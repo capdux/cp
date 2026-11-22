@@ -2237,3 +2237,209 @@
   > 已读取紧急编译器工单 `task-bun-20261123-unary-neg-zero-float`（一元负号 `-x` 被 lowering 为 `(0 - x)` 导致 IEEE-754 `-0.0` 退化为 `+0.0`，复现文件 [repro_unary_neg_zero.cp](file:///data/dev/cp/temp/repro_unary_neg_zero.cp)），并已派发专职 `CPC Hotfix Engineer` 子智能体在 `cpc/src/` 根因修复、Release 部署、回归验证并结单。
   >
   > 修复验证完成后将立即同步 `SESSION.md` 审计并提交。
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-adopt-cpc-brief`）[ticket:task-bun-20261123-adopt-cpc-brief]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 08:29:23` | 状态：`resolved` | 结单：`2026-11-23T08:32:41`
+- **报错/需求摘要**：工具收录请求：请将 /data/dev/bun/scripts/cpc_brief.py 拷贝收录到 /data/dev/cp/scripts/cpc_brief.py 作为 CP 通用工具，并在 /data/dev/cp/cp_agent_ref.md 中补充使用说明供其他 AGY 调用。注意：收录到 cp/scripts 后请将 zig ast-check 路径改为系统通用 zig（如 PATH 中的 zig），bun 仓本地保留使用 vendor/zig/zig。
+- **结单与处理汇报**：已收录至 /data/dev/cp/scripts/cpc_brief.py（已改为默认调用 PATH 中的通用 zig，并支持 --zig/--require-backup/--keep-zig 选项），已实测通过并在 cp_agent_ref.md 补齐调用规范
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 07:24:52）[step:19246]
+- **用户完整原始指令**：
+  > 还有多少工作未完成, 是否需要再增加一路子智能体加快进度
+- **完整回复与执行汇报**：
+  > ### 一、 剩余工作量评估（基于实时盘点）
+  >
+  > | 维度 | 当前进度 | 剩余待办 |
+  > | :--- | :--- | :--- |
+  > | **1. Bun 纯逻辑资产吸收（Priority ①）** | 已吸收 **1,115** 个模块（`/data/dev/bun/src` 共 1,295 个 `.cp`，覆盖率 **86.1%**），`missing_synced_tag=0, upstream_newer=0` | 剩余 ~180 个 `.cp` 中多数为 JSC/C++/宿主运行时绑定，可吸收纯逻辑存量仅剩约 **30–50** 个；中长期主要随 `bun_agy` 继续迁移剩余 2,577 个 `.zig` 做增量跟进 |
+  > | **2. 文件命名规范化** | 公共模块含下划线文件已 **清零（0 个）** | 无剩余（仅保留规范允许的 `_xxx.cp` 私有底层声明与 `xxx_.cp` 参考归档） |
+  > | **3. 下游编译器工单（`cpc`）** | `unacked` 队列 **0 条**（累计 91 条全部结单且 `SESSION.md` 零遗漏） | 按需响应（随时拉起专职热修子智能体秒级处理） |
+  > | **4. 已知存量旧库小债（可一次性清扫）** | 已在推进中顺带修复 `path`/`router`/`net`/`mysql`/`semver` 等多处 `static fn` | 尚余少量旧文件待统一修补：`lib/col/soa.cp`、`lib/http/` 6 个旧文件（`freshness`/`ifmatch`/`proxyurl`/`ratelimit`/`secfetch`/`security.cp`）缺少 `static fn`，以及 `lib/sync/` 旧子模块 modular 引用整理 |
+  > | **5. AI Agent / 向量 / 核心系统库深化（Priority ②/③）** | 全库已达 **2,545** 个 `.cp`、**1,941** 个测试文件 | 属于持续迭代项，按高价值缺口滚动补齐 |
+  >
+  > ---
+  >
+  > ### 二、 是否需要增加第 3 路子智能体？
+  >
+  > **结论：不建议常驻增加第 3 路，保持当前「2 路常驻 + 1 路按需热修」性价比最高。**
+  >
+  > 原因如下：
+  > 1. **Bun 存量已接近尾声**：现有 1 路 Priority ① 吸收器每 2–3 分钟即可交付并验证 1 个模块，当前纯逻辑存量很快就能扫完，增加第二路 Bun 吸收器反而容易撞车选到同一伞包或无纯逻辑可吸。
+  > 2. **避免同伞包写冲突与配额过快耗尽**：当前主模型配额处于低水位（剩余约 15%），两路并行已能稳定达到每小时 ~18 个“代码 + 文档 + 测试 + 提交”全闭环模块的吞吐；开第 3 路常驻会显著加快配额消耗并增加共享目录冲突风险。
+  > 3. **热修通道保持零阻塞**：留出并发裕量，一旦下游 `bun_agy`/`capsurf_agy` 发出 `cpc` 编译阻断工单，可立即拉起专职 `CPC Hotfix Engineer` 抢占修复，修完即销毁。
+  >
+  > **建议动作**：
+  > - 如果您希望顺手把第 4 项中的**存量旧库小债（`col`/`http`/`sync` 的 `static fn` 与 modular 兼容）一次性清零**，我可以临时派 1 路短生命周期子智能体一次修完即释放；否则继续维持当前双轨稳步推进即可。您看是否需要我现在派发这次一次性清理？
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 07:30:40）[step:19288]
+- **用户完整原始指令**：
+  > ③ 吸收高价值基础库（检索、优化、统计、调度、通信 多媒体等），对高价值核心库做深度强化与文档补全；
+  >    ④ 高频引用库和细分领域算法库，仅吸收明确高复用价值的库，停止扩张冷门小众顶层目录，对这些库做完整性强化与文档补全。
+  > 这部分你计划吸收哪些资产进 cp lib, 丰富/完善 cp 生态
+  > 你写的cp,我看了下, 好像大部分都是 300行左右, 实际业务本身就这么多行, 还是基于什么约束, 你只能写这么多行, 功能可能并不完备
+- **完整回复与执行汇报**：
+  > 先同步刚完成的提交：`Priority ③ Wave 23 Round 10`（[hstsStore.cp](file:///data/dev/cp/lib/web/hstsStore.cp)，532 行，7/7 PASS）已提交 [`3c3f3786`]，Wave 23 10/10 圆满收官。
+  >
+  > 针对您的两个核心问题，我如实拆解并给出调整方案：
+  >
+  > ---
+  >
+  > ### 一、 为什么最近很多 `.cp` 文件在 300–550 行？是约束还是功能不完备？
+  >
+  > **先说实话：没有任何语言或工具把我们限制在 300–500 行**（规则只要求单文件不超过 3000 行）。近期文件集中在 350–550 行，是因为我们在高频推进中偏向“**每轮 1 个独立小模块 + 零堆固定容量 Sans-IO**”的写法，客观上分成了两类情况：
+  >
+  > 1. **本身就该是 350–550 行、功能已完备的模块**：
+  >    - 协议规范与单职责算法模块，例如 [hstsStore.cp](file:///data/dev/cp/lib/web/hstsStore.cp)（532 行，完整覆盖 RFC 6797）、[traceParent.cp](file:///data/dev/cp/lib/obs/traceParent.cp)（500 行，完整覆盖 W3C Trace Context L1/L2）、[mrope.cp](file:///data/dev/cp/lib/attention/mrope.cp)（436 行，完整覆盖 Qwen2-VL 3D M-RoPE）、[orSet.cp](file:///data/dev/cp/lib/ds/orSet.cp)（439 行，完整覆盖无墓碑 Add-Wins OR-Set CRDT）以及从 Bun 逐文件对标吸收的状态机。这类模块在 Rust/Zig 标准库里体量同样是 300–600 行，功能是完整的。
+  > 2. **确实存在“偏薄 / 生产纵深不足”的模块（您看得很准！）**：
+  >    - 像向量索引（[ivfPq.cp](file:///data/dev/cp/lib/vector/ivfPq.cp) 526 行）、查询代价估算（[queryCost.cp](file:///data/dev/cp/lib/db/queryCost.cp) 421 行）、2-bit KV-Cache（[quantKivi.cp](file:///data/dev/cp/lib/attention/quantKivi.cp) 414 行）这类重型引擎，为了在 1 轮内零堆闭环，我们用了**小容量定长数组**（如 `MAX_DOCS = 256`、`MAX_TABLES = 8`），导致：
+  >      - **核心数学/算法逻辑是对的，但离直接承接大规模真实业务还差一口气**（缺少外部切片/动态缓冲区支持、缺少二进制落盘序列化、缺少完整边界特性如 DP 连接枚举 / 直方图 MCV / 完整流式编解码）。
+  >
+  > **立即纠正这个倾向**：后续对复杂基础设施不再追求“1 轮塞 1 个 400 行小文件”，而是改为**“外部切片 / Arena 驱动（无小容量硬上限）+ 800–1,500 行完整生产实现（必要时分 2–3 轮把同一个引擎做深做透）”**，宁可少建新文件，也要保证每个重型模块拿来就能跑真实规模数据。
+  >
+  > ---
+  >
+  > ### 二、 Priority ③ & ④ 计划吸收与深度强化的具体资产清单
+  >
+  > 严守“**零新增冷门顶层目录**”原则，全部落盘或深化到既有高复用主包中：
+  >
+  > | 领域 | 目标既有主包 | 计划吸收 / 深度强化的生产级资产 |
+  > | :--- | :--- | :--- |
+  > | **1. 检索** | `cap:vector`、`cap:db`、`cap:text` | ① **大规模切片/外置缓冲驱动的 HNSW & IVF-PQ**（解除 256 节点小上限，补齐二进制索引序列化/反序列化与删除墓碑压缩）；<br>② **完整倒排全文检索增强**（短语位置索引 Phrase Query、Boolean AST 查询 `AND/OR/NOT`、Snippet 高亮）；<br>③ **查询优化器深化**（在 `queryCost.cp` 上补齐 Equi-Depth 直方图 + MCV 高频值统计、动态规划 Join 顺序枚举） |
+  > | **2. 优化** | `cap:math`、`cap:graph` | ① **数值优化与线性规划套件**（单纯形 LP 求解器、L-BFGS / 共轭梯度 CG 无约束优化、QR/SVD 最小二乘求解）；<br>② **组合优化求解器**（多维装箱 Bin Packing、带约束任务指派，直接服务 GPU/容器/Prompt 打包） |
+  > | **3. 统计** | `cap:math`、`cap:obs` | ① **完整概率分布与假设检验库**（Normal / Student-t / χ² / F / Beta / Poisson 的 PDF/CDF/逆分位数 PPF、Welch t / Mann-Whitney U / KS 检验、OLS/Ridge 回归）；<br>② **在线流式时序统计**（DDSketch 相对误差分位数、CUSUM / Page-Hinkley 变点检测、Holt-Winters 季节性预测） |
+  > | **4. 调度** | `cap:sys`、`cap:time`、`cap:event` | ① **Chase-Lev Work-Stealing 双端队列调度内核**；<br>② **多维资源 DRF（Dominant Resource Fairness）集群调度器**（CPU/内存/GPU 异构公平分配）；<br>③ **EDF（Earliest Deadline First）与优先级继承实时调度器**（与 `deadlines.cp` 深度联动） |
+  > | **5. 通信** | `cap:net`、`cap:rpc`、`cap:grpc_wire` | ① **gRPC / HTTP2 完整流控状态机**（双向流、Deadline 传播、压缩帧、Trailers 状态码与拦截器）；<br>② **QUIC 传输层深化**（ACK 区间合并、PTO 丢包探测、BBR/CUBIC 拥塞控制完整状态机）；<br>③ **反熵增量同步协议**（基于 Merkle 树差异对齐的集群状态同步） |
+  > | **6. 多媒体** | `cap:media` | ① **音频 DSP 完整处理管线**（Radix-2 FFT / STFT、Biquad IIR 均衡滤波器、多相 Sinc 重采样、LUFS 响度归一化）；<br>② **图像核心处理算子**（RGBA/YUV420/NV12 色彩空间互转、双线性/Bicubic/Lanczos 缩放、高斯/Sobel 卷积与无损 PNG/BMP 完整编解码） |
+  > | **7. Priority ④ 高频库补强** | `cap:http`、`cap:col`、`cap:sync` 等 | 停止扩张小众目录；集中清理旧库技术债（补全 `col`/`http` 缺失的 `static fn`、修复 `sync` modular 引用），并将上述核心包的 `doc/lib/<pkg>.md` 补全为含实战架构图与端到端示例的完整手册 |
+  >
+  > ---
+  >
+  > ### 三、 下一步执行策略确认
+  >
+  > 从当前 **Wave 24** 开始，我计划对 **Priority ②/③** 轨道执行以下升级：
+  > 1. **做深不做薄**：优先按上表从「检索 / 优化 / 统计 / 调度 / 通信 / 多媒体」挑选核心引擎，**解除小容量固定上限**（改为调用方传入大缓冲/切片驱动，同时保留零堆特性），补齐完整边界与真实规模验证；
+  > 2. **存量重型模块返工加深**：对近期偏小容量的代表性模块（如 `ivfPq.cp`、`queryCost.cp`）按需补齐外置缓冲与持久化能力；
+  > 3. **Priority ①** 继续稳步收尾 Bun 剩余纯逻辑模块并保持 `upstream_newer=0`。
+  >
+  > 您看这个方向和深度标准是否符合预期？如果认可，我将按这个高深度标准立即调整后续派发要求。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 07:33:25）[step:19300]
+- **用户完整原始指令**：
+  > 尚余少量旧文件待统一修补：lib/col/soa.cp、lib/ht
+  >                                                    │ 等多处 static fn                                │ tp/ 6
+  >                                                    │                                                 │ 个旧文件（freshness/ifmatch/proxyurl/ratelimit/s
+  >                                                    │                                                 │ ecfetch/security.cp）缺少 static fn，以及
+  >                                                    │                                                 │ lib/sync/ 旧子模块 modular 引用整理
+  > 这个是什么意思, 这些文件来源时bun还是 你编写的
+  > 回答我之后, 临时开一个子智能体, 快速修复
+- **完整回复与执行汇报**：
+  > ### 一、 问题含义与文件来源说明
+  >
+  > 1. **这些文件的来源**：**全部都是早期从 Bun 吸收到 CP 标准库的历史文件**（每个文件顶部均有 `// Source: Absorbed from /data/dev/bun/src/...` 溯源头）：
+  >    - [lib/col/soa.cp](file:///data/dev/cp/lib/col/soa.cp)：源自 `bun/src/collections/multi_array_list.cp`
+  >    - `lib/http/` 6 个文件（[freshness.cp](file:///data/dev/cp/lib/http/freshness.cp)、[ifmatch.cp](file:///data/dev/cp/lib/http/ifmatch.cp)、[proxyurl.cp](file:///data/dev/cp/lib/http/proxyurl.cp)、[ratelimit.cp](file:///data/dev/cp/lib/http/ratelimit.cp)、[secfetch.cp](file:///data/dev/cp/lib/http/secfetch.cp)、[security.cp](file:///data/dev/cp/lib/http/security.cp)）：早期围绕 `bun/src/http/http.cp` 吸收拆分的 HTTP 扩展模块
+  >    - `lib/sync/` 3 个文件（[channel.cp](file:///data/dev/cp/lib/sync/channel.cp)、[condition.cp](file:///data/dev/cp/lib/sync/condition.cp)、[pool.cp](file:///data/dev/cp/lib/sync/pool.cp)）：源自 `bun/src/threading/` 并发原语
+  >
+  > 2. **两个历史问题的具体含义**：
+  >    - **缺少 `static fn`**：早期 CP 还没强制静态方法标注 `static`，结构体里不访问 `this` 的工厂/工具方法直接写成了 `pub fn ...`。现在 `cpc` 语义检查收紧且默认启用 `cap test -m` 模块化编译，不带 `static` 的方法会被自动注入 `self` 参数，在 Zig 端直接报“未使用的 `self` 参数”错误，连带阻塞整个 `cap:col` / `cap:http` 伞包导入。
+  >    - **`lib/sync/` 旧子模块 modular 引用整理**：`channel.cp` / `condition.cp` / `pool.cp` 在 `cap test -m` 模块化模式下存在旧式跨文件引用/导入路径不一致问题（如 `import { Mutex } from "./mutex";` 与同包 `Mutex` 引用解析），导致通过 `import { ... } from "cap:sync"` 导入该伞包时会被这几个旧文件拖垮编译。
+  >
+  > ---
+  >
+  > ### 二、 已启动临时修复子智能体
+  >
+  > 已立即派发 1 路临时专项子智能体 `Legacy Stdlib Cleanup Engineer`，集中完成以下三项修复与验证：
+  > 1. 补全 `lib/col/soa.cp` 缺失的 `static fn` 并验证 `cap:col` modular 编译通过；
+  > 2. 补全 `lib/http/` 6 个旧文件缺失的 `static fn` 并验证 `cap:http` modular 编译通过；
+  > 3. 修复 `lib/sync/{channel,condition,pool}.cp` 的 modular 引用问题并验证 `cap:sync`（含 `testThreadLock.cp`）100% PASS。
+  >
+  > 修完验证通过后我将立即提交 Git 并销毁该临时子智能体，不占用常驻资源。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 08:08:07）[step:19438]
+- **用户完整原始指令**：
+  > 1. 你提到的: lib/http/ 6
+  >       个文件（lib/http/freshness.cp、lib/http/ifmatch.cp、lib/http/proxyurl.cp、lib/http/ratelimit.cp、lib/http/secfetch.cp、lib/http/security.cp）：早
+  >       期围绕 bun/src/http/http.cp 吸收拆分的 HTTP 扩展模块
+  > 原 http文件比较大,有几千行代码, 你做的拆分吗? 为何要拆分?
+  >
+  > 2. 你在上面提到的: 您看这个方向和深度标准是否符合预期？如果认可，我将按这个高深度标准立即调整后续派发要求。 同意你的执行方案, 并将你说的" 做深不做薄" 规则,写入GEMINI.md 固化, 否则引入的库再多, 功能不全, 对程序员来说, 没有价值.
+  >
+  > 3. 高频引用库, 包括各种文档处理与读取(我看你在 doc中已经完成了一批, 如doc/pdf/xls/等文档格式), 
+  > 流媒体(WebRTC/ WHEP, HLS / DASH, RTP/RTCP/SRTP/SDP/ICE / STUN / TURN/SCTP), 流媒体实时压缩与转换(Opus, PCM, WebM / Ogg,AAC, MP3,WAV,G.711 (PCMU/PCMA),H.264, H.265, VP8 / VP9, AV1, fMP4, WebM等) 用于实时语音/视频流, ASR/TTS等当前流行库, 对实时性和性能要求非常高,
+  > 运算密集, 通过我们cp特殊优化算法/语法/编译器, 如何提高性能, 超越传统库, 这对该领域的程序员有极大的吸引力, 能带来很多用户. 
+  >
+  > 我们的cp 可以为流媒体做专门的加速优化
+  >  图片格式转换, 知名库(如:OpenCV, libvips, ImageMagick等)的api封装, 
+  > 对于这些高频库, 你觉得是直接集成到内部库, 还是作为外部库, 通过 cap 安装?
+  >
+  > 以上三个问题, 你逐一处理/回复
+- **完整回复与执行汇报**：
+  > 逐一回复并处理您的三个问题：
+  >
+  > ---
+  >
+  > ### 一、 关于 `lib/http/` 6 个文件的拆分原因
+  >
+  > 是的，这些拆分是早期迁移时按职责主动拆出来的，原因有三点：
+  > 1. **上游原文件体量与耦合度过高**：`/data/dev/bun/src/http/http.cp` 单文件就有 **2,957 行**，并且重度耦合了 JSC 对象、uSockets 回调与 BoringSSL 传输细节；
+  > 2. **按 RFC 单职责解耦**：这 6 个文件分别对应独立的 HTTP RFC 规范（RFC 9111 缓存新鲜度 `freshness.cp`、RFC 9110 §13 条件请求 `ifmatch.cp`、代理 URL 解析 `proxyurl.cp`、IETF `RateLimit` 限流头 `ratelimit.cp`、W3C Fetch Metadata `secfetch.cp`、安全响应头 `security.cp`），拆出来后变成 100% 纯 CP 零依赖算法模块，既方便单独单元测试，也能在 `cap:http`（共 93 个子模块、27,789 行）里按需复用、避免单文件超过 3,000 行导致编译与维护变慢；
+  > 3. **对外零心智负担**：所有子模块统一在 [lib/http/index.cp](file:///data/dev/cp/lib/http/index.cp) 聚合导出，用户依然只需 `import { ... } from "cap:http"`。
+  >
+  > ---
+  >
+  > ### 二、 “做深不做薄”规则已写入 `GEMINI.md` 固化
+  >
+  > 已将 **「第十一章：标准库“做深不做薄”与内置/外部生态分层铁律」** 正式写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L649-L671) 并提交 [`5898ce70`]，明确规定：
+  > - **解除小容量玩具上限**：重型核心库一律采用调用方外部切片 / Arena 驱动，零动态堆分配的同时无缝承接大规模生产数据；
+  > - **功能完备优先于模块数量**：单核心引擎按真实复杂度写透（800–1,500 行或成套子模块），补齐数值稳定性、二进制持久化、权威基准对照与完整文档；
+  > - 截至目前刚按该标准连续交付了 4 套 800–1,300 行深度引擎（[fftFilter.cp](file:///data/dev/cp/lib/media/fftFilter.cp) 972 行、[statsDist.cp](file:///data/dev/cp/lib/math/statsDist.cp) 1,182 行、[optimize.cp](file:///data/dev/cp/lib/math/optimize.cp) 1,317 行、[drfSched.cp](file:///data/dev/cp/lib/sys/drfSched.cp) 826 行、[hnswFlat.cp](file:///data/dev/cp/lib/vector/hnswFlat.cp) 1,074 行），全部首次即 100% PASS。
+  >
+  > ---
+  >
+  > ### 三、 流媒体 / ASR-TTS 性能超越路径 与 内置标准库 vs 外部 `cap` 包分层
+  >
+  > #### 1. CP 如何在流媒体 / 实时语音（ASR/TTS）与音视频处理中超越传统库？
+  > 传统 C++/Rust/Go/Python 流媒体栈（如 GStreamer/LiveKit/Python ASR 管线）最大的痛点是 **跨阶段内存拷贝 + GC 抖动（尾延迟尖刺）+ 锁竞争 + 胶水层开销**。CP 的四层架构正好直击这些瓶颈：
+  > 1. **零 GC + 外部切片零拷贝（肌肉层）**：音视频帧（PCM/RTP/fMP4/YUV420）全程原地切片视图传递，无 GC STW 抖动，实时语音 P99 延迟极低且确定；
+  > 2. **原生 SIMD 内建算子 + Zig `@Vector` 自动向量化（编译器层）**：直接用 CP 原生 `@dot` / `@fma` / `@l2sq` 加速 FFT 蝶形、Biquad/FIR 滤波、Sinc 重采样、Mel 滤波器组、VAD 能量计算与声学特征提取，性能直逼手写 AVX2/NEON 汇编；
+  > 3. **`comptime !{}` 编译期查表预生成**：将窗函数表、G.711 μ-law/A-law 查找表、YUV↔RGB 矩阵、CRC/FEC 伽罗瓦域表、Huffman/熵解码表在编译期直接烘焙进只读段，零运行时初始化；
+  > 4. **BEAM Actor + CPS + `SharedTensor`/`Refc Binary` 零拷贝流水线（并发层）**：一个实时音视频/ASR-TTS 管线（`RTP 收包 -> JitterBuffer -> 解码 -> 重采样/VAD -> ASR/LLM -> TTS -> Opus 打包 -> SRTP 发送`）天然拆成多个轻量 Actor，百万级并发会话隔离（单路畸形包崩溃不影响其他会话），大帧通过引用计数指针零拷贝接力，彻底消除传统线程池的锁争用。
+  >
+  > #### 2. 内置标准库（`cap:*`）vs 外部 `cap` 安装包：明确的三层边界（已同步固化到 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L664-L671)）
+  >
+  > | 分层 | 归属位置 | 具体资产范围 | 理由 |
+  > | :--- | :--- | :--- | :--- |
+  > | **第一层：协议 / 容器 / 轻量编解码** | **内置标准库**（`cap:net` / `cap:media` / `cap:doc`） | WebRTC 信令与传输协议（**RTP/RTCP/SRTP/SDP/ICE/STUN/TURN/SCTP/WHEP**）、流媒体打包（**HLS/DASH/fMP4/WebM/Ogg/WAV**）、轻量音频（**PCM/G.711 PCMU·PCMA/FFT/Biquad/Sinc/VAD/Mel**）、文档基础解析（PDF/DOCX/XLSX） | 100% 纯 CP 零外部 C 依赖、体量可控、编译极快，且直接决定 CP 在实时通信与 AI Agent 场景的“开箱即用竞争力” |
+  > | **第二层：中重度纯 CP 图像处理基础** | **内置标准库**（`cap:media`） | RGBA/YUV420/NV12 色彩空间互转、双线性/Bicubic/Lanczos 缩放、高斯/Sobel 卷积、无损 BMP/PPM/PNG 基础读写 | 高频用于 VLM 视觉前处理与缩略图，纯 CP SIMD 实现小巧高效 |
+  > | **第三层：重型 C/C++ 编解码与 CV 生态** | **外部官方 `cap` 包**（`cap install` 按需安装） | **OpenCV（`@cap/opencv`）、libvips（`@cap/vips`）、ImageMagick（`@cap/magick`）、FFmpeg（`@cap/av`）、libopus（`@cap/opus`）、x264/x265/dav1d/SVT-AV1（`@cap/codecs`）** | 这类库源码动辄数百万行、涉及硬件加速（NVENC/VAAPI/VideoToolbox）与专利许可，若塞进内置库会导致编译器臃肿且跨平台构建灾难；通过 `cap` 预编译二进制矩阵（`.so`/`.dylib`/`.dll` + 全局缓存软链）按需安装，既享受 C/汇编极限性能，又保持 CP 核心极速轻盈 |
+  >
+  > ---
+  >
+  > *(注：同期 `Priority ① Wave 26 Round 4` [copyResponse.cp](file:///data/dev/cp/lib/pgwire/copyResponse.cp) 已验证提交 [`86c01f76`]，`bun_sourced=1128`；当前 `Priority ① W26 R5` 与 `Priority ③ W24 R7` [quicLoss.cp](file:///data/dev/cp/lib/net/quicLoss.cp) 正在后台并行推进。)*
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 08:17:42）[step:19482]
+- **用户完整原始指令**：
+  > 你提到的:三、 流媒体 / ASR-TTS 性能超越路径 与 内置标准库 vs 外部 cap 包分层
+  >
+  > 非常好, 同意你关于库的规划, 先实现这些内置库, 再实现可安装的外部库, 将这些规则和规划一并写入GEMINI.md, 后续执行完成.
+- **完整回复与执行汇报**：
+  > 已将流媒体/实时语音四层加速原则与 **Phase 1（内置核心库）→ Phase 2（外部可安装 `cap` 官方包）** 路线图正式写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L664-L680) 并提交 [`67b0c618`]，同时已立即按 Phase 1 推进并完成以下两批提交：
+  >
+  > 1. **Priority ③ Wave 24 Round 8（Phase 1 实时语音流媒体引擎：`cap:media`）** — 已提交 [`234ceaff`]
+  >    - 新增 [rtpJitter.cp](file:///data/dev/cp/lib/media/rtpJitter.cp)（**1,026 行**无上限外部切片纯 CP）与测试 [testMediaRtpJitter.cp](file:///data/dev/cp/cap/test/testMediaRtpJitter.cp)（390 行，7/7 一次全绿），完整实现 RFC 3550 RTP/RTCP（含 CSRC/扩展头/Padding/16-bit 序号安全回绕展开与 1/16 平滑抖动统计）、ITU-T G.711 PCMU/PCMA 编解码与双向转码（SNR > 33 dB）、NetEQ 风格自适应 Jitter Buffer 与淡出式 PLC 丢包隐藏，同步更新 [index.cp](file:///data/dev/cp/lib/media/index.cp)、[media.md](file:///data/dev/cp/doc/lib/media.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
+  > 2. **Priority ① Wave 26 Round 8（`cap:pgwire` 大端长度回填写入器 `PgWireWriter`）** — 已提交 [`a8f0ef71`]
+  >    - 吸收自 Bun 新增 [wireWriter.cp](file:///data/dev/cp/lib/pgwire/wireWriter.cp) 与测试 [testPgwireWireWriter.cp](file:///data/dev/cp/cap/test/testPgwireWireWriter.cp)（5/5 PASS），同步更新 [index.cp](file:///data/dev/cp/lib/pgwire/index.cp)、[pgwire.md](file:///data/dev/cp/doc/lib/pgwire.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
+  >    - 上游审计：`bun_sourced=1132, missing_synced_tag=0, upstream_newer=0`。
+  >
+  > 已派发并运行中的后台任务：
+  > - **Priority ① Wave 26 Round 9**（目标 `bun_sourced=1133`）进行中；
+  > - **Priority ③ Wave 24 Round 9（Phase 1 纯 CP 基础图像处理引擎）**：`cap:media` — `lib/media/imageOps.cp`（无上限外部切片 RGBA↔YUV420p/NV12 BT.601/BT.709 互转、4 模可分离缩放、高斯模糊/Sobel 卷积与 BMP/PPM 完整编解码）进行中。
+  >
+  > 待任一轨道完工或新工单到达后将自动唤醒继续推进。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 08:30:57）[step:19543]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-adopt-cpc-brief)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+  > “做深不做薄” 不仅仅在后续新模块中实施, 你之前编写/吸收的库, 也要重新审核, 需要深化补全的, 补全功能及文档, 阉割版没有意义.
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
