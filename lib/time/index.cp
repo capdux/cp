@@ -210,3 +210,11 @@ export {
     VcdVarIter,
     VcdValueIter,
 } from "./vcd.cp";
+
+export {
+    ScheduleKind,
+    ScheduleState,
+    ScheduledTaskSlot,
+    SchedulerStats,
+    RecurringScheduler,
+} from "./recurring_scheduler.cp";

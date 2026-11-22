@@ -165,3 +165,44 @@ pub fn demoTimeSuite() {
    - 遵循 POSIX Cron 规范：当“日（DOM）”与“星期（DOW）”均非通配符 `*` 时，满足任一即触发；`nextAfter` 按月/日/时/分位掩码跳步推进，无需逐分钟空转扫描。
 4. **抖动退避防惊群（`ExponentialBackoff`）**：
    - 分布式重试场景推荐传入确定性随机种子启用抖动（Jitter），避免多节点在故障恢复瞬间同步重连引发雪崩。
+
+---
+
+## 零堆分配确定性定时与周期调度器（`recurring_scheduler.cp`）
+
+面向服务端定时任务、事件循环超时计算与 AI Agent 周期巡检的 100% 纯 CP 零堆分配调度引擎：
+
+- **核心类型**：`ScheduleKind`（`OneShot | FixedInterval | FixedDelay`）、`ScheduleState`（`Active | Paused | Completed | Failed | Cancelled`）、`ScheduledTaskSlot`、`SchedulerStats`、`RecurringScheduler`
+- **核心能力**：
+  - `scheduleOneShot` / `scheduleInterval` / `scheduleFixedDelay`：支持一次性任务、漂移无关的固定间隔任务（超时跳帧防惊群）与完成后固定延迟任务，内置确定性 SplitMix64 哈希抖动（`jitter_window_ms`）；
+  - `nextDueMs(): i64?`：O(N) 精确返回下一个最近触发时间戳，可直接喂给事件循环 `epoll`/`poll`；
+  - `pollDue(*_, now_ms, out_task_ids): usize`：按 `(next_run_ms asc, task_id asc)` 确定性提取全部到期任务并标记 `in_flight` 防止重入并发；
+  - `reportResult(*_, task_id, succeeded, now_ms): bool`：成功推进 `run_count` 与下一周期（达 `max_runs` 自动标记 `Completed`）；失败按指数退避（`retry_backoff_ms * 2^(retry-1)`）自动重排直至 `max_retries` 后标记 `Failed`；
+  - `pause` / `resumeTask` / `cancel` / `releaseTerminal` / `stats`。
+
+### QuickStart 示例
+
+```cp
+import { ScheduledTaskSlot, RecurringScheduler } from "cap:time";
+
+pub fn demoRecurringScheduler() {
+    let slots: [8]ScheduledTaskSlot = [ScheduledTaskSlot{}; 8];
+    let slots_s: []ScheduledTaskSlot = slots[0..];
+    let sched = RecurringScheduler.init(slots_s) ?? return;
+
+    * = sched.scheduleOneShot(1, "warmup", 1000);
+    * = sched.scheduleInterval(2, "heartbeat", 1000, 5000, 0, 200);
+    * = sched.setRetryPolicy(2, 3, 500);
+
+    if (next_ms := sched.nextDueMs()) {
+        let due: [4]u64 = [0; 4];
+        let due_s: []u64 = due[0..];
+        const n = sched.pollDue(next_ms, due_s);
+        let i: usize = 0;
+        while (i < n) : (i += 1) {
+            * = sched.reportResult(due[i], true, next_ms + 20);
+        }
+    }
+    * = sched.stats();
+}
+```
