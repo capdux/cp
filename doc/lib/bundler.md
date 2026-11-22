@@ -950,3 +950,36 @@ const items: [1][]const u8 = ["registerClientReference"];
 const summary = ab.finalize()?; // part_count == 2, hmr_aliased_import_count == 1
 * = summary;
 ```
+
+- **生产 Chunk 语句降级与 4 区域落位引擎（`chunkStmts.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/convertStmtsForChunk.cp` & `/data/dev/bun/docs/bundler/index.mdx`）**：
+    - 导出：`CHUNK_STMTS_MAX_INPUT` (`64`)、`CHUNK_STMTS_MAX_IMPORTS` (`32`)、`CHUNK_STMTS_MAX_REGION` (`32`)、`ChunkStmtsError`、`ChunkWrapKind`（`None`/`Esm`/`Cjs`）、`ChunkOutputFormat`（`Esm`/`Cjs`/`Iife`）、`ChunkStmtRegion`（`OutsideWrapperPrefix`/`InsideWrapperPrefix`/`InsideWrapperSuffix`/`OutsideWrapperSuffix`）、`ChunkStmtInputKind`、`ChunkEmittedStmtKind`、`ChunkImportRecordMeta`、`ChunkStmtInput`、`ChunkEmittedStmt`、`ChunkConvertOptions`、`ChunkConvertStats`、`ChunkStmtConverter`（`init`/`addImportRecord`/`addStmt`/`convert`/`regionSlice`/`formatPreview`）；
+    - **打包格式（`esm` / `cjs` / `iife`）与包装闭包最佳实践（参考 `/data/dev/bun/docs/bundler/index.mdx`）**：
+      - **顶层 ESM 导入提升**：当模块被包装在 `__esm(() => { ... })` 或 `__commonJS` 闭包内时，所有保留的外部 `import` / `export * as` / `export { ... } from` 必须提升至 `OutsideWrapperPrefix` 顶层，避免非法嵌套 ES 模块语法；
+      - **CJS 入口双写 `module.exports`**：当 `format == .Cjs && is_entry_point == true` 时，`__reExport(exports, target, module.exports)` 自动附加 `module.exports` 第 3 参数以同时满足外部 CJS 消费方（带 `__esModule`）与内部 ESM 自引用；
+      - **Barrel 优化与 `export default` 降级**：标记 `is_unused` 的 `export *` 直接裁剪；打包模式下自动剥离函数/类/变量的 `export` 修饰符并将 `export default` 降级为命名本地绑定或函数/类声明。
+
+```cp
+import {
+    ChunkStmtConverter,
+    ChunkImportRecordMeta,
+    ChunkStmtInput,
+    ChunkConvertOptions,
+    ChunkWrapKind,
+    ChunkOutputFormat,
+} from "cap:bundler";
+
+let conv = ChunkStmtConverter.init();
+const ext_idx = conv.addImportRecord(ChunkImportRecordMeta{
+    specifier: "node:fs",
+    namespace_name: "import_fs",
+    is_internal: false,
+})?;
+* = conv.addStmt(ChunkStmtInput{ kind: .Import, import_record_idx: ext_idx })?;
+* = conv.addStmt(ChunkStmtInput{ kind: .ExportDefaultExpr, default_name: "mod_default", code: "42" })?;
+
+const st = conv.convert(ChunkConvertOptions{ wrap: ChunkWrapKind.Esm, format: ChunkOutputFormat.Esm })?;
+let buf: [512]u8 = [0; 512];
+const n = conv.formatPreview(buf[0..], "init_app")?;
+* = st;
+* = n;
+```

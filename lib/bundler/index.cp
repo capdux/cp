@@ -578,3 +578,21 @@ export {
     AstBuildSummary,
     SyntheticAstBuilder,
 } from "./astBuilder";
+
+export {
+    CHUNK_STMTS_MAX_INPUT,
+    CHUNK_STMTS_MAX_IMPORTS,
+    CHUNK_STMTS_MAX_REGION,
+    ChunkStmtsError,
+    ChunkWrapKind,
+    ChunkOutputFormat,
+    ChunkStmtRegion,
+    ChunkStmtInputKind,
+    ChunkEmittedStmtKind,
+    ChunkImportRecordMeta,
+    ChunkStmtInput,
+    ChunkEmittedStmt,
+    ChunkConvertOptions,
+    ChunkConvertStats,
+    ChunkStmtConverter,
+} from "./chunkStmts";
