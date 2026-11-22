@@ -493,6 +493,45 @@ pub fn demoCsrfGuard() {
 }
 ```
 
+### HMAC-SHA256 预签名 URL 与多密钥轮换验签器 (`signedUrl.cp`)
+
+100% 纯 CP、零动态堆分配、零 C 依赖的预签名 URL 生成与常量时间验签引擎（内联 FIPS 180-4 SHA-256 + RFC 2104 HMAC-SHA256 + 无填充 Base64URL）：
+
+- **常量与枚举**：
+  - `SIGNED_URL_SIG_LEN = 43`、`SIGNED_URL_MAX_KEYS = 8`、`SIGNED_URL_MAX_KID_LEN = 32`、`SIGNED_URL_MAX_SECRET_LEN = 128`、`SIGNED_URL_DEFAULT_CLOCK_SKEW_S = 30`
+  - `SignedUrlStatus`（`valid | missing_signature | missing_expiry | expired | invalid_signature | method_mismatch | malformed_url`）
+  - `SignedUrlVerifyResult`（`status`, `valid`, `exp_epoch_s`, `kid()`）、`SignedUrlKeyringStats`
+- **无状态预签名与常量时间验签**：
+  - `signUrl(secret, method, path, query_without_sig, exp_epoch_s, key_id, *out_buf): usize?`：将 `(method, path, query_without_sig, exp_epoch_s, key_id)` 域分离规范化后签发带 `exp`、可选 `kid` 与 43 字符 `sig` 的预签名 URL；内置 CRLF/空路径/重复保留参数/缓冲溢出守卫。
+  - `verifySignedUrl(secret, method, full_path_and_query, now_epoch_s, clock_skew_s): SignedUrlVerifyResult`：流式剥离 `sig`/`exp`/`kid` 零堆验签，校验时钟偏移窗口，精确区分 `method_mismatch` 与 `invalid_signature`。
+  - `signedUrlConstantTimeEq(a, b)` / `formatSignedUrlStatus(status)`
+- **多密钥零停机轮换引擎 `SignedUrlKeyring`**：
+  - `init()` / `addKey(*_, kid, secret, make_primary)` / `setPrimaryKey(*_, kid)` / `revokeKey(*_, kid)` / `hasKey(kid)` / `keyCount()`
+  - `signWithPrimary(*_, method, path, query_without_sig, exp_epoch_s, *out_buf)` / `signWithKey(*_, kid, ...)`
+  - `verify(*_, method, full_path_and_query, now_epoch_s, clock_skew_s): SignedUrlVerifyResult`（按 `kid` 精准定位密钥验签，无 `kid` 回退主密钥）
+  - `stats(): SignedUrlKeyringStats` / `resetStats(*_)`
+
+```cp
+import {
+    SignedUrlStatus,
+    SignedUrlKeyring,
+    SIGNED_URL_DEFAULT_CLOCK_SKEW_S,
+} from "cap:web";
+
+pub fn demoSignedUrlKeyring() {
+    let kr = SignedUrlKeyring.init();
+    * = kr.addKey("k2026a", "secret-key-alpha-32bytes-minimum", true);
+    * = kr.addKey("k2026b", "secret-key-beta-32bytes-minimum!", true); // 平滑轮换主密钥
+
+    let url_buf: [256]u8 = [0; 256];
+    let url_s: []u8 = url_buf[0..];
+    const n = kr.signWithPrimary("GET", "/files/report.pdf", "dl=1", 1_700_003_600, *url_s) ?? return;
+
+    const vr = kr.verify("GET", url_buf[0..n], 1_700_000_100, SIGNED_URL_DEFAULT_CLOCK_SKEW_S);
+    * = (vr.status == SignedUrlStatus.valid);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

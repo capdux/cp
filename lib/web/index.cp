@@ -406,3 +406,20 @@ export {
     verifyCsrfToken,
     CsrfGuard,
 } from "./csrfGuard.cp";
+
+// --- Zero-Alloc HMAC-SHA256 Pre-Signed URL & Multi-Key Rotation Verifier ---
+export {
+    SIGNED_URL_SIG_LEN,
+    SIGNED_URL_MAX_KEYS,
+    SIGNED_URL_MAX_KID_LEN,
+    SIGNED_URL_MAX_SECRET_LEN,
+    SIGNED_URL_DEFAULT_CLOCK_SKEW_S,
+    SignedUrlStatus,
+    SignedUrlVerifyResult,
+    SignedUrlKeyringStats,
+    signedUrlConstantTimeEq,
+    formatSignedUrlStatus,
+    signUrl,
+    verifySignedUrl,
+    SignedUrlKeyring,
+} from "./signedUrl.cp";
