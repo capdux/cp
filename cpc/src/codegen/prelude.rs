@@ -223,9 +223,7 @@ impl ModuleFeatures {
                     self.scan_block(&tb.body);
                 }
                 for code in &c.extra_zig {
-                    if code.contains("<<") || code.contains(">>") {
-                        self.needs_shift = true;
-                    }
+                    self.scan_extra_zig(code);
                 }
             }
             Decl::Trait(t) => {
@@ -242,6 +240,22 @@ impl ModuleFeatures {
                 if e.ident.sym == "JsonTag" {
                     self.has_imported_json = true;
                 }
+                for v in &e.variants {
+                    if let Some(val) = &v.value {
+                        self.scan_expr(val);
+                    }
+                    if let Some(tuple_ty) = &v.tuple_type {
+                        self.scan_type(tuple_ty);
+                    }
+                    if let Some(fields) = &v.fields {
+                        for f in fields {
+                            self.scan_type(&f.ty);
+                            if let Some(def) = &f.default {
+                                self.scan_expr(def);
+                            }
+                        }
+                    }
+                }
                 for m in &e.methods {
                     if let Some(ret) = &m.return_type {
                         self.scan_type(ret);
@@ -253,6 +267,9 @@ impl ModuleFeatures {
                 }
                 for tb in &e.test_blocks {
                     self.scan_block(&tb.body);
+                }
+                for code in &e.extra_zig {
+                    self.scan_extra_zig(code);
                 }
             }
             Decl::Impl(i) => {
@@ -273,6 +290,24 @@ impl ModuleFeatures {
                 self.scan_type(&ta.target_ty);
             }
             _ => {}
+        }
+    }
+
+    fn scan_extra_zig(&mut self, code: &str) {
+        if code.contains("<<") || code.contains(">>") {
+            self.needs_shift = true;
+        }
+        let mut parser = crate::parser::Parser::new(code);
+        let (module, diags) = parser.parse_module_with_recovery();
+        let has_syntax_break = diags
+            .iter()
+            .any(|d| matches!(d.code.as_str(), "E0100" | "E0111" | "E0199"));
+        if !has_syntax_break && module.body.len() == 1 {
+            match &module.body[0] {
+                ModuleItem::Decl(d) => self.scan_decl(d),
+                ModuleItem::Stmt(s) => self.scan_stmt(s),
+                _ => {}
+            }
         }
     }
 

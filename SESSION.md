@@ -1626,3 +1626,27 @@
   > 2. **`task-bun-20261122-generic-arg-opt`**（复现：[repro_generic_arg_opt_typeof.cp](file:///data/dev/cp/temp/repro_generic_arg_opt_typeof.cp)）：泛型实参位后缀可选类型 `Box(i32?)` 未 lower 为 `Box(?i32)`，导致 Zig 报 `expected ',' after argument`。
   >
   > 原有 2 路常驻生态子智能体（Priority ① `0dcb94a7` + Priority ③ `67ff1fce`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-enum-shl-missing`）[ticket:task-bun-20261122-enum-shl-missing]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:03:09` | 状态：`resolved` | 结单：`2026-11-22T17:07:22`
+- **报错/需求摘要**：pub enum 内含移位常量 pub const b: u16 = 1 << 1; 时，cpc 生成 cp_shl(1, 1) 但未在 prelude 发射 fn cp_shl，导致 zig ast-check 报 use of undeclared identifier 'cp_shl'
+- **结单与处理汇报**：已修复 ModuleFeatures 扫描 Decl::Enum 时遗漏 e.extra_zig 与 e.variants 导致未发射 cp_shl/cp_shr prelude 的问题（cpc/src/codegen/prelude.rs），已发布 release 版 cpc，原始 repro（cpc --lib + zig ast-check）、新增回归 cap/test/test_enum_shl_missing.cp 与存量 enum 测试（test_enum_cast_smart.cp / test_enum_inline_fn.cp）全部 PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-return-this-struct-lit`）[ticket:task-bun-20261122-return-this-struct-lit]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 17:07:01` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：@This(){ x: 1 } 结构体字面量前缀为 @This() 时，parser 报 E0100 unexpected token 'Colon'（或需支持 @This() 作为结构体字面量类型名）
+- **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:03:16）[step:15467]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-enum-shl-missing)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-enum-shl-missing`**（复现：[repro_enum_shl_missing.cp](file:///data/dev/cp/temp/repro_enum_shl_missing.cp)：`pub enum` 内含移位常量 `pub const b: u16 = 1 << 1;` 时，`cpc` 生成 `cp_shl(1, 1)` 但未在 prelude 发射 `fn cp_shl` 导致 Zig 报错），并立即启动独立热修子智能体 **`47600e58`**（`CPC Hotfix Engineer`）专职排查修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单。
+  >
+  > 原有 2 路常驻生态子智能体（Priority ① `0dcb94a7` + Priority ② `67ff1fce`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 17:07:02）[step:15484]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-return-this-struct-lit)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
