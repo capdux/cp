@@ -1064,3 +1064,37 @@ let out: [1024]u8 = [0; 1024];
 const n = snap.stringify(out[0..])?;
 * = n;
 ```
+
+### 二进制锁文件 `bun.lockb` 头部与扩展段编解码器（`lib/pkg/lockb.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/bun.lockb.cp` 与 `/data/dev/bun/docs/pm/lockfile.mdx`；
+- 导出：`LOCKB_SHEBANG_HEADER`（42B `"#!/usr/bin/env bun\nbun-lockfile-format-v0\n"`）、`LOCKB_META_HASH_LEN` (`32`)、`LOCKB_FIXED_HEADER_LEN` (`86`)、`LOCKB_FORMAT_V2` (`2`)、`LOCKB_FORMAT_CURRENT` (`3`)、`LOCKB_DEAD_SENTINEL` (`0xDEADBEEF`)、`LOCKB_TAG_*`（7 大 8 字节 ASCII 扩展标签：`wOrKsPaC` / `tRuStEDd` / `eMpTrUsT` / `oVeRriDs` / `pAtChEdD` / `cAtAlOgS` / `cNfGvRsN`）、`LOCKB_EXT_*`、`LockbError`、`LockbTagKind`、`lockbTagFromAscii8`、`isLockbMagic`、`alignLockbOffset`、`LockbHeader`、`LockbArrayRef`、`LockbSectionEntry`、`LockbTrailingSummary`、`LockbInspectResult`、`LockbFrameCodec`；
+- **Lockfile 格式演进与迁移最佳实践（参考 `/data/dev/bun/docs/pm/lockfile.mdx`）**：
+  - **Git 提交与 `--lockfile-only`**：生产项目应将锁文件提交至 Git；使用 `--lockfile-only` 可在不落盘 `node_modules` 的情况下生成/更新锁文件（同时预热全局元数据缓存）；使用 `--no-save` 可跳过锁文件写入；
+  - **二进制 `bun.lockb` → 文本 `bun.lock` 迁移**：Bun v1.2+ 默认使用文本格式 `bun.lock`；存量 `bun.lockb` 可通过 `--save-text-lockfile --frozen-lockfile --lockfile-only` 无损迁移后移除旧二进制文件；
+  - **v2 → v3 兼容性边界**：`LockbHeader.decode()` 严格遵循 Bun 规则——允许 `v2` 自动标记迁移至 `v3`（`migrated_from_v2 = true`），拒绝更老版本（`OutdatedVersion`）与未知未来版本（`UnexpectedVersion`）；`LockbArrayRef` 识别 `0xDEADBEEF` 未写入哨兵并校验偏移边界。
+
+```cp
+import {
+    LockbHeader,
+    LockbFrameCodec,
+    LOCKB_EXT_WORKSPACES,
+    LOCKB_EXT_EMPTY_TRUSTED,
+    LOCKB_EXT_CATALOGS,
+} from "cap:pkg";
+
+let hdr = LockbHeader{};
+hdr.meta_hash[0] = 0xab;
+let buf: [256]u8 = [0; 256];
+const core = "payload";
+const total = LockbFrameCodec.encodeFrame(
+    hdr,
+    core,
+    LOCKB_EXT_WORKSPACES | LOCKB_EXT_EMPTY_TRUSTED | LOCKB_EXT_CATALOGS,
+    1,
+    buf[0..],
+)?;
+const info = LockbFrameCodec.inspectFrame(buf[0..total], core.len)?;
+// info.trailing.hasExtension(LOCKB_EXT_CATALOGS) == true, info.trailing.config_version == 1
+* = info;
+```
