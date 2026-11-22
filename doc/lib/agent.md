@@ -2362,3 +2362,50 @@ fn contextCompactorQuickStart() {
     }
 }
 ```
+
+
+---
+
+## 子模块：零分配多智能体层级预算树与级联止损控制器（`budget_tree.cp`）
+
+### 核心特性
+
+- **64 节点零堆分配层级委派树（`AgentBudgetTree`）**：支持 `root -> sub-agent -> tool/worker` 任意深度层级配额委派，每节点追踪三重硬上限（`max_tokens`、`max_cost_micro_usd`、`max_wall_ms`，`0` 表示不限制）以及 `self_*` / `subtree_*` / `reserved_*` 精确账本。
+- **双模式配额委派（`spawnChildBudget`）**：支持 `shared_pool`（共享父池）与 `hard_reserved`（硬预留父剩余额度，防止并发子 Agent 互相挤兑）；自动拦截超父剩余额度的非法划拨。
+- **两阶段原子向上冒泡记账（`recordSpend`）**：先沿祖先链干跑校验全路径三维度上限，任一节点超限时立即将其置 `exhausted`、不污染账本并精准汇报 `exceeded_dim` 与 `triggered_node_id`；全部通过后原子累加全链 `subtree_*` 并同步冲减 `hard_reserved` 挂账。
+- **未用预留归还与纯迭代级联止损**：`closeNodeAndReleaseUnused(node_id)` 自动将子任务未消耗的硬预留归还父节点；`cancelSubtree(node_id)` 纯迭代零递归级联取消全部活跃后代并释放预留额度。
+
+### 导出清单
+
+- **常量与枚举**：`BUDGET_TREE_MAX_NODES` (`64`)、`BUDGET_TREE_NO_PARENT` (`0xFFFF`)、`BudgetNodeState`（`active | closed | cancelled | exhausted`）、`BudgetAllocationMode`（`shared_pool | hard_reserved`）、`BudgetExceededDimension`（`none | tokens | cost_micro_usd | wall_ms`）、`BudgetTreeStatus`
+- **数据模型**：`BudgetTreeLimits`、`BudgetTreeNode`（`remainingTokens`, `remainingCostMicroUsd`, `remainingWallMs`）、`BudgetSpawnResult`、`BudgetSpendResult`、`BudgetTreeStats`
+- **核心引擎**：`AgentBudgetTree`（`init`, `getNode`, `isChainActive`, `spawnChildBudget`, `recordSpend`, `closeNodeAndReleaseUnused`, `cancelSubtree`, `stats`）
+
+### QuickStart 示例
+
+```cp
+import {
+    BudgetAllocationMode,
+    BudgetTreeLimits,
+    AgentBudgetTree,
+} from "cap:agent";
+
+fn budgetTreeQuickStart() {
+    let tree = AgentBudgetTree.init(BudgetTreeLimits{
+        max_tokens: 100000,
+        max_cost_micro_usd: 500000,
+        max_wall_ms: 60000,
+    });
+
+    // 为子 Agent 硬预留 40k tokens / $0.20 / 20s
+    const sub = tree.spawnChildBudget(0, BudgetTreeLimits{
+        max_tokens: 40000,
+        max_cost_micro_usd: 200000,
+        max_wall_ms: 20000,
+    }, BudgetAllocationMode.hard_reserved);
+
+    // 子 Agent 实际消耗 12k tokens 后提前完结，自动归还剩余 28k tokens 给 root
+    * = tree.recordSpend(sub.child_id, 12000, 50000, 3500);
+    * = tree.closeNodeAndReleaseUnused(sub.child_id);
+}
+```

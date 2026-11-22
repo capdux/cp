@@ -478,3 +478,18 @@ export {
     markOrphanToolMessages,
     planContextCompaction,
 } from "./context_compactor.cp";
+
+export {
+    BUDGET_TREE_MAX_NODES,
+    BUDGET_TREE_NO_PARENT,
+    BudgetNodeState,
+    BudgetAllocationMode,
+    BudgetExceededDimension,
+    BudgetTreeStatus,
+    BudgetTreeLimits,
+    BudgetTreeNode,
+    BudgetSpawnResult,
+    BudgetSpendResult,
+    BudgetTreeStats,
+    AgentBudgetTree,
+} from "./budget_tree.cp";
