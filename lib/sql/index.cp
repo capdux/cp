@@ -67,3 +67,22 @@ export {
 export * from "./escape.cp";
 export * from "./params.cp";
 export * from "./splitter.cp";
+
+export {
+    MYSQL_LENENC_NULL_MARKER,
+    MYSQL_LENENC_U16_MARKER,
+    MYSQL_LENENC_U24_MARKER,
+    MYSQL_LENENC_U64_MARKER,
+    MYSQL_LENENC_ERR_MARKER,
+    MySqlLenEncError,
+    EncodedLengthInt,
+    DecodeLengthIntResult,
+    DecodeLengthStringResult,
+    encodedLengthIntSize,
+    encodeLengthInt,
+    encodeLengthIntInto,
+    decodeLengthInt,
+    decodeLengthIntStrict,
+    encodeLengthString,
+    decodeLengthString,
+} from "./mysql_lenenc.cp";

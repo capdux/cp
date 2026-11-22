@@ -28,6 +28,7 @@
 | `lib/agentmem/episodic.cp` | `// Origin: Pure-CP Stdlib (AI Agent Episodic Memory: Park 2023 Recency-Importance-Relevance & Ebbinghaus Decay)` | `MemoryWeights`、`EpisodeMeta`、`ScoredEpisode`、`ebbinghausRetention`、`reinforceStability`、`scoreEpisode`、`rankTopEpisodes`、`selectEvictionVictim`、`touchEpisode` |
 | `lib/agentmem/kg.cp` | `// Origin: Pure-CP Stdlib (AI Agent Temporal Knowledge Graph Memory: SPO Triples & 2-Hop Recall)` | `KgEntity`、`KgTriple`、`KgStore`（时序三元组、事实版本失效与 1~2 跳 GraphRAG 邻域检索） |
 | `lib/agentmem/working_mem.cp` | `// Origin: Pure-CP Stdlib (AI Agent Working Memory & Token-Budget Context Window Manager)` | `MemSlotRole`、`EvictionPolicy`、`WorkingMemItem`、`WorkingMemStats`、`WorkingMemory`（零堆分配工作记忆与 Token 预算滑动上下文窗） |
+| `lib/agentmem/activation.cp` | `// Origin: Pure-CP Stdlib (AI GraphRAG Spreading Activation & Personalized PageRank Memory Recall)` | `MemGraphEdge`、`ActivatedNode`、`SpreadingConfig`、`spreadActivation`、`personalizedPageRank`（零堆分配 GraphRAG 扩散激活与个性化 PageRank 记忆召回） |
 | `lib/agentmem/index.cp` | `// Source: cp/lib/agentmem/index.cp (Unified Exports for cap:agentmem)` | `cap:agentmem` 与 `cap.agentmem` 统一公开导出入口 |
 
 ---
@@ -101,6 +102,16 @@
   - `get(id): WorkingMemItem?` / `contains(id): bool` / `setPolicy(*_, policy)`
   - `compactOldestIntoSummary(*_, count, summary_tokens, turn, summary_hash): u32?`（将最早的至多 `count` 条非 `pinned` 条目原子折叠为一条 `.Summary` 槽位；若折叠后仍超预算则返回 `null` 且零副作用）
   - `stats(): WorkingMemStats`
+
+### 6. 零堆分配 GraphRAG 扩散激活与个性化 PageRank (`activation.cp`)
+
+面向多跳记忆联想召回与知识图谱实体重排，基于调用方栈上双缓冲实现零堆分配图传播：
+
+- **`MemGraphEdge`**：`{ src: u32, dst: u32, weight: f32 }`
+- **`ActivatedNode`**：`{ node_id: u32, score: f32 }`
+- **`SpreadingConfig`**：`{ decay: f32 = 0.6, hops: u32 = 2, min_threshold: f32 = 0.01, bidirectional: bool = false }`
+- **`spreadActivation(num_nodes, edges, seed_nodes, seed_weights, cfg, scores_a, scores_b, out_top_k): usize?`**：从种子节点出发沿加权边进行多跳扩散激活（每跳乘以 `decay` 并截断低于 `min_threshold` 的噪声，支持单/双向传播），按得分降序（同分按 `node_id` 升序）输出 Top-K 激活节点；非法配置或缓冲不足返回 `null`。
+- **`personalizedPageRank(num_nodes, edges, seed_nodes, seed_weights, damping, max_iters, tol, rank_cur, rank_next, out_deg, out_top_k): usize?`**：加权个性化 PageRank，自动将悬挂节点（出度为 0）概率质量回收至个性化种子分布（严格保持总概率和为 `1.0`）并支持 L1 残差早停收敛。
 
 ---
 
@@ -244,5 +255,39 @@ pub fn demoWorkingMemory() {
 
     const st = wm.stats();
     * = st;
+}
+```
+
+### 5. GraphRAG 扩散激活与个性化 PageRank 多跳记忆召回 (`activation.cp`) 示例
+
+```cp
+import {
+    MemGraphEdge,
+    ActivatedNode,
+    SpreadingConfig,
+    spreadActivation,
+    personalizedPageRank,
+} from "cap:agentmem";
+
+pub fn demoGraphRagActivation() {
+    const edges: [3]MemGraphEdge = [
+        MemGraphEdge{ src: 0, dst: 1, weight: 0.9 },
+        MemGraphEdge{ src: 1, dst: 2, weight: 0.8 },
+        MemGraphEdge{ src: 0, dst: 3, weight: 0.3 },
+    ];
+    const seeds: [1]u32 = [0];
+    const seed_w: [1]f32 = [1.0];
+
+    let buf_a: [4]f32 = [0.0; 4];
+    let buf_b: [4]f32 = [0.0; 4];
+    let deg_buf: [4]f32 = [0.0; 4];
+    let top_buf: [4]ActivatedNode = [ActivatedNode{}; 4];
+
+    // 1. 2 跳扩散激活召回
+    const cfg = SpreadingConfig{ decay: 0.5, hops: 2, min_threshold: 0.05, bidirectional: false };
+    * = spreadActivation(4, edges[0..], seeds[0..], seed_w[0..], cfg, buf_a[0..], buf_b[0..], top_buf[0..]);
+
+    // 2. Personalized PageRank 实体关联重排（含悬挂节点回收与早停）
+    * = personalizedPageRank(4, edges[0..], seeds[0..], seed_w[0..], 0.85, 50, 0.0001, buf_a[0..], buf_b[0..], deg_buf[0..], top_buf[0..]);
 }
 ```

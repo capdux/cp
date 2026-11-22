@@ -122,6 +122,20 @@ pub fn demoSqlCodecs(): ! {
   - `countQuestionMarks`、`maxDollarParam`、`rewriteQuestionToDollar`、`NamedParamIter`。
 - **多语句脚本切分与分类 (`splitter.cp`)**：
   - `SqlSplitStmtKind`、`SqlStmtIter`、`classifySqlStmt`、`isReadOnlySql`、`countSqlStatements`。
+- **MySQL 变长整数与长度前缀字符串编解码 (`mysql_lenenc.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp`)**：
+  - 常量与错误集：`MYSQL_LENENC_NULL_MARKER` (`0xfb`)、`MYSQL_LENENC_U16_MARKER` (`0xfc`)、`MYSQL_LENENC_U24_MARKER` (`0xfd`)、`MYSQL_LENENC_U64_MARKER` (`0xfe`)、`MYSQL_LENENC_ERR_MARKER` (`0xff`)、`MySqlLenEncError`（`BufferTooSmall`/`TruncatedInput`/`NullMarker`/`ErrMarker`/`LengthOverflow`）
+  - 数据模型与编解码函数：`EncodedLengthInt`、`DecodeLengthIntResult`、`DecodeLengthStringResult`、`encodedLengthIntSize`、`encodeLengthInt`、`encodeLengthIntInto`、`decodeLengthInt`、`decodeLengthIntStrict`、`encodeLengthString`、`decodeLengthString`（零堆分配、1/3/4/9 字节小端编解码与零拷贝字符串切片解码）
+
+```typescript
+import { encodeLengthInt, decodeLengthInt, encodeLengthString, decodeLengthString } from "cap:sql";
+
+const enc = encodeLengthInt(65536); // 4-byte 0xfd little-endian encoding
+const decoded = decodeLengthInt(enc.slice()) ?? unreachable; // value=65536, bytes_read=4
+
+let wire: [64]u8 = [0; 64];
+const n = encodeLengthString("users_table", wire[0..])?;
+const str = decodeLengthString(wire[0..n])?; // data="users_table", bytes_read=12
+```
 
 ---
 

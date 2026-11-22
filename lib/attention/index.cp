@@ -195,3 +195,12 @@ export {
     buildMelFilterbankF32,
     applyMelFilterbankF32,
 } from "./conv1d.cp";
+
+export {
+    ImageNormParams,
+    normalizeRgbU8ToF32,
+    patchifyHwcF32,
+    patchEmbedLinearF32,
+    build2dSinCosPosEmbF32,
+    applyRope2dInPlaceF32,
+} from "./vision_patch.cp";

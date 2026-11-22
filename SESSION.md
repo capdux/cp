@@ -1251,3 +1251,33 @@
 ### 2026-11-22（分类合并交付：lib/a2a/event_stream.cp & lib/shell/trampoline.cp + 46 项 Bun 上游清零 | 2026-11-22 13:43:36）
 - **执行与结单汇报**：
   > 1. 交付 lib/a2a/event_stream.cp (A2A 事件流环形回放与 Last-Event-ID 断线续传, 5/5 PASS)；2. 核查清零 46 项 Bun 上游变动 (upstream_newer=0) 并从 Bun src/shell/Yield.cp 吸收 lib/shell/trampoline.cp (6/6 PASS)；均已同步 cp_lib_ref.md 并提交。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:42:57）[step:14551]
+- **用户完整原始指令**：
+  > 采纳 方案 A（推荐）：切片方法糖 buf.split(mid)
+- **完整回复与执行汇报**：
+  > 收到！已立即启动专职 `CPC Compiler Engineer (Slice .split Sugar)` 落地 **方案 A：`buf.split(mid)` 切片方法糖**：
+  > - 支持可变切片（返回两个互斥可变子切片）与只读切片 `[]const T`（返回两个只读子切片）：`let [left, right] = buf.split(mid);`；
+  > - 严格按接收者与整数实参类型路由，**确保原有 `string.split(delim)` 100% 零回归**，并保留 `@splitAtMut` 向后兼容；
+  > - 完成后将直接 `release` 发布并通过端到端测试验证。
+  >
+  > ---
+  >
+  > ### 同步验收提交（Commit `2e404b41`）
+  > 1. **第 2 批 `cap:http` 重叠目录安全收敛**（**13/13 `cpc check` 0 errors、7/7 `cap test` PASS**，治理专员已完成 2 批任务并回收）：
+  >    - 零冲突归并入 `cap:http`（旧目录保留薄兼容 re-export）：[lib/http/h2/encode.cp](file:///data/dev/cp/lib/http/h2/encode.cp)、[lib/http/h2/stream.cp](file:///data/dev/cp/lib/http/h2/stream.cp)、[lib/http/h3/qpack.cp](file:///data/dev/cp/lib/http/h3/qpack.cp)、[lib/http/byterange.cp](file:///data/dev/cp/lib/http/byterange.cp)；
+  >    - 存在功能冲突严格按规则归档参考：[lib/http/sse_parser_.cp](file:///data/dev/cp/lib/http/sse_parser_.cp)（加注 `// Reference Only: Functional overlap with lib/http/sse.cp`，0 覆盖、0 删除）；
+  > 2. **3 项新子模块 + 46 项 Bun 上游变动清零（`upstream_newer=0`）**：
+  >    - [lib/attention/tiled_gemm.cp](file:///data/dev/cp/lib/attention/tiled_gemm.cp)（综合实战 `@dot`/`@fma`/`@splitAtMut` 的 16×16 分块 GEMM，5/5 PASS）；
+  >    - [lib/a2a/event_stream.cp](file:///data/dev/cp/lib/a2a/event_stream.cp)（A2A 事件流环形回放与 `Last-Event-ID` 断线续传，5/5 PASS）；
+  >    - [lib/shell/trampoline.cp](file:///data/dev/cp/lib/shell/trampoline.cp)（吸收自 Bun `src/shell/Yield.cp`，6/6 PASS）。
+  >
+  > > 当前 4 路子智能体全速并行中（1 路 `buf.split(mid)` 编译器工程师 + 3 路标准库吸收子智能体）。
+
+### 2026-11-22（分类合并交付：lib/attention/conv1d.cp | 2026-11-22 13:47:42）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/attention/conv1d.cp（AI 语音/SSM 1D 因果/深度可分离卷积与 Mel 滤波器组核，使用 @dot/@fma SIMD，5/5 PASS），归入 cap:attention 并同步 cp_lib_ref.md；续派第 10 项 lib/attention/vision_patch.cp。
+
+### 2026-11-22（分类合并交付：lib/agentmem/activation.cp & lib/sql/mysql_lenenc.cp | 2026-11-22 13:48:43）
+- **执行与结单汇报**：
+  > 1. 交付 lib/agentmem/activation.cp (GraphRAG 扩散激活与个性化 PageRank 多跳记忆召回, 5/5 PASS)；2. 从 Bun src/sql/mysql/protocol/EncodeInt.cp 吸收归入 lib/sql/mysql_lenenc.cp (MySQL Length-Encoded Int/String 零拷贝编解码, 6/6 PASS)；均已同步 cp_lib_ref.md 并提交。

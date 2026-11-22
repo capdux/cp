@@ -35,3 +35,11 @@ export {
     WorkingMemStats,
     WorkingMemory,
 } from "./working_mem.cp";
+
+export {
+    MemGraphEdge,
+    ActivatedNode,
+    SpreadingConfig,
+    spreadActivation,
+    personalizedPageRank,
+} from "./activation.cp";

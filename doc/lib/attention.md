@@ -775,3 +775,33 @@ pub fn demoTiledGemm() {
     * = batchedGemmTransposedBF32(a[0..], b_t[0..], 1, 2, 2, 4, c_s);
 }
 ```
+
+### 1D 因果卷积与 Whisper 梅尔滤波器组投影示例 (`conv1d.cp`)
+
+```cp
+import {
+    conv1dCausalF32,
+    buildMelFilterbankF32,
+    applyMelFilterbankF32,
+} from "cap:attention";
+
+pub fn demoAudioMelAndCausalConv() {
+    // 1. 构建 4-Mel, n_fft=16 (n_bins=9) 滤波器组并投影功率谱
+    let fb: [36]f32 = undefined;
+    let fb_s: []f32 = fb[0..];
+    if (buildMelFilterbankF32(4, 16, 16000.0, 0.0, 8000.0, fb_s)) {
+        const power: [9]f32 = [0.0, 1.0, 2.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.1];
+        let log_mel: [4]f32 = undefined;
+        let log_mel_s: []f32 = log_mel[0..];
+        * = applyMelFilterbankF32(power[0..], fb[0..], 4, 9, 0.000001, log_mel_s);
+    }
+
+    // 2. 1D 因果卷积（kernel_size=3, dilation=1, 无偏置）
+    const x: [5]f32 = [1.0, 2.0, 3.0, 4.0, 5.0];
+    const w: [3]f32 = [0.2, 0.3, 0.5];
+    const no_bias: []const f32 = x[0..0];
+    let y: [5]f32 = undefined;
+    let y_s: []f32 = y[0..];
+    * = conv1dCausalF32(x[0..], w[0..], no_bias, 1, 1, 5, 3, 1, y_s);
+}
+```
