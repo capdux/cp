@@ -723,6 +723,48 @@ if (n := bl.formatAllRules(buf[0..])) {
 2. **发送批聚合（Corking）与背压控制（Drain）**：避免逐字节或高频碎片化 `write()`（如拆分成多次 1 字节写），优先使用 `TcpStream` 的 16KB `StreamBuffer`（`cork()` / `uncork()` / `flush()`）合并小包；当底层返回短写（`wrote < payload.len`）时，将剩余切片保留在缓冲中，等待 `drain` 可写事件再续传。
 3. **连接准入防护**：在 `TcpServer` 接受新连接后，优先用 `BlockList.checkAuto` / `CidrAllowlist` 对对端地址执行零分配 O(N) 准入校验，在应用层解析前即可拦截受限来源。
 
+---
+
+## 零分配 L4 双向五元组连接跟踪表与半连接配额防护引擎 (`connTrack.cp`)
+
+面向 L4 网关、状态防火墙与资源耗尽防护的 100% 纯 CP 零动态堆分配 Conntrack 连接跟踪引擎：
+
+- **常量与枚举**：
+  - `CONNTRACK_MAX_FLOWS = 128`、`CONNTRACK_PROTO_TCP = 6`、`CONNTRACK_PROTO_UDP = 17`、`CT_TCP_FIN`、`CT_TCP_SYN`、`CT_TCP_RST`、`CT_TCP_ACK`
+  - `ConnTrackState`（`syn_sent | syn_recv | established | fin_wait | time_wait | udp_unreplied | udp_assured | closed`）
+  - `ConnTrackDir`（`original | reply`）、`ConnTrackAction`（`created | updated | rejected_half_open_quota | rejected_table_full | rejected_invalid`）
+- **数据模型**：
+  - `ConnTrackTuple`：IPv4/IPv6 归一化 16 字节地址（IPv4 自动映射 `::ffff:a.b.c.d`），提供 `fromIpv4`、`fromIpv6`、`reverse()`、`equals(other)` 与双向对称哈希 `symmetricHash()`（正反向回包哈希恒等）。
+  - `ConnTrackConfig`（`max_half_open` 与各状态独立空闲超时；`defaults()` / `isValid()`）
+  - `ConnTrackEntry`（双向 `orig_packets`/`orig_bytes`、`reply_packets`/`reply_bytes`、时间戳与状态）
+  - `ConnTrackOutcome` / `ConnTrackStats`
+- **核心引擎 `ConnTrackTable`**：
+  - `init(cfg)` / `reset(*_)` / `lookup(tuple)` / `removeFlow(*_, flow_id)` / `stats()`
+  - `observePacket(*_, tuple, tcp_flags, packet_bytes, now_ms)`: 双向五元组精确命中并区分 `original`/`reply`，驱动完整 TCP 三次握手/挥手/RST 与 UDP 应答晋升状态机；内置半连接（`syn_sent`/`syn_recv`）配额上限防护；满 128 槽时优先回收最旧的 `closed` / `time_wait` 槽位。
+  - `reapExpired(*_, now_ms)`: 按各流当前状态独立空闲超时清扫过期流并同步维护活跃/半连接计数。
+
+```cp
+import {
+    CONNTRACK_PROTO_TCP,
+    CT_TCP_SYN,
+    CT_TCP_ACK,
+    ConnTrackConfig,
+    ConnTrackTuple,
+    ConnTrackTable,
+} from "cap:net";
+
+pub fn demoConnTrack() {
+    let ct = ConnTrackTable.init(ConnTrackConfig.defaults()) ?? return;
+    const c2s = ConnTrackTuple.fromIpv4(CONNTRACK_PROTO_TCP, [10, 0, 0, 1], 51000, [10, 0, 0, 2], 443);
+    const s2c = c2s.reverse();
+
+    * = ct.observePacket(c2s, CT_TCP_SYN, 60, 1000);                // created: syn_sent (original)
+    * = ct.observePacket(s2c, CT_TCP_SYN | CT_TCP_ACK, 60, 1010);   // updated: syn_recv (reply)
+    * = ct.observePacket(c2s, CT_TCP_ACK, 52, 1020);                // updated: established (original)
+    * = ct.stats();
+}
+```
+
 ## 收敛子模块深度文档
 
 - [amqp.md](net/amqp.md)

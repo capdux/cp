@@ -1880,3 +1880,23 @@ export {
     BlockListRule,
     BlockList,
 } from "./blockList.cp";
+
+// --- connTrack (Zero-Alloc L4 Bidirectional 5-Tuple Conntrack Table & Half-Open Quota Guard) ---
+export {
+    CONNTRACK_MAX_FLOWS,
+    CONNTRACK_PROTO_TCP,
+    CONNTRACK_PROTO_UDP,
+    CT_TCP_FIN,
+    CT_TCP_SYN,
+    CT_TCP_RST,
+    CT_TCP_ACK,
+    ConnTrackState,
+    ConnTrackDir,
+    ConnTrackAction,
+    ConnTrackTuple,
+    ConnTrackConfig,
+    ConnTrackEntry,
+    ConnTrackOutcome,
+    ConnTrackStats,
+    ConnTrackTable,
+} from "./connTrack.cp";
