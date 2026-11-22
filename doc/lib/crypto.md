@@ -206,3 +206,33 @@ pub fn demoModernCrypto(): !void {
 3. **非对称密钥协商与 JWT 防降级**：
    - `X25519KeyPair.computeShared` / `sharedSecret` 自动检测并拒绝 RFC 7748 低阶点导致的全零共享密钥（返回 `null`）；
    - `Jwt.verify*` 强制执行恒定时间 MAC 比对（`constantTimeEql`）并严格校验 Header 中的 `alg` 字段，彻底阻断 `alg: "none"` 与非对称转对称（RS/EdDSA -> HS）算法混淆攻击。
+
+---
+
+## 六、 多版本密钥环轮换与信封 MAC 校验器 (`keyring.cp`)
+
+`lib/crypto/keyring.cp` 提供 100% 纯 CP、零堆分配的多版本密钥环（`KeyRing`），内置 RFC 6234 SHA-256 / RFC 2104 HMAC-SHA256 与恒定时间比较，专为微服务凭证与 AI Agent 令牌零停机轮换设计：
+
+- **平滑零停机轮换**：`addKey(..., make_active = true, ...)` 自动将旧 `Active` 密钥降级为 `VerifyOnly`，宽限期内同时支持新旧版本验证；
+- **安全治理防线**：自动拦截 `Revoked` 与已过期（`now_ms >= expires_ms`）密钥，撤销与清空时主动清零内存中的密钥材料，MAC 计算域绑定 `kid` 防止跨版本混淆。
+
+```cp
+import { KeyRingEntry, KeyRing } from "cap:crypto";
+
+pub fn demoKeyRingRotation() {
+    let slots: [4]KeyRingEntry = [KeyRingEntry{}; 4];
+    let ring = KeyRing.init(slots[0..]);
+
+    const k1: [32]u8 = [0x11; 32];
+    const k2: [32]u8 = [0x22; 32];
+    * = ring.addKey(1, k1, true, 1000, 10000);
+
+    let tag1: [32]u8 = [0; 32];
+    const kid1 = ring.signEnvelope("agent-token-v1", 2000, tag1[0..]) ?? return;
+
+    // 零停机轮换至 v2（v1 自动降级为 VerifyOnly，旧令牌在宽限期内仍可通过验证）
+    * = ring.addKey(2, k2, true, 3000, 20000);
+    const old_still_valid = ring.verifyEnvelope(kid1, "agent-token-v1", tag1[0..], 4000);
+    * = old_still_valid; // true
+}
+```

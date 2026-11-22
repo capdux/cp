@@ -403,3 +403,14 @@ export {
     minhashBandHash,
     minhashCardinality,
 } from "./minhash.cp";
+
+// --- Multi-Version KeyRing Rotation & Envelope MAC Verifier ---
+
+export {
+    KEYRING_TAG_LEN,
+    KEYRING_SECRET_LEN,
+    KeyVersionState,
+    KeyRingEntry,
+    KeyRingStats,
+    KeyRing,
+} from "./keyring.cp";
