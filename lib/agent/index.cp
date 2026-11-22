@@ -298,3 +298,13 @@ export {
     TurnOutcome,
     AgentTurnRunner,
 } from "./turn_runner.cp";
+
+export {
+    EvalGateThresholds,
+    EvalCaseResult,
+    EvalGateVerdict,
+    EvalGateReport,
+    evaluateAgentGate,
+    compareWithBaselineGate,
+    renderEvalGateSummary,
+} from "./eval_gate.cp";

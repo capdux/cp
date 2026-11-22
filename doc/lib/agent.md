@@ -1555,3 +1555,59 @@ fn runAgentQuickStart(): TurnStopReason {
     return outcome.stop_reason;
 }
 ```
+
+---
+
+## 子模块：自动化评测门禁与基线回归对比器（`eval_gate.cp`）
+
+### 核心特性
+
+- **单遍聚合 + 精确 P50/P95 延迟（`evaluateAgentGate`）**：在调用方提供的栈排序工作缓冲 `[]u64` 上执行原地堆排序计算精确 Nearest-Rank P50/P95/Max 延迟，同步汇总通过率、平均/总微美元成本与工具错误率，100% 零堆分配。
+- **多维 SLA 门禁判定（`EvalGateThresholds` / `EvalGateVerdict`）**：按确定性优先级拦截 `PassRateBelowMin`、`LatencySlaViolated`、`CostSlaViolated`、`ToolErrorRateExceeded`。
+- **基线回归拦截（`compareWithBaselineGate`）**：对比候选集与基线集通过率，超过 `max_pass_rate_drop` 自动输出 `EvalGateVerdict.BaselineRegression` 并记录 `baseline_pass_rate` 与 `pass_rate_delta`。
+- **零堆 CI Markdown 汇总渲染（`renderEvalGateSummary`）**：将 `EvalGateReport` 渲染为可直接嵌入 PR 评论 / CI 日志的简洁 Markdown 报告，内置严格缓冲边界防护（不足时返回 `null`，绝不越界）。
+
+### 导出清单
+
+- **配置与数据结构**：`EvalGateThresholds`、`EvalCaseResult`、`EvalGateVerdict`（`Passed | PassRateBelowMin | LatencySlaViolated | CostSlaViolated | ToolErrorRateExceeded | BaselineRegression`）、`EvalGateReport`（`isPassed`）
+- **门禁函数**：`evaluateAgentGate`、`compareWithBaselineGate`、`renderEvalGateSummary`
+
+### QuickStart 示例
+
+```cp
+import {
+    EvalGateThresholds,
+    EvalCaseResult,
+    evaluateAgentGate,
+    compareWithBaselineGate,
+    renderEvalGateSummary,
+} from "cap:agent";
+
+fn runCiEvalGate() {
+    const baseline: [2]EvalCaseResult = [
+        EvalCaseResult{ case_id: 1, passed: true, latency_ms: 120, cost_micro_usd: 800, tool_calls: 2, tool_errors: 0 },
+        EvalCaseResult{ case_id: 2, passed: true, latency_ms: 180, cost_micro_usd: 900, tool_calls: 3, tool_errors: 0 },
+    ];
+    const candidate: [2]EvalCaseResult = [
+        EvalCaseResult{ case_id: 1, passed: true, latency_ms: 110, cost_micro_usd: 820, tool_calls: 2, tool_errors: 0 },
+        EvalCaseResult{ case_id: 2, passed: true, latency_ms: 190, cost_micro_usd: 880, tool_calls: 2, tool_errors: 0 },
+    ];
+    let scratch: [4]u64 = [0; 4];
+    let scratch_s: []u64 = scratch[0..];
+    const thresholds = EvalGateThresholds{
+        min_pass_rate: 0.90,
+        max_p95_latency_ms: 300,
+        max_avg_cost_micro_usd: 1500,
+        max_tool_error_rate: 0.10,
+        max_pass_rate_drop: 0.02,
+    };
+
+    if (report := compareWithBaselineGate(candidate[0..], baseline[0..], thresholds, scratch_s)) {
+        let md_buf: [512]u8 = [0; 512];
+        let md_s: []u8 = md_buf[0..];
+        if (written := renderEvalGateSummary(report, md_s)) {
+            * = md_s[0..written];
+        }
+    }
+}
+```
