@@ -166,3 +166,9 @@ export {
     parseChangedPathLines,
     freeChangedPathList,
 } from "./changed_filter";
+
+export {
+    CssOrderError,
+    CssOrderLoaderKind,
+    CssOrderGraph,
+} from "./css_order";

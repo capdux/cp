@@ -241,6 +241,28 @@ pub fn demoChangedFilter(allocator: std.mem.Allocator): ! {
 }
 ```
 
+### 3.13 JS 后序 CSS 级联导入收集器（`lib/bundler/css_order.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/findImportedCSSFilesInJSOrder.cp`）
+- **错误集与枚举**：`CssOrderError`（`OutOfMemory` / `SourceIndexOutOfRange`）、`CssOrderLoaderKind`（`js` / `css` / `other`，含 `isCss()`）
+- **核心引擎**：`CssOrderGraph`（`init` / `addFile` / `addImport` / `fileCount` / `findImportedCssInJsOrder` / `findImportedCssForEntries` / `findAllInJsPostorder` + RAII `~init()`），采用显式迭代栈深度优先后序（DFS Postorder）遍历，环路安全且无深层递归栈溢出风险，保证共享基础样式始终先于上层组件样式输出。
+
+```typescript
+import { CssOrderGraph, CssOrderLoaderKind } from "cap:bundler";
+
+pub fn demoCssOrder(allocator: std.mem.Allocator): ! {
+    let g = CssOrderGraph.init(allocator);
+    defer g.deinit();
+
+    const app = g.addFile(CssOrderLoaderKind.js)?;
+    const btn_css = g.addFile(CssOrderLoaderKind.css)?;
+    const base_css = g.addFile(CssOrderLoaderKind.css)?;
+    g.addImport(app, btn_css)?;
+    g.addImport(btn_css, base_css)?;
+
+    const css_list = g.findImportedCssInJsOrder(allocator, app)?;
+    defer allocator.free(css_list); // [base_css, btn_css]
+}
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -257,3 +279,6 @@ pub fn demoChangedFilter(allocator: std.mem.Allocator): ! {
 4. **HMR 边界冒泡与失效传播实践（吸收自 `/data/dev/bun/docs/bundler/hot-reloading.mdx`）**：
    - 热更新从变更叶节点沿反向导入图（`ReverseImportGraph`）向上冒泡，直至命中调用 `import.meta.hot.accept()` 的模块边界（仅重评估边界模块并修补其引用方，保留未变更兄弟模块状态）；若冒泡至入口仍无接受边界，则触发整页重载；
    - 生产构建应对 `import.meta.hot` 分支执行死代码消除（DCE），因此业务代码中必须直接书写完整 `import.meta.hot.<API>` 调用，禁止将其赋值给中间变量或作为高阶回调传递。
+5. **CSS 打包级联顺序与语法降级基线（吸收自 `/data/dev/bun/docs/bundler/css.mdx`）**：
+   - 当 JS/TS 与 CSS 混排打包时，必须按 JS 深度优先后序（`CssOrderGraph.findImportedCssInJsOrder`）合并样式表，确保菱形依赖中的基础样式先于上层样式输出，避免级联覆盖错乱；
+   - 现代 CSS 语法（CSS Nesting、嵌套 `@media`、`color-mix()` 等）默认面向 ES2020 / Chrome 87+ / Safari 14+ / Firefox 78+ / Edge 88+ 自动展平降级并补全厂商前缀。
