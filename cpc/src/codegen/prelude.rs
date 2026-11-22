@@ -35,6 +35,7 @@ pub struct ModuleFeatures {
     pub needs_cast_int: bool,
     pub needs_sync: bool,
     pub needs_json: bool,
+    pub needs_simd_math: bool,
     pub has_imported_json: bool,
     pub has_imported_ptr: bool,
     pub is_lib_mode: bool,
@@ -631,6 +632,8 @@ impl ModuleFeatures {
             Expr::Builtin(b) => {
                 if b.name == "@hash" {
                     self.needs_hash = true;
+                } else if b.name == "@dot" || b.name == "@l2sq" {
+                    self.needs_simd_math = true;
                 } else if b.name == "@not" && !self.is_lib_mode {
                     self.needs_not = true;
                 } else if matches!(

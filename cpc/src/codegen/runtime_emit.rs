@@ -1227,6 +1227,12 @@ impl Codegen {
             self.writeln("pub fn cp_string_from(__cp_val: anytype) []const u8 { const __cp_T = @TypeOf(__cp_val); if (comptime __cp_T == []const u8) { return __cp_val; } else if (comptime (__cp_T == [*:0]const u8 or __cp_T == [*:0]u8)) { return std.mem.span(__cp_val); } else if (comptime (@typeInfo(__cp_T) == .pointer and @typeInfo(__cp_T).pointer.size == .slice and @typeInfo(__cp_T).pointer.child == u8)) { return __cp_val; } else if (comptime (@typeInfo(__cp_T) == .pointer and @typeInfo(__cp_T).pointer.size == .one and @typeInfo(@typeInfo(__cp_T).pointer.child) == .array and @typeInfo(@typeInfo(__cp_T).pointer.child).array.child == u8)) { return __cp_val[0..]; } else if (comptime (@typeInfo(__cp_T) == .@\"enum\")) { return @tagName(__cp_val); } else if (comptime __cp_T == bool) { return if (__cp_val) \"true\" else \"false\"; } else if (comptime (@typeInfo(__cp_T) == .int or __cp_T == comptime_int)) { return std.fmt.allocPrint(std.heap.page_allocator, \"{}\", .{__cp_val}) catch \"0\"; } else if (comptime (@typeInfo(__cp_T) == .float or __cp_T == comptime_float)) { return std.fmt.allocPrint(std.heap.page_allocator, \"{d}\", .{__cp_val}) catch \"0.0\"; } else if (comptime (@typeInfo(__cp_T) == .@\"struct\" and @hasDecl(__cp_T, \"toString\"))) { return __cp_val.toString(); } else if (comptime (@typeInfo(__cp_T) == .pointer and @typeInfo(@typeInfo(__cp_T).pointer.child) == .@\"struct\" and @hasDecl(@typeInfo(__cp_T).pointer.child, \"toString\"))) { return __cp_val.toString(); } else { return @typeName(__cp_T); } }");
             self.writeln("");
         }
+        if features.needs_simd_math {
+            self.writeln("inline fn __cp_simd_elem_type(comptime __T: type) type { const __ti = @typeInfo(__T); if (__ti == .pointer) { if (__ti.pointer.size == .slice) return __ti.pointer.child; if (__ti.pointer.size == .one) { const __sub = @typeInfo(__ti.pointer.child); if (__sub == .array) return __sub.array.child; if (__sub == .pointer and __sub.pointer.size == .slice) return __sub.pointer.child; } } if (__ti == .array) return __ti.array.child; @compileError(\"expected floating-point slice or array for SIMD builtin\"); }");
+            self.writeln("inline fn __cp_simd_dot(a_in: anytype, b_in: anytype) __cp_simd_elem_type(@TypeOf(a_in)) { const T = __cp_simd_elem_type(@TypeOf(a_in)); const a: []const T = switch (@typeInfo(@TypeOf(a_in))) { .array => &a_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) a_in.* else a_in, else => a_in }; const b: []const T = switch (@typeInfo(@TypeOf(b_in))) { .array => &b_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) b_in.* else b_in, else => b_in }; const n = @min(a.len, b.len); const V: usize = 8; var acc: @Vector(V, T) = @splat(0); var i: usize = 0; while (i + V <= n) : (i += V) { const va: @Vector(V, T) = a[i..][0..V].*; const vb: @Vector(V, T) = b[i..][0..V].*; acc = @mulAdd(@Vector(V, T), va, vb, acc); } var sum: T = @reduce(.Add, acc); while (i < n) : (i += 1) { sum = @mulAdd(T, a[i], b[i], sum); } return sum; }");
+            self.writeln("inline fn __cp_simd_l2sq(a_in: anytype, b_in: anytype) __cp_simd_elem_type(@TypeOf(a_in)) { const T = __cp_simd_elem_type(@TypeOf(a_in)); const a: []const T = switch (@typeInfo(@TypeOf(a_in))) { .array => &a_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) a_in.* else a_in, else => a_in }; const b: []const T = switch (@typeInfo(@TypeOf(b_in))) { .array => &b_in, .pointer => |p| if (p.size == .one and @typeInfo(p.child) == .pointer) b_in.* else b_in, else => b_in }; const n = @min(a.len, b.len); const V: usize = 8; var acc: @Vector(V, T) = @splat(0); var i: usize = 0; while (i + V <= n) : (i += V) { const va: @Vector(V, T) = a[i..][0..V].*; const vb: @Vector(V, T) = b[i..][0..V].*; const diff = va - vb; acc = @mulAdd(@Vector(V, T), diff, diff, acc); } var sum: T = @reduce(.Add, acc); while (i < n) : (i += 1) { const diff = a[i] - b[i]; sum = @mulAdd(T, diff, diff, sum); } return sum; }");
+            self.writeln("");
+        }
     }
 
     pub fn generate_shared_runtime() -> String {
@@ -1254,6 +1260,7 @@ impl Codegen {
             needs_cast_int: true,
             needs_sync: true,
             needs_json: true,
+            needs_simd_math: true,
             has_imported_json: false,
             has_imported_ptr: false,
             is_lib_mode: false,
@@ -1560,6 +1567,13 @@ impl Codegen {
                 "Message",
                 "cp_msg_to_val",
             ] {
+                if !has_top_decl(s) {
+                    emit_alias(self, s, false);
+                }
+            }
+        }
+        if features.needs_simd_math {
+            for s in &["__cp_simd_dot", "__cp_simd_l2sq"] {
                 if !has_top_decl(s) {
                     emit_alias(self, s, false);
                 }

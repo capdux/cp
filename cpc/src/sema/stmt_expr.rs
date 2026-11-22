@@ -957,6 +957,215 @@ impl Analyzer {
                 for arg in &call.args {
                     self.analyze_expr(arg)?;
                 }
+                match call.name.as_str() {
+                    "@fma" => {
+                        if call.args.len() != 3 {
+                            self.errors.push(SemaError::Diagnostic(
+                                Diagnostic::new(
+                                    "E0320",
+                                    format!(
+                                        "builtin '@fma' expects 3 arguments (a, b, c), found {}",
+                                        call.args.len()
+                                    ),
+                                )
+                                .with_span(call.span)
+                                .with_cause("hardware fused multiply-add computes (a * b) + c and requires exactly 3 operands.")
+                                .with_help("pass 3 floating-point scalars (f32/f64) or SIMD vectors (@Vector(N, f32/f64)) of the same type.")
+                                .with_suggestion("usage: @fma(a, b, c)"),
+                            ));
+                        } else {
+                            let is_num_lit = |e: &Expr| -> bool {
+                                match e {
+                                    Expr::Lit(Lit::Float(_) | Lit::Int(_)) => true,
+                                    Expr::Bin(b) => {
+                                        b.op == BinaryOp::Sub
+                                            && matches!(&*b.left, Expr::Lit(Lit::Int(0)))
+                                            && matches!(
+                                                &*b.right,
+                                                Expr::Lit(Lit::Float(_) | Lit::Int(_))
+                                            )
+                                    }
+                                    _ => false,
+                                }
+                            };
+                            let mut seen_float: Option<Type> = None;
+                            for (idx, arg) in call.args.iter().enumerate() {
+                                if is_num_lit(arg) {
+                                    continue;
+                                }
+                                let ty = self.infer_type(arg).unwrap_or(Type::Unknown);
+                                match ty {
+                                    Type::F32 | Type::F64 => {
+                                        if let Some(ref prev) = seen_float {
+                                            if *prev != ty {
+                                                self.errors.push(SemaError::Diagnostic(
+                                                    Diagnostic::new(
+                                                        "E0322",
+                                                        format!(
+                                                            "builtin '@fma' operand {} has type '{}', conflicting with '{}'",
+                                                            idx + 1,
+                                                            Self::type_repr(&ty),
+                                                            Self::type_repr(prev)
+                                                        ),
+                                                    )
+                                                    .with_span(call.span)
+                                                    .with_cause("all '@fma(a, b, c)' operands must share the exact same floating-point type.")
+                                                    .with_help("cast mismatched operands to the same precision (f32 or f64).")
+                                                    .with_suggestion(format!(
+                                                        "convert operand {} with '@floatCast(...)' or use matching '{}' values.",
+                                                        idx + 1,
+                                                        Self::type_repr(prev)
+                                                    )),
+                                                ));
+                                            }
+                                        } else {
+                                            seen_float = Some(ty);
+                                        }
+                                    }
+                                    Type::Unknown | Type::Any | Type::Ref(_) => {}
+                                    other => {
+                                        self.errors.push(SemaError::Diagnostic(
+                                            Diagnostic::new(
+                                                "E0321",
+                                                format!(
+                                                    "builtin '@fma' expects floating-point operand, found '{}'",
+                                                    Self::type_repr(&other)
+                                                ),
+                                            )
+                                            .with_span(call.span)
+                                            .with_cause("'@fma' maps to hardware FMA (@mulAdd) and only supports f32, f64, or @Vector(N, f32/f64).")
+                                            .with_help("convert integer operands to f32/f64 before calling '@fma'.")
+                                            .with_suggestion("use 'x as f64' (or 'x as f32') for numeric operands."),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    "@dot" | "@l2sq" => {
+                        let name = call.name.as_str();
+                        if call.args.len() != 2 {
+                            self.errors.push(SemaError::Diagnostic(
+                                Diagnostic::new(
+                                    "E0320",
+                                    format!(
+                                        "builtin '{}' expects 2 slice arguments (a, b), found {}",
+                                        name,
+                                        call.args.len()
+                                    ),
+                                )
+                                .with_span(call.span)
+                                .with_cause(format!(
+                                    "'{}' computes a SIMD reduction across two equal-element floating-point slices.",
+                                    name
+                                ))
+                                .with_help("pass two f32 or f64 slices (e.g., []const f32 or []const f64).")
+                                .with_suggestion(format!("usage: {}(a, b)", name)),
+                            ));
+                        } else {
+                            let extract_elem = |ty: &Type| -> Option<Type> {
+                                let mut cur = ty;
+                                loop {
+                                    match cur {
+                                        Type::BorrowType { inner, .. } => cur = inner,
+                                        Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                        Type::Array(elem) | Type::FixedArray(elem, _) => {
+                                            return Some((**elem).clone());
+                                        }
+                                        _ => return None,
+                                    }
+                                }
+                            };
+                            let mut seen_elem: Option<Type> = None;
+                            for (idx, arg) in call.args.iter().enumerate() {
+                                let ty = self.infer_type(arg).unwrap_or(Type::Unknown);
+                                if matches!(ty, Type::Unknown | Type::Any | Type::Ref(_)) {
+                                    continue;
+                                }
+                                if let Some(elem) = extract_elem(&ty) {
+                                    match elem {
+                                        Type::F32 | Type::F64 => {
+                                            if let Some(ref prev) = seen_elem {
+                                                if *prev != elem {
+                                                    self.errors.push(SemaError::Diagnostic(
+                                                        Diagnostic::new(
+                                                            "E0322",
+                                                            format!(
+                                                                "builtin '{}' slice argument {} has element type '{}', conflicting with '{}'",
+                                                                name,
+                                                                idx + 1,
+                                                                Self::type_repr(&elem),
+                                                                Self::type_repr(prev)
+                                                            ),
+                                                        )
+                                                        .with_span(call.span)
+                                                        .with_cause(format!(
+                                                            "both slices passed to '{}' must have the exact same floating-point element type.",
+                                                            name
+                                                        ))
+                                                        .with_help("ensure both inputs are []const f32 (or both []const f64).")
+                                                        .with_suggestion(format!(
+                                                            "align both arguments of '{}' to '[]const {}'.",
+                                                            name,
+                                                            Self::type_repr(prev)
+                                                        )),
+                                                    ));
+                                                }
+                                            } else {
+                                                seen_elem = Some(elem);
+                                            }
+                                        }
+                                        Type::Unknown | Type::Any | Type::Ref(_) => {}
+                                        other => {
+                                            self.errors.push(SemaError::Diagnostic(
+                                                Diagnostic::new(
+                                                    "E0321",
+                                                    format!(
+                                                        "builtin '{}' expects f32 or f64 slice elements, found '{}'",
+                                                        name,
+                                                        Self::type_repr(&other)
+                                                    ),
+                                                )
+                                                .with_span(call.span)
+                                                .with_cause(format!(
+                                                    "'{}' accelerates floating-point vector reductions via 8-lane SIMD.",
+                                                    name
+                                                ))
+                                                .with_help("use '[]const f32' or '[]const f64' slices.")
+                                                .with_suggestion(format!(
+                                                    "convert slice elements to f32 or f64 before calling '{}'.",
+                                                    name
+                                                )),
+                                            ));
+                                        }
+                                    }
+                                } else {
+                                    self.errors.push(SemaError::Diagnostic(
+                                        Diagnostic::new(
+                                            "E0321",
+                                            format!(
+                                                "builtin '{}' expects a floating-point slice or array, found '{}'",
+                                                name,
+                                                Self::type_repr(&ty)
+                                            ),
+                                        )
+                                        .with_span(call.span)
+                                        .with_cause(format!(
+                                            "'{}' operates on contiguous floating-point slices ([]f32 / []const f32 / []f64 / []const f64).",
+                                            name
+                                        ))
+                                        .with_help("pass a slice (e.g., vec[0..]) instead of a scalar or non-slice value.")
+                                        .with_suggestion(format!(
+                                            "pass two slices of f32 or f64: {}(a[0..], b[0..])",
+                                            name
+                                        )),
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
             }
             Expr::ReflectType { span, target_ty } => {
                 let type_name = match target_ty {

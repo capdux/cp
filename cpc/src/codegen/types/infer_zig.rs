@@ -279,6 +279,40 @@ impl Codegen {
                         }
                         return "std.json.Value".to_string();
                     }
+                    if call.name == "@fma" {
+                        for arg in &call.args {
+                            let z = self.infer_zig_type(None, Some(arg));
+                            if z == "f64" || z == "f32" || z.starts_with("@Vector(") {
+                                return z;
+                            }
+                        }
+                        if let Some(first) = call.args.first() {
+                            return self.infer_zig_type(None, Some(first));
+                        }
+                    }
+                    if call.name == "@dot" || call.name == "@l2sq" {
+                        if let Some(first) = call.args.first() {
+                            let z = self.infer_zig_type(None, Some(first));
+                            let trimmed = z
+                                .strip_prefix("*const ")
+                                .or_else(|| z.strip_prefix('*'))
+                                .unwrap_or(&z);
+                            if let Some(elem) = trimmed
+                                .strip_prefix("[]const ")
+                                .or_else(|| trimmed.strip_prefix("[]"))
+                            {
+                                return elem.to_string();
+                            }
+                            if trimmed.starts_with('[') {
+                                if let Some(idx) = trimmed.find(']') {
+                                    let elem = &trimmed[idx + 1..];
+                                    if !elem.is_empty() {
+                                        return elem.to_string();
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 Expr::Await(inner) => {
                     let inner_type = self.infer_zig_type(None, Some(inner));

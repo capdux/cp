@@ -496,6 +496,43 @@ impl Codegen {
                     let t = self.generate_expr(&call.args[0]);
                     format!("@sizeOf({})", t)
                 }
+                "@fma" if call.args.len() == 3 => {
+                    let a = self.generate_expr(&call.args[0]);
+                    let b = self.generate_expr(&call.args[1]);
+                    let c = self.generate_expr(&call.args[2]);
+                    let is_num_lit = |e: &Expr| -> bool {
+                        match e {
+                            Expr::Lit(Lit::Float(_) | Lit::Int(_)) => true,
+                            Expr::Bin(b) => {
+                                b.op == BinaryOp::Sub
+                                    && matches!(&*b.left, Expr::Lit(Lit::Int(0)))
+                                    && matches!(
+                                        &*b.right,
+                                        Expr::Lit(Lit::Float(_) | Lit::Int(_))
+                                    )
+                            }
+                            _ => false,
+                        }
+                    };
+                    if call.args.iter().all(is_num_lit) {
+                        format!("@mulAdd(f64, {}, {}, {})", a, b, c)
+                    } else {
+                        format!(
+                            "@mulAdd(@TypeOf({0}, {1}, {2}), {0}, {1}, {2})",
+                            a, b, c
+                        )
+                    }
+                }
+                "@dot" if call.args.len() == 2 => {
+                    let a = self.generate_expr(&call.args[0]);
+                    let b = self.generate_expr(&call.args[1]);
+                    format!("__cp_simd_dot({}, {})", a, b)
+                }
+                "@l2sq" if call.args.len() == 2 => {
+                    let a = self.generate_expr(&call.args[0]);
+                    let b = self.generate_expr(&call.args[1]);
+                    format!("__cp_simd_l2sq({}, {})", a, b)
+                }
                 "@alignOf" => {
                     let t = self.generate_expr(&call.args[0]);
                     format!("@alignOf({})", t)

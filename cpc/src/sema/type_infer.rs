@@ -663,6 +663,48 @@ impl Analyzer {
                         Ok(Type::Unknown)
                     }
                 }
+                "@fma" => {
+                    let is_num_lit = |e: &Expr| -> bool {
+                        match e {
+                            Expr::Lit(Lit::Float(_) | Lit::Int(_)) => true,
+                            Expr::Bin(b) => {
+                                b.op == BinaryOp::Sub
+                                    && matches!(&*b.left, Expr::Lit(Lit::Int(0)))
+                                    && matches!(&*b.right, Expr::Lit(Lit::Float(_) | Lit::Int(_)))
+                            }
+                            _ => false,
+                        }
+                    };
+                    let mut fallback = Type::Unknown;
+                    for arg in &call.args {
+                        let ty = self.infer_type(arg).unwrap_or(Type::Unknown);
+                        if !is_num_lit(arg) && matches!(ty, Type::F32 | Type::F64) {
+                            return Ok(ty);
+                        }
+                        if fallback == Type::Unknown && ty != Type::Unknown {
+                            fallback = ty;
+                        }
+                    }
+                    Ok(fallback)
+                }
+                "@dot" | "@l2sq" => {
+                    for arg in &call.args {
+                        if let Ok(ty) = self.infer_type(arg) {
+                            let mut cur = &ty;
+                            loop {
+                                match cur {
+                                    Type::BorrowType { inner, .. } => cur = inner,
+                                    Type::RawPtr { inner, depth: 1 } => cur = inner,
+                                    Type::Array(elem) | Type::FixedArray(elem, _) => {
+                                        return Ok((**elem).clone());
+                                    }
+                                    _ => break,
+                                }
+                            }
+                        }
+                    }
+                    Ok(Type::Unknown)
+                }
                 _ => Ok(Type::Unknown),
             },
             Expr::ReflectType { span, .. } | Expr::ReflectOf { span, .. } => Ok(Type::Ref(Ident {
