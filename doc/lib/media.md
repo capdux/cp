@@ -198,6 +198,75 @@ pub fn demoDspMasteringPipeline(pcm_48k: []const f32) {
 }
 ```
 
+### 无上限外部切片 RFC 3550 RTP/RTCP、G.711 PCMU/PCMA 编解码与自适应 Jitter Buffer / PLC 引擎 (`rtpJitter.cp`)
+
+面向实时音视频流媒体、VoIP/SIP 网关与语音 AI Agent 流式 ASR/TTS 传输的 100% 纯 CP 零动态堆分配引擎，所有包缓冲、PCM16 切片与 Jitter Buffer 槽位/负载池均由调用方外部切片传入：
+
+- **常量与错误集**：
+  - `RTP_VERSION = 2`、`RTP_MIN_HEADER_LEN = 12`、`RTCP_PT_SR = 200`、`RTCP_PT_RR = 201`、`RTCP_PT_BYE = 203`、`RTP_PT_PCMU = 0`、`RTP_PT_PCMA = 8`、`RTP_PT_OPUS = 111`
+  - `RtpMediaError`（`PacketTooShort | UnsupportedVersion | InvalidPadding | InvalidExtension | InvalidRtcpLength | BufferTooSmall | PayloadTooLarge | InvalidConfig`）
+- **RFC 3550 RTP 零拷贝编解码 & 16-bit 序号回绕展开**：
+  - `RtpHeader`、`parseRtpPacket(raw)`、`encodeRtpPacket(hdr, payload, *out_buf)`（完整支持 CSRC 列表、RFC 3550 扩展头与 Padding 剥离）
+  - `RtpSeqUnwrapper`（16-bit -> 64-bit 安全单调展开，无歧义处理 `65535 -> 0` 回绕与乱序旧包）
+- **RFC 3550 RTCP SR/RR & 实时抖动/丢包统计**：
+  - `RtcpSenderReport`（`encodeRtcpSr` / `parseRtcpSr`）、`RtcpReportBlock`（`encodeRtcpRr` / `parseRtcpRr`）
+  - `RtpRecvStats`（RFC 3550 §A.8 1/16 平滑 `interarrival_jitter`、`jitterMs()`、`buildReportBlock(*_, lsr, dlsr)`）
+- **ITU-T G.711 μ-law (PCMU) & A-law (PCMA) 实时语音编解码与转码**：
+  - `linear16ToPcmu` / `pcmuToLinear16` / `linear16ToPcma` / `pcmaToLinear16`
+  - `encodePcmuSlice` / `decodePcmuSlice` / `encodePcmaSlice` / `decodePcmaSlice` / `transcodePcmuToPcma` / `transcodePcmaToPcmu`
+- **NetEQ 风格自适应 Jitter Buffer & 平滑淡出 PLC**：
+  - `JitterPopKind`（`audio_packet | plc_concealment | empty_underrun`）、`JitterSlot`、`JitterPopResult`、`JitterBufferStats`
+  - `AdaptiveJitterBuffer`（`init(slot_stride, sample_rate_hz, min_delay_ms, max_delay_ms, *slots, *payload_pool)`、`pushPacket`、`popNextFrame`、`stats`）
+  - `applyPcm16Plc(prev_frame, consecutive_losses, *out_frame)`（多帧连续丢包指数淡出至静音防爆音）
+
+```cp
+import {
+    RTP_PT_PCMU,
+    RtpHeader,
+    encodeRtpPacket,
+    parseRtpPacket,
+    encodePcmuSlice,
+    decodePcmuSlice,
+    JitterSlot,
+    JitterPopKind,
+    AdaptiveJitterBuffer,
+    applyPcm16Plc,
+} from "cap:media";
+
+pub fn demoRealtimeVoicePipeline(pcm_frame: []const i16)! {
+    // 1. PCM16 -> G.711 PCMU 编码并封装 RTP 报文
+    let ulaw_buf: [160]u8 = [0; 160];
+    let ulaw_s: []u8 = ulaw_buf[0..];
+    const enc_n = encodePcmuSlice(pcm_frame, *ulaw_s)?;
+
+    let wire: [256]u8 = [0; 256];
+    let wire_s: []u8 = wire[0..];
+    const hdr = RtpHeader{ payload_type: RTP_PT_PCMU, seq: 100, timestamp: 16000, ssrc: 0x12345678 };
+    const wire_len = encodeRtpPacket(hdr, ulaw_buf[0..enc_n], *wire_s)?;
+
+    // 2. 接收端解包并送入自适应 Jitter Buffer
+    const parsed = parseRtpPacket(wire[0..wire_len])?;
+    let slots: [16]JitterSlot = [JitterSlot{}; 16];
+    let pool: [2560]u8 = [0; 2560];
+    let slots_s: []JitterSlot = slots[0..];
+    let pool_s: []u8 = pool[0..];
+    let jb = AdaptiveJitterBuffer.init(160, 8000, 20, 200, *slots_s, *pool_s)?;
+    * = jb.pushPacket(parsed, wire[parsed.payload_offset..(parsed.payload_offset + parsed.payload_len)], 100)?;
+
+    // 3. 播放时刻出队并解码回 PCM16（缺包自动触发 PLC）
+    let pop_buf: [160]u8 = [0; 160];
+    let pop_s: []u8 = pop_buf[0..];
+    const pop = jb.popNextFrame(125, *pop_s)?;
+    let pcm_out: [160]i16 = [0; 160];
+    let pcm_out_s: []i16 = pcm_out[0..];
+    if (pop.kind == JitterPopKind.audio_packet) {
+        * = decodePcmuSlice(pop_buf[0..pop.payload_len], *pcm_out_s)?;
+    } else if (pop.kind == JitterPopKind.plc_concealment) {
+        * = applyPcm16Plc(pcm_frame, 1, *pcm_out_s)?;
+    }
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
