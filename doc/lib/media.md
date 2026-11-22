@@ -619,6 +619,23 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
   - `ImaAdpcmState`、`imaAdpcmBlockSamples`、`encodeImaAdpcmBlock`、`decodeImaAdpcmBlock`（标准 89 级步长表，支持单声道/立体声 4-byte 交错块，4:1 压缩比）；
   - `wavPcm16ToMulaw`/`wavMulawToPcm16`、`wavPcm16ToAlaw`/`wavAlawToPcm16`、`encodeWavMulaw`/`decodeWavMulaw`、`encodeWavAlaw`/`decodeWavAlaw`。
 
+### 12. ISO/IEC 14496-3 AAC ADTS / ASC / MP4 `esds` / LOAS-LATM 与 RFC 3640 `AAC-hbr` RTP 引擎 (`aac.cp`)
+
+在 100% 向下兼容既有 `AdtsFrame` / `AdtsIter` / `parseAudioSpecificConfig` / `summarizeAdts` 的基础上，原地深化为全套零堆外部切片 AAC 流媒体核心：
+
+- **ADTS 帧编码、CRC16-IBM 校验与抗噪声重同步**：
+  - `computeAdtsCrc16` / `verifyAdtsFrameCrc`（多项式 `0x8005`）、`AdtsEncodeConfig`、`encodeAdtsFrame`（7B 无 CRC）、`encodeAdtsFrameWithCrc`（9B 含 CRC16）；
+  - `AdtsFrameIter`：跳过前置垃圾字节寻找 `0xFFF` 同步字并执行下一帧前瞻同步校验。
+- **`AudioSpecificConfig` (ASC) 与 MP4 `esds` FullBox**：
+  - `AacAudioSpecificConfig`、`encodeAudioSpecificConfig` / `decodeAudioSpecificConfig`（支持扩展 AOT>=32、24-bit 显式采样率、`GASpecificConfig`、HE-AAC SBR `0x2B7` 与 PS `0x548` 扩展）；
+  - `adtsToAudioSpecificConfig` / `audioSpecificConfigToAdtsHeader` 无损互转；
+  - `Mp4EsdsInfo`、`encodeMp4EsdsBox` / `decodeMp4EsdsBox`（Tag `0x03`/`0x04`/`0x05`/`0x06` + 7-bit 变长扩展长度，直通 `fmp4Mux.cp`）。
+- **LOAS / LATM (ISO/IEC 14496-3 §1.7.3)**：
+  - `LoasFrameView`、`encodeLoasFrame`、`LoasFrameIter`（11-bit `0x2B7` 同步字 + 13-bit 长度）；
+  - `LatmParsedFrame`、`parseLatmStreamMuxConfigBasic`（解析 `StreamMuxConfig`、内嵌 ASC 与 `0xFF` 累加 `PayloadLengthInfo`，提取纯 AAC Access Unit）。
+- **RFC 3640 `AAC-hbr` WebRTC/RTSP RTP 分包重组与 SDP `fmtp`**：
+  - `AacRtpAuSpan`、`AacRtpPacketSpan`、`packetizeAacRtpHbr`（多帧聚合 + 超 MTU 分片）、`depacketizeAacRtpHbr`（零拷贝多帧解包）与 `formatAacSdpFmtp`。
+
 ---
 
 ## 收敛子模块深度文档
