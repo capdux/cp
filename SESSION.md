@@ -2113,3 +2113,16 @@
   > - `task-bun-20261123-strict-purification-flag`
   >
   > 全部 6 项修复、一次 `sync_cpc.sh release` 发布、全量回归验证并 `resolve` 结单后立即同步 `SESSION.md`、提交入库并汇总汇报。
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-silent-drop-comptime-auto-dotted-err`）[ticket:task-bun-20261123-silent-drop-comptime-auto-dotted-err]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 01:57:51` | 状态：`resolved` | 结单：`2026-11-23T02:09:50`
+- **报错/需求摘要**：cpc 静默丢弃同时含 comptime 参数 + auto 参数 + 带点号错误联合返回类型(std.Io.Writer.Error!void)的顶层函数
+- **结单与处理汇报**：已定位并修复：根因为 codegen/actor.rs 无差别过滤了所有顶层 print/spawn/join 函数（原意仅跳过标准库内建 @print/@task_spawn/@task_join 运行时桩），导致任何用户/库模块定义的顶层 print/spawn/join（含 comptime+auto+std.Io.Writer.Error!void）被静默丢弃。现已收敛为仅过滤单条内建原语委托桩函数（is_builtin_runtime_stub_fn），并同步修复 codegen/mod.rs 与 runtime_emit.rs 中的同名别名/prelude 重定义冲突。已通过 bash scripts/sync_cpc.sh release 发布正式版，zig ast-check 与回归测试 cap/test/testHotfixSilentDropComptimeAutoErr.cp 100% PASS。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 01:58:54）[step:17665]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-silent-drop-comptime-auto-dotted-err)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取紧急编译器工单 **`task-bun-20261123-silent-drop-comptime-auto-dotted-err`**（复现文件 [repro_silent_drop_comptime_auto_err.cp](file:///data/dev/cp/temp/repro_silent_drop_comptime_auto_err.cp)），并已派发专职 **CPC Hotfix Engineer**（`0dbebbc3`）立即定位修复、`release` 发布并跑回归测试；验证通过后将第一时间 `resolve` 结单、同步 `SESSION.md` 并提交。
+  >
+  > 同时 Wave 15 Round 7 双轨并行任务（`192354e5` / `23060f99`）正常推进中。

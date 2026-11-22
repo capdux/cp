@@ -968,12 +968,34 @@ impl Codegen {
         let has_top_err_decl = has_top_decl("Err");
         let has_top_error_decl = has_top_decl("Error");
 
-        let has_imported_print = module.body.iter().any(|item| match item {
-            ModuleItem::Import(imp) => {
-                imp.default_specifier
-                    .as_ref()
-                    .map_or(false, |id| id.sym == "print")
-                    || imp.specifiers.iter().any(|id| id.sym == "print")
+        let has_local_print_decl = module.body.iter().any(|item| match item {
+            ModuleItem::Stmt(Stmt::Var(v)) => match &v.pat {
+                Pattern::Ident(id) => id.sym == "print" || id.sym == "@\"print\"",
+                _ => false,
+            },
+            ModuleItem::Decl(Decl::TypeAlias(ta)) => {
+                ta.ident.sym == "print" || ta.ident.sym == "@\"print\""
+            }
+            ModuleItem::Decl(Decl::Class(c)) => {
+                c.ident.sym == "print" || c.ident.sym == "@\"print\""
+            }
+            ModuleItem::Decl(Decl::Enum(e)) => {
+                e.ident.sym == "print" || e.ident.sym == "@\"print\""
+            }
+            ModuleItem::Decl(Decl::Trait(t)) => {
+                t.ident.sym == "print" || t.ident.sym == "@\"print\""
+            }
+            ModuleItem::Decl(Decl::ErrorSet(e)) => {
+                e.ident.sym == "print" || e.ident.sym == "@\"print\""
+            }
+            ModuleItem::Decl(Decl::Func(f)) => {
+                (f.ident.sym == "print" || f.ident.sym == "@\"print\"")
+                    && !Self::is_builtin_runtime_stub_fn(f)
+            }
+            ModuleItem::Stmt(Stmt::Expr(Expr::Zig(z))) => {
+                z.code.contains("const print =")
+                    || z.code.contains("const print:")
+                    || z.code.contains("fn print(")
             }
             _ => false,
         });
@@ -1013,12 +1035,15 @@ impl Codegen {
         }
         self.writeln("");
 
-        let declares_fn = |name: &str| -> bool {
+        let declares_builtin_stub = |name: &str| -> bool {
             module.body.iter().any(|item| match item {
-                ModuleItem::Decl(Decl::Func(f)) => f.ident.sym == name,
+                ModuleItem::Decl(Decl::Func(f)) => {
+                    f.ident.sym == name && Self::is_builtin_runtime_stub_fn(f)
+                }
                 _ => false,
             })
         };
+        let has_user_print_decl = has_local_print_decl;
         let declares_class = |name: &str| -> bool {
             module.body.iter().any(|item| match item {
                 ModuleItem::Decl(Decl::Class(c)) => c.ident.sym == name,
@@ -1034,9 +1059,10 @@ impl Codegen {
                 &has_top_decl,
                 has_top_err_decl,
                 has_top_error_decl,
-                declares_fn("print"),
-                declares_fn("spawn"),
-                declares_fn("join"),
+                has_user_print_decl,
+                declares_builtin_stub("print"),
+                declares_builtin_stub("spawn"),
+                declares_builtin_stub("join"),
                 declares_class("PID"),
                 declares_class("Message"),
             );
@@ -1112,7 +1138,7 @@ impl Codegen {
         }
 
         if !self.modular_mode {
-            self.emit_runtime_preludes(&features);
+            self.emit_runtime_preludes(&features, has_user_print_decl);
             if let Some(ref hub_code) = self.cap_hub_prelude {
                 self.output.push_str(hub_code);
                 self.output.push('\n');

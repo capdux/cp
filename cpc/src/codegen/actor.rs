@@ -387,16 +387,52 @@ impl Codegen {
         false
     }
 
+    /// Returns true only for stdlib builtin runtime stubs (`cap:io` `print`,
+    /// `cap:actor` `join`, `cap:parallel` `spawn`/`join`) whose bodies merely
+    /// delegate to compiler intrinsics, so user/library top-level functions
+    /// sharing these names are never silently dropped.
+    pub(crate) fn is_builtin_runtime_stub_fn(func: &Function) -> bool {
+        let name = func.ident.sym.as_str();
+        if name != "print" && name != "spawn" && name != "join" {
+            return false;
+        }
+        if func.body.body.len() != 1 {
+            return false;
+        }
+        let inner_expr = match &func.body.body[0] {
+            Stmt::Expr(e) => e,
+            Stmt::Return(r) => match &r.arg {
+                Some(e) => e,
+                None => return false,
+            },
+            _ => return false,
+        };
+        let unwrapped = match inner_expr {
+            Expr::Await(a) => a.as_ref(),
+            other => other,
+        };
+        let builtin_name = match unwrapped {
+            Expr::Builtin(b) => b.name.as_str(),
+            Expr::Call(c) => match c.callee.as_ref() {
+                Expr::Ident(id) => id.sym.as_str(),
+                _ => return false,
+            },
+            _ => return false,
+        };
+        match name {
+            "print" => builtin_name == "@print",
+            "spawn" => builtin_name == "@task_spawn",
+            "join" => builtin_name == "@task_join" || builtin_name == "@yield_to_beam",
+            _ => false,
+        }
+    }
+
     pub(crate) fn generate_function_logic(
         &mut self,
         raw_func: &Function,
         class_name: Option<&String>,
     ) {
-        if class_name.is_none()
-            && (raw_func.ident.sym == "print"
-                || raw_func.ident.sym == "spawn"
-                || raw_func.ident.sym == "join")
-        {
+        if class_name.is_none() && Self::is_builtin_runtime_stub_fn(raw_func) {
             return;
         }
         let func = raw_func;
