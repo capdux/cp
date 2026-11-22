@@ -332,3 +332,15 @@ export {
     planContextCompaction,
     ContextWindowTracker,
 } from "./contextWindow.cp";
+
+export {
+    STRUCT_RETRY_MAX_ATTEMPTS,
+    STRUCT_RETRY_MSG_MAX_LEN,
+    RetryFailureKind,
+    RetryDirectiveAction,
+    StructuredRetryConfig,
+    RetryAttemptRecord,
+    RetryDecision,
+    StructuredRetryStats,
+    StructuredRetryController,
+} from "./structuredRetry.cp";

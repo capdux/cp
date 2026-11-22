@@ -442,6 +442,17 @@ export {
     StmtState,
 } from "./stmtState.cp";
 
+export {
+    DIRNAME_USAGE,
+    DirnameOutputKind,
+    DirnameState,
+    DirnameError,
+    DirnameResult,
+    evalPosixDirname,
+    DirnameBuiltin,
+    runDirnameBuiltin,
+} from "./dirnameBuiltin.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

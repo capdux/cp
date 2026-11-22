@@ -1136,3 +1136,40 @@ fn demoContextWindowCompactor() {
     * = validateToolPairIntegrity;
 }
 ```
+
+### 零堆分配 LLM 结构化输出自愈重试控制器与增量纠错反馈生成器 (`structuredRetry.cp`)
+
+面向 AI Agent 结构化输出（JSON/Schema/Tool Call）多轮自愈重试的 100% 纯 CP 零动态堆分配状态机与反馈生成器：
+
+- **常量与枚举**：
+  - `STRUCT_RETRY_MAX_ATTEMPTS = 8`、`STRUCT_RETRY_MSG_MAX_LEN = 160`
+  - `RetryFailureKind`（`none | json_syntax | missing_field | type_mismatch | constraint_violation | truncated_output | model_refusal`）
+  - `RetryDirectiveAction`（`accept | retry_with_feedback | retry_increase_max_tokens | retry_fallback_model | abort_identical_loop | abort_exhausted | abort_refusal`）
+- **配置与记录模型**：
+  - `StructuredRetryConfig`（`max_attempts`, `initial_temp_milli`, `temp_step_milli`, `max_temp_milli`, `initial_max_tokens`, `token_boost_factor_pct`, `max_tokens_cap`, `max_identical_errors`, `fallback_after_attempt`, `defaults()`）
+  - `RetryAttemptRecord`（`attempt_no`, `failure_kind`, `error_hash`, `temperature_milli`, `max_tokens`, `detail()`）
+  - `RetryDecision`（`action`, `next_attempt`, `next_temperature_milli`, `next_max_tokens`, `use_fallback_model`, `consecutive_same_error`）
+  - `StructuredRetryStats`（`total_attempts`, `succeeded`, `syntax_failures`, `schema_failures`, `truncations`, `identical_loop_aborts`）
+- **核心引擎 `StructuredRetryController`**：
+  - `init(cfg)` / `reset(*_)` / `recordSuccess(*_): RetryDecision` / `lastAttempt()` / `stats()`
+  - `recordFailure(*_, kind, detail): RetryDecision`：计算确定性 FNV-1a 64-bit 错误签名哈希；`model_refusal` 立即 `abort_refusal`；连续相同错误哈希达阈值熔断 `abort_identical_loop`；`truncated_output` 按倍率扩容 `max_tokens` 至上限；达 `fallback_after_attempt` 升级备选模型 `retry_fallback_model`；普通校验失败递增温度步长返回 `retry_with_feedback`。
+  - `formatFeedbackPrompt(last_detail, kind, *out_buf): usize?`：按失败类型生成精准增量修复指令。
+
+```cp
+import {
+    RetryFailureKind,
+    StructuredRetryConfig,
+    StructuredRetryController,
+} from "cap:prompt";
+
+fn demoStructuredRetry() {
+    let ctrl = StructuredRetryController.init(StructuredRetryConfig.defaults());
+    const d1 = ctrl.recordFailure(RetryFailureKind.missing_field, "citations");
+    * = d1.next_temperature_milli; // 350 (0.350)
+
+    let fb: [256]u8 = [0; 256];
+    let fb_s: []u8 = fb[0..];
+    * = ctrl.formatFeedbackPrompt("citations", RetryFailureKind.missing_field, *fb_s);
+    * = ctrl.recordSuccess();
+}
+```

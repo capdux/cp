@@ -667,3 +667,19 @@ const s1 = st.next()?; // DispatchChild(1, Pipeline)
 const s2 = st.next()?; // Finish(exit_code=2)
 * = s0; * = s1; * = s2;
 ```
+
+### POSIX `dirname` 内建命令状态机与零分配路径求值器（`dirnameBuiltin.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/builtin/dirname.cp`；
+- 导出：`DIRNAME_USAGE`、`DirnameOutputKind`（`Stdout` / `Stderr`）、`DirnameState`（`Idle` / `WaitingStdout` / `WaitingStderr` / `Err` / `Done`）、`DirnameError`（`BufferTooSmall` / `InvalidState`）、`DirnameResult`、`evalPosixDirname`、`DirnameBuiltin`（`init` / `isTerminal` / `start` / `startAsync` / `onIOWriterChunk`）、`runDirnameBuiltin`；
+- 严格遵循 POSIX `dirname` 规范处理空串、全斜杠根路径、尾斜杠与多参数批量换行输出；零参数时输出 `usage: dirname path ...\n` 至 `Stderr` 并返回退出码 `1`，支持异步写回调 `onIOWriterChunk` 收敛终态。
+
+```cp
+import { runDirnameBuiltin } from "cap:shell";
+
+const args: [2][]const u8 = ["/usr/local/bin/", "file.txt"];
+let out: [64]u8 = [0; 64];
+const res = runDirnameBuiltin(args[0..], out[0..])?;
+// out[0..res.bytes_written] == "/usr/local\n.\n", res.exit_code == 0
+* = res;
+```
