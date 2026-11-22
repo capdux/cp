@@ -18,7 +18,7 @@ import {
     EvalSummary,
     RegressionDiff,
     EvalReport,
-} from "cap:eval";
+} from "cap:obs";
 import cap from "cap";
 
 fn approxEq(a: f64, b: f64, tol: f64): bool {
@@ -301,11 +301,11 @@ fn testRegressionGate()! {
 fn testDynamicCapEvalMounting()! {
     const alloc = std.heap.page_allocator;
 
-    expect_eq(cap.eval.EvalScorer.exactMatch("cp", " cp ", MatchMode.ExactTrimmed), 1.0);
-    const p10 = cap.eval.EvalScorer.passAtK(100, 1, 10) catch unreachable;
+    expect_eq(cap.obs.EvalScorer.exactMatch("cp", " cp ", MatchMode.ExactTrimmed), 1.0);
+    const p10 = cap.obs.EvalScorer.passAtK(100, 1, 10) catch unreachable;
     expect_eq(approxEq(p10, 0.1, 0.000000001), true);
 
-    let r = cap.eval.EvalReport.init(alloc, "dyn-mount") catch unreachable;
+    let r = cap.obs.EvalReport.init(alloc, "dyn-mount") catch unreachable;
     defer r.deinit();
     r.recordCase(EvalCase{
         id: "d1",

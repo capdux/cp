@@ -2,7 +2,7 @@
 // Pure CP evaluation report builder with weighted scoring, exact P95 latency, CI regression gating, and Markdown/JSON export.
 
 const std = @import("std");
-import { EvalError } from "./metrics.cp";
+import { EvalError } from "./eval_metrics.cp";
 
 /// Single evaluated test case record inside an `EvalReport`.
 pub struct EvalCase {

@@ -3,7 +3,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { parse, MetricType, MetricsDocument } from "cap:openmetrics";
+import { parse, MetricType, MetricsDocument } from "cap:obs";
 
 test "parse multi-family Counter Gauge Histogram Summary with HELP TYPE UNIT" {
     const alloc = std.testing.allocator;
@@ -128,7 +128,7 @@ test "cap.openmetrics dynamic mount and zero-leak allocator verification" {
         "jobs_queued{queue=\"default\"} 15\n" ++
         "# EOF\n";
 
-    let doc = try cap.openmetrics.parse(alloc, raw);
+    let doc = try cap.obs.parse(alloc, raw);
     defer doc.deinit(alloc);
 
     expect_eq(doc.has_eof, true);

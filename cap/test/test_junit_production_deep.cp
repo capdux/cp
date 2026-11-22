@@ -11,7 +11,7 @@ import {
     JunitCaseIter,
     isJunitXml,
     summarizeJunit,
-} from "cap:junit";
+} from "cap:obs";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) (a - b) else (b - a);

@@ -42,7 +42,7 @@ import {
     parseBtfInt,
     parseBtfArray,
     btfMemberAt,
-} from "cap:btf";
+} from "cap:obs";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off + 0] = (v & 0xFF) as u8;

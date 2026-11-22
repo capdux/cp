@@ -8,7 +8,7 @@ import {
     TapSummary,
     TapIter,
     summarizeTap,
-} from "cap:tap";
+} from "cap:obs";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

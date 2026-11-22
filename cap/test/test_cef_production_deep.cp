@@ -19,7 +19,7 @@ import {
     unescapeCefHeader,
     unescapeCefExtValue,
     formatCefHeader,
-} from "cap:cef";
+} from "cap:obs";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
