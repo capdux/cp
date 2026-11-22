@@ -486,7 +486,7 @@ const h = cap.hash.wyhash("hello");
 | `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |
 | `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |
 | `cap:mail` | `Mailbox`, `decodeRfc2047`, `decodeQuotedPrintable`, ... | RFC 5322 邮件地址、RFC 2047 编码字与 Quoted-Printable 统一主包（同步收敛 `cap:mime`） |
-| `cap:pkg` | `NpmPackageName`, `NpmrcIter`, `PkgExports`, `PkgMatcher`, ... | 包管理/NPM 名称/npmrc/exports/matcher 统一主包（同步收敛 `cap:shell`） |
+| `cap:pkg` | `NpmPackageName`, `NpmrcIter`, `PkgExports`, `PkgMatcher`, `PostinstallMode`/`SemverTriple`/`PostinstallPkgInfo`/`DynamicOptimizerRule`/`findNativeBinlinkReplacement`/`PostinstallOptimizerConfig` (`postinstall_optimizer.cp`), ... | 包管理/NPM 名称/npmrc/exports/matcher 与 postinstall 原生二进制直连优化器统一主包（详见 `doc/lib/pkg.md`） |
 | `cap:jwt` | `JwtClaims`, `parseJwtClaims`, ... | JWT 声明解析统一主包（同步收敛 `cap:ssh`/`cap:git`/`cap:pkg`） |
 | `cap:rate` | `TokenBucket`, `GcraLimiter`, `SlidingGcraLimiter`, `SimpleTokenBucket`, `FixedWindowLimiter` | 令牌桶/GCRA/滑动窗口限流统一主包（同步收敛 `cap:cron`/`cap:time`） |
 | `cap:pg` | `PgAuth`, `PgCopySasl`, `PgExtendedQuery`, `DiagSqlStateClass`, `PgOid`, `PgReader`, `SqlStateClass`, `PgWireType` | PostgreSQL 线协议全套认证、SASL/COPY、扩展查询、OID、SQLSTATE 与二进制流解析统一主包（`lib/pg_*` 全仓清零） |

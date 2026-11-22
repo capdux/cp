@@ -59,3 +59,13 @@ export {
     SpdxIdIter,
     isCommonPermissive,
 } from "./spdx.cp";
+
+export {
+    MAX_DYNAMIC_OPTIMIZER_RULES,
+    PostinstallMode,
+    SemverTriple,
+    PostinstallPkgInfo,
+    DynamicOptimizerRule,
+    PostinstallOptimizerConfig,
+    findNativeBinlinkReplacement,
+} from "./postinstall_optimizer.cp";

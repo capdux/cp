@@ -139,6 +139,7 @@
 - **`lib/pkg/exports.cp`**（`package.json` `exports` 条件导出解析）：`ExportTargetKind`、`ExportConditionRule`、`ExportSubpathEntry`、`ResolveStatus`、`ResolveResult`、`ExportsMap`
 - **`lib/pkg/matcher.cp`**（包模式通配符匹配器）：`MatcherBehavior`、`PackagePattern`、`PackageMatcher`、`wildcardMatch`
 - **`lib/pkg/spdx.cp`**（SPDX 2.3 许可证表达式词法解析与校验）：`SpdxTokenKind`、`SpdxToken`、`SpdxLexer`、`isValidSpdxExpression`、`SpdxIdIter`、`isCommonPermissive`
+- **`lib/pkg/postinstall_optimizer.cp`**（吸收自 `/data/dev/bun/src/install/postinstall_optimizer.cp`，零分配 Postinstall 脚本优化器与原生二进制替代包匹配）：`MAX_DYNAMIC_OPTIMIZER_RULES`、`PostinstallMode`、`SemverTriple`、`PostinstallPkgInfo`、`DynamicOptimizerRule`、`PostinstallOptimizerConfig`、`findNativeBinlinkReplacement`（内置 `esbuild` / `@anthropic-ai/claude-code` 原生二进制直连替换与 `sharp >= 0.33.0` 版本门限跳过，Windows 平台自动禁用 Unix binlink 替换，支持 `configureNativeDependencies` / `configureIgnoreScripts` 动态覆盖与根安装树 `tree_id == 0` 约束）
 
 ---
 
