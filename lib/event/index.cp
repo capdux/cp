@@ -78,4 +78,12 @@ export {
     TimeoutRegistry,
 } from "./timeoutObject.cp";
 
+export {
+    IMMEDIATE_QUEUE_MAX,
+    ImmediateState,
+    ImmediateObjectError,
+    ImmediateObject,
+    ImmediateQueue,
+} from "./immediateObject.cp";
+
 export * from "./emitter.cp";

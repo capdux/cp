@@ -218,6 +218,25 @@ const fired = reg.tickDue(1060); // 仅 id2 到期触发 -> fired == 1
 * = id1; * = id2; * = fired;
 ```
 
+### 3.10 Node/Bun `ImmediateObject` 生命周期与轮次隔离 FIFO 队列 (`immediateObject.cp`)
+
+吸收自 `/data/dev/bun/src/runtime/timer/ImmediateObject.cp`：
+
+- **导出符号**：`IMMEDIATE_QUEUE_MAX` (`64`)、`ImmediateState`（`Active` / `Fired` / `Cancelled` / `Destroyed`）、`ImmediateObjectError`（`QueueFull` / `NotFound` / `AlreadyDestroyed`）、`ImmediateObject`（`init` / `toPrimitive` / `doRef` / `doUnref` / `hasRef` / `ref` / `deref` / `runImmediateTask` / `dispose` / `finalize` / `getDestroyed` / `isActive`）、`ImmediateQueue`（`init` / `schedule` / `get` / `clear` / `setRef` / `activeCount` / `activeRefCount` / `drainTurn`）；
+- **核心语义**：完整建模 `setImmediate` / `clearImmediate` 生命周期与事件循环保活引用（`ref`/`unref`），`drainTurn(out_ids)` 通过 `current_turn` 快照隔离本轮与回调内新投递的立即任务，避免递归 `setImmediate` 饿死事件循环。
+
+```cp
+import { ImmediateQueue } from "cap:event";
+
+let q = ImmediateQueue.init();
+const id1 = q.schedule()?;
+const id2 = q.schedule()?;
+* = q.clear(id1);
+let out: [8]i32 = [0; 8];
+const n = q.drainTurn(out[0..]); // n == 1, out[0] == id2
+* = n;
+```
+
 ---
 
 ## 四、 上游 Bun 事件循环行为契约与并发边界
