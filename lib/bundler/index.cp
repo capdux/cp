@@ -544,3 +544,17 @@ export {
     isDirectImportMetaHotCall,
     HmrChunkStmtConverter,
 } from "./hmrStmts";
+
+export {
+    RSC_PROXY_MAX_EXPORTS,
+    RscProxyError,
+    RscTaskKind,
+    RscTargetPlatform,
+    RscFrameworkConfig,
+    RscProxyModuleMeta,
+    rscTargetForTask,
+    formatRscProdModuleKey,
+    formatRscServerCallErrorMsg,
+    formatClientEntryWrapper,
+    RscProxyGenerator,
+} from "./rscProxy";

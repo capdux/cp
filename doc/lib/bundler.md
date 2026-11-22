@@ -909,3 +909,26 @@ const ev = parseHmrBuiltinEvent("vite:beforeUpdate"); // .BeforeUpdate
 * = ok;
 * = ev;
 ```
+
+- **RSC 客户端引用代理与入口包装器代码生成器（`rscProxy.cp`，吸收自 `/data/dev/bun/src/bundler/ServerComponentParseTask.cp` & `/data/dev/bun/docs/bundler/fullstack.mdx`）**：
+    - 导出：`RSC_PROXY_MAX_EXPORTS` (`64`)、`RscProxyError`、`RscTaskKind`（`ClientReferenceProxy`/`ClientEntryWrapper`）、`RscTargetPlatform`（`Server`/`Browser`）、`RscFrameworkConfig`、`RscProxyModuleMeta`、`rscTargetForTask`、`formatRscProdModuleKey`、`formatRscServerCallErrorMsg`、`formatClientEntryWrapper`、`RscProxyGenerator`（`init`/`addExport`/`exportSlice`/`generateProxyCode`）；
+    - **RSC 与全栈 Dev/Prod 边界最佳实践（参考 `/data/dev/bun/docs/bundler/fullstack.mdx`）**：
+      - **开发 vs 生产模块引用键**：开发模式下客户端引用代理直接使用源码相对路径 `pretty_path` 以支持零延迟 HMR；生产模式下由于最终 Chunk 路径尚未确定，统一输出 `<hex_unique_key>S<08d_source_index>` 占位键交由后续 Chunk 替换管线回填；
+      - **跨端调用错误守卫与零副作用合成**：每个 `"use client"` 导出均包装为 `registerClientReference(() => { throw new Error(...); }, modulePath, exportName)`，严格阻止在服务端直接调用客户端函数，同时合成模块本身标记为无副作用纯数据以便树摇；
+      - **浏览器入口裸导入包装**：`formatClientEntryWrapper()` 生成 `import "<entry_path>";` 裸导入（对应目标平台 `.Browser`），确保客户端入口副作用按序执行。
+
+```cp
+import { RscFrameworkConfig, RscProxyModuleMeta, RscProxyGenerator } from "cap:bundler";
+
+let gen = RscProxyGenerator.init(
+    RscFrameworkConfig{ is_dev_server: false, bundle_unique_key: 0x1a2b, server_runtime_import: "react-server-dom-webpack/server" },
+    RscProxyModuleMeta{ pretty_path: "src/Counter.tsx", source_index: 42 },
+);
+* = gen.addExport("default")?;
+* = gen.addExport("CounterButton")?;
+
+let buf: [1024]u8 = [0; 1024];
+const n = gen.generateProxyCode(buf[0..])?;
+// 包含 `import { registerClientReference } from "react-server-dom-webpack/server";` 与 `"1a2bS00000042"` 占位键
+* = n;
+```
