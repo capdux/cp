@@ -114,3 +114,14 @@ export {
     computeEntryRetentionScore,
     AgentMemoryConsolidator,
 } from "./consolidation_engine.cp";
+
+export {
+    EP_INDEX_MAX_SLOTS,
+    EP_INDEX_MAX_DIM,
+    EpisodeRecord,
+    EpisodeQueryFilter,
+    EpisodeHybridWeights,
+    EpisodeHybridHit,
+    EpisodeIndexStats,
+    HybridEpisodeIndex,
+} from "./episode_index.cp";

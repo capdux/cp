@@ -599,3 +599,41 @@ pub fn demoAgentMemoryConsolidator() {
     * = rep.semantic_promoted_count; // 1 (自动晋升为长期语义记忆)
 }
 ```
+
+
+### 13. 零分配时间窗口 + 实体位图 + `@dot` 向量三模联合情景记忆索引 (`episode_index.cp`)
+
+面向长程自主 AI Agent 情景记忆多维检索的 100% 纯 CP 零动态堆分配三模联合索引引擎，深度融合原生 `@dot`、`@popCount` 与 `@fma` 硬件原语：
+
+- **常量与数据模型**：
+  - `EP_INDEX_MAX_SLOTS = 128`、`EP_INDEX_MAX_DIM = 32`
+  - `EpisodeRecord`（`episode_id`, `timestamp_ms`, `session_id`, `entity_mask: u64`, `importance_f32`, `pinned`, L2 归一化 `vec`）
+  - `EpisodeQueryFilter`（`session_id`, `min_ts_ms..max_ts_ms`, `required_entities`, `any_entities`, `excluded_entities`, `target_entities`；提供 `all()` 与 `isValid()`）
+  - `EpisodeHybridWeights`（`vector_weight`, `recency_weight`, `entity_weight`, `importance_weight`, `recency_half_life_ms`；提供 `defaults()` 与 `isValid()`）
+  - `EpisodeHybridHit`（含 `total_score` 及分项拆解 `vector_score`, `recency_score`, `entity_score`, `importance_score`）、`EpisodeIndexStats`
+- **核心引擎 `HybridEpisodeIndex`**：
+  - `init(dim): HybridEpisodeIndex?`（校验 `1 <= dim <= 32`）
+  - `insertEpisode(*_, episode_id, timestamp_ms, session_id, entity_mask, importance_f32, pinned, raw_vec): bool`（自动 L2 归一化，拦截零/NaN 向量、重复 ID 与满池）
+  - `queryHybrid(*_, query_vec, filter, weights, now_ms, out_hits: *[]EpisodeHybridHit): usize`：联合时间窗口、会话与实体位图过滤，结合 `@dot` 余弦相似度、`@popCount` 实体重合度、指数时间近因衰减与 `@fma` 加权打分，输出确定性严格降序 Top-K。
+  - `scanSessionTimeline(session_id, min_ts_ms, max_ts_ms, out_ids: *[]u64): usize`：按 `(timestamp_ms asc, episode_id asc)` 回放指定会话时间线切片。
+  - `pruneBeforeTimestamp(*_, cutoff_ms): usize` / `setPinned(*_, episode_id, pinned)` / `getEpisode(episode_id)` / `stats()`：按时间水位线归档裁剪旧情景，严格保护 `pinned == true` 情景。
+
+```cp
+import {
+    EpisodeQueryFilter,
+    EpisodeHybridWeights,
+    EpisodeHybridHit,
+    HybridEpisodeIndex,
+} from "cap:agentmem";
+
+pub fn demoHybridEpisodeIndex() {
+    let idx = HybridEpisodeIndex.init(4) ?? return;
+    const v1: [4]f32 = [1.0, 0.0, 0.0, 0.0];
+    * = idx.insertEpisode(1, 10_000, 100, 0b0111, 0.9, true, v1[0..]);
+
+    let hits: [4]EpisodeHybridHit = [EpisodeHybridHit{}; 4];
+    let hits_s: []EpisodeHybridHit = hits[0..];
+    const n = idx.queryHybrid(v1[0..], EpisodeQueryFilter.all(), EpisodeHybridWeights.defaults(), 10_000, *hits_s);
+    * = n; // 1
+}
+```
