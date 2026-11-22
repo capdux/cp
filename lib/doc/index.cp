@@ -175,3 +175,16 @@ export {
     formatCsvField,
     formatCsvRow,
 } from "./csv_stream.cp";
+
+// --- Zero-Alloc RFC 4180 CSV/TSV Table Header Mapping & Typed Row Decoder ---
+export {
+    CsvTableOptions,
+    CsvRowCursor,
+    CsvTableHeader,
+    CsvTableReader,
+    unescapeCsvField,
+    parseCsvI64,
+    parseCsvF64,
+    parseCsvBool,
+    writeCsvRow,
+} from "./csv_table.cp";

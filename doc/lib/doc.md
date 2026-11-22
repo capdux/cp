@@ -23,6 +23,7 @@
 | 订阅源 | `rss.cp` | RSS 2.0 | 频道级元数据解析、条目零堆分配迭代器与 XML 条目格式化 |
 | 订阅源 | `atom.cp` | RFC 4287 Atom 1.0 | Feed 元数据解析、Entry 零拷贝迭代器与 Entry 序列化 |
 | 流式表格 | `csv_stream.cp` | RFC 4180 CSV / TSV | 零堆分配切片级流式读取器、字段反转义、引号检测与行格式化 |
+| 强类型表格 | `csv_table.cp` | RFC 4180 CSV / TSV | 零堆分配表头列名映射、强类型 `i64`/`f64`/`bool` 解码与 RFC 4180 行写入器（`CsvTableReader` / `writeCsvRow`） |
 | 参考归档 | `markdown_table_.cp` | GFM Pipe Table（仅参考） | 与权威 Bun MD4C 引擎 `lib/md/table.cp` 功能重叠，仅作对比归档，不在 `cap:doc` 重复导出 |
 
 ---
@@ -92,5 +93,43 @@ fn main()! {
     while (row := reader.nextRow()) {
         * = row;
     }
+}
+```
+
+### 零堆分配 RFC 4180 表头映射与强类型行解码示例 (`csv_table.cp`)
+
+```cp
+import {
+    CsvTableOptions,
+    CsvTableReader,
+    parseCsvI64,
+    parseCsvF64,
+    parseCsvBool,
+    writeCsvRow,
+} from "cap:doc";
+
+pub fn demoCsvTable() {
+    const csv = "id,name,score,active\n101,\"Alice, PhD\",98.5,yes\n";
+    let reader = CsvTableReader.init(csv, CsvTableOptions.csv());
+
+    let hdr_names: [8]string = [""; 8];
+    if (hdr := reader.parseHeader(hdr_names[0..])) {
+        const col_id = hdr.columnIndex("id") ?? return;
+        const col_score = hdr.columnIndex("score") ?? return;
+        const col_active = hdr.columnIndex("active") ?? return;
+
+        let cols: [8]string = [""; 8];
+        if (cur := reader.nextRow(cols[0..])) {
+            if (!cur.malformed) {
+                * = parseCsvI64(cols[col_id]);      // 101
+                * = parseCsvF64(cols[col_score]);   // 98.5
+                * = parseCsvBool(cols[col_active]); // true
+            }
+        }
+    }
+
+    const row: [2]string = ["hello, world", "say \"hi\""];
+    let out: [64]u8 = [0; 64];
+    * = writeCsvRow(row[0..], ',', out[0..]);
 }
 ```
