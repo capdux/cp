@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/AltSvc.cp | Synced: 2026-11-21T14:03:33Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/AltSvc.cp | Synced: 2026-11-22T11:12:13Z
 pub import {
     DEFAULT_MAX_AGE,
     AltSvcEntry,

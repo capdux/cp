@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/dispatch.cp | Synced: 2026-11-21T23:52:58Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/dispatch.cp | Synced: 2026-11-22T11:12:13Z
 // Pure-CP zero-allocation RFC 7540 HTTP/2 Frame Protocol Validator & Connection Dispatcher:
 // - Wire 9-byte frame header parser (with 31-bit stream ID masking)
 // - PADDED flag stripping (`stripH2Padding`) & PRIORITY 5-byte skipping

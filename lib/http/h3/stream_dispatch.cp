@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/callbacks.cp | Synced: 2026-11-15T16:52:39Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/callbacks.cp | Synced: 2026-11-22T11:12:13Z
 // Ported from Bun: /data/dev/bun/src/http/h3_client/callbacks.cp & /data/dev/bun/docs/guides/http/fetch.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation HTTP/3 QUIC Client Callback Event Dispatcher:

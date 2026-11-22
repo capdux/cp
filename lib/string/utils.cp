@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.cp | Synced: 2026-11-22T07:17:50Z
+// Source: Absorbed from /data/dev/bun/src/string/immutable.cp | Synced: 2026-11-22T11:12:46Z
 // lib/string/utils.cp
 // High-speed ASCII SIMD case conversion, comparison, trimming, searching, splitting, join, concat, repeat & formatting
 // Absorbed from /data/dev/bun/src/string/immutable.cp & /data/dev/bun/src/highway/

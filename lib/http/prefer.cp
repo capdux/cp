@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (RFC 7240 Prefer & Preference-Applied HTTP Header)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 7240 Prefer & Preference-Applied HTTP Header)
 // Pure-CP zero-allocation RFC 7240 Prefer header parser, query helpers, and Preference-Applied formatter.
 
 fn isWs(b: u8): bool {

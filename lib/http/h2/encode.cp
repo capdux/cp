@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T02:34:49Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T11:12:13Z
 
 /// RFC 9113 §3.4 HTTP/2 client connection preface (24 bytes).
 pub const H2_CLIENT_PREFACE: []const u8 = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";

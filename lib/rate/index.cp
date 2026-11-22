@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T07:42:24Z (Unified Rate Limiting Barrel)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T11:12:13Z (Unified Rate Limiting Barrel)
 export {
     SlidingWindowCounter,
     SlidingGcraLimiter,

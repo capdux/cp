@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-21T12:38:21Z
+// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-22T11:12:13Z
 import frame from "./frame.cp";
 
 export const CLIENT_PREFACE = frame.CLIENT_PREFACE;

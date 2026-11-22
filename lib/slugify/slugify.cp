@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T07:17:50Z (URL Slug Generator & Validator)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T11:13:01Z (URL Slug Generator & Validator)
 // Pure-CP zero-allocation URL-safe slug generator, validator, and word-boundary truncator.
 
 fn isAlnumLower(b: u8): bool {

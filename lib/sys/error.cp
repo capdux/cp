@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/Error.cp | Synced: 2026-11-22T07:13:20Z
+// Source: Absorbed from /data/dev/bun/src/sys/Error.cp | Synced: 2026-11-22T11:12:46Z
 // ============================================================================
 // lib/sys/error.cp — Structured Syscall Errors, SyscallTag & Maybe<T> Result
 // ============================================================================

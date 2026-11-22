@@ -1,3 +1,3 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-21T14:05:28Z
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-22T11:12:13Z
 
 export * from "./iter";

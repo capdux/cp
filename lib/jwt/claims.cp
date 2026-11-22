@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T05:31:41Z (RFC 7519 JWT Structure & Claims Inspector)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T11:12:13Z (RFC 7519 JWT Structure & Claims Inspector)
 // Pure-CP zero-allocation JWT segment splitter, Base64URL decoder, and RFC 7519 claims validator.
 
 fn b64UrlVal(c: u8): u8? {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/websocket_http_client.cp | Synced: 2026-11-22T09:28:00Z
+// Source: Absorbed from /data/dev/bun/src/http/websocket_http_client.cp | Synced: 2026-11-22T11:12:13Z
 // Ported from Bun: /data/dev/bun/src/http/websocket_http_client.cp & /data/dev/bun/docs/runtime/http/websockets.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation RFC 6455 WebSocket Client URL Parser & HTTP/1.1 Upgrade State Machine:

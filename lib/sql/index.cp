@@ -370,3 +370,18 @@ export {
     encodePgAuthSaslFinal,
     decodePgAuthChallenge,
 } from "./pg_auth_challenge.cp";
+
+export {
+    PG_DATA_ROW_TAG,
+    PG_DATA_ROW_NULL_LEN,
+    PG_DATA_ROW_MAX_COLS,
+    PgDataRowError,
+    PgDataRowColumn,
+    PgDataRowIter,
+    PgDataRowView,
+    estimatePgDataRowFrameLen,
+    encodePgDataRowPayload,
+    encodePgDataRowFrame,
+    decodePgDataRowIter,
+    decodePgDataRowFrame,
+} from "./pg_data_row.cp";

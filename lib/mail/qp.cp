@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-21T14:55:44Z (RFC 2045 §6.7 Quoted-Printable Codec)
+// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (RFC 2045 §6.7 Quoted-Printable Codec)
 // Pure-CP zero-allocation RFC 2045 Quoted-Printable encoder (76-col soft wraps) and decoder.
 
 fn hexVal(c: u8): u8? {

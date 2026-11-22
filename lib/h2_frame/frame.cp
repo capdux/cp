@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-21T12:38:18Z
+// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-22T11:12:13Z
 //! HTTP/2 (RFC 9113 / RFC 7540) wire-format frame header, settings, priority,
 //! error codes, and client connection preface codec.
 

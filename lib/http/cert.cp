@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/CertificateInfo.cp | Synced: 2026-11-20T05:05:22Z
+// Source: Absorbed from /data/dev/bun/src/http/CertificateInfo.cp | Synced: 2026-11-22T11:12:13Z
 // lib/http/cert.cp
 // CP HTTP TLS Certificate Info & Errors (cap:http)
 

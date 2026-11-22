@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-21T15:23:42Z (RFC 2047 MIME Encoded-Word Codec)
+// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (RFC 2047 MIME Encoded-Word Codec)
 
 const B64_TABLE: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

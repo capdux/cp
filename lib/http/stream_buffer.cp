@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ThreadSafeStreamBuffer.cp | Synced: 2026-11-22T05:00:00Z
+// Source: Absorbed from /data/dev/bun/src/http/ThreadSafeStreamBuffer.cp | Synced: 2026-11-22T11:12:13Z
 // ============================================================================
 // HTTP Thread-Safe Stream Buffer & Backpressure Control
 // Absorbed from Bun: src/http/ThreadSafeStreamBuffer.cp & src/io/PipeWriter.cp

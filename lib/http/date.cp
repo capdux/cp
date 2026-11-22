@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-21T16:45:50Z (RFC 9110 §5.6.7 HTTP-date / IMF-fixdate)
+// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-22T11:12:13Z (RFC 9110 §5.6.7 HTTP-date / IMF-fixdate)
 // Pure-CP zero-allocation IMF-fixdate (`Sun, 06 Nov 1994 08:49:37 GMT`) parser
 // and formatter with Howard Hinnant civil calendar conversion to/from Unix epoch.
 

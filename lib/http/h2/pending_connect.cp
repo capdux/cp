@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/PendingConnect.cp | Synced: 2026-11-22T09:30:00Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/PendingConnect.cp | Synced: 2026-11-22T11:12:13Z
 // Ported from Bun: /data/dev/bun/src/http/h2_client/PendingConnect.cp & /data/dev/bun/docs/runtime/http/tls.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation HTTP/2 In-Flight TLS Connect Coalescer (Singleflight PendingConnect Table):

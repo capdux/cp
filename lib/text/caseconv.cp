@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T07:17:50Z (Identifier Case Converter)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T11:13:01Z (Identifier Case Converter)
 // Pure-CP zero-allocation acronym-aware identifier case converter (snake, screaming_snake, kebab, camel, pascal).
 
 fn isUpper(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-21T14:38:28Z (WHATWG MIME Sniffing)
+// Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (WHATWG MIME Sniffing)
 
 fn eqlBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

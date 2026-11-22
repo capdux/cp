@@ -522,3 +522,26 @@ const view = decodePgAuthChallenge(wire[0..n])?;
 // view.sasl_continue.iterations == 4096, view.sasl_continue.salt_b64 == "c2FsdA=="
 * = view;
 ```
+
+8. **PostgreSQL 后端数据行（`'D'` DataRow）零拷贝流式编解码（`lib/sql/pg_data_row.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/DataRow.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **精确区分 `SQL NULL` 与空字符串 `""`**：PostgreSQL `'D'` 帧使用 `0xffff_ffff`（`-1`）哨兵表示 `SQL NULL`，长度 `0` 表示非空零字节值（空串/空 `bytea`）；`decodePgDataRowIter` 返回零拷贝流式迭代器 `PgDataRowIter`（支持任意列数宽表与 `columnAt` 随机访问），`decodePgDataRowFrame` 提供最多 64 列的定长视图；
+   - **严格帧安全校验**：自动拦截除 `-1` 以外的任意负列长（`InvalidColumnLength`）、列数据截断（`TruncatedFrame`）与行尾垃圾字节（`TrailingBytes`）。
+
+```cp
+import {
+    PgDataRowColumn,
+    encodePgDataRowFrame,
+    decodePgDataRowFrame,
+} from "cap:sql";
+
+const cols: [3]PgDataRowColumn = [
+    PgDataRowColumn.bytesCol("42"),
+    PgDataRowColumn.nullCol(),
+    PgDataRowColumn.emptyCol(),
+];
+let wire: [64]u8 = [0; 64];
+const n = encodePgDataRowFrame(cols[0..], wire[0..])?;
+const row = decodePgDataRowFrame(wire[0..n])?;
+// row.column_count == 3, row.columns[1].is_null == true, !row.columns[2].is_null && row.columns[2].bytes.len == 0
+* = row;
+```

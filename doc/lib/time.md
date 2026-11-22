@@ -282,6 +282,43 @@ pub fn demoTimingWheel() {
 
 ---
 
+## 零分配 RFC 5545 重复日程规则 `RRULE` 解析与迭代触发调度器（`rrule_scheduler.cp`）
+
+面向日历同步、定时提醒、周期计费与 AI Agent 长期日程编排的 100% 纯 CP 零动态堆分配 RFC 5545 `RRULE` 解析、规范化往返格式化与纯整数公历调度器：
+
+- **常量与枚举**：
+  - `RRULE_MAX_ITER_STEPS = 200_000`（单次查询防无限循环安全步数上限）
+  - `RRuleFreq`（`daily | weekly | monthly | yearly`）、`RRuleWeekday`（`mo | tu | we | th | fr | sa | su`）
+- **纯整数公历辅助函数（零浮点误差）**：
+  - `RRuleDateTime`、`isLeapYear(year)`、`daysInMonth(year, month)`、`rruleDateTimeToUnix(dt)`、`rruleUnixToDateTime(ts)`、`rruleWeekdayOfUnix(ts)`、`parseRRuleUtcTimestamp(s)`（解析 `YYYYMMDDTHHMMSSZ`）
+- **核心规则模型与调度 API**：
+  - `parseRRule(input): RRule?`：支持 `FREQ`、`INTERVAL`、`COUNT`、`UNTIL`、`BYDAY`、`BYMONTHDAY`、`BYMONTH`、`BYHOUR`、`BYMINUTE`、`WKST`（兼容 `"RRULE:"` 前缀）；严格按 RFC 5545 拒绝缺失 `FREQ`、`INTERVAL=0`、`COUNT` 与 `UNTIL` 同时出现、重复键值与越界参数。
+  - `formatRRule(rule, out_buf: *[]u8): usize?`：规范化往返输出标准 `RRULE` 字符串。
+  - `RRule.nextOccurrence(dtstart, after_ts): i64?` / `rruleNextOccurrence`：精确计算下一次触发时间戳，完美处理闰年 2 月 29 日与 31 日跳过规则。
+  - `RRule.expandOccurrences(dtstart, window_start, window_end, out_ts: *[]i64): usize` / `rruleExpandOccurrences`：在闭区间 `[window_start, window_end]` 批量展开触发点并严格遵守 `COUNT` / `UNTIL`。
+
+### QuickStart 示例
+
+```cp
+import {
+    RRuleDateTime,
+    rruleDateTimeToUnix,
+    parseRRule,
+} from "cap:time";
+
+pub fn demoRRuleScheduler() {
+    const rule = parseRRule("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;COUNT=4") ?? return;
+    const dtstart = rruleDateTimeToUnix(RRuleDateTime{ year: 2026, month: 1, day: 5, hour: 9, minute: 0, second: 0 }) ?? return;
+
+    let out: [8]i64 = [0; 8];
+    let out_s: []i64 = out[0..];
+    const n = rule.expandOccurrences(dtstart, dtstart, dtstart + 60 * 86400, *out_s);
+    * = n; // 4 (2026-01-05 MO, 01-07 WE, 01-09 FR, 01-19 MO)
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [health.md](time/health.md)

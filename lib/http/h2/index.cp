@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/ | Synced: 2026-11-20T10:15:21Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/ | Synced: 2026-11-22T11:12:13Z
 // lib/http/h2/index.cp
 // HTTP/2 protocol client subsystem
 

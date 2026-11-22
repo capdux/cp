@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-20T04:56:52Z
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-22T11:12:13Z
 // lib/http/header_iterator.cp
 // CP HTTP Header Value Iterator (cap:http)
 

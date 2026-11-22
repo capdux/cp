@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/AltSvc.cp | Synced: 2026-11-19T22:13:46Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/AltSvc.cp | Synced: 2026-11-22T11:12:13Z
 // lib/http/h3/alt_svc.cp
 // CP HTTP/3 Alt-Svc Parser (cap:http)
 // RFC 7838 Alt-Svc header handling for HTTP/3 client upgrade

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sys/sys.cp | Synced: 2026-11-22T10:09:59Z
+// Source: Absorbed from /data/dev/bun/src/sys/sys.cp | Synced: 2026-11-22T11:13:14Z
 // ============================================================================
 // lib/sys/fs_ops.cp — POSIX / Linux File System & Descriptor Syscall Primitives
 // ============================================================================

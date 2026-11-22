@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/AsyncHTTP.cp | Synced: 2026-11-22T08:14:00Z
+// Source: Absorbed from /data/dev/bun/src/http/AsyncHTTP.cp | Synced: 2026-11-22T11:12:13Z
 // Pure-CP zero-allocation asynchronous HTTP task state machine, option validator
 // (proxy / unix socket / keepalive / decompression / TLS policy), and simultaneous
 // request concurrency limiter (aligned with `BUN_CONFIG_MAX_HTTP_REQUESTS` default 256).

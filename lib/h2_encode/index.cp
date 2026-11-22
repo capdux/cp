@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T02:34:49Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/encode.cp | Synced: 2026-11-22T11:12:13Z
 // Backward-compatible re-export: canonical implementation consolidated into lib/http/h2/encode.cp
 
 export {

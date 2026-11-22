@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-20T09:39:31Z
+// Source: Absorbed from /data/dev/bun/src/http/H2FrameParser.cp | Synced: 2026-11-22T11:12:13Z
 // lib/http/h2/frame.cp
 // CP HTTP/2 Frame & Wire Protocol (cap:http)
 // RFC 7540 HTTP/2 binary framing types, payload codecs, and constants

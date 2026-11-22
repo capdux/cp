@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-21T16:42:30Z (RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer)
+// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-22T11:12:13Z (RFC 9110 §11 / RFC 7617 Basic / RFC 6750 Bearer)
 // Pure-CP zero-allocation HTTP `Authorization` & `WWW-Authenticate` parser/encoder
 // supporting Basic (Base64 user:pass), Bearer tokens, and auth scheme extraction.
 

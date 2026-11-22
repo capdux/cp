@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/Stream.cp | Synced: 2026-11-22T00:14:33Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/Stream.cp | Synced: 2026-11-22T11:12:13Z
 
 pub const H2_MAX_WINDOW_SIZE: i32 = 2147483647;
 pub const H2_DEFAULT_INITIAL_WINDOW: i32 = 65535;

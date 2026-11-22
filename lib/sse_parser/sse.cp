@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-21T14:29:35Z (WHATWG Server-Sent Events)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-22T11:12:13Z (WHATWG Server-Sent Events)
 
 /// 单个 Server-Sent Events (`text/event-stream`) 事件对象
 pub struct SseEvent {

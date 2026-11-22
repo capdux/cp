@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/threading.cp | Synced: 2026-11-19T20:46:24Z
+// Source: Absorbed from /data/dev/bun/src/threading/threading.cp | Synced: 2026-11-22T11:14:16Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/
 // Upstream Sync: Refer to bun/src/threading/ for future upstream updates.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-21T16:52:53Z
+// Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-22T11:12:13Z
 // lib/http/index.cp
 // CP Standard HTTP Library (cap:http) - Industrial-grade unified HTTP subsystem
 

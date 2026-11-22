@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/encode.cp | Synced: 2026-11-22T01:46:00Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/encode.cp | Synced: 2026-11-22T11:12:13Z
 // Pure-CP zero-allocation HTTP/3 (RFC 9114) request pseudo-header builder,
 // hop-by-hop forbidden header filter, lowercase normalizer, and QPACK static index mapper.
 

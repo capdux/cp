@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-21T14:32:00Z (RFC 6266 / RFC 5987 Content-Disposition)
+// Source: Absorbed from /data/dev/bun/src/http/HeaderValueIterator.cp | Synced: 2026-11-22T11:12:13Z (RFC 6266 / RFC 5987 Content-Disposition)
 // Pure-CP zero-allocation HTTP `Content-Disposition` parser, RFC 5987 `filename*`
 // UTF-8 percent-decoder, path-traversal filename sanitizer, and header formatter.
 
