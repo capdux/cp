@@ -113,6 +113,20 @@ let chunk: [64]u8 = [0; 64];
 const res = sink.flush(chunk[0..])?; // res.bytes_flushed == 3, 内部缓冲自动清零复用
 * = res;
 ```
+6. **子进程静态缓冲区非阻塞管道写入状态机（`staticPipeWriter.cp`，吸收自 `/data/dev/bun/src/runtime/api/bun/subprocess/StaticPipeWriter.cp`）**：
+   - 导出：`StaticPipeState`（`Idle` / `Writing` / `Closed` / `Errored`）、`StaticPipeWriteStatus`（`Pending` / `Drained` / `EndOfFile`）、`StaticPipeWriterError`（`AlreadyStarted` / `NotWriting` / `InvalidState`）、`StaticPipeStep`、`StaticPipeWriter`（`init`/`ref`/`deref`/`getBuffer`/`remaining`/`totalBytes`/`progressPermille`/`isTerminal`/`start`/`onWrite`/`drainToBuf`/`onError`/`close`）；
+   - 面向子进程 `stdin` 静态切片投喂：通过 `onWrite(amount, status)` 零拷贝推进未发送切片（自动钳位防止越界），写完或收到 `EndOfFile` 时自动关闭并 `detach` 数据源，支持 `drainToBuf` 确定性分片拉取。
+
+```cp
+import { StaticPipeWriter } from "cap:io";
+
+let w = StaticPipeWriter.init("hello pipe");
+* = w.start()?;
+let chunk: [5]u8 = [0; 5];
+const n1 = w.drainToBuf(chunk[0..])?; // 5 ("hello")
+const n2 = w.drainToBuf(chunk[0..])?; // 5 (" pipe"), 自动转入 Closed
+* = n1; * = n2;
+```
 
 ---
 

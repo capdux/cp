@@ -75,3 +75,11 @@ export {
     SinkFlushResult,
     ArrayBufferSink,
 } from "./arrayBufferSink";
+
+export {
+    StaticPipeState,
+    StaticPipeWriteStatus,
+    StaticPipeWriterError,
+    StaticPipeStep,
+    StaticPipeWriter,
+} from "./staticPipeWriter";
