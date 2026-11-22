@@ -54,3 +54,9 @@ export {
     IpcFrameWriter,
     decodeIpcFrame,
 } from "./ipc_frame";
+
+export {
+    WORK_STEAL_MAX_WORKERS,
+    FileRange,
+    WorkStealPool,
+} from "./work_stealing";

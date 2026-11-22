@@ -135,3 +135,13 @@ let r = IpcPayloadReader.init(frame.payload);
 const file_idx = r.readU32Checked()?; // 7
 const path = r.readStrChecked()?;     // "test/math.test.cp"
 ```
+6. **并行工作窃取区间调度器（`lib/test_runner/work_stealing.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/FileRange.cp`）**：
+   - 常量与类型：`WORK_STEAL_MAX_WORKERS` (`64`)、`FileRange`（`init` / `len` / `isEmpty` / `contains` / `popFront` / `popBack` / `stealBackHalf`）、`WorkStealPool`（`partition` / `rangeOf` / `totalRemaining` / `stealFromBusiest` / `nextFor`）。
+   - 本地派发从区间头部拉取（cache-hot 局部性），窃取从最忙同伴尾部切分后半段连续区间，兼顾负载均衡与目录局部性。
+
+```typescript
+import { WorkStealPool } from "cap:test_runner";
+
+let pool = WorkStealPool.partition(10, 4); // [0..3), [3..6), [6..8), [8..10)
+const first = pool.nextFor(0) ?? 0;        // 0 (worker 0 pops locally)
+```
