@@ -268,3 +268,6 @@
 
 ### 2026-11-22（`cap:textdecode` 验收，子智能体吸收 Bun 上游 TextDecoder.cp 为 cap:textdecode（5/5 PASS），主协调器统一登记并提交）
 - **执行成果**：`lib/textdecode/`（5/5 PASS，`doc/lib/textdecode.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 TextDecoder.cp 为 cap:textdecode（5/5 PASS），主协调器统一登记并提交
+
+### 2026-11-22（`cap:bloburl` 验收，子智能体吸收 Bun 上游 ObjectURLRegistry.cp 为 cap:bloburl（5/5 PASS），主协调器统一登记并提交）
+- **执行成果**：`lib/bloburl/`（5/5 PASS，`doc/lib/bloburl.md`）经 `verify_module.sh` 一次性验收回收；子智能体吸收 Bun 上游 ObjectURLRegistry.cp 为 cap:bloburl（5/5 PASS），主协调器统一登记并提交
