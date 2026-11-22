@@ -21,6 +21,7 @@
 | `lib/vector/binary_quant.cp` | `// Origin: Pure-CP Stdlib (RAG 1-Bit Binary Vector Quantization, Hamming Search & Two-Stage Rescore) \| Created: 2026-11-22` | 1-bit 二值量化（32x 压缩）、`@popCount` 汉明距离、Charikar 余弦估计与两阶段粗排+全精度精排 (`twoStageSearch`) |
 | `lib/vector/ivf.cp` | `// Origin: Pure-CP Stdlib (RAG IVF-Flat Coarse-Quantized Inverted File ANN Index) \| Created: 2026-11-22` | `IvfFlatIndex` 零堆分配 CSR 倒排文件近似最近邻索引（L2 / Cosine 多探针 `nprobe` 亚线性检索） |
 | `lib/vector/pq.cp` | `// Origin: Pure-CP Stdlib (RAG Product Quantization & Asymmetric Distance Computation ADC) \| Created: 2026-11-22` | `PqCodebook` 乘积量化编码/解码与 `O(m)` 查表非对称距离（ADC）Top-K 检索 |
+| `lib/vector/reranker.cp` | `// Origin: Pure-CP Stdlib (AI RAG Reranker: MMR, ColBERT MaxSim & IR Metrics) \| Created: 2026-11-22` | 零辅助缓冲 MMR (`mmrSelect`)、ColBERT Late-Interaction (`colbertMaxSim`)、原位 MinMax/ZScore 归一化与 `NDCG@K` / `MRR` / `Recall@K` IR 评测 |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -131,6 +132,14 @@
 - **`pqBuildAdcTable(cb, query, lut_out: *[]f64): bool`**：预计算 `m * ks` 子空间平方距离查找表 `lut[s * ks + c]`
 - **`pqAdcDistanceSq(lut, code, m, ks): f64`**：纯 `m` 次查表累加（零浮点乘法），与 `L2Sq(query, decode(code))` 精确等价
 - **`pqSearchAdcTopK(cb, codes_flat, n_docs, query, top_k, lut_scratch, out_hits): usize?`**：`O(n * m)` 极速 ADC 检索，按 `(dist_sq 升序, doc_id 升序)` 输出 Top-K
+
+### 8. RAG 检索重排与信息检索评测引擎 (`reranker.cp`)
+
+- **`mmrSelect(query_sims, doc_embeddings, n_docs, dim, k, lambda, out_indices: *[]usize): usize?`**：无需额外 visited mask 的零堆分配 Maximal Marginal Relevance 多样性选择（`lambda ∈ [0, 1]` 平衡相关性与去重多样性，同分按文档下标升序）
+- **`colbertMaxSim(query_tokens, q_len, doc_tokens, d_len, dim): f64?`**：ColBERT Late-Interaction 逐 query token 最大余弦相似度求和（单位化嵌入上精确等价点积 MaxSim）
+- **`minMaxNormalizeInPlace(scores: *[]f64): bool` / `zScoreNormalizeInPlace(scores: *[]f64): bool`**：原位多路检索分数归一化（零方差/常数序列安全归零，不触发除零 NaN）
+- **`ndcgAtK(relevances, k): f64?`**：零堆分配 `O(1)` 栈空间精确计算 `NDCG@K`（标准 $2^{\text{rel}} - 1$ 增益，完整处理重复相关性等级）
+- **`mrrScore(ranked_ids, relevant_ids): f64?` / `recallAtK(ranked_ids, relevant_ids, k): f64?`**：生产级 RAG 召回与排序质量评测指标（`recallAtK` 自动对 ground-truth 去重防止 Recall > 1.0）
 
 ---
 
@@ -358,5 +367,40 @@ pub fn demoPqAdcSearch(centroids_128: []const f64, query_16: []const f64, vec_a:
         const k = pqSearchAdcTopK(cb, codes_buf[0..], 1, query_16, 1, lut, hits) ?? 0;
         * = k;
     }
+}
+```
+
+### RAG 重排（MMR / ColBERT MaxSim）与 IR 指标评测示例 (`reranker.cp`)
+
+```typescript
+import {
+    mmrSelect,
+    colbertMaxSim,
+    ndcgAtK,
+    mrrScore,
+    recallAtK,
+} from "cap:vector";
+
+pub fn demoRerankerAndIrMetrics() {
+    // 1. MMR 平衡相关性与多样性（无需额外 mask 缓冲）
+    const q_sims: [3]f64 = [0.95, 0.94, 0.85];
+    const embs: [6]f64 = [1.0, 0.0, 0.999, 0.01, 0.0, 1.0];
+    let out_buf: [2]usize = [0; 2];
+    let out_idx: []usize = out_buf[0..];
+    * = mmrSelect(q_sims[0..], embs[0..], 3, 2, 2, 0.5, out_idx); // 选中 [0, 2]
+
+    // 2. ColBERT Late-Interaction MaxSim
+    const q_toks: [4]f64 = [1.0, 0.0, 0.0, 1.0];
+    const d_toks: [4]f64 = [1.0, 0.0, 0.0, 1.0];
+    const maxsim = colbertMaxSim(q_toks[0..], 2, d_toks[0..], 2, 2) ?? 0.0; // 2.0
+
+    // 3. IR 评测指标
+    const rels: [4]f64 = [3.0, 2.0, 1.0, 0.0];
+    const ranked: [4]u32 = [10, 20, 30, 40];
+    const truth: [2]u32 = [20, 40];
+    * = ndcgAtK(rels[0..], 4);             // 1.0
+    * = mrrScore(ranked[0..], truth[0..]); // 0.5
+    * = recallAtK(ranked[0..], truth[0..], 2); // 0.5
+    * = maxsim;
 }
 ```

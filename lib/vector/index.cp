@@ -60,3 +60,13 @@ export {
     pqAdcDistanceSq,
     pqSearchAdcTopK,
 } from "./pq.cp";
+
+export {
+    mmrSelect,
+    colbertMaxSim,
+    minMaxNormalizeInPlace,
+    zScoreNormalizeInPlace,
+    ndcgAtK,
+    mrrScore,
+    recallAtK,
+} from "./reranker.cp";

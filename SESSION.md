@@ -74,3 +74,9 @@
 
 ### 2026-11-22（分类合并交付：`lib/a2a/task_queue.cp` + 轮换 `AI & Agent` 子智能体）
 - **执行成果**：子智能体交付 `lib/a2a/task_queue.cp`（A2A 任务生命周期状态机、幂等去重、优先级/DDL 抢占、租约续期与 DeadLetter 回收，5/5 PASS），已同步 `cp_lib_ref.md` 并提交；按满 10 项轮换策略回收 `d0f5938a` 并启动全新 `AI & Agent Protocol Absorber` 推进 `lib/mcp/session.cp`。
+
+### 2026-11-22（分类合并交付：`lib/vector/reranker.cp`）
+- **执行成果**：子智能体交付 `lib/vector/reranker.cp`（MMR 多样性选择、ColBERT MaxSim 晚交互打分、MinMax/ZScore 归一化与 NDCG@K / MRR / Recall@K 检索评测，5/5 PASS + `hybrid` 回归 5/5 PASS），已同步 `cp_lib_ref.md` 并提交；继续派发 `lib/vector/filter.cp`。
+
+### 2026-11-22（分类合并交付：`lib/resolver/node_fallbacks.cp` + 轮换 `Bun Upstream Sync` 子智能体）
+- **执行成果**：子智能体从 Bun `src/resolver/node_fallbacks.cp` 吸收并归类合并 `lib/resolver/node_fallbacks.cp` 至 `cap:resolver`（23 个 Node 浏览器 Polyfill 映射与 VFS 路径反查/格式化，5/5 PASS），已同步 `cp_lib_ref.md` 并提交；按满 10 项轮换策略回收 `88c7f389` 并启动全新 `Bun Upstream Sync Absorber`。

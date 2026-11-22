@@ -30,6 +30,7 @@
 | `lib/resolver/advanced.cp` | `// Source: /data/dev/bun/src/resolver/tsconfig_json.cp & .../package_json.cp` | `TsConfigChainLoader`、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver` |
 | `lib/resolver/integrity.cp` | `// Source: /data/dev/bun/src/install/integrity.cp` | W3C SRI 完整性校验（`IntegrityTag` / `Integrity` 解析、多算法择强、SHA256/512 计算与恒定时间比对） |
 | `lib/resolver/hosted_git.cp` | `// Source: /data/dev/bun/src/install/hosted_git_info.cp` | Git 托管地址解析（`GitHost` / `HostedGitInfo`，支持简写、HTTPS、SSH 与 Tarball URL 生成） |
+| `lib/resolver/node_fallbacks.cp` | `// Source: /data/dev/bun/src/resolver/node_fallbacks.cp` | 面向浏览器打包目标的 23 个 Node.js 核心模块虚拟 Polyfill 路由注册表（`NodeFallbackModule`、`lookupNodeFallback`、`hasNodeFallback`、`isNodeFallbackVfsPath`、`resolveNodeFallbackFromVfsPath`、`formatNodeFallbackEntryPath`、`formatNodeFallbackPackageJsonPath`） |
 | `lib/resolver/index.cp` | `// Source: /data/dev/bun/src/resolver/` | `cap:resolver` 对外统一导出入口 |
 
 ---

@@ -68,3 +68,16 @@ export {
     SelfReferenceMatch,
     SelfReferenceResolver,
 } from "./advanced";
+
+export {
+    NODE_FALLBACK_IMPORT_PATH,
+    NODE_FALLBACK_VERSION,
+    NODE_FALLBACK_COUNT,
+    NodeFallbackModule,
+    lookupNodeFallback,
+    hasNodeFallback,
+    isNodeFallbackVfsPath,
+    resolveNodeFallbackFromVfsPath,
+    formatNodeFallbackEntryPath,
+    formatNodeFallbackPackageJsonPath,
+} from "./node_fallbacks";
