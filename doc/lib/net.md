@@ -312,3 +312,53 @@ pub fn demoTrafficShaperQuickStart() {
     }
 }
 ```
+
+---
+
+## 八、 一致性哈希环、Bounded-Load 防热点与多副本路由器（`consistent_ring.cp`）
+
+面向分布式缓存、AI Agent 集群分片与微服务负载均衡的 100% 纯 CP、零堆分配、O(log V) 二分查找一致性哈希环：
+
+- **`hashRingKey(key: string): u64`**：FNV-1a 64-bit + SplitMix64 雪崩最终化的确定性路由键哈希。
+- **`RingPhysicalNode` / `RingVirtualSlot` / `RingStats`**：物理节点（支持 `weight`、`healthy`、`active_load`、`max_load`）、有序虚拟槽位与环遥测快照。
+- **`ConsistentHashRing`**：
+  - `init(nodes_buf, vslots_buf, vnodes_per_unit): ConsistentHashRing?`：在调用方固定缓冲区零堆初始化。
+  - `addNode(*_, node_id, weight, max_load): bool`：按 `weight * vnodes_per_unit` 确定性生成 SplitMix64 虚拟节点令牌并维持升序，拒绝重复 `node_id`、零权重及超容。
+  - `removeNode(*_, node_id)` / `setHealthy(*_, node_id, healthy)` / `setLoad(*_, node_id, active_load)` / `getNode(node_id)` / `stats()`。
+  - `routeKey(key: string): u32?`：O(log V) 二分顺时针定位首个健康且未过载（`max_load == 0 || active_load < max_load`）的物理节点，内建 Google Bounded-Load 防热点雪崩。
+  - `routeReplicas(key: string, replica_count: usize, out_node_ids: *[]u32): usize`：顺时针选取互不重复的物理节点副本列表，天然跳过同一物理机的不同虚拟节点、不健康及过载节点。
+
+### QuickStart 示例
+
+```cp
+import {
+    RingPhysicalNode,
+    RingVirtualSlot,
+    ConsistentHashRing,
+} from "cap:net";
+
+pub fn demoConsistentHashRingQuickStart() {
+    let nodes: [8]RingPhysicalNode = [RingPhysicalNode{}; 8];
+    let vslots: [256]RingVirtualSlot = [RingVirtualSlot{}; 256];
+    let ring = ConsistentHashRing.init(nodes[0..], vslots[0..], 16) ?? return;
+
+    // 注册 3 个带权重和 Bounded-Load 上限的物理节点
+    * = ring.addNode(1, 2, 100); // 32 vnodes, max_load=100
+    * = ring.addNode(2, 1, 100); // 16 vnodes, max_load=100
+    * = ring.addNode(3, 1, 100); // 16 vnodes, max_load=100
+
+    // O(log V) 单节点路由
+    if (primary := ring.routeKey("agent-session:42")) {
+        * = primary;
+    }
+
+    // 顺时针去重 3 副本路由（自动跳过同一物理机的多个虚拟节点）
+    let replicas: [3]u32 = [0; 3];
+    const n = ring.routeReplicas("agent-session:42", 3, replicas[0..]);
+    * = n;
+
+    // 热点过载触发 Bounded-Load 自动顺延至下一个可用物理节点
+    * = ring.setLoad(1, 100);
+    * = ring.routeKey("agent-session:42");
+}
+```

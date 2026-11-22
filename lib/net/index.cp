@@ -1746,3 +1746,12 @@ export {
     AimdConfig,
     AimdLimiter,
 } from "./traffic_shaper.cp";
+
+// --- consistent_ring ---
+export {
+    hashRingKey,
+    RingPhysicalNode,
+    RingVirtualSlot,
+    RingStats,
+    ConsistentHashRing,
+} from "./consistent_ring.cp";
