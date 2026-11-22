@@ -159,3 +159,23 @@ export {
     encodeDnsPacket,
     decodeDnsPacket,
 } from "./wire.cp";
+
+export {
+    MAX_DNS_HOSTNAME_LEN,
+    AI_FLAG_PASSIVE,
+    AI_FLAG_CANONNAME,
+    AI_FLAG_NUMERICHOST,
+    AI_FLAG_V4MAPPED,
+    AI_FLAG_ALL,
+    AI_FLAG_ADDRCONFIG,
+    AI_FLAG_NUMERICSERV,
+    AI_FLAGS_KNOWN_MASK,
+    GetAddrInfoError,
+    AddrInfoFamily,
+    AddrInfoSocketType,
+    AddrInfoProtocol,
+    AddrInfoBackend,
+    AddrInfoFlags,
+    GetAddrInfoOptions,
+    GetAddrInfoQuery,
+} from "./getaddrinfo.cp";

@@ -1095,3 +1095,50 @@ fn workflowFsmDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：多智能体层级 Token 与微美元成本归因账本（`cost_ledger.cp`）
+
+### 核心特性
+
+- **定点数微美元精确核算（`u64` / `u128`）**：所有模型单价以「微美元 / 百万 Token」（`1 USD = 1,000,000 micro_usd`）表示，单次调用四类 Token（`input`、`output`、`cache_read`、`cache_write`）统一在 `u128` 空间合并求值后四舍五入，彻底消灭浮点累计误差与大数乘法溢出。
+- **Prompt-Cache 缓存读写折扣与节省核算**：`computeCacheSavingsMicroUsd` 精确对比标准输入单价与缓存读单价，自动累计每个 Agent 的缓存节省金额（`cache_savings_micro_usd`）。
+- **环免疫层级子树成本归因（`CostLedger`）**：零堆分配固定槽位账本支持父/子/孙任意深度多智能体子树成本归因（`agentSummary` 同时给出 `direct_micro_usd` 与 `subtree_micro_usd`），内置迭代防环保护免疫自环与互环父子关系，并提供 `totalMicroUsd()` 与 `topSpendingAgent()`。
+
+### 导出清单
+
+- **定价与事件模型**：`ModelRateCard`、`UsageEvent`、`AgentCostSummary`、`TopSpender`
+- **纯计算与账本**：`computeUsageCostMicroUsd(rate, ev)`、`computeCacheSavingsMicroUsd(rate, cache_read_tokens)`、`CostLedger`（`init`, `rateCount`, `eventCount`, `findRate`, `registerRate`, `recordUsage`, `agentSummary`, `totalMicroUsd`, `topSpendingAgent`）
+
+### 使用示例
+
+```typescript
+import {
+    ModelRateCard,
+    UsageEvent,
+    CostLedger,
+} from "cap:agent";
+
+fn costLedgerDemo() {
+    let rates_buf: [4]ModelRateCard = [ModelRateCard{}; 4];
+    let events_buf: [16]UsageEvent = [UsageEvent{}; 16];
+    let rates: []ModelRateCard = rates_buf[0..];
+    let events: []UsageEvent = events_buf[0..];
+    let ledger = CostLedger.init(rates, events);
+
+    * = ledger.registerRate(ModelRateCard{
+        model_id: 1,
+        input_per_mtok_micro: 3000000,
+        output_per_mtok_micro: 15000000,
+        cache_read_per_mtok_micro: 300000,
+        cache_write_per_mtok_micro: 3750000,
+    });
+
+    * = ledger.recordUsage(UsageEvent{ agent_id: 1, parent_agent_id: 0, model_id: 1, input_tokens: 1000, output_tokens: 200 });
+    * = ledger.recordUsage(UsageEvent{ agent_id: 2, parent_agent_id: 1, model_id: 1, input_tokens: 500, cache_read_tokens: 10000 });
+
+    const root_summary = ledger.agentSummary(1); // 包含 Agent 1 与子 Agent 2 的子树总微美元成本
+    * = root_summary;
+}
+```

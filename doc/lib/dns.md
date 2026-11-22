@@ -145,6 +145,19 @@ pub fn demoDnsProduction(): !void {
 
 ## 上游 Bun DNS 行为契约与安全边界注意事项
 
+- **`lib/dns/getaddrinfo.cp`**（吸收自 `/data/dev/bun/src/dns/dns.cp`，零堆分配 RFC 3493 / Bun `GetAddrInfo` 查询选项与缓存键哈希）：`MAX_DNS_HOSTNAME_LEN`、`AI_FLAG_*`、`GetAddrInfoError`、`AddrInfoFamily`、`AddrInfoSocketType`、`AddrInfoProtocol`、`AddrInfoBackend`、`AddrInfoFlags`、`GetAddrInfoOptions`、`GetAddrInfoQuery`（支持 `"IPv4"`/`"IPv6"`/`"c-ares"`/`"getaddrinfo"` 等全部上游别名、RFC 3493 位掩码校验与 ASCII 大小写无关 64 位缓存键哈希）。
+
+```typescript
+import { AddrInfoFamily, AddrInfoBackend, GetAddrInfoOptions, GetAddrInfoQuery } from "cap:dns";
+
+const opts = GetAddrInfoOptions{
+    family: AddrInfoFamily.parse("IPv4")?,
+    backend: AddrInfoBackend.parse("c-ares")?,
+};
+const q = GetAddrInfoQuery.init("API.Example.COM", 443, opts)?;
+const cache_key = q.hash(); // case-insensitive deterministic u64 key
+```
+
 1. **有界 TTL 缓存与失败驱逐（参考 `/data/dev/bun/docs/runtime/networking/dns.mdx`）**：
    - 上游 Bun DNS 缓存采用固定条目上限（默认 255 条）与有界 TTL（默认 30s），连接失败时主动驱逐失效缓存；在 CP 中可使用 `DnsCache<256>` 零堆分配实现同等有界缓存，并在高并发建连前合并重复域名查询。
 2. **DNS 压缩指针防环与标签长度边界（RFC 1035）**：

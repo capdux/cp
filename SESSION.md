@@ -1162,3 +1162,36 @@
 ### 2026-11-22（里程碑：RFC Phase 2 (@splitAtMut + noalias 借用优化) 落地发布并回收编译器子智能体 | 2026-11-22 13:32:26）
 - **执行与结单汇报**：
   > CPC Compiler Engineer 完成 AI-Native RFC Phase 2：1) 实现 @splitAtMut(slice, mid) 零拷贝互斥分片原语（含 E0321/E0323 AI-First 诊断与按需零污染发射）；2) 实测 Zig 0.17.0 原生支持 slice noalias，对同时含独占可变借用 *[]T 与只读借用 []const T 的纯 CP 函数自动注入 noalias 优化（零回调/既有测试回归）；3) release 部署生效，test_builtin_split_at_mut.cp、test_builtin_simd_dot_fma.cp、test_raii_local_alias_errinit.cp 全部 100% PASS，并回收编译器子智能体。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 13:32:17）[step:14497]
+- **用户完整原始指令**：
+  > 同意你的"对历史遗留重叠目录的治理建议", 确保从bun中吸收的优先, 不被覆盖/删除, 因为bun中的资产质量高,经受多年考验,
+  > bun中没有的, 不存在冲突问题, 保持即可, 领域与类别相同的, 归入 相同目录, 避免根目录膨胀, 不得重名, 避免同名覆盖,
+  > 涉及冲突的, 除非你能明确判断, 可以补充/优化 bun中的模块, 可以吸收合并, 否则不要轻易合并, 这部分参考代码可以使用 xxx_.cp 名称, 表示参考, 供后续分析/对比/参考用, 头部需备注与xxx功能冲突, 作为参考的说明
+- **完整回复与执行汇报**：
+  > 完全遵照执行！这套治理规范非常稳健（既保全 Bun 多年生产考验的权威资产，又避免盲目合并丢失对比参考），已立即作为铁律下发并启动第 1 批重叠目录治理：
+  >
+  > ### 1. 已确立的重叠目录治理铁律
+  > 1. **Bun 资产绝对优先**：绝不覆盖或删除任何从 `/data/dev/bun` 吸收的权威模块；
+  > 2. **无冲突按域归类**：Bun 中没有的领域（如 AI Agent / LLM 推理 / RAG）保持独立归类合并至对应主包，严禁重名覆盖与顶层目录膨胀；
+  > 3. **存在功能冲突时不盲目合并、不删除**：
+  >    - 除非明确可补充/优化 Bun 权威模块才做增量合并；
+  >    - 否则统一以 **`xxx_.cp`**（末尾下划线）归入同领域目录作为参考实现，并在文件头部明确标注：
+  >      `// Reference Only: Functional overlap with lib/<pkg>/<authoritative>.cp | Kept for comparison/analysis`
+  >      （不与主包权威符号重名导出，留作后续分析与对比参考）。
+  >
+  > ### 2. 已启动第 1 批治理专员（`Stdlib Overlap Consolidator`）
+  > - 首批精准处理 `cap:pkg`（`catalog` 归入）与 `cap:css`（`cssmodules` / `keyframes` / `mediaquery` 逐一核对冲突：无冲突并入主包、有冲突则按 `xxx_.cp` 参考归档），并核查 `safetensors` 与 `lib/attention/safetensors.cp` 的重叠关系。
+  >
+  > ---
+  >
+  > ### 3. 同步喜报：RFC Phase 2（`@splitAtMut` + `noalias` 借用优化）已全部落地发布（Commit `5f51f609`）
+  > - **`@splitAtMut(slice, mid)` 零拷贝互斥分片原语**：支持 `let [left, right] = @splitAtMut(buf, mid);` 在同一作用域内无冲突并发原地修改，带 `E0321`/`E0323` AI-First 诊断与按需零污染发射；
+  > - **`noalias` 借用优化**：实测 Zig 0.17.0 原生支持切片 `noalias`，已对同时包含独占可变借用 `*[]T` 与只读借用 `[]const T` 的纯 CP 函数自动注入 `noalias`（如 `pub fn saxpyNoalias(noalias out: []f32, noalias x: []const f32, alpha: f32)`），回调与既有测试 100% 零回归；
+  > - **验收与发布**：`bash scripts/sync_cpc.sh release` 已原子部署；[test_builtin_split_at_mut.cp](file:///data/dev/cp/cap/test/test_builtin_split_at_mut.cp)、[test_builtin_simd_dot_fma.cp](file:///data/dev/cp/cap/test/test_builtin_simd_dot_fma.cp)、[test_raii_local_alias_errinit.cp](file:///data/dev/cp/cap/test/test_raii_local_alias_errinit.cp) 全部 **100% PASS**，专职编译器子智能体已按规范回收。
+  >
+  > > 当前 4 路子智能体并行中（1 路重叠目录治理专员 + 3 路标准库吸收子智能体）。
+
+### 2026-11-22（分类合并交付：lib/agent/cost_ledger.cp + 满 10 项轮换 | 2026-11-22 13:34:02）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/agent/cost_ledger.cp（多智能体层级 Token 与微美元成本归因账本及 Prompt-Cache 折扣核算，5/5 PASS），归入 cap:agent 并同步 cp_lib_ref.md；满 10 项回收 0ea48e08 并启全新 AI & Agent Runtime Absorber 推进 lib/mcp/resource_router.cp。
