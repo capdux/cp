@@ -259,6 +259,16 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
             }
         }
         Expr::LabeledBlock { block, .. } => find_referenced_vars_in_block(block, vars),
+        Expr::While { stmt, else_expr } => {
+            find_referenced_vars_in_expr(&stmt.test, vars);
+            if let Some(c) = &stmt.continue_expr {
+                find_referenced_vars_in_expr(c, vars);
+            }
+            find_referenced_vars_in_stmt(&stmt.body, vars);
+            if let Some(e) = else_expr {
+                find_referenced_vars_in_expr(e, vars);
+            }
+        }
         Expr::InlineAsm { .. } => {}
         Expr::ComptimeMap {
             target_ty, entries, ..

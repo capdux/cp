@@ -505,6 +505,7 @@ pub(super) fn left_span(expr: &Expr) -> Span {
         Expr::Continue(span) | Expr::LabeledContinue(span, _) => *span,
         Expr::Break(span, _) | Expr::LabeledBreak(span, _, _) => *span,
         Expr::LabeledBlock { block, .. } => block.span,
+        Expr::While { stmt, .. } => stmt.span,
         Expr::Return(span, _) => *span,
         Expr::InlineAsm { span, .. } | Expr::ComptimeMap { span, .. } => *span,
     }
@@ -557,6 +558,7 @@ pub(super) fn right_span(expr: &Expr) -> Span {
             val.as_ref().map(|v| right_span(v)).unwrap_or(*span)
         }
         Expr::LabeledBlock { block, .. } => block.span,
+        Expr::While { stmt, .. } => stmt.span,
         Expr::Return(span, val) => val.as_ref().map(|v| right_span(v)).unwrap_or(*span),
         Expr::InlineAsm { span, .. } | Expr::ComptimeMap { span, .. } => *span,
     }

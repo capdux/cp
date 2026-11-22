@@ -1801,3 +1801,29 @@
   > 已读取新工单 **`task-bun-20261122-comptime-generic-param-discard`**（复现：[repro_comptime_generic_param_discard.cp](file:///data/dev/cp/temp/repro_comptime_generic_param_discard.cp)：`fn wrap(comptime W: type): i32 { return S<W>.f(); }` 中 `W` 被误插 `_ = W;` 导致 Zig 报 `pointless discard of function parameter`），并已同步追加派发给正在 `cpc/src/` 处理同类弃用参数逻辑的热修子智能体 **`589e1163`** 一并打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
   >
   > 原有 2 路第 4 波常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ② `a71d0cb8`）继续并行运转不受影响。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-top-if-enum-lit`）[ticket:task-bun-20261122-top-if-enum-lit]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 18:24:28` | 状态：`resolved` | 结单：`2026-11-22T18:36:45`
+- **报错/需求摘要**：顶层 pub const k: PT = if (true) .u16 else .u8; 中的裸枚举字面量 .u16 触发 E0190（误判为管道占位符 '.'）
+- **结单与处理汇报**：已修复(cpc release 已部署): parser/primary.rs 中 Token::Dot 分支已对齐 parse_ident 支持的全部关键字/原始类型 token(is_ident_token)，.u16/.u8 等裸枚举字面量不再误报 E0190；repro_top_if_enum_lit.cp 0 errors，新增回归测试 cap/test/test_top_if_enum_lit.cp 100% PASS。
+
+### 2026-11-22（下游工单全量补录：`task-bun-20261122-while-break-expr`）[ticket:task-bun-20261122-while-break-expr]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-22 18:27:00` | 状态：`resolved` | 结单：`2026-11-22T18:36:45`
+- **报错/需求摘要**：while 循环作为表达式赋值 const val = while (true) { if (flag) break 42; }; 时，parser 报 E0100 unexpected token 'While'
+- **结单与处理汇报**：已修复(cpc release 已部署): 全栈新增 Expr::While (支持 while (...) { break val; }、else 分支及 label: while 表达式)，并在 codegen 中自动推断 i32/f32 字面量类型标注避免 Zig comptime_int 报错；repro_const_while_break_val.cp 0 errors，新增回归测试 cap/test/test_while_break_expr.cp 100% PASS。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 18:24:30）[step:15840]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-top-if-enum-lit)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261122-top-if-enum-lit`**（复现：[repro_top_if_enum_lit.cp](file:///data/dev/cp/temp/repro_top_if_enum_lit.cp)：顶层 `pub const k: PT = if (true) .u16 else .u8;` 中裸枚举字面量 `.u16` 误触发 `E0190`），并立即启动独立热修子智能体 **`0e0e271d`**（`CPC Hotfix Engineer`）专职排查修复、发布 `sync_cpc.sh release`、补齐回归测试并执行 `resolve` 结单。
+  >
+  > 原有 2 路常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ② `6b28440c`）继续并行运转不受影响。待热修回报后将立即验收提交并同步 `SESSION.md`。
+
+### 2026-11-22（用户原始指令与完整回复 2026-11-22 18:28:56）[step:15860]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261122-while-break-expr)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取新工单 **`task-bun-20261122-while-break-expr`**（复现：[repro_const_while_break_val.cp](file:///data/dev/cp/temp/repro_const_while_break_val.cp)：`while` 循环作为表达式赋值 `const val = while (true) { if (flag) break 42; };` 报 `E0100 unexpected token 'While'`），并已同步追加派发给正在 `cpc/src/` 作业的热修子智能体 **`0e0e271d`** 一并打包修复、发布 `sync_cpc.sh release` 与逐一 `resolve` 结单。
+  >
+  > 原有 2 路常驻生态子智能体（Priority ① `5f0d7a3a` + Priority ③ `6b28440c`）继续并行运转不受影响。

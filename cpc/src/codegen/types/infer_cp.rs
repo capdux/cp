@@ -1393,6 +1393,30 @@ impl Codegen {
                 }
                 None
             }
+            Expr::While { stmt, else_expr } => {
+                fn find_break_val(s: &Stmt) -> Option<&Expr> {
+                    match s {
+                        Stmt::Expr(Expr::Break(_, Some(v)))
+                        | Stmt::Expr(Expr::LabeledBreak(_, _, Some(v))) => Some(v),
+                        Stmt::If(i) => find_break_val(&i.cons)
+                            .or_else(|| i.alt.as_deref().and_then(find_break_val)),
+                        Stmt::Block(b) | Stmt::UnsafeBlock(b) => {
+                            b.body.iter().rev().find_map(find_break_val)
+                        }
+                        Stmt::While(w) => find_break_val(&w.body),
+                        _ => None,
+                    }
+                }
+                if let Some(val) = find_break_val(&stmt.body) {
+                    if let Some(t) = self.infer_cp_type_with_mock(val, mock_types) {
+                        return Some(t);
+                    }
+                }
+                if let Some(e) = else_expr {
+                    return self.infer_cp_type_with_mock(e, mock_types);
+                }
+                None
+            }
             _ => None,
         }
     }

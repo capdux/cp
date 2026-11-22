@@ -802,6 +802,16 @@ impl ModuleFeatures {
             },
             Expr::Unsafe(b) | Expr::Comptime(b) | Expr::Arena(b) => self.scan_block(b),
             Expr::LabeledBlock { block, .. } => self.scan_block(block),
+            Expr::While { stmt, else_expr } => {
+                self.scan_expr(&stmt.test);
+                if let Some(c) = &stmt.continue_expr {
+                    self.scan_expr(c);
+                }
+                self.scan_stmt(&stmt.body);
+                if let Some(e) = else_expr {
+                    self.scan_expr(e);
+                }
+            }
             Expr::LabeledBreak(_, _, val) => {
                 if let Some(v) = val {
                     self.scan_expr(v);

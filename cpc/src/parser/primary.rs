@@ -40,10 +40,12 @@ impl<'a> Parser<'a> {
                     return Ok(Expr::Object(fields));
                 }
                 if self.in_pipeline_rhs > 0 {
-                    if matches!(
+                    let is_member_prop = matches!(
                         self.peek(),
                         Some(Token::Ident(_)) | Some(Token::ErrorKw) | Some(Token::Auto)
-                    ) {
+                    ) || (self.peek().map_or(false, Self::is_ident_token)
+                        && self.peek_span().start == span.end);
+                    if is_member_prop {
                         let prop = self.parse_ident()?;
                         if prop
                             .sym
@@ -92,10 +94,7 @@ impl<'a> Parser<'a> {
                         Ok(Expr::PipePlaceholder(span))
                     }
                 } else {
-                    if matches!(
-                        self.peek(),
-                        Some(Token::Ident(_)) | Some(Token::ErrorKw) | Some(Token::Auto)
-                    ) {
+                    if self.peek().map_or(false, Self::is_ident_token) {
                         let variant_name = self.parse_ident()?;
                         let mut fields = None;
                         let mut tuple_args = None;
@@ -810,6 +809,27 @@ impl<'a> Parser<'a> {
                     return Ok(Expr::LabeledBlock {
                         label: Some(Ident { span, sym }),
                         block,
+                    });
+                }
+                if self.peek() == Some(&Token::Colon) && self.peek_next() == Some(&Token::While) {
+                    self.bump()?; // consume ':'
+                    let mut w = self.parse_while_stmt()?;
+                    w.label = Some(Ident { span, sym });
+                    let else_expr = if self.peek() == Some(&Token::Else) {
+                        self.bump()?;
+                        let e = if self.peek() == Some(&Token::LBrace) {
+                            let block = self.parse_block_stmt()?;
+                            Expr::LabeledBlock { label: None, block }
+                        } else {
+                            self.parse_expr()?
+                        };
+                        Some(Box::new(e))
+                    } else {
+                        None
+                    };
+                    return Ok(Expr::While {
+                        stmt: Box::new(w),
+                        else_expr,
                     });
                 }
                 if (sym == "Err" || sym == "err") && self.peek() == Some(&Token::LParen) {
@@ -2078,6 +2098,25 @@ impl<'a> Parser<'a> {
                     is_comptime,
                     capture,
                     is_ptr_capture,
+                })
+            }
+            Token::While => {
+                let w = self.parse_while_stmt_after_kw(span.start)?;
+                let else_expr = if self.peek() == Some(&Token::Else) {
+                    self.bump()?;
+                    let e = if self.peek() == Some(&Token::LBrace) {
+                        let block = self.parse_block_stmt()?;
+                        Expr::LabeledBlock { label: None, block }
+                    } else {
+                        self.parse_expr()?
+                    };
+                    Some(Box::new(e))
+                } else {
+                    None
+                };
+                Ok(Expr::While {
+                    stmt: Box::new(w),
+                    else_expr,
                 })
             }
             Token::Slash => {

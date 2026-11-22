@@ -471,6 +471,12 @@ impl Codegen {
                                     } else {
                                         String::new()
                                     }
+                                } else if matches!(init, Expr::While { .. }) {
+                                    match self.infer_cp_type(init) {
+                                        Some(Type::I32) => ": i32".to_string(),
+                                        Some(Type::F32) => ": f32".to_string(),
+                                        _ => String::new(),
+                                    }
                                 } else {
                                     String::new()
                                 };

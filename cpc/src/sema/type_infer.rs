@@ -1061,6 +1061,15 @@ impl Analyzer {
                 }
                 Ok(Type::Void)
             }
+            Expr::While { stmt, else_expr } => {
+                if let Some(val) = Self::find_break_value_in_stmt(&stmt.body) {
+                    return Ok(self.infer_type(val).unwrap_or(Type::Any));
+                }
+                if let Some(e) = else_expr {
+                    return Ok(self.infer_type(e).unwrap_or(Type::Any));
+                }
+                Ok(Type::Void)
+            }
             _ => Ok(Type::Any),
         }
     }
@@ -1082,6 +1091,7 @@ impl Analyzer {
                 }
                 None
             }
+            Stmt::While(w) => Self::find_break_value_in_stmt(&w.body),
             _ => None,
         }
     }

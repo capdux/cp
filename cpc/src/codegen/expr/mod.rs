@@ -430,6 +430,21 @@ impl Codegen {
             Expr::LabeledContinue(_, label) => {
                 format!("continue :{}", label.sym)
             }
+            Expr::While { stmt, else_expr } => {
+                let saved = self.current_case_content.clone();
+                self.current_case_content.clear();
+                let old_blk = self.current_block_label.clone();
+                self.current_block_label = None;
+                self.generate_stmt(&Stmt::While((**stmt).clone()));
+                let while_code = self.current_case_content.trim().to_string();
+                self.current_case_content = saved;
+                self.current_block_label = old_blk;
+                if let Some(e) = else_expr {
+                    format!("({} else {})", while_code, self.generate_expr(e))
+                } else {
+                    format!("({})", while_code)
+                }
+            }
             Expr::LabeledBlock { label, block } => {
                 let saved = self.current_case_content.clone();
                 self.current_case_content.clear();

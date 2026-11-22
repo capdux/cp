@@ -1442,6 +1442,12 @@ impl Analyzer {
             Expr::LabeledBlock { block, .. } => {
                 self.analyze_block(block)?;
             }
+            Expr::While { stmt, else_expr } => {
+                self.analyze_stmt(&Stmt::While((**stmt).clone()))?;
+                if let Some(e) = else_expr {
+                    self.analyze_expr(e)?;
+                }
+            }
             Expr::LabeledBreak(_, _, val) => {
                 if let Some(v) = val {
                     self.analyze_expr(v)?;

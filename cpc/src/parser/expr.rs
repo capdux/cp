@@ -1699,6 +1699,82 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
+    pub(super) fn is_ident_token(token: &Token) -> bool {
+        matches!(
+            token,
+            Token::Ident(_)
+                | Token::Match
+                | Token::ZigEscape
+                | Token::Switch
+                | Token::Try
+                | Token::Catch
+                | Token::Null
+                | Token::Dyn
+                | Token::Super
+                | Token::ErrorKw
+                | Token::Await
+                | Token::Async
+                | Token::If
+                | Token::While
+                | Token::For
+                | Token::Return
+                | Token::Class
+                | Token::Struct
+                | Token::Ref
+                | Token::Trait
+                | Token::Enum
+                | Token::Impl
+                | Token::Interface
+                | Token::Extends
+                | Token::Any
+                | Token::Void
+                | Token::String
+                | Token::Bool
+                | Token::U8
+                | Token::I8
+                | Token::U16
+                | Token::I16
+                | Token::I32
+                | Token::U32
+                | Token::I64
+                | Token::U64
+                | Token::I128
+                | Token::U128
+                | Token::F32
+                | Token::F64
+                | Token::ISize
+                | Token::USize
+                | Token::New
+                | Token::From
+                | Token::As
+                | Token::Meta
+                | Token::Dec
+                | Token::Macro
+                | Token::Unsafe
+                | Token::Arena
+                | Token::Of
+                | Token::In
+                | Token::TypeKw
+                | Token::Import
+                | Token::Export
+                | Token::Pub
+                | Token::Const
+                | Token::Let
+                | Token::Var
+                | Token::ThreadLocal
+                | Token::Mut
+                | Token::Static
+                | Token::CStr
+                | Token::Else
+                | Token::Break
+                | Token::Continue
+                | Token::Move
+                | Token::Own
+                | Token::Fn
+                | Token::Auto
+        )
+    }
+
     pub(super) fn parse_ident(&mut self) -> ParseResult<Ident> {
         let (token, span) = self.bump()?;
         let sym = match token {

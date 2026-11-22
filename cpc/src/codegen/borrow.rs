@@ -867,6 +867,18 @@ impl Codegen {
             | Expr::Comptime(b) => {
                 self.collect_mutated_fields_in_block(b, class_name, depth, visited, mutated)
             }
+            Expr::While { stmt, else_expr } => {
+                self.collect_mutated_fields_in_expr(&stmt.test, class_name, depth, visited, mutated)
+                    && stmt.continue_expr.as_ref().map_or(true, |c| {
+                        self.collect_mutated_fields_in_expr(c, class_name, depth, visited, mutated)
+                    })
+                    && self.collect_mutated_fields_in_stmt(
+                        &stmt.body, class_name, depth, visited, mutated,
+                    )
+                    && else_expr.as_ref().map_or(true, |e| {
+                        self.collect_mutated_fields_in_expr(e, class_name, depth, visited, mutated)
+                    })
+            }
             Expr::Array(items) => items.iter().all(|i| {
                 self.collect_mutated_fields_in_expr(i, class_name, depth, visited, mutated)
             }),

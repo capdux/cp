@@ -547,6 +547,10 @@ pub enum Expr {
         label: Option<Ident>,
         block: BlockStmt,
     },
+    While {
+        stmt: Box<WhileStmt>,
+        else_expr: Option<Box<Expr>>,
+    },
     Return(Span, Option<Box<Expr>>),
     InlineAsm {
         span: Span,
@@ -1133,6 +1137,7 @@ impl Expr {
             Expr::Break(span, _) => *span,
             Expr::LabeledBreak(span, _, _) => *span,
             Expr::LabeledBlock { block, .. } => block.span,
+            Expr::While { stmt, .. } => stmt.span,
             Expr::Return(span, _) => *span,
             Expr::InlineAsm { span, .. } => *span,
             Expr::ComptimeMap { span, .. } => *span,

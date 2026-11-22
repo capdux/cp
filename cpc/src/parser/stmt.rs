@@ -680,6 +680,10 @@ impl<'a> Parser<'a> {
 
     pub(super) fn parse_while_stmt(&mut self) -> ParseResult<WhileStmt> {
         let start = self.expect(Token::While)?.start;
+        self.parse_while_stmt_after_kw(start)
+    }
+
+    pub(super) fn parse_while_stmt_after_kw(&mut self, start: usize) -> ParseResult<WhileStmt> {
         if self.peek() != Some(&Token::LParen) {
             return Err(ParseError::Generic(
                 "CP Syntax Error: 'while' condition requires parentheses.\n  = help: in CP, while loops require parentheses around the condition.\n  = suggestion: wrap the condition in parentheses: while (condition) { ... }".to_string(),
