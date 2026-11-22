@@ -327,3 +327,31 @@ while (ys.nextStep() == YesTickAction.WriteChunk) {
 * = ys.resumeFromEventLoop();
 * = ys.onWriteError(true); // EPIPE -> exit_code == 0
 ```
+
+### POSIX / Bun Shell `if / elif / else` 多分支控制流状态机（`if_state.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/If.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`SHELL_IF_MAX_STMTS` (`32`)、`SHELL_IF_MAX_ELSE_PARTS` (`16`)、`ShellIfError`、`IfBranchPhase`（`Idle`/`Cond`/`Then`/`ElifCond`/`ElseBranch`/`Done`）、`IfStepKind`（`RunStmt`/`Completed`）、`IfStepResult`、`ShellIfStateMachine`；
+- **POSIX 2.9.4.4 与 Bun 扁平 `else_parts` 约束**：
+  - 多语句条件列表顺序求值，**仅依据最后一条语句的退出码**（`== 0` 为真）决定是否进入 `then` 分支；
+  - 扁平 `else_parts` 编码：`len == 0` 表示无 `elif`/`else`；`len == 1` 表示单 `else` 块；`len >= 2` 时偶数槽为 `elif` 条件、奇数槽为对应 `then` 体，长度为奇数时末槽为兜底 `else`；
+  - 当所有条件均为假且无 `else` 时，整个 `if` 控制流严格返回退出码 `0`；命中 `then` 或 `else` 分支时返回该分支最后一条语句的退出码。
+
+```cp
+import { ShellIfStateMachine, IfStepKind } from "cap:shell";
+
+let sm = ShellIfStateMachine.init();
+* = sm.addCondStmt(10)?;
+* = sm.addThenStmt(20)?;
+const p_else = sm.beginElsePart()?;
+* = sm.addElsePartStmt(p_else, 30)?;
+
+const s1 = sm.nextStep()?; // RunStmt(10)
+* = sm.onStmtDone(1)?;     // 条件为假 -> 跳转 else 分支
+const s2 = sm.nextStep()?; // RunStmt(30)
+* = sm.onStmtDone(42)?;
+const s3 = sm.nextStep()?; // Completed(exit_code == 42)
+* = s1;
+* = s2;
+* = s3;
+```
