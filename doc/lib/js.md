@@ -177,3 +177,28 @@ if (m := reg.lookupImplicitInBlock(b2, "y")) {
 }
 * = b1;
 ```
+
+### TypeScript 装饰器元数据归约与泛型实参前瞻 (`tsMetadata.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/TypeScript.cp`：
+
+- **导出符号**：`TsMetadataError`、`TsMetadataKind`（17 种 `emitDecoratorMetadata` 元数据类型）、`TsDecoratorMetadata`（`fromKind`/`identifier`/`eql`/`finishUnion`/`mergeUnion`/`finishIntersection`/`mergeIntersection`/`foldUnion`/`foldIntersection`/`runtimeRefStr`/`emitRuntimeRef`）、`TsTypeArgLookaheadToken`、`canFollowTsTypeArguments`；
+- **关键 TypeScript 语义对齐**：
+  1. **联合类型归约 (`foldUnion`)**：`string | null | undefined -> String`、`string | number -> Object`、`MyClass | MyClass -> MyClass`、`MyClass | OtherClass -> Object`、`any | string -> Object`；
+  2. **交叉类型归约 (`foldIntersection`)**：`never & string -> void 0`（`never` 主导）、`unknown & unknown -> void 0`（全 `unknown` 交集不退化为 `Object`）、`string & unknown -> String`、`MyClass & OtherClass -> Object`；
+  3. **表达式泛型实参前瞻 (`canFollowTsTypeArguments`)**：精确区分 `foo<T>(x)` / ``foo<T>`tpl` `` 与比较运算 `a < b > c` / `a < b + c`。
+
+```cp
+import { TsDecoratorMetadata, TsMetadataKind, TsTypeArgLookaheadToken, canFollowTsTypeArguments } from "cap:js";
+
+const branches: [3]TsDecoratorMetadata = [
+    TsDecoratorMetadata.fromKind(TsMetadataKind.m_string),
+    TsDecoratorMetadata.fromKind(TsMetadataKind.m_null),
+    TsDecoratorMetadata.fromKind(TsMetadataKind.m_undefined),
+];
+const meta = TsDecoratorMetadata.foldUnion(branches[0..]);
+// meta.runtimeRefStr() == "String"
+assert(canFollowTsTypeArguments(TsTypeArgLookaheadToken.open_paren, false));
+assert(!canFollowTsTypeArguments(TsTypeArgLookaheadToken.plus, false));
+* = meta;
+```

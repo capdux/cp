@@ -76,3 +76,11 @@ export {
     TsPropertyAccessProxy,
     TsNamespaceRegistry,
 } from "./tsNamespace.cp";
+
+export {
+    TsMetadataError,
+    TsMetadataKind,
+    TsDecoratorMetadata,
+    TsTypeArgLookaheadToken,
+    canFollowTsTypeArguments,
+} from "./tsMetadata.cp";
