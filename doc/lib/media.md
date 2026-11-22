@@ -650,6 +650,21 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
   - `OpusSdpFmtpConfig`、`parseOpusSdpFmtp`、`formatOpusSdpFmtp`（全量支持 `minptime`/`maxplaybackrate`/`maxaveragebitrate`/`stereo`/`sprop-stereo`/`cbr`/`useinbandfec`/`usedtx`）；
   - `OpusRtpPacketizer`（48kHz RTP 时间戳递增、DTX 静音后首个语音包自动置位 `Marker`、`aggregatePackets` 如 20ms×2 -> 40ms）与 `OpusRtpUnpacker`（`observePacket` 统计 + `splitToSingleFramePackets` 多帧拆分）。
 
+### 14. MP3 / MPEG-1/2/2.5 帧同步、CRC16、Xing/LAME/VBRI TOC 寻址、Side-Info 与 RFC 2250 MPA RTP 引擎 (`mpeg.cp`)
+
+在 100% 向下兼容既有 `MpegFrameHeader`/`MpegFrameIter`/`parseXingHeader`/`summarizeMpeg` 的基础上，原地深化为全套零堆外部切片 MP3/MPEG 音频核心：
+
+- **帧头编码、CRC16-IBM (`0x8005`) 与抗噪声重同步**：
+  - `Mp3HeaderSpec`、`encodeMp3FrameHeader`、`mp3SideInfoLen`、`computeMp3Crc16`、`verifyMp3FrameCrc`、`stampMp3FrameCrc`；
+  - `hasTrailingId3v1` 与 `Mp3StreamIter`（跳过前置 ID3v2 + 垃圾字节，执行下一帧前瞻校验，并忽略尾部 128B ID3v1 标签）。
+- **Xing / Info / LAME Gapless、VBRI、O(1) TOC 寻址与流扫描**：
+  - `Mp3XingHeader`、`parseMp3XingHeader`（完整提取 100 字节 TOC 表 + LAME `encoder_delay` / `encoder_padding` 12-bit/12-bit 无缝播放参数）；
+  - `Mp3VbriHeader`、`parseVbriHeader`（偏移 36 处 Fraunhofer VBRI 全字段）；
+  - `seekMp3ByteOffsetByMs`（Xing TOC 线性插值或 CBR O(1) 毫秒寻址）与 `Mp3StreamSummary` / `scanMp3Stream`（min/max/avg 码率 + Gapless 裁剪样本统计）。
+- **Layer III Side-Info 与 RFC 2250 MPA RTP**：
+  - `Mp3GranuleChannelInfo`、`Mp3Layer3SideInfo`、`parseLayer3SideInfo`（`main_data_begin`、`private_bits`、`scfsi`、`part2_3_length`、`big_values`、`global_gain`）；
+  - `Mp3RtpSpan`、`packetizeMp3Rtp`（4B `[MBZ:16 | Frag_offset:16]` 多帧聚合与超 MTU 分片）与 `Mp3RtpDepacketizer`。
+
 ---
 
 ## 收敛子模块深度文档

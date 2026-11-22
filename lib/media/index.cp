@@ -433,6 +433,11 @@ export {
 } from "./aac.cp";
 
 export {
+    MP3_CRC16_POLY,
+    MP3_ID3V1_TAG_SIZE,
+    MP3_XING_TOC_SIZE,
+    MPA_RTP_HEADER_SIZE,
+    MpegError,
     MpegVersion,
     MpegLayer,
     MpegChannelMode,
@@ -446,6 +451,27 @@ export {
     isMpegAudio,
     parseXingHeader,
     summarizeMpeg,
+    Mp3HeaderSpec,
+    encodeMp3FrameHeader,
+    mp3SideInfoLen,
+    computeMp3Crc16,
+    verifyMp3FrameCrc,
+    stampMp3FrameCrc,
+    hasTrailingId3v1,
+    Mp3StreamIter,
+    Mp3XingHeader,
+    parseMp3XingHeader,
+    Mp3VbriHeader,
+    parseVbriHeader,
+    seekMp3ByteOffsetByMs,
+    Mp3StreamSummary,
+    scanMp3Stream,
+    Mp3GranuleChannelInfo,
+    Mp3Layer3SideInfo,
+    parseLayer3SideInfo,
+    Mp3RtpSpan,
+    packetizeMp3Rtp,
+    Mp3RtpDepacketizer,
 } from "./mpeg.cp";
 
 export {
