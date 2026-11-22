@@ -165,6 +165,14 @@ export {
     ShellDirState,
 } from "./cd_path.cp";
 
+export {
+    SHELL_MV_MAX_SOURCES,
+    ShellMvError,
+    MvOverwritePolicy,
+    MvOpts,
+    MvPlan,
+} from "./mv_opts.cp";
+
 // Quick synchronous shell execution helper: sh("echo hello | cat")
 pub fn sh(command_str: []const u8): ShellResult {
     let parser = Parser.init(command_str);

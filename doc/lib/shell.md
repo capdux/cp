@@ -193,6 +193,20 @@ const args2: [1][]const u8 = ["-"];
 * = dir.applyCd(args2[0..], "/home/dev")?; // "/workspace/app"
 ```
 
+### POSIX `mv` 标志解析与多源目标路径规划器（`mv_opts.cp`，吸收自 `/data/dev/bun/src/shell/builtin/mv.cp`）
+
+- 导出：`SHELL_MV_MAX_SOURCES` (`64`)、`ShellMvError`、`MvOverwritePolicy`（`Force` / `Interactive` / `NoClobber`）、`MvOpts`（`forceOverwrite` / `interactiveMode` / `noOverwrite` / `applyShortFlag`）、`MvPlan`（`parse` / `requiresDirectoryTarget` / `resolveDestPath` / `formatVerboseLine`）。
+- 遵循 POSIX/Bun 互斥覆盖策略规则：`-f`、`-i`、`-n` 后出现者覆盖先出现者；支持合并短标志（如 `-fvn`）与 `--` 选项终止哨兵（允许移动 `-` 开头的畸形文件名）；当源数量大于 1 且目标非目录时确定性返回 `TargetMustBeDirectory`。
+
+```cp
+import { MvPlan } from "cap:shell";
+
+const args: [4][]const u8 = ["-vn", "src/a.cp", "src/b.cp", "dist/"];
+const plan = MvPlan.parse(args[0..])?;
+let dst: [128]u8 = [0; 128];
+const n = plan.resolveDestPath(0, true, dst[0..])?; // "dist/a.cp"
+* = n;
+```
 
 ---
 
