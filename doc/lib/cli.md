@@ -408,3 +408,45 @@ const sn = report.formatSummaryLine(sum_buf[0..])?;
 * = jn;
 * = sn;
 ```
+
+13. **依赖过期分析、Catalog 分组与对齐表格引擎（`lib/cli/pm_outdated.cp`，吸收自 `/data/dev/bun/src/cli/outdated_command.cp` & `/data/dev/bun/docs/pm/cli/outdated.mdx`）**：
+    - **三列版本语义（Current / Update / Latest）**：
+      - `Current` 为当前已安装版本，`Update` 为满足 `package.json` 范围约束的最新兼容版本，`Latest` 为 Registry 发布的最新版本；
+      - `PmOutdatedSemver.classifyUpgradeTo` 精确区分 `UpToDate` / `Patch` / `Minor` / `Major` / `Prerelease`，`PmOutdatedTable.addEntry` 自动剔除已为最新的依赖项。
+    - **包名通配与 `!` 排除过滤**：
+      - 支持位置参数正向匹配（如 `eslint*`、`@types/*`）与反向排除（如 `!@types/*`），迭代式 `matchOutdatedGlob` 零递归免疫 ReDoS。
+    - **Monorepo Workspace 与 Catalog 依赖分组**：
+      - 同一个默认或命名 Catalog（如 `catalog:testing`）在多个 Workspace 中被引用时，`PmOutdatedTable.addEntry` 自动按 `(package_name, catalog_name, dep_kind)` 合并去重并格式化为 `catalog:testing (@app/a, @app/b)`；
+      - `sortDeterministic()` 按依赖类别（`Normal < Dev < Peer < Optional`）与包名字母序稳定排列，`formatMarkdownTable()` 动态计算列宽输出对齐表格。
+
+### 依赖过期检查与 Catalog 表格渲染示例（`lib/cli/pm_outdated.cp`）
+
+```cp
+import {
+    PmOutdatedDepKind,
+    PmOutdatedFilter,
+    PmOutdatedEntry,
+    PmOutdatedTable,
+} from "cap:cli";
+
+let filter = PmOutdatedFilter.init();
+* = filter.addPattern("!@types/*")?;
+
+let tbl = PmOutdatedTable.init();
+* = tbl.addEntry(PmOutdatedEntry{
+    package_name: "eslint",
+    dep_kind: PmOutdatedDepKind.Dev,
+    current: "8.57.1",
+    update: "8.57.1",
+    latest: "9.20.0",
+    workspace_name: "@app/web",
+    is_catalog: true,
+    catalog_name: "testing",
+}, filter)?;
+tbl.sortDeterministic();
+
+let out: [512]u8 = [0; 512];
+const n = tbl.formatMarkdownTable(out[0..], true)?;
+// 包含 "| eslint (dev) | 8.57.1  | 8.57.1 | 9.20.0 | catalog:testing (@app/web) |"
+* = n;
+```

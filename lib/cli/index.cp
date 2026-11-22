@@ -194,3 +194,19 @@ export {
     PmAuditDepEdge,
     PmAuditDepGraph,
 } from "./pm_audit.cp";
+
+export {
+    PM_OUTDATED_MAX_ENTRIES,
+    PM_OUTDATED_MAX_PATTERNS,
+    PM_OUTDATED_MAX_GROUPED_WS,
+    PmOutdatedError,
+    PmOutdatedDepKind,
+    PmOutdatedUpdateKind,
+    PmOutdatedFilterKind,
+    PmOutdatedSemver,
+    matchOutdatedGlob,
+    PmOutdatedFilterRule,
+    PmOutdatedFilter,
+    PmOutdatedEntry,
+    PmOutdatedTable,
+} from "./pm_outdated.cp";
