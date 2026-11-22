@@ -316,3 +316,12 @@ export {
     isBinaryRowColNull,
     decodeMySqlBinaryValue,
 } from "./binaryValue.cp";
+
+// --- 18. Pipelined Query & Prepare Request Queue (./requestQueue.cp) ---
+export {
+    MYSQL_REQ_QUEUE_CAPACITY,
+    MySqlRequestQueueError,
+    MySqlRequestState,
+    MySqlRequestEntry,
+    MySqlRequestQueue,
+} from "./requestQueue.cp";

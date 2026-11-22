@@ -227,3 +227,21 @@ const v = decodeMySqlBinaryValue(long_le[0..], 0x03, false, false, 45)?;
 * = v.int_val; // 42
 * = MYSQL_BINARY_CHARSET; // 63
 ```
+
+13. **查询流水线与预处理屏障请求队列（`requestQueue.cp`，吸收自 `/data/dev/bun/src/sql_jsc/mysql/MySQLRequestQueue.cp`）**：
+    - `MySqlRequestQueue` 采用 64 槽位零动态堆分配环形缓冲区管理并发 MySQL 查询生命周期（`Pending` -> `Preparing` -> `Prepared` -> `Running` -> `Completed`/`Failed`）；
+    - 精确维护 `pipelined_requests`、`nonpipelinable_requests`、`waiting_to_prepare` 与 `is_ready_for_query` 状态，提供 `canExecuteQuery`/`canPrepareQuery`/`canPipeline`/`nextDispatchableId`/`startPrepare`/`markAsPrepared`/`startRun`/`finishCurrent`/`failCurrent`/`pruneCompletedHead`/`cancelAll`。
+
+```cp
+import { MySqlRequestQueue } from "cap:mysql";
+
+let q = MySqlRequestQueue.init();
+* = q.enqueue(101, true)?;
+* = q.enqueue(102, true)?;
+* = q.startRun(101, true)?;
+const next_id = q.nextDispatchableId(true); // 102 (自动流水线并发派发)
+* = q.startRun(102, true)?;
+* = q.finishCurrent();
+* = q.finishCurrent();
+* = next_id;
+```
