@@ -26,3 +26,10 @@ export {
     dequantizeVectorU8,
     quantizedDotU8,
 } from "./hybrid.cp";
+
+export {
+    SemanticEntry,
+    SemanticLookupHit,
+    SemanticCacheStats,
+    SemanticCache,
+} from "./semantic_cache.cp";

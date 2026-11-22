@@ -17,6 +17,7 @@
 | `lib/vector/flat_index.cp` | `// Source: cp/lib/vector/flat_index.cp (In-Memory Vector Index with Cosine/Dot/L2 Metrics)` | `DistanceMetric`、`SearchHit`、`VectorError`、`VectorIndex` |
 | `lib/vector/bm25.cp` | `// Source: cp/lib/vector/bm25.cp (Okapi BM25 Full-Text Inverted Index)` | `Bm25Config`、`Bm25Index` 倒排索引与分词器 |
 | `lib/vector/hybrid.cp` | `// Origin: Pure-CP Stdlib (RAG Hybrid Retrieval: RRF, MMR Rerank & Int8 Scalar Quantization) \| Created: 2026-11-22` | `RrfFusion` + 零堆分配多路 RRF (`rrfFuse`)、线性归一化融合 (`normalizeScoresMinMax`/`normalizeScoresZScore`/`weightedScoreFuse`)、MMR 多样性重排 (`mmrRerank`) 与 U8 标量量化 (`quantizeVectorU8`/`dequantizeVectorU8`/`quantizedDotU8`) |
+| `lib/vector/semantic_cache.cp` | `// Origin: Pure-CP Stdlib (AI Agent Semantic Cache: Cosine Threshold Lookup, TTL & LRU Eviction) \| Created: 2026-11-22` | `SemanticCache` 零堆分配 LLM 语义缓存（余弦阈值命中、TTL 过期与过期优先 + LRU 淘汰） |
 | `lib/vector/index.cp` | `// Source: cp/lib/vector/index.cp (Unified Exports for cap:vector)` | `cap:vector` 与 `cap.vector` 统一公开导出入口 |
 
 ---
@@ -85,6 +86,17 @@
   - 按 `min_val + q[i] * scale` 重构浮点向量，典型 128D 嵌入相对 L2 重构误差 `< 1%`。
 - **`quantizedDotU8(qa: []const u8, pa: ScalarQuantParams, qb: []const u8, pb: ScalarQuantParams): f64?`**
   - 基于纯整型内循环累计 `sum(qa)`、`sum(qb)`、`sum(qa * qb)` 直接计算近似内积，避免逐维反量化开销且数值等价于反量化内积。
+
+### 4. 零堆分配 LLM 语义缓存 (`semantic_cache.cp`)
+
+- **`SemanticEntry`**：`{ occupied, key_id, payload_id, created_ms, last_hit_ms, expires_ms, hit_count, norm }`
+- **`SemanticLookupHit`**：`{ slot: usize, key_id: u64, payload_id: u64, similarity: f64 }`
+- **`SemanticCacheStats`**：`{ active_entries, capacity, hits, misses, evictions, expired_evictions, hit_rate }`
+- **`SemanticCache`**：
+  - `SemanticCache.init(entries: *[]SemanticEntry, embeddings_flat: *[]f64, dim: usize, similarity_threshold: f64, default_ttl_ms: i64): SemanticCache?`（校验 `dim > 0`、`embeddings_flat.len >= entries.len * dim`、`similarity_threshold ∈ (-1.0, 1.0]` 与 `default_ttl_ms >= 0`）
+  - `put(*_, key_id, payload_id, embedding, now_ms, ttl_ms_override): usize?`（先原地更新同 `key_id` 槽位；满池优先驱逐已过期条目，再按 LRU 最久未命中 `last_hit_ms` 淘汰；自动拒绝零向量与 `NaN`/`Inf`）
+  - `lookup(*_, query_embedding, now_ms): SemanticLookupHit?`（跳过过期条目，返回最高余弦相似度 `>= similarity_threshold` 的命中项并原子刷新 `last_hit_ms` 与 `hit_count`）
+  - `invalidate(*_, key_id: u64): bool` / `purgeExpired(*_, now_ms: i64): usize` / `stats(): SemanticCacheStats`
 
 ---
 
@@ -175,5 +187,35 @@ pub fn demoZeroHeapRagPipeline() {
     }
     * = n_fused;
     * = k;
+}
+```
+
+### LLM 语义缓存（余弦阈值命中 + TTL + LRU）示例
+
+```typescript
+import {
+    SemanticEntry,
+    SemanticCache,
+} from "cap:vector";
+
+pub fn demoSemanticCache() {
+    let entries_buf: [16]SemanticEntry = [SemanticEntry{}; 16];
+    let embs_buf: [64]f64 = [0.0; 64]; // 16 slots * 4 dims
+    let entries: []SemanticEntry = entries_buf[0..];
+    let embs: []f64 = embs_buf[0..];
+
+    if (cache_init := SemanticCache.init(entries, embs, 4, 0.92, 60000)) {
+        let cache = cache_init;
+        const prompt_emb: [4]f64 = [1.0, 0.0, 0.0, 0.0];
+        * = cache.put(1001, 9001, prompt_emb[0..], 1000, 0);
+
+        // 近义提问命中缓存，直接复用 payload_id = 9001 省去 LLM 推理开销
+        const near_query: [4]f64 = [0.99, 0.05, 0.0, 0.0];
+        if (hit := cache.lookup(near_query[0..], 2500)) {
+            * = hit.payload_id;
+        }
+        * = cache.purgeExpired(70000);
+        * = cache.stats();
+    }
 }
 ```
