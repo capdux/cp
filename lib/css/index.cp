@@ -600,3 +600,9 @@ export {
     CssSpacingOutput,
     CssBoxSpacingHandler,
 } from "./marginPad.cp";
+
+export {
+    CssStringError,
+    CssQuoteStyle,
+    CssString,
+} from "./cssString.cp";

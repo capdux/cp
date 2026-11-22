@@ -812,3 +812,19 @@ const n_ltr = out.formatLtrCss(ltr_buf[0..], true)?;     // "margin-left:1rem"
 const n_rtl = out.formatRtlCss(rtl_buf[0..], true)?;     // "margin-right:1rem"
 * = n_main; * = n_ltr; * = n_rtl;
 ```
+
+18. **W3C CSSOM 字符串序列化与 Syntax L3 引号解析（`cssString.cp`，吸收自 `/data/dev/bun/src/css/values/css_string.cp`）**：
+    - 导出 `CssStringError`、`CssQuoteStyle`（`.Double` / `.Single`）、`CssString`（`needsEscaping` / `serialize` / `serializeWithQuote` / `parse` / `isValidQuoted`）；
+    - **规范与安全契约**：序列化遵循 CSSOM `serialize a string`（`0x00` 替换为 `U+FFFD`、`0x01..=0x1F` 与 `0x7F` 转义为 `\x ` 带尾空格防后续十六进制歧义、引号与反斜杠转义）；解析遵循 CSS Syntax Level 3（1..6 位十六进制 Unicode 转义 `\HHHHHH` 自动吞并单个尾部空白、反斜杠换行续行折叠、孤立代理对与超界码点安全替换 `U+FFFD`，严格拦截未转义裸换行与未闭合引号）。
+
+```cp
+import { CssString } from "cap:css";
+
+let encoded: [64]u8 = [0; 64];
+let decoded: [64]u8 = [0; 64];
+const n1 = CssString.serialize("hello \"css\"\nline2", encoded[0..])?;
+// encoded[0..n1] == "\"hello \\\"css\\\"\\a line2\""
+const n2 = CssString.parse(encoded[0..n1], decoded[0..])?;
+// decoded[0..n2] == "hello \"css\"\nline2"
+* = n2;
+```
