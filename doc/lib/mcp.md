@@ -9,6 +9,7 @@
 - **零堆分配工具注册表与权限治理 (`registry.cp`)**：`McpToolRegistry` 基于调用方固定槽位缓冲实现工具注册、能力风险分级（`ReadOnly`/`WriteLocal`/`Network`/`Destructive`）、网络 ACL、高危人工审批门槛（`RequireApproval`）、固定 60 秒窗口限流与动态 `tools/list` 可见集过滤。
 - **零堆分配会话生命周期与请求追踪器 (`session.cp`)**：`McpSession` 提供协议版本解析/格式化与兼容性降级协商（`V2024_11_05` / `V2025_03_26`）、能力位掩码交集协商（`McpCapabilityFlags`）、严格五态生命周期门控（`Disconnected` -> `Initializing` -> `Ready` -> `Closing` -> `Closed`）及固定槽位 JSON-RPC 2.0 在途请求追踪（注册、完成、取消、批量超时回收与统计）。
 - **零堆分配资源 URI 模板路由与订阅分发器 (`resource_router.cp`)**：`McpResourceRouter` 与 `matchUriTemplate` 提供 RFC 6570 简单 `{var}` 路径段零拷贝参数提取、静态路由优先于模板路由的分级解析、幂等去重客户端资源订阅/退订以及变更广播订阅者扇出收集。
+- **零堆分配反向采样模型路由、递归守卫与进度追踪器 (`sampling.cp`)**：提供 MCP 2025-03-26 `sampling/createMessage` 三维偏好（`cost` / `speed` / `intelligence`）加权模型路由（`selectSamplingModel`）、嵌套采样递归深度与单树 Token 总预算硬拦截守卫（`SamplingDepthGuard`），以及固定槽位 `notifications/progress` 单调进度令牌追踪器（`McpProgressTracker`）。
 
 ## 2. 核心类型
 
@@ -19,6 +20,7 @@
 - **工具治理注册表 (`registry.cp`)**：`ToolRiskLevel`、`ToolPolicy`、`PolicyDecision`、`RegisteredTool`、`McpToolRegistry`
 - **会话状态机与请求追踪 (`session.cp`)**：`McpProtocolVersion`、`McpCapabilityFlags`、`McpSessionState`、`McpSessionOpError`、`McpInflightRequest`、`McpSessionStats`、`McpSession`
 - **资源路由与订阅分发 (`resource_router.cp`)**：`UriParamCapture`、`McpResourceRoute`、`McpResourceMatch`、`McpSubscription`、`McpResourceRouterStats`、`McpResourceRouter`
+- **反向采样路由、递归守卫与进度追踪 (`sampling.cp`)**：`ModelPreferences`、`ModelCandidate`、`SamplingDepthGuard`、`ProgressEntry`、`ProgressUpdateStatus`、`McpProgressTracker`
 
 ## 3. API 速查
 
@@ -65,6 +67,17 @@
 | `router.unsubscribeClient(client_id)` | 批量清理指定客户端的全部订阅（客户端断连回收） |
 | `router.collectSubscribers(uri, out_client_ids)` | 收集指定 URI 的全部订阅客户端 ID 用于变更广播扇出（输出截断安全） |
 | `router.stats()` | 返回路由/订阅槽位占用与解析命中/未命中/广播累计统计快照 `McpResourceRouterStats` |
+| `isValidUnitWeight(v)` | 校验权重/分值是否为 `[0.0, 1.0]` 内的有限浮点数（拦截 `NaN`、`±Inf` 与越界值） |
+| `scoreSamplingCandidate(prefs, candidate)` | 按三维偏好计算单个候选模型的归一化加权得分（`f32?`），全 0 权重回退三维均权 |
+| `selectSamplingModel(prefs, min_tokens, candidates)` | 按三维偏好选出满足 `available && max_tokens >= min_tokens` 的最优 `model_id`（`u16?`），拒绝非法权重 |
+| `SamplingDepthGuard.init(max_depth, max_tokens_per_tree)` | 初始化嵌套反向采样深度与单树 Token 总预算硬拦截守卫 |
+| `guard.tryEnter(requested_tokens)` / `guard.exit()` | 原子校验并进入一层采样（防止无限递归与 Token 爆炸，防 `u32` 溢出）/ 退出一层（下溢安全） |
+| `guard.remainingTokens()` / `guard.remainingDepth()` / `guard.refundTokens(n)` / `guard.reset()` | 查询剩余 Token 预算与深度、退回未用预估 Token 与重置守卫状态 |
+| `McpProgressTracker.init(slots)` | 使用调用方固定 `ProgressEntry` 槽位缓冲初始化进度追踪器（安全支持零长度缓冲） |
+| `tracker.register(token_id, total)` / `tracker.get(token_id)` | 注册进度令牌（拒绝 `token_id == 0`、重复注册与满槽，`total == 0` 表示不定长）/ 读取副本 |
+| `tracker.update(token_id, progress, total)` | 严格单调推进进度（拒绝回退/重复值与超出 `total`，达到 `total` 自动标记 `Completed`） |
+| `tracker.complete(token_id)` / `tracker.percent(token_id)` | 显式标记完成（支持不定长任务）/ 计算 `[0.0, 100.0]` 完成百分比 |
+| `tracker.remove(token_id)` / `tracker.purgeCompleted()` | 释放指定槽位 / 批量回收全部已完成槽位供后续注册复用 |
 
 ## 4. 示例
 
@@ -210,5 +223,67 @@ pub fn demoMcpResourceRouter() {
     let targets: []u32 = targets_buf[0..];
     const fanout_count = router.collectSubscribers("db://public/users", targets); // 2
     * = fanout_count;
+}
+```
+
+### MCP 反向采样模型路由、递归深度守卫与进度令牌追踪示例 (`sampling.cp`)
+
+```cp
+import {
+    ModelPreferences,
+    ModelCandidate,
+    selectSamplingModel,
+    SamplingDepthGuard,
+    ProgressEntry,
+    McpProgressTracker,
+} from "cap:mcp";
+
+pub fn demoMcpSamplingAndProgress() {
+    // 1. 三维偏好模型打分路由
+    const candidates: [2]ModelCandidate = [
+        ModelCandidate{
+            model_id: 1,
+            cost_score: 0.95,
+            speed_score: 0.90,
+            intelligence_score: 0.60,
+            max_tokens: 8192,
+            available: true,
+        },
+        ModelCandidate{
+            model_id: 2,
+            cost_score: 0.35,
+            speed_score: 0.50,
+            intelligence_score: 0.98,
+            max_tokens: 32768,
+            available: true,
+        },
+    ];
+    const smart_prefs = ModelPreferences{
+        cost_priority: 0.1,
+        speed_priority: 0.1,
+        intelligence_priority: 0.9,
+    };
+    const chosen = selectSamplingModel(smart_prefs, 4096, candidates[0..]); // 2
+
+    // 2. 嵌套采样递归深度与单树 Token 总预算守卫
+    let guard = SamplingDepthGuard.init(3, 16000);
+    if (guard.tryEnter(4000)) {
+        // 剩余预算 12000，当前深度 1
+        guard.exit();
+    }
+
+    // 3. 固定槽位单调进度追踪与槽位回收
+    let slots_buf: [4]ProgressEntry = [ProgressEntry{}; 4];
+    let slots: []ProgressEntry = slots_buf[0..];
+    let tracker = McpProgressTracker.init(slots);
+    * = tracker.register(1001, 100);
+    * = tracker.update(1001, 40, null);
+    const pct = tracker.percent(1001); // 40.0
+    * = tracker.update(1001, 100, null); // 自动 Completed
+    const reclaimed = tracker.purgeCompleted(); // 回收 1 个槽位
+
+    * = chosen;
+    * = pct;
+    * = reclaimed;
 }
 ```

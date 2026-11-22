@@ -1337,3 +1337,7 @@
 ### 2026-11-22（分类合并交付：lib/vector/quant_sq4.cp | 2026-11-22 14:18:21）
 - **执行与结单汇报**：
   > 子智能体交付 lib/vector/quant_sq4.cp（4-bit 非对称标量量化 SQ4 8x 显存压缩、Nibble 打包与 @fma 非对称距离/批量检索核，64D Recall@5 >= 0.85，5/5 PASS），归入 cap:vector 并同步 cp_lib_ref.md；续派 lib/vector/rabitq.cp。
+
+### 2026-11-22（分类合并交付：lib/mcp/sampling.cp | 2026-11-22 14:21:44）
+- **执行与结单汇报**：
+  > 子智能体交付 lib/mcp/sampling.cp（MCP 2025-03-26 Sampling 三维偏好路由、嵌套递归深度/预算守卫与进度令牌单调追踪器，5/5 PASS），归入 cap:mcp 并同步 cp_lib_ref.md；续派 lib/a2a/negotiation.cp。
