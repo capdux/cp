@@ -10,7 +10,7 @@ import {
     sosFilter,
     sosFiltFilt,
     sosMagnitudeDb,
-} from "cap:iir";
+} from "cap:math";
 
 const TWO_PI: f64 = 6.28318530717958647692;
 const MINUS_3DB: f64 = -3.010299956639812;

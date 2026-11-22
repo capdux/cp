@@ -9,7 +9,7 @@ import {
     processSosBlock,
     frequencyResponse,
     goertzelDetect,
-} from "cap:biquad";
+} from "cap:math";
 
 const TWO_PI: f64 = 6.28318530717958647692;
 const LN10: f64 = 2.30258509299404568402;

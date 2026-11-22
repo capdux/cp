@@ -1477,3 +1477,7 @@
 ### 2026-11-22（根目录分域收敛第 6 批完成：lib/ml/（净减 17 个顶层目录，累计 -91） | 2026-11-22 14:54:47）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/ml/ 建立与收敛：18 个经典机器学习/聚类/降维/决策算法小目录（svm/knn/dtree/logreg/naivebayes/lasso/isotonic/huber/nmf/mds/ransac/dbscan/gmm/spectral/louvain/lsh/bandit/mcts）零冲突归并入 lib/ml/ 并物理清理旧目录，18/18 PASS，顶层目录 772 -> 755（累计 -91）；续派 lib/media/ 音视频领域收敛。
+
+### 2026-11-22（根目录分域收敛第 9 批完成：lib/math/ 第 2 波（净减 16 个顶层目录，累计 -107） | 2026-11-22 14:56:24）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator (math) 完成第 2 波信号/时序/随机过程收敛：16 个纯 CP 小目录（biquad/iir/savitzky/holt/cusum/dtw/hmm/markov/particle/fft/wavelet/spline/ode/fir/hilbert/cholesky）零冲突归并入 lib/math/ 并物理清理旧目录（17/17 PASS，严格保护 Bun bigint 与避免 quat 冲突）；累计已安全削减 107 个顶层目录（846 -> 739）；续派 lib/ds/ 数据结构领域收敛。

@@ -10,7 +10,7 @@ import {
     WindowKind,
     FrequencyPeak,
     Fft,
-} from "cap:fft";
+} from "cap:math";
 
 fn approxF64(a: f64, b: f64, eps: f64): bool {
     return @abs(a - b) <= eps;
@@ -205,32 +205,32 @@ fn testFastConvolutionMatchesDirect(): !void {
 fn testCapFftLazyMount(): !void {
     const alloc = std.heap.page_allocator;
 
-    let buf: [8]cap.fft.Complex = [
-        cap.fft.Complex.init(1.0, 0.0),
-        cap.fft.Complex.init(2.0, -1.0),
-        cap.fft.Complex.init(0.5, 0.5),
-        cap.fft.Complex.init(-1.0, 2.0),
-        cap.fft.Complex.init(0.0, -0.5),
-        cap.fft.Complex.init(3.0, 1.0),
-        cap.fft.Complex.init(-2.0, 0.0),
-        cap.fft.Complex.init(0.25, -0.75),
+    let buf: [8]cap.math.Complex = [
+        cap.math.Complex.init(1.0, 0.0),
+        cap.math.Complex.init(2.0, -1.0),
+        cap.math.Complex.init(0.5, 0.5),
+        cap.math.Complex.init(-1.0, 2.0),
+        cap.math.Complex.init(0.0, -0.5),
+        cap.math.Complex.init(3.0, 1.0),
+        cap.math.Complex.init(-2.0, 0.0),
+        cap.math.Complex.init(0.25, -0.75),
     ];
-    let orig: [8]cap.fft.Complex = [cap.fft.Complex.init(0.0, 0.0); 8];
+    let orig: [8]cap.math.Complex = [cap.math.Complex.init(0.0, 0.0); 8];
     for (i of 0..8) {
         orig[i] = buf[i];
     }
 
-    cap.fft.Fft.forwardInPlace(&buf)?;
-    cap.fft.Fft.inverseInPlace(&buf)?;
+    cap.math.Fft.forwardInPlace(&buf)?;
+    cap.math.Fft.inverseInPlace(&buf)?;
     for (i of 0..8) {
         expect_eq(approxF64(buf[i].re, orig[i].re, 0.000000001), true);
         expect_eq(approxF64(buf[i].im, orig[i].im, 0.000000001), true);
     }
 
     const sig: [8]f64 = [1.0, 0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0];
-    const win = cap.fft.Fft.applyWindow(alloc, &sig, cap.fft.WindowKind.Rectangular)?;
+    const win = cap.math.Fft.applyWindow(alloc, &sig, cap.math.WindowKind.Rectangular)?;
     defer alloc.free(win);
-    const peak = cap.fft.Fft.dominantFrequency(alloc, win, 800.0)?;
+    const peak = cap.math.Fft.dominantFrequency(alloc, win, 800.0)?;
     expect_eq(peak.bin, 2);
     expect_eq(approxF64(peak.freq_hz, 200.0, 0.000000001), true);
 }

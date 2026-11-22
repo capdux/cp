@@ -9,7 +9,7 @@ import {
     effectiveSampleSize,
     resampleIndices,
     ParticleFilter,
-} from "cap:particle";
+} from "cap:math";
 
 fn absF64(v: f64): f64 {
     return if (v < 0.0) (0.0 - v) else v;

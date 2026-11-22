@@ -10,7 +10,7 @@ import {
     buildPchipSpline,
     catmullRom1d,
     catmullRom1dDeriv,
-} from "cap:spline";
+} from "cap:math";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

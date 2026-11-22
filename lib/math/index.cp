@@ -228,3 +228,193 @@ export {
     generateSigmaPoints,
     ukfPredict,
 } from "./ekf.cp";
+
+// --- Digital Signal Processing & Spectral Analysis ---
+
+export {
+    FilterType,
+    BiquadCoeffs,
+    BiquadFilter,
+    FreqResponse,
+    GoertzelResult,
+    designBiquad,
+    processSosBlock,
+    frequencyResponse,
+    goertzelDetect,
+} from "./biquad.cp";
+
+export {
+    SosSection,
+    SosState,
+    designButterworthLowpass,
+    designButterworthHighpass,
+    designChebyshev1Lowpass,
+    sosFilter,
+    sosFiltFilt,
+    sosMagnitudeDb,
+} from "./iir.cp";
+
+export {
+    windowHann,
+    windowHamming,
+    windowBlackman,
+    designLowpassFir,
+    FirFilter,
+    Biquad,
+} from "./fir.cp";
+
+export {
+    FftError,
+    Complex,
+    WindowKind,
+    FrequencyPeak,
+    Fft,
+} from "./fft.cp";
+
+export {
+    haarForward1d,
+    haarInverse1d,
+    haarForwardMulti1d,
+    haarInverseMulti1d,
+    db4Forward1d,
+    db4Inverse1d,
+    cdf53ForwardI32,
+    cdf53InverseI32,
+    softThreshold,
+    hardThreshold,
+    signalEnergy,
+} from "./wavelet.cp";
+
+// --- Time Series, Smoothing, Change-Point & Alignment ---
+
+export {
+    BoundaryMode,
+    SavgolWorkspace,
+    LoessConfig,
+    savgolCoeffs,
+    savgolFilter,
+    loessSmooth1D,
+} from "./savitzky.cp";
+
+export {
+    SeasonalityKind,
+    SesResult,
+    HoltConfig,
+    HoltResult,
+    HoltWintersConfig,
+    HoltWintersResult,
+    ForecastMetrics,
+    sesForecast,
+    holtForecast,
+    holtWintersForecast,
+    evaluateForecast,
+} from "./holt.cp";
+
+export {
+    ShiftDirection,
+    ChangePoint,
+    CusumDetector,
+    PageHinkleyDetector,
+    EwmaControlChart,
+    StreamingZScore,
+    scanCusum,
+} from "./cusum.cp";
+
+export {
+    DTW_INF,
+    WarpPair,
+    DtwPathResult,
+    dtwDistance1D,
+    dtwAlign1D,
+    dtwDistanceMulti,
+    computeKeoghEnvelope,
+    lbKeogh,
+    zNormalize,
+} from "./dtw.cp";
+
+// --- Stochastic Processes, Probabilistic Filtering & Space-Filling Curves ---
+
+export {
+    HmmModel,
+    ViterbiResult,
+    viterbiDecode,
+    forwardScaled,
+    backwardScaled,
+    posteriorStates,
+    baumWelchStep,
+} from "./hmm.cp";
+
+export {
+    isStochasticMatrix,
+    stepDistribution,
+    transitionPower,
+    StationaryResult,
+    stationaryPowerIter,
+    absorbingFundamental,
+    expectedAbsorptionSteps,
+    absorptionProbabilities,
+    sampleTrajectory,
+    entropyRate,
+} from "./markov.cp";
+
+export {
+    ResampleKind,
+    PropagateFn,
+    LogLikelihoodFn,
+    normalizeLogWeights,
+    effectiveSampleSize,
+    resampleIndices,
+    ParticleFilter,
+} from "./particle.cp";
+
+export {
+    HILBERT_MIN_ORDER,
+    HILBERT_MAX_ORDER,
+    MORTON3D_MAX_COORD,
+    Point2D,
+    Point3D,
+    hilbert2dMaxIndex,
+    hilbert2dEncode,
+    hilbert2dDecode,
+    morton2dEncode,
+    morton2dDecode,
+    morton3dEncode,
+    morton3dDecode,
+    manhattanDist2d,
+} from "./hilbert.cp";
+
+// --- Interpolation, ODE Solvers & SPD Matrix Factorization ---
+
+export {
+    CubicSegment,
+    CubicSpline,
+    buildNaturalCubicSpline,
+    buildClampedCubicSpline,
+    buildPchipSpline,
+    catmullRom1d,
+    catmullRom1dDeriv,
+} from "./spline.cp";
+
+export {
+    OdeRhsFn,
+    AccelFn,
+    Rk45Result,
+    rk2MidpointStep,
+    rk4Step,
+    rk4Integrate,
+    rk45Step,
+    rk45Integrate,
+    verletStep,
+} from "./ode.cp";
+
+export {
+    choleskyDecompose,
+    forwardSubstitute,
+    backwardSubstituteT,
+    choleskySolve,
+    choleskyLogDet,
+    choleskyDet,
+    choleskyInvert,
+    ldltDecompose,
+    ldltSolve,
+} from "./cholesky.cp";

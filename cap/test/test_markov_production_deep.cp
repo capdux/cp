@@ -13,7 +13,7 @@ import {
     absorptionProbabilities,
     sampleTrajectory,
     entropyRate,
-} from "cap:markov";
+} from "cap:math";
 
 fn absDiff(a: f64, b: f64): f64 {
     const d = a - b;

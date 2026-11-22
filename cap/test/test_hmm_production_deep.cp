@@ -10,7 +10,7 @@ import {
     backwardScaled,
     posteriorStates,
     baumWelchStep,
-} from "cap:hmm";
+} from "cap:math";
 
 fn absF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;

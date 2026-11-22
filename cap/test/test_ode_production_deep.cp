@@ -10,7 +10,7 @@ import {
     rk45Step,
     rk45Integrate,
     verletStep,
-} from "cap:ode";
+} from "cap:math";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

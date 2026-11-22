@@ -34,7 +34,23 @@
 | `lib/math/ga.cp` | 实数编码遗传算法与顺序交叉（OX）排列遗传算法 |
 | `lib/math/kalman.cp` | Joseph 形式 1D/2D 卡尔曼滤波器与 Alpha-Beta 传感器融合滤波 |
 | `lib/math/ekf.cp` | 数值 Jacobian、Joseph 形式扩展卡尔曼滤波（EKF）与 Merwe-Scaled 无迹卡尔曼滤波（UKF） |
-| `lib/math/index.cp` | `cap:math` 与 `cap.math` 统一零冲突公开导出入口（共 163 符号） |
+| `lib/math/biquad.cp` | RBJ Audio EQ Biquad IIR 滤波器族、SOS 级联与 Goertzel 单频音调检测 |
+| `lib/math/iir.cp` | Butterworth/Chebyshev-I 双线性 SOS 级联 IIR 设计与零相位 `sosFiltFilt` |
+| `lib/math/fir.cp` | Hann/Hamming/Blackman 窗、Windowed-Sinc 低通 FIR 与轻量 `Biquad` |
+| `lib/math/fft.cp` | Cooley-Tukey Radix-2 FFT/IFFT、窗函数、功率谱密度（PSD）与卷积 |
+| `lib/math/wavelet.cp` | Haar、Daubechies-4（db2）与 JPEG 2000 无损 CDF 5/3 DWT/IDWT 及阈值去噪 |
+| `lib/math/savitzky.cp` | Savitzky-Golay 多项式平滑/求导与 Cleveland LOESS 局部加权回归 |
+| `lib/math/holt.cp` | 指数平滑预测（SES、Holt 线性/阻尼、Holt-Winters 季节性）与误差指标 |
+| `lib/math/cusum.cp` | 在线变点检测（CUSUM、Page-Hinkley、EWMA 控制图、流式 Z-Score） |
+| `lib/math/dtw.cp` | 1D/多维动态时间规整（DTW）、回溯对齐、Keogh 包络与 LB_Keogh 下界 |
+| `lib/math/hmm.cp` | 离散隐马尔可夫模型（对数域 Viterbi、Rabiner 缩放前向-后向、Baum-Welch EM） |
+| `lib/math/markov.cp` | 离散马尔可夫链稳态分布、吸收链基本矩阵、轨迹采样与熵率 |
+| `lib/math/particle.cp` | 序列蒙特卡洛粒子滤波（系统/分层/多项重采样、有效样本量 ESS） |
+| `lib/math/hilbert.cp` | 2D Hilbert 空间填充曲线与 2D/3D Morton Z-order 编解码 |
+| `lib/math/spline.cp` | 自然/钳位三次样条、单调保形 PCHIP 样条与 Catmull-Rom 插值 |
+| `lib/math/ode.cp` | RK2 中点、经典 RK4、自适应 Dormand-Prince RK45 与 Velocity Verlet 积分器 |
+| `lib/math/cholesky.cp` | SPD 矩阵 Cholesky `LL^T` 与无开方 `LDL^T` 分解、求解、对数行列式与求逆 |
+| `lib/math/index.cp` | `cap:math` 与 `cap.math` 统一零冲突公开导出入口（共 297 符号，35 个实现子模块） |
 
 ---
 
@@ -96,6 +112,34 @@
 
 - **线性卡尔曼与 Alpha-Beta（`kalman.cp`）**：`Kalman1D`, `Kalman2D`, `AlphaBetaFilter`
 - **非线性 EKF / UKF（`ekf.cp`）**：`TransitionFn`, `MeasurementFn`, `EkfWorkspace`, `UkfParams`, `numericalJacobianF`, `numericalJacobianH`, `ekfPredict`, `ekfUpdate`, `generateSigmaPoints`, `ukfPredict`
+
+### 8. 数字信号处理与频谱分析（`biquad.cp` / `iir.cp` / `fir.cp` / `fft.cp` / `wavelet.cp`）
+
+- **Biquad 与 Goertzel（`biquad.cp`）**：`FilterType`, `BiquadCoeffs`, `BiquadFilter`, `FreqResponse`, `GoertzelResult`, `designBiquad`, `processSosBlock`, `frequencyResponse`, `goertzelDetect`
+- **IIR 级联与零相位滤波（`iir.cp`）**：`SosSection`, `SosState`, `designButterworthLowpass`, `designButterworthHighpass`, `designChebyshev1Lowpass`, `sosFilter`, `sosFiltFilt`, `sosMagnitudeDb`
+- **FIR 窗函数与滤波器（`fir.cp`）**：`windowHann`, `windowHamming`, `windowBlackman`, `designLowpassFir`, `FirFilter`, `Biquad`
+- **快速傅里叶变换（`fft.cp`）**：`FftError`, `Complex`, `WindowKind`, `FrequencyPeak`, `Fft`
+- **离散小波变换（`wavelet.cp`）**：`haarForward1d`, `haarInverse1d`, `haarForwardMulti1d`, `haarInverseMulti1d`, `db4Forward1d`, `db4Inverse1d`, `cdf53ForwardI32`, `cdf53InverseI32`, `softThreshold`, `hardThreshold`, `signalEnergy`
+
+### 9. 时间序列平滑、预测、变点检测与对齐（`savitzky.cp` / `holt.cp` / `cusum.cp` / `dtw.cp`）
+
+- **Savitzky-Golay 与 LOESS（`savitzky.cp`）**：`BoundaryMode`, `SavgolWorkspace`, `LoessConfig`, `savgolCoeffs`, `savgolFilter`, `loessSmooth1D`
+- **指数平滑预测（`holt.cp`）**：`SeasonalityKind`, `SesResult`, `HoltConfig`, `HoltResult`, `HoltWintersConfig`, `HoltWintersResult`, `ForecastMetrics`, `sesForecast`, `holtForecast`, `holtWintersForecast`, `evaluateForecast`
+- **在线变点检测（`cusum.cp`）**：`ShiftDirection`, `ChangePoint`, `CusumDetector`, `PageHinkleyDetector`, `EwmaControlChart`, `StreamingZScore`, `scanCusum`
+- **动态时间规整（`dtw.cp`）**：`DTW_INF`, `WarpPair`, `DtwPathResult`, `dtwDistance1D`, `dtwAlign1D`, `dtwDistanceMulti`, `computeKeoghEnvelope`, `lbKeogh`, `zNormalize`
+
+### 10. 随机过程、粒子滤波与空间填充曲线（`hmm.cp` / `markov.cp` / `particle.cp` / `hilbert.cp`）
+
+- **离散 HMM（`hmm.cp`）**：`HmmModel`, `ViterbiResult`, `viterbiDecode`, `forwardScaled`, `backwardScaled`, `posteriorStates`, `baumWelchStep`
+- **离散马尔可夫链（`markov.cp`）**：`isStochasticMatrix`, `stepDistribution`, `transitionPower`, `StationaryResult`, `stationaryPowerIter`, `absorbingFundamental`, `expectedAbsorptionSteps`, `absorptionProbabilities`, `sampleTrajectory`, `entropyRate`
+- **粒子滤波（`particle.cp`）**：`ResampleKind`, `PropagateFn`, `LogLikelihoodFn`, `normalizeLogWeights`, `effectiveSampleSize`, `resampleIndices`, `ParticleFilter`
+- **Hilbert / Morton 曲线（`hilbert.cp`）**：`HILBERT_MIN_ORDER`, `HILBERT_MAX_ORDER`, `MORTON3D_MAX_COORD`, `Point2D`, `Point3D`, `hilbert2dMaxIndex`, `hilbert2dEncode`, `hilbert2dDecode`, `morton2dEncode`, `morton2dDecode`, `morton3dEncode`, `morton3dDecode`, `manhattanDist2d`
+
+### 11. 样条插值、常微分方程与 SPD 分解（`spline.cp` / `ode.cp` / `cholesky.cp`）
+
+- **三次样条与 PCHIP（`spline.cp`）**：`CubicSegment`, `CubicSpline`, `buildNaturalCubicSpline`, `buildClampedCubicSpline`, `buildPchipSpline`, `catmullRom1d`, `catmullRom1dDeriv`
+- **ODE 数值积分（`ode.cp`）**：`OdeRhsFn`, `AccelFn`, `Rk45Result`, `rk2MidpointStep`, `rk4Step`, `rk4Integrate`, `rk45Step`, `rk45Integrate`, `verletStep`
+- **Cholesky 与 LDL^T（`cholesky.cp`）**：`choleskyDecompose`, `forwardSubstitute`, `backwardSubstituteT`, `choleskySolve`, `choleskyLogDet`, `choleskyDet`, `choleskyInvert`, `ldltDecompose`, `ldltSolve`
 
 ---
 

@@ -16,7 +16,7 @@ import {
     morton3dEncode,
     morton3dDecode,
     manhattanDist2d,
-} from "cap:hilbert";
+} from "cap:math";
 
 test("1. 2D Hilbert order=1..5 exhaustive bijection & adjacent Manhattan distance == 1 invariant", () => {
     expect_eq(HILBERT_MIN_ORDER, 1 as u8);
