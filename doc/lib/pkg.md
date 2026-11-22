@@ -312,3 +312,52 @@ const ok_git = isScriptExecutionAllowed("esbuild", .Git, false, explicit[0..], d
    - 默认展示从目标包到顶层依赖的完整嵌套依赖树，缩进符号明确区分中间节点（`├─` / `│`）与末位节点（`└─`），并在节点前标注依赖类型（`dev`、`peer`、`optional`、`optional peer`，生产依赖省略前缀）与 `(requires <spec>)` 版本约束；
    - `--top`（`WhyOptions{ top_only: true }`）仅展示直接顶层依赖方（等效 `max_depth = 1`）；`--depth <N>` 限制最大递归深度并在超深子树位置输出 `(deeper dependencies hidden)`；
    - 查询参数支持单通配符模式（如 `@types/*`、`*-lodash`、`*react*`）以及 `@version` 后缀（如 `@types/react@^18.0.0`），同层多个依赖方按「版本说明符精确度降序 → 依赖类型优先级降序 → 包名字典序升序」确定性排列。
+7. **安装差异树渲染与日志级别约定（`InstallTreePrinter`，吸收自 `/data/dev/bun/src/install/lockfile/printer/tree_printer.cp` 与 `/data/dev/bun/docs/pm/cli/{install,pm}.mdx`）**：
+   - **三档日志级别（`TreePrintLogLevel`）**：
+     - `Silent`（对应 `bun install --silent`）：静默输出 0 字节；
+     - `Default`：仅渲染当前工作区（默认 root workspace）的变更摘要；
+     - `Verbose`（对应 `bun install --verbose`）：先输出根工作区变更，再逐个按 `<workspace>:` 分段标题展开所有子工作区的升级与新增依赖。
+   - **双通道渲染与去重**：同一工作区内先集中输出版本升级项（ANSI 模式为 `↑ pkg old → new`，纯文本为 `^ pkg old -> new`），再空行分隔输出新增安装包（`+ pkg@ver`，若本地缓存存在更新版本则追加 `(vX.Y.Z available)`），并对同一工作区下重复解析的同名依赖自动去重，同时跳过被 `--omit=dev` 等策略禁用的依赖边。
+   - **显式请求与二进制清单**：通过 `addUpdateRequest` 注册的显式安装目标（如 `bun add <pkg>`）会从常规 `+` 列表中剔除，改为在末尾统一输出 `installed <pkg>@<ver>`；若包携带命名可执行文件（`File`/`NamedFile`/`Map`），自动展开 `with binaries:` 与逐行 ` - <bin>` 清单。若任一显式请求标记 `failed = true`，渲染器立即中止并返回 `TreePrintError.UpdateFailed`。
+
+### 安装差异树渲染示例（`InstallTreePrinter`）
+
+```cp
+import {
+    InstallTreePrinter,
+    TreeDepEdge,
+    TreePackageBinKind,
+    TreePrintOptions,
+    TreePrintLogLevel,
+} from "cap:pkg";
+
+let printer = InstallTreePrinter.init();
+const root_id = printer.addPackage("my-app", "1.0.0", true, true)?;
+const react_id = printer.addPackage("react", "19.1.1", false, true)?;
+const tsc_id = printer.addPackage("typescript", "5.8.2", false, true)?;
+printer.setPackageLaterVersion(react_id, "19.2.0")?;
+printer.addPackageBin(tsc_id, TreePackageBinKind.Map, "tsc")?;
+printer.addPackageBin(tsc_id, TreePackageBinKind.Map, "tsserver")?;
+
+* = printer.addDep(TreeDepEdge{
+    owner_pkg_id: root_id,
+    dep_name: "react",
+    target_pkg_id: react_id,
+    original_version: "18.3.1",
+})?;
+* = printer.addDep(TreeDepEdge{
+    owner_pkg_id: root_id,
+    dep_name: "typescript",
+    target_pkg_id: tsc_id,
+})?;
+* = printer.addUpdateRequest("typescript", false)?;
+
+let buf: [1024]u8 = [0; 1024];
+const stats = printer.render(
+    TreePrintOptions{ ansi_colors: false, log_level: TreePrintLogLevel.Default },
+    buf[0..],
+)?;
+// 输出:
+// \n^ react 18.3.1 -> 19.1.1\n\ninstalled typescript@5.8.2 with binaries:\n - tsc\n - tsserver\n\n
+* = stats;
+```

@@ -167,3 +167,23 @@ export {
     formatNodeModulesRelativeCwd,
     PkgScriptList,
 } from "./script_list.cp";
+
+export {
+    TREE_PRINTER_MAX_PACKAGES,
+    TREE_PRINTER_MAX_DEPS,
+    TREE_PRINTER_MAX_BINS_PER_PKG,
+    TREE_PRINTER_MAX_UPDATES,
+    TreePrintError,
+    TreePrintSectionHeader,
+    TreePrintLogLevel,
+    TreePrintDecisionKind,
+    TreePackageBinKind,
+    TreePackageEntry,
+    TreeDepEdge,
+    TreeUpdateRequest,
+    TreePrintOptions,
+    TreePrintStats,
+    formatUpdatedPackageLine,
+    formatInstalledPackageLine,
+    InstallTreePrinter,
+} from "./tree_printer.cp";
