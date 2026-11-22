@@ -289,3 +289,12 @@ export {
     FanOutSummary,
     FanOutAggregator,
 } from "./handoff.cp";
+
+export {
+    TurnRunnerConfig,
+    TurnStopReason,
+    TurnStepKind,
+    TurnStepEntry,
+    TurnOutcome,
+    AgentTurnRunner,
+} from "./turn_runner.cp";

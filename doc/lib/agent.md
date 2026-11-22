@@ -1501,3 +1501,57 @@ fn multiAgentHandoffDemo() {
     }
 }
 ```
+
+---
+
+## 子模块：端到端 Agent 回合编排状态机（`turn_runner.cp`）
+
+### 核心特性
+
+- **极简端到端闭环（`AgentTurnRunner`）**：开发者仅需 ~25 行代码即可完整驱动“回合预算守卫 -> 模型响应记账 -> 工具调用分发与连续失败熔断 -> 时序步骤审计轨迹 -> 确定性终止汇总”全流程，100% 纯 CP 零堆分配。
+- **多维硬限制与熔断（`TurnRunnerConfig` / `TurnStopReason`）**：统一支持 `max_turns`、`max_tool_calls`、`max_input_tokens`、`max_output_tokens`、`max_cost_micro_usd`（微美元防溢出饱和累加）与 `max_consecutive_errors` 连续工具失败熔断（单次工具成功自动清零连续失败计数）。
+- **可审计步骤轨迹与缓冲满防护（`TurnStepEntry` / `TurnOutcome`）**：在调用方提供的固定栈缓冲 `[]TurnStepEntry` 中按 `seq` 单调递增记录 `TurnStarted` / `LlmResponse` / `ToolSucceeded` / `ToolFailed` / `Stopped` 全量轨迹；缓冲满时确定性返回 `TurnStopReason.StepBufferFull` 并计数 `steps_dropped`，绝不越界。
+- **零分配复用（`reset`）**：支持在不重新分配缓冲的前提下重置状态机，适用于高并发 Agent Worker 池循环执行多轮任务。
+
+### 导出清单
+
+- **配置与枚举**：`TurnRunnerConfig`、`TurnStopReason`（`Completed | MaxTurnsReached | MaxToolCallsReached | InputTokenBudgetExceeded | OutputTokenBudgetExceeded | CostBudgetExceeded | ConsecutiveErrorsExceeded | StepBufferFull | Cancelled | LlmError`）、`TurnStepKind`（`TurnStarted | LlmResponse | ToolSucceeded | ToolFailed | Stopped`）
+- **轨迹与汇总**：`TurnStepEntry`、`TurnOutcome`（`isSuccess`, `isBudgetExceeded`）
+- **状态机（`AgentTurnRunner`）**：`init`、`beginTurn`、`recordLlmResponse`、`recordToolCall`、`finish`、`currentTurn`、`toolCallCount`、`consecutiveErrors`、`totalTokens`、`totalCostMicroUsd`、`isStopped`、`stopReason`、`stepCount`、`steps`、`reset`
+
+### 25 行 QuickStart 示例
+
+```cp
+import { TurnRunnerConfig, TurnStepEntry, TurnStopReason, AgentTurnRunner } from "cap:agent";
+
+fn runAgentQuickStart(): TurnStopReason {
+    let steps_buf: [32]TurnStepEntry = [TurnStepEntry{}; 32];
+    let steps_s: []TurnStepEntry = steps_buf[0..];
+    let runner = AgentTurnRunner.init(steps_s, TurnRunnerConfig{
+        max_turns: 6,
+        max_tool_calls: 12,
+        max_input_tokens: 16000,
+        max_output_tokens: 4000,
+        max_cost_micro_usd: 50000,
+        max_consecutive_errors: 2,
+    }) ?? return TurnStopReason.Cancelled;
+
+    let now_ms: i64 = 1000;
+    let stop: TurnStopReason = TurnStopReason.Completed;
+    while (true) {
+        if (reason := runner.beginTurn(now_ms)) { stop = reason; break; }
+        const need_tool = runner.currentTurn() == 1;
+        if (reason := runner.recordLlmResponse(800, 160, 1200, need_tool, "plan", now_ms + 50)) {
+            stop = reason;
+            break;
+        }
+        if (reason := runner.recordToolCall("search_docs", true, "3 hits", now_ms + 120)) {
+            stop = reason;
+            break;
+        }
+        now_ms += 200;
+    }
+    const outcome = runner.finish(stop, now_ms + 200);
+    return outcome.stop_reason;
+}
+```
