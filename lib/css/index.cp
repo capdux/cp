@@ -688,3 +688,11 @@ export {
     CssLengthOrPercentageKind,
     CssLengthOrPercentage,
 } from "./percentage.cp";
+
+export {
+    CssRatioError,
+    CssRatioVal,
+    CssAspectRatioKind,
+    CssAspectRatioVal,
+    matchCssMediaAspectRatio,
+} from "./ratio.cp";

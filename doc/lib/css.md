@@ -988,3 +988,26 @@ if (sum := a.tryAdd(b)) {
 * = n1;
 ```
 
+28. **CSS Values Level 4 `<ratio>` 与 CSS Sizing Level 4 `aspect-ratio` 零分配解析、约分与媒体查询匹配（`ratio.cp`，吸收自 `/data/dev/bun/src/css/values/ratio.cp`）**：
+    - **导出符号**：`CssRatioError`、`CssRatioVal`（`fromParts`/`fromNumber`/`parse`/`parseRequired`/`isDegenerate`/`value`/`reciprocal`/`addNumerator`/`reduce`/`compare`/`eql`/`equivalent`/`resolveHeight`/`resolveWidth`/`toCss`）、`CssAspectRatioKind`（`Auto`/`Ratio`/`AutoRatio`）、`CssAspectRatioVal`（`auto`/`fromRatio`/`autoWithRatio`/`parse`/`isAuto`/`hasRatio`/`effectiveRatio`/`eql`/`toCss`）、`matchCssMediaAspectRatio`；
+    - **W3C `<ratio>` 与 Bun CSS 序列化对齐**：
+      - 支持 `<number [0,∞]> [ / <number [0,∞]> ]?` 宽松解析（省略 `/ denominator` 时默认为 `1`）与 `parseRequired` 严格双操作数解析（如 `@media (aspect-ratio: 16/9)`）；
+      - 严格遵循 W3C CSS Values 4 §7.2 退化比（degenerate ratio）语义：分子或分母为 `0` 时 `isDegenerate() == true`，`value()` / `resolveWidth()` / `resolveHeight()` 安全返回 `null`；
+      - `reduce()` 通过欧几里得 GCD 将正整数比约分为最简整数比（如 `1920 / 1080` -> `16 / 9`），`compare()` 与 `matchCssMediaAspectRatio()` 使用交叉乘法避免浮点除法误差；
+      - `toCss(out, minify)` 零分配写入外部切片，与 Bun `Ratio.toCss` 一致：当 `denominator == 1` 时省略 `/ 1`，压缩模式输出 `16/9`，非压缩模式输出 `16 / 9`。
+
+```cp
+import { CssRatioVal, CssAspectRatioVal, matchCssMediaAspectRatio } from "cap:css";
+
+const r = CssRatioVal.parse("1920 / 1080")?;
+const reduced = r.reduce(); // 16 / 9
+let buf: [64]u8 = [0; 64];
+const n = reduced.toCss(buf[0..], true)?; // "16/9"
+
+const ar = CssAspectRatioVal.parse("16 / 9 auto")?;
+const n2 = ar.toCss(buf[0..], false)?; // "auto 16 / 9"
+assert(matchCssMediaAspectRatio(1920.0, 1080.0, reduced, false, false));
+* = n;
+* = n2;
+```
+
