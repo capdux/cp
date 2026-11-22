@@ -15,3 +15,14 @@ export {
     XmlTagMatch,
     PromptExtractor,
 } from "./extractor.cp";
+
+export {
+    ThoughtSplit,
+    ExtractedBlock,
+    RedactStats,
+    splitThoughtBlock,
+    extractCodeFence,
+    extractFirstJsonSlice,
+    jsonHasTopLevelKeys,
+    redactSensitiveText,
+} from "./structured.cp";

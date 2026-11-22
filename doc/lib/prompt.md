@@ -61,9 +61,24 @@
 | `PromptExtractor.escapeXmlDelimiter(alloc, text, tag_name)` | 将文本中 `<tag_name...>`/`</tag_name...>` 转义为 `&lt;...&gt;`（调用方负责 `alloc.free`） |
 | `PromptExtractor.wrapDelimited(alloc, tag_name, untrusted_text)` | 先转义内部冲突定界符，再以 `<tag_name>...</tag_name>` 安全包裹（调用方负责 `alloc.free`） |
 
+### 3. 零堆分配结构化提取、思考块剥离与安全护栏 (`lib/prompt/structured.cp`)
+
+| 符号 / 方法 | 签名与说明 |
+| :--- | :--- |
+| `ThoughtSplit` | `{ thought: string, answer: string, has_thought: bool, unclosed: bool }`（零拷贝切片） |
+| `splitThoughtBlock(text)` | 零拷贝分离 `<think>...</think>` / `<reasoning>...</reasoning>`（大小写无关、支持嵌套与未闭合流式截断） |
+| `ExtractedBlock` | `{ lang: string, content: string, start: usize, end: usize }`（含源码字节跨度） |
+| `extractCodeFence(text, preferred_lang)` | 零分配提取闭合围栏代码块（`` ``` `` / `~~~`），`preferred_lang` 非空时精确优先匹配该语言，`""` 返回首个 |
+| `extractFirstJsonSlice(text)` | 从混杂自然语言的回复中提取首个语法平衡的 `{...}` 或 `[...]` 零拷贝子串（跳过字符串内括号与 `\"`/`\\` 转义） |
+| `jsonHasTopLevelKeys(json_obj, required_keys)` | 零堆分配词法级 JSON 顶层必填键校验（严格忽略嵌套子对象/数组内部同名键，适合 Tool-Call 参数预检） |
+| `RedactStats` | `{ bytes_written: usize, redacted_emails: usize, redacted_keys: usize, redacted_phones: usize }` |
+| `redactSensitiveText(input, out_buf: *[]u8)` | 零分配脱敏 Email、API Key（`sk-`/`ghp_`/`AKIA`）与长数字/电话号码为 `[REDACTED]`，缓冲不足返回 `null` |
+
 ---
 
 ## 三、 使用示例
+
+### 1. 上下文窗口与协议导出示例
 
 ```typescript
 const std = @import("std");
@@ -91,5 +106,42 @@ fn runAgentPromptPipeline(): !void {
     const json_slice = cap.prompt.PromptExtractor.extractFirstJson(llm_reply)?;
     * = thought;
     * = json_slice;
+}
+```
+
+### 2. 零堆分配 AI Agent 思考剥离、Tool-Call 预检与 PII 脱敏示例 (`structured.cp`)
+
+```typescript
+import {
+    splitThoughtBlock,
+    extractCodeFence,
+    extractFirstJsonSlice,
+    jsonHasTopLevelKeys,
+    redactSensitiveText,
+} from "cap:prompt";
+
+fn processAgentOutput(raw_reply: string): bool {
+    // 1. 零拷贝剥离 <think>...</think> 或 <reasoning>...</reasoning>
+    const split = splitThoughtBlock(raw_reply);
+
+    // 2. 在落盘日志前零堆分配脱敏思考内容中的 Email / API Key / 电话号码
+    let log_buf: [512]u8 = undefined;
+    let out_slice: []u8 = log_buf[0..];
+    if (stats := redactSensitiveText(split.thought, out_slice)) {
+        const safe_log = out_slice[0..stats.bytes_written];
+        * = safe_log;
+    }
+
+    // 3. 优先提取 ```json 围栏，或回退扫描首个平衡 JSON 对象切片
+    let candidate = split.answer;
+    if (blk := extractCodeFence(split.answer, "json")) {
+        candidate = blk.content;
+    }
+    if (json_slice := extractFirstJsonSlice(candidate)) {
+        // 4. 零堆分配顶层必填字段预检（严格忽略嵌套对象内同名键）
+        const required: []const string = ["tool", "args"];
+        return jsonHasTopLevelKeys(json_slice, required);
+    }
+    return false;
 }
 ```
