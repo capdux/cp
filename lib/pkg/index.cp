@@ -681,3 +681,28 @@ export {
     GlobalCacheDecision,
     GlobalCachePolicy,
 } from "./globalCache.cp";
+
+export {
+    ISO_INVALID_ID,
+    ISO_ROOT_ENTRY,
+    ISO_MAX_PKG_NAME_LEN,
+    ISO_DEFAULT_STORE_DIR,
+    IsolatedPlanError,
+    validateIsoPkgName,
+    validateIsoRelPath,
+    formatIsoStoreDirKey,
+    formatIsoRelativeLinkTarget,
+    IsoDepKind,
+    IsoInstallState,
+    IsoPkgInput,
+    IsoDepEdge,
+    IsoSccScratch,
+    IsoSccResult,
+    computeIsoSccs,
+    computeLeakingPeerMasks,
+    IsoStoreEntry,
+    IsoSymlinkOp,
+    IsoPlanSummary,
+    IsoDfsFrame,
+    IsoInstallPlanner,
+} from "./isolatedPlan.cp";

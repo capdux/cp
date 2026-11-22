@@ -1139,3 +1139,35 @@ const decision = pol.evaluate(false, false, false);
 // decision.action == GlobalCacheAction.InstallToGlobalCache
 * = decision;
 ```
+
+### pnpm 风格隔离安装图规划器、迭代 Tarjan SCC 与 Peer 上下文去重引擎（`isolatedPlan.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/isolated_install.cp`（720+ 行纯 CP、全外部切片驱动、零堆分配、无递归栈溢出风险、无硬编码小容量上限）；
+- **核心导出**：
+  - 安全与路径格式化：`validateIsoPkgName`（拦截 `..`/反斜杠/空字节/非法作用域）、`validateIsoRelPath`、`formatIsoStoreDirKey`（`@scope+pkg@ver[_<16hex>]`）、`formatIsoRelativeLinkTarget`；
+  - 图分析算法：`IsoSccScratch`、`IsoSccResult`、`computeIsoSccs`（零递归迭代 Tarjan 强连通分量检测，识别环路与自环）、`computeLeakingPeerMasks`（不动点位集传播计算逃逸 peer 依赖闭包）；
+  - 隔离存储与软链树规划：`IsoDepKind`、`IsoInstallState`、`IsoPkgInput`、`IsoDepEdge`、`IsoStoreEntry`、`IsoSymlinkOp`、`IsoPlanSummary`、`IsoDfsFrame`、`IsoInstallPlanner`（`init`/`build`/`getEntry`/`transitionEntryState`/`formatEntryStorePath`/`formatPlanReport`）；
+- **核心工程特性**：
+  1. 相同 `(pkg_id, peer_ctx_hash)` 自动去重复用同一 `.bun` 存储条目；当同一包在不同祖先链下解析到不同 peer 版本（如 `react@18` vs `react@19`）时自动分叉为独立隔离条目；
+  2. 迭代 DFS + 活跃祖先链守卫确保循环依赖图安全收敛且不产生无限递归；
+  3. 全部规划软链接按 `(from_entry_id, dep_name, target_entry_id)` 确定性排序，保障跨机器 100% 可复现安装。
+
+```cp
+import {
+    ISO_DEFAULT_STORE_DIR,
+    IsoPkgInput,
+    IsoDepEdge,
+    IsoSccScratch,
+    IsoStoreEntry,
+    IsoSymlinkOp,
+    IsoDfsFrame,
+    IsoInstallPlanner,
+} from "cap:pkg";
+
+let entries: [16]IsoStoreEntry = [IsoStoreEntry.empty(); 16];
+let links: [32]IsoSymlinkOp = [IsoSymlinkOp.empty(); 32];
+let planner = IsoInstallPlanner.init(entries[0..], links[0..]);
+// 调用 planner.build(pkgs, edges, 0, scc_scratch, ...) 生成确定性隔离安装计划与软链树
+* = planner;
+* = ISO_DEFAULT_STORE_DIR;
+```
