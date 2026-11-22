@@ -385,3 +385,22 @@ export {
     decodePgDataRowIter,
     decodePgDataRowFrame,
 } from "./pg_data_row.cp";
+
+export {
+    MYSQL_CHARSET_DEFAULT_ID,
+    MYSQL_CHARSET_UTF8MB4_0900_AI_CI_ID,
+    MYSQL_CHARSET_UTF8MB4_BIN_ID,
+    MYSQL_CHARSET_UTF8MB4_UNICODE_CI_ID,
+    MYSQL_CHARSET_UTF8MB3_GENERAL_CI_ID,
+    MYSQL_CHARSET_BINARY_ID,
+    MYSQL_CHARSET_LATIN1_SWEDISH_CI_ID,
+    MYSQL_CHARSET_ASCII_GENERAL_CI_ID,
+    MYSQL_CHARSET_GBK_CHINESE_CI_ID,
+    MYSQL_CHARSET_GB18030_CHINESE_CI_ID,
+    MySqlCharsetFamily,
+    MySqlCollationInfo,
+    lookupMySqlCollation,
+    lookupMySqlCollationByName,
+    isMySqlBinaryColumn,
+    mysqlMaxCharLen,
+} from "./mysql_charset.cp";

@@ -545,3 +545,24 @@ const row = decodePgDataRowFrame(wire[0..n])?;
 // row.column_count == 3, row.columns[1].is_null == true, !row.columns[2].is_null && row.columns[2].bytes.len == 0
 * = row;
 ```
+
+9. **MySQL 5.7+/8.0+ 完整字符集与 Collation 注册表（`lib/sql/mysql_charset.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/CharacterSet.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+   - **完整 1..255+ Collation ID 查找与编码族分类**：零堆分配 O(1) 映射 Bun `CharacterSet` 全部 Collation ID 与 MySQL 8.0+ `utf8mb4_0900_*`（`255`/`278`/`305`/`309`），提供 `maxBytesPerChar()`（1/2/3/4 字节宽度）、`isUtf8Compatible()` 与大小写无关名称/别名解析（`lookupMySqlCollationByName`）；
+   - **MySQL 协议握手与二进制列边界契约**：HandshakeResponse41 仅含 1 字节 `character_set` 字段，对于 `id > 255`（如 `309` `utf8mb4_0900_bin`）须通过 `handshakeByte()` 回落为 `255` 并在连接后按需设置 collation；判定 `ColumnDefinition41` 列是否为原始字节流（`BLOB`/`VARBINARY`）时必须用 `isMySqlBinaryColumn(id)` / `isRawBinary()`（仅 `63`），切勿与文本二进制排序 `utf8mb4_bin` (`46`) 混淆。
+
+```cp
+import {
+    MYSQL_CHARSET_DEFAULT_ID,
+    MYSQL_CHARSET_BINARY_ID,
+    lookupMySqlCollation,
+    lookupMySqlCollationByName,
+    isMySqlBinaryColumn,
+} from "cap:sql";
+
+const info = lookupMySqlCollation(MYSQL_CHARSET_DEFAULT_ID); // utf8mb4_general_ci, maxBytesPerChar() == 4
+const is_bin = isMySqlBinaryColumn(MYSQL_CHARSET_BINARY_ID); // true
+const by_name = lookupMySqlCollationByName("utf8mb4_0900_bin"); // id == 309, handshakeByte() == 255
+* = info;
+* = is_bin;
+* = by_name;
+```
