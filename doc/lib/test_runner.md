@@ -145,3 +145,30 @@ import { WorkStealPool } from "cap:test_runner";
 let pool = WorkStealPool.partition(10, 4); // [0..3), [3..6), [6..8), [8..10)
 const first = pool.nextFor(0) ?? 0;        // 0 (worker 0 pops locally)
 ```
+7. **并行 Worker JUnit XML 与 LCOV 覆盖率聚合器（`lib/test_runner/aggregate.cp`，吸收自 `/data/dev/bun/src/cli/test/parallel/aggregate.cp`）**：
+   - 核心符号：`JUnitTotals`、`JUnitMergeResult`、`CoverageThreshold`、`MergedCoverageFile`、`CoverageAggregator`、`parseJUnitAttrU32`、`appendXmlEscaped`、`mergeJUnitFragments`。
+   - **JUnit 片段合并（`mergeJUnitFragments`）**：提取各 Worker 生成的 `<testsuites ...>` 头部 `tests`/`failures`/`skipped` 计数与内层 `<testsuite>`，并为异常中止的测试文件合成 XML 转义后的失败用例，确保外层 `<testsuites>` 总数与内层严格相等（通过 GitLab CI / Jenkins / GitHub Actions Schema 校验）。
+   - **LCOV 覆盖率聚合（`CoverageAggregator`）**：支持增量 `ingestLcov`（`SF:` 归并、`DA:line,hits` 饱和累加 `+|`、`FNF:`/`FNH:` 取最大值）、`formatUncoveredRanges`（连续未覆盖行折叠为 `"3,5-8,12"`）、`renderMergedLcov`（文件路径字典序 + 行号升序确定性输出 `lcov.info`）以及 `evaluateThresholds`（按函数/行阈值门禁判定）。
+
+```typescript
+import { CoverageAggregator, CoverageThreshold, mergeJUnitFragments } from "cap:test_runner";
+
+pub fn demoAggregate(allocator: std.mem.Allocator): ! {
+    let agg = CoverageAggregator.init(allocator);
+    defer agg.deinit();
+    agg.ingestLcov("SF:src/math.cp\nFNF:2\nFNH:2\nDA:1,3\nDA:2,0\nDA:3,0\nend_of_record\n")?;
+    const ok = agg.evaluateThresholds(CoverageThreshold{ functions: 0.9, lines: 0.5 });
+    * = ok;
+    const merged_lcov = agg.renderMergedLcov(allocator)?;
+    defer allocator.free(merged_lcov);
+}
+```
+
+### 上游 Bun Test Reporters 与 Code Coverage 生产最佳实践（吸收自 `/data/dev/bun/docs/test/{reporters,code-coverage}.mdx`）
+
+1. **多形态 CI 报告协同**：
+   - 终端交互与大套件推荐精简进度输出（如 dots 模式，仅打印 `.` / `F` 减少日志刷屏）；无颜色终端环境自动降级为纯 ASCII（`(pass)` / `(fail)`）。
+   - CI 流水线（GitLab CI / Jenkins / GitHub Actions）可同时输出控制台摘要与 JUnit XML 文件，并在并发执行时通过 `mergeJUnitFragments` 汇总多 Worker 产物。
+2. **代码覆盖率阈值门禁与持久化报告**：
+   - 推荐在 CI 中配置分层覆盖率阈值（`functions` 与 `lines` 可分别设定，如 `0.9`），任一文件低于阈值时触发门禁失败；
+   - 通过 `CoverageAggregator.renderMergedLcov` 输出标准 `lcov.info`，可直接对接 Codecov、Coveralls、VS Code Coverage Gutters 等生态工具。

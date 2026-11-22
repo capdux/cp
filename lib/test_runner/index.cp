@@ -60,3 +60,14 @@ export {
     FileRange,
     WorkStealPool,
 } from "./work_stealing";
+
+export {
+    JUnitTotals,
+    JUnitMergeResult,
+    CoverageThreshold,
+    MergedCoverageFile,
+    CoverageAggregator,
+    parseJUnitAttrU32,
+    appendXmlEscaped,
+    mergeJUnitFragments,
+} from "./aggregate";
