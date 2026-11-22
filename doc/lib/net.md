@@ -362,3 +362,59 @@ pub fn demoConsistentHashRingQuickStart() {
     * = ring.routeKey("agent-session:42");
 }
 ```
+
+---
+
+## 九、 二进制多路复用流帧编解码与流控状态机（Yamux 风格，`stream_mux.cp`）
+
+面向高性能 RPC、跨节点 Agent 通信与单 TCP 连接多路复用的 100% 纯 CP、零堆分配 12 字节大端帧编解码与信用窗口流控引擎：
+
+- **12 字节大端固定帧头与零拷贝编解码**：
+  - 常量：`MUX_PROTO_VERSION`（`0`）、`MUX_HEADER_LEN`（`12`）、`MUX_DEFAULT_INITIAL_WINDOW`（`256 KiB`）、`MUX_GOAWAY_NORMAL` / `MUX_GOAWAY_PROTOCOL_ERROR` / `MUX_GOAWAY_INTERNAL_ERROR`。
+  - 类型：`MuxFrameType`（`Data | WindowUpdate | Ping | GoAway`）、`MuxFlags`（`NONE` / `SYN` / `ACK` / `FIN` / `RST`）、`MuxFrameHeader`、`MuxDecodedFrame`、`MuxCodecError`。
+  - 函数：`encodeMuxFrameHeader` / `decodeMuxFrameHeader` / `encodeMuxFrame` / `decodeMuxFrame`（严格校验版本号、标志位掩码、会话级/流级 `stream_id` 合法性及载荷截断）。
+- **多路复用会话与双向信用流控（`MuxSession`）**：
+  - `init(streams_buf, is_client, max_concurrent_streams, initial_window): MuxSession?`：客户端自动分配奇数流 ID（`1, 3, 5...`）、服务端分配偶数流 ID（`2, 4, 6...`）。
+  - `openStream` / `acceptRemoteStream`：并发流上限校验与对端奇偶性校验。
+  - `canSend` / `consumeSendWindow` / `onRecvData` / `onWindowUpdate` / `grantRecvWindow`：精确双向 `send_window`/`recv_window` 信用扣减、超窗拦截与 `WindowUpdate` 补窗（防 `u32` 溢出）。
+  - `closeLocal` / `resetStream` / `sendGoAway` / `onGoAway`：完整支持全双工半关闭（`LocalHalfClosed` / `RemoteHalfClosed`）、`RST` 立即关闭与优雅停机 `GoAway`（拒绝新开流但放行在途流正常收尾）。
+
+### QuickStart 示例
+
+```cp
+import {
+    MUX_PROTO_VERSION,
+    MuxFrameType,
+    MuxFlags,
+    MuxFrameHeader,
+    encodeMuxFrame,
+    decodeMuxFrame,
+    MuxStreamSlot,
+    MuxSession,
+} from "cap:net";
+
+pub fn demoStreamMuxQuickStart()! {
+    let slots: [8]MuxStreamSlot = [MuxStreamSlot{}; 8];
+    let client = MuxSession.init(slots[0..], true, 8, 4096) ?? return;
+
+    // 1. 客户端自动分配奇数流 ID = 1 并扣减发送窗口
+    const sid = client.openStream() ?? return;
+    const body: []const u8 = "hello-rpc";
+    if (client.consumeSendWindow(sid, body.len as u32)) {
+        let wire: [64]u8 = [0; 64];
+        const hdr = MuxFrameHeader{
+            version: MUX_PROTO_VERSION,
+            frame_type: MuxFrameType.Data,
+            flags: MuxFlags.SYN,
+            stream_id: sid,
+            length: body.len as u32,
+        };
+        const n = encodeMuxFrame(hdr, body, wire[0..])?;
+        const decoded = decodeMuxFrame(wire[0..n])?;
+        * = decoded.payload; // 零拷贝切片 "hello-rpc"
+    }
+
+    // 2. 收到对端 WindowUpdate 补窗后恢复发送信用
+    * = client.onWindowUpdate(sid, 1024, MuxFlags.NONE);
+}
+```

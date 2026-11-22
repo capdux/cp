@@ -1755,3 +1755,26 @@ export {
     RingStats,
     ConsistentHashRing,
 } from "./consistent_ring.cp";
+
+// --- stream_mux ---
+export {
+    MUX_PROTO_VERSION,
+    MUX_HEADER_LEN,
+    MUX_DEFAULT_INITIAL_WINDOW,
+    MUX_GOAWAY_NORMAL,
+    MUX_GOAWAY_PROTOCOL_ERROR,
+    MUX_GOAWAY_INTERNAL_ERROR,
+    MuxFrameType,
+    MuxFlags,
+    MuxCodecError,
+    MuxFrameHeader,
+    MuxDecodedFrame,
+    encodeMuxFrameHeader,
+    decodeMuxFrameHeader,
+    encodeMuxFrame,
+    decodeMuxFrame,
+    MuxStreamState,
+    MuxStreamSlot,
+    MuxSessionStats,
+    MuxSession,
+} from "./stream_mux.cp";
