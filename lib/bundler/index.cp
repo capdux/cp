@@ -274,3 +274,16 @@ export {
     JsOrderResult,
     JsOrderGraph,
 } from "./js_order";
+
+export {
+    HTML_CHUNK_MAX_PRELOADS,
+    HtmlChunkError,
+    HtmlEndTagIndices,
+    HtmlChunkCompileOptions,
+    HtmlChunkCompileResult,
+    findHtmlEndTagIndices,
+    writeEscapedAttrUrl,
+    writeEscapedInlineScript,
+    writeEscapedInlineStyle,
+    compileHtmlChunk,
+} from "./html_chunk";

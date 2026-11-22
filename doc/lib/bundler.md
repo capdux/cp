@@ -424,6 +424,30 @@ const res = g.computeChunkOrder(0b1, files[0..], 0, false, false)?;
 * = res;
 ```
 
+### 3.21 HTML Chunk 编译注入与单文件 Standalone HTML 打包引擎（`lib/bundler/html_chunk.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCompileResultForHtmlChunk.cp` 与 `/data/dev/bun/docs/bundler/standalone-html.mdx`）
+- **常量与错误集**：`HTML_CHUNK_MAX_PRELOADS` (`32`)、`HtmlChunkError`（`BufferTooSmall` / `TooManyPreloads` / `InvalidAssetUrl`）
+- **核心类型与函数**：`HtmlEndTagIndices`（`headInsertOffset()` / `bodyInsertOffset()`）、`HtmlChunkCompileOptions`（`addModulePreload()`）、`HtmlChunkCompileResult`、`findHtmlEndTagIndices`、`writeEscapedAttrUrl`、`writeEscapedInlineScript`、`writeEscapedInlineStyle`、`compileHtmlChunk`。
+- **核心编译契约**：
+  - 100% 零动态堆分配：精准定位 `</head>`、`</body>`、`</html>` 锚点并跳过 `<!-- ... -->` 注释及 `<script>`/`<style>` 原始正文；
+  - 外链打包模式：按 CSS -> `modulepreload` -> JS 顺序注入 `<head>`（减少 FOUC 闪烁）并支持 `crossorigin` 与属性安全转义；
+  - Standalone HTML 模式：内联 `<style>` 至 `</head>` 前，内联 `<script type="module">` 至 `</body>` 前确保 DOM 已挂载，并对内联正文中的 `</script>`/`</style>` 执行安全转义防止标签提前闭合。
+
+```cp
+import { HtmlChunkCompileOptions, compileHtmlChunk } from "cap:bundler";
+
+const html = "<!doctype html><html><head><title>App</title></head><body><div id=\"root\"></div></body></html>";
+let opts = HtmlChunkCompileOptions{
+    standalone_html: true,
+    minify_whitespace: true,
+    css_ref: "body{margin:0}",
+    js_ref: "console.log('ready')",
+};
+let out: [512]u8 = [0; 512];
+const compiled = compileHtmlChunk(html, opts, out[0..])?;
+// CSS 内联至 </head> 前，JS 内联至 </body> 前
+* = compiled;
+```
+
 ---
 
 ## 四、 上游行为契约、边界与安全注意事项
@@ -452,3 +476,6 @@ const res = g.computeChunkOrder(0b1, files[0..], 0, false, false)?;
 8. **代码分割（`splitting`）与模块格式（`esm` / `cjs`）Chunk 线性化实践（吸收自 `/data/dev/bun/docs/bundler/index.mdx`）**：
    - 当启用 `--splitting`（`splitting: true`）且多个入口点共享同一模块时，共享代码会被提取至带内容哈希的独立 Chunk（如 `chunk-[hash].js`）；此时 `JsOrderGraph.computeChunkOrder(..., code_splitting = true)` 严格要求文件的 `entry_bits` 与目标 Chunk 完全相等，确保共享模块仅在对应共享 Chunk 中发射一次，避免跨入口重复打包；
    - 选择 `format: "cjs"` 时默认目标切换为 `node`（`target: "bun"` 与 `format: "cjs"` 组合会附加 `// @bun @bun-cjs` 标记，其 CommonJS 包装器不兼容 Node.js）；被 `__commonJS` / `__esm` 包装的模块（`JsPartWrapKind.Cjs` / `.Esm`）不可按 Part 拆解，线性化器会将其全部部件作为单一连续区间提升至 `parts_prefix`，保证运行时延迟初始化闭包在任意消费方之前完成定义；外部动态 `import()` 边在静态 DFS 中自动截断，防止将按需懒加载分支错误内联进首屏同步 Chunk。
+9. **单文件 Standalone HTML 打包与防闭合标签注入（吸收自 `/data/dev/bun/docs/bundler/standalone-html.mdx`）**：
+   - 使用 `bun build --compile --target=browser ./index.html` 可将整个前端应用（JS/TS/JSX、CSS、图片、字体、WASM）内联为单一自包含 `.html` 文件，无需任何相对路径或本地 HTTP 服务即可离线双击打开、嵌入 WebView 或单文件上传至 S3/CDN；
+   - 在 `compileHtmlChunk(..., standalone_html = true)` 中，CSS 内联为 `<style>` 置于 `</head>` 前以避免样式闪烁，JS 内联为 `<script type="module">` 置于 `</body>` 前以确保 DOM 节点完成解析；内联正文必须经过 `writeEscapedInlineScript` / `writeEscapedInlineStyle` 将任意大小写的 `</script`/`</style` 转义为 `<\/script`/`<\/style`，外链 URL 必须经过 `writeEscapedAttrUrl` 防止属性逃逸。
