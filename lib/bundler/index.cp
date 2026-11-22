@@ -54,3 +54,14 @@ export {
     SplitResult,
     CodeSplitter,
 } from "./splitting";
+
+export {
+    MAX_DEFINE_RULES,
+    CallUnwrapKind,
+    DefineValueKind,
+    DefineFlags,
+    DefineValue,
+    DefineEntry,
+    isValidDefineKey,
+    DefineTable,
+} from "./defines";

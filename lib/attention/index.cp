@@ -104,3 +104,11 @@ export {
     f32ToFp8E4m3,
     decodeFp8E4m3Slice,
 } from "./fp16.cp";
+
+export {
+    MlaConfig,
+    alibiSlopes,
+    alibiAttentionSingleQuery,
+    mlaCompressKv,
+    mlaDecodeSingleHead,
+} from "./mla.cp";

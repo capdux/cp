@@ -20,6 +20,7 @@
 - **`GGUF_MAGIC` / `GgufValueType` / `GgmlType` / `GgufHeader` / `GgufKvEntry` / `GgufTensorInfo` / `parseGgufHeader` / `parseGgufFile` / `ggufFindKv` / `ggufFindTensor` / `ggufTensorByteSize`** (`gguf.cp`)：零堆分配零拷贝 GGUF v2/v3 大模型权重文件解析器，直接面向 mmap 缓冲区解析头、元数据 KV（自动提取 `general.alignment`）、张量描述符与对齐 `data_offset`，并精确计算 F32/F16/BF16/Q4_0/Q8_0/K-Quants 张量物理字节数。
 - **`SafeDtype` / `SafeTensorDesc` / `SafeTensorsInfo` / `parseSafeTensors` / `safeTensorFind` / `safeTensorBytes`** (`safetensors.cp`)：零堆分配零拷贝 HuggingFace Safetensors 模型权重解析器，直接面向 mmap 缓冲区解析 `[8B LE header_len][JSON header][payload]`，跳过 `__metadata__`，严格校验 `shape * dtype.byteSize() == data_end - data_start` 与载荷边界，并返回只读零拷贝权重切片。
 - **FP16 / BF16 / FP8 E4M3FN 低精度浮点编解码核** (`fp16.cp`)：零堆分配位级精确 AI 浮点转换与批量小端解包/打包核，完整覆盖 IEEE-754 Binary16（含次正规与 RNE 舍入）、Brain Float16（RNE 防截断偏差）与 OCP/NVIDIA Hopper FP8 E4M3FN（偏置 7、饱和至 `±448.0`、张量级 `scale` 批量反量化）。
+- **`MlaConfig` / `alibiSlopes` / `alibiAttentionSingleQuery` / `mlaCompressKv` / `mlaDecodeSingleHead`** (`mla.cp`)：零堆分配 DeepSeek-V2/V3 多头潜在注意力（MLA：低秩 KV 潜空间压缩 + 矩阵吸收优化 + 解耦 RoPE）与 ALiBi 线性距离偏置注意力核，推理期无需重建完整 K/V 缓存，大幅降低 KV-Cache 显存占用。
 
 ## 3. API 速查
 
@@ -80,6 +81,10 @@
 | `bf16BitsToF32` / `f32ToBf16Bits` | `(bits: u16): f32` / `(val: f32): u16` | Brain Float16 精确互转（带 Round-to-Nearest-Even 舍入防系统偏差） |
 | `decodeBf16SliceLe` / `encodeBf16SliceLe` | `(src_bytes, dst): bool` / `(src, dst_bytes): bool` | 批量小端 BF16 权重字节流与 `f32` 切片互转 |
 | `fp8E4m3ToF32` / `f32ToFp8E4m3` / `decodeFp8E4m3Slice` | `(bits: u8): f32` / `(val: f32): u8` / `(src_bytes, scale, dst): bool` | OCP FP8 E4M3FN 精确互转（最大 `448.0`、饱和钳位、`0x7F`/`0xFF`=NaN）与带缩放批量反量化 |
+| `alibiSlopes` | `(n_heads, slopes_out): bool` | 生成 Press et al. 2022 ALiBi 几何斜率（支持 2 的幂与非 2 的幂头数） |
+| `alibiAttentionSingleQuery` | `(q_heads, k_heads, v_heads, seq_kv, n_heads, head_dim, slopes, out_heads): bool` | O(1) 在线 Softmax 多头单查询 ALiBi 注意力，自动叠加 `-m_h * ((seq_kv - 1) - j)` 偏置 |
+| `mlaCompressKv` | `(x, w_dkv, d_model, d_latent, latent_out): bool` | 将隐藏层向量压缩为 `d_latent` 维 KV 潜向量存入缓存 |
+| `mlaDecodeSingleHead` | `(q_nope, q_rope, c_kv_cache, k_rope_cache, w_uk, w_uv, seq_kv, d_latent, d_nope, d_rope, d_v, scale, q_absorbed_s, out_latent_s, out_v): bool` | DeepSeek-V2/V3 MLA 矩阵吸收解码核（`q_abs = q_nope^T * W_UK` 直接点积潜缓存 + 解耦 RoPE + 单次 `W_UV` 上投影） |
 
 ## 4. 示例
 
@@ -427,5 +432,54 @@ pub fn demoDecodeLowPrecisionWeights(
     * = decodeF16SliceLe(f16_bytes, out);
     * = decodeBf16SliceLe(bf16_bytes, out);
     * = decodeFp8E4m3Slice(fp8_bytes, 0.015625, out); // 张量级 scale 反量化
+}
+```
+
+### DeepSeek-V2/V3 MLA 矩阵吸收与 ALiBi 线性偏置示例 (`mla.cp`)
+
+```cp
+import {
+    alibiSlopes,
+    mlaCompressKv,
+    mlaDecodeSingleHead,
+} from "cap:attention";
+
+pub fn demoMlaWeightAbsorption(
+    q_nope: []const f64,
+    q_rope: []const f64,
+    c_kv_cache: []const f64,
+    k_rope_cache: []const f64,
+    w_uk: []const f64,
+    w_uv: []const f64,
+) {
+    // 1. 生成 8 头 ALiBi 斜率 [0.5, 0.25, ..., 1/256]
+    let slopes_buf: [8]f64 = [0.0; 8];
+    let slopes: []f64 = slopes_buf[0..];
+    * = alibiSlopes(8, slopes);
+
+    // 2. MLA 矩阵吸收单头解码（d_latent=4, d_nope=6, d_rope=2, d_v=6, seq_kv=8）
+    let q_abs_buf: [4]f64 = [0.0; 4];
+    let out_lat_buf: [4]f64 = [0.0; 4];
+    let out_v_buf: [6]f64 = [0.0; 6];
+    let q_abs: []f64 = q_abs_buf[0..];
+    let out_lat: []f64 = out_lat_buf[0..];
+    let out_v: []f64 = out_v_buf[0..];
+    * = mlaDecodeSingleHead(
+        q_nope,
+        q_rope,
+        c_kv_cache,
+        k_rope_cache,
+        w_uk,
+        w_uv,
+        8,
+        4,
+        6,
+        2,
+        6,
+        0.0,
+        q_abs,
+        out_lat,
+        out_v,
+    );
 }
 ```
