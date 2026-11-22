@@ -1488,3 +1488,47 @@ pub fn demoKvCompactor() {
     }
 }
 ```
+
+
+### 零分配 AWQ 激活感知 INT4 分组量化与显著通道缩放 GEMV 内核 (`quantAwq.cp`)
+
+面向大模型边缘端侧 W4A16/W4A32 推理的 100% 纯 CP 零动态堆分配 **AWQ (Activation-Aware Weight Quantization)** 量化与融合反量化 GEMV 内核，原生 8-lane SIMD `@dot` 与硬件 `@fma` 驱动：
+
+- **常量与数据模型**：
+  - `AWQ_MIN_CHANNEL_SCALE = 1.0e-4`、`AWQ_MAX_CHANNEL_SCALE = 1.0e4`
+  - `AwqGroupMeta`（`scale: f32`, `zero_point: u8`）
+  - `AwqQuantErrorStats`（`rows`, `cols`, `mse`, `max_abs_err`, `min_row_cosine`, `mean_row_cosine`）
+  - 几何辅助：`awqGroupsPerRow(cols, group_size)`、`awqPackedBytesPerRow(cols)`
+- **核心量化与推理内核**：
+  - `computeAwqChannelScales(activations, num_samples, cols, alpha, *out_scales): bool`：按通道统计 `s_j = mean(|x_j|)^alpha` 识别显著权重通道，自动清洗 `NaN`/`Inf` 并将零激活通道置为中性缩放 `1.0`。
+  - `awqQuantizeMatrix(weights, channel_scales, rows, cols, group_size, *out_packed, *out_groups): bool`：先执行通道预缩放 `w' = w * s_j` 再进行分组非对称 INT4 打包（每字节 2 个 4-bit 无符号值 `0..15`），全零/常量组零除零风险。
+  - `awqDequantizeRow(packed_weights, groups, channel_scales, row_idx, rows, cols, group_size, *out_row): bool`：逐行反量化并还原至原始权重空间。
+  - `awqGemvF32(packed_weights, groups, channel_scales, x, rows, cols, group_size, *scaled_x_scratch, *out_y): bool`：零堆分配融合 GEMV，先将输入激活按 `1 / s_j` 一次性预缩放，再通过 32 元素栈瓦片调用 `@dot` + `@fma` 累积各分组点积。
+  - `evaluateAwqQuantError(orig_weights, packed_weights, groups, channel_scales, rows, cols, group_size, *row_scratch): AwqQuantErrorStats?`：诊断量化前后 MSE、最大绝对误差与逐行余弦保真度。
+
+```cp
+import {
+    AwqGroupMeta,
+    computeAwqChannelScales,
+    awqQuantizeMatrix,
+    awqGemvF32,
+} from "cap:attention";
+
+pub fn demoAwqGemv(calib_acts: []const f32, weights: []const f32, x: []const f32) {
+    let scales: [16]f32 = [1.0; 16];
+    let scales_s: []f32 = scales[0..];
+    * = computeAwqChannelScales(calib_acts, 1, 16, 0.5, *scales_s);
+
+    let q_packed: [16]u8 = [0; 16]; // 2 rows x 16 cols -> 16 bytes
+    let packed_s: []u8 = q_packed[0..];
+    let groups: [2]AwqGroupMeta = [AwqGroupMeta{}; 2];
+    let groups_s: []AwqGroupMeta = groups[0..];
+    * = awqQuantizeMatrix(weights, scales[0..], 2, 16, 16, *packed_s, *groups_s);
+
+    let scratch: [16]f32 = [0.0; 16];
+    let scratch_s: []f32 = scratch[0..];
+    let out_y: [2]f32 = [0.0; 2];
+    let out_y_s: []f32 = out_y[0..];
+    * = awqGemvF32(q_packed[0..], groups[0..], scales[0..], x, 2, 16, 16, *scratch_s, *out_y_s);
+}
+```

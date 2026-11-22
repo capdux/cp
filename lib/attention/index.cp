@@ -363,3 +363,17 @@ export {
     KvCompactorStats,
     KvCacheCompactor,
 } from "./kvCompactor.cp";
+
+export {
+    AWQ_MIN_CHANNEL_SCALE,
+    AWQ_MAX_CHANNEL_SCALE,
+    AwqGroupMeta,
+    AwqQuantErrorStats,
+    awqGroupsPerRow,
+    awqPackedBytesPerRow,
+    computeAwqChannelScales,
+    awqQuantizeMatrix,
+    awqDequantizeRow,
+    awqGemvF32,
+    evaluateAwqQuantError,
+} from "./quantAwq.cp";
