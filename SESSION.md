@@ -1501,3 +1501,7 @@
 ### 2026-11-22（根目录分域收敛第 13 批完成：lib/pack/（净减 17 个顶层目录，累计 -187） | 2026-11-22 15:01:00）
 - **执行与结单汇报**：
   > Stdlib Root Consolidator 完成 lib/pack/ 收敛：13 个压缩/归档小目录（bzip2/lz4/snappy/rle/xz/lzss/lzo/bwt/rar/ar/cpio/cab/squashfs）零冲突归并入 lib/pack/ + 4 份参考归档（zstd_/brotli_/tar_/zip_.cp），物理清理 17 个冗余旧目录（18/18 PASS，严格保护 deflate/lzw/zlib）；根目录 676 -> 659（累计 -187）；续派 lib/codec/ 编码与 ID 领域收敛。
+
+### 2026-11-22（根目录分域收敛第 12 批完成：lib/binfmt/（净减 15 个顶层目录，累计突破 -202） | 2026-11-22 15:02:06）
+- **执行与结单汇报**：
+  > Stdlib Root Consolidator 完成 lib/binfmt/ 建立与收敛：16 个二进制/列存/序列化/剖析格式小目录（macho/pcapng/vmdk/netcdf/avro/arrow/orc/msgpack/cbor_diag/bson/ubjson/postcard/hprof/jfr/lcov/aof）零冲突归并入 lib/binfmt/ 并物理清理旧目录（16/16 PASS），根目录 659 -> 644（累计突破 -202）；续派第 10 项 lib/binfmt/ 第 2 波收敛。

@@ -16,7 +16,7 @@ import {
     isOrc,
     parseOrcLayout,
     OrcBlockIter,
-} from "cap:orc";
+} from "cap:binfmt";
 
 fn putVarint(dst: []u8, off: usize, value: u64): usize {
     let v = value;

@@ -23,7 +23,7 @@ import {
     VmdkExtentIter,
     VmdkDescriptor,
     parseVmdkDescriptor,
-} from "cap:vmdk";
+} from "cap:binfmt";
 
 fn putU16Le(buf: []u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;

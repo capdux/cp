@@ -10,7 +10,7 @@ import {
     isAofMixedRdb,
     isAofResp,
     summarizeAof,
-} from "cap:aof";
+} from "cap:binfmt";
 
 test("1. multi-command SELECT / SET / HSET AOF stream iteration and arg extraction", () => {
     const aof =

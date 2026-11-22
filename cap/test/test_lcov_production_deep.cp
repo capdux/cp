@@ -14,7 +14,7 @@ import {
     LcovRecordIter,
     LcovFileIter,
     summarizeLcov,
-} from "cap:lcov";
+} from "cap:binfmt";
 
 test("1. multi-file LCOV .info report parsing and coverage percentage calculation", () => {
     const report =

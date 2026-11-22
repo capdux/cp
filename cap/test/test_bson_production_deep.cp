@@ -22,7 +22,7 @@ import {
     encodeDocument,
     decodeDocument,
     decodeDocumentWithMaxDepth,
-} from "cap:bson";
+} from "cap:binfmt";
 import cap from "cap";
 
 test("1. All BSON 1.1 Scalar Types Encode/Decode Round-Trip") {
@@ -258,18 +258,18 @@ test("4. Malformed Input Guards & 65-Level MaxDepthExceeded Protection") {
 test("5. Dynamic `cap.bson` Namespace Mounting & Zero-Leak Round-Trip") {
     const alloc = std.testing.allocator;
 
-    const oid = cap.bson.ObjectId.fromHex("656f6a656374696430303031") catch unreachable;
-    let fields: [3]cap.bson.BsonField = [
-        cap.bson.BsonField.init("_id", cap.bson.BsonValue{ object_id: oid }),
-        cap.bson.BsonField.init("service", cap.bson.BsonValue{ utf8: "cap-bson" }),
-        cap.bson.BsonField.init("ok", cap.bson.BsonValue{ boolean: true }),
+    const oid = cap.binfmt.ObjectId.fromHex("656f6a656374696430303031") catch unreachable;
+    let fields: [3]cap.binfmt.BsonField = [
+        cap.binfmt.BsonField.init("_id", cap.binfmt.BsonValue{ object_id: oid }),
+        cap.binfmt.BsonField.init("service", cap.binfmt.BsonValue{ utf8: "cap-bson" }),
+        cap.binfmt.BsonField.init("ok", cap.binfmt.BsonValue{ boolean: true }),
     ];
 
-    const bytes = cap.bson.encodeDocument(alloc, &fields) catch unreachable;
+    const bytes = cap.binfmt.encodeDocument(alloc, &fields) catch unreachable;
     defer alloc.free(bytes);
 
-    const decoded = cap.bson.decodeDocument(alloc, bytes) catch unreachable;
-    defer cap.bson.deinitDocument(alloc, decoded);
+    const decoded = cap.binfmt.decodeDocument(alloc, bytes) catch unreachable;
+    defer cap.binfmt.deinitDocument(alloc, decoded);
 
-    expect_eq(cap.bson.eqlFields(&fields, decoded), true);
+    expect_eq(cap.binfmt.eqlFields(&fields, decoded), true);
 }

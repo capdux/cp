@@ -2,7 +2,7 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { CborValue, CborEntry, CborTag, decode, encode, encodeCanonical, toDiag } from "cap:cbor_diag";
+import { CborValue, CborEntry, CborTag, cborDiagDecode as decode, cborDiagEncode as encode, cborDiagEncodeCanonical as encodeCanonical, cborDiagToDiag as toDiag } from "cap:binfmt";
 
 test "RFC 8949 Appendix A official vectors decode and encode" {
     const alloc = std.testing.allocator;
@@ -145,10 +145,10 @@ test "Diagnostic notation (toDiag) and malformed/depth-overflow rejection" {
 test "Dynamic mount cap.cbor_diag and zero memory leak" {
     const alloc = std.testing.allocator;
 
-    let decoded = try cap.cbor_diag.decode(alloc, "\x83\xf6\xf7\xf4");
+    let decoded = try cap.binfmt.cborDiagDecode(alloc, "\x83\xf6\xf7\xf4");
     defer decoded.deinit(alloc);
 
-    const diag = try cap.cbor_diag.toDiag(alloc, decoded);
+    const diag = try cap.binfmt.cborDiagToDiag(alloc, decoded);
     defer alloc.free(diag);
     try expect_eq(std.mem.eql(u8, diag, "[null, undefined, false]"), true);
 }

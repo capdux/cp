@@ -22,7 +22,7 @@ import {
     NetcdfDimIter,
     NetcdfAttrIter,
     NetcdfVarIter,
-} from "cap:netcdf";
+} from "cap:binfmt";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

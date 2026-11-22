@@ -27,7 +27,7 @@ import {
     parseHprofLoadClass,
     parseHprofHeapSummary,
     summarizeHprof,
-} from "cap:hprof";
+} from "cap:binfmt";
 
 fn writeBytes(dst: []u8, off: usize, src: []const u8): usize {
     let i: usize = 0;

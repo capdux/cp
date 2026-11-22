@@ -19,7 +19,7 @@ import {
     JfrChunkIter,
     JfrEventIter,
     summarizeJfr,
-} from "cap:jfr";
+} from "cap:binfmt";
 
 fn zeroBytes(buf: []u8) {
     let i: usize = 0;

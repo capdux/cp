@@ -20,7 +20,7 @@ import {
     decodeDatum,
     writeContainer,
     readContainer,
-} from "cap:avro";
+} from "cap:binfmt";
 import cap from "cap";
 
 fn expectScalarRoundTrip(alloc: std.mem.Allocator, schema_json: []const u8, val: AvroValue)! {
@@ -250,7 +250,7 @@ test("5. Dynamic Lazy Namespace Mounting (cap.avro) & Zero Memory Leak") {
     const alloc = std.testing.allocator;
 
     const schema_json = "{\"type\":\"record\",\"name\":\"Ping\",\"fields\":[{\"name\":\"seq\",\"type\":\"int\"},{\"name\":\"msg\",\"type\":\"string\"}]}";
-    let schema = cap.avro.AvroSchema.parseSchema(alloc, schema_json) catch unreachable;
+    let schema = cap.binfmt.AvroSchema.parseSchema(alloc, schema_json) catch unreachable;
     defer schema.deinit();
 
     let fields: [2]AvroRecordField = [
@@ -259,10 +259,10 @@ test("5. Dynamic Lazy Namespace Mounting (cap.avro) & Zero Memory Leak") {
     ];
     const rec = AvroValue.makeRecord(&fields);
 
-    const encoded = cap.avro.encodeDatum(alloc, schema, rec) catch unreachable;
+    const encoded = cap.binfmt.encodeDatum(alloc, schema, rec) catch unreachable;
     defer alloc.free(encoded);
 
-    let decoded = cap.avro.decodeDatum(alloc, schema, encoded) catch unreachable;
+    let decoded = cap.binfmt.decodeDatum(alloc, schema, encoded) catch unreachable;
     defer decoded.deinit(alloc);
 
     expect_eq(decoded.eql(rec), true);

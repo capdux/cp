@@ -21,7 +21,7 @@ import {
     parseIdb,
     parseEpb,
     PcapngOptionIter,
-} from "cap:pcapng";
+} from "cap:binfmt";
 
 fn putU16(buf: []u8, off: usize, v: u16, is_be: bool) {
     if (is_be) {

@@ -10,17 +10,17 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import {
-    DEFAULT_MAX_DEPTH,
+    MSGPACK_DEFAULT_MAX_DEPTH as DEFAULT_MAX_DEPTH,
     MsgPackError,
     MsgExt,
     MsgMapEntry,
     MsgValue,
     MsgPackWriter,
     MsgPackReader,
-    encode,
-    decode,
-    decodeWithMaxDepth,
-} from "cap:msgpack";
+    msgpackEncode as encode,
+    msgpackDecode as decode,
+    msgpackDecodeWithMaxDepth as decodeWithMaxDepth,
+} from "cap:binfmt";
 import cap from "cap";
 
 fn expectEncodedBytesEq(alloc: std.mem.Allocator, val: MsgValue, expected: []const u8)! {
@@ -217,17 +217,17 @@ test("4. Resource Exhaustion Protection: MaxDepthExceeded (64-Layer & Custom)") 
 test("5. Dynamic Lazy Namespace Mounting via `cap.msgpack` & Zero-Leak Verification") {
     const alloc = std.testing.allocator;
 
-    let entries: [3]cap.msgpack.MsgMapEntry = [
-        cap.msgpack.MsgMapEntry.init(cap.msgpack.MsgValue.makeStr("engine"), cap.msgpack.MsgValue.makeStr("cp-msgpack")),
-        cap.msgpack.MsgMapEntry.init(cap.msgpack.MsgValue.makeStr("ready"), cap.msgpack.MsgValue.makeBool(true)),
-        cap.msgpack.MsgMapEntry.init(cap.msgpack.MsgValue.makeStr("offset"), cap.msgpack.MsgValue.makeInt(-99)),
+    let entries: [3]cap.binfmt.MsgMapEntry = [
+        cap.binfmt.MsgMapEntry.init(cap.binfmt.MsgValue.makeStr("engine"), cap.binfmt.MsgValue.makeStr("cp-msgpack")),
+        cap.binfmt.MsgMapEntry.init(cap.binfmt.MsgValue.makeStr("ready"), cap.binfmt.MsgValue.makeBool(true)),
+        cap.binfmt.MsgMapEntry.init(cap.binfmt.MsgValue.makeStr("offset"), cap.binfmt.MsgValue.makeInt(-99)),
     ];
-    const doc = cap.msgpack.MsgValue.makeMap(&entries);
+    const doc = cap.binfmt.MsgValue.makeMap(&entries);
 
-    const encoded = cap.msgpack.encode(alloc, doc) catch unreachable;
+    const encoded = cap.binfmt.msgpackEncode(alloc, doc) catch unreachable;
     defer alloc.free(encoded);
 
-    let decoded = cap.msgpack.decode(alloc, encoded) catch unreachable;
+    let decoded = cap.binfmt.msgpackDecode(alloc, encoded) catch unreachable;
     defer decoded.deinit(alloc);
 
     expect_eq(decoded.eql(doc), true);
