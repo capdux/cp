@@ -329,3 +329,18 @@ export {
     SemanticDedupStats,
     SemanticDeduplicator,
 } from "./semanticDedup.cp";
+
+export {
+    QFUSION_MAX_VIEWS,
+    QFUSION_MAX_HITS_PER_VIEW,
+    QFUSION_MAX_UNIQUE_DOCS,
+    QFUSION_DEFAULT_RRF_K,
+    QueryFusionStrategy,
+    QueryCentroidReport,
+    QueryViewHit,
+    FusedDocHit,
+    QueryFusionConfig,
+    QueryFusionReport,
+    fuseQueryVectorsF32,
+    MultiQueryFusion,
+} from "./queryFusion.cp";

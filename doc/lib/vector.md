@@ -1497,3 +1497,53 @@ pub fn demoSemanticDedup() {
     * = (d3.status == SemanticDedupStatus.novel);
 }
 ```
+
+### 32. 零堆分配多查询扩展 HyDE/子查询加权质心与多视角 RRF/CombMNZ 融合检索器 (`queryFusion.cp`)
+
+面向 RAG 多查询重写（Multi-Query Rewriting）与 HyDE（Hypothetical Document Embeddings）的 100% 纯 CP 零动态堆分配查询向量融合与多视角排序聚合引擎：
+
+- **常量与枚举**：
+  - `QFUSION_MAX_VIEWS = 8`、`QFUSION_MAX_HITS_PER_VIEW = 32`、`QFUSION_MAX_UNIQUE_DOCS = 256`、`QFUSION_DEFAULT_RRF_K = 60.0`
+  - `QueryFusionStrategy`（`weighted_rrf | comb_mnz`）
+- **数据模型**：
+  - `QueryCentroidReport`（`valid`, `dim`, `total_views`, `used_views`, `skipped_views`, `total_weight`）
+  - `QueryViewHit`（`doc_id`, `score`）、`FusedDocHit`（`doc_id`, `fused_score`, `consensus_mask: u8`, `consensus_count: u8`, `best_rank: u16`）
+  - `QueryFusionConfig`、`QueryFusionReport`（`views_added`, `total_raw_hits`, `unique_docs`, `consensus_docs`, `unanimous_docs`, `output_count`）
+- **核心算子与引擎**：
+  - `fuseQueryVectorsF32(vecs_flat, weights, num_views, dim, out_centroid): QueryCentroidReport`：结合原查询与最多 8 条 HyDE/子查询向量，自动跳过 NaN/Inf/零向量与非正权重，使用 `@fma` 计算球面加权质心并执行 L2 归一化。
+  - `MultiQueryFusion`：`init(cfg)` / `reset(*_)` / `viewCount()` / `addView(*_, weight, hits)`（单路内自动按首次最高排名去重）/ `fuse(out_hits): QueryFusionReport`（支持带权 RRF 与共识放大 CombMNZ，输出每篇文档的 8 位 `consensus_mask` 归因及覆盖率统计）。
+
+```cp
+import {
+    QueryFusionStrategy,
+    QueryFusionConfig,
+    QueryViewHit,
+    FusedDocHit,
+    fuseQueryVectorsF32,
+    MultiQueryFusion,
+} from "cap:vector";
+
+pub fn demoMultiQueryFusion() {
+    // 1. 原查询 + HyDE 向量加权质心融合 (dim = 2)
+    const vecs: [4]f32 = [1.0, 0.0, 0.0, 1.0];
+    const weights: [2]f32 = [1.0, 1.0];
+    let centroid: [2]f32 = [0.0; 2];
+    let c_s: []f32 = centroid[0..];
+    * = fuseQueryVectorsF32(vecs[0..], weights[0..], 2, 2, c_s); // ~= [0.707, 0.707]
+
+    // 2. 两路子查询结果 Weighted RRF 去重融合
+    let fusion = MultiQueryFusion.init(QueryFusionConfig{
+        strategy: QueryFusionStrategy.weighted_rrf,
+        rrf_k: 60.0,
+    });
+    const v0: [2]QueryViewHit = [QueryViewHit{ doc_id: 10, score: 0.9 }, QueryViewHit{ doc_id: 20, score: 0.7 }];
+    const v1: [2]QueryViewHit = [QueryViewHit{ doc_id: 20, score: 0.95 }, QueryViewHit{ doc_id: 30, score: 0.6 }];
+    * = fusion.addView(1.0, v0[0..]);
+    * = fusion.addView(1.0, v1[0..]);
+
+    let out: [4]FusedDocHit = [FusedDocHit{}; 4];
+    let out_s: []FusedDocHit = out[0..];
+    const rep = fusion.fuse(out_s);
+    * = rep.consensus_docs; // 1 (doc 20, consensus_mask == 0b11)
+}
+```
