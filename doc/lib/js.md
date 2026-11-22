@@ -22,6 +22,7 @@
 - `lib/js/ident.cp`：JS/TS 关键字分类、保留字判定、ASCII 标识符与私有字段校验、属性引号判定及字符串转义
 - `lib/js/op.cp`：JS AST 运算符枚举、优先级层级、赋值目标类型及元信息表
 - `lib/js/useDirective.cp`：JS/RSC 顶层指令序言（`"use client"` / `"use server"` / `"use strict"`）解析器与边界切换判定（吸收自 `/data/dev/bun/src/js_parser/ast/UseDirective.cp`）
+- `lib/js/foldString.cp`：JS/TS 编译期字符串与模板字面量加法常量折叠引擎（吸收自 `/data/dev/bun/src/js_parser/ast/foldStringAddition.cp`）
 - `lib/js/index.cp`：`cap:js` 统一聚合导出入口
 
 ## 核心 API
@@ -80,4 +81,26 @@ const dir = UseDirective.parse("\"use client\";\nexport default function Btn() {
 const crosses = UseDirective.Server.isBoundary(.Client); // true
 const flags = scanUseDirectives("\"use strict\";\n'use client';");
 * = dir; * = crosses; * = flags;
+```
+
+### 编译期字符串与模板字面量加法折叠 (`foldString.cp`) 与 Bun Minifier 指南
+
+吸收自 `/data/dev/bun/src/js_parser/ast/foldStringAddition.cp`，并同步 `/data/dev/bun/docs/bundler/minifier.mdx` 中的 `--minify-syntax` 常量折叠实战最佳实践：
+
+- **导出符号**：`FOLD_MAX_STR_LEN` (512)、`FOLD_MAX_PART_TAIL_LEN` (128)、`FOLD_MAX_TEMPLATE_PARTS` (16)、`FoldStringKind`（`Normal`/`NestedLeft`）、`JsPrimitiveType`、`JsFoldExprKind`、`JsTemplatePart`、`JsFoldExpr`、`formatJsInt`、`foldStringAddition`；
+- **关键编译优化规则与安全守卫**：
+  1. **字符串拼接与无副作用原始值强转**：`"a" + "b" -> "ab"`、`"x" + 123 -> "x123"`、`true + "!" -> "true!"`、`null + "x" -> "nullx"`、`undefined + "x" -> "undefinedx"`；
+  2. **左结合嵌套保护 (`FoldStringKind.NestedLeft`)**：在 `(a + 1) + "y"` 中，绝不将右侧 `1 + "y"` 误折叠为 `"1y"`（因 `a` 为数字时 `a + 1` 执行算术加法），但 `(a + "x") + "y" -> a + "xy"` 安全可折叠；
+  3. **模板字面量合并与降级**：支持 `"bar" + \`baz${x}\``、`` `foo${x}` + 0 ``、`` `foo${x}` + `a${y}b` `` 零分配合并，以及无插值无标签模板降级为普通字符串（`simplifyTemplateToString()`）；**带标签模板（`tag\`...\``）严禁折叠或降级**；
+  4. **空字符串恒等消除**：仅当动态操作数的 `knownPrimitive()` 确定为 `.String` 时，才允许将 `"" + x` 或 `x + ""` 化简为 `x`（避免丢失对数字/对象的 `ToString` 副作用）；
+  5. **Bun Minifier 粒度控制实战**：在生产构建中可按需组合 `--minify-whitespace`（去空白）、`--minify-syntax`（常量折叠/死代码消除/模板简化）与 `--minify-identifiers`（局部变量重命名），在减小包体积的同时减少打印器输出开销、提升整体打包速度。
+
+```cp
+import { JsFoldExpr, FoldStringKind, foldStringAddition } from "cap:js";
+
+const lhs = JsFoldExpr.stringLit("v") ?? JsFoldExpr.undefinedLit();
+if (folded := foldStringAddition(lhs, JsFoldExpr.numberInt(2), FoldStringKind.Normal)) {
+    const out = folded.strSlice(); // "v2"
+    * = out;
+}
 ```

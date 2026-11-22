@@ -24,3 +24,16 @@ export {
     UseDirective,
     scanUseDirectives,
 } from "./useDirective.cp";
+
+export {
+    FOLD_MAX_STR_LEN,
+    FOLD_MAX_PART_TAIL_LEN,
+    FOLD_MAX_TEMPLATE_PARTS,
+    FoldStringKind,
+    JsPrimitiveType,
+    JsFoldExprKind,
+    JsTemplatePart,
+    JsFoldExpr,
+    formatJsInt,
+    foldStringAddition,
+} from "./foldString.cp";
