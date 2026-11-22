@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/semver/Version.cp | Synced: 2026-11-22T07:51:03Z
+// Source: Absorbed from /data/dev/bun/src/semver/Version.cp | Synced: 2026-11-22T14:51:00Z
 // ============================================================================
 // lib/semver/version.cp — Semver 2.0.0 Specification Core Types & Logic
 // ============================================================================
@@ -522,5 +522,17 @@ pub const Version = struct {
                 }
             },
         }
+    }
+
+    /// 64-bit Wyhash fingerprint over (major, minor, patch, prerelease, build), synced from Bun Version.cp.
+    pub fn hash(self: Version): u64 {
+        let h = std.hash.Wyhash.init(0);
+        h.update(std.mem.asBytes(&self.major));
+        h.update(std.mem.asBytes(&self.minor));
+        h.update(std.mem.asBytes(&self.patch));
+        h.update(self.prerelease);
+        h.update(&[0xff]);
+        h.update(self.build);
+        return h.final();
     }
 };

@@ -568,3 +568,23 @@ let child = env.clone(&pool)?; // zero-copy refcounted clone
 const got = child.getSlice(&pool, "path")?; // "/usr/bin"
 * = got;
 ```
+
+### Shell 词展开、命令替换分词与波浪号/Glob 步进引擎（`wordExpand.cp`）
+
+- 吸收自 `/data/dev/bun/src/shell/states/Expansion.cp` 与 `/data/dev/bun/docs/runtime/shell.mdx`；
+- 导出：`WORD_EXPAND_MAX_ATOMS` (`32`)、`WORD_EXPAND_MAX_WORDS` (`32`)、`WORD_EXPAND_ARENA_CAP` (`2048`)、`WORD_EXPAND_MAX_VARS` (`32`)、`WordExpandError`、`WordExpandMode`（`Single`/`Array`）、`WordAtomKind`（`Literal`/`QuotedLiteral`/`Var`/`QuotedVar`/`Tilde`/`CmdSubst`/`QuotedCmdSubst`/`GlobPattern`）、`WordExpandStepKind`（`NeedCmdSubst`/`NeedGlobWalk`/`Done`）、`WordVarBinding`、`WordAtom`、`WordExpandStep`、`WordSpan`、`WordExpandOutput`、`stripTrailingNewlines`、`hasUnquotedGlobMeta`、`normalizeUnquotedSubshellStdout`、`expandLeadingTilde`、`ShellWordExpander`（`init`/`setVar`/`lookupVar`/`pushAtom`/`step`/`onCmdSubstDone`/`onGlobDone`/`pendingGlobPattern`/`isDone`）；
+- **Shell 词展开与防注入最佳实践（参考 `/data/dev/bun/docs/runtime/shell.mdx` & `Expansion.cp`）**：
+  - **引号空串保留 vs 未引号空变量省略**：`echo ""` 或 `"$EMPTY"` 必须设置 `has_quoted_empty` 并产生 1 个空参数，而未引号的 `$EMPTY` 展开后不产生任何参数；
+  - **命令替换 `$(...)` vs `"$(...)"`**：双引号内仅剥离末尾所有连续 `\n` 不分词；未引号模式下在 `Array` 参数上下文中将内部换行折叠为空格、修剪首尾空白并按空白拆分为多个参数（与 Bun `postSubshellExpansion` 完全一致）；
+  - **前导波浪号与 Glob 回退**：仅当 `~` 位于词首且后续为空或 `/` / `\` 时展开为 `$HOME`（`~user` 保持原样）；未引号通配符触发 `.NeedGlobWalk`，若宿主无匹配文件则按 POSIX 规范回退保留原始字面量。
+
+```cp
+import { ShellWordExpander, WordExpandOutput, WordAtom } from "cap:shell";
+
+let out = WordExpandOutput.init();
+let exp = ShellWordExpander.init(.Array, "/home/alice");
+* = exp.pushAtom(WordAtom{ kind: .Tilde })?;
+* = exp.pushAtom(WordAtom{ kind: .Literal, text: "/docs" })?;
+const st = exp.step(*out)?; // .Done, out.wordAt(0) == "/home/alice/docs"
+* = st;
+```
