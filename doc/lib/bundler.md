@@ -932,3 +932,21 @@ const n = gen.generateProxyCode(buf[0..])?;
 // 包含 `import { registerClientReference } from "react-server-dom-webpack/server";` 与 `"1a2bS00000042"` 占位键
 * = n;
 ```
+
+- **合成 JS AST 构建器与符号/作用域表（`astBuilder.cp`，吸收自 `/data/dev/bun/src/bundler/AstBuilder.cp` & `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+    - 导出：`AST_BUILDER_MAX_SYMBOLS` (`64`)、`AST_BUILDER_MAX_SCOPES` (`16`)、`AST_BUILDER_MAX_IMPORTS` (`32`)、`AST_BUILDER_MAX_IMPORT_ITEMS` (`16`)、`AST_BUILDER_MAX_STMTS` (`64`)、`AstBuilderError`、`AstScopeKind`、`AstSymbolKind`、`AstImportKind`、`AstStmtKind`、`AstSymRef`、`AstNamespaceAlias`、`AstSymbolEntry`、`AstImportRecord`、`AstSyntheticStmt`、`AstBuildSummary`、`SyntheticAstBuilder`（`init`/`pushScope`/`popScope`/`currentScopeKind`/`newSymbol`/`newExternalSymbol`/`getSymbol`/`addImportRecord`/`addImportStmt`/`addExportConstStmt`/`addExportDefaultStmt`/`finalize`/`formatJsPreview`）；
+    - **虚拟模块与合成 AST 最佳实践（参考 `/data/dev/bun/docs/bundler/plugins.mdx`）**：
+      - **免解析直接构造 AST**：插件 `onLoad` / RSC 边界模块无需拼接字符串再回送 JS Parser，直接通过 `SyntheticAstBuilder` 预分配 `module`/`hmr` 顶层符号、维护作用域栈并生成 2-Part 打包 AST（Part 0 空占位 + Part 1 主体，所有符号标记 `use_count = 1` 防树摇误删）；
+      - **HMR `namespace_alias` 自动绑定**：当 `hot_reloading == true` 时，`addImportStmt()` 自动将导入符号关联至 `namespace_ref` 与 `import_record_index`，确保热更新回调可原地刷新导入绑定；
+      - **外部全局符号防重命名**：通过 `newExternalSymbol("Error")` 标记 `must_not_be_renamed = true`，防止压缩器改写宿主全局标识符。
+
+```cp
+import { SyntheticAstBuilder } from "cap:bundler";
+
+let ab = SyntheticAstBuilder.init(5, true);
+const items: [1][]const u8 = ["registerClientReference"];
+* = ab.addImportStmt("react-server-dom-webpack/server", "import_rsc", items[0..])?;
+* = ab.addExportConstStmt("App", "registerClientReference(fn, \"App\")")?;
+const summary = ab.finalize()?; // part_count == 2, hmr_aliased_import_count == 1
+* = summary;
+```

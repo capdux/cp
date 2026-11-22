@@ -558,3 +558,23 @@ export {
     formatClientEntryWrapper,
     RscProxyGenerator,
 } from "./rscProxy";
+
+export {
+    AST_BUILDER_MAX_SYMBOLS,
+    AST_BUILDER_MAX_SCOPES,
+    AST_BUILDER_MAX_IMPORTS,
+    AST_BUILDER_MAX_IMPORT_ITEMS,
+    AST_BUILDER_MAX_STMTS,
+    AstBuilderError,
+    AstScopeKind,
+    AstSymbolKind,
+    AstImportKind,
+    AstStmtKind,
+    AstSymRef,
+    AstNamespaceAlias,
+    AstSymbolEntry,
+    AstImportRecord,
+    AstSyntheticStmt,
+    AstBuildSummary,
+    SyntheticAstBuilder,
+} from "./astBuilder";
