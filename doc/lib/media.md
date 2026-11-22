@@ -508,6 +508,53 @@ pub fn demoWhisperAsrFrontend(pcm_1s_16k: []const f32)! {
 }
 ```
 
+### 9. H.264/AVC + H.265/HEVC NAL 比特流、SPS 解析、Annex-B↔AVCC 与 RFC 6184/7798 RTP 分包重组引擎 (`videoNal.cp`)
+
+打通 CP WebRTC / RTP / CMAF fMP4 / HLS 实时视频管线的 100% 纯 CP 零动态堆分配、外部切片驱动视频比特流核心：
+
+- **NAL 扫描、Annex-B↔AVCC 互转与 EBSP↔RBSP**：
+  - `VideoNalError`、`VideoCodecKind` (`h264 | h265`)、`H264_NAL_*` / `H265_NAL_*` 类型常量
+  - `AnnexBNalUnit`、`AnnexBIter`（精确识别 `00 00 01` 与 `00 00 00 01`）、`AvccIter`（支持 1/2/4 字节长度前缀）
+  - `annexBToAvcc` / `avccToAnnexB`、`ebspToRbsp` / `rbspToEbsp`（ITU-T §7.3.1 `00 00 03` 防竞争字节脱壳/加壳）
+- **Exp-Golomb 比特流与 H.264 / H.265 SPS 解析**：
+  - `NalBitReader`（`readBit` / `readBits` / `skipBits` / `readUe` / `readSe`）
+  - H.264：`H264NalHeader`、`parseH264NalHeader`、`H264SpsInfo`、`parseH264Sps`（含 High/High10/High422/High444 扩展、scaling matrix 跳过与精确裁剪宽高如 `1920x1088 -> 1920x1080`）、`encodeAvcDecoderConfigRecord`（生成 ISO/IEC 14496-15 `avcC` 载荷）
+  - H.265：`H265NalHeader`、`parseH265NalHeader`、`H265SpsInfo`、`parseH265SpsBasic`（`profile_tier_level` + `conformance_window` 精确裁剪）与统一关键帧判定 `isVideoKeyframe`
+- **WebRTC 视频 RTP 分包与抗丢包重组（RFC 6184 & RFC 7798）**：
+  - `RtpPayloadSpan`、`packetizeH264Rtp`（Single NAL + FU-A `type=28`）、`packH264StapA`（STAP-A `type=24`）、`H264RtpDepacketizer`（Single / STAP-A / FU-A 重组回 Annex-B，含残缺分片自动回滚）
+  - `packetizeH265Rtp`（Single NAL + FU `type=49` 3 字节头）与 `H265RtpDepacketizer`（Single / AP `type=48` / FU `type=49` 重组回 Annex-B）
+
+```cp
+import {
+    parseH264Sps,
+    encodeAvcDecoderConfigRecord,
+    RtpPayloadSpan,
+    packetizeH264Rtp,
+    H264RtpDepacketizer,
+} from "cap:media";
+
+pub fn demoH264RtpPipeline(sps_nal: []const u8, pps_nal: []const u8, idr_nal: []const u8)! {
+    let rbsp: [256]u8 = [0; 256];
+    const sps = parseH264Sps(sps_nal, rbsp[0..])?; // e.g. 1920x1080
+    let avcc_rec: [256]u8 = [0; 256];
+    * = encodeAvcDecoderConfigRecord(sps_nal, pps_nal, avcc_rec[0..])?;
+
+    // MTU=1200 切分为 RFC 6184 FU-A 并重组回 Annex-B
+    let rtp_buf: [4096]u8 = [0; 4096];
+    let spans: [16]RtpPayloadSpan = [RtpPayloadSpan{}; 16];
+    const n_pkts = packetizeH264Rtp(idr_nal, 1200, rtp_buf[0..], spans[0..])?;
+
+    let annexb_out: [4096]u8 = [0; 4096];
+    let depkt = H264RtpDepacketizer.init(annexb_out[0..]);
+    let i: usize = 0;
+    while (i < n_pkts) : (i += 1) {
+        * = depkt.pushPacket(spans[i].slice(rtp_buf[0..]))?;
+    }
+    * = sps.width;
+    * = depkt.bytes().len;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档
