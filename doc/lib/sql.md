@@ -208,15 +208,30 @@ const frame = r.readTaggedFrame()?; // tag='Q', payload="SELECT 1\0"
 let body = PgWireReader.init(frame.payload);
 const sql = body.readZ()?; // "SELECT 1"
 ```
+- **MySQL `COM_QUERY` 与 8.0.23+ Query Attributes 零分配编解码器 (`mysql_query.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/Query.cp`)**：
+  - 常量与类型：`MYSQL_COM_QUERY_CMD` (`0x03`)、`MYSQL_MAX_QUERY_PARAMS` (`64`)、`MySqlQueryCodecError`、`MySqlQueryParamKind`、`MySqlQueryParam`（支持 `nullParam`/`int32Param`/`int64Param`/`uint64Param`/`float64Param`/`stringParam`/`blobParam`，空参数名自动生成 `:p1`、`:p2`…）、`MySqlDecodedQuery`；
+  - 编解码函数：`encodeMySqlSimpleQuery`、`encodeMySqlQueryWithAttrs`、`decodeMySqlSimpleQuery`、`decodeMySqlQueryWithAttrs`。
+
+```typescript
+import { MySqlQueryParam, encodeMySqlQueryWithAttrs, decodeMySqlQueryWithAttrs } from "cap:sql";
+
+let buf: [256]u8 = [0; 256];
+const params: [2]MySqlQueryParam = [
+    MySqlQueryParam.int64Param("user_id", 42),
+    MySqlQueryParam.stringParam("", "active"), // 自动命名 :p2
+];
+const wire = encodeMySqlQueryWithAttrs(buf[0..], 0, "SELECT * FROM users WHERE id = ? AND status = ?", params[0..])?;
+const decoded = decodeMySqlQueryWithAttrs(wire)?; // decoded.param_count == 2, decoded.query == "SELECT ..."
+```
 
 ---
 
 ## 上游 Bun SQL 行为契约与安全边界注意事项
 
 1. **三方言统一协议与连接串路由（参考 `/data/dev/bun/docs/runtime/sql.mdx`）**：
-   - 覆盖 **PostgreSQL v3**（`postgres://` / `postgresql://`，默认回退方言，支持 SCRAM-SHA-256 / MD5 / 明文鉴权及 `PgBinaryCodec` 90+ OID 二进制编解码）、**MySQL 5.7+ / 8.0+**（`mysql://`，支持 `mysql_native_password` SHA-1 与 `caching_sha2_password` SHA-256 及二进制预处理协议）以及 **嵌入式 SQLite3**（`sqlite://` / `SqliteDatabase`）。
+   - 覆盖 **PostgreSQL v3**（`postgres://` / `postgresql://`，默认回退方言，支持 SCRAM-SHA-256 / MD5 / 明文鉴权及 `PgBinaryCodec` 90+ OID 二进制编解码）、**MySQL 5.7+ / 8.0+**（`mysql://` / `mysql2://`，支持 `mysql_native_password` SHA-1 与 `caching_sha2_password` SHA-256、Query Attributes、二进制预处理协议与查询管线化）以及 **嵌入式 SQLite3**（`sqlite://` / `file://` / `:memory:` / `SqliteDatabase`，无协议前缀的裸文件名须显式指定 SQLite 适配器以避免与 PostgreSQL 产生歧义）。
 2. **参数化绑定与防 SQL 注入**：
-   - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
+   - 严禁通过字符串拼接构造含外部输入的 SQL；始终通过 `SqlStatement` / `SqliteDatabase` 参数绑定或 `MySqlPreparedProtocol` / `encodeMySqlQueryWithAttrs` / PostgreSQL Extended Query 参数帧分离语句与数据；审计或读写分离路由可结合 `parseSqlWithMaxDepth`、`isReadOnlyQuery` / `isReadOnlySql` 与 `normalizeSqlFingerprint` 实现安全校验与查询脱敏。
 3. **连接状态机与事务边界**：
    - PostgreSQL 事务内一旦单条语句出错即进入 `Aborted` 状态，须执行 `ROLLBACK` 后方可继续新查询；`SqlTransactionStateMachine` 与 `SqliteDatabase`（`begin`/`commit`/`rollback`）配合 `defer` 可确保异常路径下确定性回滚，防止连接池归还脏事务连接。
 4. **15 字节小对象优化（`SqlData`）**：

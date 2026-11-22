@@ -120,3 +120,16 @@ export {
     PgFrameView,
     PgWireReader,
 } from "./pg_wire_reader.cp";
+
+export {
+    MYSQL_COM_QUERY_CMD,
+    MYSQL_MAX_QUERY_PARAMS,
+    MySqlQueryCodecError,
+    MySqlQueryParamKind,
+    MySqlQueryParam,
+    MySqlDecodedQuery,
+    encodeMySqlSimpleQuery,
+    encodeMySqlQueryWithAttrs,
+    decodeMySqlSimpleQuery,
+    decodeMySqlQueryWithAttrs,
+} from "./mysql_query.cp";
