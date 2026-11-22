@@ -35,6 +35,7 @@
 - **`VocabBitset` / `DfaEdge` / `ConstrainedDfa` / `applyVocabMaskInPlace` / `applyTemperatureAndTopKMaskInPlace`** (`constrained_mask.cp`)：零堆分配 LLM 结构化受限解码 Logits 位图掩码与 DFA 状态引导词表过滤器（对标 xgrammar / Outlines，支持硬件 `@popCount`、尾位自动清零、`-inf` 掩码与零堆分配温度 + Top-K 过滤）。
 - **`RopeScalingKind` / `YarnConfig` / `yarnAttentionMscale` / `computeRopeInvFreqs` / `applyScaledRopeInPlaceF32`** (`rope_yarn.cp`)：零堆分配长上下文大模型 RoPE 扩展引擎，统一支持标准 RoPE、Linear PI、NTK-Aware 与 YaRN（Peng et al. 2023）波长频段斜坡插值以及 `mscale` 注意力温度缩放。
 - **`SPEC_TREE_NO_PARENT` / `DraftTreeNode` / `TreeVerifyResult` / `validateDraftTree` / `buildTreeAttentionMask` / `verifyDraftTreeGreedy`** (`spec_tree.cp`)：零堆分配 Medusa / Eagle 树状推测解码注意力拓扑掩码构造与贪心最长接受路径验证器，支持单次前向并行验证整棵多分支草稿树并提取奖励 Token。
+- **`IterSchedulerConfig` / `SeqRunState` / `SeqSchedEntry` / `ScheduledStepItem` / `IterStepPlan` / `IterSchedulerStats` / `ContinuousIterScheduler`** (`iter_scheduler.cp`)：零堆分配 vLLM / Sarathi-Serve 风格 Chunked-Prefill + Decode 连续批处理迭代调度器，优先保障在途解码低延迟（TPOT）、KV 块紧张时按低优先级/最新入队抢占释放防止死锁，并利用剩余 Token 预算对等待/预填充请求执行分块预填充。
 
 ## 3. API 速查
 
@@ -150,6 +151,11 @@
 | `validateDraftTree` | `(nodes: []const DraftTreeNode): bool` | 校验 Medusa/Eagle 草稿树单根、严格拓扑序（`parent < i`）、深度一致与无环 |
 | `buildTreeAttentionMask` | `(nodes, out_mask_u8: *[]u8): bool` | 构造 `N×N` 树状因果注意力掩码（仅祖先与自身可见、兄弟分支互不可见） |
 | `verifyDraftTreeGreedy` | `(nodes, target_argmax, out_accepted_tokens: *[]u32): TreeVerifyResult?` | 沿草稿树贪心匹配最长连续接受路径并返回末节点奖励 Token |
+| `ContinuousIterScheduler.init` | `(entries_buf: *[]SeqSchedEntry, config: IterSchedulerConfig): ContinuousIterScheduler?` | 零堆分配初始化连续批处理迭代调度器（校验所有容量与块大小 > 0） |
+| `ContinuousIterScheduler.enqueue` | `(*_, req_id: u64, prompt_tokens: usize, max_new_tokens: usize, priority: i32): bool` | 入队新请求（优先使用空槽，满时自动复用最旧 `Finished` 槽位；拒绝重复活跃 ID） |
+| `ContinuousIterScheduler.scheduleStep` | `(*_, out_items: *[]ScheduledStepItem): IterStepPlan` | 单步迭代调度：Decode 优先 + 低优/最新入队 KV 抢占防死锁 + 剩余预算 Chunked Prefill |
+| `ContinuousIterScheduler.commitStep` | `(*_, req_id: u64, generated_tokens: usize, hit_eos: bool): bool` | 提交单步执行结果，推进预填充/解码进度，命中 EOS 或达上限自动释放 KV 块 |
+| `ContinuousIterScheduler.cancelRequest` / `getEntry` / `stats` | `(*_, req_id): bool` / `(req_id): SeqSchedEntry?` / `(): IterSchedulerStats` | 主动取消并回收 KV 块、按 ID 查询序列状态与全量遥测统计 |
 
 ## 4. 示例
 
@@ -1018,5 +1024,58 @@ pub fn demoPagedAttentionCow() {
 
     child.releaseAll(&pool);
     parent.releaseAll(&pool); // 全部物理块零泄漏归还
+}
+```
+
+### vLLM / Sarathi 风格 Chunked-Prefill + Decode 连续批处理迭代调度器 (`iter_scheduler.cp`)
+
+面向高吞吐 LLM 推理引擎的 100% 零堆分配迭代级连续批处理调度器：
+
+- **`IterSchedulerConfig`**：配置 `max_batch_seqs`、`max_token_budget_per_step`、`max_kv_blocks` 与 `block_size`。
+- **`SeqRunState`**：完整序列生命周期状态机（`Waiting` / `Prefilling` / `Decoding` / `Preempted` / `Finished`）。
+- **`ContinuousIterScheduler`**：
+  - `init(entries_buf, config): ContinuousIterScheduler?`：在调用方栈/固定缓冲上零堆初始化。
+  - `enqueue(*_, req_id, prompt_tokens, max_new_tokens, priority): bool`：入队请求（支持自动回收最旧 `Finished` 槽位）。
+  - `scheduleStep(*_, out_items): IterStepPlan`：Phase 1 优先推进在途 `Decoding` 请求（若 KV 块不足，按最低优先级/最新入队抢占 `Preempted` 释放 KV 块防死锁）；Phase 2 将剩余 `token_budget` 分配给 `Prefilling`/`Preempted`/`Waiting` 请求做 **Chunked Prefill 分块预填充**。
+  - `commitStep(*_, req_id, generated_tokens, hit_eos): bool`：提交本步执行结果，自动推进 `Prefilling -> Decoding` 并在命中 EOS 或达到 `max_new_tokens` 时释放全部 KV 块。
+  - `cancelRequest(*_, req_id)` / `getEntry(req_id)` / `kvBlocksFree()` / `kvBlocksUsed()` / `activeCount()` / `stats()`。
+
+```cp
+import {
+    IterSchedulerConfig,
+    SeqSchedEntry,
+    ScheduledStepItem,
+    ContinuousIterScheduler,
+} from "cap:attention";
+
+pub fn demoContinuousIterScheduler() {
+    let entries_buf: [8]SeqSchedEntry = [SeqSchedEntry{}; 8];
+    let entries_s: []SeqSchedEntry = entries_buf[0..];
+    const cfg = IterSchedulerConfig{
+        max_batch_seqs: 4,
+        max_token_budget_per_step: 8,
+        max_kv_blocks: 16,
+        block_size: 4,
+    };
+    let sched = ContinuousIterScheduler.init(entries_s, cfg) ?? return;
+
+    // 入队 1 个长 Prompt 请求（14 tokens -> 跨 2 步 Chunked Prefill）与 1 个短高优请求
+    * = sched.enqueue(1001, 14, 4, 1);
+    * = sched.enqueue(1002, 4, 2, 10);
+
+    let items_buf: [4]ScheduledStepItem = [ScheduledStepItem{}; 4];
+    let items_s: []ScheduledStepItem = items_buf[0..];
+
+    // Step 1: 高优 1002 预填充 4 tokens，剩余预算 4 tokens 分配给 1001 做首块 Chunked Prefill
+    const plan1 = sched.scheduleStep(items_s);
+    let i: usize = 0;
+    while (i < plan1.num_items) : (i += 1) {
+        const it = items_buf[i];
+        * = sched.commitStep(it.req_id, if (it.is_prefill) 0 else 1, false);
+    }
+
+    // Step 2: 1002 进入 Decode (1 token)，剩余预算 7 tokens 继续推进 1001 预填充 (Prefill+Decode 混合步)
+    const plan2 = sched.scheduleStep(items_s);
+    * = plan2;
 }
 ```
