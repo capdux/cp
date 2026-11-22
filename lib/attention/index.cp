@@ -81,3 +81,12 @@ export {
     ggufFindTensor,
     ggufTensorByteSize,
 } from "./gguf.cp";
+
+export {
+    SafeDtype,
+    SafeTensorDesc,
+    SafeTensorsInfo,
+    parseSafeTensors,
+    safeTensorFind,
+    safeTensorBytes,
+} from "./safetensors.cp";

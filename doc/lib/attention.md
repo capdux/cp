@@ -18,6 +18,7 @@
 - **`LoraAdapter` / `loraApplyAdd` / `loraApplyWeightedSum` / `loraMergeIntoBase` / `loraUnmergeFromBase`** (`lora.cp`)：零堆分配多租户 LoRA 低秩适配器前向推理与权重热融合核，支持零拷贝借用 `A/B` 低秩矩阵、$O(r(d_{\text{in}} + d_{\text{out}}))$ 动态增量叠加、多 LoRA 加权混合以及零推理开销的静态热合并与在线热卸载。
 - **`softplus` / `ssmSelectiveStep` / `ssmSelectiveScan` / `causalConv1dStep`** (`ssm.cp`)：零堆分配 Mamba / S6 选择性状态空间模型（Selective SSM）$O(N)$ 线性复杂度长上下文推理核与深度可分离因果一维卷积，支持 ZOH 离散化（$A = -\exp(a_{\log}) < 0$ 严格稳定）、分块预填充无缝续接自回归单步生成以及固定环形历史缓存因果卷积。
 - **`GGUF_MAGIC` / `GgufValueType` / `GgmlType` / `GgufHeader` / `GgufKvEntry` / `GgufTensorInfo` / `parseGgufHeader` / `parseGgufFile` / `ggufFindKv` / `ggufFindTensor` / `ggufTensorByteSize`** (`gguf.cp`)：零堆分配零拷贝 GGUF v2/v3 大模型权重文件解析器，直接面向 mmap 缓冲区解析头、元数据 KV（自动提取 `general.alignment`）、张量描述符与对齐 `data_offset`，并精确计算 F32/F16/BF16/Q4_0/Q8_0/K-Quants 张量物理字节数。
+- **`SafeDtype` / `SafeTensorDesc` / `SafeTensorsInfo` / `parseSafeTensors` / `safeTensorFind` / `safeTensorBytes`** (`safetensors.cp`)：零堆分配零拷贝 HuggingFace Safetensors 模型权重解析器，直接面向 mmap 缓冲区解析 `[8B LE header_len][JSON header][payload]`，跳过 `__metadata__`，严格校验 `shape * dtype.byteSize() == data_end - data_start` 与载荷边界，并返回只读零拷贝权重切片。
 
 ## 3. API 速查
 
@@ -70,6 +71,9 @@
 | `parseGgufFile` | `(data, kvs_out, tensors_out): GgufHeader?` | 单遍零拷贝解析全部元数据 KV（自动应用 `general.alignment`）与张量描述符并计算对齐 `data_offset` |
 | `ggufFindKv` / `ggufFindTensor` | `(kvs, key): usize?` / `(tensors, name): usize?` | 按键名或张量名检索元数据与张量描述符索引 |
 | `ggufTensorByteSize` | `(dtype, dims, n_dims): u64?` | 精确计算 `F32`/`F16`/`BF16`/`Q4_0`/`Q8_0`/`K-Quants` 张量物理字节数并校验分块对齐 |
+| `parseSafeTensors` | `(data, tensors_out): SafeTensorsInfo?` | 零堆分配单遍解析 Safetensors 头与张量描述符（跳过 `__metadata__`，严格校验长度与边界） |
+| `safeTensorFind` | `(tensors, name): usize?` | 按张量名检索 `SafeTensorDesc` 索引 |
+| `safeTensorBytes` | `(data, info, desc): ([]const u8)?` | 零拷贝返回张量原始权重字节切片（支持 0D 标量至 6D 张量） |
 
 ## 4. 示例
 
@@ -367,6 +371,31 @@ pub fn demoParseGgufWeights(mmap_bytes: []const u8) {
                 const payload_start = hdr.data_offset + (info.offset as usize);
                 * = payload_start;
                 * = n_bytes;
+            }
+        }
+    }
+}
+```
+
+### HuggingFace Safetensors 权重零拷贝加载示例 (`safetensors.cp`)
+
+```cp
+import {
+    SafeTensorDesc,
+    parseSafeTensors,
+    safeTensorFind,
+    safeTensorBytes,
+} from "cap:attention";
+
+pub fn demoLoadSafeTensors(mmap_bytes: []const u8) {
+    let descs_buf: [128]SafeTensorDesc = [SafeTensorDesc{}; 128];
+    let descs: []SafeTensorDesc = descs_buf[0..];
+
+    if (info := parseSafeTensors(mmap_bytes, descs)) {
+        const active = descs_buf[0..info.tensor_count];
+        if (idx := safeTensorFind(active, "model.embed_tokens.weight")) {
+            if (raw_weights := safeTensorBytes(mmap_bytes, info, active[idx])) {
+                * = raw_weights; // 零拷贝只读原始权重切片
             }
         }
     }
