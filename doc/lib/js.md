@@ -298,3 +298,25 @@ const n = arena.formatAsAssignmentTarget(root, "src", buf[0..], false)?;
 // buf[0..n] == "({ a = 1, ...rest } = src)"
 * = n;
 ```
+
+### JS/TS 类、属性与函数签名 AST 描述符及 Tree-Shaking `canBeMoved` 分析 (`classAst.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/G.cp`：
+
+- **导出符号**：`JS_MEMBER_FLAG_*`、`JS_FN_FLAG_*`、`JsClassAstError`、`JsPropertyKind`（`normal`/`get`/`set`/`spread`/`declare_prop`/`abstract_prop`/`class_static_block`/`auto_accessor`）、`JsExprPurity`、`JsClassMoveBlocker`、`JsClassMember`、`JsClassDesc`（`moveBlocker`/`canBeMoved`/`hasStaticBlock`/`hasPrivateMembers`/`hasAutoAccessors`/`countStaticFields`/`countInstanceMembers`/`needsLowering`）、`JsFnParamDesc`、`JsFnSignature`（`validate`/`minArity`/`maxArity`/`countTsCtorFields`/`formatHeader`）；
+- **核心打包优化语义**：
+  - 精确对齐 Bun `G.Class.canBeMoved()`：继承（`extends`）、装饰器、静态块（`static {}`）、计算属性键、`...spread` 及含副作用的静态字段初始化表达式均阻断移动/树摇，并通过 `moveBlocker()` 返回结构化阻断原因；
+  - `needsLowering(es_target_year)` 判定指定 ES 目标版本（如 ES2020/ES2022）是否需要降级；
+  - `JsFnSignature.minArity()` 精确计算 ECMAScript `Function.prototype.length`，`formatHeader(out)` 零分配格式化函数头。
+
+```cp
+import { JsClassDesc, JsClassMember, JsExprPurity, JsClassMoveBlocker } from "cap:js";
+
+const members: [2]JsClassMember = [
+    JsClassMember.method("greet", false),
+    JsClassMember.field("VERSION", true, JsExprPurity.pure_movable),
+];
+const cls = JsClassDesc{ name: "Widget", members: members[0..] };
+assert(cls.canBeMoved());
+assert(cls.moveBlocker() == JsClassMoveBlocker.none);
+```
