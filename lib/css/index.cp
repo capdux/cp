@@ -530,3 +530,20 @@ export {
     cssMathAngleToRad,
     evalCssMathExpr,
 } from "./mathFunc.cp";
+
+export {
+    CssBoxAlignError,
+    CssOverflowPosition,
+    CssBaselinePosition,
+    CssContentDistribution,
+    CssContentPosition,
+    CssSelfPosition,
+    CssLegacyJustify,
+    CssContentAlignKind,
+    CssBoxContentAlign,
+    CssItemAlignKind,
+    CssBoxItemAlign,
+    CssPlaceContent,
+    CssPlaceItems,
+    CssPlaceSelf,
+} from "./boxAlign.cp";

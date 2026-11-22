@@ -277,6 +277,44 @@ pub fn demoEtagPrecondition() {
 }
 ```
 
+### 零分配 W3C Fetch CORS 预检裁决与响应头合成器 (`corsGuard.cp`)
+
+面向 API 网关与 Web 框架的 100% 纯 CP 零动态堆分配 W3C Fetch CORS 安全裁决与响应头合成器：
+
+- **常量与安全匹配原语**：
+  - `CORS_MAX_ORIGINS = 32`、`CORS_MAX_HEADERS = 32`、`CORS_MAX_ORIGIN_LEN = 128`、`CORS_MAX_HEADER_NAME_LEN = 64`、`CORS_METHOD_GET..OPTIONS` / `CORS_METHOD_ALL_STANDARD`。
+  - `hasControlOrCrlf(s)`、`isValidOriginSyntax(origin)`、`matchOriginPattern(pattern, origin)`（严格校对协议与点号边界，防止 `https://evil-example.com` 绕过 `https://*.example.com`）、`parseCorsMethodMask(method)`。
+- **核心引擎 `CorsGuard` 与响应头合成**：
+  - `addAllowedOrigin` / `setAllowedMethods` / `addAllowedHeader` / `addExposedHeader` / `setAllowCredentials` / `setMaxAgeSecs`。
+  - `evaluatePreflight(origin, req_method, req_headers_csv): CorsDecision`（`preflight_allow_204 | preflight_reject_origin | preflight_reject_method | preflight_reject_header`）。
+  - `evaluateActualRequest(origin, method): CorsDecision`（`actual_allow | actual_reject_origin | not_cors_request`）。
+  - 严格执行 W3C Fetch 凭据安全不变量：`allow_credentials == true` 时绝不反射 `*`，精确回显匹配 Origin 并自动注入 `Vary: Origin`（预检同时追加 `Access-Control-Request-Method, Access-Control-Request-Headers`）。
+  - `formatCorsResponseHeaders(decision, out_buf): usize?`：一键合成标准 CRLF HTTP 响应头片段。
+
+```cp
+import {
+    CORS_METHOD_GET,
+    CORS_METHOD_POST,
+    CorsGuard,
+    formatCorsResponseHeaders,
+} from "cap:web";
+
+pub fn demoCorsGuard() {
+    let guard = CorsGuard.init();
+    * = guard.addAllowedOrigin("https://*.example.com");
+    guard.setAllowedMethods(CORS_METHOD_GET | CORS_METHOD_POST);
+    * = guard.addAllowedHeader("Authorization");
+    * = guard.addAllowedHeader("Content-Type");
+    guard.setAllowCredentials(true);
+    guard.setMaxAgeSecs(600);
+
+    const decision = guard.evaluatePreflight("https://api.example.com", "POST", "Authorization, Content-Type");
+    let buf: [512]u8 = [0; 512];
+    let buf_s: []u8 = buf[0..];
+    * = formatCorsResponseHeaders(decision, *buf_s);
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

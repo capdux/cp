@@ -307,3 +307,28 @@ export {
     validateEtagList,
     evaluatePreconditions,
 } from "./etagPrecond.cp";
+
+// --- Zero-Alloc W3C Fetch CORS Guard, Safe Subdomain Matcher & Header Synthesizer ---
+export {
+    CORS_MAX_ORIGINS,
+    CORS_MAX_HEADERS,
+    CORS_MAX_ORIGIN_LEN,
+    CORS_MAX_HEADER_NAME_LEN,
+    CORS_HEADER_LIST_BUF_LEN,
+    CORS_METHOD_GET,
+    CORS_METHOD_HEAD,
+    CORS_METHOD_POST,
+    CORS_METHOD_PUT,
+    CORS_METHOD_DELETE,
+    CORS_METHOD_PATCH,
+    CORS_METHOD_OPTIONS,
+    CORS_METHOD_ALL_STANDARD,
+    hasControlOrCrlf,
+    isValidOriginSyntax,
+    matchOriginPattern,
+    parseCorsMethodMask,
+    CorsDecisionKind,
+    CorsDecision,
+    CorsGuard,
+    formatCorsResponseHeaders,
+} from "./corsGuard.cp";

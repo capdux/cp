@@ -671,6 +671,25 @@ const r = cssMathRem(-18.0, 5.0)?;                                              
 * = r;
 ```
 
+### CSS Box Alignment Level 3 对齐与 `place-*` 简写引擎（`boxAlign.cp`）
+
+> 吸收自 `/data/dev/bun/src/css/properties/align.cp`，零堆分配实现 W3C CSS Box Alignment Level 3 全量对齐长手（`align-content` / `justify-content` / `align-items` / `justify-items` / `align-self` / `justify-self`）与三大简写（`place-content` / `place-items` / `place-self`），支持 `safe`/`unsafe` 溢出修饰、`first/last baseline`、`legacy [left|right|center]` 及最小化折叠序列化。
+
+- 核心导出：`CssBoxAlignError`、`CssOverflowPosition`（`Safe`/`Unsafe`）、`CssBaselinePosition`（`First`/`Last`）、`CssContentDistribution`（`SpaceBetween`/`SpaceAround`/`SpaceEvenly`/`Stretch`）、`CssContentPosition`、`CssSelfPosition`、`CssLegacyJustify`、`CssContentAlignKind`、`CssBoxContentAlign`（`parseAlignContent`/`parseJustifyContent`/`eql`/`writeCss`/`toCss`）、`CssItemAlignKind`、`CssBoxItemAlign`（`parseAlignItems`/`parseJustifyItems`/`parseAlignSelf`/`parseJustifySelf`/`eql`/`writeCss`/`toCss`）、`CssPlaceContent`、`CssPlaceItems`、`CssPlaceSelf`。
+
+```cp
+import { CssPlaceContent, CssPlaceItems } from "cap:css";
+
+let buf: [64]u8 = [0; 64];
+const pc = CssPlaceContent.parse("baseline")?;
+const n1 = pc.toCss(buf[0..])?; // "baseline start"（W3C 单值 baseline 回退规则）
+
+const pi = CssPlaceItems.parse("center center")?;
+const n2 = pi.toCss(buf[0..])?; // "center"（相等双值折叠为单值）
+* = n1;
+* = n2;
+```
+
 ---
 
 ## 上游 Bun (LightningCSS) 行为契约与边界注意事项
@@ -711,3 +730,7 @@ const r = cssMathRem(-18.0, 5.0)?;                                              
 13. **CSS Math Level 4 编译期求值与降级边界（`mathFunc.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
     - 当 `round()`、`mod()`、`rem()`、`sin()`/`cos()`/`tan()`、`pow()`/`sqrt()`/`hypot()`/`log()`/`exp()` 仅含静态数值、数学常量（`pi`/`e`）或已知角度单位（`deg`/`rad`/`grad`/`turn`）时，打包器应在构建期直接求值折叠为静态数值，以兼容未原生支持 CSS Math Level 4 的旧浏览器（Chrome < 111 / Safari < 15.4）；
     - W3C 关键语义约束：`mod(a, b)` 结果与除数 `b` 同号，而 `rem(a, b)` 结果与被除数 `a` 同号；`clamp(min, val, max)` 等价于 `max(min, min(val, max))`，当 `min > max` 时恒由 `min` 胜出；`round()` 首参可省略策略关键字（默认 `nearest`），当首参为数学常量（如 `round(pi, 1)`）时必须识别为被取整值而非非法策略。
+14. **CSS Box Alignment Level 3 `place-*` 简写与浏览器兼容边界（`boxAlign.cp`，参考 `/data/dev/bun/docs/bundler/css.mdx`）**：
+    - `place-content` 单值传入 `baseline` / `first baseline` / `last baseline` 时，`justify-content` 不允许取值 `baseline`，必须按 W3C 规范回退为 `start`（序列化为 `"baseline start"`）；
+    - `left` / `right` 仅允许用于水平主轴的 `justify-*` 属性，`align-*` 中使用 `left`/`right` 属于非法语法；`legacy` 仅允许用于 `justify-items`（支持 `legacy center` 与 `center legacy` 双语序）；
+    - 当 `place-content` / `place-items` / `place-self` 的双值完全相等时，压缩序列化自动折叠为单值以减小 CSS 体积。
