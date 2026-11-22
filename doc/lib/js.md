@@ -371,3 +371,26 @@ const r = JsAstRef.initSymbol(3, 1)?;
 map.set(r, 42)?;
 assert((map.get(r)?) == 42);
 ```
+
+### 打包期精简 AST 元数据、扁平打包/CJS 解包裁决与 TLA 传播 (`bundledAst.cp`)
+
+吸收自 `/data/dev/bun/src/js_parser/ast/BundledAst.cp`：
+
+- **导出符号**：`BAST_FLAG_*`（9 项打包期模块特征/退化位标志）、`BAST_NO_REDIRECT`、`JsBundledAstError`、`JsExportsKind`、`JsTlaStatus`、`JsBundledTarget`、`JsBundleWrapMode`（`flat_esm`/`unwrapped_cjs`/`commonjs_closure`/`async_esm_wrapper`）、`JsBundledAstMeta`（`canUnwrapCjsToEsm`/`canFlatBundle`/`wrapMode`/`isStrictMode`/`hasTopLevelAwait`）、`JsBundledImportEdge`、`JsBundledGraphStats`、`propagateBundledTla`、`summarizeBundledGraph`；
+- **核心打包优化语义**：
+  - 精确区分可扁平合并的 ESM 模块、可安全解包的命名导出 CJS 模块（无 `module` 引用与无 `commonjs_module_exports_assigned_deoptimized` 退化）以及必须包裹在 `__commonJS` 闭包中的模块；
+  - `propagateBundledTla(modules, edges)` 在外部切片上执行环路安全的不动点迭代，沿静态导入边传递 Top-Level Await（动态 `import()` 边正确阻断 TLA 向上传染）。
+
+```cp
+import { JsBundledAstMeta, JsBundledImportEdge, JsExportsKind, JsTlaStatus, propagateBundledTla } from "cap:js";
+
+let mods: [2]JsBundledAstMeta = [
+    JsBundledAstMeta{ source_index: 0, exports_kind: JsExportsKind.esm },
+    JsBundledAstMeta{ source_index: 1, exports_kind: JsExportsKind.esm, tla_status: JsTlaStatus.direct },
+];
+const edges: [1]JsBundledImportEdge = [
+    JsBundledImportEdge{ importer_idx: 0, imported_idx: 1, is_dynamic_import: false },
+];
+const marked = propagateBundledTla(mods[0..], edges[0..])?;
+assert(marked == 1 && mods[0].tla_status == JsTlaStatus.transitive);
+```

@@ -187,3 +187,27 @@ export {
     JsSourceTableSpan,
     JsMergedSymbolMap,
 } from "./astRef.cp";
+
+export {
+    BAST_FLAG_NONE,
+    BAST_FLAG_USES_EXPORTS_REF,
+    BAST_FLAG_USES_MODULE_REF,
+    BAST_FLAG_USES_EXPORT_KEYWORD,
+    BAST_FLAG_HAS_CHAR_FREQ,
+    BAST_FLAG_FORCE_CJS_TO_ESM,
+    BAST_FLAG_HAS_LAZY_EXPORT,
+    BAST_FLAG_CJS_EXPORTS_DEOPTIMIZED,
+    BAST_FLAG_EXPLICIT_USE_STRICT,
+    BAST_FLAG_HAS_IMPORT_META,
+    BAST_NO_REDIRECT,
+    JsBundledAstError,
+    JsExportsKind,
+    JsTlaStatus,
+    JsBundledTarget,
+    JsBundleWrapMode,
+    JsBundledAstMeta,
+    JsBundledImportEdge,
+    JsBundledGraphStats,
+    propagateBundledTla,
+    summarizeBundledGraph,
+} from "./bundledAst.cp";
