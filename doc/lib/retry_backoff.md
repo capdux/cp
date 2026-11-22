@@ -1,6 +1,8 @@
 # cap:retry_backoff
 
-> 源码吸收自 `/data/dev/bun/src/http/HTTPContext.cp`（指数退避与 RFC 9110 §10.2.3 `Retry-After` 规范），提供纯 CP、零外部依赖、零堆分配的重试调度与 `Retry-After` 解析库。
+> 参考来源：/data/dev/bun/src/http/HTTPContext.cp | 吸收日期：2026-11-22
+
+基于指数退避与 RFC 9110 §10.2.3 `Retry-After` 规范，提供纯 CP、零外部依赖、零堆分配的重试调度与 `Retry-After` 解析库。
 
 ## 导入方式
 
@@ -57,3 +59,12 @@ fn example() {
     }
 }
 ```
+
+## 上游行为契约与重试边界防护
+
+1. **惊群抑制与确定性测试 (`JitterMode` + SplitMix64)**：
+   - 生产分布式重试推荐使用 `JitterMode.full` 或 `JitterMode.equal` 打散重试波峰、防止上游雪崩；`BackoffState.init(seed)` 内置确定性 SplitMix64 PRNG，便于单元测试与故障复现。
+2. **大重试次数防溢出**：
+   - `nextDelayMs` 对 `base_delay_ms * 2^attempt` 的移位与乘法执行饱和上限钳制，即使 `attempt` 较大也绝不触发整型溢出或回绕，始终严格受 `max_delay_ms` 封顶。
+3. **RFC 9110 `Retry-After` 边界语义**：
+   - `parseRetryAfter` 同时兼容非负十进制秒数与 IMF-fixdate HTTP 日期；当服务端返回过去时间戳时安全钳制为 `0` 秒，畸形头或非法日期返回 `null`；建议结合 `isRetryableHttpStatus` 仅对瞬态故障（`408`/`425`/`429`/`500`/`502`/`503`/`504`）触发退避重试。

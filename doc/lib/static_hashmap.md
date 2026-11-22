@@ -1,6 +1,6 @@
 # `cap:static_hashmap` — 编译期/零分配静态哈希表
 
-> 溯源：从 `/data/dev/bun/src/collections/StaticHashMap.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/collections/StaticHashMap.cp | 吸收日期：2026-11-22
 
 `cap:static_hashmap` 提供固定 2 的幂次容量、零堆分配、开放寻址的静态哈希表 `StaticHashMap<K, V, Context, const CAP: usize>`：
 
@@ -73,3 +73,12 @@ fn lookupMethod(name: string): u16? {
     return METHOD_MAP.get(name);
 }
 ```
+
+## 上游行为契约与性能/边界特性
+
+1. **无 Tombstone 退化（Backward-Shift Deletion）**：
+   - 与传统开放寻址表不同，`delete` 通过后向移位修复后续探测链，长期高频增删后仍保持紧凑探测距离，不会因墓碑堆积退化为 $O(N)$，可通过 `probeCount(key)` 实时观测探测步数。
+2. **容量与负载因子契约**：
+   - 模板参数 `CAP` 必须为 `>= 2` 的 2 的幂（利用位掩码 `hash & (CAP - 1)` 替代取模运算）；为维持 $O(1)$ 低冲突率，建议保持 `loadFactorPermille() <= 700`（负载因子 $\le 0.7$）。
+3. **哨兵值与满表保护**：
+   - `EMPTY_HASH`（`0xFFFFFFFFFFFFFFFF`）保留为空槽哨兵，内置 `fnv1a64` / `fnv1a64AsciiLower` / `splitmix64` 均已自动避开该值；自定义 `Context` 哈希函数亦须避免返回 `EMPTY_HASH`；满表写入时 `put` 返回 `false`、`putChecked` 返回 `Error.MapFull`。

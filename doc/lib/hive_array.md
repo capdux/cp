@@ -1,6 +1,8 @@
 # cap:hive_array
 
-> 源码吸收自 `/data/dev/bun/src/collections/hive_array.cp`，提供纯 CP、零外部依赖、零堆分配的固定容量位图追踪 Slab 槽池。
+> 参考来源：/data/dev/bun/src/collections/hive_array.cp | 吸收日期：2026-11-22
+
+提供纯 CP、零外部依赖、零堆分配的固定容量位图追踪 Slab 槽池。
 
 ## 导入方式
 
@@ -61,3 +63,12 @@ fn example() {
     }
 }
 ```
+
+## 上游行为契约与性能/边界特性
+
+1. **指针/索引稳定性（对标 C++ P0447 `std::hive` 与 Bun `HiveArray`）**：
+   - 底层存储为编译期固定大小连续数组，元素分配与释放永不触发 `realloc` 搬迁，已分配槽索引与 `getPtr` 返回指针在 `free` 之前恒定有效，适合高并发连接句柄、定时器与异步上下文槽池。
+2. **硬件指令级 O(1) 位图检索**：
+   - 以 64-bit 位图数组追踪占用状态，`alloc` 与 `nextOccupied` 直接利用 `@ctz` 计数尾随零指令快速跳过整批已满/空闲 64 槽位，避免线性逐槽扫描。
+3. **防 Double-Free 与尾字掩码安全**：
+   - `free(index)` 对越界索引或未占用槽位安全返回 `false`（不破坏 `count`）；非 64 倍数容量（如 `capacity = 150`）严格校验 `index < CAP`，杜绝尾字高位越界分配。

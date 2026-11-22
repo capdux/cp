@@ -1,6 +1,6 @@
 # `cap:tagged_ptr` — 64 位高位标签指针与紧凑标签联合体
 
-> 溯源：从 `/data/dev/bun/src/ptr/tagged_pointer.cp` 吸收并规范化为纯 CP 标准库模块。
+> 参考来源：/data/dev/bun/src/ptr/tagged_pointer.cp | 吸收日期：2026-11-22
 
 `cap:tagged_ptr` 利用 64 位虚拟地址空间的高 15 位（低 49 位指针地址 + 高 15 位无符号标签），提供严格 **8 字节** 的标签指针与多类型紧凑指针联合体：
 
@@ -72,3 +72,12 @@ fn demo() {
     }
 }
 ```
+
+## 上游行为契约与硬件/指针安全边界
+
+1. **49 位虚拟地址 + 15 位标签布局（源自 Bun `ptr/tagged_pointer.cp`）**：
+   - 在主流 64 位架构（x86_64 48-bit 规范地址与 ARM64 48/49-bit 用户态虚拟地址）上，高 15 位（`TAG_BITS = 15`, `MAX_TAG = 32767`）空闲可用于携带类型判别符、引用标记或状态位，使 `TaggedPointer` / `TaggedPtr2` / `TaggedPtr4` 严格保持 8 字节机器字长（寄存器直接传参）。
+2. **空指针携标与安全解包**：
+   - `TaggedPointer.nullWithTag(tag)` 允许地址为 0 的空指针携带非零 15 位标签（例如标记内联哨兵状态）；调用 `getPtr(T)` / `getConstPtr(T)` 时若低 49 位地址为 0 必定返回 `null`，避免空指针解引用。
+3. **非规范地址与生命周期边界**：
+   - `TaggedPointer` 不延长所指对象生命周期，解包后的裸指针仅在原对象存活期间有效；`TaggedPtr2` / `TaggedPtr4` 依赖高 15 位判别分支，类型不匹配时 `asA/B/C/D()` 确定性返回 `null`。
