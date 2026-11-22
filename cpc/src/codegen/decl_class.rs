@@ -117,7 +117,10 @@ impl Codegen {
                             } else {
                                 String::new()
                             };
+                            let saved_container_const = self.in_container_const;
+                            self.in_container_const = true;
                             let init_str = self.generate_expr(init);
+                            self.in_container_const = saved_container_const;
                             return format!(
                                 "{}{}{} {}{} = {};",
                                 pub_prefix, tls_prefix, kw, ident.sym, ty_str, init_str

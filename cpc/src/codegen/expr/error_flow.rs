@@ -8,7 +8,32 @@ impl Codegen {
     pub(crate) fn generate_expr_error_flow(&mut self, expr: &Expr) -> String {
         match expr {
             Expr::Question(inner) => {
-                if matches!(&**inner, Expr::TypeVal { .. }) {
+                let is_optional_type_ctx = self.in_container_const
+                    || match &**inner {
+                        Expr::TypeVal { .. } => true,
+                        Expr::Zig(z) => {
+                            let s = z.code.trim_start();
+                            s.starts_with("*const ")
+                                || s.starts_with("*fn")
+                                || s.starts_with("fn ")
+                                || s.starts_with("fn(")
+                                || s.starts_with("[*]")
+                                || s.starts_with("[*c]")
+                                || s.starts_with("[*:")
+                                || s.starts_with("[:")
+                        }
+                        Expr::Ident(id) => {
+                            !self.locals.contains_key(&id.sym)
+                                && !self.current_fn_params.contains(&id.sym)
+                                && (self.type_aliases.contains_key(&id.sym)
+                                    || self.class_defs.contains_key(&id.sym)
+                                    || self.enum_defs.contains_key(&id.sym)
+                                    || self.trait_defs.contains_key(&id.sym)
+                                    || self.value_classes.contains(&id.sym))
+                        }
+                        _ => false,
+                    };
+                if is_optional_type_ctx {
                     let exp = self.generate_expr(inner);
                     return format!("?{}", exp);
                 }

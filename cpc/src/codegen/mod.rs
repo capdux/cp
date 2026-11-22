@@ -124,6 +124,7 @@ pub struct Codegen {
     pub(crate) lambda_counter: u32,
     pub(crate) current_case_content: OutputBuffer,
     pub(crate) is_comptime: bool,
+    pub(crate) in_container_const: bool,
     pub(crate) is_state_machine: bool,
     pub(crate) current_fn_is_async: bool,
     pub(crate) locals: HashMap<String, String>,
@@ -231,6 +232,7 @@ impl Codegen {
             lambda_counter: 0,
             current_case_content: OutputBuffer::new(),
             is_comptime: false,
+            in_container_const: false,
             is_state_machine: false,
             current_fn_is_async: false,
             locals: HashMap::new(),
@@ -1481,13 +1483,16 @@ impl Codegen {
                             continue;
                         }
                         let saved_comptime = self.is_comptime;
+                        let saved_container_const = self.in_container_const;
                         self.is_comptime = true;
+                        self.in_container_const = true;
                         let init_code = if let Some(init) = &var.init {
                             self.generate_expr(init)
                         } else {
                             "undefined".to_string()
                         };
                         self.is_comptime = saved_comptime;
+                        self.in_container_const = saved_container_const;
                         self.writeln(&format!("{} {}{} = {};", kw, ident.sym, ty_str, init_code));
                     }
                     _ => {}
