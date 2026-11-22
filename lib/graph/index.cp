@@ -225,3 +225,17 @@ export {
     YenPath,
     YenGraph,
 } from "./yenKPaths.cp";
+
+export {
+    MCMF_MAX_NODES,
+    MCMF_MAX_EDGES,
+    MCMF_NO_EDGE,
+    MCMF_INF_COST,
+    MCMF_INF_FLOW,
+    McmfStatus,
+    McmfEdge,
+    McmfResult,
+    McmfTransportResult,
+    MinCostFlowNetwork,
+    solveMinCostTransport,
+} from "./minCostFlow.cp";

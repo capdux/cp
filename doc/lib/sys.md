@@ -363,6 +363,31 @@ const low = fs_info.isLowSpace(100); // false (150 permille >= 100)
 * = low;
 ```
 
+### 零分配 libuv / Node.js 系统与 DNS 错误码映射 (`libuvErrorMap.cp`)
+
+吸收自 `/data/dev/bun/src/sys/libuv_error_map.cp`（同步自 `uv.h` 与 `/data/dev/bun/docs/runtime/archive.mdx`、`file-io.mdx` 中 Node.js/Bun 系统错误码最佳实践）：
+
+- **常量与类型**：`LIBUV_ERROR_COUNT`（84 条权威映射）、`LIBUV_UNKNOWN_MESSAGE`（`"unknown error"`）、`LibuvErrorCategory`（`Filesystem`/`Network`/`Dns`/`Permission`/`Resource`/`Io`/`Argument`/`Process`/`Unknown`）、`LibuvErrno`（完整 84 项 POSIX 与 `EAI_*` DNS 错误码枚举）、`LibuvErrorEntry`、`LibuvErrorMap`；
+- **核心 API**：
+  - `LibuvErrorMap.entryFor(code)` / `entryAt(index)` / `entryCount()`
+  - `LibuvErrorMap.codeName(code)` / `messageFor(code)` / `categoryFor(code)` / `isDnsError(code)` / `isRetryable(code)`
+  - `LibuvErrorMap.lookupByName(name)` / `lookupByNameIgnoreCase(name)` / `fromCodeName(name)` / `messageByName(name)`
+  - `LibuvErrorMap.formatError(code, syscall, path, out)`：零堆分配拼装 Node.js / Bun 标准错误诊断（如 `"ENOENT: no such file or directory, open '/etc/missing'"`），目标缓冲区不足时安全截断不越界；
+- **Bun / Node.js 实战最佳实践**：
+  - 按 `error.code`（如 `"EACCES"`、`"ENOENT"`、`"EEXIST"`）而非平台相关的裸数值 errno 进行分支判断，确保 Linux / macOS / Windows 跨平台行为一致；
+  - 对瞬态系统/网络错误（`LibuvErrorMap.isRetryable(code)`，涵盖 `EAGAIN`、`EINTR`、`EBUSY`、`EAI_AGAIN`、`ECONNRESET`、`ETIMEDOUT` 等）实施指数退避重试，对权限/路径类永久错误（`EACCES`、`ENOENT`、`EISDIR`）快速失败并透出规范化诊断信息。
+
+```cp
+import { LibuvErrno, LibuvErrorMap } from "cap:sys";
+
+let buf: [128]u8 = [0; 128];
+const msg = LibuvErrorMap.formatError(.ENOENT, "open", "/tmp/missing.txt", buf[0..]);
+// => "ENOENT: no such file or directory, open '/tmp/missing.txt'"
+const retryable = LibuvErrno.EAI_AGAIN.isRetryable(); // true
+* = msg;
+* = retryable;
+```
+
 ## 收敛子模块深度文档
 
 - [acpi.md](sys/acpi.md)

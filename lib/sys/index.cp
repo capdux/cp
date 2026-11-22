@@ -1330,3 +1330,14 @@ export {
     StatFsSmall,
     StatFsBig,
 } from "./statFs.cp";
+
+// --- libuvErrorMap (Zero-Alloc libuv / Node.js System & DNS Error Code Map) ---
+export {
+    LIBUV_ERROR_COUNT,
+    LIBUV_UNKNOWN_MESSAGE,
+    LibuvErrorCategory,
+    LibuvErrno,
+    LibuvErrorEntry,
+    LibuvErrorMap,
+} from "./libuvErrorMap.cp";
+

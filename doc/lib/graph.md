@@ -338,6 +338,46 @@ pub fn demoYenKShortestPaths() {
 
 ---
 
+## 九、 零分配最小费用最大流求解器（Min-Cost Max-Flow，`minCostFlow.cp`）
+
+面向物流供需调度、云算力集群成本最优路由与带容量约束指派的 100% 纯 CP 零动态堆分配 **Successive Shortest Augmenting Path + Johnson Potentials + SPFA** 精确 `i64` 最小费用最大流求解器：
+
+- **常量与枚举**：
+  - `MCMF_MAX_NODES = 64`、`MCMF_MAX_EDGES = 256`（内部 512 残量边）、`MCMF_NO_EDGE = 0xFFFF`、`MCMF_INF_COST`、`MCMF_INF_FLOW`
+  - `McmfStatus`（`ok | invalid_nodes | invalid_source_sink | negative_cycle | infeasible_demand | edge_capacity_exceeded`）
+- **数据模型**：
+  - `McmfEdge`（残量边）、`McmfResult`（`status`, `total_flow`, `total_cost`, `augmentations`, `reached_limit`, `used_spfa_init`）、`McmfTransportResult`（`status`, `total_shipped`, `total_demand`, `total_cost`, `fully_satisfied`）
+- **核心引擎 `MinCostFlowNetwork`**：
+  - `init(node_count)` / `addEdge(*_, u, v, capacity, unit_cost): usize?`（返回 0-based 原始边编号）
+  - `solve(*_, source, sink, max_flow_limit): McmfResult`：若含初始负权边自动触发多源 SPFA 势能初始化并严格检测负费用环（返回 `negative_cycle`）；随后以零堆二叉最小堆 Dijkstra + Johnson 势能连续沿最短增广路增广直至达上限或无增广路。
+  - `edgeFlow(edge_idx): i64?` / `edgeResidualCap(edge_idx): i64?` / `resetFlows(*_)`。
+- **二分图供需运输便捷封装**：
+  - `solveMinCostTransport(supplies, demands, unit_costs, *out_flows): McmfTransportResult`：一键构建超级源汇二分运输网络并输出每对 `(supplier, consumer)` 最优分配流量。
+
+```cp
+import {
+    MCMF_INF_FLOW,
+    McmfStatus,
+    MinCostFlowNetwork,
+    solveMinCostTransport,
+} from "cap:graph";
+
+pub fn demoMinCostFlow() {
+    let net = MinCostFlowNetwork.init(4) ?? return;
+    const e0 = net.addEdge(0, 1, 2, 1) ?? 0;
+    * = net.addEdge(0, 2, 2, 5);
+    * = net.addEdge(1, 2, 1, 1);
+    * = net.addEdge(1, 3, 1, 4);
+    * = net.addEdge(2, 3, 3, 1);
+
+    const res = net.solve(0, 3, MCMF_INF_FLOW);
+    * = (res.status == McmfStatus.ok && res.total_flow == 4);
+    * = net.edgeFlow(e0); // 2
+}
+```
+
+---
+
 ## 收敛子模块深度文档
 
 - [bipartite.md](graph/bipartite.md)
