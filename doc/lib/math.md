@@ -315,6 +315,57 @@ pub fn demoStatsAndRegression() {
 }
 ```
 
+### 无上限外部工作区数值优化与两阶段单纯形线性规划套件 (`optimize.cp`)
+
+面向工程最优化、运筹资源分配、模型参数拟合与黑盒调优的 100% 纯 CP 零动态堆分配优化套件。全部多维梯度、历史窗口与单纯形表均基于调用方传入的外部工作切片运行，无硬性维度玩具上限：
+
+- **回调类型、错误集与结果模型**：
+  - `OptScalarFn`, `OptObjectiveFn`, `OptGradientFn`
+  - `OptError`（`InvalidDimension | InvalidBounds | InvalidTolerance | WorkBufferTooSmall | NonFiniteValue`）
+  - `OptStatus`（`converged | max_iters_reached | infeasible | unbounded | stalled`）、`OptSummary`（`status`, `x_best`, `objective`, `grad_norm`, `iterations`, `func_evals`）
+  - `LpStatus`（`optimal | infeasible | unbounded | max_iters_reached`）、`LpResult`（`status`, `objective`, `iterations`）
+- **一维无导数极值与有界求根**：
+  - `brentMinimize1d(f_fn, a, b, tol, max_iters): OptSummary ! OptError`（抛物线插值 + 黄金分割混合）
+  - `brentRoot1d(f_fn, a, b, tol, max_iters): f64 ! OptError`（逆二次插值 + 割线 + 二分有界超线性求根）
+- **两阶段单纯形线性规划（Two-Phase Simplex LP + Bland 防循环）**：
+  - `lpTableauRequiredLen(num_vars, num_constraints): usize`
+  - `solveLinearProgramSimplex(c, a_matrix, b_rhs, num_vars, num_constraints, *out_x, *tableau_work, *basis_work, max_iters): LpResult ! OptError`（求解 `min c^T x, s.t. A x <= b, x >= 0`，完整支持负右端项 Phase I 人工变量可行化、精准识别 `optimal` / `infeasible` / `unbounded`）
+- **无约束多维数值优化器**：
+  - `approxGradientCentral(f_fn, *x, eps, *out_grad)` / `armijoBacktrackingLineSearch(...)`
+  - `cgWorkRequiredLen(dim)` & `minimizeConjugateGradient(f_fn, grad_fn, *x, tol_grad, max_iters, *work)`（Polak-Ribière+ 共轭梯度 + 自动重启）
+  - `lbfgsWorkRequiredLen(dim, history_m)` & `minimizeLbfgs(f_fn, grad_fn, *x, history_m, tol_grad, max_iters, *work)`（Nocedal O(m·n) Two-Loop 拟牛顿法）
+  - `nelderMeadWorkRequiredLen(dim)` & `minimizeNelderMead(f_fn, *x, init_step, tol_f, max_iters, *work)`（反射/扩张/收缩/压缩四态无导数单纯形）
+
+```cp
+import {
+    brentMinimize1d,
+    lpTableauRequiredLen,
+    solveLinearProgramSimplex,
+    lbfgsWorkRequiredLen,
+    minimizeLbfgs,
+} from "cap:math";
+
+fn demoOptimize() {
+    // 1. 标准生产资源分配 LP: min -3*x0 - 5*x1 s.t. x0<=4, 2*x1<=12, 3*x0+2*x1<=18, x>=0
+    const c: [2]f64 = [-3.0, -5.0];
+    const a: [6]f64 = [1.0, 0.0, 0.0, 2.0, 3.0, 2.0];
+    const b: [3]f64 = [4.0, 12.0, 18.0];
+    let x_opt: [2]f64 = [0.0; 2];
+    let tab: [36]f64 = [0.0; 36]; // >= lpTableauRequiredLen(2, 3) = 36
+    let basis: [3]usize = [0; 3];
+    let x_s: []f64 = x_opt[0..];
+    let tab_s: []f64 = tab[0..];
+    let bas_s: []usize = basis[0..];
+    const lp = solveLinearProgramSimplex(c[0..], a[0..], b[0..], 2, 3, *x_s, *tab_s, *bas_s, 100) catch return;
+    // x_opt = [2.0, 6.0], objective = -36.0
+    * = lp;
+    * = lpTableauRequiredLen;
+    * = lbfgsWorkRequiredLen;
+    * = brentMinimize1d;
+    * = minimizeLbfgs;
+}
+```
+
 ---
 
 ## 收敛子模块深度文档

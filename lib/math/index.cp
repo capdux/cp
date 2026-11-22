@@ -489,3 +489,28 @@ export {
     fitRidgeRegression,
     predictLinear,
 } from "./statsDist.cp";
+
+// --- Unbounded-Slice Numerical Optimization & Two-Phase Simplex LP ---
+
+export {
+    OptScalarFn,
+    OptObjectiveFn,
+    OptGradientFn,
+    OptError,
+    OptStatus,
+    OptSummary,
+    LpStatus,
+    LpResult,
+    brentMinimize1d,
+    brentRoot1d,
+    lpTableauRequiredLen,
+    solveLinearProgramSimplex,
+    approxGradientCentral,
+    armijoBacktrackingLineSearch,
+    cgWorkRequiredLen,
+    minimizeConjugateGradient,
+    lbfgsWorkRequiredLen,
+    minimizeLbfgs,
+    nelderMeadWorkRequiredLen,
+    minimizeNelderMead,
+} from "./optimize.cp";
