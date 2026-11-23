@@ -1818,3 +1818,37 @@ let arena: [512]u8 = [0; 512];
 const sum = planner.planBatch(srcs[0..], existing[0..], extra_skips[0..], FileMatPlanOptions.defaults(), order[0..], ops[0..], arena[0..])?;
 * = sum;
 ```
+
+### Windows `.exe` 垫片尾块编解码、Shebang 路由与 `CommandLineToArgvW` 参数转义引擎（`winShimCodec.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/windows-shim/bun_shim_impl.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - `.exe` 尾块元数据编解码：`WIN_SHIM_TRAILER_MAGIC`、`WIN_SHIM_TRAILER_VERSION`、`WIN_SHIM_FOOTER_BYTES`、`WIN_SHIM_MAX_CMDLINE_CHARS`、`WIN_SHIM_FLAG_USE_UTF16`、`WIN_SHIM_FLAG_INHERIT_CWD`、`WIN_SHIM_FLAG_HAS_SHEBANG`、`WIN_SHIM_FLAG_GUI_SUBSYSTEM`、`WinShimCodecError`、`computeWinShimCrc32`、`updateWinShimCrc32`、`encodeUtf8ToUtf16LeBytes`、`decodeUtf16LeBytesToUtf8`、`WinShimTrailerSpec`、`WinShimTrailerView`、`encodeWinShimTrailer`、`decodeWinShimTrailer`（支持从任意 `.exe` 末尾 O(1) 零拷贝定位并完成 IEEE CRC32 校验）；
+  - Microsoft CRT `CommandLineToArgvW` 精确参数转义：`hasCmdExeMetachars`（`Simd.indexOfAny4` 检测 `cmd.exe` 元字符）、`quoteWindowsArg`（严格遵循引号前连续反斜杠倍增与快路径免引号规则）、`buildWindowsCommandLine`（32,767 字符上限守卫）；
+  - 跨平台 Shebang 解释器路由：`WinShimRuntimeKind`（`DirectExecutable`/`Cap`/`Bun`/`Node`/`Shell`/`Python`/`Custom`）、`ParsedScriptShebang`、`parseScriptShebang`（`cap:simd` 加速解析 `#!/usr/bin/env -S cap run` 等并映射 Windows 可执行启动计划）、`formatWinShimReport`。
+
+```cp
+import {
+    WIN_SHIM_FLAG_USE_UTF16,
+    WIN_SHIM_FLAG_HAS_SHEBANG,
+    WinShimTrailerSpec,
+    encodeWinShimTrailer,
+    decodeWinShimTrailer,
+    buildWindowsCommandLine,
+    parseScriptShebang,
+} from "cap:pkg";
+
+const sb = parseScriptShebang("#!/usr/bin/env -S cap run --smol\nconsole.log(1);")?;
+let trailer: [256]u8 = [0; 256];
+const tlen = encodeWinShimTrailer(WinShimTrailerSpec{
+    target_path: "C:\\proj\\cap_modules\\tool\\cli.cp",
+    interpreter_path: sb.windows_exe,
+    interpreter_args: sb.extra_args,
+    flags: WIN_SHIM_FLAG_USE_UTF16 | WIN_SHIM_FLAG_HAS_SHEBANG,
+}, trailer[0..])?;
+const view = decodeWinShimTrailer(trailer[0..tlen])?;
+const argv: [2][]const u8 = ["hello world", "a\\\"b\\"];
+let cmd: [256]u8 = [0; 256];
+const clen = buildWindowsCommandLine("C:\\cap\\cap.exe", argv[0..], cmd[0..])?;
+* = view; * = clen;
+```
