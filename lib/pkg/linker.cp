@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/hoisted_install.cp | Synced: 2026-11-23T01:30:14Z
+// Source: Absorbed from /data/dev/bun/src/install/hoisted_install.cp | Synced: 2026-11-23T01:42:05Z
 // ============================================================================
 // lib/pkg/linker.cp — Hoisted/Isolated Package Linker, BinLinker & Patch Applicator
 // Absorbed from Bun src/install/{hoisted_install,isolated_install,bin,patch_install}.cp

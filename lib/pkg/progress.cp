@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/ProgressStrings.cp | Synced: 2026-11-23T01:31:24Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/ProgressStrings.cp | Synced: 2026-11-23T01:39:20Z
 // Pure-CP zero-allocation Package Manager 5-Stage Progress Renderer & Node Counter
 // Aligned with Bun src/install/PackageManager/ProgressStrings.cp & docs/pm/cli/install.mdx:
 // - Models all 5 install lifecycle stages (`Download`, `Extract`, `Install`, `Save`, `Script`)

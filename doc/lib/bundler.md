@@ -1312,3 +1312,31 @@ let idx2 = BuildDiskCacheIndex.init(slots2[0..], 12);
 const sum = decodeDiskCacheIndex(snap[0..snap_len], &idx2)?;
 * = shard_len; * = hit; * = sum;
 ```
+
+- **CSS Chunk 编译结果拼装、前置规则提升、`url(...)` 资产重写与安全压缩引擎（`cssChunkEmit.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCompileResultForCssChunk.cp`）**：
+    - 导出：`CSS_CHARSET_UTF8`、`CSS_SOURCEMAP_PREFIX`、`CSS_SOURCEMAP_SUFFIX`、`CssChunkEmitError`、`CssMinifyOptions`、`CssMinifyStats`、`minifyCssChunkSafe`（保留字符串字面量、`calc()`/`min()`/`max()`/`clamp()` 内 `+`/`-` 必需空格与 `/*! ... */` 版权注释，接入 `cap:simd` `Simd.skipWhitespace`/`Simd.indexOfByte` 加速）、`CssUrlAssetMapping`、`CssUrlRewriteOptions`、`CssUrlRewriteStats`、`isExternalOrDataCssUrl`、`rewriteCssAssetUrls`（`cap:simd` 扫描重写相对资产路径，自动跳过 `data:`/`http:`/`https:`/`#` 并保留 `?query`/`#hash`）、`CssChunkPartKind`（`LayerDecl`/`ExternalImport`/`SourceModule`）、`CssChunkPartInput`、`CssChunkEmitOptions`、`CssChunkModuleSpan`、`CssChunkEmitSummary`、`assembleCssChunkResult`（自动提炼去重单一顶置 `@charset "UTF-8";`、按 CSS Syntax L3 规范提升并去重外部 `@import`、保留 `@layer` 声明、追踪每模块字节与行偏移、尾部追加 `/*# sourceMappingURL=... */`）、`formatCssChunkEmitReport`。
+
+```cp
+import {
+    CssChunkPartKind,
+    CssChunkPartInput,
+    CssUrlAssetMapping,
+    CssChunkEmitOptions,
+    CssChunkModuleSpan,
+    assembleCssChunkResult,
+} from "cap:bundler";
+
+const parts: [3]CssChunkPartInput = [
+    CssChunkPartInput{ kind: CssChunkPartKind.LayerDecl, code: "@layer base, theme;" },
+    CssChunkPartInput{ kind: CssChunkPartKind.ExternalImport, code: "@import url(\"https://fonts.example.com/a.css\");" },
+    CssChunkPartInput{ kind: CssChunkPartKind.SourceModule, source_index: 1, code: "@charset \"UTF-8\";\n.hero { background: url(./hero.png); width: calc(100% - 16px); }" },
+];
+const maps: [1]CssUrlAssetMapping = [
+    CssUrlAssetMapping{ original_rel_path: "hero.png", hashed_asset_path: "assets/hero-9f8e7d6c.png" },
+];
+let scratch: [1024]u8 = [0; 1024];
+let out: [2048]u8 = [0; 2048];
+let spans: [4]CssChunkModuleSpan = [CssChunkModuleSpan.empty(); 4];
+const sum = assembleCssChunkResult(parts[0..], maps[0..], CssChunkEmitOptions{ minify: true, public_path: "/static/", source_map_url: "app.css.map" }, scratch[0..], out[0..], spans[0..])?;
+* = sum;
+```

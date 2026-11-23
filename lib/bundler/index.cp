@@ -880,3 +880,25 @@ export {
     decodeDiskCacheIndex,
     formatDiskCacheReport,
 } from "./diskCache";
+
+export {
+    CSS_CHARSET_UTF8,
+    CSS_SOURCEMAP_PREFIX,
+    CSS_SOURCEMAP_SUFFIX,
+    CssChunkEmitError,
+    CssMinifyOptions,
+    CssMinifyStats,
+    minifyCssChunkSafe,
+    CssUrlAssetMapping,
+    CssUrlRewriteOptions,
+    CssUrlRewriteStats,
+    isExternalOrDataCssUrl,
+    rewriteCssAssetUrls,
+    CssChunkPartKind,
+    CssChunkPartInput,
+    CssChunkEmitOptions,
+    CssChunkModuleSpan,
+    CssChunkEmitSummary,
+    assembleCssChunkResult,
+    formatCssChunkEmitReport,
+} from "./cssChunkEmit";
