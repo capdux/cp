@@ -1586,3 +1586,39 @@ let audit: [4]DepOverrideAuditEntry = [DepOverrideAuditEntry.empty(); 4];
 const osum = applyDependencyOverrides(norm[0..@as(usize, nsum.output_count)], rules[0..], audit[0..])?;
 * = osum;
 ```
+
+### 顶层包管理执行总控管线与 Workspace 拓扑调度引擎（`managerExec.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/install_with_manager.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 执行意图与标志路由：`PM_EXEC_DEFAULT_CONCURRENCY`、`PM_EXEC_MAX_FILTER_LEN`、`PM_EXEC_INVALID_WS_INDEX`、`PmExecError`、`PmExecAction`（`Install`/`Add`/`Remove`/`Update`/`Ci`/`Link`/`Audit`/`Outdated`）、`parsePmExecAction`、`pmExecActionName`、`PmExecFlags`、`PmExecRequest`、`parsePmExecRequest`（自动强制 `cap ci` 启用 `--frozen-lockfile` + 清空重建，校验标志互斥与 `--filter`/`--concurrency`）；
+  - 9 阶段单调执行管线状态机：`PmExecStage`（`Init -> LoadConfig -> ReadManifest -> LoadLockfile -> ResolveGraph -> ComputeDiff -> MaterializeStore -> LinkWorkspaces -> RunLifecycle -> PersistLockfile -> Done / Failed`）、`pmExecStageName`、`PmExecEventKind`、`PmExecEvent`、`PmExecMetrics`、`shouldSkipPmExecStage`（支持 `--dry-run` 止步于 `ComputeDiff`、`--lockfile-only` 止步于 `PersistLockfile`、`--no-save` 跳过改写 `cap.json`）、`PmExecSession`（`--frozen-lockfile` 漂移自动触发 `FrozenLockfileDrift`）；
+  - SIMD 加速 Workspace 过滤与拓扑波次规划：`WorkspaceFilterMatch`、`matchWorkspaceFilterGlob`（支持正向/否定 `!` 与路径/包名模式，迭代防 ReDoS）、`WorkspaceNodeInput`、`WorkspaceInstallStep`、`WorkspacePlanSummary`、`planWorkspaceInstallOrder`（传递闭包展开 + Kahn 分层并发波次 + 环依赖检测）；
+  - 结构化事件流与汇总报表：`formatPmExecSummary`、`formatPmExecEventsLog`。
+
+```cp
+import {
+    parsePmExecRequest,
+    PmExecEvent,
+    PmExecSession,
+    PmExecStage,
+    formatPmExecSummary,
+} from "cap:pkg";
+
+const argv: [3][]const u8 = ["install", "--dry-run", "--filter=packages/*"];
+let targets: [4][]const u8 = [""; 4];
+let filters: [4][]const u8 = [""; 4];
+const req = parsePmExecRequest(argv[0..], targets[0..], filters[0..])?;
+let evs: [32]PmExecEvent = [PmExecEvent.empty(); 32];
+let sess = PmExecSession.init(req, evs[0..], 0);
+while (!sess.isFinished()) {
+    const next = sess.nextRequiredStage();
+    sess.advanceStage(next, 10)?;
+    if (next == PmExecStage.ComputeDiff) {
+        sess.recordDiff(2, 0, 1, 10, 15)?;
+    }
+}
+let out: [512]u8 = [0; 512];
+const n = formatPmExecSummary(sess, out[0..])?;
+* = n;
+```
