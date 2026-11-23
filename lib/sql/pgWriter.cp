@@ -1,10 +1,31 @@
 // Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp | Synced: 2026-11-22T03:32:00Z
+// Reference-hardened against sfackler/rust-postgres (MIT/Apache-2.0)
 // Pure-CP zero-allocation PostgreSQL wire-protocol binary frame writer:
 // - Big-endian integer/float encoders (u16/short/u32/i32/i64/f32/f64)
-// - C-string auto-NUL termination, text-mode bool ('t'/'f'), NULL (-1 / 0xFFFFFFFF)
+// - C-string auto-NUL termination with embedded-NUL rejection (`Simd.indexOfByte(0)`), text-mode bool ('t'/'f'), NULL (-1 / 0xFFFFFFFF)
+// - 16-lane `@Vector(16, u8)` SIMD payload copy (`simdPgCopyBytes`)
 // - Length-prefixed payload writer and two-phase length backpatching
 //   (`beginLength` / `beginTaggedFrame` + `finishLength` / `finishLengthExcludingSelf`)
-// - Strict bounds, parameter-count, patch-offset and u32 frame-length overflow guards.
+// - Strict bounds, parameter-count, patch-offset and signed 32-bit frame-length overflow guards.
+
+import { Simd } from "cap:simd";
+
+type PgWriterVec16 = @Vector(16, u8);
+
+/// 16-lane `@Vector(16, u8)` SIMD payload copy for PostgreSQL wire frames and column buffers.
+pub fn simdPgCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const chunk: PgWriterVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
 
 /// PostgreSQL 线协议 NULL 长度哨兵（无符号 32 位 0xFFFFFFFF）
 pub const PG_NULL_LENGTH_U32: u32 = 0xffffffff;
@@ -17,6 +38,7 @@ pub err PgWireWriterError {
     TooManyParameters,
     InvalidPatchOffset,
     FrameLengthOverflow,
+    EmbeddedNul,
 }
 
 /// 长度字段回填句柄（记录 4 字节大端长度占位符在缓冲区中的起始偏移）
@@ -70,16 +92,13 @@ pub struct PgWireWriter {
         return 1;
     }
 
-    /// 写入原始字节切片（对齐 Bun `write()`）
+    /// 写入原始字节切片（对齐 Bun `write()`，采用 16-lane SIMD 块拷贝）
     fn writeBytes(*_, data: []const u8): usize! {
         if (data.len > _.remaining()) {
             return err.BufferTooSmall;
         }
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[_.pos + i] = data[i];
-            i += 1;
-        }
+        const copied = simdPgCopyBytes(_.buf[_.pos .. _.pos + data.len], data);
+        if (copied != data.len) return err.BufferTooSmall;
         _.pos += data.len;
         return data.len;
     }
@@ -89,11 +108,8 @@ pub struct PgWireWriter {
         if (at > _.buf.len || data.len > _.buf.len - at) {
             return err.InvalidPatchOffset;
         }
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[at + i] = data[i];
-            i += 1;
-        }
+        const copied = simdPgCopyBytes(_.buf[at .. at + data.len], data);
+        if (copied != data.len) return err.InvalidPatchOffset;
         return data.len;
     }
 
@@ -177,10 +193,16 @@ pub struct PgWireWriter {
         return 8;
     }
 
-    /// 写入以 `\0` 结尾的 C 字符串（对齐 Bun `string()` / `bytes()`：若末尾已有 `\0` 不重复追加）
+    /// 写入以 `\0` 结尾的 C 字符串（对齐 Bun `string()` / `bytes()`：拒绝内嵌 `\0` 截断，若末尾已有 `\0` 不重复追加）
     fn writeCString(*_, value: []const u8): usize! {
+        if (nul_idx := Simd.indexOfByte(value, 0)) {
+            if (nul_idx + 1 < value.len) {
+                return err.EmbeddedNul;
+            }
+        }
         const needs_nul = value.len == 0 || value[value.len - 1] != 0;
-        const total = value.len + (if (needs_nul) 1 else 0);
+        const extra: usize = if (needs_nul) 1 else 0;
+        const total = value.len + extra;
         if (total > _.remaining()) {
             return err.BufferTooSmall;
         }
@@ -189,6 +211,19 @@ pub struct PgWireWriter {
             * = _.writeByte(0)?;
         }
         return total;
+    }
+
+    /// 严格写入 C 字符串（对标 `rust-postgres`：拒绝任意位置出现 `\0`，并追加单个 `\0` 终止符）
+    fn writeCStringStrict(*_, value: []const u8): usize! {
+        if (Simd.indexOfByte(value, 0) != null) {
+            return err.EmbeddedNul;
+        }
+        if (value.len + 1 > _.remaining()) {
+            return err.BufferTooSmall;
+        }
+        * = _.writeBytes(value)?;
+        * = _.writeByte(0)?;
+        return value.len + 1;
     }
 
     /// 写入 PostgreSQL 文本格式布尔值 `'t'` / `'f'`（对齐 Bun `bool()`）
@@ -231,13 +266,13 @@ pub struct PgWireWriter {
         return _.beginLength();
     }
 
-    /// 回填包含自身 4 字节在内的消息帧总长度（对齐 Bun `LengthWriter.write()`）
+    /// 回填包含自身 4 字节在内的消息帧总长度（对齐 Bun `LengthWriter.write()`，严格限制 `<= i32::MAX`）
     fn finishLength(*_, patch: PgLengthPatch): u32! {
         if (patch.offset + 4 > _.pos || patch.offset + 4 > _.buf.len) {
             return err.InvalidPatchOffset;
         }
         const frame_len = _.pos - patch.offset;
-        if (frame_len > 0xffffffff) {
+        if (frame_len > 0x7fffffff) {
             return err.FrameLengthOverflow;
         }
         const len_u32: u32 = @intCast(frame_len);
@@ -251,13 +286,13 @@ pub struct PgWireWriter {
         return len_u32;
     }
 
-    /// 回填不含自身 4 字节在内的载荷净长度（对齐 Bun `LengthWriter.writeExcludingSelf()`）
+    /// 回填不含自身 4 字节在内的载荷净长度（对齐 Bun `LengthWriter.writeExcludingSelf()`，严格限制 `<= i32::MAX`）
     fn finishLengthExcludingSelf(*_, patch: PgLengthPatch): u32! {
         if (patch.offset + 4 > _.pos || patch.offset + 4 > _.buf.len) {
             return err.InvalidPatchOffset;
         }
         const payload_len = _.pos - (patch.offset + 4);
-        if (payload_len > 0xffffffff) {
+        if (payload_len > 0x7fffffff) {
             return err.FrameLengthOverflow;
         }
         const len_u32: u32 = @intCast(payload_len);

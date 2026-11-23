@@ -1,16 +1,28 @@
 // Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewReader.cp | Synced: 2026-11-22T03:45:00Z
+// Reference-hardened against sfackler/rust-postgres (MIT/Apache-2.0)
 // Pure-CP zero-allocation PostgreSQL wire-protocol binary reader:
 // - Streaming message bookmarking (`markMessageStart` / `offsetFromStart` / `rewindToMessageStart`)
 // - Big-endian integer & IEEE-754 float decoders (u8/u16/i16/u32/i32/i64/f32/f64) and non-consuming peeks
-// - PostgreSQL message frame reader (`readMessageLength` / `readTaggedFrame`) with atomic ShortRead preservation
-// - Length-prefixed nullable column/parameter reader (`readLengthPrefixedOrNull`, `-1` -> `null`)
-// - Exact message byte verifier (`eatBytes`) and zero-copy C-string reader (`readZ`).
+// - PostgreSQL message frame reader (`readMessageLength` / `readTaggedFrame`) with `PG_MAX_FRAME_LEN` bound & atomic ShortRead preservation
+// - Length-prefixed nullable column/parameter reader (`readLengthPrefixedOrNull`, `-1` -> `null`, `< -1` rejected)
+// - Exact message byte verifier (`eatBytes`) and SIMD-accelerated zero-copy C-string reader (`readZ` via `cap:simd`).
+
+import { Simd } from "cap:simd";
+
+/// Default maximum PostgreSQL v3 message length (64 MiB, inclusive of 4-byte length field).
+pub const PG_MAX_FRAME_LEN: u32 = 64 * 1024 * 1024;
+
+/// SIMD-accelerated NUL (`\0`) byte scanner using `cap:simd` `Simd.indexOfByte(0)`.
+pub fn simdFindNul(s: []const u8): usize? {
+    return Simd.indexOfByte(s, 0);
+}
 
 /// PostgreSQL 线协议读取器错误集
 pub err PgWireReaderError {
     ShortRead,
     InvalidMessage,
     InvalidMessageLength,
+    FrameTooLarge,
     UnterminatedString,
 }
 
@@ -107,18 +119,13 @@ pub struct PgWireReader {
         return _.buf[start.._.pos];
     }
 
-    /// 读取以 `\0` 结尾的零拷贝 C 字符串（对齐 Bun `readZ()`，消费末尾 `\0` 但不包含在返回切片中）
+    /// 读取以 `\0` 结尾的零拷贝 C 字符串（对齐 Bun `readZ()`，经 `simdFindNul` 加速，消费末尾 `\0` 但不包含在返回切片中）
     fn readZ(*_): ([]const u8)! {
         const start = _.pos;
-        let i = start;
-        while (i < _.buf.len) {
-            if (_.buf[i] == 0) {
-                _.pos = i + 1;
-                return _.buf[start..i];
-            }
-            i += 1;
-        }
-        return err.UnterminatedString;
+        const nul_rel = simdFindNul(_.buf[start..]) ?? return err.UnterminatedString;
+        const nul_pos = start + nul_rel;
+        _.pos = nul_pos + 1;
+        return _.buf[start..nul_pos];
     }
 
     /// 非消费窥视 4 字节大端无符号整数（对齐 Bun `peekInt(u32)`）
@@ -195,9 +202,10 @@ pub struct PgWireReader {
         return @bitCast(bits_u);
     }
 
-    /// 读取并校验 PostgreSQL 4 字节含自身长度字段（对齐 Bun `length()`）：
-    /// 若 `< 4` 返回 `InvalidMessageLength`；若剩余字节不足 `len - 4`，保持 `pos` 不变返回 `ShortRead`。
-    fn readMessageLength(*_): u32! {
+    /// 读取并校验 PostgreSQL 4 字节含自身长度字段（带上限 `max_len`）：
+    /// 若 `< 4` 返回 `InvalidMessageLength`；若 `> max_len` 返回 `FrameTooLarge`；
+    /// 若剩余字节不足 `len - 4`，保持 `pos` 不变返回 `ShortRead`。
+    fn readMessageLengthWithLimit(*_, max_len: u32): u32! {
         if (_.remaining() < 4) {
             return err.ShortRead;
         }
@@ -208,6 +216,10 @@ pub struct PgWireReader {
             return err.InvalidMessageLength;
         }
         const total_u32: u32 = @intCast(len_i32);
+        if (total_u32 > max_len) {
+            _.pos = saved;
+            return err.FrameTooLarge;
+        }
         const payload_len: usize = @as(usize, total_u32 - 4);
         if (payload_len > _.remaining()) {
             _.pos = saved;
@@ -216,15 +228,19 @@ pub struct PgWireReader {
         return total_u32;
     }
 
-    /// 读取完整的 PostgreSQL 带 Tag 帧（1 字节 Tag + 4 字节含自身长度 + 载荷零拷贝切片）；
-    /// 半包或非法长度时原子恢复 `pos`，不破坏流状态。
-    fn readTaggedFrame(*_): PgFrameView! {
+    /// 读取并校验 PostgreSQL 4 字节含自身长度字段（默认上限 `PG_MAX_FRAME_LEN`）。
+    fn readMessageLength(*_): u32! {
+        return _.readMessageLengthWithLimit(PG_MAX_FRAME_LEN);
+    }
+
+    /// 读取完整的 PostgreSQL 带 Tag 帧（自定义帧长上限 `max_len`），半包或非法长度时原子恢复 `pos`。
+    fn readTaggedFrameWithLimit(*_, max_len: u32): PgFrameView! {
         if (_.remaining() < 5) {
             return err.ShortRead;
         }
         const saved = _.pos;
         const tag = _.readByte()?;
-        const total_len = _.readMessageLength() catch |e| {
+        const total_len = _.readMessageLengthWithLimit(max_len) catch |e| {
             _.pos = saved;
             return e;
         };
@@ -237,6 +253,12 @@ pub struct PgWireReader {
             tag: tag,
             payload: payload,
         };
+    }
+
+    /// 读取完整的 PostgreSQL 带 Tag 帧（1 字节 Tag + 4 字节含自身长度 + 载荷零拷贝切片）；
+    /// 半包或非法长度时原子恢复 `pos`，不破坏流状态。
+    fn readTaggedFrame(*_): PgFrameView! {
+        return _.readTaggedFrameWithLimit(PG_MAX_FRAME_LEN);
     }
 
     /// 读取 PostgreSQL 长度前缀可空值（4 字节大端 `i32` 长度：`-1` 返回 `null`，`< -1` 返回 `InvalidMessageLength`）
@@ -253,7 +275,12 @@ pub struct PgWireReader {
             _.pos = saved;
             return err.InvalidMessageLength;
         }
-        const byte_len: usize = @intCast(len_i32);
+        const byte_u32: u32 = @intCast(len_i32);
+        if (byte_u32 > PG_MAX_FRAME_LEN) {
+            _.pos = saved;
+            return err.FrameTooLarge;
+        }
+        const byte_len: usize = @as(usize, byte_u32);
         if (byte_len > _.remaining()) {
             _.pos = saved;
             return err.ShortRead;

@@ -84,6 +84,8 @@ export {
 
 export {
     DEFAULT_MAX_DEPTH as AVRO_DEFAULT_MAX_DEPTH,
+    AVRO_MAX_BLOCK_ITEMS,
+    AVRO_MAX_MAP_ITEMS,
     OCF_MAGIC,
     AvroError,
     AvroFieldSchema,
@@ -98,10 +100,22 @@ export {
     AvroUnionValue,
     AvroValue,
     AvroContainer,
+    AvroOcfSummary,
+    simdAvroSyncMarkerEql,
+    simdAvroSyncMarkerEqlScalar,
+    simdAvroCopyPayload,
+    simdAvroCopyPayloadScalar,
+    avroZigzagEncodeI32,
+    avroZigzagDecodeI32,
+    avroZigzagEncodeI64,
+    avroZigzagDecodeI64,
+    decodeVarintI32,
+    decodeVarintI64,
     encodeDatum,
     decodeDatum,
     writeContainer,
     readContainer,
+    validateAvroOcf,
 } from "./avro.cp";
 
 export {

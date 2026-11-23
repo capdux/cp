@@ -1,11 +1,17 @@
+// Reference-hardened against apache/avro-rs (Apache-2.0)
 // Source: cp/lib/avro/avro.cp (Apache Avro Schema-Driven Binary Codec & OCF Container)
 // Pure CP implementation of Apache Avro 1.11.x schema parser, ZigZag + Varint
-// binary datum codec, and Object Container File (OCF "Obj\x01") reader/writer.
+// binary datum codec, 16-lane @Vector(16, u8) SIMD Sync Marker / payload acceleration,
+// and Object Container File (OCF "Obj\x01") reader/writer/zero-heap validator.
 // Zero external C/Bun/POSIX dependencies.
 
 const std = @import("std");
 
+type AvroVec16u8 = @Vector(16, u8);
+
 pub const DEFAULT_MAX_DEPTH: usize = 64;
+pub const AVRO_MAX_BLOCK_ITEMS: usize = 10_000_000;
+pub const AVRO_MAX_MAP_ITEMS: usize = 1_000_000;
 pub const OCF_MAGIC: [4]u8 = ['O', 'b', 'j', 1];
 
 pub err AvroError {
@@ -18,6 +24,83 @@ pub err AvroError {
     InvalidContainerHeader,
     MaxDepthExceeded,
     OutOfMemory,
+    SyncMarkerMismatch,
+}
+
+fn avroLoadVec16(data: []const u8, off: usize): AvroVec16u8 {
+    const v: AvroVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD exact comparison for 16-byte Avro OCF Sync Markers.
+pub fn simdAvroSyncMarkerEql(a: [16]u8, b: [16]u8): bool {
+    const va: AvroVec16u8 = a;
+    const vb: AvroVec16u8 = b;
+    return @reduce(.And, va == vb);
+}
+
+/// Scalar reference for `simdAvroSyncMarkerEql` (differential verification).
+pub fn simdAvroSyncMarkerEqlScalar(a: [16]u8, b: [16]u8): bool {
+    let i: usize = 0;
+    while (i < 16) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD payload copy from `src` into `dst`.
+pub fn simdAvroCopyPayload(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const v = avroLoadVec16(src, i);
+        const arr: [16]u8 = v;
+        @memcpy(dst[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference for `simdAvroCopyPayload` (differential verification).
+pub fn simdAvroCopyPayloadScalar(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Encodes a signed 32-bit integer using Avro ZigZag mapping (`(n << 1) ^ (n >> 31)`).
+pub fn avroZigzagEncodeI32(val: i32): u32 {
+    const u: u32 = @bitCast(val);
+    const mask: u32 = if (val < 0) (~@as(u32, 0)) else 0;
+    return (u << 1) ^ mask;
+}
+
+/// Decodes an unsigned 32-bit Avro ZigZag integer back to `i32`.
+pub fn avroZigzagDecodeI32(zz: u32): i32 {
+    const raw: u32 = (zz >> 1) ^ (0 -% (zz & 1));
+    return @bitCast(raw);
+}
+
+/// Encodes a signed 64-bit integer using Avro ZigZag mapping (`(n << 1) ^ (n >> 63)`).
+pub fn avroZigzagEncodeI64(val: i64): u64 {
+    const u: u64 = @bitCast(val);
+    const mask: u64 = if (val < 0) (~@as(u64, 0)) else 0;
+    return (u << 1) ^ mask;
+}
+
+/// Decodes an unsigned 64-bit Avro ZigZag integer back to `i64`.
+pub fn avroZigzagDecodeI64(zz: u64): i64 {
+    const raw: u64 = (zz >> 1) ^ (0 -% (zz & 1));
+    return @bitCast(raw);
 }
 
 // ---------------------------------------------------------------------------
@@ -698,17 +781,11 @@ fn writeVarintU64(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, val: u64): 
 }
 
 fn writeZigZagI32(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, val: i32): AvroError!void {
-    const u: u32 = @bitCast(val);
-    const mask: u32 = if (val < 0) 0xFFFFFFFF else 0;
-    const zz: u32 = (u << 1) ^ mask;
-    writeVarintU64(buf, alloc, zz as u64)?;
+    writeVarintU64(buf, alloc, avroZigzagEncodeI32(val) as u64)?;
 }
 
 fn writeZigZagI64(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, val: i64): AvroError!void {
-    const u: u64 = @bitCast(val);
-    const mask: u64 = if (val < 0) 0xFFFFFFFFFFFFFFFF else 0;
-    const zz: u64 = (u << 1) ^ mask;
-    writeVarintU64(buf, alloc, zz)?;
+    writeVarintU64(buf, alloc, avroZigzagEncodeI64(val))?;
 }
 
 fn readByte(data: []const u8, pos: *usize): AvroError!u8 {
@@ -764,16 +841,24 @@ fn readVarintU64(data: []const u8, pos: *usize): AvroError!u64 {
     }
 }
 
+/// Decodes a 32-bit Avro ZigZag varint (max 5 bytes, 5th byte <= 0x0F).
+pub fn decodeVarintI32(data: []const u8, pos: *usize): AvroError!i32 {
+    return readZigZagI32(data, pos);
+}
+
+/// Decodes a 64-bit Avro ZigZag varint (max 10 bytes, 10th byte <= 0x01).
+pub fn decodeVarintI64(data: []const u8, pos: *usize): AvroError!i64 {
+    return readZigZagI64(data, pos);
+}
+
 fn readZigZagI32(data: []const u8, pos: *usize): AvroError!i32 {
     const zz = readVarintU32(data, pos)?;
-    const raw: u32 = (zz >> 1) ^ (0 -% (zz & 1));
-    return @bitCast(raw);
+    return avroZigzagDecodeI32(zz);
 }
 
 fn readZigZagI64(data: []const u8, pos: *usize): AvroError!i64 {
     const zz = readVarintU64(data, pos)?;
-    const raw: u64 = (zz >> 1) ^ (0 -% (zz & 1));
-    return @bitCast(raw);
+    return avroZigzagDecodeI64(zz);
 }
 
 // ---------------------------------------------------------------------------
@@ -976,12 +1061,14 @@ fn readLenPrefixedBytes(alloc: std.mem.Allocator, data: []const u8, pos: *usize)
         return AvroError.SchemaMismatch;
     }
     const len = raw_len as usize;
-    if (pos.* + len > data.len) {
+    if (len > data.len - pos.*) {
         return AvroError.UnexpectedEof;
     }
     const slice = data[pos.* .. pos.* + len];
     pos.* += len;
-    return dupeStr(alloc, slice);
+    let out = alloc.alloc(u8, len) catch return AvroError.OutOfMemory;
+    simdAvroCopyPayload(out, slice);
+    return out;
 }
 
 fn decodeNode(
@@ -1012,14 +1099,14 @@ fn decodeNode(
             return AvroValue.makeLong(v);
         },
         .float_type => {
-            if (pos.* + 4 > data.len) return AvroError.UnexpectedEof;
+            if (4 > data.len - pos.*) return AvroError.UnexpectedEof;
             const bits = std.mem.readInt(u32, data[pos.* .. pos.* + 4][0..4], .little);
             pos.* += 4;
             const f: f32 = @bitCast(bits);
             return AvroValue.makeFloat(f);
         },
         .double_type => {
-            if (pos.* + 8 > data.len) return AvroError.UnexpectedEof;
+            if (8 > data.len - pos.*) return AvroError.UnexpectedEof;
             const bits = std.mem.readInt(u64, data[pos.* .. pos.* + 8][0..8], .little);
             pos.* += 8;
             const d: f64 = @bitCast(bits);
@@ -1034,7 +1121,7 @@ fn decodeNode(
             return AvroValue.makeString(s);
         },
         .fixed_type => |fx| {
-            if (pos.* + fx.size > data.len) return AvroError.UnexpectedEof;
+            if (fx.size > data.len - pos.*) return AvroError.UnexpectedEof;
             const slice = data[pos.* .. pos.* + fx.size];
             pos.* += fx.size;
             return AvroValue.makeFixed(dupeStr(alloc, slice)?);
@@ -1061,10 +1148,15 @@ fn decodeNode(
                 let count = readZigZagI64(data, pos)?;
                 if (count == 0) break;
                 if (count < 0) {
+                    if (count == std.math.minInt(i64)) return AvroError.VarintOverflow;
                     count = -count;
-                    * = readZigZagI64(data, pos)?;
+                    const blk_bytes = readZigZagI64(data, pos)?;
+                    if (blk_bytes < 0) return AvroError.SchemaMismatch;
                 }
                 const n = count as usize;
+                if (n > AVRO_MAX_BLOCK_ITEMS || items_list.items.len + n > AVRO_MAX_BLOCK_ITEMS) {
+                    return AvroError.InvalidContainerHeader;
+                }
                 let i: usize = 0;
                 while (i < n) : (i += 1) {
                     let elem = decodeNode(alloc, item_schema.*, data, pos, depth + 1)?;
@@ -1090,10 +1182,15 @@ fn decodeNode(
                 let count = readZigZagI64(data, pos)?;
                 if (count == 0) break;
                 if (count < 0) {
+                    if (count == std.math.minInt(i64)) return AvroError.VarintOverflow;
                     count = -count;
-                    * = readZigZagI64(data, pos)?;
+                    const blk_bytes = readZigZagI64(data, pos)?;
+                    if (blk_bytes < 0) return AvroError.SchemaMismatch;
                 }
                 const n = count as usize;
+                if (n > AVRO_MAX_MAP_ITEMS || entries_list.items.len + n > AVRO_MAX_MAP_ITEMS) {
+                    return AvroError.InvalidContainerHeader;
+                }
                 let i: usize = 0;
                 while (i < n) : (i += 1) {
                     const key = readLenPrefixedBytes(alloc, data, pos)?;
@@ -1233,14 +1330,21 @@ pub fn readContainer(allocator: std.mem.Allocator, ocf_bytes: []const u8): AvroE
     }
 
     // Read metadata map<bytes>
+    let meta_entries: usize = 0;
     while (true) {
         let count = readZigZagI64(ocf_bytes, &pos)?;
         if (count == 0) break;
         if (count < 0) {
+            if (count == std.math.minInt(i64)) return AvroError.VarintOverflow;
             count = -count;
-            * = readZigZagI64(ocf_bytes, &pos)?;
+            const blk_bytes = readZigZagI64(ocf_bytes, &pos)?;
+            if (blk_bytes < 0) return AvroError.InvalidContainerHeader;
         }
         const n = count as usize;
+        if (n > AVRO_MAX_MAP_ITEMS || meta_entries + n > AVRO_MAX_MAP_ITEMS) {
+            return AvroError.InvalidContainerHeader;
+        }
+        meta_entries += n;
         let i: usize = 0;
         while (i < n) : (i += 1) {
             const k = readLenPrefixedBytes(allocator, ocf_bytes, &pos)?;
@@ -1279,11 +1383,11 @@ pub fn readContainer(allocator: std.mem.Allocator, ocf_bytes: []const u8): AvroE
         return AvroError.InvalidContainerHeader;
     }
 
-    if (pos + 16 > ocf_bytes.len) {
+    if (16 > ocf_bytes.len - pos) {
         return AvroError.UnexpectedEof;
     }
     let sync_marker: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    std.mem.copyForwards(u8, &sync_marker, ocf_bytes[pos .. pos + 16]);
+    simdAvroCopyPayload(&sync_marker, ocf_bytes[pos .. pos + 16]);
     pos += 16;
 
     let schema = AvroSchema.parseSchema(allocator, schema_json)?;
@@ -1307,14 +1411,20 @@ pub fn readContainer(allocator: std.mem.Allocator, ocf_bytes: []const u8): AvroE
         if (block_size < 0) {
             return AvroError.InvalidContainerHeader;
         }
+        const n = block_count as usize;
         const bsize = block_size as usize;
-        if (pos + bsize > ocf_bytes.len) {
+        if (n > AVRO_MAX_BLOCK_ITEMS || records_list.items.len + n > AVRO_MAX_BLOCK_ITEMS) {
+            return AvroError.InvalidContainerHeader;
+        }
+        if (bsize == 0 && n > 1024) {
+            return AvroError.InvalidContainerHeader;
+        }
+        if (bsize > ocf_bytes.len - pos) {
             return AvroError.UnexpectedEof;
         }
 
         const block_end = pos + bsize;
         let i: usize = 0;
-        const n = block_count as usize;
         while (i < n) : (i += 1) {
             let rec = decodeNode(allocator, schema.root, ocf_bytes[0..block_end], &pos, 0)?;
             errdefer rec.deinit(allocator);
@@ -1322,10 +1432,12 @@ pub fn readContainer(allocator: std.mem.Allocator, ocf_bytes: []const u8): AvroE
         }
         pos = block_end;
 
-        if (pos + 16 > ocf_bytes.len) {
+        if (16 > ocf_bytes.len - pos) {
             return AvroError.UnexpectedEof;
         }
-        if (!std.mem.eql(u8, ocf_bytes[pos .. pos + 16], &sync_marker)) {
+        let block_sync: [16]u8 = [0; 16];
+        simdAvroCopyPayload(&block_sync, ocf_bytes[pos .. pos + 16]);
+        if (!simdAvroSyncMarkerEql(block_sync, sync_marker)) {
             return AvroError.InvalidSyncMarker;
         }
         pos += 16;
@@ -1337,5 +1449,123 @@ pub fn readContainer(allocator: std.mem.Allocator, ocf_bytes: []const u8): AvroE
         sync_marker: sync_marker,
         codec: codec,
         records: records,
+    };
+}
+
+/// Zero-heap summary returned by `validateAvroOcf`.
+pub struct AvroOcfSummary {
+    schema_json: []const u8 = "",
+    codec: []const u8 = "null",
+    sync_marker: [16]u8 = [0; 16],
+    block_count: usize = 0,
+    total_objects: usize = 0,
+    total_payload_bytes: usize = 0,
+}
+
+fn readSliceNoAlloc(data: []const u8, pos: *usize): AvroError![]const u8 {
+    const raw_len = readZigZagI64(data, pos)?;
+    if (raw_len < 0) return AvroError.InvalidContainerHeader;
+    const len = raw_len as usize;
+    if (len > data.len - pos.*) return AvroError.UnexpectedEof;
+    const s = data[pos.* .. pos.* + len];
+    pos.* += len;
+    return s;
+}
+
+/// Zero-heap Avro 1.11 Object Container File (`Obj\x01`) structural & Sync Marker validator.
+/// Verifies magic, metadata map (supporting negative block counts with byte sizes), `avro.schema`,
+/// `avro.codec`, 16-byte header Sync Marker, and every data block's bounds and 16-lane SIMD Sync Marker.
+pub fn validateAvroOcf(ocf_bytes: []const u8): AvroError!AvroOcfSummary {
+    if (ocf_bytes.len < 4 || !std.mem.eql(u8, ocf_bytes[0..4], &OCF_MAGIC)) {
+        return AvroError.InvalidContainerHeader;
+    }
+
+    let pos: usize = 4;
+    let schema_json: []const u8 = "";
+    let has_schema = false;
+    let codec: []const u8 = "null";
+    let meta_entries: usize = 0;
+
+    while (true) {
+        let count = readZigZagI64(ocf_bytes, &pos)?;
+        if (count == 0) break;
+        if (count < 0) {
+            if (count == std.math.minInt(i64)) return AvroError.VarintOverflow;
+            count = -count;
+            const blk_bytes = readZigZagI64(ocf_bytes, &pos)?;
+            if (blk_bytes < 0) return AvroError.InvalidContainerHeader;
+            if ((blk_bytes as usize) > ocf_bytes.len - pos) return AvroError.UnexpectedEof;
+        }
+        const n = count as usize;
+        if (n > AVRO_MAX_MAP_ITEMS || meta_entries + n > AVRO_MAX_MAP_ITEMS) {
+            return AvroError.InvalidContainerHeader;
+        }
+        meta_entries += n;
+        let i: usize = 0;
+        while (i < n) : (i += 1) {
+            const k = readSliceNoAlloc(ocf_bytes, &pos)?;
+            const v = readSliceNoAlloc(ocf_bytes, &pos)?;
+            if (std.mem.eql(u8, k, "avro.schema")) {
+                schema_json = v;
+                has_schema = true;
+            } else if (std.mem.eql(u8, k, "avro.codec")) {
+                codec = v;
+            }
+        }
+    }
+
+    if (!has_schema || schema_json.len == 0) {
+        return AvroError.InvalidContainerHeader;
+    }
+
+    if (16 > ocf_bytes.len - pos) {
+        return AvroError.UnexpectedEof;
+    }
+    let sync_marker: [16]u8 = [0; 16];
+    simdAvroCopyPayload(&sync_marker, ocf_bytes[pos .. pos + 16]);
+    pos += 16;
+
+    let block_count: usize = 0;
+    let total_objects: usize = 0;
+    let total_payload_bytes: usize = 0;
+
+    while (pos < ocf_bytes.len) {
+        const obj_cnt = readZigZagI64(ocf_bytes, &pos)?;
+        if (obj_cnt <= 0) return AvroError.InvalidContainerHeader;
+        const blk_len = readZigZagI64(ocf_bytes, &pos)?;
+        if (blk_len < 0) return AvroError.InvalidContainerHeader;
+
+        const n_obj = obj_cnt as usize;
+        const bsize = blk_len as usize;
+        if (n_obj > AVRO_MAX_BLOCK_ITEMS || total_objects + n_obj > AVRO_MAX_BLOCK_ITEMS) {
+            return AvroError.InvalidContainerHeader;
+        }
+        if (bsize > ocf_bytes.len - pos) {
+            return AvroError.UnexpectedEof;
+        }
+        pos += bsize;
+
+        if (16 > ocf_bytes.len - pos) {
+            return AvroError.UnexpectedEof;
+        }
+        let block_sync: [16]u8 = [0; 16];
+        simdAvroCopyPayload(&block_sync, ocf_bytes[pos .. pos + 16]);
+        if (!simdAvroSyncMarkerEql(block_sync, sync_marker)) {
+            return AvroError.SyncMarkerMismatch;
+        }
+        pos += 16;
+
+        block_count += 1;
+        total_objects += n_obj;
+        total_payload_bytes += bsize;
+    }
+
+    return AvroOcfSummary{
+        schema_json: schema_json,
+        codec: codec,
+        sync_marker: sync_marker,
+        block_count: block_count,
+        total_objects: total_objects,
+        total_payload_bytes: total_payload_bytes,
     };
 }

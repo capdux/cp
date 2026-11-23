@@ -148,7 +148,7 @@ let wire: [64]u8 = [0; 64];
 const n = pkt.encode(wire[0..])?;
 const decoded = MySqlErrorPacket.decode(wire[0..n])?; // error_code=1213, isRetryable()==true
 ```
-- **PostgreSQL 线协议零堆分配二进制帧写入器 (`pgWriter.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`)**：
+- **PostgreSQL 线协议零堆分配二进制帧写入器 (`pgWriter.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewWriter.cp`，对标 `sfackler/rust-postgres` MIT/Apache-2.0 加固，新增 `simdPgCopyBytes`、`writeCStringStrict`、`EmbeddedNul` 与有符号 32-bit 帧长上限校验)**：
   - 常量与错误集：`PG_NULL_LENGTH_U32` (`0xffffffff`)、`PG_NULL_LENGTH_I32` (`-1`)、`PgWireWriterError`（`BufferTooSmall` / `TooManyParameters` / `InvalidPatchOffset` / `FrameLengthOverflow`）
   - 结构体与方法：`PgLengthPatch`、`PgWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeShort` / `writeU32` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeCString` / `writeBoolText` / `writeNull` / `writeLengthPrefixed` / `beginLength` / `beginTaggedFrame` / `finishLength` / `finishLengthExcludingSelf`）
 
@@ -191,7 +191,7 @@ const payload_len = w.finishPacket(pkt)?; // 9 bytes
 let r = MySqlWireReader.init(w.written());
 const hdr_len = r.readU24()?; // 9
 ```
-- **PostgreSQL 线协议零堆分配二进制读取器 (`pgReader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewReader.cp`)**：
+- **PostgreSQL 线协议零堆分配二进制读取器 (`pgReader.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/NewReader.cp`，对标 `sfackler/rust-postgres` MIT/Apache-2.0 加固，新增 `PG_MAX_FRAME_LEN`、`FrameTooLarge`、`readMessageLengthWithLimit`、`readTaggedFrameWithLimit` 与 `simdFindNul` 加速 CString 读取)**：
   - 错误集与结构体：`PgWireReaderError`（`ShortRead` / `InvalidMessage` / `InvalidMessageLength` / `UnterminatedString`）、`PgFrameView`、`PgWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readByte` / `readBytes` / `readZ` / `peekU32` / `peekI32` / `readU16` / `readI16` / `readU32` / `readI32` / `readI64` / `readF32` / `readF64` / `readMessageLength` / `readTaggedFrame` / `readLengthPrefixedOrNull` / `eatBytes`）
 
 ```typescript
@@ -523,7 +523,7 @@ const view = decodePgAuthChallenge(wire[0..n])?;
 * = view;
 ```
 
-8. **PostgreSQL 后端数据行（`'D'` DataRow）零拷贝流式编解码（`lib/sql/pgDataRow.cp`，吸收自 `/data/dev/bun/src/sql/postgres/protocol/DataRow.cp` & `/data/dev/bun/docs/runtime/sql.mdx`）**：
+8. **PostgreSQL 后端数据行（`'D'` DataRow）零拷贝流式编解码（`lib/sql/pgDataRow.cp`，对标 `sfackler/rust-postgres` MIT/Apache-2.0 加固，新增 `PG_DATA_ROW_MAX_FRAME_LEN`、`FrameTooLarge`、无溢出列长校验与 16-lane SIMD 列拷贝）**：
    - **精确区分 `SQL NULL` 与空字符串 `""`**：PostgreSQL `'D'` 帧使用 `0xffff_ffff`（`-1`）哨兵表示 `SQL NULL`，长度 `0` 表示非空零字节值（空串/空 `bytea`）；`decodePgDataRowIter` 返回零拷贝流式迭代器 `PgDataRowIter`（支持任意列数宽表与 `columnAt` 随机访问），`decodePgDataRowFrame` 提供最多 64 列的定长视图；
    - **严格帧安全校验**：自动拦截除 `-1` 以外的任意负列长（`InvalidColumnLength`）、列数据截断（`TruncatedFrame`）与行尾垃圾字节（`TrailingBytes`）。
 

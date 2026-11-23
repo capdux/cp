@@ -100,6 +100,7 @@ export {
     PgWireWriterError,
     PgLengthPatch,
     PgWireWriter,
+    simdPgCopyBytes,
 } from "./pgWriter.cp";
 
 export {
@@ -116,9 +117,11 @@ export {
 } from "./mysqlWriter.cp";
 
 export {
+    PG_MAX_FRAME_LEN,
     PgWireReaderError,
     PgFrameView,
     PgWireReader,
+    simdFindNul,
 } from "./pgReader.cp";
 
 export {
@@ -375,6 +378,7 @@ export {
     PG_DATA_ROW_TAG,
     PG_DATA_ROW_NULL_LEN,
     PG_DATA_ROW_MAX_COLS,
+    PG_DATA_ROW_MAX_FRAME_LEN,
     PgDataRowError,
     PgDataRowColumn,
     PgDataRowIter,

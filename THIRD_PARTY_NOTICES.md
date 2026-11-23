@@ -84,6 +84,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **unicode-segmentation** (`unicode-rs`) | <https://github.com/unicode-rs/unicode-segmentation> | MIT OR Apache-2.0 | `lib/text/grapheme.cp` | Copyright (c) 2012-2015 The Rust Project Developers |
 | **redis-rs** | <https://github.com/redis-rs/redis-rs> | BSD-3-Clause | `lib/redis/resp.cp` | Copyright (c) 2013-2024 Armin Ronacher / redis-rs Contributors |
 | **tungstenite-rs** (`snapview`) | <https://github.com/snapview/tungstenite-rs> | MIT OR Apache-2.0 | `lib/net/wsTypes.cp`, `lib/net/wsCodec.cp`, `lib/net/wsAssembler.cp` | Copyright (c) 2017 Alexey Galakhov / Daniel Abramov |
+| **rust-postgres** (`postgres-protocol`) | <https://github.com/sfackler/rust-postgres> | MIT OR Apache-2.0 | `lib/sql/pgReader.cp`, `lib/sql/pgWriter.cp`, `lib/sql/pgDataRow.cp` | Copyright (c) 2014 Steven Fackler |
+| **avro-rs** (`apache`) | <https://github.com/apache/avro-rs> | Apache-2.0 | `lib/binfmt/avro.cp` | Copyright (c) 2018-2024 The Apache Software Foundation |
 
 ---
 

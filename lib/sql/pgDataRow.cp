@@ -1,9 +1,13 @@
 // Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/DataRow.cp | Synced: 2026-11-22T11:09:58Z
+// Reference-hardened against sfackler/rust-postgres (MIT/Apache-2.0)
 // Ported from Bun: /data/dev/bun/src/sql/postgres/protocol/DataRow.cp & /data/dev/bun/docs/runtime/sql.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation PostgreSQL Backend DataRow ('D') wire encoder & zero-copy streaming decoder:
 // 0xffffffff (-1) SQL NULL sentinel handling, empty 0-byte value distinction, strict column-length
-// and zero-trailing-byte validation, streaming column iterator (`PgDataRowIter`), and fixed-capacity view.
+// (rejecting all negative lengths < -1), frame-size cap, zero-trailing-byte validation,
+// 16-lane SIMD column copy, streaming column iterator (`PgDataRowIter`), and fixed-capacity view.
+
+type PgDrVec16 = @Vector(16, u8);
 
 /// PostgreSQL 后端数据行消息标签 (`'D'` = 0x44)
 pub const PG_DATA_ROW_TAG: u8 = 'D';
@@ -14,16 +18,33 @@ pub const PG_DATA_ROW_NULL_LEN: u32 = 0xffff_ffff;
 /// `PgDataRowView` 固定容量视图支持的最大列数（超出请使用无上限的 `PgDataRowIter`）
 pub const PG_DATA_ROW_MAX_COLS: usize = 64;
 
+/// Default maximum DataRow message length (64 MiB, inclusive of 4-byte length field).
+pub const PG_DATA_ROW_MAX_FRAME_LEN: usize = 64 * 1024 * 1024;
+
 /// PostgreSQL DataRow 编解码错误集
 pub err PgDataRowError {
     BufferTooSmall,
     TruncatedFrame,
     InvalidTag,
     InvalidMessageLength,
+    FrameTooLarge,
     InvalidColumnLength,
     TooManyColumns,
     ColumnIndexOutOfBounds,
     TrailingBytes,
+}
+
+fn pgDrSimdCopy(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    const n = src.len;
+    while (i + 16 <= n) {
+        const chunk: PgDrVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
 }
 
 /// 单个 PostgreSQL 数据行列值（零拷贝借用底层线协议缓冲区，精确区分 `NULL` 与空串 `""`）
@@ -81,7 +102,7 @@ pub struct PgDataRowIter {
             return PgDataRowError.InvalidColumnLength;
         }
         const col_len = raw_len as usize;
-        if (_.pos + col_len > _.payload.len) {
+        if (col_len > _.payload.len - _.pos) {
             return PgDataRowError.TruncatedFrame;
         }
         const slice = _.payload[_.pos .. _.pos + col_len];
@@ -198,11 +219,7 @@ pub fn encodePgDataRowPayload(columns: []const PgDataRowColumn, out: []u8): usiz
             }
             writeBeU32(out, pos, col.bytes.len as u32);
             pos += 4;
-            let j: usize = 0;
-            while (j < col.bytes.len) {
-                out[pos + j] = col.bytes[j];
-                j += 1;
-            }
+            pgDrSimdCopy(out[pos .. pos + col.bytes.len], col.bytes);
             pos += col.bytes.len;
         }
         i += 1;
@@ -233,14 +250,18 @@ pub fn decodePgDataRowIter(frame: []const u8): PgDataRowIter! {
     if (frame[0] != PG_DATA_ROW_TAG) {
         return PgDataRowError.InvalidTag;
     }
-    const msg_len = readBeU32(frame, 1) as usize;
-    if (msg_len < 6) {
+    const raw_msg_len = readBeU32(frame, 1);
+    if ((raw_msg_len & 0x8000_0000) != 0 || raw_msg_len < 6) {
         return PgDataRowError.InvalidMessageLength;
     }
-    const total_len = 1 + msg_len;
-    if (total_len > frame.len) {
+    const msg_len = raw_msg_len as usize;
+    if (msg_len > PG_DATA_ROW_MAX_FRAME_LEN) {
+        return PgDataRowError.FrameTooLarge;
+    }
+    if (msg_len > frame.len - 1) {
         return PgDataRowError.TruncatedFrame;
     }
+    const total_len = 1 + msg_len;
     if (total_len < frame.len) {
         return PgDataRowError.TrailingBytes;
     }
