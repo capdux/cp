@@ -22,7 +22,7 @@
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
-| `lib/web/picohttp.cp` | 零分配 HTTP/1.1 请求/响应与 Chunked 解析 | `parseRequest`, `parseResponse`, `parseHeaders`, `findHeader`, `parseContentLength`, `ChunkedDecoder`, `ParsedRequest`, `ParsedResponse` |
+| `lib/web/picohttp.cp` | 零分配 HTTP/1.1 请求/响应与 Chunked 解析（对标 `seanmonstar/httparse` MIT/Apache-2.0 加固，含 16-lane SIMD 扫描与 RFC 9112 帧界定歧义防护） | `HTTP_MAX_HEADERS`, `FramingInfo`, `parseRequest`, `parseResponse`, `parseHeaders`, `findHeader`, `parseContentLength`, `validateHttp1Framing`, `parseChunkSizeStrict`, `simdScanTargetBytes`, `simdScanHeaderNameBytes`, `simdScanHeaderValueBytes`, `simdFindCrlf`, `ChunkedDecoder`, `ParsedRequest`, `ParsedResponse` |
 | `lib/web/http2.cp` | RFC 9113 HTTP/2 二进制帧、流状态与流控 | `encodeFrame`, `FrameStreamDecoder`, `FlowWindow`, `Http2Stream`, `encodeSettings`, `decodeSettings`, `encodePing`, `encodeGoaway`, `encodeWindowUpdate` |
 | `lib/web/http3.cp` | RFC 9114 HTTP/3 帧与 QPACK 静态/动态头编解码 | `encodeH3Frame`, `decodeFrames`, `decodeFramesWithMaxSize`, `freeFrames`, `encodeQpackHeaders`, `decodeQpackHeaders`, `H3_DEFAULT_MAX_FRAME_SIZE`, `H3Frame` |
 | `lib/web/sse.cp` | Server-Sent Events (SSE) 流式解析与编码 | `SseParser`, `SseEncoder`, `SseEvent`, `SseError` |

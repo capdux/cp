@@ -136,8 +136,16 @@ export {
 export {
     Ipv4Addr as RfcIpv4Addr,
     Ipv6Addr as RfcIpv6Addr,
+    Ipv4Net,
+    Ipv6Net,
     IpVersion,
     IpAddr as RfcIpAddr,
+    parsePrefixLen,
+    ipv6MaskBytes,
+    simdIpv6Eql,
+    simdIpv6EqlScalar,
+    simdIpv6InSubnet,
+    simdIpv6InSubnetScalar,
 } from "./ipaddr";
 
 export {

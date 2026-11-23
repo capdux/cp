@@ -64,7 +64,9 @@ export {
 export {
     MAX_HEADER_LINE_LEN,
     MAX_HEADERS_BYTES,
+    HTTP_MAX_HEADERS,
     PicoError,
+    FramingInfo,
     HttpHeader,
     ParsedRequest,
     ParsedResponse,
@@ -77,6 +79,12 @@ export {
     parseHeaders,
     findHeader,
     parseContentLength,
+    validateHttp1Framing,
+    parseChunkSizeStrict,
+    simdScanTargetBytes,
+    simdScanHeaderNameBytes,
+    simdScanHeaderValueBytes,
+    simdFindCrlf,
 } from "./picohttp.cp";
 
 export {

@@ -75,6 +75,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **pulldown-cmark** | <https://github.com/pulldown-cmark/pulldown-cmark> | MIT | `lib/markdown/line.cp`, `lib/markdown/links.cp`, `lib/markdown/renderer.cp`, `lib/markdown/index.cp` | Copyright (c) 2015 Google Inc. / pulldown-cmark Contributors |
 | **rust-base64** (`base64`) | <https://github.com/marshallpierce/rust-base64> | MIT OR Apache-2.0 | `lib/base64/codec.cp`, `lib/base64/index.cp` | Copyright (c) 2015 Alice Maz / Marshall Pierce |
 | **RustCrypto/AEADs** (`chacha20poly1305`, `aes-gcm`) | <https://github.com/RustCrypto/AEADs> | MIT OR Apache-2.0 | `lib/crypto/cipher.cp` | Copyright (c) 2019-2024 RustCrypto Developers |
+| **ipnet** (`krisprice`) | <https://github.com/krisprice/ipnet> | MIT OR Apache-2.0 | `lib/net/ipaddr.cp` | Copyright (c) 2017 Kris Price |
+| **httparse** (`seanmonstar`) | <https://github.com/seanmonstar/httparse> | MIT OR Apache-2.0 | `lib/web/picohttp.cp` | Copyright (c) 2015 Sean McArthur |
 
 ---
 

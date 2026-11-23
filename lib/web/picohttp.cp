@@ -1,11 +1,17 @@
 // Source: cp/lib/picohttp/picohttp.cp (Pure CP Zero-Allocation HTTP/1.1 & Chunked Parser)
+// Reference-hardened against seanmonstar/httparse (MIT/Apache-2.0)
 // Pure CP zero-allocation HTTP/1.1 request, response, header, and chunked
-// transfer-encoding parser with strict RFC 9110 / RFC 9112 validation.
+// transfer-encoding parser with strict RFC 9110 / RFC 9112 validation,
+// framing ambiguity guards, and 16-lane @Vector(16, u8) / cap:simd hot-path acceleration.
 
 const std = @import("std");
+import { Simd } from "cap:simd";
+
+type HttpVec16 = @Vector(16, u8);
 
 pub const MAX_HEADER_LINE_LEN: usize = 16384;
 pub const MAX_HEADERS_BYTES: usize = 65536;
+pub const HTTP_MAX_HEADERS: usize = 128;
 
 /// Error set returned by all picohttp parsing and chunked decoding operations.
 pub err PicoError {
@@ -19,6 +25,13 @@ pub err PicoError {
     HeaderTooLarge,
     InvalidChunkSize,
     ChunkOverflow,
+    ConflictingFraming,
+}
+
+/// Validated RFC 9112 §6.3 message framing result.
+pub struct FramingInfo {
+    pub is_chunked: bool = false,
+    pub content_length: usize? = null,
 }
 
 /// Zero-copy HTTP header slice pair pointing into the caller's input buffer.
@@ -98,6 +111,101 @@ fn isTargetChar(c: u8): bool {
 /// RFC 9110 §5.5 field-value character check (HTAB, SP, VCHAR, obs-text; no CTL/DEL).
 fn isHeaderValueChar(c: u8): bool {
     return c == 0x09 || (c >= 0x20 && c != 0x7F);
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan returning the length of the leading valid
+/// RFC 9112 request-target prefix (`0x21..=0x7E`).
+pub fn simdScanTargetBytes(s: []const u8): usize {
+    let i: usize = 0;
+    const n = s.len;
+    const v_lo: HttpVec16 = @splat(0x21);
+    const v_hi: HttpVec16 = @splat(0x7E);
+
+    while (i + 16 <= n) {
+        const chunk: HttpVec16 = s[i..][0..16].*;
+        const lt_lo: u16 = @bitCast(chunk < v_lo);
+        const gt_hi: u16 = @bitCast(chunk > v_hi);
+        const bad: u16 = lt_lo | gt_hi;
+        if (bad != 0) {
+            return i + (@ctz(bad) as usize);
+        }
+        i += 16;
+    }
+
+    while (i < n && isTargetChar(s[i])) : (i += 1) {}
+    return i;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan returning the length of the leading valid
+/// RFC 9110 header-value prefix (HTAB or `>= 0x20` and `!= 0x7F`).
+pub fn simdScanHeaderValueBytes(s: []const u8): usize {
+    let i: usize = 0;
+    const n = s.len;
+    const v_sp: HttpVec16 = @splat(0x20);
+    const v_tab: HttpVec16 = @splat(0x09);
+    const v_del: HttpVec16 = @splat(0x7F);
+
+    while (i + 16 <= n) {
+        const chunk: HttpVec16 = s[i..][0..16].*;
+        const is_ctrl: u16 = @bitCast(chunk < v_sp);
+        const is_tab: u16 = @bitCast(chunk == v_tab);
+        const is_del: u16 = @bitCast(chunk == v_del);
+        const bad: u16 = (is_ctrl & (~is_tab)) | is_del;
+        if (bad != 0) {
+            return i + (@ctz(bad) as usize);
+        }
+        i += 16;
+    }
+
+    while (i < n && isHeaderValueChar(s[i])) : (i += 1) {}
+    return i;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan returning the length of the leading valid
+/// RFC 9110 token prefix (fast-paths alphanumeric + `-` + `_` in 16-byte chunks).
+pub fn simdScanHeaderNameBytes(s: []const u8): usize {
+    let i: usize = 0;
+    const n = s.len;
+    const v_0: HttpVec16 = @splat('0');
+    const v_10: HttpVec16 = @splat(10);
+    const v_a: HttpVec16 = @splat('a');
+    const v_26: HttpVec16 = @splat(26);
+    const v_case: HttpVec16 = @splat(0x20);
+    const v_dash: HttpVec16 = @splat('-');
+    const v_under: HttpVec16 = @splat('_');
+
+    while (i + 16 <= n) {
+        const chunk: HttpVec16 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        const fast_ok: u16 = m_dig | m_alp | m_dash | m_under;
+        const non_fast: u16 = ~fast_ok;
+        if (non_fast != 0) {
+            i += @ctz(non_fast) as usize;
+            break;
+        }
+        i += 16;
+    }
+
+    while (i < n && isTokenChar(s[i])) : (i += 1) {}
+    return i;
+}
+
+/// SIMD-accelerated CRLF (`\r\n`) finder using `cap:simd` `Simd.indexOfByte('\r')`.
+pub fn simdFindCrlf(s: []const u8): usize? {
+    let i: usize = 0;
+    while (i + 1 < s.len) {
+        const hit_opt = Simd.indexOfByte(s[i..], '\r');
+        if (hit_opt == null) return null;
+        const cr_pos = i + hit_opt.?;
+        if (cr_pos + 1 < s.len && s[cr_pos + 1] == '\n') {
+            return cr_pos;
+        }
+        i = cr_pos + 1;
+    }
+    return null;
 }
 
 fn trimOws(s: []const u8): []const u8 {
@@ -251,21 +359,16 @@ fn parseHeadersAt(buf: []const u8, start_pos: usize, headers_out: []HttpHeader):
 
         // Standard header: name ":" OWS value OWS CRLF
         const name_start = pos;
-        while (true) {
-            if (pos >= buf.len) {
-                return err.Incomplete;
-            }
-            if (pos - name_start > MAX_HEADER_LINE_LEN) {
-                return err.HeaderTooLarge;
-            }
-            const c = buf[pos];
-            if (c == ':') {
-                break;
-            }
-            if (!isTokenChar(c)) {
-                return err.InvalidHeaderName;
-            }
-            pos += 1;
+        const name_span = simdScanHeaderNameBytes(buf[pos..]);
+        pos += name_span;
+        if (pos - name_start > MAX_HEADER_LINE_LEN) {
+            return err.HeaderTooLarge;
+        }
+        if (pos >= buf.len) {
+            return err.Incomplete;
+        }
+        if (buf[pos] != ':') {
+            return err.InvalidHeaderName;
         }
         const name_end = pos;
         if (name_end == name_start) {
@@ -277,38 +380,30 @@ fn parseHeadersAt(buf: []const u8, start_pos: usize, headers_out: []HttpHeader):
             pos += 1;
         }
         const val_start = pos;
+        const val_span = simdScanHeaderValueBytes(buf[pos..]);
+        pos += val_span;
+        if (pos - name_start > MAX_HEADER_LINE_LEN) {
+            return err.HeaderTooLarge;
+        }
+        if (pos >= buf.len) {
+            return err.Incomplete;
+        }
         let val_end: usize = pos;
-        while (true) {
-            if (pos >= buf.len) {
+        if (buf[pos] == '\r') {
+            if (pos + 1 >= buf.len) {
                 return err.Incomplete;
             }
-            if (pos - name_start > MAX_HEADER_LINE_LEN) {
-                return err.HeaderTooLarge;
-            }
-            const c = buf[pos];
-            if (c == '\r') {
-                if (pos + 1 >= buf.len) {
-                    return err.Incomplete;
-                }
-                if (buf[pos + 1] != '\n') {
-                    return err.InvalidHeaderValue;
-                }
-                val_end = pos;
-                pos += 2;
-                break;
-            }
-            if (c == '\n') {
-                val_end = pos;
-                pos += 1;
-                break;
-            }
-            if (!isHeaderValueChar(c)) {
+            if (buf[pos + 1] != '\n') {
                 return err.InvalidHeaderValue;
             }
+            pos += 2;
+        } else if (buf[pos] == '\n') {
             pos += 1;
+        } else {
+            return err.InvalidHeaderValue;
         }
 
-        if (count >= headers_out.len) {
+        if (count >= headers_out.len || count >= HTTP_MAX_HEADERS) {
             return err.TooManyHeaders;
         }
         headers_out[count] = HttpHeader{
@@ -348,20 +443,14 @@ pub fn parseRequest(buf: []const u8, headers_out: []HttpHeader): ParsedRequest !
     const method = buf[0..pos];
     pos += 1; // skip ' '
 
-    // 2. Request-target
+    // 2. Request-target (16-lane SIMD fast scan)
     const path_start = pos;
-    while (true) {
-        if (pos >= buf.len) {
-            return err.Incomplete;
-        }
-        const c = buf[pos];
-        if (c == ' ') {
-            break;
-        }
-        if (!isTargetChar(c)) {
-            return err.InvalidTarget;
-        }
-        pos += 1;
+    pos += simdScanTargetBytes(buf[pos..]);
+    if (pos >= buf.len) {
+        return err.Incomplete;
+    }
+    if (buf[pos] != ' ') {
+        return err.InvalidTarget;
     }
     if (pos == path_start) {
         return err.InvalidTarget;
@@ -544,6 +633,92 @@ pub fn parseContentLength(headers: []const HttpHeader): (usize?) ! PicoError {
         }
     }
     return found;
+}
+
+/// Validates RFC 9112 §6.3 HTTP/1.1 message framing headers to prevent framing ambiguity:
+/// - Rejects simultaneous `Transfer-Encoding` and `Content-Length` headers (`ConflictingFraming`)
+/// - Rejects conflicting or malformed `Content-Length` headers (`InvalidHeaderValue`)
+/// - Validates `Transfer-Encoding` contains `chunked` as the final coding without duplicate `chunked`
+pub fn validateHttp1Framing(headers: []const HttpHeader): FramingInfo ! PicoError {
+    const cl: usize? = parseContentLength(headers) catch |e| {
+        return e;
+    };
+    let has_te = false;
+    let chunked_count: usize = 0;
+    let last_was_chunked = false;
+
+    let i: usize = 0;
+    while (i < headers.len) : (i += 1) {
+        if (headers[i].name.len == 0 || !eqlIgnoreCaseAscii(headers[i].name, "transfer-encoding")) {
+            continue;
+        }
+        has_te = true;
+        const val = trimOws(headers[i].value);
+        if (val.len == 0) {
+            return err.ConflictingFraming;
+        }
+        // Parse comma-separated transfer codings
+        let p: usize = 0;
+        while (p < val.len) {
+            let tok_start = p;
+            while (p < val.len && val[p] != ',') : (p += 1) {}
+            const tok = trimOws(val[tok_start..p]);
+            if (tok.len == 0) {
+                return err.ConflictingFraming;
+            }
+            if (eqlIgnoreCaseAscii(tok, "chunked")) {
+                chunked_count += 1;
+                last_was_chunked = true;
+            } else {
+                last_was_chunked = false;
+            }
+            if (p < val.len && val[p] == ',') p += 1;
+        }
+    }
+
+    if (has_te && cl != null) {
+        return err.ConflictingFraming;
+    }
+    if (has_te) {
+        if (chunked_count > 1 || !last_was_chunked) {
+            return err.ConflictingFraming;
+        }
+        return FramingInfo{ is_chunked: true, content_length: null };
+    }
+    return FramingInfo{ is_chunked: false, content_length: cl };
+}
+
+/// Strict RFC 9112 §7.1 single chunk-size header line parser (must end with `\r\n`).
+/// Rejects leading whitespace, negative signs, empty hex, invalid extensions, missing `\r\n`, and overflow.
+pub fn parseChunkSizeStrict(line: []const u8): usize ! PicoError {
+    const crlf_pos = simdFindCrlf(line) ?? return err.Incomplete;
+    if (crlf_pos == 0) return err.InvalidChunkSize;
+
+    const max_usize = std.math.maxInt(usize);
+    let i: usize = 0;
+    let size: usize = 0;
+    let digits: usize = 0;
+    while (i < crlf_pos) : (i += 1) {
+        const c = line[i];
+        if (c == ';') {
+            break;
+        }
+        const d_opt = ChunkedDecoder.hexDigit(c);
+        if (d := d_opt) {
+            if (size > (max_usize - d) / 16) return err.ChunkOverflow;
+            size = size * 16 + d;
+            digits += 1;
+        } else {
+            return err.InvalidChunkSize;
+        }
+    }
+    if (digits == 0) return err.InvalidChunkSize;
+
+    // Validate optional ;chunk-ext characters before CRLF
+    while (i < crlf_pos) : (i += 1) {
+        if (!isHeaderValueChar(line[i])) return err.InvalidChunkSize;
+    }
+    return size;
 }
 
 /// Streaming zero-allocation RFC 9112 §7.1 Chunked Transfer-Encoding decoder.

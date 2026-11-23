@@ -1166,3 +1166,17 @@ pub fn demoWebRtcDataChannel()! {
 | `cap:kafka_wire` | `lib/net/kafka{Wire,Protocol,RecordBatch}.cp` | `KafkaError`, `KafkaReader`, `KafkaWriter`, `ApiKey`, `ApiVersionsReq/Resp`, `MetadataReq/Resp`, `KafkaStreamFramer`, `RecordBatch`, `encodeRecordBatch`, `decodeRecordBatch` |
 | `cap:ssh_wire` | `lib/net/ssh{Wire,Keys,OpensshKey,Sig}.cp` | `SshError`, `SshReader`, `SshWriter`, `SshKeyType`, `SshPublicKey`, `OpenSshPrivateKey`, `parseOpenSshPrivateKey`, `signSshSigEd25519`, `verifySshSigEd25519` |
 | `cap:retry_backoff` | `lib/net/retryBackoff.cp` | `JitterMode`, `BackoffConfig`, `BackoffState`, `RetryAfter`, `parseRetryAfter`, `isRetryableHttpStatus` |
+
+---
+
+## Wave 33 工业级安全加固与 16-Lane SIMD 加速（`ipaddr.cp` 对标 `krisprice/ipnet` MIT/Apache-2.0）
+
+`lib/net/ipaddr.cp` 已对照 `krisprice/ipnet`（MIT/Apache-2.0）与 RFC 4291 / 5952 / 6890 完成 SSRF 防护归类、完整 CIDR 子网代数与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容。
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `Ipv4Addr` / `Ipv6Addr` / `IpAddr` RFC 6890 全归类 | `lib/net/ipaddr.cp` | 补齐 `isThisNetwork`、`isPrivate`（RFC 1918 + RFC 4193 `fc00::/7`）、`isLinkLocal`（含 `169.254.169.254` + `fe80::/10`）、`isCgnat`（`100.64.0.0/10`）、`isDocumentation`、`isBenchmarking`、`isGlobalUnicast`（自动穿透 `::ffff:127.0.0.1` / `::ffff:169.254.169.254` 阻断 IPv4-mapped IPv6 SSRF 绕过） |
+| `Ipv4Net` / `Ipv6Net` / `parsePrefixLen` | `lib/net/ipaddr.cp` | 完整 CIDR 子网代数：`parse`、`init`、`netmask`、`hostmask`、`network`、`broadcast`、`contains`、`containsNet`、`overlaps`、`supernet`、`trunc`、`format`；严格 `0..=32` / `0..=128` 拒绝溢出与前导零，`/0` 与 `/128` 零移位 UB |
+| `simdIpv6InSubnet` / `simdIpv6Eql` / `ipv6MaskBytes` | `lib/net/ipaddr.cp` | 纯 CP 16-lane `@Vector(16, u8)` `@reduce(.And, (ip_v & mask_v) == (net_v & mask_v))` 单次并行 IPv6 子网匹配与地址比对（配标量参考函数 0 差异对拍） |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testNetIpaddrRustRefSuite.cp` 覆盖八进制前导零/双 `::`/Zone ID 拒绝、RFC 6890 与 IPv4-mapped SSRF 拦截、IPv4/IPv6 CIDR `/0`..`/128` 边界、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 IP/CIDR 与随机 IPv6 子网 Fuzz（0 panic / 0 OOB / 0 死循环）。
