@@ -1,6 +1,31 @@
+// Reference-hardened against tychedelia/kafka-protocol-rs (MIT/Apache-2.0)
 // Source: cp/lib/kafka_wire/record_batch.cp (Kafka RecordBatch v2 magic=2 & CRC32C Castagnoli)
 const std = @import("std");
-import { KafkaError, KafkaReader, KafkaWriter } from "./kafkaWire.cp";
+import {
+    KAFKA_MAX_FRAME_LEN,
+    KAFKA_MAX_ARRAY_LEN,
+    KafkaError,
+    KafkaReader,
+    KafkaWriter,
+} from "./kafkaWire.cp";
+
+/// Pure-CP Castagnoli CRC32C (polynomial 0x82F63B78, RFC 3720 / Kafka v2 RecordBatch).
+pub fn kafkaCrc32c(data: []const u8): u32 {
+    let crc: u32 = 0xFFFFFFFF;
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        crc ^= @as(u32, data[i]);
+        let bit: usize = 0;
+        while (bit < 8) : (bit += 1) {
+            if ((crc & 1) != 0) {
+                crc = (crc >> 1) ^ 0x82F63B78;
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    return ~crc;
+}
 
 pub struct RecordHeader {
     key: []const u8,
@@ -62,6 +87,9 @@ pub fn encodeRecordBatch(alloc: std.mem.Allocator, batch: *const RecordBatch): K
     }
 
     const records_bytes = recs_writer.items();
+    if (49 + records_bytes.len > KAFKA_MAX_FRAME_LEN) {
+        return KafkaError.FrameTooLarge;
+    }
     const batch_length: i32 = @as(i32, @intCast(49 + records_bytes.len));
 
     let w = KafkaWriter.init(alloc);
@@ -83,7 +111,7 @@ pub fn encodeRecordBatch(alloc: std.mem.Allocator, batch: *const RecordBatch): K
     w.writeBytes(records_bytes)?;
 
     const out = w.toOwnedSlice()?;
-    const crc = std.hash.crc.Crc32Iscsi.hash(out[21..]);
+    const crc = kafkaCrc32c(out[21..]);
     std.mem.writeInt(u32, out[17..21], crc, .big);
     return out;
 }
@@ -111,7 +139,7 @@ pub fn decodeRecordBatch(alloc: std.mem.Allocator, data: []const u8): KafkaError
     }
 
     const expected_crc = r.readU32()?;
-    const actual_crc = std.hash.crc.Crc32Iscsi.hash(data[21..total_len]);
+    const actual_crc = kafkaCrc32c(data[21..total_len]);
     if (actual_crc != expected_crc) {
         return KafkaError.CrcMismatch;
     }
@@ -128,6 +156,9 @@ pub fn decodeRecordBatch(alloc: std.mem.Allocator, data: []const u8): KafkaError
         return KafkaError.InvalidLength;
     }
     const records_count: usize = @as(usize, @intCast(records_count_raw));
+    if (records_count > KAFKA_MAX_ARRAY_LEN || records_count > (total_len - 61)) {
+        return KafkaError.InvalidLength;
+    }
 
     let recs_reader = KafkaReader.init(data[61..total_len]);
     let records = std.ArrayList(Record).empty;
@@ -150,13 +181,16 @@ pub fn decodeRecordBatch(alloc: std.mem.Allocator, data: []const u8): KafkaError
         const r_attr = rr.readI8()?;
         const ts_delta = rr.readVarlong()?;
         const off_delta = rr.readVarint()?;
-        const key = rr.readVarintBytes()?;
-        const value = rr.readVarintBytes()?;
+        const key = rr.readVarintBytes() catch (e) { return e; };
+        const value = rr.readVarintBytes() catch (e) { return e; };
         const hdr_count_raw = rr.readVarint()?;
         if (hdr_count_raw < 0) {
             return KafkaError.InvalidLength;
         }
         const hdr_count: usize = @as(usize, @intCast(hdr_count_raw));
+        if (hdr_count > KAFKA_MAX_ARRAY_LEN || hdr_count > rr.remaining()) {
+            return KafkaError.InvalidLength;
+        }
 
         let hdrs = std.ArrayList(RecordHeader).empty;
         errdefer hdrs.deinit(alloc);
@@ -168,7 +202,7 @@ pub fn decodeRecordBatch(alloc: std.mem.Allocator, data: []const u8): KafkaError
                 return KafkaError.InvalidLength;
             }
             const hk = rr.readBytes(@as(usize, @intCast(hk_len_raw)))?;
-            const hv = rr.readVarintBytes()?;
+            const hv = rr.readVarintBytes() catch (e) { return e; };
             hdrs.append(alloc, RecordHeader{
                 .key = hk,
                 .value = hv,

@@ -1,7 +1,14 @@
-// Source: cp/lib/kafka_wire/wire.cp (Kafka Wire Protocol binary primitives)
+// Reference-hardened against tychedelia/kafka-protocol-rs (MIT/Apache-2.0)
+// Source: cp/lib/kafka_wire/wire.cp (Kafka Wire Protocol binary primitives & 16-lane SIMD byte ops)
 const std = @import("std");
 
-pub const KafkaError = error{
+type KafkaVec16u8 = @Vector(16, u8);
+
+pub const KAFKA_MAX_FRAME_LEN: usize = 64 * 1024 * 1024;
+pub const KAFKA_MAX_ARRAY_LEN: usize = 1_000_000;
+pub const KAFKA_MAX_TAGGED_FIELDS: u32 = 4096;
+
+pub err KafkaError {
     UnexpectedEof,
     InvalidVarint,
     InvalidLength,
@@ -10,7 +17,68 @@ pub const KafkaError = error{
     FrameTooLarge,
     UnsupportedVersion,
     OutOfMemory,
-};
+}
+
+fn kafkaLoadVec16(data: []const u8, off: usize): KafkaVec16u8 {
+    const v: KafkaVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte copy for Kafka wire payloads and RecordBatch records.
+pub fn simdKafkaCopyBytes(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const v = kafkaLoadVec16(src, i);
+        const arr: [16]u8 = v;
+        @memcpy(dst[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference for `simdKafkaCopyBytes` (differential verification).
+pub fn simdKafkaCopyBytesScalar(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD equality check for Kafka headers/records/batch bytes.
+pub fn simdKafkaBytesEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const n = a.len;
+    while (i + 16 <= n) {
+        const va = kafkaLoadVec16(a, i);
+        const vb = kafkaLoadVec16(b, i);
+        if (!@reduce(.And, va == vb)) return false;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdKafkaBytesEql` (differential verification).
+pub fn simdKafkaBytesEqlScalar(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
 
 pub struct KafkaReader {
     buf: []const u8,
@@ -172,7 +240,7 @@ pub struct KafkaReader {
         return _.readBytes(@as(usize, n - 1))?;
     }
 
-    pub fn readCompactArrayLen(*_): KafkaError!(usize)? {
+    pub fn readCompactArrayLen(*_): (usize?) ! KafkaError {
         const n = _.readUVarint()?;
         if (n == 0) {
             return null;
@@ -191,8 +259,22 @@ pub struct KafkaReader {
         return _.readBytes(@as(usize, @intCast(len)))?;
     }
 
+    pub fn readNullableBytes(*_): KafkaError!([]const u8)? {
+        const len = _.readI32()?;
+        if (len == -1) {
+            return null;
+        }
+        if (len < -1) {
+            return KafkaError.InvalidLength;
+        }
+        return _.readBytes(@as(usize, @intCast(len)))?;
+    }
+
     pub fn skipTaggedFields(*_): KafkaError!void {
         const num_tags = _.readUVarint()?;
+        if (num_tags > KAFKA_MAX_TAGGED_FIELDS) {
+            return KafkaError.InvalidLength;
+        }
         let i: u32 = 0;
         while (i < num_tags) {
             * = _.readUVarint()?;
@@ -297,13 +379,29 @@ pub struct KafkaWriter {
     }
 
     pub fn writeVarint(*_, val: i32): KafkaError!void {
-        const u: u32 = @as(u32, @bitCast((val << 1) ^ (val >> 31)));
+        const raw: u32 = @bitCast(val);
+        const mask: u32 = if (val < 0) (~@as(u32, 0)) else 0;
+        const u: u32 = (raw << 1) ^ mask;
         _.writeUVarint(u)?;
     }
 
     pub fn writeVarlong(*_, val: i64): KafkaError!void {
-        const u: u64 = @as(u64, @bitCast((val << 1) ^ (val >> 63)));
+        const raw: u64 = @bitCast(val);
+        const mask: u64 = if (val < 0) (~@as(u64, 0)) else 0;
+        const u: u64 = (raw << 1) ^ mask;
         _.writeUVarint64(u)?;
+    }
+
+    pub fn writeNullableBytes(*_, b: ([]const u8)?): KafkaError!void {
+        if (bytes := b) {
+            if (bytes.len > KAFKA_MAX_FRAME_LEN) {
+                return KafkaError.FrameTooLarge;
+            }
+            _.writeI32(@as(i32, @intCast(bytes.len)))?;
+            _.writeBytes(bytes)?;
+        } else {
+            _.writeI32(-1)?;
+        }
     }
 
     pub fn writeNullableString(*_, s: ([]const u8)?): KafkaError!void {

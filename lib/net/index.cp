@@ -2247,7 +2247,14 @@ export {
 } from "./grpcFrame.cp";
 
 export {
+    KAFKA_MAX_FRAME_LEN,
+    KAFKA_MAX_ARRAY_LEN,
+    KAFKA_MAX_TAGGED_FIELDS,
     KafkaError,
+    simdKafkaCopyBytes,
+    simdKafkaCopyBytesScalar,
+    simdKafkaBytesEql,
+    simdKafkaBytesEqlScalar,
     KafkaReader,
     KafkaWriter,
 } from "./kafkaWire.cp";
@@ -2268,6 +2275,7 @@ export {
 } from "./kafkaProtocol.cp";
 
 export {
+    kafkaCrc32c,
     RecordHeader,
     Record,
     RecordBatch,

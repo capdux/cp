@@ -89,6 +89,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rust_mysql_common** (`blackbeam`) | <https://github.com/blackbeam/rust_mysql_common> | MIT OR Apache-2.0 | `lib/sql/mysqlLenenc.cp`, `lib/sql/mysqlReader.cp`, `lib/sql/mysqlWriter.cp` | Copyright (c) 2017 Anatoly Ikorsky |
 | **tonic** (`hyperium`) | <https://github.com/hyperium/tonic> | MIT | `lib/net/grpcFrame.cp`, `lib/net/grpcHeaders.cp`, `lib/net/grpcStatus.cp` | Copyright (c) 2019 Lucio Franco / Hyperium |
 | **wasm-tools** (`wasmparser`) | <https://github.com/bytecodealliance/wasm-tools> | Apache-2.0 | `lib/binfmt/wasmTypes.cp`, `lib/binfmt/wasmLeb128.cp`, `lib/binfmt/wasmCodec.cp` | Copyright (c) 2018-2024 Bytecode Alliance |
+| **kafka-protocol-rs** (`tychedelia`) | <https://github.com/tychedelia/kafka-protocol-rs> | MIT OR Apache-2.0 | `lib/net/kafkaWire.cp`, `lib/net/kafkaProtocol.cp`, `lib/net/kafkaRecordBatch.cp` | Copyright (c) 2021-2024 Tychedelia / Kafka Protocol RS Contributors |
 
 ---
 

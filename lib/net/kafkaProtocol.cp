@@ -1,6 +1,14 @@
+// Reference-hardened against tychedelia/kafka-protocol-rs (MIT/Apache-2.0)
 // Source: cp/lib/kafka_wire/protocol.cp (Kafka Wire Protocol frames, headers, ApiVersions, Metadata & StreamFramer)
 const std = @import("std");
-import { KafkaError, KafkaReader, KafkaWriter } from "./kafkaWire.cp";
+import {
+    KAFKA_MAX_FRAME_LEN,
+    KAFKA_MAX_ARRAY_LEN,
+    KafkaError,
+    KafkaReader,
+    KafkaWriter,
+    simdKafkaCopyBytes,
+} from "./kafkaWire.cp";
 
 pub enum ApiKey: i16 {
     Produce = 0,
@@ -44,7 +52,7 @@ pub struct RequestHeader {
         const api_key = r.readI16()?;
         const api_version = r.readI16()?;
         const correlation_id = r.readI32()?;
-        const client_id = r.readNullableString()?;
+        const client_id = r.readNullableString() catch (e) { return e; };
         if (header_version >= 2) {
             r.skipTaggedFields()?;
         }
@@ -101,8 +109,8 @@ pub struct ApiVersionsReq {
 
     pub static fn decode(r: *KafkaReader, api_version: i16): KafkaError!ApiVersionsReq {
         if (api_version >= 3) {
-            const name = r.readCompactString()?;
-            const ver = r.readCompactString()?;
+            const name = r.readCompactString() catch (e) { return e; };
+            const ver = r.readCompactString() catch (e) { return e; };
             r.skipTaggedFields()?;
             return ApiVersionsReq{
                 .client_software_name = name,
@@ -154,13 +162,17 @@ pub struct ApiVersionsResp {
         const error_code = r.readI16()?;
         let count: usize = 0;
         if (api_version >= 3) {
-            count = (r.readCompactArrayLen()?) orelse 0;
+            const c_opt = r.readCompactArrayLen() catch (e) { return e; };
+            count = c_opt orelse @as(usize, 0);
         } else {
             const raw_len = r.readI32()?;
             if (raw_len < 0) {
                 return KafkaError.InvalidLength;
             }
             count = @as(usize, @intCast(raw_len));
+        }
+        if (count > KAFKA_MAX_ARRAY_LEN) {
+            return KafkaError.InvalidLength;
         }
 
         let list = std.ArrayList(ApiVersionRange).empty;
@@ -240,12 +252,17 @@ pub struct MetadataReq {
     pub static fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!MetadataReq {
         let topics: ([]const []const u8)? = null;
         if (api_version >= 9) {
-            if (count := r.readCompactArrayLen()?) {
+            const raw_n = r.readUVarint()?;
+            if (raw_n > 0) {
+                const count: usize = @as(usize, raw_n - 1);
+                if (count > KAFKA_MAX_ARRAY_LEN) {
+                    return KafkaError.InvalidLength;
+                }
                 let list = std.ArrayList(string).empty;
                 errdefer list.deinit(alloc);
                 let i: usize = 0;
                 while (i < count) {
-                    const name = r.readCompactString()?;
+                    const name = r.readCompactString() catch (e) { return e; };
                     r.skipTaggedFields()?;
                     list.append(alloc, name orelse "") catch return KafkaError.OutOfMemory;
                     i += 1;
@@ -417,7 +434,7 @@ pub struct MetadataResp {
 
         let brokers_count: usize = 0;
         if (api_version >= 9) {
-            brokers_count = (r.readCompactArrayLen()?) orelse 0;
+            brokers_count = (r.readCompactArrayLen()?) orelse @as(usize, 0);
         } else {
             const raw_b = r.readI32()?;
             if (raw_b < 0) {
@@ -436,15 +453,16 @@ pub struct MetadataResp {
             let port: i32 = 0;
             let rack: ([]const u8)? = null;
             if (api_version >= 9) {
-                host = (r.readCompactString()?) orelse "";
+                const h_opt = r.readCompactString() catch (e) { return e; };
+                host = h_opt orelse "";
                 port = r.readI32()?;
-                rack = r.readCompactString()?;
+                rack = r.readCompactString() catch (e) { return e; };
                 r.skipTaggedFields()?;
             } else {
                 host = r.readString()?;
                 port = r.readI32()?;
                 if (api_version >= 1) {
-                    rack = r.readNullableString()?;
+                    rack = r.readNullableString() catch (e) { return e; };
                 }
             }
             brokers.append(alloc, BrokerMeta{
@@ -458,9 +476,9 @@ pub struct MetadataResp {
 
         let cluster_id: ([]const u8)? = null;
         if (api_version >= 9) {
-            cluster_id = r.readCompactString()?;
+            cluster_id = r.readCompactString() catch (e) { return e; };
         } else if (api_version >= 2) {
-            cluster_id = r.readNullableString()?;
+            cluster_id = r.readNullableString() catch (e) { return e; };
         }
 
         let controller_id: i32 = -1;
@@ -470,7 +488,7 @@ pub struct MetadataResp {
 
         let topics_count: usize = 0;
         if (api_version >= 9) {
-            topics_count = (r.readCompactArrayLen()?) orelse 0;
+            topics_count = (r.readCompactArrayLen()?) orelse @as(usize, 0);
         } else {
             const raw_t = r.readI32()?;
             if (raw_t < 0) {
@@ -508,7 +526,7 @@ pub struct MetadataResp {
 
             let part_count: usize = 0;
             if (api_version >= 9) {
-                part_count = (r.readCompactArrayLen()?) orelse 0;
+                part_count = (r.readCompactArrayLen()?) orelse @as(usize, 0);
             } else {
                 const raw_p = r.readI32()?;
                 if (raw_p < 0) {
@@ -590,13 +608,16 @@ pub struct MetadataResp {
 fn decodeI32Array(alloc: std.mem.Allocator, r: *KafkaReader, compact: bool): KafkaError![]const i32 {
     let count: usize = 0;
     if (compact) {
-        count = (r.readCompactArrayLen()?) orelse 0;
+        count = (r.readCompactArrayLen()?) orelse @as(usize, 0);
     } else {
         const raw = r.readI32()?;
         if (raw < 0) {
             return KafkaError.InvalidLength;
         }
         count = @as(usize, @intCast(raw));
+    }
+    if (count > KAFKA_MAX_ARRAY_LEN) {
+        return KafkaError.InvalidLength;
     }
     let list = std.ArrayList(i32).empty;
     errdefer list.deinit(alloc);
@@ -626,7 +647,16 @@ pub struct KafkaStreamFramer {
         _.buf.deinit(_.alloc);
     }
 
+    pub fn reset(*_) {
+        _.buf.clearRetainingCapacity();
+    }
+
     pub fn push(*_, chunk: []const u8): KafkaError!void {
+        if (chunk.len == 0) return;
+        const max_buf = if (_.max_frame_bytes <= (0xFFFFFFFF - 65536)) (_.max_frame_bytes + 65536) else _.max_frame_bytes;
+        if (_.buf.items.len > _.max_frame_bytes + 4 && _.buf.items.len + chunk.len > max_buf) {
+            return KafkaError.FrameTooLarge;
+        }
         _.buf.appendSlice(_.alloc, chunk) catch return KafkaError.OutOfMemory;
     }
 
@@ -639,14 +669,16 @@ pub struct KafkaStreamFramer {
             return KafkaError.InvalidLength;
         }
         const frame_len: usize = @as(usize, @intCast(raw_len));
-        if (frame_len > _.max_frame_bytes) {
+        if (frame_len > _.max_frame_bytes || frame_len > KAFKA_MAX_FRAME_LEN) {
             return KafkaError.FrameTooLarge;
         }
-        if (_.buf.items.len < 4 + frame_len) {
+        if (_.buf.items.len - 4 < frame_len) {
             return null;
         }
         const out = _.alloc.alloc(u8, frame_len) catch return KafkaError.OutOfMemory;
-        @memcpy(out, _.buf.items[4 .. 4 + frame_len]);
+        if (frame_len > 0) {
+            simdKafkaCopyBytes(out, _.buf.items[4 .. 4 + frame_len]);
+        }
         const rem = _.buf.items.len - (4 + frame_len);
         if (rem > 0) {
             std.mem.copyForwards(u8, _.buf.items[0..rem], _.buf.items[4 + frame_len ..]);
@@ -656,6 +688,9 @@ pub struct KafkaStreamFramer {
     }
 
     pub static fn framePayload(alloc: std.mem.Allocator, payload: []const u8): KafkaError![]u8 {
+        if (payload.len > KAFKA_MAX_FRAME_LEN) {
+            return KafkaError.FrameTooLarge;
+        }
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
         let hdr: [4]u8 = undefined;

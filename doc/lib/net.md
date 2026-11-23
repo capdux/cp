@@ -1204,3 +1204,15 @@ pub fn demoWebRtcDataChannel()! {
 | `isBinHeaderKey` / `statusFromName` | `lib/net/grpcHeaders.cp`, `lib/net/grpcStatus.cp` | `-bin` 二进制元数据键精确识别与全 17 种标准状态码双向映射 |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testNetGrpcRustRefSuite.cp` 覆盖 LPM 单帧/粘包/逐字节半包、压缩位 `>=2` 与超 4 MiB 拦截、`grpc-timeout` 全 6 单位与 9 位溢出/非法单位拒绝、全 17 状态码、`-bin` 元数据 Base64 与 `grpc-message` 百分比编解码、16-lane SIMD 0 差异对拍，以及 1,600 组确定性 PRNG 畸形帧/超时/元数据 Fuzz。
+
+## Wave 34 工业级安全加固与 16-Lane SIMD 加速（`kafka{Wire,Protocol,RecordBatch}.cp` 对标 `tychedelia/kafka-protocol-rs` MIT/Apache-2.0）
+
+`lib/net/kafkaWire.cp`、`lib/net/kafkaProtocol.cp` 与 `lib/net/kafkaRecordBatch.cp` 已对照 `tychedelia/kafka-protocol-rs`（MIT/Apache-2.0）与 Apache Kafka 官方协议规范完成 ZigZag 无溢出编解码、帧长/数组/RecordBatch 上限守卫与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `KAFKA_MAX_FRAME_LEN` (64 MiB) / `KAFKA_MAX_ARRAY_LEN` / `KAFKA_MAX_TAGGED_FIELDS` | `lib/net/kafkaWire.cp`, `lib/net/kafkaProtocol.cp`, `lib/net/kafkaRecordBatch.cp` | 修复 `writeVarint`/`writeVarlong` 有符号左移溢出；新增 `readNullableBytes`/`writeNullableBytes` 严格区分 `-1`（Null）与 `<-1`（非法）；防伪造超大 `records_count`/`hdr_count`/`num_tags` 耗尽内存 |
+| `simdKafkaCopyBytes` / `simdKafkaBytesEql` / 标量参考 | `lib/net/kafkaWire.cp`, `lib/net/kafkaProtocol.cp` | 纯 CP 16-lane `@Vector(16, u8)` 载荷拷贝与字节比对（配标量参考 0 差异对拍），已接入 `KafkaStreamFramer` |
+| `RecordBatch` v2 CRC32C 与 `KafkaStreamFramer.reset` | `lib/net/kafkaRecordBatch.cp`, `lib/net/kafkaProtocol.cp` | 强制 `magic==2`、61B 最小头长、Castagnoli CRC32C 完整性校验与无溢出减法帧边界检查 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testNetKafkaRustRefSuite.cp` 覆盖 ApiVersions/Metadata 帧编解码与半包重组、v2 RecordBatch 编码/解码与 CRC32C 单比特篡改拒绝、Nullable `-1` vs `-2`/`i32::MIN` 拒绝、ZigZag 32/64 极值与溢出拦截、16-lane SIMD 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 Kafka 帧与 RecordBatch Fuzz。
