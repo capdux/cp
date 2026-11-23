@@ -25,7 +25,7 @@
 | `lib/ds/rtree.cp` | 2D AABB R-Tree 空间矩形索引与最近邻检索 |
 | `lib/ds/suffix.cp` | 后缀数组、Kasai LCP 数组、模式范围搜索、不同子串计数与最长重复子串 |
 | `lib/ds/kmp.cp` | KMP 前缀函数、模式搜索、最短周期、Z-Algorithm 与 Manacher 最长回文子串 |
-| `lib/ds/ahoCorasick.cp` | Aho-Corasick 多模式自动机线性扫描匹配 |
+| `lib/ds/ahoCorasick.cp` | Aho-Corasick 多模式自动机（对标 `BurntSushi/aho-corasick`：`Standard`/`LeftmostFirst`/`LeftmostLongest`、ASCII 大小写折叠、零堆扫描/批量替换与 `cap:simd` 预过滤） |
 | `lib/ds/rope.cp` | 平衡 Rope 文本缓冲（`O(log n)` 拼接、切分、插入、删除与行索引） |
 | `lib/ds/bimap.cp` | 泛型双向 1-to-1 映射 `BiMap(K, V)` 与 `StringBiMap` |
 | `lib/ds/circBuf.cp` | 泛型环形队列/循环缓冲区 `RingBuffer(T)` |
@@ -56,7 +56,7 @@
 ### 3. 字符串匹配与文本缓冲
 - **`suffix.cp`**：`SuffixWorkspace`, `OccurrenceRange`, `LongestRepeat`, `buildSuffixArray`, `buildLcpArray`, `findPatternRange`, `countDistinctSubstrings`, `longestRepeatedSubstring`
 - **`kmp.cp`**：`PalindromeSpan`, `computePrefixFunction`, `kmpFindFirst`, `kmpFindAll`, `kmpCount`, `shortestPeriod`, `computeZArray`, `manacherLongestPalindrome`, `countPalindromicSubstrings`
-- **`ahoCorasick.cp`**：`Match`, `AhoCorasick`
+- **`ahoCorasick.cp`**：`MatchKind`（`Standard` / `LeftmostFirst` / `LeftmostLongest`）, `AcError`, `AhoCorasickOptions`, `Match`, `AhoCorasick`（`init`, `initWithOptions`, `deinit`, `prefilterActive`, `prefilterByteCount`, `findFirst`, `findNextAt`, `findAllNonOverlapping`, `findAllOverlappingInto`, `findAllOverlapping`, `replaceAllInto`, `containsAny`）
 - **`rope.cp`**：`Rope`, `RopeError`, `Node`, `NodePtr`
 
 ### 4. 映射、缓冲、位图与概率草图

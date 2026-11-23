@@ -99,6 +99,9 @@ export {
 } from "./kmp.cp";
 
 export {
+    MatchKind,
+    AcError,
+    AhoCorasickOptions,
     Match,
     AhoCorasick,
 } from "./ahoCorasick.cp";
