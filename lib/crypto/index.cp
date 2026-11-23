@@ -609,19 +609,29 @@ export {
     digestHex,
     hashOneshot,
     hashHex,
+    hashInto,
+    ctEqualSimd,
+    ctEqualScalar,
+    secureZeroBytes,
 } from "./shaHash.cp";
 
 export {
     StreamingHmac,
     hmacOneshot,
     hmacHex,
+    hmacInto,
     verifyHmac,
+    xorKeyPadSimd,
+    xorKeyPadScalar,
 } from "./shaHmac.cp";
 
 export {
     hkdfExtract as shaHkdfExtract,
     hkdfExpand as shaHkdfExpand,
     hkdf,
+    hkdfInto,
+    xorBlockSimd,
+    xorBlockScalar,
     pbkdf2HmacSha256,
     pbkdf2Hmac,
 } from "./shaKdf.cp";

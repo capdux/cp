@@ -33,7 +33,7 @@
 | `lib/dns/rtype.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | IANA RRType/Class/RCODE 枚举与 SRV/MX 记录辅助（`DnsRrType`、`DnsRcode`、`DnsClass`、`RrSrvRecord`、`MxRecord`） |
 | `lib/dns/srv.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | RFC 2782 SRV 文本/二进制头解析、`_service._proto.name` 拆解与加权轮询选择（`SrvWireHeader`、`SrvEntry`、`SrvServiceName`、`compareSrvOrder`、`selectSrvByRoll`） |
 | `lib/dns/txt.cp` | `// Source: Absorbed from /data/dev/bun/src/dns.zig (...)` | DNS TXT 分号键值对迭代、DKIM/BIMI 标签查找与 SPF/DMARC 记录解析（`TxtTag`、`TxtTagIter`、`findTxtTag`、`DmarcPolicy`、`DmarcRecord`、`SpfQualifier`、`SpfTerm`、`SpfIter`） |
-| `lib/dns/wire.cp` | `// Source: cp/lib/dns_wire/types.cp (...)` | 纯 CP RFC 1035/6891 全量 DNS 报文编解码与指针压缩（`DnsWireError`、`DnsOpcode`、`WireDnsRcode`、`DnsRecordType`、`WireDnsClass`、`WireDnsHeader`、`WireDnsQuestion`、`WireResourceRecord`、`DnsRdata`、`DnsPacket`、`encodeDnsPacket`、`decodeDnsPacket`） |
+| `lib/dns/wire.cp` | `// Reference-hardened against hickory-dns/hickory-dns (MIT/Apache-2.0)` | 纯 CP RFC 1035/3596/6891/8659 全量 DNS 报文编解码与指针压缩（`DNS_MAX_POINTER_JUMPS = 16`、前向/自指指针环拦截、A/AAAA/CNAME/NS/PTR/MX/TXT/SRV/SOA/OPT EDNS0/CAA、`validateDnsPacket` 零堆校验、`dnsNameEqlIgnoreCaseSimd` 16-lane SIMD；测试：`cap/test/testDnsWireRustRefSuite.cp`） |
 | `lib/dns/_cares.cp` | `// Source: /data/dev/bun/src/dns/` | `NSClass`、`NSType`、`CaresStatus` 错误分类与 `c-ares` C-ABI 声明 |
 | `lib/dns/index.cp` | `// Source: /data/dev/bun/src/dns/` | `cap:dns` 标准库对外统一导出入口 |
 

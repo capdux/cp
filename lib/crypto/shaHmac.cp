@@ -1,7 +1,8 @@
+// Reference-hardened against RustCrypto/hashes (MIT/Apache-2.0)
 // Source: bun/src/sha_hmac/hmac.cp -> cp/lib/sha_hmac/hmac.cp (Pure CP unified HMAC & constant-time verification)
 
 const std = @import("std");
-import { HashAlg, ShaError, MAX_DIGEST_LEN, digestLen, digestHex } from "./shaHash.cp";
+import { HashAlg, ShaError, MAX_DIGEST_LEN, digestLen, digestHex, ctEqualSimd, secureZeroBytes } from "./shaHash.cp";
 
 const HmacBlake2b256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2b256);
 const HmacBlake2s256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2s256);
@@ -48,7 +49,7 @@ pub struct StreamingHmac {
         }
     }
 
-    pub fn final(*_, out_buf: []u8): ShaError![]const u8 {
+    pub fn final(*_, out_buf: []u8): ![]const u8 {
         const dlen = digestLen(_.alg);
         if (out_buf.len < dlen) {
             return ShaError.BufferTooSmall;
@@ -106,5 +107,38 @@ pub fn verifyHmac(alg: HashAlg, key: []const u8, msg: []const u8, expected_tag: 
     * = mac.final(&actual_padded) catch return false;
 
     @memcpy(expected_padded[0..dlen], expected_tag);
-    return std.crypto.timing_safe.eql([MAX_DIGEST_LEN]u8, actual_padded, expected_padded);
+    const ok = ctEqualSimd(&actual_padded, &expected_padded);
+    secureZeroBytes(&actual_padded);
+    secureZeroBytes(&expected_padded);
+    return ok;
+}
+
+/// Zero-heap oneshot HMAC into caller-provided `out_buf`.
+pub fn hmacInto(alg: HashAlg, key: []const u8, msg: []const u8, out_buf: []u8): ![]const u8 {
+    let mac = StreamingHmac.init(alg, key);
+    mac.update(msg);
+    return try mac.final(out_buf);
+}
+
+/// 16-lane `@Vector(16, u8)` XOR for HMAC `ipad=0x36` / `opad=0x5C` key block padding.
+pub fn xorKeyPadSimd(dst: []u8, key_block: []const u8, pad_byte: u8) {
+    const n = if (dst.len < key_block.len) dst.len else key_block.len;
+    const pad_v: @Vector(16, u8) = @splat(pad_byte);
+    let i: usize = 0;
+    while (i + 16 <= n) : (i += 16) {
+        const kv: @Vector(16, u8) = key_block[i..][0..16].*;
+        dst[i..][0..16].* = kv ^ pad_v;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = key_block[i] ^ pad_byte;
+    }
+}
+
+/// Scalar reference key-pad XOR for 0-diff parity testing against `xorKeyPadSimd`.
+pub fn xorKeyPadScalar(dst: []u8, key_block: []const u8, pad_byte: u8) {
+    const n = if (dst.len < key_block.len) dst.len else key_block.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = key_block[i] ^ pad_byte;
+    }
 }

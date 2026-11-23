@@ -150,14 +150,23 @@ export {
     MxData,
     SrvData,
     SoaData,
+    CaaData,
+    Edns0Opt,
     DnsRdata,
     DnsResourceRecord as WireResourceRecord,
     DnsPacket,
     DecodedName,
+    dnsNameEqlIgnoreCaseScalar,
+    dnsNameEqlIgnoreCaseSimd,
+    copyDnsBytesScalar,
+    copyDnsBytesSimd,
     decodeDnsName,
     encodeDnsName,
     encodeDnsPacket,
     decodeDnsPacket,
+    parseEdns0Opt,
+    validateDnsName,
+    validateDnsPacket,
 } from "./wire.cp";
 
 export {

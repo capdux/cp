@@ -63,6 +63,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **bson-rust** (`mongodb`) | <https://github.com/mongodb/bson-rust> | MIT | `lib/binfmt/bson.cp` | Copyright (c) 2015-2024 MongoDB Inc. |
 | **mp4-rust** (`alfg`) | <https://github.com/alfg/mp4-rust> | MIT | `lib/media/mp4.cp` | Copyright (c) 2020 Alfred Gutierrez |
 | **rapid-qoi** (`aldanor`) | <https://github.com/aldanor/rapid-qoi> | MIT OR Apache-2.0 | `lib/image/qoi.cp` | Copyright (c) 2021-2023 aldanor |
+| **hickory-dns** | <https://github.com/hickory-dns/hickory-dns> | MIT OR Apache-2.0 | `lib/dns/wire.cp` | Copyright (c) 2015 Benjamin Fry / Hickory DNS Contributors |
+| **RustCrypto/hashes** (`sha2`, `hmac`, `hkdf`) | <https://github.com/RustCrypto/hashes> | MIT OR Apache-2.0 | `lib/crypto/shaHash.cp`, `lib/crypto/shaHmac.cp`, `lib/crypto/shaKdf.cp` | Copyright (c) 2016-2024 RustCrypto Developers |
 
 ---
 

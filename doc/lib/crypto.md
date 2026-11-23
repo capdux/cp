@@ -25,6 +25,7 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
+| `lib/crypto/shaHash.cp` / `shaHmac.cp` / `shaKdf.cp` | `// Reference-hardened against RustCrypto/hashes (MIT/Apache-2.0)` | 统一流式哈希（SHA-1/224/256/384/512/BLAKE2b/2s）、RFC 4231 HMAC（`StreamingHmac`/`hmacInto`/`verifyHmac`）、RFC 5869 HKDF（`hkdf`/`hkdfInto`）与 PBKDF2，内置 16-lane SIMD 常量时间比对 `ctEqualSimd`、`xorKeyPadSimd`、`xorBlockSimd` 与 `secureZeroBytes` |
 | `lib/crypto/hash.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 单发与流式哈希（`sha256`, `sha512`, `sha1`, `md5`, `sha256Raw`, `Hash`, `createHash`） |
 | `lib/crypto/hmac.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 单发与流式消息认证码（`hmacSha256`, `hmacSha256Raw`, `hmacSha512`, `Hmac`, `createHmac`） |
 | `lib/crypto/pbkdf2.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | PBKDF2-HMAC-SHA256 密钥派生（`pbkdf2Sync`, `pbkdf2Raw`, `pbkdf2Into`）与 `bytesToHex` |

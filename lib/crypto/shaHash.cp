@@ -1,3 +1,4 @@
+// Reference-hardened against RustCrypto/hashes (MIT/Apache-2.0)
 // Source: bun/src/sha_hmac/sha.cp -> cp/lib/sha_hmac/hash.cp (Pure CP unified cryptographic hash primitives)
 
 const std = @import("std");
@@ -88,7 +89,7 @@ pub struct StreamingHasher {
         }
     }
 
-    pub fn final(*_, out_buf: []u8): ShaError![]const u8 {
+    pub fn final(*_, out_buf: []u8): ![]const u8 {
         const dlen = digestLen(_.alg);
         if (out_buf.len < dlen) {
             return ShaError.BufferTooSmall;
@@ -141,4 +142,44 @@ pub fn hashHex(alloc: std.mem.Allocator, alg: HashAlg, data: []const u8): ![]u8 
     hasher.update(data);
     const digest = try hasher.final(&raw_buf);
     return try digestHex(alloc, digest);
+}
+
+/// Zero-heap oneshot hash into caller-provided `out_buf`.
+pub fn hashInto(alg: HashAlg, data: []const u8, out_buf: []u8): ![]const u8 {
+    let hasher = StreamingHasher.init(alg);
+    hasher.update(data);
+    return try hasher.final(out_buf);
+}
+
+/// Constant-time 16-lane `@Vector(16, u8)` byte slice equality check (no early return on mismatch).
+pub fn ctEqualSimd(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let acc_v: @Vector(16, u8) = @splat(0);
+    let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: @Vector(16, u8) = a[i..][0..16].*;
+        const vb: @Vector(16, u8) = b[i..][0..16].*;
+        acc_v |= (va ^ vb);
+    }
+    let diff: u8 = @reduce(.Or, acc_v);
+    while (i < a.len) : (i += 1) {
+        diff |= (a[i] ^ b[i]);
+    }
+    return diff == 0;
+}
+
+/// Constant-time scalar byte slice equality check for 0-diff parity testing against `ctEqualSimd`.
+pub fn ctEqualScalar(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let diff: u8 = 0;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        diff |= (a[i] ^ b[i]);
+    }
+    return diff == 0;
+}
+
+/// Securely zeros sensitive key/digest material in memory (prevents dead-store elimination).
+pub fn secureZeroBytes(buf: []u8) {
+    std.crypto.secureZero(u8, buf);
 }
