@@ -199,3 +199,25 @@ pub fn demoUrlAndQuery(): !void {
    - `application/x-www-form-urlencoded` 场景（查询串）中 `+` 解码为空格（`PercentEncoding.decodeToBuf(str, true, out)`），而通用 URI 路径组件（RFC 3986）中 `+` 保持字面量（`plus_as_space = false`），空格编码为 `%20`。
 5. **高吞吐零分配查询扫描**：
    - 在高频 HTTP 路由与网关场景下，优先使用 `Scanner.init(query_str)` 流式迭代提取键值对，避免构造完整 `URLSearchParams` 容器带来的临时内存开销。
+
+---
+
+## 八、 Wave 32 工业级安全加固与 `cap:simd` 加速（对标 `servo/rust-url` MIT/Apache-2.0）
+
+`lib/url/url.cp` 与 `lib/url/percent.cp` 已对照 `servo/rust-url`（MIT/Apache-2.0）及 WHATWG URL Standard 完成工业级安全边界加固与 `cap:simd` 16/32-lane 向量化加速，同时保持 100% 向后兼容。
+
+### 1. 新增零堆严格校验与归一化 API
+
+| 符号 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `URL_MAX_LEN` (`65536`) / `URL_MAX_HOST_LEN` (`255`) | `lib/url/url.cp` | URL 64 KiB 与主机名 255 字节硬上限防护 |
+| `isValidUrlStrict(input)` / `URL.isValidStrict(input)` | `lib/url/url.cp` | 零堆严格 WHATWG URL 校验：拒绝控制字符/空白、非法 scheme、超限端口、未闭合/畸形 IPv6、非法主机字符与畸形 `%XX` |
+| `isValidHostStrict(host)` / `isValidIPv4Strict(host)` / `isValidIPv6Strict(host)` | `lib/url/url.cp` | 完整移植 `rust-url` IPv6 状态机（含 `::` 压缩与嵌入 IPv4）、严格点分四段 IPv4（拒绝前导零）与 WHATWG Forbidden Host Code Points 防护 |
+| `isValidPortStrict(port)` / `normalizeDefaultPort(scheme, port)` / `getDefaultPortForScheme(scheme)` / `isSpecialScheme(scheme)` | `lib/url/url.cp` | 端口 `0..65535` 溢出拒绝与 Special Scheme 默认端口归一化（`http:80`, `https:443`, `ws:80`, `wss:443`, `ftp:21`） |
+| `normalizeUrlPath(path, is_special, out)` / `URL.normalizeUrlPath` | `lib/url/url.cp` | 零堆路径规范化：完整处理 `.`、`..`、`%2e`、`%2e%2e` 等目录穿越混淆，并在 Special Scheme 下执行 `\` -> `/` 归一化 |
+| `percentDecodeStrict(input, out)` / `PercentEncoding.decodeStrict` / `isValidPercentEncoding(input)` | `lib/url/percent.cp` | 严格百分号校验与解码：拒绝截断 `%`/`%2`、非法十六进制 `%ZZ`/`%2G` 与输出缓冲不足 |
+| `simdFindUrlDelimiter(input)` / `simdFindPathDelimiter(input, is_special)` / `PercentEncoding.findNextPercent(input)` | `lib/url/url.cp`, `lib/url/percent.cp` | `cap:simd` 16/32-lane 向量化分隔符（`'/'`, `'?'`, `'#'`, `':'`）与 `'%'` 快扫热路径 |
+
+### 2. 安全边界与 SIMD 验证
+
+- **回归与 Fuzz 套件**：`cap/test/testUrlRustRefSuite.cp` 覆盖基础解析、IPv6/IPv4/域名/端口严格边界、点段与 `%2e%2e` 目录穿越归一化、特殊协议反斜杠归一化、严格百分号解码、`cap:simd` 与标量 0 差异对拍，以及 1,500 组确定性 PRNG 畸形输入 Fuzz（0 panic / 0 OOB / 0 死循环）。

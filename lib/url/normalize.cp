@@ -59,7 +59,7 @@ fn strEql(a: []const u8, b: []const u8): bool {
 }
 
 /// RFC 3986 §2.3 非保留字符判定：`ALPHA / DIGIT / "-" / "." / "_" / "~"`
-export fn isUnreserved(b: u8): bool {
+pub fn isUnreserved(b: u8): bool {
     if ((b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9')) {
         return true;
     }
@@ -67,7 +67,7 @@ export fn isUnreserved(b: u8): bool {
 }
 
 /// 查询常见协议的默认端口号（大小写无关）
-export fn defaultPortForScheme(scheme: []const u8): u16? {
+pub fn defaultPortForScheme(scheme: []const u8): u16? {
     if (asciiEqlIgnoreCase(scheme, "http") || asciiEqlIgnoreCase(scheme, "ws")) return 80;
     if (asciiEqlIgnoreCase(scheme, "https") || asciiEqlIgnoreCase(scheme, "wss")) return 443;
     if (asciiEqlIgnoreCase(scheme, "ftp")) return 21;
@@ -80,7 +80,7 @@ export fn defaultPortForScheme(scheme: []const u8): u16? {
 
 /// RFC 3986 §6.2.2.2 百分号编码规范化：
 /// 解码非保留字符的 `%XX`（如 `%7E`->`~`、`%41`->`A`）；其余合法 `%xx` 统一转大写；遇非法 `%` 或缓冲不足返回 null
-export fn normalizePercentEncoding(input: []const u8, out: []u8): ([]const u8)? {
+pub fn normalizePercentEncoding(input: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
     let pos: usize = 0;
 
@@ -128,7 +128,7 @@ fn popLastSegment(out: []u8, pos_in: usize): usize {
 }
 
 /// RFC 3986 §5.2.4 路径点段归约（零堆分配，严格遵循规则 A–E）
-export fn removeDotSegments(path: []const u8, out: []u8): ([]const u8)? {
+pub fn removeDotSegments(path: []const u8, out: []u8): ([]const u8)? {
     let in_pos: usize = 0;
     let virtual_slash = false;
     let out_pos: usize = 0;
@@ -240,7 +240,7 @@ export fn removeDotSegments(path: []const u8, out: []u8): ([]const u8)? {
 }
 
 /// 规范化 URI Origin：小写化 scheme 与 host，若 port 等于默认端口则自动剥离
-export fn normalizeOrigin(scheme: []const u8, host: []const u8, port: u16?, out: []u8): ([]const u8)? {
+pub fn normalizeOrigin(scheme: []const u8, host: []const u8, port: u16?, out: []u8): ([]const u8)? {
     if (scheme.len == 0 || host.len == 0) {
         return null;
     }
