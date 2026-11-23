@@ -1254,3 +1254,61 @@ const st = emitModuleBatchIntoChunk("/*! cap */\n", mods[0..], "", "", ModuleEmi
 const owner = resolveGeneratedLineToModule(spans[0..st.modules_emitted], spans[1].start_line);
 * = owner;
 ```
+
+- **构建磁盘缓存索引、内容寻址键推导、LRU/配额淘汰与 CRC32 二进制目录快照引擎（`diskCache.cp`，吸收自 `/data/dev/bun/src/bundler/cache.cp`）**：
+    - 导出：`DISK_CACHE_INDEX_MAGIC`、`DISK_CACHE_INDEX_VERSION`、`DISK_CACHE_HEADER_BYTES`、`DISK_CACHE_RECORD_BYTES`、`DISK_CACHE_KEY_HEX_LEN`、`DISK_CACHE_SHARD_COUNT`、`DiskCacheError`、`updateDiskCacheCrc32`、`computeDiskCacheCrc32`、`computeDiskCacheHash64`、`normalizeCacheRelPath`（接入 `cap:simd` `Simd.indexOfAny2` 路径规范化与目录穿越防护）、`isValidCacheKeyHex`（`Simd.isAscii` 预过滤）、`DiskCacheDomain`、`diskCacheDomainToByte`、`diskCacheDomainFromByte`、`diskCacheDomainName`、`BuildCacheKeyInput`、`BuildCacheKey`（128-bit 确定性内容寻址键与两级分片相对路径 `ab/cd1234...bin` 格式化）、`computeBuildCacheKey`、`parseBuildCacheKeyHex`、`parseShardCachePath`、`DiskCacheEntry`、`DiskCacheLookupQuery`、`DiskCacheMissReason`、`DiskCacheLookupResult`、`DiskCacheEvictionPolicy`、`DiskCacheEvictionReason`、`DiskCacheEvictionItem`、`DiskCacheEvictionPlan`、`DiskCacheIndexStats`、`DiskCacheShardDistribution`、`BuildDiskCacheIndex`（零堆外部切片驱动，支持 `lookup` 刷新 LRU + 校验 `mtime`/`size`/`compiler_abi`/`ttl`、`upsert`、`invalidate`、`invalidateBySourceHash`、`invalidateByDomain`、`invalidateMismatchedAbi`、`planEviction`/`applyEvictionPlan` 与 `Simd` 256 分片分布统计）、`DiskCacheDecodeSummary`、`encodedDiskCacheIndexSize`、`encodeDiskCacheIndex`、`decodeDiskCacheIndex`（IEEE 802.3 CRC32 强校验防截断/溢出/畸形载荷）、`formatDiskCacheReport`。
+
+```cp
+import {
+    DiskCacheDomain,
+    BuildCacheKeyInput,
+    computeBuildCacheKey,
+    DiskCacheEntry,
+    DiskCacheLookupQuery,
+    BuildDiskCacheIndex,
+    encodeDiskCacheIndex,
+    decodeDiskCacheIndex,
+} from "cap:bundler";
+
+const key = computeBuildCacheKey(BuildCacheKeyInput{
+    domain: DiskCacheDomain.TypeScript,
+    source_path: "src/app.ts",
+    source_hash: 0x1122334455667788,
+    dep_tree_hash: 0xAABBCCDDEEFF0011,
+    compiler_version: "cpc-0.9.0",
+    compiler_abi: 12,
+    target_name: "linux-x86_64",
+    define_hash: 0xCAFEBABE,
+    loader_flags: 0x05,
+})?;
+let shard_buf: [64]u8 = [0; 64];
+const shard_len = key.formatShardPath(".bin", shard_buf[0..])?;
+
+let slots: [8]DiskCacheEntry = [DiskCacheEntry.empty(); 8];
+let idx = BuildDiskCacheIndex.init(slots[0..], 12);
+* = idx.upsert(DiskCacheEntry{
+    key: key,
+    domain: DiskCacheDomain.TypeScript,
+    source_hash: 0x1122334455667788,
+    mtime_ns: 1700000000000,
+    source_size: 2048,
+    artifact_size: 4096,
+    created_at_sec: 1000,
+    last_access_sec: 1000,
+    compiler_abi: 12,
+})?;
+const hit = idx.lookup(DiskCacheLookupQuery{
+    key: key,
+    expected_mtime_ns: 1700000000000,
+    expected_source_size: 2048,
+    expected_compiler_abi: 12,
+    now_sec: 1050,
+    ttl_secs: 3600,
+});
+let snap: [512]u8 = [0; 512];
+const snap_len = encodeDiskCacheIndex(&idx, snap[0..])?;
+let slots2: [8]DiskCacheEntry = [DiskCacheEntry.empty(); 8];
+let idx2 = BuildDiskCacheIndex.init(slots2[0..], 12);
+const sum = decodeDiskCacheIndex(snap[0..snap_len], &idx2)?;
+* = shard_len; * = hit; * = sum;
+```
