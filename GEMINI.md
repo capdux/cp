@@ -682,3 +682,12 @@ git status --porcelain cpc_dev/src
 
 
 
+
+### 3. 热路径强制 SIMD 加速与确定性 Fuzz 模糊测试门禁铁律 (CRITICAL)
+为真正发挥 CP 无 GC + 原生硬件加速的性能优势，并确保未经大规模生产流量洗礼的标准库具备零崩溃健壮性，所有新增核心引擎与存量深化模块必须严格执行以下双门禁：
+1. **热路径强制评估并接入 CP 原生 SIMD 加速**：
+   - **数值与多媒体计算核**（矩阵 GEMM/GEMV、向量检索、卷积/FIR、Sinc 重采样、DCT/FFT、图像缩放/高斯模糊/PSNR、时间序列自相关 ACF、声学 Mel/MFCC）：必须优先使用 CP 原生 SIMD 算子（`@dot` / `@fma` / `@l2sq` / `@popCount`），并附带与朴素标量参考实现的精度对拍断言（通常 `< 1e-4`）；
+   - **字节流、文档与协议扫描核**（CSV/PDF/OOXML/JSON/源码预扫描、Annex-B 起始码、EBSP 脱壳、分词大小写折叠）：必须优先调用 `cap:simd`（`Simd.indexOfByte` / `Simd.indexOfAny2` / `Simd.indexOfAny4` / `skipWhitespace` / `firstNonAscii` / `toLowerAscii` / `countByte`）替代逐字节标量循环，最大化吞吐。
+2. **确定性 Fuzz 模糊测试与外部真值交叉验真门禁**：
+   - 凡涉及解析外部不可信输入（文件容器、压缩流、网络报文、查询表达式、二进制快照）的模块，必须配备**确定性 PRNG（如 xorshift64）畸形输入 Fuzz 测试**（覆盖随机字节、截断、超大宽高/乘法溢出、`i32::MIN` 边界、深层嵌套递归、单比特校验篡改），强制要求 **0 panic、0 越界、0 整数溢出、0 死循环、0 内存泄漏**；
+   - 编解码器与标准协议模块必须优先与真实外部工业工具（`libjpeg-turbo` / `libwebp` / `zstd` / `node zlib` / `ffmpeg` / RFC 官方测试向量）做交叉验真，绝不“自写自测闭门造车”。
