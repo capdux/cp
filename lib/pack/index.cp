@@ -71,8 +71,17 @@ export {
 export {
     Lz4Error,
     LZ4_FRAME_MAGIC,
+    LZ4_SKIPPABLE_MAGIC_MIN,
+    LZ4_SKIPPABLE_MAGIC_MAX,
     LZ4_FRAME_BLOCK_SIZE,
+    Lz4FrameOptions,
     xxhash32,
+    copyNonOverlappingScalar,
+    copyNonOverlappingSimd,
+    copyMatchScalar,
+    copyMatchSimd,
+    extendMatchLenScalar,
+    extendMatchLenSimd,
     Lz4Block,
     Lz4Frame,
 } from "./lz4.cp";

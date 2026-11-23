@@ -46,6 +46,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rstar** (`georust`) | <https://github.com/georust/rstar> | MIT OR Apache-2.0 | `lib/ds/rtree.cp` | Copyright (c) 2018 The rstar project developers |
 | **claxon** (`ruuda`) | <https://github.com/ruuda/claxon> | Apache-2.0 | `lib/media/flac.cp` | Copyright (c) Ruud van Asseldonk |
 | **image-gif** (`gif`) | <https://github.com/image-rs/image-gif> | MIT OR Apache-2.0 | `lib/image/gif.cp` | Copyright (c) image-rs developers |
+| **lz4_flex** | <https://github.com/PSeitz/lz4_flex> | MIT | `lib/pack/lz4.cp` | Copyright (c) 2020 Pascal Seitz |
 
 ---
 
