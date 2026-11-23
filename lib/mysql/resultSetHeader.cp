@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ResultSetHeader.cp | Synced: 2026-11-22T20:50:10Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ResultSetHeader.cp | Synced: 2026-11-23T01:34:24Z
 // Pure-CP zero-allocation MySQL ResultSetHeader (lenenc column count + optional metadata_follows),
 // query response packet classifier, and AuthSwitchResponse wire frame codec.
 

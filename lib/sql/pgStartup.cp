@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp | Synced: 2026-11-22T05:30:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp | Synced: 2026-11-23T01:31:55Z
 // ============================================================================
 // Pure-CP Zero-Allocation PostgreSQL v3 StartupMessage / SSL / Cancel Codec
 // Absorbed from Bun: src/sql/postgres/protocol/StartupMessage.cp

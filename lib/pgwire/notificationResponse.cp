@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NotificationResponse.cp | Synced: 2026-11-22T15:53:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NotificationResponse.cp | Synced: 2026-11-23T01:32:18Z
 // Pure-CP zero-allocation PostgreSQL v3.0 `NotificationResponse` ('A') LISTEN/NOTIFY message codec.
 
 /// PostgreSQL Backend `NotificationResponse` 报文类型字节（`'A' = 0x41`）

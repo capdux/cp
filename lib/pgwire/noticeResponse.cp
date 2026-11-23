@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NoticeResponse.cp | Synced: 2026-11-22T20:23:40Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NoticeResponse.cp | Synced: 2026-11-23T01:32:01Z
 // Pure-CP zero-allocation PostgreSQL v3.0 `NoticeResponse` ('N') diagnostic frame codec.
 
 import {

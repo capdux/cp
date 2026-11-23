@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-22T21:09:37Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-23T01:31:58Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Backend `ErrorResponse` ('E') diagnostic frame codec.
 // Reuses `PgDiagnosticFields` (18-field container) with SQLSTATE taxonomy helpers for
 // retryability, constraint violations, auth failures, and fatal/panic connection triage.

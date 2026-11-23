@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/RowDescription.cp | Synced: 2026-11-22T20:38:57Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/RowDescription.cp | Synced: 2026-11-23T01:32:24Z
 // Pure-CP zero-allocation PostgreSQL v3.0 `RowDescription` ('T') zero-copy decoder, iterator, and streaming encoder.
 
 /// PostgreSQL Backend `RowDescription` 报文类型字节（`'T' = 0x54`）

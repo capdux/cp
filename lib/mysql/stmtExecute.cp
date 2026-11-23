@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp | Synced: 2026-11-22T20:55:27Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp | Synced: 2026-11-23T01:34:29Z
 // Pure-CP zero-allocation MySQL Binary Protocol `COM_STMT_EXECUTE` (0x17) request codec.
 // Implements cursor flags, NULL-bitmap encoding/decoding, new_params_bind_flag, typed binary
 // and length-encoded parameter serialization, and zero-copy frame header decoding.

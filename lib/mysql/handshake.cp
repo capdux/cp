@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/HandshakeResponse41.cp | Synced: 2026-11-21T16:59:39Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/HandshakeResponse41.cp | Synced: 2026-11-23T01:34:21Z
 //! MySQL Protocol 4.1 `HandshakeResponse41` wire packet encoder & decoder
 //! with capability flags, auth plugin response framing, connection attributes,
 //! and deterministic `~init()` RAII buffer management.

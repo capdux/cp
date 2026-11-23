@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp | Synced: 2026-11-22T20:33:03Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/StartupMessage.cp | Synced: 2026-11-23T01:31:55Z
 // Pure-CP zero-allocation PostgreSQL v3.0 connection handshake frames:
 // StartupMessage (v3.0 = 196608), SSLRequest (80877103), and GSSENCRequest (80877104).
 

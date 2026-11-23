@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/RowDescription.cp | Synced: 2026-11-22T05:32:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/RowDescription.cp | Synced: 2026-11-23T01:32:24Z
 // ============================================================================
 // Pure-CP Zero-Allocation PostgreSQL v3 RowDescription ('T') & FieldDescription Codec
 // Absorbed from Bun: src/sql/postgres/protocol/RowDescription.cp & FieldDescription.cp

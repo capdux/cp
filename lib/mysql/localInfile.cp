@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/LocalInfileRequest.cp | Synced: 2026-11-22T15:58:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/LocalInfileRequest.cp | Synced: 2026-11-23T01:34:23Z
 // ============================================================================
 // lib/mysql/localInfile.cp — Zero-Alloc MySQL LOCAL INFILE Request (0xFB) Codec
 // ============================================================================

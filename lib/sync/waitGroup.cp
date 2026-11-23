@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/WaitGroup.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/threading/WaitGroup.cp | Synced: 2026-11-23T01:34:04Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/wait_group.cp
 // Upstream Sync: Refer to bun/src/threading/wait_group.zig for future upstream updates.

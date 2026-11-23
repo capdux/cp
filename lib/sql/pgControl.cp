@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ReadyForQuery.cp | Synced: 2026-11-22T05:52:40Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ReadyForQuery.cp | Synced: 2026-11-23T01:32:22Z
 // ============================================================================
 // Pure-CP Zero-Allocation PostgreSQL v3 Backend Control Frame Codec
 // Absorbed from Bun: src/sql/postgres/protocol/{ReadyForQuery,BackendKeyData,CommandComplete,ParameterStatus,TransactionStatusIndicator}.cp

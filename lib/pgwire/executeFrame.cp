@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Execute.cp | Synced: 2026-11-22T21:04:14Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Execute.cp | Synced: 2026-11-23T01:31:53Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Frontend `Execute` ('E') wire frame codec.
 // Supports unnamed and named portal execution, `max_rows` cursor pagination,
 // strict NUL/bounds validation, and single-buffer `Execute+Sync` / `Execute+Flush` pipelining.

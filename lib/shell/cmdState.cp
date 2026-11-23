@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Cmd.cp | Synced: 2026-11-22T20:14:06Z (Shell Cmd 7-phase execution state machine: assigns/redirect/args expansion, builtin/subprocess dispatch & BufferedIoClosed barrier)
+// Source: Absorbed from /data/dev/bun/src/shell/states/Cmd.cp | Synced: 2026-11-23T01:30:14Z (Shell Cmd 7-phase execution state machine: assigns/redirect/args expansion, builtin/subprocess dispatch & BufferedIoClosed barrier)
 // Pure-CP zero-allocation Shell `Cmd` execution state machine and piped stdio completion tracker.
 
 /// Parent AST container of a `CmdStateMachine` (aligned with Bun `Cmd.ParentPtr`).

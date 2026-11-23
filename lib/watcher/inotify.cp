@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/watcher/INotifyWatcher.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/watcher/INotifyWatcher.cp | Synced: 2026-11-23T01:34:34Z
 import std from "std";
 
 pub const IN_ACCESS: u32 = 0x00000001;

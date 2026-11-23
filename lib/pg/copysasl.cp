@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyData.cp | Synced: 2026-11-21T16:59:35Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyData.cp | Synced: 2026-11-23T01:32:25Z
 
 /// PostgreSQL v3 COPY / SASL / 协议协商报文类型字节常量
 pub const TAG_COPY_DATA: u8 = 'd';

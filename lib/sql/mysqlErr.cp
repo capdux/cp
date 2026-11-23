@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ErrorPacket.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/ErrorPacket.cp | Synced: 2026-11-23T01:33:59Z
 // Pure-CP zero-allocation MySQL wire-protocol `ERR_Packet` (0xff) encoder & decoder:
 // - Decodes both MySQL 4.1+ (`#` + 5-byte SQLSTATE) and legacy 4.0 ERR packets
 // - Zero-copy message slice pointing directly into the input wire buffer

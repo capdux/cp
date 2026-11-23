@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp | Synced: 2026-11-22T12:57:27Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp | Synced: 2026-11-23T01:31:50Z
 // Ported from Bun: /data/dev/bun/src/sql/postgres/protocol/Authentication.cp & /data/dev/bun/docs/runtime/sql.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation PostgreSQL Backend Authentication ('R') wire codec:

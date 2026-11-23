@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/ExternalSlice.cp | Synced: 2026-11-22T15:47:00Z
+// Source: Absorbed from /data/dev/bun/src/install/ExternalSlice.cp | Synced: 2026-11-23T01:31:21Z
 // ============================================================================
 // lib/mem/externalSlice.cp — Compact 8-Byte Offset/Length External Slice Views
 // ============================================================================

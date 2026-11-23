@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Execute.cp | Synced: 2026-11-22T17:48:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Execute.cp | Synced: 2026-11-23T01:31:53Z
 // ============================================================================
 // lib/pg/executeMsg.cp — Zero-Alloc PostgreSQL Execute ('E') & Portal Control Codec
 // ============================================================================

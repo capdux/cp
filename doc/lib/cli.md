@@ -884,3 +884,43 @@ let rep: [1024]u8 = [0; 1024];
 const rep_len = formatPkgUnlinkReport(sum, ops[0..sum.ops_count], arena[0..], rep[0..])?;
 * = rep_len;
 ```
+
+### `cap scan` 供应链安全扫描 CLI、门禁聚合与 SARIF 2.1.0 导出引擎（`lib/cli/securityScan.cp`，吸收自 `/data/dev/bun/src/cli/scan_command.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap scan`；
+- **核心导出**：
+  - 严重度分级与 `cap:simd` 加速 CVE/通配符匹配：`SEC_SCAN_SARIF_VERSION`、`SEC_SCAN_SARIF_SCHEMA`、`SEC_SCAN_MAX_PATTERN_LEN`、`SecScanError`、`SecScanSeverity`（`Info`/`Low`/`Moderate`/`High`/`Critical`）、`secScanSeverityRank`、`secScanSeverityName`、`secScanSarifLevel`、`parseSecScanSeverity`（`Simd.toLowerAscii`）、`SecScanOutputFormat`（`Table`/`Sarif`/`Json`）、`parseSecScanOutputFormat`、`validateSecScanIgnoreRule`、`matchSecScanIgnorePattern`（无递归线性通配符匹配）；
+  - CLI 参数解析与漏洞去重聚合门禁：`SecScanCliConfig`、`parseSecScanCliArgs`（`--fail-on=<sev>`、`--ignore=<cve>` 逗号列表、`--production`、`--omit=optional`、`--format=<fmt>`、`--sarif`、`--scanner=<pkg>`）、`SecScanFinding`、`SecScanAggregatedItem`、`SecScanSeverityCounts`、`SecScanGateSummary`、`evaluateSecurityScan`（按 `(advisory_id, package_name, installed_version)` 去重、应用忽略规则并按严重度/CVSS 排序）；
+  - 双格式报表导出：`formatSecurityScanSarif`（OASIS SARIF 2.1.0 JSON，带完整 JSON 转义）、`formatSecurityScanTable`（对齐终端表格与门禁结论）。
+
+```cp
+import {
+    SecScanSeverity,
+    SecScanFinding,
+    SecScanAggregatedItem,
+    parseSecScanCliArgs,
+    evaluateSecurityScan,
+    formatSecurityScanSarif,
+} from "cap:cli";
+
+const argv: [3][]const u8 = ["--fail-on=high", "--ignore=CVE-2024-0001", "--production"];
+let ignores: [8][]const u8 = [""; 8];
+const cfg = parseSecScanCliArgs(argv[0..], ignores[0..])?;
+const raw: [1]SecScanFinding = [
+    SecScanFinding{
+        advisory_id: "CVE-2024-9999",
+        package_name: "tar-stream",
+        installed_version: "2.1.0",
+        patched_range: ">=2.2.0",
+        title: "Path traversal in header parser",
+        url: "https://nvd.nist.gov/vuln/detail/CVE-2024-9999",
+        severity: SecScanSeverity.Critical,
+        cvss_score_x10: 98,
+    },
+];
+let items: [4]SecScanAggregatedItem = [SecScanAggregatedItem.empty(); 4];
+const sum = evaluateSecurityScan(raw[0..], cfg, ignores[0..cfg.ignore_count], items[0..])?;
+let sarif: [2048]u8 = [0; 2048];
+const n = formatSecurityScanSarif("cap-scan", "0.9.0", items[0..sum.deduped_count], sum, sarif[0..])?;
+* = n;
+```

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T17:17:12Z
+// Source: Absorbed from /data/dev/bun/src/cli/cli.cp | Synced: 2026-11-22T17:17:59Z
 // lib/cli/index.cp
 // Unified Public Exports for cap:cli
 
@@ -478,3 +478,28 @@ export {
     parseUnlinkCliArgs,
     formatPkgUnlinkReport,
 } from "./pkgUnlink.cp";
+
+export {
+    SEC_SCAN_SARIF_VERSION,
+    SEC_SCAN_SARIF_SCHEMA,
+    SEC_SCAN_MAX_PATTERN_LEN,
+    SecScanError,
+    SecScanSeverity,
+    secScanSeverityRank,
+    secScanSeverityName,
+    secScanSarifLevel,
+    parseSecScanSeverity,
+    SecScanOutputFormat,
+    parseSecScanOutputFormat,
+    validateSecScanIgnoreRule,
+    matchSecScanIgnorePattern,
+    SecScanCliConfig,
+    parseSecScanCliArgs,
+    SecScanFinding,
+    SecScanAggregatedItem,
+    SecScanSeverityCounts,
+    SecScanGateSummary,
+    evaluateSecurityScan,
+    formatSecurityScanSarif,
+    formatSecurityScanTable,
+} from "./securityScan.cp";

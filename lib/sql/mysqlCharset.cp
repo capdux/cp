@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/CharacterSet.cp | Synced: 2026-11-22T12:04:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/CharacterSet.cp | Synced: 2026-11-23T01:33:48Z
 // Pure-CP zero-allocation MySQL 5.7/8.0 CharacterSet & Collation ID registry (1..255+),
 // encoding family classifier, max-bytes-per-char calculator, binary-column detector,
 // handshake byte mapper, and case-insensitive charset/collation name resolver.

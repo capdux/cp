@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Query.cp | Synced: 2026-11-22T20:52:20Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Query.cp | Synced: 2026-11-23T01:34:31Z
 // Pure-CP zero-allocation MySQL `COM_QUERY` (simple & parameterized with NULL-bitmap / named attributes)
 // and single-byte session command (`COM_PING` / `COM_QUIT` / `COM_INIT_DB`) wire frame codec.
 

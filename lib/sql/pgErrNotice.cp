@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-22T05:41:50Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-23T01:31:58Z
 // ============================================================================
 // Pure-CP Zero-Allocation PostgreSQL v3 ErrorResponse ('E') & NoticeResponse ('N') Codec
 // Absorbed from Bun: src/sql/postgres/protocol/{ErrorResponse,NoticeResponse,FieldMessage,FieldType}.cp

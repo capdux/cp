@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/MySQLTypes.cp | Synced: 2026-11-21T16:59:39Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/MySQLTypes.cp | Synced: 2026-11-23T01:33:27Z
 
 /// 常用 MySQL 字符集 ID
 pub const CHARSET_LATIN1_SWEDISH_CI: u16 = 8;

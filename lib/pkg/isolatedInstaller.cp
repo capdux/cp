@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Installer.cp | Synced: 2026-11-22T19:02:19Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install/Installer.cp | Synced: 2026-11-23T01:30:14Z
 // ============================================================================
 // lib/pkg/isolatedInstaller.cp — Isolated Store Materializer & Bin Shim Coordinator
 // ============================================================================

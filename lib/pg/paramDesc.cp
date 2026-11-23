@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp | Synced: 2026-11-22T17:39:35Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp | Synced: 2026-11-23T01:32:19Z
 // ============================================================================
 // lib/pg/paramDesc.cp — Zero-Alloc PostgreSQL ParameterDescription ('t') Codec
 // ============================================================================

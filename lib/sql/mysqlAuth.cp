@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/AuthSwitchRequest.cp | Synced: 2026-11-22T06:05:31Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/AuthSwitchRequest.cp | Synced: 2026-11-23T01:33:52Z
 // ============================================================================
 // Pure-CP Zero-Allocation MySQL 4.1/8.0 AuthSwitch, SSLRequest & LocalInfileRequest Frame Codec
 // Absorbed from Bun: src/sql/mysql/protocol/{AuthSwitchRequest,AuthSwitchResponse,SSLRequest,LocalInfileRequest}.cp

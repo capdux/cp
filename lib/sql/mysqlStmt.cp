@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/StmtPrepareOKPacket.cp | Synced: 2026-11-22T05:59:52Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/StmtPrepareOKPacket.cp | Synced: 2026-11-23T01:34:25Z
 // ============================================================================
 // Pure-CP Zero-Allocation MySQL 4.1/8.0 Command Header, COM_STMT_PREPARE_OK & ResultSetHeader Codec
 // Absorbed from Bun: src/sql/mysql/protocol/{CommandType,PacketHeader,StmtPrepareOKPacket,ResultSetHeader}.cp

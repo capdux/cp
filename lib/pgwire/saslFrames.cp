@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/SASLInitialResponse.cp | Synced: 2026-11-22T20:26:49Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/SASLInitialResponse.cp | Synced: 2026-11-23T01:32:28Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Frontend Authentication ('p') frames:
 // PasswordMessage, SASLInitialResponse, and SASLResponse.
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CommandComplete.cp | Synced: 2026-11-22T21:12:18Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CommandComplete.cp | Synced: 2026-11-23T01:31:56Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Backend `CommandComplete` ('C') wire frame codec.
 // Integrates with `PgCommandTag` for zero-alloc command classification, row-count extraction,
 // transaction-control detection, and direct tag-to-frame serialization.

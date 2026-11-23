@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Close.cp | Synced: 2026-11-22T16:01:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Close.cp | Synced: 2026-11-23T01:31:51Z
 // ============================================================================
 // lib/pgwire/closeDescribe.cp — Zero-Alloc PostgreSQL v3.0 Close ('C'),
 // Describe ('D') & CloseComplete ('3') Extended Query Protocol Codec

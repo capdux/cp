@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/shared/Data.cp | Synced: 2026-11-20T09:26:25Z
+// Source: Absorbed from /data/dev/bun/src/sql/shared/Data.cp | Synced: 2026-11-23T01:32:32Z
 // lib/sql/shared.cp
 // Shared SQL Runtime Types: Small-Buffer-Optimized SqlData, ColumnIdentifier, ConnectionFlags & Result Modes
 

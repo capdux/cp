@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/versioned_url.cp | Synced: 2026-11-22T12:12:00Z
+// Source: Absorbed from /data/dev/bun/src/install/versioned_url.cp | Synced: 2026-11-23T01:31:23Z
 // Pure-CP zero-allocation Bun lockfile/registry `VersionedURL` (v2 u32 -> v3 u64 migration,
 // strict Semver 2.0 parser/comparator, tarball URL validator, and fixed-capacity candidate
 // version resolver set).

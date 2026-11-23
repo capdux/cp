@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/FieldMessage.cp | Synced: 2026-11-22T04:20:02Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/FieldMessage.cp | Synced: 2026-11-23T01:32:01Z
 // Pure-CP zero-allocation PostgreSQL v3.0 ErrorResponse / NoticeResponse 18-field diagnostic codec.
 
 /// 单条 ErrorResponse / NoticeResponse 诊断消息允许的最大字段数

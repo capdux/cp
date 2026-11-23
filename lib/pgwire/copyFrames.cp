@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyFail.cp | Synced: 2026-11-22T16:11:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/CopyFail.cp | Synced: 2026-11-23T01:31:57Z
 // ============================================================================
 // lib/pgwire/copyFrames.cp — Zero-Alloc PostgreSQL v3.0 COPY Protocol Frames
 // (`CopyData` 'd', `CopyDone` 'c', `CopyFail` 'f')

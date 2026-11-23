@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Query.cp | Synced: 2026-11-22T05:25:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/Query.cp | Synced: 2026-11-23T01:34:31Z
 // ============================================================================
 // Pure-CP Zero-Allocation MySQL COM_QUERY & 8.0.23+ Query Attributes Codec
 // Absorbed from Bun: src/sql/mysql/protocol/Query.cp

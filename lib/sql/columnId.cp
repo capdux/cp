@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/shared/ColumnIdentifier.cp | Synced: 2026-11-22T18:20:04Z
+// Source: Absorbed from /data/dev/bun/src/sql/shared/ColumnIdentifier.cp | Synced: 2026-11-23T01:32:31Z
 // ============================================================================
 // lib/sql/columnId.cp — Zero-Alloc SQL ColumnIdentifier & Duplicate-Column Map
 // ============================================================================

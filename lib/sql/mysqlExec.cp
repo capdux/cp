@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp | Synced: 2026-11-22T10:45:27Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp | Synced: 2026-11-23T01:34:29Z
 // Ported from Bun: /data/dev/bun/src/sql/mysql/protocol/PreparedStatement.cp & /data/dev/bun/docs/runtime/sql.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation MySQL 4.1/8.0 `COM_STMT_EXECUTE` (0x17) binary protocol encoder & decoder:

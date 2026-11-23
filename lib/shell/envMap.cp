@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/EnvMap.cp | Synced: 2026-11-22T14:32:00Z
+// Source: Absorbed from /data/dev/bun/src/shell/EnvMap.cp | Synced: 2026-11-23T01:38:11Z
 // Pure-CP zero-allocation Shell Reference-Counted Environment Map (`ShellEnvMap`).
 // Aligned with Bun `src/shell/EnvMap.cp` and `docs/runtime/shell.mdx`:
 // - Stores `(EnvStr, EnvStr)` key-value pairs backed by `EnvStrPool`.

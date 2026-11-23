@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/safety/ThreadLock.cp | Synced: 2026-11-22T20:19:05Z (Single-thread ownership assertion lock ThreadLock: lock/unlock/assertLocked/lockOrAssert, invalid thread ID guard & ownership transfer)
+// Source: Absorbed from /data/dev/bun/src/safety/ThreadLock.cp | Synced: 2026-11-23T01:34:02Z (Single-thread ownership assertion lock ThreadLock: lock/unlock/assertLocked/lockOrAssert, invalid thread ID guard & ownership transfer)
 // Pure-CP zero-allocation thread ownership assertion lock aligned with Bun `safety/ThreadLock.cp`.
 
 /// Sentinel thread identifier representing an unlocked `ThreadLock` (aligned with Bun `thread_id.invalid`).

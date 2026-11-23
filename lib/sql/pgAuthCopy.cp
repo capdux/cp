@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/SASLInitialResponse.cp | Synced: 2026-11-22T06:08:16Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/SASLInitialResponse.cp | Synced: 2026-11-23T01:32:28Z
 // ============================================================================
 // Pure-CP Zero-Allocation PostgreSQL v3 Auth (SASL/Password), COPY Stream & Terminate Codec
 // Absorbed from Bun: src/sql/postgres/protocol/{SASLInitialResponse,SASLResponse,PasswordMessage,CopyData,CopyFail}.cp

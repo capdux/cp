@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/StmtPrepareOKPacket.cp | Synced: 2026-11-22T17:32:14Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/StmtPrepareOKPacket.cp | Synced: 2026-11-23T01:34:25Z
 // ============================================================================
 // lib/mysql/stmtPrepareOk.cp — Zero-Alloc MySQL COM_STMT_PREPARE_OK Codec
 // ============================================================================

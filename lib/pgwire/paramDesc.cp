@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp | Synced: 2026-11-22T21:01:07Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ParameterDescription.cp | Synced: 2026-11-23T01:32:19Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Backend `ParameterDescription` ('t') wire codec.
 // Provides zero-copy OID slice view/iterator for arbitrary parameter counts, plus
 // stack-backed encoder and slice-based encoder with strict framing & bounds checks.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-21T16:59:50Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/ErrorResponse.cp | Synced: 2026-11-23T01:31:58Z
 
 /// PostgreSQL v3 后端控制与诊断报文类型字节常量
 pub const TAG_ERROR_RESPONSE: u8 = 'E';

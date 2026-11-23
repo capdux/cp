@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp | Synced: 2026-11-22T20:47:08Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/Authentication.cp | Synced: 2026-11-23T01:31:50Z
 // Pure-CP zero-allocation PostgreSQL v3.0 Backend `Authentication` ('R') challenge codec
 // with zero-copy SCRAM-SHA-256 server-first / server-final and SASL mechanism list parsing.
 

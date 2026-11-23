@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/Capabilities.cp | Synced: 2026-11-21T16:59:55Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/Capabilities.cp | Synced: 2026-11-23T01:33:31Z
 import { StatusFlag } from "./caps.cp";
 
 /// MySQL 协议客户端/服务端能力位掩码常量 (32-bit)
