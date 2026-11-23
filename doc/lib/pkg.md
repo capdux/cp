@@ -1495,3 +1495,35 @@ const parsed = parseYarnLockV1(lock_src, &bufs)?;
 const idx = lookupYarnAlias(aliases[0..parsed.alias_count], "@babel/core", "^7.22.0");
 * = idx;
 ```
+
+### 安装上下文、跨平台可选依赖裁剪、Peer 仲裁与缓存路由矩阵（`installContext.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageInstall.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 跨平台 OS/CPU/Libc 匹配器：`InstallContextError`、`HostOsKind`、`HostCpuKind`、`HostLibcKind`、`HostPlatformTarget`、`PlatformConstraintSpec`、`PlatformMatchReason`、`PlatformMatchResult`、`matchesConstraintDimension`、`matchesPlatformConstraints`（支持正选白名单与 `!` 排除项，精准裁剪跨平台原生二进制包）；
+  - Peer 依赖自动安装与冲突仲裁：`PeerDepRequirement`、`InstalledPeerCandidate`、`PeerEvalOutcome`（`Satisfied`/`AutoInstallPeer`/`SkipOptionalMissing`/`ConflictWarn`/`ConflictBlock`/`Omitted`）、`PeerEvalDecision`、`PeerEvalOptions`、`PeerEvalSummary`、`evaluatePeerDependencies`；
+  - 缓存与获取路由策略矩阵：`InstallDepCategory`、`InstallContextConfig`、`InstallPkgCandidate`、`InstallFetchRoute`（`LocalGlobalStoreLink`/`RegistryFetchWithEtag`/`RegistryFetchFresh`/`TarballDirect`/`SkipOmitted`/`SkipIncompatiblePlatform`/`FailOfflineMiss`/`FailIncompatibleRequired`）、`InstallRouteDecision`、`InstallRouteSummary`、`InstallCacheStrategy`；
+  - 预检与报表：`InstallPreflightIssue`、`InstallPreflightResult`、`evaluateInstallPreflight`、`formatInstallContextReport`。
+
+```cp
+import {
+    HostPlatformTarget,
+    HostOsKind,
+    HostCpuKind,
+    HostLibcKind,
+    PlatformConstraintSpec,
+    matchesPlatformConstraints,
+    InstallContextConfig,
+    InstallPkgCandidate,
+    InstallCacheStrategy,
+} from "cap:pkg";
+
+const host = HostPlatformTarget{ os: HostOsKind.Linux, cpu: HostCpuKind.X64, libc: HostLibcKind.Glibc };
+const linux_only: [1][]const u8 = ["linux"];
+const m = matchesPlatformConstraints(host, PlatformConstraintSpec{ os_list: linux_only[0..] });
+const route = InstallCacheStrategy.decidePackageRoute(
+    InstallContextConfig{ host: host, offline: true },
+    InstallPkgCandidate{ name: "zod", in_global_store: true },
+);
+* = m; * = route;
+```
