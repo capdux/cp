@@ -1,9 +1,13 @@
+// Reference-hardened against rust-ammonia/ammonia (MIT/Apache-2.0)
 // Source: cp/lib/html/sanitizer.cp (Allowlist HTML5 Content Sanitizer)
 // Allowlist-Based Streaming HTML5 Sanitizer with URL Protocol & Event Handler Defense
 
 const std = @import("std");
+import { Simd } from "cap:simd";
 import { HtmlEntities } from "./entities";
 import { HtmlToken, HtmlTokenKind, HtmlAttribute, HtmlTokenizer } from "./tokenizer";
+
+pub const HTML_SANITIZE_MAX_DEPTH: usize = 64;
 
 const DEFAULT_ALL_SAFE_TAGS: [62][]const u8 = [
     "a", "abbr", "article", "aside", "b", "blockquote", "br", "caption",
@@ -35,7 +39,7 @@ pub struct SanitizerPolicy {
     strip_comments: bool = true,
     drop_dangerous_content: bool = true,
     allow_data_attrs: bool = false,
-    max_nesting_depth: usize = 256,
+    max_nesting_depth: usize = HTML_SANITIZE_MAX_DEPTH,
 
     /// Standard safe HTML5 policy allowing formatting, lists, tables, headings, links, and images.
     pub static fn defaultSafe(): SanitizerPolicy {
@@ -51,7 +55,7 @@ pub struct SanitizerPolicy {
             strip_comments: true,
             drop_dangerous_content: true,
             allow_data_attrs: false,
-            max_nesting_depth: 256,
+            max_nesting_depth: HTML_SANITIZE_MAX_DEPTH,
         };
     }
 
@@ -68,7 +72,7 @@ pub struct SanitizerPolicy {
             strip_comments: true,
             drop_dangerous_content: true,
             allow_data_attrs: false,
-            max_nesting_depth: 256,
+            max_nesting_depth: HTML_SANITIZE_MAX_DEPTH,
         };
     }
 
@@ -88,7 +92,7 @@ pub struct SanitizerPolicy {
     }
 
     pub fn isSafeNonUrlAttr(attr: []const u8): bool {
-        if (attr.len >= 2 && (attr[0] == 'o' || attr[0] == 'O') && (attr[1] == 'n' || attr[1] == 'N')) {
+        if (HtmlSanitizer.isForbiddenAttr(attr)) {
             return false;
         }
         if (_.allow_data_attrs && attr.len > 5 && std.ascii.eqlIgnoreCase(attr[0..5], "data-")) {
@@ -111,6 +115,54 @@ struct DropTagFrame {
 }
 
 pub struct HtmlSanitizer {
+    /// SIMD-accelerated scan for next HTML tag opener `'<'`.
+    pub static fn scanHtmlTagOpenSimd(slice: []const u8): usize? {
+        return Simd.indexOfByte(slice, '<');
+    }
+
+    /// Scalar reference for `scanHtmlTagOpenSimd`.
+    pub static fn scanHtmlTagOpenScalar(slice: []const u8): usize? {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            if (slice[i] == '<') return i;
+        }
+        return null;
+    }
+
+    /// SIMD-accelerated scan for next HTML special character (`<`, `>`, `&`, `"`).
+    pub static fn scanHtmlSpecialSimd(slice: []const u8): usize? {
+        return Simd.indexOfAny4(slice, '<', '>', '&', '"');
+    }
+
+    /// Scalar reference for `scanHtmlSpecialSimd`.
+    pub static fn scanHtmlSpecialScalar(slice: []const u8): usize? {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            const c = slice[i];
+            if (c == '<' || c == '>' || c == '&' || c == '"') return i;
+        }
+        return null;
+    }
+
+    /// Returns true for inherently dangerous attributes (`on*`, `style`, `srcdoc`, `formaction`, `xlink:href`).
+    pub static fn isForbiddenAttr(name: []const u8): bool {
+        if (name.len >= 2 && (name[0] == 'o' || name[0] == 'O') && (name[1] == 'n' || name[1] == 'N')) {
+            return true;
+        }
+        if (std.ascii.eqlIgnoreCase(name, "style")) return true;
+        if (std.ascii.eqlIgnoreCase(name, "srcdoc")) return true;
+        if (std.ascii.eqlIgnoreCase(name, "formaction")) return true;
+        if (std.ascii.eqlIgnoreCase(name, "xlink:href")) return true;
+        return false;
+    }
+
+    /// Decodes HTML entities before running `isSafeUrl` to catch entity-encoded scheme obfuscation.
+    pub static fn isSafeUrlStrict(alloc: std.mem.Allocator, url: []const u8): bool! {
+        const decoded = try HtmlEntities.decode(alloc, url);
+        defer alloc.free(decoded);
+        return HtmlSanitizer.isSafeUrl(decoded);
+    }
+
     /// Returns true for inherently dangerous tags whose content must always be dropped.
     pub static fn isForbiddenTag(tag: []const u8): bool {
         if (std.ascii.eqlIgnoreCase(tag, "script")) return true;
@@ -248,7 +300,7 @@ pub struct HtmlSanitizer {
                 HtmlSanitizer.appendLowerAscii(&out, alloc, t.tag_name)?;
 
                 for (a of t.attrs) {
-                    if (HtmlSanitizer.isEventHandlerAttr(a.name)) {
+                    if (HtmlSanitizer.isForbiddenAttr(a.name)) {
                         continue;
                     }
                     if (policy.isUrlAttr(a.name)) {

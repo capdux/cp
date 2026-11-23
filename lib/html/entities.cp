@@ -1,7 +1,9 @@
+// Reference-hardened against rust-ammonia/ammonia (MIT/Apache-2.0)
 // Source: cp/lib/html/entities.cp (WHATWG HTML5 Character Reference Codec)
-// WHATWG HTML5 Entity Encoder & Decoder with C1 Windows-1252 Replacements
+// WHATWG HTML5 Entity Encoder & Decoder with C1 Windows-1252 Replacements & cap:simd Fast Path
 
 const std = @import("std");
+import { Simd } from "cap:simd";
 import { Utf8 } from "cap:string";
 
 struct HtmlEntityEntry {
@@ -336,27 +338,43 @@ pub struct HtmlEntities {
         return HtmlEntities.mapNumericCodepoint(cp);
     }
 
-    /// Escapes `&`, `<`, and `>` for HTML text nodes. Caller owns returned slice.
+    /// Escapes `&`, `<`, and `>` for HTML text nodes (`cap:simd` fast-scan). Caller owns returned slice.
     pub static fn encodeText(alloc: std.mem.Allocator, text: []const u8): ([]u8)! {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(alloc);
         try out.ensureTotalCapacity(alloc, text.len);
-        for (c of text) {
+        let i: usize = 0;
+        while (i < text.len) {
+            const rest = text[i..];
+            const hit = Simd.indexOfAny4(rest, '&', '<', '>', '&') orelse {
+                out.appendSlice(alloc, rest)?;
+                break;
+            };
+            if (hit > 0) {
+                out.appendSlice(alloc, rest[0..hit])?;
+                i += hit;
+            }
+            const c = text[i];
             switch (c) {
                 '&' => out.appendSlice(alloc, "&amp;")?,
                 '<' => out.appendSlice(alloc, "&lt;")?,
                 '>' => out.appendSlice(alloc, "&gt;")?,
                 else => out.append(alloc, c)?,
             }
+            i += 1;
         }
         return out.toOwnedSlice(alloc);
     }
 
-    /// Escapes `&`, `<`, `>`, `"`, and `'` for HTML attribute values. Caller owns returned slice.
+    /// Escapes `&`, `<`, `>`, `"`, and `'` for HTML attribute values (`cap:simd` fast-path). Caller owns returned slice.
     pub static fn encodeAttr(alloc: std.mem.Allocator, text: []const u8): ([]u8)! {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(alloc);
         try out.ensureTotalCapacity(alloc, text.len);
+        if (Simd.indexOfAny4(text, '&', '<', '>', '"') == null && Simd.indexOfByte(text, '\'') == null) {
+            out.appendSlice(alloc, text)?;
+            return out.toOwnedSlice(alloc);
+        }
         for (c of text) {
             switch (c) {
                 '&' => out.appendSlice(alloc, "&amp;")?,
@@ -370,7 +388,7 @@ pub struct HtmlEntities {
         return out.toOwnedSlice(alloc);
     }
 
-    /// Decodes HTML5 named entities and decimal/hex numeric character references (with WHATWG C1/FFFD rules).
+    /// Decodes HTML5 named entities and decimal/hex numeric character references (`cap:simd` `&` fast-scan).
     pub static fn decode(alloc: std.mem.Allocator, html: []const u8): ([]u8)! {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(alloc);
@@ -378,6 +396,14 @@ pub struct HtmlEntities {
 
         let i: usize = 0;
         while (i < html.len) {
+            const amp_off = Simd.indexOfByte(html[i..], '&') orelse {
+                out.appendSlice(alloc, html[i..])?;
+                break;
+            };
+            if (amp_off > 0) {
+                out.appendSlice(alloc, html[i .. i + amp_off])?;
+                i += amp_off;
+            }
             if (html[i] == '&') {
                 let semi: usize = i + 1;
                 let found_semi = false;

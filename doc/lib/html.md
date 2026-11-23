@@ -25,8 +25,8 @@
 | `lib/html/tokenizer.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `HtmlTokenizer`、`HtmlToken`、`HtmlTokenKind`、`HtmlAttribute` HTML5 词法引擎 |
 | `lib/html/selector.cp` | `// Source: /data/dev/bun/src/lolhtml_sys/lol_html.cp` | `CssSelector` 复合选择器、`HtmlElement` 变更句柄与 `HtmlRewriter` 流式重写器 |
 | `lib/html/escape.cp` | `// Source: /data/dev/bun/src/md/entity.cp` | `HtmlEscape` 零拷贝快路径转义与实体解码 |
-| `lib/html/entities.cp` | `// Source: cp/lib/html/entities.cp (WHATWG HTML5 Character Reference Codec)` | `HtmlEntities` WHATWG HTML5 206+ 命名实体与十进制/十六进制/C1 替换编解码 |
-| `lib/html/sanitizer.cp` | `// Source: cp/lib/html/sanitizer.cp (Allowlist HTML5 Content Sanitizer)` | `SanitizerPolicy` 与 `HtmlSanitizer` 白名单流式清洗与 URL 协议防护 |
+| `lib/html/entities.cp` | `// Reference-hardened against rust-ammonia/ammonia (MIT/Apache-2.0)` | `HtmlEntities` WHATWG HTML5 206+ 命名实体与十进制/十六进制/C1 替换编解码（含 `cap:simd` 快扫） |
+| `lib/html/sanitizer.cp` | `// Reference-hardened against rust-ammonia/ammonia (MIT/Apache-2.0)` | `HTML_SANITIZE_MAX_DEPTH`、`SanitizerPolicy` 与 `HtmlSanitizer`（白名单流式清洗、URL 协议混淆拦截 `isSafeUrlStrict`、高危属性 `on*`/`style`/`srcdoc`/`formaction`/`xlink:href` 全清除与 `cap:simd` 扫描） |
 | `lib/html/extractor.cp` | `// Source: cp/lib/html/extractor.cp (AI Agent HTML Visible Text & Metadata Extractor)` | `HtmlExtractor`、`HtmlDocumentSummary` 单遍网页元数据与 RAG 规范化纯文本提取 |
 
 ---

@@ -65,6 +65,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rapid-qoi** (`aldanor`) | <https://github.com/aldanor/rapid-qoi> | MIT OR Apache-2.0 | `lib/image/qoi.cp` | Copyright (c) 2021-2023 aldanor |
 | **hickory-dns** | <https://github.com/hickory-dns/hickory-dns> | MIT OR Apache-2.0 | `lib/dns/wire.cp` | Copyright (c) 2015 Benjamin Fry / Hickory DNS Contributors |
 | **RustCrypto/hashes** (`sha2`, `hmac`, `hkdf`) | <https://github.com/RustCrypto/hashes> | MIT OR Apache-2.0 | `lib/crypto/shaHash.cp`, `lib/crypto/shaHmac.cp`, `lib/crypto/shaKdf.cp` | Copyright (c) 2016-2024 RustCrypto Developers |
+| **ammonia** (`rust-ammonia`) | <https://github.com/rust-ammonia/ammonia> | MIT OR Apache-2.0 | `lib/html/sanitizer.cp`, `lib/html/entities.cp` | Copyright (c) 2015-2024 Michael Howell / Ammonia Contributors |
 
 ---
 
