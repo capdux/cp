@@ -667,6 +667,21 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
 
 ---
 
+---
+
+## 原生 SIMD 加速 DSP & 图像核（`fftFilter.cp` / `imageOps.cp`）
+
+- **音频 DSP SIMD 加速（`fftFilter.cp`）**：
+  - `resampleSincF32`：64-lane 分块 `@dot` 加窗 Sinc 重采样核（支持任意 `half_taps`，内置溢出与非线性边界保护）。
+  - `measureAudioLoudnessF32`：64-sample 分块 `@dot` 平方和能量归约（自动清洗 NaN/Inf）。
+  - `dotF32Simd(a, b): f32`：原生 SIMD `@dot` 点积封装。
+  - `convolveFirF32Simd(input, coeffs, *out): usize ! DspKernelError`：外部切片通用因果 FIR 滤波 SIMD 核（64-lane 分块 `@dot`，无抽头数上限）。
+- **图像处理 SIMD 加速与防溢出加固（`imageOps.cp`）**：
+  - `resizeRgba`（Pass 1/2 水平+垂直可分离缩放）与 `gaussianBlurRgba`（对称 1D 高斯卷积）：全面接入 `@dot` 向量化计算。
+  - `computePsnrRgba`：64 像素分块 `@l2sq` 硬件向量化 MSE/PSNR 计算。
+  - `rgbaChannelDotF32Simd(a, b, width, height): f64`：基于 `@dot` 的 RGB 归一化互相关（NCC）模板匹配核。
+  - `decodePpmP6` / `decodeBmpToRgba` / `sobelEdgeMagnitude`：全面防整数溢出与 `i32::MIN` 翻转守卫，经 5,000 次确定性畸形输入 Fuzz 轰炸零崩溃验证。
+
 ## 收敛子模块深度文档
 
 - [aac.md](media/aac.md)

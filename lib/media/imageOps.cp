@@ -575,6 +575,14 @@ fn evalFilterKernel(filter: ResizeFilterKind, x_in: f64): f64 {
 /// Resizes an RGBA frame from `src_w x src_h` to `dst_w x dst_h` using two-pass separable
 /// horizontal + vertical filtering (`nearest | bilinear | bicubic_catmull_rom | lanczos3`).
 /// For non-nearest modes, requires `scratch_f32.len >= src_h * dst_w * 4`.
+fn safeMulPixels(w: usize, h: usize): usize? {
+    if (w == 0 || h == 0) return null;
+    if (w > 65536 || h > 65536) return null;
+    const npix: usize = w * h;
+    if (npix > 268435456) return null; // cap at 256M pixels (1 GiB RGBA)
+    return npix;
+}
+
 pub fn resizeRgba(
     src: []const u8,
     src_w: usize,
@@ -585,10 +593,9 @@ pub fn resizeRgba(
     dst: *[]u8,
     scratch_f32: *[]f32,
 ): void ! ImageOpsError {
-    if (src_w == 0 || src_h == 0 || dst_w == 0 || dst_h == 0) {
-        return ImageOpsError.InvalidDimensions;
-    }
-    if (src.len < src_w * src_h * 4 || dst.len < dst_w * dst_h * 4) {
+    const src_npix: usize = safeMulPixels(src_w, src_h) ?? return ImageOpsError.InvalidDimensions;
+    const dst_npix: usize = safeMulPixels(dst_w, dst_h) ?? return ImageOpsError.InvalidDimensions;
+    if (src.len < src_npix * 4 || dst.len < dst_npix * 4) {
         return ImageOpsError.BufferTooSmall;
     }
 
@@ -610,13 +617,19 @@ pub fn resizeRgba(
         return;
     }
 
-    if (scratch_f32.len < resizeRgbaScratchLen(src_h, dst_w)) {
+    const sc_npix: usize = safeMulPixels(src_h, dst_w) ?? return ImageOpsError.InvalidDimensions;
+    if (scratch_f32.len < sc_npix * 4) {
         return ImageOpsError.BufferTooSmall;
     }
 
     const base_radius: f64 = filterSupportRadius(filter);
+    let w_buf: [64]f32 = [0.0; 64];
+    let c0_buf: [64]f32 = [0.0; 64];
+    let c1_buf: [64]f32 = [0.0; 64];
+    let c2_buf: [64]f32 = [0.0; 64];
+    let c3_buf: [64]f32 = [0.0; 64];
 
-    // Pass 1: Horizontal resize (src_w -> dst_w) into scratch_f32[src_h * dst_w * 4]
+    // Pass 1: Horizontal resize (src_w -> dst_w) into scratch_f32[src_h * dst_w * 4] via SIMD @dot
     const scale_x: f64 = @as(f64, @floatFromInt(src_w)) / @as(f64, @floatFromInt(dst_w));
     const filter_scale_x: f64 = if (scale_x > 1.0) scale_x else 1.0;
     const support_x: f64 = base_radius * filter_scale_x;
@@ -634,6 +647,7 @@ pub fn resizeRgba(
             let acc2: f64 = 0.0;
             let acc3: f64 = 0.0;
             let w_sum: f64 = 0.0;
+            let n_lane: usize = 0;
 
             let kx: i64 = left;
             while (kx <= right) : (kx += 1) {
@@ -641,11 +655,26 @@ pub fn resizeRgba(
                 if (absF64(w) <= 1.0e-12) continue;
                 const sx: usize = clampIdx(kx, src_w);
                 const s_off: usize = (sy * src_w + sx) * 4;
-                acc0 += @as(f64, @floatFromInt(src[s_off + 0])) * w;
-                acc1 += @as(f64, @floatFromInt(src[s_off + 1])) * w;
-                acc2 += @as(f64, @floatFromInt(src[s_off + 2])) * w;
-                acc3 += @as(f64, @floatFromInt(src[s_off + 3])) * w;
+                w_buf[n_lane] = w as f32;
+                c0_buf[n_lane] = @as(f32, @floatFromInt(src[s_off + 0]));
+                c1_buf[n_lane] = @as(f32, @floatFromInt(src[s_off + 1]));
+                c2_buf[n_lane] = @as(f32, @floatFromInt(src[s_off + 2]));
+                c3_buf[n_lane] = @as(f32, @floatFromInt(src[s_off + 3]));
                 w_sum += w;
+                n_lane += 1;
+                if (n_lane == 64) {
+                    acc0 += @as(f64, @dot(c0_buf[0..64], w_buf[0..64]));
+                    acc1 += @as(f64, @dot(c1_buf[0..64], w_buf[0..64]));
+                    acc2 += @as(f64, @dot(c2_buf[0..64], w_buf[0..64]));
+                    acc3 += @as(f64, @dot(c3_buf[0..64], w_buf[0..64]));
+                    n_lane = 0;
+                }
+            }
+            if (n_lane > 0) {
+                acc0 += @as(f64, @dot(c0_buf[0..n_lane], w_buf[0..n_lane]));
+                acc1 += @as(f64, @dot(c1_buf[0..n_lane], w_buf[0..n_lane]));
+                acc2 += @as(f64, @dot(c2_buf[0..n_lane], w_buf[0..n_lane]));
+                acc3 += @as(f64, @dot(c3_buf[0..n_lane], w_buf[0..n_lane]));
             }
 
             const inv_w: f64 = if (absF64(w_sum) > 1.0e-12) (1.0 as f64) / w_sum else 0.0;
@@ -657,7 +686,7 @@ pub fn resizeRgba(
         }
     }
 
-    // Pass 2: Vertical resize (src_h -> dst_h) from scratch_f32 into dst[dst_h * dst_w * 4]
+    // Pass 2: Vertical resize (src_h -> dst_h) from scratch_f32 into dst[dst_h * dst_w * 4] via SIMD @dot
     const scale_y: f64 = @as(f64, @floatFromInt(src_h)) / @as(f64, @floatFromInt(dst_h));
     const filter_scale_y: f64 = if (scale_y > 1.0) scale_y else 1.0;
     const support_y: f64 = base_radius * filter_scale_y;
@@ -675,6 +704,7 @@ pub fn resizeRgba(
             let acc2: f64 = 0.0;
             let acc3: f64 = 0.0;
             let w_sum: f64 = 0.0;
+            let n_lane: usize = 0;
 
             let ky: i64 = top;
             while (ky <= bottom) : (ky += 1) {
@@ -682,11 +712,26 @@ pub fn resizeRgba(
                 if (absF64(w) <= 1.0e-12) continue;
                 const sy_c: usize = clampIdx(ky, src_h);
                 const sc_off: usize = (sy_c * dst_w + dx) * 4;
-                acc0 += (scratch_f32[sc_off + 0] as f64) * w;
-                acc1 += (scratch_f32[sc_off + 1] as f64) * w;
-                acc2 += (scratch_f32[sc_off + 2] as f64) * w;
-                acc3 += (scratch_f32[sc_off + 3] as f64) * w;
+                w_buf[n_lane] = w as f32;
+                c0_buf[n_lane] = scratch_f32[sc_off + 0];
+                c1_buf[n_lane] = scratch_f32[sc_off + 1];
+                c2_buf[n_lane] = scratch_f32[sc_off + 2];
+                c3_buf[n_lane] = scratch_f32[sc_off + 3];
                 w_sum += w;
+                n_lane += 1;
+                if (n_lane == 64) {
+                    acc0 += @as(f64, @dot(c0_buf[0..64], w_buf[0..64]));
+                    acc1 += @as(f64, @dot(c1_buf[0..64], w_buf[0..64]));
+                    acc2 += @as(f64, @dot(c2_buf[0..64], w_buf[0..64]));
+                    acc3 += @as(f64, @dot(c3_buf[0..64], w_buf[0..64]));
+                    n_lane = 0;
+                }
+            }
+            if (n_lane > 0) {
+                acc0 += @as(f64, @dot(c0_buf[0..n_lane], w_buf[0..n_lane]));
+                acc1 += @as(f64, @dot(c1_buf[0..n_lane], w_buf[0..n_lane]));
+                acc2 += @as(f64, @dot(c2_buf[0..n_lane], w_buf[0..n_lane]));
+                acc3 += @as(f64, @dot(c3_buf[0..n_lane], w_buf[0..n_lane]));
             }
 
             const inv_w: f64 = if (absF64(w_sum) > 1.0e-12) (1.0 as f64) / w_sum else 0.0;
@@ -700,11 +745,11 @@ pub fn resizeRgba(
 }
 
 // ============================================================================
-// 5. Separable Gaussian Blur & 3x3 Sobel Edge Gradient Magnitude
+// 5. Separable Gaussian Blur (SIMD `@dot`) & 3x3 Sobel Edge Gradient Magnitude
 // ============================================================================
 
-/// Applies a two-pass separable 2D Gaussian blur to an RGBA frame with zero heap allocation.
-/// Requires `scratch_f32.len >= width * height * 4` and `1 <= radius <= 64`.
+/// Applies a two-pass separable 2D Gaussian blur to an RGBA frame with zero heap allocation
+/// and native SIMD `@dot` convolution. Requires `scratch_f32.len >= width * height * 4` and `1 <= radius <= 64`.
 pub fn gaussianBlurRgba(
     src: []const u8,
     width: usize,
@@ -714,17 +759,18 @@ pub fn gaussianBlurRgba(
     dst: *[]u8,
     scratch_f32: *[]f32,
 ): void ! ImageOpsError {
-    if (width == 0 || height == 0) return ImageOpsError.InvalidDimensions;
+    const npix: usize = safeMulPixels(width, height) ?? return ImageOpsError.InvalidDimensions;
     if (radius == 0 || radius > MAX_GAUSS_RADIUS || sigma <= 0.0 || std.math.isNan(sigma) || std.math.isInf(sigma)) {
         return ImageOpsError.InvalidKernel;
     }
-    const total: usize = width * height * 4;
+    const total: usize = npix * 4;
     if (src.len < total || dst.len < total || scratch_f32.len < total) {
         return ImageOpsError.BufferTooSmall;
     }
 
-    // Precompute normalized symmetric 1D Gaussian weights kernel[0..=radius].
+    // Precompute normalized symmetric 1D Gaussian weights kernel_f32[0..=radius].
     let kernel: [MAX_GAUSS_RADIUS + 1]f64 = [0.0; MAX_GAUSS_RADIUS + 1];
+    let kernel_f32: [MAX_GAUSS_RADIUS + 1]f32 = [0.0; MAX_GAUSS_RADIUS + 1];
     const sig_f64: f64 = sigma as f64;
     const inv_2sig2: f64 = 1.0 / (2.0 * sig_f64 * sig_f64);
     kernel[0] = 1.0;
@@ -739,69 +785,64 @@ pub fn gaussianBlurRgba(
     let norm_i: usize = 0;
     while (norm_i <= radius) : (norm_i += 1) {
         kernel[norm_i] /= w_total;
+        kernel_f32[norm_i] = kernel[norm_i] as f32;
     }
 
-    // Pass 1: Horizontal convolution into scratch_f32
+    let s0_buf: [MAX_GAUSS_RADIUS]f32 = [0.0; MAX_GAUSS_RADIUS];
+    let s1_buf: [MAX_GAUSS_RADIUS]f32 = [0.0; MAX_GAUSS_RADIUS];
+    let s2_buf: [MAX_GAUSS_RADIUS]f32 = [0.0; MAX_GAUSS_RADIUS];
+    let s3_buf: [MAX_GAUSS_RADIUS]f32 = [0.0; MAX_GAUSS_RADIUS];
+    const kw_slice: []const f32 = kernel_f32[1..radius + 1];
+
+    // Pass 1: Horizontal convolution into scratch_f32 via SIMD @dot
     let y: usize = 0;
     while (y < height) : (y += 1) {
         let x: usize = 0;
         while (x < width) : (x += 1) {
             const c_off: usize = (y * width + x) * 4;
-            const w0: f64 = kernel[0];
-            let acc0: f64 = @as(f64, @floatFromInt(src[c_off + 0])) * w0;
-            let acc1: f64 = @as(f64, @floatFromInt(src[c_off + 1])) * w0;
-            let acc2: f64 = @as(f64, @floatFromInt(src[c_off + 2])) * w0;
-            let acc3: f64 = @as(f64, @floatFromInt(src[c_off + 3])) * w0;
-
+            const w0: f32 = kernel_f32[0];
             let k: usize = 1;
             while (k <= radius) : (k += 1) {
-                const wk: f64 = kernel[k];
                 const lx: usize = clampIdx(@as(i64, @intCast(x)) - @as(i64, @intCast(k)), width);
                 const rx: usize = clampIdx(@as(i64, @intCast(x)) + @as(i64, @intCast(k)), width);
                 const loff: usize = (y * width + lx) * 4;
                 const roff: usize = (y * width + rx) * 4;
-                acc0 += (@as(f64, @floatFromInt(src[loff + 0])) + @as(f64, @floatFromInt(src[roff + 0]))) * wk;
-                acc1 += (@as(f64, @floatFromInt(src[loff + 1])) + @as(f64, @floatFromInt(src[roff + 1]))) * wk;
-                acc2 += (@as(f64, @floatFromInt(src[loff + 2])) + @as(f64, @floatFromInt(src[roff + 2]))) * wk;
-                acc3 += (@as(f64, @floatFromInt(src[loff + 3])) + @as(f64, @floatFromInt(src[roff + 3]))) * wk;
+                s0_buf[k - 1] = @as(f32, @floatFromInt(src[loff + 0])) + @as(f32, @floatFromInt(src[roff + 0]));
+                s1_buf[k - 1] = @as(f32, @floatFromInt(src[loff + 1])) + @as(f32, @floatFromInt(src[roff + 1]));
+                s2_buf[k - 1] = @as(f32, @floatFromInt(src[loff + 2])) + @as(f32, @floatFromInt(src[roff + 2]));
+                s3_buf[k - 1] = @as(f32, @floatFromInt(src[loff + 3])) + @as(f32, @floatFromInt(src[roff + 3]));
             }
 
-            scratch_f32[c_off + 0] = acc0 as f32;
-            scratch_f32[c_off + 1] = acc1 as f32;
-            scratch_f32[c_off + 2] = acc2 as f32;
-            scratch_f32[c_off + 3] = acc3 as f32;
+            scratch_f32[c_off + 0] = @as(f32, @floatFromInt(src[c_off + 0])) * w0 + @dot(s0_buf[0..radius], kw_slice);
+            scratch_f32[c_off + 1] = @as(f32, @floatFromInt(src[c_off + 1])) * w0 + @dot(s1_buf[0..radius], kw_slice);
+            scratch_f32[c_off + 2] = @as(f32, @floatFromInt(src[c_off + 2])) * w0 + @dot(s2_buf[0..radius], kw_slice);
+            scratch_f32[c_off + 3] = @as(f32, @floatFromInt(src[c_off + 3])) * w0 + @dot(s3_buf[0..radius], kw_slice);
         }
     }
 
-    // Pass 2: Vertical convolution from scratch_f32 into dst
+    // Pass 2: Vertical convolution from scratch_f32 into dst via SIMD @dot
     let y2: usize = 0;
     while (y2 < height) : (y2 += 1) {
         let x2: usize = 0;
         while (x2 < width) : (x2 += 1) {
             const c_off: usize = (y2 * width + x2) * 4;
-            const w0: f64 = kernel[0];
-            let acc0: f64 = (scratch_f32[c_off + 0] as f64) * w0;
-            let acc1: f64 = (scratch_f32[c_off + 1] as f64) * w0;
-            let acc2: f64 = (scratch_f32[c_off + 2] as f64) * w0;
-            let acc3: f64 = (scratch_f32[c_off + 3] as f64) * w0;
-
+            const w0: f32 = kernel_f32[0];
             let k: usize = 1;
             while (k <= radius) : (k += 1) {
-                const wk: f64 = kernel[k];
                 const uy: usize = clampIdx(@as(i64, @intCast(y2)) - @as(i64, @intCast(k)), height);
                 const dy: usize = clampIdx(@as(i64, @intCast(y2)) + @as(i64, @intCast(k)), height);
                 const uoff: usize = (uy * width + x2) * 4;
                 const doff: usize = (dy * width + x2) * 4;
-                acc0 += ((scratch_f32[uoff + 0] as f64) + (scratch_f32[doff + 0] as f64)) * wk;
-                acc1 += ((scratch_f32[uoff + 1] as f64) + (scratch_f32[doff + 1] as f64)) * wk;
-                acc2 += ((scratch_f32[uoff + 2] as f64) + (scratch_f32[doff + 2] as f64)) * wk;
-                acc3 += ((scratch_f32[uoff + 3] as f64) + (scratch_f32[doff + 3] as f64)) * wk;
+                s0_buf[k - 1] = scratch_f32[uoff + 0] + scratch_f32[doff + 0];
+                s1_buf[k - 1] = scratch_f32[uoff + 1] + scratch_f32[doff + 1];
+                s2_buf[k - 1] = scratch_f32[uoff + 2] + scratch_f32[doff + 2];
+                s3_buf[k - 1] = scratch_f32[uoff + 3] + scratch_f32[doff + 3];
             }
 
-            dst[c_off + 0] = clampU8FromF64(acc0);
-            dst[c_off + 1] = clampU8FromF64(acc1);
-            dst[c_off + 2] = clampU8FromF64(acc2);
-            dst[c_off + 3] = clampU8FromF64(acc3);
+            dst[c_off + 0] = clampU8FromF32(scratch_f32[c_off + 0] * w0 + @dot(s0_buf[0..radius], kw_slice));
+            dst[c_off + 1] = clampU8FromF32(scratch_f32[c_off + 1] * w0 + @dot(s1_buf[0..radius], kw_slice));
+            dst[c_off + 2] = clampU8FromF32(scratch_f32[c_off + 2] * w0 + @dot(s2_buf[0..radius], kw_slice));
+            dst[c_off + 3] = clampU8FromF32(scratch_f32[c_off + 3] * w0 + @dot(s3_buf[0..radius], kw_slice));
         }
     }
 }
@@ -813,8 +854,7 @@ pub fn sobelEdgeMagnitude(
     height: usize,
     out_mag: *[]u8,
 ): void ! ImageOpsError {
-    if (width == 0 || height == 0) return ImageOpsError.InvalidDimensions;
-    const npix: usize = width * height;
+    const npix: usize = safeMulPixels(width, height) ?? return ImageOpsError.InvalidDimensions;
     if (gray.len < npix || out_mag.len < npix) return ImageOpsError.BufferTooSmall;
 
     let y: usize = 0;
@@ -911,6 +951,7 @@ fn readPpmUint(raw: []const u8, pos: *usize): usize ! ImageOpsError {
     }
     let val: usize = 0;
     while (pos.* < raw.len && raw[pos.*] >= '0' && raw[pos.*] <= '9') {
+        if (val > 100000000) return ImageOpsError.InvalidFormat;
         val = val * 10 + @as(usize, raw[pos.*] - '0');
         pos.* += 1;
     }
@@ -934,8 +975,8 @@ pub fn decodePpmP6(raw: []const u8, out_rgba: *[]u8): ImageViewMeta ! ImageOpsEr
     }
     pos += 1; // Consume single whitespace separator after maxval
 
-    const npix: usize = width * height;
-    if (pos + npix * 3 > raw.len) {
+    const npix: usize = safeMulPixels(width, height) ?? return ImageOpsError.InvalidDimensions;
+    if (npix * 3 > raw.len - pos) {
         return ImageOpsError.InvalidFormat;
     }
     if (out_rgba.len < npix * 4) {
@@ -1026,12 +1067,13 @@ pub fn decodeBmpToRgba(raw: []const u8, out_rgba: *[]u8): ImageViewMeta ! ImageO
 
     const raw_w: i32 = readI32Le(raw, 18);
     const raw_h: i32 = readI32Le(raw, 22);
-    if (raw_w <= 0 || raw_h == 0) {
+    if (raw_w <= 0 || raw_h == 0 || raw_h == -2147483648) {
         return ImageOpsError.InvalidDimensions;
     }
     const width: usize = @as(usize, @intCast(raw_w));
     const top_down: bool = raw_h < 0;
     const height: usize = @as(usize, @intCast(if (top_down) -raw_h else raw_h));
+    const npix: usize = safeMulPixels(width, height) ?? return ImageOpsError.InvalidDimensions;
 
     const bpp: u16 = readU16Le(raw, 28);
     const compression: u32 = readU32Le(raw, 30);
@@ -1044,10 +1086,10 @@ pub fn decodeBmpToRgba(raw: []const u8, out_rgba: *[]u8): ImageViewMeta ! ImageO
 
     const bytes_per_px: usize = @as(usize, bpp / 8);
     const row_stride: usize = ((width * bytes_per_px) + 3) & (~@as(usize, 3));
-    if (data_offset + row_stride * height > raw.len) {
+    if (row_stride > (raw.len - data_offset) / height) {
         return ImageOpsError.InvalidFormat;
     }
-    if (out_rgba.len < width * height * 4) {
+    if (out_rgba.len < npix * 4) {
         return ImageOpsError.BufferTooSmall;
     }
 
@@ -1078,30 +1120,87 @@ pub fn decodeBmpToRgba(raw: []const u8, out_rgba: *[]u8): ImageViewMeta ! ImageO
 // 7. Objective Image Quality Metric (PSNR)
 // ============================================================================
 
-/// Computes Peak Signal-to-Noise Ratio (PSNR in dB) across RGB channels of two RGBA frames.
-/// Returns `100.0` for identical (zero-MSE) images.
+/// Computes Peak Signal-to-Noise Ratio (PSNR in dB) across RGB channels of two RGBA frames
+/// using hardware SIMD `@l2sq` acceleration. Returns `100.0` for identical (zero-MSE) images.
 pub fn computePsnrRgba(
     a: []const u8,
     b: []const u8,
     width: usize,
     height: usize,
 ): f64 {
-    const npix: usize = width * height;
-    if (npix == 0 || a.len < npix * 4 || b.len < npix * 4) {
+    const npix: usize = safeMulPixels(width, height) ?? return 0.0;
+    if (a.len < npix * 4 || b.len < npix * 4) {
         return 0.0;
     }
+    let pa: [192]f32 = [0.0; 192];
+    let pb: [192]f32 = [0.0; 192];
     let mse_sum: f64 = 0.0;
     let i: usize = 0;
-    while (i < npix) : (i += 1) {
-        const off: usize = i * 4;
-        const dr: f64 = @as(f64, @floatFromInt(a[off + 0])) - @as(f64, @floatFromInt(b[off + 0]));
-        const dg: f64 = @as(f64, @floatFromInt(a[off + 1])) - @as(f64, @floatFromInt(b[off + 1]));
-        const db: f64 = @as(f64, @floatFromInt(a[off + 2])) - @as(f64, @floatFromInt(b[off + 2]));
-        mse_sum += dr * dr + dg * dg + db * db;
+    while (i < npix) {
+        const rem: usize = npix - i;
+        const take: usize = if (rem > 64) 64 else rem;
+        let k: usize = 0;
+        while (k < take) : (k += 1) {
+            const off: usize = (i + k) * 4;
+            const b_off: usize = k * 3;
+            pa[b_off + 0] = @as(f32, @floatFromInt(a[off + 0]));
+            pa[b_off + 1] = @as(f32, @floatFromInt(a[off + 1]));
+            pa[b_off + 2] = @as(f32, @floatFromInt(a[off + 2]));
+            pb[b_off + 0] = @as(f32, @floatFromInt(b[off + 0]));
+            pb[b_off + 1] = @as(f32, @floatFromInt(b[off + 1]));
+            pb[b_off + 2] = @as(f32, @floatFromInt(b[off + 2]));
+        }
+        const n_elem: usize = take * 3;
+        mse_sum += @as(f64, @l2sq(pa[0..n_elem], pb[0..n_elem]));
+        i += take;
     }
     const mse: f64 = mse_sum / (@as(f64, @floatFromInt(npix)) * 3.0);
     if (mse <= 1.0e-12) {
         return 100.0;
     }
     return 10.0 * std.math.log10((255.0 * 255.0) / mse);
+}
+
+/// Computes Normalized Cross-Correlation (NCC in `[0.0, 1.0]`) across RGB channels of two RGBA
+/// frames using hardware SIMD `@dot` acceleration, useful for template matching and visual diffing.
+pub fn rgbaChannelDotF32Simd(
+    a: []const u8,
+    b: []const u8,
+    width: usize,
+    height: usize,
+): f64 {
+    const npix: usize = safeMulPixels(width, height) ?? return 0.0;
+    if (a.len < npix * 4 || b.len < npix * 4) return 0.0;
+
+    let pa: [192]f32 = [0.0; 192];
+    let pb: [192]f32 = [0.0; 192];
+    let dot_ab: f64 = 0.0;
+    let norm_a: f64 = 0.0;
+    let norm_b: f64 = 0.0;
+
+    let i: usize = 0;
+    while (i < npix) {
+        const rem: usize = npix - i;
+        const take: usize = if (rem > 64) 64 else rem;
+        let k: usize = 0;
+        while (k < take) : (k += 1) {
+            const off: usize = (i + k) * 4;
+            const b_off: usize = k * 3;
+            pa[b_off + 0] = @as(f32, @floatFromInt(a[off + 0]));
+            pa[b_off + 1] = @as(f32, @floatFromInt(a[off + 1]));
+            pa[b_off + 2] = @as(f32, @floatFromInt(a[off + 2]));
+            pb[b_off + 0] = @as(f32, @floatFromInt(b[off + 0]));
+            pb[b_off + 1] = @as(f32, @floatFromInt(b[off + 1]));
+            pb[b_off + 2] = @as(f32, @floatFromInt(b[off + 2]));
+        }
+        const n_elem: usize = take * 3;
+        dot_ab += @as(f64, @dot(pa[0..n_elem], pb[0..n_elem]));
+        norm_a += @as(f64, @dot(pa[0..n_elem], pa[0..n_elem]));
+        norm_b += @as(f64, @dot(pb[0..n_elem], pb[0..n_elem]));
+        i += take;
+    }
+
+    const denom: f64 = std.math.sqrt(norm_a * norm_b);
+    if (denom <= 1.0e-12) return 0.0;
+    return dot_ab / denom;
 }

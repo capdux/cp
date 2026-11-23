@@ -107,6 +107,8 @@ export {
     resampleSincF32,
     LoudnessMetrics,
     measureAudioLoudnessF32,
+    dotF32Simd,
+    convolveFirF32Simd,
 } from "./fftFilter.cp";
 
 export {
@@ -171,6 +173,7 @@ export {
     encodeBmpRgba,
     decodeBmpToRgba,
     computePsnrRgba,
+    rgbaChannelDotF32Simd,
 } from "./imageOps.cp";
 
 export {

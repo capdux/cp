@@ -786,14 +786,19 @@ pub fn resampleSincF32(
     if (src_rate_hz == 0 || dst_rate_hz == 0) {
         return DspKernelError.InvalidSampleRate;
     }
-    if (half_taps == 0) {
+    if (half_taps == 0 || half_taps > 1024) {
         return DspKernelError.InvalidRatio;
     }
     if (src.len == 0) {
         return 0;
     }
 
-    const num: u64 = @as(u64, src.len) * @as(u64, dst_rate_hz) + (@as(u64, src_rate_hz) / 2);
+    const src_len_u64: u64 = @as(u64, @intCast(src.len));
+    const dst_rate_u64: u64 = @as(u64, dst_rate_hz);
+    if (src_len_u64 > (0x7FFF_FFFF_FFFF_FFFF / dst_rate_u64)) {
+        return DspKernelError.InvalidRatio;
+    }
+    const num: u64 = src_len_u64 * dst_rate_u64 + (@as(u64, src_rate_hz) / 2);
     let out_len_u64: u64 = num / @as(u64, src_rate_hz);
     if (out_len_u64 == 0) {
         out_len_u64 = 1;
@@ -816,7 +821,14 @@ pub fn resampleSincF32(
     const inv_ratio: f64 = 1.0 / ratio;
     const cutoff: f64 = if (ratio < 1.0) ratio else 1.0;
     const win_half: f64 = @as(f64, @floatFromInt(half_taps)) / cutoff;
+    if (!isFiniteF64(win_half) || win_half > 65536.0) {
+        return DspKernelError.InvalidRatio;
+    }
     const max_src_idx: i64 = @as(i64, @intCast(src.len - 1));
+
+    // Chunked SIMD @dot buffers (64-lane chunks support arbitrary tap windows with zero heap)
+    let w_chunk: [64]f32 = [0.0; 64];
+    let s_chunk: [64]f32 = [0.0; 64];
 
     let out_i: usize = 0;
     while (out_i < out_len) : (out_i += 1) {
@@ -829,6 +841,7 @@ pub fn resampleSincF32(
 
         let acc: f64 = 0.0;
         let w_sum: f64 = 0.0;
+        let chunk_n: usize = 0;
         let k: i64 = k_start;
         while (k <= k_end) : (k += 1) {
             const d: f64 = @as(f64, @floatFromInt(k)) - src_pos;
@@ -838,9 +851,19 @@ pub fn resampleSincF32(
             }
             const win: f64 = 0.5 * (1.0 + std.math.cos(PI_F64 * d / win_half));
             const h: f64 = sincNormalized(d * cutoff) * win;
-            const sample_val: f64 = @as(f64, src[@as(usize, @intCast(k))]);
-            acc += sample_val * h;
+            const raw_s: f32 = src[@as(usize, @intCast(k))];
+            s_chunk[chunk_n] = if (isFiniteF32(raw_s)) raw_s else 0.0;
+            w_chunk[chunk_n] = h as f32;
             w_sum += h;
+            chunk_n += 1;
+
+            if (chunk_n == 64) {
+                acc += @as(f64, @dot(s_chunk[0..64], w_chunk[0..64]));
+                chunk_n = 0;
+            }
+        }
+        if (chunk_n > 0) {
+            acc += @as(f64, @dot(s_chunk[0..chunk_n], w_chunk[0..chunk_n]));
         }
 
         const out_val: f64 = if (absF64(w_sum) > 1.0e-12) acc / w_sum else 0.0;
@@ -900,14 +923,23 @@ pub fn measureAudioLoudnessF32(
     let gated_block_sum: f64 = 0.0;
     let gated_block_count: usize = 0;
 
+    let clean_chunk: [64]f32 = [0.0; 64];
+    let chunk_n: usize = 0;
+
     let i: usize = 0;
     while (i < samples.len) : (i += 1) {
         const raw: f32 = samples[i];
-        const x: f64 = if (isFiniteF32(raw)) @as(f64, raw) else 0.0;
+        const finite_f32: f32 = if (isFiniteF32(raw)) raw else 0.0;
+        const x: f64 = @as(f64, finite_f32);
         const ax: f64 = absF64(x);
 
         sum_x += x;
-        sum_sq += x * x;
+        clean_chunk[chunk_n] = finite_f32;
+        chunk_n += 1;
+        if (chunk_n == 64) {
+            sum_sq += @as(f64, @dot(clean_chunk[0..64], clean_chunk[0..64]));
+            chunk_n = 0;
+        }
         if (ax > peak_abs) {
             peak_abs = ax;
         }
@@ -930,6 +962,9 @@ pub fn measureAudioLoudnessF32(
             block_k_sq = 0.0;
             block_count_in_cur = 0;
         }
+    }
+    if (chunk_n > 0) {
+        sum_sq += @as(f64, @dot(clean_chunk[0..chunk_n], clean_chunk[0..chunk_n]));
     }
 
     // Handle trailing partial block (or short buffers < 400 ms).
@@ -969,4 +1004,51 @@ pub fn measureAudioLoudnessF32(
         dc_offset: dc_offset,
         clipped_samples: clipped,
     };
+}
+
+// ============================================================================
+// 7. Native SIMD `@dot` DSP Primitives (`dotF32Simd`, `convolveFirF32Simd`)
+// ============================================================================
+
+/// Computes the hardware SIMD `@dot` inner product of two `f32` slices (bounded by `min(a.len, b.len)`).
+pub fn dotF32Simd(a: []const f32, b: []const f32): f32 {
+    const n: usize = if (a.len < b.len) a.len else b.len;
+    if (n == 0) return 0.0;
+    return @dot(a[0..n], b[0..n]);
+}
+
+/// Applies a causal Finite Impulse Response (FIR) filter `y[n] = sum_{k=0}^{M-1} coeffs[k] * input[n - k]`
+/// using chunked native SIMD `@dot` acceleration with zero dynamic heap allocation and arbitrary tap count.
+/// Returns the number of output samples written (`input.len`).
+pub fn convolveFirF32Simd(
+    input: []const f32,
+    coeffs: []const f32,
+    out: *[]f32,
+): usize ! DspKernelError {
+    if (coeffs.len == 0) return DspKernelError.InvalidLength;
+    if (out.len < input.len) return DspKernelError.OutputTooSmall;
+    if (input.len == 0) return 0;
+
+    let rev_chunk: [64]f32 = [0.0; 64];
+    let n: usize = 0;
+    while (n < input.len) : (n += 1) {
+        const active_taps: usize = if (n + 1 < coeffs.len) n + 1 else coeffs.len;
+        let acc: f64 = 0.0;
+        let tap_off: usize = 0;
+        while (tap_off < active_taps) {
+            const rem: usize = active_taps - tap_off;
+            const take: usize = if (rem > 64) 64 else rem;
+            // Input contiguous slice: input[n - tap_off - take + 1 .. n - tap_off + 1]
+            // Corresponding coeffs in reverse order: coeffs[tap_off + take - 1 .. tap_off]
+            const in_start: usize = n + 1 - tap_off - take;
+            let j: usize = 0;
+            while (j < take) : (j += 1) {
+                rev_chunk[j] = coeffs[tap_off + take - 1 - j];
+            }
+            acc += @as(f64, @dot(input[in_start..in_start + take], rev_chunk[0..take]));
+            tap_off += take;
+        }
+        out[n] = acc as f32;
+    }
+    return input.len;
 }
