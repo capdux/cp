@@ -1192,3 +1192,15 @@ pub fn demoWebRtcDataChannel()! {
 | `WsStreamAssembler` 防 OOM 守卫 | `lib/net/wsAssembler.cp` | 限制超大未完结流的 `recv_buf` 膨胀，严格校验孤立 Continuation、分片中非法新数据帧（允许穿插 Ping/Pong/Close）、跨分片 UTF-8 与 `max_payload` 硬上限 |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testNetWebSocketRustRefSuite.cp` 覆盖 RFC 6455 §1.3 官方向量、125/126/65536 长度边界、分片穿插 Ping/Pong、RSV/保留操作码/非最小长度/分片控制帧/非法 Close 码/非法 UTF-8 拒绝、16-lane SIMD 0..257B 全长度 + 偏移对齐 0 差异对拍，以及 1,600 组确定性 PRNG 畸形帧与分片流 Fuzz（0 panic / 0 OOB / 0 泄漏）。
+
+## Wave 34 工业级安全加固与 16-Lane SIMD 加速（`grpc{Frame,Headers,Status}.cp` 对标 `hyperium/tonic` MIT）
+
+`lib/net/grpcFrame.cp`、`lib/net/grpcHeaders.cp` 与 `lib/net/grpcStatus.cp` 已对照 `hyperium/tonic`（MIT）与 gRPC over HTTP/2 协议规范完成 LPM 帧边界加固、超时/元数据校验与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `GRPC_DEFAULT_MAX_DECODING_MESSAGE_SIZE` (4 MiB) / `GrpcStreamFramer.reset` | `lib/net/grpcFrame.cp` | 对齐 `tonic` 4 MiB 默认帧上限；无溢出减法边界校验（`len - 5 < msg_len`）、压缩位严格 `0/1` 拦截、防 OOM 缓冲守卫 |
+| `simdGrpcCopyPayload` / `simdGrpcIsValidAsciiMetadata` / `simdGrpcNeedsPercentEncode` | `lib/net/grpcFrame.cp`, `lib/net/grpcHeaders.cp` | 纯 CP 16-lane `@Vector(16, u8)` LPM 载荷拷贝、ASCII Metadata 合法性预检（`0x20..=0x7E`）与 `grpc-message` 免转义快路径（均配标量参考 0 差异对拍） |
+| `isBinHeaderKey` / `statusFromName` | `lib/net/grpcHeaders.cp`, `lib/net/grpcStatus.cp` | `-bin` 二进制元数据键精确识别与全 17 种标准状态码双向映射 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testNetGrpcRustRefSuite.cp` 覆盖 LPM 单帧/粘包/逐字节半包、压缩位 `>=2` 与超 4 MiB 拦截、`grpc-timeout` 全 6 单位与 9 位溢出/非法单位拒绝、全 17 状态码、`-bin` 元数据 Base64 与 `grpc-message` 百分比编解码、16-lane SIMD 0 差异对拍，以及 1,600 组确定性 PRNG 畸形帧/超时/元数据 Fuzz。

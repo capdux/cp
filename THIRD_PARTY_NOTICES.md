@@ -87,6 +87,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rust-postgres** (`postgres-protocol`) | <https://github.com/sfackler/rust-postgres> | MIT OR Apache-2.0 | `lib/sql/pgReader.cp`, `lib/sql/pgWriter.cp`, `lib/sql/pgDataRow.cp` | Copyright (c) 2014 Steven Fackler |
 | **avro-rs** (`apache`) | <https://github.com/apache/avro-rs> | Apache-2.0 | `lib/binfmt/avro.cp` | Copyright (c) 2018-2024 The Apache Software Foundation |
 | **rust_mysql_common** (`blackbeam`) | <https://github.com/blackbeam/rust_mysql_common> | MIT OR Apache-2.0 | `lib/sql/mysqlLenenc.cp`, `lib/sql/mysqlReader.cp`, `lib/sql/mysqlWriter.cp` | Copyright (c) 2017 Anatoly Ikorsky |
+| **tonic** (`hyperium`) | <https://github.com/hyperium/tonic> | MIT | `lib/net/grpcFrame.cp`, `lib/net/grpcHeaders.cp`, `lib/net/grpcStatus.cp` | Copyright (c) 2019 Lucio Franco / Hyperium |
 
 ---
 

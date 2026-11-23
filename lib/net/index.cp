@@ -2215,11 +2215,17 @@ export {
     ServiceMethodPath,
     statusName,
     statusFromCode,
+    statusFromName,
     parseServiceMethodPath,
     formatServiceMethodPath,
 } from "./grpcStatus.cp";
 
 export {
+    isBinHeaderKey,
+    simdGrpcIsValidAsciiMetadata,
+    simdGrpcIsValidAsciiMetadataScalar,
+    simdGrpcNeedsPercentEncode,
+    simdGrpcNeedsPercentEncodeScalar,
     parseGrpcTimeoutNs,
     formatGrpcTimeout,
     percentEncodeGrpcMessage,
@@ -2230,7 +2236,10 @@ export {
 
 export {
     DEFAULT_MAX_MESSAGE_BYTES,
+    GRPC_DEFAULT_MAX_DECODING_MESSAGE_SIZE,
     GRPC_FRAME_HEADER_LEN,
+    simdGrpcCopyPayload,
+    simdGrpcCopyPayloadScalar,
     GrpcFrame,
     encodeGrpcFrame,
     decodeGrpcFrame,

@@ -1,9 +1,88 @@
-// Source: cp/lib/grpc_wire/headers.cp (grpc-timeout, percent-encoded grpc-message, and -bin base64 headers)
+// Reference-hardened against hyperium/tonic (MIT)
+// Source: cp/lib/grpc_wire/headers.cp (grpc-timeout, percent-encoded grpc-message, -bin base64 headers & 16-lane SIMD metadata precheck)
 
 const std = @import("std");
 
+type GrpcHdrVec16u8 = @Vector(16, u8);
+
 const MAX_TIMEOUT_DIGITS: usize = 8;
 const MAX_TIMEOUT_VALUE: u64 = 99_999_999;
+
+fn grpcHdrLoadVec16(data: []const u8, off: usize): GrpcHdrVec16u8 {
+    const v: GrpcHdrVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD precheck for valid gRPC ASCII metadata values (`0x20..=0x7E`).
+pub fn simdGrpcIsValidAsciiMetadata(val: []const u8): bool {
+    let i: usize = 0;
+    const n = val.len;
+    const v_lo: GrpcHdrVec16u8 = @splat(0x20);
+    const v_hi: GrpcHdrVec16u8 = @splat(0x7E);
+    while (i + 16 <= n) {
+        const chunk = grpcHdrLoadVec16(val, i);
+        const ok_mask: u16 = @bitCast((chunk >= v_lo) & (chunk <= v_hi));
+        if (ok_mask != 0xFFFF) return false;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (val[i] < 0x20 || val[i] > 0x7E) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdGrpcIsValidAsciiMetadata` (differential verification).
+pub fn simdGrpcIsValidAsciiMetadataScalar(val: []const u8): bool {
+    let i: usize = 0;
+    while (i < val.len) : (i += 1) {
+        if (val[i] < 0x20 || val[i] > 0x7E) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan checking if `msg` requires percent-encoding
+/// (contains `< 0x20`, `> 0x7E`, or `'%'`).
+pub fn simdGrpcNeedsPercentEncode(msg: []const u8): bool {
+    let i: usize = 0;
+    const n = msg.len;
+    const v_lo: GrpcHdrVec16u8 = @splat(0x20);
+    const v_hi: GrpcHdrVec16u8 = @splat(0x7E);
+    const v_pct: GrpcHdrVec16u8 = @splat('%');
+    while (i + 16 <= n) {
+        const chunk = grpcHdrLoadVec16(msg, i);
+        const ok_range: u16 = @bitCast((chunk >= v_lo) & (chunk <= v_hi));
+        const has_pct: u16 = @bitCast(chunk == v_pct);
+        if (ok_range != 0xFFFF || has_pct != 0) return true;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const b = msg[i];
+        if (b < 0x20 || b > 0x7E || b == '%') return true;
+    }
+    return false;
+}
+
+/// Scalar reference for `simdGrpcNeedsPercentEncode` (differential verification).
+pub fn simdGrpcNeedsPercentEncodeScalar(msg: []const u8): bool {
+    let i: usize = 0;
+    while (i < msg.len) : (i += 1) {
+        const b = msg[i];
+        if (b < 0x20 || b > 0x7E || b == '%') return true;
+    }
+    return false;
+}
+
+/// Returns `true` if `key` is a valid gRPC binary metadata key (non-empty prefix + `"-bin"` suffix).
+pub fn isBinHeaderKey(key: []const u8): bool {
+    if (key.len <= 4) return false;
+    const off = key.len - 4;
+    return key[off] == '-' && key[off + 1] == 'b' && key[off + 2] == 'i' && key[off + 3] == 'n';
+}
 
 pub fn parseGrpcTimeoutNs(header_val: []const u8): !u64 {
     if (header_val.len < 2) {
@@ -70,14 +149,14 @@ pub fn formatGrpcTimeout(alloc: std.mem.Allocator, ns: u64): ![]u8 {
     return error.TimeoutOverflow;
 }
 
-fn hexDigit(n: u8): u8 {
+fn grpcHexDigit(n: u8): u8 {
     if (n < 10) {
         return '0' + n;
     }
     return 'A' + (n - 10);
 }
 
-fn parseHexVal(ch: u8): u8? {
+fn grpcParseHexVal(ch: u8): u8? {
     if (ch >= '0' and ch <= '9') {
         return ch - '0';
     }
@@ -91,6 +170,10 @@ fn parseHexVal(ch: u8): u8? {
 }
 
 pub fn percentEncodeGrpcMessage(alloc: std.mem.Allocator, msg: []const u8): ![]u8 {
+    if (!simdGrpcNeedsPercentEncode(msg)) {
+        return alloc.dupe(u8, msg);
+    }
+
     let out = std.ArrayList(u8).empty;
     errdefer out.deinit(alloc);
 
@@ -101,8 +184,8 @@ pub fn percentEncodeGrpcMessage(alloc: std.mem.Allocator, msg: []const u8): ![]u
             try out.append(alloc, b);
         } else {
             try out.append(alloc, '%');
-            try out.append(alloc, hexDigit(b >> 4));
-            try out.append(alloc, hexDigit(b & 0x0F));
+            try out.append(alloc, grpcHexDigit(b >> 4));
+            try out.append(alloc, grpcHexDigit(b & 0x0F));
         }
         i += 1;
     }
@@ -120,8 +203,8 @@ pub fn percentDecodeGrpcMessage(alloc: std.mem.Allocator, encoded: []const u8): 
             if (i + 2 >= encoded.len) {
                 return error.InvalidPercentEncoding;
             }
-            const hi = parseHexVal(encoded[i + 1]) orelse return error.InvalidPercentEncoding;
-            const lo = parseHexVal(encoded[i + 2]) orelse return error.InvalidPercentEncoding;
+            const hi = grpcParseHexVal(encoded[i + 1]) orelse return error.InvalidPercentEncoding;
+            const lo = grpcParseHexVal(encoded[i + 2]) orelse return error.InvalidPercentEncoding;
             try out.append(alloc, (hi << 4) | lo);
             i += 3;
         } else {

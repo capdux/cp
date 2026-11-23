@@ -1,3 +1,4 @@
+// Reference-hardened against hyperium/tonic (MIT)
 // Source: cp/lib/grpc_wire/status.cp (gRPC status codes, errors, and service/method path utilities)
 
 const std = @import("std");
@@ -88,6 +89,28 @@ pub fn statusFromCode(code: u32): GrpcStatus? {
         16 => .UNAUTHENTICATED,
         else => null,
     };
+}
+
+/// Parses a canonical uppercase gRPC status name into `GrpcStatus` (all 17 codes).
+pub fn statusFromName(name: []const u8): GrpcStatus? {
+    if (std.mem.eql(u8, name, "OK")) return .OK;
+    if (std.mem.eql(u8, name, "CANCELLED")) return .CANCELLED;
+    if (std.mem.eql(u8, name, "UNKNOWN")) return .UNKNOWN;
+    if (std.mem.eql(u8, name, "INVALID_ARGUMENT")) return .INVALID_ARGUMENT;
+    if (std.mem.eql(u8, name, "DEADLINE_EXCEEDED")) return .DEADLINE_EXCEEDED;
+    if (std.mem.eql(u8, name, "NOT_FOUND")) return .NOT_FOUND;
+    if (std.mem.eql(u8, name, "ALREADY_EXISTS")) return .ALREADY_EXISTS;
+    if (std.mem.eql(u8, name, "PERMISSION_DENIED")) return .PERMISSION_DENIED;
+    if (std.mem.eql(u8, name, "RESOURCE_EXHAUSTED")) return .RESOURCE_EXHAUSTED;
+    if (std.mem.eql(u8, name, "FAILED_PRECONDITION")) return .FAILED_PRECONDITION;
+    if (std.mem.eql(u8, name, "ABORTED")) return .ABORTED;
+    if (std.mem.eql(u8, name, "OUT_OF_RANGE")) return .OUT_OF_RANGE;
+    if (std.mem.eql(u8, name, "UNIMPLEMENTED")) return .UNIMPLEMENTED;
+    if (std.mem.eql(u8, name, "INTERNAL")) return .INTERNAL;
+    if (std.mem.eql(u8, name, "UNAVAILABLE")) return .UNAVAILABLE;
+    if (std.mem.eql(u8, name, "DATA_LOSS")) return .DATA_LOSS;
+    if (std.mem.eql(u8, name, "UNAUTHENTICATED")) return .UNAUTHENTICATED;
+    return null;
 }
 
 pub fn parseServiceMethodPath(path: []const u8): !ServiceMethodPath {
