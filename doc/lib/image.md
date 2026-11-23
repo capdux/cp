@@ -55,8 +55,10 @@
 | `jpegEncode(allocator, rgba, width, height, quality): ([]u8)!JpegError` / `Jpeg.encode(...)` / `JpegImage.encode(...)` | 完整 ITU-T T.81 / JFIF 1.01 Baseline DCT YCbCr 4:4:4 编码器（IJG 质量缩放 `1..100`，任意非 8 倍数宽高边缘复制填充） |
 | `jpegEncodeInto(rgba, width, height, quality, out): ([]const u8)!JpegError` | 零堆分配 Baseline DCT JPEG 编码器，直接写入调用方缓冲区 |
 | `Webp.probe(bytes): WebpHeader?` / `WebpImage.probe(bytes)` | 零解码极速获取 WebP VP8/VP8L/VP8X 宽高、Alpha、无损与动图标志 |
+| `parseWebpChunks(bytes): WebpExtendedInfo!WebpError` / `Webp.parseChunks(...)` | 零拷贝解析 RIFF/WEBP (含 VP8X 标志、24-bit 画布宽高及 `VP8L`/`VP8 `/`ICCP`/`EXIF`/`XMP `/`ANIM` 分块切片，对标 `image-webp` 加固) |
 | `webpEncode(allocator, rgba, width, height, quality): ([]u8)!WebpError` / `Webp.encode(...)` / `WebpImage.encode(...)` | 完整 RFC 9649 WebP (VP8L) 编码器（`quality == 100` 严格逐比特无损，`quality < 100` 可控感知量化压缩，含 Subtract Green + LZ77 + 5 组 Canonical Huffman） |
 | `webpEncodeLossless(allocator, rgba, width, height): ([]u8)!WebpError` / `Webp.encodeLossless(...)` / `WebpImage.encodeLossless(...)` | 严格无损 VP8L 编码快捷入口（等价于 `quality = 100`） |
+| `webpDecodeLosslessInto(bytes, out_rgba): WebpHeader!WebpError` / `webpDecodeLossless(allocator, bytes): WebpDecodedImage!WebpError` | 完整 RFC 9649 VP8L 无损解码器（支持 VP8L 与 VP8X 扩展容器、5 组 Canonical Huffman + Meta-Huffman、LZ77 + 120 项 2D 空间距离映射表、Color Cache 及 Predictor 14 模式 / Cross-Color / Subtract Green / Color Indexing 1/2/4/8-bit 全部 4 种逆变换） |
 
 ### 2. 无损与索引像素编解码 (`Png` / `Bmp` / `Gif`)
 

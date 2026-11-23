@@ -2831,3 +2831,94 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261123-strict-e0311-union-void)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-image-webp-compile`）[ticket:task-capsurf-20261123-image-webp-compile]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 12:50:38` | 状态：`resolved` | 结单：`2026-11-23T12:53:19`
+- **报错/需求摘要**：cap build src/main.cp 报 /data/dev/cp/lib/image/webp.cp 编译失败: L1338 E0217 index 0 out of bounds for buffer of length 0 (entropy_ids[0]); L1499/L1505 E0207 expected USize found I32 (by/p 需 usize(...) 显式转换，导致后续 p/tp/lp 级联 E0206)
+- **结单与处理汇报**：Fixed webp.cp compile errors (entropy_ids bounds + usize casts) and completed RFC 9649 VP8L decoder hardening; cpc brief & WebP test suites 100% PASS.
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 11:45:25）[step:20380]
+- **用户完整原始指令**：
+  > 1. 同意，后续深化或新增重型核心库时，我们可以直接拉取对应的 MIT/Apache-2.0 Rust 标杆仓到 _ref/ 对照迁移并继承其测试集。
+  > 2. 我们已经自创的库, 有哪些可以按上述方案, 找到对应 MIT/Apache-2.0 Rust 标杆仓到 _ref/ 对比/对照迁移合并, 再叠加 CP 原生 @dot/@fma/cap:simd 加速, 继承其测试集。确保cpa内置库稳定可靠, 功能齐备,生成可用. 
+  > 3. 知名重量级, 则按你的建议, 使用 @c 封装, 通过cap add 安装, 提供预先编译好的的跨平台二进制库.
+  > 将上述规则补充写入 GEMINI.md 固化.
+- **完整回复与执行汇报**：
+  > 已将全部三条规则（MIT/Apache-2.0 Rust 标杆仓 `_ref/` 对照迁移与测试集继承、存量自研库分批对标加固、Phase 2 重量级 C/C++ 库 `@c` 封装 + `cap add` 预编译二进制矩阵）正式写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md#L696-L708) 第十一节第 4 条并提交（`8775b787`）。
+  >
+  > ---
+  >
+  > ### 存量自研核心库 ↔ MIT/Apache-2.0 Rust 标杆仓对标加固清单
+  >
+  > 以下按最高生产收益与最易出现边缘缺陷的顺序，列出可直接浅克隆至 `_ref/<crate>/` 对照补齐并继承其 `tests/` 实战测试集的标杆清单（**100% 宽松许可，零 GPL/LGPL**）：
+  >
+  > | 领域 | 现有 CP 自研模块 | 对标 Rust 标杆仓 | 许可证 | 重点补齐的边缘能力与测试集继承 |
+  > |---|---|---|---|---|
+  > | **1. WebRTC / 流媒体传输** | [webrtcIce.cp](file:///data/dev/cp/lib/net/webrtcIce.cp)、[srtpCodec.cp](file:///data/dev/cp/lib/net/srtpCodec.cp)、[sctpDataChannel.cp](file:///data/dev/cp/lib/net/sctpDataChannel.cp)、[rtpJitter.cp](file:///data/dev/cp/lib/media/rtpJitter.cp)、[videoNal.cp](file:///data/dev/cp/lib/media/videoNal.cp) | **`algesten/str0m`**（Sans-IO WebRTC 标杆） | MIT / Apache-2.0 | STUN/ICE 边缘属性与提名状态机、SDP BUNDLE/RTX/TWCC 协商、SRTP ROC 边界、SCTP 拥塞/重传与上百个真实浏览器（Chrome/Firefox/Safari）抓包回归测试向量 |
+  > | **2. 压缩引擎** | [zstdDecode.cp](file:///data/dev/cp/lib/pack/zstdDecode.cp)、[brotli.cp](file:///data/dev/cp/lib/pack/brotli.cp) | **`KillingSpark/zstd-rs` (`ruzstd`)** & **`dropbox/rust-brotli`** | MIT / BSD-3 | Zstd 字典支持/大窗口/多块边界与官方 fuzz corpus 回归向量；Brotli 极端距离/大流边界用例 |
+  > | **3. 图像编解码** | [jpeg.cp](file:///data/dev/cp/lib/image/jpeg.cp)、[webp.cp](file:///data/dev/cp/lib/image/webp.cp)、[imageOps.cp](file:///data/dev/cp/lib/media/imageOps.cp) | **`etemesi254/zune-image`** (`zune-jpeg` / `zune-png`) & **`image-rs/image-webp`** | MIT / Apache-2.0 | SIMD 色彩空间/DCT 优化、Progressive JPEG/WebP 边缘采样与数百张真实测试图集对拍 |
+  > | **4. 办公文档** | [xlsx.cp](file:///data/dev/cp/lib/doc/xlsx.cp)、[pdfInspector.cp](file:///data/dev/cp/lib/doc/pdfInspector.cp)、[pdfWriter.cp](file:///data/dev/cp/lib/doc/pdfWriter.cp)、[csvTable.cp](file:///data/dev/cp/lib/doc/csvTable.cp) | **`tafia/calamine`** (XLSX)、**`J-F-Liu/lopdf`** (PDF)、**`BurntSushi/rust-csv`** (CSV) | MIT | XLSX 共享公式/合并单元格/日期变体真实样本集；PDF XRef Stream (PDF 1.5+)/Object Stream/加密检测真实样本；CSV 极端引号/转义测试集 |
+  > | **5. 全文检索 & 存储** | [fullTextIndex.cp](file:///data/dev/cp/lib/vector/fullTextIndex.cp)、[lsmEngine.cp](file:///data/dev/cp/lib/db/lsmEngine.cp)、[hnswFlat.cp](file:///data/dev/cp/lib/vector/hnswFlat.cp) | **`quickwit-oss/tantivy`**、`tikv/agatedb` / `spacejam/sled` | MIT / Apache-2.0 | 倒排表压缩（BitPacking/SkipList）、短语/模糊边界回归用例、SSTable 崩溃恢复与 Compaction 边界测试 |
+  > | **6. 音频 DSP & 数值矩阵** | [audioWav.cp](file:///data/dev/cp/lib/media/audioWav.cp)、[fftFilter.cp](file:///data/dev/cp/lib/media/fftFilter.cp)、[matrixDense.cp](file:///data/dev/cp/lib/math/matrixDense.cp) | **`ruuda/hound`** (WAV)、**`HEnquist/rubato`** (重采样)、**`ejmahler/RustFFT`**、**`sarah-ek/faer-rs`** | MIT / Apache-2.0 | WAV 畸形 chunk 容错用例、高精度多相 Sinc 重采样滤波器系数、奇异/病态矩阵数值稳定性测试集 |
+  >
+  > ---
+  >
+  > ### 下一步执行节奏
+  > - 等在途的 **W27 R10（全栈 6 大核心 SIMD 性能 Benchmark）** 收官轮换至 **Wave 28** 后，**Priority ③ Wave 28** 将正式启动 **「`_ref/` Rust 标杆仓对标加固 + 实战测试集继承」**，从最高价值的 `str0m`（WebRTC）、`BurntSushi/rust-csv`、`tafia/calamine`（XLSX）、`ruzstd`（Zstd）依次推进！
+  >
+  > ### 同步汇报最新提交
+  > - **Priority ① W32 R2（`02ef9b2a`）**：吸收 Bun `install_with_manager.cp` -> [lib/pkg/managerExec.cp](file:///data/dev/cp/lib/pkg/managerExec.cp)（1,126 行，9 阶段执行管线 + `cap:simd` Workspace 过滤与拓扑波次规划 + 500 次 Fuzz，8/8 PASS，`bun_sourced=1186`），已派发 **W32 R3**（`PackageManagerTask.cp` -> `lib/pkg/pmTaskGraph.cp`）。
+  >
+  > ### 当前在途（2 路主力并行）
+  > 1. **Priority ① W32 R3**：`bun/src/install/PackageManagerTask.cp` -> `lib/pkg/pmTaskGraph.cp`（目标 `bun_sourced=1187`）
+  > 2. **Priority ③ W27 R10（收官轮）**：`audioWav.cp` SIMD + 全栈 6 大核心性能 Benchmark 套件（`testCoreSimdBenchmark.cp`）
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 11:59:38）[step:20422]
+- **用户完整原始指令**：
+  > bun 还剩多少文件未吸收
+- **完整回复与执行汇报**：
+  > 刚刚完成最新全仓实时扫描（截至 `bun_sourced=1189, missing_synced_tag=0, upstream_newer=0`）：
+  >
+  > ### 一、总体进度账单
+  > | 指标 | 数量 | 对比前次变化 |
+  > |---|---:|---|
+  > | Bun 上游 `/data/dev/bun/src/**/*.cp` 总数 | **1,295** | — |
+  > | 已吸收并匹配的上游独立源文件 | **660** | **+32 个硬核核心文件**（含 `install`/`cli`/`bundler` 大模块） |
+  > | 尚未吸收的剩余源文件 | **635** | 拆解如下 |
+  > | ↳ 强耦合 JSC / VM / C-FFI（留作 `-n` 容器设计参考） | **413** | 不直接塞入通用 `lib/` |
+  > | ↳ 微小壳文件 (<40L) / `bake` / `test_runner` | **89** | 无需吸收 |
+  > | ↳ 剩余实质性纯逻辑候选 | **133** | 含 `uws_sys` 等底层绑定后，**高价值核心已大幅收敛** |
+  >
+  > ---
+  >
+  > ### 二、`cap` 核心三大目录（`install/`、`cli/`、`bundler/`）剩余清单——仅剩最后 15 个！
+  >
+  > 经过 W30~W32 的集中强攻，对 `cap` 工具链价值最高的三大目录已基本清仓，**仅剩最后 15 个非 JSC 文件**（其中真正高价值约 **8~10 个**）：
+  >
+  > 1. **`install/`（仅剩 7 个）**：
+  >    - `lockfile/bun.lock.cp` (2362L) — 文本 JSONC 锁文件格式
+  >    - `lockfile/Package.cp` (2389L) — 锁文件包条目结构与索引
+  >    - `lockfile/Buffers.cp` (417L) — 锁文件连续内存缓冲区
+  >    - `isolated_install/Installer.cp` (2129L) — 隔离安装器核心执行
+  >    - `isolated_install/FileCopier.cp` (191L) & `Hardlinker.cp` (227L) — 文件复制/硬链接物化
+  >    - `windows-shim/bun_shim_impl.cp` (974L) — Windows `.exe` 二进制垫片
+  > 2. **`cli/`（仅剩 5 个，高价值 3 个）**：
+  >    - `update_interactive_command.cp` (2142L) — 交互式 TUI 依赖升级
+  >    - `unlink_command.cp` (177L) — `cap unlink` 取消本地包链接
+  >    - `scan_command.cp` (84L) — 安全扫描命令
+  >    - *（`install_command.cp` 102L 已被总控覆盖，`fuzzilli_command.cp` 82L 为模糊器专用无需吸收）*
+  > 3. **`bundler/`（仅剩 3 个）**：
+  >    - `cache.cp` (390L) — 打包器磁盘缓存
+  >    - `linker_context/generateCompileResultForCssChunk.cp` (200L)
+  >    - `linker_context/generateCompileResultForJSChunk.cp` (131L)
+  >
+  > ### 三、收尾预计
+  > 按当前速度，**仅需最后 8~10 轮（W32 R7–R10 + W33 R1–R6，约半小时内）** 即可把 `install/`、`cli/`、`bundler/` 剩余的全部高价值核心资产 100% 吸收完毕；届时即可按计划正式启动 **`cap build -n` 原生容器编译**！
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 12:50:39）[step:20564]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-image-webp-compile)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-capsurf-20261123-image-webp-compile`**（delivery_id=210）。经核查，该报错（[webp.cp](file:///data/dev/cp/lib/image/webp.cp) L1338 `E0217` 与 L1499/L1505 `E0207`）系下游 `capsurf_agy` 并发 `cap build` 恰好撞上 W28 R7 子智能体正在原地施工的半成品窗口所致。
+  >
+  > 已第一时间通知正在编辑 [lib/image/webp.cp](file:///data/dev/cp/lib/image/webp.cp) 的单写者子智能体（避免并发写冲突），优先修净全部编译错误并跑通 `cpc brief` 与 WebP 全套测试后，立即执行 `task_queue.py resolve` 通知 CapSurf 恢复构建，随后由我同步审计 `SESSION.md` 并提交。
