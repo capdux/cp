@@ -1,6 +1,7 @@
 // Source: cp/lib/pdf/inspector.cp (PDF 1.4-1.7 Object/XRef/FlateDecode/Page-Tree/Outlines & Text Extraction Engine)
-// Pure CP zero-dynamic-heap PDF structural validator, lexical scanner, XRef/incremental-update parser,
-// FlateDecode/ASCIIHexDecode stream decoder, page-tree & outline walker, and BT..ET content stream text extractor.
+// Reference-hardened against J-F-Liu/lopdf (MIT)
+// Pure CP zero-dynamic-heap PDF structural validator, lexical scanner, XRef/XRef-Stream/ObjStm/incremental-update parser,
+// FlateDecode/ASCIIHexDecode/PNG-TIFF-Predictor stream decoder, page-tree & outline walker, and BT..ET content stream text extractor.
 
 const std = @import("std");
 import { PdfError } from "./pdfWriter.cp";
@@ -140,16 +141,25 @@ fn hasValidEof(bytes: []const u8): bool {
     return true;
 }
 
-/// Validates that `startxref` offset points to a valid `xref` table inside `bytes`.
+/// Validates that `startxref` offset points to a valid traditional `xref` table or PDF 1.5+ `/Type /XRef` stream object.
 fn hasValidXref(bytes: []const u8): bool {
     const xref_off = parseStartXrefOffset(bytes) ?? return false;
     if (xref_off >= bytes.len) return false;
     let p = xref_off;
     skipWhitespace(bytes, &p);
-    if (p + 4 > bytes.len) return false;
-    if (!std.mem.eql(u8, bytes[p..p + 4], "xref")) return false;
-    if (p + 4 < bytes.len && !isPdfWhitespace(bytes[p + 4])) return false;
-    return true;
+    if (p + 4 <= bytes.len && std.mem.eql(u8, bytes[p..p + 4], "xref")) {
+        if (p + 4 == bytes.len || isPdfWhitespace(bytes[p + 4])) return true;
+    }
+    let lex = PdfLexer.init(bytes, p);
+    const t0 = lex.nextToken();
+    const t1 = lex.nextToken();
+    const t2 = lex.nextToken();
+    if (t0.kind == PdfTokenKind.number_int && t1.kind == PdfTokenKind.number_int &&
+        t2.kind == PdfTokenKind.keyword && std.mem.eql(u8, t2.slice(bytes), "obj"))
+    {
+        return true;
+    }
+    return false;
 }
 
 /// Counts `/Type /Page` entries outside `stream ... endstream` payloads (excluding `/Type /Pages`).
@@ -506,15 +516,19 @@ pub struct PdfObjRef {
     gen_num: u16 = 0;
 }
 
-/// Single entry in a parsed traditional PDF `xref` table.
+/// Single entry in a parsed PDF cross-reference table or PDF 1.5+ cross-reference stream.
 pub struct PdfXrefEntry {
     obj_num: u32 = 0;
     gen_num: u16 = 0;
     offset: usize = 0;
     in_use: bool = false;
+    is_compressed: bool = false;
+    obj_stm_num: u32 = 0;
+    obj_stm_index: u16 = 0;
 }
 
-/// Metadata parsed from PDF `trailer << ... >>` dictionaries (including incremental `/Prev` chain).
+/// Metadata parsed from PDF `trailer << ... >>` dictionaries or `/Type /XRef` stream dictionaries
+/// (including incremental `/Prev` chains and hybrid `/XRefStm`).
 pub struct PdfTrailerInfo {
     size: u32 = 0;
     has_root: bool = false;
@@ -525,6 +539,9 @@ pub struct PdfTrailerInfo {
     has_prev: bool = false;
     prev_xref_offset: usize = 0;
     xref_sections_parsed: usize = 0;
+    is_xref_stream: bool = false;
+    has_xref_stm: bool = false;
+    xref_stm_offset: usize = 0;
 }
 
 fn parseU32Tok(bytes: []const u8, tok: PdfToken): u32? {
@@ -574,12 +591,320 @@ fn parseObjRefAt(bytes: []const u8, start_pos: usize): PdfObjRef? {
     return PdfObjRef{ obj_num: obj_n, gen_num: @as(u16, @intCast(gen_n & 0xFFFF)) };
 }
 
+fn locateObjectBodyAtOffset(pdf_bytes: []const u8, start_offset: usize): ([]const u8)? {
+    if (start_offset >= pdf_bytes.len) return null;
+    let lex = PdfLexer.init(pdf_bytes, start_offset);
+    const t_num = lex.nextToken();
+    const t_gen = lex.nextToken();
+    const t_obj = lex.nextToken();
+    if (t_num.kind != PdfTokenKind.number_int || t_gen.kind != PdfTokenKind.number_int) return null;
+    if (t_obj.kind != PdfTokenKind.keyword || !std.mem.eql(u8, t_obj.slice(pdf_bytes), "obj")) return null;
+
+    lex.skipWsAndComments();
+    const body_start = lex.pos;
+
+    let i: usize = body_start;
+    while (i < pdf_bytes.len) {
+        if (pdf_bytes[i] == '(') {
+            if (s := parseLiteralStringSlice(pdf_bytes, i)) {
+                i += s.len + 2;
+                continue;
+            }
+        }
+        if (pdf_bytes[i] == 's') {
+            if (sbody := matchStreamKeyword(pdf_bytes, i)) {
+                i = skipStreamPayload(pdf_bytes, sbody);
+                continue;
+            }
+        }
+        if (i + 6 <= pdf_bytes.len && std.mem.eql(u8, pdf_bytes[i..i + 6], "endobj")) {
+            const before_ok: bool = (i == body_start) || isPdfDelimiter(pdf_bytes[i - 1]);
+            const after_ok: bool = (i + 6 == pdf_bytes.len) || isPdfDelimiter(pdf_bytes[i + 6]);
+            if (before_ok && after_ok) {
+                return pdf_bytes[body_start..i];
+            }
+        }
+        i += 1;
+    }
+    return null;
+}
+
+fn readBeU64(bytes: []const u8, off: usize, width: usize): u64 {
+    let v: u64 = 0;
+    let i: usize = 0;
+    while (i < width) : (i += 1) {
+        v = (v << 8) | @as(u64, bytes[off + i]);
+    }
+    return v;
+}
+
+fn mergeTrailerDict(tr_slice: []const u8, trailer: *PdfTrailerInfo) {
+    if (trailer.size == 0) {
+        if (sp := findDictValuePos(tr_slice, "/Size")) {
+            let sl = PdfLexer.init(tr_slice, sp);
+            if (sz := parseU32Tok(tr_slice, sl.nextToken())) {
+                trailer.size = sz;
+            }
+        }
+    }
+    if (!trailer.has_root) {
+        if (rp := findDictValuePos(tr_slice, "/Root")) {
+            if (rref := parseObjRefAt(tr_slice, rp)) {
+                trailer.has_root = true;
+                trailer.root = rref;
+            }
+        }
+    }
+    if (!trailer.has_info) {
+        if (ip := findDictValuePos(tr_slice, "/Info")) {
+            if (iref := parseObjRefAt(tr_slice, ip)) {
+                trailer.has_info = true;
+                trailer.info = iref;
+            }
+        }
+    }
+    if (findDictValuePos(tr_slice, "/Encrypt") != null) {
+        trailer.has_encrypt = true;
+    }
+}
+
+/// Parses a PDF 1.5+ Cross-Reference Stream (`N G obj << /Type /XRef ... >> stream ... endstream endobj`)
+/// at `stm_off` into `tbl`, returning optional `/Prev` byte offset.
+fn parseXrefStreamAt(
+    pdf_bytes: []const u8,
+    stm_off: usize,
+    tbl: *PdfXrefTable,
+): (usize?) ! PdfParseError {
+    const obj_body = locateObjectBodyAtOffset(pdf_bytes, stm_off) ?? return PdfParseError.InvalidXRef;
+    const sv = extractStreamFromObject(pdf_bytes, tbl.*, obj_body) catch return PdfParseError.InvalidXRef;
+    const dict = sv.dict_slice;
+
+    // Verify `/Type /XRef`
+    const tp = findDictValuePos(dict, "/Type") ?? return PdfParseError.InvalidXRef;
+    let tlex = PdfLexer.init(dict, tp);
+    const ttok = tlex.nextToken();
+    if (ttok.kind != PdfTokenKind.name || !std.mem.eql(u8, ttok.slice(dict), "/XRef")) {
+        return PdfParseError.InvalidXRef;
+    }
+
+    // Required `/Size` and `/W [w0 w1 w2]`
+    const size_pos = findDictValuePos(dict, "/Size") ?? return PdfParseError.InvalidXRef;
+    let slex = PdfLexer.init(dict, size_pos);
+    const size_val: u32 = parseU32Tok(dict, slex.nextToken()) ?? return PdfParseError.InvalidXRef;
+
+    const w_pos = findDictValuePos(dict, "/W") ?? return PdfParseError.InvalidXRef;
+    let wlex = PdfLexer.init(dict, w_pos);
+    if (wlex.nextToken().kind != PdfTokenKind.array_start) return PdfParseError.InvalidXRef;
+    let widths: [3]usize = [0; 3];
+    let wi: usize = 0;
+    while (wi < 3) : (wi += 1) {
+        const wt = wlex.nextToken();
+        const wv: u32 = parseU32Tok(dict, wt) ?? return PdfParseError.InvalidXRef;
+        if (wv > 8) return PdfParseError.InvalidXRef;
+        widths[wi] = @as(usize, wv);
+    }
+    const entry_width: usize = widths[0] + widths[1] + widths[2];
+    if (entry_width == 0) return PdfParseError.InvalidXRef;
+
+    // Parse `/Index [...]` (defaults to `[0 size_val]`)
+    let idx_starts: [64]u32 = [0; 64];
+    let idx_counts: [64]u32 = [0; 64];
+    let num_sections: usize = 0;
+
+    if (ip := findDictValuePos(dict, "/Index")) {
+        let ilex = PdfLexer.init(dict, ip);
+        if (ilex.nextToken().kind != PdfTokenKind.array_start) return PdfParseError.InvalidXRef;
+        while (true) {
+            const st_tok = ilex.nextToken();
+            if (st_tok.kind == PdfTokenKind.array_end || st_tok.kind == PdfTokenKind.eof) break;
+            const ct_tok = ilex.nextToken();
+            const st_v: u32 = parseU32Tok(dict, st_tok) ?? return PdfParseError.InvalidXRef;
+            const ct_v: u32 = parseU32Tok(dict, ct_tok) ?? return PdfParseError.InvalidXRef;
+            if (num_sections >= 64) return PdfParseError.InvalidXRef;
+            idx_starts[num_sections] = st_v;
+            idx_counts[num_sections] = ct_v;
+            num_sections += 1;
+        }
+    } else {
+        idx_starts[0] = 0;
+        idx_counts[0] = size_val;
+        num_sections = 1;
+    }
+
+    // Decode XRef stream (automatically handles /FlateDecode + /DecodeParms PNG/TIFF predictor!)
+    let stm_buf: [65536]u8 = [0; 65536];
+    const dec_len: usize = decodePdfStream(sv, stm_buf[0..]) catch return PdfParseError.InvalidXRef;
+    const dec_data = stm_buf[0..dec_len];
+
+    // Pre-validate total entries cannot overrun decoded stream (anti-amplification guard per lopdf)
+    let total_entries: usize = 0;
+    let si: usize = 0;
+    while (si < num_sections) : (si += 1) {
+        total_entries += @as(usize, idx_counts[si]);
+        if (total_entries > dec_len / entry_width) {
+            return PdfParseError.InvalidXRef;
+        }
+    }
+
+    let pos: usize = 0;
+    si = 0;
+    while (si < num_sections) : (si += 1) {
+        const start_id: u32 = idx_starts[si];
+        const sec_cnt: u32 = idx_counts[si];
+        let j: u32 = 0;
+        while (j < sec_cnt) : (j += 1) {
+            if (pos + entry_width > dec_len) return PdfParseError.InvalidXRef;
+            const f0: u64 = if (widths[0] > 0) readBeU64(dec_data, pos, widths[0]) else 1;
+            const f1: u64 = if (widths[1] > 0) readBeU64(dec_data, pos + widths[0], widths[1]) else 0;
+            const f2: u64 = if (widths[2] > 0) readBeU64(dec_data, pos + widths[0] + widths[1], widths[2]) else 0;
+            pos += entry_width;
+
+            const obj_num: u32 = start_id + j;
+            if (tbl.findIndex(obj_num) == null) {
+                if (tbl.count >= tbl.entries.len) {
+                    return PdfParseError.OutputSliceTooSmall;
+                }
+                if (f0 == 0) {
+                    tbl.entries[tbl.count] = PdfXrefEntry{
+                        obj_num: obj_num,
+                        gen_num: @as(u16, @intCast(f2 & 0xFFFF)),
+                        offset: 0,
+                        in_use: false,
+                        is_compressed: false,
+                    };
+                } else if (f0 == 1) {
+                    tbl.entries[tbl.count] = PdfXrefEntry{
+                        obj_num: obj_num,
+                        gen_num: @as(u16, @intCast(f2 & 0xFFFF)),
+                        offset: @as(usize, @intCast(f1)),
+                        in_use: true,
+                        is_compressed: false,
+                    };
+                } else if (f0 == 2) {
+                    tbl.entries[tbl.count] = PdfXrefEntry{
+                        obj_num: obj_num,
+                        gen_num: 0,
+                        offset: 0,
+                        in_use: true,
+                        is_compressed: true,
+                        obj_stm_num: @as(u32, @intCast(f1 & 0xFFFF_FFFF)),
+                        obj_stm_index: @as(u16, @intCast(f2 & 0xFFFF)),
+                    };
+                } else {
+                    // Unknown future entry type treated as free/null per ISO 32000-1 §7.5.8.3
+                    tbl.entries[tbl.count] = PdfXrefEntry{
+                        obj_num: obj_num,
+                        in_use: false,
+                    };
+                }
+                tbl.count += 1;
+            }
+        }
+    }
+
+    tbl.trailer.is_xref_stream = true;
+    tbl.trailer.xref_sections_parsed += 1;
+    mergeTrailerDict(dict, &tbl.trailer);
+
+    if (pp := findDictValuePos(dict, "/Prev")) {
+        let pl = PdfLexer.init(dict, pp);
+        const pt = pl.nextToken();
+        if (pt.kind == PdfTokenKind.number_int) {
+            const prev_off: usize = std.fmt.parseInt(usize, pt.slice(dict), 10) catch return PdfParseError.InvalidXRef;
+            if (!tbl.trailer.has_prev) {
+                tbl.trailer.has_prev = true;
+                tbl.trailer.prev_xref_offset = prev_off;
+            }
+            return prev_off;
+        }
+    }
+    return null;
+}
+
+/// Extracts a compressed indirect object's body slice from a PDF 1.5+ `/Type /ObjStm` stream
+/// (`obj_stm_num`) into caller-provided `out_buf`. Returns byte length written.
+pub fn locateObjectBodyFromObjStm(
+    pdf_bytes: []const u8,
+    xref: PdfXrefTable,
+    obj_stm_num: u32,
+    target_obj_num: u32,
+    out_buf: []u8,
+): usize ! PdfParseError {
+    const stm_body = xref.locateObjectBody(pdf_bytes, PdfObjRef{ obj_num: obj_stm_num, gen_num: 0 }) ?? return PdfParseError.ObjectNotFound;
+    const sv = extractStreamFromObject(pdf_bytes, xref, stm_body)?;
+    const dict = sv.dict_slice;
+
+    // Validate `/Type /ObjStm`, `/N`, and `/First`
+    const tp = findDictValuePos(dict, "/Type") ?? return PdfParseError.InvalidObject;
+    let tlex = PdfLexer.init(dict, tp);
+    const ttok = tlex.nextToken();
+    if (ttok.kind != PdfTokenKind.name || !std.mem.eql(u8, ttok.slice(dict), "/ObjStm")) {
+        return PdfParseError.InvalidObject;
+    }
+
+    const np = findDictValuePos(dict, "/N") ?? return PdfParseError.InvalidObject;
+    let nlex = PdfLexer.init(dict, np);
+    const n_objs: usize = @as(usize, parseU32Tok(dict, nlex.nextToken()) ?? return PdfParseError.InvalidObject);
+
+    const fp = findDictValuePos(dict, "/First") ?? return PdfParseError.InvalidObject;
+    let flex = PdfLexer.init(dict, fp);
+    const first_off: usize = @as(usize, parseU32Tok(dict, flex.nextToken()) ?? return PdfParseError.InvalidObject);
+
+    let stm_scratch: [65536]u8 = [0; 65536];
+    const dec_len: usize = decodePdfStream(sv, stm_scratch[0..])?;
+    if (first_off > dec_len) return PdfParseError.InvalidObject;
+
+    // Parse `[0..first_off)` pairs of `<obj_num> <rel_offset>`
+    const header = stm_scratch[0..first_off];
+    let hlex = PdfLexer.init(header, 0);
+
+    let found: bool = false;
+    let target_start: usize = 0;
+    let target_end: usize = dec_len;
+
+    let i: usize = 0;
+    while (i < n_objs) : (i += 1) {
+        const id_tok = hlex.nextToken();
+        const off_tok = hlex.nextToken();
+        if (id_tok.kind != PdfTokenKind.number_int || off_tok.kind != PdfTokenKind.number_int) break;
+        const oid: u32 = parseU32Tok(header, id_tok) ?? break;
+        const rel_off: usize = @as(usize, parseU32Tok(header, off_tok) ?? break);
+        const abs_off: usize = first_off + rel_off;
+        if (abs_off > dec_len) continue;
+
+        if (found) {
+            if (abs_off >= target_start && abs_off < target_end) {
+                target_end = abs_off;
+            }
+            break;
+        }
+        if (oid == target_obj_num) {
+            found = true;
+            target_start = abs_off;
+        }
+    }
+
+    if (!found || target_start >= target_end || target_end > dec_len) {
+        return PdfParseError.ObjectNotFound;
+    }
+
+    // Trim leading whitespace before object value
+    while (target_start < target_end && isPdfWhitespace(stm_scratch[target_start])) : (target_start += 1) {}
+    const slice_len: usize = target_end - target_start;
+    if (slice_len > out_buf.len) return PdfParseError.BufferTooSmall;
+    let k: usize = 0;
+    while (k < slice_len) : (k += 1) {
+        out_buf[k] = stm_scratch[target_start + k];
+    }
+    return slice_len;
+}
+
 // ============================================================================
-// 3. Traditional XRef + Incremental `/Prev` Chain Parser (`PdfXrefTable`)
+// 3. XRef Table + PDF 1.5+ XRef Stream + Incremental `/Prev` Chain (`PdfXrefTable`)
 // ============================================================================
 
-/// Caller-slice-backed PDF cross-reference table supporting multi-subsection `xref` tables
-/// and ISO 32000-1 §7.5.6 incremental `/Prev` update chains (newest entry wins).
+/// Caller-slice-backed PDF cross-reference table supporting multi-subsection `xref` tables,
+/// PDF 1.5+ `/Type /XRef` streams, hybrid `/XRefStm`, and ISO 32000-1 §7.5.6 `/Prev` update chains.
 pub struct PdfXrefTable {
     entries: []PdfXrefEntry = [],
     count: usize = 0;
@@ -601,8 +926,8 @@ pub struct PdfXrefTable {
         return null;
     }
 
-    /// Parses the PDF `startxref` -> `xref` -> `trailer` chain (following `/Prev` incremental updates)
-    /// into caller-provided `out_entries`.
+    /// Parses the PDF `startxref` -> `xref` / `/Type /XRef` stream -> `trailer` chain
+    /// (following `/Prev` incremental updates and hybrid `/XRefStm`) into caller-provided `out_entries`.
     static fn parse(pdf_bytes: []const u8, out_entries: []PdfXrefEntry): PdfXrefTable ! PdfParseError {
         if (PdfInspector.extractVersion(pdf_bytes) == null) {
             return PdfParseError.InvalidPdf;
@@ -621,6 +946,18 @@ pub struct PdfXrefTable {
             if (cur_off >= pdf_bytes.len) return PdfParseError.InvalidXRef;
             let lex = PdfLexer.init(pdf_bytes, cur_off);
             const kw = lex.nextToken();
+
+            // PDF 1.5+ Cross-Reference Stream (`N G obj << /Type /XRef ... >> stream`)
+            if (kw.kind == PdfTokenKind.number_int) {
+                const next_prev = parseXrefStreamAt(pdf_bytes, cur_off, &tbl)?;
+                if (po := next_prev) {
+                    if (po == cur_off) break;
+                    cur_off = po;
+                    continue;
+                }
+                break;
+            }
+
             if (kw.kind != PdfTokenKind.keyword || !std.mem.eql(u8, kw.slice(pdf_bytes), "xref")) {
                 return PdfParseError.InvalidXRef;
             }
@@ -655,7 +992,6 @@ pub struct PdfXrefTable {
                     }
 
                     const obj_num: u32 = first_obj + j;
-                    // Incremental update rule: newer section already recorded `obj_num` -> do not overwrite
                     if (tbl.findIndex(obj_num) == null) {
                         if (tbl.count >= tbl.entries.len) {
                             return PdfParseError.OutputSliceTooSmall;
@@ -683,33 +1019,20 @@ pub struct PdfXrefTable {
             const tr_slice = pdf_bytes[tr_start..lex.pos];
 
             tbl.trailer.xref_sections_parsed += 1;
+            mergeTrailerDict(tr_slice, &tbl.trailer);
 
-            if (tbl.trailer.size == 0) {
-                if (sp := findDictValuePos(tr_slice, "/Size")) {
-                    let sl = PdfLexer.init(tr_slice, sp);
-                    if (sz := parseU32Tok(tr_slice, sl.nextToken())) {
-                        tbl.trailer.size = sz;
+            // Hybrid PDF 1.5+: merge optional `/XRefStm <offset>` entries
+            if (xsp := findDictValuePos(tr_slice, "/XRefStm")) {
+                let xsl = PdfLexer.init(tr_slice, xsp);
+                const xst = xsl.nextToken();
+                if (xst.kind == PdfTokenKind.number_int) {
+                    const xstm_off: usize = std.fmt.parseInt(usize, xst.slice(tr_slice), 10) catch 0;
+                    if (xstm_off > 0 && xstm_off < pdf_bytes.len) {
+                        tbl.trailer.has_xref_stm = true;
+                        tbl.trailer.xref_stm_offset = xstm_off;
+                        * = parseXrefStreamAt(pdf_bytes, xstm_off, &tbl) catch null;
                     }
                 }
-            }
-            if (!tbl.trailer.has_root) {
-                if (rp := findDictValuePos(tr_slice, "/Root")) {
-                    if (rref := parseObjRefAt(tr_slice, rp)) {
-                        tbl.trailer.has_root = true;
-                        tbl.trailer.root = rref;
-                    }
-                }
-            }
-            if (!tbl.trailer.has_info) {
-                if (ip := findDictValuePos(tr_slice, "/Info")) {
-                    if (iref := parseObjRefAt(tr_slice, ip)) {
-                        tbl.trailer.has_info = true;
-                        tbl.trailer.info = iref;
-                    }
-                }
-            }
-            if (findDictValuePos(tr_slice, "/Encrypt") != null) {
-                tbl.trailer.has_encrypt = true;
             }
 
             // Follow `/Prev` incremental xref link if present
@@ -733,46 +1056,26 @@ pub struct PdfXrefTable {
         return tbl;
     }
 
-    /// Resolves indirect object `obj_ref` via `xref` and returns the inner body slice between `N G obj` and `endobj`.
+    /// Resolves uncompressed indirect object `obj_ref` via `xref` and returns the zero-copy body slice
+    /// between `N G obj` and `endobj`.
     fn locateObjectBody(pdf_bytes: []const u8, obj_ref: PdfObjRef): ([]const u8)? {
         const entry = findEntry(obj_ref.obj_num) ?? return null;
-        if (!entry.in_use || entry.offset >= pdf_bytes.len) return null;
+        if (!entry.in_use || entry.is_compressed || entry.offset >= pdf_bytes.len) return null;
+        return locateObjectBodyAtOffset(pdf_bytes, entry.offset);
+    }
 
-        let lex = PdfLexer.init(pdf_bytes, entry.offset);
-        const t_num = lex.nextToken();
-        const t_gen = lex.nextToken();
-        const t_obj = lex.nextToken();
-        if (t_num.kind != PdfTokenKind.number_int || t_gen.kind != PdfTokenKind.number_int) return null;
-        if (t_obj.kind != PdfTokenKind.keyword || !std.mem.eql(u8, t_obj.slice(pdf_bytes), "obj")) return null;
-
-        lex.skipWsAndComments();
-        const body_start = lex.pos;
-
-        // Scan forward to matching `endobj`, skipping over any `stream ... endstream` payloads
-        let i: usize = body_start;
-        while (i < pdf_bytes.len) {
-            if (pdf_bytes[i] == '(') {
-                if (s := parseLiteralStringSlice(pdf_bytes, i)) {
-                    i += s.len + 2;
-                    continue;
-                }
-            }
-            if (pdf_bytes[i] == 's') {
-                if (sbody := matchStreamKeyword(pdf_bytes, i)) {
-                    i = skipStreamPayload(pdf_bytes, sbody);
-                    continue;
-                }
-            }
-            if (i + 6 <= pdf_bytes.len && std.mem.eql(u8, pdf_bytes[i..i + 6], "endobj")) {
-                const before_ok: bool = (i == body_start) || isPdfDelimiter(pdf_bytes[i - 1]);
-                const after_ok: bool = (i + 6 == pdf_bytes.len) || isPdfDelimiter(pdf_bytes[i + 6]);
-                if (before_ok && after_ok) {
-                    return pdf_bytes[body_start..i];
-                }
-            }
-            i += 1;
+    /// Transparently resolves both uncompressed (`type 1`) and compressed `/Type /ObjStm` (`type 2`)
+    /// indirect objects. Uncompressed objects return a zero-copy slice of `pdf_bytes`; compressed
+    /// objects are extracted into `out_buf` and returned as `out_buf[0..n]`.
+    fn resolveObjectBody(pdf_bytes: []const u8, obj_ref: PdfObjRef, out_buf: []u8): ([]const u8)? {
+        const entry = findEntry(obj_ref.obj_num) ?? return null;
+        if (!entry.in_use) return null;
+        if (!entry.is_compressed) {
+            if (entry.offset >= pdf_bytes.len) return null;
+            return locateObjectBodyAtOffset(pdf_bytes, entry.offset);
         }
-        return null;
+        const n = locateObjectBodyFromObjStm(pdf_bytes, _, entry.obj_stm_num, obj_ref.obj_num, out_buf) catch return null;
+        return out_buf[0..n];
     }
 }
 
@@ -981,11 +1284,189 @@ pub enum PdfStreamFilter {
     unsupported,
 }
 
-/// Zero-copy view of a PDF stream object's dictionary, filter, and raw encoded bytes.
+/// PDF `/DecodeParms` predictor parameters (ISO 32000-1 §7.4.4.4: TIFF Predictor 2 & PNG Predictors 10..15).
+pub struct PdfDecodeParms {
+    predictor: u32 = 1;
+    columns: u32 = 1;
+    colors: u32 = 1;
+    bits_per_component: u32 = 8;
+}
+
+/// Zero-copy view of a PDF stream object's dictionary, filter, decode parameters, and raw encoded bytes.
 pub struct PdfStreamView {
     dict_slice: []const u8 = "";
     raw_data: []const u8 = "";
     filter: PdfStreamFilter = PdfStreamFilter.none;
+    decode_parms: PdfDecodeParms = PdfDecodeParms{};
+}
+
+fn parseDecodeParms(dict_slice: []const u8): PdfDecodeParms {
+    let parms = PdfDecodeParms{};
+    const dp = findDictValuePos(dict_slice, "/DecodeParms") ?? return parms;
+    let lex = PdfLexer.init(dict_slice, dp);
+    let tok = lex.nextToken();
+    if (tok.kind == PdfTokenKind.array_start) {
+        tok = lex.nextToken();
+    }
+    if (tok.kind != PdfTokenKind.dict_start) return parms;
+
+    const sub_start = tok.start;
+    lex.pos = sub_start;
+    lex.skipValue();
+    const sub_dict = dict_slice[sub_start..lex.pos];
+
+    if (pp := findDictValuePos(sub_dict, "/Predictor")) {
+        let pl = PdfLexer.init(sub_dict, pp);
+        if (v := parseU32Tok(sub_dict, pl.nextToken())) parms.predictor = v;
+    }
+    if (cp := findDictValuePos(sub_dict, "/Columns")) {
+        let cl = PdfLexer.init(sub_dict, cp);
+        if (v := parseU32Tok(sub_dict, cl.nextToken())) {
+            if (v > 0) parms.columns = v;
+        }
+    }
+    if (colp := findDictValuePos(sub_dict, "/Colors")) {
+        let col_l = PdfLexer.init(sub_dict, colp);
+        if (v := parseU32Tok(sub_dict, col_l.nextToken())) {
+            if (v > 0) parms.colors = v;
+        }
+    }
+    if (bp := findDictValuePos(sub_dict, "/BitsPerComponent")) {
+        let bl = PdfLexer.init(sub_dict, bp);
+        if (v := parseU32Tok(sub_dict, bl.nextToken())) {
+            if (v > 0) parms.bits_per_component = v;
+        }
+    }
+    return parms;
+}
+
+fn pdfPaethPredict(left: u8, above: u8, upper_left: u8): u8 {
+    const a: i32 = @as(i32, left);
+    const b: i32 = @as(i32, above);
+    const c: i32 = @as(i32, upper_left);
+    const p: i32 = a + b - c;
+    let pa: i32 = p - a;
+    if (pa < 0) pa = -pa;
+    let pb: i32 = p - b;
+    if (pb < 0) pb = -pb;
+    let pc: i32 = p - c;
+    if (pc < 0) pc = -pc;
+    if (pa <= pb && pa <= pc) return left;
+    if (pb <= pc) return above;
+    return upper_left;
+}
+
+/// Applies ISO 32000-1 §7.4.4.4 PNG Predictor (10..15: None/Sub/Up/Average/Paeth) or
+/// TIFF Predictor 2 reverse filtering on `raw` into caller-provided `out_buf` with zero heap allocation.
+pub fn applyPdfPredictorDecode(raw: []const u8, parms: PdfDecodeParms, out_buf: []u8): usize ! PdfParseError {
+    if (parms.predictor <= 1) {
+        if (raw.len > out_buf.len) return PdfParseError.BufferTooSmall;
+        let i: usize = 0;
+        while (i < raw.len) : (i += 1) {
+            out_buf[i] = raw[i];
+        }
+        return raw.len;
+    }
+
+    if (parms.columns == 0 || parms.colors == 0 || parms.bits_per_component == 0) {
+        return PdfParseError.InvalidStream;
+    }
+
+    const bpp_calc: usize = (@as(usize, parms.colors) * @as(usize, parms.bits_per_component) + 7) / 8;
+    const bpp: usize = if (bpp_calc == 0) 1 else bpp_calc;
+    const row_bytes: usize = (@as(usize, parms.columns) * @as(usize, parms.colors) * @as(usize, parms.bits_per_component) + 7) / 8;
+    if (row_bytes == 0) return PdfParseError.InvalidStream;
+
+    // TIFF Predictor 2 (horizontal differencing, 8-bit components)
+    if (parms.predictor == 2) {
+        if (raw.len > out_buf.len) return PdfParseError.BufferTooSmall;
+        if (parms.bits_per_component != 8) return PdfParseError.UnsupportedFilter;
+        let pos: usize = 0;
+        while (pos < raw.len) {
+            const avail: usize = raw.len - pos;
+            const rlen: usize = if (avail < row_bytes) avail else row_bytes;
+            let i: usize = 0;
+            while (i < rlen) : (i += 1) {
+                if (i < bpp) {
+                    out_buf[pos + i] = raw[pos + i];
+                } else {
+                    out_buf[pos + i] = raw[pos + i] +% out_buf[pos + i - bpp];
+                }
+            }
+            pos += rlen;
+        }
+        return raw.len;
+    }
+
+    // PNG Predictors 10..15 (each row prefixed with 1-byte filter type 0..4)
+    if (parms.predictor >= 10 && parms.predictor <= 15) {
+        if (raw.len == 0) return 0;
+        const src_stride: usize = row_bytes + 1;
+        if (raw.len < src_stride) return PdfParseError.InvalidStream;
+
+        let in_pos: usize = 0;
+        let out_pos: usize = 0;
+        let has_prev: bool = false;
+        let prev_off: usize = 0;
+
+        while (in_pos < raw.len) {
+            if (in_pos + src_stride > raw.len) return PdfParseError.InvalidStream;
+            if (out_pos + row_bytes > out_buf.len) return PdfParseError.BufferTooSmall;
+
+            const filter_type: u8 = raw[in_pos];
+            in_pos += 1;
+            const eff_bpp: usize = if (bpp < row_bytes) bpp else row_bytes;
+
+            if (filter_type == 0) {
+                // None
+                let i: usize = 0;
+                while (i < row_bytes) : (i += 1) {
+                    out_buf[out_pos + i] = raw[in_pos + i];
+                }
+            } else if (filter_type == 1) {
+                // Sub
+                let i: usize = 0;
+                while (i < row_bytes) : (i += 1) {
+                    const left: u8 = if (i >= eff_bpp) out_buf[out_pos + i - eff_bpp] else 0;
+                    out_buf[out_pos + i] = raw[in_pos + i] +% left;
+                }
+            } else if (filter_type == 2) {
+                // Up
+                let i: usize = 0;
+                while (i < row_bytes) : (i += 1) {
+                    const up: u8 = if (has_prev) out_buf[prev_off + i] else 0;
+                    out_buf[out_pos + i] = raw[in_pos + i] +% up;
+                }
+            } else if (filter_type == 3) {
+                // Average
+                let i: usize = 0;
+                while (i < row_bytes) : (i += 1) {
+                    const left: u16 = if (i >= eff_bpp) @as(u16, out_buf[out_pos + i - eff_bpp]) else 0;
+                    const up: u16 = if (has_prev) @as(u16, out_buf[prev_off + i]) else 0;
+                    out_buf[out_pos + i] = raw[in_pos + i] +% @as(u8, @intCast((left + up) >> 1));
+                }
+            } else if (filter_type == 4) {
+                // Paeth
+                let i: usize = 0;
+                while (i < row_bytes) : (i += 1) {
+                    const left: u8 = if (i >= eff_bpp) out_buf[out_pos + i - eff_bpp] else 0;
+                    const up: u8 = if (has_prev) out_buf[prev_off + i] else 0;
+                    const ul: u8 = if (has_prev && i >= eff_bpp) out_buf[prev_off + i - eff_bpp] else 0;
+                    out_buf[out_pos + i] = raw[in_pos + i] +% pdfPaethPredict(left, up, ul);
+                }
+            } else {
+                return PdfParseError.InvalidStream;
+            }
+
+            prev_off = out_pos;
+            has_prev = true;
+            in_pos += row_bytes;
+            out_pos += row_bytes;
+        }
+        return out_pos;
+    }
+
+    return PdfParseError.UnsupportedFilter;
 }
 
 fn parseFilterKind(dict_slice: []const u8): PdfStreamFilter {
@@ -1061,13 +1542,17 @@ pub fn extractStreamFromObject(
         dict_slice: dict_slice,
         raw_data: obj_body[body_start..raw_end],
         filter: parseFilterKind(dict_slice),
+        decode_parms: parseDecodeParms(dict_slice),
     };
 }
 
-/// Decodes a `PdfStreamView` (raw uncompressed, `/FlateDecode` via `cap:pack` `inflate`, or `/ASCIIHexDecode`)
-/// into caller-provided `out_buf`.
+/// Decodes a `PdfStreamView` (raw uncompressed, `/FlateDecode` via `cap:pack` `inflate`, or `/ASCIIHexDecode`,
+/// automatically applying `/DecodeParms` PNG 10..15 / TIFF 2 Predictor reverse filtering) into `out_buf`.
 pub fn decodePdfStream(stream: PdfStreamView, out_buf: []u8): usize ! PdfParseError {
     if (stream.filter == PdfStreamFilter.none) {
+        if (stream.decode_parms.predictor > 1) {
+            return applyPdfPredictorDecode(stream.raw_data, stream.decode_parms, out_buf);
+        }
         if (stream.raw_data.len > out_buf.len) return PdfParseError.BufferTooSmall;
         let i: usize = 0;
         while (i < stream.raw_data.len) : (i += 1) {
@@ -1108,6 +1593,9 @@ pub fn decodePdfStream(stream: PdfStreamView, out_buf: []u8): usize ! PdfParseEr
     if (stream.filter == PdfStreamFilter.flate_decode) {
         const decomp_opt = inflate(stream.raw_data);
         if (decomp := decomp_opt) {
+            if (stream.decode_parms.predictor > 1) {
+                return applyPdfPredictorDecode(decomp, stream.decode_parms, out_buf);
+            }
             if (decomp.len > out_buf.len) return PdfParseError.BufferTooSmall;
             let i: usize = 0;
             while (i < decomp.len) : (i += 1) {
@@ -1181,7 +1669,8 @@ pub fn extractPdfMetadata(
     };
     if (!xref.trailer.has_info) return meta;
 
-    const info_body = xref.locateObjectBody(pdf_bytes, xref.trailer.info) ?? return meta;
+    let info_scratch: [8192]u8 = [0; 8192];
+    const info_body = xref.resolveObjectBody(pdf_bytes, xref.trailer.info, info_scratch[0..]) ?? return meta;
     let pos: usize = 0;
     meta.title = decodeDictStringField(info_body, "/Title", out_arena, *pos)?;
     meta.author = decodeDictStringField(info_body, "/Author", out_arena, *pos)?;
@@ -1282,14 +1771,15 @@ pub fn collectPdfPages(
     if (!xref.trailer.has_root) return PdfParseError.InvalidObject;
     if (stack_work.len == 0) return PdfParseError.BufferTooSmall;
 
-    const root_body = xref.locateObjectBody(pdf_bytes, xref.trailer.root) ?? return PdfParseError.ObjectNotFound;
+    let obj_scratch: [16384]u8 = [0; 16384];
+    const root_body = xref.resolveObjectBody(pdf_bytes, xref.trailer.root, obj_scratch[0..]) ?? return PdfParseError.ObjectNotFound;
     const pages_pos = findDictValuePos(root_body, "/Pages") ?? return PdfParseError.InvalidObject;
     const pages_ref = parseObjRefAt(root_body, pages_pos) ?? return PdfParseError.InvalidObject;
 
     // Inherit root `/MediaBox` & `/Rotate` if present on root `/Pages`
     let default_mb = PdfRect{};
     let default_rot: i32 = 0;
-    if (root_pages_body := xref.locateObjectBody(pdf_bytes, pages_ref)) {
+    if (root_pages_body := xref.resolveObjectBody(pdf_bytes, pages_ref, obj_scratch[0..])) {
         if (mbp := findDictValuePos(root_pages_body, "/MediaBox")) {
             if (mb := parseRectAt(root_pages_body, mbp)) default_mb = mb;
         }
@@ -1307,7 +1797,7 @@ pub fn collectPdfPages(
     while (sp > 0) {
         sp -= 1;
         const cur_ref = stack_work[sp];
-        const body = xref.locateObjectBody(pdf_bytes, cur_ref) ?? continue;
+        const body = xref.resolveObjectBody(pdf_bytes, cur_ref, obj_scratch[0..]) ?? continue;
 
         const tp = findDictValuePos(body, "/Type") ?? continue;
         let tlex = PdfLexer.init(body, tp);
@@ -1622,7 +2112,8 @@ pub fn extractPageText(
     }
 
     if (page.has_contents_array) {
-        const p_body = xref.locateObjectBody(pdf_bytes, page.obj_ref) ?? return PdfParseError.ObjectNotFound;
+        let page_scratch: [8192]u8 = [0; 8192];
+        const p_body = xref.resolveObjectBody(pdf_bytes, page.obj_ref, page_scratch[0..]) ?? return PdfParseError.ObjectNotFound;
         const cp = findDictValuePos(p_body, "/Contents") ?? return 0;
         let lex = PdfLexer.init(p_body, cp);
         if (lex.nextToken().kind != PdfTokenKind.array_start) return 0;
