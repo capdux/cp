@@ -132,13 +132,23 @@ export {
 } from "./tga.cp";
 
 export {
+    TIFF_MAX_IFDS,
+    TiffHeader,
     TiffError,
     TiffEndian,
     TiffCompression,
     TiffPixelFormat,
     TiffPage,
     TiffDocument,
+    tiffCopyPayloadSimd,
+    tiffCopyPayloadScalar,
+    tiffFillRunSimd,
+    tiffFillRunScalar,
+    tiffSwap16Simd,
+    tiffSwap16Scalar,
+    probeTiffHeader,
     encodeSingle,
+    encodeBigTiffSingle,
     encodeMultiPage,
     decode,
     decodeWithLimits,

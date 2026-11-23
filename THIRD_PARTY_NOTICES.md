@@ -59,6 +59,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **ogg** (`RustAudio`) | <https://github.com/RustAudio/ogg> | BSD-3-Clause | `lib/media/ogg.cp` | Copyright (c) 2016 est31 / RustAudio |
 | **RustCrypto/formats** (`der`, `x509-cert`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/asn1Der.cp`, `lib/auth/x509.cp` | Copyright (c) 2020-2024 RustCrypto Developers |
 | **ttf-parser** (`RazrFalcon`) | <https://github.com/RazrFalcon/ttf-parser> | MIT OR Apache-2.0 | `lib/gfx/ttf.cp` | Copyright (c) 2020 Yevhenii Reizner |
+| **image-tiff** (`tiff`) | <https://github.com/image-rs/image-tiff> | MIT | `lib/image/tiff.cp` | Copyright (c) 2018-2024 image-rs developers |
 
 ---
 

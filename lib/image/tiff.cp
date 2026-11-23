@@ -1,4 +1,5 @@
-// Source: cp/lib/tiff/tiff.cp (Pure CP Baseline TIFF Codec: II/MM Endian, IFD Tags, None/PackBits/LZW/Deflate)
+// Reference-hardened against image-rs/image-tiff (MIT)
+// Source: cp/lib/tiff/tiff.cp (Pure CP Classic TIFF 6.0 & BigTIFF v43 Codec: II/MM Endian, IFD Tags, None/PackBits/LZW/Deflate)
 // Zero external C dependency implementation using pure CP, cap:lzw, and cap:deflate.
 
 const std = @import("std");
@@ -15,8 +16,10 @@ import {
 const DEFAULT_MAX_WIDTH: u32 = 65535;
 const DEFAULT_MAX_HEIGHT: u32 = 65535;
 const DEFAULT_MAX_PAGES: usize = 1024;
+pub const TIFF_MAX_IFDS: usize = 64;
 
 const TIFF_MAGIC: u16 = 42;
+const TIFF_BIGTIFF_MAGIC: u16 = 43;
 
 const TAG_IMAGE_WIDTH: u16 = 256;
 const TAG_IMAGE_LENGTH: u16 = 257;
@@ -33,6 +36,84 @@ const TAG_EXTRA_SAMPLES: u16 = 338;
 const TYPE_BYTE: u16 = 1;
 const TYPE_SHORT: u16 = 3;
 const TYPE_LONG: u16 = 4;
+const TYPE_LONG8: u16 = 16;
+const TYPE_SLONG8: u16 = 17;
+const TYPE_IFD8: u16 = 18;
+
+/// Zero-pixel TIFF/BigTIFF header probe metadata.
+pub struct TiffHeader {
+    endian: TiffEndian,
+    is_bigtiff: bool,
+    width: u32,
+    height: u32,
+    compression: u32,
+    samples_per_pixel: u32,
+    first_ifd_offset: u64,
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` payload copy for hot-path uncompressed TIFF strips.
+pub fn tiffCopyPayloadSimd(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i + 16 <= src.len) : (i += 16) {
+        const chunk: @Vector(16, u8) = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+    }
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference payload copy for 0-diff parity testing against `tiffCopyPayloadSimd`.
+pub fn tiffCopyPayloadScalar(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` `@splat` fill for hot-path PackBits RLE run expansion.
+pub fn tiffFillRunSimd(dst: []u8, val: u8) {
+    const fill_v: @Vector(16, u8) = @splat(val);
+    let i: usize = 0;
+    while (i + 16 <= dst.len) : (i += 16) {
+        dst[i..][0..16].* = fill_v;
+    }
+    while (i < dst.len) : (i += 1) {
+        dst[i] = val;
+    }
+}
+
+/// Scalar reference RLE fill for 0-diff parity testing against `tiffFillRunSimd`.
+pub fn tiffFillRunScalar(dst: []u8, val: u8) {
+    let i: usize = 0;
+    while (i < dst.len) : (i += 1) {
+        dst[i] = val;
+    }
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` `@shuffle` byte-order swap for Big-Endian 16-bit channels.
+pub fn tiffSwap16Simd(dst: []u8, src: []const u8) {
+    const mask: [16]i32 = [ 1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14 ];
+    let i: usize = 0;
+    while (i + 16 <= src.len) : (i += 16) {
+        const v: @Vector(16, u8) = src[i..][0..16].*;
+        const swapped = @shuffle(u8, v, undefined, mask);
+        dst[i..][0..16].* = swapped;
+    }
+    while (i + 1 < src.len) : (i += 2) {
+        dst[i] = src[i + 1];
+        dst[i + 1] = src[i];
+    }
+}
+
+/// Scalar reference 16-bit byte-order swap for 0-diff parity testing against `tiffSwap16Simd`.
+pub fn tiffSwap16Scalar(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i + 1 < src.len) : (i += 2) {
+        dst[i] = src[i + 1];
+        dst[i + 1] = src[i];
+    }
+}
 
 /// Error set for TIFF encoding and decoding.
 pub err TiffError {
@@ -158,6 +239,27 @@ fn appendU32(alloc: std.mem.Allocator, out: *std.ArrayList(u8), v: u32, is_big: 
     }
 }
 
+fn readU64(buf: []const u8, pos: usize, is_big: bool): u64 {
+    if (is_big) {
+        const hi: u64 = readU32(buf, pos, true) as u64;
+        const lo: u64 = readU32(buf, pos + 4, true) as u64;
+        return (hi << 32) | lo;
+    }
+    const lo: u64 = readU32(buf, pos, false) as u64;
+    const hi: u64 = readU32(buf, pos + 4, false) as u64;
+    return (hi << 32) | lo;
+}
+
+fn appendU64(alloc: std.mem.Allocator, out: *std.ArrayList(u8), v: u64, is_big: bool): void ! TiffError {
+    if (is_big) {
+        appendU32(alloc, out, ((v >> 32) & 0xFFFFFFFF) as u32, true)?;
+        appendU32(alloc, out, (v & 0xFFFFFFFF) as u32, true)?;
+    } else {
+        appendU32(alloc, out, (v & 0xFFFFFFFF) as u32, false)?;
+        appendU32(alloc, out, ((v >> 32) & 0xFFFFFFFF) as u32, false)?;
+    }
+}
+
 fn writeU32At(buf: []u8, pos: usize, v: u32, is_big: bool) {
     if (is_big) {
         buf[pos] = ((v >> 24) & 0xff) as u8;
@@ -258,10 +360,10 @@ fn decodePackBits(alloc: std.mem.Allocator, src: []const u8, max_bytes: usize): 
             if (out.items.len + count > max_bytes) {
                 return TiffError.ImageTooLarge;
             }
-            let k: usize = 0;
-            while (k < count) : (k += 1) {
-                out.append(alloc, val) catch return TiffError.OutOfMemory;
-            }
+            out.ensureUnusedCapacity(alloc, count) catch return TiffError.OutOfMemory;
+            const old_len = out.items.len;
+            tiffFillRunSimd(out.items.ptr[old_len .. old_len + count], val);
+            out.items.len = old_len + count;
         }
     }
 
@@ -271,7 +373,7 @@ fn decodePackBits(alloc: std.mem.Allocator, src: []const u8, max_bytes: usize): 
 fn compressStrip(alloc: std.mem.Allocator, raw: []const u8, compression: TiffCompression): ([]u8) ! TiffError {
     if (compression == TiffCompression.None) {
         const copy = alloc.alloc(u8, raw.len) catch return TiffError.OutOfMemory;
-        @memcpy(copy, raw);
+        tiffCopyPayloadSimd(copy, raw);
         return copy;
     }
     if (compression == TiffCompression.PackBits) {
@@ -281,7 +383,7 @@ fn compressStrip(alloc: std.mem.Allocator, raw: []const u8, compression: TiffCom
         const cap_len = raw.len * 2 + 64;
         let tmp = alloc.alloc(u8, cap_len) catch return TiffError.OutOfMemory;
         defer alloc.free(tmp);
-        if (written := lzwCompressTiff(raw, *tmp)) {
+        if (written := lzwCompressTiff(raw, tmp)) {
             const exact = alloc.alloc(u8, written) catch return TiffError.OutOfMemory;
             @memcpy(exact, tmp[0..written]);
             return exact;
@@ -308,11 +410,11 @@ fn decompressStrip(
     if (compression == TiffCompression.None) {
         if (compressed.len > max_bytes) {
             const copy = alloc.alloc(u8, max_bytes) catch return TiffError.OutOfMemory;
-            @memcpy(copy, compressed[0..max_bytes]);
+            tiffCopyPayloadSimd(copy, compressed[0..max_bytes]);
             return copy;
         }
         const copy = alloc.alloc(u8, compressed.len) catch return TiffError.OutOfMemory;
-        @memcpy(copy, compressed);
+        tiffCopyPayloadSimd(copy, compressed);
         return copy;
     }
     if (compression == TiffCompression.PackBits) {
@@ -321,7 +423,7 @@ fn decompressStrip(
     if (compression == TiffCompression.Lzw) {
         let tmp = alloc.alloc(u8, max_bytes) catch return TiffError.OutOfMemory;
         defer alloc.free(tmp);
-        if (written := lzwDecompressTiff(compressed, *tmp)) {
+        if (written := lzwDecompressTiff(compressed, tmp)) {
             const exact = alloc.alloc(u8, written) catch return TiffError.OutOfMemory;
             @memcpy(exact, tmp[0..written]);
             return exact;
@@ -376,6 +478,91 @@ pub fn encodeSingle(
     };
     let pages: [1]TiffPage = [page];
     return encodeMultiPage(allocator, pages[0..1], endian);
+}
+
+fn appendBigIfdEntry(
+    alloc: std.mem.Allocator,
+    out: *std.ArrayList(u8),
+    tag: u16,
+    field_type: u16,
+    count: u64,
+    val_or_off: u64,
+    is_big: bool,
+): void ! TiffError {
+    appendU16(alloc, out, tag, is_big)?;
+    appendU16(alloc, out, field_type, is_big)?;
+    appendU64(alloc, out, count, is_big)?;
+    appendU64(alloc, out, val_or_off, is_big)?;
+}
+
+fn packBigShortInline(v: u16, is_big: bool): u64 {
+    if (is_big) {
+        return (v as u64) << 48;
+    }
+    return v as u64;
+}
+
+fn packBigLongInline(v: u32, is_big: bool): u64 {
+    if (is_big) {
+        return (v as u64) << 32;
+    }
+    return v as u64;
+}
+
+/// Encodes a single-page BigTIFF (version 43, 64-bit offsets) image into a newly allocated buffer.
+pub fn encodeBigTiffSingle(
+    allocator: std.mem.Allocator,
+    width: u32,
+    height: u32,
+    format: TiffPixelFormat,
+    compression: TiffCompression,
+    endian: TiffEndian,
+    pixels: []const u8,
+): ([]u8) ! TiffError {
+    if (width == 0 || height == 0) return TiffError.InvalidHeader;
+    const spp = samplesPerPixelForFormat(format);
+    const expected_len = checkedPixelBytes(width, height, spp)?;
+    if (pixels.len != expected_len) return TiffError.TruncatedData;
+
+    const compressed = compressStrip(allocator, pixels, compression)?;
+    defer allocator.free(compressed);
+
+    const is_big = endian == TiffEndian.Big;
+    let out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+
+    if (is_big) {
+        out.append(allocator, 'M') catch return TiffError.OutOfMemory;
+        out.append(allocator, 'M') catch return TiffError.OutOfMemory;
+    } else {
+        out.append(allocator, 'I') catch return TiffError.OutOfMemory;
+        out.append(allocator, 'I') catch return TiffError.OutOfMemory;
+    }
+    appendU16(allocator, &out, TIFF_BIGTIFF_MAGIC, is_big)?;
+    appendU16(allocator, &out, 8, is_big)?; // 8-byte offsets
+    appendU16(allocator, &out, 0, is_big)?; // reserved
+    appendU64(allocator, &out, 16, is_big)?; // IFD0 offset
+
+    const num_entries: u64 = 9;
+    appendU64(allocator, &out, num_entries, is_big)?;
+
+    // Out-of-line data starts at 16 + 8 + 9*20 + 8 = 212
+    const strip_offset: u64 = 212;
+    const strip_byte_count: u64 = compressed.len as u64;
+
+    appendBigIfdEntry(allocator, &out, TAG_IMAGE_WIDTH, TYPE_LONG, 1, packBigLongInline(width, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_IMAGE_LENGTH, TYPE_LONG, 1, packBigLongInline(height, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_BITS_PER_SAMPLE, TYPE_SHORT, 1, packBigShortInline(8, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_COMPRESSION, TYPE_SHORT, 1, packBigShortInline(compression as u16, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_PHOTOMETRIC, TYPE_SHORT, 1, packBigShortInline(photometricForFormat(format), is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_STRIP_OFFSETS, TYPE_LONG8, 1, strip_offset, is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_SAMPLES_PER_PIXEL, TYPE_SHORT, 1, packBigShortInline(spp as u16, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_ROWS_PER_STRIP, TYPE_LONG, 1, packBigLongInline(height, is_big), is_big)?;
+    appendBigIfdEntry(allocator, &out, TAG_STRIP_BYTE_COUNTS, TYPE_LONG8, 1, strip_byte_count, is_big)?;
+
+    appendU64(allocator, &out, 0, is_big)?; // next_ifd_offset = 0
+    out.appendSlice(allocator, compressed) catch return TiffError.OutOfMemory;
+    return out.toOwnedSlice(allocator) catch return TiffError.OutOfMemory;
 }
 
 /// Encodes one or more TIFF pages into a multi-page TIFF container.
@@ -574,6 +761,136 @@ fn readIfdArray(alloc: std.mem.Allocator, data: []const u8, entry_pos: usize, is
     return result;
 }
 
+fn readIfdScalarAny(data: []const u8, entry_pos: usize, is_big: bool, is_bigtiff: bool): u64 ! TiffError {
+    const field_type = readU16(data, entry_pos + 2, is_big);
+    if (!is_bigtiff) {
+        const count = readU32(data, entry_pos + 4, is_big);
+        if (count != 1) return TiffError.InvalidIfd;
+        if (field_type == TYPE_BYTE) return data[entry_pos + 8] as u64;
+        if (field_type == TYPE_SHORT) return readU16(data, entry_pos + 8, is_big) as u64;
+        if (field_type == TYPE_LONG) return readU32(data, entry_pos + 8, is_big) as u64;
+        return TiffError.InvalidIfd;
+    }
+    const count = readU64(data, entry_pos + 4, is_big);
+    if (count != 1) return TiffError.InvalidIfd;
+    if (field_type == TYPE_BYTE) return data[entry_pos + 12] as u64;
+    if (field_type == TYPE_SHORT) return readU16(data, entry_pos + 12, is_big) as u64;
+    if (field_type == TYPE_LONG) return readU32(data, entry_pos + 12, is_big) as u64;
+    if (field_type == TYPE_LONG8 || field_type == TYPE_SLONG8 || field_type == TYPE_IFD8) {
+        return readU64(data, entry_pos + 12, is_big);
+    }
+    return TiffError.InvalidIfd;
+}
+
+fn readIfdArrayAny(alloc: std.mem.Allocator, data: []const u8, entry_pos: usize, is_big: bool, is_bigtiff: bool): ([]u64) ! TiffError {
+    const field_type = readU16(data, entry_pos + 2, is_big);
+    const count_u64 = if (is_bigtiff) readU64(data, entry_pos + 4, is_big) else (readU32(data, entry_pos + 4, is_big) as u64);
+    if (count_u64 == 0 || count_u64 > data.len) return TiffError.InvalidIfd;
+    const count: usize = count_u64 as usize;
+
+    const elem_size: usize = if (field_type == TYPE_BYTE) {
+        1
+    } else if (field_type == TYPE_SHORT) {
+        2
+    } else if (field_type == TYPE_LONG) {
+        4
+    } else if (is_bigtiff && (field_type == TYPE_LONG8 || field_type == TYPE_SLONG8 || field_type == TYPE_IFD8)) {
+        8
+    } else {
+        return TiffError.InvalidIfd;
+    };
+
+    const total_bytes_ov = @mulWithOverflow(count, elem_size);
+    if (total_bytes_ov[1] != 0) return TiffError.InvalidIfd;
+    const total_bytes = total_bytes_ov[0];
+
+    const inline_limit: usize = if (is_bigtiff) 8 else 4;
+    let src_pos: usize = if (is_bigtiff) (entry_pos + 12) else (entry_pos + 8);
+    if (total_bytes > inline_limit) {
+        const off_u64 = if (is_bigtiff) readU64(data, src_pos, is_big) else (readU32(data, src_pos, is_big) as u64);
+        if (off_u64 > data.len || total_bytes > data.len - (off_u64 as usize)) {
+            return TiffError.TruncatedData;
+        }
+        src_pos = off_u64 as usize;
+    }
+
+    let result = alloc.alloc(u64, count) catch return TiffError.OutOfMemory;
+    errdefer alloc.free(result);
+    let i: usize = 0;
+    while (i < count) : (i += 1) {
+        const p = src_pos + i * elem_size;
+        if (field_type == TYPE_BYTE) {
+            result[i] = data[p] as u64;
+        } else if (field_type == TYPE_SHORT) {
+            result[i] = readU16(data, p, is_big) as u64;
+        } else if (field_type == TYPE_LONG) {
+            result[i] = readU32(data, p, is_big) as u64;
+        } else {
+            result[i] = readU64(data, p, is_big);
+        }
+    }
+    return result;
+}
+
+/// Zero-pixel TIFF/BigTIFF header probe (supports Little/Big Endian and Classic/BigTIFF v43).
+pub fn probeTiffHeader(tiff_bytes: []const u8): TiffHeader ! TiffError {
+    if (tiff_bytes.len < 8) return TiffError.TruncatedData;
+    const is_big = tiff_bytes[0] == 'M' && tiff_bytes[1] == 'M';
+    const is_little = tiff_bytes[0] == 'I' && tiff_bytes[1] == 'I';
+    if (!is_big && !is_little) return TiffError.InvalidSignature;
+
+    const magic = readU16(tiff_bytes, 2, is_big);
+    if (magic != TIFF_MAGIC && magic != TIFF_BIGTIFF_MAGIC) return TiffError.InvalidSignature;
+    const is_bigtiff = magic == TIFF_BIGTIFF_MAGIC;
+
+    let ifd_offset: u64 = 0;
+    if (is_bigtiff) {
+        if (tiff_bytes.len < 16) return TiffError.TruncatedData;
+        if (readU16(tiff_bytes, 4, is_big) != 8 || readU16(tiff_bytes, 6, is_big) != 0) {
+            return TiffError.InvalidHeader;
+        }
+        ifd_offset = readU64(tiff_bytes, 8, is_big);
+        if (ifd_offset < 16 || ifd_offset >= tiff_bytes.len) return TiffError.InvalidIfd;
+    } else {
+        ifd_offset = readU32(tiff_bytes, 4, is_big) as u64;
+        if (ifd_offset < 8 || ifd_offset >= tiff_bytes.len) return TiffError.InvalidIfd;
+    }
+
+    const off: usize = ifd_offset as usize;
+    const count_size: usize = if (is_bigtiff) 8 else 2;
+    const entry_size: usize = if (is_bigtiff) 20 else 12;
+    if (off + count_size > tiff_bytes.len) return TiffError.TruncatedData;
+    const num_entries_u64 = if (is_bigtiff) readU64(tiff_bytes, off, is_big) else (readU16(tiff_bytes, off, is_big) as u64);
+    if (num_entries_u64 > (tiff_bytes.len - off - count_size) / entry_size) return TiffError.TruncatedData;
+    const num_entries: usize = num_entries_u64 as usize;
+
+    let hdr = TiffHeader {
+        endian: if (is_big) TiffEndian.Big else TiffEndian.Little,
+        is_bigtiff: is_bigtiff,
+        width: 0,
+        height: 0,
+        compression: 1,
+        samples_per_pixel: 1,
+        first_ifd_offset: ifd_offset,
+    };
+
+    let e_idx: usize = 0;
+    while (e_idx < num_entries) : (e_idx += 1) {
+        const entry_pos = off + count_size + e_idx * entry_size;
+        const tag = readU16(tiff_bytes, entry_pos, is_big);
+        if (tag == TAG_IMAGE_WIDTH) {
+            hdr.width = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
+        } else if (tag == TAG_IMAGE_LENGTH) {
+            hdr.height = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
+        } else if (tag == TAG_COMPRESSION) {
+            hdr.compression = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
+        } else if (tag == TAG_SAMPLES_PER_PIXEL) {
+            hdr.samples_per_pixel = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
+        }
+    }
+    return hdr;
+}
+
 fn applyHorizontalPredictorDecode(pixels: []u8, width: u32, height: u32, spp: usize) {
     const w = width as usize;
     const h = height as usize;
@@ -593,13 +910,13 @@ fn applyHorizontalPredictorDecode(pixels: []u8, width: u32, height: u32, spp: us
     }
 }
 
-/// Decodes a TIFF container with default safety limits (65535x65535, 1024 pages).
+/// Decodes a TIFF or BigTIFF container with default safety limits (65535x65535, 64 IFDs).
 /// Caller owns the returned `TiffDocument` and must call `doc.deinit(allocator)`.
 pub fn decode(allocator: std.mem.Allocator, tiff_bytes: []const u8): TiffDocument ! TiffError {
-    return decodeWithLimits(allocator, tiff_bytes, DEFAULT_MAX_WIDTH, DEFAULT_MAX_HEIGHT, DEFAULT_MAX_PAGES);
+    return decodeWithLimits(allocator, tiff_bytes, DEFAULT_MAX_WIDTH, DEFAULT_MAX_HEIGHT, TIFF_MAX_IFDS);
 }
 
-/// Decodes a TIFF container with explicit dimension and page-count limits.
+/// Decodes a Classic TIFF (v42) or BigTIFF (v43) container with explicit dimension and page-count limits.
 /// Caller owns the returned `TiffDocument` and must call `doc.deinit(allocator)`.
 pub fn decodeWithLimits(
     allocator: std.mem.Allocator,
@@ -619,13 +936,22 @@ pub fn decodeWithLimits(
     }
 
     const magic = readU16(tiff_bytes, 2, is_big);
-    if (magic != TIFF_MAGIC) {
+    if (magic != TIFF_MAGIC && magic != TIFF_BIGTIFF_MAGIC) {
         return TiffError.InvalidSignature;
     }
+    const is_bigtiff = magic == TIFF_BIGTIFF_MAGIC;
 
-    let ifd_offset = readU32(tiff_bytes, 4, is_big) as usize;
-    if (ifd_offset < 8) {
-        return TiffError.InvalidIfd;
+    let ifd_offset: u64 = 0;
+    if (is_bigtiff) {
+        if (tiff_bytes.len < 16) return TiffError.TruncatedData;
+        if (readU16(tiff_bytes, 4, is_big) != 8 || readU16(tiff_bytes, 6, is_big) != 0) {
+            return TiffError.InvalidHeader;
+        }
+        ifd_offset = readU64(tiff_bytes, 8, is_big);
+        if (ifd_offset < 16) return TiffError.InvalidIfd;
+    } else {
+        ifd_offset = readU32(tiff_bytes, 4, is_big) as u64;
+        if (ifd_offset < 8) return TiffError.InvalidIfd;
     }
 
     let pages: std.ArrayList(TiffPage) = .empty;
@@ -637,8 +963,12 @@ pub fn decodeWithLimits(
         pages.deinit(allocator);
     }
 
-    let visited_ifds: std.ArrayList(usize) = .empty;
+    let visited_ifds: std.ArrayList(u64) = .empty;
     defer visited_ifds.deinit(allocator);
+
+    const count_size: usize = if (is_bigtiff) 8 else 2;
+    const entry_size: usize = if (is_bigtiff) 20 else 12;
+    const next_size: usize = if (is_bigtiff) 8 else 4;
 
     while (ifd_offset != 0) {
         if (pages.items.len >= max_pages) {
@@ -657,17 +987,19 @@ pub fn decodeWithLimits(
         if (ifd_offset >= tiff_bytes.len) {
             return TiffError.InvalidIfd;
         }
-        if (ifd_offset + 2 > tiff_bytes.len) {
+        const ifd_off_us: usize = ifd_offset as usize;
+        if (ifd_off_us + count_size > tiff_bytes.len) {
             return TiffError.TruncatedData;
         }
 
-        const num_entries = readU16(tiff_bytes, ifd_offset, is_big) as usize;
-        const entries_bytes = num_entries * 12;
-        if (entries_bytes > tiff_bytes.len - (ifd_offset + 2)) {
+        const num_entries_u64 = if (is_bigtiff) readU64(tiff_bytes, ifd_off_us, is_big) else (readU16(tiff_bytes, ifd_off_us, is_big) as u64);
+        if (num_entries_u64 > (tiff_bytes.len - (ifd_off_us + count_size)) / entry_size) {
             return TiffError.TruncatedData;
         }
-        const next_ifd_pos = ifd_offset + 2 + entries_bytes;
-        if (next_ifd_pos + 4 > tiff_bytes.len) {
+        const num_entries: usize = num_entries_u64 as usize;
+        const entries_bytes = num_entries * entry_size;
+        const next_ifd_pos = ifd_off_us + count_size + entries_bytes;
+        if (next_ifd_pos + next_size > tiff_bytes.len) {
             return TiffError.TruncatedData;
         }
 
@@ -681,53 +1013,53 @@ pub fn decodeWithLimits(
         let spp: usize = 1;
         let predictor: u32 = 1;
 
-        let bps_list: ([]u32)? = null;
+        let bps_list: ([]u64)? = null;
         defer if (b := bps_list) { allocator.free(b); }
 
-        let strip_offsets: ([]u32)? = null;
+        let strip_offsets: ([]u64)? = null;
         defer if (so := strip_offsets) { allocator.free(so); }
 
-        let strip_byte_counts: ([]u32)? = null;
+        let strip_byte_counts: ([]u64)? = null;
         defer if (sbc := strip_byte_counts) { allocator.free(sbc); }
 
         let e_idx: usize = 0;
         while (e_idx < num_entries) : (e_idx += 1) {
-            const entry_pos = ifd_offset + 2 + e_idx * 12;
+            const entry_pos = ifd_off_us + count_size + e_idx * entry_size;
             const tag = readU16(tiff_bytes, entry_pos, is_big);
 
             if (tag == TAG_IMAGE_WIDTH) {
-                width = readIfdScalar(tiff_bytes, entry_pos, is_big)?;
+                width = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
                 has_width = true;
             } else if (tag == TAG_IMAGE_LENGTH) {
-                height = readIfdScalar(tiff_bytes, entry_pos, is_big)?;
+                height = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
                 has_height = true;
             } else if (tag == TAG_BITS_PER_SAMPLE) {
                 if (bps_list != null) {
                     allocator.free(bps_list.?);
                     bps_list = null;
                 }
-                bps_list = readIfdArray(allocator, tiff_bytes, entry_pos, is_big)?;
+                bps_list = readIfdArrayAny(allocator, tiff_bytes, entry_pos, is_big, is_bigtiff)?;
             } else if (tag == TAG_COMPRESSION) {
-                compression_raw = readIfdScalar(tiff_bytes, entry_pos, is_big)?;
+                compression_raw = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
             } else if (tag == TAG_PHOTOMETRIC) {
-                photometric = readIfdScalar(tiff_bytes, entry_pos, is_big)?;
+                photometric = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
                 has_photometric = true;
             } else if (tag == TAG_STRIP_OFFSETS) {
                 if (strip_offsets != null) {
                     allocator.free(strip_offsets.?);
                     strip_offsets = null;
                 }
-                strip_offsets = readIfdArray(allocator, tiff_bytes, entry_pos, is_big)?;
+                strip_offsets = readIfdArrayAny(allocator, tiff_bytes, entry_pos, is_big, is_bigtiff)?;
             } else if (tag == TAG_SAMPLES_PER_PIXEL) {
-                spp = readIfdScalar(tiff_bytes, entry_pos, is_big)? as usize;
+                spp = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as usize;
             } else if (tag == TAG_STRIP_BYTE_COUNTS) {
                 if (strip_byte_counts != null) {
                     allocator.free(strip_byte_counts.?);
                     strip_byte_counts = null;
                 }
-                strip_byte_counts = readIfdArray(allocator, tiff_bytes, entry_pos, is_big)?;
+                strip_byte_counts = readIfdArrayAny(allocator, tiff_bytes, entry_pos, is_big, is_bigtiff)?;
             } else if (tag == TAG_PREDICTOR) {
-                predictor = readIfdScalar(tiff_bytes, entry_pos, is_big)?;
+                predictor = (readIfdScalarAny(tiff_bytes, entry_pos, is_big, is_bigtiff)?) as u32;
             }
         }
 
@@ -794,11 +1126,13 @@ pub fn decodeWithLimits(
 
         let s_idx: usize = 0;
         while (s_idx < offsets.len) : (s_idx += 1) {
-            const off = offsets[s_idx] as usize;
-            const cnt = counts[s_idx] as usize;
-            if (off > tiff_bytes.len || cnt > tiff_bytes.len - off) {
+            const off_u64 = offsets[s_idx];
+            const cnt_u64 = counts[s_idx];
+            if (off_u64 > tiff_bytes.len || cnt_u64 > tiff_bytes.len - (off_u64 as usize)) {
                 return TiffError.TruncatedData;
             }
+            const off = off_u64 as usize;
+            const cnt = cnt_u64 as usize;
             const remaining = if (expected_total > pixel_buf.items.len) {
                 expected_total - pixel_buf.items.len
             } else {
@@ -832,7 +1166,7 @@ pub fn decodeWithLimits(
             return TiffError.OutOfMemory;
         };
 
-        ifd_offset = readU32(tiff_bytes, next_ifd_pos, is_big) as usize;
+        ifd_offset = if (is_bigtiff) readU64(tiff_bytes, next_ifd_pos, is_big) else (readU32(tiff_bytes, next_ifd_pos, is_big) as u64);
     }
 
     if (pages.items.len == 0) {
