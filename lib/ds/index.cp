@@ -70,6 +70,10 @@ export {
     Rect,
     RTreeEntry,
     NearestRect,
+    minDistSqBatchScalar,
+    minDistSqBatchSimd,
+    overlapBatchScalar,
+    overlapBatchSimd,
     RTree,
 } from "./rtree.cp";
 

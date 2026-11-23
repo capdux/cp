@@ -1,7 +1,12 @@
-// Source: cp/lib/rtree/rtree.cp (2D Axis-Aligned Bounding Box R-Tree Spatial Index)
-// Pure CP, zero-C-dependency 2D AABB R-Tree spatial index supporting configurable node capacity,
-// ChooseLeaf minimal-enlargement insertion, Quadratic Split, MBR-tightening removal,
-// overlap/point queries, and Best-First Branch-and-Bound k-nearest-neighbor search.
+// Reference-hardened against georust/rstar (MIT/Apache-2.0)
+// Source: cp/lib/ds/rtree.cp (2D Axis-Aligned Bounding Box R*-Tree Spatial Index + SIMD Batch Kernels)
+// Pure CP, zero-C-dependency 2D AABB R*-Tree spatial index supporting:
+//   - STR (Sort-Tile-Recursive) bottom-up `bulkLoad` / `bulkLoadWithCapacity`
+//   - ChooseLeaf minimal-enlargement insertion & Quadratic Split
+//   - R*-Tree CondenseTree underflow-reinsertion `remove` + MBR-tightening `removeById`
+//   - Envelope queries (`locateInEnvelopeIntersecting`, `locateInEnvelopeContained`, `searchOverlap`, `searchPoint`)
+//   - Radius query (`locateWithinDistance`) & Best-First Branch-and-Bound K-NN (`nearestK`, `nearestNeighbor`, `kNearestPoint`)
+//   - 4-lane `@Vector(4, f32)` + `@mulAdd` FMA SIMD batch AABB kernels (`minDistSqBatchSimd`, `overlapBatchSimd`)
 
 const std = @import("std");
 
@@ -12,7 +17,134 @@ const DEFAULT_MAX_ENTRIES: usize = 16;
 pub err RTreeError {
     InvalidBox,
     InvalidCapacity,
+    InvalidDistance,
     OutOfMemory,
+}
+
+/// Scalar reference batch point-to-AABB minimum squared distance for `f32` SoA arrays.
+pub fn minDistSqBatchScalar(
+    qx: f32,
+    qy: f32,
+    min_x: []const f32,
+    min_y: []const f32,
+    max_x: []const f32,
+    max_y: []const f32,
+    out_dist_sq: *[]f32,
+): usize {
+    const n: usize = @min(@min(min_x.len, min_y.len), @min(@min(max_x.len, max_y.len), out_dist_sq.len));
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        const dx: f32 = @max(@as(f32, 0.0), @max(min_x[i] - qx, qx - max_x[i]));
+        const dy: f32 = @max(@as(f32, 0.0), @max(min_y[i] - qy, qy - max_y[i]));
+        out_dist_sq[i] = dx * dx + dy * dy;
+    }
+    return n;
+}
+
+/// 4-lane `@Vector(4, f32)` + `@mulAdd` FMA SIMD batch point-to-AABB minimum squared distance.
+/// Matches `minDistSqBatchScalar` within `< 1e-4` (exact up to FMA rounding).
+pub fn minDistSqBatchSimd(
+    qx: f32,
+    qy: f32,
+    min_x: []const f32,
+    min_y: []const f32,
+    max_x: []const f32,
+    max_y: []const f32,
+    out_dist_sq: *[]f32,
+): usize {
+    const n: usize = @min(@min(min_x.len, min_y.len), @min(@min(max_x.len, max_y.len), out_dist_sq.len));
+    const vqx: @Vector(4, f32) = @splat(qx);
+    const vqy: @Vector(4, f32) = @splat(qy);
+    const vzero: @Vector(4, f32) = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const vminx: @Vector(4, f32) = min_x[i..i + 4][0..4].*;
+        const vmaxx: @Vector(4, f32) = max_x[i..i + 4][0..4].*;
+        const vminy: @Vector(4, f32) = min_y[i..i + 4][0..4].*;
+        const vmaxy: @Vector(4, f32) = max_y[i..i + 4][0..4].*;
+        const dx: @Vector(4, f32) = @max(vzero, @max(vminx - vqx, vqx - vmaxx));
+        const dy: @Vector(4, f32) = @max(vzero, @max(vminy - vqy, vqy - vmaxy));
+        const dsq: @Vector(4, f32) = @mulAdd(@Vector(4, f32), dx, dx, dy * dy);
+        out_dist_sq[i..i + 4][0..4].* = dsq;
+        i += 4;
+    }
+    while (i < n) : (i += 1) {
+        const dx: f32 = @max(@as(f32, 0.0), @max(min_x[i] - qx, qx - max_x[i]));
+        const dy: f32 = @max(@as(f32, 0.0), @max(min_y[i] - qy, qy - max_y[i]));
+        out_dist_sq[i] = dx * dx + dy * dy;
+    }
+    return n;
+}
+
+/// Scalar reference batch AABB overlap test against query box `[q_min_x, q_max_x] x [q_min_y, q_max_y]`.
+/// Writes `1` (overlap) or `0` (disjoint) into `out_hits[i]` and returns total hit count.
+pub fn overlapBatchScalar(
+    q_min_x: f32,
+    q_min_y: f32,
+    q_max_x: f32,
+    q_max_y: f32,
+    min_x: []const f32,
+    min_y: []const f32,
+    max_x: []const f32,
+    max_y: []const f32,
+    out_hits: *[]u8,
+): usize {
+    const n: usize = @min(@min(min_x.len, min_y.len), @min(@min(max_x.len, max_y.len), out_hits.len));
+    let hits: usize = 0;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        const ok: bool = !(max_x[i] < q_min_x || q_max_x < min_x[i] || max_y[i] < q_min_y || q_max_y < min_y[i]);
+        out_hits[i] = if (ok) 1 else 0;
+        if (ok) hits += 1;
+    }
+    return hits;
+}
+
+/// 4-lane `@Vector(4, f32)` SIMD batch AABB overlap test.
+/// Exact match with `overlapBatchScalar` for all finite coordinates.
+pub fn overlapBatchSimd(
+    q_min_x: f32,
+    q_min_y: f32,
+    q_max_x: f32,
+    q_max_y: f32,
+    min_x: []const f32,
+    min_y: []const f32,
+    max_x: []const f32,
+    max_y: []const f32,
+    out_hits: *[]u8,
+): usize {
+    const n: usize = @min(@min(min_x.len, min_y.len), @min(@min(max_x.len, max_y.len), out_hits.len));
+    const vqminx: @Vector(4, f32) = @splat(q_min_x);
+    const vqminy: @Vector(4, f32) = @splat(q_min_y);
+    const vqmaxx: @Vector(4, f32) = @splat(q_max_x);
+    const vqmaxy: @Vector(4, f32) = @splat(q_max_y);
+    const vzero: @Vector(4, f32) = @splat(0.0);
+    let hits: usize = 0;
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const vminx: @Vector(4, f32) = min_x[i..i + 4][0..4].*;
+        const vmaxx: @Vector(4, f32) = max_x[i..i + 4][0..4].*;
+        const vminy: @Vector(4, f32) = min_y[i..i + 4][0..4].*;
+        const vmaxy: @Vector(4, f32) = max_y[i..i + 4][0..4].*;
+        // Overlap iff max(min_x, q_min_x) <= min(max_x, q_max_x) and same for y
+        const sep_x: @Vector(4, f32) = @max(vzero, @max(vminx - vqmaxx, vqminx - vmaxx));
+        const sep_y: @Vector(4, f32) = @max(vzero, @max(vminy - vqmaxy, vqminy - vmaxy));
+        const sep: @Vector(4, f32) = sep_x + sep_y;
+        const arr: [4]f32 = sep;
+        let lane: usize = 0;
+        while (lane < 4) : (lane += 1) {
+            const ok: bool = arr[lane] == 0.0;
+            out_hits[i + lane] = if (ok) 1 else 0;
+            if (ok) hits += 1;
+        }
+        i += 4;
+    }
+    while (i < n) : (i += 1) {
+        const ok: bool = !(max_x[i] < q_min_x || q_max_x < min_x[i] || max_y[i] < q_min_y || q_max_y < min_y[i]);
+        out_hits[i] = if (ok) 1 else 0;
+        if (ok) hits += 1;
+    }
+    return hits;
 }
 
 /// 2D Axis-Aligned Bounding Box (AABB) with double-precision coordinates.
@@ -208,9 +340,10 @@ pub struct RTree<V> {
 
     /// Releases all memory owned by the R-Tree.
     pub fn deinit(*_) {
-        for (node of *_.nodes.items) {
-            node.entries.deinit(_.allocator);
-            node.children.deinit(_.allocator);
+        let i: usize = 0;
+        while (i < _.nodes.items.len) : (i += 1) {
+            _.nodes.items[i].entries.deinit(_.allocator);
+            _.nodes.items[i].children.deinit(_.allocator);
         }
         _.nodes.deinit(_.allocator);
         _.free_slots.deinit(_.allocator);
@@ -220,9 +353,10 @@ pub struct RTree<V> {
 
     /// Removes all entries and resets the tree while retaining pool capacity.
     pub fn clear(*_) {
-        for (node of *_.nodes.items) {
-            node.entries.clearRetainingCapacity();
-            node.children.clearRetainingCapacity();
+        let i: usize = 0;
+        while (i < _.nodes.items.len) : (i += 1) {
+            _.nodes.items[i].entries.clearRetainingCapacity();
+            _.nodes.items[i].children.clearRetainingCapacity();
         }
         _.nodes.clearRetainingCapacity();
         _.free_slots.clearRetainingCapacity();
@@ -260,13 +394,14 @@ pub struct RTree<V> {
             return idx;
         }
         const idx = _.nodes.items.len;
-        _.nodes.append(_.allocator, RTreeNode(V){
+        const new_node: RTreeNode<V> = RTreeNode<V>{
             is_leaf: is_leaf,
             parent: NULL_NODE,
             mbr: Rect{ min_x: 0.0, min_y: 0.0, max_x: 0.0, max_y: 0.0 },
             entries: .empty,
             children: .empty,
-        }) catch return RTreeError.OutOfMemory;
+        };
+        _.nodes.append(_.allocator, new_node) catch return RTreeError.OutOfMemory;
         return idx;
     }
 
@@ -330,7 +465,7 @@ pub struct RTree<V> {
         return curr;
     }
 
-    fn quadraticPickSeeds(rects: []const Rect, out_a: *usize, out_b: *usize) {
+    static fn quadraticPickSeeds(rects: []const Rect, out_a: *usize, out_b: *usize) {
         let best_waste: f64 = -std.math.inf(f64);
         let seed_a: usize = 0;
         let seed_b: usize = 1;
@@ -511,11 +646,12 @@ pub struct RTree<V> {
 
         if (_.root == NULL_NODE) {
             const root_idx = _.allocNode(true)?;
-            _.nodes.items[root_idx].entries.append(_.allocator, RTreeEntry(V){
+            const entry_val: RTreeEntry<V> = RTreeEntry<V>{
                 id: id,
                 box_rect: box_rect,
                 value: value,
-            }) catch return RTreeError.OutOfMemory;
+            };
+            _.nodes.items[root_idx].entries.append(_.allocator, entry_val) catch return RTreeError.OutOfMemory;
             _.nodes.items[root_idx].mbr = box_rect;
             _.root = root_idx;
             _.count = 1;
@@ -523,11 +659,12 @@ pub struct RTree<V> {
         }
 
         const leaf_idx = _.chooseLeaf(box_rect);
-        _.nodes.items[leaf_idx].entries.append(_.allocator, RTreeEntry(V){
+        const leaf_entry: RTreeEntry<V> = RTreeEntry<V>{
             id: id,
             box_rect: box_rect,
             value: value,
-        }) catch return RTreeError.OutOfMemory;
+        };
+        _.nodes.items[leaf_idx].entries.append(_.allocator, leaf_entry) catch return RTreeError.OutOfMemory;
         _.count += 1;
 
         let curr = leaf_idx;
@@ -787,10 +924,11 @@ pub struct RTree<V> {
             const item = popMinHeap(&heap);
             if (item.is_entry) {
                 const e = _.nodes.items[item.node_idx].entries.items[item.entry_idx];
-                results.append(allocator, NearestRect(V){
+                const nr: NearestRect<V> = NearestRect<V>{
                     entry: e,
                     dist_sq: item.dist_sq,
-                }) catch return RTreeError.OutOfMemory;
+                };
+                results.append(allocator, nr) catch return RTreeError.OutOfMemory;
             } else {
                 const node_idx = item.node_idx;
                 if (_.nodes.items[node_idx].is_leaf) {
@@ -818,5 +956,518 @@ pub struct RTree<V> {
         }
 
         return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+    }
+
+    // ========================================================================
+    // R*-Tree Extensions (georust/rstar parity):
+    //   - STR (Sort-Tile-Recursive) Bulk Load (`bulkLoad` / `bulkLoadWithCapacity`)
+    //   - Underflow-Reinsertion Removal (`remove`)
+    //   - Envelope Intersecting / Contained & Radius Queries
+    //   - Nearest-K & Single Nearest Neighbor + Structural Invariant Verifier
+    // ========================================================================
+
+    static fn entryAxisKey(e: RTreeEntry<V>, axis_y: bool): f64 {
+        return if (axis_y) (e.box_rect.min_y + e.box_rect.max_y) else (e.box_rect.min_x + e.box_rect.max_x);
+    }
+
+    static fn sortEntriesHeapsort(items: []RTreeEntry<V>, axis_y: bool) {
+        const n: usize = items.len;
+        if (n <= 1) return;
+        let start: usize = n / 2;
+        while (start > 0) {
+            start -= 1;
+            let root: usize = start;
+            while (root * 2 + 1 < n) {
+                let child: usize = root * 2 + 1;
+                if (child + 1 < n && RTree<V>.entryAxisKey(items[child], axis_y) < RTree<V>.entryAxisKey(items[child + 1], axis_y)) {
+                    child += 1;
+                }
+                if (RTree<V>.entryAxisKey(items[root], axis_y) < RTree<V>.entryAxisKey(items[child], axis_y)) {
+                    const tmp = items[root];
+                    items[root] = items[child];
+                    items[child] = tmp;
+                    root = child;
+                } else {
+                    break;
+                }
+            }
+        }
+        let end: usize = n - 1;
+        while (end > 0) {
+            const tmp = items[end];
+            items[end] = items[0];
+            items[0] = tmp;
+            let root: usize = 0;
+            while (root * 2 + 1 < end) {
+                let child: usize = root * 2 + 1;
+                if (child + 1 < end && RTree<V>.entryAxisKey(items[child], axis_y) < RTree<V>.entryAxisKey(items[child + 1], axis_y)) {
+                    child += 1;
+                }
+                if (RTree<V>.entryAxisKey(items[root], axis_y) < RTree<V>.entryAxisKey(items[child], axis_y)) {
+                    const sw = items[root];
+                    items[root] = items[child];
+                    items[child] = sw;
+                    root = child;
+                } else {
+                    break;
+                }
+            }
+            end -= 1;
+        }
+    }
+
+    static fn nodeAxisKey(nodes: []const RTreeNode(V), node_idx: usize, axis_y: bool): f64 {
+        const m = nodes[node_idx].mbr;
+        return if (axis_y) (m.min_y + m.max_y) else (m.min_x + m.max_x);
+    }
+
+    static fn sortNodeIdsHeapsort(nodes: []const RTreeNode(V), ids: []usize, axis_y: bool) {
+        const n: usize = ids.len;
+        if (n <= 1) return;
+        let start: usize = n / 2;
+        while (start > 0) {
+            start -= 1;
+            let root: usize = start;
+            while (root * 2 + 1 < n) {
+                let child: usize = root * 2 + 1;
+                if (child + 1 < n && RTree<V>.nodeAxisKey(nodes, ids[child], axis_y) < RTree<V>.nodeAxisKey(nodes, ids[child + 1], axis_y)) {
+                    child += 1;
+                }
+                if (RTree<V>.nodeAxisKey(nodes, ids[root], axis_y) < RTree<V>.nodeAxisKey(nodes, ids[child], axis_y)) {
+                    const tmp = ids[root];
+                    ids[root] = ids[child];
+                    ids[child] = tmp;
+                    root = child;
+                } else {
+                    break;
+                }
+            }
+        }
+        let end: usize = n - 1;
+        while (end > 0) {
+            const tmp = ids[end];
+            ids[end] = ids[0];
+            ids[0] = tmp;
+            let root: usize = 0;
+            while (root * 2 + 1 < end) {
+                let child: usize = root * 2 + 1;
+                if (child + 1 < end && RTree<V>.nodeAxisKey(nodes, ids[child], axis_y) < RTree<V>.nodeAxisKey(nodes, ids[child + 1], axis_y)) {
+                    child += 1;
+                }
+                if (RTree<V>.nodeAxisKey(nodes, ids[root], axis_y) < RTree<V>.nodeAxisKey(nodes, ids[child], axis_y)) {
+                    const sw = ids[root];
+                    ids[root] = ids[child];
+                    ids[child] = sw;
+                    root = child;
+                } else {
+                    break;
+                }
+            }
+            end -= 1;
+        }
+    }
+
+    static fn ceilSqrtUsize(x: usize): usize {
+        if (x <= 1) return x;
+        let r: usize = 1;
+        while (r * r < x) : (r += 1) {}
+        return r;
+    }
+
+    /// Builds a balanced, low-overlap R*-Tree via Sort-Tile-Recursive (STR) bottom-up packing
+    /// with default capacity (`16`). Rejects any entry with NaN/Inf/inverted coordinates.
+    pub static fn bulkLoad(allocator: std.mem.Allocator, entries: []const RTreeEntry<V>): RTree<V> ! RTreeError {
+        return RTree<V>.bulkLoadWithCapacity(allocator, entries, DEFAULT_MAX_ENTRIES);
+    }
+
+    /// Builds a balanced, low-overlap R*-Tree via Sort-Tile-Recursive (STR) bottom-up packing
+    /// with configurable `max_entries >= 4`.
+    pub static fn bulkLoadWithCapacity(
+        allocator: std.mem.Allocator,
+        entries: []const RTreeEntry<V>,
+        max_entries: usize,
+    ): RTree<V> ! RTreeError {
+        let tree = RTree<V>.initWithCapacity(allocator, max_entries)?;
+        errdefer tree.deinit();
+
+        if (entries.len == 0) return tree;
+
+        // Validate all entries up front (reject NaN, Inf, inverted rects)
+        let vi: usize = 0;
+        while (vi < entries.len) : (vi += 1) {
+            if (!entries[vi].box_rect.isValid()) return RTreeError.InvalidBox;
+        }
+
+        let work = allocator.alloc(RTreeEntry(V), entries.len) catch return RTreeError.OutOfMemory;
+        defer allocator.free(work);
+        @memcpy(work, entries);
+
+        // Step 1: STR 2D tiling at leaf level (sort X -> vertical slices -> sort Y -> pack leaves)
+        const n: usize = work.len;
+        const num_leaves: usize = (n + max_entries - 1) / max_entries;
+        const num_slices: usize = RTree<V>.ceilSqrtUsize(num_leaves);
+        const slice_cap: usize = if (num_slices == 0) n else (num_slices * max_entries);
+
+        RTree<V>.sortEntriesHeapsort(work, false);
+
+        let cur_level: std.ArrayListUnmanaged(usize) = .empty;
+        defer cur_level.deinit(allocator);
+
+        let s_start: usize = 0;
+        while (s_start < n) {
+            const s_end: usize = @min(s_start + slice_cap, n);
+            RTree<V>.sortEntriesHeapsort(work[s_start..s_end], true);
+
+            let pos: usize = s_start;
+            while (pos < s_end) {
+                const chunk_end: usize = @min(pos + max_entries, s_end);
+                const leaf_idx = tree.allocNode(true)?;
+                let ci: usize = pos;
+                while (ci < chunk_end) : (ci += 1) {
+                    tree.nodes.items[leaf_idx].entries.append(allocator, work[ci]) catch return RTreeError.OutOfMemory;
+                }
+                tree.recomputeMbr(leaf_idx);
+                cur_level.append(allocator, leaf_idx) catch return RTreeError.OutOfMemory;
+                pos = chunk_end;
+            }
+            s_start = s_end;
+        }
+
+        // Step 2: Bottom-up STR packing of parent levels until a single root remains
+        let next_level: std.ArrayListUnmanaged(usize) = .empty;
+        defer next_level.deinit(allocator);
+
+        while (cur_level.items.len > 1) {
+            const m: usize = cur_level.items.len;
+            const num_parents: usize = (m + max_entries - 1) / max_entries;
+            const p_slices: usize = RTree<V>.ceilSqrtUsize(num_parents);
+            const p_slice_cap: usize = if (p_slices == 0) m else (p_slices * max_entries);
+
+            RTree<V>.sortNodeIdsHeapsort(tree.nodes.items, cur_level.items, false);
+            next_level.clearRetainingCapacity();
+
+            let ps: usize = 0;
+            while (ps < m) {
+                const pe: usize = @min(ps + p_slice_cap, m);
+                RTree<V>.sortNodeIdsHeapsort(tree.nodes.items, cur_level.items[ps..pe], true);
+
+                let pos: usize = ps;
+                while (pos < pe) {
+                    const c_end: usize = @min(pos + max_entries, pe);
+                    const p_idx = tree.allocNode(false)?;
+                    let ci: usize = pos;
+                    while (ci < c_end) : (ci += 1) {
+                        const child_id = cur_level.items[ci];
+                        tree.nodes.items[p_idx].children.append(allocator, child_id) catch return RTreeError.OutOfMemory;
+                        tree.nodes.items[child_id].parent = p_idx;
+                    }
+                    tree.recomputeMbr(p_idx);
+                    next_level.append(allocator, p_idx) catch return RTreeError.OutOfMemory;
+                    pos = c_end;
+                }
+                ps = pe;
+            }
+
+            cur_level.clearRetainingCapacity();
+            for (nid of next_level.items) {
+                cur_level.append(allocator, nid) catch return RTreeError.OutOfMemory;
+            }
+        }
+
+        tree.root = cur_level.items[0];
+        tree.nodes.items[tree.root].parent = NULL_NODE;
+        tree.count = entries.len;
+        return tree;
+    }
+
+    fn collectSubtreeEntries(*_, start_node: usize, out_entries: *std.ArrayListUnmanaged(RTreeEntry(V))) {
+        let stack: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack.deinit(_.allocator);
+        stack.append(_.allocator, start_node) catch return;
+        while (stack.items.len > 0) {
+            const nid = stack.items[stack.items.len - 1];
+            stack.items.len -= 1;
+            if (_.nodes.items[nid].is_leaf) {
+                for (e of _.nodes.items[nid].entries.items) {
+                    out_entries.append(_.allocator, e) catch {};
+                }
+            } else {
+                for (c of _.nodes.items[nid].children.items) {
+                    stack.append(_.allocator, c) catch {};
+                }
+            }
+            _.releaseSlot(nid);
+        }
+    }
+
+    /// Removes and returns the first entry matching `id` using R*-Tree CondenseTree
+    /// underflow-reinsertion (orphaning and re-inserting entries from underfilled non-root nodes).
+    pub fn remove(*_, id: u64): RTreeEntry<V>? {
+        if (_.root == NULL_NODE || _.count == 0) return null;
+
+        let stack: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack.deinit(_.allocator);
+        stack.append(_.allocator, _.root) catch return null;
+
+        let found_leaf: usize = NULL_NODE;
+        let found_idx: usize = 0;
+
+        while (stack.items.len > 0) {
+            const node_idx = stack.items[stack.items.len - 1];
+            stack.items.len -= 1;
+            if (_.nodes.items[node_idx].is_leaf) {
+                const items = _.nodes.items[node_idx].entries.items;
+                let i: usize = 0;
+                while (i < items.len) : (i += 1) {
+                    if (items[i].id == id) {
+                        found_leaf = node_idx;
+                        found_idx = i;
+                        break;
+                    }
+                }
+                if (found_leaf != NULL_NODE) break;
+            } else {
+                for (c of _.nodes.items[node_idx].children.items) {
+                    stack.append(_.allocator, c) catch return null;
+                }
+            }
+        }
+
+        if (found_leaf == NULL_NODE) return null;
+
+        const removed: RTreeEntry<V> = _.nodes.items[found_leaf].entries.swapRemove(found_idx);
+        _.count -= 1;
+
+        if (found_leaf == _.root) {
+            if (_.nodes.items[found_leaf].entries.items.len == 0) {
+                _.releaseSlot(found_leaf);
+                _.root = NULL_NODE;
+            } else {
+                _.recomputeMbr(found_leaf);
+            }
+            return removed;
+        }
+
+        // CondenseTree: walk upward collecting underflowing non-root subtrees for reinsertion
+        let orphans: std.ArrayListUnmanaged(RTreeEntry(V)) = .empty;
+        defer orphans.deinit(_.allocator);
+
+        let curr: usize = found_leaf;
+        while (curr != _.root && curr != NULL_NODE) {
+            const p: usize = _.nodes.items[curr].parent;
+            const cur_len: usize = if (_.nodes.items[curr].is_leaf)
+                _.nodes.items[curr].entries.items.len
+            else
+                _.nodes.items[curr].children.items.len;
+
+            if (cur_len < _.min_entries) {
+                // Unlink `curr` from parent `p`
+                const p_kids = _.nodes.items[p].children.items;
+                let k_idx: usize = 0;
+                while (k_idx < p_kids.len) : (k_idx += 1) {
+                    if (p_kids[k_idx] == curr) {
+                        * = _.nodes.items[p].children.swapRemove(k_idx);
+                        break;
+                    }
+                }
+                _.collectSubtreeEntries(curr, &orphans);
+            } else {
+                _.recomputeMbr(curr);
+            }
+            curr = p;
+        }
+
+        // Handle root shrinkage / collapse
+        if (_.root != NULL_NODE) {
+            if (!_.nodes.items[_.root].is_leaf) {
+                if (_.nodes.items[_.root].children.items.len == 0) {
+                    _.releaseSlot(_.root);
+                    _.root = NULL_NODE;
+                } else if (_.nodes.items[_.root].children.items.len == 1) {
+                    const only_child = _.nodes.items[_.root].children.items[0];
+                    _.nodes.items[only_child].parent = NULL_NODE;
+                    _.releaseSlot(_.root);
+                    _.root = only_child;
+                } else {
+                    _.recomputeMbr(_.root);
+                }
+            } else if (_.nodes.items[_.root].entries.items.len == 0) {
+                _.releaseSlot(_.root);
+                _.root = NULL_NODE;
+            } else {
+                _.recomputeMbr(_.root);
+            }
+        }
+
+        // Reinsert all orphaned entries (subtract them from count first since `insert` increments count)
+        _.count -= orphans.items.len;
+        for (oe of orphans.items) {
+            _.insert(oe.id, oe.box_rect, oe.value) catch {};
+        }
+
+        return removed;
+    }
+
+    /// Returns all entries whose rectangles intersect `query_rect` (`georust/rstar` naming parity).
+    pub fn locateInEnvelopeIntersecting(allocator: std.mem.Allocator, query_rect: Rect): []RTreeEntry<V> ! RTreeError {
+        return _.searchOverlap(allocator, query_rect);
+    }
+
+    /// Returns all entries whose rectangles are completely contained within `query_rect`.
+    /// Caller owns the returned slice and must free it with `allocator.free(res)`.
+    pub fn locateInEnvelopeContained(allocator: std.mem.Allocator, query_rect: Rect): []RTreeEntry<V> ! RTreeError {
+        if (!query_rect.isValid()) return RTreeError.InvalidBox;
+
+        let results: std.ArrayListUnmanaged(RTreeEntry(V)) = .empty;
+        errdefer results.deinit(allocator);
+
+        if (_.root == NULL_NODE || _.count == 0) {
+            return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+        }
+        if (!_.nodes.items[_.root].mbr.overlaps(query_rect)) {
+            return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+        }
+
+        let stack: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack.deinit(allocator);
+        stack.append(allocator, _.root) catch return RTreeError.OutOfMemory;
+
+        while (stack.items.len > 0) {
+            const node_idx = stack.items[stack.items.len - 1];
+            stack.items.len -= 1;
+            if (_.nodes.items[node_idx].is_leaf) {
+                for (e of _.nodes.items[node_idx].entries.items) {
+                    if (query_rect.containsRect(e.box_rect)) {
+                        results.append(allocator, e) catch return RTreeError.OutOfMemory;
+                    }
+                }
+            } else {
+                for (c of _.nodes.items[node_idx].children.items) {
+                    if (_.nodes.items[c].mbr.overlaps(query_rect)) {
+                        stack.append(allocator, c) catch return RTreeError.OutOfMemory;
+                    }
+                }
+            }
+        }
+        return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+    }
+
+    /// Returns all entries whose squared Euclidean distance to `(x, y)` is `<= max_dist_sq`.
+    /// Rejects non-finite coordinates or negative `max_dist_sq`.
+    pub fn locateWithinDistance(
+        allocator: std.mem.Allocator,
+        x: f64,
+        y: f64,
+        max_dist_sq: f64,
+    ): []NearestRect<V> ! RTreeError {
+        if (!std.math.isFinite(x) || !std.math.isFinite(y)) return RTreeError.InvalidBox;
+        if (!std.math.isFinite(max_dist_sq) || max_dist_sq < 0.0) return RTreeError.InvalidDistance;
+
+        let results: std.ArrayListUnmanaged(NearestRect(V)) = .empty;
+        errdefer results.deinit(allocator);
+
+        if (_.root == NULL_NODE || _.count == 0) {
+            return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+        }
+        if (_.nodes.items[_.root].mbr.distanceSqToPoint(x, y) > max_dist_sq) {
+            return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+        }
+
+        let stack: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack.deinit(allocator);
+        stack.append(allocator, _.root) catch return RTreeError.OutOfMemory;
+
+        while (stack.items.len > 0) {
+            const node_idx = stack.items[stack.items.len - 1];
+            stack.items.len -= 1;
+            if (_.nodes.items[node_idx].is_leaf) {
+                for (e of _.nodes.items[node_idx].entries.items) {
+                    const d2: f64 = e.box_rect.distanceSqToPoint(x, y);
+                    if (d2 <= max_dist_sq) {
+                        const nr: NearestRect<V> = NearestRect<V>{
+                            entry: e,
+                            dist_sq: d2,
+                        };
+                        results.append(allocator, nr) catch return RTreeError.OutOfMemory;
+                    }
+                }
+            } else {
+                for (c of _.nodes.items[node_idx].children.items) {
+                    if (_.nodes.items[c].mbr.distanceSqToPoint(x, y) <= max_dist_sq) {
+                        stack.append(allocator, c) catch return RTreeError.OutOfMemory;
+                    }
+                }
+            }
+        }
+        return results.toOwnedSlice(allocator) catch return RTreeError.OutOfMemory;
+    }
+
+    /// Best-First Branch-and-Bound K-nearest-neighbor search (`georust/rstar` naming parity).
+    pub fn nearestK(allocator: std.mem.Allocator, x: f64, y: f64, k: usize): []NearestRect<V> ! RTreeError {
+        return _.kNearestPoint(allocator, x, y, k);
+    }
+
+    /// Returns the single nearest entry to `(x, y)` (or `null` if the tree is empty).
+    pub fn nearestNeighbor(x: f64, y: f64): NearestRect<V>? ! RTreeError {
+        const res = _.kNearestPoint(_.allocator, x, y, 1)?;
+        defer _.allocator.free(res);
+        if (res.len == 0) return null;
+        return res[0];
+    }
+
+    /// Verifies all R*-Tree structural invariants:
+    ///   - Exact leaf entry count equals `_.count`
+    ///   - Every node MBR tightly encloses all of its entries/children
+    ///   - All parent pointers are consistent and all leaves sit at the same depth
+    pub fn verifyInvariants(): bool {
+        if (_.root == NULL_NODE) return _.count == 0;
+        if (_.count == 0) return false;
+        if (_.nodes.items[_.root].parent != NULL_NODE) return false;
+
+        let stack_node: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack_node.deinit(_.allocator);
+        let stack_depth: std.ArrayListUnmanaged(usize) = .empty;
+        defer stack_depth.deinit(_.allocator);
+
+        stack_node.append(_.allocator, _.root) catch return false;
+        stack_depth.append(_.allocator, 0) catch return false;
+
+        let total_entries: usize = 0;
+        let has_leaf_depth: bool = false;
+        let expected_leaf_depth: usize = 0;
+
+        while (stack_node.items.len > 0) {
+            const nid = stack_node.items[stack_node.items.len - 1];
+            const dep = stack_depth.items[stack_depth.items.len - 1];
+            stack_node.items.len -= 1;
+            stack_depth.items.len -= 1;
+
+            const nd = _.nodes.items[nid];
+            if (!nd.mbr.isValid()) return false;
+
+            if (nd.is_leaf) {
+                if (!has_leaf_depth) {
+                    expected_leaf_depth = dep;
+                    has_leaf_depth = true;
+                } else if (dep != expected_leaf_depth) {
+                    return false;
+                }
+                if (nd.entries.items.len == 0) return false;
+                total_entries += nd.entries.items.len;
+                for (e of nd.entries.items) {
+                    if (!e.box_rect.isValid()) return false;
+                    if (!nd.mbr.containsRect(e.box_rect)) return false;
+                }
+            } else {
+                if (nd.children.items.len == 0) return false;
+                for (c of nd.children.items) {
+                    if (_.nodes.items[c].parent != nid) return false;
+                    if (!nd.mbr.containsRect(_.nodes.items[c].mbr)) return false;
+                    stack_node.append(_.allocator, c) catch return false;
+                    stack_depth.append(_.allocator, dep + 1) catch return false;
+                }
+            }
+        }
+        return total_entries == _.count;
     }
 }

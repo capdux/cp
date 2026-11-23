@@ -22,7 +22,7 @@
 | `lib/ds/intervalTree.cp` | 泛型增广区间树（重叠区间检索与点刺查询） |
 | `lib/ds/quadtree.cp` | 动态分裂/合并四叉树（2D 空间索引与范围/近邻查询） |
 | `lib/ds/kdtree.cp` | 多维 K-D Tree 空间索引与 K 近邻（KNN）搜索 |
-| `lib/ds/rtree.cp` | 2D AABB R-Tree 空间矩形索引与最近邻检索 |
+| `lib/ds/rtree.cp` | 2D AABB R*-Tree 空间索引（对标 `georust/rstar`：STR 批量建树、欠载重插删除、半径/包含/相交/K-NN 查询与 4-lane SIMD FMA 批处理核） |
 | `lib/ds/suffix.cp` | 后缀数组、Kasai LCP 数组、模式范围搜索、不同子串计数与最长重复子串 |
 | `lib/ds/kmp.cp` | KMP 前缀函数、模式搜索、最短周期、Z-Algorithm 与 Manacher 最长回文子串 |
 | `lib/ds/ahoCorasick.cp` | Aho-Corasick 多模式自动机（对标 `BurntSushi/aho-corasick`：`Standard`/`LeftmostFirst`/`LeftmostLongest`、ASCII 大小写折叠、零堆扫描/批量替换与 `cap:simd` 预过滤） |
@@ -51,7 +51,7 @@
 ### 2. 多维空间索引
 - **`quadtree.cp`**：`QuadError`, `QuadEntry`, `QuadHit`, `QuadTree`
 - **`kdtree.cp`**：`KdError`, `KdPointEntry`, `KdNeighbor`, `KdTree`
-- **`rtree.cp`**：`RTreeError`, `Rect`, `RTreeEntry`, `NearestRect`, `RTree`
+- **`rtree.cp`**：`RTreeError`, `Rect`, `RTreeEntry`, `NearestRect`, `minDistSqBatchScalar`, `minDistSqBatchSimd`, `overlapBatchScalar`, `overlapBatchSimd`, `RTree`（`init`, `initWithCapacity`, `bulkLoad`, `bulkLoadWithCapacity`, `insert`, `remove`, `removeById`, `locateInEnvelopeIntersecting`, `locateInEnvelopeContained`, `locateWithinDistance`, `nearestK`, `nearestNeighbor`, `searchOverlap`, `searchPoint`, `kNearestPoint`, `verifyInvariants`）
 
 ### 3. 字符串匹配与文本缓冲
 - **`suffix.cp`**：`SuffixWorkspace`, `OccurrenceRange`, `LongestRepeat`, `buildSuffixArray`, `buildLcpArray`, `findPatternRange`, `countDistinctSubstrings`, `longestRepeatedSubstring`
