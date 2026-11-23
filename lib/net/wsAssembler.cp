@@ -1,3 +1,4 @@
+// Reference-hardened against snapview/tungstenite-rs (MIT/Apache-2.0)
 // Source: cp/lib/websocket_frame/assembler.cp (RFC 6455 Incremental Stream Frame & Fragment Assembler)
 
 const std = @import("std");
@@ -91,8 +92,13 @@ pub struct WsStreamAssembler {
     }
 
     /// Feeds an arbitrary-length incoming byte chunk into the assembler and decodes all complete frames.
+    /// Guards receive buffer growth against unbounded OOM when fed oversized incomplete streams.
     pub fn feed(*_, chunk: []const u8): void ! WsError {
         if (chunk.len > 0) {
+            const max_recv_cap = if (_.max_payload <= (0xFFFFFFFF - 65536)) (_.max_payload + 65536) else _.max_payload;
+            if (_.recv_buf.items.len + chunk.len > max_recv_cap && _.recv_buf.items.len > _.max_payload + 14) {
+                return WsError.PayloadTooLarge;
+            }
             _.recv_buf.appendSlice(_.alloc, chunk) catch return WsError.OutOfMemory;
         }
 

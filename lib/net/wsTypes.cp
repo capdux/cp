@@ -1,3 +1,4 @@
+// Reference-hardened against snapview/tungstenite-rs (MIT/Apache-2.0)
 // Source: cp/lib/websocket_frame/types.cp (RFC 6455 Opcodes, Close Codes, Errors & Handshake Accept Key)
 
 const std = @import("std");
@@ -52,12 +53,13 @@ pub enum WsCloseCode: u16 {
     MissingExtension = 1010,
     InternalError = 1011,
 
-    /// Validates whether `code` is legal to transmit on the wire in a Close frame (RFC 6455 Section 7.4.1).
+    /// Validates whether `code` is legal to transmit on the wire in a Close frame (RFC 6455 Section 7.4.1 / IANA).
+    /// Rejects `< 1000`, `1004`, `1005`, `1006`, `1015`, `1016..=2999`, and `>= 5000`.
     pub static fn isValidWireCode(code: u16): bool {
         if (code >= 1000 && code <= 1003) {
             return true;
         }
-        if (code >= 1007 && code <= 1011) {
+        if (code >= 1007 && code <= 1014) {
             return true;
         }
         if (code >= 3000 && code <= 4999) {
@@ -99,6 +101,7 @@ pub err WsError {
     FragmentedInProgress,
     InvalidClosePayload,
     OutOfMemory,
+    NonMinimalLength,
 }
 
 /// Computes the RFC 6455 Section 4.2.2 `Sec-WebSocket-Accept` key from `Sec-WebSocket-Key`

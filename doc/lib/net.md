@@ -1180,3 +1180,15 @@ pub fn demoWebRtcDataChannel()! {
 | `simdIpv6InSubnet` / `simdIpv6Eql` / `ipv6MaskBytes` | `lib/net/ipaddr.cp` | 纯 CP 16-lane `@Vector(16, u8)` `@reduce(.And, (ip_v & mask_v) == (net_v & mask_v))` 单次并行 IPv6 子网匹配与地址比对（配标量参考函数 0 差异对拍） |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testNetIpaddrRustRefSuite.cp` 覆盖八进制前导零/双 `::`/Zone ID 拒绝、RFC 6890 与 IPv4-mapped SSRF 拦截、IPv4/IPv6 CIDR `/0`..`/128` 边界、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 IP/CIDR 与随机 IPv6 子网 Fuzz（0 panic / 0 OOB / 0 死循环）。
+
+## Wave 34 工业级安全加固与 16-Lane SIMD 加速（`ws{Types,Codec,Assembler}.cp` 对标 `snapview/tungstenite-rs` MIT/Apache-2.0）
+
+`lib/net/wsTypes.cp`、`lib/net/wsCodec.cp` 与 `lib/net/wsAssembler.cp` 已对照 `snapview/tungstenite-rs`（MIT/Apache-2.0）与 RFC 6455 / Autobahn Testsuite 完成帧头规范校验、非最小长度拦截、Close 码与 UTF-8 校验、防 OOM 缓冲守卫与 16-lane `@Vector(16, u8)` SIMD 掩码异或加速，保持 100% 向后兼容：
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `WsError.NonMinimalLength` / `WsCloseCode.isValidWireCode` | `lib/net/wsTypes.cp`, `lib/net/wsCodec.cp` | 强制拦截 16-bit (`<126`) 与 64-bit (`<=65535`) 非最小长度编码、64-bit MSB=1、RSV 非零、保留操作码、分片控制帧及非法 Close 码（支持 IANA `1007..=1014` 并拒绝 `1004`/`1005`/`1006`/`1015`/`1016..=2999`/`>=5000`） |
+| `applyMaskSimd` / `applyMaskOffsetSimd` / 标量参考 | `lib/net/wsCodec.cp` | 纯 CP 16-lane `@Vector(16, u8)` 将 4 字节 masking key 广播为 16 字节向量单条 XOR 批量解掩码（配标量参考函数 0 差异对拍），`applyMask` 自动走 SIMD 快路径 |
+| `WsStreamAssembler` 防 OOM 守卫 | `lib/net/wsAssembler.cp` | 限制超大未完结流的 `recv_buf` 膨胀，严格校验孤立 Continuation、分片中非法新数据帧（允许穿插 Ping/Pong/Close）、跨分片 UTF-8 与 `max_payload` 硬上限 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testNetWebSocketRustRefSuite.cp` 覆盖 RFC 6455 §1.3 官方向量、125/126/65536 长度边界、分片穿插 Ping/Pong、RSV/保留操作码/非最小长度/分片控制帧/非法 Close 码/非法 UTF-8 拒绝、16-lane SIMD 0..257B 全长度 + 偏移对齐 0 差异对拍，以及 1,600 组确定性 PRNG 畸形帧与分片流 Fuzz（0 panic / 0 OOB / 0 泄漏）。

@@ -83,6 +83,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **h2** (`hyperium`) | <https://github.com/hyperium/h2> | MIT | `lib/http/h2/hpack.cp` | Copyright (c) 2017 Carl Lerche / Hyperium |
 | **unicode-segmentation** (`unicode-rs`) | <https://github.com/unicode-rs/unicode-segmentation> | MIT OR Apache-2.0 | `lib/text/grapheme.cp` | Copyright (c) 2012-2015 The Rust Project Developers |
 | **redis-rs** | <https://github.com/redis-rs/redis-rs> | BSD-3-Clause | `lib/redis/resp.cp` | Copyright (c) 2013-2024 Armin Ronacher / redis-rs Contributors |
+| **tungstenite-rs** (`snapview`) | <https://github.com/snapview/tungstenite-rs> | MIT OR Apache-2.0 | `lib/net/wsTypes.cp`, `lib/net/wsCodec.cp`, `lib/net/wsAssembler.cp` | Copyright (c) 2017 Alexey Galakhov / Daniel Abramov |
 
 ---
 

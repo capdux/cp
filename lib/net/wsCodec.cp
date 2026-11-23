@@ -1,7 +1,20 @@
-// Source: cp/lib/websocket_frame/codec.cp (RFC 6455 WebSocket Frame Encoder, Decoder & Masking)
+// Reference-hardened against snapview/tungstenite-rs (MIT/Apache-2.0)
+// Source: cp/lib/websocket_frame/codec.cp (RFC 6455 WebSocket Frame Encoder, Decoder & 16-Lane SIMD Masking)
 
 const std = @import("std");
 import { WsOpcode, WsCloseCode, WsError } from "./wsTypes.cp";
+
+type WsVec16u8 = @Vector(16, u8);
+
+fn wsLoadVec16(data: []const u8, off: usize): WsVec16u8 {
+    const v: WsVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
 
 /// Decoded WebSocket frame with owned heap-allocated payload.
 pub struct WsFrame {
@@ -29,20 +42,64 @@ pub struct DecodedFrame {
     bytes_consumed: usize,
 }
 
-/// Applies RFC 6455 4-byte cyclic XOR masking in-place over `buf`.
-pub fn applyMask(buf: []u8, mask_key: [4]u8) {
-    let i: usize = 0;
+/// 16-lane `@Vector(16, u8)` SIMD RFC 6455 cyclic 4-byte XOR masking in-place over `buf`
+/// starting at key phase `offset & 3`.
+pub fn applyMaskOffsetSimd(buf: []u8, mask_key: [4]u8, offset: usize) {
     const len = buf.len;
+    if (len == 0) return;
+
+    const k0 = mask_key[offset & 3];
+    const k1 = mask_key[(offset + 1) & 3];
+    const k2 = mask_key[(offset + 2) & 3];
+    const k3 = mask_key[(offset + 3) & 3];
+
+    const mask_v: WsVec16u8 = [
+        k0, k1, k2, k3,
+        k0, k1, k2, k3,
+        k0, k1, k2, k3,
+        k0, k1, k2, k3,
+    ];
+
+    let i: usize = 0;
+    while (i + 16 <= len) {
+        const chunk = wsLoadVec16(buf, i);
+        const xored: [16]u8 = chunk ^ mask_v;
+        @memcpy(buf[i .. i + 16], xored[0..16]);
+        i += 16;
+    }
     while (i + 4 <= len) {
-        buf[i] ^= mask_key[0];
-        buf[i + 1] ^= mask_key[1];
-        buf[i + 2] ^= mask_key[2];
-        buf[i + 3] ^= mask_key[3];
+        buf[i] ^= k0;
+        buf[i + 1] ^= k1;
+        buf[i + 2] ^= k2;
+        buf[i + 3] ^= k3;
         i += 4;
     }
     while (i < len) : (i += 1) {
-        buf[i] ^= mask_key[i & 3];
+        buf[i] ^= mask_key[(offset + i) & 3];
     }
+}
+
+/// Scalar reference for `applyMaskOffsetSimd` (differential verification).
+pub fn applyMaskOffsetScalar(buf: []u8, mask_key: [4]u8, offset: usize) {
+    let i: usize = 0;
+    while (i < buf.len) : (i += 1) {
+        buf[i] ^= mask_key[(offset + i) & 3];
+    }
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD RFC 6455 4-byte cyclic XOR masking in-place over `buf`.
+pub fn applyMaskSimd(buf: []u8, mask_key: [4]u8) {
+    applyMaskOffsetSimd(buf, mask_key, 0);
+}
+
+/// Scalar reference for `applyMaskSimd` (differential verification).
+pub fn applyMaskScalar(buf: []u8, mask_key: [4]u8) {
+    applyMaskOffsetScalar(buf, mask_key, 0);
+}
+
+/// Applies RFC 6455 4-byte cyclic XOR masking in-place over `buf` (16-lane SIMD accelerated).
+pub fn applyMask(buf: []u8, mask_key: [4]u8) {
+    applyMaskSimd(buf, mask_key);
 }
 
 /// Encodes a single RFC 6455 WebSocket frame with 7-bit, 16-bit (`126`), or 64-bit (`127`)
@@ -109,7 +166,7 @@ pub fn encodeFrame(
         offset += 4;
         if (plen > 0) {
             @memcpy(out[offset..(offset + plen)], payload);
-            applyMask(out[offset..(offset + plen)], mkey);
+            applyMaskSimd(out[offset..(offset + plen)], mkey);
         }
     } else {
         if (plen > 0) {
@@ -148,8 +205,8 @@ pub fn encodeCloseFrame(
 
 /// Decodes a single RFC 6455 WebSocket frame from `buf`.
 /// Enforces RSV=0, valid opcode, control frame limits (FIN=1, len<=125),
-/// optional client masking requirement, `max_payload` limit, Close payload validity,
-/// and UTF-8 validity for unfragmented Text frames.
+/// minimal length encoding, MSB=0 on 64-bit length, optional client masking requirement,
+/// `max_payload` limit, Close payload validity, and UTF-8 validity for unfragmented Text frames.
 pub fn decodeFrame(
     alloc: std.mem.Allocator,
     buf: []const u8,
@@ -198,15 +255,24 @@ pub fn decodeFrame(
         if (buf.len < 4) {
             return WsError.Incomplete;
         }
-        payload_len = std.mem.readInt(u16, buf[2..4], .big) as usize;
+        const len16 = std.mem.readInt(u16, buf[2..4], .big);
+        // RFC 6455 Section 5.2: minimal length representation required
+        if (len16 < 126) {
+            return WsError.NonMinimalLength;
+        }
+        payload_len = len16 as usize;
         header_len = 4;
     } else if (len7 == 127) {
         if (buf.len < 10) {
             return WsError.Incomplete;
         }
         const len64 = std.mem.readInt(u64, buf[2..10], .big);
-        if ((len64 & 0x8000_0000_0000_0000) != 0) {
+        if ((len64 >> 63) != 0) {
             return WsError.PayloadTooLarge;
+        }
+        // RFC 6455 Section 5.2: minimal length representation required
+        if (len64 <= 0xFFFF) {
+            return WsError.NonMinimalLength;
         }
         if (len64 > (max_payload as u64)) {
             return WsError.PayloadTooLarge;
@@ -230,7 +296,7 @@ pub fn decodeFrame(
         header_len += 4;
     }
 
-    if (buf.len < header_len + payload_len) {
+    if (buf.len - header_len < payload_len) {
         return WsError.Incomplete;
     }
 
@@ -239,7 +305,7 @@ pub fn decodeFrame(
         payload_buf = alloc.alloc(u8, payload_len) catch return WsError.OutOfMemory;
         @memcpy(payload_buf, buf[header_len..(header_len + payload_len)]);
         if (masked) {
-            applyMask(payload_buf, mask_key);
+            applyMaskSimd(payload_buf, mask_key);
         }
     }
 
