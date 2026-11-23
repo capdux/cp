@@ -817,3 +817,26 @@ export {
     WorkerLoadBalanceSummary,
     evaluateWorkerLoadBalance,
 } from "./workerPoolPlan";
+
+export {
+    CHUNK_CODE_COMMONJS_HELPER,
+    CHUNK_CODE_ESM_HELPER,
+    CHUNK_CODE_ASYNC_ESM_HELPER,
+    ChunkCodeEmitError,
+    MinifyWhitespaceOptions,
+    MinifyWhitespaceStats,
+    minifyJsWhitespaceSafe,
+    ModuleWrapMode,
+    moduleWrapModeName,
+    ModuleEmitInput,
+    ModuleEmitOptions,
+    ModuleEmitResult,
+    emitWrappedModuleInto,
+    ModuleEmitSpan,
+    ChunkAssembleStats,
+    ChunkCodeAssembler,
+    formatChunkEmitSpanTable,
+    GeneratedLineOwner,
+    resolveGeneratedLineToModule,
+    emitModuleBatchIntoChunk,
+} from "./chunkCodeEmit";

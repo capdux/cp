@@ -1230,3 +1230,27 @@ let pool = BuildWorkPool.init(workers[0..], prio[0..], lat[0..], 32);
 pool.submit(BuildWorkItem{ task_id: 1, module_index: 0 }, 0)?;
 * = plan;
 ```
+
+- **Chunk 内单模块包装发射、SourceMap 行偏移追踪与安全空白压缩引擎（`chunkCodeEmit.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCodeForFileInChunkJS.cp`）**：
+    - 导出：`CHUNK_CODE_COMMONJS_HELPER`、`CHUNK_CODE_ESM_HELPER`、`CHUNK_CODE_ASYNC_ESM_HELPER`、`ChunkCodeEmitError`、`MinifyWhitespaceOptions`、`MinifyWhitespaceStats`、`minifyJsWhitespaceSafe`（词法级注释剥离与安全空白折叠，严格保留单/双/模板字符串、正则字面量与 `/*! ... */` 版权注释，接入 `cap:simd` 加速扫描）、`ModuleWrapMode`（`FlatEsm`/`CommonJsClosure`/`LazyEsmInit`/`AsyncEsmInit`）、`moduleWrapModeName`、`ModuleEmitInput`、`ModuleEmitOptions`、`ModuleEmitResult`、`emitWrappedModuleInto`、`ModuleEmitSpan`、`ChunkAssembleStats`、`ChunkCodeAssembler`（接入 `Simd.countByte` 实时追踪 0-based 行列偏移）、`formatChunkEmitSpanTable`、`GeneratedLineOwner`、`resolveGeneratedLineToModule`（O(log M) 二分反查生成行归属模块）、`emitModuleBatchIntoChunk`。
+
+```cp
+import {
+    ModuleWrapMode,
+    ModuleEmitInput,
+    ModuleEmitOptions,
+    ModuleEmitSpan,
+    emitModuleBatchIntoChunk,
+    resolveGeneratedLineToModule,
+} from "cap:bundler";
+
+const mods: [2]ModuleEmitInput = [
+    ModuleEmitInput{ source_index: 0, source_path: "src/lib.cjs", wrapper_name: "require_lib", wrap_mode: ModuleWrapMode.CommonJsClosure, emit_use_strict: true, body_code: "exports.v = 42;" },
+    ModuleEmitInput{ source_index: 1, source_path: "src/main.js", wrap_mode: ModuleWrapMode.FlatEsm, body_code: "console.log(require_lib().v);" },
+];
+let out: [2048]u8 = [0; 2048];
+let spans: [4]ModuleEmitSpan = [ModuleEmitSpan.empty(); 4];
+const st = emitModuleBatchIntoChunk("/*! cap */\n", mods[0..], "", "", ModuleEmitOptions.defaults(), out[0..], spans[0..])?;
+const owner = resolveGeneratedLineToModule(spans[0..st.modules_emitted], spans[1].start_line);
+* = owner;
+```
