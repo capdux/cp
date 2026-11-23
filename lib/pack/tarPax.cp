@@ -1,9 +1,16 @@
+// Reference-hardened against alexcrichton/tar-rs (MIT/Apache-2.0)
 // Source: cp/lib/pack/tar_pax.cp (POSIX.1-2001 PAX & USTAR Safe Archive)
 // ============================================================================
-// lib/pack/tar_pax.cp — POSIX.1-2001 PAX 扩展头与 USTAR 安全 Tar 读写引擎
-// 支持 >100 字节超长路径与大文件 size (typeflag 'x')、符号链接、权限位与路径穿越防御
+// lib/pack/tar_pax.cp — 工业级 POSIX.1-2001 PAX / GNU / USTAR 安全 Tar 读写引擎
+// 对标 alexcrichton/tar-rs (MIT/Apache-2.0) 加固：
+//   - 支持 PAX 局部扩展头 ('x') 与全局扩展头 ('g')：path / linkpath / size / mtime / uid / gid
+//   - 支持 GNU LongName ('L') / LongLink ('K') 与 GNU Base-256 大文件/大 UID 解析
+//   - cap:simd 加速 validateArchivePath 路径穿越防御（拦截 .. / 绝对路径 / 盘符 / NUL / 硬链接越界）
+//   - 校验和双兼容（unsigned + signed）与零溢出/防截断边界校验
 // ============================================================================
 
+const std = @import("std");
+import { Simd } from "cap:simd";
 import {
     TAR_BLOCK_SIZE,
     TarTypeFlag,
@@ -12,10 +19,10 @@ import {
 
 pub const USTAR_MAX_NAME_LEN: usize = 100;
 pub const USTAR_MAX_OCTAL_SIZE: u64 = 0o77777777777;
+pub const TAR_MAX_META_PAYLOAD: usize = 1024 * 1024;
 
-/// 严格校验归档条目路径安全性：
-/// 拒绝空路径、空字节 (\0)、绝对路径 (/ 或 \ 开头)、驱动器前缀 (C:) 与 .. 路径穿越段
-pub fn validateArchivePath(path: []const u8): bool {
+/// 标量参考：严格校验归档条目路径安全性（用于与 cap:simd 预扫 0 差异对拍）
+pub fn validateArchivePathScalar(path: []const u8): bool {
     if (path.len == 0) {
         return false;
     }
@@ -50,6 +57,21 @@ pub fn validateArchivePath(path: []const u8): bool {
     return true;
 }
 
+/// 严格校验归档条目路径安全性（cap:simd 预扫加速）：
+/// 拒绝空路径、空字节 (\0)、绝对路径 (/ 或 \ 开头)、驱动器前缀 (C:) 与 .. 路径穿越段
+pub fn validateArchivePath(path: []const u8): bool {
+    if (path.len == 0) {
+        return false;
+    }
+    if (path[0] == '/' || path[0] == '\\') {
+        return false;
+    }
+    if (Simd.indexOfAny4(path, '\\', ':', 0x00, '.') == null) {
+        return true;
+    }
+    return validateArchivePathScalar(path);
+}
+
 /// POSIX.1-2001 PAX / USTAR 归档条目视图
 pub struct PaxTarEntry {
     name: []const u8 = "",
@@ -57,6 +79,8 @@ pub struct PaxTarEntry {
     size: u64 = 0,
     mode: u32 = 0o644,
     mtime: u64 = 0,
+    uid: u64 = 0,
+    gid: u64 = 0,
     typeflag: u8 = '0',
     data: []const u8 = "",
 
@@ -370,11 +394,23 @@ pub struct PaxTarWriter {
     }
 }
 
-/// POSIX.1-2001 PAX & USTAR 安全 Tar 归档读取器
+/// POSIX.1-2001 PAX / GNU / USTAR 安全 Tar 归档读取器
 pub struct PaxTarReader {
     buf: []const u8,
     pos: usize = 0,
     strict_paths: bool = true,
+    global_path: []const u8 = "",
+    has_global_path: bool = false,
+    global_linkpath: []const u8 = "",
+    has_global_linkpath: bool = false,
+    global_size: u64 = 0,
+    has_global_size: bool = false,
+    global_mtime: u64 = 0,
+    has_global_mtime: bool = false,
+    global_uid: u64 = 0,
+    has_global_uid: bool = false,
+    global_gid: u64 = 0,
+    has_global_gid: bool = false,
 
     pub static fn init(buf: []const u8, strict_paths: bool = true): PaxTarReader {
         return PaxTarReader {
@@ -412,10 +448,28 @@ pub struct PaxTarReader {
             if (c < '0' || c > '9') {
                 return null;
             }
+            if (val > 1844674407370955160) {
+                return null;
+            }
             val = val * 10 + ((c - '0') as u64);
             i += 1;
         }
         return val;
+    }
+
+    static fn parsePaxTimestamp(slice: []const u8): u64? {
+        if (slice.len == 0) return null;
+        let dot: usize = 0;
+        while (dot < slice.len && slice[dot] != '.') : (dot += 1) {}
+        return PaxTarReader.parseU64Decimal(slice[0..dot]);
+    }
+
+    static fn trimTrailingNuls(slice: []const u8): []const u8 {
+        let end = slice.len;
+        while (end > 0 && slice[end - 1] == 0) {
+            end -= 1;
+        }
+        return slice[0..end];
     }
 
     static fn extractCString(field: []const u8): []const u8 {
@@ -427,12 +481,18 @@ pub struct PaxTarReader {
     }
 
     pub fn next(*_): PaxTarEntry? {
-        let pax_path: []const u8 = "";
-        let has_pax_path = false;
-        let pax_linkpath: []const u8 = "";
-        let has_pax_linkpath = false;
-        let pax_size: u64 = 0;
-        let has_pax_size = false;
+        let pax_path: []const u8 = _.global_path;
+        let has_pax_path = _.has_global_path;
+        let pax_linkpath: []const u8 = _.global_linkpath;
+        let has_pax_linkpath = _.has_global_linkpath;
+        let pax_size: u64 = _.global_size;
+        let has_pax_size = _.has_global_size;
+        let pax_mtime: u64 = _.global_mtime;
+        let has_pax_mtime = _.has_global_mtime;
+        let pax_uid: u64 = _.global_uid;
+        let has_pax_uid = _.has_global_uid;
+        let pax_gid: u64 = _.global_gid;
+        let has_pax_gid = _.has_global_gid;
 
         while (true) {
             if (_.pos + TAR_BLOCK_SIZE > _.buf.len) {
@@ -443,28 +503,51 @@ pub struct PaxTarReader {
                 return null;
             }
 
-            const expected_sum = TarHeader.parseOctal(hdr[148..156]) as u32;
-            const actual_sum = TarHeader.computeChecksum(hdr);
-            if (expected_sum != actual_sum) {
+            if (!TarHeader.verifyChecksum(hdr)) {
                 return null;
             }
 
             const typeflag = if (hdr[156] == 0) ('0' as u8) else hdr[156];
-            const header_size = TarHeader.parseOctal(hdr[124..136]);
+            const header_size = TarHeader.parseNumeric(hdr[124..136]) orelse return null;
 
             _.pos += TAR_BLOCK_SIZE;
 
-            if (typeflag == (TarTypeFlag.PaxExtendedHeader as u8)) {
+            if (typeflag == (TarTypeFlag.GnuLongName as u8) || typeflag == (TarTypeFlag.GnuLongLink as u8)) {
+                if (header_size > (TAR_MAX_META_PAYLOAD as u64) || header_size > ((_.buf.len - _.pos) as u64)) {
+                    return null;
+                }
+                const meta_len = header_size as usize;
+                const meta_data = PaxTarReader.trimTrailingNuls(_.buf[_.pos .. _.pos + meta_len]);
+                const rem = meta_len % TAR_BLOCK_SIZE;
+                const pad = if (rem == 0) 0 else (TAR_BLOCK_SIZE - rem);
+                if (pad > _.buf.len - _.pos - meta_len) {
+                    return null;
+                }
+                _.pos += meta_len + pad;
+                if (typeflag == (TarTypeFlag.GnuLongName as u8)) {
+                    pax_path = meta_data;
+                    has_pax_path = true;
+                } else {
+                    pax_linkpath = meta_data;
+                    has_pax_linkpath = true;
+                }
+                continue;
+            }
+
+            if (typeflag == (TarTypeFlag.PaxExtendedHeader as u8) || typeflag == (TarTypeFlag.PaxGlobalHeader as u8)) {
+                if (header_size > (TAR_MAX_META_PAYLOAD as u64) || header_size > ((_.buf.len - _.pos) as u64)) {
+                    return null;
+                }
                 const pax_data_len = header_size as usize;
-                if (_.pos + pax_data_len > _.buf.len) {
-                    return null;
-                }
                 const pax_data = _.buf[_.pos .. _.pos + pax_data_len];
-                const padded_pax = (pax_data_len + TAR_BLOCK_SIZE - 1) & ~(TAR_BLOCK_SIZE - 1);
-                if (_.pos + padded_pax > _.buf.len) {
+                const rem = pax_data_len % TAR_BLOCK_SIZE;
+                const pad = if (rem == 0) 0 else (TAR_BLOCK_SIZE - rem);
+                if (pad > _.buf.len - _.pos - pax_data_len) {
                     return null;
                 }
-                _.pos += padded_pax;
+                _.pos += pax_data_len + pad;
+
+                const is_global = (typeflag == (TarTypeFlag.PaxGlobalHeader as u8));
 
                 // 解析 PAX 键值对: "<len> <key>=<value>\n"
                 let rpos: usize = 0;
@@ -481,7 +564,7 @@ pub struct PaxTarReader {
                         break;
                     }
                     const rec_len = rec_len_opt.?;
-                    if (rec_len == 0 || rpos + rec_len > pax_data.len) {
+                    if (rec_len == 0 || rec_len > pax_data.len - rpos) {
                         break;
                     }
                     const rec_end = rpos + rec_len;
@@ -495,16 +578,37 @@ pub struct PaxTarReader {
                     if (eq < kv_end) {
                         const key = pax_data[kv_start..eq];
                         const val = pax_data[eq + 1 .. kv_end];
-                        if (key == "path") {
+                        if (std.mem.eql(u8, key, "path")) {
+                            if (is_global) { _.global_path = val; _.has_global_path = true; }
                             pax_path = val;
                             has_pax_path = true;
-                        } else if (key == "linkpath") {
+                        } else if (std.mem.eql(u8, key, "linkpath")) {
+                            if (is_global) { _.global_linkpath = val; _.has_global_linkpath = true; }
                             pax_linkpath = val;
                             has_pax_linkpath = true;
-                        } else if (key == "size") {
+                        } else if (std.mem.eql(u8, key, "size")) {
                             if (parsed_sz := PaxTarReader.parseU64Decimal(val)) {
+                                if (is_global) { _.global_size = parsed_sz; _.has_global_size = true; }
                                 pax_size = parsed_sz;
                                 has_pax_size = true;
+                            }
+                        } else if (std.mem.eql(u8, key, "mtime")) {
+                            if (parsed_mt := PaxTarReader.parsePaxTimestamp(val)) {
+                                if (is_global) { _.global_mtime = parsed_mt; _.has_global_mtime = true; }
+                                pax_mtime = parsed_mt;
+                                has_pax_mtime = true;
+                            }
+                        } else if (std.mem.eql(u8, key, "uid")) {
+                            if (parsed_uid := PaxTarReader.parseU64Decimal(val)) {
+                                if (is_global) { _.global_uid = parsed_uid; _.has_global_uid = true; }
+                                pax_uid = parsed_uid;
+                                has_pax_uid = true;
+                            }
+                        } else if (std.mem.eql(u8, key, "gid")) {
+                            if (parsed_gid := PaxTarReader.parseU64Decimal(val)) {
+                                if (is_global) { _.global_gid = parsed_gid; _.has_global_gid = true; }
+                                pax_gid = parsed_gid;
+                                has_pax_gid = true;
                             }
                         }
                     }
@@ -538,18 +642,30 @@ pub struct PaxTarReader {
             }
 
             const final_link = if (has_pax_linkpath) pax_linkpath else PaxTarReader.extractCString(hdr[157..257]);
-            const final_size = if (has_pax_size) pax_size else header_size;
-            const mode = TarHeader.parseOctal(hdr[100..108]) as u32;
-            const mtime = TarHeader.parseOctal(hdr[136..148]);
+            if (_.strict_paths) {
+                if (typeflag == (TarTypeFlag.HardLink as u8) && !validateArchivePath(final_link)) {
+                    return null;
+                }
+                if (typeflag == (TarTypeFlag.Symlink as u8) && Simd.indexOfByte(final_link, 0x00) != null) {
+                    return null;
+                }
+            }
 
-            const data_size = final_size as usize;
-            if (_.pos + data_size > _.buf.len) {
+            const final_size = if (has_pax_size) pax_size else header_size;
+            const mode = (TarHeader.parseNumeric(hdr[100..108]) orelse 0o644) as u32;
+            const mtime = if (has_pax_mtime) pax_mtime else (TarHeader.parseNumeric(hdr[136..148]) orelse 0);
+            const uid = if (has_pax_uid) pax_uid else (TarHeader.parseNumeric(hdr[108..116]) orelse 0);
+            const gid = if (has_pax_gid) pax_gid else (TarHeader.parseNumeric(hdr[116..124]) orelse 0);
+
+            if (final_size > ((_.buf.len - _.pos) as u64)) {
                 return null;
             }
+            const data_size = final_size as usize;
             const data = _.buf[_.pos .. _.pos + data_size];
-            const padded_size = (data_size + TAR_BLOCK_SIZE - 1) & ~(TAR_BLOCK_SIZE - 1);
-            if (_.pos + padded_size <= _.buf.len) {
-                _.pos += padded_size;
+            const rem = data_size % TAR_BLOCK_SIZE;
+            const pad = if (rem == 0) 0 else (TAR_BLOCK_SIZE - rem);
+            if (pad <= _.buf.len - _.pos - data_size) {
+                _.pos += data_size + pad;
             } else {
                 _.pos += data_size;
             }
@@ -560,6 +676,8 @@ pub struct PaxTarReader {
                 size: final_size,
                 mode: mode,
                 mtime: mtime,
+                uid: uid,
+                gid: gid,
                 typeflag: typeflag,
                 data: data,
             };

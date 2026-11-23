@@ -43,8 +43,8 @@
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
 | `lib/pack/brotli.cp` | RFC 7932 Brotli 完整纯 CP 编解码引擎（对标 `dropbox/rust-brotli` 加固：`brotliDecompress` / `brotliDecompressInto` / `brotliDecompressWithLimits` / `brotliCompress` / `brotliCompressInto` + 16-lane SIMD LZ77/块搬运） | `/data/dev/bun/src/brotli/brotli.cp` & `dropbox/rust-brotli` (BSD-3-Clause/MIT) |
 | `lib/pack/_brotliDict.cp` | RFC 7932 122KB 静态字典、4 模式字面量上下文查表与 121 种词变换表（内部模块） | RFC 7932 Appendix A / §7.1 / §8 |
-| `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
-| `lib/pack/tarPax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tarPax.cp` (POSIX.1-2001 PAX & USTAR) |
+| `lib/pack/tar.cp` | POSIX.1-1988 USTAR / GNU Tar 512B 块编解码（`TarHeader`）与零拷贝读取器（`TarReader`，对标 `alexcrichton/tar-rs` 加固：unsigned/signed 双校验和兼容、GNU Base-256 >8GB 与负值编码、16-lane SIMD 全零块检测与校验和累加） | `/data/dev/bun/src/libarchive/libarchive.cp` & `alexcrichton/tar-rs` (MIT/Apache-2.0) |
+| `lib/pack/tarPax.cp` | POSIX.1-2001 PAX (`'x'` / `'g'`) & GNU (`'L'` / `'K'`) 安全归档读写器（`PaxTarWriter` / `PaxTarReader`、`cap:simd` 加速 `validateArchivePath` 与硬链接越界拦截） | `cp/lib/pack/tarPax.cp` & `alexcrichton/tar-rs` (MIT/Apache-2.0) |
 | `lib/pack/zip.cp` | 工业级 PKZIP (APPNOTE 6.3.x) 归档解析、安全校验与解压引擎（对标 `zip-rs/zip2` MIT 加固：16-lane SIMD 反向 EOCD 定位支持最长 65535B 注释、ZIP64 Extra Field `0x0001` 与 EOCD/Locator、ZipSlip 路径穿越防线 `isSafeZipEntryPath`/`sanitizeZipEntryPath`、CD/LFH 一致性校验 + Data Descriptor `bit 3`、`extractEntryWithLimit` 上限与 CRC32 校验） | `/data/dev/bun/src/libarchive/` & `zip-rs/zip2` (MIT) |
 | `lib/pack/zipWriter.cp` | PKWARE APPNOTE 6.3.10 内存/流式 ZIP 归档写入器（`ZipWriter` / `ZipCompressionMethod`） | `cp/lib/pack/zipWriter.cp` (PKWARE APPNOTE 6.3.10) |
 | `lib/pack/magic.cp` | 归档与压缩容器魔数嗅探器（`ArchiveSniffer` / `ArchiveMagicFormat`）与 MIME / 扩展名映射 | `cp/lib/pack/magic.cp` (Format Sniffer) |
@@ -202,8 +202,11 @@ pub fn demoBrotli(alloc: std.mem.Allocator, br_body: []const u8) {
 
 `lib/pack/tar.cp` 提供符合 POSIX.1-1988 USTAR 规范的 512 字节块编解码器 `TarHeader` 与内存零拷贝归档迭代器 `TarReader`：
 
-- 自动计算与验证 8 字节八进制 ASCII 头部校验和（将偏移 `148..156` 视为 ASCII 空格 `' '`）；
-- 自动按 512 字节边界对齐推进文件载荷，支持常规文件（`'0'`）、目录（`'5'`）、符号链接（`'2'`）等类型判别。
+- 自动计算与验证 8 字节八进制 ASCII 头部校验和（将偏移 `148..156` 视为 ASCII 空格 `' '`），并同时兼容标准无符号与历史有符号校验和（`TarHeader.verifyChecksum` / `computeSignedChecksum`）；
+- 支持标准八进制与 **GNU Base-256 二进制扩展编码**（`TarHeader.parseNumeric` / `parseSignedNumeric`），支持 >8GB 文件尺寸与负时间戳；
+- **16-lane SIMD 加速**：`TarHeader.isZeroBlockSimd`（`@Vector(16, u8)` `@reduce(.Or, acc)`）、`TarHeader.computeChecksumSimd`（`@Vector(16, u16)` `@reduce(.Add, v16)`）、`TarHeader.copyPayloadSimd` 以及 `cap:simd` 预扫 `validateArchivePath`；
+- **`PaxTarReader` 全格式支持**：兼容 PAX 局部扩展头（`'x'`）、PAX 全局扩展头（`'g'`：`path` / `linkpath` / `size` / `mtime` / `uid` / `gid`）、GNU LongName (`'L'`) / LongLink (`'K'`)，并在严格模式下拦截 TarSlip、硬链接越界与 NUL 字节；
+- **回归测试套件**：`cap/test/testPackTarRustRefSuite.cp`（覆盖 `alexcrichton/tar-rs` 样本、USTAR/PAX/Global PAX/GNU LongName/Base-256/signed checksum、TarSlip 全变体、16-lane SIMD 0 差异对拍及 1,300 组 PRNG Fuzz）。
 
 ```typescript
 import {
