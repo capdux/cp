@@ -49,6 +49,13 @@ export {
     stripUtf8Bom,
 } from "./lineBuffer.cp";
 
+export {
+    Json5TokenKind,
+    Json5Token,
+    Json5Lexer,
+    toStandardJson,
+} from "./json5.cp";
+
 const std = @import("std");
 import { JsonParser, JsonParseOptions } from "./parser";
 import { JsonValue } from "./value";

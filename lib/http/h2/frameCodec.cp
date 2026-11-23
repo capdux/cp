@@ -23,7 +23,7 @@ import {
     H2WindowUpdateFrame,
     H2RawFrame,
     H2Frame,
-} from "./types.cp";
+} from "./frameTypes.cp";
 
 fn readU16BE(b: []const u8): u16 {
     return (@as(u16, b[0]) << 8) | @as(u16, b[1]);

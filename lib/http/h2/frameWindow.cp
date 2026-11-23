@@ -4,7 +4,7 @@ import {
     H2_DEFAULT_INITIAL_WINDOW_SIZE,
     H2_MAX_WINDOW_SIZE,
     H2Error,
-} from "./types.cp";
+} from "./frameTypes.cp";
 
 pub enum H2StreamState {
     idle,

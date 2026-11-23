@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { DEFAULT_MAX_AGE, AltSvcHeader, AltSvcCache } from "cap:alt_svc";
+import { DEFAULT_MAX_AGE, AltSvcHeader, AltSvcCache } from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

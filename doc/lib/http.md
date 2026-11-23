@@ -822,3 +822,21 @@ let metrics = H2ClientMetrics.init();
 * = metrics.onSessionOpened();
 * = adm; * = resumed;
 ```
+
+## 十、历史 HTTP 域散装模块收敛（W29-Sync R2）
+
+以下 11 个原独立顶层目录已统一收敛进 `cap:http`（`lib/http/` 与 `lib/http/h2/`），可直接从 `"cap:http"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:alt_svc` | `lib/http/altSvcCache.cp` | `DEFAULT_MAX_AGE`, `AltSvcCacheEntry`, `AltSvcHeader`, `AltSvcCache` |
+| `cap:content_range` | `lib/http/contentRangeCodec.cp` | `ContentByteRange`, `ContentRangeStatus`, `ParsedRangeHeader`, `parseRangeHeader`, `formatHttpContentRange`, `formatUnsatisfiedRange`, `HttpParsedContentRange`, `parseHttpContentRange` |
+| `cap:cors_policy` | `lib/http/corsPolicy.cp` | `CorsConfig`, `CorsDecision`, `CorsPolicy` |
+| `cap:header_value_iter` | `lib/http/headerParamIter.cp` | `QuotedHeaderValueIterator`, `HeaderParam`, `HeaderParamIterator`, `ParsedHeaderCacheControl` |
+| `cap:rfc7807_problem` | `lib/http/problem.cp` | `PROBLEM_JSON_CONTENT_TYPE`, `defaultTitleForStatus`, `ProblemDetails` |
+| `cap:robots_txt` | `lib/http/robots.cp` | `matchRobotsPattern`, `isAllowed`, `crawlDelaySec`, `SitemapIter` |
+| `cap:sse_parser` | `lib/http/sseStreamParser.cp` | `ZeroAllocSseEvent`, `ZeroAllocSseParser`, `formatSseEvent` |
+| `cap:structured_headers` | `lib/http/sfv.cp` | `SfItemKind`, `SfItem`, `SfParam`, `SfParamIter`, `parseSfItem`, `formatSfString`, `formatSfByteSeq` |
+| `cap:h2_encode` | `lib/http/h2/encode.cp`（复用已有规范版） | `H2_CLIENT_PREFACE`, `encodeFrameHeader`, `encodeHeaderBlockFrames`, `encodeDataWindowed` 等 28 项 |
+| `cap:h2_frame` | `lib/http/h2/frameWire.cp` | `FRAME_HEADER_SIZE`, `SettingsUnit`, `hasClientPreface`, `H2WireFrameHeader`, `H2WireFrameType`, `H2WireErrorCode` 等 |
+| `cap:http2_frame` | `lib/http/h2/frame{Types,Codec,Decoder,Window}.cp` | `H2_PREFACE`, `H2Frame`, `decodeFrame`, `encodeFrame`, `H2StreamDecoder`, `H2ConnectionWindow`, `H2FrameStreamState`, `H2FrameErrorCode` 等 |

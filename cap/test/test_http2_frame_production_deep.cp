@@ -7,10 +7,10 @@ import {
     H2_HEADER_LEN,
     H2_DEFAULT_MAX_FRAME_SIZE,
     H2_DEFAULT_INITIAL_WINDOW_SIZE,
-    H2_MAX_WINDOW_SIZE,
+    H2_FRAME_MAX_WINDOW_SIZE as H2_MAX_WINDOW_SIZE,
     H2Error,
     H2FrameType,
-    H2ErrorCode,
+    H2FrameErrorCode as H2ErrorCode,
     H2FrameHeader,
     H2Setting,
     H2PrioritySpec,
@@ -27,9 +27,9 @@ import {
     encodeFrame,
     freeDecodedFrame,
     H2StreamDecoder,
-    H2StreamState,
+    H2FrameStreamState as H2StreamState,
     H2ConnectionWindow,
-} from "cap:http2_frame";
+} from "cap:http";
 
 test("http2_frame: SETTINGS/PING/WINDOW_UPDATE/GOAWAY/RST_STREAM roundtrip & preface") {
     const alloc = std.testing.allocator;

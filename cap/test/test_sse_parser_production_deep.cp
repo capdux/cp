@@ -2,10 +2,10 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    SseEvent,
-    SseParser,
+    ZeroAllocSseEvent as SseEvent,
+    ZeroAllocSseParser as SseParser,
     formatSseEvent,
-} from "cap:sse_parser";
+} from "cap:http";
 
 test("sse_parser: standard LLM delta stream with BOM, CRLF and comments") {
     const stream =

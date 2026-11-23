@@ -22,7 +22,7 @@ import {
     encodeClientPreface,
     encodeHeaderBlockFrames,
     encodeDataWindowed,
-} from "cap:h2_encode";
+} from "cap:http";
 
 fn readU24Be(b: []const u8, off: usize): u32 {
     return ((b[off] as u32) << 16) | ((b[off + 1] as u32) << 8) | (b[off + 2] as u32);

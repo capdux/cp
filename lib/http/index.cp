@@ -163,6 +163,54 @@ export {
     H2WriteAdmission,
     H2WriteBufferBudget,
     H2ClientMetrics,
+    FRAME_HEADER_SIZE,
+    SETTINGS_UNIT_SIZE,
+    STREAM_PRIORITY_SIZE,
+    H2FrameError,
+    FLAG_ACK,
+    FLAG_END_STREAM,
+    FLAG_END_HEADERS,
+    FLAG_PADDED,
+    FLAG_PRIORITY,
+    SettingsUnit,
+    hasClientPreface,
+    H2WireFrameType,
+    H2WireErrorCode,
+    H2WireSettingsType,
+    H2WireUInt31,
+    H2WireFrameHeader,
+    H2WireStreamPriority,
+    H2_PREFACE,
+    H2_HEADER_LEN,
+    H2_DEFAULT_INITIAL_WINDOW_SIZE,
+    H2_FRAME_MAX_WINDOW_SIZE,
+    H2_FLAG_ACK,
+    H2_FLAG_PADDED,
+    H2_FLAG_PRIORITY,
+    H2Error,
+    H2FrameType,
+    H2FrameErrorCode,
+    H2FrameHeader,
+    H2Setting,
+    H2PrioritySpec,
+    H2DataFrame,
+    H2HeadersFrame,
+    H2RstStreamFrame,
+    H2SettingsFrame,
+    H2PingFrame,
+    H2GoAwayFrame,
+    H2WindowUpdateFrame,
+    H2RawFrame,
+    H2Frame,
+    validatePreface,
+    freeDecodedFrame,
+    decodeFrame,
+    encodeFrame,
+    H2DecodedFrame,
+    H2StreamDecoder,
+    H2FrameStreamState,
+    H2StreamInfo,
+    H2ConnectionWindow,
 } from "./h2/index";
 
 export {
@@ -869,3 +917,64 @@ export {
     formatDateHeaderLine,
     DateHeaderTimer,
 } from "./dateHeader.cp";
+
+// --- Step 11: Consolidated HTTP Domain Modules (W29-Sync R2) ---
+export {
+    DEFAULT_MAX_AGE,
+    AltSvcEntry as AltSvcCacheEntry,
+    AltSvcHeader,
+    AltSvcCache,
+} from "./altSvcCache.cp";
+
+export {
+    ByteRange as ContentByteRange,
+    RangeStatus as ContentRangeStatus,
+    ParsedRangeHeader,
+    parseRangeHeader,
+    formatContentRange as formatHttpContentRange,
+    formatUnsatisfiedRange,
+    ParsedContentRange as HttpParsedContentRange,
+    parseContentRange as parseHttpContentRange,
+} from "./contentRangeCodec.cp";
+
+export {
+    CorsConfig,
+    CorsDecision,
+    CorsPolicy,
+} from "./corsPolicy.cp";
+
+export {
+    HeaderValueIterator as QuotedHeaderValueIterator,
+    HeaderParam,
+    HeaderParamIterator,
+    CacheControl as ParsedHeaderCacheControl,
+} from "./headerParamIter.cp";
+
+export {
+    PROBLEM_JSON_CONTENT_TYPE,
+    defaultTitleForStatus,
+    ProblemDetails,
+} from "./problem.cp";
+
+export {
+    matchRobotsPattern,
+    isAllowed,
+    crawlDelaySec,
+    SitemapIter,
+} from "./robots.cp";
+
+export {
+    SseEvent as ZeroAllocSseEvent,
+    SseParser as ZeroAllocSseParser,
+    formatSseEvent,
+} from "./sseStreamParser.cp";
+
+export {
+    SfItemKind,
+    SfItem,
+    SfParam,
+    SfParamIter,
+    parseSfItem,
+    formatSfString,
+    formatSfByteSeq,
+} from "./sfv.cp";

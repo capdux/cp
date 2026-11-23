@@ -6,7 +6,7 @@ import {
     parseSfItem,
     formatSfString,
     formatSfByteSeq,
-} from "cap:structured_headers";
+} from "cap:http";
 
 test("1. parseSfItem parses boolean, integer (up to 15 digits), and decimal_milli (up to 3 frac digits)", () => {
     let used: usize = 0;

@@ -6,7 +6,7 @@ import {
     Json5Token,
     Json5Lexer,
     toStandardJson,
-} from "cap:json5_lexer";
+} from "cap:json";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a >= b) a - b else b - a;

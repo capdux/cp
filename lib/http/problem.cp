@@ -104,7 +104,7 @@ export struct ProblemDetails {
     instance: ([]const u8)?,
 
     /// Create a ProblemDetails with `type: "about:blank"` and default title for `status`.
-    pub fn fromStatus(status: u16, detail: ([]const u8)?): ProblemDetails {
+    pub static fn fromStatus(status: u16, detail: ([]const u8)?): ProblemDetails {
         return ProblemDetails {
             type_uri: "about:blank",
             title: defaultTitleForStatus(status),
@@ -114,7 +114,7 @@ export struct ProblemDetails {
         };
     }
 
-    pub fn custom(
+    pub static fn custom(
         type_uri: []const u8,
         title: []const u8,
         status: u16?,

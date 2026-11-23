@@ -8,15 +8,15 @@ import {
     FLAG_END_STREAM,
     FLAG_END_HEADERS,
     FLAG_PRIORITY,
-    FrameType,
-    ErrorCode,
-    SettingsType,
-    UInt31WithReserved,
-    FrameHeader,
-    StreamPriority,
+    H2WireFrameType as FrameType,
+    H2WireErrorCode as ErrorCode,
+    H2WireSettingsType as SettingsType,
+    H2WireUInt31 as UInt31WithReserved,
+    H2WireFrameHeader as FrameHeader,
+    H2WireStreamPriority as StreamPriority,
     SettingsUnit,
     hasClientPreface,
-} from "cap:h2_frame";
+} from "cap:http";
 
 test("h2_frame: client preface and enum classifications", () => {
     expect(CLIENT_PREFACE.len).toBe(24);

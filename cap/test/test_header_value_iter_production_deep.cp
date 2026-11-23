@@ -2,11 +2,11 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    HeaderValueIterator,
+    QuotedHeaderValueIterator as HeaderValueIterator,
     HeaderParam,
     HeaderParamIterator,
-    CacheControl,
-} from "cap:header_value_iter";
+    ParsedHeaderCacheControl as CacheControl,
+} from "cap:http";
 
 test("header_value_iter: comma splitting with OWS trimming, empty skipping and quoted comma/escape protection") {
     const raw = " , \t gzip , , \"quoted, with \\\"escaped\\\", commas\" , br , \t ";

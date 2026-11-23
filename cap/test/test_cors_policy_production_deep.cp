@@ -5,7 +5,7 @@ import {
     CorsConfig,
     CorsDecision,
     CorsPolicy,
-} from "cap:cors_policy";
+} from "cap:http";
 
 test("cors_policy: wildcard origin without credentials vs with credentials echo and Vary: Origin") {
     // 1. 通配源 + 无凭证 -> 输出 "*", vary_origin = false

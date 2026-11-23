@@ -133,3 +133,67 @@ export {
     H2WriteBufferBudget,
     H2ClientMetrics,
 } from "./backpressure";
+
+// --- Consolidated HTTP/2 Wire Frame Header & Full RFC 9113 Frame Codec ---
+export {
+    FRAME_HEADER_SIZE,
+    SETTINGS_UNIT_SIZE,
+    STREAM_PRIORITY_SIZE,
+    H2FrameError,
+    FLAG_ACK,
+    FLAG_END_STREAM,
+    FLAG_END_HEADERS,
+    FLAG_PADDED,
+    FLAG_PRIORITY,
+    SettingsUnit,
+    hasClientPreface,
+    FrameType as H2WireFrameType,
+    ErrorCode as H2WireErrorCode,
+    SettingsType as H2WireSettingsType,
+    UInt31WithReserved as H2WireUInt31,
+    FrameHeader as H2WireFrameHeader,
+    StreamPriority as H2WireStreamPriority,
+} from "./frameWire.cp";
+
+export {
+    H2_PREFACE,
+    H2_HEADER_LEN,
+    H2_DEFAULT_INITIAL_WINDOW_SIZE,
+    H2_MAX_WINDOW_SIZE as H2_FRAME_MAX_WINDOW_SIZE,
+    H2_FLAG_ACK,
+    H2_FLAG_PADDED,
+    H2_FLAG_PRIORITY,
+    H2Error,
+    H2FrameType,
+    H2ErrorCode as H2FrameErrorCode,
+    H2FrameHeader,
+    H2Setting,
+    H2PrioritySpec,
+    H2DataFrame,
+    H2HeadersFrame,
+    H2RstStreamFrame,
+    H2SettingsFrame,
+    H2PingFrame,
+    H2GoAwayFrame,
+    H2WindowUpdateFrame,
+    H2RawFrame,
+    H2Frame,
+} from "./frameTypes.cp";
+
+export {
+    validatePreface,
+    freeDecodedFrame,
+    decodeFrame,
+    encodeFrame,
+} from "./frameCodec.cp";
+
+export {
+    H2DecodedFrame,
+    H2StreamDecoder,
+} from "./frameDecoder.cp";
+
+export {
+    H2StreamState as H2FrameStreamState,
+    H2StreamInfo,
+    H2ConnectionWindow,
+} from "./frameWindow.cp";

@@ -2,7 +2,7 @@ import {
     PROBLEM_JSON_CONTENT_TYPE,
     defaultTitleForStatus,
     ProblemDetails,
-} from "cap:rfc7807_problem";
+} from "cap:http";
 import { test, expect } from "cap:test";
 
 fn strEq(a: []const u8, b: []const u8): bool {

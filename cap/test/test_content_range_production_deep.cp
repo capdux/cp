@@ -1,12 +1,12 @@
 import { test, expect } from "cap:test";
 import {
-    ByteRange,
-    RangeStatus,
+    ContentByteRange as ByteRange,
+    ContentRangeStatus as RangeStatus,
     parseRangeHeader,
-    formatContentRange,
+    formatHttpContentRange as formatContentRange,
     formatUnsatisfiedRange,
-    parseContentRange,
-} from "cap:content_range";
+    parseHttpContentRange as parseContentRange,
+} from "cap:http";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

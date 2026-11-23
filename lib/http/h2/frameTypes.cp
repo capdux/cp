@@ -81,7 +81,7 @@ pub struct H2FrameHeader {
     pub flags: u8,
     pub stream_id: u32,
 
-    pub fn parse(bytes: []const u8): H2Error!H2FrameHeader {
+    pub static fn parse(bytes: []const u8): H2Error!H2FrameHeader {
         if (bytes.len < H2_HEADER_LEN) {
             return H2Error.BufferTooSmall;
         }

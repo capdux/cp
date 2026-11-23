@@ -6,7 +6,7 @@ import {
     isAllowed,
     crawlDelaySec,
     SitemapIter,
-} from "cap:robots_txt";
+} from "cap:http";
 
 test("robots_txt: matchRobotsPattern wildcards, $ end anchor and specificity length") {
     expect_eq(matchRobotsPattern("/admin", "/admin/settings").?, 6);

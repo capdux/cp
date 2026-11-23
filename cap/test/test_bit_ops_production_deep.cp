@@ -19,7 +19,7 @@ import {
     clearLowestSetBit,
     isolateLowestSetBit,
     BitSetIter64,
-} from "cap:bit_ops";
+} from "cap:math";
 
 test("bit_ops: bit masks, bitfields, popcount, and power-of-two alignment", () => {
     let m: u64 = 0;

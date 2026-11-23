@@ -7,11 +7,11 @@ import {
     H2Error,
     H2FrameHeader,
     H2Frame,
-} from "./types.cp";
+} from "./frameTypes.cp";
 import {
     decodeFrame,
     freeDecodedFrame,
-} from "./codec.cp";
+} from "./frameCodec.cp";
 
 pub struct H2DecodedFrame {
     pub header: H2FrameHeader,
