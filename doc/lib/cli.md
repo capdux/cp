@@ -809,3 +809,34 @@ let rc_buf: [1024]u8 = [0; 1024];
 const rc = planRcCompletionInstall(ShellCompDialect.Zsh, "cap", "export PATH=$HOME/.cap/bin:$PATH\n", RcCompOperation.InstallOrUpdate, rc_buf[0..])?;
 * = slen; * = rc;
 ```
+
+### `cap update -i` 交互式依赖升级 TUI 状态机与表格渲染引擎（`lib/cli/interactiveUpdate.cp`，吸收自 `/data/dev/bun/src/cli/update_interactive_command.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap update --interactive`；
+- **核心导出**：
+  - SemVer 升级风险分级与段差分着色：`IuSemverTriple`、`parseIuSemver`、`IuUpgradeKind`（`UpToDate`/`Patch`/`Minor`/`Major`/`Prerelease`）、`IuUpgradeClassification`、`classifySemverUpgrade`（精确计算目标版本变更起始偏移，如 `1.2.3 -> 1.4.0` 仅高亮 `4.0`）、`iuUpgradeAnsiColor`、`formatVersionDiffHighlight`；
+  - 交互式多选 TUI 状态机：`INTERACTIVE_UPDATE_DEFAULT_VIEWPORT`、`INTERACTIVE_UPDATE_MAX_FILTER_LEN`、`InteractiveUpdateError`、`IuDepGroup`、`iuDepGroupLabel`、`IuPackageEntry`、`IuKeyEvent`（`Up`/`Down`/`PageUp`/`PageDown`/`Home`/`End`/`ToggleSelect`/`SelectAll`/`SelectNone`/`ToggleLatest`/`Confirm`/`Cancel`/`ClearFilter`）、`IuSessionOutcome`、`IuSelectedUpgrade`、`InteractiveUpdateState`（接入 `cap:simd` `Simd.toLowerAscii` 实时搜索过滤与严格视口钳制）；
+  - 对齐终端表格渲染：`IuRenderOptions`、`renderInteractiveUpdateTable`（支持 ANSI 彩色差分与纯文本降级）。
+
+```cp
+import {
+    IuPackageEntry,
+    IuDepGroup,
+    IuKeyEvent,
+    InteractiveUpdateState,
+    IuRenderOptions,
+    renderInteractiveUpdateTable,
+} from "cap:cli";
+
+let entries: [2]IuPackageEntry = [
+    IuPackageEntry{ name: "zod", group: IuDepGroup.Dependencies, current_version: "3.22.0", target_version: "3.23.8", latest_version: "4.0.0" },
+    IuPackageEntry{ name: "vitest", group: IuDepGroup.DevDependencies, current_version: "1.6.0", target_version: "1.6.1", latest_version: "2.1.0" },
+];
+let vis: [2]usize = [0; 2];
+let st = InteractiveUpdateState.init(entries[0..], vis[0..], 10)?;
+st.handleKey(IuKeyEvent.ToggleSelect);
+st.handleKey(IuKeyEvent.ToggleLatest);
+let out: [1024]u8 = [0; 1024];
+const n = renderInteractiveUpdateTable(st, IuRenderOptions.defaults(), out[0..])?;
+* = n;
+```

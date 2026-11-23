@@ -422,3 +422,25 @@ export {
     RcCompPlanResult,
     planRcCompletionInstall,
 } from "./shellCompletions.cp";
+
+export {
+    INTERACTIVE_UPDATE_DEFAULT_VIEWPORT,
+    INTERACTIVE_UPDATE_MAX_FILTER_LEN,
+    InteractiveUpdateError,
+    IuSemverTriple,
+    parseIuSemver,
+    IuUpgradeKind,
+    IuUpgradeClassification,
+    iuUpgradeAnsiColor,
+    classifySemverUpgrade,
+    formatVersionDiffHighlight,
+    IuDepGroup,
+    iuDepGroupLabel,
+    IuPackageEntry,
+    IuKeyEvent,
+    IuSessionOutcome,
+    IuSelectedUpgrade,
+    InteractiveUpdateState,
+    IuRenderOptions,
+    renderInteractiveUpdateTable,
+} from "./interactiveUpdate.cp";
