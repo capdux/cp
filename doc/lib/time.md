@@ -558,3 +558,22 @@ pub fn demoEventLoopDelay() {
 - [union_interval.md](time/union_interval.md)
 - [uuid_v7.md](time/uuid_v7.md)
 - [vcd.md](time/vcd.md)
+
+---
+
+## Wave 32 工业级安全加固与 16-Lane SIMD 加速（对标 `chronotope/chrono` MIT/Apache-2.0）
+
+`lib/time/rfc3339.cp` 与 `lib/time/iso8601.cp` 已对照 `chronotope/chrono`（MIT/Apache-2.0）、RFC 3339、RFC 2822 及 RFC 9110 (IMF-fixdate) 完成历法边界加固与 16-lane `@Vector(16, u8)` / `cap:simd` 加速，保持 100% 向后兼容。
+
+### 1. 加固清单与新增符号
+
+| 符号 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `RFC3339_MAX_LEN` (`128`) | `lib/time/rfc3339.cp` | 时间戳输入长度硬上限防护 |
+| `simdIsDigits16` / `simdValidateRfc3339Prefix` / `simdFindTimeDelimiter` | `lib/time/rfc3339.cp` | 16-lane `@Vector(16, u8)` 并行 RFC 3339 前缀数字位校验与 `cap:simd` 分隔符扫描（配标量参考函数 0 差异对拍） |
+| `Rfc3339Time.parseWithOptions` / `Rfc3339Time.parseAllowLeapSecond` / `Iso8601.parseDateTimeWithOptions` | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | 支持可选闰秒 `60`、`T`/`t`/` ` 分隔符、1..9+ 位纳秒截断/补零、`-23:59..+23:59` 严格校验与尾随/前导空白拒绝 |
+| `parseHttpDate(input)` / `parseRfc2822(input)` | `lib/time/iso8601.cp` | 严格 RFC 9110 IMF-fixdate 与 RFC 2822 解析器，校验星期/月份精确大小写、星期与公历日期一致性及 `±HHMM`/`GMT`/`UTC`/`UT` 偏移 |
+
+### 2. 测试与 Fuzz 覆盖
+
+- **权威回归与 Fuzz 套件**：`cap/test/testTimeRustRefSuite.cp` 覆盖 1900/2000/2024/2038/2100/2400/9999 年闰年与负时间戳双向 Epoch↔Civil 往返、RFC 3339/RFC 2822/HTTP-Date 全矩阵、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形时间串与 0001–9999 年大跨度随机时间戳往返 Fuzz（0 panic / 0 OOB / 0 死循环）。

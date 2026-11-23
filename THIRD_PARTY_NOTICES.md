@@ -70,6 +70,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rust-url** (`servo`) | <https://github.com/servo/rust-url> | MIT OR Apache-2.0 | `lib/url/url.cp`, `lib/url/percent.cp` | Copyright (c) 2013-2024 The rust-url developers |
 | **uuid** (`uuid-rs`) | <https://github.com/uuid-rs/uuid> | MIT OR Apache-2.0 | `lib/uuid/uuid.cp` | Copyright (c) 2014-2024 The Rust Project Developers / uuid-rs |
 | **semver** (`dtolnay`) | <https://github.com/dtolnay/semver> | MIT OR Apache-2.0 | `lib/semver/version.cp`, `lib/semver/query.cp`, `lib/semver/range.cp` | Copyright (c) 2016 David Tolnay / Steve Klabnik |
+| **chrono** (`chronotope`) | <https://github.com/chronotope/chrono> | MIT OR Apache-2.0 | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | Copyright (c) 2014-2024 Kang Seonghoon / Chrono Contributors |
 
 ---
 

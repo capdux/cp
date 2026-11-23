@@ -1,4 +1,95 @@
+// Reference-hardened against chronotope/chrono (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/time.zig | Synced: 2026-11-21T14:57:50Z (RFC 3339 / ISO 8601 Timestamp Parser & Formatter)
+
+import { Simd } from "cap:simd";
+
+/// Hard upper bound for RFC 3339 / ISO 8601 timestamp strings to guard against DoS inputs.
+pub const RFC3339_MAX_LEN: usize = 128;
+
+type TimeVec16u8 = @Vector(16, u8);
+
+/// 16-lane SIMD check returning `true` iff the first 16 bytes of `input` are all ASCII digits `'0'..'9'`.
+pub fn simdIsDigits16(input: []const u8): bool {
+    if (input.len < 16) return false;
+    let buf: [16]u8 = [
+        input[0], input[1], input[2], input[3],
+        input[4], input[5], input[6], input[7],
+        input[8], input[9], input[10], input[11],
+        input[12], input[13], input[14], input[15],
+    ];
+    const v: TimeVec16u8 = buf;
+    const v_lo: TimeVec16u8 = @splat(48 as u8); // '0'
+    const v_hi: TimeVec16u8 = @splat(57 as u8); // '9'
+    const m_lo: u16 = @bitCast(v >= v_lo);
+    const m_hi: u16 = @bitCast(v <= v_hi);
+    return (m_lo & m_hi) == 0xFFFF;
+}
+
+/// Scalar reference for `simdIsDigits16` (used for differential verification).
+pub fn simdIsDigits16Scalar(input: []const u8): bool {
+    if (input.len < 16) return false;
+    let i: usize = 0;
+    while (i < 16) {
+        if (input[i] < '0' || input[i] > '9') return false;
+        i += 1;
+    }
+    return true;
+}
+
+/// 16-lane SIMD validator for the fixed 19-byte RFC 3339 prefix `YYYY-MM-DD[T|t| ]HH:MM:SS`.
+/// Validates all 5 separators plus all 14 digit positions in a single 16-lane vector compare.
+pub fn simdValidateRfc3339Prefix(s: []const u8): bool {
+    if (s.len < 20 || s.len > RFC3339_MAX_LEN) return false;
+    if (s[4] != '-' || s[7] != '-' || s[13] != ':' || s[16] != ':') return false;
+    const sep = s[10];
+    if (sep != 'T' && sep != 't' && sep != ' ') return false;
+
+    let digits16: [16]u8 = [
+        s[0], s[1], s[2], s[3],
+        s[5], s[6],
+        s[8], s[9],
+        s[11], s[12],
+        s[14], s[15],
+        s[17], s[18],
+        48 as u8, 48 as u8,
+    ];
+    const v: TimeVec16u8 = digits16;
+    const v_lo: TimeVec16u8 = @splat(48 as u8);
+    const v_hi: TimeVec16u8 = @splat(57 as u8);
+    const m_lo: u16 = @bitCast(v >= v_lo);
+    const m_hi: u16 = @bitCast(v <= v_hi);
+    return (m_lo & m_hi) == 0xFFFF;
+}
+
+/// Scalar reference for `simdValidateRfc3339Prefix` (used for differential verification).
+pub fn simdValidateRfc3339PrefixScalar(s: []const u8): bool {
+    if (s.len < 20 || s.len > RFC3339_MAX_LEN) return false;
+    if (s[4] != '-' || s[7] != '-' || s[13] != ':' || s[16] != ':') return false;
+    const sep = s[10];
+    if (sep != 'T' && sep != 't' && sep != ' ') return false;
+    return isDigit(s[0]) && isDigit(s[1]) && isDigit(s[2]) && isDigit(s[3]) &&
+        isDigit(s[5]) && isDigit(s[6]) &&
+        isDigit(s[8]) && isDigit(s[9]) &&
+        isDigit(s[11]) && isDigit(s[12]) &&
+        isDigit(s[14]) && isDigit(s[15]) &&
+        isDigit(s[17]) && isDigit(s[18]);
+}
+
+/// 16-lane `cap:simd` scan for primary date/time delimiters (`'-'`, `':'`, `'T'`, `' '`).
+pub fn simdFindTimeDelimiter(input: []const u8): usize? {
+    return Simd.indexOfAny4(input, 45 as u8, 58 as u8, 84 as u8, 32 as u8);
+}
+
+/// Scalar reference for `simdFindTimeDelimiter`.
+pub fn simdFindTimeDelimiterScalar(input: []const u8): usize? {
+    let i: usize = 0;
+    while (i < input.len) {
+        const c = input[i];
+        if (c == '-' || c == ':' || c == 'T' || c == ' ') return i;
+        i += 1;
+    }
+    return null;
+}
 
 /// 判断公历年份是否为闰年
 pub fn isLeapYear(year: u16): bool {
@@ -90,30 +181,27 @@ pub struct Rfc3339Time {
     nanos: u32 = 0,
     offset_minutes: i16 = 0,
 
-    /// 解析 RFC 3339 时间戳字符串（支持 `T`/`t`/` `、小数秒 `.1`..`.9` 与 `Z`/`z`/`+HH:MM`/`-HH:MM`）
-    static fn parse(s: []const u8): Rfc3339Time? {
-        if (s.len < 20) { return null; }
+    /// 解析 RFC 3339 时间戳字符串（支持 `T`/`t`/` `、小数秒 `.1`..`.9`、可选闰秒 `60` 与 `Z`/`z`/`+HH:MM`/`-HH:MM`）
+    pub static fn parseWithOptions(s: []const u8, allow_leap_second: bool): Rfc3339Time? {
+        if (!simdValidateRfc3339Prefix(s)) { return null; }
 
-        const year = parse4Digits(s, 0) ?? return null;
-        if (s[4] != '-') { return null; }
-        const month = parse2Digits(s, 5) ?? return null;
-        if (s[7] != '-') { return null; }
-        const day = parse2Digits(s, 8) ?? return null;
+        const year = @as(u16, s[0] - '0') * 1000 +
+            @as(u16, s[1] - '0') * 100 +
+            @as(u16, s[2] - '0') * 10 +
+            @as(u16, s[3] - '0');
+        const month: u8 = (s[5] - '0') * 10 + (s[6] - '0');
+        const day: u8 = (s[8] - '0') * 10 + (s[9] - '0');
 
         if (month < 1 || month > 12) { return null; }
         const max_day = daysInMonth(year, month);
         if (day < 1 || day > max_day) { return null; }
 
-        const sep = s[10];
-        if (sep != 'T' && sep != 't' && sep != ' ') { return null; }
+        const hour: u8 = (s[11] - '0') * 10 + (s[12] - '0');
+        const minute: u8 = (s[14] - '0') * 10 + (s[15] - '0');
+        const second: u8 = (s[17] - '0') * 10 + (s[18] - '0');
 
-        const hour = parse2Digits(s, 11) ?? return null;
-        if (s[13] != ':') { return null; }
-        const minute = parse2Digits(s, 14) ?? return null;
-        if (s[16] != ':') { return null; }
-        const second = parse2Digits(s, 17) ?? return null;
-
-        if (hour > 23 || minute > 59 || second > 59) {
+        const max_sec: u8 = if (allow_leap_second) 60 else 59;
+        if (hour > 23 || minute > 59 || second > max_sec) {
             return null;
         }
 
@@ -169,8 +257,18 @@ pub struct Rfc3339Time {
         };
     }
 
+    /// 解析严格 RFC 3339 时间戳字符串（秒范围 `00..59`）
+    pub static fn parse(s: []const u8): Rfc3339Time? {
+        return Rfc3339Time.parseWithOptions(s, false);
+    }
+
+    /// 解析允许闰秒 `60` 的 RFC 3339 时间戳字符串
+    pub static fn parseAllowLeapSecond(s: []const u8): Rfc3339Time? {
+        return Rfc3339Time.parseWithOptions(s, true);
+    }
+
     /// 转换为 UTC Unix 秒级时间戳（支持 1970 年前负时间戳）
-    fn toUnixSec(): i64 {
+    pub fn toUnixSec(): i64 {
         const days = daysFromCivil(@as(i64, _.year), _.month, _.day);
         const local_sec: i64 = days * 86400 +
             @as(i64, _.hour) * 3600 +
@@ -180,7 +278,7 @@ pub struct Rfc3339Time {
     }
 
     /// 从 UTC Unix 秒级时间戳与纳秒还原 `Rfc3339Time`（Howard Hinnant civil-from-days，支持负时间戳）
-    static fn fromUnixSecUtc(unix_sec: i64, nanos: u32): Rfc3339Time? {
+    pub static fn fromUnixSecUtc(unix_sec: i64, nanos: u32): Rfc3339Time? {
         if (nanos >= 1000000000) { return null; }
 
         const days: i64 = @divFloor(unix_sec, 86400);
@@ -218,10 +316,10 @@ pub struct Rfc3339Time {
     }
 
     /// 规范化格式化为 RFC 3339 字符串写入 `out`（如 `"2026-11-22T01:55:00Z"` 或含小数秒/时区偏移）
-    fn format(out: []u8): ([]const u8)? {
+    pub fn format(out: []u8): ([]const u8)? {
         if (_.month < 1 || _.month > 12) { return null; }
         if (_.day < 1 || _.day > daysInMonth(_.year, _.month)) { return null; }
-        if (_.hour > 23 || _.minute > 59 || _.second > 59 || _.nanos >= 1000000000) { return null; }
+        if (_.hour > 23 || _.minute > 59 || _.second > 60 || _.nanos >= 1000000000) { return null; }
         if (_.offset_minutes < -1439 || _.offset_minutes > 1439) { return null; }
 
         let w = OutWriter{ buf: out };

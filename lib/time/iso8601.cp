@@ -1,6 +1,9 @@
-// Source: cp/lib/time/iso8601.cp (RFC 3339 / ISO 8601 DateTime & Duration)
+// Reference-hardened against chronotope/chrono (MIT/Apache-2.0)
+// Source: cp/lib/time/iso8601.cp (RFC 3339 / ISO 8601 / RFC 2822 DateTime & Duration)
 // lib/time/iso8601.cp
-// Pure CP RFC 3339 / ISO 8601 DateTime & Duration parser, formatter, and Howard Hinnant epoch conversion
+// Pure CP RFC 3339 / ISO 8601 / RFC 2822 / HTTP-Date parser, formatter, and Howard Hinnant epoch conversion
+
+import { simdValidateRfc3339Prefix, RFC3339_MAX_LEN } from "./rfc3339";
 
 pub struct CivilDateTime {
     year: i32 = 1970;
@@ -184,8 +187,157 @@ pub struct CivilDateTime {
     }
 }
 
+fn match3Exact(s: []const u8, a: u8, b: u8, c: u8): bool {
+    return s.len >= 3 && s[0] == a && s[1] == b && s[2] == c;
+}
+
+fn parseWeekdayAbbrevExact(s: []const u8): u8? {
+    if (match3Exact(s, 'S', 'u', 'n')) return 0;
+    if (match3Exact(s, 'M', 'o', 'n')) return 1;
+    if (match3Exact(s, 'T', 'u', 'e')) return 2;
+    if (match3Exact(s, 'W', 'e', 'd')) return 3;
+    if (match3Exact(s, 'T', 'h', 'u')) return 4;
+    if (match3Exact(s, 'F', 'r', 'i')) return 5;
+    if (match3Exact(s, 'S', 'a', 't')) return 6;
+    return null;
+}
+
+fn parseMonthAbbrevExact(s: []const u8): u8? {
+    if (match3Exact(s, 'J', 'a', 'n')) return 1;
+    if (match3Exact(s, 'F', 'e', 'b')) return 2;
+    if (match3Exact(s, 'M', 'a', 'r')) return 3;
+    if (match3Exact(s, 'A', 'p', 'r')) return 4;
+    if (match3Exact(s, 'M', 'a', 'y')) return 5;
+    if (match3Exact(s, 'J', 'u', 'n')) return 6;
+    if (match3Exact(s, 'J', 'u', 'l')) return 7;
+    if (match3Exact(s, 'A', 'u', 'g')) return 8;
+    if (match3Exact(s, 'S', 'e', 'p')) return 9;
+    if (match3Exact(s, 'O', 'c', 't')) return 10;
+    if (match3Exact(s, 'N', 'o', 'v')) return 11;
+    if (match3Exact(s, 'D', 'e', 'c')) return 12;
+    return null;
+}
+
+/// Strict HTTP-Date (RFC 9110 / RFC 7231 IMF-fixdate) parser:
+/// `Sun, 06 Nov 1994 08:49:37 GMT` (exact 29 bytes, strict case, validates weekday matches calendar date).
+pub fn parseHttpDate(input: []const u8): CivilDateTime? {
+    if (input.len != 29) return null;
+    const expected_dow = parseWeekdayAbbrevExact(input[0..3]) ?? return null;
+    if (input[3] != ',' || input[4] != ' ' || input[7] != ' ' || input[11] != ' ' || input[16] != ' ') return null;
+    if (input[19] != ':' || input[22] != ':' || input[25] != ' ') return null;
+    if (!match3Exact(input[26..29], 'G', 'M', 'T')) return null;
+
+    const dy = Iso8601.parseFixedDigits(input[5..7]) ?? return null;
+    const mo = parseMonthAbbrevExact(input[8..11]) ?? return null;
+    const yr = Iso8601.parseFixedDigits(input[12..16]) ?? return null;
+    const hh = Iso8601.parseFixedDigits(input[17..19]) ?? return null;
+    const mm = Iso8601.parseFixedDigits(input[20..22]) ?? return null;
+    const ss = Iso8601.parseFixedDigits(input[23..25]) ?? return null;
+
+    const max_day = CivilDateTime.daysInMonth(yr as i32, mo);
+    if (dy < 1 || dy > (max_day as u32)) return null;
+    if (hh > 23 || mm > 59 || ss > 59) return null;
+
+    const dt = CivilDateTime.utc(yr as i32, mo, dy as u8, hh as u8, mm as u8, ss as u8);
+    if (dt.dayOfWeek() != expected_dow) return null;
+    return dt;
+}
+
+/// Strict RFC 2822 date-time parser:
+/// `[Dow, ]D[D] Mon YYYY HH:MM[:SS] (GMT|UTC|UT|±HHMM)` with exact-case weekday/month and calendar validation.
+pub fn parseRfc2822(input: []const u8): CivilDateTime? {
+    if (input.len < 20 || input.len > RFC3339_MAX_LEN) return null;
+    let pos: usize = 0;
+    let expected_dow: u8? = null;
+
+    // Optional weekday prefix "Sun, "
+    if (input.len >= 5 && input[3] == ',') {
+        expected_dow = parseWeekdayAbbrevExact(input[0..3]) ?? return null;
+        if (input[4] != ' ') return null;
+        pos = 5;
+    }
+
+    // 1 or 2 digit day
+    const d_start = pos;
+    while (pos < input.len && input[pos] >= '0' && input[pos] <= '9') {
+        pos += 1;
+    }
+    const d_len = pos - d_start;
+    if (d_len < 1 || d_len > 2) return null;
+    const dy = Iso8601.parseFixedDigits(input[d_start..pos]) ?? return null;
+    if (pos >= input.len || input[pos] != ' ') return null;
+    pos += 1;
+
+    // 3-letter month
+    if (pos + 4 > input.len) return null;
+    const mo = parseMonthAbbrevExact(input[pos .. pos + 3]) ?? return null;
+    pos += 3;
+    if (input[pos] != ' ') return null;
+    pos += 1;
+
+    // 4-digit year
+    if (pos + 5 > input.len) return null;
+    const yr = Iso8601.parseFixedDigits(input[pos .. pos + 4]) ?? return null;
+    pos += 4;
+    if (input[pos] != ' ') return null;
+    pos += 1;
+
+    // HH:MM[:SS]
+    if (pos + 5 > input.len) return null;
+    const hh = Iso8601.parseFixedDigits(input[pos .. pos + 2]) ?? return null;
+    if (input[pos + 2] != ':') return null;
+    const mm = Iso8601.parseFixedDigits(input[pos + 3 .. pos + 5]) ?? return null;
+    pos += 5;
+
+    let ss: u32 = 0;
+    if (pos < input.len && input[pos] == ':') {
+        if (pos + 3 > input.len) return null;
+        ss = Iso8601.parseFixedDigits(input[pos + 1 .. pos + 3]) ?? return null;
+        pos += 3;
+    }
+
+    if (pos >= input.len || input[pos] != ' ') return null;
+    pos += 1;
+
+    // Timezone: GMT / UTC / UT / ±HHMM
+    const tz = input[pos..];
+    let offset_mins: i16 = 0;
+    if (tz.len == 3 && (match3Exact(tz, 'G', 'M', 'T') || match3Exact(tz, 'U', 'T', 'C'))) {
+        offset_mins = 0;
+    } else if (tz.len == 2 && tz[0] == 'U' && tz[1] == 'T') {
+        offset_mins = 0;
+    } else if (tz.len == 5 && (tz[0] == '+' || tz[0] == '-')) {
+        const oh = Iso8601.parseFixedDigits(tz[1..3]) ?? return null;
+        const om = Iso8601.parseFixedDigits(tz[3..5]) ?? return null;
+        if (oh > 23 || om > 59) return null;
+        const mag = ((oh * 60 + om) as i16);
+        offset_mins = if (tz[0] == '-') (0 - mag) else mag;
+    } else {
+        return null;
+    }
+
+    const max_day = CivilDateTime.daysInMonth(yr as i32, mo);
+    if (dy < 1 || dy > (max_day as u32)) return null;
+    if (hh > 23 || mm > 59 || ss > 59) return null;
+
+    const dt = CivilDateTime {
+        year: yr as i32,
+        month: mo,
+        day: dy as u8,
+        hour: hh as u8,
+        minute: mm as u8,
+        second: ss as u8,
+        nanosecond: 0,
+        tz_offset_minutes: offset_mins,
+    };
+    if (dow := expected_dow) {
+        if (dt.dayOfWeek() != dow) return null;
+    }
+    return dt;
+}
+
 pub static struct Iso8601 {
-    priv fn parseFixedDigits(s: []const u8): u32? {
+    fn parseFixedDigits(s: []const u8): u32? {
         if (s.len == 0) { return null; }
         let acc: u32 = 0;
         let i: usize = 0;
@@ -213,25 +365,27 @@ pub static struct Iso8601 {
         return pos + 4;
     }
 
-    /// Parses strict RFC 3339 / ISO 8601 DateTime: `YYYY-MM-DDTHH:MM:SS[.fff...][Z|+HH:MM|-HH:MM]`.
-    fn parseDateTime(input: []const u8): CivilDateTime? {
-        // Minimum length: `YYYY-MM-DDTHH:MM:SSZ` = 20 bytes
-        if (input.len < 20) { return null; }
-        if (input[4] != '-' || input[7] != '-') { return null; }
-        if (input[10] != 'T' && input[10] != 't') { return null; }
-        if (input[13] != ':' || input[16] != ':') { return null; }
+    /// Parses strict RFC 3339 / ISO 8601 DateTime with optional leap-second support:
+    /// `YYYY-MM-DD[T|t| ]HH:MM:SS[.fff...](Z|z|+HH:MM|-HH:MM)`.
+    fn parseDateTimeWithOptions(input: []const u8, allow_leap_second: bool): CivilDateTime? {
+        // 16-lane SIMD prefix validation for YYYY-MM-DD[T|t| ]HH:MM:SS + length guard
+        if (!simdValidateRfc3339Prefix(input)) { return null; }
 
-        const yr = Iso8601.parseFixedDigits(input[0..4]) ?? return null;
-        const mo = Iso8601.parseFixedDigits(input[5..7]) ?? return null;
-        const dy = Iso8601.parseFixedDigits(input[8..10]) ?? return null;
-        const hh = Iso8601.parseFixedDigits(input[11..13]) ?? return null;
-        const mm = Iso8601.parseFixedDigits(input[14..16]) ?? return null;
-        const ss = Iso8601.parseFixedDigits(input[17..19]) ?? return null;
+        const yr: u32 = ((input[0] - '0') as u32) * 1000 +
+            ((input[1] - '0') as u32) * 100 +
+            ((input[2] - '0') as u32) * 10 +
+            ((input[3] - '0') as u32);
+        const mo: u32 = ((input[5] - '0') as u32) * 10 + ((input[6] - '0') as u32);
+        const dy: u32 = ((input[8] - '0') as u32) * 10 + ((input[9] - '0') as u32);
+        const hh: u32 = ((input[11] - '0') as u32) * 10 + ((input[12] - '0') as u32);
+        const mm: u32 = ((input[14] - '0') as u32) * 10 + ((input[15] - '0') as u32);
+        const ss: u32 = ((input[17] - '0') as u32) * 10 + ((input[18] - '0') as u32);
 
         if (mo < 1 || mo > 12) { return null; }
         const max_day = CivilDateTime.daysInMonth(yr as i32, mo as u8);
         if (dy < 1 || dy > (max_day as u32)) { return null; }
-        if (hh > 23 || mm > 59 || ss > 59) { return null; }
+        const max_sec: u32 = if (allow_leap_second) 60 else 59;
+        if (hh > 23 || mm > 59 || ss > max_sec) { return null; }
 
         let pos: usize = 19;
         let ns: u32 = 0;
@@ -275,6 +429,11 @@ pub static struct Iso8601 {
             nanosecond: ns,
             tz_offset_minutes: offset_mins,
         };
+    }
+
+    /// Parses strict RFC 3339 / ISO 8601 DateTime: `YYYY-MM-DD[T|t| ]HH:MM:SS[.fff...][Z|+HH:MM|-HH:MM]`.
+    fn parseDateTime(input: []const u8): CivilDateTime? {
+        return Iso8601.parseDateTimeWithOptions(input, false);
     }
 
     /// Parses strict ISO 8601 calendar date `YYYY-MM-DD` as midnight UTC.
