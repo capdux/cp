@@ -1786,3 +1786,35 @@ const d0 = view.getDependency(0)?;
 const name = view.resolveString(d0.name_ref)?;
 * = name;
 ```
+
+### 目录树克隆/硬链/复制递归规划器与权限保留引擎（`fileMaterialize.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/isolated_install/FileCopier.cp`（参考 `Hardlinker.cp`，纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 过滤规则、深度守卫与 `cap:simd` 路径规范化：`FILE_MAT_DEFAULT_MAX_DEPTH`、`FILE_MAT_MAX_PATH_LEN`、`FILE_MAT_MODE_FILE_DEFAULT`、`FILE_MAT_MODE_EXEC_MASK`、`FILE_MAT_MODE_EXEC_DEFAULT`、`FILE_MAT_MODE_DIR_DEFAULT`、`FileMaterializeError`、`FileMatEntryKind`、`FileMatSkipReason`、`normalizeMaterializeRelPath`（`Simd.indexOfAny2`/`Simd.indexOfAny4` 拦截绝对路径、`..` 穿越与 Windows 非法字符）、`countMaterializePathDepth`（`Simd.countByte`）、`shouldSkipMaterializeEntry`（精准跳过 `.git`/`node_modules`/`cap_modules`/`.DS_Store`/`Thumbs.db`/`desktop.ini` 及超深符号链接环路）、`needsExecPermission`；
+  - 字节级差异探测与增量跳过：`FileMatSourceEntry`、`FileMatExistingEntry`、`FileMatDiffStatus`、`FileMatDiffSummary`、`compareMaterializeContentBytes`、`diffMaterializeEntries`（对 `(size, mtime_ns, content_hash)` 与执行权限一致的目标文件自动标记 `SkipUnchanged`）；
+  - 零堆目录树拓扑批处理规划与 `EXDEV` 降级：`FileMatStrategy`（`CloneFile`/`HardlinkFile`/`CopyFile`）、`fileMatStrategyName`、`FileMatOpKind`（`MkdirAll`/`CloneFile`/`HardlinkFile`/`CopyFile`/`ApplyExecBit`/`SkipUnchanged`/`SkipFiltered`）、`FileMatSpan`、`getFileMatOpPath`、`FileMatOp`、`FileMatPlanOptions`、`FileMatPlanSummary`、`FileMaterializePlanner`（按深度拓扑排序并自动 `EXDEV` 降级切换）、`formatFileMaterializeReport`。
+
+```cp
+import {
+    FileMatStrategy,
+    FileMatSourceEntry,
+    FileMatExistingEntry,
+    FileMatOp,
+    FileMatPlanOptions,
+    FileMaterializePlanner,
+} from "cap:pkg";
+
+let planner = FileMaterializePlanner.init(FileMatStrategy.HardlinkFile);
+const srcs: [2]FileMatSourceEntry = [
+    FileMatSourceEntry{ rel_path: "bin/cap-cli", size: 4096, has_shebang: true },
+    FileMatSourceEntry{ rel_path: "dist/index.js", size: 8192 },
+];
+const existing: [0]FileMatExistingEntry = [];
+const extra_skips: [0][]const u8 = [];
+let order: [4]usize = [0; 4];
+let ops: [8]FileMatOp = [FileMatOp.empty(); 8];
+let arena: [512]u8 = [0; 512];
+const sum = planner.planBatch(srcs[0..], existing[0..], extra_skips[0..], FileMatPlanOptions.defaults(), order[0..], ops[0..], arena[0..])?;
+* = sum;
+```
