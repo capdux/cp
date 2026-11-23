@@ -5,7 +5,7 @@ pub const LZW_TABLE_SIZE: usize = 4096;
 pub const LZW_MIN_CODE_BITS: u8 = 2;
 pub const LZW_MAX_INITIAL_BITS: u8 = 8;
 
-const HASH_SIZE: usize = 8192;
+const LZW_HASH_SIZE: usize = 8192;
 const HASH_MASK: usize = 8191;
 const EMPTY_KEY: u32 = 0xFFFFFFFF;
 const NO_PREV: u16 = 0xFFFF;
@@ -132,9 +132,9 @@ fn hashSlot(key: u32): usize {
     return (((key *% 2654435761) >> 19) as usize) & HASH_MASK;
 }
 
-fn clearHashTable(keys: *[HASH_SIZE]u32) {
+fn clearHashTable(keys: *[LZW_HASH_SIZE]u32) {
     let i: usize = 0;
-    while (i < HASH_SIZE) {
+    while (i < LZW_HASH_SIZE) {
         keys.*[i] = EMPTY_KEY;
         i += 1;
     }
@@ -169,8 +169,8 @@ pub fn lzwCompress(src: []const u8, dst: *[]u8, lit_width: u8, order: LzwBitOrde
         return bw.flush();
     }
 
-    let hash_keys: [HASH_SIZE]u32 = undefined;
-    let hash_vals: [HASH_SIZE]u16 = undefined;
+    let hash_keys: [LZW_HASH_SIZE]u32 = undefined;
+    let hash_vals: [LZW_HASH_SIZE]u16 = undefined;
     clearHashTable(*hash_keys);
 
     if ((src[0] as u16) > max_sym) {

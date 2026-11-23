@@ -18,7 +18,7 @@ pub err DeflateError {
 }
 
 const WINDOW_SIZE: usize = 32768;
-const HASH_SIZE: usize = 32768;
+const DEFLATE_HASH_SIZE: usize = 32768;
 const MAX_MATCH_LEN: usize = 258;
 const MIN_MATCH_LEN: usize = 3;
 const MAX_CHAIN: usize = 32;
@@ -527,7 +527,7 @@ fn hash3(data: []const u8, pos: usize): usize {
     const h = ((data[pos] as usize) << 10) ^
         ((data[pos + 1] as usize) << 5) ^
         (data[pos + 2] as usize);
-    return h & (HASH_SIZE - 1);
+    return h & (DEFLATE_HASH_SIZE - 1);
 }
 
 fn compressFixedChunk(
@@ -622,7 +622,7 @@ pub fn compressDeflate(allocator: std.mem.Allocator, input: []const u8): ([]u8) 
     let out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(allocator);
 
-    const head = allocator.alloc(i32, HASH_SIZE) catch return DeflateError.OutOfMemory;
+    const head = allocator.alloc(i32, DEFLATE_HASH_SIZE) catch return DeflateError.OutOfMemory;
     defer allocator.free(head);
     const prev_len = if (input.len < CHUNK_SIZE) input.len else CHUNK_SIZE;
     const prev = allocator.alloc(i32, prev_len) catch return DeflateError.OutOfMemory;
