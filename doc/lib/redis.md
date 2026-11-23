@@ -27,7 +27,7 @@
 
 | 文件路径 | 上游谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/redis/resp.cp` | `// Source: /data/dev/bun/src/valkey/valkey_protocol.cp` | `RESPType` (RESP2/RESP3 15 种帧类型)、`RESPFrame`、`RESPParser`、`ValkeyReader` 流式零拷贝读取器、`RESPEncoder` 编码器 |
+| `lib/redis/resp.cp` | `// Reference-hardened against redis-rs/redis-rs (BSD-3-Clause)` | `RESPType` (RESP2/RESP3 15 种帧类型)、`RESPError`、`RESP_MAX_DEPTH` (64)、`RESP_MAX_BULK_LEN`、`RESP_MAX_COLLECTION_LEN`、`RESPFrame`、`RESPParser`（含 `parseFrameStrict` 严格半包/溢出/边界校验）、`ValkeyReader`（含 `validateCompleteFrame`）、`RESPEncoder` 与 16-lane SIMD / `cap:simd` 原语（`simdFindCrLf`、`simdHasCrOrLf`、`simdCopyPayload`） |
 | `lib/redis/command.cp` | `// Source: /data/dev/bun/src/valkey/valkey_protocol.cp` | `RedisCommand` 常用 Redis 指令零分配编码器与 `RedisPipeline` 4KB 栈内联批处理流水线 |
 | `lib/redis/index.cp` | `// Source: /data/dev/bun/src/valkey/valkey_protocol.cp` | `cap:redis` 标准库对外统一导出入口 |
 | `lib/valkey/valkey_protocol_.cp` | `// Source: /data/dev/bun/src/valkey/valkey_protocol.cp` | `VerbatimString` (`txt:`/`mkd:` 零拷贝视图) 与 `SubscriptionPushMessage` (Pub/Sub 推送帧枚举) |

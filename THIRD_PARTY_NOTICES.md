@@ -82,6 +82,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **mime** (`hyperium`) | <https://github.com/hyperium/mime> | MIT OR Apache-2.0 | `lib/mime/mime.cp`, `lib/mime/multipart.cp` | Copyright (c) 2014-2024 Sean McArthur / Hyperium |
 | **h2** (`hyperium`) | <https://github.com/hyperium/h2> | MIT | `lib/http/h2/hpack.cp` | Copyright (c) 2017 Carl Lerche / Hyperium |
 | **unicode-segmentation** (`unicode-rs`) | <https://github.com/unicode-rs/unicode-segmentation> | MIT OR Apache-2.0 | `lib/text/grapheme.cp` | Copyright (c) 2012-2015 The Rust Project Developers |
+| **redis-rs** | <https://github.com/redis-rs/redis-rs> | BSD-3-Clause | `lib/redis/resp.cp` | Copyright (c) 2013-2024 Armin Ronacher / redis-rs Contributors |
 
 ---
 
