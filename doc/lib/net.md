@@ -934,19 +934,17 @@ pub fn demoQuicTransportLoop()! {
 - **常量与错误集**：
   - `STUN_MAGIC_COOKIE = 0x2112A442`、`STUN_HEADER_LEN = 20`、`STUN_FINGERPRINT_XOR = 0x5354554E`、`ICE_PRIORITY_HOST = 126`、`ICE_PRIORITY_PRFLX = 110`、`ICE_PRIORITY_SRFLX = 100`、`ICE_PRIORITY_RELAY = 0`
   - `WebRtcIceError`（`PacketTooShort | InvalidMagicCookie | InvalidMessageLength | InvalidAttribute | InvalidFingerprint | BufferTooSmall | InvalidCandidate | InvalidSdp | OutputSliceTooSmall`）
-- **RFC 8489 STUN 线协议编解码（含 `XOR-MAPPED-ADDRESS` 与 IEEE CRC32 `FINGERPRINT`）**：
-  - `StunMsgType`、`StunAttrType`、`StunIpv4Addr`、`StunPacket`、`computeStunCrc32`、`computeStunFingerprint`
-  - `encodeStunBindingRequest(tx_id, username, priority, controlling_tie, use_candidate, out_buf)`：自动 4 字节对齐填充并附加标准 IEEE CRC32 `^ 0x5354554E` `FINGERPRINT`
-  - `encodeStunBindingResponse(tx_id, mapped, out_buf)`：按 RFC 8489 §14.2 编码 `XOR-MAPPED-ADDRESS`（`port ^ (magic >> 16)`、`ip ^ magic`）与 `FINGERPRINT`
-  - `encodeStunBindingError(tx_id, error_code, reason, out_buf)`、`parseStunPacket(raw)`（校验 Magic Cookie、20 字节头、4 字节对齐与 `FINGERPRINT` 完整性）
-- **RFC 8445 ICE 候选优先级、配对排序与连通性检查状态机（外部切片驱动）**：
-  - `IceCandidateKind`、`IceRole`、`IcePairState`、`WebRtcIceCandidate`、`IceCandidatePair`、`IceCheckList`
-  - `computeIceCandidatePriority(kind, local_pref, component_id)`（`(2^24)*type_pref + (2^8)*local_pref + (256 - comp)`）
-  - `computeIcePairPriority(controlling_prio, controlled_prio)`（`2^32 * min(G,D) + 2 * max(G,D) + (G>D ? 1 : 0)`）
-  - `parseIceCandidateAttr(attr_line)`、`buildAndSortIcePairs(locals, remotes, role, out_pairs)`（O(N log N) 原地堆排序降序排优）、`selectBestNominatedPair(pairs)`
-- **RFC 8866 / WebRTC SDP 编解码协商与 RFC 9725 WHEP 请求构造**：
-  - `SdpMediaKind`、`SdpDirection`、`SdpCodecSpec`、`SdpSessionSummary`
-  - `parseWebRtcSdp(raw, out_codecs)`：解析 `a=ice-ufrag`、`a=ice-pwd`、`a=fingerprint:sha-256`、`a=group:BUNDLE`、`a=rtcp-mux`、`a=rtpmap`、`a=fmtp` 与媒体方向
+- **RFC 8489 STUN 线协议编解码（含 IPv4/IPv6 `XOR-MAPPED-ADDRESS`、HMAC-SHA1 `MESSAGE-INTEGRITY` 与 IEEE CRC32 `FINGERPRINT`）**：
+  - `StunMsgType`、`StunAttrType`、`StunIpv4Addr`、`StunIpv6Addr`、`StunPacket`、`computeStunCrc32`、`computeStunFingerprint`、`computeStunMessageIntegrity`、`verifyStunMessageIntegrity`
+  - `encodeStunBindingRequest` / `encodeStunBindingRequestAuth`（支持 `ICE-CONTROLLING`/`ICE-CONTROLLED`、HMAC-SHA1 `MESSAGE-INTEGRITY` 与 `FINGERPRINT` 长度重算规范）
+  - `encodeStunBindingResponse` / `encodeStunBindingResponseV6`（IPv4 & IPv6 16 字节 XOR Magic+TxID）、`encodeStunBindingError`、`parseStunPacket`（含 `ERROR-CODE` reason 切片与 `MESSAGE-INTEGRITY` 后置属性忽略）
+- **RFC 8445 ICE 候选优先级、487 角色冲突裁决、配对排序与连通性检查状态机（外部切片驱动）**：
+  - `IceCandidateKind`、`IceRole`、`IcePairState`、`IceTransportProto`、`IceTcpType`、`IceHostKind`、`IceRoleResolution`、`WebRtcIceCandidate`、`IceCandidatePair`、`IceCheckList`
+  - `resolveIceRoleConflict(local_role, local_tie, pkt)`（RFC 8445 §7.3.1.1 tie-breaker 487 Role Conflict 裁决）
+  - `computeIceCandidatePriority`、`computeIcePairPriority`、`parseIceCandidateAttr`（支持 IPv4/IPv6/mDNS `.local`、`raddr`/`rport`、`tcptype`、`generation`、`ufrag`）、`buildAndSortIcePairs`、`selectBestNominatedPair`
+- **RFC 8866 / WebRTC SDP 编解码协商与 RFC 9725 WHEP 请求构造（对标 `algesten/str0m`）**：
+  - `SdpMediaKind`、`SdpDirection`、`SdpSetupRole`、`SdpExtmapEntry`、`SdpRtcpFbEntry`、`SdpSsrcEntry`、`SdpCodecSpec`、`SdpSessionSummary`
+  - `parseWebRtcSdp` / `parseWebRtcSdpExtended`：解析 `a=ice-ufrag`、`a=ice-pwd`、`a=fingerprint:sha-256`、`a=group:BUNDLE` mids、`a=mid`、`a=setup`、`a=extmap`、`a=rtcp-fb`、`a=ssrc`、`a=rtcp-mux`、`a=rtpmap`（7-bit PT `<= 127` 严格校验）、`a=fmtp` 与媒体方向（兼容 Chrome/Firefox/Safari/FFmpeg WHIP SDP）
   - `negotiateCommonCodecs(offer_codecs, offer_raw, local_supported_names, out_matched_indices)`：按 Offer 优先级求共同编解码器交集
   - `formatWhepOfferRequest(endpoint_path, host, bearer_token, sdp_body, out_buf)`：生成标准 RFC 9725 WHEP HTTP/1.1 `POST` 请求报文
 

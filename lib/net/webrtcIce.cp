@@ -1,11 +1,15 @@
 // Origin: Pure-CP Stdlib (RFC 8489 STUN Wire Codec, RFC 8445 ICE Pairing/Checklist & RFC 8866/9725 WebRTC SDP/WHEP) | Created: 2026-11-23
+// Reference-hardened against algesten/str0m (MIT/Apache-2.0)
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice WebRTC / WHEP signaling & NAT traversal engine:
-//   - RFC 8489 STUN binary wire codec: 20-byte header, 4-byte padded TLV attributes, XOR-MAPPED-ADDRESS (IPv4),
-//     PRIORITY, USE-CANDIDATE, ICE-CONTROLLING, ICE-CONTROLLED, USERNAME, ERROR-CODE, and IEEE CRC32 FINGERPRINT
+//   - RFC 8489 STUN binary wire codec: 20-byte header, 4-byte padded TLV attributes, XOR-MAPPED-ADDRESS (IPv4 & IPv6),
+//     PRIORITY, USE-CANDIDATE, ICE-CONTROLLING, ICE-CONTROLLED, USERNAME, ERROR-CODE (class/number/reason),
+//     HMAC-SHA1 MESSAGE-INTEGRITY (RFC 8489 §14.5) and IEEE CRC32 FINGERPRINT (RFC 8489 §14.7)
 //   - RFC 8445 ICE candidate priority (`2^24*type + 2^8*local + (256-comp)`), pair priority (`2^32*min + 2*max + (G>D)`),
-//     SDP `candidate:` parser, O(N log N) in-place heapsort pairing, nomination selection, and `IceCheckList` state machine
-//   - RFC 8866 / WebRTC SDP parser (`ice-ufrag`, `ice-pwd`, `fingerprint:sha-256`, `group:BUNDLE`, `rtcp-mux`,
-//     `rtpmap`, `fmtp`, media directions), Offer/Answer codec intersection, and RFC 9725 WHEP HTTP/1.1 POST formatter
+//     SDP `candidate:` parser (IPv4/IPv6/mDNS `.local`, `raddr`/`rport`, `tcptype`, `generation`, `ufrag`),
+//     487 Role Conflict tie-breaker resolution, O(N log N) heapsort pairing, nomination selection & `IceCheckList`
+//   - RFC 8866 / WebRTC SDP parser (`ice-ufrag`, `ice-pwd`, `fingerprint:sha-256`, `group:BUNDLE`, `mid`, `setup`,
+//     `rtcp-mux`, `rtpmap` with 7-bit PT guard, `fmtp`, `extmap`, `rtcp-fb`, `ssrc`, media directions),
+//     Offer/Answer codec intersection, and RFC 9725 WHEP HTTP/1.1 POST formatter
 
 // ============================================================================
 // 1. Constants & Error Set
@@ -48,7 +52,9 @@ pub const ICE_COMPONENT_RTP: u16 = 1;
 pub const ICE_COMPONENT_RTCP: u16 = 2;
 
 const STUN_ADDR_FAMILY_IPV4: u8 = 0x01;
+const STUN_ADDR_FAMILY_IPV6: u8 = 0x02;
 const STUN_FINGERPRINT_ATTR_WIRE_LEN: usize = 8; // 4-byte header + 4-byte CRC32 value
+const STUN_MI_ATTR_WIRE_LEN: usize = 24; // 4-byte header + 20-byte HMAC-SHA1 value
 
 /// Error set returned by STUN, ICE, SDP, and WHEP operations.
 pub err WebRtcIceError {
@@ -128,6 +134,158 @@ pub fn computeStunFingerprint(header_and_attrs: []const u8): u32 {
     return computeStunCrc32(header_and_attrs) ^ STUN_FINGERPRINT_XOR;
 }
 
+fn sha1Rotl(x: u32, n: u5): u32 {
+    const inv: u5 = @as(u5, @intCast(32 - @as(u32, n)));
+    return (x << n) | (x >> inv);
+}
+
+struct Sha1State {
+    h: [5]u32 = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
+    buf: [64]u8 = [0; 64];
+    buf_len: usize = 0;
+    total_len: u64 = 0;
+
+    fn compress(*_, block: []const u8) {
+        let w: [80]u32 = [0; 80];
+        let i: usize = 0;
+        while (i < 16) : (i += 1) {
+            w[i] = readBeU32(block, i * 4);
+        }
+        while (i < 80) : (i += 1) {
+            w[i] = sha1Rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+        }
+        let a: u32 = _.h[0];
+        let b: u32 = _.h[1];
+        let c: u32 = _.h[2];
+        let d: u32 = _.h[3];
+        let e: u32 = _.h[4];
+        i = 0;
+        while (i < 80) : (i += 1) {
+            let f: u32 = 0;
+            let k: u32 = 0;
+            if (i < 20) {
+                f = (b & c) | ((~b) & d);
+                k = 0x5A827999;
+            } else if (i < 40) {
+                f = b ^ c ^ d;
+                k = 0x6ED9EBA1;
+            } else if (i < 60) {
+                f = (b & c) | (b & d) | (c & d);
+                k = 0x8F1BBCDC;
+            } else {
+                f = b ^ c ^ d;
+                k = 0xCA62C1D6;
+            }
+            const temp: u32 = sha1Rotl(a, 5) +% f +% e +% k +% w[i];
+            e = d;
+            d = c;
+            c = sha1Rotl(b, 30);
+            b = a;
+            a = temp;
+        }
+        _.h[0] +%= a;
+        _.h[1] +%= b;
+        _.h[2] +%= c;
+        _.h[3] +%= d;
+        _.h[4] +%= e;
+    }
+
+    fn update(*_, data: []const u8) {
+        let off: usize = 0;
+        _.total_len += data.len as u64;
+        if (_.buf_len > 0) {
+            const need: usize = @as(usize, 64) - _.buf_len;
+            const take: usize = if (data.len < need) data.len else need;
+            let k: usize = 0;
+            while (k < take) : (k += 1) {
+                _.buf[_.buf_len + k] = data[k];
+            }
+            _.buf_len += take;
+            off += take;
+            if (_.buf_len == 64) {
+                _.compress(_.buf[0..64]);
+                _.buf_len = 0;
+            }
+        }
+        while (off + 64 <= data.len) : (off += 64) {
+            _.compress(data[off..(off + 64)]);
+        }
+        while (off < data.len) : (off += 1) {
+            _.buf[_.buf_len] = data[off];
+            _.buf_len += 1;
+        }
+    }
+
+    fn finish(*_): [20]u8 {
+        const total_bits: u64 = _.total_len * 8;
+        _.buf[_.buf_len] = 0x80;
+        _.buf_len += 1;
+        if (_.buf_len > 56) {
+            while (_.buf_len < 64) : (_.buf_len += 1) _.buf[_.buf_len] = 0;
+            _.compress(_.buf[0..64]);
+            _.buf_len = 0;
+        }
+        while (_.buf_len < 56) : (_.buf_len += 1) _.buf[_.buf_len] = 0;
+        writeBeU64(_.buf[0..], 56, total_bits);
+        _.compress(_.buf[0..64]);
+        let out: [20]u8 = [0; 20];
+        let i: usize = 0;
+        while (i < 5) : (i += 1) {
+            writeBeU32(out[0..], i * 4, _.h[i]);
+        }
+        return out;
+    }
+}
+
+fn hmacSha1Parts(key: []const u8, p1: []const u8, p2: []const u8, p3: []const u8): [20]u8 {
+    let kblock: [64]u8 = [0; 64];
+    if (key.len > 64) {
+        let kh = Sha1State{};
+        kh.update(key);
+        const kd = kh.finish();
+        let i: usize = 0;
+        while (i < 20) : (i += 1) kblock[i] = kd[i];
+    } else {
+        let i: usize = 0;
+        while (i < key.len) : (i += 1) kblock[i] = key[i];
+    }
+    let ipad: [64]u8 = [0; 64];
+    let opad: [64]u8 = [0; 64];
+    let i: usize = 0;
+    while (i < 64) : (i += 1) {
+        ipad[i] = kblock[i] ^ 0x36;
+        opad[i] = kblock[i] ^ 0x5C;
+    }
+    let inner = Sha1State{};
+    inner.update(ipad[0..]);
+    if (p1.len > 0) inner.update(p1);
+    if (p2.len > 0) inner.update(p2);
+    if (p3.len > 0) inner.update(p3);
+    const idig = inner.finish();
+
+    let outer = Sha1State{};
+    outer.update(opad[0..]);
+    outer.update(idig[0..]);
+    return outer.finish();
+}
+
+/// Computes RFC 8489 §14.5 STUN `MESSAGE-INTEGRITY` HMAC-SHA1 over `raw_packet[0..mi_attr_off]`
+/// with the 16-bit header length field adjusted to `(mi_attr_off - 20) + 24`.
+pub fn computeStunMessageIntegrity(raw_packet: []const u8, mi_attr_off: usize, key: []const u8): [20]u8 {
+    if (mi_attr_off < STUN_HEADER_LEN || mi_attr_off > raw_packet.len) {
+        return [0; 20];
+    }
+    let adjusted_hdr: [20]u8 = [0; 20];
+    let i: usize = 0;
+    while (i < STUN_HEADER_LEN) : (i += 1) {
+        adjusted_hdr[i] = raw_packet[i];
+    }
+    const adj_body_len: usize = (mi_attr_off - STUN_HEADER_LEN) + STUN_MI_ATTR_WIRE_LEN;
+    writeBeU16(adjusted_hdr[0..], 2, adj_body_len as u16);
+    const empty: []const u8 = "";
+    return hmacSha1Parts(key, adjusted_hdr[0..], raw_packet[STUN_HEADER_LEN..mi_attr_off], empty);
+}
+
 fn fnv1a32(data: []const u8): u32 {
     let h: u32 = 2166136261;
     let i: usize = 0;
@@ -173,6 +331,84 @@ fn startsWith(s: []const u8, prefix: []const u8): bool {
 fn startsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
     if (s.len < prefix.len) return false;
     return eqIgnoreCase(s[0..prefix.len], prefix);
+}
+
+fn endsWithIgnoreCase(s: []const u8, suffix: []const u8): bool {
+    if (s.len < suffix.len) return false;
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
+}
+
+fn hexVal(c: u8): u8? {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return null;
+}
+
+fn parseIpv6Bytes(s: []const u8): ([16]u8)? {
+    if (s.len < 2 || s.len > 45) return null;
+    let groups: [8]u16 = [0; 8];
+    let head_cnt: usize = 0;
+    let tail_groups: [8]u16 = [0; 8];
+    let tail_cnt: usize = 0;
+    let seen_double: bool = false;
+
+    let i: usize = 0;
+    if (s[0] == ':') {
+        if (s.len < 2 || s[1] != ':') return null;
+        seen_double = true;
+        i = 2;
+    }
+
+    while (i < s.len) {
+        let val: u32 = 0;
+        let digits: usize = 0;
+        while (i < s.len && s[i] != ':') : (i += 1) {
+            const hv = hexVal(s[i]) orelse return null;
+            digits += 1;
+            if (digits > 4) return null;
+            val = (val << 4) | (hv as u32);
+        }
+        if (digits == 0) return null;
+        if (!seen_double) {
+            if (head_cnt >= 8) return null;
+            groups[head_cnt] = val as u16;
+            head_cnt += 1;
+        } else {
+            if (tail_cnt >= 8) return null;
+            tail_groups[tail_cnt] = val as u16;
+            tail_cnt += 1;
+        }
+        if (i == s.len) break;
+        // s[i] == ':'
+        i += 1;
+        if (i == s.len) return null; // trailing single ':'
+        if (s[i] == ':') {
+            if (seen_double) return null; // only one '::' allowed
+            seen_double = true;
+            i += 1;
+            if (i == s.len) break;
+        }
+    }
+
+    if (seen_double) {
+        if (head_cnt + tail_cnt >= 8) return null;
+        const fill_zeros: usize = @as(usize, 8) - head_cnt - tail_cnt;
+        let t: usize = 0;
+        while (t < tail_cnt) : (t += 1) {
+            groups[head_cnt + fill_zeros + t] = tail_groups[t];
+        }
+    } else {
+        if (head_cnt != 8) return null;
+    }
+
+    let out: [16]u8 = [0; 16];
+    let g: usize = 0;
+    while (g < 8) : (g += 1) {
+        out[g * 2] = ((groups[g] >> 8) & 0xFF) as u8;
+        out[g * 2 + 1] = (groups[g] & 0xFF) as u8;
+    }
+    return out;
 }
 
 fn isSpace(c: u8): bool {
@@ -382,6 +618,25 @@ pub struct StunIpv4Addr {
     }
 }
 
+/// IPv6 address + UDP/TCP port pair used by STUN `XOR-MAPPED-ADDRESS` (family `0x02`).
+pub struct StunIpv6Addr {
+    ip: [16]u8 = [0; 16];
+    port: u16 = 0;
+
+    static fn init(ip: [16]u8, port: u16): StunIpv6Addr {
+        return StunIpv6Addr{ ip: ip, port: port };
+    }
+
+    fn eql(other: StunIpv6Addr): bool {
+        if (port != other.port) return false;
+        let i: usize = 0;
+        while (i < 16) : (i += 1) {
+            if (ip[i] != other.ip[i]) return false;
+        }
+        return true;
+    }
+}
+
 /// Zero-allocation parsed representation of an RFC 8489 STUN packet.
 pub struct StunPacket {
     msg_type: StunMsgType = StunMsgType.binding_request;
@@ -391,6 +646,8 @@ pub struct StunPacket {
     mapped: StunIpv4Addr = StunIpv4Addr{};
     has_xor_mapped: bool = false;
     xor_mapped: StunIpv4Addr = StunIpv4Addr{};
+    has_xor_mapped_v6: bool = false;
+    xor_mapped_v6: StunIpv6Addr = StunIpv6Addr{};
     has_priority: bool = false;
     priority: u32 = 0;
     use_candidate: bool = false;
@@ -400,6 +657,11 @@ pub struct StunPacket {
     ice_controlled: u64 = 0;
     has_error_code: bool = false;
     error_code: u16 = 0;
+    error_reason_off: usize = 0;
+    error_reason_len: usize = 0;
+    has_message_integrity: bool = false;
+    mi_attr_off: usize = 0;
+    message_integrity: [20]u8 = [0; 20];
     has_fingerprint: bool = false;
     fingerprint_valid: bool = false;
     username_off: usize = 0;
@@ -414,6 +676,14 @@ pub struct StunPacket {
         return raw[username_off..(username_off + username_len)];
     }
 
+    /// Returns the zero-copy `ERROR-CODE` reason phrase slice from the original packet buffer.
+    fn errorReasonSlice(raw: []const u8): []const u8 {
+        if (error_reason_len == 0 || error_reason_off + error_reason_len > raw.len) {
+            return "";
+        }
+        return raw[error_reason_off..(error_reason_off + error_reason_len)];
+    }
+
     /// Checks whether the packet's 96-bit transaction ID matches `expected`.
     fn matchesTxId(expected: [12]u8): bool {
         let i: usize = 0;
@@ -422,6 +692,20 @@ pub struct StunPacket {
         }
         return true;
     }
+}
+
+/// Verifies RFC 8489 §14.5 STUN `MESSAGE-INTEGRITY` HMAC-SHA1 against `key` in constant time.
+pub fn verifyStunMessageIntegrity(raw: []const u8, pkt: StunPacket, key: []const u8): bool {
+    if (!pkt.has_message_integrity || pkt.mi_attr_off < STUN_HEADER_LEN || pkt.mi_attr_off > raw.len) {
+        return false;
+    }
+    const calc = computeStunMessageIntegrity(raw, pkt.mi_attr_off, key);
+    let diff: u8 = 0;
+    let i: usize = 0;
+    while (i < 20) : (i += 1) {
+        diff |= calc[i] ^ pkt.message_integrity[i];
+    }
+    return diff == 0;
 }
 
 fn writeStunHeader(out_buf: []u8, msg_type: StunMsgType, body_len: u16, tx_id: [12]u8): void ! WebRtcIceError {
@@ -509,6 +793,53 @@ pub fn encodeStunBindingRequest(
     return finalizeWithFingerprint(out_buf, pos);
 }
 
+/// Encodes an RFC 8489 + RFC 8445 authenticated ICE STUN Binding Request with `USERNAME`, `PRIORITY`,
+/// `ICE-CONTROLLING` or `ICE-CONTROLLED` (selected by `role`), optional `USE-CANDIDATE`,
+/// HMAC-SHA1 `MESSAGE-INTEGRITY` (when `hmac_key.len > 0`), and IEEE CRC32 `FINGERPRINT`.
+pub fn encodeStunBindingRequestAuth(
+    tx_id: [12]u8,
+    username: []const u8,
+    priority: u32,
+    role: IceRole,
+    tie_breaker: u64,
+    use_candidate: bool,
+    hmac_key: []const u8,
+    out_buf: []u8,
+): usize ! WebRtcIceError {
+    writeStunHeader(out_buf, StunMsgType.binding_request, 0, tx_id)?;
+    let pos: usize = STUN_HEADER_LEN;
+
+    if (username.len > 0) {
+        pos = writeStunAttrPadded(out_buf, pos, StunAttrType.username, username)?;
+    }
+
+    let prio_bytes: [4]u8 = [0; 4];
+    writeBeU32(prio_bytes[0..], 0, priority);
+    pos = writeStunAttrPadded(out_buf, pos, StunAttrType.priority, prio_bytes[0..])?;
+
+    let tie_bytes: [8]u8 = [0; 8];
+    writeBeU64(tie_bytes[0..], 0, tie_breaker);
+    const role_attr = match (role) {
+        IceRole.controlling => StunAttrType.ice_controlling,
+        IceRole.controlled => StunAttrType.ice_controlled,
+    };
+    pos = writeStunAttrPadded(out_buf, pos, role_attr, tie_bytes[0..])?;
+
+    if (use_candidate) {
+        pos = writeStunAttrPadded(out_buf, pos, StunAttrType.use_candidate, "")?;
+    }
+
+    if (hmac_key.len > 0) {
+        if (pos + STUN_MI_ATTR_WIRE_LEN + STUN_FINGERPRINT_ATTR_WIRE_LEN > out_buf.len) {
+            return WebRtcIceError.BufferTooSmall;
+        }
+        const mi = computeStunMessageIntegrity(out_buf[0..pos], pos, hmac_key);
+        pos = writeStunAttrPadded(out_buf, pos, StunAttrType.message_integrity, mi[0..])?;
+    }
+
+    return finalizeWithFingerprint(out_buf, pos);
+}
+
 /// Encodes an RFC 8489 STUN Binding Success Response with `XOR-MAPPED-ADDRESS` (IPv4)
 /// (`port ^ (magic >> 16)`, `ip ^ magic`) and IEEE CRC32 `FINGERPRINT`.
 pub fn encodeStunBindingResponse(
@@ -526,6 +857,35 @@ pub fn encodeStunBindingResponse(
     writeBeU16(xma[0..], 2, xport);
     const xip: u32 = mapped.toU32() ^ STUN_MAGIC_COOKIE;
     writeBeU32(xma[0..], 4, xip);
+
+    pos = writeStunAttrPadded(out_buf, pos, StunAttrType.xor_mapped_address, xma[0..])?;
+    return finalizeWithFingerprint(out_buf, pos);
+}
+
+/// Encodes an RFC 8489 STUN Binding Success Response with `XOR-MAPPED-ADDRESS` (IPv6, family `0x02`)
+/// XORed against `STUN_MAGIC_COOKIE || tx_id`, plus IEEE CRC32 `FINGERPRINT`.
+pub fn encodeStunBindingResponseV6(
+    tx_id: [12]u8,
+    mapped: StunIpv6Addr,
+    out_buf: []u8,
+): usize ! WebRtcIceError {
+    writeStunHeader(out_buf, StunMsgType.binding_response, 0, tx_id)?;
+    let pos: usize = STUN_HEADER_LEN;
+
+    let xma: [20]u8 = [0; 20];
+    xma[0] = 0x00;
+    xma[1] = STUN_ADDR_FAMILY_IPV6;
+    const xport: u16 = mapped.port ^ ((STUN_MAGIC_COOKIE >> 16) as u16);
+    writeBeU16(xma[0..], 2, xport);
+    let magic_be: [4]u8 = [0; 4];
+    writeBeU32(magic_be[0..], 0, STUN_MAGIC_COOKIE);
+    let i: usize = 0;
+    while (i < 4) : (i += 1) {
+        xma[4 + i] = mapped.ip[i] ^ magic_be[i];
+    }
+    while (i < 16) : (i += 1) {
+        xma[4 + i] = mapped.ip[i] ^ tx_id[i - 4];
+    }
 
     pos = writeStunAttrPadded(out_buf, pos, StunAttrType.xor_mapped_address, xma[0..])?;
     return finalizeWithFingerprint(out_buf, pos);
@@ -605,6 +965,7 @@ pub fn parseStunPacket(raw: []const u8): StunPacket ! WebRtcIceError {
     }
 
     let off: usize = STUN_HEADER_LEN;
+    let ignore_after_mi: bool = false;
     while (off < total_len) {
         if (off + STUN_ATTR_HEADER_LEN > total_len) {
             return WebRtcIceError.InvalidAttribute;
@@ -617,103 +978,140 @@ pub fn parseStunPacket(raw: []const u8): StunPacket ! WebRtcIceError {
             return WebRtcIceError.InvalidAttribute;
         }
 
-        if (at := StunAttrType.fromWireU16(attr_code)) {
-            match (at) {
-                StunAttrType.mapped_address => {
-                    if (attr_len != 8 || raw[val_off + 1] != STUN_ADDR_FAMILY_IPV4) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.has_mapped = true;
-                    pkt.mapped = StunIpv4Addr.init(
-                        raw[val_off + 4],
-                        raw[val_off + 5],
-                        raw[val_off + 6],
-                        raw[val_off + 7],
-                        readBeU16(raw, val_off + 2),
-                    );
-                },
-                StunAttrType.xor_mapped_address => {
-                    if (attr_len != 8 || raw[val_off + 1] != STUN_ADDR_FAMILY_IPV4) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    const xport = readBeU16(raw, val_off + 2);
-                    const xip = readBeU32(raw, val_off + 4);
-                    const port = xport ^ ((STUN_MAGIC_COOKIE >> 16) as u16);
-                    const ip_u32 = xip ^ STUN_MAGIC_COOKIE;
-                    pkt.has_xor_mapped = true;
-                    pkt.xor_mapped = StunIpv4Addr.init(
-                        ((ip_u32 >> 24) & 0xFF) as u8,
-                        ((ip_u32 >> 16) & 0xFF) as u8,
-                        ((ip_u32 >> 8) & 0xFF) as u8,
-                        (ip_u32 & 0xFF) as u8,
-                        port,
-                    );
-                },
-                StunAttrType.username => {
-                    pkt.username_off = val_off;
-                    pkt.username_len = attr_len;
-                },
-                StunAttrType.error_code => {
-                    if (attr_len < 4) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    const class_digit = (raw[val_off + 2] & 0x07) as u16;
-                    const number = raw[val_off + 3] as u16;
-                    if (number >= 100) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.has_error_code = true;
-                    pkt.error_code = class_digit * 100 + number;
-                },
-                StunAttrType.priority => {
-                    if (attr_len != 4) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.has_priority = true;
-                    pkt.priority = readBeU32(raw, val_off);
-                },
-                StunAttrType.use_candidate => {
-                    if (attr_len != 0) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.use_candidate = true;
-                },
-                StunAttrType.ice_controlling => {
-                    if (attr_len != 8) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.has_ice_controlling = true;
-                    pkt.ice_controlling = readBeU64(raw, val_off);
-                },
-                StunAttrType.ice_controlled => {
-                    if (attr_len != 8) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    pkt.has_ice_controlled = true;
-                    pkt.ice_controlled = readBeU64(raw, val_off);
-                },
-                StunAttrType.fingerprint => {
-                    if (attr_len != 4) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                    const wire_fp = readBeU32(raw, val_off);
-                    const calc_fp = computeStunFingerprint(raw[0..off]);
-                    if (wire_fp != calc_fp) {
-                        return WebRtcIceError.InvalidFingerprint;
-                    }
-                    pkt.has_fingerprint = true;
-                    pkt.fingerprint_valid = true;
-                },
-                StunAttrType.message_integrity => {
-                    if (attr_len != 20) {
-                        return WebRtcIceError.InvalidAttribute;
-                    }
-                },
-            }
-        } else {
-            // RFC 8489 §14: comprehension-required attributes (< 0x8000) that are unknown fail parsing.
-            if (attr_code < 0x8000) {
-                return WebRtcIceError.InvalidAttribute;
+        // RFC 8489 §14.5: ignore all attributes following MESSAGE-INTEGRITY except FINGERPRINT
+        if (!ignore_after_mi || attr_code == StunAttrType.fingerprint.toWireU16()) {
+            if (at := StunAttrType.fromWireU16(attr_code)) {
+                match (at) {
+                    StunAttrType.mapped_address => {
+                        if (attr_len != 8 || raw[val_off + 1] != STUN_ADDR_FAMILY_IPV4) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_mapped = true;
+                        pkt.mapped = StunIpv4Addr.init(
+                            raw[val_off + 4],
+                            raw[val_off + 5],
+                            raw[val_off + 6],
+                            raw[val_off + 7],
+                            readBeU16(raw, val_off + 2),
+                        );
+                    },
+                    StunAttrType.xor_mapped_address => {
+                        if (attr_len < 4) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        const family = raw[val_off + 1];
+                        const xport = readBeU16(raw, val_off + 2);
+                        const port = xport ^ ((STUN_MAGIC_COOKIE >> 16) as u16);
+                        if (family == STUN_ADDR_FAMILY_IPV4) {
+                            if (attr_len != 8) return WebRtcIceError.InvalidAttribute;
+                            const xip = readBeU32(raw, val_off + 4);
+                            const ip_u32 = xip ^ STUN_MAGIC_COOKIE;
+                            pkt.has_xor_mapped = true;
+                            pkt.xor_mapped = StunIpv4Addr.init(
+                                ((ip_u32 >> 24) & 0xFF) as u8,
+                                ((ip_u32 >> 16) & 0xFF) as u8,
+                                ((ip_u32 >> 8) & 0xFF) as u8,
+                                (ip_u32 & 0xFF) as u8,
+                                port,
+                            );
+                        } else if (family == STUN_ADDR_FAMILY_IPV6) {
+                            if (attr_len != 20) return WebRtcIceError.InvalidAttribute;
+                            let magic_be: [4]u8 = [0; 4];
+                            writeBeU32(magic_be[0..], 0, STUN_MAGIC_COOKIE);
+                            let ip6: [16]u8 = [0; 16];
+                            let k: usize = 0;
+                            while (k < 4) : (k += 1) {
+                                ip6[k] = raw[val_off + 4 + k] ^ magic_be[k];
+                            }
+                            while (k < 16) : (k += 1) {
+                                ip6[k] = raw[val_off + 4 + k] ^ pkt.tx_id[k - 4];
+                            }
+                            pkt.has_xor_mapped_v6 = true;
+                            pkt.xor_mapped_v6 = StunIpv6Addr.init(ip6, port);
+                        } else {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                    },
+                    StunAttrType.username => {
+                        pkt.username_off = val_off;
+                        pkt.username_len = attr_len;
+                    },
+                    StunAttrType.error_code => {
+                        if (attr_len < 4) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        if (raw[val_off] != 0 || raw[val_off + 1] != 0 || (raw[val_off + 2] & 0xF8) != 0) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        const class_digit = (raw[val_off + 2] & 0x07) as u16;
+                        const number = raw[val_off + 3] as u16;
+                        if (number >= 100) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_error_code = true;
+                        pkt.error_code = class_digit * 100 + number;
+                        if (attr_len > 4) {
+                            pkt.error_reason_off = val_off + 4;
+                            pkt.error_reason_len = attr_len - 4;
+                        }
+                    },
+                    StunAttrType.priority => {
+                        if (attr_len != 4) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_priority = true;
+                        pkt.priority = readBeU32(raw, val_off);
+                    },
+                    StunAttrType.use_candidate => {
+                        if (attr_len != 0) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.use_candidate = true;
+                    },
+                    StunAttrType.ice_controlling => {
+                        if (attr_len != 8) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_ice_controlling = true;
+                        pkt.ice_controlling = readBeU64(raw, val_off);
+                    },
+                    StunAttrType.ice_controlled => {
+                        if (attr_len != 8) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_ice_controlled = true;
+                        pkt.ice_controlled = readBeU64(raw, val_off);
+                    },
+                    StunAttrType.fingerprint => {
+                        if (attr_len != 4) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        const wire_fp = readBeU32(raw, val_off);
+                        const calc_fp = computeStunFingerprint(raw[0..off]);
+                        if (wire_fp != calc_fp) {
+                            return WebRtcIceError.InvalidFingerprint;
+                        }
+                        pkt.has_fingerprint = true;
+                        pkt.fingerprint_valid = true;
+                    },
+                    StunAttrType.message_integrity => {
+                        if (attr_len != 20) {
+                            return WebRtcIceError.InvalidAttribute;
+                        }
+                        pkt.has_message_integrity = true;
+                        pkt.mi_attr_off = off;
+                        let k: usize = 0;
+                        while (k < 20) : (k += 1) {
+                            pkt.message_integrity[k] = raw[val_off + k];
+                        }
+                        ignore_after_mi = true;
+                    },
+                }
+            } else {
+                // RFC 8489 §14: comprehension-required attributes (< 0x8000) that are unknown fail parsing.
+                if (attr_code < 0x8000) {
+                    return WebRtcIceError.InvalidAttribute;
+                }
             }
         }
 
@@ -761,17 +1159,92 @@ pub enum IcePairState {
     failed,
 }
 
-/// Parsed RFC 8445 ICE transport candidate.
+/// RFC 8445 / RFC 6544 ICE transport protocol.
+pub enum IceTransportProto {
+    udp,
+    tcp,
+    ssltcp,
+}
+
+/// RFC 6544 ICE-TCP candidate type (`active`, `passive`, `so`).
+pub enum IceTcpType {
+    none,
+    active,
+    passive,
+    so,
+}
+
+/// Host address kind for an ICE candidate (`ipv4`, `ipv6`, or RFC 8828 mDNS `.local`).
+pub enum IceHostKind {
+    ipv4,
+    ipv6,
+    mdns,
+}
+
+/// RFC 8445 §7.3.1.1 ICE role conflict (487) resolution action.
+pub enum IceRoleResolution {
+    no_conflict,
+    switch_to_controlled,
+    switch_to_controlling,
+    send_487_conflict,
+}
+
+/// Resolves RFC 8445 §7.3.1.1 ICE role conflicts using local role, local tie-breaker,
+/// and incoming STUN `ICE-CONTROLLING` / `ICE-CONTROLLED` attributes.
+pub fn resolveIceRoleConflict(local_role: IceRole, local_tie: u64, pkt: StunPacket): IceRoleResolution {
+    if (local_role == IceRole.controlling && pkt.has_ice_controlling) {
+        if (local_tie >= pkt.ice_controlling) {
+            return IceRoleResolution.send_487_conflict;
+        }
+        return IceRoleResolution.switch_to_controlled;
+    }
+    if (local_role == IceRole.controlled && pkt.has_ice_controlled) {
+        if (local_tie >= pkt.ice_controlled) {
+            return IceRoleResolution.switch_to_controlling;
+        }
+        return IceRoleResolution.send_487_conflict;
+    }
+    return IceRoleResolution.no_conflict;
+}
+
+/// Parsed RFC 8445 ICE transport candidate (IPv4, IPv6, or mDNS `.local`).
 pub struct WebRtcIceCandidate {
     foundation_hash: u32 = 0;
     component_id: u16 = 1;
+    transport: IceTransportProto = IceTransportProto.udp;
     kind: IceCandidateKind = IceCandidateKind.host;
     priority: u32 = 0;
+    host_kind: IceHostKind = IceHostKind.ipv4;
     ip: [4]u8 = [0, 0, 0, 0];
+    ip6: [16]u8 = [0; 16];
+    host_off: usize = 0;
+    host_len: usize = 0;
     port: u16 = 0;
     has_raddr: bool = false;
     raddr_ip: [4]u8 = [0, 0, 0, 0];
     raddr_port: u16 = 0;
+    tcptype: IceTcpType = IceTcpType.none;
+    has_generation: bool = false;
+    generation: u32 = 0;
+    ufrag_off: usize = 0;
+    ufrag_len: usize = 0;
+
+    /// Returns the zero-copy host address / mDNS hostname slice from `raw`.
+    fn hostSlice(raw: []const u8): []const u8 {
+        if (host_len == 0 || host_off + host_len > raw.len) return "";
+        return raw[host_off..(host_off + host_len)];
+    }
+
+    /// Returns the zero-copy optional `ufrag` extension slice from `raw`.
+    fn ufragSlice(raw: []const u8): []const u8 {
+        if (ufrag_len == 0 || ufrag_off + ufrag_len > raw.len) return "";
+        return raw[ufrag_off..(ufrag_off + ufrag_len)];
+    }
+
+    /// Returns `true` if this candidate uses an mDNS `.local` obfuscated hostname.
+    fn isMdns(): bool {
+        return host_kind == IceHostKind.mdns;
+    }
 }
 
 /// Computes RFC 8445 §5.1.2.1 ICE candidate priority:
@@ -815,13 +1288,16 @@ pub fn parseIceCandidateAttr(attr_line: []const u8): WebRtcIceCandidate ! WebRtc
     while (start < end && isSpace(attr_line[start])) : (start += 1) {}
     let line = attr_line[start..end];
 
+    let base_off: usize = start;
     if (startsWith(line, "a=")) {
         line = line[2..];
+        base_off += 2;
     }
     if (!startsWith(line, "candidate:")) {
         return WebRtcIceError.InvalidCandidate;
     }
     line = line[10..];
+    base_off += 10;
 
     // Token 0: foundation
     const t0 = nextToken(line, 0);
@@ -839,11 +1315,18 @@ pub fn parseIceCandidateAttr(attr_line: []const u8): WebRtcIceCandidate ! WebRtc
         return WebRtcIceError.InvalidCandidate;
     }
 
-    // Token 2: transport ("udp" or "tcp")
+    // Token 2: transport ("udp", "tcp", or "ssltcp")
     const t2 = nextToken(line, t1[1]);
     if (t2[0] == t2[1]) return WebRtcIceError.InvalidCandidate;
-    const transport = line[t2[0]..t2[1]];
-    if (!eqIgnoreCase(transport, "udp") && !eqIgnoreCase(transport, "tcp")) {
+    const transport_tok = line[t2[0]..t2[1]];
+    let transport: IceTransportProto = IceTransportProto.udp;
+    if (eqIgnoreCase(transport_tok, "udp")) {
+        transport = IceTransportProto.udp;
+    } else if (eqIgnoreCase(transport_tok, "tcp")) {
+        transport = IceTransportProto.tcp;
+    } else if (eqIgnoreCase(transport_tok, "ssltcp")) {
+        transport = IceTransportProto.ssltcp;
+    } else {
         return WebRtcIceError.InvalidCandidate;
     }
 
@@ -857,12 +1340,21 @@ pub fn parseIceCandidateAttr(attr_line: []const u8): WebRtcIceCandidate ! WebRtc
         return WebRtcIceError.InvalidCandidate;
     }
 
-    // Token 4: IPv4 address
+    // Token 4: connection-address (IPv4, IPv6, or RFC 8828 mDNS `.local`)
     const t4 = nextToken(line, t3[1]);
     if (t4[0] == t4[1]) return WebRtcIceError.InvalidCandidate;
+    const addr_tok = line[t4[0]..t4[1]];
+    let host_kind: IceHostKind = IceHostKind.ipv4;
     let ip_bytes: [4]u8 = [0, 0, 0, 0];
-    if (ip := parseIpv4Bytes(line[t4[0]..t4[1]])) {
+    let ip6_bytes: [16]u8 = [0; 16];
+    if (ip := parseIpv4Bytes(addr_tok)) {
+        host_kind = IceHostKind.ipv4;
         ip_bytes = ip;
+    } else if (ip6 := parseIpv6Bytes(addr_tok)) {
+        host_kind = IceHostKind.ipv6;
+        ip6_bytes = ip6;
+    } else if (addr_tok.len > 6 && endsWithIgnoreCase(addr_tok, ".local")) {
+        host_kind = IceHostKind.mdns;
     } else {
         return WebRtcIceError.InvalidCandidate;
     }
@@ -904,13 +1396,18 @@ pub fn parseIceCandidateAttr(attr_line: []const u8): WebRtcIceCandidate ! WebRtc
     let cand = WebRtcIceCandidate{
         foundation_hash: fnv1a32(foundation),
         component_id: comp_id,
+        transport: transport,
         kind: kind,
         priority: prio,
+        host_kind: host_kind,
         ip: ip_bytes,
+        ip6: ip6_bytes,
+        host_off: base_off + t4[0],
+        host_len: t4[1] - t4[0],
         port: port_val,
     };
 
-    // Optional extension key-value pairs (e.g. "raddr <ip> rport <port>")
+    // Optional extension key-value pairs (raddr, rport, tcptype, generation, ufrag, network-id, network-cost...)
     let cursor: usize = t7[1];
     while (cursor < line.len) {
         const tk = nextToken(line, cursor);
@@ -923,11 +1420,29 @@ pub fn parseIceCandidateAttr(attr_line: []const u8): WebRtcIceCandidate ! WebRtc
             if (rip := parseIpv4Bytes(val)) {
                 cand.has_raddr = true;
                 cand.raddr_ip = rip;
+            } else if (parseIpv6Bytes(val) != null) {
+                cand.has_raddr = true;
             }
         } else if (eqIgnoreCase(key, "rport")) {
             if (rp := parseDecU16(val)) {
                 cand.raddr_port = rp;
             }
+        } else if (eqIgnoreCase(key, "tcptype")) {
+            if (eqIgnoreCase(val, "active")) {
+                cand.tcptype = IceTcpType.active;
+            } else if (eqIgnoreCase(val, "passive")) {
+                cand.tcptype = IceTcpType.passive;
+            } else if (eqIgnoreCase(val, "so")) {
+                cand.tcptype = IceTcpType.so;
+            }
+        } else if (eqIgnoreCase(key, "generation")) {
+            if (gv := parseDecU32(val)) {
+                cand.has_generation = true;
+                cand.generation = gv;
+            }
+        } else if (eqIgnoreCase(key, "ufrag")) {
+            cand.ufrag_off = base_off + tv[0];
+            cand.ufrag_len = tv[1] - tv[0];
         }
         cursor = tv[1];
     }
@@ -1189,6 +1704,52 @@ pub enum SdpDirection {
     inactive,
 }
 
+/// RFC 4145 / RFC 5763 DTLS setup role (`a=setup:actpass|active|passive`).
+pub enum SdpSetupRole {
+    none,
+    actpass,
+    active,
+    passive,
+}
+
+/// Zero-copy SDP RTP header extension mapping (`a=extmap:<id>[/<dir>] <uri>`).
+pub struct SdpExtmapEntry {
+    id: u16 = 0;
+    media: SdpMediaKind = SdpMediaKind.audio;
+    uri_off: usize = 0;
+    uri_len: usize = 0;
+
+    fn uriSlice(raw: []const u8): []const u8 {
+        if (uri_len == 0 || uri_off + uri_len > raw.len) return "";
+        return raw[uri_off..(uri_off + uri_len)];
+    }
+}
+
+/// Zero-copy SDP RTCP feedback entry (`a=rtcp-fb:<pt> <param>`).
+pub struct SdpRtcpFbEntry {
+    payload_type: u8 = 0;
+    param_off: usize = 0;
+    param_len: usize = 0;
+
+    fn paramSlice(raw: []const u8): []const u8 {
+        if (param_len == 0 || param_off + param_len > raw.len) return "";
+        return raw[param_off..(param_off + param_len)];
+    }
+}
+
+/// Zero-copy SDP SSRC attribute entry (`a=ssrc:<ssrc> <attr>`).
+pub struct SdpSsrcEntry {
+    ssrc: u32 = 0;
+    media: SdpMediaKind = SdpMediaKind.audio;
+    attr_off: usize = 0;
+    attr_len: usize = 0;
+
+    fn attrSlice(raw: []const u8): []const u8 {
+        if (attr_len == 0 || attr_off + attr_len > raw.len) return "";
+        return raw[attr_off..(attr_off + attr_len)];
+    }
+}
+
 /// Zero-copy SDP RTP codec specification parsed from `a=rtpmap:` and `a=fmtp:`.
 pub struct SdpCodecSpec {
     media: SdpMediaKind = SdpMediaKind.audio;
@@ -1224,6 +1785,19 @@ pub struct SdpSessionSummary {
     dtls_fp_len: usize = 0;
     dtls_setup_off: usize = 0;
     dtls_setup_len: usize = 0;
+    setup_role: SdpSetupRole = SdpSetupRole.none;
+    bundle_mids_off: usize = 0;
+    bundle_mids_len: usize = 0;
+    audio_mid_off: usize = 0;
+    audio_mid_len: usize = 0;
+    video_mid_off: usize = 0;
+    video_mid_len: usize = 0;
+    app_mid_off: usize = 0;
+    app_mid_len: usize = 0;
+    mid_count: usize = 0;
+    extmap_count: usize = 0;
+    rtcp_fb_count: usize = 0;
+    ssrc_count: usize = 0;
     audio_dir: SdpDirection = SdpDirection.inactive;
     video_dir: SdpDirection = SdpDirection.inactive;
     has_audio: bool = false;
@@ -1257,6 +1831,30 @@ pub struct SdpSessionSummary {
         if (dtls_setup_len == 0 || dtls_setup_off + dtls_setup_len > raw.len) return "";
         return raw[dtls_setup_off..(dtls_setup_off + dtls_setup_len)];
     }
+
+    /// Returns the space-separated BUNDLE mids slice from `a=group:BUNDLE ...`.
+    fn bundleMids(raw: []const u8): []const u8 {
+        if (bundle_mids_len == 0 || bundle_mids_off + bundle_mids_len > raw.len) return "";
+        return raw[bundle_mids_off..(bundle_mids_off + bundle_mids_len)];
+    }
+
+    /// Returns the `a=mid:` value for the audio media section, if present.
+    fn audioMid(raw: []const u8): []const u8 {
+        if (audio_mid_len == 0 || audio_mid_off + audio_mid_len > raw.len) return "";
+        return raw[audio_mid_off..(audio_mid_off + audio_mid_len)];
+    }
+
+    /// Returns the `a=mid:` value for the video media section, if present.
+    fn videoMid(raw: []const u8): []const u8 {
+        if (video_mid_len == 0 || video_mid_off + video_mid_len > raw.len) return "";
+        return raw[video_mid_off..(video_mid_off + video_mid_len)];
+    }
+
+    /// Returns the `a=mid:` value for the application (DataChannel) media section, if present.
+    fn applicationMid(raw: []const u8): []const u8 {
+        if (app_mid_len == 0 || app_mid_off + app_mid_len > raw.len) return "";
+        return raw[app_mid_off..(app_mid_off + app_mid_len)];
+    }
 }
 
 fn findByte(s: []const u8, needle: u8, start: usize): usize? {
@@ -1268,8 +1866,14 @@ fn findByte(s: []const u8, needle: u8, start: usize): usize? {
 }
 
 /// Parses an RFC 8866 / WebRTC SDP Offer or Answer into `SdpSessionSummary` and populates
-/// `out_codecs` with every `a=rtpmap:` / `a=fmtp:` codec entry (zero dynamic allocation).
-pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSummary ! WebRtcIceError {
+/// `out_codecs`, `out_extmaps`, `out_rtcp_fbs`, and `out_ssrcs` (zero dynamic allocation).
+pub fn parseWebRtcSdpExtended(
+    raw: []const u8,
+    out_codecs: []SdpCodecSpec,
+    out_extmaps: []SdpExtmapEntry,
+    out_rtcp_fbs: []SdpRtcpFbEntry,
+    out_ssrcs: []SdpSsrcEntry,
+): SdpSessionSummary ! WebRtcIceError {
     if (raw.len == 0) {
         return WebRtcIceError.InvalidSdp;
     }
@@ -1349,9 +1953,114 @@ pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSu
                 if (sub.len > 0 && summary.dtls_setup_len == 0) {
                     summary.dtls_setup_off = val_off + 6;
                     summary.dtls_setup_len = sub.len;
+                    if (eqIgnoreCase(sub, "actpass")) {
+                        summary.setup_role = SdpSetupRole.actpass;
+                    } else if (eqIgnoreCase(sub, "active")) {
+                        summary.setup_role = SdpSetupRole.active;
+                    } else if (eqIgnoreCase(sub, "passive")) {
+                        summary.setup_role = SdpSetupRole.passive;
+                    }
                 }
             } else if (startsWith(val, "group:BUNDLE")) {
                 summary.has_bundle = true;
+                if (val.len > 12 && isSpace(val[12])) {
+                    let ms: usize = 13;
+                    while (ms < val.len && isSpace(val[ms])) : (ms += 1) {}
+                    let me: usize = val.len;
+                    while (me > ms && isSpace(val[me - 1])) : (me -= 1) {}
+                    if (me > ms) {
+                        summary.bundle_mids_off = val_off + ms;
+                        summary.bundle_mids_len = me - ms;
+                    }
+                }
+            } else if (startsWith(val, "mid:")) {
+                const sub = val[4..];
+                if (sub.len > 0) {
+                    summary.mid_count += 1;
+                    if (in_media) {
+                        if (cur_media == SdpMediaKind.audio && summary.audio_mid_len == 0) {
+                            summary.audio_mid_off = val_off + 4;
+                            summary.audio_mid_len = sub.len;
+                        } else if (cur_media == SdpMediaKind.video && summary.video_mid_len == 0) {
+                            summary.video_mid_off = val_off + 4;
+                            summary.video_mid_len = sub.len;
+                        } else if (cur_media == SdpMediaKind.application && summary.app_mid_len == 0) {
+                            summary.app_mid_off = val_off + 4;
+                            summary.app_mid_len = sub.len;
+                        }
+                    }
+                }
+            } else if (startsWith(val, "extmap:")) {
+                // Format: a=extmap:<id>[/<dir>] <uri>
+                const body = val[7..];
+                const body_abs_off = val_off + 7;
+                if (sp := findByte(body, ' ', 0)) {
+                    let id_end: usize = sp;
+                    if (sl := findByte(body[0..sp], '/', 0)) {
+                        id_end = sl;
+                    }
+                    if (eid := parseDecU16(body[0..id_end])) {
+                        let us: usize = sp + 1;
+                        while (us < body.len && isSpace(body[us])) : (us += 1) {}
+                        if (us < body.len) {
+                            if (summary.extmap_count < out_extmaps.len) {
+                                out_extmaps[summary.extmap_count] = SdpExtmapEntry{
+                                    id: eid,
+                                    media: cur_media,
+                                    uri_off: body_abs_off + us,
+                                    uri_len: body.len - us,
+                                };
+                            }
+                            summary.extmap_count += 1;
+                        }
+                    }
+                }
+            } else if (startsWith(val, "rtcp-fb:")) {
+                // Format: a=rtcp-fb:<pt|*> <param>
+                const body = val[8..];
+                const body_abs_off = val_off + 8;
+                if (sp := findByte(body, ' ', 0)) {
+                    let pt_val: u8 = 0;
+                    let valid_pt: bool = false;
+                    if (sp == 1 && body[0] == '*') {
+                        pt_val = 255;
+                        valid_pt = true;
+                    } else if (pv := parseDecU8(body[0..sp])) {
+                        if (pv <= 127) {
+                            pt_val = pv;
+                            valid_pt = true;
+                        }
+                    }
+                    if (valid_pt && sp + 1 < body.len) {
+                        if (summary.rtcp_fb_count < out_rtcp_fbs.len) {
+                            out_rtcp_fbs[summary.rtcp_fb_count] = SdpRtcpFbEntry{
+                                payload_type: pt_val,
+                                param_off: body_abs_off + sp + 1,
+                                param_len: body.len - (sp + 1),
+                            };
+                        }
+                        summary.rtcp_fb_count += 1;
+                    }
+                }
+            } else if (startsWith(val, "ssrc:")) {
+                // Format: a=ssrc:<ssrc_u32> <attr>
+                const body = val[5..];
+                const body_abs_off = val_off + 5;
+                if (sp := findByte(body, ' ', 0)) {
+                    if (ssrc_v := parseDecU32(body[0..sp])) {
+                        if (sp + 1 < body.len) {
+                            if (summary.ssrc_count < out_ssrcs.len) {
+                                out_ssrcs[summary.ssrc_count] = SdpSsrcEntry{
+                                    ssrc: ssrc_v,
+                                    media: cur_media,
+                                    attr_off: body_abs_off + sp + 1,
+                                    attr_len: body.len - (sp + 1),
+                                };
+                            }
+                            summary.ssrc_count += 1;
+                        }
+                    }
+                }
             } else if (eqBytes(val, "rtcp-mux")) {
                 summary.has_rtcp_mux = true;
             } else if (eqBytes(val, "sendrecv")) {
@@ -1387,12 +2096,13 @@ pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSu
                     summary.video_dir = SdpDirection.inactive;
                 }
             } else if (startsWith(val, "rtpmap:")) {
-                // Format: a=rtpmap:<payload_type> <encoding_name>/<clock_rate>[/<channels>]
+                // Format: a=rtpmap:<payload_type 0..127> <encoding_name>/<clock_rate>[/<channels>]
                 const body = val[7..];
                 const body_abs_off = val_off + 7;
                 if (sp := findByte(body, ' ', 0)) {
                     let pt: u8 = 0;
                     if (pt_v := parseDecU8(body[0..sp])) {
+                        if (pt_v > 127) return WebRtcIceError.InvalidSdp; // 7-bit RTP PT per RFC 3550 & str0m
                         pt = pt_v;
                     } else {
                         return WebRtcIceError.InvalidSdp;
@@ -1442,13 +2152,17 @@ pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSu
                     return WebRtcIceError.InvalidSdp;
                 }
             } else if (startsWith(val, "fmtp:")) {
-                // Format: a=fmtp:<payload_type> <parameters>
+                // Format: a=fmtp:<payload_type> <parameters> (tolerates horizontal whitespace)
                 const body = val[5..];
                 const body_abs_off = val_off + 5;
                 if (sp := findByte(body, ' ', 0)) {
                     if (pt_v := parseDecU8(body[0..sp])) {
-                        const params_off = body_abs_off + sp + 1;
-                        const params_len = body.len - (sp + 1);
+                        let ps: usize = sp + 1;
+                        while (ps < body.len && isSpace(body[ps])) : (ps += 1) {}
+                        let pe: usize = body.len;
+                        while (pe > ps && isSpace(body[pe - 1])) : (pe -= 1) {}
+                        const params_off = body_abs_off + ps;
+                        const params_len = pe - ps;
                         let ci: usize = 0;
                         while (ci < summary.codec_count) : (ci += 1) {
                             if (out_codecs[ci].payload_type == pt_v) {
@@ -1468,6 +2182,15 @@ pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSu
         return WebRtcIceError.InvalidSdp;
     }
     return summary;
+}
+
+/// Parses an RFC 8866 / WebRTC SDP Offer or Answer into `SdpSessionSummary` and populates
+/// `out_codecs` with every `a=rtpmap:` / `a=fmtp:` codec entry (zero dynamic allocation).
+pub fn parseWebRtcSdp(raw: []const u8, out_codecs: []SdpCodecSpec): SdpSessionSummary ! WebRtcIceError {
+    let no_ext: [1]SdpExtmapEntry = [SdpExtmapEntry{}];
+    let no_fb: [1]SdpRtcpFbEntry = [SdpRtcpFbEntry{}];
+    let no_ssrc: [1]SdpSsrcEntry = [SdpSsrcEntry{}];
+    return parseWebRtcSdpExtended(raw, out_codecs, no_ext[0..0], no_fb[0..0], no_ssrc[0..0]);
 }
 
 /// Negotiates common RTP codecs between a remote SDP Offer and local supported codec names
