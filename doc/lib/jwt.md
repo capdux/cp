@@ -8,8 +8,9 @@ Zero-allocation, pure-CP RFC 7519 JSON Web Token (JWT) header & claims parser, B
 
 | File | Source | Responsibilities |
 | :--- | :--- | :--- |
-| `lib/jwt/claims.cp` | `// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 7519 JWT Claims Barrel)` | `decodeBase64Url`, `JwtParts`, `splitJwt`, `extractStringClaim`, `extractIntClaim`, `JwtHeader`, `ClaimStatus`, `JwtClaims` |
+| `lib/jwt/claims.cp` | `// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 7519 JWT Claims Barrel)`<br>`// Reference-hardened against Keats/jsonwebtoken (MIT)` | Legacy API (`decodeBase64Url`, `JwtParts`, `splitJwt`, `extractStringClaim`, `extractIntClaim`, `JwtHeader`, `ClaimStatus`, `JwtClaims`) + Rust-hardened JWS/JWT (`JwtAlgorithm`, `JwtError`, `JwtValidation`, `JwtVerified`, `encodeBase64Url`, `decodeBase64UrlStrict`, `splitJwtStrict`, `signJwtHmac`, `verifyJwtHmac`) + 16-lane SIMD / constant-time primitives (`jwtCtEqualSimd`, `jwtCtEqualScalar`, `jwtFindDotSimd`, `jwtFindDotScalar`, `jwtIsValidBase64UrlSimd`, `jwtIsValidBase64UrlScalar`) |
 | `lib/jwt/index.cp` | `// Source: Absorbed from /data/dev/bun/src/http/http.cp (RFC 7519 JWT Claims Barrel)` | Unified `cap:jwt` exports |
+| `cap/test/testJwtRustRefSuite.cp` | Wave 32 R3 Rust Reference Suite | HS256/384/512 roundtrip & RFC 7515 A.1 vector, `alg: "none"` / algorithm confusion / tamper / `exp`/`nbf` leeway / `iss`/`sub`/`aud` / strict Base64URL canonical trailing-bit checks, SIMD vs Scalar 0-diff parity, 1,350 deterministic PRNG fuzz cases |
 
 ## 上游行为契约与安全边界注意事项
 

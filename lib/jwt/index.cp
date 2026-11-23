@@ -1,11 +1,27 @@
+// Reference-hardened against Keats/jsonwebtoken (MIT)
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (RFC 7519 JWT Claims Barrel)
 export {
+    JwtAlgorithm,
+    JwtError,
+    JwtValidation,
+    JwtVerified,
+    jwtCtEqualScalar,
+    jwtCtEqualSimd,
+    jwtFindDotScalar,
+    jwtFindDotSimd,
+    jwtIsValidBase64UrlScalar,
+    jwtIsValidBase64UrlSimd,
     decodeBase64Url,
+    decodeBase64UrlStrict,
+    encodeBase64Url,
     JwtParts,
     splitJwt,
+    splitJwtStrict,
     extractStringClaim,
     extractIntClaim,
     JwtHeader,
     ClaimStatus,
     JwtClaims,
+    signJwtHmac,
+    verifyJwtHmac,
 } from "./claims.cp";
