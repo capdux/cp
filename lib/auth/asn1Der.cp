@@ -1,11 +1,16 @@
+// Reference-hardened against RustCrypto/formats (MIT/Apache-2.0)
 // Source: cp/lib/asn1/der.cp (ITU-T X.690 ASN.1 DER Encoder, Decoder & OID Codec)
 // Pure CP zero-C-dependency ITU-T X.690 Distinguished Encoding Rules (DER)
 // zero-copy TLV reader, canonical TLV writer, and Object Identifier (OID) codec.
 
 const std = @import("std");
 
-/// Maximum allowed nested container depth when decoding ASN.1 DER structures.
-pub const ASN1_MAX_DEPTH: usize = 64;
+/// 16-lane SIMD byte vector for DER payload copy/compare and string validation.
+type Vec16u8 = @Vector(16, u8);
+
+/// Maximum allowed nested container depth when decoding ASN.1 DER structures (aligned with RustCrypto/formats).
+pub const DER_MAX_DEPTH: usize = 32;
+pub const ASN1_MAX_DEPTH: usize = DER_MAX_DEPTH;
 
 /// Universal and common context-specific ASN.1 DER tag constants.
 pub const TAG_BOOLEAN: u8 = 0x01;
@@ -42,6 +47,131 @@ pub struct DerElement {
     tag: u8 = 0,
     content: []const u8 = "",
     raw: []const u8 = "",
+
+    /// Scalar reference: copy bytes (for 0-diff parity with SIMD).
+    pub static fn copyBytesScalar(dst: []u8, src: []const u8) {
+        let n = if (dst.len < src.len) dst.len else src.len;
+        let i: usize = 0;
+        while (i < n) : (i += 1) {
+            dst[i] = src[i];
+        }
+    }
+
+    /// 16-lane SIMD accelerated byte copy for DER payloads.
+    pub static fn copyBytesSimd(dst: []u8, src: []const u8) {
+        let n = if (dst.len < src.len) dst.len else src.len;
+        let i: usize = 0;
+        while (i + 16 <= n) {
+            let v: Vec16u8 = src[i .. i + 16][0..16].*;
+            dst[i .. i + 16][0..16].* = v;
+            i += 16;
+        }
+        while (i < n) : (i += 1) {
+            dst[i] = src[i];
+        }
+    }
+
+    /// Scalar reference: constant-length byte slice equality.
+    pub static fn eqlBytesScalar(a: []const u8, b: []const u8): bool {
+        if (a.len != b.len) return false;
+        let i: usize = 0;
+        while (i < a.len) : (i += 1) {
+            if (a[i] != b[i]) return false;
+        }
+        return true;
+    }
+
+    /// 16-lane SIMD accelerated byte slice equality for DER raw TLV comparisons.
+    pub static fn eqlBytesSimd(a: []const u8, b: []const u8): bool {
+        if (a.len != b.len) return false;
+        let i: usize = 0;
+        while (i + 16 <= a.len) {
+            const va: Vec16u8 = a[i .. i + 16][0..16].*;
+            const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+            const diff = va ^ vb;
+            if (@reduce(.Or, diff) != 0) return false;
+            i += 16;
+        }
+        while (i < a.len) : (i += 1) {
+            if (a[i] != b[i]) return false;
+        }
+        return true;
+    }
+
+    /// Scalar reference: validates X.680 IA5String (7-bit ASCII < 0x80).
+    pub static fn isValidIa5StringScalar(s: []const u8): bool {
+        let i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            if (s[i] >= 0x80) return false;
+        }
+        return true;
+    }
+
+    /// 16-lane SIMD accelerated X.680 IA5String validation (all bytes < 0x80).
+    pub static fn isValidIa5StringSimd(s: []const u8): bool {
+        const hi_mask: Vec16u8 = @splat(0x80);
+        let i: usize = 0;
+        while (i + 16 <= s.len) {
+            const v: Vec16u8 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v & hi_mask) != 0) return false;
+            i += 16;
+        }
+        while (i < s.len) : (i += 1) {
+            if (s[i] >= 0x80) return false;
+        }
+        return true;
+    }
+
+    /// Checks a single byte against the X.680 PrintableString alphabet.
+    static fn isPrintableByte(c: u8): bool {
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            return true;
+        }
+        return c == ' ' || c == '\'' || c == '(' || c == ')' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == ':' || c == '=' || c == '?';
+    }
+
+    /// Scalar reference: validates X.680 PrintableString alphabet.
+    pub static fn isValidPrintableStringScalar(s: []const u8): bool {
+        let i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            if (!DerElement.isPrintableByte(s[i])) return false;
+        }
+        return true;
+    }
+
+    /// 16-lane SIMD accelerated X.680 PrintableString validation.
+    pub static fn isValidPrintableStringSimd(s: []const u8): bool {
+        const hi_mask: Vec16u8 = @splat(0x80);
+        const lo_a: Vec16u8 = @splat('a');
+        const hi_z: Vec16u8 = @splat('z');
+        const lo_A: Vec16u8 = @splat('A');
+        const hi_Z: Vec16u8 = @splat('Z');
+        const lo_0: Vec16u8 = @splat('0');
+        const hi_9: Vec16u8 = @splat('9');
+
+        let i: usize = 0;
+        while (i + 16 <= s.len) {
+            const v: Vec16u8 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v & hi_mask) != 0) return false;
+            const is_lower = (v >= lo_a) & (v <= hi_z);
+            const is_upper = (v >= lo_A) & (v <= hi_Z);
+            const is_digit = (v >= lo_0) & (v <= hi_9);
+            const mask: u16 = @bitCast(is_lower | is_upper | is_digit);
+            if (mask != 0xFFFF) {
+                let lane: usize = 0;
+                while (lane < 16) : (lane += 1) {
+                    if (((mask >> (lane as u4)) & 1) == 0) {
+                        if (!DerElement.isPrintableByte(s[i + lane])) return false;
+                    }
+                }
+            }
+            i += 16;
+        }
+        while (i < s.len) : (i += 1) {
+            if (!DerElement.isPrintableByte(s[i])) return false;
+        }
+        return true;
+    }
 
     /// Returns a child `DerReader` scoped to this element's content octets.
     pub fn reader(): DerReader {
@@ -111,7 +241,7 @@ pub struct DerElement {
         return _.content;
     }
 
-    /// Decodes a `BIT STRING` element, validating unused-bit count and returning the payload octets.
+    /// Decodes a `BIT STRING` element, validating unused-bit count and zero-padded trailing bits per X.690 DER.
     pub fn asBitString(): ([]const u8) ! Asn1Error {
         if (_.tag != TAG_BIT_STRING) {
             return Asn1Error.TagMismatch;
@@ -126,25 +256,19 @@ pub struct DerElement {
         if (_.content.len == 1 && unused != 0) {
             return Asn1Error.InvalidLength;
         }
+        if (unused > 0 && _.content.len > 1) {
+            const mask: u8 = ((1 as u8) << (unused as u3)) - 1;
+            if ((_.content[_.content.len - 1] & mask) != 0) {
+                return Asn1Error.NonCanonicalLength;
+            }
+        }
         return _.content[1..];
     }
 
     /// Returns the number of unused trailing bits in a `BIT STRING` element.
     pub fn asBitStringUnusedBits(): u8 ! Asn1Error {
-        if (_.tag != TAG_BIT_STRING) {
-            return Asn1Error.TagMismatch;
-        }
-        if (_.content.len == 0) {
-            return Asn1Error.InvalidLength;
-        }
-        const unused = _.content[0];
-        if (unused > 7) {
-            return Asn1Error.InvalidLength;
-        }
-        if (_.content.len == 1 && unused != 0) {
-            return Asn1Error.InvalidLength;
-        }
-        return unused;
+        * = _.asBitString()?;
+        return _.content[0];
     }
 
     /// Decodes `UTF8String`, `PrintableString`, `IA5String`, or `T61String` as a zero-copy slice.
@@ -155,7 +279,19 @@ pub struct DerElement {
             }
             return _.content;
         }
-        if (_.tag == TAG_PRINTABLE_STRING || _.tag == TAG_IA5_STRING || _.tag == TAG_T61_STRING) {
+        if (_.tag == TAG_PRINTABLE_STRING) {
+            if (!DerElement.isValidPrintableStringSimd(_.content)) {
+                return Asn1Error.MalformedCert;
+            }
+            return _.content;
+        }
+        if (_.tag == TAG_IA5_STRING) {
+            if (!DerElement.isValidIa5StringSimd(_.content)) {
+                return Asn1Error.MalformedCert;
+            }
+            return _.content;
+        }
+        if (_.tag == TAG_T61_STRING) {
             return _.content;
         }
         return Asn1Error.TagMismatch;
@@ -378,12 +514,10 @@ pub struct DerReader {
         }
     }
 
-    /// Reads an `OBJECT IDENTIFIER` element and returns its raw DER content octets.
+    /// Reads an `OBJECT IDENTIFIER` element, validates canonical VLQ encoding, and returns raw DER content octets.
     pub fn readOidBytes(*_): ([]const u8) ! Asn1Error {
         const elem = _.expectTag(TAG_OID)?;
-        if (elem.content.len == 0) {
-            return Asn1Error.InvalidOid;
-        }
+        OidCodec.validate(elem.content)?;
         return elem.content;
     }
 
@@ -732,6 +866,37 @@ pub static class OidCodec {
         }
 
         return out.toOwnedSlice(alloc) catch return Asn1Error.OutOfMemory;
+    }
+
+    /// Validates raw DER OID content octets (non-empty, no leading 0x80, no u64 overflow, no truncated VLQ).
+    pub fn validate(bytes: []const u8): void ! Asn1Error {
+        if (bytes.len == 0) {
+            return Asn1Error.InvalidOid;
+        }
+        const max_subid = std.math.maxInt(u64) >> 7;
+        let pos: usize = 0;
+        while (pos < bytes.len) {
+            if (bytes[pos] == 0x80) {
+                return Asn1Error.InvalidOid;
+            }
+            let subid: u64 = 0;
+            let finished = false;
+            while (pos < bytes.len) {
+                const b = bytes[pos];
+                pos += 1;
+                if (subid > max_subid) {
+                    return Asn1Error.InvalidOid;
+                }
+                subid = (subid << 7) | ((b & 0x7F) as u64);
+                if ((b & 0x80) == 0) {
+                    finished = true;
+                    break;
+                }
+            }
+            if (!finished) {
+                return Asn1Error.InvalidOid;
+            }
+        }
     }
 
     /// Decodes DER OID content octets into an owned dotted decimal string.

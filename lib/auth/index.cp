@@ -204,6 +204,7 @@ export {
 // --- PKI, X.509, CSR, CRL, OCSP, PEM & ASN.1 DER ---
 
 export {
+    DER_MAX_DEPTH,
     ASN1_MAX_DEPTH,
     TAG_BOOLEAN,
     TAG_INTEGER,

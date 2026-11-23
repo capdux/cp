@@ -1,3 +1,4 @@
+// Reference-hardened against RustCrypto/formats (MIT/Apache-2.0)
 // Source: cp/lib/x509/x509.cp (Pure CP X.509 v3 Certificate DER/PEM Parser, SAN & Validity Engine)
 // Zero-C-dependency RFC 5280 X.509 certificate parser, RFC 6125 hostname/SAN matcher,
 // UTCTime/GeneralizedTime validator, and issuer chain verifier.
@@ -243,6 +244,11 @@ pub struct X509Certificate {
         return X509Error.InvalidPem;
     }
 
+    /// Checks whether `not_before <= not_after` per RFC 5280 validity ordering.
+    pub fn hasValidValidityOrder(): bool {
+        return _.not_before <= _.not_after;
+    }
+
     /// Returns `true` if `unix_sec` falls inclusively within `[not_before, not_after]`.
     pub fn isValidAt(unix_sec: i64): bool {
         return unix_sec >= _.not_before && unix_sec <= _.not_after;
@@ -297,7 +303,7 @@ pub struct X509Certificate {
         if (_.issuer_raw.len == 0 || issuer_cert.subject_raw.len == 0) {
             return false;
         }
-        if (!std.mem.eql(u8, _.issuer_raw, issuer_cert.subject_raw)) {
+        if (!DerElement.eqlBytesSimd(_.issuer_raw, issuer_cert.subject_raw)) {
             return false;
         }
         if (issuer_cert.spki_raw.len == 0) {

@@ -17,7 +17,7 @@
 | `lib/media/audioWav.cp` | RIFF/WAVE PCM16 & Float32 编解码 | `WavCodec`, `WavAudio`, `WavFloatAudio`, `AudioError` |
 | `lib/media/audioDsp.cp` | Voice AI 重采样、RMS/dB 计量与能量 VAD | `AudioDsp`, `EnergyVad`, `SpeechSegment` |
 | `lib/media/flac.cp` | RFC 9639 FLAC 无损音频全栈解码器（对标 `ruuda/claxon`：完整 Metadata + Frame CRC-8/16 + 4 Subframes + 4 立体声去相关 + 4-lane SIMD 0-bit 精确核） | `FlacError`, `FlacStreamInfo`, `FlacFrameHeader`, `FlacDecodedFrame`, `FlacDecodeSummary`, `decodeFlacFrame`, `decodeFlacStream`, `flacCrc8`, `flacCrc16`, `decodeFlacUtf8`, `lpcPredictSimd`, `decorrelateMidSideSimd` |
-| `lib/media/ogg.cp` | RFC 3533 Ogg 容器分页解析与 CRC32 | `isOgg`, `OggPageIter`, `oggCrc32`, `OggPage` |
+| `lib/media/ogg.cp` | RFC 3533 Ogg 容器分页编解码与多流包重组（对标 `RustAudio/ogg` BSD-3-Clause 加固 + 16-lane SIMD 段表求和/载荷拷贝 & `cap:simd` `OggS` 重同步） | `OGG_FLAG_CONTINUATION`, `OGG_FLAG_BOS`, `OGG_FLAG_EOS`, `OGG_GRANULE_UNKNOWN`, `OggError`, `OggPage`, `oggCrc32`, `isOgg`, `findNextOggPage`, `parseOggPage`, `validateOggStream`, `OggPageIter`, `OggPacket`, `OggPacketReader`, `OggPacketWriter`, `oggSumSegmentsSimd`, `oggCopyPayloadSimd` |
 | `lib/media/opus.cp` | RFC 7845/6716 Opus Head/Tags/TOC 解析 | `isOpusHead`, `isOpusTags`, `parseOpusHead`, `parseOpusTags`, `parseOpusToc`, `OpusCommentIter` |
 | `lib/media/aac.cp` | AAC ADTS 帧与 AudioSpecificConfig 解析 | `isAdts`, `AdtsIter`, `parseAudioSpecificConfig`, `summarizeAdts`, `aacSampleRate`, `aacChannelCount` |
 | `lib/media/mpeg.cp` | MPEG-1/2/2.5 (MP3) 帧与 Xing/VBRI 解析 | `isMpegAudio`, `MpegFrameIter`, `parseMpegFrameHeader`, `parseXingHeader`, `summarizeMpeg`, `skipId3v2` |

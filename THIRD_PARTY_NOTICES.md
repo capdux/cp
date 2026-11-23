@@ -56,6 +56,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **prost** (`tokio-rs`) | <https://github.com/tokio-rs/prost> | Apache-2.0 | `lib/compiler/protobuf.cp` | Copyright (c) 2017 Dan Burkert / Tokio Contributors |
 | **tar-rs** (`alexcrichton`) | <https://github.com/alexcrichton/tar-rs> | MIT OR Apache-2.0 | `lib/pack/tar.cp`, `lib/pack/tarPax.cp` | Copyright (c) 2014 Alex Crichton |
 | **ciborium** (`enarx`) | <https://github.com/enarx/ciborium> | Apache-2.0 | `lib/binfmt/cborDiag.cp` | Copyright (c) 2021 Enarx / Profian Inc. |
+| **ogg** (`RustAudio`) | <https://github.com/RustAudio/ogg> | BSD-3-Clause | `lib/media/ogg.cp` | Copyright (c) 2016 est31 / RustAudio |
+| **RustCrypto/formats** (`der`, `x509-cert`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/asn1Der.cp`, `lib/auth/x509.cp` | Copyright (c) 2020-2024 RustCrypto Developers |
 
 ---
 
