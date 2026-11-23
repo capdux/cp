@@ -67,7 +67,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustCrypto/hashes** (`sha2`, `hmac`, `hkdf`) | <https://github.com/RustCrypto/hashes> | MIT OR Apache-2.0 | `lib/crypto/shaHash.cp`, `lib/crypto/shaHmac.cp`, `lib/crypto/shaKdf.cp` | Copyright (c) 2016-2024 RustCrypto Developers |
 | **ammonia** (`rust-ammonia`) | <https://github.com/rust-ammonia/ammonia> | MIT OR Apache-2.0 | `lib/html/sanitizer.cp`, `lib/html/entities.cp` | Copyright (c) 2015-2024 Michael Howell / Ammonia Contributors |
 | **jsonwebtoken** (`Keats`) | <https://github.com/Keats/jsonwebtoken> | MIT | `lib/jwt/claims.cp`, `lib/jwt/index.cp` | Copyright (c) 2015 Vincent Prouillet |
-| **rust-url** (`servo`) | <https://github.com/servo/rust-url> | MIT OR Apache-2.0 | `lib/url/url.cp`, `lib/url/percent.cp` | Copyright (c) 2013-2024 The rust-url developers |
+| **rust-url** (`servo`) | <https://github.com/servo/rust-url> | MIT OR Apache-2.0 | `lib/url/url.cp`, `lib/url/percent.cp`, `lib/text/punycode.cp`, `lib/text/idna.cp` | Copyright (c) 2013-2024 The rust-url developers |
 | **uuid** (`uuid-rs`) | <https://github.com/uuid-rs/uuid> | MIT OR Apache-2.0 | `lib/uuid/uuid.cp`, `lib/uuid/index.cp` | Copyright (c) 2014-2024 The Rust Project Developers / uuid-rs |
 | **semver** (`dtolnay`) | <https://github.com/dtolnay/semver> | MIT OR Apache-2.0 | `lib/semver/version.cp`, `lib/semver/query.cp`, `lib/semver/range.cp` | Copyright (c) 2016 David Tolnay / Steve Klabnik |
 | **chrono** (`chronotope`) | <https://github.com/chronotope/chrono> | MIT OR Apache-2.0 | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | Copyright (c) 2014-2024 Kang Seonghoon / Chrono Contributors |

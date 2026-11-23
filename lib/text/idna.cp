@@ -1,13 +1,16 @@
-// Source: cp/lib/idna/idna.cp (Pure CP IDNA Domain Conversion & RFC 1034/1123 Validation)
-// Supports toAscii, toUnicode, isValidDomain, and normalizeDomain.
+// Reference-hardened against servo/rust-url (MIT/Apache-2.0)
+// Source: cp/lib/idna/idna.cp (Pure CP IDNA / UTS #46 Domain Conversion & RFC 1034/1123 Validation)
+// Supports toAscii, toUnicode, isValidDomain, normalizeDomain, CheckHyphens, and 16-lane SIMD ASCII fast-paths.
 
 const std = @import("std");
 import {
     IdnaError,
     decodeUtf8Codepoints,
-    encodeUtf8Codepoint,
     punycodeEncode,
     punycodeDecode,
+    simdIdnaIsAscii,
+    simdIdnaIndexOfDot,
+    simdIdnaToLowerAscii,
 } from "./punycode.cp";
 
 pub const MAX_LABEL_LEN: usize = 63;
@@ -65,14 +68,14 @@ struct OutBuf {
     }
 }
 
-fn toAsciiLower(c: u8): u8 {
+fn idnaToAsciiLower(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') {
         return c + 32;
     }
     return c;
 }
 
-fn isValidAsciiLabelChar(c: u8): bool {
+fn idnaIsValidAsciiLabelChar(c: u8): bool {
     if (c >= 'a' && c <= 'z') return true;
     if (c >= 'A' && c <= 'Z') return true;
     if (c >= '0' && c <= '9') return true;
@@ -80,24 +83,22 @@ fn isValidAsciiLabelChar(c: u8): bool {
     return false;
 }
 
-fn hasXnPrefix(label: []const u8): bool {
+fn idnaHasXnPrefix(label: []const u8): bool {
     if (label.len < 4) {
         return false;
     }
-    return toAsciiLower(label[0]) == 'x'
-        && toAsciiLower(label[1]) == 'n'
+    return idnaToAsciiLower(label[0]) == 'x'
+        && idnaToAsciiLower(label[1]) == 'n'
         && label[2] == '-'
         && label[3] == '-';
 }
 
-fn hasNonAscii(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] >= 0x80) {
-            return true;
-        }
-    }
-    return false;
+fn idnaHasReservedHyphens(label: []const u8): bool {
+    return label.len >= 4 && label[2] == '-' && label[3] == '-';
+}
+
+fn idnaHasNonAscii(s: []const u8): bool {
+    return !simdIdnaIsAscii(s);
 }
 
 /// Checks if `domain` at `pos` starts with a recognized IDNA label separator:
@@ -153,6 +154,7 @@ fn isLtrCodepoint(cp: u32): bool {
 }
 
 /// Validates and case-folds a UTF-8 non-ASCII label, returning a newly allocated folded UTF-8 slice.
+/// Enforces UTS #46 CheckHyphens (no leading/trailing `-` and no `--` in 3rd-4th positions).
 fn prepareUnicodeLabel(alloc: std.mem.Allocator, label: []const u8): ([]u8) ! IdnaError {
     const cps = decodeUtf8Codepoints(alloc, label)?;
     defer alloc.free(cps);
@@ -163,6 +165,9 @@ fn prepareUnicodeLabel(alloc: std.mem.Allocator, label: []const u8): ([]u8) ! Id
 
     if (cps[0] == '-' || cps[cps.len - 1] == '-') {
         return IdnaError.LeadingOrTrailingHyphen;
+    }
+    if (cps.len >= 4 && cps[2] == '-' && cps[3] == '-') {
+        return IdnaError.ReservedHyphens;
     }
 
     let has_rtl = false;
@@ -177,7 +182,7 @@ fn prepareUnicodeLabel(alloc: std.mem.Allocator, label: []const u8): ([]u8) ! Id
             return IdnaError.DisallowedBidirection;
         }
         if (cp < 0x80) {
-            if (!isValidAsciiLabelChar(cp as u8)) {
+            if (!idnaIsValidAsciiLabelChar(cp as u8)) {
                 return IdnaError.InvalidChar;
             }
         }
@@ -223,24 +228,28 @@ fn validateAndLowerAsciiLabel(alloc: std.mem.Allocator, label: []const u8): ([]u
     let out = alloc.alloc(u8, label.len) catch return IdnaError.OutOfMemory;
     errdefer alloc.free(out);
 
+    // 16-lane SIMD batch ASCII lowercase folding
+    * = simdIdnaToLowerAscii(label, out);
+
     let i: usize = 0;
-    while (i < label.len) : (i += 1) {
-        const c = label[i];
-        if (!isValidAsciiLabelChar(c)) {
+    while (i < out.len) : (i += 1) {
+        if (!idnaIsValidAsciiLabelChar(out[i])) {
             return IdnaError.InvalidChar;
         }
-        out[i] = toAsciiLower(c);
     }
 
-    if (hasXnPrefix(out)) {
+    if (idnaHasXnPrefix(out)) {
         if (out.len == 4) {
             return IdnaError.InvalidPunycode;
         }
         const decoded_chk = punycodeDecode(alloc, out[4..out.len])?;
         defer alloc.free(decoded_chk);
-        if (!hasNonAscii(decoded_chk)) {
+        if (!idnaHasNonAscii(decoded_chk)) {
             return IdnaError.InvalidPunycode;
         }
+    } else if (idnaHasReservedHyphens(out)) {
+        // UTS #46 CheckHyphens: disallow non-xn-- labels with '--' in positions 3-4
+        return IdnaError.ReservedHyphens;
     }
 
     return out;
@@ -248,7 +257,7 @@ fn validateAndLowerAsciiLabel(alloc: std.mem.Allocator, label: []const u8): ([]u
 
 /// Converts an internationalized domain name to its ASCII (Punycode A-label) form.
 /// Splits labels on `.`, `\u{3002}`, `\u{FF0E}`, and `\u{FF61}`.
-/// Enforces RFC 1034/1123 label rules (`<= 63` bytes/label, `<= 253` bytes total excluding optional trailing root dot).
+/// Enforces RFC 1034/1123 + UTS #46 CheckHyphens (`<= 63` bytes/label, `<= 253` bytes total excluding optional trailing root dot).
 pub fn toAscii(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaError {
     if (domain.len == 0) {
         return IdnaError.EmptyLabel;
@@ -256,6 +265,50 @@ pub fn toAscii(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaError
 
     let out = OutBuf{};
     errdefer out.deinit(alloc);
+
+    // 16-lane SIMD pure-ASCII fast path (uses simdIdnaIndexOfDot + simdIdnaToLowerAscii)
+    if (simdIdnaIsAscii(domain)) {
+        let start: usize = 0;
+        let has_trailing_dot = false;
+        let label_count: usize = 0;
+
+        while (start <= domain.len) {
+            const rel_dot = simdIdnaIndexOfDot(domain[start..domain.len]);
+            const end_pos = if (rel_dot != null) (start + rel_dot.?) else domain.len;
+            const at_end = rel_dot == null;
+            const label = domain[start..end_pos];
+
+            if (label.len == 0) {
+                if (at_end && label_count > 0) {
+                    has_trailing_dot = true;
+                    break;
+                }
+                return IdnaError.EmptyLabel;
+            }
+
+            if (label_count > 0) {
+                out.appendByte(alloc, '.')?;
+            }
+            label_count += 1;
+
+            const ascii_lbl = validateAndLowerAsciiLabel(alloc, label)?;
+            defer alloc.free(ascii_lbl);
+            out.appendSlice(alloc, ascii_lbl)?;
+
+            if (at_end) {
+                break;
+            }
+            start = end_pos + 1;
+        }
+
+        if (out.len > MAX_DOMAIN_LEN) {
+            return IdnaError.DomainTooLong;
+        }
+        if (has_trailing_dot) {
+            out.appendByte(alloc, '.')?;
+        }
+        return out.toOwnedSlice(alloc);
+    }
 
     let label_start: usize = 0;
     let pos: usize = 0;
@@ -284,7 +337,7 @@ pub fn toAscii(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaError
             }
             label_count += 1;
 
-            if (hasNonAscii(label)) {
+            if (idnaHasNonAscii(label)) {
                 const folded = prepareUnicodeLabel(alloc, label)?;
                 defer alloc.free(folded);
 
@@ -362,7 +415,7 @@ pub fn toUnicode(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaErr
             }
             label_count += 1;
 
-            if (hasNonAscii(label)) {
+            if (idnaHasNonAscii(label)) {
                 const folded = prepareUnicodeLabel(alloc, label)?;
                 defer alloc.free(folded);
 
@@ -374,7 +427,7 @@ pub fn toUnicode(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaErr
                 }
                 ascii_len_check += 4 + encoded.len;
                 out.appendSlice(alloc, folded)?;
-            } else if (hasXnPrefix(label)) {
+            } else if (idnaHasXnPrefix(label)) {
                 if (label.len > MAX_LABEL_LEN) {
                     return IdnaError.LabelTooLong;
                 }
@@ -384,7 +437,7 @@ pub fn toUnicode(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaErr
                 // Validate ASCII characters in xn-- label
                 let j: usize = 0;
                 while (j < label.len) : (j += 1) {
-                    if (!isValidAsciiLabelChar(label[j])) {
+                    if (!idnaIsValidAsciiLabelChar(label[j])) {
                         return IdnaError.InvalidChar;
                     }
                 }
@@ -395,7 +448,7 @@ pub fn toUnicode(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! IdnaErr
                 const decoded = punycodeDecode(alloc, label[4..label.len])?;
                 defer alloc.free(decoded);
 
-                if (!hasNonAscii(decoded)) {
+                if (!idnaHasNonAscii(decoded)) {
                     return IdnaError.InvalidPunycode;
                 }
                 const validated = prepareUnicodeLabel(alloc, decoded)?;
@@ -451,6 +504,10 @@ pub fn normalizeDomain(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! I
         return IdnaError.EmptyLabel;
     }
 
+    if (simdIdnaIsAscii(domain)) {
+        return toAscii(alloc, domain);
+    }
+
     let out = OutBuf{};
     errdefer out.deinit(alloc);
 
@@ -483,7 +540,7 @@ pub fn normalizeDomain(alloc: std.mem.Allocator, domain: []const u8): ([]u8) ! I
             }
             label_count += 1;
 
-            if (hasNonAscii(label)) {
+            if (idnaHasNonAscii(label)) {
                 const folded = prepareUnicodeLabel(alloc, label)?;
                 defer alloc.free(folded);
 

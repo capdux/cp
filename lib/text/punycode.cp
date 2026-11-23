@@ -1,7 +1,10 @@
-// Source: cp/lib/idna/punycode.cp (Pure CP RFC 3492 Bootstring / Punycode Codec & UTF-8 Helpers)
-// Zero external C dependency implementation using pure CP and std.
+// Reference-hardened against servo/rust-url (MIT/Apache-2.0)
+// Source: cp/lib/idna/punycode.cp (Pure CP RFC 3492 Bootstring / Punycode Codec & UTF-8 / 16-Lane SIMD Helpers)
+// Zero external C dependency implementation using pure CP, checked u32 arithmetic, and 16-lane @Vector(16, u8) SIMD.
 
 const std = @import("std");
+
+type IdnaVec16u8 = @Vector(16, u8);
 
 /// Unified error set for RFC 3492 Punycode and IDNA domain processing.
 pub err IdnaError {
@@ -15,6 +18,7 @@ pub err IdnaError {
     LeadingOrTrailingHyphen,
     DisallowedBidirection,
     OutOfMemory,
+    ReservedHyphens,
 }
 
 // RFC 3492 Section 5 Bootstring parameters for Punycode
@@ -28,6 +32,105 @@ pub const PUNYCODE_INITIAL_N: u32 = 128;
 const DELIMITER: u8 = '-';
 const MAX_U32: u32 = 0xFFFFFFFF;
 const MAX_UNICODE: u32 = 0x10FFFF;
+
+fn idnaLoadVec16(data: []const u8, off: usize): IdnaVec16u8 {
+    const v: IdnaVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD check returning `true` if all bytes in `data` are 7-bit ASCII (`< 0x80`).
+pub fn simdIdnaIsAscii(data: []const u8): bool {
+    let i: usize = 0;
+    const n = data.len;
+    const v_high: IdnaVec16u8 = @splat(0x80);
+    const v_zero: IdnaVec16u8 = @splat(0);
+    while (i + 16 <= n) {
+        const chunk = idnaLoadVec16(data, i);
+        const mask: u16 = @bitCast((chunk & v_high) != v_zero);
+        if (mask != 0) return false;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (data[i] >= 0x80) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdIdnaIsAscii` (differential verification).
+pub fn simdIdnaIsAsciiScalar(data: []const u8): bool {
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        if (data[i] >= 0x80) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan returning the first index of `'.'` in `haystack`, or `null`.
+pub fn simdIdnaIndexOfDot(haystack: []const u8): usize? {
+    let i: usize = 0;
+    const n = haystack.len;
+    const v_dot: IdnaVec16u8 = @splat('.');
+    while (i + 16 <= n) {
+        const chunk = idnaLoadVec16(haystack, i);
+        const mask: u16 = @bitCast(chunk == v_dot);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (haystack[i] == '.') return i;
+    }
+    return null;
+}
+
+/// Scalar reference for `simdIdnaIndexOfDot` (differential verification).
+pub fn simdIdnaIndexOfDotScalar(haystack: []const u8): usize? {
+    let i: usize = 0;
+    while (i < haystack.len) : (i += 1) {
+        if (haystack[i] == '.') return i;
+    }
+    return null;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD ASCII lowercase conversion into `out`. Returns bytes written.
+pub fn simdIdnaToLowerAscii(input: []const u8, out: []u8): usize {
+    const limit = if (input.len <= out.len) input.len else out.len;
+    let i: usize = 0;
+    const v_A: IdnaVec16u8 = @splat('A');
+    const v_Z: IdnaVec16u8 = @splat('Z');
+    const v_diff: IdnaVec16u8 = @splat(32);
+
+    while (i + 16 <= limit) {
+        const chunk = idnaLoadVec16(input, i);
+        const is_upper = (chunk >= v_A) & (chunk <= v_Z);
+        const lowered: IdnaVec16u8 = @select(u8, is_upper, chunk | v_diff, chunk);
+        const arr: [16]u8 = lowered;
+        @memcpy(out[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < limit) : (i += 1) {
+        const c = input[i];
+        out[i] = if (c >= 'A' && c <= 'Z') (c + 32) else c;
+    }
+    return limit;
+}
+
+/// Scalar reference for `simdIdnaToLowerAscii` (differential verification).
+pub fn simdIdnaToLowerAsciiScalar(input: []const u8, out: []u8): usize {
+    const limit = if (input.len <= out.len) input.len else out.len;
+    let i: usize = 0;
+    while (i < limit) : (i += 1) {
+        const c = input[i];
+        out[i] = if (c >= 'A' && c <= 'Z') (c + 32) else c;
+    }
+    return limit;
+}
 
 struct ByteBuf {
     items: []u8 = [],
@@ -130,6 +233,7 @@ struct U32Buf {
 }
 
 /// Strictly decodes a UTF-8 byte slice into Unicode scalar values (`u32`).
+/// Rejects overlong sequences, UTF-16 surrogates (`0xD800..=0xDFFF`), and codepoints `> 0x10FFFF`.
 pub fn decodeUtf8Codepoints(alloc: std.mem.Allocator, input: []const u8): ([]u32) ! IdnaError {
     let buf = U32Buf{};
     errdefer buf.deinit(alloc);
@@ -204,6 +308,7 @@ pub fn encodeUtf8Codepoint(alloc: std.mem.Allocator, out: *ByteBuf, cp: u32): (v
 }
 
 fn adaptBias(delta_in: u32, numpoints: u32, firsttime: bool): u32 {
+    if (numpoints == 0) return PUNYCODE_INITIAL_BIAS;
     let delta: u32 = if (firsttime) (delta_in / PUNYCODE_DAMP) else (delta_in / 2);
     delta += delta / numpoints;
     let k: u32 = 0;
@@ -316,6 +421,9 @@ pub fn punycodeEncode(alloc: std.mem.Allocator, utf8_label: []const u8): ([]u8) 
                     const q_minus_t = q - t;
                     out.append(alloc, encodeDigit(t + (q_minus_t % base_minus_t)))?;
                     q = q_minus_t / base_minus_t;
+                    if (k > MAX_U32 - PUNYCODE_BASE) {
+                        return IdnaError.Overflow;
+                    }
                     k += PUNYCODE_BASE;
                 }
                 out.append(alloc, encodeDigit(q))?;
@@ -325,36 +433,45 @@ pub fn punycodeEncode(alloc: std.mem.Allocator, utf8_label: []const u8): ([]u8) 
             }
         }
 
-        if (delta == MAX_U32) {
-            return IdnaError.Overflow;
+        if (h < total_cps) {
+            if (delta == MAX_U32 || n >= MAX_UNICODE) {
+                return IdnaError.Overflow;
+            }
+            delta += 1;
+            n += 1;
         }
-        delta += 1;
-        n += 1;
     }
 
     return out.toOwnedSlice(alloc);
 }
 
 /// Decodes an ASCII Punycode string into a UTF-8 label per RFC 3492 Section 6.2.
-/// Rejects non-ASCII input, truncated variable-length integers, and integer overflows.
+/// Rejects non-ASCII input, trailing delimiter with no encoded digits, surrogates,
+/// truncated variable-length integers, and checked `u32` overflows.
 /// Caller owns the returned slice and must free it with `alloc.free(...)`.
 pub fn punycodeDecode(alloc: std.mem.Allocator, ascii_punycode: []const u8): ([]u8) ! IdnaError {
     if (ascii_punycode.len == 0) {
         return alloc.alloc(u8, 0) catch return IdnaError.OutOfMemory;
     }
 
+    // 16-lane SIMD fast-reject of any non-ASCII byte
+    if (!simdIdnaIsAscii(ascii_punycode)) {
+        return IdnaError.InvalidPunycode;
+    }
+
     let last_dash: usize = 0;
     let has_dash = false;
     let idx: usize = 0;
     while (idx < ascii_punycode.len) : (idx += 1) {
-        const ch = ascii_punycode[idx];
-        if (ch >= 0x80) {
-            return IdnaError.InvalidPunycode;
-        }
-        if (ch == DELIMITER) {
+        if (ascii_punycode[idx] == DELIMITER) {
             last_dash = idx;
             has_dash = true;
         }
+    }
+
+    // RFC 3492 / servo/rust-url hardening: reject trailing '-' with no encoded delta digits
+    if (has_dash && last_dash + 1 >= ascii_punycode.len) {
+        return IdnaError.InvalidPunycode;
     }
 
     let cps = U32Buf{};
@@ -399,9 +516,15 @@ pub fn punycodeDecode(alloc: std.mem.Allocator, ascii_punycode: []const u8): ([]
                 return IdnaError.Overflow;
             }
             w *= base_minus_t;
+            if (k > MAX_U32 - PUNYCODE_BASE) {
+                return IdnaError.Overflow;
+            }
             k += PUNYCODE_BASE;
         }
 
+        if (cps.len >= (MAX_U32 as usize) - 1) {
+            return IdnaError.Overflow;
+        }
         const out_len_plus_1: u32 = (cps.len as u32) + 1;
         bias = adaptBias(i - oldi, out_len_plus_1, oldi == 0);
 
@@ -419,6 +542,9 @@ pub fn punycodeDecode(alloc: std.mem.Allocator, ascii_punycode: []const u8): ([]
         i %= out_len_plus_1;
 
         cps.insert(alloc, i as usize, n)?;
+        if (i == MAX_U32) {
+            return IdnaError.Overflow;
+        }
         i += 1;
     }
 

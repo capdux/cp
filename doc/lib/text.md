@@ -566,3 +566,15 @@ pub fn demoCodePatternMatch(src: string) {
 | `simdIndexOfByte` / `simdIndexOfAny4` / `simdIndexOfGlobMagic` / `simdBytesEqual` | `lib/text/glob.cp`, `lib/text/globset.cp` | 纯 CP 16-lane `@Vector(16, u8)` 魔术字符/分隔符扫描与静态字面量前缀/后缀快路径（配标量参考函数 0 差异对拍）；`IgnoreMatcher` 新增 `ruleCount()` |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testTextGlobRustRefSuite.cp` 继承 `BurntSushi/ripgrep` `globset` 测试向量，覆盖 `*`/`?`/`**`（零层与多层）/`[a-z]`/`[!0-9]`/`[.-0]`/`{a,b}`/转义/大小写不敏感/`.gitignore` 否定与目录规则、4 类病理模式毫秒级防回溯与组合爆炸拦截、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形模式与路径 Fuzz。
+
+## Wave 33 工业级安全加固与 16-Lane SIMD 加速（`punycode.cp` & `idna.cp` 对标 `servo/rust-url` MIT/Apache-2.0）
+
+`lib/text/punycode.cp` 与 `lib/text/idna.cp` 已对照 `servo/rust-url`（`idna`，MIT/Apache-2.0）、RFC 3492 与 UTS #46 完成溢出防护、保留连字符校验与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 加固项 / 新增符号 | 所在文件 | 工程价值 |
+|---|---|---|
+| RFC 3492 无溢出编解码 + 尾随 `-` 拒绝 | `lib/text/punycode.cp` | 全链路 `u32` 溢出边界守卫（`i + digit*w`、`w * (base-t)`、`k + base`、`n + i/out`、`i += 1`），拒绝代理对 `0xD800..=0xDFFF`、`> 0x10FFFF`、非 ASCII 输入与尾随 `-` 无增量编码串 |
+| UTS #46 `CheckHyphens` (`IdnaError.ReservedHyphens`) | `lib/text/idna.cp` | 严格禁止第 3-4 位为 `--` 的非 `xn--` 保留标签（含 ASCII 与 Unicode 标签），叠加单标签 `<= 63B`、总域名 `<= 253B`（含尾点 `<= 254B`）、空标签与首尾 `-` 校验 |
+| `simdIdnaIsAscii` / `simdIdnaIndexOfDot` / `simdIdnaToLowerAscii` | `lib/text/punycode.cp`, `lib/text/idna.cp` | 纯 CP 16-lane `@Vector(16, u8)` 全 ASCII 域名快速判别、点号切分与批量 ASCII 小写折叠（配标量参考函数 0 差异对拍） |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testTextIdnaRustRefSuite.cp` 继承 RFC 3492 §7.1 多语言测试向量（中文简/繁、日文、韩文、德文 `bücher`、俄文、阿拉伯文、捷克文、Emoji）、IDNA `toAscii`/`toUnicode`/`isValidDomain`/`normalizeDomain`、溢出/代理对/双连字符/超长标签拦截、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 Punycode / `xn--` 溢出串 Fuzz。

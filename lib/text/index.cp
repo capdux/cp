@@ -273,6 +273,12 @@ export {
     decodeUtf8Codepoints,
     punycodeEncode,
     punycodeDecode,
+    simdIdnaIsAscii,
+    simdIdnaIsAsciiScalar,
+    simdIdnaIndexOfDot,
+    simdIdnaIndexOfDotScalar,
+    simdIdnaToLowerAscii,
+    simdIdnaToLowerAsciiScalar,
 } from "./punycode.cp";
 
 export {
