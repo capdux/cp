@@ -1555,3 +1555,34 @@ let hex: [32]u8 = [0; 32];
 const hlen = computePmLockfileHash(entries[0..], hex[0..])?;
 * = parsed; * = hlen;
 ```
+
+### 全协议依赖说明符规范化、Overrides 覆盖注入与去重排序引擎（`depListNormalize.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManager/processDependencyList.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 全 10 类协议解析器：`DEP_NORM_MAX_SPEC_LEN`、`DepListNormalizeError`、`DepProtocolKind`（`SemverRange`/`DistTag`/`NpmAlias`/`WorkspaceProtocol`/`CatalogProtocol`/`FileProtocol`/`LinkProtocol`/`GitHubShorthand`/`GitUrl`/`TarballUrl`）、`ParsedDepProtocolSpec`、`parseDependencyProtocolSpec`（拦截不安全协议与路径穿越）；
+  - 分组优先级合并与排序：`DepNormGroup`（`Dependencies > OptionalDependencies > DevDependencies > PeerDependencies`）、`RawDepItem`、`NormalizedDepItem`、`DepNormalizeSummary`、`normalizeDependencyList`、`DepProtocolCounts`、`summarizeDepProtocols`、`findNormalizedDep`（O(log N) 二分查找）；
+  - Overrides / Resolutions 注入与审计：`DepOverrideRuleKind`（`ExactName`/`VersionScoped`/`ParentChildPath`）、`DepOverrideRule`、`DepOverrideAuditEntry`、`DepOverrideSummary`、`applyDependencyOverrides`、`formatNormalizedDepReport`。
+
+```cp
+import {
+    RawDepItem,
+    DepNormGroup,
+    NormalizedDepItem,
+    DepOverrideRule,
+    DepOverrideAuditEntry,
+    normalizeDependencyList,
+    applyDependencyOverrides,
+} from "cap:pkg";
+
+const raw: [2]RawDepItem = [
+    RawDepItem{ name: "lodash", spec: "^4.17.20", group: DepNormGroup.DevDependencies },
+    RawDepItem{ name: "lodash", spec: "^4.17.21", group: DepNormGroup.Dependencies },
+];
+let norm: [4]NormalizedDepItem = [NormalizedDepItem.empty(); 4];
+const nsum = normalizeDependencyList(raw[0..], norm[0..])?;
+const rules: [1]DepOverrideRule = [DepOverrideRule{ raw_key: "lodash", replacement_spec: "4.17.21" }];
+let audit: [4]DepOverrideAuditEntry = [DepOverrideAuditEntry.empty(); 4];
+const osum = applyDependencyOverrides(norm[0..@as(usize, nsum.output_count)], rules[0..], audit[0..])?;
+* = osum;
+```

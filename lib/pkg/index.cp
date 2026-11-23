@@ -1072,3 +1072,25 @@ export {
     PmWhoamiDiagnostic,
     diagnosePmWhoami,
 } from "./pmCommandRouter.cp";
+
+export {
+    DEP_NORM_MAX_SPEC_LEN,
+    DepListNormalizeError,
+    DepProtocolKind,
+    ParsedDepProtocolSpec,
+    parseDependencyProtocolSpec,
+    DepNormGroup,
+    RawDepItem,
+    NormalizedDepItem,
+    DepNormalizeSummary,
+    normalizeDependencyList,
+    DepOverrideRuleKind,
+    DepOverrideRule,
+    DepOverrideAuditEntry,
+    DepOverrideSummary,
+    applyDependencyOverrides,
+    formatNormalizedDepReport,
+    DepProtocolCounts,
+    summarizeDepProtocols,
+    findNormalizedDep,
+} from "./depListNormalize.cp";
