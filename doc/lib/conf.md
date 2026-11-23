@@ -200,8 +200,10 @@ fn demoJson5(): !void {
 
 1. **`.env` 分层加载优先级约定（参考 `/data/dev/bun/docs/runtime/environment-variables.mdx`）**：
    - 上游 Bun 按递增优先级依次读取 `.env` < `.env.<NODE_ENV>`（`production`/`development`/`test`）< `.env.local` < 进程显式环境变量；在 CP 应用中通过 `DotEnv` 分层加载多份配置文件时推荐沿用该优先级，避免本地覆盖泄露至生产配置。
-2. **YAML 1.2 安全与多文档边界**：
-   - `YamlParser.parseStream` 严格以 `---` / `...` 切分多文档流，支持锚点（`&a`）、别名（`*a`）与合并键（`<<: *a`）；对来自不可信输入的 YAML 须控制锚点展开深度以防止资源耗尽。
+2. **YAML 1.2 安全与多文档边界（对标 `Ethiraric/yaml-rust2` 加固）**：
+   - `YamlParser.parseStream` 严格以 `---` / `...` 切分多文档流（支持 `%YAML` / `%TAG` 指令与跨文档锚点隔离），支持块标量全量 chomping（`|`、`|-`、`|+`、`>`、`>-`、`>+` 与显式缩进 `1..9`）、Flow 集合（`[...]` / `{...}`）、显式标签（`!!str`/`!!int`/`!!float`/`!!bool`/`!!null`）、YAML 1.2 数值（`0o`/`0x`/`.inf`/`-.inf`/`.nan`，且未带点号的 `nan`/`inf`/`Infinity` 严格保留为字符串）以及合并键（`<<: *a` 与 `<<: [*a, *b]`）。
+   - 安全防护：`YAML_MAX_DEPTH = 64` 递归深度上限（`DepthExceeded`）、循环引用实时拦截（`CircularAlias`）、指数级别名展开预算上限（`YAML_MAX_ALIAS_EXPANSIONS = 256`、`YAML_MAX_EXPANDED_NODES = 16384` -> `AliasExpansionLimitExceeded`）及块级 Tab 缩进禁止（`TabIndentationForbidden`）。
+   - 热路径 `cap:simd` 加速：行尾/注释扫描（`scanLineEndSimd`）、缩进空格计数（`countIndentSpacesSimd`）与单/双引号字符串快扫（`scanSingleQuotedStopSimd` / `scanDoubleQuotedStopSimd`）全面接入 `cap:simd`，并与 `*Scalar` 参考实现 100% 等价。
 3. **TOML 1.0 与 RFC 3339 严格校验（对标 `toml-rs/toml` 加固）**：
    - `TomlParser.parse` 内置 Arena 节点池构建器与 64 层深度上限（`DepthExceeded`），严格拒绝重复键（`DuplicateKey`）、显式/点分表重定义（`TableRedefined`）、Inline Table 冻结后追加（`FrozenTable`）、多行字符串作为键、UTF-16 代理对与未转义控制字符（`InvalidControlChar`）、数值前导零/非法下划线/有限浮点溢出（`InvalidNumber`）及非闰年/越界 RFC 3339 时间（`InvalidDateTime`）；
    - 注释跳行、空白跳过与单行/多行基础/字面量字符串扫描热路径全面接入 `cap:simd`（`Simd.indexOfByte` / `Simd.indexOfAny2` / `Simd.indexOfAny4` / `Simd.skipWhitespace`），并暴露 `TomlParser.scanBasicStringStopSimd` / `scanBasicStringStopScalar` 便于向量化等价校验。

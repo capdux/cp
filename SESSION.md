@@ -3029,3 +3029,20 @@
   > 收到新的编译器待处理工单(1条: task-capsurf-20261123-pack-gzip-u32)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 17:20:28）[step:20975]
+- **用户完整原始指令**：
+  > 配额已恢复, 重开2个子智能体, 重新分发未完成的任务给子智能体，确保底部状态栏出现真实运行状态(子智能体)。本阶段工作完成，更新文档，自动git提交到代码库后，根据项目目标，自主推导下一阶段工作，持续工作，不要停。继续你的工作。
+- **完整回复与执行汇报**：
+  > 已清理服务重启后停止的旧会话，并**重新启动 2 个全新子智能体**断点续接未完成任务（底部状态栏现已显示实时运行状态）：
+  >
+  > 1. **Lane 1 (`f241c1c3`, W30 R9)**：断点续接 [zip.cp](file:///data/dev/cp/lib/pack/zip.cp)（当前已有 864 行在编改动）对标 `zip-rs/zip2`（MIT）加固，完成反向 EOCD、ZIP64 Extra Field、ZipSlip 路径穿越防护、CD/LFH 一致性校验、16-lane SIMD/`cap:simd` 加速及 ≥1,200 组 Fuzz 与真实样本互验。
+  > 2. **Lane 2C (`d95ac6f6`, W30 R8)**：断点续接 [yamlParser.cp](file:///data/dev/cp/lib/conf/yamlParser.cp)（当前已有 1,617 行在编改动）对标 `Ethiraric/yaml-rust2`（MIT/Apache-2.0）加固，完成块标量 6 种 chomping、Anchor/Alias 循环与展开预算防护、Flow 集合/多文档流、`cap:simd` 词法快扫及 ≥1,200 组 Fuzz 与测试集继承。
+  >
+  > 当前下游工单队列为空（`[]`），两路子智能体完工后将自动唤醒主控验收、更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) / [THIRD_PARTY_NOTICES.md](file:///data/dev/cp/THIRD_PARTY_NOTICES.md) 并自动 git 提交，随即自主推导并派发下一阶段任务（`W30 R10` 收官与 `Wave 31` 核心库深化）。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 17:24:35）[step:20988]
+- **用户完整原始指令**：
+  > 主智能体不要闲着,做些短平快的工作!
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
