@@ -792,3 +792,28 @@ export {
     formatAssetManifestJson,
     formatChunkEmitPoolReport,
 } from "./chunkEmitPool";
+
+export {
+    BUILD_WORKER_MIN_MEM_PER_WORKER_MB,
+    BUILD_WORKER_DEFAULT_STACK_KB,
+    BUILD_WORKER_MAX_IO_THREADS,
+    BUILD_WORKER_INVALID_ID,
+    BuildWorkerPoolError,
+    WorkerPlatformKind,
+    WorkerPlanInput,
+    WorkerPlanResult,
+    planWorkerCount,
+    BuildWorkPriority,
+    BuildWorkItem,
+    BuildWorkerDeque,
+    BuildWorkPoolState,
+    BuildWorkerSlot,
+    BuildWorkPollSource,
+    BuildWorkPollResult,
+    BuildWorkPoolStats,
+    BuildWorkPool,
+    formatBuildWorkPoolReport,
+    IoPoolLifecycle,
+    WorkerLoadBalanceSummary,
+    evaluateWorkerLoadBalance,
+} from "./workerPoolPlan";

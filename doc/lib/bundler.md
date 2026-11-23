@@ -1206,3 +1206,27 @@ const rsum = resolveChunkContentHashes(inputs[0..], ChunkHashResolveOptions{}, o
 const app_file = getResolvedFilename(outs[0], fn_arena[0..]);
 * = n; * = rsum; * = app_file;
 ```
+
+- **工作窃取构建工作池、核心数自适应规划与负载均衡引擎（`workerPoolPlan.cp`，吸收自 `/data/dev/bun/src/bundler/ThreadPool.cp`）**：
+    - 导出：`BUILD_WORKER_MIN_MEM_PER_WORKER_MB`、`BUILD_WORKER_DEFAULT_STACK_KB`、`BUILD_WORKER_MAX_IO_THREADS`、`BUILD_WORKER_INVALID_ID`、`BuildWorkerPoolError`、`WorkerPlatformKind`、`WorkerPlanInput`、`WorkerPlanResult`、`planWorkerCount`（综合 CPU 核数、模块数、内存上限与平台 I/O 锁竞争推荐最优 Worker 数与独立 I/O 线程池）、`BuildWorkPriority`、`BuildWorkItem`、`BuildWorkerDeque`（外部切片驱动 Chase-Lev 双端队列：本地 LIFO `pushLocal`/`popLocal` + 跨核 FIFO `stealOne`/`stealHalf`）、`BuildWorkPoolState`、`BuildWorkerSlot`、`BuildWorkPollSource`、`BuildWorkPollResult`、`BuildWorkPoolStats`、`BuildWorkPool`（高优直通队列 + 批量提交 + 背压限流 + 优雅停机排空 `shutdownDrain` + 紧急取消 `abortAll` + P95 尾延迟统计）、`formatBuildWorkPoolReport`、`IoPoolLifecycle`、`WorkerLoadBalanceSummary`、`evaluateWorkerLoadBalance`（接入 `cap:simd` 归约计算跨核负载倾斜度）。
+
+```cp
+import {
+    WorkerPlanInput,
+    WorkerPlatformKind,
+    planWorkerCount,
+    BuildWorkItem,
+    BuildWorkerSlot,
+    BuildWorkPool,
+} from "cap:bundler";
+
+const plan = planWorkerCount(WorkerPlanInput{ cpu_cores: 8, module_count: 500, memory_limit_mb: 1024, platform: WorkerPlatformKind.MacOS });
+let q0: [16]BuildWorkItem = [BuildWorkItem.empty(); 16];
+let q1: [16]BuildWorkItem = [BuildWorkItem.empty(); 16];
+let prio: [8]BuildWorkItem = [BuildWorkItem.empty(); 8];
+let lat: [16]u64 = [0; 16];
+let workers: [2]BuildWorkerSlot = [BuildWorkerSlot.init(0, q0[0..]), BuildWorkerSlot.init(1, q1[0..])];
+let pool = BuildWorkPool.init(workers[0..], prio[0..], lat[0..], 32);
+pool.submit(BuildWorkItem{ task_id: 1, module_index: 0 }, 0)?;
+* = plan;
+```
