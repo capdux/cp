@@ -196,6 +196,68 @@ impl Analyzer {
                     } else {
                         Ok(right)
                     }
+                } else if matches!(
+                    bin.op,
+                    BinaryOp::Shl | BinaryOp::Shr | BinaryOp::SaturatingShl
+                ) {
+                    fn is_definitely_non_int(analyzer: &Analyzer, ty: &Type, depth: usize) -> bool {
+                        if depth > 8 {
+                            return false;
+                        }
+                        match ty {
+                            Type::BorrowType { inner, .. } | Type::Aligned { inner, .. } => {
+                                is_definitely_non_int(analyzer, inner, depth + 1)
+                            }
+                            Type::Conditional(_, cons, alt) => {
+                                is_definitely_non_int(analyzer, cons, depth + 1)
+                                    && is_definitely_non_int(analyzer, alt, depth + 1)
+                            }
+                            Type::String
+                            | Type::Bool
+                            | Type::F32
+                            | Type::F64
+                            | Type::Void
+                            | Type::Array(_)
+                            | Type::FixedArray(_, _)
+                            | Type::Map(_, _)
+                            | Type::Dict(_, _)
+                            | Type::Set(_)
+                            | Type::Tuple(_)
+                            | Type::Object(_)
+                            | Type::Fn(_, _)
+                            | Type::CFn(_, _)
+                            | Type::PID
+                            | Type::Optional(_)
+                            | Type::ErrorUnion(_)
+                            | Type::ResultType { .. }
+                            | Type::RawPtr { .. }
+                            | Type::ManyRawPtr(_)
+                            | Type::CPtr(_)
+                            | Type::SentinelPtr(_, _)
+                            | Type::SentinelSlice(_, _)
+                            | Type::CStr
+                            | Type::BoxDyn(_)
+                            | Type::BareDyn(_)
+                            | Type::Shared(_) => true,
+                            Type::Ref(id) => {
+                                if Analyzer::is_int_type(ty) {
+                                    false
+                                } else if let Some(aliased) = analyzer.type_aliases.get(&id.sym) {
+                                    is_definitely_non_int(analyzer, aliased, depth + 1)
+                                } else {
+                                    analyzer.classes.contains_key(&id.sym)
+                                }
+                            }
+                            _ => false,
+                        }
+                    }
+                    if is_definitely_non_int(self, &left, 0) {
+                        return Err(SemaError::TypeMismatch(Type::I64, left, bin.span));
+                    }
+                    if is_definitely_non_int(self, &right, 0) {
+                        return Err(SemaError::TypeMismatch(Type::USize, right, bin.span));
+                    }
+                    Ok(left)
                 } else {
                     if bin.op == BinaryOp::Add || bin.op == BinaryOp::Sub {
                         let is_left_single_ptr = matches!(left, Type::RawPtr { .. });

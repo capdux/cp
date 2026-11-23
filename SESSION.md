@@ -2807,3 +2807,27 @@
   > 我们写这些库的时候, 完全可以找 rust 开源类似库, 进行迁移呀, 这样不是可以避免稳定性与功能不完备缺陷吗?
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-generic-shift-e0207`）[ticket:task-bun-20261123-generic-shift-e0207]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 11:35:32` | 状态：`resolved` | 结单：`2026-11-23T11:39:43`
+- **报错/需求摘要**：comptime T: type 泛型整数参数执行移位运算 >> / << 时，cpc 误要求右操作数与左操作数类型完全一致，报 E0207: expected 'MaskInt', found 'ShiftInt'（影响 src/collections/bit_set.cp 7 处）
+- **结单与处理汇报**：Fixed E0207 on generic/heterogeneous integer shift ops (<<, >>, <<|, <<=, >>=) in cpc/src/sema/type_infer.rs: shift RHS is a shift amount (e.g. ShiftInt/u6/usize) and no longer required to match LHS type; non-integer operands (string/bool/float/struct etc.) remain rejected with E0207. Release cpc synced ([CPC_SYNC_OK]); cpc brief + zig ast-check on repro_generic_shift_e0207.cp PASS; cap test cap/test/testHotfixGenericShift.cp PASS.
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-strict-e0311-union-void`）[ticket:task-bun-20261123-strict-e0311-union-void]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 11:39:38` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：cpc check --strict 语法冲突：union(enum) 省略 : void 报 E0111（parser 要求冒号），写 none: void 又报 E0311（strict 禁止 : void）；影响 Installer.cp 与 http.cp 等 union(enum) 字段
+- **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 11:35:33）[step:20335]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-generic-shift-e0207)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已读取工单 **`task-bun-20261123-generic-shift-e0207`**（复现用例：[repro_generic_shift_e0207.cp](file:///data/dev/cp/temp/repro_generic_shift_e0207.cp)），并立即拉起独立编译器热修子智能体修复 `cpc/src/sema/` 对 `comptime T: type` 泛型整数/类型别名移位运算（`<<` / `>>` / `<<=` / `>>=`）误要求右操作数与左操作数类型完全一致报 `E0207` 的问题。
+  >
+  > 待完成 Release 发布（`sync_cpc.sh release`）、`cpc brief` 与永久回归测试 `cap test -m` 全绿并执行 `resolve` 结单后，我将第一时间同步归档 `SESSION.md` 与 Git 提交并向您汇报。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 11:39:39）[step:20349]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-strict-e0311-union-void)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
