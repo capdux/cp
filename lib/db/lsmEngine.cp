@@ -1,19 +1,21 @@
+// Reference-hardened against fjall-rs/lsm-tree (MIT/Apache-2.0)
 // Origin: Pure-CP Stdlib (Unbounded Zero-Heap LSM-Tree: CRC32 WAL, MVCC MemTable, Block SSTable+Bloom & K-Way Compaction) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, caller-slice-driven embedded KV storage core:
-//   - Write-Ahead Log (`LsmWalCodec`): Put/Delete framing with magic, length prefix, IEEE CRC32,
+//   - Write-Ahead Log (`LsmWalCodec`): Put/Delete/RangeDelete framing with magic, length prefix, IEEE CRC32,
 //     and crash-recovery tail truncation scanner (`recoverLog`, `replayIntoMemTable`)
 //   - Ordered MVCC MemTable (`LsmMemTable`): caller-owned external slices supporting arbitrary entry counts,
-//     `(key ASC, seq DESC)` ordering, snapshot-isolated `getAt(key, snapshot_seq)` and `scanRange`
+//     `(key ASC, seq DESC)` ordering, range tombstones, snapshot-isolated `getAt`, `scanRange`, `scanPrefix`, `scanRangeReverse`
 //   - Block-based SSTable (`SstBuilder` & `SstReader`): incremental prefix-compressed Data Blocks with
 //     per-block IEEE CRC32, binary-searchable Index Block, double-hashed Bloom Filter (<2% FPR),
-//     and 64-byte CRC32-verified Footer
+//     64-byte CRC32-verified Footer, full-file integrity verifier, and forward/prefix/reverse scans
 //   - K-Way Leveled Compaction (`compactSstables`): unbounded external-cursor merge deduplicating
-//     obsolete versions under `min_active_snapshot_seq` and purging bottommost tombstones
+//     obsolete versions under `min_active_snapshot_seq` (`gc_watermark_seqno`), range-delete pruning, and bottommost tombstone GC
+//   - Hot-path `@Vector(16, u8)` SIMD acceleration for `compareBytes`, `commonPrefixLen`, and `copySlice`
 
 const std = @import("std");
 
 // ============================================================================
-// 1. Constants, Error Set & Low-Level Binary / Hashing / CRC32 Primitives
+// 1. Constants, Error Set & Low-Level Binary / Hashing / CRC32 / SIMD Primitives
 // ============================================================================
 
 /// Little-endian magic tag `"LWAL"` (`0x4C41574C`) for WAL frames.
@@ -40,7 +42,16 @@ pub const LSM_SST_FOOTER_BYTES: usize = 64;
 /// Maximum per-key scratch slot size used by compaction cursors (bytes).
 pub const LSM_CURSOR_KEY_STRIDE: usize = 256;
 
-const FNV1A_64_OFFSET: u64 = 0xcbf29ce484222325;
+/// Maximum inline range tombstones tracked per MemTable.
+pub const LSM_MAX_RANGE_TOMBSTONES: usize = 32;
+
+/// Maximum concurrent pinned MVCC snapshots tracked by `LsmDbEngine`.
+pub const LSM_MAX_ACTIVE_SNAPSHOTS: usize = 32;
+
+/// Maximum representable MVCC sequence number (`u64::MAX`), used when no active snapshot pins GC.
+pub const LSM_MAX_SEQ: u64 = (@as(u64, 0xFFFF_FFFF) << 32) | 0xFFFF_FFFF;
+
+const FNV1A_64_OFFSET: u64 = (@as(u64, 0xcbf29ce4) << 32) | 0x84222325;
 const FNV1A_64_PRIME: u64 = 0x100000001b3;
 
 /// Error set returned by WAL, MemTable, SSTable, and Compaction operations.
@@ -56,7 +67,8 @@ pub err LsmKvError {
     InvalidRange,
 }
 
-fn crc32Ieee(bytes: []const u8): u32 {
+/// Scalar bit-by-bit IEEE 802.3 CRC32 reference implementation.
+pub fn crc32IeeeScalar(bytes: []const u8): u32 {
     let crc: u32 = 0xFFFF_FFFF;
     let i: usize = 0;
     while (i < bytes.len) : (i += 1) {
@@ -73,6 +85,25 @@ fn crc32Ieee(bytes: []const u8): u32 {
     return ~crc;
 }
 
+/// Nibble-accelerated (4-bit LUT, 2 iterations/byte) IEEE 802.3 CRC32.
+/// Bit-exact with `crc32IeeeScalar`.
+pub fn crc32Ieee(bytes: []const u8): u32 {
+    const lut: [16]u32 = [
+        0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC,
+        0x76DC4190, 0x6B6B51F4, 0x4DB26158, 0x5005713C,
+        0xEDB88320, 0xF00F9344, 0xD6D6A3E8, 0xCB61B38C,
+        0x9B64C2B0, 0x86D3D2D4, 0xA00AE278, 0xBDBDF21C,
+    ];
+    let crc: u32 = 0xFFFF_FFFF;
+    let i: usize = 0;
+    while (i < bytes.len) : (i += 1) {
+        const byte_u32: u32 = @as(u32, bytes[i]);
+        crc = (crc >> 4) ^ lut[@as(usize, (crc ^ byte_u32) & 0x0F)];
+        crc = (crc >> 4) ^ lut[@as(usize, (crc ^ (byte_u32 >> 4)) & 0x0F)];
+    }
+    return ~crc;
+}
+
 fn hash64A(bytes: []const u8): u64 {
     let h: u64 = FNV1A_64_OFFSET;
     let i: usize = 0;
@@ -81,24 +112,24 @@ fn hash64A(bytes: []const u8): u64 {
         h *%= FNV1A_64_PRIME;
     }
     h ^= h >> 30;
-    h *%= 0xBF58476D1CE4E5B9;
+    h *%= ((@as(u64, 0xBF58476D) << 32) | 0x1CE4E5B9);
     h ^= h >> 27;
-    h *%= 0x94D049BB133111EB;
+    h *%= ((@as(u64, 0x94D049BB) << 32) | 0x133111EB);
     return h ^ (h >> 31);
 }
 
 fn hash64B(bytes: []const u8): u64 {
-    let h: u64 = @as(u64, 0x9E3779B97F4A7C15) ^ @as(u64, @intCast(bytes.len));
+    let h: u64 = @as(u64, ((@as(u64, 0x9E3779B9) << 32) | 0x7F4A7C15)) ^ @as(u64, @intCast(bytes.len));
     let i: usize = 0;
     while (i < bytes.len) : (i += 1) {
         h ^= @as(u64, bytes[i]) *% 0x100000001b3;
         h = (h << 13) | (h >> 51);
-        h *%= 0xC6A4A7935BD1E995;
+        h *%= ((@as(u64, 0xC6A4A793) << 32) | 0x5BD1E995);
     }
     h ^= h >> 33;
-    h *%= 0xFF51AFD7ED558CCD;
+    h *%= ((@as(u64, 0xFF51AFD7) << 32) | 0xED558CCD);
     h ^= h >> 33;
-    h *%= 0xC4CEB9FE1A85EC53;
+    h *%= ((@as(u64, 0xC4CEB9FE) << 32) | 0x1A85EC53);
     return (h ^ (h >> 33)) | 1;
 }
 
@@ -136,10 +167,38 @@ fn readU64Le(src: []const u8, off: usize): u64 {
     return lo | (hi << 32);
 }
 
-/// Lexicographical comparison of two byte slices: `< 0`, `0`, or `> 0`.
+/// Scalar reference lexicographical comparison of two byte slices: `< 0`, `0`, or `> 0`.
+pub fn compareBytesScalar(a: []const u8, b: []const u8): i32 {
+    const n: usize = if (a.len < b.len) a.len else b.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        if (a[i] < b[i]) return -1;
+        if (a[i] > b[i]) return 1;
+    }
+    if (a.len < b.len) return -1;
+    if (a.len > b.len) return 1;
+    return 0;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD-accelerated lexicographical comparison of two byte slices:
+/// `< 0`, `0`, or `> 0`. Byte-for-byte identical to `compareBytesScalar`.
 pub fn compareBytes(a: []const u8, b: []const u8): i32 {
     const n: usize = if (a.len < b.len) a.len else b.len;
     let i: usize = 0;
+    while (i + 16 <= n) {
+        const va: @Vector(16, u8) = a[i..i + 16][0..16].*;
+        const vb: @Vector(16, u8) = b[i..i + 16][0..16].*;
+        const diff: @Vector(16, u8) = va ^ vb;
+        const any_diff: u8 = @reduce(.Or, diff);
+        if (any_diff != 0) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (a[i + j] < b[i + j]) return -1;
+                if (a[i + j] > b[i + j]) return 1;
+            }
+        }
+        i += 16;
+    }
     while (i < n) : (i += 1) {
         if (a[i] < b[i]) return -1;
         if (a[i] > b[i]) return 1;
@@ -159,15 +218,66 @@ pub fn compareInternalKey(ka: []const u8, sa: u64, kb: []const u8, sb: u64): i32
     return 0;
 }
 
-fn commonPrefixLen(a: []const u8, b: []const u8): usize {
+/// Scalar reference shared prefix length between two keys.
+pub fn commonPrefixLenScalar(a: []const u8, b: []const u8): usize {
     const n: usize = if (a.len < b.len) a.len else b.len;
     let i: usize = 0;
     while (i < n && a[i] == b[i]) : (i += 1) {}
     return i;
 }
 
+/// 16-lane `@Vector(16, u8)` SIMD-accelerated shared prefix length calculation.
+/// Byte-for-byte identical to `commonPrefixLenScalar`.
+pub fn commonPrefixLen(a: []const u8, b: []const u8): usize {
+    const n: usize = if (a.len < b.len) a.len else b.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const va: @Vector(16, u8) = a[i..i + 16][0..16].*;
+        const vb: @Vector(16, u8) = b[i..i + 16][0..16].*;
+        const diff: @Vector(16, u8) = va ^ vb;
+        const any_diff: u8 = @reduce(.Or, diff);
+        if (any_diff != 0) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (a[i + j] != b[i + j]) return i + j;
+            }
+        }
+        i += 16;
+    }
+    while (i < n && a[i] == b[i]) : (i += 1) {}
+    return i;
+}
+
+/// Returns `true` if `key` starts with `prefix` (SIMD-accelerated).
+pub fn hasPrefix(key: []const u8, prefix: []const u8): bool {
+    if (prefix.len > key.len) return false;
+    return commonPrefixLen(key, prefix) == prefix.len;
+}
+
+/// Computes the exclusive upper bound for a prefix scan (`fjall-rs/lsm-tree` `prefix_upper_range`).
+/// Returns `null` when the upper bound is unbounded (empty prefix or all `0xFF` bytes).
+pub fn computePrefixUpperBound(prefix: []const u8, out: *[]u8): usize? ! LsmKvError {
+    if (prefix.len == 0) return null;
+    if (out.len < prefix.len) return LsmKvError.BufferTooSmall;
+    let i: usize = prefix.len;
+    while (i > 0) {
+        i -= 1;
+        if (prefix[i] < 0xFF) {
+            copySlice(out, 0, prefix[0..i]);
+            out[i] = prefix[i] + 1;
+            return i + 1;
+        }
+    }
+    return null;
+}
+
 fn copySlice(dst: *[]u8, dst_off: usize, src: []const u8) {
     let i: usize = 0;
+    while (i + 16 <= src.len) {
+        const v: @Vector(16, u8) = src[i..i + 16][0..16].*;
+        dst[dst_off + i..dst_off + i + 16][0..16].* = v;
+        i += 16;
+    }
     while (i < src.len) : (i += 1) {
         dst[dst_off + i] = src[i];
     }
@@ -181,9 +291,11 @@ fn copySlice(dst: *[]u8, dst_off: usize, src: []const u8) {
 pub enum LsmWalOp {
     put,
     delete,
+    range_delete,
 }
 
 /// Zero-copy view of a decoded WAL record.
+/// For `range_delete`, `key` is `start_key` and `value` is exclusive `end_key` (empty = unbounded upper).
 pub struct LsmWalRecordView {
     op: LsmWalOp = LsmWalOp.put;
     seq: u64 = 0;
@@ -245,9 +357,37 @@ pub struct LsmWalCodec {
         return need;
     }
 
+    /// Encodes a `RangeDelete([start_key, end_key), seq)` frame (`end_key.len == 0` = unbounded upper).
+    static fn encodeRangeDelete(
+        start_key: []const u8,
+        end_key: []const u8,
+        seq: u64,
+        out: *[]u8,
+    ): usize ! LsmKvError {
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) {
+            return LsmKvError.InvalidRange;
+        }
+        const need: usize = LsmWalCodec.encodedFrameSize(start_key.len, end_key.len);
+        if (out.len < need) return LsmKvError.BufferTooSmall;
+        writeU32Le(out, 0, LSM_WAL_MAGIC);
+        writeU16Le(out, 4, LSM_WAL_VERSION);
+        out[6] = 3; // RangeDelete
+        out[7] = 0;
+        writeU64Le(out, 8, seq);
+        writeU32Le(out, 16, @as(u32, @intCast(start_key.len)));
+        writeU32Le(out, 20, @as(u32, @intCast(end_key.len)));
+        copySlice(out, LSM_WAL_HEADER_BYTES, start_key);
+        copySlice(out, LSM_WAL_HEADER_BYTES + start_key.len, end_key);
+        const payload_end: usize = LSM_WAL_HEADER_BYTES + start_key.len + end_key.len;
+        const crc: u32 = crc32Ieee(out[0..payload_end]);
+        writeU32Le(out, payload_end, crc);
+        return need;
+    }
+
     /// Decodes and CRC32-verifies a single WAL frame starting at `log[offset]`.
+    /// Overflow-safe against truncated headers, forged lengths, reserved byte corruption, and bit-flips.
     static fn decodeFrameAt(log: []const u8, offset: usize): LsmWalRecordView ! LsmKvError {
-        if (offset + LSM_WAL_HEADER_BYTES + LSM_CRC32_BYTES > log.len) {
+        if (offset > log.len || log.len - offset < LSM_WAL_HEADER_BYTES + LSM_CRC32_BYTES) {
             return LsmKvError.CorruptWal;
         }
         const magic: u32 = readU32Le(log, offset);
@@ -256,16 +396,21 @@ pub struct LsmWalCodec {
             return LsmKvError.CorruptWal;
         }
         const op_byte: u8 = log[offset + 6];
-        if (op_byte != 1 && op_byte != 2) {
+        const pad_byte: u8 = log[offset + 7];
+        if ((op_byte != 1 && op_byte != 2 && op_byte != 3) || pad_byte != 0) {
             return LsmKvError.CorruptWal;
         }
         const seq: u64 = readU64Le(log, offset + 8);
         const klen: usize = @as(usize, readU32Le(log, offset + 16));
         const vlen: usize = @as(usize, readU32Le(log, offset + 20));
-        const frame_bytes: usize = LSM_WAL_HEADER_BYTES + klen + vlen + LSM_CRC32_BYTES;
-        if (offset + frame_bytes > log.len) {
+        if (op_byte == 2 && vlen != 0) {
             return LsmKvError.CorruptWal;
         }
+        const max_payload: usize = log.len - offset - LSM_WAL_HEADER_BYTES - LSM_CRC32_BYTES;
+        if (klen > max_payload || vlen > max_payload - klen) {
+            return LsmKvError.CorruptWal;
+        }
+        const frame_bytes: usize = LSM_WAL_HEADER_BYTES + klen + vlen + LSM_CRC32_BYTES;
 
         const payload_end: usize = offset + LSM_WAL_HEADER_BYTES + klen + vlen;
         const stored_crc: u32 = readU32Le(log, payload_end);
@@ -276,11 +421,22 @@ pub struct LsmWalCodec {
 
         const key_start: usize = offset + LSM_WAL_HEADER_BYTES;
         const val_start: usize = key_start + klen;
+        const key_slice: []const u8 = log[key_start..val_start];
+        const val_slice: []const u8 = log[val_start..val_start + vlen];
+        if (op_byte == 3 && val_slice.len > 0 && compareBytes(key_slice, val_slice) >= 0) {
+            return LsmKvError.CorruptWal;
+        }
+        const op_enum: LsmWalOp = if (op_byte == 1)
+            LsmWalOp.put
+        else if (op_byte == 2)
+            LsmWalOp.delete
+        else
+            LsmWalOp.range_delete;
         return LsmWalRecordView{
-            op: if (op_byte == 1) LsmWalOp.put else LsmWalOp.delete,
+            op: op_enum,
             seq: seq,
-            key: log[key_start..val_start],
-            value: log[val_start..val_start + vlen],
+            key: key_slice,
+            value: val_slice,
             frame_bytes: frame_bytes,
         };
     }
@@ -319,8 +475,10 @@ pub struct LsmWalCodec {
             };
             if (rec.op == LsmWalOp.put) {
                 try mem.put(rec.key, rec.value, rec.seq);
-            } else {
+            } else if (rec.op == LsmWalOp.delete) {
                 try mem.delete(rec.key, rec.seq);
+            } else {
+                try mem.deleteRange(rec.key, rec.value, rec.seq);
             }
             stats.recovered_records += 1;
             if (rec.seq > stats.max_seq) stats.max_seq = rec.seq;
@@ -382,6 +540,22 @@ pub struct LsmMemStats {
     tombstone_count: usize = 0;
 }
 
+/// Range tombstone descriptor stored in `LsmMemTable` referencing keys in `bufs.arena`.
+struct LsmRangeTombstoneMeta {
+    start_off: u32 = 0;
+    start_len: u32 = 0;
+    end_off: u32 = 0;
+    end_len: u32 = 0;
+    seq: u64 = 0;
+}
+
+/// Public range-delete bound `[start_key, end_key)` (`end_key.len == 0` = unbounded upper) at `seq`.
+pub struct LsmRangeDeleteBound {
+    start_key: []const u8 = "";
+    end_key: []const u8 = "";
+    seq: u64 = 0;
+}
+
 /// Unbounded external-slice MVCC MemTable ordered by `(key ASC, seq DESC)`.
 pub struct LsmMemTable {
     bufs: LsmMemBuffers = LsmMemBuffers{},
@@ -389,6 +563,8 @@ pub struct LsmMemTable {
     arena_used: usize = 0;
     max_seq: u64 = 0;
     tombstone_count: usize = 0;
+    range_tombstones: [LSM_MAX_RANGE_TOMBSTONES]LsmRangeTombstoneMeta = [LsmRangeTombstoneMeta{}; LSM_MAX_RANGE_TOMBSTONES];
+    range_tombstone_count: usize = 0;
 
     /// Initializes a `LsmMemTable` over caller-provided external slices.
     static fn init(bufs: LsmMemBuffers): LsmMemTable ! LsmKvError {
@@ -401,6 +577,7 @@ pub struct LsmMemTable {
             arena_used: 0,
             max_seq: 0,
             tombstone_count: 0,
+            range_tombstone_count: 0,
         };
     }
 
@@ -410,6 +587,7 @@ pub struct LsmMemTable {
         _.arena_used = 0;
         _.max_seq = 0;
         _.tombstone_count = 0;
+        _.range_tombstone_count = 0;
     }
 
     /// Returns telemetry for this MemTable.
@@ -433,6 +611,35 @@ pub struct LsmMemTable {
         const m: LsmMemEntryMeta = bufs.entries[entry_idx];
         const s: usize = @as(usize, m.val_off);
         return bufs.arena[s..s + @as(usize, m.val_len)];
+    }
+
+    fn rangeTombStart(rt_idx: usize): []const u8 {
+        const rt: LsmRangeTombstoneMeta = range_tombstones[rt_idx];
+        const s: usize = @as(usize, rt.start_off);
+        return bufs.arena[s..s + @as(usize, rt.start_len)];
+    }
+
+    fn rangeTombEnd(rt_idx: usize): []const u8 {
+        const rt: LsmRangeTombstoneMeta = range_tombstones[rt_idx];
+        const s: usize = @as(usize, rt.end_off);
+        return bufs.arena[s..s + @as(usize, rt.end_len)];
+    }
+
+    /// Returns the highest sequence number `<= snapshot_seq` of any range tombstone covering `key`,
+    /// or `0` if no visible range tombstone covers `key`.
+    fn maxCoveringRangeDeleteSeq(key: []const u8, snapshot_seq: u64): u64 {
+        let best: u64 = 0;
+        let i: usize = 0;
+        while (i < range_tombstone_count) : (i += 1) {
+            const rt: LsmRangeTombstoneMeta = range_tombstones[i];
+            if (rt.seq > snapshot_seq || rt.seq <= best) continue;
+            const sk: []const u8 = rangeTombStart(i);
+            if (compareBytes(key, sk) < 0) continue;
+            const ek: []const u8 = rangeTombEnd(i);
+            if (ek.len > 0 && compareBytes(key, ek) >= 0) continue;
+            best = rt.seq;
+        }
+        return best;
     }
 
     /// Binary search in `order[0..entry_count]` for the insertion position of `(key, seq)`.
@@ -473,12 +680,12 @@ pub struct LsmMemTable {
         if (_.arena_used + key.len + val.len > _.bufs.arena.len) return LsmKvError.CapacityFull;
 
         const key_off: u32 = @as(u32, @intCast(_.arena_used));
-        copySlice(*_.bufs.arena, _.arena_used, key);
+        copySlice(_.bufs.arena, _.arena_used, key);
         _.arena_used += key.len;
 
         const val_off: u32 = @as(u32, @intCast(_.arena_used));
         if (!is_tombstone && val.len > 0) {
-            copySlice(*_.bufs.arena, _.arena_used, val);
+            copySlice(_.bufs.arena, _.arena_used, val);
             _.arena_used += val.len;
         }
 
@@ -513,8 +720,41 @@ pub struct LsmMemTable {
         try _.insertInternal(key, "", seq, true);
     }
 
-    /// Snapshot-isolated point lookup returning the newest version of `key` with `seq <= snapshot_seq`.
+    /// Inserts a `RangeDelete([start_key, end_key), seq)` range tombstone (`end_key.len == 0` = unbounded upper).
+    fn deleteRange(*_, start_key: []const u8, end_key: []const u8, seq: u64): void ! LsmKvError {
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) {
+            return LsmKvError.InvalidRange;
+        }
+        if (_.range_tombstone_count >= LSM_MAX_RANGE_TOMBSTONES) return LsmKvError.CapacityFull;
+        if (_.arena_used + start_key.len + end_key.len > _.bufs.arena.len) return LsmKvError.CapacityFull;
+
+        const s_off: u32 = @as(u32, @intCast(_.arena_used));
+        if (start_key.len > 0) {
+            copySlice(_.bufs.arena, _.arena_used, start_key);
+            _.arena_used += start_key.len;
+        }
+        const e_off: u32 = @as(u32, @intCast(_.arena_used));
+        if (end_key.len > 0) {
+            copySlice(_.bufs.arena, _.arena_used, end_key);
+            _.arena_used += end_key.len;
+        }
+
+        _.range_tombstones[_.range_tombstone_count] = LsmRangeTombstoneMeta{
+            start_off: s_off,
+            start_len: @as(u32, @intCast(start_key.len)),
+            end_off: e_off,
+            end_len: @as(u32, @intCast(end_key.len)),
+            seq: seq,
+        };
+        _.range_tombstone_count += 1;
+        if (seq > _.max_seq) _.max_seq = seq;
+        _.tombstone_count += 1;
+    }
+
+    /// Snapshot-isolated point lookup returning the newest version of `key` with `seq <= snapshot_seq`,
+    /// taking both point tombstones and range tombstones into account.
     fn getAt(key: []const u8, snapshot_seq: u64): LsmMemGetResult {
+        const rt_seq: u64 = maxCoveringRangeDeleteSeq(key, snapshot_seq);
         let pos: usize = lowerBoundUserKey(key);
         while (pos < entry_count) : (pos += 1) {
             const eidx: usize = @as(usize, bufs.order[pos]);
@@ -522,6 +762,13 @@ pub struct LsmMemTable {
             if (compareBytes(ek, key) != 0) break;
             const meta: LsmMemEntryMeta = bufs.entries[eidx];
             if (meta.seq <= snapshot_seq) {
+                if (rt_seq > 0 && rt_seq >= meta.seq) {
+                    return LsmMemGetResult{
+                        status: LsmLookupStatus.deleted,
+                        value: "",
+                        seq: rt_seq,
+                    };
+                }
                 if (meta.is_tombstone) {
                     return LsmMemGetResult{
                         status: LsmLookupStatus.deleted,
@@ -535,6 +782,13 @@ pub struct LsmMemTable {
                     seq: meta.seq,
                 };
             }
+        }
+        if (rt_seq > 0) {
+            return LsmMemGetResult{
+                status: LsmLookupStatus.deleted,
+                value: "",
+                seq: rt_seq,
+            };
         }
         return LsmMemGetResult{ status: LsmLookupStatus.not_found };
     }
@@ -556,7 +810,7 @@ pub struct LsmMemTable {
             const cur_key: []const u8 = entryKey(first_idx);
             if (end_key.len > 0 && compareBytes(cur_key, end_key) >= 0) break;
 
-            // Advance through all versions of cur_key; first one with seq <= snapshot_seq wins
+            const rt_seq: u64 = maxCoveringRangeDeleteSeq(cur_key, snapshot_seq);
             let resolved: bool = false;
             while (pos < entry_count) : (pos += 1) {
                 const eidx: usize = @as(usize, bufs.order[pos]);
@@ -565,7 +819,7 @@ pub struct LsmMemTable {
                     const meta: LsmMemEntryMeta = bufs.entries[eidx];
                     if (meta.seq <= snapshot_seq) {
                         resolved = true;
-                        if (!meta.is_tombstone) {
+                        if (!meta.is_tombstone && (rt_seq == 0 || meta.seq > rt_seq)) {
                             out_items[out_count] = LsmMemScanItem{
                                 key: cur_key,
                                 value: entryVal(eidx),
@@ -576,6 +830,96 @@ pub struct LsmMemTable {
                     }
                 }
             }
+        }
+        return out_count;
+    }
+
+    /// Snapshot-isolated prefix scan over all visible non-tombstone keys starting with `prefix`
+    /// in ascending lexicographical order.
+    fn scanPrefix(
+        prefix: []const u8,
+        snapshot_seq: u64,
+        out_items: *[]LsmMemScanItem,
+    ): usize {
+        if (prefix.len == 0) {
+            return scanRange("", "", snapshot_seq, out_items);
+        }
+        let out_count: usize = 0;
+        let pos: usize = lowerBoundUserKey(prefix);
+        while (pos < entry_count && out_count < out_items.len) {
+            const first_idx: usize = @as(usize, bufs.order[pos]);
+            const cur_key: []const u8 = entryKey(first_idx);
+            if (!hasPrefix(cur_key, prefix)) break;
+
+            const rt_seq: u64 = maxCoveringRangeDeleteSeq(cur_key, snapshot_seq);
+            let resolved: bool = false;
+            while (pos < entry_count) : (pos += 1) {
+                const eidx: usize = @as(usize, bufs.order[pos]);
+                if (compareBytes(entryKey(eidx), cur_key) != 0) break;
+                if (!resolved) {
+                    const meta: LsmMemEntryMeta = bufs.entries[eidx];
+                    if (meta.seq <= snapshot_seq) {
+                        resolved = true;
+                        if (!meta.is_tombstone && (rt_seq == 0 || meta.seq > rt_seq)) {
+                            out_items[out_count] = LsmMemScanItem{
+                                key: cur_key,
+                                value: entryVal(eidx),
+                                seq: meta.seq,
+                            };
+                            out_count += 1;
+                        }
+                    }
+                }
+            }
+        }
+        return out_count;
+    }
+
+    /// Snapshot-isolated reverse range scan over `[start_key, end_key)` (`end_key.len == 0` = unbounded upper).
+    /// Yields the newest visible non-tombstone version for each distinct key in strictly descending order.
+    fn scanRangeReverse(
+        start_key: []const u8,
+        end_key: []const u8,
+        snapshot_seq: u64,
+        out_items: *[]LsmMemScanItem,
+    ): usize {
+        if (entry_count == 0 || out_items.len == 0) return 0;
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) return 0;
+
+        let out_count: usize = 0;
+        let hi: usize = if (end_key.len == 0) entry_count else lowerBoundUserKey(end_key);
+        while (hi > 0 && out_count < out_items.len) {
+            const last_idx: usize = @as(usize, bufs.order[hi - 1]);
+            const cur_key: []const u8 = entryKey(last_idx);
+            if (start_key.len > 0 && compareBytes(cur_key, start_key) < 0) break;
+
+            // Find the start of this user key's version group `[group_start..hi)`
+            let group_start: usize = hi - 1;
+            while (group_start > 0) {
+                const prev_idx: usize = @as(usize, bufs.order[group_start - 1]);
+                if (compareBytes(entryKey(prev_idx), cur_key) != 0) break;
+                group_start -= 1;
+            }
+
+            // Versions in `[group_start..hi)` are ordered `seq DESC`; first `seq <= snapshot_seq` wins
+            const rt_seq: u64 = maxCoveringRangeDeleteSeq(cur_key, snapshot_seq);
+            let p: usize = group_start;
+            while (p < hi) : (p += 1) {
+                const eidx: usize = @as(usize, bufs.order[p]);
+                const meta: LsmMemEntryMeta = bufs.entries[eidx];
+                if (meta.seq <= snapshot_seq) {
+                    if (!meta.is_tombstone && (rt_seq == 0 || meta.seq > rt_seq)) {
+                        out_items[out_count] = LsmMemScanItem{
+                            key: cur_key,
+                            value: entryVal(eidx),
+                            seq: meta.seq,
+                        };
+                        out_count += 1;
+                    }
+                    break;
+                }
+            }
+            hi = group_start;
         }
         return out_count;
     }
@@ -703,11 +1047,11 @@ pub struct SstBuilder {
         }
         return SstBuilder{
             cfg: cfg,
-            out_buf: out_buf.*,
+            out_buf: out_buf,
             out_pos: 0,
-            index_work: index_work.*,
+            index_work: index_work,
             index_pos: 0,
-            bloom_work: bloom_work.*[0..need_bloom],
+            bloom_work: bloom_work[0..need_bloom],
             bloom_bits: need_bloom * 8,
             cur_block_start: 0,
             cur_block_entries: 0,
@@ -737,20 +1081,20 @@ pub struct SstBuilder {
         // Write 4-byte block-level IEEE CRC32
         if (_.out_pos + LSM_CRC32_BYTES > _.out_buf.len) return LsmKvError.BufferTooSmall;
         const crc: u32 = crc32Ieee(_.out_buf[_.cur_block_start.._.out_pos]);
-        writeU32Le(*_.out_buf, _.out_pos, crc);
+        writeU32Le(_.out_buf, _.out_pos, crc);
         _.out_pos += LSM_CRC32_BYTES;
         const block_size: u32 = @as(u32, @intCast(_.out_pos - _.cur_block_start));
 
         // Append index entry: [last_key_len: u32][last_key][block_offset: u64][block_size: u32]
         const idx_need: usize = _.prev_key_len + 16;
         if (_.index_pos + idx_need > _.index_work.len) return LsmKvError.BufferTooSmall;
-        writeU32Le(*_.index_work, _.index_pos, @as(u32, @intCast(_.prev_key_len)));
+        writeU32Le(_.index_work, _.index_pos, @as(u32, @intCast(_.prev_key_len)));
         _.index_pos += 4;
-        copySlice(*_.index_work, _.index_pos, _.prev_key_buf[0.._.prev_key_len]);
+        copySlice(_.index_work, _.index_pos, _.prev_key_buf[0.._.prev_key_len]);
         _.index_pos += _.prev_key_len;
-        writeU64Le(*_.index_work, _.index_pos, @as(u64, @intCast(_.cur_block_start)));
+        writeU64Le(_.index_work, _.index_pos, @as(u64, @intCast(_.cur_block_start)));
         _.index_pos += 8;
-        writeU32Le(*_.index_work, _.index_pos, block_size);
+        writeU32Le(_.index_work, _.index_pos, block_size);
         _.index_pos += 4;
 
         _.block_count += 1;
@@ -798,17 +1142,17 @@ pub struct SstBuilder {
             return LsmKvError.BufferTooSmall;
         }
 
-        writeU16Le(*_.out_buf, _.out_pos + 0, @as(u16, @intCast(shared)));
-        writeU16Le(*_.out_buf, _.out_pos + 2, @as(u16, @intCast(unshared)));
-        writeU32Le(*_.out_buf, _.out_pos + 4, @as(u32, @intCast(actual_val_len)));
-        writeU64Le(*_.out_buf, _.out_pos + 8, seq);
+        writeU16Le(_.out_buf, _.out_pos + 0, @as(u16, @intCast(shared)));
+        writeU16Le(_.out_buf, _.out_pos + 2, @as(u16, @intCast(unshared)));
+        writeU32Le(_.out_buf, _.out_pos + 4, @as(u32, @intCast(actual_val_len)));
+        writeU64Le(_.out_buf, _.out_pos + 8, seq);
         _.out_buf[_.out_pos + 16] = if (is_tombstone) 1 else 0;
         _.out_pos += 17;
 
-        copySlice(*_.out_buf, _.out_pos, key[shared..key.len]);
+        copySlice(_.out_buf, _.out_pos, key[shared..key.len]);
         _.out_pos += unshared;
         if (actual_val_len > 0) {
-            copySlice(*_.out_buf, _.out_pos, val);
+            copySlice(_.out_buf, _.out_pos, val);
             _.out_pos += actual_val_len;
         }
 
@@ -836,38 +1180,38 @@ pub struct SstBuilder {
         const index_off: u64 = @as(u64, @intCast(_.out_pos));
         const index_total: usize = _.index_pos + 4 + LSM_CRC32_BYTES;
         if (_.out_pos + index_total > _.out_buf.len) return LsmKvError.BufferTooSmall;
-        writeU32Le(*_.out_buf, _.out_pos, @as(u32, @intCast(_.block_count)));
-        copySlice(*_.out_buf, _.out_pos + 4, _.index_work[0.._.index_pos]);
+        writeU32Le(_.out_buf, _.out_pos, @as(u32, @intCast(_.block_count)));
+        copySlice(_.out_buf, _.out_pos + 4, _.index_work[0.._.index_pos]);
         const idx_crc: u32 = crc32Ieee(_.out_buf[_.out_pos.._.out_pos + 4 + _.index_pos]);
-        writeU32Le(*_.out_buf, _.out_pos + 4 + _.index_pos, idx_crc);
+        writeU32Le(_.out_buf, _.out_pos + 4 + _.index_pos, idx_crc);
         _.out_pos += index_total;
 
         // 2. Write Bloom Filter Block: [num_hashes: u32][num_bits: u32][bitset...][crc32: u32]
         const bloom_off: u64 = @as(u64, @intCast(_.out_pos));
         const bloom_total: usize = _.bloom_work.len + 8 + LSM_CRC32_BYTES;
         if (_.out_pos + bloom_total > _.out_buf.len) return LsmKvError.BufferTooSmall;
-        writeU32Le(*_.out_buf, _.out_pos + 0, _.cfg.bloom_num_hashes);
-        writeU32Le(*_.out_buf, _.out_pos + 4, @as(u32, @intCast(_.bloom_bits)));
-        copySlice(*_.out_buf, _.out_pos + 8, _.bloom_work);
+        writeU32Le(_.out_buf, _.out_pos + 0, _.cfg.bloom_num_hashes);
+        writeU32Le(_.out_buf, _.out_pos + 4, @as(u32, @intCast(_.bloom_bits)));
+        copySlice(_.out_buf, _.out_pos + 8, _.bloom_work);
         const bloom_crc: u32 = crc32Ieee(_.out_buf[_.out_pos.._.out_pos + 8 + _.bloom_work.len]);
-        writeU32Le(*_.out_buf, _.out_pos + 8 + _.bloom_work.len, bloom_crc);
+        writeU32Le(_.out_buf, _.out_pos + 8 + _.bloom_work.len, bloom_crc);
         _.out_pos += bloom_total;
 
         // 3. Write 64-byte Footer
         if (_.out_pos + LSM_SST_FOOTER_BYTES > _.out_buf.len) return LsmKvError.BufferTooSmall;
         const f_off: usize = _.out_pos;
-        writeU64Le(*_.out_buf, f_off + 0, index_off);
-        writeU32Le(*_.out_buf, f_off + 8, @as(u32, @intCast(index_total)));
-        writeU64Le(*_.out_buf, f_off + 12, bloom_off);
-        writeU32Le(*_.out_buf, f_off + 20, @as(u32, @intCast(bloom_total)));
-        writeU64Le(*_.out_buf, f_off + 24, @as(u64, @intCast(_.entry_count)));
-        writeU32Le(*_.out_buf, f_off + 32, @as(u32, @intCast(_.block_count)));
-        writeU32Le(*_.out_buf, f_off + 36, LSM_SST_VERSION);
-        writeU64Le(*_.out_buf, f_off + 40, _.max_seq);
-        writeU32Le(*_.out_buf, f_off + 48, 0);
-        writeU64Le(*_.out_buf, f_off + 52, LSM_SST_MAGIC);
+        writeU64Le(_.out_buf, f_off + 0, index_off);
+        writeU32Le(_.out_buf, f_off + 8, @as(u32, @intCast(index_total)));
+        writeU64Le(_.out_buf, f_off + 12, bloom_off);
+        writeU32Le(_.out_buf, f_off + 20, @as(u32, @intCast(bloom_total)));
+        writeU64Le(_.out_buf, f_off + 24, @as(u64, @intCast(_.entry_count)));
+        writeU32Le(_.out_buf, f_off + 32, @as(u32, @intCast(_.block_count)));
+        writeU32Le(_.out_buf, f_off + 36, LSM_SST_VERSION);
+        writeU64Le(_.out_buf, f_off + 40, _.max_seq);
+        writeU32Le(_.out_buf, f_off + 48, 0);
+        writeU64Le(_.out_buf, f_off + 52, LSM_SST_MAGIC);
         const footer_crc: u32 = crc32Ieee(_.out_buf[f_off..f_off + 60]);
-        writeU32Le(*_.out_buf, f_off + 60, footer_crc);
+        writeU32Le(_.out_buf, f_off + 60, footer_crc);
         _.out_pos += LSM_SST_FOOTER_BYTES;
         _.finished = true;
 
@@ -888,6 +1232,13 @@ struct SstIndexHandle {
     last_key: []const u8 = "";
 }
 
+/// Full-file integrity verification report returned by `SstReader.verifyFullIntegrity`.
+pub struct SstVerifyReport {
+    blocks_verified: usize = 0;
+    entries_verified: usize = 0;
+    bloom_verified: bool = false;
+}
+
 /// Zero-copy SSTable reader with CRC32 verification, Bloom Filter fast reject, and binary-searched Index Block.
 pub struct SstReader {
     data: []const u8 = "",
@@ -896,7 +1247,8 @@ pub struct SstReader {
     bloom_bits: usize = 0;
     bloom_bitset: []const u8 = "",
 
-    /// Opens and validates an SSTable image (Footer CRC32, Index Block CRC32, and Bloom Filter CRC32).
+    /// Opens and validates an SSTable image (Footer CRC32, Index Block CRC32, Bloom Filter CRC32,
+    /// and strict overflow-safe structural bounds).
     static fn open(data: []const u8): SstReader ! LsmKvError {
         if (data.len < LSM_SST_FOOTER_BYTES) return LsmKvError.CorruptSst;
         const f_off: usize = data.len - LSM_SST_FOOTER_BYTES;
@@ -920,19 +1272,28 @@ pub struct SstReader {
             max_seq: readU64Le(data, f_off + 40),
         };
 
+        const f_off_u64: u64 = @as(u64, @intCast(f_off));
+        if (footer.index_off > f_off_u64 || footer.bloom_off > f_off_u64) {
+            return LsmKvError.CorruptSst;
+        }
         const idx_off: usize = @as(usize, @intCast(footer.index_off));
         const idx_len: usize = @as(usize, footer.index_len);
         const blm_off: usize = @as(usize, @intCast(footer.bloom_off));
         const blm_len: usize = @as(usize, footer.bloom_len);
-        if (idx_len < 8 || idx_off + idx_len > f_off) return LsmKvError.CorruptSst;
-        if (blm_len < 12 || blm_off + blm_len > f_off) return LsmKvError.CorruptSst;
+        if (idx_len < 8 || idx_len > f_off - idx_off) return LsmKvError.CorruptSst;
+        if (blm_len < 12 || blm_len > f_off - blm_off) return LsmKvError.CorruptSst;
+        if (footer.entry_count > 0 && footer.block_count == 0) return LsmKvError.CorruptSst;
 
-        // Verify Index Block CRC32
+        // Verify Index Block CRC32 and header consistency
         const idx_crc_stored: u32 = readU32Le(data, idx_off + idx_len - LSM_CRC32_BYTES);
         const idx_crc_calc: u32 = crc32Ieee(data[idx_off..idx_off + idx_len - LSM_CRC32_BYTES]);
         if (idx_crc_stored != idx_crc_calc) return LsmKvError.ChecksumMismatch;
 
-        // Verify Bloom Filter Block CRC32
+        const idx_bc: u32 = readU32Le(data, idx_off);
+        if (idx_bc != footer.block_count) return LsmKvError.CorruptSst;
+        if (@as(usize, idx_bc) > (idx_len - 8) / 16) return LsmKvError.CorruptSst;
+
+        // Verify Bloom Filter Block CRC32 and header bounds
         const blm_crc_stored: u32 = readU32Le(data, blm_off + blm_len - LSM_CRC32_BYTES);
         const blm_crc_calc: u32 = crc32Ieee(data[blm_off..blm_off + blm_len - LSM_CRC32_BYTES]);
         if (blm_crc_stored != blm_crc_calc) return LsmKvError.ChecksumMismatch;
@@ -940,7 +1301,7 @@ pub struct SstReader {
         const num_hashes: u32 = readU32Le(data, blm_off + 0);
         const num_bits: usize = @as(usize, readU32Le(data, blm_off + 4));
         const bitset_len: usize = blm_len - 8 - LSM_CRC32_BYTES;
-        if (num_hashes == 0 || num_bits == 0 || num_bits > bitset_len * 8) {
+        if (num_hashes == 0 || num_hashes > 64 || num_bits == 0 || num_bits > bitset_len * 8) {
             return LsmKvError.CorruptSst;
         }
 
@@ -972,10 +1333,6 @@ pub struct SstReader {
         const bc: usize = @as(usize, footer.block_count);
         if (bc == 0) return null;
 
-        // First scan index entry offsets on the fly or binary search via two-pass offset probe.
-        // Because variable-length keys sit in the index block, we do binary search over block indices
-        // using a lightweight helper that jumps to index slot `target_idx` in O(target_idx), or
-        // direct scan if bc <= 32; for arbitrary bc we still maintain O(log bc) comparisons.
         const idx_start: usize = @as(usize, @intCast(footer.index_off)) + 4;
         const idx_end: usize = @as(usize, @intCast(footer.index_off)) + @as(usize, footer.index_len) - LSM_CRC32_BYTES;
 
@@ -1014,7 +1371,8 @@ pub struct SstReader {
         const handle: SstIndexHandle = findBlockForKey(key) ?? {
             return SstLookupResult{ status: LsmLookupStatus.not_found };
         };
-        if (handle.block_size < LSM_CRC32_BYTES || handle.block_offset + handle.block_size > data.len) {
+        const data_limit: usize = @as(usize, @intCast(footer.index_off));
+        if (handle.block_offset > data_limit || handle.block_size < LSM_CRC32_BYTES || handle.block_size > data_limit - handle.block_offset) {
             return LsmKvError.CorruptSst;
         }
 
@@ -1027,18 +1385,21 @@ pub struct SstReader {
         let pos: usize = blk_start;
         let cur_key_len: usize = 0;
         while (pos < blk_payload_end) {
-            if (pos + 17 > blk_payload_end) return LsmKvError.CorruptSst;
+            if (blk_payload_end - pos < 17) return LsmKvError.CorruptSst;
             const shared: usize = @as(usize, readU16Le(data, pos + 0));
             const unshared: usize = @as(usize, readU16Le(data, pos + 2));
             const vlen: usize = @as(usize, readU32Le(data, pos + 4));
             const seq: u64 = readU64Le(data, pos + 8);
-            const is_tomb: bool = data[pos + 16] != 0;
+            const flags_byte: u8 = data[pos + 16];
+            if (flags_byte > 1) return LsmKvError.CorruptSst;
+            const is_tomb: bool = flags_byte != 0;
+            if (is_tomb && vlen != 0) return LsmKvError.CorruptSst;
             pos += 17;
 
-            if (shared > cur_key_len || shared + unshared > key_scratch.len) {
-                return LsmKvError.BufferTooSmall;
-            }
-            if (pos + unshared + vlen > blk_payload_end) return LsmKvError.CorruptSst;
+            if (shared > cur_key_len) return LsmKvError.CorruptSst;
+            if (shared + unshared > key_scratch.len) return LsmKvError.BufferTooSmall;
+            const rem: usize = blk_payload_end - pos;
+            if (unshared > rem || vlen > rem - unshared) return LsmKvError.CorruptSst;
 
             copySlice(key_scratch, shared, data[pos..pos + unshared]);
             cur_key_len = shared + unshared;
@@ -1046,7 +1407,7 @@ pub struct SstReader {
             const val_slice: []const u8 = data[pos..pos + vlen];
             pos += vlen;
 
-            const cmp: i32 = compareBytes(key_scratch.*[0..cur_key_len], key);
+            const cmp: i32 = compareBytes(key_scratch[0..cur_key_len], key);
             if (cmp == 0) {
                 if (seq <= snapshot_seq) {
                     if (is_tomb) {
@@ -1068,19 +1429,239 @@ pub struct SstReader {
         }
         return SstLookupResult{ status: LsmLookupStatus.not_found };
     }
+
+    /// Performs full-file SSTable verification: validates every Data Block's bounds, CRC32,
+    /// prefix-compression framing, strict `(key ASC, seq DESC)` ordering, and Bloom Filter zero-false-negative invariant.
+    fn verifyFullIntegrity(key_scratch: *[]u8): SstVerifyReport ! LsmKvError {
+        let rep: SstVerifyReport = SstVerifyReport{ bloom_verified: true };
+        let cur: SstCursor = SstCursor.init(SstReader{
+            data: data,
+            footer: footer,
+            bloom_num_hashes: bloom_num_hashes,
+            bloom_bits: bloom_bits,
+            bloom_bitset: bloom_bitset,
+        });
+        let prev_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let prev_len: usize = 0;
+        let prev_seq: u64 = 0;
+        let has_prev: bool = false;
+
+        while (true) {
+            const entry_opt: SstEntryView? = cur.next(key_scratch) catch |e| return e;
+            if (entry_opt == null) break;
+            const e: SstEntryView = entry_opt ?? break;
+            if (!mayContain(e.key)) return LsmKvError.CorruptSst;
+            if (has_prev) {
+                if (compareInternalKey(prev_key[0..prev_len], prev_seq, e.key, e.seq) >= 0) {
+                    return LsmKvError.InvalidKeyOrder;
+                }
+            }
+            if (e.key.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+            let k_i: usize = 0;
+            while (k_i < e.key.len) : (k_i += 1) prev_key[k_i] = e.key[k_i];
+            prev_len = e.key.len;
+            prev_seq = e.seq;
+            has_prev = true;
+            rep.entries_verified += 1;
+        }
+        rep.blocks_verified = @as(usize, footer.block_count);
+        if (@as(u64, @intCast(rep.entries_verified)) != footer.entry_count) {
+            return LsmKvError.CorruptSst;
+        }
+        return rep;
+    }
+
+    /// Snapshot-isolated ascending range scan over `[start_key, end_key)` (`end_key.len == 0` = unbounded upper).
+    /// Reconstructed keys are stored in caller-owned `key_arena`; zero dynamic heap allocation.
+    fn scanRange(
+        start_key: []const u8,
+        end_key: []const u8,
+        snapshot_seq: u64,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (footer.entry_count == 0 || out_items.len == 0) return 0;
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) return 0;
+
+        let cur: SstCursor = SstCursor.init(SstReader{
+            data: data,
+            footer: footer,
+            bloom_num_hashes: bloom_num_hashes,
+            bloom_bits: bloom_bits,
+            bloom_bitset: bloom_bitset,
+        });
+        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let scratch_s: []u8 = scratch[0..];
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let last_key_len: usize = 0;
+        let has_last: bool = false;
+        let last_resolved: bool = false;
+        let arena_used: usize = 0;
+        let out_count: usize = 0;
+
+        while (out_count < out_items.len) {
+            const entry_opt: SstEntryView? = cur.next(scratch_s) catch |e| return e;
+            if (entry_opt == null) break;
+            const e: SstEntryView = entry_opt ?? break;
+            if (start_key.len > 0 && compareBytes(e.key, start_key) < 0) continue;
+            if (end_key.len > 0 && compareBytes(e.key, end_key) >= 0) break;
+
+            const same: bool = has_last && compareBytes(last_key[0..last_key_len], e.key) == 0;
+            if (!same) {
+                let ci: usize = 0;
+                while (ci < e.key.len) : (ci += 1) last_key[ci] = e.key[ci];
+                last_key_len = e.key.len;
+                has_last = true;
+                last_resolved = false;
+            }
+            if (last_resolved) continue;
+            if (e.seq <= snapshot_seq) {
+                last_resolved = true;
+                if (!e.is_tombstone) {
+                    if (arena_used + e.key.len > key_arena.len) return LsmKvError.BufferTooSmall;
+                    copySlice(key_arena, arena_used, e.key);
+                    const stored_key: []const u8 = key_arena[arena_used..arena_used + e.key.len];
+                    arena_used += e.key.len;
+                    out_items[out_count] = LsmMemScanItem{
+                        key: stored_key,
+                        value: e.value,
+                        seq: e.seq,
+                    };
+                    out_count += 1;
+                }
+            }
+        }
+        return out_count;
+    }
+
+    /// Snapshot-isolated ascending prefix scan over all visible non-tombstone keys starting with `prefix`.
+    fn scanPrefix(
+        prefix: []const u8,
+        snapshot_seq: u64,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (prefix.len == 0) {
+            return try scanRange("", "", snapshot_seq, key_arena, out_items);
+        }
+        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let upper_s: []u8 = upper_buf[0..];
+        const upper_len_opt: usize? = computePrefixUpperBound(prefix, upper_s) catch |e| return e;
+        let end_key: []const u8 = "";
+        if (ul := upper_len_opt) {
+            end_key = upper_buf[0..ul];
+        }
+        return try scanRange(prefix, end_key, snapshot_seq, key_arena, out_items);
+    }
+
+    /// Snapshot-isolated reverse range scan over `[start_key, end_key)` (`end_key.len == 0` = unbounded upper).
+    /// Yields visible non-tombstone keys in strictly descending order.
+    fn scanRangeReverse(
+        start_key: []const u8,
+        end_key: []const u8,
+        snapshot_seq: u64,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (footer.entry_count == 0 || out_items.len == 0) return 0;
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) return 0;
+
+        let out_count: usize = 0;
+        let arena_used: usize = 0;
+        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let cur_upper_len: usize = end_key.len;
+        let has_upper: bool = end_key.len > 0;
+        if (has_upper) {
+            if (end_key.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+            let ui: usize = 0;
+            while (ui < end_key.len) : (ui += 1) cur_upper_buf[ui] = end_key[ui];
+        }
+
+        // Exact zero-heap reverse stepping: on each step pick the greatest visible user key in
+        // `[start_key, cur_upper)` so even tiny `out_items` buffers always yield the true top-N keys.
+        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let scratch_s: []u8 = scratch[0..];
+        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+
+        while (out_count < out_items.len) {
+            let cur: SstCursor = SstCursor.init(SstReader{
+                data: data,
+                footer: footer,
+                bloom_num_hashes: bloom_num_hashes,
+                bloom_bits: bloom_bits,
+                bloom_bitset: bloom_bitset,
+            });
+            let found_any: bool = false;
+            let best_len: usize = 0;
+            let best_val: []const u8 = "";
+            let best_seq: u64 = 0;
+            let last_len: usize = 0;
+            let has_last: bool = false;
+            let last_resolved: bool = false;
+
+            while (true) {
+                const entry_opt: SstEntryView? = cur.next(scratch_s) catch |e| return e;
+                if (entry_opt == null) break;
+                const e: SstEntryView = entry_opt ?? break;
+                if (start_key.len > 0 && compareBytes(e.key, start_key) < 0) continue;
+                if (has_upper && compareBytes(e.key, cur_upper_buf[0..cur_upper_len]) >= 0) break;
+
+                const same: bool = has_last && compareBytes(last_key[0..last_len], e.key) == 0;
+                if (!same) {
+                    let ci: usize = 0;
+                    while (ci < e.key.len) : (ci += 1) last_key[ci] = e.key[ci];
+                    last_len = e.key.len;
+                    has_last = true;
+                    last_resolved = false;
+                }
+                if (last_resolved) continue;
+                if (e.seq <= snapshot_seq) {
+                    last_resolved = true;
+                    if (!e.is_tombstone) {
+                        let bi: usize = 0;
+                        while (bi < e.key.len) : (bi += 1) best_key[bi] = e.key[bi];
+                        best_len = e.key.len;
+                        best_val = e.value;
+                        best_seq = e.seq;
+                        found_any = true;
+                    }
+                }
+            }
+            if (!found_any) break;
+            if (arena_used + best_len > key_arena.len) return LsmKvError.BufferTooSmall;
+            copySlice(key_arena, arena_used, best_key[0..best_len]);
+            const stored_key: []const u8 = key_arena[arena_used..arena_used + best_len];
+            arena_used += best_len;
+            out_items[out_count] = LsmMemScanItem{
+                key: stored_key,
+                value: best_val,
+                seq: best_seq,
+            };
+            out_count += 1;
+
+            let ui2: usize = 0;
+            while (ui2 < best_len) : (ui2 += 1) cur_upper_buf[ui2] = best_key[ui2];
+            cur_upper_len = best_len;
+            has_upper = true;
+        }
+        return out_count;
+    }
 }
 
 fn readIndexSlot(data: []const u8, idx_start: usize, idx_end: usize, target_idx: usize): SstIndexHandle? {
     let pos: usize = idx_start;
     let cur: usize = 0;
     while (pos < idx_end) {
-        if (pos + 4 > idx_end) return null;
+        if (idx_end - pos < 4) return null;
         const klen: usize = @as(usize, readU32Le(data, pos));
         pos += 4;
-        if (pos + klen + 12 > idx_end) return null;
+        if (idx_end - pos < 12 || klen > idx_end - pos - 12) return null;
         const last_key: []const u8 = data[pos..pos + klen];
         pos += klen;
-        const boff: usize = @as(usize, @intCast(readU64Le(data, pos)));
+        const boff_u64: u64 = readU64Le(data, pos);
+        if (boff_u64 > @as(u64, @intCast(data.len))) return null;
+        const boff: usize = @as(usize, @intCast(boff_u64));
         const bsz: usize = @as(usize, readU32Le(data, pos + 8));
         pos += 12;
         if (cur == target_idx) {
@@ -1122,19 +1703,19 @@ pub struct SstCursor {
     /// Advances to the next entry, reconstructing its full key into `key_buf` and returning `SstEntryView?`.
     fn next(*_, key_buf: *[]u8): SstEntryView? ! LsmKvError {
         const bc: usize = @as(usize, _.reader.footer.block_count);
+        const data_limit: usize = @as(usize, @intCast(_.reader.footer.index_off));
         while (true) {
             if (_.blk_pos >= _.blk_payload_end) {
                 if (_.cur_block_idx >= bc) {
                     _.valid = false;
                     return null;
                 }
-                const idx_start: usize = @as(usize, @intCast(_.reader.footer.index_off)) + 4;
-                const idx_end: usize = @as(usize, @intCast(_.reader.footer.index_off)) +
-                    @as(usize, _.reader.footer.index_len) - LSM_CRC32_BYTES;
+                const idx_start: usize = data_limit + 4;
+                const idx_end: usize = data_limit + @as(usize, _.reader.footer.index_len) - LSM_CRC32_BYTES;
                 const h: SstIndexHandle = readIndexSlot(_.reader.data, idx_start, idx_end, _.cur_block_idx) ?? {
                     return LsmKvError.CorruptSst;
                 };
-                if (h.block_size < LSM_CRC32_BYTES || h.block_offset + h.block_size > _.reader.data.len) {
+                if (h.block_offset > data_limit || h.block_size < LSM_CRC32_BYTES || h.block_size > data_limit - h.block_offset) {
                     return LsmKvError.CorruptSst;
                 }
                 const p_end: usize = h.block_offset + h.block_size - LSM_CRC32_BYTES;
@@ -1149,18 +1730,21 @@ pub struct SstCursor {
                 continue;
             }
 
-            if (_.blk_pos + 17 > _.blk_payload_end) return LsmKvError.CorruptSst;
+            if (_.blk_payload_end - _.blk_pos < 17) return LsmKvError.CorruptSst;
             const shared: usize = @as(usize, readU16Le(_.reader.data, _.blk_pos + 0));
             const unshared: usize = @as(usize, readU16Le(_.reader.data, _.blk_pos + 2));
             const vlen: usize = @as(usize, readU32Le(_.reader.data, _.blk_pos + 4));
             const seq: u64 = readU64Le(_.reader.data, _.blk_pos + 8);
-            const is_tomb: bool = _.reader.data[_.blk_pos + 16] != 0;
+            const flags_byte: u8 = _.reader.data[_.blk_pos + 16];
+            if (flags_byte > 1) return LsmKvError.CorruptSst;
+            const is_tomb: bool = flags_byte != 0;
+            if (is_tomb && vlen != 0) return LsmKvError.CorruptSst;
             _.blk_pos += 17;
 
-            if (shared > _.cur_key_len || shared + unshared > key_buf.len) {
-                return LsmKvError.BufferTooSmall;
-            }
-            if (_.blk_pos + unshared + vlen > _.blk_payload_end) return LsmKvError.CorruptSst;
+            if (shared > _.cur_key_len) return LsmKvError.CorruptSst;
+            if (shared + unshared > key_buf.len) return LsmKvError.BufferTooSmall;
+            const rem: usize = _.blk_payload_end - _.blk_pos;
+            if (unshared > rem || vlen > rem - unshared) return LsmKvError.CorruptSst;
 
             copySlice(key_buf, shared, _.reader.data[_.blk_pos.._.blk_pos + unshared]);
             _.cur_key_len = shared + unshared;
@@ -1174,7 +1758,7 @@ pub struct SstCursor {
             _.cur_tombstone = is_tomb;
 
             return SstEntryView{
-                key: key_buf.*[0.._.cur_key_len],
+                key: key_buf[0.._.cur_key_len],
                 value: val_slice,
                 seq: seq,
                 is_tombstone: is_tomb,
@@ -1190,8 +1774,9 @@ pub struct SstCursor {
 /// Configuration for `compactSstables`.
 pub struct SstCompactionConfig {
     drop_tombstones: bool = true;
-    min_active_snapshot_seq: u64 = 0xFFFF_FFFF_FFFF_FFFF;
+    min_active_snapshot_seq: u64 = LSM_MAX_SEQ;
     builder_cfg: SstBuilderConfig = SstBuilderConfig{},
+    range_tombstones: []const LsmRangeDeleteBound = [],
 }
 
 /// Statistics returned by `compactSstables`.
@@ -1213,10 +1798,29 @@ pub fn sstCompactionKeyBufMinBytes(input_count: usize): usize {
     return input_count * LSM_CURSOR_KEY_STRIDE;
 }
 
+fn isCoveredByRangeTombstoneAtWatermark(
+    key: []const u8,
+    seq: u64,
+    watermark: u64,
+    rts: []const LsmRangeDeleteBound,
+): bool {
+    let i: usize = 0;
+    while (i < rts.len) : (i += 1) {
+        const rt: LsmRangeDeleteBound = rts[i];
+        if (rt.seq > watermark || rt.seq < seq) continue;
+        if (compareBytes(key, rt.start_key) < 0) continue;
+        if (rt.end_key.len > 0 && compareBytes(key, rt.end_key) >= 0) continue;
+        return true;
+    }
+    return false;
+}
+
 /// Performs K-Way Merge Compaction over an arbitrary number of SSTable slices (`inputs`)
 /// with zero dynamic heap allocation:
 ///   - Merges entries strictly in `(key ASC, seq DESC)` order
 ///   - Keeps the newest version per user key and any version `> min_active_snapshot_seq`
+///   - Deduplicates identical `(key, seq)` entries across overlapping inputs
+///   - Drops entries shadowed by `range_tombstones` at or below `min_active_snapshot_seq`
 ///   - Drops overwritten obsolete versions (`<= min_active_snapshot_seq`)
 ///   - Drops bottommost tombstones when `drop_tombstones == true` and `seq <= min_active_snapshot_seq`
 pub fn compactSstables(
@@ -1245,14 +1849,16 @@ pub fn compactSstables(
         const reader: SstReader = try SstReader.open(inputs[i]);
         cursors_work[i] = SstCursor.init(reader);
         const kb_start: usize = i * LSM_CURSOR_KEY_STRIDE;
-        let kb: []u8 = key_bufs_work.*[kb_start..kb_start + LSM_CURSOR_KEY_STRIDE];
-        * = try cursors_work[i].next(*kb);
+        let kb: []u8 = key_bufs_work[kb_start..kb_start + LSM_CURSOR_KEY_STRIDE];
+        * = cursors_work[i].next(kb) catch |e| return e;
     }
 
     let builder: SstBuilder = try SstBuilder.init(cfg.builder_cfg, out_sst, index_work, bloom_work);
 
     let last_user_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
     let last_user_key_len: usize = 0;
+    let last_emitted_seq: u64 = 0;
+    let has_emitted_for_key: bool = false;
     let has_last_key: bool = false;
     let last_emitted_visible_at_snap: bool = false;
 
@@ -1267,8 +1873,8 @@ pub fn compactSstables(
             } else {
                 const ka_start: usize = i * LSM_CURSOR_KEY_STRIDE;
                 const kb_start: usize = best_way * LSM_CURSOR_KEY_STRIDE;
-                const ka: []const u8 = key_bufs_work.*[ka_start..ka_start + cursors_work[i].cur_key_len];
-                const kb: []const u8 = key_bufs_work.*[kb_start..kb_start + cursors_work[best_way].cur_key_len];
+                const ka: []const u8 = key_bufs_work[ka_start..ka_start + cursors_work[i].cur_key_len];
+                const kb: []const u8 = key_bufs_work[kb_start..kb_start + cursors_work[best_way].cur_key_len];
                 const cmp: i32 = compareInternalKey(ka, cursors_work[i].cur_seq, kb, cursors_work[best_way].cur_seq);
                 if (cmp < 0) {
                     best_way = i;
@@ -1283,7 +1889,7 @@ pub fn compactSstables(
         let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
         let c_i: usize = 0;
         while (c_i < cur_key_len) : (c_i += 1) {
-            cur_key_copy[c_i] = key_bufs_work.*[bw_start + c_i];
+            cur_key_copy[c_i] = key_bufs_work[bw_start + c_i];
         }
         const cur_key: []const u8 = cur_key_copy[0..cur_key_len];
         const cur_val: []const u8 = cursors_work[best_way].cur_val;
@@ -1291,8 +1897,8 @@ pub fn compactSstables(
         const cur_tomb: bool = cursors_work[best_way].cur_tombstone;
 
         // Advance winning cursor immediately (its value slice borrows immutable SSTable data)
-        let advance_kb: []u8 = key_bufs_work.*[bw_start..bw_start + LSM_CURSOR_KEY_STRIDE];
-        * = try cursors_work[best_way].next(*advance_kb);
+        let advance_kb: []u8 = key_bufs_work[bw_start..bw_start + LSM_CURSOR_KEY_STRIDE];
+        * = cursors_work[best_way].next(advance_kb) catch |e| return e;
 
         const same_as_last: bool = has_last_key && compareBytes(last_user_key[0..last_user_key_len], cur_key) == 0;
         if (!same_as_last) {
@@ -1302,7 +1908,24 @@ pub fn compactSstables(
             }
             last_user_key_len = cur_key_len;
             has_last_key = true;
+            has_emitted_for_key = false;
             last_emitted_visible_at_snap = false;
+        }
+
+        // Exact duplicate `(key, seq)` guard across overlapping SSTables
+        if (same_as_last && has_emitted_for_key && cur_seq == last_emitted_seq) {
+            stats.dropped_overwritten += 1;
+            continue;
+        }
+
+        // Range tombstone pruning below `min_active_snapshot_seq` (`gc_watermark_seqno`)
+        if (cfg.range_tombstones.len > 0 && isCoveredByRangeTombstoneAtWatermark(cur_key, cur_seq, cfg.min_active_snapshot_seq, cfg.range_tombstones)) {
+            if (cur_tomb) {
+                stats.dropped_tombstones += 1;
+            } else {
+                stats.dropped_overwritten += 1;
+            }
+            continue;
         }
 
         // MVCC deduplication & bottommost tombstone GC:
@@ -1322,6 +1945,8 @@ pub fn compactSstables(
         }
 
         try builder.addEntry(cur_key, cur_val, cur_seq, cur_tomb);
+        last_emitted_seq = cur_seq;
+        has_emitted_for_key = true;
         stats.output_entries += 1;
     }
 
@@ -1336,23 +1961,91 @@ pub fn compactSstables(
 // 6. Integrated Zero-Heap KV Engine Helper (`LsmDbEngine`)
 // ============================================================================
 
+/// Pinned MVCC snapshot handle managed by `LsmDbEngine` for `gc_watermark_seqno` tracking.
+pub struct LsmSnapshotHandle {
+    id: u64 = 0;
+    seqno: u64 = 0;
+    active: bool = false;
+}
+
 /// Integrated zero-heap LSM KV engine coordinating WAL append, MVCC MemTable,
-/// and tiered SSTable read fallback (`MemTable -> newer SSTable -> older SSTable`).
+/// active snapshot watermark tracking (`gcWatermarkSeqno`), range tombstones,
+/// and tiered SSTable read/scan fallback (`MemTable -> newer SSTable -> older SSTable`).
 pub struct LsmDbEngine {
     mem: LsmMemTable = LsmMemTable{},
     wal_buf: []u8 = [],
     wal_len: usize = 0;
     next_seq: u64 = 1;
+    snapshots: [LSM_MAX_ACTIVE_SNAPSHOTS]LsmSnapshotHandle = [LsmSnapshotHandle{}; LSM_MAX_ACTIVE_SNAPSHOTS];
+    next_snapshot_id: u64 = 1;
 
     /// Initializes an `LsmDbEngine` over caller-provided MemTable buffers and WAL byte slice.
     static fn init(mem_bufs: LsmMemBuffers, wal_buf: *[]u8): LsmDbEngine ! LsmKvError {
         const mem: LsmMemTable = try LsmMemTable.init(mem_bufs);
         return LsmDbEngine{
             mem: mem,
-            wal_buf: wal_buf.*,
+            wal_buf: wal_buf,
             wal_len: 0,
             next_seq: 1,
+            next_snapshot_id: 1,
         };
+    }
+
+    /// Pins a new MVCC snapshot at `latestSeq()` so compaction will preserve all versions
+    /// visible to this snapshot until `releaseSnapshot` is called.
+    fn openSnapshot(*_): LsmSnapshotHandle ! LsmKvError {
+        const snap_seq: u64 = _.latestSeq();
+        let i: usize = 0;
+        while (i < LSM_MAX_ACTIVE_SNAPSHOTS) : (i += 1) {
+            if (!_.snapshots[i].active) {
+                const h: LsmSnapshotHandle = LsmSnapshotHandle{
+                    id: _.next_snapshot_id,
+                    seqno: snap_seq,
+                    active: true,
+                };
+                _.snapshots[i] = h;
+                _.next_snapshot_id += 1;
+                return h;
+            }
+        }
+        return LsmKvError.CapacityFull;
+    }
+
+    /// Releases a previously pinned MVCC snapshot, allowing `gcWatermarkSeqno` to advance.
+    fn releaseSnapshot(*_, handle: LsmSnapshotHandle): bool {
+        if (!handle.active || handle.id == 0) return false;
+        let i: usize = 0;
+        while (i < LSM_MAX_ACTIVE_SNAPSHOTS) : (i += 1) {
+            if (_.snapshots[i].active && _.snapshots[i].id == handle.id) {
+                _.snapshots[i] = LsmSnapshotHandle{};
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Returns the number of currently active pinned MVCC snapshots.
+    fn activeSnapshotCount(): usize {
+        let count: usize = 0;
+        let i: usize = 0;
+        while (i < LSM_MAX_ACTIVE_SNAPSHOTS) : (i += 1) {
+            if (snapshots[i].active) count += 1;
+        }
+        return count;
+    }
+
+    /// Returns the compaction GC watermark (`gc_watermark_seqno`):
+    /// the minimum `seqno` among all active pinned snapshots, or `u64::MAX` when no snapshots are active.
+    /// Pass directly to `SstCompactionConfig.min_active_snapshot_seq`.
+    fn gcWatermarkSeqno(): u64 {
+        let min_seq: u64 = ((@as(u64, 0xFFFF_FFFF) << 32) | 0xFFFF_FFFF);
+        let i: usize = 0;
+        while (i < LSM_MAX_ACTIVE_SNAPSHOTS) : (i += 1) {
+            if (snapshots[i].active && snapshots[i].seqno < min_seq) {
+                min_seq = snapshots[i].seqno;
+            }
+        }
+        return min_seq;
     }
 
     /// Writes `Put(key, val)` to WAL first (durability), then inserts into MVCC MemTable,
@@ -1362,7 +2055,7 @@ pub struct LsmDbEngine {
         const need: usize = LsmWalCodec.encodedFrameSize(key.len, val.len);
         if (_.wal_len + need > _.wal_buf.len) return LsmKvError.CapacityFull;
         let wal_tail: []u8 = _.wal_buf[_.wal_len.._.wal_buf.len];
-        const written: usize = try LsmWalCodec.encodePut(key, val, seq, *wal_tail);
+        const written: usize = try LsmWalCodec.encodePut(key, val, seq, wal_tail);
         try _.mem.put(key, val, seq);
         _.wal_len += written;
         _.next_seq += 1;
@@ -1376,8 +2069,25 @@ pub struct LsmDbEngine {
         const need: usize = LsmWalCodec.encodedFrameSize(key.len, 0);
         if (_.wal_len + need > _.wal_buf.len) return LsmKvError.CapacityFull;
         let wal_tail: []u8 = _.wal_buf[_.wal_len.._.wal_buf.len];
-        const written: usize = try LsmWalCodec.encodeDelete(key, seq, *wal_tail);
+        const written: usize = try LsmWalCodec.encodeDelete(key, seq, wal_tail);
         try _.mem.delete(key, seq);
+        _.wal_len += written;
+        _.next_seq += 1;
+        return seq;
+    }
+
+    /// Writes `RangeDelete([start_key, end_key))` to WAL first, then inserts range tombstone into MemTable,
+    /// returning the assigned sequence number.
+    fn deleteRange(*_, start_key: []const u8, end_key: []const u8): u64 ! LsmKvError {
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) {
+            return LsmKvError.InvalidRange;
+        }
+        const seq: u64 = _.next_seq;
+        const need: usize = LsmWalCodec.encodedFrameSize(start_key.len, end_key.len);
+        if (_.wal_len + need > _.wal_buf.len) return LsmKvError.CapacityFull;
+        let wal_tail: []u8 = _.wal_buf[_.wal_len.._.wal_buf.len];
+        const written: usize = try LsmWalCodec.encodeRangeDelete(start_key, end_key, seq, wal_tail);
+        try _.mem.deleteRange(start_key, end_key, seq);
         _.wal_len += written;
         _.next_seq += 1;
         return seq;
@@ -1412,7 +2122,7 @@ pub struct LsmDbEngine {
         _.mem.reset();
         const st: LsmWalRecoveryStats = try LsmWalCodec.replayIntoMemTable(wal_data, *_.mem);
         if (st.valid_bytes <= _.wal_buf.len) {
-            copySlice(*_.wal_buf, 0, wal_data[0..st.valid_bytes]);
+            copySlice(_.wal_buf, 0, wal_data[0..st.valid_bytes]);
             _.wal_len = st.valid_bytes;
         }
         if (st.max_seq >= _.next_seq) {
@@ -1446,5 +2156,297 @@ pub struct LsmDbEngine {
             }
         }
         return LsmMemGetResult{ status: LsmLookupStatus.not_found };
+    }
+
+    /// Layered snapshot-isolated ascending range scan over `[start_key, end_key)` across
+    /// `MemTable` + `sst_levels` (newest -> oldest), resolving MVCC visibility, point tombstones,
+    /// and range tombstones with zero heap allocation.
+    fn scanRangeLayered(
+        start_key: []const u8,
+        end_key: []const u8,
+        snapshot_seq: u64,
+        sst_levels: []const []const u8,
+        cursors_work: *[]SstCursor,
+        key_bufs_work: *[]u8,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (out_items.len == 0) return 0;
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) return 0;
+        const k: usize = sst_levels.len;
+        if (cursors_work.len < k || key_bufs_work.len < k * LSM_CURSOR_KEY_STRIDE) {
+            return LsmKvError.BufferTooSmall;
+        }
+
+        // Prime all non-empty SSTable cursors to first entry >= start_key
+        let i: usize = 0;
+        while (i < k) : (i += 1) {
+            if (sst_levels[i].len == 0) {
+                cursors_work[i] = SstCursor{};
+                continue;
+            }
+            const reader: SstReader = try SstReader.open(sst_levels[i]);
+            cursors_work[i] = SstCursor.init(reader);
+            const kb_start: usize = i * LSM_CURSOR_KEY_STRIDE;
+            let kb: []u8 = key_bufs_work[kb_start..kb_start + LSM_CURSOR_KEY_STRIDE];
+            while (true) {
+                const eo: SstEntryView? = cursors_work[i].next(kb) catch |e| return e;
+                if (eo == null) break;
+                const ev: SstEntryView = eo ?? break;
+                if (start_key.len == 0 || compareBytes(ev.key, start_key) >= 0) break;
+            }
+        }
+
+        let mem_pos: usize = if (start_key.len == 0) 0 else mem.lowerBoundUserKey(start_key);
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let last_key_len: usize = 0;
+        let has_last: bool = false;
+        let last_resolved: bool = false;
+        let arena_used: usize = 0;
+        let out_count: usize = 0;
+
+        while (out_count < out_items.len) {
+            // Pick minimum internal key across MemTable and all active SSTable cursors
+            let pick_mem: bool = false;
+            let pick_way: usize = k;
+            let best_key: []const u8 = "";
+            let best_seq: u64 = 0;
+
+            if (mem_pos < mem.entry_count) {
+                const me_idx: usize = @as(usize, mem.bufs.order[mem_pos]);
+                const mk: []const u8 = mem.entryKey(me_idx);
+                if (end_key.len == 0 || compareBytes(mk, end_key) < 0) {
+                    pick_mem = true;
+                    best_key = mk;
+                    best_seq = mem.bufs.entries[me_idx].seq;
+                }
+            }
+
+            i = 0;
+            while (i < k) : (i += 1) {
+                if (!cursors_work[i].valid) continue;
+                const kb_start: usize = i * LSM_CURSOR_KEY_STRIDE;
+                const sk: []const u8 = key_bufs_work[kb_start..kb_start + cursors_work[i].cur_key_len];
+                if (end_key.len > 0 && compareBytes(sk, end_key) >= 0) {
+                    cursors_work[i].valid = false;
+                    continue;
+                }
+                if (!pick_mem && pick_way == k) {
+                    pick_way = i;
+                    best_key = sk;
+                    best_seq = cursors_work[i].cur_seq;
+                } else {
+                    const cmp: i32 = compareInternalKey(sk, cursors_work[i].cur_seq, best_key, best_seq);
+                    if (cmp < 0) {
+                        pick_mem = false;
+                        pick_way = i;
+                        best_key = sk;
+                        best_seq = cursors_work[i].cur_seq;
+                    }
+                }
+            }
+
+            if (!pick_mem && pick_way == k) break;
+
+            let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+            if (best_key.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+            let ci: usize = 0;
+            while (ci < best_key.len) : (ci += 1) cur_key_copy[ci] = best_key[ci];
+            const cur_key_len: usize = best_key.len;
+            const cur_key: []const u8 = cur_key_copy[0..cur_key_len];
+
+            let cur_val: []const u8 = "";
+            let cur_seq: u64 = 0;
+            let cur_tomb: bool = false;
+            if (pick_mem) {
+                const me_idx: usize = @as(usize, mem.bufs.order[mem_pos]);
+                const meta: LsmMemEntryMeta = mem.bufs.entries[me_idx];
+                cur_val = mem.entryVal(me_idx);
+                cur_seq = meta.seq;
+                cur_tomb = meta.is_tombstone;
+                mem_pos += 1;
+            } else {
+                cur_val = cursors_work[pick_way].cur_val;
+                cur_seq = cursors_work[pick_way].cur_seq;
+                cur_tomb = cursors_work[pick_way].cur_tombstone;
+                const kb_start: usize = pick_way * LSM_CURSOR_KEY_STRIDE;
+                let kb: []u8 = key_bufs_work[kb_start..kb_start + LSM_CURSOR_KEY_STRIDE];
+                * = cursors_work[pick_way].next(kb) catch |e| return e;
+            }
+
+            const same: bool = has_last && compareBytes(last_key[0..last_key_len], cur_key) == 0;
+            if (!same) {
+                ci = 0;
+                while (ci < cur_key_len) : (ci += 1) last_key[ci] = cur_key_copy[ci];
+                last_key_len = cur_key_len;
+                has_last = true;
+                last_resolved = false;
+            }
+            if (last_resolved) continue;
+            if (cur_seq <= snapshot_seq) {
+                last_resolved = true;
+                const rt_seq: u64 = mem.maxCoveringRangeDeleteSeq(cur_key, snapshot_seq);
+                if (!cur_tomb && (rt_seq == 0 || cur_seq > rt_seq)) {
+                    if (arena_used + cur_key_len > key_arena.len) return LsmKvError.BufferTooSmall;
+                    copySlice(key_arena, arena_used, cur_key);
+                    const stored_key: []const u8 = key_arena[arena_used..arena_used + cur_key_len];
+                    arena_used += cur_key_len;
+                    out_items[out_count] = LsmMemScanItem{
+                        key: stored_key,
+                        value: cur_val,
+                        seq: cur_seq,
+                    };
+                    out_count += 1;
+                }
+            }
+        }
+        return out_count;
+    }
+
+    /// Layered snapshot-isolated ascending prefix scan across `MemTable` + `sst_levels`.
+    fn scanPrefixLayered(
+        prefix: []const u8,
+        snapshot_seq: u64,
+        sst_levels: []const []const u8,
+        cursors_work: *[]SstCursor,
+        key_bufs_work: *[]u8,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (prefix.len == 0) {
+            return try scanRangeLayered("", "", snapshot_seq, sst_levels, cursors_work, key_bufs_work, key_arena, out_items);
+        }
+        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let upper_s: []u8 = upper_buf[0..];
+        const upper_len_opt: usize? = computePrefixUpperBound(prefix, upper_s) catch |e| return e;
+        let end_key: []const u8 = "";
+        if (ul := upper_len_opt) {
+            end_key = upper_buf[0..ul];
+        }
+        return try scanRangeLayered(prefix, end_key, snapshot_seq, sst_levels, cursors_work, key_bufs_work, key_arena, out_items);
+    }
+
+    /// Layered snapshot-isolated reverse range scan over `[start_key, end_key)` across
+    /// `MemTable` + `sst_levels` in strictly descending user-key order.
+    fn scanRangeReverseLayered(
+        start_key: []const u8,
+        end_key: []const u8,
+        snapshot_seq: u64,
+        sst_levels: []const []const u8,
+        cursors_work: *[]SstCursor,
+        key_bufs_work: *[]u8,
+        key_arena: *[]u8,
+        out_items: *[]LsmMemScanItem,
+    ): usize ! LsmKvError {
+        if (out_items.len == 0) return 0;
+        if (end_key.len > 0 && compareBytes(start_key, end_key) >= 0) return 0;
+
+        let out_count: usize = 0;
+        let arena_used: usize = 0;
+        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let cur_upper_len: usize = end_key.len;
+        let has_upper: bool = end_key.len > 0;
+        if (has_upper) {
+            if (end_key.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+            let ui: usize = 0;
+            while (ui < end_key.len) : (ui += 1) cur_upper_buf[ui] = end_key[ui];
+        }
+
+        let single_item: [1]LsmMemScanItem = [LsmMemScanItem{}; 1];
+        let single_arena: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let scratch_k: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let sk_s: []u8 = scratch_k[0..];
+        * = cursors_work;
+        * = key_bufs_work;
+
+        while (out_count < out_items.len) {
+            const cur_end: []const u8 = if (has_upper) cur_upper_buf[0..cur_upper_len] else "";
+            let found_any: bool = false;
+            let best_len: usize = 0;
+
+            // Candidate 1: greatest key in MemTable `< cur_end` (even if tombstoned, check below)
+            let m_hi: usize = if (cur_end.len == 0) mem.entry_count else mem.lowerBoundUserKey(cur_end);
+            while (m_hi > 0) {
+                const eidx: usize = @as(usize, mem.bufs.order[m_hi - 1]);
+                const mk: []const u8 = mem.entryKey(eidx);
+                if (start_key.len > 0 && compareBytes(mk, start_key) < 0) break;
+                const g: LsmMemGetResult = mem.getAt(mk, snapshot_seq);
+                if (g.status == LsmLookupStatus.found) {
+                    if (mk.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+                    let ci: usize = 0;
+                    while (ci < mk.len) : (ci += 1) best_key[ci] = mk[ci];
+                    best_len = mk.len;
+                    found_any = true;
+                    break;
+                }
+                // Skip all versions of mk
+                let gs: usize = m_hi - 1;
+                while (gs > 0) {
+                    const pidx: usize = @as(usize, mem.bufs.order[gs - 1]);
+                    if (compareBytes(mem.entryKey(pidx), mk) != 0) break;
+                    gs -= 1;
+                }
+                m_hi = gs;
+            }
+
+            // Candidate 2..K+1: greatest visible key in each SSTable `< cur_end`, verified against layered shadowing
+            let li: usize = 0;
+            while (li < sst_levels.len) : (li += 1) {
+                if (sst_levels[li].len == 0) continue;
+                const reader: SstReader = try SstReader.open(sst_levels[li]);
+                let probe_upper: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+                let probe_upper_len: usize = cur_end.len;
+                let probe_has_upper: bool = cur_end.len > 0;
+                let pi: usize = 0;
+                while (pi < cur_end.len) : (pi += 1) probe_upper[pi] = cur_end[pi];
+
+                while (true) {
+                    let sa_s: []u8 = single_arena[0..];
+                    let si_s: []LsmMemScanItem = single_item[0..];
+                    const pe: []const u8 = if (probe_has_upper) probe_upper[0..probe_upper_len] else "";
+                    const n: usize = try reader.scanRangeReverse(start_key, pe, snapshot_seq, sa_s, si_s);
+                    if (n == 0) break;
+                    const cand_k: []const u8 = single_item[0].key;
+                    if (found_any && compareBytes(cand_k, best_key[0..best_len]) <= 0) break;
+                    // Verify cand_k is not shadowed by a newer delete/range-delete in MemTable or newer SSTable
+                    const layered: LsmMemGetResult = try getLayered(cand_k, snapshot_seq, sst_levels, sk_s);
+                    if (layered.status == LsmLookupStatus.found) {
+                        if (cand_k.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
+                        let ci: usize = 0;
+                        while (ci < cand_k.len) : (ci += 1) best_key[ci] = cand_k[ci];
+                        best_len = cand_k.len;
+                        found_any = true;
+                        break;
+                    }
+                    // Shadowed -> step probe_upper down to cand_k and keep searching older keys in this SSTable
+                    let ui3: usize = 0;
+                    while (ui3 < cand_k.len) : (ui3 += 1) probe_upper[ui3] = cand_k[ui3];
+                    probe_upper_len = cand_k.len;
+                    probe_has_upper = true;
+                }
+            }
+
+            if (!found_any) break;
+            const win_key: []const u8 = best_key[0..best_len];
+            const final_res: LsmMemGetResult = try getLayered(win_key, snapshot_seq, sst_levels, sk_s);
+            if (final_res.status == LsmLookupStatus.found) {
+                if (arena_used + best_len > key_arena.len) return LsmKvError.BufferTooSmall;
+                copySlice(key_arena, arena_used, win_key);
+                const stored_key: []const u8 = key_arena[arena_used..arena_used + best_len];
+                arena_used += best_len;
+                out_items[out_count] = LsmMemScanItem{
+                    key: stored_key,
+                    value: final_res.value,
+                    seq: final_res.seq,
+                };
+                out_count += 1;
+            }
+            let ui4: usize = 0;
+            while (ui4 < best_len) : (ui4 += 1) cur_upper_buf[ui4] = best_key[ui4];
+            cur_upper_len = best_len;
+            has_upper = true;
+        }
+        return out_count;
     }
 }

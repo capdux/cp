@@ -700,23 +700,31 @@ pub fn demoQueryCostPlanner()! {
 
 ## 零堆无上限 LSM-Tree + CRC32 WAL + SSTable + Leveled Compaction 存储引擎（`lsmEngine.cp`）
 
+> 对标加固基准：`fjall-rs/lsm-tree`（MIT / Apache-2.0）
+
 面向嵌入式 KV 与本地持久化引擎的 100% 纯 CP 零动态堆分配、外部切片驱动 LSM-Tree 核心（无固定键值对或合并路数上限）：
 
+- **SIMD 与校验和热路径加速**：
+  - `compareBytes` / `commonPrefixLen` / `copySlice`：16-lane `@Vector(16, u8)` 向量化加速（与导出标量参考 `compareBytesScalar` / `commonPrefixLenScalar` 100% 逐字节等价）。
+  - `crc32Ieee`：4-bit LUT 加速 IEEE 802.3 CRC32（与导出标量参考 `crc32IeeeScalar` 100% 逐位一致）。
+  - `hasPrefix(key, prefix)` / `computePrefixUpperBound(prefix, *out)`：对标 `fjall-rs/lsm-tree` `prefix_upper_range` 语义，精确处理空前缀与全 `0xFF` 边界。
 - **Write-Ahead Log（`LsmWalCodec`）**：
-  - `encodePut(key, val, seq, *out)` / `encodeDelete(key, seq, *out)` / `decodeFrameAt(log, offset)`：带魔数 `LSM_WAL_MAGIC`、版本、长度前缀与全帧 IEEE CRC32。
-  - `recoverLog(log, *out_records): LsmWalRecoveryStats` / `replayIntoMemTable(log, *mem)`：顺序扫描恢复，遇到尾部半写或损坏帧时自动安全截断并汇报 `recovered_records`、`valid_bytes`、`corrupt_tail_bytes` 与 `max_seq`。
+  - `encodePut(key, val, seq, *out)` / `encodeDelete(key, seq, *out)` / `encodeRangeDelete(start_key, end_key, seq, *out)` / `decodeFrameAt(log, offset)`：带魔数 `LSM_WAL_MAGIC`、版本、长度前缀、保留字节校验、溢出安全边界校验与全帧 IEEE CRC32。
+  - `recoverLog(log, *out_records): LsmWalRecoveryStats` / `replayIntoMemTable(log, *mem)`：顺序扫描恢复（支持 Put / Delete / RangeDelete），遇到尾部半写或损坏帧时自动安全截断并汇报 `recovered_records`、`valid_bytes`、`corrupt_tail_bytes` 与 `max_seq`。
 - **MVCC 有序 MemTable（`LsmMemTable`）**：
-  - 由调用方 `LsmMemBuffers`（`entries`、`order`、`arena`）外部切片驱动，严格按 `(key ASC, seq DESC)` 维护内部序。
-  - `put(key, val, seq)` / `delete(key, seq)` / `getAt(key, snapshot_seq)`（MVCC 快照隔离点查）/ `scanRange(start_key, end_key, snapshot_seq, *out_items)`（范围扫描自动去重并过滤 Tombstone）/ `flushToSst(...)`。
+  - 由调用方 `LsmMemBuffers`（`entries`、`order`、`arena`）外部切片驱动，严格按 `(key ASC, seq DESC)` 维护内部序，内置 `LSM_MAX_RANGE_TOMBSTONES`（32）范围墓碑追踪。
+  - `put(key, val, seq)` / `delete(key, seq)` / `deleteRange(start_key, end_key, seq)` / `getAt(key, snapshot_seq)`（MVCC 快照隔离点查，自动裁决点写与范围墓碑的 seq 覆盖关系）/ `scanRange` / `scanPrefix` / `scanRangeReverse` / `flushToSst(...)`。
 - **块式 SSTable 与内置 Bloom Filter（`SstBuilder` / `SstReader` / `SstCursor`）**：
-  - **Data Blocks**：增量前缀压缩（`shared_prefix_len` + `unshared_key`）+ 每块 4 字节 IEEE CRC32。
-  - **Index Block**：记录每块 `last_key` 与偏移，支持二分定位 + 块级 CRC32。
+  - **Data Blocks**：增量前缀压缩（`shared_prefix_len` + `unshared_key`）+ 每块 4 字节 IEEE CRC32 + 严格溢出安全与畸形帧拦截。
+  - **Index Block**：记录每块 `last_key` 与偏移，支持二分定位 + 块级 CRC32 + `block_count` 头一致性校验。
   - **Bloom Filter Block**：Kirsch-Mitzenmacher 双重哈希 `k` 轮探测（默认 10 bits/key、`k=7`，假阳性率 `< 1%`），`mayContain` 快速拒绝不存在的 Key。
-  - **64 字节 Footer**：含索引/Bloom 偏移、条数、块数、最大序列号、`LSM_SST_MAGIC` 与 Footer CRC32。
+  - **64 字节 Footer & 全文件校验**：`verifyFullIntegrity(*key_scratch): SstVerifyReport` 校验全部 Data Block 边界/CRC32/前缀单调性与 Bloom 零假阴性不变量；支持 `scanRange` / `scanPrefix` / `scanRangeReverse`。
 - **K-Way Leveled Compaction（`compactSstables`）**：
-  - 支持任意 K 路 SSTable 归并（调用方提供 `cursors_work: []SstCursor` 与 `key_bufs_work`），在尊重 `min_active_snapshot_seq` 的前提下回收被覆盖的旧版本并在 `drop_tombstones = true`（底层）时清除过期 Tombstone，输出紧凑新 SSTable 及 `SstCompactionStats`。
+  - 支持任意 K 路 SSTable 归并（调用方提供 `cursors_work: []SstCursor` 与 `key_bufs_work`），在尊重 `min_active_snapshot_seq`（`gc_watermark_seqno`）的前提下自动去重重复 `(key, seq)`、按 `range_tombstones: []const LsmRangeDeleteBound` 裁剪过期键、回收被覆盖旧版本并在 `drop_tombstones = true`（底层）时清除过期 Tombstone。
 - **端到端统一引擎（`LsmDbEngine`）**：
-  - `put` / `delete`（先写 WAL 再写 MemTable）、`flushMemTableToSst`、`recoverFromWal`、`getLayered`（`MemTable -> 新 SSTable -> 旧 SSTable` 分层快照读）。
+  - 写入与持久化：`put` / `delete` / `deleteRange`（先写 WAL 再写 MemTable）、`flushMemTableToSst`、`recoverFromWal`。
+  - MVCC 快照生命周期与 GC 水位线：`openSnapshot(*_): LsmSnapshotHandle`、`releaseSnapshot(*_, handle)`、`activeSnapshotCount()`、`gcWatermarkSeqno(): u64`（返回最老活跃快照 seqno，无活跃快照时返回 `u64::MAX`）。
+  - 分层快照读与扫描：`getLayered`、`scanRangeLayered`、`scanPrefixLayered`、`scanRangeReverseLayered`（`MemTable -> 新 SSTable -> 旧 SSTable`）。
 
 ---
 
