@@ -26,9 +26,7 @@ fn ulidFillCsprng(buf: []u8) {
 
 fn ulidCurrentUnixMs(): u64 {
     let ts: std.os.linux.timespec = .{ .sec = 0, .nsec = 0 };
-    zig {
-        _ = std.os.linux.clock_gettime(.REALTIME, &ts);
-    }
+    * = std.os.linux.clock_gettime(.REALTIME, &ts);
     const sec_i64: i64 = ts.sec as i64;
     const nsec_i64: i64 = ts.nsec as i64;
     if (sec_i64 < 0) return 0;
