@@ -1848,3 +1848,11 @@ pub fn demoFullTextIndex() {
     * = extractBestSnippet(doc1[1], qterms[0..], 64, "<mark>", "</mark>", true, *snip_s) catch return;
 }
 ```
+
+### Tantivy 对标查询子模块与 SIMD 批量打分 (`fullTextQuery.cp`)
+
+为严格控制单文件 `< 3,000` 行上限，对标 `quickwit-oss/tantivy` (MIT) 的高级查询与 SIMD 批量打分引擎独立拆分为 `lib/vector/fullTextQuery.cp` 并由 `cap:vector` 统一导出：
+
+- **结构化布尔查询引擎**：`FtOccur`（`must | should | must_not`）、`FtClauseKind`（`term | prefix | wildcard | phrase`）、`FtBoolClause`（支持 `boost` 与 `slop`）、`FtBoolQuery`（支持 `minimum_should_match`）、`searchBooleanQuery`。
+- **短语邻近与通配符/前缀检索**：`searchPhraseQuery`（支持 `slop >= 0` 与重复词单调位置校验）、`searchPrefixQuery`（`cap:simd` 小写折叠扫描）、`searchWildcardQuery` / `wildcardMatchBytes`（线性 $O(NM)$ 非递归 `*`/`?` 匹配）。
+- **Tantivy 风格 BM25 边界保护与 8-Lane SIMD 批量打分**：`tantivyBm25Idf`、`tantivyBm25Score`、`normalizeAsciiQuerySimd`（`Simd.toLowerAscii` + `Simd.skipWhitespace`）、`batchBm25ScoreSimdF32`（8-lane `@Vector(8, f32)`）、`fuseHybridScoresSimdF32`（8-lane 线性融合）与 `rrfFuseTopKHits`（零堆 RRF 混合检索排序）。

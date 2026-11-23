@@ -432,3 +432,21 @@ export {
     FullTextIndex,
     extractBestSnippet,
 } from "./fullTextIndex.cp";
+
+export {
+    FtOccur,
+    FtClauseKind,
+    FtBoolClause,
+    FtBoolQuery,
+    normalizeAsciiQuerySimd,
+    wildcardMatchBytes,
+    tantivyBm25Idf,
+    tantivyBm25Score,
+    batchBm25ScoreSimdF32,
+    fuseHybridScoresSimdF32,
+    rrfFuseTopKHits,
+    searchBooleanQuery,
+    searchPhraseQuery,
+    searchPrefixQuery,
+    searchWildcardQuery,
+} from "./fullTextQuery.cp";

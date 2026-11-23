@@ -1,3 +1,4 @@
+// Reference-hardened against quickwit-oss/tantivy (MIT)
 // Origin: Pure-CP Stdlib (Unbounded Zero-Heap Multi-Field BM25F Full-Text Search & CRC32 Snapshot Engine) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, caller-owned external-slice full-text search engine:
 //   - Multilingual tokenizer: ASCII case folding, Unicode whitespace/punctuation splitting,
@@ -850,20 +851,28 @@ pub fn damerauLevenshteinBounded(a: []const u8, b: []const u8, max_edits: usize)
     return row_prev1[nb];
 }
 
-/// Computes Lucene / Robertson smoothed non-negative IDF: `ln(1 + (N - df + 0.5) / (df + 0.5))`.
+/// Computes Lucene / Tantivy smoothed non-negative IDF: `ln(1 + (N - df + 0.5) / (df + 0.5))`.
+/// Strictly guards against `active_docs == 0`, `df == 0`, `df > active_docs`, and non-finite outputs.
 pub fn computeBm25fIdf(active_docs: usize, df: usize): f64 {
     if (active_docs == 0 || df == 0) return 0.0;
+    const eff_df: usize = if (df > active_docs) active_docs else df;
     const n_f: f64 = @as(f64, @floatFromInt(active_docs));
-    const df_f: f64 = @as(f64, @floatFromInt(df));
+    const df_f: f64 = @as(f64, @floatFromInt(eff_df));
     const ratio: f64 = (n_f - df_f + 0.5) / (df_f + 0.5);
-    if (ratio <= 0.0) return 0.0;
-    return std.math.log(f64, std.math.e, 1.0 + ratio);
+    if (ratio <= 0.0 || std.math.isNan(ratio) || std.math.isInf(ratio)) return 0.0;
+    const idf: f64 = std.math.log(f64, std.math.e, 1.0 + ratio);
+    if (std.math.isNan(idf) || std.math.isInf(idf) || idf < 0.0) return 0.0;
+    return idf;
 }
 
 /// Computes single-term BM25F score from `idf`, aggregated `pseudo_tf`, and saturation `k1`.
 pub fn computeBm25fTermScore(idf: f64, pseudo_tf: f64, k1: f64): f64 {
-    if (idf <= 0.0 || pseudo_tf <= 0.0) return 0.0;
-    return idf * (pseudo_tf * (k1 + 1.0)) / (pseudo_tf + k1);
+    if (std.math.isNan(idf) || std.math.isInf(idf) || idf <= 0.0) return 0.0;
+    if (std.math.isNan(pseudo_tf) || std.math.isInf(pseudo_tf) || pseudo_tf <= 0.0) return 0.0;
+    if (std.math.isNan(k1) || std.math.isInf(k1) || k1 <= 0.0) return 0.0;
+    const denom: f64 = pseudo_tf + k1;
+    if (denom <= 0.0) return 0.0;
+    return idf * (pseudo_tf * (k1 + 1.0)) / denom;
 }
 
 // ============================================================================

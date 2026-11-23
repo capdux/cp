@@ -39,6 +39,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustFFT** | <https://github.com/ejmahler/RustFFT> | MIT OR Apache-2.0 | `lib/media/fftFilter.cp` | Copyright (c) 2016 Elliott Mahler |
 | **rust-brotli** | <https://github.com/dropbox/rust-brotli> | BSD-3-Clause AND MIT | `lib/pack/brotli.cp` | Copyright (c) 2016 Dropbox, Inc. |
 | **nalgebra** | <https://github.com/dimforge/nalgebra> | Apache-2.0 | `lib/math/matrixDense.cp` | Copyright (c) 2013-2024 Sébastien Crozet / Dimforge |
+| **tantivy** | <https://github.com/quickwit-oss/tantivy> | MIT | `lib/vector/fullTextIndex.cp`, `lib/vector/fullTextQuery.cp` | Copyright (c) 2016 Paul Masurel / Quickwit |
 
 ---
 
