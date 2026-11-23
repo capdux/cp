@@ -398,3 +398,27 @@ export {
     CreateSummaryInfo,
     formatCreateNextSteps,
 } from "./createTemplate.cp";
+
+export {
+    SHELL_COMP_MARKER_BEGIN,
+    SHELL_COMP_MARKER_END,
+    SHELL_COMP_MAX_PREFIX_LEN,
+    SHELL_COMP_NO_SUBCOMMAND,
+    ShellCompError,
+    ShellCompDialect,
+    parseShellCompDialect,
+    shellCompDialectName,
+    ShellCompArgHint,
+    ShellCompFlagRule,
+    ShellCompCommandRule,
+    generateCapShellCompletion,
+    ShellCompCandidateKind,
+    ShellCompCandidate,
+    ShellCompProjectContext,
+    ShellCompEvalSummary,
+    computeDynamicCompletions,
+    RcCompOperation,
+    RcCompAction,
+    RcCompPlanResult,
+    planRcCompletionInstall,
+} from "./shellCompletions.cp";

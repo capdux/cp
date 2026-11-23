@@ -777,3 +777,35 @@ const n = formatCreateNextSteps(CreateSummaryInfo{
 }, false, out[0..])?;
 * = dest; * = n;
 ```
+
+### 跨 Shell 动态命令行补全引擎与幂等 RC 安装规划器（`lib/cli/shellCompletions.cp`，吸收自 `/data/dev/bun/src/cli/add_completions.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap completions` 与实时终端补全；
+- **核心导出**：
+  - 4 大 Shell 脚本生成：`ShellCompError`、`ShellCompDialect`（`Bash`/`Zsh`/`Fish`/`PowerShell`）、`parseShellCompDialect`、`shellCompDialectName`、`ShellCompArgHint`、`ShellCompFlagRule`、`ShellCompCommandRule`、`generateCapShellCompletion`（基于声明式命令/标志/枚举值/文件扩展名规则生成开箱即用的补全脚本）；
+  - 实时动态上下文求值：`SHELL_COMP_NO_SUBCOMMAND`、`ShellCompCandidateKind`、`ShellCompCandidate`、`ShellCompProjectContext`、`ShellCompEvalSummary`、`computeDynamicCompletions`（支持子命令、`--flag`、`--flag=val`、枚举值、`cap.json` scripts、已安装包名与扩展名过滤文件路径，接入 `cap:simd` `Simd.toLowerAscii` 大小写折叠与相关性排序）；
+  - 幂等 RC 文件管理：`SHELL_COMP_MARKER_BEGIN`、`SHELL_COMP_MARKER_END`、`RcCompOperation`、`RcCompAction`、`RcCompPlanResult`、`planRcCompletionInstall`（基于 `# >>> cap completions >>>` 标记块实现幂等追加/更新/卸载，防重复写入）。
+
+```cp
+import {
+    ShellCompDialect,
+    ShellCompCommandRule,
+    ShellCompFlagRule,
+    ShellCompArgHint,
+    generateCapShellCompletion,
+    RcCompOperation,
+    planRcCompletionInstall,
+} from "cap:cli";
+
+const flags: [1]ShellCompFlagRule = [
+    ShellCompFlagRule{ long_name: "--target", short_name: "-t", description: "Target", arg_hint: ShellCompArgHint.EnumValues, enum_values_csv: "native,linux-x64" },
+];
+const cmds: [1]ShellCompCommandRule = [
+    ShellCompCommandRule{ name: "build", description: "Build project", arg_hint: ShellCompArgHint.FilePath, file_ext_filter: ".cp", flags_start: 0, flags_len: 1 },
+];
+let script_buf: [2048]u8 = [0; 2048];
+const slen = generateCapShellCompletion(ShellCompDialect.Zsh, "cap", cmds[0..], flags[0..], script_buf[0..])?;
+let rc_buf: [1024]u8 = [0; 1024];
+const rc = planRcCompletionInstall(ShellCompDialect.Zsh, "cap", "export PATH=$HOME/.cap/bin:$PATH\n", RcCompOperation.InstallOrUpdate, rc_buf[0..])?;
+* = slen; * = rc;
+```
