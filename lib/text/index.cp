@@ -306,6 +306,22 @@ export {
     IgnoreMatcher,
 } from "./globset.cp";
 
+// --- myersDiff ---
+export {
+    DiffError,
+    DiffKind,
+    LineDiff,
+    ByteDiff,
+    DiffOptions,
+    LineDiffResult,
+    ByteDiffResult,
+    areLinesEqual,
+    splitLines,
+    diffLines,
+    diffBytes,
+    formatLineDiff,
+} from "./myersDiff.cp";
+
 // --- mermaid ---
 export {
     MermaidError,

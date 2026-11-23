@@ -189,7 +189,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:command_tag` | `Tag`, `fromSubcommand` | 纯 CP CLI 32 种子命令判别、遥测码、NPM 判定与配置加载策略引擎（吸收自 Bun `src/options_types/CommandTag.cp`，支持 `cap.command_tag` 自动动态挂载，详见 `doc/lib/command_tag.md`） |
 | `cap:coverage_options` | `Reporter`, `Reporters`, `CoverageFraction`, `CoverageMetrics`, `CodeCoverageOptions`, `formatLcovRecord` | 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`） |
 | `cap:feature_flags` | `FeatureFlags`, `parseBoolEnv`, `parseUintEnv`, `parseBoolOr`, `parseUintOr` | 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`） |
-| `cap:myers_diff` | DiffError, DiffKind, LineDiff, ByteDiff, DiffOptions, LineDiffResult, ByteDiffResult, areLinesEqual, splitLines, diffLines, diffBytes, formatLineDiff | 纯 CP Myers O(ND) 最短编辑脚本行级/字节级 Diff 引擎（含尾随逗号容错与 ~init() 自动释放） |
 | `cap:exact_matcher` | ExactSizeMatcher, Matcher4, Matcher8, Matcher16, packU32, packU32Lower, packU64, packU64Lower, packU128, packU128Lower | 纯 CP 定长整型打包（1/2/4/8/12/16 字节）O(1) 无分支字符串快速匹配器 |
 | `cap:intrusive_heap` | IntrusiveField, IntrusiveHeap | 纯 CP 零堆分配侵入式配对最小堆（均摊 O(1) 插入/合并，O(log N) 弹出/任意删除） |
 | `cap:padding_checker` | hasPadding, assertNoPadding, totalPaddingBytes, fieldSumSize | 编译期结构体内存布局零填充断言与字节统计（源自 Bun install/padding_checker.cp） |

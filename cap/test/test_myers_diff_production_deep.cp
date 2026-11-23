@@ -7,7 +7,7 @@ import {
     diffLines,
     diffBytes,
     formatLineDiff,
-} from "cap:myers_diff";
+} from "cap:text";
 
 test("1. Identical & empty line slices produce zero edits", () => {
     const alloc = std.testing.allocator;
