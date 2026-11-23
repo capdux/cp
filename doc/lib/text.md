@@ -553,3 +553,16 @@ pub fn demoCodePatternMatch(src: string) {
 | `cap:grapheme_cluster` | `lib/text/grapheme.cp` | `DecodedCodepoint`, `GraphemeBreakProperty`, `GraphemeBreakState`, `GraphemeIterator`, `classifyCodepoint`, `shouldBreak`, `decodeUtf8Step`, `count`, `sliceByGraphemes` |
 | `cap:utf8_dfa` | `lib/text/utf8Dfa.cp` | `UTF8_ACCEPT`, `UTF8_REJECT`, `REPLACEMENT_CHAR`, `DecodeStep`, `decodeByte`, `isDoneDecoding`, `Utf8Iterator`, `isValidUtf8`, `countCodepoints`, ASCII 分类/大小写转换 |
 | `cap:glob_escape` | `lib/text/globEscape.cp` | `isGlobMagic`, `hasGlobMagic`, `escapeGlob`, `unescapeGlob`, `staticBaseDir`, `isNegatedPattern`, `stripNegation` |
+
+## Wave 33 工业级安全加固与 16-Lane SIMD 加速（`glob.cp` & `globset.cp` 对标 `BurntSushi/ripgrep` MIT/Unlicense）
+
+`lib/text/glob.cp` 与 `lib/text/globset.cp` 已对照 `BurntSushi/ripgrep`（`crates/globset`，MIT/Unlicense）完成全量语义加固、组合爆炸防护、线性时间防回溯 NFA 修复与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 加固项 / 新增符号 | 所在文件 | 工程价值 |
+|---|---|---|
+| `LeadingDoubleStarSlash` 双状态边界自动机 | `lib/text/glob.cp` | 修复 `a/**/b` 误匹配 `a/xb` 与 `**/foo` 误匹配 `foofoo` 的跨段穿透缺陷；严格区分零层目录跳过与段内消费，保持 $O(NM)$ 无回溯线性时间 |
+| `literal_separator` 字符类严格隔离 | `lib/text/glob.cp` | 无论正向 `[.-0]`/`[/]` 或否定 `[!a]`，在 `literal_separator = true` 下均禁止匹配 `/`，与 `globset` `SLASHLIT` 向量 100% 对齐 |
+| `GLOB_MAX_ALTERNATES = 64` / `GLOB_MAX_BRACE_DEPTH = 16` / `GlobError.TooManyAlternates` | `lib/text/glob.cp`, `lib/text/globset.cp` | 拦截 `{a,b}{a,b}...` 等花括号组合爆炸与深层嵌套，防内存耗尽；`addWithOptions` 具备 `errdefer` 原子回滚 |
+| `simdIndexOfByte` / `simdIndexOfAny4` / `simdIndexOfGlobMagic` / `simdBytesEqual` | `lib/text/glob.cp`, `lib/text/globset.cp` | 纯 CP 16-lane `@Vector(16, u8)` 魔术字符/分隔符扫描与静态字面量前缀/后缀快路径（配标量参考函数 0 差异对拍）；`IgnoreMatcher` 新增 `ruleCount()` |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testTextGlobRustRefSuite.cp` 继承 `BurntSushi/ripgrep` `globset` 测试向量，覆盖 `*`/`?`/`**`（零层与多层）/`[a-z]`/`[!0-9]`/`[.-0]`/`{a,b}`/转义/大小写不敏感/`.gitignore` 否定与目录规则、4 类病理模式毫秒级防回溯与组合爆炸拦截、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形模式与路径 Fuzz。

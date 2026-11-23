@@ -78,6 +78,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **ipnet** (`krisprice`) | <https://github.com/krisprice/ipnet> | MIT OR Apache-2.0 | `lib/net/ipaddr.cp` | Copyright (c) 2017 Kris Price |
 | **httparse** (`seanmonstar`) | <https://github.com/seanmonstar/httparse> | MIT OR Apache-2.0 | `lib/web/picohttp.cp` | Copyright (c) 2015 Sean McArthur |
 | **cookie-rs** (`rwf2`) | <https://github.com/rwf2/cookie-rs> | MIT OR Apache-2.0 | `lib/http/cookie.cp` | Copyright (c) 2014 Alex Crichton / Sergio Benitez |
+| **ripgrep** (`globset`) | <https://github.com/BurntSushi/ripgrep> | MIT OR Unlicense | `lib/text/glob.cp`, `lib/text/globset.cp` | Copyright (c) 2015 Andrew Gallant |
 
 ---
 

@@ -1,25 +1,49 @@
+// Reference-hardened against BurntSushi/ripgrep (MIT/Unlicense)
 // Source: cp/lib/globset/globset.cp (Multi-Pattern GlobSet & .gitignore Engine)
-// Pure CP multi-pattern glob set with nested brace expansion ({ts,tsx,{c,h}})
+// Pure CP multi-pattern glob set with bounded nested brace expansion ({ts,tsx,{c,h}})
 // and .gitignore-compatible IgnoreMatcher (comments, ! negation, /, trailing /).
 
 const std = @import("std");
-import { GlobError, GlobOptions, GlobMatcher } from "./glob.cp";
+import {
+    GlobError,
+    GlobOptions,
+    GlobMatcher,
+    GLOB_MAX_ALTERNATES,
+    GLOB_MAX_BRACE_DEPTH,
+    simdIndexOfByte,
+} from "./glob.cp";
 
 const SetEntry = struct {
     matcher: GlobMatcher,
     pattern_index: usize,
 };
 
-fn expandBraces(
+fn globExpandBracesInner(
     alloc: std.mem.Allocator,
     pattern: string,
     out: *std.ArrayList([]u8),
+    recursion_depth: usize,
 ): void ! GlobError {
     if (pattern.len == 0) {
         return GlobError.EmptyPattern;
     }
+    if (recursion_depth > GLOB_MAX_BRACE_DEPTH) {
+        return GlobError.TooManyAlternates;
+    }
+    if (out.items.len >= GLOB_MAX_ALTERNATES) {
+        return GlobError.TooManyAlternates;
+    }
+
+    // 16-lane SIMD fast-path: if neither '{' nor '}' appears anywhere, no brace expansion needed
+    if (simdIndexOfByte(pattern, '{') == null && simdIndexOfByte(pattern, '}') == null) {
+        const dup = alloc.dupe(u8, pattern) catch return GlobError.OutOfMemory;
+        errdefer alloc.free(dup);
+        out.append(alloc, dup) catch return GlobError.OutOfMemory;
+        return;
+    }
 
     let depth: usize = 0;
+    let max_depth: usize = 0;
     let open_idx: usize = 0;
     let close_idx: usize = 0;
     let found_first = false;
@@ -60,6 +84,12 @@ fn expandBraces(
                 open_idx = i;
             }
             depth += 1;
+            if (depth > max_depth) {
+                max_depth = depth;
+                if (max_depth > GLOB_MAX_BRACE_DEPTH) {
+                    return GlobError.TooManyAlternates;
+                }
+            }
         } else if (c == '}') {
             if (depth == 0) {
                 return GlobError.UnclosedBrace;
@@ -88,7 +118,7 @@ fn expandBraces(
     const inner = pattern[(open_idx + 1)..close_idx];
     const suffix = pattern[(close_idx + 1)..pattern.len];
 
-    // Split `inner` on top-level commas
+    // Split `inner` on top-level commas with strict GLOB_MAX_ALTERNATES guard
     let seg_start: usize = 0;
     let inner_depth: usize = 0;
     let k: usize = 0;
@@ -123,6 +153,9 @@ fn expandBraces(
         }
 
         if (at_end || is_comma) {
+            if (out.items.len >= GLOB_MAX_ALTERNATES) {
+                return GlobError.TooManyAlternates;
+            }
             const alt = inner[seg_start..k];
             const total_len = prefix.len + alt.len + suffix.len;
             const combined = alloc.alloc(u8, total_len) catch return GlobError.OutOfMemory;
@@ -131,13 +164,13 @@ fn expandBraces(
             @memcpy(combined[(prefix.len + alt.len)..total_len], suffix);
             defer alloc.free(combined);
 
-            expandBraces(alloc, combined, out)?;
+            globExpandBracesInner(alloc, combined, out, recursion_depth + 1)?;
             seg_start = k + 1;
         }
     }
 }
 
-/// Compiled multi-pattern glob set supporting brace expansion and index reporting.
+/// Compiled multi-pattern glob set supporting bounded brace expansion and index reporting.
 pub struct GlobSet {
     alloc: std.mem.Allocator,
     entries: []SetEntry,
@@ -198,7 +231,7 @@ pub struct GlobSet {
     }
 }
 
-/// Builder for constructing a `GlobSet` from multiple patterns with brace expansion.
+/// Builder for constructing a `GlobSet` from multiple patterns with bounded brace expansion.
 pub struct GlobSetBuilder {
     alloc: std.mem.Allocator,
     opts: GlobOptions,
@@ -206,7 +239,7 @@ pub struct GlobSetBuilder {
     next_index: usize,
 
     /// Creates a new `GlobSetBuilder` with default `GlobOptions`.
-    pub fn init(alloc: std.mem.Allocator): GlobSetBuilder {
+    pub static fn init(alloc: std.mem.Allocator): GlobSetBuilder {
         return GlobSetBuilder{
             alloc: alloc,
             opts: GlobOptions{},
@@ -216,7 +249,7 @@ pub struct GlobSetBuilder {
     }
 
     /// Creates a new `GlobSetBuilder` with custom default `GlobOptions`.
-    pub fn initWithOptions(alloc: std.mem.Allocator, opts: GlobOptions): GlobSetBuilder {
+    pub static fn initWithOptions(alloc: std.mem.Allocator, opts: GlobOptions): GlobSetBuilder {
         return GlobSetBuilder{
             alloc: alloc,
             opts: opts,
@@ -240,7 +273,7 @@ pub struct GlobSetBuilder {
         return _.addWithOptions(pattern, _.opts);
     }
 
-    /// Adds a pattern with explicit `GlobOptions`, expanding any `{...}` braces.
+    /// Adds a pattern with explicit `GlobOptions`, expanding any `{...}` braces up to `GLOB_MAX_ALTERNATES`.
     pub fn addWithOptions(*_, pattern: string, opts: GlobOptions): void ! GlobError {
         if (pattern.len == 0) {
             return GlobError.EmptyPattern;
@@ -255,7 +288,16 @@ pub struct GlobSetBuilder {
             expanded.deinit(_.alloc);
         }
 
-        expandBraces(_.alloc, pattern, &expanded)?;
+        globExpandBracesInner(_.alloc, pattern, &expanded, 0)?;
+
+        const saved_len = _.entries.items.len;
+        errdefer {
+            let k: usize = saved_len;
+            while (k < _.entries.items.len) : (k += 1) {
+                _.entries.items[k].matcher.deinit();
+            }
+            _.entries.items.len = saved_len;
+        }
 
         let i: usize = 0;
         while (i < expanded.items.len) : (i += 1) {
@@ -296,7 +338,7 @@ pub struct IgnoreMatcher {
     rules: std.ArrayList(IgnoreRule),
 
     /// Creates an empty `IgnoreMatcher`.
-    pub fn init(alloc: std.mem.Allocator): IgnoreMatcher {
+    pub static fn init(alloc: std.mem.Allocator): IgnoreMatcher {
         return IgnoreMatcher{
             alloc: alloc,
             rules: .empty,
@@ -310,6 +352,11 @@ pub struct IgnoreMatcher {
             _.rules.items[i].matcher.deinit();
         }
         _.rules.deinit(_.alloc);
+    }
+
+    /// Returns the number of compiled rules currently loaded.
+    pub fn ruleCount(): usize {
+        return _.rules.items.len;
     }
 
     /// Parses and appends a single `.gitignore` rule line.
@@ -381,14 +428,8 @@ pub struct IgnoreMatcher {
             if (s.len == 0) {
                 return;
             }
-        } else {
-            let idx: usize = 0;
-            while (idx < s.len) : (idx += 1) {
-                if (s[idx] == '/') {
-                    anchored = true;
-                    break;
-                }
-            }
+        } else if (simdIndexOfByte(s, '/') != null) {
+            anchored = true;
         }
 
         const opts = GlobOptions{

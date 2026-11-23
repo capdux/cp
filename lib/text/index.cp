@@ -295,9 +295,20 @@ export {
 
 // --- globset ---
 export {
+    GLOB_MAX_TOKENS,
+    GLOB_MAX_ALTERNATES,
+    GLOB_MAX_BRACE_DEPTH,
     GlobError,
     GlobOptions,
     GlobMatcher,
+    simdIndexOfByte,
+    simdIndexOfByteScalar,
+    simdIndexOfAny4,
+    simdIndexOfAny4Scalar,
+    simdIndexOfGlobMagic,
+    simdIndexOfGlobMagicScalar,
+    simdBytesEqual,
+    simdBytesEqualScalar,
 } from "./glob.cp";
 
 export {
