@@ -1718,3 +1718,35 @@ let snap: [1024]u8 = [0; 1024];
 const slen = encodeLockStoreSnapshot(store, snap[0..])?;
 * = id; * = slen;
 ```
+
+### 隔离安装物化计划器、跨文件系统降级与 `.bin` 垫片协调引擎（`isolatedInstaller.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/isolated_install/Installer.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 物化后端与跨设备降级状态机：`ISO_INST_STORE_ROOT`、`ISO_INST_BIN_DIR`、`ISO_INST_MAX_PATH_LEN`、`IsoInstallerError`、`IsoLinkBackend`（`Clonefile`/`Reflink`/`Hardlink`/`CopyFile`）、`isoLinkBackendName`、`IsoHostOs`、`IsoFsErrorCode`（`Exdev`/`Enotsup`/`Emlink`/`Eexist`/`Enospc`/`Eacces`/`Eio`）、`IsoFallbackDecision`、`IsoBackendFallbackState`（确定性降级链 + 降级遥测计数）；
+  - 隔离目录树原子物化规划：`isSafeIsoInstPath`（接入 `cap:simd` `Simd.indexOfAny4`/`Simd.indexOfByte` 拦截路径穿越）、`IsoInstOpKind`（`EnsureStoreDir`/`MaterializeFiles`/`CreateDepSymlink`/`CreateBinLink`/`PruneStaleStoreEntry`）、`IsoInstDepLink`、`IsoInstStorePackage`、`IsoInstOp`、`IsoInstPlanSummary`、`getIsoOpSrc`、`getIsoOpDst`、`planIsolatedMaterialization`、`IsoStagingPathPair`、`formatStagingStorePaths`；
+  - `.bin` 冲突裁决与跨平台垫片生成：`isSafeIsoBinName`、`IsoBinCandidate`、`IsoBinShimFormat`、`IsoBinPlannedLink`、`IsoBinPlanSummary`、`planBinShimLinks`（直接依赖覆盖传递依赖）、`formatWindowsCmdShim`、`formatWindowsPs1Shim`、`formatIsoInstallerReport`。
+
+```cp
+import {
+    IsoHostOs,
+    IsoFsErrorCode,
+    IsoBackendFallbackState,
+    IsoInstStorePackage,
+    IsoInstDepLink,
+    IsoInstOp,
+    planIsolatedMaterialization,
+} from "cap:pkg";
+
+let fb = IsoBackendFallbackState.init(IsoHostOs.MacOS, null);
+const dec1 = fb.recordFailure(IsoFsErrorCode.Enotsup); // Clonefile -> Hardlink
+const pkgs: [1]IsoInstStorePackage = [
+    IsoInstStorePackage{ name: "zod", version: "3.23.8", cache_source_dir: "/cache/zod@3.23.8", is_direct: true },
+];
+const deps: [0]IsoInstDepLink = [];
+const stale: [0][]const u8 = [];
+let ops: [8]IsoInstOp = [IsoInstOp.empty(); 8];
+let arena: [1024]u8 = [0; 1024];
+const sum = planIsolatedMaterialization(pkgs[0..], deps[0..], stale[0..], fb.active_backend, ops[0..], arena[0..])?;
+* = dec1; * = sum;
+```
