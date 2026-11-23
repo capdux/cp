@@ -57,6 +57,11 @@ export {
 } from "./error";
 
 export {
+    ErrnoOs,
+    SystemErrno,
+} from "./errnoMap.cp";
+
+export {
     FD,
     O_RDONLY,
     O_WRONLY,

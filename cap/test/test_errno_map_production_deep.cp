@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { ErrnoOs, SystemErrno } from "cap:errno_map";
+import { ErrnoOs, SystemErrno } from "cap:sys";
 
 test("1. Cross-platform Linux vs Darwin divergent numeric code mapping", () => {
     // EAGAIN: Linux 11 vs Darwin 35

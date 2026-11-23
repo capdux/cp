@@ -193,7 +193,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:thumbhash` | MAX_LEN, ThumbhashError, DecodedImage, encode, decode, approxAspectRatio, averageRGBA | Evan Wallace ThumbHash 21–25 字节低频 DCT 占位符编解码、宽高比/主色提取与 ~init() RAII（源自 Bun runtime/image/thumbhash.cp） |
 | `cap:line_offset_table` | LineCol, LineRange, Error, LineOffsetTable | O(log N) 二分查找字节偏移与行列号双向定位、LF/CRLF/CR 混合换行识别与 ~init() RAII（源自 Bun sourcemap/LineOffsetTable.cp） |
 | `cap:known_globals` | GlobalNamespace, GlobalInfo, lookupGlobal, isKnownGlobal, isPureZeroArgConstructor, canDropNewKeyword, isPurePropertyAccess, isPureGlobalCall | 纯 CP 零堆分配 69 项全局符号注册表与 Tree-Shaking/DCE 无副作用构造/属性/调用判定器（源自 Bun js_parser/ast/KnownGlobal.cp） |
-| `cap:errno_map` | ErrnoOs, SystemErrno | 跨平台 POSIX/OS Errno 69 项核心错误码双射映射、OS 特定错误消息与瞬态重试判定（吸收自 bun/src/sys/coreutils_error_map.cp 与 errno/{linux,darwin}_errno.cp） |
 | `cap:ci_info` | CiVendor, EnvEntry, CiInfo, detectFromEntries | 零堆分配 CI/CD 31 供应商环境与 PR 构建检测器（遵循 ci-info v4，吸收自 bun/src/cli/ci_info.cp 与 codegen/ci_info.ts） |
 | `cap:clap_stream` | TakesValue, ParamSpec, ParseError, ParsedArg, StreamingClap | 零堆分配流式命令行参数解析器（支持 --long/--long=val/-abc 串联/-oval/-- 位置参数分隔与精确错误码，吸收自 bun/src/clap/streaming.cp） |
 | `cap:hosted_git_info` | GitProvider, HostedGitInfo | GitHub/GitLab/Bitbucket/Gist 托管 Git URL 规范化解析与 https/ssh/sshurl/shortcut/tarball/browse/bugs 多格式生成器（吸收自 bun/src/install/hosted_git_info.cp） |
