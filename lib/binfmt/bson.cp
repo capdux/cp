@@ -1,9 +1,13 @@
+// Reference-hardened against mongodb/bson-rust (MIT)
 // Source: cp/lib/bson/bson.cp (MongoDB BSON 1.1 Binary Document & 12-Byte ObjectId Codec)
 // Pure CP implementation of MongoDB BSON 1.1 little-endian binary serialization,
-// 12-byte ObjectId codec, strict UTF-8 / CString / size / terminator validation,
-// and 64-level recursion depth guard.
+// 12-byte ObjectId codec, strict UTF-8 / CString / Binary-0x02 / size / terminator validation,
+// zero-heap document validator & cap:simd / 16-lane SIMD acceleration.
 
 const std = @import("std");
+import { Simd } from "cap:simd";
+
+type Vec16u8 = @Vector(16, u8);
 
 pub const BSON_MAX_DEPTH: usize = 64;
 
@@ -16,9 +20,13 @@ pub const BSON_TYPE_OBJECT_ID: u8 = 0x07;
 pub const BSON_TYPE_BOOLEAN: u8 = 0x08;
 pub const BSON_TYPE_UTC_DATETIME: u8 = 0x09;
 pub const BSON_TYPE_NULL: u8 = 0x0A;
+pub const BSON_TYPE_REGEX: u8 = 0x0B;
 pub const BSON_TYPE_INT32: u8 = 0x10;
 pub const BSON_TYPE_TIMESTAMP: u8 = 0x11;
 pub const BSON_TYPE_INT64: u8 = 0x12;
+pub const BSON_TYPE_DECIMAL128: u8 = 0x13;
+pub const BSON_TYPE_MAX_KEY: u8 = 0x7F;
+pub const BSON_TYPE_MIN_KEY: u8 = 0xFF;
 
 pub err BsonError {
     UnexpectedEof,
@@ -108,9 +116,75 @@ pub struct BsonBinary {
     data: []const u8 = "",
 }
 
+pub struct BsonRegex {
+    pattern: []const u8 = "",
+    options: []const u8 = "",
+}
+
 pub struct BsonTimestamp {
     increment: u32 = 0,
     timestamp: u32 = 0,
+}
+
+pub struct BsonFieldSlice {
+    elem_type: u8 = 0,
+    value_bytes: []const u8 = "",
+}
+
+/// 标量参考：查找 CString NUL 终止符
+pub fn findCStringNulScalar(slice: []const u8): usize? {
+    let i: usize = 0;
+    while (i < slice.len) : (i += 1) {
+        if (slice[i] == 0x00) return i;
+    }
+    return null;
+}
+
+/// cap:simd 加速：查找 CString NUL 终止符
+pub fn findCStringNulSimd(slice: []const u8): usize? {
+    return Simd.indexOfByte(slice, 0x00);
+}
+
+/// 标量参考：判断切片是否为纯 7-bit ASCII
+pub fn isBsonAsciiScalar(slice: []const u8): bool {
+    let i: usize = 0;
+    while (i < slice.len) : (i += 1) {
+        if (slice[i] >= 0x80) return false;
+    }
+    return true;
+}
+
+/// cap:simd 加速：判断切片是否为纯 7-bit ASCII（UTF-8 快路径）
+pub fn isBsonAsciiSimd(slice: []const u8): bool {
+    return Simd.isAscii(slice);
+}
+
+/// 标量参考：字节拷贝
+pub fn copyBsonBytesScalar(dst: []u8, src: []const u8) {
+    let n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane SIMD 加速：BSON String / Binary 大块字节拷贝
+pub fn copyBsonBytesSimd(dst: []u8, src: []const u8) {
+    let n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        let v: Vec16u8 = src[i .. i + 16][0..16].*;
+        dst[i .. i + 16][0..16].* = v;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+fn isValidBsonUtf8(s: []const u8): bool {
+    if (isBsonAsciiSimd(s)) return true;
+    return std.unicode.utf8ValidateSlice(s);
 }
 
 pub struct BsonField {
@@ -165,9 +239,13 @@ pub enum BsonValue {
     boolean: bool,
     utc_datetime: i64,
     null_val,
+    regex: BsonRegex,
     int32: i32,
     timestamp: BsonTimestamp,
     int64: i64,
+    decimal128: [16]u8,
+    min_key,
+    max_key,
 
     pub fn deinit(alloc: std.mem.Allocator) {
         switch (_) {
@@ -192,6 +270,10 @@ pub enum BsonValue {
                 if (b.data.len > 0) {
                     alloc.free(b.data);
                 }
+            },
+            .regex r => {
+                if (r.pattern.len > 0) alloc.free(r.pattern);
+                if (r.options.len > 0) alloc.free(r.options);
             },
             else => {},
         }
@@ -252,6 +334,10 @@ pub enum BsonValue {
                 .null_val => true,
                 else => false,
             },
+            .regex a => switch (other) {
+                .regex b => std.mem.eql(u8, a.pattern, b.pattern) && std.mem.eql(u8, a.options, b.options),
+                else => false,
+            },
             .int32 a => switch (other) {
                 .int32 b => a == b,
                 else => false,
@@ -262,6 +348,18 @@ pub enum BsonValue {
             },
             .int64 a => switch (other) {
                 .int64 b => a == b,
+                else => false,
+            },
+            .decimal128 a => switch (other) {
+                .decimal128 b => std.mem.eql(u8, &a, &b),
+                else => false,
+            },
+            .min_key => switch (other) {
+                .min_key => true,
+                else => false,
+            },
+            .max_key => switch (other) {
+                .max_key => true,
                 else => false,
             },
         };
@@ -347,10 +445,10 @@ fn readI64Le(s: []const u8): i64 {
 // ============================================================================
 
 fn appendCString(alloc: std.mem.Allocator, out: *std.ArrayList(u8), key: []const u8): void! {
-    if (std.mem.indexOfScalar(u8, key, 0) != null) {
+    if (findCStringNulSimd(key) != null) {
         return err.InvalidCString;
     }
-    if (!std.unicode.utf8ValidateSlice(key)) {
+    if (!isValidBsonUtf8(key)) {
         return err.InvalidUtf8;
     }
     out.appendSlice(alloc, key) catch return err.OutOfMemory;
@@ -366,7 +464,7 @@ fn encodeElement(alloc: std.mem.Allocator, out: *std.ArrayList(u8), key: []const
             appendU64Le(alloc, out, bits)?;
         },
         .utf8 s => {
-            if (!std.unicode.utf8ValidateSlice(s)) {
+            if (!isValidBsonUtf8(s)) {
                 return err.InvalidUtf8;
             }
             if (s.len + 1 > 2147483647) {
@@ -417,6 +515,12 @@ fn encodeElement(alloc: std.mem.Allocator, out: *std.ArrayList(u8), key: []const
             out.append(alloc, BSON_TYPE_NULL) catch return err.OutOfMemory;
             appendCString(alloc, out, key)?;
         },
+        .regex r => {
+            out.append(alloc, BSON_TYPE_REGEX) catch return err.OutOfMemory;
+            appendCString(alloc, out, key)?;
+            appendCString(alloc, out, r.pattern)?;
+            appendCString(alloc, out, r.options)?;
+        },
         .int32 n => {
             out.append(alloc, BSON_TYPE_INT32) catch return err.OutOfMemory;
             appendCString(alloc, out, key)?;
@@ -432,6 +536,19 @@ fn encodeElement(alloc: std.mem.Allocator, out: *std.ArrayList(u8), key: []const
             out.append(alloc, BSON_TYPE_INT64) catch return err.OutOfMemory;
             appendCString(alloc, out, key)?;
             appendI64Le(alloc, out, n)?;
+        },
+        .decimal128 d128 => {
+            out.append(alloc, BSON_TYPE_DECIMAL128) catch return err.OutOfMemory;
+            appendCString(alloc, out, key)?;
+            out.appendSlice(alloc, &d128) catch return err.OutOfMemory;
+        },
+        .min_key => {
+            out.append(alloc, BSON_TYPE_MIN_KEY) catch return err.OutOfMemory;
+            appendCString(alloc, out, key)?;
+        },
+        .max_key => {
+            out.append(alloc, BSON_TYPE_MAX_KEY) catch return err.OutOfMemory;
+            appendCString(alloc, out, key)?;
         },
     }
 }
@@ -479,19 +596,14 @@ pub fn encodeDocument(alloc: std.mem.Allocator, fields: []const BsonField): ([]u
 // BSON 1.1 Decoder
 // ============================================================================
 
-fn readCStringSlice(src: []const u8, pos: *usize, end_limit: usize): ([]const u8)! {
-    let cur = pos.*;
-    while (cur < end_limit) : (cur += 1) {
-        if (src[cur] == 0x00) {
-            const s = src[pos.* .. cur];
-            pos.* = cur + 1;
-            if (!std.unicode.utf8ValidateSlice(s)) {
-                return err.InvalidUtf8;
-            }
-            return s;
-        }
+fn readCStringSlice(src: []const u8, pos: *usize, end_limit: usize): ([]const u8)!BsonError {
+    const nul_rel = findCStringNulSimd(src[pos.* .. end_limit]) orelse return err.UnexpectedEof;
+    const s = src[pos.* .. pos.* + nul_rel];
+    pos.* += nul_rel + 1;
+    if (!isValidBsonUtf8(s)) {
+        return err.InvalidUtf8;
     }
-    return err.UnexpectedEof;
+    return s;
 }
 
 fn decodeValue(
@@ -502,7 +614,7 @@ fn decodeValue(
     elem_type: u8,
     depth: usize,
     max_depth: usize,
-): BsonValue! {
+): BsonValue!BsonError {
     switch (elem_type) {
         BSON_TYPE_DOUBLE => {
             if (pos.* + 8 > end_limit) return err.UnexpectedEof;
@@ -521,13 +633,14 @@ fn decodeValue(
             if (src[pos.* + ulen - 1] != 0x00) return err.MissingTerminator;
             const raw = src[pos.* .. pos.* + ulen - 1];
             pos.* += ulen;
-            if (!std.unicode.utf8ValidateSlice(raw)) {
+            if (!isValidBsonUtf8(raw)) {
                 return err.InvalidUtf8;
             }
             if (raw.len == 0) {
                 return BsonValue{ utf8: "" };
             }
-            const copy = alloc.dupe(u8, raw) catch return err.OutOfMemory;
+            const copy = alloc.alloc(u8, raw.len) catch return err.OutOfMemory;
+            copyBsonBytesSimd(copy, raw);
             return BsonValue{ utf8: copy };
         },
         BSON_TYPE_DOCUMENT => {
@@ -546,12 +659,21 @@ fn decodeValue(
             const subtype = src[pos.*];
             pos.* += 1;
             const ulen = bin_len as usize;
-            if (pos.* + ulen > end_limit) return err.UnexpectedEof;
+            if (ulen > end_limit - pos.*) return err.UnexpectedEof;
+            if (subtype == 0x02) {
+                if (ulen < 4) return err.InvalidDocumentSize;
+                const inner_len = readI32Le(src[pos.* .. pos.* + 4]);
+                if (inner_len < 0 || (inner_len as usize) + 4 != ulen) {
+                    return err.InvalidDocumentSize;
+                }
+            }
             const raw = src[pos.* .. pos.* + ulen];
             pos.* += ulen;
             let copy: []const u8 = "";
             if (raw.len > 0) {
-                copy = alloc.dupe(u8, raw) catch return err.OutOfMemory;
+                const buf = alloc.alloc(u8, raw.len) catch return err.OutOfMemory;
+                copyBsonBytesSimd(buf, raw);
+                copy = buf;
             }
             return BsonValue{ binary: BsonBinary{ subtype: subtype, data: copy } };
         },
@@ -582,6 +704,20 @@ fn decodeValue(
         BSON_TYPE_NULL => {
             return .null_val;
         },
+        BSON_TYPE_REGEX => {
+            const pat_raw = readCStringSlice(src, pos, end_limit)?;
+            const opt_raw = readCStringSlice(src, pos, end_limit)?;
+            let pat_copy: []const u8 = "";
+            if (pat_raw.len > 0) {
+                pat_copy = alloc.dupe(u8, pat_raw) catch return err.OutOfMemory;
+            }
+            errdefer if (pat_copy.len > 0) alloc.free(pat_copy);
+            let opt_copy: []const u8 = "";
+            if (opt_raw.len > 0) {
+                opt_copy = alloc.dupe(u8, opt_raw) catch return err.OutOfMemory;
+            }
+            return BsonValue{ regex: BsonRegex{ pattern: pat_copy, options: opt_copy } };
+        },
         BSON_TYPE_INT32 => {
             if (pos.* + 4 > end_limit) return err.UnexpectedEof;
             const n = readI32Le(src[pos.* .. pos.* + 4]);
@@ -600,6 +736,19 @@ fn decodeValue(
             const n = readI64Le(src[pos.* .. pos.* + 8]);
             pos.* += 8;
             return BsonValue{ int64: n };
+        },
+        BSON_TYPE_DECIMAL128 => {
+            if (pos.* + 16 > end_limit) return err.UnexpectedEof;
+            let d128: [16]u8 = [0; 16];
+            copyBsonBytesSimd(&d128, src[pos.* .. pos.* + 16]);
+            pos.* += 16;
+            return BsonValue{ decimal128: d128 };
+        },
+        BSON_TYPE_MIN_KEY => {
+            return .min_key;
+        },
+        BSON_TYPE_MAX_KEY => {
+            return .max_key;
         },
         else => return err.InvalidElementType,
     }
@@ -631,7 +780,7 @@ fn decodeDocumentSlice(
     parent_limit: usize,
     depth: usize,
     max_depth: usize,
-): ([]BsonField)! {
+): ([]BsonField)!BsonError {
     if (depth > max_depth) {
         return err.MaxDepthExceeded;
     }
@@ -690,7 +839,7 @@ fn decodeArraySlice(
     parent_limit: usize,
     depth: usize,
     max_depth: usize,
-): ([]BsonValue)! {
+): ([]BsonValue)!BsonError {
     if (depth > max_depth) {
         return err.MaxDepthExceeded;
     }
@@ -740,7 +889,7 @@ pub fn decodeDocumentWithMaxDepth(
     alloc: std.mem.Allocator,
     bytes: []const u8,
     max_depth: usize,
-): ([]BsonField)! {
+): ([]BsonField)!BsonError {
     if (bytes.len < 4) {
         return err.UnexpectedEof;
     }
@@ -761,6 +910,153 @@ pub fn decodeDocumentWithMaxDepth(
     return fields;
 }
 
-pub fn decodeDocument(alloc: std.mem.Allocator, bytes: []const u8): ([]BsonField)! {
+pub fn decodeDocument(alloc: std.mem.Allocator, bytes: []const u8): ([]BsonField)!BsonError {
     return decodeDocumentWithMaxDepth(alloc, bytes, BSON_MAX_DEPTH);
+}
+
+// ============================================================================
+// Zero-Heap BSON 1.1 Validator & Field Lookup (mongodb/bson-rust parity)
+// ============================================================================
+
+fn validateElementZeroHeap(
+    src: []const u8,
+    pos: *usize,
+    end_limit: usize,
+    elem_type: u8,
+    depth: usize,
+    max_depth: usize,
+): void!BsonError {
+    switch (elem_type) {
+        BSON_TYPE_DOUBLE | BSON_TYPE_UTC_DATETIME | BSON_TYPE_TIMESTAMP | BSON_TYPE_INT64 => {
+            if (pos.* + 8 > end_limit) return err.UnexpectedEof;
+            pos.* += 8;
+        },
+        BSON_TYPE_UTF8 => {
+            if (pos.* + 4 > end_limit) return err.UnexpectedEof;
+            const str_len = readI32Le(src[pos.* .. pos.* + 4]);
+            pos.* += 4;
+            if (str_len < 1) return err.InvalidDocumentSize;
+            const ulen = str_len as usize;
+            if (ulen > end_limit - pos.*) return err.UnexpectedEof;
+            if (src[pos.* + ulen - 1] != 0x00) return err.MissingTerminator;
+            if (!isValidBsonUtf8(src[pos.* .. pos.* + ulen - 1])) return err.InvalidUtf8;
+            pos.* += ulen;
+        },
+        BSON_TYPE_DOCUMENT | BSON_TYPE_ARRAY => {
+            validateDocumentSliceZeroHeap(src, pos, end_limit, depth + 1, max_depth)?;
+        },
+        BSON_TYPE_BINARY => {
+            if (pos.* + 5 > end_limit) return err.UnexpectedEof;
+            const bin_len = readI32Le(src[pos.* .. pos.* + 4]);
+            pos.* += 4;
+            if (bin_len < 0) return err.InvalidDocumentSize;
+            const subtype = src[pos.*];
+            pos.* += 1;
+            const ulen = bin_len as usize;
+            if (ulen > end_limit - pos.*) return err.UnexpectedEof;
+            if (subtype == 0x02) {
+                if (ulen < 4) return err.InvalidDocumentSize;
+                const inner_len = readI32Le(src[pos.* .. pos.* + 4]);
+                if (inner_len < 0 || (inner_len as usize) + 4 != ulen) return err.InvalidDocumentSize;
+            }
+            pos.* += ulen;
+        },
+        BSON_TYPE_OBJECT_ID => {
+            if (pos.* + 12 > end_limit) return err.UnexpectedEof;
+            pos.* += 12;
+        },
+        BSON_TYPE_BOOLEAN => {
+            if (pos.* + 1 > end_limit) return err.UnexpectedEof;
+            const b = src[pos.*];
+            pos.* += 1;
+            if (b != 0x00 && b != 0x01) return err.InvalidBoolean;
+        },
+        BSON_TYPE_NULL | BSON_TYPE_MIN_KEY | BSON_TYPE_MAX_KEY => {},
+        BSON_TYPE_REGEX => {
+            * = readCStringSlice(src, pos, end_limit)?;
+            * = readCStringSlice(src, pos, end_limit)?;
+        },
+        BSON_TYPE_INT32 => {
+            if (pos.* + 4 > end_limit) return err.UnexpectedEof;
+            pos.* += 4;
+        },
+        BSON_TYPE_DECIMAL128 => {
+            if (pos.* + 16 > end_limit) return err.UnexpectedEof;
+            pos.* += 16;
+        },
+        else => return err.InvalidElementType,
+    }
+}
+
+fn validateDocumentSliceZeroHeap(
+    src: []const u8,
+    pos: *usize,
+    parent_limit: usize,
+    depth: usize,
+    max_depth: usize,
+): void!BsonError {
+    if (depth > max_depth) return err.MaxDepthExceeded;
+    if (pos.* + 4 > parent_limit) return err.UnexpectedEof;
+    const doc_start = pos.*;
+    const doc_size = readI32Le(src[doc_start .. doc_start + 4]);
+    pos.* += 4;
+    if (doc_size < 5) return err.InvalidDocumentSize;
+    const total_len = doc_size as usize;
+    if (total_len > parent_limit - doc_start) return err.InvalidDocumentSize;
+    const doc_end = doc_start + total_len;
+    if (src[doc_end - 1] != 0x00) return err.MissingTerminator;
+    const elem_limit = doc_end - 1;
+
+    while (pos.* < elem_limit) {
+        const elem_type = src[pos.*];
+        pos.* += 1;
+        if (elem_type == 0x00) return err.InvalidDocumentSize;
+        * = readCStringSlice(src, pos, elem_limit)?;
+        validateElementZeroHeap(src, pos, elem_limit, elem_type, depth, max_depth)?;
+    }
+    if (pos.* != elem_limit) return err.InvalidDocumentSize;
+    pos.* = doc_end;
+}
+
+/// 零堆校验完整 BSON 1.1 文档（可配置最大嵌套深度）
+pub fn validateBsonDocumentWithMaxDepth(bytes: []const u8, max_depth: usize): void!BsonError {
+    if (bytes.len < 4) return err.UnexpectedEof;
+    const declared = readI32Le(bytes[0..4]);
+    if (declared < 5) return err.InvalidDocumentSize;
+    const total_len = declared as usize;
+    if (total_len > bytes.len) return err.InvalidDocumentSize;
+    let pos: usize = 0;
+    validateDocumentSliceZeroHeap(bytes, &pos, total_len, 0, max_depth)?;
+    if (total_len < bytes.len) return err.TrailingBytes;
+}
+
+/// 零堆校验完整 BSON 1.1 文档（默认 `BSON_MAX_DEPTH = 64`）
+pub fn validateBsonDocument(bytes: []const u8): void!BsonError {
+    return validateBsonDocumentWithMaxDepth(bytes, BSON_MAX_DEPTH);
+}
+
+/// 零堆按字段名查找顶层 BSON 元素并返回原始类型与值切片
+pub fn findBsonField(bytes: []const u8, key: []const u8): BsonFieldSlice? {
+    if (bytes.len < 5) return null;
+    const declared = readI32Le(bytes[0..4]);
+    if (declared < 5) return null;
+    const total_len = declared as usize;
+    if (total_len > bytes.len || bytes[total_len - 1] != 0x00) return null;
+    const elem_limit = total_len - 1;
+    let pos: usize = 4;
+    while (pos < elem_limit) {
+        const elem_type = bytes[pos];
+        pos += 1;
+        if (elem_type == 0x00) return null;
+        const k = readCStringSlice(bytes, &pos, elem_limit) catch return null;
+        const val_start = pos;
+        validateElementZeroHeap(bytes, &pos, elem_limit, elem_type, 0, BSON_MAX_DEPTH) catch return null;
+        if (std.mem.eql(u8, k, key)) {
+            return BsonFieldSlice{
+                elem_type: elem_type,
+                value_bytes: bytes[val_start..pos],
+            };
+        }
+    }
+    return null;
 }
