@@ -1,5 +1,7 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc OOXML PPTX PresentationML & DrawingML Parser) | Created: 2026-11-22
 
+import { Simd } from "../simd/index.cp";
+
 /// OOXML PresentationML 主演示文稿 Content-Type (`[Content_Types].xml`)
 pub const PPTX_MAIN_CONTENT_TYPE: []const u8 = "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml";
 
@@ -126,15 +128,18 @@ fn findTagEnd(xml: []const u8, lt_pos: usize): usize? {
     let i = lt_pos + 1;
     let in_quote: u8 = 0;
     while (i < xml.len) {
-        const c = xml[i];
         if (in_quote != 0) {
-            if (c == in_quote) in_quote = 0;
-        } else if (c == '"' || c == '\'') {
+            const rel: usize = Simd.indexOfByte(xml[i..xml.len], in_quote) ?? return null;
+            i += rel + 1;
+            in_quote = 0;
+        } else {
+            const rel: usize = Simd.indexOfAny4(xml[i..xml.len], '>', '"', '\'', '\'') ?? return null;
+            i += rel;
+            const c = xml[i];
+            if (c == '>') return i;
             in_quote = c;
-        } else if (c == '>') {
-            return i;
+            i += 1;
         }
-        i += 1;
     }
     return null;
 }
@@ -944,7 +949,10 @@ fn findPptxMatchingClose(xml: []const u8, body_start: usize, target_local: []con
     let pos: usize = body_start;
     let depth: usize = 1;
     while (pos < xml.len) {
-        if (xml[pos] != '<') { pos += 1; continue; }
+        if (xml[pos] != '<') {
+            const rel: usize = Simd.indexOfByte(xml[pos..xml.len], '<') ?? return null;
+            pos += rel;
+        }
         if (startsWith(xml[pos..xml.len], "<!--")) { pos = skipComment(xml, pos); continue; }
         if (startsWith(xml[pos..xml.len], "<![CDATA[")) { pos = skipCdata(xml, pos); continue; }
         if (startsWith(xml[pos..xml.len], "<?")) { pos = skipPi(xml, pos); continue; }

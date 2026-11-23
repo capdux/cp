@@ -5,6 +5,7 @@
 // streaming cell iterator.
 
 const std = @import("std");
+import { Simd } from "../simd/index.cp";
 
 pub const MAX_XLSX_COL: u32 = 16383;    // Column XFD (16384 columns, 0-based)
 pub const MAX_XLSX_ROW: u32 = 1048575;  // Row 1048576 (1048576 rows, 0-based)
@@ -215,7 +216,8 @@ fn localTagName(name: []const u8): []const u8 {
     return name;
 }
 
-/// Finds the closing `'>'` of an XML tag starting at `xml[start] == '<'`, respecting quoted attributes.
+/// Finds the closing `'>'` of an XML tag starting at `xml[start] == '<'`, respecting quoted attributes
+/// using 16/32-byte SIMD hardware vector scanning.
 fn findTagClose(xml: []const u8, start: usize): usize? {
     if (start >= xml.len || xml[start] != '<') {
         return null;
@@ -223,19 +225,20 @@ fn findTagClose(xml: []const u8, start: usize): usize? {
     let i = start + 1;
     let quote: u8 = 0;
     while (i < xml.len) {
-        const b = xml[i];
         if (quote != 0) {
-            if (b == quote) {
-                quote = 0;
-            }
+            const rel: usize = Simd.indexOfByte(xml[i..xml.len], quote) ?? return null;
+            i += rel + 1;
+            quote = 0;
         } else {
-            if (b == '"' || b == '\'') {
-                quote = b;
-            } else if (b == '>') {
+            const rel: usize = Simd.indexOfAny4(xml[i..xml.len], '>', '"', '\'', '\'') ?? return null;
+            i += rel;
+            const b = xml[i];
+            if (b == '>') {
                 return i;
             }
+            quote = b;
+            i += 1;
         }
-        i += 1;
     }
     return null;
 }
@@ -337,8 +340,8 @@ fn findMatchingClose(xml: []const u8, start_pos: usize, limit: usize, tag_local:
 
     while (i < limit) {
         if (xml[i] != '<') {
-            i += 1;
-            continue;
+            const rel: usize = Simd.indexOfByte(xml[i..limit], '<') ?? return null;
+            i += rel;
         }
         if (i + 1 >= limit) {
             return null;
@@ -448,6 +451,14 @@ fn parseHexU32(s: []const u8): u32? {
 fn unescapeXmlInto(src: []const u8, out: []u8, out_len: *usize): bool {
     let i: usize = 0;
     while (i < src.len) {
+        if (src[i] != '&') {
+            const rel: usize = Simd.indexOfByte(src[i..src.len], '&') ?? (src.len - i);
+            if (out_len.* + rel > out.len) return false;
+            @memcpy(out[out_len.*..out_len.* + rel], src[i..i + rel]);
+            out_len.* += rel;
+            i += rel;
+            if (i >= src.len) break;
+        }
         if (src[i] == '&') {
             let semi = i + 1;
             const max_semi = if (i + 12 < src.len) i + 12 else src.len;
