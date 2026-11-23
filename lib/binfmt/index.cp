@@ -143,15 +143,23 @@ export {
 
 export {
     DEFAULT_MAX_DEPTH as MSGPACK_DEFAULT_MAX_DEPTH,
+    MSGPACK_EXT_TIMESTAMP,
+    MSGPACK_MAX_NSEC,
     MsgPackError,
     MsgExt,
+    MsgTimestamp,
     MsgMapEntry,
     MsgValue,
     MsgPackWriter,
+    MsgPackSliceWriter,
     MsgPackReader,
+    copyPayloadSimd as msgpackCopyPayloadSimd,
+    isValidUtf8Simd as msgpackIsValidUtf8Simd,
     encode as msgpackEncode,
     decode as msgpackDecode,
     decodeWithMaxDepth as msgpackDecodeWithMaxDepth,
+    validateMsgpack,
+    validateMsgpackWithMaxDepth,
 } from "./msgpack.cp";
 
 export {

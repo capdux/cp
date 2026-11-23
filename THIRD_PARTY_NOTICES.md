@@ -50,6 +50,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rust-snappy** (`snap`) | <https://github.com/BurntSushi/rust-snappy> | BSD-3-Clause | `lib/pack/snappy.cp` | Copyright (c) 2016 Andrew Gallant |
 | **toml** (`toml-rs`) | <https://github.com/toml-rs/toml> | MIT OR Apache-2.0 | `lib/conf/toml.cp` | Copyright (c) 2014 Alex Crichton / toml-rs developers |
 | **miniz_oxide** | <https://github.com/Frommi/miniz_oxide> | MIT OR Apache-2.0 OR Zlib | `lib/pack/gzip.cp` | Copyright (c) 2017 Frommi / miniz_oxide developers |
+| **msgpack-rust** (`rmp`) | <https://github.com/3Hren/msgpack-rust> | MIT | `lib/binfmt/msgpack.cp` | Copyright (c) 2015 Evgeny Safronov |
 
 ---
 
