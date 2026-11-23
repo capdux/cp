@@ -1340,3 +1340,37 @@ let spans: [4]CssChunkModuleSpan = [CssChunkModuleSpan.empty(); 4];
 const sum = assembleCssChunkResult(parts[0..], maps[0..], CssChunkEmitOptions{ minify: true, public_path: "/static/", source_map_url: "app.css.map" }, scratch[0..], out[0..], spans[0..])?;
 * = sum;
 ```
+
+- **JS Chunk 最终编译产物封装、SHA-256 SRI 完整性摘要、Debug ID 注入与跨模块导入重映射引擎（`jsChunkResult.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateCompileResultForJSChunk.cp`）**：
+    - 导出：`JS_CHUNK_DEFAULT_SHEBANG`、`JS_CHUNK_DEBUG_ID_PREFIX`、`JS_CHUNK_SOURCEMAP_PREFIX`、`JS_CHUNK_SRI_PREFIX`、`JS_CHUNK_SRI_LEN`、`JS_CHUNK_UUID_LEN`、`JsChunkResultError`、`computeJsChunkSha256`（零堆 FIPS 180-4 SHA-256）、`JsChunkIntegrity`、`computeJsChunkIntegrity`（64-bit 内容哈希 + 32 字节 SHA-256 + 51 字节 `sha256-...` Base64 SRI + 36 字节确定性 RFC 4122 `debugId` UUID）、`JsChunkFinalFormat`（`Esm`/`Cjs`/`Iife`）、`jsChunkFinalFormatName`、`JsChunkShebangSplit`、`splitLeadingShebang`（`Simd.indexOfByte` 加速提取）、`JsChunkImportBinding`、`JsChunkExportBinding`、`emitSortedCrossChunkImports`（跨 Chunk 导入确定性排序、去重与同源合并）、`JsChunkFinalizeOptions`、`JsChunkFinalSummary`、`finalizeJsChunkResult`（统一合成 Shebang/Banner/导入头/正文/导出尾段/IIFE 包装/Footer/`//# debugId=`/`//# sourceMappingURL=` 并通过 `Simd.countByte` 统计行数）、`formatJsChunkResultReport`。
+
+```cp
+import {
+    JS_CHUNK_DEFAULT_SHEBANG,
+    JsChunkFinalFormat,
+    JsChunkImportBinding,
+    JsChunkExportBinding,
+    JsChunkFinalizeOptions,
+    finalizeJsChunkResult,
+} from "cap:bundler";
+
+const imps: [2]JsChunkImportBinding = [
+    JsChunkImportBinding{ from_path: "./chunk-vendor.js", imported_name: "b", local_name: "b" },
+    JsChunkImportBinding{ from_path: "./chunk-vendor.js", imported_name: "a", local_name: "a" },
+];
+const exps: [1]JsChunkExportBinding = [
+    JsChunkExportBinding{ local_name: "main", exported_name: "default" },
+];
+let order: [4]usize = [0; 4];
+let out: [2048]u8 = [0; 2048];
+const sum = finalizeJsChunkResult(
+    "const main = () => a + b;",
+    imps[0..],
+    exps[0..],
+    JsChunkFinalizeOptions{ format: JsChunkFinalFormat.Esm, shebang: JS_CHUNK_DEFAULT_SHEBANG, source_map_url: "app.js.map" },
+    order[0..],
+    out[0..],
+)?;
+const sri = sum.integrity.sri();
+* = sri;
+```

@@ -902,3 +902,27 @@ export {
     assembleCssChunkResult,
     formatCssChunkEmitReport,
 } from "./cssChunkEmit";
+
+export {
+    JS_CHUNK_DEFAULT_SHEBANG,
+    JS_CHUNK_DEBUG_ID_PREFIX,
+    JS_CHUNK_SOURCEMAP_PREFIX,
+    JS_CHUNK_SRI_PREFIX,
+    JS_CHUNK_SRI_LEN,
+    JS_CHUNK_UUID_LEN,
+    JsChunkResultError,
+    computeJsChunkSha256,
+    JsChunkIntegrity,
+    computeJsChunkIntegrity,
+    JsChunkFinalFormat,
+    jsChunkFinalFormatName,
+    JsChunkShebangSplit,
+    splitLeadingShebang,
+    JsChunkImportBinding,
+    JsChunkExportBinding,
+    emitSortedCrossChunkImports,
+    JsChunkFinalizeOptions,
+    JsChunkFinalSummary,
+    finalizeJsChunkResult,
+    formatJsChunkResultReport,
+} from "./jsChunkResult";
