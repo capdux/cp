@@ -630,7 +630,7 @@ pub fn demoHybridRle() {
 - **完整块与熵解码**：支持 `Raw_Block`、`RLE_Block`、`Compressed_Block`；Literals 支持 Raw / RLE / Compressed (1-Stream & 4-Stream Canonical Huffman + FSE 权重压缩/直接 4-bit 权重) / Treeless；Sequences 支持 RFC 8878 §3.1.1.3.2.2 官方预设 FSE 表、RLE、FSE_Compressed、Repeat_Mode 与 `Repeat_Offset_1/2/3`（含 `LL==0` 规则）。
 - **xxHash64 内容校验**：内置 `xxhash64Zstd(data): u64`（seed=0），当帧头启用 `Content_Checksum_Flag` 时严格校验帧尾低 32 位校验和。
 - **双模式 API**：
-  - 零堆外部工作区接口：`zstdDecompressInto(src, *dst, *ws): usize ! ZstdDecodeError`（`ZstdWorkspace.init(lit_buf)`）
+  - 零堆外部工作区接口：`zstdDecompressInto(src, *dst, *ws): usize ! ZstdDecodeError` 与字典解压接口 `zstdDecompressWithDictInto(src, dict, *dst, *ws): usize ! ZstdDecodeError`（`ZstdWorkspace.init(lit_buf)`，支持 Raw Content Dictionary 与 Formatted Dictionary `ZSTD_DICT_MAGIC = 0xEC30A437` 含 `Dict_ID`/预置 Huffman & FSE 表/`Repeat_Offset_1/2/3`/字典历史前缀，对标 `KillingSpark/zstd-rs` 加固 `Block_Maximum_Size = min(window_size, 128 KiB)`、零序列尾随字节、4-Stream 子流边界与 `Content_Size` 严格校验）
   - 便捷分配器封装：`zstdDecompress(alloc, src, max_out_bytes): []u8 ! ZstdDecodeError`
 
 ## 收敛子模块深度文档

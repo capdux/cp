@@ -1,13 +1,16 @@
 // Origin: Pure-CP Stdlib (RFC 8878 Pure-CP Zstandard Decompression Engine: FSE, Huffman 1/4-Stream, Sequences & xxHash64) | Created: 2026-11-23
+// Reference-hardened against KillingSpark/zstd-rs (MIT)
 // 100% pure CP, zero C/FFI dependencies, RFC 8878 compliant Zstandard (zstd) decoder:
 //   - Standard frames (`0xFD2FB528`), Skippable frames (`0x184D2A50..0x184D2A5F`), and concatenated multi-frame streams
 //   - Full Frame Header Descriptor parsing (Single_Segment, Content_Checksum, Dictionary_ID, Window_Descriptor, 1/2/4/8B FCS)
 //   - Complete xxHash64 (seed=0) low-32-bit Content Checksum verification
-//   - All 3 Block types: Raw (0), RLE (1), Compressed (2)
+//   - All 3 Block types: Raw (0), RLE (1), Compressed (2) with strict `Block_Maximum_Size = min(window_size, 128 KiB)` guard
 //   - Full Literals Section: Raw, RLE, Compressed (1-stream & 4-stream Huffman with FSE-compressed or direct 4-bit weights) & Treeless
 //   - Full Sequences Section: Predefined (RFC 8878 §3.1.1.3.2.2), RLE, FSE_Compressed, Repeat_Mode,
 //     Repeat_Offset_1/2/3 (including LL==0 rule), and byte-wise overlapping match copy
-//   - Zero-heap external-workspace API (`zstdDecompressInto`) + convenience allocator wrapper (`zstdDecompress`)
+//   - Full RFC 8878 §5 Dictionary support (`zstdDecompressWithDictInto`): Raw Content & Formatted (`0xEC30A437`) dictionaries
+//     with Dict_ID check, pre-populated Huffman & OF/ML/LL FSE tables, initial Repeat_Offset_1/2/3 & dictionary history window
+//   - Zero-heap external-workspace API (`zstdDecompressInto`, `zstdDecompressWithDictInto`) + convenience allocator wrapper (`zstdDecompress`)
 
 const std = @import("std");
 
@@ -17,6 +20,9 @@ const std = @import("std");
 
 /// Standard Zstandard frame magic (`0xFD2FB528`).
 pub const ZSTD_DEC_MAGIC: u32 = 0xFD2FB528;
+
+/// Standard Zstandard formatted dictionary magic (`0xEC30A437`).
+pub const ZSTD_DICT_MAGIC: u32 = 0xEC30A437;
 
 /// Lowest valid Skippable Frame magic (`0x184D2A50`).
 pub const ZSTD_DEC_SKIP_MAGIC_LO: u32 = 0x184D2A50;
@@ -784,7 +790,7 @@ struct LiteralsResult {
     bytes_consumed: usize = 0;
 }
 
-fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! ZstdDecodeError {
+fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace, max_block_size: usize): LiteralsResult ! ZstdDecodeError {
     if (src.len == 0) return ZstdDecodeError.TruncatedInput;
     const b0: u8 = src[0];
     const lit_type: u8 = b0 & 3;
@@ -806,7 +812,7 @@ fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! 
             regen_size = @as(usize, b0 >> 4) | (@as(usize, src[1]) << 4) | (@as(usize, src[2]) << 12);
             hdr_len = 3;
         }
-        if (regen_size > ZSTD_MAX_BLOCK_BYTES) return ZstdDecodeError.CorruptLiterals;
+        if (regen_size > max_block_size || regen_size > ZSTD_MAX_BLOCK_BYTES) return ZstdDecodeError.CorruptLiterals;
 
         if (lit_type == 0) {
             if (hdr_len + regen_size > src.len) return ZstdDecodeError.TruncatedInput;
@@ -854,7 +860,9 @@ fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! 
         hdr_len = 5;
     }
 
-    if (regen_size > ZSTD_MAX_BLOCK_BYTES) return ZstdDecodeError.CorruptLiterals;
+    if (regen_size == 0 || regen_size > max_block_size || regen_size > ZSTD_MAX_BLOCK_BYTES) {
+        return ZstdDecodeError.CorruptLiterals;
+    }
     if (regen_size > ws.lit_buf.len) return ZstdDecodeError.OutputTooSmall;
     if (hdr_len + comp_size > src.len) return ZstdDecodeError.TruncatedInput;
 
@@ -872,18 +880,20 @@ fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! 
 
     const streams: []const u8 = src[stream_off..stream_off + stream_bytes_len];
     if (!four_streams) {
+        if (streams.len == 0) return ZstdDecodeError.CorruptLiterals;
         let dst_s: []u8 = ws.lit_buf[0..regen_size];
         try decodeHuffmanStream(ws.huff, streams, dst_s);
     } else {
-        if (streams.len < 6) return ZstdDecodeError.CorruptLiterals;
+        if (regen_size < 6 || streams.len < 6) return ZstdDecodeError.CorruptLiterals;
         const s1: usize = @as(usize, readU16Le(streams, 0));
         const s2: usize = @as(usize, readU16Le(streams, 2));
         const s3: usize = @as(usize, readU16Le(streams, 4));
         if (6 + s1 + s2 + s3 > streams.len) return ZstdDecodeError.CorruptLiterals;
         const s4: usize = streams.len - 6 - s1 - s2 - s3;
+        if (s1 == 0 || s2 == 0 || s3 == 0 || s4 == 0) return ZstdDecodeError.CorruptLiterals;
 
         const seg_out: usize = (regen_size + 3) / 4;
-        if (seg_out * 3 > regen_size) return ZstdDecodeError.CorruptLiterals;
+        if (seg_out == 0 || seg_out * 3 >= regen_size) return ZstdDecodeError.CorruptLiterals;
         const seg4_out: usize = regen_size - seg_out * 3;
 
         let d1: []u8 = ws.lit_buf[0..seg_out];
@@ -939,15 +949,81 @@ fn setupSequenceTable(
     }
 }
 
+/// Loads an optional Raw Content or Formatted (`0xEC30A437`) Zstandard dictionary into `ws`
+/// (RFC 8878 §5) and returns the dictionary history content slice.
+fn loadDictionaryForFrame(
+    dict: []const u8,
+    frame_dict_id: u32,
+    ws: *ZstdWorkspace,
+): ([]const u8) ! ZstdDecodeError {
+    if (dict.len == 0) {
+        if (frame_dict_id != 0) return ZstdDecodeError.UnsupportedDictionary;
+        return dict;
+    }
+
+    if (dict.len >= 4 && readU32Le(dict, 0) == ZSTD_DICT_MAGIC) {
+        // Formatted Dictionary (RFC 8878 §5.1)
+        if (dict.len < 8) return ZstdDecodeError.TruncatedInput;
+        const dict_id: u32 = readU32Le(dict, 4);
+        if (dict_id == 0) return ZstdDecodeError.CorruptHeader;
+        if (frame_dict_id != 0 && frame_dict_id != dict_id) {
+            return ZstdDecodeError.UnsupportedDictionary;
+        }
+
+        let pos: usize = 8;
+        const huff_used: usize = try decodeHuffmanTable(dict[pos..dict.len], *ws.huff, *ws.fse_tmp);
+        pos += huff_used;
+        if (pos > dict.len) return ZstdDecodeError.TruncatedInput;
+
+        const of_used: usize = try decodeFseTable(dict[pos..dict.len], 31, 8, *ws.of_tbl);
+        pos += of_used;
+        if (pos > dict.len) return ZstdDecodeError.TruncatedInput;
+
+        const ml_used: usize = try decodeFseTable(dict[pos..dict.len], 52, 9, *ws.ml_tbl);
+        pos += ml_used;
+        if (pos > dict.len) return ZstdDecodeError.TruncatedInput;
+
+        const ll_used: usize = try decodeFseTable(dict[pos..dict.len], 35, 9, *ws.ll_tbl);
+        pos += ll_used;
+        if (pos + 12 > dict.len) return ZstdDecodeError.TruncatedInput;
+
+        const rep0: u32 = readU32Le(dict, pos);
+        const rep1: u32 = readU32Le(dict, pos + 4);
+        const rep2: u32 = readU32Le(dict, pos + 8);
+        pos += 12;
+
+        const content: []const u8 = dict[pos..dict.len];
+        const clen_u64: u64 = @as(u64, @intCast(content.len));
+        if (rep0 == 0 || rep1 == 0 || rep2 == 0
+            || @as(u64, rep0) > clen_u64
+            || @as(u64, rep1) > clen_u64
+            || @as(u64, rep2) > clen_u64)
+        {
+            return ZstdDecodeError.CorruptHeader;
+        }
+        ws.rep_offsets[0] = rep0;
+        ws.rep_offsets[1] = rep1;
+        ws.rep_offsets[2] = rep2;
+        return content;
+    }
+
+    // Raw Content Dictionary: no dictionary ID or pre-populated entropy tables
+    if (frame_dict_id != 0) return ZstdDecodeError.UnsupportedDictionary;
+    return dict;
+}
+
 fn decodeCompressedBlock(
     block: []const u8,
     ws: *ZstdWorkspace,
+    dict_content: []const u8,
     frame_start: usize,
     window_size: u64,
+    max_block_size: usize,
     dst: *[]u8,
     out_pos: *usize,
 ): void ! ZstdDecodeError {
-    const lit_res: LiteralsResult = try decodeLiteralsSection(block, ws);
+    const block_out_start: usize = out_pos.*;
+    const lit_res: LiteralsResult = try decodeLiteralsSection(block, ws, max_block_size);
     if (lit_res.bytes_consumed > block.len) return ZstdDecodeError.CorruptBlock;
     const seq_sec: []const u8 = block[lit_res.bytes_consumed..block.len];
     if (seq_sec.len == 0) return ZstdDecodeError.TruncatedInput;
@@ -973,6 +1049,8 @@ fn decodeCompressedBlock(
     }
 
     if (num_seq == 0) {
+        if (pos != seq_sec.len) return ZstdDecodeError.CorruptSequence;
+        if (lit_res.lit_slice.len > max_block_size) return ZstdDecodeError.CorruptBlock;
         if (out_pos.* + lit_res.lit_slice.len > dst.len) return ZstdDecodeError.OutputTooSmall;
         @memcpy(dst[out_pos.*..out_pos.* + lit_res.lit_slice.len], lit_res.lit_slice);
         out_pos.* += lit_res.lit_slice.len;
@@ -1075,6 +1153,7 @@ fn decodeCompressedBlock(
 
         // Copy literals
         if (lit_pos + lit_len > lit_res.lit_slice.len) return ZstdDecodeError.CorruptSequence;
+        if ((out_pos.* - block_out_start) + lit_len > max_block_size) return ZstdDecodeError.CorruptBlock;
         if (out_pos.* + lit_len > dst.len) return ZstdDecodeError.OutputTooSmall;
         if (lit_len > 0) {
             @memcpy(dst[out_pos.*..out_pos.* + lit_len], lit_res.lit_slice[lit_pos..lit_pos + lit_len]);
@@ -1082,17 +1161,40 @@ fn decodeCompressedBlock(
             out_pos.* += lit_len;
         }
 
-        // Copy match (byte-wise to support overlapping RLE-style matches)
-        const produced_in_frame: usize = out_pos.* - frame_start;
-        if (offset == 0 || offset > produced_in_frame) return ZstdDecodeError.OffsetOutOfBounds;
-        if (window_size > 0 && @as(u64, @intCast(offset)) > window_size) {
-            return ZstdDecodeError.OffsetOutOfBounds;
-        }
+        // Copy match (supports dictionary prefix + overlapping RLE-style matches)
+        if ((out_pos.* - block_out_start) + match_len > max_block_size) return ZstdDecodeError.CorruptBlock;
         if (out_pos.* + match_len > dst.len) return ZstdDecodeError.OutputTooSmall;
-        let m_i: usize = 0;
-        while (m_i < match_len) : (m_i += 1) {
-            dst[out_pos.*] = dst[out_pos.* - offset];
-            out_pos.* += 1;
+        const produced_in_frame: usize = out_pos.* - frame_start;
+        if (offset == 0) return ZstdDecodeError.OffsetOutOfBounds;
+
+        if (offset <= produced_in_frame) {
+            if (window_size > 0 && @as(u64, @intCast(offset)) > window_size) {
+                return ZstdDecodeError.OffsetOutOfBounds;
+            }
+            let m_i: usize = 0;
+            while (m_i < match_len) : (m_i += 1) {
+                dst[out_pos.*] = dst[out_pos.* - offset];
+                out_pos.* += 1;
+            }
+        } else {
+            // Reference back into dictionary content prefix (allowed while produced <= window_size per RFC 8878 §5)
+            if (dict_content.len == 0) return ZstdDecodeError.OffsetOutOfBounds;
+            if (window_size > 0 && @as(u64, @intCast(produced_in_frame)) > window_size) {
+                return ZstdDecodeError.OffsetOutOfBounds;
+            }
+            const dict_back: usize = offset - produced_in_frame;
+            if (dict_back > dict_content.len) return ZstdDecodeError.OffsetOutOfBounds;
+            let dict_idx: usize = dict_content.len - dict_back;
+            let m_i: usize = 0;
+            while (m_i < match_len) : (m_i += 1) {
+                if (dict_idx < dict_content.len) {
+                    dst[out_pos.*] = dict_content[dict_idx];
+                    dict_idx += 1;
+                } else {
+                    dst[out_pos.*] = dst[out_pos.* - offset];
+                }
+                out_pos.* += 1;
+            }
         }
     }
 
@@ -1101,6 +1203,7 @@ fn decodeCompressedBlock(
     // Trailing literals after final sequence
     const rem_lit: usize = lit_res.lit_slice.len - lit_pos;
     if (rem_lit > 0) {
+        if ((out_pos.* - block_out_start) + rem_lit > max_block_size) return ZstdDecodeError.CorruptBlock;
         if (out_pos.* + rem_lit > dst.len) return ZstdDecodeError.OutputTooSmall;
         @memcpy(dst[out_pos.*..out_pos.* + rem_lit], lit_res.lit_slice[lit_pos..lit_res.lit_slice.len]);
         out_pos.* += rem_lit;
@@ -1108,14 +1211,15 @@ fn decodeCompressedBlock(
 }
 
 // ============================================================================
-// 7. Top-Level Decompression APIs (`zstdDecompressInto`, `zstdDecompress`)
+// 7. Top-Level Decompression APIs (`zstdDecompressWithDictInto`, `zstdDecompressInto`, `zstdDecompress`)
 // ============================================================================
 
-/// Zero-heap RFC 8878 Zstandard decompressor supporting single frames, skippable frames,
-/// and concatenated multi-frame streams. Verifies xxHash64 content checksums when present.
+/// Zero-heap RFC 8878 Zstandard decompressor with optional Raw Content or Formatted (`0xEC30A437`) dictionary `dict`.
+/// Supports single frames, skippable frames, concatenated multi-frame streams, and xxHash64 checksum verification.
 /// Returns total uncompressed bytes written into `dst`.
-pub fn zstdDecompressInto(
+pub fn zstdDecompressWithDictInto(
     src: []const u8,
+    dict: []const u8,
     dst: *[]u8,
     ws: *ZstdWorkspace,
 ): usize ! ZstdDecodeError {
@@ -1129,11 +1233,19 @@ pub fn zstdDecompressInto(
             in_pos += info.header_bytes + info.skippable_payload_bytes;
             continue;
         }
-        if (info.dictionary_id != 0) return ZstdDecodeError.UnsupportedDictionary;
 
         in_pos += info.header_bytes;
         ws.resetForFrame();
+        const dict_content: []const u8 = try loadDictionaryForFrame(dict, info.dictionary_id, ws);
         const frame_out_start: usize = out_pos;
+
+        // Block_Maximum_Size = min(Window_Size, 128 KiB) per RFC 8878 §3.1.1.2.4
+        const max_block_size: usize = if (info.single_segment && info.window_size == 0)
+            0
+        else if (info.window_size > 0 && info.window_size < @as(u64, @intCast(ZSTD_MAX_BLOCK_BYTES)))
+            @as(usize, @intCast(info.window_size))
+        else
+            ZSTD_MAX_BLOCK_BYTES;
 
         // Decode all blocks in this frame
         let last_block: bool = false;
@@ -1147,7 +1259,7 @@ pub fn zstdDecompressInto(
             const block_size: usize = @as(usize, bhdr >> 3);
 
             if (block_type == 3) return ZstdDecodeError.CorruptBlock; // Reserved
-            if (block_size > ZSTD_MAX_BLOCK_BYTES) return ZstdDecodeError.CorruptBlock;
+            if (block_size > max_block_size) return ZstdDecodeError.CorruptBlock;
 
             if (block_type == 0) {
                 // Raw_Block
@@ -1174,7 +1286,7 @@ pub fn zstdDecompressInto(
                 if (in_pos + block_size > src.len) return ZstdDecodeError.TruncatedInput;
                 const blk_slice: []const u8 = src[in_pos..in_pos + block_size];
                 in_pos += block_size;
-                try decodeCompressedBlock(blk_slice, ws, frame_out_start, info.window_size, dst, *out_pos);
+                try decodeCompressedBlock(blk_slice, ws, dict_content, frame_out_start, info.window_size, max_block_size, dst, *out_pos);
             }
         }
 
@@ -1193,6 +1305,18 @@ pub fn zstdDecompressInto(
     }
 
     return out_pos;
+}
+
+/// Zero-heap RFC 8878 Zstandard decompressor supporting single frames, skippable frames,
+/// and concatenated multi-frame streams. Verifies xxHash64 content checksums when present.
+/// Returns total uncompressed bytes written into `dst`.
+pub fn zstdDecompressInto(
+    src: []const u8,
+    dst: *[]u8,
+    ws: *ZstdWorkspace,
+): usize ! ZstdDecodeError {
+    const empty_dict: []const u8 = "";
+    return zstdDecompressWithDictInto(src, empty_dict, dst, ws);
 }
 
 /// Convenience allocator-backed Zstandard decompressor. Caller owns returned slice (`alloc.free`).

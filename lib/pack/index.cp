@@ -409,9 +409,10 @@ export {
     decodeHybridRleU32,
 } from "./rleHybrid.cp";
 
-// --- zstd_decode (Pure-CP RFC 8878 Zstandard Decompressor: FSE, Huffman 1/4-Stream & xxHash64) ---
+// --- zstd_decode (Pure-CP RFC 8878 Zstandard Decompressor: FSE, Huffman 1/4-Stream, Dictionary & xxHash64) ---
 export {
     ZSTD_DEC_MAGIC,
+    ZSTD_DICT_MAGIC,
     ZSTD_DEC_SKIP_MAGIC_LO,
     ZSTD_DEC_SKIP_MAGIC_HI,
     ZSTD_MAX_BLOCK_BYTES,
@@ -421,6 +422,7 @@ export {
     ZstdFrameInfo,
     zstdInspectFrame,
     ZstdWorkspace,
+    zstdDecompressWithDictInto,
     zstdDecompressInto,
     zstdDecompress,
 } from "./zstdDecode.cp";
