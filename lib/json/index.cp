@@ -5,7 +5,16 @@
  */
 
 export { JsonTag, JsonField, JsonValue } from "./value";
-export { JsonParser, JsonParseOptions, JsonError, FastJsonScanner } from "./parser";
+export {
+    JsonParser,
+    JsonParseOptions,
+    JsonError,
+    FastJsonScanner,
+    JSON_DEFAULT_MAX_DEPTH,
+    validateJsonStrict,
+    validateJsonWithMaxDepth,
+    validateJsonStrictOrErr,
+} from "./parser";
 export { JsonBufferPool, JsonBufferNode } from "./pool";
 export { JsonSerializer, JsonSerializeOptions } from "./serializer";
 export {
@@ -19,6 +28,7 @@ export {
 export { NdjsonReader, NdjsonWriter, NdjsonError } from "./ndjson";
 
 export {
+    simdIndexOfJsonEscape,
     needsJsonEscape,
     escapeJsonContent,
     quoteJsonString,
@@ -57,13 +67,23 @@ export {
 } from "./json5.cp";
 
 const std = @import("std");
-import { JsonParser, JsonParseOptions } from "./parser";
+import { JsonParser, JsonParseOptions, validateJsonStrict, validateJsonWithMaxDepth } from "./parser";
 import { JsonValue } from "./value";
 import { JsonSerializer, JsonSerializeOptions } from "./serializer";
 import { JsonPatch, JsonPatchOp, JsonMergePatch } from "./pointer";
 import { NdjsonReader, NdjsonWriter } from "./ndjson";
 
 pub class JSON {
+    /// Zero-heap strict RFC 8259 validator (default max depth 128, matching `serde-rs/json`)
+    pub static fn validate(src: []const u8): bool {
+        return validateJsonStrict(src);
+    }
+
+    /// Zero-heap strict RFC 8259 validator with explicit maximum recursion depth
+    pub static fn validateWithMaxDepth(src: []const u8, max_depth: usize): bool {
+        return validateJsonWithMaxDepth(src, max_depth);
+    }
+
     /// High-performance zero-copy dynamic DOM JSON parser (strict RFC 8259)
     pub static fn parse(allocator: std.mem.Allocator, src: []const u8): JsonValue! {
         return JsonParser.parse(allocator, src);

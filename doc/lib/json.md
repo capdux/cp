@@ -1,10 +1,10 @@
 # CP 标准库：RFC 8259/6901/6902/7396/8785 JSON 与 NDJSON 流式协议手册 (`cap:json`)
 
-> 参考来源：`/data/dev/bun/docs/runtime/jsonl.mdx`, `/data/dev/bun/src/interchange/` | 吸收日期：2026-11-22
+> 参考来源：`/data/dev/bun/docs/runtime/jsonl.mdx`, `/data/dev/bun/src/interchange/`, [`serde-rs/json`](https://github.com/serde-rs/json) (MIT / Apache-2.0) | 加固日期：2026-11-23
 
 ## 一、 架构总览与设计准则
 
-`cap:json` 是 CP 语言官方内置的高性能 JSON 数据交换标准库，对照 Bun 生产级数据交换模块（`/data/dev/bun/src/interchange/`）构建，实现 **16 字节 SIMD 引号/转义/控制字符扫描 + 零拷贝切片借用 + 严格 RFC 8259 校验 + UTF-16 代理对解码 + RFC 6901 JSON Pointer + RFC 6902 JSON Patch + RFC 7396 Merge Patch + RFC 8785 Canonical/Pretty 序列化 + NDJSON/JSONL 流式读写** 全栈能力。
+`cap:json` 是 CP 语言官方内置的高性能 JSON 数据交换标准库，对照 Bun 生产级数据交换模块（`/data/dev/bun/src/interchange/`）与 Rust 标杆仓 **`serde-rs/json` (MIT/Apache-2.0)** 加固构建，实现 **16 字节 SIMD 空白/引号/转义/控制字符扫描 + 零拷贝切片借用 + 零堆 RFC 8259 结构校验器 + 严格 UTF-8 与 UTF-16 代理对解码 + 默认 128 层递归深度上限 + RFC 6901 JSON Pointer + RFC 6902 JSON Patch + RFC 7396 Merge Patch + RFC 8785 Canonical/Pretty 序列化 + NDJSON/JSONL 流式读写** 全栈能力。
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────┐
@@ -37,9 +37,10 @@
 1. **零拷贝快路径 + 完整转义与 UTF-16 代理对解码**：
    - 无转义字符的字符串直接以 `[]const u8` 切片借用原输入缓冲区（零堆分配）；
    - 包含转义的字符串自动解码 `\"`、`\\`、`\/`、`\b`、`\f`、`\n`、`\r`、`\t`、`\uXXXX` 以及 UTF-16 代理对（如 `\uD83D\uDE00` -> 4 字节 UTF-8 Emoji），同时拒绝孤立代理项与非法转义。
-2. **严格 RFC 8259 语法守卫与嵌套深度防护**：
-   - 严格校验数字语法 `-? (0 | [1-9][0-9]*) (\.[0-9]+)? ([eE][+-]?[0-9]+)?`，拒绝前导零（`01`）、前导 `+` 号（`+1`）、尾随逗号（`[1,]` / `{"a":1,}`）、未闭合字符串、未转义控制字符（`< 0x20`）及尾部多余字符；
-   - 通过 `JsonParseOptions{ max_depth: N }`（默认 `512`）防止超深嵌套导致栈溢出。
+2. **严格 RFC 8259 语法守卫、零堆校验与嵌套深度防护（对标 `serde-rs/json`）**：
+   - 严格校验数字语法 `-? (0 | [1-9][0-9]*) (\.[0-9]+)? ([eE][+-]?[0-9]+)?` 及有限性（拒绝溢出为 `Infinity` 的超限数字），拒绝前导零（`01`/`-01`）、前导 `+` 号（`+1`）、尾随逗号（`[1,]` / `{"a":1,}`）、未闭合字符串、未转义控制字符（`< 0x20`）、非法 UTF-8 字节序列、孤立/倒序 UTF-16 代理项及尾部多余字符；
+   - 默认递归深度上限对齐 `serde-rs/json`（`JSON_DEFAULT_MAX_DEPTH = 128`），可通过 `JsonParseOptions{ max_depth: N }` 自定义；
+   - 提供零堆结构校验器 `validateJsonStrict` / `validateJsonWithMaxDepth` / `validateJsonStrictOrErr`（以及门面方法 `JSON.validate` / `JSON.validateWithMaxDepth`），无需构建 DOM 即可毫秒级验证任意 JSON 合法性。
 3. **RFC 6901 JSON Pointer、RFC 6902 JSON Patch 与 RFC 7396 Merge Patch**：
    - `JsonPointer` 提供 `escapeToken`/`unescapeToken`（`~1` <-> `/`，`~0` <-> `~` 单遍精确顺序）、`parseTokens`/`format`/`resolve`，拒绝数组前导零（如 `"01"`）；
    - `JsonPatch.apply` 原生支持 `add`/`remove`/`replace`/`move`/`copy`/`test` 原子补丁操作与深拷贝隔离（任意步骤失败时不污染原文档），并禁止将节点 `move` 到自身子路径；
@@ -57,6 +58,9 @@
 
 | API 签名 | 说明 |
 | :--- | :--- |
+| `JSON.validate(src): bool` / `validateJsonStrict(src)` | 零堆严格 RFC 8259 结构校验（默认最大深度 128） |
+| `JSON.validateWithMaxDepth(src, max_depth)` / `validateJsonWithMaxDepth` | 零堆严格 RFC 8259 结构校验（自定义最大深度） |
+| `validateJsonStrictOrErr(src, max_depth): !` | 零堆严格 RFC 8259 结构校验，失败返回精确 `JsonError` |
 | `JSON.parse(allocator, src): JsonValue!` | 严格 RFC 8259 解析为动态 `JsonValue` AST |
 | `JSON.parseWithOptions(allocator, src, opts): JsonValue!` | 带 `JsonParseOptions`（如 `max_depth`）解析 |
 | `JSON.parseTyped(comptime T, allocator, src): T!` | 编译期强类型直译反序列化 |
@@ -120,8 +124,8 @@ pub fn demoJsonRfcAndNdjson(): !void {
 
 ## 零分配编解码辅助子模块（收敛自原 `json_*` 系列）
 
-- **RFC 8259 字符串转义/反转义 (`escape.cp`)**：
-  - `needsJsonEscape`、`escapeJsonContent`、`quoteJsonString`、`unescapeJsonContent`。
+- **RFC 8259 字符串转义/反转义 (`escape.cp`，16-lane SIMD 块级扫描加速)**：
+  - `simdIndexOfJsonEscape`、`needsJsonEscape`、`escapeJsonContent`、`quoteJsonString`、`unescapeJsonContent`。
 - **JSON / JSONC 压缩器 (`minify.cp`)**：
   - `minifyJson`、`minifyJsonc`、`minifyJsoncWithOptions`。
 - **RFC 6901 JSON Pointer 零分配工具 (`ptr.cp`)**：

@@ -71,6 +71,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **uuid** (`uuid-rs`) | <https://github.com/uuid-rs/uuid> | MIT OR Apache-2.0 | `lib/uuid/uuid.cp` | Copyright (c) 2014-2024 The Rust Project Developers / uuid-rs |
 | **semver** (`dtolnay`) | <https://github.com/dtolnay/semver> | MIT OR Apache-2.0 | `lib/semver/version.cp`, `lib/semver/query.cp`, `lib/semver/range.cp` | Copyright (c) 2016 David Tolnay / Steve Klabnik |
 | **chrono** (`chronotope`) | <https://github.com/chronotope/chrono> | MIT OR Apache-2.0 | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | Copyright (c) 2014-2024 Kang Seonghoon / Chrono Contributors |
+| **serde_json** (`serde-rs`) | <https://github.com/serde-rs/json> | MIT OR Apache-2.0 | `lib/json/parser.cp`, `lib/json/escape.cp`, `lib/json/serializer.cp` | Copyright (c) 2014-2024 Erick Tryzelaar / David Tolnay |
 
 ---
 

@@ -1,10 +1,18 @@
 // Source: Absorbed from /data/dev/bun/src/interchange/json.cp | Synced: 2026-11-22T16:05:00Z
-// RFC 8259 Compliant Zero-Copy Streaming & Typed JSON Parser with SIMD Acceleration
-// Handles full escape sequences, UTF-16 surrogate pairs, strict numbers, and max depth guards
+// Reference-hardened against serde-rs/json (MIT/Apache-2.0)
+// Pure-CP RFC 8259 Compliant Zero-Copy Streaming, Zero-Heap Validator & Typed JSON Parser
+// with cap:simd + 16-lane @Vector(16, u8) SIMD Acceleration, UTF-8 / UTF-16 surrogate pair
+// validation, strict RFC 8259 number grammar, and max-depth recursion guard (default 128).
 
 const std = @import("std");
 import { JsonValue, JsonField, JsonTag } from "./value";
 import { Utf8 } from "cap:string";
+import { Simd } from "cap:simd";
+
+type JsonScanVec16 = @Vector(16, u8);
+
+/// Default recursion depth limit matching `serde-rs/json` (128).
+pub const JSON_DEFAULT_MAX_DEPTH: usize = 128;
 
 pub err JsonError {
     UnexpectedEof,
@@ -22,7 +30,7 @@ pub err JsonError {
 }
 
 pub struct JsonParseOptions {
-    max_depth: usize = 512,
+    max_depth: usize = JSON_DEFAULT_MAX_DEPTH,
     allow_trailing_garbage: bool = false,
 }
 
@@ -31,20 +39,16 @@ pub struct FastJsonScanner {
     pub static fn indexOfQuoteOrEscape(input: []const u8): usize? {
         let i: usize = 0;
         const n = input.len;
-        const t1: @Vector(16, u8) = @splat('"');
-        const t2: @Vector(16, u8) = @splat('\\');
+        const t1: JsonScanVec16 = @splat('"');
+        const t2: JsonScanVec16 = @splat('\\');
 
         while (i + 16 <= n) {
-            let chunk: @Vector(16, u8) = @splat(0);
-            zig {
-                chunk = input[i..][0..16].*;
-            }
+            const chunk: JsonScanVec16 = input[i..][0..16].*;
             const m1: u16 = @bitCast(chunk == t1);
             const m2: u16 = @bitCast(chunk == t2);
             const mask: u16 = m1 | m2;
             if (mask != 0) {
-                const bit_idx = @ctz(mask) as usize;
-                return i + bit_idx;
+                return i + (@ctz(mask) as usize);
             }
             i += 16;
         }
@@ -63,22 +67,18 @@ pub struct FastJsonScanner {
     pub static fn indexOfQuoteEscapeOrCtrl(input: []const u8): usize? {
         let i: usize = 0;
         const n = input.len;
-        const t1: @Vector(16, u8) = @splat('"');
-        const t2: @Vector(16, u8) = @splat('\\');
-        const t_ctrl: @Vector(16, u8) = @splat(0x20);
+        const t1: JsonScanVec16 = @splat('"');
+        const t2: JsonScanVec16 = @splat('\\');
+        const t_ctrl: JsonScanVec16 = @splat(0x20);
 
         while (i + 16 <= n) {
-            let chunk: @Vector(16, u8) = @splat(0);
-            zig {
-                chunk = input[i..][0..16].*;
-            }
+            const chunk: JsonScanVec16 = input[i..][0..16].*;
             const m1: u16 = @bitCast(chunk == t1);
             const m2: u16 = @bitCast(chunk == t2);
             const m3: u16 = @bitCast(chunk < t_ctrl);
             const mask: u16 = m1 | m2 | m3;
             if (mask != 0) {
-                const bit_idx = @ctz(mask) as usize;
-                return i + bit_idx;
+                return i + (@ctz(mask) as usize);
             }
             i += 16;
         }
@@ -92,58 +92,32 @@ pub struct FastJsonScanner {
         }
         return null;
     }
+
+    /// 16-byte SIMD RFC 8259 whitespace skipper (`' '`, `'\t'`, `'\r'`, `'\n'`).
+    pub static fn skipWhitespace(input: []const u8): usize {
+        if (input.len == 0) return 0;
+        const c0 = input[0];
+        if (c0 != ' ' && c0 != '\t' && c0 != '\r' && c0 != '\n') return 0;
+        return Simd.skipWhitespace(input);
+    }
 }
 
-pub struct JsonParser {
+/// Validates that `s` is well-formed UTF-8 (fast-path ASCII via `Simd.firstNonAscii`).
+fn isValidUtf8Slice(s: []const u8): bool {
+    const first_opt = Simd.firstNonAscii(s);
+    if (first_opt == null) return true;
+    return std.unicode.utf8ValidateSlice(s[first_opt.?..]);
+}
+
+/// Zero-heap RFC 8259 structural validator state (pure stack recursion bounded by `max_depth`).
+struct StrictJsonValidator {
     src: []const u8 = "",
     pos: usize = 0,
-    allocator: std.mem.Allocator = undefined,
     depth: usize = 0,
-    max_depth: usize = 512,
+    max_depth: usize = JSON_DEFAULT_MAX_DEPTH,
 
-    pub static fn init(allocator: std.mem.Allocator, src: []const u8): JsonParser {
-        return JsonParser{
-            .src = src,
-            .pos = 0,
-            .allocator = allocator,
-            .depth = 0,
-            .max_depth = 512,
-        };
-    }
-
-    pub static fn initWithOptions(allocator: std.mem.Allocator, src: []const u8, opts: JsonParseOptions): JsonParser {
-        return JsonParser{
-            .src = src,
-            .pos = 0,
-            .allocator = allocator,
-            .depth = 0,
-            .max_depth = opts.max_depth,
-        };
-    }
-
-    fn skipWhitespace(*_) {
-        while (pos < src.len) {
-            const b = src[pos];
-            if (b == ' ' || b == '\t' || b == '\r' || b == '\n') {
-                pos += 1;
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn peek(*_): u8? {
-        skipWhitespace();
-        if (pos >= src.len) return null;
-        return src[pos];
-    }
-
-    fn next(*_): u8? {
-        skipWhitespace();
-        if (pos >= src.len) return null;
-        const b = src[pos];
-        pos += 1;
-        return b;
+    fn skipWs(*_) {
+        _.pos += FastJsonScanner.skipWhitespace(_.src[_.pos..]);
     }
 
     static fn parseHex4(s: []const u8): u16! {
@@ -167,10 +141,281 @@ pub struct JsonParser {
         return val;
     }
 
+    fn validateString(*_): ! {
+        _.skipWs();
+        if (_.pos >= _.src.len || _.src[_.pos] != '"') return err.InvalidToken;
+        _.pos += 1;
+
+        while (_.pos < _.src.len) {
+            const rem = _.src[_.pos..];
+            const hit = FastJsonScanner.indexOfQuoteEscapeOrCtrl(rem) ?? return err.UnexpectedEof;
+            if (hit > 0) {
+                if (!isValidUtf8Slice(rem[0..hit])) return err.InvalidUnicode;
+                _.pos += hit;
+            }
+            const ch = _.src[_.pos];
+            if (ch < 0x20) return err.InvalidControlChar;
+            if (ch == '"') {
+                _.pos += 1;
+                return;
+            }
+            // ch == '\\'
+            if (_.pos + 1 >= _.src.len) return err.UnexpectedEof;
+            const esc = _.src[_.pos + 1];
+            _.pos += 2;
+            switch (esc) {
+                '"', '\\', '/', 'b', 'f', 'n', 'r', 't' => {},
+                'u' => {
+                    if (_.pos + 4 > _.src.len) return err.UnexpectedEof;
+                    const code = StrictJsonValidator.parseHex4(_.src[_.pos .. _.pos + 4])?;
+                    _.pos += 4;
+                    if (code >= 0xD800 && code <= 0xDBFF) {
+                        if (_.pos + 6 > _.src.len) return err.InvalidUnicode;
+                        if (_.src[_.pos] != '\\' || _.src[_.pos + 1] != 'u') return err.InvalidUnicode;
+                        const lo = StrictJsonValidator.parseHex4(_.src[_.pos + 2 .. _.pos + 6])?;
+                        if (lo < 0xDC00 || lo > 0xDFFF) return err.InvalidUnicode;
+                        _.pos += 6;
+                    } else if (code >= 0xDC00 && code <= 0xDFFF) {
+                        return err.InvalidUnicode;
+                    }
+                },
+                else => return err.InvalidEscape,
+            }
+        }
+        return err.UnexpectedEof;
+    }
+
+    fn validateNumber(*_): ! {
+        _.skipWs();
+        if (_.pos >= _.src.len) return err.UnexpectedEof;
+        const start = _.pos;
+
+        if (_.src[_.pos] == '-') {
+            _.pos += 1;
+            if (_.pos >= _.src.len) return err.InvalidToken;
+        }
+
+        if (_.src[_.pos] == '0') {
+            _.pos += 1;
+            if (_.pos < _.src.len && _.src[_.pos] >= '0' && _.src[_.pos] <= '9') {
+                return err.InvalidToken;
+            }
+        } else if (_.src[_.pos] >= '1' && _.src[_.pos] <= '9') {
+            _.pos += 1;
+            while (_.pos < _.src.len && _.src[_.pos] >= '0' && _.src[_.pos] <= '9') {
+                _.pos += 1;
+            }
+        } else {
+            return err.InvalidToken;
+        }
+
+        if (_.pos < _.src.len && _.src[_.pos] == '.') {
+            _.pos += 1;
+            if (_.pos >= _.src.len || _.src[_.pos] < '0' || _.src[_.pos] > '9') {
+                return err.InvalidToken;
+            }
+            while (_.pos < _.src.len && _.src[_.pos] >= '0' && _.src[_.pos] <= '9') {
+                _.pos += 1;
+            }
+        }
+
+        if (_.pos < _.src.len && (_.src[_.pos] == 'e' || _.src[_.pos] == 'E')) {
+            _.pos += 1;
+            if (_.pos < _.src.len && (_.src[_.pos] == '+' || _.src[_.pos] == '-')) {
+                _.pos += 1;
+            }
+            if (_.pos >= _.src.len || _.src[_.pos] < '0' || _.src[_.pos] > '9') {
+                return err.InvalidToken;
+            }
+            while (_.pos < _.src.len && _.src[_.pos] >= '0' && _.src[_.pos] <= '9') {
+                _.pos += 1;
+            }
+        }
+
+        const num_str = _.src[start.._.pos];
+        const v = std.fmt.parseFloat(f64, num_str) catch return err.InvalidToken;
+        if (!std.math.isFinite(v)) return err.InvalidToken;
+    }
+
+    fn validateArray(*_): ! {
+        if (_.depth >= _.max_depth) return err.MaxDepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
+        _.pos += 1; // skip '['
+        _.skipWs();
+        if (_.pos >= _.src.len) return err.UnexpectedEof;
+        if (_.src[_.pos] == ']') {
+            _.pos += 1;
+            return;
+        }
+
+        while (true) {
+            _.validateValue()?;
+            _.skipWs();
+            if (_.pos >= _.src.len) return err.UnexpectedEof;
+            const sep = _.src[_.pos];
+            if (sep == ']') {
+                _.pos += 1;
+                return;
+            } else if (sep == ',') {
+                _.pos += 1;
+                _.skipWs();
+                if (_.pos >= _.src.len) return err.UnexpectedEof;
+                if (_.src[_.pos] == ']') return err.TrailingComma;
+            } else {
+                return err.ExpectedComma;
+            }
+        }
+    }
+
+    fn validateObject(*_): ! {
+        if (_.depth >= _.max_depth) return err.MaxDepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
+        _.pos += 1; // skip '{'
+        _.skipWs();
+        if (_.pos >= _.src.len) return err.UnexpectedEof;
+        if (_.src[_.pos] == '}') {
+            _.pos += 1;
+            return;
+        }
+
+        while (true) {
+            _.validateString()?;
+            _.skipWs();
+            if (_.pos >= _.src.len || _.src[_.pos] != ':') return err.ExpectedColon;
+            _.pos += 1; // skip ':'
+
+            _.validateValue()?;
+            _.skipWs();
+            if (_.pos >= _.src.len) return err.UnexpectedEof;
+            const sep = _.src[_.pos];
+            if (sep == '}') {
+                _.pos += 1;
+                return;
+            } else if (sep == ',') {
+                _.pos += 1;
+                _.skipWs();
+                if (_.pos >= _.src.len) return err.UnexpectedEof;
+                if (_.src[_.pos] == '}') return err.TrailingComma;
+            } else {
+                return err.ExpectedComma;
+            }
+        }
+    }
+
+    fn validateValue(*_): ! {
+        _.skipWs();
+        if (_.pos >= _.src.len) return err.UnexpectedEof;
+        const ch = _.src[_.pos];
+        if (ch == 'n') {
+            if (_.pos + 4 <= _.src.len && std.mem.eql(u8, _.src[_.pos .. _.pos + 4], "null")) {
+                _.pos += 4;
+                return;
+            }
+            return err.InvalidToken;
+        }
+        if (ch == 't') {
+            if (_.pos + 4 <= _.src.len && std.mem.eql(u8, _.src[_.pos .. _.pos + 4], "true")) {
+                _.pos += 4;
+                return;
+            }
+            return err.InvalidToken;
+        }
+        if (ch == 'f') {
+            if (_.pos + 5 <= _.src.len && std.mem.eql(u8, _.src[_.pos .. _.pos + 5], "false")) {
+                _.pos += 5;
+                return;
+            }
+            return err.InvalidToken;
+        }
+        if (ch == '"') return _.validateString();
+        if (ch == '-' || (ch >= '0' && ch <= '9')) return _.validateNumber();
+        if (ch == '[') return _.validateArray();
+        if (ch == '{') return _.validateObject();
+        return err.InvalidToken;
+    }
+}
+
+/// Zero-heap strict RFC 8259 validator returning detailed `JsonError` on failure.
+pub fn validateJsonStrictOrErr(src: []const u8, max_depth: usize): ! {
+    let v = StrictJsonValidator{
+        .src = src,
+        .pos = 0,
+        .depth = 0,
+        .max_depth = max_depth,
+    };
+    v.validateValue()?;
+    v.skipWs();
+    if (v.pos < src.len) return err.TrailingCharacters;
+}
+
+/// Zero-heap strict RFC 8259 structural validator with explicit recursion depth cap.
+pub fn validateJsonWithMaxDepth(src: []const u8, max_depth: usize): bool {
+    validateJsonStrictOrErr(src, max_depth) catch return false;
+    return true;
+}
+
+/// Zero-heap strict RFC 8259 structural validator with default `serde-rs/json` max depth (128).
+pub fn validateJsonStrict(src: []const u8): bool {
+    return validateJsonWithMaxDepth(src, JSON_DEFAULT_MAX_DEPTH);
+}
+
+pub struct JsonParser {
+    src: []const u8 = "",
+    pos: usize = 0,
+    allocator: std.mem.Allocator = undefined,
+    depth: usize = 0,
+    max_depth: usize = JSON_DEFAULT_MAX_DEPTH,
+
+    pub static fn init(allocator: std.mem.Allocator, src: []const u8): JsonParser {
+        return JsonParser{
+            .src = src,
+            .pos = 0,
+            .allocator = allocator,
+            .depth = 0,
+            .max_depth = JSON_DEFAULT_MAX_DEPTH,
+        };
+    }
+
+    pub static fn initWithOptions(allocator: std.mem.Allocator, src: []const u8, opts: JsonParseOptions): JsonParser {
+        return JsonParser{
+            .src = src,
+            .pos = 0,
+            .allocator = allocator,
+            .depth = 0,
+            .max_depth = opts.max_depth,
+        };
+    }
+
+    fn skipWhitespace(*_) {
+        pos += FastJsonScanner.skipWhitespace(src[pos..]);
+    }
+
+    fn peek(*_): u8? {
+        skipWhitespace();
+        if (pos >= src.len) return null;
+        return src[pos];
+    }
+
+    fn next(*_): u8? {
+        skipWhitespace();
+        if (pos >= src.len) return null;
+        const b = src[pos];
+        pos += 1;
+        return b;
+    }
+
+    static fn parseHex4(s: []const u8): u16! {
+        return StrictJsonValidator.parseHex4(s);
+    }
+
     /// SIMD-accelerated RFC 8259 string parser:
     /// - Zero-copy slice borrow when no backslash escapes are present
     /// - Full unescaping including `\uXXXX` and UTF-16 surrogate pairs (`\uD83D\uDE00` -> UTF-8)
-    /// - Rejects unescaped ASCII control chars (< 0x20) and invalid escapes
+    /// - Rejects unescaped ASCII control chars (< 0x20), invalid UTF-8, lone surrogates, and invalid escapes
     pub fn parseString(*_): ([]const u8)! {
         skipWhitespace();
         if (pos >= src.len || src[pos] != '"') {
@@ -179,7 +424,7 @@ pub struct JsonParser {
         pos += 1; // skip opening quote
         const start = pos;
 
-        // Fast path: check first special byte
+        // Fast path: check first special byte via 16-lane SIMD
         const first_hit = FastJsonScanner.indexOfQuoteEscapeOrCtrl(src[pos..]) ?? return err.UnexpectedEof;
         const hit_pos = pos + first_hit;
         const hit_ch = src[hit_pos];
@@ -187,15 +432,19 @@ pub struct JsonParser {
             return err.InvalidControlChar;
         }
         if (hit_ch == '"') {
+            const slice = src[start..hit_pos];
+            if (!isValidUtf8Slice(slice)) return err.InvalidUnicode;
             pos = hit_pos + 1;
-            return src[start..hit_pos];
+            return slice;
         }
 
         // Slow path: string contains backslash escape sequences
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(allocator);
         if (hit_pos > start) {
-            out.appendSlice(allocator, src[start..hit_pos])?;
+            const prefix = src[start..hit_pos];
+            if (!isValidUtf8Slice(prefix)) return err.InvalidUnicode;
+            out.appendSlice(allocator, prefix)?;
         }
         pos = hit_pos;
 
@@ -203,7 +452,9 @@ pub struct JsonParser {
             const rem = src[pos..];
             const seg_hit = FastJsonScanner.indexOfQuoteEscapeOrCtrl(rem) ?? return err.UnexpectedEof;
             if (seg_hit > 0) {
-                out.appendSlice(allocator, rem[0..seg_hit])?;
+                const seg = rem[0..seg_hit];
+                if (!isValidUtf8Slice(seg)) return err.InvalidUnicode;
+                out.appendSlice(allocator, seg)?;
                 pos += seg_hit;
             }
 
@@ -311,67 +562,21 @@ pub struct JsonParser {
         }
 
         const num_str = src[start..pos];
-        return std.fmt.parseFloat(f64, num_str) catch return err.InvalidToken;
+        const parsed = std.fmt.parseFloat(f64, num_str) catch return err.InvalidToken;
+        if (!std.math.isFinite(parsed)) return err.InvalidToken;
+        return parsed;
     }
 
-    /// Fast skip over an arbitrary JSON value without heap allocations
+    /// Strict zero-heap skip over an arbitrary JSON value (validates full RFC 8259 syntax & depth).
     pub fn skipValue(*_): ! {
-        skipWhitespace();
-        if (pos >= src.len) return err.UnexpectedEof;
-        const c = src[pos];
-        if (c == '"') {
-            * = parseString()?;
-            return;
-        }
-        if (c == '{' || c == '[') {
-            let depth: usize = 0;
-            while (pos < src.len) {
-                const cur = src[pos];
-                if (cur == '"') {
-                    * = parseString()?;
-                    continue;
-                }
-                if (cur == '{' || cur == '[') {
-                    depth += 1;
-                    if (depth > max_depth) return err.MaxDepthExceeded;
-                } else if (cur == '}' || cur == ']') {
-                    if (depth == 0) return err.InvalidToken;
-                    depth -= 1;
-                    if (depth == 0) {
-                        pos += 1;
-                        return;
-                    }
-                }
-                pos += 1;
-            }
-            return err.UnexpectedEof;
-        }
-        if (c == 'n') {
-            if (pos + 4 <= src.len && std.mem.eql(u8, src[pos .. pos + 4], "null")) {
-                pos += 4;
-                return;
-            }
-            return err.InvalidToken;
-        }
-        if (c == 't') {
-            if (pos + 4 <= src.len && std.mem.eql(u8, src[pos .. pos + 4], "true")) {
-                pos += 4;
-                return;
-            }
-            return err.InvalidToken;
-        }
-        if (c == 'f') {
-            if (pos + 5 <= src.len && std.mem.eql(u8, src[pos .. pos + 5], "false")) {
-                pos += 5;
-                return;
-            }
-            return err.InvalidToken;
-        }
-        if (c == '-' || (c >= '0' && c <= '9')) {
-            * = parseNumber()?;
-            return;
-        }
-        return err.InvalidToken;
+        let v = StrictJsonValidator{
+            .src = src,
+            .pos = pos,
+            .depth = depth,
+            .max_depth = max_depth,
+        };
+        v.validateValue()?;
+        pos = v.pos;
     }
 
     pub fn parseValue(*_): JsonValue! {
@@ -533,194 +738,184 @@ pub struct JsonParser {
         return val;
     }
 
-    /// High-performance compiled-in typed JSON parser
+    /// High-performance compiled-in typed JSON parser (strict RFC 8259, zero zig{} blocks).
     pub static fn parseTyped(comptime T: type, allocator: std.mem.Allocator, src: []const u8): T! {
-        zig {
-            var pos: usize = 0;
-            const val = try fastParseType(T, allocator, src, &pos, 0);
-            while (pos < src.len and (src[pos] == ' ' or src[pos] == '\t' or src[pos] == '\r' or src[pos] == '\n')) pos += 1;
-            if (pos < src.len) return error.TrailingCharacters;
-            return val;
-        }
+        let pos: usize = 0;
+        const val = fastParseType(T, allocator, src, &pos, 0)?;
+        pos += FastJsonScanner.skipWhitespace(src[pos..]);
+        if (pos < src.len) return err.TrailingCharacters;
+        return val;
     }
 }
 
-zig {
-    pub fn fastParseType(comptime T: type, allocator: std.mem.Allocator, src: []const u8, pos: *usize, depth: usize) anyerror!T {
-        while (pos.* < src.len) {
-            const b = src[pos.*];
-            if (b == ' ' or b == '\t' or b == '\r' or b == '\n') {
-                pos.* += 1;
-            } else {
-                break;
+pub fn fastParseType(comptime T: type, allocator: std.mem.Allocator, src: []const u8, pos: *usize, depth: usize): T! {
+    pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+    if (pos.* >= src.len) return err.UnexpectedEof;
+
+    const info = @typeInfo(T);
+    switch (info) {
+        .bool => {
+            if (pos.* + 4 <= src.len && std.mem.eql(u8, src[pos.* .. pos.* + 4], "true")) {
+                pos.* += 4;
+                return true;
             }
-        }
-        if (pos.* >= src.len) return error.UnexpectedEof;
-
-        const info = @typeInfo(T);
-
-        switch (info) {
-            .bool => {
-                if (pos.* + 4 <= src.len and std.mem.eql(u8, src[pos.*..pos.* + 4], "true")) {
-                    pos.* += 4;
-                    return true;
-                }
-                if (pos.* + 5 <= src.len and std.mem.eql(u8, src[pos.*..pos.* + 5], "false")) {
-                    pos.* += 5;
-                    return false;
-                }
-                return error.InvalidToken;
-            },
-            .int => {
-                const start = pos.*;
-                if (pos.* < src.len and src[pos.*] == '-') {
-                    pos.* += 1;
-                }
-                if (pos.* >= src.len) return error.InvalidToken;
-                if (src[pos.*] == '0') {
-                    pos.* += 1;
-                    if (pos.* < src.len and src[pos.*] >= '0' and src[pos.*] <= '9') return error.InvalidToken;
-                } else if (src[pos.*] >= '1' and src[pos.*] <= '9') {
-                    pos.* += 1;
-                    while (pos.* < src.len and src[pos.*] >= '0' and src[pos.*] <= '9') pos.* += 1;
-                } else {
-                    return error.InvalidToken;
-                }
-                const num_slice = src[start..pos.*];
-                return std.fmt.parseInt(T, num_slice, 10) catch return error.InvalidToken;
-            },
-            .float => {
-                var p = JsonParser.init(allocator, src);
+            if (pos.* + 5 <= src.len && std.mem.eql(u8, src[pos.* .. pos.* + 5], "false")) {
+                pos.* += 5;
+                return false;
+            }
+            return err.InvalidToken;
+        },
+        .int => {
+            const start = pos.*;
+            if (pos.* < src.len && src[pos.*] == '-') {
+                pos.* += 1;
+            }
+            if (pos.* >= src.len) return err.InvalidToken;
+            if (src[pos.*] == '0') {
+                pos.* += 1;
+                if (pos.* < src.len && src[pos.*] >= '0' && src[pos.*] <= '9') return err.InvalidToken;
+            } else if (src[pos.*] >= '1' && src[pos.*] <= '9') {
+                pos.* += 1;
+                while (pos.* < src.len && src[pos.*] >= '0' && src[pos.*] <= '9') pos.* += 1;
+            } else {
+                return err.InvalidToken;
+            }
+            const num_slice = src[start..pos.*];
+            return std.fmt.parseInt(T, num_slice, 10) catch return err.InvalidToken;
+        },
+        .float => {
+            let p = JsonParser.init(allocator, src);
+            p.pos = pos.*;
+            const f = p.parseNumber()?;
+            pos.* = p.pos;
+            return @floatCast(f);
+        },
+        .pointer => |ptr| {
+            if (ptr.size == .slice && ptr.child == u8) {
+                let p = JsonParser.init(allocator, src);
                 p.pos = pos.*;
-                const f = try p.parseNumber();
+                const s = p.parseString()?;
                 pos.* = p.pos;
-                return @floatCast(f);
-            },
-            .pointer => |ptr| {
-                if (ptr.size == .slice and ptr.child == u8) {
-                    var p = JsonParser.init(allocator, src);
-                    p.pos = pos.*;
-                    const s = try p.parseString();
-                    pos.* = p.pos;
-                    return s;
-                }
-                if (ptr.size == .slice) {
-                    if (depth >= 512) return error.MaxDepthExceeded;
-                    while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                    if (pos.* >= src.len or src[pos.*] != '[') return error.InvalidToken;
-                    pos.* += 1; // skip '['
+                return s;
+            }
+            if (ptr.size == .slice) {
+                if (depth >= JSON_DEFAULT_MAX_DEPTH) return err.MaxDepthExceeded;
+                pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                if (pos.* >= src.len || src[pos.*] != '[') return err.InvalidToken;
+                pos.* += 1;
 
-                    var list: std.ArrayList(ptr.child) = .empty;
-                    errdefer list.deinit(allocator);
+                let list: std.ArrayList(ptr.child) = .empty;
+                errdefer list.deinit(allocator);
 
-                    while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                    if (pos.* < src.len and src[pos.*] == ']') {
-                        pos.* += 1;
-                        return list.toOwnedSlice(allocator);
-                    }
-
-                    while (true) {
-                        const item = try fastParseType(ptr.child, allocator, src, pos, depth + 1);
-                        try list.append(allocator, item);
-
-                        while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                        if (pos.* >= src.len) return error.UnexpectedEof;
-                        const sep = src[pos.*];
-                        if (sep == ']') {
-                            pos.* += 1;
-                            break;
-                        } else if (sep == ',') {
-                            pos.* += 1;
-                            while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                            if (pos.* < src.len and src[pos.*] == ']') return error.TrailingComma;
-                        } else {
-                            return error.ExpectedComma;
-                        }
-                    }
+                pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                if (pos.* < src.len && src[pos.*] == ']') {
+                    pos.* += 1;
                     return list.toOwnedSlice(allocator);
                 }
-                @compileError("Unsupported pointer type in fast JSON deserializer: " ++ @typeName(T));
-            },
-            .optional => |opt| {
-                if (pos.* + 4 <= src.len and std.mem.eql(u8, src[pos.*..pos.* + 4], "null")) {
-                    pos.* += 4;
-                    return null;
-                }
-                return try fastParseType(opt.child, allocator, src, pos, depth);
-            },
-            .@"struct" => |s| {
-                if (depth >= 512) return error.MaxDepthExceeded;
-                while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                if (pos.* >= src.len or src[pos.*] != '{') return error.ExpectedBrace;
-                pos.* += 1; // skip '{'
 
-                var result: T = undefined;
-                inline for (s.field_names, 0..) |fname, fidx| {
-                    const ftype = s.field_types[fidx];
-                    const fattr = s.field_attrs[fidx];
-                    if (fattr.defaultValue(ftype)) |def| {
-                        @field(result, fname) = def;
-                    }
-                }
-
-                while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                if (pos.* < src.len and src[pos.*] == '}') {
-                    pos.* += 1;
-                    return result;
-                }
-
-                var p = JsonParser.init(allocator, src);
                 while (true) {
-                    p.pos = pos.*;
-                    const key = try p.parseString();
-                    pos.* = p.pos;
+                    const item = fastParseType(ptr.child, allocator, src, pos, depth + 1)?;
+                    list.append(allocator, item)?;
 
-                    while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                    if (pos.* >= src.len or src[pos.*] != ':') return error.ExpectedColon;
-                    pos.* += 1; // skip ':'
-
-                    var matched = false;
-                    inline for (s.field_names, 0..) |fname, fidx| {
-                        if (std.mem.eql(u8, key, fname)) {
-                            const ftype = s.field_types[fidx];
-                            @field(result, fname) = try fastParseType(ftype, allocator, src, pos, depth + 1);
-                            matched = true;
-                            break;
-                        }
-                    }
-
-                    if (!matched) {
-                        p.pos = pos.*;
-                        try p.skipValue();
-                        pos.* = p.pos;
-                    }
-
-                    while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                    if (pos.* >= src.len) return error.UnexpectedEof;
+                    pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                    if (pos.* >= src.len) return err.UnexpectedEof;
                     const sep = src[pos.*];
-                    if (sep == '}') {
+                    if (sep == ']') {
                         pos.* += 1;
                         break;
                     } else if (sep == ',') {
                         pos.* += 1;
-                        while (pos.* < src.len and (src[pos.*] == ' ' or src[pos.*] == '\t' or src[pos.*] == '\r' or src[pos.*] == '\n')) pos.* += 1;
-                        if (pos.* < src.len and src[pos.*] == '}') return error.TrailingComma;
+                        pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                        if (pos.* < src.len && src[pos.*] == ']') return err.TrailingComma;
                     } else {
-                        return error.ExpectedComma;
+                        return err.ExpectedComma;
                     }
                 }
-                return result;
-            },
-            else => @compileError("Unsupported type for fast JSON parser: " ++ @typeName(T)),
-        }
-    }
+                return list.toOwnedSlice(allocator);
+            }
+            @compileError("Unsupported pointer type in fast JSON deserializer: " ++ @typeName(T));
+        },
+        .optional => |opt| {
+            if (pos.* + 4 <= src.len && std.mem.eql(u8, src[pos.* .. pos.* + 4], "null")) {
+                pos.* += 4;
+                return @as(T, null);
+            }
+            return fastParseType(opt.child, allocator, src, pos, depth);
+        },
+        .@"struct" => {
+            if (depth >= JSON_DEFAULT_MAX_DEPTH) return err.MaxDepthExceeded;
+            pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+            if (pos.* >= src.len || src[pos.*] != '{') return err.ExpectedBrace;
+            pos.* += 1;
 
-    /// High-performance compiled-in typed JSON parser replacing std.json.parseFromSliceLeaky
-    pub fn parseTyped(comptime T: type, allocator: std.mem.Allocator, src: []const u8) anyerror!T {
-        var pos: usize = 0;
-        const val = try fastParseType(T, allocator, src, &pos, 0);
-        while (pos < src.len and (src[pos] == ' ' or src[pos] == '\t' or src[pos] == '\r' or src[pos] == '\n')) pos += 1;
-        if (pos < src.len) return error.TrailingCharacters;
-        return val;
+            let result: T = undefined;
+            const fields = std.meta.fields(T);
+            comptime let init_idx: usize = 0;
+            while (init_idx < fields.len) : (init_idx += 1) {
+                const f = fields[init_idx];
+                if (def := f.defaultValue()) {
+                    @field(result, f.name) = def;
+                }
+            }
+
+            pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+            if (pos.* < src.len && src[pos.*] == '}') {
+                pos.* += 1;
+                return result;
+            }
+
+            let p = JsonParser.init(allocator, src);
+            while (true) {
+                p.pos = pos.*;
+                const key = p.parseString()?;
+                pos.* = p.pos;
+
+                pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                if (pos.* >= src.len || src[pos.*] != ':') return err.ExpectedColon;
+                pos.* += 1;
+
+                let matched: bool = false;
+                comptime let fidx: usize = 0;
+                while (fidx < fields.len) : (fidx += 1) {
+                    const f = fields[fidx];
+                    if (!matched && std.mem.eql(u8, key, f.name)) {
+                        @field(result, f.name) = fastParseType(f.type, allocator, src, pos, depth + 1)?;
+                        matched = true;
+                    }
+                }
+
+                if (!matched) {
+                    p.pos = pos.*;
+                    p.depth = depth + 1;
+                    p.skipValue()?;
+                    pos.* = p.pos;
+                }
+
+                pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                if (pos.* >= src.len) return err.UnexpectedEof;
+                const sep = src[pos.*];
+                if (sep == '}') {
+                    pos.* += 1;
+                    break;
+                } else if (sep == ',') {
+                    pos.* += 1;
+                    pos.* += FastJsonScanner.skipWhitespace(src[pos.*..]);
+                    if (pos.* < src.len && src[pos.*] == '}') return err.TrailingComma;
+                } else {
+                    return err.ExpectedComma;
+                }
+            }
+            return result;
+        },
+        else => @compileError("Unsupported type for fast JSON parser: " ++ @typeName(T)),
     }
+}
+
+/// High-performance compiled-in typed JSON parser replacing std.json.parseFromSliceLeaky.
+pub fn parseTyped(comptime T: type, allocator: std.mem.Allocator, src: []const u8): T! {
+    let pos: usize = 0;
+    const val = fastParseType(T, allocator, src, &pos, 0)?;
+    pos += FastJsonScanner.skipWhitespace(src[pos..]);
+    if (pos < src.len) return err.TrailingCharacters;
+    return val;
 }
