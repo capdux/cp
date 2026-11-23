@@ -1,11 +1,124 @@
 // Source: Absorbed from /data/dev/bun/src/http/lshpack.cp | Synced: 2026-11-22T12:49:17Z
+// Reference-hardened against hyperium/h2 (MIT)
 // lib/http/h2/hpack.cp
 // RFC 7541 Complete HPACK Header Compression for HTTP/2:
 // - 61-entry Static Table (Appendix A)
 // - 257-entry Canonical Huffman Codec (Appendix B)
-// - Dynamic Table with RFC 7541 §4.1 FIFO Eviction & Table Size Updates
+// - Dynamic Table with RFC 7541 §4.1 FIFO Eviction, Table Size Update Position Guards & List Size Limits
+// - 16-lane @Vector(16, u8) SIMD acceleration for copy, lowercase name validation, and byte comparison
 
 const std = @import("std");
+
+type HpackVec16 = @Vector(16, u8);
+
+/// Default RFC 7540 SETTINGS_MAX_HEADER_LIST_SIZE protection cap (64 KiB).
+pub const HPACK_DEFAULT_MAX_HEADER_LIST_SIZE: usize = 65536;
+
+/// Maximum encoded byte length for a single HPACK prefix integer (RFC 7541 §5.1 overflow guard).
+pub const HPACK_MAX_INT_BYTES: usize = 10;
+
+/// Strict HPACK decoding error set matching `hyperium/h2` security boundaries.
+pub err HpackError {
+    InvalidInteger,
+    InvalidIndex,
+    InvalidHuffman,
+    InvalidTableSizeUpdate,
+    TableSizeUpdateNotAllowed,
+    HeaderListTooLarge,
+    InvalidHeaderName,
+    BufferTooSmall,
+    TruncatedInput,
+    OutOfMemory,
+}
+
+/// Owned header pair returned by `HpackSessionCodec.decodeBlock`.
+pub struct HpackOwnedHeader {
+    pub name: []u8 = [],
+    pub value: []u8 = [],
+    pub never_index: bool = false,
+}
+
+fn isH2LowerTokenChar(c: u8): bool {
+    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) return true;
+    return switch (c) {
+        '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~' => true,
+        else => false,
+    };
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD block copy for raw HPACK header names and values.
+pub fn simdCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const chunk: HpackVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for HTTP/2 header names (RFC 7540 §8.1.2 / RFC 9113):
+/// enforces lowercase ASCII token characters (`a-z`, `0-9`, `-`, `_`, etc.), rejects uppercase `A-Z`
+/// and control bytes, and permits `:` only at index 0 for pseudo-headers (`:method`, `:path`, ...).
+pub fn simdIsValidH2HeaderName(name: []const u8): bool {
+    if (name.len == 0) return false;
+    let i: usize = 0;
+    if (name[0] == ':') {
+        if (name.len == 1) return false;
+        i = 1;
+    }
+    const n = name.len;
+    const v_a: HpackVec16 = @splat('a');
+    const v_26: HpackVec16 = @splat(26);
+    const v_0: HpackVec16 = @splat('0');
+    const v_10: HpackVec16 = @splat(10);
+    const v_dash: HpackVec16 = @splat('-');
+    const v_under: HpackVec16 = @splat('_');
+
+    while (i + 16 <= n) {
+        const chunk: HpackVec16 = name[i..][0..16].*;
+        const m_low: u16 = @bitCast((chunk -% v_a) < v_26);
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        const fast_ok: u16 = m_low | m_dig | m_dash | m_under;
+        const non_fast: u16 = ~fast_ok;
+        if (non_fast != 0) {
+            i += @ctz(non_fast) as usize;
+            if (!isH2LowerTokenChar(name[i])) return false;
+            i += 1;
+        } else {
+            i += 16;
+        }
+    }
+
+    while (i < n) : (i += 1) {
+        if (!isH2LowerTokenChar(name[i])) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte slice equality comparison for HPACK table lookups.
+pub fn simdEqlBytes(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const n = a.len;
+    while (i + 16 <= n) {
+        const va: HpackVec16 = a[i..][0..16].*;
+        const vb: HpackVec16 = b[i..][0..16].*;
+        const neq: u16 = @bitCast(va != vb);
+        if (neq != 0) return false;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
 
 pub struct HpackIntResult {
     pub value: usize = 0;
@@ -310,7 +423,7 @@ pub struct HpackCodec {
         return pos + 1;
     }
 
-    /// RFC 7541 §5.1 Integer Representation Decoder.
+    /// RFC 7541 §5.1 Integer Representation Decoder with strict u64/usize overflow and continuation-byte guards.
     pub static fn decodePrefixInt(buf: []const u8, prefix_bits: u8): HpackIntResult? {
         if (buf.len == 0 || prefix_bits == 0 || prefix_bits > 8) {
             return null;
@@ -323,20 +436,26 @@ pub struct HpackCodec {
                 bytes_read: 1,
             };
         }
+        const max_usize = std.math.maxInt(usize);
         let shift: usize = 0;
         let pos: usize = 1;
         while (pos < buf.len) {
+            if (pos >= HPACK_MAX_INT_BYTES || shift >= 63) {
+                return null;
+            }
             const b = buf[pos];
             pos += 1;
-            value += ((b & 0x7F) as usize) << shift;
+            const low: usize = (b & 0x7F) as usize;
+            const sh: u6 = @intCast(shift);
+            if (low > (max_usize - value) >> sh) {
+                return null;
+            }
+            value += low << sh;
             if ((b & 0x80) == 0) {
                 return HpackIntResult {
                     value: value,
                     bytes_read: pos,
                 };
-            }
-            if (shift >= 56) {
-                return null;
             }
             shift += 7;
         }
@@ -356,7 +475,7 @@ pub struct HpackCodec {
         let i: usize = 0;
         while (i < HPACK_STATIC_TABLE.len) : (i += 1) {
             const e = HPACK_STATIC_TABLE[i];
-            if (std.mem.eql(u8, e.name, name) && std.mem.eql(u8, e.value, value)) {
+            if (simdEqlBytes(e.name, name) && simdEqlBytes(e.value, value)) {
                 return e.index;
             }
         }
@@ -367,7 +486,7 @@ pub struct HpackCodec {
     pub static fn findStaticName(name: []const u8): usize {
         let i: usize = 0;
         while (i < HPACK_STATIC_TABLE.len) : (i += 1) {
-            if (std.mem.eql(u8, HPACK_STATIC_TABLE[i].name, name)) {
+            if (simdEqlBytes(HPACK_STATIC_TABLE[i].name, name)) {
                 return HPACK_STATIC_TABLE[i].index;
             }
         }
@@ -461,18 +580,14 @@ pub struct HpackCodec {
         return out_pos;
     }
 
-    /// Encodes a non-Huffman string literal (7-bit length prefix + raw octets).
+    /// Encodes a non-Huffman string literal (7-bit length prefix + raw octets) using 16-lane SIMD copy.
     pub static fn encodeStringLiteral(out: []u8, str: []const u8): usize {
         const hdr_len = HpackCodec.encodePrefixInt(out, str.len, 7, 0x00);
         if (hdr_len == 0 || out.len < hdr_len + str.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < str.len) {
-            out[hdr_len + i] = str[i];
-            i += 1;
-        }
-        return hdr_len + str.len;
+        const copied = simdCopyBytes(out[hdr_len .. hdr_len + str.len], str);
+        return hdr_len + copied;
     }
 
     /// Encodes a string literal using Huffman compression if `use_huffman` is true (and shorter or forced).
@@ -493,15 +608,15 @@ pub struct HpackCodec {
         return hdr_len + written;
     }
 
-    /// Decodes a non-Huffman string literal (zero-copy).
+    /// Decodes a non-Huffman string literal (zero-copy) with overflow-safe length check.
     pub static fn decodeStringLiteral(buf: []const u8): HpackDecodedHeader? {
         if (buf.len == 0) { return null; }
         if ((buf[0] & 0x80) != 0) { return null; }
         const len_res_opt = HpackCodec.decodePrefixInt(buf, 7);
         if (len_res_opt == null) { return null; }
         const len_res = len_res_opt.?;
+        if (len_res.value > buf.len - len_res.bytes_read) { return null; }
         const total = len_res.bytes_read + len_res.value;
-        if (buf.len < total) { return null; }
         return HpackDecodedHeader {
             name: "",
             value: buf[len_res.bytes_read .. total],
@@ -515,8 +630,8 @@ pub struct HpackCodec {
         if (buf.len == 0) return null;
         const is_huff = (buf[0] & 0x80) != 0;
         const len_res = HpackCodec.decodePrefixInt(buf, 7) ?? return null;
+        if (len_res.value > buf.len - len_res.bytes_read) return null;
         const total = len_res.bytes_read + len_res.value;
-        if (buf.len < total) return null;
         const raw_bytes = buf[len_res.bytes_read .. total];
         if (!is_huff) {
             return HpackDecodedHeader{
@@ -740,26 +855,26 @@ pub struct HpackDynamicTable {
         };
     }
 
-    /// Finds exact (name, value) match across static (1..61) and dynamic (62..) tables.
+    /// Finds exact (name, value) match across static (1..61) and dynamic (62..) tables using 16-lane SIMD comparison.
     pub fn findExact(name: []const u8, value: []const u8): usize {
         const st = HpackCodec.findStaticExact(name, value);
         if (st > 0) return st;
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name) && std.mem.eql(u8, _.entries[i].value, value)) {
+            if (simdEqlBytes(_.entries[i].name, name) && simdEqlBytes(_.entries[i].value, value)) {
                 return HPACK_STATIC_TABLE.len + 1 + i;
             }
         }
         return 0;
     }
 
-    /// Finds name match across static (1..61) and dynamic (62..) tables.
+    /// Finds name match across static (1..61) and dynamic (62..) tables using 16-lane SIMD comparison.
     pub fn findName(name: []const u8): usize {
         const st = HpackCodec.findStaticName(name);
         if (st > 0) return st;
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name)) {
+            if (simdEqlBytes(_.entries[i].name, name)) {
                 return HPACK_STATIC_TABLE.len + 1 + i;
             }
         }
@@ -891,5 +1006,158 @@ pub struct HpackSessionCodec {
             never_index: never_idx,
             bytes_read: pos,
         };
+    }
+
+    /// Frees a slice of `HpackOwnedHeader` returned by `decodeBlock`.
+    pub static fn freeDecodedHeaders(alloc: std.mem.Allocator, headers: []HpackOwnedHeader) {
+        let i: usize = 0;
+        while (i < headers.len) : (i += 1) {
+            if (headers[i].name.len > 0) alloc.free(headers[i].name);
+            if (headers[i].value.len > 0) alloc.free(headers[i].value);
+        }
+        if (headers.len > 0) alloc.free(headers);
+    }
+
+    /// Strict RFC 7541 / `hyperium/h2` full header-block decoder:
+    /// - Enforces Dynamic Table Size Updates (`001xxxxx`) ONLY at block start (`TableSizeUpdateNotAllowed`)
+    /// - Rejects table size updates exceeding `protocol_max_size` (`InvalidTableSizeUpdate`)
+    /// - Rejects index 0 or out-of-range indices (`InvalidIndex`)
+    /// - Enforces lowercase HTTP/2 header names via 16-lane SIMD (`InvalidHeaderName`)
+    /// - Enforces hard `max_header_list_size` bound to prevent expansion resource exhaustion (`HeaderListTooLarge`)
+    pub fn decodeBlock(
+        *_,
+        alloc: std.mem.Allocator,
+        block: []const u8,
+        max_header_list_size: usize = HPACK_DEFAULT_MAX_HEADER_LIST_SIZE,
+    ): ([]HpackOwnedHeader) ! HpackError {
+        let list: std.ArrayList(HpackOwnedHeader) = .empty;
+        errdefer {
+            for (h of list.items) {
+                if (h.name.len > 0) alloc.free(h.name);
+                if (h.value.len > 0) alloc.free(h.value);
+            }
+            list.deinit(alloc);
+        }
+
+        let name_scratch = alloc.alloc(u8, 8192) catch return HpackError.OutOfMemory;
+        defer alloc.free(name_scratch);
+        let val_scratch = alloc.alloc(u8, 16384) catch return HpackError.OutOfMemory;
+        defer alloc.free(val_scratch);
+
+        let pos: usize = 0;
+        let seen_header = false;
+        let total_list_size: usize = 0;
+        const max_usize = std.math.maxInt(usize);
+
+        while (pos < block.len) {
+            const first = block[pos];
+            // 1. Dynamic Table Size Update (`001xxxxx`) — MUST appear before any header field (RFC 7541 §4.2)
+            if ((first & 0xE0) == 0x20) {
+                if (seen_header) {
+                    return HpackError.TableSizeUpdateNotAllowed;
+                }
+                const sz_res = HpackCodec.decodePrefixInt(block[pos..], 5) ?? return HpackError.InvalidInteger;
+                if (!_.dec_table.setMaxSize(sz_res.value)) {
+                    return HpackError.InvalidTableSizeUpdate;
+                }
+                pos += sz_res.bytes_read;
+                continue;
+            }
+
+            seen_header = true;
+            let hdr_name: []const u8 = "";
+            let hdr_val: []const u8 = "";
+            let never_idx = false;
+
+            if ((first & 0x80) != 0) {
+                // Indexed Header Field (`1xxxxxxx`)
+                const idx_res = HpackCodec.decodePrefixInt(block[pos..], 7) ?? return HpackError.InvalidInteger;
+                if (idx_res.value == 0) return HpackError.InvalidIndex;
+                const entry = _.dec_table.lookup(idx_res.value) ?? return HpackError.InvalidIndex;
+                hdr_name = entry.name;
+                hdr_val = entry.value;
+                pos += idx_res.bytes_read;
+            } else {
+                // Literal Header Field
+                const incremental = (first & 0x40) != 0;
+                never_idx = !incremental && ((first & 0xF0) == 0x10);
+                const prefix_bits: u8 = if (incremental) (6 as u8) else (4 as u8);
+                const name_idx = HpackCodec.decodePrefixInt(block[pos..], prefix_bits) ?? return HpackError.InvalidInteger;
+                pos += name_idx.bytes_read;
+
+                if (name_idx.value > 0) {
+                    const entry = _.dec_table.lookup(name_idx.value) ?? return HpackError.InvalidIndex;
+                    hdr_name = entry.name;
+                } else {
+                    if (pos >= block.len) return HpackError.TruncatedInput;
+                    const is_huff_n = (block[pos] & 0x80) != 0;
+                    const n_len_res = HpackCodec.decodePrefixInt(block[pos..], 7) ?? return HpackError.InvalidInteger;
+                    if (n_len_res.value > block.len - pos - n_len_res.bytes_read) return HpackError.TruncatedInput;
+                    const n_raw = block[pos + n_len_res.bytes_read .. pos + n_len_res.bytes_read + n_len_res.value];
+                    pos += n_len_res.bytes_read + n_len_res.value;
+                    if (is_huff_n) {
+                        const dec_n = HpackCodec.decodeHuffman(name_scratch, n_raw) catch return HpackError.InvalidHuffman;
+                        hdr_name = name_scratch[0..dec_n];
+                    } else {
+                        hdr_name = n_raw;
+                    }
+                }
+
+                if (pos >= block.len) return HpackError.TruncatedInput;
+                const is_huff_v = (block[pos] & 0x80) != 0;
+                const v_len_res = HpackCodec.decodePrefixInt(block[pos..], 7) ?? return HpackError.InvalidInteger;
+                if (v_len_res.value > block.len - pos - v_len_res.bytes_read) return HpackError.TruncatedInput;
+                const v_raw = block[pos + v_len_res.bytes_read .. pos + v_len_res.bytes_read + v_len_res.value];
+                pos += v_len_res.bytes_read + v_len_res.value;
+                if (is_huff_v) {
+                    const dec_v = HpackCodec.decodeHuffman(val_scratch, v_raw) catch return HpackError.InvalidHuffman;
+                    hdr_val = val_scratch[0..dec_v];
+                } else {
+                    hdr_val = v_raw;
+                }
+
+                if (!simdIsValidH2HeaderName(hdr_name)) {
+                    return HpackError.InvalidHeaderName;
+                }
+                if (incremental) {
+                    if (!_.dec_table.insert(hdr_name, hdr_val)) return HpackError.OutOfMemory;
+                }
+            }
+
+            if (!simdIsValidH2HeaderName(hdr_name)) {
+                return HpackError.InvalidHeaderName;
+            }
+
+            // RFC 7540 §6.5.2 header list size accounting (name + value + 32)
+            if (hdr_name.len > max_usize - 32 || hdr_val.len > max_usize - 32 - hdr_name.len) {
+                return HpackError.HeaderListTooLarge;
+            }
+            const entry_cost = hdr_name.len + hdr_val.len + 32;
+            if (entry_cost > max_header_list_size || total_list_size > max_header_list_size - entry_cost) {
+                return HpackError.HeaderListTooLarge;
+            }
+            total_list_size += entry_cost;
+
+            let n_copy = alloc.alloc(u8, hdr_name.len) catch return HpackError.OutOfMemory;
+            errdefer alloc.free(n_copy);
+            const n_copied = simdCopyBytes(n_copy, hdr_name);
+            if (n_copied != hdr_name.len) return HpackError.BufferTooSmall;
+
+            let v_copy: []u8 = [];
+            if (hdr_val.len > 0) {
+                v_copy = alloc.alloc(u8, hdr_val.len) catch return HpackError.OutOfMemory;
+                const v_copied = simdCopyBytes(v_copy, hdr_val);
+                if (v_copied != hdr_val.len) return HpackError.BufferTooSmall;
+            }
+            errdefer if (v_copy.len > 0) alloc.free(v_copy);
+
+            list.append(alloc, HpackOwnedHeader{
+                name: n_copy,
+                value: v_copy,
+                never_index: never_idx,
+            }) catch return HpackError.OutOfMemory;
+        }
+
+        return list.toOwnedSlice(alloc) catch return HpackError.OutOfMemory;
     }
 }

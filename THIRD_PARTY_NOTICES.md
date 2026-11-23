@@ -80,6 +80,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **cookie-rs** (`rwf2`) | <https://github.com/rwf2/cookie-rs> | MIT OR Apache-2.0 | `lib/http/cookie.cp` | Copyright (c) 2014 Alex Crichton / Sergio Benitez |
 | **ripgrep** (`globset`) | <https://github.com/BurntSushi/ripgrep> | MIT OR Unlicense | `lib/text/glob.cp`, `lib/text/globset.cp` | Copyright (c) 2015 Andrew Gallant |
 | **mime** (`hyperium`) | <https://github.com/hyperium/mime> | MIT OR Apache-2.0 | `lib/mime/mime.cp`, `lib/mime/multipart.cp` | Copyright (c) 2014-2024 Sean McArthur / Hyperium |
+| **h2** (`hyperium`) | <https://github.com/hyperium/h2> | MIT | `lib/http/h2/hpack.cp` | Copyright (c) 2017 Carl Lerche / Hyperium |
 
 ---
 

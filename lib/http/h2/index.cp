@@ -37,6 +37,10 @@ export {
 } from "./client";
 
 export {
+    HPACK_DEFAULT_MAX_HEADER_LIST_SIZE,
+    HPACK_MAX_INT_BYTES,
+    HpackError,
+    HpackOwnedHeader,
     HpackIntResult,
     HpackStaticEntry,
     HpackDecodedHeader,
@@ -50,7 +54,10 @@ export {
     HpackIndexMode,
     HpackDynamicEntry,
     HpackDynamicTable,
-    HpackSessionCodec
+    HpackSessionCodec,
+    simdCopyBytes,
+    simdIsValidH2HeaderName,
+    simdEqlBytes,
 } from "./hpack";
 
 export {

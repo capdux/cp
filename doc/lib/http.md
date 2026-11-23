@@ -71,7 +71,7 @@
 | `lib/http/context.cp` | `HTTPContext` 与 `HttpConnectionPool`（按 host:port 复用、空闲超时驱逐、最大连接数与健康检查） | `src/http/HTTPContext.cp` |
 | `lib/http/proxy.cp` / `sendfile.cp` / `decompressor.cp` | `ProxyTunnel` / `HttpProxyTunnel`（Basic 认证与 `NoProxyMatcher`）、`SendFile`、与 `cap:pack` 协同的 `Decompressor` / `StreamingDecompressor` | `ProxyTunnel.cp` / `SendFile.cp` / `Decompressor.cp` |
 | `lib/http/urlPath.cp` / `encoding.cp` / `fetchModes.cp` / `signals.cp` / `state.cp` / `reqBody.cp` / `cert.cp` | 路径解析、`ContentEncodingNegotiator` (`Accept-Encoding` q-value 协商)、Fetch 模式枚举、原子中止信号、状态机与证书信息 | `src/http/` & `src/http_types/` |
-| `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧与流控（`WINDOW_UPDATE`/`RST_STREAM`/`PING`/`GOAWAY`）、多路复用流状态机、RFC 7541 完整 HPACK（61 项静态表 + 257 项 Huffman + 动态表） | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
+| `lib/http/h2/frame.cp` / `client.cp` / `hpack.cp` | RFC 7540 二进制帧与流控（`WINDOW_UPDATE`/`RST_STREAM`/`PING`/`GOAWAY`）、多路复用流状态机、RFC 7541 完整 HPACK（61 项静态表 + 257 项 Huffman + 动态表；`hpack.cp` 对标 `hyperium/h2` MIT 加固，含 `decodeBlock` 头部块列表上限与表更新位置校验、16-lane SIMD 拷贝/小写名校验/字节比对） | `H2FrameParser.cp` / `h2_client/ClientSession.cp` / `lshpack.cp` |
 | `lib/http/h3/altSvc.cp` / `client.cp` / `encode.cp` | RFC 7838 `Alt-Svc` 升级头解析、HTTP/3 QUIC 会话与双向流、RFC 9114 HTTP/3 请求伪头部（`:method`/`:scheme`/`:authority`/`:path`）与 QPACK 静态索引零分配规范化编码（`encodeH3RequestHeaders`） | `h3_client/AltSvc.cp` / `ClientSession.cp` / `encode.cp` |
 | `lib/http/accept.cp` / `acceptenc.cp` / `acceptlang.cp` / `acceptranges.cp` | RFC 9110 内容协商（`Accept` / `Accept-Encoding` / `Accept-Language` / `Accept-Ranges`）零分配解析与协商器 | `src/http/` |
 | `lib/http/allow.cp` / `altsvc.cp` / `auth.cp` | RFC 9110 `Allow` 方法集、RFC 7838 `Alt-Svc` 编解码、RFC 7617/6750 Basic/Bearer 认证编解码 | `src/http/` |
@@ -391,8 +391,8 @@ pub fn demoIndustrialClient(): !void {
 
 - **RFC 7540 完整帧与状态机**：支持 `FrameHeader`（9B 帧头）、`SettingsPayloadUnit`、`RstStreamFrame`、`WindowUpdateFrame`、`PingFrame`、`GoawayFrame`、`H2FlowControl`（连接级与流级双向发送/接收窗口追踪、半窗口自动触发 `WINDOW_UPDATE` 补充）以及 `H2ClientSession.processFrame`（帧校验与控制帧自动回包 `SETTINGS ACK` / `PING ACK` / `GOAWAY`）和 `buildHeaderFrames`（超限自动分片为 `HEADERS` + `CONTINUATION`）。
 - **RFC 7541 完整 HPACK**：
-  - `HpackCodec`：无状态前缀整数编解码、`HPACK_STATIC_TABLE`（全部 61 项）、`HPACK_HUFFMAN_TABLE`（257 符号，含 EOS）+ `HPACK_HUFF_BUCKETS` 快速前缀查表解码（自动校验 EOS 填充位）；
-  - `HpackSessionCodec` + `HpackDynamicTable`：带状态的会话级编码器/解码器，支持 `HpackIndexMode.Incremental` / `WithoutIndexing` / `NeverIndexed`、Huffman 可选压缩、动态表 FIFO 插入与大小超限自动驱逐，以及动态表容量更新指令（`encodeTableSizeUpdate`）。
+  - `HpackCodec`：无状态前缀整数编解码（防 `u64`/`usize` 溢出与连续字节数上限）、`HPACK_STATIC_TABLE`（全部 61 项）、`HPACK_HUFFMAN_TABLE`（257 符号，含 EOS）+ `HPACK_HUFF_BUCKETS` 快速前缀查表解码（严格校验末尾 `<= 7` 位全 1 填充与 EOS 拒绝）；
+  - `HpackSessionCodec` + `HpackDynamicTable`：带状态的会话级编码器/解码器，支持 `HpackIndexMode.Incremental` / `WithoutIndexing` / `NeverIndexed`、Huffman 可选压缩、动态表 FIFO 插入与大小超限自动驱逐、动态表容量更新指令（`encodeTableSizeUpdate`）、以及对标 `hyperium/h2` 加固的 `decodeBlock`（强制表更新仅限头部块起始处、校验索引 `>= 1`、`max_header_list_size` 压缩膨胀防护与 16-lane SIMD `simdCopyBytes` / `simdIsValidH2HeaderName` / `simdEqlBytes`）。
 
 ```typescript
 import {
