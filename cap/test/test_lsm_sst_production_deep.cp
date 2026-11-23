@@ -10,10 +10,10 @@ import {
     buildBloomFilter,
     mayContain,
     SstOptions,
-    SstBuilder,
-    SstReader,
+    LsmSstBuilder as SstBuilder,
+    LsmSstReader as SstReader,
     SstMergeIter,
-} from "cap:lsm_sst";
+} from "cap:db";
 
 test("lsm_sst: BlockBuilder/BlockReader prefix compression, restart seek and sequential scan") {
     const alloc = std.testing.allocator;
@@ -234,14 +234,14 @@ test("lsm_sst: SstMergeIter multi-level override, tombstone deletion and corrupt
 
 test("lsm_sst: cap.lsm_sst dynamic mount and zero memory leaks") {
     const alloc = std.testing.allocator;
-    let builder = cap.lsm_sst.SstBuilder.init(alloc, cap.lsm_sst.SstOptions{});
+    let builder = cap.db.LsmSstBuilder.init(alloc, cap.db.SstOptions{});
     defer builder.deinit();
 
     try builder.put("mount_key", "mount_val");
     const bytes = try builder.finish();
     defer alloc.free(bytes);
 
-    let reader = try cap.lsm_sst.SstReader.init(alloc, bytes);
+    let reader = try cap.db.LsmSstReader.init(alloc, bytes);
     defer reader.deinit();
 
     const got = (try reader.get("mount_key")).?;

@@ -648,3 +648,7 @@ const n = formatX509AltNameList(entries[0..], out[0..])?; // "DNS:api.example.co
 - [siphash.md](crypto/siphash.md)
 - [sshsig.md](crypto/sshsig.md)
 - [x25519.md](crypto/x25519.md)
+
+## 历史密码学域散装模块收敛（W29-Sync R7）
+
+- `cap:sha_hmac` -> `lib/crypto/sha{Hash,Hmac,Kdf}.cp`：导出 `ShaError`, `HashAlg`, `MAX_DIGEST_LEN`, `digestLen`, `blockLen`, `StreamingHasher`, `digestHex`, `hashOneshot`, `hashHex`, `StreamingHmac`, `hmacOneshot`, `hmacHex`, `verifyHmac`, `shaHkdfExtract`, `shaHkdfExpand`, `hkdf`, `pbkdf2HmacSha256`, `pbkdf2Hmac`。

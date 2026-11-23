@@ -15,8 +15,8 @@ import {
     WasmGlobal,
     CustomSection,
     WasmModule,
-} from "./types.cp";
-import { readUleb128, writeUleb128 } from "./leb128.cp";
+} from "./wasmTypes.cp";
+import { readUleb128, writeUleb128 } from "./wasmLeb128.cp";
 
 fn readByte(data: []const u8, offset: *usize): WasmError!u8 {
     if (offset.* >= data.len) {

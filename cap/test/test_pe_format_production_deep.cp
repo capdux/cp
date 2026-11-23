@@ -24,7 +24,7 @@ import {
     encodeSectionName,
     computePEChecksum,
     isPE,
-} from "cap:pe_format";
+} from "cap:binfmt";
 
 test("PE64 C-ABI header sizes, alignment helpers and section name encoding") {
     expect_eq(@sizeOf(DOSHeader), @as(usize, 64));

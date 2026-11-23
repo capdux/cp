@@ -16,12 +16,12 @@ import {
     hmacOneshot,
     hmacHex,
     verifyHmac,
-    hkdfExtract,
-    hkdfExpand,
+    shaHkdfExtract as hkdfExtract,
+    shaHkdfExpand as hkdfExpand,
     hkdf,
     pbkdf2HmacSha256,
     pbkdf2Hmac,
-} from "cap:sha_hmac";
+} from "cap:crypto";
 
 test("RFC 4231 HMAC-SHA256 and HMAC-SHA512 official test vectors") {
     const alloc = std.testing.allocator;
@@ -161,19 +161,19 @@ test("StreamingHasher & StreamingHmac 1..7 byte chunking matches oneshot and ver
 test("cap.sha_hmac dynamic mount and zero memory leaks under std.testing.allocator") {
     const alloc = std.testing.allocator;
 
-    const sha_hex = try cap.sha_hmac.hashHex(alloc, .Sha256, "abc");
+    const sha_hex = try cap.crypto.hashHex(alloc, .Sha256, "abc");
     defer alloc.free(sha_hex);
     try expect_eq(sha_hex, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
 
-    const mac_raw = try cap.sha_hmac.hmacOneshot(alloc, .Sha256, "k", "v");
+    const mac_raw = try cap.crypto.hmacOneshot(alloc, .Sha256, "k", "v");
     defer alloc.free(mac_raw);
-    try std.testing.expect(cap.sha_hmac.verifyHmac(.Sha256, "k", "v", mac_raw));
+    try std.testing.expect(cap.crypto.verifyHmac(.Sha256, "k", "v", mac_raw));
 
-    const derived = try cap.sha_hmac.hkdf(alloc, .Sha256, "s", "ikm", "ctx", 16);
+    const derived = try cap.crypto.hkdf(alloc, .Sha256, "s", "ikm", "ctx", 16);
     defer alloc.free(derived);
     try std.testing.expectEqual(@as(usize, 16), derived.len);
 
-    const pbk = try cap.sha_hmac.pbkdf2HmacSha256(alloc, "pw", "salt", 10, 16);
+    const pbk = try cap.crypto.pbkdf2HmacSha256(alloc, "pw", "salt", 10, 16);
     defer alloc.free(pbk);
     try std.testing.expectEqual(@as(usize, 16), pbk.len);
 }

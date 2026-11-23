@@ -1,6 +1,6 @@
 // Source: cp/lib/exe_format/trailer.cp (Standalone executable trailer append & zero-copy extraction)
 import std from "std";
-import { readU64Le, writeU64Le } from "./types.cp";
+import { readU64Le, writeU64Le } from "./exeTypes.cp";
 
 pub const TRAILER_FOOTER_SIZE: usize = 24;
 

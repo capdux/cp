@@ -142,3 +142,5 @@ pub fn demoJsonRfcAndNdjson(): !void {
    - RFC 6901 转义序列严格按顺序解码：`~1` 先转为 `/`，再将 `~0` 转为 `~`（`unescapeToken`）；数组索引拒绝前导零（如 `"01"` 非法，仅 `"0"` 或正整数合法）；`JsonPatch` 中的 `test` 操作失败时中止补丁应用。
 4. **RFC 8785 规范化输出与签名场景**：
    - 需要对 JSON 载荷做哈希或密码学签名时，使用 `JSON.stringifyCanonical`（键名按字典序确定性排列、无多余空白）保证跨节点序列化字节完全一致。
+5. **RFC 6902 JSON Patch 与 RFC 7396 Merge Patch 完整实现（`jsonPatch.cp`，收敛自 `cap:json_patch`）**：
+   - 导出：`PatchOpKind`, `Rfc6902PatchOp`, `JsonPatchError`, `resolvePointer`, `applyPatch`, `applyPatchJson`, `mergePatch`, `diff`, `freeOps`, `freeValue`, `cloneValue`, `valuesEqual`, `stringifyValue`。

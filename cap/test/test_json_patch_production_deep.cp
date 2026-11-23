@@ -4,7 +4,7 @@ import cap from "cap";
 import { test, expect_eq } from "cap:test";
 import {
     PatchOpKind,
-    JsonPatchOp,
+    Rfc6902PatchOp as JsonPatchOp,
     resolvePointer,
     applyPatch,
     applyPatchJson,
@@ -14,7 +14,7 @@ import {
     freeValue,
     valuesEqual,
     stringifyValue
-} from "cap:json_patch";
+} from "cap:json";
 
 test("RFC 6901 JSON Pointer ~0/~1 unescaping and array indexing") {
     const alloc = std.testing.allocator;
@@ -144,16 +144,16 @@ test("RFC 7396 mergePatch and cap.json_patch dynamic mount") {
     let merged = try mergePatch(alloc, target_p.value, patch_p.value);
     defer freeValue(alloc, &merged);
 
-    const title_val = try cap.json_patch.resolvePointer(merged, "/title");
+    const title_val = try cap.json.resolvePointer(merged, "/title");
     expect_eq(std.mem.eql(u8, title_val.string, "Hello!"), true);
 
     let family_removed = false;
-    * = cap.json_patch.resolvePointer(merged, "/author/familyName") catch {
+    * = cap.json.resolvePointer(merged, "/author/familyName") catch {
         family_removed = true;
     };
     expect_eq(family_removed, true);
 
-    const tags_val = try cap.json_patch.resolvePointer(merged, "/tags");
+    const tags_val = try cap.json.resolvePointer(merged, "/tags");
     expect_eq(tags_val.array.items.len, 1);
 
     const out_json = try stringifyValue(alloc, merged);

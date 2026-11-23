@@ -62,3 +62,13 @@ export {
     ItemType,
     isSimpleCopyType,
 } from "./traits";
+
+// === W29-Sync R7: Consolidated Pointer / Packed Type Traits ===
+export {
+    isByteString,
+    isInteger,
+    isPackedContainer,
+    PointerKind,
+    PointerParseOptions,
+    PointerMeta,
+} from "./pointerTraits.cp";

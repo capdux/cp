@@ -30,7 +30,7 @@ fn readSmallFileAlloc(alloc: std.mem.Allocator, path: string, max_bytes: usize):
     let path_buf: [4096]u8 = undefined;
     @memcpy(path_buf[0..path.len], path);
     path_buf[path.len] = 0;
-    const c_path: [*:0]const u8 = @ptrCast(&path_buf[0]);
+    const c_path: [*:0]const u8 = unsafe { @ptrCast(&path_buf[0]) };
 
     const flags = std.c.O{ .ACCMODE = .RDONLY, .CLOEXEC = true };
     const fd = std.c.open(c_path, flags, @as(std.c.mode_t, 0));
@@ -42,7 +42,7 @@ fn readSmallFileAlloc(alloc: std.mem.Allocator, path: string, max_bytes: usize):
 
     let chunk: [4096]u8 = undefined;
     while (true) {
-        const n = std.c.read(fd, @ptrCast(&chunk[0]), chunk.len);
+        const n = std.c.read(fd, unsafe { @ptrCast(&chunk[0]) }, chunk.len);
         if (n == 0) break;
         if (n < 0) {
             if (std.c._errno().* == @intFromEnum(std.c.E.INTR)) continue;
@@ -97,7 +97,7 @@ fn resolveGitDir(alloc: std.mem.Allocator, repo_root: string): ([]u8) ! GitError
         let path_buf: [4096]u8 = undefined;
         @memcpy(path_buf[0..head_probe.len], head_probe);
         path_buf[head_probe.len] = 0;
-        const c_path: [*:0]const u8 = @ptrCast(&path_buf[0]);
+        const c_path: [*:0]const u8 = unsafe { @ptrCast(&path_buf[0]) };
         const fd = std.c.open(c_path, .{ .ACCMODE = .RDONLY, .CLOEXEC = true }, @as(std.c.mode_t, 0));
         if (fd >= 0) {
             * = std.c.close(fd);

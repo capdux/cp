@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { GitProvider, HostedGitInfo } from "cap:hosted_git_info";
+import { GitProvider, HostedGitInfo } from "cap:git";
 
 test("1. GitHub shorthand, HTTPS, git+https, tree URL & all to* serializers", () => {
     let buf: [128]u8 = std.mem.zeroes([128]u8);

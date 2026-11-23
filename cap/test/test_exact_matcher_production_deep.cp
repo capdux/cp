@@ -10,7 +10,7 @@ import {
     packU64Lower,
     packU128,
     packU128Lower,
-} from "cap:exact_matcher";
+} from "cap:ds";
 
 test("1. Matcher4 exact switch dispatch and boundary sentinel", () => {
     expect_eq(Matcher4.match("GET"), Matcher4.case("GET"));

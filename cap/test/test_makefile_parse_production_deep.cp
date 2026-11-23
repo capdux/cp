@@ -8,7 +8,7 @@ import {
     MakeRuleIter,
     MakeVarIter,
     isPhonyTarget,
-} from "cap:makefile_parse";
+} from "cap:devops";
 
 test("makefile_parse: MakeVarIter parses =, :=, ::=, ?=, += and export/override prefixes") {
     const mk =

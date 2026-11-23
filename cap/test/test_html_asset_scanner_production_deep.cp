@@ -7,7 +7,7 @@ import {
     SrcsetCandidate,
     parseSrcset,
     HtmlAssetScanner,
-} from "cap:html_asset_scanner";
+} from "cap:html";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

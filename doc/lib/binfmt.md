@@ -143,3 +143,15 @@ pub fn demoBinfmt() {
 - [vmdk.md](binfmt/vmdk.md)
 - [warc.md](binfmt/warc.md)
 - [xdr.md](binfmt/xdr.md)
+
+## 历史二进制格式域散装模块收敛（W29-Sync R7）
+
+以下 5 个原独立顶层目录已统一收敛至 `cap:binfmt`（`lib/binfmt/`），可直接从 `"cap:binfmt"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:arrow_ipc` | `lib/binfmt/arrow{Types,Flatbuf,Ipc}.cp` | `ArrowError`, `ArrowType`, `ArrowField`, `ArrowSchema`, `ArrowColumn`, `RecordBatch`, `ARROW_IPC_MAGIC`, `writeStream`, `readStream`, `writeFile`, `readFile` |
+| `cap:binary_schema` | `lib/binfmt/binarySchema.cp` | `END_OF_MESSAGE`, `SchemaError`, `SchemaReader`, `SchemaWriter`, `FixedSchemaWriter`, `CompactUint64` |
+| `cap:exe_format` | `lib/binfmt/exe{Types,Elf,Pe,Macho,Trailer}.cp` | `ExeKind`, `ExeArch`, `detectExeKind`, `parseElf64Header`, `parsePeHeader`, `parseMachO64Header`, `appendStandaloneTrailer`, `extractStandaloneTrailer` |
+| `cap:pe_format` | `lib/binfmt/peFormat.cp` | `PeFormatError`, `PEFile`, `DOSHeader`, `PEHeader`, `OptionalHeader64`, `SectionHeader`, `StripMode`, `StripOpts`, `computePEChecksum`, `isPE` |
+| `cap:wasm_fmt` | `lib/binfmt/wasm{Types,Leb128,Codec}.cp` | `WASM_MAGIC`, `WASM_VERSION`, `WasmError`, `WasmModule`, `wasmReadUleb128`, `writeUleb128`, `readSleb128`, `writeSleb128`, `parseWasm`, `encodeWasm`, `findExport`, `addCustomSection` |

@@ -123,3 +123,5 @@ pub fn demoHtmlSecurityAndExtract(): !void {
    - 渲染用户提交或第三方抓取的富文本 HTML 时，使用 `SanitizerPolicy.defaultSafe()` 自动移除 `<script>`、`<iframe>`、`on*` 事件属性，并通过 `isSafeUrl` 阻断 `javascript:` / `vbscript:` / 畸形 `data:` URI。
 4. **WHATWG C1 控制区与非法码点替换（`HtmlEntities`）**：
    - 解码数字字符引用（`&#...;` / `&#x...;`）时严格遵循 WHATWG HTML5 规范：自动映射 Windows-1252 C1 替换表（`0x80..0x9F`）并将 `0x00`、孤立代理项与超界码点替换为 `U+FFFD`。
+5. **HTML 资源引用与 `srcset` 扫描器（`assetScanner.cp`，收敛自 `cap:html_asset_scanner`）**：
+   - 导出：`AssetKind`, `AssetRef`, `SrcsetCandidate`, `parseSrcset`, `HtmlAssetScanner`。

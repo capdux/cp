@@ -117,3 +117,5 @@ pub fn demoMeta() {
    - `bitCount`（`popcnt`）、`leadingZeros`（`lzcnt`/`clz`）、`trailingZeros`（`tzcnt`/`ctz`）与 `rotateLeft`/`rotateRight` 直接编译为单周期 CPU 指令；注意对 `0` 调用 `leadingZeros`/`trailingZeros` 返回完整位宽（如 `u64` 为 `64`）。
 3. **编译期反射零运行时开销（`traits.cp`）**：
    - `isInt`、`isStruct`、`hasField`、`fieldCount`、`sizeOf`、`alignOf`、`typeName` 与 `ChildType` 全部在编译期（`comptime`）折叠为常量，适用于泛型容器特化与零成本序列化代码生成。
+4. **指针与打包类型特征扩展（`pointerTraits.cp`，收敛自 `cap:type_traits`）**：
+   - 导出：`isByteString`, `isInteger`, `isPackedContainer`, `PointerKind`, `PointerParseOptions`, `PointerMeta`。

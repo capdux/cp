@@ -1,6 +1,6 @@
 // Source: bun/src/exe_format/macho.cp -> cp/lib/exe_format/macho.cp (Zero-copy Mach-O 64 header parser)
 import std from "std";
-import { ExeArch, archFromMachOCpu, readU32Le } from "./types.cp";
+import { ExeArch, archFromMachOCpu, readU32Le } from "./exeTypes.cp";
 
 pub const MH_MAGIC_64: u32 = 0xFEEDFACF;
 pub const MACH_HEADER_64_SIZE: usize = 32;

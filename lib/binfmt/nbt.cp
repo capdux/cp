@@ -85,7 +85,7 @@ pub struct NbtReader {
         };
     }
 
-    fn initLittle(data: []const u8): NbtReader {
+    static fn initLittle(data: []const u8): NbtReader {
         return NbtReader{
             .data = data,
             .pos = 0,

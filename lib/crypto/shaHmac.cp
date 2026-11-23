@@ -1,7 +1,7 @@
 // Source: bun/src/sha_hmac/hmac.cp -> cp/lib/sha_hmac/hmac.cp (Pure CP unified HMAC & constant-time verification)
 
 const std = @import("std");
-import { HashAlg, ShaError, MAX_DIGEST_LEN, digestLen, digestHex } from "./hash.cp";
+import { HashAlg, ShaError, MAX_DIGEST_LEN, digestLen, digestHex } from "./shaHash.cp";
 
 const HmacBlake2b256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2b256);
 const HmacBlake2s256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2s256);

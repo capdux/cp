@@ -405,3 +405,17 @@ export {
     ObjectPool,
     PoolNode,
 } from "./objectPool.cp";
+
+// === W29-Sync R7: Consolidated Exact Size String Matcher ===
+export {
+    ExactSizeMatcher,
+    Matcher4,
+    Matcher8,
+    Matcher16,
+    packU32,
+    packU32Lower,
+    packU64,
+    packU64Lower,
+    packU128,
+    packU128Lower,
+} from "./exactMatcher.cp";

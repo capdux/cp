@@ -537,3 +537,4 @@ pub fn demoSparseSet() {
 | `cap:lockfree_queue` | `lib/ds/lockfree{Queue,Spsc,Mpmc,Channel}.cp` | `SpscQueue`, `MpmcQueue`, `BoundedChannel`, `ChannelError`, `UnboundedQueue`, `CACHE_LINE_LENGTH`, `QUEUE_PADDING_LENGTH` |
 | `cap:static_hashmap` | `lib/ds/staticHashMap.cp` | `StaticHashMap`, `KeyValue`, `Slot`, `StringContext`, `AsciiIgnoreCaseContext`, `IntContext`, `fnv1a64`, `fnv1a64AsciiLower`, `splitmix64` |
 | `cap:object_pool` | `lib/ds/objectPool.cp` | `ObjectPool`, `PoolNode` |
+| `cap:exact_matcher` | `lib/ds/exactMatcher.cp` | `ExactSizeMatcher`, `Matcher4`, `Matcher8`, `Matcher16`, `packU32`, `packU32Lower`, `packU64`, `packU64Lower`, `packU128`, `packU128Lower` |

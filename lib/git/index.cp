@@ -68,3 +68,9 @@ export {
     resolveOwners,
     isOwnedBy,
 } from "./codeowners.cp";
+
+// === W29-Sync R7: Consolidated Hosted Git Info ===
+export {
+    GitProvider,
+    HostedGitInfo,
+} from "./hostedGitInfo.cp";

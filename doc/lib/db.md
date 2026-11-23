@@ -745,3 +745,7 @@ pub fn demoQueryCostPlanner()! {
 - [valkey.md](db/valkey.md)
 - [wal.md](db/wal.md)
 - [xorfilter.md](db/xorfilter.md)
+
+## 历史数据库存储域散装模块收敛（W29-Sync R7）
+
+- `cap:lsm_sst` -> `lib/db/lsm{Block,Bloom,Sstable}.cp`：导出 `SstError`, `LsmBlockHandle`, `BlockBuilder`, `BlockReader`, `BlockIter`, `BloomFilter`, `buildBloomFilter`, `mayContain`, `SST_MAGIC`, `LSM_SST_FOOTER_SIZE`, `BLOCK_TRAILER_SIZE`, `SstOptions`, `SstEntry`, `SstOwnedEntry`, `SstGetResult`, `LsmSstBuilder`, `LsmSstReader`, `SstMergeIter`。

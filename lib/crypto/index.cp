@@ -597,3 +597,31 @@ export {
     formatX509AltNameList,
     countSafeX509AltNames,
 } from "./x509AltName.cp";
+
+// === W29-Sync R7: Consolidated Streaming SHA / HMAC / HKDF / PBKDF2 ===
+export {
+    ShaError,
+    HashAlg,
+    MAX_DIGEST_LEN,
+    digestLen,
+    blockLen,
+    StreamingHasher,
+    digestHex,
+    hashOneshot,
+    hashHex,
+} from "./shaHash.cp";
+
+export {
+    StreamingHmac,
+    hmacOneshot,
+    hmacHex,
+    verifyHmac,
+} from "./shaHmac.cp";
+
+export {
+    hkdfExtract as shaHkdfExtract,
+    hkdfExpand as shaHkdfExpand,
+    hkdf,
+    pbkdf2HmacSha256,
+    pbkdf2Hmac,
+} from "./shaKdf.cp";

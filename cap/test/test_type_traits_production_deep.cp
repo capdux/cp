@@ -18,7 +18,7 @@ import {
     PointerKind,
     PointerParseOptions,
     PointerMeta,
-} from "cap:type_traits";
+} from "cap:meta";
 
 struct PlainStruct {
     a: u32,

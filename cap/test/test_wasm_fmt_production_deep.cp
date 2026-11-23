@@ -12,7 +12,7 @@ import {
     WasmGlobal,
     CustomSection,
     WasmModule,
-    readUleb128,
+    wasmReadUleb128 as readUleb128,
     writeUleb128,
     readSleb128,
     writeSleb128,
@@ -22,7 +22,7 @@ import {
     findExportFuncType,
     findCustomSection,
     addCustomSection,
-} from "cap:wasm_fmt";
+} from "cap:binfmt";
 
 const std = @import("std");
 
@@ -276,13 +276,13 @@ test("wasm_fmt cap.wasm_fmt dynamic mount and zero leaks") {
         .exports = &exports,
     };
 
-    const encoded = try cap.wasm_fmt.encodeWasm(alloc, mod);
+    const encoded = try cap.binfmt.encodeWasm(alloc, mod);
     defer alloc.free(encoded);
 
-    let decoded = try cap.wasm_fmt.parseWasm(alloc, encoded);
+    let decoded = try cap.binfmt.parseWasm(alloc, encoded);
     defer decoded.deinit(alloc);
 
-    const found = cap.wasm_fmt.findExport(decoded, "mem").?;
+    const found = cap.binfmt.findExport(decoded, "mem").?;
     expect_eq(found.index, @as(u32, 0));
     expect_eq(decoded.memories[0].limits.min, @as(u32, 2));
 }

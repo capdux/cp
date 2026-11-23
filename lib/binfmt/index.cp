@@ -908,3 +908,161 @@ export {
     BitReader,
     Leb128,
 } from "./bitstream.cp";
+
+// === W29-Sync R7: Consolidated Arrow IPC, Binary Schema, Exe/PE & Wasm Formats ===
+export {
+    ArrowError,
+    ArrowType,
+    ArrowField,
+    ArrowSchema,
+    ValidityBitmap,
+    ArrowColumn,
+    RecordBatch,
+} from "./arrowTypes.cp";
+
+export {
+    FbNode,
+    FbBuffer,
+    FbBlock,
+    FbMessageHeader,
+    FbDecodedMessage,
+    FbDecodedFooter,
+    encodeSchemaMessage,
+    encodeRecordBatchMessage,
+    encodeFooter,
+    decodeMessage,
+    decodeFooter,
+} from "./arrowFlatbuf.cp";
+
+export {
+    ARROW_MAGIC as ARROW_IPC_MAGIC,
+    ARROW_MAGIC_PADDED,
+    IPC_CONTINUATION_TOKEN,
+    ArrowStreamResult,
+    writeStream,
+    readStream,
+    writeFile,
+    readFile,
+} from "./arrowIpc.cp";
+
+export {
+    END_OF_MESSAGE,
+    SchemaError,
+    SchemaReader,
+    SchemaWriter,
+    FixedSchemaWriter,
+    CompactUint64,
+} from "./binarySchema.cp";
+
+export {
+    ExeKind,
+    ExeArch,
+    detectExeKind,
+    archFromElfMachine,
+    archFromPeMachine,
+    archFromMachOCpu,
+    readU16Le,
+    readU32Le,
+    readU64Le,
+    writeU64Le,
+} from "./exeTypes.cp";
+
+export {
+    ELF64_EHDR_SIZE,
+    ELF64_SHDR_SIZE,
+    Elf64Header,
+    Elf64Section,
+    parseElf64Header,
+    listElf64Sections,
+    findElf64Section,
+} from "./exeElf.cp";
+
+export {
+    PE_SIGNATURE,
+    DOS_SIGNATURE,
+    PE32_MAGIC,
+    PE32_PLUS_MAGIC,
+    PE_SECTION_HEADER_SIZE,
+    PeHeaderInfo,
+    parsePeHeader,
+} from "./exePe.cp";
+
+export {
+    MH_MAGIC_64,
+    MACH_HEADER_64_SIZE,
+    MachO64HeaderInfo,
+    parseMachO64Header,
+} from "./exeMacho.cp";
+
+export {
+    TRAILER_FOOTER_SIZE,
+    StandaloneTrailer,
+    computeChecksum64,
+    appendStandaloneTrailer,
+    extractStandaloneTrailer,
+} from "./exeTrailer.cp";
+
+export {
+    Error as PeFormatError,
+    StripMode,
+    StripOpts,
+    DOSHeader,
+    PEHeader,
+    DataDirectory,
+    OptionalHeader64,
+    SectionHeader,
+    OPTIONAL_HEADER_MAGIC_64,
+    IMAGE_FILE_MACHINE_AMD64,
+    IMAGE_FILE_MACHINE_ARM64,
+    IMAGE_FILE_EXECUTABLE_IMAGE,
+    IMAGE_FILE_LARGE_ADDRESS_AWARE,
+    IMAGE_SUBSYSTEM_WINDOWS_CUI,
+    IMAGE_SCN_CNT_CODE,
+    IMAGE_SCN_CNT_INITIALIZED_DATA,
+    IMAGE_SCN_MEM_EXECUTE,
+    IMAGE_SCN_MEM_READ,
+    IMAGE_SCN_MEM_WRITE,
+    IMAGE_DIRECTORY_ENTRY_SECURITY,
+    IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY,
+    MAX_SECTIONS,
+    isPow2,
+    alignUpU32,
+    alignUpUsize,
+    encodeSectionName,
+    computePEChecksum,
+    isPE,
+    PEFile,
+} from "./peFormat.cp";
+
+export {
+    WASM_MAGIC,
+    WASM_VERSION,
+    WasmError,
+    ValType,
+    SectionId,
+    ExternalKind,
+    FuncType,
+    WasmLimits,
+    WasmImport,
+    WasmExport,
+    WasmMemory,
+    WasmGlobal,
+    CustomSection,
+    WasmModule,
+} from "./wasmTypes.cp";
+
+export {
+    readUleb128 as wasmReadUleb128,
+    writeUleb128,
+    readSleb128,
+    writeSleb128,
+} from "./wasmLeb128.cp";
+
+export {
+    parseWasm,
+    encodeWasm,
+    findExport,
+    findExportFuncType,
+    findCustomSection,
+    addCustomSection,
+} from "./wasmCodec.cp";

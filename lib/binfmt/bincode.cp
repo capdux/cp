@@ -107,11 +107,11 @@ pub struct BincodeWriter {
         };
     }
 
-    fn initStandard(buf: []u8): BincodeWriter {
+    static fn initStandard(buf: []u8): BincodeWriter {
         return BincodeWriter.init(buf, BincodeConfig.standard());
     }
 
-    fn initLegacy(buf: []u8): BincodeWriter {
+    static fn initLegacy(buf: []u8): BincodeWriter {
         return BincodeWriter.init(buf, BincodeConfig.legacy());
     }
 
@@ -330,11 +330,11 @@ pub struct BincodeReader {
         };
     }
 
-    fn initStandard(data: []const u8): BincodeReader {
+    static fn initStandard(data: []const u8): BincodeReader {
         return BincodeReader.init(data, BincodeConfig.standard());
     }
 
-    fn initLegacy(data: []const u8): BincodeReader {
+    static fn initLegacy(data: []const u8): BincodeReader {
         return BincodeReader.init(data, BincodeConfig.legacy());
     }
 

@@ -1,6 +1,6 @@
 // Source: bun/src/exe_format/elf.cp -> cp/lib/exe_format/elf.cp (Zero-copy ELF64 header & section parser)
 import std from "std";
-import { ExeArch, archFromElfMachine, readU16Le, readU32Le, readU64Le } from "./types.cp";
+import { ExeArch, archFromElfMachine, readU16Le, readU32Le, readU64Le } from "./exeTypes.cp";
 
 pub const ELF64_EHDR_SIZE: usize = 64;
 pub const ELF64_SHDR_SIZE: usize = 64;

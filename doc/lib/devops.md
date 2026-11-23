@@ -96,3 +96,7 @@ pub fn demoDevops(buf: []const u8) {
 - [udf.md](devops/udf.md)
 - [vdi.md](devops/vdi.md)
 - [vhd.md](devops/vhd.md)
+
+## 历史 DevOps 域散装模块收敛（W29-Sync R7）
+
+- `cap:makefile_parse` -> `lib/devops/makefileParse.cp`：导出 `MakeAssignOp`, `MakeVar`, `MakeRule`, `MakeRuleIter`, `MakeVarIter`, `isPhonyTarget`。

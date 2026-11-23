@@ -13,7 +13,7 @@ import {
     parseMachO64Header,
     appendStandaloneTrailer,
     extractStandaloneTrailer,
-} from "cap:exe_format";
+} from "cap:binfmt";
 
 fn putU16Le(buf: []u8, off: usize, val: u16) {
     buf[off] = (val & 0xFF) as u8;
@@ -225,12 +225,12 @@ test("exe_format: StandaloneTrailer append, zero-copy extract & tamper intercept
 test("exe_format: cap.exe_format dynamic mount & zero leak") {
     const alloc = std.testing.allocator;
     const wasm_hdr: [8]u8 = [0x00, 'a', 's', 'm', 1, 0, 0, 0];
-    expect_eq(cap.exe_format.detectExeKind(wasm_hdr[0..]), ExeKind.Wasm);
+    expect_eq(cap.binfmt.detectExeKind(wasm_hdr[0..]), ExeKind.Wasm);
 
     const magic: [8]u8 = ['C', 'P', 'T', 'E', 'S', 'T', '0', '1'];
-    const bundled = cap.exe_format.appendStandaloneTrailer(alloc, wasm_hdr[0..], "PAYLOAD", magic)?;
+    const bundled = cap.binfmt.appendStandaloneTrailer(alloc, wasm_hdr[0..], "PAYLOAD", magic)?;
     defer alloc.free(bundled);
 
-    const extracted = cap.exe_format.extractStandaloneTrailer(bundled, magic)?;
+    const extracted = cap.binfmt.extractStandaloneTrailer(bundled, magic)?;
     expect_eq(std.mem.eql(u8, extracted.payload, "PAYLOAD"), true);
 }

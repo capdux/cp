@@ -559,3 +559,31 @@ export {
     compactSstables,
     LsmDbEngine,
 } from "./lsmEngine.cp";
+
+// === W29-Sync R7: Consolidated LSM SSTable Codec ===
+export {
+    SstError,
+    BlockHandle as LsmBlockHandle,
+    BlockBuilder,
+    BlockReader,
+    BlockIter,
+} from "./lsmBlock.cp";
+
+export {
+    BloomFilter,
+    buildBloomFilter,
+    mayContain,
+} from "./lsmBloom.cp";
+
+export {
+    SST_MAGIC,
+    SST_FOOTER_SIZE as LSM_SST_FOOTER_SIZE,
+    BLOCK_TRAILER_SIZE,
+    SstOptions,
+    SstEntry,
+    SstOwnedEntry,
+    SstGetResult,
+    SstBuilder as LsmSstBuilder,
+    SstReader as LsmSstReader,
+    SstMergeIter,
+} from "./lsmSstable.cp";

@@ -1,7 +1,7 @@
 // Source: cp/lib/lsm_sst/sstable.cp (SSTable Builder, Reader, CRC32C Trailer & Multi-way Merge Iterator)
 const std = @import("std");
-import { SstError, BlockHandle, BlockBuilder, BlockReader, BlockIter } from "./block.cp";
-import { BloomFilter } from "./bloom.cp";
+import { SstError, BlockHandle, BlockBuilder, BlockReader, BlockIter } from "./lsmBlock.cp";
+import { BloomFilter } from "./lsmBloom.cp";
 
 pub const SST_MAGIC: []const u8 = "CPSST001";
 pub const SST_FOOTER_SIZE: usize = 48;
@@ -191,7 +191,7 @@ pub struct SstReader {
     bloom_slice: []const u8,
     index_slice: []const u8,
 
-    fn verifyBlockSlice(data: []const u8, handle: BlockHandle): SstError![]const u8 {
+    static fn verifyBlockSlice(data: []const u8, handle: BlockHandle): SstError![]const u8 {
         const off: usize = @as(usize, @intCast(handle.offset));
         const sz: usize = @as(usize, @intCast(handle.size));
         if (off > data.len or sz + BLOCK_TRAILER_SIZE > data.len - off) {

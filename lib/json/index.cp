@@ -147,3 +147,20 @@ pub class JSON {
 }
 
 pub const json = new JSON();
+
+// === W29-Sync R7: Consolidated RFC 6902 JSON Patch & RFC 7396 Merge Patch ===
+export {
+    PatchOpKind,
+    JsonPatchOp as Rfc6902PatchOp,
+    JsonPatchError,
+    freeValue,
+    cloneValue,
+    valuesEqual,
+    resolvePointer,
+    applyPatch,
+    mergePatch,
+    stringifyValue,
+    freeOps,
+    applyPatchJson,
+    diff,
+} from "./jsonPatch.cp";

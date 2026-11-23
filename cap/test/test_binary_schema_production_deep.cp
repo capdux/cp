@@ -6,7 +6,7 @@ import {
     SchemaWriter,
     FixedSchemaWriter,
     CompactUint64,
-} from "cap:binary_schema";
+} from "cap:binfmt";
 
 enum PlatformOS: u8 {
     unknown = 0,

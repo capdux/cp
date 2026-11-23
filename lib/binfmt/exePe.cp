@@ -1,6 +1,6 @@
 // Source: bun/src/exe_format/pe.cp -> cp/lib/exe_format/pe.cp (Zero-copy PE-COFF header parser)
 import std from "std";
-import { ExeArch, archFromPeMachine, readU16Le, readU32Le, readU64Le } from "./types.cp";
+import { ExeArch, archFromPeMachine, readU16Le, readU32Le, readU64Le } from "./exeTypes.cp";
 
 pub const PE_SIGNATURE: u32 = 0x00004550;
 pub const DOS_SIGNATURE: u16 = 0x5A4D;

@@ -57,7 +57,7 @@ export struct ConventionalCommit {
     body_and_footers: []const u8,
 
     /// Parse a Conventional Commits 1.0.0 message (`type[(scope)][!]: description[\n\nbody/footers]`).
-    pub fn parse(msg: []const u8): ConventionalCommit? {
+    pub static fn parse(msg: []const u8): ConventionalCommit? {
         // Split first line (header) and remainder
         let nl: usize = 0;
         while (nl < msg.len && msg[nl] != '\n') nl += 1;

@@ -534,3 +534,13 @@ export {
     MigrationRegistry,
     SqliteMigrator,
 } from "./migrate.cp";
+
+// === W29-Sync R7: Consolidated Makefile Target & Variable Parser ===
+export {
+    MakeAssignOp,
+    MakeVar,
+    MakeRule,
+    MakeRuleIter,
+    MakeVarIter,
+    isPhonyTarget,
+} from "./makefileParse.cp";

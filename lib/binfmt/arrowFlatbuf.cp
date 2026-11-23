@@ -1,7 +1,7 @@
 // Source: cp/lib/arrow_ipc/flatbuf.cp (Lightweight deterministic Flatbuffer codec for Arrow IPC)
 
 const std = @import("std");
-import { ArrowError, ArrowType, ArrowField, ArrowSchema } from "./types.cp";
+import { ArrowError, ArrowType, ArrowField, ArrowSchema } from "./arrowTypes.cp";
 
 pub struct FbNode {
     pub length: i64,

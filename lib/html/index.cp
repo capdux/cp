@@ -14,3 +14,12 @@ export {
     escapeHtml,
     unescapeHtml,
 } from "./esc.cp";
+
+// === W29-Sync R7: Consolidated HTML Asset Scanner ===
+export {
+    AssetKind,
+    AssetRef,
+    SrcsetCandidate,
+    parseSrcset,
+    HtmlAssetScanner,
+} from "./assetScanner.cp";

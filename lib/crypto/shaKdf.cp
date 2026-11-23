@@ -1,8 +1,8 @@
 // Source: cp/lib/sha_hmac/kdf.cp (Pure CP RFC 5869 HKDF & RFC 2898 PBKDF2-HMAC)
 
 const std = @import("std");
-import { HashAlg, ShaError, digestLen } from "./hash.cp";
-import { StreamingHmac } from "./hmac.cp";
+import { HashAlg, ShaError, digestLen } from "./shaHash.cp";
+import { StreamingHmac } from "./shaHmac.cp";
 
 const HmacBlake2b256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2b256);
 const HmacBlake2s256 = std.crypto.auth.hmac.Hmac(std.crypto.hash.blake2.Blake2s256);

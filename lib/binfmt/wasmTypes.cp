@@ -22,7 +22,7 @@ pub const WasmError = error{
     OutOfMemory,
 };
 
-pub const ValType = enum(u8) {
+pub enum ValType: u8 {
     I32 = 0x7F,
     I64 = 0x7E,
     F32 = 0x7D,
@@ -30,7 +30,7 @@ pub const ValType = enum(u8) {
     FuncRef = 0x70,
     ExternRef = 0x6F,
 
-    pub fn fromByte(b: u8): WasmError!ValType {
+    pub static fn fromByte(b: u8): WasmError!ValType {
         return switch (b) {
             0x7F => .I32,
             0x7E => .I64,
@@ -42,12 +42,12 @@ pub const ValType = enum(u8) {
         };
     }
 
-    pub fn toByte(val: ValType): u8 {
-        return @intFromEnum(val);
+    pub fn toByte(): u8 {
+        return @intFromEnum(_);
     }
-};
+}
 
-pub const SectionId = enum(u8) {
+pub enum SectionId: u8 {
     Custom = 0,
     Type = 1,
     Import = 2,
@@ -61,7 +61,7 @@ pub const SectionId = enum(u8) {
     Code = 10,
     Data = 11,
 
-    pub fn fromByte(b: u8): WasmError!SectionId {
+    pub static fn fromByte(b: u8): WasmError!SectionId {
         return switch (b) {
             0 => .Custom,
             1 => .Type,
@@ -79,18 +79,18 @@ pub const SectionId = enum(u8) {
         };
     }
 
-    pub fn toByte(val: SectionId): u8 {
-        return @intFromEnum(val);
+    pub fn toByte(): u8 {
+        return @intFromEnum(_);
     }
-};
+}
 
-pub const ExternalKind = enum(u8) {
+pub enum ExternalKind: u8 {
     Func = 0x00,
     Table = 0x01,
     Memory = 0x02,
     Global = 0x03,
 
-    pub fn fromByte(b: u8): WasmError!ExternalKind {
+    pub static fn fromByte(b: u8): WasmError!ExternalKind {
         return switch (b) {
             0x00 => .Func,
             0x01 => .Table,
@@ -100,10 +100,10 @@ pub const ExternalKind = enum(u8) {
         };
     }
 
-    pub fn toByte(val: ExternalKind): u8 {
-        return @intFromEnum(val);
+    pub fn toByte(): u8 {
+        return @intFromEnum(_);
     }
-};
+}
 
 pub struct FuncType {
     pub params: []const ValType = &.{},

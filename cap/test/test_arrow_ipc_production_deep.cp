@@ -13,7 +13,7 @@ import {
     readStream,
     writeFile,
     readFile,
-} from "cap:arrow_ipc";
+} from "cap:binfmt";
 
 test("arrow_ipc: Int32/Int64/Float64/Bool/Utf8 RecordBatch with validity bitmap") {
     const alloc = std.testing.allocator;
@@ -203,7 +203,7 @@ test("arrow_ipc: malformed magic, footer/buffer bounds, row mismatch, and invali
 
 test("arrow_ipc: cap.arrow_ipc dynamic mount and zero-leak verification") {
     const alloc = std.testing.allocator;
-    const arrow = cap.arrow_ipc;
+    const arrow = cap.binfmt;
 
     const fields: [1]arrow.ArrowField = [
         arrow.ArrowField.init("x", .Int32, false),

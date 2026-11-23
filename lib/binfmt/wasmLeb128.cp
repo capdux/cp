@@ -1,6 +1,6 @@
 // Source: cp/lib/wasm_fmt/leb128.cp (Pure CP LEB128 unsigned & signed 32-bit codec)
 const std = @import("std");
-import { WasmError } from "./types.cp";
+import { WasmError } from "./wasmTypes.cp";
 
 pub fn readUleb128(data: []const u8, offset: *usize): WasmError!u32 {
     let result: u32 = 0;

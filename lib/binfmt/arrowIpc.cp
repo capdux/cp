@@ -1,7 +1,7 @@
 // Source: cp/lib/arrow_ipc/ipc.cp (Arrow IPC Streaming & File Format "ARROW1" codec)
 
 const std = @import("std");
-import { ArrowError, ArrowType, ArrowField, ArrowSchema, ArrowColumn, ValidityBitmap, RecordBatch } from "./types.cp";
+import { ArrowError, ArrowType, ArrowField, ArrowSchema, ArrowColumn, ValidityBitmap, RecordBatch } from "./arrowTypes.cp";
 import {
     FbNode,
     FbBuffer,
@@ -11,7 +11,7 @@ import {
     encodeFooter,
     decodeMessage,
     decodeFooter,
-} from "./flatbuf.cp";
+} from "./arrowFlatbuf.cp";
 
 pub const ARROW_MAGIC: []const u8 = "ARROW1";
 pub const ARROW_MAGIC_PADDED: []const u8 = "ARROW1\x00\x00";

@@ -92,11 +92,11 @@ pub struct ValidityBitmap {
     pub bit_len: usize,
     pub null_count: usize,
 
-    pub fn byteLenForBits(bit_len: usize): usize {
+    pub static fn byteLenForBits(bit_len: usize): usize {
         return (bit_len + 7) / 8;
     }
 
-    pub fn initAllValid(alloc: std.mem.Allocator, bit_len: usize): ArrowError!ValidityBitmap {
+    pub static fn initAllValid(alloc: std.mem.Allocator, bit_len: usize): ArrowError!ValidityBitmap {
         const nbytes = ValidityBitmap.byteLenForBits(bit_len);
         let buf = alloc.alloc(u8, nbytes) catch return ArrowError.OutOfMemory;
         @memset(buf, 0xFF);
@@ -107,7 +107,7 @@ pub struct ValidityBitmap {
         };
     }
 
-    pub fn initFromBools(alloc: std.mem.Allocator, valid: []const bool): ArrowError!ValidityBitmap {
+    pub static fn initFromBools(alloc: std.mem.Allocator, valid: []const bool): ArrowError!ValidityBitmap {
         const nbytes = ValidityBitmap.byteLenForBits(valid.len);
         let buf = alloc.alloc(u8, nbytes) catch return ArrowError.OutOfMemory;
         @memset(buf, 0);
@@ -128,7 +128,7 @@ pub struct ValidityBitmap {
         };
     }
 
-    pub fn fromRawBytes(alloc: std.mem.Allocator, raw: []const u8, bit_len: usize, expected_nulls: usize?): ArrowError!ValidityBitmap {
+    pub static fn fromRawBytes(alloc: std.mem.Allocator, raw: []const u8, bit_len: usize, expected_nulls: usize?): ArrowError!ValidityBitmap {
         const needed = ValidityBitmap.byteLenForBits(bit_len);
         if (raw.len < needed) {
             return ArrowError.BufferOutOfBounds;
@@ -344,7 +344,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub fn fromUtf8(alloc: std.mem.Allocator, name: []const u8, values: []const []const u8, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromUtf8(alloc: std.mem.Allocator, name: []const u8, values: []const []const u8, valid: ([]const bool)?): ArrowError!ArrowColumn {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {

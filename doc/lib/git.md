@@ -100,3 +100,5 @@ pub fn demoGit(): !void {
 3. **引用名、远程 URL 与 Worktree 安全校验（`refcheck.cp` / `url.cp` / `repo.cp`）**：
    - `isValidGitRefName` / `isValidBranchName` 严格遵循 `git check-ref-format` 规则，拦截 `..`、`@{`、控制字符、尾随 `.` 或 `.lock` 与前导/连续 `/`；
    - `GitRepo.readHead` 自动兼容标准 `.git/` 目录与 Worktree 的 `.git` 文本指针文件（`gitdir: ...`），并在松散引用不存在时自动回退检索 `packed-refs`。
+4. **托管 Git 仓库 URL 解析（`hostedGitInfo.cp`，收敛自 `cap:hosted_git_info`）**：
+   - 导出：`GitProvider`, `HostedGitInfo`（支持 GitHub/GitLab/Bitbucket/Gist 等简写与 URL 规范化解析）。
