@@ -2284,9 +2284,16 @@ export {
 } from "./kafkaRecordBatch.cp";
 
 export {
+    SSH_MAX_WIRE_STRING_LEN,
+    SSH_MAX_NAME_LIST_COUNT,
+    SSH_MAX_MPINT_LEN,
     SshError,
     SshReader,
     SshWriter,
+    simdSshCopyBytes,
+    simdSshCopyBytesScalar,
+    simdSshCtEqual,
+    simdSshCtEqualScalar,
 } from "./sshWire.cp";
 
 export {
@@ -2297,6 +2304,8 @@ export {
     parsePublicKeyLine,
     formatPublicKeyLine,
     computeSha256Fingerprint,
+    publicKeyEquals,
+    verifySha256Fingerprint,
 } from "./sshKeys.cp";
 
 export {
@@ -2308,6 +2317,7 @@ export {
 } from "./sshOpensshKey.cp";
 
 export {
+    signSshSigEd25519WithHash,
     signSshSigEd25519,
     verifySshSigEd25519,
 } from "./sshSig.cp";

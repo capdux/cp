@@ -1,6 +1,14 @@
+// Reference-hardened against RustCrypto/SSH (MIT/Apache-2.0)
 // Source: cp/lib/ssh_wire/keys.cp (OpenSSH Public Key & Fingerprint)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./sshWire.cp";
+import {
+    SSH_MAX_WIRE_STRING_LEN,
+    SshError,
+    SshReader,
+    SshWriter,
+    simdSshCopyBytes,
+    simdSshCtEqual,
+} from "./sshWire.cp";
 
 pub enum SshKeyType {
     Ed25519,
@@ -62,12 +70,17 @@ pub fn parsePublicKeyLine(alloc: std.mem.Allocator, line: []const u8) -> SshErro
     if (trimmed.len == 0) {
         return SshError.InvalidFormat;
     }
+    for (ch of trimmed) {
+        if (ch == '\r' or ch == '\n' or ch == 0) {
+            return SshError.InvalidFormat;
+        }
+    }
 
     const first_space = std.mem.indexOfAny(u8, trimmed, " \t") orelse return SshError.InvalidFormat;
     const alg_str = trimmed[0..first_space];
     const key_type = try SshKeyType.fromAlgorithmName(alg_str);
 
-    const after_alg = std.mem.trimLeft(u8, trimmed[first_space + 1 ..], " \t");
+    const after_alg = std.mem.trimStart(u8, trimmed[first_space + 1 ..], " \t");
     if (after_alg.len == 0) {
         return SshError.InvalidFormat;
     }
@@ -76,17 +89,23 @@ pub fn parsePublicKeyLine(alloc: std.mem.Allocator, line: []const u8) -> SshErro
     let comment_slice: []const u8 = "";
     if (second_space := std.mem.indexOfAny(u8, after_alg, " \t")) {
         b64_str = after_alg[0..second_space];
-        comment_slice = std.mem.trimLeft(u8, after_alg[second_space + 1 ..], " \t");
+        comment_slice = std.mem.trimStart(u8, after_alg[second_space + 1 ..], " \t");
+    }
+    if (b64_str.len == 0) {
+        return SshError.InvalidFormat;
     }
 
     const decoded_len = std.base64.standard.Decoder.calcSizeForSlice(b64_str) catch return SshError.InvalidBase64;
+    if (decoded_len > SSH_MAX_WIRE_STRING_LEN) {
+        return SshError.PayloadTooLarge;
+    }
     const blob = alloc.alloc(u8, decoded_len) catch return SshError.OutOfMemory;
     errdefer alloc.free(blob);
     std.base64.standard.Decoder.decode(blob, b64_str) catch return SshError.InvalidBase64;
 
     let reader = SshReader.init(blob);
     const inner_alg = try reader.readString();
-    if (!std.mem.eql(u8, inner_alg, alg_str)) {
+    if (!simdSshCtEqual(inner_alg, alg_str)) {
         return SshError.KeyTypeMismatch;
     }
 
@@ -99,18 +118,18 @@ pub fn parsePublicKeyLine(alloc: std.mem.Allocator, line: []const u8) -> SshErro
             if (key_bytes.len != 32) {
                 return SshError.InvalidFormat;
             }
-            @memcpy(&ed25519_pub, key_bytes);
+            simdSshCopyBytes(&ed25519_pub, key_bytes);
         },
         .EcdsaP256 => {
             const curve = try reader.readString();
-            if (!std.mem.eql(u8, curve, "nistp256")) {
+            if (!simdSshCtEqual(curve, "nistp256")) {
                 return SshError.InvalidFormat;
             }
             const point = try reader.readString();
             if (point.len != 65 or point[0] != 0x04) {
                 return SshError.InvalidFormat;
             }
-            @memcpy(&ecdsa_p256_pub, point);
+            simdSshCopyBytes(&ecdsa_p256_pub, point);
         },
     }
 
@@ -153,4 +172,30 @@ pub fn computeSha256Fingerprint(alloc: std.mem.Allocator, raw_blob: []const u8) 
     const b64 = std.base64.standard_no_pad.Encoder.encode(b64_buf, &digest);
 
     return std.fmt.allocPrint(alloc, "SHA256:{s}", .{b64}) catch return SshError.OutOfMemory;
+}
+
+/// Constant-time comparison of two `SshPublicKey` values (ignores comment).
+pub fn publicKeyEquals(a: *const SshPublicKey, b: *const SshPublicKey): bool {
+    if (a.key_type != b.key_type) {
+        return false;
+    }
+    if (!simdSshCtEqual(a.raw_blob, b.raw_blob)) {
+        return false;
+    }
+    return switch (a.key_type) {
+        .Ed25519 => simdSshCtEqual(&a.ed25519_pub, &b.ed25519_pub),
+        .EcdsaP256 => simdSshCtEqual(&a.ecdsa_p256_pub, &b.ecdsa_p256_pub),
+    };
+}
+
+/// Computes the SHA-256 fingerprint of `raw_blob` and compares it in constant time
+/// against `expected_fp` (e.g. `"SHA256:..."`).
+pub fn verifySha256Fingerprint(
+    alloc: std.mem.Allocator,
+    raw_blob: []const u8,
+    expected_fp: []const u8,
+) -> SshError!bool {
+    const actual = try computeSha256Fingerprint(alloc, raw_blob);
+    defer alloc.free(actual);
+    return simdSshCtEqual(actual, expected_fp);
 }

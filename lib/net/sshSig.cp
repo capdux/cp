@@ -1,6 +1,7 @@
+// Reference-hardened against RustCrypto/SSH (MIT/Apache-2.0)
 // Source: cp/lib/ssh_wire/sshsig.cp (OpenSSH SSHSIG Signing & Verification)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./sshWire.cp";
+import { SshError, SshReader, SshWriter, simdSshCopyBytes, simdSshCtEqual } from "./sshWire.cp";
 import { buildEd25519PublicKeyBlob } from "./sshKeys.cp";
 import { decodePemArmoring, encodePemArmoring } from "./sshOpensshKey.cp";
 
@@ -26,20 +27,33 @@ fn buildSshSigSignedData(
     return try w.toOwnedSlice();
 }
 
-pub fn signSshSigEd25519(
+/// Signs `message` with an Ed25519 key in OpenSSH `SSHSIG` format using `"sha256"` or `"sha512"`.
+pub fn signSshSigEd25519WithHash(
     alloc: std.mem.Allocator,
     secret_64: [64]u8,
     namespace: []const u8,
+    hash_alg: []const u8,
     message: []const u8,
 ) -> SshError![]u8 {
     if (namespace.len == 0) {
         return SshError.InvalidNamespace;
     }
 
-    let msg_hash = std.mem.zeroes([64]u8);
-    std.crypto.hash.sha2.Sha512.hash(message, &msg_hash, .{});
+    let hash_buf = std.mem.zeroes([64]u8);
+    let msg_hash_slice: []const u8 = hash_buf[0..0];
+    if (std.mem.eql(u8, hash_alg, "sha512")) {
+        std.crypto.hash.sha2.Sha512.hash(message, &hash_buf, .{});
+        msg_hash_slice = hash_buf[0..64];
+    } else if (std.mem.eql(u8, hash_alg, "sha256")) {
+        let h256 = std.mem.zeroes([32]u8);
+        std.crypto.hash.sha2.Sha256.hash(message, &h256, .{});
+        simdSshCopyBytes(hash_buf[0..32], &h256);
+        msg_hash_slice = hash_buf[0..32];
+    } else {
+        return SshError.InvalidHashAlgorithm;
+    }
 
-    const signed_data = try buildSshSigSignedData(alloc, namespace, "", "sha512", &msg_hash);
+    const signed_data = try buildSshSigSignedData(alloc, namespace, "", hash_alg, msg_hash_slice);
     defer alloc.free(signed_data);
 
     const sk = std.crypto.sign.Ed25519.SecretKey.fromBytes(secret_64) catch return SshError.InvalidFormat;
@@ -53,7 +67,7 @@ pub fn signSshSigEd25519(
     try sig_blob_writer.writeString(&sig_bytes);
 
     let pub_32 = std.mem.zeroes([32]u8);
-    @memcpy(&pub_32, secret_64[32..64]);
+    simdSshCopyBytes(&pub_32, secret_64[32..64]);
     const pub_blob = try buildEd25519PublicKeyBlob(alloc, pub_32);
     defer alloc.free(pub_blob);
 
@@ -64,10 +78,19 @@ pub fn signSshSigEd25519(
     try payload.writeString(pub_blob);
     try payload.writeString(namespace);
     try payload.writeString("");
-    try payload.writeString("sha512");
+    try payload.writeString(hash_alg);
     try payload.writeString(sig_blob_writer.items());
 
     return try encodePemArmoring(alloc, payload.items(), SSHSIG_PEM_HEADER, SSHSIG_PEM_FOOTER);
+}
+
+pub fn signSshSigEd25519(
+    alloc: std.mem.Allocator,
+    secret_64: [64]u8,
+    namespace: []const u8,
+    message: []const u8,
+) -> SshError![]u8 {
+    return try signSshSigEd25519WithHash(alloc, secret_64, namespace, "sha512", message);
 }
 
 pub fn verifySshSigEd25519(
@@ -86,7 +109,7 @@ pub fn verifySshSigEd25519(
 
     let reader = SshReader.init(raw);
     const magic = try reader.readBytes(SSHSIG_MAGIC.len);
-    if (!std.mem.eql(u8, magic, SSHSIG_MAGIC)) {
+    if (!simdSshCtEqual(magic, SSHSIG_MAGIC)) {
         return SshError.InvalidMagic;
     }
 
@@ -105,18 +128,29 @@ pub fn verifySshSigEd25519(
     if (sig_pub_bytes.len != 32 or pub_reader.remaining() != 0) {
         return SshError.InvalidFormat;
     }
-    if (!std.mem.eql(u8, sig_pub_bytes, &pub_32)) {
+    if (!simdSshCtEqual(sig_pub_bytes, &pub_32)) {
         return SshError.InvalidSignature;
     }
 
     const sig_namespace = try reader.readString();
-    if (!std.mem.eql(u8, sig_namespace, namespace)) {
+    if (sig_namespace.len == 0 or !simdSshCtEqual(sig_namespace, namespace)) {
         return SshError.InvalidNamespace;
     }
 
     const reserved = try reader.readString();
     const hash_alg = try reader.readString();
-    if (!std.mem.eql(u8, hash_alg, "sha512")) {
+
+    let hash_buf = std.mem.zeroes([64]u8);
+    let msg_hash_slice: []const u8 = hash_buf[0..0];
+    if (std.mem.eql(u8, hash_alg, "sha512")) {
+        std.crypto.hash.sha2.Sha512.hash(message, &hash_buf, .{});
+        msg_hash_slice = hash_buf[0..64];
+    } else if (std.mem.eql(u8, hash_alg, "sha256")) {
+        let h256 = std.mem.zeroes([32]u8);
+        std.crypto.hash.sha2.Sha256.hash(message, &h256, .{});
+        simdSshCopyBytes(hash_buf[0..32], &h256);
+        msg_hash_slice = hash_buf[0..32];
+    } else {
         return SshError.InvalidHashAlgorithm;
     }
 
@@ -136,12 +170,9 @@ pub fn verifySshSigEd25519(
     }
 
     let sig_bytes = std.mem.zeroes([64]u8);
-    @memcpy(&sig_bytes, sig_bytes_slice);
+    simdSshCopyBytes(&sig_bytes, sig_bytes_slice);
 
-    let msg_hash = std.mem.zeroes([64]u8);
-    std.crypto.hash.sha2.Sha512.hash(message, &msg_hash, .{});
-
-    const signed_data = try buildSshSigSignedData(alloc, sig_namespace, reserved, hash_alg, &msg_hash);
+    const signed_data = try buildSshSigSignedData(alloc, sig_namespace, reserved, hash_alg, msg_hash_slice);
     defer alloc.free(signed_data);
 
     const pk = std.crypto.sign.Ed25519.PublicKey.fromBytes(pub_32) catch return SshError.InvalidFormat;

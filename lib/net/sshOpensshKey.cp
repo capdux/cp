@@ -1,11 +1,20 @@
+// Reference-hardened against RustCrypto/SSH (MIT/Apache-2.0)
 // Source: cp/lib/ssh_wire/openssh_key.cp (OpenSSH openssh-key-v1 Private Key Codec)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./sshWire.cp";
+import {
+    SSH_MAX_WIRE_STRING_LEN,
+    SshError,
+    SshReader,
+    SshWriter,
+    simdSshCopyBytes,
+    simdSshCtEqual,
+} from "./sshWire.cp";
 import { SshKeyType, buildEd25519PublicKeyBlob } from "./sshKeys.cp";
 
 const OPENSSH_KEY_MAGIC = "openssh-key-v1\x00";
 const PEM_HEADER = "-----BEGIN OPENSSH PRIVATE KEY-----";
 const PEM_FOOTER = "-----END OPENSSH PRIVATE KEY-----";
+const OPENSSH_NONE_CIPHER_BLOCK_SIZE: usize = 8;
 
 pub struct OpenSshPrivateKey {
     key_type: SshKeyType = .Ed25519;
@@ -14,6 +23,7 @@ pub struct OpenSshPrivateKey {
     comment: []u8;
 
     fn deinit(*_, alloc: std.mem.Allocator) {
+        std.crypto.secureZero(u8, &_.ed25519_secret);
         alloc.free(_.comment);
     }
 }
@@ -25,9 +35,15 @@ pub fn decodePemArmoring(alloc: std.mem.Allocator, pem_text: []const u8, header:
     const body = after_header[0..end_idx];
 
     let b64_clean = std.ArrayList(u8).empty;
-    defer b64_clean.deinit(alloc);
+    defer {
+        std.crypto.secureZero(u8, b64_clean.items);
+        b64_clean.deinit(alloc);
+    }
     for (ch of body) {
         if (ch != ' ' and ch != '\t' and ch != '\r' and ch != '\n') {
+            if (b64_clean.items.len >= SSH_MAX_WIRE_STRING_LEN) {
+                return SshError.PayloadTooLarge;
+            }
             b64_clean.append(alloc, ch) catch return SshError.OutOfMemory;
         }
     }
@@ -36,8 +52,14 @@ pub fn decodePemArmoring(alloc: std.mem.Allocator, pem_text: []const u8, header:
     }
 
     const dec_len = std.base64.standard.Decoder.calcSizeForSlice(b64_clean.items) catch return SshError.InvalidBase64;
+    if (dec_len > SSH_MAX_WIRE_STRING_LEN) {
+        return SshError.PayloadTooLarge;
+    }
     const out = alloc.alloc(u8, dec_len) catch return SshError.OutOfMemory;
-    errdefer alloc.free(out);
+    errdefer {
+        std.crypto.secureZero(u8, out);
+        alloc.free(out);
+    }
     std.base64.standard.Decoder.decode(out, b64_clean.items) catch return SshError.InvalidBase64;
     return out;
 }
@@ -45,11 +67,17 @@ pub fn decodePemArmoring(alloc: std.mem.Allocator, pem_text: []const u8, header:
 pub fn encodePemArmoring(alloc: std.mem.Allocator, payload: []const u8, header: []const u8, footer: []const u8) -> SshError![]u8 {
     const b64_len = std.base64.standard.Encoder.calcSize(payload.len);
     const b64_buf = alloc.alloc(u8, b64_len) catch return SshError.OutOfMemory;
-    defer alloc.free(b64_buf);
+    defer {
+        std.crypto.secureZero(u8, b64_buf);
+        alloc.free(b64_buf);
+    }
     const b64 = std.base64.standard.Encoder.encode(b64_buf, payload);
 
     let out = std.ArrayList(u8).empty;
-    errdefer out.deinit(alloc);
+    errdefer {
+        std.crypto.secureZero(u8, out.items);
+        out.deinit(alloc);
+    }
 
     out.appendSlice(alloc, header) catch return SshError.OutOfMemory;
     out.append(alloc, '\n') catch return SshError.OutOfMemory;
@@ -69,11 +97,14 @@ pub fn encodePemArmoring(alloc: std.mem.Allocator, payload: []const u8, header: 
 
 pub fn parseOpenSshPrivateKey(alloc: std.mem.Allocator, pem_text: []const u8) -> SshError!OpenSshPrivateKey {
     const raw = try decodePemArmoring(alloc, pem_text, PEM_HEADER, PEM_FOOTER);
-    defer alloc.free(raw);
+    defer {
+        std.crypto.secureZero(u8, raw);
+        alloc.free(raw);
+    }
 
     let reader = SshReader.init(raw);
     const magic = try reader.readBytes(OPENSSH_KEY_MAGIC.len);
-    if (!std.mem.eql(u8, magic, OPENSSH_KEY_MAGIC)) {
+    if (!simdSshCtEqual(magic, OPENSSH_KEY_MAGIC)) {
         return SshError.InvalidMagic;
     }
 
@@ -124,7 +155,7 @@ pub fn parseOpenSshPrivateKey(alloc: std.mem.Allocator, pem_text: []const u8) ->
     }
 
     const pub_bytes_inner = try priv_reader.readString();
-    if (pub_bytes_inner.len != 32 or !std.mem.eql(u8, pub_bytes_inner, pub_bytes_outer)) {
+    if (pub_bytes_inner.len != 32 or !simdSshCtEqual(pub_bytes_inner, pub_bytes_outer)) {
         return SshError.InvalidFormat;
     }
 
@@ -132,15 +163,24 @@ pub fn parseOpenSshPrivateKey(alloc: std.mem.Allocator, pem_text: []const u8) ->
     if (priv_bytes.len != 64) {
         return SshError.InvalidFormat;
     }
+    // OpenSSH PROTOCOL.key: Ed25519 64-byte private key is seed[0..32] || pub[32..64].
+    if (!simdSshCtEqual(priv_bytes[32..64], pub_bytes_inner)) {
+        return SshError.InvalidFormat;
+    }
 
     const comment_slice = try priv_reader.readString();
 
+    // OpenSSH PROTOCOL.key padding: for cipher "none" (block size 8),
+    // remaining padding bytes must be strictly 0..7 bytes equal to 1, 2, ..., k.
     const rem = priv_reader.remaining();
+    if (rem >= OPENSSH_NONE_CIPHER_BLOCK_SIZE) {
+        return SshError.InvalidFormat;
+    }
     if (rem > 0) {
         const pad = try priv_reader.readBytes(rem);
         let i: usize = 0;
         while (i < pad.len) {
-            if (pad[i] != @as(u8, @intCast((i + 1) & 0xff))) {
+            if (pad[i] != @as(u8, @intCast(i + 1))) {
                 return SshError.InvalidFormat;
             }
             i += 1;
@@ -149,8 +189,9 @@ pub fn parseOpenSshPrivateKey(alloc: std.mem.Allocator, pem_text: []const u8) ->
 
     let ed25519_pub = std.mem.zeroes([32]u8);
     let ed25519_secret = std.mem.zeroes([64]u8);
-    @memcpy(&ed25519_pub, pub_bytes_inner);
-    @memcpy(&ed25519_secret, priv_bytes);
+    errdefer std.crypto.secureZero(u8, &ed25519_secret);
+    simdSshCopyBytes(&ed25519_pub, pub_bytes_inner);
+    simdSshCopyBytes(&ed25519_secret, priv_bytes);
 
     const comment_owned = alloc.dupe(u8, comment_slice) catch return SshError.OutOfMemory;
     return OpenSshPrivateKey{
@@ -168,13 +209,16 @@ pub fn encodeOpenSshPrivateKeyEd25519(
     checkint: u32,
 ) -> SshError![]u8 {
     let pub_32 = std.mem.zeroes([32]u8);
-    @memcpy(&pub_32, secret_64[32..64]);
+    simdSshCopyBytes(&pub_32, secret_64[32..64]);
 
     const pub_blob = try buildEd25519PublicKeyBlob(alloc, pub_32);
     defer alloc.free(pub_blob);
 
     let priv_writer = SshWriter.init(alloc);
-    defer priv_writer.deinit();
+    defer {
+        std.crypto.secureZero(u8, priv_writer.buf.items);
+        priv_writer.deinit();
+    }
     try priv_writer.writeU32(checkint);
     try priv_writer.writeU32(checkint);
     try priv_writer.writeString("ssh-ed25519");
@@ -182,10 +226,9 @@ pub fn encodeOpenSshPrivateKeyEd25519(
     try priv_writer.writeString(&secret_64);
     try priv_writer.writeString(comment);
 
-    const block_size: usize = 8;
-    const mod_len = priv_writer.items().len % block_size;
+    const mod_len = priv_writer.items().len % OPENSSH_NONE_CIPHER_BLOCK_SIZE;
     if (mod_len != 0) {
-        const pad_len = block_size - mod_len;
+        const pad_len = OPENSSH_NONE_CIPHER_BLOCK_SIZE - mod_len;
         let i: usize = 1;
         while (i <= pad_len) {
             try priv_writer.writeByte(@as(u8, @intCast(i)));
@@ -194,7 +237,10 @@ pub fn encodeOpenSshPrivateKeyEd25519(
     }
 
     let outer = SshWriter.init(alloc);
-    defer outer.deinit();
+    defer {
+        std.crypto.secureZero(u8, outer.buf.items);
+        outer.deinit();
+    }
     try outer.writeRaw(OPENSSH_KEY_MAGIC);
     try outer.writeString("none");
     try outer.writeString("none");

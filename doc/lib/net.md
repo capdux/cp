@@ -1216,3 +1216,17 @@ pub fn demoWebRtcDataChannel()! {
 | `RecordBatch` v2 CRC32C 与 `KafkaStreamFramer.reset` | `lib/net/kafkaRecordBatch.cp`, `lib/net/kafkaProtocol.cp` | 强制 `magic==2`、61B 最小头长、Castagnoli CRC32C 完整性校验与无溢出减法帧边界检查 |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testNetKafkaRustRefSuite.cp` 覆盖 ApiVersions/Metadata 帧编解码与半包重组、v2 RecordBatch 编码/解码与 CRC32C 单比特篡改拒绝、Nullable `-1` vs `-2`/`i32::MIN` 拒绝、ZigZag 32/64 极值与溢出拦截、16-lane SIMD 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 Kafka 帧与 RecordBatch Fuzz。
+
+## Wave 34 工业级安全加固与 16-Lane SIMD 加速（`ssh{Wire,Keys,OpensshKey,Sig}.cp` 对标 `RustCrypto/SSH` MIT/Apache-2.0）
+
+`lib/net/sshWire.cp`、`lib/net/sshKeys.cp`、`lib/net/sshOpensshKey.cp` 与 `lib/net/sshSig.cp` 已对照 `RustCrypto/SSH`（`ssh-encoding`/`ssh-key`, MIT/Apache-2.0）与 RFC 4251 / OpenSSH `PROTOCOL.key` / `PROTOCOL.sshsig` 完成线协议边界加固、私钥安全清零、SSHSIG 双哈希验签与 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `SSH_MAX_WIRE_STRING_LEN` (16 MiB) / `SSH_MAX_NAME_LIST_COUNT` / `SSH_MAX_MPINT_LEN` / `SshError.PayloadTooLarge` / `SshReader.readUnsignedMpint` | `lib/net/sshWire.cp` | RFC 4251 4 字节大端长度无溢出减法校验与硬上限拦截（防伪造 `0xFFFFFFFF` 长度）；严格拦截非规范 `mpint` 多余前导 `0x00`/`0xff` 及无符号场景负值 `0x80`；`name-list` ASCII 字符与空项守卫 |
+| `simdSshCopyBytes` / `simdSshCtEqual` / 标量参考 | `lib/net/sshWire.cp` | 纯 CP 16-lane `@Vector(16, u8)` 载荷拷贝与无早退常量时间字节比对（`@reduce(.Or, acc_v) == 0`），已接入 `SshWriter.writeRaw`、公钥/指纹/私钥/签名校验热路径（配标量参考 0 差异对拍） |
+| `publicKeyEquals` / `verifySha256Fingerprint` | `lib/net/sshKeys.cp` | 公钥与 SHA-256 指纹常量时间比对；公钥行拒绝内部控制字符（`\r`/`\n`/`\x00`）与超大 Base64 载荷 |
+| `OpenSshPrivateKey` / `parseOpenSshPrivateKey` / `encodeOpenSshPrivateKeyEd25519` | `lib/net/sshOpensshKey.cp` | 严格校验 `checkint1 == checkint2`、Ed25519 `secret[32..64] == pub` 一致性、`cipher="none"` 8 字节块递增填充 `1..k`（拒绝坏填充及 `>= 8` 字节超块填充）；`deinit` 及解析/编码中间敏感缓冲统一通过 `std.crypto.secureZero` 安全清零 |
+| `signSshSigEd25519WithHash` / `verifySshSigEd25519` | `lib/net/sshSig.cp` | 严格校验 6 字节 `"SSHSIG"` 魔数、`version == 1`、非空 `namespace`、合法 `hash_algorithm`（`sha256` / `sha512`）及 Ed25519 验签闭环（常量时间比对公钥与 namespace） |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testNetSshRustRefSuite.cp` 覆盖 RFC 4251 §5 官方 `mpint` 向量与伪造大长度拦截、`ssh-ed25519` 公私钥解析与 `checkint`/坏填充/超块填充/私钥一致性拦截及 `secureZero` 验证、`SSHSIG` `sha256`/`sha512` 签名验签闭环与单比特篡改拒绝、16-lane SIMD 拷贝与常量时间比对 0..257B 全长度 0 差异对拍，以及 1,800 组确定性 PRNG 畸形 SSH 线流 / 私钥 / SSHSIG Fuzz（0 panic / 0 OOB / 0 泄漏）。

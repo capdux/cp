@@ -92,6 +92,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **kafka-protocol-rs** (`tychedelia`) | <https://github.com/tychedelia/kafka-protocol-rs> | MIT OR Apache-2.0 | `lib/net/kafkaWire.cp`, `lib/net/kafkaProtocol.cp`, `lib/net/kafkaRecordBatch.cp` | Copyright (c) 2021-2024 Tychedelia / Kafka Protocol RS Contributors |
 | **arrow-rs** (`apache`) | <https://github.com/apache/arrow-rs> | Apache-2.0 | `lib/binfmt/arrowTypes.cp`, `lib/binfmt/arrowFlatbuf.cp`, `lib/binfmt/arrowIpc.cp` | Copyright (c) 2018-2024 The Apache Software Foundation |
 | **totp-rs** (`constantoine`) | <https://github.com/constantoine/totp-rs> | MIT | `lib/auth/totpHotp.cp`, `lib/auth/oauthPkce.cp` | Copyright (c) 2020-2024 Cleo Rebert (constantoine) |
+| **RustCrypto/SSH** (`ssh-encoding`, `ssh-key`) | <https://github.com/RustCrypto/SSH> | MIT / Apache-2.0 | `lib/net/sshWire.cp`, `lib/net/sshKeys.cp`, `lib/net/sshOpensshKey.cp`, `lib/net/sshSig.cp` | Copyright (c) 2021-2024 RustCrypto Developers |
 
 ---
 
