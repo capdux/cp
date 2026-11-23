@@ -7,7 +7,7 @@ import {
     isUtf8Compatible,
     isAsciiSuperset,
     sniffBomCharset,
-} from "cap:charset_label";
+} from "cap:text";
 
 test("1. resolveCharsetLabel maps WHATWG aliases and trims ASCII whitespace", () => {
     expect_eq((resolveCharsetLabel("  UTF8  ") ?? unreachable) == CharsetKind.utf8, true);

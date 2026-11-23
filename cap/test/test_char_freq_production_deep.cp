@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { CharFreq, NameMinifier, HEAD_CHAR_COUNT } from "cap:char_freq";
+import { CharFreq, NameMinifier, HEAD_CHAR_COUNT } from "cap:text";
 
 test("char_freq: small and big scan paths produce consistent counts", () => {
     let f = CharFreq.init();

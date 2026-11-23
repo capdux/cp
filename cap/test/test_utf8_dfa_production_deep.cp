@@ -18,7 +18,7 @@ import {
     isWhitespace,
     toUpper,
     toLower,
-} from "cap:utf8_dfa";
+} from "cap:text";
 
 test("utf8_dfa: ascii iteration, peek, remaining, reset", () => {
     let it = Utf8Iterator.init("abc");

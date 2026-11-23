@@ -485,3 +485,120 @@ export {
     summarizeIgc,
 } from "./igc.cp";
 
+// ============================================================================
+// W29-Sync R3: Consolidated Text / Formatting / Encoding / String Primitives
+// ============================================================================
+export {
+    parseByteSize,
+    formatBytesIec,
+    formatBytesSi,
+} from "./byteSize.cp";
+
+export {
+    encodeHexLower,
+    encodeHexUpper,
+    decodeHexStrict,
+    decodeHex,
+    formatHexDumpLine,
+    formatHexDump,
+} from "./hexDump.cp";
+
+export {
+    TableStyle as HumanTableStyle,
+    formatBytes,
+    formatDurationNs,
+    redactUrl,
+    formatTableBorder,
+    formatTableRow,
+} from "./humanFmt.cp";
+
+export {
+    formatGroupedU64,
+    formatGroupedI64,
+    ordinalSuffix,
+    formatOrdinal,
+    formatRadixU64,
+    formatFixedPoint,
+} from "./numberFmt.cp";
+
+export {
+    HEAD_CHAR_COUNT,
+    TAIL_CHAR_COUNT,
+    CHAR_FREQ_COUNT,
+    CharAndCount,
+    CharFreq,
+    NameMinifier,
+} from "./charFreq.cp";
+
+export {
+    CharsetKind,
+    resolveCharsetLabel,
+    canonicalCharsetName,
+    isUtf8Compatible,
+    isAsciiSuperset,
+    sniffBomCharset,
+} from "./charsetLabel.cp";
+
+export {
+    CowStrKind,
+    CowStr,
+} from "./cowStr.cp";
+
+export {
+    MAX_INLINE_LEN,
+    SmallString,
+    ExternalString,
+    StringInternPool,
+} from "./smallStr.cp";
+
+export {
+    INLINE_MAX_LEN,
+    SmolStr,
+} from "./smolStr.cp";
+
+export {
+    DecodedCodepoint,
+    GraphemeBreakProperty,
+    GraphemeBreakState,
+    GraphemeIterator,
+    classifyCodepoint,
+    shouldBreak,
+    decodeUtf8Step,
+    count,
+    sliceByGraphemes,
+} from "./grapheme.cp";
+
+export {
+    UTF8_ACCEPT,
+    UTF8_REJECT,
+    REPLACEMENT_CHAR,
+    DecodeStep,
+    decodeByte,
+    isDoneDecoding,
+    Utf8Iterator,
+    isValidUtf8,
+    countCodepoints,
+    isAscii,
+    isDigit,
+    isUpper,
+    isLower,
+    isAlphabetic,
+    isAlphanumeric,
+    isHex,
+    isControl,
+    isPrint,
+    isWhitespace,
+    toUpper,
+    toLower,
+} from "./utf8Dfa.cp";
+
+export {
+    isGlobMagic,
+    hasGlobMagic,
+    escapeGlob,
+    unescapeGlob,
+    staticBaseDir,
+    isNegatedPattern,
+    stripNegation,
+} from "./globEscape.cp";
+

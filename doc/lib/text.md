@@ -534,3 +534,22 @@ pub fn demoCodePatternMatch(src: string) {
 - [table.md](text/table.md)
 - [template.md](text/template.md)
 - [yenc.md](text/yenc.md)
+
+## 历史文本/格式化/编码域散装模块收敛（W29-Sync R3）
+
+以下 12 个原独立顶层目录已统一收敛至 `cap:text`（`lib/text/`），可直接从 `"cap:text"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:byte_size` | `lib/text/byteSize.cp` | `parseByteSize`, `formatBytesIec`, `formatBytesSi` |
+| `cap:hex_dump` | `lib/text/hexDump.cp` | `encodeHexLower`, `encodeHexUpper`, `decodeHexStrict`, `decodeHex`, `formatHexDumpLine`, `formatHexDump` |
+| `cap:human_fmt` | `lib/text/humanFmt.cp` | `HumanTableStyle`, `formatBytes`, `formatDurationNs`, `redactUrl`, `formatTableBorder`, `formatTableRow` |
+| `cap:number_format` | `lib/text/numberFmt.cp` | `formatGroupedU64`, `formatGroupedI64`, `ordinalSuffix`, `formatOrdinal`, `formatRadixU64`, `formatFixedPoint` |
+| `cap:char_freq` | `lib/text/charFreq.cp` | `HEAD_CHAR_COUNT`, `TAIL_CHAR_COUNT`, `CHAR_FREQ_COUNT`, `CharAndCount`, `CharFreq`, `NameMinifier` |
+| `cap:charset_label` | `lib/text/charsetLabel.cp` | `CharsetKind`, `resolveCharsetLabel`, `canonicalCharsetName`, `isUtf8Compatible`, `isAsciiSuperset`, `sniffBomCharset` |
+| `cap:cow_str` | `lib/text/cowStr.cp` | `CowStrKind`, `CowStr` |
+| `cap:small_string` | `lib/text/smallStr.cp` | `MAX_INLINE_LEN`, `SmallString`, `ExternalString`, `StringInternPool` |
+| `cap:smol_str` | `lib/text/smolStr.cp` | `INLINE_MAX_LEN`, `SmolStr` |
+| `cap:grapheme_cluster` | `lib/text/grapheme.cp` | `DecodedCodepoint`, `GraphemeBreakProperty`, `GraphemeBreakState`, `GraphemeIterator`, `classifyCodepoint`, `shouldBreak`, `decodeUtf8Step`, `count`, `sliceByGraphemes` |
+| `cap:utf8_dfa` | `lib/text/utf8Dfa.cp` | `UTF8_ACCEPT`, `UTF8_REJECT`, `REPLACEMENT_CHAR`, `DecodeStep`, `decodeByte`, `isDoneDecoding`, `Utf8Iterator`, `isValidUtf8`, `countCodepoints`, ASCII 分类/大小写转换 |
+| `cap:glob_escape` | `lib/text/globEscape.cp` | `isGlobMagic`, `hasGlobMagic`, `escapeGlob`, `unescapeGlob`, `staticBaseDir`, `isNegatedPattern`, `stripNegation` |

@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { MAX_INLINE_LEN, SmallString, ExternalString, StringInternPool } from "cap:small_string";
+import { MAX_INLINE_LEN, SmallString, ExternalString, StringInternPool } from "cap:text";
 
 test "small_string: 8-byte inline SSO vs arena-backed long strings" {
     try expect_eq(@sizeOf(SmallString), 8);

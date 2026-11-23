@@ -9,7 +9,7 @@ import {
     staticBaseDir,
     isNegatedPattern,
     stripNegation,
-} from "cap:glob_escape";
+} from "cap:text";
 
 test("glob_escape: isGlobMagic and hasGlobMagic with escape awareness") {
     expect_eq(isGlobMagic('*'), true);

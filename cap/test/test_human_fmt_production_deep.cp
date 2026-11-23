@@ -1,12 +1,12 @@
 import { test, expect } from "cap:test";
 import {
-    TableStyle,
+    HumanTableStyle as TableStyle,
     formatBytes,
     formatDurationNs,
     redactUrl,
     formatTableBorder,
     formatTableRow,
-} from "cap:human_fmt";
+} from "cap:text";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

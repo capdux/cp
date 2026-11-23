@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect } from "cap:test";
-import { CowStr, CowStrKind } from "cap:cow_str";
+import { CowStr, CowStrKind } from "cap:text";
 
 test("cow_str: empty and borrowed slices incur zero heap allocations", () => {
     const e = CowStr.initEmpty();

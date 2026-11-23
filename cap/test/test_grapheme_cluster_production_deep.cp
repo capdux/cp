@@ -10,7 +10,7 @@ import {
     decodeUtf8Step,
     count,
     sliceByGraphemes,
-} from "cap:grapheme_cluster";
+} from "cap:text";
 
 test("ASCII, CRLF vs LFCR and control character boundaries (GB3/GB4/GB5)") {
     expect_eq(count(""), @as(usize, 0));

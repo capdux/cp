@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_smol_str_production_deep.cp (Production deep tests for cap:smol_str)
 
 import { test, expect_eq } from "cap:test";
-import { SmolStr, INLINE_MAX_LEN } from "cap:smol_str";
+import { SmolStr, INLINE_MAX_LEN } from "cap:text";
 
 test("Empty and inline strings (<= 15 bytes) use zero heap allocation") {
     expect_eq(INLINE_MAX_LEN, @as(usize, 15));

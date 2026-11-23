@@ -187,7 +187,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:node_builtins` | `RuntimeTarget`, `ModuleTag`, `BuiltinAlias`, `resolveAlias`, `isBuiltin`, `canonicalizeNode` | 纯 CP Node.js & Bun 内建模块映射与规范化注册表（吸收自 Bun `src/resolve_builtins/HardcodedModule.cp`，支持 `cap.node_builtins` 自动动态挂载，详见 `doc/lib/node_builtins.md`） |
 | `cap:bundle_options` | `Format`, `parseFormat`, `BundlePackage`, `GlobalCache`, `parseGlobalCache`, `OfflineMode`, `parseOfflineMode`, `NodeLinker`, `parseNodeLinker`, `WindowsOptions` | 纯 CP 打包输出格式、全局缓存策略、离线模式与包链接模式枚举引擎（吸收自 Bun `src/options_types/` 与 `src/install_types/`，支持 `cap.bundle_options` 自动动态挂载，详见 `doc/lib/bundle_options.md`） |
 | `cap:command_tag` | `Tag`, `fromSubcommand` | 纯 CP CLI 32 种子命令判别、遥测码、NPM 判定与配置加载策略引擎（吸收自 Bun `src/options_types/CommandTag.cp`，支持 `cap.command_tag` 自动动态挂载，详见 `doc/lib/command_tag.md`） |
-| `cap:small_string` | `MAX_INLINE_LEN`, `SmallString`, `ExternalString`, `StringInternPool` | 纯 CP 8 字节短串内联 (SSO) 与 Wyhash 去重驻留池引擎（吸收自 Bun `src/install_types/{SemverString,ExternalString,SlicedString}.cp`，支持 `cap.small_string` 自动动态挂载，详见 `doc/lib/small_string.md`） |
 | `cap:coverage_options` | `Reporter`, `Reporters`, `CoverageFraction`, `CoverageMetrics`, `CodeCoverageOptions`, `formatLcovRecord` | 纯 CP 代码覆盖率配置、阈值判定与 LCOV 格式化引擎（吸收自 Bun `src/options_types/CodeCoverageOptions.cp`，支持 `cap.coverage_options` 自动动态挂载，详见 `doc/lib/coverage_options.md`） |
 | `cap:feature_flags` | `FeatureFlags`, `parseBoolEnv`, `parseUintEnv`, `parseBoolOr`, `parseUintOr` | 纯 CP 特性开关与环境变量强类型容错解析引擎（吸收自 Bun `src/bun_core/{feature_flags,env_var}.cp`，支持 `cap.feature_flags` 自动动态挂载，详见 `doc/lib/feature_flags.md`） |
 | `cap:myers_diff` | DiffError, DiffKind, LineDiff, ByteDiff, DiffOptions, LineDiffResult, ByteDiffResult, areLinesEqual, splitLines, diffLines, diffBytes, formatLineDiff | 纯 CP Myers O(ND) 最短编辑脚本行级/字节级 Diff 引擎（含尾随逗号容错与 ~init() 自动释放） |
@@ -198,26 +197,21 @@ const h = cap.hash.wyhash("hello");
 | `cap:exif` | Transform, Orientation, parseTiff, readJpeg | 纯 CP 零依赖 JPEG APP1/Exif 与大小端 TIFF IFD0 Orientation 标签解析与像素校正变换（源自 Bun runtime/image/exif.cp） |
 | `cap:binary_schema` | END_OF_MESSAGE, SchemaError, SchemaReader, SchemaWriter, FixedSchemaWriter, CompactUint64 | 零拷贝二进制 Schema 流式读写、RAII 可增长写入器、定长栈写入器与枚举严格校验（源自 Bun analytics/schema.cp） |
 | `cap:pe_format` | DOSHeader, PEHeader, DataDirectory, OptionalHeader64, SectionHeader, Error, StripMode, StripOpts, isPow2, alignUpU32, alignUpUsize, encodeSectionName, isPE, computePEChecksum, PEFile | Windows PE64/COFF 二进制头解析、节表增查、Authenticode 签名剥离与校验和重算（源自 Bun exe_format/pe.cp） |
-| `cap:utf8_dfa` | UTF8_ACCEPT, UTF8_REJECT, REPLACEMENT_CHAR, DecodeStep, decodeByte, isDoneDecoding, Utf8Iterator, isValidUtf8, countCodepoints, isAscii, isDigit, isUpper, isLower, isAlphabetic, isAlphanumeric, isHex, isControl, isPrint, isWhitespace, toUpper, toLower | Bjoern Hoehrmann 双表无分支 UTF-8 DFA 解码器与 u21 ASCII 快速谓词/大小写折叠（源自 Bun unicode/uucode_lib/src/{utf8,ascii}.cp） |
 | `cap:fallback_alloc` | BufferFallbackAllocator | 优先使用栈/固定缓冲零系统调用分配、耗尽后透明回退至后备 Allocator 的混合分配器（源自 Bun bun_alloc/BufferFallbackAllocator.cp） |
 | `cap:type_traits` | isByteString, isSlice, isSingleItemPtr, isConstPtr, isOptional, isInteger, isFloat, isNumber, isStruct, isEnum, isUnion, isContainer, isExternContainer, isPackedContainer, isIndexable, PointerKind, PointerParseOptions, PointerMeta | 零运行期开销的编译期类型特征谓词与 PointerMeta 指针规范解析器（源自 Bun meta/traits.cp + ptr/meta.cp） |
 | `cap:autolink` | AutolinkKind, AutolinkSpan, ScanUrlResult, isListBullet, isListItemMark, isInSet, checkLeftBoundary, checkRightBoundary, scanUrlComponent, postProcessAutolinkEnd, findPermissiveAutolink, findNextAutolink | 纯 CP 零依赖 GFM 宽松 URL/WWW/Email 自动链接检测与尾部不配对括号/HTML 实体裁剪（源自 Bun md/autolinks.cp） |
 | `cap:static_hashmap` | fnv1a64, fnv1a64AsciiLower, splitmix64, StringContext, AsciiIgnoreCaseContext, IntContext, EMPTY_HASH, Error, KeyValue, Slot, StaticHashMap | 编译期可构建、运行期零堆分配 O(1) 开放寻址静态哈希表（源自 Bun collections/StaticHashMap.cp） |
-| `cap:char_freq` | CHAR_FREQ_COUNT, HEAD_CHAR_COUNT, TAIL_CHAR_COUNT, CharAndCount, NameMinifier, CharFreq | 纯 CP 零堆分配 64 桶标识符字符频次直方图与按频次排序 Base-54/64 短名生成器（源自 Bun js_parser/ast/CharFreq.cp） |
 | `cap:bounded_array` | BoundedArrayError, BoundedArray | 零堆分配栈上固定容量动态数组，支持 append/insert/orderedRemove/swapRemove/fromSlice（源自 Bun collections/bounded_array.cp） |
 | `cap:route_params` | Param, ParamMap, URLPath, parseURLPath | 带 ~init() RAII 释放的动态路由参数表 ParamMap 与零堆分配 URLPath 解析器（源自 Bun router/ParamMap.cp + http_types/URLPath.cp） |
-| `cap:smol_str` | INLINE_MAX_LEN, Error, SmolStr | 15 字节内零堆分配内联、超长透明堆扩容的 Compact String（~init() 零泄漏，源自 Bun string/SmolStr.cp） |
 | `cap:sri` | MAX_DIGEST_LEN, SriError, IntegrityTag, Integrity, IntegrityVerifier | 零堆分配 W3C SRI (sha1/sha256/sha384/sha512) 解析、最强算法选择、格式化与恒定时间流式校验（源自 Bun install/integrity.cp） |
 | `cap:tagged_ptr` | PTR_BITS, TAG_BITS, PTR_MASK, MAX_TAG, Tag, Address, TaggedPointer, TaggedPtr2, TaggedPtr4 | 严格 8 字节 49 位指针地址 + 15 位标签编解码与强类型 TaggedPtr2/TaggedPtr4 紧凑联合体（源自 Bun ptr/tagged_pointer.cp） |
 | `cap:env_path` | DEFAULT_DELIMITER, EnvPathIterator, EnvPath | 带 ~init() RAII 释放的 PATH 环境变量构建器（去重/规范化/prepend/append）与零分配迭代器（源自 Bun paths/EnvPath.cp） |
-| `cap:cow_str` | CowStrKind, CowStr | 统一空串、零拷贝借用切片与原子引用计数堆字符串，支持 O(1) clone 与 ~init() RAII（源自 Bun shell/EnvStr.cp） |
 | `cap:object_pool` | PoolNode, ObjectPool | 实例级侵入式单链表对象复用池，支持上限控制、自动 reset 与 ~init() 确定性零泄漏释放（源自 Bun collections/pool.cp） |
 | `cap:builtin_modules` | RuntimeTarget, BuiltinKind, ResolveConfig, ResolvedBuiltin, resolveBuiltin, isBuiltin, isNodeBuiltin, hasNodePrefix, hasBunPrefix, stripNodePrefix, ensureNodePrefix | 纯 CP 零依赖 66 项 Node.js 核心内置模块与 22 项 Bun 扩展模块注册表、前缀规范化与目标运行时解析器（源自 Bun resolve_builtins/HardcodedModule.cp） |
 | `cap:image_probe` | Error, ImageFormat, WebpKind, ImageInfo, detectFormat, probe, probePng, probeJpeg, probeWebp, probeBmp, probeGif | 纯 CP 零堆分配 PNG/JPEG/WebP/BMP/GIF 魔数识别与宽高/色深/Alpha/动画头信息探测器（源自 Bun runtime/image/codec_*.cp） |
 | `cap:thumbhash` | MAX_LEN, ThumbhashError, DecodedImage, encode, decode, approxAspectRatio, averageRGBA | Evan Wallace ThumbHash 21–25 字节低频 DCT 占位符编解码、宽高比/主色提取与 ~init() RAII（源自 Bun runtime/image/thumbhash.cp） |
 | `cap:line_offset_table` | LineCol, LineRange, Error, LineOffsetTable | O(log N) 二分查找字节偏移与行列号双向定位、LF/CRLF/CR 混合换行识别与 ~init() RAII（源自 Bun sourcemap/LineOffsetTable.cp） |
 | `cap:known_globals` | GlobalNamespace, GlobalInfo, lookupGlobal, isKnownGlobal, isPureZeroArgConstructor, canDropNewKeyword, isPurePropertyAccess, isPureGlobalCall | 纯 CP 零堆分配 69 项全局符号注册表与 Tree-Shaking/DCE 无副作用构造/属性/调用判定器（源自 Bun js_parser/ast/KnownGlobal.cp） |
-| `cap:grapheme_cluster` | GraphemeBreakProperty, GraphemeBreakState, Utf8Step, GraphemeIterator, classifyCodepoint, shouldBreak, decodeUtf8Step, count, sliceByGraphemes | Unicode UAX #29 扩展字素簇边界判定（GB3-GB13/Hangul/ZWJ Emoji/国旗）与零分配 UTF-8 迭代器（吸收自 bun/src/string/immutable/grapheme.cp） |
 | `cap:progress_tree` | ProgressUnit, INVALID_NODE, ProgressNode, ProgressTree | 零堆分配层级进度树、节流刷新判定与终端状态行格式化引擎（吸收自 bun/src/bun_core/Progress.cp） |
 | `cap:errno_map` | ErrnoOs, SystemErrno | 跨平台 POSIX/OS Errno 69 项核心错误码双射映射、OS 特定错误消息与瞬态重试判定（吸收自 bun/src/sys/coreutils_error_map.cp 与 errno/{linux,darwin}_errno.cp） |
 | `cap:ci_info` | CiVendor, EnvEntry, CiInfo, detectFromEntries | 零堆分配 CI/CD 31 供应商环境与 PR 构建检测器（遵循 ci-info v4，吸收自 bun/src/cli/ci_info.cp 与 codegen/ci_info.ts） |
@@ -233,22 +227,16 @@ const h = cap.hash.wyhash("hello");
 | `cap:linear_fifo` | StaticLinearFifo | 零堆分配泛型环形缓冲区 FIFO（支持 item/slice 读写、peek、unget、discard 与环形回绕，吸收自 bun/src/collections/linear_fifo.cp） |
 | `cap:hive_array` | HiveArray | 基于 64-bit 分块位图的零堆分配固定容量 Slab 槽池（O(1) 分配/防重复释放/稀疏 @ctz 跳跃迭代，吸收自 bun/src/collections/hive_array.cp） |
 | `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
-| `cap:human_fmt` | TableStyle, formatBytes, formatDurationNs, redactUrl, formatTableBorder, formatTableRow | 零堆分配人类可读格式化工具库（字节大小/纳秒耗时/URL 密码与 UUID/npm 令牌脱敏/Unicode&ASCII 终端表格渲染，吸收自 bun/src/bun_core/fmt.cp） |
 | `cap:lcov_report` | LineHit, CoverageThresholds, FileCoverage, parseLcovRecord | LCOV 代码覆盖率报告零堆分配记录、百分比统计、阈值校验与双向解析/序列化库（吸收自 bun/src/options_types/CodeCoverageOptions.cp） |
 | `cap:dotenv_parse` | DotEnvQuote, DotEnvEntry, DotEnvIterator, unescapeDoubleQuoted, expandVars | 零堆分配 .env 配置文件解析器（BOM/export/4 种引号/多行/行尾注释）与 ${VAR:-default} 变量展开器（吸收自 bun/src/bun_core/env.cp） |
 | `cap:retry_backoff` | JitterMode, BackoffConfig, BackoffState, RetryAfter, parseRetryAfter, isRetryableHttpStatus | 零堆分配指数退避重试调度器（Full/Equal Jitter + SplitMix64 确定性种子）与 RFC 9110 Retry-After 解析库（吸收自 bun/src/http/HTTPContext.cp） |
-| `cap:hex_dump` | encodeHexLower, encodeHexUpper, decodeHexStrict, decodeHex, formatHexDumpLine, formatHexDump | 零分配十六进制编解码与规范化 hexdump -C 多行诊断格式化器 |
-| `cap:glob_escape` | isGlobMagic, hasGlobMagic, escapeGlob, unescapeGlob, staticBaseDir, isNegatedPattern, stripNegation | Glob 通配符元字符转义/反转义、静态目录前缀提取（遍历剪枝）与否定模式解析 |
 | `cap:editorconfig` | matchSectionPattern, IndentStyle, EndOfLine, Charset, EditorConfigProps, resolveEditorConfig | .editorconfig 零分配解析器、花括号/通配符段匹配与级联属性求值器 |
 | `cap:logfmt` | LogfmtField, LogfmtIter, getLogfmtValue, appendLogfmtPair | 结构化 logfmt（key=value）日志行零分配流式解析器、键值查询与规范化转义编码器 |
 | `cap:uri_normalize` | isUnreserved, defaultPortForScheme, normalizePercentEncoding, removeDotSegments, normalizeOrigin | RFC 3986 URI 路径点段归约（§5.2.4）、百分号编码规范化与协议默认端口剥离工具 |
 | `cap:w3c_traceparent` | TraceParent, TraceStateEntry, TraceStateIter, findTraceState | W3C Trace Context Level 1 traceparent / tracestate 分布式追踪头零分配解析与格式化器 |
-| `cap:byte_size` | parseByteSize, formatBytesIec, formatBytesSi | 纯整数人类可读字节大小解析器（SI/IEC 小数支持与溢出防护）及 SI/IEC 格式化器 |
 | `cap:slugify` | slugifyWithSep, slugify, slugifyBounded, isValidSlug | 零分配 URL 安全 Slug 生成器（标点折叠、撇号省略、词边界截断与规范校验） |
 | `cap:frontmatter` | FrontmatterKind, FrontmatterSplit, splitFrontmatter, getFrontmatterField | Markdown 文档 YAML (---) / TOML (+++) Frontmatter 零分配提取器与键值查询 |
-| `cap:charset_label` | CharsetKind, resolveCharsetLabel, canonicalCharsetName, isUtf8Compatible, isAsciiSuperset, sniffBomCharset | WHATWG Encoding Standard 字符集标签规范化器（14 种编码别名映射与 UTF-8/UTF-16 BOM 嗅探） |
 | `cap:makefile_parse` | MakeAssignOp, MakeVar, MakeRule, MakeRuleIter, MakeVarIter, isPhonyTarget | GNU Makefile 目标、依赖、.PHONY 伪目标与变量赋值（=/ :=/ ?=/ +=）零分配解析器 |
-| `cap:number_format` | formatGroupedU64, formatGroupedI64, ordinalSuffix, formatOrdinal, formatRadixU64, formatFixedPoint | 零分配人类可读数字格式化器（千分位分组、英文序数词、2..36 进制与定点小数） |
 | `cap:jsonc` | `stripJsonc`, `stripJsoncPreserveLines`, `hasJsoncComments`, `countJsoncTrailingCommas` | JSON with Comments & Trailing Commas 零分配注释/尾逗号剥离器与行号保留格式化器 |
 | `cap:ansi` | `Osc8Link`, `formatOsc8`, `parseOsc8`, `stripOsc8`, `SgrColor`, `SgrStyle`, `formatStyled`, `applySgrSequence`, `stripAnsi`, `hasAnsi`, `visibleLen` | ANSI 终端控制序列统一主包（OSC 8 超链接、SGR 16/256/TrueColor 样式、转义剥离与可见宽度） |
 | `cap:docker` | `DockerImageRef`, `DockerfileIter`, ... | Docker 镜像引用与 Dockerfile 解析统一主包（同步收敛 `cap:dotenv`/`cap:ini`/`cap:csv`） |

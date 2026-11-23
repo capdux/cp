@@ -7,7 +7,7 @@ import {
     decodeHex,
     formatHexDumpLine,
     formatHexDump,
-} from "cap:hex_dump";
+} from "cap:text";
 
 test("1. encodeHexLower, encodeHexUpper, and decodeHexStrict round-trip", () => {
     const raw: [5]u8 = [0x00, 0x0A, 0x4F, 0xDE, 0xFF];
