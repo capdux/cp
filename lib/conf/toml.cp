@@ -1,14 +1,25 @@
+// Reference-hardened against toml-rs/toml (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/interchange/toml/ | Synced: 2026-11-22T12:49:17Z
-// lib/conf/toml.cp
-// Industrial-grade TOML 1.0 Parser, AST Builder, Serializer, and Document Model:
-// - Inline tables (`point = { x = 1, y = 2 }`), nested dotted keys (`a.b.c = 1`), quoted keys (`"a.b" = 1`)
-// - RFC 3339 Date/Time literals (Offset Date-Time, Local Date-Time, Local Date, Local Time) with calendar validation
-// - Multi-line basic/literal strings (`"""..."""`, `'''...'''`) & multi-dimensional arrays
-// - Table arrays (`[[products]]`) & nested sub-tables
-// - 100% backward compatible `TomlDoc` (`TOML` / `toml`) + full recursive `TomlParser` -> `ConfValue`
+// ============================================================================
+// lib/conf/toml.cp — 工业级 TOML v1.0.0 严格合规解析器、AST 构建器与双向序列化器
+// 对标 toml-rs/toml (MIT/Apache-2.0) 加固：
+//   - 严格键与表语义：裸键/引号键/点分键、重复键拒绝、显式表重定义拒绝、
+//     Inline Table 冻结不可追加（禁止换行与尾随逗号）、[[array_of_tables]] vs 静态数组隔离、
+//     禁止多行字符串作为键、64 层最大嵌套深度防护
+//   - 严格字符串与转义：基础/多行基础/字面量/多行字面量字符串、\uXXXX/\UXXXXXXXX 代理对拒绝
+//     (0xD800..0xDFFF & >0x10FFFF)、禁止未转义控制字符与孤立 CR
+//   - 严格数值与日期时间：禁止前导零、下划线位置校验、0x/0o/0b 小写无符号进制整数、
+//     inf/nan 大小写敏感、有限浮点溢出拒绝、RFC 3339 闰年与日历时间边界校验
+//   - 热路径 cap:simd 加速：注释跳行、空白跳过与单行/多行字符串块级扫描
+//   - 100% 向后兼容 TomlDoc (TOML / toml) 与 TomlParser -> ConfValue
+// ============================================================================
 
 const std = @import("std");
 import { ConfTag, ConfDateTime, ConfField, ConfValue } from "./value";
+import { Simd } from "cap:simd";
+
+/// TOML 最大嵌套深度（防畸形深层 `[[[[...` 或 `{a={b={...` 栈溢出）
+const TOML_MAX_DEPTH: usize = 64;
 
 pub error TomlError {
     OutOfMemory,
@@ -19,12 +30,47 @@ pub error TomlError {
     InvalidEscape,
     InvalidNumber,
     InvalidDateTime,
+    DepthExceeded,
+    InvalidControlChar,
+    FrozenTable,
 }
 
-type TomlFieldList = std.ArrayListUnmanaged(ConfField);
-type TomlValueList = std.ArrayListUnmanaged(ConfValue);
 type TomlByteList = std.ArrayListUnmanaged(u8);
-type TomlStrList = std.ArrayListUnmanaged(string);
+type TomlBuildFieldList = std.ArrayListUnmanaged(BuildField);
+type TomlUsizeList = std.ArrayListUnmanaged(usize);
+type TomlBuildNodeList = std.ArrayListUnmanaged(BuildNode);
+
+/// 内部表/数组语义状态（严格对齐 TOML v1.0.0 表定义规则）
+enum NodeKind: u8 {
+    Scalar = 0,
+    TableImplicit = 1,
+    TableExplicit = 2,
+    TableDotted = 3,
+    TableInlineFrozen = 4,
+    ArrayStatic = 5,
+    ArrayOfTables = 6,
+}
+
+struct BuildField {
+    key: []const u8 = "",
+    node_id: usize = 0,
+}
+
+struct BuildNode {
+    kind: NodeKind = NodeKind.Scalar,
+    scalar: ConfValue = ConfValue{},
+    fields: TomlBuildFieldList = TomlBuildFieldList.empty,
+    items: TomlUsizeList = TomlUsizeList.empty,
+    /// 对于 TableDotted，记录当前表头作用域 ID；离开作用域后不可再用点分键跨表扩展
+    scope_id: usize = 0,
+
+    static fn isTableKind(kind: NodeKind): bool {
+        return kind == NodeKind.TableImplicit ||
+            kind == NodeKind.TableExplicit ||
+            kind == NodeKind.TableDotted ||
+            kind == NodeKind.TableInlineFrozen;
+    }
+}
 
 pub struct TomlEntry {
     pub table: []const u8 = "";
@@ -36,14 +82,116 @@ pub struct TomlParser {
     src: []const u8 = "",
     pos: usize = 0,
     allocator: std.mem.Allocator = undefined,
+    scope_counter: usize = 0,
+    nodes: TomlBuildNodeList = TomlBuildNodeList.empty,
 
     pub static fn parse(allocator: std.mem.Allocator, content: []const u8): ConfValue! {
         let p = TomlParser{
             src: content,
             pos: 0,
             allocator: allocator,
+            scope_counter: 1,
+            nodes: TomlBuildNodeList.empty,
         };
+        defer p.deinitNodes();
         return try p.runParser();
+    }
+
+    fn deinitNodes(*_) {
+        let i: usize = 0;
+        while (i < _.nodes.items.len) : (i += 1) {
+            _.nodes.items[i].fields.deinit(_.allocator);
+            _.nodes.items[i].items.deinit(_.allocator);
+        }
+        _.nodes.deinit(_.allocator);
+    }
+
+    fn allocNode(*_, node: BuildNode): usize! {
+        const id = _.nodes.items.len;
+        try _.nodes.append(_.allocator, node);
+        return id;
+    }
+
+    fn nodeToConfValue(*_, node_id: usize): ConfValue! {
+        const k = _.nodes.items[node_id].kind;
+        if (k == NodeKind.Scalar) {
+            return _.nodes.items[node_id].scalar;
+        }
+        if (k == NodeKind.ArrayStatic || k == NodeKind.ArrayOfTables) {
+            const count = _.nodes.items[node_id].items.items.len;
+            let arr = try _.allocator.alloc(ConfValue, count);
+            let i: usize = 0;
+            while (i < count) : (i += 1) {
+                const child_id = _.nodes.items[node_id].items.items[i];
+                arr[i] = try _.nodeToConfValue(child_id);
+            }
+            return ConfValue.makeArray(arr);
+        }
+        const fcount = _.nodes.items[node_id].fields.items.len;
+        let fields = try _.allocator.alloc(ConfField, fcount);
+        let i: usize = 0;
+        while (i < fcount) : (i += 1) {
+            const key = _.nodes.items[node_id].fields.items[i].key;
+            const child_id = _.nodes.items[node_id].fields.items[i].node_id;
+            fields[i] = ConfField{
+                key: key,
+                value: try _.nodeToConfValue(child_id),
+            };
+        }
+        return ConfValue.makeObject(fields);
+    }
+
+    /// 检查字符是否为 TOML 禁止的注释/单行字符串控制字符（允许 TAB 0x09，禁止 0x00..0x08, 0x0A..0x1F, 0x7F）
+    static fn isDisallowedControlSingleLine(c: u8): bool {
+        return (c <= 0x08) || (c >= 0x0A && c <= 0x1F) || c == 0x7F;
+    }
+
+    /// 检查字符是否为多行字符串禁止的控制字符（允许 TAB 0x09, LF 0x0A, CR 0x0D，禁止其余控制字符）
+    static fn isDisallowedControlMultiLine(c: u8): bool {
+        return (c <= 0x08) || c == 0x0B || c == 0x0C || (c >= 0x0E && c <= 0x1F) || c == 0x7F;
+    }
+
+    /// 校验一段切片内不含单行禁止控制字符
+    static fn validateNoControlSingleLine(slice: []const u8): ! {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            if (TomlParser.isDisallowedControlSingleLine(slice[i])) {
+                return error.InvalidControlChar;
+            }
+        }
+    }
+
+    /// 校验一段多行切片内不含禁止控制字符及孤立 CR
+    static fn validateNoControlMultiLine(slice: []const u8): ! {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            const c = slice[i];
+            if (TomlParser.isDisallowedControlMultiLine(c)) {
+                return error.InvalidControlChar;
+            }
+            if (c == '\r') {
+                if (i + 1 >= slice.len || slice[i + 1] != '\n') {
+                    return error.InvalidControlChar;
+                }
+            }
+        }
+    }
+
+    /// SIMD 热路径：在基础字符串内容中查找下一个 '"', '\\', '\n', '\r' 偏移（供测试与标量对拍）
+    pub static fn scanBasicStringStopSimd(slice: []const u8): usize? {
+        return Simd.indexOfAny4(slice, '"', '\\', '\n', '\r');
+    }
+
+    /// 标量参考：在基础字符串内容中查找下一个 '"', '\\', '\n', '\r' 偏移
+    pub static fn scanBasicStringStopScalar(slice: []const u8): usize? {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            const c = slice[i];
+            if (c == '"' || c == '\\' || c == '\n' || c == '\r') {
+                return i;
+            }
+        }
+        return null;
     }
 
     fn skipWs(*_) {
@@ -52,49 +200,96 @@ pub struct TomlParser {
         }
     }
 
-    fn skipWsAndComments(*_) {
+    /// 使用 cap:simd 跳过 `# ...` 单行注释并校验注释内无非法控制字符
+    fn skipCommentBody(*_): ! {
+        // _.src[_.pos] == '#'
+        _.pos += 1;
+        const rest = _.src[_.pos..];
+        let comment_len: usize = rest.len;
+        if (nl := Simd.indexOfByte(rest, '\n')) {
+            comment_len = nl;
+        }
+        // 允许行尾紧贴 '\n' 之前的单个 '\r' (CRLF)
+        let check_len = comment_len;
+        if (check_len > 0 && rest[check_len - 1] == '\r' && comment_len < rest.len) {
+            check_len -= 1;
+        }
+        try TomlParser.validateNoControlSingleLine(rest[0..check_len]);
+        _.pos += comment_len;
+    }
+
+    fn skipWsAndComments(*_): ! {
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-                _.pos += 1;
+                if (c == '\r') {
+                    if (_.pos + 1 >= _.src.len || _.src[_.pos + 1] != '\n') {
+                        return error.InvalidControlChar;
+                    }
+                    _.pos += 2;
+                } else {
+                    const adv = Simd.skipWhitespace(_.src[_.pos..]);
+                    // 仅对连续不含孤立 CR 的空白块批量前进；若块内含 '\r' 则逐字节检查 CRLF
+                    if (adv > 1 && Simd.indexOfByte(_.src[_.pos .. _.pos + adv], '\r') == null) {
+                        _.pos += adv;
+                    } else {
+                        _.pos += 1;
+                    }
+                }
             } else if (c == '#') {
-                while (_.pos < _.src.len && _.src[_.pos] != '\n') _.pos += 1;
+                try _.skipCommentBody();
             } else {
                 break;
             }
         }
     }
 
-    fn skipCommentOnLine(*_) {
+    fn skipCommentOnLine(*_): ! {
         _.skipWs();
         if (_.pos < _.src.len && _.src[_.pos] == '#') {
-            while (_.pos < _.src.len && _.src[_.pos] != '\n') _.pos += 1;
+            try _.skipCommentBody();
         }
     }
 
     fn expectLineEndOrEof(*_): ! {
-        _.skipCommentOnLine();
+        try _.skipCommentOnLine();
         if (_.pos >= _.src.len) return;
-        if (_.src[_.pos] == '\r') _.pos += 1;
-        if (_.pos < _.src.len && _.src[_.pos] == '\n') {
+        if (_.src[_.pos] == '\r') {
+            if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\n') {
+                _.pos += 2;
+                return;
+            }
+            return error.InvalidControlChar;
+        }
+        if (_.src[_.pos] == '\n') {
             _.pos += 1;
             return;
         }
-        if (_.pos >= _.src.len) return;
         return error.SyntaxError;
     }
 
-    fn isBareKeyChar(c: u8): bool {
+    static fn isBareKeyChar(c: u8): bool {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
             (c >= '0' && c <= '9') || c == '_' || c == '-';
     }
 
+    /// 解析单个键段（TOML v1.0.0：允许裸键、单行基础字符串、单行字面量字符串；严禁多行字符串作为键）
     fn parseKeySegment(*_): ([]const u8)! {
         _.skipWs();
         if (_.pos >= _.src.len) return error.UnexpectedEof;
         const c = _.src[_.pos];
-        if (c == '"') return try _.parseBasicString();
-        if (c == '\'') return try _.parseLiteralString();
+        if (c == '"') {
+            if (_.pos + 2 < _.src.len && _.src[_.pos + 1] == '"' && _.src[_.pos + 2] == '"') {
+                return error.SyntaxError;
+            }
+            return try _.parseBasicStringSingleLine();
+        }
+        if (c == '\'') {
+            if (_.pos + 2 < _.src.len && _.src[_.pos + 1] == '\'' && _.src[_.pos + 2] == '\'') {
+                return error.SyntaxError;
+            }
+            return try _.parseLiteralStringSingleLine();
+        }
         const start = _.pos;
         while (_.pos < _.src.len && TomlParser.isBareKeyChar(_.src[_.pos])) {
             _.pos += 1;
@@ -112,14 +307,14 @@ pub struct TomlParser {
             _.skipWs();
             if (_.pos >= _.src.len || _.src[_.pos] != '.') break;
             _.pos += 1;
-            if (count >= 32) return error.SyntaxError;
+            if (count >= 32) return error.DepthExceeded;
             seg_buf[count] = try _.parseKeySegment();
             count += 1;
         }
         return count;
     }
 
-    fn parseHex(s: []const u8): u32? {
+    static fn parseHex(s: []const u8): u32? {
         let acc: u32 = 0;
         for (c of s) {
             acc <<= 4;
@@ -136,8 +331,11 @@ pub struct TomlParser {
         return acc;
     }
 
-    fn appendUtf8(out: *TomlByteList, allocator: std.mem.Allocator, cp: u32): ! {
-        if (cp > 0x10FFFF) return error.InvalidEscape;
+    /// 严格 UTF-8 标量编码（拒绝 UTF-16 代理对 0xD800..0xDFFF 及 > 0x10FFFF）
+    static fn appendUtf8(out: *TomlByteList, allocator: std.mem.Allocator, cp: u32): ! {
+        if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+            return error.InvalidEscape;
+        }
         let buf: [4]u8 = undefined;
         const n = std.unicode.utf8Encode(@intCast(cp), &buf) catch return error.InvalidEscape;
         try out.appendSlice(allocator, buf[0..n]);
@@ -171,125 +369,356 @@ pub struct TomlParser {
         }
     }
 
-    fn parseBasicString(*_): ([]const u8)! {
+    /// 单行基础字符串（使用 cap:simd Simd.indexOfAny4 块级快扫）
+    fn parseBasicStringSingleLine(*_): ([]const u8)! {
         _.pos += 1; // '"'
-        if (_.pos + 1 < _.src.len && _.src[_.pos] == '"' && _.src[_.pos + 1] == '"') {
-            _.pos += 2;
-            return try _.parseMultilineBasicString();
-        }
         let out = TomlByteList.empty;
+        errdefer out.deinit(_.allocator);
         while (_.pos < _.src.len) {
+            const rest = _.src[_.pos..];
+            const stop_opt = TomlParser.scanBasicStringStopSimd(rest);
+            if (stop_opt == null) {
+                return error.UnexpectedEof;
+            }
+            const stop = stop_opt.?;
+            if (stop > 0) {
+                const chunk = rest[0..stop];
+                try TomlParser.validateNoControlSingleLine(chunk);
+                try out.appendSlice(_.allocator, chunk);
+                _.pos += stop;
+            }
             const c = _.src[_.pos];
             if (c == '"') {
                 _.pos += 1;
                 return try out.toOwnedSlice(_.allocator);
             }
-            if (c == '\n' || c == '\r') return error.SyntaxError;
+            if (c == '\n' || c == '\r') {
+                return error.SyntaxError;
+            }
             if (c == '\\') {
                 _.pos += 1;
                 try _.parseBasicEscape(&out);
                 continue;
             }
-            try out.append(_.allocator, c);
-            _.pos += 1;
+            return error.SyntaxError;
         }
         return error.UnexpectedEof;
     }
 
+    fn parseBasicString(*_): ([]const u8)! {
+        if (_.pos + 2 < _.src.len && _.src[_.pos] == '"' && _.src[_.pos + 1] == '"' && _.src[_.pos + 2] == '"') {
+            _.pos += 3;
+            return try _.parseMultilineBasicString();
+        }
+        return try _.parseBasicStringSingleLine();
+    }
+
+    /// 多行基础字符串 `"""..."""`（使用 cap:simd Simd.indexOfAny2 块级快扫）
     fn parseMultilineBasicString(*_): ([]const u8)! {
-        // Trim immediate newline after opening """
-        if (_.pos < _.src.len && _.src[_.pos] == '\r') _.pos += 1;
-        if (_.pos < _.src.len && _.src[_.pos] == '\n') _.pos += 1;
+        // 剥离紧随开界符 `"""` 后的首个换行（LF 或 CRLF）
+        if (_.pos < _.src.len && _.src[_.pos] == '\r') {
+            if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\n') {
+                _.pos += 2;
+            } else {
+                return error.InvalidControlChar;
+            }
+        } else if (_.pos < _.src.len && _.src[_.pos] == '\n') {
+            _.pos += 1;
+        }
 
         let out = TomlByteList.empty;
+        errdefer out.deinit(_.allocator);
         while (_.pos < _.src.len) {
-            if (_.pos + 2 < _.src.len && _.src[_.pos] == '"' && _.src[_.pos + 1] == '"' && _.src[_.pos + 2] == '"') {
-                _.pos += 3;
-                // Handle up to 2 extra quotes immediately following closing delimiter
-                let extra: usize = 0;
-                while (extra < 2 && _.pos < _.src.len && _.src[_.pos] == '"') : (extra += 1) {
-                    try out.append(_.allocator, '"');
-                    _.pos += 1;
-                }
-                return try out.toOwnedSlice(_.allocator);
+            const rest = _.src[_.pos..];
+            const stop_opt = Simd.indexOfAny2(rest, '"', '\\');
+            if (stop_opt == null) {
+                return error.UnexpectedEof;
+            }
+            const stop = stop_opt.?;
+            if (stop > 0) {
+                const chunk = rest[0..stop];
+                try TomlParser.validateNoControlMultiLine(chunk);
+                try out.appendSlice(_.allocator, chunk);
+                _.pos += stop;
             }
             const c = _.src[_.pos];
+            if (c == '"') {
+                // 统计连续引号个数：1..2 个为内容，3..5 个为结束（含 0..2 个尾随内容引号），>=6 非法
+                let qcnt: usize = 0;
+                while (_.pos + qcnt < _.src.len && _.src[_.pos + qcnt] == '"') : (qcnt += 1) {}
+                if (qcnt < 3) {
+                    try out.appendSlice(_.allocator, _.src[_.pos .. _.pos + qcnt]);
+                    _.pos += qcnt;
+                    continue;
+                }
+                if (qcnt > 5) {
+                    return error.SyntaxError;
+                }
+                const extra = qcnt - 3;
+                let e: usize = 0;
+                while (e < extra) : (e += 1) {
+                    try out.append(_.allocator, '"');
+                }
+                _.pos += qcnt;
+                return try out.toOwnedSlice(_.allocator);
+            }
             if (c == '\\') {
                 _.pos += 1;
                 if (_.pos < _.src.len && (_.src[_.pos] == ' ' || _.src[_.pos] == '\t' || _.src[_.pos] == '\r' || _.src[_.pos] == '\n')) {
-                    // Line-ending backslash trims all whitespace & newlines
+                    // 行尾反斜杠：允许后跟若干空格/制表符 + 至少一个换行，裁剪其后全部空白与换行
                     let scan = _.pos;
                     while (scan < _.src.len && (_.src[scan] == ' ' || _.src[scan] == '\t')) scan += 1;
                     if (scan < _.src.len && (_.src[scan] == '\r' || _.src[scan] == '\n')) {
                         _.pos = scan;
-                        while (_.pos < _.src.len && (_.src[_.pos] == ' ' || _.src[_.pos] == '\t' || _.src[_.pos] == '\r' || _.src[_.pos] == '\n')) {
-                            _.pos += 1;
+                        while (_.pos < _.src.len) {
+                            const wc = _.src[_.pos];
+                            if (wc == ' ' || wc == '\t' || wc == '\n') {
+                                _.pos += 1;
+                            } else if (wc == '\r') {
+                                if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\n') {
+                                    _.pos += 2;
+                                } else {
+                                    return error.InvalidControlChar;
+                                }
+                            } else {
+                                break;
+                            }
                         }
                         continue;
                     }
+                    return error.InvalidEscape;
                 }
                 try _.parseBasicEscape(&out);
                 continue;
             }
-            try out.append(_.allocator, c);
-            _.pos += 1;
         }
         return error.UnexpectedEof;
     }
 
-    fn parseLiteralString(*_): ([]const u8)! {
+    /// 单行字面量字符串 `'...'`（使用 cap:simd Simd.indexOfAny4 快扫）
+    fn parseLiteralStringSingleLine(*_): ([]const u8)! {
         _.pos += 1; // '\''
-        if (_.pos + 1 < _.src.len && _.src[_.pos] == '\'' && _.src[_.pos + 1] == '\'') {
-            _.pos += 2;
-            if (_.pos < _.src.len && _.src[_.pos] == '\r') _.pos += 1;
-            if (_.pos < _.src.len && _.src[_.pos] == '\n') _.pos += 1;
-            const start = _.pos;
-            while (_.pos + 2 < _.src.len) {
-                if (_.src[_.pos] == '\'' && _.src[_.pos + 1] == '\'' && _.src[_.pos + 2] == '\'') {
-                    const inner = _.src[start.._.pos];
-                    _.pos += 3;
-                    let extra: usize = 0;
-                    let out = TomlByteList.empty;
-                    try out.appendSlice(_.allocator, inner);
-                    while (extra < 2 && _.pos < _.src.len && _.src[_.pos] == '\'') : (extra += 1) {
-                        try out.append(_.allocator, '\'');
-                        _.pos += 1;
-                    }
-                    return try out.toOwnedSlice(_.allocator);
+        const start = _.pos;
+        const rest = _.src[_.pos..];
+        const stop_opt = Simd.indexOfAny4(rest, '\'', '\n', '\r', 0x7F);
+        if (stop_opt == null) {
+            return error.UnexpectedEof;
+        }
+        const stop = stop_opt.?;
+        const hit = rest[stop];
+        if (hit != '\'') {
+            return error.SyntaxError;
+        }
+        const s = _.src[start .. start + stop];
+        try TomlParser.validateNoControlSingleLine(s);
+        _.pos = start + stop + 1;
+        return s;
+    }
+
+    /// 字面量字符串（单行 `'...'` 与多行 `'''...'''`，使用 cap:simd 块级快扫）
+    fn parseLiteralString(*_): ([]const u8)! {
+        if (_.pos + 2 < _.src.len && _.src[_.pos] == '\'' && _.src[_.pos + 1] == '\'' && _.src[_.pos + 2] == '\'') {
+            _.pos += 3;
+            if (_.pos < _.src.len && _.src[_.pos] == '\r') {
+                if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\n') {
+                    _.pos += 2;
+                } else {
+                    return error.InvalidControlChar;
                 }
+            } else if (_.pos < _.src.len && _.src[_.pos] == '\n') {
                 _.pos += 1;
+            }
+            const start = _.pos;
+            while (_.pos < _.src.len) {
+                const rest = _.src[_.pos..];
+                const q_opt = Simd.indexOfByte(rest, '\'');
+                if (q_opt == null) {
+                    return error.UnexpectedEof;
+                }
+                _.pos += q_opt.?;
+                let qcnt: usize = 0;
+                while (_.pos + qcnt < _.src.len && _.src[_.pos + qcnt] == '\'') : (qcnt += 1) {}
+                if (qcnt < 3) {
+                    _.pos += qcnt;
+                    continue;
+                }
+                if (qcnt > 5) {
+                    return error.SyntaxError;
+                }
+                const extra = qcnt - 3;
+                const inner = _.src[start .. _.pos + extra];
+                try TomlParser.validateNoControlMultiLine(inner);
+                _.pos += qcnt;
+                return inner;
             }
             return error.UnexpectedEof;
         }
-        const start = _.pos;
-        while (_.pos < _.src.len) {
-            const c = _.src[_.pos];
-            if (c == '\'') {
-                const s = _.src[start.._.pos];
-                _.pos += 1;
-                return s;
-            }
-            if (c == '\n' || c == '\r') return error.SyntaxError;
-            _.pos += 1;
-        }
-        return error.UnexpectedEof;
+        return try _.parseLiteralStringSingleLine();
     }
 
-    fn parseValue(*_): ConfValue! {
+    /// 校验数字段（仅含指定进制字符与合法下划线：下划线两侧必须为合法数字）
+    static fn isDigitForBase(c: u8, base: u8): bool {
+        if (base == 2) return c == '0' || c == '1';
+        if (base == 8) return c >= '0' && c <= '7';
+        if (base == 10) return c >= '0' && c <= '9';
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+    static fn validateDigitsWithUnderscores(s: []const u8, base: u8, forbid_leading_zero: bool): bool {
+        if (s.len == 0) return false;
+        if (s[0] == '_' || s[s.len - 1] == '_') return false;
+        if (forbid_leading_zero && s[0] == '0' && s.len > 1) return false;
+        let prev_under = false;
+        let i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            const c = s[i];
+            if (c == '_') {
+                if (prev_under) return false;
+                prev_under = true;
+            } else {
+                if (!TomlParser.isDigitForBase(c, base)) return false;
+                prev_under = false;
+            }
+        }
+        return !prev_under;
+    }
+
+    /// 判断未引号 token 是否具备日期/时间特征（用于将非法日期归类为 InvalidDateTime）
+    static fn looksLikeDateTime(tok: []const u8): bool {
+        if (tok.len >= 4 && tok[0] >= '0' && tok[0] <= '9') {
+            if (Simd.indexOfByte(tok, ':') != null) return true;
+            // 形如 YYYY-MM-...（排除科学计数法 1e-5）
+            if (tok.len >= 5 && tok[4] == '-') return true;
+            if (tok.len >= 4 && tok[3] == '-' && tok[0] >= '0' && tok[0] <= '9') return true;
+        }
+        return false;
+    }
+
+    /// 严格解析 TOML v1.0.0 数值字面量（整数/浮点/进制/inf/nan）
+    static fn parseStrictNumber(tok: []const u8): ConfValue! {
+        if (tok.len == 0) return error.InvalidNumber;
+
+        // 1. 特殊浮点常量（大小写严格敏感，严禁下划线）
+        if (std.mem.eql(u8, tok, "inf") || std.mem.eql(u8, tok, "+inf")) {
+            return ConfValue.makeFloat(std.math.inf(f64));
+        }
+        if (std.mem.eql(u8, tok, "-inf")) {
+            return ConfValue.makeFloat(-1.0 * std.math.inf(f64));
+        }
+        if (std.mem.eql(u8, tok, "nan") || std.mem.eql(u8, tok, "+nan") || std.mem.eql(u8, tok, "-nan")) {
+            return ConfValue.makeFloat(std.math.nan(f64));
+        }
+
+        // 2. 非十进制整数（TOML v1.0.0：前缀必须小写 0x/0o/0b，严禁正负号）
+        if (tok.len >= 2 && tok[0] == '0' && (tok[1] == 'x' || tok[1] == 'o' || tok[1] == 'b')) {
+            const base: u8 = if (tok[1] == 'x') 16 else if (tok[1] == 'o') 8 else 2;
+            const digits = tok[2..];
+            if (!TomlParser.validateDigitsWithUnderscores(digits, base, false)) {
+                return error.InvalidNumber;
+            }
+            const clean = TomlDoc.stripUnderscores(digits);
+            const n = std.fmt.parseInt(i64, clean, base) catch return error.InvalidNumber;
+            return ConfValue.makeInt(n);
+        }
+        if (tok.len >= 2 && tok[0] == '0' && (tok[1] == 'X' || tok[1] == 'O' || tok[1] == 'B')) {
+            return error.InvalidNumber;
+        }
+
+        // 3. 检测是否为浮点数（含 '.' 或 'e' / 'E'）
+        let dot_pos: usize? = null;
+        let exp_pos: usize? = null;
+        let idx: usize = 0;
+        while (idx < tok.len) : (idx += 1) {
+            const ch = tok[idx];
+            if (ch == '.') {
+                if (dot_pos != null || exp_pos != null) return error.InvalidNumber;
+                dot_pos = idx;
+            } else if (ch == 'e' || ch == 'E') {
+                if (exp_pos != null) return error.InvalidNumber;
+                exp_pos = idx;
+            }
+        }
+
+        let body = tok;
+        if (body[0] == '+' || body[0] == '-') {
+            body = body[1..];
+            if (body.len == 0) return error.InvalidNumber;
+        }
+
+        if (dot_pos != null || exp_pos != null) {
+            // 校验浮点三段：int_part [ '.' frac_part ] [ ('e'|'E') ['+'|'-'] exp_part ]
+            let sign_off: usize = if (tok[0] == '+' || tok[0] == '-') 1 else 0;
+            let int_end = tok.len;
+            if (dp := dot_pos) {
+                int_end = dp;
+            } else if (ep := exp_pos) {
+                int_end = ep;
+            }
+            if (int_end <= sign_off) return error.InvalidNumber;
+            if (!TomlParser.validateDigitsWithUnderscores(tok[sign_off..int_end], 10, true)) {
+                return error.InvalidNumber;
+            }
+
+            if (dp := dot_pos) {
+                const frac_end = exp_pos orelse tok.len;
+                if (frac_end <= dp + 1) return error.InvalidNumber;
+                if (!TomlParser.validateDigitsWithUnderscores(tok[dp + 1 .. frac_end], 10, false)) {
+                    return error.InvalidNumber;
+                }
+            }
+
+            if (ep := exp_pos) {
+                let e_start = ep + 1;
+                if (e_start >= tok.len) return error.InvalidNumber;
+                if (tok[e_start] == '+' || tok[e_start] == '-') {
+                    e_start += 1;
+                }
+                if (e_start >= tok.len) return error.InvalidNumber;
+                // TOML v1.0.0：指数部分允许前导零（如 1e06），但下划线规则相同
+                if (!TomlParser.validateDigitsWithUnderscores(tok[e_start..], 10, false)) {
+                    return error.InvalidNumber;
+                }
+            }
+
+            const clean = TomlDoc.stripUnderscores(tok);
+            let num_s = clean;
+            if (clean[0] == '+') num_s = clean[1..];
+            const f = std.fmt.parseFloat(f64, num_s) catch return error.InvalidNumber;
+            if (std.math.isInf(f) || std.math.isNan(f)) {
+                return error.InvalidNumber;
+            }
+            return ConfValue.makeFloat(f);
+        }
+
+        // 4. 十进制整数（严禁前导零，如 01 / +01 / -01 / 00）
+        if (!TomlParser.validateDigitsWithUnderscores(body, 10, true)) {
+            return error.InvalidNumber;
+        }
+        const clean = TomlDoc.stripUnderscores(tok);
+        let num_s = clean;
+        if (clean[0] == '+') num_s = clean[1..];
+        const iv = std.fmt.parseInt(i64, num_s, 10) catch return error.InvalidNumber;
+        return ConfValue.makeInt(iv);
+    }
+
+    fn parseValueNode(*_, depth: usize): usize! {
+        if (depth >= TOML_MAX_DEPTH) return error.DepthExceeded;
         _.skipWs();
         if (_.pos >= _.src.len) return error.UnexpectedEof;
         const c = _.src[_.pos];
         if (c == '"') {
-            return ConfValue.makeString(try _.parseBasicString());
+            const s = try _.parseBasicString();
+            return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: ConfValue.makeString(s) });
         }
         if (c == '\'') {
-            return ConfValue.makeString(try _.parseLiteralString());
+            const s = try _.parseLiteralString();
+            return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: ConfValue.makeString(s) });
         }
         if (c == '[') {
-            return try _.parseArray();
+            return try _.parseArrayNode(depth + 1);
         }
         if (c == '{') {
-            return try _.parseInlineTable();
+            return try _.parseInlineTableNode(depth + 1);
         }
 
         // Scan unquoted token (bool, int, float, or RFC 3339 date/time)
@@ -304,65 +733,39 @@ pub struct TomlParser {
         let tok = std.mem.trim(u8, _.src[start.._.pos], " \t");
         if (tok.len == 0) return error.SyntaxError;
 
-        // Note: Offset Date-Time may have a space between date and time (e.g. `1979-05-27 07:32:00Z`),
-        // which stays in `tok` because we only stop on `,`, `]`, `}`, `#`, `\r`, `\n`.
-        if (std.mem.eql(u8, tok, "true")) return ConfValue.makeBool(true);
-        if (std.mem.eql(u8, tok, "false")) return ConfValue.makeBool(false);
+        if (std.mem.eql(u8, tok, "true")) {
+            return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: ConfValue.makeBool(true) });
+        }
+        if (std.mem.eql(u8, tok, "false")) {
+            return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: ConfValue.makeBool(false) });
+        }
 
         if (dt := ConfDateTime.parse(tok)) {
-            return ConfValue.makeDateTime(dt);
+            if (dt.second > 59) return error.InvalidDateTime;
+            return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: ConfValue.makeDateTime(dt) });
+        }
+        if (TomlParser.looksLikeDateTime(tok)) {
+            return error.InvalidDateTime;
         }
 
-        const clean = TomlDoc.stripUnderscores(tok);
-        if (std.mem.eql(u8, clean, "inf") || std.mem.eql(u8, clean, "+inf")) return ConfValue.makeFloat(std.math.inf(f64));
-        if (std.mem.eql(u8, clean, "-inf")) return ConfValue.makeFloat(-1.0 * std.math.inf(f64));
-        if (std.mem.eql(u8, clean, "nan") || std.mem.eql(u8, clean, "+nan") || std.mem.eql(u8, clean, "-nan")) return ConfValue.makeFloat(std.math.nan(f64));
-
-        if (clean.len > 2 && clean[0] == '0' && (clean[1] == 'x' || clean[1] == 'X')) {
-            const n = std.fmt.parseInt(i64, clean[2..], 16) catch return error.InvalidNumber;
-            return ConfValue.makeInt(n);
-        }
-        if (clean.len > 2 && clean[0] == '0' && (clean[1] == 'o' || clean[1] == 'O')) {
-            const n = std.fmt.parseInt(i64, clean[2..], 8) catch return error.InvalidNumber;
-            return ConfValue.makeInt(n);
-        }
-        if (clean.len > 2 && clean[0] == '0' && (clean[1] == 'b' || clean[1] == 'B')) {
-            const n = std.fmt.parseInt(i64, clean[2..], 2) catch return error.InvalidNumber;
-            return ConfValue.makeInt(n);
-        }
-
-        let is_float = false;
-        for (ch of clean) {
-            if (ch == '.' || ch == 'e' || ch == 'E') {
-                is_float = true;
-                break;
-            }
-        }
-        if (is_float) {
-            let num_s = clean;
-            if (clean[0] == '+') num_s = clean[1..];
-            const f = std.fmt.parseFloat(f64, num_s) catch return error.InvalidNumber;
-            return ConfValue.makeFloat(f);
-        }
-        let num_s = clean;
-        if (clean[0] == '+') num_s = clean[1..];
-        const iv = std.fmt.parseInt(i64, num_s, 10) catch return error.InvalidNumber;
-        return ConfValue.makeInt(iv);
+        const num_val = try TomlParser.parseStrictNumber(tok);
+        return try _.allocNode(BuildNode{ kind: NodeKind.Scalar, scalar: num_val });
     }
 
-    fn parseArray(*_): ConfValue! {
+    fn parseArrayNode(*_, depth: usize): usize! {
+        if (depth >= TOML_MAX_DEPTH) return error.DepthExceeded;
         _.pos += 1; // '['
-        let items = TomlValueList.empty;
+        const arr_id = try _.allocNode(BuildNode{ kind: NodeKind.ArrayStatic });
         while (true) {
-            _.skipWsAndComments();
+            try _.skipWsAndComments();
             if (_.pos >= _.src.len) return error.UnexpectedEof;
             if (_.src[_.pos] == ']') {
                 _.pos += 1;
                 break;
             }
-            const elem = try _.parseValue();
-            try items.append(_.allocator, elem);
-            _.skipWsAndComments();
+            const elem_id = try _.parseValueNode(depth + 1);
+            try _.nodes.items[arr_id].items.append(_.allocator, elem_id);
+            try _.skipWsAndComments();
             if (_.pos < _.src.len && _.src[_.pos] == ',') {
                 _.pos += 1;
                 continue;
@@ -373,26 +776,38 @@ pub struct TomlParser {
             }
             return error.SyntaxError;
         }
-        return ConfValue.makeArray(try items.toOwnedSlice(_.allocator));
+        return arr_id;
     }
 
-    fn parseInlineTable(*_): ConfValue! {
+    /// TOML v1.0.0 Inline Table：单行、禁止换行、禁止尾随逗号、创建后永久冻结 (TableInlineFrozen)
+    fn parseInlineTableNode(*_, depth: usize): usize! {
+        if (depth >= TOML_MAX_DEPTH) return error.DepthExceeded;
         _.pos += 1; // '{'
-        let tbl = ConfValue.makeEmptyObject();
+        const tbl_id = try _.allocNode(BuildNode{ kind: NodeKind.TableInlineFrozen, scope_id: _.scope_counter });
+
+        _.skipWs();
+        if (_.pos >= _.src.len) return error.UnexpectedEof;
+        if (_.src[_.pos] == '}') {
+            _.pos += 1;
+            return tbl_id;
+        }
+
+        let inline_scope = _.scope_counter + 1000000 + depth;
         while (true) {
             _.skipWs();
             if (_.pos >= _.src.len) return error.UnexpectedEof;
+            if (_.src[_.pos] == '\n' || _.src[_.pos] == '\r') return error.SyntaxError;
             if (_.src[_.pos] == '}') {
-                _.pos += 1;
-                break;
+                // TOML v1.0.0 禁止 Inline Table 尾随逗号 `{ a = 1, }`
+                return error.SyntaxError;
             }
             let segs: [32][]const u8 = undefined;
             const seg_count = try _.parseKeyPath(&segs);
             _.skipWs();
             if (_.pos >= _.src.len || _.src[_.pos] != '=') return error.SyntaxError;
             _.pos += 1;
-            const val = try _.parseValue();
-            try TomlParser.setNestedPath(&tbl, segs[0..seg_count], val, _.allocator);
+            const val_id = try _.parseValueNode(depth + 1);
+            try _.insertDottedKey(tbl_id, segs[0..seg_count], val_id, inline_scope);
             _.skipWs();
             if (_.pos < _.src.len && _.src[_.pos] == ',') {
                 _.pos += 1;
@@ -404,89 +819,131 @@ pub struct TomlParser {
             }
             return error.SyntaxError;
         }
-        return tbl;
+        return tbl_id;
     }
 
-    fn setObjectField(obj: *ConfValue, key: []const u8, val: ConfValue, allocator: std.mem.Allocator): ! {
-        if (obj.tag != ConfTag.Object) return error.SyntaxError;
+    fn findFieldNodeId(*_, tbl_id: usize, key: []const u8): usize? {
+        const fields = _.nodes.items[tbl_id].fields.items;
         let i: usize = 0;
-        while (i < obj.obj_val.len) : (i += 1) {
-            if (std.mem.eql(u8, obj.obj_val[i].key, key)) {
-                obj.obj_val[i].value = val;
-                return;
+        while (i < fields.len) : (i += 1) {
+            if (std.mem.eql(u8, fields[i].key, key)) {
+                return fields[i].node_id;
             }
         }
-        let next = try allocator.alloc(ConfField, obj.obj_val.len + 1);
-        if (obj.obj_val.len > 0) {
-            @memcpy(next[0..obj.obj_val.len], obj.obj_val);
-            allocator.free(obj.obj_val);
-        }
-        next[obj.obj_val.len] = ConfField{ key: key, value: val };
-        obj.obj_val = next;
+        return null;
     }
 
-    fn getOrCreateChildObject(obj: *ConfValue, key: []const u8, allocator: std.mem.Allocator): (*ConfValue)! {
-        if (obj.tag != ConfTag.Object) return error.TableRedefined;
-        let i: usize = 0;
-        while (i < obj.obj_val.len) : (i += 1) {
-            if (std.mem.eql(u8, obj.obj_val[i].key, key)) {
-                if (obj.obj_val[i].value.tag == ConfTag.Array) {
-                    const arr = obj.obj_val[i].value.arr_val;
-                    if (arr.len == 0) return error.TableRedefined;
-                    return &arr[arr.len - 1];
-                }
-                if (obj.obj_val[i].value.tag != ConfTag.Object) return error.TableRedefined;
-                return &obj.obj_val[i].value;
-            }
-        }
-        try TomlParser.setObjectField(obj, key, ConfValue.makeEmptyObject(), allocator);
-        return &obj.obj_val[obj.obj_val.len - 1].value;
+    fn addFieldId(*_, tbl_id: usize, key: []const u8, child_id: usize): ! {
+        try _.nodes.items[tbl_id].fields.append(_.allocator, BuildField{ key: key, node_id: child_id });
     }
 
-    fn appendTableArrayItem(obj: *ConfValue, key: []const u8, allocator: std.mem.Allocator): (*ConfValue)! {
-        if (obj.tag != ConfTag.Object) return error.TableRedefined;
-        let arr_idx: usize? = null;
-        let i: usize = 0;
-        while (i < obj.obj_val.len) : (i += 1) {
-            if (std.mem.eql(u8, obj.obj_val[i].key, key)) {
-                if (obj.obj_val[i].value.tag != ConfTag.Array) return error.TableRedefined;
-                arr_idx = i;
-                break;
-            }
+    /// 点分键赋值（如 `a.b.c = val`）：严格执行重复键拒绝、Inline Table 冻结与作用域限制
+    fn insertDottedKey(*_, target_id: usize, segs: []const []const u8, val_id: usize, cur_scope: usize): ! {
+        if (segs.len == 0) {
+            return error.SyntaxError;
         }
-        if (idx := arr_idx) {
-            const old_arr = obj.obj_val[idx].value.arr_val;
-            let next_arr = try allocator.alloc(ConfValue, old_arr.len + 1);
-            if (old_arr.len > 0) {
-                @memcpy(next_arr[0..old_arr.len], old_arr);
-                allocator.free(old_arr);
-            }
-            next_arr[old_arr.len] = ConfValue.makeEmptyObject();
-            obj.obj_val[idx].value.arr_val = next_arr;
-            return &next_arr[old_arr.len];
-        }
-        let fresh = try allocator.alloc(ConfValue, 1);
-        fresh[0] = ConfValue.makeEmptyObject();
-        try TomlParser.setObjectField(obj, key, ConfValue.makeArray(fresh), allocator);
-        return &obj.obj_val[obj.obj_val.len - 1].value.arr_val[0];
-    }
-
-    fn setNestedPath(target: *ConfValue, segs: []const []const u8, val: ConfValue, allocator: std.mem.Allocator): ! {
-        if (segs.len == 0) return error.SyntaxError;
-        let cur = target;
+        let cur_id = target_id;
         let i: usize = 0;
         while (i + 1 < segs.len) : (i += 1) {
-            cur = try TomlParser.getOrCreateChildObject(cur, segs[i], allocator);
+            const seg = segs[i];
+            if (existing_id := _.findFieldNodeId(cur_id, seg)) {
+                const k = _.nodes.items[existing_id].kind;
+                if (k == NodeKind.TableInlineFrozen) {
+                    return error.FrozenTable;
+                }
+                if (k == NodeKind.TableExplicit) {
+                    return error.TableRedefined;
+                }
+                if (k == NodeKind.TableDotted) {
+                    if (_.nodes.items[existing_id].scope_id != cur_scope) {
+                        return error.TableRedefined;
+                    }
+                    cur_id = existing_id;
+                } else if (k == NodeKind.TableImplicit) {
+                    cur_id = existing_id;
+                } else {
+                    return error.TableRedefined;
+                }
+            } else {
+                const new_id = try _.allocNode(BuildNode{
+                    kind: NodeKind.TableDotted,
+                    scope_id: cur_scope,
+                });
+                try _.addFieldId(cur_id, seg, new_id);
+                cur_id = new_id;
+            }
         }
-        try TomlParser.setObjectField(cur, segs[segs.len - 1], val, allocator);
+        const leaf_key = segs[segs.len - 1];
+        if (_.findFieldNodeId(cur_id, leaf_key) != null) {
+            return error.DuplicateKey;
+        }
+        try _.addFieldId(cur_id, leaf_key, val_id);
+    }
+
+    /// 导航表头中间路径（`[a.b.c]` 中的 `a`, `b`）
+    fn navigateTableHeaderParent(*_, parent_id: usize, seg: []const u8): usize! {
+        if (existing_id := _.findFieldNodeId(parent_id, seg)) {
+            const k = _.nodes.items[existing_id].kind;
+            if (k == NodeKind.TableInlineFrozen) {
+                return error.FrozenTable;
+            }
+            if (k == NodeKind.ArrayOfTables) {
+                const len = _.nodes.items[existing_id].items.items.len;
+                if (len == 0) return error.TableRedefined;
+                return _.nodes.items[existing_id].items.items[len - 1];
+            }
+            if (BuildNode.isTableKind(k)) {
+                return existing_id;
+            }
+            return error.TableRedefined;
+        }
+        const new_id = try _.allocNode(BuildNode{ kind: NodeKind.TableImplicit });
+        try _.addFieldId(parent_id, seg, new_id);
+        return new_id;
+    }
+
+    /// 定义显式表 `[...leaf]`
+    fn defineExplicitTable(*_, parent_id: usize, leaf: []const u8): usize! {
+        if (existing_id := _.findFieldNodeId(parent_id, leaf)) {
+            const k = _.nodes.items[existing_id].kind;
+            if (k == NodeKind.TableImplicit) {
+                _.nodes.items[existing_id].kind = NodeKind.TableExplicit;
+                return existing_id;
+            }
+            if (k == NodeKind.TableInlineFrozen) {
+                return error.FrozenTable;
+            }
+            return error.TableRedefined;
+        }
+        const new_id = try _.allocNode(BuildNode{ kind: NodeKind.TableExplicit });
+        try _.addFieldId(parent_id, leaf, new_id);
+        return new_id;
+    }
+
+    /// 追加表数组元素 `[[...leaf]]`
+    fn appendTableArrayNode(*_, parent_id: usize, leaf: []const u8): usize! {
+        if (existing_id := _.findFieldNodeId(parent_id, leaf)) {
+            if (_.nodes.items[existing_id].kind != NodeKind.ArrayOfTables) {
+                return error.TableRedefined;
+            }
+            const elem_id = try _.allocNode(BuildNode{ kind: NodeKind.TableExplicit });
+            try _.nodes.items[existing_id].items.append(_.allocator, elem_id);
+            return elem_id;
+        }
+        const arr_id = try _.allocNode(BuildNode{ kind: NodeKind.ArrayOfTables });
+        const elem_id = try _.allocNode(BuildNode{ kind: NodeKind.TableExplicit });
+        try _.nodes.items[arr_id].items.append(_.allocator, elem_id);
+        try _.addFieldId(parent_id, leaf, arr_id);
+        return elem_id;
     }
 
     fn runParser(*_): ConfValue! {
-        let root = ConfValue.makeEmptyObject();
-        let active_table: *ConfValue = &root;
+        const root_id = try _.allocNode(BuildNode{ kind: NodeKind.TableExplicit, scope_id: 1 });
+        let active_table_id: usize = root_id;
+        let cur_scope: usize = 1;
 
         while (true) {
-            _.skipWsAndComments();
+            try _.skipWsAndComments();
             if (_.pos >= _.src.len) break;
 
             if (_.src[_.pos] == '[') {
@@ -505,15 +962,17 @@ pub struct TomlParser {
                 }
                 try _.expectLineEndOrEof();
 
-                let cur: *ConfValue = &root;
+                let cur_id: usize = root_id;
                 let i: usize = 0;
                 while (i + 1 < seg_count) : (i += 1) {
-                    cur = try TomlParser.getOrCreateChildObject(cur, segs[i], _.allocator);
+                    cur_id = try _.navigateTableHeaderParent(cur_id, segs[i]);
                 }
+                _.scope_counter += 1;
+                cur_scope = _.scope_counter;
                 if (is_table_array) {
-                    active_table = try TomlParser.appendTableArrayItem(cur, segs[seg_count - 1], _.allocator);
+                    active_table_id = try _.appendTableArrayNode(cur_id, segs[seg_count - 1]);
                 } else {
-                    active_table = try TomlParser.getOrCreateChildObject(cur, segs[seg_count - 1], _.allocator);
+                    active_table_id = try _.defineExplicitTable(cur_id, segs[seg_count - 1]);
                 }
                 continue;
             }
@@ -524,12 +983,12 @@ pub struct TomlParser {
             _.skipWs();
             if (_.pos >= _.src.len || _.src[_.pos] != '=') return error.SyntaxError;
             _.pos += 1;
-            const val = try _.parseValue();
+            const val_id = try _.parseValueNode(0);
             try _.expectLineEndOrEof();
-            try TomlParser.setNestedPath(active_table, segs[0..seg_count], val, _.allocator);
+            try _.insertDottedKey(active_table_id, segs[0..seg_count], val_id, cur_scope);
         }
 
-        return root;
+        return try _.nodeToConfValue(root_id);
     }
 
     // ========================================================================
@@ -543,7 +1002,7 @@ pub struct TomlParser {
         return try out.toOwnedSlice(allocator);
     }
 
-    fn isBareKey(s: []const u8): bool {
+    static fn isBareKey(s: []const u8): bool {
         if (s.len == 0) return false;
         for (c of s) {
             if (!TomlParser.isBareKeyChar(c)) return false;
@@ -551,7 +1010,7 @@ pub struct TomlParser {
         return true;
     }
 
-    fn writeKey(out: *TomlByteList, allocator: std.mem.Allocator, k: []const u8): ! {
+    static fn writeKey(out: *TomlByteList, allocator: std.mem.Allocator, k: []const u8): ! {
         if (TomlParser.isBareKey(k)) {
             try out.appendSlice(allocator, k);
             return;
@@ -559,26 +1018,43 @@ pub struct TomlParser {
         try TomlParser.writeQuotedString(out, allocator, k);
     }
 
-    fn writeQuotedString(out: *TomlByteList, allocator: std.mem.Allocator, s: []const u8): ! {
+    static fn writeQuotedString(out: *TomlByteList, allocator: std.mem.Allocator, s: []const u8): ! {
+        const hex_digits = "0123456789ABCDEF";
         try out.append(allocator, '"');
         for (c of s) {
             switch (c) {
+                0x08 => try out.appendSlice(allocator, "\\b"),
+                0x0C => try out.appendSlice(allocator, "\\f"),
                 '"' => try out.appendSlice(allocator, "\\\""),
                 '\\' => try out.appendSlice(allocator, "\\\\"),
                 '\n' => try out.appendSlice(allocator, "\\n"),
                 '\r' => try out.appendSlice(allocator, "\\r"),
                 '\t' => try out.appendSlice(allocator, "\\t"),
-                else => try out.append(allocator, c),
+                else => {
+                    if (c < 0x20 || c == 0x7F) {
+                        const esc: [6]u8 = [
+                            '\\',
+                            'u',
+                            '0',
+                            '0',
+                            hex_digits[(c >> 4) & 0xF],
+                            hex_digits[c & 0xF],
+                        ];
+                        try out.appendSlice(allocator, esc[0..]);
+                    } else {
+                        try out.append(allocator, c);
+                    }
+                },
             }
         }
         try out.append(allocator, '"');
     }
 
-    fn isTableArray(v: ConfValue): bool {
+    static fn isTableArray(v: ConfValue): bool {
         return v.tag == ConfTag.Array && v.arr_val.len > 0 && v.arr_val[0].tag == ConfTag.Object;
     }
 
-    fn writeInlineValue(out: *TomlByteList, allocator: std.mem.Allocator, val: ConfValue): ! {
+    static fn writeInlineValue(out: *TomlByteList, allocator: std.mem.Allocator, val: ConfValue): ! {
         switch (val.tag) {
             .Null => try out.appendSlice(allocator, "\"\""),
             .Bool => try out.appendSlice(allocator, if (val.bool_val) "true" else "false"),
@@ -623,7 +1099,7 @@ pub struct TomlParser {
         }
     }
 
-    fn writeTableBody(out: *TomlByteList, allocator: std.mem.Allocator, prefix: []const u8, obj: ConfValue): ! {
+    static fn writeTableBody(out: *TomlByteList, allocator: std.mem.Allocator, prefix: []const u8, obj: ConfValue): ! {
         // 1. Scalar / regular array / empty-object fields
         for (f of obj.obj_val) {
             if (f.value.tag == ConfTag.Object || TomlParser.isTableArray(f.value)) continue;
@@ -891,7 +1367,7 @@ pub struct TomlDoc {
         return buf[0..n];
     }
 
-    fn formatScalarToString(val: ConfValue): []const u8 {
+    static fn formatScalarToString(val: ConfValue): []const u8 {
         const alloc = std.heap.page_allocator;
         return switch (val.tag) {
             .Null => "",
@@ -1051,7 +1527,7 @@ pub struct TomlDoc {
     }
 
     static fn unescapeToml(s: []const u8): []const u8 {
-        if (std.mem.indexOfScalar(u8, s, '\\') == null) {
+        if (Simd.indexOfByte(s, '\\') == null) {
             return s;
         }
         let buf = std.heap.page_allocator.alloc(u8, s.len) catch unreachable;
@@ -1095,7 +1571,7 @@ pub struct TomlDoc {
     }
 
     pub static fn stripUnderscores(s: []const u8): []const u8 {
-        if (std.mem.indexOfScalar(u8, s, '_') == null) {
+        if (Simd.indexOfByte(s, '_') == null) {
             return s;
         }
         let buf = std.heap.page_allocator.alloc(u8, s.len) catch unreachable;

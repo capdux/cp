@@ -11,7 +11,7 @@
 `cap:conf` 是 CP 标准库的统一配置与数据交换子系统，将 Bun 内部的四大核心配置解析器（**TOML 1.0**、**YAML 1.2**、**INI**、**JSON5**）与统一 AST (`ConfValue`)、强类型配置提取器（**`ConfGetter`**）整合为一套零冗余、类型安全的原生模块：
 
 1. **统一配置 AST 与 RFC 3339 时间模型 (`ConfValue` / `ConfDateTime`)**：提供 `Null`/`Bool`/`Int`/`Float`/`String`/`DateTime`/`Array`/`Object` 八态递归值树、`getPath("a.b.0.c")` 点分/索引路径查询、`clone` 深拷贝与 `toJsonValue` 跨模块桥接；`ConfDateTime` 完整校验 RFC 3339 四种格式（`OffsetDateTime`、`LocalDateTime`、`LocalDate`、`LocalTime`）及闰年日历合法性。
-2. **工业级 TOML 1.0 解析器与序列化器 (`TomlParser` / `TomlDoc` / `TOML`)**：支持内联表 `point = { x = 10, y = 20 }`、深层点分键 `a.b.c = "val"`、引号键 `"127.0.0.1" = "loopback"`、RFC 3339 日期时间字面量、多维嵌套数组、多行字符串 `"""..."""` / `'''...'''`、`[table]` 与 `[[array_of_tables]]` 表数组、十进制/十六进制/八进制/二进制及 `inf`/`nan`，并支持 `TomlParser.stringify` 双向序列化与 100% 向后兼容 `TomlDoc`（`TOML` / `toml`）。
+2. **工业级 TOML 1.0 解析器与序列化器 (`TomlParser` / `TomlDoc` / `TOML`，对标 `toml-rs/toml` MIT/Apache-2.0 加固)**：严格执行 TOML v1.0.0 语义——裸键/引号键/空引号键/深层点分键、重复键与显式表重定义严格拒绝、Inline Table 单行冻结不可追加（禁止换行与尾随逗号）、`[[array_of_tables]]` 与静态数组隔离、64 层最大嵌套深度防护、多行字符串 `"""..."""` / `'''...'''`、`\u`/`\U` 代理对（`0xD800..0xDFFF`）与控制字符拒绝、禁止数值前导零与非法下划线、有限浮点溢出拒绝、RFC 3339 闰年日历校验、**`cap:simd` 热路径加速**（注释跳行、空白跳过、单行/多行字符串块级扫描），并支持 `TomlParser.stringify`（全控制字符转义）双向序列化与 100% 向后兼容 `TomlDoc`（`TOML` / `toml`）。
 3. **工业级 YAML 1.2 解析器与序列化器 (`YamlParser` / `YamlStream` / `YamlDoc` / `YAML`)**：支持多文档流（`---` / `...`、`%YAML` / `%TAG`）、锚点与别名（`&anchor` / `*alias`）、合并键（`<<: *base` 与 `<<: [*a, *b]`）、块标量（`|`/`|-`/`|+`/`>`/`>-`/`>+` 及显式缩进指示）、流式集合（`[...]` / `{...}`）、显式标签（`!!str`/`!!int`/`!!float`/`!!bool`/`!!null`/`!!seq`/`!!map`）、单双引号转义（`\x` / `\u` / `\U`）以及 `YamlParser.stringify` / `stringifyStream` 双向序列化，同时保留向后兼容的 `YamlDoc`（`YAML` / `yaml`）。
 4. **INI 配置与环境变量展开引擎 (`Ini` / `ini`)**：支持全局属性、`[section]` 与 `[section.nested]` 节管理、`;` 与 `#` 注释、双引号转义与 `${ENV_VAR}` 系统环境变量自动展开，以及动态增删改与 `toString()` 序列化。
 5. **JSON5 全功能 AST 解析与注释剥离器 (`JSON5`)**：支持 `//` 单行注释、`/* */` 多行块注释、对象与数组尾随逗号（Trailing Commas）、无引号标识符键名、单引号字符串、十六进制数值 `0x1F90`、前导正号 `+100`、`Infinity` / `NaN`，以及将 JSON5 降级净化为标准 JSON 的零分配预处理器 `stripCommentsAndTrailingCommas`。
@@ -202,8 +202,9 @@ fn demoJson5(): !void {
    - 上游 Bun 按递增优先级依次读取 `.env` < `.env.<NODE_ENV>`（`production`/`development`/`test`）< `.env.local` < 进程显式环境变量；在 CP 应用中通过 `DotEnv` 分层加载多份配置文件时推荐沿用该优先级，避免本地覆盖泄露至生产配置。
 2. **YAML 1.2 安全与多文档边界**：
    - `YamlParser.parseStream` 严格以 `---` / `...` 切分多文档流，支持锚点（`&a`）、别名（`*a`）与合并键（`<<: *a`）；对来自不可信输入的 YAML 须控制锚点展开深度以防止资源耗尽。
-3. **TOML 1.0 与 RFC 3339 严格校验**：
-   - `ConfDateTime` 在解析 TOML 日期时间字面量时严格校验闰年与月/日/时/分/秒边界；`TomlParser.parse` 对重复表定义与非法点分键直接返回错误，符合 TOML 1.0 规范。
+3. **TOML 1.0 与 RFC 3339 严格校验（对标 `toml-rs/toml` 加固）**：
+   - `TomlParser.parse` 内置 Arena 节点池构建器与 64 层深度上限（`DepthExceeded`），严格拒绝重复键（`DuplicateKey`）、显式/点分表重定义（`TableRedefined`）、Inline Table 冻结后追加（`FrozenTable`）、多行字符串作为键、UTF-16 代理对与未转义控制字符（`InvalidControlChar`）、数值前导零/非法下划线/有限浮点溢出（`InvalidNumber`）及非闰年/越界 RFC 3339 时间（`InvalidDateTime`）；
+   - 注释跳行、空白跳过与单行/多行基础/字面量字符串扫描热路径全面接入 `cap:simd`（`Simd.indexOfByte` / `Simd.indexOfAny2` / `Simd.indexOfAny4` / `Simd.skipWhitespace`），并暴露 `TomlParser.scanBasicStringStopSimd` / `scanBasicStringStopScalar` 便于向量化等价校验。
 4. **JSON5 净化快路径**：
    - 对仅需兼容注释与尾随逗号的配置文件（如 `tsconfig.json`），优先调用零分配 `JSON5.stripCommentsAndTrailingCommas(src, out_buf)` 将其净化为标准 JSON 后交由 `cap:json` 极速解析。
 
