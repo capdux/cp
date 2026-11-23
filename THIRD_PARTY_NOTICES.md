@@ -55,6 +55,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **yaml-rust2** | <https://github.com/Ethiraric/yaml-rust2> | MIT OR Apache-2.0 | `lib/conf/yamlParser.cp` | Copyright (c) 2015 Yuheng Chen / Ethiraric |
 | **prost** (`tokio-rs`) | <https://github.com/tokio-rs/prost> | Apache-2.0 | `lib/compiler/protobuf.cp` | Copyright (c) 2017 Dan Burkert / Tokio Contributors |
 | **tar-rs** (`alexcrichton`) | <https://github.com/alexcrichton/tar-rs> | MIT OR Apache-2.0 | `lib/pack/tar.cp`, `lib/pack/tarPax.cp` | Copyright (c) 2014 Alex Crichton |
+| **ciborium** (`enarx`) | <https://github.com/enarx/ciborium> | Apache-2.0 | `lib/binfmt/cborDiag.cp` | Copyright (c) 2021 Enarx / Profian Inc. |
 
 ---
 

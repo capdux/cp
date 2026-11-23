@@ -1,7 +1,10 @@
+// Reference-hardened against enarx/ciborium (Apache-2.0)
 // Source: native-cp-stdlib (RFC 8949 CBOR & Diagnostic Notation)
 import std from "std";
+import { Simd } from "cap:simd";
 
 pub const MAX_DEPTH: usize = 64;
+pub const CBOR_MAX_DEPTH: usize = 64;
 
 pub error CborError {
     UnexpectedEof,
@@ -11,8 +14,46 @@ pub error CborError {
     NestingTooDeep,
     InvalidUtf8,
     DuplicateMapKey,
+    NonDeterministicEncoding,
     OutOfMemory,
     TrailingBytes,
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` payload copy for hot-path CBOR ByteString/TextString.
+pub fn cborCopyPayloadSimd(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i + 16 <= src.len) : (i += 16) {
+        const chunk: @Vector(16, u8) = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+    }
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference payload copy for 0-diff parity testing against `cborCopyPayloadSimd`.
+pub fn cborCopyPayloadScalar(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Strict UTF-8 validation with `cap:simd` `Simd.isAscii` fast-path.
+pub fn cborIsValidUtf8Simd(s: []const u8): bool {
+    if (Simd.isAscii(s)) return true;
+    return std.unicode.utf8ValidateSlice(s);
+}
+
+/// Scalar reference UTF-8 validation for 0-diff parity testing against `cborIsValidUtf8Simd`.
+pub fn cborIsValidUtf8Scalar(s: []const u8): bool {
+    return std.unicode.utf8ValidateSlice(s);
+}
+
+/// Decodes an IEEE-754 half-precision Float16 (`0xF9` + big-endian u16) into `f64`.
+pub fn decodeFloat16(bits: u16): f64 {
+    const f16_val: f16 = @bitCast(bits);
+    return @as(f64, f16_val);
 }
 
 pub struct CborEntry {
@@ -25,7 +66,7 @@ pub struct CborTag {
     value: CborValue,
 }
 
-pub union CborValue {
+pub union(enum) CborValue {
     Unsigned: u64,
     Negative: i64,
     Bytes: []const u8,
@@ -131,6 +172,7 @@ struct CborReader {
     pos: usize,
     alloc: std.mem.Allocator,
     depth: usize,
+    max_depth: usize = CBOR_MAX_DEPTH,
 
     fn readByte(*_): !u8 {
         if (_.pos >= _.data.len) {
@@ -189,7 +231,7 @@ struct CborReader {
     }
 
     fn readValue(*_): anyerror!CborValue {
-        if (_.depth >= MAX_DEPTH) {
+        if (_.depth >= _.max_depth) {
             return error.NestingTooDeep;
         }
         const ib = try _.readByte();
@@ -245,6 +287,11 @@ struct CborReader {
                 }
                 const len: usize = @intCast(len_u64);
                 const slice = try _.readSlice(len);
+                if (len >= 16) {
+                    const duped = try _.alloc.alloc(u8, len);
+                    cborCopyPayloadSimd(duped, slice);
+                    return CborValue{ .Bytes = duped };
+                }
                 const duped = try _.alloc.dupe(u8, slice);
                 return CborValue{ .Bytes = duped };
             }
@@ -270,7 +317,7 @@ struct CborReader {
                     }
                     const chunk_len: usize = @intCast(chunk_len_u64);
                     const chunk = try _.readSlice(chunk_len);
-                    if (!std.unicode.utf8ValidateSlice(chunk)) {
+                    if (!cborIsValidUtf8Simd(chunk)) {
                         return error.InvalidUtf8;
                     }
                     try buf.appendSlice(_.alloc, chunk);
@@ -284,8 +331,13 @@ struct CborReader {
                 }
                 const len: usize = @intCast(len_u64);
                 const slice = try _.readSlice(len);
-                if (!std.unicode.utf8ValidateSlice(slice)) {
+                if (!cborIsValidUtf8Simd(slice)) {
                     return error.InvalidUtf8;
+                }
+                if (len >= 16) {
+                    const duped = try _.alloc.alloc(u8, len);
+                    cborCopyPayloadSimd(duped, slice);
+                    return CborValue{ .Text = duped };
                 }
                 const duped = try _.alloc.dupe(u8, slice);
                 return CborValue{ .Text = duped };
@@ -430,11 +482,16 @@ struct CborReader {
 }
 
 pub fn decode(alloc: std.mem.Allocator, bytes: []const u8): !CborValue {
+    return decodeWithMaxDepth(alloc, bytes, CBOR_MAX_DEPTH);
+}
+
+pub fn decodeWithMaxDepth(alloc: std.mem.Allocator, bytes: []const u8, max_depth: usize): !CborValue {
     let reader = CborReader{
         .data = bytes,
         .pos = 0,
         .alloc = alloc,
         .depth = 0,
+        .max_depth = max_depth,
     };
     let val = try reader.readValue();
     errdefer val.deinit(alloc);
@@ -442,6 +499,196 @@ pub fn decode(alloc: std.mem.Allocator, bytes: []const u8): !CborValue {
         return error.TrailingBytes;
     }
     return val;
+}
+
+fn validateDeterministicArg(ai: u8, arg: u64): !void {
+    if (ai == 24 and arg < 24) return error.NonDeterministicEncoding;
+    if (ai == 25 and arg <= 0xff) return error.NonDeterministicEncoding;
+    if (ai == 26 and arg <= 0xffff) return error.NonDeterministicEncoding;
+    if (ai == 27 and arg <= 0xffffffff) return error.NonDeterministicEncoding;
+}
+
+fn validateCborNode(reader: *CborReader, deterministic: bool): anyerror!void {
+    if (reader.depth >= reader.max_depth) {
+        return error.NestingTooDeep;
+    }
+    const ib = try reader.readByte();
+    const major: u8 = ib >> 5;
+    const ai: u8 = ib & 0x1f;
+
+    if (major == 0 or major == 1) {
+        if (ai == 31) return error.IndefiniteLengthNotAllowed;
+        const val = try reader.readArg(ai);
+        if (deterministic) try validateDeterministicArg(ai, val);
+        if (major == 1 and val > 9223372036854775807) {
+            return error.InvalidAdditionalInfo;
+        }
+    } else if (major == 2 or major == 3) {
+        if (ai == 31) {
+            if (deterministic) return error.NonDeterministicEncoding;
+            while (true) {
+                const next = try reader.peekByte();
+                if (next == 0xff) {
+                    reader.pos += 1;
+                    break;
+                }
+                const cib = try reader.readByte();
+                const cmajor: u8 = cib >> 5;
+                const cai: u8 = cib & 0x1f;
+                if (cmajor != major or cai == 31) return error.InvalidAdditionalInfo;
+                const clen_u64 = try reader.readArg(cai);
+                if (clen_u64 > reader.data.len - reader.pos) return error.UnexpectedEof;
+                const cslice = try reader.readSlice(@intCast(clen_u64));
+                if (major == 3 and !cborIsValidUtf8Simd(cslice)) return error.InvalidUtf8;
+            }
+        } else {
+            const len_u64 = try reader.readArg(ai);
+            if (deterministic) try validateDeterministicArg(ai, len_u64);
+            if (len_u64 > reader.data.len - reader.pos) return error.UnexpectedEof;
+            const slice = try reader.readSlice(@intCast(len_u64));
+            if (major == 3 and !cborIsValidUtf8Simd(slice)) return error.InvalidUtf8;
+        }
+    } else if (major == 4) {
+        reader.depth += 1;
+        defer { reader.depth -= 1; }
+        if (ai == 31) {
+            if (deterministic) return error.NonDeterministicEncoding;
+            while (true) {
+                const next = try reader.peekByte();
+                if (next == 0xff) {
+                    reader.pos += 1;
+                    break;
+                }
+                try validateCborNode(reader, deterministic);
+            }
+        } else {
+            const count_u64 = try reader.readArg(ai);
+            if (deterministic) try validateDeterministicArg(ai, count_u64);
+            if (count_u64 > reader.data.len - reader.pos) return error.UnexpectedEof;
+            const count: usize = @intCast(count_u64);
+            let i: usize = 0;
+            while (i < count) : (i += 1) {
+                try validateCborNode(reader, deterministic);
+            }
+        }
+    } else if (major == 5) {
+        reader.depth += 1;
+        defer { reader.depth -= 1; }
+        if (ai == 31) {
+            if (deterministic) return error.NonDeterministicEncoding;
+            while (true) {
+                const next = try reader.peekByte();
+                if (next == 0xff) {
+                    reader.pos += 1;
+                    break;
+                }
+                try validateCborNode(reader, deterministic);
+                try validateCborNode(reader, deterministic);
+            }
+        } else {
+            const count_u64 = try reader.readArg(ai);
+            if (deterministic) try validateDeterministicArg(ai, count_u64);
+            if (count_u64 > (reader.data.len - reader.pos) / 2) return error.UnexpectedEof;
+            const count: usize = @intCast(count_u64);
+            let prev_key: []const u8 = "";
+            let has_prev = false;
+            let i: usize = 0;
+            while (i < count) : (i += 1) {
+                const key_start = reader.pos;
+                try validateCborNode(reader, deterministic);
+                const key_slice = reader.data[key_start..reader.pos];
+                if (deterministic) {
+                    if (has_prev) {
+                        if (key_slice.len < prev_key.len) return error.NonDeterministicEncoding;
+                        if (key_slice.len == prev_key.len) {
+                            const ord = std.mem.order(u8, prev_key, key_slice);
+                            if (ord == .eq) return error.DuplicateMapKey;
+                            if (ord == .gt) return error.NonDeterministicEncoding;
+                        }
+                    }
+                    prev_key = key_slice;
+                    has_prev = true;
+                }
+                try validateCborNode(reader, deterministic);
+            }
+        }
+    } else if (major == 6) {
+        if (ai == 31) return error.IndefiniteLengthNotAllowed;
+        reader.depth += 1;
+        defer { reader.depth -= 1; }
+        const tag_num = try reader.readArg(ai);
+        if (deterministic) try validateDeterministicArg(ai, tag_num);
+        try validateCborNode(reader, deterministic);
+    } else {
+        if (ai < 24) {
+            return;
+        } else if (ai == 24) {
+            const s = try reader.readByte();
+            if (s < 32) return error.InvalidAdditionalInfo;
+        } else if (ai == 25) {
+            const bits = try reader.readU16();
+            if (deterministic) {
+                const f16_v: f16 = @bitCast(bits);
+                if (std.math.isNan(f16_v) and bits != 0x7e00) return error.NonDeterministicEncoding;
+            }
+        } else if (ai == 26) {
+            const bits = try reader.readU32();
+            if (deterministic) {
+                const f32_v: f32 = @bitCast(bits);
+                if (std.math.isNan(f32_v)) return error.NonDeterministicEncoding;
+                const f16_v: f16 = @floatCast(f32_v);
+                if (@as(f32, f16_v) == f32_v and std.math.signbit(@as(f32, f16_v)) == std.math.signbit(f32_v)) {
+                    return error.NonDeterministicEncoding;
+                }
+            }
+        } else if (ai == 27) {
+            const bits = try reader.readU64();
+            if (deterministic) {
+                const f64_v: f64 = @bitCast(bits);
+                if (std.math.isNan(f64_v)) return error.NonDeterministicEncoding;
+                const f32_v: f32 = @floatCast(f64_v);
+                if (@as(f64, f32_v) == f64_v and std.math.signbit(@as(f64, f32_v)) == std.math.signbit(f64_v)) {
+                    return error.NonDeterministicEncoding;
+                }
+            }
+        } else if (ai == 31) {
+            return error.UnexpectedBreak;
+        } else {
+            return error.InvalidAdditionalInfo;
+        }
+    }
+}
+
+/// Zero-heap RFC 8949 CBOR wire validator with recursion depth guard (`CBOR_MAX_DEPTH = 64`).
+pub fn validateCbor(bytes: []const u8): !void {
+    try validateCborWithMaxDepth(bytes, CBOR_MAX_DEPTH);
+}
+
+/// Zero-heap RFC 8949 CBOR wire validator with explicit recursion depth limit.
+pub fn validateCborWithMaxDepth(bytes: []const u8, max_depth: usize): !void {
+    let reader = CborReader{
+        .data = bytes,
+        .pos = 0,
+        .alloc = std.heap.page_allocator,
+        .depth = 0,
+        .max_depth = max_depth,
+    };
+    try validateCborNode(&reader, false);
+    if (reader.pos != bytes.len) return error.TrailingBytes;
+}
+
+/// Zero-heap RFC 8949 §4.2 Deterministic CBOR encoding validator (minimal integers,
+/// canonical float width, no indefinite lengths, length-first sorted unique map keys).
+pub fn validateCborDeterministic(bytes: []const u8): !void {
+    let reader = CborReader{
+        .data = bytes,
+        .pos = 0,
+        .alloc = std.heap.page_allocator,
+        .depth = 0,
+        .max_depth = CBOR_MAX_DEPTH,
+    };
+    try validateCborNode(&reader, true);
+    if (reader.pos != bytes.len) return error.TrailingBytes;
 }
 
 fn writeTypeAndArg(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, major: u8, arg: u64): !void {
@@ -514,7 +761,7 @@ struct EncodedKeyPair {
     val_bytes: []u8,
 }
 
-fn lessEncodedKeyPair(_: void, a: EncodedKeyPair, b: EncodedKeyPair): bool {
+fn lessEncodedKeyPair(a: EncodedKeyPair, b: EncodedKeyPair): bool {
     if (a.key_bytes.len != b.key_bytes.len) {
         return a.key_bytes.len < b.key_bytes.len;
     }
@@ -577,7 +824,16 @@ fn encodeInto(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, val: CborValue,
 
                     try pairs.append(alloc, EncodedKeyPair{ .key_bytes = k_owned, .val_bytes = v_owned });
                 }
-                std.mem.sort(EncodedKeyPair, pairs.items, {}, lessEncodedKeyPair);
+                let si: usize = 1;
+                while (si < pairs.items.len) : (si += 1) {
+                    const cur = pairs.items[si];
+                    let sj: usize = si;
+                    while (sj > 0 and lessEncodedKeyPair(cur, pairs.items[sj - 1])) {
+                        pairs.items[sj] = pairs.items[sj - 1];
+                        sj -= 1;
+                    }
+                    pairs.items[sj] = cur;
+                }
                 let i: usize = 0;
                 while (i < pairs.items.len) {
                     if (i > 0 and std.mem.eql(u8, pairs.items[i - 1].key_bytes, pairs.items[i].key_bytes)) {

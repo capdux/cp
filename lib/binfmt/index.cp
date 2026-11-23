@@ -164,14 +164,24 @@ export {
 
 export {
     MAX_DEPTH as CBOR_DIAG_MAX_DEPTH,
+    CBOR_MAX_DEPTH,
     CborError,
     CborEntry,
     CborTag,
     CborValue,
+    cborCopyPayloadSimd,
+    cborCopyPayloadScalar,
+    cborIsValidUtf8Simd,
+    cborIsValidUtf8Scalar,
+    decodeFloat16,
     decode as cborDiagDecode,
+    decodeWithMaxDepth as cborDiagDecodeWithMaxDepth,
     encode as cborDiagEncode,
     encodeCanonical as cborDiagEncodeCanonical,
     toDiag as cborDiagToDiag,
+    validateCbor,
+    validateCborWithMaxDepth,
+    validateCborDeterministic,
 } from "./cborDiag.cp";
 
 export {
