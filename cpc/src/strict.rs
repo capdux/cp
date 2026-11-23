@@ -278,8 +278,37 @@ pub fn collect_strict_diagnostics(code: &str, existing: &[Diagnostic]) -> Vec<Di
                 }
             }
             Token::Void => {
-                // Detect redundant `: void` or Zig `) void {` return type annotations
-                if matches!(prev, Some(Token::Colon)) {
+                // Detect redundant `: void` function return type annotations (e.g. `fn foo(): void { ... }`).
+                // Do NOT flag union/struct zero-sized fields (`none: void,`) or anonymous fn types (`fn(): void`).
+                let prev_prev = if i >= 2 { Some(&tokens[i - 2].0) } else { None };
+                let is_fn_return_void = matches!(prev, Some(Token::Colon))
+                    && matches!(prev_prev, Some(Token::RParen))
+                    && (matches!(next, Some(Token::LBrace))
+                        || (matches!(next, Some(Token::Semicolon)) && {
+                            let mut depth = 0usize;
+                            let mut j = i - 2;
+                            let mut is_named_fn = false;
+                            loop {
+                                match &tokens[j].0 {
+                                    Token::RParen => depth += 1,
+                                    Token::LParen => {
+                                        depth = depth.saturating_sub(1);
+                                        if depth == 0 {
+                                            is_named_fn =
+                                                j > 0 && !matches!(tokens[j - 1].0, Token::Fn);
+                                            break;
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                                if j == 0 {
+                                    break;
+                                }
+                                j -= 1;
+                            }
+                            is_named_fn
+                        }));
+                if is_fn_return_void {
                     let v_span = Span {
                         start: tokens[i - 1].1.start,
                         end: span.end,

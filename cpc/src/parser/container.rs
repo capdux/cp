@@ -399,8 +399,16 @@ impl<'a> Parser<'a> {
                 methods.push(method);
             } else {
                 let f_ident = self.parse_ident()?;
-                self.expect(Token::Colon)?;
-                let ty = self.parse_type()?;
+                let ty = if is_union
+                    && matches!(
+                        self.peek(),
+                        Some(Token::Comma | Token::RBrace | Token::Semicolon)
+                    ) {
+                    Type::Void
+                } else {
+                    self.expect(Token::Colon)?;
+                    self.parse_type()?
+                };
                 if matches!(ty, Type::BorrowType { .. }) {
                     is_ref = true;
                 }
