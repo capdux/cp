@@ -741,3 +741,22 @@ export {
     BundleCoordSummary,
     BundleCoordinator,
 } from "./bundleCoordinator";
+
+export {
+    PARSE_SCHED_DEFAULT_WORKERS,
+    PARSE_SCHED_INVALID_MODULE,
+    ParseSchedulerError,
+    ScannedImportKind,
+    ScannedImportEntry,
+    ImportScanSummary,
+    scanImportSpecifiersFast,
+    ParseTaskStatus,
+    ParseFailureMode,
+    ParseTaskEntry,
+    ParseDispatchItem,
+    ParseSchedulerStats,
+    ParseTaskScheduler,
+    SourceLineCol,
+    SourceLineTable,
+    formatParseSchedulerReport,
+} from "./parseScheduler";

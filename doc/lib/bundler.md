@@ -1149,3 +1149,22 @@ let coord = BundleCoordinator.init(BundleCoordOptions{ max_chunk_bytes: 500000 }
 coord.advanceStage(BundleCoordStage.ResolveEntries, 0)?;
 * = decoded;
 ```
+
+- **SIMD 导入预扫描、并行解析任务池与行列诊断引擎（`parseScheduler.cp`，吸收自 `/data/dev/bun/src/bundler/ParseTask.cp`）**：
+    - 导出：`PARSE_SCHED_DEFAULT_WORKERS`、`PARSE_SCHED_INVALID_MODULE`、`ParseSchedulerError`、`ScannedImportKind`（`StaticImport`/`StaticReExport`/`DynamicImport`/`CommonJsRequire`）、`ScannedImportEntry`、`ImportScanSummary`、`scanImportSpecifiersFast`（接入 `cap:simd` 跳过注释与字符串字面量，零拷贝提取静态/动态导入与 `require`）、`ParseTaskStatus`（`Queued`/`Parsing`/`Parsed`/`CachedHit`/`Failed`/`Cancelled`）、`ParseFailureMode`（`FailFast`/`CollectAllErrors`）、`ParseTaskEntry`、`ParseDispatchItem`、`ParseSchedulerStats`、`ParseTaskScheduler`、`SourceLineCol`、`SourceLineTable`（`Simd.indexOfByte` 构建行表，O(log L) 定位并渲染带 `^` 指示符的 AI 友好诊断）、`formatParseSchedulerReport`。
+
+```cp
+import {
+    ScannedImportEntry,
+    scanImportSpecifiersFast,
+    SourceLineTable,
+} from "cap:bundler";
+
+const src = "import { a } from \"cap:io\";\nconst m = import(\"./lazy.cp\");\n";
+let found: [8]ScannedImportEntry = [ScannedImportEntry.empty(); 8];
+const scan_sum = scanImportSpecifiersFast(src, found[0..])?;
+let lines: [16]usize = [0; 16];
+const ltab = SourceLineTable.build(src, lines[0..])?;
+const loc = ltab.resolveOffset(src, found[1].offset);
+* = scan_sum; * = loc;
+```
