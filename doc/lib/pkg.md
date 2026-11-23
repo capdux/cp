@@ -1750,3 +1750,39 @@ let arena: [1024]u8 = [0; 1024];
 const sum = planIsolatedMaterialization(pkgs[0..], deps[0..], stale[0..], fb.active_backend, ops[0..], arena[0..])?;
 * = dec1; * = sum;
 ```
+
+### 零碎片连续 Lockfile Arena 缓冲区集群与零拷贝镜像引擎（`lockArenaBuf.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/Buffers.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 五大紧凑连续缓冲段与开放寻址字符串驻留：`LOCK_ARENA_MAGIC`、`LOCK_ARENA_VERSION`、`LOCK_ARENA_SECTION_COUNT`、`LOCK_ARENA_HEADER_BYTES`、`LOCK_ARENA_ALIGNMENT`、`LOCK_ARENA_EXTERN_STR_BYTES`、`LOCK_ARENA_DEP_BYTES`、`LOCK_ARENA_TREE_BYTES`、`LOCK_ARENA_INVALID_ID`、`LOCK_ARENA_EMPTY_BUCKET`、`LOCK_ARENA_DEAD_SENTINEL`、`LockArenaError`、`hashLockArenaString64`、`LockExternString`（8 字节 `(offset, len)` 切片句柄）、`LockArenaDepKind`、`LockArenaDep`、`LockArenaTreeNode`、`LockArenaStats`、`LockArenaBuffers`（`internString` 开放寻址 FNV-1a 零重复存储、`addDependency` 同步维护 `dependencies`/`resolutions` 长度不变量并接入 `Simd.indexOfByte` 拦截 Windows 反斜杠、`addTreeNode`、`legacyPackageToDependencyId`）；
+  - 碎片整理与去重压缩：`LockArenaCompactStats`、`compactLockArenaBuffers`（回收孤儿字符串碎片并统计去重节省字节）；
+  - CRC32 校验只读零拷贝二进制镜像：`computeLockArenaCrc32`、`updateLockArenaCrc32`、`alignLockArenaOffset`、`isLockArenaAligned`、`hasWindowsPathSeparator`、`findInLockStringPool`（`cap:simd` 加速池扫描）、`encodedLockArenaImageSize`、`encodeLockArenaImage`、`LockArenaImageView`（零拷贝只读 O(1) 访问 5 段，严格防护截断、未对齐偏移、`0xDEADBEEF` 哨兵、越界字符串句柄与 CRC 失配）、`decodeLockArenaImageInto`、`formatLockArenaReport`。
+
+```cp
+import {
+    LockExternString,
+    LockArenaDepKind,
+    LockArenaDep,
+    LockArenaTreeNode,
+    LockArenaBuffers,
+    encodeLockArenaImage,
+    LockArenaImageView,
+} from "cap:pkg";
+
+let str_pool: [512]u8 = [0; 512];
+let buckets: [32]u32 = [0; 32];
+let exts: [16]LockExternString = [LockExternString.empty(); 16];
+let deps: [8]LockArenaDep = [LockArenaDep.empty(); 8];
+let res: [8]u32 = [0; 8];
+let trees: [4]LockArenaTreeNode = [LockArenaTreeNode.empty(); 4];
+let arena = LockArenaBuffers.init(str_pool[0..], buckets[0..], exts[0..], deps[0..], res[0..], trees[0..]);
+* = arena.addDependency("zod", "^3.23.8", LockArenaDepKind.Npm, 0x01, 0, 1)?;
+* = arena.addTreeNode(0xFFFFFFFF, 0, 0, 1)?;
+let img: [1024]u8 = [0; 1024];
+const n = encodeLockArenaImage(&arena, img[0..])?;
+const view = LockArenaImageView.open(img[0..n])?;
+const d0 = view.getDependency(0)?;
+const name = view.resolveString(d0.name_ref)?;
+* = name;
+```
