@@ -616,6 +616,66 @@ impl Analyzer {
                         }
                     }
                 } else if let Expr::Member(mem) = &*call.callee {
+                    if let Expr::Ident(obj_id) = &*mem.obj {
+                        let base_sym = if let Some(pos) = obj_id.sym.find('<') {
+                            &obj_id.sym[..pos]
+                        } else {
+                            &obj_id.sym
+                        };
+                        if !matches!(self.resolve(base_sym), Some(SymbolKind::Var { .. })) {
+                            if let Some(cls) = self.classes.get(base_sym).cloned() {
+                                if let Some(m) =
+                                    cls.methods.iter().find(|m| m.ident.sym == mem.prop.sym)
+                                {
+                                    if !m.is_static
+                                        && !m.ident.sym.starts_with("__")
+                                        && m.ident.sym != "_create"
+                                    {
+                                        let non_recv_count = m
+                                            .params
+                                            .iter()
+                                            .filter(|p| {
+                                                p.ident.sym != "this"
+                                                    && p.ident.sym != "_"
+                                                    && p.ident.sym != "self"
+                                            })
+                                            .count();
+                                        if call.args.len() <= non_recv_count {
+                                            let is_ufcs_first_arg = if let Some(first_arg) =
+                                                call.args.first()
+                                            {
+                                                if let Ok(arg_ty) = self.infer_type(first_arg) {
+                                                    let mut base_arg = &arg_ty;
+                                                    while let Type::BorrowType { inner, .. } =
+                                                        base_arg
+                                                    {
+                                                        base_arg = inner;
+                                                    }
+                                                    matches!(base_arg, Type::Ref(cid) if cid.sym == base_sym)
+                                                } else {
+                                                    false
+                                                }
+                                            } else {
+                                                false
+                                            };
+                                            if !is_ufcs_first_arg {
+                                                let uses_instance_state =
+                                                    method_references_instance_state(m, &cls);
+                                                return Err(
+                                                    SemaError::InstanceMethodCalledOnType {
+                                                        type_name: base_sym.to_string(),
+                                                        method_name: mem.prop.sym.clone(),
+                                                        uses_instance_state,
+                                                        span: call.span,
+                                                    },
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if let Ok(obj_ty) = self.infer_type(&mem.obj) {
                         let mut base_ty = &obj_ty;
                         while let Type::BorrowType { inner, .. } = base_ty {
@@ -1471,8 +1531,294 @@ impl Analyzer {
                 self.exit_scope();
             }
             _ => {}
-            _ => {}
         }
         Ok(())
+    }
+}
+
+fn method_references_instance_state(m: &Function, cls: &Class) -> bool {
+    if m.params
+        .iter()
+        .any(|p| p.ident.sym == "_" || p.ident.sym == "this" || p.ident.sym == "self")
+    {
+        return true;
+    }
+    let inst_names: std::collections::HashSet<&str> = cls
+        .fields
+        .iter()
+        .filter(|f| !f.is_static)
+        .map(|f| f.ident.sym.as_str())
+        .chain(
+            cls.methods
+                .iter()
+                .filter(|other| !other.is_static)
+                .map(|other| other.ident.sym.as_str()),
+        )
+        .collect();
+    let shadowed: std::collections::HashSet<String> =
+        m.params.iter().map(|p| p.ident.sym.clone()).collect();
+    block_uses_instance_state(&m.body, &inst_names, &shadowed)
+}
+
+fn block_uses_instance_state(
+    block: &BlockStmt,
+    inst_names: &std::collections::HashSet<&str>,
+    outer_shadowed: &std::collections::HashSet<String>,
+) -> bool {
+    let mut shadowed = outer_shadowed.clone();
+    for s in &block.body {
+        if let Stmt::Var(v) = s {
+            if v.init.as_ref().map_or(false, |e| {
+                expr_uses_instance_state(e, inst_names, &shadowed)
+            }) {
+                return true;
+            }
+            collect_pattern_idents(&v.pat, &mut shadowed);
+            continue;
+        }
+        if stmt_uses_instance_state(s, inst_names, &shadowed) {
+            return true;
+        }
+    }
+    false
+}
+
+fn collect_pattern_idents(pat: &Pattern, out: &mut std::collections::HashSet<String>) {
+    match pat {
+        Pattern::Ident(id) => {
+            out.insert(id.sym.clone());
+        }
+        Pattern::Tuple(items) | Pattern::Array(items) | Pattern::Or(items) => {
+            for p in items {
+                collect_pattern_idents(p, out);
+            }
+        }
+        Pattern::Object(fields) => {
+            for f in fields {
+                if let Some(p) = &f.val {
+                    collect_pattern_idents(p, out);
+                } else {
+                    out.insert(f.key.sym.clone());
+                }
+            }
+        }
+        Pattern::Rest(inner) | Pattern::Err(inner) => collect_pattern_idents(inner, out),
+        Pattern::Binding { ident, subpat } => {
+            out.insert(ident.sym.clone());
+            collect_pattern_idents(subpat, out);
+        }
+        Pattern::TypeMatch { ident, .. } => {
+            out.insert(ident.sym.clone());
+        }
+        _ => {}
+    }
+}
+
+fn stmt_uses_instance_state(
+    stmt: &Stmt,
+    inst_names: &std::collections::HashSet<&str>,
+    shadowed: &std::collections::HashSet<String>,
+) -> bool {
+    match stmt {
+        Stmt::Expr(e) => expr_uses_instance_state(e, inst_names, shadowed),
+        Stmt::Return(r) => r
+            .arg
+            .as_ref()
+            .map_or(false, |e| expr_uses_instance_state(e, inst_names, shadowed)),
+        Stmt::Defer(s) | Stmt::ErrDefer(s) => stmt_uses_instance_state(s, inst_names, shadowed),
+        Stmt::Block(b) | Stmt::UnsafeBlock(b) | Stmt::ComptimeBlock(b) | Stmt::ArenaBlock(b) => {
+            block_uses_instance_state(b, inst_names, shadowed)
+        }
+        Stmt::If(i) => {
+            let mut inner = shadowed.clone();
+            if let Some(cap) = &i.capture {
+                inner.insert(cap.sym.clone());
+            }
+            expr_uses_instance_state(&i.test, inst_names, shadowed)
+                || stmt_uses_instance_state(&i.cons, inst_names, &inner)
+                || i.alt
+                    .as_ref()
+                    .map_or(false, |a| stmt_uses_instance_state(a, inst_names, shadowed))
+        }
+        Stmt::While(w) => {
+            let mut inner = shadowed.clone();
+            if let Some(cap) = &w.capture {
+                inner.insert(cap.sym.clone());
+            }
+            expr_uses_instance_state(&w.test, inst_names, shadowed)
+                || stmt_uses_instance_state(&w.body, inst_names, &inner)
+                || w.continue_expr
+                    .as_ref()
+                    .map_or(false, |s| expr_uses_instance_state(s, inst_names, &inner))
+        }
+        Stmt::For(f) => {
+            let mut inner = shadowed.clone();
+            collect_pattern_idents(&f.pat, &mut inner);
+            expr_uses_instance_state(&f.expr, inst_names, shadowed)
+                || stmt_uses_instance_state(&f.body, inst_names, &inner)
+        }
+        Stmt::Match(m) => {
+            expr_uses_instance_state(&m.disc, inst_names, shadowed)
+                || m.arms.iter().any(|arm| {
+                    let mut inner = shadowed.clone();
+                    collect_pattern_idents(&arm.pat, &mut inner);
+                    arm.guard
+                        .as_ref()
+                        .map_or(false, |g| expr_uses_instance_state(g, inst_names, &inner))
+                        || stmt_uses_instance_state(&arm.body, inst_names, &inner)
+                })
+        }
+        Stmt::Var(v) => v
+            .init
+            .as_ref()
+            .map_or(false, |e| expr_uses_instance_state(e, inst_names, shadowed)),
+        Stmt::TryCatch {
+            try_block,
+            catch_body,
+            ..
+        } => {
+            block_uses_instance_state(try_block, inst_names, shadowed)
+                || catch_body
+                    .as_ref()
+                    .map_or(false, |b| stmt_uses_instance_state(b, inst_names, shadowed))
+        }
+        _ => false,
+    }
+}
+
+fn expr_uses_instance_state(
+    expr: &Expr,
+    inst_names: &std::collections::HashSet<&str>,
+    shadowed: &std::collections::HashSet<String>,
+) -> bool {
+    match expr {
+        Expr::Ident(id) => {
+            id.sym == "_"
+                || id.sym == "this"
+                || id.sym == "self"
+                || (!shadowed.contains(&id.sym) && inst_names.contains(id.sym.as_str()))
+        }
+        Expr::Member(m) | Expr::OptMember(m) => {
+            expr_uses_instance_state(&m.obj, inst_names, shadowed)
+        }
+        Expr::Call(c) | Expr::New(c) | Expr::OptCall(c) => {
+            expr_uses_instance_state(&c.callee, inst_names, shadowed)
+                || c.args
+                    .iter()
+                    .any(|a| expr_uses_instance_state(a, inst_names, shadowed))
+        }
+        Expr::Bin(b) => {
+            expr_uses_instance_state(&b.left, inst_names, shadowed)
+                || expr_uses_instance_state(&b.right, inst_names, shadowed)
+        }
+        Expr::NullCoalesce { left, right } => {
+            expr_uses_instance_state(left, inst_names, shadowed)
+                || expr_uses_instance_state(right, inst_names, shadowed)
+        }
+        Expr::Index { obj, index } => {
+            expr_uses_instance_state(obj, inst_names, shadowed)
+                || expr_uses_instance_state(index, inst_names, shadowed)
+        }
+        Expr::Slice(s) => {
+            expr_uses_instance_state(&s.obj, inst_names, shadowed)
+                || s.start
+                    .as_ref()
+                    .map_or(false, |e| expr_uses_instance_state(e, inst_names, shadowed))
+                || s.end
+                    .as_ref()
+                    .map_or(false, |e| expr_uses_instance_state(e, inst_names, shadowed))
+        }
+        Expr::Array(elems) => elems
+            .iter()
+            .any(|e| expr_uses_instance_state(e, inst_names, shadowed)),
+        Expr::ArrayRepeat(a, b) => {
+            expr_uses_instance_state(a, inst_names, shadowed)
+                || expr_uses_instance_state(b, inst_names, shadowed)
+        }
+        Expr::Object(fields) | Expr::Dict(fields) => fields
+            .iter()
+            .any(|f| expr_uses_instance_state(&f.val, inst_names, shadowed)),
+        Expr::If {
+            test,
+            cons,
+            alt,
+            capture,
+            ..
+        } => {
+            let mut inner = shadowed.clone();
+            if let Some(cap) = capture {
+                inner.insert(cap.sym.clone());
+            }
+            expr_uses_instance_state(test, inst_names, shadowed)
+                || expr_uses_instance_state(cons, inst_names, &inner)
+                || alt
+                    .as_ref()
+                    .map_or(false, |a| expr_uses_instance_state(a, inst_names, shadowed))
+        }
+        Expr::Match(m) => {
+            expr_uses_instance_state(&m.disc, inst_names, shadowed)
+                || m.arms.iter().any(|arm| {
+                    let mut inner = shadowed.clone();
+                    collect_pattern_idents(&arm.pat, &mut inner);
+                    arm.guard
+                        .as_ref()
+                        .map_or(false, |g| expr_uses_instance_state(g, inst_names, &inner))
+                        || stmt_uses_instance_state(&arm.body, inst_names, &inner)
+                })
+        }
+        Expr::Unsafe(b)
+        | Expr::Comptime(b)
+        | Expr::Arena(b)
+        | Expr::LabeledBlock { block: b, .. } => block_uses_instance_state(b, inst_names, shadowed),
+        Expr::Arrow(ar) => {
+            let mut inner = shadowed.clone();
+            for p in &ar.params {
+                collect_pattern_idents(p, &mut inner);
+            }
+            match &*ar.body {
+                ArrowBody::Expr(e) => expr_uses_instance_state(e, inst_names, &inner),
+                ArrowBody::Block(b) => block_uses_instance_state(b, inst_names, &inner),
+            }
+        }
+        Expr::Range { start, end, .. } => {
+            expr_uses_instance_state(start, inst_names, shadowed)
+                || expr_uses_instance_state(end, inst_names, shadowed)
+        }
+        Expr::Cast { expr: e, .. }
+        | Expr::Deref(e)
+        | Expr::Unwrap(e)
+        | Expr::BitNot(e)
+        | Expr::Neg(e)
+        | Expr::Question(e)
+        | Expr::ErrWrap(e)
+        | Expr::BoxNew(e)
+        | Expr::Downcast { obj: e, .. }
+        | Expr::Await(e)
+        | Expr::Move(e)
+        | Expr::Borrow(e, _)
+        | Expr::ComptimeExpr(e)
+        | Expr::ReflectOf { expr: e, .. } => expr_uses_instance_state(e, inst_names, shadowed),
+        Expr::QuestionFallback { expr, fallback, .. } => {
+            expr_uses_instance_state(expr, inst_names, shadowed)
+                || expr_uses_instance_state(fallback, inst_names, shadowed)
+        }
+        Expr::Catch { expr, body, .. } => {
+            expr_uses_instance_state(expr, inst_names, shadowed)
+                || stmt_uses_instance_state(body, inst_names, shadowed)
+        }
+        Expr::Builtin(bc) => bc
+            .args
+            .iter()
+            .any(|a| expr_uses_instance_state(a, inst_names, shadowed)),
+        Expr::Return(_, Some(e)) | Expr::Break(_, Some(e)) | Expr::LabeledBreak(_, _, Some(e)) => {
+            expr_uses_instance_state(e, inst_names, shadowed)
+        }
+        Expr::While { stmt, else_expr } => {
+            stmt_uses_instance_state(&Stmt::While((**stmt).clone()), inst_names, shadowed)
+                || else_expr
+                    .as_ref()
+                    .map_or(false, |e| expr_uses_instance_state(e, inst_names, shadowed))
+        }
+        _ => false,
     }
 }

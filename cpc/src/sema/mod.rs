@@ -91,6 +91,15 @@ pub enum SemaError {
     CompileTimeIndexOutOfBounds { index: i64, len: usize, span: Span },
     #[error("Compile Error: Negative index {index} at {span:?}")]
     NegativeIndex { index: i64, span: Span },
+    #[error(
+        "Compile Error: Cannot call instance method '{type_name}.{method_name}' on type without a receiver at {span:?}"
+    )]
+    InstanceMethodCalledOnType {
+        type_name: String,
+        method_name: String,
+        uses_instance_state: bool,
+        span: Span,
+    },
     #[error("Compile Error: Mutation via unbounded raw pointer or cstr '{0}' requires 'unsafe' block at {1:?}")]
     UnboundedRawPointerMutation(String, Span),
     #[error(
@@ -473,6 +482,42 @@ impl SemaError {
             .with_cause(format!("array index {} is negative.", index))
             .with_help("array and buffer indices must be non-negative unsigned integers.")
             .with_suggestion("use a non-negative index value: e.g. 0"),
+
+            SemaError::InstanceMethodCalledOnType {
+                type_name,
+                method_name,
+                uses_instance_state,
+                span,
+            } => {
+                let mut diag = Diagnostic::new(
+                    "E0219",
+                    format!(
+                        "cannot call instance method '{}.{}' on type without a receiver",
+                        type_name, method_name
+                    ),
+                )
+                .with_span(*span)
+                .with_cause(format!(
+                    "'{}.{}' is an instance method expecting a receiver as its first argument, but it was invoked on type '{}' without an instance.",
+                    type_name, method_name, type_name
+                ))
+                .with_help(format!(
+                    "either call it on an instance ('instance.{}(...)') / pass an instance as the first argument ('{}.{}(instance, ...)'), or mark '{}.{}' as 'static' (or move it into a 'static {{ ... }}' block) if it does not need an instance.",
+                    method_name, type_name, method_name, type_name, method_name
+                ));
+                if !*uses_instance_state {
+                    diag = diag.with_suggestion(format!(
+                        "note: '{}' does not reference '_' or any instance member; if intended as static, add 'static' or move into 'static {{ ... }}'",
+                        method_name
+                    ));
+                } else {
+                    diag = diag.with_suggestion(format!(
+                        "call on an instance: 'instance.{}(...)' or '{}.{}(instance, ...)'",
+                        method_name, type_name, method_name
+                    ));
+                }
+                diag
+            }
 
             SemaError::UnboundedRawPointerMutation(name, span) => Diagnostic::new(
                 "E0209",

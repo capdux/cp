@@ -486,9 +486,10 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 - **静态方法**：冠以 `static` 修饰，不含接收者，通过 `ClassName.method()` 调用；
 - **🚨 绝对禁手**：**严禁书写 `self`、`this`、`*this` 或 `mut _`（触发 `E0121` / `E0104` 报错）！**
 
-### 5. 纯静态命名空间容器 (`static class` 与 `static struct`)
-- 内部所有字段、常量与方法**默认全自动静态**，无需逐个写 `static`；
-- **严禁实例化**（`new` 或 `{}` 报错）、**严禁声明 `init`/`~init`**、**严禁 `extends` 继承**；支持 `pub`/`priv`。
+### 5. 纯静态命名空间容器与 `static { ... }` 静态块 (`static class` / `static struct` / `static { ... }`) [SYNC_PENDING: 2026-11-24]
+- **纯静态容器** (`static class` / `static struct`)：内部所有字段、常量与方法**默认全自动静态**，无需逐个写 `static`；**严禁实例化**（`new` 或 `{}` 报错）、**严禁声明 `init`/`~init`**、**严禁 `extends` 继承**；支持 `pub`/`priv`。
+- **混合容器 `static { ... }` 分组块**：在同时包含实例字段与批量静态成员的 `struct` / `class` / `enum` 内，可直接用 `static { ... }` 包裹一组静态函数、静态字段与常量（块内自动视为 `static`，无需每行重复写 `static`；严禁在块内声明 `init`/`~init`/`_` 实例方法）。
+- **调用规范**：`struct` 与 `class` 实例/静态规则完全统一；若以 `Type.method(...)` 形式调用未加 `static` 的实例方法且未将实例作为首参传入，编译器将按调用点缺失接收者报 `E0219`（并仅在方法体未引用任何实例状态时中性提示可考虑移入 `static { ... }`）。
 
 ---
 
