@@ -147,7 +147,8 @@ pub fn demoCsvTable() {
 
 在 100% 向下兼容既有 `CsvTableReader`/`writeCsvRow` 的基础上，新增全套零堆外部切片 ETL 引擎：
 
-- **方言嗅探 (`sniffCsvDialect`)**：自动识别 `,`/`\t`/`;`/`|`、`"`/`'`、`CRLF`/`LF`、UTF-8 BOM 及首行表头启发式；`CsvTableReader` 支持自定义引号、`#` 注释行跳过与严格列数校验。
+- **方言嗅探 (`sniffCsvDialect`)**：自动识别 `,`/`\t`/`;`/`|`、`"`/`'`、`CRLF`/`LF`/`CR`、UTF-8 BOM 及首行表头启发式；`CsvTableReader` 支持自定义引号、`#` 注释行跳过与严格列数校验。
+- **`BurntSushi/rust-csv` 对标边界加固**：`CsvTableOptions` 补齐 `quoting_enabled`、`double_quote_enabled`、`escape_char`、`trim_fields`、`skip_empty_lines`、`flexible_quotes`、`record_terminator`（含单独 `\r` 与 ASCII `\x1F`/`\x1E` 快捷工厂 `CsvTableOptions.relaxed()` / `CsvTableOptions.ascii()`）；新增零堆单遍流式解转义状态机 `CsvTableReader.readRecordUnescaped`、行号追踪 `line()`/`setLine()`、自定义转义解编码 `unescapeCsvFieldWith`，以及 `CsvQuoteStyle`/`CsvWriteOptions`（`necessary`/`always`/`never`/`non_numeric`、`always_quote`/`never_quote`/`quote_non_numeric`、自定义 `escape_char`/`comment_char`/`line_terminator`）与 `isCsvFieldNonNumeric`/`writeCsvRowWith`。
 - **列 Schema 推理与 Welford 在线统计 (`inferCsvSchema`)**：单调类型格提升（`empty -> bool/int/iso_date -> float -> string`），计算 `non_null_count`/`null_count`/`min`/`max`/`sum`/`mean`/`variance()`/`sampleVariance()`/`max_str_len`。
 - **过滤、投影、分组聚合与稳定排序**：
   - `CsvFilterOp` / `CsvFilterPred` / `projectAndFilterCsv`（多条件 AND 过滤 + 子列投影输出 RFC 4180 CSV）；

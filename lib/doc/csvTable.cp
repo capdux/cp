@@ -1,8 +1,12 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 4180 CSV/TSV Dialect Sniffer, Schema Inference, Filter/Sort/Aggregate & JSONL Engine) | Created: 2026-11-22
+// Reference-hardened against BurntSushi/rust-csv (MIT/Unlicense)
 // 100% pure CP, zero dynamic heap allocation, zero external FFI dependencies, caller-slice tabular data engine:
 //   - 100% backwards-compatible `CsvTableOptions`, `CsvRowCursor`, `CsvTableHeader`, `CsvTableReader`,
 //     `unescapeCsvField`, `parseCsvI64`, `parseCsvF64`, `parseCsvBool`, `writeCsvRow`
-//   - Automatic dialect sniffer (`sniffCsvDialect`: `,`/`\t`/`;`/`|`, `"`/`'`, CRLF/LF, UTF-8 BOM & header heuristic)
+//   - Rust-csv parity hardening: `quoting_enabled`, `double_quote_enabled`, `escape_char`, `trim_fields`,
+//     `skip_empty_lines`, `flexible_quotes`, custom `record_terminator` (incl. standalone `\r` & ASCII RS/US),
+//     `readRecordUnescaped`, `unescapeCsvFieldWith`, `CsvQuoteStyle`, `CsvWriteOptions`, `writeCsvRowWith`
+//   - Automatic dialect sniffer (`sniffCsvDialect`: `,`/`\t`/`;`/`|`, `"`/`'`, CRLF/LF/CR, UTF-8 BOM & header heuristic)
 //   - Single-pass monotonic-lattice column schema inference (`inferCsvSchema`: empty/bool/int/float/iso_date/string)
 //     with Welford online mean & variance statistics (`CsvColumnProfile`)
 //   - Zero-heap streaming multi-predicate AND filter + column projection (`projectAndFilterCsv`),
@@ -125,6 +129,21 @@ fn copyBytes(dst: []u8, dst_off: usize, src: []const u8) {
 // 2. Backwards-Compatible RFC 4180 Reader, Header, Scalar Decoders & Row Writer
 // ============================================================================
 
+/// Detected or configured line ending convention.
+pub enum CsvLineEnding {
+    lf,
+    crlf,
+    cr,
+}
+
+/// Quoting style for `CsvWriteOptions` and `writeCsvRowWith` (aligned with BurntSushi/rust-csv `QuoteStyle`).
+pub enum CsvQuoteStyle {
+    necessary,
+    always,
+    never,
+    non_numeric,
+}
+
 /// Configuration options for `CsvTableReader`.
 pub struct CsvTableOptions {
     delimiter: u8 = ',';
@@ -133,6 +152,13 @@ pub struct CsvTableOptions {
     quote_char: u8 = '"';
     comment_char: u8 = 0;
     strict_column_count: bool = false;
+    quoting_enabled: bool = true;
+    double_quote_enabled: bool = true;
+    escape_char: u8 = 0;
+    trim_fields: bool = false;
+    skip_empty_lines: bool = true;
+    flexible_quotes: bool = false;
+    record_terminator: u8 = 0;
 
     /// Standard RFC 4180 comma-separated CSV options.
     static fn csv(): CsvTableOptions {
@@ -143,9 +169,30 @@ pub struct CsvTableOptions {
     static fn tsv(): CsvTableOptions {
         return CsvTableOptions{ delimiter: '\t', has_header: true, trim_whitespace: false };
     }
+
+    /// Relaxed `rust-csv`-compatible options (flexible quotes, skips empty lines, CRLF/LF/CR terminators).
+    static fn relaxed(): CsvTableOptions {
+        return CsvTableOptions{
+            delimiter: ',',
+            has_header: false,
+            flexible_quotes: true,
+            skip_empty_lines: true,
+        };
+    }
+
+    /// ASCII unit/record separator delimited text (`\x1F` delimiter, `\x1E` record terminator).
+    static fn ascii(): CsvTableOptions {
+        return CsvTableOptions{
+            delimiter: 0x1F,
+            has_header: false,
+            record_terminator: 0x1E,
+            flexible_quotes: true,
+            skip_empty_lines: true,
+        };
+    }
 }
 
-/// Metadata for a single parsed CSV/TSV row returned by `CsvTableReader.nextRow`.
+/// Metadata for a single parsed CSV/TSV row returned by `CsvTableReader.nextRow` or `readRecordUnescaped`.
 pub struct CsvRowCursor {
     row_index: usize = 0;
     fields_count: usize = 0;
@@ -181,14 +228,21 @@ pub struct CsvTableHeader {
     }
 }
 
+fn isRecordTerm(c: u8, custom_term: u8): bool {
+    if (custom_term != 0) return c == custom_term;
+    return c == '\r' || c == '\n';
+}
+
 /// Zero-heap-allocation RFC 4180 CSV/TSV table reader supporting custom delimiters,
-/// custom quote characters, `#` comment lines, UTF-8 BOM, embedded newlines, `""` escapes, and header mapping.
+/// custom quote/escape characters, quoting/double-quote toggles, comment lines, UTF-8 BOM,
+/// CRLF/LF/CR & custom record terminators, embedded newlines, flexible vs strict quoting, and header mapping.
 pub struct CsvTableReader {
     data: string = "";
     opts: CsvTableOptions = CsvTableOptions{};
     pos: usize = 0;
     row_index: usize = 0;
     expected_columns: usize = 0;
+    line_number: u64 = 1;
 
     /// Initializes a `CsvTableReader` over `data` with `opts`.
     static fn init(data: string, opts: CsvTableOptions): CsvTableReader {
@@ -202,6 +256,7 @@ pub struct CsvTableReader {
             pos: start_pos,
             row_index: 0,
             expected_columns: 0,
+            line_number: 1,
         };
     }
 
@@ -213,6 +268,17 @@ pub struct CsvTableReader {
         }
         _.row_index = 0;
         _.expected_columns = 0;
+        _.line_number = 1;
+    }
+
+    /// Returns the current 1-based line number (counted by `\n` occurrences).
+    fn line(): u64 {
+        return _.line_number;
+    }
+
+    /// Sets the current 1-based line number.
+    fn setLine(*_, n: u64) {
+        _.line_number = n;
     }
 
     /// Parses the first row as a `CsvTableHeader`, storing column name slices into `out_names`.
@@ -227,21 +293,90 @@ pub struct CsvTableReader {
         };
     }
 
-    /// Reads the next RFC 4180 row into `out_fields`, returning `CsvRowCursor` or `null` at EOF.
-    fn nextRow(*_, out_fields: []string): CsvRowCursor? {
+    fn skipLeadingEmptyAndComments(*_) {
         const n = _.data.len;
         const cchar = _.opts.comment_char;
-        if (cchar != 0) {
-            while (_.pos < n && _.data[_.pos] == cchar) {
-                if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r')) {
-                    _.pos += rel;
+        const term = _.opts.record_terminator;
+        while (_.pos < n) {
+            const b = _.data[_.pos];
+            if (_.opts.skip_empty_lines && isRecordTerm(b, term)) {
+                if (term != 0) {
+                    if (b == '\n') _.line_number += 1;
+                    _.pos += 1;
+                } else if (b == '\r') {
+                    _.pos += 1;
+                    if (_.pos < n && _.data[_.pos] == '\n') {
+                        _.pos += 1;
+                        _.line_number += 1;
+                    }
                 } else {
-                    _.pos = n;
+                    _.pos += 1;
+                    _.line_number += 1;
                 }
-                if (_.pos < n && _.data[_.pos] == '\r') _.pos += 1;
-                if (_.pos < n && _.data[_.pos] == '\n') _.pos += 1;
+                continue;
             }
+            if (cchar != 0 && b == cchar && !isRecordTerm(cchar, term)) {
+                if (term != 0) {
+                    if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', term)) {
+                        _.pos += rel;
+                    } else {
+                        _.pos = n;
+                    }
+                    if (_.pos < n) {
+                        if (_.data[_.pos] == '\n') _.line_number += 1;
+                        _.pos += 1;
+                    }
+                } else {
+                    if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r')) {
+                        _.pos += rel;
+                    } else {
+                        _.pos = n;
+                    }
+                    if (_.pos < n && _.data[_.pos] == '\r') _.pos += 1;
+                    if (_.pos < n && _.data[_.pos] == '\n') {
+                        _.pos += 1;
+                        _.line_number += 1;
+                    }
+                }
+                continue;
+            }
+            break;
         }
+    }
+
+    fn consumeLineTerminator(*_): bool {
+        const n = _.data.len;
+        if (_.pos >= n) return false;
+        const term = _.opts.record_terminator;
+        const b = _.data[_.pos];
+        if (term != 0) {
+            if (b == term) {
+                if (b == '\n') _.line_number += 1;
+                _.pos += 1;
+                return true;
+            }
+            return false;
+        }
+        if (b == '\r') {
+            _.pos += 1;
+            if (_.pos < n && _.data[_.pos] == '\n') {
+                _.pos += 1;
+                _.line_number += 1;
+            }
+            return true;
+        }
+        if (b == '\n') {
+            _.pos += 1;
+            _.line_number += 1;
+            return true;
+        }
+        return false;
+    }
+
+    /// Reads the next RFC 4180 row as zero-copy slices into `out_fields`, returning `CsvRowCursor` or `null` at EOF.
+    fn nextRow(*_, out_fields: []string): CsvRowCursor? {
+        const n = _.data.len;
+        _.skipLeadingEmptyAndComments();
         if (_.pos >= n) {
             return null;
         }
@@ -257,20 +392,38 @@ pub struct CsvTableReader {
 
         const delim = _.opts.delimiter;
         const qchar = _.opts.quote_char;
+        const echar = _.opts.escape_char;
+        const term = _.opts.record_terminator;
+        const use_quotes = _.opts.quoting_enabled && qchar != 0;
 
         while (true) {
             let field_slice: string = "";
 
-            if (_.pos < n && qchar != 0 && _.data[_.pos] == qchar) {
+            if (_.pos < n && use_quotes && _.data[_.pos] == qchar) {
                 _.pos += 1;
                 const content_start = _.pos;
                 let closed = false;
                 let content_end = _.pos;
 
                 while (_.pos < n) {
-                    if (rel := Simd.indexOfByte(_.data[_.pos..n], qchar)) {
+                    const hit = if (echar != 0)
+                        Simd.indexOfAny2(_.data[_.pos..n], qchar, echar)
+                    else
+                        Simd.indexOfByte(_.data[_.pos..n], qchar);
+
+                    if (rel := hit) {
+                        _.line_number += Simd.countByte(_.data[_.pos..(_.pos + rel)], '\n') as u64;
                         _.pos += rel;
-                        if (_.pos + 1 < n && _.data[_.pos + 1] == qchar) {
+                        if (echar != 0 && _.data[_.pos] == echar) {
+                            if (_.pos + 1 < n) {
+                                if (_.data[_.pos + 1] == '\n') _.line_number += 1;
+                                _.pos += 2;
+                                continue;
+                            }
+                            _.pos = n;
+                            break;
+                        }
+                        if (_.opts.double_quote_enabled && _.pos + 1 < n && _.data[_.pos + 1] == qchar) {
                             _.pos += 2;
                             continue;
                         }
@@ -279,40 +432,80 @@ pub struct CsvTableReader {
                         closed = true;
                         break;
                     } else {
+                        _.line_number += Simd.countByte(_.data[_.pos..n], '\n') as u64;
                         _.pos = n;
                         break;
                     }
                 }
 
                 if (!closed) {
-                    cur.malformed = true;
-                    _.pos = n;
-                    return cur;
+                    if (!_.opts.flexible_quotes) {
+                        cur.malformed = true;
+                        _.pos = n;
+                        return cur;
+                    }
+                    content_end = n;
                 }
 
                 field_slice = _.data[content_start..content_end] as string;
 
-                while (_.pos < n && _.data[_.pos] == ' ' && delim != ' ') : (_.pos += 1) {}
-                if (_.pos < n && _.data[_.pos] != delim && _.data[_.pos] != '\r' && _.data[_.pos] != '\n') {
-                    cur.malformed = true;
-                    if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r')) {
-                        _.pos += rel;
-                    } else {
-                        _.pos = n;
+                if (_.opts.flexible_quotes) {
+                    if (_.pos < n && _.data[_.pos] != delim && !isRecordTerm(_.data[_.pos], term)) {
+                        const tail_hit = if (term != 0)
+                            Simd.indexOfAny2(_.data[_.pos..n], delim, term)
+                        else
+                            Simd.indexOfAny4(_.data[_.pos..n], delim, '\r', '\n', '\n');
+                        if (rel := tail_hit) {
+                            _.line_number += Simd.countByte(_.data[_.pos..(_.pos + rel)], '\n') as u64;
+                            _.pos += rel;
+                        } else {
+                            _.line_number += Simd.countByte(_.data[_.pos..n], '\n') as u64;
+                            _.pos = n;
+                        }
+                        field_slice = _.data[content_start.._.pos] as string;
                     }
-                    if (_.pos < n && _.data[_.pos] == '\r') _.pos += 1;
-                    if (_.pos < n && _.data[_.pos] == '\n') _.pos += 1;
-                    return cur;
+                } else {
+                    while (_.pos < n && _.data[_.pos] == ' ' && delim != ' ' && !isRecordTerm(' ', term)) : (_.pos += 1) {}
+                    if (_.pos < n && _.data[_.pos] != delim && !isRecordTerm(_.data[_.pos], term)) {
+                        cur.malformed = true;
+                        const skip_hit = if (term != 0)
+                            Simd.indexOfByte(_.data[_.pos..n], term)
+                        else
+                            Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r');
+                        if (rel := skip_hit) {
+                            _.line_number += Simd.countByte(_.data[_.pos..(_.pos + rel)], '\n') as u64;
+                            _.pos += rel;
+                        } else {
+                            _.line_number += Simd.countByte(_.data[_.pos..n], '\n') as u64;
+                            _.pos = n;
+                        }
+                        * = _.consumeLineTerminator();
+                        return cur;
+                    }
+                }
+
+                if (_.opts.trim_fields) {
+                    field_slice = trimFieldWs(field_slice, delim);
                 }
             } else {
                 const start = _.pos;
-                if (rel := Simd.indexOfAny4(_.data[_.pos..n], delim, '\r', '\n', '\n')) {
+                const hit = if (term != 0)
+                    Simd.indexOfAny2(_.data[_.pos..n], delim, term)
+                else
+                    Simd.indexOfAny4(_.data[_.pos..n], delim, '\r', '\n', '\n');
+                if (rel := hit) {
+                    if (term != 0) {
+                        _.line_number += Simd.countByte(_.data[_.pos..(_.pos + rel)], '\n') as u64;
+                    }
                     _.pos += rel;
                 } else {
+                    if (term != 0) {
+                        _.line_number += Simd.countByte(_.data[_.pos..n], '\n') as u64;
+                    }
                     _.pos = n;
                 }
                 field_slice = _.data[start.._.pos] as string;
-                if (_.opts.trim_whitespace) {
+                if (_.opts.trim_whitespace || _.opts.trim_fields) {
                     field_slice = trimFieldWs(field_slice, delim);
                 }
             }
@@ -332,17 +525,276 @@ pub struct CsvTableReader {
                 _.pos += 1;
                 continue;
             }
-            if (_.data[_.pos] == '\r') {
-                _.pos += 1;
-                if (_.pos < n && _.data[_.pos] == '\n') {
+            if (_.consumeLineTerminator()) {
+                break;
+            }
+        }
+
+        if (_.opts.strict_column_count) {
+            if (_.expected_columns == 0) {
+                _.expected_columns = cur.fields_count;
+            } else if (cur.fields_count != _.expected_columns) {
+                cur.malformed = true;
+            }
+        }
+        return cur;
+    }
+
+    /// Reads the next CSV record using a full `rust-csv`-compatible zero-heap state machine,
+    /// unescaping quotes and escapes directly into `out_buf` and storing decoded field slices into `out_fields`.
+    fn readRecordUnescaped(*_, out_buf: []u8, out_fields: []string): CsvRowCursor? {
+        const n = _.data.len;
+        _.skipLeadingEmptyAndComments();
+        if (_.pos >= n) {
+            return null;
+        }
+
+        let cur = CsvRowCursor{
+            row_index: _.row_index,
+            fields_count: 0,
+            fields_stored: 0,
+            truncated: false,
+            malformed: false,
+        };
+        _.row_index += 1;
+
+        const delim = _.opts.delimiter;
+        const qchar = _.opts.quote_char;
+        const echar = _.opts.escape_char;
+        const term = _.opts.record_terminator;
+        const use_quotes = _.opts.quoting_enabled && qchar != 0;
+
+        // State encoding: 0=StartField, 1=InField, 2=InQuotedField, 3=InEscapedQuote, 4=InDoubleEscapedQuote
+        let st: u8 = 0;
+        let out_pos: usize = 0;
+        let field_start: usize = 0;
+        let field_was_quoted = false;
+
+        while (_.pos < n) {
+            const c = _.data[_.pos];
+            if (st == 0) {
+                if (use_quotes && c == qchar) {
                     _.pos += 1;
+                    field_was_quoted = true;
+                    st = 2;
+                } else if (c == delim) {
+                    _.pos += 1;
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = "";
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    field_start = out_pos;
+                    field_was_quoted = false;
+                } else if (isRecordTerm(c, term)) {
+                    * = _.consumeLineTerminator();
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = "";
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    if (_.opts.strict_column_count) {
+                        if (_.expected_columns == 0) {
+                            _.expected_columns = cur.fields_count;
+                        } else if (cur.fields_count != _.expected_columns) {
+                            cur.malformed = true;
+                        }
+                    }
+                    return cur;
+                } else {
+                    st = 1;
                 }
-                break;
-            }
-            if (_.data[_.pos] == '\n') {
+            } else if (st == 1) {
+                const hit = if (term != 0)
+                    Simd.indexOfAny2(_.data[_.pos..n], delim, term)
+                else
+                    Simd.indexOfAny4(_.data[_.pos..n], delim, '\r', '\n', '\n');
+                const chunk_len: usize = hit orelse (n - _.pos);
+                if (chunk_len > 0) {
+                    if (term != 0) {
+                        _.line_number += Simd.countByte(_.data[_.pos..(_.pos + chunk_len)], '\n') as u64;
+                    }
+                    const avail: usize = if (out_pos < out_buf.len) (out_buf.len - out_pos) else 0;
+                    const to_copy: usize = if (chunk_len <= avail) chunk_len else avail;
+                    if (to_copy > 0) {
+                        copyBytes(out_buf, out_pos, _.data[_.pos..(_.pos + to_copy)]);
+                        out_pos += to_copy;
+                    }
+                    if (to_copy < chunk_len) cur.truncated = true;
+                    _.pos += chunk_len;
+                }
+                if (_.pos >= n) break;
+                const nb = _.data[_.pos];
+                if (nb == delim) {
+                    _.pos += 1;
+                    let fs: string = out_buf[field_start..out_pos] as string;
+                    if (_.opts.trim_whitespace || _.opts.trim_fields) {
+                        fs = trimFieldWs(fs, delim);
+                    }
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = fs;
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    field_start = out_pos;
+                    field_was_quoted = false;
+                    st = 0;
+                } else if (isRecordTerm(nb, term)) {
+                    * = _.consumeLineTerminator();
+                    let fs: string = out_buf[field_start..out_pos] as string;
+                    if (_.opts.trim_whitespace || _.opts.trim_fields) {
+                        fs = trimFieldWs(fs, delim);
+                    }
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = fs;
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    if (_.opts.strict_column_count) {
+                        if (_.expected_columns == 0) {
+                            _.expected_columns = cur.fields_count;
+                        } else if (cur.fields_count != _.expected_columns) {
+                            cur.malformed = true;
+                        }
+                    }
+                    return cur;
+                }
+            } else if (st == 2) {
+                const hit = if (echar != 0)
+                    Simd.indexOfAny2(_.data[_.pos..n], qchar, echar)
+                else
+                    Simd.indexOfByte(_.data[_.pos..n], qchar);
+                const chunk_len: usize = hit orelse (n - _.pos);
+                if (chunk_len > 0) {
+                    _.line_number += Simd.countByte(_.data[_.pos..(_.pos + chunk_len)], '\n') as u64;
+                    const avail: usize = if (out_pos < out_buf.len) (out_buf.len - out_pos) else 0;
+                    const to_copy: usize = if (chunk_len <= avail) chunk_len else avail;
+                    if (to_copy > 0) {
+                        copyBytes(out_buf, out_pos, _.data[_.pos..(_.pos + to_copy)]);
+                        out_pos += to_copy;
+                    }
+                    if (to_copy < chunk_len) cur.truncated = true;
+                    _.pos += chunk_len;
+                }
+                if (_.pos >= n) break;
+                const nb = _.data[_.pos];
                 _.pos += 1;
-                break;
+                if (nb == qchar) {
+                    st = 4;
+                } else {
+                    st = 3;
+                }
+            } else if (st == 3) {
+                if (c == '\n') _.line_number += 1;
+                if (out_pos < out_buf.len) {
+                    out_buf[out_pos] = c;
+                    out_pos += 1;
+                } else {
+                    cur.truncated = true;
+                }
+                _.pos += 1;
+                st = 2;
+            } else {
+                // st == 4: InDoubleEscapedQuote
+                if (use_quotes && _.opts.double_quote_enabled && c == qchar) {
+                    if (out_pos < out_buf.len) {
+                        out_buf[out_pos] = c;
+                        out_pos += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    _.pos += 1;
+                    st = 2;
+                } else if (c == delim) {
+                    _.pos += 1;
+                    let fs: string = out_buf[field_start..out_pos] as string;
+                    if (_.opts.trim_fields) {
+                        fs = trimFieldWs(fs, delim);
+                    }
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = fs;
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    field_start = out_pos;
+                    field_was_quoted = false;
+                    st = 0;
+                } else if (isRecordTerm(c, term)) {
+                    * = _.consumeLineTerminator();
+                    let fs: string = out_buf[field_start..out_pos] as string;
+                    if (_.opts.trim_fields) {
+                        fs = trimFieldWs(fs, delim);
+                    }
+                    cur.fields_count += 1;
+                    if (cur.fields_stored < out_fields.len) {
+                        out_fields[cur.fields_stored] = fs;
+                        cur.fields_stored += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    if (_.opts.strict_column_count) {
+                        if (_.expected_columns == 0) {
+                            _.expected_columns = cur.fields_count;
+                        } else if (cur.fields_count != _.expected_columns) {
+                            cur.malformed = true;
+                        }
+                    }
+                    return cur;
+                } else if (_.opts.flexible_quotes) {
+                    if (c == '\n') _.line_number += 1;
+                    if (out_pos < out_buf.len) {
+                        out_buf[out_pos] = c;
+                        out_pos += 1;
+                    } else {
+                        cur.truncated = true;
+                    }
+                    _.pos += 1;
+                    st = 1;
+                } else if (c == ' ' && delim != ' ' && !isRecordTerm(' ', term)) {
+                    _.pos += 1;
+                } else {
+                    cur.malformed = true;
+                    const skip_hit = if (term != 0)
+                        Simd.indexOfByte(_.data[_.pos..n], term)
+                    else
+                        Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r');
+                    if (rel := skip_hit) {
+                        _.line_number += Simd.countByte(_.data[_.pos..(_.pos + rel)], '\n') as u64;
+                        _.pos += rel;
+                    } else {
+                        _.line_number += Simd.countByte(_.data[_.pos..n], '\n') as u64;
+                        _.pos = n;
+                    }
+                    * = _.consumeLineTerminator();
+                    return cur;
+                }
             }
+        }
+
+        // EOF inside a record: finalize trailing field
+        if ((st == 2 || st == 3) && !_.opts.flexible_quotes) {
+            cur.malformed = true;
+        }
+        let final_fs: string = out_buf[field_start..out_pos] as string;
+        if (_.opts.trim_fields || (_.opts.trim_whitespace && !field_was_quoted)) {
+            final_fs = trimFieldWs(final_fs, delim);
+        }
+        cur.fields_count += 1;
+        if (cur.fields_stored < out_fields.len) {
+            out_fields[cur.fields_stored] = final_fs;
+            cur.fields_stored += 1;
+        } else {
+            cur.truncated = true;
         }
 
         if (_.opts.strict_column_count) {
@@ -358,9 +810,21 @@ pub struct CsvTableReader {
 
 /// Unescapes an RFC 4180 CSV field into `out_buf`, converting `""` to `"`.
 pub fn unescapeCsvField(raw: string, out_buf: []u8): usize? {
+    return unescapeCsvFieldWith(raw, '"', 0, true, out_buf);
+}
+
+/// Unescapes a CSV field into `out_buf` using custom `quote_char`, `escape_char` (0 = disabled),
+/// and `double_quote_enabled`.
+pub fn unescapeCsvFieldWith(
+    raw: string,
+    quote_char: u8,
+    escape_char: u8,
+    double_quote_enabled: bool,
+    out_buf: []u8,
+): usize? {
     let start: usize = 0;
     let end: usize = raw.len;
-    if (end - start >= 2 && raw[start] == '"' && raw[end - 1] == '"') {
+    if (quote_char != 0 && end - start >= 2 && raw[start] == quote_char && raw[end - 1] == quote_char) {
         start += 1;
         end -= 1;
     }
@@ -369,8 +833,12 @@ pub fn unescapeCsvField(raw: string, out_buf: []u8): usize? {
     let out_pos: usize = 0;
     while (i < end) {
         if (out_pos >= out_buf.len) return null;
-        if (raw[i] == '"' && i + 1 < end && raw[i + 1] == '"') {
-            out_buf[out_pos] = '"';
+        if (escape_char != 0 && raw[i] == escape_char && i + 1 < end) {
+            out_buf[out_pos] = raw[i + 1];
+            out_pos += 1;
+            i += 2;
+        } else if (double_quote_enabled && quote_char != 0 && raw[i] == quote_char && i + 1 < end && raw[i + 1] == quote_char) {
+            out_buf[out_pos] = quote_char;
             out_pos += 1;
             i += 2;
         } else {
@@ -492,8 +960,190 @@ pub fn parseCsvBool(field: string): bool? {
     return null;
 }
 
+/// Configuration options for `writeCsvRowWith` (aligned with BurntSushi/rust-csv `WriterBuilder`).
+pub struct CsvWriteOptions {
+    delimiter: u8 = ',';
+    quote_char: u8 = '"';
+    escape_char: u8 = '\\';
+    double_quote: bool = true;
+    quote_style: CsvQuoteStyle = CsvQuoteStyle.necessary;
+    always_quote: bool = false;
+    never_quote: bool = false;
+    quote_non_numeric: bool = false;
+    comment_char: u8 = 0;
+    line_terminator: CsvLineEnding = CsvLineEnding.lf;
+    custom_terminator: u8 = 0;
+    include_terminator: bool = false;
+
+    /// Standard RFC 4180 CSV write options (comma delimiter, double-quote escaping, no trailing terminator).
+    static fn csv(): CsvWriteOptions {
+        return CsvWriteOptions{};
+    }
+
+    /// RFC 4180 CSV write options with CRLF terminator appended.
+    static fn crlf(): CsvWriteOptions {
+        return CsvWriteOptions{
+            line_terminator: CsvLineEnding.crlf,
+            include_terminator: true,
+        };
+    }
+}
+
+/// Returns `true` if `field` is NOT a strict ASCII integer or IEEE-754 floating-point literal
+/// (matching BurntSushi/rust-csv `is_non_numeric`).
+pub fn isCsvFieldNonNumeric(field: string): bool {
+    if (field.len == 0) return true;
+    let i: usize = 0;
+    if (field[i] == '+' || field[i] == '-') {
+        i += 1;
+        if (i >= field.len) return true;
+    }
+    let has_digits = false;
+    while (i < field.len && field[i] >= '0' && field[i] <= '9') : (i += 1) {
+        has_digits = true;
+    }
+    if (i < field.len && field[i] == '.') {
+        i += 1;
+        while (i < field.len && field[i] >= '0' && field[i] <= '9') : (i += 1) {
+            has_digits = true;
+        }
+    }
+    if (!has_digits) return true;
+    if (i < field.len && (field[i] == 'e' || field[i] == 'E')) {
+        i += 1;
+        if (i < field.len && (field[i] == '+' || field[i] == '-')) {
+            i += 1;
+        }
+        if (i >= field.len || field[i] < '0' || field[i] > '9') return true;
+        while (i < field.len && field[i] >= '0' && field[i] <= '9') : (i += 1) {}
+    }
+    return i != field.len;
+}
+
 fn fieldNeedsQuoting(f: string, delimiter: u8): bool {
     return Simd.indexOfAny4(f, delimiter, '"', '\n', '\r') != null;
+}
+
+fn fieldNeedsQuotingWith(f: string, opts: CsvWriteOptions): bool {
+    if (opts.custom_terminator != 0) {
+        if (Simd.indexOfAny4(f, opts.delimiter, opts.quote_char, opts.custom_terminator, opts.custom_terminator) != null) {
+            return true;
+        }
+    } else {
+        if (Simd.indexOfAny4(f, opts.delimiter, opts.quote_char, '\n', '\r') != null) {
+            return true;
+        }
+    }
+    if (!opts.double_quote && opts.escape_char != 0) {
+        if (Simd.indexOfByte(f, opts.escape_char) != null) return true;
+    }
+    if (opts.comment_char != 0) {
+        if (Simd.indexOfByte(f, opts.comment_char) != null) return true;
+    }
+    return false;
+}
+
+fn resolveWriteQuoteStyle(opts: CsvWriteOptions): CsvQuoteStyle {
+    if (opts.never_quote) return CsvQuoteStyle.never;
+    if (opts.always_quote) return CsvQuoteStyle.always;
+    if (opts.quote_non_numeric) return CsvQuoteStyle.non_numeric;
+    return opts.quote_style;
+}
+
+fn shouldQuoteFieldWith(f: string, opts: CsvWriteOptions, style: CsvQuoteStyle): bool {
+    return match (style) {
+        CsvQuoteStyle.always => true,
+        CsvQuoteStyle.never => false,
+        CsvQuoteStyle.non_numeric => isCsvFieldNonNumeric(f) || fieldNeedsQuotingWith(f, opts),
+        CsvQuoteStyle.necessary => fieldNeedsQuotingWith(f, opts),
+    };
+}
+
+/// Encodes `fields` into `out_buf` using full `CsvWriteOptions` (quote styles, custom escape/quote/comment/terminator).
+pub fn writeCsvRowWith(fields: []const string, opts: CsvWriteOptions, out_buf: []u8): usize? {
+    const style = resolveWriteQuoteStyle(opts);
+    let out_pos: usize = 0;
+
+    // Single empty field must be quoted as "" (unless quote_style == never) so it roundtrips instead of becoming an empty line
+    if (fields.len == 1 && fields[0].len == 0 && style != CsvQuoteStyle.never) {
+        if (out_pos + 2 > out_buf.len) return null;
+        out_buf[out_pos] = opts.quote_char;
+        out_buf[out_pos + 1] = opts.quote_char;
+        out_pos += 2;
+    } else {
+        let idx: usize = 0;
+        while (idx < fields.len) : (idx += 1) {
+            if (idx > 0) {
+                if (out_pos >= out_buf.len) return null;
+                out_buf[out_pos] = opts.delimiter;
+                out_pos += 1;
+            }
+            const f = fields[idx];
+            if (shouldQuoteFieldWith(f, opts, style)) {
+                if (out_pos >= out_buf.len) return null;
+                out_buf[out_pos] = opts.quote_char;
+                out_pos += 1;
+
+                let j: usize = 0;
+                while (j < f.len) : (j += 1) {
+                    const b = f[j];
+                    if (b == opts.quote_char) {
+                        if (out_pos + 2 > out_buf.len) return null;
+                        if (opts.double_quote) {
+                            out_buf[out_pos] = opts.quote_char;
+                            out_buf[out_pos + 1] = opts.quote_char;
+                        } else {
+                            out_buf[out_pos] = opts.escape_char;
+                            out_buf[out_pos + 1] = opts.quote_char;
+                        }
+                        out_pos += 2;
+                    } else if (!opts.double_quote && opts.escape_char != 0 && b == opts.escape_char) {
+                        if (out_pos + 2 > out_buf.len) return null;
+                        out_buf[out_pos] = opts.escape_char;
+                        out_buf[out_pos + 1] = opts.escape_char;
+                        out_pos += 2;
+                    } else {
+                        if (out_pos >= out_buf.len) return null;
+                        out_buf[out_pos] = b;
+                        out_pos += 1;
+                    }
+                }
+
+                if (out_pos >= out_buf.len) return null;
+                out_buf[out_pos] = opts.quote_char;
+                out_pos += 1;
+            } else {
+                if (out_pos + f.len > out_buf.len) return null;
+                let j: usize = 0;
+                while (j < f.len) : (j += 1) {
+                    out_buf[out_pos + j] = f[j];
+                }
+                out_pos += f.len;
+            }
+        }
+    }
+
+    if (opts.include_terminator) {
+        if (opts.custom_terminator != 0) {
+            if (out_pos >= out_buf.len) return null;
+            out_buf[out_pos] = opts.custom_terminator;
+            out_pos += 1;
+        } else if (opts.line_terminator == CsvLineEnding.crlf) {
+            if (out_pos + 2 > out_buf.len) return null;
+            out_buf[out_pos] = '\r';
+            out_buf[out_pos + 1] = '\n';
+            out_pos += 2;
+        } else if (opts.line_terminator == CsvLineEnding.cr) {
+            if (out_pos >= out_buf.len) return null;
+            out_buf[out_pos] = '\r';
+            out_pos += 1;
+        } else {
+            if (out_pos >= out_buf.len) return null;
+            out_buf[out_pos] = '\n';
+            out_pos += 1;
+        }
+    }
+    return out_pos;
 }
 
 /// Encodes `fields` as a single RFC 4180 CSV/TSV row (without trailing newline) into `out_buf`.
@@ -546,12 +1196,6 @@ pub fn writeCsvRow(fields: []const string, delimiter: u8, out_buf: []u8): usize?
 // 3. Automatic Dialect Sniffer (`sniffCsvDialect`)
 // ============================================================================
 
-/// Detected line ending convention.
-pub enum CsvLineEnding {
-    lf,
-    crlf,
-}
-
 /// Result of `sniffCsvDialect`.
 pub struct CsvDialectInfo {
     delimiter: u8 = ',';
@@ -593,7 +1237,7 @@ pub fn isIsoDateField(field: string): bool {
 }
 
 /// Automatically sniffs delimiter (`,` / `\t` / `;` / `|`), quote character (`"` / `'`),
-/// line ending (`CRLF` / `LF`), UTF-8 BOM, and whether row 0 is a header.
+/// line ending (`CRLF` / `LF` / `CR`), UTF-8 BOM, and whether row 0 is a header.
 pub fn sniffCsvDialect(data: string, max_sample_lines: usize): CsvDialectInfo {
     let info = CsvDialectInfo{};
     let start: usize = 0;
@@ -603,14 +1247,16 @@ pub fn sniffCsvDialect(data: string, max_sample_lines: usize): CsvDialectInfo {
     }
     if (start >= data.len) return info;
 
-    // Detect CRLF vs LF and quote character frequency using SIMD @popCount byte counting
+    // Detect CRLF vs LF vs CR and quote character frequency using SIMD @popCount byte counting
     const scan_lim: usize = if (data.len - start > 4096) (start + 4096) else data.len;
     const sample_slice: []const u8 = data[start..scan_lim];
     const cr_cnt: usize = Simd.countByte(sample_slice, '\r');
     const lf_cnt: usize = Simd.countByte(sample_slice, '\n');
     const dquote_cnt: usize = Simd.countByte(sample_slice, '"');
     const squote_cnt: usize = Simd.countByte(sample_slice, '\'');
-    if (cr_cnt > 0 && cr_cnt * 2 >= lf_cnt) {
+    if (cr_cnt > 0 && lf_cnt == 0) {
+        info.line_ending = CsvLineEnding.cr;
+    } else if (cr_cnt > 0 && cr_cnt * 2 >= lf_cnt) {
         info.line_ending = CsvLineEnding.crlf;
     }
     if (squote_cnt >= 2 && squote_cnt > dquote_cnt) {
