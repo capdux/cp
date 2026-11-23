@@ -42,7 +42,7 @@
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
-| `lib/compiler/protobuf.cp` / `protobufGrpc.cp` | Protocol Buffers Wire & gRPC Framing | `ProtoWriter`, `ProtoReader`, `ProtoField`, `WireType`, `PROTO_DEFAULT_MAX_DEPTH`, `GrpcFrameCodec`, `GrpcFrameStream`, `GrpcStatus` |
+| `lib/compiler/protobuf.cp` / `protobufGrpc.cp` | Protocol Buffers Wire & gRPC Framing（对标 `tokio-rs/prost` Apache-2.0 加固） | `ProtoWriter`, `ProtoReader`, `ProtoField`, `WireType`, `PROTO_DEFAULT_MAX_DEPTH`, `PROTOBUF_MAX_RECURSION_DEPTH`, `copyPayloadSimd`, `copyPayloadScalar`, `GrpcFrameCodec`, `GrpcFrameStream`, `GrpcStatus` |
 | `lib/compiler/flatbuf.cp` | Google FlatBuffers 零分配二进制解析 | `fbRootTable`, `fbFileIdentifier`, `fbHasIdentifier`, `fbStripSizePrefix`, `FbTable`, `FbVector` |
 | `lib/compiler/flexbuf.cp` | Google FlexBuffers 无模式二进制解析 | `parseFlexRoot`, `FlexRef`, `FlexType`, `unpackFlexType`, `packFlexType` |
 

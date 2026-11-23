@@ -53,6 +53,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **msgpack-rust** (`rmp`) | <https://github.com/3Hren/msgpack-rust> | MIT | `lib/binfmt/msgpack.cp` | Copyright (c) 2015 Evgeny Safronov |
 | **zip2** (`zip-rs`) | <https://github.com/zip-rs/zip2> | MIT | `lib/pack/zip.cp` | Copyright (c) 2014 Mathijs van de Nes / zip-rs developers |
 | **yaml-rust2** | <https://github.com/Ethiraric/yaml-rust2> | MIT OR Apache-2.0 | `lib/conf/yamlParser.cp` | Copyright (c) 2015 Yuheng Chen / Ethiraric |
+| **prost** (`tokio-rs`) | <https://github.com/tokio-rs/prost> | Apache-2.0 | `lib/compiler/protobuf.cp` | Copyright (c) 2017 Dan Burkert / Tokio Contributors |
 
 ---
 

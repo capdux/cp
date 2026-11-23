@@ -1,15 +1,22 @@
+// Reference-hardened against tokio-rs/prost (Apache-2.0)
 // Source: cp/lib/protobuf/protobuf.cp (Protocol Buffers Wire Format Zero-Copy Codec)
 // Pure CP zero-copy Protocol Buffers wire format encoder & decoder.
-// Supports LEB128 Varint, ZigZag sint32/sint64, Fixed32/Fixed64/Float/Double,
-// length-delimited bytes/strings/submessages, packed repeated varints, skipField,
-// and recursion depth protection.
+// Supports LEB128 Varint (strict 10-byte 64-bit bound), ZigZag sint32/sint64,
+// Fixed32/Fixed64/Float/Double, length-delimited bytes/strings/submessages,
+// StartGroup/EndGroup pairing, packed repeated fields, zero-heap skipField /
+// validateProtobufWire, recursion depth protection (PROTOBUF_MAX_RECURSION_DEPTH = 100),
+// strict UTF-8 validation with cap:simd Simd.isAscii fast-path, and @Vector(16, u8)
+// SIMD payload copy.
 
 const std = @import("std");
+import { Simd } from "cap:simd";
 
 /// Maximum valid Protobuf field number (`2^29 - 1`).
 pub const MAX_FIELD_NUMBER: u32 = 536870911;
-/// Default maximum nested submessage recursion depth.
+/// Legacy default maximum nested submessage recursion depth.
 pub const DEFAULT_MAX_DEPTH: usize = 64;
+/// Default maximum nested submessage/group recursion depth (aligned with `prost::RECURSION_LIMIT`).
+pub const PROTOBUF_MAX_RECURSION_DEPTH: usize = 100;
 
 /// Error set returned by Protocol Buffers wire format encoding/decoding operations.
 pub err ProtoError {
@@ -19,6 +26,8 @@ pub err ProtoError {
     InvalidFieldNumber,
     TruncatedLengthDelimited,
     MaxDepthExceeded,
+    UnexpectedEndGroupTag,
+    InvalidUtf8,
     OutOfMemory,
 }
 
@@ -161,6 +170,34 @@ pub struct ProtoField {
     /// Returns the zero-copy string slice payload (`string`).
     fn asString(): []const u8 {
         return _.raw_bytes;
+    }
+
+    /// Returns the zero-copy string slice payload after strict UTF-8 validation (`ProtoError.InvalidUtf8`).
+    fn asStringChecked(): ([]const u8)! {
+        if (!ProtoReader.isValidUtf8(_.raw_bytes)) {
+            return ProtoError.InvalidUtf8;
+        }
+        return _.raw_bytes;
+    }
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` payload copy for hot-path `bytes`/`string` serialization.
+pub fn copyPayloadSimd(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i + 16 <= src.len) : (i += 16) {
+        const chunk: @Vector(16, u8) = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+    }
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference payload copy for 0-diff parity verification against `copyPayloadSimd`.
+pub fn copyPayloadScalar(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
     }
 }
 
@@ -328,12 +365,20 @@ pub struct ProtoWriter {
         _.writeFixed64(field_num, bits)?;
     }
 
-    /// Writes a length-delimited `bytes` field.
+    /// Writes a length-delimited `bytes` field (uses 16-lane SIMD payload copy for `>= 16` bytes).
     fn writeBytes(*_, field_num: u32, data: []const u8): ! {
         _.writeTag(field_num, WireType.LengthDelimited)?;
         _.writeVarint(data.len as u64)?;
         if (data.len > 0) {
-            _.buf.appendSlice(_.allocator, data) catch return ProtoError.OutOfMemory;
+            if (data.len >= 16) {
+                _.buf.ensureUnusedCapacity(_.allocator, data.len) catch return ProtoError.OutOfMemory;
+                const old_len = _.buf.items.len;
+                const dst = _.buf.items.ptr[old_len .. old_len + data.len];
+                copyPayloadSimd(dst, data);
+                _.buf.items.len = old_len + data.len;
+            } else {
+                _.buf.appendSlice(_.allocator, data) catch return ProtoError.OutOfMemory;
+            }
         }
     }
 
@@ -345,6 +390,16 @@ pub struct ProtoWriter {
     /// Writes an embedded submessage encoded as a length-delimited byte payload.
     fn writeSubmessage(*_, field_num: u32, sub_bytes: []const u8): ! {
         _.writeBytes(field_num, sub_bytes)?;
+    }
+
+    /// Writes a `StartGroup` (`WireType.StartGroup = 3`) field opener.
+    fn writeStartGroup(*_, field_num: u32): ! {
+        _.writeTag(field_num, WireType.StartGroup)?;
+    }
+
+    /// Writes an `EndGroup` (`WireType.EndGroup = 4`) field closer.
+    fn writeEndGroup(*_, field_num: u32): ! {
+        _.writeTag(field_num, WireType.EndGroup)?;
     }
 
     /// Writes a proto3 packed repeated varint field (`WireType.LengthDelimited`).
@@ -363,6 +418,40 @@ pub struct ProtoWriter {
             _.writeVarint(v)?;
         }
     }
+
+    /// Writes a proto3 packed repeated ZigZag `sint32` field (`WireType.LengthDelimited`).
+    fn writePackedSint32(*_, field_num: u32, vals: []const i32): ! {
+        if (vals.len == 0) return;
+        let total_bytes: usize = 0;
+        for (v of vals) {
+            total_bytes += ProtoWriter.varintSize(zigzagEncode32(v) as u64);
+        }
+        _.writeTag(field_num, WireType.LengthDelimited)?;
+        _.writeVarint(total_bytes as u64)?;
+        for (v of vals) {
+            _.writeVarint(zigzagEncode32(v) as u64)?;
+        }
+    }
+
+    /// Writes a proto3 packed repeated `fixed32` field (`WireType.LengthDelimited`).
+    fn writePackedFixed32(*_, field_num: u32, vals: []const u32): ! {
+        if (vals.len == 0) return;
+        _.writeTag(field_num, WireType.LengthDelimited)?;
+        _.writeVarint((vals.len * 4) as u64)?;
+        for (v of vals) {
+            _.writeRawFixed32(v)?;
+        }
+    }
+
+    /// Writes a proto3 packed repeated `fixed64` field (`WireType.LengthDelimited`).
+    fn writePackedFixed64(*_, field_num: u32, vals: []const u64): ! {
+        if (vals.len == 0) return;
+        _.writeTag(field_num, WireType.LengthDelimited)?;
+        _.writeVarint((vals.len * 8) as u64)?;
+        for (v of vals) {
+            _.writeRawFixed64(v)?;
+        }
+    }
 }
 
 /// Zero-copy slice cursor for streaming Protocol Buffers wire payloads.
@@ -370,16 +459,27 @@ pub struct ProtoReader {
     data: []const u8;
     pos: usize = 0;
     depth: usize = 0;
-    max_depth: usize = DEFAULT_MAX_DEPTH;
+    max_depth: usize = PROTOBUF_MAX_RECURSION_DEPTH;
 
-    /// Creates a `ProtoReader` over `data` with default maximum recursion depth (`64`).
+    /// Creates a `ProtoReader` over `data` with default maximum recursion depth (`100`).
     static fn init(data: []const u8): ProtoReader {
         return ProtoReader{
             data: data,
             pos: 0,
             depth: 0,
-            max_depth: DEFAULT_MAX_DEPTH,
+            max_depth: PROTOBUF_MAX_RECURSION_DEPTH,
         };
+    }
+
+    /// Strict UTF-8 validation with `cap:simd` `Simd.isAscii` fast-path.
+    pub static fn isValidUtf8(s: []const u8): bool {
+        if (Simd.isAscii(s)) return true;
+        return std.unicode.utf8ValidateSlice(s);
+    }
+
+    /// Scalar reference UTF-8 validation for 0-diff parity testing against `isValidUtf8`.
+    pub static fn isValidUtf8Scalar(s: []const u8): bool {
+        return std.unicode.utf8ValidateSlice(s);
     }
 
     /// Creates a `ProtoReader` over `data` with an explicit maximum recursion depth.
@@ -505,20 +605,47 @@ pub struct ProtoReader {
         return field;
     }
 
-    /// Skips an unknown field for forward compatibility.
-    /// When `field` was yielded by `next()`, its payload has already been consumed;
-    /// for `StartGroup`, skips nested fields until the matching `EndGroup`.
+    /// Skips an unknown field for forward compatibility with strict group-tag pairing
+    /// and recursion depth enforcement (`PROTOBUF_MAX_RECURSION_DEPTH = 100`).
     fn skipField(*_, field: ProtoField): ! {
+        if (field.wire_type == WireType.EndGroup) {
+            return ProtoError.UnexpectedEndGroupTag;
+        }
         if (field.wire_type == WireType.StartGroup) {
+            let group_stack: [128]u32 = undefined;
+            if (_.depth >= _.max_depth) {
+                return ProtoError.MaxDepthExceeded;
+            }
+            group_stack[0] = field.field_number;
             let group_depth: usize = 1;
             while (group_depth > 0) {
                 const inner = _.next()? ?? return ProtoError.UnexpectedEof;
                 if (inner.wire_type == WireType.StartGroup) {
+                    if (_.depth + group_depth >= _.max_depth || group_depth >= 128) {
+                        return ProtoError.MaxDepthExceeded;
+                    }
+                    group_stack[group_depth] = inner.field_number;
                     group_depth += 1;
                 } else if (inner.wire_type == WireType.EndGroup) {
+                    if (inner.field_number != group_stack[group_depth - 1]) {
+                        return ProtoError.UnexpectedEndGroupTag;
+                    }
                     group_depth -= 1;
                 }
             }
+        }
+    }
+
+    /// Zero-heap full-stream wire format validator (verifies tags, varints, bounds, and group pairing).
+    pub static fn validateProtobufWire(data: []const u8): ! {
+        try ProtoReader.validateProtobufWireWithMaxDepth(data, PROTOBUF_MAX_RECURSION_DEPTH);
+    }
+
+    /// Zero-heap full-stream wire format validator with explicit recursion depth limit.
+    pub static fn validateProtobufWireWithMaxDepth(data: []const u8, max_depth: usize): ! {
+        let reader = ProtoReader.initWithMaxDepth(data, max_depth);
+        while (field := reader.next()?) {
+            try reader.skipField(field);
         }
     }
 
