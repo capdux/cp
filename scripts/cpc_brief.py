@@ -48,7 +48,7 @@ def gates(cp, bak):
     txt = open(cp, encoding="utf-8").read()
     res = OrderedDict()
     res["backup"] = os.path.exists(bak)
-    res["zig{}"] = len(re.findall(r"\bzig\s*\{", txt))
+    res["zig{}"] = len(re.findall(r"(?<!\.)\bzig\s*\{", txt))
     res["var"] = len(re.findall(r"^\s*(?:pub\s+)?var\s", txt, re.M))
     res["tuple.@N"] = len(re.findall(r'\.@"\d+"', txt))
     res["anyopaque"] = len(re.findall(r"\*anyopaque|\*any!", txt))

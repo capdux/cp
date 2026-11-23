@@ -54,7 +54,9 @@ pub fn collect_strict_diagnostics(code: &str, existing: &[Diagnostic]) -> Vec<Di
         let is_member_access = matches!(prev, Some(Token::Dot | Token::QuestionDot));
         let is_decl_name = matches!(
             prev,
-            Some(Token::Fn | Token::Const | Token::Let | Token::Struct | Token::Enum | Token::Union)
+            Some(
+                Token::Fn | Token::Const | Token::Let | Token::Struct | Token::Enum | Token::Union
+            )
         ) || matches!(next, Some(Token::Colon));
 
         match tok {
@@ -144,10 +146,8 @@ pub fn collect_strict_diagnostics(code: &str, existing: &[Diagnostic]) -> Vec<Di
             }
             Token::Pipe => {
                 // Detect Zig-style payload capture: `) |ident|`, `) |*ident|`, `catch |err|`, `else |err|`
-                let after_capture_trigger = matches!(
-                    prev,
-                    Some(Token::RParen | Token::Catch | Token::Else)
-                );
+                let after_capture_trigger =
+                    matches!(prev, Some(Token::RParen | Token::Catch | Token::Else));
                 if after_capture_trigger {
                     let mut j = i + 1;
                     let mut valid_capture = false;
@@ -187,7 +187,7 @@ pub fn collect_strict_diagnostics(code: &str, existing: &[Diagnostic]) -> Vec<Di
                     }
                 }
             }
-            Token::ZigEscape => {
+            Token::ZigEscape if !is_member_access && matches!(next, Some(Token::LBrace)) => {
                 if !has_overlapping_diag(*span) {
                     diags.push(
                         Diagnostic::new(
@@ -268,7 +268,9 @@ pub fn collect_strict_diagnostics(code: &str, existing: &[Diagnostic]) -> Vec<Di
                                 "prefix optional type '?T' is prohibited in --strict mode",
                             )
                             .with_span(q_span)
-                            .with_cause("CP uses postfix optional syntax 'T?' instead of Zig prefix '?T'.")
+                            .with_cause(
+                                "CP uses postfix optional syntax 'T?' instead of Zig prefix '?T'.",
+                            )
                             .with_help("place '?' at the end of the type (e.g. 'i32?' or '(*T)?').")
                             .with_suggestion("replace '?T' with 'T?'"),
                         );

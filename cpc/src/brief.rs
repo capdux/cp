@@ -83,28 +83,22 @@ fn truncate_chars(s: &str, max_chars: usize) -> &str {
     }
 }
 
-fn is_word_byte(b: u8) -> bool {
-    b.is_ascii_alphanumeric() || b == b'_'
-}
-
 fn count_zig_blocks(txt: &str) -> usize {
-    let bytes = txt.as_bytes();
-    let len = bytes.len();
+    use crate::lexer::Token;
+    use logos::Logos;
+
+    let tokens: Vec<Option<Token>> = Token::lexer(txt).map(Result::ok).collect();
     let mut count = 0usize;
-    let mut i = 0usize;
-    while i + 3 < len {
-        if &bytes[i..i + 3] == b"zig" && (i == 0 || !is_word_byte(bytes[i - 1])) {
-            let mut j = i + 3;
-            while j < len && bytes[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < len && bytes[j] == b'{' {
+    for i in 0..tokens.len() {
+        if matches!(tokens[i], Some(Token::ZigEscape)) {
+            let is_member_access =
+                i > 0 && matches!(tokens[i - 1], Some(Token::Dot | Token::QuestionDot));
+            let followed_by_lbrace =
+                i + 1 < tokens.len() && matches!(tokens[i + 1], Some(Token::LBrace));
+            if !is_member_access && followed_by_lbrace {
                 count += 1;
-                i = j + 1;
-                continue;
             }
         }
-        i += 1;
     }
     count
 }
