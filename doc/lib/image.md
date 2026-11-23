@@ -28,7 +28,7 @@
 | `lib/image/codecs.cp` | `// Source: /data/dev/bun/src/runtime/image/codecs.cp` | `ImageFormat`、`ExifOrientation`、`Codecs`（魔数嗅探、MIME、扩展名与方向矩阵） |
 | `lib/image/png.cp` | `// Reference-hardened against image-rs/image-png (MIT/Apache-2.0)` | `Png`、`PngImage`、`PngHeader`、`PngError`、`RgbaColor`（全 5 色彩类型 × 1/2/4/8/16-bit、tRNS、Adam7 隔行、5 滤波器 + 16-lane SIMD 加速与严格 CRC32/溢出防护） |
 | `lib/image/bmp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_bmp.cp` | `Bmp`、`BmpHeader`（Windows DIB 24/32bpp、Top-Down/Bottom-Up 编解码） |
-| `lib/image/gif.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_gif.cp` | `Gif`、`GifHeader`、`GifImage`（GIF87a/89a 探测、4096 节点 LZW 解码与 4-pass 交织） |
+| `lib/image/gif.cp` | `// Reference-hardened against image-rs/image-gif (MIT/Apache-2.0)` | `Gif`、`GifHeader`、`GifImage`、`GifFrame`、`GifAnimation`、`GifEncodeFrame`、`GifDisposal`、`GifError`、`encodeGifRgba`、`encodeGifIndexed`、`decodeGifAnimation`、`decodeGifStrict`（GIF87a/89a 多帧动画、完整 1..12-bit LZW 编解码与 Deferred Clear、GCE 延迟/透明色/Disposal 0..3、NETSCAPE2.0 循环、LCT 覆盖、4-Pass 隔行、越界裁剪与 16-lane SIMD 加速） |
 | `lib/image/jpeg.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_jpeg.cp` | `Jpeg`、`JpegImage`、`JpegHeader`、`JpegError`、`jpegEncode`、`jpegEncodeInto`（Baseline DCT JFIF 1.01 编码与 SOF0/SOF2/EXIF 探测） |
 | `lib/image/webp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_webp.cp` | `Webp`、`WebpImage`、`WebpHeader`、`WebpError`、`webpEncode`、`webpEncodeLossless`（RFC 9649 VP8L 编码与 RIFF VP8/VP8L/VP8X 探测） |
 | `lib/image/exif.cp` | `// Source: /data/dev/bun/src/runtime/image/exif.cp` | `Exif`（JPEG APP1 段落扫描与大小端 TIFF IFD0 `0x0112` Orientation 解析） |
@@ -74,7 +74,13 @@
 | `Png.save(path, rgba, width, height): bool` / `Png.load(path): PngImage?` | 文件系统直存/直读 PNG |
 | `png_img.getPixel(x, y): RgbaColor` / `setPixel(x, y, r, g, b, a)` | 像素级安全读写 |
 | `Bmp.parseHeader(b)` / `Bmp.decode(bytes)` / `Bmp.encodeRgba(rgba, w, h)` | Windows DIB 24/32bpp BMP 解析、解码与 32bpp 编码 |
-| `Gif.probe(bytes): GifHeader?` / `Gif.decode(bytes): GifImage?` | GIF87a/89a 探测与 LZW 首帧 RGBA8 解码（支持透明色索引与交织） |
+| `Gif.probe(bytes): GifHeader?` / `Gif.probeStrict(bytes): GifHeader!GifError` | **零像素解压**极速探测 GIF87a/89a 逻辑屏幕宽高、全局调色板标志与背景色索引 |
+| `Gif.decode(bytes): GifImage?` / `Gif.decodeStrict(bytes): GifImage!GifError` / `decodeGifStrict(bytes)` | 完整解码 GIF 首帧为 RGBA8 像素矩阵（100% 向后兼容；对标 `image-rs/image-gif` 支持 1..12-bit LZW、Deferred Clear、4-Pass 隔行、透明色与 16-lane SIMD 调色板展开） |
+| `Gif.decodeAnimation(bytes): GifAnimation!GifError` / `decodeGifAnimation(bytes)` | 完整解码 GIF87a/89a 多帧动画（含 GCE 延迟 `delay_cs`、透明色索引、Disposal Method 0..3、`NETSCAPE2.0`/`ANIMEXTS1.0` 循环次数、Comment/PlainText/Application 扩展跳过与 Local Color Table 覆盖） |
+| `anim.renderComposedFrames(): ([]GifImage)!GifError` / `Gif.composeCanvasFrame(...)` | 按 Disposal Method 0..3 与子帧 `left/top/w/h` 越界安全裁剪合成完整动画画布（内置 16-lane `@Vector(16, u8)` 无分支透明合成 `compositeRowSimd` 与矩形背景清零 `clearRectSimd`） |
+| `Gif.encodeRgba(rgba, w, h): ([]u8)!GifError` / `encodeGifRgba(...)` | 自动量化/精确提取 <=256 色调色板（支持 1-bit 透明色）并编码为标准 GIF89a 字节流 |
+| `Gif.encodeIndexed(w, h, global_pal, frames, loop_count): ([]u8)!GifError` / `encodeGifIndexed(...)` | 完整单帧/多帧索引图 GIF89a 编码器（内置开放定址哈希 4096 节点 LZW 编码器、自动满表 Clear Code 重置、GCE 与 `NETSCAPE2.0` 写入） |
+| `Gif.expandPaletteToRgbaSimd(...)` / `Gif.compositeRowSimd(...)` / `Gif.clearRectSimd(...)` | 16-lane `@Vector(16, u8)` SIMD 热路径原语（与标量参考 0 误差对拍） |
 
 ### 3. 图像处理管线与视觉压缩 (`Image` / `Quantizer` / `ThumbHash`)
 
@@ -137,7 +143,7 @@ pub fn demoImagePipeline() {
 | **格式嗅探与 MIME** | `codecs.cp` (`sniff`, `mime`) | `Codecs.sniff(bytes)` / `Codecs.mime(fmt)` / `fromExtension(path)` |
 | **PNG 编解码** | `codec_png.cp` | `Png.encodeRgba` / `Png.decode` / `Png.save` / `Png.load` |
 | **BMP 编解码** | `codec_bmp.cp` | `Bmp.parseHeader` / `Bmp.decode` / `Bmp.encodeRgba` |
-| **GIF 探测与 LZW 解码** | `codec_gif.cp` | `Gif.probe` / `Gif.decode` |
+| **GIF 动画编解码与 SIMD 合成** | `codec_gif.cp` | `Gif.probe` / `Gif.decode` / `decodeGifAnimation` / `encodeGifRgba` / `encodeGifIndexed` / `renderComposedFrames` |
 | **JPEG / WebP 探测** | `codec_jpeg.cp` / `codec_webp.cp` | `Jpeg.probe` / `Webp.probe` |
 | **EXIF 方向解析** | `exif.cp` (`readJpeg`, `parseTiff`) | `Exif.readJpeg` / `Exif.parseTiff` / `Codecs.getOrientationTransform` |
 | **调色板量化** | `quantize.cp` | `Quantizer.quantize(rgba, w, h, max_colors)` |
