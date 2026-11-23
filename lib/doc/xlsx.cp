@@ -1,8 +1,9 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc OOXML SpreadsheetML .xlsx Parser) | Created: 2026-11-22
+// Reference-hardened against tafia/calamine (MIT)
 // Pure CP zero-heap-allocation OOXML SpreadsheetML parser:
 // A1 cell reference codec, xl/workbook.xml sheet iterator, xl/sharedStrings.xml iterator
-// with rich-text <r><t> concatenation & XML entity unescaping, and xl/worksheets/sheet*.xml
-// streaming cell iterator.
+// with rich-text <r><t> concatenation, XML entity & Excel _xHHHH_ unescaping, merged cells,
+// and xl/worksheets/sheet*.xml streaming cell iterator.
 
 const std = @import("std");
 import { Simd } from "../simd/index.cp";
@@ -16,12 +17,20 @@ pub struct XlsxCellRef {
     row: u32 = 0,
 }
 
+/// Worksheet visibility state parsed from `<sheet state="visible|hidden|veryHidden"/>`.
+pub enum XlsxSheetVisibility {
+    visible,
+    hidden,
+    very_hidden,
+}
+
 /// Workbook sheet metadata parsed from `<sheet name="..." sheetId="..." r:id="..." state="..."/>`.
 pub struct XlsxSheetInfo {
     name: []const u8 = "",
     sheet_id: u32 = 0,
     r_id: []const u8 = "",
     is_hidden: bool = false,
+    visibility: XlsxSheetVisibility = XlsxSheetVisibility.visible,
 }
 
 /// OOXML SpreadsheetML cell value type (`t` attribute on `<c>`).
@@ -32,7 +41,48 @@ pub enum XlsxCellType {
     formula_str,
     bool_val,
     error_val,
+    iso_date,
     unknown,
+}
+
+/// Complete OOXML cell error value enumeration (`#DIV/0!`, `#N/A`, `#NAME?`, `#NULL!`,
+/// `#NUM!`, `#REF!`, `#VALUE!`, `#GETTING_DATA`).
+pub enum XlsxCellErrorKind {
+    none,
+    div0,
+    na,
+    name,
+    null_err,
+    num,
+    ref_err,
+    value,
+    getting_data,
+}
+
+/// Parses an OOXML error text (e.g. `"#DIV/0!"`, `"#N/A"`) into `XlsxCellErrorKind`.
+pub fn parseXlsxCellError(raw: []const u8): XlsxCellErrorKind {
+    if (std.mem.eql(u8, raw, "#DIV/0!")) return XlsxCellErrorKind.div0;
+    if (std.mem.eql(u8, raw, "#N/A")) return XlsxCellErrorKind.na;
+    if (std.mem.eql(u8, raw, "#NAME?")) return XlsxCellErrorKind.name;
+    if (std.mem.eql(u8, raw, "#NULL!")) return XlsxCellErrorKind.null_err;
+    if (std.mem.eql(u8, raw, "#NUM!")) return XlsxCellErrorKind.num;
+    if (std.mem.eql(u8, raw, "#REF!")) return XlsxCellErrorKind.ref_err;
+    if (std.mem.eql(u8, raw, "#VALUE!")) return XlsxCellErrorKind.value;
+    if (std.mem.eql(u8, raw, "#GETTING_DATA")) return XlsxCellErrorKind.getting_data;
+    return XlsxCellErrorKind.none;
+}
+
+/// Formats `XlsxCellErrorKind` back to its canonical OOXML string representation.
+pub fn formatXlsxCellError(kind: XlsxCellErrorKind): []const u8 {
+    if (kind == XlsxCellErrorKind.div0) return "#DIV/0!";
+    if (kind == XlsxCellErrorKind.na) return "#N/A";
+    if (kind == XlsxCellErrorKind.name) return "#NAME?";
+    if (kind == XlsxCellErrorKind.null_err) return "#NULL!";
+    if (kind == XlsxCellErrorKind.num) return "#NUM!";
+    if (kind == XlsxCellErrorKind.ref_err) return "#REF!";
+    if (kind == XlsxCellErrorKind.value) return "#VALUE!";
+    if (kind == XlsxCellErrorKind.getting_data) return "#GETTING_DATA";
+    return "";
 }
 
 /// Zero-copy parsed worksheet cell from `<c r="..." t="..." s="...">...</c>`.
@@ -42,6 +92,11 @@ pub struct XlsxCell {
     style_idx: u32 = 0,
     raw_value: []const u8 = "",
     formula: []const u8 = "",
+    error_kind: XlsxCellErrorKind = XlsxCellErrorKind.none,
+    is_shared_formula: bool = false,
+    shared_formula_idx: u32 = 0,
+    shared_formula_ref: []const u8 = "",
+    inline_xml: []const u8 = "",
 
     /// Returns the shared string table index if `cell_type == .shared_string`.
     fn asSharedStringIdx(): u32? {
@@ -78,6 +133,17 @@ pub struct XlsxCell {
             return null;
         }
         return val;
+    }
+
+    /// Returns the parsed OOXML cell error kind if `cell_type == .error_val`.
+    fn asErrorKind(): XlsxCellErrorKind {
+        if (_.cell_type != XlsxCellType.error_val) {
+            return XlsxCellErrorKind.none;
+        }
+        if (_.error_kind != XlsxCellErrorKind.none) {
+            return _.error_kind;
+        }
+        return parseXlsxCellError(_.raw_value);
     }
 }
 
@@ -589,9 +655,14 @@ pub struct XlsxSheetIter {
                         r_id = id_fallback;
                     }
                     let is_hidden = false;
+                    let visibility = XlsxSheetVisibility.visible;
                     if (st := getAttr(attrs, "state")) {
-                        if (std.mem.eql(u8, st, "hidden") || std.mem.eql(u8, st, "veryHidden")) {
+                        if (std.mem.eql(u8, st, "hidden")) {
                             is_hidden = true;
+                            visibility = XlsxSheetVisibility.hidden;
+                        } else if (std.mem.eql(u8, st, "veryHidden")) {
+                            is_hidden = true;
+                            visibility = XlsxSheetVisibility.very_hidden;
                         }
                     }
                     return XlsxSheetInfo {
@@ -599,6 +670,7 @@ pub struct XlsxSheetIter {
                         sheet_id: sheet_id,
                         r_id: r_id,
                         is_hidden: is_hidden,
+                        visibility: visibility,
                     };
                 }
                 i = gt + 1;
@@ -612,12 +684,160 @@ pub struct XlsxSheetIter {
 }
 
 // ---------------------------------------------------------------------------
-// 2. xl/sharedStrings.xml Iterator & Rich-Text Extractor
+// 2. xl/sharedStrings.xml Iterator, Excel _xHHHH_ Unescaper & Rich-Text Extractor
 // ---------------------------------------------------------------------------
 
+fn hexNibble(b: u8): u8? {
+    if (b >= '0' && b <= '9') return b - '0';
+    if (b >= 'a' && b <= 'f') return (b - 'a') + 10;
+    if (b >= 'A' && b <= 'F') return (b - 'A') + 10;
+    return null;
+}
+
+/// Parses an Excel `_xHHHH_` 7-byte UTF-16 escape at `src[index..index+7]`.
+fn parseExcelEscapeAt(src: []const u8, index: usize): u16? {
+    if (index + 7 > src.len) return null;
+    if (src[index] != '_' || src[index + 1] != 'x' || src[index + 6] != '_') return null;
+    const h0 = hexNibble(src[index + 2]) ?? return null;
+    const h1 = hexNibble(src[index + 3]) ?? return null;
+    const h2 = hexNibble(src[index + 4]) ?? return null;
+    const h3 = hexNibble(src[index + 5]) ?? return null;
+    return ((h0 as u16) << 12) | ((h1 as u16) << 8) | ((h2 as u16) << 4) | (h3 as u16);
+}
+
+fn appendUtf8Codepoint(out: []u8, pos: usize, cp: u32): usize? {
+    if (cp <= 0x7F) {
+        if (pos + 1 > out.len) return null;
+        out[pos] = cp as u8;
+        return pos + 1;
+    }
+    if (cp <= 0x7FF) {
+        if (pos + 2 > out.len) return null;
+        out[pos] = (0xC0 | ((cp >> 6) & 0x1F)) as u8;
+        out[pos + 1] = (0x80 | (cp & 0x3F)) as u8;
+        return pos + 2;
+    }
+    if (cp <= 0xFFFF) {
+        if (pos + 3 > out.len) return null;
+        out[pos] = (0xE0 | ((cp >> 12) & 0x0F)) as u8;
+        out[pos + 1] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
+        out[pos + 2] = (0x80 | (cp & 0x3F)) as u8;
+        return pos + 3;
+    }
+    if (cp <= 0x10FFFF) {
+        if (pos + 4 > out.len) return null;
+        out[pos] = (0xF0 | ((cp >> 18) & 0x07)) as u8;
+        out[pos + 1] = (0x80 | ((cp >> 12) & 0x3F)) as u8;
+        out[pos + 2] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
+        out[pos + 3] = (0x80 | (cp & 0x3F)) as u8;
+        return pos + 4;
+    }
+    // Fallback to U+FFFD replacement character
+    if (pos + 3 > out.len) return null;
+    out[pos] = 0xEF;
+    out[pos + 1] = 0xBF;
+    out[pos + 2] = 0xBD;
+    return pos + 3;
+}
+
+/// Decodes Excel OOXML `_xHHHH_` hexadecimal UTF-16 escape sequences into `out`
+/// (e.g. `_x000D_` -> `\r`, `_x005F_x000A_` -> `_x000A_`, UTF-16 surrogate pairs
+/// `_xD83D__xDCF7_` -> U+1F4F7, unpaired surrogates -> U+FFFD).
+/// Returns total bytes written, or `null` if `out` is too small.
+pub fn decodeExcelEscapes(src: []const u8, out: []u8): usize? {
+    let i: usize = 0;
+    let w: usize = 0;
+    while (i < src.len) {
+        if (src[i] == '_') {
+            if (unit := parseExcelEscapeAt(src, i)) {
+                i += 7;
+                if (unit >= 0xD800 && unit <= 0xDBFF) {
+                    // High surrogate: must be followed by low surrogate _xDC00_.._xDFFF_
+                    let decoded_pair: bool = false;
+                    if (low := parseExcelEscapeAt(src, i)) {
+                        if (low >= 0xDC00 && low <= 0xDFFF) {
+                            const cp: u32 = @as(u32, 0x10000) + (((unit as u32) - @as(u32, 0xD800)) << 10) + ((low as u32) - @as(u32, 0xDC00));
+                            w = appendUtf8Codepoint(out, w, cp) ?? return null;
+                            i += 7;
+                            decoded_pair = true;
+                        }
+                    }
+                    if (!decoded_pair) {
+                        w = appendUtf8Codepoint(out, w, 0xFFFD) ?? return null;
+                    }
+                } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+                    w = appendUtf8Codepoint(out, w, 0xFFFD) ?? return null;
+                } else {
+                    w = appendUtf8Codepoint(out, w, unit as u32) ?? return null;
+                }
+                continue;
+            }
+        }
+        if (w >= out.len) return null;
+        out[w] = src[i];
+        w += 1;
+        i += 1;
+    }
+    return w;
+}
+
+/// Decodes Excel `_xHHHH_` escapes in-place within `buf[start..end]`.
+/// Because every `_xHHHH_` (7 bytes) expands to <= 3 UTF-8 bytes (and surrogate pairs
+/// 14 bytes -> 4 UTF-8 bytes), output length is strictly <= input length.
+fn decodeExcelEscapesInPlace(buf: []u8, start: usize, end: usize): usize {
+    // Fast path: check if '_' exists at all using SIMD scan
+    const slice = buf[start..end];
+    let has_esc: bool = false;
+    let scan: usize = 0;
+    while (scan < slice.len) {
+        const off = Simd.findByte(slice[scan..], '_') ?? break;
+        const pos = scan + off;
+        if (pos + 6 < slice.len && slice[pos + 1] == 'x' && slice[pos + 6] == '_') {
+            has_esc = true;
+            break;
+        }
+        scan = pos + 1;
+    }
+    if (!has_esc) return end;
+
+    let r: usize = start;
+    let w: usize = start;
+    while (r < end) {
+        if (buf[r] == '_') {
+            if (unit := parseExcelEscapeAt(buf[0..end], r)) {
+                r += 7;
+                if (unit >= 0xD800 && unit <= 0xDBFF) {
+                    let decoded_pair: bool = false;
+                    if (low := parseExcelEscapeAt(buf[0..end], r)) {
+                        if (low >= 0xDC00 && low <= 0xDFFF) {
+                            const cp: u32 = @as(u32, 0x10000) + (((unit as u32) - @as(u32, 0xD800)) << 10) + ((low as u32) - @as(u32, 0xDC00));
+                            w = appendUtf8Codepoint(buf, w, cp) ?? w;
+                            r += 7;
+                            decoded_pair = true;
+                        }
+                    }
+                    if (!decoded_pair) {
+                        w = appendUtf8Codepoint(buf, w, 0xFFFD) ?? w;
+                    }
+                } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+                    w = appendUtf8Codepoint(buf, w, 0xFFFD) ?? w;
+                } else {
+                    w = appendUtf8Codepoint(buf, w, unit as u32) ?? w;
+                }
+                continue;
+            }
+        }
+        buf[w] = buf[r];
+        w += 1;
+        r += 1;
+    }
+    return w;
+}
+
 /// Extracts and unescapes plain text from a single `<si>...</si>` XML fragment
-/// into `out`. Supports both plain `<t>...</t>` and rich-text `<r><t>...</t></r>`,
-/// skipping phonetic guide `<rPh>...</rPh>` blocks.
+/// into `out`. Supports both plain `<t>...</t>` (preserving `xml:space="preserve"` whitespace)
+/// and rich-text `<r><t>...</t></r>`, skipping phonetic guide `<rPh>...</rPh>` blocks,
+/// and decoding both XML entities and Excel `_xHHHH_` escape sequences.
 /// Returns total bytes written, or `null` if `out` buffer is too small.
 pub fn extractSharedString(si_xml: []const u8, out: []u8): usize? {
     let out_len: usize = 0;
@@ -668,9 +888,11 @@ pub fn extractSharedString(si_xml: []const u8, out: []u8): usize? {
             }
             const m = findMatchingClose(si_xml, gt + 1, si_xml.len, "t") ?? break;
             const raw_t = si_xml[gt + 1 .. m.close_start];
+            const seg_start = out_len;
             if (!unescapeXmlInto(raw_t, out, *out_len)) {
                 return null;
             }
+            out_len = decodeExcelEscapesInPlace(out, seg_start, out_len);
             i = m.after_close;
             continue;
         }
@@ -679,6 +901,13 @@ pub fn extractSharedString(si_xml: []const u8, out: []u8): usize? {
     }
 
     return out_len;
+}
+
+/// Extracts and unescapes text from an inline string `<is>...</is>` inner XML fragment
+/// (supports both `<is><t>...</t></is>` and rich-text `<is><r><t>...</t></r></is>`,
+/// `xml:space="preserve"`, XML entities, and Excel `_xHHHH_` escapes).
+pub fn extractInlineString(is_xml: []const u8, out: []u8): usize? {
+    return extractSharedString(is_xml, out);
 }
 
 /// Zero-copy iterator over `<si>...</si>` items in `xl/sharedStrings.xml`.
@@ -768,7 +997,7 @@ fn parseCellTypeAttr(t_val: []const u8): XlsxCellType {
     if (std.mem.eql(u8, t_val, "s")) {
         return XlsxCellType.shared_string;
     }
-    if (std.mem.eql(u8, t_val, "inlineStr")) {
+    if (std.mem.eql(u8, t_val, "inlineStr") || std.mem.eql(u8, t_val, "is")) {
         return XlsxCellType.inline_string;
     }
     if (std.mem.eql(u8, t_val, "str")) {
@@ -779,6 +1008,9 @@ fn parseCellTypeAttr(t_val: []const u8): XlsxCellType {
     }
     if (std.mem.eql(u8, t_val, "e")) {
         return XlsxCellType.error_val;
+    }
+    if (std.mem.eql(u8, t_val, "d")) {
+        return XlsxCellType.iso_date;
     }
     return XlsxCellType.unknown;
 }
@@ -826,11 +1058,16 @@ fn extractFirstTText(is_body: []const u8): []const u8 {
 
 /// Zero-allocation streaming iterator over all `<c ...>` cells inside `<sheetData>...</sheetData>`
 /// of an `xl/worksheets/sheet*.xml` document.
+/// Supports automatic row increment when `<row>` omits `r="..."` and automatic column increment
+/// when `<c>` omits `r="..."` (common in LibreOffice / Google Sheets / third-party writers).
 pub struct XlsxCellIter {
     src: []const u8 = "",
     pos: usize = 0,
     end: usize = 0,
     done: bool = true,
+    cur_row: u32 = 0,
+    has_row: bool = false,
+    next_col: u32 = 0,
 
     fn init(sheet_xml: []const u8): XlsxCellIter {
         let i: usize = 0;
@@ -917,6 +1154,30 @@ pub struct XlsxCellIter {
                 nend += 1;
             }
             const lname = localTagName(_.src[i + 1 .. nend]);
+            if (std.mem.eql(u8, lname, "row")) {
+                const row_attrs = _.src[nend..gt];
+                let set_explicit = false;
+                if (r_str := getAttr(row_attrs, "r")) {
+                    if (r_num := parseU32Strict(r_str)) {
+                        if (r_num >= 1 && r_num - 1 <= MAX_XLSX_ROW) {
+                            _.cur_row = r_num - 1;
+                            _.has_row = true;
+                            set_explicit = true;
+                        }
+                    }
+                }
+                if (!set_explicit) {
+                    if (!_.has_row) {
+                        _.cur_row = 0;
+                        _.has_row = true;
+                    } else if (_.cur_row < MAX_XLSX_ROW) {
+                        _.cur_row += 1;
+                    }
+                }
+                _.next_col = 0;
+                i = gt + 1;
+                continue;
+            }
             if (!std.mem.eql(u8, lname, "c")) {
                 i = gt + 1;
                 continue;
@@ -939,24 +1200,38 @@ pub struct XlsxCellIter {
                 _.pos = close_m.after_close;
             }
 
-            // Parse required cell reference `r="A1"`
-            const ref_str_opt = getAttr(attrs, "r");
-            if (ref_str_opt == null) {
-                i = _.pos;
-                continue;
-            }
-            const cell_ref_opt = parseCellRef(ref_str_opt.?);
-            if (cell_ref_opt == null) {
-                i = _.pos;
-                continue;
+            // Parse cell reference `r="A1"`, or auto-increment column when `r` is omitted.
+            let resolved_ref = XlsxCellRef {};
+            if (ref_str := getAttr(attrs, "r")) {
+                const cell_ref_opt = parseCellRef(ref_str);
+                if (cell_ref_opt == null) {
+                    i = _.pos;
+                    continue;
+                }
+                resolved_ref = cell_ref_opt.?;
+                _.cur_row = resolved_ref.row;
+                _.has_row = true;
+                _.next_col = resolved_ref.col + 1;
+            } else {
+                if (_.next_col > MAX_XLSX_COL || _.cur_row > MAX_XLSX_ROW) {
+                    i = _.pos;
+                    continue;
+                }
+                resolved_ref = XlsxCellRef { col: _.next_col, row: _.cur_row };
+                _.next_col += 1;
             }
 
             let cell = XlsxCell {
-                ref: cell_ref_opt.?,
+                ref: resolved_ref,
                 cell_type: XlsxCellType.number,
                 style_idx: 0,
                 raw_value: "",
                 formula: "",
+                error_kind: XlsxCellErrorKind.none,
+                is_shared_formula: false,
+                shared_formula_idx: 0,
+                shared_formula_ref: "",
+                inline_xml: "",
             };
 
             if (t_val := getAttr(attrs, "t")) {
@@ -996,6 +1271,20 @@ pub struct XlsxCellIter {
                 const blname = localTagName(body[bi + 1 .. bnend]);
 
                 if (std.mem.eql(u8, blname, "f")) {
+                    const f_attrs = body[bnend..bgt];
+                    if (ft := getAttr(f_attrs, "t")) {
+                        if (std.mem.eql(u8, ft, "shared")) {
+                            cell.is_shared_formula = true;
+                            if (si_s := getAttr(f_attrs, "si")) {
+                                if (si_u := parseU32Strict(si_s)) {
+                                    cell.shared_formula_idx = si_u;
+                                }
+                            }
+                            if (fref := getAttr(f_attrs, "ref")) {
+                                cell.shared_formula_ref = fref;
+                            }
+                        }
+                    }
                     if (isSelfClosing(body, bi, bgt)) {
                         bi = bgt + 1;
                     } else if (fm := findMatchingClose(body, bgt + 1, body.len, "f")) {
@@ -1010,7 +1299,10 @@ pub struct XlsxCellIter {
                     if (isSelfClosing(body, bi, bgt)) {
                         bi = bgt + 1;
                     } else if (vm := findMatchingClose(body, bgt + 1, body.len, "v")) {
-                        cell.raw_value = body[bgt + 1 .. vm.close_start];
+                        // Ignore redundant <v> on inlineStr cells (per calamine)
+                        if (cell.cell_type != XlsxCellType.inline_string) {
+                            cell.raw_value = body[bgt + 1 .. vm.close_start];
+                        }
                         bi = vm.after_close;
                     } else {
                         break;
@@ -1022,6 +1314,7 @@ pub struct XlsxCellIter {
                         bi = bgt + 1;
                     } else if (im := findMatchingClose(body, bgt + 1, body.len, "is")) {
                         const is_inner = body[bgt + 1 .. im.close_start];
+                        cell.inline_xml = is_inner;
                         cell.raw_value = extractFirstTText(is_inner);
                         bi = im.after_close;
                     } else {
@@ -1031,6 +1324,10 @@ pub struct XlsxCellIter {
                 }
 
                 bi = bgt + 1;
+            }
+
+            if (cell.cell_type == XlsxCellType.error_val) {
+                cell.error_kind = parseXlsxCellError(cell.raw_value);
             }
 
             return cell;
@@ -1405,8 +1702,36 @@ fn containsChar(s: []const u8, ch: u8): bool {
     return false;
 }
 
+/// Returns true if `num_fmt_id` is an OOXML built-in date, time, or duration format ID
+/// (`14..=22`, `27..=36`, `45..=47`, `50..=58`, matching `calamine::formats::builtin_format_by_code`).
+pub fn isBuiltinExcelDateFmt(num_fmt_id: u32): bool {
+    if (num_fmt_id >= 14 && num_fmt_id <= 22) return true;
+    if (num_fmt_id >= 27 && num_fmt_id <= 36) return true;
+    if (num_fmt_id >= 45 && num_fmt_id <= 47) return true;
+    if (num_fmt_id >= 50 && num_fmt_id <= 58) return true;
+    return false;
+}
+
 /// Classifies an OOXML `numFmtId` and optional custom `format_code` into `XlsxNumFmtKind`.
+/// Custom format analysis skips quoted `"..."` literals, `\`/`_`/`*` escaped characters,
+/// and non-elapsed `[Color]`/`[$-loc]`/`[>=N]` bracket sections before detecting date/time tokens
+/// (aligned with `calamine::formats::detect_custom_number_format`).
 pub fn classifyExcelNumFmt(num_fmt_id: u32, format_code: []const u8): XlsxNumFmtKind {
+    if (format_code.len == 0) {
+        if (num_fmt_id == 0) return XlsxNumFmtKind.general;
+        if (num_fmt_id == 1 || num_fmt_id == 3) return XlsxNumFmtKind.integer;
+        if (num_fmt_id == 2 || num_fmt_id == 4) return XlsxNumFmtKind.decimal;
+        if (num_fmt_id >= 5 && num_fmt_id <= 8) return XlsxNumFmtKind.currency;
+        if (num_fmt_id == 9 || num_fmt_id == 10) return XlsxNumFmtKind.percent;
+        if (num_fmt_id == 11) return XlsxNumFmtKind.scientific;
+        if (num_fmt_id >= 14 && num_fmt_id <= 17) return XlsxNumFmtKind.date;
+        if ((num_fmt_id >= 18 && num_fmt_id <= 21) || (num_fmt_id >= 45 && num_fmt_id <= 47)) return XlsxNumFmtKind.time;
+        if (num_fmt_id == 22 || (num_fmt_id >= 27 && num_fmt_id <= 36) || (num_fmt_id >= 50 && num_fmt_id <= 58)) return XlsxNumFmtKind.datetime;
+        if (num_fmt_id == 49) return XlsxNumFmtKind.text;
+        return XlsxNumFmtKind.custom;
+    }
+
+    // Builtin IDs (< 164) when format_code is also provided still respect standard IDs if non-custom
     if (num_fmt_id == 0) return XlsxNumFmtKind.general;
     if (num_fmt_id == 1 || num_fmt_id == 3) return XlsxNumFmtKind.integer;
     if (num_fmt_id == 2 || num_fmt_id == 4) return XlsxNumFmtKind.decimal;
@@ -1414,22 +1739,194 @@ pub fn classifyExcelNumFmt(num_fmt_id: u32, format_code: []const u8): XlsxNumFmt
     if (num_fmt_id == 9 || num_fmt_id == 10) return XlsxNumFmtKind.percent;
     if (num_fmt_id == 11) return XlsxNumFmtKind.scientific;
     if (num_fmt_id >= 14 && num_fmt_id <= 17) return XlsxNumFmtKind.date;
-    if (num_fmt_id >= 18 && num_fmt_id <= 21) return XlsxNumFmtKind.time;
-    if (num_fmt_id == 22) return XlsxNumFmtKind.datetime;
+    if ((num_fmt_id >= 18 && num_fmt_id <= 21) || (num_fmt_id >= 45 && num_fmt_id <= 47)) return XlsxNumFmtKind.time;
+    if (num_fmt_id == 22 || (num_fmt_id >= 27 && num_fmt_id <= 36) || (num_fmt_id >= 50 && num_fmt_id <= 58)) return XlsxNumFmtKind.datetime;
     if (num_fmt_id == 49) return XlsxNumFmtKind.text;
 
-    if (format_code.len > 0) {
-        const has_date: bool = containsChar(format_code, 'y') || containsChar(format_code, 'Y')
-            || containsChar(format_code, 'd') || containsChar(format_code, 'D');
-        const has_time: bool = containsChar(format_code, 'h') || containsChar(format_code, 'H')
-            || containsChar(format_code, 's') || containsChar(format_code, 'S');
-        if (has_date && has_time) return XlsxNumFmtKind.datetime;
-        if (has_date) return XlsxNumFmtKind.date;
-        if (has_time) return XlsxNumFmtKind.time;
-        if (containsChar(format_code, '%')) return XlsxNumFmtKind.percent;
-        if (containsChar(format_code, '$')) return XlsxNumFmtKind.currency;
+    // Scan first format section (stop at ';')
+    let escaped: bool = false;
+    let in_quote: bool = false;
+    let brackets: u32 = 0;
+    let prev: u8 = ' ';
+    let hms_bracket: bool = false;
+    let saw_a: bool = false;
+
+    let has_date: bool = false;
+    let has_time: bool = false;
+    let has_m: bool = false;
+    let has_percent: bool = false;
+    let has_currency: bool = false;
+
+    let i: usize = 0;
+    while (i < format_code.len) : (i += 1) {
+        const ch = format_code[i];
+        if (escaped) {
+            escaped = false;
+            prev = ch;
+            continue;
+        }
+        if (in_quote) {
+            if (ch == '"') in_quote = false;
+            prev = ch;
+            continue;
+        }
+        if (ch == '\\' || ch == '_' || ch == '*') {
+            escaped = true;
+            prev = ch;
+            continue;
+        }
+        if (ch == '"') {
+            in_quote = true;
+            prev = ch;
+            continue;
+        }
+        if (ch == ';') {
+            break;
+        }
+        if (ch == '[') {
+            brackets += 1;
+            hms_bracket = false;
+            prev = ch;
+            continue;
+        }
+        if (ch == ']') {
+            if (brackets == 1 && hms_bracket) {
+                has_time = true;
+            }
+            if (brackets > 0) brackets -= 1;
+            hms_bracket = false;
+            prev = ch;
+            continue;
+        }
+
+        if (brackets > 0) {
+            if (brackets == 1) {
+                const lower_ch: u8 = if (ch >= 'A' && ch <= 'Z') ch + 32 else ch;
+                const lower_prev: u8 = if (prev >= 'A' && prev <= 'Z') prev + 32 else prev;
+                if (hms_bracket && lower_ch == lower_prev) {
+                    // repeated [hh], [mm], [ss]
+                } else {
+                    hms_bracket = (prev == '[' && (lower_ch == 'h' || lower_ch == 'm' || lower_ch == 's'));
+                }
+            }
+            prev = ch;
+            continue;
+        }
+
+        // Outside quotes and brackets
+        if (saw_a) {
+            saw_a = false;
+            if (ch == 'p' || ch == 'P' || ch == 'm' || ch == 'M' || ch == '/') {
+                has_time = true;
+                prev = ch;
+                continue;
+            }
+        }
+        if (ch == 'a' || ch == 'A') {
+            saw_a = true;
+        } else if (ch == 'y' || ch == 'Y' || ch == 'd' || ch == 'D') {
+            has_date = true;
+        } else if (ch == 'h' || ch == 'H' || ch == 's' || ch == 'S') {
+            has_time = true;
+        } else if (ch == 'm' || ch == 'M') {
+            has_m = true;
+        } else if (ch == '%') {
+            has_percent = true;
+        } else if (ch == '$') {
+            has_currency = true;
+        }
+        prev = ch;
     }
+
+    if (has_date && has_time) return XlsxNumFmtKind.datetime;
+    if (has_date) return XlsxNumFmtKind.date;
+    if (has_time) return XlsxNumFmtKind.time;
+    if (has_m) return XlsxNumFmtKind.date;
+    if (has_percent) return XlsxNumFmtKind.percent;
+    if (has_currency) return XlsxNumFmtKind.currency;
     return XlsxNumFmtKind.custom;
+}
+
+/// Parses `<mergeCells><mergeCell ref="A1:C3"/></mergeCells>` from a worksheet XML
+/// into caller-provided `out_ranges`. Returns the number of merged regions parsed.
+pub fn parseMergedCellsXml(sheet_xml: []const u8, out_ranges: []XlsxRangeRef): usize ! XlsxError {
+    let count: usize = 0;
+    let in_merge_cells: bool = false;
+    let i: usize = 0;
+
+    while (i < sheet_xml.len) {
+        if (sheet_xml[i] != '<') {
+            const off = Simd.findByte(sheet_xml[i..], '<') ?? break;
+            i += off;
+        }
+        if (i + 1 >= sheet_xml.len) break;
+        const nb = sheet_xml[i + 1];
+        if (nb == '!' || nb == '?') {
+            const after = skipSpecialTag(sheet_xml, i) ?? break;
+            i = after;
+            continue;
+        }
+        const gt = findTagClose(sheet_xml, i) ?? break;
+        if (nb == '/') {
+            let nstart = i + 2;
+            while (nstart < gt && isXmlWs(sheet_xml[nstart])) : (nstart += 1) {}
+            let nend = nstart;
+            while (nend < gt && !isTagNameEnd(sheet_xml[nend])) : (nend += 1) {}
+            if (std.mem.eql(u8, localTagName(sheet_xml[nstart..nend]), "mergeCells")) {
+                in_merge_cells = false;
+            }
+            i = gt + 1;
+            continue;
+        }
+
+        let nend = i + 1;
+        while (nend < gt && !isTagNameEnd(sheet_xml[nend])) : (nend += 1) {}
+        const lname = localTagName(sheet_xml[(i + 1)..nend]);
+
+        if (std.mem.eql(u8, lname, "mergeCells")) {
+            in_merge_cells = !isSelfClosing(sheet_xml, i, gt);
+        } else if (in_merge_cells && std.mem.eql(u8, lname, "mergeCell")) {
+            const attrs = sheet_xml[nend..gt];
+            if (ref_str := getAttr(attrs, "ref")) {
+                if (count >= out_ranges.len) return XlsxError.SlotOverflow;
+                // Support both "A1:C3" range and single-cell "A1" degenerate mergeCell
+                let has_colon: bool = false;
+                let k: usize = 0;
+                while (k < ref_str.len) : (k += 1) {
+                    if (ref_str[k] == ':') {
+                        has_colon = true;
+                        break;
+                    }
+                }
+                if (has_colon) {
+                    const rg = parseCellRange(ref_str) catch {
+                        i = gt + 1;
+                        continue;
+                    };
+                    out_ranges[count] = rg;
+                    count += 1;
+                } else if (single := parseCellRef(ref_str)) {
+                    out_ranges[count] = XlsxRangeRef { start: single, end: single };
+                    count += 1;
+                }
+            }
+        }
+        i = gt + 1;
+    }
+
+    return count;
+}
+
+/// Resolves whether `coord` falls inside any merged cell region in `ranges`.
+/// If found, returns the master (top-left `start`) cell coordinate; otherwise returns `null`.
+pub fn findMergedCellMaster(ranges: []const XlsxRangeRef, coord: XlsxCellRef): XlsxCellRef? {
+    let i: usize = 0;
+    while (i < ranges.len) : (i += 1) {
+        if (ranges[i].contains(coord)) {
+            return ranges[i].start;
+        }
+    }
+    return null;
 }
 
 struct CustomNumFmt {
@@ -1543,6 +2040,10 @@ pub struct XlsxCellValue {
     bool_val: bool = false,
     text: []const u8 = "",
     formula: []const u8 = "",
+    error_kind: XlsxCellErrorKind = XlsxCellErrorKind.none,
+    is_shared_formula: bool = false,
+    shared_formula_idx: u32 = 0,
+    inline_xml: []const u8 = "",
 }
 
 /// Parses all cells from a worksheet XML into caller-provided `out_cells`, resolving `shared_strings`.
@@ -1560,6 +2061,10 @@ pub fn parseWorksheetCellsXml(
             cell_type: c.cell_type,
             style_idx: c.style_idx,
             formula: c.formula,
+            error_kind: c.error_kind,
+            is_shared_formula: c.is_shared_formula,
+            shared_formula_idx: c.shared_formula_idx,
+            inline_xml: c.inline_xml,
         };
         if (c.cell_type == XlsxCellType.shared_string) {
             if (idx := c.asSharedStringIdx()) {
@@ -1569,6 +2074,9 @@ pub fn parseWorksheetCellsXml(
             }
         } else if (c.cell_type == XlsxCellType.bool_val) {
             cv.bool_val = c.asBool() ?? false;
+        } else if (c.cell_type == XlsxCellType.error_val) {
+            cv.text = c.raw_value;
+            cv.error_kind = c.asErrorKind();
         } else if (c.cell_type == XlsxCellType.number || c.cell_type == XlsxCellType.unknown) {
             if (fv := c.asF64()) {
                 cv.num_val = fv;
@@ -1712,6 +2220,15 @@ pub fn buildWorksheetXml(
         } else if (c.cell_type == XlsxCellType.bool_val) {
             pos = appendBytes(out_xml, pos, " t=\"b\"><v>")?;
             pos = appendBytes(out_xml, pos, if (c.bool_val) "1" else "0")?;
+            pos = appendBytes(out_xml, pos, "</v></c>")?;
+        } else if (c.cell_type == XlsxCellType.error_val) {
+            pos = appendBytes(out_xml, pos, " t=\"e\"><v>")?;
+            const err_str = if (c.error_kind != XlsxCellErrorKind.none) formatXlsxCellError(c.error_kind) else c.text;
+            pos = appendXmlEscaped(out_xml, pos, err_str)?;
+            pos = appendBytes(out_xml, pos, "</v></c>")?;
+        } else if (c.cell_type == XlsxCellType.iso_date) {
+            pos = appendBytes(out_xml, pos, " t=\"d\"><v>")?;
+            pos = appendXmlEscaped(out_xml, pos, c.text)?;
             pos = appendBytes(out_xml, pos, "</v></c>")?;
         } else {
             pos = appendBytes(out_xml, pos, ">")?;

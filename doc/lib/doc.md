@@ -163,9 +163,13 @@ pub fn demoCsvTable() {
 - **A1/范围坐标与 Excel 1900/1904 日期序列**：
   - `encodeCellRef` / `decodeCellRef`（支持 `A..XFD`、`1..1048576` 与 `$A$1` 绝对引用剥离）、`XlsxRangeRef` / `parseCellRange`；
   - `XlsxDateTime`、`excelSerialToYmd` / `ymdToExcelSerial`（精确处理 Excel 1900 闰年兼容虫 `serial 60 == 1900-02-29`、1904 Mac 日期系统与小数 `HH:MM:SS`）。
-- **OOXML 多 Sheet / SharedStrings / Styles 解析与生成**：
-  - `parseSharedStringsXml`、`parseWorkbookSheetsXml`、`parseStylesNumFmtsXml`（自动识别内置与自定义日期/货币/百分比/数值格式 `XlsxNumFmtKind`）、`parseWorksheetCellsXml`（自动关联共享字符串表）；
-  - `buildSharedStringsXml`（自动去重 + XML 实体转义）、`buildWorkbookXml`（多工作表）与 `buildWorksheetXml`（数值/共享字符串/内联字符串/布尔/公式 `<f>`/样式 `s`）。
+- **OOXML 多 Sheet / SharedStrings / Styles / 合并单元格解析与生成（对标 `calamine` 加固）**：
+  - `XlsxSheetVisibility`（`visible` / `hidden` / `very_hidden`）、`XlsxCellErrorKind`（完整 8 种 OOXML 错误枚举：`#DIV/0!`, `#N/A`, `#NAME?`, `#NULL!`, `#NUM!`, `#REF!`, `#VALUE!`, `#GETTING_DATA` 及 `parseXlsxCellError` / `formatXlsxCellError`）；
+  - `decodeExcelEscapes`（零堆解码 Excel `_xHHHH_` UTF-16 十六进制转义、`_x005F_` 防二次转义与 UTF-16 代理对）、`extractInlineString`（支持 `<is><t>` 与 `<is><r><t>` 富文本及 `xml:space="preserve"` 空白保留）；
+  - `XlsxCellIter` 自动支持缺失 `<row r="...">` 自动行递增与缺失 `<c r="...">` 自动列递增（LibreOffice/Google Sheets 常见输出）、共享公式 `<f t="shared" si="..." ref="..."/>` 元数据与 `t="d"` ISO-8601 日期单元格；
+  - `parseMergedCellsXml` / `findMergedCellMaster`（`<mergeCells><mergeCell ref="A1:C3"/></mergeCells>` 解析与主格查询）；
+  - `isBuiltinExcelDateFmt` 与加固版 `classifyExcelNumFmt`（跳过 `"..."` 引号字面量、`\`/`_`/`*` 转义符与 `[Color]`/`[$-loc]` 方括号后再识别日期/时间与 `[h]`/`[m]`/`[s]` 耗时格式）；
+  - `parseSharedStringsXml`、`parseWorkbookSheetsXml`、`parseStylesNumFmtsXml`、`parseWorksheetCellsXml`、`buildSharedStringsXml`、`buildWorkbookXml`、`buildWorksheetXml`。
 - **零堆表格公式求值器 (`evalXlsxFormula`)**：
   - 支持 `+ - * /` 括号优先级、单元格引用（`$A$1`）、范围聚合（`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT`）、条件分支（`IF` 含 `= <> < <= > >=`）、`ABS`/`ROUND`，内置除零（`DivisionByZero`）、无效引用（`InvalidReference`）与循环引用（`CycleDetected`）防护。
 
