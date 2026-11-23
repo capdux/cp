@@ -256,6 +256,7 @@ impl<'a> Parser<'a> {
                         end_idx = s.end;
                     }
                     let raw_code = self.input[start_idx..end_idx].to_string();
+                    self.validate_anon_container_expr(&raw_code, start_idx);
                     return Ok(Expr::Zig(ZigEscapeExpr {
                         span: Span {
                             start: start_idx,
@@ -372,6 +373,7 @@ impl<'a> Parser<'a> {
                     end_idx = s.end;
                 }
                 let raw_code = self.input[start_idx..end_idx].to_string();
+                self.validate_anon_container_expr(&raw_code, start_idx);
                 Ok(Expr::Zig(ZigEscapeExpr {
                     span: Span {
                         start: start_idx,
@@ -426,6 +428,7 @@ impl<'a> Parser<'a> {
                     end_idx = s.end;
                 }
                 let raw_code = self.input[start_idx..end_idx].to_string();
+                self.validate_anon_container_expr(&raw_code, start_idx);
                 Ok(Expr::Zig(ZigEscapeExpr {
                     span: Span {
                         start: start_idx,
@@ -515,6 +518,7 @@ impl<'a> Parser<'a> {
                         end_idx = s.end;
                     }
                     let raw_code = self.input[start_idx..end_idx].to_string();
+                    self.validate_anon_container_expr(&raw_code, start_idx);
                     return Ok(Expr::Zig(ZigEscapeExpr {
                         span: Span {
                             start: start_idx,
@@ -802,6 +806,7 @@ impl<'a> Parser<'a> {
                         end_idx = s.end;
                     }
                     let raw_code = self.input[start_idx..end_idx].to_string();
+                    self.validate_anon_container_expr(&raw_code, start_idx);
                     return Ok(Expr::Zig(ZigEscapeExpr {
                         span: Span {
                             start: start_idx,
@@ -1124,6 +1129,9 @@ impl<'a> Parser<'a> {
                     let target_ty = self.parse_type()?;
                     self.expect(Token::Comma)?;
                     let expr = self.parse_expr()?;
+                    if self.peek() == Some(&Token::Comma) {
+                        self.bump()?;
+                    }
                     let end = self.expect(Token::RParen)?.end;
                     return Ok(Expr::Cast {
                         span: Span {

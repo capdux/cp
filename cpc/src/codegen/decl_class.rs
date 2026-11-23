@@ -54,7 +54,10 @@ impl Codegen {
             &rest[brace_idx..]
         );
         let mut parser = crate::parser::Parser::new(&wrapped);
-        let (module, _) = parser.parse_module_with_recovery();
+        let (module, diags) = parser.parse_module_with_recovery();
+        if !diags.is_empty() {
+            return None;
+        }
         if let Some(ModuleItem::Decl(Decl::Class(cls))) = module.body.into_iter().next() {
             return Some(cls);
         }
@@ -91,7 +94,10 @@ impl Codegen {
             &rest[brace_idx..]
         );
         let mut parser = crate::parser::Parser::new(&wrapped);
-        let (module, _) = parser.parse_module_with_recovery();
+        let (module, diags) = parser.parse_module_with_recovery();
+        if !diags.is_empty() {
+            return None;
+        }
         if let Some(ModuleItem::Decl(Decl::Enum(e))) = module.body.into_iter().next() {
             return Some((e, is_extern));
         }

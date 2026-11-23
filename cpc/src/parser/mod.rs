@@ -419,6 +419,118 @@ impl<'a> Parser<'a> {
         Ok(module)
     }
 
+    pub(super) fn validate_anon_container_expr(&mut self, raw_code: &str, base_offset: usize) {
+        let trimmed = raw_code.trim();
+        let (layout_prefix, rest) = if let Some(r) = trimmed.strip_prefix("packed") {
+            if r.starts_with(char::is_whitespace) {
+                ("@packed ", r.trim_start())
+            } else {
+                ("", trimmed)
+            }
+        } else if let Some(r) = trimmed.strip_prefix("extern") {
+            if r.starts_with(char::is_whitespace) {
+                ("@c ", r.trim_start())
+            } else {
+                ("", trimmed)
+            }
+        } else {
+            ("", trimmed)
+        };
+
+        let is_struct_or_union = (rest.starts_with("struct")
+            && rest.as_bytes().get("struct".len()).map_or(false, |b| {
+                b.is_ascii_whitespace() || *b == b'{' || *b == b'('
+            }))
+            || (rest.starts_with("union")
+                && rest.as_bytes().get("union".len()).map_or(false, |b| {
+                    b.is_ascii_whitespace() || *b == b'{' || *b == b'('
+                }));
+
+        let is_enum = !is_struct_or_union
+            && rest.starts_with("enum")
+            && rest.as_bytes().get("enum".len()).map_or(false, |b| {
+                b.is_ascii_whitespace() || *b == b'{' || *b == b'('
+            });
+
+        if !is_struct_or_union && !is_enum {
+            return;
+        }
+
+        let Some(brace_idx) = rest.find('{') else {
+            return;
+        };
+
+        let wrapped = if is_struct_or_union {
+            format!(
+                "{}{} __CpAnonStruct__ {}",
+                layout_prefix,
+                rest[..brace_idx].trim_end(),
+                &rest[brace_idx..]
+            )
+        } else {
+            let header_after_enum = rest["enum".len()..brace_idx].trim();
+            format!(
+                "enum __CpAnonEnum__{} {}",
+                if header_after_enum.is_empty() {
+                    String::new()
+                } else {
+                    format!(" {}", header_after_enum)
+                },
+                &rest[brace_idx..]
+            )
+        };
+
+        let body_len = rest[brace_idx..].len();
+        let wrapped_brace_offset = wrapped.len() - body_len;
+        let rest_offset_in_raw = rest.as_ptr() as usize - raw_code.as_ptr() as usize;
+        let orig_brace_offset = base_offset + rest_offset_in_raw + brace_idx;
+        let input_len = self.input.len();
+
+        let mut sub_parser = Parser::new(&wrapped);
+        let (_module, diags) = sub_parser.parse_module_with_recovery();
+        for mut diag in diags {
+            if let Some(sp) = diag.span {
+                if sp.start >= wrapped_brace_offset {
+                    let mapped_start =
+                        (orig_brace_offset + (sp.start - wrapped_brace_offset)).min(input_len);
+                    let mapped_end = (orig_brace_offset
+                        + sp.end.saturating_sub(wrapped_brace_offset))
+                    .max(mapped_start)
+                    .min(input_len);
+                    diag.span = Some(Span {
+                        start: mapped_start,
+                        end: mapped_end,
+                    });
+                } else {
+                    let mapped_start = base_offset.min(input_len);
+                    let mapped_end = (base_offset + raw_code.len())
+                        .max(mapped_start)
+                        .min(input_len);
+                    diag.span = Some(Span {
+                        start: mapped_start,
+                        end: mapped_end,
+                    });
+                }
+            } else {
+                let mapped_start = base_offset.min(input_len);
+                let mapped_end = (base_offset + raw_code.len())
+                    .max(mapped_start)
+                    .min(input_len);
+                diag.span = Some(Span {
+                    start: mapped_start,
+                    end: mapped_end,
+                });
+            }
+            if diag.help.is_none() {
+                diag.help = Some(
+                    "fix the syntax error inside this anonymous struct/union/enum expression."
+                        .to_string(),
+                );
+            }
+            self.push_error(diag);
+        }
+    }
+
     pub(super) fn clone_lookahead(&self) -> Parser<'a> {
         Parser {
             lexer: self.lexer.clone(),

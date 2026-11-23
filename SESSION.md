@@ -3046,3 +3046,116 @@
   > 主智能体不要闲着,做些短平快的工作!
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（下游工单全量补录：`task-bun-20261123-return-struct-silent-drop`）[ticket:task-bun-20261123-return-struct-silent-drop]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-23 19:58:24` | 状态：`resolved` | 结单：`2026-11-23T22:40:36`
+- **报错/需求摘要**：严重 codegen 安全隐患：在 return struct 泛型工厂方法内若某条语句存在解析失败（如多行 @as(u16, @truncate(c),) 尾逗号），cpc --lib 仍返回 exit 0 且静默丢弃整条语句生成空函数体（导致 bun src/js_parser/lexer.cp decodeJSXEntities 丢失全部 >0xFFFF UTF-16 代理对输出）
+- **结单与处理汇报**：已双重根治并发布 Release 版 cpc：(1) cpc/src/parser/{mod,primary}.rs 新增 validate_anon_container_expr 严格校验 return struct/union/enum 匿名容器内部语法并将 Span 精确映射回原源码，且 cpc/src/codegen/decl_class.rs 双保险禁止吞掉 diags 返回残缺 AST，彻底杜绝静默丢弃语句并返回 exit 0；(2) cpc/src/parser/primary.rs 支持 @as(...) 可选尾逗号。已通过正向 repro + zig ast-check、负向非法语法 NEG_EXIT=1 三段式诊断及 cap/test/testHotfixReturnStructSilentDrop.cp 回归验收。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 19:58:25）[step:21213]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:08:25）[step:21216]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:18:25）[step:21219]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:28:26）[step:21222]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:38:27）[step:21225]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:48:27）[step:21228]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 20:58:27）[step:21231]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:08:27）[step:21234]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:18:28）[step:21237]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:28:29）[step:21240]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:38:30）[step:21243]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:48:30）[step:21246]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 21:58:30）[step:21249]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 22:08:31）[step:21252]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 22:15:07）[step:21255]
+- **用户完整原始指令**：
+  > 配额已恢复, 重开2个子智能体, 重新分发未完成的任务给子智能体，确保底部状态栏出现真实运行状态(子智能体)。本阶段工作完成，更新文档，自动git提交到代码库后，根据项目目标，自主推导下一阶段工作，持续工作，不要停。继续你的工作。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 22:18:31）[step:21258]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 22:28:32）[step:21261]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261123-return-struct-silent-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 配额恢复后已第一时间清理停滞实例，并按三通道完全隔离架构并行启动 **1 路紧急编译器热修 + 2 路 Wave 33 标准库标杆加固**（底部状态栏已显示实时运行状态）：
+  >
+  > 1. **紧急编译器热修 (`86fb6373`, 最高优先级)**：正在攻克下游 `bun_agy` 工单 **`task-bun-20261123-return-struct-silent-drop`**（[repro_as_trailing_comma_drop.cp](file:///data/dev/cp/temp/repro_as_trailing_comma_drop.cp)），同时根治两项根因：① `return struct` 泛型工厂方法内解析失败时严禁静默丢弃语句并返回 `exit 0`；② 内建调用（如 `@as(u16, @truncate(c),)`）多行尾逗号支持。验证并 `sync_cpc.sh release` 部署后将第一时间 `resolve` 结单。
+  > 2. **Wave 33 Lane 1 (`24f4c5c8`, `W33 R4`)**：断点续接 [picohttp.cp](file:///data/dev/cp/lib/web/picohttp.cp) 对标 `seanmonstar/httparse`（MIT/Apache-2.0）加固与 [testWebHttp1RustRefSuite.cp](file:///data/dev/cp/cap/test/testWebHttp1RustRefSuite.cp) 验收。
+  > 3. **Wave 33 Lane 2 (`a4d35b69`, `W33 R3`)**：断点续接 [ipaddr.cp](file:///data/dev/cp/lib/net/ipaddr.cp) 对标 `krisprice/ipnet`（MIT/Apache-2.0）加固与 [testNetIpaddrRustRefSuite.cp](file:///data/dev/cp/cap/test/testNetIpaddrRustRefSuite.cp) 验收。
+  >
+  > 任一路完工将自动唤醒验收、更新文档、自动提交并持续推进后续阶段。
