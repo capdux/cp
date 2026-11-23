@@ -5,6 +5,7 @@
 const std = @import("std");
 import { PdfError } from "./pdfWriter.cp";
 import { inflate } from "cap:pack";
+import { Simd } from "../simd/index.cp";
 
 // ============================================================================
 // 1. Legacy Backward-Compatible Structural Inspector (`PdfInfo` & `PdfInspector`)
@@ -41,8 +42,14 @@ fn hexNibble(c: u8): u8? {
 }
 
 fn skipWhitespace(bytes: []const u8, pos: *usize) {
-    while (pos.* < bytes.len && isPdfWhitespace(bytes[pos.*])) {
-        pos.* += 1;
+    while (pos.* < bytes.len) {
+        const adv: usize = Simd.skipWhitespace(bytes[pos.*..]);
+        pos.* += adv;
+        if (pos.* < bytes.len && (bytes[pos.*] == 0 || bytes[pos.*] == 0x0C)) {
+            pos.* += 1;
+        } else {
+            break;
+        }
     }
 }
 
@@ -62,24 +69,33 @@ fn matchStreamKeyword(bytes: []const u8, pos: usize): usize? {
     return null;
 }
 
-/// Finds the end of a `stream ... endstream` section starting after `stream\n`.
+/// Finds the end of a `stream ... endstream` section starting after `stream\n` using 32-byte SIMD scan.
 fn skipStreamPayload(bytes: []const u8, body_start: usize): usize {
-    const end_idx = std.mem.indexOfPos(u8, bytes, body_start, "endstream") ?? return bytes.len;
-    return end_idx + 9;
+    let p: usize = body_start;
+    while (p + 9 <= bytes.len) {
+        const rel: usize = Simd.indexOfByte(bytes[p..bytes.len], 'e') ?? return bytes.len;
+        p += rel;
+        if (p + 9 > bytes.len) return bytes.len;
+        if (std.mem.eql(u8, bytes[p..p + 9], "endstream")) {
+            return p + 9;
+        }
+        p += 1;
+    }
+    return bytes.len;
 }
 
 /// Parses a PDF literal string `(...)` starting at `open_idx` (where `bytes[open_idx] == '('`).
-/// Respects nested parentheses and `\` escape sequences, returning the inner raw slice.
+/// Uses 16-byte SIMD scan for `\`, `(`, `)` to skip plain runs at hardware speed.
 fn parseLiteralStringSlice(bytes: []const u8, open_idx: usize): ([]const u8)? {
     if (open_idx >= bytes.len || bytes[open_idx] != '(') return null;
     let depth: usize = 1;
     let i: usize = open_idx + 1;
-    while (i < bytes.len) : (i += 1) {
+    while (i < bytes.len) {
+        const rel: usize = Simd.indexOfAny4(bytes[i..bytes.len], '\\', '(', ')', ')') ?? return null;
+        i += rel;
         const c = bytes[i];
         if (c == '\\') {
-            if (i + 1 < bytes.len) {
-                i += 1;
-            }
+            i += if (i + 1 < bytes.len) 2 else 1;
             continue;
         }
         if (c == '(') {
@@ -90,6 +106,7 @@ fn parseLiteralStringSlice(bytes: []const u8, open_idx: usize): ([]const u8)? {
                 return bytes[open_idx + 1 .. i];
             }
         }
+        i += 1;
     }
     return null;
 }
@@ -316,15 +333,20 @@ pub struct PdfLexer {
         return PdfLexer{ bytes: bytes, pos: p };
     }
 
-    /// Skips PDF whitespace and `% ... \r?\n` comments.
+    /// Skips PDF whitespace and `% ... \r?\n` comments using 16-byte SIMD vector scanners.
     fn skipWsAndComments(*_) {
         while (pos < bytes.len) {
-            if (isPdfWhitespace(bytes[pos])) {
+            const adv: usize = Simd.skipWhitespace(bytes[pos..bytes.len]);
+            pos += adv;
+            if (pos >= bytes.len) break;
+            if (bytes[pos] == 0 || bytes[pos] == 0x0C) {
                 pos += 1;
             } else if (bytes[pos] == '%') {
                 pos += 1;
-                while (pos < bytes.len && bytes[pos] != '\n' && bytes[pos] != '\r') {
-                    pos += 1;
+                if (rel := Simd.indexOfAny2(bytes[pos..bytes.len], '\n', '\r')) {
+                    pos += rel;
+                } else {
+                    pos = bytes.len;
                 }
             } else {
                 break;
@@ -349,10 +371,11 @@ pub struct PdfLexer {
                 return PdfToken{ kind: PdfTokenKind.dict_start, start: start, end: pos };
             }
             pos += 1;
-            while (pos < bytes.len && bytes[pos] != '>') {
-                pos += 1;
+            if (rel := Simd.indexOfByte(bytes[pos..bytes.len], '>')) {
+                pos += rel + 1;
+            } else {
+                pos = bytes.len;
             }
-            if (pos < bytes.len) pos += 1;
             return PdfToken{ kind: PdfTokenKind.hex_string, start: start, end: pos };
         }
         if (c == '>') {
@@ -372,23 +395,28 @@ pub struct PdfLexer {
             return PdfToken{ kind: PdfTokenKind.array_end, start: start, end: pos };
         }
 
-        // Literal string `(...)` with balanced parentheses and backslash escapes
+        // Literal string `(...)` with balanced parentheses and backslash escapes (SIMD accelerated)
         if (c == '(') {
             let depth: usize = 1;
             pos += 1;
             while (pos < bytes.len && depth > 0) {
-                const ch = bytes[pos];
-                if (ch == '\\') {
+                if (rel := Simd.indexOfAny4(bytes[pos..bytes.len], '\\', '(', ')', ')')) {
+                    pos += rel;
+                    const ch = bytes[pos];
+                    if (ch == '\\') {
+                        pos += if (pos + 1 < bytes.len) 2 else 1;
+                        continue;
+                    }
+                    if (ch == '(') {
+                        depth += 1;
+                    } else if (ch == ')') {
+                        depth -= 1;
+                    }
                     pos += 1;
-                    if (pos < bytes.len) pos += 1;
-                    continue;
+                } else {
+                    pos = bytes.len;
+                    break;
                 }
-                if (ch == '(') {
-                    depth += 1;
-                } else if (ch == ')') {
-                    depth -= 1;
-                }
-                pos += 1;
             }
             return PdfToken{ kind: PdfTokenKind.literal_string, start: start, end: pos };
         }

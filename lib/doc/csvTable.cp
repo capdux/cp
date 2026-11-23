@@ -10,6 +10,8 @@
 //     and O(N log N) iterative stable merge sort (`sortCsvRowsByColumn`: numeric or lexicographic asc/desc)
 //   - Bidirectional RFC 4180 CSV <-> RFC 8259 JSONL (NDJSON) zero-heap converter (`csvToJsonl` / `jsonlToCsv`)
 
+import { Simd } from "../simd/index.cp";
+
 // ============================================================================
 // 1. Error Set & String/Byte Helpers
 // ============================================================================
@@ -231,7 +233,11 @@ pub struct CsvTableReader {
         const cchar = _.opts.comment_char;
         if (cchar != 0) {
             while (_.pos < n && _.data[_.pos] == cchar) {
-                while (_.pos < n && _.data[_.pos] != '\n' && _.data[_.pos] != '\r') : (_.pos += 1) {}
+                if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r')) {
+                    _.pos += rel;
+                } else {
+                    _.pos = n;
+                }
                 if (_.pos < n && _.data[_.pos] == '\r') _.pos += 1;
                 if (_.pos < n && _.data[_.pos] == '\n') _.pos += 1;
             }
@@ -262,7 +268,8 @@ pub struct CsvTableReader {
                 let content_end = _.pos;
 
                 while (_.pos < n) {
-                    if (_.data[_.pos] == qchar) {
+                    if (rel := Simd.indexOfByte(_.data[_.pos..n], qchar)) {
+                        _.pos += rel;
                         if (_.pos + 1 < n && _.data[_.pos + 1] == qchar) {
                             _.pos += 2;
                             continue;
@@ -271,8 +278,10 @@ pub struct CsvTableReader {
                         _.pos += 1;
                         closed = true;
                         break;
+                    } else {
+                        _.pos = n;
+                        break;
                     }
-                    _.pos += 1;
                 }
 
                 if (!closed) {
@@ -286,14 +295,22 @@ pub struct CsvTableReader {
                 while (_.pos < n && _.data[_.pos] == ' ' && delim != ' ') : (_.pos += 1) {}
                 if (_.pos < n && _.data[_.pos] != delim && _.data[_.pos] != '\r' && _.data[_.pos] != '\n') {
                     cur.malformed = true;
-                    while (_.pos < n && _.data[_.pos] != '\n' && _.data[_.pos] != '\r') : (_.pos += 1) {}
+                    if (rel := Simd.indexOfAny2(_.data[_.pos..n], '\n', '\r')) {
+                        _.pos += rel;
+                    } else {
+                        _.pos = n;
+                    }
                     if (_.pos < n && _.data[_.pos] == '\r') _.pos += 1;
                     if (_.pos < n && _.data[_.pos] == '\n') _.pos += 1;
                     return cur;
                 }
             } else {
                 const start = _.pos;
-                while (_.pos < n && _.data[_.pos] != delim && _.data[_.pos] != '\r' && _.data[_.pos] != '\n') : (_.pos += 1) {}
+                if (rel := Simd.indexOfAny4(_.data[_.pos..n], delim, '\r', '\n', '\n')) {
+                    _.pos += rel;
+                } else {
+                    _.pos = n;
+                }
                 field_slice = _.data[start.._.pos] as string;
                 if (_.opts.trim_whitespace) {
                     field_slice = trimFieldWs(field_slice, delim);
@@ -476,14 +493,7 @@ pub fn parseCsvBool(field: string): bool? {
 }
 
 fn fieldNeedsQuoting(f: string, delimiter: u8): bool {
-    let i: usize = 0;
-    while (i < f.len) : (i += 1) {
-        const b = f[i];
-        if (b == delimiter || b == '"' || b == '\n' || b == '\r') {
-            return true;
-        }
-    }
-    return false;
+    return Simd.indexOfAny4(f, delimiter, '"', '\n', '\r') != null;
 }
 
 /// Encodes `fields` as a single RFC 4180 CSV/TSV row (without trailing newline) into `out_buf`.
@@ -593,26 +603,14 @@ pub fn sniffCsvDialect(data: string, max_sample_lines: usize): CsvDialectInfo {
     }
     if (start >= data.len) return info;
 
-    // Detect CRLF vs LF and quote character frequency
-    let crlf_cnt: usize = 0;
-    let lf_cnt: usize = 0;
-    let dquote_cnt: usize = 0;
-    let squote_cnt: usize = 0;
-    let scan_lim: usize = if (data.len - start > 4096) (start + 4096) else data.len;
-    let p: usize = start;
-    while (p < scan_lim) : (p += 1) {
-        const b = data[p];
-        if (b == '\r' && p + 1 < scan_lim && data[p + 1] == '\n') {
-            crlf_cnt += 1;
-        } else if (b == '\n') {
-            lf_cnt += 1;
-        } else if (b == '"') {
-            dquote_cnt += 1;
-        } else if (b == '\'') {
-            squote_cnt += 1;
-        }
-    }
-    if (crlf_cnt > 0 && crlf_cnt * 2 >= lf_cnt) {
+    // Detect CRLF vs LF and quote character frequency using SIMD @popCount byte counting
+    const scan_lim: usize = if (data.len - start > 4096) (start + 4096) else data.len;
+    const sample_slice: []const u8 = data[start..scan_lim];
+    const cr_cnt: usize = Simd.countByte(sample_slice, '\r');
+    const lf_cnt: usize = Simd.countByte(sample_slice, '\n');
+    const dquote_cnt: usize = Simd.countByte(sample_slice, '"');
+    const squote_cnt: usize = Simd.countByte(sample_slice, '\'');
+    if (cr_cnt > 0 && cr_cnt * 2 >= lf_cnt) {
         info.line_ending = CsvLineEnding.crlf;
     }
     if (squote_cnt >= 2 && squote_cnt > dquote_cnt) {

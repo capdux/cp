@@ -12,6 +12,7 @@
 //   - IEEE CRC32-verified binary snapshot (`serializeSnapshot` / `deserializeSnapshot`)
 
 const std = @import("std");
+import { Simd } from "../simd/index.cp";
 
 // ============================================================================
 // 1. Constants, Error Set, Configuration & Data Models
@@ -558,25 +559,22 @@ pub fn porterLiteStemInPlace(buf: *[]u8, in_len: usize): usize {
     return len;
 }
 
-/// Normalizes a single ASCII/UTF-8 query term into `out_buf`, returning normalized byte length.
+/// Normalizes a single ASCII/UTF-8 query term into `out_buf` using SIMD `toLowerAscii`,
+/// returning normalized byte length.
 pub fn normalizeSingleTerm(
     raw: []const u8,
     enable_stemming: bool,
     out_buf: *[]u8,
 ): usize {
-    let n: usize = 0;
-    let i: usize = 0;
-    while (i < raw.len && n < out_buf.len) : (i += 1) {
-        out_buf[n] = foldAsciiLower(raw[i]);
-        n += 1;
-    }
+    let n: usize = Simd.toLowerAscii(raw, out_buf.*);
     if (enable_stemming && n > 2) {
         n = porterLiteStemInPlace(out_buf, n);
     }
     return n;
 }
 
-/// Tokenizes `text` into caller-provided `out_spans` slice with ASCII folding, Unicode punctuation
+/// Tokenizes `text` into caller-provided `out_spans` slice with SIMD ASCII fast-path
+/// (`Simd.firstNonAscii` + `Simd.toLowerAscii` + `Simd.skipWhitespace`), Unicode punctuation
 /// splitting, optional CJK unigram + 2-gram segmentation, stopword filtering, and Porter-lite stemming.
 /// Returns the number of tokens written to `out_spans`.
 pub fn tokenizeText(
@@ -586,6 +584,7 @@ pub fn tokenizeText(
     enable_cjk_bigrams: bool,
     out_spans: *[]FtTokenSpan,
 ): usize {
+    const pure_ascii: bool = Simd.firstNonAscii(text) == null;
     let out_count: usize = 0;
     let pos: u32 = 0;
     let i: usize = 0;
@@ -595,6 +594,57 @@ pub fn tokenizeText(
     let has_prev_cjk: bool = false;
 
     while (i < text.len && out_count < out_spans.len) {
+        const ws_adv: usize = Simd.skipWhitespace(text[i..text.len]);
+        if (ws_adv > 0) {
+            has_prev_cjk = false;
+            i += ws_adv;
+            if (i >= text.len) break;
+        }
+
+        if (pure_ascii) {
+            const b0: u8 = text[i];
+            if (!((b0 >= 'a' && b0 <= 'z') || (b0 >= 'A' && b0 <= 'Z') || (b0 >= '0' && b0 <= '9'))) {
+                i += 1;
+                continue;
+            }
+            const word_start: usize = i;
+            while (i < text.len) : (i += 1) {
+                const c: u8 = text[i];
+                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) {
+                    break;
+                }
+            }
+            const word_end: usize = i;
+            let norm_arr: [FT_MAX_TOKEN_BYTES]u8 = [0; FT_MAX_TOKEN_BYTES];
+            let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
+            let norm_len: usize = Simd.toLowerAscii(text[word_start..word_end], norm_slice);
+            if (norm_len == 0) continue;
+            if (enable_stopwords && isEnglishStopword(norm_arr[0..norm_len])) {
+                pos += 1;
+                continue;
+            }
+            if (enable_stemming && norm_len > 2) {
+                norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+            }
+            if (norm_len > 0 && out_count < out_spans.len) {
+                let sp: FtTokenSpan = FtTokenSpan{
+                    byte_start: word_start,
+                    byte_end: word_end,
+                    position: pos,
+                    is_bigram: false,
+                    norm_len: @as(u8, @intCast(norm_len)),
+                };
+                let k: usize = 0;
+                while (k < norm_len) : (k += 1) {
+                    sp.norm_buf[k] = norm_arr[k];
+                }
+                out_spans[out_count] = sp;
+                out_count += 1;
+            }
+            pos += 1;
+            continue;
+        }
+
         const u8dec: Utf8Decoded = decodeUtf8At(text, i);
         if (u8dec.len == 0) break;
 
@@ -1050,7 +1100,8 @@ pub struct FullTextIndex {
             return FullTextError.BufferTooSmall;
         }
 
-        // Stream tokens directly into scratch.term_ids / scratch.token_positions
+        // Stream tokens directly into scratch.term_ids / scratch.token_positions (with SIMD ASCII fast-path)
+        const pure_ascii: bool = Simd.firstNonAscii(text) == null;
         let tok_count: usize = 0;
         let logical_tokens: u32 = 0;
         let pos: u32 = 0;
@@ -1061,6 +1112,50 @@ pub struct FullTextIndex {
         let has_prev_cjk: bool = false;
 
         while (i < text.len) {
+            const ws_adv: usize = Simd.skipWhitespace(text[i..text.len]);
+            if (ws_adv > 0) {
+                has_prev_cjk = false;
+                i += ws_adv;
+                if (i >= text.len) break;
+            }
+
+            if (pure_ascii) {
+                const b0: u8 = text[i];
+                if (!((b0 >= 'a' && b0 <= 'z') || (b0 >= 'A' && b0 <= 'Z') || (b0 >= '0' && b0 <= '9'))) {
+                    i += 1;
+                    continue;
+                }
+                const word_start: usize = i;
+                while (i < text.len) : (i += 1) {
+                    const c: u8 = text[i];
+                    if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) {
+                        break;
+                    }
+                }
+                const word_end: usize = i;
+                let norm_arr: [FT_MAX_TOKEN_BYTES]u8 = [0; FT_MAX_TOKEN_BYTES];
+                let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
+                let norm_len: usize = Simd.toLowerAscii(text[word_start..word_end], norm_slice);
+                if (norm_len == 0) continue;
+                if (_.cfg.enable_stopwords && isEnglishStopword(norm_arr[0..norm_len])) {
+                    pos += 1;
+                    continue;
+                }
+                if (_.cfg.enable_stemming && norm_len > 2) {
+                    norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+                }
+                if (norm_len > 0) {
+                    if (tok_count >= scratch.term_ids.len) return FullTextError.BufferTooSmall;
+                    const tid: u32 = try _.internTerm(norm_arr[0..norm_len]);
+                    scratch.term_ids[tok_count] = tid;
+                    scratch.token_positions[tok_count] = pos;
+                    tok_count += 1;
+                    logical_tokens += 1;
+                }
+                pos += 1;
+                continue;
+            }
+
             const u8dec: Utf8Decoded = decodeUtf8At(text, i);
             if (u8dec.len == 0) break;
 
@@ -2391,8 +2486,9 @@ fn evalPrimaryExpr(
     const c: u8 = parser.src[parser.pos];
     if (c == ')') return false;
 
-    // Parenthesized sub-expression
+    // Parenthesized sub-expression (bounded depth prevents stack exhaustion on adversarial queries)
     if (c == '(') {
+        if (parser.depth >= 32) return FullTextError.InvalidQuery;
         parser.pos += 1;
         parser.depth += 1;
         const ok: bool = try evalOrExpr(idx, parser, scores, out_mask, matched_cnt, aux_buf);
