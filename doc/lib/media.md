@@ -611,7 +611,8 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
 - **容器与扩展头**：
   - `WavSampleFormat`（`u8_pcm` / `s16_le` / `s24_le` / `s32_le` / `f32_le` / `mulaw` / `alaw` / `ima_adpcm`）、`WAV_FORMAT_*`、`WAV_CHANNEL_MASK_*`、`parseWavSubFormatGuid`；
   - `WavChunkIter` / `parseWavContainer`：零拷贝解析标准 `RIFF/WAVE`、`WAVE_FORMAT_EXTENSIBLE`（`0xFFFE` + 16 字节 `SubFormat` GUID）、EBU Tech 3306 `RF64` + `ds64` 64-bit 长度（>4GB）、`fact`、`LIST/INFO`（INAM/IART/IALB/ICRD/ICMT/ISFT）、`cue ` 与 `smpl`；
-  - `encodeRf64Header` 与流式 `WavStreamWriter`（`init` -> `writePcm16`/`writeF32`/`writeRawBytes` -> `finalize`/`finalizeWithCues` 自动回填 `RIFF`/`data`/`fact` 长度）。
+  - **`ruuda/hound` 对标边界加固**：严格校验 `fmt ` 长度/`cbSize`/`block_align`/`byte_rate`/`valid_bits_per_sample`（含 `0` 回退与非 8 倍数如 20-bit 解码）、奇数 chunk 1 字节填充跳过、未知 chunk 跳过、24-bit 3 字节与 4 字节容器打包（`readWavSampleI24From3`/`readWavSampleI24From4`）、`defaultWavChannelMask`、`encodeWavInfiniteHeader`、双射 `wavU8ToSignedI8`/`wavSignedI8ToU8`、范围窄化 `narrowSampleToI8`/`I16`/`I24` 与类型安全解码器 `decodeWavSamplesI32`/`I16`/`F32`；
+  - `encodeRf64Header` 与流式 `WavStreamWriter`（`init` 含 `auto_extensible`/`container_bytes_per_sample` -> `writeI8`/`writePcm16`/`writeI24`/`writeI32`/`writeF32`/`writeRawBytes` -> `flushHeader`/`finalize`/`finalizeWithCues` 自动回填 `RIFF`/`data`/`fact` 长度）。
 - **全位深转换与任意声道混音**：
   - `u8ToF32Slice`/`f32ToU8Slice`、`s16LeToF32Slice`/`f32ToS16LeSlice`（含可选 TPDF 抖动）、`s24LeToF32Slice`/`f32ToS24LeSlice`（3 字节紧缩读写）、`s32LeToF32Slice`/`f32ToS32LeSlice`、`f32LeBytesToF32Slice`/`f32SliceToF32LeBytes`；
   - `stereoToMonoF32`、`monoToStereoF32`、`interleaveChannelsF32`、`deinterleaveChannelsF32`（任意声道数，无上限）。

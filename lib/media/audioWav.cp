@@ -1,8 +1,13 @@
 // Source: cp/lib/audio/wav.cp (RIFF/WAVE, RF64, WAVEFORMATEXTENSIBLE, PCM/Float/G.711/IMA-ADPCM Streaming Codec)
+// Reference-hardened against ruuda/hound (Apache-2.0)
 // 100% pure CP multimedia audio container & sample codec:
 //   - 100% backwards-compatible legacy `AudioError`, `WavAudio`, `WavFloatAudio`, `WavCodec`
 //   - Zero-heap external-slice RIFF/WAVE, `WAVE_FORMAT_EXTENSIBLE` (0xFFFE + SubFormat GUIDs),
 //     EBU Tech 3306 `RF64` + `ds64` 64-bit header/parser, `fact`, `LIST/INFO`, `cue `, and `smpl` chunks
+//   - Hound parity hardening: strict fmt/cbSize/block_align/byte_rate/valid_bits validation, odd-chunk pad skipping,
+//     24-bit in 3-byte & 4-byte containers, non-multiple-of-8 valid_bits (e.g. 20-bit) decoding,
+//     auto `WAVE_FORMAT_EXTENSIBLE` switching, `defaultWavChannelMask`, `encodeWavInfiniteHeader`,
+//     bijective U8<->I8, narrowing range guards, and streaming `writeI8`/`writeI24`/`writeI32`/`flushHeader`
 //   - Streaming `WavStreamWriter` with multi-chunk PCM/Float writes and `finalize()` header patching
 //   - Full bit-depth lossless/clamped conversions (U8 / S16LE / S24LE / S32LE / F32LE <-> normalized f32) + TPDF dither
 //   - Arbitrary-channel planar/interleaved conversion & mono/stereo mixing helpers
@@ -626,10 +631,13 @@ pub struct WavParsedInfo {
     block_align: u16 = 0;
     bits_per_sample: u16 = 0;
     valid_bits_per_sample: u16 = 0;
+    bytes_per_sample: u16 = 0;
     channel_mask: u32 = 0;
     samples_per_block: u16 = 0;
     riff_size_64: u64 = 0;
     data_size_64: u64 = 0;
+    sample_count: u64 = 0;
+    duration_frames: u64 = 0;
     fact_sample_length: u64 = 0;
     data_offset: usize = 0;
     data_len: usize = 0;
@@ -698,18 +706,71 @@ pub fn parseWavContainer(bytes: []const u8, out_cues: []WavCuePoint): WavParsedI
 
             out.effective_format_tag = out.format_tag;
             out.valid_bits_per_sample = out.bits_per_sample;
-            if (out.format_tag == WAV_FORMAT_EXTENSIBLE) {
+            const is_fixed_pcm_or_float = out.format_tag == WAV_FORMAT_PCM
+                || out.format_tag == WAV_FORMAT_IEEE_FLOAT
+                || out.format_tag == WAV_FORMAT_EXTENSIBLE;
+
+            if (is_fixed_pcm_or_float) {
+                if (out.bits_per_sample == 0 || (out.bits_per_sample % 8) != 0) {
+                    return AudioError.InvalidHeader;
+                }
+                if (out.block_align == 0 || (out.block_align % out.channels) != 0) {
+                    return AudioError.InvalidHeader;
+                }
+                const bps: u16 = out.block_align / out.channels;
+                if (bps == 0 || (out.bits_per_sample as u32) > (bps as u32) * 8) {
+                    return AudioError.InvalidHeader;
+                }
+                const expected_br: u64 = (out.block_align as u64) * (out.sample_rate as u64);
+                if ((out.byte_rate as u64) != expected_br) {
+                    return AudioError.InvalidHeader;
+                }
+                out.bytes_per_sample = bps;
+            } else if (out.format_tag == WAV_FORMAT_MULAW || out.format_tag == WAV_FORMAT_ALAW) {
+                if (out.block_align > 0 && (out.block_align % out.channels) == 0) {
+                    out.bytes_per_sample = out.block_align / out.channels;
+                } else {
+                    out.bytes_per_sample = 1;
+                }
+            }
+
+            if (out.format_tag == WAV_FORMAT_PCM) {
+                if (ch.payload.len != 16 && ch.payload.len != 18 && ch.payload.len != 40) {
+                    return AudioError.InvalidHeader;
+                }
+            } else if (out.format_tag == WAV_FORMAT_IEEE_FLOAT) {
+                if (ch.payload.len != 16 && ch.payload.len != 18) {
+                    return AudioError.InvalidHeader;
+                }
+                if (ch.payload.len == 18) {
+                    const cb_size = readU16Le(ch.payload, 16);
+                    if (cb_size != 0) return AudioError.InvalidHeader;
+                }
+                if (out.bits_per_sample != 32) return AudioError.UnsupportedFormat;
+            } else if (out.format_tag == WAV_FORMAT_EXTENSIBLE) {
                 if (ch.payload.len < 40) return AudioError.InvalidHeader;
                 const cb_size = readU16Le(ch.payload, 16);
-                if (cb_size < 22) return AudioError.InvalidHeader;
+                if (cb_size < 22 || ch.payload.len < (18 + (cb_size as usize))) {
+                    return AudioError.InvalidHeader;
+                }
                 out.is_extensible = true;
-                out.valid_bits_per_sample = readU16Le(ch.payload, 18);
+                const vbits = readU16Le(ch.payload, 18);
+                // Fallback to container bits_per_sample when valid_bits_per_sample == 0 (hound nonstandard-02.wav)
+                out.valid_bits_per_sample = if (vbits > 0) vbits else out.bits_per_sample;
+                if ((out.valid_bits_per_sample as u32) > (out.bytes_per_sample as u32) * 8) {
+                    return AudioError.InvalidHeader;
+                }
                 out.channel_mask = readU32Le(ch.payload, 20);
                 out.effective_format_tag = parseWavSubFormatGuid(ch.payload[24..40]);
+                if (out.effective_format_tag == 0) return AudioError.UnsupportedFormat;
+                if (out.effective_format_tag == WAV_FORMAT_IEEE_FLOAT && out.valid_bits_per_sample != 32) {
+                    return AudioError.UnsupportedFormat;
+                }
             } else if (out.format_tag == WAV_FORMAT_IMA_ADPCM && ch.payload.len >= 20) {
                 out.samples_per_block = readU16Le(ch.payload, 18);
             }
-            out.sample_format = classifySampleFormat(out.effective_format_tag, out.bits_per_sample);
+            const eff_bits: u16 = if (out.is_extensible) out.valid_bits_per_sample else out.bits_per_sample;
+            out.sample_format = classifySampleFormat(out.effective_format_tag, eff_bits);
             has_fmt = true;
         } else if (ch.isTag('f', 'a', 'c', 't')) {
             if (ch.payload.len >= 4) {
@@ -753,6 +814,7 @@ pub fn parseWavContainer(bytes: []const u8, out_cues: []WavCuePoint): WavParsedI
                 }
             }
         } else if (ch.isTag('d', 'a', 't', 'a')) {
+            if (!has_fmt) return AudioError.InvalidHeader;
             out.data_offset = ch.offset + 8;
             out.data_len = ch.payload.len;
             out.data_slice = ch.payload;
@@ -768,7 +830,27 @@ pub fn parseWavContainer(bytes: []const u8, out_cues: []WavCuePoint): WavParsedI
 
     if (!has_fmt) return AudioError.InvalidHeader;
     if (!has_data) return AudioError.TruncatedData;
+
+    if (!out.is_rf64 && out.bytes_per_sample > 0 && out.block_align > 0) {
+        if ((out.data_len % (out.block_align as usize)) != 0) {
+            return AudioError.TruncatedData;
+        }
+    }
+    if (out.bytes_per_sample > 0) {
+        out.sample_count = out.data_size_64 / (out.bytes_per_sample as u64);
+        if (out.channels > 0) {
+            out.duration_frames = out.sample_count / (out.channels as u64);
+        }
+    }
     return out;
+}
+
+/// Generates the standard `WAVE_FORMAT_EXTENSIBLE` channel mask with `min(channels, 18)` low bits set
+/// (aligned with `ruuda/hound::channel_mask`).
+pub fn defaultWavChannelMask(channels: u16): u32 {
+    const clamped: u32 = if (channels > 18) 18 else (channels as u32);
+    if (clamped == 0) return 0;
+    return (@as(u32, 1) << (@as(u5, @intCast(clamped)))) - 1;
 }
 
 /// Configuration for `WavStreamWriter` and `encodeRf64Header`.
@@ -779,8 +861,20 @@ pub struct WavStreamConfig {
     valid_bits_per_sample: u16 = 0;
     channel_mask: u32 = 0;
     use_extensible: bool = false;
+    auto_extensible: bool = false;
+    container_bytes_per_sample: u16 = 0;
     block_align: u16 = 0;
     samples_per_block: u16 = 0;
+}
+
+fn effectiveContainerBytes(cfg: WavStreamConfig): usize ! AudioError {
+    if (cfg.container_bytes_per_sample != 0) {
+        const cb = cfg.container_bytes_per_sample as usize;
+        const bits = cfg.sample_format.bitsPerSample() as usize;
+        if (cb == 0 || cb > 4 || cb * 8 < bits) return AudioError.InvalidParameter;
+        return cb;
+    }
+    return cfg.sample_format.bytesPerSample();
 }
 
 fn writeFmtChunkBody(out: []u8, pos: usize, cfg: WavStreamConfig): usize ! AudioError {
@@ -789,15 +883,26 @@ fn writeFmtChunkBody(out: []u8, pos: usize, cfg: WavStreamConfig): usize ! Audio
     if (bits == 0) return AudioError.UnsupportedFormat;
 
     const tag: u16 = cfg.sample_format.formatTag();
-    const balign: u16 = if (cfg.block_align != 0) cfg.block_align else ((cfg.channels as usize) * cfg.sample_format.bytesPerSample()) as u16;
-    if (balign == 0) return AudioError.InvalidParameter;
+    const bps: usize = if (cfg.sample_format == WavSampleFormat.ima_adpcm) 0 else effectiveContainerBytes(cfg)?;
+    const balign_u64: u64 = if (cfg.block_align != 0) (cfg.block_align as u64) else ((cfg.channels as u64) * (bps as u64));
+    if (balign_u64 == 0 || balign_u64 > 65535) return AudioError.InvalidParameter;
+    const balign: u16 = balign_u64 as u16;
 
-    let byte_rate: u32 = (cfg.sample_rate as u64 * (balign as u64)) as u32;
+    const valid_bits: u16 = if (cfg.valid_bits_per_sample != 0) cfg.valid_bits_per_sample else bits;
+    const container_bits: u16 = if (bps > 0) ((bps * 8) as u16) else bits;
+    if (bps > 0 && valid_bits > container_bits) return AudioError.InvalidParameter;
+
+    let byte_rate_u64: u64 = (cfg.sample_rate as u64) * (balign as u64);
     if (cfg.sample_format == WavSampleFormat.ima_adpcm && cfg.samples_per_block > 0) {
-        byte_rate = (((cfg.sample_rate as u64) * (balign as u64)) / (cfg.samples_per_block as u64)) as u32;
+        byte_rate_u64 = ((cfg.sample_rate as u64) * (balign as u64)) / (cfg.samples_per_block as u64);
     }
+    if (byte_rate_u64 > 4294967295) return AudioError.InvalidParameter;
+    const byte_rate: u32 = byte_rate_u64 as u32;
 
-    if (cfg.use_extensible) {
+    const should_ext: bool = cfg.use_extensible
+        || (cfg.auto_extensible && (cfg.channels > 2 || bits > 16 || valid_bits != container_bits));
+
+    if (should_ext) {
         if (pos + 48 > out.len) return AudioError.BufferTooSmall;
         writeTag(out, pos, 'f', 'm', 't', ' ');
         writeU32Le(out, pos + 4, 40);
@@ -806,10 +911,10 @@ fn writeFmtChunkBody(out: []u8, pos: usize, cfg: WavStreamConfig): usize ! Audio
         writeU32Le(out, pos + 12, cfg.sample_rate);
         writeU32Le(out, pos + 16, byte_rate);
         writeU16Le(out, pos + 20, balign);
-        writeU16Le(out, pos + 22, bits);
+        writeU16Le(out, pos + 22, container_bits);
         writeU16Le(out, pos + 24, 22); // cbSize
-        writeU16Le(out, pos + 26, if (cfg.valid_bits_per_sample != 0) cfg.valid_bits_per_sample else bits);
-        const cmask: u32 = if (cfg.channel_mask != 0) cfg.channel_mask else if (cfg.channels == 1) WAV_CHANNEL_MASK_MONO else WAV_CHANNEL_MASK_STEREO;
+        writeU16Le(out, pos + 26, valid_bits);
+        const cmask: u32 = if (cfg.channel_mask != 0) cfg.channel_mask else defaultWavChannelMask(cfg.channels);
         writeU32Le(out, pos + 28, cmask);
         writeSubFormatGuid(out, pos + 32, tag);
         return pos + 48;
@@ -840,6 +945,20 @@ fn writeFmtChunkBody(out: []u8, pos: usize, cfg: WavStreamConfig): usize ! Audio
     writeU16Le(out, pos + 20, balign);
     writeU16Le(out, pos + 22, bits);
     return pos + 24;
+}
+
+/// Encodes a streaming WAV header with `0xFFFFFFFF` RIFF and `data` chunk sizes for non-seekable sinks
+/// (aligned with `ruuda/hound::WavSpec::into_header_for_infinite_file`).
+pub fn encodeWavInfiniteHeader(out: []u8, cfg: WavStreamConfig): usize ! AudioError {
+    if (out.len < 44) return AudioError.BufferTooSmall;
+    writeTag(out, 0, 'R', 'I', 'F', 'F');
+    writeU32Le(out, 4, 0xFFFFFFFF);
+    writeTag(out, 8, 'W', 'A', 'V', 'E');
+    let pos: usize = writeFmtChunkBody(out, 12, cfg)?;
+    if (pos + 8 > out.len) return AudioError.BufferTooSmall;
+    writeTag(out, pos, 'd', 'a', 't', 'a');
+    writeU32Le(out, pos + 4, 0xFFFFFFFF);
+    return pos + 8;
 }
 
 /// Encodes an EBU Tech 3306 `RF64` + `ds64` + `fmt ` + `data` header supporting >4GB audio streams.
@@ -999,6 +1118,94 @@ pub struct WavStreamWriter {
         return nbytes;
     }
 
+    /// Appends interleaved signed 8-bit samples (encoded as standard WAV unsigned 8-bit `x + 128`).
+    fn writeI8(*_, samples: []const i8): usize ! AudioError {
+        if (finalized) return AudioError.InvalidState;
+        if (cfg.sample_format != WavSampleFormat.u8_pcm) return AudioError.UnsupportedFormat;
+        if (samples.len % (cfg.channels as usize) != 0) return AudioError.InvalidParameter;
+        if (pos + samples.len > buf.len) return AudioError.BufferTooSmall;
+        let i: usize = 0;
+        while (i < samples.len) : (i += 1) {
+            buf[pos + i] = wavSignedI8ToU8(samples[i]);
+        }
+        pos += samples.len;
+        data_bytes += samples.len;
+        total_frames += (samples.len / (cfg.channels as usize)) as u64;
+        return samples.len;
+    }
+
+    /// Appends interleaved 24-bit signed PCM samples (in 3-byte packed or 4-byte padded container)
+    /// with strict `[-8388608, 8388607]` range checking (aligned with `ruuda/hound`).
+    fn writeI24(*_, samples: []const i32): usize ! AudioError {
+        if (finalized) return AudioError.InvalidState;
+        if (cfg.sample_format != WavSampleFormat.s24_le) return AudioError.UnsupportedFormat;
+        if (samples.len % (cfg.channels as usize) != 0) return AudioError.InvalidParameter;
+        const bps: usize = effectiveContainerBytes(cfg)?;
+        if (bps != 3 && bps != 4) return AudioError.InvalidParameter;
+        const nbytes: usize = samples.len * bps;
+        if (pos + nbytes > buf.len) return AudioError.BufferTooSmall;
+        let i: usize = 0;
+        while (i < samples.len) : (i += 1) {
+            const v: i32 = narrowSampleToI24(samples[i])?;
+            const u: u32 = @as(u32, @bitCast(v));
+            const off: usize = pos + i * bps;
+            buf[off] = (u & 0xFF) as u8;
+            buf[off + 1] = ((u >> 8) & 0xFF) as u8;
+            buf[off + 2] = ((u >> 16) & 0xFF) as u8;
+            if (bps == 4) {
+                buf[off + 3] = 0;
+            }
+        }
+        pos += nbytes;
+        data_bytes += nbytes;
+        total_frames += (samples.len / (cfg.channels as usize)) as u64;
+        return nbytes;
+    }
+
+    /// Appends interleaved signed 32-bit PCM samples into the `data` chunk.
+    fn writeI32(*_, samples: []const i32): usize ! AudioError {
+        if (finalized) return AudioError.InvalidState;
+        if (cfg.sample_format != WavSampleFormat.s32_le) return AudioError.UnsupportedFormat;
+        if (samples.len % (cfg.channels as usize) != 0) return AudioError.InvalidParameter;
+        const nbytes: usize = samples.len * 4;
+        if (pos + nbytes > buf.len) return AudioError.BufferTooSmall;
+        let i: usize = 0;
+        while (i < samples.len) : (i += 1) {
+            writeU32Le(buf, pos + i * 4, @as(u32, @bitCast(samples[i])));
+        }
+        pos += nbytes;
+        data_bytes += nbytes;
+        total_frames += (samples.len / (cfg.channels as usize)) as u64;
+        return nbytes;
+    }
+
+    /// Checkpoints RIFF, `data`, and `fact` header lengths without finalizing so more samples can still be appended
+    /// (aligned with `ruuda/hound::WavWriter::flush`).
+    fn flushHeader(*_): usize ! AudioError {
+        if (finalized) return AudioError.InvalidState;
+        const bps: usize = if (cfg.sample_format == WavSampleFormat.ima_adpcm) 0 else effectiveContainerBytes(cfg)?;
+        if (bps > 0 && cfg.channels > 0) {
+            const frame_bytes: usize = bps * (cfg.channels as usize);
+            if ((data_bytes % frame_bytes) != 0) return AudioError.InvalidParameter;
+        }
+        writeU32Le(buf, data_size_off, data_bytes as u32);
+        if (fact_samples_off != 0) {
+            writeU32Le(buf, fact_samples_off, total_frames as u32);
+        }
+        writeU32Le(buf, 4, (pos - 8) as u32);
+        return pos;
+    }
+
+    /// Returns total frames written so far (independent of channel count).
+    fn durationFrames(): u64 {
+        return total_frames;
+    }
+
+    /// Returns total interleaved samples written so far (`durationFrames() * channels`).
+    fn sampleCount(): u64 {
+        return total_frames * (cfg.channels as u64);
+    }
+
     /// Finalizes the stream, optionally appending a `cue ` chunk, and patches `data`, `fact`, and `RIFF` sizes.
     fn finalizeWithCues(*_, cues: []const WavCuePoint): usize ! AudioError {
         if (finalized) return AudioError.InvalidState;
@@ -1047,8 +1254,136 @@ pub struct WavStreamWriter {
 }
 
 // ============================================================================
-// 4. Full Sample Bit-Depth Conversions (U8/S16/S24/S32/F32 <-> f32) & Mixing
+// 4. Full Sample Bit-Depth Conversions (U8/S16/S24/S32/F32 <-> f32), Sign Extension & Mixing
 // ============================================================================
+
+/// Converts WAV unsigned 8-bit PCM (`0..255`) to signed `i8` (`-128..127`), bijective with `wavSignedI8ToU8`.
+pub fn wavU8ToSignedI8(x: u8): i8 {
+    return ((x as i16) - 128) as i8;
+}
+
+/// Converts signed `i8` (`-128..127`) to WAV unsigned 8-bit PCM (`0..255`), bijective with `wavU8ToSignedI8`.
+pub fn wavSignedI8ToU8(x: i8): u8 {
+    return ((x as i16) + 128) as u8;
+}
+
+/// Strictly narrows `x` to `i8` (`[-128, 127]`), returning `AudioError.InvalidParameter` on overflow.
+pub fn narrowSampleToI8(x: i32): i8 ! AudioError {
+    if (x < -128 || x > 127) return AudioError.InvalidParameter;
+    return x as i8;
+}
+
+/// Strictly narrows `x` to `i16` (`[-32768, 32767]`), returning `AudioError.InvalidParameter` on overflow.
+pub fn narrowSampleToI16(x: i32): i16 ! AudioError {
+    if (x < -32768 || x > 32767) return AudioError.InvalidParameter;
+    return x as i16;
+}
+
+/// Strictly narrows `x` to signed 24-bit integer (`[-8388608, 8388607]`), returning `AudioError.InvalidParameter` on overflow.
+pub fn narrowSampleToI24(x: i32): i32 ! AudioError {
+    if (x < -8388608 || x > 8388607) return AudioError.InvalidParameter;
+    return x;
+}
+
+/// Reads a packed 3-byte little-endian signed 24-bit sample with exact sign extension into `i32`.
+pub fn readWavSampleI24From3(b: []const u8, off: usize): i32 {
+    const raw24: u32 = (b[off] as u32) | ((b[off + 1] as u32) << 8) | ((b[off + 2] as u32) << 16);
+    const ext: u32 = if ((raw24 & 0x00800000) != 0) (raw24 | 0xFF000000) else raw24;
+    return @as(i32, @bitCast(ext));
+}
+
+/// Reads a 24-bit signed sample packed in a 4-byte little-endian container (masking high byte & sign-extending bit 23),
+/// aligned with `ruuda/hound::ReadExt::read_le_i24_4`.
+pub fn readWavSampleI24From4(b: []const u8, off: usize): i32 {
+    const raw32: u32 = readU32Le(b, off);
+    const ext: u32 = if ((raw32 & 0x00800000) != 0) (raw32 | 0xFF000000) else (raw32 & 0x00FFFFFF);
+    return @as(i32, @bitCast(ext));
+}
+
+/// Decodes integer PCM samples from a parsed `WavParsedInfo` into `out_samples` (`[]i32`).
+/// Supports 8-bit, 16-bit, 24-bit (3-byte packed & 4-byte padded container), 32-bit, and non-multiple-of-8
+/// `valid_bits_per_sample` (e.g. 20-bit MSB-aligned in 24/32-bit container). Rejects Float containers.
+pub fn decodeWavSamplesI32(info: WavParsedInfo, out_samples: []i32): usize ! AudioError {
+    if (info.effective_format_tag != WAV_FORMAT_PCM) return AudioError.UnsupportedFormat;
+    const bps: usize = info.bytes_per_sample as usize;
+    if (bps == 0 || bps > 4) return AudioError.UnsupportedFormat;
+    if ((info.data_slice.len % bps) != 0) return AudioError.TruncatedData;
+    const n: usize = info.data_slice.len / bps;
+    if (out_samples.len < n) return AudioError.BufferTooSmall;
+    const vbits: u16 = if (info.valid_bits_per_sample > 0) info.valid_bits_per_sample else info.bits_per_sample;
+    const cbits: u16 = (bps * 8) as u16;
+    if (vbits == 0 || vbits > cbits) return AudioError.InvalidHeader;
+
+    let i: usize = 0;
+    if (bps == 1 && vbits == 8) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = wavU8ToSignedI8(info.data_slice[i]) as i32;
+        }
+    } else if (bps == 2 && vbits == 16) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = @as(i16, @bitCast(readU16Le(info.data_slice, i * 2))) as i32;
+        }
+    } else if (bps == 3 && vbits == 24) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = readWavSampleI24From3(info.data_slice, i * 3);
+        }
+    } else if (bps == 4 && vbits == 24) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = readWavSampleI24From4(info.data_slice, i * 4);
+        }
+    } else if (bps == 4 && vbits == 32) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = @as(i32, @bitCast(readU32Le(info.data_slice, i * 4)));
+        }
+    } else {
+        // Non-multiple-of-8 valid_bits_per_sample (e.g. 20-bit MSB-aligned in 24-bit or 32-bit container)
+        const shift: u5 = @as(u5, @intCast(cbits - vbits));
+        while (i < n) : (i += 1) {
+            const raw_signed: i32 = if (bps == 1)
+                (wavU8ToSignedI8(info.data_slice[i]) as i32)
+            else if (bps == 2)
+                (@as(i16, @bitCast(readU16Le(info.data_slice, i * 2))) as i32)
+            else if (bps == 3)
+                readWavSampleI24From3(info.data_slice, i * 3)
+            else
+                @as(i32, @bitCast(readU32Le(info.data_slice, i * 4)));
+            out_samples[i] = raw_signed >> shift;
+        }
+    }
+    return n;
+}
+
+/// Decodes 8-bit or 16-bit integer PCM samples from `WavParsedInfo` into `out_samples` (`[]i16`).
+/// Rejects wider bit depths (24/32-bit -> `InvalidParameter`) and Float containers (`UnsupportedFormat`).
+pub fn decodeWavSamplesI16(info: WavParsedInfo, out_samples: []i16): usize ! AudioError {
+    if (info.effective_format_tag != WAV_FORMAT_PCM) return AudioError.UnsupportedFormat;
+    const bps: usize = info.bytes_per_sample as usize;
+    const vbits: u16 = if (info.valid_bits_per_sample > 0) info.valid_bits_per_sample else info.bits_per_sample;
+    if (bps > 2 || vbits > 16) return AudioError.InvalidParameter;
+    if (bps == 0 || (info.data_slice.len % bps) != 0) return AudioError.TruncatedData;
+    const n: usize = info.data_slice.len / bps;
+    if (out_samples.len < n) return AudioError.BufferTooSmall;
+    let i: usize = 0;
+    if (bps == 1) {
+        while (i < n) : (i += 1) {
+            out_samples[i] = wavU8ToSignedI8(info.data_slice[i]) as i16;
+        }
+    } else {
+        while (i < n) : (i += 1) {
+            out_samples[i] = @as(i16, @bitCast(readU16Le(info.data_slice, i * 2)));
+        }
+    }
+    return n;
+}
+
+/// Decodes 32-bit IEEE float samples from `WavParsedInfo` into `out_samples` (`[]f32`).
+/// Rejects integer PCM containers with `AudioError.UnsupportedFormat`.
+pub fn decodeWavSamplesF32(info: WavParsedInfo, out_samples: []f32): usize ! AudioError {
+    if (info.effective_format_tag != WAV_FORMAT_IEEE_FLOAT || info.bytes_per_sample != 4) {
+        return AudioError.UnsupportedFormat;
+    }
+    return f32LeBytesToF32Slice(info.data_slice, out_samples);
+}
 
 fn clampF32(x: f32): f32 {
     if (x > 1.0) return 1.0;
