@@ -522,3 +522,18 @@ pub fn demoSparseSet() {
 - [treap.md](ds/treap.md)
 - [trie_radix.md](ds/trie_radix.md)
 - [zset.md](ds/zset.md)
+
+## 历史数据结构域散装模块收敛（W29-Sync R4）
+
+以下 8 个原独立顶层目录已统一收敛至 `cap:ds`（`lib/ds/`），可直接从 `"cap:ds"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:bounded_array` | `lib/ds/boundedArray.cp` | `BoundedArray` |
+| `cap:bplus_tree` | `lib/ds/bplus{Types,SlottedPage,Tree}.cp` | `SlottedBPlusTree`, `BPlusError`, `KvEntry`, `RangeIter`, `SlottedPage`, `encodeSlottedPage`, `decodeSlottedPage`, `PAGE_SIZE`, `MAX_PAYLOAD_SIZE` |
+| `cap:hive_array` | `lib/ds/hiveArray.cp` | `HiveArray` |
+| `cap:intrusive_heap` | `lib/ds/intrusiveHeap.cp` | `IntrusiveField`, `IntrusiveHeap` |
+| `cap:linear_fifo` | `lib/ds/linearFifo.cp` | `StaticLinearFifo` |
+| `cap:lockfree_queue` | `lib/ds/lockfree{Queue,Spsc,Mpmc,Channel}.cp` | `SpscQueue`, `MpmcQueue`, `BoundedChannel`, `ChannelError`, `UnboundedQueue`, `CACHE_LINE_LENGTH`, `QUEUE_PADDING_LENGTH` |
+| `cap:static_hashmap` | `lib/ds/staticHashMap.cp` | `StaticHashMap`, `KeyValue`, `Slot`, `StringContext`, `AsciiIgnoreCaseContext`, `IntContext`, `fnv1a64`, `fnv1a64AsciiLower`, `splitmix64` |
+| `cap:object_pool` | `lib/ds/objectPool.cp` | `ObjectPool`, `PoolNode` |

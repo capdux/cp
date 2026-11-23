@@ -2,14 +2,14 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    TaggedPointer,
+    HighBitTaggedPointer as TaggedPointer,
     TaggedPtr2,
     TaggedPtr4,
     PTR_BITS,
     TAG_BITS,
     PTR_MASK,
     MAX_TAG,
-} from "cap:tagged_ptr";
+} from "cap:mem";
 
 struct NodeA {
     id: u32,

@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect } from "cap:test";
-import { BufferFallbackAllocator } from "cap:fallback_alloc";
+import { StackBufferFallbackAllocator as BufferFallbackAllocator } from "cap:mem";
 
 test("fallback_alloc: fast-path allocation stays inside inline buffer", () => {
     let stack_buf: [256]u8 = undefined;

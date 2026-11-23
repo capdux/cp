@@ -1,7 +1,7 @@
 // Source: cp/lib/bplus_tree/slotted_page.cp (4KB Slotted Page binary codec with CRC32C)
 
 const std = @import("std");
-import { BPlusError } from "./types.cp";
+import { BPlusError } from "./bplusTypes.cp";
 
 pub const PAGE_SIZE: usize = 4096;
 pub const PAGE_MAGIC: u32 = 0x43504250;

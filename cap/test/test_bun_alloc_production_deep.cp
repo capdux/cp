@@ -3,7 +3,7 @@
 const std = @import("std");
 import cap from "cap";
 import { test, expect_eq } from "cap:test";
-import { BumpAllocator, PoolAllocator, TrackingAllocator, ScratchArena } from "cap:bun_alloc";
+import { BumpAllocator, PoolAllocator, TrackingAllocator, ScratchArena } from "cap:mem";
 
 const Item = struct {
     id: u64,
@@ -21,7 +21,8 @@ fn testBumpAllocator()! {
     p1[1] = 99;
     expect_eq(p1[0], 42);
     expect_eq(p1[1], 99);
-    expect_eq(@intFromPtr(p1.ptr) % @alignOf(u64), 0);
+    const p1_addr = unsafe { @intFromPtr(p1.ptr) };
+    expect_eq(p1_addr % @alignOf(u64), 0);
     expect_eq(bump.usedBytes() >= 16, true);
     expect_eq(bump.remainingBytes() <= 48, true);
 
@@ -67,13 +68,14 @@ fn testPoolAllocator()! {
     b.score = 20;
     expect_eq(pool.activeCount(), 2);
 
-    const a_addr = @intFromPtr(a);
+    const a_addr = unsafe { @intFromPtr(a) };
     pool.recycle(a);
     expect_eq(pool.activeCount(), 1);
 
     // Next create must reuse the recycled slot address in O(1)
     let c = pool.create()?;
-    expect_eq(@intFromPtr(c), a_addr);
+    const c_addr = unsafe { @intFromPtr(c) };
+    expect_eq(c_addr, a_addr);
     expect_eq(pool.activeCount(), 2);
 
     pool.recycle(b);
@@ -160,7 +162,7 @@ fn testCapBunAllocDynamicMount()! {
     let gpa = std.heap.DebugAllocator(.{}).init;
     const backing = gpa.allocator();
 
-    const ba = cap.bun_alloc;
+    const ba = cap.mem;
     let tracker = ba.TrackingAllocator.init(backing);
     const tracked = tracker.allocator();
 

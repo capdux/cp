@@ -10,10 +10,6 @@ pub fn SpscQueue(comptime T: type, comptime CAP: usize): type {
     }
 
     const MASK: usize = CAP - 1;
-    const OptHolder = struct {
-        val: T?,
-    };
-    const OptT = @TypeOf(@as(OptHolder, undefined).val);
 
     return struct {
         const Self = @This();
@@ -41,7 +37,7 @@ pub fn SpscQueue(comptime T: type, comptime CAP: usize): type {
             return true;
         }
 
-        pub fn tryPop(self: *Self): OptT {
+        pub fn tryPop(self: *Self): T? {
             const h = self.head.load(.monotonic);
             const t = self.tail.load(.acquire);
             if (h == t) {

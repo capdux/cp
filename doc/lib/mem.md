@@ -291,3 +291,14 @@ let owned = OwnedOrBorrowed.fromAlloc(&alloc, "hello")?;
 assert(owned.isOwned());
 owned.release(&alloc);
 ```
+
+## 历史内存/分配器域散装模块收敛（W29-Sync R4）
+
+以下 4 个原独立顶层目录已统一收敛至 `cap:mem`（`lib/mem/`），可直接从 `"cap:mem"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:fallback_alloc` | `lib/mem/fallbackAlloc.cp` | `StackBufferFallbackAllocator` |
+| `cap:bun_alloc` | `lib/mem/{bumpAlloc,poolAlloc,trackingAlloc,scratchArena,heapBreakdown}.cp` | `BumpAllocator`, `PoolAllocator`, `TrackingAllocator`, `ScratchArena`, `Checkpoint`, `HeapBreakdown`, `HeapZoneHandle`, `ZoneStats`, `HeapBreakdownError`, `HEAP_ZONE_PREFIX` |
+| `cap:tagged_ptr` | `lib/mem/highBitTaggedPtr.cp` | `HighBitTaggedPointer`, `TaggedPtr2`, `TaggedPtr4`, `Address`, `Tag`, `PTR_BITS`, `TAG_BITS`, `PTR_MASK`, `MAX_TAG` |
+| `cap:padding_checker` | `lib/mem/paddingChecker.cp` | `paddingBytes`, `hasPadding`, `hasPointers`, `isSafeBinarySerializable`, `assertNoUninitializedPadding` |

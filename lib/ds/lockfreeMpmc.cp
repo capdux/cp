@@ -10,10 +10,6 @@ pub fn MpmcQueue(comptime T: type, comptime CAP: usize): type {
     }
 
     const MASK: usize = CAP - 1;
-    const OptHolder = struct {
-        val: T?,
-    };
-    const OptT = @TypeOf(@as(OptHolder, undefined).val);
 
     const Slot = struct {
         sequence: std.atomic.Value(usize) align(64),
@@ -42,7 +38,7 @@ pub fn MpmcQueue(comptime T: type, comptime CAP: usize): type {
         pub fn tryPush(self: *Self, item: T): bool {
             let pos = self.enqueue_pos.load(.monotonic);
             while (true) {
-                const slot = &self.buffer[pos & MASK];
+                let slot = &self.buffer[pos & MASK];
                 const seq = slot.sequence.load(.acquire);
                 const diff = @as(isize, @bitCast(seq)) -% @as(isize, @bitCast(pos));
                 if (diff == 0) {
@@ -62,7 +58,7 @@ pub fn MpmcQueue(comptime T: type, comptime CAP: usize): type {
             }
         }
 
-        pub fn tryPop(self: *Self): OptT {
+        pub fn tryPop(self: *Self): T? {
             let pos = self.dequeue_pos.load(.monotonic);
             while (true) {
                 const slot = &self.buffer[pos & MASK];

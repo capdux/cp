@@ -325,3 +325,83 @@ export {
     SparseSet,
     SparseMapU64,
 } from "./sparseSet.cp";
+
+// === W29-Sync R4: Consolidated Core Data Structures ===
+export {
+    BoundedArray,
+} from "./boundedArray.cp";
+
+export {
+    BPlusError,
+    KvEntry,
+    compareKeys,
+} from "./bplusTypes.cp";
+
+export {
+    BPlusTree as SlottedBPlusTree,
+    RangeIter,
+    NULL_NODE,
+    MIN_ORDER,
+} from "./bplusTree.cp";
+
+export {
+    SlottedPage,
+    encodeSlottedPage,
+    decodeSlottedPage,
+    PAGE_SIZE,
+    PAGE_MAGIC,
+    PAGE_HEADER_SIZE,
+    PAGE_FOOTER_SIZE,
+    SLOT_SIZE,
+    MAX_PAYLOAD_SIZE,
+} from "./bplusSlottedPage.cp";
+
+export {
+    HiveArray,
+} from "./hiveArray.cp";
+
+export {
+    IntrusiveField,
+    IntrusiveHeap,
+} from "./intrusiveHeap.cp";
+
+export {
+    StaticLinearFifo,
+} from "./linearFifo.cp";
+
+export {
+    SpscQueue,
+} from "./lockfreeSpsc.cp";
+
+export {
+    MpmcQueue,
+} from "./lockfreeMpmc.cp";
+
+export {
+    BoundedChannel,
+    ChannelError,
+} from "./lockfreeChannel.cp";
+
+export {
+    CACHE_LINE_LENGTH,
+    QUEUE_PADDING_LENGTH,
+    UnboundedQueue,
+} from "./lockfreeQueue.cp";
+
+export {
+    StaticHashMap,
+    KeyValue,
+    Slot,
+    StringContext,
+    AsciiIgnoreCaseContext,
+    IntContext,
+    EMPTY_HASH,
+    fnv1a64,
+    fnv1a64AsciiLower,
+    splitmix64,
+} from "./staticHashMap.cp";
+
+export {
+    ObjectPool,
+    PoolNode,
+} from "./objectPool.cp";

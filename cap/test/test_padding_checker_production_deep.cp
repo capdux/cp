@@ -5,7 +5,7 @@ import {
     hasPointers,
     isSafeBinarySerializable,
     assertNoUninitializedPadding,
-} from "cap:padding_checker";
+} from "cap:mem";
 
 @c struct CleanRecord {
     a: u8 = 0,

@@ -11,7 +11,7 @@ import {
     fnv1a64,
     fnv1a64AsciiLower,
     splitmix64,
-} from "cap:static_hashmap";
+} from "cap:ds";
 
 const COMPTIME_METHOD_MAP = StaticHashMap<string, u16, StringContext, 16>.fromPairs([
     KeyValue<string, u16>{ key: "GET", value: 1 },

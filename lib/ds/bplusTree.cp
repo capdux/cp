@@ -1,7 +1,7 @@
 // Source: cp/lib/bplus_tree/tree.cp (Variable-order B+ Tree engine with split/borrow/merge and invariant checker)
 
 const std = @import("std");
-import { BPlusError, KvEntry, compareKeys } from "./types.cp";
+import { BPlusError, KvEntry, compareKeys } from "./bplusTypes.cp";
 
 pub const NULL_NODE: u32 = 0xFFFFFFFF;
 pub const MIN_ORDER: usize = 4;

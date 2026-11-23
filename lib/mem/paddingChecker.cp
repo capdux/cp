@@ -94,7 +94,7 @@ pub fn assertNoUninitializedPadding(comptime T: type) {
         }
         const info = @typeInfo(T);
         if (info == .@"struct") {
-            comptime for (field of info.@"struct".fields) {
+            for (field of info.@"struct".fields) {
                 assertNoUninitializedPadding(field.@"type");
             }
         } else if (info == .array) {

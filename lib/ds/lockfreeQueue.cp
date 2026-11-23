@@ -21,14 +21,14 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
     return struct {
         const Self = @This();
 
-        @inline fn ptrToAddr(ptr: (*T!)?): usize {
+        @inline static fn ptrToAddr(ptr: (*T!)?): usize {
             if (p := ptr) {
                 return @intFromPtr(p);
             }
             return 0;
         }
 
-        @inline fn addrToPtr(addr: usize): (*T!)? {
+        @inline static fn addrToPtr(addr: usize): (*T!)? {
             if (addr == 0) {
                 return null;
             }
@@ -36,7 +36,7 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
             return raw;
         }
 
-        @inline fn getNext(item: *T!): (*T!)? {
+        @inline static fn getNext(item: *T!): (*T!)? {
             if (comptime has_custom_accessors) {
                 return @field(item, next_name).getPtr();
             } else {
@@ -44,7 +44,7 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
             }
         }
 
-        @inline fn setNext(item: *T!, ptr: (*T!)?) {
+        @inline static fn setNext(item: *T!, ptr: (*T!)?) {
             if (comptime has_custom_accessors) {
                 const field_ptr: *FieldType! = &@field(item, next_name);
                 field_ptr.setPtr(ptr);
@@ -53,7 +53,7 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
             }
         }
 
-        @inline fn atomicLoadNext(item: *T!, ordering: std.builtin.AtomicOrder): (*T!)? {
+        @inline static fn atomicLoadNext(item: *T!, ordering: std.builtin.AtomicOrder): (*T!)? {
             if (comptime has_custom_accessors) {
                 const field_ptr: *FieldType! = &@field(item, next_name);
                 return field_ptr.atomicLoadPtr(ordering);
@@ -62,7 +62,7 @@ pub fn UnboundedQueue(comptime T: type, comptime next_field: std.meta.FieldEnum(
             }
         }
 
-        @inline fn atomicStoreNext(item: *T!, ptr: (*T!)?, ordering: std.builtin.AtomicOrder) {
+        @inline static fn atomicStoreNext(item: *T!, ptr: (*T!)?, ordering: std.builtin.AtomicOrder) {
             if (comptime has_custom_accessors) {
                 const field_ptr: *FieldType! = &@field(item, next_name);
                 field_ptr.atomicStorePtr(ptr, ordering);

@@ -4,14 +4,14 @@ const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
 import {
-    BPlusTree,
+    SlottedBPlusTree as BPlusTree,
     BPlusError,
     SlottedPage,
     encodeSlottedPage,
     decodeSlottedPage,
     PAGE_SIZE,
     MAX_PAYLOAD_SIZE,
-} from "cap:bplus_tree";
+} from "cap:ds";
 
 test("bplus_tree: 500 disordered inserts, multi-level splits, overwrite updates, invariants") {
     const alloc = std.testing.allocator;

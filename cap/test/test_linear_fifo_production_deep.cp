@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { StaticLinearFifo } from "cap:linear_fifo";
+import { StaticLinearFifo } from "cap:ds";
 
 test("linear_fifo: wrap-around byte ring buffer writeSlice/readSlice/unget/discard", () => {
     let fifo = StaticLinearFifo(u8, 8).init();

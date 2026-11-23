@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_object_pool_production_deep.cp (Production deep tests for cap:object_pool)
 
 import { test, expect_eq } from "cap:test";
-import { ObjectPool, PoolNode } from "cap:object_pool";
+import { ObjectPool, PoolNode } from "cap:ds";
 
 struct ResettableWorkItem {
     id: u32 = 0,

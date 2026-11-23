@@ -9,7 +9,7 @@ import {
     CACHE_LINE_LENGTH,
     QUEUE_PADDING_LENGTH,
     UnboundedQueue,
-} from "cap:lockfree_queue";
+} from "cap:ds";
 import cap from "cap";
 
 const std = @import("std");
@@ -271,11 +271,11 @@ fn runTest4(): bool {
 }
 
 fn runTest5(): bool {
-    let spsc = cap.lockfree_queue.SpscQueue(u64, 8).init();
+    let spsc = cap.ds.SpscQueue(u64, 8).init();
     if (!spsc.tryPush(7)) return false;
     if (spsc.tryPop().? != 7) return false;
 
-    let mpmc = cap.lockfree_queue.MpmcQueue(u64, 8).init();
+    let mpmc = cap.ds.MpmcQueue(u64, 8).init();
     if (!mpmc.tryPush(9)) return false;
     if (mpmc.tryPop().? != 9) return false;
 
@@ -283,7 +283,7 @@ fn runTest5(): bool {
     const alloc = if (builtin.is_test) std.testing.allocator else gpa.allocator();
 
     {
-        let ch = cap.lockfree_queue.BoundedChannel(u64).init(alloc, 16).ok;
+        let ch = cap.ds.BoundedChannel(u64).init(alloc, 16).ok;
         defer ch.deinit();
         if (ch.trySend(123) == .err) return false;
         if (ch.len() != 1) return false;

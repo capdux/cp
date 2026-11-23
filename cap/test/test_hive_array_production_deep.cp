@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { HiveArray } from "cap:hive_array";
+import { HiveArray } from "cap:ds";
 
 struct TaskSlot {
     id: u32;

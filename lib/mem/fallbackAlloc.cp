@@ -52,7 +52,7 @@ export struct BufferFallbackAllocator {
         _.fixed_buffer_allocator.reset();
     }
 
-    static fn allocFn(ctx: *anyopaque!, len: usize, alignment: std.mem.Alignment, ra: usize): ([*]u8!)? {
+    static fn allocFn(ctx: *!, len: usize, alignment: std.mem.Alignment, ra: usize): ([*]u8!)? {
         const inst: *BufferFallbackAllocator! = unsafe { @ptrCast(@alignCast(ctx)) };
         return FixedBufferAllocator.alloc(
             &inst.fixed_buffer_allocator,
@@ -62,7 +62,7 @@ export struct BufferFallbackAllocator {
         ) ?? inst.fallback_allocator.rawAlloc(len, alignment, ra);
     }
 
-    static fn resizeFn(ctx: *anyopaque!, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize): bool {
+    static fn resizeFn(ctx: *!, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize): bool {
         const inst: *BufferFallbackAllocator! = unsafe { @ptrCast(@alignCast(ctx)) };
         if (inst.fixed_buffer_allocator.ownsPtr(buf.ptr)) {
             return FixedBufferAllocator.resize(
@@ -76,7 +76,7 @@ export struct BufferFallbackAllocator {
         return inst.fallback_allocator.rawResize(buf, alignment, new_len, ra);
     }
 
-    static fn remapFn(ctx: *anyopaque!, memory: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize): ([*]u8!)? {
+    static fn remapFn(ctx: *!, memory: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize): ([*]u8!)? {
         const inst: *BufferFallbackAllocator! = unsafe { @ptrCast(@alignCast(ctx)) };
         if (inst.fixed_buffer_allocator.ownsPtr(memory.ptr)) {
             return FixedBufferAllocator.remap(
@@ -90,7 +90,7 @@ export struct BufferFallbackAllocator {
         return inst.fallback_allocator.rawRemap(memory, alignment, new_len, ra);
     }
 
-    static fn freeFn(ctx: *anyopaque!, buf: []u8, alignment: std.mem.Alignment, ra: usize) {
+    static fn freeFn(ctx: *!, buf: []u8, alignment: std.mem.Alignment, ra: usize) {
         const inst: *BufferFallbackAllocator! = unsafe { @ptrCast(@alignCast(ctx)) };
         if (inst.fixed_buffer_allocator.ownsPtr(buf.ptr)) {
             FixedBufferAllocator.free(

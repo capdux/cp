@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { IntrusiveField, IntrusiveHeap } from "cap:intrusive_heap";
+import { IntrusiveField, IntrusiveHeap } from "cap:ds";
 
 struct TimerNode {
     id: u32,

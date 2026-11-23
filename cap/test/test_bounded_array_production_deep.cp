@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { BoundedArray } from "cap:bounded_array";
+import { BoundedArray } from "cap:ds";
 
 test("bounded_array: append, appendSlice, pop, capacity and overflow", () => {
     const Arr8 = BoundedArray(u32, 8);

@@ -119,3 +119,55 @@ export {
     NullableBump,
     OwnedOrBorrowed,
 } from "./nullable.cp";
+
+// === W29-Sync R4: Consolidated Allocators, Tagged Pointers & Layout Padding Checker ===
+export {
+    BufferFallbackAllocator as StackBufferFallbackAllocator,
+} from "./fallbackAlloc.cp";
+
+export {
+    BumpAllocator,
+} from "./bumpAlloc.cp";
+
+export {
+    PoolAllocator,
+} from "./poolAlloc.cp";
+
+export {
+    TrackingAllocator,
+} from "./trackingAlloc.cp";
+
+export {
+    ScratchArena,
+    Checkpoint,
+} from "./scratchArena.cp";
+
+export {
+    HEAP_ZONE_PREFIX,
+    HeapBreakdownError,
+    heapZoneBaseName,
+    formatHeapZoneLabel,
+    HeapZoneHandle,
+    ZoneStats,
+    HeapBreakdown,
+} from "./heapBreakdown.cp";
+
+export {
+    Address,
+    Tag,
+    PTR_BITS,
+    TAG_BITS,
+    PTR_MASK,
+    MAX_TAG,
+    TaggedPointer as HighBitTaggedPointer,
+    TaggedPtr2,
+    TaggedPtr4,
+} from "./highBitTaggedPtr.cp";
+
+export {
+    paddingBytes,
+    hasPadding,
+    hasPointers,
+    isSafeBinarySerializable,
+    assertNoUninitializedPadding,
+} from "./paddingChecker.cp";
