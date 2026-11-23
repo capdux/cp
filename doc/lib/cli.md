@@ -840,3 +840,47 @@ let out: [1024]u8 = [0; 1024];
 const n = renderInteractiveUpdateTable(st, IuRenderOptions.defaults(), out[0..])?;
 * = n;
 ```
+
+### `cap unlink` 本地开发包全局/项目软链解除规划与安全事务引擎（`lib/cli/pkgUnlink.cp`，吸收自 `/data/dev/bun/src/cli/unlink_command.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap unlink [pkg...]`；
+- **核心导出**：
+  - `cap:simd` 加速包名与路径安全守卫：`PKG_UNLINK_MAX_NAME_LEN`、`PKG_UNLINK_MAX_PATH_LEN`、`PKG_UNLINK_GLOBAL_SUBDIR`、`PKG_UNLINK_GLOBAL_BIN_SUBDIR`、`PKG_UNLINK_LOCAL_MODULES_DIR`、`PkgUnlinkError`、`UnlinkParsedPkgName`、`parseUnlinkPackageName`（`Simd.isAscii`/`Simd.indexOfByte`/`Simd.indexOfAny4` 拦截空名、穿越、绝对路径与非法 `@scope/`）、`normalizeUnlinkPath`、`isUnlinkPathWithinRoot`（防兄弟前缀绕过）、`isSafeUnlinkBinName`、`formatGlobalLinkPath`、`formatLocalLinkPath`；
+  - 双模式安全符号链接校验：`UnlinkMode`（`GlobalSelfUnlink` / `ProjectDepUnlink`）、`unlinkModeName`、`UnlinkFsEntryKind`、`UnlinkTargetProbe`、`UnlinkGuardStatus`、`unlinkGuardStatusMessage`、`UnlinkTargetValidation`、`validateUnlinkTarget`（保护真实目录与普通文件不被误删，强校验软链目标位于预期根目录边界内）；
+  - 事务清理计划与空 `@scope/` 回收：`UnlinkOpKind`、`UnlinkTextSpan`、`getUnlinkOpText`、`UnlinkPlannedOp`、`UnlinkPlanOptions`、`UnlinkPlanSummary`、`planPkgUnlink`（按序规划 `.bin/` 软链移除 -> 包软链移除 -> 空 `@scope/` 目录回收 -> Registry 版本恢复）、`UnlinkCliArgs`、`parseUnlinkCliArgs`、`formatPkgUnlinkReport`。
+
+```cp
+import {
+    UnlinkMode,
+    UnlinkFsEntryKind,
+    UnlinkTargetProbe,
+    UnlinkPlannedOp,
+    UnlinkPlanOptions,
+    planPkgUnlink,
+    formatPkgUnlinkReport,
+} from "cap:cli";
+
+const bins: [1][]const u8 = ["cap-ui"];
+const probes: [1]UnlinkTargetProbe = [
+    UnlinkTargetProbe{
+        package_name: "@acme/ui",
+        link_path: "/workspace/app/cap_modules/@acme/ui",
+        entry_kind: UnlinkFsEntryKind.Symlink,
+        symlink_target: "/home/dev/.cap/install/global/node_modules/@acme/ui",
+        expected_root_dir: "/home/dev/.cap/install/global/node_modules",
+        scope_remaining_siblings: 0,
+        bin_names: bins[0..],
+        registry_fallback_version: "^2.1.0",
+    },
+];
+let ops: [8]UnlinkPlannedOp = [UnlinkPlannedOp.empty(); 8];
+let arena: [1024]u8 = [0; 1024];
+const sum = planPkgUnlink(probes[0..], UnlinkPlanOptions{
+    mode: UnlinkMode.ProjectDepUnlink,
+    global_root_dir: "/home/dev/.cap",
+    project_root_dir: "/workspace/app",
+}, ops[0..], arena[0..])?;
+let rep: [1024]u8 = [0; 1024];
+const rep_len = formatPkgUnlinkReport(sum, ops[0..sum.ops_count], arena[0..], rep[0..])?;
+* = rep_len;
+```
