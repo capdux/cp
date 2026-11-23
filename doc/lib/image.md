@@ -52,8 +52,10 @@
 | `Exif.readJpeg(bytes): ExifOrientation` | 解析 JPEG APP1 中的 EXIF 方向标号（无标签时返回 `.Normal`） |
 | `Exif.parseTiff(tiff): ExifOrientation?` | 直接解析大端 (`MM`) 或小端 (`II`) TIFF IFD0 目录中的 `0x0112` 标签 |
 | `Jpeg.probe(bytes): JpegHeader?` / `JpegImage.probe(bytes)` | 零解码极速获取 JPEG 宽高、色彩分量数、是否渐进式及 EXIF 方向 |
-| `jpegEncode(allocator, rgba, width, height, quality): ([]u8)!JpegError` / `Jpeg.encode(...)` / `JpegImage.encode(...)` | 完整 ITU-T T.81 / JFIF 1.01 Baseline DCT YCbCr 4:4:4 编码器（IJG 质量缩放 `1..100`，任意非 8 倍数宽高边缘复制填充） |
+| `parseJpegHeader(bytes): JpegHeaderInfo!JpegError` / `Jpeg.parseHeader(...)` | 严格解析 JPEG `SOF0`/`SOF2`、分量采样因子、`DRI` 重启间隔与 EXIF 方向（对标 `zune-jpeg` 加固） |
+| `jpegEncode(allocator, rgba, width, height, quality): ([]u8)!JpegError` / `Jpeg.encode(...)` / `JpegImage.encode(...)` | 完整 ITU-T T.81 / JFIF 1.01 Baseline DCT YCbCr 4:4:4 编码器（8-lane `@dot` SIMD Forward DCT，IJG 质量缩放 `1..100`，任意非 8 倍数宽高边缘复制填充） |
 | `jpegEncodeInto(rgba, width, height, quality, out): ([]const u8)!JpegError` | 零堆分配 Baseline DCT JPEG 编码器，直接写入调用方缓冲区 |
+| `decodeJpegToRgbaInto(bytes, out_rgba): JpegHeaderInfo!JpegError` / `decodeJpegToRgba(allocator, bytes): JpegDecodedImage!JpegError` | 零堆/分配双接口 Baseline DCT JPEG (`SOF0`) 解码器（支持灰度 + YCbCr 4:4:4/4:2:2/4:4:0/4:2:0、DQT 8/16-bit、DHT 9-bit 快速 LUT、DRI+RST0..RST7、8-lane `@dot` SIMD 8x8 IDCT 与 `@fma` BT.601 YCbCr→RGBA） |
 | `Webp.probe(bytes): WebpHeader?` / `WebpImage.probe(bytes)` | 零解码极速获取 WebP VP8/VP8L/VP8X 宽高、Alpha、无损与动图标志 |
 | `parseWebpChunks(bytes): WebpExtendedInfo!WebpError` / `Webp.parseChunks(...)` | 零拷贝解析 RIFF/WEBP (含 VP8X 标志、24-bit 画布宽高及 `VP8L`/`VP8 `/`ICCP`/`EXIF`/`XMP `/`ANIM` 分块切片，对标 `image-webp` 加固) |
 | `webpEncode(allocator, rgba, width, height, quality): ([]u8)!WebpError` / `Webp.encode(...)` / `WebpImage.encode(...)` | 完整 RFC 9649 WebP (VP8L) 编码器（`quality == 100` 严格逐比特无损，`quality < 100` 可控感知量化压缩，含 Subtract Green + LZ77 + 5 组 Canonical Huffman） |

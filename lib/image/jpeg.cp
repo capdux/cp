@@ -1,7 +1,9 @@
 // Source: Absorbed from /data/dev/bun/src/runtime/image/codec_jpeg.cp | Synced: 2026-11-22T06:39:08Z
+// Reference-hardened against etemesi254/zune-image (MIT/Apache-2.0/Zlib)
 // ============================================================================
 // Absorbed from Bun: bun/src/runtime/image/codec_jpeg.cp
 // Extended with Production Baseline DCT JPEG (ITU-T T.81 / JFIF 1.01) Encoder
+// and Zero-Heap SIMD-Accelerated Baseline DCT JPEG (SOF0) Decoder
 // ============================================================================
 const std = @import("std");
 import { Codecs, ExifOrientation } from "./codecs";
@@ -12,6 +14,14 @@ pub err JpegError {
     InvalidBufferLength,
     BufferTooSmall,
     OutOfMemory,
+    InvalidMarker,
+    UnsupportedFormat,
+    InvalidHuffman,
+    InvalidQuantTable,
+    InvalidSamplingFactor,
+    InvalidScan,
+    UnexpectedEof,
+    DimensionTooLarge,
 }
 
 pub struct JpegHeader {
@@ -640,6 +650,782 @@ pub fn jpegEncodeInto(
     return out[0..sink.pos];
 }
 
+// ============================================================================
+// ITU-T T.81 Baseline DCT JPEG (SOF0) Zero-Heap SIMD Decoder (Ref: zune-jpeg)
+// ============================================================================
+
+const JPEG_MAX_DIM: u32 = 16384;
+
+/// 8-lane SIMD `@dot` 1D 正交 Inverse DCT 余弦基行向量 (`IDCT_COS_F32 = DCT_COS_F32^T`)
+const IDCT_COS_F32: [64]f32 = [
+     0.35355339,  0.49039264,  0.46193977,  0.41573481,  0.35355339,  0.27778512,  0.19134172,  0.09754516,
+     0.35355339,  0.41573481,  0.19134172, -0.09754516, -0.35355339, -0.49039264, -0.46193977, -0.27778512,
+     0.35355339,  0.27778512, -0.19134172, -0.49039264, -0.35355339,  0.09754516,  0.46193977,  0.41573481,
+     0.35355339,  0.09754516, -0.46193977, -0.27778512,  0.35355339,  0.41573481, -0.19134172, -0.49039264,
+     0.35355339, -0.09754516, -0.46193977,  0.27778512,  0.35355339, -0.41573481, -0.19134172,  0.49039264,
+     0.35355339, -0.27778512, -0.19134172,  0.49039264, -0.35355339, -0.09754516,  0.46193977, -0.41573481,
+     0.35355339, -0.41573481,  0.19134172,  0.09754516, -0.35355339,  0.49039264, -0.46193977,  0.27778512,
+     0.35355339, -0.49039264,  0.46193977, -0.41573481,  0.35355339, -0.27778512,  0.19134172, -0.09754516,
+];
+
+/// Per-component frame descriptor parsed from `SOF0` / `SOF2`.
+pub struct JpegComponentInfo {
+    id: u8 = 0,
+    h_samp: u8 = 1,
+    v_samp: u8 = 1,
+    quant_id: u8 = 0,
+}
+
+/// Complete JPEG frame metadata parsed by `parseJpegHeader`.
+pub struct JpegHeaderInfo {
+    width: u32 = 0,
+    height: u32 = 0,
+    components: u8 = 0,
+    precision: u8 = 8,
+    is_progressive: bool = false,
+    restart_interval: u16 = 0,
+    max_h_samp: u8 = 1,
+    max_v_samp: u8 = 1,
+    comp: [4]JpegComponentInfo = [
+        JpegComponentInfo{},
+        JpegComponentInfo{},
+        JpegComponentInfo{},
+        JpegComponentInfo{},
+    ],
+    orientation: ExifOrientation = ExifOrientation.Normal,
+}
+
+/// Decoded RGBA8 JPEG image owned by caller's allocator.
+pub struct JpegDecodedImage {
+    width: u32 = 0,
+    height: u32 = 0,
+    components: u8 = 0,
+    rgba: []u8 = [],
+
+    fn deinit(*_, allocator: std.mem.Allocator) {
+        if (rgba.len > 0) {
+            allocator.free(rgba);
+            rgba = [];
+        }
+    }
+}
+
+/// Decoded ITU-T T.81 Huffman table with 9-bit fast lookahead LUT + 1..16-bit canonical slow path.
+struct JpegHuffDecTable {
+    valid: bool = false,
+    // Fast 9-bit LUT: high bits (>> 9) = code length (1..9, or 10 if slow path), low 8 bits = symbol
+    fast_lut: [512]u16 = [0; 512],
+    max_code: [18]i32 = [0; 18],
+    val_offset: [18]i32 = [0; 18],
+    values: [256]u8 = [0; 256],
+
+    static fn build(bits: []const u8, vals: []const u8): JpegHuffDecTable ! JpegError {
+        if (bits.len < 16 || vals.len > 256) return JpegError.InvalidHuffman;
+        let t = JpegHuffDecTable{ valid: true };
+        const slow_sentinel: u16 = @as(u16, 10) << 9;
+        let li: usize = 0;
+        while (li < 512) : (li += 1) {
+            t.fast_lut[li] = slow_sentinel;
+        }
+        let vi: usize = 0;
+        while (vi < vals.len) : (vi += 1) {
+            t.values[vi] = vals[vi];
+        }
+
+        let code: i32 = 0;
+        let sym_idx: i32 = 0;
+        let k: usize = 1;
+        while (k <= 16) : (k += 1) {
+            const cnt: i32 = @as(i32, bits[k - 1]);
+            if (cnt == 0) {
+                t.max_code[k] = -1;
+                t.val_offset[k] = 0;
+            } else {
+                t.val_offset[k] = sym_idx - code;
+                let j: i32 = 0;
+                while (j < cnt) : (j += 1) {
+                    if (sym_idx >= @as(i32, @intCast(vals.len))) return JpegError.InvalidHuffman;
+                    const sym: u8 = vals[@as(usize, @intCast(sym_idx))];
+                    if (k <= 9) {
+                        const pad_bits: u4 = @as(u4, @intCast(9 - k));
+                        const base: usize = @as(usize, @intCast(code)) << pad_bits;
+                        const span: usize = @as(usize, 1) << pad_bits;
+                        const entry: u16 = (@as(u16, @intCast(k)) << 9) | @as(u16, sym);
+                        let s: usize = 0;
+                        while (s < span) : (s += 1) {
+                            t.fast_lut[base + s] = entry;
+                        }
+                    }
+                    code += 1;
+                    sym_idx += 1;
+                }
+                if (code > (@as(i32, 1) << @as(u5, @intCast(k)))) {
+                    return JpegError.InvalidHuffman;
+                }
+                t.max_code[k] = (code << @as(u5, @intCast(16 - k)));
+            }
+            code <<= 1;
+        }
+        t.max_code[17] = 0x10000;
+        return t;
+    }
+}
+
+/// MSB-first byte-stuffed JPEG entropy bitstream reader (ref: zune-jpeg/src/bitstream.rs).
+struct JpegBitReader {
+    src: []const u8 = "",
+    pos: usize = 0,
+    buf: u64 = 0,
+    nbits: u8 = 0,
+    seen_marker: u8 = 0,
+
+    static fn init(src: []const u8, start_pos: usize): JpegBitReader {
+        return JpegBitReader{ src: src, pos: start_pos, buf: 0, nbits: 0, seen_marker: 0 };
+    }
+
+    fn refill(*_) {
+        while (nbits <= 56) {
+            if (seen_marker != 0 || pos >= src.len) {
+                break;
+            }
+            const b: u8 = src[pos];
+            pos += 1;
+            if (b == 0xFF) {
+                // Skip any fill 0xFF bytes
+                let next_b: u8 = 0xFF;
+                while (pos < src.len) {
+                    next_b = src[pos];
+                    pos += 1;
+                    if (next_b != 0xFF) break;
+                }
+                if (next_b == 0x00) {
+                    // Byte-stuffed literal 0xFF
+                    buf = (buf << 8) | 0xFF;
+                    nbits += 8;
+                } else {
+                    // Encountered a marker (RSTm / EOI / etc.) — stop entropy reading
+                    seen_marker = next_b;
+                    break;
+                }
+            } else {
+                buf = (buf << 8) | @as(u64, b);
+                nbits += 8;
+            }
+        }
+    }
+
+    fn peekBits(*_, n: u8): u32 {
+        if (nbits < n) refill();
+        if (nbits >= n) {
+            const sh: u6 = @as(u6, @intCast(nbits - n));
+            const mask: u64 = (@as(u64, 1) << @as(u6, @intCast(n))) - 1;
+            return @as(u32, @intCast((buf >> sh) & mask));
+        }
+        // Zero-pad remaining bits at end of entropy segment (per ITU-T T.81 & zune-jpeg)
+        const pad: u6 = @as(u6, @intCast(n - nbits));
+        const mask: u64 = (@as(u64, 1) << @as(u6, @intCast(n))) - 1;
+        return @as(u32, @intCast((buf << pad) & mask));
+    }
+
+    fn dropBits(*_, n: u8): void ! JpegError {
+        if (nbits < n) refill();
+        if (nbits < n) return JpegError.UnexpectedEof;
+        nbits -= n;
+        if (nbits == 0) {
+            buf = 0;
+        } else {
+            const mask: u64 = (@as(u64, 1) << @as(u6, @intCast(nbits))) - 1;
+            buf &= mask;
+        }
+    }
+
+    fn readBits(*_, n: u8): u32 ! JpegError {
+        if (n == 0) return 0;
+        if (nbits < n) refill();
+        if (nbits < n) return JpegError.UnexpectedEof;
+        const sh: u6 = @as(u6, @intCast(nbits - n));
+        const mask: u64 = (@as(u64, 1) << @as(u6, @intCast(n))) - 1;
+        const val: u32 = @as(u32, @intCast((buf >> sh) & mask));
+        nbits -= n;
+        if (nbits == 0) {
+            buf = 0;
+        } else {
+            buf &= (@as(u64, 1) << @as(u6, @intCast(nbits))) - 1;
+        }
+        return val;
+    }
+
+    fn decodeHuffman(*_, tbl: *const JpegHuffDecTable): u8 ! JpegError {
+        if (!tbl.valid) return JpegError.InvalidHuffman;
+        if (nbits < 16) refill();
+
+        const p9: usize = @as(usize, peekBits(9));
+        const entry: u16 = tbl.fast_lut[p9];
+        const clen: u8 = @as(u8, @intCast(entry >> 9));
+        if (clen <= 9) {
+            dropBits(clen)?;
+            return @as(u8, @intCast(entry & 0xFF));
+        }
+
+        // Slow path: 10..16-bit canonical decode
+        const p16: i32 = @as(i32, @intCast(peekBits(16)));
+        let k: usize = 10;
+        while (k <= 16) : (k += 1) {
+            if (p16 < tbl.max_code[k]) {
+                const code_val: i32 = p16 >> @as(u5, @intCast(16 - k));
+                const idx: i32 = code_val + tbl.val_offset[k];
+                if (idx < 0 || idx >= 256) return JpegError.InvalidHuffman;
+                dropBits(@as(u8, @intCast(k)))?;
+                return tbl.values[@as(usize, @intCast(idx))];
+            }
+        }
+        return JpegError.InvalidHuffman;
+    }
+
+    /// Consumes a restart marker `RST0..RST7` at an MCU restart boundary and resets bit buffer.
+    fn consumeRestart(*_) {
+        buf = 0;
+        nbits = 0;
+        if (seen_marker >= 0xD0 && seen_marker <= 0xD7) {
+            seen_marker = 0;
+            return;
+        }
+        if (seen_marker != 0) return;
+        // Scan forward for 0xFF 0xD0..0xD7
+        while (pos + 1 < src.len) {
+            if (src[pos] == 0xFF) {
+                let p: usize = pos + 1;
+                while (p < src.len && src[p] == 0xFF) : (p += 1) {}
+                if (p < src.len && src[p] >= 0xD0 && src[p] <= 0xD7) {
+                    pos = p + 1;
+                    return;
+                }
+                break;
+            }
+            pos += 1;
+        }
+    }
+}
+
+fn jpegReceiveExtend(val: u32, nbits: u8): i32 {
+    if (nbits == 0) return 0;
+    const half: u32 = @as(u32, 1) << @as(u5, @intCast(nbits - 1));
+    if (val < half) {
+        const full: i32 = @as(i32, 1) << @as(u5, @intCast(nbits));
+        return @as(i32, @intCast(val)) - (full - 1);
+    }
+    return @as(i32, @intCast(val));
+}
+
+fn clampF32ToU8(v: f32): u8 {
+    if (v <= 0.0) return 0;
+    if (v >= 255.0) return 255;
+    return @as(u8, @intFromFloat(v + 0.5));
+}
+
+/// 8-lane SIMD `@dot` hardware-accelerated separable 2D 8x8 Inverse DCT (`X = C^T * Y * C + 128`).
+fn inverseDctSimd8x8(deq: [64]f32, out_pixels: *[64]u8) {
+    // 1. Row-wise 1D IDCT via 8-lane @dot, transposed directly into `tmp_t[x * 8 + v]`
+    let tmp_t: [64]f32 = [0.0; 64];
+    let v: usize = 0;
+    while (v < 8) : (v += 1) {
+        const row_off = v * 8;
+        const row_slice: []const f32 = deq[row_off .. row_off + 8];
+        let x: usize = 0;
+        while (x < 8) : (x += 1) {
+            const c_off = x * 8;
+            tmp_t[x * 8 + v] = @dot(row_slice, IDCT_COS_F32[c_off .. c_off + 8]);
+        }
+    }
+
+    // 2. Column-wise 1D IDCT via 8-lane @dot + level shift (+128.0) + clamp [0, 255]
+    let y: usize = 0;
+    while (y < 8) : (y += 1) {
+        const c_off = y * 8;
+        const cos_row: []const f32 = IDCT_COS_F32[c_off .. c_off + 8];
+        let x: usize = 0;
+        while (x < 8) : (x += 1) {
+            const col_off = x * 8;
+            const val: f32 = @dot(tmp_t[col_off .. col_off + 8], cos_row) + 128.0;
+            out_pixels[y * 8 + x] = clampF32ToU8(val);
+        }
+    }
+}
+
+fn decodeMcuBlock(
+    br: *JpegBitReader,
+    dc_tbl: *const JpegHuffDecTable,
+    ac_tbl: *const JpegHuffDecTable,
+    quant: *const [64]f32,
+    dc_pred: *i32,
+    out_pixels: *[64]u8,
+): void ! JpegError {
+    let deq: [64]f32 = [0.0; 64];
+
+    // 1. DC coefficient
+    const dc_cat: u8 = br.decodeHuffman(dc_tbl)?;
+    if (dc_cat > 11) return JpegError.InvalidHuffman;
+    const dc_bits: u32 = br.readBits(dc_cat)?;
+    const dc_diff: i32 = jpegReceiveExtend(dc_bits, dc_cat);
+    dc_pred.* = dc_pred.* +% dc_diff;
+    deq[0] = @as(f32, @floatFromInt(dc_pred.*)) * quant[0];
+
+    // 2. AC coefficients (1..63 in Zig-Zag order)
+    let k: usize = 1;
+    while (k < 64) {
+        const rs: u8 = br.decodeHuffman(ac_tbl)?;
+        if (rs == 0x00) {
+            // EOB: remaining AC coefficients are 0
+            break;
+        }
+        if (rs == 0xF0) {
+            // ZRL: skip 16 zeros
+            k += 16;
+            continue;
+        }
+        const run: usize = @as(usize, rs >> 4);
+        const cat: u8 = rs & 0x0F;
+        if (cat == 0 || cat > 10) return JpegError.InvalidHuffman;
+        k += run;
+        if (k >= 64) return JpegError.InvalidHuffman;
+        const ac_bits: u32 = br.readBits(cat)?;
+        const ac_val: i32 = jpegReceiveExtend(ac_bits, cat);
+        const nat_idx: usize = ZIGZAG[k];
+        deq[nat_idx] = @as(f32, @floatFromInt(ac_val)) * quant[nat_idx];
+        k += 1;
+    }
+
+    inverseDctSimd8x8(deq, out_pixels);
+}
+
+/// Parses JPEG frame header (`SOF0`/`SOF2`, `DRI`, `EXIF` orientation) with strict bounds validation.
+pub fn parseJpegHeader(bytes: []const u8): JpegHeaderInfo ! JpegError {
+    if (bytes.len < 4 || bytes[0] != 0xFF || bytes[1] != 0xD8) {
+        return JpegError.InvalidMarker;
+    }
+    let info = JpegHeaderInfo{
+        orientation: Exif.readJpeg(bytes),
+    };
+    let pos: usize = 2;
+    let found_sof: bool = false;
+
+    while (pos + 2 <= bytes.len) {
+        if (bytes[pos] != 0xFF) {
+            pos += 1;
+            continue;
+        }
+        while (pos < bytes.len && bytes[pos] == 0xFF) : (pos += 1) {}
+        if (pos >= bytes.len) break;
+        const marker: u8 = bytes[pos];
+        pos += 1;
+
+        if (marker == 0x00 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD8)) {
+            continue;
+        }
+        if (marker == 0xD9 || marker == 0xDA) {
+            break;
+        }
+        if (pos + 2 > bytes.len) return JpegError.UnexpectedEof;
+        const seglen: usize = (@as(usize, bytes[pos]) << 8) | @as(usize, bytes[pos + 1]);
+        if (seglen < 2 || pos + seglen > bytes.len) return JpegError.InvalidMarker;
+        const body = bytes[pos + 2 .. pos + seglen];
+        pos += seglen;
+
+        if (marker == 0xDD) {
+            // DRI
+            if (body.len < 2) return JpegError.InvalidMarker;
+            info.restart_interval = (@as(u16, body[0]) << 8) | @as(u16, body[1]);
+        } else if (marker == 0xC0 || marker == 0xC2) {
+            if (body.len < 6) return JpegError.InvalidMarker;
+            info.precision = body[0];
+            info.height = (@as(u32, body[1]) << 8) | @as(u32, body[2]);
+            info.width = (@as(u32, body[3]) << 8) | @as(u32, body[4]);
+            info.components = body[5];
+            info.is_progressive = (marker == 0xC2);
+            if (info.width == 0 || info.height == 0) return JpegError.InvalidDimensions;
+            if (info.width > JPEG_MAX_DIM || info.height > JPEG_MAX_DIM) return JpegError.DimensionTooLarge;
+            if (info.components == 0 || info.components > 4) return JpegError.UnsupportedFormat;
+            if (body.len < @as(usize, 6) + @as(usize, info.components) * 3) return JpegError.InvalidMarker;
+
+            let max_h: u8 = 1;
+            let max_v: u8 = 1;
+            let ci: usize = 0;
+            while (ci < @as(usize, info.components)) : (ci += 1) {
+                const cid: u8 = body[6 + ci * 3];
+                const hv: u8 = body[6 + ci * 3 + 1];
+                const qid: u8 = body[6 + ci * 3 + 2];
+                const h: u8 = (hv >> 4) & 0x0F;
+                const v: u8 = hv & 0x0F;
+                if (h == 0 || h > 4 || v == 0 || v > 4 || qid > 3) {
+                    return JpegError.InvalidSamplingFactor;
+                }
+                if (h > max_h) max_h = h;
+                if (v > max_v) max_v = v;
+                info.comp[ci] = JpegComponentInfo{ id: cid, h_samp: h, v_samp: v, quant_id: qid };
+            }
+            info.max_h_samp = max_h;
+            info.max_v_samp = max_v;
+            found_sof = true;
+            break;
+        }
+    }
+
+    if (!found_sof) return JpegError.InvalidMarker;
+    return info;
+}
+
+/// Zero-heap Baseline DCT JPEG (`SOF0`) decoder into caller-provided `out_rgba` (`width * height * 4` bytes).
+/// Supports 1-component grayscale and 3-component YCbCr (4:4:4, 4:2:2, 4:4:0, 4:2:0),
+/// DQT (8/16-bit), DHT (standard/custom), DRI + RST0..RST7 restart markers,
+/// 8-lane SIMD `@dot` 8x8 IDCT, and `@fma` BT.601 YCbCr->RGBA conversion.
+pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo ! JpegError {
+    if (bytes.len < 4 || bytes[0] != 0xFF || bytes[1] != 0xD8) {
+        return JpegError.InvalidMarker;
+    }
+
+    let info = JpegHeaderInfo{
+        orientation: Exif.readJpeg(bytes),
+    };
+    let quant_tables: [4][64]f32 = [[0.0; 64]; 4];
+    let quant_valid: [4]bool = [false; 4];
+    let dc_tables: [4]JpegHuffDecTable = [
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+    ];
+    let ac_tables: [4]JpegHuffDecTable = [
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+        JpegHuffDecTable{},
+    ];
+
+    let found_sof: bool = false;
+    let found_sos: bool = false;
+    let sos_comp_dc: [4]usize = [0; 4];
+    let sos_comp_ac: [4]usize = [0; 4];
+    let sos_comp_idx: [4]usize = [0; 4];
+    let sos_ns: usize = 0;
+    let entropy_start: usize = 0;
+
+    let pos: usize = 2;
+    while (pos + 2 <= bytes.len) {
+        if (bytes[pos] != 0xFF) {
+            pos += 1;
+            continue;
+        }
+        while (pos < bytes.len && bytes[pos] == 0xFF) : (pos += 1) {}
+        if (pos >= bytes.len) break;
+        const marker: u8 = bytes[pos];
+        pos += 1;
+
+        if (marker == 0x00 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD8)) {
+            continue;
+        }
+        if (marker == 0xD9) {
+            break;
+        }
+        if (pos + 2 > bytes.len) return JpegError.UnexpectedEof;
+        const seglen: usize = (@as(usize, bytes[pos]) << 8) | @as(usize, bytes[pos + 1]);
+        if (seglen < 2 || pos + seglen > bytes.len) return JpegError.InvalidMarker;
+        const body = bytes[pos + 2 .. pos + seglen];
+        pos += seglen;
+
+        if (marker == 0xDB) {
+            // DQT: one or more quantization tables
+            let off: usize = 0;
+            while (off < body.len) {
+                const pq_tq: u8 = body[off];
+                off += 1;
+                const pq: u8 = (pq_tq >> 4) & 0x0F;
+                const tq: usize = @as(usize, pq_tq & 0x0F);
+                if (pq > 1 || tq > 3) return JpegError.InvalidQuantTable;
+                const elem_size: usize = if (pq == 0) 1 else 2;
+                if (off + 64 * elem_size > body.len) return JpegError.InvalidQuantTable;
+                let k: usize = 0;
+                while (k < 64) : (k += 1) {
+                    const qval: u16 = if (pq == 0)
+                        @as(u16, body[off + k])
+                    else
+                        (@as(u16, body[off + k * 2]) << 8) | @as(u16, body[off + k * 2 + 1]);
+                    quant_tables[tq][ZIGZAG[k]] = @as(f32, @floatFromInt(qval));
+                }
+                quant_valid[tq] = true;
+                off += 64 * elem_size;
+            }
+        } else if (marker == 0xC4) {
+            // DHT: one or more Huffman tables
+            let off: usize = 0;
+            while (off < body.len) {
+                if (off + 17 > body.len) return JpegError.InvalidHuffman;
+                const tc_th: u8 = body[off];
+                const tc: u8 = (tc_th >> 4) & 0x0F;
+                const th: usize = @as(usize, tc_th & 0x0F);
+                if (tc > 1 || th > 3) return JpegError.InvalidHuffman;
+                const bits = body[off + 1 .. off + 17];
+                let sum: usize = 0;
+                let bi: usize = 0;
+                while (bi < 16) : (bi += 1) {
+                    sum += @as(usize, bits[bi]);
+                }
+                if (sum > 256 || off + 17 + sum > body.len) return JpegError.InvalidHuffman;
+                const vals = body[off + 17 .. off + 17 + sum];
+                const tbl = JpegHuffDecTable.build(bits, vals)?;
+                if (tc == 0) {
+                    dc_tables[th] = tbl;
+                } else {
+                    ac_tables[th] = tbl;
+                }
+                off += 17 + sum;
+            }
+        } else if (marker == 0xDD) {
+            // DRI
+            if (body.len < 2) return JpegError.InvalidMarker;
+            info.restart_interval = (@as(u16, body[0]) << 8) | @as(u16, body[1]);
+        } else if (marker == 0xC0) {
+            // SOF0 Baseline DCT
+            if (body.len < 6) return JpegError.InvalidMarker;
+            info.precision = body[0];
+            if (info.precision != 8) return JpegError.UnsupportedFormat;
+            info.height = (@as(u32, body[1]) << 8) | @as(u32, body[2]);
+            info.width = (@as(u32, body[3]) << 8) | @as(u32, body[4]);
+            info.components = body[5];
+            info.is_progressive = false;
+            if (info.width == 0 || info.height == 0) return JpegError.InvalidDimensions;
+            if (info.width > JPEG_MAX_DIM || info.height > JPEG_MAX_DIM) return JpegError.DimensionTooLarge;
+            if (info.components != 1 && info.components != 3) return JpegError.UnsupportedFormat;
+            if (body.len < @as(usize, 6) + @as(usize, info.components) * 3) return JpegError.InvalidMarker;
+
+            let max_h: u8 = 1;
+            let max_v: u8 = 1;
+            let ci: usize = 0;
+            while (ci < @as(usize, info.components)) : (ci += 1) {
+                const cid: u8 = body[6 + ci * 3];
+                const hv: u8 = body[6 + ci * 3 + 1];
+                const qid: u8 = body[6 + ci * 3 + 2];
+                const h: u8 = (hv >> 4) & 0x0F;
+                const v: u8 = hv & 0x0F;
+                if (h == 0 || h > 2 || v == 0 || v > 2 || qid > 3) {
+                    return JpegError.InvalidSamplingFactor;
+                }
+                if (h > max_h) max_h = h;
+                if (v > max_v) max_v = v;
+                info.comp[ci] = JpegComponentInfo{ id: cid, h_samp: h, v_samp: v, quant_id: qid };
+            }
+            // Validate chroma sampling for 3-component images (chroma must divide luma)
+            if (info.components == 3) {
+                if ((max_h % info.comp[1].h_samp) != 0 || (max_v % info.comp[1].v_samp) != 0 ||
+                    (max_h % info.comp[2].h_samp) != 0 || (max_v % info.comp[2].v_samp) != 0)
+                {
+                    return JpegError.InvalidSamplingFactor;
+                }
+            }
+            info.max_h_samp = max_h;
+            info.max_v_samp = max_v;
+            found_sof = true;
+        } else if (marker == 0xC1 || marker == 0xC2 || marker == 0xC3 ||
+                   (marker >= 0xC5 && marker <= 0xC7) ||
+                   (marker >= 0xC9 && marker <= 0xCB) ||
+                   (marker >= 0xCD && marker <= 0xCF))
+        {
+            return JpegError.UnsupportedFormat;
+        } else if (marker == 0xDA) {
+            // SOS: Start of Scan
+            if (!found_sof || body.len < 4) return JpegError.InvalidScan;
+            sos_ns = @as(usize, body[0]);
+            if (sos_ns != @as(usize, info.components)) return JpegError.UnsupportedFormat;
+            if (body.len < @as(usize, 1) + sos_ns * 2 + 3) return JpegError.InvalidScan;
+
+            let si: usize = 0;
+            while (si < sos_ns) : (si += 1) {
+                const cs: u8 = body[1 + si * 2];
+                const td_ta: u8 = body[1 + si * 2 + 1];
+                const td: usize = @as(usize, (td_ta >> 4) & 0x0F);
+                const ta: usize = @as(usize, td_ta & 0x0F);
+                if (td > 3 || ta > 3) return JpegError.InvalidScan;
+
+                let matched: usize = 4;
+                let ci: usize = 0;
+                while (ci < @as(usize, info.components)) : (ci += 1) {
+                    if (info.comp[ci].id == cs) {
+                        matched = ci;
+                        break;
+                    }
+                }
+                if (matched == 4) return JpegError.InvalidScan;
+                sos_comp_idx[si] = matched;
+                sos_comp_dc[si] = td;
+                sos_comp_ac[si] = ta;
+            }
+            // Baseline SOS spectral selection: Ss == 0, Se == 63, Ah == 0, Al == 0
+            const ss: u8 = body[1 + sos_ns * 2];
+            const se: u8 = body[1 + sos_ns * 2 + 1];
+            if (ss != 0 || se != 63) return JpegError.UnsupportedFormat;
+
+            entropy_start = pos;
+            found_sos = true;
+            break;
+        }
+    }
+
+    if (!found_sof || !found_sos) return JpegError.InvalidMarker;
+
+    const total_rgba: usize = @as(usize, info.width) * @as(usize, info.height) * 4;
+    if (out_rgba.len < total_rgba) return JpegError.BufferTooSmall;
+
+    // Validate all referenced quantization & Huffman tables exist
+    let si_chk: usize = 0;
+    while (si_chk < sos_ns) : (si_chk += 1) {
+        const ci = sos_comp_idx[si_chk];
+        if (!quant_valid[@as(usize, info.comp[ci].quant_id)]) return JpegError.InvalidQuantTable;
+        if (!dc_tables[sos_comp_dc[si_chk]].valid || !ac_tables[sos_comp_ac[si_chk]].valid) {
+            return JpegError.InvalidHuffman;
+        }
+    }
+
+    const mcu_w: usize = @as(usize, info.max_h_samp) * 8;
+    const mcu_h: usize = @as(usize, info.max_v_samp) * 8;
+    const mcus_x: usize = (@as(usize, info.width) + mcu_w - 1) / mcu_w;
+    const mcus_y: usize = (@as(usize, info.height) + mcu_h - 1) / mcu_h;
+
+    let br = JpegBitReader.init(bytes, entropy_start);
+    let dc_preds: [4]i32 = [0; 4];
+    let mcu_counter: u32 = 0;
+
+    // Stack-allocated MCU component planes (max 16x16 = 256 bytes per component — zero heap!)
+    let comp_buf: [3][256]u8 = [[128; 256]; 3];
+    let blk: [64]u8 = [0; 64];
+
+    let my: usize = 0;
+    while (my < mcus_y) : (my += 1) {
+        let mx: usize = 0;
+        while (mx < mcus_x) : (mx += 1) {
+            if (info.restart_interval > 0 && mcu_counter > 0 && (mcu_counter % @as(u32, info.restart_interval)) == 0) {
+                br.consumeRestart();
+                dc_preds[0] = 0;
+                dc_preds[1] = 0;
+                dc_preds[2] = 0;
+                dc_preds[3] = 0;
+            }
+
+            // Decode all data units in this MCU
+            let s_idx: usize = 0;
+            while (s_idx < sos_ns) : (s_idx += 1) {
+                const c_idx: usize = sos_comp_idx[s_idx];
+                const h_s: usize = @as(usize, info.comp[c_idx].h_samp);
+                const v_s: usize = @as(usize, info.comp[c_idx].v_samp);
+                const qid: usize = @as(usize, info.comp[c_idx].quant_id);
+                const dcid: usize = sos_comp_dc[s_idx];
+                const acid: usize = sos_comp_ac[s_idx];
+                const plane_w: usize = h_s * 8;
+
+                let bv: usize = 0;
+                while (bv < v_s) : (bv += 1) {
+                    let bh: usize = 0;
+                    while (bh < h_s) : (bh += 1) {
+                        decodeMcuBlock(
+                            &br,
+                            &dc_tables[dcid],
+                            &ac_tables[acid],
+                            &quant_tables[qid],
+                            &dc_preds[c_idx],
+                            &blk,
+                        )?;
+                        let r: usize = 0;
+                        while (r < 8) : (r += 1) {
+                            const dst_row: usize = (bv * 8 + r) * plane_w + bh * 8;
+                            let col: usize = 0;
+                            while (col < 8) : (col += 1) {
+                                comp_buf[c_idx][dst_row + col] = blk[r * 8 + col];
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Upsample & convert MCU to RGBA8 directly into `out_rgba`
+            const base_x: usize = mx * mcu_w;
+            const base_y: usize = my * mcu_h;
+            const img_w: usize = @as(usize, info.width);
+            const img_h: usize = @as(usize, info.height);
+
+            if (info.components == 1) {
+                let py: usize = 0;
+                while (py < mcu_h && base_y + py < img_h) : (py += 1) {
+                    const row_out: usize = (base_y + py) * img_w;
+                    let px: usize = 0;
+                    while (px < mcu_w && base_x + px < img_w) : (px += 1) {
+                        const yv: u8 = comp_buf[0][py * mcu_w + px];
+                        const o: usize = (row_out + base_x + px) * 4;
+                        out_rgba[o] = yv;
+                        out_rgba[o + 1] = yv;
+                        out_rgba[o + 2] = yv;
+                        out_rgba[o + 3] = 255;
+                    }
+                }
+            } else {
+                const cb_h_shift: u6 = if (info.max_h_samp > info.comp[1].h_samp) 1 else 0;
+                const cb_v_shift: u6 = if (info.max_v_samp > info.comp[1].v_samp) 1 else 0;
+                const cr_h_shift: u6 = if (info.max_h_samp > info.comp[2].h_samp) 1 else 0;
+                const cr_v_shift: u6 = if (info.max_v_samp > info.comp[2].v_samp) 1 else 0;
+                const y_w: usize = @as(usize, info.comp[0].h_samp) * 8;
+                const cb_w: usize = @as(usize, info.comp[1].h_samp) * 8;
+                const cr_w: usize = @as(usize, info.comp[2].h_samp) * 8;
+
+                let py: usize = 0;
+                while (py < mcu_h && base_y + py < img_h) : (py += 1) {
+                    const row_out: usize = (base_y + py) * img_w;
+                    const cby: usize = py >> cb_v_shift;
+                    const cry: usize = py >> cr_v_shift;
+                    let px: usize = 0;
+                    while (px < mcu_w && base_x + px < img_w) : (px += 1) {
+                        const yf: f32 = @as(f32, @floatFromInt(comp_buf[0][py * y_w + px]));
+                        const cbf: f32 = @as(f32, @floatFromInt(comp_buf[1][cby * cb_w + (px >> cb_h_shift)])) - 128.0;
+                        const crf: f32 = @as(f32, @floatFromInt(comp_buf[2][cry * cr_w + (px >> cr_h_shift)])) - 128.0;
+
+                        // BT.601 YCbCr -> RGB using hardware @fma
+                        const rf: f32 = @fma(1.40200, crf, yf);
+                        const gf: f32 = @fma(-0.71414, crf, @fma(-0.34414, cbf, yf));
+                        const bf: f32 = @fma(1.77200, cbf, yf);
+
+                        const o: usize = (row_out + base_x + px) * 4;
+                        out_rgba[o] = clampF32ToU8(rf);
+                        out_rgba[o + 1] = clampF32ToU8(gf);
+                        out_rgba[o + 2] = clampF32ToU8(bf);
+                        out_rgba[o + 3] = 255;
+                    }
+                }
+            }
+
+            mcu_counter += 1;
+        }
+    }
+
+    return info;
+}
+
+/// Decodes a Baseline DCT JPEG (`SOF0`) into a newly allocated RGBA8 image.
+pub fn decodeJpegToRgba(
+    allocator: std.mem.Allocator,
+    bytes: []const u8,
+): JpegDecodedImage ! JpegError {
+    const hdr = parseJpegHeader(bytes)?;
+    if (hdr.is_progressive) return JpegError.UnsupportedFormat;
+    const total: usize = @as(usize, hdr.width) * @as(usize, hdr.height) * 4;
+    const rgba = allocator.alloc(u8, total) catch return JpegError.OutOfMemory;
+    const decoded_hdr = decodeJpegToRgbaInto(bytes, rgba) catch |e| {
+        allocator.free(rgba);
+        return e;
+    };
+    return JpegDecodedImage{
+        width: decoded_hdr.width,
+        height: decoded_hdr.height,
+        components: decoded_hdr.components,
+        rgba: rgba,
+    };
+}
+
 pub class Jpeg {
     /// 快速探测 JPEG 图像尺寸、采样与 EXIF 方向
     pub static fn probe(bytes: []const u8): JpegHeader? {
@@ -712,9 +1498,24 @@ pub class Jpeg {
     ): ([]u8) ! JpegError {
         return jpegEncode(allocator, rgba, width, height, quality);
     }
+
+    /// 解析 JPEG 帧头与采样/重启间隔信息
+    pub static fn parseHeader(bytes: []const u8): JpegHeaderInfo ! JpegError {
+        return parseJpegHeader(bytes);
+    }
+
+    /// 零堆解码 Baseline DCT JPEG 到调用方外部 RGBA8 切片
+    pub static fn decodeToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo ! JpegError {
+        return decodeJpegToRgbaInto(bytes, out_rgba);
+    }
+
+    /// 解码 Baseline DCT JPEG 到新分配 RGBA8 图像
+    pub static fn decodeToRgba(allocator: std.mem.Allocator, bytes: []const u8): JpegDecodedImage ! JpegError {
+        return decodeJpegToRgba(allocator, bytes);
+    }
 }
 
-/// JPEG 图像编码器与探测器别名类（提供 `JpegImage.encode` / `JpegImage.probe`）
+/// JPEG 图像编码器与探测器别名类（提供 `JpegImage.encode` / `JpegImage.probe` / `JpegImage.decodeToRgba`）
 pub class JpegImage {
     pub static fn probe(bytes: []const u8): JpegHeader? {
         return Jpeg.probe(bytes);
@@ -728,5 +1529,17 @@ pub class JpegImage {
         quality: u8,
     ): ([]u8) ! JpegError {
         return jpegEncode(allocator, rgba, width, height, quality);
+    }
+
+    pub static fn parseHeader(bytes: []const u8): JpegHeaderInfo ! JpegError {
+        return parseJpegHeader(bytes);
+    }
+
+    pub static fn decodeToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo ! JpegError {
+        return decodeJpegToRgbaInto(bytes, out_rgba);
+    }
+
+    pub static fn decodeToRgba(allocator: std.mem.Allocator, bytes: []const u8): JpegDecodedImage ! JpegError {
+        return decodeJpegToRgba(allocator, bytes);
     }
 }
