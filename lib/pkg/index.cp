@@ -1047,3 +1047,28 @@ export {
     evaluateInstallPreflight,
     formatInstallContextReport,
 } from "./installContext.cp";
+
+export {
+    PM_ROUTER_MAX_TREE_DEPTH,
+    PmRouterError,
+    PmSubcommandKind,
+    PmParsedCommand,
+    parsePmSubcommandArgs,
+    formatPmCommandHelp,
+    PmLsNode,
+    PmLsEdge,
+    PmLsRenderOptions,
+    PmLsRenderResult,
+    renderPmLsTree,
+    CacheEntryMeta,
+    CachePrunePolicy,
+    CachePruneDecisionKind,
+    CachePruneDecision,
+    CachePruneSummary,
+    planCachePrune,
+    PmLockHashEntry,
+    computePmLockfileHash,
+    PmWhoamiAuthKind,
+    PmWhoamiDiagnostic,
+    diagnosePmWhoami,
+} from "./pmCommandRouter.cp";

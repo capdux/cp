@@ -1527,3 +1527,31 @@ const route = InstallCacheStrategy.decidePackageRoute(
 );
 * = m; * = route;
 ```
+
+### `cap pm` 运维子命令路由、依赖树渲染与缓存审计引擎（`pmCommandRouter.cp`）
+
+- 吸收自 `/data/dev/bun/src/cli/package_manager_command.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 子命令路由与帮助渲染：`PmRouterError`、`PmSubcommandKind`（覆盖 `bin`/`ls`/`cache`/`cache rm`/`hash`/`hash-string`/`hash-tokens`/`migrate`/`untrusted`/`default-trusted`/`trust`/`version`/`pack`/`pkg`/`whoami`/`outdated`/`audit`/`why` 19 类）、`PmParsedCommand`、`parsePmSubcommandArgs`、`formatPmCommandHelp`；
+  - ASCII/Unicode 依赖树渲染：`PM_ROUTER_MAX_TREE_DEPTH`、`PmLsNode`、`PmLsEdge`、`PmLsRenderOptions`、`PmLsRenderResult`、`renderPmLsTree`（支持顶层视图与 `--all` 全量展开、环路 `(circular)` 与去重 `(deduped)` 标注）；
+  - 全局缓存 LRU/TTL 清理规划：`CacheEntryMeta`、`CachePrunePolicy`、`CachePruneDecisionKind`、`CachePruneDecision`、`CachePruneSummary`、`planCachePrune`（保护当前锁文件引用条目，按 TTL 与 LRU 配额回收空间）；
+  - 锁文件摘要与凭据诊断：`PmLockHashEntry`、`computePmLockfileHash`、`PmWhoamiAuthKind`、`PmWhoamiDiagnostic`、`diagnosePmWhoami`。
+
+```cp
+import {
+    parsePmSubcommandArgs,
+    PmSubcommandKind,
+    PmLockHashEntry,
+    computePmLockfileHash,
+} from "cap:pkg";
+
+const argv: [3][]const u8 = ["pm", "ls", "--all"];
+let pos_buf: [4][]const u8 = [""; 4];
+const parsed = parsePmSubcommandArgs(argv[0..], pos_buf[0..])?;
+const entries: [1]PmLockHashEntry = [
+    PmLockHashEntry{ name: "zod", version: "3.23.8", resolved: "https://reg/zod.tgz", integrity: "sha512-abc" },
+];
+let hex: [32]u8 = [0; 32];
+const hlen = computePmLockfileHash(entries[0..], hex[0..])?;
+* = parsed; * = hlen;
+```
