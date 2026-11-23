@@ -676,6 +676,7 @@ pub fn demoWebmMuxRoundtrip(vp9_keyframe: []const u8, opus_pkt: []const u8)! {
   - `measureAudioLoudnessF32`：64-sample 分块 `@dot` 平方和能量归约（自动清洗 NaN/Inf）。
   - `dotF32Simd(a, b): f32`：原生 SIMD `@dot` 点积封装。
   - `convolveFirF32Simd(input, coeffs, *out): usize ! DspKernelError`：外部切片通用因果 FIR 滤波 SIMD 核（64-lane 分块 `@dot`，无抽头数上限）。
+  - `audioWav.cp`：`computeAudioRmsSimdF32`（`@dot` 硬件 RMS 测量）、`mixAudioGainSimdF32`（8 路展开线性混音）、8 路展开优化 `s16LeToF32Slice` 与 `stereoToMonoF32`。
 - **图像处理 SIMD 加速与防溢出加固（`imageOps.cp`）**：
   - `resizeRgba`（Pass 1/2 水平+垂直可分离缩放）与 `gaussianBlurRgba`（对称 1D 高斯卷积）：全面接入 `@dot` 向量化计算。
   - `computePsnrRgba`：64 像素分块 `@l2sq` 硬件向量化 MSE/PSNR 计算。

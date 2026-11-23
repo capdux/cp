@@ -64,6 +64,8 @@ export {
     decodeWavMulaw,
     encodeWavAlaw,
     decodeWavAlaw,
+    computeAudioRmsSimdF32,
+    mixAudioGainSimdF32,
 } from "./audioWav.cp";
 
 export {

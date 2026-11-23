@@ -1089,15 +1089,28 @@ pub fn f32ToU8Slice(src: []const f32, dst: []u8): usize ! AudioError {
     return src.len;
 }
 
-/// Converts packed little-endian signed 16-bit PCM bytes to normalized `f32` (`[-1.0, 1.0]`).
+/// Converts packed little-endian signed 16-bit PCM bytes to normalized `f32` (`[-1.0, 1.0]`)
+/// with 8-way unrolled multiply-by-reciprocal acceleration.
 pub fn s16LeToF32Slice(src_bytes: []const u8, dst: []f32): usize ! AudioError {
     if ((src_bytes.len & 1) != 0) return AudioError.TruncatedData;
     const n: usize = src_bytes.len / 2;
     if (dst.len < n) return AudioError.BufferTooSmall;
+    const inv: f32 = 1.0 / 32768.0;
     let i: usize = 0;
+    while (i + 8 <= n) : (i += 8) {
+        const off: usize = i * 2;
+        dst[i + 0] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 0))) as f32) * inv;
+        dst[i + 1] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 2))) as f32) * inv;
+        dst[i + 2] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 4))) as f32) * inv;
+        dst[i + 3] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 6))) as f32) * inv;
+        dst[i + 4] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 8))) as f32) * inv;
+        dst[i + 5] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 10))) as f32) * inv;
+        dst[i + 6] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 12))) as f32) * inv;
+        dst[i + 7] = (@as(i16, @bitCast(readU16Le(src_bytes, off + 14))) as f32) * inv;
+    }
     while (i < n) : (i += 1) {
         const raw: i16 = @as(i16, @bitCast(readU16Le(src_bytes, i * 2)));
-        dst[i] = (raw as f32) / 32768.0;
+        dst[i] = (raw as f32) * inv;
     }
     return n;
 }
@@ -1211,12 +1224,24 @@ pub fn f32SliceToF32LeBytes(src: []const f32, dst_bytes: []u8): usize ! AudioErr
     return need;
 }
 
-/// Downmixes interleaved stereo `f32` (`L, R, L, R...`) to mono `f32` (`0.5 * (L + R)`).
+/// Downmixes interleaved stereo `f32` (`L, R, L, R...`) to mono `f32` (`0.5 * (L + R)`)
+/// using 8-way unrolled vector-friendly loops.
 pub fn stereoToMonoF32(stereo: []const f32, out_mono: []f32): usize ! AudioError {
     if ((stereo.len & 1) != 0) return AudioError.InvalidParameter;
     const frames: usize = stereo.len / 2;
     if (out_mono.len < frames) return AudioError.BufferTooSmall;
     let i: usize = 0;
+    while (i + 8 <= frames) : (i += 8) {
+        const s: usize = i * 2;
+        out_mono[i + 0] = (stereo[s + 0] + stereo[s + 1]) * 0.5;
+        out_mono[i + 1] = (stereo[s + 2] + stereo[s + 3]) * 0.5;
+        out_mono[i + 2] = (stereo[s + 4] + stereo[s + 5]) * 0.5;
+        out_mono[i + 3] = (stereo[s + 6] + stereo[s + 7]) * 0.5;
+        out_mono[i + 4] = (stereo[s + 8] + stereo[s + 9]) * 0.5;
+        out_mono[i + 5] = (stereo[s + 10] + stereo[s + 11]) * 0.5;
+        out_mono[i + 6] = (stereo[s + 12] + stereo[s + 13]) * 0.5;
+        out_mono[i + 7] = (stereo[s + 14] + stereo[s + 15]) * 0.5;
+    }
     while (i < frames) : (i += 1) {
         out_mono[i] = (stereo[i * 2] + stereo[i * 2 + 1]) * 0.5;
     }
@@ -1668,4 +1693,38 @@ pub fn decodeWavAlaw(wav_bytes: []const u8, out_samples: []i16): WavParsedInfo !
         out_samples[i] = wavAlawToPcm16(info.data_slice[i]);
     }
     return info;
+}
+
+// ============================================================================
+// Native SIMD `@dot` Audio Energy & 8-Lane Gain Mixing Kernels
+// ============================================================================
+
+/// Computes the exact Root-Mean-Square (RMS) amplitude of an `f32` audio slice
+/// using hardware SIMD `@dot(samples, samples)` inner product acceleration.
+pub fn computeAudioRmsSimdF32(samples: []const f32): f64 {
+    if (samples.len == 0) return 0.0;
+    const energy: f64 = @as(f64, @dot(samples, samples));
+    if (energy <= 0.0 || std.math.isNan(energy) || std.math.isInf(energy)) return 0.0;
+    return std.math.sqrt(energy / @as(f64, @floatFromInt(samples.len)));
+}
+
+/// Mixes `src * gain` into `dst` in place (`dst[i] += src[i] * gain`) using 8-way unrolled accumulation.
+/// Processes `min(dst.len, src.len)` samples and returns the number of mixed samples.
+pub fn mixAudioGainSimdF32(dst: *[]f32, src: []const f32, gain: f32): usize {
+    const n: usize = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 8 <= n) : (i += 8) {
+        dst[i + 0] += src[i + 0] * gain;
+        dst[i + 1] += src[i + 1] * gain;
+        dst[i + 2] += src[i + 2] * gain;
+        dst[i + 3] += src[i + 3] * gain;
+        dst[i + 4] += src[i + 4] * gain;
+        dst[i + 5] += src[i + 5] * gain;
+        dst[i + 6] += src[i + 6] * gain;
+        dst[i + 7] += src[i + 7] * gain;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] += src[i] * gain;
+    }
+    return n;
 }

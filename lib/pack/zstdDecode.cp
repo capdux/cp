@@ -129,10 +129,10 @@ fn rotl64(x: u64, r: u6): u64 {
     return (x << r) | (x >> inv);
 }
 
-const XXH_P1: u64 = 0x9E3779B185EBCA87;
-const XXH_P2: u64 = 0xC2B2AE3D27D4EB4F;
+const XXH_P1: u64 = (@as(u64, 0x9E3779B1) << 32) | 0x85EBCA87;
+const XXH_P2: u64 = (@as(u64, 0xC2B2AE3D) << 32) | 0x27D4EB4F;
 const XXH_P3: u64 = 0x165667B19E3779F9;
-const XXH_P4: u64 = 0x85EBCA77C2B2AE63;
+const XXH_P4: u64 = (@as(u64, 0x85EBCA77) << 32) | 0xC2B2AE63;
 const XXH_P5: u64 = 0x27D4EB2F165667C5;
 
 fn xxhRound(acc: u64, lane: u64): u64 {
@@ -533,13 +533,13 @@ fn decodeFseTable(src: []const u8, max_sym: usize, max_log: usize, tbl: *FseTabl
     if (acc_log > max_log || acc_log > FSE_MAX_LOG) return ZstdDecodeError.CorruptFseTable;
 
     let norm: [256]i16 = [0; 256];
-    let remaining: i32 = @as(i32, 1) << @as(u5, @intCast(acc_log));
-    let threshold: i32 = remaining;
+    let remaining: i32 = (@as(i32, 1) << @as(u5, @intCast(acc_log))) + 1;
+    let threshold: i32 = @as(i32, 1) << @as(u5, @intCast(acc_log));
     let nb_bits: usize = acc_log + 1;
     let sym: usize = 0;
     let prev_zero: bool = false;
 
-    while (remaining > 0 && sym <= max_sym) {
+    while (remaining > 1 && sym <= max_sym) {
         if (prev_zero) {
             while (true) {
                 const rep: u32 = try br.readBits(2);
@@ -553,7 +553,6 @@ fn decodeFseTable(src: []const u8, max_sym: usize, max_log: usize, tbl: *FseTabl
 
         const max_val: i32 = 2 * threshold - 1 - remaining;
         const low_bits: usize = nb_bits - 1;
-        const small_mask: i32 = (@as(i32, 1) << @as(u5, @intCast(low_bits))) - 1;
         let val: i32 = @as(i32, @intCast(br.peekBits(low_bits)));
 
         if (val < max_val) {
@@ -572,7 +571,7 @@ fn decodeFseTable(src: []const u8, max_sym: usize, max_log: usize, tbl: *FseTabl
         } else {
             remaining -= count;
         }
-        if (remaining < 0) return ZstdDecodeError.CorruptFseTable;
+        if (remaining < 1) return ZstdDecodeError.CorruptFseTable;
         norm[sym] = @as(i16, @intCast(count));
         sym += 1;
         prev_zero = (count == 0);
@@ -583,7 +582,7 @@ fn decodeFseTable(src: []const u8, max_sym: usize, max_log: usize, tbl: *FseTabl
         }
     }
 
-    if (remaining != 0) return ZstdDecodeError.CorruptFseTable;
+    if (remaining != 1) return ZstdDecodeError.CorruptFseTable;
     const consumed: usize = br.bytesConsumed();
     if (consumed > src.len) return ZstdDecodeError.TruncatedInput;
 
@@ -874,7 +873,7 @@ fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! 
     const streams: []const u8 = src[stream_off..stream_off + stream_bytes_len];
     if (!four_streams) {
         let dst_s: []u8 = ws.lit_buf[0..regen_size];
-        try decodeHuffmanStream(ws.huff, streams, *dst_s);
+        try decodeHuffmanStream(ws.huff, streams, dst_s);
     } else {
         if (streams.len < 6) return ZstdDecodeError.CorruptLiterals;
         const s1: usize = @as(usize, readU16Le(streams, 0));
@@ -897,10 +896,10 @@ fn decodeLiteralsSection(src: []const u8, ws: *ZstdWorkspace): LiteralsResult ! 
         const o3: usize = o2 + s2;
         const o4: usize = o3 + s3;
 
-        try decodeHuffmanStream(ws.huff, streams[o1..o2], *d1);
-        try decodeHuffmanStream(ws.huff, streams[o2..o3], *d2);
-        try decodeHuffmanStream(ws.huff, streams[o3..o4], *d3);
-        try decodeHuffmanStream(ws.huff, streams[o4..o4 + s4], *d4);
+        try decodeHuffmanStream(ws.huff, streams[o1..o2], d1);
+        try decodeHuffmanStream(ws.huff, streams[o2..o3], d2);
+        try decodeHuffmanStream(ws.huff, streams[o3..o4], d3);
+        try decodeHuffmanStream(ws.huff, streams[o4..o4 + s4], d4);
     }
 
     return LiteralsResult{
@@ -975,7 +974,7 @@ fn decodeCompressedBlock(
 
     if (num_seq == 0) {
         if (out_pos.* + lit_res.lit_slice.len > dst.len) return ZstdDecodeError.OutputTooSmall;
-        @memcpy(dst.*[out_pos.*..out_pos.* + lit_res.lit_slice.len], lit_res.lit_slice);
+        @memcpy(dst[out_pos.*..out_pos.* + lit_res.lit_slice.len], lit_res.lit_slice);
         out_pos.* += lit_res.lit_slice.len;
         return;
     }
@@ -1078,7 +1077,7 @@ fn decodeCompressedBlock(
         if (lit_pos + lit_len > lit_res.lit_slice.len) return ZstdDecodeError.CorruptSequence;
         if (out_pos.* + lit_len > dst.len) return ZstdDecodeError.OutputTooSmall;
         if (lit_len > 0) {
-            @memcpy(dst.*[out_pos.*..out_pos.* + lit_len], lit_res.lit_slice[lit_pos..lit_pos + lit_len]);
+            @memcpy(dst[out_pos.*..out_pos.* + lit_len], lit_res.lit_slice[lit_pos..lit_pos + lit_len]);
             lit_pos += lit_len;
             out_pos.* += lit_len;
         }
@@ -1103,7 +1102,7 @@ fn decodeCompressedBlock(
     const rem_lit: usize = lit_res.lit_slice.len - lit_pos;
     if (rem_lit > 0) {
         if (out_pos.* + rem_lit > dst.len) return ZstdDecodeError.OutputTooSmall;
-        @memcpy(dst.*[out_pos.*..out_pos.* + rem_lit], lit_res.lit_slice[lit_pos..lit_res.lit_slice.len]);
+        @memcpy(dst[out_pos.*..out_pos.* + rem_lit], lit_res.lit_slice[lit_pos..lit_res.lit_slice.len]);
         out_pos.* += rem_lit;
     }
 }
@@ -1155,7 +1154,7 @@ pub fn zstdDecompressInto(
                 if (in_pos + block_size > src.len) return ZstdDecodeError.TruncatedInput;
                 if (out_pos + block_size > dst.len) return ZstdDecodeError.OutputTooSmall;
                 if (block_size > 0) {
-                    @memcpy(dst.*[out_pos..out_pos + block_size], src[in_pos..in_pos + block_size]);
+                    @memcpy(dst[out_pos..out_pos + block_size], src[in_pos..in_pos + block_size]);
                     out_pos += block_size;
                     in_pos += block_size;
                 }
@@ -1188,7 +1187,7 @@ pub fn zstdDecompressInto(
             if (in_pos + 4 > src.len) return ZstdDecodeError.TruncatedInput;
             const expected_cksum: u32 = readU32Le(src, in_pos);
             in_pos += 4;
-            const computed_cksum: u32 = @as(u32, @intCast(xxhash64Zstd(dst.*[frame_out_start..out_pos]) & 0xFFFF_FFFF));
+            const computed_cksum: u32 = @as(u32, @intCast(xxhash64Zstd(dst[frame_out_start..out_pos]) & 0xFFFF_FFFF));
             if (computed_cksum != expected_cksum) return ZstdDecodeError.ChecksumMismatch;
         }
     }
@@ -1221,7 +1220,7 @@ pub fn zstdDecompress(
     let ws: ZstdWorkspace = ZstdWorkspace.init(lit_buf);
 
     let out_buf: []u8 = alloc.alloc(u8, alloc_len) catch return ZstdDecodeError.OutOfMemory;
-    const written: usize = zstdDecompressInto(src, *out_buf, *ws) catch |e| {
+    const written: usize = zstdDecompressInto(src, out_buf, *ws) catch |e| {
         alloc.free(out_buf);
         return e;
     };

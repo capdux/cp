@@ -27,7 +27,7 @@ pub const FT_SNAPSHOT_VERSION: u32 = 1;
 /// Sentinel index for empty hash table slot or end of intrusive posting list.
 pub const FT_INVALID_IDX: u32 = 0xFFFF_FFFF;
 
-const FNV1A_64_OFFSET: u64 = 0xcbf29ce484222325;
+const FNV1A_64_OFFSET: u64 = (@as(u64, 0xcbf29ce4) << 32) | 0x84222325;
 const FNV1A_64_PRIME: u64 = 0x100000001b3;
 const FT_MAX_TOKEN_BYTES: usize = 64;
 const FT_MAX_PHRASE_TERMS: usize = 32;
@@ -566,7 +566,7 @@ pub fn normalizeSingleTerm(
     enable_stemming: bool,
     out_buf: *[]u8,
 ): usize {
-    let n: usize = Simd.toLowerAscii(raw, out_buf.*);
+    let n: usize = Simd.toLowerAscii(raw, out_buf);
     if (enable_stemming && n > 2) {
         n = porterLiteStemInPlace(out_buf, n);
     }
@@ -624,7 +624,7 @@ pub fn tokenizeText(
                 continue;
             }
             if (enable_stemming && norm_len > 2) {
-                norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+                norm_len = porterLiteStemInPlace(norm_slice, norm_len);
             }
             if (norm_len > 0 && out_count < out_spans.len) {
                 let sp: FtTokenSpan = FtTokenSpan{
@@ -746,7 +746,7 @@ pub fn tokenizeText(
 
         if (enable_stemming && norm_len > 2) {
             let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
-            norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+            norm_len = porterLiteStemInPlace(norm_slice, norm_len);
         }
 
         if (norm_len > 0 && out_count < out_spans.len) {
@@ -1142,7 +1142,7 @@ pub struct FullTextIndex {
                     continue;
                 }
                 if (_.cfg.enable_stemming && norm_len > 2) {
-                    norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+                    norm_len = porterLiteStemInPlace(norm_slice, norm_len);
                 }
                 if (norm_len > 0) {
                     if (tok_count >= scratch.term_ids.len) return FullTextError.BufferTooSmall;
@@ -1237,7 +1237,7 @@ pub struct FullTextIndex {
             }
             if (_.cfg.enable_stemming && norm_len > 2) {
                 let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
-                norm_len = porterLiteStemInPlace(*norm_slice, norm_len);
+                norm_len = porterLiteStemInPlace(norm_slice, norm_len);
             }
             if (norm_len > 0) {
                 if (tok_count >= scratch.term_ids.len) return FullTextError.BufferTooSmall;
@@ -1259,7 +1259,7 @@ pub struct FullTextIndex {
         if (tok_count == 0) return 0;
 
         // Sort (term_id, position) pairs in place by (term_id ASC, position ASC) using heapsort
-        sortTermPosPairs(*scratch.term_ids, *scratch.token_positions, tok_count);
+        sortTermPosPairs(scratch.term_ids, scratch.token_positions, tok_count);
 
         // Group contiguous runs of identical term_id and emit one FtPosting per unique term
         let run_start: usize = 0;
@@ -1582,7 +1582,7 @@ pub struct FullTextIndex {
             cfg.enable_stemming,
             cfg.enable_stopwords,
             false,
-            *span_slice,
+            span_slice,
         );
         if (raw_cnt == 0) return;
 
@@ -1646,7 +1646,7 @@ pub struct FullTextIndex {
     ) {
         let norm_arr: [FT_MAX_TOKEN_BYTES]u8 = [0; FT_MAX_TOKEN_BYTES];
         let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
-        const plen: usize = normalizeSingleTerm(raw_prefix, false, *norm_slice);
+        const plen: usize = normalizeSingleTerm(raw_prefix, false, norm_slice);
         if (plen == 0) return;
         const prefix: []const u8 = norm_arr[0..plen];
 
@@ -1670,13 +1670,13 @@ pub struct FullTextIndex {
     ) {
         let norm_arr: [FT_MAX_TOKEN_BYTES]u8 = [0; FT_MAX_TOKEN_BYTES];
         let norm_slice: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
-        const qlen: usize = normalizeSingleTerm(raw_term, false, *norm_slice);
+        const qlen: usize = normalizeSingleTerm(raw_term, false, norm_slice);
         if (qlen == 0) return;
         const qterm: []const u8 = norm_arr[0..qlen];
 
         let stem_arr: [FT_MAX_TOKEN_BYTES]u8 = [0; FT_MAX_TOKEN_BYTES];
         let stem_slice: []u8 = stem_arr[0..FT_MAX_TOKEN_BYTES];
-        const slen: usize = normalizeSingleTerm(raw_term, cfg.enable_stemming, *stem_slice);
+        const slen: usize = normalizeSingleTerm(raw_term, cfg.enable_stemming, stem_slice);
         const sterm: []const u8 = stem_arr[0..slen];
 
         const clamped_edits: usize = if (max_edits > 2) 2 else max_edits;
@@ -1717,12 +1717,13 @@ pub struct FullTextIndex {
             cfg.enable_stemming,
             cfg.enable_stopwords,
             cfg.enable_cjk_bigrams,
-            *span_slice,
+            span_slice,
         );
         let i: usize = 0;
         while (i < cnt) : (i += 1) {
             if (tid := findTerm(spans[i].text())) {
-                const boost: f64 = (if (spans[i].is_bigram) 1.25 else 1.0) * score_scale;
+                const bg_boost: f64 = if (spans[i].is_bigram) @as(f64, 1.25) else @as(f64, 1.0);
+                const boost: f64 = bg_boost * score_scale;
                 scoreTermInto(@as(usize, tid), boost, out_scores, out_mask, out_matched);
             }
         }
@@ -1812,10 +1813,10 @@ pub struct FullTextIndex {
         const has_expr: bool = try evalOrExpr(
             _,
             *parser,
-            *scratch.scores,
-            *scratch.doc_mask,
-            *scratch.matched_terms_cnt,
-            *scratch.doc_mask_aux,
+            scratch.scores,
+            scratch.doc_mask,
+            scratch.matched_terms_cnt,
+            scratch.doc_mask_aux,
         );
         if (!has_expr) return 0;
         parser.skipSpaces();
@@ -2340,7 +2341,7 @@ fn evalOrExpr(
 
         const rhs_base: usize = try allocAuxMask(parser, aux_buf, dc);
         let rhs_mask: []u8 = aux_buf[rhs_base..rhs_base + dc];
-        const rhs_ok: bool = try evalAndExpr(idx, parser, scores, *rhs_mask, matched_cnt, aux_buf);
+        const rhs_ok: bool = try evalAndExpr(idx, parser, scores, rhs_mask, matched_cnt, aux_buf);
         if (!rhs_ok) {
             parser.aux_offset = rhs_base;
             if (explicit_or) return FullTextError.InvalidQuery;
@@ -2395,7 +2396,7 @@ fn evalAndExpr(
         let rhs_mask: []u8 = aux_buf[rhs_base..rhs_base + dc];
         const saved_score_en: bool = parser.score_enabled;
         if (is_must_not) parser.score_enabled = false;
-        const rhs_ok: bool = try evalNotExpr(idx, parser, scores, *rhs_mask, matched_cnt, aux_buf);
+        const rhs_ok: bool = try evalNotExpr(idx, parser, scores, rhs_mask, matched_cnt, aux_buf);
         parser.score_enabled = saved_score_en;
         if (!rhs_ok) {
             parser.aux_offset = rhs_base;
@@ -2447,7 +2448,7 @@ fn evalNotExpr(
         let sub_mask: []u8 = aux_buf[sub_base..sub_base + dc];
         const saved_score_en: bool = parser.score_enabled;
         parser.score_enabled = false;
-        const ok: bool = try evalNotExpr(idx, parser, scores, *sub_mask, matched_cnt, aux_buf);
+        const ok: bool = try evalNotExpr(idx, parser, scores, sub_mask, matched_cnt, aux_buf);
         parser.score_enabled = saved_score_en;
         if (!ok) {
             parser.aux_offset = sub_base;
@@ -2722,7 +2723,7 @@ pub fn extractBestSnippet(
 
         if (enable_stemming && norm_len > 2) {
             let ns: []u8 = norm_arr[0..FT_MAX_TOKEN_BYTES];
-            norm_len = porterLiteStemInPlace(*ns, norm_len);
+            norm_len = porterLiteStemInPlace(ns, norm_len);
         }
         const w_norm: []const u8 = norm_arr[0..norm_len];
         qi = 0;

@@ -280,7 +280,7 @@ pub fn matmulF32Simd(
     const n: usize = b.cols;
     if (b_trans_work.len < k * n) return MatrixError.BufferTooSmall;
 
-    let bt: MatrixMutF32 = try MatrixMutF32.init(b_trans_work.*, n, k);
+    let bt: MatrixMutF32 = try MatrixMutF32.init(b_trans_work, n, k);
     try transposeMatrixF32(b, *bt);
     const bt_view: MatrixViewF32 = bt.asView();
 
@@ -317,7 +317,7 @@ pub fn matmulF64(
     const n: usize = b.cols;
     if (b_trans_work.len < k * n) return MatrixError.BufferTooSmall;
 
-    let bt: MatrixMutF64 = try MatrixMutF64.init(b_trans_work.*, n, k);
+    let bt: MatrixMutF64 = try MatrixMutF64.init(b_trans_work, n, k);
     try transposeMatrixF64(b, *bt);
 
     let i: usize = 0;
@@ -484,8 +484,8 @@ pub fn luInvert(
     if (inv_out.rows != n || piv.len < n) return MatrixError.DimensionMismatch;
     if (col_work.len < 2 * n) return MatrixError.BufferTooSmall;
 
-    let rhs: []f64 = col_work.*[0..n];
-    let sol: []f64 = col_work.*[n..2 * n];
+    let rhs: []f64 = col_work[0..n];
+    let sol: []f64 = col_work[n..2 * n];
 
     let col: usize = 0;
     while (col < n) : (col += 1) {
@@ -1075,7 +1075,7 @@ pub fn gramMatrixF32Simd(
     if (gram_out.rows != n || gram_out.cols != n) return MatrixError.DimensionMismatch;
     if (at_work.len < m * n) return MatrixError.BufferTooSmall;
 
-    let at: MatrixMutF32 = try MatrixMutF32.init(at_work.*, n, m);
+    let at: MatrixMutF32 = try MatrixMutF32.init(at_work, n, m);
     try transposeMatrixF32(a, *at);
     const at_view: MatrixViewF32 = at.asView();
 

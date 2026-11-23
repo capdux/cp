@@ -1025,9 +1025,32 @@ pub fn convolveFirF32Simd(
     coeffs: []const f32,
     out: *[]f32,
 ): usize ! DspKernelError {
-    if (coeffs.len == 0) return DspKernelError.InvalidLength;
+    if (coeffs.len == 0) return DspKernelError.LengthMismatch;
     if (out.len < input.len) return DspKernelError.OutputTooSmall;
     if (input.len == 0) return 0;
+
+    // Fast path: pre-reverse up to 256 taps ONCE outside the sample loop so every steady-state
+    // sample evaluates a single contiguous `@dot` SIMD inner product with zero per-sample copying.
+    if (coeffs.len <= 256) {
+        let rev_all: [256]f32 = [0.0; 256];
+        const m: usize = coeffs.len;
+        let k: usize = 0;
+        while (k < m) : (k += 1) {
+            rev_all[k] = coeffs[m - 1 - k];
+        }
+        const rev_full: []const f32 = rev_all[0..m];
+        let n: usize = 0;
+        while (n < input.len) : (n += 1) {
+            if (n + 1 >= m) {
+                const start: usize = n + 1 - m;
+                out[n] = @dot(input[start..start + m], rev_full);
+            } else {
+                const take: usize = n + 1;
+                out[n] = @dot(input[0..take], rev_all[m - take..m]);
+            }
+        }
+        return input.len;
+    }
 
     let rev_chunk: [64]f32 = [0.0; 64];
     let n: usize = 0;
