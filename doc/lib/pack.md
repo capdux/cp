@@ -39,7 +39,7 @@
 | 模块文件 | 核心职责 | 上游吸收来源 |
 | :--- | :--- | :--- |
 | `lib/pack/index.cp` | `cap:pack` / `cap:compress` 统一导出门面 | `/data/dev/bun/src/zlib/` & `/data/dev/bun/src/libarchive/` |
-| `lib/pack/gzip.cp` | RFC 1952 Gzip / RFC 1950 Zlib / RFC 1951 Raw Deflate 单发与流式引擎 | `/data/dev/bun/src/zlib/zlib.cp` |
+| `lib/pack/gzip.cp` | 纯 CP RFC 1951 Deflate/Inflate + RFC 1950 Zlib + RFC 1952 Gzip 引擎（对标 `Frommi/miniz_oxide` 加固：零 C/FFI 依赖、`inflateRawWithLimit`/`inflateRawInto`/`inflateWithLimit`/`gunzipWithLimit`/`parseGzipHeader`/`parseZlibHeader`、完整 FEXTRA/FNAME/FCOMMENT/FHCRC 与串联多成员 Gzip、16-lane SIMD） | `/data/dev/bun/src/zlib/zlib.cp` & `Frommi/miniz_oxide` (MIT/Apache-2.0/Zlib) |
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
 | `lib/pack/brotli.cp` | RFC 7932 Brotli 完整纯 CP 编解码引擎（对标 `dropbox/rust-brotli` 加固：`brotliDecompress` / `brotliDecompressInto` / `brotliDecompressWithLimits` / `brotliCompress` / `brotliCompressInto` + 16-lane SIMD LZ77/块搬运） | `/data/dev/bun/src/brotli/brotli.cp` & `dropbox/rust-brotli` (BSD-3-Clause/MIT) |
 | `lib/pack/_brotliDict.cp` | RFC 7932 122KB 静态字典、4 模式字面量上下文查表与 121 种词变换表（内部模块） | RFC 7932 Appendix A / §7.1 / §8 |
@@ -61,7 +61,12 @@
 
 > 📘 **专项深度文档**：关于 Zlib / Gzip 状态机内部细节、`windowBits` 驱动机制与扩容策略，请同时参阅同目录下的专项手册 [`docs/pack/zlib.md`](./zlib.md)。
 
-支持 **RFC 1952 (Gzip)**、**RFC 1950 (Zlib)** 与 **RFC 1951 (Raw Deflate)** 三种标准容器格式，提供单发极速 API 与分块流式管道（`GzipStream` / `GunzipStream` / `DeflateStream` / `InflateStream`）：
+支持 **RFC 1952 (Gzip)**、**RFC 1950 (Zlib)** 与 **RFC 1951 (Raw Deflate)** 三种标准容器格式，已重构为 **100% 纯 CP 零 C/FFI 依赖引擎**（对标 `Frommi/miniz_oxide` MIT/Apache-2.0/Zlib 加固）：
+
+- **安全边界与上限防护**：Stored 块 `LEN ^ NLEN == 0xFFFF` 校验、Fixed/Dynamic Huffman 过度订阅（`OverSubscribedHuffman`）与不完整码表（`IncompleteHuffman`）拦截、32KB 滑动窗口越界距离拒绝、RFC 1950 Zlib `CM==8 / CINFO<=7 / mod-31 / FDICT` 与 Adler-32 校验、RFC 1952 Gzip 完整 `FEXTRA`/`FNAME`/`FCOMMENT`/`FHCRC`、串联多成员 Gzip 流及 CRC32/ISIZE 精确校验；
+- **新增带上限与零堆 API**：`GzipError`、`GzipHeaderInfo`、`ZlibHeaderInfo`、`GzipHeader.parseFull`、`parseGzipHeader`、`parseZlibHeader`、`inflateRawWithLimit`、`inflateRawInto`、`inflateWithLimit`、`gunzipWithLimit`、`DEFAULT_MAX_OUTPUT_SIZE`、`GZIP_FRESERVED`；
+- **16-lane `@Vector(16, u8)` SIMD 加速内核**：`inflateCopyStoredSimd`（Stored 块搬运）、`inflateCopyMatchSimd`（`dist == 1` `@splat` RLE + `dist >= 16` 16-lane 块拷贝）与 `deflateMatchLenSimd`（Deflate 匹配长度扩展），与标量参考保持 0 字节差异；
+- **100% 向后兼容 API**：单发极速 API（`gzip` / `gunzip` / `deflate` / `inflate` / `deflateRaw` / `inflateRaw`）与分块流式管道（`GzipStream` / `GunzipStream` / `DeflateStream` / `InflateStream`）：
 
 ```typescript
 import {
