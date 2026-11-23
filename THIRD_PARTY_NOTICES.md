@@ -36,6 +36,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **zune-image** (`zune-jpeg`) | <https://github.com/etemesi254/zune-image> | MIT OR Apache-2.0 OR Zlib | `lib/image/jpeg.cp` | Copyright (c) zune-image developers |
 | **image-png** (`png`) | <https://github.com/image-rs/image-png> | MIT OR Apache-2.0 | `lib/image/png.cp` | Copyright (c) image-rs developers |
 | **regex** (`regex-automata`) | <https://github.com/rust-lang/regex> | MIT OR Apache-2.0 | `lib/compiler/regexCompiler.cp`, `lib/compiler/regexVm.cp` | Copyright (c) 2014 The Rust Project Developers |
+| **RustFFT** | <https://github.com/ejmahler/RustFFT> | MIT OR Apache-2.0 | `lib/media/fftFilter.cp` | Copyright (c) 2016 Elliott Mahler |
 
 ---
 

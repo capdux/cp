@@ -135,16 +135,23 @@ pub fn demoVoiceAiFrontend(pcm_48k: []const f32) {
 
 面向专业音频 DSP、频谱分析、实时均衡滤波、高质量重采样与广播级响度计量的 100% 纯 CP 零动态堆分配引擎。全部算子直接作用于调用方传入的任意长度外部切片（支持任意 2 的幂 FFT `64..65536+` 与任意时长 PCM 缓冲）：
 
-- **错误集**：`DspKernelError`（`NotPowerOfTwo | LengthMismatch | InvalidSampleRate | InvalidCutoff | InvalidQ | InvalidRatio | OutputTooSmall`）
+- **错误集**：`DspKernelError`（`NotPowerOfTwo | LengthMismatch | InvalidSampleRate | InvalidCutoff | InvalidQ | InvalidRatio | OutputTooSmall | InvalidLength | ScratchTooSmall | InvalidHopSize | NonFiniteInput`）
 - **窗函数族**：
   - `DspWindowKind`（`rectangular | hann | hamming | blackman_harris`）
-  - `windowSampleAt(kind, index, len)` / `windowCoherentGain(kind)` / `applyDspWindowF64(*buf, kind)` / `applyDspWindowF32(*buf, kind)`
-- **Radix-2 Cooley-Tukey 迭代 FFT / IFFT 与频谱分析**：
-  - `fftRadix2InPlace(*re, *im): void ! DspKernelError`（位反转置换 + 周期性旋转因子重锚，零递归零堆分配）
-  - `ifftRadix2InPlace(*re, *im): void ! DspKernelError`（共轭对称 + `1/N` 归一化，往返精度 `< 1e-12`）
+  - `windowSampleAt(kind, index, len)` / `periodicWindowSampleAt(kind, index, len)`（COLA 周期窗）/ `windowCoherentGain(kind)` / `applyDspWindowF64(*buf, kind)` / `applyDspWindowF32(*buf, kind)`
+- **Radix-2 / Radix-4 / Bluestein 任意长度 FFT/IFFT 与 RFFT/IRFFT（对标 `ejmahler/RustFFT` MIT/Apache-2.0 加固）**：
+  - `fftRadix2InPlace(*re, *im)` / `ifftRadix2InPlace(*re, *im)`（迭代位反转 + 周期性旋转因子重锚，零堆分配）
+  - `fftRadix4InPlace(*re, *im)` / `ifftRadix4InPlace(*re, *im)`（混合 Radix-4/2 4 点蝶形 + `@fma` 复数乘加，显著降低大点数乘法与访存次数）
+  - `bluesteinScratchLen(n)` / `fftBluesteinInPlace(*re, *im, *a_re, *a_im, *b_re, *b_im)` / `ifftBluesteinInPlace(...)`（Chirp-Z 任意长度非 2 的幂零堆 FFT/IFFT，支持 `N=120/240/480/960` 等 48kHz 音频帧与任意质数/合数）
+  - `rfftForward(input_real, *out_re, *out_im): usize` / `irfftInverse(in_re, in_im, *out_real, *work_re, *work_im): usize`（`N/2` 复数打包实数 FFT/IFFT，吞吐翻倍，直接输出 `N/2 + 1` 非负频谱 bin）
+  - `stftFrameCount(signal_len, fft_size, hop_size)` / `stftForwardF32(...)` / `istftOverlapAddF32(...)`（零堆 STFT/ISTFT 重叠相加管线，Hann/Hamming/Blackman-Harris 周期窗 COLA 归一化重建误差 `< 1e-5`）
   - `computeMagnitudeSpectrum(re, im, *out_mag)` / `computePowerDbSpectrum(re, im, floor_db, *out_db)`（兼容 `N/2 + 1` 单边与 `N` 双边缓冲）
   - `findPeakFrequencyHz(mag, sample_rate_hz): f64 ! DspKernelError`（三点抛物线亚频点插值精确测频）
   - `computeStftFrameMagnitude(frame_f32, window, *work_re, *work_im, *out_mag)`（单帧 STFT 加窗 + FFT + 幅度谱）
+- **8-Lane SIMD 频谱/加窗/卷积热路径原语**：
+  - `dotF32Simd(a, b)` / `convolveFirF32Simd(input, coeffs, *out)`（`@dot` 硬件加速）
+  - `applyWindowSimdF32(*dst, src, win)` / `computeMagnitudeSimdF32(re, im, *out_mag)` / `complexMulSimdF32(a_re, a_im, b_re, b_im, *out_re, *out_im)`（8-lane `@Vector(8, f32)` + `@fma` 硬件加速）
+  - `sanitizeNonFiniteF32(*buf): usize`（NaN/Inf 零堆安全清洗）
 - **RBJ Audio EQ Cookbook Biquad IIR 滤波器与 SOS 级联**：
   - `BiquadFilterKind`（`low_pass | high_pass | band_pass | notch | peaking_eq | low_shelf | high_shelf | all_pass`）
   - `BiquadCoeffs`（`b0, b1, b2, a1, a2`；提供 `identity()`、`magnitudeResponseAt(freq_hz, sample_rate_hz)` 与 `magnitudeDbAt(...)`）

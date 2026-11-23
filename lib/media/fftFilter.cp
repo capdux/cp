@@ -1,4 +1,5 @@
-// Origin: Pure-CP Stdlib (Unbounded-Slice Radix-2 FFT/IFFT, STFT, RBJ Biquad IIR/SOS, Windowed Sinc Resampler & ITU-R BS.1770 K-Weighted Loudness Engine) | Created: 2026-11-23
+// Reference-hardened against ejmahler/RustFFT (MIT/Apache-2.0)
+// Origin: Pure-CP Stdlib (Unbounded-Slice Radix-2/Radix-4/Bluestein FFT/IFFT, RFFT/IRFFT, STFT/ISTFT Overlap-Add, RBJ Biquad IIR/SOS, Windowed Sinc Resampler & ITU-R BS.1770 K-Weighted Loudness Engine) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice driven audio DSP kernel:
 //   - Spectral windows (`rectangular | hann | hamming | blackman_harris`) + coherent gain helpers
 //   - Iterative in-place Radix-2 Cooley-Tukey FFT & IFFT supporting any power-of-two slice (64..65536+)
@@ -32,6 +33,10 @@ pub err DspKernelError {
     InvalidQ,
     InvalidRatio,
     OutputTooSmall,
+    InvalidLength,
+    ScratchTooSmall,
+    InvalidHopSize,
+    NonFiniteInput,
 }
 
 fn isPowerOfTwo(n: usize): bool {
@@ -1074,4 +1079,725 @@ pub fn convolveFirF32Simd(
         out[n] = acc as f32;
     }
     return input.len;
+}
+
+// ============================================================================
+// 8. Radix-4 Mixed-Radix Butterfly FFT / IFFT (RustFFT-Hardened, @fma Accelerated)
+// ============================================================================
+
+/// Returns the smallest power of two `>= n` (returns `1` for `n <= 1`).
+pub fn nextPowerOfTwo(n: usize): usize {
+    if (n <= 1) return 1;
+    let p: usize = 1;
+    while (p < n) {
+        p <<= 1;
+    }
+    return p;
+}
+
+/// Evaluates a periodic COLA-compatible window coefficient (`denom = len`) for STFT/ISTFT Overlap-Add.
+pub fn periodicWindowSampleAt(kind: DspWindowKind, index: usize, len: usize): f64 {
+    if (len <= 1 || kind == DspWindowKind.rectangular) {
+        return 1.0;
+    }
+    const phase: f64 = TWO_PI_F64 * (@as(f64, @floatFromInt(index)) / @as(f64, @floatFromInt(len)));
+    if (kind == DspWindowKind.hann) {
+        return 0.5 * (1.0 - std.math.cos(phase));
+    }
+    if (kind == DspWindowKind.hamming) {
+        return 0.54 - 0.46 * std.math.cos(phase);
+    }
+    return 0.35875 -
+        0.48829 * std.math.cos(phase) +
+        0.14128 * std.math.cos(2.0 * phase) -
+        0.01168 * std.math.cos(3.0 * phase);
+}
+
+/// Performs an in-place iterative Mixed Radix-4 / Radix-2 forward FFT on any power-of-two slice.
+/// Uses 4-point butterflies (`-i` rotation via zero-multiply lane swaps) with `@fma` complex arithmetic,
+/// falling back to a single leading Radix-2 stage when `log2(N)` is odd.
+pub fn fftRadix4InPlace(re: *[]f64, im: *[]f64): void ! DspKernelError {
+    if (re.len != im.len) {
+        return DspKernelError.LengthMismatch;
+    }
+    const n: usize = re.len;
+    if (!isPowerOfTwo(n)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    if (n <= 1) {
+        return;
+    }
+
+    // 1. In-place bit-reversal permutation.
+    let i: usize = 1;
+    let j: usize = 0;
+    while (i < n) : (i += 1) {
+        let bit: usize = n >> 1;
+        while ((j & bit) != 0) {
+            j ^= bit;
+            bit >>= 1;
+        }
+        j ^= bit;
+        if (i < j) {
+            const tr: f64 = re[i];
+            re[i] = re[j];
+            re[j] = tr;
+            const ti: f64 = im[i];
+            im[i] = im[j];
+            im[j] = ti;
+        }
+    }
+
+    // Count log2(n) to decide whether a leading Radix-2 stage is needed.
+    let log2_n: usize = 0;
+    let tmp_n: usize = n;
+    while (tmp_n > 1) : (tmp_n >>= 1) {
+        log2_n += 1;
+    }
+
+    let stage_len: usize = 4;
+    if ((log2_n & 1) == 1) {
+        // Leading Radix-2 stage (size 2, trivial twiddle = 1)
+        let s2: usize = 0;
+        while (s2 < n) : (s2 += 2) {
+            const u_re: f64 = re[s2];
+            const u_im: f64 = im[s2];
+            const v_re: f64 = re[s2 + 1];
+            const v_im: f64 = im[s2 + 1];
+            re[s2] = u_re + v_re;
+            im[s2] = u_im + v_im;
+            re[s2 + 1] = u_re - v_re;
+            im[s2 + 1] = u_im - v_im;
+        }
+        stage_len = 8;
+    }
+
+    // 2. Iterative Radix-4 Decimation-In-Time butterfly stages.
+    while (stage_len <= n) : (stage_len <<= 2) {
+        const quarter: usize = stage_len >> 2;
+        const ang_step: f64 = -TWO_PI_F64 / @as(f64, @floatFromInt(stage_len));
+
+        let k: usize = 0;
+        while (k < quarter) : (k += 1) {
+            const ang1: f64 = ang_step * @as(f64, @floatFromInt(k));
+            const w1_re: f64 = std.math.cos(ang1);
+            const w1_im: f64 = std.math.sin(ang1);
+
+            const ang2: f64 = ang1 * 2.0;
+            const w2_re: f64 = std.math.cos(ang2);
+            const w2_im: f64 = std.math.sin(ang2);
+
+            const ang3: f64 = ang1 * 3.0;
+            const w3_re: f64 = std.math.cos(ang3);
+            const w3_im: f64 = std.math.sin(ang3);
+
+            let base: usize = k;
+            while (base < n) : (base += stage_len) {
+                const idx0: usize = base;
+                const idx1: usize = base + quarter;
+                const idx2: usize = idx1 + quarter;
+                const idx3: usize = idx2 + quarter;
+
+                const a0_re: f64 = re[idx0];
+                const a0_im: f64 = im[idx0];
+
+                // Under standard Radix-2 bit-reversal permutation, idx1 holds the 2-mod-4 sub-DFT
+                // and idx2 holds the 1-mod-4 sub-DFT at every Radix-4 stage.
+                const r1: f64 = re[idx2];
+                const m1: f64 = im[idx2];
+                const a1_re: f64 = @fma(r1, w1_re, -(m1 * w1_im));
+                const a1_im: f64 = @fma(r1, w1_im, m1 * w1_re);
+
+                const r2: f64 = re[idx1];
+                const m2: f64 = im[idx1];
+                const a2_re: f64 = @fma(r2, w2_re, -(m2 * w2_im));
+                const a2_im: f64 = @fma(r2, w2_im, m2 * w2_re);
+
+                const r3: f64 = re[idx3];
+                const m3: f64 = im[idx3];
+                const a3_re: f64 = @fma(r3, w3_re, -(m3 * w3_im));
+                const a3_im: f64 = @fma(r3, w3_im, m3 * w3_re);
+
+                // 4-point butterfly with forward (-i) rotation: (-i)*(x + i*y) = y - i*x
+                const t0_re: f64 = a0_re + a2_re;
+                const t0_im: f64 = a0_im + a2_im;
+                const t1_re: f64 = a0_re - a2_re;
+                const t1_im: f64 = a0_im - a2_im;
+                const t2_re: f64 = a1_re + a3_re;
+                const t2_im: f64 = a1_im + a3_im;
+                const t3_re: f64 = a1_re - a3_re;
+                const t3_im: f64 = a1_im - a3_im;
+
+                re[idx0] = t0_re + t2_re;
+                im[idx0] = t0_im + t2_im;
+                re[idx1] = t1_re + t3_im;
+                im[idx1] = t1_im - t3_re;
+                re[idx2] = t0_re - t2_re;
+                im[idx2] = t0_im - t2_im;
+                re[idx3] = t1_re - t3_im;
+                im[idx3] = t1_im + t3_re;
+            }
+        }
+    }
+}
+
+/// Performs an in-place iterative Mixed Radix-4 / Radix-2 inverse FFT (`1/N` normalized).
+pub fn ifftRadix4InPlace(re: *[]f64, im: *[]f64): void ! DspKernelError {
+    if (re.len != im.len) {
+        return DspKernelError.LengthMismatch;
+    }
+    const n: usize = re.len;
+    if (!isPowerOfTwo(n)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    if (n <= 1) {
+        return;
+    }
+
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        im[i] = -im[i];
+    }
+
+    fftRadix4InPlace(re, im)?;
+
+    const inv_n: f64 = 1.0 / @as(f64, @floatFromInt(n));
+    let k: usize = 0;
+    while (k < n) : (k += 1) {
+        re[k] *= inv_n;
+        im[k] = -im[k] * inv_n;
+    }
+}
+
+// ============================================================================
+// 9. Bluestein Arbitrary-Length Zero-Heap FFT / IFFT (e.g. N=120/240/480/960)
+// ============================================================================
+
+/// Returns the required minimum length of each of the 4 scratch buffers for an `n`-point Bluestein FFT.
+pub fn bluesteinScratchLen(n: usize): usize {
+    if (n <= 1) return 1;
+    return nextPowerOfTwo(2 * n - 1);
+}
+
+/// Performs an in-place arbitrary-length forward FFT using Bluestein's Chirp-Z convolution algorithm
+/// with zero dynamic heap allocation. Each scratch slice must have length `>= bluesteinScratchLen(re.len)`.
+pub fn fftBluesteinInPlace(
+    re: *[]f64,
+    im: *[]f64,
+    a_re: *[]f64,
+    a_im: *[]f64,
+    b_re: *[]f64,
+    b_im: *[]f64,
+): void ! DspKernelError {
+    if (re.len != im.len) {
+        return DspKernelError.LengthMismatch;
+    }
+    const n: usize = re.len;
+    if (n == 0) {
+        return DspKernelError.InvalidLength;
+    }
+    if (n == 1) {
+        return;
+    }
+    if (isPowerOfTwo(n)) {
+        return fftRadix4InPlace(re, im);
+    }
+
+    const m: usize = bluesteinScratchLen(n);
+    if (a_re.len < m || a_im.len < m || b_re.len < m || b_im.len < m) {
+        return DspKernelError.ScratchTooSmall;
+    }
+
+    let sa_re: []f64 = a_re[0..m];
+    let sa_im: []f64 = a_im[0..m];
+    let sb_re: []f64 = b_re[0..m];
+    let sb_im: []f64 = b_im[0..m];
+
+    let z: usize = 0;
+    while (z < m) : (z += 1) {
+        sa_re[z] = 0.0;
+        sa_im[z] = 0.0;
+        sb_re[z] = 0.0;
+        sb_im[z] = 0.0;
+    }
+
+    // Build chirp sequence w[k] = exp(-i * pi * k^2 / N) using exact modular reduction (k^2 mod 2N)
+    // to preserve full double-precision trigonometric accuracy even for large N.
+    const two_n: u64 = @as(u64, @intCast(n)) * 2;
+    const n_f64: f64 = @as(f64, @floatFromInt(n));
+
+    let k: usize = 0;
+    while (k < n) : (k += 1) {
+        const k64: u64 = @as(u64, @intCast(k));
+        const k2_mod: u64 = (k64 * k64) % two_n;
+        const ang: f64 = -PI_F64 * (@as(f64, @floatFromInt(k2_mod)) / n_f64);
+        const c_re: f64 = std.math.cos(ang);
+        const c_im: f64 = std.math.sin(ang);
+
+        const xr: f64 = re[k];
+        const xi: f64 = im[k];
+        sa_re[k] = @fma(xr, c_re, -(xi * c_im));
+        sa_im[k] = @fma(xr, c_im, xi * c_re);
+
+        // b[k] = conj(w[k]) = (c_re, -c_im)
+        sb_re[k] = c_re;
+        sb_im[k] = -c_im;
+        if (k > 0) {
+            sb_re[m - k] = c_re;
+            sb_im[m - k] = -c_im;
+        }
+    }
+
+    fftRadix4InPlace(sa_re, sa_im)?;
+    fftRadix4InPlace(sb_re, sb_im)?;
+
+    // Pointwise complex multiplication in frequency domain
+    let p: usize = 0;
+    while (p < m) : (p += 1) {
+        const ar: f64 = sa_re[p];
+        const ai: f64 = sa_im[p];
+        const br: f64 = sb_re[p];
+        const bi: f64 = sb_im[p];
+        sa_re[p] = @fma(ar, br, -(ai * bi));
+        sa_im[p] = @fma(ar, bi, ai * br);
+    }
+
+    ifftRadix4InPlace(sa_re, sa_im)?;
+
+    // Post-multiply by chirp w[k]
+    k = 0;
+    while (k < n) : (k += 1) {
+        const k64: u64 = @as(u64, @intCast(k));
+        const k2_mod: u64 = (k64 * k64) % two_n;
+        const ang: f64 = -PI_F64 * (@as(f64, @floatFromInt(k2_mod)) / n_f64);
+        const c_re: f64 = std.math.cos(ang);
+        const c_im: f64 = std.math.sin(ang);
+
+        const cr: f64 = sa_re[k];
+        const ci: f64 = sa_im[k];
+        re[k] = @fma(cr, c_re, -(ci * c_im));
+        im[k] = @fma(cr, c_im, ci * c_re);
+    }
+}
+
+/// Performs an in-place arbitrary-length inverse FFT (`1/N` normalized) via Bluestein's algorithm.
+pub fn ifftBluesteinInPlace(
+    re: *[]f64,
+    im: *[]f64,
+    a_re: *[]f64,
+    a_im: *[]f64,
+    b_re: *[]f64,
+    b_im: *[]f64,
+): void ! DspKernelError {
+    if (re.len != im.len) {
+        return DspKernelError.LengthMismatch;
+    }
+    const n: usize = re.len;
+    if (n == 0) {
+        return DspKernelError.InvalidLength;
+    }
+    if (n == 1) {
+        return;
+    }
+
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        im[i] = -im[i];
+    }
+
+    fftBluesteinInPlace(re, im, a_re, a_im, b_re, b_im)?;
+
+    const inv_n: f64 = 1.0 / @as(f64, @floatFromInt(n));
+    let k: usize = 0;
+    while (k < n) : (k += 1) {
+        re[k] *= inv_n;
+        im[k] = -im[k] * inv_n;
+    }
+}
+
+// ============================================================================
+// 10. Real FFT / Inverse Real FFT (RFFT / IRFFT via N/2 Complex Packing)
+// ============================================================================
+
+/// Computes the forward Real-to-Complex FFT of an even power-of-two real signal `input_real` (`N >= 2`).
+/// Uses an `N/2`-point complex Radix-4 FFT to halve compute cost and writes `N/2 + 1` non-negative
+/// frequency bins into `out_re[0 .. N/2 + 1]` and `out_im[0 .. N/2 + 1]`. Returns `N/2 + 1`.
+pub fn rfftForward(
+    input_real: []const f64,
+    out_re: *[]f64,
+    out_im: *[]f64,
+): usize ! DspKernelError {
+    const n: usize = input_real.len;
+    if (n < 2 || !isPowerOfTwo(n)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    const half: usize = n >> 1;
+    const bins: usize = half + 1;
+    if (out_re.len < bins || out_im.len < bins) {
+        return DspKernelError.OutputTooSmall;
+    }
+
+    // Pack real signal x[0..N] into M = N/2 complex samples z[k] = x[2k] + i * x[2k + 1]
+    let z_re: []f64 = out_re[0..half];
+    let z_im: []f64 = out_im[0..half];
+    let k: usize = 0;
+    while (k < half) : (k += 1) {
+        z_re[k] = input_real[k * 2];
+        z_im[k] = input_real[k * 2 + 1];
+    }
+
+    fftRadix4InPlace(z_re, z_im)?;
+
+    // Unpack DC (k=0) and Nyquist (k=N/2)
+    const z0_re: f64 = z_re[0];
+    const z0_im: f64 = z_im[0];
+    out_re[0] = z0_re + z0_im;
+    out_im[0] = 0.0;
+    out_re[half] = z0_re - z0_im;
+    out_im[half] = 0.0;
+
+    // Unpack symmetric pairs (k, half - k)
+    const n_f64: f64 = @as(f64, @floatFromInt(n));
+    const quarter: usize = half >> 1;
+    k = 1;
+    while (k <= quarter) : (k += 1) {
+        const rk: usize = half - k;
+        const zk_re: f64 = z_re[k];
+        const zk_im: f64 = z_im[k];
+        const zrk_re: f64 = z_re[rk];
+        const zrk_im: f64 = z_im[rk];
+
+        const even_re: f64 = 0.5 * (zk_re + zrk_re);
+        const even_im: f64 = 0.5 * (zk_im - zrk_im);
+        const odd_re: f64 = 0.5 * (zk_im + zrk_im);
+        const odd_im: f64 = 0.5 * (zrk_re - zk_re);
+
+        const ang: f64 = -TWO_PI_F64 * (@as(f64, @floatFromInt(k)) / n_f64);
+        const w_re: f64 = std.math.cos(ang);
+        const w_im: f64 = std.math.sin(ang);
+
+        const tw_re: f64 = @fma(odd_re, w_re, -(odd_im * w_im));
+        const tw_im: f64 = @fma(odd_re, w_im, odd_im * w_re);
+
+        out_re[k] = even_re + tw_re;
+        out_im[k] = even_im + tw_im;
+        if (rk != k) {
+            out_re[rk] = even_re - tw_re;
+            out_im[rk] = tw_im - even_im;
+        }
+    }
+
+    return bins;
+}
+
+/// Computes the inverse Complex-to-Real FFT from `N/2 + 1` non-negative frequency bins back to `N`
+/// real samples (`out_real.len == N`, even power of two `>= 2`). `work_re` / `work_im` must have
+/// length `>= N / 2`. Returns `N`.
+pub fn irfftInverse(
+    in_re: []const f64,
+    in_im: []const f64,
+    out_real: *[]f64,
+    work_re: *[]f64,
+    work_im: *[]f64,
+): usize ! DspKernelError {
+    const n: usize = out_real.len;
+    if (n < 2 || !isPowerOfTwo(n)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    const half: usize = n >> 1;
+    const bins: usize = half + 1;
+    if (in_re.len < bins || in_im.len < bins) {
+        return DspKernelError.LengthMismatch;
+    }
+    if (work_re.len < half || work_im.len < half) {
+        return DspKernelError.ScratchTooSmall;
+    }
+
+    let z_re: []f64 = work_re[0..half];
+    let z_im: []f64 = work_im[0..half];
+
+    z_re[0] = 0.5 * (in_re[0] + in_re[half]);
+    z_im[0] = 0.5 * (in_re[0] - in_re[half]);
+
+    const n_f64: f64 = @as(f64, @floatFromInt(n));
+    const quarter: usize = half >> 1;
+    let k: usize = 1;
+    while (k <= quarter) : (k += 1) {
+        const rk: usize = half - k;
+        const xk_re: f64 = in_re[k];
+        const xk_im: f64 = in_im[k];
+        const xrk_re: f64 = in_re[rk];
+        const xrk_im: f64 = in_im[rk];
+
+        const even_re: f64 = 0.5 * (xk_re + xrk_re);
+        const even_im: f64 = 0.5 * (xk_im - xrk_im);
+        const diff_re: f64 = 0.5 * (xk_re - xrk_re);
+        const diff_im: f64 = 0.5 * (xk_im + xrk_im);
+
+        // Multiply diff by conj(W_N^k) = exp(+i * 2*pi*k / N)
+        const ang: f64 = TWO_PI_F64 * (@as(f64, @floatFromInt(k)) / n_f64);
+        const w_re: f64 = std.math.cos(ang);
+        const w_im: f64 = std.math.sin(ang);
+
+        const odd_re: f64 = @fma(diff_re, w_re, -(diff_im * w_im));
+        const odd_im: f64 = @fma(diff_re, w_im, diff_im * w_re);
+
+        // Z[k] = even + i * odd = (even_re - odd_im) + i * (even_im + odd_re)
+        z_re[k] = even_re - odd_im;
+        z_im[k] = even_im + odd_re;
+        if (rk != k) {
+            // Z[M - k] = conj(even) + i * conj(odd) = (even_re + odd_im) + i * (odd_re - even_im)
+            z_re[rk] = even_re + odd_im;
+            z_im[rk] = odd_re - even_im;
+        }
+    }
+
+    ifftRadix4InPlace(z_re, z_im)?;
+
+    k = 0;
+    while (k < half) : (k += 1) {
+        out_real[k * 2] = z_re[k];
+        out_real[k * 2 + 1] = z_im[k];
+    }
+
+    return n;
+}
+
+// ============================================================================
+// 11. Zero-Heap STFT / ISTFT Overlap-Add Pipeline (COLA Normalized)
+// ============================================================================
+
+/// Returns the number of STFT frames produced for `signal_len` with `fft_size` and `hop_size`.
+pub fn stftFrameCount(signal_len: usize, fft_size: usize, hop_size: usize): usize {
+    if (signal_len == 0 || fft_size < 2 || hop_size == 0 || signal_len < fft_size) {
+        return 0;
+    }
+    return ((signal_len - fft_size) / hop_size) + 1;
+}
+
+/// Zero-heap multi-frame STFT forward transform (`f32` PCM -> `num_frames * (fft_size/2 + 1)` complex `f64` spectrum).
+/// Uses periodic COLA windowing + `rfftForward`. Returns the number of frames written.
+pub fn stftForwardF32(
+    signal: []const f32,
+    fft_size: usize,
+    hop_size: usize,
+    window: DspWindowKind,
+    frame_work: *[]f64,
+    out_re: *[]f64,
+    out_im: *[]f64,
+): usize ! DspKernelError {
+    if (fft_size < 2 || !isPowerOfTwo(fft_size)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    if (hop_size == 0 || hop_size > fft_size) {
+        return DspKernelError.InvalidHopSize;
+    }
+    const frames: usize = stftFrameCount(signal.len, fft_size, hop_size);
+    if (frames == 0) return 0;
+
+    const bins: usize = (fft_size >> 1) + 1;
+    if (frame_work.len < fft_size) {
+        return DspKernelError.ScratchTooSmall;
+    }
+    if (out_re.len < frames * bins || out_im.len < frames * bins) {
+        return DspKernelError.OutputTooSmall;
+    }
+
+    let f: usize = 0;
+    while (f < frames) : (f += 1) {
+        const start: usize = f * hop_size;
+        let i: usize = 0;
+        while (i < fft_size) : (i += 1) {
+            const raw: f32 = signal[start + i];
+            const clean: f64 = if (isFiniteF32(raw)) (raw as f64) else 0.0;
+            frame_work[i] = clean * periodicWindowSampleAt(window, i, fft_size);
+        }
+        const spec_off: usize = f * bins;
+        let dst_re: []f64 = out_re[spec_off .. spec_off + bins];
+        let dst_im: []f64 = out_im[spec_off .. spec_off + bins];
+        * = rfftForward(frame_work[0..fft_size], dst_re, dst_im)?;
+    }
+
+    return frames;
+}
+
+/// Zero-heap ISTFT Overlap-Add synthesis (`num_frames * (fft_size/2 + 1)` complex `f64` spectrum -> `f32` PCM).
+/// Applies matched periodic synthesis window and COLA squared-window normalization (`norm_work`).
+/// Returns the reconstructed sample count `(num_frames - 1) * hop_size + fft_size`.
+pub fn istftOverlapAddF32(
+    spec_re: []const f64,
+    spec_im: []const f64,
+    num_frames: usize,
+    fft_size: usize,
+    hop_size: usize,
+    window: DspWindowKind,
+    frame_work: *[]f64,
+    work_re: *[]f64,
+    work_im: *[]f64,
+    accum_work: *[]f64,
+    norm_work: *[]f64,
+    out_signal: *[]f32,
+): usize ! DspKernelError {
+    if (fft_size < 2 || !isPowerOfTwo(fft_size)) {
+        return DspKernelError.NotPowerOfTwo;
+    }
+    if (hop_size == 0 || hop_size > fft_size) {
+        return DspKernelError.InvalidHopSize;
+    }
+    if (num_frames == 0) return 0;
+
+    const bins: usize = (fft_size >> 1) + 1;
+    const half: usize = fft_size >> 1;
+    const out_len: usize = (num_frames - 1) * hop_size + fft_size;
+
+    if (spec_re.len < num_frames * bins || spec_im.len < num_frames * bins) {
+        return DspKernelError.LengthMismatch;
+    }
+    if (frame_work.len < fft_size || work_re.len < half || work_im.len < half ||
+        accum_work.len < out_len || norm_work.len < out_len) {
+        return DspKernelError.ScratchTooSmall;
+    }
+    if (out_signal.len < out_len) {
+        return DspKernelError.OutputTooSmall;
+    }
+
+    let z: usize = 0;
+    while (z < out_len) : (z += 1) {
+        accum_work[z] = 0.0;
+        norm_work[z] = 0.0;
+    }
+
+    let f: usize = 0;
+    while (f < num_frames) : (f += 1) {
+        const spec_off: usize = f * bins;
+        let frame_slice: []f64 = frame_work[0..fft_size];
+        * = irfftInverse(
+            spec_re[spec_off .. spec_off + bins],
+            spec_im[spec_off .. spec_off + bins],
+            frame_slice,
+            work_re,
+            work_im,
+        )?;
+
+        const dst_start: usize = f * hop_size;
+        let i: usize = 0;
+        while (i < fft_size) : (i += 1) {
+            const w: f64 = periodicWindowSampleAt(window, i, fft_size);
+            accum_work[dst_start + i] = @fma(frame_slice[i], w, accum_work[dst_start + i]);
+            norm_work[dst_start + i] = @fma(w, w, norm_work[dst_start + i]);
+        }
+    }
+
+    let k: usize = 0;
+    while (k < out_len) : (k += 1) {
+        const denom: f64 = norm_work[k];
+        if (denom > 1.0e-12) {
+            out_signal[k] = (accum_work[k] / denom) as f32;
+        } else {
+            out_signal[k] = 0.0;
+        }
+    }
+
+    return out_len;
+}
+
+// ============================================================================
+// 12. 8-Lane `@Vector(8, f32)` SIMD Spectral & Windowing Hot-Path Primitives
+// ============================================================================
+
+type Vec8f32 = @Vector(8, f32);
+
+/// Sanitizes NaN / Inf values in an `f32` PCM buffer in-place (replaces with `0.0`).
+/// Returns the count of non-finite samples replaced.
+pub fn sanitizeNonFiniteF32(buf: *[]f32): usize {
+    let fixed: usize = 0;
+    let i: usize = 0;
+    while (i < buf.len) : (i += 1) {
+        if (!isFiniteF32(buf[i])) {
+            buf[i] = 0.0;
+            fixed += 1;
+        }
+    }
+    return fixed;
+}
+
+/// 8-lane SIMD `@Vector(8, f32)` window multiplication: `dst[i] = src[i] * win[i]`.
+pub fn applyWindowSimdF32(dst: *[]f32, src: []const f32, win: []const f32): usize ! DspKernelError {
+    if (src.len != win.len) return DspKernelError.LengthMismatch;
+    if (dst.len < src.len) return DspKernelError.OutputTooSmall;
+    const n: usize = src.len;
+    let i: usize = 0;
+    while (i + 8 <= n) : (i += 8) {
+        const vs: @Vector(8, f32) = src[i .. i + 8][0..8].*;
+        const vw: @Vector(8, f32) = win[i .. i + 8][0..8].*;
+        const prod: @Vector(8, f32) = vs * vw;
+        dst[i .. i + 8][0..8].* = prod;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i] * win[i];
+    }
+    return n;
+}
+
+/// 8-lane SIMD `@Vector(8, f32)` complex magnitude spectrum: `out_mag[i] = sqrt(re[i]^2 + im[i]^2)`.
+pub fn computeMagnitudeSimdF32(
+    re: []const f32,
+    im: []const f32,
+    out_mag: *[]f32,
+): usize ! DspKernelError {
+    if (re.len != im.len) return DspKernelError.LengthMismatch;
+    if (out_mag.len < re.len) return DspKernelError.OutputTooSmall;
+    const n: usize = re.len;
+    let i: usize = 0;
+    while (i + 8 <= n) : (i += 8) {
+        const vr: @Vector(8, f32) = re[i .. i + 8][0..8].*;
+        const vi: @Vector(8, f32) = im[i .. i + 8][0..8].*;
+        const sq: @Vector(8, f32) = vr * vr + vi * vi;
+        const mag_v: @Vector(8, f32) = @sqrt(sq);
+        out_mag[i .. i + 8][0..8].* = mag_v;
+    }
+    while (i < n) : (i += 1) {
+        const r: f32 = re[i];
+        const m: f32 = im[i];
+        out_mag[i] = std.math.sqrt(@fma(r, r, m * m));
+    }
+    return n;
+}
+
+/// 8-lane SIMD `@Vector(8, f32)` pointwise complex multiplication (frequency-domain convolution).
+pub fn complexMulSimdF32(
+    a_re: []const f32,
+    a_im: []const f32,
+    b_re: []const f32,
+    b_im: []const f32,
+    out_re: *[]f32,
+    out_im: *[]f32,
+): usize ! DspKernelError {
+    const n: usize = a_re.len;
+    if (a_im.len != n || b_re.len != n || b_im.len != n) {
+        return DspKernelError.LengthMismatch;
+    }
+    if (out_re.len < n || out_im.len < n) {
+        return DspKernelError.OutputTooSmall;
+    }
+    let i: usize = 0;
+    while (i + 8 <= n) : (i += 8) {
+        const ar: @Vector(8, f32) = a_re[i .. i + 8][0..8].*;
+        const ai: @Vector(8, f32) = a_im[i .. i + 8][0..8].*;
+        const br: @Vector(8, f32) = b_re[i .. i + 8][0..8].*;
+        const bi: @Vector(8, f32) = b_im[i .. i + 8][0..8].*;
+        const rr: @Vector(8, f32) = ar * br - ai * bi;
+        const ri: @Vector(8, f32) = ar * bi + ai * br;
+        out_re[i .. i + 8][0..8].* = rr;
+        out_im[i .. i + 8][0..8].* = ri;
+    }
+    while (i < n) : (i += 1) {
+        const ar: f32 = a_re[i];
+        const ai: f32 = a_im[i];
+        const br: f32 = b_re[i];
+        const bi: f32 = b_im[i];
+        out_re[i] = @fma(ar, br, -(ai * bi));
+        out_im[i] = @fma(ar, bi, ai * br);
+    }
+    return n;
 }

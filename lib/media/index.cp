@@ -123,6 +123,22 @@ export {
     measureAudioLoudnessF32,
     dotF32Simd,
     convolveFirF32Simd,
+    nextPowerOfTwo,
+    periodicWindowSampleAt,
+    fftRadix4InPlace,
+    ifftRadix4InPlace,
+    bluesteinScratchLen,
+    fftBluesteinInPlace,
+    ifftBluesteinInPlace,
+    rfftForward,
+    irfftInverse,
+    stftFrameCount,
+    stftForwardF32,
+    istftOverlapAddF32,
+    sanitizeNonFiniteF32,
+    applyWindowSimdF32,
+    computeMagnitudeSimdF32,
+    complexMulSimdF32,
 } from "./fftFilter.cp";
 
 export {
