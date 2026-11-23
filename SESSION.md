@@ -2922,3 +2922,99 @@
   > 已读取工单 **`task-capsurf-20261123-image-webp-compile`**（delivery_id=210）。经核查，该报错（[webp.cp](file:///data/dev/cp/lib/image/webp.cp) L1338 `E0217` 与 L1499/L1505 `E0207`）系下游 `capsurf_agy` 并发 `cap build` 恰好撞上 W28 R7 子智能体正在原地施工的半成品窗口所致。
   >
   > 已第一时间通知正在编辑 [lib/image/webp.cp](file:///data/dev/cp/lib/image/webp.cp) 的单写者子智能体（避免并发写冲突），优先修净全部编译错误并跑通 `cpc brief` 与 WebP 全套测试后，立即执行 `task_queue.py resolve` 通知 CapSurf 恢复构建，随后由我同步审计 `SESSION.md` 并提交。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 13:25:57）[step:20632]
+- **用户完整原始指令**：
+  > 已经确定 容器名称为 capdux, 编译选项 为 -c, 已经注册域名 capdux.com capdux.dev capdux.ai, Capdux商标正在安排注册.
+  > cp cpc 作为Capdux旗下开源产品.
+  > 容器编译后续开始,暂不开始.
+  >
+  > 1. 从bun 深度吸收资产, 全部完成了吗?
+  > 2. 从 rust 吸收无版权风险开源库, 深化/补全 本地 库, 使用 cp 特定语法优化, 加速, 都完成了吗?
+  > 3. 你之前的计划, 还有哪些未完成
+- **完整回复与执行汇报**：
+  > 祝贺 **Capdux** 品牌落定（`capdux.com` / `capdux.dev` / `capdux.ai`，编译选项 `-c`）！已记下：**Capdux 容器编译（`cap build -c`）暂不启动**，等您后续明确指示再开启。
+  >
+  > 以下是基于当前仓库实时扫描数据的逐项如实盘点：
+  >
+  > ---
+  >
+  > ### 1. 从 Bun 深度吸收资产，全部完成了吗？
+  > **主干纯逻辑已吸收约 90%+，但尚未 100% 收尾**（实时扫描 `/data/dev/bun/src` 共 1,295 个 `.cp` 文件，`lib/` 已吸收溯源 **1,202 份**）：
+  >
+  > - **已基本清零的高价值纯逻辑目录**：`install/`（68/69）、`bundler/`（46/49）、`css/`（86/95）、`shell/`（38/43）、`cli/`（40/58）、`md/`（16/16）、`http/` 核心协议、`string/`、`collections/`。
+  > - **尚未完成的两部分**：
+  >   1. **上游增量同步（`upstream_newer = 99`）**：刚才运行 [audit_bun_sync.py](file:///data/dev/cp/scripts/audit_bun_sync.py) 发现，`bun_agy` 今日更新了 `http/`、`sql_jsc/mysql/`、`sql_jsc/postgres/` 等上游文件，导致 **99 份**已吸收模块落后于上游最新时间戳，需做一次增量 diff 排查（把实质 Bug 修复/新特性同步过来，并刷新 `Synced:` 时间戳）。
+  >   2. **剩余未吸收目录**：其中 `jsc/`（113 份）、`sql_jsc/`（28 份）、`http_jsc/`（9 份）与 `runtime/` 大部分属于 JSC/Node 绑定胶水层，**不应吸收**；但 `test_runner/`（79 份）和 `runtime/` 中仍有少量纯逻辑工具（如测试过滤/快照/报告、流控辅助）可按需挑选吸收。
+  >
+  > ---
+  >
+  > ### 2. 从 Rust 吸收无版权风险开源库、深化补全本地库并叠加 CP SIMD 加速，都完成了吗？
+  > **只完成了第 1 批（Wave 28：8 个 Rust 标杆仓 → 10 个核心模块），远未全部完成。**
+  >
+  > - **已完成（Wave 28，全部 100% 通过真实样本互验 + Fuzz + `THIRD_PARTY_NOTICES.md` 合规）**：
+  >   - 文档/表格：`csvTable.cp`（`rust-csv`）、`xlsx.cp`（`calamine`）、`pdfInspector.cp`（`lopdf`）
+  >   - 图像：`webp.cp`（`image-webp`）、`jpeg.cp`（`zune-image`，含 `@dot` 2D IDCT + `@fma` YCbCr→RGB）
+  >   - 压缩：`zstdDecode.cp`（`zstd-rs`）
+  >   - 实时音视频/WebRTC：`audioWav.cp`（`hound`）、`webrtcIce.cp` / `rtpJitter.cp` / `srtpCodec.cp`（`str0m`）
+  > - **尚未对标加固的重点存量自研库（待 Wave 29+ 分批推进）**：
+  >   - **图像**：`png.cp`（对标 `image-rs/image-png`）、`gif.cp` / `tiff.cp` / `ico.cp`（`image-rs/*`）
+  >   - **压缩**：`brotli.cp`（对标 `dropbox/rust-brotli`，MIT/BSD-3）、`deflate`/`gzip`（对标 `miniz_oxide` / `flate2`，MIT/Apache-2.0）
+  >   - **DSP / 媒体**：`fftFilter.cp`（对标 `RustFFT` + `rubato`）、`flac.cp` / `ogg.cp` / `mp4.cp`（严格筛选 MIT/Apache-2.0 仓）
+  >   - **检索 / 存储 / 正则**：`fullTextIndex.cp`（对标 `tantivy`，MIT）、`lsmEngine.cp`（对标 `lsm-tree`，MIT/Apache-2.0）、`regexVm.cp`（对标 `rust-lang/regex`，MIT/Apache-2.0）、`hnswGraph.cp`（对标 `instant-distance`）
+  >   - **文档 / 数学 / 协议**：`pdfWriter.cp` / `docx.cp` / `pptx.cp`、`matrixDense.cp`（对标 `faer-rs` / `nalgebra`）、`sctpDataChannel.cp`（对标 `str0m` / `webrtc-rs/sctp`）
+  > - **SIMD 加速**：已在 GEMM、FIR、Sinc、FFT、JPEG DCT/IDCT、YCbCr、CSV、Zstd、BM25、向量距离等热路径落地 `@dot` / `@fma` / `@l2sq` / `cap:simd`，其余上述模块在对标加固时同步落地。
+  >
+  > ---
+  >
+  > ### 3. 之前的计划，还有哪些未完成？
+  > 按当前状态汇总，尚未完成的共 **6 大块**：
+  >
+  > | 序号 | 计划项 | 当前状态 | 说明 |
+  > | :--- | :--- | :--- | :--- |
+  > | 1 | **Rust 宽松协议 `_ref/` 标杆对标加固（Wave 29+）** | 进行中（已完成 10 个模块） | 按上表继续对标 PNG/Brotli/FFT/Tantivy/LSM/Regex/矩阵等，叠加 `@dot`/`@fma`/`cap:simd` 与 Fuzz |
+  > | 2 | **Bun 上游增量回刷（`upstream_newer=99`）+ 零星纯逻辑收尾** | 待执行 | 同步 `bun_agy` 今日改动至 `lib/http`/`lib/sql`/`lib/mysql`/`lib/pgwire`，并评估 `test_runner` 可复用部分 |
+  > | 3 | **存量旧库回溯深化 & 历史散装目录收敛** | 部分完成 | 按 [GEMINI.md](file:///data/dev/cp/GEMINI.md) 第十/十一节，收敛历史下划线散装目录（如 `content_range`/`h2stream`/`header_value_iter` 等并入主包），清除早期小容量浅层模块 |
+  > | 4 | **Phase 2 外部重量级 `@c` 生态包矩阵** | 未开始（排在内置库完备后） | 通过 `cap add` 提供预编译二进制包：`@cap/av`（FFmpeg）、`@cap/opus`、`@cap/vips`、`@cap/opencv`、`@cap/onnx`、`@cap/llama` |
+  > | 5 | **对外发布工程化与手册同步** | 未开始 | `cap` 跨平台矩阵构建发布、将 `cp_agent_ref.md` 中的 `[SYNC_PENDING]` 集中同步至 `cp_ref.md`、完善 `Capdux` 品牌/许可声明 |
+  > | 6 | **Capdux 容器编译（`cap build -c`）与百万智能体运行时** | **按指令暂缓** | 后续启动：抢占式让权插桩、原生动态加载二进制、Host ABI 与多租户隔离 |
+  >
+  > ---
+  >
+  > 您看接下来我们优先推进哪一条？例如：
+  > - **路线 A（推荐）**：双线并行——1 路做 **Wave 29 Rust 标杆加固**（先攻 `png.cp`、`brotli.cp`、`fftFilter.cp`、`regexVm.cp`、`fullTextIndex.cp` 等最高频基础库），1 路同步清理 **Bun 99 份上游增量 + 散装目录收敛**；
+  > - **路线 B**：集中全力推进 **Rust 标杆加固 + SIMD/Fuzz**，先把全部核心内置库打磨到生产可用。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 14:52:24）[step:20643]
+- **用户完整原始指令**：
+  > 路线A,保持两路子智能体与主智能体并行工作,主智能体不可陷入长时间任务. 继续跟之前一样自主连续工作,不要停.
+- **完整回复与执行汇报**：
+  > 已按 **路线 A** 全面启动双路并行自主推进，主控保持轻量调度与即时验收状态：
+  >
+  > - **Lane 1 — Wave 29 Rust 标杆加固 (`5021770c`, R1)**：正在拉取 `image-rs/image-png`（MIT/Apache-2.0）至 `_ref/image-png`，对照加固 [png.cp](file:///data/dev/cp/lib/image/png.cp)（当前 497 行），补全多色深/色彩类型（Gray/RGB/Indexed PLTE/GrayAlpha/RGBA + `tRNS` + Adam7 隔行）、5 种滤波器、SIMD 热路径加速、真实 PNG 样本互验与 ≥1,000 组确定性 Fuzz。
+  > - **Lane 2 — Bun 上游增量同步与目录收敛 (`667daf67`, R1)**：正在逐一核对 `audit_bun_sync.py` 报出的 `upstream_newer=99`（对应 `bun/src/http/` 与 `bun/src/sql_jsc/` 的今日改动），精准同步实质逻辑修复并清零 `upstream_newer=0`。
+  > - **主控预置下一批队列（已盘点完毕）**：
+  >   - **Lane 1 后续队列**：`regexVm.cp`（400 行，对标 `rust-lang/regex`）→ `brotli.cp`（对标 `dropbox/rust-brotli`）→ `fftFilter.cp`（对标 `RustFFT`）→ `lsmEngine.cp`（对标 `fjall-rs/lsm-tree`）→ `matrixDense.cp`（对标 `faer-rs`）；
+  >   - **Lane 2 后续队列**：清零 `upstream_newer=0` 后，按领域分批收敛历史遗留的 **84 个**下划线散装目录（首批聚焦 HTTP/Web 域：`alt_svc`、`content_range`、`h2_encode`、`h2_frame`、`http2_frame`、`header_value_iter`、`rfc7807_problem`、`robots_txt`、`sse_parser`、`structured_headers` 等）。
+  > - 下游工单队列已确认清空（`[]`），两路完成后将自动唤醒验收、登记提交并无缝派发下一轮。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 14:58:42）[step:20659]
+- **用户完整原始指令**：
+  > 主智能体不要闲着,做些短平快的工作!
+- **完整回复与执行汇报**：
+  > 主控已完成本轮短平快收敛任务，并与 Lane 2 R2 成果合并原子提交 (`64c239c1`)，一次性清理 **13 个**历史下划线散装目录（剩余下划线目录 `84 -> 71`）：
+  >
+  > ### 已提交成果 (`64c239c1`)
+  > 1. **主控短平快收敛（2 个目录）**：
+  >    - `lib/json5_lexer/` → [json5.cp](file:///data/dev/cp/lib/json/json5.cp)（并入 `cap:json`）；
+  >    - `lib/bit_ops/` → [bits.cp](file:///data/dev/cp/lib/math/bits.cp)（并入 `cap:math`）；
+  >    - `cpc brief` 4 门禁全 0，两份测试（[test_json5_lexer_production_deep.cp](file:///data/dev/cp/cap/test/test_json5_lexer_production_deep.cp)、[test_bit_ops_production_deep.cp](file:///data/dev/cp/cap/test/test_bit_ops_production_deep.cp)）100% PASS。
+  > 2. **Lane 2 (`W29-Sync R2`) 验收合并（11 个 HTTP 域目录）**：
+  >    - `alt_svc`、`content_range`、`cors_policy`、`header_value_iter`、`rfc7807_problem`、`robots_txt`、`sse_parser`、`structured_headers`、`h2_encode`、`h2_frame`、`http2_frame` 全部安全并入 `cap:http`（`13/13 cpc brief PASS`、`11/11 cap test PASS`、`audit_bun_sync.py` 保持 `upstream_newer=0`）。
+  > 3. **同步清理 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)**：移除 13 条旧散装条目并更新 `cap:json` / `cap:math` 索引。
+  >
+  > ### 当前双路后台推进中
+  > - **Lane 1 (`5021770c`, `W29 R1`)**：[png.cp](file:///data/dev/cp/lib/image/png.cp) 对标 `image-rs/image-png`（MIT/Apache-2.0）加固、SIMD 与测试集继承；
+  > - **Lane 2 (`667daf67`, `W29-Sync R3`)**：已无缝派发第 2 批 **12 个文本/格式化/编码域**下划线目录（`byte_size`、`hex_dump`、`human_fmt`、`number_format`、`char_freq`、`charset_label`、`cow_str`、`small_string`、`smol_str`、`grapheme_cluster`、`utf8_dfa`、`glob_escape`）向 `cap:text` 主包收敛。
+  >
+  > 任一路完工将自动唤醒验收并继续滚动推进。
