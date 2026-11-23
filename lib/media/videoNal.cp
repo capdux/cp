@@ -8,6 +8,8 @@
 //   - H.265/HEVC 2-byte NAL header & basic SPS parser (`profile_tier_level`, `conformance_window` cropping) + keyframe detector
 //   - RFC 6184 H.264 (Single NAL, STAP-A, FU-A) & RFC 7798 H.265 (Single NAL, AP, FU) RTP packetizers & loss-resilient depacketizers
 
+import { Simd } from "../simd/index.cp";
+
 // ============================================================================
 // 1. Constants, Error Set & Enums
 // ============================================================================
@@ -76,8 +78,11 @@ pub struct AnnexBNalUnit {
 
 fn findStartCode(data: []const u8, start_at: usize): ([2]usize)? {
     let i: usize = start_at;
-    while (i + 3 <= data.len) : (i += 1) {
-        if (data[i] == 0 && data[i + 1] == 0) {
+    while (i + 3 <= data.len) {
+        const rel: usize = Simd.indexOfByte(data[i..data.len], 0) ?? return null;
+        i += rel;
+        if (i + 3 > data.len) return null;
+        if (data[i + 1] == 0) {
             if (data[i + 2] == 1) {
                 return [i, 3];
             }
@@ -85,6 +90,7 @@ fn findStartCode(data: []const u8, start_at: usize): ([2]usize)? {
                 return [i, 4];
             }
         }
+        i += 1;
     }
     return null;
 }
@@ -239,13 +245,25 @@ pub fn avccToAnnexB(avcc: []const u8, length_size: usize, out_buf: []u8): usize 
 }
 
 /// Strips ITU-T H.264/H.265 §7.3.1 emulation prevention bytes (`00 00 03` -> `00 00`),
-/// converting EBSP payload bytes into raw RBSP bytes.
+/// converting EBSP payload bytes into raw RBSP bytes with 32-byte SIMD zero-byte scanning.
 pub fn ebspToRbsp(ebsp: []const u8, out_rbsp: []u8): usize ! VideoNalError {
     let out_pos: usize = 0;
     let zeros: usize = 0;
     let i: usize = 0;
-    while (i < ebsp.len) : (i += 1) {
+    while (i < ebsp.len) {
+        // Fast SIMD bulk copy of non-zero runs when not tracking trailing zeros
+        if (zeros == 0) {
+            const rel: usize = Simd.indexOfByte(ebsp[i..ebsp.len], 0) ?? (ebsp.len - i);
+            if (rel > 0) {
+                if (out_pos + rel > out_rbsp.len) return VideoNalError.BufferTooSmall;
+                @memcpy(out_rbsp[out_pos..out_pos + rel], ebsp[i..i + rel]);
+                out_pos += rel;
+                i += rel;
+                if (i >= ebsp.len) break;
+            }
+        }
         const b = ebsp[i];
+        i += 1;
         if (zeros >= 2 && b == 0x03) {
             zeros = 0;
             continue;

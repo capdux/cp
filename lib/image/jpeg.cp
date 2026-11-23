@@ -150,6 +150,18 @@ const DCT_COS: [64]f64 = [
      0.49039264020161533, -0.41573480615127245,  0.27778511650980148, -0.09754516100806381,
 ];
 
+/// 8-lane SIMD `@dot` 1D 正交 DCT 余弦基行向量 (`f32`)
+const DCT_COS_F32: [64]f32 = [
+     0.35355339,  0.35355339,  0.35355339,  0.35355339,  0.35355339,  0.35355339,  0.35355339,  0.35355339,
+     0.49039264,  0.41573481,  0.27778512,  0.09754516, -0.09754516, -0.27778512, -0.41573481, -0.49039264,
+     0.46193977,  0.19134172, -0.19134172, -0.46193977, -0.46193977, -0.19134172,  0.19134172,  0.46193977,
+     0.41573481, -0.09754516, -0.49039264, -0.27778512,  0.27778512,  0.49039264,  0.09754516, -0.41573481,
+     0.35355339, -0.35355339, -0.35355339,  0.35355339,  0.35355339, -0.35355339, -0.35355339,  0.35355339,
+     0.27778512, -0.49039264,  0.09754516,  0.41573481, -0.41573481, -0.09754516,  0.49039264, -0.27778512,
+     0.19134172, -0.46193977,  0.46193977, -0.19134172, -0.19134172,  0.46193977, -0.46193977,  0.19134172,
+     0.09754516, -0.27778512,  0.41573481, -0.49039264,  0.49039264, -0.41573481,  0.27778512, -0.09754516,
+];
+
 struct HuffmanTable {
     codes: [256]u16,
     lens: [256]u8,
@@ -308,42 +320,41 @@ fn coeffExtraBits(v: i32, cat: u8): u32 {
     return (max_val + v) as u32;
 }
 
-/// 可分离 8x8 2D Forward DCT + 量化 + Zig-Zag 重排
+/// 可分离 8x8 2D Forward DCT（8-lane SIMD `@dot` 硬件加速）+ 量化 + Zig-Zag 重排
 fn forwardDctAndQuantize(
     block: [64]f64,
     quant: [64]u8,
     out_zz: *[64]i32,
 ) {
-    let tmp: [64]f64 = [0.0; 64];
+    let blk_f32: [64]f32 = [0.0; 64];
+    let k_i: usize = 0;
+    while (k_i < 64) : (k_i += 1) {
+        blk_f32[k_i] = block[k_i] as f32;
+    }
 
-    // 1. 行方向 1D DCT
+    // 1. 行方向 1D DCT（8-lane @dot，直接转置存入 tmp_t[u * 8 + y] 以便列变换连续向量化）
+    let tmp_t: [64]f32 = [0.0; 64];
     let y: usize = 0;
     while (y < 8) : (y += 1) {
         const row_off = y * 8;
+        const row_slice: []const f32 = blk_f32[row_off..row_off + 8];
         let u: usize = 0;
         while (u < 8) : (u += 1) {
             const c_off = u * 8;
-            let sum: f64 = 0.0;
-            let x: usize = 0;
-            while (x < 8) : (x += 1) {
-                sum += block[row_off + x] * DCT_COS[c_off + x];
-            }
-            tmp[row_off + u] = sum;
+            tmp_t[u * 8 + y] = @dot(row_slice, DCT_COS_F32[c_off..c_off + 8]);
         }
     }
 
-    // 2. 列方向 1D DCT + 量化
+    // 2. 列方向 1D DCT（8-lane @dot 连续列向量）+ 量化
     let qblock: [64]i32 = [0; 64];
     let v: usize = 0;
     while (v < 8) : (v += 1) {
         const c_off = v * 8;
+        const cos_row: []const f32 = DCT_COS_F32[c_off..c_off + 8];
         let u: usize = 0;
         while (u < 8) : (u += 1) {
-            let sum: f64 = 0.0;
-            let y2: usize = 0;
-            while (y2 < 8) : (y2 += 1) {
-                sum += tmp[y2 * 8 + u] * DCT_COS[c_off + y2];
-            }
+            const col_off = u * 8;
+            const sum: f64 = @as(f64, @dot(tmp_t[col_off..col_off + 8], cos_row));
             const idx = v * 8 + u;
             const qf = quant[idx] as f64;
             const scaled = sum / qf;
