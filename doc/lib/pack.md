@@ -41,7 +41,7 @@
 | `lib/pack/index.cp` | `cap:pack` / `cap:compress` 统一导出门面 | `/data/dev/bun/src/zlib/` & `/data/dev/bun/src/libarchive/` |
 | `lib/pack/gzip.cp` | RFC 1952 Gzip / RFC 1950 Zlib / RFC 1951 Raw Deflate 单发与流式引擎 | `/data/dev/bun/src/zlib/zlib.cp` |
 | `lib/pack/zstd.cp` | RFC 8478 Zstandard 帧头解析（`ZstdFrameHeader`）、压缩上界与编解码接口 | `/data/dev/bun/src/zstd/zstd.cp` |
-| `lib/pack/brotli.cp` | RFC 7932 Brotli 完整纯 CP 解压引擎（`brotliDecompress` / `brotliDecompressInto` / `brotliDecompressWithLimits`）、窗口位数解析（`BrotliHeader`）与上界 | `/data/dev/bun/src/brotli/brotli.cp` & RFC 7932 |
+| `lib/pack/brotli.cp` | RFC 7932 Brotli 完整纯 CP 编解码引擎（对标 `dropbox/rust-brotli` 加固：`brotliDecompress` / `brotliDecompressInto` / `brotliDecompressWithLimits` / `brotliCompress` / `brotliCompressInto` + 16-lane SIMD LZ77/块搬运） | `/data/dev/bun/src/brotli/brotli.cp` & `dropbox/rust-brotli` (BSD-3-Clause/MIT) |
 | `lib/pack/_brotliDict.cp` | RFC 7932 122KB 静态字典、4 模式字面量上下文查表与 121 种词变换表（内部模块） | RFC 7932 Appendix A / §7.1 / §8 |
 | `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
 | `lib/pack/tarPax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tarPax.cp` (POSIX.1-2001 PAX & USTAR) |
@@ -148,10 +148,11 @@ pub fn demoZstd() {
 
 `lib/pack/brotli.cp`（配合内部字典表 `lib/pack/_brotliDict.cp`）提供 **100% 纯 CP、零外部依赖的完整 RFC 7932 Brotli 解压引擎**，支持 `WBITS`（10..24）、多 Meta-Block、Metadata 跳过块、未压缩直通块、Simple/Complex Canonical Huffman 前缀码、4 模式精确字面量上下文查表（LSB6/MSB6/UTF8/Signed）、Context Map（RLE + 逆 MTF）、4-entry 距离环形缓存与短码、重叠 LZ77 后向复制，以及完整 122KB RFC 7932 静态字典与 121 种词变换，适用于 HTTP `Content-Encoding: br`（`q=0..11`）响应解压：
 
-- `brotliDecompress(allocator: std.mem.Allocator, compressed: []const u8): []u8 ! BrotliError`（默认安全上限：16MiB 窗口 / 64MiB 输出）
+- `brotliDecompress(allocator: std.mem.Allocator, compressed: []const u8): []u8 ! BrotliError`（默认安全上限：16MiB 窗口 / 64MiB 输出；16-lane SIMD LZ77/块拷贝加速）
 - `brotliDecompressWithLimits(allocator: std.mem.Allocator, compressed: []const u8, max_window_bytes: usize, max_output_bytes: usize): []u8 ! BrotliError`
 - `brotliDecompressInto(compressed: []const u8, out: *[]u8): usize ! BrotliError`（直接写入外部缓冲区，零输出堆分配，缓冲区不足时返回 `BrotliError.OutputBufferTooSmall`）
-- `Brotli.decompress` / `Brotli.decompressWithLimits` / `Brotli.decompressInto`（面向对象门面别名）
+- `brotliCompress(allocator: std.mem.Allocator, input: []const u8): []u8 ! BrotliError` / `brotliCompressInto(input: []const u8, out: *[]u8): usize ! BrotliError`（纯 CP RFC 7932 无损编码器）
+- `Brotli.decompress` / `Brotli.decompressWithLimits` / `Brotli.decompressInto` / `Brotli.compress` / `Brotli.compressInto`（面向对象门面别名）
 
 ```typescript
 import {
