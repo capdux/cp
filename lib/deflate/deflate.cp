@@ -187,7 +187,7 @@ struct HuffTree {
     counts: [16]u16 = [0; 16],
     symbols: [288]u16 = [0; 288],
 
-    fn build(lengths: []const u8): HuffTree ! DeflateError {
+    static fn build(lengths: []const u8): HuffTree ! DeflateError {
         let tree = HuffTree{};
         let i: usize = 0;
         while (i < lengths.len) : (i += 1) {

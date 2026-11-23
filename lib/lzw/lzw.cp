@@ -153,7 +153,7 @@ pub fn lzwCompress(src: []const u8, dst: *[]u8, lit_width: u8, order: LzwBitOrde
     const first_code: u16 = clear_code + 2;
     const max_sym: u16 = clear_code - 1;
 
-    let bw = LzwBitWriter.init(dst.*, order);
+    let bw = LzwBitWriter.init(dst, order);
     let code_size: u8 = lit_width + 1;
     let next_code: u16 = first_code;
 
@@ -328,13 +328,13 @@ pub fn lzwDecompress(src: []const u8, dst: *[]u8, lit_width: u8, order: LzwBitOr
         stack[sp] = first_byte;
         sp += 1;
 
-        if (dst.*.len - out_pos < sp) {
+        if (dst.len - out_pos < sp) {
             return null;
         }
         let k = sp;
         while (k > 0) {
             k -= 1;
-            dst.*[out_pos] = stack[k];
+            dst[out_pos] = stack[k];
             out_pos += 1;
         }
 
