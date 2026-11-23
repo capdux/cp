@@ -472,7 +472,7 @@ pub fn demoSniffer() {
 | :--- | :--- | :--- | :--- |
 | 压缩算法 | `lib/pack/bzip2.cp` | bzip2 Container | 零堆分配 bzip2 容器头与位流解析器 |
 | 压缩算法 | `lib/pack/lz4.cp` | LZ4 Frame v1.6.1 / Block + xxHash32 + 16-lane SIMD | 对标 `PSeitz/lz4_flex`（MIT）：零堆/字典 Block 编解码、Linked/Independent/ContentSize/BlockChecksum/Skippable Frame 与 16-lane SIMD 匹配拷贝/扩展 |
-| 压缩算法 | `lib/pack/snappy.cp` | Google Snappy | 纯 CP Snappy 压缩/解压与长度上限防护（导出别名 `snappyCompress`） |
+| 压缩算法 | `lib/pack/snappy.cp` | Google Snappy Block + Framing (`sNaPpY`) + Masked CRC32C + 16-lane SIMD | 对标 `BurntSushi/rust-snappy`（BSD-3-Clause）：零堆 `compressInto`/`decompressInto`、完整 Framing 块与 Masked CRC32C、16-lane SIMD 匹配拷贝/扩展（导出别名 `snappyCompress`） |
 | 压缩算法 | `lib/pack/rle.cp` | PackBits / PCX / TGA / Zero-RLE | 零堆分配多标准游程编码套件 |
 | 压缩算法 | `lib/pack/xz.cp` | XZ / LZMA2 Container | 零堆分配 XZ 流头/块头/索引/CRC 校验解析器 |
 | 压缩算法 | `lib/pack/lzss.cp` | LZSS 滑动窗口 | 零堆分配 LZSS 编解码器 |

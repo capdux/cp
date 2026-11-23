@@ -47,6 +47,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **claxon** (`ruuda`) | <https://github.com/ruuda/claxon> | Apache-2.0 | `lib/media/flac.cp` | Copyright (c) Ruud van Asseldonk |
 | **image-gif** (`gif`) | <https://github.com/image-rs/image-gif> | MIT OR Apache-2.0 | `lib/image/gif.cp` | Copyright (c) image-rs developers |
 | **lz4_flex** | <https://github.com/PSeitz/lz4_flex> | MIT | `lib/pack/lz4.cp` | Copyright (c) 2020 Pascal Seitz |
+| **rust-snappy** (`snap`) | <https://github.com/BurntSushi/rust-snappy> | BSD-3-Clause | `lib/pack/snappy.cp` | Copyright (c) 2016 Andrew Gallant |
 
 ---
 

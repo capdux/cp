@@ -88,11 +88,31 @@ export {
 
 // --- snappy ---
 export {
+    SNAPPY_FRAME_CHUNK_SIZE,
+    SNAPPY_STREAM_IDENTIFIER,
     SnappyError,
+    snappyCrc32c,
+    snappyMaskChecksum,
+    snappyUnmaskChecksum,
+    snappyCopyLitScalar,
+    snappyCopyLitSimd,
+    snappyCopyMatchScalar,
+    snappyCopyMatchSimd,
+    snappyExtendMatchScalar,
+    snappyExtendMatchSimd,
+    maxCompressLen,
+    decompressLen,
+    compressInto,
+    decompressInto,
     compress as snappyCompress,
     decompress,
     decompressWithMaxSize,
     uncompressedLength,
+    encodeFramedPaddingChunk,
+    encodeFramedSkippableChunk,
+    compressFramed,
+    decompressFramed,
+    decompressFramedWithMaxSize,
 } from "./snappy.cp";
 
 // --- rle ---
