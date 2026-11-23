@@ -86,6 +86,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **tungstenite-rs** (`snapview`) | <https://github.com/snapview/tungstenite-rs> | MIT OR Apache-2.0 | `lib/net/wsTypes.cp`, `lib/net/wsCodec.cp`, `lib/net/wsAssembler.cp` | Copyright (c) 2017 Alexey Galakhov / Daniel Abramov |
 | **rust-postgres** (`postgres-protocol`) | <https://github.com/sfackler/rust-postgres> | MIT OR Apache-2.0 | `lib/sql/pgReader.cp`, `lib/sql/pgWriter.cp`, `lib/sql/pgDataRow.cp` | Copyright (c) 2014 Steven Fackler |
 | **avro-rs** (`apache`) | <https://github.com/apache/avro-rs> | Apache-2.0 | `lib/binfmt/avro.cp` | Copyright (c) 2018-2024 The Apache Software Foundation |
+| **rust_mysql_common** (`blackbeam`) | <https://github.com/blackbeam/rust_mysql_common> | MIT OR Apache-2.0 | `lib/sql/mysqlLenenc.cp`, `lib/sql/mysqlReader.cp`, `lib/sql/mysqlWriter.cp` | Copyright (c) 2017 Anatoly Ikorsky |
 
 ---
 

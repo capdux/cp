@@ -1,16 +1,36 @@
 // Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewWriter.cp | Synced: 2026-11-22T03:41:50Z
+// Reference-hardened against blackbeam/rust_mysql_common (MIT/Apache-2.0)
 // Pure-CP zero-allocation MySQL wire-protocol binary packet writer:
 // - 4-byte MySQL packet header (24-bit LE payload length + 1-byte sequence_id)
 //   two-phase backpatching (`beginPacket` / `finishPacket`) with 0xffffff overflow guard
 // - Little-endian integer & IEEE-754 float encoders (u8/u16/u24/u32/u64/i32/i64/f32/f64)
-// - Auto-NUL C-string (`writeZ`), length-encoded integer/string/NULL (`writeLenEncInt`,
-//   `writeLenEncString`, `writeLenEncNull`), and binary protocol NULL bitmap (`writeNullBitmap`)
-// - Zero heap allocations, zero external bindings.
+// - Auto-NUL C-string (`writeZ` / `writeNullTerminatedStrict`) with embedded-NUL guard (`Simd.indexOfByte(0)`)
+// - 16-lane `@Vector(16, u8)` SIMD payload copy (`simdMySqlCopyBytes`)
+// - Length-encoded integer/string/NULL (`writeLenEncInt`, `writeLenEncString`, `writeLenEncNull`),
+//   and binary protocol NULL bitmap (`writeNullBitmap`).
 
+import { Simd } from "cap:simd";
 import {
     MYSQL_LENENC_NULL_MARKER,
     encodeLengthInt,
 } from "./mysqlLenenc.cp";
+
+type MySqlWriterVec16 = @Vector(16, u8);
+
+/// 16-lane `@Vector(16, u8)` SIMD payload copy for MySQL wire packets.
+pub fn simdMySqlCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const chunk: MySqlWriterVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
 
 /// MySQL 线协议包头固定长度（3 字节小端载荷长度 + 1 字节序列号）
 pub const MYSQL_PACKET_HEADER_SIZE: usize = 4;
@@ -22,6 +42,7 @@ pub err MySqlWireWriterError {
     BufferTooSmall,
     InvalidPatchOffset,
     PacketLengthOverflow,
+    EmbeddedNul,
 }
 
 /// MySQL 包头回填句柄（记录 4 字节包头起始偏移与序列号）
@@ -76,16 +97,13 @@ pub struct MySqlWireWriter {
         return 1;
     }
 
-    /// 写入原始字节切片（对齐 Bun `write()`）
+    /// 写入原始字节切片（对齐 Bun `write()`，采用 16-lane SIMD 块拷贝）
     fn writeBytes(*_, data: []const u8): usize! {
         if (data.len > _.remaining()) {
             return err.BufferTooSmall;
         }
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[_.pos + i] = data[i];
-            i += 1;
-        }
+        const copied = simdMySqlCopyBytes(_.buf[_.pos .. _.pos + data.len], data);
+        if (copied != data.len) return err.BufferTooSmall;
         _.pos += data.len;
         return data.len;
     }
@@ -95,11 +113,8 @@ pub struct MySqlWireWriter {
         if (at > _.buf.len || data.len > _.buf.len - at) {
             return err.InvalidPatchOffset;
         }
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[at + i] = data[i];
-            i += 1;
-        }
+        const copied = simdMySqlCopyBytes(_.buf[at .. at + data.len], data);
+        if (copied != data.len) return err.InvalidPatchOffset;
         return data.len;
     }
 
@@ -183,10 +198,16 @@ pub struct MySqlWireWriter {
         return _.writeU64(bits);
     }
 
-    /// 写入以 `\0` 结尾的 C 字符串（对齐 Bun `writeZ()`：若末尾已有 `\0` 不重复追加）
+    /// 写入以 `\0` 结尾的 C 字符串（对齐 Bun `writeZ()`：拦截内嵌 `\0` 截断，若末尾已有 `\0` 不重复追加）
     fn writeZ(*_, value: []const u8): usize! {
+        if (nul_idx := Simd.indexOfByte(value, 0)) {
+            if (nul_idx + 1 < value.len) {
+                return err.EmbeddedNul;
+            }
+        }
         const needs_nul = value.len == 0 || value[value.len - 1] != 0;
-        const total = value.len + (if (needs_nul) 1 else 0);
+        const extra: usize = if (needs_nul) 1 else 0;
+        const total = value.len + extra;
         if (total > _.remaining()) {
             return err.BufferTooSmall;
         }
@@ -195,6 +216,19 @@ pub struct MySqlWireWriter {
             * = _.writeByte(0)?;
         }
         return total;
+    }
+
+    /// 严格写入 NUL 终止串（拒绝任意位置含 `\0` 字节，防协议参数截断，并追加单个 `\0`）
+    fn writeNullTerminatedStrict(*_, value: []const u8): usize! {
+        if (Simd.indexOfByte(value, 0) != null) {
+            return err.EmbeddedNul;
+        }
+        if (value.len + 1 > _.remaining()) {
+            return err.BufferTooSmall;
+        }
+        * = _.writeBytes(value)?;
+        * = _.writeByte(0)?;
+        return value.len + 1;
     }
 
     /// 写入 MySQL 变长整数 `lenenc-int`（对齐 Bun `writeLengthEncodedInt()`）

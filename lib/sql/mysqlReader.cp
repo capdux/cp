@@ -1,22 +1,45 @@
 // Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewReader.cp | Synced: 2026-11-22T03:37:30Z
+// Reference-hardened against blackbeam/rust_mysql_common (MIT/Apache-2.0)
 // Pure-CP zero-allocation MySQL wire-protocol binary reader:
 // - Streaming message bookmarking (`markMessageStart` / `setOffsetFromStart` / `rewindToMessageStart`)
-// - Zero-copy slice reads (`readBytes`, `readZ`, `peek`), safe skip/capacity guards
+// - 4-byte MySQL packet framing (`readPacket` / `readPacketWithLimit`) with 0xffffff max cap, sequence_id check & atomic ShortRead
+// - Zero-copy slice reads (`readBytes`, `readZ` / `readNullTerminated` via `cap:simd` NUL scan, `peek`), safe skip/capacity guards
 // - Little-endian integer & IEEE-754 float decoders (u8/u16/u24/u32/u64/i32/i64/f32/f64)
 // - Length-encoded integer & string readers (`readLenEncInt`, `readLenEncIntWithSize`,
 //   `readLenEncString`, `readLenEncStringOrNull`) with truncation & overflow guards.
 
+import { Simd } from "cap:simd";
 import {
     MYSQL_LENENC_NULL_MARKER,
+    MYSQL_LENENC_MAX_STR_LEN,
     DecodeLengthIntResult,
     decodeLengthInt,
+    decodeLengthIntStrict,
 } from "./mysqlLenenc.cp";
+
+/// Maximum single MySQL packet payload length (2^24 - 1 = 16,777,215 bytes).
+pub const MYSQL_MAX_PACKET_LEN: u32 = 0xffffff;
+
+/// SIMD-accelerated NUL (`\0`) byte scanner for MySQL C-strings using `cap:simd` `Simd.indexOfByte(0)`.
+pub fn simdMySqlFindNul(s: []const u8): usize? {
+    return Simd.indexOfByte(s, 0);
+}
+
+/// Zero-copy MySQL packet view (4-byte header stripped).
+pub struct MySqlPacketView {
+    payload: []const u8 = "",
+    sequence_id: u8 = 0,
+    is_continuation: bool = false,
+}
 
 /// MySQL 线协议二进制读取器错误集
 pub err MySqlWireReaderError {
     ShortRead,
     InvalidEncodedInteger,
     InvalidEncodedLength,
+    LengthOverflow,
+    PacketTooLarge,
+    SequenceMismatch,
     UnterminatedString,
     InvalidOffset,
 }
@@ -117,18 +140,57 @@ pub struct MySqlWireReader {
         return b;
     }
 
-    /// 读取以 `\0` 结尾的零拷贝 C 字符串（对齐 Bun `readZ()`，消费末尾 `\0` 但不包含在返回切片中）
+    /// 读取以 `\0` 结尾的零拷贝 C 字符串（对齐 Bun `readZ()`，经 `simdMySqlFindNul` 加速，消费末尾 `\0`）
     fn readZ(*_): ([]const u8)! {
         const start = _.pos;
-        let i = start;
-        while (i < _.buf.len) {
-            if (_.buf[i] == 0) {
-                _.pos = i + 1;
-                return _.buf[start..i];
-            }
-            i += 1;
+        const nul_rel = simdMySqlFindNul(_.buf[start..]) ?? return err.UnterminatedString;
+        const nul_pos = start + nul_rel;
+        _.pos = nul_pos + 1;
+        return _.buf[start..nul_pos];
+    }
+
+    /// `readZ` 别名（严格拦截缺失 `\0` 终止符）
+    fn readNullTerminated(*_): ([]const u8)! {
+        return _.readZ();
+    }
+
+    /// 读取完整 4 字节包头 MySQL 数据包（带最大包长与可选 `sequence_id` 连续性校验，半包/错误时原子恢复 `pos`）
+    fn readPacketWithLimit(*_, max_payload: u32, expected_seq: u8?): MySqlPacketView! {
+        if (_.remaining() < 4) {
+            return err.ShortRead;
         }
-        return err.UnterminatedString;
+        const saved = _.pos;
+        const payload_len_u32 = _.readU24()?;
+        const seq_id = _.readByte()?;
+        if (payload_len_u32 > max_payload) {
+            _.pos = saved;
+            return err.PacketTooLarge;
+        }
+        if (exp := expected_seq) {
+            if (seq_id != exp) {
+                _.pos = saved;
+                return err.SequenceMismatch;
+            }
+        }
+        const payload_len: usize = @as(usize, payload_len_u32);
+        if (payload_len > _.remaining()) {
+            _.pos = saved;
+            return err.ShortRead;
+        }
+        const payload = _.readBytes(payload_len) catch |e| {
+            _.pos = saved;
+            return e;
+        };
+        return MySqlPacketView{
+            payload: payload,
+            sequence_id: seq_id,
+            is_continuation: payload_len_u32 == MYSQL_MAX_PACKET_LEN,
+        };
+    }
+
+    /// 读取完整 4 字节包头 MySQL 数据包（默认上限 `MYSQL_MAX_PACKET_LEN = 0xffffff`）
+    fn readPacket(*_): MySqlPacketView! {
+        return _.readPacketWithLimit(MYSQL_MAX_PACKET_LEN, null);
     }
 
     /// 读取 2 字节小端无符号整数
@@ -209,20 +271,23 @@ pub struct MySqlWireReader {
         return err.InvalidEncodedInteger;
     }
 
-    /// 读取 MySQL 长度前缀字符串 `lenenc-str`（对齐 Bun `encodeLenString()`，零拷贝）
+    /// 读取 MySQL 长度前缀字符串 `lenenc-str`（对齐 Bun `encodeLenString()`，零拷贝，带超长溢出与截断防护）
     fn readLenEncString(*_): ([]const u8)! {
         const rem_slice = _.peek();
-        if (res := decodeLengthInt(rem_slice)) {
-            if (res.value > @as(u64, _.buf.len - (_.pos + res.bytes_read))) {
-                return err.ShortRead;
-            }
-            const str_len: usize = @intCast(res.value);
-            _.pos += res.bytes_read;
-            const start = _.pos;
-            _.pos += str_len;
-            return _.buf[start.._.pos];
+        const res = decodeLengthIntStrict(rem_slice) catch {
+            return err.InvalidEncodedLength;
+        };
+        if (res.value > MYSQL_LENENC_MAX_STR_LEN) {
+            return err.LengthOverflow;
         }
-        return err.InvalidEncodedLength;
+        if (res.value > @as(u64, _.buf.len - (_.pos + res.bytes_read))) {
+            return err.ShortRead;
+        }
+        const str_len: usize = @intCast(res.value);
+        _.pos += res.bytes_read;
+        const start = _.pos;
+        _.pos += str_len;
+        return _.buf[start.._.pos];
     }
 
     /// 读取可空 MySQL 长度前缀字符串：遇到 `0xfb` NULL 标记消费 1 字节并返回 `null`

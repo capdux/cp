@@ -85,6 +85,7 @@ export {
     decodeLengthIntStrict,
     encodeLengthString,
     decodeLengthString,
+    MYSQL_LENENC_MAX_STR_LEN,
 } from "./mysqlLenenc.cp";
 
 export {
@@ -104,8 +105,11 @@ export {
 } from "./pgWriter.cp";
 
 export {
+    MYSQL_MAX_PACKET_LEN,
+    MySqlPacketView,
     MySqlWireReaderError,
     MySqlWireReader,
+    simdMySqlFindNul,
 } from "./mysqlReader.cp";
 
 export {
@@ -114,6 +118,7 @@ export {
     MySqlWireWriterError,
     MySqlPacketPatch,
     MySqlWireWriter,
+    simdMySqlCopyBytes,
 } from "./mysqlWriter.cp";
 
 export {

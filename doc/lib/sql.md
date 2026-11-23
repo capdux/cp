@@ -122,7 +122,7 @@ pub fn demoSqlCodecs(): ! {
   - `countQuestionMarks`、`maxDollarParam`、`rewriteQuestionToDollar`、`NamedParamIter`。
 - **多语句脚本切分与分类 (`splitter.cp`)**：
   - `SqlSplitStmtKind`、`SqlStmtIter`、`classifySqlStmt`、`isReadOnlySql`、`countSqlStatements`。
-- **MySQL 变长整数与长度前缀字符串编解码 (`mysqlLenenc.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp`)**：
+- **MySQL 变长整数与长度前缀字符串编解码 (`mysqlLenenc.cp`，对标 `blackbeam/rust_mysql_common` MIT/Apache-2.0 加固，新增 `MYSQL_LENENC_MAX_STR_LEN` 伪造 8B 超长拦截与 16-lane SIMD 拷贝)**：
   - 常量与错误集：`MYSQL_LENENC_NULL_MARKER` (`0xfb`)、`MYSQL_LENENC_U16_MARKER` (`0xfc`)、`MYSQL_LENENC_U24_MARKER` (`0xfd`)、`MYSQL_LENENC_U64_MARKER` (`0xfe`)、`MYSQL_LENENC_ERR_MARKER` (`0xff`)、`MySqlLenEncError`（`BufferTooSmall`/`TruncatedInput`/`NullMarker`/`ErrMarker`/`LengthOverflow`）
   - 数据模型与编解码函数：`EncodedLengthInt`、`DecodeLengthIntResult`、`DecodeLengthStringResult`、`encodedLengthIntSize`、`encodeLengthInt`、`encodeLengthIntInto`、`decodeLengthInt`、`decodeLengthIntStrict`、`encodeLengthString`、`decodeLengthString`（零堆分配、1/3/4/9 字节小端编解码与零拷贝字符串切片解码）
 
@@ -162,7 +162,7 @@ const frame = w.beginTaggedFrame('Q')?;
 const frame_len = w.finishLength(frame)?; // 4 + 9 = 13 bytes
 const wire = w.written(); // ['Q', 0, 0, 0, 13, 'S', 'E', ..., 0]
 ```
-- **MySQL 线协议零堆分配二进制读取器 (`mysqlReader.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewReader.cp`)**：
+- **MySQL 线协议零堆分配二进制读取器 (`mysqlReader.cp`，对标 `blackbeam/rust_mysql_common` MIT/Apache-2.0 加固，新增 `MYSQL_MAX_PACKET_LEN`、`MySqlPacketView`、`readPacket`/`readPacketWithLimit`、`readNullTerminated` 与 `simdMySqlFindNul`)**：
   - 错误集与结构体：`MySqlWireReaderError`（`ShortRead` / `InvalidEncodedInteger` / `InvalidEncodedLength` / `UnterminatedString` / `InvalidOffset`）、`MySqlWireReader`（`init` / `markMessageStart` / `offset` / `offsetFromStart` / `setOffsetFromStart` / `rewindToMessageStart` / `remaining` / `peek` / `ensureCapacity` / `skip` / `readBytes` / `readByte` / `readZ` / `readU16` / `readU24` / `readU32` / `readU64` / `readI32` / `readI64` / `readF32` / `readF64` / `readLenEncInt` / `readLenEncIntWithSize` / `readLenEncString` / `readLenEncStringOrNull`）
 
 ```typescript
@@ -175,7 +175,7 @@ const table = r.readLenEncString()?;   // "users"
 const opt = r.readLenEncStringOrNull()?; // null (0xfb)
 const tag = r.readByte()?; // 0x2a
 ```
-- **MySQL 线协议零堆分配二进制包写入器 (`mysqlWriter.cp`，吸收自 `/data/dev/bun/src/sql/mysql/protocol/NewWriter.cp`)**：
+- **MySQL 线协议零堆分配二进制包写入器 (`mysqlWriter.cp`，对标 `blackbeam/rust_mysql_common` MIT/Apache-2.0 加固，新增 `EmbeddedNul`、`writeNullTerminatedStrict` 与 `simdMySqlCopyBytes`)**：
   - 常量与错误集：`MYSQL_PACKET_HEADER_SIZE` (`4`)、`MYSQL_MAX_PACKET_PAYLOAD` (`0xffffff`)、`MySqlWireWriterError`（`BufferTooSmall` / `InvalidPatchOffset` / `PacketLengthOverflow`）
   - 结构体与方法：`MySqlPacketPatch`、`MySqlWireWriter`（`init` / `offset` / `remaining` / `written` / `reset` / `writeByte` / `writeBytes` / `pwrite` / `writeU16` / `writeU24` / `writeU32` / `writeU64` / `writeI32` / `writeI64` / `writeF32` / `writeF64` / `writeZ` / `writeLenEncInt` / `writeLenEncString` / `writeLenEncNull` / `writeNullBitmap` / `beginPacket` / `finishPacket`）
 

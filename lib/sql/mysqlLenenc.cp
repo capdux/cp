@@ -1,7 +1,26 @@
 // Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/EncodeInt.cp | Synced: 2026-11-22T12:49:17Z
+// Reference-hardened against blackbeam/rust_mysql_common (MIT/Apache-2.0)
 // Pure-CP zero-allocation MySQL wire-protocol length-encoded integer (`lenenc-int`)
 // and length-encoded string (`lenenc-str`) encoder/decoder (1/3/4/9-byte LE format,
-// with 0xfb NULL & 0xff ERR marker awareness and truncation/overflow guards).
+// with 0xfb NULL & 0xff ERR marker awareness, 16-lane SIMD copy, and truncation/overflow guards).
+
+type MySqlLeVec16 = @Vector(16, u8);
+
+/// Default maximum `lenenc-str` payload length (16 MiB) to block forged 8-byte lengths (`0xfe 0xff..`).
+pub const MYSQL_LENENC_MAX_STR_LEN: u64 = 16 * 1024 * 1024;
+
+fn mysqlLeSimdCopy(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    const n = src.len;
+    while (i + 16 <= n) {
+        const chunk: MySqlLeVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
 
 /// MySQL 协议 length-encoded NULL 标记字节（251）
 pub const MYSQL_LENENC_NULL_MARKER: u8 = 0xfb;
@@ -172,22 +191,18 @@ pub fn encodeLengthString(data: []const u8, out: []u8): usize! {
         return err.BufferTooSmall;
     }
     const written_hdr = encodeLengthIntInto(@as(u64, data.len), out)?;
-    let i: usize = 0;
-    while (i < data.len) {
-        out[written_hdr + i] = data[i];
-        i += 1;
-    }
+    mysqlLeSimdCopy(out[written_hdr .. written_hdr + data.len], data);
     return written_hdr + data.len;
 }
 
 /// 零拷贝解码 MySQL 协议 `lenenc-str`，返回指向原始缓冲区的切片与总消费字节数
 pub fn decodeLengthString(bytes: []const u8): DecodeLengthStringResult! {
     const hdr = decodeLengthIntStrict(bytes)?;
+    if (hdr.value > MYSQL_LENENC_MAX_STR_LEN) {
+        return err.LengthOverflow;
+    }
     const rem = bytes.len - hdr.bytes_read;
     if (hdr.value > @as(u64, rem)) {
-        if (hdr.value > @as(u64, 0x7fffffff)) {
-            return err.LengthOverflow;
-        }
         return err.TruncatedInput;
     }
     const str_len: usize = @intCast(hdr.value);
