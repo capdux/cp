@@ -1097,3 +1097,30 @@ const defs: [1]BuildDefinePair = [BuildDefinePair{ key: "DEBUG", value: "false" 
 const fp = computeBuildFlagsFingerprint(BuildPipelineFlags.defaults(), defs[0..], ov[0..]);
 * = ldr; * = fp;
 ```
+
+- **`cap build` 构建命令解析、跨平台编译矩阵与产物报表引擎（`buildCommand.cp`，吸收自 `/data/dev/bun/src/cli/build_command.cp`）**：
+    - 导出：`BUILD_CMD_DEFAULT_ENTRY_NAMING`、`BUILD_CMD_DEFAULT_CHUNK_NAMING`、`BUILD_CMD_DEFAULT_ASSET_NAMING`、`BuildCommandError`、`BuildCmdTarget`（`Native`/`Nest`/`LinuxX64`/`LinuxArm64`/`MacosArm64`/`MacosX64`/`WindowsX64`/`Wasm`/`Browser`/`Node`）、`BuildCmdFormat`（`Exe`/`Lib`/`Nest`/`Esm`/`Cjs`）、`BuildCmdSourceMap`、`BuildCmdKeyValue`、`BuildCommandConfig`、`BuildCmdParseBuffers`、`parseBuildCommandArgs`（完整解析多入口、`--outdir`/`--outfile`、`--minify*`、`--splitting`、`--compile`、`--bytecode`、`-n`/`--nest`、`--external`、`--define`、`--loader`、`--public-path`、命名模板与 `--watch`）、`BuildValidationIssueKind`、`BuildValidationResult`、`isSafeBuildOutputPath`、`validateBuildNamingTemplate`、`validateBuildConfig`（语义互斥与路径穿越校验）、`CrossOsKind`、`CrossArchKind`、`CrossAbiKind`、`CrossTargetSpec`、`parseCrossCompileTarget`、`formatCrossArtifactPath`（Windows 自动补 `.exe`、`-n` 自动补 `.nest`）、`BuildArtifactKind`、`BuildArtifactEntry`、`BuildSummaryMetrics`、`formatHumanByteSize`、`formatBuildArtifactTable`（列对齐终端产物表格与耗时摘要）。
+
+```cp
+import {
+    BuildCmdKeyValue,
+    BuildCmdParseBuffers,
+    parseBuildCommandArgs,
+    validateBuildConfig,
+    parseCrossCompileTarget,
+    formatCrossArtifactPath,
+} from "cap:bundler";
+
+const argv: [4][]const u8 = ["src/main.cp", "--compile", "--target=cap-windows-x86_64", "--minify"];
+let entries: [4][]const u8 = [""; 4];
+let exts: [4][]const u8 = [""; 4];
+let defs: [4]BuildCmdKeyValue = [BuildCmdKeyValue.empty(); 4];
+let ldrs: [4]BuildCmdKeyValue = [BuildCmdKeyValue.empty(); 4];
+let bufs = BuildCmdParseBuffers{ entry_points: entries[0..], externals: exts[0..], defines: defs[0..], loaders: ldrs[0..] };
+const cfg = parseBuildCommandArgs(argv[0..], &bufs)?;
+const val = validateBuildConfig(cfg);
+const spec = parseCrossCompileTarget("cap-windows-x86_64")?;
+let path_buf: [128]u8 = [0; 128];
+const plen = formatCrossArtifactPath("bin", "hello", spec, false, true, path_buf[0..])?; // "bin/cap-windows-x86_64/hello.exe"
+* = val; * = plen;
+```
