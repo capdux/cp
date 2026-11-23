@@ -147,8 +147,21 @@ export {
 } from "./hll.cp";
 
 export {
+    ROARING_SERIAL_COOKIE_NO_RUNCONTAINER,
+    ROARING_SERIAL_COOKIE_RUNCONTAINER,
+    ROARING_NO_OFFSET_THRESHOLD,
     RoaringError,
     RoaringBitmap,
+    scalarBitmapPopcount,
+    simdBitmapPopcount,
+    scalarBitmapAnd,
+    simdBitmapAnd,
+    scalarBitmapOr,
+    simdBitmapOr,
+    scalarBitmapXor,
+    simdBitmapXor,
+    scalarBitmapAndNot,
+    simdBitmapAndNot,
 } from "./roaring.cp";
 
 export {

@@ -32,7 +32,7 @@
 | `lib/ds/bitset.cp` | 64-bit 字加速位集合（`BitSet`，按位与/或/异或/计数/前导搜索） |
 | `lib/ds/cuckoo.cp` | 4 槽 16-bit 指纹 Cuckoo Filter（支持动态删除的概率成员过滤） |
 | `lib/ds/hll.cp` | HyperLogLog 基数估算器（低内存去重计数） |
-| `lib/ds/roaring.cp` | Roaring Bitmap 压缩 32-bit 整型集合引擎（Array/Bitmap/Run 容器） |
+| `lib/ds/roaring.cp` | Roaring Bitmap 压缩 32-bit 整型集合引擎（对标 `RoaringBitmap/roaring-rs` MIT/Apache-2.0 加固：Array/Bitset 4096 阈值自适应切换、`select`/`isSubset`/`isDisjoint`/`equals`/`addRangeInclusive`、Portable Roaring Format `12346`/`12347` 严苛编解码与 4-lane `@Vector(4, u64)` SIMD 位图集合核） |
 | `lib/ds/tdigest.cp` | T-Digest 流式分位数估算（极端尾延迟 p99/p99.9 高精度） |
 | `lib/ds/index.cp` | `cap:ds` 与 `cap.ds` 统一零冲突公开导出入口（20 个子模块） |
 
@@ -65,7 +65,7 @@
 - **`bitset.cp`**：`BitSet`, `BitSetError`
 - **`cuckoo.cp`**：`CuckooError`, `CuckooStats`, `CuckooFilter`
 - **`hll.cp`**：`HllError`, `HyperLogLog`
-- **`roaring.cp`**：`RoaringError`, `RoaringBitmap`
+- **`roaring.cp`**：`ROARING_SERIAL_COOKIE_NO_RUNCONTAINER` (`12346`), `ROARING_SERIAL_COOKIE_RUNCONTAINER` (`12347`), `ROARING_NO_OFFSET_THRESHOLD` (`4`), `RoaringError`, `RoaringBitmap`（`init`, `deinit`, `clone`, `add`, `addRange`, `addRangeInclusive`, `removeVal`, `contains`, `cardinality`, `isEmpty`, `minimum`, `maximum`, `rank`, `select`, `isSubset`, `isDisjoint`, `equals`, `containerCount`, `isContainerBitset`, `bitAnd`, `bitOr`, `bitAndNot`, `bitXor`, `andCardinality`, `intersects`, `toSlice`, `serialize`, `deserialize`, `serializePortable`, `deserializePortable`）, `scalarBitmapPopcount`, `simdBitmapPopcount`, `scalarBitmapAnd`, `simdBitmapAnd`, `scalarBitmapOr`, `simdBitmapOr`, `scalarBitmapXor`, `simdBitmapXor`, `scalarBitmapAndNot`, `simdBitmapAndNot`；回归测试：`cap/test/testDsRoaringRustRefSuite.cp`（边界与 4095/4096/4097 阈值震荡、集合代数律与参考模型差分、Portable Format 12346/12347 编解码与畸形字节流拦截、4-lane SIMD 0 差异对拍、1,600 组确定性 PRNG Fuzz）
 - **`tdigest.cp`**：`TDigestError`, `Centroid`, `TDigest`
 
 ---
