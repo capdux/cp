@@ -1688,3 +1688,33 @@ let out: [1024]u8 = [0; 1024];
 const n = formatTextLockfile(lock, bufs, scratch[0..], out[0..])?;
 * = n;
 ```
+
+### 紧凑锁文件包存储索引、BFS 剪枝与 CRC32 快照引擎（`lockPackageStore.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/Package.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 紧凑字符串池与开放寻址存储：`LOCK_STORE_SNAPSHOT_MAGIC`、`LOCK_STORE_SNAPSHOT_VERSION`、`LOCK_STORE_INVALID_ID`、`LOCK_STORE_EMPTY_BUCKET`、`LockPackageStoreError`、`hashLockPackageName64`、`LockStrRef`（8 字节 `(offset, len)` 偏移切片）、`LockResolutionKind`（`Root`/`Npm`/`Workspace`/`Folder`/`LocalTarball`/`RemoteTarball`/`Git`/`GitHub`/`Symlink`）、`lockResolutionKindName`、`LockBinKind`、`LockPackageMeta`（`os_mask`/`cpu_mask`/`bin_kind`/`has_scripts`/`is_trusted`/`is_patched`）、`LockPackageRecord`、`LockPackageInput`、`LockPackageStore`（同名多版本 O(1) 均摊查找 + 精确去重）；
+  - 闭包剪枝与重复版本审计：`LockPruneSummary`、`pruneUnreachablePackages`（零堆 BFS + `cap:simd` `Simd.countByte` 统计可达包与孤儿死包）、`DuplicatePkgVersionEntry`、`DuplicatePkgAuditSummary`、`findDuplicatePackageVersions`；
+  - IEEE CRC32 二进制紧凑快照：`computeLockStoreCrc32`、`encodeLockStoreSnapshot`、`decodeLockStoreSnapshot`（严格校验 Magic/Version/CRC32 与所有偏移边界）。
+
+```cp
+import {
+    LockPackageRecord,
+    LockPackageInput,
+    LockResolutionKind,
+    LockPackageStore,
+    encodeLockStoreSnapshot,
+    decodeLockStoreSnapshot,
+} from "cap:pkg";
+
+let recs: [8]LockPackageRecord = [LockPackageRecord.empty(); 8];
+let edges: [16]u32 = [0; 16];
+let sbuf: [512]u8 = [0; 512];
+let buckets: [16]u32 = [0; 16];
+let store = LockPackageStore.init(recs[0..], edges[0..], sbuf[0..], buckets[0..]);
+const no_deps: [0]u32 = [];
+const id = store.addPackage(LockPackageInput{ name: "zod", version: "3.23.8", resolution: LockResolutionKind.Npm, integrity: "sha512-abc" }, no_deps[0..])?;
+let snap: [1024]u8 = [0; 1024];
+const slen = encodeLockStoreSnapshot(store, snap[0..])?;
+* = id; * = slen;
+```

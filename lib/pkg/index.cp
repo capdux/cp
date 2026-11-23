@@ -1171,3 +1171,28 @@ export {
     TextLockDiffSummary,
     diffTextLockfiles,
 } from "./textLockfile.cp";
+
+export {
+    LOCK_STORE_SNAPSHOT_MAGIC,
+    LOCK_STORE_SNAPSHOT_VERSION,
+    LOCK_STORE_INVALID_ID,
+    LOCK_STORE_EMPTY_BUCKET,
+    LockPackageStoreError,
+    hashLockPackageName64,
+    computeLockStoreCrc32,
+    LockStrRef,
+    LockResolutionKind,
+    lockResolutionKindName,
+    LockBinKind,
+    LockPackageMeta,
+    LockPackageRecord,
+    LockPackageInput,
+    LockPackageStore,
+    LockPruneSummary,
+    pruneUnreachablePackages,
+    DuplicatePkgVersionEntry,
+    DuplicatePkgAuditSummary,
+    findDuplicatePackageVersions,
+    encodeLockStoreSnapshot,
+    decodeLockStoreSnapshot,
+} from "./lockPackageStore.cp";
