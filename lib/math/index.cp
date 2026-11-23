@@ -574,6 +574,18 @@ export {
     svdThinPinv,
     gramMatrixF32Simd,
     matrixPowerF64,
+    solveLowerTriangular,
+    solveUpperTriangular,
+    solveTrsmLeftLower,
+    solveTrsmLeftUpper,
+    infNormF64,
+    oneNormF64,
+    detFromLu,
+    estimateConditionNumber,
+    matrixRankF64,
+    svdThinAny,
+    frobeniusNormF32Simd,
+    outerProductAddF32Simd,
 } from "./matrixDense.cp";
 
 // --- Unbounded Zero-Heap Time-Series Engine (Holt-Winters, Kalman N-D, SIMD ACF/PACF, AR(p) & Anomaly Detection) ---

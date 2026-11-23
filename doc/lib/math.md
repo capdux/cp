@@ -407,19 +407,20 @@ fn demoOptimize() {
 
 ---
 
-## 零堆无上限密集矩阵引擎（SIMD GEMM / LU / Cholesky / QR / Jacobi 特征值 / 薄 SVD，`matrixDense.cp`）
+## 零堆无上限密集矩阵引擎（对标 `dimforge/nalgebra` Apache-2.0 加固：`matrixDense.cp`）
 
-面向科学计算、回归分析、卡尔曼滤波、PCA 与嵌入式机器学习的 100% 纯 CP 零动态堆分配、外部切片驱动密集矩阵核心（支持任意 $M \times N$ 维度，无硬编码小矩阵上限）：
+面向科学计算、回归分析、卡尔曼滤波、PCA 与嵌入式机器学习的 100% 纯 CP 零动态堆分配、外部切片驱动密集矩阵核心（支持任意 $M \times N$ 维度，无硬编码小矩阵上限，含 NaN/Inf 前置防护与奇异/非对称拦截）：
 
-- **矩阵视图与基础算子**：`MatrixViewF64` / `MatrixMutF64` / `MatrixViewF32` / `MatrixMutF32`、`matrixIdentityF64`、`transposeMatrixF64`/`F32`、`matrixTraceF64`、`frobeniusNormF64`/`F32`、`matrixDiffFrobeniusF64`、`matrixPowerF64`。
-- **CP 原生 SIMD `@dot` 加速核心**：
+- **矩阵视图与范数/基础算子**：`MatrixViewF64` / `MatrixMutF64` / `MatrixViewF32` / `MatrixMutF32`、`matrixIdentityF64`、`transposeMatrixF64`/`F32`、`matrixTraceF64`、`frobeniusNormF64`/`F32`、`frobeniusNormF32Simd`（`@dot` 加速）、`infNormF64`、`oneNormF64`、`matrixDiffFrobeniusF64`、`matrixPowerF64`。
+- **CP 原生 SIMD `@dot` / `@Vector(8, f32)` 加速核心**：
   - `matmulF32Simd(a, b, alpha, beta, *c, *b_trans_work)`：转置 $B$ 后按行调用硬件 8-lane `@dot` 计算 $C = \alpha A B + \beta C$。
-  - `matvecF32Simd` & `gramMatrixF32Simd`（利用对称性减半计算 $A^T A$）。
-- **四大经典数值分解**：
-  - **部分主元 LU**：`luDecomposeInPlace`、`denseLuSolve`、`denseLuDeterminant`、`luInvert`。
-  - **SPD Cholesky**：`choleskyDecomposeInPlace`（严格检测非正定返回 `NotPositiveDefinite`）、`denseCholeskySolve`、`denseCholeskyLogDet`。
-  - **Householder QR & 超定最小二乘**：`qrDecomposeHouseholder`、`denseQrSolveLeastSquares`。
-  - **对称 Jacobi 特征值 & One-Sided Jacobi (Hestenes) 薄 SVD**：`eigenSymmetricJacobi`、`svdThin`（避免 $A^T A$ 条件数平方损失）、`svdCondNumber`、`svdThinPinv`。
+  - `matvecF32Simd`、`gramMatrixF32Simd`（利用对称性减半计算 $A^T A$）与 `outerProductAddF32Simd`（8-lane `@Vector(8, f32)` Rank-1 外积更新 $A \leftarrow A + \alpha x y^T$）。
+- **三角求解与四大经典数值分解**：
+  - **TRSV / TRSM 三角求解**：`solveLowerTriangular`、`solveUpperTriangular`、`solveTrsmLeftLower`、`solveTrsmLeftUpper`（支持单位对角与多右端矩阵求解）。
+  - **部分主元 LU**：`luDecomposeInPlace`、`denseLuSolve`、`denseLuDeterminant` / `detFromLu`、`luInvert`。
+  - **SPD Cholesky**：`choleskyDecomposeInPlace`（严格检测对称性与非正定返回 `NotPositiveDefinite`）、`denseCholeskySolve`、`denseCholeskyLogDet`。
+  - **Householder QR & 超定最小二乘**：`qrDecomposeHouseholder`（支持任意 $M \times N$ 含宽矮 $M < N$ 与零列/秩亏矩阵）、`denseQrSolveLeastSquares`。
+  - **对称 Jacobi 特征值 & One-Sided Jacobi 薄 SVD**：`eigenSymmetricJacobi`、`svdThin`、`svdThinAny`（自动支持 $M \ge N$ 与 $M < N$ 任意矩形矩阵）、`svdCondNumber`、`estimateConditionNumber`、`matrixRankF64`、`svdThinPinv`。
 
 ---
 

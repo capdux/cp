@@ -1,4 +1,5 @@
-// Origin: Pure-CP Stdlib (Unbounded Zero-Heap Dense Matrix Engine: SIMD GEMM, LU, Cholesky, Householder QR, Jacobi Eigen & One-Sided Jacobi Thin SVD) | Created: 2026-11-23
+// Reference-hardened against dimforge/nalgebra (Apache-2.0)
+// Origin: Pure-CP Stdlib (Unbounded Zero-Heap Dense Matrix Engine: SIMD GEMM/Rank-1/Norm, LU, Cholesky, Householder QR, TRSV/TRSM, Jacobi Eigen & One-Sided Jacobi Thin SVD) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, caller-slice-driven dense linear algebra engine:
 //   - Row-major unbounded views (`MatrixViewF64`, `MatrixMutF64`, `MatrixViewF32`, `MatrixMutF32`)
 //   - Transposed-B SIMD `@dot` GEMM (`matmulF32Simd`, `matvecF32Simd`, `matmulF64`, `matvecF64`)
@@ -367,6 +368,10 @@ pub fn luDecomposeInPlace(a: *MatrixMutF64, piv: *[]usize): LuFactorResult ! Mat
     if (!a.isSquare()) return MatrixError.NotSquare;
     const n: usize = a.rows;
     if (piv.len < n) return MatrixError.BufferTooSmall;
+    let chk: usize = 0;
+    while (chk < a.data.len) : (chk += 1) {
+        if (!isFiniteF64(a.data[chk])) return MatrixError.NonFiniteValue;
+    }
 
     let i: usize = 0;
     while (i < n) : (i += 1) {
@@ -511,6 +516,21 @@ pub fn choleskyDecomposeInPlace(a: *MatrixMutF64): void ! MatrixError {
     if (!a.isSquare()) return MatrixError.NotSquare;
     const n: usize = a.rows;
 
+    // Validate finite entries and symmetry before factorization
+    let r_chk: usize = 0;
+    while (r_chk < n) : (r_chk += 1) {
+        let c_chk: usize = r_chk;
+        while (c_chk < n) : (c_chk += 1) {
+            const v_rc: f64 = a.at(r_chk, c_chk);
+            const v_cr: f64 = a.at(c_chk, r_chk);
+            if (!isFiniteF64(v_rc) || !isFiniteF64(v_cr)) return MatrixError.NonFiniteValue;
+            if (r_chk != c_chk) {
+                const sym_tol: f64 = 1.0e-10 * (1.0 + absF64(v_rc) + absF64(v_cr));
+                if (absF64(v_rc - v_cr) > sym_tol) return MatrixError.NotPositiveDefinite;
+            }
+        }
+    }
+
     let i: usize = 0;
     while (i < n) : (i += 1) {
         let j: usize = 0;
@@ -587,8 +607,8 @@ pub fn denseCholeskyLogDet(l_mat: MatrixViewF64): f64 ! MatrixError {
 // 5. Householder QR Decomposition & Linear Least Squares Solver
 // ============================================================================
 
-/// Computes full Householder QR decomposition `A = Q * R` (`A: M x N` with `M >= N`,
-/// `Q: M x M` orthogonal, `R: M x N` upper triangular) using caller scratch `v_work` (`len >= M`).
+/// Computes full Householder QR decomposition `A = Q * R` (`A: M x N` for any `M, N > 0`,
+/// `Q: M x M` orthogonal, `R: M x N` upper trapezoidal) using caller scratch `v_work` (`len >= M`).
 pub fn qrDecomposeHouseholder(
     a: MatrixViewF64,
     q_out: *MatrixMutF64,
@@ -597,21 +617,22 @@ pub fn qrDecomposeHouseholder(
 ): void ! MatrixError {
     const m: usize = a.rows;
     const n: usize = a.cols;
-    if (m < n) return MatrixError.InvalidDimensions;
     if (q_out.rows != m || q_out.cols != m || r_out.rows != m || r_out.cols != n) {
         return MatrixError.DimensionMismatch;
     }
     if (v_work.len < m) return MatrixError.BufferTooSmall;
 
-    // Copy A -> R, initialize Q = I_m
+    // Validate finite entries & copy A -> R, initialize Q = I_m
     let i: usize = 0;
     while (i < a.data.len) : (i += 1) {
+        if (!isFiniteF64(a.data[i])) return MatrixError.NonFiniteValue;
         r_out.data[i] = a.data[i];
     }
     try matrixIdentityF64(q_out);
 
+    const k_limit: usize = if (m < n) m else n;
     let k: usize = 0;
-    while (k < n) : (k += 1) {
+    while (k < k_limit) : (k += 1) {
         // Compute norm of column k from row k..m
         let norm_sq: f64 = 0.0;
         let r: usize = k;
@@ -877,9 +898,10 @@ pub fn svdThin(
         return MatrixError.DimensionMismatch;
     }
 
-    // Initialize U = A, V = I_n
+    // Validate finite entries & initialize U = A, V = I_n
     let i: usize = 0;
     while (i < a.data.len) : (i += 1) {
+        if (!isFiniteF64(a.data[i])) return MatrixError.NonFiniteValue;
         u_out.data[i] = a.data[i];
     }
     try matrixIdentityF64(v_out);
@@ -1130,6 +1152,276 @@ pub fn matrixPowerF64(
             try matmulF64(base_work.asView(), base_work.asView(), 1.0, 0.0, prod_work, bt_work);
             let k: usize = 0;
             while (k < base_work.data.len) : (k += 1) base_work.data[k] = prod_work.data[k];
+        }
+    }
+}
+
+// ============================================================================
+// 9. Triangular Solvers (TRSV / TRSM), Matrix Norms, Rank, Condition Number & SIMD Rank-1
+// ============================================================================
+
+/// Solves lower-triangular system `L * x = b` (`L: N x N`, `b: [N]`, `x_out: [N]`).
+/// When `unit_diag` is true, diagonal entries of `L` are treated as `1.0`.
+pub fn solveLowerTriangular(
+    l_mat: MatrixViewF64,
+    b: []const f64,
+    unit_diag: bool,
+    x_out: *[]f64,
+): void ! MatrixError {
+    if (!l_mat.isSquare()) return MatrixError.NotSquare;
+    const n: usize = l_mat.rows;
+    if (b.len < n || x_out.len < n) return MatrixError.DimensionMismatch;
+
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        let sum: f64 = b[i];
+        if (!isFiniteF64(sum)) return MatrixError.NonFiniteValue;
+        let j: usize = 0;
+        while (j < i) : (j += 1) {
+            sum = @fma(-l_mat.at(i, j), x_out[j], sum);
+        }
+        if (unit_diag) {
+            x_out[i] = sum;
+        } else {
+            const diag: f64 = l_mat.at(i, i);
+            if (!isFiniteF64(diag)) return MatrixError.NonFiniteValue;
+            if (absF64(diag) <= 1.0e-14) return MatrixError.SingularMatrix;
+            x_out[i] = sum / diag;
+        }
+    }
+}
+
+/// Solves upper-triangular system `U * x = b` (`U: N x N`, `b: [N]`, `x_out: [N]`).
+/// When `unit_diag` is true, diagonal entries of `U` are treated as `1.0`.
+pub fn solveUpperTriangular(
+    u_mat: MatrixViewF64,
+    b: []const f64,
+    unit_diag: bool,
+    x_out: *[]f64,
+): void ! MatrixError {
+    if (!u_mat.isSquare()) return MatrixError.NotSquare;
+    const n: usize = u_mat.rows;
+    if (b.len < n || x_out.len < n) return MatrixError.DimensionMismatch;
+
+    let idx: usize = n;
+    while (idx > 0) {
+        idx -= 1;
+        let sum: f64 = b[idx];
+        if (!isFiniteF64(sum)) return MatrixError.NonFiniteValue;
+        let j: usize = idx + 1;
+        while (j < n) : (j += 1) {
+            sum = @fma(-u_mat.at(idx, j), x_out[j], sum);
+        }
+        if (unit_diag) {
+            x_out[idx] = sum;
+        } else {
+            const diag: f64 = u_mat.at(idx, idx);
+            if (!isFiniteF64(diag)) return MatrixError.NonFiniteValue;
+            if (absF64(diag) <= 1.0e-14) return MatrixError.SingularMatrix;
+            x_out[idx] = sum / diag;
+        }
+    }
+}
+
+/// Solves multi-RHS lower-triangular matrix system `L * X = B` (`L: N x N`, `B: N x K`, `X: N x K`).
+pub fn solveTrsmLeftLower(
+    l_mat: MatrixViewF64,
+    b_mat: MatrixViewF64,
+    unit_diag: bool,
+    x_out: *MatrixMutF64,
+): void ! MatrixError {
+    if (!l_mat.isSquare()) return MatrixError.NotSquare;
+    const n: usize = l_mat.rows;
+    const nrhs: usize = b_mat.cols;
+    if (b_mat.rows != n || x_out.rows != n || x_out.cols != nrhs) {
+        return MatrixError.DimensionMismatch;
+    }
+
+    let c: usize = 0;
+    while (c < nrhs) : (c += 1) {
+        let i: usize = 0;
+        while (i < n) : (i += 1) {
+            let sum: f64 = b_mat.at(i, c);
+            if (!isFiniteF64(sum)) return MatrixError.NonFiniteValue;
+            let j: usize = 0;
+            while (j < i) : (j += 1) {
+                sum = @fma(-l_mat.at(i, j), x_out.at(j, c), sum);
+            }
+            if (unit_diag) {
+                x_out.set(i, c, sum);
+            } else {
+                const diag: f64 = l_mat.at(i, i);
+                if (!isFiniteF64(diag)) return MatrixError.NonFiniteValue;
+                if (absF64(diag) <= 1.0e-14) return MatrixError.SingularMatrix;
+                x_out.set(i, c, sum / diag);
+            }
+        }
+    }
+}
+
+/// Solves multi-RHS upper-triangular matrix system `U * X = B` (`U: N x N`, `B: N x K`, `X: N x K`).
+pub fn solveTrsmLeftUpper(
+    u_mat: MatrixViewF64,
+    b_mat: MatrixViewF64,
+    unit_diag: bool,
+    x_out: *MatrixMutF64,
+): void ! MatrixError {
+    if (!u_mat.isSquare()) return MatrixError.NotSquare;
+    const n: usize = u_mat.rows;
+    const nrhs: usize = b_mat.cols;
+    if (b_mat.rows != n || x_out.rows != n || x_out.cols != nrhs) {
+        return MatrixError.DimensionMismatch;
+    }
+
+    let c: usize = 0;
+    while (c < nrhs) : (c += 1) {
+        let idx: usize = n;
+        while (idx > 0) {
+            idx -= 1;
+            let sum: f64 = b_mat.at(idx, c);
+            if (!isFiniteF64(sum)) return MatrixError.NonFiniteValue;
+            let j: usize = idx + 1;
+            while (j < n) : (j += 1) {
+                sum = @fma(-u_mat.at(idx, j), x_out.at(j, c), sum);
+            }
+            if (unit_diag) {
+                x_out.set(idx, c, sum);
+            } else {
+                const diag: f64 = u_mat.at(idx, idx);
+                if (!isFiniteF64(diag)) return MatrixError.NonFiniteValue;
+                if (absF64(diag) <= 1.0e-14) return MatrixError.SingularMatrix;
+                x_out.set(idx, c, sum / diag);
+            }
+        }
+    }
+}
+
+/// Computes the infinity norm `||A||_inf = max_i sum_j |a_{ij}|`.
+pub fn infNormF64(a: MatrixViewF64): f64 {
+    let max_sum: f64 = 0.0;
+    let r: usize = 0;
+    while (r < a.rows) : (r += 1) {
+        let row_sum: f64 = 0.0;
+        let c: usize = 0;
+        while (c < a.cols) : (c += 1) {
+            row_sum += absF64(a.at(r, c));
+        }
+        if (row_sum > max_sum) max_sum = row_sum;
+    }
+    return max_sum;
+}
+
+/// Computes the 1-norm `||A||_1 = max_j sum_i |a_{ij}|`.
+pub fn oneNormF64(a: MatrixViewF64): f64 {
+    let max_sum: f64 = 0.0;
+    let c: usize = 0;
+    while (c < a.cols) : (c += 1) {
+        let col_sum: f64 = 0.0;
+        let r: usize = 0;
+        while (r < a.rows) : (r += 1) {
+            col_sum += absF64(a.at(r, c));
+        }
+        if (col_sum > max_sum) max_sum = col_sum;
+    }
+    return max_sum;
+}
+
+/// Computes determinant from an LU factor and row-swap sign (standardized alias of `denseLuDeterminant`).
+pub fn detFromLu(lu: MatrixViewF64, sign: i32): f64 ! MatrixError {
+    return denseLuDeterminant(lu, sign);
+}
+
+/// Estimates the 2-norm condition number `sigma_max / sigma_min` via Thin SVD (`M >= N`).
+pub fn estimateConditionNumber(
+    a: MatrixViewF64,
+    u_work: *MatrixMutF64,
+    s_work: *[]f64,
+    v_work: *MatrixMutF64,
+): f64 ! MatrixError {
+    * = try svdThin(a, 64, 1.0e-12, u_work, s_work, v_work);
+    return svdCondNumber(s_work[0..a.cols]);
+}
+
+/// Computes the numerical rank of `A` (`M >= N`) via Thin SVD with optional tolerance `tol` (`<= 0` uses `s_max * 1e-12`).
+pub fn matrixRankF64(
+    a: MatrixViewF64,
+    tol: f64,
+    u_work: *MatrixMutF64,
+    s_work: *[]f64,
+    v_work: *MatrixMutF64,
+): usize ! MatrixError {
+    const res = try svdThin(a, 64, 1.0e-12, u_work, s_work, v_work);
+    if (tol <= 0.0) return res.rank;
+    let rank: usize = 0;
+    let i: usize = 0;
+    while (i < a.cols) : (i += 1) {
+        if (s_work[i] > tol) rank += 1;
+    }
+    return rank;
+}
+
+/// Computes Thin SVD for arbitrary `M x N` matrices including wide (`M < N`) matrices
+/// by automatically transposing `A^T` into `at_work` (`len >= M * N`) when `M < N`.
+/// Outputs `U: M x K`, `S: [K]`, `V: N x K` where `K = min(M, N)`.
+pub fn svdThinAny(
+    a: MatrixViewF64,
+    max_sweeps: usize,
+    tol: f64,
+    u_out: *MatrixMutF64,
+    s_out: *[]f64,
+    v_out: *MatrixMutF64,
+    at_work: *[]f64,
+): SvdThinResult ! MatrixError {
+    const m: usize = a.rows;
+    const n: usize = a.cols;
+    if (m >= n) {
+        return svdThin(a, max_sweeps, tol, u_out, s_out, v_out);
+    }
+    // Wide matrix (M < N): compute Thin SVD of A^T (N x M) = V * diag(S) * U^T
+    if (u_out.rows != m || u_out.cols != m || s_out.len < m || v_out.rows != n || v_out.cols != m) {
+        return MatrixError.DimensionMismatch;
+    }
+    if (at_work.len < m * n) return MatrixError.BufferTooSmall;
+
+    let at_mut: MatrixMutF64 = try MatrixMutF64.init(at_work, n, m);
+    try transposeMatrixF64(a, *at_mut);
+    // For A^T (N x M): left singular vectors are V (N x M), right singular vectors are U (M x M)
+    return svdThin(at_mut.asView(), max_sweeps, tol, v_out, s_out, u_out);
+}
+
+/// Hardware SIMD `@dot`-accelerated Frobenius norm `||A||_F = sqrt(sum a_{ij}^2)` for `f32` matrices.
+pub fn frobeniusNormF32Simd(a: MatrixViewF32): f32 {
+    if (a.data.len == 0) return 0.0;
+    const sum_sq: f32 = @dot(a.data, a.data);
+    return std.math.sqrt(if (sum_sq > 0.0) sum_sq else 0.0);
+}
+
+/// 8-lane `@Vector(8, f32)` SIMD Rank-1 outer product update: `A += alpha * x * y^T` (`A: M x N`, `x: [M]`, `y: [N]`).
+pub fn outerProductAddF32Simd(
+    x: []const f32,
+    y: []const f32,
+    alpha: f32,
+    a_inout: *MatrixMutF32,
+): void ! MatrixError {
+    const m: usize = a_inout.rows;
+    const n: usize = a_inout.cols;
+    if (x.len < m || y.len < n) return MatrixError.DimensionMismatch;
+
+    let r: usize = 0;
+    while (r < m) : (r += 1) {
+        const s: f32 = alpha * x[r];
+        if (s == 0.0) continue;
+        const vs: @Vector(8, f32) = @splat(s);
+        const row_off: usize = r * n;
+        let c: usize = 0;
+        while (c + 8 <= n) : (c += 8) {
+            const va: @Vector(8, f32) = a_inout.data[row_off + c .. row_off + c + 8][0..8].*;
+            const vy: @Vector(8, f32) = y[c .. c + 8][0..8].*;
+            const vr: @Vector(8, f32) = va + vs * vy;
+            a_inout.data[row_off + c .. row_off + c + 8][0..8].* = vr;
+        }
+        while (c < n) : (c += 1) {
+            a_inout.data[row_off + c] = @fma(s, y[c], a_inout.data[row_off + c]);
         }
     }
 }

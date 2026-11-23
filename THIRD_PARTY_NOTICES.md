@@ -38,6 +38,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **regex** (`regex-automata`) | <https://github.com/rust-lang/regex> | MIT OR Apache-2.0 | `lib/compiler/regexCompiler.cp`, `lib/compiler/regexVm.cp` | Copyright (c) 2014 The Rust Project Developers |
 | **RustFFT** | <https://github.com/ejmahler/RustFFT> | MIT OR Apache-2.0 | `lib/media/fftFilter.cp` | Copyright (c) 2016 Elliott Mahler |
 | **rust-brotli** | <https://github.com/dropbox/rust-brotli> | BSD-3-Clause AND MIT | `lib/pack/brotli.cp` | Copyright (c) 2016 Dropbox, Inc. |
+| **nalgebra** | <https://github.com/dimforge/nalgebra> | Apache-2.0 | `lib/math/matrixDense.cp` | Copyright (c) 2013-2024 Sébastien Crozet / Dimforge |
 
 ---
 
