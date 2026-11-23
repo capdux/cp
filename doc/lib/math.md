@@ -420,3 +420,22 @@ fn demoOptimize() {
   - **SPD Cholesky**：`choleskyDecomposeInPlace`（严格检测非正定返回 `NotPositiveDefinite`）、`denseCholeskySolve`、`denseCholeskyLogDet`。
   - **Householder QR & 超定最小二乘**：`qrDecomposeHouseholder`、`denseQrSolveLeastSquares`。
   - **对称 Jacobi 特征值 & One-Sided Jacobi (Hestenes) 薄 SVD**：`eigenSymmetricJacobi`、`svdThin`（避免 $A^T A$ 条件数平方损失）、`svdCondNumber`、`svdThinPinv`。
+
+---
+
+## 零堆无上限时间序列滤波、预测与异常检测引擎（`timeSeries.cp`）
+
+面向监控告警、IoT 传感器追踪与量化/业务时序预测的 100% 纯 CP 零动态堆分配、外部切片驱动时序核心：
+
+- **滑窗统计与季节平滑**：
+  - `rollingMeanF64` / `rollingStdF64`（Welford 单遍稳定滑窗）、`ewmaSmoothF64`、`doubleExpSmoothHolt`。
+  - `tsHoltWintersForecast`：支持任意周期 `period` 与加法/乘法季节性的三重指数平滑与多步预测。
+  - `decomposeSeasonalAdditive`：居中移动平均（偶数周期 `2xP` / 奇数周期 `P`）提取 Trend + Seasonal + Residual，精确守恒 `trend[i] + seasonal[i] + residual[i] == y[i]`。
+- **CP 原生 SIMD `@dot` 自相关 & AR(p) 预测**：
+  - `computeAcfF32Simd`（硬件 `@dot` 加速滞后自相关）与 `computeAcfF64`。
+  - `levinsonDurbinAr`（$O(p^2)$ Levinson-Durbin 递推解 Yule-Walker 输出 AR 系数、PACF 与噪声方差）+ `forecastArModel`。
+- **生产级线性 Kalman 滤波器**：
+  - `Kalman1dFilter`（2 状态恒速追踪器，Joseph 稳定协方差更新）。
+  - `KalmanFilterN`（任意 $n$ 维状态 / $m$ 维观测空间滤波器，Joseph 稳定协方差更新 + 马氏距离新息门控）。
+- **异常检测、变点检测与预测指标**：
+  - `detectAnomaliesZScore`（滑窗 Z-Score）、`detectAnomaliesMad`（抗离群值污染 Robust MAD）、`CusumChangeDetector`（双边 Page-Hinkley/CUSUM 在线变点检测）、`evalForecastMetrics`（MAE/RMSE/MAPE/sMAPE/$R^2$）。

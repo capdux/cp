@@ -553,3 +553,34 @@ export {
     gramMatrixF32Simd,
     matrixPowerF64,
 } from "./matrixDense.cp";
+
+// --- Unbounded Zero-Heap Time-Series Engine (Holt-Winters, Kalman N-D, SIMD ACF/PACF, AR(p) & Anomaly Detection) ---
+
+export {
+    TimeSeriesError,
+    TsSeasonalMode,
+    AnomalyFlag,
+    rollingMeanF64,
+    rollingStdF64,
+    ewmaSmoothF64,
+    TsHoltWintersState,
+    TsHoltWintersParams,
+    doubleExpSmoothHolt,
+    tsHoltWintersForecast,
+    decomposeSeasonalAdditive,
+    computeAcfF32Simd,
+    computeAcfF64,
+    ArModelFit,
+    levinsonDurbinAr,
+    forecastArModel,
+    Kalman1dFilter,
+    KalmanUpdateInfo,
+    KalmanNScratch,
+    KalmanFilterN,
+    detectAnomaliesZScore,
+    detectAnomaliesMad,
+    CusumChangeResult,
+    CusumChangeDetector,
+    TsForecastMetrics,
+    evalForecastMetrics,
+} from "./timeSeries.cp";
