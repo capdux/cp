@@ -1460,3 +1460,38 @@ let out: [1024]u8 = [0; 1024];
 const sum = applyManifestMutations(src, ops[0..], ManifestUpdateOptions.defaults(), &bufs, out[0..])?;
 * = sum;
 ```
+
+### Yarn Lockfile v1 解析、SRI 校验与 `cap.lock` 迁移引擎（`yarnLockParser.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/yarn.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 格式探测与描述符拆解：`YarnLockParseError`、`YarnLockFormatKind`（`YarnV1`/`YarnBerryV2Plus`/`Unknown`）、`detectYarnLockFormat`、`YarnDescriptorSpec`、`splitYarnDescriptor`（支持 `@scope/pkg@^1.0.0`、`pkg@npm:other@^2.0.0`、`pkg@workspace:^`、`pkg@https://...`）；
+  - SRI 完整性解析：`YarnIntegrityAlgo`（`Sha512`/`Sha384`/`Sha256`/`Sha1`）、`YarnParsedIntegrity`、`parseYarnIntegrity`；
+  - 零堆 Yarn v1 解析、审计与双向格式化：`YarnV1DepKind`、`YarnV1AliasEntry`、`YarnV1DepEntry`、`YarnV1PackageRecord`、`YarnV1ParseBuffers`、`YarnV1ParseResult`、`parseYarnLockV1`、`YarnDanglingDep`、`YarnMigrationReport`、`lookupYarnAlias`、`buildYarnMigrationReport`、`formatYarnMigrationSummary`、`formatYarnLockV1`（支持完整解析 -> 格式化 -> 重解析往返闭环）。
+
+```cp
+import {
+    YarnV1PackageRecord,
+    YarnV1AliasEntry,
+    YarnV1DepEntry,
+    YarnV1ParseBuffers,
+    parseYarnLockV1,
+    lookupYarnAlias,
+} from "cap:pkg";
+
+const lock_src =
+    "# yarn lockfile v1\n\n" ++
+    "\"@babel/core@^7.20.0\", \"@babel/core@^7.22.0\":\n" ++
+    "  version \"7.22.5\"\n" ++
+    "  resolved \"https://registry.yarnpkg.com/@babel/core/-/core-7.22.5.tgz\"\n" ++
+    "  integrity sha512-abcdefgh12345678==\n";
+
+let pkgs: [8]YarnV1PackageRecord = [YarnV1PackageRecord.empty(); 8];
+let aliases: [16]YarnV1AliasEntry = [YarnV1AliasEntry.empty(); 16];
+let deps: [16]YarnV1DepEntry = [YarnV1DepEntry.empty(); 16];
+let scratch: [256]u8 = [0; 256];
+let bufs = YarnV1ParseBuffers{ packages: pkgs[0..], aliases: aliases[0..], deps: deps[0..], unescape_scratch: scratch[0..] };
+const parsed = parseYarnLockV1(lock_src, &bufs)?;
+const idx = lookupYarnAlias(aliases[0..parsed.alias_count], "@babel/core", "^7.22.0");
+* = idx;
+```
