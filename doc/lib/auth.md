@@ -13,12 +13,12 @@
 
 | 文件路径 | 核心职责 |
 | :--- | :--- |
-| `lib/auth/oauthPkce.cp` | RFC 7636 PKCE S256 挑战生成与校验（`Pkce`, `PkceChallenge`, `OAuthError`） |
+| `lib/auth/oauthPkce.cp` | RFC 7636 PKCE S256 挑战生成与校验（对标 `constantoine/totp-rs` MIT & RFC 7636 加固：`Pkce`, `PkceChallenge`, `PkceChallengeMethod`, `OAuthError`, `simdIsValidPkceVerifier`, `verifyChallenge`/`verifyWithMethod` 默认拒绝 `plain` 降级与 `secureZero` 清零） |
 | `lib/auth/oauthFlow.cp` | RFC 6749 OAuth 2.0 / OIDC 授权流、Token 响应解析与 Basic/Bearer 认证头 |
 | `lib/auth/rbacPermission.cp` | 层次化通配符权限匹配器（`PermissionMatcher`, `PolicyEffect`, `RbacError`） |
 | `lib/auth/rbacEngine.cp` | 企业级 RBAC / IAM 策略引擎（角色继承、环检测、显式拒绝优先） |
 | `lib/auth/rego.cp` | OPA Rego 策略语言词法扫描器、包名提取与定界符校验 |
-| `lib/auth/totpHotp.cp` | RFC 4226 HOTP / RFC 6238 TOTP 动态口令、Base32 与 `otpauth://` URI |
+| `lib/auth/totpHotp.cp` | RFC 4226 HOTP / RFC 6238 TOTP 动态口令、Base32 与 `otpauth://` URI（对标 `constantoine/totp-rs` MIT 加固：`OtpError`, `hotpAtStrict`, `totpAtStrict`, `verifyTotpWithSkew`, `base32DecodeStrict`, `secureZero`, 16-lane SIMD `simdAuthCtEqual`） |
 | `lib/auth/kerberos.cp` | RFC 4120 Kerberos v5 ASN.1 DER 线协议解析器（Ticket/AP-REQ/KRB-ERROR） |
 | `lib/auth/ntlm.cp` | MS-NLMP NTLM v1/v2 认证消息解析（Negotiate/Challenge/Authenticate/AV_PAIR） |
 | `lib/auth/tacacs.cp` | RFC 8907 TACACS+ AAA 认证/授权/审计线协议解析器 |
@@ -30,17 +30,17 @@
 | `lib/auth/csr.cp` | RFC 2986 PKCS#10 证书签名请求（CSR）DER 解析器 |
 | `lib/auth/crl.cp` | RFC 5280 X.509 证书吊销列表（CRL）DER 解析与统计器 |
 | `lib/auth/ocsp.cp` | RFC 6960 在线证书状态协议（OCSP）请求与响应 DER 解析器 |
-| `lib/auth/index.cp` | `cap:auth` 与 `cap.auth` 统一零冲突公开导出入口（共 243 符号） |
+| `lib/auth/index.cp` | `cap:auth` 与 `cap.auth` 统一零冲突公开导出入口（共 254 符号） |
 
 ---
 
 ## 二、 核心 API 索引
 
 ### 1. OAuth 2.0 / RBAC / Rego / TOTP
-- **OAuth 2.0（`oauthPkce.cp`, `oauthFlow.cp`）**：`OAuthError`, `PkceChallenge`, `Pkce`, `OAuthConfig`, `OAuthFlow`, `OAuthTokenResponse`, `BasicCredentials`, `AuthHeader`
+- **OAuth 2.0（`oauthPkce.cp`, `oauthFlow.cp`）**：`OAuthError`, `PkceChallengeMethod`, `PkceChallenge`, `Pkce`（`isValidVerifier`, `computeS256Challenge`, `generate`, `fromVerifier`, `verifyS256`, `verifyWithMethod`, `verifyChallenge`, `generateState`）, `scalarIsValidPkceVerifier`, `simdIsValidPkceVerifier`, `OAuthConfig`, `OAuthFlow`, `OAuthTokenResponse`, `BasicCredentials`, `AuthHeader`
 - **RBAC（`rbacPermission.cp`, `rbacEngine.cp`）**：`RbacError`, `PolicyEffect`, `PermissionMatcher`, `AccessDecision`, `RbacEngine`
 - **OPA Rego（`rego.cp`）**：`REGO_MAX_DEPTH`, `RegoTokenKind`, `RegoToken`, `RegoIter`, `RegoImportIter`, `RegoRuleIter`, `extractRegoPackage`, `validateRegoDelimiters`
-- **TOTP / HOTP（`totpHotp.cp`）**：`HashAlg`, `OtpType`, `OtpAuthUri`, `hotpAtWithAlg`, `hotpAt`, `totpAt`, `formatCode`, `constantTimeEq`, `verifyHotp`, `verifyTotp`, `base32Encode`, `base32Decode`, `generateSecret`, `buildOtpAuthUri`, `parseOtpAuthUri`
+- **TOTP / HOTP（`totpHotp.cp`）**：`OtpError`, `HashAlg`, `OtpType`, `OtpAuthUri`, `secureZero`, `hotpAtWithAlg`, `hotpAtStrict`, `hotpAt`, `totpAt`, `totpAtStrict`, `formatCode`, `scalarAuthCtEqual`, `simdAuthCtEqual`, `constantTimeEq`, `verifyHotp`, `verifyTotpWithSkew`, `verifyTotp`, `base32Encode`, `base32Decode`, `base32DecodeStrict`, `generateSecret`, `buildOtpAuthUri`, `parseOtpAuthUri`；回归测试：`cap/test/testAuthTotpPkceRustRefSuite.cp`（含 RFC 4226 Appendix D 全部 10 组 HOTP 向量、RFC 6238 Appendix B SHA-1/256/512 向量、`verifyTotpWithSkew`、RFC 4648 Base32 严苛校验、RFC 7636 Appendix B PKCE S256 向量与 `plain` 降级拒绝、16-lane SIMD 0 差异对拍与 1,800 组确定性 PRNG Fuzz）
 
 ### 2. 企业网络认证协议
 - **Kerberos v5（`kerberos.cp`）**：`KRB_PORT`, `KRB_VERSION`, `KrbPrincipalName`, `KrbEncryptedData`, `KrbTicket`, `KrbMessageInfo`, `KrbError`, `unwrapKrbTcpRecord`, `peekKrbAppTag`, `isKerberos`, `parseKrbMessageInfo`, `parseKrbTicket`, `parseKrbError`

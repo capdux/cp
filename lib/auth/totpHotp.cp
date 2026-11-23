@@ -1,22 +1,34 @@
+// Reference-hardened against constantoine/totp-rs (MIT)
 // Source: native-cp-stdlib (RFC 4226 / RFC 6238 TOTP & HOTP)
 
 const std = @import("std");
 
 type StrSlice = []const u8;
 type ByteSlice = []u8;
+type TotpVec16u8 = @Vector(16, u8);
 
-export enum HashAlg {
+pub err OtpError {
+    InvalidDigits,
+    InvalidPeriod,
+    InvalidSecret,
+    InvalidBase32,
+    InvalidCode,
+    InvalidUri,
+    OutOfMemory,
+}
+
+pub enum HashAlg {
     Sha1,
     Sha256,
     Sha512,
 }
 
-export enum OtpType {
+pub enum OtpType {
     Totp,
     Hotp,
 }
 
-export struct OtpAuthUri {
+pub struct OtpAuthUri {
     otp_type: OtpType,
     label: []const u8,
     issuer: []const u8,
@@ -61,8 +73,15 @@ fn dynamicTruncate(digest: []const u8): u32 {
     return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
 }
 
-export fn hotpAtWithAlg(secret: []const u8, counter: u64, digits: u8, alg: HashAlg): u32 {
+pub fn secureZero(buf: []u8) {
+    if (buf.len > 0) {
+        std.crypto.secureZero(u8, buf);
+    }
+}
+
+pub fn hotpAtWithAlg(secret: []const u8, counter: u64, digits: u8, alg: HashAlg): u32 {
     let counter_bytes: [8]u8 = undefined;
+    defer std.crypto.secureZero(u8, &counter_bytes);
     std.mem.writeInt(u64, &counter_bytes, counter, .big);
 
     const mod_val = pow10(digits);
@@ -70,34 +89,52 @@ export fn hotpAtWithAlg(secret: []const u8, counter: u64, digits: u8, alg: HashA
     switch (alg) {
         .Sha1 => {
             let mac: [20]u8 = undefined;
+            defer std.crypto.secureZero(u8, &mac);
             std.crypto.auth.hmac.HmacSha1.create(&mac, &counter_bytes, secret);
             return dynamicTruncate(&mac) % mod_val;
         },
         .Sha256 => {
             let mac: [32]u8 = undefined;
-            std.crypto.auth.hmac.HmacSha256.create(&mac, &counter_bytes, secret);
+            defer std.crypto.secureZero(u8, &mac);
+            std.crypto.auth.hmac.sha2.HmacSha256.create(&mac, &counter_bytes, secret);
             return dynamicTruncate(&mac) % mod_val;
         },
         .Sha512 => {
             let mac: [64]u8 = undefined;
-            std.crypto.auth.hmac.HmacSha512.create(&mac, &counter_bytes, secret);
+            defer std.crypto.secureZero(u8, &mac);
+            std.crypto.auth.hmac.sha2.HmacSha512.create(&mac, &counter_bytes, secret);
             return dynamicTruncate(&mac) % mod_val;
         },
     }
 }
 
-export fn hotpAt(secret: []const u8, counter: u64, digits: u8): u32 {
+pub fn hotpAtStrict(secret: []const u8, counter: u64, digits: u8, alg: HashAlg): u32 ! OtpError {
+    if (digits < 6 or digits > 8) return OtpError.InvalidDigits;
+    if (secret.len == 0) return OtpError.InvalidSecret;
+    return hotpAtWithAlg(secret, counter, digits, alg);
+}
+
+pub fn hotpAt(secret: []const u8, counter: u64, digits: u8): u32 {
     return hotpAtWithAlg(secret, counter, digits, HashAlg.Sha1);
 }
 
-export fn totpAt(secret: []const u8, unix_sec: u64, period: u64, digits: u8, alg: HashAlg): u32 {
+pub fn totpAt(secret: []const u8, unix_sec: u64, period: u64, digits: u8, alg: HashAlg): u32 {
     const step: u64 = if (period == 0) 30 else period;
     const counter: u64 = unix_sec / step;
     return hotpAtWithAlg(secret, counter, digits, alg);
 }
 
-export fn formatCode(code: u32, digits: u8, out: []u8): []const u8 {
-    const d: usize = if (digits >= 6 and digits <= 8) @intCast(digits) else 6;
+pub fn totpAtStrict(secret: []const u8, unix_sec: u64, period: u64, digits: u8, alg: HashAlg): u32 ! OtpError {
+    if (period == 0) return OtpError.InvalidPeriod;
+    if (digits < 6 or digits > 8) return OtpError.InvalidDigits;
+    if (secret.len == 0) return OtpError.InvalidSecret;
+    const counter: u64 = unix_sec / period;
+    return hotpAtWithAlg(secret, counter, digits, alg);
+}
+
+pub fn formatCode(code: u32, digits: u8, out: []u8): []const u8 {
+    if (digits < 6 or digits > 8) return "";
+    const d: usize = @intCast(digits);
     if (out.len < d) return "";
     let v: u32 = code;
     let i: usize = d;
@@ -110,7 +147,8 @@ export fn formatCode(code: u32, digits: u8, out: []u8): []const u8 {
     return out[0..d];
 }
 
-export fn constantTimeEq(a: []const u8, b: []const u8): bool {
+/// Scalar reference constant-time equality comparison for tokens/challenges (no early exit).
+pub fn scalarAuthCtEqual(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let diff: u8 = 0;
     let i: usize = 0;
@@ -121,6 +159,29 @@ export fn constantTimeEq(a: []const u8, b: []const u8): bool {
     return diff == 0;
 }
 
+/// 16-lane SIMD accelerated constant-time equality comparison (`@reduce(.Or, va ^ vb) == 0`, no early exit).
+pub fn simdAuthCtEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let acc: TotpVec16u8 = @splat(0);
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: TotpVec16u8 = a[i .. i + 16][0..16].*;
+        const vb: TotpVec16u8 = b[i .. i + 16][0..16].*;
+        acc = acc | (va ^ vb);
+        i = i + 16;
+    }
+    let diff: u8 = @reduce(.Or, acc);
+    while (i < a.len) {
+        diff = diff | (a[i] ^ b[i]);
+        i = i + 1;
+    }
+    return diff == 0;
+}
+
+pub fn constantTimeEq(a: []const u8, b: []const u8): bool {
+    return simdAuthCtEqual(a, b);
+}
+
 fn isAllDigits(s: []const u8): bool {
     for (ch of s) {
         if (ch < '0' or ch > '9') return false;
@@ -128,7 +189,7 @@ fn isAllDigits(s: []const u8): bool {
     return true;
 }
 
-export fn verifyHotp(
+pub fn verifyHotp(
     secret: []const u8,
     counter: u64,
     code: []const u8,
@@ -136,19 +197,21 @@ export fn verifyHotp(
     lookahead: u64,
     alg: HashAlg,
 ): u64? {
-    const d: u8 = if (digits >= 6 and digits <= 8) digits else 6;
-    const d_usize: usize = @intCast(d);
+    if (digits < 6 or digits > 8) return null;
+    if (secret.len == 0) return null;
+    const d_usize: usize = @intCast(digits);
     if (code.len != d_usize or !isAllDigits(code)) return null;
 
     let expected_buf: [8]u8 = undefined;
+    defer std.crypto.secureZero(u8, &expected_buf);
     let matched_next: u64? = null;
     let offset: u64 = 0;
     while (offset <= lookahead) {
         if (counter > std.math.maxInt(u64) - offset) break;
         const c: u64 = counter + offset;
-        const expected = hotpAtWithAlg(secret, c, d, alg);
-        const expected_str = formatCode(expected, d, &expected_buf);
-        if (constantTimeEq(code, expected_str)) {
+        const expected = hotpAtWithAlg(secret, c, digits, alg);
+        const expected_str = formatCode(expected, digits, &expected_buf);
+        if (simdAuthCtEqual(code, expected_str)) {
             if (matched_next == null) {
                 matched_next = c +% 1;
             }
@@ -158,7 +221,70 @@ export fn verifyHotp(
     return matched_next;
 }
 
-export fn verifyTotp(
+pub fn verifyTotpWithSkew(
+    secret: []const u8,
+    unix_sec: u64,
+    code: []const u8,
+    period: u64,
+    digits: u8,
+    skew: u64,
+    alg: HashAlg,
+): i64 ! OtpError {
+    if (period == 0) return OtpError.InvalidPeriod;
+    if (digits < 6 or digits > 8) return OtpError.InvalidDigits;
+    if (secret.len == 0) return OtpError.InvalidSecret;
+    const d_usize: usize = @intCast(digits);
+    if (code.len != d_usize or !isAllDigits(code)) return OtpError.InvalidCode;
+
+    const base_counter: u64 = unix_sec / period;
+
+    let expected_buf: [8]u8 = undefined;
+    defer std.crypto.secureZero(u8, &expected_buf);
+    let matched: bool = false;
+    let best_delta: i64 = 0;
+    let best_abs: u64 = std.math.maxInt(u64);
+
+    let neg_off: u64 = 1;
+    while (neg_off <= skew) {
+        if (base_counter >= neg_off) {
+            const c: u64 = base_counter - neg_off;
+            const expected = hotpAtWithAlg(secret, c, digits, alg);
+            const expected_str = formatCode(expected, digits, &expected_buf);
+            if (simdAuthCtEqual(code, expected_str)) {
+                if (neg_off < best_abs) {
+                    best_abs = neg_off;
+                    const signed_off: i64 = @intCast(neg_off);
+                    best_delta = -signed_off;
+                    matched = true;
+                }
+            }
+        }
+        neg_off = neg_off + 1;
+    }
+
+    let pos_off: u64 = 0;
+    while (pos_off <= skew) {
+        if (base_counter <= std.math.maxInt(u64) - pos_off) {
+            const c: u64 = base_counter + pos_off;
+            const expected = hotpAtWithAlg(secret, c, digits, alg);
+            const expected_str = formatCode(expected, digits, &expected_buf);
+            if (simdAuthCtEqual(code, expected_str)) {
+                if (pos_off <= best_abs) {
+                    best_abs = pos_off;
+                    const signed_off: i64 = @intCast(pos_off);
+                    best_delta = signed_off;
+                    matched = true;
+                }
+            }
+        }
+        pos_off = pos_off + 1;
+    }
+
+    if (!matched) return OtpError.InvalidCode;
+    return best_delta;
+}
+
+pub fn verifyTotp(
     secret: []const u8,
     unix_sec: u64,
     code: []const u8,
@@ -167,57 +293,12 @@ export fn verifyTotp(
     window: u64,
     alg: HashAlg,
 ): i64? {
-    const d: u8 = if (digits >= 6 and digits <= 8) digits else 6;
-    const d_usize: usize = @intCast(d);
-    if (code.len != d_usize or !isAllDigits(code)) return null;
-
-    const step: u64 = if (period == 0) 30 else period;
-    const base_counter: u64 = unix_sec / step;
-
-    let expected_buf: [8]u8 = undefined;
-    let best_delta: i64? = null;
-    let best_abs: u64 = std.math.maxInt(u64);
-
-    let neg_off: u64 = 1;
-    while (neg_off <= window) {
-        if (base_counter >= neg_off) {
-            const c: u64 = base_counter - neg_off;
-            const expected = hotpAtWithAlg(secret, c, d, alg);
-            const expected_str = formatCode(expected, d, &expected_buf);
-            if (constantTimeEq(code, expected_str)) {
-                if (neg_off < best_abs) {
-                    best_abs = neg_off;
-                    const signed_off: i64 = @intCast(neg_off);
-                    best_delta = -signed_off;
-                }
-            }
-        }
-        neg_off = neg_off + 1;
-    }
-
-    let pos_off: u64 = 0;
-    while (pos_off <= window) {
-        if (base_counter <= std.math.maxInt(u64) - pos_off) {
-            const c: u64 = base_counter + pos_off;
-            const expected = hotpAtWithAlg(secret, c, d, alg);
-            const expected_str = formatCode(expected, d, &expected_buf);
-            if (constantTimeEq(code, expected_str)) {
-                if (pos_off <= best_abs) {
-                    best_abs = pos_off;
-                    const signed_off: i64 = @intCast(pos_off);
-                    best_delta = signed_off;
-                }
-            }
-        }
-        pos_off = pos_off + 1;
-    }
-
-    return best_delta;
+    return verifyTotpWithSkew(secret, unix_sec, code, period, digits, window, alg) catch return null;
 }
 
 const B32_ALPHABET: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-export fn base32Encode(alloc: std.mem.Allocator, data: []const u8, pad: bool): ByteSlice? {
+pub fn base32Encode(alloc: std.mem.Allocator, data: []const u8, pad: bool): ByteSlice? {
     let out = std.ArrayList(u8).empty;
     errdefer out.deinit(alloc);
 
@@ -273,16 +354,27 @@ fn base32CharVal(ch: u8): u8? {
     return null;
 }
 
-export fn base32Decode(alloc: std.mem.Allocator, input: []const u8): ByteSlice? {
+pub fn base32Decode(alloc: std.mem.Allocator, input: []const u8): ByteSlice? {
     let out = std.ArrayList(u8).empty;
     let buffer: u32 = 0;
     let bits_left: u5 = 0;
+    let saw_pad: bool = false;
 
     for (ch of input) {
-        if (ch == ' ' or ch == '\t' or ch == '\r' or ch == '\n' or ch == '=') {
+        if (ch == ' ' or ch == '\t' or ch == '\r' or ch == '\n') {
             continue;
         }
+        if (ch == '=') {
+            saw_pad = true;
+            continue;
+        }
+        if (saw_pad) {
+            if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
+            out.deinit(alloc);
+            return null;
+        }
         const val = base32CharVal(ch) orelse {
+            if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
             out.deinit(alloc);
             return null;
         };
@@ -292,6 +384,7 @@ export fn base32Decode(alloc: std.mem.Allocator, input: []const u8): ByteSlice? 
             const shift: u5 = bits_left - 8;
             const byte_val: u8 = @intCast((buffer >> shift) & 0xff);
             out.append(alloc, byte_val) catch {
+                if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
                 out.deinit(alloc);
                 return null;
             };
@@ -300,12 +393,88 @@ export fn base32Decode(alloc: std.mem.Allocator, input: []const u8): ByteSlice? 
     }
 
     return out.toOwnedSlice(alloc) catch {
+        if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
         out.deinit(alloc);
         return null;
     };
 }
 
-export fn generateSecret(alloc: std.mem.Allocator, num_bytes: usize): ByteSlice? {
+/// Strict RFC 4648 Base32 decoder: rejects empty input, invalid characters, misplaced/invalid padding,
+/// invalid quantum lengths (rem 1/3/6), and non-zero canonical trailing bits. Zeroizes sensitive buffers on error.
+pub fn base32DecodeStrict(alloc: std.mem.Allocator, input: []const u8): ([]u8) ! OtpError {
+    if (input.len == 0) return OtpError.InvalidBase32;
+
+    let data_count: usize = 0;
+    let pad_count: usize = 0;
+    let i: usize = 0;
+    while (i < input.len) {
+        const ch = input[i];
+        if (ch == '=') {
+            pad_count = pad_count + 1;
+        } else {
+            if (pad_count > 0) return OtpError.InvalidBase32;
+            if (base32CharVal(ch) == null) return OtpError.InvalidBase32;
+            data_count = data_count + 1;
+        }
+        i = i + 1;
+    }
+
+    if (data_count == 0) return OtpError.InvalidBase32;
+
+    const rem = data_count % 8;
+    if (rem == 1 or rem == 3 or rem == 6) return OtpError.InvalidBase32;
+
+    if (pad_count > 0) {
+        if ((data_count + pad_count) % 8 != 0) return OtpError.InvalidBase32;
+        const expected_pad: usize = switch (rem) {
+            0 => 0,
+            2 => 6,
+            4 => 4,
+            5 => 3,
+            7 => 1,
+            else => 99,
+        };
+        if (pad_count != expected_pad) return OtpError.InvalidBase32;
+    }
+
+    let out = std.ArrayList(u8).empty;
+    let buffer: u32 = 0;
+    let bits_left: u5 = 0;
+    let j: usize = 0;
+    while (j < data_count) {
+        const val = base32CharVal(input[j]).?;
+        buffer = (buffer << 5) | @as(u32, val);
+        bits_left = bits_left + 5;
+        if (bits_left >= 8) {
+            const shift: u5 = bits_left - 8;
+            const byte_val: u8 = @intCast((buffer >> shift) & 0xff);
+            out.append(alloc, byte_val) catch {
+                if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
+                out.deinit(alloc);
+                return OtpError.OutOfMemory;
+            };
+            bits_left = bits_left - 8;
+        }
+        j = j + 1;
+    }
+
+    if (bits_left > 0) {
+        const mask: u32 = (@as(u32, 1) << bits_left) - 1;
+        if ((buffer & mask) != 0) {
+            if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
+            out.deinit(alloc);
+            return OtpError.InvalidBase32;
+        }
+    }
+
+    return out.toOwnedSlice(alloc) catch {
+        if (out.items.len > 0) std.crypto.secureZero(u8, out.items);
+        out.deinit(alloc);
+        return OtpError.OutOfMemory;
+    };
+}
+
+pub fn generateSecret(alloc: std.mem.Allocator, num_bytes: usize): ByteSlice? {
     let threaded = std.Io.Threaded.init(alloc, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -426,7 +595,7 @@ fn algToStr(alg: HashAlg): []const u8 {
     };
 }
 
-export fn buildOtpAuthUri(alloc: std.mem.Allocator, uri: OtpAuthUri): ByteSlice? {
+pub fn buildOtpAuthUri(alloc: std.mem.Allocator, uri: OtpAuthUri): ByteSlice? {
     let out = std.ArrayList(u8).empty;
 
     const type_str: []const u8 = if (uri.otp_type == OtpType.Totp) "totp" else "hotp";
@@ -541,7 +710,7 @@ export fn buildOtpAuthUri(alloc: std.mem.Allocator, uri: OtpAuthUri): ByteSlice?
     };
 }
 
-export fn parseOtpAuthUri(alloc: std.mem.Allocator, uri_str: []const u8): OtpAuthUri? {
+pub fn parseOtpAuthUri(alloc: std.mem.Allocator, uri_str: []const u8): OtpAuthUri? {
     const prefix = "otpauth://";
     if (!std.mem.startsWith(u8, uri_str, prefix)) return null;
     const rest = uri_str[prefix.len..];

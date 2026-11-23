@@ -5,8 +5,11 @@
 
 export {
     OAuthError,
+    PkceChallengeMethod,
     PkceChallenge,
     Pkce,
+    scalarIsValidPkceVerifier,
+    simdIsValidPkceVerifier,
 } from "./oauthPkce.cp";
 
 export {
@@ -40,18 +43,26 @@ export {
 } from "./rego.cp";
 
 export {
+    OtpError,
     HashAlg,
     OtpType,
     OtpAuthUri,
+    secureZero,
     hotpAtWithAlg,
+    hotpAtStrict,
     hotpAt,
     totpAt,
+    totpAtStrict,
     formatCode,
+    scalarAuthCtEqual,
+    simdAuthCtEqual,
     constantTimeEq,
     verifyHotp,
+    verifyTotpWithSkew,
     verifyTotp,
     base32Encode,
     base32Decode,
+    base32DecodeStrict,
     generateSecret,
     buildOtpAuthUri,
     parseOtpAuthUri,
