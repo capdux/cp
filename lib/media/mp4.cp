@@ -1,3 +1,4 @@
+// Reference-hardened against alfg/mp4-rust (MIT)
 // Origin: Pure-CP Stdlib (Zero-Alloc ISO BMFF / MP4 Box Container Parser) | Created: 2026-11-22
 
 import std from "std";
@@ -5,6 +6,109 @@ import std from "std";
 pub const MP4_BOX_HEADER_SIZE: usize = 8;
 pub const MP4_LARGE_HEADER_SIZE: usize = 16;
 pub const MP4_UUID_SIZE: usize = 16;
+pub const MP4_MAX_BOX_DEPTH: usize = 32;
+
+pub error Mp4Error {
+    UnexpectedEof,
+    InvalidBoxSize,
+    MaxDepthExceeded,
+    InvalidBoxFormat,
+    OutOfMemory,
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` payload copy for hot-path MP4 Box / sample data.
+pub fn mp4CopyPayloadSimd(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i + 16 <= src.len) : (i += 16) {
+        const chunk: @Vector(16, u8) = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+    }
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference payload copy for 0-diff parity testing against `mp4CopyPayloadSimd`.
+pub fn mp4CopyPayloadScalar(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    while (i < src.len) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane SIMD FourCC brand search across `compatible_brands` (4 brands per iteration).
+pub fn mp4HasBrandSimd(compatible_brands: []const u8, brand: []const u8): bool {
+    if (brand.len != 4) return false;
+    const target_u32: u32 = std.mem.readInt(u32, brand[0..4], .little);
+    const target_v: @Vector(4, u32) = @splat(target_u32);
+    let off: usize = 0;
+    while (off + 16 <= compatible_brands.len) : (off += 16) {
+        const bytes_v: @Vector(16, u8) = compatible_brands[off..][0..16].*;
+        const words_v: @Vector(4, u32) = @bitCast(bytes_v);
+        const eq_mask = words_v == target_v;
+        if (@reduce(.Or, eq_mask)) return true;
+    }
+    while (off + 4 <= compatible_brands.len) : (off += 4) {
+        if (compatible_brands[off] == brand[0] &&
+            compatible_brands[off + 1] == brand[1] &&
+            compatible_brands[off + 2] == brand[2] &&
+            compatible_brands[off + 3] == brand[3])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// Scalar reference FourCC brand search for 0-diff parity testing against `mp4HasBrandSimd`.
+pub fn mp4HasBrandScalar(compatible_brands: []const u8, brand: []const u8): bool {
+    if (brand.len != 4) return false;
+    let off: usize = 0;
+    while (off + 4 <= compatible_brands.len) : (off += 4) {
+        if (compatible_brands[off] == brand[0] &&
+            compatible_brands[off + 1] == brand[1] &&
+            compatible_brands[off + 2] == brand[2] &&
+            compatible_brands[off + 3] == brand[3])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// 4-lane SIMD big-endian `u32` array unpack (`@Vector(16, u8)` `@shuffle` -> `@Vector(4, u32)`).
+pub fn mp4UnpackU32BESimd(dst: []u32, src: []const u8) {
+    const swap_mask: [16]i32 = [ 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12 ];
+    let di: usize = 0;
+    let si: usize = 0;
+    while (di + 4 <= dst.len && si + 16 <= src.len) {
+        const v: @Vector(16, u8) = src[si..][0..16].*;
+        const swapped = @shuffle(u8, v, undefined, swap_mask);
+        const words: [4]u32 = @bitCast(swapped);
+        dst[di] = words[0];
+        dst[di + 1] = words[1];
+        dst[di + 2] = words[2];
+        dst[di + 3] = words[3];
+        di += 4;
+        si += 16;
+    }
+    while (di < dst.len && si + 4 <= src.len) {
+        dst[di] = readU32BE(src, si);
+        di += 1;
+        si += 4;
+    }
+}
+
+/// Scalar reference big-endian `u32` array unpack for 0-diff parity testing against `mp4UnpackU32BESimd`.
+pub fn mp4UnpackU32BEScalar(dst: []u32, src: []const u8) {
+    let di: usize = 0;
+    let si: usize = 0;
+    while (di < dst.len && si + 4 <= src.len) {
+        dst[di] = readU32BE(src, si);
+        di += 1;
+        si += 4;
+    }
+}
 
 pub struct Mp4Box {
     box_type: [4]u8,
@@ -69,14 +173,7 @@ pub struct FtypBox {
         if (fourccEquals(_.major_brand, brand)) {
             return true;
         }
-        let off: usize = 0;
-        while (off + 4 <= _.compatible_brands.len) {
-            if (fourccEquals(readFourCC(_.compatible_brands, off), brand)) {
-                return true;
-            }
-            off += 4;
-        }
-        return false;
+        return mp4HasBrandSimd(_.compatible_brands, brand);
     }
 }
 
@@ -465,4 +562,224 @@ pub fn parseTkhd(payload: []const u8): TkhdBox? {
     }
 
     return null;
+}
+
+pub struct HdlrBox {
+    version: u8,
+    flags: u32,
+    handler_type: [4]u8,
+    name: []const u8,
+
+    pub fn isVideo(): bool {
+        return fourccEquals(_.handler_type, "vide");
+    }
+
+    pub fn isAudio(): bool {
+        return fourccEquals(_.handler_type, "soun");
+    }
+
+    pub fn isSubtitle(): bool {
+        return fourccEquals(_.handler_type, "subt");
+    }
+}
+
+pub fn parseHdlr(payload: []const u8): HdlrBox? {
+    if (payload.len < 24) return null;
+    return HdlrBox {
+        .version = payload[0],
+        .flags = readU24BE(payload, 1),
+        .handler_type = readFourCC(payload, 8),
+        .name = payload[24..],
+    };
+}
+
+pub struct StszBox {
+    version: u8,
+    flags: u32,
+    sample_size: u32,
+    sample_count: u32,
+    entry_bytes: []const u8,
+
+    pub fn sampleSizeAt(index: u32): u32? {
+        if (index >= _.sample_count) return null;
+        if (_.sample_size != 0) return _.sample_size;
+        const off = (index as usize) * 4;
+        if (off + 4 > _.entry_bytes.len) return null;
+        return readU32BE(_.entry_bytes, off);
+    }
+}
+
+pub fn parseStsz(payload: []const u8): StszBox? {
+    if (payload.len < 12) return null;
+    const sample_size = readU32BE(payload, 4);
+    const sample_count = readU32BE(payload, 8);
+    const entries = payload[12..];
+    if (sample_size == 0) {
+        const need = @mulWithOverflow(sample_count as usize, 4);
+        if (need[1] != 0 || need[0] > entries.len) return null;
+    }
+    return StszBox {
+        .version = payload[0],
+        .flags = readU24BE(payload, 1),
+        .sample_size = sample_size,
+        .sample_count = sample_count,
+        .entry_bytes = entries,
+    };
+}
+
+pub struct StcoBox {
+    version: u8,
+    flags: u32,
+    is_co64: bool,
+    entry_count: u32,
+    entry_bytes: []const u8,
+
+    pub fn chunkOffsetAt(index: u32): u64? {
+        if (index >= _.entry_count) return null;
+        const elem_sz: usize = if (_.is_co64) 8 else 4;
+        const off = (index as usize) * elem_sz;
+        if (off + elem_sz > _.entry_bytes.len) return null;
+        if (_.is_co64) return readU64BE(_.entry_bytes, off);
+        return readU32BE(_.entry_bytes, off) as u64;
+    }
+}
+
+pub fn parseStco(payload: []const u8): StcoBox? {
+    if (payload.len < 8) return null;
+    const entry_count = readU32BE(payload, 4);
+    const entries = payload[8..];
+    const need = @mulWithOverflow(entry_count as usize, 4);
+    if (need[1] != 0 || need[0] > entries.len) return null;
+    return StcoBox {
+        .version = payload[0],
+        .flags = readU24BE(payload, 1),
+        .is_co64 = false,
+        .entry_count = entry_count,
+        .entry_bytes = entries,
+    };
+}
+
+pub fn parseCo64(payload: []const u8): StcoBox? {
+    if (payload.len < 8) return null;
+    const entry_count = readU32BE(payload, 4);
+    const entries = payload[8..];
+    const need = @mulWithOverflow(entry_count as usize, 8);
+    if (need[1] != 0 || need[0] > entries.len) return null;
+    return StcoBox {
+        .version = payload[0],
+        .flags = readU24BE(payload, 1),
+        .is_co64 = true,
+        .entry_count = entry_count,
+        .entry_bytes = entries,
+    };
+}
+
+pub struct SttsEntry {
+    sample_count: u32,
+    sample_delta: u32,
+}
+
+pub struct SttsBox {
+    version: u8,
+    flags: u32,
+    entry_count: u32,
+    entry_bytes: []const u8,
+
+    pub fn entryAt(index: u32): SttsEntry? {
+        if (index >= _.entry_count) return null;
+        const off = (index as usize) * 8;
+        if (off + 8 > _.entry_bytes.len) return null;
+        return SttsEntry {
+            .sample_count = readU32BE(_.entry_bytes, off),
+            .sample_delta = readU32BE(_.entry_bytes, off + 4),
+        };
+    }
+
+    pub fn totalDuration(): u64 {
+        let total: u64 = 0;
+        let i: u32 = 0;
+        while (i < _.entry_count) : (i += 1) {
+            if (e := _.entryAt(i)) {
+                total += (e.sample_count as u64) * (e.sample_delta as u64);
+            }
+        }
+        return total;
+    }
+}
+
+pub fn parseStts(payload: []const u8): SttsBox? {
+    if (payload.len < 8) return null;
+    const entry_count = readU32BE(payload, 4);
+    const entries = payload[8..];
+    const need = @mulWithOverflow(entry_count as usize, 8);
+    if (need[1] != 0 || need[0] > entries.len) return null;
+    return SttsBox {
+        .version = payload[0],
+        .flags = readU24BE(payload, 1),
+        .entry_count = entry_count,
+        .entry_bytes = entries,
+    };
+}
+
+fn validateBoxSlice(data: []const u8, depth: usize, max_depth: usize): Mp4Error!void {
+    if (depth > max_depth) return Mp4Error.MaxDepthExceeded;
+    let pos: usize = 0;
+    while (pos < data.len) {
+        if (data.len - pos < MP4_BOX_HEADER_SIZE) return Mp4Error.UnexpectedEof;
+        const avail: u64 = (data.len - pos) as u64;
+        const size32 = readU32BE(data, pos);
+        const box_type = readFourCC(data, pos + 4);
+
+        let total_size: u64 = 0;
+        let hdr_size: usize = MP4_BOX_HEADER_SIZE;
+        if (size32 == 0) {
+            total_size = avail;
+        } else if (size32 == 1) {
+            if (avail < (MP4_LARGE_HEADER_SIZE as u64)) return Mp4Error.UnexpectedEof;
+            total_size = readU64BE(data, pos + 8);
+            hdr_size = MP4_LARGE_HEADER_SIZE;
+            if (total_size < (MP4_LARGE_HEADER_SIZE as u64)) return Mp4Error.InvalidBoxSize;
+            if (total_size > avail) return Mp4Error.UnexpectedEof;
+        } else if (size32 < 8) {
+            return Mp4Error.InvalidBoxSize;
+        } else {
+            total_size = size32 as u64;
+            if (total_size > avail) return Mp4Error.UnexpectedEof;
+        }
+
+        if (fourccEquals(box_type, "uuid")) {
+            if (total_size < ((hdr_size + MP4_UUID_SIZE) as u64)) return Mp4Error.InvalidBoxSize;
+            hdr_size += MP4_UUID_SIZE;
+        }
+
+        const end_pos = pos + (total_size as usize);
+        const payload = data[pos + hdr_size .. end_pos];
+        const tmp_box = Mp4Box {
+            .box_type = box_type,
+            .size = total_size,
+            .header_size = hdr_size as u8,
+            .has_uuid = false,
+            .uuid = std.mem.zeroes([16]u8),
+            .payload = payload,
+        };
+        if (tmp_box.isContainer()) {
+            const child_slice = if (fourccEquals(box_type, "meta")) blk: {
+                if (payload.len < 4) return Mp4Error.InvalidBoxFormat;
+                break :blk payload[4..];
+            } else payload;
+            try validateBoxSlice(child_slice, depth + 1, max_depth);
+        }
+        pos = end_pos;
+    }
+}
+
+/// Zero-heap full ISO BMFF / MP4 box tree validator with recursion depth guard (`MP4_MAX_BOX_DEPTH = 32`).
+pub fn validateMp4Structure(data: []const u8): Mp4Error!void {
+    try validateMp4StructureWithMaxDepth(data, MP4_MAX_BOX_DEPTH);
+}
+
+/// Zero-heap full ISO BMFF / MP4 box tree validator with explicit recursion depth limit.
+pub fn validateMp4StructureWithMaxDepth(data: []const u8, max_depth: usize): Mp4Error!void {
+    if (data.len == 0) return Mp4Error.UnexpectedEof;
+    try validateBoxSlice(data, 0, max_depth);
 }
