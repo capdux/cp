@@ -15,7 +15,7 @@
 
 | 子模块文件 | 原目录 | 核心导出符号与职责 |
 | :--- | :--- | :--- |
-| `lib/gfx/ttf.cp` | `lib/ttf` | `SfntFlavor`, `SfntOffsetTable`, `SfntTableRecord`, `TtfHeadMetrics`, `parseSfntHeader`, `SfntTableIter`, `findSfntTable`, `parseTtfHead`, `parseTtfNumGlyphs`, `calcSfntChecksum`（TrueType / OpenType SFNT 字体解析） |
+| `lib/gfx/ttf.cp` | `lib/ttf` | `SfntFlavor`, `SfntOffsetTable`, `SfntTableRecord`, `TtfHeadMetrics`, `TtcHeader`, `TtfHheaMetrics`, `TtfHorizontalMetrics`, `TtfOs2Metrics`, `TtfNameRecord`, `parseTtcHeader`, `getTtcFontOffset`, `parseSfntHeaderAt`, `parseSfntHeader`, `SfntTableIter`, `findSfntTableSimd`, `findSfntTable`, `findSfntTableAt`, `parseTtfHead`, `parseTtfNumGlyphs`, `parseTtfHhea`, `parseTtfHmtx`, `parseTtfOs2`, `lookupCmapFormat4`, `lookupCmapFormat12`, `lookupCmapGlyph`, `findTtfNameRecord`, `calcSfntChecksumSimd`, `calcSfntChecksum`, `computeTtfTableChecksum`（对标 `RazrFalcon/ttf-parser` MIT/Apache-2.0 加固：TTC 集合、cmap Format 4/12 全 Unicode、SIMD 校验和/扫描；测试：`cap/test/testGfxTtfRustRefSuite.cp`） |
 | `lib/gfx/woff2.cp` | `lib/woff2` | `Woff2Header`, `Woff2TableEntry`, `decodeUIntBase128`, `isWoff2`, `parseWoff2Header`, `Woff2TableIter`（W3C WOFF2 字体头与表目录解析） |
 | `lib/gfx/eot.cp` | `lib/eot` | `EotHeader`, `isEot`, `parseEot` 等（Microsoft Embedded OpenType `.eot` 字体解析） |
 | `lib/gfx/bdf.cp` | `lib/bdf` | `BdfHeader`, `BdfGlyph`, `parseBdfHeader`, `BdfGlyphIter` 等（Adobe BDF 2.1/2.2 点阵字体解析） |
