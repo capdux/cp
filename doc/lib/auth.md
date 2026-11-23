@@ -25,7 +25,7 @@
 | `lib/auth/eap.cp` | RFC 3748 EAP 与 IEEE 802.1X EAPOL 帧解析器 |
 | `lib/auth/asn1Der.cp` | ITU-T X.690 ASN.1 DER 严格读写编解码器与 `OidCodec` 注册表（对标 `RustCrypto/formats` MIT/Apache-2.0 加固：最短长度、`BOOLEAN` 0x00/0xFF、`INTEGER` 最小编码、`BIT STRING` 零填充尾位、`OID` 前导 0x80 拦截、`DER_MAX_DEPTH = 32` 与 16-lane SIMD 校验/搬运） |
 | `lib/auth/asn1X509.cp` | Arena 驱动的 X.509 v3 证书元数据与 SHA-256 指纹检查器（`X509Inspector`） |
-| `lib/auth/pem.cp` | RFC 7468 PEM 块与证书链多块解析/编码器 |
+| `lib/auth/pem.cp` | RFC 7468 PEM 块与证书链多块解析/编码器（对标 `RustCrypto/formats` `pem-rfc7468` MIT/Apache-2.0 加固：严格边界、规范 Base64 零填充尾位校验、`PemBundleIter` / `decodePemInto` / `encodePemStrict`、`cap:simd` 与 16-lane SIMD 加速） |
 | `lib/auth/x509.cp` | RFC 5280 X.509 v3 证书解析、RFC 6125 SAN/主机名匹配与有效期校验（对标 `RustCrypto/formats` 加固：`hasValidValidityOrder()`、16-lane SIMD 原始 DN 比对） |
 | `lib/auth/csr.cp` | RFC 2986 PKCS#10 证书签名请求（CSR）DER 解析器 |
 | `lib/auth/crl.cp` | RFC 5280 X.509 证书吊销列表（CRL）DER 解析与统计器 |
@@ -50,7 +50,7 @@
 
 ### 3. PKI 与 X.509 证书体系
 - **ASN.1 DER（`asn1Der.cp`, `asn1X509.cp`）**：`DER_MAX_DEPTH` (`32`), `ASN1_MAX_DEPTH`, `Asn1Error`, `DerElement` (`copyBytesSimd` / `eqlBytesSimd` / `isValidIa5StringSimd` / `isValidPrintableStringSimd`), `DerReader`, `DerWriter`, `OidCodec` (`validate` / `encode` / `decode`), `X509CertInfo`, `X509Inspector`；回归测试：`cap/test/testAuthDerX509RustRefSuite.cp`（含 `RustCrypto/formats` `rsa2048-crt.der`、DER 6 类非规范编码拒绝、SIMD 0 差异对拍与 1,300 组 PRNG Fuzz）
-- **PEM（`pem.cp`）**：`PemError`, `PemHeader`, `PemBlock`, `parse`, `parseWithMaxBlocks`, `parseFirst`, `encode`, `encodeWithHeaders`, `encodeChain`, `freeBlocks`
+- **PEM（`pem.cp`）**：`PemError`, `PemHeader`, `PemBlock`, `PemDecodedSlice`, `PemRawSpan`, `PemBundleIter`, `parse`, `parseWithMaxBlocks`, `parseFirst`, `encode`, `encodePemStrict`, `encodeWithHeaders`, `encodeChain`, `decodePemInto`, `freeBlocks`（测试：`cap/test/testAuthPemRustRefSuite.cp`）
 - **X.509 / CSR / CRL / OCSP**：`X509Certificate` (`hasValidValidityOrder`), `parseAsn1Time`, `parseCsrDer`, `isCsrDer`, `parseCrlDer`, `summarizeCrl`, `parseOcspRequestDer`, `parseOcspResponseDer`
 
 ---

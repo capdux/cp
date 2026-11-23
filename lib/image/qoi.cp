@@ -1,4 +1,21 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc QOI Lossless Image Codec) | Created: 2026-11-22
+// Reference-hardened against aldanor/rapid-qoi (MIT/Apache-2.0)
+// Origin: Pure-CP Stdlib (Zero-Alloc QOI v1.0 Lossless Image Codec) | Created: 2026-11-22
+
+const std = @import("std");
+
+pub const QOI_MAX_PIXELS: u64 = 64000000;
+
+pub error QoiError {
+    InvalidHeader,
+    InvalidChannels,
+    InvalidColorspace,
+    ImageTooLarge,
+    BufferTooSmall,
+    TruncatedData,
+    MissingEndMarker,
+    InvalidChunkStream,
+    OutOfMemory,
+}
 
 /// QOI 14 字节大端文件头（魔数 `"qoif"`）
 pub struct QoiHeader {
@@ -6,6 +23,113 @@ pub struct QoiHeader {
     height: u32,
     channels: u8,
     colorspace: u8,
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` RGBA run fill (4 pixels per vector store).
+pub fn qoiFillRunRgbaSimd(dst: []u8, count_pixels: usize, r: u8, g: u8, b: u8, a: u8) {
+    const px4: @Vector(16, u8) = [ r, g, b, a, r, g, b, a, r, g, b, a, r, g, b, a ];
+    let px_idx: usize = 0;
+    let byte_off: usize = 0;
+    while (px_idx + 4 <= count_pixels && byte_off + 16 <= dst.len) {
+        dst[byte_off..][0..16].* = px4;
+        px_idx += 4;
+        byte_off += 16;
+    }
+    while (px_idx < count_pixels && byte_off + 4 <= dst.len) {
+        dst[byte_off] = r;
+        dst[byte_off + 1] = g;
+        dst[byte_off + 2] = b;
+        dst[byte_off + 3] = a;
+        px_idx += 1;
+        byte_off += 4;
+    }
+}
+
+/// Scalar reference RGBA run fill for 0-diff parity testing against `qoiFillRunRgbaSimd`.
+pub fn qoiFillRunRgbaScalar(dst: []u8, count_pixels: usize, r: u8, g: u8, b: u8, a: u8) {
+    let px_idx: usize = 0;
+    let byte_off: usize = 0;
+    while (px_idx < count_pixels && byte_off + 4 <= dst.len) {
+        dst[byte_off] = r;
+        dst[byte_off + 1] = g;
+        dst[byte_off + 2] = b;
+        dst[byte_off + 3] = a;
+        px_idx += 1;
+        byte_off += 4;
+    }
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` RGB24 -> RGBA32 (`A=255`) conversion (4 pixels per step).
+pub fn qoiRgbToRgbaSimd(dst_rgba: []u8, src_rgb: []const u8) {
+    let si: usize = 0;
+    let di: usize = 0;
+    while (si + 12 <= src_rgb.len && di + 16 <= dst_rgba.len) {
+        const v: @Vector(16, u8) = [
+            src_rgb[si], src_rgb[si + 1], src_rgb[si + 2], 255,
+            src_rgb[si + 3], src_rgb[si + 4], src_rgb[si + 5], 255,
+            src_rgb[si + 6], src_rgb[si + 7], src_rgb[si + 8], 255,
+            src_rgb[si + 9], src_rgb[si + 10], src_rgb[si + 11], 255,
+        ];
+        dst_rgba[di..][0..16].* = v;
+        si += 12;
+        di += 16;
+    }
+    while (si + 3 <= src_rgb.len && di + 4 <= dst_rgba.len) {
+        dst_rgba[di] = src_rgb[si];
+        dst_rgba[di + 1] = src_rgb[si + 1];
+        dst_rgba[di + 2] = src_rgb[si + 2];
+        dst_rgba[di + 3] = 255;
+        si += 3;
+        di += 4;
+    }
+}
+
+/// Scalar reference RGB24 -> RGBA32 conversion for 0-diff parity testing.
+pub fn qoiRgbToRgbaScalar(dst_rgba: []u8, src_rgb: []const u8) {
+    let si: usize = 0;
+    let di: usize = 0;
+    while (si + 3 <= src_rgb.len && di + 4 <= dst_rgba.len) {
+        dst_rgba[di] = src_rgb[si];
+        dst_rgba[di + 1] = src_rgb[si + 1];
+        dst_rgba[di + 2] = src_rgb[si + 2];
+        dst_rgba[di + 3] = 255;
+        si += 3;
+        di += 4;
+    }
+}
+
+/// 16-lane SIMD `@Vector(16, u8)` pixel buffer equality check.
+pub fn qoiPixelsEqualSimd(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: @Vector(16, u8) = a[i..][0..16].*;
+        const vb: @Vector(16, u8) = b[i..][0..16].*;
+        if (!@reduce(.And, va == vb)) return false;
+    }
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Scalar reference pixel buffer equality check for 0-diff parity testing.
+pub fn qoiPixelsEqualScalar(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Computes worst-case encoded QOI buffer size in bytes for `(width, height, channels)`.
+pub fn qoiMaxEncodedSize(width: u32, height: u32, channels: u8): usize? {
+    if (width == 0 || height == 0) return null;
+    if (channels != 3 && channels != 4) return null;
+    const px = (width as u64) * (height as u64);
+    if (px > QOI_MAX_PIXELS) return null;
+    return QOI_HEADER_SIZE + (px as usize) * ((channels as usize) + 1) + QOI_PADDING_SIZE;
 }
 
 struct Rgba {
@@ -327,7 +451,22 @@ pub fn decodeQoi(data: []const u8, out_pixels: []u8): QoiHeader? {
                 run = b1 & 0x3F;
             }
 
-            index[qoiColorHash(px)] = px;
+            if ((b1 & QOI_MASK_2) != QOI_OP_RUN || b1 == QOI_OP_RGB || b1 == QOI_OP_RGBA) {
+                index[qoiColorHash(px)] = px;
+            }
+        }
+
+        if (hdr.channels == 4 && run > 0) {
+            const total_run = (run as usize) + 1;
+            const avail_px = (total_bytes - out_pos) / 4;
+            const fill_px = if (total_run > avail_px) avail_px else total_run;
+            qoiFillRunRgbaSimd(out_pixels[out_pos..total_bytes], fill_px, px.r, px.g, px.b, px.a);
+            out_pos += fill_px * 4;
+            run -= (fill_px - 1) as u8;
+            if (fill_px < total_run) {
+                return null;
+            }
+            continue;
         }
 
         out_pixels[out_pos] = px.r;
@@ -343,4 +482,55 @@ pub fn decodeQoi(data: []const u8, out_pixels: []u8): QoiHeader? {
         return null;
     }
     return hdr;
+}
+
+/// Strict error-returning QOI header parser (`QoiError`).
+pub fn parseQoiHeaderStrict(data: []const u8): QoiHeader!QoiError {
+    if (data.len < QOI_HEADER_SIZE) return QoiError.TruncatedData;
+    if (data[0] != 'q' || data[1] != 'o' || data[2] != 'i' || data[3] != 'f') {
+        return QoiError.InvalidHeader;
+    }
+    const width = readU32Be(data, 4);
+    const height = readU32Be(data, 8);
+    const channels = data[12];
+    const colorspace = data[13];
+    if (width == 0 || height == 0) return QoiError.InvalidHeader;
+    if (channels != 3 && channels != 4) return QoiError.InvalidChannels;
+    if (colorspace > 1) return QoiError.InvalidColorspace;
+    const px = (width as u64) * (height as u64);
+    if (px > QOI_MAX_PIXELS) return QoiError.ImageTooLarge;
+    return QoiHeader {
+        width: width,
+        height: height,
+        channels: channels,
+        colorspace: colorspace,
+    };
+}
+
+/// Strict error-returning QOI encoder (`QoiError`).
+pub fn encodeQoiStrict(
+    pixels: []const u8,
+    width: u32,
+    height: u32,
+    channels: u8,
+    colorspace: u8,
+    out: []u8,
+): ([]const u8)!QoiError {
+    if (width == 0 || height == 0) return QoiError.InvalidHeader;
+    if (channels != 3 && channels != 4) return QoiError.InvalidChannels;
+    if (colorspace > 1) return QoiError.InvalidColorspace;
+    const px = (width as u64) * (height as u64);
+    if (px > QOI_MAX_PIXELS) return QoiError.ImageTooLarge;
+    if (px * (channels as u64) != (pixels.len as u64)) return QoiError.TruncatedData;
+    return encodeQoi(pixels, width, height, channels, colorspace, out) orelse return QoiError.BufferTooSmall;
+}
+
+/// Strict error-returning QOI decoder (`QoiError`), enforcing 8-byte end marker & `QOI_MAX_PIXELS`.
+pub fn decodeQoiStrict(data: []const u8, out_pixels: []u8): QoiHeader!QoiError {
+    if (data.len < QOI_HEADER_SIZE + QOI_PADDING_SIZE) return QoiError.TruncatedData;
+    const hdr = try parseQoiHeaderStrict(data);
+    if (!hasQoiEndMarker(data)) return QoiError.MissingEndMarker;
+    const total_bytes = (hdr.width as u64) * (hdr.height as u64) * (hdr.channels as u64);
+    if (total_bytes > (out_pixels.len as u64)) return QoiError.BufferTooSmall;
+    return decodeQoi(data, out_pixels) orelse return QoiError.InvalidChunkStream;
 }

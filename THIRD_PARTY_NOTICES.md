@@ -57,11 +57,12 @@ The following permissively-licensed Rust reference implementations were audited 
 | **tar-rs** (`alexcrichton`) | <https://github.com/alexcrichton/tar-rs> | MIT OR Apache-2.0 | `lib/pack/tar.cp`, `lib/pack/tarPax.cp` | Copyright (c) 2014 Alex Crichton |
 | **ciborium** (`enarx`) | <https://github.com/enarx/ciborium> | Apache-2.0 | `lib/binfmt/cborDiag.cp` | Copyright (c) 2021 Enarx / Profian Inc. |
 | **ogg** (`RustAudio`) | <https://github.com/RustAudio/ogg> | BSD-3-Clause | `lib/media/ogg.cp` | Copyright (c) 2016 est31 / RustAudio |
-| **RustCrypto/formats** (`der`, `x509-cert`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/asn1Der.cp`, `lib/auth/x509.cp` | Copyright (c) 2020-2024 RustCrypto Developers |
+| **RustCrypto/formats** (`der`, `x509-cert`, `pem-rfc7468`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/asn1Der.cp`, `lib/auth/x509.cp`, `lib/auth/pem.cp` | Copyright (c) 2020-2024 RustCrypto Developers |
 | **ttf-parser** (`RazrFalcon`) | <https://github.com/RazrFalcon/ttf-parser> | MIT OR Apache-2.0 | `lib/gfx/ttf.cp` | Copyright (c) 2020 Yevhenii Reizner |
 | **image-tiff** (`tiff`) | <https://github.com/image-rs/image-tiff> | MIT | `lib/image/tiff.cp` | Copyright (c) 2018-2024 image-rs developers |
 | **bson-rust** (`mongodb`) | <https://github.com/mongodb/bson-rust> | MIT | `lib/binfmt/bson.cp` | Copyright (c) 2015-2024 MongoDB Inc. |
 | **mp4-rust** (`alfg`) | <https://github.com/alfg/mp4-rust> | MIT | `lib/media/mp4.cp` | Copyright (c) 2020 Alfred Gutierrez |
+| **rapid-qoi** (`aldanor`) | <https://github.com/aldanor/rapid-qoi> | MIT OR Apache-2.0 | `lib/image/qoi.cp` | Copyright (c) 2021-2023 aldanor |
 
 ---
 

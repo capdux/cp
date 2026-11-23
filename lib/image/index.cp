@@ -102,11 +102,23 @@ export {
 } from "./psd.cp";
 
 export {
+    QOI_MAX_PIXELS,
+    QoiError,
     QoiHeader,
+    qoiFillRunRgbaSimd,
+    qoiFillRunRgbaScalar,
+    qoiRgbToRgbaSimd,
+    qoiRgbToRgbaScalar,
+    qoiPixelsEqualSimd,
+    qoiPixelsEqualScalar,
+    qoiMaxEncodedSize,
     isQoi,
     parseQoiHeader,
+    parseQoiHeaderStrict,
     encodeQoi,
+    encodeQoiStrict,
     decodeQoi,
+    decodeQoiStrict,
 } from "./qoi.cp";
 
 export {
