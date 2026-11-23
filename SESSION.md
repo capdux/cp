@@ -3018,3 +3018,14 @@
   > - **Lane 2 (`667daf67`, `W29-Sync R3`)**：已无缝派发第 2 批 **12 个文本/格式化/编码域**下划线目录（`byte_size`、`hex_dump`、`human_fmt`、`number_format`、`char_freq`、`charset_label`、`cow_str`、`small_string`、`smol_str`、`grapheme_cluster`、`utf8_dfa`、`glob_escape`）向 `cap:text` 主包收敛。
   >
   > 任一路完工将自动唤醒验收并继续滚动推进。
+
+### 2026-11-23（下游工单全量补录：`task-capsurf-20261123-pack-gzip-u32`）[ticket:task-capsurf-20261123-pack-gzip-u32]
+- **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-23 16:26:57` | 状态：`resolved` | 结单：`2026-11-23T16:28:05`
+- **报错/需求摘要**：cap build 编译 /data/dev/cp/lib/pack/gzip.cp:1269 报错 error[E0207]: type mismatch: expected 'U32', found 'I32' (const fcheck: u32 = if (rem == 0) 0 else (31 - rem);)
+- **结单与处理汇报**：已修复 lib/pack/gzip.cp:1269-1270 处 u32/i32 隐式类型不匹配（显式使用 const thirty_one: u32 = 31; const fcheck: u32 = if (rem == 0) 0 else (thirty_one - rem);），cpc check 与 cpc brief 4 门禁均 100% PASS。下游可直接重新编译。
+
+### 2026-11-23（用户原始指令与完整回复 2026-11-23 16:26:58）[step:20944]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-capsurf-20261123-pack-gzip-u32)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
