@@ -26,7 +26,7 @@
 | :--- | :--- | :--- |
 | `lib/image/index.cp` | `// Source: /data/dev/bun/src/runtime/image/Image.cp` | `cap:image` 统一公开导出入口 |
 | `lib/image/codecs.cp` | `// Source: /data/dev/bun/src/runtime/image/codecs.cp` | `ImageFormat`、`ExifOrientation`、`Codecs`（魔数嗅探、MIME、扩展名与方向矩阵） |
-| `lib/image/png.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_png.cp` | `Png`、`PngImage`、`RgbaColor`（RFC 2083 全滤镜解码与 Zlib+CRC32 编码） |
+| `lib/image/png.cp` | `// Reference-hardened against image-rs/image-png (MIT/Apache-2.0)` | `Png`、`PngImage`、`PngHeader`、`PngError`、`RgbaColor`（全 5 色彩类型 × 1/2/4/8/16-bit、tRNS、Adam7 隔行、5 滤波器 + 16-lane SIMD 加速与严格 CRC32/溢出防护） |
 | `lib/image/bmp.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_bmp.cp` | `Bmp`、`BmpHeader`（Windows DIB 24/32bpp、Top-Down/Bottom-Up 编解码） |
 | `lib/image/gif.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_gif.cp` | `Gif`、`GifHeader`、`GifImage`（GIF87a/89a 探测、4096 节点 LZW 解码与 4-pass 交织） |
 | `lib/image/jpeg.cp` | `// Source: /data/dev/bun/src/runtime/image/codec_jpeg.cp` | `Jpeg`、`JpegImage`、`JpegHeader`、`JpegError`、`jpegEncode`、`jpegEncodeInto`（Baseline DCT JFIF 1.01 编码与 SOF0/SOF2/EXIF 探测） |
@@ -66,8 +66,11 @@
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `Png.encodeRgba(rgba, width, height): []u8` | 将 RGBA8 像素编码为完整 PNG 字节流（IHDR + Zlib IDAT + IEND + CRC32） |
-| `Png.decode(bytes): PngImage?` | 解码 PNG（支持 RGBA/RGB/Grayscale/GrayscaleAlpha 与 5 种 RFC 2083 滤波器） |
+| `Png.probe(bytes): PngHeader?` / `Png.parseHeader(bytes): PngHeader!PngError` | **零像素解压**极速探测 PNG 宽高、位深、色彩类型、Adam7 隔行与 PLTE/tRNS 标志（含全 Chunk CRC32 与 RFC 2083 顺序校验） |
+| `Png.decode(bytes): PngImage?` / `Png.decodeStrict(bytes): PngImage!PngError` | 完整解码 PNG（对标 `image-rs/image-png` 加固：支持 Grayscale/RGB/Indexed+PLTE/GrayscaleAlpha/RGBA、1/2/4/8/16-bit、`tRNS` 透明块、Adam7 7-Pass 隔行扫描、多 IDAT 拼接、5 种滤波器 + 16-lane SIMD `unfilterRow` 加速与防溢出/截断防护） |
+| `Png.encodeRgba(rgba, width, height): []u8` / `Png.encodeRgbaWithFilter(..., filter_type)` | 将 RGBA8 像素编码为标准 PNG（支持 None/Sub/Up/Average/Paeth 5 种滤波器与 16-lane SIMD Up 滤波） |
+| `Png.encodeRgb(...)` / `Png.encodeGray(...)` / `Png.encodeIndexed(indices, w, h, palette, trns)` | 多色彩类型 PNG 编码接口（8-bit RGB、Grayscale、Indexed+PLTE+tRNS） |
+| `Png.unfilterRow(filter_type, bpp, raw_src, prev_recon, curr_recon): bool` | 16-lane SIMD 加速单行逆滤波原语（Up 滤波与 None 行搬运向量化，0 误差） |
 | `Png.save(path, rgba, width, height): bool` / `Png.load(path): PngImage?` | 文件系统直存/直读 PNG |
 | `png_img.getPixel(x, y): RgbaColor` / `setPixel(x, y, r, g, b, a)` | 像素级安全读写 |
 | `Bmp.parseHeader(b)` / `Bmp.decode(bytes)` / `Bmp.encodeRgba(rgba, w, h)` | Windows DIB 24/32bpp BMP 解析、解码与 32bpp 编码 |
