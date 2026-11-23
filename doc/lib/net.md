@@ -1014,10 +1014,10 @@ pub fn demoWebRtcWhepHandshake(offer_sdp: []const u8)! {
 - **ROC 48-bit 包索引与 64-bit 防重放滑窗**：
   - `estimateSrtpPacketIndex(roc, s_l, seq): u64`（RFC 3711 Appendix A 16-bit 序号回绕估算）
   - `SrtpReplayWindow`（`check(index)` / `accept(*_, index)`）
-- **SRTP / SRTCP 状态机 (`SrtpContext`)**：
-  - `init(master, profile)`、`~init()`（析构自动清零全部会话密钥）
-  - `protectRtp(*_, rtp_packet, out_buf)` / `unprotectRtp(*_, srtp_packet, out_buf)`（支持 CSRC 与 RTP 扩展头、恒定时间 HMAC-SHA1 标签校验、自动 ROC 回绕同步）
-  - `protectRtcp(*_, rtcp_packet, out_buf)` / `unprotectRtcp(*_, srtcp_packet, out_buf)`（RFC 3711 §3.4 加密 8B 头之后载荷 + `E|31-bit index` + 10B 标签 + 独立防重放滑窗）
+- **SRTP / SRTCP 状态机 (`SrtpContext`，对标 `str0m` 加固)**：
+  - `init(master, profile)`、`~init()`（析构自动清零全部会话密钥）、只读诊断查询 `txRoc()` / `rxRoc()` / `txSrtcpIndex()` / `rxRtpHighestIndex()` / `rxRtcpHighestIndex()`；
+  - `protectRtp(*_, rtp_packet, out_buf)` / `unprotectRtp(*_, srtp_packet, out_buf)`（RTP `V==2` 与最小包长/扩展越界校验、ROC 跨 65535 回绕与下溢/上溢守卫、恒定时间 HMAC-SHA1 标签校验）；
+  - `protectRtcp(*_, rtcp_packet, out_buf)` / `protectRtcpWithOptions(*_, rtcp_packet, encrypt, out_buf)` / `unprotectRtcp(*_, srtcp_packet, out_buf)`（支持 `E=0` 明文仅认证与 `E=1` 加密认证双路径 + 独立 64-bit SRTCP 防重放滑窗）。
 
 ```cp
 import {

@@ -208,9 +208,14 @@ pub fn demoDspMasteringPipeline(pcm_48k: []const f32) {
 - **RFC 3550 RTP 零拷贝编解码 & 16-bit 序号回绕展开**：
   - `RtpHeader`、`parseRtpPacket(raw)`、`encodeRtpPacket(hdr, payload, *out_buf)`（完整支持 CSRC 列表、RFC 3550 扩展头与 Padding 剥离）
   - `RtpSeqUnwrapper`（16-bit -> 64-bit 安全单调展开，无歧义处理 `65535 -> 0` 回绕与乱序旧包）
-- **RFC 3550 RTCP SR/RR & 实时抖动/丢包统计**：
-  - `RtcpSenderReport`（`encodeRtcpSr` / `parseRtcpSr`）、`RtcpReportBlock`（`encodeRtcpRr` / `parseRtcpRr`）
-  - `RtpRecvStats`（RFC 3550 §A.8 1/16 平滑 `interarrival_jitter`、`jitterMs()`、`buildReportBlock(*_, lsr, dlsr)`）
+- **RFC 8285 RTP Header Extensions（对标 `str0m` 加固）**：
+  - `RTP_EXT_PROFILE_ONE_BYTE (0xBEDE)` / `RTP_EXT_PROFILE_TWO_BYTE (0x1000)`、`RtpExtForm`、`detectRtpExtForm`、`RtpExtEntry`、`RtpExtIter`、`parseRtpHeaderExtensions`、`encodeRtpHeaderExtensions`、`encodeRtpPacketWithExtensions`（自动跳过 `0` 填充字节，One-Byte 遇 ID `15` 立即终止）；
+  - 常用扩展负载编解码：`RtpAudioLevel`（`parseRtpExtAudioLevel` / `encodeRtpExtAudioLevel`）、`parseRtpExtAbsSendTime` / `encodeRtpExtAbsSendTime`、`parseRtpExtTransportCc` / `encodeRtpExtTransportCc`。
+- **RFC 3550 / 4585 / 5104 RTCP SR/RR、Compound RTCP 与视频控制反馈包**：
+  - `RtcpPacketView`、`RtcpCompoundIter`（复合 RTCP 零拷贝迭代，校验 `V==2`、声明长度与 `P=1` 尾部填充）；
+  - `RtcpNackEntry` / `RtcpNackPacket` / `encodeRtcpNack` / `parseRtcpNack` / `expandRtcpNackEntry`（`PT=205 FMT=1` Generic NACK 含 16-bit BLP 掩码展开）；
+  - `RtcpPli` / `encodeRtcpPli` / `parseRtcpPli`（`PT=206 FMT=1`）、`RtcpFirEntry` / `RtcpFirPacket` / `encodeRtcpFir` / `parseRtcpFir`（`PT=206 FMT=4`）；
+  - `RtcpSenderReport`（`encodeRtcpSr` / `parseRtcpSr`）、`RtcpReportBlock`（`encodeRtcpRr` / `parseRtcpRr`）、`RtpRecvStats`（RFC 3550 §A.8 1/16 平滑 `interarrival_jitter`）。
 - **ITU-T G.711 μ-law (PCMU) & A-law (PCMA) 实时语音编解码与转码**：
   - `linear16ToPcmu` / `pcmuToLinear16` / `linear16ToPcma` / `pcmaToLinear16`
   - `encodePcmuSlice` / `decodePcmuSlice` / `encodePcmaSlice` / `decodePcmaSlice` / `transcodePcmuToPcma` / `transcodePcmaToPcmu`

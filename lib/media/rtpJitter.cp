@@ -1,8 +1,10 @@
 // Origin: Pure-CP Stdlib (Unbounded-Slice RFC 3550 RTP/RTCP, ITU-T G.711 PCMU/PCMA & Adaptive Jitter Buffer/PLC) | Created: 2026-11-23
+// Reference-hardened against algesten/str0m (MIT/Apache-2.0)
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice real-time voice & media streaming engine:
 //   - RFC 3550 zero-copy RTP packet parser & serializer (CSRC list, header extensions, padding stripping)
+//   - RFC 8285 One-Byte (0xBEDE) & Two-Byte (0x1000) RTP Header Extensions (MID, AudioLevel, AbsSendTime, TransportCC)
 //   - Ambiguity-free 16-bit -> 64-bit `RtpSeqUnwrapper` handling wrap-around (65535 -> 0) and reordering
-//   - RFC 3550 RTCP Sender Report (SR) / Receiver Report (RR) codec & §A.8 interarrival jitter / loss stats
+//   - RFC 3550 RTCP SR/RR, Compound RTCP iterator, RFC 4585 Generic NACK / PLI & RFC 5104 FIR feedback codecs
 //   - ITU-T G.711 u-law (PCMU) & A-law (PCMA) real-time speech codecs + batch slice encode/decode/transcode
 //   - NetEQ-style `AdaptiveJitterBuffer` backed by caller-owned `[]JitterSlot` and `[]u8` payload pool,
 //     with adaptive target delay scaling, duplicate/late rejection, and smooth fade-out `applyPcm16Plc`
@@ -19,6 +21,12 @@ pub const RTP_VERSION: u8 = 2;
 /// Minimum fixed RTP header length in bytes (`12`).
 pub const RTP_MIN_HEADER_LEN: usize = 12;
 
+/// RFC 8285 §4.2 One-Byte RTP header extension profile (`0xBEDE`).
+pub const RTP_EXT_PROFILE_ONE_BYTE: u16 = 0xBEDE;
+
+/// RFC 8285 §4.3 Two-Byte RTP header extension profile base (`0x1000`, top 12 bits).
+pub const RTP_EXT_PROFILE_TWO_BYTE: u16 = 0x1000;
+
 /// RTCP packet type: Sender Report (`200`).
 pub const RTCP_PT_SR: u8 = 200;
 
@@ -27,6 +35,21 @@ pub const RTCP_PT_RR: u8 = 201;
 
 /// RTCP packet type: Goodbye (`203`).
 pub const RTCP_PT_BYE: u8 = 203;
+
+/// RTCP packet type: Transport-Layer Feedback (`205`, RFC 4585).
+pub const RTCP_PT_RTPFB: u8 = 205;
+
+/// RTCP packet type: Payload-Specific Feedback (`206`, RFC 4585 / RFC 5104).
+pub const RTCP_PT_PSFB: u8 = 206;
+
+/// RFC 4585 Generic NACK FMT (`1`, under `PT = 205`).
+pub const RTCP_FMT_NACK: u8 = 1;
+
+/// RFC 4585 Picture Loss Indication (PLI) FMT (`1`, under `PT = 206`).
+pub const RTCP_FMT_PLI: u8 = 1;
+
+/// RFC 5104 Full Intra Request (FIR) FMT (`4`, under `PT = 206`).
+pub const RTCP_FMT_FIR: u8 = 4;
 
 /// Standard RTP static payload type: ITU-T G.711 u-law 8kHz (`0`).
 pub const RTP_PT_PCMU: u8 = 0;
@@ -1023,4 +1046,593 @@ pub struct AdaptiveJitterBuffer {
             jitter_ms: recv_stats.jitterMs(),
         };
     }
+}
+
+// ============================================================================
+// 7. RFC 8285 RTP Header Extensions (One-Byte 0xBEDE & Two-Byte 0x1000)
+// ============================================================================
+
+/// RFC 8285 RTP header extension wire format.
+pub enum RtpExtForm {
+    one_byte,
+    two_byte,
+    unknown,
+}
+
+/// Detects RFC 8285 extension form from the 16-bit RTP extension profile field.
+/// `0xBEDE` -> `one_byte`; `(profile & 0xFFF0) == 0x1000` -> `two_byte`.
+pub fn detectRtpExtForm(profile: u16): RtpExtForm {
+    if (profile == RTP_EXT_PROFILE_ONE_BYTE) return RtpExtForm.one_byte;
+    if ((profile & 0xFFF0) == RTP_EXT_PROFILE_TWO_BYTE) return RtpExtForm.two_byte;
+    return RtpExtForm.unknown;
+}
+
+/// Zero-copy parsed RFC 8285 RTP header extension entry.
+pub struct RtpExtEntry {
+    id: u8 = 0;
+    data: []const u8 = "";
+}
+
+/// Zero-allocation streaming iterator over RFC 8285 One-Byte / Two-Byte header extension elements.
+/// Automatically skips `0` padding octets and terminates immediately on One-Byte ID `15`.
+pub struct RtpExtIter {
+    form: RtpExtForm = RtpExtForm.unknown;
+    src: []const u8 = "";
+    pos: usize = 0;
+    done: bool = true;
+
+    static fn init(profile: u16, ext_bytes: []const u8): RtpExtIter {
+        const f = detectRtpExtForm(profile);
+        return RtpExtIter{
+            form: f,
+            src: ext_bytes,
+            pos: 0,
+            done: (f == RtpExtForm.unknown) || (ext_bytes.len == 0),
+        };
+    }
+
+    fn next(*_): RtpExtEntry? {
+        if (done) return null;
+        while (pos < src.len) {
+            // Skip zero padding bytes between or after extension elements
+            if (src[pos] == 0) {
+                pos += 1;
+                continue;
+            }
+            if (form == RtpExtForm.one_byte) {
+                const b0: u8 = src[pos];
+                const id: u8 = (b0 >> 4) & 0x0F;
+                if (id == 15) {
+                    // RFC 8285 §4.2: ID 15 terminates extension parsing immediately
+                    done = true;
+                    return null;
+                }
+                const data_len: usize = @as(usize, b0 & 0x0F) + 1;
+                pos += 1;
+                if (pos + data_len > src.len) {
+                    done = true;
+                    return null;
+                }
+                const slice = src[pos .. pos + data_len];
+                pos += data_len;
+                return RtpExtEntry{ id: id, data: slice };
+            } else if (form == RtpExtForm.two_byte) {
+                if (pos + 2 > src.len) {
+                    done = true;
+                    return null;
+                }
+                const id: u8 = src[pos];
+                const data_len: usize = @as(usize, src[pos + 1]);
+                pos += 2;
+                if (pos + data_len > src.len) {
+                    done = true;
+                    return null;
+                }
+                const slice = src[pos .. pos + data_len];
+                pos += data_len;
+                return RtpExtEntry{ id: id, data: slice };
+            } else {
+                done = true;
+                return null;
+            }
+        }
+        done = true;
+        return null;
+    }
+}
+
+/// Parses all RFC 8285 extension entries from `ext_bytes` into `out_entries`.
+pub fn parseRtpHeaderExtensions(
+    profile: u16,
+    ext_bytes: []const u8,
+    out_entries: []RtpExtEntry,
+): usize ! RtpMediaError {
+    if (detectRtpExtForm(profile) == RtpExtForm.unknown) {
+        return RtpMediaError.InvalidExtension;
+    }
+    let it = RtpExtIter.init(profile, ext_bytes);
+    let count: usize = 0;
+    while (entry := it.next()) {
+        if (count >= out_entries.len) {
+            return RtpMediaError.BufferTooSmall;
+        }
+        out_entries[count] = entry;
+        count += 1;
+    }
+    return count;
+}
+
+/// Serializes RFC 8285 One-Byte or Two-Byte header extensions into `out_buf` with 4-byte zero alignment.
+/// Returns total 4-byte-aligned extension payload length (excluding the 4-byte RTP extension header).
+pub fn encodeRtpHeaderExtensions(
+    form: RtpExtForm,
+    entries: []const RtpExtEntry,
+    out_buf: []u8,
+): usize ! RtpMediaError {
+    if (form == RtpExtForm.unknown) {
+        return RtpMediaError.InvalidExtension;
+    }
+    let off: usize = 0;
+    let i: usize = 0;
+    while (i < entries.len) : (i += 1) {
+        const e = entries[i];
+        if (form == RtpExtForm.one_byte) {
+            if (e.id == 0 || e.id > 14 || e.data.len == 0 || e.data.len > 16) {
+                return RtpMediaError.InvalidExtension;
+            }
+            if (off + 1 + e.data.len > out_buf.len) {
+                return RtpMediaError.BufferTooSmall;
+            }
+            out_buf[off] = (e.id << 4) | @as(u8, @intCast(e.data.len - 1));
+            off += 1;
+        } else {
+            if (e.id == 0 || e.data.len > 255) {
+                return RtpMediaError.InvalidExtension;
+            }
+            if (off + 2 + e.data.len > out_buf.len) {
+                return RtpMediaError.BufferTooSmall;
+            }
+            out_buf[off] = e.id;
+            out_buf[off + 1] = @as(u8, @intCast(e.data.len));
+            off += 2;
+        }
+        let j: usize = 0;
+        while (j < e.data.len) : (j += 1) {
+            out_buf[off + j] = e.data[j];
+        }
+        off += e.data.len;
+    }
+
+    // Pad with 0x00 to 32-bit word boundary
+    const rem: usize = off % 4;
+    if (rem != 0) {
+        const pad: usize = @as(usize, 4) - rem;
+        if (off + pad > out_buf.len) {
+            return RtpMediaError.BufferTooSmall;
+        }
+        let p: usize = 0;
+        while (p < pad) : (p += 1) {
+            out_buf[off + p] = 0;
+        }
+        off += pad;
+    }
+    return off;
+}
+
+/// RFC 6464 SSRC-Audio-Level extension payload (`V` voice activity bit + 7-bit `-dBov` level 0..127).
+pub struct RtpAudioLevel {
+    voice_activity: bool = false;
+    level_dbov: u8 = 127;
+}
+
+/// Parses a 1-byte RFC 6464 audio-level header extension payload.
+pub fn parseRtpExtAudioLevel(data: []const u8): RtpAudioLevel? {
+    if (data.len != 1) return null;
+    return RtpAudioLevel{
+        voice_activity: (data[0] & 0x80) != 0,
+        level_dbov: data[0] & 0x7F,
+    };
+}
+
+/// Encodes an RFC 6464 audio-level value into a single octet.
+pub fn encodeRtpExtAudioLevel(v: RtpAudioLevel): u8 {
+    let b: u8 = v.level_dbov & 0x7F;
+    if (v.voice_activity) b |= 0x80;
+    return b;
+}
+
+/// Parses a 3-byte big-endian 24-bit `abs-send-time` extension payload.
+pub fn parseRtpExtAbsSendTime(data: []const u8): u32? {
+    if (data.len != 3) return null;
+    return (@as(u32, data[0]) << 16) | (@as(u32, data[1]) << 8) | @as(u32, data[2]);
+}
+
+/// Encodes a 24-bit `abs-send-time` value into `out[0..3]`.
+pub fn encodeRtpExtAbsSendTime(val24: u32, out: []u8): usize ! RtpMediaError {
+    if (out.len < 3) return RtpMediaError.BufferTooSmall;
+    out[0] = @as(u8, @intCast((val24 >> 16) & 0xFF));
+    out[1] = @as(u8, @intCast((val24 >> 8) & 0xFF));
+    out[2] = @as(u8, @intCast(val24 & 0xFF));
+    return 3;
+}
+
+/// Parses a 2-byte big-endian `transport-wide-cc` sequence number extension payload.
+pub fn parseRtpExtTransportCc(data: []const u8): u16? {
+    if (data.len != 2) return null;
+    return readU16Be(data, 0);
+}
+
+/// Encodes a 16-bit `transport-wide-cc` sequence number into `out[0..2]`.
+pub fn encodeRtpExtTransportCc(seq: u16, out: []u8): usize ! RtpMediaError {
+    if (out.len < 2) return RtpMediaError.BufferTooSmall;
+    out[0] = @as(u8, @intCast((seq >> 8) & 0xFF));
+    out[1] = @as(u8, @intCast(seq & 0xFF));
+    return 2;
+}
+
+/// Serializes an RFC 3550 RTP packet carrying RFC 8285 header extensions in one pass.
+pub fn encodeRtpPacketWithExtensions(
+    hdr: RtpHeader,
+    ext_form: RtpExtForm,
+    ext_entries: []const RtpExtEntry,
+    payload: []const u8,
+    out_buf: *[]u8,
+): usize ! RtpMediaError {
+    if (hdr.version != RTP_VERSION) return RtpMediaError.UnsupportedVersion;
+    if (hdr.csrc_count > 15 || hdr.payload_type > 127) return RtpMediaError.InvalidConfig;
+    if (ext_form == RtpExtForm.unknown) return RtpMediaError.InvalidExtension;
+
+    const csrc_bytes: usize = @as(usize, hdr.csrc_count) * 4;
+    const ext_hdr_off: usize = RTP_MIN_HEADER_LEN + csrc_bytes;
+    if (out_buf.len < ext_hdr_off + 4) return RtpMediaError.BufferTooSmall;
+
+    const ext_data_off: usize = ext_hdr_off + 4;
+    const ext_len: usize = encodeRtpHeaderExtensions(ext_form, ext_entries, out_buf.*[ext_data_off..])?;
+
+    const unpadded_len: usize = ext_data_off + ext_len + payload.len;
+    let pad_len: usize = 0;
+    if (hdr.padding) {
+        const rem: usize = unpadded_len % 4;
+        pad_len = if (rem == 0) @as(usize, 4) else @as(usize, 4) - rem;
+    }
+    const total_len: usize = unpadded_len + pad_len;
+    if (out_buf.len < total_len) return RtpMediaError.BufferTooSmall;
+
+    let b0: u8 = (RTP_VERSION << 6) | 0x10 | (hdr.csrc_count & 0x0F);
+    if (hdr.padding) b0 |= 0x20;
+    let b1: u8 = hdr.payload_type & 0x7F;
+    if (hdr.marker) b1 |= 0x80;
+
+    out_buf[0] = b0;
+    out_buf[1] = b1;
+    writeU16Be(out_buf, 2, hdr.seq);
+    writeU32Be(out_buf, 4, hdr.timestamp);
+    writeU32Be(out_buf, 8, hdr.ssrc);
+
+    let off: usize = RTP_MIN_HEADER_LEN;
+    let ci: usize = 0;
+    while (ci < @as(usize, hdr.csrc_count)) : (ci += 1) {
+        writeU32Be(out_buf, off, hdr.csrc[ci]);
+        off += 4;
+    }
+
+    const profile: u16 = if (ext_form == RtpExtForm.one_byte) RTP_EXT_PROFILE_ONE_BYTE else RTP_EXT_PROFILE_TWO_BYTE;
+    writeU16Be(out_buf, ext_hdr_off, profile);
+    writeU16Be(out_buf, ext_hdr_off + 2, @as(u16, @intCast(ext_len / 4)));
+
+    const payload_off: usize = ext_data_off + ext_len;
+    let pi: usize = 0;
+    while (pi < payload.len) : (pi += 1) {
+        out_buf[payload_off + pi] = payload[pi];
+    }
+
+    let end_off: usize = payload_off + payload.len;
+    if (hdr.padding) {
+        let zi: usize = 0;
+        while (zi + 1 < pad_len) : (zi += 1) {
+            out_buf[end_off + zi] = 0;
+        }
+        out_buf[end_off + pad_len - 1] = @as(u8, @intCast(pad_len));
+        end_off += pad_len;
+    }
+    return end_off;
+}
+
+// ============================================================================
+// 8. Compound RTCP Iterator & WebRTC Feedback Codecs (NACK / PLI / FIR)
+// ============================================================================
+
+/// Zero-copy view of a single RTCP packet inside a compound RTCP datagram.
+pub struct RtcpPacketView {
+    version: u8 = RTP_VERSION;
+    padding: bool = false;
+    count_or_fmt: u8 = 0;
+    packet_type: u8 = 0;
+    raw: []const u8 = "";
+    unpadded: []const u8 = "";
+}
+
+/// Zero-allocation iterator over a compound RTCP packet (RFC 3550 §6.1).
+/// Validates version (`V == 2`), declared 32-bit word length, and `P == 1` padding octets.
+pub struct RtcpCompoundIter {
+    src: []const u8 = "";
+    pos: usize = 0;
+    had_error: bool = false;
+
+    static fn init(buf: []const u8): RtcpCompoundIter {
+        return RtcpCompoundIter{
+            src: buf,
+            pos: 0,
+            had_error: false,
+        };
+    }
+
+    fn next(*_): RtcpPacketView? {
+        if (had_error || pos >= src.len) return null;
+        if (pos + 4 > src.len) {
+            had_error = true;
+            return null;
+        }
+        const b0: u8 = src[pos];
+        const ver: u8 = (b0 >> 6) & 0x03;
+        if (ver != RTP_VERSION) {
+            had_error = true;
+            return null;
+        }
+        const pad: bool = ((b0 >> 5) & 0x01) != 0;
+        const rc: u8 = b0 & 0x1F;
+        const pt: u8 = src[pos + 1];
+        const full_len: usize = (@as(usize, readU16Be(src, pos + 2)) + 1) * 4;
+        if (pos + full_len > src.len) {
+            had_error = true;
+            return null;
+        }
+
+        const pkt_raw = src[pos .. pos + full_len];
+        let unpadded_len: usize = full_len;
+        if (pad) {
+            const pad_len: usize = @as(usize, pkt_raw[full_len - 1]);
+            if (pad_len == 0 || pad_len > full_len - 4) {
+                had_error = true;
+                return null;
+            }
+            unpadded_len = full_len - pad_len;
+        }
+
+        pos += full_len;
+        return RtcpPacketView{
+            version: ver,
+            padding: pad,
+            count_or_fmt: rc,
+            packet_type: pt,
+            raw: pkt_raw,
+            unpadded: pkt_raw[0..unpadded_len],
+        };
+    }
+}
+
+/// RFC 4585 §6.2.1 Generic NACK Feedback Control Information (FCI) entry.
+pub struct RtcpNackEntry {
+    pid: u16 = 0;
+    blp: u16 = 0;
+}
+
+/// Parsed RFC 4585 Generic NACK header (`PT = 205, FMT = 1`).
+pub struct RtcpNackPacket {
+    sender_ssrc: u32 = 0;
+    media_ssrc: u32 = 0;
+    entry_count: usize = 0;
+}
+
+/// Encodes an RFC 4585 Generic NACK (`PT = 205, FMT = 1`) packet into `out_buf`.
+pub fn encodeRtcpNack(
+    sender_ssrc: u32,
+    media_ssrc: u32,
+    entries: []const RtcpNackEntry,
+    out_buf: []u8,
+): usize ! RtpMediaError {
+    if (entries.len == 0) return RtpMediaError.InvalidRtcpLength;
+    const total_len: usize = @as(usize, 12) + entries.len * 4;
+    if (out_buf.len < total_len) return RtpMediaError.BufferTooSmall;
+
+    const words_less_one: u16 = @as(u16, @intCast((total_len / 4) - 1));
+    out_buf[0] = (RTP_VERSION << 6) | RTCP_FMT_NACK;
+    out_buf[1] = RTCP_PT_RTPFB;
+    out_buf[2] = @as(u8, @intCast((words_less_one >> 8) & 0xFF));
+    out_buf[3] = @as(u8, @intCast(words_less_one & 0xFF));
+
+    out_buf[4] = @as(u8, @intCast((sender_ssrc >> 24) & 0xFF));
+    out_buf[5] = @as(u8, @intCast((sender_ssrc >> 16) & 0xFF));
+    out_buf[6] = @as(u8, @intCast((sender_ssrc >> 8) & 0xFF));
+    out_buf[7] = @as(u8, @intCast(sender_ssrc & 0xFF));
+
+    out_buf[8] = @as(u8, @intCast((media_ssrc >> 24) & 0xFF));
+    out_buf[9] = @as(u8, @intCast((media_ssrc >> 16) & 0xFF));
+    out_buf[10] = @as(u8, @intCast((media_ssrc >> 8) & 0xFF));
+    out_buf[11] = @as(u8, @intCast(media_ssrc & 0xFF));
+
+    let i: usize = 0;
+    while (i < entries.len) : (i += 1) {
+        const off: usize = @as(usize, 12) + i * 4;
+        out_buf[off] = @as(u8, @intCast((entries[i].pid >> 8) & 0xFF));
+        out_buf[off + 1] = @as(u8, @intCast(entries[i].pid & 0xFF));
+        out_buf[off + 2] = @as(u8, @intCast((entries[i].blp >> 8) & 0xFF));
+        out_buf[off + 3] = @as(u8, @intCast(entries[i].blp & 0xFF));
+    }
+    return total_len;
+}
+
+/// Parses an RFC 4585 Generic NACK (`PT = 205, FMT = 1`) packet into `out_entries`.
+pub fn parseRtcpNack(raw: []const u8, out_entries: []RtcpNackEntry): RtcpNackPacket ! RtpMediaError {
+    if (raw.len < 16) return RtpMediaError.PacketTooShort;
+    if (((raw[0] >> 6) & 0x03) != RTP_VERSION) return RtpMediaError.UnsupportedVersion;
+    const fmt: u8 = raw[0] & 0x1F;
+    if (raw[1] != RTCP_PT_RTPFB || fmt != RTCP_FMT_NACK) return RtpMediaError.InvalidRtcpLength;
+
+    const declared_bytes: usize = (@as(usize, readU16Be(raw, 2)) + 1) * 4;
+    if (declared_bytes < 16 || declared_bytes > raw.len) return RtpMediaError.InvalidRtcpLength;
+
+    const fci_bytes: usize = declared_bytes - 12;
+    const count: usize = fci_bytes / 4;
+    if (count > out_entries.len) return RtpMediaError.BufferTooSmall;
+
+    let i: usize = 0;
+    while (i < count) : (i += 1) {
+        const off: usize = @as(usize, 12) + i * 4;
+        out_entries[i] = RtcpNackEntry{
+            pid: readU16Be(raw, off),
+            blp: readU16Be(raw, off + 2),
+        };
+    }
+
+    return RtcpNackPacket{
+        sender_ssrc: readU32Be(raw, 4),
+        media_ssrc: readU32Be(raw, 8),
+        entry_count: count,
+    };
+}
+
+/// Expands a single `RtcpNackEntry` (`pid` + 16-bit `blp` bitmask) into all lost 16-bit RTP sequence numbers
+/// (up to 17 entries, wrapping modulo 65536). Returns number of sequence numbers written into `out_seqs`.
+pub fn expandRtcpNackEntry(entry: RtcpNackEntry, out_seqs: []u16): usize {
+    if (out_seqs.len == 0) return 0;
+    let count: usize = 0;
+    out_seqs[count] = entry.pid;
+    count += 1;
+
+    let bit: u4 = 0;
+    let idx: usize = 0;
+    while (idx < 16) : (idx += 1) {
+        bit = @as(u4, @intCast(idx));
+        if (((entry.blp >> bit) & 1) != 0) {
+            if (count >= out_seqs.len) break;
+            out_seqs[count] = entry.pid +% @as(u16, @intCast(idx + 1));
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/// RFC 4585 §6.3.1 Picture Loss Indication (PLI, `PT = 206, FMT = 1`).
+pub struct RtcpPli {
+    sender_ssrc: u32 = 0;
+    media_ssrc: u32 = 0;
+}
+
+/// Encodes a 12-byte RFC 4585 PLI (`PT = 206, FMT = 1`) packet into `out_buf`.
+pub fn encodeRtcpPli(pli: RtcpPli, out_buf: []u8): usize ! RtpMediaError {
+    if (out_buf.len < 12) return RtpMediaError.BufferTooSmall;
+    out_buf[0] = (RTP_VERSION << 6) | RTCP_FMT_PLI;
+    out_buf[1] = RTCP_PT_PSFB;
+    out_buf[2] = 0;
+    out_buf[3] = 2; // 3 32-bit words - 1 = 2
+    out_buf[4] = @as(u8, @intCast((pli.sender_ssrc >> 24) & 0xFF));
+    out_buf[5] = @as(u8, @intCast((pli.sender_ssrc >> 16) & 0xFF));
+    out_buf[6] = @as(u8, @intCast((pli.sender_ssrc >> 8) & 0xFF));
+    out_buf[7] = @as(u8, @intCast(pli.sender_ssrc & 0xFF));
+    out_buf[8] = @as(u8, @intCast((pli.media_ssrc >> 24) & 0xFF));
+    out_buf[9] = @as(u8, @intCast((pli.media_ssrc >> 16) & 0xFF));
+    out_buf[10] = @as(u8, @intCast((pli.media_ssrc >> 8) & 0xFF));
+    out_buf[11] = @as(u8, @intCast(pli.media_ssrc & 0xFF));
+    return 12;
+}
+
+/// Parses an RFC 4585 PLI (`PT = 206, FMT = 1`) packet from `raw`.
+pub fn parseRtcpPli(raw: []const u8): RtcpPli ! RtpMediaError {
+    if (raw.len < 12) return RtpMediaError.PacketTooShort;
+    if (((raw[0] >> 6) & 0x03) != RTP_VERSION) return RtpMediaError.UnsupportedVersion;
+    const fmt: u8 = raw[0] & 0x1F;
+    if (raw[1] != RTCP_PT_PSFB || fmt != RTCP_FMT_PLI) return RtpMediaError.InvalidRtcpLength;
+    const declared_bytes: usize = (@as(usize, readU16Be(raw, 2)) + 1) * 4;
+    if (declared_bytes < 12 || declared_bytes > raw.len) return RtpMediaError.InvalidRtcpLength;
+    return RtcpPli{
+        sender_ssrc: readU32Be(raw, 4),
+        media_ssrc: readU32Be(raw, 8),
+    };
+}
+
+/// RFC 5104 §4.3.1 Full Intra Request (FIR) FCI entry (8 bytes: SSRC + seq_nr + 3 reserved zero bytes).
+pub struct RtcpFirEntry {
+    ssrc: u32 = 0;
+    seq_nr: u8 = 0;
+}
+
+/// Parsed RFC 5104 FIR packet header (`PT = 206, FMT = 4`).
+pub struct RtcpFirPacket {
+    sender_ssrc: u32 = 0;
+    media_ssrc: u32 = 0;
+    entry_count: usize = 0;
+}
+
+/// Encodes an RFC 5104 FIR (`PT = 206, FMT = 4`) packet into `out_buf`.
+pub fn encodeRtcpFir(
+    sender_ssrc: u32,
+    entries: []const RtcpFirEntry,
+    out_buf: []u8,
+): usize ! RtpMediaError {
+    if (entries.len == 0) return RtpMediaError.InvalidRtcpLength;
+    const total_len: usize = @as(usize, 12) + entries.len * 8;
+    if (out_buf.len < total_len) return RtpMediaError.BufferTooSmall;
+
+    const words_less_one: u16 = @as(u16, @intCast((total_len / 4) - 1));
+    out_buf[0] = (RTP_VERSION << 6) | RTCP_FMT_FIR;
+    out_buf[1] = RTCP_PT_PSFB;
+    out_buf[2] = @as(u8, @intCast((words_less_one >> 8) & 0xFF));
+    out_buf[3] = @as(u8, @intCast(words_less_one & 0xFF));
+
+    out_buf[4] = @as(u8, @intCast((sender_ssrc >> 24) & 0xFF));
+    out_buf[5] = @as(u8, @intCast((sender_ssrc >> 16) & 0xFF));
+    out_buf[6] = @as(u8, @intCast((sender_ssrc >> 8) & 0xFF));
+    out_buf[7] = @as(u8, @intCast(sender_ssrc & 0xFF));
+
+    // RFC 5104 §4.3.1.1: media SSRC is unused (0) or matches first target SSRC
+    out_buf[8] = 0;
+    out_buf[9] = 0;
+    out_buf[10] = 0;
+    out_buf[11] = 0;
+
+    let i: usize = 0;
+    while (i < entries.len) : (i += 1) {
+        const off: usize = @as(usize, 12) + i * 8;
+        const s = entries[i].ssrc;
+        out_buf[off] = @as(u8, @intCast((s >> 24) & 0xFF));
+        out_buf[off + 1] = @as(u8, @intCast((s >> 16) & 0xFF));
+        out_buf[off + 2] = @as(u8, @intCast((s >> 8) & 0xFF));
+        out_buf[off + 3] = @as(u8, @intCast(s & 0xFF));
+        out_buf[off + 4] = entries[i].seq_nr;
+        out_buf[off + 5] = 0;
+        out_buf[off + 6] = 0;
+        out_buf[off + 7] = 0;
+    }
+    return total_len;
+}
+
+/// Parses an RFC 5104 FIR (`PT = 206, FMT = 4`) packet into `out_entries`.
+pub fn parseRtcpFir(raw: []const u8, out_entries: []RtcpFirEntry): RtcpFirPacket ! RtpMediaError {
+    if (raw.len < 20) return RtpMediaError.PacketTooShort;
+    if (((raw[0] >> 6) & 0x03) != RTP_VERSION) return RtpMediaError.UnsupportedVersion;
+    const fmt: u8 = raw[0] & 0x1F;
+    if (raw[1] != RTCP_PT_PSFB || fmt != RTCP_FMT_FIR) return RtpMediaError.InvalidRtcpLength;
+
+    const declared_bytes: usize = (@as(usize, readU16Be(raw, 2)) + 1) * 4;
+    if (declared_bytes < 20 || declared_bytes > raw.len) return RtpMediaError.InvalidRtcpLength;
+
+    const fci_bytes: usize = declared_bytes - 12;
+    const count: usize = fci_bytes / 8;
+    if (count > out_entries.len) return RtpMediaError.BufferTooSmall;
+
+    let i: usize = 0;
+    while (i < count) : (i += 1) {
+        const off: usize = @as(usize, 12) + i * 8;
+        out_entries[i] = RtcpFirEntry{
+            ssrc: readU32Be(raw, off),
+            seq_nr: raw[off + 4],
+        };
+    }
+
+    return RtcpFirPacket{
+        sender_ssrc: readU32Be(raw, 4),
+        media_ssrc: readU32Be(raw, 8),
+        entry_count: count,
+    };
 }

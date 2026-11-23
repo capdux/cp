@@ -1,4 +1,5 @@
 // Origin: Pure-CP Stdlib (RFC 3711 SRTP/SRTCP Codec, AES-128-CM KDF, ROC 48-Bit Index, 64-Bit Replay Window & RFC 5764 DTLS-SRTP) | Created: 2026-11-23
+// Reference-hardened against algesten/str0m (MIT/Apache-2.0)
 // 100% pure CP, zero dynamic heap allocation, zero external FFI dependencies, caller-slice WebRTC secure media engine:
 //   - Self-contained FIPS 197 AES-128-ECB/CM & FIPS 180-4 SHA-1 / RFC 2104 HMAC-SHA1 primitives
 //   - RFC 5764 §4.2 DTLS-SRTP Exported Keying Material (EKM) 60-byte split (`client`/`server` master key & salt)
@@ -571,6 +572,10 @@ fn parseRtpHeaderLen(pkt: []const u8): usize ! SrtpError {
     if (pkt.len < SRTP_MIN_RTP_HEADER_LEN) {
         return SrtpError.PacketTooShort;
     }
+    // RFC 3550 / str0m guard: RTP version must be 2
+    if (((pkt[0] >> 6) & 0x03) != 2) {
+        return SrtpError.PacketTooShort;
+    }
     const cc: usize = @as(usize, pkt[0] & 0x0F);
     let hdr_len: usize = SRTP_MIN_RTP_HEADER_LEN + cc * 4;
     if (hdr_len > pkt.len) {
@@ -582,10 +587,11 @@ fn parseRtpHeaderLen(pkt: []const u8): usize ! SrtpError {
             return SrtpError.PacketTooShort;
         }
         const ext_words: usize = @as(usize, readBeU16(pkt, hdr_len + 2));
-        hdr_len += 4 + ext_words * 4;
-        if (hdr_len > pkt.len) {
+        const ext_bytes: usize = ext_words * 4;
+        if (hdr_len + 4 + ext_bytes > pkt.len) {
             return SrtpError.PacketTooShort;
         }
+        hdr_len += 4 + ext_bytes;
     }
     return hdr_len;
 }
@@ -665,6 +671,10 @@ pub struct SrtpContext {
             pkt_index = seq as u64;
             used_roc = 0;
         } else {
+            // Guard 48-bit ROC overflow on forward wrap at roc == 0xFFFFFFFF
+            if (tx_roc == 0xFFFFFFFF && tx_s_l >= 32768 && seq < tx_s_l && (tx_s_l - seq) > 32768) {
+                return SrtpError.IndexOverflow;
+            }
             pkt_index = estimateSrtpPacketIndex(tx_roc, tx_s_l, seq);
             used_roc = ((pkt_index >> 16) & 0xFFFFFFFF) as u32;
             const cur_highest: u64 = ((tx_roc as u64) << 16) | (tx_s_l as u64);
@@ -715,7 +725,16 @@ pub struct SrtpContext {
         const seq: u16 = readBeU16(srtp_packet, 2);
         const ssrc: u32 = readBeU32(srtp_packet, 8);
 
-        // Estimate 48-bit index & pre-check anti-replay window BEFORE crypto work
+        // Estimate 48-bit index & guard ROC underflow/overflow BEFORE crypto work
+        if (rx_initialized) {
+            if (rx_roc == 0 && rx_s_l < 32768 && seq > rx_s_l && (seq - rx_s_l) > 32768) {
+                // Backward wrap below ROC 0 (would require ROC = -1)
+                return SrtpError.PacketTooOld;
+            }
+            if (rx_roc == 0xFFFFFFFF && rx_s_l >= 32768 && seq < rx_s_l && (rx_s_l - seq) > 32768) {
+                return SrtpError.IndexOverflow;
+            }
+        }
         const pkt_index: u64 = if (!rx_initialized)
             (seq as u64)
         else
@@ -761,9 +780,28 @@ pub struct SrtpContext {
         return rtp_len;
     }
 
-    /// Encrypts and authenticates an outbound RTCP packet into `out_buf` per RFC 3711 §3.4.
-    fn protectRtcp(*_, rtcp_packet: []const u8, out_buf: []u8): usize ! SrtpError {
+    /// Returns current outbound RTP rollover counter (ROC).
+    fn txRoc(): u32 { return tx_roc; }
+
+    /// Returns current inbound RTP rollover counter (ROC).
+    fn rxRoc(): u32 { return rx_roc; }
+
+    /// Returns next outbound 31-bit SRTCP index.
+    fn txSrtcpIndex(): u32 { return tx_srtcp_index; }
+
+    /// Returns highest authenticated inbound 48-bit SRTP packet index.
+    fn rxRtpHighestIndex(): u64 { return rx_rtp_window.highest_index; }
+
+    /// Returns highest authenticated inbound 31-bit SRTCP packet index.
+    fn rxRtcpHighestIndex(): u64 { return rx_rtcp_window.highest_index; }
+
+    /// Protects an outbound RTCP packet with explicit `encrypt` control (`E=1` encrypted vs `E=0` plaintext-authenticated)
+    /// per RFC 3711 §3.4.
+    fn protectRtcpWithOptions(*_, rtcp_packet: []const u8, encrypt: bool, out_buf: []u8): usize ! SrtpError {
         if (rtcp_packet.len < SRTP_MIN_RTCP_HEADER_LEN) {
+            return SrtpError.PacketTooShort;
+        }
+        if (((rtcp_packet[0] >> 6) & 0x03) != 2) {
             return SrtpError.PacketTooShort;
         }
         if (tx_srtcp_index > SRTCP_INDEX_MASK) {
@@ -785,9 +823,9 @@ pub struct SrtpContext {
             out_buf[i] = rtcp_packet[i];
         }
 
-        // Encrypt payload beyond byte 8 if cipher enabled
+        // Encrypt payload beyond byte 8 when `encrypt && profile.usesEncryption()`
         let trailer: u32 = idx & SRTCP_INDEX_MASK;
-        if (profile.usesEncryption()) {
+        if (encrypt && profile.usesEncryption()) {
             trailer |= SRTCP_E_FLAG_MASK;
             const iv: [16]u8 = buildSrtpIv(keys.srtcp_salt_key, ssrc, idx as u64);
             aes128CmXor(keys.srtcp_enc_key, iv, rtcp_packet[SRTP_MIN_RTCP_HEADER_LEN..], out_buf[SRTP_MIN_RTCP_HEADER_LEN .. rtcp_packet.len]);
@@ -811,10 +849,18 @@ pub struct SrtpContext {
         return total_len;
     }
 
+    /// Encrypts and authenticates an outbound RTCP packet into `out_buf` per RFC 3711 §3.4.
+    fn protectRtcp(*_, rtcp_packet: []const u8, out_buf: []u8): usize ! SrtpError {
+        return protectRtcpWithOptions(rtcp_packet, profile.usesEncryption(), out_buf);
+    }
+
     /// Authenticates, checks SRTCP anti-replay, and decrypts an inbound SRTCP packet into `out_buf`.
     fn unprotectRtcp(*_, srtcp_packet: []const u8, out_buf: []u8): usize ! SrtpError {
         const tag_len: usize = profile.rtcpTagLen();
         if (srtcp_packet.len < SRTP_MIN_RTCP_HEADER_LEN + SRTCP_INDEX_TRAILER_LEN + tag_len) {
+            return SrtpError.PacketTooShort;
+        }
+        if (((srtcp_packet[0] >> 6) & 0x03) != 2) {
             return SrtpError.PacketTooShort;
         }
         const auth_end: usize = srtcp_packet.len - tag_len;
