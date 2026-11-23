@@ -6,7 +6,7 @@ import {
     normalizePercentEncoding,
     removeDotSegments,
     normalizeOrigin,
-} from "cap:uri_normalize";
+} from "cap:url";
 
 test("1. isUnreserved and defaultPortForScheme cover RFC 3986 and standard schemes", () => {
     expect_eq(isUnreserved('A'), true);

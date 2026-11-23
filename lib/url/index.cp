@@ -7,3 +7,21 @@ export * from "./percent";
 export * from "./searchParams";
 export * from "./url";
 export * from "./url_";
+
+export {
+    isUnreserved,
+    defaultPortForScheme,
+    normalizePercentEncoding,
+    removeDotSegments,
+    normalizeOrigin,
+} from "./normalize.cp";
+
+export {
+    DataUrl,
+    percentDecode,
+    encodeBase64DataUrl,
+    encodePercentDataUrl,
+    encodeShortestDataUrl,
+    base64Encode,
+    base64Decode,
+} from "./dataUrl.cp";

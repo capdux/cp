@@ -4,7 +4,7 @@ import {
     encodeShortestDataUrl,
     encodeBase64DataUrl,
     encodePercentDataUrl,
-} from "cap:data_url";
+} from "cap:url";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
