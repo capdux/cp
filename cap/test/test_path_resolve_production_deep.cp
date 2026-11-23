@@ -4,10 +4,10 @@ import {
     isParentOrEqual,
     isPathInside,
     longestCommonPath,
-    normalizePosix,
+    normalizePosixBuf as normalizePosix,
     joinNormalized,
-    relativePosix,
-} from "cap:path_resolve";
+    relativePosixBuf as relativePosix,
+} from "cap:path";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

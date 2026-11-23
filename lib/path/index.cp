@@ -31,3 +31,19 @@ export {
     longestCommonPathPosix,
     longestCommonPathWindows,
 } from "./resolve";
+
+export {
+    ParentRelation,
+    isParentOrEqual,
+    isPathInside,
+    longestCommonPath,
+    joinNormalized,
+    normalizePosix as normalizePosixBuf,
+    relativePosix as relativePosixBuf,
+} from "./posixResolve.cp";
+
+export {
+    DEFAULT_DELIMITER as ENV_PATH_DELIMITER,
+    EnvPath as EnvPathList,
+    EnvPathIterator as EnvPathListIter,
+} from "./envPathList.cp";

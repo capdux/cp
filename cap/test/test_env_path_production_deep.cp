@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect } from "cap:test";
-import { EnvPath, EnvPathIterator } from "cap:env_path";
+import { EnvPathList as EnvPath, EnvPathListIter as EnvPathIterator } from "cap:path";
 
 test("env_path: append, trailing-slash normalization, prepend, and zero-leak ~init()", () => {
     let ep = EnvPath.initWithDelimiter(std.testing.allocator, ':');

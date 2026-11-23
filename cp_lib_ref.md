@@ -195,7 +195,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:autolink` | AutolinkKind, AutolinkSpan, ScanUrlResult, isListBullet, isListItemMark, isInSet, checkLeftBoundary, checkRightBoundary, scanUrlComponent, postProcessAutolinkEnd, findPermissiveAutolink, findNextAutolink | 纯 CP 零依赖 GFM 宽松 URL/WWW/Email 自动链接检测与尾部不配对括号/HTML 实体裁剪（源自 Bun md/autolinks.cp） |
 | `cap:route_params` | Param, ParamMap, URLPath, parseURLPath | 带 ~init() RAII 释放的动态路由参数表 ParamMap 与零堆分配 URLPath 解析器（源自 Bun router/ParamMap.cp + http_types/URLPath.cp） |
 | `cap:sri` | MAX_DIGEST_LEN, SriError, IntegrityTag, Integrity, IntegrityVerifier | 零堆分配 W3C SRI (sha1/sha256/sha384/sha512) 解析、最强算法选择、格式化与恒定时间流式校验（源自 Bun install/integrity.cp） |
-| `cap:env_path` | DEFAULT_DELIMITER, EnvPathIterator, EnvPath | 带 ~init() RAII 释放的 PATH 环境变量构建器（去重/规范化/prepend/append）与零分配迭代器（源自 Bun paths/EnvPath.cp） |
 | `cap:builtin_modules` | RuntimeTarget, BuiltinKind, ResolveConfig, ResolvedBuiltin, resolveBuiltin, isBuiltin, isNodeBuiltin, hasNodePrefix, hasBunPrefix, stripNodePrefix, ensureNodePrefix | 纯 CP 零依赖 66 项 Node.js 核心内置模块与 22 项 Bun 扩展模块注册表、前缀规范化与目标运行时解析器（源自 Bun resolve_builtins/HardcodedModule.cp） |
 | `cap:image_probe` | Error, ImageFormat, WebpKind, ImageInfo, detectFormat, probe, probePng, probeJpeg, probeWebp, probeBmp, probeGif | 纯 CP 零堆分配 PNG/JPEG/WebP/BMP/GIF 魔数识别与宽高/色深/Alpha/动画头信息探测器（源自 Bun runtime/image/codec_*.cp） |
 | `cap:thumbhash` | MAX_LEN, ThumbhashError, DecodedImage, encode, decode, approxAspectRatio, averageRGBA | Evan Wallace ThumbHash 21–25 字节低频 DCT 占位符编解码、宽高比/主色提取与 ~init() RAII（源自 Bun runtime/image/thumbhash.cp） |
@@ -209,7 +208,6 @@ const h = cap.hash.wyhash("hello");
 | `cap:html_asset_scanner` | AssetKind, AssetRef, SrcsetCandidate, parseSrcset, HtmlAssetScanner | 零堆分配 HTML 资源引用扫描器（支持 script/link/img/video/audio/source、精确字节偏移原位重写与 srcset 解析，吸收自 bun/src/bundler/HTMLScanner.cp） |
 | `cap:tsconfig_paths` | PathMapping, ResolvedCandidate, expandConfigDir, TsConfigPaths | TSConfig compilerOptions.paths 最长前缀通配符路径映射解析器与 ${configDir} 模板展开器（吸收自 bun/src/resolver/tsconfig_json.cp） |
 | `cap:etag` | ParsedETag, ifNoneMatch, ifMatch, generateStrong, generateWeak | RFC 9110 / RFC 7232 HTTP ETag 解析、强/弱比较、If-None-Match/If-Match 求值与 FNV-1a 内容 ETag 生成库（吸收自 bun/src/http_types/ETag.cp） |
-| `cap:path_resolve` | ParentRelation, isParentOrEqual, isPathInside, longestCommonPath, normalizePosix, joinNormalized, relativePosix | POSIX 路径零堆分配规范化、拼接、相对路径、最长公共目录前缀与防目录穿越校验库（吸收自 bun/src/paths/resolve_path.cp） |
 | `cap:compile_target` | TargetOs, TargetArch, TargetLibc, CompileTarget | 跨平台二进制分发与交叉编译目标三元组解析、支持矩阵校验与 Zig 三元组映射库（吸收自 bun/src/options_types/CompileTarget.cp） |
 | `cap:fs_router` | RouteKind, SegmentKind, RouteParam, RouteMatch, RoutePattern, FsRouter | Next.js / Bun FileSystemRouter 风格文件路由解析、静态>动态>捕获优先级排序与零拷贝参数匹配引擎（吸收自 bun/src/router/{Route,route_types}.cp） |
 | `cap:sourcemap_index` | MappingEntry, SourceMapIndex | SourceMap v3 Base64-VLQ mappings 零堆分配解码器与 O(log N) 二分查找原始源码定位器（吸收自 bun/src/sourcemap/Mapping.cp） |
