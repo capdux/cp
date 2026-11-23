@@ -1124,3 +1124,28 @@ let path_buf: [128]u8 = [0; 128];
 const plen = formatCrossArtifactPath("bin", "hello", spec, false, true, path_buf[0..])?; // "bin/cap-windows-x86_64/hello.exe"
 * = val; * = plen;
 ```
+
+- **端到端打包协调器、SourceMap V3 VLQ 编解码与虚拟模块/插件管线（`bundleCoordinator.cp`，吸收自 `/data/dev/bun/src/bundler/bundle_v2.cp`）**：
+    - 导出：`BUNDLE_COORD_MAX_RESOLVE_DEPTH`、`BUNDLE_COORD_SOURCEMAP_VERSION`、`BUNDLE_COORD_NO_NAME`、`BundleCoordinatorError`、`VlqDecodeResult`、`encodeVlqI32`、`decodeVlqI32`、`SourceMapSegment`、`SourceMapV3Input`、`encodeSourceMapV3Json`（零堆输出标准 RFC 8259 SourceMap V3 JSON）、`PluginFilterKind`（`Prefix`/`Suffix`/`Exact`/`Wildcard`）、`PluginResolveHook`、`PluginLoadHook`、`PluginResolveOutcome`、`PluginLoadOutcome`、`BundlePluginRegistry`（优先级排序 `onResolve`/`onLoad` 钩子 + 防循环解析深度限制）、`BundleCoordStage`（`ResolveEntries -> ScanGraph -> RunPlugins -> GenerateChunks -> EmitSourceMaps -> WriteManifest` 六阶段状态机）、`BundleDiagSeverity`、`BundleDiagnostic`、`BundleEmittedChunk`、`BundleCoordOptions`（支持 `max_chunk_bytes` 体积预算告警与 `fail_on_budget_exceeded`）、`BundleCoordSummary`、`BundleCoordinator`（含 `formatMetafileJson` 确定性 Metafile 摘要）。
+
+```cp
+import {
+    encodeVlqI32,
+    decodeVlqI32,
+    BundleCoordOptions,
+    BundleDiagnostic,
+    BundleEmittedChunk,
+    BundleCoordStage,
+    BundleCoordinator,
+} from "cap:bundler";
+
+let vbuf: [16]u8 = [0; 16];
+let vpos: usize = 0;
+encodeVlqI32(-16, vbuf[0..], &vpos)?; // "hB"
+const decoded = decodeVlqI32(vbuf[0..vpos])?; // -16
+let diags: [8]BundleDiagnostic = [BundleDiagnostic.empty(); 8];
+let chunks: [8]BundleEmittedChunk = [BundleEmittedChunk.empty(); 8];
+let coord = BundleCoordinator.init(BundleCoordOptions{ max_chunk_bytes: 500000 }, diags[0..], chunks[0..]);
+coord.advanceStage(BundleCoordStage.ResolveEntries, 0)?;
+* = decoded;
+```
