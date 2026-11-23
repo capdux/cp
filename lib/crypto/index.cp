@@ -43,6 +43,10 @@ export {
 } from "./pbkdf2.cp";
 
 export {
+    AeadError,
+    aeadSecureZero,
+    aeadTagEqlSimd,
+    aeadXorSimd,
     Aes256Gcm,
     ChaCha20Poly1305,
 } from "./cipher.cp";

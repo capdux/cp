@@ -66,14 +66,15 @@ The following permissively-licensed Rust reference implementations were audited 
 | **hickory-dns** | <https://github.com/hickory-dns/hickory-dns> | MIT OR Apache-2.0 | `lib/dns/wire.cp` | Copyright (c) 2015 Benjamin Fry / Hickory DNS Contributors |
 | **RustCrypto/hashes** (`sha2`, `hmac`, `hkdf`) | <https://github.com/RustCrypto/hashes> | MIT OR Apache-2.0 | `lib/crypto/shaHash.cp`, `lib/crypto/shaHmac.cp`, `lib/crypto/shaKdf.cp` | Copyright (c) 2016-2024 RustCrypto Developers |
 | **ammonia** (`rust-ammonia`) | <https://github.com/rust-ammonia/ammonia> | MIT OR Apache-2.0 | `lib/html/sanitizer.cp`, `lib/html/entities.cp` | Copyright (c) 2015-2024 Michael Howell / Ammonia Contributors |
-| **jsonwebtoken** (`Keats`) | <https://github.com/Keats/jsonwebtoken> | MIT | `lib/jwt/claims.cp` | Copyright (c) 2015 Vincent Prouillet |
+| **jsonwebtoken** (`Keats`) | <https://github.com/Keats/jsonwebtoken> | MIT | `lib/jwt/claims.cp`, `lib/jwt/index.cp` | Copyright (c) 2015 Vincent Prouillet |
 | **rust-url** (`servo`) | <https://github.com/servo/rust-url> | MIT OR Apache-2.0 | `lib/url/url.cp`, `lib/url/percent.cp` | Copyright (c) 2013-2024 The rust-url developers |
-| **uuid** (`uuid-rs`) | <https://github.com/uuid-rs/uuid> | MIT OR Apache-2.0 | `lib/uuid/uuid.cp` | Copyright (c) 2014-2024 The Rust Project Developers / uuid-rs |
+| **uuid** (`uuid-rs`) | <https://github.com/uuid-rs/uuid> | MIT OR Apache-2.0 | `lib/uuid/uuid.cp`, `lib/uuid/index.cp` | Copyright (c) 2014-2024 The Rust Project Developers / uuid-rs |
 | **semver** (`dtolnay`) | <https://github.com/dtolnay/semver> | MIT OR Apache-2.0 | `lib/semver/version.cp`, `lib/semver/query.cp`, `lib/semver/range.cp` | Copyright (c) 2016 David Tolnay / Steve Klabnik |
 | **chrono** (`chronotope`) | <https://github.com/chronotope/chrono> | MIT OR Apache-2.0 | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | Copyright (c) 2014-2024 Kang Seonghoon / Chrono Contributors |
 | **serde_json** (`serde-rs`) | <https://github.com/serde-rs/json> | MIT OR Apache-2.0 | `lib/json/parser.cp`, `lib/json/escape.cp`, `lib/json/serializer.cp` | Copyright (c) 2014-2024 Erick Tryzelaar / David Tolnay |
-| **pulldown-cmark** | <https://github.com/pulldown-cmark/pulldown-cmark> | MIT | `lib/markdown/line.cp`, `lib/markdown/links.cp`, `lib/markdown/renderer.cp` | Copyright (c) 2015 Google Inc. / pulldown-cmark Contributors |
+| **pulldown-cmark** | <https://github.com/pulldown-cmark/pulldown-cmark> | MIT | `lib/markdown/line.cp`, `lib/markdown/links.cp`, `lib/markdown/renderer.cp`, `lib/markdown/index.cp` | Copyright (c) 2015 Google Inc. / pulldown-cmark Contributors |
 | **rust-base64** (`base64`) | <https://github.com/marshallpierce/rust-base64> | MIT OR Apache-2.0 | `lib/base64/codec.cp`, `lib/base64/index.cp` | Copyright (c) 2015 Alice Maz / Marshall Pierce |
+| **RustCrypto/AEADs** (`chacha20poly1305`, `aes-gcm`) | <https://github.com/RustCrypto/AEADs> | MIT OR Apache-2.0 | `lib/crypto/cipher.cp` | Copyright (c) 2019-2024 RustCrypto Developers |
 
 ---
 

@@ -29,7 +29,7 @@
 | `lib/crypto/hash.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 单发与流式哈希（`sha256`, `sha512`, `sha1`, `md5`, `sha256Raw`, `Hash`, `createHash`） |
 | `lib/crypto/hmac.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 单发与流式消息认证码（`hmacSha256`, `hmacSha256Raw`, `hmacSha512`, `Hmac`, `createHmac`） |
 | `lib/crypto/pbkdf2.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | PBKDF2-HMAC-SHA256 密钥派生（`pbkdf2Sync`, `pbkdf2Raw`, `pbkdf2Into`）与 `bytesToHex` |
-| `lib/crypto/cipher.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | AEAD 认证对称加密引擎（`Aes256Gcm`, `ChaCha20Poly1305`） |
+| `lib/crypto/cipher.cp` | `// Reference-hardened against RustCrypto/AEADs (MIT/Apache-2.0)` | 工业级 AEAD 认证对称加密引擎（`Aes256Gcm`, `ChaCha20Poly1305`, `AeadError`），含零堆 `encryptInPlace`/`decryptInPlace`/`sealCombined`/`openCombined`、验签失败自动清零（`aeadSecureZero`）、16-lane SIMD 常量时间 Tag 比对（`aeadTagEqlSimd`）与块异或（`aeadXorSimd`） |
 | `lib/crypto/random.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | 内核级 CSPRNG（`getrandom` 驱动的 `fillRandom`, `randomBytes`, `randomUUID`, `randomUUIDInto`, `randomInt`） |
 | `lib/crypto/tls.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp` | RFC 6125 TLS 主机名通配符验证器 `TlsHostnameVerifier` 与 BoringSSL X.509 证书链校验 |
 | `lib/crypto/asymmetric.cp` | `// Source: /data/dev/bun/src/boringssl/boringssl.cp & Zig std.crypto` | **非对称密码学**（`Ed25519KeyPair`, `X25519KeyPair`, `EcdsaP256KeyPair`） |
@@ -107,6 +107,7 @@
   - **SHA-384 / SHA3-256 / SHA3-512**：`sha384`、`sha3_256`、`sha3_512`（及 `*Raw` 零分配版本与同名流式类 `Sha384` / `Sha3_256` / `Sha3_512`）；
   - **HMAC-SHA384 / HMAC-SHA512**：`hmacSha384`、`HmacSha384`、`HmacSha512`（支持单发 `create` 与流式 `init()->update()->digest()`）。
 - **AEAD 认证对称加密 (`Aes128Gcm`, `Aes256Gcm`, `ChaCha20Poly1305`, `XChaCha20Poly1305`)**：
+  - `Aes256Gcm`（NIST SP 800-38D）与 `ChaCha20Poly1305`（RFC 8439）已对照 `RustCrypto/AEADs` (MIT/Apache-2.0) 完成边界加固：强制 32B Key / 12B Nonce / 16B Tag 长度校验，提供零堆 `encryptDetached`/`decryptDetached`/`encryptInPlace`/`decryptInPlace`/`sealCombined`/`openCombined`，验签失败自动通过 `aeadSecureZero`（`std.crypto.secureZero`）清零明文缓冲并返回 `AeadError.AuthenticationFailed`，内置 16-lane `@Vector(16, u8)` 常量时间 Tag 比对 `aeadTagEqlSimd` 与块异或 `aeadXorSimd`；
   - `XChaCha20Poly1305`：32 字节密钥 + **24 字节扩展 Nonce** + 16 字节 Poly1305 Tag，适合随机 Nonce 场景；
   - `Aes128Gcm`：16 字节密钥 + 12 字节 Nonce + 16 字节 GHASH Tag。
 
