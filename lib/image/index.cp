@@ -233,3 +233,16 @@ export {
     parseXcfHeader,
     parseXcfLayerHeader,
 } from "./xcf.cp";
+
+export {
+    ImageFormat as ProbeImageFormat,
+    WebpKind,
+    ImageInfo,
+    detectFormat,
+    probe,
+    probePng,
+    probeJpeg,
+    probeWebp,
+    probeBmp,
+    probeGif,
+} from "./probe.cp";

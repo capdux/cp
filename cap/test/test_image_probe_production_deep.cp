@@ -2,7 +2,7 @@
 
 import { test, expect_eq } from "cap:test";
 import {
-    ImageFormat,
+    ProbeImageFormat as ImageFormat,
     WebpKind,
     ImageInfo,
     detectFormat,
@@ -12,7 +12,7 @@ import {
     probeWebp,
     probeBmp,
     probeGif,
-} from "cap:image_probe";
+} from "cap:image";
 
 fn makePngHeader(w: u32, h: u32, bit_depth: u8, color_type: u8, interlace: u8): [33]u8 {
     let b: [33]u8 = [0; 33];
