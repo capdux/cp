@@ -2,10 +2,16 @@
 // Pure CP zero-C-dependency RFC 6838 MediaType, RFC 9110 ContentNegotiator, and MIME Database.
 
 export {
+    MIME_MAX_NAME_LEN,
+    MIME_MAX_PARAMS,
     MimeError,
     MimeParam,
     MediaType,
     ContentNegotiator,
+    simdIsValidMimeToken,
+    simdIsValidRestrictedName,
+    simdFindMimeDelim,
+    simdIndexOfSemicolon,
 } from "./mime.cp";
 
 export {

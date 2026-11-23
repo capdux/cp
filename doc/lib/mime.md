@@ -10,7 +10,8 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/mime/mime.cp` | `// Source: cp/lib/mime/mime.cp (...)` | `MimeError`、`MimeParam`、`MediaType`、`ContentNegotiator` |
+| `lib/mime/mime.cp` | `// Reference-hardened against hyperium/mime (MIT/Apache-2.0)` | `MIME_MAX_NAME_LEN`、`MIME_MAX_PARAMS`、`MimeError`、`MimeParam`、`MediaType`、`ContentNegotiator`、16-lane SIMD 原语（`simdIsValidMimeToken`、`simdIsValidRestrictedName`、`simdFindMimeDelim`、`simdIndexOfSemicolon`） |
+| `lib/mime/multipart.cp` | `// Reference-hardened against hyperium/mime (MIT/Apache-2.0) & RFC 7578` | `MULTIPART_MAX_PARTS`、`isValidBoundary`、`simdFindDashBoundaryCandidate`、`MultipartPart`、`MultipartParser` |
 | `lib/mime/db.cp` | `// Source: cp/lib/mime/db.cp (...)` | `MimeDb`（110+ 扩展名双向映射与 `isText`/`isCompressible` 判定） |
 | `lib/mime/index.cp` | `// Source: cp/lib/mime/index.cp (...)` | `cap:mime` 统一公开导出入口 |
 

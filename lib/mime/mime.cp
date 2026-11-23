@@ -1,7 +1,18 @@
 // Source: cp/lib/mime/mime.cp (RFC 6838 MediaType Parser/Formatter & RFC 9110 ContentNegotiator)
-// Pure CP zero-C-dependency MediaType parser, serializer, and HTTP Accept content negotiator.
+// Reference-hardened against hyperium/mime (MIT/Apache-2.0)
+// Pure CP zero-C-dependency MediaType parser, serializer, and HTTP Accept content negotiator
+// with RFC 6838 restricted-name validation and 16-lane @Vector(16, u8) / cap:simd acceleration.
 
 const std = @import("std");
+import { Simd } from "cap:simd";
+
+type MimeVec16 = @Vector(16, u8);
+
+/// RFC 6838 §4.2 maximum length of a type or subtype restricted-name (127 bytes).
+pub const MIME_MAX_NAME_LEN: usize = 127;
+
+/// Maximum number of parameters accepted per MediaType to bound resource usage.
+pub const MIME_MAX_PARAMS: usize = 64;
 
 /// Errors returned during MediaType parsing, formatting, or Accept negotiation.
 pub err MimeError {
@@ -32,13 +43,118 @@ fn isTokenChar(c: u8): bool {
     };
 }
 
-fn isValidToken(s: []const u8): bool {
+fn isRestrictedNameFirst(c: u8): bool {
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+fn isRestrictedNameChar(c: u8): bool {
+    if (isRestrictedNameFirst(c)) return true;
+    return switch (c) {
+        '!', '#', '$', '&', '-', '^', '_', '.', '+' => true,
+        else => false,
+    };
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for RFC 2045/9110 MIME token characters.
+pub fn simdIsValidMimeToken(s: []const u8): bool {
     if (s.len == 0) return false;
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const n = s.len;
+    const v_0: MimeVec16 = @splat('0');
+    const v_10: MimeVec16 = @splat(10);
+    const v_a: MimeVec16 = @splat('a');
+    const v_26: MimeVec16 = @splat(26);
+    const v_case: MimeVec16 = @splat(0x20);
+    const v_dash: MimeVec16 = @splat('-');
+    const v_under: MimeVec16 = @splat('_');
+    const v_dot: MimeVec16 = @splat('.');
+    const v_plus: MimeVec16 = @splat('+');
+
+    while (i + 16 <= n) {
+        const chunk: MimeVec16 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        const m_dot: u16 = @bitCast(chunk == v_dot);
+        const m_plus: u16 = @bitCast(chunk == v_plus);
+        const fast_ok: u16 = m_dig | m_alp | m_dash | m_under | m_dot | m_plus;
+        const non_fast: u16 = ~fast_ok;
+        if (non_fast != 0) {
+            i += @ctz(non_fast) as usize;
+            if (!isTokenChar(s[i])) return false;
+            i += 1;
+        } else {
+            i += 16;
+        }
+    }
+
+    while (i < n) : (i += 1) {
         if (!isTokenChar(s[i])) return false;
     }
     return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for RFC 6838 §4.2 restricted-name
+/// (1..=127 bytes, starts with alphanumeric, or wildcard `*`).
+pub fn simdIsValidRestrictedName(s: []const u8): bool {
+    if (s.len == 0 || s.len > MIME_MAX_NAME_LEN) return false;
+    if (s.len == 1 && s[0] == '*') return true;
+    if (!isRestrictedNameFirst(s[0])) return false;
+
+    let i: usize = 1;
+    const n = s.len;
+    const v_0: MimeVec16 = @splat('0');
+    const v_10: MimeVec16 = @splat(10);
+    const v_a: MimeVec16 = @splat('a');
+    const v_26: MimeVec16 = @splat(26);
+    const v_case: MimeVec16 = @splat(0x20);
+    const v_dash: MimeVec16 = @splat('-');
+    const v_under: MimeVec16 = @splat('_');
+    const v_dot: MimeVec16 = @splat('.');
+    const v_plus: MimeVec16 = @splat('+');
+
+    while (i + 16 <= n) {
+        const chunk: MimeVec16 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        const m_dot: u16 = @bitCast(chunk == v_dot);
+        const m_plus: u16 = @bitCast(chunk == v_plus);
+        const fast_ok: u16 = m_dig | m_alp | m_dash | m_under | m_dot | m_plus;
+        const non_fast: u16 = ~fast_ok;
+        if (non_fast != 0) {
+            i += @ctz(non_fast) as usize;
+            if (!isRestrictedNameChar(s[i])) return false;
+            i += 1;
+        } else {
+            i += 16;
+        }
+    }
+
+    while (i < n) : (i += 1) {
+        if (!isRestrictedNameChar(s[i])) return false;
+    }
+    return true;
+}
+
+/// SIMD-accelerated delimiter finder for MIME syntax using `cap:simd` `Simd.indexOfAny4('/', ';', '=', '"')`.
+pub fn simdFindMimeDelim(s: []const u8): usize? {
+    return Simd.indexOfAny4(s, '/', ';', '=', '"');
+}
+
+/// SIMD-accelerated semicolon finder using `cap:simd` `Simd.indexOfByte(';')`.
+pub fn simdIndexOfSemicolon(s: []const u8): usize? {
+    return Simd.indexOfByte(s, ';');
+}
+
+fn isValidToken(s: []const u8): bool {
+    return simdIsValidMimeToken(s);
+}
+
+fn isQuotedTextChar(c: u8): bool {
+    return c == '\t' || (c >= 0x20 && c != 0x7F);
 }
 
 fn isOws(c: u8): bool {
@@ -88,24 +204,24 @@ struct EssenceSplit {
 fn validateTypeSubtype(raw_essence: []const u8): EssenceSplit ! MimeError {
     if (raw_essence.len == 0) return MimeError.InvalidMediaType;
 
-    let slash_idx: usize? = null;
-    let i: usize = 0;
-    while (i < raw_essence.len) : (i += 1) {
-        if (raw_essence[i] == '/') {
-            if (slash_idx != null) return MimeError.InvalidMediaType;
-            slash_idx = i;
-        }
-    }
-
-    if (slash_idx == null) return MimeError.InvalidMediaType;
-    const s_idx = slash_idx.?;
+    const first_delim = simdFindMimeDelim(raw_essence) ?? return MimeError.InvalidMediaType;
+    if (raw_essence[first_delim] != '/') return MimeError.InvalidMediaType;
+    const s_idx = first_delim;
     if (s_idx == 0 || s_idx + 1 >= raw_essence.len) {
         return MimeError.InvalidMediaType;
     }
 
     const t = raw_essence[0..s_idx];
     const st = raw_essence[(s_idx + 1)..];
-    if (!isValidToken(t) || !isValidToken(st)) {
+    // Reject multiple '/', ';', '=', or '"' inside subtype
+    if (simdFindMimeDelim(st) != null) {
+        return MimeError.InvalidMediaType;
+    }
+    if (!simdIsValidRestrictedName(t) || !simdIsValidRestrictedName(st)) {
+        return MimeError.InvalidMediaType;
+    }
+    // RFC 9110: "*/subtype" is invalid unless subtype is also "*"
+    if (t.len == 1 && t[0] == '*' && !(st.len == 1 && st[0] == '*')) {
         return MimeError.InvalidMediaType;
     }
 
@@ -160,16 +276,19 @@ fn parseParamsList(
         }
         if (pos >= raw_params.len) break;
 
-        // Parse parameter name up to '='
-        const name_start = pos;
-        while (pos < raw_params.len && raw_params[pos] != '=' && raw_params[pos] != ';') {
-            pos += 1;
+        if (list.items.len >= MIME_MAX_PARAMS) {
+            return MimeError.InvalidParameter;
         }
-        if (pos >= raw_params.len || raw_params[pos] != '=') {
+
+        // Parse parameter name up to '=' using SIMD delimiter scan
+        const name_start = pos;
+        const delim_rel = simdFindMimeDelim(raw_params[pos..]) ?? return MimeError.InvalidParameter;
+        pos += delim_rel;
+        if (raw_params[pos] != '=') {
             return MimeError.InvalidParameter;
         }
         const raw_name = trimOws(raw_params[name_start..pos]);
-        if (!isValidToken(raw_name)) {
+        if (raw_name.len > MIME_MAX_NAME_LEN || !simdIsValidMimeToken(raw_name)) {
             return MimeError.InvalidParameter;
         }
         pos += 1; // skip '='
@@ -183,7 +302,7 @@ fn parseParamsList(
 
         let owned_val: []u8 = [];
         if (raw_params[pos] == '"') {
-            // Quoted-string parameter value
+            // Quoted-string parameter value (RFC 9110 §5.6.4)
             pos += 1;
             let val_buf: std.ArrayList(u8) = .empty;
             errdefer val_buf.deinit(alloc);
@@ -192,7 +311,7 @@ fn parseParamsList(
                 const ch = raw_params[pos];
                 if (ch == '\\') {
                     pos += 1;
-                    if (pos >= raw_params.len) {
+                    if (pos >= raw_params.len || !isQuotedTextChar(raw_params[pos])) {
                         return MimeError.InvalidParameter;
                     }
                     val_buf.append(alloc, raw_params[pos]) catch return MimeError.OutOfMemory;
@@ -202,6 +321,9 @@ fn parseParamsList(
                     closed = true;
                     break;
                 } else {
+                    if (!isQuotedTextChar(ch)) {
+                        return MimeError.InvalidParameter;
+                    }
                     val_buf.append(alloc, ch) catch return MimeError.OutOfMemory;
                     pos += 1;
                 }
@@ -209,15 +331,24 @@ fn parseParamsList(
             if (!closed) {
                 return MimeError.InvalidParameter;
             }
+            // Only OWS or ';' may follow a closing quote
+            while (pos < raw_params.len && isOws(raw_params[pos])) {
+                pos += 1;
+            }
+            if (pos < raw_params.len && raw_params[pos] != ';') {
+                return MimeError.InvalidParameter;
+            }
             owned_val = val_buf.toOwnedSlice(alloc) catch return MimeError.OutOfMemory;
         } else {
             // Token parameter value
             const val_start = pos;
-            while (pos < raw_params.len && raw_params[pos] != ';') {
-                pos += 1;
+            if (semi_rel := simdIndexOfSemicolon(raw_params[pos..])) {
+                pos += semi_rel;
+            } else {
+                pos = raw_params.len;
             }
             const raw_val = trimOws(raw_params[val_start..pos]);
-            if (!isValidToken(raw_val)) {
+            if (!simdIsValidMimeToken(raw_val)) {
                 return MimeError.InvalidParameter;
             }
             owned_val = alloc.alloc(u8, raw_val.len) catch return MimeError.OutOfMemory;
@@ -249,19 +380,12 @@ pub struct MediaType {
     owned_params: []OwnedParam;
 
     /// Parses a MediaType string such as `Text/HTML; charset="utf-8"; boundary=abc`.
-    pub fn parse(alloc: std.mem.Allocator, raw: []const u8): MediaType ! MimeError {
+    pub static fn parse(alloc: std.mem.Allocator, raw: []const u8): MediaType ! MimeError {
         const trimmed = trimOws(raw);
         if (trimmed.len == 0) return MimeError.InvalidMediaType;
 
-        // Split essence from optional parameters at first ';'
-        let semi_idx: usize = trimmed.len;
-        let i: usize = 0;
-        while (i < trimmed.len) : (i += 1) {
-            if (trimmed[i] == ';') {
-                semi_idx = i;
-                break;
-            }
-        }
+        // Split essence from optional parameters at first ';' via SIMD
+        const semi_idx = simdIndexOfSemicolon(trimmed) ?? trimmed.len;
 
         const essence_slice = trimOws(trimmed[0..semi_idx]);
         const meta = validateTypeSubtype(essence_slice)?;

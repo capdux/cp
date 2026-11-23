@@ -1,14 +1,36 @@
 // Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-23T02:03:12Z (RFC 7578 multipart/form-data)
+// Reference-hardened against hyperium/mime (MIT/Apache-2.0) & RFC 7578
+// with cap:simd boundary fast-scanning and part count limits.
 
-fn isOws(c: u8): bool {
+import { Simd } from "cap:simd";
+
+/// Default upper bound on parts emitted by a single `MultipartParser`.
+pub const MULTIPART_MAX_PARTS: usize = 1024;
+
+/// SIMD-accelerated finder for `--` boundary prefix candidates using `cap:simd` `Simd.indexOfByte('-')`.
+pub fn simdFindDashBoundaryCandidate(data: []const u8, start: usize): usize? {
+    let i = start;
+    while (i + 1 < data.len) {
+        const hit_opt = Simd.indexOfByte(data[i..], '-');
+        if (hit_opt == null) return null;
+        const pos = i + hit_opt.?;
+        if (pos + 1 < data.len && data[pos + 1] == '-') {
+            return pos;
+        }
+        i = pos + 1;
+    }
+    return null;
+}
+
+fn mpIsOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn trimOws(s: []const u8): []const u8 {
+fn mpTrimOws(s: []const u8): []const u8 {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && isOws(s[start])) { start += 1; }
-    while (end > start && isOws(s[end - 1])) { end -= 1; }
+    while (start < end && mpIsOws(s[start])) { start += 1; }
+    while (end > start && mpIsOws(s[end - 1])) { end -= 1; }
     return s[start..end];
 }
 
@@ -97,9 +119,9 @@ pub struct MultipartPart {
                 k += 1;
             }
             if (ci := colon_idx) {
-                const key = trimOws(line[0..ci]);
+                const key = mpTrimOws(line[0..ci]);
                 if (eqlIgnoreCaseAscii(key, header_name)) {
-                    return trimOws(line[(ci + 1)..line.len]);
+                    return mpTrimOws(line[(ci + 1)..line.len]);
                 }
             }
         }
@@ -126,7 +148,7 @@ fn checkBoundaryLineTail(data: []const u8, after_boundary: usize): BoundaryLineM
         return BoundaryLineMatch{ is_final: true, next_pos: data.len };
     }
     // 允许边界后带可选 OWS 后跟 CRLF 或 LF
-    while (p < data.len && isOws(data[p])) {
+    while (p < data.len && mpIsOws(data[p])) {
         p += 1;
     }
     if (p + 1 < data.len && data[p] == '\r' && data[p + 1] == '\n') {
@@ -146,6 +168,8 @@ pub struct MultipartParser {
     started: bool = false,
     finished: bool = false,
     valid: bool = false,
+    parts_emitted: usize = 0,
+    max_parts: usize = MULTIPART_MAX_PARTS,
 
     static fn init(body: []const u8, boundary: []const u8): MultipartParser {
         return MultipartParser{
@@ -155,6 +179,21 @@ pub struct MultipartParser {
             started: false,
             finished: false,
             valid: isValidBoundary(boundary),
+            parts_emitted: 0,
+            max_parts: MULTIPART_MAX_PARTS,
+        };
+    }
+
+    static fn initWithMaxParts(body: []const u8, boundary: []const u8, max_parts: usize): MultipartParser {
+        return MultipartParser{
+            body: body,
+            boundary: boundary,
+            pos: 0,
+            started: false,
+            finished: false,
+            valid: isValidBoundary(boundary),
+            parts_emitted: 0,
+            max_parts: max_parts,
         };
     }
 
@@ -163,22 +202,26 @@ pub struct MultipartParser {
         return _.finished;
     }
 
-    /// 解析并返回下一个 `MultipartPart`，到达终止边界或遇到截断输入时返回 `null`
+    /// 解析并返回下一个 `MultipartPart`，到达终止边界、超出部件上限或遇到截断输入时返回 `null`
     fn next(*_): MultipartPart? {
-        if (!_.valid || _.finished || _.pos >= _.body.len) {
+        if (!_.valid || _.finished || _.pos >= _.body.len || _.parts_emitted >= _.max_parts) {
             return null;
         }
 
         const dash_len = 2 + _.boundary.len;
 
-        // 1. 跳过 preamble，定位首个 --<boundary>
+        // 1. 跳过 preamble，使用 SIMD 快扫定位首个 --<boundary>
         if (!_.started) {
             let found = false;
             let scan: usize = 0;
             while (scan + dash_len <= _.body.len) {
-                const at_line_start = (scan == 0) || (_.body[scan - 1] == '\n');
-                if (at_line_start && matchesDashBoundary(_.body, scan, _.boundary)) {
-                    if (tail := checkBoundaryLineTail(_.body, scan + dash_len)) {
+                const cand_opt = simdFindDashBoundaryCandidate(_.body, scan);
+                if (cand_opt == null) break;
+                const cand = cand_opt.?;
+                if (cand + dash_len > _.body.len) break;
+                const at_line_start = (cand == 0) || (_.body[cand - 1] == '\n');
+                if (at_line_start && matchesDashBoundary(_.body, cand, _.boundary)) {
+                    if (tail := checkBoundaryLineTail(_.body, cand + dash_len)) {
                         _.started = true;
                         if (tail.is_final) {
                             _.finished = true;
@@ -190,7 +233,7 @@ pub struct MultipartParser {
                         break;
                     }
                 }
-                scan += 1;
+                scan = cand + 1;
             }
             if (!found) {
                 _.pos = _.body.len;
@@ -254,6 +297,7 @@ pub struct MultipartParser {
                 } else {
                     _.pos = tail.next_pos;
                 }
+                _.parts_emitted += 1;
                 return MultipartPart{
                     raw_headers: raw_headers,
                     body: _.body[body_start..body_start],
@@ -262,18 +306,23 @@ pub struct MultipartParser {
         }
 
         let scan = body_start;
-        while (scan < _.body.len) {
-            if (_.body[scan] == '\n') {
-                const cand = scan + 1;
+        while (scan + dash_len <= _.body.len) {
+            const cand_opt = simdFindDashBoundaryCandidate(_.body, scan);
+            if (cand_opt == null) break;
+            const cand = cand_opt.?;
+            if (cand + dash_len > _.body.len) break;
+            if (cand > body_start && _.body[cand - 1] == '\n') {
+                const nl_pos = cand - 1;
                 if (matchesDashBoundary(_.body, cand, _.boundary)) {
                     if (tail := checkBoundaryLineTail(_.body, cand + dash_len)) {
-                        const body_end = if (scan > body_start && _.body[scan - 1] == '\r') scan - 1 else scan;
+                        const body_end = if (nl_pos > body_start && _.body[nl_pos - 1] == '\r') nl_pos - 1 else nl_pos;
                         if (tail.is_final) {
                             _.finished = true;
                             _.pos = _.body.len;
                         } else {
                             _.pos = tail.next_pos;
                         }
+                        _.parts_emitted += 1;
                         return MultipartPart{
                             raw_headers: raw_headers,
                             body: _.body[body_start..body_end],
@@ -281,7 +330,7 @@ pub struct MultipartParser {
                     }
                 }
             }
-            scan += 1;
+            scan = cand + 1;
         }
 
         // 未找到下一个或终止边界（截断报文），不置位 finished
