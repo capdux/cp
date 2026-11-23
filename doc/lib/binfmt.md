@@ -150,7 +150,7 @@ pub fn demoBinfmt() {
 
 | 原顶层目录 | 收敛目标文件 | 主要导出符号 |
 |---|---|---|
-| `cap:arrow_ipc` | `lib/binfmt/arrow{Types,Flatbuf,Ipc}.cp` | `ArrowError`, `ArrowType`, `ArrowField`, `ArrowSchema`, `ArrowColumn`, `RecordBatch`, `ARROW_IPC_MAGIC`, `writeStream`, `readStream`, `writeFile`, `readFile` |
+| `cap:arrow_ipc` | `lib/binfmt/arrow{Types,Flatbuf,Ipc}.cp`（对标 `apache/arrow-rs` Apache-2.0 加固） | `ARROW_MAX_ROWS`, `ARROW_MAX_FIELDS`, `ARROW_MAX_METADATA_LEN`, `ARROW_MAX_BODY_LEN`, `ArrowError`, `ArrowType`, `ArrowField`, `ArrowSchema`, `ArrowColumn`, `RecordBatch`, `popcountValidBits`, `popcountNullBits`, `simdArrowCopyBytes`, `ARROW_IPC_MAGIC`, `writeStream`, `readStream`, `writeFile`, `readFile`, `validateArrowStream`, `validateArrowFile` |
 | `cap:binary_schema` | `lib/binfmt/binarySchema.cp` | `END_OF_MESSAGE`, `SchemaError`, `SchemaReader`, `SchemaWriter`, `FixedSchemaWriter`, `CompactUint64` |
 | `cap:exe_format` | `lib/binfmt/exe{Types,Elf,Pe,Macho,Trailer}.cp` | `ExeKind`, `ExeArch`, `detectExeKind`, `parseElf64Header`, `parsePeHeader`, `parseMachO64Header`, `appendStandaloneTrailer`, `extractStandaloneTrailer` |
 | `cap:pe_format` | `lib/binfmt/peFormat.cp` | `PeFormatError`, `PEFile`, `DOSHeader`, `PEHeader`, `OptionalHeader64`, `SectionHeader`, `StripMode`, `StripOpts`, `computePEChecksum`, `isPE` |

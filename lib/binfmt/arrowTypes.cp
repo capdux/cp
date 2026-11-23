@@ -1,8 +1,17 @@
 // Source: cp/lib/arrow_ipc/types.cp (Arrow columnar data model & validity bitmap)
+// Reference-hardened against apache/arrow-rs (Apache-2.0)
 
 const std = @import("std");
 
-pub const ArrowError = error{
+type ArrowVec16 = @Vector(16, u8);
+
+/// Resource protection caps aligned with `apache/arrow-rs` IPC bounds.
+pub const ARROW_MAX_ROWS: usize = 16 * 1024 * 1024;
+pub const ARROW_MAX_FIELDS: usize = 65536;
+pub const ARROW_MAX_METADATA_LEN: usize = 64 * 1024 * 1024;
+pub const ARROW_MAX_BODY_LEN: usize = 512 * 1024 * 1024;
+
+pub err ArrowError {
     OutOfMemory,
     InvalidMagic,
     InvalidFooter,
@@ -17,7 +26,55 @@ pub const ArrowError = error{
     BufferOutOfBounds,
     InvalidUtf8,
     EmptySchema,
-};
+    MetadataTooLarge,
+    BodyTooLarge,
+    TooManyRows,
+}
+
+/// 64-bit word-parallel `@popCount` valid-bit counter for Arrow validity bitmaps.
+pub fn popcountValidBits(bytes: []const u8, bit_len: usize): usize {
+    if (bit_len == 0) return 0;
+    const full_bytes = bit_len >> 3;
+    const rem_bits = bit_len & 7;
+    let valid_count: usize = 0;
+    let i: usize = 0;
+
+    while (i + 8 <= full_bytes) {
+        const word = std.mem.readInt(u64, bytes[i..][0..8], .little);
+        valid_count += @as(usize, @popCount(word));
+        i += 8;
+    }
+    while (i < full_bytes) : (i += 1) {
+        valid_count += @as(usize, @popCount(bytes[i]));
+    }
+    if (rem_bits > 0) {
+        const sh: u3 = @intCast(rem_bits);
+        const mask: u8 = (@as(u8, 1) << sh) - 1;
+        valid_count += @as(usize, @popCount(bytes[full_bytes] & mask));
+    }
+    return valid_count;
+}
+
+/// 64-bit word-parallel `@popCount` null-bit counter for Arrow validity bitmaps.
+pub fn popcountNullBits(bytes: []const u8, bit_len: usize): usize {
+    const valid = popcountValidBits(bytes, bit_len);
+    return bit_len - valid;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD buffer copy for Arrow columnar payloads.
+pub fn simdArrowCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const chunk: ArrowVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
 
 pub enum ArrowType {
     Int32,
@@ -32,7 +89,7 @@ pub struct ArrowField {
     pub arrow_type: ArrowType,
     pub nullable: bool,
 
-    pub fn init(name: []const u8, arrow_type: ArrowType, nullable: bool): ArrowField {
+    pub static fn init(name: []const u8, arrow_type: ArrowType, nullable: bool): ArrowField {
         return ArrowField{
             .name = name,
             .arrow_type = arrow_type,
@@ -44,9 +101,12 @@ pub struct ArrowField {
 pub struct ArrowSchema {
     pub fields: []ArrowField,
 
-    pub fn init(alloc: std.mem.Allocator, fields: []const ArrowField): ArrowError!ArrowSchema {
+    pub static fn init(alloc: std.mem.Allocator, fields: []const ArrowField): ArrowSchema ! ArrowError {
         if (fields.len == 0) {
             return ArrowError.EmptySchema;
+        }
+        if (fields.len > ARROW_MAX_FIELDS) {
+            return ArrowError.ColumnCountMismatch;
         }
         let cloned = alloc.alloc(ArrowField, fields.len) catch return ArrowError.OutOfMemory;
         let initialized: usize = 0;
@@ -72,7 +132,7 @@ pub struct ArrowSchema {
         return ArrowSchema{ .fields = cloned };
     }
 
-    pub fn clone(alloc: std.mem.Allocator): ArrowError!ArrowSchema {
+    pub fn clone(alloc: std.mem.Allocator): ArrowSchema ! ArrowError {
         return ArrowSchema.init(alloc, _.fields);
     }
 
@@ -96,7 +156,7 @@ pub struct ValidityBitmap {
         return (bit_len + 7) / 8;
     }
 
-    pub static fn initAllValid(alloc: std.mem.Allocator, bit_len: usize): ArrowError!ValidityBitmap {
+    pub static fn initAllValid(alloc: std.mem.Allocator, bit_len: usize): ValidityBitmap ! ArrowError {
         const nbytes = ValidityBitmap.byteLenForBits(bit_len);
         let buf = alloc.alloc(u8, nbytes) catch return ArrowError.OutOfMemory;
         @memset(buf, 0xFF);
@@ -107,7 +167,7 @@ pub struct ValidityBitmap {
         };
     }
 
-    pub static fn initFromBools(alloc: std.mem.Allocator, valid: []const bool): ArrowError!ValidityBitmap {
+    pub static fn initFromBools(alloc: std.mem.Allocator, valid: []const bool): ValidityBitmap ! ArrowError {
         const nbytes = ValidityBitmap.byteLenForBits(valid.len);
         let buf = alloc.alloc(u8, nbytes) catch return ArrowError.OutOfMemory;
         @memset(buf, 0);
@@ -115,7 +175,8 @@ pub struct ValidityBitmap {
         let i: usize = 0;
         while (i < valid.len) {
             if (valid[i]) {
-                buf[i >> 3] |= (@as(u8, 1) << @intCast(i & 7));
+                const sh: u3 = @intCast(i & 7);
+                buf[i >> 3] |= (@as(u8, 1) << sh);
             } else {
                 nulls += 1;
             }
@@ -128,22 +189,18 @@ pub struct ValidityBitmap {
         };
     }
 
-    pub static fn fromRawBytes(alloc: std.mem.Allocator, raw: []const u8, bit_len: usize, expected_nulls: usize?): ArrowError!ValidityBitmap {
+    pub static fn fromRawBytes(alloc: std.mem.Allocator, raw: []const u8, bit_len: usize, expected_nulls: usize?): ValidityBitmap ! ArrowError {
         const needed = ValidityBitmap.byteLenForBits(bit_len);
         if (raw.len < needed) {
             return ArrowError.BufferOutOfBounds;
         }
-        const buf = alloc.alloc(u8, needed) catch return ArrowError.OutOfMemory;
-        @memcpy(buf, raw[0..needed]);
-        let nulls: usize = 0;
-        let i: usize = 0;
-        while (i < bit_len) {
-            const bit = (buf[i >> 3] >> @intCast(i & 7)) & 1;
-            if (bit == 0) {
-                nulls += 1;
-            }
-            i += 1;
+        let buf = alloc.alloc(u8, needed) catch return ArrowError.OutOfMemory;
+        const copied = simdArrowCopyBytes(buf, raw[0..needed]);
+        if (copied != needed) {
+            alloc.free(buf);
+            return ArrowError.BufferOutOfBounds;
         }
+        const nulls = popcountNullBits(buf, bit_len);
         if (exp := expected_nulls) {
             if (exp != nulls) {
                 alloc.free(buf);
@@ -161,15 +218,17 @@ pub struct ValidityBitmap {
         if (idx >= _.bit_len) {
             return false;
         }
-        return ((_.bytes[idx >> 3] >> @intCast(idx & 7)) & 1) != 0;
+        const sh: u3 = @intCast(idx & 7);
+        return ((_.bytes[idx >> 3] >> sh) & 1) != 0;
     }
 
-    pub fn setValid(*_, idx: usize, valid: bool): ArrowError!void {
+    pub fn setValid(*_, idx: usize, valid: bool): bool ! ArrowError {
         if (idx >= _.bit_len) {
             return ArrowError.IndexOutOfBounds;
         }
         const was_valid = _.isValid(idx);
-        const mask: u8 = @as(u8, 1) << @intCast(idx & 7);
+        const sh: u3 = @intCast(idx & 7);
+        const mask: u8 = @as(u8, 1) << sh;
         if (valid) {
             _.bytes[idx >> 3] |= mask;
             if (!was_valid and _.null_count > 0) {
@@ -181,6 +240,7 @@ pub struct ValidityBitmap {
                 _.null_count += 1;
             }
         }
+        return true;
     }
 
     pub fn deinit(*_, alloc: std.mem.Allocator) {
@@ -199,7 +259,7 @@ pub struct ArrowColumn {
     pub data: []u8,
     pub offsets: []i32,
 
-    pub fn fromInt32(alloc: std.mem.Allocator, name: []const u8, values: []const i32, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromInt32(alloc: std.mem.Allocator, name: []const u8, values: []const i32, valid: ([]const bool)?): ArrowColumn ! ArrowError {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {
@@ -234,7 +294,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub fn fromInt64(alloc: std.mem.Allocator, name: []const u8, values: []const i64, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromInt64(alloc: std.mem.Allocator, name: []const u8, values: []const i64, valid: ([]const bool)?): ArrowColumn ! ArrowError {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {
@@ -269,7 +329,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub fn fromFloat64(alloc: std.mem.Allocator, name: []const u8, values: []const f64, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromFloat64(alloc: std.mem.Allocator, name: []const u8, values: []const f64, valid: ([]const bool)?): ArrowColumn ! ArrowError {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {
@@ -305,7 +365,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub fn fromBool(alloc: std.mem.Allocator, name: []const u8, values: []const bool, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromBool(alloc: std.mem.Allocator, name: []const u8, values: []const bool, valid: ([]const bool)?): ArrowColumn ! ArrowError {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {
@@ -330,7 +390,8 @@ pub struct ArrowColumn {
         let i: usize = 0;
         while (i < values.len) {
             if (values[i]) {
-                data_buf[i >> 3] |= (@as(u8, 1) << @intCast(i & 7));
+                const sh: u3 = @intCast(i & 7);
+                data_buf[i >> 3] |= (@as(u8, 1) << sh);
             }
             i += 1;
         }
@@ -344,7 +405,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub static fn fromUtf8(alloc: std.mem.Allocator, name: []const u8, values: []const []const u8, valid: ([]const bool)?): ArrowError!ArrowColumn {
+    pub static fn fromUtf8(alloc: std.mem.Allocator, name: []const u8, values: []const []const u8, valid: ([]const bool)?): ArrowColumn ! ArrowError {
         let bm: ValidityBitmap? = null;
         let nulls: usize = 0;
         if (v := valid) {
@@ -396,8 +457,8 @@ pub struct ArrowColumn {
                 is_val = b.isValid(i);
             }
             if (is_val and values[i].len > 0) {
-                @memcpy(data_buf[pos .. pos + values[i].len], values[i]);
-                pos += values[i].len;
+                const copied = simdArrowCopyBytes(data_buf[pos .. pos + values[i].len], values[i]);
+                pos += copied;
             }
             i += 1;
         }
@@ -412,7 +473,7 @@ pub struct ArrowColumn {
         };
     }
 
-    pub fn isNull(idx: usize): ArrowError!bool {
+    pub fn isNull(idx: usize): bool ! ArrowError {
         if (idx >= _.len) {
             return ArrowError.IndexOutOfBounds;
         }
@@ -422,7 +483,7 @@ pub struct ArrowColumn {
         return false;
     }
 
-    pub fn getInt32(idx: usize): ArrowError!(i32?) {
+    pub fn getInt32(idx: usize): (i32?) ! ArrowError {
         if (_.field.arrow_type != .Int32) {
             return ArrowError.TypeMismatch;
         }
@@ -432,7 +493,7 @@ pub struct ArrowColumn {
         return std.mem.readInt(i32, _.data[idx * 4 ..][0..4], .little);
     }
 
-    pub fn getInt64(idx: usize): ArrowError!(i64?) {
+    pub fn getInt64(idx: usize): (i64?) ! ArrowError {
         if (_.field.arrow_type != .Int64) {
             return ArrowError.TypeMismatch;
         }
@@ -442,7 +503,7 @@ pub struct ArrowColumn {
         return std.mem.readInt(i64, _.data[idx * 8 ..][0..8], .little);
     }
 
-    pub fn getFloat64(idx: usize): ArrowError!(f64?) {
+    pub fn getFloat64(idx: usize): (f64?) ! ArrowError {
         if (_.field.arrow_type != .Float64) {
             return ArrowError.TypeMismatch;
         }
@@ -453,17 +514,18 @@ pub struct ArrowColumn {
         return @bitCast(bits);
     }
 
-    pub fn getBool(idx: usize): ArrowError!(bool?) {
+    pub fn getBool(idx: usize): (bool?) ! ArrowError {
         if (_.field.arrow_type != .Bool) {
             return ArrowError.TypeMismatch;
         }
         if (try _.isNull(idx)) {
             return null;
         }
-        return ((_.data[idx >> 3] >> @intCast(idx & 7)) & 1) != 0;
+        const sh: u3 = @intCast(idx & 7);
+        return ((_.data[idx >> 3] >> sh) & 1) != 0;
     }
 
-    pub fn getUtf8(idx: usize): ArrowError!(([]const u8)?) {
+    pub fn getUtf8(idx: usize): (([]const u8)?) ! ArrowError {
         if (_.field.arrow_type != .Utf8) {
             return ArrowError.TypeMismatch;
         }
@@ -501,7 +563,7 @@ pub struct RecordBatch {
     pub columns: []ArrowColumn,
     pub num_rows: usize,
 
-    pub fn init(alloc: std.mem.Allocator, schema: ArrowSchema, columns: []ArrowColumn): ArrowError!RecordBatch {
+    pub static fn init(alloc: std.mem.Allocator, schema: ArrowSchema, columns: []ArrowColumn): RecordBatch ! ArrowError {
         if (schema.fields.len != columns.len) {
             return ArrowError.ColumnCountMismatch;
         }
@@ -551,7 +613,7 @@ pub struct RecordBatch {
         return _.columns.len;
     }
 
-    pub fn column(idx: usize): ArrowError!*const ArrowColumn {
+    pub fn column(idx: usize): (*const ArrowColumn) ! ArrowError {
         if (idx >= _.columns.len) {
             return ArrowError.IndexOutOfBounds;
         }

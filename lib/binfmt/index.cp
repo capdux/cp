@@ -958,6 +958,10 @@ export {
 
 // === W29-Sync R7: Consolidated Arrow IPC, Binary Schema, Exe/PE & Wasm Formats ===
 export {
+    ARROW_MAX_ROWS,
+    ARROW_MAX_FIELDS,
+    ARROW_MAX_METADATA_LEN,
+    ARROW_MAX_BODY_LEN,
     ArrowError,
     ArrowType,
     ArrowField,
@@ -965,6 +969,9 @@ export {
     ValidityBitmap,
     ArrowColumn,
     RecordBatch,
+    popcountValidBits,
+    popcountNullBits,
+    simdArrowCopyBytes,
 } from "./arrowTypes.cp";
 
 export {
@@ -979,6 +986,8 @@ export {
     encodeFooter,
     decodeMessage,
     decodeFooter,
+    validateMessageFlatbuf,
+    validateFooterFlatbuf,
 } from "./arrowFlatbuf.cp";
 
 export {
@@ -990,6 +999,8 @@ export {
     readStream,
     writeFile,
     readFile,
+    validateArrowStream,
+    validateArrowFile,
 } from "./arrowIpc.cp";
 
 export {

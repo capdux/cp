@@ -1,7 +1,20 @@
 // Source: cp/lib/arrow_ipc/ipc.cp (Arrow IPC Streaming & File Format "ARROW1" codec)
+// Reference-hardened against apache/arrow-rs (Apache-2.0)
 
 const std = @import("std");
-import { ArrowError, ArrowType, ArrowField, ArrowSchema, ArrowColumn, ValidityBitmap, RecordBatch } from "./arrowTypes.cp";
+import {
+    ARROW_MAX_ROWS,
+    ARROW_MAX_METADATA_LEN,
+    ARROW_MAX_BODY_LEN,
+    ArrowError,
+    ArrowType,
+    ArrowField,
+    ArrowSchema,
+    ArrowColumn,
+    ValidityBitmap,
+    RecordBatch,
+    simdArrowCopyBytes,
+} from "./arrowTypes.cp";
 import {
     FbNode,
     FbBuffer,
@@ -11,6 +24,8 @@ import {
     encodeFooter,
     decodeMessage,
     decodeFooter,
+    validateMessageFlatbuf,
+    validateFooterFlatbuf,
 } from "./arrowFlatbuf.cp";
 
 pub const ARROW_MAGIC: []const u8 = "ARROW1";
@@ -37,24 +52,27 @@ fn alignUp8(n: usize): usize {
     return (n + 7) & ~@as(usize, 7);
 }
 
-fn appendU32LE(out: *std.ArrayList(u8), alloc: std.mem.Allocator, v: u32): ArrowError!void {
+fn appendU32LE(out: *std.ArrayList(u8), alloc: std.mem.Allocator, v: u32): bool ! ArrowError {
     let b: [4]u8 = undefined;
     std.mem.writeInt(u32, &b, v, .little);
     out.appendSlice(alloc, &b) catch return ArrowError.OutOfMemory;
+    return true;
 }
 
-fn appendI32LE(out: *std.ArrayList(u8), alloc: std.mem.Allocator, v: i32): ArrowError!void {
+fn appendI32LE(out: *std.ArrayList(u8), alloc: std.mem.Allocator, v: i32): bool ! ArrowError {
     let b: [4]u8 = undefined;
     std.mem.writeInt(i32, &b, v, .little);
     out.appendSlice(alloc, &b) catch return ArrowError.OutOfMemory;
+    return true;
 }
 
-fn appendZeroPad(out: *std.ArrayList(u8), alloc: std.mem.Allocator, count: usize): ArrowError!void {
+fn appendZeroPad(out: *std.ArrayList(u8), alloc: std.mem.Allocator, count: usize): bool ! ArrowError {
     let i: usize = 0;
     while (i < count) {
         out.append(alloc, 0) catch return ArrowError.OutOfMemory;
         i += 1;
     }
+    return true;
 }
 
 fn writeEncapsulatedMessage(
@@ -62,7 +80,7 @@ fn writeEncapsulatedMessage(
     alloc: std.mem.Allocator,
     meta_bytes: []const u8,
     body_bytes: []const u8,
-): ArrowError!FbBlock {
+): FbBlock ! ArrowError {
     const msg_offset: i64 = @intCast(out.items.len);
     const meta_padded_len = alignUp8(meta_bytes.len);
     const pad_len = meta_padded_len - meta_bytes.len;
@@ -87,12 +105,15 @@ fn writeEncapsulatedMessage(
     };
 }
 
+struct EncodedBatchPayload {
+    meta: []u8,
+    body: []u8,
+}
+
 fn encodeRecordBatchPayload(
     alloc: std.mem.Allocator,
     batch: *const RecordBatch,
-    out_meta: *[]u8,
-    out_body: *[]u8,
-): ArrowError!void {
+): EncodedBatchPayload ! ArrowError {
     let nodes = alloc.alloc(FbNode, batch.columns.len) catch return ArrowError.OutOfMemory;
     defer alloc.free(nodes);
 
@@ -156,11 +177,13 @@ fn encodeRecordBatchPayload(
         buffers_list.items,
     );
 
-    out_meta.* = meta_slice;
-    out_body.* = body_slice;
+    return EncodedBatchPayload{
+        .meta = meta_slice,
+        .body = body_slice,
+    };
 }
 
-fn sliceBodyBuffer(body: []const u8, buf: FbBuffer): ArrowError![]const u8 {
+fn sliceBodyBuffer(body: []const u8, buf: FbBuffer): ([]const u8) ! ArrowError {
     if (buf.offset < 0 or buf.length < 0) {
         return ArrowError.BufferOutOfBounds;
     }
@@ -179,11 +202,14 @@ fn decodeRecordBatchFromParts(
     nodes: []const FbNode,
     buffers: []const FbBuffer,
     body: []const u8,
-): ArrowError!RecordBatch {
+): RecordBatch ! ArrowError {
     if (row_count_i64 < 0) {
         return ArrowError.RowCountMismatch;
     }
     const row_count: usize = @intCast(row_count_i64);
+    if (row_count > ARROW_MAX_ROWS) {
+        return ArrowError.TooManyRows;
+    }
     if (nodes.len != schema.fields.len) {
         return ArrowError.ColumnCountMismatch;
     }
@@ -274,7 +300,12 @@ fn decodeRecordBatchFromParts(
                 j += 1;
             }
 
-            const data_copy = alloc.dupe(u8, data_slice) catch return ArrowError.OutOfMemory;
+            let data_copy = alloc.alloc(u8, data_slice.len) catch return ArrowError.OutOfMemory;
+            const copied = simdArrowCopyBytes(data_copy, data_slice);
+            if (copied != data_slice.len) {
+                alloc.free(data_copy);
+                return ArrowError.BufferOutOfBounds;
+            }
             cols[c] = ArrowColumn{
                 .field = ArrowField{
                     .name = name_copy,
@@ -306,7 +337,12 @@ fn decodeRecordBatchFromParts(
                 return ArrowError.BufferOutOfBounds;
             }
 
-            const data_copy = alloc.dupe(u8, data_slice[0..needed_bytes]) catch return ArrowError.OutOfMemory;
+            let data_copy = alloc.alloc(u8, needed_bytes) catch return ArrowError.OutOfMemory;
+            const copied = simdArrowCopyBytes(data_copy, data_slice[0..needed_bytes]);
+            if (copied != needed_bytes) {
+                alloc.free(data_copy);
+                return ArrowError.BufferOutOfBounds;
+            }
             cols[c] = ArrowColumn{
                 .field = ArrowField{
                     .name = name_copy,
@@ -330,22 +366,20 @@ fn decodeRecordBatchFromParts(
     return rb;
 }
 
-pub fn writeStream(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: []const RecordBatch): ArrowError![]u8 {
+pub fn writeStream(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: []const RecordBatch): ([]u8) ! ArrowError {
     let out = std.ArrayList(u8).empty;
     errdefer out.deinit(alloc);
 
     const schema_meta = try encodeSchemaMessage(alloc, schema);
     defer alloc.free(schema_meta);
-    * = try writeEncapsulatedMessage(&out, alloc, schema_meta, &.{});
+    try writeEncapsulatedMessage(&out, alloc, schema_meta, &.{});
 
     let i: usize = 0;
     while (i < batches.len) {
-        let meta: []u8 = undefined;
-        let body: []u8 = undefined;
-        try encodeRecordBatchPayload(alloc, &batches[i], &meta, &body);
-        defer alloc.free(meta);
-        defer alloc.free(body);
-        * = try writeEncapsulatedMessage(&out, alloc, meta, body);
+        const enc_b = try encodeRecordBatchPayload(alloc, &batches[i]);
+        defer alloc.free(enc_b.meta);
+        defer alloc.free(enc_b.body);
+        try writeEncapsulatedMessage(&out, alloc, enc_b.meta, enc_b.body);
         i += 1;
     }
 
@@ -355,7 +389,7 @@ pub fn writeStream(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches
     return out.toOwnedSlice(alloc) catch return ArrowError.OutOfMemory;
 }
 
-pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowStreamResult {
+pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowStreamResult ! ArrowError {
     let pos: usize = 0;
     let schema: ArrowSchema? = null;
     errdefer {
@@ -375,7 +409,7 @@ pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!Arrow
     }
 
     while (pos < bytes.len) {
-        if (pos + 8 > bytes.len) {
+        if (bytes.len - pos < 8) {
             return ArrowError.UnexpectedEof;
         }
         const cont = std.mem.readInt(u32, bytes[pos..][0..4], .little);
@@ -391,6 +425,9 @@ pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!Arrow
             return ArrowError.InvalidFlatbuffer;
         }
         const meta_size: usize = @intCast(meta_size_i32);
+        if (meta_size > ARROW_MAX_METADATA_LEN) {
+            return ArrowError.MetadataTooLarge;
+        }
         if (meta_size > bytes.len - pos) {
             return ArrowError.UnexpectedEof;
         }
@@ -401,6 +438,9 @@ pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!Arrow
         defer msg.deinit(alloc);
 
         const body_len: usize = @intCast(msg.body_length);
+        if (body_len > ARROW_MAX_BODY_LEN) {
+            return ArrowError.BodyTooLarge;
+        }
         if (body_len > bytes.len - pos) {
             return ArrowError.BufferOutOfBounds;
         }
@@ -419,8 +459,8 @@ pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!Arrow
             schema = msg.schema;
             msg.schema = null;
         } else if (msg.header_type == .RecordBatch) {
-            if (*s := schema) {
-                const rb = try decodeRecordBatchFromParts(alloc, s, msg.row_count, msg.nodes, msg.buffers, body_bytes);
+            if (s := schema) {
+                const rb = try decodeRecordBatchFromParts(alloc, &s, msg.row_count, msg.nodes, msg.buffers, body_bytes);
                 batches.append(alloc, rb) catch return ArrowError.OutOfMemory;
             } else {
                 return ArrowError.EmptySchema;
@@ -438,7 +478,7 @@ pub fn readStream(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!Arrow
     return ArrowError.EmptySchema;
 }
 
-pub fn writeFile(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: []const RecordBatch): ArrowError![]u8 {
+pub fn writeFile(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: []const RecordBatch): ([]u8) ! ArrowError {
     let out = std.ArrayList(u8).empty;
     errdefer out.deinit(alloc);
 
@@ -446,19 +486,17 @@ pub fn writeFile(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: 
 
     const schema_meta = try encodeSchemaMessage(alloc, schema);
     defer alloc.free(schema_meta);
-    * = try writeEncapsulatedMessage(&out, alloc, schema_meta, &.{});
+    try writeEncapsulatedMessage(&out, alloc, schema_meta, &.{});
 
     let blocks = alloc.alloc(FbBlock, batches.len) catch return ArrowError.OutOfMemory;
     defer alloc.free(blocks);
 
     let i: usize = 0;
     while (i < batches.len) {
-        let meta: []u8 = undefined;
-        let body: []u8 = undefined;
-        try encodeRecordBatchPayload(alloc, &batches[i], &meta, &body);
-        defer alloc.free(meta);
-        defer alloc.free(body);
-        blocks[i] = try writeEncapsulatedMessage(&out, alloc, meta, body);
+        const enc_b = try encodeRecordBatchPayload(alloc, &batches[i]);
+        defer alloc.free(enc_b.meta);
+        defer alloc.free(enc_b.body);
+        blocks[i] = try writeEncapsulatedMessage(&out, alloc, enc_b.meta, enc_b.body);
         i += 1;
     }
 
@@ -475,11 +513,11 @@ pub fn writeFile(alloc: std.mem.Allocator, schema: *const ArrowSchema, batches: 
     return out.toOwnedSlice(alloc) catch return ArrowError.OutOfMemory;
 }
 
-pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowStreamResult {
+pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowStreamResult ! ArrowError {
     if (bytes.len < 18) {
         return ArrowError.InvalidMagic;
     }
-    if (!std.mem.eql(u8, bytes[0..6], ARROW_MAGIC)) {
+    if (!std.mem.eql(u8, bytes[0..8], ARROW_MAGIC_PADDED)) {
         return ArrowError.InvalidMagic;
     }
     if (!std.mem.eql(u8, bytes[bytes.len - 6 ..], ARROW_MAGIC)) {
@@ -491,6 +529,9 @@ pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowSt
         return ArrowError.InvalidFooter;
     }
     const footer_len: usize = @intCast(footer_len_i32);
+    if (footer_len > ARROW_MAX_METADATA_LEN) {
+        return ArrowError.MetadataTooLarge;
+    }
     if (footer_len > bytes.len - 18) {
         return ArrowError.InvalidFooter;
     }
@@ -520,6 +561,12 @@ pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowSt
         const blk_off: usize = @intCast(blk.offset);
         const meta_len: usize = @intCast(blk.meta_len);
         const body_len: usize = @intCast(blk.body_len);
+        if (meta_len > ARROW_MAX_METADATA_LEN) {
+            return ArrowError.MetadataTooLarge;
+        }
+        if (body_len > ARROW_MAX_BODY_LEN) {
+            return ArrowError.BodyTooLarge;
+        }
         if (blk_off > footer_start or meta_len > footer_start - blk_off) {
             return ArrowError.BufferOutOfBounds;
         }
@@ -532,7 +579,7 @@ pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowSt
             return ArrowError.InvalidContinuation;
         }
         const fb_len_i32 = std.mem.readInt(i32, bytes[blk_off + 4 ..][0..4], .little);
-        if (fb_len_i32 <= 0 or @as(usize, @intCast(fb_len_i32)) + 8 > meta_len) {
+        if (fb_len_i32 <= 0 or @as(usize, @intCast(fb_len_i32)) > meta_len - 8) {
             return ArrowError.InvalidFlatbuffer;
         }
         const fb_bytes = bytes[blk_off + 8 .. blk_off + 8 + @as(usize, @intCast(fb_len_i32))];
@@ -562,4 +609,62 @@ pub fn readFile(alloc: std.mem.Allocator, bytes: []const u8): ArrowError!ArrowSt
         .schema = schema_copy,
         .batches = batches,
     };
+}
+
+/// Zero-allocation structural validator for Apache Arrow IPC Stream format.
+/// Verifies continuation tokens (`0xFFFFFFFF`), EOS (`0x00000000`), 8-byte alignment,
+/// metadata/body limits, and Flatbuffer message bounds; returns count of validated messages.
+pub fn validateArrowStream(bytes: []const u8): u32 ! ArrowError {
+    if (bytes.len < 8) return ArrowError.UnexpectedEof;
+    let pos: usize = 0;
+    let msg_count: u32 = 0;
+
+    while (pos < bytes.len) {
+        if (bytes.len - pos < 8) return ArrowError.UnexpectedEof;
+        const cont = std.mem.readInt(u32, bytes[pos..][0..4], .little);
+        if (cont != IPC_CONTINUATION_TOKEN) return ArrowError.InvalidContinuation;
+        const meta_size_i32 = std.mem.readInt(i32, bytes[pos + 4 ..][0..4], .little);
+        pos += 8;
+        if (meta_size_i32 == 0) {
+            break;
+        }
+        if (meta_size_i32 < 0) return ArrowError.InvalidFlatbuffer;
+        const meta_size: usize = @intCast(meta_size_i32);
+        if (meta_size > ARROW_MAX_METADATA_LEN) return ArrowError.MetadataTooLarge;
+        if (meta_size > bytes.len - pos) return ArrowError.UnexpectedEof;
+        const meta_bytes = bytes[pos .. pos + meta_size];
+        pos += meta_size;
+
+        const body_len = try validateMessageFlatbuf(meta_bytes);
+        if (body_len > bytes.len - pos) return ArrowError.BufferOutOfBounds;
+        const padded_body = alignUp8(body_len);
+        if (padded_body <= bytes.len - pos) {
+            pos += padded_body;
+        } else {
+            pos = bytes.len;
+        }
+        msg_count += 1;
+    }
+
+    if (msg_count == 0) return ArrowError.EmptySchema;
+    return msg_count;
+}
+
+/// Zero-allocation structural validator for Apache Arrow IPC File ("ARROW1") format.
+/// Verifies 8B header magic `ARROW1\0\0`, 6B trailer magic `ARROW1`, overflow-safe footer size,
+/// Footer Flatbuffer schema, and all RecordBatch block bounds; returns RecordBatch block count.
+pub fn validateArrowFile(bytes: []const u8): u32 ! ArrowError {
+    if (bytes.len < 18) return ArrowError.InvalidMagic;
+    if (!std.mem.eql(u8, bytes[0..8], ARROW_MAGIC_PADDED)) return ArrowError.InvalidMagic;
+    if (!std.mem.eql(u8, bytes[bytes.len - 6 ..], ARROW_MAGIC)) return ArrowError.InvalidMagic;
+
+    const footer_len_i32 = std.mem.readInt(i32, bytes[bytes.len - 10 ..][0..4], .little);
+    if (footer_len_i32 <= 0) return ArrowError.InvalidFooter;
+    const footer_len: usize = @intCast(footer_len_i32);
+    if (footer_len > ARROW_MAX_METADATA_LEN) return ArrowError.MetadataTooLarge;
+    if (footer_len > bytes.len - 18) return ArrowError.InvalidFooter;
+
+    const footer_start = bytes.len - 10 - footer_len;
+    const footer_bytes = bytes[footer_start .. footer_start + footer_len];
+    return validateFooterFlatbuf(footer_bytes, footer_start);
 }
