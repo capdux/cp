@@ -1,5 +1,7 @@
+// Reference-hardened against rust-lang/regex (MIT/Apache-2.0)
 // Source: cp/lib/regex/compiler.cp (Linear NFA Regex Bytecode Compiler)
-// Pure CP zero-C-dependency regular expression parser and Thompson NFA bytecode compiler.
+// Pure CP zero-C-dependency regular expression parser, Thompson NFA bytecode compiler,
+// and static SIMD literal/first-byte prefilter analyzer.
 
 const std = @import("std");
 
@@ -9,6 +11,8 @@ pub const MAX_SLOTS: usize = (MAX_GROUPS + 1) * 2;
 pub const MAX_REPEAT_COUNT: usize = 1000;
 pub const MAX_CLASSES: usize = 1024;
 pub const MAX_PARSE_DEPTH: usize = 64;
+pub const MAX_AST_NODES: usize = 8192;
+pub const MAX_PREFIX_LEN: usize = 32;
 
 pub err RegexError {
     InvalidPattern,
@@ -23,13 +27,39 @@ pub err RegexError {
 pub enum Opcode {
     Char,
     Any,
+    AnyAll,
     Class,
     Split,
     Jmp,
     Save,
     AssertStart,
     AssertEnd,
+    AssertStartLine,
+    AssertEndLine,
+    AssertWordBoundary,
+    AssertNonWordBoundary,
     Match,
+}
+
+/// 静态预过滤策略（对标 rust-lang/regex prefilter）
+pub enum PrefilterKind: u8 {
+    None = 0,
+    AnchoredStart = 1,
+    SingleByte = 2,
+    TwoBytes = 3,
+    FourBytes = 4,
+    LiteralPrefix = 5,
+}
+
+/// 编译期提取的 SIMD 预过滤元数据
+pub struct Prefilter {
+    pub kind: PrefilterKind = PrefilterKind.None,
+    pub b0: u8 = 0,
+    pub b1: u8 = 0,
+    pub b2: u8 = 0,
+    pub b3: u8 = 0,
+    pub prefix_len: usize = 0,
+    pub prefix: [MAX_PREFIX_LEN]u8 = [0; MAX_PREFIX_LEN],
 }
 
 pub struct CharClass {
@@ -41,11 +71,34 @@ pub struct CharClass {
         _.bits[idx] |= (u64(1) << bit);
     }
 
+    pub fn setByteCaseFold(*_, c: u8, case_insensitive: bool) {
+        _.setByte(c);
+        if (case_insensitive) {
+            if (c >= 'a' && c <= 'z') {
+                _.setByte(c - 32);
+            } else if (c >= 'A' && c <= 'Z') {
+                _.setByte(c + 32);
+            }
+        }
+    }
+
     pub fn setRange(*_, lo: u8, hi: u8) {
         let c: usize = usize(lo);
         const end: usize = usize(hi);
         while (c <= end) : (c += 1) {
             _.setByte(u8(c));
+        }
+    }
+
+    pub fn foldAsciiCase(*_) {
+        let c: usize = usize('a');
+        while (c <= usize('z')) : (c += 1) {
+            const lo = u8(c);
+            const hi = u8(c - 32);
+            if (_.contains(lo) || _.contains(hi)) {
+                _.setByte(lo);
+                _.setByte(hi);
+            }
         }
     }
 
@@ -65,6 +118,14 @@ pub struct CharClass {
         const idx = usize(c >> 6);
         const bit: u6 = @truncate(c & 63);
         return (_.bits[idx] & (u64(1) << bit)) != 0;
+    }
+
+    pub fn popcount(): usize {
+        let total: usize = 0;
+        for (i of 0..4) {
+            total += usize(@popCount(_.bits[i]));
+        }
+        return total;
     }
 
     pub static fn digits(): CharClass {
@@ -108,6 +169,7 @@ pub struct Program {
     insts: []Inst = [],
     classes: []CharClass = [],
     num_groups: usize = 0,
+    pub prefilter: Prefilter = Prefilter{},
 
     pub fn deinit(*_) {
         if (_.insts.len > 0) {
@@ -121,13 +183,25 @@ pub struct Program {
     }
 }
 
+struct CompileFlags {
+    case_insensitive: bool = false,
+    multi_line: bool = false,
+    dot_all: bool = false,
+    swap_greed: bool = false,
+}
+
 enum AstKind {
     Empty,
     Char,
     Any,
+    AnyAll,
     Class,
     AssertStart,
     AssertEnd,
+    AssertStartLine,
+    AssertEndLine,
+    AssertWordBoundary,
+    AssertNonWordBoundary,
     Concat,
     Alt,
     Repeat,
@@ -172,6 +246,7 @@ struct Parser {
     pos: usize = 0,
     depth: usize = 0,
     num_groups: usize = 0,
+    flags: CompileFlags = CompileFlags{},
     nodes: std.ArrayList(AstNode) = .empty,
     child_ids: std.ArrayList(usize) = .empty,
     classes: std.ArrayList(CharClass) = .empty,
@@ -183,6 +258,9 @@ struct Parser {
     }
 
     fn addNode(*_, node: AstNode): usize ! RegexError {
+        if (_.nodes.items.len >= MAX_AST_NODES) {
+            return RegexError.MaxComplexityExceeded;
+        }
         const idx = _.nodes.items.len;
         _.nodes.append(_.alloc, node) catch return RegexError.OutOfMemory;
         return idx;
@@ -195,6 +273,16 @@ struct Parser {
         const idx = _.classes.items.len;
         _.classes.append(_.alloc, cc) catch return RegexError.OutOfMemory;
         return idx;
+    }
+
+    fn addCharNode(*_, c: u8): usize ! RegexError {
+        if (_.flags.case_insensitive && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+            let cc = CharClass{};
+            cc.setByteCaseFold(c, true);
+            const idx = _.addClass(cc)?;
+            return _.addNode(AstNode{ kind: .Class, class_idx: idx });
+        }
+        return _.addNode(AstNode{ kind: .Char, ch: c });
     }
 
     fn parse(*_): usize ! RegexError {
@@ -212,11 +300,13 @@ struct Parser {
         let branches: std.ArrayList(usize) = .empty;
         defer branches.deinit(_.alloc);
 
+        const saved_flags = _.flags;
         const first = _.parseConcat()?;
         branches.append(_.alloc, first) catch return RegexError.OutOfMemory;
 
         while (_.pos < _.pattern.len && _.pattern[_.pos] == '|') {
             _.pos += 1;
+            _.flags = saved_flags;
             const next_branch = _.parseConcat()?;
             branches.append(_.alloc, next_branch) catch return RegexError.OutOfMemory;
         }
@@ -277,7 +367,9 @@ struct Parser {
         const c = _.pattern[_.pos];
         if (c == '*' || c == '+' || c == '?' || c == '{') {
             const atom_kind = _.nodes.items[atom].kind;
-            if (atom_kind == .AssertStart || atom_kind == .AssertEnd) {
+            if (atom_kind == .AssertStart || atom_kind == .AssertEnd ||
+                atom_kind == .AssertStartLine || atom_kind == .AssertEndLine ||
+                atom_kind == .AssertWordBoundary || atom_kind == .AssertNonWordBoundary) {
                 return RegexError.InvalidQuantifier;
             }
 
@@ -302,9 +394,9 @@ struct Parser {
                 max_count = parsed.max;
             }
 
-            let greedy = true;
+            let greedy = !_.flags.swap_greed;
             if (_.pos < _.pattern.len && _.pattern[_.pos] == '?') {
-                greedy = false;
+                greedy = !greedy;
                 _.pos += 1;
             }
 
@@ -329,7 +421,6 @@ struct Parser {
     }
 
     fn parseBraceQuantifier(*_): BraceRange ! RegexError {
-        // Consumes `{m}`, `{m,}`, `{m,n}`
         if (_.pos >= _.pattern.len || _.pattern[_.pos] != '{') {
             return RegexError.InvalidQuantifier;
         }
@@ -414,15 +505,15 @@ struct Parser {
         }
         if (c == '.') {
             _.pos += 1;
-            return _.addNode(AstNode{ kind: .Any });
+            return _.addNode(AstNode{ kind: if (_.flags.dot_all) .AnyAll else .Any });
         }
         if (c == '^') {
             _.pos += 1;
-            return _.addNode(AstNode{ kind: .AssertStart });
+            return _.addNode(AstNode{ kind: if (_.flags.multi_line) .AssertStartLine else .AssertStart });
         }
         if (c == '$') {
             _.pos += 1;
-            return _.addNode(AstNode{ kind: .AssertEnd });
+            return _.addNode(AstNode{ kind: if (_.flags.multi_line) .AssertEndLine else .AssertEnd });
         }
         if (c == '[') {
             return _.parseCharClass();
@@ -435,7 +526,65 @@ struct Parser {
         }
 
         _.pos += 1;
-        return _.addNode(AstNode{ kind: .Char, ch: c });
+        return _.addCharNode(c);
+    }
+
+    fn parseFlagGroup(*_): usize ! RegexError {
+        // Called right after consuming "(?"
+        let next_flags = _.flags;
+        let setting = true;
+        let saw_any = false;
+
+        while (_.pos < _.pattern.len) {
+            const fc = _.pattern[_.pos];
+            if (fc == ')') {
+                if (!saw_any) return RegexError.InvalidPattern;
+                _.pos += 1;
+                _.flags = next_flags;
+                return _.addNode(AstNode{ kind: .Empty });
+            }
+            if (fc == ':') {
+                _.pos += 1;
+                const prev_flags = _.flags;
+                _.flags = next_flags;
+                const inner = _.parseAlternation() catch |e| {
+                    _.flags = prev_flags;
+                    return e;
+                };
+                _.flags = prev_flags;
+                if (_.pos >= _.pattern.len || _.pattern[_.pos] != ')') {
+                    return RegexError.UnmatchedParen;
+                }
+                _.pos += 1;
+                return inner;
+            }
+            if (fc == '-') {
+                if (!setting) return RegexError.InvalidPattern;
+                setting = false;
+                _.pos += 1;
+                continue;
+            }
+            if (fc == 'i') {
+                next_flags.case_insensitive = setting;
+                saw_any = true;
+                _.pos += 1;
+            } else if (fc == 'm') {
+                next_flags.multi_line = setting;
+                saw_any = true;
+                _.pos += 1;
+            } else if (fc == 's') {
+                next_flags.dot_all = setting;
+                saw_any = true;
+                _.pos += 1;
+            } else if (fc == 'U') {
+                next_flags.swap_greed = setting;
+                saw_any = true;
+                _.pos += 1;
+            } else {
+                return RegexError.InvalidPattern;
+            }
+        }
+        return RegexError.UnmatchedParen;
     }
 
     fn parseGroup(*_): usize ! RegexError {
@@ -447,31 +596,44 @@ struct Parser {
 
         _.pos += 1; // consume '('
 
-        let group_id: usize = 0;
-        if (_.pos + 1 < _.pattern.len && _.pattern[_.pos] == '?' && _.pattern[_.pos + 1] == ':') {
-            _.pos += 2; // non-capturing (?:...)
-        } else {
-            if (_.num_groups >= MAX_GROUPS) {
-                return RegexError.MaxComplexityExceeded;
-            }
-            _.num_groups += 1;
-            group_id = _.num_groups;
+        if (_.pos < _.pattern.len && _.pattern[_.pos] == '?') {
+            _.pos += 1; // consume '?'
+            return _.parseFlagGroup();
         }
 
-        const inner = _.parseAlternation()?;
+        if (_.num_groups >= MAX_GROUPS) {
+            return RegexError.MaxComplexityExceeded;
+        }
+        _.num_groups += 1;
+        const group_id = _.num_groups;
+
+        const saved_flags = _.flags;
+        const inner = _.parseAlternation() catch |e| {
+            _.flags = saved_flags;
+            return e;
+        };
+        _.flags = saved_flags;
+
         if (_.pos >= _.pattern.len || _.pattern[_.pos] != ')') {
             return RegexError.UnmatchedParen;
         }
         _.pos += 1; // consume ')'
 
-        if (group_id == 0) {
-            return inner;
-        }
         return _.addNode(AstNode{
             kind: .Group,
             child: inner,
             group_id: group_id,
         });
+    }
+
+    fn parseHexByte(*_): u8 ! RegexError {
+        if (_.pos + 2 > _.pattern.len) {
+            return RegexError.InvalidEscape;
+        }
+        const hi = hexDigitValue(_.pattern[_.pos]) orelse return RegexError.InvalidEscape;
+        const lo = hexDigitValue(_.pattern[_.pos + 1]) orelse return RegexError.InvalidEscape;
+        _.pos += 2;
+        return (hi << 4) | lo;
     }
 
     fn parseEscapeAtom(*_): usize ! RegexError {
@@ -482,6 +644,18 @@ struct Parser {
         const esc = _.pattern[_.pos];
         _.pos += 1;
 
+        if (esc == 'A') {
+            return _.addNode(AstNode{ kind: .AssertStart });
+        }
+        if (esc == 'z') {
+            return _.addNode(AstNode{ kind: .AssertEnd });
+        }
+        if (esc == 'b') {
+            return _.addNode(AstNode{ kind: .AssertWordBoundary });
+        }
+        if (esc == 'B') {
+            return _.addNode(AstNode{ kind: .AssertNonWordBoundary });
+        }
         if (esc == 'd') {
             const idx = _.addClass(CharClass.digits())?;
             return _.addNode(AstNode{ kind: .Class, class_idx: idx });
@@ -512,9 +686,13 @@ struct Parser {
             const idx = _.addClass(cc)?;
             return _.addNode(AstNode{ kind: .Class, class_idx: idx });
         }
+        if (esc == 'x') {
+            const hb = _.parseHexByte()?;
+            return _.addCharNode(hb);
+        }
 
         const lit = decodeLiteralEscape(esc)?;
-        return _.addNode(AstNode{ kind: .Char, ch: lit });
+        return _.addCharNode(lit);
     }
 
     fn parseCharClass(*_): usize ! RegexError {
@@ -527,7 +705,6 @@ struct Parser {
             _.pos += 1;
         }
 
-        // Allow ']' as the very first character inside [...] or [^...]
         let first = true;
         let has_prev_char = false;
         let prev_char: u8 = 0;
@@ -538,6 +715,9 @@ struct Parser {
                 _.pos += 1;
                 if (has_prev_char) {
                     cc.setByte(prev_char);
+                }
+                if (_.flags.case_insensitive) {
+                    cc.foldAsciiCase();
                 }
                 if (negated) {
                     cc.negate();
@@ -588,6 +768,9 @@ struct Parser {
                     let s = CharClass.space();
                     s.negate();
                     cc.merge(s);
+                } else if (esc == 'x') {
+                    prev_char = _.parseHexByte()?;
+                    has_prev_char = true;
                 } else {
                     prev_char = decodeLiteralEscape(esc)?;
                     has_prev_char = true;
@@ -617,23 +800,239 @@ struct Parser {
             if (esc == 'd' || esc == 'D' || esc == 'w' || esc == 'W' || esc == 's' || esc == 'S') {
                 return RegexError.InvalidPattern;
             }
+            if (esc == 'x') {
+                return _.parseHexByte();
+            }
             return decodeLiteralEscape(esc);
         }
         return c;
     }
 }
 
+fn hexDigitValue(c: u8): u8? {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return null;
+}
+
 fn decodeLiteralEscape(esc: u8): u8 ! RegexError {
     if (esc == 'n') return '\n';
     if (esc == 'r') return '\r';
     if (esc == 't') return '\t';
+    if (esc == 'a') return 0x07;
+    if (esc == 'f') return 0x0C;
+    if (esc == 'v') return 0x0B;
     if (esc == '\\' || esc == '.' || esc == '*' || esc == '+' || esc == '?' ||
         esc == '(' || esc == ')' || esc == '[' || esc == ']' || esc == '{' ||
         esc == '}' || esc == '|' || esc == '^' || esc == '$' || esc == '/' ||
-        esc == '-' || esc == '_') {
+        esc == '-' || esc == '_' || esc == ':' || esc == ';' || esc == ',' ||
+        esc == '\'' || esc == '"' || esc == '!' || esc == '@' || esc == '#' ||
+        esc == '%' || esc == '&' || esc == '=' || esc == '<' || esc == '>' ||
+        esc == '~' || esc == '`') {
         return esc;
     }
     return RegexError.InvalidEscape;
+}
+
+// ============================================================================
+// Static Prefilter Analysis (Anchored / Literal Prefix / First-Byte Set)
+// ============================================================================
+
+struct FirstSet {
+    nullable: bool = false,
+    any_byte: bool = false,
+    anchored_start: bool = false,
+    bytes: CharClass = CharClass{},
+}
+
+fn analyzeFirstSet(
+    nodes: []const AstNode,
+    child_ids: []const usize,
+    classes: []const CharClass,
+    node_idx: usize,
+    depth: usize,
+): FirstSet {
+    if (depth > MAX_PARSE_DEPTH) {
+        return FirstSet{ nullable: true, any_byte: true };
+    }
+    const node = nodes[node_idx];
+    switch (node.kind) {
+        .Empty | .AssertEnd | .AssertStartLine | .AssertEndLine | .AssertWordBoundary | .AssertNonWordBoundary => {
+            return FirstSet{ nullable: true };
+        },
+        .AssertStart => {
+            return FirstSet{ nullable: true, anchored_start: true };
+        },
+        .Char => {
+            let fs = FirstSet{};
+            fs.bytes.setByte(node.ch);
+            return fs;
+        },
+        .Any | .AnyAll => {
+            return FirstSet{ any_byte: true };
+        },
+        .Class => {
+            let fs = FirstSet{};
+            fs.bytes = classes[node.class_idx];
+            if (fs.bytes.popcount() > 4) {
+                fs.any_byte = true;
+            }
+            return fs;
+        },
+        .Group => {
+            return analyzeFirstSet(nodes, child_ids, classes, node.child, depth + 1);
+        },
+        .Repeat => {
+            let inner = analyzeFirstSet(nodes, child_ids, classes, node.child, depth + 1);
+            if (node.min == 0) {
+                inner.nullable = true;
+                inner.anchored_start = false;
+            }
+            return inner;
+        },
+        .Concat => {
+            let acc = FirstSet{ nullable: true };
+            let i: usize = 0;
+            while (i < node.children_len) : (i += 1) {
+                const sub = analyzeFirstSet(nodes, child_ids, classes, child_ids[node.children_start + i], depth + 1);
+                if (sub.anchored_start) {
+                    acc.anchored_start = true;
+                }
+                if (sub.any_byte) {
+                    acc.any_byte = true;
+                } else {
+                    acc.bytes.merge(sub.bytes);
+                }
+                if (!sub.nullable) {
+                    acc.nullable = false;
+                    break;
+                }
+            }
+            return acc;
+        },
+        .Alt => {
+            let acc = FirstSet{ anchored_start: true };
+            let i: usize = 0;
+            while (i < node.children_len) : (i += 1) {
+                const sub = analyzeFirstSet(nodes, child_ids, classes, child_ids[node.children_start + i], depth + 1);
+                if (sub.nullable) acc.nullable = true;
+                if (!sub.anchored_start) acc.anchored_start = false;
+                if (sub.any_byte) {
+                    acc.any_byte = true;
+                } else {
+                    acc.bytes.merge(sub.bytes);
+                }
+            }
+            return acc;
+        },
+    }
+}
+
+fn collectLiteralPrefix(
+    nodes: []const AstNode,
+    child_ids: []const usize,
+    node_idx: usize,
+    out: *[MAX_PREFIX_LEN]u8,
+    out_len: *usize,
+    depth: usize,
+): bool {
+    // Returns true if we can continue collecting subsequent concat nodes
+    if (depth > MAX_PARSE_DEPTH || out_len.* >= MAX_PREFIX_LEN) return false;
+    const node = nodes[node_idx];
+    switch (node.kind) {
+        .Empty => return true,
+        .Char => {
+            out.*[out_len.*] = node.ch;
+            out_len.* += 1;
+            return out_len.* < MAX_PREFIX_LEN;
+        },
+        .Group => {
+            return collectLiteralPrefix(nodes, child_ids, node.child, out, out_len, depth + 1);
+        },
+        .Concat => {
+            let i: usize = 0;
+            while (i < node.children_len) : (i += 1) {
+                if (!collectLiteralPrefix(nodes, child_ids, child_ids[node.children_start + i], out, out_len, depth + 1)) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        .Repeat => {
+            if (node.min == 0) return false;
+            const child = nodes[node.child];
+            if (child.kind == .Char) {
+                let r: usize = 0;
+                while (r < node.min && out_len.* < MAX_PREFIX_LEN) : (r += 1) {
+                    out.*[out_len.*] = child.ch;
+                    out_len.* += 1;
+                }
+            }
+            return false;
+        },
+        else => return false,
+    }
+}
+
+fn buildPrefilter(
+    nodes: []const AstNode,
+    child_ids: []const usize,
+    classes: []const CharClass,
+    root: usize,
+): Prefilter {
+    const fs = analyzeFirstSet(nodes, child_ids, classes, root, 0);
+    if (fs.anchored_start) {
+        return Prefilter{ kind: PrefilterKind.AnchoredStart };
+    }
+    if (fs.nullable) {
+        return Prefilter{ kind: PrefilterKind.None };
+    }
+
+    // 1. Check mandatory literal prefix (>= 2 bytes)
+    let pbuf: [MAX_PREFIX_LEN]u8 = [0; MAX_PREFIX_LEN];
+    let plen: usize = 0;
+    * = collectLiteralPrefix(nodes, child_ids, root, *pbuf, *plen, 0);
+    if (plen >= 2) {
+        return Prefilter{
+            kind: PrefilterKind.LiteralPrefix,
+            b0: pbuf[0],
+            prefix_len: plen,
+            prefix: pbuf,
+        };
+    }
+
+    if (fs.any_byte) {
+        return Prefilter{ kind: PrefilterKind.None };
+    }
+
+    // 2. Extract 1..4 possible first bytes for SIMD indexOfByte / indexOfAny2 / indexOfAny4
+    let found: [4]u8 = [0, 0, 0, 0];
+    let cnt: usize = 0;
+    let c: usize = 0;
+    while (c < 256) : (c += 1) {
+        if (fs.bytes.contains(u8(c))) {
+            if (cnt >= 4) {
+                return Prefilter{ kind: PrefilterKind.None };
+            }
+            found[cnt] = u8(c);
+            cnt += 1;
+        }
+    }
+
+    if (cnt == 1) {
+        return Prefilter{ kind: PrefilterKind.SingleByte, b0: found[0] };
+    }
+    if (cnt == 2) {
+        return Prefilter{ kind: PrefilterKind.TwoBytes, b0: found[0], b1: found[1] };
+    }
+    if (cnt == 3) {
+        return Prefilter{ kind: PrefilterKind.FourBytes, b0: found[0], b1: found[1], b2: found[2], b3: found[2] };
+    }
+    if (cnt == 4) {
+        return Prefilter{ kind: PrefilterKind.FourBytes, b0: found[0], b1: found[1], b2: found[2], b3: found[3] };
+    }
+    return Prefilter{ kind: PrefilterKind.None };
 }
 
 struct Emitter {
@@ -686,6 +1085,12 @@ struct Emitter {
                 f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
                 return f;
             },
+            .AnyAll => {
+                const pc = _.emitInst(Inst{ op: .AnyAll })?;
+                let f = Frag{ start: pc };
+                f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
+                return f;
+            },
             .Class => {
                 const pc = _.emitInst(Inst{ op: .Class, class_idx: node.class_idx })?;
                 let f = Frag{ start: pc };
@@ -700,6 +1105,30 @@ struct Emitter {
             },
             .AssertEnd => {
                 const pc = _.emitInst(Inst{ op: .AssertEnd })?;
+                let f = Frag{ start: pc };
+                f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
+                return f;
+            },
+            .AssertStartLine => {
+                const pc = _.emitInst(Inst{ op: .AssertStartLine })?;
+                let f = Frag{ start: pc };
+                f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
+                return f;
+            },
+            .AssertEndLine => {
+                const pc = _.emitInst(Inst{ op: .AssertEndLine })?;
+                let f = Frag{ start: pc };
+                f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
+                return f;
+            },
+            .AssertWordBoundary => {
+                const pc = _.emitInst(Inst{ op: .AssertWordBoundary })?;
+                let f = Frag{ start: pc };
+                f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
+                return f;
+            },
+            .AssertNonWordBoundary => {
+                const pc = _.emitInst(Inst{ op: .AssertNonWordBoundary })?;
                 let f = Frag{ start: pc };
                 f.exits.append(_.alloc, Patch{ pc: pc, is_out2: false }) catch return RegexError.OutOfMemory;
                 return f;
@@ -775,7 +1204,6 @@ struct Emitter {
         let acc = Frag{ start: 0 };
         errdefer acc.deinit(_.alloc);
 
-        // Emit `min_count` mandatory copies
         for (i of 0..min_count) {
             * = i;
             let part = _.compileNode(child_idx)?;
@@ -796,7 +1224,6 @@ struct Emitter {
         }
 
         if (max_count == null) {
-            // Unbounded tail: e*
             let body = _.compileNode(child_idx)?;
             errdefer body.deinit(_.alloc);
             const split_pc = _.emitInst(Inst{ op: .Split })?;
@@ -866,7 +1293,6 @@ struct Emitter {
         }
 
         if (!has_acc) {
-            // {0,0} -> empty match
             const jmp_pc = _.emitInst(Inst{ op: .Jmp })?;
             acc.start = jmp_pc;
             acc.exits.append(_.alloc, Patch{ pc: jmp_pc, is_out2: false }) catch return RegexError.OutOfMemory;
@@ -882,6 +1308,12 @@ pub static class Compiler {
         defer parser.deinit();
 
         const root = parser.parse()?;
+        const prefilter = buildPrefilter(
+            parser.nodes.items,
+            parser.child_ids.items,
+            parser.classes.items,
+            root,
+        );
 
         let emitter = Emitter{
             alloc: alloc,
@@ -916,6 +1348,7 @@ pub static class Compiler {
             insts: insts_slice,
             classes: classes_slice,
             num_groups: parser.num_groups,
+            prefilter: prefilter,
         };
     }
 }

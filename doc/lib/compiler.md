@@ -16,7 +16,7 @@
 | :--- | :--- | :--- |
 | `lib/compiler/expr.cp` | 安全确定性表达式编译与求值 | `compile`, `compileWithMaxDepth`, `eval`, `CompiledExpr`, `ExprContext`, `ExprValue`, `ExprError`, `DEFAULT_MAX_DEPTH` |
 | `lib/compiler/sat.cp` | DPLL 布尔可满足性求解器与 DIMACS CNF | `SatSolver`, `ConstraintModel`, `SatSolution`, `NamedSolution`, `SatStatus`, `SatError` |
-| `lib/compiler/regexCompiler.cp` / `regexVm.cp` | Anti-ReDoS Pike VM / Thompson NFA 正则引擎 | `Regex`, `Compiler`, `Program`, `Inst`, `Opcode`, `Captures`, `MatchSpan`, `RegexError` |
+| `lib/compiler/regexCompiler.cp` / `regexVm.cp` | Anti-ReDoS Pike VM / Thompson NFA 正则引擎（对标 `rust-lang/regex` 加固 + `cap:simd` 预过滤） | `Regex`, `Compiler`, `Program`, `Inst`, `Opcode`, `Prefilter`, `PrefilterKind`, `Captures`, `MatchSpan`, `RegexError` |
 
 ### 2. 语言前端、WebAssembly、着色器与 IDL（6 个子模块）
 

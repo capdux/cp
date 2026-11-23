@@ -29,6 +29,8 @@ export {
 export {
     RegexError,
     Opcode,
+    PrefilterKind,
+    Prefilter,
     CharClass,
     Inst,
     Program,
