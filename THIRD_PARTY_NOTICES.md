@@ -44,6 +44,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **aho-corasick** | <https://github.com/BurntSushi/aho-corasick> | MIT OR Unlicense | `lib/ds/ahoCorasick.cp` | Copyright (c) 2015 Andrew Gallant |
 | **webrtc-rs/sctp** | <https://github.com/webrtc-rs/sctp> | MIT OR Apache-2.0 | `lib/net/sctpDataChannel.cp` | Copyright (c) 2021 webrtc-rs developers |
 | **rstar** (`georust`) | <https://github.com/georust/rstar> | MIT OR Apache-2.0 | `lib/ds/rtree.cp` | Copyright (c) 2018 The rstar project developers |
+| **claxon** (`ruuda`) | <https://github.com/ruuda/claxon> | Apache-2.0 | `lib/media/flac.cp` | Copyright (c) Ruud van Asseldonk |
 
 ---
 

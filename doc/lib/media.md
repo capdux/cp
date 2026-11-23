@@ -16,7 +16,7 @@
 | :--- | :--- | :--- |
 | `lib/media/audioWav.cp` | RIFF/WAVE PCM16 & Float32 编解码 | `WavCodec`, `WavAudio`, `WavFloatAudio`, `AudioError` |
 | `lib/media/audioDsp.cp` | Voice AI 重采样、RMS/dB 计量与能量 VAD | `AudioDsp`, `EnergyVad`, `SpeechSegment` |
-| `lib/media/flac.cp` | FLAC 无损音频元数据块解析 | `isFlac`, `FlacBlockIter`, `parseStreamInfoPayload`, `parseFlacStreamInfo`, `FlacStreamInfo`, `FlacBlockType` |
+| `lib/media/flac.cp` | RFC 9639 FLAC 无损音频全栈解码器（对标 `ruuda/claxon`：完整 Metadata + Frame CRC-8/16 + 4 Subframes + 4 立体声去相关 + 4-lane SIMD 0-bit 精确核） | `FlacError`, `FlacStreamInfo`, `FlacFrameHeader`, `FlacDecodedFrame`, `FlacDecodeSummary`, `decodeFlacFrame`, `decodeFlacStream`, `flacCrc8`, `flacCrc16`, `decodeFlacUtf8`, `lpcPredictSimd`, `decorrelateMidSideSimd` |
 | `lib/media/ogg.cp` | RFC 3533 Ogg 容器分页解析与 CRC32 | `isOgg`, `OggPageIter`, `oggCrc32`, `OggPage` |
 | `lib/media/opus.cp` | RFC 7845/6716 Opus Head/Tags/TOC 解析 | `isOpusHead`, `isOpusTags`, `parseOpusHead`, `parseOpusTags`, `parseOpusToc`, `OpusCommentIter` |
 | `lib/media/aac.cp` | AAC ADTS 帧与 AudioSpecificConfig 解析 | `isAdts`, `AdtsIter`, `parseAudioSpecificConfig`, `summarizeAdts`, `aacSampleRate`, `aacChannelCount` |
