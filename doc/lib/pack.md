@@ -620,6 +620,19 @@ pub fn demoHybridRle() {
 
 ---
 
+---
+
+## 纯 CP RFC 8878 Zstandard 解压引擎（零 C 依赖，`zstdDecode.cp`）
+
+面向 HTTP `Content-Encoding: zstd` 与现代包管理分发的 100% 纯 CP、零 C/FFI 依赖 RFC 8878 Zstandard 解压引擎（与 `gzip` / `deflate` / `brotli` 组成四大现代压缩全栈）：
+
+- **帧头解析与多帧流**：`zstdInspectFrame(src): ZstdFrameInfo ! ZstdDecodeError` 支持标准帧 (`0xFD2FB528`)、可跳过帧 Skippable Frame (`0x184D2A50..0x184D2A5F`) 与拼接多帧流，解析 `Single_Segment`、`Content_Checksum`、`Dictionary_ID`、`Window_Descriptor` 及 1/2/4/8B `Frame_Content_Size`。
+- **完整块与熵解码**：支持 `Raw_Block`、`RLE_Block`、`Compressed_Block`；Literals 支持 Raw / RLE / Compressed (1-Stream & 4-Stream Canonical Huffman + FSE 权重压缩/直接 4-bit 权重) / Treeless；Sequences 支持 RFC 8878 §3.1.1.3.2.2 官方预设 FSE 表、RLE、FSE_Compressed、Repeat_Mode 与 `Repeat_Offset_1/2/3`（含 `LL==0` 规则）。
+- **xxHash64 内容校验**：内置 `xxhash64Zstd(data): u64`（seed=0），当帧头启用 `Content_Checksum_Flag` 时严格校验帧尾低 32 位校验和。
+- **双模式 API**：
+  - 零堆外部工作区接口：`zstdDecompressInto(src, *dst, *ws): usize ! ZstdDecodeError`（`ZstdWorkspace.init(lit_buf)`）
+  - 便捷分配器封装：`zstdDecompress(alloc, src, max_out_bytes): []u8 ! ZstdDecodeError`
+
 ## 收敛子模块深度文档
 
 - [ar.md](pack/ar.md)
