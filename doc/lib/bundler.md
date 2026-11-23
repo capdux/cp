@@ -1168,3 +1168,41 @@ const ltab = SourceLineTable.build(src, lines[0..])?;
 const loc = ltab.resolveOffset(src, found[1].offset);
 * = scan_sum; * = loc;
 ```
+
+- **并行 Chunk 发射调度池、两阶段内容寻址哈希与资产清单引擎（`chunkEmitPool.cp`，吸收自 `/data/dev/bun/src/bundler/linker_context/generateChunksInParallel.cp`）**：
+    - 导出：`CHUNK_EMIT_DEFAULT_WORKERS`、`CHUNK_EMIT_INVALID_ID`、`CHUNK_EMIT_HASH_HEX_LEN`、`CHUNK_EMIT_DEFAULT_MAX_ROUNDS`、`CHUNK_EMIT_PLACEHOLDER_PREFIX`、`ChunkEmitPoolError`、`computeChunkContentHash64`、`ChunkPlaceholderSpan`、`PlaceholderScanSummary`、`PlaceholderRewriteResult`、`scanChunkPlaceholdersFast`（接入 `cap:simd` `Simd.indexOfByte` 加速扫描 `[chunk_placeholder:<id>]` 并安全跳过畸形/截断占位符）、`substituteChunkPlaceholders`、`ChunkEmitKind`、`ChunkEmitState`（`Pending -> Emitting -> Hashed -> Written | Failed | Cancelled`）、`ChunkEmitJob`、`ChunkEmitDispatchItem`、`ChunkEmitPoolStats`、`ChunkEmitPool`（LPT 最长作业优先调度 + `max_workers` 槽位限流 + 失败快速取消）、`ChunkHashInput`、`ResolvedChunkOutput`、`ChunkHashResolveOptions`、`ChunkHashResolveSummary`、`formatChunkHashedFilename`、`getResolvedFilename`、`getResolvedCode`、`resolveChunkContentHashes`（两阶段 64-bit 内容寻址哈希与多轮固定点收敛回填 + 重复输出路径冲突检测）、`ManifestChunkEntry`、`formatAssetManifestJson`（按字典序输出 `file`/`isEntry`/`size`/`integrity`/`imports`/`css` 规范 JSON 清单）、`formatChunkEmitPoolReport`。
+
+```cp
+import {
+    ChunkEmitJob,
+    ChunkEmitDispatchItem,
+    ChunkEmitPool,
+    ChunkHashInput,
+    ResolvedChunkOutput,
+    ChunkHashResolveOptions,
+    resolveChunkContentHashes,
+    getResolvedFilename,
+    ManifestChunkEntry,
+    formatAssetManifestJson,
+} from "cap:bundler";
+
+let jobs: [4]ChunkEmitJob = [ChunkEmitJob.empty(); 4];
+let pool = ChunkEmitPool.init(jobs[0..], 2, true);
+* = pool.enqueue(ChunkEmitJob{ chunk_id: 1, base_name: "app", estimated_bytes: 4096 })?;
+* = pool.enqueue(ChunkEmitJob{ chunk_id: 2, base_name: "vendor", estimated_bytes: 65536 })?;
+let batch: [2]ChunkEmitDispatchItem = [ChunkEmitDispatchItem.empty(); 2];
+const n = pool.dispatchNext(batch[0..]); // batch[0].chunk_id == 2 (LPT longest job first)
+
+const inputs: [2]ChunkHashInput = [
+    ChunkHashInput{ chunk_id: 1, base_name: "app", extension: ".js", public_prefix: "assets/", raw_source: "import \"[chunk_placeholder:2]\";" },
+    ChunkHashInput{ chunk_id: 2, base_name: "vendor", extension: ".js", public_prefix: "assets/", raw_source: "export const v = 42;" },
+];
+let outs: [2]ResolvedChunkOutput = [ResolvedChunkOutput.empty(); 2];
+let ids: [2]u32 = [0; 2];
+let names: [2][]const u8 = [""; 2];
+let fn_arena: [256]u8 = [0; 256];
+let code_arena: [512]u8 = [0; 512];
+const rsum = resolveChunkContentHashes(inputs[0..], ChunkHashResolveOptions{}, outs[0..], ids[0..], names[0..], fn_arena[0..], code_arena[0..])?;
+const app_file = getResolvedFilename(outs[0], fn_arena[0..]);
+* = n; * = rsum; * = app_file;
+```
