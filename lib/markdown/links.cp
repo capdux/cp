@@ -1,4 +1,8 @@
 // Source: Absorbed from /data/dev/bun/src/md/links.cp | Synced: 2026-11-21T17:04:34Z
+// Reference-hardened against pulldown-cmark/pulldown-cmark (MIT)
+
+const MD_MAX_LINK_BRACKET_DEPTH: usize = 64;
+const MD_MAX_LINK_SCAN_BYTES: usize = 4096;
 
 /// CommonMark §6.3–6.5 链接与图片类型枚举
 pub enum LinkKind: u8 {
@@ -236,23 +240,27 @@ pub fn parseInlineLinkOrImage(text: []const u8, start_pos: usize): ParsedLink? {
         return null;
     }
 
-    // 查找匹配的 ']'（跳过转义字符、代码跨度与平衡嵌套括号）
+    // 查找匹配的 ']'（跳过转义字符、代码跨度与平衡嵌套括号，带深度与扫描上限防二次回溯 DoS）
     let pos = bracket_open + 1;
     let depth: usize = 1;
-    while (pos < text.len && depth > 0) {
+    const scan_limit = if (bracket_open + MD_MAX_LINK_SCAN_BYTES < text.len) (bracket_open + MD_MAX_LINK_SCAN_BYTES) else text.len;
+    while (pos < scan_limit && depth > 0) {
         const c = text[pos];
-        if (c == '\\' && pos + 1 < text.len) {
+        if (c == '\\' && pos + 1 < scan_limit) {
             pos += 2;
             continue;
         }
         if (c == '`') {
-            if (after_code := skipCodeSpan(text, pos)) {
+            if (after_code := skipCodeSpan(text[0..scan_limit], pos)) {
                 pos = after_code;
                 continue;
             }
         }
         if (c == '[') {
             depth += 1;
+            if (depth > MD_MAX_LINK_BRACKET_DEPTH) {
+                return null;
+            }
         } else if (c == ']') {
             depth -= 1;
             if (depth == 0) {
@@ -476,4 +484,31 @@ pub fn percentEncodeUrl(raw: []const u8, out: []u8): ([]const u8)? {
         i += 1;
     }
     return out[0..pos];
+}
+
+fn startsWithIgnoreCaseStripCtrl(url: []const u8, prefix: []const u8): bool {
+    let ui: usize = 0;
+    let pi: usize = 0;
+    while (pi < prefix.len) {
+        while (ui < url.len && (url[ui] <= 0x20 || url[ui] == 0x7F)) {
+            ui += 1;
+        }
+        if (ui >= url.len) return false;
+        let c = url[ui];
+        if (c >= 'A' && c <= 'Z') c += 32;
+        if (c != prefix[pi]) return false;
+        ui += 1;
+        pi += 1;
+    }
+    return true;
+}
+
+/// Safe URL filter blocking dangerous schemes (`javascript:`, `vbscript:`, `data:text/html`, `data:application/xhtml`)
+/// even when obfuscated with mixed case or embedded ASCII control/whitespace bytes.
+pub fn isSafeUrl(url: []const u8): bool {
+    if (startsWithIgnoreCaseStripCtrl(url, "javascript:")) return false;
+    if (startsWithIgnoreCaseStripCtrl(url, "vbscript:")) return false;
+    if (startsWithIgnoreCaseStripCtrl(url, "data:text/html")) return false;
+    if (startsWithIgnoreCaseStripCtrl(url, "data:application/xhtml")) return false;
+    return true;
 }

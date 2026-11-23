@@ -1,4 +1,5 @@
 // Source: Absorbed from /data/dev/bun/src/md/ | Synced: 2026-11-22T12:49:17Z (line_analysis.cp, links.cp, ref_defs.cp)
+// Reference-hardened against pulldown-cmark/pulldown-cmark (MIT)
 
 export {
     SetextResult,
@@ -25,6 +26,7 @@ export {
     parseAutolink,
     parseInlineLinkOrImage,
     percentEncodeUrl,
+    isSafeUrl,
 } from "./links.cp";
 
 export {
@@ -40,3 +42,14 @@ export {
     parseRefDef,
     RefDefTable,
 } from "./refdefs.cp";
+
+export {
+    MD_MAX_NESTING_DEPTH,
+    RenderOptions,
+    simdFindLineEnd,
+    simdIndexOfInlineSpecial,
+    simdIndexOfHtmlEscape,
+    escapeHtmlSimd,
+    renderToHtml,
+    renderToHtmlWithOptions,
+} from "./renderer.cp";

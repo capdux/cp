@@ -35,3 +35,16 @@ defer std.heap.page_allocator.free(enc);
 let dec = decodeAlloc(std.heap.page_allocator, enc, .UrlSafeNoPad)?;
 defer std.heap.page_allocator.free(dec);
 ```
+
+## 5. Wave 32 工业级安全加固与 16-Lane SIMD 加速（对标 `marshallpierce/rust-base64` MIT/Apache-2.0）
+
+`lib/base64/codec.cp` 与 `lib/base64/index.cp` 已对照 `marshallpierce/rust-base64`（MIT/Apache-2.0）与 RFC 4648 完成严格规范化加固与纯 CP 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容。
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `encodedLenChecked` / `decodedLenEstimate` / `encodeInto` / `decodeInto` | `lib/base64/codec.cp` | 无溢出编码长度计算与零堆编解码便捷别名 |
+| `exactDecodedLen` 填充加固 | `lib/base64/codec.cp` | 拒绝前两位含 `=`（如 `"===="`、`"A==="`）或非法位置 `=` 的畸形填充 |
+| `simdValidateBlock16` / `simdValidateBase64Alphabet` | `lib/base64/codec.cp` | 16-lane `@Vector(16, u8)` Standard & URL-Safe 字母表并行合法性预检 |
+| `simdEncodeChunk12To16` / `simdDecodeChunk16To12` | `lib/base64/codec.cp` | 纯 16-lane SIMD 范围算术快路径（12B -> 16B 编码、16B -> 12B 解码，零查表），并保留 `encodeToSliceScalar` / `decodeToSliceScalar` 标量参考用于 0 差异对拍 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testBase64RustRefSuite.cp` 覆盖 RFC 4648 §10 官方向量、全 4 种模式、`RequireCanonical` 尾比特拒绝（`AB==`, `ABC=`）、`len % 4 == 1` 与字母表混用拦截、0..257 字节全长度 SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 随机字节往返与畸形 Base64 Fuzz（0 panic / 0 OOB / 0 差异）。

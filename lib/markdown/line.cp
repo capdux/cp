@@ -1,6 +1,20 @@
 // Source: Absorbed from /data/dev/bun/src/md/line_analysis.cp | Synced: 2026-11-21T17:04:34Z
-// Pure-CP CommonMark / GFM block-level line analyzer: Setext & ATX headings,
-// thematic breaks (HR), fenced code blocks, HTML block types 1-7, and GFM table underlines.
+// Reference-hardened against pulldown-cmark/pulldown-cmark (MIT)
+// Pure-CP CommonMark 0.31.2 / GFM block-level line analyzer with cap:simd line-end acceleration:
+// Setext & ATX headings, thematic breaks (HR), fenced code blocks, HTML block types 1-7, and GFM table underlines.
+
+import { Simd } from "cap:simd";
+
+/// SIMD-accelerated line-end finder returning byte offset of '\n' or '\r', or `text.len` if none.
+fn mdFindLineEnd(text: []const u8, off: usize): usize {
+    if (off >= text.len) return text.len;
+    const rem = text[off..];
+    const hit_opt = Simd.indexOfAny2(rem, '\n', '\r');
+    if (h := hit_opt) {
+        return off + h;
+    }
+    return text.len;
+}
 
 pub struct SetextResult {
     is_setext: bool,
@@ -97,8 +111,7 @@ pub fn isAtxHeaderLine(text: []const u8, off: usize, permissive: bool): AtxHeade
     while (pos < text.len && isBlank(text[pos])) : (pos += 1) {}
     const content_beg = pos;
 
-    let line_end = pos;
-    while (line_end < text.len && !isNewline(text[line_end])) : (line_end += 1) {}
+    const line_end = mdFindLineEnd(text, pos);
 
     // Trim trailing spaces/tabs
     let end = line_end;
@@ -200,7 +213,7 @@ pub fn isHtmlBlockStartCondition(text: []const u8, off: usize): u8 {
     }
 
     // Type 5: <![CDATA[
-    if (off + 9 <= text.len && strEq(text[off + 1 .. off + 9], "![CDATA[")) {
+    if (off + 9 <= text.len && mdLineStrEq(text[off + 1 .. off + 9], "![CDATA[")) {
         return 5;
     }
 
@@ -353,8 +366,7 @@ pub fn isTableUnderline(text: []const u8, off: usize): TableUnderlineResult {
         alignments: [TableAlign.none; 32],
     };
 
-    let line_end = off;
-    while (line_end < text.len && !isNewline(text[line_end])) : (line_end += 1) {}
+    const line_end = mdFindLineEnd(text, off);
 
     let p = off;
     while (p < line_end && isBlank(text[p])) : (p += 1) {}
@@ -447,7 +459,7 @@ fn toLower(c: u8): u8 {
     return c;
 }
 
-fn strEq(a: []const u8, b: []const u8): bool {
+fn mdLineStrEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
     while (i < a.len) : (i += 1) {

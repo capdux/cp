@@ -72,6 +72,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **semver** (`dtolnay`) | <https://github.com/dtolnay/semver> | MIT OR Apache-2.0 | `lib/semver/version.cp`, `lib/semver/query.cp`, `lib/semver/range.cp` | Copyright (c) 2016 David Tolnay / Steve Klabnik |
 | **chrono** (`chronotope`) | <https://github.com/chronotope/chrono> | MIT OR Apache-2.0 | `lib/time/rfc3339.cp`, `lib/time/iso8601.cp` | Copyright (c) 2014-2024 Kang Seonghoon / Chrono Contributors |
 | **serde_json** (`serde-rs`) | <https://github.com/serde-rs/json> | MIT OR Apache-2.0 | `lib/json/parser.cp`, `lib/json/escape.cp`, `lib/json/serializer.cp` | Copyright (c) 2014-2024 Erick Tryzelaar / David Tolnay |
+| **pulldown-cmark** | <https://github.com/pulldown-cmark/pulldown-cmark> | MIT | `lib/markdown/line.cp`, `lib/markdown/links.cp`, `lib/markdown/renderer.cp` | Copyright (c) 2015 Google Inc. / pulldown-cmark Contributors |
+| **rust-base64** (`base64`) | <https://github.com/marshallpierce/rust-base64> | MIT OR Apache-2.0 | `lib/base64/codec.cp`, `lib/base64/index.cp` | Copyright (c) 2015 Alice Maz / Marshall Pierce |
 
 ---
 
