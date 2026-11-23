@@ -1,4 +1,62 @@
+// Reference-hardened against unicode-rs/unicode-segmentation (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/string/immutable/grapheme.cp | Synced: 2026-11-22T12:49:17Z
+// Pure-CP zero-allocation Unicode UAX #29 Extended Grapheme Cluster segmenter
+// with 16-lane @Vector(16, u8) SIMD printable-ASCII fast-paths and malformed-UTF-8 safety.
+
+type GraphemeVec16u8 = @Vector(16, u8);
+
+fn graphemeLoadVec16(data: []const u8, off: usize): GraphemeVec16u8 {
+    const v: GraphemeVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan returning the length of the leading run of
+/// printable ASCII bytes (`0x20..=0x7E`, excluding Control/CR/LF and all non-ASCII bytes).
+pub fn simdPrintableAsciiRun(data: []const u8): usize {
+    let i: usize = 0;
+    const n = data.len;
+    const v_lo: GraphemeVec16u8 = @splat(0x20);
+    const v_hi: GraphemeVec16u8 = @splat(0x7E);
+    while (i + 16 <= n) {
+        const chunk = graphemeLoadVec16(data, i);
+        const ok_mask: u16 = @bitCast((chunk >= v_lo) & (chunk <= v_hi));
+        const bad_mask: u16 = ~ok_mask;
+        if (bad_mask != 0) {
+            return i + (@ctz(bad_mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const b = data[i];
+        if (b < 0x20 || b > 0x7E) return i;
+    }
+    return n;
+}
+
+/// Scalar reference for `simdPrintableAsciiRun` (differential verification).
+pub fn simdPrintableAsciiRunScalar(data: []const u8): usize {
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        const b = data[i];
+        if (b < 0x20 || b > 0x7E) return i;
+    }
+    return data.len;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD predicate returning `true` iff all bytes are printable ASCII (`0x20..=0x7E`).
+pub fn simdIsAllPrintableAscii(data: []const u8): bool {
+    return simdPrintableAsciiRun(data) == data.len;
+}
+
+/// Scalar reference for `simdIsAllPrintableAscii` (differential verification).
+pub fn simdIsAllPrintableAsciiScalar(data: []const u8): bool {
+    return simdPrintableAsciiRunScalar(data) == data.len;
+}
 
 /// Unicode UAX #29 扩展字素簇断行属性分类
 pub enum GraphemeBreakProperty: u8 {
@@ -62,15 +120,17 @@ pub fn classifyCodepoint(cp: u21): GraphemeBreakProperty {
         return .Prepend;
     }
 
-    // Extend 字符（组合音标、变体选择符 FE00..FE0F、肤色修饰符 1F3FB..1F3FF、ZWNJ 等）
+    // Extend 字符（组合音标、日文浊音符 3099..309A、变体选择符 FE00..FE0F、肤色修饰符 1F3FB..1F3FF、ZWNJ 等）
     if ((cp >= 0x0300 && cp <= 0x036F) ||
         (cp >= 0x0483 && cp <= 0x0489) ||
         (cp >= 0x0591 && cp <= 0x05BD) || cp == 0x05BF || cp == 0x05C1 || cp == 0x05C2 || cp == 0x05C4 || cp == 0x05C5 || cp == 0x05C7 ||
         (cp >= 0x0610 && cp <= 0x061A) || (cp >= 0x064B && cp <= 0x065F) || cp == 0x0670 ||
+        cp == 0x093C || (cp >= 0x0941 && cp <= 0x0948) || cp == 0x094D ||
         (cp >= 0x1AB0 && cp <= 0x1AFF) ||
         (cp >= 0x1DC0 && cp <= 0x1DFF) ||
         cp == 0x200C ||
         (cp >= 0x20D0 && cp <= 0x20FF) ||
+        (cp >= 0x302A && cp <= 0x302D) || cp == 0x3099 || cp == 0x309A ||
         (cp >= 0xFE00 && cp <= 0xFE0F) ||
         (cp >= 0xFE20 && cp <= 0xFE2F) ||
         (cp >= 0x1F3FB && cp <= 0x1F3FF) ||
@@ -142,6 +202,10 @@ pub fn shouldBreak(state: *GraphemeBreakState, prev: u21, next: u21): bool {
     } else if (p1 == .ZWJ) {
         if (state.in_ext_pict) {
             state.seen_zwj_after_ext_pict = true;
+            // GB11 仅在 ZWJ 后紧接 Extended_Pictographic 时延续链
+            if (p2 != .ExtendedPictographic) {
+                state.in_ext_pict = false;
+            }
         }
     } else {
         state.in_ext_pict = false;
@@ -220,7 +284,7 @@ pub struct DecodedCodepoint {
     len: usize,
 }
 
-/// 安全解码 UTF-8 首码点；非法或截断序列回退为 U+FFFD 并推进 1 字节
+/// 安全解码 UTF-8 首码点；非法、过长、代理项或截断序列回退为 U+FFFD 并严格推进 1 字节
 pub fn decodeUtf8Step(bytes: []const u8): DecodedCodepoint {
     if (bytes.len == 0) {
         return DecodedCodepoint{ cp: 0, len: 0 };
@@ -300,8 +364,8 @@ pub struct GraphemeIterator {
     }
 }
 
-/// 统计 UTF-8 字符串中的扩展字素簇总数（用户感知字符数）
-pub fn count(s: []const u8): usize {
+/// 标量参考：统计 UTF-8 字符串中的扩展字素簇总数（用于 SIMD 0 差异对拍）
+pub fn countScalar(s: []const u8): usize {
     let it = GraphemeIterator.init(s);
     let total: usize = 0;
     while (it.next() != null) {
@@ -310,8 +374,36 @@ pub fn count(s: []const u8): usize {
     return total;
 }
 
-/// 按扩展字素簇索引区间 `[start, end)` 零分配截取子串；越界或反转返回空切片
-pub fn sliceByGraphemes(s: []const u8, start: usize, end: usize): []const u8 {
+/// 统计 UTF-8 字符串中的扩展字素簇总数（16-lane SIMD 纯可打印 ASCII 快路径 + 完整 UAX #29 状态机）
+pub fn count(s: []const u8): usize {
+    if (s.len == 0) return 0;
+    let it = GraphemeIterator.init(s);
+    let total: usize = 0;
+    while (it.pos < s.len) {
+        const rem = s[it.pos..];
+        const run = simdPrintableAsciiRun(rem);
+        if (run == rem.len) {
+            // 剩余全部为可打印 ASCII (0x20..=0x7E)：1 字节 = 1 字素簇
+            return total + run;
+        }
+        if (run >= 2) {
+            // 前 run - 1 个字节的后继必为 0x20..=0x7E，绝对独立成字素簇；
+            // 保留最后一个 ASCII 字节交由状态机处理可能跟随的组合标记（如 e + U+0301）
+            const safe_skip = run - 1;
+            total += safe_skip;
+            it.pos += safe_skip;
+        }
+        if (it.next() != null) {
+            total += 1;
+        } else {
+            break;
+        }
+    }
+    return total;
+}
+
+/// 标量参考：按扩展字素簇索引区间 `[start, end)` 零分配截取子串
+pub fn sliceByGraphemesScalar(s: []const u8, start: usize, end: usize): []const u8 {
     if (start >= end || s.len == 0) {
         return s[0..0];
     }
@@ -341,4 +433,17 @@ pub fn sliceByGraphemes(s: []const u8, start: usize, end: usize): []const u8 {
         return s[0..0];
     }
     return s[byte_start..byte_end];
+}
+
+/// 按扩展字素簇索引区间 `[start, end)` 零分配截取子串（16-lane SIMD 纯可打印 ASCII O(N/16) 快路径）
+pub fn sliceByGraphemes(s: []const u8, start: usize, end: usize): []const u8 {
+    if (start >= end || s.len == 0) {
+        return s[0..0];
+    }
+    if (simdIsAllPrintableAscii(s)) {
+        if (start >= s.len) return s[0..0];
+        const clamped_end = if (end > s.len) s.len else end;
+        return s[start..clamped_end];
+    }
+    return sliceByGraphemesScalar(s, start, end);
 }

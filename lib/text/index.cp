@@ -598,7 +598,13 @@ export {
     shouldBreak,
     decodeUtf8Step,
     count,
+    countScalar,
     sliceByGraphemes,
+    sliceByGraphemesScalar,
+    simdPrintableAsciiRun,
+    simdPrintableAsciiRunScalar,
+    simdIsAllPrintableAscii,
+    simdIsAllPrintableAsciiScalar,
 } from "./grapheme.cp";
 
 export {

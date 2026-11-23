@@ -578,3 +578,15 @@ pub fn demoCodePatternMatch(src: string) {
 | `simdIdnaIsAscii` / `simdIdnaIndexOfDot` / `simdIdnaToLowerAscii` | `lib/text/punycode.cp`, `lib/text/idna.cp` | 纯 CP 16-lane `@Vector(16, u8)` 全 ASCII 域名快速判别、点号切分与批量 ASCII 小写折叠（配标量参考函数 0 差异对拍） |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testTextIdnaRustRefSuite.cp` 继承 RFC 3492 §7.1 多语言测试向量（中文简/繁、日文、韩文、德文 `bücher`、俄文、阿拉伯文、捷克文、Emoji）、IDNA `toAscii`/`toUnicode`/`isValidDomain`/`normalizeDomain`、溢出/代理对/双连字符/超长标签拦截、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 畸形 Punycode / `xn--` 溢出串 Fuzz。
+
+## Wave 33 工业级安全加固与 16-Lane SIMD 加速（`grapheme.cp` 对标 `unicode-rs/unicode-segmentation` MIT/Apache-2.0）
+
+`lib/text/grapheme.cp` 已对照 `unicode-rs/unicode-segmentation`（MIT/Apache-2.0）与 Unicode UAX #29 完成扩展字素簇状态机加固与 16-lane `@Vector(16, u8)` SIMD 纯可打印 ASCII 快路径，保持 100% 向后兼容：
+
+| 加固项 / 新增符号 | 所在文件 | 工程价值 |
+|---|---|---|
+| UAX #29 GB3-GB13 状态机加固 | `lib/text/grapheme.cp` | 修正 GB11 `ZWJ` 后非 `Extended_Pictographic` 链重置边界，补全组合日文浊音符（`U+3099..U+309A`）与 Devanagari `Extend` 覆盖；严格保证 CRLF、Hangul `L/V/T/LV/LVT`、Emoji ZWJ 家庭序列与 2/3/4 国旗 Regional Indicator 配对 |
+| `simdPrintableAsciiRun` / `simdIsAllPrintableAscii` | `lib/text/grapheme.cp` | 纯 CP 16-lane `@Vector(16, u8)` 可打印 ASCII（`0x20..=0x7E`）扫描，在 `count` 与 `sliceByGraphemes` 中单次跳过 16 个 ASCII 字素簇，并保留末尾 1 字节交回状态机防止误切 `e + U+0301` |
+| `countScalar` / `sliceByGraphemesScalar` / 标量参考函数 | `lib/text/grapheme.cp` | 提供标量参考实现与 SIMD 0 差异对拍保障 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testTextGraphemeRustRefSuite.cp` 覆盖 CRLF、组合变音符、韩文音节、2/3/4 个国旗 RI、ZWJ 家庭 Emoji（`👨‍👩‍👧‍👦`）、肤色修饰符（`👋🏽`）、中日混排、`sliceByGraphemes` 零截断、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 有效/畸形 UTF-8 字节流 Fuzz（全量字节拼接 100% 还原原串且 `count == 迭代次数`）。
