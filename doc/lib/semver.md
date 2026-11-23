@@ -149,3 +149,23 @@ const n = scoped.value.formatStorePath(pool.bytes(), path_buf[0..])?;
 * = short_tag;
 * = n;
 ```
+
+---
+
+## 六、 Wave 32 工业级安全加固与 `cap:simd` 加速（对标 `dtolnay/semver` MIT/Apache-2.0）
+
+`lib/semver/version.cp`、`lib/semver/query.cp` 与 `lib/semver/range.cp` 已对照 `dtolnay/semver`（MIT/Apache-2.0）及 SemVer 2.0.0 规范完成安全边界加固与 `cap:simd` 16-lane 向量化加速，同时保持 100% 向后兼容。
+
+### 1. 加固清单与新增符号
+
+| 符号 / 改进 | 所在文件 | 说明 |
+| :--- | :--- | :--- |
+| `SEMVER_MAX_LEN` (`256`) / `SEMVER_RANGE_MAX_LEN` (`1024`) | `lib/semver/version.cp`, `lib/semver/query.cp` | 版本串与范围表达式硬上限防护，防止超长输入 DoS |
+| `Version` & `PartialVersion` 升级为 `u64` + 溢出拦截 | `lib/semver/version.cp`, `lib/semver/query.cp` | 支持完整 `0..u64::MAX` 版本号并拦截 `> u64::MAX` 解析与区间 `checkedAddOne` 溢出 |
+| `Version.parseStrict` / `isValidSemverStrict` / `compareSemverPrecedence` | `lib/semver/version.cp` | 严格拒绝前导/尾随空白、非 ASCII、前导零（允许 `0` 与 `01a` 字母数字段）、空 prerelease/build 段；§11 优先级严格忽略 `+build` |
+| `simdFindSemverDelimiter` / `simdIsValidSemverAscii` | `lib/semver/version.cp` | `cap:simd` `Simd.indexOfAny4('.', '-', '+', ' ')` 与 `Simd.isAscii` 热路径加速，与标量参考 0 差异对拍 |
+| `Query.parseOpAndVersionIntoSet` | `lib/semver/query.cp` | 消除独立运算符（如 `>= 1.2.3-beta.2`）局部栈缓冲拼接导致的悬垂切片隐患 |
+
+### 2. 测试与 Fuzz 覆盖
+
+- **权威回归与 Fuzz 套件**：`cap/test/testSemverRustRefSuite.cp` 继承 `dtolnay/semver` 经典 valid/invalid 向量、SemVer 2.0.0 §11 全套优先级阶梯、Build Metadata 忽略规则、Caret/Tilde/Wildcard/预发布隔离与 `u64::MAX` 溢出防护、`cap:simd` 0 差异对拍，以及 1,500 组确定性 PRNG 畸形版本串与范围表达式 Fuzz（0 panic / 0 OOB / 0 死循环）。

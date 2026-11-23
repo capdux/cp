@@ -1,9 +1,87 @@
+// Reference-hardened against dtolnay/semver (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/semver/Version.cp | Synced: 2026-11-22T14:51:00Z
 // ============================================================================
-// lib/semver/version.cp — Semver 2.0.0 Specification Core Types & Logic
+// lib/semver/version.cp — Semver 2.0.0 Specification Core Types & Strict Parser
 // ============================================================================
 
+import { Simd } from "cap:simd";
 const std = @import("std");
+
+/// Hard upper bound for a single SemVer 2.0.0 version string to guard against DoS inputs.
+pub const SEMVER_MAX_LEN: usize = 256;
+
+/// 16-lane SIMD scan for primary SemVer delimiters (`'.'`, `'-'`, `'+'`, `' '`).
+pub fn simdFindSemverDelimiter(input: []const u8): usize? {
+    return Simd.indexOfAny4(input, 46 as u8, 45 as u8, 43 as u8, 32 as u8);
+}
+
+/// Scalar reference for `simdFindSemverDelimiter` (for differential verification).
+pub fn simdFindSemverDelimiterScalar(input: []const u8): usize? {
+    let i: usize = 0;
+    while (i < input.len) {
+        const c = input[i];
+        if (c == (46 as u8) || c == (45 as u8) || c == (43 as u8) || c == (32 as u8)) {
+            return i;
+        }
+        i += 1;
+    }
+    return null;
+}
+
+/// SIMD-accelerated ASCII preflight check for SemVer 2.0.0 character set (`[0-9A-Za-z.+-]`).
+pub fn simdIsValidSemverAscii(input: []const u8): bool {
+    if (input.len == 0 || input.len > SEMVER_MAX_LEN) return false;
+    if (!Simd.isAscii(input)) return false;
+    let i: usize = 0;
+    while (i < input.len) {
+        const c = input[i];
+        const ok = (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            c == '.' || c == '-' || c == '+';
+        if (!ok) return false;
+        i += 1;
+    }
+    return true;
+}
+
+fn parseStrictU64(part: []const u8): !u64 {
+    if (part.len == 0 || part.len > 20) return error.InvalidVersion;
+    if (part.len > 1 && part[0] == '0') return error.InvalidVersion;
+    let val: u64 = 0;
+    let i: usize = 0;
+    while (i < part.len) {
+        const c = part[i];
+        if (c < '0' || c > '9') return error.InvalidVersion;
+        const digit: u64 = (c - '0') as u64;
+        if (val > 1844674407370955161) return error.InvalidVersion;
+        if (val == 1844674407370955161 && digit > 5) return error.InvalidVersion;
+        val = val * 10 + digit;
+        i += 1;
+    }
+    return val;
+}
+
+fn parseLooseU64(part: []const u8): !u64 {
+    if (part.len == 0) return error.InvalidVersion;
+    let s = part;
+    while (s.len > 1 && s[0] == '0') {
+        s = s[1..];
+    }
+    if (s.len > 20) return error.InvalidVersion;
+    let val: u64 = 0;
+    let i: usize = 0;
+    while (i < s.len) {
+        const c = s[i];
+        if (c < '0' || c > '9') return error.InvalidVersion;
+        const digit: u64 = (c - '0') as u64;
+        if (val > 1844674407370955161) return error.InvalidVersion;
+        if (val == 1844674407370955161 && digit > 5) return error.InvalidVersion;
+        val = val * 10 + digit;
+        i += 1;
+    }
+    return val;
+}
 
 pub const ReleaseType = enum {
     major,
@@ -16,9 +94,9 @@ pub const ReleaseType = enum {
 };
 
 pub const PartialVersion = struct {
-    major: u32? = null,
-    minor: u32? = null,
-    patch: u32? = null,
+    major: u64? = null,
+    minor: u64? = null,
+    patch: u64? = null,
     prerelease: []const u8 = "",
     build: []const u8 = "",
 };
@@ -26,13 +104,13 @@ pub const PartialVersion = struct {
 let inc_scratch: [128]u8 = undefined;
 
 pub const Version = struct {
-    major: u32 = 0,
-    minor: u32 = 0,
-    patch: u32 = 0,
+    major: u64 = 0,
+    minor: u64 = 0,
+    patch: u64 = 0,
     prerelease: []const u8 = "",
     build: []const u8 = "",
 
-    fn isValidTagIdentChar(c: u8): bool {
+    static fn isValidTagIdentChar(c: u8): bool {
         return (c >= '0' && c <= '9') ||
                (c >= 'a' && c <= 'z') ||
                (c >= 'A' && c <= 'Z') ||
@@ -41,69 +119,88 @@ pub const Version = struct {
 
     static fn validateTagSegments(tag: []const u8, check_no_leading_zero: bool): bool {
         if (tag.len == 0) return false;
-        let iter = std.mem.splitScalar(u8, tag, '.');
-        while (seg := iter.next()) {
+        let start: usize = 0;
+        while (start <= tag.len) {
+            const dot_rel = Simd.indexOfByte(tag[start..], 46 as u8);
+            const end_idx = if (off := dot_rel) (start + off) else tag.len;
+            const seg = tag[start..end_idx];
             if (seg.len == 0) return false;
+
             let all_digits = true;
-            for (c of seg) {
-                if (!isValidTagIdentChar(c)) return false;
+            let k: usize = 0;
+            while (k < seg.len) {
+                const c = seg[k];
+                if (!Version.isValidTagIdentChar(c)) return false;
                 if (c < '0' || c > '9') all_digits = false;
+                k += 1;
             }
             if (check_no_leading_zero && all_digits && seg.len > 1 && seg[0] == '0') {
                 return false;
             }
+            if (end_idx == tag.len) break;
+            start = end_idx + 1;
         }
         return true;
     }
 
-    fn isStrictNumericPart(part: []const u8): bool {
+    static fn isStrictNumericPart(part: []const u8): bool {
         if (part.len == 0) return false;
         if (part.len > 1 && part[0] == '0') return false;
-        for (c of part) {
+        let i: usize = 0;
+        while (i < part.len) {
+            const c = part[i];
             if (c < '0' || c > '9') return false;
+            i += 1;
         }
         return true;
     }
 
-    static fn parseStrict(input_str: []const u8): !Version {
-        let str = std.mem.trim(u8, input_str, " \t\r\n");
-        if (str.len == 0) return error.InvalidVersion;
+    /// Strict SemVer 2.0.0 parser (aligned with `dtolnay/semver`):
+    /// - Rejects leading/trailing whitespace, non-ASCII, empty segments, leading zeros in
+    ///   major/minor/patch or numeric prerelease identifiers, and `u64` integer overflow;
+    /// - Allows alphanumeric prerelease segments with leading zero (e.g. `1.0.0-01a`)
+    ///   and numeric build metadata with leading zeros (e.g. `1.0.0+0851523`).
+    pub static fn parseStrict(input_str: []const u8): !Version {
+        if (!simdIsValidSemverAscii(input_str)) return error.InvalidVersion;
 
+        let str = input_str;
         let v = Version{};
 
-        if (plus_pos := std.mem.indexOfScalar(u8, str, '+')) {
+        if (plus_pos := Simd.indexOfByte(str, 43 as u8)) { // '+'
             v.build = str[plus_pos + 1 ..];
-            if (!validateTagSegments(v.build, false)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(v.build, false)) return error.InvalidVersion;
             str = str[0..plus_pos];
         }
 
-        if (dash_pos := std.mem.indexOfScalar(u8, str, '-')) {
+        if (dash_pos := Simd.indexOfByte(str, 45 as u8)) { // '-'
             v.prerelease = str[dash_pos + 1 ..];
-            if (!validateTagSegments(v.prerelease, true)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(v.prerelease, true)) return error.InvalidVersion;
             str = str[0..dash_pos];
         }
 
-        let iter = std.mem.splitScalar(u8, str, '.');
-        const p_maj = iter.next() orelse return error.InvalidVersion;
-        const p_min = iter.next() orelse return error.InvalidVersion;
-        const p_pat = iter.next() orelse return error.InvalidVersion;
-        if (iter.next() != null) return error.InvalidVersion;
+        // Exactly 3 dot-separated numeric segments: major.minor.patch
+        const d1 = Simd.indexOfByte(str, 46 as u8) orelse return error.InvalidVersion;
+        const p_maj = str[0..d1];
+        const rest1 = str[d1 + 1 ..];
+        const d2 = Simd.indexOfByte(rest1, 46 as u8) orelse return error.InvalidVersion;
+        const p_min = rest1[0..d2];
+        const p_pat = rest1[d2 + 1 ..];
+        if (Simd.indexOfByte(p_pat, 46 as u8) != null) return error.InvalidVersion;
 
-        if (!isStrictNumericPart(p_maj) || !isStrictNumericPart(p_min) || !isStrictNumericPart(p_pat)) {
-            return error.InvalidVersion;
-        }
-
-        v.major = std.fmt.parseInt(u32, p_maj, 10) catch return error.InvalidVersion;
-        v.minor = std.fmt.parseInt(u32, p_min, 10) catch return error.InvalidVersion;
-        v.patch = std.fmt.parseInt(u32, p_pat, 10) catch return error.InvalidVersion;
+        v.major = parseStrictU64(p_maj) catch return error.InvalidVersion;
+        v.minor = parseStrictU64(p_min) catch return error.InvalidVersion;
+        v.patch = parseStrictU64(p_pat) catch return error.InvalidVersion;
         return v;
     }
 
-    pub fn parseLoose(input_str: []const u8): !Version {
+    pub static fn parseLoose(input_str: []const u8): !Version {
         return Version.parse(input_str);
     }
 
-    static fn parse(input_str: []const u8): !Version {
+    pub static fn parse(input_str: []const u8): !Version {
+        if (input_str.len == 0 || input_str.len > SEMVER_MAX_LEN) return error.InvalidVersion;
+        if (!Simd.isAscii(input_str)) return error.InvalidVersion;
+
         let str = std.mem.trim(u8, input_str, " \t\r\n");
         while (str.len > 0 && (str[0] == 'v' || str[0] == 'V' || str[0] == '=' || str[0] == ' ' || str[0] == '\t')) {
             str = str[1..];
@@ -114,16 +211,16 @@ pub const Version = struct {
         let v = Version{};
 
         // Extract build metadata (+...)
-        if (p_idx := std.mem.indexOfScalar(u8, str, '+')) {
+        if (p_idx := Simd.indexOfByte(str, 43 as u8)) {
             v.build = str[p_idx + 1 ..];
-            if (!validateTagSegments(v.build, false)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(v.build, false)) return error.InvalidVersion;
             str = str[0..p_idx];
         }
 
         // Extract prerelease (-...)
-        if (d_idx := std.mem.indexOfScalar(u8, str, '-')) {
+        if (d_idx := Simd.indexOfByte(str, 45 as u8)) {
             v.prerelease = str[d_idx + 1 ..];
-            if (!validateTagSegments(v.prerelease, false)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(v.prerelease, false)) return error.InvalidVersion;
             str = str[0..d_idx];
         }
 
@@ -138,7 +235,7 @@ pub const Version = struct {
                 } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                     if (dot_count >= 2 && k > 0) {
                         v.prerelease = str[k..];
-                        if (!validateTagSegments(v.prerelease, false)) return error.InvalidVersion;
+                        if (!Version.validateTagSegments(v.prerelease, false)) return error.InvalidVersion;
                         str = str[0..k];
                         break;
                     }
@@ -154,12 +251,12 @@ pub const Version = struct {
         let iter = std.mem.splitScalar(u8, str, '.');
         let opt_major = iter.next();
         if (opt_major == null) return error.InvalidVersion;
-        v.major = std.fmt.parseInt(u32, opt_major.?, 10) catch return error.InvalidVersion;
+        v.major = parseLooseU64(opt_major.?) catch return error.InvalidVersion;
 
         if (opt_minor := iter.next()) {
-            v.minor = std.fmt.parseInt(u32, opt_minor, 10) catch return error.InvalidVersion;
+            v.minor = parseLooseU64(opt_minor) catch return error.InvalidVersion;
             if (opt_patch := iter.next()) {
-                v.patch = std.fmt.parseInt(u32, opt_patch, 10) catch return error.InvalidVersion;
+                v.patch = parseLooseU64(opt_patch) catch return error.InvalidVersion;
             } else {
                 v.patch = 0;
             }
@@ -172,7 +269,10 @@ pub const Version = struct {
         return v;
     }
 
-    static fn parsePartial(input_str: []const u8): !PartialVersion {
+    pub static fn parsePartial(input_str: []const u8): !PartialVersion {
+        if (input_str.len == 0 || input_str.len > SEMVER_MAX_LEN) return error.InvalidVersion;
+        if (!Simd.isAscii(input_str)) return error.InvalidVersion;
+
         let str = std.mem.trim(u8, input_str, " \t\r\n");
         while (str.len > 0 && (str[0] == 'v' || str[0] == 'V' || str[0] == '=' || str[0] == ' ' || str[0] == '\t')) {
             str = str[1..];
@@ -183,16 +283,16 @@ pub const Version = struct {
         let pv = PartialVersion{};
 
         // Extract build metadata
-        if (p_idx := std.mem.indexOfScalar(u8, str, '+')) {
+        if (p_idx := Simd.indexOfByte(str, 43 as u8)) {
             pv.build = str[p_idx + 1 ..];
-            if (!validateTagSegments(pv.build, false)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(pv.build, false)) return error.InvalidVersion;
             str = str[0..p_idx];
         }
 
         // Extract prerelease
-        if (d_idx := std.mem.indexOfScalar(u8, str, '-')) {
+        if (d_idx := Simd.indexOfByte(str, 45 as u8)) {
             pv.prerelease = str[d_idx + 1 ..];
-            if (!validateTagSegments(pv.prerelease, false)) return error.InvalidVersion;
+            if (!Version.validateTagSegments(pv.prerelease, false)) return error.InvalidVersion;
             str = str[0..d_idx];
         }
 
@@ -207,7 +307,7 @@ pub const Version = struct {
                 } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                     if (c != 'x' && c != 'X' && dot_count >= 2 && k > 0) {
                         pv.prerelease = str[k..];
-                        if (!validateTagSegments(pv.prerelease, false)) return error.InvalidVersion;
+                        if (!Version.validateTagSegments(pv.prerelease, false)) return error.InvalidVersion;
                         str = str[0..k];
                         break;
                     }
@@ -220,28 +320,28 @@ pub const Version = struct {
         let saw_wildcard = false;
 
         if (opt_major := iter.next()) {
-            if (isWildcard(opt_major)) {
+            if (Version.isWildcard(opt_major)) {
                 saw_wildcard = true;
             } else {
-                pv.major = std.fmt.parseInt(u32, opt_major, 10) catch return error.InvalidVersion;
+                pv.major = parseLooseU64(opt_major) catch return error.InvalidVersion;
             }
         } else {
             return error.InvalidVersion;
         }
 
         if (opt_minor := iter.next()) {
-            if (saw_wildcard || isWildcard(opt_minor)) {
+            if (saw_wildcard || Version.isWildcard(opt_minor)) {
                 saw_wildcard = true;
             } else {
-                pv.minor = std.fmt.parseInt(u32, opt_minor, 10) catch return error.InvalidVersion;
+                pv.minor = parseLooseU64(opt_minor) catch return error.InvalidVersion;
             }
         }
 
         if (opt_patch := iter.next()) {
-            if (saw_wildcard || isWildcard(opt_patch)) {
+            if (saw_wildcard || Version.isWildcard(opt_patch)) {
                 saw_wildcard = true;
             } else {
-                pv.patch = std.fmt.parseInt(u32, opt_patch, 10) catch return error.InvalidVersion;
+                pv.patch = parseLooseU64(opt_patch) catch return error.InvalidVersion;
             }
         }
 
@@ -259,21 +359,24 @@ pub const Version = struct {
         return Version.valid(input_str, buf);
     }
 
-    fn isWildcard(part: []const u8): bool {
+    static fn isWildcard(part: []const u8): bool {
         return std.mem.eql(u8, part, "*") ||
                std.mem.eql(u8, part, "x") ||
                std.mem.eql(u8, part, "X");
     }
 
-    fn isAllDigits(part: []const u8): bool {
+    static fn isAllDigits(part: []const u8): bool {
         if (part.len == 0) return false;
-        for (c of part) {
+        let i: usize = 0;
+        while (i < part.len) {
+            const c = part[i];
             if (c < '0' || c > '9') return false;
+            i += 1;
         }
         return true;
     }
 
-    fn compareNumericIdent(a: []const u8, b: []const u8): std.math.Order {
+    static fn compareNumericIdent(a: []const u8, b: []const u8): std.math.Order {
         // Strip leading zeros if any
         let sa = a;
         while (sa.len > 1 && sa[0] == '0') sa = sa[1..];
@@ -290,12 +393,12 @@ pub const Version = struct {
         return _.prerelease.len > 0;
     }
 
-    static fn order(a: Version, b: Version): std.math.Order {
+    /// SemVer 2.0.0 Section 11 precedence comparison (build metadata is strictly ignored).
+    pub static fn order(a: Version, b: Version): std.math.Order {
         if (a.major != b.major) return if (a.major < b.major) .lt else .gt;
         if (a.minor != b.minor) return if (a.minor < b.minor) .lt else .gt;
         if (a.patch != b.patch) return if (a.patch < b.patch) .lt else .gt;
 
-        // Prerelease comparison per Semver 2.0.0 Spec Section 11:
         // A normal version without a prerelease has higher precedence than with prerelease
         if (a.prerelease.len == 0 && b.prerelease.len == 0) return .eq;
         if (a.prerelease.len == 0 && b.prerelease.len > 0) return .gt;
@@ -316,11 +419,11 @@ pub const Version = struct {
             let part_a = next_a.?;
             let part_b = next_b.?;
 
-            let a_is_num = isAllDigits(part_a);
-            let b_is_num = isAllDigits(part_b);
+            let a_is_num = Version.isAllDigits(part_a);
+            let b_is_num = Version.isAllDigits(part_b);
 
             if (a_is_num && b_is_num) {
-                let ord = compareNumericIdent(part_a, part_b);
+                let ord = Version.compareNumericIdent(part_a, part_b);
                 if (ord != .eq) return ord;
             } else if (a_is_num && !b_is_num) {
                 // Numeric identifier has lower precedence than non-numeric
@@ -335,29 +438,29 @@ pub const Version = struct {
         }
     }
 
-    pub fn compare(a: Version, b: Version): std.math.Order {
+    pub static fn compare(a: Version, b: Version): std.math.Order {
         return Version.order(a, b);
     }
 
-    pub fn eql(a: Version, b: Version): bool {
-        return Version.order(a, b) == .eq;
+    pub fn eql(self: Version, b: Version): bool {
+        return Version.order(self, b) == .eq;
     }
 
-    pub fn lt(a: Version, b: Version): bool {
-        return Version.order(a, b) == .lt;
+    pub fn lt(self: Version, b: Version): bool {
+        return Version.order(self, b) == .lt;
     }
 
-    pub fn lte(a: Version, b: Version): bool {
-        let ord = Version.order(a, b);
+    pub fn lte(self: Version, b: Version): bool {
+        let ord = Version.order(self, b);
         return ord == .lt || ord == .eq;
     }
 
-    pub fn gt(a: Version, b: Version): bool {
-        return Version.order(a, b) == .gt;
+    pub fn gt(self: Version, b: Version): bool {
+        return Version.order(self, b) == .gt;
     }
 
-    pub fn gte(a: Version, b: Version): bool {
-        let ord = Version.order(a, b);
+    pub fn gte(self: Version, b: Version): bool {
+        let ord = Version.order(self, b);
         return ord == .gt || ord == .eq;
     }
 
@@ -389,10 +492,11 @@ pub const Version = struct {
     }
 
     pub fn increment(self: Version, release_type: ReleaseType, identifier: ([]const u8)?): Version {
-        return incrementWithBuf(self, release_type, identifier, &inc_scratch);
+        return self.incrementWithBuf(release_type, identifier, &inc_scratch);
     }
 
     pub fn incrementWithBuf(self: Version, release_type: ReleaseType, identifier: ([]const u8)?, buf: []u8): Version {
+        const max_u64: u64 = std.math.maxInt(u64);
         let id_val = "0";
         if (id := identifier) {
             id_val = id;
@@ -401,7 +505,7 @@ pub const Version = struct {
         switch (release_type) {
             .major => {
                 return Version{
-                    major: self.major + 1,
+                    major: if (self.major < max_u64) (self.major + 1) else max_u64,
                     minor: 0,
                     patch: 0,
                     prerelease: "",
@@ -411,7 +515,7 @@ pub const Version = struct {
             .minor => {
                 return Version{
                     major: self.major,
-                    minor: self.minor + 1,
+                    minor: if (self.minor < max_u64) (self.minor + 1) else max_u64,
                     patch: 0,
                     prerelease: "",
                     build: "",
@@ -421,7 +525,7 @@ pub const Version = struct {
                 return Version{
                     major: self.major,
                     minor: self.minor,
-                    patch: self.patch + 1,
+                    patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
                     prerelease: "",
                     build: "",
                 };
@@ -429,7 +533,7 @@ pub const Version = struct {
             .premajor => {
                 let pre = if (identifier != null) id_val else "0";
                 return Version{
-                    major: self.major + 1,
+                    major: if (self.major < max_u64) (self.major + 1) else max_u64,
                     minor: 0,
                     patch: 0,
                     prerelease: pre,
@@ -440,7 +544,7 @@ pub const Version = struct {
                 let pre = if (identifier != null) id_val else "0";
                 return Version{
                     major: self.major,
-                    minor: self.minor + 1,
+                    minor: if (self.minor < max_u64) (self.minor + 1) else max_u64,
                     patch: 0,
                     prerelease: pre,
                     build: "",
@@ -451,7 +555,7 @@ pub const Version = struct {
                 return Version{
                     major: self.major,
                     minor: self.minor,
-                    patch: self.patch + 1,
+                    patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
                     prerelease: pre,
                     build: "",
                 };
@@ -462,7 +566,7 @@ pub const Version = struct {
                     return Version{
                         major: self.major,
                         minor: self.minor,
-                        patch: self.patch + 1,
+                        patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
                         prerelease: pre,
                         build: "",
                     };
@@ -500,9 +604,10 @@ pub const Version = struct {
                     suffix = self.prerelease[d + 1 ..];
                 }
 
-                if (isAllDigits(suffix)) {
+                if (Version.isAllDigits(suffix)) {
                     let num = std.fmt.parseInt(u64, suffix, 10) catch 0;
-                    let formatted = std.fmt.bufPrint(buf, "{s}{d}", .{ prefix, num + 1 }) catch self.prerelease;
+                    const next_num = if (num < max_u64) (num + 1) else max_u64;
+                    let formatted = std.fmt.bufPrint(buf, "{s}{d}", .{ prefix, next_num }) catch self.prerelease;
                     return Version{
                         major: self.major,
                         minor: self.minor,
@@ -536,3 +641,16 @@ pub const Version = struct {
         return h.final();
     }
 };
+
+/// Zero-allocation strict SemVer 2.0.0 validity predicate.
+pub fn isValidSemverStrict(input: []const u8): bool {
+    * = Version.parseStrict(input) catch return false;
+    return true;
+}
+
+/// Strictly parses two SemVer 2.0.0 strings and compares their §11 precedence (build metadata ignored).
+pub fn compareSemverPrecedence(a_str: []const u8, b_str: []const u8): std.math.Order? {
+    const a = Version.parseStrict(a_str) catch return null;
+    const b = Version.parseStrict(b_str) catch return null;
+    return Version.order(a, b);
+}

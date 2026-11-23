@@ -1,14 +1,36 @@
+// Reference-hardened against dtolnay/semver (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/semver/SemverRange.cp | Synced: 2026-11-22T13:25:22Z
 // ============================================================================
 // lib/semver/range.cp — Semver Range & Disjunctive Set Matching Engine
 // ============================================================================
 
+import { Simd } from "cap:simd";
 const std = @import("std");
 import { Version } from "./version";
-import { Query, ComparatorSet, Comparator, Op } from "./query";
+import { Query, ComparatorSet, Comparator, Op, SEMVER_RANGE_MAX_LEN } from "./query";
+
+fn findOrSeparator(s: []const u8, start: usize): usize? {
+    let cursor = start;
+    while (cursor + 1 < s.len) {
+        const rel = Simd.indexOfByte(s[cursor..], 124 as u8); // '|'
+        if (off := rel) {
+            const idx = cursor + off;
+            if (idx + 1 < s.len && s[idx + 1] == '|') {
+                return idx;
+            }
+            cursor = idx + 1;
+        } else {
+            return null;
+        }
+    }
+    return null;
+}
 
 pub const SemverRange = struct {
     pub static fn isValidRange(range_str: []const u8): bool {
+        if (range_str.len > SEMVER_RANGE_MAX_LEN) return false;
+        if (range_str.len > 0 && !Simd.isAscii(range_str)) return false;
+
         let trimmed = std.mem.trim(u8, range_str, " \t\r\n");
         if (trimmed.len == 0 || std.mem.eql(u8, trimmed, "*")) {
             return true;
@@ -17,16 +39,7 @@ pub const SemverRange = struct {
         let cursor: usize = 0;
         while (cursor < trimmed.len) {
             let start = cursor;
-            let found_or: usize? = null;
-
-            let i = cursor;
-            while (i + 1 < trimmed.len) {
-                if (trimmed[i] == '|' && trimmed[i + 1] == '|') {
-                    found_or = i;
-                    break;
-                }
-                i += 1;
-            }
+            const found_or = findOrSeparator(trimmed, cursor);
 
             let end_idx = trimmed.len;
             if (f := found_or) {
@@ -57,6 +70,9 @@ pub const SemverRange = struct {
     }
 
     pub static fn validRangeBuf(range_str: []const u8, buf: []u8): ([]const u8)? {
+        if (range_str.len > SEMVER_RANGE_MAX_LEN) return null;
+        if (range_str.len > 0 && !Simd.isAscii(range_str)) return null;
+
         let trimmed = std.mem.trim(u8, range_str, " \t\r\n");
         if (trimmed.len == 0 || std.mem.eql(u8, trimmed, "*")) {
             if (buf.len > 0) {
@@ -71,15 +87,7 @@ pub const SemverRange = struct {
         let cursor: usize = 0;
         while (cursor < trimmed.len) {
             let start = cursor;
-            let found_or: usize? = null;
-            let i = cursor;
-            while (i + 1 < trimmed.len) {
-                if (trimmed[i] == '|' && trimmed[i + 1] == '|') {
-                    found_or = i;
-                    break;
-                }
-                i += 1;
-            }
+            const found_or = findOrSeparator(trimmed, cursor);
             let end_idx = trimmed.len;
             if (f := found_or) {
                 end_idx = f;
@@ -136,6 +144,9 @@ pub const SemverRange = struct {
     }
 
     pub static fn satisfiesWithOptions(v: Version, range_str: []const u8, include_prerelease: bool): bool {
+        if (range_str.len > SEMVER_RANGE_MAX_LEN) return false;
+        if (range_str.len > 0 && !Simd.isAscii(range_str)) return false;
+
         let trimmed = std.mem.trim(u8, range_str, " \t\r\n");
         if (trimmed.len == 0 || std.mem.eql(u8, trimmed, "*")) {
             return include_prerelease || v.prerelease.len == 0;
@@ -145,16 +156,7 @@ pub const SemverRange = struct {
         let cursor: usize = 0;
         while (cursor < trimmed.len) {
             let start = cursor;
-            let found_or: usize? = null;
-
-            let i = cursor;
-            while (i + 1 < trimmed.len) {
-                if (trimmed[i] == '|' && trimmed[i + 1] == '|') {
-                    found_or = i;
-                    break;
-                }
-                i += 1;
-            }
+            const found_or = findOrSeparator(trimmed, cursor);
 
             let end_idx = trimmed.len;
             if (f := found_or) {
