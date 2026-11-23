@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/Signals.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/Signals.cp | Synced: 2026-11-23T01:58:13Z
 // lib/http/signals.cp
 // CP HTTP Atomic Signals & Flags (cap:http)
 

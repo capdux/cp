@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h3_client/ClientContext.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/h3_client/ClientContext.cp | Synced: 2026-11-23T02:05:38Z
 // Pure-CP zero-allocation HTTP/3 QUIC client session pool:
 // connection coalescing by (hostname, port, reject_unauthorized), concurrent stream headroom control,
 // O(1) swap-remove session unregistration, and http_id-based abort / body-stream routing.

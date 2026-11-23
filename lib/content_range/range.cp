@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/SendFile.cp | Synced: 2026-11-22T11:12:13Z (RFC 9110 §14 HTTP Range / Content-Range)
+// Source: Absorbed from /data/dev/bun/src/http/SendFile.cp | Synced: 2026-11-23T01:58:54Z (RFC 9110 §14 HTTP Range / Content-Range)
 // Pure-CP zero-allocation HTTP `Range` request parser and `Content-Range`
 // response header parser/formatter for partial content (206 / 416).
 

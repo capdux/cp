@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T16:05:00Z
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z
 // lib/http/redirect.cp
 // WHATWG Fetch / RFC 9110 HTTP Redirect Policy Engine (cap:http)
 

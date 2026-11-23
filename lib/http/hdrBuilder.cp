@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HeaderBuilder.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/HeaderBuilder.cp | Synced: 2026-11-23T01:58:50Z
 // lib/http/header_builder.cp
 // Zero-copy contiguous wire serialization & span-indexed HTTP HeaderBuilder
 

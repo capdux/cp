@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql_jsc/postgres/Signature.cp | Synced: 2026-11-22T21:33:59Z
+// Source: Absorbed from /data/dev/bun/src/sql_jsc/postgres/Signature.cp | Synced: 2026-11-23T01:59:25Z
 // Pure-CP zero-allocation PostgreSQL prepared statement signature & cache key generator.
 // Computes deterministic parameter-typed signature keys, PostgreSQL wire parameter OID lists,
 // bounded prepared statement identifiers ("P<prefix>$<id>"), and 64-bit lookup hashes.

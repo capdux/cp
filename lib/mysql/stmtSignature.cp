@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql_jsc/mysql/protocol/Signature.cp | Synced: 2026-11-22T21:36:07Z
+// Source: Absorbed from /data/dev/bun/src/sql_jsc/mysql/protocol/Signature.cp | Synced: 2026-11-23T01:59:25Z
 // Pure-CP zero-allocation MySQL prepared statement signature & cache key generator.
 // Encodes signed/unsigned parameter type descriptors and computes deterministic 64-bit hashes
 // for prepared statement caching without any dynamic heap allocation.

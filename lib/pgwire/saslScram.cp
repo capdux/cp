@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql_jsc/postgres/SASL.cp | Synced: 2026-11-22T21:29:51Z
+// Source: Absorbed from /data/dev/bun/src/sql_jsc/postgres/SASL.cp | Synced: 2026-11-23T01:59:25Z
 // Pure-CP zero-allocation PostgreSQL SCRAM-SHA-256 (RFC 5802 / RFC 7677) client SASL state machine.
 // Computes SaltedPassword (PBKDF2-HMAC-SHA256), ClientKey, StoredKey, ClientProof, and
 // constant-time ServerSignature verification without any dynamic heap allocation.

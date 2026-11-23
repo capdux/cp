@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql_jsc/mysql/MySQLRequestQueue.cp | Synced: 2026-11-22T21:43:06Z
+// Source: Absorbed from /data/dev/bun/src/sql_jsc/mysql/MySQLRequestQueue.cp | Synced: 2026-11-23T02:05:43Z
 // Pure-CP zero-allocation MySQL query pipeline & prepared-statement request queue.
 // Tracks pipelined vs non-pipelinable in-flight counts, prepare barriers, ready-for-query
 // state, head-of-line completed-entry pruning, and bulk cancellation on disconnect.

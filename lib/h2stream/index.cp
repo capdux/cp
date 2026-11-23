@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/h2_client/Stream.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/h2_client/Stream.cp | Synced: 2026-11-23T01:58:16Z
 // Backward-compatible re-export: canonical implementation consolidated into lib/http/h2/stream.cp
 
 export {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/ProxyTunnel.cp | Synced: 2026-11-23T01:59:15Z
 
 /// IPv4 地址（4 字节网络序，纯 CP 零堆分配）
 export struct Ipv4Addr {

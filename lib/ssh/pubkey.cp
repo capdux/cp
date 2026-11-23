@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-22T16:05:00Z (OpenSSH authorized_keys Public Key Line Parser)
+// Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (OpenSSH authorized_keys Public Key Line Parser)
 // Pure-CP zero-allocation OpenSSH public key & authorized_keys parser, option splitter, and key-type classifier.
 
 fn isWs(b: u8): bool {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-22T11:12:13Z
+// Source: Absorbed from /data/dev/bun/src/http/Headers.cp | Synced: 2026-11-23T01:58:51Z
 // lib/http/headers.cp
 // High-performance case-insensitive HTTP Headers collection
 

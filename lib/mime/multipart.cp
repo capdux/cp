@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-22T11:12:13Z (RFC 7578 multipart/form-data)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPRequestBody.cp | Synced: 2026-11-23T02:03:12Z (RFC 7578 multipart/form-data)
 
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';
