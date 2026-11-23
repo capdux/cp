@@ -1,8 +1,176 @@
 // Source: Absorbed from /data/dev/bun/src/runtime/webcore/CookieMap.cp | Synced: 2026-11-20T11:49:45Z
+// Reference-hardened against rwf2/cookie-rs (MIT/Apache-2.0)
 // lib/http/cookie.cp
-// RFC 6265 HTTP Cookie Header Parser, CookieMap, CookieCodec & HttpCookieJar
+// RFC 6265 / RFC 6265bis HTTP Cookie Header Parser, CookieMap, CookieCodec & HttpCookieJar
+// with 16-lane @Vector(16, u8) / cap:simd hot-path acceleration and security prefix enforcement.
 
 const std = @import("std");
+import { Simd } from "cap:simd";
+
+type CookieVec16 = @Vector(16, u8);
+
+/// Error set returned by strict RFC 6265 / RFC 6265bis cookie validation.
+pub err CookieValidationError {
+    InvalidName,
+    InvalidValue,
+    InvalidControl,
+    InvalidDomain,
+    InvalidPath,
+    InvalidMaxAge,
+    InvalidSecurePrefix,
+    InvalidHostPrefix,
+    SameSiteNoneRequiresSecure,
+    PartitionedRequiresSecure,
+}
+
+fn isCookieTokenChar(c: u8): bool {
+    if (c <= 0x20 || c >= 0x7F) return false;
+    switch (c) {
+        '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}' => return false,
+        else => return true,
+    }
+}
+
+fn isCookieOctetChar(c: u8): bool {
+    if (c <= 0x20 || c >= 0x7F) return false;
+    return c != '"' && c != ',' && c != ';' && c != '\\';
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan detecting invalid control characters
+/// (`0x00..=0x08`, `0x0A..=0x1F`, `0x7F`, excluding HTAB `0x09`), matching `rwf2/cookie-rs`.
+pub fn simdHasInvalidControl(s: []const u8): bool {
+    let i: usize = 0;
+    const n = s.len;
+    const v_sp: CookieVec16 = @splat(0x20);
+    const v_tab: CookieVec16 = @splat(0x09);
+    const v_del: CookieVec16 = @splat(0x7F);
+
+    while (i + 16 <= n) {
+        const chunk: CookieVec16 = s[i..][0..16].*;
+        const is_ctrl: u16 = @bitCast(chunk < v_sp);
+        const is_tab: u16 = @bitCast(chunk == v_tab);
+        const is_del: u16 = @bitCast(chunk == v_del);
+        if (((is_ctrl & (~is_tab)) | is_del) != 0) {
+            return true;
+        }
+        i += 16;
+    }
+
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if ((c < 0x20 && c != 0x09) || c == 0x7F) return true;
+    }
+    return false;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for RFC 2616/9110 cookie-name token.
+/// Rejects empty names, whitespace, control bytes, CRLF, `;`, `=`, and HTTP separators.
+pub fn simdIsValidCookieName(name: []const u8): bool {
+    if (name.len == 0) return false;
+    let i: usize = 0;
+    const n = name.len;
+    const v_0: CookieVec16 = @splat('0');
+    const v_10: CookieVec16 = @splat(10);
+    const v_a: CookieVec16 = @splat('a');
+    const v_26: CookieVec16 = @splat(26);
+    const v_case: CookieVec16 = @splat(0x20);
+    const v_dash: CookieVec16 = @splat('-');
+    const v_under: CookieVec16 = @splat('_');
+    const v_dot: CookieVec16 = @splat('.');
+
+    while (i + 16 <= n) {
+        const chunk: CookieVec16 = name[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        const m_dot: u16 = @bitCast(chunk == v_dot);
+        const fast_ok: u16 = m_dig | m_alp | m_dash | m_under | m_dot;
+        const non_fast: u16 = ~fast_ok;
+        if (non_fast != 0) {
+            i += @ctz(non_fast) as usize;
+            if (!isCookieTokenChar(name[i])) return false;
+            i += 1;
+        } else {
+            i += 16;
+        }
+    }
+
+    while (i < n) : (i += 1) {
+        if (!isCookieTokenChar(name[i])) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for RFC 6265 `cookie-value`.
+/// Allows optional matching outer double-quotes `"..."` and strictly enforces
+/// `cookie-octet` inside (rejects control bytes, CRLF, spaces, `;`, `,`, `\`, and stray `"`).
+pub fn simdIsValidCookieValue(raw_value: []const u8): bool {
+    let inner = raw_value;
+    if (inner.len > 0 && (inner[0] == '"' || inner[inner.len - 1] == '"')) {
+        if (inner.len < 2 || inner[0] != '"' || inner[inner.len - 1] != '"') {
+            return false;
+        }
+        inner = inner[1 .. inner.len - 1];
+    }
+
+    let i: usize = 0;
+    const n = inner.len;
+    const v_lo: CookieVec16 = @splat(0x21);
+    const v_hi: CookieVec16 = @splat(0x7E);
+    const v_dquote: CookieVec16 = @splat('"');
+    const v_comma: CookieVec16 = @splat(',');
+    const v_semi: CookieVec16 = @splat(';');
+    const v_bslash: CookieVec16 = @splat('\\');
+
+    while (i + 16 <= n) {
+        const chunk: CookieVec16 = inner[i..][0..16].*;
+        const lt_lo: u16 = @bitCast(chunk < v_lo);
+        const gt_hi: u16 = @bitCast(chunk > v_hi);
+        const is_dq: u16 = @bitCast(chunk == v_dquote);
+        const is_cm: u16 = @bitCast(chunk == v_comma);
+        const is_sc: u16 = @bitCast(chunk == v_semi);
+        const is_bs: u16 = @bitCast(chunk == v_bslash);
+        if ((lt_lo | gt_hi | is_dq | is_cm | is_sc | is_bs) != 0) {
+            return false;
+        }
+        i += 16;
+    }
+
+    while (i < n) : (i += 1) {
+        if (!isCookieOctetChar(inner[i])) return false;
+    }
+    return true;
+}
+
+/// SIMD-accelerated delimiter finder for `Cookie:` headers using `cap:simd` `Simd.indexOfAny2(';', '=')`.
+pub fn simdFindCookieDelim(s: []const u8): usize? {
+    return Simd.indexOfAny2(s, ';', '=');
+}
+
+/// SIMD-accelerated semicolon finder using `cap:simd` `Simd.indexOfByte(';')`.
+pub fn simdIndexOfSemicolon(s: []const u8): usize? {
+    return Simd.indexOfByte(s, ';');
+}
+
+fn cookieIsValidAttrValue(value: []const u8): bool {
+    if (simdHasInvalidControl(value)) return false;
+    return simdIndexOfSemicolon(value) == null;
+}
+
+fn cookieIsValidDomainAttr(domain: []const u8): bool {
+    if (!cookieIsValidAttrValue(domain)) return false;
+    let i: usize = 0;
+    while (i < domain.len) : (i += 1) {
+        if (domain[i] <= 0x20 || domain[i] >= 0x7F) return false;
+    }
+    return true;
+}
+
+fn startsWithIgnoreCaseAscii(s: []const u8, prefix: []const u8): bool {
+    if (s.len < prefix.len) return false;
+    return std.ascii.eqlIgnoreCase(s[0..prefix.len], prefix);
+}
 
 pub enum CookieSameSite: u8 {
     Lax = 0,
@@ -19,33 +187,48 @@ pub struct CookieEntry {
     pub http_only: bool = false,
     pub secure: bool = false,
     pub same_site: CookieSameSite = CookieSameSite.Lax,
+    pub partitioned: bool = false,
 }
 
 pub struct CookieMap {
     pub entries: [64]CookieEntry = undefined,
     pub count: usize = 0,
 
-    /// Parses an HTTP `Cookie:` request header (`k1=v1; k2=v2`) into a `CookieMap`.
+    /// Parses an HTTP `Cookie:` request header (`k1=v1; k2=v2`) into a `CookieMap`
+    /// using SIMD `;`/`=` delimiter scanning.
     pub static fn parse(cookie_header: []const u8): CookieMap {
         let map = CookieMap {
             entries: undefined,
             count: 0,
         };
-        let pair_iter = std.mem.splitScalar(u8, cookie_header, ';');
-        while (raw_pair := pair_iter.next()) {
-            const pair = std.mem.trim(u8, raw_pair, " \t\r\n");
-            if (pair.len == 0) {
+        let pos: usize = 0;
+        while (pos < cookie_header.len) {
+            const rem = cookie_header[pos..];
+            const delim_opt = simdFindCookieDelim(rem);
+            if (delim_opt == null) {
+                break;
+            }
+            const d = delim_opt.?;
+            if (rem[d] == ';') {
+                pos += d + 1;
                 continue;
             }
-            if (eq_idx := std.mem.indexOfScalar(u8, pair, '=')) {
-                const k = std.mem.trim(u8, pair[0..eq_idx], " \t");
-                let v = std.mem.trim(u8, pair[eq_idx + 1 ..], " \t");
-                if (v.len >= 2 && v[0] == '"' && v[v.len - 1] == '"') {
-                    v = v[1 .. v.len - 1];
-                }
-                if (k.len > 0) {
-                    map.set(k, v);
-                }
+            // rem[d] == '='
+            const k = std.mem.trim(u8, rem[0..d], " \t\r\n");
+            const after_eq = rem[d + 1 ..];
+            let val_raw: []const u8 = after_eq;
+            if (semi := simdIndexOfSemicolon(after_eq)) {
+                val_raw = after_eq[0..semi];
+                pos += d + 1 + semi + 1;
+            } else {
+                pos = cookie_header.len;
+            }
+            let v = std.mem.trim(u8, val_raw, " \t\r\n");
+            if (v.len >= 2 && v[0] == '"' && v[v.len - 1] == '"') {
+                v = v[1 .. v.len - 1];
+            }
+            if (simdIsValidCookieName(k) && !simdHasInvalidControl(v)) {
+                map.set(k, v);
             }
         }
         return map;
@@ -111,6 +294,9 @@ pub struct CookieMap {
         } else {
             pos = CookieMap.appendBytes(out_buf, pos, "; SameSite=Lax");
         }
+        if (entry.partitioned) {
+            pos = CookieMap.appendBytes(out_buf, pos, "; Partitioned");
+        }
         return out_buf[0..pos];
     }
 
@@ -148,6 +334,7 @@ pub struct HttpCookie {
     pub http_only: bool = false,
     pub same_site: SameSite = SameSite.Lax,
     pub host_only: bool = false,
+    pub partitioned: bool = false,
 }
 
 pub struct CookiePair {
@@ -156,26 +343,79 @@ pub struct CookiePair {
 }
 
 fn cookieIsValidName(name: []const u8): bool {
-    if (name.len == 0) return false;
-    let i: usize = 0;
-    while (i < name.len) : (i += 1) {
-        const c = name[i];
-        if (c <= 0x20 || c >= 0x7F) return false;
-        switch (c) {
-            '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}' => return false,
-            else => {},
-        }
+    return simdIsValidCookieName(name);
+}
+
+fn cookieIsValidValue(value: []const u8): bool {
+    return simdIsValidCookieValue(value);
+}
+
+/// Validates RFC 6265bis §4.1.3 `__Secure-` and `__Host-` cookie name prefix requirements:
+/// - `__Secure-`: must have `Secure` attribute set.
+/// - `__Host-`: must have `Secure` attribute set, no `Domain` attribute (`domain.len == 0`), and `Path=/`.
+pub fn isValidCookiePrefix(cookie: HttpCookie): bool {
+    if (startsWithIgnoreCaseAscii(cookie.name, "__Secure-")) {
+        return cookie.secure;
+    }
+    if (startsWithIgnoreCaseAscii(cookie.name, "__Host-")) {
+        return cookie.secure && cookie.domain.len == 0 && std.mem.eql(u8, cookie.path, "/");
     }
     return true;
 }
 
-fn cookieIsValidValue(value: []const u8): bool {
-    let i: usize = 0;
-    while (i < value.len) : (i += 1) {
-        const c = value[i];
-        if (c == '\r' || c == '\n' || c == 0 || c == ';') return false;
+/// Strict RFC 6265 / RFC 6265bis validation for a `Set-Cookie` model.
+/// Enforces token name, cookie-octet value, attribute safety, `__Secure-`/`__Host-` prefixes,
+/// `SameSite=None` requiring `Secure`, and `Partitioned` (CHIPS) requiring `Secure`.
+pub fn validateSetCookieStrict(cookie: HttpCookie): bool ! CookieValidationError {
+    if (!simdIsValidCookieName(cookie.name)) {
+        return err.InvalidName;
+    }
+    if (!simdIsValidCookieValue(cookie.value)) {
+        return err.InvalidValue;
+    }
+    if (cookie.domain.len > 0 && !cookieIsValidDomainAttr(cookie.domain)) {
+        return err.InvalidDomain;
+    }
+    if (cookie.path.len > 0 && !cookieIsValidAttrValue(cookie.path)) {
+        return err.InvalidPath;
+    }
+    if (startsWithIgnoreCaseAscii(cookie.name, "__Secure-") && !cookie.secure) {
+        return err.InvalidSecurePrefix;
+    }
+    if (startsWithIgnoreCaseAscii(cookie.name, "__Host-")) {
+        if (!cookie.secure || cookie.domain.len != 0 || !std.mem.eql(u8, cookie.path, "/")) {
+            return err.InvalidHostPrefix;
+        }
+    }
+    if (cookie.same_site == SameSite.None && !cookie.secure) {
+        return err.SameSiteNoneRequiresSecure;
+    }
+    if (cookie.partitioned && !cookie.secure) {
+        return err.PartitionedRequiresSecure;
     }
     return true;
+}
+
+fn cookieParseMaxAge(raw: []const u8): i64? {
+    if (raw.len == 0) return null;
+    let is_neg = false;
+    let digits = raw;
+    if (digits[0] == '-') {
+        is_neg = true;
+        digits = digits[1..];
+    }
+    if (digits.len == 0) return null;
+    let i: usize = 0;
+    while (i < digits.len) : (i += 1) {
+        if (digits[i] < '0' || digits[i] > '9') return null;
+    }
+    if (is_neg) {
+        // RFC 6265 §5.2.2: negative values expire immediately; clamp negative overflow to 0
+        const zero_i64: i64 = 0;
+        return std.fmt.parseInt(i64, raw, 10) catch zero_i64;
+    }
+    const max_i64: i64 = std.math.maxInt(i64);
+    return std.fmt.parseInt(i64, digits, 10) catch max_i64;
 }
 
 priv struct CookieByteBuf {
@@ -312,18 +552,25 @@ fn cookieFormatHttpDate(epoch_s: i64, buf: *[40]u8): []const u8 {
 }
 
 pub struct CookieCodec {
-    /// Parses a single `Set-Cookie` response header line per RFC 6265 §5.2.
+    /// Parses a single `Set-Cookie` response header line per RFC 6265 §5.2 / RFC 6265bis.
     pub static fn parseSetCookie(header: []const u8): HttpCookie! {
-        const trimmed = std.mem.trim(u8, header, " \t\r\n");
+        if (simdHasInvalidControl(header)) return error.InvalidSetCookie;
+        const trimmed = std.mem.trim(u8, header, " \t");
         if (trimmed.len == 0) return error.InvalidSetCookie;
 
-        let iter = std.mem.splitScalar(u8, trimmed, ';');
-        const nv_raw = iter.next() ?? return error.InvalidSetCookie;
+        let pos: usize = 0;
+        let nv_raw: []const u8 = trimmed;
+        if (first_semi := simdIndexOfSemicolon(trimmed)) {
+            nv_raw = trimmed[0..first_semi];
+            pos = first_semi + 1;
+        } else {
+            pos = trimmed.len;
+        }
         const eq = std.mem.indexOfScalar(u8, nv_raw, '=') ?? return error.InvalidSetCookie;
 
         const name = std.mem.trim(u8, nv_raw[0..eq], " \t");
         let value = std.mem.trim(u8, nv_raw[eq + 1 ..], " \t");
-        if (!cookieIsValidName(name) || !cookieIsValidValue(value)) {
+        if (!simdIsValidCookieName(name) || !simdIsValidCookieValue(value)) {
             return error.InvalidSetCookie;
         }
         if (value.len >= 2 && value[0] == '"' && value[value.len - 1] == '"') {
@@ -341,9 +588,18 @@ pub struct CookieCodec {
             http_only: false,
             same_site: SameSite.Lax,
             host_only: true,
+            partitioned: false,
         };
 
-        while (attr_raw := iter.next()) {
+        while (pos < trimmed.len) {
+            const rem = trimmed[pos..];
+            let attr_raw: []const u8 = rem;
+            if (semi := simdIndexOfSemicolon(rem)) {
+                attr_raw = rem[0..semi];
+                pos += semi + 1;
+            } else {
+                pos = trimmed.len;
+            }
             const attr = std.mem.trim(u8, attr_raw, " \t");
             if (attr.len == 0) continue;
 
@@ -352,17 +608,18 @@ pub struct CookieCodec {
                 const v = std.mem.trim(u8, attr[aeq + 1 ..], " \t");
                 if (std.ascii.eqlIgnoreCase(k, "Domain")) {
                     const dom = std.mem.trimStart(u8, v, ".");
-                    if (dom.len > 0 && !cookieIsValidValue(dom)) return error.InvalidSetCookie;
+                    if (dom.len > 0 && !cookieIsValidDomainAttr(dom)) return error.InvalidSetCookie;
                     if (dom.len > 0) {
                         c.domain = dom;
                         c.host_only = false;
                     }
                 } else if (std.ascii.eqlIgnoreCase(k, "Path")) {
                     if (v.len > 0 && v[0] == '/') {
+                        if (!cookieIsValidAttrValue(v)) return error.InvalidSetCookie;
                         c.path = v;
                     }
                 } else if (std.ascii.eqlIgnoreCase(k, "Max-Age")) {
-                    if (parsed := std.fmt.parseInt(i64, v, 10) catch null) {
+                    if (parsed := cookieParseMaxAge(v)) {
                         c.max_age = parsed;
                     }
                 } else if (std.ascii.eqlIgnoreCase(k, "Expires")) {
@@ -383,6 +640,8 @@ pub struct CookieCodec {
                     c.secure = true;
                 } else if (std.ascii.eqlIgnoreCase(attr, "HttpOnly")) {
                     c.http_only = true;
+                } else if (std.ascii.eqlIgnoreCase(attr, "Partitioned")) {
+                    c.partitioned = true;
                 }
             }
         }
@@ -391,10 +650,10 @@ pub struct CookieCodec {
 
     /// Formats an `HttpCookie` into a `Set-Cookie` header value using `alloc`.
     pub static fn formatSetCookie(alloc: std.mem.Allocator, cookie: HttpCookie): ([]const u8)! {
-        if (!cookieIsValidName(cookie.name) || !cookieIsValidValue(cookie.value)) {
+        if (!simdIsValidCookieName(cookie.name) || !simdIsValidCookieValue(cookie.value)) {
             return error.InvalidCookie;
         }
-        if (cookieIsValidValue(cookie.domain) == false || cookieIsValidValue(cookie.path) == false) {
+        if ((cookie.domain.len > 0 && !cookieIsValidDomainAttr(cookie.domain)) || !cookieIsValidAttrValue(cookie.path)) {
             return error.InvalidCookie;
         }
 
@@ -436,40 +695,56 @@ pub struct CookieCodec {
             .Strict => try out.appendBytes(alloc, "; SameSite=Strict"),
             .Lax => try out.appendBytes(alloc, "; SameSite=Lax"),
         }
+        if (cookie.partitioned) {
+            try out.appendBytes(alloc, "; Partitioned");
+        }
 
         return try out.toOwnedSlice(alloc);
     }
 
-    /// Parses an HTTP `Cookie:` request header (`k1=v1; k2=v2`) into an owned slice of `CookiePair`.
+    /// Parses an HTTP `Cookie:` request header (`k1=v1; k2=v2`) into an owned slice of `CookiePair`
+    /// using SIMD `;`/`=` delimiter scanning.
     pub static fn parseCookieHeader(alloc: std.mem.Allocator, header: []const u8): ([]CookiePair)! {
         let pairs: []CookiePair = [];
         let len: usize = 0;
         let cap: usize = 0;
         errdefer if (cap > 0) alloc.free(pairs);
 
-        let iter = std.mem.splitScalar(u8, header, ';');
-        while (raw_pair := iter.next()) {
-            const pair = std.mem.trim(u8, raw_pair, " \t\r\n");
-            if (pair.len == 0) continue;
-            if (eq := std.mem.indexOfScalar(u8, pair, '=')) {
-                const k = std.mem.trim(u8, pair[0..eq], " \t");
-                let v = std.mem.trim(u8, pair[eq + 1 ..], " \t");
-                if (v.len >= 2 && v[0] == '"' && v[v.len - 1] == '"') {
-                    v = v[1 .. v.len - 1];
-                }
-                if (k.len == 0) continue;
-                if (len >= cap) {
-                    const new_cap: usize = if (cap == 0) 8 else cap * 2;
-                    if (cap == 0) {
-                        pairs = try alloc.alloc(CookiePair, new_cap);
-                    } else {
-                        pairs = try alloc.realloc(pairs, new_cap);
-                    }
-                    cap = new_cap;
-                }
-                pairs[len] = CookiePair{ name: k, value: v };
-                len += 1;
+        let pos: usize = 0;
+        while (pos < header.len) {
+            const rem = header[pos..];
+            const delim_opt = simdFindCookieDelim(rem);
+            if (delim_opt == null) break;
+            const d = delim_opt.?;
+            if (rem[d] == ';') {
+                pos += d + 1;
+                continue;
             }
+            const k = std.mem.trim(u8, rem[0..d], " \t\r\n");
+            const after_eq = rem[d + 1 ..];
+            let val_raw: []const u8 = after_eq;
+            if (semi := simdIndexOfSemicolon(after_eq)) {
+                val_raw = after_eq[0..semi];
+                pos += d + 1 + semi + 1;
+            } else {
+                pos = header.len;
+            }
+            let v = std.mem.trim(u8, val_raw, " \t\r\n");
+            if (v.len >= 2 && v[0] == '"' && v[v.len - 1] == '"') {
+                v = v[1 .. v.len - 1];
+            }
+            if (!simdIsValidCookieName(k) || simdHasInvalidControl(v)) continue;
+            if (len >= cap) {
+                const new_cap: usize = if (cap == 0) 8 else cap * 2;
+                if (cap == 0) {
+                    pairs = try alloc.alloc(CookiePair, new_cap);
+                } else {
+                    pairs = try alloc.realloc(pairs, new_cap);
+                }
+                cap = new_cap;
+            }
+            pairs[len] = CookiePair{ name: k, value: v };
+            len += 1;
         }
         if (len == 0) {
             if (cap > 0) alloc.free(pairs);
@@ -735,8 +1010,12 @@ pub struct HttpCookieJar {
     }
 
     /// Parses a `Set-Cookie` header for a given request `host` and `now_epoch_s` and stores it in the jar.
+    /// Enforces RFC 6265bis `__Secure-` and `__Host-` prefix rules before host-only defaulting.
     pub fn setFromHeader(*_, request_host: []const u8, set_cookie_header: []const u8, now_epoch_s: i64 = 0): ! {
         let c = try CookieCodec.parseSetCookie(set_cookie_header);
+        if (!isValidCookiePrefix(c)) {
+            return error.InvalidCookiePrefix;
+        }
         const clean_host = cookieStripHostPort(request_host);
         if (c.domain.len == 0) {
             c.domain = clean_host;

@@ -59,7 +59,7 @@
 | `lib/http/status.cp` | `HTTP_STATUS_TABLE`（64 项）与 `HTTPStatus` 状态码短语/语义判定工具 | `src/http/http.cp` |
 | `lib/http/etag.cp` | Wyhash ETag 生成与强/弱 `If-None-Match` 校验 | `src/http_types/ETag.cp` |
 | `lib/http/mime.cp` | 201 项完整 `MIME_DATABASE` 映射、压缩/文本/字符集判定与二进制 `sniffMagic` 嗅探 | `src/http_types/MimeType.cp` |
-| `lib/http/cookie.cp` | RFC 6265 `CookieMap`、`CookieCodec`（`parseSetCookie`/`formatSetCookie`/`parseCookieHeader`）与 `HttpCookieJar`（域名/路径/Secure/过期/公共后缀防护） | `src/runtime/webcore/CookieMap.cp` |
+| `lib/http/cookie.cp` | RFC 6265 / RFC 6265bis `CookieMap`、`CookieCodec`（`parseSetCookie`/`formatSetCookie`/`parseCookieHeader`）、`HttpCookieJar`（域名/路径/Secure/过期/公共后缀防护）、`__Secure-`/`__Host-` 前缀校验（`isValidCookiePrefix`/`validateSetCookieStrict`）、`Partitioned` (CHIPS) 与 16-lane SIMD / `cap:simd` 加速（对标 `rwf2/cookie-rs` MIT/Apache-2.0 加固） | `src/runtime/webcore/CookieMap.cp` |
 | `lib/http/formData.cp` | `x-www-form-urlencoded` 解析与 `multipart/form-data` 边界提取 | `src/runtime/webcore/FormData.cp` |
 | `lib/http/sse.cp` | WHATWG Server-Sent Events 增量流式状态机 (`SseParser`) 与编码器 (`SseEncoder`)，适配 AI/LLM 流式输出 | `cp/lib/http/sse.cp` |
 | `lib/http/multipart.cp` | RFC 7578 二进制安全 `MultipartBuilder`、`MultipartParser` 与 `MultipartBoundary` | `cp/lib/http/multipart.cp` |
@@ -557,9 +557,10 @@ pub fn demoDeepHttpEngines(): !void {
    - `MultipartBoundary.extractFromContentType(ct)`：支持带引号/不带引号 `boundary=...` 提取与非 `multipart/*` 校验。
    - `MultipartBuilder`：`addField(name, value)`、`addFile(name, filename, content_type, data)`、`contentTypeHeader()` 与 `build()`。
    - `MultipartParser.parse(alloc, boundary, body)`：跳过 preamble 与 epilogue，二进制安全边界扫描（不受载荷内 `\0`、`\r\n` 或伪边界前缀干扰），提取 `name`、`filename`、`content_type` 与零拷贝 `body` 切片。
-3. **RFC 6265 Cookie 编解码与状态容器 (`SameSite` / `HttpCookie` / `CookieCodec` / `HttpCookieJar` in `cookie.cp`)**：
-   - `CookieCodec.parseSetCookie(header)`、`formatSetCookie(alloc, cookie)`（含 `Expires` IMF-fixdate / `Max-Age` / `Domain` / `Path` / `Secure` / `HttpOnly` / `SameSite`）与 `parseCookieHeader(alloc, header)`。
-   - `HttpCookieJar`：支持存储/覆盖/删除（`Max-Age <= 0` 或过期）、RFC 6265 域名后缀匹配（含基础公共后缀边界防越界校验）、路径前缀匹配与长度降序排列、`Secure` 协议校验以及 `cookieHeaderFor(alloc, host, path, is_https, now_epoch_s)`。
+3. **RFC 6265 / 6265bis Cookie 编解码、安全前缀与状态容器 (`SameSite` / `HttpCookie` / `CookieValidationError` / `CookieCodec` / `HttpCookieJar` in `cookie.cp`)**：
+   - 对标 `rwf2/cookie-rs`（MIT/Apache-2.0）加固，新增 `Partitioned` (CHIPS)、`isValidCookiePrefix`、`validateSetCookieStrict`、`simdHasInvalidControl`、`simdIsValidCookieName`、`simdIsValidCookieValue`、`simdFindCookieDelim`、`simdIndexOfSemicolon`。
+   - `CookieCodec.parseSetCookie(header)`、`formatSetCookie(alloc, cookie)`（含 `Expires` IMF-fixdate / `Max-Age` 溢出钳位 / `Domain` / `Path` / `Secure` / `HttpOnly` / `SameSite` / `Partitioned`）与 `parseCookieHeader(alloc, header)`（基于 `Simd.indexOfAny2(';', '=')` 加速切分）。
+   - `HttpCookieJar`：支持存储/覆盖/删除（`Max-Age <= 0` 或过期）、RFC 6265bis `__Secure-`/`__Host-` 前缀校验、RFC 6265 域名后缀匹配（含基础公共后缀边界防越界校验）、路径前缀匹配与长度降序排列、`Secure` 协议校验以及 `cookieHeaderFor(alloc, host, path, is_https, now_epoch_s)`。
 
 ```typescript
 import {

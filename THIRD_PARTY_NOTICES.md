@@ -77,6 +77,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustCrypto/AEADs** (`chacha20poly1305`, `aes-gcm`) | <https://github.com/RustCrypto/AEADs> | MIT OR Apache-2.0 | `lib/crypto/cipher.cp` | Copyright (c) 2019-2024 RustCrypto Developers |
 | **ipnet** (`krisprice`) | <https://github.com/krisprice/ipnet> | MIT OR Apache-2.0 | `lib/net/ipaddr.cp` | Copyright (c) 2017 Kris Price |
 | **httparse** (`seanmonstar`) | <https://github.com/seanmonstar/httparse> | MIT OR Apache-2.0 | `lib/web/picohttp.cp` | Copyright (c) 2015 Sean McArthur |
+| **cookie-rs** (`rwf2`) | <https://github.com/rwf2/cookie-rs> | MIT OR Apache-2.0 | `lib/http/cookie.cp` | Copyright (c) 2014 Alex Crichton / Sergio Benitez |
 
 ---
 
