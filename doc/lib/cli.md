@@ -744,3 +744,36 @@ let apos: usize = 0;
 const summary = planProjectScaffold(opts, existing[0..], extra[0..], planned[0..], arena[0..], &apos)?;
 * = summary;
 ```
+
+### `cap create` 模板源路由、目录冲突守卫与创建后引导管线（`lib/cli/createTemplate.cp`，吸收自 `/data/dev/bun/src/cli/create_command.cp`）
+
+- **纯 CP、零堆分配、全外部切片驱动**，面向 `cap create <template> [dest]`；
+- **核心导出**：
+  - 多源模板说明符解析：`CreateTemplateError`、`CreateSourceKind`（`OfficialBuiltin`/`GitHubRepo`/`NpmOrCapPackage`/`LocalPath`/`TarballUrl`）、`CreateTemplateSpec`、`isOfficialBuiltinTemplate`、`normalizeCreatePackageName`（自动补全 `create-` 前缀）、`parseCreateTemplateSpec`（严格拦截路径穿越、非法主机名与命令注入字符）；
+  - 目标目录卫生与冲突评估：`CreateDestStatus`、`CreateDestDecision`、`isSafeIgnoredDestEntry`、`isSafeCreateDestPath`、`evaluateCreateDestination`（允许 `.git`/`.DS_Store`/`LICENSE`/`README.md` 安全忽略项及 `--force` 覆盖）；
+  - 复制过滤、重命名与工作流规划：`CreateStepKind`、`CreateWorkflowStep`、`CreatePostMetadata`、`CreateWorkflowOptions`、`shouldSkipTemplateFile`、`resolveTemplateDestFilename`（`gitignore`/`_gitignore` -> `.gitignore`，去 `.tmpl`）、`planCreateWorkflow`；
+  - 引导摘要渲染：`CreateSummaryInfo`、`formatCreateNextSteps`。
+
+```cp
+import {
+    parseCreateTemplateSpec,
+    evaluateCreateDestination,
+    CreateSummaryInfo,
+    formatCreateNextSteps,
+} from "cap:cli";
+
+let nbuf: [128]u8 = [0; 128];
+const spec = parseCreateTemplateSpec("cap-lang/starters/agent#v1", nbuf[0..])?;
+const existing: [1][]const u8 = [".git"];
+const dest = evaluateCreateDestination("my-agent", existing[0..], false);
+let out: [512]u8 = [0; 512];
+const n = formatCreateNextSteps(CreateSummaryInfo{
+    project_name: "my-agent",
+    dest_dir: "my-agent",
+    template_label: spec.raw_input,
+    files_copied: 12,
+    deps_installed: false,
+    git_initialized: true,
+}, false, out[0..])?;
+* = dest; * = n;
+```
