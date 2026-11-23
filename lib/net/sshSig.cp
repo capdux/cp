@@ -1,8 +1,8 @@
 // Source: cp/lib/ssh_wire/sshsig.cp (OpenSSH SSHSIG Signing & Verification)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./wire.cp";
-import { buildEd25519PublicKeyBlob } from "./keys.cp";
-import { decodePemArmoring, encodePemArmoring } from "./opensshKey.cp";
+import { SshError, SshReader, SshWriter } from "./sshWire.cp";
+import { buildEd25519PublicKeyBlob } from "./sshKeys.cp";
+import { decodePemArmoring, encodePemArmoring } from "./sshOpensshKey.cp";
 
 const SSHSIG_MAGIC = "SSHSIG";
 const SSHSIG_VERSION: u32 = 1;

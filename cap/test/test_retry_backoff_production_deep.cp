@@ -5,7 +5,7 @@ import {
     BackoffState,
     parseRetryAfter,
     isRetryableHttpStatus,
-} from "cap:retry_backoff";
+} from "cap:net";
 
 test("1. JitterMode.none exponential growth, max_delay_ms cap, overflow guard, and exhaustion", () => {
     const cfg = BackoffConfig{

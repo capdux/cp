@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect } from "cap:test";
-import { Param, ParamMap, URLPath, parseURLPath } from "cap:route_params";
+import { Param, ParamMap, URLPath, parseURLPath } from "cap:web";
 
 test("route_params: ParamMap CRUD, overwrite, clear, and zero-leak ~init()", () => {
     let map = ParamMap.init(std.testing.allocator);

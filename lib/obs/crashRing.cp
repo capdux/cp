@@ -1,7 +1,7 @@
 // Source: cp/lib/crash_handler/ring.cp (Zero-heap fixed crash writer & breadcrumb ring buffer)
 
 const std = @import("std");
-import { SignalKind, StackFrame, Breadcrumb, signalName, signalDescription } from "./types.cp";
+import { SignalKind, StackFrame, Breadcrumb, signalName, signalDescription } from "./crashTypes.cp";
 
 fn isSensitiveKey(key: []const u8): bool {
     const patterns: [6][]const u8 = [ "KEY", "TOKEN", "SECRET", "PASS", "AUTH", "COOKIE" ];

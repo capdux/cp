@@ -1,6 +1,6 @@
 import std from "std";
 import { test, expect_eq } from "cap:test";
-import { TraceParent, TraceStateIter, findTraceState } from "cap:w3c_traceparent";
+import { W3cTraceParent as TraceParent, TraceStateIter, findTraceState } from "cap:obs";
 
 test("1. TraceParent.parse and format canonical 55-byte round-trip", () => {
     const raw = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";

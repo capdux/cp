@@ -1,6 +1,6 @@
 // Source: cp/lib/ssh_wire/keys.cp (OpenSSH Public Key & Fingerprint)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./wire.cp";
+import { SshError, SshReader, SshWriter } from "./sshWire.cp";
 
 pub enum SshKeyType {
     Ed25519,

@@ -6,7 +6,7 @@ import {
     CoverageThresholds,
     FileCoverage,
     parseLcovRecord,
-} from "cap:lcov_report";
+} from "cap:obs";
 
 fn approxEq(a: f32, b: f32, eps: f32): bool {
     const diff = if (a >= b) a - b else b - a;

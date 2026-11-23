@@ -22,7 +22,7 @@ import {
     formatCrashTextFixed,
     formatCrashText,
     formatCrashJson,
-} from "cap:crash_handler";
+} from "cap:obs";
 
 fn runFormatTest(): ! {
     let alloc = std.testing.allocator;
@@ -75,15 +75,15 @@ fn runFormatTest(): ! {
 fn runDynamicMountTest(): ! {
     let alloc = std.testing.allocator;
 
-    let builder = cap.crash_handler.CrashReportBuilder.init(
-        cap.crash_handler.CrashReason{ .BusError = 0xbeef },
+    let builder = cap.obs.CrashReportBuilder.init(
+        cap.obs.CrashReason{ .BusError = 0xbeef },
         0xbeef,
         777,
         1700000002000,
     );
     defer builder.deinit(alloc);
 
-    builder.addFrame(alloc, cap.crash_handler.StackFrame{
+    builder.addFrame(alloc, cap.obs.StackFrame{
         .addr = 0x1234,
         .symbol = "handler",
         .file = "app.cp",
@@ -91,7 +91,7 @@ fn runDynamicMountTest(): ! {
         .col = 1,
         .offset = 0,
     })?;
-    builder.addBreadcrumb(alloc, cap.crash_handler.Breadcrumb{
+    builder.addBreadcrumb(alloc, cap.obs.Breadcrumb{
         .timestamp_ms = 123,
         .category = "sys",
         .message = "started",
@@ -102,12 +102,12 @@ fn runDynamicMountTest(): ! {
     let report = builder.build(alloc)?;
     defer report.deinit(alloc);
 
-    let fw = cap.crash_handler.FixedCrashWriter(512).init();
-    cap.crash_handler.formatCrashTextFixed(512, &report, &fw);
+    let fw = cap.obs.FixedCrashWriter(512).init();
+    cap.obs.formatCrashTextFixed(512, &report, &fw);
     expect_eq(fw.isTruncated(), false);
     expect_eq(std.mem.indexOf(u8, fw.slice(), "SIGBUS") != null, true);
 
-    let json = cap.crash_handler.formatCrashJson(&report, alloc)?;
+    let json = cap.obs.formatCrashJson(&report, alloc)?;
     defer alloc.free(json);
     expect_eq(std.mem.indexOf(u8, json, "\"signal\":\"SIGBUS\"") != null, true);
     expect_eq(std.mem.indexOf(u8, json, "\"thread_id\":777") != null, true);

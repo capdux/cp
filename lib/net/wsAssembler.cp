@@ -1,8 +1,8 @@
 // Source: cp/lib/websocket_frame/assembler.cp (RFC 6455 Incremental Stream Frame & Fragment Assembler)
 
 const std = @import("std");
-import { WsOpcode, WsError } from "./types.cp";
-import { DecodedFrame, decodeFrame } from "./codec.cp";
+import { WsOpcode, WsError } from "./wsTypes.cp";
+import { DecodedFrame, decodeFrame } from "./wsCodec.cp";
 
 /// Assembled WebSocket message (either a complete data message or an interleaved control frame).
 /// Caller owns `payload` and must call `deinit(alloc)`.

@@ -2143,3 +2143,145 @@ export {
     SctpAssociationConfig,
     SctpAssociation,
 } from "./sctpDataChannel.cp";
+
+// === W29-Sync R5: Consolidated Wire Protocols & Retry Backoff ===
+export {
+    WS_GUID,
+    WsOpcode,
+    WsCloseCode,
+    WsError,
+    computeAcceptKey,
+} from "./wsTypes.cp";
+
+export {
+    WsFrame,
+    DecodedFrame,
+    applyMask,
+    encodeFrame as encodeWsFrame,
+    encodeCloseFrame,
+    decodeFrame,
+} from "./wsCodec.cp";
+
+export {
+    WsMessage,
+    WsStreamAssembler,
+} from "./wsAssembler.cp";
+
+export {
+    QUIC_VERSION_1,
+    QUIC_VERSION_2,
+    QUIC_VERSION_NEGOTIATION,
+    QUIC_MAX_CID_LEN,
+    QUIC_VARINT_MAX,
+    QuicHeaderError,
+    QuicPacketKind,
+    DecodedVarInt,
+    varIntEncodedLen,
+    encodeVarInt,
+    decodeVarInt,
+    QuicHeader,
+    decodeQuicHeader,
+    encodeQuicHeader,
+    QpackHeaderClass,
+    QpackIndex,
+    QpackLookup,
+    classifyQpackHeader,
+    SocketKind as QuicSocketKind,
+    socketKindFromByte,
+} from "./quicHeader.cp";
+
+export {
+    GrpcWireError,
+    GrpcStatus,
+    GrpcError,
+    ServiceMethodPath,
+    statusName,
+    statusFromCode,
+    parseServiceMethodPath,
+    formatServiceMethodPath,
+} from "./grpcStatus.cp";
+
+export {
+    parseGrpcTimeoutNs,
+    formatGrpcTimeout,
+    percentEncodeGrpcMessage,
+    percentDecodeGrpcMessage,
+    encodeBinHeader,
+    decodeBinHeader,
+} from "./grpcHeaders.cp";
+
+export {
+    DEFAULT_MAX_MESSAGE_BYTES,
+    GRPC_FRAME_HEADER_LEN,
+    GrpcFrame,
+    encodeGrpcFrame,
+    decodeGrpcFrame,
+    GrpcStreamFramer,
+} from "./grpcFrame.cp";
+
+export {
+    KafkaError,
+    KafkaReader,
+    KafkaWriter,
+} from "./kafkaWire.cp";
+
+export {
+    ApiKey,
+    RequestHeader,
+    ResponseHeader,
+    ApiVersionRange,
+    ApiVersionsReq,
+    ApiVersionsResp,
+    MetadataReq,
+    BrokerMeta,
+    PartitionMeta,
+    TopicMeta,
+    MetadataResp,
+    KafkaStreamFramer,
+} from "./kafkaProtocol.cp";
+
+export {
+    RecordHeader,
+    Record,
+    RecordBatch,
+    encodeRecordBatch,
+    decodeRecordBatch,
+} from "./kafkaRecordBatch.cp";
+
+export {
+    SshError,
+    SshReader,
+    SshWriter,
+} from "./sshWire.cp";
+
+export {
+    SshKeyType,
+    SshPublicKey,
+    buildEd25519PublicKeyBlob,
+    buildEcdsaP256PublicKeyBlob,
+    parsePublicKeyLine,
+    formatPublicKeyLine,
+    computeSha256Fingerprint,
+} from "./sshKeys.cp";
+
+export {
+    OpenSshPrivateKey,
+    decodePemArmoring,
+    encodePemArmoring,
+    parseOpenSshPrivateKey,
+    encodeOpenSshPrivateKeyEd25519,
+} from "./sshOpensshKey.cp";
+
+export {
+    signSshSigEd25519,
+    verifySshSigEd25519,
+} from "./sshSig.cp";
+
+export {
+    JitterMode,
+    BackoffConfig,
+    BackoffState,
+    RetryAfter,
+    parseRetryAfter,
+    isRetryableHttpStatus,
+} from "./retryBackoff.cp";

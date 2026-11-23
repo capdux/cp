@@ -1,7 +1,7 @@
 // Source: cp/lib/websocket_frame/codec.cp (RFC 6455 WebSocket Frame Encoder, Decoder & Masking)
 
 const std = @import("std");
-import { WsOpcode, WsCloseCode, WsError } from "./types.cp";
+import { WsOpcode, WsCloseCode, WsError } from "./wsTypes.cp";
 
 /// Decoded WebSocket frame with owned heap-allocated payload.
 pub struct WsFrame {

@@ -17,7 +17,7 @@ import {
     parseOpenSshPrivateKey,
     signSshSigEd25519,
     verifySshSigEd25519,
-} from "cap:ssh_wire";
+} from "cap:net";
 
 test("RFC 4251 SshWriter/SshReader mpint and truncation guards") {
     const alloc = std.testing.allocator;
@@ -243,7 +243,7 @@ test("SSHSIG Ed25519 sign & verify & namespace/tamper guards") {
 
 test("cap.ssh_wire dynamic mount & std.testing.allocator zero leak") {
     const alloc = std.testing.allocator;
-    let w = cap.ssh_wire.SshWriter.init(alloc);
+    let w = cap.net.SshWriter.init(alloc);
     defer w.deinit();
 
     try w.writeString("cap-ssh-wire");
@@ -251,7 +251,7 @@ test("cap.ssh_wire dynamic mount & std.testing.allocator zero leak") {
     const bytes = try w.toOwnedSlice();
     defer alloc.free(bytes);
 
-    let r = cap.ssh_wire.SshReader.init(bytes);
+    let r = cap.net.SshReader.init(bytes);
     const tag = try r.readString();
     const num = try r.readU32();
     expect_eq(std.mem.eql(u8, tag, "cap-ssh-wire"), true);

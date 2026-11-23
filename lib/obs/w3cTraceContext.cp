@@ -69,7 +69,7 @@ export struct TraceParent {
 
     /// 严格解析 W3C `traceparent` 头部
     /// 拒绝大写十六进制、version == 0xff、全零 trace_id 或全零 parent_id；支持 version > 0 后带 `-extra` 向前兼容
-    fn parse(header: []const u8): TraceParent? {
+    static fn parse(header: []const u8): TraceParent? {
         const s = trimOws(header);
         if (s.len < 55) {
             return null;

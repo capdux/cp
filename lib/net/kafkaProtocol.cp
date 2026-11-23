@@ -1,6 +1,6 @@
 // Source: cp/lib/kafka_wire/protocol.cp (Kafka Wire Protocol frames, headers, ApiVersions, Metadata & StreamFramer)
 const std = @import("std");
-import { KafkaError, KafkaReader, KafkaWriter } from "./wire.cp";
+import { KafkaError, KafkaReader, KafkaWriter } from "./kafkaWire.cp";
 
 pub enum ApiKey: i16 {
     Produce = 0,
@@ -40,7 +40,7 @@ pub struct RequestHeader {
         }
     }
 
-    pub fn decode(r: *KafkaReader, header_version: u8): KafkaError!RequestHeader {
+    pub static fn decode(r: *KafkaReader, header_version: u8): KafkaError!RequestHeader {
         const api_key = r.readI16()?;
         const api_version = r.readI16()?;
         const correlation_id = r.readI32()?;
@@ -69,7 +69,7 @@ pub struct ResponseHeader {
         }
     }
 
-    pub fn decode(r: *KafkaReader, header_version: u8): KafkaError!ResponseHeader {
+    pub static fn decode(r: *KafkaReader, header_version: u8): KafkaError!ResponseHeader {
         const correlation_id = r.readI32()?;
         if (header_version >= 1) {
             r.skipTaggedFields()?;
@@ -99,7 +99,7 @@ pub struct ApiVersionsReq {
         }
     }
 
-    pub fn decode(r: *KafkaReader, api_version: i16): KafkaError!ApiVersionsReq {
+    pub static fn decode(r: *KafkaReader, api_version: i16): KafkaError!ApiVersionsReq {
         if (api_version >= 3) {
             const name = r.readCompactString()?;
             const ver = r.readCompactString()?;
@@ -150,7 +150,7 @@ pub struct ApiVersionsResp {
         }
     }
 
-    pub fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!ApiVersionsResp {
+    pub static fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!ApiVersionsResp {
         const error_code = r.readI16()?;
         let count: usize = 0;
         if (api_version >= 3) {
@@ -237,7 +237,7 @@ pub struct MetadataReq {
         }
     }
 
-    pub fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!MetadataReq {
+    pub static fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!MetadataReq {
         let topics: ([]const []const u8)? = null;
         if (api_version >= 9) {
             if (count := r.readCompactArrayLen()?) {
@@ -409,7 +409,7 @@ pub struct MetadataResp {
         }
     }
 
-    pub fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!MetadataResp {
+    pub static fn decode(alloc: std.mem.Allocator, r: *KafkaReader, api_version: i16): KafkaError!MetadataResp {
         let throttle_time_ms: i32 = 0;
         if (api_version >= 3) {
             throttle_time_ms = r.readI32()?;
@@ -655,7 +655,7 @@ pub struct KafkaStreamFramer {
         return out;
     }
 
-    pub fn framePayload(alloc: std.mem.Allocator, payload: []const u8): KafkaError![]u8 {
+    pub static fn framePayload(alloc: std.mem.Allocator, payload: []const u8): KafkaError![]u8 {
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
         let hdr: [4]u8 = undefined;

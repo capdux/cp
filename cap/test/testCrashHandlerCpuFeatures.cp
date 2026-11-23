@@ -19,7 +19,7 @@ import {
     X86CpuFlags,
     Aarch64CpuFlags,
     CpuFeatures,
-} from "cap:crash_handler";
+} from "cap:obs";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

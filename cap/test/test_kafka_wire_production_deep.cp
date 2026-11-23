@@ -23,7 +23,7 @@ import {
     RecordBatch,
     encodeRecordBatch,
     decodeRecordBatch,
-} from "cap:kafka_wire";
+} from "cap:net";
 
 fn expectCrcMismatch(alloc: std.mem.Allocator, data: []const u8): bool {
     let r = decodeRecordBatch(alloc, data) catch |e| {
@@ -306,11 +306,11 @@ test("kafka_wire KafkaStreamFramer 1..7 byte chunking & max_frame_bytes guard") 
 
 test("kafka_wire cap.kafka_wire dynamic mount & zero-leak allocator") {
     const alloc = std.testing.allocator;
-    let w = cap.kafka_wire.KafkaWriter.init(alloc);
+    let w = cap.net.KafkaWriter.init(alloc);
     defer w.deinit();
 
     w.writeCompactString("cap-mount-ok")?;
-    let r = cap.kafka_wire.KafkaReader.init(w.items());
+    let r = cap.net.KafkaReader.init(w.items());
     const s = r.readCompactString()?;
     expect_eq(std.mem.eql(u8, s orelse "", "cap-mount-ok"), true);
 }

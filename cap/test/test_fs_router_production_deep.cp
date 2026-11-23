@@ -5,10 +5,10 @@ import {
     RouteKind,
     SegmentKind,
     RouteParam,
-    RouteMatch,
+    FsRouteMatch as RouteMatch,
     RoutePattern,
     FsRouter,
-} from "cap:fs_router";
+} from "cap:web";
 
 test("fs_router: static routes, root path, trailing slash and query normalization") {
     let router = FsRouter.init();

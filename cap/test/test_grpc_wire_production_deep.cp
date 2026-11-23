@@ -20,7 +20,7 @@ import {
     encodeGrpcFrame,
     decodeGrpcFrame,
     GrpcStreamFramer,
-} from "cap:grpc_wire";
+} from "cap:net";
 
 test("Length-Prefixed frame codec and GrpcStreamFramer arbitrary 1..7 byte chunking") {
     const alloc = std.testing.allocator;
@@ -203,13 +203,13 @@ test("max_message_bytes guard, invalid compressed_flag > 1, and -bin base64 vali
 test("cap.grpc_wire dynamic mount and zero-leak verification") {
     const alloc = std.testing.allocator;
 
-    const frame_bytes = try cap.grpc_wire.encodeGrpcFrame(alloc, false, "mounted-ok");
+    const frame_bytes = try cap.net.encodeGrpcFrame(alloc, false, "mounted-ok");
     defer alloc.free(frame_bytes);
 
-    let frame = try cap.grpc_wire.decodeGrpcFrame(alloc, frame_bytes, cap.grpc_wire.DEFAULT_MAX_MESSAGE_BYTES);
+    let frame = try cap.net.decodeGrpcFrame(alloc, frame_bytes, cap.net.DEFAULT_MAX_MESSAGE_BYTES);
     defer frame.deinit(alloc);
     expect_eq(std.mem.eql(u8, frame.payload, "mounted-ok"), true);
 
-    const ns = try cap.grpc_wire.parseGrpcTimeoutNs("42m");
+    const ns = try cap.net.parseGrpcTimeoutNs("42m");
     expect_eq(ns, 42_000_000);
 }

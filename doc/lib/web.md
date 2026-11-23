@@ -625,3 +625,12 @@ pub fn demoHstsStore() {
 - [uritemplate.md](web/uritemplate.md)
 - [webhook.md](web/webhook.md)
 - [xpath.md](web/xpath.md)
+
+## 历史 Web 路由域散装模块收敛（W29-Sync R5）
+
+以下 2 个原独立顶层目录已统一收敛至 `cap:web`（`lib/web/`），可直接从 `"cap:web"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:route_params` | `lib/web/routeParams.cp` | `Param`, `ParamMap`, `URLPath`, `parseURLPath` |
+| `cap:fs_router` | `lib/web/fsRouter.cp` | `RouteKind`, `SegmentKind`, `RouteSegment`, `RouteParam`, `FsRouteMatch`, `RoutePattern`, `FsRouter` |

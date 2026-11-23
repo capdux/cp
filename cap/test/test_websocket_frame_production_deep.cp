@@ -15,10 +15,10 @@ import {
     WsStreamAssembler,
     computeAcceptKey,
     applyMask,
-    encodeFrame,
+    encodeWsFrame as encodeFrame,
     encodeCloseFrame,
     decodeFrame,
-} from "cap:websocket_frame";
+} from "cap:net";
 
 fn runTest1(): !void {
     const alloc = std.testing.allocator;
@@ -294,14 +294,14 @@ fn runTest5(): !void {
     const alloc = std.testing.allocator;
 
     // Dynamic mount: import cap from "cap"; cap.websocket_frame
-    const accept = cap.websocket_frame.computeAcceptKey("dGhlIHNhbXBsZSBub25jZQ==");
+    const accept = cap.net.computeAcceptKey("dGhlIHNhbXBsZSBub25jZQ==");
     expect_eq(std.mem.eql(u8, &accept, "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="), true);
 
     const mask_key: [4]u8 = [0xAA, 0xBB, 0xCC, 0xDD];
-    const encoded = cap.websocket_frame.encodeFrame(alloc, .Text, "dynamic-hub-ok", true, mask_key)?;
+    const encoded = cap.net.encodeWsFrame(alloc, .Text, "dynamic-hub-ok", true, mask_key)?;
     defer alloc.free(encoded);
 
-    let assembler = cap.websocket_frame.WsStreamAssembler.init(alloc, true, 4096);
+    let assembler = cap.net.WsStreamAssembler.init(alloc, true, 4096);
     defer assembler.deinit();
     assembler.feed(encoded)?;
 

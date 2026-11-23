@@ -700,3 +700,14 @@ pub fn demoW3cTraceContext() {
 - [openmetrics.md](obs/openmetrics.md)
 - [sarif.md](obs/sarif.md)
 - [tap.md](obs/tap.md)
+
+## 历史可观测性/诊断域散装模块收敛（W29-Sync R5）
+
+以下 4 个原独立顶层目录已统一收敛至 `cap:obs`（`lib/obs/`），可直接从 `"cap:obs"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:w3c_traceparent` | `lib/obs/w3cTraceContext.cp` | `W3cTraceParent`, `W3cTraceStateEntry`, `TraceStateIter`, `findTraceState` |
+| `cap:lcov_report` | `lib/obs/lcovReport.cp` | `LineHit`, `CoverageThresholds`, `FileCoverage`, `parseLcovRecord` |
+| `cap:crash_handler` | `lib/obs/{crashTypes,crashRing,crashFormat,cpuFeatures}.cp` | `SignalKind`, `CrashReason`, `CrashReport`, `CrashReportBuilder`, `FixedCrashWriter`, `BreadcrumbRing`, `formatCrashTextFixed`, `formatCrashJson`, `CpuFeatures` 等 |
+| `cap:progress_tree` | `lib/obs/progressTree.cp` | `ProgressUnit`, `INVALID_NODE`, `ProgressNode`, `ProgressTree` |

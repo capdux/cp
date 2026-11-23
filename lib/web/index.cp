@@ -452,3 +452,21 @@ export {
     isHstsEligibleHost,
     HstsStore,
 } from "./hstsStore.cp";
+
+// === W29-Sync R5: Consolidated Web Route Params & File-System Router ===
+export {
+    Param,
+    ParamMap,
+    URLPath,
+    parseURLPath,
+} from "./routeParams.cp";
+
+export {
+    RouteKind,
+    SegmentKind,
+    RouteSegment,
+    RouteParam,
+    RouteMatch as FsRouteMatch,
+    RoutePattern,
+    FsRouter,
+} from "./fsRouter.cp";

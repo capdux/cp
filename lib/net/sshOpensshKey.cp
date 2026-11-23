@@ -1,7 +1,7 @@
 // Source: cp/lib/ssh_wire/openssh_key.cp (OpenSSH openssh-key-v1 Private Key Codec)
 const std = @import("std");
-import { SshError, SshReader, SshWriter } from "./wire.cp";
-import { SshKeyType, buildEd25519PublicKeyBlob } from "./keys.cp";
+import { SshError, SshReader, SshWriter } from "./sshWire.cp";
+import { SshKeyType, buildEd25519PublicKeyBlob } from "./sshKeys.cp";
 
 const OPENSSH_KEY_MAGIC = "openssh-key-v1\x00";
 const PEM_HEADER = "-----BEGIN OPENSSH PRIVATE KEY-----";

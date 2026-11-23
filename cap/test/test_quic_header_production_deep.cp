@@ -15,9 +15,9 @@ import {
     QpackHeaderClass,
     QpackIndex,
     classifyQpackHeader,
-    SocketKind,
+    QuicSocketKind as SocketKind,
     socketKindFromByte,
-} from "cap:quic_header";
+} from "cap:net";
 
 test("1. QUIC RFC 9000 VarInt encode/decode across 1/2/4/8-byte boundaries", () => {
     const samples: [6]u64 = [0, 63, 64, 16383, 1073741823, QUIC_VARINT_MAX];

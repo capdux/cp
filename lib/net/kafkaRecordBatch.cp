@@ -1,6 +1,6 @@
 // Source: cp/lib/kafka_wire/record_batch.cp (Kafka RecordBatch v2 magic=2 & CRC32C Castagnoli)
 const std = @import("std");
-import { KafkaError, KafkaReader, KafkaWriter } from "./wire.cp";
+import { KafkaError, KafkaReader, KafkaWriter } from "./kafkaWire.cp";
 
 pub struct RecordHeader {
     key: []const u8,

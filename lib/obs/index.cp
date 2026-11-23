@@ -365,3 +365,73 @@ export {
     isValidTraceStateKey,
     TraceState,
 } from "./traceParent.cp";
+
+// === W29-Sync R5: Consolidated W3C TraceContext, LCOV, Crash Handler & Progress Tree ===
+export {
+    TraceParent as W3cTraceParent,
+    TraceStateEntry as W3cTraceStateEntry,
+    TraceStateIter,
+    findTraceState,
+} from "./w3cTraceContext.cp";
+
+export {
+    LineHit,
+    CoverageThresholds,
+    FileCoverage,
+    parseLcovRecord,
+} from "./lcovReport.cp";
+
+export {
+    SignalKind,
+    CrashReason,
+    StackFrame,
+    Breadcrumb,
+    MetadataEntry,
+    CrashReport,
+    CrashReportBuilder,
+    signalName,
+    signalDescription,
+    signalFromCode,
+    reasonName,
+    reasonSignal,
+    reasonAddress,
+} from "./crashTypes.cp";
+
+export {
+    FixedCrashWriter,
+    BreadcrumbIter,
+    BreadcrumbRing,
+} from "./crashRing.cp";
+
+export {
+    formatCrashTextFixed,
+    formatCrashText,
+    formatCrashJson,
+} from "./crashFormat.cp";
+
+export {
+    CPU_FEATURES_FORMAT_BUF_CAP,
+    X86_BIT_SSE42,
+    X86_BIT_POPCNT,
+    X86_BIT_AVX,
+    X86_BIT_AVX2,
+    X86_BIT_AVX512,
+    AARCH64_BIT_NEON,
+    AARCH64_BIT_FP,
+    AARCH64_BIT_AES,
+    AARCH64_BIT_CRC32,
+    AARCH64_BIT_ATOMICS,
+    AARCH64_BIT_SVE,
+    CpuFeaturesError,
+    CpuArchKind,
+    X86CpuFlags,
+    Aarch64CpuFlags,
+    CpuFeatures,
+} from "./cpuFeatures.cp";
+
+export {
+    ProgressUnit,
+    INVALID_NODE,
+    ProgressNode,
+    ProgressTree,
+} from "./progressTree.cp";

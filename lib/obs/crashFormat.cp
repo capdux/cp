@@ -11,8 +11,8 @@ import {
     signalName,
     signalDescription,
     reasonName,
-} from "./types.cp";
-import { FixedCrashWriter } from "./ring.cp";
+} from "./crashTypes.cp";
+import { FixedCrashWriter } from "./crashRing.cp";
 
 fn appendHex(list: *std.ArrayList(u8), alloc: std.mem.Allocator, val: usize): ! {
     list.appendSlice(alloc, "0x")?;

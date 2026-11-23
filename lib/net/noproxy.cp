@@ -5,7 +5,7 @@ export struct Ipv4Addr {
     octets: [4]u8;
 
     /// 严格解析点分十进制 IPv4 地址（拒绝前导零、空段、超 255 或非法字符）
-    fn parse(s: []const u8): Ipv4Addr? {
+    static fn parse(s: []const u8): Ipv4Addr? {
         if (s.len < 7 || s.len > 15) {
             return null;
         }
@@ -90,7 +90,7 @@ export struct Ipv4Cidr {
     prefix_len: u8;
 
     /// 解析形如 `a.b.c.d/prefix` 的 IPv4 CIDR 表达式（prefix 范围 0..32）
-    fn parse(s: []const u8): Ipv4Cidr? {
+    static fn parse(s: []const u8): Ipv4Cidr? {
         const slash_idx = findByte(s, '/') ?? return null;
         const ip_part = s[0..slash_idx];
         const prefix_part = s[slash_idx + 1..];

@@ -1152,3 +1152,16 @@ pub fn demoWebRtcDataChannel()! {
 - [vrrp.md](net/vrrp.md)
 - [whois.md](net/whois.md)
 - [wireguard.md](net/wireguard.md)
+
+## 历史网络协议域散装模块收敛（W29-Sync R5）
+
+以下 6 个原独立顶层目录已统一收敛至 `cap:net`（`lib/net/`），可直接从 `"cap:net"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:websocket_frame` | `lib/net/ws{Types,Codec,Assembler}.cp` | `WS_GUID`, `WsOpcode`, `WsCloseCode`, `WsError`, `WsFrame`, `DecodedFrame`, `WsMessage`, `WsStreamAssembler`, `computeAcceptKey`, `applyMask`, `encodeWsFrame`, `encodeCloseFrame`, `decodeFrame` |
+| `cap:quic_header` | `lib/net/quicHeader.cp` | `QUIC_VERSION_1`, `QUIC_VERSION_2`, `QuicHeader`, `decodeQuicHeader`, `encodeQuicHeader`, `varIntEncodedLen`, `encodeVarInt`, `decodeVarInt`, `classifyQpackHeader`, `QuicSocketKind`, `socketKindFromByte` |
+| `cap:grpc_wire` | `lib/net/grpc{Status,Headers,Frame}.cp` | `GrpcStatus`, `GrpcWireError`, `GrpcFrame`, `encodeGrpcFrame`, `decodeGrpcFrame`, `GrpcStreamFramer`, `parseGrpcTimeoutNs`, `formatGrpcTimeout`, `encodeBinHeader`, `decodeBinHeader` |
+| `cap:kafka_wire` | `lib/net/kafka{Wire,Protocol,RecordBatch}.cp` | `KafkaError`, `KafkaReader`, `KafkaWriter`, `ApiKey`, `ApiVersionsReq/Resp`, `MetadataReq/Resp`, `KafkaStreamFramer`, `RecordBatch`, `encodeRecordBatch`, `decodeRecordBatch` |
+| `cap:ssh_wire` | `lib/net/ssh{Wire,Keys,OpensshKey,Sig}.cp` | `SshError`, `SshReader`, `SshWriter`, `SshKeyType`, `SshPublicKey`, `OpenSshPrivateKey`, `parseOpenSshPrivateKey`, `signSshSigEd25519`, `verifySshSigEd25519` |
+| `cap:retry_backoff` | `lib/net/retryBackoff.cp` | `JitterMode`, `BackoffConfig`, `BackoffState`, `RetryAfter`, `parseRetryAfter`, `isRetryableHttpStatus` |
