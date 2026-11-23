@@ -1084,6 +1084,8 @@ export {
 export {
     WASM_MAGIC,
     WASM_VERSION,
+    WASM_MAX_SECTION_ITEMS,
+    WASM_MAX_NAME_LEN,
     WasmError,
     ValType,
     SectionId,
@@ -1103,9 +1105,16 @@ export {
     writeUleb128,
     readSleb128,
     writeSleb128,
+    readUleb128U64,
+    writeUleb128U64,
+    readSleb128I64,
+    writeSleb128I64,
 } from "./wasmLeb128.cp";
 
 export {
+    simdIsValidWasmUtf8,
+    simdWasmCopyPayload,
+    validateWasmModule,
     parseWasm,
     encodeWasm,
     findExport,

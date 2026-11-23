@@ -1,10 +1,16 @@
 // Source: cp/lib/wasm_fmt/types.cp (Pure CP WebAssembly binary format types & errors)
+// Reference-hardened against bytecodealliance/wasm-tools (Apache-2.0)
 const std = @import("std");
 
 pub const WASM_MAGIC: [4]u8 = .{ @as(u8, 0x00), @as(u8, 0x61), @as(u8, 0x73), @as(u8, 0x6D) };
 pub const WASM_VERSION: [4]u8 = .{ @as(u8, 0x01), @as(u8, 0x00), @as(u8, 0x00), @as(u8, 0x00) };
 
-pub const WasmError = error{
+/// Maximum vector item count in a single WebAssembly section to prevent resource exhaustion.
+pub const WASM_MAX_SECTION_ITEMS: u32 = 1_000_000;
+/// Maximum UTF-8 name length in WebAssembly Custom/Import/Export sections.
+pub const WASM_MAX_NAME_LEN: u32 = 100_000;
+
+pub err WasmError {
     InvalidMagic,
     UnsupportedVersion,
     UnexpectedEof,
@@ -16,11 +22,14 @@ pub const WasmError = error{
     InvalidValType,
     InvalidExternalKind,
     InvalidLimitFlags,
+    InvalidLimitsRange,
     InvalidFuncTypeTag,
     InvalidMutFlag,
     InvalidTypeIndex,
+    InvalidUtf8,
+    TooManyItems,
     OutOfMemory,
-};
+}
 
 pub enum ValType: u8 {
     I32 = 0x7F,
@@ -30,7 +39,7 @@ pub enum ValType: u8 {
     FuncRef = 0x70,
     ExternRef = 0x6F,
 
-    pub static fn fromByte(b: u8): WasmError!ValType {
+    pub static fn fromByte(b: u8): ValType ! WasmError {
         return switch (b) {
             0x7F => .I32,
             0x7E => .I64,
@@ -60,8 +69,9 @@ pub enum SectionId: u8 {
     Element = 9,
     Code = 10,
     Data = 11,
+    DataCount = 12,
 
-    pub static fn fromByte(b: u8): WasmError!SectionId {
+    pub static fn fromByte(b: u8): SectionId ! WasmError {
         return switch (b) {
             0 => .Custom,
             1 => .Type,
@@ -75,6 +85,7 @@ pub enum SectionId: u8 {
             9 => .Element,
             10 => .Code,
             11 => .Data,
+            12 => .DataCount,
             else => WasmError.InvalidSectionId,
         };
     }
@@ -90,7 +101,7 @@ pub enum ExternalKind: u8 {
     Memory = 0x02,
     Global = 0x03,
 
-    pub static fn fromByte(b: u8): WasmError!ExternalKind {
+    pub static fn fromByte(b: u8): ExternalKind ! WasmError {
         return switch (b) {
             0x00 => .Func,
             0x01 => .Table,

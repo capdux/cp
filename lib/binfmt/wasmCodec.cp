@@ -1,8 +1,12 @@
 // Source: cp/lib/wasm_fmt/codec.cp (Pure CP WebAssembly binary parser, encoder & helpers)
+// Reference-hardened against bytecodealliance/wasm-tools (Apache-2.0)
 const std = @import("std");
+import { Simd } from "cap:simd";
 import {
     WASM_MAGIC,
     WASM_VERSION,
+    WASM_MAX_SECTION_ITEMS,
+    WASM_MAX_NAME_LEN,
     WasmError,
     ValType,
     SectionId,
@@ -18,7 +22,31 @@ import {
 } from "./wasmTypes.cp";
 import { readUleb128, writeUleb128 } from "./wasmLeb128.cp";
 
-fn readByte(data: []const u8, offset: *usize): WasmError!u8 {
+type WasmVec16 = @Vector(16, u8);
+
+/// SIMD-accelerated UTF-8 validator for WebAssembly Custom/Import/Export names:
+/// fast-paths pure ASCII via `cap:simd` `Simd.isAscii`, falling back to strict RFC 3629 UTF-8 check.
+pub fn simdIsValidWasmUtf8(s: []const u8): bool {
+    if (Simd.isAscii(s)) return true;
+    return std.unicode.utf8ValidateSlice(s);
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD payload copy for WebAssembly section and code bodies.
+pub fn simdWasmCopyPayload(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const chunk: WasmVec16 = src[i..][0..16].*;
+        dst[i..][0..16].* = chunk;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+fn readByte(data: []const u8, offset: *usize): u8 ! WasmError {
     if (offset.* >= data.len) {
         return WasmError.UnexpectedEof;
     }
@@ -27,8 +55,8 @@ fn readByte(data: []const u8, offset: *usize): WasmError!u8 {
     return b;
 }
 
-fn readBytesSlice(data: []const u8, offset: *usize, len: usize): WasmError![]const u8 {
-    if (offset.* + len > data.len) {
+fn readBytesSlice(data: []const u8, offset: *usize, len: usize): ([]const u8) ! WasmError {
+    if (len > data.len - offset.*) {
         return WasmError.UnexpectedEof;
     }
     const s = data[offset.* .. offset.* + len];
@@ -36,14 +64,27 @@ fn readBytesSlice(data: []const u8, offset: *usize, len: usize): WasmError![]con
     return s;
 }
 
-fn readName(alloc: std.mem.Allocator, data: []const u8, offset: *usize): WasmError![]u8 {
+fn readNameSlice(data: []const u8, offset: *usize): ([]const u8) ! WasmError {
     const len = try readUleb128(data, offset);
+    if (len > WASM_MAX_NAME_LEN) {
+        return WasmError.TooManyItems;
+    }
     const raw = try readBytesSlice(data, offset, @as(usize, len));
-    const dup = try alloc.dupe(u8, raw);
+    if (!simdIsValidWasmUtf8(raw)) {
+        return WasmError.InvalidUtf8;
+    }
+    return raw;
+}
+
+fn readName(alloc: std.mem.Allocator, data: []const u8, offset: *usize): ([]u8) ! WasmError {
+    const raw = try readNameSlice(data, offset);
+    let dup = try alloc.alloc(u8, raw.len);
+    const copied = simdWasmCopyPayload(dup, raw);
+    if (copied != raw.len) return WasmError.UnexpectedEof;
     return dup;
 }
 
-fn readLimits(data: []const u8, offset: *usize): WasmError!WasmLimits {
+fn readLimits(data: []const u8, offset: *usize): WasmLimits ! WasmError {
     const flags = try readByte(data, offset);
     if (flags == 0x00) {
         const min_val = try readUleb128(data, offset);
@@ -51,14 +92,28 @@ fn readLimits(data: []const u8, offset: *usize): WasmError!WasmLimits {
     } else if (flags == 0x01) {
         const min_val = try readUleb128(data, offset);
         const max_val = try readUleb128(data, offset);
+        if (max_val < min_val) {
+            return WasmError.InvalidLimitsRange;
+        }
         return WasmLimits{ .min = min_val, .max = max_val };
     }
     return WasmError.InvalidLimitFlags;
 }
 
-fn parseTypeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]FuncType {
+fn checkVectorCount(count: u32, rem_bytes: usize): u32 ! WasmError {
+    if (count > WASM_MAX_SECTION_ITEMS) {
+        return WasmError.TooManyItems;
+    }
+    if (@as(usize, count) > rem_bytes) {
+        return WasmError.UnexpectedEof;
+    }
+    return count;
+}
+
+fn parseTypeSection(alloc: std.mem.Allocator, payload: []const u8): ([]FuncType) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let list: std.ArrayList(FuncType) = .empty;
     errdefer {
         let j: usize = 0;
@@ -78,6 +133,7 @@ fn parseTypeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]
         }
 
         const p_count = try readUleb128(payload, &off);
+        try checkVectorCount(p_count, payload.len - off);
         let params = try alloc.alloc(ValType, @as(usize, p_count));
         errdefer alloc.free(params);
         let pi: u32 = 0;
@@ -88,6 +144,7 @@ fn parseTypeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]
         }
 
         const r_count = try readUleb128(payload, &off);
+        try checkVectorCount(r_count, payload.len - off);
         let results = try alloc.alloc(ValType, @as(usize, r_count));
         errdefer alloc.free(results);
         let ri: u32 = 0;
@@ -107,9 +164,10 @@ fn parseTypeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]
     return try list.toOwnedSlice(alloc);
 }
 
-fn parseImportSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]WasmImport {
+fn parseImportSection(alloc: std.mem.Allocator, payload: []const u8): ([]WasmImport) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let list: std.ArrayList(WasmImport) = .empty;
     errdefer {
         let j: usize = 0;
@@ -164,9 +222,10 @@ fn parseImportSection(alloc: std.mem.Allocator, payload: []const u8): WasmError!
     return try list.toOwnedSlice(alloc);
 }
 
-fn parseFunctionSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]u32 {
+fn parseFunctionSection(alloc: std.mem.Allocator, payload: []const u8): ([]u32) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let funcs = try alloc.alloc(u32, @as(usize, count));
     errdefer alloc.free(funcs);
 
@@ -182,9 +241,10 @@ fn parseFunctionSection(alloc: std.mem.Allocator, payload: []const u8): WasmErro
     return funcs;
 }
 
-fn parseMemorySection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]WasmMemory {
+fn parseMemorySection(alloc: std.mem.Allocator, payload: []const u8): ([]WasmMemory) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let mems = try alloc.alloc(WasmMemory, @as(usize, count));
     errdefer alloc.free(mems);
 
@@ -201,9 +261,10 @@ fn parseMemorySection(alloc: std.mem.Allocator, payload: []const u8): WasmError!
     return mems;
 }
 
-fn parseGlobalSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]WasmGlobal {
+fn parseGlobalSection(alloc: std.mem.Allocator, payload: []const u8): ([]WasmGlobal) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let list: std.ArrayList(WasmGlobal) = .empty;
     errdefer {
         let j: usize = 0;
@@ -245,9 +306,10 @@ fn parseGlobalSection(alloc: std.mem.Allocator, payload: []const u8): WasmError!
     return try list.toOwnedSlice(alloc);
 }
 
-fn parseExportSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]WasmExport {
+fn parseExportSection(alloc: std.mem.Allocator, payload: []const u8): ([]WasmExport) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     let list: std.ArrayList(WasmExport) = .empty;
     errdefer {
         let j: usize = 0;
@@ -279,7 +341,7 @@ fn parseExportSection(alloc: std.mem.Allocator, payload: []const u8): WasmError!
     return try list.toOwnedSlice(alloc);
 }
 
-fn parseStartSection(payload: []const u8): WasmError!u32 {
+fn parseStartSection(payload: []const u8): u32 ! WasmError {
     let off: usize = 0;
     const idx = try readUleb128(payload, &off);
     if (off != payload.len) {
@@ -288,9 +350,10 @@ fn parseStartSection(payload: []const u8): WasmError!u32 {
     return idx;
 }
 
-fn parseCodeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]const []const u8 {
+fn parseCodeSection(alloc: std.mem.Allocator, payload: []const u8): ([]const []const u8) ! WasmError {
     let off: usize = 0;
     const count = try readUleb128(payload, &off);
+    try checkVectorCount(count, payload.len - off);
     const empty_code: []const u8 = "";
     let codes = try alloc.alloc(@TypeOf(empty_code), @as(usize, count));
     let parsed_count: usize = 0;
@@ -307,7 +370,9 @@ fn parseCodeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]
     while (i < count) {
         const body_len = try readUleb128(payload, &off);
         const body_raw = try readBytesSlice(payload, &off, @as(usize, body_len));
-        const body_dup = try alloc.dupe(u8, body_raw);
+        let body_dup = try alloc.alloc(u8, body_raw.len);
+        const copied = simdWasmCopyPayload(body_dup, body_raw);
+        if (copied != body_raw.len) return WasmError.UnexpectedEof;
         codes[@as(usize, i)] = body_dup;
         parsed_count += 1;
         i += 1;
@@ -319,18 +384,21 @@ fn parseCodeSection(alloc: std.mem.Allocator, payload: []const u8): WasmError![]
     return codes;
 }
 
-fn parseCustomSection(alloc: std.mem.Allocator, payload: []const u8): WasmError!CustomSection {
+fn parseCustomSection(alloc: std.mem.Allocator, payload: []const u8): CustomSection ! WasmError {
     let off: usize = 0;
     const sec_name = try readName(alloc, payload, &off);
     errdefer alloc.free(sec_name);
-    const sec_data = try alloc.dupe(u8, payload[off..]);
+    const tail = payload[off..];
+    let sec_data = try alloc.alloc(u8, tail.len);
+    const copied = simdWasmCopyPayload(sec_data, tail);
+    if (copied != tail.len) return WasmError.UnexpectedEof;
     return CustomSection{
         .name = sec_name,
         .data = sec_data,
     };
 }
 
-pub fn parseWasm(alloc: std.mem.Allocator, bytes: []const u8): WasmError!WasmModule {
+pub fn parseWasm(alloc: std.mem.Allocator, bytes: []const u8): WasmModule ! WasmError {
     if (bytes.len < 8) {
         return WasmError.UnexpectedEof;
     }
@@ -355,7 +423,7 @@ pub fn parseWasm(alloc: std.mem.Allocator, bytes: []const u8): WasmError!WasmMod
         customs.deinit(alloc);
     }
 
-    let seen_sections: [12]bool = .{ false, false, false, false, false, false, false, false, false, false, false, false };
+    let seen_sections: [13]bool = .{ false, false, false, false, false, false, false, false, false, false, false, false, false };
     let last_std_id: u8 = 0;
     let off: usize = 8;
 
@@ -405,6 +473,13 @@ pub fn parseWasm(alloc: std.mem.Allocator, bytes: []const u8): WasmError!WasmMod
             .Code => {
                 mod.codes = try parseCodeSection(alloc, payload);
             },
+            .DataCount => {
+                let dc_off: usize = 0;
+                * = try readUleb128(payload, &dc_off);
+                if (dc_off != payload.len) {
+                    return WasmError.SectionLengthMismatch;
+                }
+            },
             .Table, .Element, .Data => {},
         }
     }
@@ -413,18 +488,171 @@ pub fn parseWasm(alloc: std.mem.Allocator, bytes: []const u8): WasmError!WasmMod
     return mod;
 }
 
-fn appendSection(out: *std.ArrayList(u8), alloc: std.mem.Allocator, sec_id: SectionId, payload: []const u8): WasmError!void {
+/// Zero-allocation structural WebAssembly 2.0 binary module validator (aligned with `wasmparser`).
+/// Enforces magic/version, strictly ascending non-duplicate standard section IDs (1..=12),
+/// overflow-safe section lengths, UTF-8 names, exact section consumption, and vector item caps.
+/// Returns the total number of validated sections on success.
+pub fn validateWasmModule(bytes: []const u8): u32 ! WasmError {
+    if (bytes.len < 8) {
+        return WasmError.UnexpectedEof;
+    }
+    if (!std.mem.eql(u8, bytes[0..4], &WASM_MAGIC)) {
+        return WasmError.InvalidMagic;
+    }
+    if (!std.mem.eql(u8, bytes[4..8], &WASM_VERSION)) {
+        return WasmError.UnsupportedVersion;
+    }
+
+    let seen_sections: [13]bool = .{ false, false, false, false, false, false, false, false, false, false, false, false, false };
+    let last_std_id: u8 = 0;
+    let off: usize = 8;
+    let sec_count: u32 = 0;
+
+    while (off < bytes.len) {
+        const id_byte = try readByte(bytes, &off);
+        const sec_id = try SectionId.fromByte(id_byte);
+        const payload_len = try readUleb128(bytes, &off);
+        const payload = try readBytesSlice(bytes, &off, @as(usize, payload_len));
+
+        if (sec_id != .Custom) {
+            if (seen_sections[@as(usize, id_byte)]) {
+                return WasmError.DuplicateSection;
+            }
+            if (id_byte <= last_std_id) {
+                return WasmError.OutOfOrderSection;
+            }
+            seen_sections[@as(usize, id_byte)] = true;
+            last_std_id = id_byte;
+        }
+
+        let p: usize = 0;
+        switch (sec_id) {
+            .Custom => {
+                * = try readNameSlice(payload, &p);
+            },
+            .Type => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    const tag = try readByte(payload, &p);
+                    if (tag != 0x60) return WasmError.InvalidFuncTypeTag;
+                    const pc = try readUleb128(payload, &p);
+                    try checkVectorCount(pc, payload.len - p);
+                    let pi: u32 = 0;
+                    while (pi < pc) : (pi += 1) {
+                        * = try ValType.fromByte(try readByte(payload, &p));
+                    }
+                    const rc = try readUleb128(payload, &p);
+                    try checkVectorCount(rc, payload.len - p);
+                    let ri: u32 = 0;
+                    while (ri < rc) : (ri += 1) {
+                        * = try ValType.fromByte(try readByte(payload, &p));
+                    }
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Import => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    * = try readNameSlice(payload, &p);
+                    * = try readNameSlice(payload, &p);
+                    const kind = try ExternalKind.fromByte(try readByte(payload, &p));
+                    if (kind == .Func) {
+                        * = try readUleb128(payload, &p);
+                    } else if (kind == .Memory) {
+                        * = try readLimits(payload, &p);
+                    } else if (kind == .Table) {
+                        * = try readByte(payload, &p);
+                        * = try readLimits(payload, &p);
+                    } else if (kind == .Global) {
+                        * = try ValType.fromByte(try readByte(payload, &p));
+                        if ((try readByte(payload, &p)) > 1) return WasmError.InvalidMutFlag;
+                    }
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Function => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    * = try readUleb128(payload, &p);
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Memory => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    * = try readLimits(payload, &p);
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Global => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    * = try ValType.fromByte(try readByte(payload, &p));
+                    if ((try readByte(payload, &p)) > 1) return WasmError.InvalidMutFlag;
+                    while (true) {
+                        if ((try readByte(payload, &p)) == 0x0B) break;
+                    }
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Export => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    * = try readNameSlice(payload, &p);
+                    * = try ExternalKind.fromByte(try readByte(payload, &p));
+                    * = try readUleb128(payload, &p);
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Start, .DataCount => {
+                * = try readUleb128(payload, &p);
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Code => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+                let i: u32 = 0;
+                while (i < cnt) : (i += 1) {
+                    const blen = try readUleb128(payload, &p);
+                    * = try readBytesSlice(payload, &p, @as(usize, blen));
+                }
+                if (p != payload.len) return WasmError.SectionLengthMismatch;
+            },
+            .Table, .Element, .Data => {
+                const cnt = try readUleb128(payload, &p);
+                try checkVectorCount(cnt, payload.len - p);
+            },
+        }
+        sec_count += 1;
+    }
+
+    return sec_count;
+}
+
+fn appendSection(out: *std.ArrayList(u8), alloc: std.mem.Allocator, sec_id: SectionId, payload: []const u8): ! {
     try out.append(alloc, sec_id.toByte());
     try writeUleb128(out, alloc, @as(u32, @intCast(payload.len)));
     try out.appendSlice(alloc, payload);
 }
 
-fn appendName(out: *std.ArrayList(u8), alloc: std.mem.Allocator, name: []const u8): WasmError!void {
+fn appendName(out: *std.ArrayList(u8), alloc: std.mem.Allocator, name: []const u8): ! {
     try writeUleb128(out, alloc, @as(u32, @intCast(name.len)));
     try out.appendSlice(alloc, name);
 }
 
-fn appendLimits(out: *std.ArrayList(u8), alloc: std.mem.Allocator, lim: WasmLimits): WasmError!void {
+fn appendLimits(out: *std.ArrayList(u8), alloc: std.mem.Allocator, lim: WasmLimits): ! {
     if (m := lim.max) {
         try out.append(alloc, 0x01);
         try writeUleb128(out, alloc, lim.min);
@@ -435,7 +663,7 @@ fn appendLimits(out: *std.ArrayList(u8), alloc: std.mem.Allocator, lim: WasmLimi
     }
 }
 
-pub fn encodeWasm(alloc: std.mem.Allocator, mod: WasmModule): WasmError![]u8 {
+pub fn encodeWasm(alloc: std.mem.Allocator, mod: WasmModule): ([]u8) ! {
     let out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(alloc);
 
@@ -625,7 +853,7 @@ pub fn findCustomSection(mod: WasmModule, name: []const u8): CustomSection? {
     return null;
 }
 
-pub fn addCustomSection(alloc: std.mem.Allocator, wasm_bytes: []const u8, name: []const u8, data: []const u8): WasmError![]u8 {
+pub fn addCustomSection(alloc: std.mem.Allocator, wasm_bytes: []const u8, name: []const u8, data: []const u8): ([]u8) ! {
     if (wasm_bytes.len < 8) {
         return WasmError.UnexpectedEof;
     }
