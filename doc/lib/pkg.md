@@ -1622,3 +1622,34 @@ let out: [512]u8 = [0; 512];
 const n = formatPmExecSummary(sess, out[0..])?;
 * = n;
 ```
+
+### 异构包任务调度图、分通道并发限流与重试引擎（`pmTaskGraph.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/PackageManagerTask.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 6 类异构任务通道与去重哈希：`PM_TASK_CHANNEL_COUNT`、`PM_TASK_INVALID_INDEX`、`PmTaskGraphError`、`PmTaskKind`（`ManifestFetch`/`TarballDownload`/`TarballExtract`/`GitCheckout`/`PatchApply`/`LifecycleScript`）、`pmTaskKindIndex`、`pmTaskKindName`、`PmTaskChannelLimits`（独立通道并发配额，默认 16/16/8/4/4/4）、`computePmTaskDedupHash`（域分离 FNV-1a + SplitMix64 + `cap:simd` 前缀空白跳过）；
+  - 指数退避重试与故障分类：`PM_TASK_DEFAULT_MAX_RETRIES`、`PM_TASK_DEFAULT_BASE_BACKOFF_MS`、`PM_TASK_DEFAULT_MAX_BACKOFF_MS`、`PmTaskFailureKind`、`classifyPmHttpFailure`、`isPmFailureRetryable`（区分瞬时 429/5xx/网络超时与永久 404/401/SRI 校验失败）、`PmRetryPolicy`、`PmRetryDecision`、`decidePmTaskRetry`（指数退避 + 确定性抖动 + `Retry-After` 覆盖）；
+  - 任务 DAG 与级联取消传播：`PmTaskState`、`PmTaskDepEdge`、`PmTaskNode`、`PmTaskAddResult`、`PmTaskDispatchItem`、`PmTaskGraphStats`、`PmTaskGraph`（`(kind, dedup_hash)` 去重 + 环依赖拒绝 + 必需上游失败自动级联取消下游 + 关键路径耗时统计）、`formatPmTaskGraphReport`。
+
+```cp
+import {
+    PmTaskKind,
+    PmTaskChannelLimits,
+    PmRetryPolicy,
+    PmTaskNode,
+    PmTaskDepEdge,
+    PmTaskDispatchItem,
+    PmTaskGraph,
+    computePmTaskDedupHash,
+} from "cap:pkg";
+
+let nodes: [8]PmTaskNode = [PmTaskNode.empty(); 8];
+let edges: [8]PmTaskDepEdge = [PmTaskDepEdge.empty(); 8];
+let graph = PmTaskGraph.init(nodes[0..], edges[0..], PmTaskChannelLimits.defaults(), PmRetryPolicy.defaults());
+const m = graph.addTask(PmTaskKind.ManifestFetch, computePmTaskDedupHash(PmTaskKind.ManifestFetch, "zod", ""), "zod", 10)?;
+const d = graph.addTask(PmTaskKind.TarballDownload, computePmTaskDedupHash(PmTaskKind.TarballDownload, "zod", "3.23.8"), "zod@3.23.8", 5)?;
+graph.addDependency(m.task_index, d.task_index, true)?;
+let batch: [4]PmTaskDispatchItem = [PmTaskDispatchItem.empty(); 4];
+const n = graph.dispatchReady(0, batch[0..]);
+* = n;
+```
