@@ -12,13 +12,13 @@ import {
     ZIP_EOCD_SIZE,
     ZIP_METHOD_STORE,
     ZIP_METHOD_DEFLATE,
+    ZIP_FLAG_UTF8,
     ZipLocalHeader,
     ZipCentralHeader,
     ZipEocd,
     ZipEntryView,
 } from "./zip.cp";
 
-pub const ZIP_FLAG_UTF8: u16 = 0x0800;
 pub const ZIP_EXT_ATTR_DIR: u32 = 0x41ED0010;
 pub const ZIP_EXT_ATTR_FILE: u32 = 0x81A40000;
 

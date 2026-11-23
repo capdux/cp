@@ -45,7 +45,7 @@
 | `lib/pack/_brotliDict.cp` | RFC 7932 122KB 静态字典、4 模式字面量上下文查表与 121 种词变换表（内部模块） | RFC 7932 Appendix A / §7.1 / §8 |
 | `lib/pack/tar.cp` | POSIX.1-1988 USTAR 512 字节块编解码（`TarHeader`）与零拷贝读取器（`TarReader`） | `/data/dev/bun/src/libarchive/libarchive.cp` |
 | `lib/pack/tarPax.cp` | POSIX.1-2001 PAX 扩展头（`'x'`）安全归档读写器（`PaxTarWriter` / `PaxTarReader`）与 `validateArchivePath` | `cp/lib/pack/tarPax.cp` (POSIX.1-2001 PAX & USTAR) |
-| `lib/pack/zip.cp` | PKZIP Local Header / Central Directory / EOCD 反向扫描与零拷贝读取器（`ZipReader`） | `/data/dev/bun/src/libarchive/` |
+| `lib/pack/zip.cp` | 工业级 PKZIP (APPNOTE 6.3.x) 归档解析、安全校验与解压引擎（对标 `zip-rs/zip2` MIT 加固：16-lane SIMD 反向 EOCD 定位支持最长 65535B 注释、ZIP64 Extra Field `0x0001` 与 EOCD/Locator、ZipSlip 路径穿越防线 `isSafeZipEntryPath`/`sanitizeZipEntryPath`、CD/LFH 一致性校验 + Data Descriptor `bit 3`、`extractEntryWithLimit` 上限与 CRC32 校验） | `/data/dev/bun/src/libarchive/` & `zip-rs/zip2` (MIT) |
 | `lib/pack/zipWriter.cp` | PKWARE APPNOTE 6.3.10 内存/流式 ZIP 归档写入器（`ZipWriter` / `ZipCompressionMethod`） | `cp/lib/pack/zipWriter.cp` (PKWARE APPNOTE 6.3.10) |
 | `lib/pack/magic.cp` | 归档与压缩容器魔数嗅探器（`ArchiveSniffer` / `ArchiveMagicFormat`）与 MIME / 扩展名映射 | `cp/lib/pack/magic.cp` (Format Sniffer) |
 | `lib/pack/checksum.cp` | IEEE 802.3 `Crc32` 与 RFC 1950 `Adler32` 流式增量及单次校验器 | `/data/dev/bun/src/zlib/` & IEEE 802.3 / RFC 1950 specs |
@@ -250,7 +250,15 @@ pub fn demoTarArchive() {
 - **`ZipLocalHeader`** (`0x04034b50`, 30 字节)：支持单步编码带 CRC-32 校验的完整本地文件条目（`encodeEntry`）与解析；
 - **`ZipCentralHeader`** (`0x02014b50`, 46 字节)：中央目录文件头编解码，记录条目属性与本地头部偏移 `local_header_offset`；
 - **`ZipEocd`** (`0x06054b50`, 22 字节)：中央目录结束记录，支持 `findInBuffer()` 从缓冲区末尾向后扫描定位 EOCD；
-- **`ZipReader` & `ZipEntryView`**：零拷贝顺序遍历 ZIP 条目并内置 `entry.verifyCrc()` 完整性校验。
+- **`ZipReader` & `ZipEntryView`**：零拷贝顺序遍历 ZIP 条目并内置 `entry.verifyCrc()` 完整性校验；
+- **`ZipArchive` / `ZipCdIter` / `ZipCdEntry`（对标 `zip-rs/zip2` MIT 加固）**：
+  - **反向 EOCD 定位**（`findEocdOffsetSimd` / `findEocdOffsetScalar`）：16-lane `@Vector(16, u8)` 加速反向扫描，支持最长 `65535B` 归档注释，严格无溢出校验 `cd_offset + cd_size <= eocd_offset`，拦截多卷（`UnsupportedMultiDisk`）与伪造条目数；
+  - **ZIP64 完整支持**（`parseZip64ExtraField` / `Zip64Fields`）：支持 `0xFFFF` / `0xFFFFFFFF` 占位符从 Extra Field `0x0001` 与 ZIP64 EOCD/Locator 提取 64-bit 尺寸与偏移；
+  - **安全防护三板斧**：
+    1. **路径遍历防护**（`isSafeZipEntryPath` / `sanitizeZipEntryPath` + `cap:simd` `Simd.indexOfAny4` 预扫）：拦截 `..`、绝对路径 `/` / `\`、Windows 盘符 `:` 与 NUL 字节；
+    2. **CD/LFH 一致性校验**：核验方法、文件名与非 Data Descriptor (`bit 3`) 条目的 CRC32 与尺寸，拦截加密条目（`EncryptedEntry`）；
+    3. **解压上限与 CRC32 校验**（`extractEntry` / `extractEntryWithLimit`）：Stored 路径使用 16-lane SIMD `copyStoredSimd` 搬运，Deflate 路径调用 `inflateRawWithLimit`，统一校验 IEEE CRC32。
+- **回归测试套件**：`cap/test/testPackZipRustRefSuite.cp`（覆盖 Python `zipfile` 与 `zip-rs/zip2` 真实归档、ZIP64、ZipSlip 全变体、HeaderMismatch、CRC32 单比特篡改、输出上限、16-lane SIMD 0 差异对拍及 1,300 组 PRNG Fuzz）。
 
 ```typescript
 import {

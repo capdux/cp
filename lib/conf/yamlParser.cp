@@ -1,17 +1,24 @@
+// Reference-hardened against Ethiraric/yaml-rust2 (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/interchange/yaml.cp | Synced: 2026-11-22T19:03:00Z
-// lib/conf/yaml_parser.cp
+// lib/conf/yamlParser.cp
 // Industrial-grade YAML 1.2 Parser & Bidirectional Serializer:
 // - Multi-document streams (`---` / `...`, `%YAML`/`%TAG`)
-// - Anchors & Aliases (`&anchor` / `*alias`)
-// - Merge Keys (`<<: *base` and `<<: [*a, *b]`)
-// - Block Scalars (`|`, `|-`, `|+`, `>`, `>-`, `>+`, explicit indent indicator)
-// - Flow Sequences & Mappings (`[a, {b: 1}]`)
+// - Anchors & Aliases (`&anchor` / `*alias`) with Circular Alias & Expansion Budget protection
+// - Merge Keys (`<<: *base` and `<<: [*a, *b]`) with bounded node budget
+// - Block Scalars (`|`, `|-`, `|+`, `>`, `>-`, `>+`, explicit indent indicator `1..9`)
+// - Flow Sequences & Mappings (`[a, {b: [1, 2]}]`) with max depth guard (`YAML_MAX_DEPTH = 64`)
 // - Explicit Type Tags (`!!str`, `!!int`, `!!float`, `!!bool`, `!!null`, `!!seq`, `!!map`)
-// - Single & Double Quoted Escapes + YAML 1.2 Core Schema scalar resolution
+// - Single & Double Quoted Escapes (`\n`/`\t`/`\xHH`/`\uXXXX`/`\UXXXXXXXX`) + YAML 1.2 Core Schema
+// - Hot-path `cap:simd` acceleration for line-end/comment scan, indent counting, and quoted string scan
 // - Recursive ConfValue AST & Bidirectional YAML Serialization
 
 const std = @import("std");
+import { Simd } from "cap:simd";
 import { ConfTag, ConfField, ConfValue } from "./value";
+
+pub const YAML_MAX_DEPTH: usize = 64;
+pub const YAML_MAX_ALIAS_EXPANSIONS: usize = 256;
+pub const YAML_MAX_EXPANDED_NODES: usize = 16384;
 
 pub error YamlError {
     OutOfMemory,
@@ -21,6 +28,10 @@ pub error YamlError {
     InvalidEscape,
     InvalidTag,
     InvalidIndentation,
+    DepthExceeded,
+    CircularAlias,
+    AliasExpansionLimitExceeded,
+    TabIndentationForbidden,
 }
 
 pub struct YamlAnchor {
@@ -68,6 +79,10 @@ pub struct YamlParser {
     pos: usize = 0,
     allocator: std.mem.Allocator = undefined,
     anchors: YamlAnchorList = YamlAnchorList.empty,
+    active_anchors: YamlStrList = YamlStrList.empty,
+    depth: usize = 0,
+    alias_expansions: usize = 0,
+    expanded_nodes: usize = 0,
 
     pub static fn init(allocator: std.mem.Allocator, src: []const u8): YamlParser {
         return YamlParser{
@@ -75,11 +90,16 @@ pub struct YamlParser {
             pos: 0,
             allocator: allocator,
             anchors: YamlAnchorList.empty,
+            active_anchors: YamlStrList.empty,
+            depth: 0,
+            alias_expansions: 0,
+            expanded_nodes: 0,
         };
     }
 
     pub fn deinit(*_) {
         _.anchors.deinit(_.allocator);
+        _.active_anchors.deinit(_.allocator);
     }
 
     pub static fn parse(allocator: std.mem.Allocator, src: []const u8): ConfValue! {
@@ -92,6 +112,128 @@ pub struct YamlParser {
         let p = YamlParser.init(allocator, src);
         defer p.deinit();
         return try p.runStream();
+    }
+
+    // ========================================================================
+    // Hot-Path cap:simd Scanners & Scalar Reference Counterparts
+    // ========================================================================
+
+    /// SIMD-accelerated scan for next line break (`\n` or `\r`); returns `slice.len` if none.
+    pub static fn scanLineEndSimd(slice: []const u8): usize {
+        if (idx := Simd.indexOfAny2(slice, '\n', '\r')) {
+            return idx;
+        }
+        return slice.len;
+    }
+
+    /// Scalar reference for `scanLineEndSimd`.
+    pub static fn scanLineEndScalar(slice: []const u8): usize {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            if (slice[i] == '\n' || slice[i] == '\r') return i;
+        }
+        return slice.len;
+    }
+
+    /// SIMD-accelerated count of leading ASCII space (`' '`) indentation bytes.
+    pub static fn countIndentSpacesSimd(slice: []const u8): usize {
+        if (slice.len < 16) {
+            return YamlParser.countIndentSpacesScalar(slice);
+        }
+        const ws_len = Simd.skipWhitespace(slice);
+        if (ws_len == 0) return 0;
+        const ws_slice = slice[0..ws_len];
+        if (non_sp := Simd.indexOfAny4(ws_slice, '\t', '\r', '\n', '\t')) {
+            return non_sp;
+        }
+        return ws_len;
+    }
+
+    /// Scalar reference for `countIndentSpacesSimd`.
+    pub static fn countIndentSpacesScalar(slice: []const u8): usize {
+        let i: usize = 0;
+        while (i < slice.len && slice[i] == ' ') : (i += 1) {}
+        return i;
+    }
+
+    /// SIMD-accelerated scan for next double-quoted stop byte (`"`, `\`, `\n`, `\r`).
+    pub static fn scanDoubleQuotedStopSimd(slice: []const u8): usize? {
+        return Simd.indexOfAny4(slice, '"', '\\', '\n', '\r');
+    }
+
+    /// Scalar reference for `scanDoubleQuotedStopSimd`.
+    pub static fn scanDoubleQuotedStopScalar(slice: []const u8): usize? {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            const c = slice[i];
+            if (c == '"' || c == '\\' || c == '\n' || c == '\r') return i;
+        }
+        return null;
+    }
+
+    /// SIMD-accelerated scan for next single-quoted stop byte (`'`, `\n`, `\r`).
+    pub static fn scanSingleQuotedStopSimd(slice: []const u8): usize? {
+        return Simd.indexOfAny4(slice, '\'', '\n', '\r', '\'');
+    }
+
+    /// Scalar reference for `scanSingleQuotedStopSimd`.
+    pub static fn scanSingleQuotedStopScalar(slice: []const u8): usize? {
+        let i: usize = 0;
+        while (i < slice.len) : (i += 1) {
+            const c = slice[i];
+            if (c == '\'' || c == '\n' || c == '\r') return i;
+        }
+        return null;
+    }
+
+    // ========================================================================
+    // Security Guards: Anchors, Circular Alias & Expansion Budget
+    // ========================================================================
+
+    static fn countNodesBounded(val: ConfValue, limit: usize, depth: usize): usize? {
+        if (depth > YAML_MAX_DEPTH) return null;
+        if (limit == 0) return null;
+        let total: usize = 1;
+        switch (val.tag) {
+            .Array => {
+                for (item of val.arr_val) {
+                    if (total >= limit) return null;
+                    const sub = YamlParser.countNodesBounded(item, limit - total, depth + 1) orelse return null;
+                    total += sub;
+                    if (total > limit) return null;
+                }
+            },
+            .Object => {
+                for (f of val.obj_val) {
+                    if (total >= limit) return null;
+                    const sub = YamlParser.countNodesBounded(f.value, limit - total, depth + 1) orelse return null;
+                    total += sub;
+                    if (total > limit) return null;
+                }
+            },
+            else => {},
+        }
+        return total;
+    }
+
+    fn chargeExpansionBudget(*_, val: ConfValue): ! {
+        if (_.alias_expansions >= YAML_MAX_ALIAS_EXPANSIONS) {
+            return error.AliasExpansionLimitExceeded;
+        }
+        if (_.expanded_nodes >= YAML_MAX_EXPANDED_NODES) {
+            return error.AliasExpansionLimitExceeded;
+        }
+        const remaining = YAML_MAX_EXPANDED_NODES - _.expanded_nodes;
+        const needed = YamlParser.countNodesBounded(val, remaining, 0) orelse return error.AliasExpansionLimitExceeded;
+        _.alias_expansions += 1;
+        _.expanded_nodes += needed;
+    }
+
+    fn isAnchorActive(name: []const u8): bool {
+        for (a of _.active_anchors.items) {
+            if (std.mem.eql(u8, a, name)) return true;
+        }
+        return false;
     }
 
     fn setAnchor(*_, name: []const u8, val: ConfValue): ! {
@@ -115,6 +257,10 @@ pub struct YamlParser {
         return null;
     }
 
+    // ========================================================================
+    // Cursor, Whitespace & Line Indentation Helpers (SIMD-Accelerated)
+    // ========================================================================
+
     fn isEof(): bool {
         return _.pos >= _.src.len;
     }
@@ -132,18 +278,21 @@ pub struct YamlParser {
 
     fn skipLineComment(*_) {
         if (_.pos < _.src.len && _.src[_.pos] == '#') {
-            while (_.pos < _.src.len && _.src[_.pos] != '\n') {
-                _.pos += 1;
+            const rest = _.src[_.pos..];
+            if (nl := Simd.indexOfByte(rest, '\n')) {
+                _.pos += nl;
+            } else {
+                _.pos = _.src.len;
             }
         }
     }
 
     fn skipToNextLine(*_) {
-        while (_.pos < _.src.len && _.src[_.pos] != '\n') {
-            _.pos += 1;
-        }
-        if (_.pos < _.src.len && _.src[_.pos] == '\n') {
-            _.pos += 1;
+        const rest = _.src[_.pos..];
+        if (nl := Simd.indexOfByte(rest, '\n')) {
+            _.pos += nl + 1;
+        } else {
+            _.pos = _.src.len;
         }
     }
 
@@ -170,34 +319,50 @@ pub struct YamlParser {
         }
     }
 
-    fn currentLineIndent(): usize {
+    fn currentLineStart(): usize {
         let line_start = _.pos;
         while (line_start > 0 && _.src[line_start - 1] != '\n') {
             line_start -= 1;
         }
-        let col: usize = 0;
-        while (line_start + col < _.src.len && _.src[line_start + col] == ' ') {
-            col += 1;
+        return line_start;
+    }
+
+    fn currentLineIndent(): usize {
+        const line_start = _.currentLineStart();
+        return YamlParser.countIndentSpacesSimd(_.src[line_start..]);
+    }
+
+    fn checkBlockLineIndent(): usize! {
+        const line_start = _.currentLineStart();
+        const sp = YamlParser.countIndentSpacesSimd(_.src[line_start..]);
+        if (line_start + sp < _.src.len && _.src[line_start + sp] == '\t') {
+            return error.TabIndentationForbidden;
         }
-        return col;
+        return sp;
     }
 
     fn currentColumn(): usize {
-        let line_start = _.pos;
-        while (line_start > 0 && _.src[line_start - 1] != '\n') {
-            line_start -= 1;
-        }
-        return _.pos - line_start;
+        return _.pos - _.currentLineStart();
     }
 
-    fn isDocBoundaryAt(idx: usize): bool {
-        if (idx + 3 > _.src.len) return false;
-        const is_start = (_.src[idx] == '-' && _.src[idx + 1] == '-' && _.src[idx + 2] == '-');
-        const is_end = (_.src[idx] == '.' && _.src[idx + 1] == '.' && _.src[idx + 2] == '.');
-        if (!is_start && !is_end) return false;
-        if (idx + 3 == _.src.len) return true;
-        const next_ch = _.src[idx + 3];
-        return next_ch == ' ' || next_ch == '\t' || next_ch == '\r' || next_ch == '\n';
+    fn expectLineEndOrComment(*_): ! {
+        _.skipHorizontalWs();
+        if (_.pos >= _.src.len) return;
+        const c = _.src[_.pos];
+        if (c == '#') {
+            _.skipToNextLine();
+            return;
+        }
+        if (c == '\r') {
+            _.pos += 1;
+            if (_.pos < _.src.len && _.src[_.pos] == '\n') _.pos += 1;
+            return;
+        }
+        if (c == '\n') {
+            _.pos += 1;
+            return;
+        }
+        return error.SyntaxError;
     }
 
     fn isDocStartAtLine(): bool {
@@ -219,6 +384,10 @@ pub struct YamlParser {
         }
         return false;
     }
+
+    // ========================================================================
+    // Multi-Document Stream Driver
+    // ========================================================================
 
     fn runStream(*_): YamlStream! {
         let docs = YamlValueList.empty;
@@ -275,12 +444,30 @@ pub struct YamlParser {
                 continue;
             }
 
-            const doc_val = try _.parseNode(0, false);
+            if (_.currentColumn() == 0) {
+                * = try _.checkBlockLineIndent();
+            }
+
+            const pos_before = _.pos;
+            const doc_val = try _.parseNode(0, false, false);
             try docs.append(_.allocator, doc_val);
+
+            // Prevent infinite loop on malformed unconsumed input
+            if (_.pos == pos_before) {
+                return error.SyntaxError;
+            }
+
+            // If still on the same line after a scalar/flow document, validate no trailing garbage
+            if (_.pos < _.src.len && _.currentColumn() > 0) {
+                try _.expectLineEndOrComment();
+            }
 
             _.skipBlankAndCommentLines();
             if (_.pos < _.src.len && _.isDocEndAtLine()) {
                 _.skipToNextLine();
+            } else if (_.pos < _.src.len && !_.isDocStartAtLine()) {
+                // Unexpected trailing content without `---` document separator
+                return error.SyntaxError;
             }
         }
 
@@ -288,6 +475,10 @@ pub struct YamlParser {
             docs: try docs.toOwnedSlice(_.allocator),
         };
     }
+
+    // ========================================================================
+    // Properties (Anchors & Explicit Tags)
+    // ========================================================================
 
     fn parseProperties(*_): NodeProps! {
         let props = NodeProps{};
@@ -303,9 +494,8 @@ pub struct YamlParser {
                 {
                     _.pos += 1;
                 }
-                if (_.pos > start) {
-                    props.anchor = _.src[start.._.pos];
-                }
+                if (_.pos == start) return error.SyntaxError;
+                props.anchor = _.src[start.._.pos];
             } else if (c == '!') {
                 const start = _.pos;
                 while (_.pos < _.src.len && !isYamlSpaceOrBreak(_.src[_.pos]) &&
@@ -336,7 +526,7 @@ pub struct YamlParser {
         return props;
     }
 
-    fn applyTag(val: ConfValue, tag: YamlTagOverride, allocator: std.mem.Allocator): ConfValue! {
+    static fn applyTag(val: ConfValue, tag: YamlTagOverride, allocator: std.mem.Allocator): ConfValue! {
         return switch (tag) {
             .None => val,
             .Null => ConfValue.makeNull(),
@@ -378,7 +568,13 @@ pub struct YamlParser {
         };
     }
 
-    fn parseNode(*_, min_indent: usize, in_flow: bool): ConfValue! {
+    // ========================================================================
+    // Core Recursive Node Parser
+    // ========================================================================
+
+    fn parseNode(*_, min_indent: usize, in_flow: bool, in_block_collection: bool): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+
         if (!in_flow) {
             _.skipBlankAndCommentLines();
         } else {
@@ -390,6 +586,17 @@ pub struct YamlParser {
         }
 
         const props = try _.parseProperties();
+        let pushed_active_anchor = false;
+        if (aname := props.anchor) {
+            try _.active_anchors.append(_.allocator, aname);
+            pushed_active_anchor = true;
+        }
+        defer {
+            if (pushed_active_anchor) {
+                * = _.active_anchors.pop();
+            }
+        }
+
         if (!in_flow) {
             _.skipHorizontalWs();
         } else {
@@ -406,8 +613,8 @@ pub struct YamlParser {
                 _.skipToNextLine();
                 _.skipBlankAndCommentLines();
                 if (_.pos < _.src.len && !_.isDocStartAtLine() && !_.isDocEndAtLine()) {
-                    const next_ind = _.currentLineIndent();
-                    if (next_ind > min_indent || (next_ind == min_indent && _.src[_.pos] == '-' && isSeqMarker(_.src, _.pos))) {
+                    const next_ind = try _.checkBlockLineIndent();
+                    if (next_ind > min_indent || (next_ind == min_indent && isSeqMarker(_.src, _.pos + next_ind))) {
                         val = try _.parseBlockFromCurrent(next_ind);
                     }
                 }
@@ -415,8 +622,8 @@ pub struct YamlParser {
                 _.skipToNextLine();
                 _.skipBlankAndCommentLines();
                 if (_.pos < _.src.len && !_.isDocStartAtLine() && !_.isDocEndAtLine()) {
-                    const next_ind = _.currentLineIndent();
-                    if (next_ind > min_indent || (next_ind == min_indent && isSeqMarker(_.src, _.pos))) {
+                    const next_ind = try _.checkBlockLineIndent();
+                    if (next_ind > min_indent || (next_ind == min_indent && isSeqMarker(_.src, _.pos + next_ind))) {
                         val = try _.parseBlockFromCurrent(next_ind);
                     }
                 }
@@ -429,14 +636,17 @@ pub struct YamlParser {
                     _.pos += 1;
                 }
                 const aname = _.src[astart.._.pos];
+                if (aname.len == 0) return error.UnknownAlias;
+                if (_.isAnchorActive(aname)) return error.CircularAlias;
                 const found = _.lookupAnchor(aname) orelse return error.UnknownAlias;
+                try _.chargeExpansionBudget(found);
                 val = try found.clone(_.allocator);
             } else if (c == '[') {
                 val = try _.parseFlowSeq();
             } else if (c == '{') {
                 val = try _.parseFlowMap();
             } else if (!in_flow && (c == '|' || c == '>')) {
-                val = try _.parseBlockScalar(min_indent);
+                val = try _.parseBlockScalar(min_indent, in_block_collection);
             } else if (!in_flow && isSeqMarker(_.src, _.pos)) {
                 const seq_col = _.currentColumn();
                 val = try _.parseBlockSequence(seq_col);
@@ -463,6 +673,8 @@ pub struct YamlParser {
     }
 
     fn parseBlockFromCurrent(*_, block_indent: usize): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+        * = try _.checkBlockLineIndent();
         _.skipHorizontalWs();
         if (_.pos >= _.src.len) return ConfValue.makeNull();
         if (isSeqMarker(_.src, _.pos)) {
@@ -471,7 +683,7 @@ pub struct YamlParser {
         if (_.looksLikeBlockMappingLine()) {
             return try _.parseBlockMapping(_.currentColumn());
         }
-        return try _.parseNode(block_indent, false);
+        return try _.parseNode(block_indent, false, true);
     }
 
     fn looksLikeBlockMappingLine(): bool {
@@ -511,14 +723,22 @@ pub struct YamlParser {
         return false;
     }
 
+    // ========================================================================
+    // Block Sequence & Block Mapping
+    // ========================================================================
+
     fn parseBlockSequence(*_, seq_indent: usize): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
         let items = YamlValueList.empty;
 
         while (true) {
             _.skipBlankAndCommentLines();
             if (_.pos >= _.src.len || _.isDocStartAtLine() || _.isDocEndAtLine()) break;
 
-            const ind = _.currentLineIndent();
+            const ind = try _.checkBlockLineIndent();
             const col = _.currentColumn();
             if (col == 0) {
                 if (ind != seq_indent) break;
@@ -529,7 +749,6 @@ pub struct YamlParser {
             if (!isSeqMarker(_.src, _.pos)) break;
             _.pos += 1; // consume '-'
 
-            const item_col = seq_indent + 1;
             _.skipHorizontalWs();
 
             if (_.pos >= _.src.len || _.src[_.pos] == '\n' || _.src[_.pos] == '\r' || _.src[_.pos] == '#') {
@@ -538,10 +757,14 @@ pub struct YamlParser {
                     _.skipToNextLine();
                 }
                 _.skipBlankAndCommentLines();
-                if (_.pos < _.src.len && !_.isDocStartAtLine() && !_.isDocEndAtLine() && _.currentLineIndent() > seq_indent) {
-                    const next_ind = _.currentLineIndent();
-                    const child = try _.parseBlockFromCurrent(next_ind);
-                    try items.append(_.allocator, child);
+                if (_.pos < _.src.len && !_.isDocStartAtLine() && !_.isDocEndAtLine()) {
+                    const next_ind = try _.checkBlockLineIndent();
+                    if (next_ind > seq_indent) {
+                        const child = try _.parseBlockFromCurrent(next_ind);
+                        try items.append(_.allocator, child);
+                    } else {
+                        try items.append(_.allocator, ConfValue.makeNull());
+                    }
                 } else {
                     try items.append(_.allocator, ConfValue.makeNull());
                 }
@@ -556,12 +779,10 @@ pub struct YamlParser {
                 const child = try _.parseBlockMapping(map_col);
                 try items.append(_.allocator, child);
             } else {
-                const elem = try _.parseNode(item_col, false);
+                const elem = try _.parseNode(seq_indent, false, true);
                 try items.append(_.allocator, elem);
-                _.skipHorizontalWs();
-                _.skipLineComment();
-                if (_.pos < _.src.len && (_.src[_.pos] == '\r' || _.src[_.pos] == '\n')) {
-                    _.skipToNextLine();
+                if (_.pos < _.src.len && _.currentColumn() > 0) {
+                    try _.expectLineEndOrComment();
                 }
             }
         }
@@ -569,7 +790,7 @@ pub struct YamlParser {
         return ConfValue.makeArray(try items.toOwnedSlice(_.allocator));
     }
 
-    fn mergeObjectInto(fields: *YamlFieldList, src_obj: ConfValue, allocator: std.mem.Allocator): ! {
+    fn mergeObjectInto(*_, fields: *YamlFieldList, src_obj: ConfValue): ! {
         if (src_obj.tag != ConfTag.Object) return;
         for (sf of src_obj.obj_val) {
             let exists = false;
@@ -580,9 +801,10 @@ pub struct YamlParser {
                 }
             }
             if (!exists) {
-                try fields.append(allocator, ConfField{
-                    key: try allocator.dupe(u8, sf.key),
-                    value: try sf.value.clone(allocator),
+                try _.chargeExpansionBudget(sf.value);
+                try fields.append(_.allocator, ConfField{
+                    key: try _.allocator.dupe(u8, sf.key),
+                    value: try sf.value.clone(_.allocator),
                 });
             }
         }
@@ -607,7 +829,7 @@ pub struct YamlParser {
         return std.mem.trimEnd(u8, _.src[start.._.pos], " \t");
     }
 
-    fn upsertField(fields: *YamlFieldList, key: []const u8, val: ConfValue, allocator: std.mem.Allocator): ! {
+    static fn upsertField(fields: *YamlFieldList, key: []const u8, val: ConfValue, allocator: std.mem.Allocator): ! {
         for (*ef of fields.items) {
             if (std.mem.eql(u8, ef.key, key)) {
                 ef.value = val;
@@ -618,6 +840,10 @@ pub struct YamlParser {
     }
 
     fn parseBlockMapping(*_, map_indent: usize): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
         let fields = YamlFieldList.empty;
         let merge_sources = YamlValueList.empty;
 
@@ -625,7 +851,7 @@ pub struct YamlParser {
             _.skipBlankAndCommentLines();
             if (_.pos >= _.src.len || _.isDocStartAtLine() || _.isDocEndAtLine()) break;
 
-            const line_ind = _.currentLineIndent();
+            const line_ind = try _.checkBlockLineIndent();
             // Handle compact first line where cursor is already at `map_indent` past line start
             const col = _.currentColumn();
             if (col == 0) {
@@ -651,7 +877,7 @@ pub struct YamlParser {
                 }
                 _.skipBlankAndCommentLines();
                 if (_.pos < _.src.len && !_.isDocStartAtLine() && !_.isDocEndAtLine()) {
-                    const next_ind = _.currentLineIndent();
+                    const next_ind = try _.checkBlockLineIndent();
                     if (next_ind > map_indent) {
                         val = try _.parseBlockFromCurrent(next_ind);
                     } else if (next_ind == map_indent && isSeqMarkerAt(_.src, _.pos + next_ind)) {
@@ -660,11 +886,9 @@ pub struct YamlParser {
                     }
                 }
             } else {
-                val = try _.parseNode(map_indent, false);
-                _.skipHorizontalWs();
-                _.skipLineComment();
-                if (_.pos < _.src.len && (_.src[_.pos] == '\r' || _.src[_.pos] == '\n')) {
-                    _.skipToNextLine();
+                val = try _.parseNode(map_indent, false, true);
+                if (_.pos < _.src.len && _.currentColumn() > 0) {
+                    try _.expectLineEndOrComment();
                 }
             }
 
@@ -685,32 +909,39 @@ pub struct YamlParser {
 
         // Apply YAML merge keys (explicit keys take precedence over merged keys)
         for (ms of merge_sources.items) {
-            try YamlParser.mergeObjectInto(&fields, ms, _.allocator);
+            try _.mergeObjectInto(&fields, ms);
         }
         merge_sources.deinit(_.allocator);
 
         return ConfValue.makeObject(try fields.toOwnedSlice(_.allocator));
     }
 
-    fn parseBlockScalar(*_, parent_indent: usize): ConfValue! {
+    // ========================================================================
+    // Block Scalars (`|`, `|-`, `|+`, `>`, `>-`, `>+`, explicit indent `1..9`)
+    // ========================================================================
+
+    fn parseBlockScalar(*_, parent_indent: usize, in_block_collection: bool): ConfValue! {
         const style = _.src[_.pos]; // '|' or '>'
         _.pos += 1;
 
         let chomp: u8 = 0; // 0=clip, 1=strip(-), 2=keep(+)
+        let has_chomp = false;
         let explicit_indent: usize = 0;
+        let seen_ws = false;
 
         while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r' && _.src[_.pos] != '#') {
             const c = _.src[_.pos];
-            if (c == '-') {
-                chomp = 1;
-            } else if (c == '+') {
-                chomp = 2;
-            } else if (c >= '1' && c <= '9') {
+            if (!seen_ws && (c == '-' || c == '+')) {
+                if (has_chomp) return error.SyntaxError;
+                chomp = if (c == '-') 1 else 2;
+                has_chomp = true;
+            } else if (!seen_ws && c >= '1' && c <= '9') {
+                if (explicit_indent != 0) return error.SyntaxError;
                 explicit_indent = (c - '0') as usize;
             } else if (c == ' ' || c == '\t') {
-                // whitespace before comment
+                seen_ws = true;
             } else {
-                break;
+                return error.SyntaxError;
             }
             _.pos += 1;
         }
@@ -719,26 +950,41 @@ pub struct YamlParser {
             _.skipToNextLine();
         }
 
-        // Determine block content indentation
+        const min_required_indent: usize = if (in_block_collection) (parent_indent + 1) else 0;
         let content_indent: usize = if (explicit_indent > 0) (parent_indent + explicit_indent) else 0;
-        let scan_pos = _.pos;
+
         if (content_indent == 0) {
+            let scan_pos = _.pos;
+            let found_content = false;
+            let leading_blank_count: usize = 0;
             while (scan_pos < _.src.len) {
-                let sp: usize = 0;
-                while (scan_pos + sp < _.src.len && _.src[scan_pos + sp] == ' ') sp += 1;
-                if (scan_pos + sp >= _.src.len || _.src[scan_pos + sp] == '\n' || _.src[scan_pos + sp] == '\r') {
-                    // Blank line
-                    while (scan_pos < _.src.len && _.src[scan_pos] != '\n') scan_pos += 1;
-                    if (scan_pos < _.src.len) scan_pos += 1;
+                const sp = YamlParser.countIndentSpacesSimd(_.src[scan_pos..]);
+                const after_sp = scan_pos + sp;
+                if (after_sp >= _.src.len || _.src[after_sp] == '\n' || _.src[after_sp] == '\r') {
+                    leading_blank_count += 1;
+                    scan_pos = after_sp;
+                    if (scan_pos < _.src.len && _.src[scan_pos] == '\r') scan_pos += 1;
+                    if (scan_pos < _.src.len && _.src[scan_pos] == '\n') scan_pos += 1;
                     continue;
                 }
+                if (sp == 0 && (isDocStartAtSlice(_.src, scan_pos) || isDocEndAtSlice(_.src, scan_pos))) {
+                    break;
+                }
                 content_indent = sp;
+                found_content = true;
                 break;
             }
-            if (content_indent <= parent_indent && parent_indent > 0) {
-                // Empty block scalar
-                if (chomp == 2) {
-                    // keep trailing newlines only if blank lines were present
+            if (!found_content || content_indent < min_required_indent) {
+                // Consume only blank lines belonging to empty block scalar
+                if (chomp == 2 && leading_blank_count > 0) {
+                    let consumed: usize = 0;
+                    while (consumed < leading_blank_count && _.pos < _.src.len) : (consumed += 1) {
+                        _.skipToNextLine();
+                    }
+                    let buf = try _.allocator.alloc(u8, leading_blank_count);
+                    let k: usize = 0;
+                    while (k < leading_blank_count) : (k += 1) buf[k] = '\n';
+                    return ConfValue.makeString(buf);
                 }
                 return ConfValue.makeString("");
             }
@@ -750,18 +996,14 @@ pub struct YamlParser {
 
         while (_.pos < _.src.len) {
             if (_.isDocStartAtLine() || _.isDocEndAtLine()) break;
-            let sp: usize = 0;
-            while (_.pos + sp < _.src.len && _.src[_.pos + sp] == ' ') sp += 1;
+            const sp = YamlParser.countIndentSpacesSimd(_.src[_.pos..]);
             const after_sp = _.pos + sp;
             const is_blank = (after_sp >= _.src.len || _.src[after_sp] == '\n' || _.src[after_sp] == '\r');
             if (!is_blank && sp < content_indent) {
                 break;
             }
 
-            let line_end = after_sp;
-            while (line_end < _.src.len && _.src[line_end] != '\n' && _.src[line_end] != '\r') {
-                line_end += 1;
-            }
+            const line_end = after_sp + YamlParser.scanLineEndSimd(_.src[after_sp..]);
 
             if (is_blank) {
                 const extra = if (sp > content_indent) _.src[_.pos + content_indent .. line_end] else "";
@@ -777,7 +1019,6 @@ pub struct YamlParser {
             if (_.pos < _.src.len && _.src[_.pos] == '\n') _.pos += 1;
         }
 
-        // Trim trailing blank lines based on chomp mode
         const content_line_count = lines.items.len - trailing_blanks;
         if (content_line_count == 0) {
             if (chomp == 2 && trailing_blanks > 0) {
@@ -797,16 +1038,27 @@ pub struct YamlParser {
                 try out.appendSlice(_.allocator, lines.items[i]);
             }
         } else {
-            // Folded '>': blank lines produce one '\n' each; non-blank adjacent lines join with ' ' unless indented
+            // YAML 1.2 Folded '>' (Spec 8.1.3):
+            // - Adjacent normal lines fold with ' '
+            // - More-indented lines preserve newlines before & after (including around blank lines)
+            // - Blank lines between normal lines emit one '\n' per blank line
             let i: usize = 0;
             let prev_was_indented = false;
+            let had_non_empty = false;
             while (i < content_line_count) : (i += 1) {
                 const ln = lines.items[i];
                 const is_empty = (ln.len == 0);
                 const is_indented = (!is_empty && (ln[0] == ' ' || ln[0] == '\t'));
                 if (is_empty) {
-                    if (i > 0) try out.append(_.allocator, '\n');
-                    prev_was_indented = false;
+                    if (had_non_empty) {
+                        if (prev_was_indented) {
+                            try out.append(_.allocator, '\n');
+                            prev_was_indented = false;
+                        }
+                        try out.append(_.allocator, '\n');
+                    } else {
+                        try out.append(_.allocator, '\n');
+                    }
                     continue;
                 }
                 if (i > 0) {
@@ -820,6 +1072,7 @@ pub struct YamlParser {
                     }
                 }
                 try out.appendSlice(_.allocator, ln);
+                had_non_empty = true;
                 prev_was_indented = is_indented;
             }
         }
@@ -837,12 +1090,15 @@ pub struct YamlParser {
         return ConfValue.makeString(try out.toOwnedSlice(_.allocator));
     }
 
+    // ========================================================================
+    // Flow Sequences & Flow Mappings (SIMD Whitespace + Depth Guard)
+    // ========================================================================
+
     fn skipFlowWs(*_) {
         while (_.pos < _.src.len) {
-            const c = _.src[_.pos];
-            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-                _.pos += 1;
-            } else if (c == '#') {
+            const adv = Simd.skipWhitespace(_.src[_.pos..]);
+            _.pos += adv;
+            if (_.pos < _.src.len && _.src[_.pos] == '#') {
                 _.skipToNextLine();
             } else {
                 break;
@@ -851,6 +1107,10 @@ pub struct YamlParser {
     }
 
     fn parseFlowSeq(*_): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
         _.pos += 1; // '['
         let items = YamlValueList.empty;
         while (true) {
@@ -860,7 +1120,10 @@ pub struct YamlParser {
                 _.pos += 1;
                 break;
             }
-            const elem = try _.parseNode(0, true);
+            if (_.src[_.pos] == ',') {
+                return error.SyntaxError;
+            }
+            const elem = try _.parseNode(0, true, false);
             try items.append(_.allocator, elem);
             _.skipFlowWs();
             if (_.pos < _.src.len && _.src[_.pos] == ',') {
@@ -877,6 +1140,10 @@ pub struct YamlParser {
     }
 
     fn parseFlowMap(*_): ConfValue! {
+        if (_.depth >= YAML_MAX_DEPTH) return error.DepthExceeded;
+        _.depth += 1;
+        defer _.depth -= 1;
+
         _.pos += 1; // '{'
         let fields = YamlFieldList.empty;
         let merge_sources = YamlValueList.empty;
@@ -888,6 +1155,9 @@ pub struct YamlParser {
                 _.pos += 1;
                 break;
             }
+            if (_.src[_.pos] == ',') {
+                return error.SyntaxError;
+            }
 
             let key: []const u8 = "";
             if (_.src[_.pos] == '"') {
@@ -896,9 +1166,10 @@ pub struct YamlParser {
                 key = try _.parseSingleQuoted();
             } else {
                 const start = _.pos;
-                while (_.pos < _.src.len && _.src[_.pos] != ':' && _.src[_.pos] != ',' && _.src[_.pos] != '}' && _.src[_.pos] != '\n') {
+                while (_.pos < _.src.len && _.src[_.pos] != ':' && _.src[_.pos] != ',' && _.src[_.pos] != '}' && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
                     _.pos += 1;
                 }
+                if (_.pos == start) return error.SyntaxError;
                 key = std.mem.trim(u8, _.src[start.._.pos], " \t");
             }
 
@@ -908,7 +1179,7 @@ pub struct YamlParser {
                 _.pos += 1;
                 _.skipFlowWs();
                 if (_.pos < _.src.len && _.src[_.pos] != ',' && _.src[_.pos] != '}') {
-                    val = try _.parseNode(0, true);
+                    val = try _.parseNode(0, true, false);
                 }
             }
 
@@ -937,16 +1208,26 @@ pub struct YamlParser {
         }
 
         for (ms of merge_sources.items) {
-            try YamlParser.mergeObjectInto(&fields, ms, _.allocator);
+            try _.mergeObjectInto(&fields, ms);
         }
         merge_sources.deinit(_.allocator);
         return ConfValue.makeObject(try fields.toOwnedSlice(_.allocator));
     }
 
+    // ========================================================================
+    // Quoted & Plain Scalars (SIMD-Accelerated Fast Paths)
+    // ========================================================================
+
     fn parseSingleQuoted(*_): ([]const u8)! {
         _.pos += 1; // opening '\''
         let out = YamlByteList.empty;
         while (_.pos < _.src.len) {
+            const rest = _.src[_.pos..];
+            const stop = YamlParser.scanSingleQuotedStopSimd(rest) orelse return error.UnexpectedEof;
+            if (stop > 0) {
+                try out.appendSlice(_.allocator, rest[0..stop]);
+                _.pos += stop;
+            }
             const c = _.src[_.pos];
             if (c == '\'') {
                 if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\'') {
@@ -964,13 +1245,11 @@ pub struct YamlParser {
                 try out.append(_.allocator, ' ');
                 continue;
             }
-            try out.append(_.allocator, c);
-            _.pos += 1;
         }
         return error.UnexpectedEof;
     }
 
-    fn parseHexDigits(src: []const u8): u32? {
+    static fn parseHexDigits(src: []const u8): u32? {
         let acc: u32 = 0;
         for (c of src) {
             acc <<= 4;
@@ -987,8 +1266,8 @@ pub struct YamlParser {
         return acc;
     }
 
-    fn appendUtf8(out: *YamlByteList, allocator: std.mem.Allocator, cp: u32): ! {
-        if (cp > 0x10FFFF) return error.InvalidEscape;
+    static fn appendUtf8(out: *YamlByteList, allocator: std.mem.Allocator, cp: u32): ! {
+        if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) return error.InvalidEscape;
         let buf: [4]u8 = undefined;
         const n = std.unicode.utf8Encode(@intCast(cp), &buf) catch return error.InvalidEscape;
         try out.appendSlice(allocator, buf[0..n]);
@@ -998,6 +1277,12 @@ pub struct YamlParser {
         _.pos += 1; // opening '"'
         let out = YamlByteList.empty;
         while (_.pos < _.src.len) {
+            const rest = _.src[_.pos..];
+            const stop = YamlParser.scanDoubleQuotedStopSimd(rest) orelse return error.UnexpectedEof;
+            if (stop > 0) {
+                try out.appendSlice(_.allocator, rest[0..stop]);
+                _.pos += stop;
+            }
             const c = _.src[_.pos];
             if (c == '"') {
                 _.pos += 1;
@@ -1012,7 +1297,7 @@ pub struct YamlParser {
                     '0' => try out.append(_.allocator, 0),
                     'a' => try out.append(_.allocator, 0x07),
                     'b' => try out.append(_.allocator, 0x08),
-                    't' => try out.append(_.allocator, '\t'),
+                    't', '\t' => try out.append(_.allocator, '\t'),
                     'n' => try out.append(_.allocator, '\n'),
                     'v' => try out.append(_.allocator, 0x0B),
                     'f' => try out.append(_.allocator, 0x0C),
@@ -1022,6 +1307,10 @@ pub struct YamlParser {
                     '"' => try out.append(_.allocator, '"'),
                     '/' => try out.append(_.allocator, '/'),
                     '\\' => try out.append(_.allocator, '\\'),
+                    'N' => try YamlParser.appendUtf8(&out, _.allocator, 0x0085),
+                    '_' => try YamlParser.appendUtf8(&out, _.allocator, 0x00A0),
+                    'L' => try YamlParser.appendUtf8(&out, _.allocator, 0x2028),
+                    'P' => try YamlParser.appendUtf8(&out, _.allocator, 0x2029),
                     '\n' => {
                         _.skipHorizontalWs();
                     },
@@ -1058,20 +1347,33 @@ pub struct YamlParser {
                 try out.append(_.allocator, ' ');
                 continue;
             }
-            try out.append(_.allocator, c);
-            _.pos += 1;
         }
         return error.UnexpectedEof;
     }
 
     fn scanPlainScalar(*_, in_flow: bool): []const u8 {
         const start = _.pos;
-        while (_.pos < _.src.len) {
-            const c = _.src[_.pos];
-            if (c == '\n' || c == '\r') break;
-            if (c == '#' && _.pos > start && (_.src[_.pos - 1] == ' ' || _.src[_.pos - 1] == '\t')) break;
-            if (in_flow && (c == ',' || c == ']' || c == '}')) break;
-            _.pos += 1;
+        if (!in_flow) {
+            while (_.pos < _.src.len) {
+                const rest = _.src[_.pos..];
+                const stop = Simd.indexOfAny4(rest, '\n', '\r', '#', '#') orelse {
+                    _.pos = _.src.len;
+                    break;
+                };
+                _.pos += stop;
+                const c = _.src[_.pos];
+                if (c == '\n' || c == '\r') break;
+                if (c == '#' && _.pos > start && (_.src[_.pos - 1] == ' ' || _.src[_.pos - 1] == '\t')) break;
+                _.pos += 1;
+            }
+        } else {
+            while (_.pos < _.src.len) {
+                const c = _.src[_.pos];
+                if (c == '\n' || c == '\r') break;
+                if (c == '#' && _.pos > start && (_.src[_.pos - 1] == ' ' || _.src[_.pos - 1] == '\t')) break;
+                if (c == ',' || c == ']' || c == '}') break;
+                _.pos += 1;
+            }
         }
         return std.mem.trim(u8, _.src[start.._.pos], " \t");
     }
@@ -1098,25 +1400,33 @@ pub struct YamlParser {
         return try out.toOwnedSlice(allocator);
     }
 
-    fn writeIndent(out: *YamlByteList, allocator: std.mem.Allocator, indent: usize): ! {
+    static fn writeIndent(out: *YamlByteList, allocator: std.mem.Allocator, indent: usize): ! {
         let k: usize = 0;
         while (k < indent) : (k += 1) {
             try out.append(allocator, ' ');
         }
     }
 
-    fn needsQuotes(s: []const u8): bool {
+    static fn needsQuotes(s: []const u8): bool {
         if (s.len == 0) return true;
-        if (std.mem.eql(u8, s, "true") || std.mem.eql(u8, s, "false") || std.mem.eql(u8, s, "null") || std.mem.eql(u8, s, "~")) return true;
-        if (s[0] == ' ' || s[s.len - 1] == ' ' || s[0] == '-' || s[0] == '#' || s[0] == '&' || s[0] == '*' || s[0] == '!' || s[0] == '[' || s[0] == '{') return true;
+        if (std.mem.eql(u8, s, "true") || std.mem.eql(u8, s, "True") || std.mem.eql(u8, s, "TRUE") ||
+            std.mem.eql(u8, s, "false") || std.mem.eql(u8, s, "False") || std.mem.eql(u8, s, "FALSE") ||
+            std.mem.eql(u8, s, "null") || std.mem.eql(u8, s, "Null") || std.mem.eql(u8, s, "NULL") ||
+            std.mem.eql(u8, s, "~"))
+        {
+            return true;
+        }
+        if (s[0] == ' ' || s[s.len - 1] == ' ' || s[0] == '-' || s[0] == '#' || s[0] == '&' || s[0] == '*' || s[0] == '!' || s[0] == '[' || s[0] == '{' || s[0] == '|' || s[0] == '>' || s[0] == '\'' || s[0] == '"') {
+            return true;
+        }
         for (c of s) {
-            if (c == ':' || c == '#' || c == '\n' || c == '\r' || c == '"' || c == '\t') return true;
+            if (c == ':' || c == '#' || c == '\n' || c == '\r' || c == '"' || c == '\t' || c < 0x20) return true;
         }
         if (parseYamlInt(s) != null || parseYamlFloat(s) != null) return true;
         return false;
     }
 
-    fn writeYamlString(out: *YamlByteList, allocator: std.mem.Allocator, s: []const u8): ! {
+    static fn writeYamlString(out: *YamlByteList, allocator: std.mem.Allocator, s: []const u8): ! {
         if (!YamlParser.needsQuotes(s)) {
             try out.appendSlice(allocator, s);
             return;
@@ -1124,6 +1434,7 @@ pub struct YamlParser {
         try out.append(allocator, '"');
         for (c of s) {
             switch (c) {
+                0x00 => try out.appendSlice(allocator, "\\0"),
                 '"' => try out.appendSlice(allocator, "\\\""),
                 '\\' => try out.appendSlice(allocator, "\\\\"),
                 '\n' => try out.appendSlice(allocator, "\\n"),
@@ -1135,7 +1446,7 @@ pub struct YamlParser {
         try out.append(allocator, '"');
     }
 
-    fn writeValue(out: *YamlByteList, allocator: std.mem.Allocator, val: ConfValue, indent: usize): ! {
+    static fn writeValue(out: *YamlByteList, allocator: std.mem.Allocator, val: ConfValue, indent: usize): ! {
         switch (val.tag) {
             .Null => try out.appendSlice(allocator, "null"),
             .Bool => try out.appendSlice(allocator, if (val.bool_val) "true" else "false"),
@@ -1212,6 +1523,26 @@ fn isYamlSpaceOrBreak(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
+fn isDocStartAtSlice(src: []const u8, pos: usize): bool {
+    if (pos + 3 > src.len) return false;
+    if (src[pos] == '-' && src[pos + 1] == '-' && src[pos + 2] == '-') {
+        if (pos + 3 == src.len) return true;
+        const c = src[pos + 3];
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    }
+    return false;
+}
+
+fn isDocEndAtSlice(src: []const u8, pos: usize): bool {
+    if (pos + 3 > src.len) return false;
+    if (src[pos] == '.' && src[pos + 1] == '.' && src[pos + 2] == '.') {
+        if (pos + 3 == src.len) return true;
+        const c = src[pos + 3];
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    }
+    return false;
+}
+
 fn isSeqMarker(src: []const u8, pos: usize): bool {
     if (pos >= src.len || src[pos] != '-') return false;
     if (pos + 1 >= src.len) return true;
@@ -1249,9 +1580,9 @@ fn parseYamlFloat(s: []const u8): f64? {
     if (std.ascii.eqlIgnoreCase(s, ".nan")) return std.math.nan(f64);
     let has_dot_or_exp = false;
     for (c of s) {
+        if (c == 'x' || c == 'X' || c == 'p' || c == 'P') return null;
         if (c == '.' || c == 'e' || c == 'E') {
             has_dot_or_exp = true;
-            break;
         }
     }
     if (!has_dot_or_exp) return null;
