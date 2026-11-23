@@ -4,7 +4,7 @@ import {
     ParamSpec,
     ParseError,
     StreamingClap,
-} from "cap:clap_stream";
+} from "cap:cli";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

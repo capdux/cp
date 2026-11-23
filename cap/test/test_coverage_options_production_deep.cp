@@ -9,7 +9,7 @@ import {
     CoverageMetrics,
     CodeCoverageOptions,
     formatLcovRecord,
-} from "cap:coverage_options";
+} from "cap:cli";
 
 test "coverage_options: threshold evaluation & zero-total edge cases" {
     const opts = CodeCoverageOptions{
@@ -54,8 +54,8 @@ test "coverage_options: defaults & Reporter enum" {
 }
 
 test "coverage_options: cap.coverage_options dynamic mount" {
-    const opts = cap.coverage_options.CodeCoverageOptions{
-        .fractions = cap.coverage_options.CoverageFraction{ .lines = 0.90 },
+    const opts = cap.cli.CodeCoverageOptions{
+        .fractions = cap.cli.CoverageFraction{ .lines = 0.90 },
     };
-    try expect_eq(opts.meetsThresholds(cap.coverage_options.CoverageMetrics{ .lines_hit = 9, .lines_total = 10 }), true);
+    try expect_eq(opts.meetsThresholds(cap.cli.CoverageMetrics{ .lines_hit = 9, .lines_total = 10 }), true);
 }

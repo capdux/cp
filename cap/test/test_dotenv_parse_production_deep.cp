@@ -7,7 +7,7 @@ import {
     DotEnvIterator,
     unescapeDoubleQuoted,
     expandVars,
-} from "cap:dotenv_parse";
+} from "cap:cli";
 
 fn mockLookup(name: []const u8): ([]const u8)? {
     if (std.mem.eql(u8, name, "HOST")) { return "127.0.0.1"; }

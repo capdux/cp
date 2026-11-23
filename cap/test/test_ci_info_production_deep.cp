@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { CiVendor, EnvEntry, detectFromEntries } from "cap:ci_info";
+import { CiDetectVendor as CiVendor, EnvEntry, detectFromEntries } from "cap:cli";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

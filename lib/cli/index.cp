@@ -503,3 +503,57 @@ export {
     formatSecurityScanSarif,
     formatSecurityScanTable,
 } from "./securityScan.cp";
+
+// === W29-Sync R6: Consolidated CLI / Build Config / Env / Target Modules ===
+export {
+    CiVendor as CiDetectVendor,
+    EnvEntry,
+    CiInfo as CiDetectInfo,
+    detectFromEntries,
+} from "./ciDetect.cp";
+
+export {
+    TakesValue,
+    ParamSpec,
+    ParsedArg,
+    ParseError,
+    StreamingClap,
+} from "./clapStream.cp";
+
+export {
+    Tag,
+    fromSubcommand,
+} from "./commandTag.cp";
+
+export {
+    TargetOs,
+    TargetArch,
+    TargetLibc,
+    CompileTarget,
+} from "./compileTarget.cp";
+
+export {
+    Reporter,
+    Reporters,
+    CoverageFraction,
+    CoverageMetrics,
+    CodeCoverageOptions,
+    formatLcovRecord,
+} from "./coverageOpts.cp";
+
+export {
+    DotEnvQuote,
+    DotEnvEntry,
+    DotEnvIterator,
+    EnvLookupFn,
+    unescapeDoubleQuoted,
+    expandVars,
+} from "./dotenvParse.cp";
+
+export {
+    FeatureFlags,
+    parseBoolEnv,
+    parseUintEnv,
+    parseBoolOr,
+    parseUintOr,
+} from "./featureFlags.cp";

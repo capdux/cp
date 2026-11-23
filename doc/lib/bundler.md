@@ -1374,3 +1374,17 @@ const sum = finalizeJsChunkResult(
 const sri = sum.integrity.sri();
 * = sri;
 ```
+
+## 历史 Bundler / SourceMap / 模块解析域散装模块收敛（W29-Sync R6）
+
+以下 7 个原独立顶层目录已统一收敛至 `cap:bundler`（`lib/bundler/`），可直接从 `"cap:bundler"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:bundle_options` | `lib/bundler/bundleOpts.cp` | `Format`, `parseFormat`, `GlobalCache`, `parseGlobalCache`, `OfflineMode`, `parseOfflineMode`, `NodeLinker`, `parseNodeLinker`, `BundlePackage`, `WindowsOptions` |
+| `cap:sourcemap_index` | `lib/bundler/sourcemapIndex.cp` | `MappingEntry`, `SourceMapIndex` |
+| `cap:line_offset_table` | `lib/bundler/lineOffsetTable.cp` | `LineCol`, `LineRange`, `LineOffsetTable` |
+| `cap:tsconfig_paths` | `lib/bundler/tsconfigPaths.cp` | `PathMapping`, `ResolvedCandidate`, `expandConfigDir`, `TsConfigPaths` |
+| `cap:builtin_modules` | `lib/bundler/builtinModules.cp` | `RuntimeTarget`, `BuiltinKind`, `ResolveConfig`, `ResolvedBuiltin`, `hasNodePrefix`, `hasBunPrefix`, `stripNodePrefix`, `ensureNodePrefix`, `resolveBuiltin`, `isBuiltin`, `isNodeBuiltin` |
+| `cap:node_builtins` | `lib/bundler/nodeBuiltins.cp` | `NodeRuntimeTarget`, `ModuleTag`, `BuiltinAlias`, `OptBuiltinAlias`, `resolveAlias`, `isNodeAliasBuiltin`, `canonicalizeNode` |
+| `cap:known_globals` | `lib/bundler/knownGlobals.cp` | `GlobalNamespace`, `GlobalInfo`, `lookupGlobal`, `isKnownGlobal`, `isPureZeroArgConstructor`, `canDropNewKeyword`, `isPurePropertyAccess`, `isPureGlobalCall` |

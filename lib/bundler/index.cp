@@ -926,3 +926,70 @@ export {
     finalizeJsChunkResult,
     formatJsChunkResultReport,
 } from "./jsChunkResult";
+
+// === W29-Sync R6: Consolidated Bundler Options / SourceMap / Module Resolution ===
+export {
+    Format,
+    parseFormat,
+    GlobalCache,
+    parseGlobalCache,
+    OfflineMode,
+    parseOfflineMode,
+    NodeLinker,
+    parseNodeLinker,
+    BundlePackage,
+    WindowsOptions,
+} from "./bundleOpts.cp";
+
+export {
+    MappingEntry,
+    SourceMapIndex,
+} from "./sourcemapIndex.cp";
+
+export {
+    LineCol,
+    LineRange,
+    LineOffsetTable,
+} from "./lineOffsetTable.cp";
+
+export {
+    PathMapping,
+    ResolvedCandidate,
+    expandConfigDir,
+    TsConfigPaths,
+} from "./tsconfigPaths.cp";
+
+export {
+    RuntimeTarget,
+    BuiltinKind,
+    ResolveConfig,
+    ResolvedBuiltin,
+    hasNodePrefix,
+    hasBunPrefix,
+    stripNodePrefix,
+    ensureNodePrefix,
+    resolveBuiltin,
+    isBuiltin,
+    isNodeBuiltin,
+} from "./builtinModules.cp";
+
+export {
+    RuntimeTarget as NodeRuntimeTarget,
+    ModuleTag,
+    BuiltinAlias,
+    OptBuiltinAlias,
+    resolveAlias,
+    isBuiltin as isNodeAliasBuiltin,
+    canonicalizeNode,
+} from "./nodeBuiltins.cp";
+
+export {
+    GlobalNamespace,
+    GlobalInfo,
+    lookupGlobal,
+    isKnownGlobal,
+    isPureZeroArgConstructor,
+    canDropNewKeyword,
+    isPurePropertyAccess,
+    isPureGlobalCall,
+} from "./knownGlobals.cp";

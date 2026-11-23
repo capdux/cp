@@ -6,7 +6,7 @@ import {
     TargetArch,
     TargetLibc,
     CompileTarget,
-} from "cap:compile_target";
+} from "cap:cli";
 
 test("compile_target: platform aliases, prefixes and canonical formatting") {
     let buf: [64]u8 = [0; 64];

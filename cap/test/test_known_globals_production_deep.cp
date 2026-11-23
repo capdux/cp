@@ -7,7 +7,7 @@ import {
     canDropNewKeyword,
     isPurePropertyAccess,
     isPureGlobalCall,
-} from "cap:known_globals";
+} from "cap:bundler";
 
 test("1. Core ECMAScript globals recognition & namespace classification", () => {
     const core_es: [10]string = [

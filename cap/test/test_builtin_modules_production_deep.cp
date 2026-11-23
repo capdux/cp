@@ -10,7 +10,7 @@ import {
     resolveBuiltin,
     isBuiltin,
     isNodeBuiltin,
-} from "cap:builtin_modules";
+} from "cap:bundler";
 
 test("1. Node.js core builtins, subpaths & deprecated aliases resolution", () => {
     const cfg = ResolveConfig{};

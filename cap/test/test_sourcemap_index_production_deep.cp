@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { SourceMapIndex } from "cap:sourcemap_index";
+import { SourceMapIndex } from "cap:bundler";
 
 test("sourcemap_index: decode v3 VLQ mappings and binary-search lookup", () => {
     // Line 0:

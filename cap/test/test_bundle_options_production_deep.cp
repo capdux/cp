@@ -12,7 +12,7 @@ import {
     NodeLinker,
     parseNodeLinker,
     WindowsOptions,
-} from "cap:bundle_options";
+} from "cap:bundler";
 
 test "bundle_options: Format enum & ESM semantics" {
     const esm = parseFormat("esm").?;
@@ -55,6 +55,6 @@ test "bundle_options: WindowsOptions defaults" {
 }
 
 test "bundle_options: cap.bundle_options dynamic mount" {
-    try expect_eq(cap.bundle_options.parseFormat("iife").? == Format.iife, true);
-    try expect_eq(cap.bundle_options.parseGlobalCache("fallback").?.canUse(true), true);
+    try expect_eq(cap.bundler.parseFormat("iife").? == Format.iife, true);
+    try expect_eq(cap.bundler.parseGlobalCache("fallback").?.canUse(true), true);
 }

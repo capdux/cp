@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { RuntimeTarget, resolveAlias, isBuiltin, canonicalizeNode } from "cap:node_builtins";
+import { NodeRuntimeTarget as RuntimeTarget, resolveAlias, isNodeAliasBuiltin as isBuiltin, canonicalizeNode } from "cap:bundler";
 
 test "node_builtins: bare & node:-prefixed canonicalization and deprecated sys alias" {
     try expect_eq(std.mem.eql(u8, canonicalizeNode("fs/promises").?, "node:fs/promises"), true);
@@ -38,6 +38,6 @@ test "node_builtins: third-party polyfill overrides on Bun target" {
 }
 
 test "node_builtins: cap.node_builtins dynamic mount" {
-    try expect_eq(cap.node_builtins.isBuiltin("node:path/posix", .Node), true);
-    try expect_eq(std.mem.eql(u8, cap.node_builtins.canonicalizeNode("zlib").?, "node:zlib"), true);
+    try expect_eq(cap.bundler.isNodeAliasBuiltin("node:path/posix", .Node), true);
+    try expect_eq(std.mem.eql(u8, cap.bundler.canonicalizeNode("zlib").?, "node:zlib"), true);
 }

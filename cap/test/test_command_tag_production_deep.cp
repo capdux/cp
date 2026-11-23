@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { Tag, fromSubcommand } from "cap:command_tag";
+import { Tag, fromSubcommand } from "cap:cli";
 
 test "command_tag: subcommand lookup & telemetry char" {
     const inst = fromSubcommand("install").?;
@@ -31,7 +31,7 @@ test "command_tag: loadsConfig vs alwaysLoadsConfig & usesGlobalOptions" {
 }
 
 test "command_tag: cap.command_tag dynamic mount" {
-    const t = cap.command_tag.fromSubcommand("publish").?;
+    const t = cap.cli.fromSubcommand("publish").?;
     try expect_eq(t.char(), 'k');
     try expect_eq(t.isNPMRelated(), true);
 }

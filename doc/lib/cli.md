@@ -924,3 +924,17 @@ let sarif: [2048]u8 = [0; 2048];
 const n = formatSecurityScanSarif("cap-scan", "0.9.0", items[0..sum.deduped_count], sum, sarif[0..])?;
 * = n;
 ```
+
+## 历史 CLI / 配置 / 构建选项域散装模块收敛（W29-Sync R6）
+
+以下 7 个原独立顶层目录已统一收敛至 `cap:cli`（`lib/cli/`），可直接从 `"cap:cli"` 导入：
+
+| 原顶层目录 | 收敛目标文件 | 主要导出符号 |
+|---|---|---|
+| `cap:ci_info` | `lib/cli/ciDetect.cp` | `CiDetectVendor`, `CiDetectInfo`, `EnvEntry`, `detectFromEntries` |
+| `cap:clap_stream` | `lib/cli/clapStream.cp` | `TakesValue`, `ParamSpec`, `ParsedArg`, `ParseError`, `StreamingClap` |
+| `cap:command_tag` | `lib/cli/commandTag.cp` | `Tag`, `fromSubcommand` |
+| `cap:compile_target` | `lib/cli/compileTarget.cp` | `TargetOs`, `TargetArch`, `TargetLibc`, `CompileTarget` |
+| `cap:coverage_options` | `lib/cli/coverageOpts.cp` | `Reporter`, `Reporters`, `CoverageFraction`, `CoverageMetrics`, `CodeCoverageOptions`, `formatLcovRecord` |
+| `cap:dotenv_parse` | `lib/cli/dotenvParse.cp` | `DotEnvQuote`, `DotEnvEntry`, `DotEnvIterator`, `EnvLookupFn`, `unescapeDoubleQuoted`, `expandVars` |
+| `cap:feature_flags` | `lib/cli/featureFlags.cp` | `FeatureFlags`, `parseBoolEnv`, `parseUintEnv`, `parseBoolOr`, `parseUintOr` |

@@ -1,5 +1,5 @@
 import { test, expect } from "cap:test";
-import { expandConfigDir, TsConfigPaths } from "cap:tsconfig_paths";
+import { expandConfigDir, TsConfigPaths } from "cap:bundler";
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;

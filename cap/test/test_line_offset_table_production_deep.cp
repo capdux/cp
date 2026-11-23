@@ -1,7 +1,7 @@
 // Source: cp/cap/test/test_line_offset_table_production_deep.cp (Production deep tests for cap:line_offset_table)
 
 import { test, expect_eq } from "cap:test";
-import { LineOffsetTable, LineCol } from "cap:line_offset_table";
+import { LineOffsetTable, LineCol } from "cap:bundler";
 
 test("Empty source and single-line source positioning") {
     const alloc = std.testing.allocator;

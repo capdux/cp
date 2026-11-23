@@ -2,7 +2,7 @@
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
 import cap from "cap";
-import { FeatureFlags, parseBoolEnv, parseUintEnv, parseBoolOr, parseUintOr } from "cap:feature_flags";
+import { FeatureFlags, parseBoolEnv, parseUintEnv, parseBoolOr, parseUintOr } from "cap:cli";
 
 test "feature_flags: default flags match Bun core defaults" {
     const f = FeatureFlags{};
@@ -37,6 +37,6 @@ test "feature_flags: parseUintEnv & fallback defaults" {
 }
 
 test "feature_flags: cap.feature_flags dynamic mount" {
-    try expect_eq(cap.feature_flags.parseBoolOr("on", false), true);
-    try expect_eq(cap.feature_flags.parseUintOr("1024", 0), 1024);
+    try expect_eq(cap.cli.parseBoolOr("on", false), true);
+    try expect_eq(cap.cli.parseUintOr("1024", 0), 1024);
 }
