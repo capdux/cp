@@ -1653,3 +1653,38 @@ let batch: [4]PmTaskDispatchItem = [PmTaskDispatchItem.empty(); 4];
 const n = graph.dispatchReady(0, batch[0..]);
 * = n;
 ```
+
+### JSONC 文本锁文件解析、确定性格式化与 Diff 引擎（`textLockfile.cp`）
+
+- 吸收自 `/data/dev/bun/src/install/lockfile/bun.lock.cp`（纯 CP 零堆分配、全外部切片驱动）；
+- **核心导出**：
+  - 完整 JSONC 数据模型：`TEXT_LOCK_VERSION_CURRENT`、`TEXT_LOCK_MAX_SUPPORTED_VERSION`、`TEXT_LOCK_CONFIG_VERSION_CURRENT`、`TEXT_LOCK_MAX_NESTING_DEPTH`、`TextLockfileError`、`TextLockKvPair`、`TextLockCatalogEntry`、`TextLockWorkspace`、`TextLockPackage`、`TextLockfileBuffers`、`TextLockfile`、`TextLockParseDiag`；
+  - SIMD JSONC 解析器：`parseTextLockfile`（接入 `cap:simd` 跳过空白与 `//`/`/* */` 注释，支持尾逗号、未知版本拦截、最大嵌套深度守卫、重复 package key 检测与精确 1-based `(line, col)` 错误诊断）；
+  - 确定性格式化与语义 Diff：`formatTextLockfile`（2 空格缩进 + 全字段字典序排序，保证 `parse -> format -> parse` 100% 往返幂等）、`TextLockDiffKind`、`TextLockDiffEntry`、`TextLockDiffSummary`、`diffTextLockfiles`。
+
+```cp
+import {
+    TextLockWorkspace,
+    TextLockPackage,
+    TextLockKvPair,
+    TextLockCatalogEntry,
+    TextLockfileBuffers,
+    TextLockParseDiag,
+    parseTextLockfile,
+    formatTextLockfile,
+} from "cap:pkg";
+
+const src = "{\n  \"lockfileVersion\": 1,\n  \"configVersion\": 1,\n  \"workspaces\": { \"\": { \"name\": \"app\" } },\n  \"packages\": { \"zod\": [\"zod@3.23.8\", \"\", {}, \"sha512-abc\"] }\n}\n";
+let ws: [4]TextLockWorkspace = [TextLockWorkspace.empty(); 4];
+let pkgs: [8]TextLockPackage = [TextLockPackage.empty(); 8];
+let kvs: [16]TextLockKvPair = [TextLockKvPair.empty(); 16];
+let strs: [16][]const u8 = [""; 16];
+let cats: [8]TextLockCatalogEntry = [TextLockCatalogEntry.empty(); 8];
+let bufs = TextLockfileBuffers{ workspaces: ws[0..], packages: pkgs[0..], kv_pairs: kvs[0..], string_items: strs[0..], catalogs: cats[0..] };
+let diag = TextLockParseDiag{};
+const lock = parseTextLockfile(src, &bufs, &diag)?;
+let scratch: [16]usize = [0; 16];
+let out: [1024]u8 = [0; 1024];
+const n = formatTextLockfile(lock, bufs, scratch[0..], out[0..])?;
+* = n;
+```

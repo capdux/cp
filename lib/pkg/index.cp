@@ -1150,3 +1150,24 @@ export {
     PmTaskGraph,
     formatPmTaskGraphReport,
 } from "./pmTaskGraph.cp";
+
+export {
+    TEXT_LOCK_VERSION_CURRENT,
+    TEXT_LOCK_MAX_SUPPORTED_VERSION,
+    TEXT_LOCK_CONFIG_VERSION_CURRENT,
+    TEXT_LOCK_MAX_NESTING_DEPTH,
+    TextLockfileError,
+    TextLockKvPair,
+    TextLockCatalogEntry,
+    TextLockWorkspace,
+    TextLockPackage,
+    TextLockfileBuffers,
+    TextLockfile,
+    TextLockParseDiag,
+    parseTextLockfile,
+    formatTextLockfile,
+    TextLockDiffKind,
+    TextLockDiffEntry,
+    TextLockDiffSummary,
+    diffTextLockfiles,
+} from "./textLockfile.cp";
