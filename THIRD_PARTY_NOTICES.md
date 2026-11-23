@@ -42,6 +42,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **tantivy** | <https://github.com/quickwit-oss/tantivy> | MIT | `lib/vector/fullTextIndex.cp`, `lib/vector/fullTextQuery.cp` | Copyright (c) 2016 Paul Masurel / Quickwit |
 | **lsm-tree** (`fjall-rs`) | <https://github.com/fjall-rs/lsm-tree> | MIT OR Apache-2.0 | `lib/db/lsmEngine.cp` | Copyright (c) 2024 fjall-rs |
 | **aho-corasick** | <https://github.com/BurntSushi/aho-corasick> | MIT OR Unlicense | `lib/ds/ahoCorasick.cp` | Copyright (c) 2015 Andrew Gallant |
+| **webrtc-rs/sctp** | <https://github.com/webrtc-rs/sctp> | MIT OR Apache-2.0 | `lib/net/sctpDataChannel.cp` | Copyright (c) 2021 webrtc-rs developers |
 
 ---
 

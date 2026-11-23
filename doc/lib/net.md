@@ -1043,20 +1043,21 @@ pub fn demoDtlsSrtpMedia(ekm_60: []const u8, rtp_pkt: []const u8)! {
 
 ## 十二、 WebRTC DataChannel 传输核心：RFC 4960 SCTP / RFC 3758 PR-SCTP / RFC 8832 DCEP（`lib/net/sctpDataChannel.cp`）
 
-`lib/net/sctpDataChannel.cp` 提供 100% 纯 CP、零动态堆分配、外部切片驱动的 WebRTC DataChannel 传输协议栈，与 `webrtcIce.cp`（ICE/STUN/SDP）和 `srtpCodec.cp`（SRTP/SRTCP）共同构成完整 WebRTC 传输核心：
+`lib/net/sctpDataChannel.cp` 提供 100% 纯 CP、零动态堆分配、外部切片驱动的 WebRTC DataChannel 传输协议栈（已对照 `webrtc-rs/sctp`（MIT/Apache-2.0）完成 RFC 边界加固与热路径加速），与 `webrtcIce.cp`（ICE/STUN/SDP）和 `srtpCodec.cp`（SRTP/SRTCP）共同构成完整 WebRTC 传输核心：
 
-1. **Castagnoli CRC32C 与分组头**：
-   - `computeSctpCrc32c` / `updateSctpCrc32c`：256 项查表 Castagnoli CRC32C（多项式 `0x82F63B78`，官方向量 `"123456789"` = `0xE3069283`）；
-   - `SctpCommonHeader`（12 字节，`checksum` 小端存储）、`computeSctpPacketCrc32c`、`stampSctpPacketCrc32c`、`verifySctpPacketCrc32c`；
+1. **Slicing-by-4 Castagnoli CRC32C、16-lane SIMD 内存原语与分组校验**：
+   - `computeSctpCrc32c` / `updateSctpCrc32c`：Slicing-by-4（4 字节/迭代，多项式 `0x82F63B78`，官方向量 `"123456789"` = `0xE3069283`），并与 `updateSctpCrc32cScalar` 保持 0-bit 差异；
+   - `simdCopyBytes` / `simdIsAllZero`：16-lane `@Vector(16, u8)` SIMD 载荷拷贝与零填充快速检测；
+   - `SctpCommonHeader`（12 字节，`checksum` 小端存储）、`computeSctpPacketCrc32c`、`stampSctpPacketCrc32c`、`verifySctpPacketCrc32c`、`validateSctpPacket`（对标 `webrtc-rs/sctp` `Packet::check_packet`：校验 CRC32C、非零端口 `ZeroPort`、INIT/INIT_ACK 禁止捆绑 `InitChunkBundled` 与 INIT 零 Verification Tag）；
    - `SctpWireChunkIter`（4 字节对齐填充跳过与严格长度守卫）与 `SctpPacketBuilder`（零分配多 Chunk 组包与 CRC32C 签章）。
 2. **全量核心 Chunk 编解码**：
-   - `DATA` (`0`，含 `U/B/E/I` 与 WebRTC PPID `50/51/53/56/57`)、`INIT` (`1`) / `INIT_ACK` (`2`，含 TLV 迭代 `SctpTlvIter`、`State Cookie`、`Forward-TSN-Supported`)、`SACK` (`3`，外部切片 `GapAckBlock` 与重复 TSN)、`HEARTBEAT` (`4`) / `HEARTBEAT_ACK` (`5`)、`ABORT` (`6`)、`SHUTDOWN` (`7`) / `SHUTDOWN_ACK` (`8`) / `SHUTDOWN_COMPLETE` (`14`)、`COOKIE_ECHO` (`10`) / `COOKIE_ACK` (`11`)、`FORWARD_TSN` (`192`，RFC 3758 PR-SCTP)。
+   - `DATA` (`0`，含 `U/B/E/I` 与 WebRTC PPID `50/51/53/56/57`)、`INIT` (`1`) / `INIT_ACK` (`2`，含 TLV 迭代 `SctpTlvIter`、`State Cookie`、`Forward-TSN-Supported`)、`SACK` (`3`，外部切片 `GapAckBlock` 严格递增非重叠校验与重复 TSN)、`HEARTBEAT` (`4`) / `HEARTBEAT_ACK` (`5`)、`ABORT` (`6`，`encodeSctpAbortChunk` / `SctpAbortView` / `decodeSctpAbortChunk`)、`SHUTDOWN` (`7`) / `SHUTDOWN_ACK` (`8`) / `SHUTDOWN_COMPLETE` (`14`)、`COOKIE_ECHO` (`10`) / `COOKIE_ACK` (`11`)、`FORWARD_TSN` (`192`，RFC 3758 PR-SCTP)。
 3. **无上限外部切片 TSN 接收窗口与分片重组**：
    - `SctpRecvTracker`：基于 RFC 1982 32-bit 回绕比较（`tsnLt`/`tsnLe`/`tsnGt`/`tsnGe`/`tsnDiff`），以调用方传入的任意长度 `bitmap: []u64` 追踪乱序 TSN、记录重复 TSN、生成 `GapAckBlock` 与 `SACK` Chunk，并支持 `applyForwardTsn` 跳过过期部分可靠消息并级联推进连续已收 TSN；
    - `SctpFragmentReassembler`：支持 `B=1,E=1` 单片与 `B=1,E=0` / `B=0,E=0` / `B=0,E=1` 跨 TSN 多片重组（外部切片存储，无硬编码消息长度上限）。
 4. **RFC 8832 WebRTC DCEP 与 4-Way 关联状态机**：
    - `DcepChannelType`（全 6 种可靠/部分可靠与有序/无序通道类型）、`DcepOpenMessage`、`encodeDcepOpen` / `decodeDcepOpen`、`encodeDcepAck` / `decodeDcepAck`；
-   - `SctpAssociationState` & `SctpAssociation`：完整 4 步握手（`INIT -> INIT_ACK (Stateless Cookie) -> COOKIE_ECHO -> COOKIE_ACK`）、DCEP/DATA/SACK/FORWARD_TSN/HEARTBEAT 构造与 3 步优雅关闭。
+   - `SctpAssociationState` & `SctpAssociation`：完整 4 步握手（`INIT -> INIT_ACK (Stateless Cookie) -> COOKIE_ECHO -> COOKIE_ACK`）、DCEP/DATA/SACK/FORWARD_TSN/HEARTBEAT/ABORT（`buildAbortPacket` / `onAbort` T-bit 校验）构造与 3 步优雅关闭。
 
 ```typescript
 import {
