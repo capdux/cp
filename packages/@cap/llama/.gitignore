@@ -1,0 +1,2 @@
+# Do not commit heavy llama.cpp prebuilt shared libraries to git
+prebuilt/

@@ -1,0 +1,4 @@
+.cap/
+bin/
+cap_modules/
+*.tgz

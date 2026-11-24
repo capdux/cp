@@ -1,0 +1,2 @@
+# Do not commit heavy ONNX Runtime prebuilt binaries to git
+prebuilt/

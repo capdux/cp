@@ -1,0 +1,6 @@
+# Do not commit heavy DuckDB shared library binaries to git
+prebuilt/*/*.so
+prebuilt/*/*.so.*
+prebuilt/*/*.dylib
+prebuilt/*/*.dll
+prebuilt/*/*.lib
