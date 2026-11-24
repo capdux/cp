@@ -470,7 +470,7 @@ export {
     WalCheckpointCoordinator,
 } from "./walCheckpt.cp";
 
-// --- raft_vote (Sans-IO Raft Election, Pre-Vote & Quorum Commit FSM) ---
+// --- raft_vote (Sans-IO Raft Election, Pre-Vote, Figure-8 Commit & 4-Lane SIMD Quorum FSM) ---
 export {
     RAFT_MAX_PEERS,
     RAFT_NO_NODE,
@@ -481,6 +481,11 @@ export {
     RaftHeartbeat,
     RaftPeerProgress,
     RaftElectionStats,
+    simdRaftCountAtLeastU64,
+    scalarRaftCountAtLeastU64,
+    simdRaftMaxU64,
+    scalarRaftMaxU64,
+    hasQuorum,
     isLogUpToDate,
     formatRaftRole,
     RaftElectionNode,

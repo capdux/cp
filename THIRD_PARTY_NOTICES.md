@@ -102,6 +102,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **tower-http** (`tower-rs`) | <https://github.com/tower-rs/tower-http> | MIT | `lib/web/corsGuard.cp`, `lib/web/cspPolicy.cp`, `lib/web/etagPrecond.cp` | Copyright (c) 2021-2024 Tower Contributors |
 | **hyperloglog** (`pwoolcoc`) & **t-digest** (Ted Dunning) | <https://github.com/pwoolcoc/hyperloglog> | MIT / Apache-2.0 | `lib/ds/hll.cp`, `lib/ds/tdigest.cp` | Copyright (c) 2015-2024 Paul Woolcock / Ted Dunning |
 | **quinn** (`quinn-rs`) | <https://github.com/quinn-rs/quinn> | MIT OR Apache-2.0 | `lib/net/quicLoss.cp` | Copyright (c) 2018-2024 Quinn Contributors (RFC 9002) |
+| **raft-rs** (`tikv`) | <https://github.com/tikv/raft-rs> | Apache-2.0 | `lib/db/raftVote.cp`, `lib/db/raftLog.cp` | Copyright (c) 2017-2024 TiKV Project Authors |
 
 ---
 

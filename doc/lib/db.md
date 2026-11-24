@@ -17,7 +17,7 @@
 | 存储引擎与 KV | `lib/db/kvWal.cp` / `lib/db/kvStore.cp` | 嵌入式持久化 KV 存储引擎与日志编解码 | `KV_WAL_MAGIC`, `KV_WAL_HEADER_SIZE`, `KvWalRecord` |
 | 事务、锁与日志 | `lib/db/mvccTypes.cp` / `lib/db/mvccStore.cp` | MVCC 快照隔离事务存储 | — |
 | 事务、锁与日志 | `lib/db/lockGraph.cp` / `lib/db/lock.cp` | 命名锁表、租约锁管理器与死锁等待图检测 | — |
-| 事务、锁与日志 | `lib/db/raftLog.cp` | Raft 复制日志与快照压缩 | — |
+| 事务、锁与日志 | `lib/db/raftLog.cp` / `lib/db/raftVote.cp` | Raft 复制日志、快照安装与 Sans-IO 选主/Pre-Vote/Figure-8 提交状态机（对标 `tikv/raft-rs` Apache-2.0 加固 + 4-lane `@Vector(4, u64)` SIMD 法定人数统计与最大索引扫描；测试：`cap/test/testDbRaftRustRefSuite.cp`） | — |
 | 缓存与内存池 | `lib/db/lru.cp` | O(1) LRU 缓存（支持 TTL） | — |
 | 缓存与内存池 | `lib/db/lruK.cp` | 抗全表扫描 LRU-K 缓存 | — |
 | 缓存与内存池 | `lib/db/lfu.cp` | 零堆分配 LFU 缓存与 4-bit W-TinyLFU Count-Min Sketch | — |

@@ -1,11 +1,90 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc Sans-IO Raft Election, Pre-Vote & Quorum Commit FSM) | Created: 2026-11-23
+// Reference-hardened against tikv/raft-rs (Apache-2.0)
+// Origin: Pure-CP Stdlib (Zero-Alloc Sans-IO Raft Election, Pre-Vote, Figure-8 Commit & 4-Lane SIMD Quorum FSM) | Created: 2026-11-23
 // Pure CP zero-heap-allocation Sans-IO Raft Leader Election, Pre-Vote & Quorum Commit State Machine:
-//   - Strict Raft Section 5.4.1 log up-to-date comparison (`isLogUpToDate`)
+//   - Strict Raft Section 5.2 / 5.4.1 / 5.4.2 (Figure 8) safety invariants
 //   - Pre-Vote protocol preventing partitioned/isolated nodes from inflating cluster terms
 //   - Leader Lease anti-disruption guard rejecting spurious RequestVote RPCs while leader is healthy
-//   - Deterministic quorum commit index computation (`computeQuorumCommitIndex`) via zero-heap
-//     in-stack sorting of `(local_last_index, peer match_indices)`
+//   - 4-lane @Vector(4, u64) SIMD quorum replication count & max scan (`simdRaftCountAtLeastU64`, `simdRaftMaxU64`)
 //   - Complements `lib/db/raftLog.cp` with zero C or I/O dependencies
+
+type RaftVec4u64 = @Vector(4, u64);
+
+// ============================================================================
+// 0. 4-Lane @Vector(4, u64) SIMD Quorum Kernels + Scalar Differential References
+// ============================================================================
+
+fn raftLoadVec4u64(data: []const u64, off: usize): RaftVec4u64 {
+    const v: RaftVec4u64 = [data[off], data[off + 1], data[off + 2], data[off + 3]];
+    return v;
+}
+
+/// 4-lane `@Vector(4, u64)` SIMD counter of elements `>= target` (quorum match_index replication tally).
+pub fn simdRaftCountAtLeastU64(values: []const u64, target: u64): usize {
+    const target_v: RaftVec4u64 = @splat(target);
+    let count: usize = 0;
+    let i: usize = 0;
+    while (i + 4 <= values.len) {
+        const v = raftLoadVec4u64(values, i);
+        if (@reduce(.Or, v >= target_v)) {
+            if (values[i] >= target) count += 1;
+            if (values[i + 1] >= target) count += 1;
+            if (values[i + 2] >= target) count += 1;
+            if (values[i + 3] >= target) count += 1;
+        }
+        i += 4;
+    }
+    while (i < values.len) : (i += 1) {
+        if (values[i] >= target) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/// Scalar reference for `simdRaftCountAtLeastU64` (differential verification).
+pub fn scalarRaftCountAtLeastU64(values: []const u64, target: u64): usize {
+    let count: usize = 0;
+    let i: usize = 0;
+    while (i < values.len) : (i += 1) {
+        if (values[i] >= target) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/// 4-lane `@Vector(4, u64)` SIMD maximum index/term scanner (returns `0` for empty slice).
+pub fn simdRaftMaxU64(values: []const u64): u64 {
+    if (values.len == 0) return 0;
+    let max_v: RaftVec4u64 = @splat(0);
+    let i: usize = 0;
+    while (i + 4 <= values.len) {
+        const v = raftLoadVec4u64(values, i);
+        max_v = @max(max_v, v);
+        i += 4;
+    }
+    let best: u64 = @reduce(.Max, max_v);
+    while (i < values.len) : (i += 1) {
+        if (values[i] > best) best = values[i];
+    }
+    return best;
+}
+
+/// Scalar reference for `simdRaftMaxU64` (differential verification).
+pub fn scalarRaftMaxU64(values: []const u64): u64 {
+    let best: u64 = 0;
+    let i: usize = 0;
+    while (i < values.len) : (i += 1) {
+        if (values[i] > best) best = values[i];
+    }
+    return best;
+}
+
+/// Overflow-safe strict majority quorum check: `count * 2 > cluster_size` (using `u128`).
+pub fn hasQuorum(count: usize, cluster_size: usize): bool {
+    if (cluster_size == 0) return false;
+    return (@as(u128, count) * 2) > @as(u128, cluster_size);
+}
 
 // ============================================================================
 // 1. Constants, Enums & Message Value Objects
@@ -437,6 +516,23 @@ pub struct RaftElectionNode {
         return null;
     }
 
+    /// Process an inbound leader heartbeat (`AppendEntries` empty RPC) bounded by `local_last_index`.
+    /// Enforces `commit_index <= local_last_index` and monotonic commit advancement.
+    fn handleHeartbeatBounded(*_, hb: RaftHeartbeat, now_ms: u64, local_last_index: u64): bool {
+        if (hb.term < current_term) return false;
+        if (hb.term > current_term || role != RaftRole.follower) {
+            stepDown(hb.term);
+        }
+        leader_id = hb.leader_id;
+        last_heard_ms = now_ms;
+        has_heard_leader = true;
+        const bounded_commit = if (hb.leader_commit < local_last_index) hb.leader_commit else local_last_index;
+        if (bounded_commit > commit_index) {
+            commit_index = bounded_commit;
+        }
+        return true;
+    }
+
     /// Process an inbound leader heartbeat (`AppendEntries` empty RPC).
     /// Refreshes `last_heard_ms` and `leader_id` for valid terms (`>= current_term`),
     /// stepping down if currently a candidate or behind in term. Rejects stale terms.
@@ -509,7 +605,29 @@ pub struct RaftElectionNode {
 
         const q_idx = quorumSize() - 1;
         const quorum_match = indices[q_idx];
+        // Verify quorum via 4-lane SIMD replication counter & overflow-safe majority check
+        const replicated = simdRaftCountAtLeastU64(indices[0..cluster_size], quorum_match);
+        if (!hasQuorum(replicated, cluster_size)) {
+            return commit_index;
+        }
         return if (quorum_match > commit_index) quorum_match else commit_index;
+    }
+
+    /// Raft Section 5.4.2 (Figure 8) safety guard: a leader may only commit an entry directly
+    /// when that entry was created in `current_term`.
+    fn canCommitEntryInCurrentTerm(entry_term: u64): bool {
+        return role == RaftRole.leader && entry_term == current_term;
+    }
+
+    /// Advance and return the leader's `commit_index` enforcing Raft Figure 8 safety:
+    /// only advances when the quorum-replicated index belongs to `current_term`.
+    fn advanceCommitIndexForTerm(*_, local_last_index: u64, quorum_entry_term: u64): u64 {
+        if (role != RaftRole.leader) return commit_index;
+        const next_commit = computeQuorumCommitIndex(local_last_index);
+        if (next_commit > commit_index && quorum_entry_term == current_term) {
+            commit_index = next_commit;
+        }
+        return commit_index;
     }
 
     /// Advance and return the leader's persisted `commit_index` using `computeQuorumCommitIndex`.
