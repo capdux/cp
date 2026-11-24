@@ -1,0 +1,27 @@
+{
+  "name": "@cap/miniz",
+  "ver": "3.0.2",
+  "description": "Single-file lossless compression & ZIP archive creation/extraction engine (miniz 3.0.2) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "miniz": {
+      "path": "c",
+      "src": [
+        "miniz.c",
+        "miniz_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
