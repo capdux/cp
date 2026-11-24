@@ -3159,3 +3159,639 @@
   > 3. **Wave 33 Lane 2 (`a4d35b69`, `W33 R3`)**：断点续接 [ipaddr.cp](file:///data/dev/cp/lib/net/ipaddr.cp) 对标 `krisprice/ipnet`（MIT/Apache-2.0）加固与 [testNetIpaddrRustRefSuite.cp](file:///data/dev/cp/cap/test/testNetIpaddrRustRefSuite.cp) 验收。
   >
   > 任一路完工将自动唤醒验收、更新文档、自动提交并持续推进后续阶段。
+
+### 2026-11-24（下游工单全量补录：`task-bun-20261124-struct-addr-of`）[ticket:task-bun-20261124-struct-addr-of]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-24 16:22:52` | 状态：`resolved` | 结单：`2026-11-24T16:36:52`
+- **报错/需求摘要**：const task = &_.tasks[idx]; on []Struct drops '&' and generates value copy 'const task = self.tasks[idx];' instead of '(&self.tasks[idx])', causing stack-address UAF/SIGSEGV when &task.field is passed to ThreadPool
+- **结单与处理汇报**：Fixed is_zig_heap_ptr_type in cpc/src/codegen/borrow.rs: prioritize value_classes/ref_classes/enum_defs before built-in heap class name list (Task/Server/Request/etc.) so &_.tasks[idx] on user-defined const Task = struct preserves (&self.tasks[idx]). Release cpc deployed, verified repro_struct_addr_of.cp + zig ast-check + cap/test/testHotfixStructAddrOf.cp PASS.
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 02:26:07）[step:21451]
+- **用户完整原始指令**：
+  > use
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 02:40:56）[step:21452]
+- **用户完整原始指令**：
+  > bun agy 反馈:
+  > static struct 可以用，cpc 已支持。我写了一个小用例验证过：pub static struct Util { fn add(...) ... } 里的成员不用再写 static，生成的 .zig
+  >   里它们都是没有 self 参数的普通函数。
+  >
+  >   我刚才加的几处 static fn 里，可以合并成 static struct 的只有一类：成员全是静态函数、没有实例字段和实例方法的类型。需要保持原样的有这些：
+  >
+  >   • AllocScope.cp：它有 __scope 字段，所以不能整体改成 static struct，各函数的 static 要保留。
+  >   • resolve_path.cp 的 Platform：它是 enum，里面既有 static fn 又有实例用法，也要保留。
+  >   • 其余（Handlers、PackageInstall、crash_handler、immutable）：都是单个方法，保留 static fn。
+  >
+  >  纯工具类的模块可以直接用 static struct。
+  >
+  > -----
+  >
+  > 编译报错的主要原因之一是, 如果 struct 成员函数 没有 加 static, cpc 会自动添加 self, zig 会报错.
+  > 也就是说, 无论是否使用了 this(或_), cpc 都添加了 self
+  > zig 里, 如果结构成员函数 使用了 self, 和 没使用, 有何区别? 它需要显示使用 self 参数吗? 还是根据函数内容自动判断? zig 并没有强制每个成员函数加 static
+  > 我们 cpc, 是否可以参考 zig 的处理方法, 根据函数内部是否有 this或 _, 来决定,是否应该添加 self 参数, 这样就无需为每个 成员函数 添加 static 修饰符.
+  > 你觉得是否合理? 
+  > 模块函数, 没有加 static, 我们cpc 有没有自动添加 self?
+- **完整回复与执行汇报**：
+  > ## 结论
+  >
+  > 当前 cpc 的行为和你的判断一致。我用 `temp/selfprobe.cp` 实测了一遍。
+  >
+  > | 写法 | 生成的 Zig |
+  > |---|---|
+  > | class 内 `fn a(a1)`，body 没用 `_` | `pub fn a(self: *const Foo, a1: i32)`，并附带 `_ = self;` |
+  > | class 内 `fn b()`，body 用了 `_.x` | `pub fn b(self: *const Foo)` |
+  > | class 内 `static fn c(a1)` | `pub fn c(a1: i32)`，没有 self |
+  > | 模块级 `fn modfn(a1)` | `pub fn modfn(a1: i32)`，**不会**加 self |
+  >
+  > 结论：只有 class、struct、enum 的成员函数会自动加 `self`。判断依据是 `static` 修饰符，不看 body 里有没有用 `_` 或 `this`。模块函数不受影响。
+  >
+  > ## Zig 的做法
+  >
+  > - Zig 没有隐式 self。所谓“方法”只是一个普通函数，第一个参数的类型恰好是容器类型。`self` 只是约定俗成的参数名。
+  > - 这个参数是显式写出来的，不是编译器根据 body 推断的。Zig 也没有 `static` 这个概念。
+  > - 不用 self 时，要么不写这个参数，要么写 `_ = self;`。否则会报 unused parameter。
+  >
+  > 所以 Zig 里“是否带 self”是由签名决定的，不是由 body 决定的。
+  >
+  > ## 让 cpc 按 body 是否用 `_` / `this` 来决定
+  >
+  > 这个想法合理，可行。仓库里已有 `block_find_ident_span` 这类按 body 扫描标识符的工具。但它会带来几个问题，需要先定规则：
+  >
+  > 1. **调用点依赖 body。** 现在 `obj.a(1)` 靠签名就能降级成 `Foo.a(obj, 1)`。改成按 body 推断后，body 里加一个 `_` 就会改变 ABI。cpc 需要在 sema 阶段先做一遍“是否用到 receiver”的预扫描，之后所有调用点才能降级。
+  > 2. **旧的实例式调用要兼容。** 推断为 static 的方法，如果有人写了 `obj.a(1)`，Zig 会报错。cpc 需要把它降级成 `Foo.a(1)`，同时保留对 `obj` 的求值。
+  > 3. **`_` 有两种含义。** 它既是 receiver，也是 discard（`_ = x`）。预扫描必须区分读取形式（`_.field`、`_.method()`、作为参数传递）和赋值目标。还要处理嵌套闭包和遮蔽的情况。
+  > 4. **不能推断成 static 的例外：**
+  >    - trait 要求的方法。签名必须和 trait 声明一致，哪怕 body 里没用 `_`。
+  >    - `init`、`release`、`deinit` 等生命周期钩子。
+  >    - actor、vtable 的入口，以及空 body 的占位方法。
+  > 5. **保留 `static` 作为显式声明。** 如果标了 `static` 却用了 `_`，应该报错。推断出来的 static 只是默认行为，显式写的 static 仍然有效。
+  >
+  > ## 建议
+  >
+  > 分两步做，风险从低到高：
+  >
+  > 1. **先加 AI-First 诊断。** 当 `Type.method(args)` 的调用方式命中一个会被自动加 self 的方法时，cpc 在 sema 层直接报错，不等 Zig 报。报错带 suggestion：“method 'add' never uses '_': declare it `static fn`, or wrap the type in `static struct`”。这样 bun agy 能一轮修好，也不改变语义。
+  > 2. **再做 body 推断。** 条件是 body 不引用 receiver，并且不属于上面第 4 条的例外。同时给 `obj.a()` 做降级。
+  >
+  > 按你描述的用例，`static struct` 加这条诊断，已经能覆盖大部分报错。
+  >
+  > 要不要我现在先做第 1 步，加 sema 诊断并写回归测试，再评估第 2 步？我还没动 `cpc/src`。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 02:54:02）[step:21463]
+- **用户完整原始指令**：
+  > _ 有两种含义。 它既是 receiver，也是 discard（_ = x）
+  > 这个不对, cp 中 discard（* = x）, _ 作为this 替代
+  > 你提到的, zig 的 self 是普通函数参数, 需要使用 self 就传, 不需要使用, 调用时就不传, 对吗? 这个工作全部交给 程序员自行决定.
+  > 这对我们编译期来说, 就是个考验, 我们需判断, 内部到底是否使用到 this 来推断上游是否需传入 this
+  > 或者 就像现在这样, 没有 static, 全部传, 带 static 不传, 不管函数体, 简单粗暴, 如果内部使用了 this/_, 又定义了 static, 则编译报错, 调用者不管这个参数,带来的副作用就是,因为结构函数,大部分不需要 this, 因为一个成员函数或变量不是 static, 其他所有成员函数全部都要加static,
+  > 满屏幕的 static, 是否合理?  
+  >
+  > 而 rust 第一个参数必传 self, 对吗?
+- **完整回复与执行汇报**：
+  > ## 更正
+  >
+  > 你说得对。CP 里 discard 是 `* = x`，`_` 只是 receiver 的写法。上一条我说“`_` 有两种含义”是错的。这样预扫描更简单：body 里只要出现标识符 `_`（读取位置），就是用了 receiver，不存在歧义。
+  >
+  > ## Zig 与 Rust 的对比
+  >
+  > - **Zig：** 对。self 是普通参数，用就写，不用就不写。调用时 `obj.f()` 在第一个参数类型匹配时会自动传入，否则用 `Type.f()`。一切由程序员决定，编译器不推断。
+  > - **Rust：** 基本对，但要说准确。方法要显式写 `self`、`&self` 或 `&mut self` 作为第一个参数，才算方法，才能用 `obj.f()` 调用。不写 self 的是“关联函数”，用 `Type::f()` 调用。所以 Rust 和 Zig 一样，是签名决定，不看 body。Rust 的“必传”只针对方法，关联函数不需要 self。
+  >
+  > 两者的共同点是：是否带 receiver 写在签名上，程序员用语法明确表达。
+  >
+  > ## 当前方案：非 static 一律传，带 static 不传
+  >
+  > **优点：**
+  > - 规则简单，签名一眼能看出来，调用点不依赖 body。
+  > - 不需要预扫描，也不需要考虑 trait 和 vtable 的例外。
+  >
+  > **缺点：**
+  > - 就是你说的“满屏 static”。一个 class 里只要有一个实例方法或字段，其余纯函数都得逐个加 `static`。AI 和程序员都容易漏，漏了 Zig 就会报错。
+  > - 对大量工具类来说，样板代码太多。
+  >
+  > ## 推断方案：按 body 是否出现 `_` / `this`
+  >
+  > **优点：**
+  > - 用到才传，贴近 Zig 的习惯，也不用满屏 `static`。
+  > - `static` 可以只用作显式断言。标了 static 却用了 `_`，直接报错。
+  >
+  > **代价：**
+  > - 签名要靠扫 body 才能确定，调用点要等预扫描完成后才能降级。
+  > - 加一个 `_.x` 就会改变函数签名，属于远距离影响。
+  > - trait 要求的方法，以及 `init`、`release` 等钩子，不管 body 怎么写，签名都必须带 receiver。
+  > - 对 `obj.f()` 这种旧写法要做降级。
+  >
+  > ## 我的建议
+  >
+  > **可以做，方向合理。** 理由是 CP 已经废除了显式 `self`，receiver 只能写成 `_`、`*_`、`move _`。因此“body 里有没有 `_`”是一个可靠的判断条件，不会像 Rust 或 Zig 那样要靠签名。
+  >
+  > 规则建议如下，保持简单：
+  >
+  > 1. body 里出现 `_`、`*_` 或 `move _`，该方法是实例方法，带 self。
+  > 2. 否则是静态方法，不带 self。
+  > 3. 以下几类方法，不管 body 怎么写，都强制带 self：
+  >    - `init`、`release`、`deinit`、`__super_*`
+  >    - trait 的 impl 方法
+  >    - 空 body 的占位方法
+  > 4. 显式 `static` 保留。`static` 加 body 用了 `_` 仍然报错，suggestion 里写明“remove `static`”。
+  > 5. `obj.f()` 命中推断为 static 的方法时，降级成 `Type.f()`，同时保留 `obj` 的求值。
+  > 6. 新增一条 AI-First 诊断：当实例方法被 `Type.f(...)` 调用，且参数个数少一个时，提示“method uses `_`, call it via an instance”。
+  >
+  > **风险：** 第 3 条的例外范围要先列全，否则 trait 和 actor 路径会出问题。
+  >
+  > 要不要我按这个方案实现？会改 `cpc/src` 的 parser、sema 和 codegen，并写 `cap/test` 回归测试，完成后跑全量回归再发布。我还没动代码。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 02:59:13）[step:21466]
+- **用户完整原始指令**：
+  > 你提到的 不写 self 的是“关联函数”，用
+  >   Type::f() 调用, 是什么意思?
+- **完整回复与执行汇报**：
+  > Rust 里，`impl` 块中的函数分两类，区别只在第一个参数。
+  >
+  > ```rust
+  > struct Counter { n: i32 }
+  >
+  > impl Counter {
+  >     // 关联函数：没有 self，属于类型本身
+  >     fn new() -> Counter { Counter { n: 0 } }
+  >     fn max_value() -> i32 { 100 }
+  >
+  >     // 方法：第一个参数是 self / &self / &mut self，属于某个实例
+  >     fn get(&self) -> i32 { self.n }
+  >     fn inc(&mut self) { self.n += 1; }
+  > }
+  >
+  > fn main() {
+  >     let mut c = Counter::new();   // 关联函数：Type::f()
+  >     let m = Counter::max_value(); // 关联函数：Type::f()
+  >     c.inc();                      // 方法：obj.f()
+  >     let v = c.get();              // 方法：obj.f()
+  >     let v2 = Counter::get(&c);    // 方法也可以写成 Type::f(obj)，等价于 c.get()
+  > }
+  > ```
+  >
+  > - **关联函数：** 没有 `self` 参数，只能用 `Type::f()` 调用。它和实例无关，常用作构造函数（`new`、`default`）或工具函数。
+  > - **方法：** 第一个参数是 `self`、`&self` 或 `&mut self`，可以用 `obj.f()` 调用。
+  >
+  > `::` 是 Rust 的路径分隔符，相当于 Zig 和 CP 里的 `Type.f()`。
+  >
+  > 对应到 CP：
+  >
+  > | Rust | CP（现在） |
+  > |---|---|
+  > | 关联函数（无 self） | `static fn` |
+  > | 方法（有 self） | 非 static 的 `fn` |
+  >
+  > 我上一条说“Rust 的必传只针对方法”，意思就是：Rust 里不写 self 的函数也合法，只是它被归为关联函数，不能用 `obj.f()` 调用。Rust 和 Zig 都靠签名区分这两类，不看函数体。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:12:18）[step:21469]
+- **用户完整原始指令**：
+  > 总结来说, rust/zig 依赖 调用, cp 依赖函数定义, 调用简单.
+  > cp 容器, struct 和 class, class 可以按当前规则, 成员函数不带 static, 自动加self, 因为 class 需要new 实例化才能使用, 成员默认 priv私有
+  > cp 中 struct 成员默认 pub, 且无需 new,  struct 的函数, 在哪种情况下,需使用 this呢? 成员函数调用成员函数或引用属性, 均无需 this前缀, 
+  > 也就是说, struct 绝大部分成员应该都是static的(struct 无需 new), 只有个别属性字段, 是非静态, AllocScope.cp：它有 __scope 字段, 为何这个字段是非静态呢?  
+  > 给出 struct 非静态属性/非静态方法 示例
+- **完整回复与执行汇报**：
+  > ## 先纠正一个前提
+  >
+  > “成员函数调用成员函数或引用属性，均无需 this 前缀”只对**静态成员**成立。
+  >
+  > - 访问静态成员，直接写名字（`LIMIT`、`clamp(...)`）。
+  > - 访问**实例字段**，必须写 `_.n`，没有省略写法。
+  >
+  > 所以 struct 里用到 `_` 的唯一场景，就是读写某个具体实例的字段。
+  >
+  > ## `AllocScope.cp` 的 `__scope` 为什么是实例字段
+  >
+  > 看 [AllocScope.cp](file:///data/dev/bun/src/shell/AllocScope.cp)：
+  >
+  > ```
+  > __scope: if (...) bun.AllocationScope else void,          // 实例字段
+  > static fn beginScope(alloc): AllocScope { return { __scope: ...init(alloc) } }
+  > static fn endScope(client: *AllocScope) { client.__scope.deinit(); }
+  > ```
+  >
+  > `AllocScope` 是一个**值**。`beginScope` 返回一个新实例，里面装着各自独立的 `AllocationScope` 状态，所以 `__scope` 必须是每个实例各有一份，不能是静态的。静态字段全局只有一份，多个 scope 会互相覆盖。
+  >
+  > 另外，这些函数是从 Zig 原样搬过来的，把 `client: *AllocScope` 当普通参数传入。按 CP 的写法，它们本来就该是实例方法：
+  >
+  > ```
+  > fn endScope(*_)                  { _.__scope.deinit(); }
+  > fn leakSlice(*_, memory: auto)   { ... _.__scope.trackExternalFree(...) ... }
+  > fn allocator(*_): Allocator      { return _.__scope.allocator(); }
+  > ```
+  >
+  > 只有 `beginScope` 是真静态（构造函数）。bun agy 说“要保留 static”，是因为现在这些函数显式带了 `client` 参数。改成 `*_` 后就不需要 `static` 了，是否这么改取决于 bun 侧要不要重写。
+  >
+  > ## struct 的静态与实例示例
+  >
+  > 以下已用 cpc 实测通过：
+  >
+  > ```
+  > struct Counter {
+  >     static LIMIT: i32 = 100;       // 静态字段：全局一份，直接用名字
+  >     n: i32;                        // 实例字段：每个 Counter 值各一份
+  >
+  >     static fn create(): Counter { return { n: 0 }; }       // 静态：构造，无 this
+  >     static fn clamp(v: i32): i32 {                         // 静态：纯函数，直接引用 LIMIT
+  >         if (v > LIMIT) { return LIMIT; }
+  >         return v;
+  >     }
+  >     fn get(): i32 { return _.n; }                          // 实例（只读）：生成 self: Counter
+  >     fn inc(*_)    { _.n = clamp(_.n + 1); }                // 实例（可变）：生成 self: *Counter
+  > }
+  > ```
+  >
+  > 生成的 Zig 里，`create` 和 `clamp` 没有 self，`get` 和 `inc` 有 self。
+  >
+  > ## 对你的设想的评价
+  >
+  > - **class：** 保持现状，默认带 self。class 本来就是需要实例化的，默认有 receiver 合理。
+  > - **struct：** 你的观察成立。纯数据容器上的纯函数很多，很容易写出满屏 `static`。
+  > - **折中方案：** 对 struct，按 body 是否出现 `_` 来推断；class 保持现在的规则。这样改动面小，只动 struct 一处。
+  > - **过渡手段：** 在有实例字段的 struct 里，纯函数很多时，bun agy 可以先把纯函数拆到 `static struct`，作为现成的绕行办法。
+  >
+  > 要不要按“struct 按 body 推断，class 保持现状”实现？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:21:33）[step:21477]
+- **用户完整原始指令**：
+  > 确认一下: cp 里面, class 和 struct 引用内部属性或函数, 是否必须带 this/_, 我记得设计时, 无需带 this/_, 只有与当前函数内变量重名冲突,才必须带
+  > 如果这样, 通过函数内容判断,就非常困难
+- **完整回复与执行汇报**：
+  > ## 你记得的是对的
+  >
+  > 我上一条说“必须写 `_.n`”是错的，实测推翻了。
+  >
+  > `implprobe.cp` 的结果：
+  >
+  > - `fn get(): i32 { return n; }` → 生成 `self.n`
+  > - `fn call(): i32 { return helper() + n; }` → 生成 `self.helper() + self.n`
+  > - 重名时，`fn shadow(n: i32)` 里参数 `n` 遮蔽字段，要访问字段才写 `_.n`，生成 `n + self.n`
+  >
+  > struct 和 class 一致：**裸标识符会自动解析到当前类型的字段或方法，只有和局部变量或参数重名时才需要 `_.`**。`self` 的注入也是在这个解析之后发生的。
+  >
+  > ## 对“按 body 推断”的影响
+  >
+  > 你的判断成立。要判断一个方法是否用到实例，不能只扫 `_` 这个标识符，还要做**名字解析**：
+  >
+  > - 裸 `n` 是字段还是局部变量？
+  > - 裸 `helper()` 是实例方法还是静态方法？
+  > - 这又取决于重名和遮蔽，以及继承、trait 带来的成员。
+  >
+  > 这些信息只有 sema 阶段才有，parser 阶段拿不到，而且 `helper()` 是否传 self，又取决于 `helper` 自己是否被推断为实例方法，形成依赖链，需要按调用图求不动点。复杂度高，而且“加一个字段名相同的局部变量，就改变了函数签名”这种远距离影响，会很难排查。
+  >
+  > ## 建议：保持现在的规则
+  >
+  > 保持“非 static 一律加 self，带 static 不加”。理由：
+  >
+  > 1. 签名只看声明，不依赖 body，这也是你之前说的“cp 依赖函数定义，调用简单”。
+  > 2. 和裸标识符自动解析的设计一致，不会引入解析顺序的循环依赖。
+  > 3. 冲突、遗漏都能用诊断提示出来，不需要靠推断。
+  >
+  > ## 缓解“满屏 static”
+  >
+  > 不改语义，从两个方向降低成本：
+  >
+  > 1. **struct 级批量修饰。** `static struct` 已经支持，纯工具类直接用。再考虑一个“按成员批量”的小语法，比如 `static { fn a() {...} fn b() {...} }` 的静态块，一个块里的函数都视为 static。需要你确认语法。
+  > 2. **AI-First 诊断。** 在 sema 阶段做一个明确的判定：非 static 方法的 body 里，既没有裸字段名、裸实例方法名，也没有 `_`，而它又被 `Type.f(...)` 调用，直接报错并给出 suggestion：“add `static`”。这条诊断可以在 sema 里算（有名字解析），不会影响签名，只是提示。
+  >
+  > 要不要先做第 2 条诊断，再等你定第 1 条的语法？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:25:02）[step:21481]
+- **用户完整原始指令**：
+  > 配额已恢复, 重开2个子智能体, 重新分发未完成的任务给子智能体，确保底部状态栏出现真实运行状态(子智能体)。本阶段工作完成，更新文档，自动git提交到代码库后，根据项目目标，自主推导下一阶段工作，持续工作，不要停。继续你的工作。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:26:10）[step:21482]
+- **用户完整原始指令**：
+  > 配额不足, 停止使用子智能体, 只使用主智能体
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:27:58）[step:21511]
+- **用户完整原始指令**：
+  > 刚才我们讨论的 struct 结构, 大量 static 问题, 你有什么好的建议
+- **完整回复与执行汇报**：
+  > 结合 CP 的“**裸标识符隐式访问实例成员**”和“**签名决定调用约定**”两大设计前提，**不建议做“扫描函数体自动推断 `static`”**（会因局部变量遮蔽与调用图递归依赖让 ABI 变得不可预测）。
+  >
+  > 解决“混合 `struct` 里满屏 `static`”问题，建议按优先级采用以下 **3 个零副作用方案**：
+  >
+  > ### 1. 语言层面最干净：`static { ... }` 静态块（推荐引入）
+  > 在 `struct` / `class` 内部支持 `static { ... }` 分组块，块内声明的所有函数与字段自动视为 `static`（不注入 `self`）：
+  > ```cp
+  > struct AllocScope {
+  >     __scope: AllocationScope,
+  >
+  >     static {
+  >         pub fn beginScope(alloc: Allocator): AllocScope { ... }
+  >         pub fn helperA(x: i32): i32 { ... }
+  >         pub fn helperB(x: i32): i32 { ... }
+  >     }
+  > }
+  > ```
+  > - **优点**：只写一次 `static`，彻底消灭满屏重复修饰符；签名依然 100% 显式，解析阶段直接确定 `is_static = true`，零复杂度。
+  >
+  > ### 2. 现有语法立即可用：数据归 `struct`、工具归嵌套 `static struct` / 模块函数，真操作实例用 `*_`
+  > - **纯工具类型**：直接用 `pub static struct`（无实例字段）。
+  > - **混合类型**（如 `AllocScope`）：
+  >   - 若函数本质上就是操作实例（如 `endScope(client: *AllocScope)`），改为 CP 风格 `fn endScope(*_)`——既省掉 `client` 参数，也省掉 `static`；
+  >   - 若需保留 Zig 风格显式指针签名或纯工具函数，放进嵌套 `pub static struct Ops { ... }`（`cpc` 已支持）或提为模块级 `pub fn`。
+  >
+  > ### 3. 编译器护栏：`cpc` Sema 增加 AI-First 漏写 `static` 诊断
+  > 在 `cpc` 语义分析阶段，若检测到方法满足：
+  > 1. 未标注 `static`，
+  > 2. 方法体未引用 `_`、也未引用任何实例字段/实例方法，
+  > 3. 且调用点以 `Type.method(...)` 形式调用（或触发 `self` 参数个数不匹配），
+  >
+  > 直接给出可自动修复的三段式诊断与 `suggestion: add 'static' modifier`（若实现了方案 1，则提示移入 `static { ... }`）。这样迁移 Zig 代码时单轮即可定位并修复。
+  >
+  > ---
+  >
+  > ### 当前工作状态（单兵模式）
+  > - **子智能体**：已按指令清理并停止使用（`kill_all` 完成），后续全程由主智能体推进。
+  > - **W35 R2 已提交**：`9f192e60`（[roaring.cp](file:///data/dev/cp/lib/ds/roaring.cp) 对标 `RoaringBitmap/roaring-rs`，4-lane `@Vector(4, u64)` + `@popCount` SIMD 与 Portable Format 12346/12347 加固）。
+  > - **W35 R3 收尾中**：[myersDiff.cp](file:///data/dev/cp/lib/text/myersDiff.cp) & [unifiedDiff.cp](file:///data/dev/cp/lib/text/unifiedDiff.cp) 已通过 `cpc brief` 4 门禁全 0，[testTextDiffRustRefSuite.cp](file:///data/dev/cp/cap/test/testTextDiffRustRefSuite.cp) 4 项已过 2 项（Myers SES 与 16-lane SIMD 0 差异对拍 PASS），正在排查 Unified Diff roundtrip 返回码 `3` 与 Fuzz 断言，修通后立即提交并继续下一轮。
+  >
+  > 请确认是否要我顺手为 `cpc` 加上 **`static { ... }` 静态块**或 **AI-First 漏写 `static` 诊断**，还是继续专注标准库加固与提交。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:37:09）[step:21530]
+- **用户完整原始指令**：
+  > 这里有个悖论, cpc 语义分析阶段, 既然能检测到 没有使用 this, 提示 加 static, 为何不直接 加上, 何必要提示程序员加 static 呢?
+- **完整回复与执行汇报**：
+  > 你说得非常准——如果只看表面，这确实像个悖论。
+  >
+  > 但把“**报错后给个提示**”和“**编译器直接决定 ABI**”放在一起，两者的前提完全不同：
+  >
+  > 1. **函数指针与跨模块 ABI 会因函数体改动而静默突变**
+  >    假设 `fn calc(x: i32): i32` 今天没用实例字段，编译器自动把它变成 `static`（类型是 `fn(i32): i32`）。明天你在里面加了一行 `if (debug_flag) ...`（引用了一个实例字段），函数类型会**悄无声息地变成 `fn(*const S, i32): i32`**，所有把 `S.calc` 当回调传参或跨模块调用的地方全部破坏。
+  >    * **诊断**只是在已经编译报错时做一次事后猜测，猜偏了最多多改一个关键字，**永远不会改变正常代码的签名**。
+  >    * **自动推断**一旦作为语言规则，就要求 100% 确定且稳定，改一行函数体不该暗中修改函数签名。
+  >
+  > 2. **因为 CP 允许省略 `_.`，判断“有没有用到 this”不是局部扫描**
+  >    `fn a()` 没出现 `_`，但它调用了 `b()`，`b()` 调用了 `c()`，`c()` 读了字段 `n`——这需要做**跨函数的调用图不动点分析**（遇到递归、Trait 多态甚至无法在单个函数内判定）。而诊断只需要在**局部报错点**做启发式提醒即可。
+  >
+  > 3. **Trait / 回调契约冲突**
+  >    实现某个 Trait 的空方法或占位方法虽然没用到 `_`，签名也**绝对不能**变成 `static`，否则接口签名对不上。
+  >
+  > ---
+  >
+  > ### 换个角度：真正消除“满屏 `static`”的两个干净办法
+  >
+  > 既然不靠“猜函数体”，又不想满屏写 `static`，其实只有两条路最干净：
+  >
+  > 1. **保留现有规则 + 增加 `static { ... }` 静态块**（零破坏现有语法）：
+  >    把一组静态函数放进一个 `static { ... }` 块里，只写一次 `static`，签名依然 100% 显式。
+  > 2. **明确 `struct` 默认不加 `self`（彻底看齐 Zig）**（改动规范）：
+  >    如果承认“CP 的 `struct` 本质上就像 Zig 的容器，绝大多数函数都是纯关联函数”，那 `struct` 默认**不加 `self`**，仅当参数列表显式写了 `_`（只读）或 `*_`（可变）时才注入 `self`；而 `class` 保持现有规则默认注入 `self`。
+  >
+  > 你更倾向哪种思路：**加 `static { ... }` 块**，还是保持现状先继续推进标准库加固？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 03:53:14）[step:21532]
+- **用户完整原始指令**：
+  > 这会影响调用解析对吗?
+  > 当前情况
+  > 1. 如果调用的函数,是static, 则调用方不加 self 实参, 函数实现也没有 self 形参
+  > 2. 如果调用的函数, 非 static, 则调用方解析,需加 self 实参, 函数实现, 也带 self 形参, 两者匹配
+  > 3. 如果我们把函数签名改了(理论上来说, 无论编译器自动修改, 还是提示人手动修改), 所有调用该函数的,均需重新编译, 否则形参与实参对不上
+  >
+  > 如果采用 rust 或 zig 模式, 显示定义:
+  > 1. 根据第一个参数定义(是否带 this/_), 在编译调用时, 编译器决定, 是否加入 self 实参, 对吗?
+  > 2. 如果cp 这样实现, struct 与 class 规则就不一样, class 成员默认priv, 默认非static, 默认可以省略只读借用this, 否则必须加 static; 
+  >   struct 成员默认pub, 默认 static, 如需实例动态, 函数必须显示定义 this, 不能省略 只读借用.
+  >
+  > 你是编程语言设计大师, 从人工学和统一性, struct 与 class 定位, 程序员心智, 慨念尽量简单好记, 以及各自处于的大部分使用场景来看,  
+  > 你的建议是?
+- **完整回复与执行汇报**：
+  > 你的两段推导**完全准确**：
+  > 1. 无论编译器自动改还是人手动改，只要函数签名变了，调用点都必须按新签名匹配并重新编译。
+  > 2. 如果采用“在 `struct` 中必须显式写 `_` 才算实例方法、在 `class` 中可省略只读 `_`”，就会形成**两套不对称规则**。
+  >
+  > ---
+  >
+  > ### 从语言设计与人机工学视角看：两套规则不可取
+  >
+  > #### 1. 统一性与正交性原则（最重要的心智模型）
+  > 优秀的语言设计里，**两个概念的差异应该只来自它们的本质定位，而不应交叉污染其他规则**：
+  > - **`struct` vs `class` 的本质定位**：
+  >   - `struct`：值语义、默认 `pub`、轻量数据聚合（`Vec3`、`Rect`、`BufferView`、`RoaringBitmap`）。
+  >   - `class`：引用/对象语义、默认 `priv`、完整构造 `init` 与 RAII 生命周期管理。
+  > - **如果让 `struct` 默认 `static`、而 `class` 默认实例方法**：
+  >   1. **心智割裂**：程序员和 AI 必须时刻默念“我当前在 `struct` 里还是 `class` 里？只读方法要不要写 `_`？”。一旦把一个 `struct` 重构成 `class`（或者反过来），所有没写修饰的 `fn` 语义瞬间反转，极易引入隐蔽 Bug。
+  >   2. **伤害真正的值类型体验**：日常写 `struct Vec3 { x: f32, y: f32, z: f32; fn length(): f32 ... fn dot(other: Vec3): f32 ... }` 时，90% 都是实例方法。强制 `struct` 写 `fn length(_): f32` 会反过来把日常值类型代码弄得啰嗦。
+  >   3. **错位归因**：“满屏 `static`”并不是因为 `struct` 本身不该有实例方法，而是来自两类特定场景：
+  >      - 纯命名空间/工具类（**已被 `static struct` 彻底解决**）；
+  >      - 混合结构体（像 `AllocScope` 这样有 1 个实例字段，但从 Zig 搬运过来一堆显式传 `*AllocScope` 的纯关联函数）。
+  >
+  > ---
+  >
+  > ### 最终设计建议：**“统一规则 + `static { ... }` 分组块”**
+  >
+  > 1. **保持 `struct` 与 `class` 方法规则 100% 统一（只有一条规则，零例外）**：
+  >    - `fn f()`：永远是只读实例方法（自动注入只读 `self`）；
+  >    - `fn f(*_)`：永远是可变实例方法；
+  >    - `static`：永远表示静态成员（不注入 `self`）。
+  >    - 全语言只需要记这一条，绝无 `struct`/`class` 分裂。
+  >
+  > 2. **补齐 `static { ... }` 块，专治混合容器的“满屏 `static`”**：
+  >    - 纯工具容器 → **`pub static struct Util { fn a() ... fn b() ... }`**（已支持，0 个函数级 `static`）。
+  >    - 混合容器（既有实例字段/方法，又有批量静态工厂或 Zig 迁移函数）→ **用 `static { ... }` 包起来，只写一次 `static`**：
+  >      ```cp
+  >      struct AllocScope {
+  >          __scope: AllocationScope,
+  >
+  >          static {
+  >              pub fn beginScope(alloc: Allocator): AllocScope { ... }
+  >              pub fn endScope(client: *AllocScope) { ... }
+  >              pub fn leakSlice(client: *AllocScope, memory: auto) { ... }
+  >          }
+  >      }
+  >      ```
+  >    - 块内的字段与函数在 Parser 阶段直接标记 `is_static = true`：
+  >      - 签名 100% 显式、调用解析规则完全不变；
+  >      - `struct` 和 `class` 都能用，正交统一；
+  >      - 彻底消除每行重复写 `static` 的样板噪音。
+  >
+  > 你觉得这套**“统一规则 + `static { ... }` 静态块”**方案如何？需要我现在就在 `cpc` 中实现 `static { ... }`（含回归测试与 `cp_agent_ref.md` 同步），还是先继续推进 Wave 35 标准库加固？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 04:00:39）[step:21534]
+- **用户完整原始指令**：
+  > 认同你的建议!
+  > 你之前提到, 在解析时, 如函数内部未引用 非static成员时, 告警提示(不应该是报错对吧) 该函数添加static 前缀或 放入 static {}, 这个还需要吗?
+- **完整回复与执行汇报**：
+  > 对，**绝对不能作为编译报错，也不建议在正常编译时刷屏告警（Warning）**。
+  >
+  > 理由很简单：实现 Trait 的空方法、预留钩子函数、或者纯常量返回方法，原本就可以不用实例状态。如果无条件报 Warning，大型工程里会产生大量噪音，反而不利于 AI 和人快速定位真实错误。
+  >
+  > ### 结论：**“平时静默，出错时精准指路”**
+  >
+  > 不需要在解析时主动发告警；只需要保留一种情况——**当调用点已经报错时（比如写了 `Type.foo(...)` 却因为 `foo` 忘了 `static` 导致 `self` 参数不匹配）**，在 Sema 报错信息的 `suggestion` 里顺手补一句：
+  >
+  > > `method 'foo' uses no instance members; add 'static' or move it into 'static { ... }'`
+  >
+  > 这样：
+  > - 正常代码**零噪音**；
+  > - 一旦漏写 `static` 导致调用失败，**一轮报错直接给出精准修法**。
+  >
+  > ---
+  >
+  > 接下来我是否现在就在 `cpc` 中实现 **`static { ... }` 静态块 + 调用报错时的 AI-First `static` 提示**（并发布到全局 `cpc` 供 bun agy 使用），还是先继续完成手头的 Wave 35 标准库加固？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 04:05:08）[step:21537]
+- **用户完整原始指令**：
+  > （比如写了 Type.foo(...) 却因为 foo 忘了 static 导致 self 参数不匹配）
+  > 这种情况, 不是应该 提示 调用错误, 而不应该提示 foo 错误吗? 提示用户, 调用了static 方法, 而 foo 并非 static 方法, 要么修改调用, 要么修改 foo, 而不仅仅只是修改 foo, 如果 foo 就是 实例方法, 调用方错误调用
+- **完整回复与执行汇报**：
+  > 完全赞同！你说得非常在理——主错误**只能报调用方错，不能武断指责定义方错**。
+  >
+  > 正确的诊断层级应该是：
+  > 1. **主报错（Error）报在调用点**：
+  >    `cannot call instance method 'Type.foo' without a receiver`
+  >    - 明确告知：调用了非静态方法 `foo`，但未提供实例接收者。
+  > 2. **并行给出两种可能修法（Help）**：
+  >    - 若 `foo` 本就是实例方法：通过实例调用 `instance.foo(...)`（或作为首参传入）；
+  >    - 若 `foo` 本应是静态方法：为 `foo` 添加 `static` 修饰或放入 `static { ... }`。
+  > 3. **仅在符合条件时附加中性 `note`**：
+  >    只有当 Sema 检测到 `foo` 体内**确实未使用任何实例成员或 `_`** 时，才额外补一句中性提示：
+  >    `note: 'foo' does not reference any instance members (it may have been intended as 'static')`
+  >
+  > 这样既不误导“实例方法被错当静态调用”的场景，也能在“迁移时真的漏了 `static`”的场景中提供关键线索。
+  >
+  > ---
+  >
+  > 这套设计已经完全闭环：**统一规则 + `static { ... }` 静态块 + 调用点中性双向诊断**。需要我现在就在 `cpc` 中着手实现并发布吗？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 04:07:51）[step:21539]
+- **用户完整原始指令**：
+  > • 若 foo 本就是实例方法：通过实例调用 instance.foo(...)（或作为首参传入）；
+  > 首参传入,是什么意思?
+- **完整回复与执行汇报**：
+  > “作为首参传入”，是指**通过类型名调用实例方法时，把实例本身当作第一个参数传进去**（等价于 Zig/Rust 的 UFCS 写法）。
+  >
+  > 我在 `cpc` 里实测验证过，以下两种写法目前都合法：
+  > ```cp
+  > struct Counter {
+  >     n: i32;
+  >     fn add(x: i32): i32 { return n + x; } // 生成 fn add(self: Counter, x: i32)
+  > }
+  >
+  > let c = Counter { n: 10 };
+  > let d = c.add(5);           // 语法糖：自动把 c 作为第一个参数传入
+  > let b = Counter.add(c, 5);  // 显式调用：把实例 c 作为“首参”传入
+  > ```
+  >
+  > 所以当有人误写成 `Counter.add(5)`（既没用 `c.add(5)`，也没把 `c` 作为首参传入 `Counter.add(c, 5)`）时，才会少一个 `self` 参数并触发报错。
+  >
+  > 这套设计（**统一规则 + `static { ... }` 静态块 + 调用点中性双向诊断**）你确认后，我可以直接在 `cpc` 实现并发布，然后继续推进 Wave 35 标准库加固。是否现在开始实现？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 04:13:09）[step:21543]
+- **用户完整原始指令**：
+  > 明白了, 开始实现cpc并发布, 同步修改 cp_agent_ref.md(做好同步标记,后续与 cp_ref.md同步), 同时,根据 cp_agent_ref.md 更新 bun 和 capsurf目录下的 CP_PITFALLS.md(简化版).
+  > 标准库加固等配额恢复,再继续.
+- **完整回复与执行汇报**：
+  > 已完成 [container.rs](file:///data/dev/cp/cpc/src/parser/container.rs)、[mod.rs](file:///data/dev/cp/cpc/src/sema/mod.rs) 与 [stmt_expr.rs](file:///data/dev/cp/cpc/src/sema/stmt_expr.rs) 的开发并通过 `cargo check`，同时已更新：
+  > - [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md#L489)（已加 `[SYNC_PENDING: 2026-11-24]` 同步标记）
+  > - [bun/CP_PITFALLS.md](file:///data/dev/bun/CP_PITFALLS.md#L12) 与 [capsurf/CP_PITFALLS.md](file:///data/dev/capsurf/CP_PITFALLS.md#L12)
+  > - 回归测试 [testStaticBlockAndCallDiag.cp](file:///data/dev/cp/cap/test/testStaticBlockAndCallDiag.cp)
+  >
+  > 正在等待 `sync_cpc.sh release` 编译发布完成，随后立即跑正反测试验证并自动提交。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 04:29:17）[step:21641]
+- **用户完整原始指令**：
+  > cpc fix 是否需要集成该功能, 如果 struct/enum 或 class 大量(约定一个数量) static时, 自动放入 static {}, 如果全部为 static, 则自动在 容器前 加 static
+  > 这样fix 是否合理/安全?
+- **完整回复与执行汇报**：
+  > 从目前 `cpc fix` 的实现机制（`run_check(..., fix=true)`，仅做**局部报错修复**）以及语言语义来看，**不建议在默认 `cpc fix` 中自动做这两种改写**，具体安全性与合理性拆分如下：
+  >
+  > ---
+  >
+  > ### 1. “如果全部为 `static`，自动在容器前加 `static`” —— **不安全，不能自动改**
+  > 表面看全静态成员似乎等价于 `static struct` / `static class`，但实际会直接破坏合法代码：
+  > - **禁止实例化破坏调用点**：空结构体 / 标记类型（`struct Empty {}`、`struct Tag {}`）经常没有任何字段，却被用作 `Empty {}` 实例化、泛型占位类型或 `trait` 载体。加上 `static` 后会**永久禁止实例化**并引发 `E0212`。
+  > - **破坏 FFI / 内存布局容器**：`@c struct`、`@packed struct` 即使暂只写了静态辅助方法，也可能在后续或跨界用作类型布局，不能改成静态命名空间。
+  >
+  > ---
+  >
+  > ### 2. “如果有大量 `static`（>= N 个），自动合并放入 `static { ... }`” —— **语义等价，但不适合放进默认 `cpc fix`**
+  > 把已经带 `static` 的成员移入 `static { ... }` 不会改变 ABI 或实例化能力，但作为自动重写工具存在 3 个实际问题：
+  > 1. **打乱代码布局与注释归属**：如果静态成员分散在构造、实例方法、属性之间，强行聚拢到同一个 `static { ... }` 会跨行搬移函数，破坏作者按“功能模块”分组的阅读顺序，还容易拆散函数上方的 `///` 文档注释、`@meta` 或 `comptime`/`zig {}` 上下文。
+  > 2. **职责边界冲突**：`cpc fix` 定位是**安全修复编译错误**（`Diagnostic.with_edit` 局部替换），不应在没有报错的正常文件里做大范围代码重排。
+  > 3. **只有“原地不重排”才安全**：仅当**连续相邻出现 `>= 3` 个 `static` 成员**时，在原地直接用 `static { ... }` 包裹（剥离每行前缀 `static`、保持原顺序与注释不变）才是 100% 无损的；即便如此，这也属于**风格重构（Refactoring / Formatter）**而非修复错误。
+  >
+  > ---
+  >
+  > ### 建议做法
+  > - **保持 `cpc fix` 克制安全**：只修明确报错，不私自给容器加 `static`，也不跨行搬运成员。
+  > - **规范源头写法**：我们已把 `static struct` 与 `static { ... }` 写入 [CP_PITFALLS.md](file:///data/dev/bun/CP_PITFALLS.md#L12)，由下游智能体在迁移或新写代码时直接使用即可。
+  > - **如果确实想要自动整理工具**：以后可作为一个显式子命令/开关（例如 `cpc fix --group-static` 或独立格式化规则），且**只原地包裹连续相邻的 `>= 3` 个 `static` 成员**，绝不改变容器本身的 `static` 属性或函数顺序。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 15:29:59）[step:21648]
+- **用户完整原始指令**：
+  > 配额恢复了
+  > 继续开两个子智能体和主智能体并行工作, 主智能体不可限于长时间任务,也可以空闲等待.
+  > 根之前一样, 完成阶段任务, 更新文档, git提交后,自主推导下阶段任务, 持续工作, 不停顿.
+- **完整回复与执行汇报**：
+  > 已重启 **2 路隔离并行子智能体**（下游工单队列为空 `0` 待处理），主智能体保持轻装待命：
+  >
+  > - **Lane 1D**（`6c0c99f0`）：**W35 R3 收尾** — `lib/text/{myersDiff,unifiedDiff}.cp` 对标 `mitsuhiko/similar`（修通 Unified Diff roundtrip 与 1,600 PRNG Fuzz 全绿）
+  > - **Lane 2F**（`83bbb9bd`）：**W35 R4** — `lib/obs/{traceParent,w3cTraceContext,baggage}.cp` 对标 `open-telemetry/opentelemetry-rust` & W3C Trace Context / Baggage（16-lane `@Vector(16, u8)` SIMD + >= 1,600 PRNG Fuzz）
+  >
+  > 待任一子智能体回报后，主控立即验收、更新文档索引与 `THIRD_PARTY_NOTICES.md`、自动提交并无缝接力 **W35 R5 / R6**。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 15:41:32）[step:21669]
+- **用户完整原始指令**：
+  > 最大限度节省token情况下, 加快进度
+  >     每隔3个小时分析一次, 如何节省token, 提高效率, 测试如有效, 执行的同时,  合并到 GEMINI.md 固化, 实现自我优化!
+- **完整回复与执行汇报**：
+  > 已收到并立即落地执行：
+  >
+  > 1. **已启用每 3 小时自我优化定时任务**（`0 */3 * * *`，后台守护任务 `task-21671`）：定期审计主/子智能体 Token 消耗与吞吐瓶颈，提出策略、小样本实测有效后立即生效并固化进 [GEMINI.md](file:///data/dev/cp/GEMINI.md)。
+  > 2. **即刻生效的省 Token / 提速举措**：子智能体采用 ≤12 行极简结构化回执；主控汇报保持极简；索引更新与下轮派发同回合并行完成。
+  > 3. **当前并行进度**：
+  >    - **W35 R5 已提交**：`8d0ad288`（[lib/xml/](file:///data/dev/cp/lib/xml/parser.cp) 对标 `RazrFalcon/roxmltree`，`validateXmlStrict` 零堆校验 + 16-lane SIMD，4/4 PASS + 1,600 Fuzz）；
+  >    - **Lane 2F**（`83bbb9bd`）：**W35 R4** — `lib/obs/{traceParent,w3cTraceContext,baggage}.cp`（`opentelemetry-rust`）运行中；
+  >    - **Lane 1D**（`6c0c99f0`）：**W35 R6** — `lib/binfmt/{macho,coff}.cp`（`gimli-rs/object`）运行中。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 15:44:38）[step:21674]
+- **用户完整原始指令**：
+  > 从 bun 中吸引资产任务全部完成了吗?
+  > 借鉴 rust 知名库, 需注意授权, 不能影响 cp的授权!
+- **完整回复与执行汇报**：
+  > 正在执行 `audit_bun_sync.py` 与 `THIRD_PARTY_NOTICES.md` 许可证全量审计，结果出炉后立即回复精确数据。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 16:02:07）[step:21732]
+- **用户完整原始指令**：
+  > 你现在的计划是?
+- **完整回复与执行汇报**：
+  > 当前自主滚动执行计划如下：
+  >
+  > ### 1. 正在并行执行（2 路子智能体 + 主控轻装协调）
+  > - **Wave 35 收官（9/10 已提交）**：Lane 2F 正在收尾最后一轮 **W35 R10**（`lib/net/quicLoss.cp` 对标 `quinn-rs/quinn` & RFC 9002），完成后累计达 **117** 组核心库深度加固（100% 宽松协议零 Copyleft 污染）。
+  > - **Wave 36 已启动**：Lane 1D 正在推进 **W36 R1**（`lib/db/{raftVote,raftLog}.cp` 对标 `tikv/raft-rs` Apache-2.0）。
+  >
+  > ### 2. 接下来滚动推进清单（Wave 36 + 增量维护）
+  > 1. **Wave 36 剩余 9 轮深度加固**（严格 MIT/Apache-2.0/BSD 白名单 + SIMD + `>= 1,600` PRNG Fuzz）：
+  >    - 存储引擎：`lib/db/{walRecover,writeBatch,sstableIndex}.cp`
+  >    - 协议与 Web 安全：`lib/web/{cachePolicy,contentNeg,rateHeader,csrfGuard,signedUrl}.cp`（RFC 9110/9111）
+  >    - 编译器/序列化：`lib/compiler/{flatbuf,flexbuf,expr}.cp`
+  >    - 计算几何/图形：`lib/gfx/{earcut,gjk,bezier}.cp`
+  >    - 密码学/鉴权补齐：`lib/auth/{csr,crl,ocsp}.cp`、`lib/net/{dhcp,bgp,quic/wire}.cp`
+  > 2. **顺手穿插两项轻量质量维护**：
+  >    - 修复 `lib/obs/` 中被新 `E0219` 诊断抓出的几个旧文件（`cef.cp`/`leef.cp`/`clf.cp`/`junit.cp`）漏标 `static` 问题，恢复 `"cap:obs"` 桶式导入全绿；
+  >    - 增量审计昨日 Bun Wave #111–#119 的 `upstream_newer` 变更，回流有价值的 Bug 修复并刷新同步时间戳。
+  > 3. **持续护栏**：
+  >    - 随时优先秒级响应下游 `bun_agy` / `capsurf_agy` 编译器工单；
+  >    - 每 3 小时定时任务自动审计 Token 与吞吐效率，有效优化固化进 [GEMINI.md](file:///data/dev/cp/GEMINI.md)；
+  >    - **Capdux 容器编译（`cap build -c`）** 按你的要求继续暂缓，不提前启动。
+  >
+  > 如需调整优先级或指定特定模块，随时告诉我。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 16:22:53）[step:21790]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261124-struct-addr-of)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已定位并修复工单 `task-bun-20261124-struct-addr-of` 根因（[borrow.rs](file:///data/dev/cp/cpc/src/codegen/borrow.rs#L959)：`is_zig_heap_ptr_type` 中内置堆类名表 `Task`/`Server`/`Request` 等抢先匹配了已注册为 `value_classes` 的 `const Task = struct { ... };`，导致 `&_.tasks[idx]` 误判 `already_ptr=true` 而丢弃 `&`），并新增回归测试 [testHotfixStructAddrOf.cp](file:///data/dev/cp/cap/test/testHotfixStructAddrOf.cp)。
+  >
+  > 正在等待 `sync_cpc.sh release` 构建部署完成，随后立即验证复现用例、跑通测试、`resolve` 结单并提交。
