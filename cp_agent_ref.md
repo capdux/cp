@@ -94,6 +94,7 @@ export * from "./sub_module.cp";
   "main": "src/main.cp",
   "license": "MIT",
   "opt": "fast",
+  "registry": "https://registry.capdux.dev",
   "workspaces": ["packages/*", "packages/@cap/*"],
   "dep": {
     "@cap/picohttp": "workspace:*",
@@ -138,7 +139,8 @@ export * from "./sub_module.cp";
 >    - **`sys`**（动态库/系统库依赖，兼容 `sys_dependencies`）：**编译期检查**（随包 `prebuilt/<os>-<arch>/lib<k>.so`/`.dylib`/`.dll` 或 `path` 自动注入 `-L`/`-l`/`-Wl,-rpath`；内置 `c`/`m`/`pthread`/`dl`/`rt`/`gcc_s` 直接放行；外部动态库检查 `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH` 与系统标准目录，缺失且未标 `"optional": true` 时编译期精准报错）+ **运行期保障**（`cap run` 启动前自动校验随包动态库并注入 `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`）；
 > 3. **Workspace 协议**：根 `cap.json` 含 `workspaces`（支持 `packages/*`、`packages/@cap/*` 等 glob）时，`cap install` 自动展开子包、将 `workspace:*` 软链入根 `cap_modules/` 并写入根 `cap.lock`；支持 `--filter <pkg>` 过滤 `rebuild` / `pm ls`；
 > 4. **按需链接（On-Demand Link Tree-Shaking）**：`cap build`/`run`/`test` 仅扫描转译后 `.zig` 顶部的 `// @cap-used-pkg: <pkg>`（无注释时回退扫描 `@import` / `.cp` 的 `import` 路径），**绝不盲目链接未引用的 `cap_modules/` 包**，仅递归收集实际使用包的 `dep`、`bin`（`.a` + `-I` + C++ 自动 `-lc++`）与 `sys`（`-L`/`-l`/`-Wl,-rpath`）传给 `zig build-exe`；
-> 5. **`lib` 路径精准映射**：`lib/cap.json` 的 `path` 支持目录（自动识别 `index.cp`/`main.cp`/同名 `.cp`）或具体文件。
+> 5. **`lib` 路径精准映射**：`lib/cap.json` 的 `path` 支持目录（自动识别 `index.cp`/`main.cp`/同名 `.cp`）或具体文件；
+> 6. **`.tar.zst` 分包打包与远程 Registry 验签**：`cap` 原生静态链接 Zstd（零外部 `tar`/`zstd` CLI 依赖），支持 `cap pack` 将纯 CP/C 源码主包（`<pkg>-<ver>.tar.zst`）与各平台预编译二进制包（`<pkg>-<ver>-<os>-<arch>.tar.zst`）分离打包并产出 `pack-manifest.json`（含 `sha256-...` 校验和）；远程安装按 `CAP_REGISTRY` 环境变量 > `cap.json` `"registry"` > 默认 `"https://registry.capdux.dev"` 解析，下载后先强制 SHA-256 验签与路径防穿越校验再解压至 `~/.cap/cache/pkgs/` 并软链入 `cap_modules/`（缺失当前平台二进制包时自动回退 Zig 本地编译 `c/` 源码）。
 | 工具指令 | 核心用途与行为 |
 | :--- | :--- |
 | `cpc brief [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | **⭐ 推荐首选：内置原生多文件省 Token 联合校验器**（自动探测 Zig 优先级：`--zig` > `$ZIG_BIN` > `./vendor/zig/zig` > `../vendor/zig/zig` > `/data/dev/cp/vendor/zig/zig` > `zig`）：直接复用内部诊断引擎按 `code` 统计去重前 `N` 条根因 + `--lib` 代码生成 + `zig ast-check` + 4 项纯净度静态门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`，`--require-backup` 校验 `_.zig` 与膨胀比 `<=1.2`） |
@@ -146,6 +148,7 @@ export * from "./sub_module.cp";
 | `cap init [template]` / `add [-d] [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理 `dep`/`dev` |
 | `cap install [--production\|--prod] [--frozen-lockfile] [--rebuild] [--target=<os-arch>]` | 展开 `workspaces`、解析 `workspace:*`/`file:`/注册表依赖并预编译 `bin` C/C++ 静态库写入 `cap.lock`（`--production`/`--prod` 跳过 `dev`） |
 | `cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch\|all>] [--write-prebuilt]` | 遍历包内全部 `bin` 条目重编或全平台交叉编译（支持 C/C++），可选回写随包 `prebuilt/` |
+| `cap pack [--target=<os-arch\|all>] [--out=<dir>]` | 打包主包 `<pkg>-<ver>.tar.zst` + 分平台二进制包 `<pkg>-<ver>-<os>-<arch>.tar.zst` 与 `pack-manifest.json`（SHA-256 校验） |
 | `cap pm ls [--filter <pkg>]` / `cap why <pkg>` / `cap cache <dir\|ls\|clean>` | 查看 `cap_modules/` 已安装包（含 `bin` 列表）、依赖溯源与 `~/.cap/cache` 缓存管理 |
 | `cap build [dir]` (`-r`/`-f`/`-s`/`-B`/`-n`) | 构建产物：`-r` 全平台矩阵、`-f` ReleaseFast、`-s` ReleaseSmall、`-B` 强制全量、`-n` (`--nest`) Nest 动态库 |
 | `cap build --lib` / `--obj` | 输出静态库 `.a` 或底层 `.o` 目标文件 |

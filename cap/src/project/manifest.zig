@@ -484,6 +484,7 @@ pub const Manifest = struct {
     description: ?[]const u8 = null,
     main: ?[]const u8 = null,
     mode: ?[]const u8 = null,
+    registry: ?[]const u8 = null,
     workspaces: [][]const u8 = &.{},
     scripts: std.StringHashMap([]const u8),
     dependencies: std.StringHashMap([]const u8),
@@ -528,6 +529,13 @@ pub const Manifest = struct {
         if (root.get("mode")) |m| {
             if (m == .string) {
                 mode = try allocator.dupe(u8, m.string);
+            }
+        }
+
+        var registry_url: ?[]const u8 = null;
+        if (root.get("registry")) |r| {
+            if (r == .string and r.string.len > 0) {
+                registry_url = try allocator.dupe(u8, r.string);
             }
         }
 
@@ -733,6 +741,7 @@ pub const Manifest = struct {
             .description = description,
             .main = main,
             .mode = mode,
+            .registry = registry_url,
             .workspaces = workspaces,
             .scripts = scripts,
             .dependencies = deps,
@@ -766,6 +775,9 @@ pub const Manifest = struct {
         }
         if (self.mode) |m| {
             try root.object.put(aa, "mode", std.json.Value{ .string = m });
+        }
+        if (self.registry) |r| {
+            try root.object.put(aa, "registry", std.json.Value{ .string = r });
         }
 
         if (self.workspaces.len > 0) {
@@ -958,6 +970,7 @@ pub const Manifest = struct {
         if (self.description) |d| allocator.free(d);
         if (self.main) |m| allocator.free(m);
         if (self.mode) |m| allocator.free(m);
+        if (self.registry) |r| allocator.free(r);
         var script_iter = self.scripts.iterator();
         while (script_iter.next()) |entry| {
             allocator.free(entry.key_ptr.*);

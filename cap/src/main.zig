@@ -117,6 +117,8 @@ pub fn main(init: std.process.Init) !void {
         try installer.handleInstall(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "rebuild")) {
         try installer.handleRebuild(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "pack")) {
+        try installer.handlePack(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "cache")) {
         try installer.handleCache(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "why")) {
@@ -209,6 +211,7 @@ fn usage() void {
         \\  cap update [package]          Update dependencies and refresh cap.lock
         \\  cap install [options]         Install dependencies (--production|--prod, --frozen-lockfile, --rebuild)
         \\  cap rebuild [pkg] [options]   Rebuild bin C/C++ libs (--filter <pkg>, --target=<os-arch|all>, --write-prebuilt)
+        \\  cap pack [options]            Pack .tar.zst main + per-platform binary archives (--target=<os-arch|all>, --out=<dir>)
         \\  cap cache <dir|ls|clean>      Inspect or clean global ~/.cap/cache
         \\  cap why <package>             Explain why a package is installed
         \\  cap pm ls [--filter <pkg>]    List installed packages in cap_modules/

@@ -5,6 +5,8 @@ const manifest = @import("manifest.zig");
 const semver = @import("semver.zig");
 const lock = @import("lock.zig");
 const native = @import("native.zig");
+const archive = @import("archive.zig");
+const registry = @import("registry.zig");
 
 pub const InstallOptions = struct {
     frozen_lockfile: bool = false,
@@ -245,12 +247,21 @@ fn resolvePackageBinLibs(
     return first_lib;
 }
 
+fn localRegistryHasPkg(name: []const u8) bool {
+    var reg_dir = std.Io.Dir.openDirAbsolute(main_mod.global_io, main_mod.registry_path, .{}) catch return false;
+    defer reg_dir.close(main_mod.global_io);
+    var pkg_dir = reg_dir.openDir(main_mod.global_io, name, .{}) catch return false;
+    pkg_dir.close(main_mod.global_io);
+    return true;
+}
+
 fn installSingleDep(
     allocator: std.mem.Allocator,
     name: []const u8,
     spec: []const u8,
     is_dev: bool,
     record_root_dep: bool,
+    manifest_registry: ?[]const u8,
     ws_map: *const std.StringHashMap([]const u8),
     lk: *lock.Lockfile,
     opts: InstallOptions,
@@ -260,6 +271,7 @@ fn installSingleDep(
     var resolved_dir: []const u8 = undefined;
     var resolved_url: []const u8 = undefined;
     var resolved_ver: []const u8 = undefined;
+    var remote_integrity: ?[]const u8 = null;
     var owns_resolved_dir = false;
 
     if (std.mem.startsWith(u8, spec, "file:")) {
@@ -309,36 +321,80 @@ fn installSingleDep(
             resolved_ver = try allocator.dupe(u8, "0.0.0");
         }
     } else {
-        // Registry semver resolution + global cache (~/.cap/cache/pkgs/<safe>@<ver>)
-        const range = try semver.VersionRange.parse(spec);
-        const best_ver = try resolveBestRegistryVersion(name, range);
-        const v_str = try best_ver.format(allocator);
-        resolved_ver = v_str;
+        const use_remote = registry.hasExplicitRemoteRegistry(manifest_registry) or !localRegistryHasPkg(name);
+        if (use_remote) {
+            const reg_url = try registry.resolveRegistryUrl(allocator, manifest_registry);
+            defer allocator.free(reg_url);
 
-        const cache_root = try native.getCapCacheRoot(allocator);
-        defer allocator.free(cache_root);
-        const safe_pkg = try native.sanitizePkgName(allocator, name);
-        defer allocator.free(safe_pkg);
-        const pkg_tag = try std.fmt.allocPrint(allocator, "{s}@{s}", .{ safe_pkg, v_str });
-        defer allocator.free(pkg_tag);
+            var meta = try registry.resolvePackageMeta(allocator, reg_url, name, spec, target_key);
+            defer meta.deinit(allocator);
 
-        const cache_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ cache_root, "pkgs", pkg_tag });
-        resolved_dir = cache_pkg_path;
-        owns_resolved_dir = true;
-        resolved_url = try std.fmt.allocPrint(allocator, "registry:{s}@{s}", .{ name, v_str });
+            resolved_ver = try allocator.dupe(u8, meta.version);
 
-        var cache_exists = true;
-        var d = std.Io.Dir.openDirAbsolute(main_mod.global_io, cache_pkg_path, .{}) catch blk: {
-            cache_exists = false;
-            break :blk std.Io.Dir.cwd();
-        };
-        if (cache_exists) {
-            d.close(main_mod.global_io);
+            const cache_root = try native.getCapCacheRoot(allocator);
+            defer allocator.free(cache_root);
+            const safe_pkg = try native.sanitizePkgName(allocator, name);
+            defer allocator.free(safe_pkg);
+            const pkg_tag = try std.fmt.allocPrint(allocator, "{s}@{s}", .{ safe_pkg, meta.version });
+            defer allocator.free(pkg_tag);
+
+            const cache_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ cache_root, "pkgs", pkg_tag });
+            resolved_dir = cache_pkg_path;
+            owns_resolved_dir = true;
+
+            var cache_exists = true;
+            var d = std.Io.Dir.openDirAbsolute(main_mod.global_io, cache_pkg_path, .{}) catch blk: {
+                cache_exists = false;
+                break :blk std.Io.Dir.cwd();
+            };
+            if (cache_exists) {
+                d.close(main_mod.global_io);
+            }
+
+            if (!cache_exists or opts.rebuild_native) {
+                if (cache_exists) removePathAny(cache_pkg_path);
+                var fetched = try registry.downloadAndExtractResolved(allocator, reg_url, name, &meta, cache_pkg_path, target_key);
+                defer fetched.deinit(allocator);
+                resolved_url = try allocator.dupe(u8, fetched.resolved_url);
+                remote_integrity = try allocator.dupe(u8, fetched.integrity);
+            } else {
+                resolved_url = try std.fmt.allocPrint(allocator, "{s}/{s}@{s}", .{ reg_url, name, meta.version });
+                if (meta.main_pkg.integrity) |mi| {
+                    remote_integrity = try allocator.dupe(u8, mi);
+                }
+            }
         } else {
-            std.debug.print("  ↓ Fetching {s}@{s} -> {s}\n", .{ name, v_str, cache_pkg_path });
-            const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ main_mod.registry_path, name, v_str });
-            defer allocator.free(reg_pkg_path);
-            try copyDirRecursive(reg_pkg_path, cache_pkg_path);
+            // Local mock_registry fallback
+            const range = try semver.VersionRange.parse(spec);
+            const best_ver = try resolveBestRegistryVersion(name, range);
+            const v_str = try best_ver.format(allocator);
+            resolved_ver = v_str;
+
+            const cache_root = try native.getCapCacheRoot(allocator);
+            defer allocator.free(cache_root);
+            const safe_pkg = try native.sanitizePkgName(allocator, name);
+            defer allocator.free(safe_pkg);
+            const pkg_tag = try std.fmt.allocPrint(allocator, "{s}@{s}", .{ safe_pkg, v_str });
+            defer allocator.free(pkg_tag);
+
+            const cache_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ cache_root, "pkgs", pkg_tag });
+            resolved_dir = cache_pkg_path;
+            owns_resolved_dir = true;
+            resolved_url = try std.fmt.allocPrint(allocator, "registry:{s}@{s}", .{ name, v_str });
+
+            var cache_exists = true;
+            var d = std.Io.Dir.openDirAbsolute(main_mod.global_io, cache_pkg_path, .{}) catch blk: {
+                cache_exists = false;
+                break :blk std.Io.Dir.cwd();
+            };
+            if (cache_exists) {
+                d.close(main_mod.global_io);
+            } else {
+                std.debug.print("  ↓ Fetching {s}@{s} -> {s}\n", .{ name, v_str, cache_pkg_path });
+                const reg_pkg_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ main_mod.registry_path, name, v_str });
+                defer allocator.free(reg_pkg_path);
+                try copyDirRecursive(reg_pkg_path, cache_pkg_path);
+            }
         }
     }
     defer if (owns_resolved_dir) allocator.free(resolved_dir);
@@ -350,8 +406,8 @@ fn installSingleDep(
     defer allocator.free(link_path);
     std.debug.print("  ✓ Linked {s}@{s} -> {s}\n", .{ name, resolved_ver, link_path });
 
-    // Compute integrity hash
-    const integrity = try computeDirSha256(allocator, resolved_dir);
+    // Compute integrity hash (prefer tarball SHA-256 from remote registry if available)
+    const integrity = remote_integrity orelse try computeDirSha256(allocator, resolved_dir);
     errdefer allocator.free(integrity);
 
     // Resolve/build all `bin` static libraries declared in this package
@@ -416,7 +472,7 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
             const ws_name = ws_entry.key_ptr.*;
             const is_root_dep = mf.dependencies.contains(ws_name) or mf.dev_dependencies.contains(ws_name);
             if (!is_root_dep) {
-                try installSingleDep(allocator, ws_name, "workspace:*", false, false, &ws_map, &lk, opts);
+                try installSingleDep(allocator, ws_name, "workspace:*", false, false, mf.registry, &ws_map, &lk, opts);
             }
         }
     }
@@ -424,13 +480,13 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
     // 2. Install root dep & (unless --production) dev
     var dep_it = mf.dependencies.iterator();
     while (dep_it.next()) |entry| {
-        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, true, &ws_map, &lk, opts);
+        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, true, mf.registry, &ws_map, &lk, opts);
     }
 
     if (!opts.production) {
         var dev_it = mf.dev_dependencies.iterator();
         while (dev_it.next()) |entry| {
-            try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, true, &ws_map, &lk, opts);
+            try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, true, mf.registry, &ws_map, &lk, opts);
         }
     }
 
@@ -449,14 +505,14 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
             var wdep_it = ws_mf.dependencies.iterator();
             while (wdep_it.next()) |entry| {
                 if (!lk.packages.contains(entry.key_ptr.*)) {
-                    try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, false, &ws_map, &lk, opts);
+                    try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, false, ws_mf.registry orelse mf.registry, &ws_map, &lk, opts);
                 }
             }
             if (!opts.production) {
                 var wdev_it = ws_mf.dev_dependencies.iterator();
                 while (wdev_it.next()) |entry| {
                     if (!lk.packages.contains(entry.key_ptr.*)) {
-                        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, false, &ws_map, &lk, opts);
+                        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, false, ws_mf.registry orelse mf.registry, &ws_map, &lk, opts);
                     }
                 }
             }
@@ -963,4 +1019,378 @@ pub fn handlePm(allocator: std.mem.Allocator, args: []const []const u8) !void {
     if (count == 0) {
         std.debug.print("  (none)\n", .{});
     }
+}
+
+fn tarballSafeName(allocator: std.mem.Allocator, pkg_name: []const u8) ![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+    const trimmed = if (pkg_name.len > 0 and pkg_name[0] == '@') pkg_name[1..] else pkg_name;
+    for (trimmed) |c| {
+        if (c == '/' or c == '\\' or c == ':') {
+            try out.append(allocator, '-');
+        } else {
+            try out.append(allocator, c);
+        }
+    }
+    return try out.toOwnedSlice(allocator);
+}
+
+fn isPackExcludedDir(name: []const u8, prebuilt_dirs: []const []const u8) bool {
+    const fixed_excluded = [_][]const u8{
+        "prebuilt",
+        ".cap",
+        "cap_modules",
+        "bin",
+        ".git",
+        ".zig-cache",
+        "zig-out",
+        "node_modules",
+    };
+    for (fixed_excluded) |ex| {
+        if (std.mem.eql(u8, name, ex)) return true;
+    }
+    for (prebuilt_dirs) |pb| {
+        if (std.mem.eql(u8, name, pb)) return true;
+    }
+    return false;
+}
+
+fn collectFilesRecursive(
+    allocator: std.mem.Allocator,
+    base_dir: []const u8,
+    rel_prefix: []const u8,
+    out_files: *std.ArrayList([]const u8),
+    exclude_top_dirs: ?[]const []const u8,
+    exclude_abs_dir: ?[]const u8,
+) !void {
+    const open_path = if (rel_prefix.len == 0)
+        base_dir
+    else if (std.mem.eql(u8, base_dir, "."))
+        rel_prefix
+    else
+        try std.Io.Dir.path.join(allocator, &[_][]const u8{ base_dir, rel_prefix });
+    defer if (rel_prefix.len > 0 and !std.mem.eql(u8, base_dir, ".")) allocator.free(open_path);
+
+    if (exclude_abs_dir) |ex_abs| {
+        if (realpathAny(allocator, open_path)) |cur_abs| {
+            defer allocator.free(cur_abs);
+            if (std.mem.eql(u8, cur_abs, ex_abs)) return;
+        } else |_| {}
+    }
+
+    var dir = blk: {
+        if (open_path.len > 0 and open_path[0] == '/') {
+            break :blk std.Io.Dir.openDirAbsolute(main_mod.global_io, open_path, .{ .iterate = true }) catch return;
+        }
+        break :blk std.Io.Dir.openDir(.cwd(), main_mod.global_io, open_path, .{ .iterate = true }) catch return;
+    };
+    defer dir.close(main_mod.global_io);
+
+    var it = dir.iterate();
+    while (try it.next(main_mod.global_io)) |entry| {
+        if (entry.name.len == 0) continue;
+        // Skip hidden dotfiles/dirs (except .gitignore if desired, skip .git/.cap)
+        if (entry.name[0] == '.') {
+            if (entry.kind == .directory) continue;
+        }
+        if (rel_prefix.len == 0) {
+            if (exclude_top_dirs) |pb_dirs| {
+                if (entry.kind == .directory and isPackExcludedDir(entry.name, pb_dirs)) continue;
+            }
+            if (std.mem.eql(u8, entry.name, "pack-manifest.json") or std.mem.endsWith(u8, entry.name, ".tar.zst")) continue;
+        }
+
+        const child_rel = if (rel_prefix.len == 0)
+            try allocator.dupe(u8, entry.name)
+        else
+            try std.fmt.allocPrint(allocator, "{s}/{s}", .{ rel_prefix, entry.name });
+
+        if (entry.kind == .directory) {
+            defer allocator.free(child_rel);
+            try collectFilesRecursive(allocator, base_dir, child_rel, out_files, exclude_top_dirs, exclude_abs_dir);
+        } else if (entry.kind == .file or entry.kind == .sym_link) {
+            try out_files.append(allocator, child_rel);
+        } else {
+            allocator.free(child_rel);
+        }
+    }
+}
+
+const BinaryPackEntry = struct {
+    target_key: []const u8,
+    tarball: []const u8,
+    sha256: []const u8,
+    raw_size: u64,
+    compressed_size: u64,
+    file_count: usize,
+};
+
+pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    var target_opt: ?[]const u8 = null;
+    var out_dir: []const u8 = ".";
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.startsWith(u8, arg, "--target=")) {
+            target_opt = arg["--target=".len..];
+        } else if (std.mem.eql(u8, arg, "--target") or std.mem.eql(u8, arg, "-t")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                target_opt = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--out=")) {
+            out_dir = arg["--out=".len..];
+        } else if (std.mem.eql(u8, arg, "--out") or std.mem.eql(u8, arg, "-o")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                out_dir = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            std.debug.print("Usage: cap pack [--target=<os-arch|all>] [--out=<dir>]\n", .{});
+            return;
+        }
+    }
+
+    const content = main_mod.fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024) catch {
+        std.debug.print("Error: cap.json not found in current directory.\n", .{});
+        return error.ManifestNotFound;
+    };
+    defer allocator.free(content);
+    var mf = try manifest.Manifest.parse(allocator, content);
+    defer mf.deinit(allocator);
+
+    // If --target is specified, rebuild bin libraries and write into prebuilt/ first
+    if (target_opt != null) {
+        var seen_pkgs = std.StringHashMap(void).init(allocator);
+        defer {
+            var sit = seen_pkgs.iterator();
+            while (sit.next()) |e| allocator.free(e.key_ptr.*);
+            seen_pkgs.deinit();
+        }
+        _ = try rebuildPkgDir(allocator, ".", null, target_opt, true, &seen_pkgs);
+    }
+
+    try native.ensureDirPath(out_dir);
+    const out_abs = realpathAny(allocator, out_dir) catch null;
+    defer if (out_abs) |oa| allocator.free(oa);
+
+    // Collect prebuilt directory names declared in bin / sys (default: "prebuilt")
+    var pb_dirs: std.ArrayList([]const u8) = .empty;
+    defer pb_dirs.deinit(allocator);
+    try pb_dirs.append(allocator, "prebuilt");
+    {
+        var bit = mf.bin_dependencies.iterator();
+        while (bit.next()) |entry| {
+            if (entry.value_ptr.prebuilt) |pb| {
+                var dup = false;
+                for (pb_dirs.items) |existing| {
+                    if (std.mem.eql(u8, existing, pb)) {
+                        dup = true;
+                        break;
+                    }
+                }
+                if (!dup) try pb_dirs.append(allocator, pb);
+            }
+        }
+        if (mf.sys_dependencies) |sys| {
+            for (sys.libs) |lib| {
+                if (lib.prebuilt) |pb| {
+                    var dup = false;
+                    for (pb_dirs.items) |existing| {
+                        if (std.mem.eql(u8, existing, pb)) {
+                            dup = true;
+                            break;
+                        }
+                    }
+                    if (!dup) try pb_dirs.append(allocator, pb);
+                }
+            }
+        }
+    }
+
+    const safe_name = try tarballSafeName(allocator, mf.name);
+    defer allocator.free(safe_name);
+
+    // 1. Pack main source archive (<safe_name>-<ver>.tar.zst)
+    var main_files: std.ArrayList([]const u8) = .empty;
+    defer {
+        for (main_files.items) |f| allocator.free(f);
+        main_files.deinit(allocator);
+    }
+    try collectFilesRecursive(allocator, ".", "", &main_files, pb_dirs.items, out_abs);
+
+    const main_tarball_name = try std.fmt.allocPrint(allocator, "{s}-{s}.tar.zst", .{ safe_name, mf.version });
+    defer allocator.free(main_tarball_name);
+    const main_out_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, main_tarball_name });
+    defer allocator.free(main_out_path);
+
+    var main_res = try archive.packDirToTarZst(allocator, ".", main_files.items, main_out_path);
+    defer main_res.deinit(allocator);
+
+    const main_ratio: f64 = if (main_res.raw_size > 0)
+        (@as(f64, @floatFromInt(main_res.compressed_size)) / @as(f64, @floatFromInt(main_res.raw_size))) * 100.0
+    else
+        0.0;
+    std.debug.print("✓ Packed main: {s} ({d} files, {d} B -> {d} B, {d:.1}%, {s})\n", .{
+        main_tarball_name,
+        main_res.file_count,
+        main_res.raw_size,
+        main_res.compressed_size,
+        main_ratio,
+        main_res.sha256,
+    });
+
+    // 2. Discover and pack per-platform prebuilt binary archives (<safe_name>-<ver>-<os>-<arch>.tar.zst)
+    var target_files_map = std.StringHashMap(std.ArrayList([]const u8)).init(allocator);
+    defer {
+        var tit = target_files_map.iterator();
+        while (tit.next()) |e| {
+            allocator.free(e.key_ptr.*);
+            for (e.value_ptr.items) |f| allocator.free(f);
+            e.value_ptr.deinit(allocator);
+        }
+        target_files_map.deinit();
+    }
+
+    for (pb_dirs.items) |pb_dir| {
+        var d = std.Io.Dir.openDir(.cwd(), main_mod.global_io, pb_dir, .{ .iterate = true }) catch continue;
+        defer d.close(main_mod.global_io);
+        var it = d.iterate();
+        while (try it.next(main_mod.global_io)) |entry| {
+            if (entry.kind != .directory) continue;
+            if (entry.name.len == 0 or entry.name[0] == '.') continue;
+            if (target_opt) |t_req| {
+                if (!std.mem.eql(u8, t_req, "all")) {
+                    const norm_req = native.zigTripleToTargetKey(t_req);
+                    if (!std.mem.eql(u8, entry.name, norm_req)) continue;
+                }
+            }
+            const sub_rel = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ pb_dir, entry.name });
+            defer allocator.free(sub_rel);
+
+            var sub_files: std.ArrayList([]const u8) = .empty;
+            try collectFilesRecursive(allocator, ".", sub_rel, &sub_files, null, out_abs);
+            if (sub_files.items.len == 0) {
+                sub_files.deinit(allocator);
+                continue;
+            }
+
+            const gop = try target_files_map.getOrPut(entry.name);
+            if (!gop.found_existing) {
+                gop.key_ptr.* = try allocator.dupe(u8, entry.name);
+                gop.value_ptr.* = .empty;
+            }
+            for (sub_files.items) |sf| {
+                try gop.value_ptr.append(allocator, sf);
+            }
+            sub_files.deinit(allocator);
+        }
+    }
+
+    var bin_entries: std.ArrayList(BinaryPackEntry) = .empty;
+    defer {
+        for (bin_entries.items) |be| {
+            allocator.free(be.target_key);
+            allocator.free(be.tarball);
+            allocator.free(be.sha256);
+        }
+        bin_entries.deinit(allocator);
+    }
+
+    var t_it = target_files_map.iterator();
+    while (t_it.next()) |e| {
+        const t_key = e.key_ptr.*;
+        const files = e.value_ptr.items;
+        if (files.len == 0) continue;
+
+        const bin_tarball_name = try std.fmt.allocPrint(allocator, "{s}-{s}-{s}.tar.zst", .{ safe_name, mf.version, t_key });
+        errdefer allocator.free(bin_tarball_name);
+        const bin_out_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, bin_tarball_name });
+        defer allocator.free(bin_out_path);
+
+        const bin_res = try archive.packDirToTarZst(allocator, ".", files, bin_out_path);
+        const ratio: f64 = if (bin_res.raw_size > 0)
+            (@as(f64, @floatFromInt(bin_res.compressed_size)) / @as(f64, @floatFromInt(bin_res.raw_size))) * 100.0
+        else
+            0.0;
+        std.debug.print("✓ Packed binary [{s}]: {s} ({d} files, {d} B -> {d} B, {d:.1}%, {s})\n", .{
+            t_key,
+            bin_tarball_name,
+            bin_res.file_count,
+            bin_res.raw_size,
+            bin_res.compressed_size,
+            ratio,
+            bin_res.sha256,
+        });
+
+        try bin_entries.append(allocator, .{
+            .target_key = try allocator.dupe(u8, t_key),
+            .tarball = bin_tarball_name,
+            .sha256 = bin_res.sha256,
+            .raw_size = bin_res.raw_size,
+            .compressed_size = bin_res.compressed_size,
+            .file_count = bin_res.file_count,
+        });
+    }
+
+    // 3. Write pack-manifest.json (registry-ready metadata)
+    const manifest_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, "pack-manifest.json" });
+    defer allocator.free(manifest_path);
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const aa = arena.allocator();
+
+    var root = std.json.Value{ .object = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable };
+    try root.object.put(aa, "name", .{ .string = mf.name });
+    try root.object.put(aa, "ver", .{ .string = mf.version });
+    try root.object.put(aa, "tarball", .{ .string = main_tarball_name });
+    try root.object.put(aa, "integrity", .{ .string = main_res.sha256 });
+    try root.object.put(aa, "raw_size", .{ .integer = @intCast(main_res.raw_size) });
+    try root.object.put(aa, "compressed_size", .{ .integer = @intCast(main_res.compressed_size) });
+    try root.object.put(aa, "file_count", .{ .integer = @intCast(main_res.file_count) });
+
+    var bins_obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    for (bin_entries.items) |be| {
+        var bobj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+        try bobj.put(aa, "tarball", .{ .string = be.tarball });
+        try bobj.put(aa, "integrity", .{ .string = be.sha256 });
+        try bobj.put(aa, "raw_size", .{ .integer = @intCast(be.raw_size) });
+        try bobj.put(aa, "compressed_size", .{ .integer = @intCast(be.compressed_size) });
+        try bobj.put(aa, "file_count", .{ .integer = @intCast(be.file_count) });
+        try bins_obj.put(aa, be.target_key, .{ .object = bobj });
+    }
+    try root.object.put(aa, "binaries", .{ .object = bins_obj });
+
+    // Also include registry-compatible dist-tags & versions block
+    var dist_tags = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try dist_tags.put(aa, "latest", .{ .string = mf.version });
+    try root.object.put(aa, "dist-tags", .{ .object = dist_tags });
+
+    var ver_entry = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try ver_entry.put(aa, "tarball", .{ .string = main_tarball_name });
+    try ver_entry.put(aa, "integrity", .{ .string = main_res.sha256 });
+    try ver_entry.put(aa, "binaries", .{ .object = bins_obj });
+
+    var versions_obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try versions_obj.put(aa, mf.version, .{ .object = ver_entry });
+    try root.object.put(aa, "versions", .{ .object = versions_obj });
+
+    var out_file = blk: {
+        if (manifest_path.len > 0 and manifest_path[0] == '/') {
+            var rdir = try std.Io.Dir.openDirAbsolute(main_mod.global_io, "/", .{});
+            defer rdir.close(main_mod.global_io);
+            break :blk try rdir.createFile(main_mod.global_io, manifest_path[1..], .{});
+        }
+        break :blk try std.Io.Dir.createFile(.cwd(), main_mod.global_io, manifest_path, .{});
+    };
+    defer out_file.close(main_mod.global_io);
+
+    var wbuf: [8192]u8 = undefined;
+    var writer = out_file.writer(main_mod.global_io, &wbuf);
+    try std.json.Stringify.value(root, .{ .whitespace = .indent_2 }, &writer.interface);
+    try writer.end();
+
+    std.debug.print("✓ Wrote manifest: {s}\n", .{manifest_path});
 }

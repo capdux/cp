@@ -4,13 +4,21 @@ pub fn build(b: *std.Build) void {
     const native_target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const root_mod = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = native_target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    root_mod.addIncludePath(b.path("../packages/@cap/zstd/c"));
+    root_mod.addCSourceFile(.{
+        .file = b.path("../packages/@cap/zstd/c/zstd.c"),
+        .flags = &.{ "-O2", "-DZSTD_MULTITHREAD=0" },
+    });
+
     const exe = b.addExecutable(.{
         .name = "cap",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = native_target,
-            .optimize = optimize,
-        }),
+        .root_module = root_mod,
     });
 
     const install_artifact = b.addInstallArtifact(exe, .{ .dest_dir = .{ .override = .{ .custom = "" } } });
