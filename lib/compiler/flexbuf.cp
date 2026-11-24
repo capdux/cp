@@ -1,4 +1,13 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc Google FlatBuffers FlexBuffers Parser) | Created: 2026-11-22
+// Reference-hardened against google/flatbuffers (Apache-2.0)
+
+import {
+    simdFbFindZeroByte,
+    simdFbBytesEqual,
+} from "./flatbuf.cp";
+
+/// FlexBuffers 严格递归校验默认最大深度（64）
+pub const FLEXBUF_MAX_DEPTH: usize = 64;
 
 /// FlexBuffers 值类型枚举（打包类型字节高 6 位 `packed >> 2`）
 pub enum FlexType: u8 {
@@ -235,14 +244,11 @@ pub struct FlexRef {
         return _.data[target .. target + len];
     }
 
-    /// 零拷贝读取 `\0` 结尾的 Key 字符串切片
+    /// 零拷贝读取 `\0` 结尾的 Key 字符串切片（16-lane SIMD 零字节定位）
     fn asKey(): ([]const u8)? {
         if (_.flex_type != FlexType.key) return null;
         const target = _.indirectTarget() ?? return null;
-        let end = target;
-        while (end < _.data.len && _.data[end] != 0) {
-            end += 1;
-        }
+        const end = simdFbFindZeroByte(_.data, target);
         if (end >= _.data.len) return null;
         return _.data[target..end];
     }
@@ -278,7 +284,8 @@ pub struct FlexRef {
         if (target < _.byte_width) return null;
         const len_u64 = readUintWidth(_.data, target - _.byte_width, _.byte_width) ?? return null;
         const len: usize = len_u64 as usize;
-        if (_.byte_width > 0 && len > (_.data.len - target) / _.byte_width) return null;
+        if (_.byte_width == 0 || !isValidByteWidth(_.byte_width)) return null;
+        if (len > (_.data.len - target) / _.byte_width) return null;
         if (_.flex_type == FlexType.vector) {
             const elems_bytes: usize = len * _.byte_width;
             if (len > _.data.len - target - elems_bytes) return null;
@@ -317,9 +324,10 @@ pub struct FlexRef {
         };
     }
 
-    /// 返回有序 Map 的键值对数量
+    /// 返回有序 Map 的键值对数量（严格校验 keys 向量长度与 values 长度一致）
     fn mapLen(): usize? {
         if (_.flex_type != FlexType.map) return null;
+        if (!isValidByteWidth(_.byte_width)) return null;
         const target = _.indirectTarget() ?? return null;
         if (target < _.byte_width * 3) return null;
         const len_u64 = readUintWidth(_.data, target - _.byte_width, _.byte_width) ?? return null;
@@ -327,6 +335,19 @@ pub struct FlexRef {
         if (len > (_.data.len - target) / _.byte_width) return null;
         const elems_bytes: usize = len * _.byte_width;
         if (len > _.data.len - target - elems_bytes) return null;
+
+        // Verify keys vector header consistency (`keys_len == values_len`)
+        const keys_ptr: usize = target - _.byte_width * 3;
+        const keys_bw_u64 = readUintWidth(_.data, target - _.byte_width * 2, _.byte_width) ?? return null;
+        const keys_bw: usize = keys_bw_u64 as usize;
+        if (!isValidByteWidth(keys_bw)) return null;
+        const keys_rel = readUintWidth(_.data, keys_ptr, _.byte_width) ?? return null;
+        if (keys_rel > (keys_ptr as u64)) return null;
+        const keys_data: usize = keys_ptr - (keys_rel as usize);
+        if (keys_data < keys_bw) return null;
+        const keys_len_u64 = readUintWidth(_.data, keys_data - keys_bw, keys_bw) ?? return null;
+        if ((keys_len_u64 as usize) != len) return null;
+        if (len > (_.data.len - keys_data) / keys_bw) return null;
         return len;
     }
 
@@ -386,10 +407,10 @@ pub struct FlexRef {
         while (lo < hi) {
             const mid: usize = lo + ((hi - lo) / 2);
             const mid_key = _.mapKeyAt(mid) ?? return null;
-            const cmp = compareBytes(mid_key, key);
-            if (cmp == 0) {
+            if (simdFbBytesEqual(mid_key, key)) {
                 return _.mapValueAt(mid);
             }
+            const cmp = compareBytes(mid_key, key);
             if (cmp < 0) {
                 lo = mid + 1;
             } else {
@@ -398,6 +419,62 @@ pub struct FlexRef {
         }
         return null;
     }
+}
+
+struct FlexVerifyBudget {
+    rem: usize = 4096,
+}
+
+fn validateFlexRefRec(r: FlexRef, depth: usize, max_depth: usize, budget: *FlexVerifyBudget): bool {
+    if (depth > max_depth) return false;
+    if (budget.rem == 0) return false;
+    budget.rem -= 1;
+
+    if (!isValidByteWidth(r.parent_width) || !isValidByteWidth(r.byte_width)) return false;
+    if (r.offset > r.data.len || r.parent_width > r.data.len - r.offset) return false;
+
+    const ft = r.flex_type;
+    if (ft == FlexType.null_val) return true;
+    if (ft == FlexType.bool_val) return r.asBool() != null;
+    if (ft == FlexType.int || ft == FlexType.indirect_int) return r.asInt() != null;
+    if (ft == FlexType.uint || ft == FlexType.indirect_uint) return r.asUint() != null;
+    if (ft == FlexType.float || ft == FlexType.indirect_float) return r.asFloat() != null;
+    if (ft == FlexType.key) return r.asKey() != null;
+    if (ft == FlexType.string) {
+        const s = r.asString() ?? return false;
+        const target = r.indirectTarget() ?? return false;
+        if (target + s.len >= r.data.len || r.data[target + s.len] != 0) return false;
+        return true;
+    }
+    if (ft == FlexType.blob) return r.asBlob() != null;
+
+    if (ft == FlexType.map) {
+        const len = r.mapLen() ?? return false;
+        let i: usize = 0;
+        while (i < len) : (i += 1) {
+            if (r.mapKeyAt(i) == null) return false;
+            const val_ref = r.mapValueAt(i) ?? return false;
+            if (!validateFlexRefRec(val_ref, depth + 1, max_depth, budget)) return false;
+        }
+        return true;
+    }
+
+    // Vectors (polymorphic, typed, fixed 2/3/4)
+    const vlen = r.vecLen() ?? return false;
+    let i: usize = 0;
+    while (i < vlen) : (i += 1) {
+        const elem = r.vecGet(i) ?? return false;
+        if (!validateFlexRefRec(elem, depth + 1, max_depth, budget)) return false;
+    }
+    return true;
+}
+
+/// 零堆递归严格校验 FlexBuffers 缓冲区（含尾部 root、width、间接偏移、Map keys/values 一致性与递归深度上限）。
+pub fn validateFlexbufStrict(data: []const u8, max_depth: usize): bool {
+    const eff_depth: usize = if (max_depth == 0) FLEXBUF_MAX_DEPTH else max_depth;
+    const root = parseFlexRoot(data) ?? return false;
+    let budget = FlexVerifyBudget{ rem: 4096 };
+    return validateFlexRefRec(root, 0, eff_depth, *budget);
 }
 
 /// 解析 FlexBuffers 缓冲区尾部 2 字节 `[root_packed_type, root_byte_width]` 并构造根 `FlexRef`

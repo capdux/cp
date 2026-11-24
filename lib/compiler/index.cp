@@ -193,15 +193,22 @@ export {
     FB_SIZE_PREFIX_BYTES,
     FB_FILE_ID_OFFSET,
     FB_FILE_ID_LEN,
+    FLATBUF_MAX_DEPTH,
+    scalarFbFindZeroByte,
+    simdFbFindZeroByte,
+    scalarFbBytesEqual,
+    simdFbBytesEqual,
     FbVector,
     FbTable,
     fbFileIdentifier,
     fbHasIdentifier,
     fbStripSizePrefix,
     fbRootTable,
+    validateFlatbufStrict,
 } from "./flatbuf.cp";
 
 export {
+    FLEXBUF_MAX_DEPTH,
     FlexType,
     FlexBitWidth,
     UnpackedFlexType,
@@ -210,4 +217,5 @@ export {
     packFlexType,
     FlexRef,
     parseFlexRoot,
+    validateFlexbufStrict,
 } from "./flexbuf.cp";
