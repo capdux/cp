@@ -45,9 +45,12 @@ const EPOLLRDHUP: u32 = 0x2000;
     sin_zero: [8]u8,
 }
 
+// Linux x86_64 struct epoll_event is 12 bytes (__attribute__((__packed__)): u32 events + u64 data).
+// Using three u32 fields guarantees exact 12-byte stride with zero padding!
 @c struct EpollEventC {
     events: u32,
-    data_u64: u64,
+    data_lo: u32,
+    data_hi: u32,
 }
 
 extern fn socket(domain: i32, sock_type: i32, protocol: i32): i32;
@@ -66,6 +69,7 @@ extern fn malloc(size: usize): *u8?;
 extern fn free(ptr: *u8?);
 extern fn __errno_location(): *i32;
 extern fn sched_yield(): i32;
+extern fn sched_setaffinity(pid: i32, cpusetsize: usize, mask: *const u8): i32;
 extern fn pthread_create(
     thread: *usize,
     attr: *const u8?,
@@ -284,8 +288,20 @@ struct WorkerCtx {
     app: *App,
     port: u16,
     backlog: i32,
+    worker_id: usize,
+    pin_cpu: bool,
     stop_flag: *i32,
     ready_count: *i32,
+}
+
+fn pinCurrentThreadToCpu(cpu_id: usize) {
+    let mask: [16]u64 = [0; 16]; // up to 1024 CPUs
+    const word_idx = (cpu_id / 64) % 16;
+    const bit_idx = (cpu_id % 64) as u6;
+    mask[word_idx] = (1 as u64) << bit_idx;
+    unsafe {
+        * = sched_setaffinity(0, 128, @ptrCast(&mask[0]));
+    }
 }
 
 fn createReusePortListener(port: u16, backlog: i32): i32 {
@@ -341,6 +357,9 @@ fn writeAllFd(fd: i32, data: string): bool {
     if (arg == null) return null;
     unsafe {
         const wctx: *WorkerCtx = @ptrCast(@alignCast(arg.?));
+        if (wctx.pin_cpu) {
+            pinCurrentThreadToCpu(wctx.worker_id);
+        }
         const lfd = createReusePortListener(wctx.port, wctx.backlog);
         if (lfd < 0) return null;
 
@@ -352,7 +371,8 @@ fn writeAllFd(fd: i32, data: string): bool {
 
         let lev = EpollEventC{
             events: EPOLLIN,
-            data_u64: lfd as u64,
+            data_lo: lfd as u32,
+            data_hi: 0,
         };
         * = epoll_ctl(epfd, EPOLL_CTL_ADD, lfd, *lev);
 
@@ -374,7 +394,7 @@ fn writeAllFd(fd: i32, data: string): bool {
             conns[ci].read_len = 0;
         }
 
-        let events: [SERVER_EPOLL_BATCH]EpollEventC = [EpollEventC{ events: 0, data_u64: 0 }; SERVER_EPOLL_BATCH];
+        let events: [SERVER_EPOLL_BATCH]EpollEventC = [EpollEventC{ events: 0, data_lo: 0, data_hi: 0 }; SERVER_EPOLL_BATCH];
         let write_buf: [SERVER_WRITE_BUF_LEN]u8 = [0; SERVER_WRITE_BUF_LEN];
         let one: i32 = 1;
 
@@ -385,7 +405,7 @@ fn writeAllFd(fd: i32, data: string): bool {
             let ei: usize = 0;
             while (ei < (nev as usize)) : (ei += 1) {
                 const ev = events[ei];
-                const fd = ev.data_u64 as i32;
+                const fd = ev.data_lo as i32;
 
                 if (fd == lfd) {
                     // Drain accept queue
@@ -401,7 +421,8 @@ fn writeAllFd(fd: i32, data: string): bool {
                         conns[cfd as usize].read_len = 0;
                         let cev = EpollEventC{
                             events: EPOLLIN | EPOLLRDHUP,
-                            data_u64: cfd as u64,
+                            data_lo: cfd as u32,
+                            data_hi: 0,
                         };
                         * = epoll_ctl(epfd, EPOLL_CTL_ADD, cfd, *cev);
                     }
@@ -511,6 +532,7 @@ pub struct ServerConfig {
     port: u16 = 3000;
     workers: usize = 1;
     backlog: i32 = 4096;
+    pin_cpu: bool = true;
 }
 
 pub struct WebServer {
@@ -551,6 +573,8 @@ pub struct WebServer {
                 app: app,
                 port: _.config.port,
                 backlog: _.config.backlog,
+                worker_id: i,
+                pin_cpu: _.config.pin_cpu,
                 stop_flag: *_.stop_flag,
                 ready_count: *_.ready_count,
             };

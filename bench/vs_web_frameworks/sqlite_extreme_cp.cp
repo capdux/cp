@@ -1,0 +1,334 @@
+// SQLite Extreme Single-Thread & 8-Core Multi-Thread WAL Benchmark (`cap:sqlite`)
+// Statically linked against source-compiled `temp/sqlite3_extreme.o` with:
+//   -O3 -march=native -DSQLITE_THREADSAFE=2 -DSQLITE_DEFAULT_MEMSTATUS=0
+//   -DSQLITE_OMIT_PROGRESS_CALLBACK -DSQLITE_DQS=0 -DSQLITE_MAX_EXPR_DEPTH=0 -DSQLITE_OMIT_DEPRECATED
+//
+// Modes via env `SQLITE_BENCH_MODE`:
+//   - "write"       : 100,000 order inserts in 1 transaction with prepared statement reuse
+//   - "point_read"  : 200,000 indexed point lookups (`SELECT amount FROM orders WHERE id = ?`)
+//   - "wal_read_8t" : 8 pthread workers x 200,000 = 1,600,000 concurrent WAL point reads
+
+import {
+    Database,
+    SQLITE_OPEN_READONLY,
+    SQLITE_OPEN_READWRITE,
+    SQLITE_OPEN_CREATE,
+    SQLITE_OPEN_NOMUTEX,
+} from "cap:sqlite";
+import { HwTimer } from "cap:bench";
+import std from "std";
+
+extern fn getenv(name: [*:0]const u8): [*:0]const u8?;
+extern fn atoi(s: [*:0]const u8): i32;
+extern fn sched_yield(): i32;
+extern fn pthread_create(
+    thread: *usize,
+    attr: *const u8?,
+    start_routine: *const fn (*u8?) callconv(.c) *u8?,
+    arg: *u8?,
+): i32;
+extern fn pthread_join(thread: usize, retval: *u8?): i32;
+
+const ORDERS: i64 = 100000;
+const POINT_QUERIES: i64 = 200000;
+const MAX_THREADS: usize = 32;
+const ORDER_NOTE: []const u8 = "order_payload_item";
+
+const PRAGMA_WRITE_SQL: []const u8 =
+    "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
+
+const PRAGMA_READ_SQL: []const u8 =
+    "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+
+const SELECT_SQL: []const u8 = "SELECT amount FROM orders WHERE id = ?;";
+
+fn envStr(name: [*:0]const u8, default_val: []const u8): []const u8 {
+    if (v := getenv(name)) {
+        return std.mem.span(v);
+    }
+    return default_val;
+}
+
+fn envInt(name: [*:0]const u8, default_val: i32): i32 {
+    if (v := getenv(name)) {
+        const n = atoi(v);
+        if (n > 0) return n;
+    }
+    return default_val;
+}
+
+fn strEq(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+fn readVmHwmKb(): u64 {
+    let buf: [4096]u8 = undefined;
+    let kb: u64 = 0;
+    zig {
+        const fp = std.c.fopen("/proc/self/status", "r") orelse return 0;
+        defer _ = std.c.fclose(fp);
+        const n = std.c.fread(&buf, 1, buf.len, fp);
+        const text = buf[0..n];
+        if (std.mem.indexOf(u8, text, "VmHWM:")) |pos| {
+            var p = pos + 6;
+            while (p < text.len and (text[p] == ' ' or text[p] == '\t')) : (p += 1) {}
+            while (p < text.len and text[p] >= '0' and text[p] <= '9') : (p += 1) {
+                kb = kb * 10 + @as(u64, text[p] - '0');
+            }
+        }
+    }
+    return kb;
+}
+
+fn runWrite(db_path: []const u8) {
+    let db = Database.open(
+        db_path,
+        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
+    ) catch {
+        std.debug.print("{{\"error\":\"open_write_failed\"}}\n", .{});
+        return;
+    };
+    defer db.close();
+
+    db.exec(PRAGMA_WRITE_SQL) catch {
+        std.debug.print("{{\"error\":\"pragma_write_failed\"}}\n", .{});
+        return;
+    };
+
+    db.exec("DROP TABLE IF EXISTS orders;") catch return;
+    db.exec("CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, amount INTEGER NOT NULL, status INTEGER NOT NULL, note TEXT NOT NULL);") catch return;
+
+    const t0 = HwTimer.nowNs();
+    db.begin() catch return;
+    {
+        let ins = db.prepare("INSERT INTO orders (id, customer_id, amount, status, note) VALUES (?, ?, ?, ?, ?);") catch return;
+        defer ins.close();
+        let i: i64 = 1;
+        while (i <= ORDERS) : (i += 1) {
+            ins.bindInt(1, i) catch return;
+            ins.bindInt(2, @mod(i * 37, 10000) + 1) catch return;
+            ins.bindInt(3, @mod(i * 131, 50000) + 100) catch return;
+            ins.bindInt(4, @mod(i, 4)) catch return;
+            ins.bindText(5, ORDER_NOTE) catch return;
+            ins.run() catch return;
+        }
+    }
+    db.commit() catch return;
+    const t1 = HwTimer.nowNs();
+
+    let checksum: i64 = 0;
+    {
+        let chk = db.prepare("SELECT COUNT(*), SUM(amount) FROM orders;") catch return;
+        defer chk.close();
+        if (chk.next()) {
+            checksum = chk.columnInt(0) + chk.columnInt(1);
+        }
+    }
+
+    const elapsed_ms: f64 = @as(f64, @floatFromInt(t1 - t0)) / 1_000_000.0;
+    const ops_per_sec: f64 = @as(f64, @floatFromInt(ORDERS)) / (elapsed_ms / 1000.0);
+    const peak_rss_mb: f64 = @as(f64, @floatFromInt(readVmHwmKb())) / 1024.0;
+
+    std.debug.print(
+        "{{\"mode\":\"write\",\"rows\":{d},\"elapsed_ms\":{d:.3},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
+        .{ ORDERS, elapsed_ms, ops_per_sec, peak_rss_mb, checksum },
+    );
+}
+
+fn runPointRead(db_path: []const u8) {
+    let db = Database.open(db_path, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX) catch {
+        std.debug.print("{{\"error\":\"open_read_failed\"}}\n", .{});
+        return;
+    };
+    defer db.close();
+
+    db.exec(PRAGMA_READ_SQL) catch {
+        std.debug.print("{{\"error\":\"pragma_read_failed\"}}\n", .{});
+        return;
+    };
+
+    let sel = db.prepare(SELECT_SQL) catch {
+        std.debug.print("{{\"error\":\"prepare_read_failed\"}}\n", .{});
+        return;
+    };
+    defer sel.close();
+
+    let checksum: i64 = 0;
+    const t0 = HwTimer.nowNs();
+    let k: i64 = 0;
+    while (k < POINT_QUERIES) : (k += 1) {
+        const target_id = @mod(k * 7919, ORDERS) + 1;
+        sel.bindInt(1, target_id) catch return;
+        if (sel.next()) {
+            checksum += sel.columnInt(0);
+        }
+        sel.reset() catch return;
+    }
+    const t1 = HwTimer.nowNs();
+
+    const elapsed_ms: f64 = @as(f64, @floatFromInt(t1 - t0)) / 1_000_000.0;
+    const ops_per_sec: f64 = @as(f64, @floatFromInt(POINT_QUERIES)) / (elapsed_ms / 1000.0);
+    const peak_rss_mb: f64 = @as(f64, @floatFromInt(readVmHwmKb())) / 1024.0;
+
+    std.debug.print(
+        "{{\"mode\":\"point_read\",\"queries\":{d},\"elapsed_ms\":{d:.3},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
+        .{ POINT_QUERIES, elapsed_ms, ops_per_sec, peak_rss_mb, checksum },
+    );
+}
+
+struct WalWorkerCtx {
+    db_path: []const u8,
+    tid: i64,
+    queries: i64,
+    ready_count: *i32,
+    go_flag: *i32,
+    checksum: i64,
+    err_code: i32,
+}
+
+@c fn walReaderWorker(arg: *u8?): *u8? {
+    if (arg == null) return null;
+    unsafe {
+        const ctx: *WalWorkerCtx = @ptrCast(@alignCast(arg.?));
+        const db_path = ctx.db_path;
+
+        let db = Database.open(db_path, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX) catch {
+            ctx.err_code = 1;
+            * = @atomicRmw(i32, ctx.ready_count, .Add, 1, .seq_cst);
+            return null;
+        };
+        defer db.close();
+
+        db.exec(PRAGMA_READ_SQL) catch {
+            ctx.err_code = 2;
+            * = @atomicRmw(i32, ctx.ready_count, .Add, 1, .seq_cst);
+            return null;
+        };
+
+        let sel = db.prepare(SELECT_SQL) catch {
+            ctx.err_code = 3;
+            * = @atomicRmw(i32, ctx.ready_count, .Add, 1, .seq_cst);
+            return null;
+        };
+        defer sel.close();
+
+        * = @atomicRmw(i32, ctx.ready_count, .Add, 1, .seq_cst);
+        while (@atomicLoad(i32, ctx.go_flag, .acquire) == 0) {
+            * = sched_yield();
+        }
+
+        let local_sum: i64 = 0;
+        const offset: i64 = ctx.tid * 131071;
+        let k: i64 = 0;
+        while (k < ctx.queries) : (k += 1) {
+            const target_id = @mod((k + offset) * 7919, ORDERS) + 1;
+            sel.bindInt(1, target_id) catch {
+                ctx.err_code = 4;
+                break;
+            };
+            if (sel.next()) {
+                local_sum += sel.columnInt(0);
+            }
+            sel.reset() catch {
+                ctx.err_code = 5;
+                break;
+            };
+        }
+        ctx.checksum = local_sum;
+    }
+    return null;
+}
+
+fn runWalReadMulti(db_path: []const u8, num_threads: usize) {
+    let n: usize = num_threads;
+    if (n < (1 as usize)) {
+        n = 1 as usize;
+    }
+    if (n > MAX_THREADS) {
+        n = MAX_THREADS;
+    }
+
+    let threads: [MAX_THREADS]usize = [0; MAX_THREADS];
+    let ctxs: [MAX_THREADS]WalWorkerCtx = undefined;
+    let ready_count: i32 = 0;
+    let go_flag: i32 = 0;
+
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        ctxs[i] = WalWorkerCtx{
+            db_path: db_path,
+            tid: @intCast(i),
+            queries: POINT_QUERIES,
+            ready_count: *ready_count,
+            go_flag: *go_flag,
+            checksum: 0,
+            err_code: 0,
+        };
+        unsafe {
+            const rc = pthread_create(
+                *threads[i],
+                null,
+                walReaderWorker,
+                @ptrCast(*ctxs[i]),
+            );
+            if (rc != 0) {
+                std.debug.print("{{\"error\":\"pthread_create_failed\"}}\n", .{});
+                return;
+            }
+        }
+    }
+
+    while (@atomicLoad(i32, *ready_count, .acquire) < @as(i32, @intCast(n))) {
+        * = sched_yield();
+    }
+
+    const t0 = HwTimer.nowNs();
+    @atomicStore(i32, *go_flag, 1, .release);
+
+    i = 0;
+    while (i < n) : (i += 1) {
+        * = pthread_join(threads[i], null);
+    }
+    const t1 = HwTimer.nowNs();
+
+    let total_checksum: i64 = 0;
+    i = 0;
+    while (i < n) : (i += 1) {
+        if (ctxs[i].err_code != 0) {
+            std.debug.print("{{\"error\":\"worker_failed\",\"tid\":{d},\"code\":{d}}}\n", .{ i, ctxs[i].err_code });
+            return;
+        }
+        total_checksum += ctxs[i].checksum;
+    }
+
+    const total_queries: i64 = @as(i64, @intCast(n)) * POINT_QUERIES;
+    const elapsed_ms: f64 = @as(f64, @floatFromInt(t1 - t0)) / 1_000_000.0;
+    const ops_per_sec: f64 = @as(f64, @floatFromInt(total_queries)) / (elapsed_ms / 1000.0);
+    const peak_rss_mb: f64 = @as(f64, @floatFromInt(readVmHwmKb())) / 1024.0;
+
+    std.debug.print(
+        "{{\"mode\":\"wal_read_8t\",\"threads\":{d},\"queries\":{d},\"elapsed_ms\":{d:.3},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
+        .{ n, total_queries, elapsed_ms, ops_per_sec, peak_rss_mb, total_checksum },
+    );
+}
+
+fn main() {
+    const mode = envStr("SQLITE_BENCH_MODE", "write");
+    const db_path = envStr("SQLITE_BENCH_DB", "/tmp/cp_sqlite_extreme.db");
+    const threads: usize = @intCast(envInt("SQLITE_BENCH_THREADS", 8));
+
+    if (strEq(mode, "write")) {
+        runWrite(db_path);
+    } else if (strEq(mode, "point_read")) {
+        runPointRead(db_path);
+    } else if (strEq(mode, "wal_read_8t")) {
+        runWalReadMulti(db_path, threads);
+    } else {
+        std.debug.print("{{\"error\":\"unknown_mode\"}}\n", .{});
+    }
+}

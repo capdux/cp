@@ -590,6 +590,13 @@ export {
 } from "./server.cp";
 
 export {
+    WS_SERVER_MAX_WORKERS,
+    WsServerConfig,
+    WsServer,
+    simdMaskXor,
+} from "./wsServer.cp";
+
+export {
     StaticRouteSpec,
     ComptimeRouteTable,
     TraceSpan,

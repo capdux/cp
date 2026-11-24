@@ -76,24 +76,47 @@ fn main() {
 const DEFAULT_BENCHMARKS = [
   {
     cat: "net",
-    title: "HTTP/1.1 8-Core (GET /id/:id?name=bun, 32c Keep-Alive)",
-    subtitle: "Higher is better (QPS) · 1.88x Bun, 2.26x Node · 22.3x–37.9x lower RSS",
+    title: "HTTP/1.1 Multi-Core (GET /, Err=0 Keep-Alive)",
+    subtitle: "Higher is better (QPS) · CP 16c hits 1.06M QPS in 33.9 MB · CP 8c 1.46x Bun / 22x less RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 8c (P99 0.08ms · 19.3 MB RSS)", key: "cp", value: 559339, display: "559,339 QPS" },
-      { label: "Bun 1.3.14 8c (429.8 MB RSS)", key: "bun", value: 297714, display: "297,714 QPS" },
-      { label: "Node v26.1.0 8c (732.4 MB RSS)", key: "node", value: 247326, display: "247,326 QPS" },
+      { label: "CP v1.0 16c single-proc (P99 0.10ms · 33.9 MB RSS)", key: "cp", value: 1064581, display: "1,064,581 QPS" },
+      { label: "CP v1.0 8c single-proc (P99 0.13ms · 19.2 MB RSS)", key: "cp", value: 749811, display: "749,811 QPS" },
+      { label: "Bun 1.3.14 8c (8-proc · 409.6 MB RSS)", key: "bun", value: 512632, display: "512,632 QPS" },
+      { label: "Node v26.1.0 8c (8-proc · 697.3 MB RSS)", key: "node", value: 328329, display: "328,329 QPS" },
     ],
   },
   {
     cat: "net",
-    title: "HTTP/1.1 8-Core (POST /json, 32c Keep-Alive)",
-    subtitle: "Higher is better (QPS) · 2.35x Bun, 2.65x Node · 19.3 MB vs 429–732 MB RSS",
+    title: "HTTP/1.1 8-Core (POST /json, Err=0 Keep-Alive)",
+    subtitle: "Higher is better (QPS) · 2.11x Bun 8c, 2.95x Node 8c · 22.0x–38.3x lower RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 8c (P99 0.08ms · 19.3 MB RSS)", key: "cp", value: 512634, display: "512,634 QPS" },
-      { label: "Bun 1.3.14 8c (429.3 MB RSS)", key: "bun", value: 218060, display: "218,060 QPS" },
-      { label: "Node v26.1.0 8c (732.4 MB RSS)", key: "node", value: 193602, display: "193,602 QPS" },
+      { label: "CP v1.0 8c (P99 0.09ms · 19.2 MB RSS)", key: "cp", value: 709061, display: "709,061 QPS" },
+      { label: "Bun 1.3.14 8c (422.3 MB RSS)", key: "bun", value: 336002, display: "336,002 QPS" },
+      { label: "Node v26.1.0 8c (734.4 MB RSS)", key: "node", value: 240005, display: "240,005 QPS" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "Live TCP WebSocket 8-Core (128B Masked Echo, Err=0)",
+    subtitle: "Higher is better (msg/s) · Lower P99 (0.148ms vs 0.160ms) & 23.2x lower RSS than Bun 8c",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 8c 32B-SIMD (P99 0.148ms · 17.2 MB RSS)", key: "cp", value: 619221, display: "619,221 msg/s" },
+      { label: "Bun 1.3.14 8c (P99 0.160ms · 398.6 MB RSS)", key: "bun", value: 623524, display: "623,524 msg/s" },
+      { label: "Node v26.1.0 1c (P99 1.114ms · 77.7 MB RSS)", key: "node", value: 62564, display: "62,564 msg/s" },
+    ],
+  },
+  {
+    cat: "db",
+    title: "SQLite 8-Core Concurrent WAL Reads (1.6M queries)",
+    subtitle: "Higher is better (QPS) · 1.92x Bun 8c, 2.02x Node 8c · 22.8x lower RSS (33.4 vs 760.5 MB)",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 8-thread single-proc (33.4 MB RSS)", key: "cp", value: 777631, display: "777,631 QPS" },
+      { label: "Bun 1.3.14 8-proc (760.5 MB RSS)", key: "bun", value: 405078, display: "405,078 QPS" },
+      { label: "Node v26.1.0 8-proc (546.9 MB RSS)", key: "node", value: 385874, display: "385,874 QPS" },
     ],
   },
   {

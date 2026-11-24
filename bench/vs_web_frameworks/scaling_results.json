@@ -1,0 +1,290 @@
+{
+  "cp_1c": {
+    "port": 18201,
+    "scenarios": {
+      "get_root": {
+        "qps": 112549.95,
+        "p50_ms": 0.132,
+        "p99_ms": 0.269,
+        "ok": 281478,
+        "err": 0,
+        "mb_per_sec": 11.27,
+        "duration_sec": 2.501,
+        "rss_mb": 6.44
+      },
+      "get_id": {
+        "qps": 111199.26,
+        "p50_ms": 0.134,
+        "p99_ms": 0.273,
+        "ok": 278094,
+        "err": 0,
+        "mb_per_sec": 14.32,
+        "duration_sec": 2.501,
+        "rss_mb": 6.44
+      },
+      "post_json": {
+        "qps": 108623.07,
+        "p50_ms": 0.134,
+        "p99_ms": 0.277,
+        "ok": 271653,
+        "err": 0,
+        "mb_per_sec": 13.16,
+        "duration_sec": 2.501,
+        "rss_mb": 6.44
+      }
+    },
+    "peak_rss_mb": 6.44
+  },
+  "cp_4c": {
+    "port": 18204,
+    "scenarios": {
+      "get_root": {
+        "qps": 438480.23,
+        "p50_ms": 0.079,
+        "p99_ms": 0.176,
+        "ok": 1096756,
+        "err": 0,
+        "mb_per_sec": 43.91,
+        "duration_sec": 2.501,
+        "rss_mb": 11.91
+      },
+      "get_id": {
+        "qps": 433014.83,
+        "p50_ms": 0.064,
+        "p99_ms": 0.165,
+        "ok": 1083118,
+        "err": 0,
+        "mb_per_sec": 55.75,
+        "duration_sec": 2.501,
+        "rss_mb": 11.92
+      },
+      "post_json": {
+        "qps": 437853.17,
+        "p50_ms": 0.071,
+        "p99_ms": 0.147,
+        "ok": 1095194,
+        "err": 0,
+        "mb_per_sec": 53.03,
+        "duration_sec": 2.501,
+        "rss_mb": 11.92
+      }
+    },
+    "peak_rss_mb": 11.92
+  },
+  "cp_8c": {
+    "port": 18208,
+    "scenarios": {
+      "get_root": {
+        "qps": 749811.35,
+        "p50_ms": 0.037,
+        "p99_ms": 0.135,
+        "ok": 1875635,
+        "err": 0,
+        "mb_per_sec": 75.08,
+        "duration_sec": 2.501,
+        "rss_mb": 19.2
+      },
+      "get_id": {
+        "qps": 692110.84,
+        "p50_ms": 0.037,
+        "p99_ms": 0.13,
+        "ok": 1731185,
+        "err": 0,
+        "mb_per_sec": 89.11,
+        "duration_sec": 2.501,
+        "rss_mb": 19.23
+      },
+      "post_json": {
+        "qps": 709061.08,
+        "p50_ms": 0.039,
+        "p99_ms": 0.094,
+        "ok": 1773636,
+        "err": 0,
+        "mb_per_sec": 85.88,
+        "duration_sec": 2.501,
+        "rss_mb": 19.23
+      }
+    },
+    "peak_rss_mb": 19.23
+  },
+  "cp_16c": {
+    "port": 18216,
+    "scenarios": {
+      "get_root": {
+        "qps": 1064580.86,
+        "p50_ms": 0.04,
+        "p99_ms": 0.099,
+        "ok": 2663733,
+        "err": 0,
+        "mb_per_sec": 106.6,
+        "duration_sec": 2.502,
+        "rss_mb": 33.88
+      },
+      "get_id": {
+        "qps": 983948.41,
+        "p50_ms": 0.04,
+        "p99_ms": 0.129,
+        "ok": 2461879,
+        "err": 0,
+        "mb_per_sec": 126.68,
+        "duration_sec": 2.502,
+        "rss_mb": 33.93
+      },
+      "post_json": {
+        "qps": 949310.09,
+        "p50_ms": 0.046,
+        "p99_ms": 0.109,
+        "ok": 2375147,
+        "err": 0,
+        "mb_per_sec": 114.98,
+        "duration_sec": 2.502,
+        "rss_mb": 33.93
+      }
+    },
+    "peak_rss_mb": 33.93
+  },
+  "bun_1c": {
+    "port": 18221,
+    "scenarios": {
+      "get_root": {
+        "qps": 72933.04,
+        "p50_ms": 0.189,
+        "p99_ms": 0.632,
+        "ok": 182407,
+        "err": 0,
+        "mb_per_sec": 8.14,
+        "duration_sec": 2.501,
+        "rss_mb": 47.82
+      },
+      "get_id": {
+        "qps": 68699.64,
+        "p50_ms": 0.208,
+        "p99_ms": 0.608,
+        "ok": 171818,
+        "err": 0,
+        "mb_per_sec": 9.63,
+        "duration_sec": 2.501,
+        "rss_mb": 48.72
+      },
+      "post_json": {
+        "qps": 60546.33,
+        "p50_ms": 0.235,
+        "p99_ms": 0.678,
+        "ok": 151417,
+        "err": 0,
+        "mb_per_sec": 8.03,
+        "duration_sec": 2.501,
+        "rss_mb": 49.62
+      }
+    },
+    "peak_rss_mb": 49.62
+  },
+  "bun_8c": {
+    "port": 18228,
+    "scenarios": {
+      "get_root": {
+        "qps": 512632.13,
+        "p50_ms": 0.049,
+        "p99_ms": 0.133,
+        "ok": 1282281,
+        "err": 0,
+        "mb_per_sec": 57.2,
+        "duration_sec": 2.501,
+        "rss_mb": 409.62
+      },
+      "get_id": {
+        "qps": 413254.36,
+        "p50_ms": 0.067,
+        "p99_ms": 0.219,
+        "ok": 1033656,
+        "err": 0,
+        "mb_per_sec": 57.93,
+        "duration_sec": 2.501,
+        "rss_mb": 415.4
+      },
+      "post_json": {
+        "qps": 336001.63,
+        "p50_ms": 0.08,
+        "p99_ms": 0.314,
+        "ok": 840525,
+        "err": 0,
+        "mb_per_sec": 44.54,
+        "duration_sec": 2.502,
+        "rss_mb": 422.32
+      }
+    },
+    "peak_rss_mb": 422.32
+  },
+  "node_1c": {
+    "port": 18231,
+    "scenarios": {
+      "get_root": {
+        "qps": 42300.29,
+        "p50_ms": 0.361,
+        "p99_ms": 0.526,
+        "ok": 105817,
+        "err": 0,
+        "mb_per_sec": 6.09,
+        "duration_sec": 2.502,
+        "rss_mb": 82.08
+      },
+      "get_id": {
+        "qps": 42459.76,
+        "p50_ms": 0.37,
+        "p99_ms": 0.485,
+        "ok": 106188,
+        "err": 0,
+        "mb_per_sec": 7.33,
+        "duration_sec": 2.501,
+        "rss_mb": 82.24
+      },
+      "post_json": {
+        "qps": 31915.71,
+        "p50_ms": 0.486,
+        "p99_ms": 0.946,
+        "ok": 79825,
+        "err": 0,
+        "mb_per_sec": 5.27,
+        "duration_sec": 2.501,
+        "rss_mb": 84.54
+      }
+    },
+    "peak_rss_mb": 84.54
+  },
+  "node_8c": {
+    "port": 18238,
+    "scenarios": {
+      "get_root": {
+        "qps": 328329.02,
+        "p50_ms": 0.076,
+        "p99_ms": 0.199,
+        "ok": 822072,
+        "err": 0,
+        "mb_per_sec": 47.28,
+        "duration_sec": 2.504,
+        "rss_mb": 697.32
+      },
+      "get_id": {
+        "qps": 302385.35,
+        "p50_ms": 0.097,
+        "p99_ms": 0.266,
+        "ok": 756412,
+        "err": 0,
+        "mb_per_sec": 52.2,
+        "duration_sec": 2.501,
+        "rss_mb": 722.96
+      },
+      "post_json": {
+        "qps": 240004.8,
+        "p50_ms": 0.104,
+        "p99_ms": 0.269,
+        "ok": 600379,
+        "err": 0,
+        "mb_per_sec": 39.6,
+        "duration_sec": 2.502,
+        "rss_mb": 734.41
+      }
+    },
+    "peak_rss_mb": 734.41
+  }
+}
