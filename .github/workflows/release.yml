@@ -1,0 +1,214 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (e.g. v1.0.0)"
+        required: false
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x86_64
+            os: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+            zig_target: x86_64-linux-gnu
+            archive_ext: tar.gz
+            exe_ext: ""
+            cross_linux_arm64: false
+          - target: linux-aarch64
+            os: ubuntu-latest
+            rust_target: aarch64-unknown-linux-gnu
+            zig_target: aarch64-linux-gnu
+            archive_ext: tar.gz
+            exe_ext: ""
+            cross_linux_arm64: true
+          - target: macos-aarch64
+            os: macos-14
+            rust_target: aarch64-apple-darwin
+            zig_target: aarch64-macos
+            archive_ext: tar.gz
+            exe_ext: ""
+            cross_linux_arm64: false
+          - target: macos-x86_64
+            os: macos-14
+            rust_target: x86_64-apple-darwin
+            zig_target: x86_64-macos
+            archive_ext: tar.gz
+            exe_ext: ""
+            cross_linux_arm64: false
+          - target: windows-x86_64
+            os: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            zig_target: x86_64-windows-msvc
+            archive_ext: zip
+            exe_ext: ".exe"
+            cross_linux_arm64: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: meta
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            VER="${GITHUB_REF_NAME}"
+          else
+            VER="${{ github.event.inputs.version || 'v1.0.0' }}"
+          fi
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux aarch64 cross-linker
+        if: matrix.cross_linux_arm64
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Cache Cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cpc
+          key: release-${{ matrix.target }}
+
+      - name: Setup Zig 0.17.0
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0
+
+      - name: Build cpc (Release)
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: cargo build --release --manifest-path cpc/Cargo.toml --target ${{ matrix.rust_target }}
+
+      - name: Build cap (ReleaseFast)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd cap
+          zig build -Doptimize=ReleaseFast -Dtarget=${{ matrix.zig_target }}
+
+      - name: Package release archive (Unix)
+        if: matrix.archive_ext == 'tar.gz'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${{ steps.meta.outputs.version }}"
+          ARCHIVE="cp-${VER}-${{ matrix.target }}.tar.gz"
+          STAGE="$(mktemp -d)"
+          trap 'rm -rf "$STAGE"' EXIT
+
+          mkdir -p "$STAGE/bin" "$STAGE/lib" dist
+          install -m 755 "cpc/target/${{ matrix.rust_target }}/release/cpc" "$STAGE/bin/cpc"
+          install -m 755 "cap/zig-out/cap" "$STAGE/bin/cap"
+
+          tar -cf - \
+            --exclude='*.a' \
+            --exclude='*.so' \
+            --exclude='*.dylib' \
+            --exclude='*.dll' \
+            --exclude='*.o' \
+            --exclude='*.zcs' \
+            --exclude='.cap' \
+            --exclude='.zig-cache' \
+            -C lib . | tar -xf - -C "$STAGE/lib"
+
+          cp LICENSE-MIT LICENSE-APACHE THIRD_PARTY_NOTICES.md README.md "$STAGE/"
+          tar -czf "dist/${ARCHIVE}" -C "$STAGE" .
+          ls -lh "dist/${ARCHIVE}"
+
+      - name: Package release archive (Windows)
+        if: matrix.archive_ext == 'zip'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ver = "${{ steps.meta.outputs.version }}"
+          $archive = "cp-$ver-${{ matrix.target }}.zip"
+          $stage = Join-Path $env:TEMP ("cp-stage-" + [guid]::NewGuid().ToString("N"))
+          New-Item -ItemType Directory -Force -Path "$stage\bin", "$stage\lib", "dist" | Out-Null
+
+          try {
+            Copy-Item -Force "cpc\target\${{ matrix.rust_target }}\release\cpc.exe" "$stage\bin\cpc.exe"
+            Copy-Item -Force "cap\zig-out\cap.exe" "$stage\bin\cap.exe"
+
+            $excludeExts = @(".a", ".so", ".dylib", ".dll", ".o", ".zcs")
+            $libRoot = (Resolve-Path "lib").Path
+            Get-ChildItem -Path $libRoot -Recurse -File | Where-Object {
+              ($excludeExts -notcontains $_.Extension.ToLowerInvariant()) -and
+              ($_.FullName -notmatch '[\\/](\.cap|\.zig-cache)[\\/]')
+            } | ForEach-Object {
+              $rel = $_.FullName.Substring($libRoot.Length).TrimStart('\', '/')
+              $dest = Join-Path "$stage\lib" $rel
+              $destDir = Split-Path -Parent $dest
+              if (-not (Test-Path $destDir)) {
+                New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+              }
+              Copy-Item -Force $_.FullName $dest
+            }
+
+            foreach ($doc in @("LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY_NOTICES.md", "README.md")) {
+              Copy-Item -Force $doc "$stage\$doc"
+            }
+
+            Compress-Archive -Path "$stage\*" -DestinationPath "dist\$archive" -Force
+            Get-Item "dist\$archive" | Select-Object Name, Length
+          } finally {
+            Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+          }
+
+      - name: Upload platform archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/cp-*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all release archives
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS.txt
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum cp-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/cp-*
+            dist/SHA256SUMS.txt

@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x86_64
+            exe_ext: ""
+          - os: macos-latest
+            target: macos-aarch64
+            exe_ext: ""
+          - os: windows-latest
+            target: windows-x86_64
+            exe_ext: ".exe"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cpc
+
+      - name: Setup Zig 0.17.0
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0
+
+      - name: Build cpc (Release)
+        run: cargo build --release --manifest-path cpc/Cargo.toml
+
+      - name: Build cap (ReleaseFast)
+        shell: bash
+        run: |
+          cd cap
+          zig build -Doptimize=ReleaseFast
+
+      - name: Install toolchain to local PATH & verify versions (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.cap/bin" cap/bin
+          install -m 755 cpc/target/release/cpc "$HOME/.cap/bin/cpc"
+          install -m 755 cap/zig-out/cap "$HOME/.cap/bin/cap"
+          install -m 755 cpc/target/release/cpc cap/bin/cpc
+          install -m 755 cap/zig-out/cap cap/bin/cap
+          echo "$HOME/.cap/bin" >> "$GITHUB_PATH"
+          "$HOME/.cap/bin/cpc" --version
+          "$HOME/.cap/bin/cap" --version
+
+      - name: Install toolchain to local PATH & verify versions (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $binDir = Join-Path $env:USERPROFILE ".cap\bin"
+          New-Item -ItemType Directory -Force -Path $binDir, "cap\bin" | Out-Null
+          Copy-Item -Force "cpc\target\release\cpc.exe" (Join-Path $binDir "cpc.exe")
+          Copy-Item -Force "cap\zig-out\cap.exe" (Join-Path $binDir "cap.exe")
+          Copy-Item -Force "cpc\target\release\cpc.exe" "cap\bin\cpc.exe"
+          Copy-Item -Force "cap\zig-out\cap.exe" "cap\bin\cap.exe"
+          Add-Content -Path $env:GITHUB_PATH -Value $binDir
+          & (Join-Path $binDir "cpc.exe") --version
+          & (Join-Path $binDir "cap.exe") --version
+
+      - name: Run core regression quick-test suite (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          QUICK_DIR="$(mktemp -d)"
+          trap 'rm -rf "$QUICK_DIR"' EXIT
+          for tf in \
+            cap/test/test_actor.cp \
+            cap/test/test_base64_production_deep.cp \
+            cap/test/test_json.cp; do
+            if [ -f "$tf" ]; then
+              cp "$tf" "$QUICK_DIR/"
+            fi
+          done
+          cap test "$QUICK_DIR" -m
+
+      - name: License compliance audit (Zero-Copyleft)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+
+          required = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY_NOTICES.md"]
+          missing = [f for f in required if not os.path.isfile(f)]
+          if missing:
+              print(f"[FAIL] Missing required license files: {missing}")
+              sys.exit(1)
+
+          spdx_re = re.compile(r"SPDX-License-Identifier:\s*([^\n]+)", re.IGNORECASE)
+          copyleft_re = re.compile(r"\b(A?L?GPL(?:-[0-9.]+)?(?:-only|-or-later)?)\b", re.IGNORECASE)
+          scan_roots = ["lib", "cpc/src", "cap/src"]
+          exts = (".cp", ".rs", ".zig", ".c", ".h")
+
+          copyleft_violations = []
+          for root_dir in scan_roots:
+              if not os.path.isdir(root_dir):
+                  continue
+              for dirpath, _, filenames in os.walk(root_dir):
+                  for fn in filenames:
+                      if not fn.endswith(exts):
+                          continue
+                      path = os.path.join(dirpath, fn)
+                      with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                          head = "".join(f.readline() for _ in range(30))
+                      for m in spdx_re.finditer(head):
+                          if copyleft_re.search(m.group(1)):
+                              copyleft_violations.append((path, m.group(1).strip()))
+
+          print(f"copyleft_violations={len(copyleft_violations)}")
+          if copyleft_violations:
+              for path, lic in copyleft_violations[:20]:
+                  print(f"  VIOLATION: {path} -> {lic}")
+              sys.exit(1)
+          print("[PASS] Zero-copyleft compliance verified.")
+          PY
