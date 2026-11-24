@@ -722,3 +722,5 @@ git status --porcelain cpc_dev/src
    - 构建部署 `cap` 统一调用 `bash scripts/sync_cap.sh [debug|release|fmt]`（一键完成可选 `zig fmt` + `zig build` + 原子部署至 `/root/.cap/bin/cap`，成功仅输出 1 行 52B；失败自动折叠冗长的 `failed command:` 完整参数行与重复 `Build Summary` 树，实测将典型报错从 1,346B 压至 277B，降幅 79.4%），禁止再手写长串 `cd ... && zig build && cp ... && mv ...`。
 8. **大批量文件 Git 提交静默输出节流（实测降幅 99.4% 提交日志 Token，2026-11-25 Iteration 4）**：
    - 凡单次提交涉及 > 10 个新增/修改文件（如引入 C 生态包或批量重构），统一执行 `git commit -q -m "<msg>" && git show --stat --format="%h %s" HEAD | tail -n 3`，避免打印长达 13KB–26KB 的 `create mode 100644 ...` 文件刷屏（26,106B → ~120B，降幅 99.4%）。
+9. **统一 `RUSTFLAGS="-Awarnings"` 消除 `sync_cpc.sh` 指纹失效重编（实测将热修部署从 >120s 超时压至 ~3s，提速 >40x，2026-11-25 Iteration 5）**：
+   - `scripts/sync_cpc.sh` 已统一注入 `RUSTFLAGS="${RUSTFLAGS:--Awarnings}"`，与 Rule 5 保持完全一致的 Cargo 编译指纹，彻底消除 `cargo check`/`cargo build` 与 `sync_cpc.sh` 交替执行时触发全量依赖重编与 120s 超时重试（同时节省 2 轮重试上下文 Token）。

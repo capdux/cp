@@ -24,9 +24,9 @@ fi
 # 1. 清理残留的僵尸 cargo 进程，防止死锁
 pkill -f "cargo.*cpc/Cargo.toml" 2>/dev/null || true
 
-# 2. 后台执行构建并输出心跳点（防 agy 卡死且不消耗多余 token）
+# 2. 后台执行构建并输出心跳点（统一 RUSTFLAGS="-Awarnings" 与 Rule 5 对齐，消除 Cargo 指纹失效触发全量重编）
 echo -n "[1/2] 构建 cpc ($MODE) 二进制 "
-cargo build --manifest-path "$MANIFEST" $CARGO_FLAGS --message-format=short >"$BUILD_LOG" 2>&1 < /dev/null &
+RUSTFLAGS="${RUSTFLAGS:--Awarnings}" cargo build --manifest-path "$MANIFEST" $CARGO_FLAGS --message-format=short >"$BUILD_LOG" 2>&1 < /dev/null &
 BUILD_PID=$!
 
 ELAPSED=0
