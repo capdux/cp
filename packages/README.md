@@ -40,6 +40,8 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/ogg` | `1.3.5` | BSD-3-Clause | C static (`bin`) | Xiph Ogg audio/video bitstream container (36 KB) |
 | `@cap/sdl3` | `3.2.8` | Zlib | Prebuilt dynamic (`sys`) | Cross-platform window, audio, input & GPU abstraction (2.9 MB) |
 | `@cap/openblas` | `0.3.29` | BSD-3-Clause | Prebuilt dynamic (`sys`) | High-performance BLAS linear algebra / GEMM engine (5.0 MB) |
+| `@cap/freetype` | `2.13.3` | FTL | C static (`bin`) | Industry-standard font rasterizer & glyph engine |
+| `@cap/flac` | `1.4.3` | BSD-3-Clause | C static (`bin`) | Xiph lossless audio codec (`libFLAC`) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 

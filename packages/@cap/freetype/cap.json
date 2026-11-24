@@ -1,0 +1,43 @@
+{
+  "name": "@cap/freetype",
+  "ver": "2.13.3",
+  "description": "FreeType 2.13.3 industrial-standard TrueType/SFNT font rasterization engine for CP",
+  "main": "src/index.cp",
+  "license": "FTL",
+  "bin": {
+    "freetype": {
+      "path": "c",
+      "src": [
+        "src/base/ftbase.c",
+        "src/base/ftinit.c",
+        "src/base/ftsystem.c",
+        "src/base/ftdebug.c",
+        "src/base/ftbitmap.c",
+        "src/base/ftglyph.c",
+        "src/base/ftmm.c",
+        "src/truetype/truetype.c",
+        "src/sfnt/sfnt.c",
+        "src/smooth/smooth.c",
+        "src/raster/raster.c",
+        "src/autofit/autofit.c",
+        "src/psnames/psnames.c",
+        "src/pshinter/pshinter.c",
+        "freetype_ffi.c"
+      ],
+      "include": [
+        "include"
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DFT2_BUILD_LIBRARY"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

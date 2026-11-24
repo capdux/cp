@@ -1469,13 +1469,19 @@ fn appendLinkArgs(
             }
             if (!std.mem.startsWith(u8, native.zigTripleToTargetKey(target_triple), "windows")) {
                 for (native_deps.runtime_lib_dirs.items) |rdir| {
-                    const rdir_dup = try allocator.dupe(u8, rdir);
-                    if (allocated_libs_len.* < allocated_libs.len) {
-                        allocated_libs[allocated_libs_len.*] = rdir_dup;
-                        allocated_libs_len.* += 1;
+                    // Use single-arg -rpath=<dir> (or push -rpath without deduping the flag token)
+                    // so multiple prebuilt dynamic packages each preserve their own runtime search dir.
+                    if (argc.* + 2 < args_buf.len) {
+                        const rdir_dup = try allocator.dupe(u8, rdir);
+                        if (allocated_libs_len.* < allocated_libs.len) {
+                            allocated_libs[allocated_libs_len.*] = rdir_dup;
+                            allocated_libs_len.* += 1;
+                        }
+                        args_buf[argc.*] = "-rpath";
+                        argc.* += 1;
+                        args_buf[argc.*] = rdir_dup;
+                        argc.* += 1;
                     }
-                    addArg(args_buf, argc, "-rpath");
-                    addArg(args_buf, argc, rdir_dup);
                 }
             }
             if (native_deps.has_cpp) {

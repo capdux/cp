@@ -151,6 +151,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libogg 1.3.5** (`@cap/ogg`) | <https://github.com/xiph/ogg> | BSD-3-Clause | `packages/@cap/ogg/` | Copyright (c) 2002-2021 Xiph.Org Foundation |
 | **SDL3 3.2.8** (`@cap/sdl3`) | <https://github.com/libsdl-org/SDL> | Zlib | `packages/@cap/sdl3/` | Copyright (c) 1997-2025 Sam Lantinga |
 | **OpenBLAS 0.3.29** (`@cap/openblas`) | <https://github.com/OpenMathLib/OpenBLAS> | BSD-3-Clause | `packages/@cap/openblas/` | Copyright (c) 2011-2025 The OpenBLAS Project |
+| **FreeType 2.13.3** (`@cap/freetype`) | <https://freetype.org/> | FTL | `packages/@cap/freetype/` | Copyright (c) 1996-2024 David Turner, Robert Wilhelm, Werner Lemberg |
+| **libFLAC 1.4.3** (`@cap/flac`) | <https://github.com/xiph/flac> | BSD-3-Clause | `packages/@cap/flac/` | Copyright (c) 2000-2024 Josh Coalson & Xiph.Org Foundation |
 
 ---
 

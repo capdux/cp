@@ -1,0 +1,54 @@
+{
+  "name": "@cap/flac",
+  "ver": "1.4.3",
+  "description": "Xiph libFLAC 1.4.3 lossless audio encoder and decoder engine for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "flac": {
+      "path": "c",
+      "src": [
+        "bitmath.c",
+        "bitreader.c",
+        "bitwriter.c",
+        "cpu.c",
+        "crc.c",
+        "fixed.c",
+        "float.c",
+        "format.c",
+        "lpc.c",
+        "md5.c",
+        "memory.c",
+        "metadata_iterators.c",
+        "metadata_object.c",
+        "stream_decoder.c",
+        "stream_encoder.c",
+        "stream_encoder_framing.c",
+        "window.c",
+        "flac_ffi.c"
+      ],
+      "include": [
+        "include",
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DPACKAGE_VERSION=\"1.4.3\"",
+        "-DFLAC__NO_ASM",
+        "-DFLAC__NO_DLL",
+        "-DHAVE_LROUND",
+        "-DFLAC__HAS_OGG=0",
+        "-DHAVE_STDINT_H",
+        "-DHAVE_STDLIB_H",
+        "-DHAVE_INTTYPES_H"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}
