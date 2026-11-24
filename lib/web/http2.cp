@@ -1,7 +1,10 @@
-// Source: cp/lib/http2/http2.cp (RFC 9113 HTTP/2 Binary Framing, Stream State & Flow Control Engine)
+// Reference-hardened against hyperium/h2 (MIT) & RFC 9113/WHATWG SSE
+// Source: cp/lib/http2/http2.cp (RFC 9113 HTTP/2 Binary Framing, Stream State & Flow Control Engine + 16-Lane SIMD)
 // Pure CP zero-C-dependency RFC 9113 HTTP/2 framing, stream state, and flow control library.
 
 const std = @import("std");
+
+type H2SseVec16u8 = @Vector(16, u8);
 
 /// Client connection preface (24 bytes) per RFC 9113 Section 3.4.
 pub const CONNECTION_PREFACE: []const u8 = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
@@ -100,6 +103,15 @@ pub struct GoawayPayload {
     debug_data: []const u8 = [],
 }
 
+/// Zero-alloc validated HTTP/2 frame header summary.
+pub struct Http2FrameHeader {
+    payload_len: u32 = 0,
+    frame_type: FrameType = FrameType.Data,
+    flags: u8 = 0,
+    stream_id: u31 = 0,
+    total_len: usize = 0,
+}
+
 /// HTTP/2 stream states per RFC 9113 Section 5.1.
 pub enum StreamState: u8 {
     Idle = 0,
@@ -111,6 +123,87 @@ pub enum StreamState: u8 {
     Closed = 6,
 }
 
+// ============================================================================
+// 16-Lane @Vector(16, u8) SIMD Primitives + Scalar Differential References
+// ============================================================================
+
+fn h2SseLoadVec16(data: []const u8, off: usize): H2SseVec16u8 {
+    const v: H2SseVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scanner locating the first `\r` (0x0D), `\n` (0x0A), or `\0` (0x00).
+/// Hot path for WHATWG SSE line splitting and NUL-byte detection.
+pub fn simdH2SseFindLineBreak(data: []const u8): usize? {
+    const v_cr: H2SseVec16u8 = @splat(0x0D);
+    const v_lf: H2SseVec16u8 = @splat(0x0A);
+    const v_nul: H2SseVec16u8 = @splat(0x00);
+    let i: usize = 0;
+    while (i + 16 <= data.len) {
+        const v = h2SseLoadVec16(data, i);
+        if (@reduce(.Or, v == v_cr) || @reduce(.Or, v == v_lf) || @reduce(.Or, v == v_nul)) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                const b = data[i + j];
+                if (b == '\r' || b == '\n' || b == 0) {
+                    return i + j;
+                }
+            }
+        }
+        i += 16;
+    }
+    while (i < data.len) : (i += 1) {
+        const b = data[i];
+        if (b == '\r' || b == '\n' || b == 0) {
+            return i;
+        }
+    }
+    return null;
+}
+
+/// Scalar reference for `simdH2SseFindLineBreak` (differential verification).
+pub fn scalarH2SseFindLineBreak(data: []const u8): usize? {
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        const b = data[i];
+        if (b == '\r' || b == '\n' || b == 0) {
+            return i;
+        }
+    }
+    return null;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte slice equality check for HTTP/2 preface and SSE field names.
+pub fn simdH2SseBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va = h2SseLoadVec16(a, i);
+        const vb = h2SseLoadVec16(b, i);
+        if (!@reduce(.And, va == vb)) return false;
+        i += 16;
+    }
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdH2SseBytesEqual` (differential verification).
+pub fn scalarH2SseBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
 /// HTTP/2 stream state transition helper per RFC 9113 Section 5.1.
 pub struct Http2Stream {
     id: u31 = 0,
@@ -120,7 +213,7 @@ pub struct Http2Stream {
         return Http2Stream { id: id, state: StreamState.Idle };
     }
 
-    pub fn sendHeaders(*_, end_stream: bool): ! Http2Error {
+    pub fn sendHeaders(*_, end_stream: bool): void ! Http2Error {
         switch (_.state) {
             StreamState.Idle => {
                 _.state = if (end_stream) StreamState.HalfClosedLocal else StreamState.Open;
@@ -142,7 +235,7 @@ pub struct Http2Stream {
         }
     }
 
-    pub fn recvHeaders(*_, end_stream: bool): ! Http2Error {
+    pub fn recvHeaders(*_, end_stream: bool): void ! Http2Error {
         switch (_.state) {
             StreamState.Idle => {
                 _.state = if (end_stream) StreamState.HalfClosedRemote else StreamState.Open;
@@ -190,7 +283,30 @@ pub struct Http2Frame {
     }
 }
 
-fn parseFrameType(raw: u8): FrameType ! Http2Error {
+fn h2ReadU16BE(data: []const u8, off: usize): u16 {
+    return ((data[off] as u16) << 8) | (data[off + 1] as u16);
+}
+
+fn h2ReadU32BE(data: []const u8, off: usize): u32 {
+    return ((data[off] as u32) << 24)
+        | ((data[off + 1] as u32) << 16)
+        | ((data[off + 2] as u32) << 8)
+        | (data[off + 3] as u32);
+}
+
+fn h2WriteU16BE(out: []u8, off: usize, v: u16) {
+    out[off] = @as(u8, @truncate(v >> 8));
+    out[off + 1] = @as(u8, @truncate(v));
+}
+
+fn h2WriteU32BE(out: []u8, off: usize, v: u32) {
+    out[off] = @as(u8, @truncate(v >> 24));
+    out[off + 1] = @as(u8, @truncate(v >> 16));
+    out[off + 2] = @as(u8, @truncate(v >> 8));
+    out[off + 3] = @as(u8, @truncate(v));
+}
+
+fn h2ParseFrameType(raw: u8): FrameType ! Http2Error {
     switch (raw) {
         0x0 => return FrameType.Data,
         0x1 => return FrameType.Headers,
@@ -206,12 +322,205 @@ fn parseFrameType(raw: u8): FrameType ! Http2Error {
     }
 }
 
-/// Verifies whether `data` starts with the 24-byte HTTP/2 client connection preface.
+fn h2ValidateFrameSemantics(
+    ftype: FrameType,
+    flags: u8,
+    stream_id: u31,
+    payload: []const u8,
+): void ! Http2Error {
+    const plen = payload.len;
+    switch (ftype) {
+        FrameType.Data => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+            if ((flags & FrameFlags.PADDED) != 0) {
+                if (plen == 0) {
+                    return Http2Error.ProtocolError;
+                }
+                const pad_len: usize = payload[0] as usize;
+                if (pad_len >= plen) {
+                    return Http2Error.ProtocolError;
+                }
+            }
+        },
+        FrameType.Headers => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+            const has_pad = (flags & FrameFlags.PADDED) != 0;
+            const has_prio = (flags & FrameFlags.PRIORITY) != 0;
+            let prefix_len: usize = 0;
+            if (has_pad) prefix_len += 1;
+            if (has_prio) prefix_len += 5;
+            if (plen < prefix_len) {
+                return Http2Error.FrameSizeError;
+            }
+            if (has_pad) {
+                const pad_len: usize = payload[0] as usize;
+                if (pad_len > plen - prefix_len) {
+                    return Http2Error.ProtocolError;
+                }
+            }
+            if (has_prio) {
+                const prio_off: usize = if (has_pad) 1 else 0;
+                const dep_sid = (h2ReadU32BE(payload, prio_off) & 0x7FFFFFFF) as u31;
+                if (dep_sid == stream_id) {
+                    return Http2Error.ProtocolError;
+                }
+            }
+        },
+        FrameType.Priority => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+            if (plen != 5) {
+                return Http2Error.FrameSizeError;
+            }
+            const dep_sid = (h2ReadU32BE(payload, 0) & 0x7FFFFFFF) as u31;
+            if (dep_sid == stream_id) {
+                return Http2Error.ProtocolError;
+            }
+        },
+        FrameType.RstStream => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+            if (plen != 4) {
+                return Http2Error.FrameSizeError;
+            }
+        },
+        FrameType.Settings => {
+            if (stream_id != 0) {
+                return Http2Error.ProtocolError;
+            }
+            if ((flags & FrameFlags.ACK) != 0) {
+                if (plen != 0) {
+                    return Http2Error.FrameSizeError;
+                }
+            } else {
+                if ((plen % 6) != 0) {
+                    return Http2Error.InvalidSettingsLength;
+                }
+                let off: usize = 0;
+                while (off < plen) : (off += 6) {
+                    const id = h2ReadU16BE(payload, off);
+                    const val = h2ReadU32BE(payload, off + 2);
+                    if (id == SettingId.ENABLE_PUSH) {
+                        if (val > 1) return Http2Error.ProtocolError;
+                    } else if (id == SettingId.INITIAL_WINDOW_SIZE) {
+                        if (val > MAX_WINDOW_SIZE) return Http2Error.FlowControlError;
+                    } else if (id == SettingId.MAX_FRAME_SIZE) {
+                        if (val < DEFAULT_MAX_FRAME_SIZE or val > MAX_ALLOWED_FRAME_SIZE) {
+                            return Http2Error.ProtocolError;
+                        }
+                    }
+                }
+            }
+        },
+        FrameType.PushPromise => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+            const has_pad = (flags & FrameFlags.PADDED) != 0;
+            const prefix_len: usize = if (has_pad) 5 else 4;
+            if (plen < prefix_len) {
+                return Http2Error.FrameSizeError;
+            }
+            if (has_pad) {
+                const pad_len: usize = payload[0] as usize;
+                if (pad_len > plen - prefix_len) {
+                    return Http2Error.ProtocolError;
+                }
+            }
+            const prom_off: usize = if (has_pad) 1 else 0;
+            const prom_sid = (h2ReadU32BE(payload, prom_off) & 0x7FFFFFFF) as u31;
+            if (prom_sid == 0) {
+                return Http2Error.ProtocolError;
+            }
+        },
+        FrameType.Ping => {
+            if (stream_id != 0) {
+                return Http2Error.ProtocolError;
+            }
+            if (plen != 8) {
+                return Http2Error.FrameSizeError;
+            }
+        },
+        FrameType.Goaway => {
+            if (stream_id != 0) {
+                return Http2Error.ProtocolError;
+            }
+            if (plen < 8) {
+                return Http2Error.FrameSizeError;
+            }
+        },
+        FrameType.WindowUpdate => {
+            if (plen != 4) {
+                return Http2Error.FrameSizeError;
+            }
+            const inc = std.mem.readInt(u32, payload[0..4], .big) & 0x7FFFFFFF;
+            if (inc == 0) {
+                return Http2Error.InvalidWindowIncrement;
+            }
+        },
+        FrameType.Continuation => {
+            if (stream_id == 0) {
+                return Http2Error.ProtocolError;
+            }
+        },
+    }
+}
+
+/// Verifies whether `data` starts with the 24-byte HTTP/2 client connection preface (16-lane SIMD).
 pub fn hasConnectionPreface(data: []const u8): bool {
     if (data.len < CONNECTION_PREFACE.len) {
         return false;
     }
-    return std.mem.eql(u8, data[0..CONNECTION_PREFACE.len], CONNECTION_PREFACE);
+    return simdH2SseBytesEqual(data[0..CONNECTION_PREFACE.len], CONNECTION_PREFACE);
+}
+
+/// Strictly validates the 24-byte HTTP/2 client connection preface, returning `ProtocolError` on mismatch.
+pub fn validateHttp2Preface(data: []const u8): void ! Http2Error {
+    if (!hasConnectionPreface(data)) {
+        return Http2Error.ProtocolError;
+    }
+}
+
+/// Zero-alloc strict validator for a single raw HTTP/2 frame per RFC 9113 & `hyperium/h2`.
+/// Checks `max_frame_size` (`16384..=16777215`), 9-byte header, 24-bit payload length bounds,
+/// 31-bit Stream ID reserved bit masking, and all per-frame semantic invariants (Stream 0,
+/// SETTINGS mod 6 + param bounds, PING == 8B, RST_STREAM == 4B, WINDOW_UPDATE == 4B & inc != 0,
+/// PADDED `pad_len < payload_len` underflow guard).
+pub fn validateHttp2FrameStrict(raw: []const u8, max_frame_size: u32): Http2FrameHeader ! Http2Error {
+    if (max_frame_size < DEFAULT_MAX_FRAME_SIZE or max_frame_size > MAX_ALLOWED_FRAME_SIZE) {
+        return Http2Error.FrameSizeError;
+    }
+    if (raw.len < FRAME_HEADER_SIZE) {
+        return Http2Error.FrameSizeError;
+    }
+    const plen: u32 = ((raw[0] as u32) << 16) | ((raw[1] as u32) << 8) | (raw[2] as u32);
+    if (plen > max_frame_size) {
+        return Http2Error.FrameSizeError;
+    }
+    const plen_usize: usize = plen as usize;
+    if (plen_usize > raw.len - FRAME_HEADER_SIZE) {
+        return Http2Error.FrameSizeError;
+    }
+    const ftype = try h2ParseFrameType(raw[3]);
+    const flags = raw[4];
+    const stream_id: u31 = (std.mem.readInt(u32, raw[5..9], .big) & 0x7FFFFFFF) as u31;
+    const payload = raw[FRAME_HEADER_SIZE .. FRAME_HEADER_SIZE + plen_usize];
+
+    try h2ValidateFrameSemantics(ftype, flags, stream_id, payload);
+
+    return Http2FrameHeader {
+        payload_len: plen,
+        frame_type: ftype,
+        flags: flags,
+        stream_id: stream_id,
+        total_len: FRAME_HEADER_SIZE + plen_usize,
+    };
 }
 
 /// Encodes a raw HTTP/2 frame with a 9-byte big-endian header, clearing reserved bit `R`.
@@ -263,8 +572,8 @@ pub fn encodeSettings(
     let i: usize = 0;
     while (i < params.len) : (i += 1) {
         const off = i * 6;
-        std.mem.writeInt(u16, payload[off .. off + 2], params[i].id, .big);
-        std.mem.writeInt(u32, payload[off + 2 .. off + 6], params[i].value, .big);
+        h2WriteU16BE(payload, off, params[i].id);
+        h2WriteU32BE(payload, off + 2, params[i].value);
     }
     return encodeFrame(allocator, FrameType.Settings, 0, 0, payload);
 }
@@ -292,8 +601,8 @@ pub fn decodeSettings(
     let i: usize = 0;
     while (i < count) : (i += 1) {
         const off = i * 6;
-        const id = std.mem.readInt(u16, frame.payload[off .. off + 2], .big);
-        const value = std.mem.readInt(u32, frame.payload[off + 2 .. off + 6], .big);
+        const id = h2ReadU16BE(frame.payload, off);
+        const value = h2ReadU32BE(frame.payload, off + 2);
         out[i] = SettingParam { id: id, value: value };
     }
     return out;
@@ -453,7 +762,7 @@ pub fn decodeDataPayload(frame: Http2Frame): ([]const u8) ! Http2Error {
         return Http2Error.ProtocolError;
     }
     const pad_len = frame.payload[0] as usize;
-    if (1 + pad_len > frame.payload.len) {
+    if (pad_len >= frame.payload.len) {
         return Http2Error.ProtocolError;
     }
     return frame.payload[1 .. frame.payload.len - pad_len];
@@ -482,14 +791,14 @@ pub struct FrameStreamDecoder {
         _.read_offset = 0;
     }
 
-    pub fn setMaxFrameSize(*_, max_frame_size: u32): ! Http2Error {
+    pub fn setMaxFrameSize(*_, max_frame_size: u32): void ! Http2Error {
         if (max_frame_size < DEFAULT_MAX_FRAME_SIZE or max_frame_size > MAX_ALLOWED_FRAME_SIZE) {
             return Http2Error.FrameSizeError;
         }
         _.max_frame_size = max_frame_size;
     }
 
-    pub fn feed(*_, chunk: []const u8): ! Http2Error {
+    pub fn feed(*_, chunk: []const u8): void ! Http2Error {
         if (chunk.len == 0) {
             return;
         }
@@ -512,7 +821,7 @@ pub struct FrameStreamDecoder {
             return Http2Error.FrameSizeError;
         }
 
-        const ftype = try parseFrameType(hdr[3]);
+        const ftype = try h2ParseFrameType(hdr[3]);
         const flags = hdr[4];
         const stream_id: u31 = (std.mem.readInt(u32, hdr[5..9], .big) & 0x7FFFFFFF) as u31;
 
@@ -521,58 +830,16 @@ pub struct FrameStreamDecoder {
             return null;
         }
 
-        // Validate frame-level structural invariants per RFC 9113 Section 6.
-        switch (ftype) {
-            FrameType.Settings => {
-                if (stream_id != 0) {
-                    return Http2Error.ProtocolError;
-                }
-                if ((flags & FrameFlags.ACK) != 0) {
-                    if (plen != 0) {
-                        return Http2Error.FrameSizeError;
-                    }
-                } else if ((plen % 6) != 0) {
-                    return Http2Error.InvalidSettingsLength;
-                }
-            },
-            FrameType.Ping => {
-                if (stream_id != 0) {
-                    return Http2Error.ProtocolError;
-                }
-                if (plen != 8) {
-                    return Http2Error.FrameSizeError;
-                }
-            },
-            FrameType.Goaway => {
-                if (stream_id != 0) {
-                    return Http2Error.ProtocolError;
-                }
-                if (plen < 8) {
-                    return Http2Error.FrameSizeError;
-                }
-            },
-            FrameType.WindowUpdate => {
-                if (plen != 4) {
-                    return Http2Error.FrameSizeError;
-                }
-            },
-            FrameType.RstStream => {
-                if (stream_id == 0) {
-                    return Http2Error.ProtocolError;
-                }
-                if (plen != 4) {
-                    return Http2Error.FrameSizeError;
-                }
-            },
-            else => {},
-        }
-
         const payload_start = _.read_offset + FRAME_HEADER_SIZE;
         const payload_end = payload_start + (plen as usize);
+        const raw_payload = _.buf.items[payload_start..payload_end];
+
+        try h2ValidateFrameSemantics(ftype, flags, stream_id, raw_payload);
+
         let payload: []u8 = [];
         if (plen > 0) {
             payload = _.alloc.alloc(u8, plen as usize) catch return Http2Error.OutOfMemory;
-            @memcpy(payload, _.buf.items[payload_start..payload_end]);
+            @memcpy(payload, raw_payload);
         }
 
         _.read_offset += frame_total;
@@ -607,7 +874,7 @@ pub struct FlowWindow {
         return _.size;
     }
 
-    pub fn consume(*_, bytes: u32): ! Http2Error {
+    pub fn consume(*_, bytes: u32): void ! Http2Error {
         const b = bytes as i64;
         if (b > _.size) {
             return Http2Error.FlowControlError;
@@ -615,7 +882,7 @@ pub struct FlowWindow {
         _.size -= b;
     }
 
-    pub fn replenish(*_, increment: u32): ! Http2Error {
+    pub fn replenish(*_, increment: u32): void ! Http2Error {
         if (increment == 0 or increment > MAX_WINDOW_SIZE) {
             return Http2Error.InvalidWindowIncrement;
         }
@@ -626,7 +893,7 @@ pub struct FlowWindow {
         _.size = next_size;
     }
 
-    pub fn updateInitialSize(*_, new_initial: u32, old_initial: u32): ! Http2Error {
+    pub fn updateInitialSize(*_, new_initial: u32, old_initial: u32): void ! Http2Error {
         if (new_initial > MAX_WINDOW_SIZE) {
             return Http2Error.FlowControlError;
         }

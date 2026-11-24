@@ -23,9 +23,9 @@
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
 | `lib/web/picohttp.cp` | 零分配 HTTP/1.1 请求/响应与 Chunked 解析（对标 `seanmonstar/httparse` MIT/Apache-2.0 加固，含 16-lane SIMD 扫描与 RFC 9112 帧界定歧义防护） | `HTTP_MAX_HEADERS`, `FramingInfo`, `parseRequest`, `parseResponse`, `parseHeaders`, `findHeader`, `parseContentLength`, `validateHttp1Framing`, `parseChunkSizeStrict`, `simdScanTargetBytes`, `simdScanHeaderNameBytes`, `simdScanHeaderValueBytes`, `simdFindCrlf`, `ChunkedDecoder`, `ParsedRequest`, `ParsedResponse` |
-| `lib/web/http2.cp` | RFC 9113 HTTP/2 二进制帧、流状态与流控 | `encodeFrame`, `FrameStreamDecoder`, `FlowWindow`, `Http2Stream`, `encodeSettings`, `decodeSettings`, `encodePing`, `encodeGoaway`, `encodeWindowUpdate` |
+| `lib/web/http2.cp` | RFC 9113 HTTP/2 二进制帧、流状态与流控（对标 `hyperium/h2` MIT 加固 + 16-lane SIMD 前言/行切分原语 & 零堆 `validateHttp2FrameStrict`） | `CONNECTION_PREFACE`, `Http2FrameHeader`, `simdH2SseFindLineBreak`, `simdH2SseBytesEqual`, `hasConnectionPreface`, `validateHttp2Preface`, `validateHttp2FrameStrict`, `encodeFrame`, `FrameStreamDecoder`, `FlowWindow`, `Http2Stream`, `encodeSettings`, `decodeSettings`, `encodePing`, `encodeGoaway`, `encodeWindowUpdate`（测试：`cap/test/testWebH2SseRustRefSuite.cp`） |
 | `lib/web/http3.cp` | RFC 9114 HTTP/3 帧与 QPACK 静态/动态头编解码 | `encodeH3Frame`, `decodeFrames`, `decodeFramesWithMaxSize`, `freeFrames`, `encodeQpackHeaders`, `decodeQpackHeaders`, `H3_DEFAULT_MAX_FRAME_SIZE`, `H3Frame` |
-| `lib/web/sse.cp` | Server-Sent Events (SSE) 流式解析与编码 | `SseParser`, `SseEncoder`, `SseEvent`, `SseError` |
+| `lib/web/sse.cp` | WHATWG Server-Sent Events (SSE) 流式解析与编码（对标 `hyperium/h2`/WHATWG SSE 加固 + 16-lane SIMD 换行/NUL 扫描与字段比对） | `SseParser`, `SseEncoder`, `SseEvent`, `SseError`（测试：`cap/test/testWebH2SseRustRefSuite.cp`） |
 | `lib/web/multipart.cp` | RFC 7578 `multipart/form-data` 解析与构造 | `extractBoundary`, `parse`, `parseWithLimits`, `MultipartBuilder`, `MultipartDocument`, `MultipartPart`, `MultipartError` |
 | `lib/web/uritemplate.cp` | RFC 6570 Level 1–4 URI Template 展开 | `UriTemplate`, `TemplateVars`, `AssocPair`, `TemplateOp`, `UriTemplateError` |
 

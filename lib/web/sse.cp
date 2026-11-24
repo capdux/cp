@@ -1,7 +1,9 @@
-// Source: cp/lib/sse/sse.cp (Pure CP W3C Server-Sent Events Incremental Parser & Encoder)
+// Reference-hardened against hyperium/h2 (MIT) & RFC 9113/WHATWG SSE
+// Source: cp/lib/sse/sse.cp (Pure CP W3C Server-Sent Events Incremental Parser & Encoder + 16-Lane SIMD)
 // Zero-C-dependency WHATWG/W3C text/event-stream incremental streaming parser and frame-safe encoder.
 
 const std = @import("std");
+import { simdH2SseFindLineBreak, simdH2SseBytesEqual } from "./http2.cp";
 
 /// Unified error set for `cap:sse` streaming parser and encoder operations.
 pub err SseError {
@@ -31,35 +33,54 @@ pub struct SseEvent {
     }
 }
 
-fn containsCrOrLf(bytes: []const u8): bool {
-    for (b of bytes) {
-        if (b == '\r' || b == '\n') {
-            return true;
+fn sseContainsCrOrLf(bytes: []const u8): bool {
+    let off: usize = 0;
+    while (off < bytes.len) {
+        if (pos := simdH2SseFindLineBreak(bytes[off..])) {
+            const b = bytes[off + pos];
+            if (b == '\r' || b == '\n') return true;
+            off += pos + 1;
+        } else {
+            return false;
         }
     }
     return false;
 }
 
-fn containsNul(bytes: []const u8): bool {
-    for (b of bytes) {
-        if (b == 0) {
-            return true;
+fn sseContainsNul(bytes: []const u8): bool {
+    let off: usize = 0;
+    while (off < bytes.len) {
+        if (pos := simdH2SseFindLineBreak(bytes[off..])) {
+            if (bytes[off + pos] == 0) return true;
+            off += pos + 1;
+        } else {
+            return false;
         }
     }
     return false;
 }
 
-fn parseAsciiU64(bytes: []const u8): u64? {
+/// Strict WHATWG SSE `retry:` ASCII decimal integer parser with overflow guard.
+fn sseParseAsciiU64(bytes: []const u8): u64? {
     if (bytes.len == 0) return null;
-    for (b of bytes) {
+    let acc: u64 = 0;
+    const max_u64: u64 = std.math.maxInt(u64);
+    let i: usize = 0;
+    while (i < bytes.len) : (i += 1) {
+        const b = bytes[i];
         if (b < '0' || b > '9') {
             return null;
         }
+        const digit: u64 = (b - '0') as u64;
+        if (acc > (max_u64 - digit) / 10) {
+            return null;
+        }
+        acc = acc * 10 + digit;
     }
-    return std.fmt.parseInt(u64, bytes, 10) catch return null;
+    return acc;
 }
 
-fn writeU64(out: *std.ArrayList(u8), alloc: std.mem.Allocator, val: u64): void ! SseError {
+fn sseWriteU64(out: *std.ArrayList(u8), alloc: std.mem.Allocator, val: u64): void ! SseError {
     let buf: [24]u8 = [0; 24];
     const rendered = std.fmt.bufPrint(&buf, "{d}", .{val}) catch return SseError.OutOfMemory;
     out.appendSlice(alloc, rendered) catch return SseError.OutOfMemory;
@@ -70,7 +91,7 @@ fn writeU64(out: *std.ArrayList(u8), alloc: std.mem.Allocator, val: u64): void !
 /// `\r\n` / `\n` / `\r` line endings (including `\r` and `\n` split across chunks),
 /// single leading space stripping after `:`, multi-line `data:` concatenation,
 /// `Last-Event-ID` tracking (ignoring values containing `\x00`), `retry:` tracking,
-/// and strict `max_event_bytes` resource-exhaustion protection.
+/// 16-lane SIMD line-break/NUL scanning, and strict `max_event_bytes` protection.
 pub struct SseParser {
     alloc: std.mem.Allocator,
     max_event_bytes: usize,
@@ -198,21 +219,21 @@ pub struct SseParser {
             value = raw_val;
         }
 
-        if (std.mem.eql(u8, field, "event")) {
+        if (simdH2SseBytesEqual(field, "event")) {
             if (value.len > _.max_event_bytes) {
                 return SseError.EventBufferOverflow;
             }
             _.event_type_buf.clearRetainingCapacity();
             _.event_type_buf.appendSlice(_.alloc, value) catch return SseError.OutOfMemory;
-        } else if (std.mem.eql(u8, field, "data")) {
-            if (_.data_buf.items.len + value.len + 1 > _.max_event_bytes) {
+        } else if (simdH2SseBytesEqual(field, "data")) {
+            if (value.len > _.max_event_bytes || _.data_buf.items.len + value.len + 1 > _.max_event_bytes) {
                 return SseError.EventBufferOverflow;
             }
             _.data_buf.appendSlice(_.alloc, value) catch return SseError.OutOfMemory;
             _.data_buf.append(_.alloc, '\n') catch return SseError.OutOfMemory;
-        } else if (std.mem.eql(u8, field, "id")) {
-            // W3C spec: ignore id field if value contains U+0000 NULL
-            if (!containsNul(value)) {
+        } else if (simdH2SseBytesEqual(field, "id")) {
+            // WHATWG SSE spec: ignore id field if value contains U+0000 NULL
+            if (!sseContainsNul(value)) {
                 if (value.len > _.max_event_bytes) {
                     return SseError.EventBufferOverflow;
                 }
@@ -220,8 +241,8 @@ pub struct SseParser {
                 _.last_event_id.appendSlice(_.alloc, value) catch return SseError.OutOfMemory;
                 _.has_id = true;
             }
-        } else if (std.mem.eql(u8, field, "retry")) {
-            if (parsed := parseAsciiU64(value)) {
+        } else if (simdH2SseBytesEqual(field, "retry")) {
+            if (parsed := sseParseAsciiU64(value)) {
                 _.current_retry_ms = parsed;
             }
         }
@@ -254,7 +275,7 @@ pub struct SseParser {
         _.line_buf.append(_.alloc, b) catch return SseError.OutOfMemory;
     }
 
-    /// Feeds an arbitrary-length byte chunk into the incremental SSE parser.
+    /// Feeds an arbitrary-length byte chunk into the incremental SSE parser (16-lane SIMD accelerated).
     pub fn feed(*_, chunk: []const u8): void ! SseError {
         let idx: usize = 0;
 
@@ -283,8 +304,34 @@ pub struct SseParser {
             }
         }
 
-        while (idx < chunk.len) : (idx += 1) {
-            _.processByte(chunk[idx])?;
+        while (idx < chunk.len) {
+            if (_.pending_cr) {
+                _.processByte(chunk[idx])?;
+                idx += 1;
+                continue;
+            }
+
+            const rem = chunk[idx..];
+            if (hit := simdH2SseFindLineBreak(rem)) {
+                if (hit > 0) {
+                    const seg = rem[0..hit];
+                    const used = _.data_buf.items.len + _.line_buf.items.len;
+                    if (seg.len > _.max_event_bytes || used + seg.len > _.max_event_bytes) {
+                        return SseError.EventBufferOverflow;
+                    }
+                    _.line_buf.appendSlice(_.alloc, seg) catch return SseError.OutOfMemory;
+                    idx += hit;
+                }
+                _.processByte(chunk[idx])?;
+                idx += 1;
+            } else {
+                const used = _.data_buf.items.len + _.line_buf.items.len;
+                if (rem.len > _.max_event_bytes || used + rem.len > _.max_event_bytes) {
+                    return SseError.EventBufferOverflow;
+                }
+                _.line_buf.appendSlice(_.alloc, rem) catch return SseError.OutOfMemory;
+                idx = chunk.len;
+            }
         }
     }
 
@@ -318,7 +365,7 @@ pub struct SseParser {
 pub struct SseEncoder {
     /// Formats a single SSE event frame with optional `event_type`, multi-line `data` splitting,
     /// optional `id`, and optional `retry_ms`.
-    /// Rejects `event_type` or `id` containing `\r` or `\n` with `SseError.InvalidEventData`.
+    /// Rejects `event_type` containing `\r`/`\n` or `id` containing `\r`/`\n`/`\0` with `SseError.InvalidEventData`.
     pub static fn formatEvent(
         allocator: std.mem.Allocator,
         event_type: ([]const u8)?,
@@ -327,12 +374,12 @@ pub struct SseEncoder {
         retry_ms: u64?,
     ): []u8 ! SseError {
         if (et := event_type) {
-            if (containsCrOrLf(et)) {
+            if (sseContainsCrOrLf(et)) {
                 return SseError.InvalidEventData;
             }
         }
         if (id_val := id) {
-            if (containsCrOrLf(id_val)) {
+            if (sseContainsCrOrLf(id_val) || sseContainsNul(id_val)) {
                 return SseError.InvalidEventData;
             }
         }
@@ -356,19 +403,38 @@ pub struct SseEncoder {
 
         if (r_val := retry_ms) {
             out.appendSlice(allocator, "retry: ") catch return SseError.OutOfMemory;
-            writeU64(&out, allocator, r_val)?;
+            sseWriteU64(&out, allocator, r_val)?;
             out.append(allocator, '\n') catch return SseError.OutOfMemory;
         }
 
-        // Split data by '\n' into multiple "data: ...\n" lines
+        // Split data by '\n', '\r\n', or '\r' into multiple "data: ...\n" lines
         let start: usize = 0;
         let i: usize = 0;
-        while (i <= data.len) : (i += 1) {
-            if (i == data.len || data[i] == '\n') {
+        while (i <= data.len) {
+            if (i == data.len) {
                 out.appendSlice(allocator, "data: ") catch return SseError.OutOfMemory;
                 out.appendSlice(allocator, data[start..i]) catch return SseError.OutOfMemory;
                 out.append(allocator, '\n') catch return SseError.OutOfMemory;
-                start = i + 1;
+                break;
+            }
+            if (data[i] == '\n') {
+                out.appendSlice(allocator, "data: ") catch return SseError.OutOfMemory;
+                out.appendSlice(allocator, data[start..i]) catch return SseError.OutOfMemory;
+                out.append(allocator, '\n') catch return SseError.OutOfMemory;
+                i += 1;
+                start = i;
+            } else if (data[i] == '\r') {
+                out.appendSlice(allocator, "data: ") catch return SseError.OutOfMemory;
+                out.appendSlice(allocator, data[start..i]) catch return SseError.OutOfMemory;
+                out.append(allocator, '\n') catch return SseError.OutOfMemory;
+                if (i + 1 < data.len && data[i + 1] == '\n') {
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+                start = i;
+            } else {
+                i += 1;
             }
         }
 
@@ -380,7 +446,7 @@ pub struct SseEncoder {
     /// Formats an SSE comment line (`: <text>\n`).
     /// Rejects `text` containing `\r` or `\n` with `SseError.InvalidEventData`.
     pub static fn formatComment(allocator: std.mem.Allocator, text: []const u8): []u8 ! SseError {
-        if (containsCrOrLf(text)) {
+        if (sseContainsCrOrLf(text)) {
             return SseError.InvalidEventData;
         }
         let out: std.ArrayList(u8) = .empty;
