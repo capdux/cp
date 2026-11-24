@@ -216,7 +216,43 @@ pub enum Token {
         s[1..s.len()-1].to_string()
     })]
     #[regex(r"\\\\[^\n]*", |lex| {
-        lex.slice()[2..].replace('\\', "\\\\").replace('"', "\\\"")
+        let mut out = lex.slice()[2..]
+            .trim_end_matches('\r')
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"");
+        loop {
+            let rem = lex.remainder();
+            let bytes = rem.as_bytes();
+            let mut i = 0;
+            if i < bytes.len() && bytes[i] == b'\r' {
+                i += 1;
+            }
+            if i < bytes.len() && bytes[i] == b'\n' {
+                i += 1;
+            } else {
+                break;
+            }
+            while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t') {
+                i += 1;
+            }
+            if i + 1 < bytes.len() && bytes[i] == b'\\' && bytes[i + 1] == b'\\' {
+                let content_start = i + 2;
+                let mut line_end = content_start;
+                while line_end < bytes.len() && bytes[line_end] != b'\n' {
+                    line_end += 1;
+                }
+                let line = rem[content_start..line_end]
+                    .trim_end_matches('\r')
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"");
+                out.push_str("\\n");
+                out.push_str(&line);
+                lex.bump(line_end);
+            } else {
+                break;
+            }
+        }
+        out
     })]
     StringLiteral(String),
     #[regex(r#"`([^`\\]|\\.)*`"#, |lex| {
