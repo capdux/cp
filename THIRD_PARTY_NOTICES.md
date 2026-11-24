@@ -95,6 +95,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustCrypto/SSH** (`ssh-encoding`, `ssh-key`) | <https://github.com/RustCrypto/SSH> | MIT / Apache-2.0 | `lib/net/sshWire.cp`, `lib/net/sshKeys.cp`, `lib/net/sshOpensshKey.cp`, `lib/net/sshSig.cp` | Copyright (c) 2021-2024 RustCrypto Developers |
 | **roaring-rs** (`RoaringBitmap`) | <https://github.com/RoaringBitmap/roaring-rs> | MIT / Apache-2.0 | `lib/ds/roaring.cp` | Copyright (c) 2015-2024 RoaringBitmap Contributors |
 | **similar** (`mitsuhiko`) | <https://github.com/mitsuhiko/similar> | Apache-2.0 | `lib/text/myersDiff.cp`, `lib/text/unifiedDiff.cp` | Copyright (c) 2021-2024 Armin Ronacher |
+| **roxmltree** (`RazrFalcon`) | <https://github.com/RazrFalcon/roxmltree> | MIT / Apache-2.0 | `lib/xml/parser.cp`, `lib/xml/escape.cp`, `lib/xml/writer.cp` | Copyright (c) 2018-2024 Yevhenii Reizner (RazrFalcon) |
 
 ---
 

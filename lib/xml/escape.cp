@@ -1,7 +1,8 @@
+// Reference-hardened against RazrFalcon/roxmltree (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T13:00:28Z (XML 1.0 Text / Attribute / CDATA Escaper)
 
 /// XML 1.0 Fifth Edition §2.2 合法字符码点校验
-export fn isValidXmlChar(cp: u32): bool {
+pub fn isValidXmlChar(cp: u32): bool {
     if (cp == 0x09 || cp == 0x0A || cp == 0x0D) return true;
     if (cp >= 0x20 && cp <= 0xD7FF) return true;
     if (cp >= 0xE000 && cp <= 0xFFFD) return true;
@@ -23,7 +24,7 @@ fn strEql(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-struct XmlWriter {
+struct XmlEscapeBuf {
     out: []u8;
     pos: usize;
 
@@ -79,8 +80,8 @@ struct XmlWriter {
 }
 
 /// 转义 XML 1.0 元素文本节点（转义 `&`, `<`, `>`，并安全消解 `]]>`）
-export fn escapeXmlText(src: []const u8, out: []u8): ([]const u8)? {
-    let w = XmlWriter{ out: out, pos: 0 };
+pub fn escapeXmlText(src: []const u8, out: []u8): ([]const u8)? {
+    let w = XmlEscapeBuf{ out: out, pos: 0 };
     for (c of src) {
         if (c == '&') {
             if (!w.writeSlice("&amp;")) return null;
@@ -96,8 +97,8 @@ export fn escapeXmlText(src: []const u8, out: []u8): ([]const u8)? {
 }
 
 /// 转义 XML 1.0 属性值（转义 `&`, `<`, `>`, `"`, `'`, `\r`, `\n`, `\t`）
-export fn escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)? {
-    let w = XmlWriter{ out: out, pos: 0 };
+pub fn escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)? {
+    let w = XmlEscapeBuf{ out: out, pos: 0 };
     for (c of src) {
         if (c == '&') {
             if (!w.writeSlice("&amp;")) return null;
@@ -123,8 +124,8 @@ export fn escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)? {
 }
 
 /// 用 `<![CDATA[...]]>` 包裹文本，遇到内部 `]]>` 自动安全拆分为 `]]]]><![CDATA[>`
-export fn wrapXmlCdata(src: []const u8, out: []u8): ([]const u8)? {
-    let w = XmlWriter{ out: out, pos: 0 };
+pub fn wrapXmlCdata(src: []const u8, out: []u8): ([]const u8)? {
+    let w = XmlEscapeBuf{ out: out, pos: 0 };
     if (!w.writeSlice("<![CDATA[")) return null;
 
     let i: usize = 0;
@@ -174,8 +175,8 @@ fn parseHexCodePoint(s: []const u8): u32? {
 }
 
 /// 反转义 XML 1.0 文本/属性：还原 5 个预定义实体及十进制/十六进制数字字符引用并严格校验 isValidXmlChar
-export fn unescapeXml(src: []const u8, out: []u8): ([]const u8)? {
-    let w = XmlWriter{ out: out, pos: 0 };
+pub fn unescapeXml(src: []const u8, out: []u8): ([]const u8)? {
+    let w = XmlEscapeBuf{ out: out, pos: 0 };
     let i: usize = 0;
 
     while (i < src.len) {

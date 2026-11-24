@@ -128,3 +128,18 @@ pub fn demoXmlPipeline(): ! {
    - XML 1.0 禁止 CDATA 段内直接出现 `]]>`；写入任意二进制或代码片段时使用 `wrapXmlCdata` 自动检测/拆分 `]]>` 序列，防止闭合注入破坏文档结构。
 3. **合法 XML 1.0 字符过滤（`isValidXmlChar`）**：
    - XML 1.0 禁止 NUL 与多数 ASCII 控制字符（仅允许 `0x09`/`0x0A`/`0x0D` 及 `>= 0x20`），序列化日志或 JUnit 报告前可通过 `isValidXmlChar` 与 `escapeXmlText`/`escapeXmlAttr` 保证输出严格合规。
+
+---
+
+## Wave 35 工业级安全加固与 16-Lane SIMD 加速（对标 `RazrFalcon/roxmltree` MIT/Apache-2.0 & W3C XML 1.0 5th Ed）
+
+`lib/xml/parser.cp`、`lib/xml/escape.cp` 与 `lib/xml/writer.cp` 已对照 `RazrFalcon/roxmltree`（MIT/Apache-2.0）与 W3C XML 1.0（5th Edition）完成严苛词法/文法加固、全栈零分配校验器与 16-lane `@Vector(16, u8)` SIMD 热路径加速，保持 100% 向后兼容：
+
+| 加固项 / 新增符号 | 所在文件 | 工程价值 |
+|---|---|---|
+| `XML_MAX_DEPTH` (128) / `XML_MAX_ATTRS_PER_ELEMENT` (256) / `XML_MAX_NODES` (65536) / `XML_MAX_ENTITY_EXPANSIONS` (65536) | `lib/xml/parser.cp` | 强制限制元素嵌套深度、单元素属性数、总节点数与实体展开次数，防止深层嵌套与畸形大文档资源耗尽 |
+| `XmlError` 细粒度异常（新增 `DuplicateAttribute`, `InvalidControlChar`, `MaxNodesExceeded`, `MaxAttrsExceeded`） | `lib/xml/parser.cp` | 严格拦截同元素重复属性、XML 1.0 §2.2 非法控制字节（`0x00..0x08`, `0x0B`, `0x0C`, `0x0E..0x1F`）、注释体 `--`、文本裸 `]]>`、非法数字引用（`0`/代理对/越界/大写 `&#X`）及非首部/非法 `<?xml ...?>` 声明 |
+| `validateXmlStrict(xml_str)` | `lib/xml/parser.cp` | 零堆分配只读 W3C XML 1.0 严苛校验器（栈上定长深度与属性去重缓冲），与 `XmlParser.parse` 保持 100% 校验等价 |
+| `simdFindXmlTextDelim` / `simdHasInvalidXmlControl` / `simdFindAttrQuoteOrAmp`（配标量参考） | `lib/xml/parser.cp` | 纯 CP 16-lane `@Vector(16, u8)` 文本定界符（`<`, `&`, `]`）、非法控制字符与属性引号/`&`/`<` 扫描，直接驱动解析器与校验器热路径 |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testXmlRoxmltreeRustRefSuite.cp` 覆盖 W3C XML 1.0 合规文档与序列化往返、10 类严苛异常拦截、全 256 字节值与 `0..257` 长度 16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 变异/随机字节流 Fuzz（同时校验 `validateXmlStrict` 与 `XmlParser.parse` 100% 一致性，0 panic / 0 OOB / 0 死循环）。

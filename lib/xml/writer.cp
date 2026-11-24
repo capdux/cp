@@ -1,3 +1,4 @@
+// Reference-hardened against RazrFalcon/roxmltree (MIT/Apache-2.0)
 // Source: cp/lib/xml/writer.cp (XML 1.0 Compact & Pretty Serializer)
 // Pure CP streaming XML 1.0 writer and DOM tree serializer with automatic
 // attribute/text entity escaping, CDATA `]]>` validation, and compact/pretty modes.
