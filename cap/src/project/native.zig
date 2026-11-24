@@ -398,6 +398,21 @@ pub fn resolveOrBuildBinLibEx(
         if (opt_cflag) |of| {
             try argv.append(allocator, of);
         }
+        // Strip DWARF debug info and enable per-section GC for lean prebuilt static archives
+        // unless the package explicitly requested Debug opt or a -g flag.
+        const is_debug_opt = if (bin_cfg.opt) |o| (o == .Debug) else false;
+        var has_debug_flag = false;
+        for (bin_cfg.c_flags) |cf| {
+            if (std.mem.startsWith(u8, cf, "-g")) {
+                has_debug_flag = true;
+                break;
+            }
+        }
+        if (!is_debug_opt and !has_debug_flag) {
+            try argv.append(allocator, "-g0");
+            try argv.append(allocator, "-ffunction-sections");
+            try argv.append(allocator, "-fdata-sections");
+        }
         for (bin_cfg.c_flags) |cf| {
             if (cf.len > 0) try argv.append(allocator, cf);
         }
