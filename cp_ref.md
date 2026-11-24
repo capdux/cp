@@ -372,8 +372,8 @@ CP对他们来说 = **保留Zig全部能力，叠加Rust安全检查 + TS风格�
 | `cap publish [options]`         | -            | **npm / Verdaccio 生态直发**：自动由 `cap.json` 合成 `package.json` 打包 `.tgz`，读取 `CAP_TOKEN`/`NPM_TOKEN`/`~/.npmrc` 直发官方 npm 或私有仓库（支持 `--registry`/`--access`/`--tag`/`--otp`/`--dry-run`）。 | **已全面实装** |
 | `cap cache <dir\|ls\|clean>`    | -            | **全局缓存治理**：查看或清理 `~/.cap/cache/` 下的历史归档与预编译缓存。                                             | **已全面实装** |
 | `cap pm ls` / `cap why <pkg>`   | -            | **依赖审计与溯源**：列出 `cap_modules/` 已安装包及 `bin` 产物（支持 `--filter`），追踪某依赖包的引入路径。           | **已全面实装** |
-| `cap fmt`                       | -            | **代码格式化**：原生百毫秒级格式化全部 `.cp` 源代码，保持工业级统一风格。                                           | **规划实现**   |
-| `cap lint`                      | -            | **静态分析与安全审计**：扫描生命周期逃逸、借用冲突与性能反模式。                                                    | **规划实现**   |
+| `cap fmt [--check] [path]`      | -            | **代码格式化**：原生百毫秒级幂等格式化全部 `.cp` 源代码，支持 `--check`（CI 门禁）与 `--stdout`。                | **已全面实装** |
+| `cap lint [path]`               | -            | **静态分析与安全审计**：基于 `cpc brief` 执行语法、借用冲突与 4 项纯净度门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`）审计。 | **已全面实装** |
 
 ---
 

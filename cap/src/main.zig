@@ -134,10 +134,16 @@ pub fn main(init: std.process.Init) !void {
         try handleFuzz(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "bench")) {
         try handleBench(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "fmt")) {
+        try handleFmt(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "lint")) {
+        try handleLint(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "demangle")) {
         try handleDemangle(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "sniff")) {
         try sniffHardware();
+    } else if (std.mem.eql(u8, cmd, "version") or std.mem.eql(u8, cmd, "--version") or std.mem.eql(u8, cmd, "-V")) {
+        std.Io.File.stdout().writeStreamingAll(global_io, "cap 1.0.0\n") catch {};
     } else if (std.mem.eql(u8, cmd, "help") or std.mem.eql(u8, cmd, "--help") or std.mem.eql(u8, cmd, "-h")) {
         usage();
     } else {
@@ -190,10 +196,155 @@ fn resolveDirectoryMain(allocator: std.mem.Allocator, dir_path: []const u8) !?[]
     return null;
 }
 
+fn handleFmt(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
+
+    var cmd_list: std.ArrayList([]const u8) = .empty;
+    defer cmd_list.deinit(allocator);
+    try cmd_list.append(allocator, cpc_bin);
+    try cmd_list.append(allocator, "fmt");
+
+    var has_path = false;
+    for (args) |arg| {
+        try cmd_list.append(allocator, arg);
+        if (!std.mem.startsWith(u8, arg, "-")) {
+            has_path = true;
+        }
+    }
+    if (!has_path) {
+        try cmd_list.append(allocator, ".");
+    }
+
+    var child = try std.process.spawn(global_io, .{ .argv = cmd_list.items });
+    const term = try child.wait(global_io);
+    switch (term) {
+        .exited => |code| {
+            if (code != 0) std.process.exit(code);
+        },
+        else => std.process.exit(1),
+    }
+}
+
+fn shouldSkipLintDir(name: []const u8) bool {
+    const skip_names = [_][]const u8{
+        ".cap",
+        "cap_modules",
+        "vendor",
+        "bin",
+        "temp",
+        ".git",
+        "target",
+        "zig-cache",
+        ".zig-cache",
+        "zig-out",
+        "node_modules",
+    };
+    for (skip_names) |s| {
+        if (std.mem.eql(u8, name, s)) return true;
+    }
+    return false;
+}
+
+fn collectCpFilesForLint(allocator: std.mem.Allocator, dir_path: []const u8, list: *std.ArrayList([]const u8)) !void {
+    var dir = fs_shim.cwd().openDir(dir_path, .{ .iterate = true }) catch return;
+    defer dir.close(global_io);
+    var it = dir.iterate();
+    while (try it.next(global_io)) |entry| {
+        if (entry.kind == .directory) {
+            if (shouldSkipLintDir(entry.name)) continue;
+            const sub_path = if (std.mem.eql(u8, dir_path, "."))
+                try allocator.dupe(u8, entry.name)
+            else
+                try std.fmt.allocPrint(allocator, "{s}/{s}", .{ dir_path, entry.name });
+            defer allocator.free(sub_path);
+            try collectCpFilesForLint(allocator, sub_path, list);
+        } else if (entry.kind == .file and std.mem.endsWith(u8, entry.name, ".cp")) {
+            const full_path = if (std.mem.eql(u8, dir_path, "."))
+                try allocator.dupe(u8, entry.name)
+            else
+                try std.fmt.allocPrint(allocator, "{s}/{s}", .{ dir_path, entry.name });
+            try list.append(allocator, full_path);
+        }
+    }
+}
+
+fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
+
+    var flags: std.ArrayList([]const u8) = .empty;
+    defer flags.deinit(allocator);
+    var raw_paths: std.ArrayList([]const u8) = .empty;
+    defer raw_paths.deinit(allocator);
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "-n") or std.mem.eql(u8, arg, "--zig")) {
+            try flags.append(allocator, arg);
+            if (i + 1 < args.len) {
+                i += 1;
+                try flags.append(allocator, args[i]);
+            }
+        } else if (std.mem.startsWith(u8, arg, "-")) {
+            try flags.append(allocator, arg);
+        } else {
+            try raw_paths.append(allocator, arg);
+        }
+    }
+    if (raw_paths.items.len == 0) {
+        try raw_paths.append(allocator, ".");
+    }
+
+    var target_files: std.ArrayList([]const u8) = .empty;
+    defer {
+        for (target_files.items) |f| allocator.free(f);
+        target_files.deinit(allocator);
+    }
+
+    for (raw_paths.items) |p| {
+        const stat = fs_shim.cwd().statFile(p) catch {
+            std.debug.print("Error: Lint target '{s}' not found.\n", .{p});
+            std.process.exit(1);
+        };
+        if (stat.kind == .directory) {
+            try collectCpFilesForLint(allocator, p, &target_files);
+        } else {
+            try target_files.append(allocator, try allocator.dupe(u8, p));
+        }
+    }
+
+    if (target_files.items.len == 0) {
+        std.debug.print("No .cp files found to lint.\n", .{});
+        return;
+    }
+
+    var cmd_list: std.ArrayList([]const u8) = .empty;
+    defer cmd_list.deinit(allocator);
+    try cmd_list.append(allocator, cpc_bin);
+    try cmd_list.append(allocator, "brief");
+    for (flags.items) |f| {
+        try cmd_list.append(allocator, f);
+    }
+    for (target_files.items) |f| {
+        try cmd_list.append(allocator, f);
+    }
+
+    var child = try std.process.spawn(global_io, .{ .argv = cmd_list.items });
+    const term = try child.wait(global_io);
+    switch (term) {
+        .exited => |code| {
+            if (code != 0) std.process.exit(code);
+        },
+        else => std.process.exit(1),
+    }
+}
+
 fn usage() void {
     std.debug.print(
         \\  ██████╗      ██╗     ██████╗ 
-        \\ ██╔════╝     ████╗    ██╔══██╗   CAP : Concurrent Application Plus v0.1.0
+        \\ ██╔════╝     ████╗    ██╔══██╗   CAP : Concurrent Application Plus v1.0.0
         \\ ██║         ██╔═██╗   ██████╔╝   The All-in-One AI Agent & Native Systems Toolchain
         \\ ██║        ██╔╝ ╚██╗  ██╔═══╝    [ Package Manager • Compiler • Runner • Test • Bench ]
         \\ ╚██████╗  ██╔╝   ╚██╗ ██║        ^ (Upward Arrow) Linking C & P as the Letter 'A' (Application)
@@ -204,6 +355,8 @@ fn usage() void {
         \\  cap run [options] <file|script> Run a script or file (-m modular+parallel .o cache)
         \\  cap build [target] [options]  Build a CP package or directory
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
+        \\  cap fmt [--check] [--stdout] [path...] Format CP source files (default: .)
+        \\  cap lint [path...]            Run syntax, borrow & 4-gate static audit (cpc brief)
         \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
@@ -220,6 +373,7 @@ fn usage() void {
         \\  cap why <package>             Explain why a package is installed
         \\  cap pm ls [--filter <pkg>]    List installed packages in cap_modules/
         \\  cap sniff                     Detect hardware features (AVX2, CPU, OS)
+        \\  cap version, --version, -V    Show cap version (1.0.0)
         \\  cap help                      Show this help message
         \\
         \\Test Options:

@@ -13,7 +13,7 @@ use cpc::resolver::{
 };
 
 #[derive(Parser)]
-#[command(name = "cpc", about = "CP Language Compiler", version)]
+#[command(name = "cpc", about = "CP Language Compiler", version = "1.0.0")]
 struct Cli {
     /// Input file to compile directly
     #[arg(value_name = "INPUT")]
@@ -126,6 +126,17 @@ enum Commands {
         /// Target .cp files
         #[arg(required = true)]
         files: Vec<PathBuf>,
+    },
+    /// Format CP source files (4-space indent, preserves comments/strings/zig blocks)
+    Fmt {
+        /// Check if files are formatted without modifying them (exit 1 if unformatted)
+        #[arg(long)]
+        check: bool,
+        /// Write formatted output to stdout instead of modifying files in-place
+        #[arg(long)]
+        stdout: bool,
+        /// Target .cp files or directories (defaults to current directory)
+        paths: Vec<PathBuf>,
     },
     /// Emit .d.cp type declarations
     EmitTypes {
@@ -618,6 +629,16 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     keep_zig,
                     files,
                 })?;
+                if !ok {
+                    std::process::exit(1);
+                }
+            }
+            Commands::Fmt {
+                check,
+                stdout,
+                paths,
+            } => {
+                let ok = cpc::formatter::run_fmt(&paths, check, stdout)?;
                 if !ok {
                     std::process::exit(1);
                 }

@@ -4,6 +4,7 @@ pub mod brief;
 pub mod codegen;
 pub mod dcp;
 pub mod diagnostic;
+pub mod formatter;
 pub mod lexer;
 pub mod lsp;
 pub mod modular;
