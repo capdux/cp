@@ -3907,3 +3907,42 @@
   > - **Lane 2I**（`9360fe87`）：**全库遗留 `E0219` & 旧绑定清理** — 巡检清理 `lib/` 残余漏标 `static fn`、现代化旧版 `__zig__` 绑定（含 [lib/sqlite.cp](file:///data/dev/cp/lib/sqlite.cp)）、并清零最后 5 个 `lib/ds/` 的 Bun `upstream_newer` 时间戳。
   >
   > 主智能体保持轻装待命，完成后立即验收并自动提交。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 18:08:55）[step:22150]
+- **用户完整原始指令**：
+  > 完成1 后, 启动 任务2（全量回归 + SIMD 性能基准）完成2后, 启动可安装的 3（Phase 2 重型 C 生态包）, 集成知名/高频C生态库, 由 zig 负责完成c代码跨平台编译, cap 安装和cp import时, 可直接根据操作系统, 使用这些已经编译的二进制文件, 让 安装速度和编译速度快, 如没有提供二进制库文件, cap 安装时, 支持自动编译, 编译完成的, 也可以通过 cap 指令,重新编译
+- **完整回复与执行汇报**：
+  > 已立即启动 **任务 2（全量回归 + SIMD 性能基准）** 2 路隔离并行推进（下游工单 `0` 待处理）：
+  >
+  > - **Lane 1H**（`f81b106a`）：全仓 **101 个** `cap/test/test*RustRefSuite.cp` 端到端全量回归验证（遇回归当场修复至 100% PASS）；
+  > - **Lane 2J**（`241ed545`）：8 大代表性标准库领域（XML/Roaring/HLL/HNSW/Stats/ICMP/Auth-CT/Diff）**ReleaseFast** 原生 SIMD vs 标量实测基准，生成 `cap/test/benchSimdStdlib.cp` 与 `doc/BENCHMARK_AND_REGRESSION.md`。
+  >
+  > 任务 2 验收提交后，将无缝自动启动 **任务 3（Phase 2 可安装重型 C 生态包体系：Zig 跨平台编译 + `cap` 按 OS/Arch 命中预编译二进制 / 缺失自动编译 / `cap rebuild` 重编）**。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 18:12:15）[step:22156]
+- **用户完整原始指令**：
+  > 对于第三点, 参照 npm pnpm 特别是 bun的包管理, 完善/优化 cap, 我们已经从 bun中吸收了几乎所有代码, 此时, 刚好用来 参照bun, 使用从 bun中继承的代码,实现cpa的增强/完善/优化, 你是编程语言专家,发挥你的最佳水平,  做好 cap 规划和功能设计及完成, 让cp能替换bun, 达到生产级别
+- **完整回复与执行汇报**：
+  > 已摸清现有 `cap/src/`（当前仅 5 个基础文件且全局缓存为 Mock）与已从 Bun 吸收的 76 个 `lib/pkg/` 生产级模块。我已为 **任务 3（生产级 `cap` 2.0 + Phase 2 重型 C 生态包）** 定好清晰施工蓝图，待任务 2 一完成即刻开 2 路并行落地：
+  >
+  > ### 生产级 `cap` 2.0 架构与功能设计（对标 Bun + pnpm，无缝集成 C 生态）
+  >
+  > 1. **高速包管理核心（对齐 Bun 全局缓存 + pnpm 隔离链接）**
+  >    - **真实全局内容寻址缓存**（`~/.cap/cache/<pkg>@<ver>/`）+ 硬链接/软链接秒级物化 `cap_modules/` 与 `.bin/` shim，消除重复拷贝；
+  >    - **确定性锁文件 `cap.lock`**（记录精确版本、SHA-256 `integrity`、依赖图与原生二进制目标校验和），支持 `--frozen-lockfile` CI 严格模式；
+  >    - **Workspace Monorepo**：支持 `cap.json` `workspaces` 与 `workspace:*` 内部协议；
+  >    - **完整生产 CLI**：补齐 `remove` / `update` / `rebuild` / `cache (ls|clean|dir)` / `why` / `pm ls` / `init`。
+  >
+  > 2. **Zig 驱动的 C 生态跨平台二进制矩阵（核心杀手锏）**
+  >    - 在包 `cap.json` 中标准化 `native` 清单：`c_sources`、`include_dirs`、`cflags`、`defines`、`link_libs`、`prebuilt/<os>-<arch>/`（覆盖 `linux-x86_64`/`linux-aarch64`/`macos-aarch64`/`macos-x86_64`/`windows-x86_64`）；
+  >    - **三态零配置链路**：
+  >      1. **秒装秒编**：`cap install` 与 `cp import` 自动识别当前 `os-arch`，命中随包/缓存中的预编译 `.a`/`.so`/`.dylib`/`.dll` 直接链接，零 C 编译耗时；
+  >      2. **缺失自动编译**：若当前平台无预编译二进制，`cap install` 自动调用 `zig cc` / `zig build-lib` 编译随包 C 源码并写入 `~/.cap/cache/<pkg>@<ver>/prebuilt/<os>-<arch>/` 持久化复用；
+  >      3. **一键重编与交叉发包**：新增 `cap rebuild [pkg] [--target=<os-arch|all>]`，支持本地强制重编或通过 Zig 一键交叉编译产出全平台预编译矩阵。
+  >    - **自动链接贯通**：`cap build` / `cap run` / `cap test` 自动扫描 `cap_modules` 中各包的 `native` 段，自动注入 `-I` 头文件目录与对应平台的静态/动态库链接参数，用户只需写 `import ... from "@cap/..."` 零手动配置。
+  >
+  > 3. **首批 Phase 2 示范重型 C 生态包（宽松协议，端到端实测）**
+  >    - 落地原生 C 生态包（如 `@cap/sqlite` [Public Domain]、`@cap/treesitter` [MIT] 等 `@c` + `~init()` RAII 安全封装），完整打通 `cap install` 自动编译缓存 → 二次秒级命中预编译 → `cp import` 编译运行 → `cap rebuild --target=...` 跨平台交叉编译全闭环。
+  >
+  > ---
+  > *(当前任务 2 仍在后台 2 路高速执行中：Lane 1H 跑全仓 101 个 `test*RustRefSuite.cp` 回归，Lane 2J 跑 8 大领域 ReleaseFast SIMD 基准，完成后立刻验收提交并自动启动上述任务 3。)*
