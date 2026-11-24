@@ -7,6 +7,7 @@ pub mod diagnostic;
 pub mod formatter;
 pub mod lexer;
 pub mod lsp;
+pub mod migrate;
 pub mod modular;
 pub mod parser;
 pub mod resolver;

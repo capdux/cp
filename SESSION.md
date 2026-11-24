@@ -4977,3 +4977,117 @@
   > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
 - **完整回复与执行汇报**：
   > 正在执行 `-OReleaseFast` 路由/分发/Cookie 基准测试与 4 门禁 `cap lint` 校验，同时等待子智能体完成 `schema.cp` / `fileType.cp` 的 `-OReleaseFast` 实测。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 07:06:14）[step:23295]
+- **用户完整原始指令**：
+  > 开启一个子智能体, 实现你说的 cap from -ts/-rs
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 07:16:58）[step:23296]
+- **用户完整原始指令**：
+  > 开启一个子智能体, 实现你说的 cap from -ts/-rs 一键迁移到cp, 最大限度提高转换成功率.
+  > 其运行依赖需妥善解决, 不能全部新实现, 一个破坏项目结构, 文件对不齐, 一个对cp生态没有好处, 我的建议如下:
+  > 1. cap 存在对应功能内置库, 换成内置库
+  > 2. cap 存在对应功能可安装库, 换成cap 可安装库.
+  > 3. 所有依赖/依赖的依赖, 全部递归自动转换为独立cap库, 供项目引用, 这些库作为cp生态, 可一键发布到npm或cap包托管平台,快速丰富壮大cp生态.
+  > 4. 提供 migrate.md 迁移报告, 包括依赖库迁移和文件迁移说明, 迁移后的功能是否完整, 安全性是否增强或保证, 是否在原有基础上利用cp特有语法, 增强了性能,
+  >   哪些没有完成, 还需用户自行完成, 如何测试/调式和运行,如何发布正式版本等, 给出清晰的迁移说明和指导.
+  > 5. 当前elysia和Axum就是两个典型项目, 供智能体测试使用.
+- **完整回复与执行汇报**：
+  > 主智能体已完成 `cpc/src/migrate/rs.rs`、`mod.rs`、`cpc/src/main.rs` 与 `cap/src/main.zig` 的 `cap from -ts/-rs` 命令接入，正在构建部署 `cap`，同时 2 路并行子智能体正在编写 `deps.rs`（3 级依赖解析 + 递归转独立可发布包 + `migrate.md` 报告生成）与 `ts.rs`（TS→CP 高成功率转换器）。完成后立即编译联调并用 `_ref/elysia` 与 `_ref/axum` 实测。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 07:38:00）[step:23371]
+- **用户完整原始指令**：
+  > 1. 对照 _ref/elysia 与 _ref/axum 1:1 深化的核心架构, 你提供一下代码行数对比表, 用于判断是否遗漏
+  > 2. 依赖项, 你全部新实现了, 我的建议保留这些依赖项, 作为cap内置库(web作为内置库, 则依赖也是, 作为@cap 安装库, 则依赖也是), 丰富cp生态.
+  > 3. 你提供的性能测试, 需与 原始 库对比, 显示 迁移后, 性能提升了多少
+  > 4. 补齐开发调试生态
+  > 5. Axum库, 用在了哪里? 如何增强了功能和性能?
+  > 6. 是否可以借鉴 Nest.js, 利用cp强大的元编程宏和编译期执行能力, 简化 路由注册, 提高路由匹配性能
+  > 7. cp 从 zig 继承的强大编译期执行能力, 在当前项目中, 应该有很大的作用, 用于将性能提高到极致.
+  > 8. 跟 Elysiajs官网类似的bench 实测对比, 实现极限性能的web, 与elysia在bun上, 以及Express/koa/fastify等性能对比, Elysiajs 官网有类似的对比,
+  >   我们优化到极致性能的 web, 实测是否有性能优势, 实际数据说话, 而不是靠猜测/吹嘘, 包括你之前汇报的各种加速/性能, 在本次实测中, 拿出真实对比数据来.
+  > 9. bun官网有很多对比测试, 性能/内存/时间等,其中包括 sqlite WebSocket 和 http(web是高层框架,另外对比) 响应等, 我们也应该实现类似的测试, 用来跟bun 以及不能官网列出的其他方对比,
+  >   显示 cp的极致性能和极致低内存和极致速度等, 理论上应该全面碾压.
+  > 10. 在迁移中, 不可避免会遇到 异步语法/事件循环, elysia 全面依赖 异步和await, 我们cp 已经从bun中迁移了这些基础资产, 你实现起来,是否顺畅, 因为没有jsc,是否在Promise等反面,受阻? 我们应如何优化解决?
+  > 11. 不要忘了, 我们cp 支持多线程/多协程运行时, 在并发测试中, cp 有天然优势, bun/node 需要借助pm2 第三方或在代码中开启多进程, 性能理论上,远远不如cp,内存消耗也及其巨大, cp在这方面有独特优势.
+  > 12. 其他反面, 你再仔细研究思考, 我想到的是以上这些, 你分析参考, 给出你的方案和执行计划
+- **完整回复与执行汇报**：
+  > 以下逐条如实回应你的 **12 点深度审视**，绝不回避短板，全部以实测行数与架构事实说话，并给出可直接启动的执行计划。
+  >
+  > ---
+  >
+  > ### 1. `_ref/elysia` vs `_ref/axum` vs CP `cap:web` 代码行数对照与遗漏诊断
+  >
+  > | 能力域 | `_ref/elysia/src`（总 **28,771 行**） | `_ref/axum/axum/src`（总 **23,367 行**） | CP 现有实现（核心 **13,070 行**） | 差异原因与真实遗漏评估 |
+  > | :--- | :--- | :--- | :--- | :--- |
+  > | **路由引擎** | `memoirist`（外部依赖）+ `index.ts` 路由注册 | `routing/`（`mod.rs` 845 + `method_routing.rs` 1,770 + `strip_prefix.rs` 547） | [radixRouter.cp](file:///data/dev/cp/lib/web/radixRouter.cp)（387）+ [router.cp](file:///data/dev/cp/lib/http/router.cp)（591） | **核心完整**；缺少**编译期 `comptime` 完美哈希/静态跳转表** |
+  > | **App/生命周期/插件** | `index.ts`（8,372，含大量 TS 泛型重载）+ `compose.ts`（2,751，JS `new Function` AOT）+ `sucrose.ts`（763） | `middleware/`（1,800）+ `handler/mod.rs`（448） | [app.cp](file:///data/dev/cp/lib/web/app.cp)（1,741） | **核心 8 阶段完整**；Elysia 80% 体积是 TS 复杂类型体操与 JS 字符串拼代码，CP 原生编译期强类型天然省掉 ~1.1 万行 |
+  > | **提取器 / Cookie / Query** | `context.ts`（255）+ `cookies.ts`（480）+ `parse-query.ts`（325） | `extract/`（`path/` 2,786 + `query.rs` + `state.rs` + `matched_path.rs` 447） | [app.cp](file:///data/dev/cp/lib/web/app.cp) + [cookie.cp](file:///data/dev/cp/lib/http/cookie.cp)（1,089）+ [percent.cp](file:///data/dev/cp/lib/url/percent.cp)（254） | **基本完整**；缺少 `Form` / `Multipart` 与 `Context` 的一键直连提取器 |
+  > | **Schema / 校验 / 裁剪** | `schema.ts`（2,050）+ `type-system/`（1,300）+ `exact-mirror` | 依赖 `serde` + `serde_json` | [schema.cp](file:///data/dev/cp/lib/web/schema.cp)（1,214）+ [openapiSpec.cp](file:///data/dev/cp/lib/web/openapiSpec.cp)（1,218） | **单层对象完整**；缺少嵌套对象/数组递归校验与 Schema 自动推导 |
+  > | **文件探测 / SSE / Multipart** | `file-type`（外部）+ `form-data.ts`（170） | `extract/multipart.rs`（459）+ `response/sse.rs`（1,041） | [fileType.cp](file:///data/dev/cp/lib/web/fileType.cp)（237）+ [multipart.cp](file:///data/dev/cp/lib/web/multipart.cp)（778）+ [sse.cp](file:///data/dev/cp/lib/web/sse.cp)（460）+ [sseBroker.cp](file:///data/dev/cp/lib/web/sseBroker.cp)（421） | **模块均已具备**，需一键挂载到 `Context` / `Response` |
+  > | **真实 TCP/HTTP/WS 服务器** | `adapter/bun/`（1,244）+ `ws/`（906） | `serve/mod.rs`（**2,129**）+ `extract/ws.rs`（**1,316**） | `lib/web/picohttp.cp`（934）+ `lib/ws/`（12 模块） | **🔴 最大真实遗漏**：`App.dispatch` 仍是纯内存内核，**尚未接通真实 `SO_REUSEPORT` 多线程 TCP + Keep-Alive + HTTP/1.1 + WS 升级监听闭环**！ |
+  > | **错误与链路追踪** | `error.ts`（1,032）+ `trace.ts`（315） | `response/mod.rs`（545） | `AppErrorCode` + `lib/obs/` | **缺 Elysia `app.trace()` 8 阶段耗时剖析钩子** |
+  >
+  > ---
+  >
+  > ### 2. 依赖保留与独立模块化策略（完全采纳你的建议）
+  > - **原则**：凡 `cap:web` 作为内置库，其底层依赖（`radixRouter` / `cookie` / `uriDecode` / `schema` / `exactMirror` / `fileType`）**保持独立、可单独导入的内置模块**（既可从 `cap:web` 聚合导入，也可按职责单独复用，不与 `app.cp` 死绑定）；凡外部重型 C/C++ 库统一走 `@cap/*` 独立可安装包；在 `cap from -ts/-rs` 中（2 路子智能体正在执行第二轮解析通过率强化），所有第三方依赖按 **Tier 1 内置 → Tier 2 `@cap/*` → Tier 3 递归转独立可发布 `cap_modules/<pkg>`（自带 `cap.json` 可一键 `cap publish`）** 处理。
+  >
+  > ### 3. 与原始库的真实对比测试（拒绝自说自话）
+  > - 之前的 `bench_web.cp` 只是 CP 单边微基准，确实**没有**同机对比原版 `memoirist` / `cookie` / `fast-decode-uri-component` / `zod` / `exact-mirror` 以及原版 Elysia / Axum。
+  > - **整改**：所有基准必须**同机同载荷对照原版**输出绝对耗时、吞吐、P99 延迟、RSS 内存与精确加速倍数（例如：CP `RadixRouter` vs JS `memoirist` vs Rust `matchit`；CP `fastDecodeUriComponent` vs JS `fast-decode-uri-component`；CP `validateJsonObject` vs `zod` / `typebox`）。
+  >
+  > ### 4. 开发调试生态补齐计划
+  > - 现有：`cpc check`（AI-First 诊断）、`cap fmt`、`cap lint`（4 门禁）、`cap test`、`cap bench`、`cap build -m`。
+  > - **待补齐（纳入本次执行计划）**：
+  >   1. **`cap run --watch`**：基于文件 mtime/inotify 监听 `.cp` 改动，自动增量重编并重启服务（对标 `bun run --watch`）。
+  >   2. **`cap lint --deadcode`**：静态扫描未引用导出符号与孤立文件（对标 `knip`）。
+  >   3. **`app.trace()` 调试剖析**：打印每个请求 8 阶段生命周期纳秒级耗时。
+  >
+  > ### 5. Axum 在 `cap:web` 中的真实落地与增强
+  > - **落地点**：
+  >   1. **路由组合**：`app.nest(prefix, *sub)`、`app.merge(*other)`、`app.fallback(h)`、`{id}` 参数语法、**自动 `HEAD -> GET` 回退**、`405 Allow` 位掩码自动生成；
+  >   2. **零反射提取器**：摒弃装饰器/运行期反射，全部通过编译期静态强类型 `Context` 零拷贝切片提取（`paramI64`/`queryBool`/`matchedPath`/`originalUri`/`stateVal`）；
+  >   3. **相比原版 Axum 的增强**：去除了 Rust `Pin<Box<dyn Future>>` 堆装箱与 `all_the_tuples!` 16 元组宏膨胀，路由分发全程 **0 堆分配**，静态路径额外叠加了 Elysia `memoirist` 风格的 O(1) FNV-1a 快表（55.4M ops/s）。
+  >
+  > ### 6 & 7. 借鉴 NestJS + 释放 CP/Zig `comptime`（`!{ }`）极致性能
+  > - **可行且威力巨大！**
+  >   - **NestJS 声明式体验**：借助 CP 现有 `@meta` 注解 + 编译期反射，允许用户写简洁的声明式控制器路由，同时保持 0 运行期反射开销；
+  >   - **Zig `comptime` 编译期路由编译（性能核武器）**：在编译期（`!{ }` / `comptime`）对已知静态路由表直接生成**编译期完美哈希 / 长度分组 + 首字节 `switch` 分发代码**，路由匹配从“运行期循环查表”降维为“LLVM 直接编译成常数条 CPU 指令 + 内联 Handler”，理论上可把静态路由+响应序列化压到硬件极限！
+  >
+  > ### 8 & 9. 对标 Elysia 官网 & Bun 官网的真实端到端压测矩阵（实测数据说话）
+  > 我们将建立 **`bench/vs_web_frameworks/`** 与 **`bench/vs_bun_official/`** 两套**真实网络/I/O 端到端**压测（统一使用 `wrk` / `oha` / 同机测吞吐 + 延迟 + `/usr/bin/time -v` RSS 内存）：
+  > 1. **Elysia 官网同款 3 场景 HTTP 压测**（CP `cap:web` 单核 & 多核 vs **Elysia on Bun** vs **Fastify on Node** vs **Koa on Node** vs **Express on Node** vs **Axum on Rust**）：
+  >    - `GET /`（纯文本 `"Hi"`）
+  >    - `GET /id/:id?name=bun`（路径参数 + Query 提取 + 自定义响应头）
+  >    - `POST /json`（JSON 请求体解析 + 校验 + JSON 响应）
+  > 2. **Bun 官网同款 4 场景全维度对比（速度 + 延迟 + RSS 内存）**：
+  >    - **HTTP Server 吞吐 & 内存 RSS**（CP 原生多线程 `SO_REUSEPORT` vs Bun `Bun.serve` vs Node `http`）
+  >    - **WebSocket 聊天室广播消息/秒 & 内存 RSS**（CP `cap:ws` vs Bun WebSocket vs Node `ws`）
+  >    - **SQLite 复杂查询（Northwind 风格读/写）**（CP `cap:sqlite` vs `bun:sqlite` vs `better-sqlite3`）
+  >    - **多核并发内存对比**（见第 11 点）
+  >
+  > ### 10. 异步 / 事件循环 / Promise 迁移痛点与解决思路（如实剖析）
+  > - **现状判断**：CP 没有 JSC，也没有 JS 动态微任务队列 + 堆分配 `Promise` 对象，但这反而是 **性能优势而非劣势**：
+  >   - **顺畅处**：CP 已有 `lib/event_loop/`（最小堆定时器、无锁跨线程任务、`file_poll`）、`lib/net/`（uSockets）、`async/await` CPS 状态机。
+  >   - **受阻处**：JS/TS 的 `Promise.all` / `Promise.race` / `async` 闭包捕获在迁移时会遇到“堆分配闭包生命周期”和“异构返回类型”问题。
+  >   - **解决方案**：
+  >     1. 对 HTTP/WS 服务端主干采用 **“多线程 `SO_REUSEPORT` + 每核独立 `epoll/kqueue` 非阻塞事件循环 + 栈/池化连接状态机”**（与 Rust Tokio/Glommio、Nginx、Dragonfly 同架构，单连接内存仅 ~4KB，完全不需要 JS Promise 堆对象！）；
+  >     2. 对业务层并发 I/O 提供结构化并发原语（`spawn` / `joinAll` / `race`），在 `cap from -ts` 中自动将 `Promise.all([...])` 映射为 CP 结构化并发。
+  >
+  > ### 11. CP 多线程/多协程运行时对 Bun/Node 单线程的降维打击
+  > - **物理事实**：Bun/Node 受限于单线程 JS 引擎，吃满多核必须靠 `cluster` / `pm2` 起 $N$ 个独立进程——每个进程复制一份完整 V8/JSC 堆与代码段（16 核动辄 **1.2GB–2.5GB RSS**），且进程间状态无法共享（必须序列化过 IPC/Redis）；
+  > - **CP 优势**：单进程内开启 $N$ 个 OS Worker 线程绑定 `SO_REUSEPORT`（共享同一份代码段与只读配置，原子无锁共享状态/缓存），16 核满载 RSS 预计仅 **15MB–40MB（低 30x–60x）**，且 QPS 随核数近线性扩展！我们将在压测中**同时测 1 核与 8/16 核的 QPS 和 RSS 内存**，用实测表格直观展示这一碾压优势。
+  >
+  > ### 12. 完整分阶段执行计划（等你拍板即刻 2 子智能体 + 主控三线并行启动）
+  >
+  > | 阶段 | 核心交付 | 验收指标（全部实测说话） |
+  > | :--- | :--- | :--- |
+  > | **Phase 1（收尾当前进行中）** | 完成 `cap from -ts/-rs` 第二轮解析通过率强化（2 路子智能体已在跑），重测 `_ref/elysia` 与 `_ref/axum` | 解析通过率大幅跃升 + `migrate.md` 精简清晰 + 提交 |
+  > | **Phase 2（真实服务器内核 + `comptime` 路由）** | 实现 `lib/web/server.cp`（`SO_REUSEPORT` 多线程 + `epoll` 非阻塞事件循环 + HTTP/1.1 Keep-Alive + 零拷贝响应缓冲 + `cap:ws` 升级 + Graceful Shutdown）+ `comptime` 静态路由分发优化 + `app.trace()` | `cap run` 启动真实端口监听，通过 `curl`/并发压测 0 崩溃、0 内存泄漏 |
+  > | **Phase 3（开发调试生态）** | 实现 `cap run --watch` 文件热重载 + `cap lint --deadcode` 死代码检测 | 实测改 `.cp` 文件 <500ms 自动重启；准确检出未用符号 |
+  > | **Phase 4（真实跨框架 & 仿 Bun 官网压测）** | 同机实测：`CP (1核/8核)` vs `Elysia(Bun)` vs `Fastify/Koa/Express(Node)` 3 场景 HTTP + `WebSocket 广播` + `SQLite` + `原版依赖库(memoirist/zod/fast-decode-uri)` 对比（含 QPS、P99、RSS 内存），并同步更新官网 [website/](file:///data/dev/cp/website/) | 输出可复现脚本、原始 JSON 数据与真实对比表，**绝不估算** |
+  >
+  > 确认后回复「**启动**」，我立即在 Phase 1 收尾的同时，按 2 子智能体 + 主控三线并行推进 Phase 2 → Phase 4！

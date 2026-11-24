@@ -152,6 +152,26 @@ enum Commands {
         #[arg(short = 'm', long)]
         map: Option<PathBuf>,
     },
+    /// Migrate a TypeScript or Rust project (and its dependencies) to CP
+    From {
+        /// Migrate from TypeScript/JavaScript project
+        #[arg(long)]
+        ts: bool,
+        /// Migrate from Rust crate/workspace
+        #[arg(long)]
+        rs: bool,
+        /// Source project directory
+        src_dir: PathBuf,
+        /// Output directory (default: <src_dir>_cp)
+        #[arg(short = 'o', long)]
+        out: Option<PathBuf>,
+        /// Disable recursive conversion of Tier 3 local dependencies
+        #[arg(long)]
+        no_deps: bool,
+        /// Maximum dependency recursion depth (default: 4)
+        #[arg(long, default_value_t = 4)]
+        max_depth: usize,
+    },
     /// Run Language Server Protocol daemon
     Lsp,
 }
@@ -674,6 +694,62 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 };
                 let demangled = cpc::source_map::demangle_stack_trace(&trace, sm.as_ref());
                 print!("{}", demangled);
+            }
+            Commands::From {
+                ts,
+                rs,
+                src_dir,
+                out,
+                no_deps,
+                max_depth,
+            } => {
+                use cpc::migrate::deps::SourceLang;
+                use cpc::migrate::{run_migrate, MigrateOptions};
+                let lang = if ts && !rs {
+                    SourceLang::Ts
+                } else if rs && !ts {
+                    SourceLang::Rs
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Specify exactly one source language: `--ts` (or `-ts`) or `--rs` (or `-rs`)"
+                    ));
+                };
+                let out_dir = out.unwrap_or_else(|| {
+                    let base = src_dir
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("migrated");
+                    PathBuf::from(format!("{}_cp", base))
+                });
+                let summary = run_migrate(MigrateOptions {
+                    lang,
+                    src_dir,
+                    out_dir: out_dir.clone(),
+                    recursive_deps: !no_deps,
+                    max_depth,
+                })
+                .map_err(|e| anyhow::anyhow!("{}", e))?;
+                let total = summary.files.len();
+                let parse_ok = summary.files.iter().filter(|f| f.parse_ok).count();
+                let total_todos: usize = summary.files.iter().map(|f| f.todo_count).sum();
+                let pct = if total == 0 {
+                    100.0
+                } else {
+                    (parse_ok as f64) * 100.0 / (total as f64)
+                };
+                println!(
+                    "[cap from] Migrated '{}' -> {} | files={} (cpc parse ok: {}/{}, {:.1}%) | deps={} (recursive pkgs: {}) | TODOs={}",
+                    summary.project_name,
+                    out_dir.display(),
+                    total,
+                    parse_ok,
+                    total,
+                    pct,
+                    summary.deps.len(),
+                    summary.converted_dep_pkgs.len(),
+                    total_todos
+                );
+                println!("[cap from] Report written to: {}/migrate.md", out_dir.display());
             }
             Commands::Lsp => {
                 let rt = tokio::runtime::Runtime::new()?;

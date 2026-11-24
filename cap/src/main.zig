@@ -138,6 +138,8 @@ pub fn main(init: std.process.Init) !void {
         try handleFmt(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "lint")) {
         try handleLint(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "from")) {
+        try handleFrom(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "demangle")) {
         try handleDemangle(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "sniff")) {
@@ -341,6 +343,38 @@ fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
     }
 }
 
+fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    if (args.len == 0) {
+        std.debug.print("Usage:\n  cap from -ts <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>]\n  cap from -rs <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>]\n", .{});
+        std.process.exit(1);
+    }
+    const cpc_bin = try getCpcBin(allocator);
+    defer allocator.free(cpc_bin);
+
+    var cmd_list: std.ArrayList([]const u8) = .empty;
+    defer cmd_list.deinit(allocator);
+    try cmd_list.append(allocator, cpc_bin);
+    try cmd_list.append(allocator, "from");
+    for (args) |a| {
+        if (std.mem.eql(u8, a, "-ts")) {
+            try cmd_list.append(allocator, "--ts");
+        } else if (std.mem.eql(u8, a, "-rs")) {
+            try cmd_list.append(allocator, "--rs");
+        } else {
+            try cmd_list.append(allocator, a);
+        }
+    }
+
+    var child = try std.process.spawn(global_io, .{ .argv = cmd_list.items });
+    const term = try child.wait(global_io);
+    switch (term) {
+        .exited => |code| {
+            if (code != 0) std.process.exit(code);
+        },
+        else => std.process.exit(1),
+    }
+}
+
 fn usage() void {
     std.debug.print(
         \\  ██████╗      ██╗     ██████╗ 
@@ -357,6 +391,7 @@ fn usage() void {
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
         \\  cap fmt [--check] [--stdout] [path...] Format CP source files (default: .)
         \\  cap lint [path...]            Run syntax, borrow & 4-gate static audit (cpc brief)
+        \\  cap from <-ts|-rs> <dir>      Migrate TypeScript or Rust project & deps to CP + migrate.md
         \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
