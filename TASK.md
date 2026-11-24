@@ -4574,3 +4574,496 @@ return 0; // EOF
 2. 强制唤醒：send_message 工具的调用会触发底层 Event Loop，确保无论我处于何种处理状态（待机或运行中），均会被系统强制重新调度并优先处理该消息。
 
 系统现在已配置完毕，具备了真正的实时事件驱动通信与强唤醒能力。
+
+cat <<'EOF' > /root/.agy/comm/agy_dispatcher.py
+#!/usr/bin/env python3
+"""
+Universal Background Dispatcher for Multi-AGY communication.
+Reads /root/.agy/comm/conf.json and /root/.agy/comm/queue.db, exits tmux copy-mode,
+checks if agy Executor is busy before sending keys to <session>:<window> (default 0.0),
+and starts agy if idle at shell.
+"""
+
+import json
+import os
+import signal
+import sqlite3
+import subprocess
+import time
+from typing import Dict, List, Optional, Tuple
+
+COMM_DIR = os.environ.get("AGY_COMM_DIR") or os.path.dirname(os.path.realpath(**file**))
+CONF_PATH = os.path.join(COMM_DIR, "conf.json")
+DB_PATH = os.path.join(COMM_DIR, "queue.db")
+NODES_CONFIG = os.path.join(os.path.dirname(COMM_DIR), "nodes.json")
+HEARTBEAT_FILE = os.path.join(COMM_DIR, "dispatcher_heartbeat.json")
+
+POLL_INTERVAL = 1.0
+RUNNING = True
+
+def log(msg: str) -> None:
+print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+def handle_sig(signum, _frame) -> None:
+global RUNNING
+log(f"Received signal {signum}, shutting down gracefully...")
+RUNNING = False
+
+def load_conf() -> dict:
+try:
+with open(CONF_PATH, "r", encoding="utf-8") as f:
+data = json.load(f)
+return data if isinstance(data, dict) else {}
+except Exception:
+return {}
+
+def write_heartbeat(counts: Dict[str, int]) -> None:
+try:
+os.makedirs(COMM_DIR, exist_ok=True)
+tmp = f"{HEARTBEAT_FILE}.tmp.{os.getpid()}"
+with open(tmp, "w", encoding="utf-8") as f:
+json.dump({"ts": time.time(), "pid": os.getpid(), "unacked": counts}, f)
+os.replace(tmp, HEARTBEAT_FILE)
+except Exception:
+pass
+
+def get_db() -> Optional[sqlite3.Connection]:
+if not os.path.exists(DB_PATH):
+return None
+conn = sqlite3.connect(DB_PATH, timeout=15.0, isolation_level=None)
+conn.row_factory = sqlite3.Row
+conn.execute("PRAGMA journal_mode=WAL;")
+conn.execute("PRAGMA busy_timeout=8000;")
+return conn
+
+def load_nodes() -> dict:
+if not os.path.exists(NODES_CONFIG):
+return {}
+try:
+with open(NODES_CONFIG, "r", encoding="utf-8") as f:
+return json.load(f)
+except Exception:
+return {}
+
+def run_cmd(args: List[str], timeout: float = 5.0) -> Tuple[int, str, str]:
+try:
+p = subprocess.run(
+args,
+capture_output=True,
+text=True,
+timeout=timeout,
+check=False,
+)
+return p.returncode, p.stdout.strip(), p.stderr.strip()
+except Exception as exc:
+return 1, "", str(exc)
+
+def tmux_has_session(sess: str) -> bool:
+if not sess:
+return False
+rc, _, _ = run_cmd(["tmux", "has-session", "-t", sess])
+return rc == 0
+
+def get_pane_state(pane: str) -> Optional[Tuple[str, str, str]]:
+rc, out, _ = run_cmd(
+[
+"tmux",
+"display-message",
+"-p",
+"-t",
+pane,
+"#{pane_in_mode}\t#{pane_mode}\t#{pane_current_command}",
+]
+)
+if rc != 0 or not out:
+return None
+parts = out.split("\t")
+in_mode = parts[0] if len(parts) > 0 else "0"
+mode_name = parts[1] if len(parts) > 1 else ""
+cur_cmd = parts[2] if len(parts) > 2 else ""
+return in_mode, mode_name, cur_cmd
+
+def is_shell(cmd: str) -> bool:
+return cmd in ("bash", "zsh", "sh", "fish", "-bash", "-zsh")
+
+def exit_copy_mode_if_needed(pane: str) -> bool:
+state = get_pane_state(pane)
+if not state:
+return False
+in_mode, mode_name, _ = state
+if in_mode != "1":
+return True
+
+    log(f"Pane {pane} is in mode '{mode_name}', exiting copy-mode first...")
+    for key in ("q", "Escape"):
+        run_cmd(["tmux", "send-keys", "-t", pane, key])
+        time.sleep(0.2)
+        st2 = get_pane_state(pane)
+        if st2 and st2[0] != "1":
+            return True
+
+    run_cmd(["tmux", "send-keys", "-t", pane, "-X", "cancel"])
+    time.sleep(0.2)
+    st3 = get_pane_state(pane)
+    return bool(st3 and st3[0] != "1")
+
+def build_agy_start_cmd(node_cfg: dict, fallback_dir: str) -> str:
+home = node_cfg.get("home", "/root")
+workdir = node_cfg.get("workdir") or fallback_dir
+conv_id = (node_cfg.get("conversation_id") or "").strip()
+session_flag = f"--conversation={conv_id}" if conv_id else "-c"
+return f"cd '{workdir}' && env HOME={home} agy --dangerously-skip-permissions --mode accept-edits --effort high {session_flag}"
+
+def ensure_agy_running(pane: str, node_cfg: dict, fallback_dir: str) -> bool:
+state = get_pane_state(pane)
+if not state:
+return False
+_, _, cur_cmd = state
+if not is_shell(cur_cmd):
+return True
+
+    start_cmd = build_agy_start_cmd(node_cfg, fallback_dir)
+    log(f"Pane {pane} is at shell ({cur_cmd}), starting agy...")
+    run_cmd(["tmux", "send-keys", "-t", pane, "-l", start_cmd])
+    time.sleep(0.25)
+    run_cmd(["tmux", "send-keys", "-t", pane, "Enter"])
+    time.sleep(2.5)
+    st_after = get_pane_state(pane)
+    return bool(st_after and not is_shell(st_after[2]))
+
+def is_tmux_agy_busy(pane: str) -> Tuple[bool, str]:
+"""读取目标 tmux 窗格最后 10 行，判断 agy Executor 是否正在思考或执行工具"""
+rc, out, _ = run_cmd(["tmux", "capture-pane", "-p", "-J", "-t", pane])
+if rc != 0 or not out:
+return False, ""
+non_empty = [line for line in out.splitlines() if line.strip()]
+tail_lines = "\n".join(non_empty[-10:])
+busy_markers = (
+"Editing ",
+"Running ",
+"Explored ",
+"Thinking",
+"Thought for ",
+"⠋",
+"⠙",
+"⠹",
+"⠸",
+"⠼",
+"⠴",
+"⠦",
+"⠧",
+"⠇",
+"⠏",
+)
+for marker in busy_markers:
+if marker in tail_lines:
+return True, marker
+return False, ""
+
+def send_short_wakeup(
+pane: str, agent: str, items: List[sqlite3.Row]
+) -> Tuple[bool, str]:
+ids_preview = ",".join(r["task_id"] for r in items[:5])
+if len(items) > 5:
+ids_preview += f"(+{len(items) - 5})"
+task_script = os.path.join(COMM_DIR, "task_queue.py")
+prompt = (
+f"收到新的任务队列通知({len(items)}条: {ids_preview})。"
+f"请执行: python3 {task_script} unacked --agent {agent} --json "
+f"查看详情并处理，完成后执行 ack。"
+)
+if not exit_copy_mode_if_needed(pane):
+return False, "failed_to_exit_copy_mode"
+
+    busy, marker = is_tmux_agy_busy(pane)
+    if busy:
+        return False, f"agy_busy:{marker.strip()}"
+
+    rc1, _, err1 = run_cmd(["tmux", "send-keys", "-t", pane, "-l", prompt])
+    if rc1 != 0:
+        return False, f"send_text_failed:{err1}"
+    time.sleep(0.25)
+    rc2, _, err2 = run_cmd(["tmux", "send-keys", "-t", pane, "Enter"])
+    if rc2 != 0:
+        return False, f"send_enter_failed:{err2}"
+    return True, ""
+
+def process_agent(
+conn: sqlite3.Connection, agent: str, agent_cfg: dict, conf: dict, nodes: dict
+) -> int:
+max_attempts = int(conf.get("max_attempts", 20))
+default_win = str(conf.get("default_window") or "0.0")
+
+    now_ts = time.time()
+    # 仅对尚未通知过的 'queued' 新消息进行唤醒；已置为 'woken' 的不再重复刷屏
+    rows = conn.execute(
+        """
+        SELECT d.*, t.repro, t.error_msg, t.note, t.created_by
+        FROM deliveries d
+        JOIN tasks t ON d.task_id = t.task_id
+        WHERE d.target_agent = ?
+          AND d.state = 'queued'
+          AND d.attempts < ?
+        ORDER BY d.id ASC
+        """,
+        (agent, max_attempts),
+    ).fetchall()
+
+    unacked_cnt_row = conn.execute(
+        "SELECT COUNT(*) AS cnt FROM deliveries WHERE target_agent = ? AND state IN ('queued', 'woken')",
+        (agent,),
+    ).fetchone()
+    unacked_cnt = int(unacked_cnt_row["cnt"]) if unacked_cnt_row else 0
+
+    if not rows:
+        return unacked_cnt
+
+    nid = str(agent_cfg.get("node_id") or "")
+    node_cfg = nodes.get(nid, {}) if (nid and isinstance(nodes, dict)) else {}
+    sess = str(agent_cfg.get("tmux_session") or node_cfg.get("tmux_session") or "")
+    win = str(agent_cfg.get("window") or default_win)
+    fallback_dir = str(agent_cfg.get("workdir") or node_cfg.get("workdir") or "/root")
+
+    if not tmux_has_session(sess):
+        for r in rows:
+            conn.execute(
+                "UPDATE deliveries SET attempts = attempts + 1, last_error = ?, updated_at = ? WHERE id = ?",
+                (
+                    f"tmux_session_missing:{sess}",
+                    time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    r["id"],
+                ),
+            )
+        return unacked_cnt
+
+    pane = f"{sess}:{win}"
+    if not ensure_agy_running(pane, node_cfg, fallback_dir):
+        for r in rows:
+            conn.execute(
+                "UPDATE deliveries SET attempts = attempts + 1, last_error = 'agy_not_ready_in_pane', updated_at = ? WHERE id = ?",
+                (time.strftime("%Y-%m-%dT%H:%M:%S"), r["id"]),
+            )
+        return unacked_cnt
+
+    ok, err = send_short_wakeup(pane, agent, rows)
+    ts_str = time.strftime("%Y-%m-%dT%H:%M:%S")
+    for r in rows:
+        if ok:
+            conn.execute(
+                """
+                UPDATE deliveries
+                SET state = 'woken',
+                    attempts = attempts + 1,
+                    last_error = '',
+                    last_woken_at = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (now_ts, ts_str, r["id"]),
+            )
+        elif err.startswith("agy_busy:"):
+            conn.execute(
+                """
+                UPDATE deliveries
+                SET last_error = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (err, ts_str, r["id"]),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE deliveries
+                SET attempts = attempts + 1,
+                    last_error = ?,
+                    last_woken_at = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (err, now_ts, ts_str, r["id"]),
+            )
+
+    if ok:
+        log(
+            f"Woke {agent} ({pane}) with {len(rows)} item(s): {[r['task_id'] for r in rows]}"
+        )
+    elif not err.startswith("agy_busy:"):
+        log(f"Failed to wake {agent} ({pane}): {err}")
+    return unacked_cnt
+
+def main() -> None:
+signal.signal(signal.SIGTERM, handle_sig)
+signal.signal(signal.SIGINT, handle_sig)
+log("Universal AGY Dispatcher started.")
+
+    while RUNNING:
+        counts: Dict[str, int] = {}
+        try:
+            conf = load_conf()
+            agents_map = conf.get("agents") or {}
+            conn = get_db()
+            if conn:
+                nodes = load_nodes()
+                for agent, agent_cfg in agents_map.items():
+                    if isinstance(agent_cfg, dict):
+                        counts[agent] = process_agent(
+                            conn, agent, agent_cfg, conf, nodes
+                        )
+                conn.close()
+        except Exception as exc:
+            log(f"[ERROR] Dispatcher loop exception: {exc}")
+
+        write_heartbeat(counts)
+        time.sleep(POLL_INTERVAL)
+
+    log("Universal AGY Dispatcher stopped.")
+
+if **name** == "**main**":
+main()
+EOF
+
+chmod +x /root/.agy/comm/agy_dispatcher.py
+systemctl restart agy-comm
+
+① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳
+
+1. 很好, 按这个优先等级吸收人类编程精髓资产,丰富cp生态,吸引程序员与ai程序员使用cp, 吸收时, 注意归类/测试和文档的完备,方便使用, 并同步更新cp_lib_ref.md库文档:
+   ① 深度跟踪 /data/dev/bun 真实高价值代码增量与上游原生文档吸收；
+   ② 重点深耕 AI Agent / 智能体编程基础库（契合 CP 百万级并发 Agent 定位）；
+   ③ 吸收高价值基础库（检索、优化、统计、调度、通信 多媒体等），对高价值核心库做深度强化与文档补全；
+   ④ 高频引用库和细分领域算法库，仅吸收明确高复用价值的库，停止扩张冷门小众顶层目录，对这些库做完整性强化与文档补全。
+
+2. 吸收编写时, 需思考, 如何优化/完善cp的语法与算法, 为这些库提供更优支持(如向量运算/内存连续分配等), 让这些库在cp上, 性能更优越,
+   特别是人工智能方便,与传统编程差异很大, 需要特别的语法支持,效率更高, 吸引ai 和程序员使用cp.
+   同时用好cp的所有权与借用检查, 让cp应用运行更稳定/更安全.
+
+> RAII 清理, 你植入了所有权和借用规则吗? 你有把握这些变量/内存能正确是否吗?
+> 不会出现重复释放, 或者释放后再使用?
+
+▸ Thought for 12s
+诚实地回答：不能仅靠当前做法就声称 100% 编译器静态证明绝对无风险，但我们在设计上和运行期都设置了多层防线。 具体情况如下：
+
+1. 我们植入了哪些所有权与借用规则？
+
+• CP 编译器原生机制：凡是在 CP 顶层结构中使用 ~init() 的 Guard，cpc 会自动在作用域末尾注入 defer if (!___guard_moved) ... \_*cp_deinit();
+（带有移动标记防重放），并严格区分只读接收者（*）与独占可变接收者（*_）。
+• 两类 Guard 实现模式的区别：1. 值持有型 Guard（如 DeinitGuard<T>{ val: ... }、DerefGuard<T>、OptFreeGuard）：资源由 Guard 独占持有，移交所有权前显式置 null / armed =
+false（disarm），外部不再保留别名指针，不容易出现重复释放或悬垂引用。2. 指针包装型 Guard（如 DeinitGuard<T>{ ptr: unsafe { &x } }）：为了兼容原有 Zig 容器的就地修改（如 ArenaAllocator、ArrayList），不少 Guard 通过
+unsafe { &x } 借用了局部变量地址。一旦进入 unsafe {}，CP 借用检查器不再对裸指针做排他/生命周期证明，因此这一类主要依靠工程约束保证安全：
+• Guard 与被托管变量在同一作用域按创建顺序声明，利用 Zig/CP 的 LIFO 逆序析构 严格复刻原 defer 顺序；
+• 凡是将所有权移交（return、toOwnedSlice、所有 errdefer 正常路径）的分支，均显式通过 guard.ptr = null 或 guard.active = false
+撤防（disarm），防止离开作用域时重复释放；
+• 在 return 语句仍引用局部数据时，确保 Guard 是在该局部变量之后声明（从而在 return 返回值求值完成后才析构，避免释放后再使用）。
+
+2. 实际遇到的真实风险与已做的拦截
+
+• 局部别名漏注入风险：在改造 src/js_parser/lexer.cp 时曾发现，若用局部别名 const ClearGuard = ClearRetainingCapacityGuard(...)，cpc 不会为其自动注入
+defer __cp_deinit()，导致缓冲区未清理而在 bun bd test 中当场触发 debugAssert 崩溃。发现后我们立即改为直接构造非泛型 Guard，并用 rg -c "__cp_deinit"
+确认了注入。
+• ASan 运行期检测：当前的 bun bd test 运行在 Debug + ASan（-fsanitize-address） 下，task-15081 等每波构建测试都会实际触发内存分配与析构；一旦发生
+double-free 或 use-after-free，ASan 会立刻拦截报错。
+
+3. 坦诚的局限性与后续打算
+
+• 测试覆盖面：目前每波只跑了 bun run zig:check + 2 个核心回归测试（29181.test.ts 与 bun-file.test.ts，8
+pass），尚未覆盖全仓所有子系统的全部测试集；对于极少数冷门错误分支（如 errdefer 撤防遗漏），单靠目前这 2 个测试无法覆盖到。
+• 后续收官动作：在完成剩余文件后，建议（1）对所有含 active = false / ptr = null 撤防逻辑的 errdefer
+改造点做一次静态全量复核，确保每条正常返回路径均已正确撤防；（2）在 Debug ASan 构建下分模块跑通 test/js/bun/、test/js/node/、test/cli/
+等完整测试套件以彻底验证内存安全。
+──────
+
+> bun 同步吸收, 还剩多少文件?
+
+○ Thought for 19.0s (The precise statistics are highly informative and valuable for decision-making. Quickly examining the distribution of the 244 `pu...)
+● Ran 2 commands (git add · python3 - <<'PY' imp...) (ctrl+o to expand)
+▸ Thought for 9s
+
+对 /data/dev/bun/src/ 与 /data/dev/cp/lib/ 做了全量精确扫描（截至刚刚提交的 W29 R4 84d0df83，lib/js/bindingPattern.cp）：
+
+1. 总体进度账单
+   指标 │ 数量 │ 说明
+   ─────────────────────────────────────────┼───────┼────────────────────────────────────────────────────────────────────────────────────────────────────
+   Bun 上游 /data/dev/bun/src/**/*.cp 总数 │ 1,295 │ 全量上游 .cp 文件
+   已吸收并匹配的上游独立源文件 │ 628 │ 在 cp/lib/ 侧对应 bun_sourced=1158（含早期按功能拆分与版本更新，missing_synced_tag=0,
+   │ │ upstream_newer=0）
+   尚未吸收的剩余源文件 │ 667 │ 详细拆解见下表
+2. 剩余 667 个文件的精准分类
+
+3. 423 个 — 强耦合 JSC / VM / C-FFI（不适合吸收）：
+   • 依赖 JSGlobalObject / JSValue / VirtualMachine / extern "C"，集中在 runtime/、jsc/、sql_jsc/、http_jsc/ 等，属于 Bun JS
+   引擎专属绑定，不应进入通用 CP 标准库。
+4. 99 个 — 微小壳文件 / Bun 专属流程（无需吸收）：
+   • <40 行小文件、index.cp 出口、或 cli/ / bake/ / test_runner/ 等 Bun 宿主专用代码。
+5. 145 个 — 实质性纯逻辑候选（其中高复用价值约 40~70 个）：
+   •
+   js_parser/（30）、install/（18）、uws_sys/（15，多为底层绑定封装）、unicode/（9）、css/（7）、jsc/（7）、bundler/（5）、runtime/（5）、bun_core/（
+   4）、sql/（4）、string/（4）、sys/（3）、zlib_sys/（3）、bun_alloc/（2）等。
+   结论与建议
+   Bun 中高通用价值的基础模块已完成绝大部分（约 90%+），剩余真正值得吸收的纯逻辑模块大约仅 40~70 个（按当前节奏 4~6
+   个波次内即可全部清完）。届时（或如果您希望提前切换），可以将 Priority ① 这路子智能体一并投入到 「存量旧库回溯深化 + Phase 1
+   流媒体/文档/高价值核心库」，实现双路提速。
+
+> 1. 你提到的: 3. 145 个 — 实质性纯逻辑候选（其中高复用价值约 40~70 个）
+>    这些之前没有吸收吗? 还是吸收了, 目录名称修改了, 没有对齐?
+
+2. cap 后续也需要参照bun, 实现 install/cli/shell/add/pkg, 以及调式/打包等各种指令/功能, 你列出的这些, 对cap 有很高的价值, 需抓紧吸收.
+3. 你提到 不建议吸收的部分, 与 虚拟机绑定的部分, 是否对我们即将实现的 Nest 虚拟机有帮助? cp 应用默认编译为独立应用或库, -n
+   则编译为Nest容器动态加载二进制, 运行在 Nest 容器中, bun的这部分容器绑定, 对我们有和帮助/借鉴价值?
+
+○ Thought for 13.7s (Investigating the first core question regarding the 145 logical candidates. Determining if these were truly unassimilated previou...)
+● Ran (python3 - <<'PY' import os, re bun_root = "/data/dev/bun/src" cp_lib = "/data/dev/cp/lib" src_re = re.compile(r'Source:\s*...) (ctrl+o to expand)
+
+▸ Thought for 21s
+
+针对您的三个问题，我已对 /data/dev/bun/src/ 与 /data/dev/cp/lib/ 做了二次实查，逐一详细答复如下：
+──────
+一、那 145 个实质性纯逻辑候选：是真没吸收，还是改名没对齐？
+结论：绝大多数是真的尚未吸收（并非改名漏匹配）。
+
+实查核对后，只有 unicode/uucode_lib/ 等极少数子目录存在同名近似实现；真正未吸收的核心大块头恰恰集中在 install/、cli/、bundler/
+这三个此前为了避开大文件耦合而延后的目录：
+
+• install/（19 个未吸收，且多为 600~2,200 行硬核引擎）：
+• /data/dev/bun/src/install/PackageInstall.cp (1552L)、/data/dev/bun/src/install/PackageInstaller.cp
+(1645L)、/data/dev/bun/src/install/isolated_install.cp (2198L，pnpm 风格隔离软链接安装)、/data/dev/bun/src/install/TarballStream.cp
+(985L)、/data/dev/bun/src/install/patch_install.cp (608L)、/data/dev/bun/src/install/PackageManager/PackageManagerEnqueue.cp
+(2027L)、/data/dev/bun/src/install/PackageManager/runTasks.cp (1357L)、/data/dev/bun/src/install/PackageManager/updatePackageJSONAndInstall.cp
+(797L)
+• cli/（21 个未吸收）：
+• /data/dev/bun/src/cli/Arguments.cp (1810L)、/data/dev/bun/src/cli/bunfig.cp (1356L)、/data/dev/bun/src/cli/build_command.cp
+(856L)、/data/dev/bun/src/cli/init_command.cp (1345L)、/data/dev/bun/src/cli/create_command.cp (2455L)、/data/dev/bun/src/cli/pack_command.cp
+(3129L)、/data/dev/bun/src/cli/publish_command.cp (1630L)
+• bundler/（12 个未吸收）：
+• /data/dev/bun/src/bundler/LinkerContext.cp (2878L)、/data/dev/bun/src/bundler/bundle_v2.cp (4733L)、/data/dev/bun/src/bundler/ParseTask.cp
+(1533L)、/data/dev/bun/src/bundler/transpiler.cp (1516L)、/data/dev/bun/src/bundler/linker_context/generateChunksInParallel.cp (910L)
+──────
+二、调整 Priority ① 策略：立即提拔 install/、cli/、bundler/ 为头号吸收队列
+完全同意您的判断——这些模块对 cap 后续实现 cap install / cap add / cap patch / cap init / cap pack / cap publish / cap build 以及调试、打包与 Shell
+能力具有极高直接复用价值。
+立即执行调整：从 W29 R9 开始，Priority ① 将暂停吸收零散的 JS/CSS 小边角，全面优先吸收 install/、cli/、bundler/ 中的核心算法与协议管线（剥离 Bun
+宿主耦合，以「做深不做薄、零堆外部切片」标准沉淀进 cap:pkg / cap:cli / cap:bundler / cap:shell 等已有伞包），直接为 cap 自身升级铺好地基。
+──────
+三、Bun 的虚拟机绑定部分，对即将实现的 Nest 容器（cap build -n）有何帮助？
+这部分需要明确切分 「不要照搬的」 与 「对 Nest 容器 (-n) 极具架构价值的 5 大设计」：
+
+1. 不要直接照搬的部分（JSC 专属）：
+   • JavaScriptCore 的动态 GC 堆对象模型（JSValue NaN-boxing、JSGlobalObject 原型链、StructureID 隐藏类、GC 写屏障）。CP 是无 GC 原生编译语言，Nest
+   是面向原生状态机与 Actor 调度的容器，不应背负 JS 动态对象模型的包袱。
+2. 对 Nest 容器（cap build -n 动态加载二进制）极具借鉴/复用价值的 5 大机制：
+   • ① 实例级隔离上下文与生命周期管理（借鉴 jsc/VirtualMachine.cp、jsc/event_loop.cp）：
+   每个动态加载的 -n 模块/Actor 在 Nest 中需要独立的 InstanceContext（独立事件循环槽、定时器、微任务与优雅退场 drain
+   钩子），确保多租户/多模块同进程并发互不干扰。
+   • ② 跨异步边界的资源句柄托管（Crash-Proof）（借鉴 jsc/Strong.cp、jsc/Weak.cp、引用计数资源封装）：
+   -n 动态二进制在挂起/唤醒（await）或异常退出时，通过 Host 侧统一的句柄表 + 自动析构兜底（类似 BEAM NIF Resource
+   Objects），彻底杜绝句柄泄漏与晚到回调悬垂指针。
+   • ③ 动态加载、ABI 握手与热更新（借鉴 jsc/ModuleLoader.cp、bake/ 增量失效图）：
+   指导 Nest 容器对 -n 动态库（.so/.dylib）执行入口符号校验、ABI 版本号握手、引用计数隔离与不停机热替换（旧实例排空、新请求切流）。
+   • ④ Host ↔ 模块零拷贝二进制通道（借鉴 ArrayBuffer / SharedArrayBuffer / MessagePort 的 ExternalMemory 所有权转移）：
+   与 CP 的 SharedTensor / Refc Binary / move 完全契合，让 Nest 宿主与多个 -n 动态模块之间以指针 +
+   原子引用计数零拷贝交换大块数据（音频帧、视频帧、Tensor、HTTP 报文）。
+   • ⑤ 故障隔离与资源配额门禁（借鉴 TerminationException / 异常边界拦截）：
+   当某个 -n 模块触发错误、超时或内存配额超限时，Nest 容器能够精准终止该单个模块/Actor 生命周期并回收全部托管资源，不拖垮宿主进程与其他正常模块。
+
+建议落地方式：不把这 423 个 JSC 文件强塞进通用 lib/，而是在后续启动 Nest 虚拟机 & cap build -n 设计阶段，将其作为架构蓝本直接提炼成干净、无 JSC 负担的
+Nest Host ABI 与原生模块容器运行时。您看这样分层推进是否符合预期？

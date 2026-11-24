@@ -110,7 +110,7 @@ flowchart LR
 
 - **传统困境**：Python/TS 遇到本地 Embedding 余弦计算或重度正则匹配就会卡死 I/O；Go/Rust 则需要开发者手动设计复杂的 Worker Pool 和 Channel 路由。
 - **CP 独到设计**：在语言级提供双轨调度：
-  - **`spawn(async () => ...)`**：派生到**抢占式协程池**，仅消耗百字节级内存，支撑数百万 Agent 的 I/O 监听、工具流式调用、网络信箱收发；
+  - **`spawn(async () => ...)`**：派生到**Capdux抢占式协程池**，仅消耗百字节级内存，支撑数百万 Agent 的 I/O 监听、工具流式调用、网络信箱收发；
   - **`spawn.cpu(() => ...)`**：一键将繁重的小模型本地推理、向量检索、矩阵转置直接派发到底层的 **OS 物理线程池**，榨干 CPU 多核多线程算力，**完全不占用、不阻塞协程调度器**！
 
 ##### 2. 彻底无 GC（No GC）+ CPS 状态机切分：终结百万 Agent 内存爆炸
@@ -345,35 +345,35 @@ CP对他们来说 = **保留Zig全部能力，叠加Rust安全检查 + TS风格�
 
 `cap` 提供了比肩 `bun`、超越传统 `cargo`/`npm` 的极速统一指令行体系：
 
-| 用户命令                        | 底层优化模式 | 功能定位与行为说明                                                                                                  | 实装状态       |
-| :------------------------------ | :----------- | :------------------------------------------------------------------------------------------------------------------ | :------------- |
-| `cap <file/dir>`                | Debug        | **日常极速运行**：直接运行 `.cp` 脚本或目录，百毫秒级 JIT 式极速构建并在内存/本地直接运行。                         | **已全面实装** |
-| `cap run <file/dir>`            | Debug        | **显式运行模式**：与 `cap <file>` 等价，支持透传参数给用户程序。                                                    | **已全面实装** |
-| `cap build [dir]`               | ReleaseSafe  | **当前平台安全发布**：支持增量构建检查，仅编译变动文件，输出独立 Native 可执行文件至 `bin/`。                       | **已全面实装** |
-| `cap build -B` (或 `--force`)   | ReleaseSafe  | **强制全量编译**：忽略 mtime 与缓存状态，强制重新生成中间 Zig 代码与 Native 独立二进制。                            | **已全面实装** |
-| `cap build -r` (或 `--release`) | ReleaseSafe  | **终极矩阵跨平台构建**：单机一口气编译输出 Windows、macOS-ARM、macOS-Intel、Linux-x64、Linux-ARM 全套生产级二进制！ | **已全面实装** |
-| `cap build -f`                  | ReleaseFast  | **极限计算性能优化**：榨干硬件算力，消除一切额外运行时检查（可结合 `-r`：`cap build -r -f`）。                      | **已全面实装** |
-| `cap build -s`                  | ReleaseSmall | **极小体积构建**：极限剔除调试信息与体积优化，专用于边缘计算、嵌入式设备与轻量容器（可结合 `-r`）。                 | **已全面实装** |
-| `cap build --exe`               | -            | （默认行为）输出独立的系统原生可执行程序。                                                                          | **已全面实装** |
-| `cap build --obj`               | -            | 输出底层的 `.o` 机器码对象文件，供外部链接。                                                                        | **已全面实装** |
-| `cap build --lib`               | -            | 输出系统级静态库 `.a`，供 C/C++ 或宿主语言无缝桥接。                                                                | **已全面实装** |
-| `cap build -b` (或 `--beam`)    | ReleaseFast  | **Nest 智能体容器动态库**：编译为导出标准 C-ABI 的纯状态机动态库（`.so`/`.dll`），供 Nest 容器原生动态热加载。      | **已全面实装** |
-| `cap clean`                     | -            | **构建缓存清理**：一键安全清理 `.cap/zig/`、`.cap/zig-cache/`、`.cap/obj/` 与输出目录 `bin/`。                      | **已全面实装** |
-| `cap add <pkg>`                 | -            | **项目级依赖安装**：极速拉取并软链接到 `cap_modules/`，自动将依赖与 Semver 写入 `cap.json`。                        | **已全面实装** |
-| `cap add -g <pkg>`              | -            | **全局依赖注入**：将公共高频依赖安装到 `~/.cap/global/cap_modules/`，作为当前系统所有项目的公共兜底池。             | **已全面实装** |
-| `cap test [dir]`                | Debug        | **单元与集成测试**：递归扫描并执行测试用例，结果输出至 `bin/test/`，与业务产物物理隔离。                            | **已全面实装** |
-| `cap init [template]`           | -            | **开箱即用工程脚手架**：快速初始化模板工程（支持 `app` 独立应用、`agent` 智能体服务、`lib` 库模块）。               | **已全面实装** |
-| `cap remove <pkg>`              | -            | **依赖卸载**：清理指定依赖项及其孤立软链接，同步更新 `cap.json` 清单。                                              | **已全面实装** |
-| `cap update [pkg]`              | -            | **语义化版本升级**：按照 `^`/`~` 规则安全升级依赖包至符合 Semver 规范的最新版本。                                   | **已全面实装** |
-| `cap bench <file.cp>`           | ReleaseFast  | **微秒级基准测试**：纳秒级高精度计时度量状态机、闭包与数据吞吐耗时。                                                | **已全面实装** |
-| `cap install` / `cap i`         | -            | **依赖与 Workspace 安装**：展开 `workspaces`、`workspace:*`、`file:` 与远程包，支持 `--production`/`--prod`（跳过 `dev`）、`--frozen-lockfile`、`--rebuild`。 | **已全面实装** |
-| `cap rebuild [pkg]`             | -            | **原生 C/C++ 静态库重编**：按 `bin` 声明跨平台交叉编译（`--target=<os-arch\|all>`、`--filter <pkg>`、`--write-prebuilt`），默认 `-g0` 瘦身产物。 | **已全面实装** |
-| `cap pack [options]`            | -            | **双格式归档打包**：默认将主包与平台预编译二进制分离打包为 `.tar.zst` + `pack-manifest.json`；`--npm`/`--tgz` 输出带 `package/` 前缀与合成 `package.json` 的标准 Gzip `.tgz`。 | **已全面实装** |
+| 用户命令                        | 底层优化模式 | 功能定位与行为说明                                                                                                                                                                                             | 实装状态       |
+| :------------------------------ | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------- |
+| `cap <file/dir>`                | Debug        | **日常极速运行**：直接运行 `.cp` 脚本或目录，百毫秒级 JIT 式极速构建并在内存/本地直接运行。                                                                                                                    | **已全面实装** |
+| `cap run <file/dir>`            | Debug        | **显式运行模式**：与 `cap <file>` 等价，支持透传参数给用户程序。                                                                                                                                               | **已全面实装** |
+| `cap build [dir]`               | ReleaseSafe  | **当前平台安全发布**：支持增量构建检查，仅编译变动文件，输出独立 Native 可执行文件至 `bin/`。                                                                                                                  | **已全面实装** |
+| `cap build -B` (或 `--force`)   | ReleaseSafe  | **强制全量编译**：忽略 mtime 与缓存状态，强制重新生成中间 Zig 代码与 Native 独立二进制。                                                                                                                       | **已全面实装** |
+| `cap build -r` (或 `--release`) | ReleaseSafe  | **终极矩阵跨平台构建**：单机一口气编译输出 Windows、macOS-ARM、macOS-Intel、Linux-x64、Linux-ARM 全套生产级二进制！                                                                                            | **已全面实装** |
+| `cap build -f`                  | ReleaseFast  | **极限计算性能优化**：榨干硬件算力，消除一切额外运行时检查（可结合 `-r`：`cap build -r -f`）。                                                                                                                 | **已全面实装** |
+| `cap build -s`                  | ReleaseSmall | **极小体积构建**：极限剔除调试信息与体积优化，专用于边缘计算、嵌入式设备与轻量容器（可结合 `-r`）。                                                                                                            | **已全面实装** |
+| `cap build --exe`               | -            | （默认行为）输出独立的系统原生可执行程序。                                                                                                                                                                     | **已全面实装** |
+| `cap build --obj`               | -            | 输出底层的 `.o` 机器码对象文件，供外部链接。                                                                                                                                                                   | **已全面实装** |
+| `cap build --lib`               | -            | 输出系统级静态库 `.a`，供 C/C++ 或宿主语言无缝桥接。                                                                                                                                                           | **已全面实装** |
+| `cap build -b` (或 `--beam`)    | ReleaseFast  | **Nest 智能体容器动态库**：编译为导出标准 C-ABI 的纯状态机动态库（`.so`/`.dll`），供 Nest 容器原生动态热加载。                                                                                                 | **已全面实装** |
+| `cap clean`                     | -            | **构建缓存清理**：一键安全清理 `.cap/zig/`、`.cap/zig-cache/`、`.cap/obj/` 与输出目录 `bin/`。                                                                                                                 | **已全面实装** |
+| `cap add <pkg>`                 | -            | **项目级依赖安装**：极速拉取并软链接到 `cap_modules/`，自动将依赖与 Semver 写入 `cap.json`。                                                                                                                   | **已全面实装** |
+| `cap add -g <pkg>`              | -            | **全局依赖注入**：将公共高频依赖安装到 `~/.cap/global/cap_modules/`，作为当前系统所有项目的公共兜底池。                                                                                                        | **已全面实装** |
+| `cap test [dir]`                | Debug        | **单元与集成测试**：递归扫描并执行测试用例，结果输出至 `bin/test/`，与业务产物物理隔离。                                                                                                                       | **已全面实装** |
+| `cap init [template]`           | -            | **开箱即用工程脚手架**：快速初始化模板工程（支持 `app` 独立应用、`agent` 智能体服务、`lib` 库模块）。                                                                                                          | **已全面实装** |
+| `cap remove <pkg>`              | -            | **依赖卸载**：清理指定依赖项及其孤立软链接，同步更新 `cap.json` 清单。                                                                                                                                         | **已全面实装** |
+| `cap update [pkg]`              | -            | **语义化版本升级**：按照 `^`/`~` 规则安全升级依赖包至符合 Semver 规范的最新版本。                                                                                                                              | **已全面实装** |
+| `cap bench <file.cp>`           | ReleaseFast  | **微秒级基准测试**：纳秒级高精度计时度量状态机、闭包与数据吞吐耗时。                                                                                                                                           | **已全面实装** |
+| `cap install` / `cap i`         | -            | **依赖与 Workspace 安装**：展开 `workspaces`、`workspace:*`、`file:` 与远程包，支持 `--production`/`--prod`（跳过 `dev`）、`--frozen-lockfile`、`--rebuild`。                                                  | **已全面实装** |
+| `cap rebuild [pkg]`             | -            | **原生 C/C++ 静态库重编**：按 `bin` 声明跨平台交叉编译（`--target=<os-arch\|all>`、`--filter <pkg>`、`--write-prebuilt`），默认 `-g0` 瘦身产物。                                                               | **已全面实装** |
+| `cap pack [options]`            | -            | **双格式归档打包**：默认将主包与平台预编译二进制分离打包为 `.tar.zst` + `pack-manifest.json`；`--npm`/`--tgz` 输出带 `package/` 前缀与合成 `package.json` 的标准 Gzip `.tgz`。                                 | **已全面实装** |
 | `cap publish [options]`         | -            | **npm / Verdaccio 生态直发**：自动由 `cap.json` 合成 `package.json` 打包 `.tgz`，读取 `CAP_TOKEN`/`NPM_TOKEN`/`~/.npmrc` 直发官方 npm 或私有仓库（支持 `--registry`/`--access`/`--tag`/`--otp`/`--dry-run`）。 | **已全面实装** |
-| `cap cache <dir\|ls\|clean>`    | -            | **全局缓存治理**：查看或清理 `~/.cap/cache/` 下的历史归档与预编译缓存。                                             | **已全面实装** |
-| `cap pm ls` / `cap why <pkg>`   | -            | **依赖审计与溯源**：列出 `cap_modules/` 已安装包及 `bin` 产物（支持 `--filter`），追踪某依赖包的引入路径。           | **已全面实装** |
-| `cap fmt [--check] [path]`      | -            | **代码格式化**：原生百毫秒级幂等格式化全部 `.cp` 源代码，支持 `--check`（CI 门禁）与 `--stdout`。                | **已全面实装** |
-| `cap lint [path]`               | -            | **静态分析与安全审计**：基于 `cpc brief` 执行语法、借用冲突与 4 项纯净度门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`）审计。 | **已全面实装** |
+| `cap cache <dir\|ls\|clean>`    | -            | **全局缓存治理**：查看或清理 `~/.cap/cache/` 下的历史归档与预编译缓存。                                                                                                                                        | **已全面实装** |
+| `cap pm ls` / `cap why <pkg>`   | -            | **依赖审计与溯源**：列出 `cap_modules/` 已安装包及 `bin` 产物（支持 `--filter`），追踪某依赖包的引入路径。                                                                                                     | **已全面实装** |
+| `cap fmt [--check] [path]`      | -            | **代码格式化**：原生百毫秒级幂等格式化全部 `.cp` 源代码，支持 `--check`（CI 门禁）与 `--stdout`。                                                                                                              | **已全面实装** |
+| `cap lint [path]`               | -            | **静态分析与安全审计**：基于 `cpc brief` 执行语法、借用冲突与 4 项纯净度门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`）审计。                                                                                     | **已全面实装** |
 
 ---
 
@@ -458,6 +458,7 @@ flowchart TD
 #### 2. 四大一级依赖、按需链接与双格式打包/发布实战
 
 > **`cap.json` 2.0 核心设计规范**：
+>
 > 1. **四大一级依赖键**：
 >    - **`dep`**（运行时依赖，兼容 `dependencies`/`deps`）：`cap add <pkg>` 写入；
 >    - **`dev`**（开发依赖，兼容 `dev_dependencies`/`devDependencies`）：`cap add <pkg> -d` 写入；`cap install --production`（或 `--prod`）自动跳过；
@@ -487,6 +488,7 @@ CAP_REGISTRY=https://registry.npmjs.org cap add @cap/picohttp@1.0.0
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -576,6 +578,7 @@ export * from "./io/index";
 #### 1.1 模块重导出规范（Re-export 与门面模式）
 
 CP 语言原生支持标准的重导出语法，广泛应用于复合标准库及包门面（Facade）：
+
 - **具名重导出**：`export { foo, bar } from "./sub_module";` —— 将子模块声明的符号直接公开导出，无需显式写 `import` 再 `export`；
 - **全量重导出**：`export * from "./sub_module";` —— 门面文件将子目录/子模块入口中的所有公开符号一次性透明对外暴露；
 - **标准库目录化规范（单一真理来源，杜绝冗余门面）**：
@@ -640,27 +643,27 @@ CP 语言原生支持标准的重导出语法，广泛应用于复合标准库�
 
 CP 是一门严格无 GC 的静态类型编译型语言，禁止任何隐式类型提升：
 
-| 标量类型  | 内存宽度                   | 说明                                                               |
-| :-------- | :------------------------- | :----------------------------------------------------------------- |
-| `i8`      | 8-bit 有符号整型           | 默认整数字面量类型                                                 |
-| `u8`      | 8-bit 无符号整型           | 无符号索引、尺寸                                                   |
-| `i16`     | 16-bit 有符号整型          | 默认整数字面量类型                                                 |
-| `u16`     | 16-bit 无符号整型          | 无符号索引、尺寸                                                   |
-| `i32`     | 32-bit 有符号整型          | 默认整数字面量类型                                                 |
-| `u32`     | 32-bit 无符号整型          | 无符号索引、尺寸                                                   |
-| `i64`     | 64-bit 有符号整型          | 高精度时间戳、大计数器                                             |
-| `u64`     | 64-bit 无符号整型          | 高精度时间戳、大计数器                                             |
-| `i128`    | 128-bit 有符号整型         | 超大整型计算、高精度中间量                                         |
-| `u128`    | 128-bit 无符号整型         | 超大整型计算、位运算混淆计算                                       |
-| `u1`~`u128` / `i1`~`i128` | 任意位宽原生整型 | 精准位宽标量，零开销映射硬件寄存器与 `packed struct` 位字段 |
-| `usize`   | 无符号系统字长 (32/64-bit) | 内存偏移量、容器长度                                               |
-| `isize`   | 与符号系统字长 (32/64-bit) | 内存偏移量、容器长度                                               |
-| `f32`     | 32-bit 单精度浮点          | 图形计算、Tensor 运算基准                                          |
-| `f64`     | 64-bit 双精度浮点          | 默认浮点字面量类型                                                 |
-| `bool`    | 1-bit / 1-byte             | 布尔真假值 (`true` / `false`)                                      |
-| `string`  | 连续只读 UTF-8 内存视图    | 附带长度信息的不可变切片视图                                       |
-| `cstring` | 以 null 结尾的连续字节切片 | 对接 C/Bun 原生库，映射为 Zig `[:0]const u8` (可变借用为 `[:0]u8`) |
-| `void`    | 0-bit                      | 空单元类型，表示无返回值                                           |
+| 标量类型                  | 内存宽度                   | 说明                                                               |
+| :------------------------ | :------------------------- | :----------------------------------------------------------------- |
+| `i8`                      | 8-bit 有符号整型           | 默认整数字面量类型                                                 |
+| `u8`                      | 8-bit 无符号整型           | 无符号索引、尺寸                                                   |
+| `i16`                     | 16-bit 有符号整型          | 默认整数字面量类型                                                 |
+| `u16`                     | 16-bit 无符号整型          | 无符号索引、尺寸                                                   |
+| `i32`                     | 32-bit 有符号整型          | 默认整数字面量类型                                                 |
+| `u32`                     | 32-bit 无符号整型          | 无符号索引、尺寸                                                   |
+| `i64`                     | 64-bit 有符号整型          | 高精度时间戳、大计数器                                             |
+| `u64`                     | 64-bit 无符号整型          | 高精度时间戳、大计数器                                             |
+| `i128`                    | 128-bit 有符号整型         | 超大整型计算、高精度中间量                                         |
+| `u128`                    | 128-bit 无符号整型         | 超大整型计算、位运算混淆计算                                       |
+| `u1`~`u128` / `i1`~`i128` | 任意位宽原生整型           | 精准位宽标量，零开销映射硬件寄存器与 `packed struct` 位字段        |
+| `usize`                   | 无符号系统字长 (32/64-bit) | 内存偏移量、容器长度                                               |
+| `isize`                   | 与符号系统字长 (32/64-bit) | 内存偏移量、容器长度                                               |
+| `f32`                     | 32-bit 单精度浮点          | 图形计算、Tensor 运算基准                                          |
+| `f64`                     | 64-bit 双精度浮点          | 默认浮点字面量类型                                                 |
+| `bool`                    | 1-bit / 1-byte             | 布尔真假值 (`true` / `false`)                                      |
+| `string`                  | 连续只读 UTF-8 内存视图    | 附带长度信息的不可变切片视图                                       |
+| `cstring`                 | 以 null 结尾的连续字节切片 | 对接 C/Bun 原生库，映射为 Zig `[:0]const u8` (可变借用为 `[:0]u8`) |
+| `void`                    | 0-bit                      | 空单元类型，表示无返回值                                           |
 
 ---
 
@@ -783,9 +786,10 @@ pub const LibInfo = struct {
 #### 3.3.0.2 错误联合类型（Result）声明顺序
 
 CP 语法遵从 TypeScript / Rust 成功优先直觉，Result 类型统一采用 `OkType!ErrType`：
+
 - `void!bun.JSError`（成功返回 void，失败携带 JSError）；
 - `jsc.JSValue!bun.JSTerminated`（成功返回 JSValue，失败携带 JSTerminated）。
-转译器（`cpc`）在生成 Zig 代码时会自动转为 Zig 的 `ErrType!OkType`。
+  转译器（`cpc`）在生成 Zig 代码时会自动转为 Zig 的 `ErrType!OkType`。
 
 ---
 
@@ -881,6 +885,7 @@ unsafe {
 ```
 
 若在普通安全代码块中试图使用 `as` 强转裸指针，cpc 编译器前端静态报错：`CP Compile Error: Raw pointer casting is only allowed inside unsafe block`。
+
 > **与 `@bitCast` 的明确界分**：数值大小裁剪、有符号/无符号转换及标量转型使用 `as` 或 `T(x)`；仅当需要保持底层二进制位 100% 不变（如 Tagged Pointer 指针高低位打标、`f32 <-> u32`、`@Vector` 位压缩）时，显式使用 `@bitCast(expr)`（详见 19.7 节）。
 
 ---
@@ -1054,6 +1059,7 @@ export enum FetchRequestMode: u2 {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -1106,13 +1112,13 @@ const [startVal, ..., endVal] = arr; // startVal = 10, endVal = 50
 
 CP 的对象解构与所有权/借用检查体系深度融合，支持 **五态解构矩阵**，并在成员级别原生支持 **局部成员分离可变借用（Disjoint Member Borrowing）**：
 
-| 解构形态 | 语法示例 | 内存与所有权语义 |
-| :--- | :--- | :--- |
-| **1. 默认只读提取** | `const { x, y } = pt;` | POD 字段执行值拷贝；RAII 资源字段为只读借用，**零析构责任** |
-| **2. 整体可变借用** | `const { handlers: h, port } = *_;` | 对容器整体建立独占可变借用（借用存活期间与任意子成员互斥） |
-| **3. 局部成员分离可变借用** | `const { *a: ma, *b: mb, c } = obj;` | 精准借用互不重叠的子字段，**允许同时持有多个不同字段的可变借用并行修改** |
-| **4. 整体所有权转移** | `const { res: r, tag } = move holder;` | 整容器移交所有权，原变量 `holder` 失效，`r` 接管 RAII 析构责任 |
-| **5. 单字段所有权转移** | `const { move res: r, tag } = holder;` | 仅将指定字段 `res` 的所有权移交给 `r`，其余字段按默认只读提取 |
+| 解构形态                    | 语法示例                               | 内存与所有权语义                                                         |
+| :-------------------------- | :------------------------------------- | :----------------------------------------------------------------------- |
+| **1. 默认只读提取**         | `const { x, y } = pt;`                 | POD 字段执行值拷贝；RAII 资源字段为只读借用，**零析构责任**              |
+| **2. 整体可变借用**         | `const { handlers: h, port } = *_;`    | 对容器整体建立独占可变借用（借用存活期间与任意子成员互斥）               |
+| **3. 局部成员分离可变借用** | `const { *a: ma, *b: mb, c } = obj;`   | 精准借用互不重叠的子字段，**允许同时持有多个不同字段的可变借用并行修改** |
+| **4. 整体所有权转移**       | `const { res: r, tag } = move holder;` | 整容器移交所有权，原变量 `holder` 失效，`r` 接管 RAII 析构责任           |
+| **5. 单字段所有权转移**     | `const { move res: r, tag } = holder;` | 仅将指定字段 `res` 的所有权移交给 `r`，其余字段按默认只读提取            |
 
 ```typescript
 struct MetricsBox {
@@ -1213,13 +1219,13 @@ pub fn checkTag(tag: Tag): i32 {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
 - **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ---
-
 
 ### 4.4 守卫条件表达式与穷尽性检查
 
@@ -1345,6 +1351,7 @@ fn render(u: User?): void {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -1661,6 +1668,7 @@ class User {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -1832,6 +1840,7 @@ class Account {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -1982,6 +1991,7 @@ let left = pool.available();
 #### 5.15.3 调用规范统一与 `E0219` 中性双向诊断
 
 `struct` 与 `class` 的实例/静态调用规则完全统一：
+
 - 实例方法应通过 `instance.method(...)` 调用（或在 UFCS 形式下显式将实例作为首参传入）；
 - 若以 **`Type.method(...)`** 形式调用未加 `static`（也不在 `static { ... }` 内）的实例方法，且未将实例作为首参传入，编译器将在**调用点**报 **`error[E0219]`**（缺失实例接收者），并给出中性双向自愈提示：
   1. 若该方法本就是实例方法 -> 通过具体实例调用 `obj.method(...)`；
@@ -2122,14 +2132,14 @@ CP 将**直接赋值、对象解构、函数参数、方法接收者与循环迭
 
 ### 6.2 统一语法规范矩阵
 
-| 语法场景 | 只读（默认，零析构） | 安全可变借用（`*`，零析构） | 显式所有权转移（`move` / `own`） | Unsafe 裸指针（尾置 `!`） |
-| :--- | :--- | :--- | :--- | :--- |
-| **1. 直接赋值** | `const a = b;`（POD 拷贝 / RAII 只读借用） | **`const m = *b;`** | **`const a = move b;`** | `const p: *T! = &b;` / `*b!` |
-| **2. 对象解构** | `const { x, y } = obj;` | `const { *a: ma, *b: mb } = obj;` / `const { x } = *obj;` | `const { move r } = obj;` / `const { r } = move obj;` | — |
-| **3. 函数具名参数** | `fn f(x: T)` | **`fn f(x: *T)`** | **`fn f(move x: T)`** / `fn f(own x: T)` | `unsafe fn f(p: *T!)` |
-| **4. 方法接收者 `_`** | `fn get()` _（省略只读 `_`）_ | **`fn set(*_, v: i32)`** | **`fn close(move _)`** / `fn close(own _)` | — |
-| **5. `for` 循环迭代** | `for (x of list)` | **`for (*x of list)`** | **`for (move x of list)`** | — |
-| **6. 类型 / 返回值** | `: &T`（或 `: &param T`） | **`: *T`**（或 `: *param T`） | **`: T`** | **`: *T!`** / **`: **T!`** |
+| 语法场景              | 只读（默认，零析构）                       | 安全可变借用（`*`，零析构）                               | 显式所有权转移（`move` / `own`）                      | Unsafe 裸指针（尾置 `!`）    |
+| :-------------------- | :----------------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------- | :--------------------------- |
+| **1. 直接赋值**       | `const a = b;`（POD 拷贝 / RAII 只读借用） | **`const m = *b;`**                                       | **`const a = move b;`**                               | `const p: *T! = &b;` / `*b!` |
+| **2. 对象解构**       | `const { x, y } = obj;`                    | `const { *a: ma, *b: mb } = obj;` / `const { x } = *obj;` | `const { move r } = obj;` / `const { r } = move obj;` | —                            |
+| **3. 函数具名参数**   | `fn f(x: T)`                               | **`fn f(x: *T)`**                                         | **`fn f(move x: T)`** / `fn f(own x: T)`              | `unsafe fn f(p: *T!)`        |
+| **4. 方法接收者 `_`** | `fn get()` _（省略只读 `_`）_              | **`fn set(*_, v: i32)`**                                  | **`fn close(move _)`** / `fn close(own _)`            | —                            |
+| **5. `for` 循环迭代** | `for (x of list)`                          | **`for (*x of list)`**                                    | **`for (move x of list)`**                            | —                            |
+| **6. 类型 / 返回值**  | `: &T`（或 `: &param T`）                  | **`: *T`**（或 `: *param T`）                             | **`: T`**                                             | **`: *T!`** / **`: **T!`**   |
 
 ### 6.3 变量绑定、唯一析构 `~init()` 与 `drop(x)` 双重幂等 RAII
 
@@ -2225,6 +2235,7 @@ fn bad_borrow(data: *InternalLoopData) {
     q1.* = 1;
 }
 ```
+
 - **可变借用变量的三类核心操作（自动解引用与显式 `.*`）**：
   1. **基础值类型（`i32`, `f32`, `bool` 等）**：通过后缀解引用 `p.* = val` 原地修改所借用变量的值；
   2. **结构体 / 对象字面量（`{a: 10, b: 20}` / `struct` / `class`）**：支持自动解引用，直接通过 `p.a = val` 原地修改字段；
@@ -2414,8 +2425,8 @@ error[E0217]: index out of bounds: index 300 is out of bounds for buffer of leng
 let s: cstring = "hello"; // 具备确定长度 len 为 5 (有效范围 0..4，5 为哨兵 \0)
 
 // 转换或提取带明确长度的安全切片
-let slice = s[0..max_len]; // 转换为 []u8
-slice[1] = 'A'; // 若动态索引超出 max_len，触发带行号与完整调用栈的安全 Panic！
+let slice = s[(0).max_len]; // 转换为 []u8
+slice[1] = "A"; // 若动态索引超出 max_len，触发带行号与完整调用栈的安全 Panic！
 ```
 
 切片自带动态长度，在 `Debug` 与 `ReleaseSafe` 模式下，底层机器码在每一次内存寻址写入前，会自动注入硬件级边界校验（`index >= slice.len`）。一旦越界，在任何破坏性物理写入发生之前，立即触发确定性 Fail-Fast Panic，绝不发生静默脏数据污染！
@@ -2733,12 +2744,12 @@ CP 彻底废除 `self` 与 `this`（书写 `self`/`this`/`*this`/`mut _` 直接�
 
 #### 6.9.2 首参 `_` 的四态权限矩阵
 
-| 实例权限模式 | 权威方法声明语法 | 编译期安全检查规则 |
-| :--- | :--- | :--- |
-| **1. 只读借用（默认省略 `_`）** | `fn get_val(): i32` | • 内部禁止修改 `_.field` 或调用 `*_` / `move _` 方法<br>• 调用 `obj.get_val()` 产生只读借用 |
-| **2. 可变借用（`*_`）** | **`fn set_val(*_, v: i32)`** | • 允许修改自身字段及调用其他 `*_` 方法<br>• 调用 `obj.set_val(1)` 时与活跃借用严格互斥 |
-| **3. 所有权消费（`move _` / `own _`）** | `fn close(move _)`<br>`fn into_raw(own _): i32` | • 调用 `obj.close()` 后，外层 `obj` **所有权立即失效**（后续访问报 `E0203`）<br>• 自动跳过外层 `defer ~init()`，杜绝 Double-Free |
-| **4. 静态方法（`static` / `static {}`）** | `static fn create(): Tensor` | • 无实例接收者 `_`，通过 `TypeName.create()` 调用 |
+| 实例权限模式                              | 权威方法声明语法                                | 编译期安全检查规则                                                                                                               |
+| :---------------------------------------- | :---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| **1. 只读借用（默认省略 `_`）**           | `fn get_val(): i32`                             | • 内部禁止修改 `_.field` 或调用 `*_` / `move _` 方法<br>• 调用 `obj.get_val()` 产生只读借用                                      |
+| **2. 可变借用（`*_`）**                   | **`fn set_val(*_, v: i32)`**                    | • 允许修改自身字段及调用其他 `*_` 方法<br>• 调用 `obj.set_val(1)` 时与活跃借用严格互斥                                           |
+| **3. 所有权消费（`move _` / `own _`）**   | `fn close(move _)`<br>`fn into_raw(own _): i32` | • 调用 `obj.close()` 后，外层 `obj` **所有权立即失效**（后续访问报 `E0203`）<br>• 自动跳过外层 `defer ~init()`，杜绝 Double-Free |
+| **4. 静态方法（`static` / `static {}`）** | `static fn create(): Tensor`                    | • 无实例接收者 `_`，通过 `TypeName.create()` 调用                                                                                |
 
 #### 6.9.3 实例方法的生命周期联动推导
 
@@ -2818,11 +2829,11 @@ switch (some_user) {
 
 CP 彻底废除传统的 `interface` 混合模型，实现数据布局与行为契约的彻底解耦，并为三类核心数据容器划定清晰边界：
 
-| 容器类型 | 内存分配与构造 | 成员默认可见性 | 继承与多态 | 所有权与析构语义 |
-| :--- | :--- | :---: | :---: | :--- |
-| **`struct`** | 纯栈分配，无需 `new`（`Point{ x: 1, y: 2 }`） | **默认 `pub`** | 无继承，支持 `trait`/`impl` | 无 `~init()` 且全 Copy -> POD 值拷贝；声明 `~init()` -> 栈上 Move-Only RAII 句柄 |
-| **`class`** | 堆分配引用语义，必须 `new Class(...)` | **默认 `priv`**（公开写 `pub`） | 支持 `extends`/`super`/`Box<dyn Trait>` | 堆上 RAII 对象；未手写 `init` 时**自动合成全字段默认 `init`**；支持 `#field` 硬隔离私有字段 |
-| **`ref struct`** | 纯栈绑定视图（允许持有栈借用字段） | **默认 `pub`** | 无继承 | 生命周期锁定当前栈帧，**物理严禁跨 `spawn`/`await` 或 `return` 逃逸** |
+| 容器类型         | 内存分配与构造                                |         成员默认可见性          |               继承与多态                | 所有权与析构语义                                                                            |
+| :--------------- | :-------------------------------------------- | :-----------------------------: | :-------------------------------------: | :------------------------------------------------------------------------------------------ |
+| **`struct`**     | 纯栈分配，无需 `new`（`Point{ x: 1, y: 2 }`） |         **默认 `pub`**          |       无继承，支持 `trait`/`impl`       | 无 `~init()` 且全 Copy -> POD 值拷贝；声明 `~init()` -> 栈上 Move-Only RAII 句柄            |
+| **`class`**      | 堆分配引用语义，必须 `new Class(...)`         | **默认 `priv`**（公开写 `pub`） | 支持 `extends`/`super`/`Box<dyn Trait>` | 堆上 RAII 对象；未手写 `init` 时**自动合成全字段默认 `init`**；支持 `#field` 硬隔离私有字段 |
+| **`ref struct`** | 纯栈绑定视图（允许持有栈借用字段）            |         **默认 `pub`**          |                 无继承                  | 生命周期锁定当前栈帧，**物理严禁跨 `spawn`/`await` 或 `return` 逃逸**                       |
 
 - **底层系统级布局注解**：
   - `@packed struct/union`：紧凑位域内存布局（支持 `u1`~`u7` 位宽），无填充对齐；
@@ -2917,6 +2928,7 @@ fn run_gpu_job() {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -2942,6 +2954,7 @@ trait Logger {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -2989,6 +3002,7 @@ CP 语言在前端 AST 与语义分析（Sema）层原生支持完整的泛型�
 #### 7.4.2 内置 Trait 体系 (Built-in Traits)
 
 CP 编译器内置以下基础 Trait 契约，由标量基础类型天然满足或通过方法约定满足：
+
 - **`Comparable`**：基础标量数值类型（`u8`~`u128`, `i8`~`i128`, `usize`, `isize`, `f32`, `f64`, `bool`, `string`）天生满足比较契约；类定义中实现 `compare` 或 `cmp` 方法（或显式声明 `implements Comparable`）亦满足；
 - **`ToString`**：基础标量类型天生满足；类定义中提供 `toString` / `to_string` 方法即满足；
 - **`Clone`**：基础标量类型天生满足；类提供 `clone` 方法即满足；
@@ -2996,6 +3010,7 @@ CP 编译器内置以下基础 Trait 契约，由标量基础类型天然满足�
 - **`Debug`**：基础标量类型天生满足；类提供 `debug` 或 `format` 方法即满足。
 
 示例：泛型比较器函数天然支持强类型数值与浮点：
+
 ```typescript
 fn max_val<T: Comparable>(a: T, b: T): T {
     if (a > b) {
@@ -3014,6 +3029,7 @@ let m2 = max_val(3.14, 2.71);   // T 推导为 f32，返回 3.14
 
 1. **类声明未实现 Trait 必需方法拦截**：
    若类声明 `class Dog implements Printable`，但遗漏了 Trait 的无默认实现方法 `display`，前端直接发出自愈建议：
+
    ```text
    error[E0301]: class 'Dog' does not satisfy trait 'Printable'
      --> src/animal.cp:5:7
@@ -3045,6 +3061,7 @@ let m2 = max_val(3.14, 2.71);   // T 推导为 f32，返回 3.14
 #### 7.4.4 底层 Native 单态化转译机制
 
 在转译为 Zig 时，泛型参数映射为 Zig 原生高性能 `anytype` 编译期内联参数，泛型返回类型自动使用 Zig 原生 `@TypeOf(param)` 精确推导返回类型，实现 100% 原生零成本抽象，不产生任何运行时虚表寻址开销：
+
 ```zig
 pub fn max_val(a: anytype, b: anytype) @TypeOf(a) {
     if ((a > b)) {
@@ -3075,6 +3092,7 @@ for (handler of handlers) {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -3333,6 +3351,7 @@ fn inspect_dynamic(res: string ! Err) {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -3458,6 +3477,7 @@ fn handle_errors() {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -3517,6 +3537,7 @@ fn process_err(res: i32 ! TaskErr) {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -3785,6 +3806,7 @@ outer: for (i of 0..10) {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -3939,6 +3961,7 @@ while (tag_str := iter.next()) {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -4806,6 +4829,7 @@ fn unroll_example() {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -5473,6 +5497,7 @@ class AdminService {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -5609,6 +5634,7 @@ class UserService {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -5890,6 +5916,7 @@ export class NativeBuffer {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -6000,6 +6027,7 @@ export @value struct Compact {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -6043,6 +6071,7 @@ CP 编译器在每个库模块头部自动注入 `const string = []const u8;`。
   ```
 - **类/结构体内部的静态 C 回调方法**：
   若在 `class` 或 `struct` 内部定义需要传递给底层 C 运行时的回调函数，必须附加 `static` 修饰符，防止编译器自动注入实例 `self` 接收者：
+
   ```typescript
   pub class GarbageCollectionController {
       // 静态 C-ABI 回调方法，无 self 隐式参数，使用 @c 直接声明
@@ -6052,7 +6081,9 @@ CP 编译器在每个库模块头部自动注入 `const string = []const u8;`。
       }
   }
   ```
+
   生成的 Zig 代码：
+
   ```zig
   pub const GarbageCollectionController = struct {
       pub fn onGCTimer(timer: *uws.Timer) callconv(.c) void {
@@ -6078,6 +6109,7 @@ export @opaque class App {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -6110,16 +6142,17 @@ export @opaque class App {
 
 ##### 1. 新旧开发模式革命性对比（体现体系级方便性）
 
-| 维度 | 传统手写绑定（旧模式） | CP 原生 `@c { ... }` 头文件吸纳（新模式） |
-| :--- | :--- | :--- |
-| **胶水代码量** | 每个 C 函数需逐一手写签名，几十行乃至上千行样板代码 | **仅需 1 行头文件名声明**（如 `"stdio.h"`），零样板代码 |
-| **类型对齐风险** | 易因 C 指针级别、结构体 padding 误判导致段错误崩溃 | **Clang/Zig 编译器底层自动解析 ABI 与类型**，100% 内存安全对齐 |
-| **维护与升级** | C 库更新头文件后需手动同步修改所有绑定函数声明 | **头文件升级时自动无缝吸收**，编译期强校验，无需人工修改胶水 |
-| **命名空间隔离** | 污染全局符号表，容易引发命名遮蔽冲突 | **自动挂载在整洁的 `c` 全局安全命名空间下**（如 `c.puts`） |
+| 维度             | 传统手写绑定（旧模式）                              | CP 原生 `@c { ... }` 头文件吸纳（新模式）                      |
+| :--------------- | :-------------------------------------------------- | :------------------------------------------------------------- |
+| **胶水代码量**   | 每个 C 函数需逐一手写签名，几十行乃至上千行样板代码 | **仅需 1 行头文件名声明**（如 `"stdio.h"`），零样板代码        |
+| **类型对齐风险** | 易因 C 指针级别、结构体 padding 误判导致段错误崩溃  | **Clang/Zig 编译器底层自动解析 ABI 与类型**，100% 内存安全对齐 |
+| **维护与升级**   | C 库更新头文件后需手动同步修改所有绑定函数声明      | **头文件升级时自动无缝吸收**，编译期强校验，无需人工修改胶水   |
+| **命名空间隔离** | 污染全局符号表，容易引发命名遮蔽冲突                | **自动挂载在整洁的 `c` 全局安全命名空间下**（如 `c.puts`）     |
 
 ##### 2. 核心语法与使用示例
 
 ###### 场景 A：直接吸纳标准库或第三方 C 库头文件
+
 无需手写任何 C 函数声明，直接在 `@c { ... }` 块中写入头文件字符串字面量（如 `"stdio.h"`, `"sqlite3.h"`）。编译器自动解析并注入统一的 `c` 全局命名空间：
 
 ```typescript
@@ -6148,12 +6181,14 @@ pub fn main(): void {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
 - **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
 ###### 场景 B：头文件与自定义 C 函数原型混合声明
+
 同一个 `@c { ... }` 块中支持头文件引入与自定义函数声明混写，满足各类复杂底层的精细控制需求：
 
 ```typescript
@@ -6169,7 +6204,9 @@ pub fn start_native_io(fd: i32): void {
 ```
 
 ##### 3. 转译与底层保障
+
 编译器在代码生成阶段，自动为吸纳的头文件生成安全的 C-ABI 映射结构：
+
 ```zig
 pub const c = struct {
     pub extern "c" fn puts(s: [*c]const u8) c_int;
@@ -6228,7 +6265,7 @@ export class VTable {
 | **`[*]T!` / `[*]T?!`** | `[*]T` / `?[*]T`                          | **未定长多项指针 (Many-Item Pointer)**。表示连续内存缓冲，支持切片与下标算术，提供非空与可空（`?`）双轨。           | 接收底层的 raw packet payload、IOVEC 缓冲区。       |
 | **`*any!` / `*any?!`** | `*anyopaque` / `?*anyopaque`              | **通用非类型化系统裸指针 (Universal Raw Pointer)**。对齐 C 语言 `void*`，彻底废除 `anyopaque` 冗余关键字。          | 跨语言不透明句柄、用户自定义指针 `user_data`。      |
 | **`*T!` / `*T?!`**     | `*T` / `?*T`                              | **单对象强类型裸指针**。在 unsafe 作用域下直接映射为 C-ABI 单对象指针，**严格禁止下标操作（如 `p[i]` 编译报错）**。 | 指向具体的单一 C 结构体实例（如 `*quic.Socket!`）。 |
-| **`[*c]T` / `[*c]T?`** | `[*c]T` / `?[*c]T`                        | **C-ABI 兼容指针（仅限 FFI 边界）**。专门用于对齐未定语义的传统 C 头文件签名，支持与 `&buf` 无缝互通。         | 绑定传统 C 语言外部头文件 API 声明。              |
+| **`[*c]T` / `[*c]T?`** | `[*c]T` / `?[*c]T`                        | **C-ABI 兼容指针（仅限 FFI 边界）**。专门用于对齐未定语义的传统 C 头文件签名，支持与 `&buf` 无缝互通。              | 绑定传统 C 语言外部头文件 API 声明。                |
 
 > [!IMPORTANT]
 > **指针边界防滥用铁律与单对象越界禁止**：
@@ -6301,6 +6338,7 @@ pub fn test(): void {
 #### 11.9.5.1 Struct 嵌套与匿名代码块语法自动降级机制
 
 针对在 CP 中书写 `@zig`、C-FFI 或匿名 `struct { ... }` 表达式的场景，CP 编译器内置 token 感知的语法自愈降级机制：
+
 1. **`let` / `let mut` 自动降级**：在 struct 内函数体中书写的 `let` 与 `let mut` 自动转译为 Zig 的 `var`，防止 Zig 编译器因不识别 `let` 关键字而报错；
 2. **函数签名冒号消除**：自动将 CP 风格函数声明中的返回值类型冒号（如 `pub fn f(): void`）消除为 Zig 标准函数签名（`pub fn f() void`），避免 `error: expected return type expression, found ':'`。
 
@@ -6309,6 +6347,7 @@ pub fn test(): void {
 在底层目标语言（Zig）的作用域规则中，顶层或模块级声明（如 `pub const T = enum { ... }`）会被其作用域内包含同名局部变量或常量的辅助函数判定为命名遮蔽（`local constant shadows declaration of 'T'`）。
 
 为保障用户在 CP 业务代码中自由使用 `T`（如通用类型形参名、枚举名或结构体名）而不受转译期环境干扰，CP 编译器规范：
+
 1. **内建辅助函数形参与局部变量私有化**：所有由代码生成器（Codegen Prelude）注入的通用类型提取辅助函数（如 `cp_iter_slice`、`is_string_like`、`CpValType`、`cp_string_from`、`cp_opt_is_null`、`cp_opt_unwrap`、`LockGuard`、`CpMutex` 等）统一采用前缀型标识符 `__T` 替代裸 `T`；
 2. **自动析构（Auto-Drop）防冲突隔离**：在作用域末尾自动注入的资源释放与所有权回收代码块（`defer if (!__x_moved) { const __T = @TypeOf(x); ... }`）同样全面采用 `__T` 局部类型名，实现 100% 的作用域安全隔离与抵抗遮蔽。
 
@@ -6373,6 +6412,7 @@ export class SocketContext<Handler> {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -6403,65 +6443,65 @@ export class SocketContext<Handler> {
 
 ### 12.1 已实装官方核心标准库索引（`cap:*`）
 
-| 标准库协议通道    | 核心导出功能                                                           | 状态           |
-| :---------------- | :--------------------------------------------------------------------- | :------------- |
-| `cap:sort`        | 工业级切片排序与对数检索：`Sort`（`asc`, `desc`, `sort`, `stable`, `heap`, `isSorted`, `binarySearch`, `lowerBound`, `upperBound`, `minI32`, `maxI32`, `argMin`, `argMax`）、`SortOf<T>` | **已全面实装** |
-| `cap:hash`        | 非密码学极速散列与校验和：`Hash`（`xxhash3`, `xxhash128`, `murmur3`, `cityhash64`, `crc32`, `adler32`, `siphash`, `siphash128`, `fnv1a`, `hashInt`）、`XxHash3Stream` | **已全面实装** |
-| `cap:col`（兼容 `cap:collections`） | `BoundedArray`, `BabyList`, `OffsetByteList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`, `Soa<T>`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet` | **已全面实装** |
-| `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter` | **已全面实装** |
-| `cap:conf`（兼容 `cap:dotenv` / `cap:ini`） | 统一配置中心（直迁 Bun `interchange/` 4.5K 行）：`DotEnv`、`Ini`、统一 AST `ConfValue`/`ConfDateTime`（RFC 3339）、完整 YAML 1.2（`YamlParser`/`YamlStream` 多文档/锚点别名/合并键 `<<`/块标量 `|` `>`/流式集合/类型标签/双向序列化）、TOML 1.0（内联表/点分与引号键/RFC 3339/`[[array]]`）、`JSON5` 与 `ConfValueParser` | **已全面实装** |
-| `cap:pack`（兼容 `cap:compress`） | 流式压缩与归档打包：`gzip`/`gunzip`/`deflate`/`inflate`/`deflateRaw`/`inflateRaw`、`GzipStream`/`DeflateStream`、`Zstd`/`Brotli`、`Crc32`/`Adler32`、`TarHeader`/`TarReader`、`PaxTarWriter`/`PaxTarReader`（PAX `'x'` 超长路径 + `validateArchivePath` 路径安全防护）、`ZipReader`/`ZipWriter`（Stored+Deflate+UTF-8）、`ArchiveSniffer` | **已全面实装** |
-| `cap:redis`       | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`） | **已全面实装** |
-| `cap:cli`         | 命令行参数解析（`CliArgs`, `CliOption`）、15+ CI/CD 环境与终端宽度探测（`CiInfo`/`CiVendor`）、多级子命令路由与编辑距离纠错（`SubcommandRouter`）、并发进度树与转轮（`MultiProgress`/`Spinner`）、ANSI 色彩与 ASCII 表格（`CliTable`） | **已全面实装** |
-| `cap:watch`       | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`） | **已全面实装** |
-| `cap:patch`       | Unified Diff 解析、Hunk 渲染、Myers 行级差异比对与彩色终端对比渲染（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`, `DiffFormatter`, `DiffFormatOptions`） | **已全面实装** |
-| `cap:bench`       | 纳秒级硬件计时器（`HwTimer`, `Stopwatch`）、分位数统计（`BenchStats`）与对数桶延迟直方图（`LatencyHistogram`） | **已全面实装** |
-| `cap:elf`         | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`） | **已全面实装** |
-| `cap:md`          | 完整 MD4C 级 CommonMark / GFM 引擎（直迁 Bun 全部 16 模块 11.7K 行）：双遍块解析、O(N) 强调栈、2,125 条 W3C HTML5 命名实体、完整 Unicode 折叠与标点表、HTML 安全渲染（`heading_ids`/`tag_filter`/`sanitize`）与 ANSI 终端渲染（折行/CJK 宽度/Unicode 方框表/OSC 8/Kitty 图片） | **已全面实装** |
-| `cap:html`        | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`） | **已全面实装** |
-| `cap:css`         | 工业级纯 CP CSS + LightningCSS 引擎（15 模块 8.5K 行）：Syntax L3 词法器、Color 4（149 命名色/OKLCH）、递归下降 `calc()`、Selectors L4、`var()` 防环 + `lib/css/engine/`（9 大浏览器 `Targets`/27 特性矩阵与前缀、`EasingFunction` 贝塞尔求值/`Gradient`、全套简写展开压缩、`@supports`/`@container`/`@layer`/`@font-face`/`@property`/`@scope`/Media Range L4 降级与 `CssCompiler`/CSS Modules 哈希） | **已全面实装** |
-| `cap:image`（兼容 `cap:png` / `cap:img`） | 工业级现代全景图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）、GIF89a/87a LZW 解码（`Gif`）、ThumbHash 模糊微缩占位图算法（`ThumbHash`）、EXIF Orientation 方向解析（`Exif`）、高阶图像几何变换与裁切缩放管线（`Image.flop`, `Image.flip`, `Image.rotate`, `Image.crop`, `Image.resize`）与 JPEG/WebP/8大格式嗅探（`Codecs.sniff`, `Jpeg.probe`, `Webp.probe`） | **已全面实装** |
-| `cap:ffi`         | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`） | **已全面实装** |
-| `cap:sql`         | 统一 SQL 协议栈（直迁 Bun `sql/` 4.7K 行）：15B SSO `SqlData`、`SqlStatement`、PostgreSQL v3（90+ OID/`PgBinaryCodec` 含 numeric/uuid/jsonb/array/COPY/SSL/Notify/SCRAM-SHA-256）、MySQL（Native SHA-1/`CachingSha2`/ColumnDef41/`COM_STMT_*`/`BinaryRowDecoder`）与原生 SQLite3 事务驱动 | **已全面实装** |
-| `cap:shell`（兼容 `cap:sh`） | 工业级跨平台 Shell 引擎（直迁 Bun `shell/` 7.1K 行）：完整 POSIX 词法/语法/展开（`${VAR:-/=/+/ #}`/`$((arith))`/`$(cmd)`/`{a..z}`/Glob）、控制流（`if`/`for`/`while`/`until`/`&&`/`||`/`!`）、子 Shell 隔离、多级 `PosixSpawn` 混合管道与重定向（`>`/`>>`/`<`/`2>`/`2>&1`/`<<<`）及 30+ 生产内置命令 | **已全面实装** |
-| `cap:io`          | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`（含 `readUntilDelimiter`/`shift`）, `BufferedWriter`, `copyStream`, `IoStatus`/`IoSource`, 非阻塞 `PipeReader`/`PipeWriter`（`pipe2` + `EAGAIN`/`BrokenPipe`）, `FileReader`/`FileWriter`（`pread`/`pwrite`/`copy_file_range`/`sendfile`）, `MaxBuf`, `Pipe`, `print`, `console` | **已全面实装** |
-| `cap:stream`      | 工业级零拷贝流式 I/O 管道（重导出 `cap:io` 中的统一流接口）             | **已全面实装** |
-| `cap:sync`        | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared`, `Guarded<T>`, `WorkPool` | **已全面实装** |
-| `cap:json` / `cap:serde` | 零拷贝 JSON 流式解析器 `JsonParser`、`JsonValue`、内存池 `JsonBufferPool`、`@json_parse` / `@json_stringify` | **已全面实装** |
-| `cap:router`      | 超高性能 Radix-Tree 路由引擎与路径反向生成器 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `RouteFormatter` | **已全面实装** |
-| `cap:http`        | 工业级 HTTP/1.1 & H2 & H3 全协议栈（直迁 Bun `http/`+`http_types/` 7.5K 行）：201 项 `MIME_DATABASE`、`HTTPStatus`、`HeaderBuilder`、`CacheControl`/`ContentDisposition`/`Accept`/`Range` 解析、RFC 7541 完整 HPACK（61 静态表 + 257 Huffman + 动态表）、H2 流控帧（`SETTINGS`/`WINDOW_UPDATE`/`GOAWAY`/`PING`/`RST_STREAM`）、`HttpServer`/`HTTPClient`/`H3ClientSession` | **已全面实装** |
-| `cap:path`        | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`） | **已全面实装** |
-| `cap:url`         | WHATWG 规范 `URL`（含 RFC 3986 `normalizePath`/`resolve`/`parseWithBase`/`formatOrigin`）、`URLSearchParams`（`setUnique`/`hasValue`/`deleteValue`/`toEncodedString`）与百分号编解码器 `PercentEncoding` | **已全面实装** |
-| `cap:encoding`    | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, `decodeInPlace`）、`Hex`、`Utf8`/`Utf16`/`Utf16BE`、`Ascii` 与 `PercentEncoding` | **已全面实装** |
-| `cap:glob`        | 工业级 Unix Glob 模式匹配（递归 `**`、花括号展开 `{a,b}`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`）与零堆分配目录扫描引擎 `GlobWalker` | **已全面实装** |
-| `cap:ptr`         | 工业级智能指针与底层内存抽象套件（`Shared<T>`, `AtomicShared<T>`, `Weak<T>`, `AtomicWeak<T>`, `Cow<T>`, `CowSlice<T>`, `Owned<T>`, `TaggedPointer<T>`, `LowTagPointer<T>`, `RefCount<T>`, `RefPtr<T>`） | **已全面实装** |
-| `cap:semver`      | Semver 2.0.0 规范点分标识符排序梯级、高级范围比较（`^`, `~`, `>=`, `<=`, `-`, `||`, `*`）、`maxSatisfying` 与原子版本递增 | **已全面实装** |
-| `cap:dotenv`      | 工业级 `.env` 词法/语法解析、`${VAR:-default}` 变量展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入 | **已全面实装** |
-| `cap:which`       | 跨平台可执行二进制定位器（支持 `PATH`、`PATHEXT` 扩展名探测、多路径全量检索 `whichAll` 与执行权限校验） | **已全面实装** |
-| `cap:ws`          | RFC 6455 / RFC 7692 现代 WebSocket 全协议栈：Opcode/掩码/分片帧、子协议与扩展协商（`SubprotocolNegotiator`/`WsExtensionHeader`）、关闭码与 UTF-8 校验（`CloseCodeValidator`）、`PerMessageDeflate` 与完整会话状态机（`WsSession`） | **已全面实装** |
-| `cap:crypto`      | 工业级现代密码学全栈：CSPRNG、UUID v4、SHA/BLAKE3/SHA3、HMAC、PBKDF2/HKDF/Scrypt/Argon2id、AEAD（AES-128/256-GCM、ChaCha20/XChaCha20-Poly1305）、非对称（Ed25519/X25519/ECDSA P-256）、RFC 7519 JWT、RFC 7468 PEM、BoringSSL X.509 校验 | **已全面实装** |
-| `cap:safety`      | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`） | **已全面实装** |
-| `cap:security`    | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex） | **已全面实装** |
-| `cap:mem`         | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator`, `AllocationScope`（泄漏/峰值/重复与悬空释放检测）, `BufferFallbackAllocator<N>`（栈热路径+堆回退）, `MaybeOwned<T>`, `MemFdBuffer`（Linux `memfd_create` + `mmap`） | **已全面实装** |
-| `cap:string`      | `ZigString`, `WTF8`/`Wtf8`, `SimdUtf`, `Utf8Grapheme`, `Unicode` 分类与 `CodepointIterator`, `Strings`/`strings`（`eqlComptime`/`hasPrefixComptime`/`indexOfAny`/`splitScalar`/`concat`/`join`/`escapeHtml`/`escapeRegExp`）, `Latin-1/UTF-16/UTF-8` 互转, `StringBuilder`, `MutableString`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner` | **已全面实装** |
-| `cap:parallel`    | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中） | **已全面实装** |
-| `cap:actor`       | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`） | **已全面实装** |
-| `cap:fs`          | 异步/同步文件读取、写入、目录创建、流式 I/O                            | **已全面实装** |
-| `cap:net`         | `SocketAddress`, `UdpSocket`, `TcpStream`, `TcpServer`, `SafeSocket`, `Ipv4Cidr`/`Ipv6Cidr`, `IpClass`/`CidrAllowlist`, `SocketOptions`/`pollSingleFd`, `Socks5Codec`/`HttpConnectCodec`, `ConnectionPool` | **已全面实装** |
-| `cap:dns`         | RFC 1035/3596 DNS 报文头/压缩编解码、A/AAAA/CNAME/MX/SRV/TXT 资源记录解析、IPv4/IPv6 `DnsCache` 与 `/etc/hosts`（`lookupIPv6`） | **已全面实装** |
-| `cap:s3`          | AWS S3 完备客户端、全量可选头 SigV4 签名、STS `session_token` 预签名与分片预签名（`presignPartUrl`）、分块上传状态机、XML 流式解析与分片下载流 | **已全面实装** |
-| `cap:sourcemap`   | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查 | **已全面实装** |
-| `cap:clap`        | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取 | **已全面实装** |
-| `cap:reflect`     | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                      | **已全面实装** |
-| `cap:resolver`    | 工业级模块解析器与包配置套件（直迁 Bun `resolver/` 3.6K 行）：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由）、JSONC `TsConfigJson`、`TsConfigChainLoader`（多级 `extends` 继承合并）、`DirEntryCache`（`getdents64`+`StatHash` 目录缓存）、`RealpathResolver`（40 级软链环防护）、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`、`ModuleResolver`、W3C SRI `Integrity` 与 `HostedGitInfo` | **已全面实装** |
-| `cap:test_runner` | 纯 CP 生产级测试运行器基础设施（直迁 Bun `test_runner/`）：`TestOrder`（SplitMix64/Xoshiro256 确定性种子洗牌）、树形 `TestRunner`（嵌套 `describe`、`beforeAll`/`beforeEach`/`afterEach`/`afterAll`、`.only`/`.skip`/`.todo` 过滤）、`SnapshotStore`（`.snap` 快照读写更新 + `DiffFormatter` 彩色字符级差分）、`PrettyFormat` 与三格式 CI `TestReporter`（TAP v13 / JUnit XML / JSON） | **已全面实装** |
-| `cap:time`        | 纯 CP 工业级时间、Cron 调度与限流引擎：`Duration`/`WallClock`（Linux `clock_gettime`）、`CivilDateTime`/`Iso8601`（Howard Hinnant 纯算法 RFC 3339 + `IsoDuration`）、`CronExpr`（POSIX 5 字段 + 快捷别名 + 跨闰年 `nextAfter`）、`TokenBucket`/`SlidingWindowLimiter`/`ExponentialBackoff` | **已全面实装** |
-| `cap:aio`         | 异步 I/O 环形队列与进程监控套件：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 竞态防护）与零堆固定容量 `AioQueue<CAP>`（Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir） | **已全面实装** |
-| `cap:bundler`     | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`、`StandaloneModuleGraph`、`ModuleGraph`（环检测/拓扑/Tree-Shaking）、`Metafile`（esbuild/Bun 兼容 JSON 与彩色树状体积分析）与多入口 `CodeSplitter`（`u64` 位掩码共享 Chunk 抽取与 `AssetManifest`） | **已全面实装** |
-| `cap:meta`        | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`） | **已全面实装** |
-| `cap:platform`    | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`） | **已全面实装** |
-| **`cap`（根按需挂载容器）** | `import cap from "cap";`（支持任意别名与 `@import("cap")`）：极薄零重依赖微核心（`lib/_cap/core.cp`：`OOM`/`handleOom`/`Environment`/`assert`/`clamp`/`FD`/`O`/`S`/`Output`/`ComptimeStringMap`）+ **`cpc` 编译期不动点扫描按需惰性挂载 59 个标准库**（未引用库 0 读取、0 转译、0 编译） | **已全面实装** |
-| `cap:pkg`（兼容 `cap.pkg` / `cap.install`） | 工业级包管理核心引擎（直迁自 Bun `install/`，13 模块 7.9K 行）：`DependencyVersion` 10 协议解析、`.npmrc`/`RegistryConfig` 与 `NpmPackageManifest` Packument、`RegistryHttpClient`（ETag/304 磁盘缓存+指数退避重试）、Monorepo `WorkspaceGraph`（`workspace:*^~`/`catalog:`/拓扑排序）、零信任 `LifecycleRunner`（`trustedDependencies`+`PosixSpawn`）、DAG `Lockfile`（JSON + 二进制 `CPLK0001`/CRC32）、`LockfileMigrator`（npm/yarn/pnpm 三生态一键迁移）与 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`）、安全 `TarballExtractor`、`PackageLinker`（Hoisted/Isolated/补丁）及 `PackageManager` | **已全面实装** |
+| 标准库协议通道                                      | 核心导出功能                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 状态                                                                                                                   |
+| :-------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| `cap:sort`                                          | 工业级切片排序与对数检索：`Sort`（`asc`, `desc`, `sort`, `stable`, `heap`, `isSorted`, `binarySearch`, `lowerBound`, `upperBound`, `minI32`, `maxI32`, `argMin`, `argMax`）、`SortOf<T>`                                                                                                                                                                                                                                                                                                                                                                                                                             | **已全面实装**                                                                                                         |
+| `cap:hash`                                          | 非密码学极速散列与校验和：`Hash`（`xxhash3`, `xxhash128`, `murmur3`, `cityhash64`, `crc32`, `adler32`, `siphash`, `siphash128`, `fnv1a`, `hashInt`）、`XxHash3Stream`                                                                                                                                                                                                                                                                                                                                                                                                                                                | **已全面实装**                                                                                                         |
+| `cap:col`（兼容 `cap:collections`）                 | `BoundedArray`, `BabyList`, `OffsetByteList`, `LinearFifo`, `HiveArray`, `ObjectPool`, `BitSet64`, `BitSet128`, `BitSet256`, `BitSet512`, `BitSet1024`, `DynamicBitSet`, `Range`, `Soa<T>`, `StaticStringMap`, `VecDeque`, `BinaryHeap`, `BTreeMap`, `BTreeSet`, `HashMap`, `HashSet`                                                                                                                                                                                                                                                                                                                                | **已全面实装**                                                                                                         |
+| `cap:event`（兼容 `cap:event_loop` / `cap:events`） | 统一事件循环与事件总线：`EventLoop`, `Timer`, `TimerHeap`, `ConcurrentTask`, `ConcurrentQueue`, `DeferredTaskQueue`, `PollEngine`, `EventEmitter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **已全面实装**                                                                                                         |
+| `cap:conf`（兼容 `cap:dotenv` / `cap:ini`）         | 统一配置中心（直迁 Bun `interchange/` 4.5K 行）：`DotEnv`、`Ini`、统一 AST `ConfValue`/`ConfDateTime`（RFC 3339）、完整 YAML 1.2（`YamlParser`/`YamlStream` 多文档/锚点别名/合并键 `<<`/块标量 `                                                                                                                                                                                                                                                                                                                                                                                                                     | ` `>`/流式集合/类型标签/双向序列化）、TOML 1.0（内联表/点分与引号键/RFC 3339/`[[array]]`）、`JSON5`与`ConfValueParser` | **已全面实装**                                                                                                  |
+| `cap:pack`（兼容 `cap:compress`）                   | 流式压缩与归档打包：`gzip`/`gunzip`/`deflate`/`inflate`/`deflateRaw`/`inflateRaw`、`GzipStream`/`DeflateStream`、`Zstd`/`Brotli`、`Crc32`/`Adler32`、`TarHeader`/`TarReader`、`PaxTarWriter`/`PaxTarReader`（PAX `'x'` 超长路径 + `validateArchivePath` 路径安全防护）、`ZipReader`/`ZipWriter`（Stored+Deflate+UTF-8）、`ArchiveSniffer`                                                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:redis`                                         | Redis / Valkey RESP2 & RESP3 零拷贝协议帧、命令构建与 Pipeline 批处理（`RESPType`, `RESPFrame`, `RESPParser`, `RESPEncoder`, `RedisCommand`, `RedisPipeline`）                                                                                                                                                                                                                                                                                                                                                                                                                                                       | **已全面实装**                                                                                                         |
+| `cap:cli`                                           | 命令行参数解析（`CliArgs`, `CliOption`）、15+ CI/CD 环境与终端宽度探测（`CiInfo`/`CiVendor`）、多级子命令路由与编辑距离纠错（`SubcommandRouter`）、并发进度树与转轮（`MultiProgress`/`Spinner`）、ANSI 色彩与 ASCII 表格（`CliTable`）                                                                                                                                                                                                                                                                                                                                                                               | **已全面实装**                                                                                                         |
+| `cap:watch`                                         | 跨平台文件系统监控引擎、路径忽略过滤与防抖器（`FileWatcher`, `WatchEvent`, `WatchMask`, `WatchFilter`, `DebounceTracker`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | **已全面实装**                                                                                                         |
+| `cap:patch`                                         | Unified Diff 解析、Hunk 渲染、Myers 行级差异比对与彩色终端对比渲染（`UnifiedDiff`, `UnifiedHunkHeader`, `LineDiffer`, `DiffOp`, `DiffFormatter`, `DiffFormatOptions`）                                                                                                                                                                                                                                                                                                                                                                                                                                               | **已全面实装**                                                                                                         |
+| `cap:bench`                                         | 纳秒级硬件计时器（`HwTimer`, `Stopwatch`）、分位数统计（`BenchStats`）与对数桶延迟直方图（`LatencyHistogram`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | **已全面实装**                                                                                                         |
+| `cap:elf`                                           | 可执行文件魔数嗅探与 ELF64 / Mach-O / PE 头部解析（`ExeFormat`, `Elf64HeaderInfo`, `ElfInspector`, `MachHeader64`, `MachoInspector`, `PeCoffHeader`, `PeInspector`）                                                                                                                                                                                                                                                                                                                                                                                                                                                 | **已全面实装**                                                                                                         |
+| `cap:md`                                            | 完整 MD4C 级 CommonMark / GFM 引擎（直迁 Bun 全部 16 模块 11.7K 行）：双遍块解析、O(N) 强调栈、2,125 条 W3C HTML5 命名实体、完整 Unicode 折叠与标点表、HTML 安全渲染（`heading_ids`/`tag_filter`/`sanitize`）与 ANSI 终端渲染（折行/CJK 宽度/Unicode 方框表/OSC 8/Kitty 图片）                                                                                                                                                                                                                                                                                                                                       | **已全面实装**                                                                                                         |
+| `cap:html`                                          | CSS 选择器解析（`CssSelector`）、流式 HTML 重写器（`HtmlRewriter`）与零拷贝实体转义器（`HtmlEscape`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | **已全面实装**                                                                                                         |
+| `cap:css`                                           | 工业级纯 CP CSS + LightningCSS 引擎（15 模块 8.5K 行）：Syntax L3 词法器、Color 4（149 命名色/OKLCH）、递归下降 `calc()`、Selectors L4、`var()` 防环 + `lib/css/engine/`（9 大浏览器 `Targets`/27 特性矩阵与前缀、`EasingFunction` 贝塞尔求值/`Gradient`、全套简写展开压缩、`@supports`/`@container`/`@layer`/`@font-face`/`@property`/`@scope`/Media Range L4 降级与 `CssCompiler`/CSS Modules 哈希）                                                                                                                                                                                                               | **已全面实装**                                                                                                         |
+| `cap:image`（兼容 `cap:png` / `cap:img`）           | 工业级现代全景图像处理标准库：PNG 截图编码器（`Png.encodeRgba`）、PNG 全滤镜解码器（`Png.decode`）、`PngImage`、像素四元组（`RgbaColor`）、BMP/DIB 编解码（`Bmp`）、Median-Cut 调色板颜色量化（`Quantizer`）、GIF89a/87a LZW 解码（`Gif`）、ThumbHash 模糊微缩占位图算法（`ThumbHash`）、EXIF Orientation 方向解析（`Exif`）、高阶图像几何变换与裁切缩放管线（`Image.flop`, `Image.flip`, `Image.rotate`, `Image.crop`, `Image.resize`）与 JPEG/WebP/8大格式嗅探（`Codecs.sniff`, `Jpeg.probe`, `Webp.probe`）                                                                                                       | **已全面实装**                                                                                                         |
+| `cap:ffi`                                           | 跨平台动态库加载（`DynLib`）、FFI 调用签名布局（`FFISignature`, `CStructLayout`, `CStructField`）与 TinyCC 内存编译声明（`TccOutputFormat`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **已全面实装**                                                                                                         |
+| `cap:sql`                                           | 统一 SQL 协议栈（直迁 Bun `sql/` 4.7K 行）：15B SSO `SqlData`、`SqlStatement`、PostgreSQL v3（90+ OID/`PgBinaryCodec` 含 numeric/uuid/jsonb/array/COPY/SSL/Notify/SCRAM-SHA-256）、MySQL（Native SHA-1/`CachingSha2`/ColumnDef41/`COM_STMT_*`/`BinaryRowDecoder`）与原生 SQLite3 事务驱动                                                                                                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:shell`（兼容 `cap:sh`）                        | 工业级跨平台 Shell 引擎（直迁 Bun `shell/` 7.1K 行）：完整 POSIX 词法/语法/展开（`${VAR:-/=/+/ #}`/`$((arith))`/`$(cmd)`/`{a..z}`/Glob）、控制流（`if`/`for`/`while`/`until`/`&&`/`                                                                                                                                                                                                                                                                                                                                                                                                                                  |                                                                                                                        | `/`!`）、子 Shell 隔离、多级 `PosixSpawn` 混合管道与重定向（`>`/`>>`/`<`/`2>`/`2>&1`/`<<<`）及 30+ 生产内置命令 | **已全面实装** |
+| `cap:io`                                            | `Reader`, `Writer`, `Closer`, `Seeker`, `BufferReader`, `BufferWriter`, `BufferedReader`（含 `readUntilDelimiter`/`shift`）, `BufferedWriter`, `copyStream`, `IoStatus`/`IoSource`, 非阻塞 `PipeReader`/`PipeWriter`（`pipe2` + `EAGAIN`/`BrokenPipe`）, `FileReader`/`FileWriter`（`pread`/`pwrite`/`copy_file_range`/`sendfile`）, `MaxBuf`, `Pipe`, `print`, `console`                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:stream`                                        | 工业级零拷贝流式 I/O 管道（重导出 `cap:io` 中的统一流接口）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **已全面实装**                                                                                                         |
+| `cap:sync`                                          | `Futex`, `Mutex`, `RwLock`, `Condition`, `WaitGroup`, `Channel`, `MpmcQueue`, `UnboundedQueue`, `ConcurrentMap`, `ArcSlice`, `Wyhash`, `Atomic`, `Shared`, `Guarded<T>`, `WorkPool`                                                                                                                                                                                                                                                                                                                                                                                                                                  | **已全面实装**                                                                                                         |
+| `cap:json` / `cap:serde`                            | 零拷贝 JSON 流式解析器 `JsonParser`、`JsonValue`、内存池 `JsonBufferPool`、`@json_parse` / `@json_stringify`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **已全面实装**                                                                                                         |
+| `cap:router`                                        | 超高性能 Radix-Tree 路由引擎与路径反向生成器 `Router<T>`, `RadixNode<T>`, `ParamMap`, `RouteMatch`, `RouteFormatter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | **已全面实装**                                                                                                         |
+| `cap:http`                                          | 工业级 HTTP/1.1 & H2 & H3 全协议栈（直迁 Bun `http/`+`http_types/` 7.5K 行）：201 项 `MIME_DATABASE`、`HTTPStatus`、`HeaderBuilder`、`CacheControl`/`ContentDisposition`/`Accept`/`Range` 解析、RFC 7541 完整 HPACK（61 静态表 + 257 Huffman + 动态表）、H2 流控帧（`SETTINGS`/`WINDOW_UPDATE`/`GOAWAY`/`PING`/`RST_STREAM`）、`HttpServer`/`HTTPClient`/`H3ClientSession`                                                                                                                                                                                                                                           | **已全面实装**                                                                                                         |
+| `cap:path`                                          | 跨平台路径计算 `Path`, `PosixPath`, `WindowsPath`（`join`, `resolve`, `normalize`, `dirname`, `basename`, `extname`, `isAbsolute`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | **已全面实装**                                                                                                         |
+| `cap:url`                                           | WHATWG 规范 `URL`（含 RFC 3986 `normalizePath`/`resolve`/`parseWithBase`/`formatOrigin`）、`URLSearchParams`（`setUnique`/`hasValue`/`deleteValue`/`toEncodedString`）与百分号编解码器 `PercentEncoding`                                                                                                                                                                                                                                                                                                                                                                                                             | **已全面实装**                                                                                                         |
+| `cap:encoding`                                      | 极速 Base64 编解码器（Standard, URL-Safe, 无填充, `decodeInPlace`）、`Hex`、`Utf8`/`Utf16`/`Utf16BE`、`Ascii` 与 `PercentEncoding`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **已全面实装**                                                                                                         |
+| `cap:glob`                                          | 工业级 Unix Glob 模式匹配（递归 `**`、花括号展开 `{a,b}`、单级 `*`、`?`、字符集 `[a-z]`、`!`、`hasMagic`）与零堆分配目录扫描引擎 `GlobWalker`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | **已全面实装**                                                                                                         |
+| `cap:ptr`                                           | 工业级智能指针与底层内存抽象套件（`Shared<T>`, `AtomicShared<T>`, `Weak<T>`, `AtomicWeak<T>`, `Cow<T>`, `CowSlice<T>`, `Owned<T>`, `TaggedPointer<T>`, `LowTagPointer<T>`, `RefCount<T>`, `RefPtr<T>`）                                                                                                                                                                                                                                                                                                                                                                                                              | **已全面实装**                                                                                                         |
+| `cap:semver`                                        | Semver 2.0.0 规范点分标识符排序梯级、高级范围比较（`^`, `~`, `>=`, `<=`, `-`, `                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                        | `, `*`）、`maxSatisfying` 与原子版本递增                                                                        | **已全面实装** |
+| `cap:dotenv`                                        | 工业级 `.env` 词法/语法解析、`${VAR:-default}` 变量展开、`.env.<mode>.local` 级联覆盖状态机与环境变量注入                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:which`                                         | 跨平台可执行二进制定位器（支持 `PATH`、`PATHEXT` 扩展名探测、多路径全量检索 `whichAll` 与执行权限校验）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | **已全面实装**                                                                                                         |
+| `cap:ws`                                            | RFC 6455 / RFC 7692 现代 WebSocket 全协议栈：Opcode/掩码/分片帧、子协议与扩展协商（`SubprotocolNegotiator`/`WsExtensionHeader`）、关闭码与 UTF-8 校验（`CloseCodeValidator`）、`PerMessageDeflate` 与完整会话状态机（`WsSession`）                                                                                                                                                                                                                                                                                                                                                                                   | **已全面实装**                                                                                                         |
+| `cap:crypto`                                        | 工业级现代密码学全栈：CSPRNG、UUID v4、SHA/BLAKE3/SHA3、HMAC、PBKDF2/HKDF/Scrypt/Argon2id、AEAD（AES-128/256-GCM、ChaCha20/XChaCha20-Poly1305）、非对称（Ed25519/X25519/ECDSA P-256）、RFC 7519 JWT、RFC 7468 PEM、BoringSSL X.509 校验                                                                                                                                                                                                                                                                                                                                                                              | **已全面实装**                                                                                                         |
+| `cap:safety`                                        | 生产级并发安全、硬件探测与崩溃诊断套件：线程 ID 极速获取（`thread_id`）、单线程属主防御锁（`ThreadLock`）、可重入并发读写竞态检测（`CriticalSection`）、非托管容器防混用（`CheckedAllocator`）、原生 ASAN 内存毒化（`asan`）、CPU 指令集运行时探测（`CpuFeatures`）、OOM 策略守卫（`OomGuard`）与崩溃报告格式化（`CrashReport`）                                                                                                                                                                                                                                                                                     | **已全面实装**                                                                                                         |
+| `cap:security`                                      | 安全防护与防跨站请求伪造子系统：CSPRNG 随机 Nonce、HMAC-SHA256 签名与篡改校验、恒定时间防时序攻击比对（`constantTimeEql`）、多格式编解码（Base64Url, Base64, Hex）                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **已全面实装**                                                                                                         |
+| `cap:mem`                                           | `Arena`, `SharedTensor`, `Cow`, `CowSlice`, `TaggedPointer`, `TaggedPtr`, `MaxHeapAllocator`, `AllocationScope`（泄漏/峰值/重复与悬空释放检测）, `BufferFallbackAllocator<N>`（栈热路径+堆回退）, `MaybeOwned<T>`, `MemFdBuffer`（Linux `memfd_create` + `mmap`）                                                                                                                                                                                                                                                                                                                                                    | **已全面实装**                                                                                                         |
+| `cap:string`                                        | `ZigString`, `WTF8`/`Wtf8`, `SimdUtf`, `Utf8Grapheme`, `Unicode` 分类与 `CodepointIterator`, `Strings`/`strings`（`eqlComptime`/`hasPrefixComptime`/`indexOfAny`/`splitScalar`/`concat`/`join`/`escapeHtml`/`escapeRegExp`）, `Latin-1/UTF-16/UTF-8` 互转, `StringBuilder`, `MutableString`, `SmolStr`, `HashedString`, `PathString`, `StringJoiner`                                                                                                                                                                                                                                                                 | **已全面实装**                                                                                                         |
+| `cap:parallel`                                      | `spawn`, `join`, `Task`（注：`cap:task` / `Task.all` / `Task.race` 规划中）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **已全面实装**                                                                                                         |
+| `cap:actor`                                         | `yield`, `receive`, `sleep`, `join`, `self_pid`, `sender`, `send`, `reply`（内建 `@spawn`/`@receive`/`@reply`/`@send`/`@self`/`@sender`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:fs`                                            | 异步/同步文件读取、写入、目录创建、流式 I/O                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **已全面实装**                                                                                                         |
+| `cap:net`                                           | `SocketAddress`, `UdpSocket`, `TcpStream`, `TcpServer`, `SafeSocket`, `Ipv4Cidr`/`Ipv6Cidr`, `IpClass`/`CidrAllowlist`, `SocketOptions`/`pollSingleFd`, `Socks5Codec`/`HttpConnectCodec`, `ConnectionPool`                                                                                                                                                                                                                                                                                                                                                                                                           | **已全面实装**                                                                                                         |
+| `cap:dns`                                           | RFC 1035/3596 DNS 报文头/压缩编解码、A/AAAA/CNAME/MX/SRV/TXT 资源记录解析、IPv4/IPv6 `DnsCache` 与 `/etc/hosts`（`lookupIPv6`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | **已全面实装**                                                                                                         |
+| `cap:s3`                                            | AWS S3 完备客户端、全量可选头 SigV4 签名、STS `session_token` 预签名与分片预签名（`presignPartUrl`）、分块上传状态机、XML 流式解析与分片下载流                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | **已全面实装**                                                                                                         |
+| `cap:sourcemap`                                     | Base64 VLQ/Varint 编解码、二分/动态行偏移表、二进制 InternalSourceMap 与 SourceMap v3 生成/反查                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | **已全面实装**                                                                                                         |
+| `cap:clap`                                          | 工业级命令行参数解析：POSIX 引号 Shell 词法分词、声明式语法、流式解析与编译期强类型提取                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | **已全面实装**                                                                                                         |
+| `cap:reflect`                                       | 编译期与运行时 `type_of`, `fields_of`, 结构体自省                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **已全面实装**                                                                                                         |
+| `cap:resolver`                                      | 工业级模块解析器与包配置套件（直迁 Bun `resolver/` 3.6K 行）：RFC 2397 `DataURL`、`PackageJson`（`exports`/`imports` 条件路由）、JSONC `TsConfigJson`、`TsConfigChainLoader`（多级 `extends` 继承合并）、`DirEntryCache`（`getdents64`+`StatHash` 目录缓存）、`RealpathResolver`（40 级软链环防护）、`BrowserFieldMap`、`SideEffectsMatcher`、`SelfReferenceResolver`、`ModuleResolver`、W3C SRI `Integrity` 与 `HostedGitInfo`                                                                                                                                                                                      | **已全面实装**                                                                                                         |
+| `cap:test_runner`                                   | 纯 CP 生产级测试运行器基础设施（直迁 Bun `test_runner/`）：`TestOrder`（SplitMix64/Xoshiro256 确定性种子洗牌）、树形 `TestRunner`（嵌套 `describe`、`beforeAll`/`beforeEach`/`afterEach`/`afterAll`、`.only`/`.skip`/`.todo` 过滤）、`SnapshotStore`（`.snap` 快照读写更新 + `DiffFormatter` 彩色字符级差分）、`PrettyFormat` 与三格式 CI `TestReporter`（TAP v13 / JUnit XML / JSON）                                                                                                                                                                                                                               | **已全面实装**                                                                                                         |
+| `cap:time`                                          | 纯 CP 工业级时间、Cron 调度与限流引擎：`Duration`/`WallClock`（Linux `clock_gettime`）、`CivilDateTime`/`Iso8601`（Howard Hinnant 纯算法 RFC 3339 + `IsoDuration`）、`CronExpr`（POSIX 5 字段 + 快捷别名 + 跨闰年 `nextAfter`）、`TokenBucket`/`SlidingWindowLimiter`/`ExponentialBackoff`                                                                                                                                                                                                                                                                                                                           | **已全面实装**                                                                                                         |
+| `cap:aio`                                           | 异步 I/O 环形队列与进程监控套件：`ParentDeathWatchdog`（Linux `PR_SET_PDEATHSIG` + 竞态防护）与零堆固定容量 `AioQueue<CAP>`（Open/Read/Write/Pread/Pwrite/Stat/Fsync/Close/Unlink/Mkdir）                                                                                                                                                                                                                                                                                                                                                                                                                            | **已全面实装**                                                                                                         |
+| `cap:bundler`                                       | 静态打包与单文件分发引擎：`BundleConfig`、`ChunkOrder`、`BundleV2`、`CompileTarget`、`StandaloneModuleGraph`、`ModuleGraph`（环检测/拓扑/Tree-Shaking）、`Metafile`（esbuild/Bun 兼容 JSON 与彩色树状体积分析）与多入口 `CodeSplitter`（`u64` 位掩码共享 Chunk 抽取与 `AssetManifest`）                                                                                                                                                                                                                                                                                                                              | **已全面实装**                                                                                                         |
+| `cap:meta`                                          | 编译期反射特征与无分支位操作套件：`bits`（2 的幂对齐、位计数/旋转、字节序打包、packed 位域运算）与 `traits`（Zig 0.17 `@typeInfo` 全类型特征探测、`ChildType`/`ItemType`）                                                                                                                                                                                                                                                                                                                                                                                                                                           | **已全面实装**                                                                                                         |
+| `cap:platform`                                      | 跨平台宿主环境与内核特性探测：`OsKind`/`ArchKind`/`Endianness`、`KernelVersion` 与 `PlatformInfo`（Linux `uname` 真实内核版本、`io_uring`/`copy_file_range`/`statx`/`pidfd` 特性开关、`/proc/self/exe`、`pageSize`、`cpuCount`）                                                                                                                                                                                                                                                                                                                                                                                     | **已全面实装**                                                                                                         |
+| **`cap`（根按需挂载容器）**                         | `import cap from "cap";`（支持任意别名与 `@import("cap")`）：极薄零重依赖微核心（`lib/_cap/core.cp`：`OOM`/`handleOom`/`Environment`/`assert`/`clamp`/`FD`/`O`/`S`/`Output`/`ComptimeStringMap`）+ **`cpc` 编译期不动点扫描按需惰性挂载 59 个标准库**（未引用库 0 读取、0 转译、0 编译）                                                                                                                                                                                                                                                                                                                             | **已全面实装**                                                                                                         |
+| `cap:pkg`（兼容 `cap.pkg` / `cap.install`）         | 工业级包管理核心引擎（直迁自 Bun `install/`，13 模块 7.9K 行）：`DependencyVersion` 10 协议解析、`.npmrc`/`RegistryConfig` 与 `NpmPackageManifest` Packument、`RegistryHttpClient`（ETag/304 磁盘缓存+指数退避重试）、Monorepo `WorkspaceGraph`（`workspace:*^~`/`catalog:`/拓扑排序）、零信任 `LifecycleRunner`（`trustedDependencies`+`PosixSpawn`）、DAG `Lockfile`（JSON + 二进制 `CPLK0001`/CRC32）、`LockfileMigrator`（npm/yarn/pnpm 三生态一键迁移）与 `DependencyAnalyzer`（`why`/`findDuplicates`/`auditIntegrity`）、安全 `TarballExtractor`、`PackageLinker`（Hoisted/Isolated/补丁）及 `PackageManager` | **已全面实装**                                                                                                         |
 
 ---
 
@@ -6654,6 +6694,7 @@ export trait Seeker {
 #### 12.3.2 内存切片与缓冲流
 
 - **`BufferReader`**：基于只读字节切片 `[]const u8` 的零拷贝内存读取器，无需堆分配，原生实现 `Reader` 与 `Seeker`。
+
   ```typescript
   import { BufferReader, SeekOrigin } from "cap:io";
 
@@ -6664,6 +6705,7 @@ export trait Seeker {
   ```
 
 - **`BufferWriter`**：4096 字节定长安全写入器，原生实现 `Writer`，支持 `.bytes()` 切片提取与 `.reset()` 重置。
+
   ```typescript
   import { BufferWriter } from "cap:io";
 
@@ -6673,6 +6715,7 @@ export trait Seeker {
   ```
 
 - **`BufferedReader<R: Reader>`**：带 256 字节内部缓存的高性能包装流，支持 `.readByte()` 单字节速读与批量块填充，消除高频细粒度系统调用。
+
   ```typescript
   import { BufferReader, BufferedReader } from "cap:io";
 
@@ -6738,23 +6781,23 @@ let n = reader.read(buf[..])?;
 
 #### 12.4.1 底层同步原语全览
 
-| 原语 | 类型 / 签名 | 说明 |
-| :--- | :--- | :--- |
-| **`Futex`** | `struct Futex` | 跨平台轻量系统 Futex 封装（Linux `SYS_futex`、macOS `__ulock`、Windows `WaitOnAddress`），支持 `wait()`、`waitForever()`、`wake()`。 |
-| **`Mutex`** | `struct Mutex` | 工业级互斥锁，支持无竞争秒级原子自旋与慢速 Futex 挂起，提供 `lock()`、`unlock()` 与 `tryLock()`。 |
-| **`Condition`** | `struct Condition` | 跨平台条件变量，支持基于 Futex 的毫秒级等待 `timedWait()` 与 `signal()` / `broadcast()` 唤醒。 |
-| **`WaitGroup`** | `struct WaitGroup` | 计数信号量同步屏障，支持 `add(delta)`、`done()`、`wait()`，精确控制并发批处理任务聚合。 |
-| **`Channel<T>`** | `struct Channel<T>` | 线程安全有界 MPMC 通道，支持非阻塞 `trySend()` / `tryRecv()` 与超时阻塞 `send()` / `recv()`，自带 `close()` 广播。 |
+| 原语             | 类型 / 签名         | 说明                                                                                                                                 |
+| :--------------- | :------------------ | :----------------------------------------------------------------------------------------------------------------------------------- |
+| **`Futex`**      | `struct Futex`      | 跨平台轻量系统 Futex 封装（Linux `SYS_futex`、macOS `__ulock`、Windows `WaitOnAddress`），支持 `wait()`、`waitForever()`、`wake()`。 |
+| **`Mutex`**      | `struct Mutex`      | 工业级互斥锁，支持无竞争秒级原子自旋与慢速 Futex 挂起，提供 `lock()`、`unlock()` 与 `tryLock()`。                                    |
+| **`Condition`**  | `struct Condition`  | 跨平台条件变量，支持基于 Futex 的毫秒级等待 `timedWait()` 与 `signal()` / `broadcast()` 唤醒。                                       |
+| **`WaitGroup`**  | `struct WaitGroup`  | 计数信号量同步屏障，支持 `add(delta)`、`done()`、`wait()`，精确控制并发批处理任务聚合。                                              |
+| **`Channel<T>`** | `struct Channel<T>` | 线程安全有界 MPMC 通道，支持非阻塞 `trySend()` / `tryRecv()` 与超时阻塞 `send()` / `recv()`，自带 `close()` 广播。                   |
 
 #### 12.4.2 无锁并发数据结构（Lock-Free Primitives）
 
-| 结构 | 类型 / 签名 | 说明 |
-| :--- | :--- | :--- |
-| **`MpmcQueue<T>`** | `struct MpmcQueue<T>` | 基于 Dmitry Vyukov 经典算法的有界多生产者多消费者（MPMC）无锁环形队列，支持 `push()`、`pop()`，高频跨线程数据吞吐零全局锁争用。 |
-| **`UnboundedQueue<T>`**| `struct UnboundedQueue<T>` | 侵入式链表无锁无界并发队列，支持多线程高吞吐安全并发入队。 |
-| **`ConcurrentMap<V>`** | `struct ConcurrentMap<V>` | 基于 **Wyhash** 64 位超高速哈希分片的分段并发哈希表（Striped Map），将锁竞争分散至 16 个独立桶，支持高并发读写 `put()`、`get()`、`remove()`。 |
-| **`ArcSlice<T>`** | `struct ArcSlice<T>` | 原子引用计数切片（Atomic Reference-Counted Slice），提供跨线程零拷贝只读共享视图与幂等释放 `retain()` / `release()`。 |
-| **`Wyhash`** | `struct Wyhash` | 工业级 64 位极速确定性哈希算法，提供 `hash(seed, data)` 与 `hash64(data)`。 |
+| 结构                    | 类型 / 签名                | 说明                                                                                                                                          |
+| :---------------------- | :------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`MpmcQueue<T>`**      | `struct MpmcQueue<T>`      | 基于 Dmitry Vyukov 经典算法的有界多生产者多消费者（MPMC）无锁环形队列，支持 `push()`、`pop()`，高频跨线程数据吞吐零全局锁争用。               |
+| **`UnboundedQueue<T>`** | `struct UnboundedQueue<T>` | 侵入式链表无锁无界并发队列，支持多线程高吞吐安全并发入队。                                                                                    |
+| **`ConcurrentMap<V>`**  | `struct ConcurrentMap<V>`  | 基于 **Wyhash** 64 位超高速哈希分片的分段并发哈希表（Striped Map），将锁竞争分散至 16 个独立桶，支持高并发读写 `put()`、`get()`、`remove()`。 |
+| **`ArcSlice<T>`**       | `struct ArcSlice<T>`       | 原子引用计数切片（Atomic Reference-Counted Slice），提供跨线程零拷贝只读共享视图与幂等释放 `retain()` / `release()`。                         |
+| **`Wyhash`**            | `struct Wyhash`            | 工业级 64 位极速确定性哈希算法，提供 `hash(seed, data)` 与 `hash64(data)`。                                                                   |
 
 #### 12.4.3 完整使用示例
 
@@ -7109,15 +7152,15 @@ defer allocator.free(url_safe);
 
 #### 12.11.1 语法全特性覆盖
 
-| 语法原语 | 说明 | 示例 |
-| :--- | :--- | :--- |
-| `*` | 匹配单个路径段内的任意字符（不跨越目录边界 `/`） | `*.cp` 匹配 `main.cp`，不匹配 `src/main.cp` |
-| `**` | 递归 Globstar，匹配 0 个或多个任意层级的目录 | `**/*.cp` 匹配 `main.cp`、`src/main.cp`、`a/b/c.cp` |
-| `?` | 匹配单个任意字符 | `test?.cp` 匹配 `test1.cp`、`testA.cp` |
-| `[a-z]` / `[0-9]` | 字符范围集合匹配 | `v[0-9].txt` 匹配 `v1.txt`、`v9.txt` |
-| `[!...]` / `[^...]`| 字符范围集合取反 | `log_[!0-9].txt` 匹配 `log_a.txt` |
-| `!` (前缀) | 整体模式取反 | `!*.tmp` 匹配除 `.tmp` 结尾以外的所有路径 |
-| `hasMagic(pat)` | 极速检查模式串是否含有 Glob 通配符（跳过普通文件的遍历开销） | `hasMagic("**/*.cp") == true` |
+| 语法原语            | 说明                                                         | 示例                                                |
+| :------------------ | :----------------------------------------------------------- | :-------------------------------------------------- |
+| `*`                 | 匹配单个路径段内的任意字符（不跨越目录边界 `/`）             | `*.cp` 匹配 `main.cp`，不匹配 `src/main.cp`         |
+| `**`                | 递归 Globstar，匹配 0 个或多个任意层级的目录                 | `**/*.cp` 匹配 `main.cp`、`src/main.cp`、`a/b/c.cp` |
+| `?`                 | 匹配单个任意字符                                             | `test?.cp` 匹配 `test1.cp`、`testA.cp`              |
+| `[a-z]` / `[0-9]`   | 字符范围集合匹配                                             | `v[0-9].txt` 匹配 `v1.txt`、`v9.txt`                |
+| `[!...]` / `[^...]` | 字符范围集合取反                                             | `log_[!0-9].txt` 匹配 `log_a.txt`                   |
+| `!` (前缀)          | 整体模式取反                                                 | `!*.tmp` 匹配除 `.tmp` 结尾以外的所有路径           |
+| `hasMagic(pat)`     | 极速检查模式串是否含有 Glob 通配符（跳过普通文件的遍历开销） | `hasMagic("**/*.cp") == true`                       |
 
 #### 12.11.2 完整使用示例
 
@@ -7125,17 +7168,17 @@ defer allocator.free(url_safe);
 import { Glob } from "cap:glob";
 
 // 1. 单级与多级递归通配
-const is_match1 = Glob.match("*.cp", "main.cp");              // true
-const is_match2 = Glob.match("**/*.cp", "src/core/expr.cp");  // true
+const is_match1 = Glob.match("*.cp", "main.cp"); // true
+const is_match2 = Glob.match("**/*.cp", "src/core/expr.cp"); // true
 const is_match3 = Glob.match("lib/**/test_*.cp", "lib/a/b/test_deep.cp"); // true
 
 // 2. 字符集与取反
-const is_match4 = Glob.match("v[0-9].json", "v3.json");        // true
-const is_match5 = Glob.match("!*.tmp", "data.json");           // true (模式取反)
+const is_match4 = Glob.match("v[0-9].json", "v3.json"); // true
+const is_match5 = Glob.match("!*.tmp", "data.json"); // true (模式取反)
 
 // 3. 语法探测
 if (Glob.hasMagic("src/**/*.cp")) {
-    // 启用目录递归遍历探测引擎
+  // 启用目录递归遍历探测引擎
 }
 ```
 
@@ -7545,12 +7588,14 @@ _ = loop.unwatch(pipe_fds[0]);
 针对现代 Web 与分布式智能体微服务的跨站请求伪造（CSRF）防护需求，CP 原生实装高可靠、零时序漏洞的 `cap:security` 安全库。
 
 #### 1. 核心架构设计与防护原理
+
 1. **密码学 Nonce 与时间戳**：结合 Linux 熵池 CSPRNG 生成 16 字节不可预测随机数，并在载荷内嵌入纳秒/毫秒时间戳与失效阈值，严格防御重放攻击；
 2. **HMAC-SHA256 签名与防篡改**：载荷经由应用密钥实施 HMAC-SHA256 签名，服务端验证时若密文被篡改 1 比特即刻拒绝；
 3. **恒定时间比对（Constant-Time Eql）**：校验过程通过 `constantTimeEql` 逐字节异或累加比较，执行时长与输入匹配程度无关，彻底免疫时序侧信道攻击；
 4. **多格式编解码支持**：原生支持 `Base64Url`（URL 安全、免 Cookie 转义）、`Base64` 与 `Hex` 十六进制三种主流工业形态。
 
 #### 2. 核心 API 契约与使用示例
+
 ```typescript
 import { CSRF, TokenFormat, DEFAULT_EXPIRATION_MS, constantTimeEql } from "cap:security";
 
@@ -7994,13 +8039,13 @@ enum TaskState {
 }
 
 let st = TaskState.Running;
-let name = st.name;       // "Running"
-let val = st as i32;      // 1（首选：直接强转获取底层数值）
+let name = st.name; // "Running"
+let val = st as i32; // 1（首选：直接强转获取底层数值）
 
 let from_int = TaskState(2); // TaskState.Completed
 let from_as = 1 as TaskState; // TaskState.Running
-let from_get = TaskState.get("Idle");      // TaskState?（首选静态查找，兼容 TaskState.fromName("Idle")）
-let exists = TaskState.has("Running");     // true
+let from_get = TaskState.get("Idle"); // TaskState?（首选静态查找，兼容 TaskState.fromName("Idle")）
+let exists = TaskState.has("Running"); // true
 ```
 
 ---
@@ -8056,14 +8101,14 @@ let s4 = string.from(12345); // "12345"
 
 ### 15.3 所有权、安全与内存控制关键字
 
-| 关键字   | 含义说明                                                                 |
-| -------- | ------------------------------------------------------------------------ |
-| `own`    | 极简 3 字母独占所有权转移标记（替代繁琐的 `move unique`，杜绝并发别名）  |
-| `move`   | 所有权转移标记（与 `own` 等价并兼容）                                     |
-| `unsafe` | 不安全代码块，关闭借用检查，允许裸指针操作                               |
-| `zig`    | 内嵌 Zig 代码块，直接执行原生 Zig 代码                                   |
-| `&`      | 只读借用                                                                 |
-| `*`      | 可变借用                                                                 |
+| 关键字   | 含义说明                                                                |
+| -------- | ----------------------------------------------------------------------- |
+| `own`    | 极简 3 字母独占所有权转移标记（替代繁琐的 `move unique`，杜绝并发别名） |
+| `move`   | 所有权转移标记（与 `own` 等价并兼容）                                   |
+| `unsafe` | 不安全代码块，关闭借用检查，允许裸指针操作                              |
+| `zig`    | 内嵌 Zig 代码块，直接执行原生 Zig 代码                                  |
+| `&`      | 只读借用                                                                |
+| `*`      | 可变借用                                                                |
 
 ### 15.4 流程控制关键字
 
@@ -8215,6 +8260,7 @@ pub fn build(b: *std.Build) void {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -8453,6 +8499,7 @@ struct Trampoline {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -8878,6 +8925,7 @@ export class TCPSocket {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -8959,6 +9007,7 @@ export class RequestContext {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -8997,6 +9046,7 @@ export class FileResponseStream {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9039,6 +9089,7 @@ export class MiniEventLoop {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9092,6 +9143,7 @@ export class DeferredTaskQueue {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9125,6 +9177,7 @@ export class DateHeaderTimer {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9153,6 +9206,7 @@ export class URL {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9470,6 +9524,7 @@ export class ThreadPool {
 ### 2.5 cap.lock (Lockfile) 机制
 
 `cap.lock` 用于记录当前项目依赖图（DAG）的完整版本链，确保构建的确定性：
+
 - **确定性构建**：在任何环境执行 `cap build`，其依赖版本完全一致。
 - **自动更新**：在 `cap install` 或 `cap build` 时自动更新。
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
@@ -9503,10 +9558,10 @@ pub threadlocal let worker_id: u32 = 0; // 亦支持 @tls let worker_id: u32 = 0
 > [!NOTE] 顶层常量与变量编译期求值规范 (Top-Level Comptime Initializer Semantics)
 > 在转译目标 Zig 中，模块顶级作用域中声明的所有常量（`const`）与变量（转译为 Zig `var`）初始值表达式均在**编译期（Comptime Context）**进行静态求值。
 > CP 编译器（`cpc`）在生成顶层 `Stmt::Var`（无论是 `let` 还是 `const`）初始值代码时，统一处于 `is_comptime = true` 模式：
+>
 > 1. 杜绝在顶层初始值中生成嵌套的 `if (comptime @typeInfo(...))`，避免触发 Zig 的 `error: comptime expression cannot be inside comptime context`；
 > 2. 支持在顶层初始值中直接执行类型转换、结构体内联初始化与编译期常量计算；
 > 3. 初始值生成完毕后即刻恢复运行时状态，确保函数体内的局部变量保持正确的运行时/编译期分流逻辑。
-
 
 ##### 17.12.2 透明 Zig 模块导入与默认导出绑定 (Default Specifier Import)
 
@@ -9723,18 +9778,20 @@ cpc check --json src/main.cp
 
 ##### 1. `own` 与传统 `move` 的核心区别
 
-| 维度 | 传统 `move` | 现代 `own`（无别名单写者） |
-| :--- | :--- | :--- |
-| **设计哲学** | 侧重于单线程作用域内的**“所有权移动动作（Action）”** | 侧重于跨边界的**“排他单写者契约（Exclusive Ownership Contract）”** |
+| 维度             | 传统 `move`                                                     | 现代 `own`（无别名单写者）                                         |
+| :--------------- | :-------------------------------------------------------------- | :----------------------------------------------------------------- |
+| **设计哲学**     | 侧重于单线程作用域内的**“所有权移动动作（Action）”**            | 侧重于跨边界的**“排他单写者契约（Exclusive Ownership Contract）”** |
 | **并发别名防护** | 仅做普通变量移出，不主动约束跨 Actor 的无别名（Alias-Free）语义 | **严格约束单写者**，保证接收方是全局唯一的排他持有者，杜绝并发竞争 |
-| **函数参数修饰** | `fn process(move x: T)` 语义偏向动作，语法略显突兀 | **`fn process(own x: T)`** 优雅明确表达“该形参要求独占所有权” |
-| **语法精炼度** | 历史上跨并发独占需写为 `move unique`，冗长繁琐 | **统一收敛为 3 个字母 `own`**，语法极简有力，无冗余心智负担 |
-| **向后兼容性** | 继续保留，作为 `own` 的动作等价写法向下兼容 | **作为 CP 语言推荐的标准所有权关键字** |
+| **函数参数修饰** | `fn process(move x: T)` 语义偏向动作，语法略显突兀              | **`fn process(own x: T)`** 优雅明确表达“该形参要求独占所有权”      |
+| **语法精炼度**   | 历史上跨并发独占需写为 `move unique`，冗长繁琐                  | **统一收敛为 3 个字母 `own`**，语法极简有力，无冗余心智负担        |
+| **向后兼容性**   | 继续保留，作为 `own` 的动作等价写法向下兼容                     | **作为 CP 语言推荐的标准所有权关键字**                             |
 
 ##### 2. `own` 核心三大应用场景
 
 ###### 场景一：Actor 间跨线程/微进程零拷贝传递共享堆大对象（Tensor、大缓存）
+
 在 Actor 消息传递模型中，物理值拷贝大数组开销巨大，而多指针别名又容易引发数据竞争。使用 `own` 既实现零拷贝原子指针传递，又确保接收端是排他的“单写者（Single-Writer）”：
+
 ```typescript
 import { spawn } from "cap:actor";
 import { SharedTensor } from "cap:mem";
@@ -9757,7 +9814,9 @@ pub fn main(): void {
 ```
 
 ###### 场景二：系统 RAII 核心资源的排他转移与自动析构接管
+
 对于包装了底层文件描述符、网络 Socket 或显存资源的结构体，通过 `own` 移交所有权时，编译器自动织入 Drop Flag（`__{var}_moved = true;`），使原作用域的自动释放（`release`）安全旁路，彻底消除双重释放（Double Free）与悬挂指针：
+
 ```typescript
 struct SafeSocket {
     pub fd: i32,
@@ -9781,10 +9840,13 @@ pub fn main(): void {
 ```
 
 ###### 场景三：无锁并发队列与环形缓冲区任务提取
+
 在事件循环（Event Loop）与任务调度池中，消费任务时使用 `own` 能够以确定性方式表明该任务已被消费线程认领并转移，杜绝多 Worker 重复执行。
 
 ##### 3. 编译期使用已移动变量的智能自愈拦截（`E0203`）
+
 当变量被 `own` 移交后，后续任何读取或借用均被编译器静态语义分析直接阻断，并输出三段式自愈诊断：
+
 ```text
 error[E0203]: use of moved value 'r1'
   --> src/main.cp:23:17
@@ -9807,6 +9869,7 @@ error[E0203]: use of moved value 'r1'
 在微架构调优、WebAssembly 运行时代数运算、原子同步等待（如 Futex `memory.atomic.wait32`）或特定 CPU 指令调用场景下，CP 原生支持内联汇编表达式：
 
 ##### 1. 语法规范
+
 - **简易内联指令**：`@asm("nop")` 或 `@asm volatile ("nop")`；
 - **带输入/输出寄存器约束的汇编表达式**：
   支持直接书写汇编字符串与操作数约束，使用 `: [ret] "=r" (-> Type)` 指定输出寄存器，使用 `: [param] "r" (val)` 指定输入寄存器及 clobber 列表：
@@ -9833,6 +9896,7 @@ error[E0203]: use of moved value 'r1'
   ```
 
 ##### 2. 编译器代码生成映射
+
 - CP AST 中将该语法节点解析为 `Expr::InlineAsm { is_volatile: bool, content: String }`；
 - Codegen 层精确映射并发射 Zig 原生的 `asm volatile (...)` / `asm (...)` 语法。
 
@@ -9843,7 +9907,9 @@ error[E0203]: use of moved value 'r1'
 在高性能网络服务与 URL 路径解析等高并发场景下，避免高频内存分配的经典方案是使用线程局部静态缓冲区（Thread-Local Storage）。
 
 ##### 1. 核心语法约束
+
 CP 语言**彻底废除了容易引起混乱的 `var` 关键字**，变量声明体系只有 `let`（默认可重新赋值/修改）与 `const`（不可变常量）。因此，TLS 变量严格遵循 CP 风格：
+
 - 推荐现代宏修饰符写法：`@tls let name: Type = init;`
 - 系统关键字兼容写法：`threadlocal let name: Type = init;`
 - **严禁使用 `var`**：若书写 `threadlocal var`，编译器在语法解析阶段将直接报错并提示修正为 `let`。
@@ -9861,6 +9927,7 @@ pub fn format_path(input: []const u8): []const u8 {
 ```
 
 ##### 2. 编译器代码生成映射
+
 CP Codegen 会将顶层 `@tls let` / `threadlocal let` 变量发射为 Zig 的 `threadlocal var name: Type = init;`，实现零开销线程私有全局变量。
 
 ---
@@ -9870,7 +9937,9 @@ CP Codegen 会将顶层 `@tls let` / `threadlocal let` 变量发射为 Zig 的 `
 Zig 中的 `union(enum)` 在 CP 语言中天然映射为 **携带载荷的强类型枚举（Payload Enums）**。
 
 ##### 1. CP 纯正定义与映射契约
+
 在 CP 中，用户无需使用冷冰冰的 Zig 式宏定义，直接以现代面向对象联合枚举书写：
+
 ```typescript
 // 带载荷的强类型辨识联合枚举（Header.cp:60 场景）
 pub enum Class {
@@ -9897,7 +9966,9 @@ pub enum Task {
   ```
 
 ##### 2. 模式匹配与变量捕获解构
+
 配合 CP 原生的 `match` 表达式，可以直接安全地解构辨识联合的变体载荷：
+
 ```typescript
 let t = Task.Text("hello tagged union");
 
@@ -9916,6 +9987,7 @@ match (t) {
 在处理网络协议、HTTP MIME 类型解析（如 `MimeType.cp`）、S3 ACL 权限列表（如 `acl.cp`）时，运行时的字符串哈希查找存在显著性能损耗。CP 引入了编译期静态查找表与枚举内置映射体系：
 
 ##### 1. 编译期静态查找表 `@map`
+
 `@map` 在编译期（Comptime）将键值对映射生成完美最小哈希表（Perfect Hash Map），运行时享受 O(1) 甚至近似 O(0) 的内联静态查表性能：
 
 - **显式指定枚举类型（推荐）**：首参数声明目标类型，内部享受极简的点语法（`.variant`）：
@@ -9946,28 +10018,31 @@ match (t) {
   - `MAP.has("key")`：返回布尔值 `bool`。
 
 ##### 2. 内置枚举映射自洽体系（替代繁琐的 `fromName`）
+
 枚举类型本身是天然的“标识符名称 -> 枚举变体”静态映射表。CP 语言正式确立以 `.get()` / `.has()` / `.name` 统一的极简自洽体系：
+
 ```typescript
 enum Method {
-    GET,
-    POST,
-    PUT,
-    DELETE,
+  GET,
+  POST,
+  PUT,
+  DELETE,
 }
 
 // 1. 编译期自动生成的极速静态获取：代替冗长的 fromName/fromString
-let m = Method.get("GET");      // 返回 ?Method: Method.GET
-let invalid = Method.get("FOO");// 返回 null
+let m = Method.get("GET"); // 返回 ?Method: Method.GET
+let invalid = Method.get("FOO"); // 返回 null
 
 // 2. 存在性快速判定
-let exists = Method.has("POST");// 返回 true
+let exists = Method.has("POST"); // 返回 true
 
 // 3. 极速获取枚举变体标识符名称（零开销字符串）
 let val = Method.POST;
-let str_name = val.name;         // 返回 "POST"
+let str_name = val.name; // 返回 "POST"
 ```
 
 ##### 3. 类顶层引用计数自动管理装饰器 (`@refCount`)
+
 在包装底层 C 资源、网络套接字或共享内存对象时，生命周期需要通过侵入式引用计数（Reference Counting）进行精准管理。CP 提供了 `@refCount` 类顶层装饰器（credentials.cp 等场景）：
 
 ```typescript
@@ -9993,6 +10068,7 @@ pub fn main() {
     res.deref();     // 归零时自动触发 cleanup()，执行安全释放
 }
 ```
+
 - **编译器支持**：如果当前环境处于 Bun 宿主中，编译器自动桥接对接 `bun.ptr.RefCount`；如果处于独立 CP 环境，则自动生成原子递增/递减与条件析构的纯正原生方法。
 
 ---
@@ -10004,6 +10080,7 @@ pub fn main() {
 CP 编译器在语义分析器（`sema.rs`）与代码生成器（`codegen.rs`）中全面打通了整型标量与枚举类型的显式 `as` 转换：
 
 ##### 1. 显式双向转换规范
+
 - **枚举转换为整型**：`kind as i32`、`kind as usize`，编译器自动发射底层原生 `@intFromEnum(kind)`；
 - **整型转换为枚举**：`raw_int as SocketKind`、`0 as SocketKind`，编译器自动发射底层原生 `@enumFromInt(raw_int)`。
 
@@ -10025,6 +10102,7 @@ pub fn handle_socket(raw_fd_type: i32): void {
     let default_kind = 0 as SocketKind;
 }
 ```
+
 - **架构价值**：开发者再也无需在 CP 代码中嵌入 Zig 的 `@enumFromInt` / `@intFromEnum` 代码块，彻底消除了此类转换对 `zig {}` 内联块的依赖，保持代码库 100% 纯正优雅。
 
 ---
@@ -10034,6 +10112,7 @@ pub fn handle_socket(raw_fd_type: i32): void {
 在系统级编程与高级业务逻辑中，除了通过 `as` 运算符进行显式类型强转外，CP 语言全面支持类似主流现代语言（TypeScript / Rust / Python）的**函数调用风格类型构造与转换**（Functional Casts / Constructors），并原生提供统一的 `.toString()` 方法。
 
 ##### 1. 函数风格类型转换规范
+
 开发者可以直接将类型名称作为函数调用，将源值转换为目标类型：
 
 - **基础标量数值转换**：
@@ -10073,9 +10152,11 @@ pub fn demo_casts() {
 ```
 
 ##### 2. 强类型安全防线：坚决摒弃模糊的 `num(x)` / `Number(x)`
+
 > [!IMPORTANT]
 > **拒绝 JS 弱类型泥潭**：JavaScript 中的 `Number()` / `num` 模糊了整数、无符号数、指针位宽与浮点数的物理边界，这在系统级高并发与高性能 Agent 通信场景中是致命隐患。
 > CP 语言坚决要求精确标量类型（Precise Scalar Types）。若在代码中调用 `num(x)` 或 `Number(x)`，编译器将在前端直接硬性拦截，并输出 AI 友好的自愈诊断：
+>
 > ```text
 > error[E0204]: invalid cast: 'num()' is ambiguous in CP.
 >   --> src/demo.cp:12:15
@@ -10087,6 +10168,7 @@ pub fn demo_casts() {
 > ```
 
 ##### 3. 内置 `.toString()` 统一方法
+
 所有基础标量类型与枚举类型均原生支持 `.toString()` 方法：
 
 - **枚举类型**：`val.toString()` 自动零开销展开为枚举标签标识符字符串（底层发射 Zig 原生 `@tagName(val)`，**零堆分配、零内存损耗**，等价于 `val.name`）；
@@ -10095,13 +10177,13 @@ pub fn demo_casts() {
 
 ```typescript
 let state = SocketKind.Datagram;
-let name_str = state.toString();   // "Datagram"（零堆分配，底层编译期静态展开）
+let name_str = state.toString(); // "Datagram"（零堆分配，底层编译期静态展开）
 
 let count = 42;
-let count_str = count.toString();  // "42"
+let count_str = count.toString(); // "42"
 
 let flag = true;
-let flag_str = flag.toString();    // "true"
+let flag_str = flag.toString(); // "true"
 ```
 
 ---
@@ -10112,10 +10194,10 @@ let flag_str = flag.toString();    // "true"
 
 ##### 1. `@bitCast` vs `as` 数值转换 vs 地址转换
 
-| 原语 / 语法 | 语义边界 | 典型用途 |
-| :--- | :--- | :--- |
-| **`x as TargetT` / `T(x)`** | **数值与地址转换**：可能执行整数截断、浮点转整或指针/整型转换（`ptr as *T!` 自动织入 `@ptrCast(@alignCast(ptr))`；`ptr as usize` 对应 `@intFromPtr`；`addr as *T!` 对应 `@ptrFromInt`） | 普通数值裁剪、C 指针强转、句柄转地址 |
-| **`@bitCast(expr)` / `@as(T, @bitCast(expr))`** | **物理二进制位 1:1 无损重解释**：要求源类型与目标类型位宽（`@bitSizeOf`）严格相等，不修改任何二进制位 | Tagged Pointer 指针高位/低位打标、`f32 <-> u32`、Packed Struct 转整型、`@Vector` 转位掩码 |
+| 原语 / 语法                                     | 语义边界                                                                                                                                                                                | 典型用途                                                                                  |
+| :---------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
+| **`x as TargetT` / `T(x)`**                     | **数值与地址转换**：可能执行整数截断、浮点转整或指针/整型转换（`ptr as *T!` 自动织入 `@ptrCast(@alignCast(ptr))`；`ptr as usize` 对应 `@intFromPtr`；`addr as *T!` 对应 `@ptrFromInt`） | 普通数值裁剪、C 指针强转、句柄转地址                                                      |
+| **`@bitCast(expr)` / `@as(T, @bitCast(expr))`** | **物理二进制位 1:1 无损重解释**：要求源类型与目标类型位宽（`@bitSizeOf`）严格相等，不修改任何二进制位                                                                                   | Tagged Pointer 指针高位/低位打标、`f32 <-> u32`、Packed Struct 转整型、`@Vector` 转位掩码 |
 
 ##### 2. SIMD 向量与硬件位计数原语
 
@@ -10189,10 +10271,12 @@ flowchart TD
 #### 20.1 源码映射、可观测性与生产级调试 (Source Maps, DWARF Debuginfo & Demangling) 【已实装】
 
 ##### 1. 痛点场景与设计考量
+
 `cpc` 将 `.cp` 转译为 `.zig` 并由底层 LLVM 生成机器码二进制。由于 Zig 语言原生不提供 C 语言风格的 `#line` 预处理宏指令（遇到 `#line` 会直接作为语法错误拒绝），直接在转译文件中写 `#line` 无法通过 Zig 解析。
 因此，CP 采用现代工业级架构方案：**前端 AST Span 精确映射 + 自动伴随生成 JSON Source Map (`.zig.map`) + 工具链原生堆栈反解器 (`cpc demangle` / `cap demangle`)**。
 
 ##### 2. 演进技术规范与落地架构
+
 1. **源码映射 (Source Map) 自动伴随生成**：
    - 编译器 `Codegen` 在生成每一个函数定义和语句（`generate_stmt` / `generate_function_decorated`）时，自动根据 AST `Span` 将 CP 源码行号、列号与生成的 Zig 代码行号精准记录；
    - 转译输出 `<target>.zig` 时，自动在同一目录下伴随生成 `<target>.zig.map` 标准映射文件：
@@ -10202,8 +10286,22 @@ flowchart TD
        "cp_source": "cap/test/test_source_map_demangle.cp",
        "zig_target": ".cap/zig/cap/test/test_source_map_demangle.zig",
        "mappings": [
-         { "zig_line": 23, "zig_col": 1, "cp_file": "cap/test/test_source_map_demangle.cp", "cp_line": 3, "cp_col": 1, "symbol": "trigger_crash" },
-         { "zig_line": 24, "zig_col": 1, "cp_file": "cap/test/test_source_map_demangle.cp", "cp_line": 4, "cp_col": 5, "symbol": "trigger_crash" }
+         {
+           "zig_line": 23,
+           "zig_col": 1,
+           "cp_file": "cap/test/test_source_map_demangle.cp",
+           "cp_line": 3,
+           "cp_col": 1,
+           "symbol": "trigger_crash"
+         },
+         {
+           "zig_line": 24,
+           "zig_col": 1,
+           "cp_file": "cap/test/test_source_map_demangle.cp",
+           "cp_line": 4,
+           "cp_col": 5,
+           "symbol": "trigger_crash"
+         }
        ]
      }
      ```
@@ -10226,9 +10324,11 @@ flowchart TD
 #### 20.2 可插拔内存分配器体系与区域作用域 (Pluggable Allocators & Scoped Arena) 【已完成】
 
 ##### 1. 痛点场景
+
 系统级高并发场景（如高吞吐 Web 服务、百万 Agent 工具调用流）严禁对每一次请求都走全局堆 `malloc`，否则将诱发严重的堆锁竞争与内存碎片。
 
 ##### 2. 技术规范与已落地实现
+
 1. **一等公民 Allocator 注入契约**：
    - 标准库容器与大型对象支持显式传入自定义 `Allocator`。
 2. **作用域区域分配器（`arena { ... }` 原生语法）**：
@@ -10274,9 +10374,11 @@ flowchart TD
 #### 20.3 抢占式调度与高可用并发引擎 (Auto-Reduction Injection & Structured Concurrency)
 
 ##### 1. 痛点场景
+
 在海量 Agent 共存运行环境下，单个 Agent 一旦因提示词异常陷入死循环（如 `while (true)`）或执行本地长耗时正则/数学运算，极易将底层工作线程卡死，导致同线程其他 Agent 饥饿。
 
 ##### 2. 演进技术规范
+
 1. **自动抢占式计数器注入（Auto-Reduction Injection）**：
    - 在 `-nest` 模式下，`cpc` 在循环回边（Loop Backedge）与函数序言（Function Prologue）中自动织入指令递减逻辑：
      ```zig
@@ -10297,9 +10399,11 @@ flowchart TD
 #### 20.4 模块化增量编译与工程扩展性 (Modular Incremental Transpilation & Caching)
 
 ##### 1. 痛点场景
+
 大型工程包含上百个模块、数十万行代码时，全量单体 AST 解析与重复转译会导致编译耗时激增。
 
 ##### 2. 演进技术规范
+
 1. **基于内容哈希的模块级增量转译缓存**：
    - 引入 Content-Addressable Cache：根据 AST 语法指纹缓存模块产物，仅转译发生变更的源码及其受影响的下游依赖。
 2. **跨模块循环引用解耦 (Two-Pass Declaration Resolution) 【已实装】**：
@@ -10310,15 +10414,15 @@ flowchart TD
      // circ_a.cp
      import { NodeB } from "./circ_b";
      export class NodeA {
-         id: i32;
-         b: ?NodeB;
+       id: i32;
+       b: ?NodeB;
      }
 
      // circ_b.cp
      import { NodeA } from "./circ_a";
      export class NodeB {
-         tag: string;
-         a: ?NodeA;
+       tag: string;
+       a: ?NodeA;
      }
      ```
 3. **稳定 C-ABI 导出与动态插件热加载 (Dynamic Plugins)**：
@@ -10341,9 +10445,11 @@ flowchart TD
 #### 20.5 高级类型系统与借用检查器深度升级 (Advanced Type System & Borrow Checker)
 
 ##### 1. 痛点场景
+
 目前泛型报错有时会穿透到底层 Zig 模板展开阶段；借用检查器若锁定整个结构体实例，会导致独立字段并发读写误报冲突。
 
 ##### 2. 演进技术规范
+
 1. **泛型 Trait 静态契约拦截 (Generic Bounds)**：
    - 在 CP 前端直接校验泛型约束（如 `fn sort<T: Comparable>(*arr: [T])`），类型不满足时立即给出精准自愈建议，彻底避免底层晦涩报错。
 2. **多字段分离借用 (Disjoint Field Borrowing) 【已实装】**：
@@ -10377,12 +10483,15 @@ flowchart TD
 #### 20.6 生产级零拷贝标准库基石 (Production Standard Library Ecosystem)
 
 ##### 1. 统一零拷贝流抽象 (`Reader` / `Writer` / `Closer` / `Seeker`) 【已全面实装】
+
 - 详见第 12.3 节《统一高性能 I/O 流体系（`cap:io`）与 Trait 契约》。在 `cap:io` 中已完备落地 `Reader`、`Writer`、`Closer`、`Seeker` 四大核心契约，并配套提供 `BufferReader`、`BufferWriter`、`BufferedReader`、`BufferedWriter` 与 `copyStream` 泛型管道。文件系统、TCP/UDP 套接字、TLS 安全连接与内存 Buffer 统一实现标准流契约，数据流转零多余深拷贝。
 
 ##### 2. 高性能编译期序列化框架 (Zero-Copy Serde)
+
 - 对标 `simdjson`，实现零拷贝编译期 JSON / 结构化二进制序列化与反序列化，从原始字节切片直接零成本映射至强类型数据容器。
 
 ##### 3. 无锁并发原语库 (Lock-free Primitives)
+
 - 内置 MPMC 无锁环形队列、并发哈希表与原子切片，为跨线程高频信箱通信提供极速基础设施。
 
 ---
@@ -10390,15 +10499,19 @@ flowchart TD
 #### 20.7 开发者体验与工具链全家桶 (DevEx & Toolchain)
 
 ##### 1. 工业级 LSP (Language Server Protocol)
+
 - 完善 `cpc lsp`：支持精确定义跳转（Go to Definition）、全局引用查找（Find All References）、实时语义波浪线、全局安全重命名（Rename Symbol）与智能导入补全。
 
 ##### 2. 官方权威代码格式化工具 (`cpc fmt` / `cap fmt`)
+
 - 官方内置统一步伐的代码格式化工具，杜绝团队风格分歧与提交冲突。
 
 ##### 3. 原生测试与基准评测套件 (`cap test` / `cap bench`)
+
 - 内置 `test "name" { ... }` 与 `benchmark "name" { ... }` 语法，一键输出耗时、每秒操作数（ops/sec）以及内存分配统计。
 
 ##### 4. C 头文件自动化绑定生成工具 (`cap bindgen`)
+
 - 自动解析复杂 C/C++ 库头文件并生成现代强类型的 `.cp` 绑定声明，一键吸纳庞大 C 语言成熟生态。
 
 ---
@@ -10406,23 +10519,25 @@ flowchart TD
 #### 20.8 AI-First 机器自愈全闭环与确定性构建 (Autonomic Evolution & Reproducible Builds)
 
 ##### 1. 100% 覆盖的 Machine-Readable Edits 自愈闭环
+
 - 将 `--json` 结构化修正从语法层深入扩展至类型错误与借用冲突：
   - 遇到只读参数就地修改时：自动输出插入 `*` 或转换为独占 `own` 的修改偏移量；
   - 遇到遗漏模块导入时：自动计算正确的 `import` 插入位置；
   - 遇到模式匹配未穷尽时：自动追加缺失的分支骨架。
 
 ##### 2. 确定性与可复现构建 (Deterministic Builds)
+
 - 保证相同源码在任何操作系统与时间转译出的 Zig 产物和二进制散列值（SHA-256）100% 完全一致。
 
 ---
 
 #### 20.9 实施优先级规划与推进里程碑 (Priority Milestones)
 
-| 阶段 | 重点领域 | 核心任务 | 交付价值与验收标准 |
-| :--- | :--- | :--- | :--- |
-| **P0 阶段（已全面攻坚完成）** | **调试与工程稳定性** | 1. 源码行号指示与 DWARF 映射注入 (`.zig.map` / Source Map & Demangle 反解器)【已完成】<br/>2. 泛型 Trait 前端契约校验（消除底层报错泄露）【已完成】<br/>3. Scoped Arena 区域内存池语法与运行时实现【已完成】 | 极大降低大型项目与 Bun 迁移调试门槛，实现断点与崩溃堆栈精准映射到 `.cp` 源码，消灭高频小对象内存碎片 |
-| **P1 阶段（中期生产化）** | **并发调度与工程规模** | 1. 循环回边 Auto-Reduction 抢占计数自动注入<br/>2. 跨 await 线程安全静态借用拦截<br/>3. 基于内容哈希的模块级增量编译与缓存 | 真正实现百万 Agent 抗死循环与防单点饥饿，十万行以上超大工程秒级极速构建 |
-| **P2 阶段（生态成熟期）** | **工具链与标准库基座** | 1. 完整生产级 LSP（跳转/引用/重命名/补全）<br/>2. 官方权威代码格式化工具 `cpc fmt`<br/>3. 统一零拷贝 I/O 流与无锁并发容器标准库 | 开发者与 AI 协同体验全面媲美 TS/Rust，具备承载国家级超高并发与关键系统服务的能力 |
+| 阶段                          | 重点领域               | 核心任务                                                                                                                                                                                                     | 交付价值与验收标准                                                                                   |
+| :---------------------------- | :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| **P0 阶段（已全面攻坚完成）** | **调试与工程稳定性**   | 1. 源码行号指示与 DWARF 映射注入 (`.zig.map` / Source Map & Demangle 反解器)【已完成】<br/>2. 泛型 Trait 前端契约校验（消除底层报错泄露）【已完成】<br/>3. Scoped Arena 区域内存池语法与运行时实现【已完成】 | 极大降低大型项目与 Bun 迁移调试门槛，实现断点与崩溃堆栈精准映射到 `.cp` 源码，消灭高频小对象内存碎片 |
+| **P1 阶段（中期生产化）**     | **并发调度与工程规模** | 1. 循环回边 Auto-Reduction 抢占计数自动注入<br/>2. 跨 await 线程安全静态借用拦截<br/>3. 基于内容哈希的模块级增量编译与缓存                                                                                   | 真正实现百万 Agent 抗死循环与防单点饥饿，十万行以上超大工程秒级极速构建                              |
+| **P2 阶段（生态成熟期）**     | **工具链与标准库基座** | 1. 完整生产级 LSP（跳转/引用/重命名/补全）<br/>2. 官方权威代码格式化工具 `cpc fmt`<br/>3. 统一零拷贝 I/O 流与无锁并发容器标准库                                                                              | 开发者与 AI 协同体验全面媲美 TS/Rust，具备承载国家级超高并发与关键系统服务的能力                     |
 
 ---
 
@@ -10431,6 +10546,7 @@ flowchart TD
 为贯彻“**如非必要，尽量简洁**”的核心设计原则并彻底消除 Zig / Rust / TypeScript 遗留语法混用，CP 编译器（`cpc`）确立并强制执行以下核心契约：
 
 ##### 1. 形参与接收者正交化设计（`*_` vs `v: *T` vs `move v: T`）
+
 - **容器（`struct` / `class` / `enum` / `trait`）方法接收者（无类型，修饰符在前）**：
   - **只读接收者**：**直接省略 `_`**（如 `pub fn text(): string { return _.body; }`，写显式 `_`、`this`、`self` 触发 `E0121` / `E0123` 报错）；
   - **可变接收者**：首参写 **`*_`**（如 `pub fn init(*_, url: string)`、`pub fn reset(*_) { _.remaining = 0; }`）；
@@ -10444,14 +10560,17 @@ flowchart TD
     - `move` 与 `own` 是变量所有权传递动作而非类型属性，统一置于参数名 `v` 之前（严禁写 `v: move T`）。
 
 ##### 2. 函数返回签名唯一规范（必写 `: ReturnType` 与全面省略 `: void`）
+
 - **有返回值函数**：左括号 `)` 后**必须写冒号 `: ReturnType`**（如 `pub fn next(*_): ([]const u8)?`），漏写 `:` 触发 `E0116` 拦截（避免与后缀 `?`/`!` 混写产生二义性）；
 - **无返回值函数（`void`）**：无论普通函数、成员方法还是 `@c` / `extern` 外部函数声明，**一律直接省略 `: void`**（如 `pub fn close(*_)`、`fn deflateEnd(strm: z_streamp);`），写 `: void` 触发 `E0122` 拦截。
 
 ##### 3. 抛弃返回值唯一语法（`* = expr;`）
+
 - `_` 在 CP 中严格专用于当前实例接收者（`_`）；
 - 忽略/抛弃函数调用返回值**必须使用 `* = expr;`**（或 `let * = expr;`），写 `_ = expr;` 或 `let _ = expr;` 触发 `E0120` 报错。
 
 ##### 4. 一等公民内置 `JSON`、`RegExp` 与默认预置 `std`
+
 - **全局内建 `JSON`（无需 `import`，CP 与 Bun 100% 同构）**：
   - `JSON.stringify(val)` -> `string`（任意结构体/类/容器序列化，基于 `std.heap.smp_allocator`）；
   - `JSON.parse<T>(str)?` / `JSON.parse(T, str)?` -> `T`（编译期强类型反序列化，开启 `.allocate = .alloc_if_needed` 零拷贝原切片借用，0 中间容器开销）；
@@ -10462,6 +10581,7 @@ flowchart TD
 - **编译器默认预置 `std`**：`.cp` 文件可直接调用 `std.mem.eql(...)`、`std.ascii.eqlIgnoreCase(...)` 等，无需手写 `const std = @import("std");`，且绝无需包裹在 `zig {}` 块中。
 
 ##### 5. `@c { ... }` / `pub @c { ... }`、`enum`/`struct` 默认 `pub` 与 `--nest` / `@is_nest`
+
 - **`@c { ... }`（模块内私有）与 `pub @c { ... }`（模块级导出）**：块内直接声明 `fn`、`struct`、`union`、`enum`、`type`、`const`，无需重复写 `pub` 或 `extern`；
 - **`struct` 与 `enum` 成员默认 `pub`**：内部字段、变体与方法默认均为 `pub`（静态方法仍需写 `static fn`）；模块顶层导出统一推荐 `pub`；
 - **空切片字面量 `[]`**：`buf: []T = [];` 自动映射为底层空切片 `&.{}`，淘汰手写 `&.{}`；
@@ -10476,6 +10596,7 @@ flowchart TD
 #### 20.11 高频人体工程学优化、契约式设计与 SIMD 原语 【已全面实装】
 
 ##### 1. 空值合并赋值操作符（Nullish Coalescing Assignment `??=`）
+
 - **语法语义**：`lhs ??= rhs;`
 - **运行时特征**：零运行时与堆开销短路求值。当且仅当左侧可空变量 `lhs` 为 `null` 时，才执行右侧表达式 `rhs` 计算并赋值给 `lhs`；若 `lhs` 不为 `null`，右侧表达式短路跳过，彻底避免重复计算与无谓重赋值。
 - **Lowering 映射**：
@@ -10490,6 +10611,7 @@ flowchart TD
   ```
 
 ##### 2. 万能降级解包 `? { ... }` 与复合类型 `(?T)!` 双重解包
+
 - **多行发散块支持**：`let v = expr ? { ...; return; };`，当左侧为空或发生错误时，执行降级代码块（必须以发散控制流如 `return`、`break`、`continue`、`unreachable` 结尾）。
 - **复合类型 `(?T)!` 智能双重解包**：若表达式类型既可能抛出错误又可能返回空值（如 `(?T)!`），降级解包符 `?` 自动执行链式双重解包——第一层捕获错误，第二层捕获空值。任意一层失败均执行降级分支；两层皆成功则直接解包出纯净基础类型 `T`。
   ```cp
@@ -10500,6 +10622,7 @@ flowchart TD
   ```
 
 ##### 3. 契约式设计注解（Design-by-Contract：`@pre` 与 `@ret`）
+
 - **前置契约 `@pre(cond)`**：标注在函数签名之后，在进入函数体第一行前自动生成对入参的断言守卫校验。
 - **返回值后置契约 `@ret(cond)`**：标注在函数签名之后，在函数体内所有 `return` 返回前，自动捕获返回值绑定为 `ret` 变量并断言后置状态。
 - **正交性与命名约定**：采用 `@ret`（Return Postcondition）完美替代容易与网络请求混淆的 `@post`，与 `@pre` 高度对称简洁（仅 4 字符）。
@@ -10514,6 +10637,7 @@ flowchart TD
   ```
 
 ##### 4. 原生定长 SIMD 向量类型别名与向量算术
+
 - **类型矩阵**：直接支持 `u8x16`, `u8x32`, `u8x64`, `i16x8`, `i16x16`, `i32x4`, `i32x8`, `u32x4`, `u32x8`, `f32x4`, `f32x8`, `f32x16`, `f64x2`, `f64x4`。
 - **底层映射**：映射至底层 `@Vector(N, T)`，原生享有硬件 SIMD 指令集加速（AVX2/AVX-512/Neon）。
 - **算术原语**：原生支持向量并行加减乘除（`+`, `-`, `*`, `/`）以及标量填充 `@splat`。
@@ -10524,6 +10648,7 @@ flowchart TD
   ```
 
 ##### 5. 官方派生宏全家桶之零值构造工厂（`@[Default]`）
+
 - 为 `struct` 或 `class` 自动派生静态构造工厂方法 `pub static fn default(): Self`。
 - 自动按各字段物理类型的全零基态（数值为 0，布尔为 false，可选类型/指针为 null）进行静态初始化，大幅减少样板代码并保障内存确定性。
   ```cp
@@ -10538,10 +10663,12 @@ flowchart TD
   ```
 
 ##### 6. 切片属性语法糖消歧保护（Disambiguation of `.slice`）
+
 - 针对基础类型（字符串 `string`、定长数组 `[N]T` 与切片 `[]T`），保持 `.slice(start, len)` 语法糖便利；
 - 对用户自定义的结构体与类，豁免语法糖拦截，100% 保留用户自定义的同名 `.slice()` 成员方法调用与传参行为。
 
 ##### 7. 字段级序列化定制（`@json("alias")` 与 `@json_ignore`）
+
 - **字段键别名重命名 `@json("alias")`**：
   在结构体/类字段前标注 `@json("alias_name")`，派生的 `toJson()` 序列化器自动使用别名替换源码字段名作为输出 JSON 键名：
   ```cp
@@ -10566,6 +10693,7 @@ flowchart TD
   ```
 
 ##### 8. 函数级作用域内存区域修饰器（`@arena`）
+
 - **修饰器语法**：在普通函数/方法前标注 `@arena` 修饰器。
 - **运行时特征**：
   - 编译器在函数序言（prologue）处自动声明并初始化本地栈 Arena（`std.heap.ArenaAllocator.init(std.heap.page_allocator)`）；
@@ -10582,6 +10710,7 @@ flowchart TD
   ```
 
 ##### 9. 一等公民 Fuzz 模糊测试声明（`fuzz` 块）与 libFuzzer 驱动接入
+
 - **语法语义**：`fuzz <name>(<data_param>) { ... }` 作为一等公民顶层或模块项声明。
 - **自动化模糊驱动**：
   - 编译器自动为 `fuzz` 块生成内置测试执行器及高质量测试语料库（Corpus，包含空串、畸形 UTF-8 序列、边界整数与长字符串变异样本）；
@@ -10611,6 +10740,7 @@ flowchart TD
   ```
 
 ##### 10. 模板字符串零堆分配流式直写（Zero-Allocation Stream Write）
+
 - **痛点与核心机制**：
   在高性能网络服务与大规模 Agent 日志场景下，避免频繁的堆内存分配与垃圾回收压力。
 - **Lowering 优化规范**：
@@ -10623,6 +10753,7 @@ flowchart TD
   - 仅当模板字符串作为独立表达式、变量赋值或返回值（如 `let s = \`hello ${name}\``）时，才走逃逸分配（`allocPrint`），兼顾极端性能与内存安全。
 
 ##### 11. 跨协程/异步边界静态安全隔离检查（E0305）
+
 - **核心契约**：
   当调用 `spawn`、`@spawn`、`spawn.cpu`、`send` 或跨协程通道传递数据时，严禁传递非拥有局部借用指针 `*T`、`&T` 或未转移所有权的局部切片。
 - **静态规则矩阵**：
@@ -10637,12 +10768,15 @@ flowchart TD
     ```
 
 ##### 12. 结构体数组化列式容器（`Soa<T>`）
+
 - **协议与入口**：`import { Soa } from "cap:col";`
 - **定位与价值**：底层封装 Zig 原生 `std.MultiArrayList(T)`，将结构体各字段在物理内存中拆分为独立连续切片。消除 AoS 内存对齐填充内碎片，使单列遍历时的 CPU L1 缓存命中率逼近 100%，提供直通硬件 SIMD 向量规约的 `items(field)` 列切片投影能力。
 - **详尽规范**：详见内置库独立手册 [`docs/col/col.md`](file:///data/dev/cp/docs/col/col.md) 与 [`docs/stdlib/soa.md`](file:///data/dev/cp/docs/stdlib/soa.md)。
 
 ##### 13. 标准库独立专著文档索引体系 (`docs/<lib>/<lib>.md`)
+
 为保持权威规范手册与智能体契约手册的高密度精简，各标准库模块的详细架构图、完整代码示例、参数矩阵与 Bun/Node.js 对照表统一归档于 `docs/<库名>/<库名>.md`：
+
 - **压缩与归档 (`cap:pack`)**：[`docs/pack/pack.md`](file:///data/dev/cp/docs/pack/pack.md)、[`docs/pack/zlib.md`](file:///data/dev/cp/docs/pack/zlib.md)（Gzip/Zlib/Deflate/Brotli/Zstd/Tar/PAX-Tar/Zip/ZipWriter/ArchiveSniffer/CRC32/Adler32）
 - **高性能容器 (`cap:col`)**：[`docs/col/col.md`](file:///data/dev/cp/docs/col/col.md)（BabyList/HiveArray/ObjectPool/BoundedArray/LinearFifo/PriorityQueue/BitSet/Treap/HashMap/StringMap/Soa/Leb128）
 - **编码与解码 (`cap:encoding`)**：[`docs/encoding/encoding.md`](file:///data/dev/cp/docs/encoding/encoding.md)（Base64 标准与 URL-Safe、原地解码、Hex）

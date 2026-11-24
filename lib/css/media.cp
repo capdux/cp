@@ -15,11 +15,12 @@ fn trimAscii(s: string): string {
     return std.mem.trim(u8, s, " \t\r\n");
 }
 
-/// 媒体类型（`all` / `screen` / `print`）
+/// 媒体类型（`all` / `screen` / `print` / `unknown`）
 pub enum MediaType: u8 {
     all = 0,
     screen = 1,
     print = 2,
+    unknown = 3,
 
     static fn default(): MediaType {
         return .all;
@@ -27,10 +28,19 @@ pub enum MediaType: u8 {
 
     static fn parse(input: string): MediaType? {
         const s = trimAscii(input);
+        if (s.len == 0) return null;
         if (std.ascii.eqlIgnoreCase(s, "all")) { return .all; }
         if (std.ascii.eqlIgnoreCase(s, "screen")) { return .screen; }
         if (std.ascii.eqlIgnoreCase(s, "print")) { return .print; }
-        return null;
+        if (std.ascii.eqlIgnoreCase(s, "not") || std.ascii.eqlIgnoreCase(s, "and") || std.ascii.eqlIgnoreCase(s, "or") || std.ascii.eqlIgnoreCase(s, "only")) {
+            return null;
+        }
+        let i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            const c = s[i];
+            if (!std.ascii.isAlphanumeric(c) && c != '-' && c != '_') return null;
+        }
+        return .unknown;
     }
 
     fn toCss(): string {
@@ -38,6 +48,7 @@ pub enum MediaType: u8 {
             .all => "all",
             .screen => "screen",
             .print => "print",
+            .unknown => "unknown",
         };
     }
 }
@@ -442,8 +453,8 @@ pub struct MediaQuery {
                 if (s.len == 0) {
                     return q;
                 }
-                // 媒体类型之后必须紧跟 `and `
-                if (s.len < 4 || !std.ascii.eqlIgnoreCase(s[0..3], "and") || (s[3] != ' ' && s[3] != '\t')) {
+                // 媒体类型之后必须紧跟 `and ` 或 `and(`
+                if (s.len < 4 || !std.ascii.eqlIgnoreCase(s[0..3], "and") || (s[3] != ' ' && s[3] != '\t' && s[3] != '(')) {
                     return err.InvalidMediaQuery;
                 }
                 s = trimAscii(s[3..]);

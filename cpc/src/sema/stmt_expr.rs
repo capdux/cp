@@ -9,10 +9,9 @@ impl Analyzer {
     /// whose struct/class defines `~init()` (`__cp_deinit`) or `~errinit()` (`__cp_errdeinit`).
     pub(super) fn find_owned_raii_destructor(&self, ty: &Type) -> Option<(String, String)> {
         match ty {
-            Type::BorrowType { .. }
-            | Type::RawPtr { .. }
-            | Type::ManyRawPtr(_)
-            | Type::CPtr(_) => None,
+            Type::BorrowType { .. } | Type::RawPtr { .. } | Type::ManyRawPtr(_) | Type::CPtr(_) => {
+                None
+            }
             Type::Optional(inner) | Type::ErrorUnion(inner) => {
                 self.find_owned_raii_destructor(inner)
             }
@@ -79,7 +78,9 @@ impl Analyzer {
                     if let Some(init) = &var.init {
                         let is_plain_ident = matches!(init, Expr::Ident(_));
                         if !is_plain_ident {
-                            if let Some((raii_name, dtor_kind)) = self.find_owned_raii_destructor(&ty) {
+                            if let Some((raii_name, dtor_kind)) =
+                                self.find_owned_raii_destructor(&ty)
+                            {
                                 return Err(SemaError::DiscardedRaiiValue {
                                     type_name: raii_name,
                                     dtor_kind,

@@ -117,7 +117,10 @@ fn migrate_project_recursive(
     visited: &mut HashSet<String>,
 ) -> Result<ProjectMigrateSummary, String> {
     if !src_dir.exists() {
-        return Err(format!("Source directory does not exist: {}", src_dir.display()));
+        return Err(format!(
+            "Source directory does not exist: {}",
+            src_dir.display()
+        ));
     }
     fs::create_dir_all(out_dir)
         .map_err(|e| format!("Failed to create output dir {}: {}", out_dir.display(), e))?;
@@ -134,7 +137,9 @@ fn migrate_project_recursive(
                 let tier = if let Some(t) = resolve_builtin_or_official(lang, &dname) {
                     t
                 } else if !is_dev && recursive_deps && depth < max_depth {
-                    if let Some(local_dep_src) = locate_local_dep_source(lang, src_dir, &dname, None) {
+                    if let Some(local_dep_src) =
+                        locate_local_dep_source(lang, src_dir, &dname, None)
+                    {
                         let safe_name = sanitize_pkg_dir_name(&dname);
                         let dep_out = root_cap_modules_dir.join(&safe_name);
                         if !visited.contains(&dname) {
@@ -178,7 +183,8 @@ fn migrate_project_recursive(
                 } else {
                     DepTier::PendingManual {
                         reason: if is_dev {
-                            "开发期依赖（已由 cap fmt/lint/test/build 工具链替代或按需忽略）".to_string()
+                            "开发期依赖（已由 cap fmt/lint/test/build 工具链替代或按需忽略）"
+                                .to_string()
                         } else {
                             "超过递归深度或禁用依赖转换".to_string()
                         },

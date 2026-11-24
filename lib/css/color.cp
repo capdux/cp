@@ -503,7 +503,19 @@ pub struct CssColor {
         if (_.a == 255) {
             return std.fmt.bufPrint(out_buf, "rgb({d}, {d}, {d})", .{ _.r, _.g, _.b }) catch "";
         }
-        return std.fmt.bufPrint(out_buf, "rgba({d}, {d}, {d}, {d})", .{ _.r, _.g, _.b, _.a }) catch "";
+        if (_.a == 0) {
+            return std.fmt.bufPrint(out_buf, "rgba({d}, {d}, {d}, 0)", .{ _.r, _.g, _.b }) catch "";
+        }
+        const af = @as(f64, @floatFromInt(_.a)) / 255.0;
+        let abuf: [32]u8 = undefined;
+        let astr = std.fmt.bufPrint(&abuf, "{d:.6}", .{af}) catch "0";
+        while (astr.len > 1 && astr[astr.len - 1] == '0') {
+            astr = astr[0 .. astr.len - 1];
+        }
+        if (astr.len > 1 && astr[astr.len - 1] == '.') {
+            astr = astr[0 .. astr.len - 1];
+        }
+        return std.fmt.bufPrint(out_buf, "rgba({d}, {d}, {d}, {s})", .{ _.r, _.g, _.b, astr }) catch "";
     }
 
     /// Converts sRGB color to HSL `[h_deg, s_pct, l_pct]`.

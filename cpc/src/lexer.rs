@@ -423,8 +423,7 @@ pub struct Lexer<'a> {
     err_count: usize,
 }
 
-pub static QUIET_LEXER: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
+pub static QUIET_LEXER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {

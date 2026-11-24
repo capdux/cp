@@ -28,9 +28,9 @@ fn sanitize_cp_ident(name: &str) -> String {
         | "throw" | "try" | "var" | "function" | "null" | "undefined" | "this" | "super"
         | "defer" | "errdefer" | "actor" | "spawn" | "receive" | "reply" | "comptime" | "zig"
         | "string" | "void" | "bool" | "err" | "type" | "fn" | "let" | "const" | "mut"
-        | "struct" | "enum" | "union" | "trait" | "impl" | "pub" | "priv" | "static"
-        | "async" | "await" | "move" | "ref" | "unsafe" | "extern" | "return" | "if" | "else"
-        | "while" | "for" | "break" | "continue" | "true" | "false" | "as" => {
+        | "struct" | "enum" | "union" | "trait" | "impl" | "pub" | "priv" | "static" | "async"
+        | "await" | "move" | "ref" | "unsafe" | "extern" | "return" | "if" | "else" | "while"
+        | "for" | "break" | "continue" | "true" | "false" | "as" => {
             format!("{}_", clean)
         }
         _ => {
@@ -107,8 +107,7 @@ fn preprocess_rust_source(source: &str) -> String {
         }
 
         // 3. Raw byte string `br"..."` / `br#"..."#` or raw string `r"..."` / `r#"..."#`
-        let prev_is_ident = i > 0
-            && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'_');
+        let prev_is_ident = i > 0 && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'_');
         if !prev_is_ident {
             let raw_prefix_len = if bytes[i] == b'b' && i + 1 < len && bytes[i + 1] == b'r' {
                 Some(2)
@@ -537,11 +536,7 @@ fn split_top_level_commas(s: &str) -> Vec<String> {
                 }
                 cur.push(ch);
             }
-            ',' if depth_angle == 0
-                && depth_paren == 0
-                && depth_brack == 0
-                && depth_brace == 0 =>
-            {
+            ',' if depth_angle == 0 && depth_paren == 0 && depth_brack == 0 && depth_brace == 0 => {
                 parts.push(cur.trim().to_string());
                 cur.clear();
             }
@@ -606,11 +601,7 @@ fn clean_generic_params(raw_generics: &str) -> String {
             .next()
             .unwrap_or("")
             .trim();
-        if !name.is_empty()
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
+        if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             params.push(name.to_string());
         }
     }
@@ -658,7 +649,13 @@ fn map_rust_type(raw: &str) -> String {
     if t.is_empty() || t == "()" || t == "!" {
         return "void".to_string();
     }
-    if t == "&str" || t == "& str" || t == "String" || t == "Cow<str>" || t == "Box<str>" || t == "str" {
+    if t == "&str"
+        || t == "& str"
+        || t == "String"
+        || t == "Cow<str>"
+        || t == "Box<str>"
+        || t == "str"
+    {
         return "string".to_string();
     }
     if t == "Self" {
@@ -799,7 +796,11 @@ fn map_rust_type(raw: &str) -> String {
                                 return if rhs.is_empty() { None } else { Some(rhs) };
                             }
                             let m = map_rust_type(a);
-                            if m.is_empty() { None } else { Some(m) }
+                            if m.is_empty() {
+                                None
+                            } else {
+                                Some(m)
+                            }
                         })
                         .collect();
                     let clean_base = sanitize_type_path(base_raw);
@@ -927,7 +928,10 @@ fn convert_rust_params(
                     // CP read-only receiver is implicit!
                     continue;
                 }
-                if p == "&mut self" || p == "& mut self" || p.contains("&mut") || p.contains("& mut")
+                if p == "&mut self"
+                    || p == "& mut self"
+                    || p.contains("&mut")
+                    || p.contains("& mut")
                 {
                     out_params.push("*_".to_string());
                     continue;
@@ -1093,13 +1097,19 @@ fn convert_rust_use(stmt: &str, dep_map: &HashMap<String, DepTier>) -> Option<St
         .unwrap_or("index");
 
     let import_src = if pkg_root == "crate" || pkg_root == "self" {
-        if first_mod.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        if first_mod
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+        {
             format!("./{}.cp", first_mod)
         } else {
             "./index.cp".to_string()
         }
     } else if pkg_root == "super" {
-        if first_mod.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        if first_mod
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+        {
             format!("../{}.cp", first_mod)
         } else {
             "../index.cp".to_string()
@@ -1235,17 +1245,30 @@ fn is_rust_macro_invocation_start(trimmed: &str) -> bool {
             return false;
         }
         // Prefix must be a valid Rust path `ident(::ident)*`
-        let valid_path = prefix
-            .split("::")
-            .all(|seg| !seg.is_empty() && seg.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
+        let valid_path = prefix.split("::").all(|seg| {
+            !seg.is_empty() && seg.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+        });
         if !valid_path {
             return false;
         }
         // Must not be a Rust keyword like `if`, `return`, `let`, `const`, `pub`
         if matches!(
             prefix,
-            "if" | "while" | "for" | "match" | "return" | "let" | "const" | "pub" | "fn" | "struct"
-                | "enum" | "trait" | "impl" | "type" | "use" | "mod"
+            "if" | "while"
+                | "for"
+                | "match"
+                | "return"
+                | "let"
+                | "const"
+                | "pub"
+                | "fn"
+                | "struct"
+                | "enum"
+                | "trait"
+                | "impl"
+                | "type"
+                | "use"
+                | "mod"
         ) {
             return false;
         }
@@ -1694,11 +1717,18 @@ fn convert_rust_function(
     if is_unsafe {
         sig.push_str("unsafe ");
     }
-    sig.push_str(&format!("fn {}{}({}){}", fn_name, gen_str, cp_params, ret_str));
+    sig.push_str(&format!(
+        "fn {}{}({}){}",
+        fn_name, gen_str, cp_params, ret_str
+    ));
 
     let mut prefix_comments = String::new();
     if let Some(wc) = where_clause {
-        prefix_comments.push_str(&format!("{}// [rs-where] {}\n", indent, wc.trim_end_matches('{').trim()));
+        prefix_comments.push_str(&format!(
+            "{}// [rs-where] {}\n",
+            indent,
+            wc.trim_end_matches('{').trim()
+        ));
     }
 
     if term_char == ';' || body_lines.is_none() {
@@ -1754,7 +1784,10 @@ fn convert_rust_function(
         converted_body.push_str(&format!("{}{}\n", bindent, conv));
     }
 
-    let full_fn = format!("{}{}{} {{\n{}{}}}\n", prefix_comments, indent, sig, converted_body, indent);
+    let full_fn = format!(
+        "{}{}{} {{\n{}{}}}\n",
+        prefix_comments, indent, sig, converted_body, indent
+    );
 
     // Self-check parseability of this single function
     let check_wrapper = if in_trait {
@@ -1951,7 +1984,9 @@ pub fn transpile_rs_to_cp(
         let indent = &raw_line[..indent_len];
         let trimmed = raw_line.trim();
 
-        if trimmed.contains('\'') && (trimmed.contains("<'") || trimmed.contains("&'") || trimmed.contains("'static")) {
+        if trimmed.contains('\'')
+            && (trimmed.contains("<'") || trimmed.contains("&'") || trimmed.contains("'static"))
+        {
             saw_lifetime = true;
         }
         if trimmed.contains("Pin<Box<") || trimmed.contains("BoxFuture") {
@@ -2148,7 +2183,8 @@ pub fn transpile_rs_to_cp(
                         ));
                         for (idx, elem) in elems.iter().enumerate() {
                             let en = normalize_rust_vis(elem);
-                            let ety = pty_or_fallback(&map_rust_type(en.trim_start_matches("pub ")));
+                            let ety =
+                                pty_or_fallback(&map_rust_type(en.trim_start_matches("pub ")));
                             let def = default_value_for_cp_type(&ety);
                             if !def.is_empty() {
                                 snippet.push_str(&format!(
@@ -2272,12 +2308,17 @@ pub fn transpile_rs_to_cp(
 
             let mut snippet = String::new();
             if after_kw.contains('<') || after_kw.contains(':') || where_clause.is_some() {
-                snippet.push_str(&format!("{}// [rs-trait] {}\n", indent, hdr.trim_end_matches('{').trim()));
+                snippet.push_str(&format!(
+                    "{}// [rs-trait] {}\n",
+                    indent,
+                    hdr.trim_end_matches('{').trim()
+                ));
             }
             if term == '{' {
                 let (tbody, after_body) = collect_brace_body(&lines, next_i);
                 let inner_indent = format!("{}    ", indent);
-                let members = convert_member_block(&tbody, &inner_indent, true, false, None, &mut todo_count);
+                let members =
+                    convert_member_block(&tbody, &inner_indent, true, false, None, &mut todo_count);
                 snippet.push_str(&format!(
                     "{}{}trait {} {{\n{}{}}}\n",
                     indent, pub_kw, tname, members, indent
@@ -2353,12 +2394,19 @@ pub fn transpile_rs_to_cp(
             }
 
             if let Some((trait_raw, target_raw)) = for_split {
-                if let (Some(trait_id), Some(target_id)) =
-                    (extract_simple_ident(trait_raw), extract_simple_ident(target_raw))
-                {
+                if let (Some(trait_id), Some(target_id)) = (
+                    extract_simple_ident(trait_raw),
+                    extract_simple_ident(target_raw),
+                ) {
                     let inner_indent = format!("{}    ", indent);
-                    let members =
-                        convert_member_block(&ibody, &inner_indent, false, true, None, &mut todo_count);
+                    let members = convert_member_block(
+                        &ibody,
+                        &inner_indent,
+                        false,
+                        true,
+                        None,
+                        &mut todo_count,
+                    );
                     let snippet = format!(
                         "{}// [rs-impl] {}\n{}impl {} for {} {{\n{}{}}}\n",
                         indent,
@@ -2396,7 +2444,8 @@ pub fn transpile_rs_to_cp(
             } else {
                 // Inherent impl `impl Target { ... }`: CP does not allow `impl Target` without `for`.
                 // Hoist methods cleanly as `Target_method(...)` free functions!
-                let target_id = extract_simple_ident(after_gen).unwrap_or_else(|| "Impl".to_string());
+                let target_id =
+                    extract_simple_ident(after_gen).unwrap_or_else(|| "Impl".to_string());
                 out.push_str(&format!(
                     "{}// [cap-migrate] inherent `{}` (methods hoisted for CP struct)\n",
                     indent,
@@ -2474,7 +2523,8 @@ pub fn transpile_rs_to_cp(
                 let rhs = pty_or_fallback(&map_rust_type(
                     hnorm[eq_idx + 1..].trim().trim_end_matches(';'),
                 ));
-                let candidate = format!("{}{}type {}{} = {};\n", indent, pub_kw, tname, gen_str, rhs);
+                let candidate =
+                    format!("{}{}type {}{} = {};\n", indent, pub_kw, tname, gen_str, rhs);
                 if snippet_parses_ok(&candidate) {
                     out.push_str(&candidate);
                 } else {
@@ -2509,7 +2559,8 @@ pub fn transpile_rs_to_cp(
                 if let Some(eq) = rest.find('=') {
                     let cty = pty_or_fallback(&map_rust_type(&rest[..eq]));
                     let cval = convert_rust_expr_line(rest[eq + 1..].trim().trim_end_matches(';'));
-                    let candidate = format!("{}{}const {}: {} = {};\n", indent, pub_kw, cname, cty, cval);
+                    let candidate =
+                        format!("{}{}const {}: {} = {};\n", indent, pub_kw, cname, cty, cval);
                     if snippet_parses_ok(&candidate) {
                         out.push_str(&candidate);
                     } else {

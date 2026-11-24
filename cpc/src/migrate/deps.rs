@@ -829,9 +829,10 @@ pub fn resolve_builtin_or_official(lang: SourceLang, orig_name: &str) -> Option<
                     Some(("cap:http", "CP 内置 HTTP Cookie 与日期头编解码（cap:http）"))
                 }
                 "memchr" => Some(("cap:simd", "CP 内置 16-lane SIMD 字节扫描核（cap:simd）")),
-                "smallvec" => {
-                    Some(("cap:collections", "CP 内置零堆内联溢出 SmallVec（cap:collections）"))
-                }
+                "smallvec" => Some((
+                    "cap:collections",
+                    "CP 内置零堆内联溢出 SmallVec（cap:collections）",
+                )),
                 "url" | "percent-encoding" | "form-urlencoded" => {
                     Some(("cap:url", "CP 内置 URL 与百分号编解码库（cap:url）"))
                 }

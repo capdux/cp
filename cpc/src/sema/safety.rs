@@ -214,10 +214,7 @@ impl Analyzer {
             }
             let is_raw_ptr = matches!(
                 base_ty,
-                Type::ManyRawPtr(_)
-                    | Type::CPtr(_)
-                    | Type::SentinelPtr(_, _)
-                    | Type::RawPtr { .. }
+                Type::ManyRawPtr(_) | Type::CPtr(_) | Type::SentinelPtr(_, _) | Type::RawPtr { .. }
             );
             let is_unbounded_ptr_or_cstr = is_raw_ptr
                 || matches!(base_ty, Type::CStr)

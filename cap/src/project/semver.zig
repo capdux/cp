@@ -14,7 +14,7 @@ pub const Version = struct {
     }
 
     pub fn format(self: Version, allocator: std.mem.Allocator) ![]const u8 {
-        return std.fmt.allocPrint(allocator, "{d}.{d}.{d}", .{self.major, self.minor, self.patch});
+        return std.fmt.allocPrint(allocator, "{d}.{d}.{d}", .{ self.major, self.minor, self.patch });
     }
 
     pub fn compare(self: Version, other: Version) i8 {

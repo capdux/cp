@@ -757,7 +757,10 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     summary.converted_dep_pkgs.len(),
                     total_todos
                 );
-                println!("[cap from] Report written to: {}/migrate.md", out_dir.display());
+                println!(
+                    "[cap from] Report written to: {}/migrate.md",
+                    out_dir.display()
+                );
             }
             Commands::Lsp => {
                 let rt = tokio::runtime::Runtime::new()?;
