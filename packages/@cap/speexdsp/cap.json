@@ -1,0 +1,42 @@
+{
+  "name": "@cap/speexdsp",
+  "ver": "1.2.1",
+  "description": "Xiph SpeexDSP 1.2.1 real-time acoustic echo cancellation (AEC), noise suppression, AGC, and VAD for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "speexdsp": {
+      "path": "c",
+      "src": [
+        "libspeexdsp/preprocess.c",
+        "libspeexdsp/mdf.c",
+        "libspeexdsp/jitter.c",
+        "libspeexdsp/resample.c",
+        "libspeexdsp/fftwrap.c",
+        "libspeexdsp/kiss_fft.c",
+        "libspeexdsp/kiss_fftr.c",
+        "libspeexdsp/filterbank.c",
+        "libspeexdsp/smallft.c",
+        "libspeexdsp/buffer.c",
+        "libspeexdsp/scal.c"
+      ],
+      "include": [
+        "include",
+        "libspeexdsp"
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DFLOATING_POINT",
+        "-DUSE_KISS_FFT",
+        "-DEXPORT="
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

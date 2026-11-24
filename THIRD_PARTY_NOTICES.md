@@ -144,6 +144,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **stb 2.30.0** (`@cap/stb`) | <https://github.com/nothings/stb> | MIT / Public Domain | `packages/@cap/stb/` | Public Domain / MIT (Sean Barrett) |
 | **RNNoise 0.1.1** (`@cap/rnnoise`) | <https://github.com/xiph/rnnoise> | BSD-3-Clause | `packages/@cap/rnnoise/` | Copyright (c) 2017-2024 Xiph.Org Foundation / Jean-Marc Valin |
 | **libsrtp 2.6.0** (`@cap/libsrtp`) | <https://github.com/cisco/libsrtp> | BSD-3-Clause | `packages/@cap/libsrtp/` | Copyright (c) 2001-2024 Cisco Systems, Inc. |
+| **libyuv 1.9.0** (`@cap/libyuv`) | <https://chromium.googlesource.com/libyuv/libyuv> | BSD-3-Clause | `packages/@cap/libyuv/` | Copyright (c) 2011 The LibYuv Project Authors |
+| **SpeexDSP 1.2.1** (`@cap/speexdsp`) | <https://github.com/xiph/speexdsp> | BSD-3-Clause | `packages/@cap/speexdsp/` | Copyright (c) 2002-2022 Jean-Marc Valin / Xiph.Org |
 
 ---
 

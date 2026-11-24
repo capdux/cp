@@ -1,0 +1,59 @@
+{
+  "name": "@cap/libyuv",
+  "ver": "1.9.0",
+  "description": "Google libyuv high-performance YUV/RGB pixel conversion, scaling, and rotation for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "libyuv": {
+      "path": "c",
+      "src": [
+        "source/cpu_id.cc",
+        "source/planar_functions.cc",
+        "source/convert.cc",
+        "source/convert_argb.cc",
+        "source/convert_from.cc",
+        "source/convert_from_argb.cc",
+        "source/convert_to_argb.cc",
+        "source/convert_to_i420.cc",
+        "source/rotate.cc",
+        "source/rotate_any.cc",
+        "source/rotate_argb.cc",
+        "source/rotate_common.cc",
+        "source/rotate_gcc.cc",
+        "source/rotate_neon64.cc",
+        "source/row_any.cc",
+        "source/row_common.cc",
+        "source/row_gcc.cc",
+        "source/row_neon64.cc",
+        "source/scale.cc",
+        "source/scale_any.cc",
+        "source/scale_argb.cc",
+        "source/scale_common.cc",
+        "source/scale_gcc.cc",
+        "source/scale_neon64.cc",
+        "source/scale_rgb.cc",
+        "source/scale_uv.cc",
+        "source/video_common.cc"
+      ],
+      "include": [
+        "include"
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-std=c++17",
+        "-DLIBYUV_DISABLE_LSX",
+        "-DLIBYUV_DISABLE_LASX",
+        "-DLIBYUV_DISABLE_SME",
+        "-DLIBYUV_DISABLE_SVE"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}
