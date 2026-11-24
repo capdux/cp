@@ -3985,3 +3985,45 @@
   > - **Lane 2L**（`74fdcf16`）：**`cap` 2.0 `bin`/`sys` 重构 + Workspace + 按需链接 + 规范固化** — 彻底移除自造 `native` 字段，全面切回 `lib/cap.json` 的 `bin`/`sys` 多库规范与 `deps`/`dev`/`workspaces`；迁移 3 个示范包 `cap.json`；改造 `cap build`/`run`/`test` 按 `// @cap-used-pkg:` 精准按需链接（未用包绝不打进二进制）；并将完整规范写入 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)（标注 `[SYNC_PENDING: 2026-11-24]`）。
   >
   > 两路完工后我将部署新版 `cpc` + `cap`，并实测“同时导入已用 `@cap/picohttp` 与未用 `@cap/zstd`（5.5MB）”验证按需链接确实零引入 `libzstd.a`。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 20:40:24）[step:22236]
+- **用户完整原始指令**：
+  > dep(兼容dependencies), dev(兼容 dev_dependencies), bin(兼容bin_dependencies), sys(兼容sys_dependencies), 作为当前包/项目的四大依赖:
+  >  动态库依赖, 需动态引用, 编译和运行时检查.
+  >  静态库依赖, 需支持 zig 编译, 和 二进制跨操作系统产物 以及c/c++源代码可编译
+  >  开发依赖, 开发调试需要的库, 需cap安装(install/i, add)
+  >  运行时依赖, 运行时需要的库, 需cap安装(install/i, add)
+- **完整回复与执行汇报**：
+  > 收到，已按你的终极定版规范启动 **Lane 1K**（`de537beb`）落地升级：
+  >
+  > - **四大一级依赖定版**（全部 3 字母零下划线，100% 兼容旧名）：`dep`（运行时，兼容 `dependencies`/`deps`）、`dev`（开发，兼容 `dev_dependencies`/`devDependencies`，支持 `cap install --production` 跳过）、`bin`（静态库，兼容 `bin_dependencies`，新增 **`.cpp`/`.cc`/`.cxx` 自动分流 `zig c++` + `-lc++`** 与跨 OS 预编译产物）、`sys`（动态库，兼容 `sys_dependencies`，新增 **编译期缺失报错 + 随包 `.so`/`.dylib` 自动 `-Wl,-rpath` 与 `cap run` 运行期 `LD_LIBRARY_PATH` 注入检查**）；
+  > - 同步更正 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md#L89-L158) 规范并完成 `dep`/`dev`/C++ `bin`/`sys` 4 项端到端实测，完成后立即部署新版 `cap` 并自动提交。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 20:48:02）[step:22240]
+- **用户完整原始指令**：
+  > 为减小安装包大小, 编译生产的可安装包, 是否可以压缩为一个压缩包,cap安装时,通过类似 npm 包托管服务器下载压缩文件,本地解压后完成安装, 这样是不是可以加快安装速度,同时也减少安装包托管服务器的存储空间.
+  > 你的建议是?
+- **完整回复与执行汇报**：
+  > **非常合理，而且这是现代高性能包生态（esbuild / swc / Bun / Cargo）的标准做法。** 但在具体落地时，有一条关键架构建议能把**下载体积和服务器存储再压降 70%+**：
+  >
+  > ### 推荐架构：**“`.tar.zst` 压缩 + 主包与平台二进制包分离”**
+  >
+  > 1. **压缩格式首选 `.tar.zst`（兼容 `.tgz`）**
+  >    - 相比 npm 传统的 `.tgz`（gzip），Zstd 压缩率高 **25%–40%**（如 5.5MB 的 `libzstd.a` 可压到 ~1.3MB），且解压速度达 **1 GB/s 以上**（比 gzip 快 3–5 倍），极大加快本地安装速度、同时显著节省托管服务器存储与 CDN 带宽。
+  >
+  > 2. **主包与平台二进制包拆开托管（绝不把 5 个平台塞进同一个压缩包）**
+  >    - **主包** `pkg-1.0.0.tar.zst`：仅含 `cap.json` + `src/*.cp` + 可选 `c/` 源码（无预编译时本地 Zig 自动编译兜底）；
+  >    - **平台预编译包** `pkg-1.0.0-<os>-<arch>.tar.zst`：仅含该单一平台的 `prebuilt/<os>-<arch>/` 静态库（`bin`）或动态库（`sys`）。
+  >    - `cap install` 时**只下载主包 + 当前宿主 `os-arch` 对应的 1 个平台包**，Linux 用户绝不白下 macOS/Windows 的二进制。
+  >
+  > 3. **极速安装流水线（对齐 Bun / pnpm）**
+  >    - ① 拉取 Registry 元数据（含版本、依赖图、各平台 `.tar.zst` 下载地址与 SHA-256 `integrity`）；
+  >    - ② 命中 `~/.cap/cache/` 全局缓存直接 0ms 硬/软链秒装；未命中则并发下载 `.tar.zst`；
+  >    - ③ **流式验签（SHA-256）+ 流式解压**到 `~/.cap/cache/`，再软/硬链物化到 `cap_modules/`；
+  >    - ④ 若 Registry 无当前平台预编译包，自动用主包内 `c/` 源码触发 Zig 本地编译并写入缓存。
+  >
+  > 4. **配套发包命令**
+  >    - `cap pack [--target=<os-arch|all>]`：自动用 Zig 交叉编译各平台 `bin` 产物，并分别打成主包与各平台 `.tar.zst` + 生成 SHA-256 清单；
+  >    - `cap publish`：上传至包托管服务器（天然适配 S3/R2 对象存储 + 不可变 CDN 边缘缓存）。
+  >
+  > 等当前 **Lane 1K** 完成四大依赖（`dep`/`dev`/`bin`/`sys`）收尾后，需要我接着在 `cap` 中落地 **`cap pack` 打包压缩（`.tar.zst`/`.tgz`）与 `cap install` 远程下载解压验签** 吗？
