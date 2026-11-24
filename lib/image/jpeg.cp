@@ -1108,6 +1108,8 @@ pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo !
     let sos_comp_idx: [4]usize = [0; 4];
     let sos_ns: usize = 0;
     let entropy_start: usize = 0;
+    let non_interleaved: bool = false;
+    let decoded_comp_mask: u8 = 0;
 
     let pos: usize = 2;
     while (pos + 2 <= bytes.len) {
@@ -1213,6 +1215,14 @@ pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo !
                 if (v > max_v) max_v = v;
                 info.comp[ci] = JpegComponentInfo{ id: cid, h_samp: h, v_samp: v, quant_id: qid };
             }
+            // Per ITU-T T.81 §A.2.2, a single-component scan is always non-interleaved (1x1 8x8 MCU)
+            // regardless of the sampling factors declared in SOF0.
+            if (info.components == 1) {
+                info.comp[0].h_samp = 1;
+                info.comp[0].v_samp = 1;
+                max_h = 1;
+                max_v = 1;
+            }
             // Validate chroma sampling for 3-component images (chroma must divide luma)
             if (info.components == 3) {
                 if ((max_h % info.comp[1].h_samp) != 0 || (max_v % info.comp[1].v_samp) != 0 ||
@@ -1234,7 +1244,9 @@ pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo !
             // SOS: Start of Scan
             if (!found_sof || body.len < 4) return JpegError.InvalidScan;
             sos_ns = @as(usize, body[0]);
-            if (sos_ns != @as(usize, info.components)) return JpegError.UnsupportedFormat;
+            if (sos_ns != @as(usize, info.components) && !(sos_ns == 1 && info.components == 3)) {
+                return JpegError.UnsupportedFormat;
+            }
             if (body.len < @as(usize, 1) + sos_ns * 2 + 3) return JpegError.InvalidScan;
 
             let si: usize = 0;
@@ -1263,6 +1275,88 @@ pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo !
             const se: u8 = body[1 + sos_ns * 2 + 1];
             if (ss != 0 || se != 63) return JpegError.UnsupportedFormat;
 
+            if (sos_ns == 1 && info.components == 3) {
+                // Non-interleaved multi-scan Baseline JPEG: decode this component plane into out_rgba channel c_idx
+                const total_rgba_ni: usize = @as(usize, info.width) * @as(usize, info.height) * 4;
+                if (out_rgba.len < total_rgba_ni) return JpegError.BufferTooSmall;
+                if (!non_interleaved) {
+                    non_interleaved = true;
+                    let init_i: usize = 0;
+                    while (init_i < total_rgba_ni) : (init_i += 4) {
+                        out_rgba[init_i] = 0;
+                        out_rgba[init_i + 1] = 128;
+                        out_rgba[init_i + 2] = 128;
+                        out_rgba[init_i + 3] = 255;
+                    }
+                }
+                const c_idx: usize = sos_comp_idx[0];
+                const qid: usize = @as(usize, info.comp[c_idx].quant_id);
+                const dcid: usize = sos_comp_dc[0];
+                const acid: usize = sos_comp_ac[0];
+                if (!quant_valid[qid]) return JpegError.InvalidQuantTable;
+                if (!dc_tables[dcid].valid || !ac_tables[acid].valid) return JpegError.InvalidHuffman;
+
+                const img_w_ni: usize = @as(usize, info.width);
+                const img_h_ni: usize = @as(usize, info.height);
+                const h_scale: usize = @as(usize, info.max_h_samp) / @as(usize, info.comp[c_idx].h_samp);
+                const v_scale: usize = @as(usize, info.max_v_samp) / @as(usize, info.comp[c_idx].v_samp);
+                const comp_w: usize = (img_w_ni + h_scale - 1) / h_scale;
+                const comp_h: usize = (img_h_ni + v_scale - 1) / v_scale;
+                const blocks_x: usize = (comp_w + 7) / 8;
+                const blocks_y: usize = (comp_h + 7) / 8;
+
+                let br_ni = JpegBitReader.init(bytes, pos);
+                let dc_pred_ni: i32 = 0;
+                let blk_ni: [64]u8 = [0; 64];
+                let blk_cnt: u32 = 0;
+
+                let by: usize = 0;
+                while (by < blocks_y) : (by += 1) {
+                    let bx: usize = 0;
+                    while (bx < blocks_x) : (bx += 1) {
+                        if (info.restart_interval > 0 && blk_cnt > 0 && (blk_cnt % @as(u32, info.restart_interval)) == 0) {
+                            br_ni.consumeRestart();
+                            dc_pred_ni = 0;
+                        }
+                        decodeMcuBlock(
+                            &br_ni,
+                            &dc_tables[dcid],
+                            &ac_tables[acid],
+                            &quant_tables[qid],
+                            &dc_pred_ni,
+                            &blk_ni,
+                        )?;
+                        let r: usize = 0;
+                        while (r < 8) : (r += 1) {
+                            let col: usize = 0;
+                            while (col < 8) : (col += 1) {
+                                const v: u8 = blk_ni[r * 8 + col];
+                                const base_py: usize = (by * 8 + r) * v_scale;
+                                const base_px: usize = (bx * 8 + col) * h_scale;
+                                let sy: usize = 0;
+                                while (sy < v_scale && base_py + sy < img_h_ni) : (sy += 1) {
+                                    let sx: usize = 0;
+                                    while (sx < h_scale && base_px + sx < img_w_ni) : (sx += 1) {
+                                        const o: usize = ((base_py + sy) * img_w_ni + (base_px + sx)) * 4;
+                                        out_rgba[o + c_idx] = v;
+                                    }
+                                }
+                            }
+                        }
+                        blk_cnt += 1;
+                    }
+                }
+
+                decoded_comp_mask |= @as(u8, 1) << @as(u3, @intCast(c_idx));
+                found_sos = true;
+                if (br_ni.seen_marker != 0 && br_ni.pos >= 2) {
+                    pos = br_ni.pos - 2;
+                } else {
+                    pos = br_ni.pos;
+                }
+                continue;
+            }
+
             entropy_start = pos;
             found_sos = true;
             break;
@@ -1270,6 +1364,25 @@ pub fn decodeJpegToRgbaInto(bytes: []const u8, out_rgba: []u8): JpegHeaderInfo !
     }
 
     if (!found_sof || !found_sos) return JpegError.InvalidMarker;
+
+    if (non_interleaved) {
+        // Convert in-place YCbCr planes stored in out_rgba[0..3] to RGBA8
+        const total_rgba_conv: usize = @as(usize, info.width) * @as(usize, info.height) * 4;
+        let pi: usize = 0;
+        while (pi < total_rgba_conv) : (pi += 4) {
+            const yf: f32 = @as(f32, @floatFromInt(out_rgba[pi]));
+            const cbf: f32 = @as(f32, @floatFromInt(out_rgba[pi + 1])) - 128.0;
+            const crf: f32 = @as(f32, @floatFromInt(out_rgba[pi + 2])) - 128.0;
+            const rf: f32 = @fma(1.40200, crf, yf);
+            const gf: f32 = @fma(-0.71414, crf, @fma(-0.34414, cbf, yf));
+            const bf: f32 = @fma(1.77200, cbf, yf);
+            out_rgba[pi] = clampF32ToU8(rf);
+            out_rgba[pi + 1] = clampF32ToU8(gf);
+            out_rgba[pi + 2] = clampF32ToU8(bf);
+            out_rgba[pi + 3] = 255;
+        }
+        return info;
+    }
 
     const total_rgba: usize = @as(usize, info.width) * @as(usize, info.height) * 4;
     if (out_rgba.len < total_rgba) return JpegError.BufferTooSmall;

@@ -4,7 +4,8 @@
 // and 1,200-iteration deterministic malformed JPEG fuzzing.
 
 const std = @import("std");
-import { test, expect_eq, expect_true, expect_false } from "cap:test";
+import { test, expect_eq } from "cap:test";
+import { readFileSync } from "cap:fs";
 import {
     Jpeg,
     JpegError,
@@ -14,7 +15,7 @@ import {
     jpegEncodeInto,
     decodeJpegToRgbaInto,
     decodeJpegToRgba,
-} from "../../lib/image/index.cp";
+} from "../../lib/image/jpeg.cp";
 
 fn computeRgbPsnr(a: []const u8, b: []const u8): f64 {
     if (a.len != b.len || a.len == 0) return 0.0;
@@ -35,16 +36,16 @@ fn computeRgbPsnr(a: []const u8, b: []const u8): f64 {
 }
 
 fn readJpegFile(alloc: std.mem.Allocator, path: []const u8): ([]u8)? {
-    const f = std.fs.openFileAbsolute(path, .{}) catch return null;
-    defer f.close();
-    return f.readToEndAlloc(alloc, 4 * 1024 * 1024) catch return null;
+    const raw = readFileSync(path);
+    if (raw.len == 0) return null;
+    return alloc.dupe(u8, raw) catch return null;
 }
 
 // ============================================================================
 // Part A: Encode -> Decode Closed-Loop & PSNR Verification
 // ============================================================================
 
-test("jpeg_ref_01_roundtrip_1x1_and_solid_16x16_high_psnr") {
+fn runTestCase1(): !void {
     const alloc = std.heap.page_allocator;
     const px: [4]u8 = [200, 120, 60, 255];
     const enc1 = jpegEncode(alloc, px[0..], 1, 1, 95) catch unreachable;
@@ -56,7 +57,7 @@ test("jpeg_ref_01_roundtrip_1x1_and_solid_16x16_high_psnr") {
     expect_eq(dec1.height, 1);
     expect_eq(dec1.components, 3);
     const psnr1 = computeRgbPsnr(px[0..], dec1.rgba);
-    expect_true(psnr1 >= 38.0);
+    expect_eq(psnr1 >= 38.0, true);
 
     // 16x16 solid color
     let solid: [16 * 16 * 4]u8 = [0; 16 * 16 * 4];
@@ -71,10 +72,10 @@ test("jpeg_ref_01_roundtrip_1x1_and_solid_16x16_high_psnr") {
     defer alloc.free(enc16);
     let dec16 = decodeJpegToRgba(alloc, enc16) catch unreachable;
     defer dec16.deinit(alloc);
-    expect_true(computeRgbPsnr(solid[0..], dec16.rgba) >= 44.0);
+    expect_eq(computeRgbPsnr(solid[0..], dec16.rgba) >= 44.0, true);
 }
 
-test("jpeg_ref_02_roundtrip_smooth_gradient_32x32_quality_psnr_monotonicity") {
+fn runTestCase2(): !void {
     const alloc = std.heap.page_allocator;
     let grad: [32 * 32 * 4]u8 = [0; 32 * 32 * 4];
     let y: usize = 0;
@@ -101,12 +102,12 @@ test("jpeg_ref_02_roundtrip_smooth_gradient_32x32_quality_psnr_monotonicity") {
 
     const psnr_lo = computeRgbPsnr(grad[0..], dec_lo.rgba);
     const psnr_hi = computeRgbPsnr(grad[0..], dec_hi.rgba);
-    expect_true(psnr_lo >= 28.0);
-    expect_true(psnr_hi >= 40.0);
-    expect_true(psnr_hi > psnr_lo);
+    expect_eq(psnr_lo >= 28.0, true);
+    expect_eq(psnr_hi >= 40.0, true);
+    expect_eq(psnr_hi > psnr_lo, true);
 }
 
-test("jpeg_ref_03_roundtrip_non_multiple_of_8_13x17_high_freq_zero_heap") {
+fn runTestCase3(): !void {
     let src: [13 * 17 * 4]u8 = [0; 13 * 17 * 4];
     let y: usize = 0;
     while (y < 17) : (y += 1) {
@@ -130,14 +131,16 @@ test("jpeg_ref_03_roundtrip_non_multiple_of_8_13x17_high_freq_zero_heap") {
     expect_eq(hdr.width, 13);
     expect_eq(hdr.height, 17);
     expect_eq(hdr.components, 3);
-    expect_true(computeRgbPsnr(src[0..], out_rgba[0..]) >= 36.0);
+    expect_eq(computeRgbPsnr(src[0..], out_rgba[0..]) >= 36.0, true);
 }
 
 // ============================================================================
+
 // Part B: Grayscale (1-Component) & DRI + RST0..RST7 Restart Markers
+
 // ============================================================================
 
-test("jpeg_ref_04_grayscale_1comp_and_dri_restart_markers") {
+fn runTestCase4(): !void {
     // Minimal 16x8 1-component grayscale Baseline JPEG with DRI=1 (2 MCUs separated by RST0):
     // Quant table 0: all 1s.
     // DC Huff 0: 1-bit code 0 -> cat 0 (diff=0), 2-bit code 10 -> cat 7 (diff=+80 -> +10 pixel shift)
@@ -213,17 +216,19 @@ test("jpeg_ref_04_grayscale_1comp_and_dri_restart_markers") {
 }
 
 // ============================================================================
+
 // Part C: Real External zune-image JPEG Cross-Decoding & Fuzz-Corpus Guards
+
 // ============================================================================
 
-test("jpeg_ref_05_real_zune_baseline_ycbcr_cross_decode") {
+fn runTestCase5(): !void {
     const alloc = std.heap.page_allocator;
     const jpg = readJpegFile(alloc, "/data/dev/cp/_ref/zune-image/test-images/jpeg/app14/baseline_ycbcr.jpg") ?? return;
     defer alloc.free(jpg);
 
     const hdr = parseJpegHeader(jpg) catch unreachable;
-    expect_true(hdr.width > 0 && hdr.height > 0);
-    expect_false(hdr.is_progressive);
+    expect_eq(hdr.width > 0 && hdr.height > 0, true);
+    expect_eq(hdr.is_progressive, false);
     expect_eq(hdr.components, 3);
 
     let img = decodeJpegToRgba(alloc, jpg) catch unreachable;
@@ -234,13 +239,13 @@ test("jpeg_ref_05_real_zune_baseline_ycbcr_cross_decode") {
     expect_eq(img.rgba[3], 255);
 }
 
-test("jpeg_ref_06_real_zune_420_2029_cross_decode") {
+fn runTestCase6(): !void {
     const alloc = std.heap.page_allocator;
     const jpg = readJpegFile(alloc, "/data/dev/cp/_ref/zune-image/test-images/jpeg/2029.jpg") ?? return;
     defer alloc.free(jpg);
 
     const hdr = parseJpegHeader(jpg) catch unreachable;
-    expect_true(hdr.width > 0 && hdr.height > 0);
+    expect_eq(hdr.width > 0 && hdr.height > 0, true);
     if (!hdr.is_progressive && (hdr.components == 1 || hdr.components == 3)) {
         let img = decodeJpegToRgba(alloc, jpg) catch unreachable;
         defer img.deinit(alloc);
@@ -250,7 +255,7 @@ test("jpeg_ref_06_real_zune_420_2029_cross_decode") {
     }
 }
 
-test("jpeg_ref_07_real_zune_grayscale_single_component") {
+fn runTestCase7(): !void {
     const alloc = std.heap.page_allocator;
     const jpg = readJpegFile(alloc, "/data/dev/cp/_ref/zune-image/test-images/jpeg/app14/single_component_transform_zero.jpg") ?? return;
     defer alloc.free(jpg);
@@ -266,7 +271,7 @@ test("jpeg_ref_07_real_zune_grayscale_single_component") {
     }
 }
 
-test("jpeg_ref_08_real_zune_fuzz_corpus_no_panic") {
+fn runTestCase8(): !void {
     const alloc = std.heap.page_allocator;
     const paths: [6][]const u8 = [
         "/data/dev/cp/_ref/zune-image/fuzz-corpus/jpeg/issue256.jpg",
@@ -289,10 +294,12 @@ test("jpeg_ref_08_real_zune_fuzz_corpus_no_panic") {
 }
 
 // ============================================================================
+
 // Part D: Error Boundary Guards & 1,200-Iter Deterministic Fuzzing
+
 // ============================================================================
 
-test("jpeg_ref_09_malformed_markers_progressive_and_sampling_guards") {
+fn runTestCase9(): !void {
     let out: [256]u8 = [0; 256];
 
     // 1. Invalid SOI
@@ -300,7 +307,7 @@ test("jpeg_ref_09_malformed_markers_progressive_and_sampling_guards") {
     * = decodeJpegToRgbaInto("NOT_A_JPEG", out[0..]) catch |e| {
         if (e == JpegError.InvalidMarker) e1 = true;
     };
-    expect_true(e1);
+    expect_eq(e1, true);
 
     // 2. Progressive SOF2 explicitly rejected as UnsupportedFormat
     const prog: [15]u8 = [0xFF, 0xD8, 0xFF, 0xC2, 0x00, 11, 8, 0, 8, 0, 8, 1, 1, 0x11, 0];
@@ -308,7 +315,7 @@ test("jpeg_ref_09_malformed_markers_progressive_and_sampling_guards") {
     * = decodeJpegToRgbaInto(prog[0..], out[0..]) catch |e| {
         if (e == JpegError.UnsupportedFormat) e2 = true;
     };
-    expect_true(e2);
+    expect_eq(e2, true);
 
     // 3. Invalid sampling factor (hv = 0x00)
     const bad_samp: [15]u8 = [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 11, 8, 0, 8, 0, 8, 1, 1, 0x00, 0];
@@ -316,10 +323,10 @@ test("jpeg_ref_09_malformed_markers_progressive_and_sampling_guards") {
     * = decodeJpegToRgbaInto(bad_samp[0..], out[0..]) catch |e| {
         if (e == JpegError.InvalidSamplingFactor) e3 = true;
     };
-    expect_true(e3);
+    expect_eq(e3, true);
 }
 
-test("jpeg_ref_10_1200_iter_deterministic_malformed_jpeg_fuzz") {
+fn runTestCase10(): !void {
     let src: [8 * 8 * 4]u8 = [0; 8 * 8 * 4];
     let i: usize = 0;
     while (i < src.len) : (i += 1) {
@@ -381,4 +388,37 @@ test("jpeg_ref_10_1200_iter_deterministic_malformed_jpeg_fuzz") {
         * = decodeJpegToRgbaInto(mut_buf[0..tlen], out_rgba[0..]) catch {};
     }
     expect_eq(iter, 1200);
+}
+
+fn main() {
+    test("jpeg_ref_01_roundtrip_1x1_and_solid_16x16_high_psnr", () => {
+        runTestCase1()?;
+    });
+    test("jpeg_ref_02_roundtrip_smooth_gradient_32x32_quality_psnr_monotonicity", () => {
+        runTestCase2()?;
+    });
+    test("jpeg_ref_03_roundtrip_non_multiple_of_8_13x17_high_freq_zero_heap", () => {
+        runTestCase3()?;
+    });
+    test("jpeg_ref_04_grayscale_1comp_and_dri_restart_markers", () => {
+        runTestCase4()?;
+    });
+    test("jpeg_ref_05_real_zune_baseline_ycbcr_cross_decode", () => {
+        runTestCase5()?;
+    });
+    test("jpeg_ref_06_real_zune_420_2029_cross_decode", () => {
+        runTestCase6()?;
+    });
+    test("jpeg_ref_07_real_zune_grayscale_single_component", () => {
+        runTestCase7()?;
+    });
+    test("jpeg_ref_08_real_zune_fuzz_corpus_no_panic", () => {
+        runTestCase8()?;
+    });
+    test("jpeg_ref_09_malformed_markers_progressive_and_sampling_guards", () => {
+        runTestCase9()?;
+    });
+    test("jpeg_ref_10_1200_iter_deterministic_malformed_jpeg_fuzz", () => {
+        runTestCase10()?;
+    });
 }

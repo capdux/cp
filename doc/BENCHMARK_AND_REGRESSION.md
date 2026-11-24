@@ -50,4 +50,10 @@ rm -rf temp/bench_simd
 
 ## 3. 全量回归验证结果
 
-> _待主控汇总全量 `cap test` 与回归矩阵结果后填入。_
+- **测试范围**：全仓全部 **101 个** `cap/test/test*RustRefSuite.cp` 深度加固回归套件（独立缓存 `--cache-dir=.cap/ws_t2_regress/<suite>`，4 路并行执行）。
+- **最终结果**：**101 / 101 PASS (100%)**（总耗时 ~76s；终验 4 路并行复跑 5s）。
+- **首轮拦截并顺手修复的 4 项真实回归/规范边界（全部通过 `cpc brief` 4 门禁全 0，零删减断言）**：
+  1. `lib/doc/csvTable.cp` + `cap/test/testDocCsvRustRefSuite.cp`：修复 `u64` 位移字面量 `1 << 63` 与入口包装（9/9 PASS）；
+  2. `lib/image/jpeg.cp` + `cap/test/testImageJpegRustRefSuite.cp`：补齐非交错多扫描 Baseline SOS 与 ITU-T T.81 §A.2.2 单分量 1×1 MCU 规范（10/10 PASS）；
+  3. `lib/image/webp.cp` + `cap/test/testImageWebpRustRefSuite.cp`：修复 `[4]u8` 字面量、`ArrayList.empty` 与 `dark.webp` 有损 VP8 校验（16/16 PASS）；
+  4. `lib/pack/zstdDecode.cp` + `cap/test/testPackZstdRustRefSuite.cp`：按 RFC 8878 修复小帧 `Single_Segment` 压缩块大小下限 1024B（6/6 PASS）。

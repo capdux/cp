@@ -1156,7 +1156,8 @@ struct Vp8lColorCache {
         const argb: u32 = (@as(u32, a) << 24) | (@as(u32, r) << 16) | (@as(u32, g) << 8) | @as(u32, b);
         const shift: u5 = @as(u5, @intCast(32 - @as(u32, bits)));
         const idx: usize = @as(usize, (@as(u32, 0x1E35_A7BD) *% argb) >> shift);
-        table[idx] = [r, g, b, a];
+        const px: [4]u8 = [r, g, b, a];
+        table[idx] = px;
     }
 }
 
@@ -1286,9 +1287,10 @@ fn vp8lDecodeImageStream(
         if (cc_bits < 1 || cc_bits > 11) return WebpError.InvalidColorCacheBits;
         const cc_size: usize = @as(usize, 1) << @as(u6, @intCast(cc_bits));
         let tbl = alloc.alloc([4]u8, cc_size) catch return WebpError.OutOfMemory;
+        const zero_px: [4]u8 = [0; 4];
         let ci: usize = 0;
         while (ci < cc_size) : (ci += 1) {
-            tbl[ci] = [0, 0, 0, 0];
+            tbl[ci] = zero_px;
         }
         cc.bits = cc_bits;
         cc.table = tbl;

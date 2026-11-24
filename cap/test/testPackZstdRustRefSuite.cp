@@ -9,7 +9,7 @@
 //      zero-sequence trailing garbage, 4-stream empty/overflow sub-streams, Content_Size mismatch & huge Window_Descriptor
 //   6. 1,000-iteration deterministic fuzzing across both standard & dictionary decompression paths
 
-import { test, expect_eq, expect_true } from "cap:test";
+import { test, expect_eq } from "cap:test";
 import {
     ZSTD_DEC_MAGIC,
     ZSTD_DICT_MAGIC,
@@ -19,7 +19,7 @@ import {
     ZstdWorkspace,
     zstdDecompressWithDictInto,
     zstdDecompressInto,
-} from "cap:pack";
+} from "../../lib/pack/zstdDecode.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
@@ -173,7 +173,7 @@ const VEC_4STREAM_CRC32: u32 = 0xFF393909;
 // 1. Formatted Dictionary (0xEC30A437) & Dict_ID / Truncated / Zero-Offset Guards
 // ============================================================================
 
-test("ruzstd parity: Formatted Dictionary (zstd --train) decode, Dict_ID & truncated/zero-offset guards") {
+fn runTestCase1(): !void {
     let lit_buf: [4096]u8 = [0; 4096];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
     let out: [512]u8 = [0; 512];
@@ -185,104 +185,110 @@ test("ruzstd parity: Formatted Dictionary (zstd --train) decode, Dict_ID & trunc
     expect_eq(ZSTD_DICT_MAGIC, 0xEC30A437);
 
     // 1a. Decode with matching trained Formatted Dictionary (reuses pre-populated FSE/Huffman tables & history)
-    const n = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], VEC_FMT_DICT[0..], *dst, *ws) catch unreachable;
+    const n = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], VEC_FMT_DICT[0..], dst, *ws) catch unreachable;
     expect_eq(n, VEC_FMT_DICT_PLAIN.len);
-    expect_true(bytesEq(out[0..n], VEC_FMT_DICT_PLAIN[0..]));
+    expect_eq(bytesEq(out[0..n], VEC_FMT_DICT_PLAIN[0..]), true);
 
     // 1b. Without dictionary -> UnsupportedDictionary
     let got_nodict = false;
-    * = zstdDecompressInto(VEC_FMT_DICT_ZST[0..], *dst, *ws) catch |e| {
+    * = zstdDecompressInto(VEC_FMT_DICT_ZST[0..], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.UnsupportedDictionary) got_nodict = true;
     };
-    expect_true(got_nodict);
+    expect_eq(got_nodict, true);
 
     // 1c. Wrong Dict_ID -> UnsupportedDictionary
     let wrong_dict = VEC_FMT_DICT;
     wrong_dict[4] ^= 0x01;
     let got_wrong_id = false;
-    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], wrong_dict[0..], *dst, *ws) catch |e| {
+    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], wrong_dict[0..], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.UnsupportedDictionary) got_wrong_id = true;
     };
-    expect_true(got_wrong_id);
+    expect_eq(got_wrong_id, true);
 
     // 1d. Truncated dictionary (only 4-byte magic, missing 4-byte ID — ruzstd truncated_dictionary)
     const trunc_dict1: [4]u8 = [0x37, 0xA4, 0x30, 0xEC];
     let got_t1 = false;
-    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], trunc_dict1[0..], *dst, *ws) catch |e| {
+    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], trunc_dict1[0..], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.TruncatedInput) got_t1 = true;
     };
-    expect_true(got_t1);
+    expect_eq(got_t1, true);
 
     // 1e. Truncated dictionary missing 12-byte repeat offsets (ruzstd truncated_dictionary #2)
     let got_t2 = false;
-    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], VEC_FMT_DICT[0..140], *dst, *ws) catch |e| {
+    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], VEC_FMT_DICT[0..140], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.TruncatedInput) got_t2 = true;
     };
-    expect_true(got_t2);
+    expect_eq(got_t2, true);
 
     // 1f. Malformed dictionary with repeat_offset[0] == 0 (ruzstd issue #115) -> CorruptHeader
     let zero_rep_dict = VEC_FMT_DICT;
     // rep_offsets are at offset 136..148 in VEC_FMT_DICT ([1, 0, 0, 0, 4, 0, 0, 0, 8, 0, 0, 0])
     zero_rep_dict[136] = 0;
     let got_zrep = false;
-    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], zero_rep_dict[0..], *dst, *ws) catch |e| {
+    * = zstdDecompressWithDictInto(VEC_FMT_DICT_ZST[0..], zero_rep_dict[0..], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.CorruptHeader) got_zrep = true;
     };
-    expect_true(got_zrep);
+    expect_eq(got_zrep, true);
 }
 
 // ============================================================================
+
 // 2. Raw Content Dictionary (zstd -D) & Missing-Dict Guard
+
 // ============================================================================
 
-test("ruzstd parity: Raw Content Dictionary decode & missing-dictionary OffsetOutOfBounds") {
+fn runTestCase2(): !void {
     let lit_buf: [4096]u8 = [0; 4096];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
     let out: [256]u8 = [0; 256];
     let dst: []u8 = out[0..];
 
-    const n = zstdDecompressWithDictInto(VEC_RAW_DICT_ZST[0..], VEC_RAW_DICT[0..], *dst, *ws) catch unreachable;
+    const n = zstdDecompressWithDictInto(VEC_RAW_DICT_ZST[0..], VEC_RAW_DICT[0..], dst, *ws) catch unreachable;
     expect_eq(n, VEC_RAW_DICT_PLAIN.len);
-    expect_true(bytesEq(out[0..n], VEC_RAW_DICT_PLAIN[0..]));
+    expect_eq(bytesEq(out[0..n], VEC_RAW_DICT_PLAIN[0..]), true);
 
     // Decoding without raw dict must fail cleanly with OffsetOutOfBounds
     let got_oob = false;
-    * = zstdDecompressInto(VEC_RAW_DICT_ZST[0..], *dst, *ws) catch |e| {
+    * = zstdDecompressInto(VEC_RAW_DICT_ZST[0..], dst, *ws) catch |e| {
         if (e == ZstdDecodeError.OffsetOutOfBounds) got_oob = true;
     };
-    expect_true(got_oob);
+    expect_eq(got_oob, true);
 }
 
 // ============================================================================
+
 // 3. Multi-Block Small-Window Repeat_Mode & 4-Stream Huffman Cross-Validation
+
 // ============================================================================
 
-test("ruzstd parity: multi-block wlog=10 cross-block Repeat_Mode & 4-Stream Huffman") {
+fn runTestCase3(): !void {
     let lit_buf: [4096]u8 = [0; 4096];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
 
     // 3a. Multi-block small-window (1024B window -> 3 blocks, 3060B output)
     let out_mb: [4096]u8 = [0; 4096];
     let dst_mb: []u8 = out_mb[0..];
-    const n_mb = zstdDecompressInto(VEC_MULTIBLOCK_ZST[0..], *dst_mb, *ws) catch unreachable;
+    const n_mb = zstdDecompressInto(VEC_MULTIBLOCK_ZST[0..], dst_mb, *ws) catch unreachable;
     expect_eq(n_mb, 3060);
     const unit = "alpha=0123456789;beta=abcdefghij;gamma=ABCDEFGHIJ;delta=9876543210;\n";
-    expect_true(bytesEq(out_mb[0..unit.len], unit));
-    expect_true(bytesEq(out_mb[(3060 - unit.len)..3060], unit));
+    expect_eq(bytesEq(out_mb[0..unit.len], unit), true);
+    expect_eq(bytesEq(out_mb[(3060 - unit.len)..3060], unit), true);
 
     // 3b. 4-Stream Huffman multi-block (1563B output, CRC32 == 0xFF393909)
     let out_4s: [2048]u8 = [0; 2048];
     let dst_4s: []u8 = out_4s[0..];
-    const n_4s = zstdDecompressInto(VEC_4STREAM_ZST[0..], *dst_4s, *ws) catch unreachable;
+    const n_4s = zstdDecompressInto(VEC_4STREAM_ZST[0..], dst_4s, *ws) catch unreachable;
     expect_eq(n_4s, VEC_4STREAM_PLAIN_LEN);
     expect_eq(crc32Ieee(out_4s[0..n_4s]), VEC_4STREAM_CRC32);
 }
 
 // ============================================================================
+
 // 4. Empty Block, Zero-Sequence Compressed Block, RLE Block & Skippable Multi-Frame
+
 // ============================================================================
 
-test("ruzstd parity: empty block, zero-sequence compressed block, RLE block & skippable multi-frame") {
+fn runTestCase4(): !void {
     let lit_buf: [1024]u8 = [0; 1024];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
     let out: [256]u8 = [0; 256];
@@ -290,7 +296,7 @@ test("ruzstd parity: empty block, zero-sequence compressed block, RLE block & sk
 
     // 4a. Empty frame (Single_Segment, FCS=0, 1 empty Raw block)
     const empty_f: [9]u8 = [0x28, 0xB5, 0x2F, 0xFD, 0x20, 0x00, 0x01, 0x00, 0x00];
-    expect_eq(zstdDecompressInto(empty_f[0..], *dst, *ws) catch unreachable, 0);
+    expect_eq(zstdDecompressInto(empty_f[0..], dst, *ws) catch unreachable, 0);
 
     // 4b. Compressed block with Raw literals ("XYZ") + 0 sequences (0x00)
     // Frame: magic + fhd=0x20(single_seg, fcs=1B) + fcs=3 + blk_hdr(last=1, type=2(Comp), size=5 -> (5<<3)|5 = 45 = 0x2D)
@@ -300,9 +306,9 @@ test("ruzstd parity: empty block, zero-sequence compressed block, RLE block & sk
         0x2D, 0x00, 0x00,
         0x18, 'X', 'Y', 'Z', 0x00,
     ];
-    const nz = zstdDecompressInto(zseq_f[0..], *dst, *ws) catch unreachable;
+    const nz = zstdDecompressInto(zseq_f[0..], dst, *ws) catch unreachable;
     expect_eq(nz, 3);
-    expect_true(bytesEq(out[0..3], "XYZ"));
+    expect_eq(bytesEq(out[0..3], "XYZ"), true);
 
     // 4c. Skippable frame (0x184D2A55, 3B payload) + RLE frame (5x 'Q') + Skippable (0x184D2A5F, 0B) + Raw frame ("!")
     const multi_ok: [39]u8 = [
@@ -311,16 +317,18 @@ test("ruzstd parity: empty block, zero-sequence compressed block, RLE block & sk
         0x5F, 0x2A, 0x4D, 0x18, 0x00, 0x00, 0x00, 0x00,
         0x28, 0xB5, 0x2F, 0xFD, 0x20, 0x01, 0x09, 0x00, 0x00, '!',
     ];
-    const nm = zstdDecompressInto(multi_ok[0..], *dst, *ws) catch unreachable;
+    const nm = zstdDecompressInto(multi_ok[0..], dst, *ws) catch unreachable;
     expect_eq(nm, 6);
-    expect_true(bytesEq(out[0..6], "QQQQQ!"));
+    expect_eq(bytesEq(out[0..6], "QQQQQ!"), true);
 }
 
 // ============================================================================
+
 // 5. RFC 8878 / ruzstd Malformed & Boundary Security Matrix
+
 // ============================================================================
 
-test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, trailing seq, 4-stream, FCS & Window") {
+fn runTestCase5(): !void {
     let lit_buf: [2048]u8 = [0; 2048];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
     let out: [2048]u8 = [0; 2048];
@@ -334,8 +342,8 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x00, 0x01, 0xFC, 0x01,
     ];
     let ok = false;
-    * = zstdDecompressInto(bad_rep[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptFseTable) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_rep[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptFseTable) ok = true; };
+    expect_eq(ok, true);
 
     // 5b. Treeless literals (lit_type=3) without prior Huffman table -> CorruptHuffmanTable
     // size_fmt=0 (1-stream), regen=4, comp=2: b0=(4<<4)|3=0x43, b1=(2<<6)=0x80, b2=0x00
@@ -345,8 +353,8 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x43, 0x80, 0x00, 0x01, 0x01, 0x00,
     ];
     ok = false;
-    * = zstdDecompressInto(bad_treeless[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptHuffmanTable) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_treeless[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptHuffmanTable) ok = true; };
+    expect_eq(ok, true);
 
     // 5c. Block_Size > min(window_size, 128KiB) (ruzstd oversized_compressed_body_is_rejected)
     // window_desc=0x00 => window_size=1024; compressed block declares size=1025 -> (1025<<3)|5 = 8205 = 0x200D
@@ -355,8 +363,8 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x0D, 0x20, 0x00,
     ];
     ok = false;
-    * = zstdDecompressInto(bad_oversize[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptBlock) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_oversize[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptBlock) ok = true; };
+    expect_eq(ok, true);
 
     // 5d. Zero-sequence compressed block with extra trailing byte -> CorruptSequence
     const bad_zseq: [15]u8 = [
@@ -365,8 +373,8 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x18, 'X', 'Y', 'Z', 0x00, 0xFF, // extra trailing 0xFF after num_seq=0
     ];
     ok = false;
-    * = zstdDecompressInto(bad_zseq[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptSequence) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_zseq[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptSequence) ok = true; };
+    expect_eq(ok, true);
 
     // 5e. Content_Size mismatch (FCS declares 5, RLE block produces 3) -> ContentSizeMismatch
     const bad_fcs: [10]u8 = [
@@ -374,20 +382,20 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x1B, 0x00, 0x00, 'A', // last=1, type=1(RLE), size=3 -> (3<<3)|3 = 27 = 0x1B
     ];
     ok = false;
-    * = zstdDecompressInto(bad_fcs[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.ContentSizeMismatch) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_fcs[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.ContentSizeMismatch) ok = true; };
+    expect_eq(ok, true);
 
     // 5f. Huge Window_Descriptor (0xFF -> exp=31 -> overflow guard) -> WindowTooLarge
     const bad_win: [6]u8 = [0x28, 0xB5, 0x2F, 0xFD, 0x00, 0xFF];
     ok = false;
     * = zstdInspectFrame(bad_win[0..]) catch |e| { if (e == ZstdDecodeError.WindowTooLarge) ok = true; };
-    expect_true(ok);
+    expect_eq(ok, true);
 
     // 5g. Reserved block type (type=3) -> CorruptBlock
     const bad_rsv: [9]u8 = [0x28, 0xB5, 0x2F, 0xFD, 0x20, 0x00, 0x07, 0x00, 0x00];
     ok = false;
-    * = zstdDecompressInto(bad_rsv[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptBlock) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_rsv[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptBlock) ok = true; };
+    expect_eq(ok, true);
 
     // 5h. 4-Stream Huffman with empty/truncated jump table -> CorruptLiterals
     // Direct Huffman weights: hbyte=129 (2 weights: [1, 1] => 2B: [0x81, 0x11]), then 4-stream jump table too short (3B)
@@ -398,15 +406,17 @@ test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, tr
         0x86, 0x40, 0x01, 0x81, 0x11, 0x01, 0x00, 0x00, 0x00,
     ];
     ok = false;
-    * = zstdDecompressInto(bad_4s[0..], *dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptLiterals) ok = true; };
-    expect_true(ok);
+    * = zstdDecompressInto(bad_4s[0..], dst, *ws) catch |e| { if (e == ZstdDecodeError.CorruptLiterals) ok = true; };
+    expect_eq(ok, true);
 }
 
 // ============================================================================
+
 // 6. 1,000-Iteration Deterministic Fuzzing (Standard + Dictionary Paths)
+
 // ============================================================================
 
-test("ruzstd fuzz: 1,000-iteration deterministic mutation fuzz across standard & dictionary paths") {
+fn runTestCase6(): !void {
     let lit_buf: [4096]u8 = [0; 4096];
     let ws = ZstdWorkspace.init(lit_buf[0..]);
     let out: [4096]u8 = [0; 4096];
@@ -444,10 +454,31 @@ test("ruzstd fuzz: 1,000-iteration deterministic mutation fuzz across standard &
         }
 
         if (mode == 0) {
-            * = zstdDecompressWithDictInto(mut_buf[0..len], VEC_FMT_DICT[0..], *dst, *ws) catch 0;
+            * = zstdDecompressWithDictInto(mut_buf[0..len], VEC_FMT_DICT[0..], dst, *ws) catch 0;
         } else {
-            * = zstdDecompressInto(mut_buf[0..len], *dst, *ws) catch 0;
+            * = zstdDecompressInto(mut_buf[0..len], dst, *ws) catch 0;
         }
     }
     expect_eq(iter, 1000);
+}
+
+fn main() {
+    test("ruzstd parity: Formatted Dictionary (zstd --train) decode, Dict_ID & truncated/zero-offset guards", () => {
+        runTestCase1()?;
+    });
+    test("ruzstd parity: Raw Content Dictionary decode & missing-dictionary OffsetOutOfBounds", () => {
+        runTestCase2()?;
+    });
+    test("ruzstd parity: multi-block wlog=10 cross-block Repeat_Mode & 4-Stream Huffman", () => {
+        runTestCase3()?;
+    });
+    test("ruzstd parity: empty block, zero-sequence compressed block, RLE block & skippable multi-frame", () => {
+        runTestCase4()?;
+    });
+    test("ruzstd security matrix: uninitialized Repeat/Treeless, oversized block, trailing seq, 4-stream, FCS & Window", () => {
+        runTestCase5()?;
+    });
+    test("ruzstd fuzz: 1,000-iteration deterministic mutation fuzz across standard & dictionary paths", () => {
+        runTestCase6()?;
+    });
 }

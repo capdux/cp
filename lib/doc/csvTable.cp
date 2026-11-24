@@ -865,7 +865,7 @@ pub fn parseCsvI64(field: string): i64? {
     }
     if (i >= s.len) return null;
 
-    const max_mag: u64 = if (neg) 9223372036854775808 else 9223372036854775807;
+    const max_mag: u64 = if (neg) (@as(u64, 1) << 63) else 9223372036854775807;
     let acc: u64 = 0;
     while (i < s.len) : (i += 1) {
         const b = s[i];

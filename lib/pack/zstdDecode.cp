@@ -1240,12 +1240,15 @@ pub fn zstdDecompressWithDictInto(
         const frame_out_start: usize = out_pos;
 
         // Block_Maximum_Size = min(Window_Size, 128 KiB) per RFC 8878 §3.1.1.2.4
+        // For Single_Segment frames with tiny FCS (< 1024), compressed block headers may exceed FCS,
+        // so floor the compressed block_size limit to 1024 (RFC minimum window size).
         const max_block_size: usize = if (info.single_segment && info.window_size == 0)
             0
         else if (info.window_size > 0 && info.window_size < @as(u64, @intCast(ZSTD_MAX_BLOCK_BYTES)))
             @as(usize, @intCast(info.window_size))
         else
             ZSTD_MAX_BLOCK_BYTES;
+        const max_comp_block_size: usize = if (info.single_segment && max_block_size < 1024) 1024 else max_block_size;
 
         // Decode all blocks in this frame
         let last_block: bool = false;
@@ -1259,7 +1262,8 @@ pub fn zstdDecompressWithDictInto(
             const block_size: usize = @as(usize, bhdr >> 3);
 
             if (block_type == 3) return ZstdDecodeError.CorruptBlock; // Reserved
-            if (block_size > max_block_size) return ZstdDecodeError.CorruptBlock;
+            const block_limit: usize = if (block_type == 2) max_comp_block_size else max_block_size;
+            if (block_size > block_limit) return ZstdDecodeError.CorruptBlock;
 
             if (block_type == 0) {
                 // Raw_Block

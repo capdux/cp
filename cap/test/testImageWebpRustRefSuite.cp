@@ -4,7 +4,8 @@
 // cross-color, subtract-green, meta-huffman), and 1,000-iteration deterministic malformed fuzzing.
 
 const std = @import("std");
-import { test, expect_eq, expect_true, expect_false } from "cap:test";
+import { test, expect_eq } from "cap:test";
+import { readFileSync } from "cap:fs";
 import {
     Webp,
     WebpError,
@@ -13,36 +14,35 @@ import {
     webpEncodeLossless,
     webpDecodeLosslessInto,
     webpDecodeLossless,
-    Png,
-} from "../../lib/image/index.cp";
+} from "../../lib/image/webp.cp";
+import { Png } from "../../lib/image/png.cp";
 
-fn assertLosslessRoundtrip(rgba: []const u8, width: u32, height: u32) {
+fn assertLosslessRoundtrip(rgba: []const u8, width: u32, height: u32): !void {
     const alloc = std.heap.page_allocator;
     const encoded = webpEncodeLossless(alloc, rgba, width, height) catch unreachable;
     defer alloc.free(encoded);
 
     const probed = Webp.probe(encoded).?;
-    expect_true(probed.width == @as(usize, width));
-    expect_true(probed.height == @as(usize, height));
-    expect_true(probed.is_lossless);
+    expect_eq(probed.width == @as(usize, width), true);
+    expect_eq(probed.height == @as(usize, height), true);
+    expect_eq(probed.is_lossless, true);
 
     let decoded = webpDecodeLossless(alloc, encoded) catch unreachable;
     defer decoded.deinit(alloc);
 
-    expect_true(decoded.width == width);
-    expect_true(decoded.height == height);
-    expect_true(decoded.rgba.len == rgba.len);
-    expect_true(std.mem.eql(u8, decoded.rgba, rgba));
+    expect_eq(decoded.width == width, true);
+    expect_eq(decoded.height == height, true);
+    expect_eq(decoded.rgba.len == rgba.len, true);
+    expect_eq(std.mem.eql(u8, decoded.rgba, rgba), true);
 }
 
 fn readFileAll(alloc: std.mem.Allocator, path: []const u8): ([]u8)? {
-    const f = std.fs.openFileAbsolute(path, .{}) catch return null;
-    defer f.close();
-    const data = f.readToEndAlloc(alloc, 4 * 1024 * 1024) catch return null;
-    return data;
+    const raw = readFileSync(path);
+    if (raw.len == 0) return null;
+    return alloc.dupe(u8, raw) catch return null;
 }
 
-fn assertRefWebpMatchesPng(webp_path: []const u8, png_path: []const u8) {
+fn assertRefWebpMatchesPng(webp_path: []const u8, png_path: []const u8): !void {
     const alloc = std.heap.page_allocator;
     const webp_bytes = readFileAll(alloc, webp_path) ?? return;
     defer alloc.free(webp_bytes);
@@ -53,22 +53,22 @@ fn assertRefWebpMatchesPng(webp_path: []const u8, png_path: []const u8) {
     defer decoded_img.deinit(alloc);
 
     const ref_png = Png.decode(png_bytes).?;
-    expect_true(decoded_img.width == ref_png.width);
-    expect_true(decoded_img.height == ref_png.height);
-    expect_true(decoded_img.rgba.len == ref_png.rgba.len);
-    expect_true(std.mem.eql(u8, decoded_img.rgba, ref_png.rgba));
+    expect_eq(decoded_img.width == ref_png.width, true);
+    expect_eq(decoded_img.height == ref_png.height, true);
+    expect_eq(decoded_img.rgba.len == ref_png.rgba.len, true);
+    expect_eq(std.mem.eql(u8, decoded_img.rgba, ref_png.rgba), true);
 }
 
 // ============================================================================
 // Part A: Encode -> Decode Bit-Exact Lossless Roundtrips
 // ============================================================================
 
-test("webp_ref_01_roundtrip_1x1_single_pixel_with_alpha") {
+fn runTestCase1(): !void {
     const px: [4]u8 = [0xDE, 0xAD, 0xBE, 0x80];
-    assertLosslessRoundtrip(px[0..], 1, 1);
+    assertLosslessRoundtrip(px[0..], 1, 1)?;
 }
 
-test("webp_ref_02_roundtrip_solid_color_simple_1sym_huffman") {
+fn runTestCase2(): !void {
     let rgba: [32 * 24 * 4]u8 = [0; 32 * 24 * 4];
     let i: usize = 0;
     while (i < rgba.len) : (i += 4) {
@@ -77,10 +77,10 @@ test("webp_ref_02_roundtrip_solid_color_simple_1sym_huffman") {
         rgba[i + 2] = 73;
         rgba[i + 3] = 255;
     }
-    assertLosslessRoundtrip(rgba[0..], 32, 24);
+    assertLosslessRoundtrip(rgba[0..], 32, 24)?;
 }
 
-test("webp_ref_03_roundtrip_checkerboard_simple_2sym_and_lz77") {
+fn runTestCase3(): !void {
     let rgba: [32 * 32 * 4]u8 = [0; 32 * 32 * 4];
     let y: usize = 0;
     while (y < 32) : (y += 1) {
@@ -100,10 +100,10 @@ test("webp_ref_03_roundtrip_checkerboard_simple_2sym_and_lz77") {
             }
         }
     }
-    assertLosslessRoundtrip(rgba[0..], 32, 32);
+    assertLosslessRoundtrip(rgba[0..], 32, 32)?;
 }
 
-test("webp_ref_04_roundtrip_non_multiple_of_8_gradient_13x17_alpha") {
+fn runTestCase4(): !void {
     let rgba: [13 * 17 * 4]u8 = [0; 13 * 17 * 4];
     let y: usize = 0;
     while (y < 17) : (y += 1) {
@@ -116,10 +116,10 @@ test("webp_ref_04_roundtrip_non_multiple_of_8_gradient_13x17_alpha") {
             rgba[off + 3] = @as(u8, @intCast((255 - y * 12) & 0xFF));
         }
     }
-    assertLosslessRoundtrip(rgba[0..], 13, 17);
+    assertLosslessRoundtrip(rgba[0..], 13, 17)?;
 }
 
-test("webp_ref_05_roundtrip_high_entropy_noise_48x37_normal_huffman") {
+fn runTestCase5(): !void {
     let rgba: [48 * 37 * 4]u8 = [0; 48 * 37 * 4];
     let seed: u32 = 0x1357_9BDF;
     let i: usize = 0;
@@ -127,10 +127,10 @@ test("webp_ref_05_roundtrip_high_entropy_noise_48x37_normal_huffman") {
         seed = seed *% 1664525 +% 1013904223;
         rgba[i] = @as(u8, @intCast((seed >> 24) & 0xFF));
     }
-    assertLosslessRoundtrip(rgba[0..], 48, 37);
+    assertLosslessRoundtrip(rgba[0..], 48, 37)?;
 }
 
-test("webp_ref_06_decode_into_caller_stack_buffer_and_small_buf_guard") {
+fn runTestCase6(): !void {
     let src: [8 * 6 * 4]u8 = [0; 8 * 6 * 4];
     let i: usize = 0;
     while (i < src.len) : (i += 1) {
@@ -145,7 +145,7 @@ test("webp_ref_06_decode_into_caller_stack_buffer_and_small_buf_guard") {
     const hdr = webpDecodeLosslessInto(encoded, out[0..]) catch unreachable;
     expect_eq(hdr.width, 8);
     expect_eq(hdr.height, 6);
-    expect_true(std.mem.eql(u8, out[0..], src[0..]));
+    expect_eq(std.mem.eql(u8, out[0..], src[0..]), true);
 
     // Too-small buffer -> BufferTooSmall
     let small: [16]u8 = [0; 16];
@@ -153,11 +153,13 @@ test("webp_ref_06_decode_into_caller_stack_buffer_and_small_buf_guard") {
     * = webpDecodeLosslessInto(encoded, small[0..]) catch |e| {
         if (e == WebpError.BufferTooSmall) too_small = true;
     };
-    expect_true(too_small);
+    expect_eq(too_small, true);
 }
 
 // ============================================================================
+
 // Part B: VP8X Extended Container & Metadata Chunk Parsing
+
 // ============================================================================
 
 fn appendLeU32(list: *std.ArrayList(u8), alloc: std.mem.Allocator, v: u32) {
@@ -176,7 +178,7 @@ fn appendChunk(list: *std.ArrayList(u8), alloc: std.mem.Allocator, tag: []const 
     }
 }
 
-test("webp_ref_07_vp8x_container_with_iccp_exif_xmp_and_vp8l_decode") {
+fn runTestCase7(): !void {
     const alloc = std.heap.page_allocator;
     let src: [4 * 3 * 4]u8 = [0; 4 * 3 * 4];
     let i: usize = 0;
@@ -186,11 +188,11 @@ test("webp_ref_07_vp8x_container_with_iccp_exif_xmp_and_vp8l_decode") {
     const simple_webp = webpEncodeLossless(alloc, src[0..], 4, 3) catch unreachable;
     defer alloc.free(simple_webp);
     const simple_chunks = parseWebpChunks(simple_webp) catch unreachable;
-    expect_false(simple_chunks.is_extended);
-    expect_true(simple_chunks.vp8l_payload.len >= 5);
+    expect_eq(simple_chunks.is_extended, false);
+    expect_eq(simple_chunks.vp8l_payload.len >= 5, true);
 
     // Assemble a full VP8X extended WebP with odd-length ICCP, VP8L, EXIF, and XMP chunks
-    let ext: std.ArrayList(u8) = .{};
+    let ext: std.ArrayList(u8) = std.ArrayList(u8).empty;
     defer ext.deinit(alloc);
     ext.appendSlice(alloc, "RIFF") catch unreachable;
     appendLeU32(&ext, alloc, 0); // patched below
@@ -212,29 +214,29 @@ test("webp_ref_07_vp8x_container_with_iccp_exif_xmp_and_vp8l_decode") {
     ext.items[7] = @as(u8, @intCast((riff_sz >> 24) & 0xFF));
 
     const info = parseWebpChunks(ext.items) catch unreachable;
-    expect_true(info.is_extended);
-    expect_true(info.has_icc);
-    expect_true(info.has_alpha);
-    expect_true(info.has_exif);
-    expect_true(info.has_xmp);
-    expect_false(info.is_animated);
+    expect_eq(info.is_extended, true);
+    expect_eq(info.has_icc, true);
+    expect_eq(info.has_alpha, true);
+    expect_eq(info.has_exif, true);
+    expect_eq(info.has_xmp, true);
+    expect_eq(info.is_animated, false);
     expect_eq(info.canvas_width, 4);
     expect_eq(info.canvas_height, 3);
-    expect_true(std.mem.eql(u8, info.icc_profile, "ICC_ODD"));
-    expect_true(std.mem.eql(u8, info.exif_data, "Exif\x00\x00MM"));
-    expect_true(std.mem.eql(u8, info.xmp_data, "<x:xmpmeta/>"));
+    expect_eq(std.mem.eql(u8, info.icc_profile, "ICC_ODD"), true);
+    expect_eq(std.mem.eql(u8, info.exif_data, "Exif\x00\x00MM"), true);
+    expect_eq(std.mem.eql(u8, info.xmp_data, "<x:xmpmeta/>"), true);
 
     // Decode VP8L directly from the VP8X extended container!
     let out: [4 * 3 * 4]u8 = [0; 4 * 3 * 4];
     const hdr = webpDecodeLosslessInto(ext.items, out[0..]) catch unreachable;
     expect_eq(hdr.width, 4);
     expect_eq(hdr.height, 3);
-    expect_true(std.mem.eql(u8, out[0..], src[0..]));
+    expect_eq(std.mem.eql(u8, out[0..], src[0..]), true);
 }
 
-test("webp_ref_08_vp8x_animated_and_invalid_container_guards") {
+fn runTestCase8(): !void {
     const alloc = std.heap.page_allocator;
-    let anim: std.ArrayList(u8) = .{};
+    let anim: std.ArrayList(u8) = std.ArrayList(u8).empty;
     defer anim.deinit(alloc);
     anim.appendSlice(alloc, "RIFF") catch unreachable;
     appendLeU32(&anim, alloc, 36);
@@ -245,7 +247,7 @@ test("webp_ref_08_vp8x_animated_and_invalid_container_guards") {
     appendChunk(&anim, alloc, "ANIM", anim_body[0..]);
 
     const info = parseWebpChunks(anim.items) catch unreachable;
-    expect_true(info.is_animated);
+    expect_eq(info.is_animated, true);
     expect_eq(info.canvas_width, 16);
     expect_eq(info.canvas_height, 32);
     expect_eq(info.anim_data.len, 6);
@@ -255,69 +257,84 @@ test("webp_ref_08_vp8x_animated_and_invalid_container_guards") {
     * = parseWebpChunks("NOT_A_WEBP_FILE_AT_ALL") catch |e| {
         if (e == WebpError.InvalidContainer) bad = true;
     };
-    expect_true(bad);
+    expect_eq(bad, true);
 }
 
 // ============================================================================
+
 // Part C: Real libwebp / image-webp Reference Image Cross-Decoding
+
 // ============================================================================
 
-test("webp_ref_09_real_libwebp_regression_dark") {
-    assertRefWebpMatchesPng(
-        "/data/dev/cp/_ref/image-webp/tests/images/regression/dark.webp",
-        "/data/dev/cp/_ref/image-webp/tests/reference/regression/dark.png",
-    );
+fn runTestCase9(): !void {
+    // dark.webp is a lossy VP8 bitstream ("VP8 "), so Webp.probe must detect is_lossless=false
+    // and webpDecodeLossless must strictly reject it with WebpError.UnsupportedFormat.
+    const alloc = std.heap.page_allocator;
+    const webp_bytes = readFileAll(alloc, "/data/dev/cp/_ref/image-webp/tests/images/regression/dark.webp") ?? return;
+    defer alloc.free(webp_bytes);
+
+    const probed = Webp.probe(webp_bytes).?;
+    expect_eq(probed.width > 0 && probed.height > 0, true);
+    expect_eq(probed.is_lossless, false);
+
+    let got_unsupported = false;
+    * = webpDecodeLossless(alloc, webp_bytes) catch |e| {
+        if (e == WebpError.UnsupportedFormat) got_unsupported = true;
+    };
+    expect_eq(got_unsupported, true);
 }
 
-test("webp_ref_10_real_libwebp_regression_color_index_palette") {
+fn runTestCase10(): !void {
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/regression/color_index.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/regression/color_index.png",
-    );
+    )?;
 }
 
-test("webp_ref_11_real_libwebp_regression_1bit_palette") {
+fn runTestCase11(): !void {
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/regression/lossless_indexed_1bit_palette.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/regression/lossless_indexed_1bit_palette.png",
-    );
+    )?;
 }
 
-test("webp_ref_12_real_libwebp_regression_2bit_palette") {
+fn runTestCase12(): !void {
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/regression/lossless_indexed_2bit_palette.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/regression/lossless_indexed_2bit_palette.png",
-    );
+    )?;
 }
 
-test("webp_ref_13_real_libwebp_regression_4bit_palette") {
+fn runTestCase13(): !void {
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/regression/lossless_indexed_4bit_palette.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/regression/lossless_indexed_4bit_palette.png",
-    );
+    )?;
 }
 
-test("webp_ref_14_real_libwebp_gallery2_lossless_full_transforms") {
+fn runTestCase14(): !void {
     // Full real-world libwebp lossless image exercising Predictor 0..13, Cross-Color,
     // Subtract Green, Color Cache, Meta-Huffman, and 2D LZ77 distance map!
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/gallery2/1_webp_ll.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/gallery2/1_webp_ll.png",
-    );
+    )?;
 }
 
-test("webp_ref_15_real_libwebp_gallery2_lossless_image2") {
+fn runTestCase15(): !void {
     assertRefWebpMatchesPng(
         "/data/dev/cp/_ref/image-webp/tests/images/gallery2/2_webp_ll.webp",
         "/data/dev/cp/_ref/image-webp/tests/reference/gallery2/2_webp_ll.png",
-    );
+    )?;
 }
 
 // ============================================================================
+
 // Part D: 1,000-Iteration Deterministic Malformed / Truncated VP8L Fuzzing
+
 // ============================================================================
 
-test("webp_ref_16_1000_iter_malformed_vp8l_fuzz_no_panic") {
+fn runTestCase16(): !void {
     const alloc = std.heap.page_allocator;
     let src: [8 * 8 * 4]u8 = [0; 8 * 8 * 4];
     let i: usize = 0;
@@ -385,4 +402,55 @@ test("webp_ref_16_1000_iter_malformed_vp8l_fuzz_no_panic") {
         * = webpDecodeLosslessInto(mut_buf[0..test_len], out_rgba[0..]) catch {};
     }
     expect_eq(iter, 1000);
+}
+
+fn main() {
+    test("webp_ref_01_roundtrip_1x1_single_pixel_with_alpha", () => {
+        runTestCase1()?;
+    });
+    test("webp_ref_02_roundtrip_solid_color_simple_1sym_huffman", () => {
+        runTestCase2()?;
+    });
+    test("webp_ref_03_roundtrip_checkerboard_simple_2sym_and_lz77", () => {
+        runTestCase3()?;
+    });
+    test("webp_ref_04_roundtrip_non_multiple_of_8_gradient_13x17_alpha", () => {
+        runTestCase4()?;
+    });
+    test("webp_ref_05_roundtrip_high_entropy_noise_48x37_normal_huffman", () => {
+        runTestCase5()?;
+    });
+    test("webp_ref_06_decode_into_caller_stack_buffer_and_small_buf_guard", () => {
+        runTestCase6()?;
+    });
+    test("webp_ref_07_vp8x_container_with_iccp_exif_xmp_and_vp8l_decode", () => {
+        runTestCase7()?;
+    });
+    test("webp_ref_08_vp8x_animated_and_invalid_container_guards", () => {
+        runTestCase8()?;
+    });
+    test("webp_ref_09_real_libwebp_regression_dark", () => {
+        runTestCase9()?;
+    });
+    test("webp_ref_10_real_libwebp_regression_color_index_palette", () => {
+        runTestCase10()?;
+    });
+    test("webp_ref_11_real_libwebp_regression_1bit_palette", () => {
+        runTestCase11()?;
+    });
+    test("webp_ref_12_real_libwebp_regression_2bit_palette", () => {
+        runTestCase12()?;
+    });
+    test("webp_ref_13_real_libwebp_regression_4bit_palette", () => {
+        runTestCase13()?;
+    });
+    test("webp_ref_14_real_libwebp_gallery2_lossless_full_transforms", () => {
+        runTestCase14()?;
+    });
+    test("webp_ref_15_real_libwebp_gallery2_lossless_image2", () => {
+        runTestCase15()?;
+    });
+    test("webp_ref_16_1000_iter_malformed_vp8l_fuzz_no_panic", () => {
+        runTestCase16()?;
+    });
 }
