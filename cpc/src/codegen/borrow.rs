@@ -956,6 +956,18 @@ impl Codegen {
                     .split('(')
                     .next()
                     .unwrap_or(resolved_sym);
+                if self.ref_classes.contains(&cid.sym)
+                    || self.ref_classes.contains(resolved_sym)
+                    || self.ref_classes.contains(base_name)
+                    || self.value_classes.contains(&cid.sym)
+                    || self.value_classes.contains(resolved_sym)
+                    || self.value_classes.contains(base_name)
+                    || self.enum_defs.contains_key(&cid.sym)
+                    || self.enum_defs.contains_key(resolved_sym)
+                    || self.enum_defs.contains_key(base_name)
+                {
+                    return false;
+                }
                 if !self.class_defs.contains_key(base_name)
                     && (base_name == "Map"
                         || base_name == "Dict"
@@ -974,15 +986,6 @@ impl Codegen {
                         || base_name == "HashSet")
                 {
                     return true;
-                }
-                if self.ref_classes.contains(&cid.sym)
-                    || self.ref_classes.contains(resolved_sym)
-                    || self.ref_classes.contains(base_name)
-                    || self.value_classes.contains(&cid.sym)
-                    || self.value_classes.contains(resolved_sym)
-                    || self.value_classes.contains(base_name)
-                {
-                    return false;
                 }
                 self.class_defs
                     .get(&cid.sym)
