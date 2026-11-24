@@ -1,12 +1,17 @@
 // Origin: Pure-CP Stdlib (W3C Trace Context Level 1/2: traceparent & tracestate Propagation Engine) | Created: 2026-11-23
+// Reference-hardened against open-telemetry/opentelemetry-rust (Apache-2.0)
 // Pure CP zero-heap-allocation W3C Trace Context Level 1/2 codec and propagation engine:
 //   - `TraceParent`: strict W3C `traceparent` parser/formatter (`00-<32hex>-<16hex>-<2hex>`),
-//     rejecting version `ff`, uppercase hex, all-zero `trace_id`/`parent_id`, and CRLF/NUL injection,
-//     while supporting forward-compatible future versions (`version > 0x00` trailing `-<ext>` fields)
+//     rejecting version `ff`, uppercase hex, all-zero `trace_id`/`parent_id`, and CRLF/NUL/CTL injection,
+//     while supporting forward-compatible future versions (`01..fe` trailing `-<ext>` fields)
 //     and child span derivation (`deriveChild`)
 //   - `TraceState`: order-preserving 32-entry W3C `tracestate` vendor list supporting single-segment
 //     `vendor` and multi-tenant `tenant@vendor` keys, OWS trimming, duplicate-key deduplication,
 //     MRU `setFront` promotion with tail eviction at capacity 32, and zero-alloc formatting
+//   - Hot-path 16-lane `@Vector(16, u8)` SIMD primitives (`simdIsLowerHex`, `simdIsAllZero16`,
+//     `simdHasControlByte`) with exact scalar parity
+
+type OtelVec16u8 = @Vector(16, u8);
 
 // ============================================================================
 // 1. Constants & Error Set
@@ -23,6 +28,9 @@ pub const TRACE_FLAG_RANDOM: u8 = 0x02;
 
 /// W3C `tracestate` maximum number of list-member entries (`32`).
 pub const TRACESTATE_MAX_ENTRIES: usize = 32;
+
+/// W3C `tracestate` recommended maximum combined header length (`512` bytes).
+pub const TRACESTATE_SPEC_MAX_HEADER_BYTES: usize = 512;
 
 /// Maximum inline byte length for a single `tracestate` key (`64`).
 pub const TRACESTATE_KEY_MAX_LEN: usize = 64;
@@ -45,7 +53,92 @@ pub err TraceContextError {
 }
 
 // ============================================================================
-// 2. Internal Byte, Hex & Validation Helpers
+// 2. 16-Lane SIMD Primitives & Scalar Reference Implementations
+// ============================================================================
+
+/// Scalar reference: returns `true` iff every byte in `s` is lowercase hex (`0-9`, `a-f`).
+pub fn scalarIsLowerHex(s: []const u8): bool {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD validation for lowercase hex (`0-9`, `a-f`).
+/// Accelerates 32B `trace-id` and 16B `parent-id` validation with 0-diff vs `scalarIsLowerHex`.
+pub fn simdIsLowerHex(s: []const u8): bool {
+    let i: usize = 0;
+    const n = s.len;
+    const v_0: OtelVec16u8 = @splat('0');
+    const v_10: OtelVec16u8 = @splat(10);
+    const v_a: OtelVec16u8 = @splat('a');
+    const v_6: OtelVec16u8 = @splat(6);
+
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: OtelVec16u8 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_hex: u16 = @bitCast((chunk -% v_a) < v_6);
+        if ((m_dig | m_hex) != 0xFFFF) return false;
+    }
+
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+    }
+    return true;
+}
+
+/// Scalar reference: returns `true` iff all 16 bytes are zero.
+pub fn scalarIsAllZero16(bytes: [16]u8): bool {
+    let i: usize = 0;
+    while (i < 16) : (i += 1) {
+        if (bytes[i] != 0) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` branchless all-zero check for 16-byte IDs (`trace_id` / padded `parent_id`).
+pub fn simdIsAllZero16(bytes: [16]u8): bool {
+    const v: OtelVec16u8 = bytes;
+    const zero: OtelVec16u8 = @splat(0);
+    const mask: u16 = @bitCast(v == zero);
+    return mask == 0xFFFF;
+}
+
+/// Scalar reference: returns `true` if `s` contains any ASCII control byte (`< 0x20` or `0x7F`).
+pub fn scalarHasControlByte(s: []const u8): bool {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        if (s[i] < 0x20 || s[i] == 0x7F) return true;
+    }
+    return false;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan detecting ASCII control bytes (`< 0x20` or `0x7F`,
+/// including CR `\r`, LF `\n`, and NUL `\0`). Exact 0-diff parity with `scalarHasControlByte`.
+pub fn simdHasControlByte(s: []const u8): bool {
+    let i: usize = 0;
+    const n = s.len;
+    const v_20: OtelVec16u8 = @splat(0x20);
+    const v_7f: OtelVec16u8 = @splat(0x7F);
+
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: OtelVec16u8 = s[i..][0..16].*;
+        const m_lt: u16 = @bitCast(chunk < v_20);
+        const m_del: u16 = @bitCast(chunk == v_7f);
+        if ((m_lt | m_del) != 0) return true;
+    }
+
+    while (i < n) : (i += 1) {
+        if (s[i] < 0x20 || s[i] == 0x7F) return true;
+    }
+    return false;
+}
+
+// ============================================================================
+// 3. Internal Byte, Hex & Validation Helpers
 // ============================================================================
 
 const HEX_LOWER: [16]u8 = [
@@ -54,11 +147,31 @@ const HEX_LOWER: [16]u8 = [
 ];
 
 fn hasCrlfOrNul(s: []const u8): bool {
+    if (!simdHasControlByte(s)) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         if (s[i] == '\r' || s[i] == '\n' || s[i] == 0) return true;
     }
     return false;
+}
+
+fn hasNonTabControlByte(s: []const u8): bool {
+    if (!simdHasControlByte(s)) return false;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
+    }
+    return false;
+}
+
+fn isAllZero8(bytes: [8]u8): bool {
+    let padded: [16]u8 = [0; 16];
+    let i: usize = 0;
+    while (i < 8) : (i += 1) {
+        padded[i] = bytes[i];
+    }
+    return simdIsAllZero16(padded);
 }
 
 fn hexLowerNibble(c: u8): u8? {
@@ -76,14 +189,6 @@ fn parseHexByteLower(hi_c: u8, lo_c: u8): u8 ! TraceContextError {
 fn writeHexByteLower(buf: *[]u8, pos: usize, b: u8) {
     buf[pos] = HEX_LOWER[(b >> 4) as usize];
     buf[pos + 1] = HEX_LOWER[(b & 0x0F) as usize];
-}
-
-fn isAllZeroBytes(bytes: []const u8): bool {
-    let i: usize = 0;
-    while (i < bytes.len) : (i += 1) {
-        if (bytes[i] != 0) return false;
-    }
-    return true;
 }
 
 fn bytesEqual(a: []const u8, b: []const u8): bool {
@@ -166,16 +271,17 @@ fn isValidTraceStateValue(val: []const u8): bool {
     if (val.len == 0 || val.len > TRACESTATE_VAL_MAX_LEN) return false;
     // W3C tracestate value: 0x20..=0x7E excluding ',' (0x2C) and '=' (0x3D); last byte must not be space.
     if (val[val.len - 1] == 0x20) return false;
+    if (simdHasControlByte(val)) return false;
     let i: usize = 0;
     while (i < val.len) : (i += 1) {
         const c: u8 = val[i];
-        if (c < 0x20 || c > 0x7E || c == ',' || c == '=') return false;
+        if (c > 0x7E || c == ',' || c == '=') return false;
     }
     return true;
 }
 
 // ============================================================================
-// 3. W3C `TraceParent` Codec & Propagation
+// 4. W3C `TraceParent` Codec & Propagation
 // ============================================================================
 
 /// W3C Trace Context `traceparent` header representation (`version`, `trace_id`, `parent_id`, `trace_flags`).
@@ -186,11 +292,12 @@ pub struct TraceParent {
     trace_flags: u8 = 0;
 
     /// Parses a W3C `traceparent` header string strictly per W3C Trace Context Level 1/2:
-    /// - Rejects CRLF/NUL injection, uppercase hex, version `0xff`, all-zero `trace_id` or `parent_id`.
+    /// - Rejects CRLF/NUL/CTL injection, uppercase hex, version `0xff`, all-zero `trace_id` or `parent_id`.
     /// - Version `0x00` requires exact length `55`.
     /// - Future versions (`0x01..0xfe`) accept trailing `-<extension>` fields for forward compatibility.
     static fn parse(header: []const u8): TraceParent ! TraceContextError {
         if (hasCrlfOrNul(header)) return TraceContextError.CrlfRejected;
+        if (simdHasControlByte(header)) return TraceContextError.InvalidValue;
         if (header.len < TRACEPARENT_HEADER_LEN) return TraceContextError.InvalidLength;
 
         if (header[2] != '-' || header[35] != '-' || header[52] != '-') {
@@ -212,13 +319,17 @@ pub struct TraceParent {
             }
         }
 
+        // 16-lane SIMD lowercase hex validation for 32B trace-id and 16B parent-id
+        if (!simdIsLowerHex(header[3..35])) return TraceContextError.InvalidHex;
+        if (!simdIsLowerHex(header[36..52])) return TraceContextError.InvalidHex;
+
         let tid: [16]u8 = [0; 16];
         let ti: usize = 0;
         while (ti < 16) : (ti += 1) {
             const off: usize = @as(usize, 3) + ti * @as(usize, 2);
             tid[ti] = parseHexByteLower(header[off], header[off + 1])?;
         }
-        if (isAllZeroBytes(tid[0..])) return TraceContextError.AllZeroTraceId;
+        if (simdIsAllZero16(tid)) return TraceContextError.AllZeroTraceId;
 
         let pid: [8]u8 = [0; 8];
         let pi: usize = 0;
@@ -226,7 +337,7 @@ pub struct TraceParent {
             const off: usize = @as(usize, 36) + pi * @as(usize, 2);
             pid[pi] = parseHexByteLower(header[off], header[off + 1])?;
         }
-        if (isAllZeroBytes(pid[0..])) return TraceContextError.AllZeroParentId;
+        if (isAllZero8(pid)) return TraceContextError.AllZeroParentId;
 
         const flags: u8 = parseHexByteLower(header[53], header[54])?;
 
@@ -285,7 +396,7 @@ pub struct TraceParent {
     /// Derives a child span `TraceParent` keeping `version`, `trace_id`, and `trace_flags`,
     /// replacing `parent_id` with `new_parent_id`. Rejects an all-zero `new_parent_id`.
     fn deriveChild(new_parent_id: [8]u8): TraceParent ! TraceContextError {
-        if (isAllZeroBytes(new_parent_id[0..])) return TraceContextError.AllZeroParentId;
+        if (isAllZero8(new_parent_id)) return TraceContextError.AllZeroParentId;
         return TraceParent{
             version: version,
             trace_id: trace_id,
@@ -296,7 +407,7 @@ pub struct TraceParent {
 }
 
 // ============================================================================
-// 4. W3C `TraceState` Ordered Vendor List
+// 5. W3C `TraceState` Ordered Vendor List
 // ============================================================================
 
 /// Single vendor key-value entry inside `TraceState`.
@@ -341,12 +452,13 @@ pub struct TraceState {
     }
 
     /// Parses a W3C `tracestate` header:
-    /// - Rejects CRLF/NUL injection.
+    /// - Rejects CRLF/NUL and non-HTAB control-byte injection.
     /// - Splits on `,`, trims OWS, skips empty list members, validates keys/values,
     ///   deduplicates repeated keys (keeping the leftmost/most-recent occurrence),
     ///   and retains at most `TRACESTATE_MAX_ENTRIES` (`32`) entries from the front.
     static fn parse(header: []const u8): TraceState ! TraceContextError {
         if (hasCrlfOrNul(header)) return TraceContextError.CrlfRejected;
+        if (hasNonTabControlByte(header)) return TraceContextError.InvalidValue;
 
         let ts = TraceState.init();
         let pos: usize = 0;

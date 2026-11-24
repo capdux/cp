@@ -615,15 +615,16 @@ pub fn demoCanaryGate() {
 
 ### 零分配 W3C Baggage 分布式上下文传播与脱敏配额引擎 (`baggage.cp`)
 
-严格遵循 W3C Baggage (Trace Context Level 2) 规范上限（成员数、单成员 `<= 4096B`、总头 `<= 8192B`）的 100% 纯 CP 零动态堆分配上下文传播与安全脱敏引擎：
+对标 `open-telemetry/opentelemetry-rust` (Apache-2.0) 并严格遵循 W3C Baggage (Trace Context Level 2) 规范上限（最多 180 个 list-member、单成员 `<= 4096B`、总头 `<= 8192B`）的 100% 纯 CP 零动态堆分配上下文传播与安全脱敏引擎：
 
 - **常量与枚举**：
-  - `BAGGAGE_MAX_ENTRIES = 32`、`BAGGAGE_MAX_HEADER_BYTES = 8192`、`BAGGAGE_MAX_MEMBER_BYTES = 4096`、`BAGGAGE_MAX_KEY_LEN = 64`、`BAGGAGE_MAX_VALUE_LEN = 160`、`BAGGAGE_MAX_PROPS_LEN = 128`
+  - `BAGGAGE_MAX_ENTRIES = 32`（内联 `BaggageContext` 槽位数）、`BAGGAGE_SPEC_MAX_MEMBERS = 180`（W3C 规范 list-member 上限）、`BAGGAGE_MAX_HEADER_BYTES = 8192`、`BAGGAGE_MAX_MEMBER_BYTES = 4096`、`BAGGAGE_MAX_KEY_LEN = 64`、`BAGGAGE_MAX_VALUE_LEN = 160`、`BAGGAGE_MAX_PROPS_LEN = 128`
   - `BaggageOpStatus`（`ok | invalid_key | invalid_value | invalid_props | crlf_rejected | header_too_large | capacity_full | buffer_too_small`）
 - **数据模型与解析/格式化器**：
   - `BaggageEntry`（`key()`, `value()`, `props()`）、`BaggageParseReport`（`status`, `parsed_members`, `stored_entries`, `overwritten_duplicates`, `skipped_invalid`, `dropped_overflow`, `header_bytes`）
+  - `BaggageMemberView` / `BaggageMemberIter`：零拷贝流式迭代器，完整支持 W3C 规范最多 `180` 个 list-member、`<= 8192B` 总头、`<= 4096B` 单 member 与 16-lane SIMD 控制字符/CRLF 拦截。
   - `isValidBaggageKey(key)`（RFC 7230 `token` 字符集校验）
-  - `parseBaggageHeader(header, *out_ctx): BaggageParseReport`：支持逗号分隔成员、`key=value;prop1=v1;prop2` 属性解析、OWS 空白裁剪、`%XX` 百分号解码、重复键 Last-Write-Wins 去重与 CRLF/超长头/洪峰防护。
+  - `parseBaggageHeader(header, *out_ctx): BaggageParseReport`：支持逗号分隔成员、`key=value;prop1=v1;prop2` 属性解析、OWS 空白裁剪、严格 `%XX` 百分号解码（拦截非法转义与解码后控制字符）、重复键 Last-Write-Wins 去重与 180 成员/CRLF/超长头防护。
   - `formatBaggageHeader(ctx, *out_buf): usize?`：零分配自动 `%XX` 编码与属性保留序列化。
 - **核心容器 `BaggageContext`**：
   - `init()` / `set(*_, key, value)` / `setWithProps(*_, key, value, props)` / `get(key)` / `getProps(key)` / `remove(*_, key)` / `has(key)` / `len()` / `clear(*_)` / `estimatedHeaderBytes()`
@@ -650,22 +651,26 @@ pub fn demoW3cBaggage() {
 }
 ```
 
-### 零分配 W3C Trace Context Level 1/2 (`traceparent` & `tracestate`) 传播引擎 (`traceParent.cp`)
+### 零分配 W3C Trace Context Level 1/2 (`traceparent` & `tracestate`) 传播引擎 (`traceParent.cp` / `w3cTraceContext.cp`)
 
-严格遵循 W3C Trace Context Level 1/2 规范、与 `baggage.cp` 配套的 100% 纯 CP 零动态堆分配分布式追踪上下文编解码与传播引擎：
+对标 `open-telemetry/opentelemetry-rust` (Apache-2.0) 并严格遵循 W3C Trace Context Level 1/2 规范、集成 16-lane `@Vector(16, u8)` SIMD 热路径加速的 100% 纯 CP 零动态堆分配分布式追踪上下文编解码与传播引擎：
 
 - **常量与错误集**：
   - `TRACEPARENT_HEADER_LEN = 55`、`TRACE_FLAG_SAMPLED = 0x01`、`TRACE_FLAG_RANDOM = 0x02`
-  - `TRACESTATE_MAX_ENTRIES = 32`、`TRACESTATE_KEY_MAX_LEN = 64`、`TRACESTATE_VAL_MAX_LEN = 128`
+  - `TRACESTATE_MAX_ENTRIES = 32`、`TRACESTATE_SPEC_MAX_HEADER_BYTES = 512`、`TRACESTATE_KEY_MAX_LEN = 64`、`TRACESTATE_VAL_MAX_LEN = 128`
   - `TraceContextError`（`InvalidLength | InvalidVersion | InvalidHex | AllZeroTraceId | AllZeroParentId | InvalidSeparator | InvalidKey | InvalidValue | CrlfRejected | BufferTooSmall`）
+- **16-lane SIMD 原语（与标量 0 差异对拍）**：
+  - `simdIsLowerHex` / `scalarIsLowerHex`：16-lane 向量小写十六进制校验，加速 32B `trace-id` 与 16B `parent-id` 验证；
+  - `simdIsAllZero16` / `scalarIsAllZero16`：16-lane 零分支全零检测；
+  - `simdHasControlByte` / `scalarHasControlByte`：16-lane 控制字符/CRLF/NUL 扫描。
 - **`TraceParent` (`version`, `trace_id: [16]u8`, `parent_id: [8]u8`, `trace_flags`)**：
-  - `parse(header): TraceParent ! TraceContextError`：严格拒绝 `version == 0xff`、大写 hex、全 0 `trace_id`/`parent_id` 及 CRLF/NUL 畸形报文；对 `version > 0x00` 自动前向兼容尾部 `-<ext>` 扩展字段。
+  - `parse(header): TraceParent ! TraceContextError`：严格拒绝 `version == 0xff`、大写 hex、全 0 `trace_id`/`parent_id` 及 CRLF/NUL/控制字符畸形报文；`version == 00` 拒绝多余尾随字段，`version > 0x00`（`01..fe`）自动前向兼容尾部 `-<ext>` 扩展字段。
   - `format(*out_buf): usize ! TraceContextError`：输出固定 55 字节规范小写 hex（`00-<32hex>-<16hex>-<2hex>`）。
   - `isSampled()` / `isRandom()` / `withSampled(sampled)` / `deriveChild(new_parent_id: [8]u8)`：保持 `trace_id` 与 `trace_flags` 继承，安全派生下游子 Span 上下文。
 - **`TraceState`（保序 32 条厂商键值对链表）**：
   - `TraceStateEntry`（`key()`, `value()`）、`isValidTraceStateKey(key)`（校验单段 `vendor` 及多租户 `tenant@vendor` 规范字符集与长度上限）。
-  - `parse(header)`：支持逗号分隔、OWS 裁剪、空成员跳过、左端优先重复键去重与 CRLF 防护。
-  - `get(key)` / `entryAt(idx)` / `setFront(*_, key, value)`（W3C 规范更新/插入强制置顶，满 32 条时从尾部淘汰最旧条目）/ `remove(*_, key)` / `len()` / `format(*out_buf)`。
+  - `parse(header)`：支持逗号分隔、OWS 裁剪、空成员跳过、左端优先重复键去重与控制字符/CRLF 防护。
+  - `get(key)` / `entryAt(idx)` / `setFront(*_, key, value)`（W3C 规范更新/插入强制置顶 MRU，满 32 条时从尾部淘汰最旧条目）/ `remove(*_, key)` / `len()` / `format(*out_buf)`。
 
 ```cp
 import { TraceParent, TraceState } from "cap:obs";

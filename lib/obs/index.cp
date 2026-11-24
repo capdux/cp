@@ -336,6 +336,7 @@ export {
 
 export {
     BAGGAGE_MAX_ENTRIES,
+    BAGGAGE_SPEC_MAX_MEMBERS,
     BAGGAGE_MAX_HEADER_BYTES,
     BAGGAGE_MAX_MEMBER_BYTES,
     BAGGAGE_MAX_KEY_LEN,
@@ -344,6 +345,8 @@ export {
     BaggageOpStatus,
     BaggageEntry,
     BaggageParseReport,
+    BaggageMemberView,
+    BaggageMemberIter,
     isValidBaggageKey,
     BaggageContext,
     parseBaggageHeader,
@@ -357,9 +360,16 @@ export {
     TRACE_FLAG_SAMPLED,
     TRACE_FLAG_RANDOM,
     TRACESTATE_MAX_ENTRIES,
+    TRACESTATE_SPEC_MAX_HEADER_BYTES,
     TRACESTATE_KEY_MAX_LEN,
     TRACESTATE_VAL_MAX_LEN,
     TraceContextError,
+    scalarIsLowerHex,
+    simdIsLowerHex,
+    scalarIsAllZero16,
+    simdIsAllZero16,
+    scalarHasControlByte,
+    simdHasControlByte,
     TraceParent,
     TraceStateEntry,
     isValidTraceStateKey,
@@ -368,8 +378,8 @@ export {
 
 // === W29-Sync R5: Consolidated W3C TraceContext, LCOV, Crash Handler & Progress Tree ===
 export {
-    TraceParent as W3cTraceParent,
-    TraceStateEntry as W3cTraceStateEntry,
+    W3cTraceParent,
+    W3cTraceStateEntry,
     TraceStateIter,
     findTraceState,
 } from "./w3cTraceContext.cp";

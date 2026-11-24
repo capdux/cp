@@ -1,21 +1,48 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (W3C Trace Context traceparent / tracestate)
+// Reference-hardened against open-telemetry/opentelemetry-rust (Apache-2.0)
 
-const HEX_LOWER: []const u8 = "0123456789abcdef";
+import {
+    TRACESTATE_MAX_ENTRIES,
+    simdIsLowerHex,
+    simdIsAllZero16,
+    simdHasControlByte,
+} from "./traceParent.cp";
 
-fn isOws(c: u8): bool {
+const W3C_HEX_LOWER: []const u8 = "0123456789abcdef";
+
+fn w3cIsOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn trimOws(s: []const u8): []const u8 {
+fn w3cTrimOws(s: []const u8): []const u8 {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && isOws(s[start])) {
+    while (start < end && w3cIsOws(s[start])) {
         start += 1;
     }
-    while (end > start && isOws(s[end - 1])) {
+    while (end > start && w3cIsOws(s[end - 1])) {
         end -= 1;
     }
     return s[start..end];
+}
+
+fn w3cHasNonTabControlByte(s: []const u8): bool {
+    if (!simdHasControlByte(s)) return false;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
+    }
+    return false;
+}
+
+fn w3cIsAllZero8(bytes: [8]u8): bool {
+    let padded: [16]u8 = [0; 16];
+    let i: usize = 0;
+    while (i < 8) : (i += 1) {
+        padded[i] = bytes[i];
+    }
+    return simdIsAllZero16(padded);
 }
 
 fn lowerHexNibble(c: u8): u8? {
@@ -31,8 +58,8 @@ fn parseLowerHexByte(s: []const u8, offset: usize): u8? {
 }
 
 fn writeHexByte(out: []u8, pos: usize, b: u8) {
-    out[pos] = HEX_LOWER[usize(b >> 4)];
-    out[pos + 1] = HEX_LOWER[usize(b & 0x0F)];
+    out[pos] = W3C_HEX_LOWER[@as(usize, b >> 4)];
+    out[pos + 1] = W3C_HEX_LOWER[@as(usize, b & 0x0F)];
 }
 
 fn strEql(a: []const u8, b: []const u8): bool {
@@ -60,18 +87,22 @@ fn findByte(s: []const u8, needle: u8): usize? {
     return null;
 }
 
-/// W3C Trace Context Level 1 `traceparent` 头部结构（零堆分配）
-export struct TraceParent {
+/// W3C Trace Context Level 1/2 `traceparent` 头部结构（零堆分配）
+pub struct W3cTraceParent {
     version: u8;
     trace_id: [16]u8;
     parent_id: [8]u8;
     trace_flags: u8;
 
     /// 严格解析 W3C `traceparent` 头部
-    /// 拒绝大写十六进制、version == 0xff、全零 trace_id 或全零 parent_id；支持 version > 0 后带 `-extra` 向前兼容
-    static fn parse(header: []const u8): TraceParent? {
-        const s = trimOws(header);
-        if (s.len < 55) {
+    /// 拒绝控制字符/CRLF、大写十六进制、version == 0xff、全零 trace_id 或全零 parent_id；
+    /// 支持 version > 0 后带 `-extra` 向前兼容，热路径启用 16-lane SIMD 加速。
+    static fn parse(header: []const u8): W3cTraceParent? {
+        if (w3cHasNonTabControlByte(header)) {
+            return null;
+        }
+        const s = w3cTrimOws(header);
+        if (s.len < 55 || simdHasControlByte(s)) {
             return null;
         }
         if (s[2] != '-' || s[35] != '-' || s[52] != '-') {
@@ -86,45 +117,48 @@ export struct TraceParent {
             if (s.len != 55) {
                 return null;
             }
-        } else {
-            if (s.len > 55 && s[55] != '-') {
+        } else if (s.len > 55) {
+            if (s[55] != '-' || s.len == 56) {
                 return null;
+            }
+            let ei: usize = 56;
+            while (ei < s.len) : (ei += 1) {
+                if (s[ei] < 0x20 || s[ei] > 0x7E) {
+                    return null;
+                }
             }
         }
 
+        // 16-lane SIMD lowercase hex validation for 32B trace-id and 16B parent-id
+        if (!simdIsLowerHex(s[3..35]) || !simdIsLowerHex(s[36..52])) {
+            return null;
+        }
+
         let trace_id: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let trace_nonzero = false;
         let i: usize = 0;
         while (i < 16) {
             const b = parseLowerHexByte(s, 3 + i * 2) ?? return null;
             trace_id[i] = b;
-            if (b != 0) {
-                trace_nonzero = true;
-            }
             i += 1;
         }
-        if (!trace_nonzero) {
+        if (simdIsAllZero16(trace_id)) {
             return null;
         }
 
         let parent_id: [8]u8 = [0, 0, 0, 0, 0, 0, 0, 0];
-        let parent_nonzero = false;
         let j: usize = 0;
         while (j < 8) {
             const b = parseLowerHexByte(s, 36 + j * 2) ?? return null;
             parent_id[j] = b;
-            if (b != 0) {
-                parent_nonzero = true;
-            }
             j += 1;
         }
-        if (!parent_nonzero) {
+        if (w3cIsAllZero8(parent_id)) {
             return null;
         }
 
         const flags = parseLowerHexByte(s, 53) ?? return null;
 
-        return TraceParent{
+        return W3cTraceParent{
             version: version,
             trace_id: trace_id,
             parent_id: parent_id,
@@ -137,10 +171,10 @@ export struct TraceParent {
         return (_.trace_flags & 0x01) != 0;
     }
 
-    /// 返回更新采样标志位后的新 TraceParent 副本
-    fn withSampled(sampled: bool): TraceParent {
-        const next_flags: u8 = if (sampled) (_.trace_flags | u8(0x01)) else (_.trace_flags & ~u8(0x01));
-        return TraceParent{
+    /// 返回更新采样标志位后的新 W3cTraceParent 副本
+    fn withSampled(sampled: bool): W3cTraceParent {
+        const next_flags: u8 = if (sampled) (_.trace_flags | @as(u8, 0x01)) else (_.trace_flags & ~@as(u8, 0x01));
+        return W3cTraceParent{
             version: _.version,
             trace_id: _.trace_id,
             parent_id: _.parent_id,
@@ -148,9 +182,9 @@ export struct TraceParent {
         };
     }
 
-    /// 返回替换 parent_id（子 Span ID）后的新 TraceParent 副本
-    fn withParentId(new_parent: [8]u8): TraceParent {
-        return TraceParent{
+    /// 返回替换 parent_id（子 Span ID）后的新 W3cTraceParent 副本
+    fn withParentId(new_parent: [8]u8): W3cTraceParent {
+        return W3cTraceParent{
             version: _.version,
             trace_id: _.trace_id,
             parent_id: new_parent,
@@ -193,7 +227,7 @@ fn isValidSimpleKeyChar(c: u8): bool {
         || c == '/';
 }
 
-fn isValidTraceStateKey(key: []const u8): bool {
+fn w3cIsValidTraceStateKey(key: []const u8): bool {
     if (key.len == 0 || key.len > 256) {
         return false;
     }
@@ -230,15 +264,18 @@ fn isValidTraceStateKey(key: []const u8): bool {
     return true;
 }
 
-fn isValidTraceStateValue(val: []const u8): bool {
+fn w3cIsValidTraceStateValue(val: []const u8): bool {
     if (val.len == 0 || val.len > 256) {
         return false;
     }
     if (val[val.len - 1] == ' ') {
         return false;
     }
+    if (simdHasControlByte(val)) {
+        return false;
+    }
     for (c of val) {
-        if (c < 0x20 || c > 0x7E || c == ',' || c == '=') {
+        if (c > 0x7E || c == ',' || c == '=') {
             return false;
         }
     }
@@ -246,31 +283,43 @@ fn isValidTraceStateValue(val: []const u8): bool {
 }
 
 /// W3C `tracestate` 单个 vendor `key=value` 成员（零拷贝切片）
-export struct TraceStateEntry {
+pub struct W3cTraceStateEntry {
     key: []const u8;
     value: []const u8;
 }
 
-/// W3C `tracestate` 逗号分隔成员流式迭代器
-export struct TraceStateIter {
+/// W3C `tracestate` 逗号分隔成员流式迭代器（严格执行最多 32 个成员与控制字符防护）
+pub struct TraceStateIter {
     src: []const u8;
     pos: usize;
+    yielded: usize = 0;
 
-    fn init(header: []const u8): TraceStateIter {
+    static fn init(header: []const u8): TraceStateIter {
+        if (w3cHasNonTabControlByte(header)) {
+            return TraceStateIter{
+                src: header,
+                pos: header.len,
+                yielded: TRACESTATE_MAX_ENTRIES,
+            };
+        }
         return TraceStateIter{
             src: header,
             pos: 0,
+            yielded: 0,
         };
     }
 
-    /// 迭代下一个合法的 `key=value` 成员；自动跳过空成员与畸形项
-    fn next(*_): TraceStateEntry? {
+    /// 迭代下一个合法的 `key=value` 成员；自动跳过空成员与畸形项，最多返回 32 项
+    fn next(*_): W3cTraceStateEntry? {
+        if (_.yielded >= TRACESTATE_MAX_ENTRIES) {
+            return null;
+        }
         while (_.pos < _.src.len) {
             const start = _.pos;
             while (_.pos < _.src.len && _.src[_.pos] != ',') {
                 _.pos += 1;
             }
-            const seg = trimOws(_.src[start.._.pos]);
+            const seg = w3cTrimOws(_.src[start.._.pos]);
             if (_.pos < _.src.len && _.src[_.pos] == ',') {
                 _.pos += 1;
             }
@@ -280,8 +329,9 @@ export struct TraceStateIter {
             if (eq_idx := findByte(seg, '=')) {
                 const key = seg[0..eq_idx];
                 const val = seg[eq_idx + 1..];
-                if (isValidTraceStateKey(key) && isValidTraceStateValue(val)) {
-                    return TraceStateEntry{
+                if (w3cIsValidTraceStateKey(key) && w3cIsValidTraceStateValue(val)) {
+                    _.yielded += 1;
+                    return W3cTraceStateEntry{
                         key: key,
                         value: val,
                     };
@@ -293,7 +343,7 @@ export struct TraceStateIter {
 }
 
 /// 在 `tracestate` 头部中精确查找指定 vendor key 对应的值
-export fn findTraceState(header: []const u8, key: []const u8): ([]const u8)? {
+pub fn findTraceState(header: []const u8, key: []const u8): ([]const u8)? {
     let it = TraceStateIter.init(header);
     while (true) {
         if (entry := it.next()) {

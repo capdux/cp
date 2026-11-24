@@ -1,15 +1,18 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc W3C Baggage Distributed Context & Redaction Engine) | Created: 2026-11-23
+// Reference-hardened against open-telemetry/opentelemetry-rust (Apache-2.0)
 // Pure CP zero-heap-allocation W3C Baggage (Trace Context Level 2) Propagation & Redaction Engine:
-//   - Fixed-capacity zero-heap storage strictly enforcing W3C specification limits (entry cap,
-//     per-member 4096B cap, and total header <= 8192B cap)
-//   - RFC-compliant `parseBaggageHeader` / `formatBaggageHeader`: comma-separated members,
-//     `key=value;prop1=v1;prop2` metadata properties, OWS trimming, `%XX` percent-encoding/decoding,
-//     Last-Write-Wins duplicate key deduplication, and strict RFC 7230 token key validation
+//   - Fixed-capacity zero-heap storage strictly enforcing W3C specification limits (180 spec list-members,
+//     32 inline context slots, per-member 4096B cap, and total header <= 8192B cap)
+//   - RFC-compliant `parseBaggageHeader` / `formatBaggageHeader` & zero-copy `BaggageMemberIter`:
+//     comma-separated members, `key=value;prop1=v1;prop2` metadata properties, OWS trimming,
+//     `%XX` percent-encoding/decoding, Last-Write-Wins duplicate key deduplication, and strict RFC 7230 token keys
 //   - `BaggageContext`: `init`, `set`, `setWithProps`, `get`, `getProps`, `remove`, `has`, `len`,
 //     `clear`, `mergeFrom` (cross-process / cross-agent propagation with prefix allowlist &
 //     overwrite policy), `redactKeys` (in-place PII/secret masking), `estimatedHeaderBytes`
-//   - Security boundary guards: blocks CRLF/control-char injection, oversized header floods,
+//   - Security boundary guards: 16-lane SIMD control-byte/CRLF/NUL injection guard, oversized header floods,
 //     invalid token keys, malformed `%XX` escapes & high-cardinality overflow (`BaggageParseReport`)
+
+import { simdHasControlByte } from "./traceParent.cp";
 
 // ============================================================================
 // 1. Constants, Enums & Data Models
@@ -17,6 +20,9 @@
 
 /// Fixed maximum number of baggage entries stored inline in `BaggageContext`.
 pub const BAGGAGE_MAX_ENTRIES: usize = 32;
+
+/// W3C Baggage specification maximum number of list-members per header (`180`).
+pub const BAGGAGE_SPEC_MAX_MEMBERS: usize = 180;
 
 /// W3C Baggage specification maximum total header byte length (8 KiB).
 pub const BAGGAGE_MAX_HEADER_BYTES: usize = 8192;
@@ -86,7 +92,8 @@ pub struct BaggageParseReport {
 // 2. Character Validation, Percent-Encoding & Trimming Helpers
 // ============================================================================
 
-fn hasCrlfOrNul(s: []const u8): bool {
+fn bagHasCrlfOrNul(s: []const u8): bool {
+    if (!simdHasControlByte(s)) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         if (s[i] == '\r' || s[i] == '\n' || s[i] == 0) return true;
@@ -94,23 +101,29 @@ fn hasCrlfOrNul(s: []const u8): bool {
     return false;
 }
 
-fn hasCtlChar(s: []const u8): bool {
+fn bagHasNonTabControlByte(s: []const u8): bool {
+    if (!simdHasControlByte(s)) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        if (s[i] < 0x20 || s[i] == 0x7F) return true;
+        const c = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
     }
     return false;
 }
 
-fn isOws(c: u8): bool {
+fn bagHasCtlChar(s: []const u8): bool {
+    return simdHasControlByte(s);
+}
+
+fn bagIsOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn trimOws(s: []const u8): []const u8 {
+fn bagTrimOws(s: []const u8): []const u8 {
     let start: usize = 0;
-    while (start < s.len && isOws(s[start])) : (start += 1) {}
+    while (start < s.len && bagIsOws(s[start])) : (start += 1) {}
     let end: usize = s.len;
-    while (end > start && isOws(s[end - 1])) : (end -= 1) {}
+    while (end > start && bagIsOws(s[end - 1])) : (end -= 1) {}
     return s[start..end];
 }
 
@@ -139,11 +152,44 @@ fn isUnencodedBaggageOctet(c: u8): bool {
 }
 
 fn isValidBaggageProps(props: []const u8): bool {
+    if (props.len == 0) return true;
     if (props.len > BAGGAGE_MAX_PROPS_LEN) return false;
-    let i: usize = 0;
-    while (i < props.len) : (i += 1) {
-        const c = props[i];
-        if (c < 0x20 || c == 0x7F || c == ',') return false;
+    if (simdHasControlByte(props)) return false;
+
+    let pos: usize = 0;
+    while (pos <= props.len) {
+        let end: usize = pos;
+        while (end < props.len && props[end] != ';') : (end += 1) {
+            const c = props[end];
+            if (c == ',' || c > 0x7E) return false;
+        }
+        const seg = bagTrimOws(props[pos..end]);
+        if (seg.len == 0) return false;
+
+        let eq_idx: usize = seg.len;
+        let k: usize = 0;
+        while (k < seg.len) : (k += 1) {
+            if (seg[k] == '=') {
+                eq_idx = k;
+                break;
+            }
+        }
+        const pk = bagTrimOws(seg[0..eq_idx]);
+        if (pk.len == 0) return false;
+        let ki: usize = 0;
+        while (ki < pk.len) : (ki += 1) {
+            if (!isTchar(pk[ki])) return false;
+        }
+        if (eq_idx < seg.len) {
+            const pv = bagTrimOws(seg[eq_idx + 1 ..]);
+            let vi: usize = 0;
+            while (vi < pv.len) : (vi += 1) {
+                if (pv[vi] <= 0x20 || pv[vi] >= 0x7F || pv[vi] == '"' || pv[vi] == '\\') return false;
+            }
+        }
+
+        if (end >= props.len) break;
+        pos = end + 1;
     }
     return true;
 }
@@ -170,26 +216,48 @@ fn encodedValueLen(val: []const u8): usize {
     return total;
 }
 
-fn percentEncodeValueInto(val: []const u8, out_buf: *[]u8, pos: *usize): bool {
+fn percentEncodeValueInto(val: []const u8, out_buf: *[]u8, start_pos: usize): usize? {
+    let pos: usize = start_pos;
     let i: usize = 0;
     while (i < val.len) : (i += 1) {
         const c = val[i];
         if (isUnencodedBaggageOctet(c)) {
-            if (pos + 1 > out_buf.len) return false;
+            if (pos + 1 > out_buf.len) return null;
             out_buf[pos] = c;
             pos += 1;
         } else {
-            if (pos + 3 > out_buf.len) return false;
+            if (pos + 3 > out_buf.len) return null;
             out_buf[pos] = '%';
             out_buf[pos + 1] = HEX_UPPER[@as(usize, (c >> 4) & 0x0F)];
             out_buf[pos + 2] = HEX_UPPER[@as(usize, c & 0x0F)];
             pos += 3;
         }
     }
+    return pos;
+}
+
+fn isValidPercentEncodedValue(raw: []const u8): bool {
+    if (simdHasControlByte(raw)) return false;
+    let i: usize = 0;
+    while (i < raw.len) {
+        if (raw[i] == '%') {
+            if (i + 2 >= raw.len) return false;
+            const hi = hexVal(raw[i + 1]) ?? return false;
+            const lo = hexVal(raw[i + 2]) ?? return false;
+            const b: u8 = (hi << 4) | lo;
+            if (b < 0x20 || b == 0x7F) return false;
+            i += 3;
+        } else {
+            const c = raw[i];
+            if (c <= 0x20 || c >= 0x7F || c == '"' || c == ',' || c == ';' || c == '\\') return false;
+            i += 1;
+        }
+    }
     return true;
 }
 
 fn percentDecodeInto(raw: []const u8, out_buf: *[]u8): usize? {
+    if (simdHasControlByte(raw)) return null;
     let pos: usize = 0;
     let i: usize = 0;
     while (i < raw.len) {
@@ -198,15 +266,16 @@ fn percentDecodeInto(raw: []const u8, out_buf: *[]u8): usize? {
             const hi = hexVal(raw[i + 1]) ?? return null;
             const lo = hexVal(raw[i + 2]) ?? return null;
             const b: u8 = (hi << 4) | lo;
-            if (b == '\r' || b == '\n' || b == 0) return null;
+            if (b < 0x20 || b == 0x7F) return null;
             if (pos >= out_buf.len) return null;
             out_buf[pos] = b;
             pos += 1;
             i += 3;
         } else {
-            if (raw[i] < 0x20 || raw[i] == 0x7F) return null;
+            const c = raw[i];
+            if (c <= 0x20 || c >= 0x7F || c == '"' || c == ',' || c == ';' || c == '\\') return null;
             if (pos >= out_buf.len) return null;
-            out_buf[pos] = raw[i];
+            out_buf[pos] = c;
             pos += 1;
             i += 1;
         }
@@ -242,14 +311,13 @@ fn startsWithBytes(s: []const u8, prefix: []const u8): bool {
     return bytesEq(s[0..prefix.len], prefix);
 }
 
-fn appendBytes(out_buf: *[]u8, pos: *usize, s: []const u8): bool {
-    if (pos + s.len > out_buf.len) return false;
+fn appendBytes(out_buf: *[]u8, pos: usize, s: []const u8): usize? {
+    if (pos + s.len > out_buf.len) return null;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         out_buf[pos + i] = s[i];
     }
-    pos += s.len;
-    return true;
+    return pos + s.len;
 }
 
 // ============================================================================
@@ -338,11 +406,11 @@ pub struct BaggageContext {
     /// Insert or update a baggage entry with optional semicolon-delimited metadata properties.
     /// Enforces CRLF guard, RFC 7230 key token syntax, entry cap, and 8192B header cap.
     fn setWithProps(*_, key: []const u8, value: []const u8, props: []const u8): BaggageOpStatus {
-        if (hasCrlfOrNul(key) || hasCrlfOrNul(value) || hasCrlfOrNul(props)) {
+        if (bagHasCrlfOrNul(key) || bagHasCrlfOrNul(value) || bagHasCrlfOrNul(props)) {
             return BaggageOpStatus.crlf_rejected;
         }
         if (!isValidBaggageKey(key)) return BaggageOpStatus.invalid_key;
-        if (value.len > BAGGAGE_MAX_VALUE_LEN || hasCtlChar(value)) return BaggageOpStatus.invalid_value;
+        if (value.len > BAGGAGE_MAX_VALUE_LEN || bagHasCtlChar(value)) return BaggageOpStatus.invalid_value;
         if (!isValidBaggageProps(props)) return BaggageOpStatus.invalid_props;
 
         const new_member_bytes = key.len + 1 + encodedValueLen(value) + (if (props.len > 0) 1 + props.len else 0);
@@ -449,7 +517,7 @@ pub struct BaggageContext {
     /// Returns the number of entries redacted.
     fn redactKeys(*_, sensitive_keys: []const []const u8, mask: []const u8): usize {
         const eff_mask: []const u8 = if (mask.len == 0) "[REDACTED]" else mask;
-        if (eff_mask.len > BAGGAGE_MAX_VALUE_LEN || hasCtlChar(eff_mask)) return 0;
+        if (eff_mask.len > BAGGAGE_MAX_VALUE_LEN || bagHasCtlChar(eff_mask)) return 0;
 
         let redacted: usize = 0;
         let i: usize = 0;
@@ -480,15 +548,111 @@ pub struct BaggageContext {
 // 4. W3C Baggage Header Parser & Formatter
 // ============================================================================
 
+/// Zero-copy view of a single validated W3C Baggage list-member.
+pub struct BaggageMemberView {
+    key: []const u8;
+    raw_value: []const u8;
+    props: []const u8;
+}
+
+/// Zero-copy streaming iterator for W3C Baggage headers strictly enforcing W3C specification limits:
+/// - Total header length `<= BAGGAGE_MAX_HEADER_BYTES` (`8192` bytes)
+/// - Single member length `<= BAGGAGE_MAX_MEMBER_BYTES` (`4096` bytes)
+/// - Maximum `BAGGAGE_SPEC_MAX_MEMBERS` (`180`) list-members per header
+/// - Rejects CRLF/NUL/non-HTAB control bytes, invalid RFC 7230 keys, malformed `%XX` escapes, and invalid properties.
+pub struct BaggageMemberIter {
+    src: []const u8;
+    pos: usize;
+    seen_members: usize = 0;
+    truncated: bool = false;
+    rejected: bool = false;
+
+    static fn init(header: []const u8): BaggageMemberIter {
+        if (bagHasCrlfOrNul(header) || bagHasNonTabControlByte(header) || header.len > BAGGAGE_MAX_HEADER_BYTES) {
+            return BaggageMemberIter{
+                src: header,
+                pos: header.len,
+                seen_members: 0,
+                truncated: false,
+                rejected: true,
+            };
+        }
+        return BaggageMemberIter{
+            src: header,
+            pos: 0,
+            seen_members: 0,
+            truncated: false,
+            rejected: false,
+        };
+    }
+
+    /// Yield the next valid `BaggageMemberView`, enforcing the 180 list-member cap.
+    fn next(*_): BaggageMemberView? {
+        if (_.rejected) return null;
+        while (_.pos < _.src.len) {
+            const start = _.pos;
+            while (_.pos < _.src.len && _.src[_.pos] != ',') : (_.pos += 1) {}
+            const seg = bagTrimOws(_.src[start.._.pos]);
+            if (_.pos < _.src.len && _.src[_.pos] == ',') {
+                _.pos += 1;
+            }
+            if (seg.len == 0) continue;
+
+            if (_.seen_members >= BAGGAGE_SPEC_MAX_MEMBERS) {
+                _.truncated = true;
+                _.pos = _.src.len;
+                return null;
+            }
+            _.seen_members += 1;
+
+            if (seg.len > BAGGAGE_MAX_MEMBER_BYTES) continue;
+
+            let semi_idx: usize = seg.len;
+            let k: usize = 0;
+            while (k < seg.len) : (k += 1) {
+                if (seg[k] == ';') {
+                    semi_idx = k;
+                    break;
+                }
+            }
+            const kv_part = bagTrimOws(seg[0..semi_idx]);
+            const props_part: []const u8 = if (semi_idx < seg.len) bagTrimOws(seg[semi_idx + 1 ..]) else "";
+
+            let eq_idx: usize = kv_part.len;
+            let e_i: usize = 0;
+            while (e_i < kv_part.len) : (e_i += 1) {
+                if (kv_part[e_i] == '=') {
+                    eq_idx = e_i;
+                    break;
+                }
+            }
+            if (eq_idx == kv_part.len) continue;
+
+            const key = bagTrimOws(kv_part[0..eq_idx]);
+            const raw_val = bagTrimOws(kv_part[eq_idx + 1 ..]);
+            if (!isValidBaggageKey(key)) continue;
+            if (!isValidPercentEncodedValue(raw_val)) continue;
+            if (!isValidBaggageProps(props_part)) continue;
+
+            return BaggageMemberView{
+                key: key,
+                raw_value: raw_val,
+                props: props_part,
+            };
+        }
+        return null;
+    }
+}
+
 /// Parse a W3C `baggage` HTTP header into `out_ctx` (cleared first).
-/// Enforces CRLF guard, 8192B header cap, 4096B per-member cap, `%XX` decoding,
-/// RFC 7230 key validation, and Last-Write-Wins duplicate deduplication.
+/// Enforces CRLF/CTL guard, 8192B header cap, 4096B per-member cap, 180 list-member spec cap,
+/// `%XX` decoding, RFC 7230 key validation, and Last-Write-Wins duplicate deduplication.
 pub fn parseBaggageHeader(header: []const u8, out_ctx: *BaggageContext): BaggageParseReport {
     out_ctx.clear();
     let rep = BaggageParseReport{};
     rep.header_bytes = header.len;
 
-    if (hasCrlfOrNul(header)) {
+    if (bagHasCrlfOrNul(header) || bagHasNonTabControlByte(header)) {
         rep.status = BaggageOpStatus.crlf_rejected;
         return rep;
     }
@@ -506,11 +670,14 @@ pub fn parseBaggageHeader(header: []const u8, out_ctx: *BaggageContext): Baggage
         let end = start;
         while (end < header.len && header[end] != ',') : (end += 1) {}
         const member_raw = header[start..end];
-        const member = trimOws(member_raw);
+        const member = bagTrimOws(member_raw);
 
         if (member.len > 0) {
             rep.parsed_members += 1;
-            if (member.len > BAGGAGE_MAX_MEMBER_BYTES) {
+            if (rep.parsed_members > BAGGAGE_SPEC_MAX_MEMBERS) {
+                rep.dropped_overflow += 1;
+                rep.status = BaggageOpStatus.capacity_full;
+            } else if (member.len > BAGGAGE_MAX_MEMBER_BYTES) {
                 rep.skipped_invalid += 1;
             } else {
                 // Split optional `;props`
@@ -522,8 +689,8 @@ pub fn parseBaggageHeader(header: []const u8, out_ctx: *BaggageContext): Baggage
                         break;
                     }
                 }
-                const kv_part = trimOws(member[0..semi_idx]);
-                const props_part: []const u8 = if (semi_idx < member.len) trimOws(member[semi_idx + 1 ..]) else "";
+                const kv_part = bagTrimOws(member[0..semi_idx]);
+                const props_part: []const u8 = if (semi_idx < member.len) bagTrimOws(member[semi_idx + 1 ..]) else "";
 
                 // Split `key=value` on first '='
                 let eq_idx = kv_part.len;
@@ -538,12 +705,12 @@ pub fn parseBaggageHeader(header: []const u8, out_ctx: *BaggageContext): Baggage
                 if (eq_idx == kv_part.len) {
                     rep.skipped_invalid += 1;
                 } else {
-                    const key = trimOws(kv_part[0..eq_idx]);
-                    const raw_val = trimOws(kv_part[eq_idx + 1 ..]);
+                    const key = bagTrimOws(kv_part[0..eq_idx]);
+                    const raw_val = bagTrimOws(kv_part[eq_idx + 1 ..]);
 
                     let dec_buf: [BAGGAGE_MAX_VALUE_LEN]u8 = [0; BAGGAGE_MAX_VALUE_LEN];
                     let dec_s: []u8 = dec_buf[0..];
-                    if (dec_len := percentDecodeInto(raw_val, *dec_s)) {
+                    if (dec_len := percentDecodeInto(raw_val, dec_s)) {
                         const existed = out_ctx.has(key);
                         const st = out_ctx.setWithProps(key, dec_buf[0..dec_len], props_part);
                         if (st == BaggageOpStatus.ok) {
@@ -584,14 +751,14 @@ pub fn formatBaggageHeader(ctx: BaggageContext, out_buf: *[]u8): usize? {
     while (i < BAGGAGE_MAX_ENTRIES) : (i += 1) {
         if (!ctx.entries[i].active) continue;
         if (written_entries > 0) {
-            if (!appendBytes(out_buf, *pos, ",")) return null;
+            pos = appendBytes(out_buf, pos, ",") ?? return null;
         }
-        if (!appendBytes(out_buf, *pos, ctx.entries[i].key())) return null;
-        if (!appendBytes(out_buf, *pos, "=")) return null;
-        if (!percentEncodeValueInto(ctx.entries[i].value(), out_buf, *pos)) return null;
+        pos = appendBytes(out_buf, pos, ctx.entries[i].key()) ?? return null;
+        pos = appendBytes(out_buf, pos, "=") ?? return null;
+        pos = percentEncodeValueInto(ctx.entries[i].value(), out_buf, pos) ?? return null;
         if (ctx.entries[i].props_len > 0) {
-            if (!appendBytes(out_buf, *pos, ";")) return null;
-            if (!appendBytes(out_buf, *pos, ctx.entries[i].props())) return null;
+            pos = appendBytes(out_buf, pos, ";") ?? return null;
+            pos = appendBytes(out_buf, pos, ctx.entries[i].props()) ?? return null;
         }
         written_entries += 1;
     }
