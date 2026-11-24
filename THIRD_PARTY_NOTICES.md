@@ -112,6 +112,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp`, `lib/net/icmp.cp`, `lib/net/arp.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131/4271/792/4443/826) |
 | **RustCrypto/KDFs & MACs** | <https://github.com/RustCrypto/KDFs> | MIT OR Apache-2.0 | `lib/crypto/ratchet.cp`, `lib/crypto/aeadNonce.cp`, `lib/crypto/keyring.cp` | Copyright (c) 2018-2024 RustCrypto Developers (RFC 5869/4231/9001) |
 | **HdrHistogram_rust** (`HdrHistogram`) | <https://github.com/HdrHistogram/HdrHistogram_rust> | MIT OR Apache-2.0 | `lib/obs/hdrHist.cp`, `lib/obs/openmetrics.cp` | Copyright (c) 2016-2024 HdrHistogram Contributors (OpenMetrics 1.0) |
+| **pcap-parser** (`rusticata`) | <https://github.com/rusticata/pcap-parser> | MIT OR Apache-2.0 | `lib/binfmt/pcap.cp`, `lib/binfmt/pcapng.cp` | Copyright (c) 2017-2024 Pierre Chifflier (Rusticata) |
 
 ---
 

@@ -1,7 +1,10 @@
-// Source: cp/lib/pcap/pcap.cp (Pure CP libpcap Container & L2-L4 Network Dissector)
+// Reference-hardened against rusticata/pcap-parser (MIT OR Apache-2.0)
+// Source: cp/lib/pcap/pcap.cp (Pure CP libpcap Container & L2-L4 Network Dissector + 16-Lane SIMD)
 // Pure CP zero-copy libpcap (.pcap) reader/writer and Ethernet/IPv4/TCP/UDP protocol dissector.
 
 const std = @import("std");
+
+type PcapVec16u8 = @Vector(16, u8);
 
 pub const PCAP_MAGIC_US: u32 = 0xa1b2c3d4;
 pub const PCAP_MAGIC_US_SWAPPED: u32 = 0xd4c3b2a1;
@@ -10,19 +13,23 @@ pub const PCAP_MAGIC_NS_SWAPPED: u32 = 0x4d3cb2a1;
 
 pub const PCAP_VERSION_MAJOR: u16 = 2;
 pub const PCAP_VERSION_MINOR: u16 = 4;
+pub const PCAP_GLOBAL_HEADER_SIZE: usize = 24;
+pub const PCAP_PACKET_HEADER_SIZE: usize = 16;
 pub const DEFAULT_MAX_SNAPLEN: u32 = 1024 * 1024;
+pub const PCAP_DEFAULT_MAX_PACKETS: usize = 1_000_000;
 
-pub const PcapError = error {
+pub err PcapError {
     InvalidMagic,
     UnsupportedVersion,
     TruncatedHeader,
     TruncatedPacket,
     PacketTooLarge,
+    TooManyPackets,
     InvalidEthernet,
     InvalidIpv4,
     InvalidTransport,
     OutOfMemory,
-};
+}
 
 pub enum PcapEndian {
     Little,
@@ -54,6 +61,12 @@ pub struct PcapPacket {
     ts_subsec: u32,
     orig_len: u32,
     data: []const u8,
+}
+
+pub struct PcapValidationStats {
+    header: PcapGlobalHeader,
+    packet_count: usize,
+    total_payload_bytes: usize,
 }
 
 pub struct PcapFile {
@@ -103,7 +116,75 @@ pub struct UdpDatagram {
     payload: []const u8,
 }
 
-fn readU16(bytes: []const u8, endian: PcapEndian): u16 {
+// ============================================================================
+// 16-Lane @Vector(16, u8) SIMD Primitives + Scalar Differential References
+// ============================================================================
+
+fn pcapLoadVec16(data: []const u8, off: usize): PcapVec16u8 {
+    const v: PcapVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD packet payload byte copy (hot path for capture frame encoding/decoding).
+pub fn simdPcapCopyBytes(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const v = pcapLoadVec16(src, i);
+        const arr: [16]u8 = v;
+        @memcpy(dst[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// Scalar reference for `simdPcapCopyBytes` (differential verification).
+pub fn scalarPcapCopyBytes(dst: []u8, src: []const u8) {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte slice equality check for magic bytes & packet payloads.
+pub fn simdPcapBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va = pcapLoadVec16(a, i);
+        const vb = pcapLoadVec16(b, i);
+        if (!@reduce(.And, va == vb)) return false;
+        i += 16;
+    }
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdPcapBytesEqual` (differential verification).
+pub fn scalarPcapBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+// ============================================================================
+// Endian-Aware Helpers & Magic Detection
+// ============================================================================
+
+fn pcapReadU16(bytes: []const u8, endian: PcapEndian): u16 {
     const arr: [2]u8 = [bytes[0], bytes[1]];
     if (endian == .Little) {
         return std.mem.readInt(u16, &arr, .little);
@@ -111,7 +192,7 @@ fn readU16(bytes: []const u8, endian: PcapEndian): u16 {
     return std.mem.readInt(u16, &arr, .big);
 }
 
-fn readU32(bytes: []const u8, endian: PcapEndian): u32 {
+fn pcapReadU32(bytes: []const u8, endian: PcapEndian): u32 {
     const arr: [4]u8 = [bytes[0], bytes[1], bytes[2], bytes[3]];
     if (endian == .Little) {
         return std.mem.readInt(u32, &arr, .little);
@@ -119,103 +200,44 @@ fn readU32(bytes: []const u8, endian: PcapEndian): u32 {
     return std.mem.readInt(u32, &arr, .big);
 }
 
-fn appendU16(buf: *std.ArrayList(u8), allocator: std.mem.Allocator, val: u16, endian: PcapEndian): PcapError!void {
+fn pcapAppendU16(buf: *std.ArrayList(u8), allocator: std.mem.Allocator, val: u16, endian: PcapEndian): PcapError!void {
     let raw: [2]u8 = undefined;
     if (endian == .Little) {
         std.mem.writeInt(u16, &raw, val, .little);
     } else {
         std.mem.writeInt(u16, &raw, val, .big);
     }
-    buf.appendSlice(allocator, &raw) catch return PcapError.OutOfMemory;
+    buf.appendSlice(allocator, &raw) catch { return PcapError.OutOfMemory; };
 }
 
-fn appendU32(buf: *std.ArrayList(u8), allocator: std.mem.Allocator, val: u32, endian: PcapEndian): PcapError!void {
+fn pcapAppendU32(buf: *std.ArrayList(u8), allocator: std.mem.Allocator, val: u32, endian: PcapEndian): PcapError!void {
     let raw: [4]u8 = undefined;
     if (endian == .Little) {
         std.mem.writeInt(u32, &raw, val, .little);
     } else {
         std.mem.writeInt(u32, &raw, val, .big);
     }
-    buf.appendSlice(allocator, &raw) catch return PcapError.OutOfMemory;
+    buf.appendSlice(allocator, &raw) catch { return PcapError.OutOfMemory; };
 }
 
-pub struct PcapWriter {
-    allocator: std.mem.Allocator,
-    endian: PcapEndian,
-    precision: PcapPrecision,
-    snaplen: u32,
-    link_type: u32,
-    buf: std.ArrayList(u8),
-
-    pub fn init(
-        allocator: std.mem.Allocator,
-        endian: PcapEndian,
-        precision: PcapPrecision,
-        snaplen: u32,
-        link_type: u32,
-    ): PcapError!PcapWriter {
-        let buf = std.ArrayList(u8).empty;
-        errdefer buf.deinit(allocator);
-
-        let magic: u32 = PCAP_MAGIC_US;
-        if (precision == .Nanosecond) {
-            magic = PCAP_MAGIC_NS;
-        }
-        appendU32(&buf, allocator, magic, endian)?;
-        appendU16(&buf, allocator, PCAP_VERSION_MAJOR, endian)?;
-        appendU16(&buf, allocator, PCAP_VERSION_MINOR, endian)?;
-        appendU32(&buf, allocator, 0, endian)?;
-        appendU32(&buf, allocator, 0, endian)?;
-        appendU32(&buf, allocator, snaplen, endian)?;
-        appendU32(&buf, allocator, link_type, endian)?;
-
-        return PcapWriter {
-            allocator: allocator,
-            endian: endian,
-            precision: precision,
-            snaplen: snaplen,
-            link_type: link_type,
-            buf: buf,
-        };
-    }
-
-    pub fn addPacket(
-        *_,
-        ts_sec: u32,
-        ts_subsec: u32,
-        orig_len: u32,
-        data: []const u8,
-    ): PcapError!void {
-        if (data.len > _.snaplen) {
-            return PcapError.PacketTooLarge;
-        }
-        const incl_len: u32 = @intCast(data.len);
-        appendU32(&_.buf, _.allocator, ts_sec, _.endian)?;
-        appendU32(&_.buf, _.allocator, ts_subsec, _.endian)?;
-        appendU32(&_.buf, _.allocator, incl_len, _.endian)?;
-        appendU32(&_.buf, _.allocator, orig_len, _.endian)?;
-        _.buf.appendSlice(_.allocator, data) catch return PcapError.OutOfMemory;
-    }
-
-    pub fn finish(*_, allocator: std.mem.Allocator): PcapError![]u8 {
-        return _.buf.toOwnedSlice(allocator) catch return PcapError.OutOfMemory;
-    }
-
-    pub fn deinit(*_) {
-        _.buf.deinit(_.allocator);
-    }
+/// Checks whether the byte slice starts with one of the 4 standard libpcap magic numbers
+/// (microsecond/nanosecond × little-endian/big-endian).
+pub fn isPcap(bytes: []const u8): bool {
+    if (bytes.len < 4) return false;
+    const magic_us_be: [4]u8 = [0xa1, 0xb2, 0xc3, 0xd4];
+    const magic_us_le: [4]u8 = [0xd4, 0xc3, 0xb2, 0xa1];
+    const magic_ns_be: [4]u8 = [0xa1, 0xb2, 0x3c, 0x4d];
+    const magic_ns_le: [4]u8 = [0x4d, 0x3c, 0xb2, 0xa1];
+    const head = bytes[0..4];
+    return simdPcapBytesEqual(head, magic_us_be[0..4])
+        || simdPcapBytesEqual(head, magic_us_le[0..4])
+        || simdPcapBytesEqual(head, magic_ns_be[0..4])
+        || simdPcapBytesEqual(head, magic_ns_le[0..4]);
 }
 
-pub fn parsePcap(allocator: std.mem.Allocator, bytes: []const u8): PcapError!PcapFile {
-    return parsePcapWithMaxSnaplen(allocator, bytes, DEFAULT_MAX_SNAPLEN);
-}
-
-pub fn parsePcapWithMaxSnaplen(
-    allocator: std.mem.Allocator,
-    bytes: []const u8,
-    max_snaplen: u32,
-): PcapError!PcapFile {
-    if (bytes.len < 24) {
+/// Zero-alloc parser for the 24-byte libpcap global header (all 4 magic numbers + version 2.4).
+pub fn parsePcapGlobalHeader(bytes: []const u8): PcapError!PcapGlobalHeader {
+    if (bytes.len < PCAP_GLOBAL_HEADER_SIZE) {
         return PcapError.TruncatedHeader;
     }
 
@@ -239,19 +261,16 @@ pub fn parsePcapWithMaxSnaplen(
         return PcapError.InvalidMagic;
     }
 
-    const version_major = readU16(bytes[4..6], endian);
-    const version_minor = readU16(bytes[6..8], endian);
+    const version_major = pcapReadU16(bytes[4..6], endian);
+    const version_minor = pcapReadU16(bytes[6..8], endian);
     if (version_major != PCAP_VERSION_MAJOR or version_minor != PCAP_VERSION_MINOR) {
         return PcapError.UnsupportedVersion;
     }
 
-    const snaplen = readU32(bytes[16..20], endian);
-    const link_type = readU32(bytes[20..24], endian);
-    if (snaplen > max_snaplen) {
-        return PcapError.PacketTooLarge;
-    }
+    const snaplen = pcapReadU32(bytes[16..20], endian);
+    const link_type = pcapReadU32(bytes[20..24], endian);
 
-    const header = PcapGlobalHeader {
+    return PcapGlobalHeader {
         version_major: version_major,
         version_minor: version_minor,
         snaplen: snaplen,
@@ -259,22 +278,180 @@ pub fn parsePcapWithMaxSnaplen(
         endian: endian,
         precision: precision,
     };
+}
+
+// ============================================================================
+// PcapWriter (with 16-Lane SIMD Packet Payload Copy Hot Path)
+// ============================================================================
+
+pub struct PcapWriter {
+    allocator: std.mem.Allocator,
+    endian: PcapEndian,
+    precision: PcapPrecision,
+    snaplen: u32,
+    link_type: u32,
+    buf: std.ArrayList(u8),
+
+    pub static fn init(
+        allocator: std.mem.Allocator,
+        endian: PcapEndian,
+        precision: PcapPrecision,
+        snaplen: u32,
+        link_type: u32,
+    ): PcapError!PcapWriter {
+        let buf = std.ArrayList(u8).empty;
+        errdefer buf.deinit(allocator);
+
+        let magic: u32 = PCAP_MAGIC_US;
+        if (precision == .Nanosecond) {
+            magic = PCAP_MAGIC_NS;
+        }
+        pcapAppendU32(&buf, allocator, magic, endian)?;
+        pcapAppendU16(&buf, allocator, PCAP_VERSION_MAJOR, endian)?;
+        pcapAppendU16(&buf, allocator, PCAP_VERSION_MINOR, endian)?;
+        pcapAppendU32(&buf, allocator, 0, endian)?;
+        pcapAppendU32(&buf, allocator, 0, endian)?;
+        pcapAppendU32(&buf, allocator, snaplen, endian)?;
+        pcapAppendU32(&buf, allocator, link_type, endian)?;
+
+        return PcapWriter {
+            allocator: allocator,
+            endian: endian,
+            precision: precision,
+            snaplen: snaplen,
+            link_type: link_type,
+            buf: buf,
+        };
+    }
+
+    pub fn addPacket(
+        *_,
+        ts_sec: u32,
+        ts_subsec: u32,
+        orig_len: u32,
+        data: []const u8,
+    ): PcapError!void {
+        if (data.len > _.snaplen) {
+            return PcapError.PacketTooLarge;
+        }
+        const incl_len: u32 = @intCast(data.len);
+        pcapAppendU32(&_.buf, _.allocator, ts_sec, _.endian)?;
+        pcapAppendU32(&_.buf, _.allocator, ts_subsec, _.endian)?;
+        pcapAppendU32(&_.buf, _.allocator, incl_len, _.endian)?;
+        pcapAppendU32(&_.buf, _.allocator, orig_len, _.endian)?;
+        if (data.len > 0) {
+            const old_len = _.buf.items.len;
+            _.buf.resize(_.allocator, old_len + data.len) catch { return PcapError.OutOfMemory; };
+            simdPcapCopyBytes(_.buf.items[old_len .. old_len + data.len], data);
+        }
+    }
+
+    pub fn finish(*_, allocator: std.mem.Allocator): PcapError![]u8 {
+        return _.buf.toOwnedSlice(allocator) catch { return PcapError.OutOfMemory; };
+    }
+
+    pub fn deinit(*_) {
+        _.buf.deinit(_.allocator);
+    }
+}
+
+// ============================================================================
+// Zero-Alloc Strict Validator & Hardened Parsers
+// ============================================================================
+
+/// Zero-alloc strict validator for libpcap streams using default resource bounds
+/// (`DEFAULT_MAX_SNAPLEN` and `PCAP_DEFAULT_MAX_PACKETS`).
+pub fn validatePcapStrict(bytes: []const u8): PcapError!PcapValidationStats {
+    return validatePcapStrictWithLimits(bytes, DEFAULT_MAX_SNAPLEN, PCAP_DEFAULT_MAX_PACKETS);
+}
+
+/// Zero-alloc strict validator for libpcap streams with explicit snaplen & packet count bounds.
+/// Validates all 4 magic numbers, 24B global header, and every 16B packet header without overflow.
+pub fn validatePcapStrictWithLimits(
+    bytes: []const u8,
+    max_snaplen: u32,
+    max_packets: usize,
+): PcapError!PcapValidationStats {
+    const header = parsePcapGlobalHeader(bytes)?;
+    if (header.snaplen > max_snaplen) {
+        return PcapError.PacketTooLarge;
+    }
+
+    let pos: usize = PCAP_GLOBAL_HEADER_SIZE;
+    let packet_count: usize = 0;
+    let total_payload_bytes: usize = 0;
+
+    while (pos < bytes.len) {
+        if (packet_count >= max_packets) {
+            return PcapError.TooManyPackets;
+        }
+        if (bytes.len - pos < PCAP_PACKET_HEADER_SIZE) {
+            return PcapError.TruncatedPacket;
+        }
+        const incl_len = pcapReadU32(bytes[pos + 8 .. pos + 12], header.endian);
+        pos += PCAP_PACKET_HEADER_SIZE;
+
+        if (incl_len > header.snaplen or incl_len > max_snaplen) {
+            return PcapError.PacketTooLarge;
+        }
+        const incl_usize: usize = @intCast(incl_len);
+        if (bytes.len - pos < incl_usize) {
+            return PcapError.TruncatedPacket;
+        }
+
+        pos += incl_usize;
+        packet_count += 1;
+        total_payload_bytes += incl_usize;
+    }
+
+    return PcapValidationStats {
+        header: header,
+        packet_count: packet_count,
+        total_payload_bytes: total_payload_bytes,
+    };
+}
+
+pub fn parsePcap(allocator: std.mem.Allocator, bytes: []const u8): PcapError!PcapFile {
+    return parsePcapWithLimits(allocator, bytes, DEFAULT_MAX_SNAPLEN, PCAP_DEFAULT_MAX_PACKETS);
+}
+
+pub fn parsePcapWithMaxSnaplen(
+    allocator: std.mem.Allocator,
+    bytes: []const u8,
+    max_snaplen: u32,
+): PcapError!PcapFile {
+    return parsePcapWithLimits(allocator, bytes, max_snaplen, PCAP_DEFAULT_MAX_PACKETS);
+}
+
+pub fn parsePcapWithLimits(
+    allocator: std.mem.Allocator,
+    bytes: []const u8,
+    max_snaplen: u32,
+    max_packets: usize,
+): PcapError!PcapFile {
+    const header = parsePcapGlobalHeader(bytes)?;
+    if (header.snaplen > max_snaplen) {
+        return PcapError.PacketTooLarge;
+    }
 
     let packets = std.ArrayList(PcapPacket).empty;
     errdefer packets.deinit(allocator);
 
-    let pos: usize = 24;
+    let pos: usize = PCAP_GLOBAL_HEADER_SIZE;
     while (pos < bytes.len) {
-        if (bytes.len - pos < 16) {
+        if (packets.items.len >= max_packets) {
+            return PcapError.TooManyPackets;
+        }
+        if (bytes.len - pos < PCAP_PACKET_HEADER_SIZE) {
             return PcapError.TruncatedPacket;
         }
-        const ts_sec = readU32(bytes[pos .. pos + 4], endian);
-        const ts_subsec = readU32(bytes[pos + 4 .. pos + 8], endian);
-        const incl_len = readU32(bytes[pos + 8 .. pos + 12], endian);
-        const orig_len = readU32(bytes[pos + 12 .. pos + 16], endian);
-        pos += 16;
+        const ts_sec = pcapReadU32(bytes[pos .. pos + 4], header.endian);
+        const ts_subsec = pcapReadU32(bytes[pos + 4 .. pos + 8], header.endian);
+        const incl_len = pcapReadU32(bytes[pos + 8 .. pos + 12], header.endian);
+        const orig_len = pcapReadU32(bytes[pos + 12 .. pos + 16], header.endian);
+        pos += PCAP_PACKET_HEADER_SIZE;
 
-        if (incl_len > snaplen or incl_len > max_snaplen) {
+        if (incl_len > header.snaplen or incl_len > max_snaplen) {
             return PcapError.PacketTooLarge;
         }
         const incl_usize: usize = @intCast(incl_len);
@@ -288,16 +465,20 @@ pub fn parsePcapWithMaxSnaplen(
             orig_len: orig_len,
             data: bytes[pos .. pos + incl_usize],
         };
-        packets.append(allocator, pkt) catch return PcapError.OutOfMemory;
+        packets.append(allocator, pkt) catch { return PcapError.OutOfMemory; };
         pos += incl_usize;
     }
 
-    const owned = packets.toOwnedSlice(allocator) catch return PcapError.OutOfMemory;
+    const owned = packets.toOwnedSlice(allocator) catch { return PcapError.OutOfMemory; };
     return PcapFile {
         header: header,
         packets: owned,
     };
 }
+
+// ============================================================================
+// L2-L4 Protocol Dissectors (Ethernet / IPv4 / TCP / UDP)
+// ============================================================================
 
 pub fn parseEthernet(frame: []const u8): PcapError!EthernetFrame {
     if (frame.len < 14) {
@@ -306,8 +487,8 @@ pub fn parseEthernet(frame: []const u8): PcapError!EthernetFrame {
 
     let dst_mac: [6]u8 = undefined;
     let src_mac: [6]u8 = undefined;
-    @memcpy(&dst_mac, frame[0..6]);
-    @memcpy(&src_mac, frame[6..12]);
+    simdPcapCopyBytes(dst_mac[0..6], frame[0..6]);
+    simdPcapCopyBytes(src_mac[0..6], frame[6..12]);
 
     let ether_type = std.mem.readInt(u16, frame[12..14], .big);
     let offset: usize = 14;
@@ -316,7 +497,7 @@ pub fn parseEthernet(frame: []const u8): PcapError!EthernetFrame {
         if (frame.len - offset < 4) {
             return PcapError.InvalidEthernet;
         }
-        ether_type = readU16(frame[offset + 2 .. offset + 4], .Big);
+        ether_type = pcapReadU16(frame[offset + 2 .. offset + 4], .Big);
         offset += 4;
     }
 
@@ -352,8 +533,8 @@ pub fn parseIpv4(bytes: []const u8): PcapError!Ipv4Packet {
     const protocol = bytes[9];
     let src_ip: [4]u8 = undefined;
     let dst_ip: [4]u8 = undefined;
-    @memcpy(&src_ip, bytes[12..16]);
-    @memcpy(&dst_ip, bytes[16..20]);
+    simdPcapCopyBytes(src_ip[0..4], bytes[12..16]);
+    simdPcapCopyBytes(dst_ip[0..4], bytes[16..20]);
 
     const ihl_usize: usize = @intCast(ihl);
     const total_usize: usize = @intCast(total_len);
