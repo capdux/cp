@@ -1,0 +1,33 @@
+{
+  "name": "@cap/llama",
+  "ver": "1.0.12676",
+  "description": "llama.cpp (b12676) local LLM inference engine for CP via official prebuilt dynamic library",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "llama_shim": {
+      "path": ".",
+      "src": [
+        "c/llama_ffi.c"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "llama": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {},
+    "m": {},
+    "pthread": {},
+    "dl": {}
+  }
+}

@@ -135,6 +135,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **PCRE2 10.44** (`@cap/pcre2`) | <https://github.com/PCRE2Project/pcre2> | BSD-3-Clause | `packages/@cap/pcre2/` | Copyright (c) 1997-2024 University of Cambridge / Zoltan Herczeg |
 | **ONNX Runtime 1.32.0** (`@cap/onnx`) | <https://github.com/microsoft/onnxruntime> | MIT | `packages/@cap/onnx/` | Copyright (c) Microsoft Corporation |
 | **libopus 1.5.2** (`@cap/opus`) | <https://opus-codec.org/> | BSD-3-Clause | `packages/@cap/opus/` | Copyright (c) 2001-2024 Xiph.Org Foundation & Contributors |
+| **llama.cpp b12676** (`@cap/llama`) | <https://github.com/ggml-org/llama.cpp> | MIT | `packages/@cap/llama/` | Copyright (c) 2023-2026 The ggml authors |
 
 ---
 
