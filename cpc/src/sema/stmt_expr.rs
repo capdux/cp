@@ -5,6 +5,49 @@ use crate::Span;
 use std::collections::HashMap;
 
 impl Analyzer {
+    /// Returns `(type_name, dtor_kind)` if `ty` represents an owned value (not a borrow/raw pointer)
+    /// whose struct/class defines `~init()` (`__cp_deinit`) or `~errinit()` (`__cp_errdeinit`).
+    pub(super) fn find_owned_raii_destructor(&self, ty: &Type) -> Option<(String, String)> {
+        match ty {
+            Type::BorrowType { .. }
+            | Type::RawPtr { .. }
+            | Type::ManyRawPtr(_)
+            | Type::CPtr(_) => None,
+            Type::Optional(inner) | Type::ErrorUnion(inner) => {
+                self.find_owned_raii_destructor(inner)
+            }
+            Type::ResultType { ok, .. } => self.find_owned_raii_destructor(ok),
+            Type::Ref(id) => self.lookup_class_destructor(&id.sym),
+            _ => None,
+        }
+    }
+
+    fn lookup_class_destructor(&self, raw_name: &str) -> Option<(String, String)> {
+        let base_name = raw_name.split('<').next().unwrap_or(raw_name).trim();
+        let short_name = base_name.rsplit('.').next().unwrap_or(base_name);
+        let cls = self
+            .classes
+            .get(base_name)
+            .or_else(|| self.classes.get(short_name))?;
+        let has_deinit = cls
+            .methods
+            .iter()
+            .any(|m| !m.is_static && m.ident.sym == "__cp_deinit");
+        let has_errdeinit = cls
+            .methods
+            .iter()
+            .any(|m| !m.is_static && m.ident.sym == "__cp_errdeinit");
+        if has_deinit && has_errdeinit {
+            Some((cls.ident.sym.clone(), "~init() / ~errinit()".to_string()))
+        } else if has_deinit {
+            Some((cls.ident.sym.clone(), "~init()".to_string()))
+        } else if has_errdeinit {
+            Some((cls.ident.sym.clone(), "~errinit()".to_string()))
+        } else {
+            None
+        }
+    }
+
     pub(super) fn analyze_stmt(&mut self, stmt: &Stmt) -> SemaResult<()> {
         match stmt {
             Stmt::Var(var) => {
@@ -30,6 +73,22 @@ impl Analyzer {
                     }
                 }
                 let ty = var.ty.clone().unwrap_or(inferred_ty);
+                // Reject discarding an owned RAII value (type with ~init() or ~errinit()) via `* = expr;`
+                // unless `expr` is merely a named variable reference (e.g. `* = existing_guard;` used to silence unused warnings).
+                if matches!(var.pat, Pattern::Wildcard) {
+                    if let Some(init) = &var.init {
+                        let is_plain_ident = matches!(init, Expr::Ident(_));
+                        if !is_plain_ident {
+                            if let Some((raii_name, dtor_kind)) = self.find_owned_raii_destructor(&ty) {
+                                return Err(SemaError::DiscardedRaiiValue {
+                                    type_name: raii_name,
+                                    dtor_kind,
+                                    span: var.span,
+                                });
+                            }
+                        }
+                    }
+                }
                 self.analyze_pattern(&var.pat, ty.clone(), &var.kind)?;
                 if let Pattern::Ident(ident) = &var.pat {
                     let var_name = ident.sym.clone();

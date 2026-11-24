@@ -124,6 +124,14 @@ pub enum SemaError {
         "Compile Error: borrowed reference cannot cross async/coroutine boundary without 'move' or 'own' at {span:?}"
     )]
     AsyncIsolationViolation { name: String, span: Span },
+    #[error(
+        "Compile Error: cannot discard RAII value of type '{type_name}' ({dtor_kind}) via '* =' at {span:?}"
+    )]
+    DiscardedRaiiValue {
+        type_name: String,
+        dtor_kind: String,
+        span: Span,
+    },
 }
 
 impl SemaError {
@@ -518,6 +526,30 @@ impl SemaError {
                 }
                 diag
             }
+
+            SemaError::DiscardedRaiiValue {
+                type_name,
+                dtor_kind,
+                span,
+            } => Diagnostic::new(
+                "E0220",
+                format!(
+                    "cannot discard RAII value of type '{}' ({}) via '* ='",
+                    type_name, dtor_kind
+                ),
+            )
+            .with_span(*span)
+            .with_cause(format!(
+                "type '{}' defines {} and owns resources that must be released deterministically; discarding an owned RAII value via '* =' bypasses automatic destructor injection and causes a resource leak.",
+                type_name, dtor_kind
+            ))
+            .with_help(
+                "bind the RAII guard/resource to a named local variable so its destructor runs automatically on scope exit, or explicitly release it before discarding.",
+            )
+            .with_suggestion(format!(
+                "bind to a named variable: 'const guard = ...;' (the compiler will automatically run '{}' at scope exit)",
+                dtor_kind
+            )),
 
             SemaError::UnboundedRawPointerMutation(name, span) => Diagnostic::new(
                 "E0209",
