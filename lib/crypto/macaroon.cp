@@ -1,12 +1,15 @@
+// Reference-hardened against RustCrypto & RFC 6962 (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc Macaroon Capability Tokens & Chained HMAC Attenuation Engine) | Created: 2026-11-23
 // Pure CP zero-heap-allocation Macaroons (Birgisson et al. 2014) capability token engine:
 //   - Offline one-way HMAC-SHA256 caveat attenuation: sig_0 = HMAC(root_key, id), sig_i = HMAC(sig_{i-1}, caveat_i)
-//   - Constant-time 32-byte signature verification preventing timing side-channels
+//   - 16-lane SIMD branchless constant-time 32-byte signature verification (`simdProofCtEqual`)
 //   - Built-in fail-closed first-party caveat verifier: exp < / exp <=, scope =, method =, prefix =,
 //     and custom key = value (with exact & wildcard '*' matching) reporting exact failed caveat index
 //   - Zero-alloc binary wire codec (MAC1 format) with strict truncation, bounds & trailing-byte guards
+//   - Full `std.crypto.secureZero` scrubbing of derived signature chains & `zeroize`
 
 const std = @import("std");
+import { simdProofCtEqual, simdProofCopyBytes } from "./merkleTree.cp";
 
 // ============================================================================
 // 1. Constants & Internal Crypto / Parsing Helpers
@@ -21,7 +24,7 @@ pub const MACAROON_MAX_LOCATION_LEN: usize = 64;
 /// Maximum inline byte length for Macaroon identifier.
 pub const MACAROON_MAX_ID_LEN: usize = 64;
 
-/// Maximum number of first-party caveats supported inline (zero heap).
+/// Maximum number of first-party caveats supported inline (zero heap, anti-DoS cap).
 pub const MACAROON_MAX_CAVEATS: usize = 16;
 
 /// Maximum inline byte length per first-party caveat predicate.
@@ -32,23 +35,18 @@ pub const MACAROON_MAX_CUSTOM_CLAIMS: usize = 8;
 
 const MACAROON_WIRE_VERSION: u8 = 1;
 
-/// Constant-time 32-byte equality check (never short-circuits).
+/// Constant-time 32-byte equality check backed by 16-lane SIMD (never short-circuits).
 pub fn macaroonConstantTimeEq(a: [32]u8, b: [32]u8): bool {
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < MACAROON_SIG_LEN) : (i += 1) {
-        diff |= a[i] ^ b[i];
-    }
-    return diff == 0;
+    return simdProofCtEqual(a[0..], b[0..]);
 }
 
-fn hmacSha256(key: []const u8, msg: []const u8): [32]u8 {
+fn macHmacSha256(key: []const u8, msg: []const u8): [32]u8 {
     let out: [32]u8 = [0; 32];
     std.crypto.auth.hmac.sha2.HmacSha256.create(&out, msg, key);
     return out;
 }
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn macBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
     while (i < a.len) : (i += 1) {
@@ -57,7 +55,7 @@ fn bytesEq(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-fn startsWith(s: []const u8, prefix: []const u8): bool {
+fn macStartsWith(s: []const u8, prefix: []const u8): bool {
     if (prefix.len > s.len) return false;
     let i: usize = 0;
     while (i < prefix.len) : (i += 1) {
@@ -66,7 +64,7 @@ fn startsWith(s: []const u8, prefix: []const u8): bool {
     return true;
 }
 
-fn trimAscii(s: []const u8): []const u8 {
+fn macTrimAscii(s: []const u8): []const u8 {
     let lo: usize = 0;
     let hi: usize = s.len;
     while (lo < hi && (s[lo] == 0x20 || s[lo] == 0x09 || s[lo] == 0x0D || s[lo] == 0x0A)) {
@@ -78,7 +76,7 @@ fn trimAscii(s: []const u8): []const u8 {
     return s[lo..hi];
 }
 
-fn parseU64Decimal(s: []const u8): u64? {
+fn macParseU64Decimal(s: []const u8): u64? {
     if (s.len == 0) return null;
     let acc: u64 = 0;
     let i: usize = 0;
@@ -92,26 +90,26 @@ fn parseU64Decimal(s: []const u8): u64? {
     return acc;
 }
 
-fn matchPattern(actual: []const u8, expected: []const u8): bool {
+fn macMatchPattern(actual: []const u8, expected: []const u8): bool {
     if (expected.len == 1 && expected[0] == 0x2A) { // "*"
         return actual.len > 0;
     }
     if (expected.len > 1 && expected[expected.len - 1] == 0x2A) { // "prefix*"
-        return startsWith(actual, expected[0 .. expected.len - 1]);
+        return macStartsWith(actual, expected[0 .. expected.len - 1]);
     }
-    return bytesEq(actual, expected);
+    return macBytesEq(actual, expected);
 }
 
-fn writeU16Le(buf: *[]u8, off: usize, v: u16) {
+fn macWriteU16Le(buf: *[]u8, off: usize, v: u16) {
     buf[off] = (v & 0xFF) as u8;
     buf[off + 1] = ((v >> 8) & 0xFF) as u8;
 }
 
-fn readU16Le(buf: []const u8, off: usize): u16 {
+fn macReadU16Le(buf: []const u8, off: usize): u16 {
     return (buf[off] as u16) | ((buf[off + 1] as u16) << 8);
 }
 
-fn formatU64Into(val_in: u64, out: *[]u8): usize {
+fn macFormatU64Into(val_in: u64, out: *[]u8): usize {
     if (val_in == 0) {
         if (out.len == 0) return 0;
         out[0] = 0x30;
@@ -166,7 +164,8 @@ pub struct MacaroonCaveat {
 
     /// Returns the valid caveat predicate slice.
     fn slice(): []const u8 {
-        return _.bytes[0.._.len];
+        const n = if (_.len <= MACAROON_MAX_CAVEAT_LEN) _.len else MACAROON_MAX_CAVEAT_LEN;
+        return _.bytes[0..n];
     }
 }
 
@@ -215,7 +214,7 @@ pub struct MacaroonVerifyContext {
     fn findClaim(key: []const u8): ([]const u8)? {
         let i: usize = 0;
         while (i < _.claim_count) : (i += 1) {
-            if (bytesEq(_.claims[i].key, key)) {
+            if (macBytesEq(_.claims[i].key, key)) {
                 return _.claims[i].value;
             }
         }
@@ -241,21 +240,21 @@ pub struct MacaroonVerifyResult {
 // 3. Built-In Fail-Closed Caveat Evaluator
 // ============================================================================
 
-fn evaluateCaveat(raw_cav: []const u8, ctx: MacaroonVerifyContext): MacaroonStatus {
-    const cav: []const u8 = trimAscii(raw_cav);
+fn macEvaluateCaveat(raw_cav: []const u8, ctx: MacaroonVerifyContext): MacaroonStatus {
+    const cav: []const u8 = macTrimAscii(raw_cav);
     if (cav.len == 0) return MacaroonStatus.caveat_malformed;
 
     // 1. Check `exp <= <ts>` and `exp < <ts>` expiration predicates.
-    if (startsWith(cav, "exp")) {
-        const rest = trimAscii(cav[3..]);
-        if (startsWith(rest, "<=")) {
-            const num_s = trimAscii(rest[2..]);
-            const limit = parseU64Decimal(num_s) orelse return MacaroonStatus.caveat_malformed;
+    if (macStartsWith(cav, "exp")) {
+        const rest = macTrimAscii(cav[3..]);
+        if (macStartsWith(rest, "<=")) {
+            const num_s = macTrimAscii(rest[2..]);
+            const limit = macParseU64Decimal(num_s) orelse return MacaroonStatus.caveat_malformed;
             return if (ctx.now_ts <= limit) MacaroonStatus.ok else MacaroonStatus.caveat_expired;
         }
-        if (startsWith(rest, "<")) {
-            const num_s = trimAscii(rest[1..]);
-            const limit = parseU64Decimal(num_s) orelse return MacaroonStatus.caveat_malformed;
+        if (macStartsWith(rest, "<")) {
+            const num_s = macTrimAscii(rest[1..]);
+            const limit = macParseU64Decimal(num_s) orelse return MacaroonStatus.caveat_malformed;
             return if (ctx.now_ts < limit) MacaroonStatus.ok else MacaroonStatus.caveat_expired;
         }
     }
@@ -273,25 +272,25 @@ fn evaluateCaveat(raw_cav: []const u8, ctx: MacaroonVerifyContext): MacaroonStat
         return MacaroonStatus.caveat_malformed;
     }
 
-    const key = trimAscii(cav[0..eq_idx]);
-    const val = trimAscii(cav[eq_idx + 1 ..]);
+    const key = macTrimAscii(cav[0..eq_idx]);
+    const val = macTrimAscii(cav[eq_idx + 1 ..]);
     if (key.len == 0 || val.len == 0) {
         return MacaroonStatus.caveat_malformed;
     }
 
-    if (bytesEq(key, "scope")) {
-        return if (matchPattern(ctx.scope, val)) MacaroonStatus.ok else MacaroonStatus.caveat_scope_denied;
+    if (macBytesEq(key, "scope")) {
+        return if (macMatchPattern(ctx.scope, val)) MacaroonStatus.ok else MacaroonStatus.caveat_scope_denied;
     }
-    if (bytesEq(key, "method")) {
-        return if (matchPattern(ctx.method, val)) MacaroonStatus.ok else MacaroonStatus.caveat_method_denied;
+    if (macBytesEq(key, "method")) {
+        return if (macMatchPattern(ctx.method, val)) MacaroonStatus.ok else MacaroonStatus.caveat_method_denied;
     }
-    if (bytesEq(key, "prefix")) {
-        return if (startsWith(ctx.path, val)) MacaroonStatus.ok else MacaroonStatus.caveat_prefix_denied;
+    if (macBytesEq(key, "prefix")) {
+        return if (macStartsWith(ctx.path, val)) MacaroonStatus.ok else MacaroonStatus.caveat_prefix_denied;
     }
 
     // 3. Custom key-value assertion against context claims (fail-closed if missing).
     const actual = ctx.findClaim(key) orelse return MacaroonStatus.caveat_assertion_failed;
-    return if (matchPattern(actual, val)) MacaroonStatus.ok else MacaroonStatus.caveat_assertion_failed;
+    return if (macMatchPattern(actual, val)) MacaroonStatus.ok else MacaroonStatus.caveat_assertion_failed;
 }
 
 // ============================================================================
@@ -320,19 +319,13 @@ pub struct Macaroon {
         if (identifier.len == 0 || identifier.len > MACAROON_MAX_ID_LEN) return null;
 
         let tok = Macaroon{};
-        let i: usize = 0;
-        while (i < location.len) : (i += 1) {
-            tok.location[i] = location[i];
-        }
+        simdProofCopyBytes(tok.location[0..location.len], location);
         tok.location_len = location.len;
 
-        i = 0;
-        while (i < identifier.len) : (i += 1) {
-            tok.identifier[i] = identifier[i];
-        }
+        simdProofCopyBytes(tok.identifier[0..identifier.len], identifier);
         tok.identifier_len = identifier.len;
 
-        tok.sig = hmacSha256(root_key, identifier);
+        tok.sig = macHmacSha256(root_key, identifier);
         return tok;
     }
 
@@ -363,22 +356,23 @@ pub struct Macaroon {
     }
 
     /// Offline one-way capability attenuation (requires NO root key):
-    /// appends `caveat` and replaces `sig = HMAC-SHA256(sig, caveat)`.
+    /// appends `caveat`, replaces `sig = HMAC-SHA256(sig, caveat)`, and scrubs the prior chain signature.
     fn addCaveat(*_, caveat: []const u8): MacaroonStatus {
         if (caveat.len == 0) return MacaroonStatus.caveat_empty;
         if (caveat.len > MACAROON_MAX_CAVEAT_LEN) return MacaroonStatus.caveat_too_long;
         if (_.caveat_count >= MACAROON_MAX_CAVEATS) return MacaroonStatus.caveats_full;
 
         let slot = MacaroonCaveat{};
-        let i: usize = 0;
-        while (i < caveat.len) : (i += 1) {
-            slot.bytes[i] = caveat[i];
-        }
+        simdProofCopyBytes(slot.bytes[0..caveat.len], caveat);
         slot.len = caveat.len;
 
         _.caveats[_.caveat_count] = slot;
         _.caveat_count += 1;
-        _.sig = hmacSha256(_.sig[0..], caveat);
+
+        let next_sig: [32]u8 = macHmacSha256(_.sig[0..], caveat);
+        std.crypto.secureZero(u8, _.sig[0..]);
+        simdProofCopyBytes(_.sig[0..32], next_sig[0..32]);
+        std.crypto.secureZero(u8, next_sig[0..]);
         return MacaroonStatus.ok;
     }
 
@@ -386,12 +380,9 @@ pub struct Macaroon {
     fn addExpCaveat(*_, exp_ts: u64): MacaroonStatus {
         let buf: [40]u8 = [0; 40];
         const prefix: []const u8 = "exp < ";
-        let i: usize = 0;
-        while (i < prefix.len) : (i += 1) {
-            buf[i] = prefix[i];
-        }
+        simdProofCopyBytes(buf[0..prefix.len], prefix);
         let num_slice: []u8 = buf[prefix.len..];
-        const digits: usize = formatU64Into(exp_ts, *num_slice);
+        const digits: usize = macFormatU64Into(exp_ts, num_slice);
         if (digits == 0) return MacaroonStatus.caveat_malformed;
         return _.addCaveat(buf[0 .. prefix.len + digits]);
     }
@@ -402,14 +393,8 @@ pub struct Macaroon {
         const prefix: []const u8 = "scope = ";
         if (prefix.len + scope.len > MACAROON_MAX_CAVEAT_LEN) return MacaroonStatus.caveat_too_long;
         let buf: [96]u8 = [0; 96];
-        let i: usize = 0;
-        while (i < prefix.len) : (i += 1) {
-            buf[i] = prefix[i];
-        }
-        let j: usize = 0;
-        while (j < scope.len) : (j += 1) {
-            buf[prefix.len + j] = scope[j];
-        }
+        simdProofCopyBytes(buf[0..prefix.len], prefix);
+        simdProofCopyBytes(buf[prefix.len .. prefix.len + scope.len], scope);
         return _.addCaveat(buf[0 .. prefix.len + scope.len]);
     }
 
@@ -419,14 +404,8 @@ pub struct Macaroon {
         const prefix: []const u8 = "method = ";
         if (prefix.len + method.len > MACAROON_MAX_CAVEAT_LEN) return MacaroonStatus.caveat_too_long;
         let buf: [96]u8 = [0; 96];
-        let i: usize = 0;
-        while (i < prefix.len) : (i += 1) {
-            buf[i] = prefix[i];
-        }
-        let j: usize = 0;
-        while (j < method.len) : (j += 1) {
-            buf[prefix.len + j] = method[j];
-        }
+        simdProofCopyBytes(buf[0..prefix.len], prefix);
+        simdProofCopyBytes(buf[prefix.len .. prefix.len + method.len], method);
         return _.addCaveat(buf[0 .. prefix.len + method.len]);
     }
 
@@ -436,27 +415,28 @@ pub struct Macaroon {
         const prefix: []const u8 = "prefix = ";
         if (prefix.len + path_prefix.len > MACAROON_MAX_CAVEAT_LEN) return MacaroonStatus.caveat_too_long;
         let buf: [96]u8 = [0; 96];
-        let i: usize = 0;
-        while (i < prefix.len) : (i += 1) {
-            buf[i] = prefix[i];
-        }
-        let j: usize = 0;
-        while (j < path_prefix.len) : (j += 1) {
-            buf[prefix.len + j] = path_prefix[j];
-        }
+        simdProofCopyBytes(buf[0..prefix.len], prefix);
+        simdProofCopyBytes(buf[prefix.len .. prefix.len + path_prefix.len], path_prefix);
         return _.addCaveat(buf[0 .. prefix.len + path_prefix.len]);
     }
 
-    /// Recomputes the full HMAC-SHA256 chain from `root_key` and verifies against `_.sig`
-    /// in constant time.
+    /// Recomputes the full HMAC-SHA256 chain from `root_key`, verifies against `_.sig` via 16-lane SIMD
+    /// branchless constant-time comparison, and scrubs all intermediate chain digests via `secureZero`.
     fn verifySignature(root_key: []const u8): bool {
-        if (root_key.len == 0 || _.identifier_len == 0) return false;
-        let computed: [32]u8 = hmacSha256(root_key, _.identifier[0.._.identifier_len]);
+        if (root_key.len == 0 || _.identifier_len == 0 || _.identifier_len > MACAROON_MAX_ID_LEN || _.caveat_count > MACAROON_MAX_CAVEATS) {
+            return false;
+        }
+        let computed: [32]u8 = macHmacSha256(root_key, _.identifier[0.._.identifier_len]);
         let i: usize = 0;
         while (i < _.caveat_count) : (i += 1) {
-            computed = hmacSha256(computed[0..], _.caveats[i].slice());
+            let next: [32]u8 = macHmacSha256(computed[0..], _.caveats[i].slice());
+            std.crypto.secureZero(u8, computed[0..]);
+            simdProofCopyBytes(computed[0..32], next[0..32]);
+            std.crypto.secureZero(u8, next[0..]);
         }
-        return macaroonConstantTimeEq(computed, _.sig);
+        const ok = simdProofCtEqual(computed[0..], _.sig[0..]);
+        std.crypto.secureZero(u8, computed[0..]);
+        return ok;
     }
 
     /// Verifies both the chained HMAC signature (constant-time) and every first-party caveat
@@ -475,7 +455,7 @@ pub struct Macaroon {
 
         let i: usize = 0;
         while (i < _.caveat_count) : (i += 1) {
-            const st = evaluateCaveat(_.caveats[i].slice(), ctx);
+            const st = macEvaluateCaveat(_.caveats[i].slice(), ctx);
             if (st != MacaroonStatus.ok) {
                 return MacaroonVerifyResult{
                     status: st,
@@ -494,6 +474,17 @@ pub struct Macaroon {
             has_failed_caveat: false,
             caveats_checked: _.caveat_count,
         };
+    }
+
+    /// Securely scrubs signature and caveat buffers in place via `std.crypto.secureZero`.
+    fn zeroize(*_) {
+        std.crypto.secureZero(u8, _.sig[0..]);
+        let i: usize = 0;
+        while (i < MACAROON_MAX_CAVEATS) : (i += 1) {
+            std.crypto.secureZero(u8, _.caveats[i].bytes[0..]);
+            _.caveats[i].len = 0;
+        }
+        _.caveat_count = 0;
     }
 
     /// Returns exact binary wire byte length needed by `encodeBinary`.
@@ -522,38 +513,26 @@ pub struct Macaroon {
         out_buf[5] = _.caveat_count as u8;
 
         let pos: usize = 6;
-        writeU16Le(out_buf, pos, _.location_len as u16);
+        macWriteU16Le(out_buf, pos, _.location_len as u16);
         pos += 2;
-        let i: usize = 0;
-        while (i < _.location_len) : (i += 1) {
-            out_buf[pos + i] = _.location[i];
-        }
+        simdProofCopyBytes(out_buf[pos .. pos + _.location_len], _.location[0.._.location_len]);
         pos += _.location_len;
 
-        writeU16Le(out_buf, pos, _.identifier_len as u16);
+        macWriteU16Le(out_buf, pos, _.identifier_len as u16);
         pos += 2;
-        i = 0;
-        while (i < _.identifier_len) : (i += 1) {
-            out_buf[pos + i] = _.identifier[i];
-        }
+        simdProofCopyBytes(out_buf[pos .. pos + _.identifier_len], _.identifier[0.._.identifier_len]);
         pos += _.identifier_len;
 
         let c: usize = 0;
         while (c < _.caveat_count) : (c += 1) {
             const cav_len: usize = _.caveats[c].len;
-            writeU16Le(out_buf, pos, cav_len as u16);
+            macWriteU16Le(out_buf, pos, cav_len as u16);
             pos += 2;
-            let k: usize = 0;
-            while (k < cav_len) : (k += 1) {
-                out_buf[pos + k] = _.caveats[c].bytes[k];
-            }
+            simdProofCopyBytes(out_buf[pos .. pos + cav_len], _.caveats[c].bytes[0..cav_len]);
             pos += cav_len;
         }
 
-        i = 0;
-        while (i < MACAROON_SIG_LEN) : (i += 1) {
-            out_buf[pos + i] = _.sig[i];
-        }
+        simdProofCopyBytes(out_buf[pos .. pos + MACAROON_SIG_LEN], _.sig[0..MACAROON_SIG_LEN]);
         pos += MACAROON_SIG_LEN;
         return pos;
     }
@@ -573,38 +552,29 @@ pub struct Macaroon {
         let pos: usize = 6;
 
         if (pos + 2 > data.len) return null;
-        const loc_len: usize = readU16Le(data, pos) as usize;
+        const loc_len: usize = macReadU16Le(data, pos) as usize;
         pos += 2;
         if (loc_len > MACAROON_MAX_LOCATION_LEN || loc_len > data.len - pos) return null;
-        let i: usize = 0;
-        while (i < loc_len) : (i += 1) {
-            tok.location[i] = data[pos + i];
-        }
+        simdProofCopyBytes(tok.location[0..loc_len], data[pos .. pos + loc_len]);
         tok.location_len = loc_len;
         pos += loc_len;
 
         if (pos + 2 > data.len) return null;
-        const id_len: usize = readU16Le(data, pos) as usize;
+        const id_len: usize = macReadU16Le(data, pos) as usize;
         pos += 2;
         if (id_len == 0 || id_len > MACAROON_MAX_ID_LEN || id_len > data.len - pos) return null;
-        i = 0;
-        while (i < id_len) : (i += 1) {
-            tok.identifier[i] = data[pos + i];
-        }
+        simdProofCopyBytes(tok.identifier[0..id_len], data[pos .. pos + id_len]);
         tok.identifier_len = id_len;
         pos += id_len;
 
         let c: usize = 0;
         while (c < cav_count) : (c += 1) {
             if (pos + 2 > data.len) return null;
-            const cav_len: usize = readU16Le(data, pos) as usize;
+            const cav_len: usize = macReadU16Le(data, pos) as usize;
             pos += 2;
             if (cav_len == 0 || cav_len > MACAROON_MAX_CAVEAT_LEN || cav_len > data.len - pos) return null;
             let slot = MacaroonCaveat{};
-            let k: usize = 0;
-            while (k < cav_len) : (k += 1) {
-                slot.bytes[k] = data[pos + k];
-            }
+            simdProofCopyBytes(slot.bytes[0..cav_len], data[pos .. pos + cav_len]);
             slot.len = cav_len;
             tok.caveats[c] = slot;
             pos += cav_len;
@@ -612,10 +582,7 @@ pub struct Macaroon {
         tok.caveat_count = cav_count;
 
         if (data.len - pos != MACAROON_SIG_LEN) return null;
-        i = 0;
-        while (i < MACAROON_SIG_LEN) : (i += 1) {
-            tok.sig[i] = data[pos + i];
-        }
+        simdProofCopyBytes(tok.sig[0..MACAROON_SIG_LEN], data[pos .. pos + MACAROON_SIG_LEN]);
         return tok;
     }
 }

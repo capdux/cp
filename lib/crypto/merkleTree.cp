@@ -1,5 +1,8 @@
+// Reference-hardened against RustCrypto & RFC 6962 (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (AI-Native Zero-Alloc RFC 6962 Domain-Separated Merkle Tree & Inclusion Proofs) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 6962 Certificate Transparency style SHA-256 binary Merkle Tree:
+//   - 16-lane @Vector(16, u8) SIMD (`CryptoProofVec16u8`) branchless constant-time equality (`simdProofCtEqual`)
+//     and 16-lane payload/hash copy (`simdProofCopyBytes`) with 0-diff scalar references
 //   - Strict domain separation: 0x00 leaf prefix, 0x01 internal node prefix, SHA-256("") empty root
 //   - Canonical `largestPowerOfTwoLessThan(n)` tree splitting supporting arbitrary non-power-of-two leaf counts (1..128)
 //   - Fixed inline leaf buffer & fixed-depth O(log N) inclusion proof generation (`Rfc6962MerkleTree`)
@@ -7,8 +10,11 @@
 
 const std = @import("std");
 
+/// Module-local 16-lane byte vector alias for crypto proof & envelope hot paths.
+type CryptoProofVec16u8 = @Vector(16, u8);
+
 // ============================================================================
-// 1. Constants & Constant-Time Helpers
+// 1. Constants & 16-Lane SIMD Hot-Path Primitives (0-Diff with Scalar)
 // ============================================================================
 
 /// SHA-256 digest length in bytes.
@@ -18,17 +24,60 @@ pub const MERKLE_MAX_LEAVES: usize = 128;
 /// Maximum inclusion proof depth (`ceil(log2(128)) = 7`, padded to 8).
 pub const MERKLE_MAX_PROOF_DEPTH: usize = 8;
 
-fn constantTimeEql32(a: [MERKLE_HASH_LEN]u8, b: [MERKLE_HASH_LEN]u8): bool {
+/// Scalar reference: branchless constant-time byte-slice equality (never short-circuits on mismatch).
+pub fn scalarProofCtEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
     let diff: u8 = 0;
     let i: usize = 0;
-    while (i < MERKLE_HASH_LEN) : (i += 1) {
+    while (i < a.len) : (i += 1) {
         diff |= a[i] ^ b[i];
     }
     return diff == 0;
 }
 
+/// 16-lane SIMD accelerated branchless constant-time byte-slice equality (zero early exits).
+pub fn simdProofCtEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let acc_vec: CryptoProofVec16u8 = @splat(0);
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: CryptoProofVec16u8 = a[i .. i + 16][0..16].*;
+        const vb: CryptoProofVec16u8 = b[i .. i + 16][0..16].*;
+        acc_vec = acc_vec | (va ^ vb);
+        i += 16;
+    }
+    let diff: u8 = @reduce(.Or, acc_vec);
+    while (i < a.len) : (i += 1) {
+        diff |= a[i] ^ b[i];
+    }
+    return diff == 0;
+}
+
+/// Scalar reference: copy bytes from `src` into `dst`.
+pub fn scalarProofCopyBytes(dst: *[]u8, src: []const u8) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
+/// 16-lane SIMD accelerated payload & hash byte copy from `src` into `dst`.
+pub fn simdProofCopyBytes(dst: *[]u8, src: []const u8) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const v: CryptoProofVec16u8 = src[i .. i + 16][0..16].*;
+        dst[i .. i + 16][0..16].* = v;
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+}
+
 /// Returns the largest power of two strictly less than `n` (requires `n >= 2`).
-fn largestPowerOfTwoLessThan(n: usize): usize {
+fn mtLargestPowerOfTwoLessThan(n: usize): usize {
     let k: usize = 1;
     while (k < n - k) {
         k = k << 1;
@@ -75,13 +124,13 @@ pub fn merkleHashNode(left: [MERKLE_HASH_LEN]u8, right: [MERKLE_HASH_LEN]u8): [M
 // 3. Public Models: MerkleHash, Proof Step & Inclusion Proof
 // ============================================================================
 
-/// Fixed 32-byte SHA-256 Merkle hash wrapper with constant-time equality comparison.
+/// Fixed 32-byte SHA-256 Merkle hash wrapper with 16-lane SIMD constant-time equality comparison.
 pub struct MerkleHash {
     bytes: [MERKLE_HASH_LEN]u8 = [0; MERKLE_HASH_LEN];
 
-    /// Compares two 32-byte Merkle hashes in constant time.
+    /// Compares two 32-byte Merkle hashes in branchless 16-lane SIMD constant time.
     fn eql(other: MerkleHash): bool {
-        return constantTimeEql32(_.bytes, other.bytes);
+        return simdProofCtEqual(_.bytes[0..], other.bytes[0..]);
     }
 }
 
@@ -103,7 +152,7 @@ pub struct MerkleInclusionProof {
 // 4. Internal Recursive RFC 6962 Subtree Evaluation & Proof Construction
 // ============================================================================
 
-fn computeRangeRoot(
+fn mtComputeRangeRoot(
     leaves: []const [MERKLE_HASH_LEN]u8,
     start: usize,
     count: usize,
@@ -114,13 +163,13 @@ fn computeRangeRoot(
     if (count == 1) {
         return leaves[start];
     }
-    const k = largestPowerOfTwoLessThan(count);
-    const left = computeRangeRoot(leaves, start, k);
-    const right = computeRangeRoot(leaves, start + k, count - k);
+    const k = mtLargestPowerOfTwoLessThan(count);
+    const left = mtComputeRangeRoot(leaves, start, k);
+    const right = mtComputeRangeRoot(leaves, start + k, count - k);
     return merkleHashNode(left, right);
 }
 
-fn buildInclusionPath(
+fn mtBuildInclusionPath(
     leaves: []const [MERKLE_HASH_LEN]u8,
     start: usize,
     count: usize,
@@ -130,10 +179,10 @@ fn buildInclusionPath(
     if (count <= 1) {
         return;
     }
-    const k = largestPowerOfTwoLessThan(count);
+    const k = mtLargestPowerOfTwoLessThan(count);
     if (rel_index < k) {
-        buildInclusionPath(leaves, start, k, rel_index, proof);
-        const right_root = computeRangeRoot(leaves, start + k, count - k);
+        mtBuildInclusionPath(leaves, start, k, rel_index, proof);
+        const right_root = mtComputeRangeRoot(leaves, start + k, count - k);
         if (proof.depth < MERKLE_MAX_PROOF_DEPTH) {
             proof.steps[proof.depth] = MerkleProofStep{
                 sibling: right_root,
@@ -142,8 +191,8 @@ fn buildInclusionPath(
             proof.depth += 1;
         }
     } else {
-        buildInclusionPath(leaves, start + k, count - k, rel_index - k, proof);
-        const left_root = computeRangeRoot(leaves, start, k);
+        mtBuildInclusionPath(leaves, start + k, count - k, rel_index - k, proof);
+        const left_root = mtComputeRangeRoot(leaves, start, k);
         if (proof.depth < MERKLE_MAX_PROOF_DEPTH) {
             proof.steps[proof.depth] = MerkleProofStep{
                 sibling: left_root,
@@ -188,7 +237,7 @@ pub struct Rfc6962MerkleTree {
         if (_.count >= MERKLE_MAX_LEAVES) {
             return false;
         }
-        _.leaves[_.count] = h;
+        simdProofCopyBytes(_.leaves[_.count][0..], h[0..]);
         _.count += 1;
         return true;
     }
@@ -206,7 +255,7 @@ pub struct Rfc6962MerkleTree {
         if (_.count == 0) {
             return merkleHashEmpty();
         }
-        return computeRangeRoot(_.leaves[0 .. _.count], 0, _.count);
+        return mtComputeRangeRoot(_.leaves[0 .. _.count], 0, _.count);
     }
 
     /// Generates a zero-alloc RFC 6962 inclusion proof for `leaf_index`.
@@ -221,20 +270,20 @@ pub struct Rfc6962MerkleTree {
             steps: [MerkleProofStep{}; MERKLE_MAX_PROOF_DEPTH],
             depth: 0,
         };
-        buildInclusionPath(_.leaves[0 .. _.count], 0, _.count, leaf_index, &proof);
+        mtBuildInclusionPath(_.leaves[0 .. _.count], 0, _.count, leaf_index, &proof);
         return proof;
     }
 }
 
-/// Statelessly verifies an RFC 6962 inclusion proof against `leaf_data` and `expected_root`.
-/// Enforces exact structural path depth, canonical `sibling_is_left` direction matching `(leaf_index, leaf_count)`,
-/// and constant-time root digest comparison.
-pub fn verifyMerkleInclusionProof(
-    leaf_data: []const u8,
+/// Statelessly verifies an RFC 6962 inclusion proof given a pre-hashed 32-byte `leaf_hash` and `expected_root`.
+/// Enforces `leaf_count in 1..=MERKLE_MAX_LEAVES`, `leaf_index < leaf_count`, exact structural path depth,
+/// canonical `sibling_is_left` directions, and 16-lane SIMD constant-time root digest comparison.
+pub fn verifyMerkleInclusionProofHash(
+    leaf_hash: [MERKLE_HASH_LEN]u8,
     proof: MerkleInclusionProof,
     expected_root: [MERKLE_HASH_LEN]u8,
 ): bool {
-    if (proof.leaf_count == 0 || proof.leaf_index >= proof.leaf_count || proof.depth > MERKLE_MAX_PROOF_DEPTH) {
+    if (proof.leaf_count == 0 || proof.leaf_count > MERKLE_MAX_LEAVES || proof.leaf_index >= proof.leaf_count || proof.depth > MERKLE_MAX_PROOF_DEPTH) {
         return false;
     }
 
@@ -247,7 +296,7 @@ pub fn verifyMerkleInclusionProof(
         if (exp_depth >= MERKLE_MAX_PROOF_DEPTH) {
             return false;
         }
-        const k = largestPowerOfTwoLessThan(cur_n);
+        const k = mtLargestPowerOfTwoLessThan(cur_n);
         if (cur_idx < k) {
             exp_left[exp_depth] = false;
             cur_n = k;
@@ -263,7 +312,7 @@ pub fn verifyMerkleInclusionProof(
         return false;
     }
 
-    let acc = merkleHashLeaf(leaf_data);
+    let acc = leaf_hash;
     let i: usize = 0;
     while (i < proof.depth) : (i += 1) {
         const expected_is_left = exp_left[exp_depth - 1 - i];
@@ -277,5 +326,14 @@ pub fn verifyMerkleInclusionProof(
         }
     }
 
-    return constantTimeEql32(acc, expected_root);
+    return simdProofCtEqual(acc[0..], expected_root[0..]);
+}
+
+/// Statelessly verifies an RFC 6962 inclusion proof against raw `leaf_data` and `expected_root`.
+pub fn verifyMerkleInclusionProof(
+    leaf_data: []const u8,
+    proof: MerkleInclusionProof,
+    expected_root: [MERKLE_HASH_LEN]u8,
+): bool {
+    return verifyMerkleInclusionProofHash(merkleHashLeaf(leaf_data), proof, expected_root);
 }

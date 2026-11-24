@@ -1,12 +1,15 @@
+// Reference-hardened against RustCrypto & RFC 6962 (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc Versioned Envelope Encryption & Key-Rotation Keyring) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Versioned Envelope Encryption Header, Keyring & Encrypt-then-MAC Engine:
 //   - Compact binary `CPE1` envelope header (`magic|ver|alg|key_version|nonce_len|salt_len|aad_len|ct_len|nonce|salt|tag`)
 //   - Fixed-capacity 16-key `EnvelopeKeyring` with 4-state lifecycle (`primary | active_decrypt_only | retired | revoked`),
-//     atomic primary promotion, zeroization on revoke, and `needsRewrap(key_version)` re-encryption hints
+//     atomic primary promotion, `std.crypto.secureZero` KEK scrubbing on revoke/zeroize, and `needsRewrap` hints
 //   - Zero-C-FFI end-to-end `sealEnvelope` / `openEnvelope` using RFC 5869 HKDF-SHA256 per-message subkeys,
-//     streaming HMAC-SHA256 CTR keystream, and constant-time Encrypt-then-MAC authentication over Header + AAD + Ciphertext
+//     streaming HMAC-SHA256 CTR keystream, 16-lane SIMD branchless constant-time tag verification,
+//     overflow/trailing-byte rejection, and full `std.crypto.secureZero` DEK/subkey scrubbing
 
 const std = @import("std");
+import { simdProofCtEqual, simdProofCopyBytes } from "./merkleTree.cp";
 
 // ============================================================================
 // 1. Constants & Public Enums
@@ -144,39 +147,26 @@ pub struct EnvelopeKeyringStats {
 // 3. Internal Low-Level Codec & Constant-Time Crypto Helpers
 // ============================================================================
 
-fn writeBeU32(dst: *[]u8, off: usize, v: u32) {
+fn envWriteBeU32(dst: *[]u8, off: usize, v: u32) {
     dst[off] = ((v >> 24) & 0xFF) as u8;
     dst[off + 1] = ((v >> 16) & 0xFF) as u8;
     dst[off + 2] = ((v >> 8) & 0xFF) as u8;
     dst[off + 3] = (v & 0xFF) as u8;
 }
 
-fn readBeU32(src: []const u8, off: usize): u32 {
+fn envReadBeU32(src: []const u8, off: usize): u32 {
     return ((src[off] as u32) << 24) |
         ((src[off + 1] as u32) << 16) |
         ((src[off + 2] as u32) << 8) |
         (src[off + 3] as u32);
 }
 
-fn isAllZeroKey(k: [ENVELOPE_KEK_LEN]u8): bool {
-    let acc: u8 = 0;
-    let i: usize = 0;
-    while (i < ENVELOPE_KEK_LEN) : (i += 1) {
-        acc |= k[i];
-    }
-    return acc == 0;
+fn envIsAllZeroKey(k: [ENVELOPE_KEK_LEN]u8): bool {
+    const zeros: [ENVELOPE_KEK_LEN]u8 = [0; ENVELOPE_KEK_LEN];
+    return simdProofCtEqual(k[0..], zeros[0..]);
 }
 
-fn constantTimeTagEql(a: [ENVELOPE_TAG_LEN]u8, b: [ENVELOPE_TAG_LEN]u8): bool {
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < ENVELOPE_TAG_LEN) : (i += 1) {
-        diff |= a[i] ^ b[i];
-    }
-    return diff == 0;
-}
-
-fn validateHeaderParams(hdr: EnvelopeHeader): EnvelopeStatus {
+fn envValidateHeaderParams(hdr: EnvelopeHeader): EnvelopeStatus {
     if (hdr.version != ENVELOPE_FORMAT_VERSION) {
         return EnvelopeStatus.unsupported_version;
     }
@@ -197,50 +187,44 @@ fn validateHeaderParams(hdr: EnvelopeHeader): EnvelopeStatus {
     return EnvelopeStatus.ok;
 }
 
-struct DerivedSubkeys {
+struct EnvDerivedSubkeys {
     enc_key: [32]u8 = [0; 32];
     mac_key: [32]u8 = [0; 32];
 }
 
-fn deriveMessageSubkeys(
+fn envDeriveMessageSubkeys(
     kek: [ENVELOPE_KEK_LEN]u8,
     alg_id: u8,
     key_version: u32,
     salt: []const u8,
     nonce: []const u8,
-): DerivedSubkeys {
-    const prk: [32]u8 = std.crypto.kdf.hkdf.HkdfSha256.extract(salt, kek[0..]);
+): EnvDerivedSubkeys {
+    let prk: [32]u8 = std.crypto.kdf.hkdf.HkdfSha256.extract(salt, kek[0..]);
 
     // Domain-separated HKDF info: "CPE1-SUBKEYS" (12B) | alg_id (1B) | key_version (4B BE) | nonce (<=32B)
     let info_buf: [64]u8 = [0; 64];
     const domain: []const u8 = "CPE1-SUBKEYS";
-    let i: usize = 0;
-    while (i < domain.len) : (i += 1) {
-        info_buf[i] = domain[i];
-    }
+    simdProofCopyBytes(info_buf[0..12], domain);
     info_buf[12] = alg_id;
     let info_slice: []u8 = info_buf[0..];
-    writeBeU32(*info_slice, 13, key_version);
-    let n_idx: usize = 0;
-    while (n_idx < nonce.len) : (n_idx += 1) {
-        info_buf[17 + n_idx] = nonce[n_idx];
-    }
-    const prefix_len: usize = 17;
-    const info_len: usize = prefix_len + nonce.len;
+    envWriteBeU32(info_slice, 13, key_version);
+    simdProofCopyBytes(info_buf[17 .. 17 + nonce.len], nonce);
+    const info_len: usize = (17 as usize) + nonce.len;
 
     let okm: [64]u8 = [0; 64];
     std.crypto.kdf.hkdf.HkdfSha256.expand(okm[0..], info_buf[0..info_len], prk);
 
-    let out = DerivedSubkeys{};
-    let k: usize = 0;
-    while (k < 32) : (k += 1) {
-        out.enc_key[k] = okm[k];
-        out.mac_key[k] = okm[32 + k];
-    }
+    let out = EnvDerivedSubkeys{};
+    simdProofCopyBytes(out.enc_key[0..32], okm[0..32]);
+    simdProofCopyBytes(out.mac_key[0..32], okm[32..64]);
+
+    std.crypto.secureZero(u8, prk[0..]);
+    std.crypto.secureZero(u8, okm[0..]);
+    std.crypto.secureZero(u8, info_buf[0..]);
     return out;
 }
 
-fn xorCtrTransform(
+fn envXorCtrTransform(
     enc_key: [32]u8,
     nonce: []const u8,
     input: []const u8,
@@ -248,19 +232,16 @@ fn xorCtrTransform(
     out_offset: usize,
 ) {
     let ctr_in: [ENVELOPE_MAX_NONCE_LEN + 4]u8 = [0; ENVELOPE_MAX_NONCE_LEN + 4];
-    let i: usize = 0;
-    while (i < nonce.len) : (i += 1) {
-        ctr_in[i] = nonce[i];
-    }
+    simdProofCopyBytes(ctr_in[0..nonce.len], nonce);
     const ctr_in_len: usize = nonce.len + 4;
 
     let pos: usize = 0;
     let counter: u32 = 0;
+    let keystream: [32]u8 = [0; 32];
     while (pos < input.len) : (counter += 1) {
         let ctr_slice: []u8 = ctr_in[0..];
-        writeBeU32(*ctr_slice, nonce.len, counter);
+        envWriteBeU32(ctr_slice, nonce.len, counter);
 
-        let keystream: [32]u8 = [0; 32];
         std.crypto.auth.hmac.sha2.HmacSha256.create(&keystream, ctr_in[0..ctr_in_len], enc_key[0..]);
 
         let j: usize = 0;
@@ -269,9 +250,11 @@ fn xorCtrTransform(
             pos += 1;
         }
     }
+    std.crypto.secureZero(u8, keystream[0..]);
+    std.crypto.secureZero(u8, ctr_in[0..]);
 }
 
-fn computeEnvelopeTag(
+fn envComputeEnvelopeTag(
     mac_key: [32]u8,
     hdr: EnvelopeHeader,
     aad: []const u8,
@@ -286,11 +269,11 @@ fn computeEnvelopeTag(
     prefix[4] = hdr.version;
     prefix[5] = hdr.alg_id;
     let p_slice: []u8 = prefix[0..];
-    writeBeU32(*p_slice, 6, hdr.key_version);
+    envWriteBeU32(p_slice, 6, hdr.key_version);
     prefix[10] = hdr.nonce_len;
     prefix[11] = hdr.salt_len;
-    writeBeU32(*p_slice, 12, hdr.aad_len);
-    writeBeU32(*p_slice, 16, hdr.ct_len);
+    envWriteBeU32(p_slice, 12, hdr.aad_len);
+    envWriteBeU32(p_slice, 16, hdr.ct_len);
 
     let mac = std.crypto.auth.hmac.sha2.HmacSha256.init(mac_key[0..]);
     mac.update(prefix[0..]);
@@ -310,7 +293,7 @@ fn computeEnvelopeTag(
 
 /// Encodes `hdr` into caller-owned `out_buf` in canonical big-endian `CPE1` binary format.
 pub fn encodeEnvelopeHeader(hdr: EnvelopeHeader, out_buf: *[]u8): EnvelopeOpResult {
-    const valid = validateHeaderParams(hdr);
+    const valid = envValidateHeaderParams(hdr);
     if (valid != EnvelopeStatus.ok) {
         return EnvelopeOpResult{ status: valid };
     }
@@ -325,31 +308,22 @@ pub fn encodeEnvelopeHeader(hdr: EnvelopeHeader, out_buf: *[]u8): EnvelopeOpResu
     out_buf[3] = '1';
     out_buf[4] = hdr.version;
     out_buf[5] = hdr.alg_id;
-    writeBeU32(out_buf, 6, hdr.key_version);
+    envWriteBeU32(out_buf, 6, hdr.key_version);
     out_buf[10] = hdr.nonce_len;
     out_buf[11] = hdr.salt_len;
-    writeBeU32(out_buf, 12, hdr.aad_len);
-    writeBeU32(out_buf, 16, hdr.ct_len);
+    envWriteBeU32(out_buf, 12, hdr.aad_len);
+    envWriteBeU32(out_buf, 16, hdr.ct_len);
 
     let off: usize = ENVELOPE_FIXED_HEADER_LEN;
     const nl: usize = hdr.nonce_len as usize;
-    let i: usize = 0;
-    while (i < nl) : (i += 1) {
-        out_buf[off + i] = hdr.nonce[i];
-    }
+    simdProofCopyBytes(out_buf[off .. off + nl], hdr.nonce[0..nl]);
     off += nl;
 
     const sl: usize = hdr.salt_len as usize;
-    let j: usize = 0;
-    while (j < sl) : (j += 1) {
-        out_buf[off + j] = hdr.salt[j];
-    }
+    simdProofCopyBytes(out_buf[off .. off + sl], hdr.salt[0..sl]);
     off += sl;
 
-    let t: usize = 0;
-    while (t < ENVELOPE_TAG_LEN) : (t += 1) {
-        out_buf[off + t] = hdr.tag[t];
-    }
+    simdProofCopyBytes(out_buf[off .. off + ENVELOPE_TAG_LEN], hdr.tag[0..ENVELOPE_TAG_LEN]);
 
     return EnvelopeOpResult{
         status: EnvelopeStatus.ok,
@@ -371,14 +345,14 @@ pub fn decodeEnvelopeHeader(buf: []const u8): EnvelopeDecodeResult {
     let hdr = EnvelopeHeader{
         version: buf[4],
         alg_id: buf[5],
-        key_version: readBeU32(buf, 6),
+        key_version: envReadBeU32(buf, 6),
         nonce_len: buf[10],
         salt_len: buf[11],
-        aad_len: readBeU32(buf, 12),
-        ct_len: readBeU32(buf, 16),
+        aad_len: envReadBeU32(buf, 12),
+        ct_len: envReadBeU32(buf, 16),
     };
 
-    const valid = validateHeaderParams(hdr);
+    const valid = envValidateHeaderParams(hdr);
     if (valid != EnvelopeStatus.ok) {
         return EnvelopeDecodeResult{ status: valid };
     }
@@ -390,23 +364,14 @@ pub fn decodeEnvelopeHeader(buf: []const u8): EnvelopeDecodeResult {
 
     let off: usize = ENVELOPE_FIXED_HEADER_LEN;
     const nl: usize = hdr.nonce_len as usize;
-    let i: usize = 0;
-    while (i < nl) : (i += 1) {
-        hdr.nonce[i] = buf[off + i];
-    }
+    simdProofCopyBytes(hdr.nonce[0..nl], buf[off .. off + nl]);
     off += nl;
 
     const sl: usize = hdr.salt_len as usize;
-    let j: usize = 0;
-    while (j < sl) : (j += 1) {
-        hdr.salt[j] = buf[off + j];
-    }
+    simdProofCopyBytes(hdr.salt[0..sl], buf[off .. off + sl]);
     off += sl;
 
-    let t: usize = 0;
-    while (t < ENVELOPE_TAG_LEN) : (t += 1) {
-        hdr.tag[t] = buf[off + t];
-    }
+    simdProofCopyBytes(hdr.tag[0..ENVELOPE_TAG_LEN], buf[off .. off + ENVELOPE_TAG_LEN]);
 
     return EnvelopeDecodeResult{
         status: EnvelopeStatus.ok,
@@ -449,7 +414,7 @@ pub struct EnvelopeKeyring {
         state: EnvelopeKeyState,
         created_at_ms: u64,
     ): EnvelopeStatus {
-        if (key_version == 0 || isAllZeroKey(kek)) {
+        if (key_version == 0 || envIsAllZeroKey(kek)) {
             return EnvelopeStatus.invalid_key_material;
         }
         if (_.findSlot(key_version) != null) {
@@ -508,11 +473,11 @@ pub struct EnvelopeKeyring {
         return EnvelopeStatus.ok;
     }
 
-    /// Permanently revokes `key_version` and scrubs its inline KEK bytes to zero.
+    /// Permanently revokes `key_version` and scrubs its inline KEK bytes via `std.crypto.secureZero`.
     fn revokeKey(*_, key_version: u32): EnvelopeStatus {
         const target_idx: usize = _.findSlot(key_version) ?? return EnvelopeStatus.key_not_found;
         _.entries[target_idx].state = EnvelopeKeyState.revoked;
-        _.entries[target_idx].kek = [0; ENVELOPE_KEK_LEN];
+        std.crypto.secureZero(u8, _.entries[target_idx].kek[0..]);
         return EnvelopeStatus.ok;
     }
 
@@ -578,11 +543,11 @@ pub struct EnvelopeKeyring {
         return st;
     }
 
-    /// Scrubs all inline KEK bytes across the entire keyring.
+    /// Scrubs all inline KEK bytes across the entire keyring via `std.crypto.secureZero`.
     fn zeroize(*_) {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            _.entries[i].kek = [0; ENVELOPE_KEK_LEN];
+            std.crypto.secureZero(u8, _.entries[i].kek[0..]);
         }
     }
 }
@@ -611,6 +576,9 @@ pub fn sealEnvelope(
     if (salt.len < ENVELOPE_MIN_SALT_LEN || salt.len > ENVELOPE_MAX_SALT_LEN) {
         return EnvelopeOpResult{ status: EnvelopeStatus.invalid_header_params };
     }
+    if (aad.len > (std.math.maxInt(u32) as usize) || plaintext.len > (std.math.maxInt(u32) as usize)) {
+        return EnvelopeOpResult{ status: EnvelopeStatus.invalid_header_params };
+    }
 
     let hdr = EnvelopeHeader{
         version: ENVELOPE_FORMAT_VERSION,
@@ -622,23 +590,17 @@ pub fn sealEnvelope(
         ct_len: plaintext.len as u32,
     };
 
-    let i: usize = 0;
-    while (i < nonce.len) : (i += 1) {
-        hdr.nonce[i] = nonce[i];
-    }
-    let j: usize = 0;
-    while (j < salt.len) : (j += 1) {
-        hdr.salt[j] = salt[j];
-    }
+    simdProofCopyBytes(hdr.nonce[0..nonce.len], nonce);
+    simdProofCopyBytes(hdr.salt[0..salt.len], salt);
 
     const hdr_len: usize = hdr.encodedLen();
-    const total_len: usize = hdr_len + plaintext.len;
-    if (out_envelope.len < total_len) {
+    if (plaintext.len > out_envelope.len || hdr_len > out_envelope.len - plaintext.len) {
         return EnvelopeOpResult{ status: EnvelopeStatus.output_buffer_too_small };
     }
+    const total_len: usize = hdr_len + plaintext.len;
 
     // 1. Derive per-message encryption & MAC subkeys via HKDF-SHA256.
-    const subkeys = deriveMessageSubkeys(
+    let subkeys = envDeriveMessageSubkeys(
         key_entry.kek,
         hdr.alg_id,
         hdr.key_version,
@@ -647,15 +609,19 @@ pub fn sealEnvelope(
     );
 
     // 2. Encrypt plaintext directly into `out_envelope[hdr_len..total_len]` using XOR-CTR.
-    xorCtrTransform(subkeys.enc_key, nonce, plaintext, out_envelope, hdr_len);
+    envXorCtrTransform(subkeys.enc_key, nonce, plaintext, out_envelope, hdr_len);
 
     // 3. Encrypt-then-MAC over canonical header prefix + nonce + salt + AAD + ciphertext.
-    hdr.tag = computeEnvelopeTag(
+    hdr.tag = envComputeEnvelopeTag(
         subkeys.mac_key,
         hdr,
         aad,
         out_envelope[hdr_len..total_len],
     );
+
+    // Scrub derived DEK/MAC subkeys immediately after use.
+    std.crypto.secureZero(u8, subkeys.enc_key[0..]);
+    std.crypto.secureZero(u8, subkeys.mac_key[0..]);
 
     // 4. Write encoded header into `out_envelope[0..hdr_len]`.
     const enc_res = encodeEnvelopeHeader(hdr, out_envelope);
@@ -672,8 +638,8 @@ pub fn sealEnvelope(
 }
 
 /// Verifies and opens `envelope` with `aad` using `keyring`, writing plaintext into `out_plaintext`.
-/// Rejects revoked keys, truncated payloads, header/AAD/ciphertext tampering, and signals `needs_rewrap`
-/// whenever the envelope was encrypted with a non-primary (rotated/retired) key version.
+/// Rejects revoked/unknown keys, truncated or trailing-garbage payloads, header/AAD/ciphertext tampering
+/// via 16-lane SIMD constant-time MAC verification, and scrubs all derived subkeys via `secureZero`.
 pub fn openEnvelope(
     keyring: EnvelopeKeyring,
     envelope: []const u8,
@@ -687,9 +653,12 @@ pub fn openEnvelope(
 
     const hdr = decoded.header;
     const ct_len: usize = hdr.ct_len as usize;
-    const total_expected: usize = decoded.header_len + ct_len;
-    if (envelope.len < total_expected) {
+    if (ct_len > envelope.len - decoded.header_len) {
         return EnvelopeOpResult{ status: EnvelopeStatus.truncated_input };
+    }
+    const total_expected: usize = decoded.header_len + ct_len;
+    if (envelope.len > total_expected) {
+        return EnvelopeOpResult{ status: EnvelopeStatus.auth_failed, key_version: hdr.key_version };
     }
     if (out_plaintext.len < ct_len) {
         return EnvelopeOpResult{ status: EnvelopeStatus.output_buffer_too_small };
@@ -725,7 +694,7 @@ pub fn openEnvelope(
     const salt_slice: []const u8 = hdr.salt[0..(hdr.salt_len as usize)];
     const ct_slice: []const u8 = envelope[decoded.header_len..total_expected];
 
-    const subkeys = deriveMessageSubkeys(
+    let subkeys = envDeriveMessageSubkeys(
         key_entry.kek,
         hdr.alg_id,
         hdr.key_version,
@@ -733,16 +702,21 @@ pub fn openEnvelope(
         nonce_slice,
     );
 
-    // Constant-time Encrypt-then-MAC verification BEFORE decrypting any bytes.
-    const expected_tag = computeEnvelopeTag(subkeys.mac_key, hdr, aad, ct_slice);
-    if (!constantTimeTagEql(expected_tag, hdr.tag)) {
+    // 16-lane SIMD branchless constant-time Encrypt-then-MAC verification BEFORE decrypting any bytes.
+    let expected_tag = envComputeEnvelopeTag(subkeys.mac_key, hdr, aad, ct_slice);
+    const tag_ok = simdProofCtEqual(expected_tag[0..], hdr.tag[0..]);
+    std.crypto.secureZero(u8, expected_tag[0..]);
+    std.crypto.secureZero(u8, subkeys.mac_key[0..]);
+    if (!tag_ok) {
+        std.crypto.secureZero(u8, subkeys.enc_key[0..]);
         return EnvelopeOpResult{
             status: EnvelopeStatus.auth_failed,
             key_version: hdr.key_version,
         };
     }
 
-    xorCtrTransform(subkeys.enc_key, nonce_slice, ct_slice, out_plaintext, 0);
+    envXorCtrTransform(subkeys.enc_key, nonce_slice, ct_slice, out_plaintext, 0);
+    std.crypto.secureZero(u8, subkeys.enc_key[0..]);
 
     return EnvelopeOpResult{
         status: EnvelopeStatus.ok,

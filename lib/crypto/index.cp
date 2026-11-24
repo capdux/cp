@@ -426,6 +426,10 @@ export {
     MERKLE_HASH_LEN,
     MERKLE_MAX_LEAVES,
     MERKLE_MAX_PROOF_DEPTH,
+    scalarProofCtEqual,
+    simdProofCtEqual,
+    scalarProofCopyBytes,
+    simdProofCopyBytes,
     MerkleHash,
     MerkleProofStep,
     MerkleInclusionProof,
@@ -433,6 +437,7 @@ export {
     merkleHashLeaf,
     merkleHashNode,
     Rfc6962MerkleTree,
+    verifyMerkleInclusionProofHash,
     verifyMerkleInclusionProof,
 } from "./merkleTree.cp";
 

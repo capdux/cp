@@ -245,6 +245,8 @@ pub fn demoKeyRingRotation() {
 
 ## 七、 零分配 RFC 6962 域分离 Merkle Tree 与包含性证明引擎 (`merkleTree.cp`)
 
+> 对标加固基准：`RustCrypto` & RFC 6962（MIT OR Apache-2.0）；16-lane `@Vector(16, u8)` SIMD 无早退常量时间根比对/载荷拷贝（`simdProofCtEqual` / `simdProofCopyBytes`）与 `verifyMerkleInclusionProofHash`；回归测试：`cap/test/testCryptoProofEnvRustRefSuite.cp`
+
 面向透明审计日志、包管理器构件校验、AI Agent 执行轨迹存证与分布式快照一致性的 100% 纯 CP 零动态堆分配 RFC 6962 SHA-256 二叉 Merkle Tree（规避与 Allocator 版 `merkle.cp::MerkleTree` 冲突，导出为 `Rfc6962MerkleTree`）：
 
 - **常量与模型**：`MERKLE_HASH_LEN` (`32`)、`MERKLE_MAX_LEAVES` (`128`)、`MERKLE_MAX_PROOF_DEPTH` (`8`)、`MerkleHash`（内置常量时间 `eql`）、`MerkleProofStep`、`MerkleInclusionProof`。
@@ -322,6 +324,8 @@ pub fn demoSymmetricKeyRatchet() {
 ---
 
 ### 16. 零分配版本化信封加密与密钥轮换环（`envelope.cp`）
+
+> 对标加固基准：`RustCrypto` & RFC 6962（MIT OR Apache-2.0）；16-lane SIMD 无早退常量时间验签与载荷拷贝、尾随字节与溢出拦截、全链路 `std.crypto.secureZero` 擦除 DEK/KEK/keystream；回归测试：`cap/test/testCryptoProofEnvRustRefSuite.cp`
 
 纯 CP 零动态堆分配、零 C FFI 依赖的版本化信封加密头编解码、多版本 KEK 轮换密钥环与 Encrypt-then-MAC 端到端加解密引擎：
 
@@ -441,6 +445,8 @@ pub fn demoSparseMerkleTree() {
 ---
 
 ## 零分配 Macaroon 能力令牌与链式 HMAC 衰减引擎 (`macaroon.cp`)
+
+> 对标加固基准：`RustCrypto` & RFC 6962（MIT OR Apache-2.0）；16-lane SIMD 无早退常量时间链式验签、caveat 上限防资源耗尽与全链路 `std.crypto.secureZero` 擦除派生签名链；回归测试：`cap/test/testCryptoProofEnvRustRefSuite.cp`
 
 面向微服务零信任授权、去中心化能力委托（Capability Delegation）与 AI Agent 细粒度沙箱权限衰减的 100% 纯 CP 零动态堆分配 **Macaroons (Birgisson et al. 2014)** 引擎：
 
