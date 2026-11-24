@@ -413,6 +413,7 @@ export {
 export {
     KEYRING_TAG_LEN,
     KEYRING_SECRET_LEN,
+    keyringHmacSha256,
     KeyVersionState,
     KeyRingEntry,
     KeyRingStats,
@@ -439,7 +440,18 @@ export {
 
 export {
     RATCHET_KEY_LEN,
+    RATCHET_MIN_STRICT_SECRET_LEN,
+    RATCHET_HKDF_MAX_OUTPUT_LEN,
     RATCHET_MAX_SKIPPED_KEYS,
+    scalarCryptoExtCtEqual,
+    simdCryptoExtCtEqual,
+    scalarCryptoExtXor,
+    simdCryptoExtXor,
+    scalarCryptoExtCopy,
+    simdCryptoExtCopy,
+    isAllZeroBytesCt,
+    ratchetHkdfExtract,
+    ratchetHkdfExpand,
     RatchetDerivedKey,
     RatchetStats,
     SymmetricKeyRatchet,

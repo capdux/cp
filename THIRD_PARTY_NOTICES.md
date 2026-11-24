@@ -110,6 +110,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustCrypto/formats** (`x509-cert`, `x509-ocsp`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/csr.cp`, `lib/auth/crl.cp`, `lib/auth/ocsp.cp` | Copyright (c) 2020-2024 RustCrypto Developers (RFC 2986/5280/6960) |
 | **actix-web** (`actix`) | <https://github.com/actix/actix-web> | MIT OR Apache-2.0 | `lib/web/csrfGuard.cp`, `lib/web/signedUrl.cp`, `lib/web/hstsStore.cp` | Copyright (c) 2017-2024 Actix Team (RFC 6797) |
 | **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp`, `lib/net/icmp.cp`, `lib/net/arp.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131/4271/792/4443/826) |
+| **RustCrypto/KDFs & MACs** | <https://github.com/RustCrypto/KDFs> | MIT OR Apache-2.0 | `lib/crypto/ratchet.cp`, `lib/crypto/aeadNonce.cp`, `lib/crypto/keyring.cp` | Copyright (c) 2018-2024 RustCrypto Developers (RFC 5869/4231/9001) |
 
 ---
 

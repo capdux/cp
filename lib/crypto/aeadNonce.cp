@@ -1,13 +1,17 @@
+// Reference-hardened against RustCrypto/AEADs (MIT OR Apache-2.0) & RFC 9001/8446
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 9001 AEAD Nonce Deriver, Reuse Guard & 128-Bit Anti-Replay Window) | Created: 2026-11-23
 // Pure CP zero-heap-allocation TLS 1.3 / QUIC (RFC 9001 §5.3) AEAD nonce management & anti-replay engine:
 //   - Deterministic 96-bit (12-byte) AEAD nonce derivation (`deriveAeadNonce`): XORs big-endian 64-bit sequence
 //     number into the low 8 bytes of `base_iv`
-//   - Monotonic `AeadNonceSender` with hard `rekey_limit` ceiling & `needsRekey()` warning watermark,
-//     structurally eliminating catastrophic AES-GCM / ChaCha20-Poly1305 nonce reuse
+//   - Monotonic `AeadNonceSender` with hard `rekey_limit` ceiling, `rekeyStrict` (rejecting all-zero or
+//     identical base_iv via 16-lane constant-time SIMD), `std.crypto.secureZero` scrubbing, and `needsRekey()`
 //   - O(1) 128-bit sliding anti-replay bitmap (`AntiReplayWindow128`) supporting up to 128 out-of-order
 //     packets, distinguishing `accepted | duplicate_replay | too_old_below_window`, with read-only pre-check
 //     (`checkOnly`) and post-AEAD-verify commit (`checkAndMark`)
-//   - Epoch-tracked `rekey(*_, new_base_iv)` on both sender and `AeadNonceReceiver`, plus zero-alloc telemetry
+//   - Epoch-tracked `rekey`/`rekeyStrict` & `zeroize` on both sender and `AeadNonceReceiver`
+
+const std = @import("std");
+import { simdCryptoExtCtEqual, isAllZeroBytesCt } from "./ratchet.cp";
 
 // ============================================================================
 // 1. Constants, Enums & Data Models
@@ -69,20 +73,20 @@ pub struct AntiReplayStats {
 /// Derives a 96-bit AEAD nonce per RFC 9001 §5.3 / RFC 8446 §5.3:
 /// copies `base_iv[0..4]` verbatim and XORs the 64-bit big-endian `seq` into `base_iv[4..12]`.
 pub fn deriveAeadNonce(base_iv: [AEAD_NONCE_LEN]u8, seq: u64): [AEAD_NONCE_LEN]u8 {
-    return [
-        base_iv[0],
-        base_iv[1],
-        base_iv[2],
-        base_iv[3],
-        base_iv[4] ^ (((seq >> 56) & 0xFF) as u8),
-        base_iv[5] ^ (((seq >> 48) & 0xFF) as u8),
-        base_iv[6] ^ (((seq >> 40) & 0xFF) as u8),
-        base_iv[7] ^ (((seq >> 32) & 0xFF) as u8),
-        base_iv[8] ^ (((seq >> 24) & 0xFF) as u8),
-        base_iv[9] ^ (((seq >> 16) & 0xFF) as u8),
-        base_iv[10] ^ (((seq >> 8) & 0xFF) as u8),
-        base_iv[11] ^ ((seq & 0xFF) as u8),
-    ];
+    let out: [AEAD_NONCE_LEN]u8 = [0; AEAD_NONCE_LEN];
+    out[0] = base_iv[0];
+    out[1] = base_iv[1];
+    out[2] = base_iv[2];
+    out[3] = base_iv[3];
+    out[4] = base_iv[4] ^ (((seq >> 56) & 0xFF) as u8);
+    out[5] = base_iv[5] ^ (((seq >> 48) & 0xFF) as u8);
+    out[6] = base_iv[6] ^ (((seq >> 40) & 0xFF) as u8);
+    out[7] = base_iv[7] ^ (((seq >> 32) & 0xFF) as u8);
+    out[8] = base_iv[8] ^ (((seq >> 24) & 0xFF) as u8);
+    out[9] = base_iv[9] ^ (((seq >> 16) & 0xFF) as u8);
+    out[10] = base_iv[10] ^ (((seq >> 8) & 0xFF) as u8);
+    out[11] = base_iv[11] ^ ((seq & 0xFF) as u8);
+    return out;
 }
 
 // ============================================================================
@@ -103,14 +107,14 @@ pub struct AeadNonceSender {
     /// Initializes a sender with explicit `rekey_limit` and `warn_threshold`.
     /// Returns `null` if `rekey_limit == 0` or `warn_threshold > rekey_limit`.
     /// Passing `warn_threshold == 0` automatically selects 80% of `rekey_limit`.
-    pub fn init(
+    pub static fn init(
         base_iv: [AEAD_NONCE_LEN]u8,
         rekey_limit: u64,
         warn_threshold: u64,
     ): AeadNonceSender? {
         if (rekey_limit == 0 || warn_threshold > rekey_limit) return null;
         const resolved_warn: u64 = if (warn_threshold == 0)
-            ((rekey_limit * 80) / 100)
+            ((rekey_limit / 5) * 4)
         else
             warn_threshold;
 
@@ -162,12 +166,27 @@ pub struct AeadNonceSender {
         return if (_.next_seq >= _.rekey_limit) 0 else (_.rekey_limit - _.next_seq);
     }
 
-    /// Rotates to a fresh key epoch with `new_base_iv`, incrementing `key_epoch` and resetting `next_seq` to 0.
+    /// Rotates to a fresh key epoch with `new_base_iv`, scrubbing old `base_iv` via `secureZero`,
+    /// incrementing `key_epoch`, and resetting `next_seq` to 0.
     pub fn rekey(*_, new_base_iv: [AEAD_NONCE_LEN]u8) {
+        std.crypto.secureZero(u8, _.base_iv[0..]);
         _.base_iv = new_base_iv;
         _.key_epoch += 1;
         _.next_seq = 0;
         _.total_rekeys += 1;
+    }
+
+    /// Strict rekey rejecting all-zero `new_base_iv` or reuse of the current `base_iv` (constant-time).
+    pub fn rekeyStrict(*_, new_base_iv: [AEAD_NONCE_LEN]u8): bool {
+        if (isAllZeroBytesCt(new_base_iv[0..])) return false;
+        if (simdCryptoExtCtEqual(_.base_iv[0..], new_base_iv[0..])) return false;
+        _.rekey(new_base_iv);
+        return true;
+    }
+
+    /// Scrubs `base_iv` in place via `std.crypto.secureZero`.
+    pub fn zeroize(*_) {
+        std.crypto.secureZero(u8, _.base_iv[0..]);
     }
 
     /// Returns a complete sender telemetry snapshot.
@@ -204,7 +223,7 @@ pub struct AntiReplayWindow128 {
     total_rekeys: u64 = 0,
 
     /// Creates a fresh empty 128-bit anti-replay window at `key_epoch = 0`.
-    pub fn init(): AntiReplayWindow128 {
+    pub static fn init(): AntiReplayWindow128 {
         return AntiReplayWindow128{};
     }
 
@@ -314,7 +333,7 @@ pub struct AeadNonceReceiver {
     window: AntiReplayWindow128 = AntiReplayWindow128{},
 
     /// Initializes a receiver with `base_iv` at `key_epoch = 0`.
-    pub fn init(base_iv: [AEAD_NONCE_LEN]u8): AeadNonceReceiver {
+    pub static fn init(base_iv: [AEAD_NONCE_LEN]u8): AeadNonceReceiver {
         return AeadNonceReceiver{
             base_iv: base_iv,
             window: AntiReplayWindow128.init(),
@@ -336,10 +355,24 @@ pub struct AeadNonceReceiver {
         return _.window.checkAndMark(seq);
     }
 
-    /// Rotates to `new_base_iv`, incrementing `key_epoch` and resetting the anti-replay window.
+    /// Rotates to `new_base_iv`, scrubbing old `base_iv`, incrementing `key_epoch`, and resetting window.
     pub fn rekey(*_, new_base_iv: [AEAD_NONCE_LEN]u8) {
+        std.crypto.secureZero(u8, _.base_iv[0..]);
         _.base_iv = new_base_iv;
         _.window.rekey();
+    }
+
+    /// Strict rekey rejecting all-zero or reused `new_base_iv`.
+    pub fn rekeyStrict(*_, new_base_iv: [AEAD_NONCE_LEN]u8): bool {
+        if (isAllZeroBytesCt(new_base_iv[0..])) return false;
+        if (simdCryptoExtCtEqual(_.base_iv[0..], new_base_iv[0..])) return false;
+        _.rekey(new_base_iv);
+        return true;
+    }
+
+    /// Scrubs `base_iv` in place via `std.crypto.secureZero`.
+    pub fn zeroize(*_) {
+        std.crypto.secureZero(u8, _.base_iv[0..]);
     }
 
     /// Returns anti-replay window telemetry.

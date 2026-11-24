@@ -213,7 +213,9 @@ pub fn demoModernCrypto(): !void {
 
 ## 六、 多版本密钥环轮换与信封 MAC 校验器 (`keyring.cp`)
 
-`lib/crypto/keyring.cp` 提供 100% 纯 CP、零堆分配的多版本密钥环（`KeyRing`），内置 RFC 6234 SHA-256 / RFC 2104 HMAC-SHA256 与恒定时间比较，专为微服务凭证与 AI Agent 令牌零停机轮换设计：
+> 对标加固基准：`RustCrypto/MACs`（MIT OR Apache-2.0）& RFC 2104/4231/6234；16-lane `@Vector(16, u8)` SIMD XOR 与无早退恒定时间校验 + `std.crypto.secureZero` 全链路清零；回归测试：`cap/test/testCryptoExtRustRefSuite.cp`
+
+`lib/crypto/keyring.cp` 提供 100% 纯 CP、零堆分配的多版本密钥环（`KeyRing`），内置 RFC 6234 SHA-256 / RFC 2104 HMAC-SHA256（含导出 `keyringHmacSha256`、`addKeyStrict`）与 16-lane SIMD 无早退恒定时间比较，专为微服务凭证与 AI Agent 令牌零停机轮换设计：
 
 - **平滑零停机轮换**：`addKey(..., make_active = true, ...)` 自动将旧 `Active` 密钥降级为 `VerifyOnly`，宽限期内同时支持新旧版本验证；
 - **安全治理防线**：自动拦截 `Revoked` 与已过期（`now_ms >= expires_ms`）密钥，撤销与清空时主动清零内存中的密钥材料，MAC 计算域绑定 `kid` 防止跨版本混淆。
@@ -276,6 +278,8 @@ pub fn demoRfc6962Merkle() {
 ```
 
 ### 零堆分配前向安全对称密钥棘轮与乱序跳步密钥缓存引擎 (`ratchet.cp`)
+
+> 对标加固基准：`RustCrypto/KDFs` & `RustCrypto/MACs`（MIT OR Apache-2.0）& RFC 5869/2104；16-lane `@Vector(16, u8)` SIMD 无早退常量时间比较/XOR/拷贝（`simdCryptoExtCtEqual`/`simdCryptoExtXor`/`simdCryptoExtCopy`/`isAllZeroBytesCt`）、`ratchetHkdfExtract`/`ratchetHkdfExpand`、`initStrict`/`rekeyStrict` 与全链路 `std.crypto.secureZero` 清零；回归测试：`cap/test/testCryptoExtRustRefSuite.cp`
 
 面向安全多 Agent 通信通道、TLS 1.3 密钥更新与 Signal 风格前向安全（Forward Secrecy）的 100% 零动态堆分配对称密钥棘轮内核（基于 RFC 5869 HKDF-SHA256 与 HMAC-SHA256）：
 
@@ -562,6 +566,8 @@ pub fn demoCertPinning() {
 ---
 
 ### 零分配 TLS 1.3 / QUIC RFC 9001 AEAD Nonce 派生、防重用守卫与 128 位防重放滑窗 (`aeadNonce.cp`)
+
+> 对标加固基准：`RustCrypto/AEADs`（MIT OR Apache-2.0）& RFC 9001/8446；新增 `rekeyStrict`（拒绝全零或复用 `base_iv`）与 `std.crypto.secureZero` 清零；回归测试：`cap/test/testCryptoExtRustRefSuite.cp`
 
 面向 AES-GCM / ChaCha20-Poly1305 安全传输层的 100% 纯 CP 零动态堆分配 Nonce 派生与 128 位防重放引擎：
 

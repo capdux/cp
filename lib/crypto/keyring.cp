@@ -1,7 +1,11 @@
+// Reference-hardened against RustCrypto/MACs (MIT OR Apache-2.0) & RFC 2104/4231/6234
 // Origin: Pure-CP Stdlib (Zero-Alloc Multi-Version KeyRing Rotation & Envelope MAC Verifier) | Created: 2026-11-22
 // 100% pure-CP zero-heap-allocation key-version rotation manager with embedded RFC 6234 SHA-256 /
-// RFC 2104 HMAC-SHA256 envelope signing, kid domain binding, constant-time MAC verification,
-// graceful Active -> VerifyOnly rotation, expiry enforcement, and secret zeroization on revoke.
+// RFC 2104 HMAC-SHA256 envelope signing, kid domain binding, 16-lane SIMD XOR & branchless constant-time
+// MAC verification, graceful Active -> VerifyOnly rotation, expiry enforcement, and `std.crypto.secureZero` scrubbing.
+
+const std = @import("std");
+import { simdCryptoExtCtEqual, simdCryptoExtXor, isAllZeroBytesCt } from "./ratchet.cp";
 
 /// Fixed HMAC-SHA256 authentication tag length in bytes.
 pub const KEYRING_TAG_LEN: usize = 32;
@@ -13,7 +17,7 @@ pub const KEYRING_SECRET_LEN: usize = 32;
 // Pure-CP Zero-Alloc RFC 6234 SHA-256 & RFC 2104 HMAC-SHA256
 // ============================================================================
 
-const SHA256_K: [64]u32 = [
+const KR_SHA256_K: [64]u32 = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -24,26 +28,26 @@ const SHA256_K: [64]u32 = [
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-fn rotr32(x: u32, n: u5): u32 {
+fn krRotr32(x: u32, n: u5): u32 {
     const r: u5 = (32 - (n as u8)) as u5;
     return (x >> n) | (x << r);
 }
 
-fn readBeU32(b: []const u8, off: usize): u32 {
+fn krReadBeU32(b: []const u8, off: usize): u32 {
     return ((b[off] as u32) << 24) |
         ((b[off + 1] as u32) << 16) |
         ((b[off + 2] as u32) << 8) |
         (b[off + 3] as u32);
 }
 
-fn writeBeU32(out: []u8, off: usize, v: u32) {
+fn krWriteBeU32(out: *[]u8, off: usize, v: u32) {
     out[off] = ((v >> 24) & 0xFF) as u8;
     out[off + 1] = ((v >> 16) & 0xFF) as u8;
     out[off + 2] = ((v >> 8) & 0xFF) as u8;
     out[off + 3] = (v & 0xFF) as u8;
 }
 
-struct Sha256State {
+struct KrSha256State {
     h: [8]u32 = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
@@ -52,19 +56,19 @@ struct Sha256State {
     block_len: usize = 0;
     total_bytes: u64 = 0;
 
-    static fn init(): Sha256State {
-        return Sha256State{};
+    static fn init(): KrSha256State {
+        return KrSha256State{};
     }
 
     fn compress(*_, blk: []const u8) {
         let w: [64]u32 = [0; 64];
         let i: usize = 0;
         while (i < 16) : (i += 1) {
-            w[i] = readBeU32(blk, i * 4);
+            w[i] = krReadBeU32(blk, i * 4);
         }
         while (i < 64) : (i += 1) {
-            const s0 = rotr32(w[i - 15], 7) ^ rotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
-            const s1 = rotr32(w[i - 2], 17) ^ rotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
+            const s0 = krRotr32(w[i - 15], 7) ^ krRotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
+            const s1 = krRotr32(w[i - 2], 17) ^ krRotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
             w[i] = w[i - 16] +% s0 +% w[i - 7] +% s1;
         }
 
@@ -79,10 +83,10 @@ struct Sha256State {
 
         let r: usize = 0;
         while (r < 64) : (r += 1) {
-            const s1 = rotr32(e, 6) ^ rotr32(e, 11) ^ rotr32(e, 25);
+            const s1 = krRotr32(e, 6) ^ krRotr32(e, 11) ^ krRotr32(e, 25);
             const ch = (e & f) ^ ((~e) & g);
-            const temp1 = hh +% s1 +% ch +% SHA256_K[r] +% w[r];
-            const s0 = rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22);
+            const temp1 = hh +% s1 +% ch +% KR_SHA256_K[r] +% w[r];
+            const s0 = krRotr32(a, 2) ^ krRotr32(a, 13) ^ krRotr32(a, 22);
             const maj = (a & b) ^ (a & c) ^ (b & c);
             const temp2 = s0 +% maj;
 
@@ -119,7 +123,7 @@ struct Sha256State {
         }
     }
 
-    fn finish(*_, out: []u8) {
+    fn finish(*_, out: *[]u8) {
         const bit_len: u64 = _.total_bytes *% 8;
         _.block[_.block_len] = 0x80;
         _.block_len += 1;
@@ -148,19 +152,66 @@ struct Sha256State {
 
         let i: usize = 0;
         while (i < 8) : (i += 1) {
-            writeBeU32(out, i * 4, _.h[i]);
+            krWriteBeU32(out, i * 4, _.h[i]);
         }
+    }
+
+    fn scrub(*_) {
+        std.crypto.secureZero(u8, _.block[0..]);
+        _.block_len = 0;
     }
 }
 
-fn computeEnvelopeMac(secret: [32]u8, kid: u32, payload: []const u8, out_tag: []u8) {
+/// Pure-CP RFC 2104 / RFC 4231 HMAC-SHA256 with 16-lane SIMD ipad/opad XOR and `secureZero` scrubbing.
+pub fn keyringHmacSha256(key: []const u8, data: []const u8): [KEYRING_TAG_LEN]u8 {
+    let key_blk: [64]u8 = [0; 64];
+    if (key.len > 64) {
+        let kh = KrSha256State.init();
+        kh.update(key);
+        kh.finish(key_blk[0..32]);
+        kh.scrub();
+    } else {
+        let i: usize = 0;
+        while (i < key.len) : (i += 1) {
+            key_blk[i] = key[i];
+        }
+    }
+
+    const ipad_const: [64]u8 = [0x36; 64];
+    const opad_const: [64]u8 = [0x5C; 64];
+    let ipad: [64]u8 = [0; 64];
+    let opad: [64]u8 = [0; 64];
+    simdCryptoExtXor(ipad[0..64], key_blk[0..64], ipad_const[0..64]);
+    simdCryptoExtXor(opad[0..64], key_blk[0..64], opad_const[0..64]);
+
+    let inner_hasher = KrSha256State.init();
+    inner_hasher.update(ipad[0..64]);
+    inner_hasher.update(data);
+    let inner_digest: [32]u8 = [0; 32];
+    inner_hasher.finish(inner_digest[0..32]);
+    inner_hasher.scrub();
+
+    let out: [KEYRING_TAG_LEN]u8 = [0; KEYRING_TAG_LEN];
+    let outer_hasher = KrSha256State.init();
+    outer_hasher.update(opad[0..64]);
+    outer_hasher.update(inner_digest[0..32]);
+    outer_hasher.finish(out[0..32]);
+    outer_hasher.scrub();
+
+    std.crypto.secureZero(u8, key_blk[0..]);
+    std.crypto.secureZero(u8, ipad[0..]);
+    std.crypto.secureZero(u8, opad[0..]);
+    std.crypto.secureZero(u8, inner_digest[0..]);
+    return out;
+}
+
+fn krComputeEnvelopeMac(secret: [32]u8, kid: u32, payload: []const u8, out_tag: *[]u8) {
+    const ipad_const: [32]u8 = [0x36; 32];
+    const opad_const: [32]u8 = [0x5C; 32];
     let ipad: [64]u8 = [0x36; 64];
     let opad: [64]u8 = [0x5C; 64];
-    let i: usize = 0;
-    while (i < 32) : (i += 1) {
-        ipad[i] = secret[i] ^ 0x36;
-        opad[i] = secret[i] ^ 0x5C;
-    }
+    simdCryptoExtXor(ipad[0..32], secret[0..32], ipad_const[0..32]);
+    simdCryptoExtXor(opad[0..32], secret[0..32], opad_const[0..32]);
 
     // Domain-bind kid (4-byte little-endian) into MAC input to prevent cross-version confusion
     let kid_le: [4]u8 = [
@@ -170,27 +221,23 @@ fn computeEnvelopeMac(secret: [32]u8, kid: u32, payload: []const u8, out_tag: []
         ((kid >> 24) & 0xFF) as u8,
     ];
 
-    let inner_hasher = Sha256State.init();
+    let inner_hasher = KrSha256State.init();
     inner_hasher.update(ipad[0..64]);
     inner_hasher.update(kid_le[0..4]);
     inner_hasher.update(payload);
     let inner_digest: [32]u8 = [0; 32];
     inner_hasher.finish(inner_digest[0..32]);
+    inner_hasher.scrub();
 
-    let outer_hasher = Sha256State.init();
+    let outer_hasher = KrSha256State.init();
     outer_hasher.update(opad[0..64]);
     outer_hasher.update(inner_digest[0..32]);
     outer_hasher.finish(out_tag[0..32]);
-}
+    outer_hasher.scrub();
 
-fn constantTimeEq32(a: []const u8, b: []const u8): bool {
-    if (a.len != 32 || b.len != 32) return false;
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < 32) : (i += 1) {
-        diff = diff | (a[i] ^ b[i]);
-    }
-    return diff == 0;
+    std.crypto.secureZero(u8, ipad[0..]);
+    std.crypto.secureZero(u8, opad[0..]);
+    std.crypto.secureZero(u8, inner_digest[0..]);
 }
 
 // ============================================================================
@@ -229,7 +276,7 @@ pub struct KeyRingStats {
 }
 
 /// Zero-heap-allocation multi-version keyring manager supporting zero-downtime key rotation,
-/// kid-bound HMAC-SHA256 envelope signing, and constant-time verification.
+/// kid-bound HMAC-SHA256 envelope signing, and 16-lane SIMD constant-time verification.
 pub struct KeyRing {
     slots: []KeyRingEntry;
     len: usize = 0;
@@ -283,17 +330,27 @@ pub struct KeyRing {
         return true;
     }
 
-    /// Revokes the key version matching `kid` and zeroes its in-memory secret bytes.
+    /// Strict key insertion rejecting all-zero 256-bit weak keys in addition to all `addKey` checks.
+    fn addKeyStrict(
+        *_,
+        kid: u32,
+        secret: [32]u8,
+        make_active: bool,
+        created_ms: i64,
+        expires_ms: i64,
+    ): bool {
+        if (isAllZeroBytesCt(secret[0..])) return false;
+        return _.addKey(kid, secret, make_active, created_ms, expires_ms);
+    }
+
+    /// Revokes the key version matching `kid` and scrubs its in-memory secret bytes via `secureZero`.
     /// Returns `false` if `kid` is not found.
     fn revokeKey(*_, kid: u32): bool {
         let i: usize = 0;
         while (i < _.len) : (i += 1) {
             if (_.slots[i].kid == kid) {
                 _.slots[i].state = KeyVersionState.Revoked;
-                let k: usize = 0;
-                while (k < 32) : (k += 1) {
-                    _.slots[i].secret[k] = 0;
-                }
+                std.crypto.secureZero(u8, _.slots[i].secret[0..]);
                 return true;
             }
         }
@@ -331,25 +388,27 @@ pub struct KeyRing {
     /// Signs `payload` using the current non-expired `Active` key at `now_ms`, writing the 32-byte
     /// kid-bound HMAC-SHA256 tag into `out_tag_buf[0..32]` and returning the signing `kid`.
     /// Returns `null` if `out_tag_buf.len < 32` or no active valid key exists.
-    fn signEnvelope(payload: []const u8, now_ms: i64, out_tag_buf: []u8): u32? {
+    fn signEnvelope(payload: []const u8, now_ms: i64, out_tag_buf: *[]u8): u32? {
         if (out_tag_buf.len < KEYRING_TAG_LEN) {
             return null;
         }
         const entry = _.activeKey(now_ms) ?? return null;
-        computeEnvelopeMac(entry.secret, entry.kid, payload, out_tag_buf[0..32]);
+        krComputeEnvelopeMac(entry.secret, entry.kid, payload, out_tag_buf[0..32]);
         return entry.kid;
     }
 
-    /// Verifies `expected_tag` (32 bytes) against `payload` using `kid` at `now_ms` in constant time.
-    /// Accepts both `Active` and grace-period `VerifyOnly` keys; rejects `Revoked` or expired keys.
+    /// Verifies `expected_tag` (32 bytes) against `payload` using `kid` at `now_ms` in branchless
+    /// 16-lane SIMD constant time, scrubbing intermediate MAC buffers via `std.crypto.secureZero`.
     fn verifyEnvelope(kid: u32, payload: []const u8, expected_tag: []const u8, now_ms: i64): bool {
         if (expected_tag.len != KEYRING_TAG_LEN) {
             return false;
         }
         const entry = _.findVerifiableKey(kid, now_ms) ?? return false;
         let computed: [32]u8 = [0; 32];
-        computeEnvelopeMac(entry.secret, entry.kid, payload, computed[0..32]);
-        return constantTimeEq32(computed[0..32], expected_tag);
+        krComputeEnvelopeMac(entry.secret, entry.kid, payload, computed[0..32]);
+        const ok = simdCryptoExtCtEqual(computed[0..32], expected_tag);
+        std.crypto.secureZero(u8, computed[0..]);
+        return ok;
     }
 
     /// Returns a snapshot of keyring version states at `now_ms`.
@@ -380,14 +439,11 @@ pub struct KeyRing {
         return _.slots.len;
     }
 
-    /// Zeroes all stored secrets and clears the keyring for buffer reuse.
+    /// Scrubs all stored secrets via `std.crypto.secureZero` and clears the keyring for buffer reuse.
     fn clear(*_) {
         let i: usize = 0;
         while (i < _.len) : (i += 1) {
-            let k: usize = 0;
-            while (k < 32) : (k += 1) {
-                _.slots[i].secret[k] = 0;
-            }
+            std.crypto.secureZero(u8, _.slots[i].secret[0..]);
         }
         _.len = 0;
     }
