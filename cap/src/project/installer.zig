@@ -9,6 +9,7 @@ const native = @import("native.zig");
 pub const InstallOptions = struct {
     frozen_lockfile: bool = false,
     rebuild_native: bool = false,
+    production: bool = false,
     target_key: ?[]const u8 = null,
 };
 
@@ -420,15 +421,17 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
         }
     }
 
-    // 2. Install root deps & dev deps
+    // 2. Install root dep & (unless --production) dev
     var dep_it = mf.dependencies.iterator();
     while (dep_it.next()) |entry| {
         try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, true, &ws_map, &lk, opts);
     }
 
-    var dev_it = mf.dev_dependencies.iterator();
-    while (dev_it.next()) |entry| {
-        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, true, &ws_map, &lk, opts);
+    if (!opts.production) {
+        var dev_it = mf.dev_dependencies.iterator();
+        while (dev_it.next()) |entry| {
+            try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, true, &ws_map, &lk, opts);
+        }
     }
 
     // 3. Install dependencies declared inside workspace members (including inter-workspace `workspace:*`)
@@ -449,10 +452,12 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
                     try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, false, &ws_map, &lk, opts);
                 }
             }
-            var wdev_it = ws_mf.dev_dependencies.iterator();
-            while (wdev_it.next()) |entry| {
-                if (!lk.packages.contains(entry.key_ptr.*)) {
-                    try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, false, &ws_map, &lk, opts);
+            if (!opts.production) {
+                var wdev_it = ws_mf.dev_dependencies.iterator();
+                while (wdev_it.next()) |entry| {
+                    if (!lk.packages.contains(entry.key_ptr.*)) {
+                        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, false, &ws_map, &lk, opts);
+                    }
                 }
             }
         }
@@ -473,10 +478,12 @@ pub fn handleInstall(allocator: std.mem.Allocator, args: []const []const u8) !vo
             opts.frozen_lockfile = true;
         } else if (std.mem.eql(u8, arg, "--rebuild")) {
             opts.rebuild_native = true;
+        } else if (std.mem.eql(u8, arg, "--production") or std.mem.eql(u8, arg, "--prod")) {
+            opts.production = true;
         } else if (std.mem.startsWith(u8, arg, "--target=")) {
             opts.target_key = arg["--target=".len..];
         } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            std.debug.print("Usage: cap install [--frozen-lockfile] [--rebuild] [--target=<os-arch>]\n", .{});
+            std.debug.print("Usage: cap install [--production|--prod] [--frozen-lockfile] [--rebuild] [--target=<os-arch>]\n", .{});
             return;
         }
     }

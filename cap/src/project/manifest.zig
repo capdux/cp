@@ -214,6 +214,7 @@ pub const SingleSysDep = struct {
     win: ?[]const u8 = null,
     path: ?[]const u8 = null,
     prebuilt: ?[]const u8 = null,
+    optional: bool = false,
 
     pub fn deinit(self: *SingleSysDep, allocator: std.mem.Allocator) void {
         if (self.name) |n| allocator.free(n);
@@ -232,6 +233,7 @@ pub const SingleSysDep = struct {
             .win = if (self.win) |w| try allocator.dupe(u8, w) else null,
             .path = if (self.path) |p| try allocator.dupe(u8, p) else null,
             .prebuilt = if (self.prebuilt) |pb| try allocator.dupe(u8, pb) else null,
+            .optional = self.optional,
         };
     }
 
@@ -356,6 +358,9 @@ pub const SysDependencyConfig = struct {
                         }
                         if (sub_val.object.get("prebuilt") orelse sub_val.object.get("prebuilt_dir")) |pb| {
                             if (pb == .string and pb.string.len > 0) s.prebuilt = try allocator.dupe(u8, pb.string);
+                        }
+                        if (sub_val.object.get("optional")) |opt_v| {
+                            if (opt_v == .bool) s.optional = opt_v.bool;
                         }
                     }
                     try list.append(allocator, s);
@@ -539,26 +544,23 @@ pub const Manifest = struct {
         }
 
         var deps = std.StringHashMap([]const u8).init(allocator);
-        if (root.get("dependencies")) |d| {
-            if (d == .object) {
-                var iter = d.object.iterator();
-                while (iter.next()) |entry| {
-                    if (entry.value_ptr.* == .string) {
-                        try deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
-                    }
-                }
-            }
-        }
-        if (root.get("deps")) |d| {
-            if (d == .object) {
-                var iter = d.object.iterator();
-                while (iter.next()) |entry| {
-                    if (entry.value_ptr.* == .string) {
-                        if (deps.fetchRemove(entry.key_ptr.*)) |old| {
-                            allocator.free(old.key);
-                            allocator.free(old.value);
+        const dep_sources = [_]?std.json.Value{
+            root.get("dependencies"),
+            root.get("deps"),
+            root.get("dep"),
+        };
+        for (dep_sources) |dep_opt| {
+            if (dep_opt) |d| {
+                if (d == .object) {
+                    var iter = d.object.iterator();
+                    while (iter.next()) |entry| {
+                        if (entry.value_ptr.* == .string) {
+                            if (deps.fetchRemove(entry.key_ptr.*)) |old| {
+                                allocator.free(old.key);
+                                allocator.free(old.value);
+                            }
+                            try deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
                         }
-                        try deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
                     }
                 }
             }
@@ -789,7 +791,7 @@ pub const Manifest = struct {
             while (dep_iter.next()) |entry| {
                 try deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
             }
-            try root.object.put(aa, "deps", std.json.Value{ .object = deps_map });
+            try root.object.put(aa, "dep", std.json.Value{ .object = deps_map });
         }
 
         if (self.dev_dependencies.count() > 0) {
@@ -844,6 +846,7 @@ pub const Manifest = struct {
                 if (lib.win) |w| try obj.put(aa, "win", std.json.Value{ .string = w });
                 if (lib.path) |p| try obj.put(aa, "path", std.json.Value{ .string = p });
                 if (lib.prebuilt) |pb| try obj.put(aa, "prebuilt", std.json.Value{ .string = pb });
+                if (lib.optional) try obj.put(aa, "optional", std.json.Value{ .bool = true });
                 try sys_map.put(aa, key, std.json.Value{ .object = obj });
             }
             try root.object.put(aa, "sys", std.json.Value{ .object = sys_map });

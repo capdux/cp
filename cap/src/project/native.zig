@@ -69,6 +69,25 @@ pub fn dynamicLibExtForTarget(target_key: []const u8) []const u8 {
     return ".so";
 }
 
+pub fn staticLibExtForTarget(target_key: []const u8) []const u8 {
+    if (std.mem.startsWith(u8, target_key, "windows")) return ".lib";
+    return ".a";
+}
+
+pub fn isCppSource(src_path: []const u8) bool {
+    return std.mem.endsWith(u8, src_path, ".cpp") or
+        std.mem.endsWith(u8, src_path, ".cc") or
+        std.mem.endsWith(u8, src_path, ".cxx") or
+        std.mem.endsWith(u8, src_path, ".C");
+}
+
+pub fn binHasCppSources(bin_cfg: manifest.BinDependencyConfig) bool {
+    for (bin_cfg.sources) |src| {
+        if (isCppSource(src)) return true;
+    }
+    return false;
+}
+
 pub fn sanitizePkgName(allocator: std.mem.Allocator, pkg_name: []const u8) ![]const u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(allocator);
@@ -231,7 +250,8 @@ pub fn resolveOrBuildBinLibEx(
 
     const target_key = zigTripleToTargetKey(target_key_in);
     const zig_triple = targetKeyToZigTriple(target_key);
-    const lib_filename = try std.fmt.allocPrint(allocator, "lib{s}.a", .{bin_name});
+    const lib_ext = staticLibExtForTarget(target_key);
+    const lib_filename = try std.fmt.allocPrint(allocator, "lib{s}{s}", .{ bin_name, lib_ext });
     defer allocator.free(lib_filename);
 
     const prebuilt_dir_name = if (bin_cfg.prebuilt) |pb| (if (pb.len > 0) pb else "prebuilt") else "prebuilt";
@@ -244,8 +264,30 @@ pub fn resolveOrBuildBinLibEx(
     errdefer allocator.free(prebuilt_path);
 
     // State 1: Package-bundled prebuilt static archive (0ms hit)
-    if (!opts.force_rebuild and fileExists(prebuilt_path)) {
-        return prebuilt_path;
+    if (!opts.force_rebuild) {
+        if (fileExists(prebuilt_path)) {
+            return prebuilt_path;
+        }
+        if (std.mem.startsWith(u8, target_key, "windows")) {
+            const win_alt_names = [_][]const u8{
+                try std.fmt.allocPrint(allocator, "{s}.lib", .{bin_name}),
+                try std.fmt.allocPrint(allocator, "lib{s}.a", .{bin_name}),
+            };
+            defer for (win_alt_names) |n| allocator.free(n);
+            for (win_alt_names) |alt_name| {
+                const alt_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{
+                    pkg_dir,
+                    prebuilt_dir_name,
+                    target_key,
+                    alt_name,
+                });
+                if (fileExists(alt_path)) {
+                    allocator.free(prebuilt_path);
+                    return alt_path;
+                }
+                allocator.free(alt_path);
+            }
+        }
     }
 
     const cache_root = try getCapCacheRoot(allocator);
@@ -343,10 +385,13 @@ pub fn resolveOrBuildBinLibEx(
         const obj_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ obj_dir, obj_name });
         try obj_paths.append(allocator, obj_path);
 
+        const is_cpp = isCppSource(src_rel);
+        const compiler_subcmd = if (is_cpp) "c++" else "cc";
+
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(allocator);
         try argv.append(allocator, "zig");
-        try argv.append(allocator, "cc");
+        try argv.append(allocator, compiler_subcmd);
         try argv.append(allocator, "-target");
         try argv.append(allocator, zig_triple);
         try argv.append(allocator, "-c");
@@ -365,7 +410,7 @@ pub fn resolveOrBuildBinLibEx(
 
         const ok = try spawnSuccess(argv.items);
         if (!ok) {
-            std.debug.print("  ✗ [bin] zig cc failed for {s}\n", .{src_path});
+            std.debug.print("  ✗ [bin] zig {s} failed for {s}\n", .{ compiler_subcmd, src_path });
             return error.NativeBuildFailed;
         }
     }
@@ -405,12 +450,18 @@ pub const NativeLinkSet = struct {
     include_dirs: std.ArrayList([]const u8),
     static_libs: std.ArrayList([]const u8),
     link_libs: std.ArrayList([]const u8),
+    runtime_lib_dirs: std.ArrayList([]const u8),
+    runtime_lib_files: std.ArrayList([]const u8),
+    has_cpp: bool = false,
 
     pub fn init() NativeLinkSet {
         return .{
             .include_dirs = .empty,
             .static_libs = .empty,
             .link_libs = .empty,
+            .runtime_lib_dirs = .empty,
+            .runtime_lib_files = .empty,
+            .has_cpp = false,
         };
     }
 
@@ -421,9 +472,13 @@ pub const NativeLinkSet = struct {
         self.static_libs.deinit(allocator);
         for (self.link_libs.items) |p| allocator.free(p);
         self.link_libs.deinit(allocator);
+        for (self.runtime_lib_dirs.items) |p| allocator.free(p);
+        self.runtime_lib_dirs.deinit(allocator);
+        for (self.runtime_lib_files.items) |p| allocator.free(p);
+        self.runtime_lib_files.deinit(allocator);
     }
 
-    fn appendUnique(list: *std.ArrayList([]const u8), allocator: std.mem.Allocator, value: []const u8) void {
+    pub fn appendUnique(list: *std.ArrayList([]const u8), allocator: std.mem.Allocator, value: []const u8) void {
         for (list.items) |existing| {
             if (std.mem.eql(u8, existing, value)) {
                 allocator.free(value);
@@ -451,73 +506,241 @@ fn readManifestInDir(allocator: std.mem.Allocator, pkg_dir: []const u8) ?manifes
     return manifest.Manifest.parse(allocator, content) catch return null;
 }
 
-fn collectSysDeps(
+fn realpathOrDupe(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
+    return std.Io.Dir.realPathFileAlloc(.cwd(), main_mod.global_io, path, allocator) catch try allocator.dupe(u8, path);
+}
+
+fn isBuiltinSysLib(name: []const u8) bool {
+    const builtins = [_][]const u8{ "c", "m", "pthread", "dl", "rt", "gcc_s" };
+    for (builtins) |b| {
+        if (std.mem.eql(u8, name, b)) return true;
+    }
+    return false;
+}
+
+fn extractLogicalLibName(sys_dep: manifest.SingleSysDep, target_triple: []const u8) ?[]const u8 {
+    if (sys_dep.getRawForTarget(target_triple)) |raw| {
+        var n = raw;
+        if (std.mem.startsWith(u8, n, "lib")) n = n[3..];
+        if (std.mem.indexOf(u8, n, ".")) |dot_idx| n = n[0..dot_idx];
+        if (n.len > 0) return n;
+    }
+    if (sys_dep.name) |k| {
+        if (k.len > 0) return k;
+    }
+    return null;
+}
+
+fn dirHasSharedLib(dir_path: []const u8, lib_name: []const u8, raw_name_opt: ?[]const u8, ext: []const u8) bool {
+    if (dir_path.len == 0) return false;
+    var dir = if (dir_path[0] == '/')
+        std.Io.Dir.openDirAbsolute(main_mod.global_io, dir_path, .{ .iterate = true }) catch return false
+    else
+        std.Io.Dir.openDir(.cwd(), main_mod.global_io, dir_path, .{ .iterate = true }) catch return false;
+    defer dir.close(main_mod.global_io);
+
+    var prefix_buf: [256]u8 = undefined;
+    const lib_prefix = std.fmt.bufPrint(&prefix_buf, "lib{s}", .{lib_name}) catch return false;
+
+    var exact_buf: [256]u8 = undefined;
+    const exact_name = std.fmt.bufPrint(&exact_buf, "lib{s}{s}", .{ lib_name, ext }) catch return false;
+
+    var so_dot_buf: [256]u8 = undefined;
+    const so_dot_prefix = std.fmt.bufPrint(&so_dot_buf, "lib{s}.so.", .{lib_name}) catch return false;
+
+    var it = dir.iterate();
+    while (it.next(main_mod.global_io) catch null) |entry| {
+        const ename = entry.name;
+        if (raw_name_opt) |raw| {
+            if (std.mem.eql(u8, ename, raw)) return true;
+        }
+        if (std.mem.eql(u8, ename, exact_name)) return true;
+        if (std.mem.eql(u8, ext, ".so")) {
+            if (std.mem.startsWith(u8, ename, so_dot_prefix)) return true;
+        } else if (std.mem.eql(u8, ext, ".dylib")) {
+            if (std.mem.startsWith(u8, ename, lib_prefix) and std.mem.endsWith(u8, ename, ".dylib")) return true;
+        } else if (std.mem.eql(u8, ext, ".dll")) {
+            var dll_buf: [256]u8 = undefined;
+            if (std.fmt.bufPrint(&dll_buf, "{s}.dll", .{lib_name})) |plain_dll| {
+                if (std.mem.eql(u8, ename, plain_dll)) return true;
+            } else |_| {}
+        }
+    }
+    return false;
+}
+
+fn sysLibExistsOnHost(lib_name: []const u8, raw_name_opt: ?[]const u8, ext: []const u8) bool {
+    const env_key = if (builtin.os.tag == .macos) "DYLD_LIBRARY_PATH" else "LD_LIBRARY_PATH";
+    if (main_mod.global_env.get(env_key)) |env_paths| {
+        var it = std.mem.splitScalar(u8, env_paths, ':');
+        while (it.next()) |dir_p| {
+            if (dir_p.len > 0 and dirHasSharedLib(dir_p, lib_name, raw_name_opt, ext)) {
+                return true;
+            }
+        }
+    }
+
+    const std_dirs = [_][]const u8{
+        "/usr/lib64",
+        "/usr/lib",
+        "/lib64",
+        "/lib",
+        "/usr/local/lib",
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib/aarch64-linux-gnu",
+    };
+    for (std_dirs) |dir_p| {
+        if (dirHasSharedLib(dir_p, lib_name, raw_name_opt, ext)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn tryMatchBundledDynLibInDir(
+    allocator: std.mem.Allocator,
+    dir_path: []const u8,
+    lib_name: []const u8,
+    raw_name_opt: ?[]const u8,
+    ext: []const u8,
+) !?[]const u8 {
+    const std_dyn = try std.fmt.allocPrint(allocator, "lib{s}{s}", .{ lib_name, ext });
+    defer allocator.free(std_dyn);
+    const full_std = try std.Io.Dir.path.join(allocator, &[_][]const u8{ dir_path, std_dyn });
+    if (fileExists(full_std)) {
+        return full_std;
+    }
+    allocator.free(full_std);
+
+    if (raw_name_opt) |raw| {
+        if (raw.len > 0) {
+            const full_raw = try std.Io.Dir.path.join(allocator, &[_][]const u8{ dir_path, raw });
+            if (fileExists(full_raw)) {
+                return full_raw;
+            }
+            allocator.free(full_raw);
+        }
+    }
+    return null;
+}
+
+/// Compile-time verification & resolution for a single `sys` dynamic library entry:
+/// 1. Bundled prebuilt (`<pkg>/<prebuilt>/<os>-<arch>/lib<name>.so`) or `sys.<name>.path`
+///    -> injects `-L<dir>`, `-l<name>`, `-Wl,-rpath,<dir>` (Linux/macOS), and records runtime dir/file.
+/// 2. Builtin system libraries (`c`, `m`, `pthread`, `dl`, `rt`, `gcc_s`) -> passes `-l<name>`.
+/// 3. External system libraries -> checks `LD_LIBRARY_PATH` / `DYLD_LIBRARY_PATH` + standard system dirs
+///    on host builds; fails with clear compile-time error if missing and not `optional: true`.
+pub fn verifyAndResolveSysLib(
+    allocator: std.mem.Allocator,
+    pkg_dir: []const u8,
+    sys_dep: manifest.SingleSysDep,
+    target_key: []const u8,
+    target_triple: []const u8,
+    out: *NativeLinkSet,
+) !void {
+    const ext = dynamicLibExtForTarget(target_key);
+    const lib_name = extractLogicalLibName(sys_dep, target_triple) orelse return;
+    const raw_opt = sys_dep.getRawForTarget(target_triple);
+
+    // 1. Check bundled prebuilt dynamic library (`<prebuilt>/<os>-<arch>/lib<name><ext>`) or `sys.<name>.path`
+    var hit_dir: ?[]const u8 = null;
+    var hit_file: ?[]const u8 = null;
+    defer if (hit_dir) |d| allocator.free(d);
+    defer if (hit_file) |f| allocator.free(f);
+
+    const pb_dir_name = if (sys_dep.prebuilt) |pb| (if (pb.len > 0) pb else "prebuilt") else "prebuilt";
+    {
+        const dyn_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, pb_dir_name, target_key });
+        if (try tryMatchBundledDynLibInDir(allocator, dyn_dir, lib_name, raw_opt, ext)) |matched_file| {
+            hit_dir = dyn_dir;
+            hit_file = matched_file;
+        } else {
+            allocator.free(dyn_dir);
+        }
+    }
+
+    if (hit_file == null) {
+        if (sys_dep.path) |p| {
+            if (p.len > 0) {
+                const path_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, p });
+                if (try tryMatchBundledDynLibInDir(allocator, path_dir, lib_name, raw_opt, ext)) |matched_file| {
+                    hit_dir = path_dir;
+                    hit_file = matched_file;
+                } else {
+                    const path_target_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, p, target_key });
+                    if (try tryMatchBundledDynLibInDir(allocator, path_target_dir, lib_name, raw_opt, ext)) |matched_file2| {
+                        hit_dir = path_target_dir;
+                        hit_file = matched_file2;
+                        allocator.free(path_dir);
+                    } else {
+                        allocator.free(path_target_dir);
+                        allocator.free(path_dir);
+                    }
+                }
+            }
+        }
+    }
+
+    if (hit_dir != null and hit_file != null) {
+        const abs_dir = try realpathOrDupe(allocator, hit_dir.?);
+        const abs_file = try realpathOrDupe(allocator, hit_file.?);
+        NativeLinkSet.appendUnique(&out.link_libs, allocator, try std.fmt.allocPrint(allocator, "-L{s}", .{abs_dir}));
+        NativeLinkSet.appendUnique(&out.link_libs, allocator, try std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}));
+        NativeLinkSet.appendUnique(&out.runtime_lib_dirs, allocator, abs_dir);
+        NativeLinkSet.appendUnique(&out.runtime_lib_files, allocator, abs_file);
+        return;
+    }
+
+    // 2. Builtin system libraries pass directly
+    if (isBuiltinSysLib(lib_name)) {
+        NativeLinkSet.appendUnique(&out.link_libs, allocator, try std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}));
+        return;
+    }
+
+    // 3. External system dynamic libraries: verify existence on host builds
+    if (std.mem.eql(u8, target_key, hostTargetKey())) {
+        if (!sysLibExistsOnHost(lib_name, raw_opt, ext)) {
+            if (sys_dep.optional) {
+                return;
+            }
+            std.debug.print(
+                \\error[cap:sys]: dynamic library 'lib{s}{s}' not found on this host ({s})
+                \\  = cause: declared in `sys.{s}` without `"optional": true`, and not found in LD_LIBRARY_PATH or standard system library directories
+                \\  = help: install the system package providing lib{s}{s}, place it under `{s}/{s}/{s}/lib{s}{s}`, or set `"{s}": {{ "optional": true }}`
+                \\
+            , .{
+                lib_name,
+                ext,
+                target_key,
+                lib_name,
+                lib_name,
+                ext,
+                pkg_dir,
+                pb_dir_name,
+                target_key,
+                lib_name,
+                ext,
+                lib_name,
+            });
+            return error.MissingSysLibrary;
+        }
+    }
+
+    if (try sys_dep.getLibFlagForTarget(target_triple, allocator)) |flag| {
+        NativeLinkSet.appendUnique(&out.link_libs, allocator, flag);
+    }
+}
+
+pub fn verifyAndResolveSysDeps(
     allocator: std.mem.Allocator,
     pkg_dir: []const u8,
     sys_cfg: manifest.SysDependencyConfig,
     target_key: []const u8,
     target_triple: []const u8,
     out: *NativeLinkSet,
-) void {
-    const ext = dynamicLibExtForTarget(target_key);
+) !void {
     for (sys_cfg.libs) |sys_dep| {
-        var resolved_prebuilt = false;
-        if (sys_dep.name) |lib_name| {
-            // Check bundled prebuilt dynamic library (.so / .dylib / .dll)
-            if (sys_dep.prebuilt) |pb| {
-                const dyn_name = std.fmt.allocPrint(allocator, "lib{s}{s}", .{ lib_name, ext }) catch null;
-                if (dyn_name) |dn| {
-                    defer allocator.free(dn);
-                    const dyn_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, pb, target_key }) catch null;
-                    if (dyn_dir) |dd| {
-                        defer allocator.free(dd);
-                        const dyn_full = std.Io.Dir.path.join(allocator, &[_][]const u8{ dd, dn }) catch null;
-                        if (dyn_full) |df| {
-                            defer allocator.free(df);
-                            if (fileExists(df)) {
-                                if (std.fmt.allocPrint(allocator, "-L{s}", .{dd}) catch null) |l_dir_flag| {
-                                    NativeLinkSet.appendUnique(&out.link_libs, allocator, l_dir_flag);
-                                }
-                                if (std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}) catch null) |l_flag| {
-                                    NativeLinkSet.appendUnique(&out.link_libs, allocator, l_flag);
-                                }
-                                resolved_prebuilt = true;
-                            }
-                        }
-                    }
-                }
-            }
-            if (!resolved_prebuilt) {
-                if (sys_dep.path) |p| {
-                    const dyn_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, p }) catch null;
-                    if (dyn_dir) |dd| {
-                        defer allocator.free(dd);
-                        const dyn_name = std.fmt.allocPrint(allocator, "lib{s}{s}", .{ lib_name, ext }) catch null;
-                        if (dyn_name) |dn| {
-                            defer allocator.free(dn);
-                            const dyn_full = std.Io.Dir.path.join(allocator, &[_][]const u8{ dd, dn }) catch null;
-                            if (dyn_full) |df| {
-                                defer allocator.free(df);
-                                if (fileExists(df)) {
-                                    if (std.fmt.allocPrint(allocator, "-L{s}", .{dd}) catch null) |l_dir_flag| {
-                                        NativeLinkSet.appendUnique(&out.link_libs, allocator, l_dir_flag);
-                                    }
-                                    if (std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}) catch null) |l_flag| {
-                                        NativeLinkSet.appendUnique(&out.link_libs, allocator, l_flag);
-                                    }
-                                    resolved_prebuilt = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!resolved_prebuilt) {
-            if (sys_dep.getLibFlagForTarget(target_triple, allocator) catch null) |flag| {
-                NativeLinkSet.appendUnique(&out.link_libs, allocator, flag);
-            }
-        }
+        try verifyAndResolveSysLib(allocator, pkg_dir, sys_dep, target_key, target_triple, out);
     }
 }
 
@@ -529,11 +752,11 @@ fn collectPackageRecursive(
     target_triple: []const u8,
     visited: *std.StringHashMap(void),
     out: *NativeLinkSet,
-) void {
+) !void {
     if (visited.contains(pkg_name)) return;
-    visited.put(allocator.dupe(u8, pkg_name) catch return, {}) catch return;
+    try visited.put(try allocator.dupe(u8, pkg_name), {});
 
-    const pkg_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ modules_dir_path, pkg_name }) catch return;
+    const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ modules_dir_path, pkg_name });
     defer allocator.free(pkg_dir);
 
     var mf = readManifestInDir(allocator, pkg_dir) orelse return;
@@ -545,6 +768,9 @@ fn collectPackageRecursive(
         const bin_name = entry.key_ptr.*;
         const bin_cfg = entry.value_ptr.*;
         if (isLocalBinLib(bin_cfg)) {
+            if (binHasCppSources(bin_cfg)) {
+                out.has_cpp = true;
+            }
             if (resolveOrBuildBinLib(allocator, mf.name, mf.version, pkg_dir, bin_name, bin_cfg, target_key, false)) |lib_path| {
                 NativeLinkSet.appendUnique(&out.static_libs, allocator, lib_path);
             } else |_| {}
@@ -567,24 +793,24 @@ fn collectPackageRecursive(
             }
         } else if (bin_cfg.version != null) {
             // External static library package reference (e.g. "pkg": "^1.0.0")
-            collectPackageRecursive(allocator, modules_dir_path, bin_name, target_key, target_triple, visited, out);
+            try collectPackageRecursive(allocator, modules_dir_path, bin_name, target_key, target_triple, visited, out);
         }
     }
 
-    // 2. Collect all `sys` dynamic/system libraries declared in this package
+    // 2. Verify & collect all `sys` dynamic/system libraries declared in this package
     if (mf.sys_dependencies) |sys_cfg| {
-        collectSysDeps(allocator, pkg_dir, sys_cfg, target_key, target_triple, out);
+        try verifyAndResolveSysDeps(allocator, pkg_dir, sys_cfg, target_key, target_triple, out);
     }
 
-    // 3. Recursively traverse transitive `deps`
+    // 3. Recursively traverse transitive `dep`
     var dep_it = mf.dependencies.iterator();
     while (dep_it.next()) |dep_entry| {
-        collectPackageRecursive(allocator, modules_dir_path, dep_entry.key_ptr.*, target_key, target_triple, visited, out);
+        try collectPackageRecursive(allocator, modules_dir_path, dep_entry.key_ptr.*, target_key, target_triple, visited, out);
     }
 }
 
 /// On-demand recursive link collector: ONLY links packages actually referenced by the compilation unit
-/// and their transitive `deps`, `bin` static archives, and `sys` dynamic libraries.
+/// and their transitive `dep`, `bin` static archives (C & C++), and `sys` dynamic libraries.
 pub fn collectUsedPackageDepsForTarget(
     allocator: std.mem.Allocator,
     project_root: []const u8,
@@ -612,7 +838,7 @@ pub fn collectUsedPackageDepsForTarget(
 
     var it = used_pkgs.iterator();
     while (it.next()) |entry| {
-        collectPackageRecursive(allocator, modules_dir_path, entry.key_ptr.*, target_key, target_triple, &visited, &result);
+        try collectPackageRecursive(allocator, modules_dir_path, entry.key_ptr.*, target_key, target_triple, &visited, &result);
     }
 
     return result;
