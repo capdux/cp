@@ -1125,10 +1125,92 @@ const BinaryPackEntry = struct {
     file_count: usize,
 };
 
+const StripSummary = struct {
+    stripped_files: usize = 0,
+    skipped_files: usize = 0,
+    bytes_before: u64 = 0,
+    bytes_after: u64 = 0,
+};
+
+fn isStrippableBinary(rel_path: []const u8) bool {
+    if (std.mem.endsWith(u8, rel_path, ".so") or
+        std.mem.endsWith(u8, rel_path, ".dylib") or
+        std.mem.endsWith(u8, rel_path, ".a"))
+    {
+        return true;
+    }
+    const base = std.Io.Dir.path.basename(rel_path);
+    return std.mem.indexOf(u8, base, ".so.") != null;
+}
+
+fn stageStrippedFiles(
+    allocator: std.mem.Allocator,
+    stage_dir: []const u8,
+    files: []const []const u8,
+) !StripSummary {
+    var summary = StripSummary{};
+    try native.ensureDirPath(stage_dir);
+
+    for (files) |rel_path| {
+        const stage_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ stage_dir, rel_path });
+        defer allocator.free(stage_path);
+        if (std.Io.Dir.path.dirname(stage_path)) |parent| {
+            try native.ensureDirPath(parent);
+        }
+
+        if (isStrippableBinary(rel_path)) {
+            const orig_stat = std.Io.Dir.statFile(.cwd(), main_mod.global_io, rel_path, .{}) catch null;
+            const orig_size: u64 = if (orig_stat) |st| st.size else 0;
+
+            var stripped_ok = false;
+            var new_size: u64 = 0;
+            const argv = &[_][]const u8{ "zig", "objcopy", "--strip-debug", rel_path, stage_path };
+            if (std.process.spawn(main_mod.global_io, .{
+                .argv = argv,
+                .stdout = .ignore,
+                .stderr = .ignore,
+            })) |child_val| {
+                var child = child_val;
+                if (child.wait(main_mod.global_io)) |res| {
+                    const exit_ok = switch (res) {
+                        .exited => |code| code == 0,
+                        else => false,
+                    };
+                    if (exit_ok) {
+                        if (std.Io.Dir.statFile(.cwd(), main_mod.global_io, stage_path, .{})) |new_st| {
+                            if (new_st.size > 0 and (orig_size == 0 or new_st.size <= orig_size)) {
+                                stripped_ok = true;
+                                new_size = new_st.size;
+                            }
+                        } else |_| {}
+                    }
+                } else |_| {}
+            } else |_| {}
+
+            if (stripped_ok) {
+                summary.stripped_files += 1;
+                summary.bytes_before += orig_size;
+                summary.bytes_after += new_size;
+                continue;
+            }
+
+            // Unsupported format (e.g. static .a archive or non-ELF): remove partial output and keep original
+            removePathAny(stage_path);
+            try native.copyFilePath(allocator, rel_path, stage_path);
+            summary.skipped_files += 1;
+        } else {
+            try native.copyFilePath(allocator, rel_path, stage_path);
+        }
+    }
+
+    return summary;
+}
+
 pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var target_opt: ?[]const u8 = null;
     var out_dir: []const u8 = ".";
     var npm_mode = false;
+    var strip_bins = false;
 
     var i: usize = 0;
     while (i < args.len) : (i += 1) {
@@ -1149,8 +1231,10 @@ pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void 
             }
         } else if (std.mem.eql(u8, arg, "--npm") or std.mem.eql(u8, arg, "--tgz")) {
             npm_mode = true;
+        } else if (std.mem.eql(u8, arg, "--strip")) {
+            strip_bins = true;
         } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            std.debug.print("Usage: cap pack [--npm|--tgz] [--target=<os-arch|all>] [--out=<dir>]\n", .{});
+            std.debug.print("Usage: cap pack [--npm|--tgz] [--strip] [--target=<os-arch|all>] [--out=<dir>]\n", .{});
             return;
         }
     }
@@ -1348,7 +1432,44 @@ pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void 
         const bin_out_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, bin_tarball_name });
         defer allocator.free(bin_out_path);
 
-        const bin_res = try archive.packDirToTarZst(allocator, ".", files, bin_out_path);
+        var stage_dir_opt: ?[]u8 = null;
+        defer if (stage_dir_opt) |sd| {
+            removePathAny(sd);
+            allocator.free(sd);
+        };
+        var pack_root: []const u8 = ".";
+        if (strip_bins) {
+            const stage_dir = try std.fmt.allocPrint(allocator, "{s}/.cap-strip-tmp-{s}", .{ out_dir, t_key });
+            stage_dir_opt = stage_dir;
+            removePathAny(stage_dir);
+            const strip_summary = try stageStrippedFiles(allocator, stage_dir, files);
+            pack_root = stage_dir;
+            if (strip_summary.stripped_files > 0) {
+                const saved: u64 = if (strip_summary.bytes_before >= strip_summary.bytes_after)
+                    strip_summary.bytes_before - strip_summary.bytes_after
+                else
+                    0;
+                const saved_pct: f64 = if (strip_summary.bytes_before > 0)
+                    (@as(f64, @floatFromInt(saved)) / @as(f64, @floatFromInt(strip_summary.bytes_before))) * 100.0
+                else
+                    0.0;
+                std.debug.print("  ✂ Stripped [{s}]: {d} file(s), {d} B -> {d} B (-{d} B, -{d:.1}%)\n", .{
+                    t_key,
+                    strip_summary.stripped_files,
+                    strip_summary.bytes_before,
+                    strip_summary.bytes_after,
+                    saved,
+                    saved_pct,
+                });
+            } else if (strip_summary.skipped_files > 0) {
+                std.debug.print("  ✂ Strip [{s}]: 0 stripped, {d} skipped (unsupported/non-ELF format)\n", .{
+                    t_key,
+                    strip_summary.skipped_files,
+                });
+            }
+        }
+
+        const bin_res = try archive.packDirToTarZst(allocator, pack_root, files, bin_out_path);
         const ratio: f64 = if (bin_res.raw_size > 0)
             (@as(f64, @floatFromInt(bin_res.compressed_size)) / @as(f64, @floatFromInt(bin_res.raw_size))) * 100.0
         else

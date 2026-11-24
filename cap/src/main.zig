@@ -201,7 +201,7 @@ fn usage() void {
         \\
         \\Usage:
         \\  cap <file.cp|dir>             Run a CP file or directory directly (Debug)
-        \\  cap run <file|script>         Run a script or file explicitly
+        \\  cap run [options] <file|script> Run a script or file (-m/--modular, --parallel-obj)
         \\  cap build [target] [options]  Build a CP package or directory
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
         \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
@@ -214,7 +214,7 @@ fn usage() void {
         \\  cap update [package]          Update dependencies and refresh cap.lock
         \\  cap install [options]         Install dependencies (--production|--prod, --frozen-lockfile, --rebuild)
         \\  cap rebuild [pkg] [options]   Rebuild bin C/C++ libs (--filter <pkg>, --target=<os-arch|all>, --write-prebuilt)
-        \\  cap pack [options]            Pack .tar.zst (or --npm .tgz) archives (--target=<os-arch|all>, --out=<dir>)
+        \\  cap pack [options]            Pack .tar.zst (or --npm .tgz) archives (--strip, --target=<os-arch|all>, --out=<dir>)
         \\  cap publish [options]         Publish .tgz package to npm/Verdaccio registry (--registry, --access, --tag, --otp, --dry-run)
         \\  cap cache <dir|ls|clean>      Inspect or clean global ~/.cap/cache
         \\  cap why <package>             Explain why a package is installed
@@ -255,12 +255,47 @@ fn usage() void {
     , .{});
 }
 
+const RunOptions = struct {
+    opt_mode: []const u8 = "Debug",
+    is_modular: bool = false,
+    parallel_obj: bool = false,
+    force_rebuild: bool = false,
+};
+
 fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
     if (args.len == 0) return false;
-    const target = args[0];
+
+    var run_opts = RunOptions{};
+    var target_opt: ?[]const u8 = null;
+
+    for (args) |arg| {
+        if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            std.debug.print(
+                \\Usage: cap run [options] <file.cp|script>
+                \\
+                \\Options:
+                \\  -m, --modular       Enable modular multi-file Zig codegen (cpc compile --emit-dir)
+                \\  --parallel-obj      Enable parallel per-module .o caching & incremental linking (implies -m)
+                \\  -B, --force         Force rebuild even if targets are up to date
+                \\
+            , .{});
+            return true;
+        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
+            run_opts.is_modular = true;
+        } else if (std.mem.eql(u8, arg, "--parallel-obj")) {
+            run_opts.is_modular = true;
+            run_opts.parallel_obj = true;
+        } else if (std.mem.eql(u8, arg, "-B") or std.mem.eql(u8, arg, "--force")) {
+            run_opts.force_rebuild = true;
+        } else if (target_opt == null) {
+            target_opt = arg;
+        }
+    }
+
+    const target = target_opt orelse return false;
 
     if (std.mem.endsWith(u8, target, ".cp")) {
-        try runFile(allocator, target);
+        try runFileWithOpts(allocator, target, run_opts);
         return true;
     }
 
@@ -1582,10 +1617,15 @@ fn spawnRunBinary(allocator: std.mem.Allocator, run_path: []const u8, mf_opt: ?m
 }
 
 fn runFile(allocator: std.mem.Allocator, filename: []const u8) !void {
-    try runFileWithOpt(allocator, filename, "Debug");
+    try runFileWithOpts(allocator, filename, .{ .opt_mode = "Debug" });
 }
 
 fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: []const u8) !void {
+    try runFileWithOpts(allocator, filename, .{ .opt_mode = opt_mode });
+}
+
+fn runFileWithOpts(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !void {
+    const opt_mode = opts.opt_mode;
     const full_base_name = filename[0 .. filename.len - 3];
     var bin_subpath: []const u8 = full_base_name;
     if (std.mem.startsWith(u8, full_base_name, "src/")) {
@@ -1597,7 +1637,7 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     const src_stat = fs_shim.cwd().statFile(filename) catch null;
     const bin_stat = fs_shim.cwd().statFile(run_path) catch null;
 
-    if (src_stat != null and bin_stat != null and bin_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
+    if (!opts.force_rebuild and !opts.is_modular and src_stat != null and bin_stat != null and bin_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
         std.debug.print("[Up-to-date] bin/{s} (skipped compile)\n", .{bin_subpath});
         var cached_mf: ?manifest.Manifest = null;
         if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
@@ -1614,34 +1654,49 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
         return;
     }
 
-    std.debug.print("Compiling: {s} (Mode: {s})...\n", .{ filename, opt_mode });
+    if (opts.is_modular and opts.parallel_obj) {
+        std.debug.print("Compiling: {s} (Mode: {s}, modular + parallel-obj)...\n", .{ filename, opt_mode });
+    } else if (opts.is_modular) {
+        std.debug.print("Compiling: {s} (Mode: {s}, modular)...\n", .{ filename, opt_mode });
+    } else {
+        std.debug.print("Compiling: {s} (Mode: {s})...\n", .{ filename, opt_mode });
+    }
     const comp_start = std.Io.Timestamp.now(global_io, .awake);
 
-    const zig_file = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{full_base_name});
-    defer allocator.free(zig_file);
+    var mod_zig_dir_opt: ?[]u8 = null;
+    defer if (mod_zig_dir_opt) |d| allocator.free(d);
+    var zig_file_buf: ?[]const u8 = null;
+    defer if (zig_file_buf) |zf| allocator.free(zf);
 
-    if (std.Io.Dir.path.dirname(zig_file)) |dirname| {
-        fs_shim.cwd().createDirPath(global_io, dirname) catch {};
-    }
+    const base_with_ext = std.Io.Dir.path.basename(filename);
+    const entry_stem = if (std.mem.endsWith(u8, base_with_ext, ".cp"))
+        base_with_ext[0 .. base_with_ext.len - 3]
+    else
+        base_with_ext;
 
-    const zig_stat = fs_shim.cwd().statFile(zig_file) catch null;
-    if (zig_stat != null and src_stat != null and zig_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
-        std.debug.print("  → [cpc] Intermediate Zig source is up to date (skipped)\n", .{});
-    } else {
+    if (opts.is_modular) {
+        const mod_zig_dir = try std.fmt.allocPrint(allocator, ".cap/run-mod/{s}/zig", .{bin_subpath});
+        mod_zig_dir_opt = mod_zig_dir;
+        fs_shim.cwd().createDirPath(global_io, mod_zig_dir) catch {};
+
         const cpc_bin = try getCpcBin(allocator);
         defer allocator.free(cpc_bin);
         const cpc_start = std.Io.Timestamp.now(global_io, .awake);
-        var cpc_args_buf: [15][]const u8 = undefined;
+        var cpc_args_buf: [20][]const u8 = undefined;
         var cpc_argc: usize = 0;
         cpc_args_buf[cpc_argc] = cpc_bin;
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "compile";
         cpc_argc += 1;
+        cpc_args_buf[cpc_argc] = "--emit-dir";
+        cpc_argc += 1;
+        cpc_args_buf[cpc_argc] = mod_zig_dir;
+        cpc_argc += 1;
+        if (opts.force_rebuild) {
+            cpc_args_buf[cpc_argc] = "--force";
+            cpc_argc += 1;
+        }
         cpc_args_buf[cpc_argc] = filename;
-        cpc_argc += 1;
-        cpc_args_buf[cpc_argc] = "--output";
-        cpc_argc += 1;
-        cpc_args_buf[cpc_argc] = zig_file;
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "-I";
         cpc_argc += 1;
@@ -1662,9 +1717,65 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
             .exited => |code| if (code != 0) return error.CompileFailed,
             else => return error.CompileFailed,
         }
+
+        zig_file_buf = try resolveModularEntryFile(allocator, mod_zig_dir, entry_stem);
+        if (zig_file_buf == null) {
+            std.debug.print("Error: --modular compilation did not produce {s}/__cp_entry.zig or {s}/{s}.zig\n", .{ mod_zig_dir, mod_zig_dir, entry_stem });
+            return error.CompileFailed;
+        }
         const cpc_ms = cpc_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
         std.debug.print("  → [cpc] Transpiled in {d}ms\n", .{cpc_ms});
+    } else {
+        zig_file_buf = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{full_base_name});
+        const zf = zig_file_buf.?;
+        if (std.Io.Dir.path.dirname(zf)) |dirname| {
+            fs_shim.cwd().createDirPath(global_io, dirname) catch {};
+        }
+
+        const zig_stat = fs_shim.cwd().statFile(zf) catch null;
+        if (!opts.force_rebuild and zig_stat != null and src_stat != null and zig_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
+            std.debug.print("  → [cpc] Intermediate Zig source is up to date (skipped)\n", .{});
+        } else {
+            const cpc_bin = try getCpcBin(allocator);
+            defer allocator.free(cpc_bin);
+            const cpc_start = std.Io.Timestamp.now(global_io, .awake);
+            var cpc_args_buf: [15][]const u8 = undefined;
+            var cpc_argc: usize = 0;
+            cpc_args_buf[cpc_argc] = cpc_bin;
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "compile";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = filename;
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "--output";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = zf;
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "-I";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "cap_modules";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "-I";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "/data/dev/cp/cap/cap_modules";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "-I";
+            cpc_argc += 1;
+            cpc_args_buf[cpc_argc] = "/data/dev/cp/lib";
+            cpc_argc += 1;
+
+            var compile_child = try std.process.spawn(global_io, .{ .argv = cpc_args_buf[0..cpc_argc] });
+            const compile_res = try compile_child.wait(global_io);
+            switch (compile_res) {
+                .exited => |code| if (code != 0) return error.CompileFailed,
+                else => return error.CompileFailed,
+            }
+            const cpc_ms = cpc_start.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
+            std.debug.print("  → [cpc] Transpiled in {d}ms\n", .{cpc_ms});
+        }
     }
+
+    const zig_file = zig_file_buf.?;
 
     // Emit Type Definitions (.d.cp)
     {
@@ -1680,7 +1791,35 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
         _ = try emit_types_child.wait(global_io);
     }
 
-    std.debug.print("Linking: {s}...\n", .{zig_file});
+    var par_obj_res = modular_obj.ParallelObjResult.init();
+    defer par_obj_res.deinit(allocator);
+    var effective_zig_file: []const u8 = zig_file;
+
+    if (opts.is_modular and opts.parallel_obj) {
+        if (mod_zig_dir_opt) |mod_zig_dir| {
+            const obj_root = try std.fmt.allocPrint(allocator, ".cap/run-mod/{s}/obj", .{bin_subpath});
+            defer allocator.free(obj_root);
+            par_obj_res = modular_obj.prepareParallelObjects(allocator, .{
+                .zig_root_dir = mod_zig_dir,
+                .obj_root_dir = obj_root,
+                .optimize_mode = opt_mode,
+                .target_triple = "native",
+                .force_rebuild = opts.force_rebuild,
+            }) catch modular_obj.ParallelObjResult.init();
+
+            if (par_obj_res.active and par_obj_res.link_entry_zig != null) {
+                effective_zig_file = par_obj_res.link_entry_zig.?;
+                const mod_ms = @as(f64, @floatFromInt(par_obj_res.elapsed_ns)) / 1_000_000.0;
+                std.debug.print("  → [modular-obj] {d} cached, {d} rebuilt in {d:.2}ms\n", .{
+                    par_obj_res.hits,
+                    par_obj_res.misses,
+                    mod_ms,
+                });
+            }
+        }
+    }
+
+    std.debug.print("Linking: {s}...\n", .{effective_zig_file});
 
     if (std.Io.Dir.path.dirname(run_path)) |dirname| {
         fs_shim.cwd().createDirPath(global_io, dirname) catch {};
@@ -1703,13 +1842,14 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
     } else |_| {}
     defer if (mf_opt) |*m| m.deinit(allocator);
 
-    var build_args_buf: [128][]const u8 = undefined;
+    var build_args_buf: [512][]const u8 = undefined;
     var build_argc: usize = 0;
     build_args_buf[build_argc] = "zig";
     build_argc += 1;
     build_args_buf[build_argc] = "build-exe";
     build_argc += 1;
-    build_args_buf[build_argc] = zig_file;
+    const entry_arg_idx = build_argc;
+    build_args_buf[build_argc] = effective_zig_file;
     build_argc += 1;
     build_args_buf[build_argc] = emit_bin_arg;
     build_argc += 1;
@@ -1730,8 +1870,26 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
 
     try appendLinkArgs(allocator, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len, mf_opt, "native", opt_mode, zig_file, ".cap/zig-cache");
     scanZigFileForLinkPragmas(allocator, zig_file, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
+    if (opts.is_modular) {
+        if (mod_zig_dir_opt) |mod_zig_dir| {
+            scanModularManifestForLinkPragmas(allocator, mod_zig_dir, &build_args_buf, &build_argc, &allocated_libs, &allocated_libs_len);
+        }
+    }
 
-    const build_ok = try spawnAndWaitSuccess(build_args_buf[0..build_argc]);
+    const pre_obj_argc = build_argc;
+    if (par_obj_res.active) {
+        for (par_obj_res.obj_paths.items) |obj_p| {
+            addArg(&build_args_buf, &build_argc, obj_p);
+        }
+    }
+
+    var build_ok = try spawnAndWaitSuccess(build_args_buf[0..build_argc]);
+    if (!build_ok and par_obj_res.active) {
+        fs_shim.cwd().deleteFile(tmp_run_path) catch {};
+        std.debug.print("  ! [modular-obj] Incremental link failed, falling back to joint modular build...\n", .{});
+        build_args_buf[entry_arg_idx] = zig_file;
+        build_ok = try spawnAndWaitSuccess(build_args_buf[0..pre_obj_argc]);
+    }
     if (!build_ok) {
         fs_shim.cwd().deleteFile(tmp_run_path) catch {};
         return error.BuildFailed;
