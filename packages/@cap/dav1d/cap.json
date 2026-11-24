@@ -1,0 +1,32 @@
+{
+  "name": "@cap/dav1d",
+  "ver": "1.5.4",
+  "description": "VideoLAN dav1d (v1.5.4) high-performance royalty-free AV1 video decoder for CP via prebuilt dynamic library",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "bin": {
+    "dav1d_shim": {
+      "path": ".",
+      "src": [
+        "c/dav1d_ffi.c"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "dav1d": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {},
+    "pthread": {}
+  }
+}

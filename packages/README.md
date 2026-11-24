@@ -42,6 +42,8 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/openblas` | `0.3.29` | BSD-3-Clause | Prebuilt dynamic (`sys`) | High-performance BLAS linear algebra / GEMM engine (5.0 MB) |
 | `@cap/freetype` | `2.13.3` | FTL | C static (`bin`) | Industry-standard font rasterizer & glyph engine |
 | `@cap/flac` | `1.4.3` | BSD-3-Clause | C static (`bin`) | Xiph lossless audio codec (`libFLAC`) |
+| `@cap/harfbuzz` | `15.2.0` | MIT | C++ static (`bin`) | Industrial multi-script/CJK/Arabic text shaping engine |
+| `@cap/dav1d` | `1.5.4` | BSD-2-Clause | Prebuilt dynamic (`sys`) | VideoLAN fastest royalty-free AV1 video decoder (1.8 MB) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 

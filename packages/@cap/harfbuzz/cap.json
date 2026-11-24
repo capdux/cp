@@ -1,0 +1,28 @@
+{
+  "name": "@cap/harfbuzz",
+  "ver": "15.2.0",
+  "description": "HarfBuzz (v15.2.0) industrial-standard OpenType text shaping engine (CJK/Arabic/Latin/Indic) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "harfbuzz": {
+      "path": "c",
+      "src": [
+        "hb_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

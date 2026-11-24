@@ -153,6 +153,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **OpenBLAS 0.3.29** (`@cap/openblas`) | <https://github.com/OpenMathLib/OpenBLAS> | BSD-3-Clause | `packages/@cap/openblas/` | Copyright (c) 2011-2025 The OpenBLAS Project |
 | **FreeType 2.13.3** (`@cap/freetype`) | <https://freetype.org/> | FTL | `packages/@cap/freetype/` | Copyright (c) 1996-2024 David Turner, Robert Wilhelm, Werner Lemberg |
 | **libFLAC 1.4.3** (`@cap/flac`) | <https://github.com/xiph/flac> | BSD-3-Clause | `packages/@cap/flac/` | Copyright (c) 2000-2024 Josh Coalson & Xiph.Org Foundation |
+| **HarfBuzz 15.2.0** (`@cap/harfbuzz`) | <https://github.com/harfbuzz/harfbuzz> | MIT | `packages/@cap/harfbuzz/` | Copyright (c) 2010-2025 Behdad Esfahbod & HarfBuzz Contributors |
+| **dav1d 1.5.4** (`@cap/dav1d`) | <https://code.videolan.org/videolan/dav1d> | BSD-2-Clause | `packages/@cap/dav1d/` | Copyright (c) 2018-2025 VideoLAN & dav1d Authors |
 
 ---
 
