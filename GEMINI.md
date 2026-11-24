@@ -718,3 +718,5 @@ git status --porcelain cpc_dev/src
    - 调用 `cargo check` / `cargo build` 时必须加 `RUSTFLAGS="-Awarnings"` 与 `-q`（实测仅 `-q` 仍输出 21,567B warning，加 `RUSTFLAGS="-Awarnings"` 后压至 418B，降幅 98.1%），仅保留真实报错与完成状态。
 6. **多套件回归 4 路并行 + 独立 `--cache-dir` 隔离（实测 4x 提速、降 90% 回归日志 Token）**：
    - 批量跑多份 `cap/test/*.cp` 时统一使用 4 路并发 + 独立 `--cache-dir=.cap/ws_<tag>/<suite>` 避免缓存锁竞争与串台，PASS 项仅输出汇总计数、仅对 FAIL 项展开错误上下文。
+7. **`cap` 工具链原子构建脚本与报错降噪（实测降幅 79.4% 报错日志 Token，2026-11-24 Iteration 3）**：
+   - 构建部署 `cap` 统一调用 `bash scripts/sync_cap.sh [debug|release|fmt]`（一键完成可选 `zig fmt` + `zig build` + 原子部署至 `/root/.cap/bin/cap`，成功仅输出 1 行 52B；失败自动折叠冗长的 `failed command:` 完整参数行与重复 `Build Summary` 树，实测将典型报错从 1,346B 压至 277B，降幅 79.4%），禁止再手写长串 `cd ... && zig build && cp ... && mv ...`。
