@@ -31,3 +31,4 @@ export * from "./soa.cp";
 export * from "./priorityQueue.cp";
 export * from "./leb128.cp";
 export * from "./treap.cp";
+export * from "./enumSet.cp";
