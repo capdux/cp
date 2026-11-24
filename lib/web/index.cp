@@ -579,3 +579,27 @@ export {
     FileTypeInfo,
     detectFileType,
 } from "./fileType.cp";
+
+export {
+    SERVER_MAX_WORKERS,
+    SERVER_READ_BUF_LEN,
+    SERVER_WRITE_BUF_LEN,
+    SERVER_EPOLL_BATCH,
+    ServerConfig,
+    WebServer,
+} from "./server.cp";
+
+export {
+    StaticRouteSpec,
+    ComptimeRouteTable,
+    TraceSpan,
+    LifecycleTrace,
+    routeGet,
+    routePost,
+    routePut,
+    routeDelete,
+    routePatch,
+    routeHead,
+    routeOptions,
+    monotonicNowNs,
+} from "./comptimeRouter.cp";

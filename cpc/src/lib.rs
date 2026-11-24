@@ -3,6 +3,7 @@ pub mod ast_visitor;
 pub mod brief;
 pub mod codegen;
 pub mod dcp;
+pub mod deadcode;
 pub mod diagnostic;
 pub mod formatter;
 pub mod lexer;

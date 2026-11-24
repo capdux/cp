@@ -417,8 +417,28 @@ pub struct Response {
     status: u16 = 200;
     content_type: string = "text/plain; charset=utf-8";
     body: string = "";
+    body_buf: [128]u8 = [0; 128];
+    body_buf_len: usize = 0;
     headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
     header_len: usize = 0;
+
+    pub static fn textConcat3(status_code: u16, a: string, sep: string, b: string): Response {
+        let r = Response{
+            status: status_code,
+            content_type: "text/plain; charset=utf-8",
+            body: "",
+            body_buf: [0; 128],
+            body_buf_len: 0,
+            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            header_len: 0,
+        };
+        let pos: usize = 0;
+        * = writeRaw(r.body_buf[0..], *pos, a);
+        * = writeRaw(r.body_buf[0..], *pos, sep);
+        * = writeRaw(r.body_buf[0..], *pos, b);
+        r.body_buf_len = pos;
+        return r;
+    }
 
     pub static fn json(status_code: u16, payload: string): Response {
         return Response{

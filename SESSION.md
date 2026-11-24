@@ -5091,3 +5091,13 @@
   > | **Phase 4（真实跨框架 & 仿 Bun 官网压测）** | 同机实测：`CP (1核/8核)` vs `Elysia(Bun)` vs `Fastify/Koa/Express(Node)` 3 场景 HTTP + `WebSocket 广播` + `SQLite` + `原版依赖库(memoirist/zod/fast-decode-uri)` 对比（含 QPS、P99、RSS 内存），并同步更新官网 [website/](file:///data/dev/cp/website/) | 输出可复现脚本、原始 JSON 数据与真实对比表，**绝不估算** |
   >
   > 确认后回复「**启动**」，我立即在 Phase 1 收尾的同时，按 2 子智能体 + 主控三线并行推进 Phase 2 → Phase 4！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 07:59:39）[step:23407]
+- **用户完整原始指令**：
+  > 1. cap lint --deadcode 改为 cap lint --dead 或其他更简洁语法
+  > 2. 我们的多线程与多协程设计时,实现了 “双轨派生模型”：`spawn`（协程池）vs `spawn.cpu`（Worker 物理线程池）, 用于io异步和重计算, http/web 应该使用协程池对吗? 需发挥多cpu内核并发优势,与操作系统底层的异步io能力.
+  > 3. 我发现从rs 迁移非常顺畅 从 ts 迁移, 没那么顺畅, 是否涉及 cp 需补全一些能力/功能, 让ts迁移更加顺畅呢?
+  >
+  > 我补充以上几点, 按你的计划, 启动你的执行!
+- **完整回复与执行汇报**：
+  > **Phase 2 重大突破**：纯 CP 多核 `SO_REUSEPORT` + Linux `epoll` 非阻塞 HTTP/1.1 Keep-Alive 服务器 [server.cp](file:///data/dev/cp/lib/web/server.cp) 已通过真实 Socket 端到端测试（`PASS testWebServerLive: 2-worker SO_REUSEPORT epoll + HTTP/1.1 Keep-Alive 3/3`）！正在完成 `-OReleaseFast` `server_cp` 压测二进制编译与 4 门禁校验，同时等待 2 路并行子智能体完成 `cap lint --dead`/`cap run --watch` 与跨框架对比基准套件。

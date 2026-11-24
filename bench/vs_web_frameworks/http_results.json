@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-11-24T21:11:42Z",
+  "config": {
+    "threads": 32,
+    "duration": 3.0,
+    "warmup": 0.5
+  },
+  "results": {
+    "cp_1c": {
+      "name": "cp_1c",
+      "idle_rss_mb": 6.41,
+      "peak_rss_mb": 6.41,
+      "scenarios": {
+        "get_root": {
+          "qps": 74799.57,
+          "p50_ms": 0.127,
+          "p99_ms": 0.192,
+          "ok": 224539,
+          "err": 55,
+          "mb_per_sec": 7.49,
+          "duration_sec": 3.002,
+          "rss_peak_mb": 6.41,
+          "rss_avg_mb": 6.41
+        },
+        "get_id_query": {
+          "qps": 70318.83,
+          "p50_ms": 0.111,
+          "p99_ms": 0.234,
+          "ok": 211106,
+          "err": 4657,
+          "mb_per_sec": 9.05,
+          "duration_sec": 3.002,
+          "rss_peak_mb": 6.41,
+          "rss_avg_mb": 6.41
+        },
+        "post_json": {
+          "qps": 68401.66,
+          "p50_ms": 0.109,
+          "p99_ms": 0.249,
+          "ok": 205351,
+          "err": 8947,
+          "mb_per_sec": 8.28,
+          "duration_sec": 3.002,
+          "rss_peak_mb": 6.41,
+          "rss_avg_mb": 6.41
+        }
+      }
+    },
+    "cp_8c": {
+      "name": "cp_8c",
+      "idle_rss_mb": 19.23,
+      "peak_rss_mb": 19.27,
+      "scenarios": {
+        "get_root": {
+          "qps": 488554.89,
+          "p50_ms": 0.041,
+          "p99_ms": 0.099,
+          "ok": 1466394,
+          "err": 77,
+          "mb_per_sec": 48.92,
+          "duration_sec": 3.001,
+          "rss_peak_mb": 19.24,
+          "rss_avg_mb": 19.24
+        },
+        "get_id_query": {
+          "qps": 559339.39,
+          "p50_ms": 0.04,
+          "p99_ms": 0.083,
+          "ok": 1678755,
+          "err": 230,
+          "mb_per_sec": 72.01,
+          "duration_sec": 3.001,
+          "rss_peak_mb": 19.27,
+          "rss_avg_mb": 19.27
+        },
+        "post_json": {
+          "qps": 512634.32,
+          "p50_ms": 0.036,
+          "p99_ms": 0.079,
+          "ok": 1538571,
+          "err": 45,
+          "mb_per_sec": 62.09,
+          "duration_sec": 3.001,
+          "rss_peak_mb": 19.27,
+          "rss_avg_mb": 19.27
+        }
+      }
+    }
+  }
+}

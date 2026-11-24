@@ -1,0 +1,130 @@
+{
+  "timestamp_utc": "2026-11-24T21:13:33Z",
+  "host": {
+    "cpu": {
+      "model": "Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz",
+      "logical_cpus": 96,
+      "arch": "x86_64",
+      "os": "Linux 6.12.0-280.el10.x86_64"
+    }
+  },
+  "runtimes": {
+    "cp": {
+      "cpc_version": "cpc 1.0.0",
+      "zig_version": "0.17.0",
+      "opt_mode": "ReleaseFast"
+    },
+    "bun": {
+      "path": "/root/.bun/bin/bun",
+      "version": "1.3.14"
+    },
+    "node": {
+      "path": "/root/.nvm/versions/node/v26.1.0/bin/node",
+      "version": "v26.1.0"
+    }
+  },
+  "benchmarks": {
+    "sqlite_northwind": {
+      "description": "SQLite :memory: Northwind-style 100K order writes + 50K indexed JOIN lookups + 1K JOIN+GROUP BY aggregations",
+      "trials": 3,
+      "workload": {
+        "customers": 1000,
+        "orders_written": 100000,
+        "indexed_join_lookups": 50000,
+        "join_group_by_queries": 1000,
+        "total_ops": 151000
+      },
+      "results": {
+        "cp": {
+          "write_ms": 241.995,
+          "lookup_ms": 48.87,
+          "agg_ms": 3146.337,
+          "total_ms": 3437.563,
+          "peak_rss_mb": 10.8,
+          "checksum": 126758015750,
+          "ops_per_sec": 43926.5,
+          "write_ops_per_sec": 413231.7,
+          "lookup_ops_per_sec": 1023122.6,
+          "agg_qps": 317.8
+        },
+        "bun": {
+          "write_ms": 273.885,
+          "lookup_ms": 91.89,
+          "agg_ms": 3515.637,
+          "total_ms": 3884.603,
+          "peak_rss_mb": 86.38,
+          "checksum": 126758015750,
+          "ops_per_sec": 38871.4,
+          "write_ops_per_sec": 365116.7,
+          "lookup_ops_per_sec": 544128.8,
+          "agg_qps": 284.4
+        },
+        "node": {
+          "write_ms": 276.711,
+          "lookup_ms": 148.138,
+          "agg_ms": 3361.434,
+          "total_ms": 3786.283,
+          "peak_rss_mb": 68.94,
+          "checksum": 126758015750,
+          "ops_per_sec": 39880.8,
+          "write_ops_per_sec": 361387.9,
+          "lookup_ops_per_sec": 337523.1,
+          "agg_qps": 297.5
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 1.13,
+        "node": 1.1
+      }
+    },
+    "websocket_codec_broadcast": {
+      "description": "RFC 6455 WebSocket 128B text frame encode/mask/decode + 16-subscriber broadcast fanout (1,000,000 frames)",
+      "trials": 3,
+      "workload": {
+        "payload_bytes": 128,
+        "frames": 1000000,
+        "subscribers": 16,
+        "broadcast_deliveries": 16000000
+      },
+      "results": {
+        "cp": {
+          "payload_bytes": 128,
+          "frames": 1000000,
+          "subscribers": 16,
+          "total_ms": 114.777,
+          "peak_rss_mb": 2.48,
+          "checksum": 428468058,
+          "msg_per_sec": 8712546.9,
+          "broadcast_msg_per_sec": 139400751.0,
+          "payload_mb_per_sec": 1063.54
+        },
+        "bun": {
+          "payload_bytes": 128,
+          "frames": 1000000,
+          "subscribers": 16,
+          "total_ms": 749.606,
+          "peak_rss_mb": 62.65,
+          "checksum": 428468058,
+          "msg_per_sec": 1334034.1,
+          "broadcast_msg_per_sec": 21344546.3,
+          "payload_mb_per_sec": 162.85
+        },
+        "node": {
+          "payload_bytes": 128,
+          "frames": 1000000,
+          "subscribers": 16,
+          "total_ms": 1433.979,
+          "peak_rss_mb": 56.74,
+          "checksum": 428468058,
+          "msg_per_sec": 697360.3,
+          "broadcast_msg_per_sec": 11157764.5,
+          "payload_mb_per_sec": 85.13
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 6.53,
+        "node": 12.49
+      }
+    }
+  }
+}

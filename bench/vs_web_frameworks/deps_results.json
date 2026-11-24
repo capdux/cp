@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-11-24T21:04:54Z",
+  "runtimes": {
+    "cp": "cpc + zig -OReleaseFast",
+    "bun": "bun 1.3.14",
+    "node": "node v26.1.0"
+  },
+  "comparison": [
+    {
+      "key": "uri_ascii_64B",
+      "label": "fast-decode-uri (ASCII 64B)",
+      "cp_ops_per_sec": 108238336.0,
+      "cp_ns_per_op": 9.2,
+      "bun_ops_per_sec": 15971952.18,
+      "bun_ns_per_op": 62.61,
+      "node_ops_per_sec": 56219961.81,
+      "node_ns_per_op": 17.79,
+      "cp_vs_bun_speedup": 6.78,
+      "cp_vs_node_speedup": 1.93
+    },
+    {
+      "key": "uri_utf8_63B",
+      "label": "fast-decode-uri (UTF-8 %XX)",
+      "cp_ops_per_sec": 12136359.0,
+      "cp_ns_per_op": 82.4,
+      "bun_ops_per_sec": 2010554.68,
+      "bun_ns_per_op": 497.38,
+      "node_ops_per_sec": 2215865.11,
+      "node_ns_per_op": 451.29,
+      "cp_vs_bun_speedup": 6.04,
+      "cp_vs_node_speedup": 5.48
+    },
+    {
+      "key": "router_static",
+      "label": "memoirist/Radix (static)",
+      "cp_ops_per_sec": 59320256.0,
+      "cp_ns_per_op": 16.86,
+      "bun_ops_per_sec": 6644695.07,
+      "bun_ns_per_op": 150.5,
+      "node_ops_per_sec": 84761334.37,
+      "node_ns_per_op": 11.8,
+      "cp_vs_bun_speedup": 8.93,
+      "cp_vs_node_speedup": 0.7
+    },
+    {
+      "key": "router_dynamic_2params",
+      "label": "memoirist/Radix (:uid/:pid)",
+      "cp_ops_per_sec": 9920834.0,
+      "cp_ns_per_op": 100.8,
+      "bun_ops_per_sec": 1420736.02,
+      "bun_ns_per_op": 703.86,
+      "node_ops_per_sec": 1414714.56,
+      "node_ns_per_op": 706.86,
+      "cp_vs_bun_speedup": 6.98,
+      "cp_vs_node_speedup": 7.01
+    },
+    {
+      "key": "cookie_set_header",
+      "label": "cookie Set-Cookie format",
+      "cp_ops_per_sec": 22952451.0,
+      "cp_ns_per_op": 43.57,
+      "bun_ops_per_sec": 4304238.93,
+      "bun_ns_per_op": 232.33,
+      "node_ops_per_sec": 6268140.23,
+      "node_ns_per_op": 159.54,
+      "cp_vs_bun_speedup": 5.33,
+      "cp_vs_node_speedup": 3.66
+    },
+    {
+      "key": "schema_validate_5f",
+      "label": "Schema validate (5 fields)",
+      "cp_ops_per_sec": 1767372.0,
+      "cp_ns_per_op": 565.8,
+      "bun_ops_per_sec": 1831828.06,
+      "bun_ns_per_op": 545.9,
+      "node_ops_per_sec": 1407838.51,
+      "node_ns_per_op": 710.31,
+      "cp_vs_bun_speedup": 0.96,
+      "cp_vs_node_speedup": 1.26
+    },
+    {
+      "key": "exact_mirror_strip",
+      "label": "exact-mirror strip+emit",
+      "cp_ops_per_sec": 883843.0,
+      "cp_ns_per_op": 1131.4,
+      "bun_ops_per_sec": 991331.23,
+      "bun_ns_per_op": 1008.74,
+      "node_ops_per_sec": 932096.61,
+      "node_ns_per_op": 1072.85,
+      "cp_vs_bun_speedup": 0.89,
+      "cp_vs_node_speedup": 0.95
+    }
+  ]
+}

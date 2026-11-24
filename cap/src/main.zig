@@ -289,6 +289,8 @@ fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
                 i += 1;
                 try flags.append(allocator, args[i]);
             }
+        } else if (std.mem.eql(u8, arg, "--dead") or std.mem.eql(u8, arg, "--deadcode")) {
+            try flags.append(allocator, "--dead");
         } else if (std.mem.startsWith(u8, arg, "-")) {
             try flags.append(allocator, arg);
         } else {
@@ -386,11 +388,11 @@ fn usage() void {
         \\
         \\Usage:
         \\  cap <file.cp|dir>             Run a CP file or directory directly (Debug)
-        \\  cap run [options] <file|script> Run a script or file (-m modular+parallel .o cache)
+        \\  cap run [--watch|-w] [options] <file|script> Run a script or file (-w watch, -m modular)
         \\  cap build [target] [options]  Build a CP package or directory
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
         \\  cap fmt [--check] [--stdout] [path...] Format CP source files (default: .)
-        \\  cap lint [path...]            Run syntax, borrow & 4-gate static audit (cpc brief)
+        \\  cap lint [--dead] [path...]   Run syntax, borrow, 4-gate audit or --dead unused symbol check
         \\  cap from <-ts|-rs> <dir>      Migrate TypeScript or Rust project & deps to CP + migrate.md
         \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
@@ -450,6 +452,7 @@ const RunOptions = struct {
     is_modular: bool = false,
     parallel_obj: bool = false,
     force_rebuild: bool = false,
+    watch: bool = false,
 };
 
 fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
@@ -461,15 +464,18 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
     for (args) |arg| {
         if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
             std.debug.print(
-                \\Usage: cap run [options] <file.cp|script>
+                \\Usage: cap run [--watch|-w] [options] <file.cp|script>
                 \\
                 \\Options:
+                \\  -w, --watch         Watch .cp files for changes and auto-rebuild/restart
                 \\  -m, --modular       Enable modular multi-file Zig codegen (cpc compile --emit-dir)
                 \\  --parallel-obj      Enable parallel per-module .o caching & incremental linking (implies -m)
                 \\  -B, --force         Force rebuild even if targets are up to date
                 \\
             , .{});
             return true;
+        } else if (std.mem.eql(u8, arg, "-w") or std.mem.eql(u8, arg, "--watch")) {
+            run_opts.watch = true;
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             run_opts.is_modular = true;
             run_opts.parallel_obj = true;
@@ -485,7 +491,11 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
     const target = target_opt orelse return false;
 
     if (std.mem.endsWith(u8, target, ".cp")) {
-        try runFileWithOpts(allocator, target, run_opts);
+        if (run_opts.watch) {
+            try runFileWatch(allocator, target, run_opts);
+        } else {
+            try runFileWithOpts(allocator, target, run_opts);
+        }
         return true;
     }
 
@@ -1733,7 +1743,7 @@ fn appendLinkArgs(
     }
 }
 
-fn spawnRunBinary(allocator: std.mem.Allocator, run_path: []const u8, mf_opt: ?manifest.Manifest, scan_file: ?[]const u8) !void {
+fn spawnRunBinaryChild(allocator: std.mem.Allocator, run_path: []const u8, mf_opt: ?manifest.Manifest, scan_file: ?[]const u8) !std.process.Child {
     var runtime_set = native.NativeLinkSet.init();
     defer runtime_set.deinit(allocator);
     const host_key = native.hostTargetKey();
@@ -1789,20 +1799,117 @@ fn spawnRunBinary(allocator: std.mem.Allocator, run_path: []const u8, mf_opt: ?m
             }
         }
         try env_map.put(env_key, joined.items);
-        var run_child = try std.process.spawn(global_io, .{ .argv = &[_][]const u8{run_path}, .environ_map = &env_map });
-        const run_res = try run_child.wait(global_io);
-        switch (run_res) {
-            .exited => |code| if (code != 0) return error.RunFailed,
-            else => return error.RunFailed,
-        }
-        return;
+        return try std.process.spawn(global_io, .{ .argv = &[_][]const u8{run_path}, .environ_map = &env_map });
     }
 
-    var run_child = try std.process.spawn(global_io, .{ .argv = &[_][]const u8{run_path} });
+    return try std.process.spawn(global_io, .{ .argv = &[_][]const u8{run_path} });
+}
+
+fn spawnRunBinary(allocator: std.mem.Allocator, run_path: []const u8, mf_opt: ?manifest.Manifest, scan_file: ?[]const u8) !void {
+    var run_child = try spawnRunBinaryChild(allocator, run_path, mf_opt, scan_file);
     const run_res = try run_child.wait(global_io);
     switch (run_res) {
         .exited => |code| if (code != 0) return error.RunFailed,
         else => return error.RunFailed,
+    }
+}
+
+const CompiledRunTarget = struct {
+    run_path: []u8,
+    scan_file: []u8,
+
+    fn deinit(self: CompiledRunTarget, allocator: std.mem.Allocator) void {
+        allocator.free(self.run_path);
+        allocator.free(self.scan_file);
+    }
+};
+
+fn computeWatchMtimeNs(filename: []const u8) i96 {
+    var max_mtime: i96 = 0;
+    if (fs_shim.cwd().statFile(filename)) |st| {
+        max_mtime = @max(max_mtime, st.mtime.nanoseconds);
+    } else |_| {}
+
+    const watch_dir_path = std.Io.Dir.path.dirname(filename) orelse ".";
+    if (fs_shim.cwd().openDir(watch_dir_path, .{ .iterate = true })) |dir_val| {
+        var dir = dir_val;
+        defer dir.close(global_io);
+        var iter = dir.iterate();
+        while (iter.next(global_io) catch null) |entry| {
+            if (entry.kind == .file or entry.kind == .sym_link) {
+                if (!std.mem.endsWith(u8, entry.name, ".cp")) continue;
+                if (std.mem.endsWith(u8, entry.name, ".d.cp")) continue;
+                if (dir.statFile(global_io, entry.name, .{})) |st| {
+                    if (st.kind != .directory) {
+                        max_mtime = @max(max_mtime, st.mtime.nanoseconds);
+                    }
+                } else |_| {}
+            }
+        }
+    } else |_| {}
+
+    return max_mtime;
+}
+
+fn runFileWatch(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !void {
+    std.debug.print("[watch] Watching {s} (polling every 250ms)...\n", .{filename});
+    var last_mtime = computeWatchMtimeNs(filename);
+    var active_child: ?std.process.Child = null;
+    defer if (active_child) |*ch| ch.kill(global_io);
+
+    // Initial build & background start
+    if (compileRunBinary(allocator, filename, opts)) |compiled| {
+        defer compiled.deinit(allocator);
+        var mf_opt: ?manifest.Manifest = null;
+        if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+            defer allocator.free(content);
+            if (manifest.Manifest.parse(allocator, content)) |mf| {
+                mf_opt = mf;
+            } else |_| {}
+        } else |_| {}
+        defer if (mf_opt) |*m| m.deinit(allocator);
+
+        active_child = spawnRunBinaryChild(allocator, compiled.run_path, mf_opt, compiled.scan_file) catch |err| blk: {
+            std.debug.print("[watch] Failed to launch process: {}\n", .{err});
+            break :blk null;
+        };
+    } else |err| {
+        std.debug.print("[watch] Initial build failed ({}), waiting for changes...\n", .{err});
+    }
+
+    var rebuild_opts = opts;
+    rebuild_opts.force_rebuild = true;
+
+    while (true) {
+        std.Io.sleep(global_io, std.Io.Duration.fromMilliseconds(250), .awake) catch break;
+        const cur_mtime = computeWatchMtimeNs(filename);
+        if (cur_mtime > last_mtime) {
+            last_mtime = cur_mtime;
+            if (active_child) |*ch| {
+                ch.kill(global_io);
+                active_child = null;
+            }
+            std.debug.print("[watch] Change detected, rebuilding...\n", .{});
+
+            if (compileRunBinary(allocator, filename, rebuild_opts)) |compiled| {
+                defer compiled.deinit(allocator);
+                var mf_opt: ?manifest.Manifest = null;
+                if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+                    defer allocator.free(content);
+                    if (manifest.Manifest.parse(allocator, content)) |mf| {
+                        mf_opt = mf;
+                    } else |_| {}
+                } else |_| {}
+                defer if (mf_opt) |*m| m.deinit(allocator);
+
+                active_child = spawnRunBinaryChild(allocator, compiled.run_path, mf_opt, compiled.scan_file) catch |err| blk: {
+                    std.debug.print("[watch] Failed to restart process: {}\n", .{err});
+                    break :blk null;
+                };
+            } else |err| {
+                std.debug.print("[watch] Rebuild failed ({}), waiting for next change...\n", .{err});
+            }
+        }
     }
 }
 
@@ -1815,6 +1922,20 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
 }
 
 fn runFileWithOpts(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !void {
+    const compiled = try compileRunBinary(allocator, filename, opts);
+    defer compiled.deinit(allocator);
+    var mf_opt: ?manifest.Manifest = null;
+    if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
+        defer allocator.free(content);
+        if (manifest.Manifest.parse(allocator, content)) |mf| {
+            mf_opt = mf;
+        } else |_| {}
+    } else |_| {}
+    defer if (mf_opt) |*m| m.deinit(allocator);
+    try spawnRunBinary(allocator, compiled.run_path, mf_opt, compiled.scan_file);
+}
+
+fn compileRunBinary(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !CompiledRunTarget {
     const opt_mode = opts.opt_mode;
     const full_base_name = filename[0 .. filename.len - 3];
     var bin_subpath: []const u8 = full_base_name;
@@ -1822,26 +1943,19 @@ fn runFileWithOpts(allocator: std.mem.Allocator, filename: []const u8, opts: Run
         bin_subpath = full_base_name[4..];
     }
     const run_path = try std.fmt.allocPrint(allocator, "bin/{s}", .{bin_subpath});
-    defer allocator.free(run_path);
+    errdefer allocator.free(run_path);
 
     const src_stat = fs_shim.cwd().statFile(filename) catch null;
     const bin_stat = fs_shim.cwd().statFile(run_path) catch null;
 
     if (!opts.force_rebuild and !opts.is_modular and src_stat != null and bin_stat != null and bin_stat.?.mtime.nanoseconds >= src_stat.?.mtime.nanoseconds) {
         std.debug.print("[Up-to-date] bin/{s} (skipped compile)\n", .{bin_subpath});
-        var cached_mf: ?manifest.Manifest = null;
-        if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-            defer allocator.free(content);
-            if (manifest.Manifest.parse(allocator, content)) |mf| {
-                cached_mf = mf;
-            } else |_| {}
-        } else |_| {}
-        defer if (cached_mf) |*m| m.deinit(allocator);
         const cached_zig = try std.fmt.allocPrint(allocator, ".cap/zig/{s}.zig", .{full_base_name});
-        defer allocator.free(cached_zig);
-        const scan_p: []const u8 = if (native.fileExists(cached_zig)) cached_zig else filename;
-        try spawnRunBinary(allocator, run_path, cached_mf, scan_p);
-        return;
+        if (native.fileExists(cached_zig)) {
+            return .{ .run_path = run_path, .scan_file = cached_zig };
+        }
+        allocator.free(cached_zig);
+        return .{ .run_path = run_path, .scan_file = try allocator.dupe(u8, filename) };
     }
 
     if (opts.is_modular and opts.parallel_obj) {
@@ -2097,7 +2211,10 @@ fn runFileWithOpts(allocator: std.mem.Allocator, filename: []const u8, opts: Run
         std.debug.print("Compiled and linked in {d}ms\n", .{comp_ms});
     }
 
-    try spawnRunBinary(allocator, run_path, mf_opt, zig_file);
+    return .{
+        .run_path = run_path,
+        .scan_file = try allocator.dupe(u8, zig_file),
+    };
 }
 
 fn sniffHardware() !void {

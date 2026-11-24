@@ -123,7 +123,10 @@ enum Commands {
         /// Keep emitted <stem>.zig instead of cleaning up when target did not exist
         #[arg(long)]
         keep_zig: bool,
-        /// Target .cp files
+        /// Run static dead-code audit for unused exported symbols (pub fn/struct/enum/const)
+        #[arg(long, alias = "deadcode")]
+        dead: bool,
+        /// Target .cp files or directories
         #[arg(required = true)]
         files: Vec<PathBuf>,
     },
@@ -640,15 +643,20 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 zig,
                 require_backup,
                 keep_zig,
+                dead,
                 files,
             } => {
-                let ok = cpc::brief::run_brief(&cpc::brief::BriefOptions {
-                    max,
-                    zig,
-                    require_backup,
-                    keep_zig,
-                    files,
-                })?;
+                let ok = if dead {
+                    cpc::deadcode::run_deadcode(&files)?
+                } else {
+                    cpc::brief::run_brief(&cpc::brief::BriefOptions {
+                        max,
+                        zig,
+                        require_backup,
+                        keep_zig,
+                        files,
+                    })?
+                };
                 if !ok {
                     std::process::exit(1);
                 }
