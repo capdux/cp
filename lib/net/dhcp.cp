@@ -1,7 +1,14 @@
+// Reference-hardened against smoltcp-rs/smoltcp (0BSD) & RFC 2131/4271
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 2131/2132 DHCPv4 Wire Codec) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 2131 / RFC 2132 DHCPv4 wire protocol codec:
 // 240-byte BOOTP/DHCP header with Magic Cookie verification, PAD-skipping / END-terminating
-// Option iterator, typed Option accessors, and zero-allocation DhcpWriter encoder.
+// Option iterator with resource-exhaustion cap, 16-lane SIMD byte copy, zero-heap strict validator,
+// typed Option accessors, and zero-allocation DhcpWriter encoder.
+
+import { simdNetCopyBytes16 } from "./bgp.cp";
+
+/// Maximum number of TLV options allowed during iteration/validation (resource-exhaustion guard).
+pub const DHCP_MAX_OPTIONS: usize = 64;
 
 /// Standard DHCPv4 server UDP port (`67`).
 pub const DHCP_SERVER_PORT: u16 = 67;
@@ -78,7 +85,7 @@ pub struct DhcpHeader {
 
     /// Returns the leading 6-byte Ethernet MAC address from `chaddr`.
     fn macAddr(): [6]u8 {
-        return [
+        const out: [6]u8 = [
             _.chaddr[0],
             _.chaddr[1],
             _.chaddr[2],
@@ -86,6 +93,7 @@ pub struct DhcpHeader {
             _.chaddr[4],
             _.chaddr[5],
         ];
+        return out;
     }
 }
 
@@ -100,13 +108,15 @@ pub struct DhcpOption {
 pub struct DhcpOptIter {
     data: []const u8 = "",
     pos: usize = 0,
+    count: usize = 0,
     seen_end: bool = false,
     failed: bool = false,
 
-    pub fn init(options_bytes: []const u8): DhcpOptIter {
+    static fn init(options_bytes: []const u8): DhcpOptIter {
         return DhcpOptIter {
             data: options_bytes,
             pos: 0,
+            count: 0,
             seen_end: false,
             failed: false,
         };
@@ -135,6 +145,10 @@ pub struct DhcpOptIter {
                 _.seen_end = true;
                 return null;
             }
+            if (_.count >= DHCP_MAX_OPTIONS) {
+                _.failed = true;
+                return null;
+            }
             if (_.data.len - _.pos < 2) {
                 _.failed = true;
                 return null;
@@ -146,6 +160,7 @@ pub struct DhcpOptIter {
             }
             const val = _.data[(_.pos + 2)..(_.pos + 2 + opt_len)];
             _.pos += 2 + opt_len;
+            _.count += 1;
             return DhcpOption {
                 code: code,
                 value: val,
@@ -179,7 +194,7 @@ pub struct DhcpPacket {
     fn msgType(): DhcpMsgType {
         if (opt := _.findOption(OPT_MSG_TYPE)) {
             if (opt.value.len == 1) {
-                return classifyMsgType(opt.value[0]);
+                return dhcpClassifyMsgType(opt.value[0]);
             }
         }
         return DhcpMsgType.unknown;
@@ -188,7 +203,7 @@ pub struct DhcpPacket {
     fn leaseTime(): u32? {
         if (opt := _.findOption(OPT_LEASE_TIME)) {
             if (opt.value.len == 4) {
-                return readBeU32(opt.value, 0);
+                return dhcpReadBeU32(opt.value, 0);
             }
         }
         return null;
@@ -197,7 +212,8 @@ pub struct DhcpPacket {
     fn subnetMask(): ([4]u8)? {
         if (opt := _.findOption(OPT_SUBNET_MASK)) {
             if (opt.value.len == 4) {
-                return [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                const out: [4]u8 = [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                return out;
             }
         }
         return null;
@@ -206,7 +222,8 @@ pub struct DhcpPacket {
     fn serverId(): ([4]u8)? {
         if (opt := _.findOption(OPT_SERVER_ID)) {
             if (opt.value.len == 4) {
-                return [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                const out: [4]u8 = [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                return out;
             }
         }
         return null;
@@ -215,7 +232,8 @@ pub struct DhcpPacket {
     fn requestedIp(): ([4]u8)? {
         if (opt := _.findOption(OPT_REQUESTED_IP)) {
             if (opt.value.len == 4) {
-                return [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                const out: [4]u8 = [opt.value[0], opt.value[1], opt.value[2], opt.value[3]];
+                return out;
             }
         }
         return null;
@@ -233,30 +251,30 @@ pub struct DhcpPacket {
 // Internal Helpers
 // ---------------------------------------------------------------------------
 
-fn readBeU16(data: []const u8, off: usize): u16 {
+fn dhcpReadBeU16(data: []const u8, off: usize): u16 {
     return ((data[off] as u16) << 8) | (data[off + 1] as u16);
 }
 
-fn readBeU32(data: []const u8, off: usize): u32 {
+fn dhcpReadBeU32(data: []const u8, off: usize): u32 {
     return ((data[off] as u32) << 24)
         | ((data[off + 1] as u32) << 16)
         | ((data[off + 2] as u32) << 8)
         | (data[off + 3] as u32);
 }
 
-fn writeBeU16(buf: []u8, off: usize, val: u16) {
+fn dhcpWriteBeU16(buf: []u8, off: usize, val: u16) {
     buf[off] = ((val >> 8) & 0xFF) as u8;
     buf[off + 1] = (val & 0xFF) as u8;
 }
 
-fn writeBeU32(buf: []u8, off: usize, val: u32) {
+fn dhcpWriteBeU32(buf: []u8, off: usize, val: u32) {
     buf[off] = ((val >> 24) & 0xFF) as u8;
     buf[off + 1] = ((val >> 16) & 0xFF) as u8;
     buf[off + 2] = ((val >> 8) & 0xFF) as u8;
     buf[off + 3] = (val & 0xFF) as u8;
 }
 
-fn trimCString(field: []const u8): []const u8 {
+fn dhcpTrimCString(field: []const u8): []const u8 {
     let i: usize = 0;
     while (i < field.len) {
         if (field[i] == 0) {
@@ -267,7 +285,7 @@ fn trimCString(field: []const u8): []const u8 {
     return field;
 }
 
-fn classifyMsgType(raw: u8): DhcpMsgType {
+fn dhcpClassifyMsgType(raw: u8): DhcpMsgType {
     if (raw == 1) { return DhcpMsgType.discover; }
     if (raw == 2) { return DhcpMsgType.offer; }
     if (raw == 3) { return DhcpMsgType.request; }
@@ -279,7 +297,7 @@ fn classifyMsgType(raw: u8): DhcpMsgType {
     return DhcpMsgType.unknown;
 }
 
-fn msgTypeToByte(t: DhcpMsgType): u8 {
+fn dhcpMsgTypeToByte(t: DhcpMsgType): u8 {
     if (t == DhcpMsgType.discover) { return 1; }
     if (t == DhcpMsgType.offer) { return 2; }
     if (t == DhcpMsgType.request) { return 3; }
@@ -292,7 +310,7 @@ fn msgTypeToByte(t: DhcpMsgType): u8 {
 }
 
 // ---------------------------------------------------------------------------
-// Public DHCPv4 Parser
+// Public DHCPv4 Parser & Zero-Heap Strict Validator
 // ---------------------------------------------------------------------------
 
 /// Strictly parses an RFC 2131 DHCPv4 packet.
@@ -311,16 +329,13 @@ pub fn parseDhcp(data: []const u8): DhcpPacket? {
         return null;
     }
     const hops = data[3];
-    if (readBeU32(data, DHCP_FIXED_HEADER_SIZE) != DHCP_MAGIC_COOKIE) {
+    if (dhcpReadBeU32(data, DHCP_FIXED_HEADER_SIZE) != DHCP_MAGIC_COOKIE) {
         return null;
     }
 
     let chaddr: [16]u8 = [0; 16];
-    let i: usize = 0;
-    while (i < 16) {
-        chaddr[i] = data[28 + i];
-        i += 1;
-    }
+    const ch_dst: []u8 = chaddr[0..16];
+    * = simdNetCopyBytes16(ch_dst, data[28..44]);
 
     return DhcpPacket {
         header: DhcpHeader {
@@ -328,19 +343,43 @@ pub fn parseDhcp(data: []const u8): DhcpPacket? {
             htype: htype,
             hlen: hlen,
             hops: hops,
-            xid: readBeU32(data, 4),
-            secs: readBeU16(data, 8),
-            flags: readBeU16(data, 10),
+            xid: dhcpReadBeU32(data, 4),
+            secs: dhcpReadBeU16(data, 8),
+            flags: dhcpReadBeU16(data, 10),
             ciaddr: [data[12], data[13], data[14], data[15]],
             yiaddr: [data[16], data[17], data[18], data[19]],
             siaddr: [data[20], data[21], data[22], data[23]],
             giaddr: [data[24], data[25], data[26], data[27]],
             chaddr: chaddr,
         },
-        sname: trimCString(data[44..108]),
-        boot_file: trimCString(data[108..236]),
+        sname: dhcpTrimCString(data[44..108]),
+        boot_file: dhcpTrimCString(data[108..236]),
         options_bytes: data[DHCP_MIN_PACKET_SIZE..data.len],
     };
+}
+
+/// Zero-heap strict validator for RFC 2131/2132 DHCPv4 packets.
+/// Validates fixed 236B header, 4B Magic Cookie, `op in {1,2}`, `hlen <= 16`,
+/// TLV framing (PAD/END/truncation), option count cap (`DHCP_MAX_OPTIONS`),
+/// and well-known fixed-length option invariants.
+pub fn validateDhcpStrict(data: []const u8): bool {
+    const pkt = parseDhcp(data) ?? return false;
+    let it = pkt.options();
+    while (opt := it.next()) {
+        if (opt.code == OPT_MSG_TYPE) {
+            if (opt.value.len != 1 || opt.value[0] < 1 || opt.value[0] > 8) return false;
+        } else if (opt.code == OPT_SUBNET_MASK || opt.code == OPT_REQUESTED_IP ||
+            opt.code == OPT_LEASE_TIME || opt.code == OPT_SERVER_ID ||
+            opt.code == OPT_RENEWAL_TIME || opt.code == OPT_REBINDING_TIME)
+        {
+            if (opt.value.len != 4) return false;
+        } else if (opt.code == OPT_MAX_MSG_SIZE) {
+            if (opt.value.len != 2) return false;
+        } else if (opt.code == OPT_ROUTER || opt.code == OPT_DNS) {
+            if (opt.value.len < 4 || (opt.value.len % 4) != 0) return false;
+        }
+    }
+    return !it.hasError();
 }
 
 /// Returns `true` if `data` starts with a structurally valid RFC 2131 DHCPv4 packet.
@@ -363,7 +402,7 @@ pub struct DhcpWriter {
     failed: bool = false,
 
     /// Initializes the 240-byte BOOTP/DHCP header (with Ethernet htype=1/hlen=6 and Magic Cookie).
-    pub fn init(buf: []u8, op: u8, xid: u32, mac: [6]u8, broadcast: bool): DhcpWriter {
+    static fn init(buf: []u8, op: u8, xid: u32, mac: [6]u8, broadcast: bool): DhcpWriter {
         if (buf.len < DHCP_MIN_PACKET_SIZE || (op != DHCP_OP_REQUEST && op != DHCP_OP_REPLY)) {
             return DhcpWriter {
                 buf: buf,
@@ -379,16 +418,16 @@ pub struct DhcpWriter {
         buf[0] = op;
         buf[1] = 1; // Ethernet
         buf[2] = 6; // MAC length
-        writeBeU32(buf, 4, xid);
+        dhcpWriteBeU32(buf, 4, xid);
         if (broadcast) {
-            writeBeU16(buf, 10, DHCP_FLAG_BROADCAST);
+            dhcpWriteBeU16(buf, 10, DHCP_FLAG_BROADCAST);
         }
         let m: usize = 0;
         while (m < 6) {
             buf[28 + m] = mac[m];
             m += 1;
         }
-        writeBeU32(buf, DHCP_FIXED_HEADER_SIZE, DHCP_MAGIC_COOKIE);
+        dhcpWriteBeU32(buf, DHCP_FIXED_HEADER_SIZE, DHCP_MAGIC_COOKIE);
 
         return DhcpWriter {
             buf: buf,
@@ -449,18 +488,15 @@ pub struct DhcpWriter {
         }
         _.buf[_.pos] = code;
         _.buf[_.pos + 1] = value.len as u8;
-        let i: usize = 0;
-        while (i < value.len) {
-            _.buf[_.pos + 2 + i] = value[i];
-            i += 1;
-        }
+        const dst_slice: []u8 = _.buf[(_.pos + 2)..(_.pos + 2 + value.len)];
+        * = simdNetCopyBytes16(dst_slice, value);
         _.pos += need;
         return true;
     }
 
     /// Appends Option 53 (`OPT_MSG_TYPE`).
     fn writeMsgType(*_, msg_type: DhcpMsgType): bool {
-        const b = msgTypeToByte(msg_type);
+        const b = dhcpMsgTypeToByte(msg_type);
         if (b == 0) {
             _.failed = true;
             return false;
@@ -472,7 +508,7 @@ pub struct DhcpWriter {
     /// Appends a 4-byte big-endian `u32` option (e.g. `OPT_LEASE_TIME`).
     fn writeU32Option(*_, code: u8, val: u32): bool {
         let v: [4]u8 = [0; 4];
-        writeBeU32(v[0..4], 0, val);
+        dhcpWriteBeU32(v[0..4], 0, val);
         return _.writeOption(code, v[0..4]);
     }
 

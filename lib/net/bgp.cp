@@ -1,4 +1,7 @@
+// Reference-hardened against smoltcp-rs/smoltcp (0BSD) & RFC 4271
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 4271 BGP-4 Protocol Parser) | Created: 2026-11-22
+
+type DhcpBgpVec16u8 = @Vector(16, u8);
 
 /// BGP-4 固定 19 字节报头长度（16B Marker + 2B Length + 1B Type）
 pub const BGP_HEADER_SIZE: usize = 19;
@@ -9,8 +12,83 @@ pub const BGP_MARKER_LEN: usize = 16;
 /// RFC 4271 标准最大单报文长度（4096 字节）
 pub const BGP_MAX_MESSAGE_LEN: usize = 4096;
 
+/// BGP 严格校验防资源耗尽上限
+pub const BGP_MAX_OPT_PARAMS: usize = 256;
+pub const BGP_MAX_PATH_ATTRS: usize = 256;
+pub const BGP_MAX_PREFIXES: usize = 2048;
+
 /// BGP 默认 TCP 端口
 pub const BGP_PORT: u16 = 179;
+
+/// 标量基准：校验前 16 字节是否全为 0xFF（BGP Marker）
+pub fn scalarBgpIsAllFF16(data: []const u8): bool {
+    if (data.len < BGP_MARKER_LEN) return false;
+    let acc: u8 = 0xFF;
+    let i: usize = 0;
+    while (i < BGP_MARKER_LEN) : (i += 1) {
+        acc = acc & data[i];
+    }
+    return acc == 0xFF;
+}
+
+/// 16-lane SIMD 零分支校验前 16 字节是否全为 0xFF（BGP Marker 热路径）
+pub fn simdBgpIsAllFF16(data: []const u8): bool {
+    if (data.len < BGP_MARKER_LEN) return false;
+    const v: DhcpBgpVec16u8 = [
+        data[0], data[1], data[2], data[3],
+        data[4], data[5], data[6], data[7],
+        data[8], data[9], data[10], data[11],
+        data[12], data[13], data[14], data[15],
+    ];
+    const ff: DhcpBgpVec16u8 = @splat(@as(u8, 0xFF));
+    const diff = v ^ ff;
+    return @reduce(.Or, diff) == 0;
+}
+
+/// 标量基准：拷贝 `min(dst.len, src.len)` 字节并返回实际拷贝长度
+pub fn scalarNetCopyBytes16(dst: *[]u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+/// 16-lane SIMD 加速字节块拷贝（用于网络载荷与 16B 硬件地址拷贝）
+pub fn simdNetCopyBytes16(dst: *[]u8, src: []const u8): usize {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) : (i += 16) {
+        const v: DhcpBgpVec16u8 = [
+            src[i], src[i + 1], src[i + 2], src[i + 3],
+            src[i + 4], src[i + 5], src[i + 6], src[i + 7],
+            src[i + 8], src[i + 9], src[i + 10], src[i + 11],
+            src[i + 12], src[i + 13], src[i + 14], src[i + 15],
+        ];
+        const blk: [16]u8 = v;
+        dst[i] = blk[0];
+        dst[i + 1] = blk[1];
+        dst[i + 2] = blk[2];
+        dst[i + 3] = blk[3];
+        dst[i + 4] = blk[4];
+        dst[i + 5] = blk[5];
+        dst[i + 6] = blk[6];
+        dst[i + 7] = blk[7];
+        dst[i + 8] = blk[8];
+        dst[i + 9] = blk[9];
+        dst[i + 10] = blk[10];
+        dst[i + 11] = blk[11];
+        dst[i + 12] = blk[12];
+        dst[i + 13] = blk[13];
+        dst[i + 14] = blk[14];
+        dst[i + 15] = blk[15];
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
 
 /// 常用 BGP-4 Path Attribute Type Code
 pub const ATTR_ORIGIN: u8 = 1;
@@ -218,7 +296,7 @@ pub struct BgpPathAttrIter {
                 _.pos = _.data.len;
                 return null;
             }
-            len = readU16Be(_.data, _.pos + 2) as usize;
+            len = bgpReadU16Be(_.data, _.pos + 2) as usize;
             val_start = _.pos + 4;
         } else {
             len = _.data[_.pos + 2] as usize;
@@ -281,11 +359,11 @@ pub struct BgpStreamIter {
 // 内部辅助函数
 // ---------------------------------------------------------------------------
 
-fn readU16Be(buf: []const u8, off: usize): u16 {
+fn bgpReadU16Be(buf: []const u8, off: usize): u16 {
     return ((buf[off] as u16) << 8) | (buf[off + 1] as u16);
 }
 
-fn decodeMsgType(raw: u8): BgpMsgType {
+fn bgpDecodeMsgType(raw: u8): BgpMsgType {
     return match (raw) {
         1 => .open,
         2 => .update,
@@ -300,27 +378,23 @@ fn decodeMsgType(raw: u8): BgpMsgType {
 // 公开 API
 // ---------------------------------------------------------------------------
 
-/// 解析单条 BGP-4 报文（严格校验 16B 全 0xFF Marker、19 <= length <= 4096 与 KEEPALIVE 定长 19B）
+/// 解析单条 BGP-4 报文（16-lane SIMD 校验 16B 全 0xFF Marker、19 <= length <= 4096 与 KEEPALIVE 定长 19B）
 pub fn parseBgpMessage(data: []const u8): BgpMessage? {
     if (data.len < BGP_HEADER_SIZE) {
         return null;
     }
-    let i: usize = 0;
-    while (i < BGP_MARKER_LEN) {
-        if (data[i] != 0xFF) {
-            return null;
-        }
-        i += 1;
+    if (!simdBgpIsAllFF16(data)) {
+        return null;
     }
 
-    const length: u16 = readU16Be(data, 16);
+    const length: u16 = bgpReadU16Be(data, 16);
     const len_usize: usize = length as usize;
     if (len_usize < BGP_HEADER_SIZE || len_usize > BGP_MAX_MESSAGE_LEN || len_usize > data.len) {
         return null;
     }
 
     const raw_type: u8 = data[18];
-    const msg_type = decodeMsgType(raw_type);
+    const msg_type = bgpDecodeMsgType(raw_type);
     if (msg_type == .unknown) {
         return null;
     }
@@ -348,11 +422,11 @@ pub fn parseBgpOpen(body: []const u8): BgpOpen? {
     if (version != 4) {
         return null;
     }
-    const my_as: u16 = readU16Be(body, 1);
-    const hold_time: u16 = readU16Be(body, 3);
+    const my_as: u16 = bgpReadU16Be(body, 1);
+    const hold_time: u16 = bgpReadU16Be(body, 3);
     const bgp_id: [4]u8 = [body[5], body[6], body[7], body[8]];
     const opt_len: usize = body[9] as usize;
-    if (opt_len + 10 != body.len) {
+    if (opt_len > body.len - 10 || opt_len + 10 != body.len) {
         return null;
     }
 
@@ -365,19 +439,19 @@ pub fn parseBgpOpen(body: []const u8): BgpOpen? {
     };
 }
 
-/// 解析 BGP-4 UPDATE 报文体（零拷贝切分 withdrawn_routes / path_attrs / nlri）
+/// 解析 BGP-4 UPDATE 报文体（无溢出零拷贝切分 withdrawn_routes / path_attrs / nlri）
 pub fn parseBgpUpdate(body: []const u8): BgpUpdate? {
     if (body.len < 4) {
         return null;
     }
-    const withdrawn_len: usize = readU16Be(body, 0) as usize;
-    if (body.len - 2 < withdrawn_len + 2) {
+    const withdrawn_len: usize = bgpReadU16Be(body, 0) as usize;
+    if (withdrawn_len > body.len - 4) {
         return null;
     }
     const pa_len_off: usize = withdrawn_len + 2;
-    const total_pa_len: usize = readU16Be(body, pa_len_off) as usize;
+    const total_pa_len: usize = bgpReadU16Be(body, pa_len_off) as usize;
     const pa_start: usize = pa_len_off + 2;
-    if (body.len - pa_start < total_pa_len) {
+    if (total_pa_len > body.len - pa_start) {
         return null;
     }
     const nlri_start: usize = pa_start + total_pa_len;
@@ -399,4 +473,63 @@ pub fn parseBgpNotification(body: []const u8): BgpNotification? {
         error_subcode: body[1],
         data: body[2..body.len],
     };
+}
+
+/// 零堆严格校验单条 RFC 4271 BGP-4 报文（Marker、长度 19..=4096、类型 1..=4、KEEPALIVE 19B、
+/// OPEN 可选参数边界、UPDATE withdrawn/path_attrs/NLRI 全量无溢出与前缀 <= 32 校验）。
+pub fn validateBgpStrict(data: []const u8): bool {
+    const msg = parseBgpMessage(data) ?? return false;
+    if (msg.header.raw_type < 1 || msg.header.raw_type > 4) {
+        return false;
+    }
+    if (msg.header.msg_type == .keepalive) {
+        return msg.total_bytes == BGP_HEADER_SIZE && msg.body.len == 0;
+    }
+    if (msg.header.msg_type == .open) {
+        const open = parseBgpOpen(msg.body) ?? return false;
+        let it = open.optParams();
+        let count: usize = 0;
+        while (opt := it.next()) {
+            * = opt;
+            count += 1;
+            if (count > BGP_MAX_OPT_PARAMS) return false;
+        }
+        return !it.had_error;
+    }
+    if (msg.header.msg_type == .update) {
+        const upd = parseBgpUpdate(msg.body) ?? return false;
+
+        let w_it = BgpPrefixIter.init(upd.withdrawn_routes);
+        let w_cnt: usize = 0;
+        while (w := w_it.next()) {
+            * = w;
+            w_cnt += 1;
+            if (w_cnt > BGP_MAX_PREFIXES) return false;
+        }
+        if (w_it.had_error) return false;
+
+        let pa_it = BgpPathAttrIter.init(upd.path_attrs);
+        let pa_cnt: usize = 0;
+        while (pa := pa_it.next()) {
+            * = pa;
+            pa_cnt += 1;
+            if (pa_cnt > BGP_MAX_PATH_ATTRS) return false;
+        }
+        if (pa_it.had_error) return false;
+
+        let n_it = BgpPrefixIter.init(upd.nlri);
+        let n_cnt: usize = 0;
+        while (n := n_it.next()) {
+            * = n;
+            n_cnt += 1;
+            if (n_cnt > BGP_MAX_PREFIXES) return false;
+        }
+        return !n_it.had_error;
+    }
+    if (msg.header.msg_type == .notification) {
+        const notif = parseBgpNotification(msg.body) ?? return false;
+        * = notif;
+        return true;
+    }
+    return false;
 }
