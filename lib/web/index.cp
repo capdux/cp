@@ -507,3 +507,26 @@ export {
     RoutePattern,
     FsRouter,
 } from "./fsRouter.cp";
+
+// --- Official Flagship REST API Framework (ElysiaJS Chainable API + Axum Zero-Reflection Kernel) ---
+export {
+    APP_MAX_ROUTES,
+    APP_MAX_MIDDLEWARES,
+    APP_MAX_SEGMENTS,
+    APP_MAX_PARAMS,
+    APP_MAX_HEADERS,
+    APP_MAX_PATH_LEN,
+    AppMethod,
+    HeaderKV,
+    ParamKV,
+    Request,
+    Response,
+    Context,
+    HandlerFn,
+    MiddlewareFn,
+    RouteSegKind,
+    RouteSeg,
+    RouteEntry,
+    RouteGroup,
+    App,
+} from "./app.cp";
