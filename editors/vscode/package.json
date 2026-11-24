@@ -1,21 +1,27 @@
 {
   "name": "cp-lang",
   "displayName": "CP Language Support",
-  "description": "Official VS Code extension for the CP language. Provides syntax highlighting and LSP-powered intelligence.",
-  "version": "0.1.0",
+  "description": "Official VS Code extension for the CP language v1.0. Provides syntax highlighting, cpc LSP intelligence, cap fmt, and cap lint.",
+  "version": "1.0.0",
   "publisher": "cp-lang",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Formatters",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:cp"
   ],
   "contributes": {
     "languages": [
       {
         "id": "cp",
-        "aliases": ["Concurrent Plus", "cp"],
-        "extensions": [".cp"],
+        "aliases": ["CP", "Concurrent Plus", "cp"],
+        "extensions": [".cp", ".d.cp"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -25,7 +31,27 @@
         "scopeName": "source.cp",
         "path": "./syntaxes/cp.tmLanguage.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "CP Language",
+      "properties": {
+        "cp.cpcPath": {
+          "type": "string",
+          "default": "cpc",
+          "description": "Path to the cpc compiler & LSP executable."
+        },
+        "cp.capPath": {
+          "type": "string",
+          "default": "cap",
+          "description": "Path to the cap toolchain executable."
+        },
+        "cp.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically format .cp files via 'cap fmt' on save."
+        }
+      }
+    }
   },
   "main": "./out/extension.js",
   "scripts": {
