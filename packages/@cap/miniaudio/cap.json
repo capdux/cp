@@ -1,0 +1,30 @@
+{
+  "name": "@cap/miniaudio",
+  "ver": "0.11.21",
+  "description": "Cross-platform audio playback, capture, decoding (WAV/FLAC/MP3) and PCM resampling (miniaudio 0.11.21) for CP",
+  "main": "src/index.cp",
+  "license": "MIT-0",
+  "bin": {
+    "miniaudio": {
+      "path": "c",
+      "src": [
+        "miniaudio_impl.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {},
+    "pthread": {},
+    "dl": {}
+  }
+}

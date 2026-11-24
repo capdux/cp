@@ -140,6 +140,10 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libsodium 1.0.20** (`@cap/sodium`) | <https://github.com/jedisct1/libsodium> | ISC | `packages/@cap/sodium/` | Copyright (c) 2013-2024 Frank Denis |
 | **utf8proc 2.10.0** (`@cap/utf8proc`) | <https://github.com/JuliaStrings/utf8proc> | MIT | `packages/@cap/utf8proc/` | Copyright (c) 2014-2025 JuliaStrings / Jan Behrens |
 | **dr_libs 0.13.17** (`@cap/dr_libs`) | <https://github.com/mackron/dr_libs> | MIT-0 / Public Domain | `packages/@cap/dr_libs/` | Public Domain / MIT-0 (David Reid) |
+| **miniaudio 0.11.21** (`@cap/miniaudio`) | <https://github.com/mackron/miniaudio> | MIT-0 / Public Domain | `packages/@cap/miniaudio/` | Public Domain / MIT-0 (David Reid) |
+| **stb 2.30.0** (`@cap/stb`) | <https://github.com/nothings/stb> | MIT / Public Domain | `packages/@cap/stb/` | Public Domain / MIT (Sean Barrett) |
+| **RNNoise 0.1.1** (`@cap/rnnoise`) | <https://github.com/xiph/rnnoise> | BSD-3-Clause | `packages/@cap/rnnoise/` | Copyright (c) 2017-2024 Xiph.Org Foundation / Jean-Marc Valin |
+| **libsrtp 2.6.0** (`@cap/libsrtp`) | <https://github.com/cisco/libsrtp> | BSD-3-Clause | `packages/@cap/libsrtp/` | Copyright (c) 2001-2024 Cisco Systems, Inc. |
 
 ---
 

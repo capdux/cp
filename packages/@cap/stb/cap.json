@@ -1,0 +1,28 @@
+{
+  "name": "@cap/stb",
+  "ver": "2.30.0",
+  "description": "Single-header image decoding (PNG/JPG/BMP/TGA/GIF), PNG encoding and SIMD image resizing (nothings/stb) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "stb": {
+      "path": "c",
+      "src": [
+        "stb_impl.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

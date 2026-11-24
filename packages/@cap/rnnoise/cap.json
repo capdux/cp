@@ -1,0 +1,36 @@
+{
+  "name": "@cap/rnnoise",
+  "ver": "0.1.1",
+  "description": "Xiph RNNoise recurrent neural network speech denoising and VAD for CP voice AI agents",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "rnnoise": {
+      "path": "c",
+      "src": [
+        "src/denoise.c",
+        "src/rnn.c",
+        "src/rnn_data.c",
+        "src/rnn_reader.c",
+        "src/pitch.c",
+        "src/kiss_fft.c",
+        "src/celt_lpc.c"
+      ],
+      "include": [
+        "include",
+        "src"
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DRNNOISE_BUILD"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

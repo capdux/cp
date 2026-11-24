@@ -30,6 +30,10 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/sodium` | `1.0.20` | ISC | C static (`bin`) | Modern cryptography suite (Ed25519/XChaCha20-Poly1305/BLAKE2b) |
 | `@cap/utf8proc` | `2.10.0` | MIT | C static (`bin`) | Unicode 16.0 NFC/NFD/NFKC/Casefold normalization & charwidth |
 | `@cap/dr_libs` | `0.13.17` | MIT-0 | C static (`bin`) | Zero-dependency WAV/MP3/FLAC audio codecs (`dr_wav`/`dr_mp3`/`dr_flac`) |
+| `@cap/miniaudio` | `0.11.21` | MIT-0 | C static (`bin`) | Cross-platform audio capture/playback/decoding/resampling |
+| `@cap/stb` | `2.30.0` | MIT | C static (`bin`) | Single-header image decoding, PNG/JPG encoding & high-quality resize |
+| `@cap/rnnoise` | `0.1.1` | BSD-3-Clause | C static (`bin`) | Real-time neural network voice denoiser & VAD (162 KB) |
+| `@cap/libsrtp` | `2.6.0` | BSD-3-Clause | C static (`bin`) | Cisco SRTP/SRTCP encrypted real-time media transport (155 KB) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 
