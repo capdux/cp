@@ -128,6 +128,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **yyjson 0.10.0** (`@cap/yyjson`) | <https://github.com/ibireme/yyjson> | MIT | `packages/@cap/yyjson/` | Copyright (c) 2020-2024 YaoYuan |
 | **LMDB 0.9.33** (`@cap/lmdb`) | <https://github.com/LMDB/lmdb> | OLDAP-2.8 | `packages/@cap/lmdb/` | Copyright (c) 2011-2024 Howard Chu / Symas Corp. |
 | **tree-sitter 0.25.10** (`@cap/treesitter`) | <https://github.com/tree-sitter/tree-sitter> | MIT | `packages/@cap/treesitter/` | Copyright (c) 2018-2025 Max Brunsfeld |
+| **USearch 2.26.6** (`@cap/usearch`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 | `packages/@cap/usearch/` | Copyright (c) 2023-2025 Unum Cloud |
 
 ---
 

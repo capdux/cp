@@ -1,0 +1,32 @@
+{
+  "name": "@cap/usearch",
+  "ver": "2.26.6",
+  "description": "USearch (v2.26.6) high-performance HNSW vector search engine for CP AI Agents",
+  "main": "src/index.cp",
+  "license": "Apache-2.0",
+  "bin": {
+    "usearch": {
+      "path": ".",
+      "src": [
+        "c/lib.cpp"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3",
+        "-std=c++17",
+        "-DUSEARCH_USE_SIMSIMD=0",
+        "-DUSEARCH_USE_FP16LIB=0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {},
+    "pthread": {}
+  }
+}
