@@ -212,7 +212,7 @@ pub fn demoProductionNet() {
 | L2/L3/L4 与地址/安全 | `lib/net/arp.cp` | RFC 826 / RFC 5227 (`smoltcp` 0BSD 加固) | 零堆分配 ARP 报文编解码与免费 ARP/探针检测（16-lane SIMD `simdArpBytesEqual` + `validateArpStrict`） |
 | L2/L3/L4 与地址/安全 | `lib/net/bgp.cp` | RFC 4271 (`smoltcp` 0BSD 加固) | 零堆分配 BGP-4 协议帧与路径属性解析器（16-lane SIMD `simdBgpIsAllFF16`/`simdNetCopyBytes16` + `validateBgpStrict`） |
 | L2/L3/L4 与地址/安全 | `lib/net/dhcp.cp` | RFC 2131 / RFC 2132 (`smoltcp` 0BSD 加固) | 零堆分配 DHCPv4 线缆报文与 Option 编解码（`DHCP_MAX_OPTIONS` 上限防护 + `validateDhcpStrict`） |
-| L2/L3/L4 与地址/安全 | `lib/net/icmp.cp` | RFC 792 / RFC 4443 | 零堆分配 ICMPv4 / ICMPv6 报文与校验和编解码 |
+| L2/L3/L4 与地址/安全 | `lib/net/icmp.cp` | RFC 792 / RFC 4443 (`smoltcp` 0BSD 加固) | 零堆分配 ICMPv4 / ICMPv6 报文与校验和编解码（8-lane SIMD `simdIcmpChecksumFold` + `validateIcmpStrict`） |
 | L2/L3/L4 与地址/安全 | `lib/net/ipsec.cp` | RFC 4302 / 4303 / 7296 | 零堆分配 IPsec AH / ESP 与 IKEv2 报文解析 |
 | 流量遥测与负载均衡 | `lib/net/ipfix.cp` | RFC 7011 | 零堆分配 IPFIX v10 流量遥测线缆解析器 |
 | 流量遥测与负载均衡 | `lib/net/netflow.cp` | Cisco NetFlow v5 / RFC 3954 v9 | 零堆分配 NetFlow v5/v9 流量记录解析器 |

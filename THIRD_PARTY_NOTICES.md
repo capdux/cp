@@ -109,7 +109,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **fjall** (`fjall-rs`) | <https://github.com/fjall-rs/fjall> | MIT OR Apache-2.0 | `lib/db/walRecover.cp`, `lib/db/writeBatch.cp`, `lib/db/sstableIndex.cp`, `lib/db/slottedPage.cp` | Copyright (c) 2023-2024 Marvin (fjall-rs) |
 | **RustCrypto/formats** (`x509-cert`, `x509-ocsp`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/csr.cp`, `lib/auth/crl.cp`, `lib/auth/ocsp.cp` | Copyright (c) 2020-2024 RustCrypto Developers (RFC 2986/5280/6960) |
 | **actix-web** (`actix`) | <https://github.com/actix/actix-web> | MIT OR Apache-2.0 | `lib/web/csrfGuard.cp`, `lib/web/signedUrl.cp`, `lib/web/hstsStore.cp` | Copyright (c) 2017-2024 Actix Team (RFC 6797) |
-| **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131 / RFC 4271) |
+| **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp`, `lib/net/icmp.cp`, `lib/net/arp.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131/4271/792/4443/826) |
 
 ---
 
