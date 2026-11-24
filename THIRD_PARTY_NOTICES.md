@@ -137,6 +137,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libopus 1.5.2** (`@cap/opus`) | <https://opus-codec.org/> | BSD-3-Clause | `packages/@cap/opus/` | Copyright (c) 2001-2024 Xiph.Org Foundation & Contributors |
 | **llama.cpp b12676** (`@cap/llama`) | <https://github.com/ggml-org/llama.cpp> | MIT | `packages/@cap/llama/` | Copyright (c) 2023-2026 The ggml authors |
 | **whisper.cpp 1.9.6** (`@cap/whisper`) | <https://github.com/ggml-org/whisper.cpp> | MIT | `packages/@cap/whisper/` | Copyright (c) 2023-2026 The ggml authors |
+| **libsodium 1.0.20** (`@cap/sodium`) | <https://github.com/jedisct1/libsodium> | ISC | `packages/@cap/sodium/` | Copyright (c) 2013-2024 Frank Denis |
 
 ---
 
