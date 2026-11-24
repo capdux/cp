@@ -1,8 +1,12 @@
+// Reference-hardened against krisprice/ipnet & smoltcp (MIT / 0BSD)
 // Source: Absorbed from /data/dev/bun/src/runtime/node/net/BlockList.cp | Synced: 2026-11-22T16:14:43Z
 // Pure-CP zero-allocation IPv4/IPv6 BlockList (Node/Bun `net.BlockList` semantics):
-// single-address, inclusive range, and CIDR subnet rules with IPv4-mapped IPv6 interop.
+// single-address, inclusive range, and CIDR subnet rules with IPv4-mapped IPv6 interop & 16-lane SIMD.
 
 import { Ipv4Addr, Ipv6Addr, IpVersion, IpAddr } from "./ipaddr.cp";
+import { simdFwBytesEqual16 } from "./connTrack.cp";
+
+type FwPrefixVec16u8 = @Vector(16, u8);
 
 pub const BLOCKLIST_MAX_RULES: usize = 256;
 pub const BLOCKLIST_IPV4_MAX_PREFIX: u8 = 32;
@@ -129,6 +133,66 @@ fn u128ToIpv6(v: u128): Ipv6Addr {
     return Ipv6Addr { segments: segs };
 }
 
+fn u128ToBeBytes16(v: u128): [16]u8 {
+    let out: [16]u8 = [0; 16];
+    let i: usize = 0;
+    while (i < 16) : (i += 1) {
+        const shift: u7 = @as(u7, @intCast((15 - i) * 8));
+        out[i] = @as(u8, @truncate(v >> shift));
+    }
+    return out;
+}
+
+fn beBytes16ToU128(bytes: [16]u8): u128 {
+    let acc: u128 = 0;
+    let i: usize = 0;
+    while (i < 16) : (i += 1) {
+        acc = (acc << 8) | @as(u128, bytes[i]);
+    }
+    return acc;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD IPv6 CIDR prefix match (`0..=128`).
+/// Hot path for `BlockList` IPv6 subnet matching.
+pub fn simdFwIpv6MatchesPrefix(ip: [16]u8, net: [16]u8, prefix: u8): bool {
+    if (prefix == 0) return true;
+    if (prefix >= 128) return simdFwBytesEqual16(ip, net);
+    let mask: [16]u8 = [0; 16];
+    const full_bytes: usize = @as(usize, prefix / 8);
+    const rem_bits: u8 = prefix % 8;
+    let i: usize = 0;
+    while (i < full_bytes) : (i += 1) {
+        mask[i] = 0xFF;
+    }
+    if (rem_bits > 0 && full_bytes < 16) {
+        const shift: u3 = @as(u3, @intCast(8 - rem_bits));
+        mask[full_bytes] = @as(u8, 0xFF) << shift;
+    }
+    const v_ip: FwPrefixVec16u8 = ip;
+    const v_net: FwPrefixVec16u8 = net;
+    const v_mask: FwPrefixVec16u8 = mask;
+    const diff: FwPrefixVec16u8 = (v_ip ^ v_net) & v_mask;
+    return @reduce(.Or, diff) == 0;
+}
+
+/// Scalar reference for `simdFwIpv6MatchesPrefix` (0-diff differential verification).
+pub fn scalarFwIpv6MatchesPrefix(ip: [16]u8, net: [16]u8, prefix: u8): bool {
+    if (prefix == 0) return true;
+    const clamped: u8 = if (prefix > 128) 128 else prefix;
+    const full_bytes: usize = @as(usize, clamped / 8);
+    const rem_bits: u8 = clamped % 8;
+    let i: usize = 0;
+    while (i < full_bytes) : (i += 1) {
+        if (ip[i] != net[i]) return false;
+    }
+    if (rem_bits > 0 && full_bytes < 16) {
+        const shift: u3 = @as(u3, @intCast(8 - rem_bits));
+        const m: u8 = @as(u8, 0xFF) << shift;
+        if ((ip[full_bytes] & m) != (net[full_bytes] & m)) return false;
+    }
+    return true;
+}
+
 fn maskMatchV4(ip: u32, net: u32, prefix: u8): bool {
     if (prefix == 0) return true;
     if (prefix >= 32) return ip == net;
@@ -138,9 +202,7 @@ fn maskMatchV4(ip: u32, net: u32, prefix: u8): bool {
 
 fn maskMatchV6(ip: u128, net: u128, prefix: u8): bool {
     if (prefix == 0) return true;
-    if (prefix >= 128) return ip == net;
-    const shift: u7 = @as(u7, 128 - prefix);
-    return (ip >> shift) == (net >> shift);
+    return simdFwIpv6MatchesPrefix(u128ToBeBytes16(ip), u128ToBeBytes16(net), prefix);
 }
 
 /// Normalized IPv4 / IPv6 address stored in host-comparable big-endian integer order.
@@ -163,6 +225,21 @@ pub struct BlockListAddr {
             v4: 0,
             v6: ipv6ToU128(addr),
         };
+    }
+
+    static fn fromV6Bytes(bytes: [16]u8): BlockListAddr {
+        return BlockListAddr {
+            family: BlockListFamily.Ipv6,
+            v4: 0,
+            v6: beBytes16ToU128(bytes),
+        };
+    }
+
+    fn toV6Bytes(): [16]u8 {
+        if (_.family == BlockListFamily.Ipv4) {
+            return u128ToBeBytes16((@as(u128, 0xFFFF) << 32) | @as(u128, _.v4));
+        }
+        return u128ToBeBytes16(_.v6);
     }
 
     static fn fromIpAddr(ip: IpAddr): BlockListAddr {
@@ -241,8 +318,13 @@ pub struct BlockListRule {
 
     fn matches(addr: BlockListAddr): bool {
         if (_.kind == BlockListRuleKind.Address) {
-            if (ord := addr.compare(_.start)) {
-                return ord == 0;
+            if (l4 := addr.asV4()) {
+                if (r4 := _.start.asV4()) {
+                    return l4 == r4;
+                }
+            }
+            if (addr.family == BlockListFamily.Ipv6 && _.start.family == BlockListFamily.Ipv6) {
+                return simdFwBytesEqual16(u128ToBeBytes16(addr.v6), u128ToBeBytes16(_.start.v6));
             }
             return false;
         }
@@ -534,7 +616,9 @@ pub struct BlockList {
 
     /// Appends rules from `other` (preserving `other`'s priority order).
     fn mergeFrom(*_, other: BlockList): ! {
-        if (_.count + other.count > BLOCKLIST_MAX_RULES) return BlockListError.CapacityFull;
+        if (other.count > BLOCKLIST_MAX_RULES || _.count > BLOCKLIST_MAX_RULES - other.count) {
+            return BlockListError.CapacityFull;
+        }
         let i: usize = 0;
         while (i < other.count) {
             _.rules[_.count] = other.rules[i];

@@ -1893,11 +1893,13 @@ export {
     HedgedRequestScheduler,
 } from "./hedgedReq.cp";
 
-// --- blockList (Node/Bun net.BlockList: IPv4/IPv6 Address/Range/Subnet Rules) ---
+// --- blockList (Node/Bun net.BlockList: IPv4/IPv6 Address/Range/Subnet Rules + 16-Lane SIMD) ---
 export {
     BLOCKLIST_MAX_RULES,
     BLOCKLIST_IPV4_MAX_PREFIX,
     BLOCKLIST_IPV6_MAX_PREFIX,
+    simdFwIpv6MatchesPrefix,
+    scalarFwIpv6MatchesPrefix,
     BlockListFamily,
     BlockListRuleKind,
     BlockListError,
@@ -1906,8 +1908,9 @@ export {
     BlockList,
 } from "./blockList.cp";
 
-// --- connTrack (Zero-Alloc L4 Bidirectional 5-Tuple Conntrack Table & Half-Open Quota Guard) ---
+// --- connTrack (Zero-Alloc L4 Bidirectional 5-Tuple Conntrack Table & Half-Open Quota Guard + 16-Lane SIMD) ---
 export {
+    FwVec16u8,
     CONNTRACK_MAX_FLOWS,
     CONNTRACK_PROTO_TCP,
     CONNTRACK_PROTO_UDP,
@@ -1915,6 +1918,9 @@ export {
     CT_TCP_SYN,
     CT_TCP_RST,
     CT_TCP_ACK,
+    simdFwBytesEqual16,
+    scalarFwBytesEqual16,
+    ctElapsedMsSaturating,
     ConnTrackState,
     ConnTrackDir,
     ConnTrackAction,

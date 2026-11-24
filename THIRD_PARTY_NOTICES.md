@@ -109,7 +109,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **fjall** (`fjall-rs`) | <https://github.com/fjall-rs/fjall> | MIT OR Apache-2.0 | `lib/db/walRecover.cp`, `lib/db/writeBatch.cp`, `lib/db/sstableIndex.cp`, `lib/db/slottedPage.cp`, `lib/db/mvccSnap.cp`, `lib/db/bloomBlock.cp` | Copyright (c) 2023-2024 Marvin (fjall-rs) |
 | **RustCrypto/formats** (`x509-cert`, `x509-ocsp`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/csr.cp`, `lib/auth/crl.cp`, `lib/auth/ocsp.cp` | Copyright (c) 2020-2024 RustCrypto Developers (RFC 2986/5280/6960) |
 | **actix-web** (`actix`) | <https://github.com/actix/actix-web> | MIT OR Apache-2.0 | `lib/web/csrfGuard.cp`, `lib/web/signedUrl.cp`, `lib/web/hstsStore.cp` | Copyright (c) 2017-2024 Actix Team (RFC 6797) |
-| **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp`, `lib/net/icmp.cp`, `lib/net/arp.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131/4271/792/4443/826) |
+| **smoltcp** (`smoltcp-rs`) | <https://github.com/smoltcp-rs/smoltcp> | 0BSD | `lib/net/dhcp.cp`, `lib/net/bgp.cp`, `lib/net/icmp.cp`, `lib/net/arp.cp`, `lib/net/connTrack.cp`, `lib/net/blockList.cp` | Copyright (c) 2016-2024 smoltcp Contributors (RFC 2131/4271/792/4443/826) |
 | **RustCrypto/KDFs & MACs** | <https://github.com/RustCrypto/KDFs> | MIT OR Apache-2.0 | `lib/crypto/ratchet.cp`, `lib/crypto/aeadNonce.cp`, `lib/crypto/keyring.cp`, `lib/crypto/envelope.cp`, `lib/crypto/macaroon.cp`, `lib/crypto/merkleTree.cp`, `lib/crypto/shamirSecret.cp`, `lib/crypto/sparseMerkle.cp` | Copyright (c) 2018-2024 RustCrypto Developers (RFC 5869/4231/6962/9001) |
 | **HdrHistogram_rust** (`HdrHistogram`) | <https://github.com/HdrHistogram/HdrHistogram_rust> | MIT OR Apache-2.0 | `lib/obs/hdrHist.cp`, `lib/obs/openmetrics.cp` | Copyright (c) 2016-2024 HdrHistogram Contributors (OpenMetrics 1.0) |
 | **pcap-parser** (`rusticata`) | <https://github.com/rusticata/pcap-parser> | MIT OR Apache-2.0 | `lib/binfmt/pcap.cp`, `lib/binfmt/pcapng.cp` | Copyright (c) 2017-2024 Pierre Chifflier (Rusticata) |
@@ -117,6 +117,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **multer** (`rwf2`) | <https://github.com/rwf2/multer> | MIT | `lib/web/multipart.cp`, `lib/web/uritemplate.cp` | Copyright (c) 2020-2024 Rousan Ali / rwf2 (RFC 7578 / RFC 6570) |
 | **usearch** (`unum-cloud`) & **instant-distance** (`djc`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 / MIT | `lib/vector/hnswFlat.cp`, `lib/vector/ivfPq.cp` | Copyright (c) 2022-2024 Unum Cloud / Dirkjan Ochtman |
 | **varisat** (`jix`) | <https://github.com/jix/varisat> | MIT OR Apache-2.0 | `lib/compiler/expr.cp`, `lib/compiler/sat.cp` | Copyright (c) 2018-2024 Jannis Harder |
+| **statrs** (`statrs-dev`) & **nalgebra** (`dimforge`) | <https://github.com/statrs-dev/statrs> | MIT / Apache-2.0 | `lib/math/statsDist.cp`, `lib/math/lu.cp` | Copyright (c) 2016-2024 Statrs / Dimforge Contributors |
 
 ---
 

@@ -692,9 +692,10 @@ pub fn demoHedgedRequestScheduler() {
 
 ### 1. `BlockList` 零分配 IPv4/IPv6 访问控制表
 
-`lib/net/blockList.cp` 提供与 Node.js / Bun `net.BlockList` 语义对齐的 100% 纯 CP 零堆分配实现（固定容量 `BLOCKLIST_MAX_RULES = 256`）：
+`lib/net/blockList.cp`（对标 `krisprice/ipnet & smoltcp (MIT / 0BSD)` 深度加固）提供与 Node.js / Bun `net.BlockList` 语义对齐的 100% 纯 CP 零堆分配实现（固定容量 `BLOCKLIST_MAX_RULES = 256`）：
 
-- **规则类型与 LIFO 优先级**：支持单地址（`addAddress` / `addAddressAuto`）、闭区间范围（`addRange` / `addRangeAuto`，严格校验 `start <= end` 与同协议族）以及 CIDR 子网（`addSubnet` / `addSubnetCidr`，IPv4 `0..32`、IPv6 `0..128`，含 `/0` 移位溢出防护）。新规则按 LIFO 顺序头插至索引 `0`，与 Bun `da_rules.insert(0, ...)` 一致。
+- **规则类型与 LIFO 优先级**：支持单地址（`addAddress` / `addAddressAuto`）、闭区间范围（`addRange` / `addRangeAuto`，严格校验 `start <= end` 与同协议族）以及 CIDR 子网（`addSubnet` / `addSubnetCidr`，IPv4 `0..32`、IPv6 `0..128`，含 `/0` 移位溢出防护与前导零拒绝）。新规则按 LIFO 顺序头插至索引 `0`，与 Bun `da_rules.insert(0, ...)` 一致；`mergeFrom` 具备无溢出容量保护。
+- **16-lane SIMD 热路径 (`FwVec16u8`)**：提供 `simdFwIpv6MatchesPrefix` / `scalarFwIpv6MatchesPrefix`（16-lane `@Vector(16, u8)` IPv6 CIDR 掩码匹配，直连 `BlockList` IPv6 子网热路径）与 `simdFwBytesEqual16`（128-bit 地址精确比对，直连单地址匹配）。
 - **IPv4-Mapped IPv6 双向互通**：`::ffff:a.b.c.d` 与原生 IPv4 在单地址、范围、子网匹配中自动互通；`check` 对畸形 IP 字符串返回 `false` 而不触发异常。
 - **规则格式化导出**：`formatRule(idx, out)` 与 `formatAllRules(out)` 严格输出 Node/Bun 标准格式：`"Address: IPv4 127.0.0.1"`、`"Range: IPv4 10.0.0.1-10.0.0.10"`、`"Subnet: IPv6 2001:db8::/32"`。
 
@@ -727,7 +728,9 @@ if (n := bl.formatAllRules(buf[0..])) {
 
 ## 零分配 L4 双向五元组连接跟踪表与半连接配额防护引擎 (`connTrack.cp`)
 
-面向 L4 网关、状态防火墙与资源耗尽防护的 100% 纯 CP 零动态堆分配 Conntrack 连接跟踪引擎：
+面向 L4 网关、状态防火墙与资源耗尽防护的 100% 纯 CP 零动态堆分配 Conntrack 连接跟踪引擎（对标 `krisprice/ipnet & smoltcp (MIT / 0BSD)` 深度加固）：
+
+- **16-lane SIMD 与时钟回拨防护**：提供 `FwVec16u8`、`simdFwBytesEqual16` / `scalarFwBytesEqual16`（16-lane 128-bit 五元组地址比对，直连 `ConnTrackTuple.equals`）、`ctElapsedMsSaturating`（时钟回拨归零与 `i64` 差值防溢出保护）、双向包/字节计数器饱和递增及 `verifyInvariants()` 内部不变量自检。
 
 - **常量与枚举**：
   - `CONNTRACK_MAX_FLOWS = 128`、`CONNTRACK_PROTO_TCP = 6`、`CONNTRACK_PROTO_UDP = 17`、`CT_TCP_FIN`、`CT_TCP_SYN`、`CT_TCP_RST`、`CT_TCP_ACK`

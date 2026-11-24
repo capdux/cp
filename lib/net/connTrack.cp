@@ -1,3 +1,4 @@
+// Reference-hardened against krisprice/ipnet & smoltcp (MIT / 0BSD)
 // Origin: Pure-CP Stdlib (Zero-Alloc L4 Bidirectional 5-Tuple Conntrack Table & Half-Open Quota Guard) | Created: 2026-11-23
 // 100% pure CP zero-heap-allocation L4 stateful connection tracking table (Conntrack):
 //   - Fixed 128-slot table (`CONNTRACK_MAX_FLOWS = 128`) with normalized 16-byte IPv4/IPv6 addresses
@@ -5,7 +6,10 @@
 //   - Full TCP (`syn_sent | syn_recv | established | fin_wait | time_wait | closed`) & UDP
 //     (`udp_unreplied | udp_assured`) state machines with per-state idle timeout sweeping (`reapExpired`)
 //   - Half-open (`syn_sent` / `syn_recv`) quota enforcement for resource exhaustion protection,
-//     bidirectional packet/byte counters, and full-table priority reclamation of `closed` / `time_wait` slots
+//     bidirectional packet/byte counters, clock-rollback saturation, and full-table reclamation
+
+/// 16-lane SIMD byte vector alias shared across firewall (`blockList` & `connTrack`) hot paths.
+pub type FwVec16u8 = @Vector(16, u8);
 
 /// Maximum number of tracked L4 flows stored inline in `ConnTrackTable`.
 pub const CONNTRACK_MAX_FLOWS: usize = 128;
@@ -53,15 +57,20 @@ pub enum ConnTrackAction: u8 {
     rejected_invalid = 4,
 }
 
+const CT_SM64_C1: u64 = (@as(u64, 0x9E3779B9) << 32) | 0x7F4A7C15;
+const CT_SM64_C2: u64 = (@as(u64, 0xBF58476D) << 32) | 0x1CE4E5B9;
+const CT_SM64_C3: u64 = (@as(u64, 0x94D049BB) << 32) | 0x133111EB;
+const CT_FNV_OFFSET: u64 = (@as(u64, 0xCBF29CE4) << 32) | 0x84222325;
+
 fn splitMix64(x_in: u64): u64 {
-    let z: u64 = x_in +% 0x9E3779B97F4A7C15;
-    z = (z ^ (z >> 30)) *% 0xBF58476D1CE4E5B9;
-    z = (z ^ (z >> 27)) *% 0x94D049BB133111EB;
+    let z: u64 = x_in +% CT_SM64_C1;
+    z = (z ^ (z >> 30)) *% CT_SM64_C2;
+    z = (z ^ (z >> 27)) *% CT_SM64_C3;
     return z ^ (z >> 31);
 }
 
 fn hashEndpoint(ip: [16]u8, port: u16): u64 {
-    let h: u64 = 0xCBF29CE484222325;
+    let h: u64 = CT_FNV_OFFSET;
     let idx: usize = 0;
     while (idx < 16) {
         h ^= @as(u64, ip[idx]);
@@ -75,7 +84,16 @@ fn hashEndpoint(ip: [16]u8, port: u16): u64 {
     return splitMix64(h);
 }
 
-fn ipEq16(a: [16]u8, b: [16]u8): bool {
+/// 16-lane `@Vector(16, u8)` SIMD 128-bit IPv6 / normalized-IP address equality check.
+pub fn simdFwBytesEqual16(a: [16]u8, b: [16]u8): bool {
+    const va: FwVec16u8 = a;
+    const vb: FwVec16u8 = b;
+    const diff: FwVec16u8 = va ^ vb;
+    return @reduce(.Or, diff) == 0;
+}
+
+/// Scalar reference for `simdFwBytesEqual16` (0-diff differential verification).
+pub fn scalarFwBytesEqual16(a: [16]u8, b: [16]u8): bool {
     let idx: usize = 0;
     while (idx < 16) {
         if (a[idx] != b[idx]) {
@@ -84,6 +102,22 @@ fn ipEq16(a: [16]u8, b: [16]u8): bool {
         idx += 1;
     }
     return true;
+}
+
+/// Computes elapsed milliseconds saturating on clock rollback (`now_ms <= last_seen_ms => 0`)
+/// and protecting against signed `i64` subtraction overflow.
+pub fn ctElapsedMsSaturating(now_ms: i64, last_seen_ms: i64): u64 {
+    if (now_ms <= last_seen_ms) return 0;
+    const diff: i128 = @as(i128, now_ms) - @as(i128, last_seen_ms);
+    const max_i64_i128: i128 = (@as(i128, 0x7FFF_FFFF) << 32) | 0xFFFF_FFFF;
+    if (diff > max_i64_i128) {
+        return (@as(u64, 0x7FFF_FFFF) << 32) | 0xFFFF_FFFF;
+    }
+    return @as(u64, @intCast(diff));
+}
+
+fn ipEq16(a: [16]u8, b: [16]u8): bool {
+    return simdFwBytesEqual16(a, b);
 }
 
 /// Normalized IPv4/IPv6 L4 5-tuple (`IPv4` is stored as IPv4-mapped IPv6 `::ffff:a.b.c.d`).
@@ -168,7 +202,7 @@ pub struct ConnTrackTuple {
     fn symmetricHash(): u64 {
         const ha: u64 = hashEndpoint(_.src_ip, _.src_port);
         const hb: u64 = hashEndpoint(_.dst_ip, _.dst_port);
-        const mixed: u64 = (ha ^ hb) ^ ((ha +% hb) *% 0x9E3779B97F4A7C15) ^ (@as(u64, _.proto) << 56);
+        const mixed: u64 = (ha ^ hb) ^ ((ha +% hb) *% CT_SM64_C1) ^ (@as(u64, _.proto) << 56);
         return splitMix64(mixed);
     }
 }
@@ -360,13 +394,13 @@ pub struct ConnTrackTable {
         return false;
     }
 
-    /// Sweeps all flows whose idle time `now_ms - last_seen_ms` exceeds their per-state timeout.
+    /// Sweeps all flows whose idle time `ctElapsedMsSaturating(now_ms, last_seen_ms)` exceeds their per-state timeout.
     fn reapExpired(*_, now_ms: i64): usize {
         let reaped: usize = 0;
         let idx: usize = 0;
         while (idx < CONNTRACK_MAX_FLOWS) {
-            if (_.entries[idx].occupied && now_ms > _.entries[idx].last_seen_ms) {
-                const idle_ms: u64 = @as(u64, @intCast(now_ms - _.entries[idx].last_seen_ms));
+            if (_.entries[idx].occupied) {
+                const idle_ms: u64 = ctElapsedMsSaturating(now_ms, _.entries[idx].last_seen_ms);
                 const limit_ms: u64 = _.timeoutForState(_.entries[idx].state);
                 if (idle_ms >= limit_ms) {
                     if (isHalfOpenState(_.entries[idx].state) && _.half_open_flows > 0) {
@@ -381,7 +415,7 @@ pub struct ConnTrackTable {
             }
             idx += 1;
         }
-        _.total_expired_reaped += @as(u64, reaped);
+        _.total_expired_reaped +|= @as(u64, reaped);
         return reaped;
     }
 
@@ -447,11 +481,11 @@ pub struct ConnTrackTable {
                 if (is_orig || is_reply) {
                     const dir: ConnTrackDir = if (is_orig) ConnTrackDir.original else ConnTrackDir.reply;
                     if (is_orig) {
-                        _.entries[idx].orig_packets += 1;
-                        _.entries[idx].orig_bytes += @as(u64, packet_bytes);
+                        _.entries[idx].orig_packets +|= 1;
+                        _.entries[idx].orig_bytes +|= @as(u64, packet_bytes);
                     } else {
-                        _.entries[idx].reply_packets += 1;
-                        _.entries[idx].reply_bytes += @as(u64, packet_bytes);
+                        _.entries[idx].reply_packets +|= 1;
+                        _.entries[idx].reply_bytes +|= @as(u64, packet_bytes);
                     }
                     if (now_ms > _.entries[idx].last_seen_ms) {
                         _.entries[idx].last_seen_ms = now_ms;
@@ -603,5 +637,27 @@ pub struct ConnTrackTable {
             total_table_full_dropped: _.total_table_full_dropped,
             total_reclaimed_closed_tw: _.total_reclaimed_closed_tw,
         };
+    }
+
+    /// Verifies internal table invariants: active/half-open counts, quota ceiling, and slot hash integrity.
+    fn verifyInvariants(): bool {
+        if (_.active_flows > CONNTRACK_MAX_FLOWS) return false;
+        if (_.half_open_flows > _.cfg.max_half_open) return false;
+        if (_.half_open_flows > _.active_flows) return false;
+        let seen_active: usize = 0;
+        let seen_half: usize = 0;
+        let idx: usize = 0;
+        while (idx < CONNTRACK_MAX_FLOWS) {
+            if (_.entries[idx].occupied) {
+                seen_active += 1;
+                if (_.entries[idx].flow_id == 0) return false;
+                if (_.entries[idx].sym_hash != _.entries[idx].orig_tuple.symmetricHash()) return false;
+                if (isHalfOpenState(_.entries[idx].state)) {
+                    seen_half += 1;
+                }
+            }
+            idx += 1;
+        }
+        return seen_active == _.active_flows && seen_half == _.half_open_flows;
     }
 }
