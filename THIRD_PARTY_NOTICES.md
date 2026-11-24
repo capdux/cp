@@ -146,6 +146,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libsrtp 2.6.0** (`@cap/libsrtp`) | <https://github.com/cisco/libsrtp> | BSD-3-Clause | `packages/@cap/libsrtp/` | Copyright (c) 2001-2024 Cisco Systems, Inc. |
 | **libyuv 1.9.0** (`@cap/libyuv`) | <https://chromium.googlesource.com/libyuv/libyuv> | BSD-3-Clause | `packages/@cap/libyuv/` | Copyright (c) 2011 The LibYuv Project Authors |
 | **SpeexDSP 1.2.1** (`@cap/speexdsp`) | <https://github.com/xiph/speexdsp> | BSD-3-Clause | `packages/@cap/speexdsp/` | Copyright (c) 2002-2022 Jean-Marc Valin / Xiph.Org |
+| **str0m** (Sans-IO WebRTC Reference) | <https://github.com/algesten/str0m> | MIT OR Apache-2.0 | `lib/rtc/index.cp` | Copyright (c) Martin Algesten & str0m Contributors |
 
 ---
 
