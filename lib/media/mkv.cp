@@ -1,4 +1,14 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc Matroska / WebM EBML Container Parser) | Created: 2026-11-22
+// Reference-hardened against RFC 8794 / RFC 9559 & ebml-iterable (MIT)
+// Origin: Pure-CP Stdlib (Zero-Alloc Matroska / WebM EBML Container Parser & Strict Validator) | Created: 2026-11-22
+
+import {
+    EBML_MAX_DEPTH,
+    decodeEbmlId,
+    decodeEbmlSize,
+    decodeEbmlUint,
+    decodeEbmlFloat,
+    simdEbmlBytesEqual,
+} from "./ebml.cp";
 
 pub const ID_EBML: u32 = 0x1A45DFA3;
 pub const ID_DOC_TYPE: u32 = 0x4282;
@@ -20,8 +30,42 @@ pub const ID_AUDIO: u32 = 0xE1;
 pub const ID_SAMPLING_FREQ: u32 = 0xB5;
 pub const ID_CHANNELS: u32 = 0x9F;
 pub const ID_CLUSTER: u32 = 0x1F43B675;
+pub const ID_CLUSTER_TIMECODE: u32 = 0xE7;
+pub const ID_SIMPLE_BLOCK: u32 = 0xA3;
+pub const ID_BLOCK_GROUP: u32 = 0xA0;
+pub const ID_BLOCK: u32 = 0xA1;
 
 pub const MKV_DEFAULT_TIMECODE_SCALE_NS: u64 = 1_000_000;
+
+pub err MkvError {
+    InvalidEbmlHeader,
+    UnsupportedDocType,
+    MissingSegment,
+    MalformedElement,
+    InvalidTrackEntry,
+    InvalidSimpleBlock,
+    InvalidLacing,
+    PayloadOutOfBounds,
+    MaxDepthExceeded,
+}
+
+pub enum MkvLacingKind: u8 {
+    none = 0,
+    xiph = 1,
+    fixed_size = 2,
+    ebml = 3,
+}
+
+pub struct MkvSimpleBlock {
+    track_number: u64,
+    timecode_rel: i16,
+    keyframe: bool,
+    invisible: bool,
+    discardable: bool,
+    lacing: MkvLacingKind,
+    frame_count: u16,
+    payload: []const u8,
+}
 
 pub enum MkvTrackType: u8 {
     unknown = 0,
@@ -45,20 +89,6 @@ pub fn mkvTrackTypeFromInt(raw: u64): MkvTrackType {
     return MkvTrackType.unknown;
 }
 
-fn sliceEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn trimTrailingNul(s: []const u8): []const u8 {
     let end: usize = s.len;
     while (end > 0 && s[end - 1] == 0) {
@@ -74,12 +104,12 @@ pub struct MkvInfo {
     muxing_app: []const u8,
     writing_app: []const u8,
 
-    fn durationMs(): f64 {
+    pub fn durationMs(): f64 {
         return (_.duration_ticks * (_.timecode_scale_ns as f64)) / 1_000_000.0;
     }
 
-    fn isWebm(): bool {
-        return sliceEq(_.doc_type, "webm");
+    pub fn isWebm(): bool {
+        return simdEbmlBytesEqual(_.doc_type, "webm");
     }
 }
 
@@ -93,173 +123,141 @@ pub struct MkvTrack {
     sampling_frequency: f64,
 }
 
-struct VintId {
-    id: u32,
-    len: usize,
-}
-
-struct VintSize {
-    size: u64,
-    len: usize,
-    unknown: bool,
-}
-
-struct EbmlElement {
+struct MkvRawElem {
     id: u32,
     payload: []const u8,
     next_pos: usize,
     unknown_size: bool,
 }
 
-fn readVintId(data: []const u8, pos: usize): VintId? {
-    if (pos >= data.len) {
-        return null;
-    }
-    const b0 = data[pos];
-    if (b0 == 0) {
-        return null;
-    }
-
-    let width: usize = 0;
-    if ((b0 & 0x80) != 0) {
-        width = 1;
-    } else if ((b0 & 0x40) != 0) {
-        width = 2;
-    } else if ((b0 & 0x20) != 0) {
-        width = 3;
-    } else if ((b0 & 0x10) != 0) {
-        width = 4;
-    } else {
-        return null;
-    }
-
-    if (width > data.len - pos) {
-        return null;
-    }
-
-    let id: u32 = 0;
-    let i: usize = 0;
-    while (i < width) {
-        id = (id << 8) | (data[pos + i] as u32);
-        i += 1;
-    }
-
-    return VintId{
-        .id = id,
-        .len = width,
-    };
-}
-
-fn readVintSize(data: []const u8, pos: usize): VintSize? {
-    if (pos >= data.len) {
-        return null;
-    }
-    const b0 = data[pos];
-    if (b0 == 0) {
-        return null;
-    }
-
-    let width: usize = 1;
-    let mask: u8 = 0x80;
-    while (width <= 8 && (b0 & mask) == 0) {
-        mask = mask >> 1;
-        width += 1;
-    }
-    if (width > 8 || width > data.len - pos) {
-        return null;
-    }
-
-    const first_data_mask: u8 = mask - 1;
-    let val: u64 = (b0 & first_data_mask) as u64;
-    let all_ones: u64 = first_data_mask as u64;
-
-    let i: usize = 1;
-    while (i < width) {
-        val = (val << 8) | (data[pos + i] as u64);
-        all_ones = (all_ones << 8) | (0xFF as u64);
-        i += 1;
-    }
-
-    return VintSize{
-        .size = val,
-        .len = width,
-        .unknown = (val == all_ones),
-    };
-}
-
-fn readElementAt(data: []const u8, pos: usize, allow_unknown: bool): EbmlElement? {
-    const vid = readVintId(data, pos) ?? return null;
-    const vsz = readVintSize(data, pos + vid.len) ?? return null;
-    const payload_start = pos + vid.len + vsz.len;
+fn readMkvElementAt(data: []const u8, pos: usize, allow_unknown: bool): MkvRawElem? {
+    if (pos >= data.len) return null;
+    const vid = decodeEbmlId(data[pos..]) ?? return null;
+    const size_pos = pos + (vid.bytes_read as usize);
+    const vsz = decodeEbmlSize(data[size_pos..]) ?? return null;
+    const payload_start = size_pos + (vsz.bytes_read as usize);
     const rem = data.len - payload_start;
 
-    if (vsz.unknown) {
-        if (!allow_unknown) {
-            return null;
-        }
-        return EbmlElement{
-            .id = vid.id,
+    if (vsz.is_unknown_size) {
+        if (!allow_unknown) return null;
+        return MkvRawElem{
+            .id = vid.raw_id,
             .payload = data[payload_start..data.len],
             .next_pos = data.len,
             .unknown_size = true,
         };
     }
 
-    if (vsz.size > (rem as u64)) {
+    if (vsz.value > (rem as u64)) {
         return null;
     }
 
-    const payload_end = payload_start + (vsz.size as usize);
-    return EbmlElement{
-        .id = vid.id,
+    const payload_end = payload_start + (vsz.value as usize);
+    return MkvRawElem{
+        .id = vid.raw_id,
         .payload = data[payload_start..payload_end],
         .next_pos = payload_end,
         .unknown_size = false,
     };
 }
 
-fn readEbmlUint(payload: []const u8): u64? {
-    if (payload.len > 8) {
-        return null;
-    }
-    let val: u64 = 0;
-    let i: usize = 0;
-    while (i < payload.len) {
-        val = (val << 8) | (payload[i] as u64);
-        i += 1;
-    }
-    return val;
-}
+/// Parses and strictly validates an RFC 9559 Matroska `SimpleBlock` / `Block` binary payload,
+/// including TrackNumber VINT, relative `i16` timecode, flags, and all 4 lacing modes
+/// (`none`, `xiph`, `fixed_size`, `ebml`).
+pub fn parseMkvSimpleBlock(raw: []const u8): MkvError!MkvSimpleBlock {
+    if (raw.len < 4) return err.InvalidSimpleBlock;
+    const trk = decodeEbmlSize(raw) ?? return err.InvalidSimpleBlock;
+    if (trk.is_unknown_size || trk.value == 0) return err.InvalidSimpleBlock;
+    const hdr_end = (trk.bytes_read as usize) + 3;
+    if (hdr_end > raw.len) return err.InvalidSimpleBlock;
 
-fn readEbmlFloat(payload: []const u8): f64? {
-    if (payload.len == 0) {
-        return 0.0;
-    }
-    if (payload.len == 4) {
-        const bits32: u32 = ((payload[0] as u32) << 24) |
-            ((payload[1] as u32) << 16) |
-            ((payload[2] as u32) << 8) |
-            (payload[3] as u32);
-        unsafe {
-            const f: f32 = @bitCast(bits32);
-            return f as f64;
+    const tc_u16: u16 = ((raw[trk.bytes_read as usize] as u16) << 8)
+        | (raw[(trk.bytes_read as usize) + 1] as u16);
+    const tc_rel: i16 = @bitCast(tc_u16);
+    const flags = raw[(trk.bytes_read as usize) + 2];
+
+    const keyframe = (flags & 0x80) != 0;
+    const invisible = (flags & 0x08) != 0;
+    const discardable = (flags & 0x01) != 0;
+    const lace_bits: u8 = (flags >> 1) & 0x03;
+
+    const lacing = if (lace_bits == 0)
+        MkvLacingKind.none
+    else if (lace_bits == 1)
+        MkvLacingKind.xiph
+    else if (lace_bits == 2)
+        MkvLacingKind.fixed_size
+    else
+        MkvLacingKind.ebml;
+
+    let pos: usize = hdr_end;
+    let frame_count: u16 = 1;
+
+    if (lacing != MkvLacingKind.none) {
+        if (pos >= raw.len) return err.InvalidLacing;
+        const n_minus_1 = raw[pos];
+        pos += 1;
+        frame_count = (n_minus_1 as u16) + 1;
+        const num_frames: usize = frame_count as usize;
+
+        if (lacing == MkvLacingKind.fixed_size) {
+            const data_rem = raw.len - pos;
+            if (data_rem == 0 || (data_rem % num_frames) != 0) {
+                return err.InvalidLacing;
+            }
+        } else if (lacing == MkvLacingKind.xiph) {
+            let sum_frames: u64 = 0;
+            let fi: usize = 0;
+            while (fi + 1 < num_frames) : (fi += 1) {
+                let flen: u64 = 0;
+                while (true) {
+                    if (pos >= raw.len) return err.InvalidLacing;
+                    const b = raw[pos];
+                    pos += 1;
+                    flen += b as u64;
+                    if (flen > (raw.len as u64)) return err.InvalidLacing;
+                    if (b != 255) break;
+                }
+                sum_frames += flen;
+                if (sum_frames > (raw.len as u64)) return err.InvalidLacing;
+            }
+            if (sum_frames > ((raw.len - pos) as u64)) return err.InvalidLacing;
+        } else {
+            // EBML lacing: first frame unsigned VINT, subsequent num_frames - 2 signed VINT deltas
+            const first_v = decodeEbmlSize(raw[pos..]) ?? return err.InvalidLacing;
+            if (first_v.is_unknown_size) return err.InvalidLacing;
+            pos += first_v.bytes_read as usize;
+            let cur_len: i64 = first_v.value as i64;
+            let sum_frames: u64 = first_v.value;
+            if (sum_frames > (raw.len as u64)) return err.InvalidLacing;
+
+            let fi: usize = 1;
+            while (fi + 1 < num_frames) : (fi += 1) {
+                const dv = decodeEbmlSize(raw[pos..]) ?? return err.InvalidLacing;
+                if (dv.is_unknown_size) return err.InvalidLacing;
+                pos += dv.bytes_read as usize;
+                const shift: u6 = ((dv.bytes_read * 7) - 1) as u6;
+                const bias: i64 = (((1 as u64) << shift) - (1 as u64)) as i64;
+                const delta: i64 = (dv.value as i64) - bias;
+                cur_len += delta;
+                if (cur_len < 0) return err.InvalidLacing;
+                sum_frames += cur_len as u64;
+                if (sum_frames > (raw.len as u64)) return err.InvalidLacing;
+            }
+            if (sum_frames > ((raw.len - pos) as u64)) return err.InvalidLacing;
         }
     }
-    if (payload.len == 8) {
-        const bits64: u64 = ((payload[0] as u64) << 56) |
-            ((payload[1] as u64) << 48) |
-            ((payload[2] as u64) << 40) |
-            ((payload[3] as u64) << 32) |
-            ((payload[4] as u64) << 24) |
-            ((payload[5] as u64) << 16) |
-            ((payload[6] as u64) << 8) |
-            (payload[7] as u64);
-        unsafe {
-            const d: f64 = @bitCast(bits64);
-            return d;
-        }
-    }
-    return null;
+
+    return MkvSimpleBlock{
+        .track_number = trk.value,
+        .timecode_rel = tc_rel,
+        .keyframe = keyframe,
+        .invisible = invisible,
+        .discardable = discardable,
+        .lacing = lacing,
+        .frame_count = frame_count,
+        .payload = raw[pos..raw.len],
+    };
 }
 
 struct DocTypeSlice {
@@ -267,13 +265,13 @@ struct DocTypeSlice {
 }
 
 fn parseEbmlDocType(data: []const u8): DocTypeSlice? {
-    const ebml = readElementAt(data, 0, false) ?? return null;
+    const ebml = readMkvElementAt(data, 0, false) ?? return null;
     if (ebml.id != ID_EBML) {
         return null;
     }
     let pos: usize = 0;
     while (pos < ebml.payload.len) {
-        const child = readElementAt(ebml.payload, pos, false) ?? return null;
+        const child = readMkvElementAt(ebml.payload, pos, false) ?? return null;
         pos = child.next_pos;
         if (child.id == ID_DOC_TYPE) {
             return DocTypeSlice{ .value = trimTrailingNul(child.payload) };
@@ -284,25 +282,25 @@ fn parseEbmlDocType(data: []const u8): DocTypeSlice? {
 
 pub fn isMkv(data: []const u8): bool {
     const dt = parseEbmlDocType(data) ?? return false;
-    return sliceEq(dt.value, "matroska") || sliceEq(dt.value, "webm");
+    return simdEbmlBytesEqual(dt.value, "matroska") || simdEbmlBytesEqual(dt.value, "webm");
 }
 
 pub fn isWebm(data: []const u8): bool {
     const dt = parseEbmlDocType(data) ?? return false;
-    return sliceEq(dt.value, "webm");
+    return simdEbmlBytesEqual(dt.value, "webm");
 }
 
 fn parseVideoElement(payload: []const u8, track: *MkvTrack) {
     let pos: usize = 0;
     while (pos < payload.len) {
-        const child = readElementAt(payload, pos, false) ?? break;
+        const child = readMkvElementAt(payload, pos, false) ?? break;
         pos = child.next_pos;
         if (child.id == ID_PIXEL_WIDTH) {
-            if (w := readEbmlUint(child.payload)) {
+            if (w := decodeEbmlUint(child.payload)) {
                 track.pixel_width = w as u32;
             }
         } else if (child.id == ID_PIXEL_HEIGHT) {
-            if (h := readEbmlUint(child.payload)) {
+            if (h := decodeEbmlUint(child.payload)) {
                 track.pixel_height = h as u32;
             }
         }
@@ -312,14 +310,14 @@ fn parseVideoElement(payload: []const u8, track: *MkvTrack) {
 fn parseAudioElement(payload: []const u8, track: *MkvTrack) {
     let pos: usize = 0;
     while (pos < payload.len) {
-        const child = readElementAt(payload, pos, false) ?? break;
+        const child = readMkvElementAt(payload, pos, false) ?? break;
         pos = child.next_pos;
         if (child.id == ID_CHANNELS) {
-            if (ch := readEbmlUint(child.payload)) {
+            if (ch := decodeEbmlUint(child.payload)) {
                 track.channels = ch as u32;
             }
         } else if (child.id == ID_SAMPLING_FREQ) {
-            if (sr := readEbmlFloat(child.payload)) {
+            if (sr := decodeEbmlFloat(child.payload)) {
                 track.sampling_frequency = sr;
             }
         }
@@ -339,14 +337,14 @@ fn parseTrackEntry(payload: []const u8): MkvTrack {
 
     let pos: usize = 0;
     while (pos < payload.len) {
-        const child = readElementAt(payload, pos, false) ?? break;
+        const child = readMkvElementAt(payload, pos, false) ?? break;
         pos = child.next_pos;
         if (child.id == ID_TRACK_NUMBER) {
-            if (n := readEbmlUint(child.payload)) {
+            if (n := decodeEbmlUint(child.payload)) {
                 track.track_number = n;
             }
         } else if (child.id == ID_TRACK_TYPE) {
-            if (tt := readEbmlUint(child.payload)) {
+            if (tt := decodeEbmlUint(child.payload)) {
                 track.track_type = mkvTrackTypeFromInt(tt);
             }
         } else if (child.id == ID_CODEC_ID) {
@@ -366,7 +364,7 @@ pub struct MkvTrackIter {
     pos: usize,
     done: bool,
 
-    fn init(tracks_payload: []const u8): MkvTrackIter {
+    pub static fn init(tracks_payload: []const u8): MkvTrackIter {
         return MkvTrackIter{
             .data = tracks_payload,
             .pos = 0,
@@ -374,12 +372,12 @@ pub struct MkvTrackIter {
         };
     }
 
-    fn next(*_): MkvTrack? {
+    pub fn next(*_): MkvTrack? {
         if (_.done) {
             return null;
         }
         while (_.pos < _.data.len) {
-            if (elem := readElementAt(_.data, _.pos, false)) {
+            if (elem := readMkvElementAt(_.data, _.pos, false)) {
                 _.pos = elem.next_pos;
                 if (elem.id == ID_TRACK_ENTRY) {
                     return parseTrackEntry(elem.payload);
@@ -400,7 +398,7 @@ pub struct MkvHeader {
     has_info: bool,
     has_tracks: bool,
 
-    fn tracks(): MkvTrackIter {
+    pub fn tracks(): MkvTrackIter {
         return MkvTrackIter.init(_.tracks_payload);
     }
 }
@@ -408,14 +406,14 @@ pub struct MkvHeader {
 fn parseInfoElement(payload: []const u8, info: *MkvInfo) {
     let pos: usize = 0;
     while (pos < payload.len) {
-        const child = readElementAt(payload, pos, false) ?? break;
+        const child = readMkvElementAt(payload, pos, false) ?? break;
         pos = child.next_pos;
         if (child.id == ID_TIMECODE_SCALE) {
-            if (ts := readEbmlUint(child.payload)) {
+            if (ts := decodeEbmlUint(child.payload)) {
                 info.timecode_scale_ns = ts;
             }
         } else if (child.id == ID_DURATION) {
-            if (d := readEbmlFloat(child.payload)) {
+            if (d := decodeEbmlFloat(child.payload)) {
                 info.duration_ticks = d;
             }
         } else if (child.id == ID_MUXING_APP) {
@@ -427,7 +425,7 @@ fn parseInfoElement(payload: []const u8, info: *MkvInfo) {
 }
 
 pub fn parseMkvHeader(data: []const u8): MkvHeader? {
-    const ebml = readElementAt(data, 0, false) ?? return null;
+    const ebml = readMkvElementAt(data, 0, false) ?? return null;
     if (ebml.id != ID_EBML) {
         return null;
     }
@@ -435,14 +433,14 @@ pub fn parseMkvHeader(data: []const u8): MkvHeader? {
     let doc_type: []const u8 = data[0..0];
     let epos: usize = 0;
     while (epos < ebml.payload.len) {
-        const child = readElementAt(ebml.payload, epos, false) ?? return null;
+        const child = readMkvElementAt(ebml.payload, epos, false) ?? return null;
         epos = child.next_pos;
         if (child.id == ID_DOC_TYPE) {
             doc_type = trimTrailingNul(child.payload);
         }
     }
 
-    if (!sliceEq(doc_type, "matroska") && !sliceEq(doc_type, "webm")) {
+    if (!simdEbmlBytesEqual(doc_type, "matroska") && !simdEbmlBytesEqual(doc_type, "webm")) {
         return null;
     }
 
@@ -460,15 +458,14 @@ pub fn parseMkvHeader(data: []const u8): MkvHeader? {
 
     let top_pos: usize = ebml.next_pos;
     while (top_pos < data.len) {
-        const top = readElementAt(data, top_pos, true) ?? return null;
+        const top = readMkvElementAt(data, top_pos, true) ?? return null;
         top_pos = top.next_pos;
 
         if (top.id == ID_SEGMENT) {
             found_segment = true;
             let spos: usize = 0;
             while (spos < top.payload.len) {
-                // Allow unknown size only for Cluster so streaming media stops cleanly
-                const elem = readElementAt(top.payload, spos, true) ?? break;
+                const elem = readMkvElementAt(top.payload, spos, true) ?? break;
                 if (elem.id == ID_CLUSTER) {
                     break;
                 }
@@ -499,4 +496,133 @@ pub fn parseMkvHeader(data: []const u8): MkvHeader? {
         .has_info = has_info,
         .has_tracks = has_tracks,
     };
+}
+
+fn validateTrackEntryStrict(payload: []const u8): MkvError!void {
+    let pos: usize = 0;
+    let has_num = false;
+    let has_type = false;
+    let has_codec = false;
+    while (pos < payload.len) {
+        const child = readMkvElementAt(payload, pos, false) ?? return err.InvalidTrackEntry;
+        pos = child.next_pos;
+        if (child.id == ID_TRACK_NUMBER) {
+            const tn = decodeEbmlUint(child.payload) ?? return err.InvalidTrackEntry;
+            if (tn == 0) return err.InvalidTrackEntry;
+            has_num = true;
+        } else if (child.id == ID_TRACK_TYPE) {
+            * = decodeEbmlUint(child.payload) ?? return err.InvalidTrackEntry;
+            has_type = true;
+        } else if (child.id == ID_CODEC_ID) {
+            if (trimTrailingNul(child.payload).len == 0) return err.InvalidTrackEntry;
+            has_codec = true;
+        } else if (child.id == ID_VIDEO) {
+            let vp: usize = 0;
+            while (vp < child.payload.len) {
+                const vc = readMkvElementAt(child.payload, vp, false) ?? return err.InvalidTrackEntry;
+                vp = vc.next_pos;
+                if (vc.id == ID_PIXEL_WIDTH || vc.id == ID_PIXEL_HEIGHT) {
+                    * = decodeEbmlUint(vc.payload) ?? return err.InvalidTrackEntry;
+                }
+            }
+        } else if (child.id == ID_AUDIO) {
+            let ap: usize = 0;
+            while (ap < child.payload.len) {
+                const ac = readMkvElementAt(child.payload, ap, false) ?? return err.InvalidTrackEntry;
+                ap = ac.next_pos;
+                if (ac.id == ID_CHANNELS) {
+                    * = decodeEbmlUint(ac.payload) ?? return err.InvalidTrackEntry;
+                } else if (ac.id == ID_SAMPLING_FREQ) {
+                    * = decodeEbmlFloat(ac.payload) ?? return err.InvalidTrackEntry;
+                }
+            }
+        }
+    }
+    if (!has_num || !has_type || !has_codec) return err.InvalidTrackEntry;
+}
+
+fn validateClusterStrict(payload: []const u8): MkvError!void {
+    let pos: usize = 0;
+    while (pos < payload.len) {
+        const child = readMkvElementAt(payload, pos, false) ?? return err.MalformedElement;
+        pos = child.next_pos;
+        if (child.id == ID_CLUSTER_TIMECODE) {
+            * = decodeEbmlUint(child.payload) ?? return err.MalformedElement;
+        } else if (child.id == ID_SIMPLE_BLOCK) {
+            * = parseMkvSimpleBlock(child.payload)?;
+        } else if (child.id == ID_BLOCK_GROUP) {
+            let bp: usize = 0;
+            while (bp < child.payload.len) {
+                const bc = readMkvElementAt(child.payload, bp, false) ?? return err.MalformedElement;
+                bp = bc.next_pos;
+                if (bc.id == ID_BLOCK) {
+                    * = parseMkvSimpleBlock(bc.payload)?;
+                }
+            }
+        }
+    }
+}
+
+/// Zero-allocation strict Matroska / WebM (RFC 9559) container validator.
+/// Verifies EBML Header, DocType (`matroska`/`webm`), Segment, Info, Tracks, Cluster,
+/// and SimpleBlock/Block lacing & payload bounds.
+pub fn validateMkvStrict(data: []const u8): MkvError!void {
+    const ebml = readMkvElementAt(data, 0, false) ?? return err.InvalidEbmlHeader;
+    if (ebml.id != ID_EBML) return err.InvalidEbmlHeader;
+
+    let doc_type: []const u8 = data[0..0];
+    let epos: usize = 0;
+    while (epos < ebml.payload.len) {
+        const child = readMkvElementAt(ebml.payload, epos, false) ?? return err.InvalidEbmlHeader;
+        epos = child.next_pos;
+        if (child.id == ID_DOC_TYPE) {
+            doc_type = trimTrailingNul(child.payload);
+        }
+    }
+    if (!simdEbmlBytesEqual(doc_type, "matroska") && !simdEbmlBytesEqual(doc_type, "webm")) {
+        return err.UnsupportedDocType;
+    }
+
+    let found_segment = false;
+    let top_pos: usize = ebml.next_pos;
+    while (top_pos < data.len) {
+        const top = readMkvElementAt(data, top_pos, true) ?? return err.MalformedElement;
+        top_pos = top.next_pos;
+        if (top.id == ID_SEGMENT) {
+            found_segment = true;
+            let spos: usize = 0;
+            let depth_guard: usize = 0;
+            while (spos < top.payload.len) {
+                if (depth_guard > EBML_MAX_DEPTH * 64) return err.MaxDepthExceeded;
+                depth_guard += 1;
+                const elem = readMkvElementAt(top.payload, spos, true) ?? return err.MalformedElement;
+                spos = elem.next_pos;
+                if (elem.id == ID_INFO) {
+                    let ip: usize = 0;
+                    while (ip < elem.payload.len) {
+                        const ic = readMkvElementAt(elem.payload, ip, false) ?? return err.MalformedElement;
+                        ip = ic.next_pos;
+                        if (ic.id == ID_TIMECODE_SCALE) {
+                            const ts = decodeEbmlUint(ic.payload) ?? return err.MalformedElement;
+                            if (ts == 0) return err.MalformedElement;
+                        } else if (ic.id == ID_DURATION) {
+                            * = decodeEbmlFloat(ic.payload) ?? return err.MalformedElement;
+                        }
+                    }
+                } else if (elem.id == ID_TRACKS) {
+                    let tp: usize = 0;
+                    while (tp < elem.payload.len) {
+                        const tc = readMkvElementAt(elem.payload, tp, false) ?? return err.InvalidTrackEntry;
+                        tp = tc.next_pos;
+                        if (tc.id == ID_TRACK_ENTRY) {
+                            validateTrackEntryStrict(tc.payload)?;
+                        }
+                    }
+                } else if (elem.id == ID_CLUSTER) {
+                    validateClusterStrict(elem.payload)?;
+                }
+            }
+        }
+    }
+    if (!found_segment) return err.MissingSegment;
 }

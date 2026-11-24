@@ -98,6 +98,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **roxmltree** (`RazrFalcon`) | <https://github.com/RazrFalcon/roxmltree> | MIT / Apache-2.0 | `lib/xml/parser.cp`, `lib/xml/escape.cp`, `lib/xml/writer.cp` | Copyright (c) 2018-2024 Yevhenii Reizner (RazrFalcon) |
 | **object** (`gimli-rs`) | <https://github.com/gimli-rs/object> | MIT OR Apache-2.0 | `lib/binfmt/macho.cp`, `lib/binfmt/coff.cp` | Copyright (c) 2016-2024 Gimli Contributors |
 | **opentelemetry-rust** (`open-telemetry`) | <https://github.com/open-telemetry/opentelemetry-rust> | Apache-2.0 | `lib/obs/traceParent.cp`, `lib/obs/w3cTraceContext.cp`, `lib/obs/baggage.cp` | Copyright (c) 2019-2024 OpenTelemetry Authors |
+| **ebml-iterable** (`austinleroy`) | <https://github.com/austinleroy/ebml-iterable> | MIT | `lib/media/ebml.cp`, `lib/media/mkv.cp` | Copyright (c) 2020-2024 Austin LeRoy (RFC 8794 / RFC 9559) |
 
 ---
 

@@ -28,9 +28,9 @@
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
 | `lib/media/mp4.cp` | ISO BMFF / MP4 Box 容器解析与结构校验（对标 `alfg/mp4-rust` MIT 加固 + 16-lane SIMD 品牌扫描/载荷拷贝 & 4-lane `u32` BE 解包） | `MP4_MAX_BOX_DEPTH`, `Mp4Error`, `isMp4`, `BoxCursor`, `findBox`, `findBoxPath`, `parseFtyp`, `parseMvhd`, `parseMdhd`, `parseTkhd`, `parseHdlr`, `parseStsz`, `parseStco`, `parseCo64`, `parseStts`, `validateMp4Structure`, `mp4CopyPayloadSimd`, `mp4HasBrandSimd`, `mp4UnpackU32BESimd` |
-| `lib/media/mkv.cp` | Matroska / WebM EBML 容器解析 | `isMkv`, `isWebm`, `parseMkvHeader`, `MkvTrackIter`, `MkvHeader`, `MkvInfo`, `MkvTrack`, `MkvTrackType` |
+| `lib/media/mkv.cp` | Matroska / WebM EBML 容器解析与严格校验（对标 RFC 8794 / RFC 9559 & `ebml-iterable` MIT 加固 + 16-lane SIMD 匹配 & SimpleBlock 4 种 Lacing 校验） | `MkvError`, `MkvLacingKind`, `MkvSimpleBlock`, `parseMkvSimpleBlock`, `validateMkvStrict`, `isMkv`, `isWebm`, `parseMkvHeader`, `MkvTrackIter`, `MkvHeader`, `MkvInfo`, `MkvTrack`, `MkvTrackType`（测试：`cap/test/testMediaMkvEbmlRustRefSuite.cp`） |
 | `lib/media/flv.cp` | Adobe FLV 容器与音视频 Tag 解析 | `isFlv`, `parseFlvHeader`, `FlvTagIter`, `parseFlvAudioHeader`, `parseFlvVideoHeader`, `FlvHeader`, `FlvTag` |
-| `lib/media/ebml.cp` | RFC 8794 EBML VINT 与元素迭代器 | `isEbmlHeader`, `EbmlElementIter`, `decodeEbmlId`, `decodeEbmlSize`, `decodeEbmlUint`, `EbmlElement` |
+| `lib/media/ebml.cp` | RFC 8794 EBML VINT、整型/IEEE754 浮点、元素迭代与零堆校验器（对标 RFC 8794 & `ebml-iterable` MIT 加固 + 16-lane SIMD 载荷拷贝/魔数重同步） | `EBML_MAX_DEPTH`, `EbmlError`, `isEbmlHeader`, `EbmlElementIter`, `decodeEbmlId`, `decodeEbmlSize`, `decodeEbmlUint`, `decodeEbmlSint`, `decodeEbmlFloat`, `validateEbmlStrict`, `simdEbmlCopyPayload`, `simdEbmlBytesEqual`, `simdFindEbmlHeaderMagic` |
 | `lib/media/riff.cp` | RIFF / RIFX 容器分块扫描器 | `parseRiffHeader`, `parseListType`, `RiffChunkIter`, `findRiffChunk`, `RiffHeader`, `RiffChunk` |
 
 ### 3. 字幕与音频标签元数据（3 个子模块）
