@@ -26,6 +26,7 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/onnx` | `1.32.0` | MIT | Prebuilt dynamic (`sys`) | Microsoft ONNX Runtime neural/embedding inference engine |
 | `@cap/opus` | `1.5.2` | BSD-3-Clause | C static (`bin`) | Low-latency real-time speech/audio codec (WebRTC/Voice Agent) |
 | `@cap/llama` | `1.0.12676` | MIT | Prebuilt dynamic (`sys`) | Local LLM inference engine (`llama.cpp` AVX2/AVX512/GPU) |
+| `@cap/whisper` | `1.9.6` | MIT | Prebuilt dynamic (`sys`) | Local speech-to-text ASR engine (`whisper.cpp`, 2.6 MB `.so`) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 
