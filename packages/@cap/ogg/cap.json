@@ -1,0 +1,29 @@
+{
+  "name": "@cap/ogg",
+  "ver": "1.3.5",
+  "description": "Xiph libogg 1.3.5 bitstream container framing and page muxing engine for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "ogg": {
+      "path": "c",
+      "src": [
+        "framing.c",
+        "bitwise.c",
+        "ogg_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}

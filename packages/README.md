@@ -36,6 +36,8 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/libsrtp` | `2.6.0` | BSD-3-Clause | C static (`bin`) | Cisco SRTP/SRTCP encrypted real-time media transport (155 KB) |
 | `@cap/libyuv` | `1.9.0` | BSD-3-Clause | C++17 static (`bin` + `-lc++`) | Google SIMD YUV↔RGB conversion, scaling & rotation |
 | `@cap/speexdsp` | `1.2.1` | BSD-3-Clause | C static (`bin`) | Real-time Acoustic Echo Cancellation (AEC), AGC & denoise |
+| `@cap/cmark` | `0.31.1` | BSD-2-Clause | C static (`bin`) | CommonMark official fast Markdown→HTML/XML renderer |
+| `@cap/ogg` | `1.3.5` | BSD-3-Clause | C static (`bin`) | Xiph Ogg audio/video bitstream container (36 KB) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 

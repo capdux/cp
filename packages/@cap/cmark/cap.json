@@ -1,0 +1,46 @@
+{
+  "name": "@cap/cmark",
+  "ver": "0.31.1",
+  "description": "CommonMark 0.31.1 official C reference Markdown to HTML/XML/LaTeX renderer for CP",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "bin": {
+    "cmark": {
+      "path": "c",
+      "src": [
+        "blocks.c",
+        "buffer.c",
+        "cmark.c",
+        "cmark_ctype.c",
+        "commonmark.c",
+        "houdini_href_e.c",
+        "houdini_html_e.c",
+        "houdini_html_u.c",
+        "html.c",
+        "inlines.c",
+        "iterator.c",
+        "latex.c",
+        "man.c",
+        "node.c",
+        "references.c",
+        "render.c",
+        "scanners.c",
+        "utf8.c",
+        "xml.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DCMARK_STATIC_DEFINE"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}

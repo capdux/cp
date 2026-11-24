@@ -147,6 +147,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libyuv 1.9.0** (`@cap/libyuv`) | <https://chromium.googlesource.com/libyuv/libyuv> | BSD-3-Clause | `packages/@cap/libyuv/` | Copyright (c) 2011 The LibYuv Project Authors |
 | **SpeexDSP 1.2.1** (`@cap/speexdsp`) | <https://github.com/xiph/speexdsp> | BSD-3-Clause | `packages/@cap/speexdsp/` | Copyright (c) 2002-2022 Jean-Marc Valin / Xiph.Org |
 | **str0m** (Sans-IO WebRTC Reference) | <https://github.com/algesten/str0m> | MIT OR Apache-2.0 | `lib/rtc/index.cp` | Copyright (c) Martin Algesten & str0m Contributors |
+| **cmark 0.31.1** (`@cap/cmark`) | <https://github.com/commonmark/cmark> | BSD-2-Clause | `packages/@cap/cmark/` | Copyright (c) 2014 John MacFarlane |
+| **libogg 1.3.5** (`@cap/ogg`) | <https://github.com/xiph/ogg> | BSD-3-Clause | `packages/@cap/ogg/` | Copyright (c) 2002-2021 Xiph.Org Foundation |
 
 ---
 
