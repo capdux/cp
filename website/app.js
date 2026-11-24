@@ -1,0 +1,252 @@
+// CP v1.0.0 Website — Interactive Install Tabs, Live Benchmark Renderer & 43+ Package Explorer
+
+const INSTALL_CMDS = {
+  unix: "curl -fsSL https://raw.githubusercontent.com/cp-lang/cp/main/install.sh | sh",
+  win: "irm https://raw.githubusercontent.com/cp-lang/cp/main/install.ps1 | iex",
+};
+
+const CODE_SAMPLES = {
+  rest: `// Elysia-style fluent API + Axum-style zero-reflection extractors
+import { App, Context, Response } from "cap:web";
+
+fn getUser(ctx: *Context): Response {
+    const id = ctx.param("id") orelse "0";
+    return ctx.json(200, "{\\"id\\":\\"" ++ id ++ "\\",\\"status\\":\\"ok\\"}");
+}
+
+fn main() {
+    let app = App.init();
+    app.get("/api/users/:id", getUser);
+    // Export OpenAPI 3.1 spec with zero runtime reflection
+}`,
+  sqlite: `// Built-in embedded SQLite 3.54.1 (zero install, 2.64M point-lookups/s)
+import { Database } from "cap:sqlite";
+import std from "std";
+
+fn main() {
+    let db = Database.openMemory() catch return;
+    db.exec("CREATE TABLE agents (id INTEGER PRIMARY KEY, name TEXT, score INT);") catch return;
+    db.exec("INSERT INTO agents (name, score) VALUES ('alpha', 98), ('gamma', 100);") catch return;
+
+    let stmt = db.prepare("SELECT name, score FROM agents WHERE score >= ?;") catch return;
+    stmt.bindInt(1, 95) catch return;
+    while (stmt.step() catch false) {
+        std.debug.print("{s}: {d}\\n", .{ stmt.columnText(0), stmt.columnInt(1) });
+    }
+}`,
+  raii: `// Deterministic Zero-GC Stack RAII (~init runs automatically on scope exit)
+import std from "std";
+
+struct FileGuard {
+    label: string,
+    ~init() {
+        std.debug.print("[~init] Released {s} deterministically\\n", .{_.label});
+    }
+}
+
+fn main() {
+    const g = FileGuard{ .label = "gpu-buffer" };
+    * = g; // Safe silence; discarding an unowned Guard via '* = FileGuard{...}' is rejected (E0220)!
+}`,
+  ai: `// Local LLM (@cap/llama) + Billion-scale HNSW Vector Search (@cap/usearch)
+import { LlamaBackend } from "@cap/llama";
+import { VectorIndex } from "@cap/usearch";
+
+fn main() {
+    const llm = LlamaBackend.init() catch return;
+    let idx = VectorIndex.initCosine(16) catch return;
+    idx.reserve(1024) catch return;
+    // Zero-GC inference + vector memory retrieval in one native binary
+}`,
+  native: `// Native C packages with prebuilt -g0 lean archives & AST link tree-shaking
+import { compressInto, decompressInto } from "@cap/lz4";
+import { JsonDoc } from "@cap/yyjson";
+import std from "std";
+
+fn main() {
+    const doc = JsonDoc.parse("{\\"lang\\":\\"CP\\",\\"packages\\":43}") catch return;
+    const lang: string = doc.root().get("lang").?.asStr().?;
+    std.debug.print("Parsed via yyjson: {s}\\n", .{lang});
+}`,
+};
+
+// Default benchmark dataset (automatically overwritten when ../bench/vs_runtimes/results.json is loaded)
+const DEFAULT_BENCHMARKS = [
+  {
+    title: "SQLite :memory: Point Lookups (100k)",
+    subtitle: "Higher is better (ops/sec) · Embedded SQLite 3.54.1",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 (cap:sqlite)", key: "cp", value: 2641434, display: "2.64M ops/s" },
+      { label: "Bun (bun:sqlite)", key: "bun", value: 1100000, display: "1.10M ops/s" },
+      { label: "Python 3 (sqlite3)", key: "py", value: 185000, display: "0.19M ops/s" },
+    ],
+  },
+  {
+    title: "SQLite :memory: Bulk Insert (100k)",
+    subtitle: "Higher is better (ops/sec) · Single transaction",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 (cap:sqlite)", key: "cp", value: 2256356, display: "2.26M ops/s" },
+      { label: "Bun (bun:sqlite)", key: "bun", value: 920000, display: "0.92M ops/s" },
+      { label: "Python 3 (sqlite3)", key: "py", value: 210000, display: "0.21M ops/s" },
+    ],
+  },
+];
+
+const PACKAGES = [
+  { name: "@cap/llama", lic: "MIT", cat: "ai", desc: "Local LLM inference (llama.cpp AVX2/AVX512/GPU)" },
+  { name: "@cap/whisper", lic: "MIT", cat: "ai", desc: "Local speech-to-text ASR (whisper.cpp, 2.6 MB)" },
+  { name: "@cap/onnx", lic: "MIT", cat: "ai", desc: "Microsoft ONNX Runtime neural/embedding engine" },
+  { name: "@cap/usearch", lic: "Apache-2.0", cat: "ai", desc: "Billion-scale SIMD HNSW vector search" },
+  { name: "@cap/openblas", lic: "BSD-3", cat: "ai", desc: "High-performance BLAS / GEMM linear algebra" },
+  { name: "@cap/duckdb", lic: "MIT", cat: "ai", desc: "Embedded OLAP SQL engine (Parquet/CSV/JSON)" },
+  { name: "@cap/lmdb", lic: "OLDAP-2.8", cat: "ai", desc: "Zero-copy mmap embedded KV store (124 KB)" },
+  { name: "@cap/opus", lic: "BSD-3", cat: "media", desc: "Low-latency real-time voice/audio codec" },
+  { name: "@cap/miniaudio", lic: "MIT-0", cat: "media", desc: "Cross-platform audio capture/playback/resample" },
+  { name: "@cap/rnnoise", lic: "BSD-3", cat: "media", desc: "Real-time neural voice denoiser & VAD (162 KB)" },
+  { name: "@cap/speexdsp", lic: "BSD-3", cat: "media", desc: "Acoustic Echo Cancellation (AEC) & AGC" },
+  { name: "@cap/dr_libs", lic: "MIT-0", cat: "media", desc: "Zero-dependency WAV / MP3 / FLAC codecs" },
+  { name: "@cap/flac", lic: "BSD-3", cat: "media", desc: "Xiph lossless audio encoder & decoder" },
+  { name: "@cap/vorbis", lic: "BSD-3", cat: "media", desc: "Xiph Ogg/Vorbis audio encoder & decoder" },
+  { name: "@cap/ogg", lic: "BSD-3", cat: "media", desc: "Xiph Ogg bitstream container (36 KB)" },
+  { name: "@cap/libyuv", lic: "BSD-3", cat: "media", desc: "Google SIMD YUV↔RGB conversion & scaling" },
+  { name: "@cap/dav1d", lic: "BSD-2", cat: "media", desc: "VideoLAN fastest royalty-free AV1 decoder (1.8 MB)" },
+  { name: "@cap/libvpx", lic: "BSD-3", cat: "media", desc: "Google royalty-free VP8/VP9 video codec (1.7 MB)" },
+  { name: "@cap/libavif", lic: "BSD-2", cat: "media", desc: "Next-gen AVIF image container & parser" },
+  { name: "@cap/libsrtp", lic: "BSD-3", cat: "media", desc: "Cisco SRTP/SRTCP encrypted media transport" },
+  { name: "@cap/usrsctp", lic: "BSD-3", cat: "media", desc: "WebRTC DataChannel userspace SCTP stack" },
+  { name: "@cap/opencv", lic: "Apache-2.0", cat: "graphics", desc: "Computer vision core + imgproc (10.4 MB)" },
+  { name: "@cap/pdfium", lic: "Apache-2.0", cat: "graphics", desc: "Chrome PDFium rendering & text extraction (6.8 MB)" },
+  { name: "@cap/sdl3", lic: "Zlib", cat: "graphics", desc: "Cross-platform window, audio, input & SDL_GPU (2.9 MB)" },
+  { name: "@cap/stb", lic: "MIT", cat: "graphics", desc: "Single-header image decode/encode/resize" },
+  { name: "@cap/freetype", lic: "FTL", cat: "graphics", desc: "Industry-standard font rasterizer & glyph engine" },
+  { name: "@cap/harfbuzz", lic: "MIT", cat: "graphics", desc: "Multi-script / CJK / Arabic text shaping" },
+  { name: "@cap/cmark", lic: "BSD-2", cat: "graphics", desc: "CommonMark official fast Markdown→HTML renderer" },
+  { name: "@cap/zstd", lic: "BSD-3", cat: "core", desc: "Zstandard high-ratio compression (914 KB)" },
+  { name: "@cap/lz4", lic: "BSD-2", cat: "core", desc: "GB/s real-time lossless compression (180 KB)" },
+  { name: "@cap/snappy", lic: "BSD-3", cat: "core", desc: "Google high-speed compression (67 KB)" },
+  { name: "@cap/miniz", lic: "MIT", cat: "core", desc: "Single-file ZIP archive & DEFLATE (140 KB)" },
+  { name: "@cap/yyjson", lic: "MIT", cat: "core", desc: "Fastest C JSON reader & writer (303 KB)" },
+  { name: "@cap/xxhash", lic: "BSD-2", cat: "core", desc: "Ultra-fast XXH3/XXH64 hashing (51 KB)" },
+  { name: "@cap/picohttp", lic: "MIT", cat: "core", desc: "Zero-copy HTTP/1.x parser (7.8 KB)" },
+  { name: "@cap/hdrhistogram", lic: "CC0", cat: "core", desc: "Nanosecond high-dynamic-range latency histogram (28 KB)" },
+  { name: "@cap/treesitter", lic: "MIT", cat: "core", desc: "Incremental AST parsing runtime (tree-sitter)" },
+  { name: "@cap/yaml", lic: "MIT", cat: "core", desc: "Industrial YAML 1.1/1.2 parser (libyaml)" },
+  { name: "@cap/expat", lic: "MIT", cat: "core", desc: "Fast streaming XML SAX parser (libexpat)" },
+  { name: "@cap/pcre2", lic: "BSD-3", cat: "core", desc: "Full Perl regex with SLJIT native machine-code JIT" },
+  { name: "@cap/utf8proc", lic: "MIT", cat: "core", desc: "Unicode 16.0 NFC/NFD/NFKC/Casefold normalization" },
+  { name: "@cap/sodium", lic: "ISC", cat: "core", desc: "Modern cryptography (Ed25519 / XChaCha20-Poly1305)" },
+  { name: "@cap/mbedtls", lic: "Apache-2.0", cat: "core", desc: "Lightweight ARM Mbed TLS crypto core (80 KB)" },
+  { name: "@cap/curl", lic: "curl", cat: "core", desc: "Multiprotocol HTTP/HTTPS/FTP/Proxy client (845 KB)" },
+];
+
+// Install tab switcher + copy
+document.querySelectorAll(".install-tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".install-tab").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("install-cmd").textContent = INSTALL_CMDS[btn.dataset.os];
+  });
+});
+
+document.getElementById("copy-install").addEventListener("click", async (e) => {
+  const txt = document.getElementById("install-cmd").textContent;
+  try {
+    await navigator.clipboard.writeText(txt);
+    e.target.textContent = "Copied!";
+    setTimeout(() => (e.target.textContent = "Copy"), 1500);
+  } catch {
+    e.target.textContent = "Select & Copy";
+  }
+});
+
+// Code showcase tabs
+function renderCode(key) {
+  document.getElementById("code-display").textContent = CODE_SAMPLES[key] || "";
+}
+document.querySelectorAll(".code-tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".code-tab").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderCode(btn.dataset.sample);
+  });
+});
+renderCode("rest");
+
+// Benchmark renderer
+function renderBenchmarks(cards) {
+  const grid = document.getElementById("bench-grid");
+  grid.innerHTML = "";
+  cards.forEach((c) => {
+    const maxVal = Math.max(...c.rows.map((r) => r.value), 1);
+    const card = document.createElement("div");
+    card.className = "bench-card";
+    card.innerHTML = `
+      <h3>${c.title}</h3>
+      <div class="bench-sub">${c.subtitle}</div>
+      ${c.rows
+        .map((r) => {
+          const pct = Math.max(4, Math.round((r.value / maxVal) * 100));
+          return `
+            <div class="bar-row">
+              <div class="bar-label"><span>${r.label}</span><span>${r.display}</span></div>
+              <div class="bar-track"><div class="bar-fill ${r.key}" style="width:${pct}%"></div></div>
+            </div>`;
+        })
+        .join("")}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// Try loading live machine benchmark results if served alongside bench/vs_runtimes/results.json
+fetch("../bench/vs_runtimes/results.json")
+  .then((r) => (r.ok ? r.json() : null))
+  .then((data) => {
+    if (data && Array.isArray(data.cards) && data.cards.length > 0) {
+      if (data.cpu) {
+        document.getElementById("bench-meta").innerHTML =
+          `Measured on <strong>${data.cpu}</strong>. Reproducible via <code>python3 bench/vs_runtimes/run_all.py</code>.`;
+      }
+      renderBenchmarks(data.cards);
+    } else {
+      renderBenchmarks(DEFAULT_BENCHMARKS);
+    }
+  })
+  .catch(() => renderBenchmarks(DEFAULT_BENCHMARKS));
+
+// Packages explorer
+let currentCat = "all";
+function renderPackages() {
+  const q = document.getElementById("pkg-search").value.trim().toLowerCase();
+  const grid = document.getElementById("pkg-grid");
+  const filtered = PACKAGES.filter((p) => {
+    if (currentCat !== "all" && p.cat !== currentCat) return false;
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.lic.toLowerCase().includes(q);
+  });
+  grid.innerHTML = filtered
+    .map(
+      (p) => `
+      <div class="pkg-card">
+        <div class="pkg-top">
+          <span class="pkg-name">${p.name}</span>
+          <span class="pkg-lic">${p.lic}</span>
+        </div>
+        <div class="pkg-desc">${p.desc}</div>
+      </div>`
+    )
+    .join("");
+}
+
+document.getElementById("pkg-search").addEventListener("input", renderPackages);
+document.querySelectorAll(".filter-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentCat = btn.dataset.cat;
+    renderPackages();
+  });
+});
+renderPackages();

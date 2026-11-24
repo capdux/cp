@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CP v1.0 — Fast All-in-One Native Systems &amp; AI Agent Language</title>
+  <meta name="description" content="CP combines TypeScript's ergonomics, Rust's memory safety, and Zig's native speed with zero GC, deterministic RAII, and 43+ permissive native C/C++ packages." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <span class="brand-mark">CP</span>
+        <span class="brand-ver">v1.0.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#benchmarks">Benchmarks</a>
+        <a href="#code">Examples</a>
+        <a href="#toolchain">Toolchain</a>
+        <a href="#packages">43+ Packages</a>
+        <a href="https://github.com/cp-lang/cp" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="pill">🚀 CP v1.0.0 Public Release · Zero GC · 100% Permissive</div>
+          <h1>
+            Develop, compile, and ship<br />
+            <span class="gradient-text">at native machine speed.</span>
+          </h1>
+          <p class="subtitle">
+            <strong>CP</strong> fuses TypeScript’s elegance, Rust’s memory safety, and Zig’s native performance into one all-in-one toolchain (<code>cpc</code> + <code>cap</code>) — built for high-concurrency AI Agents, APIs, and systems software.
+          </p>
+
+          <div class="install-box">
+            <div class="install-tabs" role="tablist">
+              <button class="install-tab active" data-os="unix">Linux &amp; macOS</button>
+              <button class="install-tab" data-os="win">Windows (PowerShell)</button>
+            </div>
+            <div class="install-cmd-row">
+              <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/cp-lang/cp/main/install.sh | sh</code>
+              <button id="copy-install" class="copy-btn" title="Copy command">Copy</button>
+            </div>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="stat-val" id="hero-sqlite-stat">2.64M/s</div>
+              <div class="stat-lbl">SQLite :memory: Lookups</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val" id="hero-startup-stat">&lt; 3 ms</div>
+              <div class="stat-lbl">Native Cold Startup</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">43+</div>
+              <div class="stat-lbl">Permissive @cap/* Packages</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">0 GC</div>
+              <div class="stat-lbl">Deterministic Stack RAII</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-terminal">
+          <div class="term-bar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="term-title">cap — all-in-one toolchain</span>
+          </div>
+          <pre class="term-body"><code><span class="c-dim">$</span> cap init my-agent &amp;&amp; cd my-agent
+<span class="c-dim">$</span> cap add @cap/llama @cap/duckdb @cap/yyjson
+  <span class="c-green">✓</span> Linked @cap/llama@1.0.12676  (prebuilt dynamic)
+  <span class="c-green">✓</span> Linked @cap/duckdb@1.2.1     (prebuilt dynamic)
+  <span class="c-green">✓</span> Linked @cap/yyjson@0.10.0    (prebuilt 303 KB)
+
+<span class="c-dim">$</span> cap run -m src/main.cp
+  <span class="c-cyan">→</span> [modular-obj] 9 cached, 1 rebuilt in <span class="c-amber">2.4ms</span>
+  <span class="c-green">✓</span> Built &amp; executed native binary (zero GC)
+
+<span class="c-dim">$</span> cap fmt --check &amp;&amp; cap lint &amp;&amp; cap test
+  <span class="c-green">✓</span> All 4 purity gates 0/0/0/0 · Tests 100% PASS</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benchmarks -->
+    <section id="benchmarks" class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Real Benchmarks, <span class="gradient-text">Same Machine</span></h2>
+          <p id="bench-meta">Measured on Linux x86_64 (`-OReleaseFast`). Reproducible via <code>python3 bench/vs_runtimes/run_all.py</code>.</p>
+        </div>
+        <div class="bench-grid" id="bench-grid"></div>
+      </div>
+    </section>
+
+    <!-- Interactive Code Examples -->
+    <section id="code" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <h2>Write like TypeScript. <span class="gradient-text">Run like C &amp; Rust.</span></h2>
+          <p>Zero garbage collector pauses. Explicit 3-mode ownership (<code>read-only</code> / <code>*</code> / <code>move</code>) with automatic <code>~init()</code> RAII.</p>
+        </div>
+        <div class="code-showcase">
+          <div class="code-tabs" id="code-tabs">
+            <button class="code-tab active" data-sample="rest">REST API (cap:web)</button>
+            <button class="code-tab" data-sample="sqlite">Built-in SQLite</button>
+            <button class="code-tab" data-sample="raii">Stack RAII (~init)</button>
+            <button class="code-tab" data-sample="ai">Local LLM + Vector</button>
+            <button class="code-tab" data-sample="native">Native C Pkg</button>
+          </div>
+          <pre class="code-panel"><code id="code-display"></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolchain -->
+    <section id="toolchain" class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>One Binary. <span class="gradient-text">Everything Included.</span></h2>
+          <p>Inspired by Bun, Cargo, and Zig — zero external build scripts or CMake headaches.</p>
+        </div>
+        <div class="feature-grid">
+          <div class="card">
+            <h3>⚡ cap.json 2.0 &amp; Workspaces</h3>
+            <p>Four clean 3-letter dependency keys: <code>dep</code>, <code>dev</code>, <code>bin</code> (C/C++ static), and <code>sys</code> (dynamic). Full <code>workspaces</code> glob &amp; <code>workspace:*</code> support.</p>
+          </div>
+          <div class="card">
+            <h3>🌳 AST On-Demand Tree-Shaking</h3>
+            <p><code>cpc</code> tracks actually referenced external packages via <code>// @cap-used-pkg:</code>. Unused dependencies add <strong>0 bytes</strong> to your final binary.</p>
+          </div>
+          <div class="card">
+            <h3>🚀 Parallel .o Cache (<code>-m</code>)</h3>
+            <p>Content-hashed <code>.cap/obj/*.o</code> cache with multi-core parallel compilation and incremental linking. Add <code>--low</code> for low-memory serial mode.</p>
+          </div>
+          <div class="card">
+            <h3>📦 Dual-Format Pack &amp; Publish</h3>
+            <p>Built-in Zstd + libdeflate. Pack split <code>.tar.zst</code> with <code>cap pack --strip</code>, or publish RFC 1952 <code>.tgz</code> directly to npm / Verdaccio via <code>cap publish</code>.</p>
+          </div>
+          <div class="card">
+            <h3>🤖 AI-First Self-Healing Errors</h3>
+            <p>Every diagnostic provides <code>cause</code>, <code>help</code>, and exact fix <code>suggestion</code> — plus <code>cpc fix</code>, <code>cap fmt</code>, and <code>cap lint</code>.</p>
+          </div>
+          <div class="card">
+            <h3>🛡️ Built-in Batteries</h3>
+            <p>Embedded SQLite 3.54.1, SIMD+LazyDFA Regex, Sans-IO WebRTC (<code>cap:rtc</code>), HTTP/1/2/3, PG/MySQL/Redis, IANA TZ, LEB128, and ELF/COFF/Mach-O/SPIR-V.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 43+ Official @cap/* Packages -->
+    <section id="packages" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <h2>43+ Official <span class="gradient-text">@cap/*</span> Native Packages</h2>
+          <p>100% permissive licenses (MIT / Apache-2.0 / BSD / ISC / Zlib / CC0). Zero GPL contamination. Prebuilt &amp; stripped.</p>
+        </div>
+        <div class="pkg-controls">
+          <input type="search" id="pkg-search" placeholder="Search packages (e.g. llama, duckdb, opencv, opus, yyjson)..." />
+          <div class="pkg-filters" id="pkg-filters">
+            <button class="filter-btn active" data-cat="all">All</button>
+            <button class="filter-btn" data-cat="ai">AI &amp; Data</button>
+            <button class="filter-btn" data-cat="media">Audio &amp; Video</button>
+            <button class="filter-btn" data-cat="graphics">Vision &amp; UI</button>
+            <button class="filter-btn" data-cat="core">Core &amp; Net</button>
+          </div>
+        </div>
+        <div class="pkg-grid" id="pkg-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>CP Language v1.0.0</strong> · Dual-licensed MIT OR Apache-2.0
+      </div>
+      <div class="footer-links">
+        <a href="../README.md">README</a>
+        <a href="../cp_ref.md">Language Spec</a>
+        <a href="../cp_lib_ref.md">Stdlib Index</a>
+        <a href="../packages/README.md">@cap/* Catalog</a>
+        <a href="../THIRD_PARTY_NOTICES.md">Licenses</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
