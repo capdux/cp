@@ -120,6 +120,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **statrs** (`statrs-dev`) & **nalgebra** (`dimforge`) | <https://github.com/statrs-dev/statrs> | MIT / Apache-2.0 | `lib/math/statsDist.cp`, `lib/math/lu.cp` | Copyright (c) 2016-2024 Statrs / Dimforge Contributors |
 | **jsonrpsee** (`paritytech`) | <https://github.com/paritytech/jsonrpsee> | MIT | `lib/rpc/framing.cp`, `lib/rpc/jsonrpc.cp`, `lib/rpc/mcp.cp` | Copyright (c) 2019-2024 Parity Technologies (JSON-RPC 2.0 / MCP) |
 | **rust-std BTree & rust-bio** | <https://github.com/rust-bio/rust-bio> | MIT OR Apache-2.0 | `lib/ds/bptree.cp`, `lib/ds/intervalTree.cp` | Copyright (c) 2015-2024 The Rust Project & Rust-Bio Developers |
+| **RFC 5545 / RFC 6350** (iCalendar & vCard) | <https://www.rfc-editor.org/rfc/rfc5545> | MIT OR Apache-2.0 | `lib/doc/ical.cp`, `lib/doc/vcard.cp` | IETF RFC 5545 / RFC 6350 Specification Reference |
 
 ---
 

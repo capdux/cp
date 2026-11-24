@@ -191,6 +191,13 @@ pub fn demoCsvTable() {
 - **大纲 Markdown 导出与多语言统计**：`pptxSlideXmlToMarkdown`（`## Slide N: ...` + 缩进项目符号 + GFM 表格 + `> Notes: ...`）与 `computePptxSlideStats`（中英文词/字数 + 备注字数）；
 - **OOXML 安全与 16-lane SIMD 加固（对标 `roxmltree` / ECMA-376）**：`validatePptxStrict`（零堆校验 `.pptx` ZIP 包路径穿越、资源上限、`ppt/presentation.xml` 与 `ppt/slides/slide*.xml` 核心部件完整性及严格 XML 实体/闭合标签校验），共享 16-lane SIMD 文本扫描与标签匹配。
 
+### RFC 5545 iCalendar & RFC 6350 vCard 4.0 安全与 SIMD 加固（`ical.cp` / `vcard.cp`）
+
+- **16-lane `@Vector(16, u8)` SIMD 热路径扫描**：`simdCalFindLineDelim`/`scalarCalFindLineDelim`（扫描 `\r`/`\n`/`:`/`;`，直连折行展开与属性解析）及 `simdCalHasControlByte`/`scalarCalHasControlByte`（控制字节注入检测，标量 0 差异）。
+- **零堆严格校验与防资源耗尽**：
+  - `validateIcalStrict`（`ICAL_MAX_LINE_BYTES`/`ICAL_MAX_PROPERTIES`/`ICAL_MAX_COMPONENT_DEPTH`）：拦截控制字节、裸 `\r`、超长行/超量属性、过深嵌套与未配对/未闭合 `BEGIN:VCALENDAR`/`VEVENT`/`VTODO` 及未闭合参数引号；
+  - `validateVcardStrict`（`VCARD_MAX_LINE_BYTES`/`VCARD_MAX_PROPERTIES`）：拦截控制字节、裸 `\r`、非法 `VERSION`（仅接受 `3.0`/`4.0`）、缺失 `FN`、未闭合 `BEGIN:VCARD`/`END:VCARD` 与 CRLF 注入。
+
 ---
 
 ## 收敛子模块深度文档

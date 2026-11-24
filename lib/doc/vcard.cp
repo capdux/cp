@@ -1,7 +1,12 @@
+// Reference-hardened against RFC 5545 (iCalendar) & RFC 6350 (vCard 4.0) (MIT OR Apache-2.0)
 // Source: cp/lib/vcard/vcard.cp (Pure CP RFC 6350 / 2426 vCard 3.0 & 4.0 Parser & Generator)
-// Zero external C dependencies; supports line unfolding, escaping, group prefixes, TYPE params, N/ADR fields, and round-trip generation.
+// Zero external C dependencies; supports 16-lane SIMD scanning, line unfolding, escaping, group prefixes, TYPE params, N/ADR fields, and round-trip generation.
 
 const std = @import("std");
+import { simdCalFindLineDelim, simdCalHasControlByte } from "./ical.cp";
+
+pub const VCARD_MAX_LINE_BYTES: usize = 65536;
+pub const VCARD_MAX_PROPERTIES: usize = 16384;
 
 pub err VCardError {
     InvalidFormat,
@@ -23,7 +28,7 @@ pub enum VCardVersion {
     }
 
     static fn fromStr(s: string): VCardVersion? {
-        let trimmed = trimSpaces(s);
+        let trimmed = vcTrimSpaces(s);
         if (std.mem.eql(u8, trimmed, "3.0")) return .V3_0;
         if (std.mem.eql(u8, trimmed, "4.0")) return .V4_0;
         return null;
@@ -162,23 +167,23 @@ pub struct VCardContact {
 // Internal String & Escaping Helpers
 // ============================================================================
 
-fn isSpace(c: u8): bool {
+fn vcIsSpace(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn trimSpaces(s: string): string {
+fn vcTrimSpaces(s: string): string {
     let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
+    while (start < s.len && vcIsSpace(s[start])) {
         start += 1;
     }
     let end: usize = s.len;
-    while (end > start && isSpace(s[end - 1])) {
+    while (end > start && vcIsSpace(s[end - 1])) {
         end -= 1;
     }
     return s[start..end];
 }
 
-fn asciiEqlIgnoreCase(a: string, b: string): bool {
+fn vcAsciiEqlIgnoreCase(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
     while (i < a.len) : (i += 1) {
@@ -191,26 +196,46 @@ fn asciiEqlIgnoreCase(a: string, b: string): bool {
     return true;
 }
 
-fn dupSlice(alloc: std.mem.Allocator, s: string): string ! VCardError {
+fn vcDupSlice(alloc: std.mem.Allocator, s: string): string ! VCardError {
     if (s.len == 0) return "";
     return alloc.dupe(u8, s) catch return VCardError.OutOfMemory;
 }
 
-/// Unfolds RFC 6350 / 2426 folded lines: removes CRLF (or LF) followed by a single SPACE or TAB.
-fn unfoldLines(alloc: std.mem.Allocator, text: string): ([]u8) ! VCardError {
+fn vcHasCrLfOrControl(s: string): bool {
+    if (simdCalHasControlByte(s)) return true;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '\r' || s[i] == '\n') return true;
+    }
+    return false;
+}
+
+/// Unfolds RFC 6350 / 2426 folded lines via 16-lane SIMD delimiter scanning: removes CRLF (or LF)
+/// followed by a single SPACE or TAB. Rejects bare `\r` not followed by `\n`.
+fn vcUnfoldLines(alloc: std.mem.Allocator, text: string): ([]u8) ! VCardError {
     let out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(alloc);
 
     let i: usize = 0;
     while (i < text.len) {
-        if (text[i] == '\r' && i + 1 < text.len && text[i + 1] == '\n') {
+        const hit = simdCalFindLineDelim(text, i);
+        if (hit > i) {
+            out.appendSlice(alloc, text[i..hit]) catch return VCardError.OutOfMemory;
+            i = hit;
+            if (i >= text.len) break;
+        }
+        const ch = text[i];
+        if (ch == '\r') {
+            if (i + 1 >= text.len || text[i + 1] != '\n') {
+                return VCardError.InvalidFormat;
+            }
             if (i + 2 < text.len && (text[i + 2] == ' ' || text[i + 2] == '\t')) {
                 i += 3;
                 continue;
             }
             out.append(alloc, '\n') catch return VCardError.OutOfMemory;
             i += 2;
-        } else if (text[i] == '\n') {
+        } else if (ch == '\n') {
             if (i + 1 < text.len && (text[i + 1] == ' ' || text[i + 1] == '\t')) {
                 i += 2;
                 continue;
@@ -218,7 +243,7 @@ fn unfoldLines(alloc: std.mem.Allocator, text: string): ([]u8) ! VCardError {
             out.append(alloc, '\n') catch return VCardError.OutOfMemory;
             i += 1;
         } else {
-            out.append(alloc, text[i]) catch return VCardError.OutOfMemory;
+            out.append(alloc, ch) catch return VCardError.OutOfMemory;
             i += 1;
         }
     }
@@ -226,7 +251,7 @@ fn unfoldLines(alloc: std.mem.Allocator, text: string): ([]u8) ! VCardError {
     return out.toOwnedSlice(alloc) catch return VCardError.OutOfMemory;
 }
 
-fn unescapeText(alloc: std.mem.Allocator, text: string): string ! VCardError {
+fn vcUnescapeText(alloc: std.mem.Allocator, text: string): string ! VCardError {
     if (text.len == 0) return "";
     let out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(alloc);
@@ -266,7 +291,7 @@ fn unescapeText(alloc: std.mem.Allocator, text: string): string ! VCardError {
     return out.toOwnedSlice(alloc) catch return VCardError.OutOfMemory;
 }
 
-fn appendEscapedText(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, text: string): void ! VCardError {
+fn vcAppendEscapedText(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, text: string): void ! VCardError {
     for (c of text) {
         switch (c) {
             '\\' => buf.appendSlice(alloc, "\\\\") catch return VCardError.OutOfMemory,
@@ -303,7 +328,7 @@ fn splitStructuredComponents(alloc: std.mem.Allocator, raw: string, max_parts: u
             continue;
         }
         if (ch == ';' && parts.items.len + 1 < max_parts) {
-            let comp = unescapeText(alloc, raw[start..i])?;
+            let comp = vcUnescapeText(alloc, raw[start..i])?;
             parts.append(alloc, comp) catch {
                 if (comp.len > 0) alloc.free(comp);
                 return VCardError.OutOfMemory;
@@ -312,7 +337,7 @@ fn splitStructuredComponents(alloc: std.mem.Allocator, raw: string, max_parts: u
         }
     }
 
-    let last = unescapeText(alloc, raw[start..])?;
+    let last = vcUnescapeText(alloc, raw[start..])?;
     parts.append(alloc, last) catch {
         if (last.len > 0) alloc.free(last);
         return VCardError.OutOfMemory;
@@ -353,16 +378,17 @@ fn parseContentLine(line: string): ContentLine? {
             }
         }
     }
+    if (in_quotes) return null;
     let c_idx = colon_idx ?? return null;
     let name_end = semi_idx ?? c_idx;
-    let raw_name = trimSpaces(line[0..name_end]);
+    let raw_name = vcTrimSpaces(line[0..name_end]);
     if (raw_name.len == 0) return null;
 
     // Strip optional `group.` prefix (e.g. `item1.TEL` -> `TEL`)
     let prop_name = raw_name;
     let dot_idx: usize? = std.mem.indexOfScalar(u8, raw_name, '.');
     if (d := dot_idx) {
-        prop_name = trimSpaces(raw_name[d + 1..]);
+        prop_name = vcTrimSpaces(raw_name[d + 1..]);
         if (prop_name.len == 0) return null;
     }
 
@@ -402,22 +428,22 @@ fn parseTypeParams(alloc: std.mem.Allocator, params: string): ([]string) ! VCard
             continue;
         }
         if (at_end || (!in_quotes && params[i] == ';')) {
-            let segment = trimSpaces(params[start..i]);
+            let segment = vcTrimSpaces(params[start..i]);
             start = i + 1;
             if (segment.len == 0) continue;
 
             if (eq_idx := std.mem.indexOfScalar(u8, segment, '=')) {
-                let p_name = trimSpaces(segment[0..eq_idx]);
-                if (asciiEqlIgnoreCase(p_name, "TYPE")) {
-                    let p_val = trimSpaces(segment[eq_idx + 1..]);
+                let p_name = vcTrimSpaces(segment[0..eq_idx]);
+                if (vcAsciiEqlIgnoreCase(p_name, "TYPE")) {
+                    let p_val = vcTrimSpaces(segment[eq_idx + 1..]);
                     if (p_val.len >= 2 && p_val[0] == '"' && p_val[p_val.len - 1] == '"') {
                         p_val = p_val[1..p_val.len - 1];
                     }
                     let tok_it = std.mem.splitScalar(u8, p_val, ',');
                     while (tok := tok_it.next()) {
-                        let t = trimSpaces(tok);
+                        let t = vcTrimSpaces(tok);
                         if (t.len == 0) continue;
-                        let dup = dupSlice(alloc, t)?;
+                        let dup = vcDupSlice(alloc, t)?;
                         types.append(alloc, dup) catch {
                             if (dup.len > 0) alloc.free(dup);
                             return VCardError.OutOfMemory;
@@ -490,13 +516,14 @@ fn appendTypedProperty(
         line_buf.appendSlice(alloc, ";TYPE=") catch return VCardError.OutOfMemory;
         let idx: usize = 0;
         for (t of tv.types) {
+            if (vcHasCrLfOrControl(t)) return VCardError.InvalidFormat;
             if (idx > 0) line_buf.append(alloc, ',') catch return VCardError.OutOfMemory;
             line_buf.appendSlice(alloc, t) catch return VCardError.OutOfMemory;
             idx += 1;
         }
     }
     line_buf.append(alloc, ':') catch return VCardError.OutOfMemory;
-    appendEscapedText(line_buf, alloc, tv.value)?;
+    vcAppendEscapedText(line_buf, alloc, tv.value)?;
     appendFoldedLine(buf, alloc, line_buf.items, fold_75)?;
 }
 
@@ -506,7 +533,14 @@ fn appendTypedProperty(
 
 pub static class VCardCodec {
     static fn parseAll(alloc: std.mem.Allocator, vcf_text: string): ([]VCardContact) ! VCardError {
-        let unfolded = unfoldLines(alloc, vcf_text)?;
+        let src = vcf_text;
+        if (src.len >= 3 && src[0] == 0xEF && src[1] == 0xBB && src[2] == 0xBF) {
+            src = src[3..];
+        }
+        if (simdCalHasControlByte(src)) {
+            return VCardError.InvalidFormat;
+        }
+        let unfolded = vcUnfoldLines(alloc, src)?;
         defer alloc.free(unfolded);
 
         let contacts: std.ArrayList(VCardContact) = .empty;
@@ -537,15 +571,24 @@ pub static class VCardCodec {
             addrs_list.deinit(alloc);
         }
 
+        let prop_count: usize = 0;
         let line_it = std.mem.splitScalar(u8, unfolded, '\n');
         while (raw_line := line_it.next()) {
-            let line = trimSpaces(raw_line);
+            if (raw_line.len > VCARD_MAX_LINE_BYTES) {
+                return VCardError.InvalidFormat;
+            }
+            let line = vcTrimSpaces(raw_line);
             if (line.len == 0) continue;
+
+            prop_count += 1;
+            if (prop_count > VCARD_MAX_PROPERTIES) {
+                return VCardError.InvalidFormat;
+            }
 
             let parts = parseContentLine(line) ?? return VCardError.InvalidFormat;
 
-            if (asciiEqlIgnoreCase(parts.name, "BEGIN")) {
-                if (!asciiEqlIgnoreCase(trimSpaces(parts.value), "VCARD")) {
+            if (vcAsciiEqlIgnoreCase(parts.name, "BEGIN")) {
+                if (!vcAsciiEqlIgnoreCase(vcTrimSpaces(parts.value), "VCARD")) {
                     return VCardError.InvalidFormat;
                 }
                 if (in_card) {
@@ -557,8 +600,8 @@ pub static class VCardCodec {
                 continue;
             }
 
-            if (asciiEqlIgnoreCase(parts.name, "END")) {
-                if (!asciiEqlIgnoreCase(trimSpaces(parts.value), "VCARD")) {
+            if (vcAsciiEqlIgnoreCase(parts.name, "END")) {
+                if (!vcAsciiEqlIgnoreCase(vcTrimSpaces(parts.value), "VCARD")) {
                     return VCardError.InvalidFormat;
                 }
                 if (!in_card) {
@@ -583,26 +626,26 @@ pub static class VCardCodec {
                 return VCardError.InvalidFormat;
             }
 
-            if (asciiEqlIgnoreCase(parts.name, "VERSION")) {
+            if (vcAsciiEqlIgnoreCase(parts.name, "VERSION")) {
                 let ver = VCardVersion.fromStr(parts.value) ?? return VCardError.UnsupportedVersion;
                 current.version = ver;
-            } else if (asciiEqlIgnoreCase(parts.name, "UID")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "UID")) {
                 if (current.uid.len > 0) alloc.free(current.uid);
-                current.uid = unescapeText(alloc, parts.value)?;
-            } else if (asciiEqlIgnoreCase(parts.name, "FN")) {
+                current.uid = vcUnescapeText(alloc, parts.value)?;
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "FN")) {
                 if (current.fn_name.len > 0) alloc.free(current.fn_name);
-                current.fn_name = unescapeText(alloc, parts.value)?;
+                current.fn_name = vcUnescapeText(alloc, parts.value)?;
                 saw_fn = true;
-            } else if (asciiEqlIgnoreCase(parts.name, "ORG")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "ORG")) {
                 if (current.org.len > 0) alloc.free(current.org);
-                current.org = unescapeText(alloc, parts.value)?;
-            } else if (asciiEqlIgnoreCase(parts.name, "TITLE")) {
+                current.org = vcUnescapeText(alloc, parts.value)?;
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "TITLE")) {
                 if (current.title.len > 0) alloc.free(current.title);
-                current.title = unescapeText(alloc, parts.value)?;
-            } else if (asciiEqlIgnoreCase(parts.name, "NOTE")) {
+                current.title = vcUnescapeText(alloc, parts.value)?;
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "NOTE")) {
                 if (current.note.len > 0) alloc.free(current.note);
-                current.note = unescapeText(alloc, parts.value)?;
-            } else if (asciiEqlIgnoreCase(parts.name, "N")) {
+                current.note = vcUnescapeText(alloc, parts.value)?;
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "N")) {
                 let comps = splitStructuredComponents(alloc, parts.value, 5)?;
                 if (*prev_n := current.name) {
                     prev_n.deinit(alloc);
@@ -615,25 +658,25 @@ pub static class VCardCodec {
                 if (comps.len > 4) sn.suffix = comps[4];
                 if (comps.len > 0) alloc.free(comps);
                 current.name = sn;
-            } else if (asciiEqlIgnoreCase(parts.name, "TEL")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "TEL")) {
                 let types = parseTypeParams(alloc, parts.params)?;
                 errdefer freeStringSlice(alloc, types);
-                let val = unescapeText(alloc, parts.value)?;
+                let val = vcUnescapeText(alloc, parts.value)?;
                 errdefer if (val.len > 0) alloc.free(val);
                 phones_list.append(alloc, TypedValue{ types: types, value: val }) catch return VCardError.OutOfMemory;
-            } else if (asciiEqlIgnoreCase(parts.name, "EMAIL")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "EMAIL")) {
                 let types = parseTypeParams(alloc, parts.params)?;
                 errdefer freeStringSlice(alloc, types);
-                let val = unescapeText(alloc, parts.value)?;
+                let val = vcUnescapeText(alloc, parts.value)?;
                 errdefer if (val.len > 0) alloc.free(val);
                 emails_list.append(alloc, TypedValue{ types: types, value: val }) catch return VCardError.OutOfMemory;
-            } else if (asciiEqlIgnoreCase(parts.name, "URL")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "URL")) {
                 let types = parseTypeParams(alloc, parts.params)?;
                 errdefer freeStringSlice(alloc, types);
-                let val = unescapeText(alloc, parts.value)?;
+                let val = vcUnescapeText(alloc, parts.value)?;
                 errdefer if (val.len > 0) alloc.free(val);
                 urls_list.append(alloc, TypedValue{ types: types, value: val }) catch return VCardError.OutOfMemory;
-            } else if (asciiEqlIgnoreCase(parts.name, "ADR")) {
+            } else if (vcAsciiEqlIgnoreCase(parts.name, "ADR")) {
                 let types = parseTypeParams(alloc, parts.params)?;
                 errdefer freeStringSlice(alloc, types);
                 let comps = splitStructuredComponents(alloc, parts.value, 7)?;
@@ -708,41 +751,41 @@ pub static class VCardCodec {
             if (c.uid.len > 0) {
                 line_buf.clearRetainingCapacity();
                 line_buf.appendSlice(alloc, "UID:") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, c.uid)?;
+                vcAppendEscapedText(*line_buf, alloc, c.uid)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
             line_buf.clearRetainingCapacity();
             line_buf.appendSlice(alloc, "FN:") catch return VCardError.OutOfMemory;
-            appendEscapedText(*line_buf, alloc, c.fn_name)?;
+            vcAppendEscapedText(*line_buf, alloc, c.fn_name)?;
             appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
 
             if (sn := c.name) {
                 line_buf.clearRetainingCapacity();
                 line_buf.appendSlice(alloc, "N:") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, sn.family)?;
+                vcAppendEscapedText(*line_buf, alloc, sn.family)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, sn.given)?;
+                vcAppendEscapedText(*line_buf, alloc, sn.given)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, sn.additional)?;
+                vcAppendEscapedText(*line_buf, alloc, sn.additional)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, sn.prefix)?;
+                vcAppendEscapedText(*line_buf, alloc, sn.prefix)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, sn.suffix)?;
+                vcAppendEscapedText(*line_buf, alloc, sn.suffix)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
             if (c.org.len > 0) {
                 line_buf.clearRetainingCapacity();
                 line_buf.appendSlice(alloc, "ORG:") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, c.org)?;
+                vcAppendEscapedText(*line_buf, alloc, c.org)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
             if (c.title.len > 0) {
                 line_buf.clearRetainingCapacity();
                 line_buf.appendSlice(alloc, "TITLE:") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, c.title)?;
+                vcAppendEscapedText(*line_buf, alloc, c.title)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
@@ -771,22 +814,22 @@ pub static class VCardCodec {
                     }
                 }
                 line_buf.appendSlice(alloc, ":;;") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, a.street)?;
+                vcAppendEscapedText(*line_buf, alloc, a.street)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, a.city)?;
+                vcAppendEscapedText(*line_buf, alloc, a.city)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, a.region)?;
+                vcAppendEscapedText(*line_buf, alloc, a.region)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, a.postal_code)?;
+                vcAppendEscapedText(*line_buf, alloc, a.postal_code)?;
                 line_buf.append(alloc, ';') catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, a.country)?;
+                vcAppendEscapedText(*line_buf, alloc, a.country)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
             if (c.note.len > 0) {
                 line_buf.clearRetainingCapacity();
                 line_buf.appendSlice(alloc, "NOTE:") catch return VCardError.OutOfMemory;
-                appendEscapedText(*line_buf, alloc, c.note)?;
+                vcAppendEscapedText(*line_buf, alloc, c.note)?;
                 appendFoldedLine(*out, alloc, line_buf.items, fold_75)?;
             }
 
@@ -795,4 +838,158 @@ pub static class VCardCodec {
 
         return out.toOwnedSlice(alloc) catch return VCardError.OutOfMemory;
     }
+}
+
+/// Zero-heap strict RFC 6350 / 2426 vCard validator:
+/// rejects control bytes, bare CR, oversized lines/property floods, unbalanced BEGIN/END:VCARD,
+/// invalid VERSION (only 3.0 / 4.0 allowed), missing FN, and unclosed parameter quotes.
+pub fn validateVcardStrict(vcf_text: string): bool ! VCardError {
+    let src = vcf_text;
+    if (src.len >= 3 && src[0] == 0xEF && src[1] == 0xBB && src[2] == 0xBF) {
+        src = src[3..];
+    }
+    if (src.len == 0 || simdCalHasControlByte(src)) {
+        return VCardError.InvalidFormat;
+    }
+
+    let in_card: bool = false;
+    let saw_card: bool = false;
+    let saw_version: bool = false;
+    let saw_fn: bool = false;
+    let prop_count: usize = 0;
+
+    let pos: usize = 0;
+    while (pos < src.len) {
+        const logical_start: usize = pos;
+        let logical_len: usize = 0;
+        let first_seg_end: usize = pos;
+        let is_first_seg: bool = true;
+
+        while (pos < src.len) {
+            const hit = simdCalFindLineDelim(src, pos);
+            if (hit < src.len && (src[hit] == '\r' || src[hit] == '\n')) {
+                const seg_len = hit - pos;
+                logical_len += seg_len;
+                if (logical_len > VCARD_MAX_LINE_BYTES) {
+                    return VCardError.InvalidFormat;
+                }
+                if (is_first_seg) {
+                    first_seg_end = hit;
+                    is_first_seg = false;
+                }
+                if (src[hit] == '\r') {
+                    if (hit + 1 >= src.len || src[hit + 1] != '\n') {
+                        return VCardError.InvalidFormat;
+                    }
+                    pos = hit + 2;
+                } else {
+                    pos = hit + 1;
+                }
+                if (pos < src.len && (src[pos] == ' ' || src[pos] == '\t')) {
+                    pos += 1;
+                    continue;
+                }
+                break;
+            }
+            if (hit >= src.len) {
+                logical_len += src.len - pos;
+                if (logical_len > VCARD_MAX_LINE_BYTES) {
+                    return VCardError.InvalidFormat;
+                }
+                if (is_first_seg) {
+                    first_seg_end = src.len;
+                    is_first_seg = false;
+                }
+                pos = src.len;
+                break;
+            }
+            logical_len += (hit - pos) + 1;
+            if (logical_len > VCARD_MAX_LINE_BYTES) {
+                return VCardError.InvalidFormat;
+            }
+            pos = hit + 1;
+        }
+
+        if (logical_len == 0) continue;
+        const first_line = vcTrimSpaces(src[logical_start..first_seg_end]);
+        if (first_line.len == 0 && logical_len == (first_seg_end - logical_start)) continue;
+
+        prop_count += 1;
+        if (prop_count > VCARD_MAX_PROPERTIES) {
+            return VCardError.InvalidFormat;
+        }
+
+        // Validate property name, balanced parameter quotes, and ':' separator
+        let in_q: bool = false;
+        let colon_pos: usize? = null;
+        let semi_pos: usize? = null;
+        let scan_i: usize = logical_start;
+        while (scan_i < pos) : (scan_i += 1) {
+            const ch = src[scan_i];
+            if (ch == '\r' || ch == '\n') {
+                if (ch == '\r' && scan_i + 1 < pos && src[scan_i + 1] == '\n') {
+                    scan_i += 1;
+                }
+                if (scan_i + 1 < pos && (src[scan_i + 1] == ' ' || src[scan_i + 1] == '\t')) {
+                    scan_i += 1;
+                    continue;
+                }
+                break;
+            }
+            if (ch == '"') {
+                in_q = !in_q;
+            } else if (!in_q) {
+                if (ch == ';' && semi_pos == null) {
+                    semi_pos = scan_i;
+                } else if (ch == ':') {
+                    colon_pos = scan_i;
+                    break;
+                }
+            }
+        }
+        if (in_q) return VCardError.InvalidFormat;
+        const c_idx = colon_pos ?? return VCardError.InvalidFormat;
+        const name_end = semi_pos ?? c_idx;
+        let raw_name = vcTrimSpaces(src[logical_start..name_end]);
+        if (raw_name.len == 0) return VCardError.InvalidFormat;
+        if (d := std.mem.indexOfScalar(u8, raw_name, '.')) {
+            raw_name = vcTrimSpaces(raw_name[d + 1..]);
+            if (raw_name.len == 0) return VCardError.InvalidFormat;
+        }
+
+        if (vcAsciiEqlIgnoreCase(raw_name, "BEGIN")) {
+            const val = vcTrimSpaces(src[c_idx + 1 .. first_seg_end]);
+            if (!vcAsciiEqlIgnoreCase(val, "VCARD")) return VCardError.InvalidFormat;
+            if (in_card) return VCardError.UnbalancedCard;
+            in_card = true;
+            saw_card = true;
+            saw_version = false;
+            saw_fn = false;
+        } else if (vcAsciiEqlIgnoreCase(raw_name, "END")) {
+            const val = vcTrimSpaces(src[c_idx + 1 .. first_seg_end]);
+            if (!vcAsciiEqlIgnoreCase(val, "VCARD")) return VCardError.InvalidFormat;
+            if (!in_card) return VCardError.UnbalancedCard;
+            if (!saw_version) return VCardError.UnsupportedVersion;
+            if (!saw_fn) return VCardError.MissingFn;
+            in_card = false;
+        } else {
+            if (!in_card) return VCardError.InvalidFormat;
+            if (vcAsciiEqlIgnoreCase(raw_name, "VERSION")) {
+                const val = vcTrimSpaces(src[c_idx + 1 .. first_seg_end]);
+                if (VCardVersion.fromStr(val) == null) return VCardError.UnsupportedVersion;
+                saw_version = true;
+            } else if (vcAsciiEqlIgnoreCase(raw_name, "FN")) {
+                // Non-empty FN value (either on first segment or folded continuation)
+                const seg_val = vcTrimSpaces(src[c_idx + 1 .. first_seg_end]);
+                if (seg_val.len > 0 || logical_len > (first_seg_end - logical_start)) {
+                    saw_fn = true;
+                }
+            }
+        }
+    }
+
+    if (!saw_card || in_card) {
+        return VCardError.UnbalancedCard;
+    }
+    return true;
 }

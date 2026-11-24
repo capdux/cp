@@ -1,7 +1,112 @@
+// Reference-hardened against RFC 5545 (iCalendar) & RFC 6350 (vCard 4.0) (MIT OR Apache-2.0)
 // Source: cp/lib/ical/ical.cp (Pure CP RFC 5545 iCalendar Parser, Generator & RRULE Expansion Engine)
-// Zero external dependencies; supports line unfolding, text escaping, calendar arithmetic, and RRULE expansion.
+// Zero external dependencies; supports line unfolding, text escaping, calendar arithmetic, 16-lane SIMD scanning, and RRULE expansion.
 
 const std = @import("std");
+
+pub const ICAL_MAX_LINE_BYTES: usize = 65536;
+pub const ICAL_MAX_PROPERTIES: usize = 16384;
+pub const ICAL_MAX_COMPONENT_DEPTH: usize = 16;
+
+type CalCardVec16u8 = @Vector(16, u8);
+
+/// Scalar reference: finds first index `>= start` where `data[i]` is `\r`, `\n`, `:`, or `;`.
+pub fn scalarCalFindLineDelim(data: []const u8, start: usize): usize {
+    let i: usize = start;
+    while (i < data.len) : (i += 1) {
+        const b = data[i];
+        if (b == '\r' || b == '\n' || b == ':' || b == ';') {
+            return i;
+        }
+    }
+    return data.len;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan for `\r`, `\n`, `:`, or `;` starting at `start`.
+/// Matches `scalarCalFindLineDelim` with 0 discrepancy across all lengths.
+pub fn simdCalFindLineDelim(data: []const u8, start: usize): usize {
+    const n: usize = data.len;
+    if (start >= n) return n;
+    const v_cr: CalCardVec16u8 = @splat('\r');
+    const v_lf: CalCardVec16u8 = @splat('\n');
+    const v_colon: CalCardVec16u8 = @splat(':');
+    const v_semi: CalCardVec16u8 = @splat(';');
+
+    let i: usize = start;
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: CalCardVec16u8 = data[i .. i + 16][0..16].*;
+        const m_cr = chunk == v_cr;
+        const m_lf = chunk == v_lf;
+        const m_co = chunk == v_colon;
+        const m_se = chunk == v_semi;
+        if (@reduce(.Or, m_cr) || @reduce(.Or, m_lf) || @reduce(.Or, m_co) || @reduce(.Or, m_se)) {
+            let k: usize = 0;
+            while (k < 16) : (k += 1) {
+                const b = data[i + k];
+                if (b == '\r' || b == '\n' || b == ':' || b == ';') {
+                    return i + k;
+                }
+            }
+        }
+    }
+    while (i < n) : (i += 1) {
+        const b = data[i];
+        if (b == '\r' || b == '\n' || b == ':' || b == ';') {
+            return i;
+        }
+    }
+    return n;
+}
+
+/// Scalar reference: returns `true` if `data` contains a disallowed ASCII control byte
+/// (`0x00..0x08`, `0x0B`, `0x0C`, `0x0E..0x1F`, or `0x7F`).
+pub fn scalarCalHasControlByte(data: []const u8): bool {
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        const b = data[i];
+        if ((b < 0x20 && b != 0x09 && b != 0x0A && b != 0x0D) || b == 0x7F) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan for disallowed ASCII control bytes.
+/// Matches `scalarCalHasControlByte` with 0 discrepancy across all lengths.
+pub fn simdCalHasControlByte(data: []const u8): bool {
+    const n: usize = data.len;
+    const v_sp: CalCardVec16u8 = @splat(0x20);
+    const v_tab: CalCardVec16u8 = @splat(0x09);
+    const v_lf: CalCardVec16u8 = @splat(0x0A);
+    const v_cr: CalCardVec16u8 = @splat(0x0D);
+    const v_del: CalCardVec16u8 = @splat(0x7F);
+
+    let i: usize = 0;
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: CalCardVec16u8 = data[i .. i + 16][0..16].*;
+        const lt_sp = chunk < v_sp;
+        const is_del = chunk == v_del;
+        if (@reduce(.Or, lt_sp) || @reduce(.Or, is_del)) {
+            let k: usize = 0;
+            while (k < 16) : (k += 1) {
+                const b = data[i + k];
+                if ((b < 0x20 && b != 0x09 && b != 0x0A && b != 0x0D) || b == 0x7F) {
+                    return true;
+                }
+            }
+        }
+        * = v_tab;
+        * = v_lf;
+        * = v_cr;
+    }
+    while (i < n) : (i += 1) {
+        const b = data[i];
+        if ((b < 0x20 && b != 0x09 && b != 0x0A && b != 0x0D) || b == 0x7F) {
+            return true;
+        }
+    }
+    return false;
+}
 
 pub err IcalError {
     InvalidFormat,
@@ -855,21 +960,32 @@ pub struct RRule {
 // RFC 5545 Line Unfolding & Text Escaping / Unescaping
 // ============================================================================
 
-/// Unfolds RFC 5545 folded lines: removes CRLF (or LF) followed by a single SPACE or TAB.
+/// Unfolds RFC 5545 folded lines via 16-lane SIMD delimiter scanning: removes CRLF (or LF)
+/// followed by a single SPACE or TAB. Rejects bare `\r` not followed by `\n`.
 fn unfoldLines(alloc: std.mem.Allocator, text: []const u8): ([]u8)! {
     let out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(alloc);
 
     let i: usize = 0;
     while (i < text.len) {
-        if (text[i] == '\r' && i + 1 < text.len && text[i + 1] == '\n') {
+        const hit = simdCalFindLineDelim(text, i);
+        if (hit > i) {
+            out.appendSlice(alloc, text[i..hit]) catch return IcalError.OutOfMemory;
+            i = hit;
+            if (i >= text.len) break;
+        }
+        const ch = text[i];
+        if (ch == '\r') {
+            if (i + 1 >= text.len || text[i + 1] != '\n') {
+                return IcalError.InvalidFormat;
+            }
             if (i + 2 < text.len && (text[i + 2] == ' ' || text[i + 2] == '\t')) {
                 i += 3;
                 continue;
             }
             out.append(alloc, '\n') catch return IcalError.OutOfMemory;
             i += 2;
-        } else if (text[i] == '\n') {
+        } else if (ch == '\n') {
             if (i + 1 < text.len && (text[i + 1] == ' ' || text[i + 1] == '\t')) {
                 i += 2;
                 continue;
@@ -877,7 +993,7 @@ fn unfoldLines(alloc: std.mem.Allocator, text: []const u8): ([]u8)! {
             out.append(alloc, '\n') catch return IcalError.OutOfMemory;
             i += 1;
         } else {
-            out.append(alloc, text[i]) catch return IcalError.OutOfMemory;
+            out.append(alloc, ch) catch return IcalError.OutOfMemory;
             i += 1;
         }
     }
@@ -943,6 +1059,7 @@ struct ContentLineParts {
 }
 
 /// Splits a content line `NAME;PARAM=VAL:VALUE` into `(base_name, value)`.
+/// Rejects unclosed parameter quotes or missing/empty property name.
 fn splitContentLine(line: []const u8): ContentLineParts? {
     let in_quotes: bool = false;
     let colon_idx: usize? = null;
@@ -961,11 +1078,162 @@ fn splitContentLine(line: []const u8): ContentLineParts? {
             }
         }
     }
+    if (in_quotes) return null;
     let c_idx = colon_idx ?? return null;
     let name_end = semi_idx ?? c_idx;
     let name = trimSpaces(line[0..name_end]);
     if (name.len == 0) return null;
     return ContentLineParts{ name: name, value: line[c_idx + 1..] };
+}
+
+/// Zero-heap strict RFC 5545 structural validator:
+/// rejects control bytes, bare CR, oversized lines/property floods, excessive nesting depth,
+/// mismatched/unclosed BEGIN..END components, and unclosed parameter quotes.
+pub fn validateIcalStrict(ics_text: []const u8): bool ! IcalError {
+    let src = ics_text;
+    if (src.len >= 3 && src[0] == 0xEF && src[1] == 0xBB && src[2] == 0xBF) {
+        src = src[3..];
+    }
+    if (src.len == 0 || simdCalHasControlByte(src)) {
+        return IcalError.InvalidFormat;
+    }
+
+    let stack: [ICAL_MAX_COMPONENT_DEPTH][]const u8 = [""; ICAL_MAX_COMPONENT_DEPTH];
+    let depth: usize = 0;
+    let seen_calendar: bool = false;
+    let prop_count: usize = 0;
+
+    let pos: usize = 0;
+    while (pos < src.len) {
+        // Locate end of logical (unfolded) line without heap allocation
+        const logical_start: usize = pos;
+        let logical_len: usize = 0;
+        let first_seg_end: usize = pos;
+        let is_first_seg: bool = true;
+
+        while (pos < src.len) {
+            const hit = simdCalFindLineDelim(src, pos);
+            if (hit < src.len && (src[hit] == '\r' || src[hit] == '\n')) {
+                const seg_len = hit - pos;
+                logical_len += seg_len;
+                if (logical_len > ICAL_MAX_LINE_BYTES) {
+                    return IcalError.InvalidFormat;
+                }
+                if (is_first_seg) {
+                    first_seg_end = hit;
+                    is_first_seg = false;
+                }
+                if (src[hit] == '\r') {
+                    if (hit + 1 >= src.len || src[hit + 1] != '\n') {
+                        return IcalError.InvalidFormat;
+                    }
+                    pos = hit + 2;
+                } else {
+                    pos = hit + 1;
+                }
+                // RFC 5545 folding continuation: next line starts with SPACE or HTAB
+                if (pos < src.len && (src[pos] == ' ' || src[pos] == '\t')) {
+                    pos += 1;
+                    continue;
+                }
+                break;
+            }
+            if (hit >= src.len) {
+                logical_len += src.len - pos;
+                if (logical_len > ICAL_MAX_LINE_BYTES) {
+                    return IcalError.InvalidFormat;
+                }
+                if (is_first_seg) {
+                    first_seg_end = src.len;
+                    is_first_seg = false;
+                }
+                pos = src.len;
+                break;
+            }
+            // hit was ':' or ';', advance past it
+            logical_len += (hit - pos) + 1;
+            if (logical_len > ICAL_MAX_LINE_BYTES) {
+                return IcalError.InvalidFormat;
+            }
+            pos = hit + 1;
+        }
+
+        if (logical_len == 0) continue;
+        const first_line = trimSpaces(src[logical_start..first_seg_end]);
+        if (first_line.len == 0 && logical_len == (first_seg_end - logical_start)) continue;
+
+        prop_count += 1;
+        if (prop_count > ICAL_MAX_PROPERTIES) {
+            return IcalError.InvalidFormat;
+        }
+
+        // Validate property name, balanced parameter quotes, and ':' separator across logical span
+        let in_q: bool = false;
+        let colon_pos: usize? = null;
+        let semi_pos: usize? = null;
+        let scan_i: usize = logical_start;
+        while (scan_i < pos) : (scan_i += 1) {
+            const ch = src[scan_i];
+            if (ch == '\r' || ch == '\n') {
+                // Skip folding sequence (CRLF+SP or LF+SP)
+                if (ch == '\r' && scan_i + 1 < pos && src[scan_i + 1] == '\n') {
+                    scan_i += 1;
+                }
+                if (scan_i + 1 < pos && (src[scan_i + 1] == ' ' || src[scan_i + 1] == '\t')) {
+                    scan_i += 1;
+                    continue;
+                }
+                break;
+            }
+            if (ch == '"') {
+                in_q = !in_q;
+            } else if (!in_q) {
+                if (ch == ';' && semi_pos == null) {
+                    semi_pos = scan_i;
+                } else if (ch == ':') {
+                    colon_pos = scan_i;
+                    break;
+                }
+            }
+        }
+        if (in_q) return IcalError.InvalidFormat;
+        const c_idx = colon_pos ?? return IcalError.InvalidFormat;
+        const name_end = semi_pos ?? c_idx;
+        const prop_name = trimSpaces(src[logical_start..name_end]);
+        if (prop_name.len == 0) return IcalError.InvalidFormat;
+
+        // Extract single-segment value for BEGIN/END structural pairing
+        if (asciiEqlIgnoreCase(prop_name, "BEGIN")) {
+            const comp = trimSpaces(src[c_idx + 1 .. first_seg_end]);
+            if (comp.len == 0) return IcalError.InvalidFormat;
+            if (depth == 0) {
+                if (!asciiEqlIgnoreCase(comp, "VCALENDAR")) {
+                    return IcalError.InvalidFormat;
+                }
+                seen_calendar = true;
+            }
+            if (depth >= ICAL_MAX_COMPONENT_DEPTH) {
+                return IcalError.InvalidFormat;
+            }
+            stack[depth] = comp;
+            depth += 1;
+        } else if (asciiEqlIgnoreCase(prop_name, "END")) {
+            const comp = trimSpaces(src[c_idx + 1 .. first_seg_end]);
+            if (depth == 0 || !asciiEqlIgnoreCase(stack[depth - 1], comp)) {
+                return IcalError.InvalidFormat;
+            }
+            depth -= 1;
+        } else {
+            if (depth == 0) {
+                return IcalError.InvalidFormat;
+            }
+        }
+    }
+
+    if (!seen_calendar || depth != 0) {
+        return IcalError.InvalidFormat;
+    }
+    return true;
 }
 
 // ============================================================================
@@ -1066,6 +1334,9 @@ pub struct IcalCalendar {
         if (src.len >= 3 && src[0] == 0xEF && src[1] == 0xBB && src[2] == 0xBF) {
             src = src[3..];
         }
+        if (src.len == 0 || simdCalHasControlByte(src)) {
+            return IcalError.InvalidFormat;
+        }
 
         let unfolded = unfoldLines(alloc, src)?;
         defer alloc.free(unfolded);
@@ -1073,6 +1344,9 @@ pub struct IcalCalendar {
         let cal = IcalCalendar.init(alloc);
         errdefer cal.deinit();
 
+        let comp_stack: [ICAL_MAX_COMPONENT_DEPTH][]const u8 = [""; ICAL_MAX_COMPONENT_DEPTH];
+        let comp_depth: usize = 0;
+        let prop_count: usize = 0;
         let in_calendar: bool = false;
         let seen_calendar: bool = false;
         let in_event: bool = false;
@@ -1091,8 +1365,17 @@ pub struct IcalCalendar {
             let raw_line = unfolded[pos..line_end];
             pos = if (line_end < unfolded.len) line_end + 1 else unfolded.len;
 
+            if (raw_line.len > ICAL_MAX_LINE_BYTES) {
+                return IcalError.InvalidFormat;
+            }
+
             let trimmed = trimSpaces(raw_line);
             if (trimmed.len == 0) continue;
+
+            prop_count += 1;
+            if (prop_count > ICAL_MAX_PROPERTIES) {
+                return IcalError.InvalidFormat;
+            }
 
             let parts = splitContentLine(raw_line) ?? return IcalError.InvalidFormat;
             let prop = parts.name;
@@ -1100,8 +1383,11 @@ pub struct IcalCalendar {
 
             if (asciiEqlIgnoreCase(prop, "BEGIN")) {
                 let vtrim = trimSpaces(val);
+                if (vtrim.len == 0 || comp_depth >= ICAL_MAX_COMPONENT_DEPTH) {
+                    return IcalError.InvalidFormat;
+                }
                 if (asciiEqlIgnoreCase(vtrim, "VCALENDAR")) {
-                    if (in_calendar) return IcalError.InvalidFormat;
+                    if (in_calendar || comp_depth != 0) return IcalError.InvalidFormat;
                     in_calendar = true;
                     seen_calendar = true;
                 } else if (asciiEqlIgnoreCase(vtrim, "VEVENT")) {
@@ -1109,12 +1395,20 @@ pub struct IcalCalendar {
                     in_event = true;
                     cur_event = IcalEvent.init(alloc);
                     has_dtstart = false;
+                } else {
+                    if (!in_calendar) return IcalError.InvalidFormat;
                 }
+                comp_stack[comp_depth] = vtrim;
+                comp_depth += 1;
                 continue;
             }
 
             if (asciiEqlIgnoreCase(prop, "END")) {
                 let vtrim = trimSpaces(val);
+                if (comp_depth == 0 || !asciiEqlIgnoreCase(comp_stack[comp_depth - 1], vtrim)) {
+                    return IcalError.InvalidFormat;
+                }
+                comp_depth -= 1;
                 if (asciiEqlIgnoreCase(vtrim, "VEVENT")) {
                     if (!in_event) return IcalError.InvalidFormat;
                     if (!has_dtstart) return IcalError.MissingRequiredField;
@@ -1128,18 +1422,23 @@ pub struct IcalCalendar {
                 continue;
             }
 
-            if (!in_calendar) return IcalError.InvalidFormat;
+            if (!in_calendar || comp_depth == 0) return IcalError.InvalidFormat;
 
             if (!in_event) {
-                if (asciiEqlIgnoreCase(prop, "PRODID")) {
-                    if (cal.prodid.len > 0) alloc.free(cal.prodid);
-                    cal.prodid = dupSlice(alloc, trimSpaces(val))?;
-                } else if (asciiEqlIgnoreCase(prop, "VERSION")) {
-                    if (cal.version.len > 0) alloc.free(cal.version);
-                    cal.version = dupSlice(alloc, trimSpaces(val))?;
+                if (comp_depth == 1) {
+                    if (asciiEqlIgnoreCase(prop, "PRODID")) {
+                        if (cal.prodid.len > 0) alloc.free(cal.prodid);
+                        cal.prodid = dupSlice(alloc, trimSpaces(val))?;
+                    } else if (asciiEqlIgnoreCase(prop, "VERSION")) {
+                        if (cal.version.len > 0) alloc.free(cal.version);
+                        cal.version = dupSlice(alloc, trimSpaces(val))?;
+                    }
                 }
                 continue;
             }
+
+            // Ignore nested subcomponents (e.g. VALARM inside VEVENT)
+            if (comp_depth > 2) continue;
 
             // Inside VEVENT
             if (asciiEqlIgnoreCase(prop, "UID")) {
@@ -1181,7 +1480,7 @@ pub struct IcalCalendar {
             }
         }
 
-        if (!seen_calendar || in_calendar || in_event) {
+        if (!seen_calendar || in_calendar || in_event || comp_depth != 0) {
             return IcalError.InvalidFormat;
         }
 

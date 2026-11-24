@@ -252,6 +252,14 @@ export {
 
 // --- RFC 5545 iCalendar & RRULE Expansion ---
 export {
+    ICAL_MAX_LINE_BYTES,
+    ICAL_MAX_PROPERTIES,
+    ICAL_MAX_COMPONENT_DEPTH,
+    scalarCalFindLineDelim,
+    simdCalFindLineDelim,
+    scalarCalHasControlByte,
+    simdCalHasControlByte,
+    validateIcalStrict,
     IcalError,
     RRuleFreq,
     Weekday,
@@ -263,6 +271,9 @@ export {
 
 // --- RFC 6350 / 2426 vCard 3.0 & 4.0 ---
 export {
+    VCARD_MAX_LINE_BYTES,
+    VCARD_MAX_PROPERTIES,
+    validateVcardStrict,
     VCardError,
     VCardVersion,
     StructuredName,
