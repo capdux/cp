@@ -1,0 +1,29 @@
+{
+  "name": "@cap/lmdb",
+  "ver": "0.9.33",
+  "description": "Lightning Memory-Mapped Database (LMDB 0.9.33) zero-copy KV engine for CP",
+  "main": "src/index.cp",
+  "license": "OLDAP-2.8",
+  "bin": {
+    "lmdb": {
+      "path": "c",
+      "src": [
+        "mdb.c",
+        "midl.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-DMDB_USE_ROBUST=0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "pthread": {}
+  }
+}

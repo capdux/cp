@@ -1,0 +1,27 @@
+{
+  "name": "@cap/lz4",
+  "ver": "1.10.0",
+  "description": "Extremely fast lossless compression (LZ4 & LZ4-HC) native C binding for CP",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "bin": {
+    "lz4": {
+      "path": "c",
+      "src": [
+        "lz4.c",
+        "lz4hc.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}

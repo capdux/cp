@@ -1,0 +1,27 @@
+{
+  "name": "@cap/yyjson",
+  "ver": "0.10.0",
+  "description": "High performance JSON library (yyjson v0.10.0) native C binding for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "yyjson": {
+      "path": "c",
+      "src": [
+        "yyjson.c",
+        "yyjson_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
