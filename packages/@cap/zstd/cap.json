@@ -1,0 +1,14 @@
+{
+  "name": "@cap/zstd",
+  "version": "1.0.0",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "native": {
+    "lib_name": "zstd",
+    "c_sources": ["c/zstd.c"],
+    "include_dirs": ["c"],
+    "cflags": ["-O2", "-DZSTD_DISABLE_ASM"],
+    "link_libs": ["c"],
+    "prebuilt_dir": "prebuilt"
+  }
+}

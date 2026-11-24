@@ -1,0 +1,14 @@
+{
+  "name": "@cap/hdrhistogram",
+  "version": "1.0.0",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "native": {
+    "lib_name": "hdrhistogram",
+    "c_sources": ["c/hdr_histogram.c"],
+    "include_dirs": ["c"],
+    "cflags": ["-O2"],
+    "link_libs": ["c", "m"],
+    "prebuilt_dir": "prebuilt"
+  }
+}

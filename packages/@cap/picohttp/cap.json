@@ -1,0 +1,14 @@
+{
+  "name": "@cap/picohttp",
+  "version": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "native": {
+    "lib_name": "picohttp",
+    "c_sources": ["c/picohttpparser.c"],
+    "include_dirs": ["c"],
+    "cflags": ["-O2"],
+    "link_libs": ["c"],
+    "prebuilt_dir": "prebuilt"
+  }
+}
