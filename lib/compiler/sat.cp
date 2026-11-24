@@ -1,8 +1,16 @@
-// Source: cp/lib/sat/solver.cp (DPLL SAT Solver, DIMACS CNF Parser & High-Level ConstraintModel)
+// Reference-hardened against jix/varisat (MIT OR Apache-2.0)
+// Source: cp/lib/sat/solver.cp (DPLL SAT Solver, DIMACS CNF Parser & High-Level ConstraintModel + 4-Lane SIMD)
 // Pure CP, zero-C-dependency Boolean Satisfiability (SAT) solver with DPLL, unit propagation,
-// pure literal elimination, MOM branching heuristic, DIMACS CNF parser, and named ConstraintModel.
+// pure literal elimination, MOM branching heuristic, decision/clause/variable bounds,
+// 4-lane `@Vector(4, i32)` SIMD model verification (`verifySatModel`), and named ConstraintModel.
 
 const std = @import("std");
+
+type ExprSatVec4i32 = @Vector(4, i32);
+
+pub const SAT_DEFAULT_MAX_DECISIONS: u64 = 10000000;
+pub const SAT_DEFAULT_MAX_CLAUSES: usize = 1000000;
+pub const SAT_DEFAULT_MAX_VARS: i32 = 1000000;
 
 /// Error set for SAT solver, DIMACS parser, and constraint modeling operations.
 pub err SatError {
@@ -10,6 +18,7 @@ pub err SatError {
     EmptyClause,
     InvalidDimacs,
     MaxDecisionsExceeded,
+    MaxClausesExceeded,
     OutOfMemory,
 }
 
@@ -17,6 +26,7 @@ pub err SatError {
 pub enum SatStatus {
     Satisfiable,
     Unsatisfiable,
+    Unknown,
 }
 
 /// Solution returned by `SatSolver.solve()`.
@@ -80,23 +90,105 @@ pub struct NamedSolution {
     }
 }
 
-fn absVar(lit: i32): usize {
+fn satAbsVar(lit: i32): usize {
     return if (lit > 0) usize(lit) else usize(-lit);
 }
 
-fn evalLit(vals: []const i8, lit: i32): i8 {
-    const v = absVar(lit);
+fn satEvalLit(vals: []const i8, lit: i32): i8 {
+    const v = satAbsVar(lit);
     const val = vals[v];
     if (val == 0) return 0;
     if ((lit > 0 && val == 1) || (lit < 0 && val == -1)) return 1;
     return -1;
 }
 
-fn isWhitespace(ch: u8): bool {
+/// 4-lane `@Vector(4, i32)` SIMD counter of satisfied literals in a CNF clause under `assignment`.
+/// Hot path for independent SAT model verification (`verifySatModel`).
+pub fn simdSatCountTrueLits(clause: []const i32, assignment: []const bool): usize {
+    const v_zero: ExprSatVec4i32 = @splat(0);
+    const v_one: ExprSatVec4i32 = @splat(1);
+    const v_neg1: ExprSatVec4i32 = @splat(-1);
+    let count: usize = 0;
+    let i: usize = 0;
+    while (i + 4 <= clause.len) {
+        const l0 = clause[i];
+        const l1 = clause[i + 1];
+        const l2 = clause[i + 2];
+        const l3 = clause[i + 3];
+        const lits_v: ExprSatVec4i32 = [l0, l1, l2, l3];
+        const sign_v = @select(i32, lits_v > v_zero, v_one, v_neg1);
+
+        let a0: i32 = 0;
+        let a1: i32 = 0;
+        let a2: i32 = 0;
+        let a3: i32 = 0;
+        if (l0 != 0 && l0 != -2147483648) {
+            const v0 = satAbsVar(l0);
+            if (v0 < assignment.len) a0 = if (assignment[v0]) 1 else -1;
+        }
+        if (l1 != 0 && l1 != -2147483648) {
+            const v1 = satAbsVar(l1);
+            if (v1 < assignment.len) a1 = if (assignment[v1]) 1 else -1;
+        }
+        if (l2 != 0 && l2 != -2147483648) {
+            const v2 = satAbsVar(l2);
+            if (v2 < assignment.len) a2 = if (assignment[v2]) 1 else -1;
+        }
+        if (l3 != 0 && l3 != -2147483648) {
+            const v3 = satAbsVar(l3);
+            if (v3 < assignment.len) a3 = if (assignment[v3]) 1 else -1;
+        }
+        const vals_v: ExprSatVec4i32 = [a0, a1, a2, a3];
+        const matched = @select(i32, sign_v == vals_v, v_one, v_zero);
+        count += usize(@reduce(.Add, matched));
+        i += 4;
+    }
+    while (i < clause.len) : (i += 1) {
+        const lit = clause[i];
+        if (lit == 0 || lit == -2147483648) continue;
+        const v = satAbsVar(lit);
+        if (v >= assignment.len) continue;
+        const val = assignment[v];
+        if ((lit > 0 && val) || (lit < 0 && !val)) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/// Scalar reference for `simdSatCountTrueLits` (differential verification).
+pub fn scalarSatCountTrueLits(clause: []const i32, assignment: []const bool): usize {
+    let count: usize = 0;
+    let i: usize = 0;
+    while (i < clause.len) : (i += 1) {
+        const lit = clause[i];
+        if (lit == 0 || lit == -2147483648) continue;
+        const v = satAbsVar(lit);
+        if (v >= assignment.len) continue;
+        const val = assignment[v];
+        if ((lit > 0 && val) || (lit < 0 && !val)) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+/// Independent CNF model verifier: returns `true` iff every clause has at least one true literal
+/// under `assignment` (uses 4-lane SIMD `simdSatCountTrueLits`).
+pub fn verifySatModel(clauses: []const []const i32, assignment: []const bool): bool {
+    for (c_idx of 0..clauses.len) {
+        if (simdSatCountTrueLits(clauses[c_idx], assignment) == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn satIsWhitespace(ch: u8): bool {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
-fn parseSignedInt(tok: string): i32? {
+fn satParseSignedInt(tok: string): i32? {
     if (tok.len == 0) return null;
     let idx: usize = 0;
     let neg = false;
@@ -119,8 +211,8 @@ fn parseSignedInt(tok: string): i32? {
     return res;
 }
 
-fn parseNonNegI32(tok: string): i32? {
-    const v = parseSignedInt(tok) orelse return null;
+fn satParseNonNegI32(tok: string): i32? {
+    const v = satParseSignedInt(tok) orelse return null;
     if (v < 0) return null;
     return v;
 }
@@ -166,7 +258,7 @@ struct DpllState {
 
                 for (l_idx of 0..clause.len) {
                     const lit = clause[l_idx];
-                    const ev = evalLit(_.vals, lit);
+                    const ev = satEvalLit(_.vals, lit);
                     if (ev == 1) {
                         satisfied = true;
                         break;
@@ -182,7 +274,7 @@ struct DpllState {
                     return false;
                 }
                 if (unassigned_count == 1) {
-                    const v = i32(absVar(last_unassigned));
+                    const v = i32(satAbsVar(last_unassigned));
                     const assign_val: i8 = if (last_unassigned > 0) 1 else -1;
                     _.assignVar(v, assign_val);
                     _.propagations += 1;
@@ -202,7 +294,7 @@ struct DpllState {
             const clause = _.clauses[c_idx];
             let satisfied = false;
             for (l_idx of 0..clause.len) {
-                if (evalLit(_.vals, clause[l_idx]) == 1) {
+                if (satEvalLit(_.vals, clause[l_idx]) == 1) {
                     satisfied = true;
                     break;
                 }
@@ -211,8 +303,8 @@ struct DpllState {
 
             for (l_idx of 0..clause.len) {
                 const lit = clause[l_idx];
-                if (evalLit(_.vals, lit) == 0) {
-                    const v = absVar(lit);
+                if (satEvalLit(_.vals, lit) == 0) {
+                    const v = satAbsVar(lit);
                     if (lit > 0) {
                         _.pos_cnt[v] += 1;
                     } else {
@@ -252,7 +344,7 @@ struct DpllState {
             let satisfied = false;
             let open_cnt: usize = 0;
             for (l_idx of 0..clause.len) {
-                const ev = evalLit(_.vals, clause[l_idx]);
+                const ev = satEvalLit(_.vals, clause[l_idx]);
                 if (ev == 1) {
                     satisfied = true;
                     break;
@@ -280,7 +372,7 @@ struct DpllState {
             let satisfied = false;
             let open_cnt: usize = 0;
             for (l_idx of 0..clause.len) {
-                const ev = evalLit(_.vals, clause[l_idx]);
+                const ev = satEvalLit(_.vals, clause[l_idx]);
                 if (ev == 1) {
                     satisfied = true;
                     break;
@@ -293,8 +385,8 @@ struct DpllState {
 
             for (l_idx of 0..clause.len) {
                 const lit = clause[l_idx];
-                if (evalLit(_.vals, lit) == 0) {
-                    const v = absVar(lit);
+                if (satEvalLit(_.vals, lit) == 0) {
+                    const v = satAbsVar(lit);
                     if (lit > 0) {
                         _.pos_cnt[v] += 1;
                     } else {
@@ -308,7 +400,8 @@ struct DpllState {
         let best_score: u64 = 0;
         let first_val: i8 = 1;
 
-        for (v of 1..(_.num_vars + 1)) {
+        let v: usize = 1;
+        while (v <= _.num_vars) : (v += 1) {
             if (_.vals[v] != 0) continue;
             const p = u64(_.pos_cnt[v]);
             const n = u64(_.neg_cnt[v]);
@@ -349,21 +442,25 @@ pub struct SatSolver {
     num_vars: i32 = 0;
     clauses: [][]i32 = [];
     clauses_len: usize = 0;
-    max_decisions: u64 = 10000000;
+    max_decisions: u64 = SAT_DEFAULT_MAX_DECISIONS;
+    max_clauses: usize = SAT_DEFAULT_MAX_CLAUSES;
+    has_empty_clause: bool = false;
 
     /// Initializes an empty SAT solver.
-    static fn init(alloc: std.mem.Allocator): SatSolver {
+    pub static fn init(alloc: std.mem.Allocator): SatSolver {
         return SatSolver{
             alloc: alloc,
             num_vars: 0,
             clauses: [],
             clauses_len: 0,
-            max_decisions: 10000000,
+            max_decisions: SAT_DEFAULT_MAX_DECISIONS,
+            max_clauses: SAT_DEFAULT_MAX_CLAUSES,
+            has_empty_clause: false,
         };
     }
 
     /// Releases all clauses owned by this solver.
-    fn deinit(*_) {
+    pub fn deinit(*_) {
         for (i of 0.._.clauses_len) {
             _.alloc.free(_.clauses[i]);
         }
@@ -373,37 +470,59 @@ pub struct SatSolver {
         }
         _.clauses_len = 0;
         _.num_vars = 0;
+        _.has_empty_clause = false;
     }
 
-    /// Configures the maximum number of DPLL branching decisions before aborting.
-    fn setMaxDecisions(*_, limit: u64) {
+    /// Configures the maximum number of DPLL branching decisions before returning `Unknown`.
+    pub fn setMaxDecisions(*_, limit: u64) {
         _.max_decisions = limit;
     }
 
+    /// Configures the maximum number of clauses allowed in this solver.
+    pub fn setMaxClauses(*_, limit: usize) {
+        _.max_clauses = limit;
+    }
+
     /// Allocates and returns a fresh 1-based variable ID.
-    fn newVar(*_): i32 {
+    pub fn newVar(*_): i32 {
         _.num_vars += 1;
         return _.num_vars;
     }
 
-    /// Ensures at least `n` variables are registered.
-    fn ensureVars(*_, n: i32): void ! SatError {
-        if (n < 0) return SatError.InvalidVariable;
+    /// Ensures at least `n` variables are registered (rejects negative or out-of-range variable counts).
+    pub fn ensureVars(*_, n: i32): void ! SatError {
+        if (n < 0 || n > SAT_DEFAULT_MAX_VARS) return SatError.InvalidVariable;
         if (n > _.num_vars) {
             _.num_vars = n;
         }
     }
 
+    /// Records an explicit empty clause (immediately making the formula UNSAT).
+    pub fn addEmptyClause(*_) {
+        _.has_empty_clause = true;
+    }
+
+    /// Adds a disjunctive clause, treating an empty slice as an immediate UNSAT empty clause.
+    pub fn addClauseAllowEmpty(*_, lits: []const i32): void ! SatError {
+        if (lits.len == 0) {
+            _.has_empty_clause = true;
+            return;
+        }
+        return _.addClause(lits);
+    }
+
     /// Adds a disjunctive clause `(lits[0] | lits[1] | ...)`.
-    /// Rejects empty clauses (`EmptyClause`) and literal `0` (`InvalidVariable`).
-    fn addClause(*_, lits: []const i32): void ! SatError {
+    /// Rejects empty clauses (`EmptyClause`), literal `0`/out-of-range (`InvalidVariable`), and clause cap overflow.
+    pub fn addClause(*_, lits: []const i32): void ! SatError {
         if (lits.len == 0) return SatError.EmptyClause;
+        if (_.clauses_len >= _.max_clauses) return SatError.MaxClausesExceeded;
 
         let max_v = _.num_vars;
         for (i of 0..lits.len) {
             const lit = lits[i];
-            if (lit == 0) return SatError.InvalidVariable;
+            if (lit == 0 || lit == -2147483648) return SatError.InvalidVariable;
             const v = if (lit > 0) lit else -lit;
+            if (v > SAT_DEFAULT_MAX_VARS) return SatError.InvalidVariable;
             if (v > max_v) {
                 max_v = v;
             }
@@ -451,7 +570,7 @@ pub struct SatSolver {
                 at_line_start = true;
                 continue;
             }
-            if (isWhitespace(ch)) {
+            if (satIsWhitespace(ch)) {
                 pos += 1;
                 continue;
             }
@@ -478,10 +597,10 @@ pub struct SatSolver {
                 let clauses_val: i32 = 0;
 
                 while (t_idx < line.len) {
-                    while (t_idx < line.len && isWhitespace(line[t_idx])) : (t_idx += 1) {}
+                    while (t_idx < line.len && satIsWhitespace(line[t_idx])) : (t_idx += 1) {}
                     if (t_idx >= line.len) break;
                     const t_start = t_idx;
-                    while (t_idx < line.len && !isWhitespace(line[t_idx])) : (t_idx += 1) {}
+                    while (t_idx < line.len && !satIsWhitespace(line[t_idx])) : (t_idx += 1) {}
                     const tok = line[t_start..t_idx];
 
                     if (tok_count == 0) {
@@ -489,9 +608,9 @@ pub struct SatSolver {
                     } else if (tok_count == 1) {
                         if (!std.mem.eql(u8, tok, "cnf")) return SatError.InvalidDimacs;
                     } else if (tok_count == 2) {
-                        vars_val = parseNonNegI32(tok) orelse return SatError.InvalidDimacs;
+                        vars_val = satParseNonNegI32(tok) orelse return SatError.InvalidDimacs;
                     } else if (tok_count == 3) {
-                        clauses_val = parseNonNegI32(tok) orelse return SatError.InvalidDimacs;
+                        clauses_val = satParseNonNegI32(tok) orelse return SatError.InvalidDimacs;
                     } else {
                         return SatError.InvalidDimacs;
                     }
@@ -513,10 +632,10 @@ pub struct SatSolver {
 
             at_line_start = false;
             const tok_start = pos;
-            while (pos < cnf_text.len && !isWhitespace(cnf_text[pos])) : (pos += 1) {}
+            while (pos < cnf_text.len && !satIsWhitespace(cnf_text[pos])) : (pos += 1) {}
             const tok = cnf_text[tok_start..pos];
 
-            const lit = parseSignedInt(tok) orelse return SatError.InvalidDimacs;
+            const lit = satParseSignedInt(tok) orelse return SatError.InvalidDimacs;
             if (lit == 0) {
                 if (cur_len == 0) return SatError.EmptyClause;
                 solver.addClause(cur_lits[0..cur_len]) catch |e| return e;
@@ -544,15 +663,38 @@ pub struct SatSolver {
         return solver;
     }
 
+    /// Independently verifies that every clause in this solver is satisfied under `assignment`
+    /// using 4-lane SIMD `simdSatCountTrueLits`.
+    pub fn verifyAssignment(assignment: []const bool): bool {
+        if (_.has_empty_clause) return false;
+        for (c_idx of 0.._.clauses_len) {
+            if (simdSatCountTrueLits(_.clauses[c_idx], assignment) == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /// Solves the CNF instance via DPLL with unit propagation, pure literal elimination, and MOM heuristic.
-    /// Verifies 100% of original clauses before returning `Satisfiable`.
-    fn solve(): SatSolution ! SatError {
+    /// Returns `Unsatisfiable` immediately if an empty clause is present, `Unknown` if decision budget is exceeded,
+    /// and verifies 100% of original clauses via 4-lane SIMD `verifyAssignment` before returning `Satisfiable`.
+    pub fn solve(): SatSolution ! SatError {
         const nvars = usize(_.num_vars);
         const assign_len = nvars + 1;
 
         let assignment = _.alloc.alloc(bool, assign_len) catch return SatError.OutOfMemory;
         errdefer _.alloc.free(assignment);
         @memset(assignment, false);
+
+        if (_.has_empty_clause) {
+            return SatSolution{
+                alloc: _.alloc,
+                status: .Unsatisfiable,
+                assignment: assignment,
+                decisions: 0,
+                propagations: 0,
+            };
+        }
 
         if (_.clauses_len == 0) {
             return SatSolution{
@@ -590,7 +732,18 @@ pub struct SatSolver {
             max_decisions: _.max_decisions,
         };
 
-        const sat = state.search() catch |e| return e;
+        const sat = state.search() catch |e| {
+            if (e == SatError.MaxDecisionsExceeded) {
+                return SatSolution{
+                    alloc: _.alloc,
+                    status: .Unknown,
+                    assignment: assignment,
+                    decisions: state.decisions,
+                    propagations: state.propagations,
+                };
+            }
+            return e;
+        };
         if (!sat) {
             return SatSolution{
                 alloc: _.alloc,
@@ -605,22 +758,8 @@ pub struct SatSolver {
             assignment[v] = vals[v] == 1;
         }
 
-        // Verify all original clauses evaluate to true under the final assignment.
-        for (c_idx of 0.._.clauses_len) {
-            const clause = _.clauses[c_idx];
-            let clause_sat = false;
-            for (l_idx of 0..clause.len) {
-                const lit = clause[l_idx];
-                const v = absVar(lit);
-                const val = assignment[v];
-                if ((lit > 0 && val) || (lit < 0 && !val)) {
-                    clause_sat = true;
-                    break;
-                }
-            }
-            if (!clause_sat) {
-                return SatError.InvalidDimacs;
-            }
+        if (!_.verifyAssignment(assignment)) {
+            return SatError.InvalidDimacs;
         }
 
         return SatSolution{
@@ -787,7 +926,7 @@ pub struct ConstraintModel {
         let sol = _.solver.solve() catch |e| return e;
         defer sol.deinit();
 
-        if (sol.status == .Unsatisfiable) {
+        if (sol.status != .Satisfiable) {
             return null;
         }
 

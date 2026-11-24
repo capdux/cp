@@ -8,6 +8,9 @@
 // --- Expression Evaluation, Rule Engine, SAT Solver & Pike VM Regex ---
 export {
     DEFAULT_MAX_DEPTH,
+    EXPR_MAX_DEPTH,
+    simdExprSkipWhitespace,
+    scalarExprSkipWhitespace,
     ExprError,
     ExprValue,
     ExprContext,
@@ -18,6 +21,12 @@ export {
 } from "./expr.cp";
 
 export {
+    SAT_DEFAULT_MAX_DECISIONS,
+    SAT_DEFAULT_MAX_CLAUSES,
+    SAT_DEFAULT_MAX_VARS,
+    simdSatCountTrueLits,
+    scalarSatCountTrueLits,
+    verifySatModel,
     SatError,
     SatStatus,
     SatSolution,

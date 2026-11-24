@@ -116,6 +116,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **ropey** (`cessen`) & **crossbeam** (`crossbeam-rs`) | <https://github.com/cessen/ropey> | MIT / Apache-2.0 | `lib/ds/rope.cp`, `lib/ds/skiplist.cp` | Copyright (c) 2018-2024 Nathan Vegdahl / Crossbeam Developers |
 | **multer** (`rwf2`) | <https://github.com/rwf2/multer> | MIT | `lib/web/multipart.cp`, `lib/web/uritemplate.cp` | Copyright (c) 2020-2024 Rousan Ali / rwf2 (RFC 7578 / RFC 6570) |
 | **usearch** (`unum-cloud`) & **instant-distance** (`djc`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 / MIT | `lib/vector/hnswFlat.cp`, `lib/vector/ivfPq.cp` | Copyright (c) 2022-2024 Unum Cloud / Dirkjan Ochtman |
+| **varisat** (`jix`) | <https://github.com/jix/varisat> | MIT OR Apache-2.0 | `lib/compiler/expr.cp`, `lib/compiler/sat.cp` | Copyright (c) 2018-2024 Jannis Harder |
 
 ---
 

@@ -14,8 +14,8 @@
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
-| `lib/compiler/expr.cp` | 安全确定性表达式编译与求值 | `compile`, `compileWithMaxDepth`, `eval`, `CompiledExpr`, `ExprContext`, `ExprValue`, `ExprError`, `DEFAULT_MAX_DEPTH` |
-| `lib/compiler/sat.cp` | DPLL 布尔可满足性求解器与 DIMACS CNF | `SatSolver`, `ConstraintModel`, `SatSolution`, `NamedSolution`, `SatStatus`, `SatError` |
+| `lib/compiler/expr.cp` | 安全确定性表达式编译与求值（对标 `jix/varisat` & Pratt 深度加固：`EXPR_MAX_DEPTH=128`、右结合 `**`、`NaN`/`±Inf` 拦截与 16-lane SIMD 空白跳过） | `DEFAULT_MAX_DEPTH`, `EXPR_MAX_DEPTH`, `simdExprSkipWhitespace`, `scalarExprSkipWhitespace`, `compile`, `compileWithMaxDepth`, `eval`, `CompiledExpr`, `ExprContext`, `ExprValue`, `ExprError`（测试：`cap/test/testCompilerExprSatRustRefSuite.cp`） |
+| `lib/compiler/sat.cp` | DPLL 布尔可满足性求解器与 DIMACS CNF（对标 `jix/varisat` MIT/Apache-2.0 加固：空子句即刻 UNSAT、决策/子句上限超时返回 `Unknown`、4-lane SIMD 模型验真 `verifySatModel`） | `SAT_DEFAULT_MAX_DECISIONS`, `SAT_DEFAULT_MAX_CLAUSES`, `SAT_DEFAULT_MAX_VARS`, `simdSatCountTrueLits`, `scalarSatCountTrueLits`, `verifySatModel`, `SatSolver`, `ConstraintModel`, `SatSolution`, `NamedSolution`, `SatStatus`, `SatError`（测试：`cap/test/testCompilerExprSatRustRefSuite.cp`） |
 | `lib/compiler/regexCompiler.cp` / `regexVm.cp` | Anti-ReDoS Pike VM / Thompson NFA 正则引擎（对标 `rust-lang/regex` 加固 + `cap:simd` 预过滤） | `Regex`, `Compiler`, `Program`, `Inst`, `Opcode`, `Prefilter`, `PrefilterKind`, `Captures`, `MatchSpan`, `RegexError` |
 
 ### 2. 语言前端、WebAssembly、着色器与 IDL（6 个子模块）
