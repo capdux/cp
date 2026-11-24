@@ -63,6 +63,7 @@ const resolver = @import("project/resolver.zig");
 const lock = @import("project/lock.zig");
 const native = @import("project/native.zig");
 const installer = @import("project/installer.zig");
+const modular_obj = @import("project/modular_obj.zig");
 
 fn getCapRoot(allocator: std.mem.Allocator) ![]const u8 {
     if (global_env.get("CAP_ROOT")) |root| {
@@ -242,6 +243,7 @@ fn usage() void {
         \\  -o, --out-dir=<dir>           Override output directory (default: bin or cap.json)
         \\  --cache-dir=<path>            Override Zig compiler cache directory (isolates concurrent builds)
         \\  -m, --modular                 Enable modular multi-file Zig codegen (cpc compile --emit-dir)
+        \\  --parallel-obj                Enable parallel per-module .o caching & incremental linking (with -m)
         \\  --emit-types                  Emit .d.cp type definitions even when building executables
         \\  --timings                     Print per-stage build timings breakdown in ms
         \\  -t, --target=<triple>         Cross-compile for specific target triple
@@ -1773,6 +1775,7 @@ const BuildOptions = struct {
     force_llvm: bool = false,
     emit_types: bool = false,
     is_modular: bool = false,
+    parallel_obj: bool = false,
     timings: bool = false,
     explicit_cache_dir: ?[]const u8 = null,
 };
@@ -1780,6 +1783,10 @@ const BuildOptions = struct {
 const BuildTimings = struct {
     source_scan_ns: i128 = 0,
     cpc_transpile_ns: i128 = 0,
+    modular_obj_ns: i128 = 0,
+    modular_obj_hits: usize = 0,
+    modular_obj_misses: usize = 0,
+    modular_obj_active: bool = false,
     zig_compile_ns: i128 = 0,
     atomic_install_ns: i128 = 0,
 };
@@ -2052,6 +2059,8 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
             opts.timings = true;
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
             opts.is_modular = true;
+        } else if (std.mem.eql(u8, arg, "--parallel-obj")) {
+            opts.parallel_obj = true;
         } else if (std.mem.eql(u8, arg, "--safe")) {
             opts.optimize_mode = "ReleaseSafe";
         } else if (std.mem.startsWith(u8, arg, "--opt=")) {
@@ -2145,6 +2154,14 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
         std.debug.print("\nBuild Timings:\n", .{});
         std.debug.print("  Source mtime scan  : {d:>8.2}ms ({d:>5.1}%)\n", .{ scan_ms, scan_ms * 100.0 / denom });
         std.debug.print("  cpc Transpile      : {d:>8.2}ms ({d:>5.1}%)\n", .{ cpc_ms, cpc_ms * 100.0 / denom });
+        if (timings.modular_obj_active) {
+            const mod_obj_ms = @as(f64, @floatFromInt(timings.modular_obj_ns)) / 1_000_000.0;
+            std.debug.print("  modular-obj: {d} cached, {d} rebuilt in {d:.2}ms\n", .{
+                timings.modular_obj_hits,
+                timings.modular_obj_misses,
+                mod_obj_ms,
+            });
+        }
         std.debug.print("  Zig Native Compile : {d:>8.2}ms ({d:>5.1}%)\n", .{ zig_ms, zig_ms * 100.0 / denom });
         std.debug.print("  Atomic Install     : {d:>8.2}ms ({d:>5.1}%)\n", .{ install_ms, install_ms * 100.0 / denom });
         std.debug.print("  Total              : {d:>8.2}ms\n", .{tot_f_ms});
@@ -2488,7 +2505,37 @@ fn compileSingleFile(
         }
         const zig_start = std.Io.Timestamp.now(global_io, .awake);
 
-        var child_args: [128][]const u8 = undefined;
+        var par_obj_res = modular_obj.ParallelObjResult.init();
+        defer par_obj_res.deinit(allocator);
+        var effective_zig_file: []const u8 = zig_file;
+
+        if (opts.is_modular and opts.parallel_obj and !opts.is_beam and std.mem.eql(u8, build_type_resolved, "build-exe")) {
+            const obj_root = try std.fmt.allocPrint(allocator, "{s}/../obj", .{ws_paths.zig_root_dir});
+            defer allocator.free(obj_root);
+            par_obj_res = modular_obj.prepareParallelObjects(allocator, .{
+                .zig_root_dir = ws_paths.zig_root_dir,
+                .obj_root_dir = obj_root,
+                .optimize_mode = opts.optimize_mode,
+                .target_triple = t.triple,
+                .force_rebuild = opts.force_rebuild,
+            }) catch modular_obj.ParallelObjResult.init();
+
+            if (par_obj_res.active and par_obj_res.link_entry_zig != null) {
+                effective_zig_file = par_obj_res.link_entry_zig.?;
+                timings.modular_obj_active = true;
+                timings.modular_obj_ns += par_obj_res.elapsed_ns;
+                timings.modular_obj_hits += par_obj_res.hits;
+                timings.modular_obj_misses += par_obj_res.misses;
+                const mod_ms = @as(f64, @floatFromInt(par_obj_res.elapsed_ns)) / 1_000_000.0;
+                std.debug.print("  → [modular-obj] {d} cached, {d} rebuilt in {d:.2}ms\n", .{
+                    par_obj_res.hits,
+                    par_obj_res.misses,
+                    mod_ms,
+                });
+            }
+        }
+
+        var child_args: [512][]const u8 = undefined;
         var argc: usize = 0;
         child_args[argc] = "zig";
         argc += 1;
@@ -2498,7 +2545,8 @@ fn compileSingleFile(
             child_args[argc] = "-dynamic";
             argc += 1;
         }
-        child_args[argc] = zig_file;
+        const entry_arg_idx = argc;
+        child_args[argc] = effective_zig_file;
         argc += 1;
         child_args[argc] = emit_arg;
         argc += 1;
@@ -2534,6 +2582,13 @@ fn compileSingleFile(
             scanModularManifestForLinkPragmas(allocator, ws_paths.zig_root_dir, &child_args, &argc, &local_alloc_libs, &local_alloc_libs_len);
         }
 
+        const pre_obj_argc = argc;
+        if (par_obj_res.active) {
+            for (par_obj_res.obj_paths.items) |obj_p| {
+                addArg(&child_args, &argc, obj_p);
+            }
+        }
+
         const base_argc = argc;
         if (use_no_llvm and argc < child_args.len) {
             child_args[argc] = "-fno-llvm";
@@ -2545,6 +2600,12 @@ fn compileSingleFile(
             fs_shim.cwd().deleteFile(tmp_out_path) catch {};
             std.debug.print("  ! [-fno-llvm] Native backend failed for {s}, falling back to LLVM...\n", .{t.name});
             build_ok = try spawnAndWaitSuccess(child_args[0..base_argc]);
+        }
+        if (!build_ok and par_obj_res.active) {
+            fs_shim.cwd().deleteFile(tmp_out_path) catch {};
+            std.debug.print("  ! [modular-obj] Incremental link failed for {s}, falling back to joint modular build...\n", .{t.name});
+            child_args[entry_arg_idx] = zig_file;
+            build_ok = try spawnAndWaitSuccess(child_args[0..pre_obj_argc]);
         }
 
         const zig_dur = zig_start.durationTo(std.Io.Timestamp.now(global_io, .awake));
