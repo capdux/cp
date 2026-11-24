@@ -50,7 +50,10 @@ pub fn find_referenced_vars_in_type(ty: &Type, vars: &mut HashSet<String>) {
         | Type::ManyRawPtr(inner)
         | Type::CPtr(inner)
         | Type::Aligned { inner, .. } => find_referenced_vars_in_type(inner, vars),
-        Type::ResultType { ok, .. } => find_referenced_vars_in_type(ok, vars),
+        Type::ResultType { ok, err } => {
+            find_referenced_vars_in_type(ok, vars);
+            find_referenced_vars_in_error_type(err, vars);
+        }
         Type::Map(k, v) | Type::Dict(k, v) => {
             find_referenced_vars_in_type(k, vars);
             find_referenced_vars_in_type(v, vars);
@@ -133,11 +136,15 @@ pub fn find_referenced_vars_in_expr(expr: &Expr, vars: &mut HashSet<String>) {
         Expr::Match(m) => {
             find_referenced_vars_in_expr(&m.disc, vars);
             for arm in &m.arms {
+                find_referenced_vars_in_pattern(&arm.pat, vars);
                 if let Some(g) = &arm.guard {
                     find_referenced_vars_in_expr(g, vars);
                 }
                 find_referenced_vars_in_stmt(&arm.body, vars);
             }
+        }
+        Expr::Receive(Some(ty)) => {
+            find_referenced_vars_in_type(ty, vars);
         }
         Expr::Spawn(s) => {
             find_referenced_vars_in_expr(&s.callee, vars);
@@ -312,7 +319,11 @@ pub fn find_referenced_vars_in_stmt(stmt: &Stmt, vars: &mut HashSet<String>) {
             find_referenced_vars_in_stmt(&w.body, vars);
         }
         Stmt::For(f) => {
+            find_referenced_vars_in_pattern(&f.pat, vars);
             find_referenced_vars_in_expr(&f.expr, vars);
+            if let Some(raw) = &f.raw_header {
+                extract_words_from_str(raw, vars);
+            }
             find_referenced_vars_in_stmt(&f.body, vars);
         }
         Stmt::Return(r) => {
@@ -324,6 +335,7 @@ pub fn find_referenced_vars_in_stmt(stmt: &Stmt, vars: &mut HashSet<String>) {
         Stmt::Match(m) => {
             find_referenced_vars_in_expr(&m.disc, vars);
             for arm in &m.arms {
+                find_referenced_vars_in_pattern(&arm.pat, vars);
                 if let Some(g) = &arm.guard {
                     find_referenced_vars_in_expr(g, vars);
                 }
@@ -353,12 +365,289 @@ pub fn find_referenced_vars_in_stmt(stmt: &Stmt, vars: &mut HashSet<String>) {
             }
         }
         Stmt::Func(f) => {
-            find_referenced_vars_in_block(&f.body, vars);
+            find_referenced_vars_in_func(f, vars);
         }
         Stmt::Fuzz(f) => {
+            if let Some(ty) = &f.param_type {
+                find_referenced_vars_in_type(ty, vars);
+            }
             find_referenced_vars_in_block(&f.body, vars);
         }
     }
+}
+
+pub fn find_referenced_vars_in_error_type(err: &ErrorType, vars: &mut HashSet<String>) {
+    match err {
+        ErrorType::Named(id) | ErrorType::BoxDyn(id) => {
+            extract_words_from_str(&id.sym, vars);
+        }
+        ErrorType::Union(ids) | ErrorType::AnonSet(ids) => {
+            for id in ids {
+                extract_words_from_str(&id.sym, vars);
+            }
+        }
+        ErrorType::DefaultError | ErrorType::AnyErr => {}
+    }
+}
+
+pub fn find_referenced_vars_in_pattern(pat: &Pattern, vars: &mut HashSet<String>) {
+    match pat {
+        Pattern::Array(pats) | Pattern::Tuple(pats) | Pattern::Or(pats) => {
+            for p in pats {
+                find_referenced_vars_in_pattern(p, vars);
+            }
+        }
+        Pattern::Object(props) => {
+            for p in props {
+                if let Some(v) = &p.val {
+                    find_referenced_vars_in_pattern(v, vars);
+                }
+            }
+        }
+        Pattern::Enum(ep) => {
+            extract_words_from_str(&ep.enum_name.sym, vars);
+            if let Some(fields) = &ep.fields {
+                for f in fields {
+                    if let Some(v) = &f.val {
+                        find_referenced_vars_in_pattern(v, vars);
+                    }
+                }
+            }
+            if let Some(tpats) = &ep.tuple_pats {
+                for p in tpats {
+                    find_referenced_vars_in_pattern(p, vars);
+                }
+            }
+        }
+        Pattern::Rest(inner) | Pattern::Err(inner) => {
+            find_referenced_vars_in_pattern(inner, vars);
+        }
+        Pattern::Range { start, end, .. } => {
+            for b in [start, end] {
+                match b {
+                    RangeBound::Ident(id) | RangeBound::NegIdent(id) => {
+                        extract_words_from_str(&id.sym, vars);
+                    }
+                    RangeBound::Int(_) => {}
+                }
+            }
+        }
+        Pattern::Binding { subpat, .. } => {
+            find_referenced_vars_in_pattern(subpat, vars);
+        }
+        Pattern::TypeMatch { ty, .. } | Pattern::Type(ty) => {
+            find_referenced_vars_in_type(ty, vars);
+        }
+        Pattern::Expr(e) => {
+            find_referenced_vars_in_expr(e, vars);
+        }
+        Pattern::Ident(_) | Pattern::Lit(_) | Pattern::Wildcard | Pattern::Null => {}
+    }
+}
+
+fn find_referenced_vars_in_meta_items(meta: &[MetaItem], vars: &mut HashSet<String>) {
+    for m in meta {
+        extract_words_from_str(&m.name.sym, vars);
+        for arg in &m.args {
+            match arg {
+                MetaArg::Positional(e) | MetaArg::Named(_, e) => {
+                    find_referenced_vars_in_expr(e, vars);
+                }
+            }
+        }
+    }
+}
+
+fn find_referenced_vars_in_generic_params(params: &[GenericParam], vars: &mut HashSet<String>) {
+    for gp in params {
+        match gp {
+            GenericParam::Type { bounds, .. } => {
+                for b in bounds {
+                    extract_words_from_str(&b.sym, vars);
+                }
+            }
+            GenericParam::Const { ty, .. } => {
+                find_referenced_vars_in_type(ty, vars);
+            }
+        }
+    }
+}
+
+fn find_referenced_vars_in_func(f: &Function, vars: &mut HashSet<String>) {
+    find_referenced_vars_in_meta_items(&f.meta, vars);
+    find_referenced_vars_in_generic_params(&f.generic_params, vars);
+    for p in &f.params {
+        find_referenced_vars_in_type(&p.ty, vars);
+    }
+    if let Some(ret) = &f.return_type {
+        find_referenced_vars_in_type(ret, vars);
+    }
+    find_referenced_vars_in_block(&f.body, vars);
+}
+
+fn find_referenced_vars_in_class(c: &Class, vars: &mut HashSet<String>) {
+    find_referenced_vars_in_meta_items(&c.meta, vars);
+    find_referenced_vars_in_generic_params(&c.generic_params, vars);
+    for imp in &c.implements {
+        extract_words_from_str(&imp.sym, vars);
+    }
+    if let Some(ext) = &c.extends {
+        extract_words_from_str(&ext.sym, vars);
+    }
+    for f in &c.fields {
+        find_referenced_vars_in_type(&f.ty, vars);
+        if let Some(def) = &f.default {
+            find_referenced_vars_in_expr(def, vars);
+        }
+    }
+    for m in &c.methods {
+        find_referenced_vars_in_func(m, vars);
+    }
+    for z in &c.extra_zig {
+        extract_words_from_str(z, vars);
+    }
+    for nested in &c.nested_classes {
+        find_referenced_vars_in_class(nested, vars);
+    }
+    for tb in &c.test_blocks {
+        find_referenced_vars_in_block(&tb.body, vars);
+    }
+}
+
+fn find_referenced_vars_in_decl(decl: &Decl, vars: &mut HashSet<String>) {
+    match decl {
+        Decl::Func(f) => find_referenced_vars_in_func(f, vars),
+        Decl::Class(c) => find_referenced_vars_in_class(c, vars),
+        Decl::Trait(t) => {
+            find_referenced_vars_in_meta_items(&t.meta, vars);
+            for m in &t.methods {
+                for p in &m.params {
+                    find_referenced_vars_in_type(&p.ty, vars);
+                }
+                if let Some(ret) = &m.return_type {
+                    find_referenced_vars_in_type(ret, vars);
+                }
+            }
+        }
+        Decl::Impl(imp) => {
+            extract_words_from_str(&imp.trait_name.sym, vars);
+            extract_words_from_str(&imp.target_name.sym, vars);
+            for m in &imp.methods {
+                find_referenced_vars_in_func(m, vars);
+            }
+        }
+        Decl::Enum(e) => {
+            find_referenced_vars_in_meta_items(&e.meta, vars);
+            if let Some(tag_ty) = &e.tag_type {
+                find_referenced_vars_in_type(tag_ty, vars);
+            }
+            for v in &e.variants {
+                if let Some(fields) = &v.fields {
+                    for f in fields {
+                        find_referenced_vars_in_type(&f.ty, vars);
+                        if let Some(def) = &f.default {
+                            find_referenced_vars_in_expr(def, vars);
+                        }
+                    }
+                }
+                if let Some(val) = &v.value {
+                    find_referenced_vars_in_expr(val, vars);
+                }
+                if let Some(tt) = &v.tuple_type {
+                    find_referenced_vars_in_type(tt, vars);
+                }
+                if let Some(fe) = &v.from_err {
+                    extract_words_from_str(&fe.sym, vars);
+                }
+            }
+            for m in &e.methods {
+                find_referenced_vars_in_func(m, vars);
+            }
+            for z in &e.extra_zig {
+                extract_words_from_str(z, vars);
+            }
+            for tb in &e.test_blocks {
+                find_referenced_vars_in_block(&tb.body, vars);
+            }
+        }
+        Decl::Interface(iface) => {
+            for m in &iface.methods {
+                for p in &m.params {
+                    find_referenced_vars_in_type(&p.ty, vars);
+                }
+                if let Some(ret) = &m.return_type {
+                    find_referenced_vars_in_type(ret, vars);
+                }
+            }
+        }
+        Decl::ErrorSet(es) => {
+            for u in &es.unions {
+                extract_words_from_str(u, vars);
+            }
+        }
+        Decl::Meta(md) => {
+            find_referenced_vars_in_meta_items(&md.meta, vars);
+            for p in &md.params {
+                find_referenced_vars_in_type(&p.ty, vars);
+                if let Some(def) = &p.default {
+                    find_referenced_vars_in_expr(def, vars);
+                }
+            }
+        }
+        Decl::Dec(dd) => {
+            find_referenced_vars_in_meta_items(&dd.meta, vars);
+            for p in &dd.params {
+                find_referenced_vars_in_type(&p.ty, vars);
+            }
+            if let Some(ret) = &dd.return_type {
+                find_referenced_vars_in_type(ret, vars);
+            }
+            find_referenced_vars_in_block(&dd.body, vars);
+        }
+        Decl::Macro(mac) => {
+            find_referenced_vars_in_meta_items(&mac.meta, vars);
+            for p in &mac.params {
+                find_referenced_vars_in_type(&p.ty, vars);
+            }
+            if let Some(ret) = &mac.return_type {
+                find_referenced_vars_in_type(ret, vars);
+            }
+            find_referenced_vars_in_block(&mac.body, vars);
+            for m in &mac.methods {
+                find_referenced_vars_in_func(m, vars);
+            }
+        }
+        Decl::TypeAlias(ta) => {
+            find_referenced_vars_in_type(&ta.target_ty, vars);
+        }
+        Decl::CInclude(_) => {}
+        Decl::Fuzz(f) => {
+            if let Some(ty) = &f.param_type {
+                find_referenced_vars_in_type(ty, vars);
+            }
+            find_referenced_vars_in_block(&f.body, vars);
+        }
+    }
+}
+
+/// Collect all identifiers and namespace prefixes actually referenced in non-Import items of a module.
+pub fn collect_module_referenced_idents(module: &Module) -> HashSet<String> {
+    let mut vars = HashSet::new();
+    for item in &module.body {
+        match item {
+            ModuleItem::Import(_) => {}
+            ModuleItem::Decl(d) => find_referenced_vars_in_decl(d, &mut vars),
+            ModuleItem::Stmt(s) => find_referenced_vars_in_stmt(s, &mut vars),
+            ModuleItem::Export(exp) => {
+                if exp.source.is_none() {
+                    for sp in &exp.specifiers {
+                        vars.insert(sp.sym.clone());
+                    }
+                }
+            }
+        }
+    }
+    vars
 }
 
 pub fn find_referenced_vars_in_block(block: &BlockStmt, vars: &mut HashSet<String>) {

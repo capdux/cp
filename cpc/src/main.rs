@@ -397,7 +397,33 @@ fn compile_file(
         let mut parser = CPParser::new(&code);
         let (parsed_module, p_diags) = parser.parse_module_with_recovery();
         all_diags.extend(p_diags);
-        all_items = parsed_module.body;
+        let referenced = cpc::ast_visitor::collect_module_referenced_idents(&parsed_module);
+        for item in parsed_module.body {
+            match &item {
+                cpc::ast::ModuleItem::Import(imp) => {
+                    if cpc::resolver::is_external_package_source(&imp.source) {
+                        if !cpc::resolver::is_import_used(imp, &referenced) {
+                            continue;
+                        }
+                        cap_hub.used_packages.insert(imp.source.clone());
+                    } else if imp.source.starts_with("cap:")
+                        && cpc::resolver::is_import_used(imp, &referenced)
+                    {
+                        cap_hub.used_packages.insert(imp.source.clone());
+                    }
+                }
+                cpc::ast::ModuleItem::Export(exp) => {
+                    if let Some(src) = &exp.source {
+                        if cpc::resolver::is_external_package_source(src) || src.starts_with("cap:")
+                        {
+                            cap_hub.used_packages.insert(src.clone());
+                        }
+                    }
+                }
+                _ => {}
+            }
+            all_items.push(item);
+        }
     } else {
         resolve_imports_with_cap_hub(
             input,
@@ -449,6 +475,7 @@ fn compile_file(
     let fuzz_tgt = fuzz_target.or_else(|| std::env::var("CP_FUZZ_TARGET").ok());
 
     let code_str = fs::read_to_string(input).ok();
+    let used_packages = cap_hub.used_packages;
     let zig_code_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut codegen = Codegen::new();
         codegen.is_beam_mode = beam;
@@ -456,6 +483,7 @@ fn compile_file(
         codegen.is_fuzz_mode = is_fuzz;
         codegen.fuzz_target_filter = fuzz_tgt;
         codegen.cap_hub_prelude = cap_hub_prelude;
+        codegen.used_packages = used_packages;
         codegen.source_dir = input.parent().map(|p| p.to_path_buf());
         if let Some(ref c) = code_str {
             codegen.init_source(Some(&input.display().to_string()), Some(c));

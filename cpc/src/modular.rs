@@ -3,7 +3,8 @@ use crate::codegen::Codegen;
 use crate::parser::Parser as CPParser;
 use crate::resolver::{
     extract_cap_hub_aliases, extract_top_level_zig_pub_names, find_cap_core_file, find_lib_file,
-    is_cap_hub_source, resolve_cap_hub_target, resolve_source_path, scan_cap_hub_members,
+    is_cap_hub_source, is_external_package_source, is_import_used, resolve_cap_hub_target,
+    resolve_source_path, scan_cap_hub_members,
 };
 use crate::sema::Analyzer;
 use serde::{Deserialize, Serialize};
@@ -38,6 +39,8 @@ struct CachedFileScan {
     uses_cap_hub: bool,
     #[serde(default)]
     cap_hub_members: Vec<String>,
+    #[serde(default)]
+    used_packages: Vec<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -298,12 +301,14 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
     }
 
     let mut raw_imports = Vec::new();
+    let mut used_packages = Vec::new();
     let mut c_includes = Vec::new();
     let mut link_libs = Vec::new();
     let mut link_paths = Vec::new();
     let mut exported_symbols = Vec::new();
     let mut reexport_stars = Vec::new();
     let mut reexport_named = Vec::new();
+    let referenced_idents = crate::ast_visitor::collect_module_referenced_idents(&module);
 
     for line in code.lines() {
         let trimmed = line.trim();
@@ -336,12 +341,30 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
     for item in &module.body {
         match item {
             ModuleItem::Import(imp) => {
+                if is_external_package_source(&imp.source) {
+                    if !is_import_used(imp, &referenced_idents) {
+                        continue;
+                    }
+                    if !used_packages.contains(&imp.source) {
+                        used_packages.push(imp.source.clone());
+                    }
+                } else if imp.source.starts_with("cap:") && is_import_used(imp, &referenced_idents)
+                {
+                    if !used_packages.contains(&imp.source) {
+                        used_packages.push(imp.source.clone());
+                    }
+                }
                 if !raw_imports.contains(&imp.source) {
                     raw_imports.push(imp.source.clone());
                 }
             }
             ModuleItem::Export(exp) => {
                 if let Some(src) = &exp.source {
+                    if is_external_package_source(src) || src.starts_with("cap:") {
+                        if !used_packages.contains(src) {
+                            used_packages.push(src.clone());
+                        }
+                    }
                     if !raw_imports.contains(src) {
                         raw_imports.push(src.clone());
                     }
@@ -418,6 +441,7 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
         reexport_named,
         uses_cap_hub,
         cap_hub_members,
+        used_packages,
     };
     Ok((scan, module))
 }
@@ -447,7 +471,7 @@ fn compute_module_inc_hash(
     opts: &ModularOptions,
 ) -> String {
     let mut h: u64 = 0xcbf29ce484222325;
-    fnv1a_update(&mut h, b"cpc-modular-v1:");
+    fnv1a_update(&mut h, b"cpc-modular-v2:");
     fnv1a_update(&mut h, env!("CARGO_PKG_VERSION").as_bytes());
     fnv1a_update(
         &mut h,
@@ -729,9 +753,9 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
     let mut cache: IncCacheFile = fs::read_to_string(&cache_path)
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
-        .filter(|c: &IncCacheFile| c.version == 2)
+        .filter(|c: &IncCacheFile| c.version == 3)
         .unwrap_or_else(|| IncCacheFile {
-            version: 2,
+            version: 3,
             files: HashMap::new(),
         });
     let mut cache_modified = false;
@@ -878,6 +902,13 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
 
         // Parse module first (needed for AST)
         let mut module = get_or_parse_module(&node.abs_path, &mut parsed_modules)?.clone();
+        let referenced_idents = crate::ast_visitor::collect_module_referenced_idents(&module);
+        module.body.retain(|item| match item {
+            ModuleItem::Import(imp) if is_external_package_source(&imp.source) => {
+                is_import_used(imp, &referenced_idents)
+            }
+            _ => true,
+        });
 
         // Build import_map and collect ImportedEnv for direct imports/re-exports
         let mut per_target_wanted: HashMap<PathBuf, Option<HashSet<String>>> = HashMap::new();
@@ -1026,6 +1057,14 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
         let beam = opts.beam;
         let lib = opts.lib;
         let parallel_entry = is_entry && is_parallel_entry;
+        let mod_used_packages: BTreeSet<String> = if is_entry {
+            order
+                .iter()
+                .flat_map(|p| nodes[p].scan.used_packages.iter().cloned())
+                .collect()
+        } else {
+            node.scan.used_packages.iter().cloned().collect()
+        };
 
         let zig_res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut codegen = Codegen::new();
@@ -1039,6 +1078,7 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
             codegen.modular_inc_hash = Some(node_hash_clone);
             codegen.modular_import_map = import_map;
             codegen.modular_module_exports = star_exports;
+            codegen.used_packages = mod_used_packages;
             if parallel_entry {
                 codegen.is_parallel_runtime = true;
             }
@@ -1173,6 +1213,7 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
     let mut link_paths: BTreeSet<String> = Codegen::new().linker_paths.into_iter().collect();
     let mut link_libs: BTreeSet<String> = BTreeSet::new();
     let mut c_includes: BTreeSet<String> = BTreeSet::new();
+    let mut all_used_pkgs: BTreeSet<String> = BTreeSet::new();
     for p in &order {
         let node = &nodes[p];
         for lp in &node.scan.link_paths {
@@ -1183,6 +1224,9 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
         }
         for ci in &node.scan.c_includes {
             c_includes.insert(ci.clone());
+        }
+        for pkg in &node.scan.used_packages {
+            all_used_pkgs.insert(pkg.clone());
         }
     }
 
@@ -1201,6 +1245,9 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
     }
     for ci in &c_includes {
         manifest.push_str(&format!("cInclude={}\n", ci));
+    }
+    for pkg in &all_used_pkgs {
+        manifest.push_str(&format!("usedPkg={}\n", pkg));
     }
     for p in &order {
         let node = &nodes[p];

@@ -198,6 +198,7 @@ pub struct Codegen {
     pub arena_allocator_stack: Vec<String>,
     pub has_imported_ptr: bool,
     pub linker_paths: Vec<String>,
+    pub used_packages: std::collections::BTreeSet<String>,
     pub modular_mode: bool,
     pub modular_is_entry: bool,
     pub modular_runtime_import: Option<String>,
@@ -309,6 +310,7 @@ impl Codegen {
             arena_allocator_stack: Vec::new(),
             has_imported_ptr: false,
             linker_paths,
+            used_packages: std::collections::BTreeSet::new(),
             modular_mode: false,
             modular_is_entry: false,
             modular_runtime_import: None,
@@ -493,6 +495,10 @@ impl Codegen {
             let linker_paths = self.linker_paths.clone();
             for path in linker_paths {
                 self.writeln(&format!("// @linkPath(\"{}\")", path));
+            }
+            let used_packages = self.used_packages.clone();
+            for pkg in used_packages {
+                self.writeln(&format!("// @cap-used-pkg: {}", pkg));
             }
         }
 

@@ -1,4 +1,4 @@
-use crate::ast::{Decl, Expr, Lit, Module, ModuleItem, Pattern, Stmt};
+use crate::ast::{Decl, Expr, ImportStmt, Lit, Module, ModuleItem, Pattern, Stmt};
 use crate::parser::Parser as CPParser;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs;
@@ -6,6 +6,46 @@ use std::path::{Path, PathBuf};
 
 pub fn is_cap_hub_source(source: &str) -> bool {
     source == "cap" || source == "cap:core"
+}
+
+/// Returns true if `source` refers to an external package (e.g. `@cap/picohttp`, `foo`),
+/// i.e. not a relative/absolute path, not `std`/`builtin`, not `cap:*`, not `cap` hub,
+/// and not a direct `.cp`/`.zig` file reference.
+pub fn is_external_package_source(source: &str) -> bool {
+    if source.is_empty()
+        || source == "std"
+        || source == "builtin"
+        || source.starts_with("std/")
+        || source.starts_with("cap:")
+        || is_cap_hub_source(source)
+        || source.starts_with("./")
+        || source.starts_with("../")
+        || source.starts_with('/')
+        || source.ends_with(".zig")
+        || source.ends_with(".cp")
+    {
+        return false;
+    }
+    true
+}
+
+/// Returns true if at least one binding imported by `imp` is referenced in `referenced`,
+/// or if `imp` is a side-effect-only import (`import "<pkg>"`).
+pub fn is_import_used(imp: &ImportStmt, referenced: &HashSet<String>) -> bool {
+    if imp.default_specifier.is_none() && imp.specifiers.is_empty() {
+        return true;
+    }
+    if let Some(def) = &imp.default_specifier {
+        if referenced.contains(&def.sym) {
+            return true;
+        }
+    }
+    for sp in &imp.specifiers {
+        if referenced.contains(&sp.sym) {
+            return true;
+        }
+    }
+    false
 }
 
 pub fn resolve_cap_hub_target(ns: &str) -> Option<String> {
@@ -243,6 +283,7 @@ pub struct CapHubResolution {
     pub uses_cap_hub: bool,
     pub aliases: BTreeSet<String>,
     pub mounted_ns: BTreeMap<String, PathBuf>,
+    pub used_packages: BTreeSet<String>,
 }
 
 pub fn extract_top_level_zig_pub_names(zig_code: &str) -> Vec<String> {
@@ -560,6 +601,28 @@ pub fn resolve_source_path(
                 .join(&search_source);
             resolved_path = resolve_file_or_dir(&global_path);
         }
+
+        if resolved_path.is_none() {
+            for inc in include_paths {
+                let p = inc.join(&search_source);
+                if let Some(res) = resolve_file_or_dir(&p) {
+                    resolved_path = Some(res);
+                    break;
+                }
+                let p_mod = inc.join("cap_modules").join(&search_source);
+                if let Some(res) = resolve_file_or_dir(&p_mod) {
+                    resolved_path = Some(res);
+                    break;
+                }
+            }
+        }
+
+        if resolved_path.is_none() {
+            let default_pkg = PathBuf::from("/data/dev/cp/packages").join(&search_source);
+            if let Some(res) = resolve_file_or_dir(&default_pkg) {
+                resolved_path = Some(res);
+            }
+        }
     }
 
     resolved_path
@@ -673,27 +736,56 @@ pub fn resolve_imports_with_cap_hub(
         }
     }
 
+    let referenced_idents = crate::ast_visitor::collect_module_referenced_idents(&module);
+
     for item in module.body {
         match item {
             ModuleItem::Import(imp) => {
                 if is_cap_hub_source(&imp.source) {
                     all_items.push(ModuleItem::Import(imp));
-                } else if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
-                    resolve_imports_with_cap_hub(
-                        &p,
-                        include_paths,
-                        all_items,
-                        processed,
-                        false,
-                        cap_hub,
-                    )?;
-                    all_items.push(ModuleItem::Import(imp));
+                } else if is_external_package_source(&imp.source) {
+                    if !is_import_used(&imp, &referenced_idents) {
+                        // Unused external package import: tree-shake completely (skip expansion & link marker)
+                        continue;
+                    }
+                    cap_hub.used_packages.insert(imp.source.clone());
+                    if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
+                        resolve_imports_with_cap_hub(
+                            &p,
+                            include_paths,
+                            all_items,
+                            processed,
+                            false,
+                            cap_hub,
+                        )?;
+                        all_items.push(ModuleItem::Import(imp));
+                    } else {
+                        all_items.push(ModuleItem::Import(imp));
+                    }
                 } else {
-                    all_items.push(ModuleItem::Import(imp));
+                    if imp.source.starts_with("cap:") && is_import_used(&imp, &referenced_idents) {
+                        cap_hub.used_packages.insert(imp.source.clone());
+                    }
+                    if let Some(p) = resolve_source_path(path, &imp.source, include_paths) {
+                        resolve_imports_with_cap_hub(
+                            &p,
+                            include_paths,
+                            all_items,
+                            processed,
+                            false,
+                            cap_hub,
+                        )?;
+                        all_items.push(ModuleItem::Import(imp));
+                    } else {
+                        all_items.push(ModuleItem::Import(imp));
+                    }
                 }
             }
             ModuleItem::Export(exp) => {
                 if let Some(source) = &exp.source {
+                    if is_external_package_source(source) || source.starts_with("cap:") {
+                        cap_hub.used_packages.insert(source.clone());
+                    }
                     if let Some(p) = resolve_source_path(path, source, include_paths) {
                         resolve_imports_with_cap_hub(
                             &p,
