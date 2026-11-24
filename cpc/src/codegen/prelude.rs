@@ -89,10 +89,11 @@ impl ModuleFeatures {
                 ModuleItem::Export(exp) => {
                     if let Some(source) = &exp.source {
                         if source == "cap:sync"
-                            || exp
-                                .specifiers
-                                .iter()
-                                .any(|s| s.sym == "Mutex" || s.sym == "RwLock" || s.sym == "Atomic")
+                            || exp.specifiers.iter().any(|s| {
+                                s.local.sym == "Mutex"
+                                    || s.local.sym == "RwLock"
+                                    || s.local.sym == "Atomic"
+                            })
                         {
                             f.needs_sync = true;
                         }
@@ -100,19 +101,19 @@ impl ModuleFeatures {
                             || exp
                                 .specifiers
                                 .iter()
-                                .any(|s| s.sym == "JSON" || s.sym == "JsonValue")
+                                .any(|s| s.local.sym == "JSON" || s.local.sym == "JsonValue")
                         {
                             f.has_imported_json = true;
                         }
                         if source == "cap:ptr"
                             || source.contains("ptr")
                             || exp.specifiers.iter().any(|s| {
-                                s.sym == "Shared"
-                                    || s.sym == "AtomicShared"
-                                    || s.sym == "Cow"
-                                    || s.sym == "CowSlice"
-                                    || s.sym == "Owned"
-                                    || s.sym == "TaggedPointer"
+                                s.local.sym == "Shared"
+                                    || s.local.sym == "AtomicShared"
+                                    || s.local.sym == "Cow"
+                                    || s.local.sym == "CowSlice"
+                                    || s.local.sym == "Owned"
+                                    || s.local.sym == "TaggedPointer"
                             })
                         {
                             f.has_imported_ptr = true;
@@ -179,13 +180,10 @@ impl ModuleFeatures {
                         .iter()
                         .any(|id| id.sym == name || id.sym == escaped)
             }
-            ModuleItem::Export(exp) => {
-                exp.source.is_some()
-                    && exp
-                        .specifiers
-                        .iter()
-                        .any(|id| id.sym == name || id.sym == escaped)
-            }
+            ModuleItem::Export(exp) => exp.specifiers.iter().any(|sp| {
+                (exp.source.is_some() || sp.exported.sym != sp.local.sym)
+                    && (sp.exported.sym == name || sp.exported.sym == escaped)
+            }),
             ModuleItem::Stmt(Stmt::Expr(Expr::Zig(z))) => {
                 z.code.contains(&zig_eq) || z.code.contains(&zig_col)
             }

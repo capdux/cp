@@ -641,7 +641,7 @@ pub fn collect_module_referenced_idents(module: &Module) -> HashSet<String> {
             ModuleItem::Export(exp) => {
                 if exp.source.is_none() {
                     for sp in &exp.specifiers {
-                        vars.insert(sp.sym.clone());
+                        vars.insert(sp.local.sym.clone());
                     }
                 }
             }

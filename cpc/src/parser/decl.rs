@@ -769,7 +769,22 @@ impl<'a> Parser<'a> {
         let start = self.expect(Token::LBrace)?.start;
         let mut specifiers = Vec::new();
         while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
-            specifiers.push(self.parse_ident()?);
+            if self.peek() == Some(&Token::TypeKw)
+                && !matches!(
+                    self.peek_next(),
+                    Some(Token::As) | Some(Token::Comma) | Some(Token::RBrace) | None
+                )
+            {
+                self.bump()?;
+            }
+            let local = self.parse_ident()?;
+            let exported = if self.peek() == Some(&Token::As) {
+                self.bump()?;
+                self.parse_ident()?
+            } else {
+                local.clone()
+            };
+            specifiers.push(ExportSpecifier { local, exported });
             if self.peek() == Some(&Token::Comma) {
                 self.bump()?;
             }

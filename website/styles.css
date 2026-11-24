@@ -116,6 +116,16 @@ h1 { font-size: 46px; line-height: 1.12; font-weight: 800; letter-spacing: -0.02
 .section-head code { font-family: var(--mono); background: var(--card); padding: 2px 6px; border-radius: 5px; color: #e2e8f0; font-size: 13px; }
 
 /* Benchmarks */
+.bench-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.bench-tab {
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+  padding: 8px 16px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.bench-tab:hover { color: var(--text); border-color: rgba(56,189,248,0.45); }
+.bench-tab.active {
+  border-color: var(--accent2); color: var(--text); background: rgba(56,189,248,0.14);
+}
 .bench-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
 .bench-card {
   background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px;
@@ -123,7 +133,8 @@ h1 { font-size: 46px; line-height: 1.12; font-weight: 800; letter-spacing: -0.02
 .bench-card h3 { font-size: 17px; margin-bottom: 4px; }
 .bench-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-family: var(--mono); }
 .bar-row { margin-bottom: 12px; }
-.bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; font-family: var(--mono); }
+.bar-label { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; margin-bottom: 5px; font-family: var(--mono); }
+.bar-label span:last-child { flex-shrink: 0; font-weight: 700; color: var(--text); }
 .bar-track { height: 12px; background: #0d1018; border-radius: 999px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 999px; transition: width .6s ease; }
 .bar-fill.cp { background: linear-gradient(90deg, var(--accent2), var(--accent)); }

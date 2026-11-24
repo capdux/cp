@@ -71,9 +71,55 @@ fn main() {
 };
 
 // Real verified same-machine benchmarks (Intel Xeon Platinum 8175M, Linux 6.12 x86_64)
+// Sources: bench/vs_web_frameworks/http_results.json, bun_official_results.json, bench/vs_runtimes/results.json
 // CP v1.0.0 (-OReleaseFast) vs Bun 1.3.14 vs Node v26.1.0 vs Python 3.12.15
 const DEFAULT_BENCHMARKS = [
   {
+    cat: "net",
+    title: "HTTP/1.1 8-Core (GET /id/:id?name=bun, 32c Keep-Alive)",
+    subtitle: "Higher is better (QPS) · 1.88x Bun, 2.26x Node · 22.3x–37.9x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 8c (P99 0.08ms · 19.3 MB RSS)", key: "cp", value: 559339, display: "559,339 QPS" },
+      { label: "Bun 1.3.14 8c (429.8 MB RSS)", key: "bun", value: 297714, display: "297,714 QPS" },
+      { label: "Node v26.1.0 8c (732.4 MB RSS)", key: "node", value: 247326, display: "247,326 QPS" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "HTTP/1.1 8-Core (POST /json, 32c Keep-Alive)",
+    subtitle: "Higher is better (QPS) · 2.35x Bun, 2.65x Node · 19.3 MB vs 429–732 MB RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 8c (P99 0.08ms · 19.3 MB RSS)", key: "cp", value: 512634, display: "512,634 QPS" },
+      { label: "Bun 1.3.14 8c (429.3 MB RSS)", key: "bun", value: 218060, display: "218,060 QPS" },
+      { label: "Node v26.1.0 8c (732.4 MB RSS)", key: "node", value: 193602, display: "193,602 QPS" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "WebSocket 128B Frame + 16-Subscriber Broadcast",
+    subtitle: "Higher is better (msg/s) · 6.53x Bun, 12.49x Node · 25.3x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 (2.48 MB RSS)", key: "cp", value: 8712547, display: "8.71M msg/s" },
+      { label: "Bun 1.3.14 (62.65 MB RSS)", key: "bun", value: 1334034, display: "1.33M msg/s" },
+      { label: "Node v26.1.0 (56.74 MB RSS)", key: "node", value: 697360, display: "0.70M msg/s" },
+    ],
+  },
+  {
+    cat: "data",
+    title: "SQLite Northwind Indexed JOIN Point Lookup",
+    subtitle: "Higher is better (ops/s) · 1.88x Bun, 3.03x Node · 8.0x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 (cap:sqlite · 10.8 MB RSS)", key: "cp", value: 1023123, display: "1.02M ops/s" },
+      { label: "Bun 1.3.14 (bun:sqlite · 86.4 MB RSS)", key: "bun", value: 544129, display: "544.1K ops/s" },
+      { label: "Node v26.1.0 (node:sqlite · 68.9 MB RSS)", key: "node", value: 337523, display: "337.5K ops/s" },
+    ],
+  },
+  {
+    cat: "core",
     title: "Cold Startup Latency (20-run median)",
     subtitle: "Lower is better (ms) · CP 1.61ms (9.38x faster than Bun, 20.01x vs Node)",
     higherIsBetter: false,
@@ -85,6 +131,7 @@ const DEFAULT_BENCHMARKS = [
     ],
   },
   {
+    cat: "data",
     title: "JSON Parsing Throughput (10,000 × 1.75 KB)",
     subtitle: "Higher is better (MB/s) · CP @cap/yyjson 4.93x faster than Bun",
     higherIsBetter: true,
@@ -96,6 +143,7 @@ const DEFAULT_BENCHMARKS = [
     ],
   },
   {
+    cat: "data",
     title: "SQLite :memory: 100K Insert + 100K Point Lookup",
     subtitle: "Higher is better (ops/sec) · CP cap:sqlite 1.64x vs Bun, 2.10x vs Node",
     higherIsBetter: true,
@@ -107,6 +155,7 @@ const DEFAULT_BENCHMARKS = [
     ],
   },
   {
+    cat: "core",
     title: "Zero-GC Compute (fib(38) + 10M u32 Reduction)",
     subtitle: "Lower is better (ms) · CP 1.98x vs Bun, 4.19x vs Node, 25.88x vs Python",
     higherIsBetter: false,
@@ -199,11 +248,17 @@ document.querySelectorAll(".code-tab").forEach((btn) => {
 });
 renderCode("rest");
 
-// Benchmark renderer
+// Benchmark renderer + category switcher
+let currentBenchCat = "all";
+let allBenchmarks = DEFAULT_BENCHMARKS;
+
 function renderBenchmarks(cards) {
   const grid = document.getElementById("bench-grid");
   grid.innerHTML = "";
-  cards.forEach((c) => {
+  const visible = currentBenchCat === "all"
+    ? cards
+    : cards.filter((c) => c.cat === currentBenchCat);
+  visible.forEach((c) => {
     const maxVal = Math.max(...c.rows.map((r) => r.value), 1);
     const card = document.createElement("div");
     card.className = "bench-card";
@@ -225,21 +280,26 @@ function renderBenchmarks(cards) {
   });
 }
 
-// Try loading live machine benchmark results if served alongside bench/vs_runtimes/results.json
+document.querySelectorAll(".bench-tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".bench-tab").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentBenchCat = btn.dataset.benchCat || "all";
+    renderBenchmarks(allBenchmarks);
+  });
+});
+
+// Render verified same-machine benchmarks immediately; optionally enrich CPU label from results.json
+renderBenchmarks(allBenchmarks);
 fetch("../bench/vs_runtimes/results.json")
   .then((r) => (r.ok ? r.json() : null))
   .then((data) => {
-    if (data && Array.isArray(data.cards) && data.cards.length > 0) {
-      if (data.cpu) {
-        document.getElementById("bench-meta").innerHTML =
-          `Measured on <strong>${data.cpu}</strong>. Reproducible via <code>python3 bench/vs_runtimes/run_all.py</code>.`;
-      }
-      renderBenchmarks(data.cards);
-    } else {
-      renderBenchmarks(DEFAULT_BENCHMARKS);
+    if (data && data.cpu) {
+      document.getElementById("bench-meta").innerHTML =
+        `Measured on <strong>${data.cpu}</strong> (<code>-OReleaseFast</code>) vs Bun 1.3.14 &amp; Node v26.1.0. Reproducible via <code>bench/vs_web_frameworks/</code> &amp; <code>bench/vs_runtimes/</code>.`;
     }
   })
-  .catch(() => renderBenchmarks(DEFAULT_BENCHMARKS));
+  .catch(() => {});
 
 // Packages explorer
 let currentCat = "all";

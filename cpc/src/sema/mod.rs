@@ -1231,14 +1231,14 @@ impl Analyzer {
                 }
                 ModuleItem::Export(exp) => {
                     for spec in &exp.specifiers {
-                        if !self.scopes[0].contains_key(&spec.sym) {
+                        if !self.scopes[0].contains_key(&spec.exported.sym) {
                             let _ = self.define(
-                                spec.sym.clone(),
+                                spec.exported.sym.clone(),
                                 SymbolKind::Var {
                                     ty: Type::Any,
                                     kind: VarDeclKind::Const,
                                 },
-                                spec.span,
+                                spec.exported.span,
                             );
                         }
                     }

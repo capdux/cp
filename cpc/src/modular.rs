@@ -373,8 +373,11 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
                             reexport_stars.push(src.clone());
                         }
                     } else {
-                        let specs: Vec<String> =
-                            exp.specifiers.iter().map(|s| s.sym.clone()).collect();
+                        let specs: Vec<String> = exp
+                            .specifiers
+                            .iter()
+                            .map(|s| s.exported.sym.clone())
+                            .collect();
                         for s in &specs {
                             push_sym(&mut exported_symbols, s);
                         }
@@ -382,7 +385,7 @@ fn scan_cp_module(path: &Path, raw_bytes: &[u8]) -> anyhow::Result<(CachedFileSc
                     }
                 } else {
                     for s in &exp.specifiers {
-                        push_sym(&mut exported_symbols, &s.sym);
+                        push_sym(&mut exported_symbols, &s.exported.sym);
                     }
                 }
             }
@@ -619,8 +622,8 @@ fn collect_exported_env_from_module(
                             } else {
                                 let mut sub_wanted = HashSet::new();
                                 for sp in &exp.specifiers {
-                                    if allow(&sp.sym) {
-                                        sub_wanted.insert(sp.sym.clone());
+                                    if allow(&sp.exported.sym) {
+                                        sub_wanted.insert(sp.local.sym.clone());
                                     }
                                 }
                                 if !sub_wanted.is_empty() {
@@ -981,7 +984,7 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
                                     .or_insert_with(|| Some(HashSet::new()));
                                 if let Some(set) = entry_wanted {
                                     for sp in &exp.specifiers {
-                                        set.insert(sp.sym.clone());
+                                        set.insert(sp.local.sym.clone());
                                     }
                                 }
                             }

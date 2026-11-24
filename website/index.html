@@ -51,20 +51,20 @@
 
           <div class="hero-stats">
             <div class="stat">
+              <div class="stat-val" id="hero-http-stat">559K QPS</div>
+              <div class="stat-lbl">HTTP/1.1 8c (19.3 MB RSS)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val" id="hero-ws-stat">8.71M/s</div>
+              <div class="stat-lbl">WS Broadcast (6.5x vs Bun)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val" id="hero-sqlite-stat">1.02M/s</div>
+              <div class="stat-lbl">SQLite Lookup (10.8 MB RSS)</div>
+            </div>
+            <div class="stat">
               <div class="stat-val" id="hero-startup-stat">1.61 ms</div>
               <div class="stat-lbl">Cold Startup (9.4x vs Bun)</div>
-            </div>
-            <div class="stat">
-              <div class="stat-val" id="hero-sqlite-stat">1.64x / 2.10x</div>
-              <div class="stat-lbl">SQLite vs Bun / Node</div>
-            </div>
-            <div class="stat">
-              <div class="stat-val">755.8 MB/s</div>
-              <div class="stat-lbl">JSON Parse (4.93x vs Bun)</div>
-            </div>
-            <div class="stat">
-              <div class="stat-val">43+</div>
-              <div class="stat-lbl">Permissive @cap/* Packages</div>
             </div>
           </div>
         </div>
@@ -76,18 +76,18 @@
             <span class="dot green"></span>
             <span class="term-title">cap — all-in-one toolchain</span>
           </div>
-          <pre class="term-body"><code><span class="c-dim">$</span> cap init my-agent &amp;&amp; cd my-agent
+          <pre class="term-body"><code><span class="c-dim">$</span> cap from -ts ./legacy-api -o my-agent   <span class="c-dim"># or -rs for Rust</span>
+  <span class="c-green">✓</span> Migrated 14 TS modules → native CP with cap.json
+
 <span class="c-dim">$</span> cap add @cap/llama @cap/duckdb @cap/yyjson
-  <span class="c-green">✓</span> Linked @cap/llama@1.0.12676  (prebuilt dynamic)
-  <span class="c-green">✓</span> Linked @cap/duckdb@1.2.1     (prebuilt dynamic)
-  <span class="c-green">✓</span> Linked @cap/yyjson@0.10.0    (prebuilt 303 KB)
+  <span class="c-green">✓</span> Linked @cap/llama, @cap/duckdb, @cap/yyjson (prebuilt)
 
-<span class="c-dim">$</span> cap run -m src/main.cp
-  <span class="c-cyan">→</span> [modular-obj] 9 cached, 1 rebuilt in <span class="c-amber">2.4ms</span>
-  <span class="c-green">✓</span> Built &amp; executed native binary (zero GC)
+<span class="c-dim">$</span> cap run --watch -m src/main.cp
+  <span class="c-cyan">→</span> [modular-obj] 9 cached, 1 rebuilt in <span class="c-amber">2.4ms</span> · watching...
+  <span class="c-green">✓</span> Serving HTTP/1.1 on :3000 (19.3 MB RSS, zero GC)
 
-<span class="c-dim">$</span> cap fmt --check &amp;&amp; cap lint &amp;&amp; cap test
-  <span class="c-green">✓</span> All 4 purity gates 0/0/0/0 · Tests 100% PASS</code></pre>
+<span class="c-dim">$</span> cap fmt --check &amp;&amp; cap lint --dead &amp;&amp; cap test
+  <span class="c-green">✓</span> 0 dead symbols · All purity gates PASS</code></pre>
         </div>
       </div>
     </section>
@@ -97,7 +97,13 @@
       <div class="container">
         <div class="section-head">
           <h2>Real Benchmarks, <span class="gradient-text">Same Machine</span></h2>
-          <p id="bench-meta">Measured on Linux x86_64 (`-OReleaseFast`). Reproducible via <code>python3 bench/vs_runtimes/run_all.py</code>.</p>
+          <p id="bench-meta">Measured on Intel Xeon Platinum 8175M · Linux x86_64 (<code>-OReleaseFast</code>) vs Bun 1.3.14 &amp; Node v26.1.0. Reproducible via <code>bench/vs_web_frameworks/</code> &amp; <code>bench/vs_runtimes/</code>.</p>
+        </div>
+        <div class="bench-tabs" id="bench-tabs" role="tablist">
+          <button class="bench-tab active" data-bench-cat="all">All Benchmarks</button>
+          <button class="bench-tab" data-bench-cat="net">HTTP/1.1 &amp; WebSocket</button>
+          <button class="bench-tab" data-bench-cat="data">SQLite &amp; JSON</button>
+          <button class="bench-tab" data-bench-cat="core">Startup &amp; Compute</button>
         </div>
         <div class="bench-grid" id="bench-grid"></div>
       </div>
@@ -150,6 +156,18 @@
           <div class="card">
             <h3>🤖 AI-First Self-Healing Errors</h3>
             <p>Every diagnostic provides <code>cause</code>, <code>help</code>, and exact fix <code>suggestion</code> — plus <code>cpc fix</code>, <code>cap fmt</code>, and <code>cap lint</code>.</p>
+          </div>
+          <div class="card">
+            <h3>🔄 One-Click Project Migration</h3>
+            <p>Convert existing TypeScript or Rust codebases into idiomatic native CP projects in one command with <code>cap from -ts</code> and <code>cap from -rs</code>.</p>
+          </div>
+          <div class="card">
+            <h3>🔥 Watch Mode &amp; Dead-Code Lint</h3>
+            <p>Instant incremental hot-reload via <code>cap run --watch</code> paired with AST-level unused symbol &amp; dead-code detection via <code>cap lint --dead</code>.</p>
+          </div>
+          <div class="card">
+            <h3>🌐 559K QPS HTTP &amp; 8.71M/s WS</h3>
+            <p>Zero-GC multi-core TCP HTTP/1.1 (<code>19.3 MB</code> RSS) and RFC 6455 WebSocket broadcast (<code>2.48 MB</code> RSS) — up to <strong>37.9x</strong> lower memory than Node.</p>
           </div>
           <div class="card">
             <h3>🛡️ Built-in Batteries</h3>

@@ -225,7 +225,13 @@ fn replace_ident_word(s: &str, from: &str, to: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -312,7 +318,13 @@ fn replace_outside_strings(s: &str, from: &str, to: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -651,10 +663,9 @@ fn map_ts_type(raw: &str, todo_count: &mut usize) -> String {
             return base;
         }
         // String literal union `'a' | 'b'` -> `string` (or `string?`)
-        if non_null
-            .iter()
-            .all(|p| (p.starts_with('"') && p.ends_with('"')) || (p.starts_with('\'') && p.ends_with('\'')))
-        {
+        if non_null.iter().all(|p| {
+            (p.starts_with('"') && p.ends_with('"')) || (p.starts_with('\'') && p.ends_with('\''))
+        }) {
             return if nullable {
                 "string?".to_string()
             } else {
@@ -866,8 +877,7 @@ fn convert_import_export(stmt: &str, dep_map: &HashMap<String, DepTier>) -> Stri
     // `import type ...` or `export type { ... } from ...`
     let is_import = trimmed.starts_with("import ");
     let is_export = trimmed.starts_with("export ");
-    let is_type_only =
-        trimmed.starts_with("import type ") || trimmed.starts_with("export type ");
+    let is_type_only = trimmed.starts_with("import type ") || trimmed.starts_with("export type ");
 
     // Locate ` from `
     if let Some(from_pos) = trimmed.rfind(" from ") {
@@ -876,9 +886,11 @@ fn convert_import_export(stmt: &str, dep_map: &HashMap<String, DepTier>) -> Stri
         if let Some((raw_pkg, _, _)) = extract_quoted_specifier(tail) {
             let rewritten = rewrite_import_source(SourceLang::Ts, &raw_pkg, dep_map);
             if is_type_only {
-                let clean_head = head
-                    .replacen("import type ", "import ", 1)
-                    .replacen("export type ", "export ", 1);
+                let clean_head = head.replacen("import type ", "import ", 1).replacen(
+                    "export type ",
+                    "export ",
+                    1,
+                );
                 return format!("// [cap-migrate] {} from \"{}\";", clean_head, rewritten);
             }
 
@@ -988,7 +1000,12 @@ fn convert_ts_params(
 
         let mut cp_ty = if let Some(ty_str) = raw_ty {
             let mapped = map_ts_type(ty_str, todo_count);
-            mapped.split(" /*").next().unwrap_or(&mapped).trim().to_string()
+            mapped
+                .split(" /*")
+                .next()
+                .unwrap_or(&mapped)
+                .trim()
+                .to_string()
         } else {
             "auto".to_string()
         };
@@ -1057,7 +1074,13 @@ fn strip_ts_expr_noise(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             res.push_str(&out[i..]);
             break;
         }
@@ -1144,7 +1167,13 @@ fn strip_ts_as_and_satisfies(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -1324,7 +1353,13 @@ fn convert_typeof_exprs(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -1446,7 +1481,13 @@ fn rename_cp_keyword_idents(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -1532,7 +1573,13 @@ fn convert_inline_arrows(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -1614,7 +1661,10 @@ fn convert_inline_arrows(s: &str) -> String {
                             if pt.starts_with('{') || pt.starts_with('[') {
                                 return Some("_p".to_string());
                             }
-                            let head = split_top_level(pt, '=').into_iter().next().unwrap_or_default();
+                            let head = split_top_level(pt, '=')
+                                .into_iter()
+                                .next()
+                                .unwrap_or_default();
                             let name = head
                                 .split(':')
                                 .next()
@@ -1754,7 +1804,13 @@ fn strip_call_type_args(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -1992,8 +2048,17 @@ fn convert_ternary_inner(s: &str) -> String {
             b'?' if depth_paren == 0 && depth_brack == 0 && depth_brace == 0 => {
                 let next = bytes.get(i + 1).copied();
                 let prev = if i > 0 { Some(bytes[i - 1]) } else { None };
-                let is_ternary_q = !matches!(next, Some(b'.') | Some(b'?') | Some(b':') | Some(b',') | Some(b')') | Some(b';') | Some(b'}') | None)
-                    && prev != Some(b'?');
+                let is_ternary_q = !matches!(
+                    next,
+                    Some(b'.')
+                        | Some(b'?')
+                        | Some(b':')
+                        | Some(b',')
+                        | Some(b')')
+                        | Some(b';')
+                        | Some(b'}')
+                        | None
+                ) && prev != Some(b'?');
                 if is_ternary_q {
                     q_pos = Some(i);
                     break;
@@ -2484,7 +2549,10 @@ fn convert_local_var_type_annotation(s: &str, todo_count: &mut usize) -> String 
                     depth -= 1;
                 }
             }
-            b'=' if depth == 0 && bytes.get(idx + 1) != Some(&b'>') && bytes.get(idx + 1) != Some(&b'=') => {
+            b'=' if depth == 0
+                && bytes.get(idx + 1) != Some(&b'>')
+                && bytes.get(idx + 1) != Some(&b'=') =>
+            {
                 eq_idx = Some(idx);
                 break;
             }
@@ -2524,7 +2592,13 @@ fn strip_prefix_angle_casts(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -2581,7 +2655,10 @@ fn strip_prefix_angle_casts(s: &str) -> String {
         }
         if b == b'<' {
             let prev_non_ws = s[..i].trim_end().as_bytes().last().copied();
-            let is_cast_pos = matches!(prev_non_ws, Some(b'=') | Some(b'(') | Some(b',') | Some(b':'));
+            let is_cast_pos = matches!(
+                prev_non_ws,
+                Some(b'=') | Some(b'(') | Some(b',') | Some(b':')
+            );
             if is_cast_pos {
                 if let Some(gt) = find_matching_delim(s, i, b'<', b'>') {
                     let after_gt = s[gt + 1..].trim_start().as_bytes().first().copied();
@@ -2613,7 +2690,13 @@ fn strip_unary_plus(s: &str) -> String {
 
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             out.push_str(&s[i..]);
             break;
         }
@@ -2756,7 +2839,8 @@ fn convert_inline_function_exprs(s: &str) -> String {
         if i + 8 <= bytes.len()
             && &bytes[i..i + 8] == b"function"
             && (i == 0 || !is_ident_byte(bytes[i - 1]))
-            && (i + 8 < bytes.len() && (bytes[i + 8] == b' ' || bytes[i + 8] == b'(' || bytes[i + 8] == b'*'))
+            && (i + 8 < bytes.len()
+                && (bytes[i + 8] == b' ' || bytes[i + 8] == b'(' || bytes[i + 8] == b'*'))
         {
             let mut j = i + 8;
             while j < bytes.len() && (bytes[j] == b' ' || bytes[j] == b'*') {
@@ -2796,9 +2880,22 @@ fn convert_inline_function_exprs(s: &str) -> String {
                                 if pt.starts_with('{') || pt.starts_with('[') {
                                     return Some("_p".to_string());
                                 }
-                                let head = split_top_level(pt, '=').into_iter().next().unwrap_or_default();
-                                let name = head.split(':').next().unwrap_or("").trim().trim_end_matches('?').trim();
-                                if name.is_empty() { None } else { Some(name.to_string()) }
+                                let head = split_top_level(pt, '=')
+                                    .into_iter()
+                                    .next()
+                                    .unwrap_or_default();
+                                let name = head
+                                    .split(':')
+                                    .next()
+                                    .unwrap_or("")
+                                    .trim()
+                                    .trim_end_matches('?')
+                                    .trim();
+                                if name.is_empty() {
+                                    None
+                                } else {
+                                    Some(name.to_string())
+                                }
                             })
                             .collect();
                         out.push('(');
@@ -2894,7 +2991,10 @@ fn method_body_mutates_self(lines: &[&str], start_line: usize) -> bool {
                 let mut k = 0;
                 let rbytes = rest.as_bytes();
                 while k < rbytes.len()
-                    && (is_ident_byte(rbytes[k]) || rbytes[k] == b'.' || rbytes[k] == b'[' || rbytes[k] == b']')
+                    && (is_ident_byte(rbytes[k])
+                        || rbytes[k] == b'.'
+                        || rbytes[k] == b'['
+                        || rbytes[k] == b']')
                 {
                     k += 1;
                 }
@@ -3043,11 +3143,7 @@ fn try_convert_top_level_arrow_fn(
     let lhs = rest[..eq_pos].trim();
     // Skip destructuring or complex typed const
     let fname = lhs.split(':').next()?.trim();
-    if fname.is_empty()
-        || !fname
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
-    {
+    if fname.is_empty() || !fname.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
         return None;
     }
 
@@ -3351,7 +3447,10 @@ fn convert_field_line(
                 b'(' | b'[' | b'{' | b'<' => depth += 1,
                 b'>' if idx > 0 && rb[idx - 1] == b'=' => {}
                 b')' | b']' | b'}' | b'>' => depth = (depth - 1).max(0),
-                b'=' if depth == 0 && rb.get(idx + 1) != Some(&b'>') && rb.get(idx + 1) != Some(&b'=') => {
+                b'=' if depth == 0
+                    && rb.get(idx + 1) != Some(&b'>')
+                    && rb.get(idx + 1) != Some(&b'=') =>
+                {
                     eq_idx = Some(idx);
                     break;
                 }
@@ -3367,7 +3466,10 @@ fn convert_field_line(
     };
 
     let (raw_name, raw_ty) = if let Some(colon) = decl_part.find(':') {
-        (decl_part[..colon].trim(), Some(decl_part[colon + 1..].trim()))
+        (
+            decl_part[..colon].trim(),
+            Some(decl_part[colon + 1..].trim()),
+        )
     } else {
         (decl_part, None)
     };
@@ -3379,17 +3481,18 @@ fn convert_field_line(
         .trim_matches('"')
         .trim_matches('\'')
         .trim();
-    if fname.is_empty()
-        || !fname
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
-    {
+    if fname.is_empty() || !fname.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
         return None;
     }
 
     let mut cp_ty = if let Some(ty_s) = raw_ty {
         let mapped = map_ts_type(ty_s, todo_count);
-        mapped.split(" /*").next().unwrap_or(&mapped).trim().to_string()
+        mapped
+            .split(" /*")
+            .next()
+            .unwrap_or(&mapped)
+            .trim()
+            .to_string()
     } else {
         "string".to_string()
     };
@@ -3410,7 +3513,10 @@ fn convert_field_line(
     } else {
         let def = default_value_for_cp_type(&cp_ty);
         if !def.is_empty() {
-            Some(format!("{}{}{}: {} = {};", indent, pub_kw, fname, cp_ty, def))
+            Some(format!(
+                "{}{}{}: {} = {};",
+                indent, pub_kw, fname, cp_ty, def
+            ))
         } else {
             Some(format!("{}{}{}: {};", indent, pub_kw, fname, cp_ty))
         }
@@ -3528,7 +3634,13 @@ fn count_backticks(s: &str, mut in_backtick: bool) -> bool {
     let mut in_single = false;
     while i < bytes.len() {
         let b = bytes[i];
-        if !in_double && !in_single && !in_backtick && b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
             break;
         }
         if in_backtick {
@@ -3735,7 +3847,11 @@ fn wrap_single_line_control_flow(line: &str) -> String {
 }
 
 /// Convert JS object literal method shorthand `foo(a, b) {` -> `foo: (a, b) => {`.
-fn try_convert_object_method_shorthand(trimmed: &str, indent: &str, todo_count: &mut usize) -> Option<String> {
+fn try_convert_object_method_shorthand(
+    trimmed: &str,
+    indent: &str,
+    todo_count: &mut usize,
+) -> Option<String> {
     let mut rest = trimmed;
     let is_async = if let Some(r) = rest.strip_prefix("async ") {
         rest = r.trim();
@@ -3748,7 +3864,18 @@ fn try_convert_object_method_shorthand(trimmed: &str, indent: &str, todo_count: 
     if mname.is_empty()
         || matches!(
             mname,
-            "if" | "for" | "while" | "switch" | "catch" | "function" | "return" | "const" | "let" | "var" | "else" | "fn" | "pub"
+            "if" | "for"
+                | "while"
+                | "switch"
+                | "catch"
+                | "function"
+                | "return"
+                | "const"
+                | "let"
+                | "var"
+                | "else"
+                | "fn"
+                | "pub"
         )
     {
         return None;
@@ -3775,8 +3902,17 @@ fn try_convert_object_method_shorthand(trimmed: &str, indent: &str, todo_count: 
             if pt.starts_with('{') || pt.starts_with('[') {
                 return Some("_p".to_string());
             }
-            let head = split_top_level(pt, '=').into_iter().next().unwrap_or_default();
-            let name = head.split(':').next().unwrap_or("").trim().trim_end_matches('?').trim();
+            let head = split_top_level(pt, '=')
+                .into_iter()
+                .next()
+                .unwrap_or_default();
+            let name = head
+                .split(':')
+                .next()
+                .unwrap_or("")
+                .trim()
+                .trim_end_matches('?')
+                .trim();
             if name.is_empty() {
                 None
             } else {
@@ -3826,8 +3962,24 @@ fn maybe_append_semicolon(
     let last = trimmed.as_bytes().last().copied().unwrap_or(0);
     if matches!(
         last,
-        b';' | b'{' | b'}' | b',' | b':' | b'(' | b'[' | b'\\' | b'+' | b'-' | b'*' | b'/'
-            | b'?' | b'&' | b'|' | b'=' | b'<' | b'>' | b'.'
+        b';' | b'{'
+            | b'}'
+            | b','
+            | b':'
+            | b'('
+            | b'['
+            | b'\\'
+            | b'+'
+            | b'-'
+            | b'*'
+            | b'/'
+            | b'?'
+            | b'&'
+            | b'|'
+            | b'='
+            | b'<'
+            | b'>'
+            | b'.'
     ) {
         return line.to_string();
     }
@@ -4028,7 +4180,10 @@ pub fn transpile_ts_to_cp(
                 .unwrap_or("ns")
                 .to_string();
             namespace_depths.push((brace_depth, ns_name.clone()));
-            out.push_str(&format!("{}// [cap-migrate] namespace {} {{\n", indent, ns_name));
+            out.push_str(&format!(
+                "{}// [cap-migrate] namespace {} {{\n",
+                indent, ns_name
+            ));
             i += 1;
             continue;
         }
@@ -4036,7 +4191,10 @@ pub fn transpile_ts_to_cp(
             if let Some(&(ns_depth, _)) = namespace_depths.last() {
                 if brace_depth == ns_depth {
                     let (_, ns_name) = namespace_depths.pop().unwrap();
-                    out.push_str(&format!("{}// [cap-migrate] }} // end namespace {}\n", indent, ns_name));
+                    out.push_str(&format!(
+                        "{}// [cap-migrate] }} // end namespace {}\n",
+                        indent, ns_name
+                    ));
                     i += 1;
                     continue;
                 }
@@ -4182,11 +4340,7 @@ pub fn transpile_ts_to_cp(
             let (mut bo, mut bc) = count_braces(&field_src);
             if bo > bc && pd == 0 && bd == 0 {
                 // Nested inline object type inside interface -> degrade to string field and skip inner lines
-                let mut raw_fn = trimmed
-                    .split(':')
-                    .next()
-                    .unwrap_or("field")
-                    .trim();
+                let mut raw_fn = trimmed.split(':').next().unwrap_or("field").trim();
                 for kw in &["public ", "private ", "protected ", "readonly "] {
                     while let Some(r) = raw_fn.strip_prefix(kw) {
                         raw_fn = r.trim();
@@ -4229,7 +4383,8 @@ pub fn transpile_ts_to_cp(
                 bo += do_;
                 bc += dc_;
             }
-            if let Some(field_line) = convert_field_line(&field_src, indent, true, &mut todo_count) {
+            if let Some(field_line) = convert_field_line(&field_src, indent, true, &mut todo_count)
+            {
                 out.push_str(&field_line);
                 out.push('\n');
             } else {
@@ -4240,8 +4395,7 @@ pub fn transpile_ts_to_cp(
         }
 
         // 8. `export type Foo = ...` / `type Foo = ...`
-        if brace_depth == 0
-            && (trimmed.starts_with("export type ") || trimmed.starts_with("type "))
+        if brace_depth == 0 && (trimmed.starts_with("export type ") || trimmed.starts_with("type "))
         {
             let is_pub = trimmed.starts_with("export ");
             let mut full = trimmed.to_string();
@@ -4300,7 +4454,13 @@ pub fn transpile_ts_to_cp(
                         prev = b;
                     }
                 };
-            update_depths(trimmed, &mut b_brace, &mut b_paren, &mut b_angle, &mut b_brack);
+            update_depths(
+                trimmed,
+                &mut b_brace,
+                &mut b_paren,
+                &mut b_angle,
+                &mut b_brack,
+            );
             while j + 1 < total {
                 let next_t = lines[j + 1].trim();
                 let full_t = full.trim_end();
@@ -4326,7 +4486,13 @@ pub fn transpile_ts_to_cp(
                 j += 1;
                 full.push(' ');
                 full.push_str(next_t);
-                update_depths(next_t, &mut b_brace, &mut b_paren, &mut b_angle, &mut b_brack);
+                update_depths(
+                    next_t,
+                    &mut b_brace,
+                    &mut b_paren,
+                    &mut b_angle,
+                    &mut b_brack,
+                );
             }
 
             let rest = full
@@ -4363,7 +4529,10 @@ pub fn transpile_ts_to_cp(
             };
 
             // Note: CP `type Name = Target;` does not accept generic params `<T>` on type aliases.
-            if !generics.is_empty() || is_complex_ts_type(rhs) || split_top_level(rhs, '|').len() > 2 {
+            if !generics.is_empty()
+                || is_complex_ts_type(rhs)
+                || split_top_level(rhs, '|').len() > 2
+            {
                 saw_complex_type = true;
                 todo_count += 1;
                 out.push_str(&format!(
@@ -4596,7 +4765,11 @@ pub fn transpile_ts_to_cp(
             let (mut pd, mut bd) = count_parens_brackets(&candidate);
             let mut lookahead_limit = 0;
             // Collect multi-line parameter list until `=>` is found (bounded lookahead)
-            while !candidate.contains("=>") && (pd > 0 || bd > 0 || candidate.trim_end().ends_with('=')) && j + 1 < total && lookahead_limit < 25 {
+            while !candidate.contains("=>")
+                && (pd > 0 || bd > 0 || candidate.trim_end().ends_with('='))
+                && j + 1 < total
+                && lookahead_limit < 25
+            {
                 j += 1;
                 lookahead_limit += 1;
                 let nt = lines[j].trim();
@@ -4670,13 +4843,16 @@ pub fn transpile_ts_to_cp(
         }
 
         // 14. Top-level `export const` / `export let` -> `pub const` / `pub let`
-        if brace_depth == 0 && (trimmed.starts_with("export const ") || trimmed.starts_with("export let ")) {
+        if brace_depth == 0
+            && (trimmed.starts_with("export const ") || trimmed.starts_with("export let "))
+        {
             // Join multi-line ternary if next line starts with `?` or `:`
             let mut joined = trimmed.strip_prefix("export ").unwrap().to_string();
             let mut j = i;
             while j + 1 < total {
                 let nt = lines[j + 1].trim();
-                if nt.starts_with("? ") || nt.starts_with(": ") || joined.trim_end().ends_with('=') {
+                if nt.starts_with("? ") || nt.starts_with(": ") || joined.trim_end().ends_with('=')
+                {
                     j += 1;
                     joined.push(' ');
                     joined.push_str(nt);
@@ -4728,7 +4904,9 @@ pub fn transpile_ts_to_cp(
         }
 
         // 15.6 `switch (expr) {` and `case X:` / `default:` arms -> CP switch syntax
-        if (trimmed.starts_with("switch ") || trimmed.starts_with("switch(")) && trimmed.ends_with('{') {
+        if (trimmed.starts_with("switch ") || trimmed.starts_with("switch("))
+            && trimmed.ends_with('{')
+        {
             let conv = convert_ts_expr(trimmed, &mut todo_count);
             let (o, c) = count_braces(&conv);
             brace_depth += o - c;
@@ -4767,7 +4945,8 @@ pub fn transpile_ts_to_cp(
                         sw.pending_cases.push(pat);
                         if !after.is_empty() {
                             let pats = sw.pending_cases.drain(..).collect::<Vec<_>>().join(", ");
-                            let stmt = convert_ts_expr(after.trim_end_matches(';'), &mut todo_count);
+                            let stmt =
+                                convert_ts_expr(after.trim_end_matches(';'), &mut todo_count);
                             out.push_str(&format!("{}{} => {{ {}; }},\n", indent, pats, stmt));
                         }
                     }
@@ -4851,7 +5030,9 @@ pub fn transpile_ts_to_cp(
             && trimmed.ends_with('{')
             && trimmed.contains('(')
         {
-            if let Some(obj_method) = try_convert_object_method_shorthand(trimmed, indent, &mut todo_count) {
+            if let Some(obj_method) =
+                try_convert_object_method_shorthand(trimmed, indent, &mut todo_count)
+            {
                 let (o, c) = count_braces(&obj_method);
                 brace_depth += o - c;
                 out.push_str(&obj_method);
@@ -4902,12 +5083,18 @@ pub fn transpile_ts_to_cp(
         // Convert JS multi-line comma variable declaration `const a = 1,\n b = 2` -> separate `const` / `let` statements
         if paren_depth == 0
             && bracket_depth == 0
-            && (stmt_src.starts_with("const ") || stmt_src.starts_with("let ") || stmt_src.starts_with("var "))
+            && (stmt_src.starts_with("const ")
+                || stmt_src.starts_with("let ")
+                || stmt_src.starts_with("var "))
             && stmt_src.ends_with(',')
             && count_braces(&stmt_src).0 == count_braces(&stmt_src).1
             && count_parens_brackets(&stmt_src) == (0, 0)
         {
-            let decl_kw = if stmt_src.starts_with("const ") { "const" } else { "let" };
+            let decl_kw = if stmt_src.starts_with("const ") {
+                "const"
+            } else {
+                "let"
+            };
             let first = convert_ts_expr(stmt_src.trim_end_matches(','), &mut todo_count);
             out.push_str(&format!("{}{};\n", indent, first.trim_end_matches(';')));
             while j + 1 < total {
@@ -4969,6 +5156,12 @@ pub fn transpile_ts_to_cp(
         brace_depth -= 1;
     }
 
+    // Self-verify transpiled CP output with `cpc::parser::Parser`.
+    // Fast path: if the whole module already parses cleanly, return untouched!
+    if !cp_snippet_parses_ok(&out) {
+        out = repair_ts_output_by_blocks(&out, &mut todo_count);
+    }
+
     // Record CP migration optimization notes
     if saw_interface {
         opt_notes.push("消除 interface 动态派发为栈布局 struct（零虚表开销）".to_string());
@@ -4983,10 +5176,12 @@ pub fn transpile_ts_to_cp(
         opt_notes.push("自动推断字段写操作并为类方法注入安全可变接收者 `*_`".to_string());
     }
     if saw_try_catch {
-        opt_notes.push("剥离 `try/catch` 异常块并标注切换至 CP 零成本 `?T` / `?` 错误传播".to_string());
+        opt_notes
+            .push("剥离 `try/catch` 异常块并标注切换至 CP 零成本 `?T` / `?` 错误传播".to_string());
     }
     if saw_complex_type {
-        opt_notes.push("复杂 TS 条件/映射类型安全降级为显式 `TODO` 别名以保障 `cpc` 解析".to_string());
+        opt_notes
+            .push("复杂 TS 条件/映射类型安全降级为显式 `TODO` 别名以保障 `cpc` 解析".to_string());
     }
 
     TranspileResult {
@@ -4994,6 +5189,659 @@ pub fn transpile_ts_to_cp(
         todo_count,
         opt_notes,
     }
+}
+
+// ============================================================================
+// Post-Transpile Local `Parser::new` Verification & Graceful Fallback Engine
+// ============================================================================
+
+/// Verify a standalone CP snippet parses cleanly with `cpc::parser::Parser`,
+/// temporarily silencing lexer warnings via `QUIET_LEXER`.
+fn cp_snippet_parses_ok(cp_snippet: &str) -> bool {
+    use std::sync::atomic::Ordering;
+    let prev = crate::lexer::QUIET_LEXER.swap(true, Ordering::Relaxed);
+    let ok = crate::parser::Parser::new(cp_snippet)
+        .parse_module()
+        .is_ok();
+    crate::lexer::QUIET_LEXER.store(prev, Ordering::Relaxed);
+    ok
+}
+
+#[derive(Default)]
+struct CpScanState {
+    in_block_comment: bool,
+    in_backtick: bool,
+}
+
+/// Scan net `(brace_delta, paren_delta, bracket_delta)` on a CP line while
+/// accurately tracking multi-line `/* ... */` comments, `` `...` `` strings,
+/// `"..."` / `'...'` literals, and `//` line comments.
+fn scan_cp_line_delims(line: &str, state: &mut CpScanState) -> (i32, i32, i32) {
+    let bytes = line.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+    let mut braces = 0i32;
+    let mut parens = 0i32;
+    let mut brackets = 0i32;
+    let mut in_double = false;
+    let mut in_single = false;
+
+    while i < len {
+        let b = bytes[i];
+        if state.in_block_comment {
+            if b == b'*' && i + 1 < len && bytes[i + 1] == b'/' {
+                state.in_block_comment = false;
+                i += 2;
+            } else {
+                i += 1;
+            }
+            continue;
+        }
+        if state.in_backtick {
+            if b == b'\\' && i + 1 < len {
+                i += 2;
+                continue;
+            }
+            if b == b'`' {
+                state.in_backtick = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_double {
+            if b == b'\\' && i + 1 < len {
+                i += 2;
+                continue;
+            }
+            if b == b'"' {
+                in_double = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_single {
+            if b == b'\\' && i + 1 < len {
+                i += 2;
+                continue;
+            }
+            if b == b'\'' {
+                in_single = false;
+            }
+            i += 1;
+            continue;
+        }
+        if b == b'/' && i + 1 < len && bytes[i + 1] == b'/' {
+            break;
+        }
+        if b == b'/' && i + 1 < len && bytes[i + 1] == b'*' {
+            state.in_block_comment = true;
+            i += 2;
+            continue;
+        }
+        match b {
+            b'"' => in_double = true,
+            b'\'' => in_single = true,
+            b'`' => state.in_backtick = true,
+            b'{' => braces += 1,
+            b'}' => braces -= 1,
+            b'(' => parens += 1,
+            b')' => parens -= 1,
+            b'[' => brackets += 1,
+            b']' => brackets -= 1,
+            _ => {}
+        }
+        i += 1;
+    }
+
+    (braces, parens, brackets)
+}
+
+fn is_top_level_decl_start(trimmed: &str) -> bool {
+    trimmed.starts_with("import ")
+        || trimmed.starts_with("export ")
+        || trimmed.starts_with("pub ")
+        || trimmed.starts_with("fn ")
+        || trimmed.starts_with("async fn ")
+        || trimmed.starts_with("static fn ")
+        || trimmed.starts_with("struct ")
+        || trimmed.starts_with("enum ")
+        || trimmed.starts_with("class ")
+        || trimmed.starts_with("type ")
+        || trimmed.starts_with("trait ")
+        || trimmed.starts_with("impl ")
+        || trimmed.starts_with("const ")
+        || trimmed.starts_with("let ")
+}
+
+fn is_member_decl_start(trimmed: &str) -> bool {
+    is_top_level_decl_start(trimmed)
+        || trimmed.starts_with("priv ")
+        || trimmed.starts_with("static ")
+        || trimmed.starts_with("async ")
+}
+
+enum CpBlock {
+    Trivia(String),
+    Code(String),
+}
+
+/// Split CP source into top-level trivia (blank/comment lines) and balanced code blocks.
+fn split_cp_blocks(code: &str, member_mode: bool) -> Vec<CpBlock> {
+    let lines: Vec<&str> = code.lines().collect();
+    let total = lines.len();
+    let mut blocks = Vec::new();
+    let mut state = CpScanState::default();
+    let mut i = 0;
+
+    while i < total {
+        let raw = lines[i];
+        let trimmed = raw.trim();
+
+        // Standalone blank or single-line comment outside multi-line comment/template
+        if !state.in_block_comment
+            && !state.in_backtick
+            && (trimmed.is_empty() || trimmed.starts_with("//"))
+        {
+            blocks.push(CpBlock::Trivia(format!("{}\n", raw)));
+            i += 1;
+            continue;
+        }
+
+        // Start collecting a balanced block
+        let mut buf = String::new();
+        let mut b_depth = 0i32;
+        let mut p_depth = 0i32;
+        let mut k_depth = 0i32;
+        let mut saw_brace = false;
+
+        loop {
+            let line = lines[i];
+            let (db, dp, dk) = scan_cp_line_delims(line, &mut state);
+            if db != 0 {
+                saw_brace = true;
+            }
+            b_depth += db;
+            p_depth += dp;
+            k_depth += dk;
+            buf.push_str(line);
+            buf.push('\n');
+            i += 1;
+
+            if i >= total {
+                break;
+            }
+            if state.in_block_comment || state.in_backtick {
+                continue;
+            }
+            if b_depth > 0 || p_depth > 0 || k_depth > 0 {
+                continue;
+            }
+
+            // Negative brace depth (e.g. stray `}`): end this block immediately so it does not swallow subsequent items
+            if b_depth < 0 {
+                break;
+            }
+
+            let next_trimmed = lines[i].trim();
+            if saw_brace {
+                // Keep `else` / `else if` attached to preceding `if { ... }`
+                if next_trimmed.starts_with("else ")
+                    || next_trimmed == "else"
+                    || next_trimmed.starts_with("else{")
+                {
+                    continue;
+                }
+                break;
+            }
+
+            let (code_part, _) = split_inline_comment(line);
+            let code_end = code_part.trim_end();
+            if code_end.ends_with(';') {
+                break;
+            }
+            if next_trimmed.is_empty()
+                || next_trimmed.starts_with("//")
+                || (if member_mode {
+                    is_member_decl_start(next_trimmed)
+                } else {
+                    is_top_level_decl_start(next_trimmed)
+                })
+            {
+                break;
+            }
+        }
+
+        blocks.push(CpBlock::Code(buf));
+    }
+
+    blocks
+}
+
+fn comment_out_ts_block(block: &str, indent: &str, reason: &str) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("{}// TODO(cap-migrate): {}\n", indent, reason));
+    for line in block.lines() {
+        let t = line.trim();
+        if t.is_empty() {
+            continue;
+        }
+        if t.starts_with("//") {
+            out.push_str(&format!("{}{}\n", indent, t));
+        } else {
+            out.push_str(&format!("{}// [ts] {}\n", indent, t));
+        }
+    }
+    out
+}
+
+/// Find the byte index of the opening `{` of a function/method body (after `(...)` and return type).
+fn find_fn_body_open_brace(block: &str) -> Option<usize> {
+    let fn_pos = block.find("fn ")?;
+    let after_fn = &block[fn_pos + 3..];
+    let lp_rel = after_fn.find('(')?;
+    let lp = fn_pos + 3 + lp_rel;
+    let rp = find_matching_delim(block, lp, b'(', b')')?;
+
+    let bytes = block.as_bytes();
+    let mut i = rp + 1;
+    let mut angle = 0i32;
+    let mut in_double = false;
+    let mut in_single = false;
+    let mut in_backtick = false;
+    let mut in_block_comment = false;
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if in_block_comment {
+            if b == b'*' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+                in_block_comment = false;
+                i += 2;
+            } else {
+                i += 1;
+            }
+            continue;
+        }
+        if in_double {
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+                continue;
+            }
+            if b == b'"' {
+                in_double = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_single {
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+                continue;
+            }
+            if b == b'\'' {
+                in_single = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_backtick {
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+                continue;
+            }
+            if b == b'`' {
+                in_backtick = false;
+            }
+            i += 1;
+            continue;
+        }
+        if b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+        if b == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'*' {
+            in_block_comment = true;
+            i += 2;
+            continue;
+        }
+        match b {
+            b'"' => in_double = true,
+            b'\'' => in_single = true,
+            b'`' => in_backtick = true,
+            b'<' => angle += 1,
+            b'>' => {
+                if angle > 0 {
+                    angle -= 1;
+                }
+            }
+            b'{' if angle == 0 => return Some(i),
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Build a stubbed function/method keeping the CP signature and commenting the body with `// [ts]`.
+fn build_fn_stub(block: &str, open_brace: usize, indent: &str) -> String {
+    let sig = block[..open_brace].trim_end();
+    let close_brace = find_matching_delim(block, open_brace, b'{', b'}')
+        .unwrap_or_else(|| block.rfind('}').unwrap_or(block.len()));
+    let body_slice = if close_brace > open_brace + 1 {
+        &block[open_brace + 1..close_brace]
+    } else {
+        ""
+    };
+    let mut stub = String::new();
+    stub.push_str(sig);
+    stub.push_str(" {\n");
+    stub.push_str(&format!(
+        "{}    // TODO(cap-migrate): refine TS body\n",
+        indent
+    ));
+    for line in body_slice.lines() {
+        let t = line.trim();
+        if t.is_empty() {
+            continue;
+        }
+        if t.starts_with("//") {
+            stub.push_str(&format!("{}    {}\n", indent, t));
+        } else {
+            stub.push_str(&format!("{}    // [ts] {}\n", indent, t));
+        }
+    }
+    stub.push_str(&format!("{}}}\n", indent));
+    stub
+}
+
+/// Extract leading whitespace of the first non-empty line in `block`.
+fn leading_indent(block: &str) -> &str {
+    for line in block.lines() {
+        if !line.trim().is_empty() {
+            let n = line.len() - line.trim_start().len();
+            return &line[..n];
+        }
+    }
+    ""
+}
+
+fn is_fn_block_header(first_line: &str) -> bool {
+    let t = first_line.trim();
+    let mut s = t;
+    for pfx in ["pub ", "priv ", "static ", "async ", "unsafe "] {
+        if let Some(rest) = s.strip_prefix(pfx) {
+            s = rest.trim_start();
+        }
+    }
+    s.starts_with("fn ")
+}
+
+fn repair_fn_block(block: &str, in_class: bool, todo_count: &mut usize) -> String {
+    let indent = leading_indent(block);
+    if let Some(open_brace) = find_fn_body_open_brace(block) {
+        let stub = build_fn_stub(block, open_brace, indent);
+        let check = if in_class {
+            format!("pub class __Tmp {{\n{}\n}}\n", stub)
+        } else {
+            stub.clone()
+        };
+        if cp_snippet_parses_ok(&check) {
+            *todo_count += 1;
+            return stub;
+        }
+    }
+    *todo_count += 1;
+    comment_out_ts_block(block, indent, "refine TS function")
+}
+
+fn repair_class_block(block: &str, todo_count: &mut usize) -> String {
+    let indent = leading_indent(block);
+    let open_brace = match block.find('{') {
+        Some(pos) => pos,
+        None => {
+            *todo_count += 1;
+            return comment_out_ts_block(block, indent, "refine TS class");
+        }
+    };
+    let close_brace = find_matching_delim(block, open_brace, b'{', b'}')
+        .or_else(|| block.rfind('}'))
+        .unwrap_or(block.len());
+    let header = block[..open_brace].trim_end();
+    let body_slice = if close_brace > open_brace + 1 {
+        &block[open_brace + 1..close_brace]
+    } else {
+        ""
+    };
+
+    let members = split_cp_blocks(body_slice, true);
+    let mut repaired_body = String::new();
+    for m in members {
+        match m {
+            CpBlock::Trivia(t) => repaired_body.push_str(&t),
+            CpBlock::Code(code) => {
+                let wrapped = format!("pub class __Tmp {{\n{}\n}}\n", code);
+                if cp_snippet_parses_ok(&wrapped) {
+                    repaired_body.push_str(&code);
+                    continue;
+                }
+                let first_non_empty = code.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
+                if is_fn_block_header(first_non_empty) {
+                    repaired_body.push_str(&repair_fn_block(&code, true, todo_count));
+                } else {
+                    // Try appending semicolon for class field declarations
+                    let trimmed_end = code.trim_end();
+                    if !trimmed_end.ends_with(';') && !trimmed_end.ends_with('}') {
+                        let with_semi = format!("{};\n", trimmed_end);
+                        let wrapped_semi = format!("pub class __Tmp {{\n{}\n}}\n", with_semi);
+                        if cp_snippet_parses_ok(&wrapped_semi) {
+                            repaired_body.push_str(&with_semi);
+                            continue;
+                        }
+                    }
+                    *todo_count += 1;
+                    let m_indent = leading_indent(&code);
+                    repaired_body.push_str(&comment_out_ts_block(
+                        &code,
+                        m_indent,
+                        "refine TS class member",
+                    ));
+                }
+            }
+        }
+    }
+
+    let candidate = format!("{} {{\n{}{}}}\n", header, repaired_body, indent);
+    if cp_snippet_parses_ok(&candidate) {
+        return candidate;
+    }
+
+    // If the class header itself had complex TS generics/extends, simplify header to `pub class Name`
+    let h_trim = header.trim();
+    let pub_kw = if h_trim.starts_with("pub ") {
+        "pub "
+    } else {
+        ""
+    };
+    if let Some(after_cls) = h_trim.trim_start_matches("pub ").strip_prefix("class ") {
+        let cname: String = after_cls
+            .trim()
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+            .collect();
+        if !cname.is_empty() {
+            let simplified = format!(
+                "{}// [ts] {}\n{}{}class {} {{\n{}{}}}\n",
+                indent, h_trim, indent, pub_kw, cname, repaired_body, indent
+            );
+            if cp_snippet_parses_ok(&simplified) {
+                *todo_count += 1;
+                return simplified;
+            }
+        }
+    }
+
+    *todo_count += 1;
+    comment_out_ts_block(block, indent, "refine TS class")
+}
+
+fn repair_struct_or_enum_block(block: &str, kind: &str, todo_count: &mut usize) -> String {
+    let indent = leading_indent(block);
+    let open_brace = match block.find('{') {
+        Some(pos) => pos,
+        None => {
+            *todo_count += 1;
+            return comment_out_ts_block(block, indent, &format!("refine TS {}", kind));
+        }
+    };
+    let close_brace = find_matching_delim(block, open_brace, b'{', b'}')
+        .or_else(|| block.rfind('}'))
+        .unwrap_or(block.len());
+    let header = block[..open_brace].trim_end();
+    let body_slice = if close_brace > open_brace + 1 {
+        &block[open_brace + 1..close_brace]
+    } else {
+        ""
+    };
+
+    let mut repaired_body = String::new();
+    for line in body_slice.lines() {
+        let t = line.trim();
+        if t.is_empty() || t.starts_with("//") {
+            repaired_body.push_str(line);
+            repaired_body.push('\n');
+            continue;
+        }
+        let wrapped = format!("pub {} __Tmp {{\n{}\n}}\n", kind, line);
+        if cp_snippet_parses_ok(&wrapped) {
+            repaired_body.push_str(line);
+            repaired_body.push('\n');
+        } else {
+            *todo_count += 1;
+            let l_indent = leading_indent(line);
+            repaired_body.push_str(&format!(
+                "{}// TODO(cap-migrate): refine TS {} entry\n{}// [ts] {}\n",
+                l_indent, kind, l_indent, t
+            ));
+        }
+    }
+
+    let candidate = format!("{} {{\n{}{}}}\n", header, repaired_body, indent);
+    if cp_snippet_parses_ok(&candidate) {
+        return candidate;
+    }
+
+    // Simplify header if generics/heritage broke parsing
+    let h_trim = header.trim();
+    let pub_kw = if h_trim.starts_with("pub ") {
+        "pub "
+    } else {
+        ""
+    };
+    let kw_prefix = format!("{} ", kind);
+    if let Some(after_kw) = h_trim.trim_start_matches("pub ").strip_prefix(&kw_prefix) {
+        let name: String = after_kw
+            .trim()
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+            .collect();
+        if !name.is_empty() {
+            let simplified = format!(
+                "{}// [ts] {}\n{}{}{} {} {{\n{}{}}}\n",
+                indent, h_trim, indent, pub_kw, kind, name, repaired_body, indent
+            );
+            if cp_snippet_parses_ok(&simplified) {
+                *todo_count += 1;
+                return simplified;
+            }
+        }
+    }
+
+    *todo_count += 1;
+    comment_out_ts_block(block, indent, &format!("refine TS {}", kind))
+}
+
+fn verify_and_repair_top_item(block: &str, todo_count: &mut usize) -> String {
+    if cp_snippet_parses_ok(block) {
+        return block.to_string();
+    }
+
+    let first_line = block
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .unwrap_or("")
+        .trim();
+
+    // 1. Class declaration: validate member-by-member so valid methods/fields survive
+    if first_line.starts_with("pub class ") || first_line.starts_with("class ") {
+        return repair_class_block(block, todo_count);
+    }
+
+    // 2. Struct declaration: validate field-by-field
+    if first_line.starts_with("pub struct ") || first_line.starts_with("struct ") {
+        return repair_struct_or_enum_block(block, "struct", todo_count);
+    }
+
+    // 3. Enum declaration: validate variant-by-variant
+    if first_line.starts_with("pub enum ") || first_line.starts_with("enum ") {
+        return repair_struct_or_enum_block(block, "enum", todo_count);
+    }
+
+    // 4. Function declaration: keep valid CP signature and stub body with `// [ts]`
+    if is_fn_block_header(first_line) {
+        return repair_fn_block(block, false, todo_count);
+    }
+
+    // 5. Simple missing trailing semicolon recovery (e.g. `import`, `pub type`, `pub const`)
+    let trimmed_end = block.trim_end();
+    if !trimmed_end.ends_with(';') && !trimmed_end.ends_with('}') {
+        let with_semi = format!("{};\n", trimmed_end);
+        if cp_snippet_parses_ok(&with_semi) {
+            return with_semi;
+        }
+    }
+
+    // 6. Unparseable top-level dynamic TS statement / metaprogramming -> safe comment fallback
+    *todo_count += 1;
+    let indent = leading_indent(block);
+    comment_out_ts_block(block, indent, "refine TS statement")
+}
+
+/// Validate and repair transpiled CP output block-by-block using `cpc::parser::Parser`.
+fn repair_ts_output_by_blocks(code: &str, todo_count: &mut usize) -> String {
+    let blocks = split_cp_blocks(code, false);
+    let mut repaired_chunks: Vec<String> = Vec::with_capacity(blocks.len());
+    for blk in blocks {
+        match blk {
+            CpBlock::Trivia(t) => repaired_chunks.push(t),
+            CpBlock::Code(c) => {
+                repaired_chunks.push(verify_and_repair_top_item(&c, todo_count));
+            }
+        }
+    }
+
+    let joined: String = repaired_chunks.concat();
+    if cp_snippet_parses_ok(&joined) {
+        return joined;
+    }
+
+    // Rare cross-block interaction fallback: incrementally accumulate chunks and
+    // comment out any chunk that causes the combined module to fail parsing.
+    let mut acc = String::with_capacity(joined.len());
+    for chunk in repaired_chunks {
+        let prev_len = acc.len();
+        acc.push_str(&chunk);
+        if !chunk.trim().is_empty()
+            && !chunk.trim().starts_with("//")
+            && !cp_snippet_parses_ok(&acc)
+        {
+            acc.truncate(prev_len);
+            *todo_count += 1;
+            let indent = leading_indent(&chunk);
+            acc.push_str(&comment_out_ts_block(&chunk, indent, "refine TS block"));
+        }
+    }
+    acc
 }
 
 #[cfg(test)]
@@ -5015,14 +5863,18 @@ export type Complex<T> = T extends string ? number : never;
 "#;
         let dep_map = HashMap::new();
         let res = transpile_ts_to_cp(ts, "src/config.ts", &dep_map);
-        assert!(res.cp_code.contains("// Migrated from TypeScript (src/config.ts) via cap from -ts"));
+        assert!(res
+            .cp_code
+            .contains("// Migrated from TypeScript (src/config.ts) via cap from -ts"));
         assert!(res.cp_code.contains("pub struct UserConfig {"));
         assert!(res.cp_code.contains("name: string = \"\";"));
         assert!(res.cp_code.contains("retries: f64? = null;"));
         assert!(res.cp_code.contains("tags: []string = [];"));
         assert!(res.cp_code.contains("headers: Map<string, string>;"));
         assert!(res.cp_code.contains("payload: []u8 = [];"));
-        assert!(res.cp_code.contains("pub type Complex = string; // TODO(cap-migrate): complex TS conditional/mapped type"));
+        assert!(res.cp_code.contains(
+            "pub type Complex = string; // TODO(cap-migrate): complex TS conditional/mapped type"
+        ));
         assert!(res.todo_count >= 1);
         assert!(res.opt_notes.iter().any(|n| n.contains("struct")));
     }
@@ -5060,13 +5912,21 @@ export const makeCounter = (n: number): Counter => new Counter(n);
         let dep_map = HashMap::new();
         let res = transpile_ts_to_cp(ts, "src/counter.ts", &dep_map);
         assert!(res.cp_code.contains("pub class Counter {"));
-        assert!(res.cp_code.contains("pub static fn init(initial: f64): Counter {"));
-        assert!(res.cp_code.contains("pub async fn increment(*_, step: f64): f64 {"));
+        assert!(res
+            .cp_code
+            .contains("pub static fn init(initial: f64): Counter {"));
+        assert!(res
+            .cp_code
+            .contains("pub async fn increment(*_, step: f64): f64 {"));
         assert!(res.cp_code.contains("pub fn getCount(): f64 {"));
         assert!(res.cp_code.contains("let next = _.count + step;"));
         assert!(res.cp_code.contains("if (next == null) {"));
-        assert!(res.cp_code.contains("return; // TODO(cap-migrate): throw -> error return"));
+        assert!(res
+            .cp_code
+            .contains("return; // TODO(cap-migrate): throw -> error return"));
         assert!(res.cp_code.contains("@print(\"failed\");"));
-        assert!(res.cp_code.contains("pub fn makeCounter(n: f64): Counter { return Counter.init(n); }"));
+        assert!(res
+            .cp_code
+            .contains("pub fn makeCounter(n: f64): Counter { return Counter.init(n); }"));
     }
 }

@@ -484,7 +484,9 @@ impl Codegen {
                 if let ModuleItem::Export(exp) = item {
                     if exp.source.is_none() {
                         for s in &exp.specifiers {
-                            self.modular_local_exports.insert(s.sym.clone());
+                            if s.local.sym == s.exported.sym {
+                                self.modular_local_exports.insert(s.local.sym.clone());
+                            }
                         }
                     }
                 }
@@ -1204,16 +1206,39 @@ impl Codegen {
                             }
                         } else {
                             for s in &exp.specifiers {
-                                if !self.globals.insert(s.sym.clone()) {
+                                if !self.globals.insert(s.exported.sym.clone()) {
                                     continue;
                                 }
-                                if !self.class_defs.contains_key(&s.sym)
-                                    && !self.ref_classes.contains(&s.sym)
+                                if !self.class_defs.contains_key(&s.exported.sym)
+                                    && !self.ref_classes.contains(&s.exported.sym)
                                 {
-                                    self.value_classes.insert(s.sym.clone());
+                                    self.value_classes.insert(s.exported.sym.clone());
                                 }
-                                let esc = Self::escape_zig_ident(&s.sym);
-                                self.writeln(&format!("pub const {0} = {1}.{0};", esc, mod_var));
+                                let esc_exported = Self::escape_zig_ident(&s.exported.sym);
+                                let esc_local = Self::escape_zig_ident(&s.local.sym);
+                                self.writeln(&format!(
+                                    "pub const {} = {}.{};",
+                                    esc_exported, mod_var, esc_local
+                                ));
+                            }
+                        }
+                    } else {
+                        for s in &exp.specifiers {
+                            if s.exported.sym != s.local.sym {
+                                if !self.globals.insert(s.exported.sym.clone()) {
+                                    continue;
+                                }
+                                if !self.class_defs.contains_key(&s.exported.sym)
+                                    && !self.ref_classes.contains(&s.exported.sym)
+                                {
+                                    self.value_classes.insert(s.exported.sym.clone());
+                                }
+                                let esc_exported = Self::escape_zig_ident(&s.exported.sym);
+                                let esc_local = Self::escape_zig_ident(&s.local.sym);
+                                self.writeln(&format!(
+                                    "pub const {} = {};",
+                                    esc_exported, esc_local
+                                ));
                             }
                         }
                     }
@@ -1830,13 +1855,28 @@ impl Codegen {
                         src.clone()
                     };
                     for s in &exp.specifiers {
-                        self.globals.insert(s.sym.clone());
-                        self.value_classes.insert(s.sym.clone());
+                        self.globals.insert(s.exported.sym.clone());
+                        self.value_classes.insert(s.exported.sym.clone());
                         self.writeln(&format!(
-                            "pub const {0} = @import(\"{1}\").{0};",
-                            Self::escape_zig_ident(&s.sym),
-                            zig_source
+                            "pub const {} = @import(\"{}\").{};",
+                            Self::escape_zig_ident(&s.exported.sym),
+                            zig_source,
+                            Self::escape_zig_ident(&s.local.sym)
                         ));
+                    }
+                } else {
+                    for s in &exp.specifiers {
+                        if s.exported.sym != s.local.sym {
+                            if !self.globals.insert(s.exported.sym.clone()) {
+                                continue;
+                            }
+                            self.value_classes.insert(s.exported.sym.clone());
+                            self.writeln(&format!(
+                                "pub const {} = {};",
+                                Self::escape_zig_ident(&s.exported.sym),
+                                Self::escape_zig_ident(&s.local.sym)
+                            ));
+                        }
                     }
                 }
             }

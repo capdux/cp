@@ -795,6 +795,18 @@ pub fn resolve_imports_with_cap_hub(
                             false,
                             cap_hub,
                         )?;
+                        let aliased: Vec<_> = exp
+                            .specifiers
+                            .into_iter()
+                            .filter(|sp| sp.exported.sym != sp.local.sym)
+                            .collect();
+                        if !aliased.is_empty() {
+                            all_items.push(ModuleItem::Export(crate::ast::ExportStmt {
+                                span: exp.span,
+                                specifiers: aliased,
+                                source: None,
+                            }));
+                        }
                     } else {
                         all_items.push(ModuleItem::Export(exp));
                     }

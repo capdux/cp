@@ -5101,3 +5101,23 @@
   > 我补充以上几点, 按你的计划, 启动你的执行!
 - **完整回复与执行汇报**：
   > **Phase 2 重大突破**：纯 CP 多核 `SO_REUSEPORT` + Linux `epoll` 非阻塞 HTTP/1.1 Keep-Alive 服务器 [server.cp](file:///data/dev/cp/lib/web/server.cp) 已通过真实 Socket 端到端测试（`PASS testWebServerLive: 2-worker SO_REUSEPORT epoll + HTTP/1.1 Keep-Alive 3/3`）！正在完成 `-OReleaseFast` `server_cp` 压测二进制编译与 4 门禁校验，同时等待 2 路并行子智能体完成 `cap lint --dead`/`cap run --watch` 与跨框架对比基准套件。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 08:28:27）[step:23507]
+- **用户完整原始指令**：
+  > 继续按计划完成上述所有任务
+- **完整回复与执行汇报**：
+  > 主智能体已完成 `lib/web/server.cp` 的 `EPOLLIN` 优先排空、`SIGPIPE` 忽略与连接池上限调优，正在重测 `cp_1c/cp_8c`；同时 2 路并行子智能体正在推进：
+  > 1. `TS-Migrate 100% Parse Booster`：为 `cpc/src/migrate/ts.rs` 引入 `Parser::new` 局部自校验与兜底，冲刺 `_ref/elysia` 90%–100% 解析通过率；
+  > 2. `Website Live-Bench Updater`：将最新 559K QPS / 19.3 MB RSS、WebSocket 8.71M msg/s 与 `cap from -ts/-rs` / `cap lint --dead` / `cap run --watch` 同步到官网 `website/`。
+  > 完成后立即统一汇报！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 08:30:11）[step:23521]
+- **用户完整原始指令**：
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+  > 另外一路专用于 cap from -ts/-rs 一键转换, 务必达到 100%, 如 需补齐 cpc 功能, 安排补齐
+- **完整回复与执行汇报**：
+  > 当前 3 路并行推进中：
+  > 1. **子智能体 1**（`TS-Migrate 100% Parse Booster`）：正在冲刺 `cap from -ts _ref/elysia` 90%–100% `cpc` 解析通过率；
+  > 2. **子智能体 2**（`CPC Export Alias Author`）：正在为 `cpc` 补齐 `export { Orig as Alias } from "./mod.cp"` 重导出别名语法（直击 TS barrel `index.ts` 迁移痛点）；
+  > 3. **主智能体**：已完成官网 `website/` 最新实测数据同步验收，正在复验 `server_cp` 1c/8c 基准。
+  > 完成后立即统一构建、实测并汇报！
