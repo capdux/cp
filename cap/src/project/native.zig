@@ -63,6 +63,12 @@ pub fn zigTripleToTargetKey(triple: []const u8) []const u8 {
     return hostTargetKey();
 }
 
+pub fn dynamicLibExtForTarget(target_key: []const u8) []const u8 {
+    if (std.mem.startsWith(u8, target_key, "macos")) return ".dylib";
+    if (std.mem.startsWith(u8, target_key, "windows")) return ".dll";
+    return ".so";
+}
+
 pub fn sanitizePkgName(allocator: std.mem.Allocator, pkg_name: []const u8) ![]const u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(allocator);
@@ -150,42 +156,85 @@ pub const ResolveOptions = struct {
     write_prebuilt: bool = false,
 };
 
-/// Three-state native static library resolution & Zig C cross-compilation engine:
-/// 1. Prebuilt in package: `<pkg_dir>/<prebuilt_dir>/<target_key>/lib<lib_name>.a` (0ms hit)
-/// 2. Global cache: `~/.cap/cache/native/<safe_pkg>@<ver>/<target_key>/lib<lib_name>.a`
+pub fn joinBinSubPath(
+    allocator: std.mem.Allocator,
+    pkg_dir: []const u8,
+    bin_path: ?[]const u8,
+    rel: []const u8,
+) ![]const u8 {
+    if (bin_path) |bp| {
+        if (bp.len > 0) {
+            if (rel.len == 0 or std.mem.eql(u8, rel, ".")) {
+                return try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, bp });
+            }
+            return try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, bp, rel });
+        }
+    }
+    if (rel.len == 0 or std.mem.eql(u8, rel, ".")) {
+        return try allocator.dupe(u8, pkg_dir);
+    }
+    return try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, rel });
+}
+
+fn hasOptFlag(flags: [][]const u8) bool {
+    for (flags) |f| {
+        if (std.mem.startsWith(u8, f, "-O")) return true;
+    }
+    return false;
+}
+
+fn optModeToCFlag(opt: manifest.OptimizeMode) []const u8 {
+    return switch (opt) {
+        .Debug => "-O0",
+        .ReleaseSafe => "-O2",
+        .ReleaseFast => "-O3",
+        .ReleaseSmall => "-Os",
+    };
+}
+
+/// Returns true if a `bin` entry represents a local C/C++ static library (rather than an external package version ref).
+pub fn isLocalBinLib(bin_cfg: manifest.BinDependencyConfig) bool {
+    return bin_cfg.sources.len > 0 or bin_cfg.path != null or bin_cfg.prebuilt != null or bin_cfg.build_cmd != null;
+}
+
+/// Three-state static library resolution & Zig C cross-compilation engine for a single `bin.<k>` entry:
+/// 1. Prebuilt in package: `<pkg_dir>/<prebuilt>/<target_key>/lib<k>.a` (0ms hit)
+/// 2. Global cache: `~/.cap/cache/native/<safe_pkg>@<ver>/<target_key>/lib<k>.a`
 /// 3. Compile C sources with `zig cc -target <triple> -c ...` + `zig ar rcs ...`
-pub fn resolveOrBuildNativeLib(
+pub fn resolveOrBuildBinLib(
     allocator: std.mem.Allocator,
     pkg_name: []const u8,
     pkg_ver: []const u8,
     pkg_dir: []const u8,
-    native_cfg: manifest.NativeConfig,
+    bin_name: []const u8,
+    bin_cfg: manifest.BinDependencyConfig,
     target_key_in: []const u8,
     force_rebuild: bool,
 ) ![]const u8 {
-    return resolveOrBuildNativeLibEx(allocator, pkg_name, pkg_ver, pkg_dir, native_cfg, target_key_in, .{
+    return resolveOrBuildBinLibEx(allocator, pkg_name, pkg_ver, pkg_dir, bin_name, bin_cfg, target_key_in, .{
         .force_rebuild = force_rebuild,
         .write_prebuilt = false,
     });
 }
 
-pub fn resolveOrBuildNativeLibEx(
+pub fn resolveOrBuildBinLibEx(
     allocator: std.mem.Allocator,
     pkg_name: []const u8,
     pkg_ver: []const u8,
     pkg_dir: []const u8,
-    native_cfg: manifest.NativeConfig,
+    bin_name: []const u8,
+    bin_cfg: manifest.BinDependencyConfig,
     target_key_in: []const u8,
     opts: ResolveOptions,
 ) ![]const u8 {
-    if (native_cfg.lib_name.len == 0) return error.InvalidNativeConfig;
+    if (bin_name.len == 0) return error.InvalidBinConfig;
 
     const target_key = zigTripleToTargetKey(target_key_in);
     const zig_triple = targetKeyToZigTriple(target_key);
-    const lib_filename = try std.fmt.allocPrint(allocator, "lib{s}.a", .{native_cfg.lib_name});
+    const lib_filename = try std.fmt.allocPrint(allocator, "lib{s}.a", .{bin_name});
     defer allocator.free(lib_filename);
 
-    const prebuilt_dir_name = if (native_cfg.prebuilt_dir.len > 0) native_cfg.prebuilt_dir else "prebuilt";
+    const prebuilt_dir_name = if (bin_cfg.prebuilt) |pb| (if (pb.len > 0) pb else "prebuilt") else "prebuilt";
     const prebuilt_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{
         pkg_dir,
         prebuilt_dir_name,
@@ -194,7 +243,7 @@ pub fn resolveOrBuildNativeLibEx(
     });
     errdefer allocator.free(prebuilt_path);
 
-    // State 1: Package-bundled prebuilt binary (0ms hit)
+    // State 1: Package-bundled prebuilt static archive (0ms hit)
     if (!opts.force_rebuild and fileExists(prebuilt_path)) {
         return prebuilt_path;
     }
@@ -232,17 +281,18 @@ pub fn resolveOrBuildNativeLibEx(
     }
 
     // State 3: Compile C sources via `zig cc` and pack with `zig ar`
-    if (native_cfg.c_sources.len == 0) {
-        return error.NativeSourcesMissing;
+    if (bin_cfg.sources.len == 0) {
+        return error.BinSourcesMissing;
     }
 
-    const obj_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ cache_target_dir, "obj" });
+    const obj_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ cache_target_dir, "obj", bin_name });
     defer allocator.free(obj_dir);
     try ensureDirPath(obj_dir);
 
-    std.debug.print("  ⚙ [native] Compiling {s}@{s} ({s} -> {s})...\n", .{
+    std.debug.print("  ⚙ [bin] Compiling {s}@{s} [{s}] ({s} -> {s})...\n", .{
         pkg_name,
         pkg_ver,
+        bin_name,
         target_key,
         zig_triple,
     });
@@ -260,16 +310,31 @@ pub fn resolveOrBuildNativeLibEx(
         for (inc_flags.items) |f| allocator.free(f);
         inc_flags.deinit(allocator);
     }
-    for (native_cfg.include_dirs) |inc| {
-        if (inc.len == 0) continue;
-        const inc_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, inc });
-        defer allocator.free(inc_path);
-        try inc_flags.append(allocator, try std.fmt.allocPrint(allocator, "-I{s}", .{inc_path}));
+    if (bin_cfg.include_dirs.len == 0) {
+        if (bin_cfg.path) |bp| {
+            if (bp.len > 0) {
+                const inc_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, bp });
+                defer allocator.free(inc_path);
+                try inc_flags.append(allocator, try std.fmt.allocPrint(allocator, "-I{s}", .{inc_path}));
+            }
+        }
+    } else {
+        for (bin_cfg.include_dirs) |inc| {
+            if (inc.len == 0) continue;
+            const inc_path = try joinBinSubPath(allocator, pkg_dir, bin_cfg.path, inc);
+            defer allocator.free(inc_path);
+            try inc_flags.append(allocator, try std.fmt.allocPrint(allocator, "-I{s}", .{inc_path}));
+        }
     }
 
-    for (native_cfg.c_sources, 0..) |src_rel, idx| {
+    const opt_cflag: ?[]const u8 = if (bin_cfg.opt) |o|
+        (if (!hasOptFlag(bin_cfg.c_flags)) optModeToCFlag(o) else null)
+    else
+        null;
+
+    for (bin_cfg.sources, 0..) |src_rel, idx| {
         if (src_rel.len == 0) continue;
-        const src_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, src_rel });
+        const src_path = try joinBinSubPath(allocator, pkg_dir, bin_cfg.path, src_rel);
         defer allocator.free(src_path);
 
         const stem = std.Io.Dir.path.stem(src_rel);
@@ -285,7 +350,10 @@ pub fn resolveOrBuildNativeLibEx(
         try argv.append(allocator, "-target");
         try argv.append(allocator, zig_triple);
         try argv.append(allocator, "-c");
-        for (native_cfg.cflags) |cf| {
+        if (opt_cflag) |of| {
+            try argv.append(allocator, of);
+        }
+        for (bin_cfg.c_flags) |cf| {
             if (cf.len > 0) try argv.append(allocator, cf);
         }
         for (inc_flags.items) |inc_f| {
@@ -297,12 +365,12 @@ pub fn resolveOrBuildNativeLibEx(
 
         const ok = try spawnSuccess(argv.items);
         if (!ok) {
-            std.debug.print("  ✗ [native] zig cc failed for {s}\n", .{src_path});
+            std.debug.print("  ✗ [bin] zig cc failed for {s}\n", .{src_path});
             return error.NativeBuildFailed;
         }
     }
 
-    // Archive all .o into lib<lib_name>.a
+    // Archive all .o into lib<bin_name>.a
     var ar_argv: std.ArrayList([]const u8) = .empty;
     defer ar_argv.deinit(allocator);
     try ar_argv.append(allocator, "zig");
@@ -315,16 +383,16 @@ pub fn resolveOrBuildNativeLibEx(
 
     const ar_ok = try spawnSuccess(ar_argv.items);
     if (!ar_ok) {
-        std.debug.print("  ✗ [native] zig ar failed for {s}\n", .{cache_lib_path});
+        std.debug.print("  ✗ [bin] zig ar failed for {s}\n", .{cache_lib_path});
         return error.NativeArchiveFailed;
     }
 
     const ms = t0.durationTo(std.Io.Timestamp.now(main_mod.global_io, .awake)).toMilliseconds();
-    std.debug.print("  ✓ [native] Built {s} ({s}) in {d}ms\n", .{ lib_filename, target_key, ms });
+    std.debug.print("  ✓ [bin] Built {s} ({s}) in {d}ms\n", .{ lib_filename, target_key, ms });
 
     if (opts.write_prebuilt) {
         try copyFilePath(allocator, cache_lib_path, prebuilt_path);
-        std.debug.print("  ✓ [native] Wrote prebuilt -> {s}\n", .{prebuilt_path});
+        std.debug.print("  ✓ [bin] Wrote prebuilt -> {s}\n", .{prebuilt_path});
         allocator.free(cache_lib_path);
         return prebuilt_path;
     }
@@ -354,6 +422,16 @@ pub const NativeLinkSet = struct {
         for (self.link_libs.items) |p| allocator.free(p);
         self.link_libs.deinit(allocator);
     }
+
+    fn appendUnique(list: *std.ArrayList([]const u8), allocator: std.mem.Allocator, value: []const u8) void {
+        for (list.items) |existing| {
+            if (std.mem.eql(u8, existing, value)) {
+                allocator.free(value);
+                return;
+            }
+        }
+        list.append(allocator, value) catch allocator.free(value);
+    }
 };
 
 fn readManifestInDir(allocator: std.mem.Allocator, pkg_dir: []const u8) ?manifest.Manifest {
@@ -373,48 +451,150 @@ fn readManifestInDir(allocator: std.mem.Allocator, pkg_dir: []const u8) ?manifes
     return manifest.Manifest.parse(allocator, content) catch return null;
 }
 
-fn collectFromPkgDir(
+fn collectSysDeps(
     allocator: std.mem.Allocator,
     pkg_dir: []const u8,
+    sys_cfg: manifest.SysDependencyConfig,
     target_key: []const u8,
+    target_triple: []const u8,
     out: *NativeLinkSet,
 ) void {
+    const ext = dynamicLibExtForTarget(target_key);
+    for (sys_cfg.libs) |sys_dep| {
+        var resolved_prebuilt = false;
+        if (sys_dep.name) |lib_name| {
+            // Check bundled prebuilt dynamic library (.so / .dylib / .dll)
+            if (sys_dep.prebuilt) |pb| {
+                const dyn_name = std.fmt.allocPrint(allocator, "lib{s}{s}", .{ lib_name, ext }) catch null;
+                if (dyn_name) |dn| {
+                    defer allocator.free(dn);
+                    const dyn_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, pb, target_key }) catch null;
+                    if (dyn_dir) |dd| {
+                        defer allocator.free(dd);
+                        const dyn_full = std.Io.Dir.path.join(allocator, &[_][]const u8{ dd, dn }) catch null;
+                        if (dyn_full) |df| {
+                            defer allocator.free(df);
+                            if (fileExists(df)) {
+                                if (std.fmt.allocPrint(allocator, "-L{s}", .{dd}) catch null) |l_dir_flag| {
+                                    NativeLinkSet.appendUnique(&out.link_libs, allocator, l_dir_flag);
+                                }
+                                if (std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}) catch null) |l_flag| {
+                                    NativeLinkSet.appendUnique(&out.link_libs, allocator, l_flag);
+                                }
+                                resolved_prebuilt = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!resolved_prebuilt) {
+                if (sys_dep.path) |p| {
+                    const dyn_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, p }) catch null;
+                    if (dyn_dir) |dd| {
+                        defer allocator.free(dd);
+                        const dyn_name = std.fmt.allocPrint(allocator, "lib{s}{s}", .{ lib_name, ext }) catch null;
+                        if (dyn_name) |dn| {
+                            defer allocator.free(dn);
+                            const dyn_full = std.Io.Dir.path.join(allocator, &[_][]const u8{ dd, dn }) catch null;
+                            if (dyn_full) |df| {
+                                defer allocator.free(df);
+                                if (fileExists(df)) {
+                                    if (std.fmt.allocPrint(allocator, "-L{s}", .{dd}) catch null) |l_dir_flag| {
+                                        NativeLinkSet.appendUnique(&out.link_libs, allocator, l_dir_flag);
+                                    }
+                                    if (std.fmt.allocPrint(allocator, "-l{s}", .{lib_name}) catch null) |l_flag| {
+                                        NativeLinkSet.appendUnique(&out.link_libs, allocator, l_flag);
+                                    }
+                                    resolved_prebuilt = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!resolved_prebuilt) {
+            if (sys_dep.getLibFlagForTarget(target_triple, allocator) catch null) |flag| {
+                NativeLinkSet.appendUnique(&out.link_libs, allocator, flag);
+            }
+        }
+    }
+}
+
+fn collectPackageRecursive(
+    allocator: std.mem.Allocator,
+    modules_dir_path: []const u8,
+    pkg_name: []const u8,
+    target_key: []const u8,
+    target_triple: []const u8,
+    visited: *std.StringHashMap(void),
+    out: *NativeLinkSet,
+) void {
+    if (visited.contains(pkg_name)) return;
+    visited.put(allocator.dupe(u8, pkg_name) catch return, {}) catch return;
+
+    const pkg_dir = std.Io.Dir.path.join(allocator, &[_][]const u8{ modules_dir_path, pkg_name }) catch return;
+    defer allocator.free(pkg_dir);
+
     var mf = readManifestInDir(allocator, pkg_dir) orelse return;
     defer mf.deinit(allocator);
 
-    const nc = mf.native_config orelse return;
-    if (nc.lib_name.len == 0) return;
+    // 1. Collect all `bin` static libraries declared in this package
+    var bin_it = mf.bin_dependencies.iterator();
+    while (bin_it.next()) |entry| {
+        const bin_name = entry.key_ptr.*;
+        const bin_cfg = entry.value_ptr.*;
+        if (isLocalBinLib(bin_cfg)) {
+            if (resolveOrBuildBinLib(allocator, mf.name, mf.version, pkg_dir, bin_name, bin_cfg, target_key, false)) |lib_path| {
+                NativeLinkSet.appendUnique(&out.static_libs, allocator, lib_path);
+            } else |_| {}
 
-    const lib_path = resolveOrBuildNativeLib(allocator, mf.name, mf.version, pkg_dir, nc, target_key, false) catch return;
-    out.static_libs.append(allocator, lib_path) catch {
-        allocator.free(lib_path);
-        return;
-    };
-
-    for (nc.include_dirs) |inc| {
-        if (inc.len == 0) continue;
-        const inc_path = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, inc }) catch continue;
-        out.include_dirs.append(allocator, inc_path) catch allocator.free(inc_path);
+            if (bin_cfg.include_dirs.len == 0) {
+                if (bin_cfg.path) |bp| {
+                    if (bp.len > 0) {
+                        if (std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, bp }) catch null) |inc_path| {
+                            NativeLinkSet.appendUnique(&out.include_dirs, allocator, inc_path);
+                        }
+                    }
+                }
+            } else {
+                for (bin_cfg.include_dirs) |inc| {
+                    if (inc.len == 0) continue;
+                    if (joinBinSubPath(allocator, pkg_dir, bin_cfg.path, inc) catch null) |inc_path| {
+                        NativeLinkSet.appendUnique(&out.include_dirs, allocator, inc_path);
+                    }
+                }
+            }
+        } else if (bin_cfg.version != null) {
+            // External static library package reference (e.g. "pkg": "^1.0.0")
+            collectPackageRecursive(allocator, modules_dir_path, bin_name, target_key, target_triple, visited, out);
+        }
     }
 
-    for (nc.link_libs) |ll| {
-        if (ll.len == 0) continue;
-        const ll_dup = allocator.dupe(u8, ll) catch continue;
-        out.link_libs.append(allocator, ll_dup) catch allocator.free(ll_dup);
+    // 2. Collect all `sys` dynamic/system libraries declared in this package
+    if (mf.sys_dependencies) |sys_cfg| {
+        collectSysDeps(allocator, pkg_dir, sys_cfg, target_key, target_triple, out);
+    }
+
+    // 3. Recursively traverse transitive `deps`
+    var dep_it = mf.dependencies.iterator();
+    while (dep_it.next()) |dep_entry| {
+        collectPackageRecursive(allocator, modules_dir_path, dep_entry.key_ptr.*, target_key, target_triple, visited, out);
     }
 }
 
-pub fn collectInstalledNativeDeps(allocator: std.mem.Allocator, project_root: []const u8) !NativeLinkSet {
-    return collectInstalledNativeDepsForTarget(allocator, project_root, hostTargetKey());
-}
-
-pub fn collectInstalledNativeDepsForTarget(
+/// On-demand recursive link collector: ONLY links packages actually referenced by the compilation unit
+/// and their transitive `deps`, `bin` static archives, and `sys` dynamic libraries.
+pub fn collectUsedPackageDepsForTarget(
     allocator: std.mem.Allocator,
     project_root: []const u8,
+    used_pkgs: *const std.StringHashMap(void),
     target_triple: []const u8,
 ) !NativeLinkSet {
     var result = NativeLinkSet.init();
     errdefer result.deinit(allocator);
+
+    if (used_pkgs.count() == 0) return result;
 
     const target_key = zigTripleToTargetKey(target_triple);
     const modules_dir_path = if (std.mem.eql(u8, project_root, ".") or project_root.len == 0)
@@ -423,33 +603,16 @@ pub fn collectInstalledNativeDepsForTarget(
         try std.Io.Dir.path.join(allocator, &[_][]const u8{ project_root, "cap_modules" });
     defer allocator.free(modules_dir_path);
 
-    var mod_dir = (if (modules_dir_path[0] == '/')
-        std.Io.Dir.openDirAbsolute(main_mod.global_io, modules_dir_path, .{ .iterate = true })
-    else
-        std.Io.Dir.openDir(.cwd(), main_mod.global_io, modules_dir_path, .{ .iterate = true })) catch {
-        return result;
-    };
-    defer mod_dir.close(main_mod.global_io);
+    var visited = std.StringHashMap(void).init(allocator);
+    defer {
+        var vit = visited.iterator();
+        while (vit.next()) |e| allocator.free(e.key_ptr.*);
+        visited.deinit();
+    }
 
-    var it = mod_dir.iterate();
-    while (try it.next(main_mod.global_io)) |entry| {
-        if (entry.name.len == 0 or entry.name[0] == '.') continue;
-        if (entry.name[0] == '@') {
-            // Scoped directory: cap_modules/@scope/<pkg>
-            var scope_dir = mod_dir.openDir(main_mod.global_io, entry.name, .{ .iterate = true }) catch continue;
-            defer scope_dir.close(main_mod.global_io);
-            var scope_it = scope_dir.iterate();
-            while (try scope_it.next(main_mod.global_io)) |sub| {
-                if (sub.name.len == 0 or sub.name[0] == '.') continue;
-                const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ modules_dir_path, entry.name, sub.name });
-                defer allocator.free(pkg_dir);
-                collectFromPkgDir(allocator, pkg_dir, target_key, &result);
-            }
-        } else {
-            const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ modules_dir_path, entry.name });
-            defer allocator.free(pkg_dir);
-            collectFromPkgDir(allocator, pkg_dir, target_key, &result);
-        }
+    var it = used_pkgs.iterator();
+    while (it.next()) |entry| {
+        collectPackageRecursive(allocator, modules_dir_path, entry.key_ptr.*, target_key, target_triple, &visited, &result);
     }
 
     return result;

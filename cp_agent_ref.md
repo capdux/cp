@@ -86,45 +86,64 @@ export * from "./sub_module.cp";
 ```
 - **架构铁律**：复合多文件库统一使用 `lib/<name>/index.cp` 作为唯一对外出口，根目录下严禁创建多余同名门面文件（如严禁创建 `lib/io.cp`）。
 
-### 4. `cap.json` 工程清单与工具链 CLI (`cap` & `cpc`)
+### 4. `cap.json` 极简工程清单、Workspace 与工具链 CLI (`cap` & `cpc`) [SYNC_PENDING: 2026-11-24]
 ```json
 {
   "name": "nexus-agent",
-  "version": "1.0.0",
+  "ver": "1.0.0",
   "main": "src/main.cp",
+  "license": "MIT",
   "opt": "fast",
-  "dependencies": { "tensor-math": "^0.2.1" },
-  "bin_dependencies": {
-    "my_c_lib": {
-      "path": "vendor/foo",
-      "src": ["a.c"],
-      "include": ["."],
-      "flag": ["-D_GNU_SOURCE"]
-    }
+  "workspaces": ["packages/*", "packages/@cap/*"],
+  "deps": {
+    "@cap/picohttp": "workspace:*",
+    "tensor-math": "^0.2.1"
   },
-  "build": {
-    "entry": "src/main.cp",
-    "opt": "fast",
-    "out_dir": "bin",
-    "sys": {
-      "z": { "linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll" }
-    }
+  "dev": {
+    "@cap/hdrhistogram": "workspace:*"
+  },
+  "bin": {
+    "picohttp": {
+      "path": "c",
+      "src": ["picohttpparser.c"],
+      "include": ["."],
+      "flag": ["-D_GNU_SOURCE"],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    },
+    "z": {
+      "path": "vendor/zlib",
+      "src": ["adler32.c", "deflate.c"],
+      "include": ["."],
+      "flag": ["-DZLIB_COMPAT", "-DNDEBUG"],
+      "opt": "fast"
+    },
+    "ext_static": "^1.0.0"
+  },
+  "sys": {
+    "c": {},
+    "pthread": {},
+    "z": { "linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll" },
+    "ssl": { "path": "lib", "prebuilt": "prebuilt" }
   }
 }
 ```
 
-> **`cap.json` 精简规范速查**：
-> 1. **`opt`**：全级别优化配置，取值 `"debug"` / `"safe"` / `"fast"` / `"small"`（替代旧版 `default_opt: ReleaseSmall`）；
-> 2. **`bin` 库配置**：默认即为静态库（废除冗余的 `type: static_lib`）；支持精炼字段名 `src`、`include`、`flag`；
-> 3. **`path` 相对作用域**：当指定了 `path`，其下的 `src` 与 `include` 无需重复写 `path` 前缀；若省略 `include`，系统默认注入当前 `path` 作为头文件包含路径；
-> 4. **`flag` 编译选项**：供底层 C/C++ 编译器使用的宏定义（如 `-D_GNU_SOURCE`）及编译选项；
-> 5. **`sys` 命名字典**：采用命名字典支持多动态库依赖隔离，平台支持 `mac` / `win` / `linux` 精炼键名；
-> 6. **`lib` 路径精准映射**：`path` 支持指向目录（自动识别 `index.cp` / `main.cp` / 同名 `.cp`）或直接指向特定文件（如 `"http/server.cp"`），不存在时平滑回退。
+> **`cap.json` 2.0 无下划线极简规范（100% 向后兼容读取旧键名 `version`/`dependencies`/`devDependencies`/`bin_dependencies`/`sys_dependencies`）**：
+> 1. **核心顶层字段**：`name`、`ver`、`main`、`license`、`opt`（`"debug"`/`"safe"`/`"fast"`/`"small"`）、`deps`（生产依赖）、`dev`（开发/测试依赖）、`workspaces`（兼容 `ws`，对标 pnpm/Bun）；
+> 2. **`bin` 静态库多库字典（禁止使用已废除的 `native` 字段）**：单包可声明多个静态库 `bin.<k>`，每条支持 `path`/`src`/`include`/`flag`/`opt`/`prebuilt`（默认 `"prebuilt"`）或 `"<pkg>": "^1.0.0"` 引用外部静态库包；省略 `include` 时默认注入 `path`；每个静态库独立走三态解析：随包 `<prebuilt>/<os>-<arch>/lib<k>.a` (0ms 命中) -> `~/.cap/cache/native/<pkg>@<ver>/<os>-<arch>/lib<k>.a` -> 自动 `zig cc` + `zig ar` 编译缓存；
+> 3. **`sys` 动态库/系统库多库字典**：支持空对象直连（`"c": {}`、`"m": {}`、`"pthread": {}`）、跨平台映射（`linux`/`mac`/`win`）或随包预编译动态库（`path`/`prebuilt` 自动探测 `.so`/`.dylib`/`.dll`）；
+> 4. **Workspace 协议**：根 `cap.json` 含 `workspaces`（支持 `packages/*`、`packages/@cap/*` 等 glob）时，`cap install` 自动展开子包、将 `workspace:*` 软链入根 `cap_modules/` 并写入根 `cap.lock`；支持 `--filter <pkg>` 过滤 `rebuild` / `pm ls`；
+> 5. **按需链接（On-Demand Link Tree-Shaking）**：`cap build`/`run`/`test` 仅扫描转译后 `.zig` 顶部的 `// @cap-used-pkg: <pkg>`（无注释时回退扫描 `@import` / `.cp` 的 `import` 路径），**绝不盲目链接未引用的 `cap_modules/` 包**，仅递归收集实际使用包的 `deps`、`bin`（`.a` + `-I`）与 `sys`（`-l`）传给 `zig build-exe`；
+> 6. **`lib` 路径精准映射**：`lib/cap.json` 的 `path` 支持目录（自动识别 `index.cp`/`main.cp`/同名 `.cp`）或具体文件。
 | 工具指令 | 核心用途与行为 |
 | :--- | :--- |
 | `cpc brief [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | **⭐ 推荐首选：内置原生多文件省 Token 联合校验器**（自动探测 Zig 优先级：`--zig` > `$ZIG_BIN` > `./vendor/zig/zig` > `../vendor/zig/zig` > `/data/dev/cp/vendor/zig/zig` > `zig`）：直接复用内部诊断引擎按 `code` 统计去重前 `N` 条根因 + `--lib` 代码生成 + `zig ast-check` + 4 项纯净度静态门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`，`--require-backup` 校验 `_.zig` 与膨胀比 `<=1.2`） |
-| `cap <file>` / `cap run <file>` | Debug 模式百毫秒级直接构建并运行 |
-| `cap init [template]` / `add [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理依赖 |
+| `cap <file>` / `cap run <file>` | Debug 模式百毫秒级直接构建并运行（按需链接已引用包） |
+| `cap init [template]` / `add [-d] [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理 `deps`/`dev` |
+| `cap install [--frozen-lockfile] [--rebuild] [--target=<os-arch>]` | 展开 `workspaces`、解析 `workspace:*`/`file:`/注册表依赖并预编译 `bin` 静态库写入 `cap.lock` |
+| `cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch\|all>] [--write-prebuilt]` | 遍历包内全部 `bin` 条目重编或全平台交叉编译，可选回写随包 `prebuilt/` |
+| `cap pm ls [--filter <pkg>]` / `cap why <pkg>` / `cap cache <dir\|ls\|clean>` | 查看 `cap_modules/` 已安装包（含 `bin` 列表）、依赖溯源与 `~/.cap/cache` 缓存管理 |
 | `cap build [dir]` (`-r`/`-f`/`-s`/`-B`/`-n`) | 构建产物：`-r` 全平台矩阵、`-f` ReleaseFast、`-s` ReleaseSmall、`-B` 强制全量、`-n` (`--nest`) Nest 动态库 |
 | `cap build --lib` / `--obj` | 输出静态库 `.a` 或底层 `.o` 目标文件 |
 | `cap test [dir]` / `bench` / `clean` | 运行测试（`bin/test/`）、`bench` 基准测试、`clean` 清理 `.cap/` 与 `bin/` |

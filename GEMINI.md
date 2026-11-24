@@ -714,7 +714,7 @@ git status --porcelain cpc_dev/src
    - 验收通过后，在同一回合内并行执行 `cp_lib_ref.md` / `THIRD_PARTY_NOTICES.md` 更新、下轮子智能体派发与下游工单队列检查，紧接着单条命令完成 `git add && git commit`，将主控每轮往返压缩至 2 回合以内；修改已有表格行前先精准 `rg -n` 确认原文，杜绝盲猜失败浪费整轮重传。
 4. **高负载下 `cpc` 热修构建防超时策略**：
    - 若系统处于高负载（如下游 Bun 链接期间），先直跑 `cargo build --release` 完成增量编译（可见进度且无 120s/300s 静默强杀），再调用 `bash scripts/sync_cpc.sh release` 3 秒完成原子部署。
-5. **静默编译输出节流（实测节省 99% 编译日志 Token，2026-11-24 Iteration 2）**：
-   - 调用 `cargo check` / `cargo build` 时默认加 `-q`（或 `RUSTFLAGS="-Awarnings"`），消除 88+ 条历史 warning 刷屏（从 ~25KB 降至 < 200B），仅保留真实报错与完成状态。
+5. **静默编译输出节流（实测节省 98%+ 编译日志 Token，2026-11-24 Iteration 2）**：
+   - 调用 `cargo check` / `cargo build` 时必须加 `RUSTFLAGS="-Awarnings"` 与 `-q`（实测仅 `-q` 仍输出 21,567B warning，加 `RUSTFLAGS="-Awarnings"` 后压至 418B，降幅 98.1%），仅保留真实报错与完成状态。
 6. **多套件回归 4 路并行 + 独立 `--cache-dir` 隔离（实测 4x 提速、降 90% 回归日志 Token）**：
    - 批量跑多份 `cap/test/*.cp` 时统一使用 4 路并发 + 独立 `--cache-dir=.cap/ws_<tag>/<suite>` 避免缓存锁竞争与串台，PASS 项仅输出汇总计数、仅对 FAIL 项展开错误上下文。

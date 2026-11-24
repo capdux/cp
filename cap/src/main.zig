@@ -208,10 +208,10 @@ fn usage() void {
         \\  cap remove <package>          Remove a dependency from cap.json, cap.lock & cap_modules
         \\  cap update [package]          Update dependencies and refresh cap.lock
         \\  cap install [options]         Install dependencies (--frozen-lockfile, --rebuild)
-        \\  cap rebuild [pkg] [options]   Rebuild native C libs (--target=<os-arch|all>, --write-prebuilt)
+        \\  cap rebuild [pkg] [options]   Rebuild bin C libs (--filter <pkg>, --target=<os-arch|all>, --write-prebuilt)
         \\  cap cache <dir|ls|clean>      Inspect or clean global ~/.cap/cache
         \\  cap why <package>             Explain why a package is installed
-        \\  cap pm ls                     List installed packages in cap_modules/
+        \\  cap pm ls [--filter <pkg>]    List installed packages in cap_modules/
         \\  cap sniff                     Detect hardware features (AVX2, CPU, OS)
         \\  cap help                      Show this help message
         \\
@@ -824,6 +824,107 @@ fn scanDirRecursivelyForCaps(allocator: std.mem.Allocator, dir_path: []const u8,
     }
 }
 
+fn extractPkgNameFromSlice(raw: []const u8) []const u8 {
+    if (raw.len == 0) return "";
+    if (raw[0] == '@') {
+        if (std.mem.indexOfScalar(u8, raw, '/')) |first_slash| {
+            var end = first_slash + 1;
+            while (end < raw.len and raw[end] != '/' and raw[end] != '"' and raw[end] != '\'' and raw[end] != ')' and !std.ascii.isWhitespace(raw[end])) : (end += 1) {}
+            if (end > first_slash + 1) return raw[0..end];
+        }
+        return "";
+    }
+    var end: usize = 0;
+    while (end < raw.len and raw[end] != '/' and raw[end] != '"' and raw[end] != '\'' and raw[end] != ')' and !std.ascii.isWhitespace(raw[end])) : (end += 1) {}
+    return raw[0..end];
+}
+
+fn addUsedPkg(allocator: std.mem.Allocator, used_pkgs: *std.StringHashMap(void), pkg_name: []const u8) void {
+    if (pkg_name.len == 0) return;
+    if (used_pkgs.contains(pkg_name)) return;
+    used_pkgs.put(allocator.dupe(u8, pkg_name) catch return, {}) catch {};
+}
+
+fn scanCpImportsFallback(allocator: std.mem.Allocator, cp_path: []const u8, used_pkgs: *std.StringHashMap(void)) void {
+    const content = fs_shim.cwd().readFileAlloc(allocator, cp_path, 2 * 1024 * 1024) catch return;
+    defer allocator.free(content);
+
+    var lines = std.mem.splitScalar(u8, content, '\n');
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \t\r");
+        if (!std.mem.startsWith(u8, trimmed, "import ")) continue;
+        const from_idx = std.mem.indexOf(u8, trimmed, "from ") orelse continue;
+        const after_from = std.mem.trimStart(u8, trimmed[from_idx + 5 ..], " \t");
+        if (after_from.len < 2) continue;
+        const quote = after_from[0];
+        if (quote != '"' and quote != '\'') continue;
+        const rest = after_from[1..];
+        const end_q = std.mem.indexOfScalar(u8, rest, quote) orelse continue;
+        const spec = rest[0..end_q];
+        if (spec.len == 0 or spec[0] == '.' or spec[0] == '/' or std.mem.startsWith(u8, spec, "cap:")) continue;
+        const pkg = extractPkgNameFromSlice(spec);
+        if (pkg.len == 0) continue;
+        const mod_check = std.fmt.allocPrint(allocator, "cap_modules/{s}/cap.json", .{pkg}) catch continue;
+        defer allocator.free(mod_check);
+        if (native.fileExists(mod_check)) {
+            addUsedPkg(allocator, used_pkgs, pkg);
+        }
+    }
+}
+
+/// On-Demand Link Tree-Shaking scanner:
+/// 1. Primary: scans `// @cap-used-pkg: <pkg>` comments emitted at the top of generated `.zig` files.
+/// 2. Fallback (only when no `@cap-used-pkg` pragma is present): scans `@import("...cap_modules/<pkg>/...")`
+///    references and original `.cp` `import ... from "<pkg>"` statements.
+/// Never blindly links unused packages in `cap_modules/`.
+fn scanUsedPackagesFromFile(allocator: std.mem.Allocator, file_path: []const u8, used_pkgs: *std.StringHashMap(void)) void {
+    const content = fs_shim.cwd().readFileAlloc(allocator, file_path, 4 * 1024 * 1024) catch return;
+    defer allocator.free(content);
+
+    // 1. Primary pass: scan `// @cap-used-pkg: <pkg>` annotations
+    var lines = std.mem.splitScalar(u8, content, '\n');
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \t\r");
+        if (std.mem.startsWith(u8, trimmed, "//")) {
+            const after_slashes = std.mem.trimStart(u8, trimmed[2..], " \t");
+            if (std.mem.startsWith(u8, after_slashes, "@cap-used-pkg:")) {
+                const raw_pkg = std.mem.trim(u8, after_slashes["@cap-used-pkg:".len..], " \t\r");
+                const pkg = extractPkgNameFromSlice(raw_pkg);
+                addUsedPkg(allocator, used_pkgs, pkg);
+            }
+        }
+    }
+    if (used_pkgs.count() > 0) return;
+
+    // 2. Fallback pass: scan `@import` / path references containing `cap_modules/`
+    var cursor: usize = 0;
+    while (std.mem.indexOfPos(u8, content, cursor, "cap_modules/")) |idx| {
+        const start = idx + "cap_modules/".len;
+        if (start < content.len) {
+            const pkg = extractPkgNameFromSlice(content[start..]);
+            addUsedPkg(allocator, used_pkgs, pkg);
+        }
+        cursor = start;
+    }
+
+    // 3. Fallback pass for `.cp` source imports (when file_path is `.cp` or mapped from `.cap/zig/*.zig`)
+    if (std.mem.endsWith(u8, file_path, ".cp")) {
+        scanCpImportsFallback(allocator, file_path, used_pkgs);
+    } else if (std.mem.startsWith(u8, file_path, ".cap/zig/") and std.mem.endsWith(u8, file_path, ".zig")) {
+        const rel_stem = file_path[".cap/zig/".len .. file_path.len - 4];
+        const cp_path = std.fmt.allocPrint(allocator, "{s}.cp", .{rel_stem}) catch return;
+        defer allocator.free(cp_path);
+        scanCpImportsFallback(allocator, cp_path, used_pkgs);
+    } else if (std.mem.startsWith(u8, file_path, ".cap/ws/") and std.mem.endsWith(u8, file_path, ".zig")) {
+        if (std.mem.indexOf(u8, file_path, "/zig/")) |zig_idx| {
+            const rel_stem = file_path[zig_idx + "/zig/".len .. file_path.len - 4];
+            const cp_path = std.fmt.allocPrint(allocator, "{s}.cp", .{rel_stem}) catch return;
+            defer allocator.free(cp_path);
+            scanCpImportsFallback(allocator, cp_path, used_pkgs);
+        }
+    }
+}
+
 fn scanSourceForCapImports(allocator: std.mem.Allocator, file_path: []const u8, imported_caps: *std.StringHashMap(void)) void {
     scanBufferForCapImports(allocator, file_path, imported_caps);
 
@@ -1174,6 +1275,20 @@ fn appendLinkArgs(
             }
         }
 
+        // 1.5 Process top-level `sys` dynamic/system libraries from project cap.json
+        if (mf.sys_dependencies) |sys_cfg| {
+            if (sys_cfg.getAllLibFlagsForTarget(target_triple, allocator) catch null) |flags| {
+                defer allocator.free(flags);
+                for (flags) |flag| {
+                    if (allocated_libs_len.* < allocated_libs.len) {
+                        allocated_libs[allocated_libs_len.*] = flag;
+                        allocated_libs_len.* += 1;
+                    }
+                    addArg(args_buf, argc, flag);
+                }
+            }
+        }
+
         // 2. Process c_flags and link_libs from build_config
         if (mf.build_config) |bc| {
             for (bc.c_flags) |cf| {
@@ -1283,41 +1398,53 @@ fn appendLinkArgs(
         }
     }
 
-    // 3.5 Installed cap_modules/ native C packages (prebuilt 0ms hit or auto zig cc build)
-    if (native.collectInstalledNativeDepsForTarget(allocator, ".", target_triple)) |native_deps_val| {
-        var native_deps = native_deps_val;
-        defer native_deps.deinit(allocator);
-        for (native_deps.include_dirs.items) |inc_dir| {
-            const inc_arg = try std.fmt.allocPrint(allocator, "-I{s}", .{inc_dir});
-            if (allocated_libs_len.* < allocated_libs.len) {
-                allocated_libs[allocated_libs_len.*] = inc_arg;
-                allocated_libs_len.* += 1;
-            }
-            addArg(args_buf, argc, inc_arg);
+    // 3.5 On-Demand Link Tree-Shaking for cap_modules/ packages (only links referenced packages + transitive deps)
+    if (scan_file) |sf| {
+        var used_pkgs = std.StringHashMap(void).init(allocator);
+        defer {
+            var uit = used_pkgs.iterator();
+            while (uit.next()) |e| allocator.free(e.key_ptr.*);
+            used_pkgs.deinit();
         }
-        for (native_deps.static_libs.items) |static_lib| {
-            const lib_dup = try allocator.dupe(u8, static_lib);
-            if (allocated_libs_len.* < allocated_libs.len) {
-                allocated_libs[allocated_libs_len.*] = lib_dup;
-                allocated_libs_len.* += 1;
-            }
-            addArg(args_buf, argc, lib_dup);
+        scanUsedPackagesFromFile(allocator, sf, &used_pkgs);
+
+        if (used_pkgs.count() > 0) {
+            if (native.collectUsedPackageDepsForTarget(allocator, ".", &used_pkgs, target_triple)) |native_deps_val| {
+                var native_deps = native_deps_val;
+                defer native_deps.deinit(allocator);
+                for (native_deps.include_dirs.items) |inc_dir| {
+                    const inc_arg = try std.fmt.allocPrint(allocator, "-I{s}", .{inc_dir});
+                    if (allocated_libs_len.* < allocated_libs.len) {
+                        allocated_libs[allocated_libs_len.*] = inc_arg;
+                        allocated_libs_len.* += 1;
+                    }
+                    addArg(args_buf, argc, inc_arg);
+                }
+                for (native_deps.static_libs.items) |static_lib| {
+                    const lib_dup = try allocator.dupe(u8, static_lib);
+                    if (allocated_libs_len.* < allocated_libs.len) {
+                        allocated_libs[allocated_libs_len.*] = lib_dup;
+                        allocated_libs_len.* += 1;
+                    }
+                    addArg(args_buf, argc, lib_dup);
+                }
+                for (native_deps.link_libs.items) |ll| {
+                    const l_arg = if (std.mem.startsWith(u8, ll, "-l") or std.mem.startsWith(u8, ll, "-L"))
+                        try allocator.dupe(u8, ll)
+                    else
+                        try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+                    if (allocated_libs_len.* < allocated_libs.len) {
+                        allocated_libs[allocated_libs_len.*] = l_arg;
+                        allocated_libs_len.* += 1;
+                    }
+                    addArg(args_buf, argc, l_arg);
+                }
+                if (native_deps.static_libs.items.len > 0) {
+                    addArg(args_buf, argc, "-lc");
+                }
+            } else |_| {}
         }
-        for (native_deps.link_libs.items) |ll| {
-            const l_arg = if (std.mem.startsWith(u8, ll, "-l") or std.mem.startsWith(u8, ll, "-L"))
-                try allocator.dupe(u8, ll)
-            else
-                try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
-            if (allocated_libs_len.* < allocated_libs.len) {
-                allocated_libs[allocated_libs_len.*] = l_arg;
-                allocated_libs_len.* += 1;
-            }
-            addArg(args_buf, argc, l_arg);
-        }
-        if (native_deps.static_libs.items.len > 0) {
-            addArg(args_buf, argc, "-lc");
-        }
-    } else |_| {}
+    }
 
     // 4. Fallback auto-detection for uSockets / QuickJS if not already linked
     if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {

@@ -54,7 +54,6 @@ fn removePathAny(path: []const u8) void {
 pub fn computeDirSha256(allocator: std.mem.Allocator, dir_path: []const u8) ![]const u8 {
     var hasher = std.crypto.hash.sha2.Sha256.init(.{});
 
-    // Hash cap.json if present, plus top-level file names & sizes for deterministic integrity
     const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ dir_path, "cap.json" });
     defer allocator.free(mf_path);
     if (readFileAny(allocator, mf_path)) |mf_bytes| {
@@ -96,38 +95,85 @@ pub fn materializePackage(allocator: std.mem.Allocator, pkg_name: []const u8, ab
     return link_path;
 }
 
-fn discoverWorkspaces(allocator: std.mem.Allocator, workspaces: [][]const u8) !std.StringHashMap([]const u8) {
+fn registerWorkspaceDir(
+    allocator: std.mem.Allocator,
+    dir_rel: []const u8,
+    map: *std.StringHashMap([]const u8),
+) void {
+    const mf_path = std.Io.Dir.path.join(allocator, &[_][]const u8{ dir_rel, "cap.json" }) catch return;
+    defer allocator.free(mf_path);
+    const content = readFileAny(allocator, mf_path) catch return;
+    defer allocator.free(content);
+    var mf = manifest.Manifest.parse(allocator, content) catch return;
+    defer mf.deinit(allocator);
+    if (mf.name.len == 0 or std.mem.eql(u8, mf.name, "unknown")) return;
+    const abs_dir = realpathAny(allocator, dir_rel) catch return;
+    if (map.fetchRemove(mf.name)) |old| {
+        allocator.free(old.key);
+        allocator.free(old.value);
+    }
+    map.put(allocator.dupe(u8, mf.name) catch {
+        allocator.free(abs_dir);
+        return;
+    }, abs_dir) catch allocator.free(abs_dir);
+}
+
+fn expandWorkspaceSegments(
+    allocator: std.mem.Allocator,
+    current_dir: []const u8,
+    segments: []const []const u8,
+    map: *std.StringHashMap([]const u8),
+) void {
+    if (segments.len == 0) {
+        if (current_dir.len > 0) {
+            registerWorkspaceDir(allocator, current_dir, map);
+        }
+        return;
+    }
+
+    const seg = segments[0];
+    const rest = segments[1..];
+
+    if (std.mem.eql(u8, seg, "*")) {
+        const open_path = if (current_dir.len == 0) "." else current_dir;
+        var dir = std.Io.Dir.openDir(.cwd(), main_mod.global_io, open_path, .{ .iterate = true }) catch return;
+        defer dir.close(main_mod.global_io);
+        var it = dir.iterate();
+        while (it.next(main_mod.global_io) catch null) |entry| {
+            if (entry.name.len == 0 or entry.name[0] == '.') continue;
+            if (entry.kind != .directory and entry.kind != .sym_link) continue;
+            const next_dir = if (current_dir.len == 0)
+                allocator.dupe(u8, entry.name) catch continue
+            else
+                std.Io.Dir.path.join(allocator, &[_][]const u8{ current_dir, entry.name }) catch continue;
+            defer allocator.free(next_dir);
+            expandWorkspaceSegments(allocator, next_dir, rest, map);
+        }
+    } else {
+        const next_dir = if (current_dir.len == 0)
+            allocator.dupe(u8, seg) catch return
+        else
+            std.Io.Dir.path.join(allocator, &[_][]const u8{ current_dir, seg }) catch return;
+        defer allocator.free(next_dir);
+        expandWorkspaceSegments(allocator, next_dir, rest, map);
+    }
+}
+
+/// Discovers all workspace packages matching pnpm/Bun-style glob patterns
+/// (e.g. "packages/*", "packages/@cap/*", "packages/*/*", "apps/web").
+pub fn discoverWorkspaces(allocator: std.mem.Allocator, workspaces: [][]const u8) !std.StringHashMap([]const u8) {
     var map = std.StringHashMap([]const u8).init(allocator);
     for (workspaces) |pattern| {
-        if (pattern.len == 0) continue;
-        if (std.mem.endsWith(u8, pattern, "/*")) {
-            const base = pattern[0 .. pattern.len - 2];
-            var dir = std.Io.Dir.openDir(.cwd(), main_mod.global_io, base, .{ .iterate = true }) catch continue;
-            defer dir.close(main_mod.global_io);
-            var it = dir.iterate();
-            while (try it.next(main_mod.global_io)) |entry| {
-                if (entry.kind != .directory and entry.kind != .sym_link) continue;
-                const sub_rel = try std.Io.Dir.path.join(allocator, &[_][]const u8{ base, entry.name });
-                defer allocator.free(sub_rel);
-                const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ sub_rel, "cap.json" });
-                defer allocator.free(mf_path);
-                const content = readFileAny(allocator, mf_path) catch continue;
-                defer allocator.free(content);
-                var mf = manifest.Manifest.parse(allocator, content) catch continue;
-                defer mf.deinit(allocator);
-                const abs_dir = realpathAny(allocator, sub_rel) catch continue;
-                try map.put(try allocator.dupe(u8, mf.name), abs_dir);
-            }
-        } else {
-            const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pattern, "cap.json" });
-            defer allocator.free(mf_path);
-            const content = readFileAny(allocator, mf_path) catch continue;
-            defer allocator.free(content);
-            var mf = manifest.Manifest.parse(allocator, content) catch continue;
-            defer mf.deinit(allocator);
-            const abs_dir = realpathAny(allocator, pattern) catch continue;
-            try map.put(try allocator.dupe(u8, mf.name), abs_dir);
+        const trimmed = std.mem.trim(u8, pattern, " \t\r\n/");
+        if (trimmed.len == 0) continue;
+        var segs: std.ArrayList([]const u8) = .empty;
+        defer segs.deinit(allocator);
+        var split_it = std.mem.splitScalar(u8, trimmed, '/');
+        while (split_it.next()) |part| {
+            if (part.len == 0 or std.mem.eql(u8, part, ".")) continue;
+            try segs.append(allocator, part);
         }
+        expandWorkspaceSegments(allocator, "", segs.items, &map);
     }
     return map;
 }
@@ -154,11 +200,56 @@ fn resolveBestRegistryVersion(name: []const u8, range: semver.VersionRange) !sem
     return error.PackageNotFound;
 }
 
+/// Resolves/builds all local `bin` static libraries in a package directory.
+/// Returns the first built static library path (for lockfile metadata) if any.
+fn resolvePackageBinLibs(
+    allocator: std.mem.Allocator,
+    pkg_dir: []const u8,
+    target_key: []const u8,
+    rebuild_native: bool,
+) !?[]const u8 {
+    const pkg_mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, "cap.json" });
+    defer allocator.free(pkg_mf_path);
+
+    const pkg_mf_content = readFileAny(allocator, pkg_mf_path) catch return null;
+    defer allocator.free(pkg_mf_content);
+
+    var pmf = manifest.Manifest.parse(allocator, pkg_mf_content) catch return null;
+    defer pmf.deinit(allocator);
+
+    var first_lib: ?[]const u8 = null;
+    var bin_it = pmf.bin_dependencies.iterator();
+    while (bin_it.next()) |entry| {
+        const bin_name = entry.key_ptr.*;
+        const bin_cfg = entry.value_ptr.*;
+        if (!native.isLocalBinLib(bin_cfg)) continue;
+
+        const lib_p = try native.resolveOrBuildBinLib(
+            allocator,
+            pmf.name,
+            pmf.version,
+            pkg_dir,
+            bin_name,
+            bin_cfg,
+            target_key,
+            rebuild_native,
+        );
+        std.debug.print("  ✓ Bin [{s}] ready: {s}\n", .{ bin_name, lib_p });
+        if (first_lib == null) {
+            first_lib = lib_p;
+        } else {
+            allocator.free(lib_p);
+        }
+    }
+    return first_lib;
+}
+
 fn installSingleDep(
     allocator: std.mem.Allocator,
     name: []const u8,
     spec: []const u8,
     is_dev: bool,
+    record_root_dep: bool,
     ws_map: *const std.StringHashMap([]const u8),
     lk: *lock.Lockfile,
     opts: InstallOptions,
@@ -180,7 +271,6 @@ fn installSingleDep(
         owns_resolved_dir = true;
         resolved_url = try std.fmt.allocPrint(allocator, "file:{s}", .{abs_dir});
 
-        // Read version from package's cap.json
         const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ abs_dir, "cap.json" });
         defer allocator.free(mf_path);
         if (readFileAny(allocator, mf_path)) |content| {
@@ -263,41 +353,22 @@ fn installSingleDep(
     const integrity = try computeDirSha256(allocator, resolved_dir);
     errdefer allocator.free(integrity);
 
-    // Check native C configuration and resolve/build immediately
-    var native_lib_path: ?[]const u8 = null;
-    const pkg_mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ resolved_dir, "cap.json" });
-    defer allocator.free(pkg_mf_path);
-    if (readFileAny(allocator, pkg_mf_path)) |pkg_mf_content| {
-        defer allocator.free(pkg_mf_content);
-        if (manifest.Manifest.parse(allocator, pkg_mf_content)) |pmf_val| {
-            var pmf = pmf_val;
-            defer pmf.deinit(allocator);
-            if (pmf.native_config) |nc| {
-                if (nc.lib_name.len > 0) {
-                    const lib_p = try native.resolveOrBuildNativeLib(
-                        allocator,
-                        pmf.name,
-                        pmf.version,
-                        resolved_dir,
-                        nc,
-                        target_key,
-                        opts.rebuild_native,
-                    );
-                    native_lib_path = lib_p;
-                    std.debug.print("  ✓ Native [{s}] ready: {s}\n", .{ nc.lib_name, lib_p });
-                }
-            }
-        } else |_| {}
-    } else |_| {}
+    // Resolve/build all `bin` static libraries declared in this package
+    const first_bin_lib = try resolvePackageBinLibs(allocator, resolved_dir, target_key, opts.rebuild_native);
 
-    try lk.putPackage(allocator, name, lock.LockedPackage{
+    const locked_pkg = lock.LockedPackage{
         .version = try allocator.dupe(u8, resolved_ver),
         .spec = try allocator.dupe(u8, spec),
         .resolved = try allocator.dupe(u8, resolved_url),
         .integrity = integrity,
-        .native_lib = native_lib_path,
+        .native_lib = first_bin_lib,
         .is_dev = is_dev,
-    });
+    };
+    if (record_root_dep) {
+        try lk.putPackage(allocator, name, locked_pkg);
+    } else {
+        try lk.putWorkspacePackage(allocator, name, locked_pkg);
+    }
 }
 
 pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void {
@@ -336,14 +407,55 @@ pub fn installProject(allocator: std.mem.Allocator, opts: InstallOptions) !void 
     var lk = try lock.Lockfile.initEmpty(allocator);
     defer lk.deinit(allocator);
 
+    // 1. Auto-link all discovered workspace packages into root cap_modules/ & cap.lock
+    if (ws_map.count() > 0) {
+        std.debug.print("Workspaces: discovered {d} package(s)\n", .{ws_map.count()});
+        var ws_it = ws_map.iterator();
+        while (ws_it.next()) |ws_entry| {
+            const ws_name = ws_entry.key_ptr.*;
+            const is_root_dep = mf.dependencies.contains(ws_name) or mf.dev_dependencies.contains(ws_name);
+            if (!is_root_dep) {
+                try installSingleDep(allocator, ws_name, "workspace:*", false, false, &ws_map, &lk, opts);
+            }
+        }
+    }
+
+    // 2. Install root deps & dev deps
     var dep_it = mf.dependencies.iterator();
     while (dep_it.next()) |entry| {
-        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, &ws_map, &lk, opts);
+        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, true, &ws_map, &lk, opts);
     }
 
     var dev_it = mf.dev_dependencies.iterator();
     while (dev_it.next()) |entry| {
-        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, &ws_map, &lk, opts);
+        try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, true, &ws_map, &lk, opts);
+    }
+
+    // 3. Install dependencies declared inside workspace members (including inter-workspace `workspace:*`)
+    if (ws_map.count() > 0) {
+        var ws_it2 = ws_map.iterator();
+        while (ws_it2.next()) |ws_entry| {
+            const ws_dir = ws_entry.value_ptr.*;
+            const ws_mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ ws_dir, "cap.json" });
+            defer allocator.free(ws_mf_path);
+            const ws_mf_bytes = readFileAny(allocator, ws_mf_path) catch continue;
+            defer allocator.free(ws_mf_bytes);
+            var ws_mf = manifest.Manifest.parse(allocator, ws_mf_bytes) catch continue;
+            defer ws_mf.deinit(allocator);
+
+            var wdep_it = ws_mf.dependencies.iterator();
+            while (wdep_it.next()) |entry| {
+                if (!lk.packages.contains(entry.key_ptr.*)) {
+                    try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, false, false, &ws_map, &lk, opts);
+                }
+            }
+            var wdev_it = ws_mf.dev_dependencies.iterator();
+            while (wdev_it.next()) |entry| {
+                if (!lk.packages.contains(entry.key_ptr.*)) {
+                    try installSingleDep(allocator, entry.key_ptr.*, entry.value_ptr.*, true, false, &ws_map, &lk, opts);
+                }
+            }
+        }
     }
 
     if (!opts.frozen_lockfile) {
@@ -372,7 +484,6 @@ pub fn handleInstall(allocator: std.mem.Allocator, args: []const []const u8) !vo
 }
 
 fn parseAddSpec(allocator: std.mem.Allocator, raw_arg: []const u8) !struct { name: []const u8, spec: []const u8 } {
-    // Case 1: direct local path `file:./pkgs/foo` -> read name from <path>/cap.json
     if (std.mem.startsWith(u8, raw_arg, "file:")) {
         const local_path = raw_arg[5..];
         const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ local_path, "cap.json" });
@@ -393,7 +504,6 @@ fn parseAddSpec(allocator: std.mem.Allocator, raw_arg: []const u8) !struct { nam
         };
     }
 
-    // Case 2: scoped package `@scope/name` or `@scope/name@spec`
     if (raw_arg.len > 0 and raw_arg[0] == '@') {
         if (std.mem.indexOfScalarPos(u8, raw_arg, 1, '@')) |at_idx| {
             return .{
@@ -407,7 +517,6 @@ fn parseAddSpec(allocator: std.mem.Allocator, raw_arg: []const u8) !struct { nam
         };
     }
 
-    // Case 3: unscoped `name@spec` or `name`
     if (std.mem.indexOfScalar(u8, raw_arg, '@')) |at_idx| {
         return .{
             .name = try allocator.dupe(u8, raw_arg[0..at_idx]),
@@ -503,7 +612,6 @@ pub fn handleRemove(allocator: std.mem.Allocator, args: []const []const u8) !voi
         defer allocator.free(link_path);
         removePathAny(link_path);
 
-        // Update cap.lock if it exists
         if (main_mod.fs_shim.cwd().readFileAlloc(allocator, "cap.lock", 4 * 1024 * 1024)) |lk_content| {
             defer allocator.free(lk_content);
             if (lock.Lockfile.parse(allocator, lk_content)) |lk_val| {
@@ -530,12 +638,23 @@ pub fn handleUpdate(allocator: std.mem.Allocator, args: []const []const u8) !voi
     try installProject(allocator, .{ .frozen_lockfile = false, .rebuild_native = false });
 }
 
+fn matchesFilter(pkg_name: []const u8, filter: ?[]const u8) bool {
+    const f = filter orelse return true;
+    if (f.len == 0) return true;
+    if (std.mem.eql(u8, pkg_name, f)) return true;
+    if (std.mem.endsWith(u8, f, "*")) {
+        return std.mem.startsWith(u8, pkg_name, f[0 .. f.len - 1]);
+    }
+    return false;
+}
+
 fn rebuildPkgDir(
     allocator: std.mem.Allocator,
     pkg_dir: []const u8,
     filter_pkg: ?[]const u8,
     target_opt: ?[]const u8,
     write_prebuilt: bool,
+    seen_pkgs: *std.StringHashMap(void),
 ) !usize {
     const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, "cap.json" });
     defer allocator.free(mf_path);
@@ -544,34 +663,38 @@ fn rebuildPkgDir(
     var mf = manifest.Manifest.parse(allocator, content) catch return 0;
     defer mf.deinit(allocator);
 
-    if (filter_pkg) |fp| {
-        if (!std.mem.eql(u8, mf.name, fp)) return 0;
-    }
-
-    const nc = mf.native_config orelse return 0;
-    if (nc.lib_name.len == 0) return 0;
+    if (!matchesFilter(mf.name, filter_pkg)) return 0;
+    if (seen_pkgs.contains(mf.name)) return 0;
+    try seen_pkgs.put(try allocator.dupe(u8, mf.name), {});
 
     const is_all = if (target_opt) |t| std.mem.eql(u8, t, "all") else false;
     const should_write_prebuilt = write_prebuilt or is_all;
 
     var built_count: usize = 0;
-    if (is_all) {
-        for (native.ALL_TARGETS) |t_key| {
-            const out_path = try native.resolveOrBuildNativeLibEx(allocator, mf.name, mf.version, pkg_dir, nc, t_key, .{
+    var bin_it = mf.bin_dependencies.iterator();
+    while (bin_it.next()) |entry| {
+        const bin_name = entry.key_ptr.*;
+        const bin_cfg = entry.value_ptr.*;
+        if (!native.isLocalBinLib(bin_cfg) or bin_cfg.sources.len == 0) continue;
+
+        if (is_all) {
+            for (native.ALL_TARGETS) |t_key| {
+                const out_path = try native.resolveOrBuildBinLibEx(allocator, mf.name, mf.version, pkg_dir, bin_name, bin_cfg, t_key, .{
+                    .force_rebuild = true,
+                    .write_prebuilt = should_write_prebuilt,
+                });
+                defer allocator.free(out_path);
+                built_count += 1;
+            }
+        } else {
+            const t_key = if (target_opt) |t| native.zigTripleToTargetKey(t) else native.hostTargetKey();
+            const out_path = try native.resolveOrBuildBinLibEx(allocator, mf.name, mf.version, pkg_dir, bin_name, bin_cfg, t_key, .{
                 .force_rebuild = true,
                 .write_prebuilt = should_write_prebuilt,
             });
             defer allocator.free(out_path);
             built_count += 1;
         }
-    } else {
-        const t_key = if (target_opt) |t| native.zigTripleToTargetKey(t) else native.hostTargetKey();
-        const out_path = try native.resolveOrBuildNativeLibEx(allocator, mf.name, mf.version, pkg_dir, nc, t_key, .{
-            .force_rebuild = true,
-            .write_prebuilt = should_write_prebuilt,
-        });
-        defer allocator.free(out_path);
-        built_count += 1;
     }
     return built_count;
 }
@@ -581,13 +704,22 @@ pub fn handleRebuild(allocator: std.mem.Allocator, args: []const []const u8) !vo
     var target_opt: ?[]const u8 = null;
     var write_prebuilt = false;
 
-    for (args) |arg| {
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
         if (std.mem.startsWith(u8, arg, "--target=")) {
             target_opt = arg["--target=".len..];
         } else if (std.mem.eql(u8, arg, "--write-prebuilt")) {
             write_prebuilt = true;
+        } else if (std.mem.startsWith(u8, arg, "--filter=")) {
+            filter_pkg = arg["--filter=".len..];
+        } else if (std.mem.eql(u8, arg, "--filter") or std.mem.eql(u8, arg, "-F")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                filter_pkg = args[i];
+            }
         } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            std.debug.print("Usage: cap rebuild [pkg] [--target=<os-arch|all>] [--write-prebuilt]\n", .{});
+            std.debug.print("Usage: cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch|all>] [--write-prebuilt]\n", .{});
             std.debug.print("  Targets: linux-x86_64, linux-aarch64, macos-aarch64, macos-x86_64, windows-x86_64, all\n", .{});
             return;
         } else if (!std.mem.startsWith(u8, arg, "-")) {
@@ -595,9 +727,40 @@ pub fn handleRebuild(allocator: std.mem.Allocator, args: []const []const u8) !vo
         }
     }
 
+    var seen_pkgs = std.StringHashMap(void).init(allocator);
+    defer {
+        var sit = seen_pkgs.iterator();
+        while (sit.next()) |e| allocator.free(e.key_ptr.*);
+        seen_pkgs.deinit();
+    }
+
     var total_built: usize = 0;
 
-    // 1. Scan cap_modules/ (including @scope/*)
+    // 1. Scan workspace packages from root cap.json (if any)
+    if (main_mod.fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |root_content| {
+        defer allocator.free(root_content);
+        if (manifest.Manifest.parse(allocator, root_content)) |root_mf_val| {
+            var root_mf = root_mf_val;
+            defer root_mf.deinit(allocator);
+            if (root_mf.workspaces.len > 0) {
+                var ws_map = try discoverWorkspaces(allocator, root_mf.workspaces);
+                defer {
+                    var wit = ws_map.iterator();
+                    while (wit.next()) |e| {
+                        allocator.free(e.key_ptr.*);
+                        allocator.free(e.value_ptr.*);
+                    }
+                    ws_map.deinit();
+                }
+                var wit = ws_map.iterator();
+                while (wit.next()) |entry| {
+                    total_built += try rebuildPkgDir(allocator, entry.value_ptr.*, filter_pkg, target_opt, write_prebuilt, &seen_pkgs);
+                }
+            }
+        } else |_| {}
+    } else |_| {}
+
+    // 2. Scan cap_modules/ (including @scope/*)
     if (std.Io.Dir.openDir(.cwd(), main_mod.global_io, "cap_modules", .{ .iterate = true })) |mod_dir_val| {
         var mod_dir = mod_dir_val;
         defer mod_dir.close(main_mod.global_io);
@@ -612,25 +775,23 @@ pub fn handleRebuild(allocator: std.mem.Allocator, args: []const []const u8) !vo
                     if (sub.name.len == 0 or sub.name[0] == '.') continue;
                     const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ "cap_modules", entry.name, sub.name });
                     defer allocator.free(pkg_dir);
-                    total_built += try rebuildPkgDir(allocator, pkg_dir, filter_pkg, target_opt, write_prebuilt);
+                    total_built += try rebuildPkgDir(allocator, pkg_dir, filter_pkg, target_opt, write_prebuilt, &seen_pkgs);
                 }
             } else {
                 const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ "cap_modules", entry.name });
                 defer allocator.free(pkg_dir);
-                total_built += try rebuildPkgDir(allocator, pkg_dir, filter_pkg, target_opt, write_prebuilt);
+                total_built += try rebuildPkgDir(allocator, pkg_dir, filter_pkg, target_opt, write_prebuilt, &seen_pkgs);
             }
         }
     } else |_| {}
 
-    // 2. Also check current directory's cap.json if it defines a native library
-    if (total_built == 0 or filter_pkg == null) {
-        total_built += try rebuildPkgDir(allocator, ".", filter_pkg, target_opt, write_prebuilt);
-    }
+    // 3. Also check current directory's cap.json if it defines `bin` static libraries
+    total_built += try rebuildPkgDir(allocator, ".", filter_pkg, target_opt, write_prebuilt, &seen_pkgs);
 
     if (total_built == 0) {
-        std.debug.print("No matching native packages found to rebuild.\n", .{});
+        std.debug.print("No matching bin packages found to rebuild.\n", .{});
     } else {
-        std.debug.print("Rebuilt {d} native artifact(s).\n", .{total_built});
+        std.debug.print("Rebuilt {d} static library artifact(s).\n", .{total_built});
     }
 }
 
@@ -703,7 +864,7 @@ pub fn handleWhy(allocator: std.mem.Allocator, args: []const []const u8) !void {
                 std.debug.print("  resolved:       {s}\n", .{pkg.resolved});
                 std.debug.print("  integrity:      {s}\n", .{pkg.integrity});
                 if (pkg.native_lib) |nl| {
-                    std.debug.print("  native_lib:     {s}\n", .{nl});
+                    std.debug.print("  bin_lib:        {s}\n", .{nl});
                 }
                 found = true;
             }
@@ -715,30 +876,52 @@ pub fn handleWhy(allocator: std.mem.Allocator, args: []const []const u8) !void {
     }
 }
 
-fn printInstalledPkg(allocator: std.mem.Allocator, pkg_dir: []const u8, display_name: []const u8) void {
-    const mf_path = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, "cap.json" }) catch return;
+fn printInstalledPkg(allocator: std.mem.Allocator, pkg_dir: []const u8, display_name: []const u8, filter_pkg: ?[]const u8) bool {
+    const mf_path = std.Io.Dir.path.join(allocator, &[_][]const u8{ pkg_dir, "cap.json" }) catch return false;
     defer allocator.free(mf_path);
     if (readFileAny(allocator, mf_path)) |content| {
         defer allocator.free(content);
         if (manifest.Manifest.parse(allocator, content)) |mf_val| {
             var mf = mf_val;
             defer mf.deinit(allocator);
-            if (mf.native_config) |nc| {
-                std.debug.print("  {s}@{s} [native: lib{s}.a]\n", .{ mf.name, mf.version, nc.lib_name });
+            if (!matchesFilter(mf.name, filter_pkg)) return false;
+            if (mf.bin_dependencies.count() > 0) {
+                std.debug.print("  {s}@{s} [bin:", .{ mf.name, mf.version });
+                var bit = mf.bin_dependencies.iterator();
+                while (bit.next()) |e| {
+                    std.debug.print(" lib{s}.a", .{e.key_ptr.*});
+                }
+                std.debug.print("]\n", .{});
             } else {
                 std.debug.print("  {s}@{s}\n", .{ mf.name, mf.version });
             }
-            return;
+            return true;
         } else |_| {}
     } else |_| {}
+    if (!matchesFilter(display_name, filter_pkg)) return false;
     std.debug.print("  {s}\n", .{display_name});
+    return true;
 }
 
 pub fn handlePm(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const sub = if (args.len > 0) args[0] else "ls";
     if (!std.mem.eql(u8, sub, "ls")) {
-        std.debug.print("Usage: cap pm ls\n", .{});
+        std.debug.print("Usage: cap pm ls [--filter <pkg>]\n", .{});
         return;
+    }
+
+    var filter_pkg: ?[]const u8 = null;
+    var i: usize = 1;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.startsWith(u8, arg, "--filter=")) {
+            filter_pkg = arg["--filter=".len..];
+        } else if (std.mem.eql(u8, arg, "--filter") or std.mem.eql(u8, arg, "-F")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                filter_pkg = args[i];
+            }
+        }
     }
 
     var mod_dir = std.Io.Dir.openDir(.cwd(), main_mod.global_io, "cap_modules", .{ .iterate = true }) catch {
@@ -762,14 +945,12 @@ pub fn handlePm(allocator: std.mem.Allocator, args: []const []const u8) !void {
                 defer allocator.free(pkg_dir);
                 const disp = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ entry.name, sub_entry.name });
                 defer allocator.free(disp);
-                printInstalledPkg(allocator, pkg_dir, disp);
-                count += 1;
+                if (printInstalledPkg(allocator, pkg_dir, disp, filter_pkg)) count += 1;
             }
         } else {
             const pkg_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ "cap_modules", entry.name });
             defer allocator.free(pkg_dir);
-            printInstalledPkg(allocator, pkg_dir, entry.name);
-            count += 1;
+            if (printInstalledPkg(allocator, pkg_dir, entry.name, filter_pkg)) count += 1;
         }
     }
     if (count == 0) {

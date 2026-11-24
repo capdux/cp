@@ -94,6 +94,20 @@ pub const Lockfile = struct {
         }
     }
 
+    pub fn putWorkspacePackage(
+        self: *Lockfile,
+        allocator: std.mem.Allocator,
+        name: []const u8,
+        pkg: LockedPackage,
+    ) !void {
+        if (self.packages.fetchRemove(name)) |kv| {
+            allocator.free(kv.key);
+            var old_val = kv.value;
+            old_val.deinit(allocator);
+        }
+        try self.packages.put(try allocator.dupe(u8, name), pkg);
+    }
+
     pub fn removePackage(self: *Lockfile, allocator: std.mem.Allocator, name: []const u8) bool {
         var removed = false;
         if (self.packages.fetchRemove(name)) |kv| {

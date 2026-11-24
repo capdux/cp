@@ -75,6 +75,7 @@ pub const BinDependencyConfig = struct {
     include_dirs: [][]const u8 = &.{},
     c_flags: [][]const u8 = &.{},
     opt: ?OptimizeMode = null,
+    prebuilt: ?[]const u8 = null,
     out_dir: ?[]const u8 = null,
     target: ?[]const u8 = null,
     build_cmd: ?[]const u8 = null,
@@ -90,6 +91,7 @@ pub const BinDependencyConfig = struct {
         if (self.include_dirs.len > 0) allocator.free(self.include_dirs);
         for (self.c_flags) |cf| allocator.free(cf);
         if (self.c_flags.len > 0) allocator.free(self.c_flags);
+        if (self.prebuilt) |pb| allocator.free(pb);
         if (self.out_dir) |od| allocator.free(od);
         if (self.target) |t| allocator.free(t);
         if (self.build_cmd) |bc| allocator.free(bc);
@@ -102,6 +104,7 @@ pub const BinDependencyConfig = struct {
             .dep_type = try allocator.dupe(u8, self.dep_type),
             .path = if (self.path) |p| try allocator.dupe(u8, p) else null,
             .opt = self.opt,
+            .prebuilt = if (self.prebuilt) |pb| try allocator.dupe(u8, pb) else null,
             .out_dir = if (self.out_dir) |od| try allocator.dupe(u8, od) else null,
             .target = if (self.target) |t| try allocator.dupe(u8, t) else null,
             .build_cmd = if (self.build_cmd) |bc| try allocator.dupe(u8, bc) else null,
@@ -130,7 +133,7 @@ pub const BinDependencyConfig = struct {
         if (val == .string) {
             cfg.version = try allocator.dupe(u8, val.string);
         } else if (val == .object) {
-            if (val.object.get("version")) |v| {
+            if (val.object.get("ver") orelse val.object.get("version")) |v| {
                 if (v == .string) cfg.version = try allocator.dupe(u8, v.string);
             }
             if (val.object.get("type")) |t| {
@@ -187,6 +190,9 @@ pub const BinDependencyConfig = struct {
             if (val.object.get("opt")) |o| {
                 if (o == .string) cfg.opt = OptimizeMode.fromString(o.string);
             }
+            if (val.object.get("prebuilt") orelse val.object.get("prebuilt_dir")) |pb| {
+                if (pb == .string and pb.string.len > 0) cfg.prebuilt = try allocator.dupe(u8, pb.string);
+            }
             if (val.object.get("out_dir")) |od| {
                 if (od == .string) cfg.out_dir = try allocator.dupe(u8, od.string);
             }
@@ -206,12 +212,16 @@ pub const SingleSysDep = struct {
     linux: ?[]const u8 = null,
     mac: ?[]const u8 = null,
     win: ?[]const u8 = null,
+    path: ?[]const u8 = null,
+    prebuilt: ?[]const u8 = null,
 
     pub fn deinit(self: *SingleSysDep, allocator: std.mem.Allocator) void {
         if (self.name) |n| allocator.free(n);
         if (self.linux) |l| allocator.free(l);
         if (self.mac) |m| allocator.free(m);
         if (self.win) |w| allocator.free(w);
+        if (self.path) |p| allocator.free(p);
+        if (self.prebuilt) |pb| allocator.free(pb);
     }
 
     pub fn clone(self: SingleSysDep, allocator: std.mem.Allocator) !SingleSysDep {
@@ -220,6 +230,8 @@ pub const SingleSysDep = struct {
             .linux = if (self.linux) |l| try allocator.dupe(u8, l) else null,
             .mac = if (self.mac) |m| try allocator.dupe(u8, m) else null,
             .win = if (self.win) |w| try allocator.dupe(u8, w) else null,
+            .path = if (self.path) |p| try allocator.dupe(u8, p) else null,
+            .prebuilt = if (self.prebuilt) |pb| try allocator.dupe(u8, pb) else null,
         };
     }
 
@@ -339,6 +351,12 @@ pub const SysDependencyConfig = struct {
                         } else if (sub_val.object.get("windows")) |w| {
                             if (w == .string) s.win = try allocator.dupe(u8, w.string);
                         }
+                        if (sub_val.object.get("path")) |p| {
+                            if (p == .string) s.path = try allocator.dupe(u8, p.string);
+                        }
+                        if (sub_val.object.get("prebuilt") orelse sub_val.object.get("prebuilt_dir")) |pb| {
+                            if (pb == .string and pb.string.len > 0) s.prebuilt = try allocator.dupe(u8, pb.string);
+                        }
                     }
                     try list.append(allocator, s);
                 }
@@ -454,104 +472,10 @@ pub const CentralLibIndex = struct {
     }
 };
 
-pub const NativeConfig = struct {
-    lib_name: []const u8 = "",
-    c_sources: [][]const u8 = &.{},
-    include_dirs: [][]const u8 = &.{},
-    cflags: [][]const u8 = &.{},
-    link_libs: [][]const u8 = &.{},
-    prebuilt_dir: []const u8 = "",
-
-    pub fn deinit(self: *NativeConfig, allocator: std.mem.Allocator) void {
-        if (self.lib_name.len > 0) allocator.free(self.lib_name);
-        for (self.c_sources) |s| allocator.free(s);
-        if (self.c_sources.len > 0) allocator.free(self.c_sources);
-        for (self.include_dirs) |id| allocator.free(id);
-        if (self.include_dirs.len > 0) allocator.free(self.include_dirs);
-        for (self.cflags) |cf| allocator.free(cf);
-        if (self.cflags.len > 0) allocator.free(self.cflags);
-        for (self.link_libs) |ll| allocator.free(ll);
-        if (self.link_libs.len > 0) allocator.free(self.link_libs);
-        if (self.prebuilt_dir.len > 0) allocator.free(self.prebuilt_dir);
-    }
-
-    pub fn clone(self: NativeConfig, allocator: std.mem.Allocator) !NativeConfig {
-        var copy = NativeConfig{
-            .lib_name = if (self.lib_name.len > 0) try allocator.dupe(u8, self.lib_name) else "",
-            .prebuilt_dir = if (self.prebuilt_dir.len > 0) try allocator.dupe(u8, self.prebuilt_dir) else "",
-        };
-        if (self.c_sources.len > 0) {
-            const list = try allocator.alloc([]const u8, self.c_sources.len);
-            for (self.c_sources, 0..) |s, i| list[i] = try allocator.dupe(u8, s);
-            copy.c_sources = list;
-        }
-        if (self.include_dirs.len > 0) {
-            const list = try allocator.alloc([]const u8, self.include_dirs.len);
-            for (self.include_dirs, 0..) |id, i| list[i] = try allocator.dupe(u8, id);
-            copy.include_dirs = list;
-        }
-        if (self.cflags.len > 0) {
-            const list = try allocator.alloc([]const u8, self.cflags.len);
-            for (self.cflags, 0..) |cf, i| list[i] = try allocator.dupe(u8, cf);
-            copy.cflags = list;
-        }
-        if (self.link_libs.len > 0) {
-            const list = try allocator.alloc([]const u8, self.link_libs.len);
-            for (self.link_libs, 0..) |ll, i| list[i] = try allocator.dupe(u8, ll);
-            copy.link_libs = list;
-        }
-        return copy;
-    }
-
-    fn parseStringArray(allocator: std.mem.Allocator, val: std.json.Value) ![][]const u8 {
-        if (val == .array) {
-            var list = try allocator.alloc([]const u8, val.array.items.len);
-            for (val.array.items, 0..) |item, i| {
-                list[i] = try allocator.dupe(u8, if (item == .string) item.string else "");
-            }
-            return list;
-        } else if (val == .string) {
-            var list = try allocator.alloc([]const u8, 1);
-            list[0] = try allocator.dupe(u8, val.string);
-            return list;
-        }
-        return &.{};
-    }
-
-    pub fn parseValue(allocator: std.mem.Allocator, val: std.json.Value) !NativeConfig {
-        var cfg = NativeConfig{};
-        if (val != .object) return cfg;
-
-        if (val.object.get("lib_name")) |ln| {
-            if (ln == .string) cfg.lib_name = try allocator.dupe(u8, ln.string);
-        }
-        if (val.object.get("c_sources") orelse val.object.get("sources")) |srcs| {
-            cfg.c_sources = try parseStringArray(allocator, srcs);
-        }
-        if (val.object.get("include_dirs") orelse val.object.get("include")) |incs| {
-            cfg.include_dirs = try parseStringArray(allocator, incs);
-        }
-        if (val.object.get("cflags") orelse val.object.get("c_flags")) |cfs| {
-            cfg.cflags = try parseStringArray(allocator, cfs);
-        }
-        if (val.object.get("link_libs")) |lls| {
-            cfg.link_libs = try parseStringArray(allocator, lls);
-        }
-        if (val.object.get("prebuilt_dir")) |pd| {
-            if (pd == .string and pd.string.len > 0) {
-                cfg.prebuilt_dir = try allocator.dupe(u8, pd.string);
-            }
-        }
-        if (cfg.prebuilt_dir.len == 0) {
-            cfg.prebuilt_dir = try allocator.dupe(u8, "prebuilt");
-        }
-        return cfg;
-    }
-};
-
 pub const Manifest = struct {
     name: []const u8,
     version: []const u8,
+    license: ?[]const u8 = null,
     description: ?[]const u8 = null,
     main: ?[]const u8 = null,
     mode: ?[]const u8 = null,
@@ -560,9 +484,9 @@ pub const Manifest = struct {
     dependencies: std.StringHashMap([]const u8),
     dev_dependencies: std.StringHashMap([]const u8),
     bin_dependencies: std.StringHashMap(BinDependencyConfig),
+    sys_dependencies: ?SysDependencyConfig = null,
     build_config: ?BuildConfig = null,
     nest_config: ?NestConfig = null,
-    native_config: ?NativeConfig = null,
 
     pub fn parse(allocator: std.mem.Allocator, contents: []const u8) !Manifest {
         var parsed = try std.json.parseFromSlice(std.json.Value, allocator, contents, .{});
@@ -571,7 +495,15 @@ pub const Manifest = struct {
         const root = parsed.value.object;
 
         const name = try allocator.dupe(u8, if (root.get("name")) |n| (if (n == .string) n.string else "unknown") else "unknown");
-        const version = try allocator.dupe(u8, if (root.get("version")) |v| (if (v == .string) v.string else "0.1.0") else "0.1.0");
+        const ver_val = root.get("ver") orelse root.get("version");
+        const version = try allocator.dupe(u8, if (ver_val) |v| (if (v == .string) v.string else "0.1.0") else "0.1.0");
+
+        var license: ?[]const u8 = null;
+        if (root.get("license")) |l| {
+            if (l == .string) {
+                license = try allocator.dupe(u8, l.string);
+            }
+        }
 
         var description: ?[]const u8 = null;
         if (root.get("description")) |d| {
@@ -617,28 +549,69 @@ pub const Manifest = struct {
                 }
             }
         }
-
-        var dev_deps = std.StringHashMap([]const u8).init(allocator);
-        if (root.get("dev_dependencies")) |dd| {
-            if (dd == .object) {
-                var iter = dd.object.iterator();
+        if (root.get("deps")) |d| {
+            if (d == .object) {
+                var iter = d.object.iterator();
                 while (iter.next()) |entry| {
                     if (entry.value_ptr.* == .string) {
-                        try dev_deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
+                        if (deps.fetchRemove(entry.key_ptr.*)) |old| {
+                            allocator.free(old.key);
+                            allocator.free(old.value);
+                        }
+                        try deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
+                    }
+                }
+            }
+        }
+
+        var dev_deps = std.StringHashMap([]const u8).init(allocator);
+        const dev_sources = [_]?std.json.Value{
+            root.get("dev_dependencies"),
+            root.get("devDependencies"),
+            root.get("dev"),
+        };
+        for (dev_sources) |dev_opt| {
+            if (dev_opt) |dd| {
+                if (dd == .object) {
+                    var iter = dd.object.iterator();
+                    while (iter.next()) |entry| {
+                        if (entry.value_ptr.* == .string) {
+                            if (dev_deps.fetchRemove(entry.key_ptr.*)) |old| {
+                                allocator.free(old.key);
+                                allocator.free(old.value);
+                            }
+                            try dev_deps.put(try allocator.dupe(u8, entry.key_ptr.*), try allocator.dupe(u8, entry.value_ptr.string));
+                        }
                     }
                 }
             }
         }
 
         var bin_deps = std.StringHashMap(BinDependencyConfig).init(allocator);
-        if (root.get("bin_dependencies")) |bd| {
-            if (bd == .object) {
-                var iter = bd.object.iterator();
-                while (iter.next()) |entry| {
-                    const b_cfg = try BinDependencyConfig.parseValue(allocator, entry.key_ptr.*, entry.value_ptr.*);
-                    try bin_deps.put(try allocator.dupe(u8, entry.key_ptr.*), b_cfg);
+        const bin_sources = [_]?std.json.Value{
+            root.get("bin_dependencies"),
+            root.get("bin"),
+        };
+        for (bin_sources) |bin_opt| {
+            if (bin_opt) |bd| {
+                if (bd == .object) {
+                    var iter = bd.object.iterator();
+                    while (iter.next()) |entry| {
+                        const b_cfg = try BinDependencyConfig.parseValue(allocator, entry.key_ptr.*, entry.value_ptr.*);
+                        if (bin_deps.fetchRemove(entry.key_ptr.*)) |old| {
+                            allocator.free(old.key);
+                            var old_val = old.value;
+                            old_val.deinit(allocator);
+                        }
+                        try bin_deps.put(try allocator.dupe(u8, entry.key_ptr.*), b_cfg);
+                    }
                 }
             }
+        }
+
+        var sys_deps: ?SysDependencyConfig = null;
+        if (root.get("sys") orelse root.get("sys_dependencies")) |sd| {
+            sys_deps = try SysDependencyConfig.parseValue(allocator, sd);
         }
 
         var build_cfg: ?BuildConfig = null;
@@ -741,7 +714,7 @@ pub const Manifest = struct {
         }
 
         var workspaces: [][]const u8 = &.{};
-        if (root.get("workspaces")) |ws| {
+        if (root.get("workspaces") orelse root.get("ws")) |ws| {
             if (ws == .array) {
                 var list = try allocator.alloc([]const u8, ws.array.items.len);
                 for (ws.array.items, 0..) |item, i| {
@@ -751,16 +724,10 @@ pub const Manifest = struct {
             }
         }
 
-        var native_cfg: ?NativeConfig = null;
-        if (root.get("native")) |nv| {
-            if (nv == .object) {
-                native_cfg = try NativeConfig.parseValue(allocator, nv);
-            }
-        }
-
         return Manifest{
             .name = name,
             .version = version,
+            .license = license,
             .description = description,
             .main = main,
             .mode = mode,
@@ -769,9 +736,9 @@ pub const Manifest = struct {
             .dependencies = deps,
             .dev_dependencies = dev_deps,
             .bin_dependencies = bin_deps,
+            .sys_dependencies = sys_deps,
             .build_config = build_cfg,
             .nest_config = nest_cfg,
-            .native_config = native_cfg,
         };
     }
 
@@ -785,7 +752,10 @@ pub const Manifest = struct {
 
         var root = std.json.Value{ .object = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable };
         try root.object.put(aa, "name", std.json.Value{ .string = self.name });
-        try root.object.put(aa, "version", std.json.Value{ .string = self.version });
+        try root.object.put(aa, "ver", std.json.Value{ .string = self.version });
+        if (self.license) |l| {
+            try root.object.put(aa, "license", std.json.Value{ .string = l });
+        }
         if (self.description) |d| {
             try root.object.put(aa, "description", std.json.Value{ .string = d });
         }
@@ -796,19 +766,31 @@ pub const Manifest = struct {
             try root.object.put(aa, "mode", std.json.Value{ .string = m });
         }
 
-        var scripts_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
-        var script_iter = self.scripts.iterator();
-        while (script_iter.next()) |entry| {
-            try scripts_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
+        if (self.workspaces.len > 0) {
+            var ws_arr = std.json.Array.init(aa);
+            for (self.workspaces) |w| {
+                try ws_arr.append(std.json.Value{ .string = w });
+            }
+            try root.object.put(aa, "workspaces", std.json.Value{ .array = ws_arr });
         }
-        try root.object.put(aa, "scripts", std.json.Value{ .object = scripts_map });
 
-        var deps_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
-        var dep_iter = self.dependencies.iterator();
-        while (dep_iter.next()) |entry| {
-            try deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
+        if (self.scripts.count() > 0) {
+            var scripts_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+            var script_iter = self.scripts.iterator();
+            while (script_iter.next()) |entry| {
+                try scripts_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
+            }
+            try root.object.put(aa, "scripts", std.json.Value{ .object = scripts_map });
         }
-        try root.object.put(aa, "dependencies", std.json.Value{ .object = deps_map });
+
+        if (self.dependencies.count() > 0) {
+            var deps_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+            var dep_iter = self.dependencies.iterator();
+            while (dep_iter.next()) |entry| {
+                try deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
+            }
+            try root.object.put(aa, "deps", std.json.Value{ .object = deps_map });
+        }
 
         if (self.dev_dependencies.count() > 0) {
             var dev_deps_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
@@ -816,23 +798,55 @@ pub const Manifest = struct {
             while (dev_dep_iter.next()) |entry| {
                 try dev_deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
             }
-            try root.object.put(aa, "dev_dependencies", std.json.Value{ .object = dev_deps_map });
+            try root.object.put(aa, "dev", std.json.Value{ .object = dev_deps_map });
         }
 
         if (self.bin_dependencies.count() > 0) {
             var bin_deps_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
             var bin_dep_iter = self.bin_dependencies.iterator();
             while (bin_dep_iter.next()) |entry| {
-                if (entry.value_ptr.version) |v| {
-                    try bin_deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = v });
+                const b = entry.value_ptr.*;
+                if (b.version != null and b.sources.len == 0 and b.path == null) {
+                    try bin_deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .string = b.version.? });
                 } else {
                     var obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
-                    try obj.put(aa, "type", std.json.Value{ .string = entry.value_ptr.dep_type });
-                    if (entry.value_ptr.path) |p| try obj.put(aa, "path", std.json.Value{ .string = p });
+                    if (b.path) |p| try obj.put(aa, "path", std.json.Value{ .string = p });
+                    if (b.sources.len > 0) {
+                        var arr = std.json.Array.init(aa);
+                        for (b.sources) |s| try arr.append(std.json.Value{ .string = s });
+                        try obj.put(aa, "src", std.json.Value{ .array = arr });
+                    }
+                    if (b.include_dirs.len > 0) {
+                        var arr = std.json.Array.init(aa);
+                        for (b.include_dirs) |id| try arr.append(std.json.Value{ .string = id });
+                        try obj.put(aa, "include", std.json.Value{ .array = arr });
+                    }
+                    if (b.c_flags.len > 0) {
+                        var arr = std.json.Array.init(aa);
+                        for (b.c_flags) |cf| try arr.append(std.json.Value{ .string = cf });
+                        try obj.put(aa, "flag", std.json.Value{ .array = arr });
+                    }
+                    if (b.opt) |o| try obj.put(aa, "opt", std.json.Value{ .string = o.toConfigString() });
+                    if (b.prebuilt) |pb| try obj.put(aa, "prebuilt", std.json.Value{ .string = pb });
                     try bin_deps_map.put(aa, entry.key_ptr.*, std.json.Value{ .object = obj });
                 }
             }
-            try root.object.put(aa, "bin_dependencies", std.json.Value{ .object = bin_deps_map });
+            try root.object.put(aa, "bin", std.json.Value{ .object = bin_deps_map });
+        }
+
+        if (self.sys_dependencies) |sys| {
+            var sys_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+            for (sys.libs) |lib| {
+                const key = lib.name orelse continue;
+                var obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+                if (lib.linux) |l| try obj.put(aa, "linux", std.json.Value{ .string = l });
+                if (lib.mac) |m| try obj.put(aa, "mac", std.json.Value{ .string = m });
+                if (lib.win) |w| try obj.put(aa, "win", std.json.Value{ .string = w });
+                if (lib.path) |p| try obj.put(aa, "path", std.json.Value{ .string = p });
+                if (lib.prebuilt) |pb| try obj.put(aa, "prebuilt", std.json.Value{ .string = pb });
+                try sys_map.put(aa, key, std.json.Value{ .object = obj });
+            }
+            try root.object.put(aa, "sys", std.json.Value{ .object = sys_map });
         }
 
         if (self.build_config) |bc| {
@@ -895,45 +909,6 @@ pub const Manifest = struct {
             try root.object.put(aa, "nest", std.json.Value{ .object = n_map });
         }
 
-        if (self.workspaces.len > 0) {
-            var ws_arr = std.json.Array.init(aa);
-            for (self.workspaces) |w| {
-                try ws_arr.append(std.json.Value{ .string = w });
-            }
-            try root.object.put(aa, "workspaces", std.json.Value{ .array = ws_arr });
-        }
-
-        if (self.native_config) |nc| {
-            var nv_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
-            if (nc.lib_name.len > 0) {
-                try nv_map.put(aa, "lib_name", std.json.Value{ .string = nc.lib_name });
-            }
-            if (nc.c_sources.len > 0) {
-                var arr = std.json.Array.init(aa);
-                for (nc.c_sources) |s| try arr.append(std.json.Value{ .string = s });
-                try nv_map.put(aa, "c_sources", std.json.Value{ .array = arr });
-            }
-            if (nc.include_dirs.len > 0) {
-                var arr = std.json.Array.init(aa);
-                for (nc.include_dirs) |id| try arr.append(std.json.Value{ .string = id });
-                try nv_map.put(aa, "include_dirs", std.json.Value{ .array = arr });
-            }
-            if (nc.cflags.len > 0) {
-                var arr = std.json.Array.init(aa);
-                for (nc.cflags) |cf| try arr.append(std.json.Value{ .string = cf });
-                try nv_map.put(aa, "cflags", std.json.Value{ .array = arr });
-            }
-            if (nc.link_libs.len > 0) {
-                var arr = std.json.Array.init(aa);
-                for (nc.link_libs) |ll| try arr.append(std.json.Value{ .string = ll });
-                try nv_map.put(aa, "link_libs", std.json.Value{ .array = arr });
-            }
-            if (nc.prebuilt_dir.len > 0) {
-                try nv_map.put(aa, "prebuilt_dir", std.json.Value{ .string = nc.prebuilt_dir });
-            }
-            try root.object.put(aa, "native", std.json.Value{ .object = nv_map });
-        }
-
         var buf: [8192]u8 = undefined;
         var writer = out_file.writer(@import("../main.zig").global_io, &buf);
         try std.json.Stringify.value(root, .{ .whitespace = .indent_2 }, &writer.interface);
@@ -976,6 +951,7 @@ pub const Manifest = struct {
     pub fn deinit(self: *Manifest, allocator: std.mem.Allocator) void {
         allocator.free(self.name);
         allocator.free(self.version);
+        if (self.license) |l| allocator.free(l);
         if (self.description) |d| allocator.free(d);
         if (self.main) |m| allocator.free(m);
         if (self.mode) |m| allocator.free(m);
@@ -1003,13 +979,13 @@ pub const Manifest = struct {
             entry.value_ptr.deinit(allocator);
         }
         self.bin_dependencies.deinit();
+        if (self.sys_dependencies) |*sd| {
+            sd.deinit(allocator);
+        }
         for (self.workspaces) |w| allocator.free(w);
         if (self.workspaces.len > 0) allocator.free(self.workspaces);
         if (self.build_config) |*bc| {
             bc.deinit(allocator);
-        }
-        if (self.native_config) |*nc| {
-            nc.deinit(allocator);
         }
     }
 
