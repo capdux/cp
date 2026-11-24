@@ -127,6 +127,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **LZ4 1.10.0** (`@cap/lz4`) | <https://github.com/lz4/lz4> | BSD-2-Clause | `packages/@cap/lz4/` | Copyright (c) 2011-2024 Yann Collet |
 | **yyjson 0.10.0** (`@cap/yyjson`) | <https://github.com/ibireme/yyjson> | MIT | `packages/@cap/yyjson/` | Copyright (c) 2020-2024 YaoYuan |
 | **LMDB 0.9.33** (`@cap/lmdb`) | <https://github.com/LMDB/lmdb> | OLDAP-2.8 | `packages/@cap/lmdb/` | Copyright (c) 2011-2024 Howard Chu / Symas Corp. |
+| **tree-sitter 0.25.10** (`@cap/treesitter`) | <https://github.com/tree-sitter/tree-sitter> | MIT | `packages/@cap/treesitter/` | Copyright (c) 2018-2025 Max Brunsfeld |
 
 ---
 

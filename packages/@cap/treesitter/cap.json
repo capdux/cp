@@ -1,0 +1,30 @@
+{
+  "name": "@cap/treesitter",
+  "ver": "0.25.10",
+  "description": "Tree-sitter incremental parsing library (v0.25.10) native C runtime for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "treesitter": {
+      "path": "c",
+      "src": [
+        "lib.c"
+      ],
+      "include": [
+        ".",
+        "include"
+      ],
+      "flag": [
+        "-O3",
+        "-std=c11",
+        "-D_POSIX_C_SOURCE=200809L",
+        "-D_DEFAULT_SOURCE"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
