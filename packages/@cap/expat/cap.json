@@ -1,0 +1,36 @@
+{
+  "name": "@cap/expat",
+  "ver": "2.6.4",
+  "description": "Stream-oriented XML 1.0 SAX parser (libexpat 2.6.4) native C binding for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "expat": {
+      "path": "c",
+      "src": [
+        "xmlparse.c",
+        "xmlrole.c",
+        "xmltok.c",
+        "expat_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-DXML_STATIC",
+        "-DXML_GE=1",
+        "-DXML_DEV_URANDOM",
+        "-DHAVE_MEMMOVE",
+        "-DXML_DTD",
+        "-DXML_NS"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}

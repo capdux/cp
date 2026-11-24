@@ -161,6 +161,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libavif 1.2.1** (`@cap/libavif`) | <https://github.com/AOMediaCodec/libavif> | BSD-2-Clause | `packages/@cap/libavif/` | Copyright (c) 2019 Joe Drago / AOMedia |
 | **miniz 3.0.2** (`@cap/miniz`) | <https://github.com/richgel999/miniz> | MIT | `packages/@cap/miniz/` | Copyright (c) 2013-2014 RAD Game Tools / Rich Geldreich |
 | **OpenCV 4.10.0** (`@cap/opencv`) | <https://github.com/opencv/opencv> | Apache-2.0 | `packages/@cap/opencv/` | Copyright (c) 2000-2024 OpenCV team |
+| **libexpat 2.6.4** (`@cap/expat`) | <https://github.com/libexpat/libexpat> | MIT | `packages/@cap/expat/` | Copyright (c) 1998-2024 Expat development team |
+| **Mbed TLS 3.6.2** (`@cap/mbedtls`) | <https://github.com/Mbed-TLS/mbedtls> | Apache-2.0 | `packages/@cap/mbedtls/` | Copyright (c) The Mbed TLS Contributors |
 
 ---
 

@@ -1,0 +1,42 @@
+{
+  "name": "@cap/mbedtls",
+  "ver": "3.6.2",
+  "description": "ARM Mbed TLS 3.6.2 core cryptography suite (SHA-256/512, AES-GCM, ChaCha20-Poly1305, Base64) for CP",
+  "main": "src/index.cp",
+  "license": "Apache-2.0",
+  "bin": {
+    "mbedtls": {
+      "path": "c",
+      "src": [
+        "library/sha256.c",
+        "library/sha512.c",
+        "library/aes.c",
+        "library/gcm.c",
+        "library/cipher.c",
+        "library/cipher_wrap.c",
+        "library/chacha20.c",
+        "library/poly1305.c",
+        "library/chachapoly.c",
+        "library/base64.c",
+        "library/constant_time.c",
+        "library/platform_util.c",
+        "library/version.c",
+        "library/version_features.c",
+        "mbedtls_ffi.c"
+      ],
+      "include": [
+        "include",
+        "library"
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
