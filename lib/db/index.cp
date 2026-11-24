@@ -273,6 +273,11 @@ export {
 export {
     WAL_FRAME_MAGIC,
     WAL_FRAME_HEADER_SIZE,
+    WAL_FRAME_MAX_PAYLOAD_BYTES,
+    simdWalCopyBytes,
+    scalarWalCopyBytes,
+    simdWalBytesEqual,
+    scalarWalBytesEqual,
     walCrc32Ieee,
     WalRecordKind,
     WalFrameView,

@@ -1,6 +1,8 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc CRC32 Torn-Write-Safe WAL Framing & Crash Recovery Engine) | Created: 2026-11-22
+// Reference-hardened against fjall-rs/fjall (MIT OR Apache-2.0)
+// Origin: Pure-CP Stdlib (Zero-Alloc CRC32 Torn-Write-Safe WAL Framing, 16-Lane SIMD Copy & Crash Recovery Engine) | Created: 2026-11-22
 // Deterministic little-endian binary WAL framing with IEEE 802.3 CRC32 integrity protection,
-// atomic no-partial-write appends, monotonic LSN enforcement, and torn-tail/corruption truncation recovery.
+// atomic no-partial-write appends, monotonic LSN enforcement, 16-lane @Vector(16, u8) SIMD payload copy/compare,
+// and torn-tail/corruption truncation recovery.
 //
 // Binary frame layout (24-byte fixed little-endian header + N-byte payload):
 //   [0..4)   magic: u32 LE       (WAL_FRAME_MAGIC = 0x57414C46)
@@ -11,13 +13,94 @@
 //   [20..24) crc32: u32 LE       (IEEE 802.3 CRC32 over header[0..20] + payload[0..N])
 //   [24..24+N) payload: [N]u8
 
+type WalVec16u8 = @Vector(16, u8);
+
 /// Magic header tag ("WALF" = 0x57414C46) identifying valid WAL recovery frames.
 pub const WAL_FRAME_MAGIC: u32 = 0x57414C46;
 
 /// Fixed little-endian binary frame header size in bytes.
 pub const WAL_FRAME_HEADER_SIZE: usize = 24;
 
+/// Maximum permitted single WAL frame payload length (64 MiB) preventing malformed-length DoS/overflow.
+pub const WAL_FRAME_MAX_PAYLOAD_BYTES: u32 = 64 * 1024 * 1024;
+
 const IEEE_CRC32_POLY: u32 = 0xEDB88320;
+
+fn walLoadVec16(data: []const u8, off: usize): WalVec16u8 {
+    const v: WalVec16u8 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte copy (`min(dst.len, src.len)` bytes) for WAL & WriteBatch hot paths.
+pub fn simdWalCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 16 <= n) {
+        const v = walLoadVec16(src, i);
+        dst[i] = v[0];
+        dst[i + 1] = v[1];
+        dst[i + 2] = v[2];
+        dst[i + 3] = v[3];
+        dst[i + 4] = v[4];
+        dst[i + 5] = v[5];
+        dst[i + 6] = v[6];
+        dst[i + 7] = v[7];
+        dst[i + 8] = v[8];
+        dst[i + 9] = v[9];
+        dst[i + 10] = v[10];
+        dst[i + 11] = v[11];
+        dst[i + 12] = v[12];
+        dst[i + 13] = v[13];
+        dst[i + 14] = v[14];
+        dst[i + 15] = v[15];
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+/// Scalar reference for `simdWalCopyBytes` (differential verification).
+pub fn scalarWalCopyBytes(dst: []u8, src: []const u8): usize {
+    const n = if (dst.len <= src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD byte slice equality check for WAL magics & WriteBatch keys.
+pub fn simdWalBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va = walLoadVec16(a, i);
+        const vb = walLoadVec16(b, i);
+        if (!@reduce(.And, va == vb)) return false;
+        i += 16;
+    }
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdWalBytesEqual` (differential verification).
+pub fn scalarWalBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
 
 fn writeU32LE(buf: []u8, off: usize, v: u32) {
     buf[off] = (v & 0xFF) as u8;
@@ -178,7 +261,7 @@ pub struct WalFrameWriter {
         if (_.has_written && lsn <= _.last_lsn) {
             return null;
         }
-        if (payload.len > 0xFFFFFFFF) {
+        if (payload.len > (WAL_FRAME_MAX_PAYLOAD_BYTES as usize)) {
             return null;
         }
         const total_len = WAL_FRAME_HEADER_SIZE + payload.len;
@@ -198,10 +281,7 @@ pub struct WalFrameWriter {
         const crc = computeFrameCrc32(_.buf[base .. base + 20], payload);
         writeU32LE(_.buf, base + 20, crc);
 
-        let i: usize = 0;
-        while (i < payload.len) : (i += 1) {
-            _.buf[base + WAL_FRAME_HEADER_SIZE + i] = payload[i];
-        }
+        * = simdWalCopyBytes(_.buf[base + WAL_FRAME_HEADER_SIZE .. base + total_len], payload);
 
         _.offset += total_len;
         _.last_lsn = lsn;
@@ -285,7 +365,15 @@ pub struct WalRecoveryScanner {
             }
             const kind = kind_opt ?? WalRecordKind.Put;
 
-            const payload_len = readU32LE(buf, pos + 16) as usize;
+            const payload_len_u32 = readU32LE(buf, pos + 16);
+            if (payload_len_u32 > WAL_FRAME_MAX_PAYLOAD_BYTES) {
+                report.status = WalRecoveryStatus.CorruptedTruncated;
+                report.has_corruption = true;
+                report.corrupted_offset = pos;
+                report.valid_end_offset = pos;
+                break;
+            }
+            const payload_len = payload_len_u32 as usize;
             const expected_crc = readU32LE(buf, pos + 20);
             const rem_payload = avail - WAL_FRAME_HEADER_SIZE;
 

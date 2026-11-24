@@ -1,12 +1,15 @@
-// Origin: Pure-CP Stdlib (LSM Atomic WriteBatch & Group Commit Coordinator) | Created: 2026-11-23
-// Pure CP zero-heap-allocation RocksDB-style atomic WriteBatch binary codec + LSM Group Commit coordinator:
+// Reference-hardened against fjall-rs/fjall (MIT OR Apache-2.0)
+// Origin: Pure-CP Stdlib (LSM Atomic WriteBatch & Group Commit Coordinator + 16-Lane SIMD Copy) | Created: 2026-11-23
+// Pure CP zero-heap-allocation RocksDB/fjall-style atomic WriteBatch binary codec + LSM Group Commit coordinator:
 //   - 12-byte wire header (u64 LE sequence + u32 LE op count) + inline payload + CRC32-IEEE framing
 //   - put / delete / singleDelete / merge mutations with nested SavePoint rollback support
 //   - Zero-copy forward WriteBatchIter with strict truncation, varint overflow & checksum guards
+//   - 16-lane @Vector(16, u8) SIMD payload copy & key equality matching
 //   - Leader/Follower GroupCommitCoordinator coalescing concurrent WriteBatches into a single
 //     contiguous disk write with monotonic sequence range assignment and per-writer receipts
 
 const std = @import("std");
+import { simdWalCopyBytes, simdWalBytesEqual } from "./walRecover.cp";
 
 // ============================================================================
 // 1. Wire Constants, CRC32-IEEE & Varint32 Codec
@@ -396,8 +399,8 @@ pub struct WriteBatch {
     /// Writes `seq` and `count` into the 12-byte little-endian header.
     fn syncHeader(*_) {
         let hdr: []u8 = _.buf[0..WRITE_BATCH_HEADER_SIZE];
-        writeU64Le(*hdr, 0, _.seq);
-        writeU32Le(*hdr, 8, _.count);
+        writeU64Le(hdr, 0, _.seq);
+        writeU32Le(hdr, 8, _.count);
     }
 
     /// Sets the starting sequence number stored in the 12-byte wire header.
@@ -484,20 +487,14 @@ pub struct WriteBatch {
         let dst: []u8 = _.buf[0..WRITE_BATCH_MAX_BYTES];
         dst[pos] = op as u8;
         pos += 1;
-        pos += encodeVarint32(*dst, pos, k_len32);
+        pos += encodeVarint32(dst, pos, k_len32);
 
-        let i: usize = 0;
-        while (i < key.len) : (i += 1) {
-            dst[pos + i] = key[i];
-        }
+        * = simdWalCopyBytes(dst[pos .. pos + key.len], key);
         pos += key.len;
 
         if (has_val) {
-            pos += encodeVarint32(*dst, pos, v_len32);
-            let j: usize = 0;
-            while (j < val.len) : (j += 1) {
-                dst[pos + j] = val[j];
-            }
+            pos += encodeVarint32(dst, pos, v_len32);
+            * = simdWalCopyBytes(dst[pos .. pos + val.len], val);
             pos += val.len;
         }
 
@@ -558,18 +555,26 @@ pub struct WriteBatch {
         return WriteBatchStatus.ok;
     }
 
-    /// Serializes `[12B header][payload][4B LE CRC32]` into `out_buf`.
+    /// Serializes `[12B header][payload][4B LE CRC32]` into `out_buf` via 16-lane SIMD copy.
     /// Returns total framed bytes written, or `null` if `out_buf` is too small.
     fn encodeFramed(out_buf: *[]u8): usize? {
         const total: usize = _.len + WRITE_BATCH_TRAILER_SIZE;
         if (out_buf.len < total) return null;
-        let i: usize = 0;
-        while (i < _.len) : (i += 1) {
-            out_buf[i] = _.buf[i];
-        }
+        * = simdWalCopyBytes(out_buf[0.._.len], _.buf[0.._.len]);
         const crc: u32 = writeBatchCrc32(_.buf[0.._.len]);
         writeU32Le(out_buf, _.len, crc);
         return total;
+    }
+
+    /// Scans the batch for a mutation targeting `target_key` using 16-lane SIMD key comparison.
+    fn containsKey(target_key: []const u8): bool {
+        let it = _.iter();
+        while (rec := it.next()) {
+            if (simdWalBytesEqual(rec.key, target_key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Validates internal structure and record count of this batch.
@@ -750,10 +755,7 @@ pub struct GroupCommitCoordinator {
         }
 
         const offset: usize = _.merged_len;
-        let i: usize = 0;
-        while (i < payload_len) : (i += 1) {
-            _.merged_buf[offset + i] = raw_batch[WRITE_BATCH_HEADER_SIZE + i];
-        }
+        * = simdWalCopyBytes(_.merged_buf[offset .. offset + payload_len], raw_batch[WRITE_BATCH_HEADER_SIZE .. WRITE_BATCH_HEADER_SIZE + payload_len]);
         _.merged_len += payload_len;
 
         const is_leader: bool = (_.pending_count == 0);
@@ -793,20 +795,18 @@ pub struct GroupCommitCoordinator {
         if (out_receipts.len < _.pending_count) return null;
 
         const group_start_seq: u64 = _.next_seq;
+        if ((_.pending_ops as u64) > std.math.maxInt(u64) - group_start_seq) return null;
         const group_end_seq: u64 = group_start_seq + (_.pending_ops as u64);
 
         // Write coalesced 12-byte header.
         let hdr: []u8 = _.merged_buf[0..WRITE_BATCH_HEADER_SIZE];
-        writeU64Le(*hdr, 0, group_start_seq);
-        writeU32Le(*hdr, 8, _.pending_ops);
+        writeU64Le(hdr, 0, group_start_seq);
+        writeU32Le(hdr, 8, _.pending_ops);
 
         const crc: u32 = writeBatchCrc32(_.merged_buf[0.._.merged_len]);
 
-        // Copy coalesced raw bytes + 4-byte CRC32 trailer into caller output buffer.
-        let i: usize = 0;
-        while (i < _.merged_len) : (i += 1) {
-            out_framed[i] = _.merged_buf[i];
-        }
+        // Copy coalesced raw bytes + 4-byte CRC32 trailer into caller output buffer via 16-lane SIMD.
+        * = simdWalCopyBytes(out_framed[0.._.merged_len], _.merged_buf[0.._.merged_len]);
         writeU32Le(out_framed, _.merged_len, crc);
 
         // Finalize contiguous monotonic sequence intervals for Leader + Followers.

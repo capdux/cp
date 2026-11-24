@@ -34,7 +34,7 @@
 | SQL 查询构建器 | `lib/db/queryTypes.cp` / `lib/db/queryBuilder.cp` | 参数化 SQL 查询构建器（PostgreSQL `$1..$N`、MySQL/SQLite `?` 防注入 `SelectBuilder`/`InsertBuilder`/`UpdateBuilder`/`DeleteBuilder`） | — |
 | Schema 校验引擎 | `lib/db/schema.cp` / `lib/db/schemaValidator.cp` | JSON Schema Draft 2020-12 & AI Tool Calling 运行时结构化校验器（`Schema` / `SchemaValidator`） | — |
 | 连接池生命周期引擎 | `lib/db/connPool.cp` | 零堆分配数据库连接池状态机（LIFO 温连接复用、空闲/最大寿命淘汰、不健康连续错误摘除与满载背压 `DbConnPool`） | — |
-| 崩溃恢复 WAL 引擎 | `lib/db/walRecover.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码与崩溃恢复引擎（`WalFrameWriter` / `WalRecoveryScanner`） | — |
+| 崩溃恢复 WAL 引擎 | `lib/db/walRecover.cp` / `lib/db/writeBatch.cp` | 零堆分配 IEEE CRC32 防撕裂写 WAL 帧编解码、崩溃恢复与原子 WriteBatch / GroupCommit 引擎（对标 `fjall-rs/fjall` MIT OR Apache-2.0 加固 + 16-lane `@Vector(16, u8)` SIMD 载荷拷贝与键值比对；测试：`cap/test/testDbWalBatchRustRefSuite.cp`） | — |
 | LSM 分层压缩规划器 | `lib/db/compactor.cp` | 零堆分配 RocksDB/Pebble 级 LSM-Tree 分层压缩规划器与 SSTable 键区间重叠选择器（`LsmCompactionPlanner`） | — |
 | MVCC 快照与水位线 GC | `lib/db/mvccGc.cp` | 零堆分配 MVCC 多版本链、快照隔离时间旅行读与 Low-Watermark 安全水位线垃圾回收引擎（`MvccVersionGcStore`） | — |
 
