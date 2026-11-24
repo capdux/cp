@@ -420,13 +420,18 @@ pub enum Token {
 pub struct Lexer<'a> {
     inner: logos::Lexer<'a, Token>,
     base_offset: usize,
+    err_count: usize,
 }
+
+pub static QUIET_LEXER: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             inner: Token::lexer(input),
             base_offset: 0,
+            err_count: 0,
         }
     }
 
@@ -444,11 +449,18 @@ impl<'a> Iterator for Lexer<'a> {
         let token = match token_result {
             Ok(t) => t,
             Err(_) => {
-                eprintln!(
-                    "Lexer Error: Unknown slice '{s}' at {span:?}",
-                    s = self.inner.slice(),
-                    span = self.inner.span()
-                );
+                if !QUIET_LEXER.load(std::sync::atomic::Ordering::Relaxed) {
+                    self.err_count += 1;
+                    if self.err_count <= 5 {
+                        eprintln!(
+                            "Lexer Error: Unknown slice '{s}' at {span:?}",
+                            s = self.inner.slice(),
+                            span = self.inner.span()
+                        );
+                    } else if self.err_count == 6 {
+                        eprintln!("Lexer Error: (further lexer errors suppressed)");
+                    }
+                }
                 Token::Error
             }
         };

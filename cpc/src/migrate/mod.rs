@@ -90,8 +90,12 @@ fn collect_source_files(lang: SourceLang, root: &Path, cur: &Path, acc: &mut Vec
 }
 
 fn check_cp_parse(cp_code: &str) -> (bool, Option<String>) {
+    use std::sync::atomic::Ordering;
+    let prev = crate::lexer::QUIET_LEXER.swap(true, Ordering::Relaxed);
     let mut parser = Parser::new(cp_code);
-    match parser.parse_module() {
+    let res = parser.parse_module();
+    crate::lexer::QUIET_LEXER.store(prev, Ordering::Relaxed);
+    match res {
         Ok(_) => (true, None),
         Err(e) => {
             let raw = format!("{:?}", e);

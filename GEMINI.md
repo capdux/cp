@@ -724,3 +724,5 @@ git status --porcelain cpc_dev/src
    - 凡单次提交涉及 > 10 个新增/修改文件（如引入 C 生态包或批量重构），统一执行 `git commit -q -m "<msg>" && git show --stat --format="%h %s" HEAD | tail -n 3`，避免打印长达 13KB–26KB 的 `create mode 100644 ...` 文件刷屏（26,106B → ~120B，降幅 99.4%）。
 9. **统一 `RUSTFLAGS="-Awarnings"` 消除 `sync_cpc.sh` 指纹失效重编（实测将热修部署从 >120s 超时压至 ~3s，提速 >40x，2026-11-25 Iteration 5）**：
    - `scripts/sync_cpc.sh` 已统一注入 `RUSTFLAGS="${RUSTFLAGS:--Awarnings}"`，与 Rule 5 保持完全一致的 Cargo 编译指纹，彻底消除 `cargo check`/`cargo build` 与 `sync_cpc.sh` 交替执行时触发全量依赖重编与 120s 超时重试（同时节省 2 轮重试上下文 Token）。
+10. **词法器 `Lexer Error` 限流与批量自检静默（实测将 `cap from` 批量解析日志从 219 KB 压至 ~260 B，降幅 99.9%，2026-11-25 Iteration 6）**：
+    - `cpc/src/lexer.rs` 对单文件 `Lexer Error` stderr 输出实施 5 条上限封顶并支持 `QUIET_LEXER` 原子静默；`cpc/src/migrate/mod.rs` 批量 `check_cp_parse` 自动开启静默模式，彻底杜绝大批量解析时百 KB 级无用刷屏污染上下文。
