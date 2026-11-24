@@ -137,7 +137,7 @@ export * from "./sub_module.cp";
 
 ---
 
-## 二、 变量绑定、可变性与所有权/借用检查体系 (Bindings, Ownership & Borrowing) [SYNC_PENDING: 2026-11-21]
+## 二、 变量绑定、可变性与所有权/借用检查体系 (Bindings, Ownership & Borrowing)
 
 ### 1. 变量声明矩阵
 CP 彻底废除 `let mut`、`var` 与 `threadlocal var`，全面拥抱清晰确定的可变性语义：
@@ -312,7 +312,7 @@ pub type SimpleCb = fn (x: u8) bool;                     // Zig 兼容简写函�
 
 ---
 
-## 四、 裸指针机制、Unsafe 操作、内嵌汇编与逃逸舱 (Raw Pointers, Unsafe & Inline Asm) [SYNC_PENDING: 2026-11-21]
+## 四、 裸指针机制、Unsafe 操作、内嵌汇编与逃逸舱 (Raw Pointers, Unsafe & Inline Asm)
 
 ### 1. 变量常量性与指针只读性的正交解耦（`&v` 取址与 `*T!` 互操作）
 > 牢记：**`*T` 是安全可变借用，不是指针！** 裸指针类型必须带尾置 `!`（单级 `*T!` / `*const T!`，二级 `**T!` / `**const T!`），永不触发自动析构。`&v` 回收为纯取址运算符，可直接初始化裸指针变量：
@@ -486,14 +486,14 @@ let is_same = std.mem.eql(u8, slice_a, slice_b);
 - **静态方法**：冠以 `static` 修饰，不含接收者，通过 `ClassName.method()` 调用；
 - **🚨 绝对禁手**：**严禁书写 `self`、`this`、`*this` 或 `mut _`（触发 `E0121` / `E0104` 报错）！**
 
-### 5. 纯静态命名空间容器与 `static { ... }` 静态块 (`static class` / `static struct` / `static { ... }`) [SYNC_PENDING: 2026-11-24]
+### 5. 纯静态命名空间容器与 `static { ... }` 静态块 (`static class` / `static struct` / `static { ... }`)
 - **纯静态容器** (`static class` / `static struct`)：内部所有字段、常量与方法**默认全自动静态**，无需逐个写 `static`；**严禁实例化**（`new` 或 `{}` 报错）、**严禁声明 `init`/`~init`**、**严禁 `extends` 继承**；支持 `pub`/`priv`。
 - **混合容器 `static { ... }` 分组块**：在同时包含实例字段与批量静态成员的 `struct` / `class` / `enum` 内，可直接用 `static { ... }` 包裹一组静态函数、静态字段与常量（块内自动视为 `static`，无需每行重复写 `static`；严禁在块内声明 `init`/`~init`/`_` 实例方法）。
 - **调用规范**：`struct` 与 `class` 实例/静态规则完全统一；若以 `Type.method(...)` 形式调用未加 `static` 的实例方法且未将实例作为首参传入，编译器将按调用点缺失接收者报 `E0219`（并仅在方法体未引用任何实例状态时中性提示可考虑移入 `static { ... }`）。
 
 ---
 
-## 六、 面向对象、枚举、联合体与 C-FFI 布局 (OOP, Enums, Unions & C-FFI) [SYNC_PENDING: 2026-11-21]
+## 六、 面向对象、枚举、联合体与 C-FFI 布局 (OOP, Enums, Unions & C-FFI)
 
 ### 1. 结构体 (`struct`) 与 类 (`class`) 清晰边界
 - **`struct`（纯栈分配，无需 `new`，成员默认 `pub`，无继承）**：
@@ -632,7 +632,7 @@ if (net_mut := handler.downcast_mut<NetworkHandler>()) { net_mut.reset(); }
 
 ---
 
-## 七、 字面量、解构赋值与全景 `switch` 模式匹配 (Destructuring & Switch) [SYNC_PENDING: 2026-11-21]
+## 七、 字面量、解构赋值与全景 `switch` 模式匹配 (Destructuring & Switch)
 
 ### 1. 纯正 CP 字面量与现代解构赋值（支持整体 / 局部五态借用与所有权转移）
 ```typescript
