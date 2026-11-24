@@ -165,6 +165,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **Mbed TLS 3.6.2** (`@cap/mbedtls`) | <https://github.com/Mbed-TLS/mbedtls> | Apache-2.0 | `packages/@cap/mbedtls/` | Copyright (c) The Mbed TLS Contributors |
 | **Snappy 1.2.1** (`@cap/snappy`) | <https://github.com/google/snappy> | BSD-3-Clause | `packages/@cap/snappy/` | Copyright (c) 2011 Google Inc. |
 | **xxHash 0.8.3** (`@cap/xxhash`) | <https://github.com/Cyan4973/xxHash> | BSD-2-Clause | `packages/@cap/xxhash/` | Copyright (c) 2012-2024 Yann Collet |
+| **libcurl 8.23.0** (`@cap/curl`) | <https://curl.se/> | curl (MIT-like) | `packages/@cap/curl/` | Copyright (c) 1996-2026 Daniel Stenberg |
 
 ---
 

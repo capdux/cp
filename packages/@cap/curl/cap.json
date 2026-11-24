@@ -1,0 +1,31 @@
+{
+  "name": "@cap/curl",
+  "ver": "8.23.0",
+  "description": "libcurl (v8.23.0) multiprotocol network transfer library (HTTP/FTP/Proxy/Multipart) for CP via prebuilt dynamic library",
+  "main": "src/index.cp",
+  "license": "curl",
+  "bin": {
+    "curl_shim": {
+      "path": ".",
+      "src": [
+        "c/curl_ffi.c"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "curl": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {}
+  }
+}
