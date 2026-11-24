@@ -4027,3 +4027,56 @@
   >    - `cap publish`：上传至包托管服务器（天然适配 S3/R2 对象存储 + 不可变 CDN 边缘缓存）。
   >
   > 等当前 **Lane 1K** 完成四大依赖（`dep`/`dev`/`bin`/`sys`）收尾后，需要我接着在 `cap` 中落地 **`cap pack` 打包压缩（`.tar.zst`/`.tgz`）与 `cap install` 远程下载解压验签** 吗？
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 20:58:53）[step:22248]
+- **用户完整原始指令**：
+  > 需要你实现 .tar.zst 主包 + 平台二进制包分离打包（cap pack）与远程托管下载解压验签（cap install）
+  > 1. .tar.zst 压缩包, 能跨平台解压对吗?
+  > 2. 使用的咱们 cp 内置的, 经过深度优化的压缩/解压库吗?
+  > 3. 我们在本机如何模拟 包托管服务? 能借用当前的 npm吗(发布到 npm, 从npm安装, 类似 bun)?
+  > 4. 如果使用咱们的cp 实现一个高性能包托管服务器(类似 npm), 要做哪些工作? 工作量如何?  是否应该另开一个独立项目?
+- **完整回复与执行汇报**：
+  > 已启动 **Lane 1L**（`42d9729e`）落地 `cap pack`（`.tar.zst` 主包 + 平台二进制包分离打包）与远程 Registry 下载解压验签（`cap install`），同时先直接回答你的 4 个问题：
+  >
+  > ### 1. `.tar.zst` 能跨平台解压吗？
+  > **完全可以。** POSIX USTAR TAR 与 Zstd（RFC 8878）都是 100% 平台无关的字节流格式；只要在解压层统一 `/` 路径分隔符并拦截 `..` / 绝对路径穿越，Linux / macOS / Windows 全平台通用，且无需宿主机预装 `tar` 或 `zstd` 命令。
+  >
+  > ### 2. 用的是咱们内置的深度优化压缩/解压库吗？
+  > - 目前 `cap` 工具链本身是 Zig 代码（`cap/src/`），而我们深度加固的 `lib/pack/tar.cp` / `zstdDecode.cp` 是 CP 标准库；
+  > - 本次直接在 `cap/build.zig` 中静态链入仓库内刚封装好的 [packages/@cap/zstd/c/zstd.c](file:///data/dev/cp/packages/@cap/zstd/c/zstd.c)（BSD-3-Clause 单文件工业级 Zstd 压缩+解压内核）配合纯 Zig USTAR TAR 与 SHA-256 流式验签，做到 **`cap` 单二进制自包含、跨平台零外部依赖、压缩解压都走工业级 Zstd 高速路径**。
+  >
+  > ### 3. 本机如何模拟托管服务？能否借用 npm（类似 Bun）？
+  > - **本机模拟**：只需一个轻量 HTTP 静态文件服务（托管 `<pkg>` 元数据 JSON + `.tar.zst` 文件），通过 `CAP_REGISTRY=http://127.0.0.1:<port>` 或 `cap.json` `"registry"` 即可 100% 真实端到端测试下载、SHA-256 验签与解压安装（Lane 1L 会在本机启动临时 HTTP 服务完成全链路实测）。
+  > - **借用 npm**：**完全可行**。只要 `cap` 的 Registry 客户端同时兼容 `.tar.zst`（CP 首选）与 npm 标准的 `dist.tarball`（`.tgz`）元数据格式，冷启动阶段就能直接借用 npm / Verdaccio 托管包（按 `esbuild` 模式发布主包 + `@scope/pkg-linux-x64` 平台子包），零运维成本。
+  >
+  > ### 4. 用 CP 自研高性能包托管服务器（类似 npm）的工作量与项目规划
+  > - **建议另开独立仓库**（如 `capdux-registry`），不要塞进 `cp` 编译器主仓（语言工具链与云服务运维发布节奏分离）。
+  > - **工作量估算**（直接复用我们已加固的纯 CP 标准库 `cap:http`、`cap:auth` [JWT/TOTP/OAuth]、`cap:sql`、`cap:crypto`、`cap:pack`、`cap:vector`）：
+  >   - **MVP 生产可用版（约 1–2 周）**：Registry REST API（`GET /<pkg>`、`PUT /<pkg>` `cap publish`、tarball 下载）、S3/R2 对象存储 + CDN 不可变缓存、SQLite/PostgreSQL 元数据索引、Token/2FA 鉴权与作用域权限、`integrity` 校验与限流；
+  >   - **完整生态版（+2–3 周）**：全文搜索（`cap:vector`）、Web 包门户、下载统计、私有镜像代理与 `cap audit` 漏洞库。
+  >
+  > 正在等待 **Lane 1L** 完成 `cap pack` + 远程下载验签 + 本地 HTTP Mock Registry 端到端实测，完成后立即部署 `/root/.cap/bin/cap` 并自动提交。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 21:08:15）[step:22252]
+- **用户完整原始指令**：
+  > 我们目前没有包托管服务器情况下, 只能托管到 npm 服务器, cap 目前实现了 npm的publish吗? 类似 bun
+- **完整回复与执行汇报**：
+  > **目前还没有实现 `cap publish`**（Lane 1L 正在完成 `.tar.zst` 打包 `cap pack` 与远程下载验签 `cap install`）。
+  >
+  > 如果要借用官方 **npmjs.org**（或私有 Verdaccio / GitHub Packages）托管 CP 包，需要注意 npm 服务器的协议要求，并且我们可以很轻量地把 `cap` 做成 **“npm + CP 原生源双兼容”**：
+  >
+  > ### 借用 npm 托管只需补齐 3 个轻量模块（类似 `bun publish`）
+  > 1. **`.tgz` 打包 + 自动合成 `package.json`**：
+  >    - npm 服务器强制要求 **`package/` 顶层前缀的 `.tgz`（gzip）** 及 `package.json`（不支持直接传 `.tar.zst` 到 npmjs.org）；
+  >    - `cap publish` 发往 npm 时自动根据 `cap.json` 合成最小 `package.json`（含 `name`/`version`/`os`/`cpu`/`optionalDependencies`），打成 `.tgz` 并计算 npm 要求的 `shasum`（SHA-1）与 `integrity`（`sha512-...`）。
+  > 2. **`cap publish` 命令（完全对齐 `bun publish` / `npm publish`）**：
+  >    - 自动读取 `NPM_TOKEN` / `CAP_TOKEN` 或 `~/.npmrc` 中的 `_authToken`；
+  >    - 支持 `--registry`、`--access=public|restricted`、`--tag=latest`、`--otp=<code>`（2FA）、`--dry-run`；
+  >    - 按 npm Registry 协议构造带 `_attachments` 的 JSON，发送 `PUT <registry>/<pkg>` 即可直接发布到 npmjs.org 或本地 Verdaccio（主包 + `@scope/pkg-linux-x64` 平台二进制子包一键发布）。
+  > 3. **`cap install` 双格式透明解压**：
+  >    - 遇到 `.tar.zst`（未来自建 `capdux-registry`）走 Zstd 解压 + `sha256` 验签；
+  >    - 遇到 `.tgz`（npm / Verdaccio）走 Gzip 解压 + 自动剥离 `package/` 前缀 + `sha512` SRI 验签。
+  >
+  > 这样零运维成本就能先用 npm 托管冷启动，将来切到自研 CP 包托管服务器（`.tar.zst`）也完全平滑无缝。
+  >
+  > 等当前 **Lane 1L** 完成 `cap pack` 与远程 `cap install` 后，要不要我直接顺手把 **`cap publish` + `.tgz` npm 双向兼容** 一并实现并实测？
