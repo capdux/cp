@@ -401,11 +401,13 @@ fn compile_file(
         for item in parsed_module.body {
             match &item {
                 cpc::ast::ModuleItem::Import(imp) => {
+                    // In `--lib` mode, preserve all top-level imports in `all_items` so library
+                    // barrel files (e.g. `import Async from "async";` -> `pub const Async = @import("async");`)
+                    // never drop re-exported module bindings; only emit `// @cap-used-pkg:` when referenced.
                     if cpc::resolver::is_external_package_source(&imp.source) {
-                        if !cpc::resolver::is_import_used(imp, &referenced) {
-                            continue;
+                        if cpc::resolver::is_import_used(imp, &referenced) {
+                            cap_hub.used_packages.insert(imp.source.clone());
                         }
-                        cap_hub.used_packages.insert(imp.source.clone());
                     } else if imp.source.starts_with("cap:")
                         && cpc::resolver::is_import_used(imp, &referenced)
                     {
