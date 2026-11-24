@@ -1,11 +1,19 @@
+// Reference-hardened against fjall-rs/lsm-tree & rocksdb (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc MVCC Snapshot Isolation ReadView, Visibility & GC Watermark Engine) | Created: 2026-11-22
 // Pure CP zero-heap-allocation MVCC Snapshot Isolation (ReadView) & version-chain GC engine:
+//   - 4-lane @Vector(4, u64) SIMD (`BloomMvccVec4u64`) active-tx membership scan (`simdMvccContainsTxId`)
+//     wired directly into `MvccReadView.isTxInActiveSet` / `isVisible` with 0-diff scalar reference
 //   - Monotonic transaction ID allocator (`beginTx` / `commitTx` / `abortTx`) with fixed-capacity active table
-//   - Standard PostgreSQL / InnoDB style `MvccReadView` (`xmin`, `xmax`, sorted active tx set with binary search)
+//   - Standard PostgreSQL / InnoDB style `MvccReadView` (`xmin`, `xmax`, active tx set)
 //   - Strict Snapshot Isolation visibility (`isVersionVisible`: self-write, committed < xmax & not in active set,
 //     aborted invisible) and First-Committer-Wins write-write conflict detection (`detectWriteConflict`)
 //   - Multi-version tuple chain (`begin_tx` / `end_tx` / `prev_version_slot`) read/write/delete operations
 //   - Global minimum-active-tx GC safety watermark (`computeGcWatermark` / `canReclaimVersion` / `reclaimDeadVersions`)
+
+const std = @import("std");
+
+/// Module-local 4-lane u64 vector alias for MVCC active transaction table hot path.
+type MvccSnapVec4u64 = @Vector(4, u64);
 
 /// Maximum concurrent active transactions tracked in `MvccSnapshotManager`.
 pub const MVCC_SNAP_MAX_ACTIVE_TXNS: usize = 64;
@@ -20,13 +28,42 @@ pub const MVCC_SNAP_MAX_VERSIONS: usize = 256;
 pub const MVCC_SNAP_INVALID_TX: u64 = 0;
 
 /// Sentinel `end_tx` indicating a version has not been superseded or deleted.
-pub const MVCC_SNAP_INF_TX: u64 = 0xFFFFFFFFFFFFFFFF;
+pub const MVCC_SNAP_INF_TX: u64 = std.math.maxInt(u64);
 
 /// Sentinel slot index indicating end of a version chain.
 pub const MVCC_SNAP_NO_SLOT: u16 = 0xFFFF;
 
 // ============================================================================
-// 1. Public Enums & Data Models
+// 1. 4-Lane SIMD Active Transaction Table Lookup (0-Diff with Scalar)
+// ============================================================================
+
+/// Scalar reference: linear membership check for `target` in `tx_ids`.
+pub fn scalarMvccContainsTxId(tx_ids: []const u64, target: u64): bool {
+    let i: usize = 0;
+    while (i < tx_ids.len) : (i += 1) {
+        if (tx_ids[i] == target) return true;
+    }
+    return false;
+}
+
+/// 4-lane SIMD accelerated membership check for `target` in `tx_ids` (wired into ReadView hot path).
+pub fn simdMvccContainsTxId(tx_ids: []const u64, target: u64): bool {
+    const needle: MvccSnapVec4u64 = @splat(target);
+    let i: usize = 0;
+    while (i + 4 <= tx_ids.len) {
+        const v: MvccSnapVec4u64 = tx_ids[i .. i + 4][0..4].*;
+        const eq = v == needle;
+        if (@reduce(.Or, eq)) return true;
+        i += 4;
+    }
+    while (i < tx_ids.len) : (i += 1) {
+        if (tx_ids[i] == target) return true;
+    }
+    return false;
+}
+
+// ============================================================================
+// 2. Public Enums & Data Models
 // ============================================================================
 
 /// Lifecycle state of a transaction ID.
@@ -53,22 +90,20 @@ pub struct MvccReadView {
     active_tx_ids: [MVCC_SNAP_MAX_ACTIVE_TXNS]u64 = [0; MVCC_SNAP_MAX_ACTIVE_TXNS];
     active_count: usize = 0;
 
-    /// Binary-searches the sorted active transaction set captured in this `ReadView`.
+    /// Searches the active transaction set captured in this `ReadView` using 4-lane SIMD.
     fn isTxInActiveSet(tx_id: u64): bool {
         if (_.active_count == 0 || tx_id < _.xmin || tx_id >= _.xmax) return false;
-        let lo: usize = 0;
-        let hi: usize = _.active_count;
-        while (lo < hi) {
-            const mid: usize = lo + ((hi - lo) >> 1);
-            const cur: u64 = _.active_tx_ids[mid];
-            if (cur == tx_id) return true;
-            if (cur < tx_id) {
-                lo = mid + 1;
-            } else {
-                hi = mid;
-            }
-        }
-        return false;
+        return simdMvccContainsTxId(_.active_tx_ids[0.._.active_count], tx_id);
+    }
+
+    /// Pure Snapshot Isolation visibility predicate for a committed transaction ID under this `ReadView`
+    /// (self-write visible; `< xmin` visible; `>= xmax` invisible; active-set checked via 4-lane SIMD).
+    fn isVisible(tx_id: u64): bool {
+        if (tx_id == MVCC_SNAP_INVALID_TX || tx_id == MVCC_SNAP_INF_TX) return false;
+        if (_.viewer_tx_id != MVCC_SNAP_INVALID_TX && tx_id == _.viewer_tx_id) return true;
+        if (tx_id >= _.xmax) return false;
+        if (tx_id < _.xmin) return true;
+        return !_.isTxInActiveSet(tx_id);
     }
 }
 
@@ -102,12 +137,12 @@ pub struct MvccSnapshotStats {
     gc_watermark: u64 = 1;
 }
 
-struct TxHistorySlot {
+struct MvccTxHistorySlot {
     tx_id: u64 = MVCC_SNAP_INVALID_TX;
     status: MvccTxStatus = MvccTxStatus.unknown;
 }
 
-fn sortU64Asc(arr: *[]u64, count: usize) {
+fn mvccSortU64Asc(arr: *[]u64, count: usize) {
     let i: usize = 1;
     while (i < count) : (i += 1) {
         const key: u64 = arr[i];
@@ -120,7 +155,7 @@ fn sortU64Asc(arr: *[]u64, count: usize) {
 }
 
 // ============================================================================
-// 2. Zero-Alloc MVCC Snapshot Manager & Version-Chain GC Engine
+// 3. Zero-Alloc MVCC Snapshot Manager & Version-Chain GC Engine
 // ============================================================================
 
 /// Zero-heap-allocation MVCC transaction, `ReadView` visibility, write-conflict, and GC engine.
@@ -128,7 +163,7 @@ pub struct MvccSnapshotManager {
     next_tx_id: u64 = 1;
     active_txs: [MVCC_SNAP_MAX_ACTIVE_TXNS]u64 = [0; MVCC_SNAP_MAX_ACTIVE_TXNS];
     active_count: usize = 0;
-    history: [MVCC_SNAP_MAX_TX_HISTORY]TxHistorySlot = [TxHistorySlot{}; MVCC_SNAP_MAX_TX_HISTORY];
+    history: [MVCC_SNAP_MAX_TX_HISTORY]MvccTxHistorySlot = [MvccTxHistorySlot{}; MVCC_SNAP_MAX_TX_HISTORY];
     versions: [MVCC_SNAP_MAX_VERSIONS]MvccTupleVersion = [MvccTupleVersion{}; MVCC_SNAP_MAX_VERSIONS];
     occupied_version_count: usize = 0;
     committed_tx_count: u64 = 0;
@@ -141,7 +176,7 @@ pub struct MvccSnapshotManager {
             next_tx_id: 1,
             active_txs: [0; MVCC_SNAP_MAX_ACTIVE_TXNS],
             active_count: 0,
-            history: [TxHistorySlot{}; MVCC_SNAP_MAX_TX_HISTORY],
+            history: [MvccTxHistorySlot{}; MVCC_SNAP_MAX_TX_HISTORY],
             versions: [MvccTupleVersion{}; MVCC_SNAP_MAX_VERSIONS],
             occupied_version_count: 0,
             committed_tx_count: 0,
@@ -152,7 +187,7 @@ pub struct MvccSnapshotManager {
 
     fn recordHistory(*_, tx_id: u64, status: MvccTxStatus) {
         const idx: usize = (tx_id as usize) % MVCC_SNAP_MAX_TX_HISTORY;
-        _.history[idx] = TxHistorySlot{
+        _.history[idx] = MvccTxHistorySlot{
             tx_id: tx_id,
             status: status,
         };
@@ -160,6 +195,7 @@ pub struct MvccSnapshotManager {
 
     fn findActiveSlot(tx_id: u64): usize? {
         if (tx_id == MVCC_SNAP_INVALID_TX) return null;
+        if (!simdMvccContainsTxId(_.active_txs[0.._.active_count], tx_id)) return null;
         let i: usize = 0;
         while (i < _.active_count) : (i += 1) {
             if (_.active_txs[i] == tx_id) return i;
@@ -172,7 +208,7 @@ pub struct MvccSnapshotManager {
         if (tx_id == MVCC_SNAP_INVALID_TX || tx_id >= _.next_tx_id) {
             return MvccTxStatus.unknown;
         }
-        if (_.findActiveSlot(tx_id) != null) {
+        if (simdMvccContainsTxId(_.active_txs[0.._.active_count], tx_id)) {
             return MvccTxStatus.active;
         }
         const idx: usize = (tx_id as usize) % MVCC_SNAP_MAX_TX_HISTORY;
@@ -244,7 +280,7 @@ pub struct MvccSnapshotManager {
         }
         if (view.active_count > 0) {
             let act_s: []u64 = view.active_tx_ids[0..view.active_count];
-            sortU64Asc(*act_s, view.active_count);
+            mvccSortU64Asc(act_s, view.active_count);
             view.xmin = view.active_tx_ids[0];
         }
         return view;
@@ -264,11 +300,9 @@ pub struct MvccSnapshotManager {
             return true;
         }
 
-        // Other transactions must be committed and must have committed before `view` was captured.
+        // Other transactions must be committed and satisfy `view.isVisible(tx_id)` (4-lane SIMD).
         if (st != MvccTxStatus.committed) return false;
-        if (tx_id >= view.xmax) return false;
-        if (tx_id < view.xmin) return true;
-        return !view.isTxInActiveSet(tx_id);
+        return view.isVisible(tx_id);
     }
 
     /// Evaluates Snapshot Isolation visibility of a tuple version `[begin_tx, end_tx)` under `view`.

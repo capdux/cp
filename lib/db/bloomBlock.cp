@@ -1,16 +1,21 @@
+// Reference-hardened against fjall-rs/lsm-tree & rocksdb (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc 64-Byte Cache-Line Aligned Blocked Bloom Filter using @popCount) | Created: 2026-11-22
 // Pure CP zero-heap-allocation Cache-Line Aligned Blocked Bloom Filter (RocksDB / Parquet Split-Block style)
 // for SSTable / LSM-Tree storage engines:
+//   - 4-lane @Vector(4, u64) SIMD (`BloomMvccVec4u64`) bitmap OR merge (`simdBloomOrBlocks`) &
+//     hardware `@popCount` reduction (`simdBloomPopcountWords`) with 0-diff scalar references
 //   - Fixed 512-bit (8 x u64 = 64 bytes = 1 CPU cache line) blocks: every probe touches exactly 1 cache line
 //   - Double-hashing (FNV-1a + SplitMix64 avalanche) for block selection (h1) and intra-block k-bit probing (h2)
 //   - Parameter planner (`recommendBloomParams`) computing optimal block count & probe count for target FPR
-//   - Bitwise union (`unionInPlace`) for isomorphic filters & exact hardware `@popCount` fill-ratio / live FPR estimation
-//   - Compact binary serialization/deserialization (`CPB1` magic + header + raw little-endian bitmap) for SSTable persistence
+//   - Bitwise union (`unionInPlace`) with strict geometry checks & compact binary serialization (`CPB1`)
 
 const std = @import("std");
 
+/// Shared 4-lane u64 vector alias for Blocked Bloom Filter & MVCC ReadView hot paths.
+pub type BloomMvccVec4u64 = @Vector(4, u64);
+
 // ============================================================================
-// Constants & Internal Helpers
+// Constants & 4-Lane SIMD Hot-Path Primitives (0-Diff with Scalar)
 // ============================================================================
 
 /// Magic bytes `"CPB1"` stored in little-endian (`0x43, 0x50, 0x42, 0x31`).
@@ -22,44 +27,100 @@ pub const BLOOM_BLOCK_BYTES: usize = 64;
 pub const BLOOM_BLOCK_MAX_BLOCKS: usize = 256;
 pub const BLOOM_BLOCK_MAX_PROBES: u32 = 16;
 
-fn isFiniteF64(x: f64): bool {
+/// Scalar reference: bitwise OR merges `src` into `dst` word-by-word.
+pub fn scalarBloomOrBlocks(dst: *[]u64, src: []const u64) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] |= src[i];
+    }
+}
+
+/// 4-lane SIMD accelerated bitwise OR merge for 64-byte Bloom filter blocks.
+pub fn simdBloomOrBlocks(dst: *[]u64, src: []const u64) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const vd: BloomMvccVec4u64 = dst[i .. i + 4][0..4].*;
+        const vs: BloomMvccVec4u64 = src[i .. i + 4][0..4].*;
+        dst[i .. i + 4][0..4].* = vd | vs;
+        i += 4;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] |= src[i];
+    }
+}
+
+/// Scalar reference: total set-bit count across `words` using `@popCount`.
+pub fn scalarBloomPopcountWords(words: []const u64): usize {
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i < words.len) : (i += 1) {
+        total += @popCount(words[i]) as usize;
+    }
+    return total;
+}
+
+/// 4-lane SIMD accelerated total set-bit count across `words` using vector `@popCount`.
+pub fn simdBloomPopcountWords(words: []const u64): usize {
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i + 4 <= words.len) {
+        const v: BloomMvccVec4u64 = words[i .. i + 4][0..4].*;
+        const pc = @popCount(v);
+        total += (pc[0] as usize) + (pc[1] as usize) + (pc[2] as usize) + (pc[3] as usize);
+        i += 4;
+    }
+    while (i < words.len) : (i += 1) {
+        total += @popCount(words[i]) as usize;
+    }
+    return total;
+}
+
+fn bbIsFiniteF64(x: f64): bool {
     return !std.math.isNan(x) && !std.math.isInf(x);
 }
 
+const BB_SPLITMIX_GAMMA: u64 = ((0x9E3779B9 as u64) << 32) | (0x7F4A7C15 as u64);
+const BB_SPLITMIX_M1: u64 = ((0xBF58476D as u64) << 32) | (0x1CE4E5B9 as u64);
+const BB_SPLITMIX_M2: u64 = ((0x94D049BB as u64) << 32) | (0x133111EB as u64);
+const BB_FNV_OFFSET: u64 = ((0xCBF29CE4 as u64) << 32) | (0x84222325 as u64);
+const BB_FNV_PRIME: u64 = ((0x00000100 as u64) << 32) | (0x000001B3 as u64);
+
 /// SplitMix64 avalanche mixer for high-quality independent hash derivation.
 pub fn bloomSplitMix64(x: u64): u64 {
-    let z: u64 = x +% 0x9E3779B97F4A7C15;
-    z = (z ^ (z >> 30)) *% 0xBF58476D1CE4E5B9;
-    z = (z ^ (z >> 27)) *% 0x94D049BB133111EB;
+    let z: u64 = x +% BB_SPLITMIX_GAMMA;
+    z = (z ^ (z >> 30)) *% BB_SPLITMIX_M1;
+    z = (z ^ (z >> 27)) *% BB_SPLITMIX_M2;
     return z ^ (z >> 31);
 }
 
 /// Deterministic 64-bit byte-slice hash combining FNV-1a with SplitMix64 finalization.
 pub fn bloomHashBytes(data: []const u8): u64 {
-    let h: u64 = 0xCBF29CE484222325;
+    let h: u64 = BB_FNV_OFFSET;
     let i: usize = 0;
     while (i < data.len) : (i += 1) {
         h ^= data[i] as u64;
-        h = h *% 0x100000001B3;
+        h = h *% BB_FNV_PRIME;
     }
-    return bloomSplitMix64(h ^ ((data.len as u64) *% 0x9E3779B97F4A7C15));
+    return bloomSplitMix64(h ^ ((data.len as u64) *% BB_SPLITMIX_GAMMA));
 }
 
-fn writeU32Le(dst: *[]u8, offset: usize, val: u32) {
+fn bbWriteU32Le(dst: *[]u8, offset: usize, val: u32) {
     dst[offset + 0] = (val & 0xFF) as u8;
     dst[offset + 1] = ((val >> 8) & 0xFF) as u8;
     dst[offset + 2] = ((val >> 16) & 0xFF) as u8;
     dst[offset + 3] = ((val >> 24) & 0xFF) as u8;
 }
 
-fn readU32Le(src: []const u8, offset: usize): u32 {
+fn bbReadU32Le(src: []const u8, offset: usize): u32 {
     return (src[offset + 0] as u32)
         | ((src[offset + 1] as u32) << 8)
         | ((src[offset + 2] as u32) << 16)
         | ((src[offset + 3] as u32) << 24);
 }
 
-fn writeU64Le(dst: *[]u8, offset: usize, val: u64) {
+fn bbWriteU64Le(dst: *[]u8, offset: usize, val: u64) {
     let b: usize = 0;
     while (b < 8) : (b += 1) {
         const shift: u6 = (b * 8) as u6;
@@ -67,7 +128,7 @@ fn writeU64Le(dst: *[]u8, offset: usize, val: u64) {
     }
 }
 
-fn readU64Le(src: []const u8, offset: usize): u64 {
+fn bbReadU64Le(src: []const u8, offset: usize): u64 {
     let out: u64 = 0;
     let b: usize = 0;
     while (b < 8) : (b += 1) {
@@ -108,7 +169,7 @@ pub fn recommendBloomParams(expected_keys: usize, target_fpr: f64): BloomBlockPa
     if (expected_keys == 0) {
         return null;
     }
-    if (!isFiniteF64(target_fpr) || target_fpr <= 0.0 || target_fpr >= 1.0) {
+    if (!bbIsFiniteF64(target_fpr) || target_fpr <= 0.0 || target_fpr >= 1.0) {
         return null;
     }
 
@@ -173,16 +234,9 @@ pub struct BloomBlock {
         return (_.words[word_i] & ((1 as u64) << bit_shift)) != 0;
     }
 
-    /// Exact number of set bits in this 512-bit block using hardware `@popCount`.
+    /// Exact number of set bits in this 512-bit block using 4-lane SIMD `@popCount`.
     fn popCount(): usize {
-        return (@popCount(_.words[0]) as usize)
-            + (@popCount(_.words[1]) as usize)
-            + (@popCount(_.words[2]) as usize)
-            + (@popCount(_.words[3]) as usize)
-            + (@popCount(_.words[4]) as usize)
-            + (@popCount(_.words[5]) as usize)
-            + (@popCount(_.words[6]) as usize)
-            + (@popCount(_.words[7]) as usize);
+        return simdBloomPopcountWords(_.words[0..]);
     }
 
     /// Resets all 512 bits to zero.
@@ -208,7 +262,7 @@ pub struct BlockedBloomFilter {
 
     /// Creates a Blocked Bloom Filter with `num_blocks ∈ [1, 256]` and `num_probes ∈ [1, 16]`.
     /// Returns `null` on invalid geometry.
-    fn init(num_blocks: usize, num_probes: u32): BlockedBloomFilter? {
+    static fn init(num_blocks: usize, num_probes: u32): BlockedBloomFilter? {
         if (num_blocks == 0 || num_blocks > BLOOM_BLOCK_MAX_BLOCKS) {
             return null;
         }
@@ -222,7 +276,7 @@ pub struct BlockedBloomFilter {
     }
 
     /// Creates a Blocked Bloom Filter directly from `recommendBloomParams` output.
-    fn fromParams(params: BloomBlockParams): BlockedBloomFilter? {
+    static fn fromParams(params: BloomBlockParams): BlockedBloomFilter? {
         return BlockedBloomFilter.init(params.num_blocks, params.num_probes);
     }
 
@@ -232,7 +286,7 @@ pub struct BlockedBloomFilter {
             return;
         }
         const h1: u64 = bloomSplitMix64(hash);
-        const h2: u64 = bloomSplitMix64(h1 ^ 0x9E3779B97F4A7C15) | 1;
+        const h2: u64 = bloomSplitMix64(h1 ^ BB_SPLITMIX_GAMMA) | 1;
         const block_idx: usize = (h1 as usize) % _.num_blocks;
 
         let cur: u64 = h1;
@@ -257,7 +311,7 @@ pub struct BlockedBloomFilter {
             return false;
         }
         const h1: u64 = bloomSplitMix64(hash);
-        const h2: u64 = bloomSplitMix64(h1 ^ 0x9E3779B97F4A7C15) | 1;
+        const h2: u64 = bloomSplitMix64(h1 ^ BB_SPLITMIX_GAMMA) | 1;
         const block_idx: usize = (h1 as usize) % _.num_blocks;
 
         let cur: u64 = h1;
@@ -277,7 +331,8 @@ pub struct BlockedBloomFilter {
         return _.mayContainHash(bloomHashBytes(key));
     }
 
-    /// Bitwise-OR merges another isomorphic `BlockedBloomFilter` into this filter in-place.
+    /// Bitwise-OR merges another isomorphic `BlockedBloomFilter` into this filter in-place
+    /// using 4-lane SIMD (`simdBloomOrBlocks`).
     /// Atomically returns `false` without mutation if `num_blocks` or `num_probes` differ.
     fn unionInPlace(*_, other: BlockedBloomFilter): bool {
         if (_.num_blocks == 0 || _.num_blocks != other.num_blocks || _.num_probes != other.num_probes) {
@@ -285,10 +340,7 @@ pub struct BlockedBloomFilter {
         }
         let b: usize = 0;
         while (b < _.num_blocks) : (b += 1) {
-            let w: usize = 0;
-            while (w < BLOOM_BLOCK_WORDS) : (w += 1) {
-                _.blocks[b].words[w] |= other.blocks[b].words[w];
-            }
+            simdBloomOrBlocks(_.blocks[b].words[0..], other.blocks[b].words[0..]);
         }
         _.inserted_count += other.inserted_count;
         return true;
@@ -299,7 +351,7 @@ pub struct BlockedBloomFilter {
         return _.num_blocks * BLOOM_BLOCK_BITS;
     }
 
-    /// Exact count of set bits across all active blocks via hardware `@popCount`.
+    /// Exact count of set bits across all active blocks via 4-lane SIMD `@popCount`.
     fn setBitCount(): usize {
         let total: usize = 0;
         let b: usize = 0;
@@ -349,16 +401,16 @@ pub struct BlockedBloomFilter {
             return null;
         }
 
-        writeU32Le(out, 0, BLOOM_BLOCK_MAGIC);
-        writeU32Le(out, 4, _.num_blocks as u32);
-        writeU32Le(out, 8, _.num_probes);
+        bbWriteU32Le(out, 0, BLOOM_BLOCK_MAGIC);
+        bbWriteU32Le(out, 4, _.num_blocks as u32);
+        bbWriteU32Le(out, 8, _.num_probes);
 
         let off: usize = BLOOM_BLOCK_HEADER_SIZE;
         let b: usize = 0;
         while (b < _.num_blocks) : (b += 1) {
             let w: usize = 0;
             while (w < BLOOM_BLOCK_WORDS) : (w += 1) {
-                writeU64Le(out, off, _.blocks[b].words[w]);
+                bbWriteU64Le(out, off, _.blocks[b].words[w]);
                 off += 8;
             }
         }
@@ -367,16 +419,16 @@ pub struct BlockedBloomFilter {
 
     /// Zero-copy validates whether `data` is a well-formed serialized `BlockedBloomFilter`
     /// SSTable filter block (valid `"CPB1"` magic, legal bounds, exact payload byte length).
-    fn verifySerializedBytes(data: []const u8): bool {
+    static fn verifySerializedBytes(data: []const u8): bool {
         if (data.len < BLOOM_BLOCK_HEADER_SIZE) {
             return false;
         }
-        const magic: u32 = readU32Le(data, 0);
+        const magic: u32 = bbReadU32Le(data, 0);
         if (magic != BLOOM_BLOCK_MAGIC) {
             return false;
         }
-        const nb: usize = readU32Le(data, 4) as usize;
-        const np: u32 = readU32Le(data, 8);
+        const nb: usize = bbReadU32Le(data, 4) as usize;
+        const np: u32 = bbReadU32Le(data, 8);
         if (nb == 0 || nb > BLOOM_BLOCK_MAX_BLOCKS) {
             return false;
         }
@@ -389,12 +441,12 @@ pub struct BlockedBloomFilter {
 
     /// Deserializes a `BlockedBloomFilter` from a compact binary SSTable filter block.
     /// Returns `null` on invalid magic, out-of-range header params, or truncated/oversized payload.
-    fn deserialize(data: []const u8): BlockedBloomFilter? {
+    static fn deserialize(data: []const u8): BlockedBloomFilter? {
         if (!BlockedBloomFilter.verifySerializedBytes(data)) {
             return null;
         }
-        const nb: usize = readU32Le(data, 4) as usize;
-        const np: u32 = readU32Le(data, 8);
+        const nb: usize = bbReadU32Le(data, 4) as usize;
+        const np: u32 = bbReadU32Le(data, 8);
 
         let filter = BlockedBloomFilter {
             num_blocks: nb,
@@ -405,7 +457,7 @@ pub struct BlockedBloomFilter {
         while (b < nb) : (b += 1) {
             let w: usize = 0;
             while (w < BLOOM_BLOCK_WORDS) : (w += 1) {
-                filter.blocks[b].words[w] = readU64Le(data, off);
+                filter.blocks[b].words[w] = bbReadU64Le(data, off);
                 off += 8;
             }
         }

@@ -232,6 +232,8 @@ pub fn demoClockPageBufferPool() {
 
 ### 零分配 MVCC 快照隔离与版本可见性 / GC 水位线引擎 (`mvccSnap.cp`)
 
+> 对标加固基准：`fjall-rs/lsm-tree` & `rocksdb`（MIT OR Apache-2.0）；4-lane `@Vector(4, u64)` SIMD 活跃事务查重（`simdMvccContainsTxId`）直连 `MvccReadView.isVisible`；回归测试：`cap/test/testDbMvccBloomRustRefSuite.cp`
+
 面向 PostgreSQL / InnoDB 级事务存储引擎的 100% 纯 CP 零动态堆分配 MVCC Snapshot Isolation（`MvccReadView`）与多版本元组链 GC 引擎：
 
 - **常量与枚举**：
@@ -324,6 +326,8 @@ pub fn demoSlottedPage() {
 ```
 
 ### 零分配 64B 缓存行对齐 Blocked Bloom Filter (`bloomBlock.cp`)
+
+> 对标加固基准：`fjall-rs/lsm-tree` & `rocksdb`（MIT OR Apache-2.0）；4-lane `@Vector(4, u64)` SIMD 位图 OR 合并与 `@popCount` 填充率统计（`simdBloomOrBlocks` / `simdBloomPopcountWords`）；回归测试：`cap/test/testDbMvccBloomRustRefSuite.cp`
 
 面向 SSTable / LSM-Tree 存储引擎的 100% 纯 CP 零动态堆分配 **Cache-Line Aligned Blocked Bloom Filter**（RocksDB / Parquet Split-Block 经典架构）：
 
