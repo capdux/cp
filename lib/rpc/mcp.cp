@@ -1,9 +1,12 @@
+// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP
 // Source: cp/lib/rpc/mcp.cp (Model Context Protocol Core Server Dispatcher)
 // Pure CP Model Context Protocol (MCP) server dispatcher supporting initialize,
 // notifications/initialized, ping, tools/list, tools/call & resources/list.
 
 const std = @import("std");
-import { JsonValue, JsonParser, JsonSerializer } from "cap:json";
+import { JsonValue } from "../json/value.cp";
+import { JsonParser } from "../json/parser.cp";
+import { JsonSerializer } from "../json/serializer.cp";
 import {
     ERR_PARSE,
     ERR_INVALID_REQUEST,
@@ -16,7 +19,18 @@ import {
     JsonRpcCodec,
 } from "./jsonrpc.cp";
 
-pub type McpToolHandler = fn (alloc: std.mem.Allocator, args_json: []const u8): ([]const u8)!;
+pub const MCP_MAX_TOOLS: usize = 256;
+pub const MCP_MAX_RESOURCES: usize = 256;
+
+pub err McpError {
+    InvalidToolName,
+    InvalidResourceUri,
+    TooManyTools,
+    TooManyResources,
+    OutOfMemory,
+}
+
+pub type McpToolHandler = *const fn (alloc: std.mem.Allocator, args_json: []const u8): anyerror![]const u8;
 
 pub struct McpToolSpec {
     name: []const u8 = "",
@@ -101,6 +115,18 @@ pub struct McpServer {
     }
 
     pub fn registerTool(*_, spec: McpToolSpec, handler_fn: McpToolHandler): ! {
+        if (spec.name.len == 0) return McpError.InvalidToolName;
+        let is_update = false;
+        for (existing of _.tools.items) {
+            if (std.mem.eql(u8, existing.spec.name, spec.name)) {
+                is_update = true;
+                break;
+            }
+        }
+        if (!is_update && _.tools.items.len >= MCP_MAX_TOOLS) {
+            return McpError.TooManyTools;
+        }
+
         const owned_name = _.allocator.dupe(u8, spec.name)?;
         errdefer _.allocator.free(owned_name);
 
@@ -135,6 +161,18 @@ pub struct McpServer {
     }
 
     pub fn registerResource(*_, spec: McpResourceSpec): ! {
+        if (spec.uri.len == 0) return McpError.InvalidResourceUri;
+        let is_update = false;
+        for (existing of _.resources.items) {
+            if (std.mem.eql(u8, existing.spec.uri, spec.uri)) {
+                is_update = true;
+                break;
+            }
+        }
+        if (!is_update && _.resources.items.len >= MCP_MAX_RESOURCES) {
+            return McpError.TooManyResources;
+        }
+
         const owned_uri = _.allocator.dupe(u8, spec.uri)?;
         errdefer _.allocator.free(owned_uri);
 
@@ -264,9 +302,13 @@ pub struct McpServer {
         defer tmp_arena.deinit();
         const arena_alloc = tmp_arena.allocator();
 
-        const req = JsonRpcCodec.parseRequest(arena_alloc, req_json) catch e => {
-            if (e == @as(anyerror, err.ParseError)) {
+        const req = JsonRpcCodec.parseRequest(arena_alloc, req_json) catch |e| {
+            if (e == @as(anyerror, error.ParseError)) {
                 const encoded = JsonRpcCodec.encodeError(alloc, JsonRpcId.Null, JsonRpcError.parseError())?;
+                return encoded;
+            }
+            if (e == @as(anyerror, error.InvalidParams)) {
+                const encoded = JsonRpcCodec.encodeError(alloc, JsonRpcId.Null, JsonRpcError.invalidParams())?;
                 return encoded;
             }
             const encoded = JsonRpcCodec.encodeError(alloc, JsonRpcId.Null, JsonRpcError.invalidRequest())?;
@@ -351,11 +393,8 @@ pub struct McpServer {
                     args_json = JsonSerializer.stringify(arena_alloc, args_val)?;
                 }
 
-                const tool_out = handler(arena_alloc, args_json) catch tool_err => {
-                    let err_msg: []const u8 = "Tool execution failed";
-                    zig {
-                        err_msg = @errorName(tool_err);
-                    }
+                const tool_out = handler(arena_alloc, args_json) catch |tool_err| {
+                    const err_msg: []const u8 = @errorName(tool_err);
                     const err_result = McpServer.buildToolCallResult(arena_alloc, err_msg, true)?;
                     const encoded = JsonRpcCodec.encodeSuccess(alloc, req.id, err_result)?;
                     return encoded;

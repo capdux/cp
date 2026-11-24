@@ -1,8 +1,11 @@
-// Source: cp/lib/rpc/framing.cp (LSP & MCP Content-Length / NDJSON Incremental Framers)
+// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP
+// Source: cp/lib/rpc/framing.cp (LSP & MCP Content-Length / NDJSON Incremental Framers + 16-Lane SIMD)
 // Pure CP incremental streaming framers for Content-Length (LSP/DAP/MCP HTTP-style)
-// and newline-delimited JSON-RPC (MCP stdio NDJSON) with DoS frame size protection.
+// and newline-delimited JSON-RPC (MCP stdio NDJSON) with 16 MiB resource-exhaustion protection.
 
 const std = @import("std");
+
+pub type RpcVec16u8 = @Vector(16, u8);
 
 pub const DEFAULT_MAX_FRAME_BYTES: usize = 16 * 1024 * 1024; // 16 MiB
 pub const DEFAULT_MAX_HEADER_BYTES: usize = 16 * 1024;       // 16 KiB
@@ -17,6 +20,129 @@ pub err FramingError {
     OutOfMemory,
 }
 
+fn rpcLoadVec16(data: []const u8, offset: usize): RpcVec16u8 {
+    let arr: [16]u8 = [0; 16];
+    let j: usize = 0;
+    while (j < 16) : (j += 1) {
+        arr[j] = data[offset + j];
+    }
+    return arr;
+}
+
+fn rpcAsciiLowerByte(c: u8): u8 {
+    if (c >= 'A' && c <= 'Z') return c + 32;
+    return c;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan for the first `\r` (`0x0D`) or `\n` (`0x0A`) at or after `start`.
+/// Hot path for `ContentLengthFramer` and `LineRpcFramer`.
+pub fn simdRpcFindCrlf(data: []const u8, start: usize): usize? {
+    if (start >= data.len) return null;
+    let pos: usize = start;
+    const v_cr: RpcVec16u8 = @splat(0x0D);
+    const v_lf: RpcVec16u8 = @splat(0x0A);
+    const v_one: RpcVec16u8 = @splat(1);
+    const v_zero: RpcVec16u8 = @splat(0);
+
+    while (pos + 16 <= data.len) {
+        const v = rpcLoadVec16(data, pos);
+        const hit = @select(u8, v == v_cr, v_one, v_zero) | @select(u8, v == v_lf, v_one, v_zero);
+        if (@reduce(.Max, hit) != 0) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                const c = data[pos + j];
+                if (c == '\r' || c == '\n') return pos + j;
+            }
+        }
+        pos += 16;
+    }
+    while (pos < data.len) : (pos += 1) {
+        const c = data[pos];
+        if (c == '\r' || c == '\n') return pos;
+    }
+    return null;
+}
+
+/// Scalar reference for `simdRpcFindCrlf` (0-diff differential verification).
+pub fn scalarRpcFindCrlf(data: []const u8, start: usize): usize? {
+    if (start >= data.len) return null;
+    let pos: usize = start;
+    while (pos < data.len) : (pos += 1) {
+        const c = data[pos];
+        if (c == '\r' || c == '\n') return pos;
+    }
+    return null;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD ASCII case-insensitive equality.
+/// Hot path for matching HTTP/LSP header names such as `Content-Length`.
+pub fn simdRpcAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let pos: usize = 0;
+    const v_upper_a: RpcVec16u8 = @splat('A');
+    const v_upper_z: RpcVec16u8 = @splat('Z');
+    const v_diff32: RpcVec16u8 = @splat(32);
+    const v_zero: RpcVec16u8 = @splat(0);
+
+    while (pos + 16 <= a.len) {
+        const va = rpcLoadVec16(a, pos);
+        const vb = rpcLoadVec16(b, pos);
+        const a_is_upper = (va >= v_upper_a) & (va <= v_upper_z);
+        const b_is_upper = (vb >= v_upper_a) & (vb <= v_upper_z);
+        const la = va + @select(u8, a_is_upper, v_diff32, v_zero);
+        const lb = vb + @select(u8, b_is_upper, v_diff32, v_zero);
+        const diff: RpcVec16u8 = la ^ lb;
+        if (@reduce(.Or, diff) != 0) return false;
+        pos += 16;
+    }
+    while (pos < a.len) : (pos += 1) {
+        if (rpcAsciiLowerByte(a[pos]) != rpcAsciiLowerByte(b[pos])) return false;
+    }
+    return true;
+}
+
+/// Scalar reference for `simdRpcAsciiLowerEql` (0-diff differential verification).
+pub fn scalarRpcAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let pos: usize = 0;
+    while (pos < a.len) : (pos += 1) {
+        if (rpcAsciiLowerByte(a[pos]) != rpcAsciiLowerByte(b[pos])) return false;
+    }
+    return true;
+}
+
+fn rpcFindHeaderTerminator(data: []const u8): usize? {
+    let pos: usize = 0;
+    while (pos + 4 <= data.len) {
+        const hit = simdRpcFindCrlf(data, pos) ?? return null;
+        if (hit + 3 < data.len
+            && data[hit] == '\r'
+            && data[hit + 1] == '\n'
+            && data[hit + 2] == '\r'
+            && data[hit + 3] == '\n')
+        {
+            return hit;
+        }
+        pos = hit + 1;
+    }
+    return null;
+}
+
+fn rpcFormatUsize(buf: *[32]u8, value: usize): []const u8 {
+    if (value == 0) {
+        buf[31] = '0';
+        return buf[31..32];
+    }
+    let v = value;
+    let idx: usize = 32;
+    while (v > 0) {
+        idx -= 1;
+        buf[idx] = @as(u8, '0') + @as(u8, @intCast(v % 10));
+        v /= 10;
+    }
+    return buf[idx..32];
+}
+
 pub struct ContentLengthFramer {
     allocator: std.mem.Allocator = undefined,
     buf: std.ArrayList(u8) = .empty,
@@ -28,10 +154,11 @@ pub struct ContentLengthFramer {
         alloc: std.mem.Allocator,
         max_frame_bytes: usize = DEFAULT_MAX_FRAME_BYTES,
     ): ContentLengthFramer {
+        const eff_max: usize = if (max_frame_bytes > DEFAULT_MAX_FRAME_BYTES) DEFAULT_MAX_FRAME_BYTES else max_frame_bytes;
         return ContentLengthFramer{
             allocator: alloc,
             buf: .empty,
-            max_frame_bytes: max_frame_bytes,
+            max_frame_bytes: eff_max,
             max_header_bytes: DEFAULT_MAX_HEADER_BYTES,
             pending_content_length: null,
         };
@@ -78,9 +205,11 @@ pub struct ContentLengthFramer {
         let pos: usize = 0;
         while (pos <= header_bytes.len) {
             const rem = header_bytes[pos..];
-            const crlf_opt = std.mem.indexOf(u8, rem, "\r\n");
             let line: []const u8 = "";
-            if (crlf_pos := crlf_opt) {
+            if (crlf_pos := simdRpcFindCrlf(rem, 0)) {
+                if (rem[crlf_pos] != '\r' || crlf_pos + 1 >= rem.len || rem[crlf_pos + 1] != '\n') {
+                    return FramingError.InvalidHeader;
+                }
                 line = rem[0..crlf_pos];
                 pos += crlf_pos + 2;
             } else {
@@ -90,20 +219,20 @@ pub struct ContentLengthFramer {
 
             if (line.len == 0) continue;
 
-            const colon_pos = std.mem.indexOfScalar(u8, line, ':') ?? return err.InvalidHeader;
+            const colon_pos = std.mem.indexOfScalar(u8, line, ':') ?? return FramingError.InvalidHeader;
             const name = std.mem.trim(u8, line[0..colon_pos], " \t");
             const val = std.mem.trim(u8, line[colon_pos + 1 ..], " \t");
-            if (name.len == 0) return err.InvalidHeader;
+            if (name.len == 0) return FramingError.InvalidHeader;
 
-            if (std.ascii.eqlIgnoreCase(name, "content-length")) {
-                const parsed = ContentLengthFramer.parseUnsignedDecimal(val) ?? return err.InvalidContentLength;
+            if (simdRpcAsciiLowerEql(name, "content-length")) {
+                const parsed = ContentLengthFramer.parseUnsignedDecimal(val) ?? return FramingError.InvalidContentLength;
                 if (prev := found_len) {
-                    if (prev != parsed) return err.InvalidHeader;
+                    if (prev != parsed) return FramingError.InvalidHeader;
                 }
                 found_len = parsed;
             }
         }
-        return found_len ?? return err.MissingContentLength;
+        return found_len ?? return FramingError.MissingContentLength;
     }
 
     pub fn feed(*_, chunk: []const u8): ([][]u8)! {
@@ -123,14 +252,14 @@ pub struct ContentLengthFramer {
         while (read_pos < _.buf.items.len || _.pending_content_length != null) {
             if (_.pending_content_length == null) {
                 const rem = _.buf.items[read_pos..];
-                const sep_opt = std.mem.indexOf(u8, rem, "\r\n\r\n");
+                const sep_opt = rpcFindHeaderTerminator(rem);
                 if (sep_pos := sep_opt) {
                     if (sep_pos > _.max_header_bytes) {
                         _.reset();
                         return FramingError.HeaderTooLarge;
                     }
                     const header_bytes = rem[0..sep_pos];
-                    const content_len = ContentLengthFramer.parseHeaderBlock(header_bytes) catch e => {
+                    const content_len = ContentLengthFramer.parseHeaderBlock(header_bytes) catch |e| {
                         _.reset();
                         return e;
                     };
@@ -175,11 +304,8 @@ pub struct ContentLengthFramer {
     }
 
     pub static fn encodeFrame(alloc: std.mem.Allocator, payload: []const u8): ([]u8)! {
-        let len_buf: [32]u8 = undefined;
-        let len_str: []const u8 = "";
-        zig {
-            len_str = std.fmt.bufPrint(&len_buf, "{d}", .{payload.len}) catch unreachable;
-        }
+        let len_buf: [32]u8 = [0; 32];
+        const len_str = rpcFormatUsize(&len_buf, payload.len);
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(alloc);
 
@@ -200,10 +326,11 @@ pub struct LineRpcFramer {
         alloc: std.mem.Allocator,
         max_frame_bytes: usize = DEFAULT_MAX_FRAME_BYTES,
     ): LineRpcFramer {
+        const eff_max: usize = if (max_frame_bytes > DEFAULT_MAX_FRAME_BYTES) DEFAULT_MAX_FRAME_BYTES else max_frame_bytes;
         return LineRpcFramer{
             allocator: alloc,
             buf: .empty,
-            max_frame_bytes: max_frame_bytes,
+            max_frame_bytes: eff_max,
         };
     }
 
@@ -242,19 +369,28 @@ pub struct LineRpcFramer {
         let read_pos: usize = 0;
         while (read_pos < _.buf.items.len) {
             const rem = _.buf.items[read_pos..];
-            const nl_opt = std.mem.indexOfScalar(u8, rem, '\n');
+            let nl_opt: usize? = null;
+            let scan: usize = 0;
+            while (scan < rem.len) {
+                const hit = simdRpcFindCrlf(rem, scan) ?? break;
+                if (rem[hit] == '\n') {
+                    nl_opt = hit;
+                    break;
+                }
+                scan = hit + 1;
+            }
             if (nl_pos := nl_opt) {
                 let raw_line = rem[0..nl_pos];
                 read_pos += nl_pos + 1;
                 if (raw_line.len > 0 && raw_line[raw_line.len - 1] == '\r') {
                     raw_line = raw_line[0 .. raw_line.len - 1];
                 }
-                const trimmed = std.mem.trim(u8, raw_line, " \t\r");
-                if (trimmed.len == 0) continue;
-                if (trimmed.len > _.max_frame_bytes) {
+                if (raw_line.len > _.max_frame_bytes) {
                     _.reset();
                     return FramingError.FrameTooLarge;
                 }
+                const trimmed = std.mem.trim(u8, raw_line, " \t\r");
+                if (trimmed.len == 0) continue;
                 const owned = _.allocator.dupe(u8, trimmed)?;
                 errdefer if (owned.len > 0) _.allocator.free(owned);
                 lines.append(_.allocator, owned)?;
@@ -279,10 +415,8 @@ pub struct LineRpcFramer {
     }
 
     pub static fn encodeLine(alloc: std.mem.Allocator, payload: []const u8): ([]u8)! {
-        for (c of payload) {
-            if (c == '\n' || c == '\r') {
-                return FramingError.InvalidLine;
-            }
+        if (simdRpcFindCrlf(payload, 0) != null) {
+            return FramingError.InvalidLine;
         }
         let out = alloc.alloc(u8, payload.len + 1)?;
         if (payload.len > 0) {

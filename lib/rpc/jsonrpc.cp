@@ -1,9 +1,12 @@
+// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP
 // Source: cp/lib/rpc/jsonrpc.cp (JSON-RPC 2.0 Wire Codec & Standard Error Codes)
 // Pure CP RFC-compliant JSON-RPC 2.0 codec with typed IDs, standard error codes,
 // request/notification/response parsing & zero-leak Arena-isolated DOM validation.
 
 const std = @import("std");
-import { JsonValue, JsonTag, JsonParser, JsonSerializer } from "cap:json";
+import { JsonValue, JsonTag } from "../json/value.cp";
+import { JsonParser } from "../json/parser.cp";
+import { JsonSerializer } from "../json/serializer.cp";
 
 pub const ERR_PARSE: i32 = -32700;
 pub const ERR_INVALID_REQUEST: i32 = -32600;
@@ -217,12 +220,25 @@ pub struct JsonRpcCodec {
     }
 
     static fn appendI64(out: *std.ArrayList(u8), alloc: std.mem.Allocator, v: i64): ! {
-        let buf: [32]u8 = undefined;
-        let rendered: []const u8 = "";
-        zig {
-            rendered = std.fmt.bufPrint(&buf, "{d}", .{v}) catch unreachable;
+        let buf: [32]u8 = [0; 32];
+        let idx: usize = 32;
+        const neg = v < 0;
+        let mag: u64 = if (neg) @as(u64, @intCast(-@as(i128, v))) else @as(u64, @intCast(v));
+        if (mag == 0) {
+            idx -= 1;
+            buf[idx] = '0';
+        } else {
+            while (mag > 0) {
+                idx -= 1;
+                buf[idx] = @as(u8, '0') + @as(u8, @intCast(mag % 10));
+                mag /= 10;
+            }
         }
-        out.appendSlice(alloc, rendered)?;
+        if (neg) {
+            idx -= 1;
+            buf[idx] = '-';
+        }
+        out.appendSlice(alloc, buf[idx..32])?;
     }
 
     static fn appendId(out: *std.ArrayList(u8), alloc: std.mem.Allocator, id: JsonRpcId): ! {
@@ -234,31 +250,27 @@ pub struct JsonRpcCodec {
     }
 
     static fn parseExactInt(num: f64): i64? {
-        let out_val: i64? = null;
-        zig {
-            if (!std.math.isFinite(num) or @trunc(num) != num) {
-                out_val = null;
-            } else if (num < -9007199254740991.0 or num > 9007199254740991.0) {
-                out_val = null;
-            } else {
-                out_val = @as(i64, @intFromFloat(num));
-            }
+        if (!std.math.isFinite(num) || @trunc(num) != num) {
+            return null;
         }
-        return out_val;
+        if (num < -9007199254740991.0 || num > 9007199254740991.0) {
+            return null;
+        }
+        return @as(i64, @intFromFloat(num));
     }
 
     static fn parseIdValue(alloc: std.mem.Allocator, val: JsonValue): JsonRpcId! {
         return switch (val.tag) {
             .Null => JsonRpcId.Null,
             .Number => {
-                const int_v = JsonRpcCodec.parseExactInt(val.num_val) ?? return err.InvalidId;
+                const int_v = JsonRpcCodec.parseExactInt(val.num_val) ?? return JsonRpcCodecError.InvalidId;
                 return JsonRpcId.Int(int_v);
             },
             .String => {
                 const duped = alloc.dupe(u8, val.str_val)?;
                 return JsonRpcId.Str(duped);
             },
-            else => return err.InvalidId,
+            else => return JsonRpcCodecError.InvalidId,
         };
     }
 

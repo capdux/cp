@@ -20,9 +20,9 @@
 
 | 文件路径 | 谱系注释 | 核心职责 |
 | :--- | :--- | :--- |
-| `lib/rpc/jsonrpc.cp` | `// Source: cp/lib/rpc/jsonrpc.cp (JSON-RPC 2.0 Wire Codec & Standard Error Codes)` | JSON-RPC 2.0 请求/通知/响应/错误码编解码与校验 |
-| `lib/rpc/framing.cp` | `// Source: cp/lib/rpc/framing.cp (LSP & MCP Content-Length / NDJSON Incremental Framers)` | `Content-Length` 与 NDJSON 增量流式分帧器及 16 MiB DoS 上限防护 |
-| `lib/rpc/mcp.cp` | `// Source: cp/lib/rpc/mcp.cp (Model Context Protocol Core Server Dispatcher)` | MCP 核心服务端路由器与工具/资源注册表 |
+| `lib/rpc/jsonrpc.cp` | `// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP` | JSON-RPC 2.0 请求/通知/响应/错误码编解码与严格校验（零 `zig {}`） |
+| `lib/rpc/framing.cp` | `// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP` | `Content-Length` 与 NDJSON 增量流式分帧器、16 MiB 上限防护与 16-lane `RpcVec16u8` SIMD（`simdRpcFindCrlf` / `simdRpcAsciiLowerEql`） |
+| `lib/rpc/mcp.cp` | `// Reference-hardened against paritytech/jsonrpsee (MIT) & JSON-RPC 2.0 / MCP` | MCP 核心服务端路由器、工具/资源注册上限（`MCP_MAX_TOOLS=256` / `MCP_MAX_RESOURCES=256`）与标准错误码映射 |
 | `lib/rpc/index.cp` | `// Source: cp/lib/rpc/index.cp (Unified Exports for cap:rpc)` | `cap:rpc` 统一公开导出入口 |
 
 ---

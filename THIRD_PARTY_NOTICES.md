@@ -118,6 +118,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **usearch** (`unum-cloud`) & **instant-distance** (`djc`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 / MIT | `lib/vector/hnswFlat.cp`, `lib/vector/ivfPq.cp` | Copyright (c) 2022-2024 Unum Cloud / Dirkjan Ochtman |
 | **varisat** (`jix`) | <https://github.com/jix/varisat> | MIT OR Apache-2.0 | `lib/compiler/expr.cp`, `lib/compiler/sat.cp` | Copyright (c) 2018-2024 Jannis Harder |
 | **statrs** (`statrs-dev`) & **nalgebra** (`dimforge`) | <https://github.com/statrs-dev/statrs> | MIT / Apache-2.0 | `lib/math/statsDist.cp`, `lib/math/lu.cp` | Copyright (c) 2016-2024 Statrs / Dimforge Contributors |
+| **jsonrpsee** (`paritytech`) | <https://github.com/paritytech/jsonrpsee> | MIT | `lib/rpc/framing.cp`, `lib/rpc/jsonrpc.cp`, `lib/rpc/mcp.cp` | Copyright (c) 2019-2024 Parity Technologies (JSON-RPC 2.0 / MCP) |
+| **rust-std BTree & rust-bio** | <https://github.com/rust-bio/rust-bio> | MIT OR Apache-2.0 | `lib/ds/bptree.cp`, `lib/ds/intervalTree.cp` | Copyright (c) 2015-2024 The Rust Project & Rust-Bio Developers |
 
 ---
 

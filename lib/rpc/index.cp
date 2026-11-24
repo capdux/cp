@@ -16,14 +16,22 @@ export {
 } from "./jsonrpc.cp";
 
 export {
+    RpcVec16u8,
     DEFAULT_MAX_FRAME_BYTES,
     DEFAULT_MAX_HEADER_BYTES,
+    simdRpcFindCrlf,
+    scalarRpcFindCrlf,
+    simdRpcAsciiLowerEql,
+    scalarRpcAsciiLowerEql,
     FramingError,
     ContentLengthFramer,
     LineRpcFramer,
 } from "./framing.cp";
 
 export {
+    MCP_MAX_TOOLS,
+    MCP_MAX_RESOURCES,
+    McpError,
     McpToolHandler,
     McpToolSpec,
     McpResourceSpec,
