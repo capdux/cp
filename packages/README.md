@@ -24,6 +24,7 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/duckdb` | `1.2.1` | MIT | Prebuilt dynamic (`sys`) | Embedded OLAP analytical SQL engine (Parquet/CSV/JSON) |
 | `@cap/pdfium` | `131.0.0` | Apache-2.0 | Prebuilt dynamic (`sys`) | Chrome PDFium rendering & text extraction engine |
 | `@cap/onnx` | `1.32.0` | MIT | Prebuilt dynamic (`sys`) | Microsoft ONNX Runtime neural/embedding inference engine |
+| `@cap/opus` | `1.5.2` | BSD-3-Clause | C static (`bin`) | Low-latency real-time speech/audio codec (WebRTC/Voice Agent) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 
