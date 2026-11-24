@@ -155,6 +155,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **libFLAC 1.4.3** (`@cap/flac`) | <https://github.com/xiph/flac> | BSD-3-Clause | `packages/@cap/flac/` | Copyright (c) 2000-2024 Josh Coalson & Xiph.Org Foundation |
 | **HarfBuzz 15.2.0** (`@cap/harfbuzz`) | <https://github.com/harfbuzz/harfbuzz> | MIT | `packages/@cap/harfbuzz/` | Copyright (c) 2010-2025 Behdad Esfahbod & HarfBuzz Contributors |
 | **dav1d 1.5.4** (`@cap/dav1d`) | <https://code.videolan.org/videolan/dav1d> | BSD-2-Clause | `packages/@cap/dav1d/` | Copyright (c) 2018-2025 VideoLAN & dav1d Authors |
+| **libvorbis 1.3.7** (`@cap/vorbis`) | <https://github.com/xiph/vorbis> | BSD-3-Clause | `packages/@cap/vorbis/` | Copyright (c) 2002-2020 Xiph.Org Foundation |
+| **libvpx 1.15.0** (`@cap/libvpx`) | <https://github.com/webmproject/libvpx> | BSD-3-Clause | `packages/@cap/libvpx/` | Copyright (c) 2010-2025 The WebM Project Authors |
 
 ---
 

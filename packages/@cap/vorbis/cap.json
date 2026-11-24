@@ -1,0 +1,51 @@
+{
+  "name": "@cap/vorbis",
+  "ver": "1.3.7",
+  "description": "Xiph libvorbis 1.3.7 royalty-free audio codec (self-contained with libogg) for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "vorbis": {
+      "path": "c",
+      "src": [
+        "bitwise.c",
+        "framing.c",
+        "mdct.c",
+        "smallft.c",
+        "block.c",
+        "envelope.c",
+        "window.c",
+        "lsp.c",
+        "lpc.c",
+        "analysis.c",
+        "synthesis.c",
+        "psy.c",
+        "info.c",
+        "floor1.c",
+        "floor0.c",
+        "res0.c",
+        "mapping0.c",
+        "registry.c",
+        "codebook.c",
+        "sharedbook.c",
+        "lookup.c",
+        "bitrate.c",
+        "vorbisenc.c",
+        "vorbis_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}
