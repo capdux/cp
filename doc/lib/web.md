@@ -39,7 +39,7 @@
 | `lib/web/selector.cp` | CSS3 选择器编译与 DOM 匹配引擎 | `CssSelector`, `ComplexSelector`, `CompoundSelector`, `AttrSelector`, `PseudoSelector`, `SelectorError` |
 | `lib/web/xpath.cp` | 零分配 W3C XPath 词法与步进扫描器 | `XPathIter`, `XPathStepIter`, `validateXPathDelimiters`, `XPathToken`, `XPathStep` |
 
-### 4. API 网关流量治理与容错（2 个子模块）
+### 4. API 网关流量治理与容错（4 个子模块）
 
 | 子模块文件 | 领域分类 | 核心导出符号 |
 | :--- | :--- | :--- |
@@ -47,6 +47,17 @@
 | `lib/web/breaker.cp` / `breakerPol.cp` | 熔断器、指数退避抖动与舱壁隔离 | `CircuitBreaker`, `CircuitConfig`, `CircuitState`, `CircuitStats`, `BackoffPolicy`, `Bulkhead`, `JitterMode` |
 | `lib/web/middleware.cp` | 零堆分配 HTTP 洋葱中间件链、CORS/Bearer 鉴权/413 守卫与指标统计 | `WebContext`, `WebMiddlewareConfig`, `WebMiddlewareOutcome`, `WebMiddlewareStats`, `WebMiddlewarePipeline`, `renderJsonErrorBody` |
 | `lib/web/hedged.cp` | Google "The Tail at Scale" 对冲请求（Hedged Requests）与重试预算防风暴控制器 | `HEDGED_MAX_ATTEMPTS`, `RetryBudgetConfig`, `RetryBudgetStats`, `RetryBudget`, `HedgedRequestConfig`, `HedgedAction`, `HedgedAttemptState`, `HedgedWinResult`, `HedgedRequestTracker` |
+
+### 5. 旗舰零分配 REST API 框架（4 个核心子模块）
+
+融合 **ElysiaJS 链式 8 阶段生命周期 / Plugin / exact-mirror / OpenAPI 3.1.0** 与 **Axum 零反射提取器 / Radix Trie / Router 组合**，100% 纯 CP 零动态堆分配：
+
+| 子模块文件 | 领域分类 | 核心导出符号 |
+| :--- | :--- | :--- |
+| `lib/web/radixRouter.cp` | Memoirist O(1) 静态哈希 + Matchit 压缩 Radix Trie 路由器 | `RadixRouter`, `RadixMatchResult`, `RadixParam`, `RADIX_STATIC_BUCKETS`, `RADIX_MAX_NODES`, `RADIX_METHOD_SLOTS` |
+| `lib/web/app.cp` | 旗舰 REST 应用内核（8 阶段生命周期、Plugin、Axum `nest`/`merge`/`fallback`、RFC 6265 Cookie、OpenAPI 3.1.0） | `App`, `Plugin`, `PluginScope`, `RouteGroup`, `Context`, `Request`, `Response`, `AppMethod`, `AppErrorCode`, `CookieOptions`, `CookieSameSite`, `formatSetCookie` |
+| `lib/web/schema.cp` | 16-lane SIMD URI 解码、零反射 JSON Schema 校验、`exact-mirror` 字段裁剪与 OpenAPI Schema 导出 | `fastDecodeUriComponent`, `fastDecodeFormComponent`, `fastDecodeUriComponentOpts`, `parseQueryPair`, `findQueryParamDecoded`, `ObjectSchema`, `FieldKind`, `FieldRule`, `ValidationReport`, `ValidationIssue`, `validateJsonObject`, `exactMirrorJson`, `schemaToOpenApiJson` |
+| `lib/web/fileType.cp` | 零堆 30 种 Web/媒体/归档/字体/SQLite/文本魔数文件类型检测器 | `FileKind`, `FileTypeInfo`, `detectFileType` |
 
 ---
 
@@ -605,6 +616,71 @@ pub fn demoHstsStore() {
     * = res.must_upgrade; // true (matched_via_subdomain == true)
 }
 ```
+
+---
+
+## 四、 `cap:web` 旗舰 REST API 框架（ElysiaJS 生命周期 + Axum 零反射内核）
+
+> 完整可运行示例：[examples/05_web_rest_api.cp](../../examples/05_web_rest_api.cp)（`cap run examples/05_web_rest_api.cp`）
+
+`cap:web` 旗舰 REST 框架由 4 个零动态堆分配核心模块构成：`radixRouter.cp`、`app.cp`、`schema.cp` 与 `fileType.cp`，全链路无 GC、无运行时反射，支持纯内存零 I/O `app.dispatch(req)` 测试与生产服务器挂载。
+
+### 1. 混合极速路由器 (`lib/web/radixRouter.cp`)
+
+融合 **Memoirist O(1) FNV-1a 静态路径哈希表** 与 **Matchit 压缩段 Radix Trie**，按「静态段 > 参数段 (`:id` / `{id}`) > 通配段 (`*wildcard`)」优先级精确匹配：
+
+| 符号 / 方法 | 签名 / 说明 |
+| :--- | :--- |
+| `RadixRouter.init()` | 初始化零堆路由器（512 静态桶 + 512 Trie 节点 + 7 方法槽位） |
+| `insert(*_, method_idx, path, handler_id): bool` | 注册静态或动态路由（`0=GET, 1=POST, 2=PUT, 3=DELETE, 4=PATCH, 5=HEAD, 6=OPTIONS`），同时支持 Elysia `:param`、Axum `{param}` 与 `*wildcard` |
+| `lookup(*_, method_idx, path): RadixMatchResult` | O(1) 静态查表 + O(depth) Trie 回退；内置 **Axum 风格 `HEAD -> GET` 自动回退**（`head_fallback_to_get = true`）与 **405 `allowed_mask` 位掩码收集** |
+| `staticRouteCount()` / `trieNodeCount()` | 查询静态路由数与 Radix Trie 节点数 |
+
+### 2. 旗舰应用内核、8 阶段生命周期、Plugin、Axum 组合与 Cookie (`lib/web/app.cp`)
+
+#### 2.1 Elysia 8 阶段请求生命周期管道
+
+`app.dispatch(req)` 严格按以下确定性流水线执行（任一前置钩子返回 `false` 或调用 `ctx.abort()` / `ctx.fail()` 时立即短路并进入响应收尾阶段）：
+
+1. **`onRequest`**（`app.onRequest`）→ 全局洋葱中间件（`app.use`）
+2. **路由匹配**（`RadixRouter.lookup`：静态 O(1) / Radix Trie + `HEAD -> GET` 自动回退；405 自动生成 `Allow` 头；404 走 `fallback` 或 `onError`）
+3. **`derive`**（`app.derive`）：按请求动态派生上下文属性（`ctx.setDerived(k, v)` / `ctx.derived(k)`）
+4. **`onParse`**（`app.onParse`）：请求体自定义解析钩子
+5. **`onTransform`**（`app.onTransform`）：入参规范化与预处理钩子
+6. **`onBeforeHandle`**（`app.onBeforeHandle`）：路由前鉴权/守卫钩子（可用 `ctx.fail(AppErrorCode, msg)` 触发 `onError`）
+7. **`handler` 执行** → **`onAfterHandle`**（`app.onAfterHandle`）→ 合并 `ctx.setHeader` 响应头
+8. **`mapResponse`**（`app.mapResponse`）→ **`onAfterResponse`**（`app.onAfterResponse`）；任意阶段错误统一路由至 **`onError`**（`app.onError`）
+
+#### 2.2 核心 API 速查表
+
+| 分类 | API / 符号 | 说明 |
+| :--- | :--- | :--- |
+| **链式路由与分组** | `App.init()`, `.get/post/put/delete/patch/head/options(path, fn)`, `.route(method, path, fn)`, `.routeDoc(method, path, summary, fn)`, `.group(prefix)` | 链式注册路由与 `RouteGroup` 前缀分组，支持 `:param`、`{param}` 与 `*wildcard` |
+| **8 阶段钩子与错误处理** | `.onRequest`, `.derive`, `.onParse`, `.onTransform`, `.onBeforeHandle`, `.onAfterHandle`, `.mapResponse`, `.onAfterResponse`, `.onError`, `.use` | `LifecycleHookFn = *const fn (*Context): bool`、`ResponseHookFn = *const fn (*Context, *Response): void`、`ErrorHookFn = *const fn (*Context, AppErrorCode, string): Response` |
+| **Elysia Plugin 组合** | `Plugin.init(name)`, `.withPrefix(p)`, `.withScope(PluginScope)`, `.setState(k, v)`, `.get/post/.../route`, `.onRequest/derive/onBeforeHandle/onAfterHandle`, `app.usePlugin(*plug)` | 零堆模块化插件容器（`PluginScope`: `Local | Scoped | Global`），挂载路由、前缀、状态与钩子 |
+| **Axum 组合与兜底** | `app.nest(prefix, *sub)`, `app.merge(*other)`, `app.fallback(handler)`, `app.state(ptr)`, `app.setState(k, v)` | 支持子路由嵌套挂载、多路由/状态合并与自定义 404 Fallback |
+| **Context 零反射提取器** | `ctx.param(k)`, `ctx.paramU64(k)`, `ctx.paramI64(k)`, `ctx.query(k)`, `ctx.queryU64(k)`, `ctx.queryI64(k)`, `ctx.queryBool(k)`, `ctx.header(k)`, `ctx.bearerToken()`, `ctx.matchedPath()`, `ctx.originalUri()`, `ctx.stateVal(k)`, `ctx.stateAddr()`, `ctx.derived(k)` | 编译期零反射提取路径/查询/请求头/Bearer/状态/派生属性；响应构造：`ctx.json`, `ctx.text`, `ctx.noContent`, `ctx.status`, `ctx.setHeader`, `ctx.abort`, `ctx.fail` |
+| **RFC 6265 Cookie** | `ctx.cookie(name): string?`, `CookieOptions`, `CookieSameSite` (`None | Lax | Strict`), `formatSetCookie(name, val, opts, out_buf): usize?` | 零堆解析请求 `Cookie` 头（自动解引号）与生成标准 `Set-Cookie`（`Path`/`Domain`/`Max-Age`/`HttpOnly`/`Secure`/`SameSite`） |
+| **OpenAPI 3.1.0 导出** | `app.toOpenApiJson(title, version, out_buf): usize?` | 零堆导出完整 OpenAPI 3.1.0 JSON 文档（自动将 `:param`/`*wildcard` 转为 `{param}` 并生成 `parameters`） |
+
+### 3. SIMD URI 解码、零反射 Schema 校验与 `exact-mirror` (`lib/web/schema.cp`)
+
+| 分类 | API / 符号 | 说明 |
+| :--- | :--- | :--- |
+| **16-lane SIMD URI 解码** | `fastDecodeUriComponent(in, out)`, `fastDecodeFormComponent(in, out)`, `fastDecodeUriComponentOpts(in, out, plus_as_space)` | 基于 `@Vector(16, u8)` 跳过无 `%`/`+` 块，严格校验 `%XX` 十六进制转义 |
+| **零拷贝 Query 解析** | `parseQueryPair(seg): QueryPair`, `findQueryParamDecoded(query, key, out_buf): usize?` | 零堆查找并自动解码 Query 参数 |
+| **Schema 构建器** | `ObjectSchema.init(name)`, `.strField`, `.intField`, `.floatField`, `.boolField`, `.emailField`, `.uuidField`, `.urlField`, `.enumField`, `.addRule`, `.findField` | 链式声明最多 32 个字段规则（`FieldKind`: `Str | Int | Float | Bool | Email | Uuid | Url | Enum`） |
+| **JSON 校验与裁剪** | `validateJsonObject(json_body, *schema): ValidationReport`, `exactMirrorJson(json_body, *schema, out_buf): usize?` | 零堆校验必填/类型/长度/范围/格式；`exactMirrorJson` 严格剔除未声明敏感字段（对标 Elysia `exact-mirror`） |
+| **OpenAPI Schema 导出** | `schemaToOpenApiJson(*schema, out_buf): usize?` | 导出符合 OpenAPI 3.1.0 / JSON Schema Draft 2020-12 的对象 Schema 片段 |
+
+### 4. 零堆魔数文件类型检测器 (`lib/web/fileType.cp`)
+
+1:1 替代 Elysia `file-type` 依赖，零堆安全检测 **30 种**常见二进制魔数与文本启发式格式（越界/截断输入安全返回 `null`）：
+
+| API / 符号 | 说明 |
+| :--- | :--- |
+| `detectFileType(bytes: string): FileTypeInfo?` | 返回 `{ kind: FileKind, ext: string, mime: string }` 或 `null` |
+| `FileKind`（30 种格式） | **图像**：`Png`, `Jpeg`, `Gif`, `Webp`, `Avif`, `Bmp`, `Ico`；**文档与压缩**：`Pdf`, `Zip`, `Gzip`, `Zstd`, `Xz`, `Bz2`, `Lz4`；**音视频**：`Mp4`, `Webm`, `Mp3`, `Flac`, `Ogg`, `Wav`；**Wasm/字体/DB**：`Wasm`, `Woff2`, `Woff`, `Ttf`, `Otf`, `Sqlite3`；**Web 文本**：`Svg`, `Html`, `Xml`, `Json` |
 
 ---
 

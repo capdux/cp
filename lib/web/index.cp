@@ -508,14 +508,36 @@ export {
     FsRouter,
 } from "./fsRouter.cp";
 
-// --- Official Flagship REST API Framework (ElysiaJS Chainable API + Axum Zero-Reflection Kernel) ---
+// --- Official Flagship REST API Framework (ElysiaJS 8-Stage Lifecycle/Plugin + Axum Radix/Extractors/Nest) ---
+export {
+    RADIX_STATIC_BUCKETS,
+    RADIX_MAX_NODES,
+    RADIX_MAX_CHILDREN,
+    RADIX_MAX_PARAMS,
+    RADIX_MAX_SEG_LEN,
+    RADIX_MAX_PATH_LEN,
+    RADIX_METHOD_SLOTS,
+    RadixParam,
+    RadixMatchResult,
+    RadixRouter,
+} from "./radixRouter.cp";
+
 export {
     APP_MAX_ROUTES,
     APP_MAX_MIDDLEWARES,
+    APP_MAX_HOOKS,
     APP_MAX_SEGMENTS,
     APP_MAX_PARAMS,
     APP_MAX_HEADERS,
     APP_MAX_PATH_LEN,
+    APP_MAX_STATE_KV,
+    APP_MAX_DERIVED_KV,
+    PLUGIN_MAX_ROUTES,
+    CookieSameSite,
+    CookieOptions,
+    formatSetCookie,
+    AppErrorCode,
+    PluginScope,
     AppMethod,
     HeaderKV,
     ParamKV,
@@ -524,9 +546,36 @@ export {
     Context,
     HandlerFn,
     MiddlewareFn,
+    LifecycleHookFn,
+    ResponseHookFn,
+    ErrorHookFn,
     RouteSegKind,
     RouteSeg,
     RouteEntry,
     RouteGroup,
+    PluginRouteDef,
+    Plugin,
     App,
 } from "./app.cp";
+
+export {
+    fastDecodeUriComponent,
+    fastDecodeFormComponent,
+    fastDecodeUriComponentOpts,
+    QueryPair,
+    parseQueryPair,
+    findQueryParamDecoded,
+    FieldKind,
+    FieldRule,
+    ObjectSchema,
+    ValidationIssue,
+    validateJsonObject,
+    exactMirrorJson,
+    schemaToOpenApiJson,
+} from "./schema.cp";
+
+export {
+    FileKind,
+    FileTypeInfo,
+    detectFileType,
+} from "./fileType.cp";

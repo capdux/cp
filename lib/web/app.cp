@@ -10,13 +10,17 @@
 // ============================================================================
 
 const std = @import("std");
+import { RadixRouter, RadixMatchResult } from "./radixRouter.cp";
 
 pub const APP_MAX_ROUTES: usize = 128;
 pub const APP_MAX_MIDDLEWARES: usize = 16;
+pub const APP_MAX_HOOKS: usize = 8;
 pub const APP_MAX_SEGMENTS: usize = 16;
 pub const APP_MAX_PARAMS: usize = 16;
 pub const APP_MAX_HEADERS: usize = 32;
 pub const APP_MAX_PATH_LEN: usize = 256;
+pub const APP_MAX_STATE_KV: usize = 16;
+pub const APP_MAX_DERIVED_KV: usize = 16;
 
 // ============================================================================
 // Internal Zero-Alloc String, ASCII, Numeric & JSON Helpers
@@ -59,6 +63,164 @@ fn parseDecimalU64(s: string): u64? {
         acc = acc * 10 + digit;
     }
     return acc;
+}
+
+fn parseDecimalI64(s: string): i64? {
+    if (s.len == 0) return null;
+    let neg: bool = false;
+    let start: usize = 0;
+    if (s[0] == '-') {
+        neg = true;
+        start = 1;
+    } else if (s[0] == '+') {
+        start = 1;
+    }
+    if (start >= s.len) return null;
+    if (mag := parseDecimalU64(s[start..])) {
+        const min_abs: u64 = (1 as u64) << 63;
+        if (neg) {
+            if (mag > min_abs) return null;
+            if (mag == min_abs) return std.math.minInt(i64);
+            return -(mag as i64);
+        } else {
+            if (mag > 9223372036854775807) return null;
+            return mag as i64;
+        }
+    }
+    return null;
+}
+
+fn writeI64Decimal(out_buf: []u8, pos: *usize, val: i64): bool {
+    let tmp: [24]u8 = [0; 24];
+    let n: usize = 0;
+    let v: u64 = 0;
+    if (val < 0) {
+        if (!writeByte(out_buf, pos, '-')) return false;
+        v = if (val == std.math.minInt(i64)) ((1 as u64) << 63) else ((-val) as u64);
+    } else {
+        v = val as u64;
+    }
+    if (v == 0) {
+        return writeByte(out_buf, pos, '0');
+    }
+    while (v > 0) {
+        tmp[n] = (48 + ((v % 10) as u8)) as u8;
+        n += 1;
+        v = v / 10;
+    }
+    while (n > 0) {
+        n -= 1;
+        if (!writeByte(out_buf, pos, tmp[n])) return false;
+    }
+    return true;
+}
+
+fn trimAsciiSpaces(s: string): string {
+    let start: usize = 0;
+    while (start < s.len && (s[start] == ' ' || s[start] == '\t')) : (start += 1) {}
+    let end: usize = s.len;
+    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t')) : (end -= 1) {}
+    return s[start..end];
+}
+
+pub enum CookieSameSite {
+    None,
+    Lax,
+    Strict,
+}
+
+pub struct CookieOptions {
+    path: string = "/";
+    domain: string = "";
+    max_age: i64 = -1; // < 0 means omit Max-Age
+    http_only: bool = true;
+    secure: bool = false;
+    same_site: CookieSameSite = CookieSameSite.Lax;
+}
+
+/// Format an RFC 6265 `Set-Cookie` header value into `out_buf` (zero heap).
+pub fn formatSetCookie(name: string, value: string, opts: CookieOptions, out_buf: []u8): usize? {
+    if (name.len == 0) return null;
+    let pos: usize = 0;
+    if (!writeRaw(out_buf, *pos, name)) return null;
+    if (!writeByte(out_buf, *pos, '=')) return null;
+    if (!writeRaw(out_buf, *pos, value)) return null;
+    if (opts.path.len > 0) {
+        if (!writeRaw(out_buf, *pos, "; Path=")) return null;
+        if (!writeRaw(out_buf, *pos, opts.path)) return null;
+    }
+    if (opts.domain.len > 0) {
+        if (!writeRaw(out_buf, *pos, "; Domain=")) return null;
+        if (!writeRaw(out_buf, *pos, opts.domain)) return null;
+    }
+    if (opts.max_age >= 0) {
+        if (!writeRaw(out_buf, *pos, "; Max-Age=")) return null;
+        if (!writeI64Decimal(out_buf, *pos, opts.max_age)) return null;
+    }
+    if (opts.http_only) {
+        if (!writeRaw(out_buf, *pos, "; HttpOnly")) return null;
+    }
+    if (opts.secure) {
+        if (!writeRaw(out_buf, *pos, "; Secure")) return null;
+    }
+    match (opts.same_site) {
+        .Strict => {
+            if (!writeRaw(out_buf, *pos, "; SameSite=Strict")) return null;
+        },
+        .Lax => {
+            if (!writeRaw(out_buf, *pos, "; SameSite=Lax")) return null;
+        },
+        .None => {
+            if (!writeRaw(out_buf, *pos, "; SameSite=None")) return null;
+        },
+    }
+    return pos;
+}
+
+pub enum AppErrorCode {
+    None,
+    NotFound,
+    MethodNotAllowed,
+    Validation,
+    Parse,
+    Unauthorized,
+    Forbidden,
+    InternalServerError,
+    Custom,
+
+    pub fn asString(): string {
+        match (_) {
+            .None => return "NONE",
+            .NotFound => return "NOT_FOUND",
+            .MethodNotAllowed => return "METHOD_NOT_ALLOWED",
+            .Validation => return "VALIDATION",
+            .Parse => return "PARSE",
+            .Unauthorized => return "UNAUTHORIZED",
+            .Forbidden => return "FORBIDDEN",
+            .InternalServerError => return "INTERNAL_SERVER_ERROR",
+            .Custom => return "CUSTOM",
+        }
+    }
+
+    pub fn defaultStatus(): u16 {
+        match (_) {
+            .None => return 200,
+            .NotFound => return 404,
+            .MethodNotAllowed => return 405,
+            .Validation => return 422,
+            .Parse => return 400,
+            .Unauthorized => return 401,
+            .Forbidden => return 403,
+            .InternalServerError => return 500,
+            .Custom => return 500,
+        }
+    }
+}
+
+pub enum PluginScope {
+    Local,
+    Scoped,
+    Global,
 }
 
 fn findByte(s: string, needle: u8): usize? {
@@ -162,6 +324,18 @@ pub enum AppMethod {
             .PATCH => return 16,
             .HEAD => return 32,
             .OPTIONS => return 64,
+        }
+    }
+
+    pub fn methodIndex(): usize {
+        match (_) {
+            .GET => return 0,
+            .POST => return 1,
+            .PUT => return 2,
+            .DELETE => return 3,
+            .PATCH => return 4,
+            .HEAD => return 5,
+            .OPTIONS => return 6,
         }
     }
 
@@ -319,6 +493,8 @@ pub struct Response {
 pub struct Context {
     method: AppMethod = AppMethod.GET;
     path: string = "/";
+    original_uri: string = "/";
+    matched_path: string = "";
     raw_query: string = "";
     body: string = "";
     headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
@@ -326,12 +502,18 @@ pub struct Context {
     params: [APP_MAX_PARAMS]ParamKV = [ParamKV{}; APP_MAX_PARAMS];
     param_len: usize = 0;
     state_ptr: usize = 0;
+    state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
+    state_kv_len: usize = 0;
+    derived_kv: [APP_MAX_DERIVED_KV]ParamKV = [ParamKV{}; APP_MAX_DERIVED_KV];
+    derived_kv_len: usize = 0;
     response_headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
     response_header_len: usize = 0;
     aborted: bool = false;
     abort_response: Response = Response{};
+    error_code: AppErrorCode = AppErrorCode.None;
+    error_message: string = "";
 
-    /// Extract a dynamic path parameter (`:id` or `*wildcard`).
+    /// Extract a dynamic path parameter (`:id`, `{id}`, or `*wildcard`).
     pub fn param(name: string): string? {
         let i: usize = 0;
         while (i < _.param_len) : (i += 1) {
@@ -348,6 +530,24 @@ pub struct Context {
             return parseDecimalU64(raw);
         }
         return null;
+    }
+
+    /// Extract and parse a signed 64-bit integer path parameter (Axum `Path<i64>`).
+    pub fn paramI64(name: string): i64? {
+        if (raw := _.param(name)) {
+            return parseDecimalI64(raw);
+        }
+        return null;
+    }
+
+    /// Axum `MatchedPath` extractor: returns the matched route pattern (e.g. `/users/:id`).
+    pub fn matchedPath(): string {
+        return _.matched_path;
+    }
+
+    /// Axum `OriginalUri` extractor: returns the original unsplit request target.
+    pub fn originalUri(): string {
+        return _.original_uri;
     }
 
     /// Extract a query parameter from `raw_query` (zero-allocation linear scan).
@@ -383,6 +583,27 @@ pub struct Context {
         return null;
     }
 
+    /// Extract and parse a signed 64-bit integer query parameter.
+    pub fn queryI64(key: string): i64? {
+        if (raw := _.query(key)) {
+            return parseDecimalI64(raw);
+        }
+        return null;
+    }
+
+    /// Extract and parse a boolean query parameter (`true`/`1`/`yes` vs `false`/`0`/`no`).
+    pub fn queryBool(key: string): bool? {
+        if (raw := _.query(key)) {
+            if (asciiEqlIgnoreCase(raw, "true") || bytesEql(raw, "1") || asciiEqlIgnoreCase(raw, "yes")) {
+                return true;
+            }
+            if (asciiEqlIgnoreCase(raw, "false") || bytesEql(raw, "0") || asciiEqlIgnoreCase(raw, "no")) {
+                return false;
+            }
+        }
+        return null;
+    }
+
     /// Extract an HTTP request header (ASCII case-insensitive).
     pub fn header(name: string): string? {
         let i: usize = 0;
@@ -394,16 +615,94 @@ pub struct Context {
         return null;
     }
 
+    /// Extract Bearer token from `Authorization: Bearer <token>`.
+    pub fn bearerToken(): string? {
+        if (auth := _.header("Authorization")) {
+            if (auth.len > 7 && asciiEqlIgnoreCase(auth[0..7], "Bearer ")) {
+                return trimAsciiSpaces(auth[7..]);
+            }
+        }
+        return null;
+    }
+
+    /// Extract an RFC 6265 Cookie value from the `Cookie` request header (zero heap).
+    pub fn cookie(name: string): string? {
+        if (name.len == 0) return null;
+        if (raw := _.header("Cookie")) {
+            let pos: usize = 0;
+            while (pos < raw.len) {
+                let end: usize = pos;
+                while (end < raw.len && raw[end] != ';') : (end += 1) {}
+                const pair = trimAsciiSpaces(raw[pos..end]);
+                if (pair.len > 0) {
+                    if (eq_idx := findByte(pair, '=')) {
+                        const k = trimAsciiSpaces(pair[0..eq_idx]);
+                        if (bytesEql(k, name)) {
+                            let val = trimAsciiSpaces(pair[eq_idx + 1 ..]);
+                            if (val.len >= 2 && val[0] == '"' && val[val.len - 1] == '"') {
+                                val = val[1 .. val.len - 1];
+                            }
+                            return val;
+                        }
+                    }
+                }
+                if (end >= raw.len) break;
+                pos = end + 1;
+            }
+        }
+        return null;
+    }
+
     /// Access the application state pointer address injected via `app.state(ptr)`.
     pub fn stateAddr(): usize {
         return _.state_ptr;
     }
 
-    /// Attach a response header (e.g., CORS / X-Request-Id) merged into the final response.
+    /// Access named application state value injected via `app.setState(key, value)`.
+    pub fn stateVal(key: string): string? {
+        let i: usize = 0;
+        while (i < _.state_kv_len) : (i += 1) {
+            if (bytesEql(_.state_kv[i].name, key)) {
+                return _.state_kv[i].value;
+            }
+        }
+        return null;
+    }
+
+    /// Inject a per-request derived property (used inside `app.derive(...)` hooks).
+    pub fn setDerived(*_, key: string, value: string): *Context {
+        let i: usize = 0;
+        while (i < _.derived_kv_len) : (i += 1) {
+            if (bytesEql(_.derived_kv[i].name, key)) {
+                _.derived_kv[i].value = value;
+                return _;
+            }
+        }
+        if (_.derived_kv_len < APP_MAX_DERIVED_KV) {
+            _.derived_kv[_.derived_kv_len] = ParamKV{ name: key, value: value };
+            _.derived_kv_len += 1;
+        }
+        return _;
+    }
+
+    /// Read a per-request derived property set by `app.derive(...)`.
+    pub fn derived(key: string): string? {
+        let i: usize = 0;
+        while (i < _.derived_kv_len) : (i += 1) {
+            if (bytesEql(_.derived_kv[i].name, key)) {
+                return _.derived_kv[i].value;
+            }
+        }
+        return null;
+    }
+
+    /// Attach a response header (e.g., CORS / X-Request-Id / Set-Cookie) merged into the final response.
     pub fn setHeader(*_, name: string, value: string): *Context {
         let i: usize = 0;
         while (i < _.response_header_len) : (i += 1) {
-            if (asciiEqlIgnoreCase(_.response_headers[i].name, name)) {
+            if (asciiEqlIgnoreCase(_.response_headers[i].name, name)
+                && !asciiEqlIgnoreCase(name, "Set-Cookie"))
+            {
                 _.response_headers[i].value = value;
                 return _;
             }
@@ -419,6 +718,13 @@ pub struct Context {
     pub fn abort(*_, resp: Response) {
         _.aborted = true;
         _.abort_response = resp;
+    }
+
+    /// Trigger the unified Elysia `onError` pipeline with a structured `AppErrorCode`.
+    pub fn fail(*_, code: AppErrorCode, message: string) {
+        _.error_code = code;
+        _.error_message = message;
+        _.aborted = true;
     }
 
     /// Build a JSON response (`application/json; charset=utf-8`).
@@ -443,11 +749,14 @@ pub struct Context {
 }
 
 // ============================================================================
-// 3. Handler, Middleware & Pre-Compiled Route Table
+// 3. Handler, Lifecycle Hooks, Plugin & Pre-Compiled Route Table
 // ============================================================================
 
 pub type HandlerFn = *const fn (*Context): Response;
 pub type MiddlewareFn = *const fn (*Context): bool;
+pub type LifecycleHookFn = *const fn (*Context): bool;
+pub type ResponseHookFn = *const fn (*Context, *Response): void;
+pub type ErrorHookFn = *const fn (*Context, AppErrorCode, string): Response;
 
 pub enum RouteSegKind {
     Static,
@@ -710,24 +1019,160 @@ pub struct RouteGroup {
 }
 
 // ============================================================================
-// 5. Flagship App Kernel (Chainable Registration + Dispatch + OpenAPI 3.1)
+// 4b. Elysia-Style Composable Plugin Container
+// ============================================================================
+
+pub const PLUGIN_MAX_ROUTES: usize = 32;
+
+pub struct PluginRouteDef {
+    method: AppMethod = AppMethod.GET;
+    path: string = "/";
+    summary: string = "";
+    handler: HandlerFn? = null;
+}
+
+pub struct Plugin {
+    name: string = "";
+    prefix: string = "";
+    scope: PluginScope = PluginScope.Scoped;
+    routes: [PLUGIN_MAX_ROUTES]PluginRouteDef = [PluginRouteDef{}; PLUGIN_MAX_ROUTES];
+    route_len: usize = 0;
+    on_request_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_request_len: usize = 0;
+    derive_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    derive_len: usize = 0;
+    on_before_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_before_len: usize = 0;
+    on_after_hooks: [APP_MAX_HOOKS]ResponseHookFn? = [null; APP_MAX_HOOKS];
+    on_after_len: usize = 0;
+    state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
+    state_kv_len: usize = 0;
+
+    pub static fn init(name: string): Plugin {
+        return Plugin{ name: name };
+    }
+
+    pub fn withPrefix(*_, prefix: string): *Plugin {
+        _.prefix = prefix;
+        return _;
+    }
+
+    pub fn withScope(*_, scope: PluginScope): *Plugin {
+        _.scope = scope;
+        return _;
+    }
+
+    pub fn route(*_, method: AppMethod, path: string, summary: string, handler: HandlerFn): *Plugin {
+        if (_.route_len < PLUGIN_MAX_ROUTES) {
+            _.routes[_.route_len] = PluginRouteDef{
+                method: method,
+                path: path,
+                summary: summary,
+                handler: handler,
+            };
+            _.route_len += 1;
+        }
+        return _;
+    }
+
+    pub fn get(*_, path: string, handler: HandlerFn): *Plugin {
+        return _.route(AppMethod.GET, path, "", handler);
+    }
+
+    pub fn post(*_, path: string, handler: HandlerFn): *Plugin {
+        return _.route(AppMethod.POST, path, "", handler);
+    }
+
+    pub fn put(*_, path: string, handler: HandlerFn): *Plugin {
+        return _.route(AppMethod.PUT, path, "", handler);
+    }
+
+    pub fn delete(*_, path: string, handler: HandlerFn): *Plugin {
+        return _.route(AppMethod.DELETE, path, "", handler);
+    }
+
+    pub fn patch(*_, path: string, handler: HandlerFn): *Plugin {
+        return _.route(AppMethod.PATCH, path, "", handler);
+    }
+
+    pub fn onRequest(*_, hook: LifecycleHookFn): *Plugin {
+        if (_.on_request_len < APP_MAX_HOOKS) {
+            _.on_request_hooks[_.on_request_len] = hook;
+            _.on_request_len += 1;
+        }
+        return _;
+    }
+
+    pub fn derive(*_, hook: LifecycleHookFn): *Plugin {
+        if (_.derive_len < APP_MAX_HOOKS) {
+            _.derive_hooks[_.derive_len] = hook;
+            _.derive_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onBeforeHandle(*_, hook: LifecycleHookFn): *Plugin {
+        if (_.on_before_len < APP_MAX_HOOKS) {
+            _.on_before_hooks[_.on_before_len] = hook;
+            _.on_before_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onAfterHandle(*_, hook: ResponseHookFn): *Plugin {
+        if (_.on_after_len < APP_MAX_HOOKS) {
+            _.on_after_hooks[_.on_after_len] = hook;
+            _.on_after_len += 1;
+        }
+        return _;
+    }
+
+    pub fn setState(*_, key: string, value: string): *Plugin {
+        if (_.state_kv_len < APP_MAX_STATE_KV) {
+            _.state_kv[_.state_kv_len] = ParamKV{ name: key, value: value };
+            _.state_kv_len += 1;
+        }
+        return _;
+    }
+}
+
+// ============================================================================
+// 5. Flagship App Kernel (Radix Router + 8-Stage Lifecycle + Plugins + OpenAPI 3.1)
 // ============================================================================
 
 pub struct App {
     routes: [APP_MAX_ROUTES]RouteEntry = [RouteEntry{}; APP_MAX_ROUTES];
     route_len: usize = 0;
+    radix: RadixRouter = RadixRouter.init();
     middlewares: [APP_MAX_MIDDLEWARES]MiddlewareFn? = [null; APP_MAX_MIDDLEWARES];
     middleware_len: usize = 0;
+
+    // Elysia 8-Stage Lifecycle Hooks
+    on_request_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_request_len: usize = 0;
+    on_parse_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_parse_len: usize = 0;
+    on_transform_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_transform_len: usize = 0;
+    derive_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    derive_len: usize = 0;
+    on_before_hooks: [APP_MAX_HOOKS]LifecycleHookFn? = [null; APP_MAX_HOOKS];
+    on_before_len: usize = 0;
+    on_after_hooks: [APP_MAX_HOOKS]ResponseHookFn? = [null; APP_MAX_HOOKS];
+    on_after_len: usize = 0;
+    map_response_hooks: [APP_MAX_HOOKS]ResponseHookFn? = [null; APP_MAX_HOOKS];
+    map_response_len: usize = 0;
+    on_after_response_hooks: [APP_MAX_HOOKS]ResponseHookFn? = [null; APP_MAX_HOOKS];
+    on_after_response_len: usize = 0;
+    on_error_hook: ErrorHookFn? = null;
+    fallback_handler: HandlerFn? = null;
+
     state_ptr: usize = 0;
+    state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
+    state_kv_len: usize = 0;
 
     pub static fn init(): App {
-        return App{
-            routes: [RouteEntry{}; APP_MAX_ROUTES],
-            route_len: 0,
-            middlewares: [null; APP_MAX_MIDDLEWARES],
-            middleware_len: 0,
-            state_ptr: 0,
-        };
+        return App{};
     }
 
     pub fn registerWithPrefix(
@@ -752,8 +1197,10 @@ pub struct App {
         };
         entry.path_len = normalizeAndJoinPath(prefix, path, *entry.path_buf);
         compileRouteSegments(*entry);
-        _.routes[_.route_len] = entry;
+        const route_idx = _.route_len;
+        _.routes[route_idx] = entry;
         _.route_len += 1;
+        * = _.radix.insert(method.methodIndex(), _.routes[route_idx].pathSlice(), route_idx as i32);
     }
 
     pub fn route(*_, method: AppMethod, path: string, handler: HandlerFn): *App {
@@ -791,10 +1238,167 @@ pub struct App {
         return _;
     }
 
+    pub fn head(*_, path: string, handler: HandlerFn): *App {
+        _.registerWithPrefix(AppMethod.HEAD, "", path, "", handler);
+        return _;
+    }
+
+    pub fn options(*_, path: string, handler: HandlerFn): *App {
+        _.registerWithPrefix(AppMethod.OPTIONS, "", path, "", handler);
+        return _;
+    }
+
     pub fn use(*_, middleware: MiddlewareFn): *App {
         if (_.middleware_len < APP_MAX_MIDDLEWARES) {
             _.middlewares[_.middleware_len] = middleware;
             _.middleware_len += 1;
+        }
+        return _;
+    }
+
+    // --- Elysia 8-Stage Lifecycle Hook Registration ---
+
+    pub fn onRequest(*_, hook: LifecycleHookFn): *App {
+        if (_.on_request_len < APP_MAX_HOOKS) {
+            _.on_request_hooks[_.on_request_len] = hook;
+            _.on_request_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onParse(*_, hook: LifecycleHookFn): *App {
+        if (_.on_parse_len < APP_MAX_HOOKS) {
+            _.on_parse_hooks[_.on_parse_len] = hook;
+            _.on_parse_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onTransform(*_, hook: LifecycleHookFn): *App {
+        if (_.on_transform_len < APP_MAX_HOOKS) {
+            _.on_transform_hooks[_.on_transform_len] = hook;
+            _.on_transform_len += 1;
+        }
+        return _;
+    }
+
+    pub fn derive(*_, hook: LifecycleHookFn): *App {
+        if (_.derive_len < APP_MAX_HOOKS) {
+            _.derive_hooks[_.derive_len] = hook;
+            _.derive_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onBeforeHandle(*_, hook: LifecycleHookFn): *App {
+        if (_.on_before_len < APP_MAX_HOOKS) {
+            _.on_before_hooks[_.on_before_len] = hook;
+            _.on_before_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onAfterHandle(*_, hook: ResponseHookFn): *App {
+        if (_.on_after_len < APP_MAX_HOOKS) {
+            _.on_after_hooks[_.on_after_len] = hook;
+            _.on_after_len += 1;
+        }
+        return _;
+    }
+
+    pub fn mapResponse(*_, hook: ResponseHookFn): *App {
+        if (_.map_response_len < APP_MAX_HOOKS) {
+            _.map_response_hooks[_.map_response_len] = hook;
+            _.map_response_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onAfterResponse(*_, hook: ResponseHookFn): *App {
+        if (_.on_after_response_len < APP_MAX_HOOKS) {
+            _.on_after_response_hooks[_.on_after_response_len] = hook;
+            _.on_after_response_len += 1;
+        }
+        return _;
+    }
+
+    pub fn onError(*_, hook: ErrorHookFn): *App {
+        _.on_error_hook = hook;
+        return _;
+    }
+
+    /// Axum `Router::fallback`: custom handler when no route matches.
+    pub fn fallback(*_, handler: HandlerFn): *App {
+        _.fallback_handler = handler;
+        return _;
+    }
+
+    /// Mount an Elysia-style `Plugin` (routes, prefix, lifecycle hooks, derived props & state).
+    pub fn usePlugin(*_, plugin: *const Plugin): *App {
+        let i: usize = 0;
+        while (i < plugin.route_len) : (i += 1) {
+            const rd = plugin.routes[i];
+            if (h := rd.handler) {
+                _.registerWithPrefix(rd.method, plugin.prefix, rd.path, rd.summary, h);
+            }
+        }
+        i = 0;
+        while (i < plugin.on_request_len) : (i += 1) {
+            if (h := plugin.on_request_hooks[i]) {
+                * = _.onRequest(h);
+            }
+        }
+        i = 0;
+        while (i < plugin.derive_len) : (i += 1) {
+            if (h := plugin.derive_hooks[i]) {
+                * = _.derive(h);
+            }
+        }
+        i = 0;
+        while (i < plugin.on_before_len) : (i += 1) {
+            if (h := plugin.on_before_hooks[i]) {
+                * = _.onBeforeHandle(h);
+            }
+        }
+        i = 0;
+        while (i < plugin.on_after_len) : (i += 1) {
+            if (h := plugin.on_after_hooks[i]) {
+                * = _.onAfterHandle(h);
+            }
+        }
+        i = 0;
+        while (i < plugin.state_kv_len) : (i += 1) {
+            * = _.setState(plugin.state_kv[i].name, plugin.state_kv[i].value);
+        }
+        return _;
+    }
+
+    /// Axum `Router::nest`: mount all routes of `sub` under `prefix`.
+    pub fn nest(*_, prefix: string, sub: *const App): *App {
+        let i: usize = 0;
+        while (i < sub.route_len) : (i += 1) {
+            const r = sub.routes[i];
+            if (h := r.handler) {
+                const sub_path = r.path_buf[0..r.path_len];
+                _.registerWithPrefix(r.method, prefix, sub_path, r.summary, h);
+            }
+        }
+        return _;
+    }
+
+    /// Axum `Router::merge`: merge all routes and named state from `other` into this App.
+    pub fn merge(*_, other: *const App): *App {
+        let i: usize = 0;
+        while (i < other.route_len) : (i += 1) {
+            const r = other.routes[i];
+            if (h := r.handler) {
+                const other_path = r.path_buf[0..r.path_len];
+                _.registerWithPrefix(r.method, "", other_path, r.summary, h);
+            }
+        }
+        i = 0;
+        while (i < other.state_kv_len) : (i += 1) {
+            * = _.setState(other.state_kv[i].name, other.state_kv[i].value);
         }
         return _;
     }
@@ -814,6 +1418,21 @@ pub struct App {
         return _;
     }
 
+    pub fn setState(*_, key: string, value: string): *App {
+        let i: usize = 0;
+        while (i < _.state_kv_len) : (i += 1) {
+            if (bytesEql(_.state_kv[i].name, key)) {
+                _.state_kv[i].value = value;
+                return _;
+            }
+        }
+        if (_.state_kv_len < APP_MAX_STATE_KV) {
+            _.state_kv[_.state_kv_len] = ParamKV{ name: key, value: value };
+            _.state_kv_len += 1;
+        }
+        return _;
+    }
+
     pub fn routeCount(): usize {
         return _.route_len;
     }
@@ -822,8 +1441,70 @@ pub struct App {
         return _.middleware_len;
     }
 
-    /// Pure zero-I/O HTTP request dispatcher: executes middleware chain, matches route,
-    /// extracts params, runs handler, and merges response headers.
+    fn finalizeResponse(*_, ctx: *Context, resp: *Response) {
+        let i: usize = 0;
+        while (i < _.on_after_len) : (i += 1) {
+            if (h := _.on_after_hooks[i]) {
+                h(ctx, resp);
+            }
+        }
+        mergeContextHeaders(ctx, resp);
+        i = 0;
+        while (i < _.map_response_len) : (i += 1) {
+            if (h := _.map_response_hooks[i]) {
+                h(ctx, resp);
+            }
+        }
+        i = 0;
+        while (i < _.on_after_response_len) : (i += 1) {
+            if (h := _.on_after_response_hooks[i]) {
+                h(ctx, resp);
+            }
+        }
+    }
+
+    fn buildErrorResponse(*_, ctx: *Context, code: AppErrorCode, msg: string): Response {
+        if (eh := _.on_error_hook) {
+            let resp = eh(ctx, code, msg);
+            _.finalizeResponse(ctx, *resp);
+            return resp;
+        }
+        let resp = Response.json(code.defaultStatus(), msg);
+        _.finalizeResponse(ctx, *resp);
+        return resp;
+    }
+
+    fn runHookChain(
+        *_,
+        hooks: [APP_MAX_HOOKS]LifecycleHookFn?,
+        hook_len: usize,
+        ctx: *Context,
+    ): Response? {
+        let i: usize = 0;
+        while (i < hook_len) : (i += 1) {
+            if (h := hooks[i]) {
+                const ok = h(ctx);
+                if (!ok || ctx.aborted) {
+                    if (ctx.error_code != AppErrorCode.None) {
+                        return _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
+                    }
+                    let resp = if (ctx.aborted)
+                        ctx.abort_response
+                    else
+                        Response.json(403, "{\"error\":\"Forbidden\"}");
+                    _.finalizeResponse(ctx, *resp);
+                    return resp;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// Pure zero-I/O HTTP request dispatcher:
+    /// 1. `onRequest` -> `middlewares` -> `derive`
+    /// 2. O(1) Static Hash / Compressed Radix Trie lookup (with Axum HEAD->GET fallback)
+    /// 3. `onParse` -> `onTransform` -> `onBeforeHandle` -> `handler`
+    /// 4. `onAfterHandle` -> header merge -> `mapResponse` -> `onAfterResponse`
     pub fn dispatch(*_, req: Request): Response {
         let clean_path = req.path;
         let query_str = req.raw_query;
@@ -839,6 +1520,8 @@ pub struct App {
         let ctx = Context{
             method: req.method,
             path: if (clean_path.len == 0) "/" else clean_path,
+            original_uri: req.path,
+            matched_path: "",
             raw_query: query_str,
             body: req.body,
             headers: req.headers,
@@ -846,79 +1529,94 @@ pub struct App {
             params: [ParamKV{}; APP_MAX_PARAMS],
             param_len: 0,
             state_ptr: _.state_ptr,
+            state_kv: _.state_kv,
+            state_kv_len: _.state_kv_len,
+            derived_kv: [ParamKV{}; APP_MAX_DERIVED_KV],
+            derived_kv_len: 0,
             response_headers: [HeaderKV{}; APP_MAX_HEADERS],
             response_header_len: 0,
             aborted: false,
             abort_response: Response{},
+            error_code: AppErrorCode.None,
+            error_message: "",
         };
 
-        // 1. Run pre-dispatch middleware chain
+        // Stage 1: onRequest hooks
+        if (early := _.runHookChain(_.on_request_hooks, _.on_request_len, *ctx)) {
+            return early;
+        }
+
+        // Legacy & Onion middleware chain
         let mw_idx: usize = 0;
         while (mw_idx < _.middleware_len) : (mw_idx += 1) {
             if (mw := _.middlewares[mw_idx]) {
                 const proceed = mw(*ctx);
                 if (!proceed || ctx.aborted) {
+                    if (ctx.error_code != AppErrorCode.None) {
+                        return _.buildErrorResponse(*ctx, ctx.error_code, ctx.error_message);
+                    }
                     let resp = if (ctx.aborted)
                         ctx.abort_response
                     else
                         Response.json(403, "{\"error\":\"Forbidden\"}");
-                    mergeContextHeaders(*ctx, *resp);
+                    _.finalizeResponse(*ctx, *resp);
                     return resp;
                 }
             }
         }
 
-        // 2. Match route (highest priority wins; track allowed methods for 405)
-        let best_idx: usize? = null;
-        let best_priority: u16 = 0;
-        let best_params: [APP_MAX_PARAMS]ParamKV = [ParamKV{}; APP_MAX_PARAMS];
-        let best_param_len: usize = 0;
-        let allowed_mask: u8 = 0;
-
-        let tmp_params: [APP_MAX_PARAMS]ParamKV = [ParamKV{}; APP_MAX_PARAMS];
-        let tmp_param_len: usize = 0;
-
-        let i: usize = 0;
-        while (i < _.route_len) : (i += 1) {
-            if (matchRouteEntry(*_.routes[i], ctx.path, *tmp_params, *tmp_param_len)) {
-                const entry_method = _.routes[i].method;
-                allowed_mask = allowed_mask | entry_method.bitMask();
-                if (entry_method == ctx.method) {
-                    const entry_prio = _.routes[i].priority;
-                    if (best_idx == null || entry_prio > best_priority) {
-                        best_idx = i;
-                        best_priority = entry_prio;
-                        best_param_len = tmp_param_len;
-                        let p_i: usize = 0;
-                        while (p_i < tmp_param_len) : (p_i += 1) {
-                            best_params[p_i] = tmp_params[p_i];
-                        }
-                    }
-                }
+        // Stage 2: O(1) Static Hash + Compressed Radix Trie Route Lookup
+        const rmatch = _.radix.lookup(ctx.method.methodIndex(), ctx.path);
+        if (rmatch.matched && rmatch.handler_id >= 0) {
+            const matched = rmatch.handler_id as usize;
+            ctx.matched_path = _.routes[matched].pathSlice();
+            let p_i: usize = 0;
+            while (p_i < rmatch.param_len && p_i < APP_MAX_PARAMS) : (p_i += 1) {
+                ctx.params[p_i] = ParamKV{
+                    name: rmatch.params[p_i].name,
+                    value: rmatch.params[p_i].value,
+                };
             }
-        }
+            ctx.param_len = if (rmatch.param_len < APP_MAX_PARAMS) rmatch.param_len else APP_MAX_PARAMS;
 
-        if (matched := best_idx) {
-            ctx.params = best_params;
-            ctx.param_len = best_param_len;
+            // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle
+            if (early := _.runHookChain(_.derive_hooks, _.derive_len, *ctx)) return early;
+            if (early := _.runHookChain(_.on_parse_hooks, _.on_parse_len, *ctx)) return early;
+            if (early := _.runHookChain(_.on_transform_hooks, _.on_transform_len, *ctx)) return early;
+            if (early := _.runHookChain(_.on_before_hooks, _.on_before_len, *ctx)) return early;
+
+            // Stage 4: Handler execution
             if (h := _.routes[matched].handler) {
                 let resp = h(*ctx);
-                mergeContextHeaders(*ctx, *resp);
+                if (ctx.error_code != AppErrorCode.None) {
+                    return _.buildErrorResponse(*ctx, ctx.error_code, ctx.error_message);
+                }
+                if (rmatch.head_fallback_to_get) {
+                    resp.body = "";
+                }
+                _.finalizeResponse(*ctx, *resp);
                 return resp;
             }
         }
 
-        // 3. Distinguish 405 Method Not Allowed vs 404 Not Found
-        if (allowed_mask != 0) {
+        // Stage 5: 405 Method Not Allowed vs Fallback / 404 Not Found
+        if (rmatch.allowed_mask != 0) {
             let resp = Response.json(405, "{\"error\":\"Method Not Allowed\"}");
-            * = resp.setHeader("Allow", formatAllowHeaderValue(allowed_mask));
-            mergeContextHeaders(*ctx, *resp);
+            if (eh := _.on_error_hook) {
+                resp = eh(*ctx, AppErrorCode.MethodNotAllowed, "{\"error\":\"Method Not Allowed\"}");
+            }
+            * = resp.setHeader("Allow", formatAllowHeaderValue(rmatch.allowed_mask));
+            _.finalizeResponse(*ctx, *resp);
             return resp;
         }
 
-        let not_found = Response.json(404, "{\"error\":\"Not Found\"}");
-        mergeContextHeaders(*ctx, *not_found);
-        return not_found;
+        if (fb := _.fallback_handler) {
+            let resp = fb(*ctx);
+            _.finalizeResponse(*ctx, *resp);
+            return resp;
+        }
+
+        return _.buildErrorResponse(*ctx, AppErrorCode.NotFound, "{\"error\":\"Not Found\"}");
     }
 
     /// Generate an OpenAPI 3.1.0 JSON specification document for all registered routes.

@@ -4899,3 +4899,81 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261125-c-method-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > 正在构建发布版 `cpc` 并验证 `repro_c_method_self.cp`、`repro_struct_extern_fn_self.cp`、回归测试与 `napi.cp`，完成后立即汇报并结单。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 06:46:48）[step:23178]
+- **用户完整原始指令**：
+  > 我们来深化刚实现的后端 web rest 框架
+  > 1. 我看你已经作为内置库,无需安装, 而不是 @cap 需安装库,  也可以, 这个是高频使用库.
+  > 2. 	"scripts": {
+  > 		"test": "bun run test:functionality && bun run test:types && bun run test:node",
+  > 		"test:functionality": "bun test ./test && bun run test:imports",
+  > 		"test:imports": "bun run test/type-system/import.ts",
+  > 		"test:types": "tsc --project tsconfig.test.json",
+  > 		"test:node": "npm install --prefix test/node/cjs && npm install --prefix test/node/esm/ && node test/node/cjs/index.js && node test/node/esm/index.js",
+  > 		"test:cf": "npm install --prefix test/cloudflare && cd test/cloudflare && bun run cf-typegen && bun run test",
+  > 		"dev": "bun run --watch example/a.ts",
+  > 		"build": "rm -rf dist && bun build.ts",
+  > 		"deadcode": "knip",
+  > 		"release": "bun run build && bun run test && bun publish"
+  > 	},
+  > 	"dependencies": {
+  > 		"cookie": "^1.1.1",
+  > 		"exact-mirror": "^0.2.9",
+  > 		"fast-decode-uri-component": "^1.0.1",
+  > 		"memoirist": "^0.4.0"
+  > 	},
+  > 	"devDependencies": {
+  > 		"@elysiajs/openapi": "^1.4.1",
+  > 		"@types/bun": "^1.3.5",
+  > 		"@types/cookie": "1.0.0",
+  > 		"@types/fast-decode-uri-component": "^1.0.0",
+  > 		"@typescript-eslint/eslint-plugin": "^8.30.1",
+  > 		"@typescript-eslint/parser": "^8.30.1",
+  > 		"arktype": "^2.1.22",
+  > 		"esbuild-fix-imports-plugin": "^1.0.22",
+  > 		"eslint": "^9.24.0",
+  > 		"eslint-plugin-security": "^3.0.1",
+  > 		"eslint-plugin-sonarjs": "^3.0.2",
+  > 		"expect-type": "^1.2.1",
+  > 		"file-type": "^20.4.1",
+  > 		"knip": "^5.64.1",
+  > 		"prettier": "^3.5.3",
+  > 		"tsup": "^8.4.0",
+  > 		"typescript": "^5.8.3",
+  > 		"valibot": "^1.1.0",
+  > 		"zod": "^4.1.5"
+  > 	},
+  > 	"peerDependencies": {
+  > 		"@types/bun": ">= 1.2.0",
+  > 		"@sinclair/typebox": ">= 0.34.0 < 1",
+  > 		"exact-mirror": ">= 0.2.9 < 1",
+  > 		"file-type": ">= 20.0.0",
+  > 		"openapi-types": ">= 12.0.0",
+  > 		"typescript": ">= 5.0.0"
+  > 	},
+  > 	"overrides": {
+  > 		"esbuild": "0.25.4"
+  > 	},
+  > 	"peerDependenciesMeta": {
+  > 		"@types/bun": {
+  > 			"optional": true
+  > 		},
+  > 		"typescript": {
+  > 			"optional": true
+  > 		}
+  > 	}
+  >   这是 elysia的运行依赖和开发依赖, 我们作为其移植版本, 需解决运行依赖, 同时参考其他依赖, 哪些我们已经实现了, 哪些需要实现尚未实现, 列出实现计划,
+  >   实现类似的开发/调试生态.
+  > 3. 已将 elysa 和 axum 源代码clone 到 _ref 目录, 对照这两个项目的源代码, 1:1 深化/吸收到我们实现的web框架, 包括插件与中间件模式.
+  > 4. 吸收时, 注意观察 Typescript 和 rust 迁移到 cp的容易点和难点, 写一个迁移报告migrate.md, 总结从Typescript 和 rust 迁移到cp的步骤, 注意点, 总结难点也易点, 这两种语言迁移到cp, 为何流畅, 给出迁移示范.
+  > 5. 根据这两个典型项目迁移与合并, 分析评估下, cap 能否提供 迁移指令, 比如 cap from -ts  cap from -rs, 来迁移转换 Typescript项目和rust项目到cp,类似我们迁移zig 到cp. 这个实现是否容易? 
+  > 当前这两个项目, 刚好是经典示例, 这样能快速丰富cp生态.
+  > 6. 迁移到cp后, 还要利用cp内置强大的内存分配和高性能语法, 实现性能优化和超越, 达到性能天花板.
+- **完整回复与执行汇报**：
+  > `cap:web` 深度升级（RadixRouter + Elysia 8 阶段生命周期/Plugin/Derive/RFC 6265 Cookie + Axum Nest/Merge/Fallback/HEAD 回退）已转译完成，正在链接执行两套回归测试与 `-OReleaseFast` 性能基准测试，同时等待子智能体 1 完成 `schema.cp` / `fileType.cp`。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 06:55:49）[step:23236]
+- **用户完整原始指令**：
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+- **完整回复与执行汇报**：
+  > 正在执行 `-OReleaseFast` 路由/分发/Cookie 基准测试与 4 门禁 `cap lint` 校验，同时等待子智能体完成 `schema.cp` / `fileType.cp` 的 `-OReleaseFast` 实测。
