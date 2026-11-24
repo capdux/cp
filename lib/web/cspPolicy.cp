@@ -1,15 +1,20 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc W3C Content-Security-Policy Level 3 Parser, Evaluator & Builder) | Created: 2026-11-23
+// Reference-hardened against tower-rs/tower-http (MIT) & W3C Fetch/CSP3/RFC 9110
 // Pure CP zero-heap-allocation W3C CSP Level 3 engine:
 //   - Fixed-capacity parser (`parseHeader`) with `;` directive splitting, W3C first-directive-wins
-//     duplicate handling, and strict CRLF / NUL header-injection rejection
+//     duplicate handling, ASCII case-insensitive directive matching, and 16-lane SIMD CRLF/CTL rejection
 //   - Exact W3C CSP3 fallback chain (`effectiveDirective`): fetch directives (`script-src`, `style-src`,
 //     `img-src`, `connect-src`, `font-src`, `frame-src`, `object-src`) fall back to `default-src`,
 //     whereas `base-uri`, `form-action`, and `frame-ancestors` NEVER fall back to `default-src`
-//   - Resource URL evaluator (`checkResourceUrl`) supporting `'none'`, `'self'`, `*`, scheme sources,
-//     exact hosts, and strict `*.example.com` subdomain wildcards
-//   - Inline script evaluator (`checkInlineScript`) enforcing CSP3 nonce/hash/`'strict-dynamic'`
-//     suppression of `'unsafe-inline'`
+//   - Strict CSP3 `'none'` coexistence rule (`isEffectiveNone`), Base64/Base64URL validation for
+//     `'nonce-'` / `'sha256-'` / `'sha384-'` / `'sha512-'`, and `'unsafe-inline'` suppression
 //   - Zero-allocation canonical header serializer (`formatHeader`)
+
+import {
+    simdWebHasControlOrCrlf,
+    simdWebBytesEqual,
+    simdWebAsciiLowerEql,
+} from "./corsGuard.cp";
 
 // ============================================================================
 // 1. Constants, Enums & Data Models
@@ -69,62 +74,91 @@ pub enum CspEvalVerdict {
 // 2. Pure ASCII & URL Parsing Helpers
 // ============================================================================
 
-fn toLowerAscii(c: u8): u8 {
+fn cspToLowerAscii(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') return c + 32;
     return c;
 }
 
-fn isAsciiSpace(c: u8): bool {
+fn cspIsAsciiSpace(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn hasControlOrCrlfChar(s: []const u8): bool {
+fn cspHasControlOrCrlfChar(s: []const u8): bool {
+    return simdWebHasControlOrCrlf(s);
+}
+
+fn cspHasHeaderIllegalCtrl(s: []const u8): bool {
+    if (!simdWebHasControlOrCrlf(s)) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         const c = s[i];
-        if (c < 0x20 || c == 0x7F) return true;
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
     }
     return false;
 }
 
-fn trimSpaces(s: []const u8): []const u8 {
+fn cspTrimSpaces(s: []const u8): []const u8 {
     let start: usize = 0;
-    while (start < s.len && isAsciiSpace(s[start])) : (start += 1) {}
+    while (start < s.len && cspIsAsciiSpace(s[start])) : (start += 1) {}
     let end: usize = s.len;
-    while (end > start && isAsciiSpace(s[end - 1])) : (end -= 1) {}
+    while (end > start && cspIsAsciiSpace(s[end - 1])) : (end -= 1) {}
     return s[start..end];
 }
 
-fn bytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
+fn cspBytesEqual(a: []const u8, b: []const u8): bool {
+    return simdWebBytesEqual(a, b);
 }
 
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
-    }
-    return true;
+fn cspEqIgnoreCase(a: []const u8, b: []const u8): bool {
+    return simdWebAsciiLowerEql(a, b);
 }
 
-fn startsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
+fn cspStartsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
     if (s.len < prefix.len) return false;
-    return eqIgnoreCase(s[0..prefix.len], prefix);
+    return simdWebAsciiLowerEql(s[0..prefix.len], prefix);
 }
 
-fn isValidSchemeName(s: []const u8): bool {
+fn cspIsValidBase64Value(s: []const u8): bool {
     if (s.len == 0) return false;
-    const c0 = toLowerAscii(s[0]);
+    let seen_pad = false;
+    let pad_count: usize = 0;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '=') {
+            seen_pad = true;
+            pad_count += 1;
+            if (pad_count > 2) return false;
+        } else {
+            if (seen_pad) return false;
+            const ok = (c >= 'A' && c <= 'Z') ||
+                (c >= 'a' && c <= 'z') ||
+                (c >= '0' && c <= '9') ||
+                c == '+' || c == '/' || c == '-' || c == '_';
+            if (!ok) return false;
+        }
+    }
+    return pad_count < s.len;
+}
+
+fn cspIsValidDirectiveName(s: []const u8): bool {
+    if (s.len == 0 || s.len > 64) return false;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        const ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-';
+        if (!ok) return false;
+    }
+    return true;
+}
+
+fn cspIsValidSchemeName(s: []const u8): bool {
+    if (s.len == 0) return false;
+    const c0 = cspToLowerAscii(s[0]);
     if (c0 < 'a' || c0 > 'z') return false;
     let i: usize = 1;
     while (i < s.len) : (i += 1) {
-        const c = toLowerAscii(s[i]);
+        const c = cspToLowerAscii(s[i]);
         const ok = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.';
         if (!ok) return false;
     }
@@ -132,18 +166,18 @@ fn isValidSchemeName(s: []const u8): bool {
 }
 
 fn parseDirectiveKind(name: []const u8): CspDirectiveKind? {
-    if (eqIgnoreCase(name, "default-src")) return CspDirectiveKind.default_src;
-    if (eqIgnoreCase(name, "script-src")) return CspDirectiveKind.script_src;
-    if (eqIgnoreCase(name, "style-src")) return CspDirectiveKind.style_src;
-    if (eqIgnoreCase(name, "img-src")) return CspDirectiveKind.img_src;
-    if (eqIgnoreCase(name, "connect-src")) return CspDirectiveKind.connect_src;
-    if (eqIgnoreCase(name, "font-src")) return CspDirectiveKind.font_src;
-    if (eqIgnoreCase(name, "frame-src")) return CspDirectiveKind.frame_src;
-    if (eqIgnoreCase(name, "frame-ancestors")) return CspDirectiveKind.frame_ancestors;
-    if (eqIgnoreCase(name, "object-src")) return CspDirectiveKind.object_src;
-    if (eqIgnoreCase(name, "base-uri")) return CspDirectiveKind.base_uri;
-    if (eqIgnoreCase(name, "form-action")) return CspDirectiveKind.form_action;
-    if (eqIgnoreCase(name, "upgrade-insecure-requests")) return CspDirectiveKind.upgrade_insecure_requests;
+    if (cspEqIgnoreCase(name, "default-src")) return CspDirectiveKind.default_src;
+    if (cspEqIgnoreCase(name, "script-src")) return CspDirectiveKind.script_src;
+    if (cspEqIgnoreCase(name, "style-src")) return CspDirectiveKind.style_src;
+    if (cspEqIgnoreCase(name, "img-src")) return CspDirectiveKind.img_src;
+    if (cspEqIgnoreCase(name, "connect-src")) return CspDirectiveKind.connect_src;
+    if (cspEqIgnoreCase(name, "font-src")) return CspDirectiveKind.font_src;
+    if (cspEqIgnoreCase(name, "frame-src")) return CspDirectiveKind.frame_src;
+    if (cspEqIgnoreCase(name, "frame-ancestors")) return CspDirectiveKind.frame_ancestors;
+    if (cspEqIgnoreCase(name, "object-src")) return CspDirectiveKind.object_src;
+    if (cspEqIgnoreCase(name, "base-uri")) return CspDirectiveKind.base_uri;
+    if (cspEqIgnoreCase(name, "form-action")) return CspDirectiveKind.form_action;
+    if (cspEqIgnoreCase(name, "upgrade-insecure-requests")) return CspDirectiveKind.upgrade_insecure_requests;
     return null;
 }
 
@@ -173,16 +207,16 @@ fn fallsBackToDefaultSrc(kind: CspDirectiveKind): bool {
 }
 
 fn defaultPortForScheme(scheme: []const u8): u16 {
-    if (eqIgnoreCase(scheme, "http") || eqIgnoreCase(scheme, "ws")) return 80;
-    if (eqIgnoreCase(scheme, "https") || eqIgnoreCase(scheme, "wss")) return 443;
+    if (cspEqIgnoreCase(scheme, "http") || cspEqIgnoreCase(scheme, "ws")) return 80;
+    if (cspEqIgnoreCase(scheme, "https") || cspEqIgnoreCase(scheme, "wss")) return 443;
     return 0;
 }
 
 fn isNetworkScheme(scheme: []const u8): bool {
-    return eqIgnoreCase(scheme, "http") ||
-        eqIgnoreCase(scheme, "https") ||
-        eqIgnoreCase(scheme, "ws") ||
-        eqIgnoreCase(scheme, "wss");
+    return cspEqIgnoreCase(scheme, "http") ||
+        cspEqIgnoreCase(scheme, "https") ||
+        cspEqIgnoreCase(scheme, "ws") ||
+        cspEqIgnoreCase(scheme, "wss");
 }
 
 fn parsePortU16(s: []const u8): u16? {
@@ -205,7 +239,7 @@ struct ParsedUrlParts {
 }
 
 fn parseUrlParts(url: []const u8): ParsedUrlParts? {
-    if (url.len == 0 || hasControlOrCrlfChar(url)) return null;
+    if (url.len == 0 || cspHasControlOrCrlfChar(url)) return null;
 
     let colon_idx: usize = url.len;
     let i: usize = 0;
@@ -218,7 +252,7 @@ fn parseUrlParts(url: []const u8): ParsedUrlParts? {
     if (colon_idx == url.len || colon_idx == 0) return null;
 
     const scheme: []const u8 = url[0..colon_idx];
-    if (!isValidSchemeName(scheme)) return null;
+    if (!cspIsValidSchemeName(scheme)) return null;
 
     let parts = ParsedUrlParts{};
     parts.scheme = scheme;
@@ -255,7 +289,7 @@ fn parseUrlParts(url: []const u8): ParsedUrlParts? {
 
 fn matchHostPattern(pattern: []const u8, target_host: []const u8): bool {
     if (pattern.len == 0 || target_host.len == 0) return false;
-    if (bytesEqual(pattern, "*")) return true;
+    if (cspBytesEqual(pattern, "*")) return true;
 
     // Strict subdomain wildcard: `*.example.com` matches `a.example.com` and `a.b.example.com`,
     // NOT `example.com` and NOT `evil-example.com`.
@@ -263,10 +297,10 @@ fn matchHostPattern(pattern: []const u8, target_host: []const u8): bool {
         const suffix: []const u8 = pattern[1..]; // `.example.com`
         if (target_host.len <= suffix.len) return false;
         const tail: []const u8 = target_host[target_host.len - suffix.len .. target_host.len];
-        return eqIgnoreCase(tail, suffix);
+        return cspEqIgnoreCase(tail, suffix);
     }
 
-    return eqIgnoreCase(pattern, target_host);
+    return cspEqIgnoreCase(pattern, target_host);
 }
 
 fn matchHostSourceExpr(expr: []const u8, page_origin: []const u8, target: ParsedUrlParts): bool {
@@ -281,7 +315,7 @@ fn matchHostSourceExpr(expr: []const u8, page_origin: []const u8, target: Parsed
     while (i + 2 < rest.len) : (i += 1) {
         if (rest[i] == ':' && rest[i + 1] == '/' && rest[i + 2] == '/') {
             expr_scheme = rest[0..i];
-            if (!isValidSchemeName(expr_scheme)) return false;
+            if (!cspIsValidSchemeName(expr_scheme)) return false;
             has_expr_scheme = true;
             rest = rest[i + 3 ..];
             break;
@@ -289,12 +323,12 @@ fn matchHostSourceExpr(expr: []const u8, page_origin: []const u8, target: Parsed
     }
 
     if (has_expr_scheme) {
-        if (!eqIgnoreCase(expr_scheme, target.scheme)) return false;
+        if (!cspEqIgnoreCase(expr_scheme, target.scheme)) return false;
     } else {
         // Without explicit scheme, target scheme must match page origin (or https upgrade from http).
         if (origin := parseUrlParts(page_origin)) {
-            const same = eqIgnoreCase(origin.scheme, target.scheme);
-            const upgraded = eqIgnoreCase(origin.scheme, "http") && eqIgnoreCase(target.scheme, "https");
+            const same = cspEqIgnoreCase(origin.scheme, target.scheme);
+            const upgraded = cspEqIgnoreCase(origin.scheme, "http") && cspEqIgnoreCase(target.scheme, "https");
             if (!same && !upgraded) return false;
         }
     }
@@ -319,7 +353,7 @@ fn matchHostSourceExpr(expr: []const u8, page_origin: []const u8, target: Parsed
         expr_host = host_port[0..p_colon];
         const p_str: []const u8 = host_port[p_colon + 1 ..];
         has_expr_port = true;
-        if (bytesEqual(p_str, "*")) {
+        if (cspBytesEqual(p_str, "*")) {
             expr_port_wildcard = true;
         } else {
             expr_port = parsePortU16(p_str) ?? return false;
@@ -338,14 +372,13 @@ fn matchHostSourceExpr(expr: []const u8, page_origin: []const u8, target: Parsed
     return true;
 }
 
-fn appendBytes(out_buf: *[]u8, pos: *usize, s: []const u8): bool {
-    if (pos + s.len > out_buf.len) return false;
+fn cspAppendBytes(out_buf: *[]u8, pos: usize, s: []const u8): usize? {
+    if (pos + s.len > out_buf.len) return null;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         out_buf[pos + i] = s[i];
     }
-    pos += s.len;
-    return true;
+    return pos + s.len;
 }
 
 // ============================================================================
@@ -367,7 +400,7 @@ pub struct CspSourceExpr {
     /// Returns `null` on empty, oversized, control-character, or malformed tokens.
     static fn parse(raw: []const u8): CspSourceExpr? {
         if (raw.len == 0 || raw.len > CSP_MAX_TOKEN_LEN) return null;
-        if (hasControlOrCrlfChar(raw)) return null;
+        if (cspHasControlOrCrlfChar(raw)) return null;
 
         let i: usize = 0;
         while (i < raw.len) : (i += 1) {
@@ -383,52 +416,56 @@ pub struct CspSourceExpr {
 
         if (raw[0] == '\'') {
             if (raw.len < 3 || raw[raw.len - 1] != '\'') return null;
-            if (eqIgnoreCase(raw, "'none'")) {
+            if (cspEqIgnoreCase(raw, "'none'")) {
                 expr.kind = CspSourceKind.kw_none;
                 return expr;
             }
-            if (eqIgnoreCase(raw, "'self'")) {
+            if (cspEqIgnoreCase(raw, "'self'")) {
                 expr.kind = CspSourceKind.kw_self;
                 return expr;
             }
-            if (eqIgnoreCase(raw, "'unsafe-inline'")) {
+            if (cspEqIgnoreCase(raw, "'unsafe-inline'")) {
                 expr.kind = CspSourceKind.kw_unsafe_inline;
                 return expr;
             }
-            if (eqIgnoreCase(raw, "'unsafe-eval'")) {
+            if (cspEqIgnoreCase(raw, "'unsafe-eval'")) {
                 expr.kind = CspSourceKind.kw_unsafe_eval;
                 return expr;
             }
-            if (eqIgnoreCase(raw, "'strict-dynamic'")) {
+            if (cspEqIgnoreCase(raw, "'strict-dynamic'")) {
                 expr.kind = CspSourceKind.kw_strict_dynamic;
                 return expr;
             }
-            if (startsWithIgnoreCase(raw, "'nonce-") && raw.len > 8) {
+            if (cspStartsWithIgnoreCase(raw, "'nonce-") && raw.len > 8) {
+                if (!cspIsValidBase64Value(raw[7 .. raw.len - 1])) return null;
                 expr.kind = CspSourceKind.nonce;
                 return expr;
             }
-            if (startsWithIgnoreCase(raw, "'sha256-") && raw.len > 9) {
+            if (cspStartsWithIgnoreCase(raw, "'sha256-") && raw.len > 9) {
+                if (!cspIsValidBase64Value(raw[8 .. raw.len - 1])) return null;
                 expr.kind = CspSourceKind.hash_sha256;
                 return expr;
             }
-            if (startsWithIgnoreCase(raw, "'sha384-") && raw.len > 9) {
+            if (cspStartsWithIgnoreCase(raw, "'sha384-") && raw.len > 9) {
+                if (!cspIsValidBase64Value(raw[8 .. raw.len - 1])) return null;
                 expr.kind = CspSourceKind.hash_sha384;
                 return expr;
             }
-            if (startsWithIgnoreCase(raw, "'sha512-") && raw.len > 9) {
+            if (cspStartsWithIgnoreCase(raw, "'sha512-") && raw.len > 9) {
+                if (!cspIsValidBase64Value(raw[8 .. raw.len - 1])) return null;
                 expr.kind = CspSourceKind.hash_sha512;
                 return expr;
             }
             return null;
         }
 
-        if (bytesEqual(raw, "*")) {
+        if (cspBytesEqual(raw, "*")) {
             expr.kind = CspSourceKind.wildcard;
             return expr;
         }
 
         if (raw[raw.len - 1] == ':') {
-            if (!isValidSchemeName(raw[0 .. raw.len - 1])) return null;
+            if (!cspIsValidSchemeName(raw[0 .. raw.len - 1])) return null;
             expr.kind = CspSourceKind.scheme;
             return expr;
         }
@@ -452,6 +489,12 @@ pub struct CspDirective {
             if (sources[i].kind == CspSourceKind.kw_none) return true;
         }
         return false;
+    }
+
+    /// W3C CSP3 §2.3.1: `'none'` only blocks all sources when it is the SOLE source expression.
+    /// When coexisting with other sources (e.g. `'none' 'self'`), `'none'` is ignored.
+    fn isEffectiveNone(): bool {
+        return source_count == 1 && sources[0].kind == CspSourceKind.kw_none;
     }
 
     /// Return true if this directive contains `'strict-dynamic'`.
@@ -517,21 +560,26 @@ pub struct CspPolicy {
     ///   - Follows W3C CSP first-directive-wins rule for duplicate directives
     ///   - Rejects CRLF / NUL control characters (`null`) to prevent header injection
     static fn parseHeader(header: []const u8): CspPolicy? {
-        if (hasControlOrCrlfChar(header)) return null;
+        if (cspHasHeaderIllegalCtrl(header)) return null;
 
         let pol = CspPolicy.init();
+        let seen_segments: usize = 0;
         let pos: usize = 0;
         while (pos < header.len) {
             const seg_start = pos;
             while (pos < header.len && header[pos] != ';') : (pos += 1) {}
-            const seg = trimSpaces(header[seg_start..pos]);
+            const seg = cspTrimSpaces(header[seg_start..pos]);
             if (pos < header.len && header[pos] == ';') pos += 1;
             if (seg.len == 0) continue;
 
+            seen_segments += 1;
+            if (seen_segments > 128) return null;
+
             // Extract directive name (first whitespace-delimited token)
             let p: usize = 0;
-            while (p < seg.len && !isAsciiSpace(seg[p])) : (p += 1) {}
+            while (p < seg.len && !cspIsAsciiSpace(seg[p])) : (p += 1) {}
             const dir_name: []const u8 = seg[0..p];
+            if (!cspIsValidDirectiveName(dir_name)) return null;
 
             const kind = parseDirectiveKind(dir_name) ?? continue; // ignore unknown directives per CSP3
 
@@ -552,10 +600,10 @@ pub struct CspPolicy {
 
             // Parse source tokens
             while (p < seg.len) {
-                while (p < seg.len && isAsciiSpace(seg[p])) : (p += 1) {}
+                while (p < seg.len && cspIsAsciiSpace(seg[p])) : (p += 1) {}
                 if (p >= seg.len) break;
                 const tok_start = p;
-                while (p < seg.len && !isAsciiSpace(seg[p])) : (p += 1) {}
+                while (p < seg.len && !cspIsAsciiSpace(seg[p])) : (p += 1) {}
                 const tok: []const u8 = seg[tok_start..p];
 
                 const src = CspSourceExpr.parse(tok) ?? return null;
@@ -643,7 +691,7 @@ pub struct CspPolicy {
         const target = parseUrlParts(target_url) ?? return CspEvalVerdict.invalid_input;
         const eff = effectiveDirective(dir) ?? return CspEvalVerdict.allowed;
 
-        if (eff.hasNone()) return CspEvalVerdict.blocked_by_none;
+        if (eff.isEffectiveNone()) return CspEvalVerdict.blocked_by_none;
 
         let i: usize = 0;
         while (i < eff.source_count) : (i += 1) {
@@ -654,8 +702,8 @@ pub struct CspPolicy {
                 if (origin := parseUrlParts(page_origin)) {
                     if (origin.has_authority &&
                         target.has_authority &&
-                        eqIgnoreCase(origin.scheme, target.scheme) &&
-                        eqIgnoreCase(origin.host, target.host) &&
+                        cspEqIgnoreCase(origin.scheme, target.scheme) &&
+                        cspEqIgnoreCase(origin.host, target.host) &&
                         origin.port == target.port)
                     {
                         return CspEvalVerdict.allowed;
@@ -666,7 +714,7 @@ pub struct CspPolicy {
                     return CspEvalVerdict.allowed;
                 }
             } else if (src.kind == CspSourceKind.scheme) {
-                if (tok.len > 1 && eqIgnoreCase(target.scheme, tok[0 .. tok.len - 1])) {
+                if (tok.len > 1 && cspEqIgnoreCase(target.scheme, tok[0 .. tok.len - 1])) {
                     return CspEvalVerdict.allowed;
                 }
             } else if (src.kind == CspSourceKind.host_expr) {
@@ -683,11 +731,11 @@ pub struct CspPolicy {
     /// Enforces W3C CSP3 strict rule: if the effective `script-src` directive contains any nonce,
     /// hash, or `'strict-dynamic'`, `'unsafe-inline'` is ignored!
     fn checkInlineScript(nonce_val: []const u8, sha256_b64: []const u8): CspEvalVerdict {
-        if (hasControlOrCrlfChar(nonce_val) || hasControlOrCrlfChar(sha256_b64)) {
+        if (cspHasControlOrCrlfChar(nonce_val) || cspHasControlOrCrlfChar(sha256_b64)) {
             return CspEvalVerdict.invalid_input;
         }
         const eff = effectiveDirective(CspDirectiveKind.script_src) ?? return CspEvalVerdict.allowed;
-        if (eff.hasNone()) return CspEvalVerdict.blocked_by_none;
+        if (eff.isEffectiveNone()) return CspEvalVerdict.blocked_by_none;
 
         // 1. Check matching nonce (`'nonce-<nonce_val>'`)
         if (nonce_val.len > 0) {
@@ -697,7 +745,7 @@ pub struct CspPolicy {
                     const tok: []const u8 = eff.sources[i].token_buf[0..@as(usize, eff.sources[i].token_len)];
                     if (tok.len > 8) {
                         const expected_nonce: []const u8 = tok[7 .. tok.len - 1];
-                        if (bytesEqual(expected_nonce, nonce_val)) {
+                        if (cspBytesEqual(expected_nonce, nonce_val)) {
                             return CspEvalVerdict.allowed;
                         }
                     }
@@ -713,7 +761,7 @@ pub struct CspPolicy {
                     const tok: []const u8 = eff.sources[i].token_buf[0..@as(usize, eff.sources[i].token_len)];
                     if (tok.len > 9) {
                         const expected_hash: []const u8 = tok[8 .. tok.len - 1];
-                        if (bytesEqual(expected_hash, sha256_b64)) {
+                        if (cspBytesEqual(expected_hash, sha256_b64)) {
                             return CspEvalVerdict.allowed;
                         }
                     }
@@ -739,15 +787,15 @@ pub struct CspPolicy {
         while (i < directive_count) : (i += 1) {
             if (!directives[i].active) continue;
             if (written_dirs > 0) {
-                if (!appendBytes(out_buf, *pos, "; ")) return null;
+                pos = cspAppendBytes(out_buf, pos, "; ") ?? return null;
             }
-            if (!appendBytes(out_buf, *pos, formatDirectiveName(directives[i].kind))) return null;
+            pos = cspAppendBytes(out_buf, pos, formatDirectiveName(directives[i].kind)) ?? return null;
 
             let s: usize = 0;
             while (s < directives[i].source_count) : (s += 1) {
-                if (!appendBytes(out_buf, *pos, " ")) return null;
+                pos = cspAppendBytes(out_buf, pos, " ") ?? return null;
                 const tok: []const u8 = directives[i].sources[s].token_buf[0..@as(usize, directives[i].sources[s].token_len)];
-                if (!appendBytes(out_buf, *pos, tok)) return null;
+                pos = cspAppendBytes(out_buf, pos, tok) ?? return null;
             }
             written_dirs += 1;
         }

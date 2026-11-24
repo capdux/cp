@@ -243,9 +243,9 @@ pub fn demoApiIdempotencyStore() {
 
 ### RFC 9110 §13 HTTP 条件请求与 ETag 强弱比较裁决引擎（`etagPrecond.cp`）
 
-面向 CDN、API 网关与对象存储的 100% 纯 CP 零动态堆分配 RFC 9110 §8.8.3 & §13 条件请求状态机：
+对标 `tower-rs/tower-http` (MIT) 与 RFC 9110 §8.8.3 / §13，面向 CDN、API 网关与对象存储的 100% 纯 CP 零动态堆分配条件请求状态机（集成 16-lane `@Vector(16, u8)` SIMD 字节比对与控制字符拦截）：
 
-- **ETag 解析与强弱比较**：`parseEntityTag`（严格区分强标签 `"abc"` 与弱标签 `W/"abc"`，拒绝小写 `w/`、未闭合引号及非法 `etagc` 字节）、`etagStrongEqual`、`etagWeakEqual`。
+- **ETag 解析与强弱比较**：`parseEntityTag`（严格区分强标签 `"abc"` 与大写弱标签 `W/"abc"`，拒绝小写 `w/`、未闭合引号、控制字节/CRLF 及非法 `etagc` 字节）、`etagStrongEqual`、`etagWeakEqual`（热路径直连 `simdWebBytesEqual`）。
 - **逗号列表与通配符 `*`**：`etagListMatchesStrong`、`etagListMatchesWeak`、`validateEtagList`（正确处理双引号内含逗号如 `"a,b", W/"c"` 与资源不存在时 `*` 语义）。
 - **RFC 9110 §13.2.2 精确五步裁决（`evaluatePreconditions`）**：
   1. `If-Match`（强比较 -> 失败返回 `precondition_failed_412`）；
@@ -279,13 +279,13 @@ pub fn demoEtagPrecondition() {
 
 ### 零分配 W3C Fetch CORS 预检裁决与响应头合成器 (`corsGuard.cp`)
 
-面向 API 网关与 Web 框架的 100% 纯 CP 零动态堆分配 W3C Fetch CORS 安全裁决与响应头合成器：
+对标 `tower-rs/tower-http` (MIT) 与 W3C Fetch CORS 规范的 100% 纯 CP 零动态堆分配安全裁决与响应头合成器（集成 16-lane `@Vector(16, u8)` SIMD 加速原语 `simdWebHasControlOrCrlf` / `simdWebAsciiLowerEql` / `simdWebBytesEqual` 及对应标量参考）：
 
 - **常量与安全匹配原语**：
   - `CORS_MAX_ORIGINS = 32`、`CORS_MAX_HEADERS = 32`、`CORS_MAX_ORIGIN_LEN = 128`、`CORS_MAX_HEADER_NAME_LEN = 64`、`CORS_METHOD_GET..OPTIONS` / `CORS_METHOD_ALL_STANDARD`。
-  - `hasControlOrCrlf(s)`、`isValidOriginSyntax(origin)`、`matchOriginPattern(pattern, origin)`（严格校对协议与点号边界，防止 `https://evil-example.com` 绕过 `https://*.example.com`）、`parseCorsMethodMask(method)`。
+  - `simdWebHasControlOrCrlf` / `scalarWebHasControlOrCrlf`、`simdWebAsciiLowerEql` / `scalarWebAsciiLowerEql`、`simdWebBytesEqual` / `scalarWebBytesEqual`、`hasControlOrCrlf(s)`、`isValidOriginSyntax(origin)`、`isValidCorsHeaderToken(name)`（RFC 7230 `tchar`）、`matchOriginPattern(pattern, origin)`（严格校对协议与点号边界）、`parseCorsMethodMask(method)`。
 - **核心引擎 `CorsGuard` 与响应头合成**：
-  - `addAllowedOrigin` / `setAllowedMethods` / `addAllowedHeader` / `addExposedHeader` / `setAllowCredentials` / `setMaxAgeSecs`。
+  - `addAllowedOrigin` / `setAllowedMethods` / `addAllowedHeader` / `addExposedHeader` / `setAllowCredentials` / `setAllowNullOrigin`（默认拒绝 `Origin: null`，仅显式配置放行）/ `setMaxAgeSecs`。
   - `evaluatePreflight(origin, req_method, req_headers_csv): CorsDecision`（`preflight_allow_204 | preflight_reject_origin | preflight_reject_method | preflight_reject_header`）。
   - `evaluateActualRequest(origin, method): CorsDecision`（`actual_allow | actual_reject_origin | not_cors_request`）。
   - 严格执行 W3C Fetch 凭据安全不变量：`allow_credentials == true` 时绝不反射 `*`，精确回显匹配 Origin 并自动注入 `Vary: Origin`（预检同时追加 `Access-Control-Request-Method, Access-Control-Request-Headers`）。
@@ -534,7 +534,8 @@ pub fn demoSignedUrlKeyring() {
 
 ### W3C Content-Security-Policy (CSP Level 3) 解析、源匹配裁决与策略构建器 (`cspPolicy.cp`)
 
-100% 纯 CP、零动态堆分配的 W3C CSP Level 3 响应头解析、资源与内联脚本安全裁决及规范序列化引擎：
+对标 `tower-rs/tower-http` (MIT) 与 W3C CSP Level 3 规范的 100% 纯 CP、零动态堆分配响应头解析、资源与内联脚本安全裁决及规范序列化引擎（集成 16-lane SIMD 控制字节与大小写不敏感匹配）：
+- **安全与规范加固**：重复指令仅首条生效、指令名 ASCII 大小写不敏感、`'none'` 仅单独出现时生效（`isEffectiveNone()`）、严格 Base64/Base64URL 校验 `'nonce-'`/`'sha256-'`/`'sha384-'`/`'sha512-'`、拒绝控制字符/CRLF/超限指令数。
 
 - **常量与枚举**：
   - `CSP_MAX_DIRECTIVES = 16`、`CSP_MAX_SOURCES_PER_DIR = 16`、`CSP_MAX_TOKEN_LEN = 96`

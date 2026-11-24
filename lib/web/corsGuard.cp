@@ -1,14 +1,17 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc W3C Fetch CORS Guard, Safe Subdomain Matcher & Header Synthesizer) | Created: 2026-11-22
+// Reference-hardened against tower-rs/tower-http (MIT) & W3C Fetch/CSP3/RFC 9110
 // Pure CP zero-heap-allocation W3C Fetch CORS policy evaluator and HTTP header synthesizer:
 //   - Supports exact Origins, safe wildcard subdomains (`https://*.example.com` enforcing scheme
-//     and dot-boundary checks to prevent `evil-example.com` bypasses), and `*` wildcard
+//     and dot-boundary checks to prevent `evil-example.com` bypasses), `*` wildcard, and explicit opt-in `null` origin
 //   - Enforces W3C Fetch security invariant: when `allow_credentials == true`, NEVER reflects `*`;
 //     always echoes the exact matched Origin and emits `Vary: Origin` (plus preflight Vary tokens)
-//   - Distinguishes OPTIONS preflight (`evaluatePreflight`) vs actual requests (`evaluateActualRequest`)
+//   - Strict RFC 7230 token validation for preflight method & header names + 16-lane `@Vector(16, u8)` SIMD acceleration
 //   - Synthesizes wire-ready HTTP response headers (`formatCorsResponseHeaders`) with full CRLF/control-char guards
 
+type WebSecVec16u8 = @Vector(16, u8);
+
 // ============================================================================
-// Constants & Internal String/Validation Helpers
+// Constants & 16-Lane SIMD Primitives (with Scalar 0-Diff Reference)
 // ============================================================================
 
 pub const CORS_MAX_ORIGINS: usize = 32;
@@ -26,14 +29,46 @@ pub const CORS_METHOD_PATCH: u16 = 1 << 5;
 pub const CORS_METHOD_OPTIONS: u16 = 1 << 6;
 pub const CORS_METHOD_ALL_STANDARD: u16 = 0x7F;
 
-fn toLowerAscii(c: u8): u8 {
+fn corsToLowerAscii(c: u8): u8 {
     if (c >= 65 && c <= 90) {
         return c + 32;
     }
     return c;
 }
 
-fn bytesEqual(a: []const u8, b: []const u8): bool {
+/// Scalar reference: returns `true` if `s` contains CR, LF, NUL, or any ASCII control byte (`< 0x20` or `0x7F`).
+pub fn scalarWebHasControlOrCrlf(s: []const u8): bool {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c: u8 = s[i];
+        if (c < 0x20 || c == 0x7F) return true;
+    }
+    return false;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan detecting ASCII control bytes (`< 0x20` or `0x7F`, including CR/LF/NUL).
+pub fn simdWebHasControlOrCrlf(s: []const u8): bool {
+    let i: usize = 0;
+    const n: usize = s.len;
+    const v_20: WebSecVec16u8 = @splat(0x20);
+    const v_7f: WebSecVec16u8 = @splat(0x7F);
+
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: WebSecVec16u8 = s[i..][0..16].*;
+        const m_lt: u16 = @bitCast(chunk < v_20);
+        const m_del: u16 = @bitCast(chunk == v_7f);
+        if ((m_lt | m_del) != 0) return true;
+    }
+
+    while (i < n) : (i += 1) {
+        const c: u8 = s[i];
+        if (c < 0x20 || c == 0x7F) return true;
+    }
+    return false;
+}
+
+/// Scalar reference: exact byte equality.
+pub fn scalarWebBytesEqual(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
     while (i < a.len) : (i += 1) {
@@ -42,16 +77,58 @@ fn bytesEqual(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-fn bytesEqualIgnoreCase(a: []const u8, b: []const u8): bool {
+/// 16-lane `@Vector(16, u8)` SIMD exact byte equality (0-diff vs `scalarWebBytesEqual`).
+pub fn simdWebBytesEqual(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
+    const n: usize = a.len;
+    while (i + 16 <= n) : (i += 16) {
+        const va: WebSecVec16u8 = a[i..][0..16].*;
+        const vb: WebSecVec16u8 = b[i..][0..16].*;
+        const eq_mask: u16 = @bitCast(va == vb);
+        if (eq_mask != 0xFFFF) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (a[i] != b[i]) return false;
     }
     return true;
 }
 
-fn trimAsciiSpace(s: []const u8): []const u8 {
+/// Scalar reference: ASCII case-insensitive byte equality.
+pub fn scalarWebAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (corsToLowerAscii(a[i]) != corsToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD ASCII case-insensitive byte equality (0-diff vs `scalarWebAsciiLowerEql`).
+pub fn simdWebAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const n: usize = a.len;
+    const v_A: WebSecVec16u8 = @splat('A');
+    const v_26: WebSecVec16u8 = @splat(26);
+    const v_32: WebSecVec16u8 = @splat(32);
+    const v_0: WebSecVec16u8 = @splat(0);
+
+    while (i + 16 <= n) : (i += 16) {
+        const va: WebSecVec16u8 = a[i..][0..16].*;
+        const vb: WebSecVec16u8 = b[i..][0..16].*;
+        const la: WebSecVec16u8 = va + @select(u8, (va -% v_A) < v_26, v_32, v_0);
+        const lb: WebSecVec16u8 = vb + @select(u8, (vb -% v_A) < v_26, v_32, v_0);
+        const eq_mask: u16 = @bitCast(la == lb);
+        if (eq_mask != 0xFFFF) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (corsToLowerAscii(a[i]) != corsToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
+
+fn corsTrimAsciiSpace(s: []const u8): []const u8 {
     let start: usize = 0;
     let end: usize = s.len;
     while (start < end && (s[start] == 32 || s[start] == 9)) : (start += 1) {}
@@ -61,17 +138,17 @@ fn trimAsciiSpace(s: []const u8): []const u8 {
 
 /// Returns `true` if `s` contains CR, LF, NUL, or any ASCII control byte (< 0x20 or 0x7F).
 pub fn hasControlOrCrlf(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        const c: u8 = s[i];
-        if (c < 0x20 || c == 0x7F) {
-            return true;
-        }
-    }
-    return false;
+    return simdWebHasControlOrCrlf(s);
 }
 
-fn findSchemeSep(s: []const u8): usize? {
+fn corsIsRfc7230Tchar(c: u8): bool {
+    if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return true;
+    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' || c == '\'' ||
+        c == '*' || c == '+' || c == '-' || c == '.' || c == '^' || c == '_' ||
+        c == '`' || c == '|' || c == '~';
+}
+
+fn corsFindSchemeSep(s: []const u8): usize? {
     if (s.len < 4) return null;
     let i: usize = 0;
     while (i + 2 < s.len) : (i += 1) {
@@ -83,17 +160,21 @@ fn findSchemeSep(s: []const u8): usize? {
 }
 
 /// Validates RFC 6454 serialized Origin syntax (`scheme://host[:port]`), rejecting CRLF, spaces,
-/// path slashes, query/fragment delimiters, and overlong values.
+/// path slashes, query/fragment delimiters, `null`, and overlong values.
 pub fn isValidOriginSyntax(origin: []const u8): bool {
-    if (origin.len == 0 || origin.len > CORS_MAX_ORIGIN_LEN || hasControlOrCrlf(origin)) {
+    if (origin.len == 0 || origin.len > CORS_MAX_ORIGIN_LEN || simdWebHasControlOrCrlf(origin)) {
         return false;
     }
-    const sep = findSchemeSep(origin) ?? return false;
+    const sep = corsFindSchemeSep(origin) ?? return false;
     if (sep == 0) {
         return false;
     }
-    // Validate scheme characters: ALPHA / DIGIT / '+' / '-' / '.'
-    let i: usize = 0;
+    // Validate scheme characters: ALPHA / DIGIT / '+' / '-' / '.' (must start with ALPHA)
+    const s0: u8 = origin[0];
+    if (!((s0 >= 65 && s0 <= 90) || (s0 >= 97 && s0 <= 122))) {
+        return false;
+    }
+    let i: usize = 1;
     while (i < sep) : (i += 1) {
         const c: u8 = origin[i];
         const is_alpha: bool = (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
@@ -106,25 +187,25 @@ pub fn isValidOriginSyntax(origin: []const u8): bool {
     if (host_start >= origin.len) {
         return false;
     }
-    // Host[:port] must not contain '/', '?', '#', '@', whitespace, or '*'
+    // Host[:port] must not contain '/', '?', '#', '@', whitespace, '*', or non-ASCII
     i = host_start;
     while (i < origin.len) : (i += 1) {
         const c: u8 = origin[i];
-        if (c == 47 || c == 63 || c == 35 || c == 64 || c == 32 || c == 42) {
+        if (c <= 0x20 || c >= 0x7F || c == 47 || c == 63 || c == 35 || c == 64 || c == 42) {
             return false;
         }
     }
     return true;
 }
 
-fn isValidOriginPattern(pattern: []const u8): bool {
-    if (pattern.len == 0 || pattern.len > CORS_MAX_ORIGIN_LEN || hasControlOrCrlf(pattern)) {
+fn corsIsValidOriginPattern(pattern: []const u8): bool {
+    if (pattern.len == 0 || pattern.len > CORS_MAX_ORIGIN_LEN || simdWebHasControlOrCrlf(pattern)) {
         return false;
     }
-    if (bytesEqual(pattern, "*")) {
+    if (simdWebBytesEqual(pattern, "*")) {
         return true;
     }
-    const sep = findSchemeSep(pattern) ?? return false;
+    const sep = corsFindSchemeSep(pattern) ?? return false;
     const host_start: usize = sep + 3;
     if (host_start >= pattern.len) {
         return false;
@@ -138,7 +219,7 @@ fn isValidOriginPattern(pattern: []const u8): bool {
         }
         while (i < pattern.len) : (i += 1) {
             const c: u8 = pattern[i];
-            if (c == 42 || c == 47 || c == 63 || c == 35 || c == 64 || c == 32) {
+            if (c <= 0x20 || c >= 0x7F || c == 42 || c == 47 || c == 63 || c == 35 || c == 64) {
                 return false;
             }
         }
@@ -154,12 +235,12 @@ pub fn matchOriginPattern(pattern: []const u8, origin: []const u8): bool {
     if (!isValidOriginSyntax(origin)) {
         return false;
     }
-    if (bytesEqual(pattern, "*")) {
+    if (simdWebBytesEqual(pattern, "*")) {
         return true;
     }
-    const p_sep = findSchemeSep(pattern) ?? return false;
-    const o_sep = findSchemeSep(origin) ?? return false;
-    if (p_sep != o_sep || !bytesEqualIgnoreCase(pattern[0..p_sep], origin[0..o_sep])) {
+    const p_sep = corsFindSchemeSep(pattern) ?? return false;
+    const o_sep = corsFindSchemeSep(origin) ?? return false;
+    if (p_sep != o_sep || !simdWebAsciiLowerEql(pattern[0..p_sep], origin[0..o_sep])) {
         return false;
     }
 
@@ -184,39 +265,40 @@ pub fn matchOriginPattern(pattern: []const u8, origin: []const u8): bool {
                 return false;
             }
         }
-        return bytesEqualIgnoreCase(tail_part, dot_suffix);
+        return simdWebAsciiLowerEql(tail_part, dot_suffix);
     }
 
-    return bytesEqualIgnoreCase(pattern[host_start..], origin[host_start..]);
+    return simdWebAsciiLowerEql(pattern[host_start..], origin[host_start..]);
 }
 
-/// Parses an HTTP method token into its `CORS_METHOD_*` bitmask (returns `0` if unrecognized).
+/// Parses an HTTP method token into its `CORS_METHOD_*` bitmask (returns `0` if unrecognized or invalid RFC 7230 token).
 pub fn parseCorsMethodMask(method: []const u8): u16 {
-    if (bytesEqual(method, "GET")) return CORS_METHOD_GET;
-    if (bytesEqual(method, "HEAD")) return CORS_METHOD_HEAD;
-    if (bytesEqual(method, "POST")) return CORS_METHOD_POST;
-    if (bytesEqual(method, "PUT")) return CORS_METHOD_PUT;
-    if (bytesEqual(method, "DELETE")) return CORS_METHOD_DELETE;
-    if (bytesEqual(method, "PATCH")) return CORS_METHOD_PATCH;
-    if (bytesEqual(method, "OPTIONS")) return CORS_METHOD_OPTIONS;
+    if (method.len == 0 || method.len > 16 || simdWebHasControlOrCrlf(method)) return 0;
+    if (simdWebBytesEqual(method, "GET")) return CORS_METHOD_GET;
+    if (simdWebBytesEqual(method, "HEAD")) return CORS_METHOD_HEAD;
+    if (simdWebBytesEqual(method, "POST")) return CORS_METHOD_POST;
+    if (simdWebBytesEqual(method, "PUT")) return CORS_METHOD_PUT;
+    if (simdWebBytesEqual(method, "DELETE")) return CORS_METHOD_DELETE;
+    if (simdWebBytesEqual(method, "PATCH")) return CORS_METHOD_PATCH;
+    if (simdWebBytesEqual(method, "OPTIONS")) return CORS_METHOD_OPTIONS;
     return 0;
 }
 
-fn isValidHeaderToken(name: []const u8): bool {
-    if (name.len == 0 || name.len > CORS_MAX_HEADER_NAME_LEN || hasControlOrCrlf(name)) {
+/// Validates an RFC 7230 HTTP header/method token name (`1..=CORS_MAX_HEADER_NAME_LEN`, `tchar` only).
+pub fn isValidCorsHeaderToken(name: []const u8): bool {
+    if (name.len == 0 || name.len > CORS_MAX_HEADER_NAME_LEN || simdWebHasControlOrCrlf(name)) {
         return false;
     }
     let i: usize = 0;
     while (i < name.len) : (i += 1) {
-        const c: u8 = name[i];
-        if (c <= 0x20 || c == 44 || c == 58) { // disallow spaces, commas, colons
+        if (!corsIsRfc7230Tchar(name[i])) {
             return false;
         }
     }
     return true;
 }
 
-fn copyFixed(dst: *[]u8, src: []const u8): usize {
+fn corsCopyFixed(dst: *[]u8, src: []const u8): usize {
     const n: usize = if (src.len < dst.len) src.len else dst.len;
     let i: usize = 0;
     while (i < n) : (i += 1) {
@@ -225,7 +307,7 @@ fn copyFixed(dst: *[]u8, src: []const u8): usize {
     return n;
 }
 
-fn appendBytes(dst: *[]u8, pos: usize, src: []const u8): usize? {
+fn corsAppendBytes(dst: *[]u8, pos: usize, src: []const u8): usize? {
     if (pos + src.len > dst.len) return null;
     let i: usize = 0;
     while (i < src.len) : (i += 1) {
@@ -234,7 +316,7 @@ fn appendBytes(dst: *[]u8, pos: usize, src: []const u8): usize? {
     return pos + src.len;
 }
 
-fn appendU32Dec(dst: *[]u8, pos: usize, val_in: u32): usize? {
+fn corsAppendU32Dec(dst: *[]u8, pos: usize, val_in: u32): usize? {
     let tmp: [10]u8 = [0; 10];
     let len: usize = 0;
     let v: u32 = val_in;
@@ -324,23 +406,24 @@ pub struct CorsGuard {
     exposed_header_count: usize = 0;
 
     allow_credentials: bool = false;
+    allow_null_origin: bool = false;
     max_age_secs: u32 = 0;
 
-    fn init(): CorsGuard {
+    static fn init(): CorsGuard {
         return CorsGuard {};
     }
 
     /// Registers an allowed Origin pattern (`*`, exact `https://app.example.com`, or safe
     /// wildcard subdomain `https://*.example.com`). Rejects malformed patterns, CRLF, or full table.
     fn addAllowedOrigin(*_, pattern: []const u8): bool {
-        if (!isValidOriginPattern(pattern) || _.origin_count >= CORS_MAX_ORIGINS) {
+        if (!corsIsValidOriginPattern(pattern) || _.origin_count >= CORS_MAX_ORIGINS) {
             return false;
         }
-        if (bytesEqual(pattern, "*")) {
+        if (simdWebBytesEqual(pattern, "*")) {
             _.has_wildcard_origin = true;
         }
         let dst: []u8 = _.origins[_.origin_count][0..];
-        _.origin_lens[_.origin_count] = copyFixed(*dst, pattern);
+        _.origin_lens[_.origin_count] = corsCopyFixed(dst, pattern);
         _.origin_count += 1;
         return true;
     }
@@ -351,26 +434,26 @@ pub struct CorsGuard {
 
     /// Registers an allowed request header name (or `"*"` for any header).
     fn addAllowedHeader(*_, header_name: []const u8): bool {
-        if (bytesEqual(header_name, "*")) {
+        if (simdWebBytesEqual(header_name, "*")) {
             _.allow_any_header = true;
             return true;
         }
-        if (!isValidHeaderToken(header_name) || _.allowed_header_count >= CORS_MAX_HEADERS) {
+        if (!isValidCorsHeaderToken(header_name) || _.allowed_header_count >= CORS_MAX_HEADERS) {
             return false;
         }
         let dst: []u8 = _.allowed_headers[_.allowed_header_count][0..];
-        _.allowed_header_lens[_.allowed_header_count] = copyFixed(*dst, header_name);
+        _.allowed_header_lens[_.allowed_header_count] = corsCopyFixed(dst, header_name);
         _.allowed_header_count += 1;
         return true;
     }
 
     /// Registers a response header to expose via `Access-Control-Expose-Headers`.
     fn addExposedHeader(*_, header_name: []const u8): bool {
-        if (!isValidHeaderToken(header_name) || _.exposed_header_count >= CORS_MAX_HEADERS) {
+        if (!isValidCorsHeaderToken(header_name) || _.exposed_header_count >= CORS_MAX_HEADERS) {
             return false;
         }
         let dst: []u8 = _.exposed_headers[_.exposed_header_count][0..];
-        _.exposed_header_lens[_.exposed_header_count] = copyFixed(*dst, header_name);
+        _.exposed_header_lens[_.exposed_header_count] = corsCopyFixed(dst, header_name);
         _.exposed_header_count += 1;
         return true;
     }
@@ -379,11 +462,19 @@ pub struct CorsGuard {
         _.allow_credentials = enabled;
     }
 
+    /// Explicitly opts in or out of accepting the opaque `"null"` Origin (default: `false`).
+    fn setAllowNullOrigin(*_, enabled: bool) {
+        _.allow_null_origin = enabled;
+    }
+
     fn setMaxAgeSecs(*_, secs: u32) {
         _.max_age_secs = secs;
     }
 
     fn isOriginMatched(origin: []const u8): bool {
+        if (simdWebBytesEqual(origin, "null")) {
+            return _.allow_null_origin;
+        }
         if (!isValidOriginSyntax(origin)) {
             return false;
         }
@@ -404,7 +495,7 @@ pub struct CorsGuard {
         let i: usize = 0;
         while (i < _.allowed_header_count) : (i += 1) {
             const h: []const u8 = _.allowed_headers[i][0.._.allowed_header_lens[i]];
-            if (bytesEqualIgnoreCase(h, name)) {
+            if (simdWebAsciiLowerEql(h, name)) {
                 return true;
             }
         }
@@ -414,13 +505,13 @@ pub struct CorsGuard {
     /// Populates `allow_origin_buf` and `vary_origin` strictly enforcing W3C Fetch credential invariant.
     fn populateOriginHeader(origin: []const u8, decision: *CorsDecision) {
         // W3C Fetch invariant: when allow_credentials == true, NEVER emit "*"; echo exact Origin + Vary: Origin.
-        if (_.has_wildcard_origin && !_.allow_credentials && _.origin_count == 1) {
+        if (_.has_wildcard_origin && !_.allow_credentials && _.origin_count == 1 && !simdWebBytesEqual(origin, "null")) {
             let dst: []u8 = decision.allow_origin_buf[0..];
-            decision.allow_origin_len = copyFixed(*dst, "*");
+            decision.allow_origin_len = corsCopyFixed(dst, "*");
             decision.vary_origin = false;
         } else {
             let dst: []u8 = decision.allow_origin_buf[0..];
-            decision.allow_origin_len = copyFixed(*dst, origin);
+            decision.allow_origin_len = corsCopyFixed(dst, origin);
             decision.vary_origin = true;
         }
         decision.allow_credentials = _.allow_credentials;
@@ -451,7 +542,7 @@ pub struct CorsGuard {
             };
         }
 
-        if (hasControlOrCrlf(req_headers_csv) || req_headers_csv.len > CORS_HEADER_LIST_BUF_LEN) {
+        if (simdWebHasControlOrCrlf(req_headers_csv) || req_headers_csv.len > CORS_HEADER_LIST_BUF_LEN) {
             return CorsDecision {
                 kind: CorsDecisionKind.preflight_reject_header,
                 http_status: 403,
@@ -476,9 +567,9 @@ pub struct CorsGuard {
             while (pos <= req_headers_csv.len) : (pos += 1) {
                 const at_end: bool = pos == req_headers_csv.len;
                 if (at_end || req_headers_csv[pos] == 44) { // ','
-                    const tok: []const u8 = trimAsciiSpace(req_headers_csv[start..pos]);
+                    const tok: []const u8 = corsTrimAsciiSpace(req_headers_csv[start..pos]);
                     if (tok.len > 0) {
-                        if (!isValidHeaderToken(tok) || !_.isSingleHeaderAllowed(tok)) {
+                        if (!isValidCorsHeaderToken(tok) || !_.isSingleHeaderAllowed(tok)) {
                             return CorsDecision {
                                 kind: CorsDecisionKind.preflight_reject_header,
                                 http_status: 403,
@@ -488,7 +579,7 @@ pub struct CorsGuard {
                         }
                         if (hdr_out_pos > 0) {
                             let h_s: []u8 = decision.allow_headers_buf[0..];
-                            hdr_out_pos = appendBytes(*h_s, hdr_out_pos, ", ") ?? return CorsDecision {
+                            hdr_out_pos = corsAppendBytes(h_s, hdr_out_pos, ", ") ?? return CorsDecision {
                                 kind: CorsDecisionKind.preflight_reject_header,
                                 http_status: 403,
                                 vary_origin: true,
@@ -496,7 +587,7 @@ pub struct CorsGuard {
                             };
                         }
                         let h_s2: []u8 = decision.allow_headers_buf[0..];
-                        hdr_out_pos = appendBytes(*h_s2, hdr_out_pos, tok) ?? return CorsDecision {
+                        hdr_out_pos = corsAppendBytes(h_s2, hdr_out_pos, tok) ?? return CorsDecision {
                             kind: CorsDecisionKind.preflight_reject_header,
                             http_status: 403,
                             vary_origin: true,
@@ -549,13 +640,13 @@ pub struct CorsGuard {
             const h: []const u8 = _.exposed_headers[i][0.._.exposed_header_lens[i]];
             let e_s: []u8 = decision.expose_headers_buf[0..];
             if (exp_pos > 0) {
-                if (next_p := appendBytes(*e_s, exp_pos, ", ")) {
+                if (next_p := corsAppendBytes(e_s, exp_pos, ", ")) {
                     exp_pos = next_p;
                 } else {
                     break;
                 }
             }
-            if (next_p2 := appendBytes(*e_s, exp_pos, h)) {
+            if (next_p2 := corsAppendBytes(e_s, exp_pos, h)) {
                 exp_pos = next_p2;
             } else {
                 break;
@@ -570,7 +661,7 @@ pub struct CorsGuard {
 // 2. Wire-Ready HTTP CORS Response Header Synthesizer
 // ============================================================================
 
-fn appendMethodsList(dst: *[]u8, pos_in: usize, mask: u16): usize? {
+fn corsAppendMethodsList(dst: *[]u8, pos_in: usize, mask: u16): usize? {
     const names: [7][]const u8 = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
     const bits: [7]u16 = [
         CORS_METHOD_GET,
@@ -587,9 +678,9 @@ fn appendMethodsList(dst: *[]u8, pos_in: usize, mask: u16): usize? {
     while (i < 7) : (i += 1) {
         if ((mask & bits[i]) != 0) {
             if (!first) {
-                pos = appendBytes(dst, pos, ", ") ?? return null;
+                pos = corsAppendBytes(dst, pos, ", ") ?? return null;
             }
-            pos = appendBytes(dst, pos, names[i]) ?? return null;
+            pos = corsAppendBytes(dst, pos, names[i]) ?? return null;
             first = false;
         }
     }
@@ -602,51 +693,51 @@ pub fn formatCorsResponseHeaders(decision: CorsDecision, out_buf: *[]u8): usize?
     let pos: usize = 0;
 
     if (decision.allow_origin_len > 0) {
-        pos = appendBytes(out_buf, pos, "Access-Control-Allow-Origin: ") ?? return null;
-        pos = appendBytes(out_buf, pos, decision.allowOriginSlice()) ?? return null;
-        pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "Access-Control-Allow-Origin: ") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, decision.allowOriginSlice()) ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
     }
 
     if (decision.allow_credentials && decision.allow_origin_len > 0) {
-        pos = appendBytes(out_buf, pos, "Access-Control-Allow-Credentials: true\r\n") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "Access-Control-Allow-Credentials: true\r\n") ?? return null;
     }
 
     if (decision.kind == CorsDecisionKind.preflight_allow_204) {
         if (decision.allowed_methods_mask != 0) {
-            pos = appendBytes(out_buf, pos, "Access-Control-Allow-Methods: ") ?? return null;
-            pos = appendMethodsList(out_buf, pos, decision.allowed_methods_mask) ?? return null;
-            pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "Access-Control-Allow-Methods: ") ?? return null;
+            pos = corsAppendMethodsList(out_buf, pos, decision.allowed_methods_mask) ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
         }
         if (decision.allow_headers_len > 0) {
-            pos = appendBytes(out_buf, pos, "Access-Control-Allow-Headers: ") ?? return null;
-            pos = appendBytes(out_buf, pos, decision.allowHeadersSlice()) ?? return null;
-            pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "Access-Control-Allow-Headers: ") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, decision.allowHeadersSlice()) ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
         }
         if (decision.max_age_secs > 0) {
-            pos = appendBytes(out_buf, pos, "Access-Control-Max-Age: ") ?? return null;
-            pos = appendU32Dec(out_buf, pos, decision.max_age_secs) ?? return null;
-            pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "Access-Control-Max-Age: ") ?? return null;
+            pos = corsAppendU32Dec(out_buf, pos, decision.max_age_secs) ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
         }
     } else if (decision.kind == CorsDecisionKind.actual_allow && decision.expose_headers_len > 0) {
-        pos = appendBytes(out_buf, pos, "Access-Control-Expose-Headers: ") ?? return null;
-        pos = appendBytes(out_buf, pos, decision.exposeHeadersSlice()) ?? return null;
-        pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "Access-Control-Expose-Headers: ") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, decision.exposeHeadersSlice()) ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
     }
 
     if (decision.vary_origin || decision.vary_preflight) {
-        pos = appendBytes(out_buf, pos, "Vary: ") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "Vary: ") ?? return null;
         let wrote_vary: bool = false;
         if (decision.vary_origin) {
-            pos = appendBytes(out_buf, pos, "Origin") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "Origin") ?? return null;
             wrote_vary = true;
         }
         if (decision.vary_preflight) {
             if (wrote_vary) {
-                pos = appendBytes(out_buf, pos, ", ") ?? return null;
+                pos = corsAppendBytes(out_buf, pos, ", ") ?? return null;
             }
-            pos = appendBytes(out_buf, pos, "Access-Control-Request-Method, Access-Control-Request-Headers") ?? return null;
+            pos = corsAppendBytes(out_buf, pos, "Access-Control-Request-Method, Access-Control-Request-Headers") ?? return null;
         }
-        pos = appendBytes(out_buf, pos, "\r\n") ?? return null;
+        pos = corsAppendBytes(out_buf, pos, "\r\n") ?? return null;
     }
 
     return pos;

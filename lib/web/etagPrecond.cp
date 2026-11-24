@@ -1,11 +1,17 @@
 // Origin: Pure-CP Stdlib (RFC 9110 §13 Conditional Request & ETag Precondition Evaluator) | Created: 2026-11-22
+// Reference-hardened against tower-rs/tower-http (MIT) & W3C Fetch/CSP3/RFC 9110
 // Pure CP zero-heap-allocation RFC 9110 §8.8.3 & §13 HTTP Conditional Request & ETag Evaluation Engine:
 //   - Strict RFC 9110 ETag parser (`parseEntityTag`): distinguishes strong `"tag"` vs weak `W/"tag"`,
-//     rejects lowercase `w/`, unclosed quotes, and illegal non-etagc bytes
-//   - Strong & weak comparison (`etagStrongEqual`, `etagWeakEqual`) and quote-aware comma-separated
-//     ETag list / `*` wildcard matching (`etagListMatchesStrong`, `etagListMatchesWeak`, `validateEtagList`)
+//     rejects lowercase `w/`, unclosed quotes, and illegal non-etagc bytes (16-lane SIMD CTL guard)
+//   - Strong & weak comparison (`etagStrongEqual`, `etagWeakEqual`) via 16-lane SIMD `simdWebBytesEqual`
+//     and quote-aware comma-separated ETag list / `*` wildcard matching (`etagListMatchesStrong`, `etagListMatchesWeak`, `validateEtagList`)
 //   - Exact RFC 9110 §13.2.2 5-step precedence evaluator (`evaluatePreconditions`):
 //     If-Match -> If-Unmodified-Since -> If-None-Match -> If-Modified-Since -> If-Range
+
+import {
+    simdWebHasControlOrCrlf,
+    simdWebBytesEqual,
+} from "./corsGuard.cp";
 
 // ============================================================================
 // 1. Public Enums & Data Models
@@ -79,33 +85,34 @@ pub struct PreconditionResult {
 // 2. Internal Byte & Slice Helpers
 // ============================================================================
 
-fn isOws(b: u8): bool {
+fn etagIsOws(b: u8): bool {
     return b == ' ' || b == '\t';
 }
 
-fn trimOws(s: []const u8): []const u8 {
+fn etagTrimOws(s: []const u8): []const u8 {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && isOws(s[start])) : (start += 1) {}
-    while (end > start && isOws(s[end - 1])) : (end -= 1) {}
+    while (start < end && etagIsOws(s[start])) : (start += 1) {}
+    while (end > start && etagIsOws(s[end - 1])) : (end -= 1) {}
     return s[start..end];
 }
 
+fn etagHasIllegalCtrl(s: []const u8): bool {
+    if (!simdWebHasControlOrCrlf(s)) return false;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c: u8 = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
+    }
+    return false;
+}
+
 /// RFC 9110 §8.8.3: `etagc = %x21 / %x23-7E / obs-text (%x80-FF)`.
-fn isEtagc(b: u8): bool {
+fn etagIsEtagc(b: u8): bool {
     return b == 0x21 || (b >= 0x23 && b <= 0x7E) || b >= 0x80;
 }
 
-fn bytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
-
-fn isReadMethod(m: PreconditionMethod): bool {
+fn etagIsReadMethod(m: PreconditionMethod): bool {
     return m == PreconditionMethod.get || m == PreconditionMethod.head;
 }
 
@@ -114,10 +121,13 @@ fn isReadMethod(m: PreconditionMethod): bool {
 // ============================================================================
 
 /// Parses a single RFC 9110 Entity-Tag (`"abc"` or `W/"abc"`).
-/// Rejects lowercase `w/`, unclosed quotes, and any non-`etagc` bytes inside quotes.
+/// Rejects lowercase `w/`, unclosed quotes, control bytes/CRLF, and any non-`etagc` bytes inside quotes.
 pub fn parseEntityTag(raw: []const u8): EntityTag? {
-    const s = trimOws(raw);
-    if (s.len < 2) {
+    if (etagHasIllegalCtrl(raw)) {
+        return null;
+    }
+    const s = etagTrimOws(raw);
+    if (s.len < 2 || simdWebHasControlOrCrlf(s)) {
         return null;
     }
 
@@ -142,7 +152,7 @@ pub fn parseEntityTag(raw: []const u8): EntityTag? {
     const inner = body[1..(body.len - 1)];
     let i: usize = 0;
     while (i < inner.len) : (i += 1) {
-        if (!isEtagc(inner[i])) {
+        if (!etagIsEtagc(inner[i])) {
             return null;
         }
     }
@@ -153,17 +163,17 @@ pub fn parseEntityTag(raw: []const u8): EntityTag? {
     };
 }
 
-/// RFC 9110 §8.8.3.2 Strong Comparison: both tags must be strong and byte-identical.
+/// RFC 9110 §8.8.3.2 Strong Comparison: both tags must be strong and byte-identical (16-lane SIMD).
 pub fn etagStrongEqual(a: EntityTag, b: EntityTag): bool {
     if (a.weak || b.weak) {
         return false;
     }
-    return bytesEqual(a.tag, b.tag);
+    return simdWebBytesEqual(a.tag, b.tag);
 }
 
-/// RFC 9110 §8.8.3.2 Weak Comparison: opaque tags must be byte-identical (ignores weak flag).
+/// RFC 9110 §8.8.3.2 Weak Comparison: opaque tags must be byte-identical (ignores weak flag, 16-lane SIMD).
 pub fn etagWeakEqual(a: EntityTag, b: EntityTag): bool {
-    return bytesEqual(a.tag, b.tag);
+    return simdWebBytesEqual(a.tag, b.tag);
 }
 
 // ============================================================================
@@ -176,7 +186,10 @@ fn matchEtagListInternal(
     resource_exists: bool,
     strong: bool,
 ): bool {
-    const trimmed = trimOws(header_val);
+    if (etagHasIllegalCtrl(header_val)) {
+        return false;
+    }
+    const trimmed = etagTrimOws(header_val);
     if (trimmed.len == 0) {
         return false;
     }
@@ -192,7 +205,7 @@ fn matchEtagListInternal(
     let pos: usize = 0;
     while (pos < trimmed.len) {
         // Skip leading OWS and empty comma items
-        while (pos < trimmed.len && (isOws(trimmed[pos]) || trimmed[pos] == ',')) : (pos += 1) {}
+        while (pos < trimmed.len && (etagIsOws(trimmed[pos]) || trimmed[pos] == ',')) : (pos += 1) {}
         if (pos >= trimmed.len) break;
 
         const item_start: usize = pos;
@@ -210,7 +223,7 @@ fn matchEtagListInternal(
             return false;
         }
 
-        const item = trimOws(trimmed[item_start..pos]);
+        const item = etagTrimOws(trimmed[item_start..pos]);
         if (item.len > 0) {
             if (cand := parseEntityTag(item)) {
                 if (strong) {
@@ -248,7 +261,10 @@ pub fn etagListMatchesWeak(
 
 /// Strictly validates that `header_val` is either `*` or a well-formed comma-separated ETag list.
 pub fn validateEtagList(header_val: []const u8): bool {
-    const trimmed = trimOws(header_val);
+    if (etagHasIllegalCtrl(header_val)) {
+        return false;
+    }
+    const trimmed = etagTrimOws(header_val);
     if (trimmed.len == 0) {
         return false;
     }
@@ -259,7 +275,7 @@ pub fn validateEtagList(header_val: []const u8): bool {
     let valid_items: usize = 0;
     let pos: usize = 0;
     while (pos < trimmed.len) {
-        while (pos < trimmed.len && (isOws(trimmed[pos]) || trimmed[pos] == ',')) : (pos += 1) {}
+        while (pos < trimmed.len && (etagIsOws(trimmed[pos]) || trimmed[pos] == ',')) : (pos += 1) {}
         if (pos >= trimmed.len) break;
 
         const item_start: usize = pos;
@@ -275,7 +291,7 @@ pub fn validateEtagList(header_val: []const u8): bool {
         if (in_quotes) {
             return false;
         }
-        const item = trimOws(trimmed[item_start..pos]);
+        const item = etagTrimOws(trimmed[item_start..pos]);
         if (item.len > 0) {
             if (parseEntityTag(item) == null) {
                 return false;
@@ -307,7 +323,7 @@ pub fn evaluatePreconditions(
     const cur_etag: EntityTag? = if (res.resource_exists && res.etag.len > 0) parseEntityTag(res.etag) else null;
 
     // Step 1: If-Match (strong comparison)
-    const has_if_match: bool = trimOws(req.if_match).len > 0;
+    const has_if_match: bool = etagTrimOws(req.if_match).len > 0;
     if (has_if_match) {
         if (!etagListMatchesStrong(req.if_match, cur_etag, res.resource_exists)) {
             return PreconditionResult{
@@ -334,10 +350,10 @@ pub fn evaluatePreconditions(
     }
 
     // Step 3: If-None-Match (weak comparison)
-    const has_if_none_match: bool = trimOws(req.if_none_match).len > 0;
+    const has_if_none_match: bool = etagTrimOws(req.if_none_match).len > 0;
     if (has_if_none_match) {
         if (etagListMatchesWeak(req.if_none_match, cur_etag, res.resource_exists)) {
-            if (isReadMethod(req.method)) {
+            if (etagIsReadMethod(req.method)) {
                 return PreconditionResult{
                     verdict: PreconditionVerdict.not_modified_304,
                     http_status: 304,
@@ -352,7 +368,7 @@ pub fn evaluatePreconditions(
                 serve_range: false,
             };
         }
-    } else if (isReadMethod(req.method)) {
+    } else if (etagIsReadMethod(req.method)) {
         // Step 4: If-Modified-Since (ignored when If-None-Match is present, or method != GET/HEAD)
         if (ims := req.if_modified_since_sec) {
             if (res.resource_exists) {
@@ -372,7 +388,7 @@ pub fn evaluatePreconditions(
 
     // Step 5: If-Range (only applies to GET requests carrying a Range header)
     if (req.method == PreconditionMethod.get && req.has_range) {
-        const ir_etag_trimmed = trimOws(req.if_range_etag);
+        const ir_etag_trimmed = etagTrimOws(req.if_range_etag);
         if (ir_etag_trimmed.len > 0) {
             if (ir_tag := parseEntityTag(ir_etag_trimmed)) {
                 if (ct := cur_etag) {
