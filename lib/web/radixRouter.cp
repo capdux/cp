@@ -53,7 +53,7 @@ pub struct RadixMatchResult {
     handler_id: i32 = -1;
     allowed_mask: u8 = 0;
     head_fallback_to_get: bool = false;
-    params: [RADIX_MAX_PARAMS]RadixParam = [RadixParam{}; RADIX_MAX_PARAMS];
+    params: [RADIX_MAX_PARAMS]RadixParam = undefined;
     param_len: usize = 0;
 }
 

@@ -16,13 +16,18 @@ Unified PRAGMA tuning across all three runtimes:
   Read : PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000;
          PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;
 
-Three core benchmarks (strict cross-runtime checksum verification + peak VmHWM/VmRSS MB):
+Four core benchmarks (strict cross-runtime checksum verification + peak VmHWM/VmRSS MB):
   1. Single-thread bulk insert: 100,000 order rows in 1 tx + prepared statement reuse
   2. Single-thread indexed point lookup: 200,000 x `SELECT amount FROM orders WHERE id = ?`
   3. 8-core concurrent WAL read (1,600,000 total queries):
      - CP   : single process, 8 pthreads (each with independent read-only connection)
      - Bun  : 8 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
      - Node : 8 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
+  4. Batch row materialization (500 queries x 1,000 rows = 500,000 multi-column rows):
+     - Table `orders_batch(id, cat_id, amount, status, customer, sku)` with `idx_orders_cat(cat_id)`
+     - CP   : `undefined` stack/Arena linear buffer zero-GC materialization (`arena_pos = 0` O(1) reset)
+     - Bun  : `bun:sqlite` `stmt.all(cat)` JS object/string array materialization
+     - Node : `node:sqlite` `stmt.all(cat)` JS object/string array materialization
 
 Results saved to `/data/dev/cp/bench/vs_web_frameworks/sqlite_extreme_results.json`.
 """
@@ -34,6 +39,7 @@ import json
 import os
 import platform
 import shutil
+import sqlite3
 import statistics
 import subprocess
 import tempfile
@@ -66,6 +72,10 @@ ORDERS = 100_000
 POINT_QUERIES = 200_000
 CONCURRENT_WORKERS = 8
 TOTAL_CONCURRENT_QUERIES = CONCURRENT_WORKERS * POINT_QUERIES
+BATCH_QUERIES = 500
+BATCH_ROWS_PER_QUERY = 1_000
+BATCH_CATS = 100
+TOTAL_BATCH_ROWS = BATCH_QUERIES * BATCH_ROWS_PER_QUERY
 TRIALS = 3
 
 # ---------------------------------------------------------------------------
@@ -180,6 +190,48 @@ if (mode === "write") {
     peak_rss_mb: readPeakRssMb(),
     checksum: Number(checksum),
   }) + "\n");
+} else if (mode === "batch_materialize") {
+  const BATCH_QUERIES = 500;
+  const BATCH_CATS = 100;
+  const db = new Database(dbPath, { readonly: true });
+  db.exec(PRAGMA_READ);
+  const sel = db.prepare("SELECT id, amount, status, customer, sku FROM orders_batch WHERE cat_id = ?;");
+
+  let checksum = 0n;
+  let totalRows = 0;
+  const t0 = Bun.nanoseconds();
+  for (let q = 0; q < BATCH_QUERIES; q++) {
+    const cat = (q * 17) % BATCH_CATS;
+    const rows = sel.all(cat);
+    totalRows += rows.length;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const c = r.customer;
+      const s = r.sku;
+      const cl = c.length;
+      const sl = s.length;
+      checksum += BigInt(
+        r.id + r.amount + r.status + cl + sl +
+        (cl > 0 ? c.charCodeAt(0) + c.charCodeAt(cl - 1) : 0) +
+        (sl > 0 ? s.charCodeAt(0) + s.charCodeAt(sl - 1) : 0)
+      );
+    }
+  }
+  const t1 = Bun.nanoseconds();
+  db.close();
+
+  const elapsed_ms = (t1 - t0) / 1e6;
+  const rows_per_sec = Number((totalRows / (elapsed_ms / 1000)).toFixed(1));
+  console.log(JSON.stringify({
+    mode: "batch_materialize",
+    queries: BATCH_QUERIES,
+    rows: totalRows,
+    elapsed_ms: Number(elapsed_ms.toFixed(3)),
+    rows_per_sec,
+    ops_per_sec: rows_per_sec,
+    peak_rss_mb: readPeakRssMb(),
+    checksum: Number(checksum),
+  }));
 }
 """
 
@@ -289,6 +341,48 @@ if (mode === "write") {
     peak_rss_mb: readPeakRssMb(),
     checksum: Number(checksum),
   }) + "\n");
+} else if (mode === "batch_materialize") {
+  const BATCH_QUERIES = 500;
+  const BATCH_CATS = 100;
+  const db = new DatabaseSync(dbPath, { readOnly: true });
+  db.exec(PRAGMA_READ);
+  const sel = db.prepare("SELECT id, amount, status, customer, sku FROM orders_batch WHERE cat_id = ?;");
+
+  let checksum = 0n;
+  let totalRows = 0;
+  const t0 = process.hrtime.bigint();
+  for (let q = 0; q < BATCH_QUERIES; q++) {
+    const cat = (q * 17) % BATCH_CATS;
+    const rows = sel.all(cat);
+    totalRows += rows.length;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const c = r.customer;
+      const s = r.sku;
+      const cl = c.length;
+      const sl = s.length;
+      checksum += BigInt(
+        r.id + r.amount + r.status + cl + sl +
+        (cl > 0 ? c.charCodeAt(0) + c.charCodeAt(cl - 1) : 0) +
+        (sl > 0 ? s.charCodeAt(0) + s.charCodeAt(sl - 1) : 0)
+      );
+    }
+  }
+  const t1 = process.hrtime.bigint();
+  db.close();
+
+  const elapsed_ms = Number(t1 - t0) / 1e6;
+  const rows_per_sec = Number((totalRows / (elapsed_ms / 1000)).toFixed(1));
+  console.log(JSON.stringify({
+    mode: "batch_materialize",
+    queries: BATCH_QUERIES,
+    rows: totalRows,
+    elapsed_ms: Number(elapsed_ms.toFixed(3)),
+    rows_per_sec,
+    ops_per_sec: rows_per_sec,
+    peak_rss_mb: readPeakRssMb(),
+    checksum: Number(checksum),
+  }));
 }
 """
 
@@ -586,6 +680,50 @@ def run_multiprocess_wal_read(
     }
 
 
+def build_batch_wal_db(db_path: Path) -> None:
+    """Create shared WAL DB for batch row materialization (100,000 rows, 100 categories x 1,000 rows)."""
+    remove_db_files(db_path)
+    conn = sqlite3.connect(str(db_path))
+    try:
+        conn.executescript(
+            """
+            PRAGMA journal_mode=WAL;
+            PRAGMA synchronous=NORMAL;
+            PRAGMA mmap_size=268435456;
+            PRAGMA cache_size=-64000;
+            PRAGMA temp_store=MEMORY;
+            CREATE TABLE orders_batch (
+                id INTEGER PRIMARY KEY,
+                cat_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                status INTEGER NOT NULL,
+                customer TEXT NOT NULL,
+                sku TEXT NOT NULL
+            );
+            """
+        )
+        rows = (
+            (
+                i,
+                (i - 1) % BATCH_CATS,
+                ((i * 131) % 50000) + 100,
+                i % 4,
+                f"customer_{i:06d}_vip",
+                f"SKU-{(i * 29) % 100000:05d}-PROD",
+            )
+            for i in range(1, ORDERS + 1)
+        )
+        with conn:
+            conn.executemany(
+                "INSERT INTO orders_batch (id, cat_id, amount, status, customer, sku) VALUES (?, ?, ?, ?, ?, ?);",
+                rows,
+            )
+            conn.execute("CREATE INDEX idx_orders_cat ON orders_batch(cat_id);")
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+    finally:
+        conn.close()
+
+
 def ratio(other: float | None, base: float | None) -> float | None:
     if other is None or base is None or base <= 0:
         return None
@@ -611,7 +749,7 @@ def main() -> int:
         # ------------------------------------------------------------------
         # 1. Single-thread Bulk Write (100,000 rows in 1 tx)
         # ------------------------------------------------------------------
-        print("==> [1/3] Single-thread bulk write (100,000 rows, 1 tx, prepared stmt)...")
+        print("==> [1/4] Single-thread bulk write (100,000 rows, 1 tx, prepared stmt)...")
         write_res: dict[str, Any] = {}
         cp_write_db = work_dir / "write_cp.db"
         bun_write_db = work_dir / "write_bun.db"
@@ -639,7 +777,7 @@ def main() -> int:
         # ------------------------------------------------------------------
         # 2. Single-thread Indexed Point Read (200,000 queries)
         # ------------------------------------------------------------------
-        print("==> [2/3] Single-thread indexed point lookup (200,000 queries)...")
+        print("==> [2/4] Single-thread indexed point lookup (200,000 queries)...")
         point_res: dict[str, Any] = {}
         point_res["cp"] = run_single_mode([str(CP_BIN)], "point_read", shared_wal_db, recreate_db=False)
         point_res["bun"] = run_single_mode([bun_bin, str(bun_script)], "point_read", shared_wal_db, recreate_db=False)
@@ -653,7 +791,7 @@ def main() -> int:
         # ------------------------------------------------------------------
         # 3. 8-Core Concurrent WAL Read (1,600,000 total queries)
         # ------------------------------------------------------------------
-        print("==> [3/3] 8-core concurrent WAL read (1,600,000 total queries)...")
+        print("==> [3/4] 8-core concurrent WAL read (1,600,000 total queries)...")
         wal8_res: dict[str, Any] = {}
         wal8_res["cp"] = run_single_mode([str(CP_BIN)], "wal_read_8t", shared_wal_db, recreate_db=False)
         wal8_res["cp"]["processes"] = 1
@@ -665,6 +803,26 @@ def main() -> int:
         for rt, v in wal8_res.items():
             if v["checksum"] != m_ck:
                 raise AssertionError(f"8-core WAL read checksum mismatch for {rt}: {v['checksum']} != {m_ck}")
+
+        # ------------------------------------------------------------------
+        # 4. Batch Row Materialization (500 queries x 1,000 rows = 500,000 rows)
+        # ------------------------------------------------------------------
+        print("==> [4/4] Batch row materialization (500 queries x 1,000 rows = 500,000 multi-column rows)...")
+        batch_wal_db = work_dir / "batch_wal.db"
+        build_batch_wal_db(batch_wal_db)
+
+        batch_res: dict[str, Any] = {}
+        batch_res["cp"] = run_single_mode([str(CP_BIN)], "batch_materialize", batch_wal_db, recreate_db=False)
+        batch_res["bun"] = run_single_mode([bun_bin, str(bun_script)], "batch_materialize", batch_wal_db, recreate_db=False)
+        batch_res["node"] = run_single_mode([node_bin, str(node_script)], "batch_materialize", batch_wal_db, recreate_db=False)
+
+        for v in batch_res.values():
+            v["rows_per_sec"] = v["ops_per_sec"]
+
+        b_ck = batch_res["cp"]["checksum"]
+        for rt, v in batch_res.items():
+            if v["checksum"] != b_ck:
+                raise AssertionError(f"Batch-materialize checksum mismatch for {rt}: {v['checksum']} != {b_ck}")
 
         final_data = {
             "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -721,6 +879,21 @@ def main() -> int:
                     "rss_savings_vs": {
                         "bun": ratio(wal8_res["bun"]["peak_rss_mb"], wal8_res["cp"]["peak_rss_mb"]),
                         "node": ratio(wal8_res["node"]["peak_rss_mb"], wal8_res["cp"]["peak_rss_mb"]),
+                    },
+                },
+                "batch_row_materialization": {
+                    "queries": BATCH_QUERIES,
+                    "rows_per_query": BATCH_ROWS_PER_QUERY,
+                    "total_rows": TOTAL_BATCH_ROWS,
+                    "checksum": b_ck,
+                    "results": batch_res,
+                    "cp_speedup_vs": {
+                        "bun": ratio(batch_res["bun"]["elapsed_ms"], batch_res["cp"]["elapsed_ms"]),
+                        "node": ratio(batch_res["node"]["elapsed_ms"], batch_res["cp"]["elapsed_ms"]),
+                    },
+                    "rss_savings_vs": {
+                        "bun": ratio(batch_res["bun"]["peak_rss_mb"], batch_res["cp"]["peak_rss_mb"]),
+                        "node": ratio(batch_res["node"]["peak_rss_mb"], batch_res["cp"]["peak_rss_mb"]),
                     },
                 },
             },

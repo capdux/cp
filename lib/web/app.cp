@@ -366,7 +366,7 @@ pub struct Request {
     path: string = "/";
     raw_query: string = "";
     body: string = "";
-    headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
+    headers: [APP_MAX_HEADERS]HeaderKV = undefined;
     header_len: usize = 0;
 
     /// Construct a request from method and target (automatically splits `?query`).
@@ -384,7 +384,7 @@ pub struct Request {
             path: if (path.len == 0) "/" else path,
             raw_query: query,
             body: "",
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            headers: undefined,
             header_len: 0,
         };
     }
@@ -417,9 +417,9 @@ pub struct Response {
     status: u16 = 200;
     content_type: string = "text/plain; charset=utf-8";
     body: string = "";
-    body_buf: [128]u8 = [0; 128];
+    body_buf: [128]u8 = undefined;
     body_buf_len: usize = 0;
-    headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
+    headers: [APP_MAX_HEADERS]HeaderKV = undefined;
     header_len: usize = 0;
 
     pub static fn textConcat3(status_code: u16, a: string, sep: string, b: string): Response {
@@ -427,9 +427,9 @@ pub struct Response {
             status: status_code,
             content_type: "text/plain; charset=utf-8",
             body: "",
-            body_buf: [0; 128],
+            body_buf: undefined,
             body_buf_len: 0,
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            headers: undefined,
             header_len: 0,
         };
         let pos: usize = 0;
@@ -445,7 +445,9 @@ pub struct Response {
             status: status_code,
             content_type: "application/json; charset=utf-8",
             body: payload,
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
             header_len: 0,
         };
     }
@@ -455,7 +457,9 @@ pub struct Response {
             status: status_code,
             content_type: "text/plain; charset=utf-8",
             body: payload,
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
             header_len: 0,
         };
     }
@@ -465,7 +469,9 @@ pub struct Response {
             status: 204,
             content_type: "",
             body: "",
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
             header_len: 0,
         };
     }
@@ -475,7 +481,9 @@ pub struct Response {
             status: code,
             content_type: "text/plain; charset=utf-8",
             body: "",
-            headers: [HeaderKV{}; APP_MAX_HEADERS],
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
             header_len: 0,
         };
     }
@@ -517,19 +525,19 @@ pub struct Context {
     matched_path: string = "";
     raw_query: string = "";
     body: string = "";
-    headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
+    headers: [APP_MAX_HEADERS]HeaderKV = undefined;
     header_len: usize = 0;
-    params: [APP_MAX_PARAMS]ParamKV = [ParamKV{}; APP_MAX_PARAMS];
+    params: [APP_MAX_PARAMS]ParamKV = undefined;
     param_len: usize = 0;
     state_ptr: usize = 0;
-    state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
+    state_kv: [APP_MAX_STATE_KV]ParamKV = undefined;
     state_kv_len: usize = 0;
-    derived_kv: [APP_MAX_DERIVED_KV]ParamKV = [ParamKV{}; APP_MAX_DERIVED_KV];
+    derived_kv: [APP_MAX_DERIVED_KV]ParamKV = undefined;
     derived_kv_len: usize = 0;
-    response_headers: [APP_MAX_HEADERS]HeaderKV = [HeaderKV{}; APP_MAX_HEADERS];
+    response_headers: [APP_MAX_HEADERS]HeaderKV = undefined;
     response_header_len: usize = 0;
     aborted: bool = false;
-    abort_response: Response = Response{};
+    abort_response: Response = undefined;
     error_code: AppErrorCode = AppErrorCode.None;
     error_message: string = "";
 
@@ -1546,17 +1554,17 @@ pub struct App {
             body: req.body,
             headers: req.headers,
             header_len: req.header_len,
-            params: [ParamKV{}; APP_MAX_PARAMS],
+            params: undefined,
             param_len: 0,
             state_ptr: _.state_ptr,
             state_kv: _.state_kv,
             state_kv_len: _.state_kv_len,
-            derived_kv: [ParamKV{}; APP_MAX_DERIVED_KV],
+            derived_kv: undefined,
             derived_kv_len: 0,
-            response_headers: [HeaderKV{}; APP_MAX_HEADERS],
+            response_headers: undefined,
             response_header_len: 0,
             aborted: false,
-            abort_response: Response{},
+            abort_response: undefined,
             error_code: AppErrorCode.None,
             error_message: "",
         };

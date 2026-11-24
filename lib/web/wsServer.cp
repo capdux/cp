@@ -65,6 +65,7 @@ extern fn malloc(size: usize): *u8?;
 extern fn free(ptr: *u8?);
 extern fn __errno_location(): *i32;
 extern fn sched_yield(): i32;
+extern fn sched_setaffinity(pid: i32, cpusetsize: usize, mask: *const u8): i32;
 extern fn pthread_create(
     thread: *usize,
     attr: *const u8?,
@@ -416,15 +417,27 @@ fn writeServerFrameHeader(out_buf: []u8, opcode: u8, payload_len: usize): usize 
 struct WsConnBuf {
     fd: i32 = -1;
     upgraded: bool = false;
-    read_buf: [WS_READ_BUF_LEN]u8 = [0; WS_READ_BUF_LEN];
+    read_buf: [WS_READ_BUF_LEN]u8 = undefined;
     read_len: usize = 0;
 }
 
 struct WsWorkerCtx {
     port: u16,
     backlog: i32,
+    worker_id: usize,
+    pin_cpu: bool,
     stop_flag: *i32,
     ready_count: *i32,
+}
+
+fn wsPinCurrentThreadToCpu(cpu_id: usize) {
+    let mask: [16]u64 = [0; 16]; // up to 1024 CPUs
+    const word_idx = (cpu_id / 64) % 16;
+    const bit_idx = (cpu_id % 64) as u6;
+    mask[word_idx] = (1 as u64) << bit_idx;
+    unsafe {
+        * = sched_setaffinity(0, 128, @ptrCast(&mask[0]));
+    }
 }
 
 fn wsCreateReusePortListener(port: u16, backlog: i32): i32 {
@@ -480,6 +493,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
     if (arg == null) return null;
     unsafe {
         const wctx: *WsWorkerCtx = @ptrCast(@alignCast(arg.?));
+        if (wctx.pin_cpu) {
+            wsPinCurrentThreadToCpu(wctx.worker_id);
+        }
         const lfd = wsCreateReusePortListener(wctx.port, wctx.backlog);
         if (lfd < 0) return null;
 
@@ -515,8 +531,8 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
             conns[ci].read_len = 0;
         }
 
-        let events: [WS_EPOLL_BATCH]WsEpollEventC = [WsEpollEventC{ events: 0, data_lo: 0, data_hi: 0 }; WS_EPOLL_BATCH];
-        let write_buf: [WS_WRITE_BUF_LEN]u8 = [0; WS_WRITE_BUF_LEN];
+        let events: [WS_EPOLL_BATCH]WsEpollEventC = undefined;
+        let write_buf: [WS_WRITE_BUF_LEN]u8 = undefined;
         let one: i32 = 1;
 
         while (@atomicLoad(i32, wctx.stop_flag, .acquire) == 0) {
@@ -613,8 +629,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         }
                     }
 
-                    // Stage 2: Process all complete WebSocket frames in buffer
+                    // Stage 2: Process all complete WebSocket frames in buffer (Cork write aggregation)
                     if (!should_close && conns[idx].upgraded) {
+                        let write_pos: usize = 0;
                         while (offset < conns[idx].read_len) {
                             const avail = conns[idx].read_len - offset;
                             if (avail < 2) break;
@@ -646,7 +663,7 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                                 hdr_len = 10;
                             }
 
-                            let mask_key: [4]u8 = [0, 0, 0, 0];
+                            let mask_key: [4]u8 = undefined;
                             if (masked) {
                                 if (avail < hdr_len + 4) break;
                                 mask_key[0] = conns[idx].read_buf[offset + hdr_len];
@@ -666,54 +683,55 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                             const payload_start = offset + hdr_len;
                             const payload_slice = conns[idx].read_buf[payload_start .. payload_start + payload_len];
 
-                            if (opcode == 0x1 || opcode == 0x2) {
-                                // Text / Binary: SIMD unmask directly into output frame buffer & single-write echo
-                                const out_hdr = writeServerFrameHeader(write_buf[0..], opcode, payload_len);
+                            if (opcode == 0x1 || opcode == 0x2 || opcode == 0x9 || opcode == 0x8) {
+                                let out_opcode: u8 = opcode;
+                                if (opcode == 0x9) {
+                                    out_opcode = 0xA; // Ping -> Pong
+                                }
+                                let need_hdr: usize = 2;
+                                if (payload_len >= 126 && payload_len <= 65535) {
+                                    need_hdr = 4;
+                                } else if (payload_len > 65535) {
+                                    need_hdr = 10;
+                                }
+                                if (write_pos + need_hdr + payload_len > WS_WRITE_BUF_LEN) {
+                                    if (!wsWriteAllFd(fd, write_buf[0..write_pos])) {
+                                        write_pos = 0;
+                                        should_close = true;
+                                        break;
+                                    }
+                                    write_pos = 0;
+                                }
+                                const out_hdr = writeServerFrameHeader(write_buf[write_pos..], out_opcode, payload_len);
                                 if (masked) {
-                                    simdMaskXorCopy(write_buf[out_hdr .. out_hdr + payload_len], payload_slice, mask_key);
+                                    simdMaskXorCopy(
+                                        write_buf[write_pos + out_hdr .. write_pos + out_hdr + payload_len],
+                                        payload_slice,
+                                        mask_key,
+                                    );
                                 } else {
                                     let pi: usize = 0;
                                     while (pi < payload_len) : (pi += 1) {
-                                        write_buf[out_hdr + pi] = payload_slice[pi];
+                                        write_buf[write_pos + out_hdr + pi] = payload_slice[pi];
                                     }
                                 }
-                                if (!wsWriteAllFd(fd, write_buf[0 .. out_hdr + payload_len])) {
+                                write_pos += out_hdr + payload_len;
+
+                                if (opcode == 0x8) {
+                                    offset += frame_len;
                                     should_close = true;
                                     break;
                                 }
-                            } else if (opcode == 0x9) {
-                                // Ping -> Pong with exact payload
-                                const out_hdr = writeServerFrameHeader(write_buf[0..], 0xA, payload_len);
-                                if (masked) {
-                                    simdMaskXorCopy(write_buf[out_hdr .. out_hdr + payload_len], payload_slice, mask_key);
-                                } else {
-                                    let pi: usize = 0;
-                                    while (pi < payload_len) : (pi += 1) {
-                                        write_buf[out_hdr + pi] = payload_slice[pi];
-                                    }
-                                }
-                                if (!wsWriteAllFd(fd, write_buf[0 .. out_hdr + payload_len])) {
-                                    should_close = true;
-                                    break;
-                                }
-                            } else if (opcode == 0x8) {
-                                // Close -> echo Close frame and close gracefully
-                                const out_hdr = writeServerFrameHeader(write_buf[0..], 0x8, payload_len);
-                                if (masked) {
-                                    simdMaskXorCopy(write_buf[out_hdr .. out_hdr + payload_len], payload_slice, mask_key);
-                                } else {
-                                    let pi: usize = 0;
-                                    while (pi < payload_len) : (pi += 1) {
-                                        write_buf[out_hdr + pi] = payload_slice[pi];
-                                    }
-                                }
-                                * = wsWriteAllFd(fd, write_buf[0 .. out_hdr + payload_len]);
-                                offset += frame_len;
-                                should_close = true;
-                                break;
                             }
                             // opcode 0xA (Pong) or continuation: consume silently
                             offset += frame_len;
+                        }
+
+                        // Flush all aggregated response frames in a single write() syscall
+                        if (write_pos > 0) {
+                            if (!wsWriteAllFd(fd, write_buf[0..write_pos])) {
+                                should_close = true;
+                            }
                         }
                     }
 
@@ -753,6 +771,7 @@ pub struct WsServerConfig {
     port: u16 = 3000;
     workers: usize = 1;
     backlog: i32 = 4096;
+    pin_cpu: bool = true;
 }
 
 pub struct WsServer {
@@ -792,6 +811,8 @@ pub struct WsServer {
             _.worker_ctxs[i] = WsWorkerCtx{
                 port: _.config.port,
                 backlog: _.config.backlog,
+                worker_id: i,
+                pin_cpu: _.config.pin_cpu,
                 stop_flag: *_.stop_flag,
                 ready_count: *_.ready_count,
             };

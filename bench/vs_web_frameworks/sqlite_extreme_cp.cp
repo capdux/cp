@@ -4,9 +4,10 @@
 //   -DSQLITE_OMIT_PROGRESS_CALLBACK -DSQLITE_DQS=0 -DSQLITE_MAX_EXPR_DEPTH=0 -DSQLITE_OMIT_DEPRECATED
 //
 // Modes via env `SQLITE_BENCH_MODE`:
-//   - "write"       : 100,000 order inserts in 1 transaction with prepared statement reuse
-//   - "point_read"  : 200,000 indexed point lookups (`SELECT amount FROM orders WHERE id = ?`)
-//   - "wal_read_8t" : 8 pthread workers x 200,000 = 1,600,000 concurrent WAL point reads
+//   - "write"             : 100,000 order inserts in 1 transaction with prepared statement reuse
+//   - "point_read"        : 200,000 indexed point lookups (`SELECT amount FROM orders WHERE id = ?`)
+//   - "wal_read_8t"       : 8 pthread workers x 200,000 = 1,600,000 concurrent WAL point reads
+//   - "batch_materialize" : 500 queries x 1,000 rows = 500,000 multi-column rows into `undefined` stack Arena
 
 import {
     Database,
@@ -31,6 +32,10 @@ extern fn pthread_join(thread: usize, retval: *u8?): i32;
 
 const ORDERS: i64 = 100000;
 const POINT_QUERIES: i64 = 200000;
+const BATCH_QUERIES: i64 = 500;
+const BATCH_ROWS_PER_QUERY: usize = 1000;
+const BATCH_CATS: i64 = 100;
+const ARENA_CAP: usize = 131072;
 const MAX_THREADS: usize = 32;
 const ORDER_NOTE: []const u8 = "order_payload_item";
 
@@ -41,6 +46,8 @@ const PRAGMA_READ_SQL: []const u8 =
     "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
 
 const SELECT_SQL: []const u8 = "SELECT amount FROM orders WHERE id = ?;";
+const SELECT_BATCH_SQL: []const u8 =
+    "SELECT id, amount, status, customer, sku FROM orders_batch WHERE cat_id = ?;";
 
 fn envStr(name: [*:0]const u8, default_val: []const u8): []const u8 {
     if (v := getenv(name)) {
@@ -317,6 +324,112 @@ fn runWalReadMulti(db_path: []const u8, num_threads: usize) {
     );
 }
 
+struct OrderRow {
+    id: i64,
+    amount: i64,
+    status: i64,
+    customer_off: u32,
+    customer_len: u32,
+    sku_off: u32,
+    sku_len: u32,
+}
+
+fn runBatchMaterialize(db_path: []const u8) {
+    let db = Database.open(db_path, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX) catch {
+        std.debug.print("{{\"error\":\"open_batch_failed\"}}\n", .{});
+        return;
+    };
+    defer db.close();
+
+    db.exec(PRAGMA_READ_SQL) catch {
+        std.debug.print("{{\"error\":\"pragma_batch_failed\"}}\n", .{});
+        return;
+    };
+
+    let sel = db.prepare(SELECT_BATCH_SQL) catch {
+        std.debug.print("{{\"error\":\"prepare_batch_failed\"}}\n", .{});
+        return;
+    };
+    defer sel.close();
+
+    // Zero-heap, zero-GC pre-allocated stack buffers (`undefined` avoids zero-fill overhead).
+    let rows: [BATCH_ROWS_PER_QUERY]OrderRow = undefined;
+    let arena: [ARENA_CAP]u8 = undefined;
+
+    let checksum: i64 = 0;
+    let total_rows: i64 = 0;
+
+    const t0 = HwTimer.nowNs();
+    let q: i64 = 0;
+    while (q < BATCH_QUERIES) : (q += 1) {
+        const cat = @mod(q * 17, BATCH_CATS);
+        sel.bindInt(1, cat) catch return;
+
+        let row_count: usize = 0;
+        let arena_pos: usize = 0;
+
+        while (sel.next()) {
+            const id = sel.columnInt(0);
+            const amount = sel.columnInt(1);
+            const status = sel.columnInt(2);
+            const cust = sel.columnText(3);
+            const sku = sel.columnText(4);
+
+            const c_off = arena_pos;
+            if (cust.len > 0) {
+                @memcpy(arena[arena_pos..arena_pos + cust.len], cust);
+                arena_pos += cust.len;
+            }
+            const s_off = arena_pos;
+            if (sku.len > 0) {
+                @memcpy(arena[arena_pos..arena_pos + sku.len], sku);
+                arena_pos += sku.len;
+            }
+
+            if (row_count < BATCH_ROWS_PER_QUERY) {
+                rows[row_count] = OrderRow{
+                    id: id,
+                    amount: amount,
+                    status: status,
+                    customer_off: @intCast(c_off),
+                    customer_len: @intCast(cust.len),
+                    sku_off: @intCast(s_off),
+                    sku_len: @intCast(sku.len),
+                };
+                row_count += 1;
+            }
+        }
+        sel.reset() catch return;
+
+        total_rows += @as(i64, @intCast(row_count));
+        let i: usize = 0;
+        while (i < row_count) : (i += 1) {
+            const r = rows[i];
+            const c_start: usize = @intCast(r.customer_off);
+            const c_len: usize = @intCast(r.customer_len);
+            const s_start: usize = @intCast(r.sku_off);
+            const s_len: usize = @intCast(r.sku_len);
+            const c_b0: i64 = if (c_len > 0) @as(i64, arena[c_start]) else 0;
+            const c_blast: i64 = if (c_len > 0) @as(i64, arena[c_start + c_len - 1]) else 0;
+            const s_b0: i64 = if (s_len > 0) @as(i64, arena[s_start]) else 0;
+            const s_blast: i64 = if (s_len > 0) @as(i64, arena[s_start + s_len - 1]) else 0;
+            checksum += r.id + r.amount + r.status + @as(i64, @intCast(c_len)) + @as(i64, @intCast(s_len)) + c_b0 + c_blast + s_b0 + s_blast;
+        }
+        // O(1) linear arena reset (zero malloc, zero GC)
+        arena_pos = 0;
+    }
+    const t1 = HwTimer.nowNs();
+
+    const elapsed_ms: f64 = @as(f64, @floatFromInt(t1 - t0)) / 1_000_000.0;
+    const rows_per_sec: f64 = @as(f64, @floatFromInt(total_rows)) / (elapsed_ms / 1000.0);
+    const peak_rss_mb: f64 = @as(f64, @floatFromInt(readVmHwmKb())) / 1024.0;
+
+    std.debug.print(
+        "{{\"mode\":\"batch_materialize\",\"queries\":{d},\"rows\":{d},\"elapsed_ms\":{d:.3},\"rows_per_sec\":{d:.1},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
+        .{ BATCH_QUERIES, total_rows, elapsed_ms, rows_per_sec, rows_per_sec, peak_rss_mb, checksum },
+    );
+}
+
 fn main() {
     const mode = envStr("SQLITE_BENCH_MODE", "write");
     const db_path = envStr("SQLITE_BENCH_DB", "/tmp/cp_sqlite_extreme.db");
@@ -328,6 +441,8 @@ fn main() {
         runPointRead(db_path);
     } else if (strEq(mode, "wal_read_8t")) {
         runWalReadMulti(db_path, threads);
+    } else if (strEq(mode, "batch_materialize")) {
+        runBatchMaterialize(db_path);
     } else {
         std.debug.print("{{\"error\":\"unknown_mode\"}}\n", .{});
     }

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Real TCP WebSocket Echo benchmark suite (RFC 6455, 32 concurrent persistent connections,
+Real TCP WebSocket Echo benchmark suite (RFC 6455, 32/48 concurrent persistent connections,
 128-byte Masked Text frames):
-  - cp_ws_1c  (CP SO_REUSEPORT + epoll + 32B SIMD @Vector(32, u8), -OReleaseFast, 1 worker)
-  - cp_ws_8c  (CP SO_REUSEPORT + epoll + 32B SIMD @Vector(32, u8), -OReleaseFast, 8 workers)
-  - bun_ws_1c (Bun.serve({ websocket }), 1 worker)
-  - bun_ws_8c (Bun.serve({ websocket, reusePort: true }), 8 workers)
+  - cp_ws_1c   (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 1 worker)
+  - cp_ws_8c   (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 8 workers)
+  - cp_ws_16c  (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 16 workers, 48 client threads)
+  - bun_ws_1c  (Bun.serve({ websocket }), 1 worker)
+  - bun_ws_8c  (Bun.serve({ websocket, reusePort: true }), 8 workers)
   - node_ws_1c (Native Node http upgrade RFC 6455, 1 worker)
+  - node_ws_8c (Native Node cluster + http upgrade RFC 6455, 8 workers)
 
 Measures real msg/s, P50/P99 latency (ms), error count, and process-tree peak VmRSS (MB).
 Saves results to /data/dev/cp/bench/vs_web_frameworks/ws_live_results.json.
@@ -152,7 +154,7 @@ def run_target(name, cmd, port, threads, payload_size, duration, warmup):
             err = proc.stderr.read().decode(errors="replace") if proc.stderr else ""
             raise RuntimeError(f"{name} failed to start on port {port}: {err}")
 
-        time.sleep(0.2)
+        time.sleep(0.35)
         idle_rss = sample_tree_rss_mb(proc.pid)
         rss_samples = [idle_rss]
         stop_evt = threading.Event()
@@ -181,11 +183,12 @@ def run_target(name, cmd, port, threads, payload_size, duration, warmup):
         metrics = json.loads(out)
         peak_rss = max(rss_samples) if rss_samples else idle_rss
         avg_rss = sum(rss_samples) / len(rss_samples) if rss_samples else idle_rss
+        metrics["threads"] = threads
         metrics["idle_rss_mb"] = round(idle_rss, 2)
         metrics["peak_rss_mb"] = round(peak_rss, 2)
         metrics["avg_rss_mb"] = round(avg_rss, 2)
         print(
-            f"  -> {name:12s} | {metrics['msg_per_sec']:10.0f} msg/s | "
+            f"  -> {name:12s} ({threads:2d}c) | {metrics['msg_per_sec']:10.0f} msg/s | "
             f"P50: {metrics['p50_ms']:6.3f}ms | P99: {metrics['p99_ms']:6.3f}ms | "
             f"Err: {metrics['err']} | Peak RSS: {peak_rss:.1f} MB",
             flush=True,
@@ -198,7 +201,8 @@ def run_target(name, cmd, port, threads, payload_size, duration, warmup):
 
 def main():
     parser = argparse.ArgumentParser(description="Real TCP WebSocket Echo Benchmark Suite")
-    parser.add_argument("--threads", type=int, default=32, help="Concurrent WebSocket connections")
+    parser.add_argument("--threads", type=int, default=32, help="Concurrent WebSocket connections (default targets)")
+    parser.add_argument("--threads-16c", type=int, default=48, help="Concurrent WebSocket connections for cp_ws_16c")
     parser.add_argument("--payload-size", type=int, default=128, help="Masked payload size in bytes")
     parser.add_argument("--duration", type=float, default=3.0, help="Measurement duration (sec)")
     parser.add_argument("--warmup", type=float, default=0.5, help="Warmup duration (sec)")
@@ -207,17 +211,19 @@ def main():
     ensure_binaries()
 
     targets = [
-        ("cp_ws_1c", ["env", "PORT=18201", "WORKERS=1", str(CP_WS_BIN)], 18201),
-        ("cp_ws_8c", ["env", "PORT=18202", "WORKERS=8", str(CP_WS_BIN)], 18202),
-        ("bun_ws_1c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18203", "--workers", "1"], 18203),
-        ("bun_ws_8c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18204", "--workers", "8"], 18204),
-        ("node_ws_1c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18205", "--workers", "1"], 18205),
+        ("cp_ws_1c", ["env", "PORT=18201", "WORKERS=1", str(CP_WS_BIN)], 18201, args.threads),
+        ("cp_ws_8c", ["env", "PORT=18202", "WORKERS=8", str(CP_WS_BIN)], 18202, args.threads),
+        ("cp_ws_16c", ["env", "PORT=18207", "WORKERS=16", str(CP_WS_BIN)], 18207, args.threads_16c),
+        ("bun_ws_1c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18203", "--workers", "1"], 18203, args.threads),
+        ("bun_ws_8c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18204", "--workers", "8"], 18204, args.threads),
+        ("node_ws_1c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18205", "--workers", "1"], 18205, args.threads),
+        ("node_ws_8c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18206", "--workers", "8"], 18206, args.threads),
     ]
 
     results = {}
-    for name, cmd, port in targets:
+    for name, cmd, port, target_threads in targets:
         results[name] = run_target(
-            name, cmd, port, args.threads, args.payload_size, args.duration, args.warmup
+            name, cmd, port, target_threads, args.payload_size, args.duration, args.warmup
         )
 
     out_path = SUITE_DIR / "ws_live_results.json"
@@ -225,6 +231,7 @@ def main():
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "config": {
             "threads": args.threads,
+            "threads_16c": args.threads_16c,
             "payload_size": args.payload_size,
             "duration": args.duration,
             "warmup": args.warmup,
@@ -233,12 +240,12 @@ def main():
     }
     out_path.write_text(json.dumps(payload, indent=2) + "\n")
 
-    print("\n=== WebSocket Live Echo Benchmark Summary (32 conns, 128B Masked) ===")
-    print("| Target | msg/s | P50 (ms) | P99 (ms) | Err | Peak VmRSS |")
-    print("|---|---:|---:|---:|---:|---:|")
+    print("\n=== WebSocket Live Echo Benchmark Summary (128B Masked) ===")
+    print("| Target | Conns | msg/s | P50 (ms) | P99 (ms) | Err | Peak VmRSS |")
+    print("|---|---:|---:|---:|---:|---:|---:|")
     for name, m in results.items():
         print(
-            f"| {name} | {m['msg_per_sec']:,.0f} | {m['p50_ms']:.3f} | "
+            f"| {name} | {m['threads']} | {m['msg_per_sec']:,.0f} | {m['p50_ms']:.3f} | "
             f"{m['p99_ms']:.3f} | {m['err']} | {m['peak_rss_mb']:.1f} MB |"
         )
     print(f"\n[ok] Saved to {out_path}")

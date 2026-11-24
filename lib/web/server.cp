@@ -394,8 +394,8 @@ fn writeAllFd(fd: i32, data: string): bool {
             conns[ci].read_len = 0;
         }
 
-        let events: [SERVER_EPOLL_BATCH]EpollEventC = [EpollEventC{ events: 0, data_lo: 0, data_hi: 0 }; SERVER_EPOLL_BATCH];
-        let write_buf: [SERVER_WRITE_BUF_LEN]u8 = [0; SERVER_WRITE_BUF_LEN];
+        let events: [SERVER_EPOLL_BATCH]EpollEventC = undefined;
+        let write_buf: [SERVER_WRITE_BUF_LEN]u8 = undefined;
         let one: i32 = 1;
 
         while (@atomicLoad(i32, wctx.stop_flag, .acquire) == 0) {
@@ -470,8 +470,9 @@ fn writeAllFd(fd: i32, data: string): bool {
                     }
                     conns[idx].read_len += nread as usize;
 
-                    // Process all complete pipelined HTTP/1.1 requests in buffer
+                    // Process all complete pipelined HTTP/1.1 requests in buffer with Cork write coalescing
                     let offset: usize = 0;
+                    let wtotal: usize = 0;
                     let should_close = false;
                     while (offset < conns[idx].read_len) {
                         let req = Request{};
@@ -485,15 +486,24 @@ fn writeAllFd(fd: i32, data: string): bool {
                         if (consumed == 0) break;
 
                         const resp = wctx.app.dispatch(req);
-                        const wlen = serializeHttp1Response(*resp, keep_alive, write_buf[0..]);
-                        if (!writeAllFd(fd, write_buf[0..wlen])) {
-                            should_close = true;
-                            break;
+                        if (wtotal + 1024 > SERVER_WRITE_BUF_LEN) {
+                            if (!writeAllFd(fd, write_buf[0..wtotal])) {
+                                should_close = true;
+                                break;
+                            }
+                            wtotal = 0;
                         }
+                        const wlen = serializeHttp1Response(*resp, keep_alive, write_buf[wtotal..]);
+                        wtotal += wlen;
                         offset += consumed as usize;
                         if (!keep_alive) {
                             should_close = true;
                             break;
+                        }
+                    }
+                    if (wtotal > 0) {
+                        if (!writeAllFd(fd, write_buf[0..wtotal])) {
+                            should_close = true;
                         }
                     }
 
