@@ -3946,3 +3946,42 @@
   >
   > ---
   > *(当前任务 2 仍在后台 2 路高速执行中：Lane 1H 跑全仓 101 个 `test*RustRefSuite.cp` 回归，Lane 2J 跑 8 大领域 ReleaseFast SIMD 基准，完成后立刻验收提交并自动启动上述任务 3。)*
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 20:02:22）[step:22209]
+- **用户完整原始指令**：
+  > {
+  >   "name": "@cap/picohttp",
+  >   "version": "1.0.0",
+  >   "main": "src/index.cp",
+  >   "license": "MIT",
+  >   "native": {
+  >     "lib_name": "picohttp",
+  >     "c_sources": ["c/picohttpparser.c"],
+  >     "include_dirs": ["c"],
+  >     "cflags": ["-O2"],
+  >     "link_libs": ["c"],
+  >     "prebuilt_dir": "prebuilt"
+  >   }
+  > }
+  >
+  > 这个需要按我们之前实现的 lib/cap.json 中的格式来定义, 不是 native, 是 sys(动态库) 和 bin(静态库),里面有相关字段定义(名称尽量简洁, 不用下划线),  支持多个库定义,  如果依赖其他安装包, sys_dependencies 和 bin_dependencies/dev_dependencies/dependencies(这几个依赖名称单词有些长,照搬npm的, 你觉得需要简化不呢? ), 这个参照npm的规则, 另外,还要参照 pnpm和 bun, 实现 workspace.
+  > 我们在之前实现的 "按需编译中", 有这方面的设计和规范, 根据实际import, 并且实际使用了(import 没使用,不链接, 这个功能应该没有实现), 动态扫描引用库, 编译只包含这些库, 其他的库不包含,确保产出文件最小.
+  > 实现的相关规范, 需写入 cp_agent_ref.md 中, 后续同步到 cp_ref.md 规范. 避免后续agy遗忘.
+- **完整回复与执行汇报**：
+  > 完全赞同你的纠偏与简化方向！我已核对 [lib/cap.json](file:///data/dev/cp/lib/cap.json) 的原始风格，并按极简无下划线方案直接启动 **2 路隔离并行改造**：
+  >
+  > ### 1. 依赖字段命名简化方案（全小写、零下划线、3–4 字母对称，100% 兼容旧名读取）
+  > | 场景 | 推荐极简规范（新写入标准） | 向后兼容读取 |
+  > |---|---|---|
+  > | 生产 CP 包依赖 | **`deps`** | `dependencies` |
+  > | 开发/测试包依赖 | **`dev`** | `devDependencies` |
+  > | 静态库（多库字典，本地编译/预编译/外部） | **`bin`**（子字段：`path`/`src`/`include`/`flag`/`opt`/`prebuilt`） | `bin_dependencies` |
+  > | 动态库/系统库（多库字典） | **`sys`** | `sys_dependencies` |
+  > | 工作区（pnpm/Bun 风格） | **`workspaces`**（支持 `ws` 简写与 `workspace:*`） | — |
+  > | 版本与优化等级 | **`ver`** / **`opt`** | `version` |
+  >
+  > ### 2. 已并行启动 2 路施工
+  > - **Lane 1J**（`83dfc306`）：**`cpc` 按需导入使用分析** — 静态分析全文件 AST 中真正被引用的导入符号，仅对“已 `import` 且已实际使用”的外部包在生成 `.zig` 顶部输出 `// @cap-used-pkg: <pkg>`，仅 `import` 未使用的包直接跳过、绝不链接。
+  > - **Lane 2L**（`74fdcf16`）：**`cap` 2.0 `bin`/`sys` 重构 + Workspace + 按需链接 + 规范固化** — 彻底移除自造 `native` 字段，全面切回 `lib/cap.json` 的 `bin`/`sys` 多库规范与 `deps`/`dev`/`workspaces`；迁移 3 个示范包 `cap.json`；改造 `cap build`/`run`/`test` 按 `// @cap-used-pkg:` 精准按需链接（未用包绝不打进二进制）；并将完整规范写入 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md)（标注 `[SYNC_PENDING: 2026-11-24]`）。
+  >
+  > 两路完工后我将部署新版 `cpc` + `cap`，并实测“同时导入已用 `@cap/picohttp` 与未用 `@cap/zstd`（5.5MB）”验证按需链接确实零引入 `libzstd.a`。
