@@ -242,8 +242,9 @@ fn usage() void {
         \\  --opt=<debug|safe|fast|small> Specify optimization mode explicitly
         \\  -o, --out-dir=<dir>           Override output directory (default: bin or cap.json)
         \\  --cache-dir=<path>            Override Zig compiler cache directory (isolates concurrent builds)
-        \\  -m, --modular                 Modular codegen + parallel .o cache & incremental link (disable with --no-parallel)
+        \\  -m, --modular                 Modular codegen + parallel .o cache & incremental link (use --low for low-mem serial)
         \\  -p, --parallel-obj            Alias for -m (parallel per-module .o cache & incremental link)
+        \\  --low                         Low-resource serial mode (disable parallel .o worker pool under -m)
         \\  --emit-types                  Emit .d.cp type definitions even when building executables
         \\  --timings                     Print per-stage build timings breakdown in ms
         \\  -t, --target=<triple>         Cross-compile for specific target triple
@@ -283,7 +284,7 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             run_opts.is_modular = true;
             run_opts.parallel_obj = true;
-        } else if (std.mem.eql(u8, arg, "--no-parallel")) {
+        } else if (std.mem.eql(u8, arg, "--low") or std.mem.eql(u8, arg, "--no-parallel")) {
             run_opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "-B") or std.mem.eql(u8, arg, "--force")) {
             run_opts.force_rebuild = true;
@@ -2218,7 +2219,7 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             opts.is_modular = true;
             opts.parallel_obj = true;
-        } else if (std.mem.eql(u8, arg, "--no-parallel")) {
+        } else if (std.mem.eql(u8, arg, "--low") or std.mem.eql(u8, arg, "--no-parallel")) {
             opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "--safe")) {
             opts.optimize_mode = "ReleaseSafe";
