@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/background.cp | Synced: 2026-11-22T18:06:00Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/background.cp | Synced: 2026-11-23T21:37:18Z
 
 /// CSS Background 属性族解析错误集
 pub err CssBackgroundError {

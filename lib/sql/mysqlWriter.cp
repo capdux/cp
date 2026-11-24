@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewWriter.cp | Synced: 2026-11-22T03:41:50Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewWriter.cp | Synced: 2026-11-24T04:40:49Z
 // Reference-hardened against blackbeam/rust_mysql_common (MIT/Apache-2.0)
 // Pure-CP zero-allocation MySQL wire-protocol binary packet writer:
 // - 4-byte MySQL packet header (24-bit LE payload length + 1-byte sequence_id)

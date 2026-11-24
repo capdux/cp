@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/size.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/size.cp | Synced: 2026-11-23T21:35:29Z
 // Pure-CP CSS Sizing & Box-Model Insets: BoxSizing, Size, MaxSize, AspectRatio,
 // BoxInsets (margin/padding/inset 1-4 shorthand), LogicalInsets (block/inline 1-2 shorthand).
 

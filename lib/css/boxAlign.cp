@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/align.cp | Synced: 2026-11-22T13:29:00Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/align.cp | Synced: 2026-11-23T21:32:52Z
 // Pure-CP zero-allocation W3C CSS Box Alignment Level 3 parser, shorthand expander & serializer.
 // Supports:
 // - `<overflow-position>` (`safe` / `unsafe`) & `<baseline-position>` (`[first | last]? baseline`)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/CommandLineArguments.cp | Synced: 2026-11-22T13:24:00Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/CommandLineArguments.cp | Synced: 2026-11-23T20:22:40Z
 // Pure-CP zero-allocation Package Manager CLI argument parser & validator.
 // Models Bun's `install`, `add`, `remove`, `update`, `pm`, `link`, `audit`, `patch` CLI flags:
 // - Supports `--flag=value`, `--flag value`, clustered short flags (`-dE`, `-pf`), and `--` separator

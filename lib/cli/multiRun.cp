@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/multi_run.cp | Synced: 2026-11-22T12:43:45Z
+// Source: Absorbed from /data/dev/bun/src/cli/multi_run.cp | Synced: 2026-11-23T20:20:53Z
 // Ported from Bun: /data/dev/bun/src/cli/multi_run.cp & /data/dev/bun/docs/snippets/cli/run.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Foreman-style `--parallel` / `--sequential` multi-script runner:

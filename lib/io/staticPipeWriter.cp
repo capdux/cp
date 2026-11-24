@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/api/bun/subprocess/StaticPipeWriter.cp | Synced: 2026-11-22T19:46:00Z (Zero-alloc subprocess static stdin pipe writer state machine with partial-write tracking & ref lifecycle)
+// Source: Absorbed from /data/dev/bun/src/runtime/api/bun/subprocess/StaticPipeWriter.cp | Synced: 2026-11-23T22:07:22Z (Zero-alloc subprocess static stdin pipe writer state machine with partial-write tracking & ref lifecycle)
 // Pure-CP zero-allocation static-slice non-blocking pipe writer state machine with partial-write advancement and source detach lifecycle.
 
 /// Lifecycle state of a `StaticPipeWriter`.

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws_sys/udp.cp | Synced: 2026-11-22T20:42:08Z
+// Source: Absorbed from /data/dev/bun/src/uws_sys/udp.cp | Synced: 2026-11-24T04:45:04Z
 // lib/net/udp.cp
 // High-performance UDP Datagram Socket & Packet Abstraction
 // Absorbed from Bun src/uws_sys/udp.cp and src/runtime/socket/udp_socket.cp

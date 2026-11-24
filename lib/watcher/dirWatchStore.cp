@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bake/DevServer/DirectoryWatchStore.cp | Synced: 2026-11-22T17:22:32Z
+// Source: Absorbed from /data/dev/bun/src/bake/DevServer/DirectoryWatchStore.cp | Synced: 2026-11-23T20:58:45Z
 // Pure-CP zero-allocation directory watch & intrusive dependency-chain store for
 // tracking unresolved relative imports in DevServer: deduplicates watched directories,
 // stores per-directory failed-import dependencies in a stable-index intrusive linked

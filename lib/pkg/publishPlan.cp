@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/publish_command.cp | Synced: 2026-11-22T13:58:06Z
+// Source: Absorbed from /data/dev/bun/src/cli/publish_command.cp | Synced: 2026-11-23T20:20:17Z
 // ============================================================================
 // lib/pkg/publishPlan.cp — Zero-Alloc Package Publish Planner & Registry Codec
 // ============================================================================

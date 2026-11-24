@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/output.cp | Synced: 2026-11-22T11:01:19Z (ANSI 16-Color Style & Visible Length)
+// Source: Absorbed from /data/dev/bun/src/bun_core/output.cp | Synced: 2026-11-23T21:08:17Z (ANSI 16-Color Style & Visible Length)
 
 const ESC: u8 = 0x1B;
 const BEL: u8 = 0x07;

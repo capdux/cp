@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/filter_arg.cp | Synced: 2026-11-22T05:20:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/filter_arg.cp | Synced: 2026-11-23T20:18:30Z
 // ============================================================================
 // Monorepo `--filter` Package Name & Path Glob Matcher
 // Absorbed from Bun: src/cli/filter_arg.cp

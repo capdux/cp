@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/animation.cp | Synced: 2026-11-21T17:10:46Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/animation.cp | Synced: 2026-11-23T21:37:18Z
 //! CSS Animations Level 1 & Transitions Level 1 shorthand parsers and serializers,
 //! composing `./time.cp` and `./easing.cp`.
 

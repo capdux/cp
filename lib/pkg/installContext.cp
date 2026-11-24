@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageInstall.cp | Synced: 2026-11-22T13:12:13Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageInstall.cp | Synced: 2026-11-23T20:22:19Z
 // ============================================================================
 // lib/pkg/installContext.cp — Zero-Alloc Platform, Peer & Cache Context Engine
 // ============================================================================

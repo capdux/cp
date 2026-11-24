@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/pnpm.cp | Synced: 2026-11-22T12:28:39Z
+// Source: Absorbed from /data/dev/bun/src/install/pnpm.cp | Synced: 2026-11-23T20:24:05Z
 // Pure-CP zero-allocation pnpm-lock.yaml (v7/v8/v9) migration parser & index:
 // balanced-parenthesis dependency path suffix parser (patch_hash + nested peers),
 // package key & importer version normalizer (scoped, npm: alias, link:, file:, workspace:, git, tarball),

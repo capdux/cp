@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-23T20:26:39Z
 // ============================================================================
 // lib/pkg/lockfile.cp — Dependency Graph, Cycle/Topo Engine & Dual Lockfile Persistence
 // Absorbed from Bun src/install/{lockfile.cp,lockfile/bun.lock.cp,lockfile/bun.lockb.cp}
@@ -286,7 +286,7 @@ pub struct Lockfile {
         std.mem.writeInt(u64, _.meta_hash[24..32], h4, .little);
     }
 
-    fn dfsCycleCheck(
+    static fn dfsCycleCheck(
         pkgs: []const LockfilePackage,
         node: usize,
         state: []u8,
@@ -322,7 +322,7 @@ pub struct Lockfile {
         return false;
     }
 
-    fn dfsTopo(
+    static fn dfsTopo(
         pkgs: []const LockfilePackage,
         node: usize,
         state: []u8,
@@ -367,7 +367,7 @@ pub struct Lockfile {
     // JSON Escaping & Text Lockfile (`cap.lock`) Serialization / Parsing
     // ------------------------------------------------------------------------
 
-    fn writeJsonStr(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): ! {
+    static fn writeJsonStr(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): ! {
         try out.append(allocator, '"');
         for (c of s) {
             if (c == '"') {
@@ -728,37 +728,37 @@ pub struct Lockfile {
     // Binary Lockfile (`CPLK0001`) Serialization / Parsing
     // ------------------------------------------------------------------------
 
-    fn writeU16(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u16): ! {
+    static fn writeU16(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u16): ! {
         let buf: [2]u8 = undefined;
         zig { std.mem.writeInt(u16, &buf, val, .little); }
         try out.appendSlice(allocator, buf[0..2]);
     }
 
-    fn writeU32(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u32): ! {
+    static fn writeU32(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u32): ! {
         let buf: [4]u8 = undefined;
         zig { std.mem.writeInt(u32, &buf, val, .little); }
         try out.appendSlice(allocator, buf[0..4]);
     }
 
-    fn writeU64(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u64): ! {
+    static fn writeU64(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, val: u64): ! {
         let buf: [8]u8 = undefined;
         zig { std.mem.writeInt(u64, &buf, val, .little); }
         try out.appendSlice(allocator, buf[0..8]);
     }
 
-    fn writeLenStr(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): ! {
+    static fn writeLenStr(out: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): ! {
         try Lockfile.writeU32(out, allocator, s.len as u32);
         if (s.len > 0) try out.appendSlice(allocator, s);
     }
 
-    fn readU8(data: []const u8, pos: *usize): u8! {
+    static fn readU8(data: []const u8, pos: *usize): u8! {
         if (pos.* + 1 > data.len) return error.LockfileCorrupt;
         const v = data[pos.*];
         pos.* += 1;
         return v;
     }
 
-    fn readU16(data: []const u8, pos: *usize): u16! {
+    static fn readU16(data: []const u8, pos: *usize): u16! {
         if (pos.* + 2 > data.len) return error.LockfileCorrupt;
         let v: u16 = 0;
         const p = pos.*;
@@ -767,7 +767,7 @@ pub struct Lockfile {
         return v;
     }
 
-    fn readU32(data: []const u8, pos: *usize): u32! {
+    static fn readU32(data: []const u8, pos: *usize): u32! {
         if (pos.* + 4 > data.len) return error.LockfileCorrupt;
         let v: u32 = 0;
         const p = pos.*;
@@ -776,7 +776,7 @@ pub struct Lockfile {
         return v;
     }
 
-    fn readU64(data: []const u8, pos: *usize): u64! {
+    static fn readU64(data: []const u8, pos: *usize): u64! {
         if (pos.* + 8 > data.len) return error.LockfileCorrupt;
         let v: u64 = 0;
         const p = pos.*;
@@ -785,7 +785,7 @@ pub struct Lockfile {
         return v;
     }
 
-    fn readLenStr(data: []const u8, pos: *usize): ([]const u8)! {
+    static fn readLenStr(data: []const u8, pos: *usize): ([]const u8)! {
         const slen = try Lockfile.readU32(data, pos);
         const len_sz = slen as usize;
         if (pos.* + len_sz > data.len) return error.LockfileCorrupt;

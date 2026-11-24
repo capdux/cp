@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/cache.cp | Synced: 2026-11-22T10:59:22Z
+// Source: Absorbed from /data/dev/bun/src/bundler/cache.cp | Synced: 2026-11-23T14:41:07Z
 // ============================================================================
 // lib/bundler/diskCache.cp — Build Disk Cache Index, Content Keying & Snapshot Engine
 // ============================================================================

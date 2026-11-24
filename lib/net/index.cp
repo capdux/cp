@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/uws/uws.cp | Synced: 2026-11-21T16:46:57Z
+// Source: Absorbed from /data/dev/bun/src/uws/uws.cp | Synced: 2026-11-24T04:44:15Z
 // lib/net/index.cp
 // Unified Public Exports for cap:net
 // Architecture:

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/writeOutputFilesToDisk.cp | Synced: 2026-11-22T13:08:29Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/writeOutputFilesToDisk.cp | Synced: 2026-11-23T14:41:08Z
 // Pure-CP zero-allocation Bundler disk output write planner:
 // standalone HTML placeholder alignment, deduplicated parent-directory creation plan,
 // duplicate output path collision detection, path-traversal guard, executable mode (0o755/0o644),

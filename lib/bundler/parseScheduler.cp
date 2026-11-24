@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/ParseTask.cp | Synced: 2026-11-22T11:27:43Z
+// Source: Absorbed from /data/dev/bun/src/bundler/ParseTask.cp | Synced: 2026-11-23T15:28:17Z
 // ============================================================================
 // lib/bundler/parseScheduler.cp — Zero-Alloc SIMD Import Scanner & Parse Pool
 // ============================================================================

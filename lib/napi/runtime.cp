@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-22T17:15:35Z
+// Source: Absorbed from /data/dev/bun/src/napi/napi.cp | Synced: 2026-11-23T21:59:28Z
 // lib/napi/runtime.cp
 // Pure CP Node-API v9 Runtime Context, HandleScope/Ref/AsyncWork/TSFN State & Mock Env (cap:napi)
 

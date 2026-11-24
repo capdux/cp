@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-22T13:13:23Z (POSIX Shell Quoting & Tokenizer)
+// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-24T04:51:05Z (POSIX Shell Quoting & Tokenizer)
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

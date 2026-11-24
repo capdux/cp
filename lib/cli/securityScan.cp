@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/scan_command.cp | Synced: 2026-11-22T01:23:34Z
+// Source: Absorbed from /data/dev/bun/src/cli/scan_command.cp | Synced: 2026-11-23T20:20:17Z
 // ============================================================================
 // lib/cli/securityScan.cp — `cap scan` Supply-Chain Security CLI & SARIF 2.1.0 Engine
 // ============================================================================

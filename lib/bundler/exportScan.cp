@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/scanImportsAndExports.cp | Synced: 2026-11-22T13:05:52Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/scanImportsAndExports.cp | Synced: 2026-11-23T14:41:08Z
 // Pure-CP zero-allocation Bundler Linker import/export scanner:
 // Step 1 CommonJS/ESM wrap propagation (`require()`, `import *`, `import default` on empty modules,
 // top-level await ESM wrapper propagation), and Step 2 cycle-safe `export * from` recursive expansion

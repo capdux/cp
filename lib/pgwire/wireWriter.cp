@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp | Synced: 2026-11-22T21:16:46Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp | Synced: 2026-11-24T04:40:51Z
 // Pure-CP zero-allocation PostgreSQL v3.0 big-endian wire writer (`PgWireWriter`).
 // Provides big-endian scalar & IEEE-754 encoders, NUL-terminated C-string helpers,
 // nullable Int32-prefixed byte fields, and back-patched length bookmarks (`beginFrame`/`finishLength`).

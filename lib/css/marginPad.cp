@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/margin_padding.cp | Synced: 2026-11-22T14:37:12Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/margin_padding.cp | Synced: 2026-11-23T21:12:04Z
 // Pure-CP zero-allocation CSS Box Spacing (`margin` / `padding` / `inset` / `scroll-margin` / `scroll-padding`)
 // physical & logical shorthand parser, serializer, and browser-target lowering handler
 // (aligned with LightningCSS & Bun `NewSizeHandler` + `docs/bundler/css.mdx`).

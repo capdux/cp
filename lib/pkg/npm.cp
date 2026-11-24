@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/npm.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/install/npm.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/npm.cp — NPM Registry Config (.npmrc), Auth & Packument Manifest Parser
 // Absorbed from Bun src/install/npm.cp
@@ -126,7 +126,7 @@ pub struct RegistryConfig {
         _.host_auths.deinit(allocator);
     }
 
-    fn stripSurroundingQuotes(s: []const u8): []const u8 {
+    static fn stripSurroundingQuotes(s: []const u8): []const u8 {
         if (s.len >= 2) {
             if ((s[0] == '"' && s[s.len - 1] == '"') || (s[0] == '\'' && s[s.len - 1] == '\'')) {
                 return s[1 .. s.len - 1];
@@ -135,7 +135,7 @@ pub struct RegistryConfig {
         return s;
     }
 
-    fn normalizeHostKey(raw_key: []const u8): []const u8 {
+    static fn normalizeHostKey(raw_key: []const u8): []const u8 {
         let k = raw_key;
         if (std.mem.startsWith(u8, k, "https://")) k = k[8..];
         if (std.mem.startsWith(u8, k, "http://")) k = k[7..];
@@ -167,7 +167,7 @@ pub struct RegistryConfig {
         });
     }
 
-    fn applyHostAuthToScope(scope: *RegistryScope, host_auths: []const HostAuthEntry) {
+    static fn applyHostAuthToScope(scope: *RegistryScope, host_auths: []const HostAuthEntry) {
         const hp = scope.hostPath();
         for (ha of host_auths) {
             if (std.mem.eql(u8, hp, ha.host_key) || std.mem.startsWith(u8, hp, ha.host_key)) {
@@ -330,7 +330,7 @@ pub struct NpmPackageManifest {
         _.versions.deinit(allocator);
     }
 
-    fn appendDepMap(allocator: std.mem.Allocator, list: *std.ArrayListUnmanaged(NpmDepPair), obj: JsonValue?, default_optional: bool): ! {
+    static fn appendDepMap(allocator: std.mem.Allocator, list: *std.ArrayListUnmanaged(NpmDepPair), obj: JsonValue?, default_optional: bool): ! {
         const map_val = obj ?? return;
         if (map_val.tag != .Object) return;
         for (f of map_val.obj_val) {

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/AllocScope.cp | Synced: 2026-11-14T19:14:45Z
+// Source: Absorbed from /data/dev/bun/src/shell/AllocScope.cp | Synced: 2026-11-24T04:33:32Z
 // Pure-CP zero-allocation scoped allocation ownership & leak tracker
 // (mirroring Bun shell/AllocScope.cp beginScope/endScope/leakSlice/assertInScope).
 

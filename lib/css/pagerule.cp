@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/page.cp | Synced: 2026-11-21T17:05:36Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/page.cp | Synced: 2026-11-23T21:35:39Z
 
 /// CSS Paged Media 与定位属性解析错误集
 pub err CssPageError {

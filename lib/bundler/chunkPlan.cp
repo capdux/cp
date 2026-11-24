@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/computeChunks.cp | Synced: 2026-11-22T15:47:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/computeChunks.cp | Synced: 2026-11-23T14:41:08Z
 // Ported from Bun: /data/dev/bun/src/bundler/linker_context/computeChunks.cp & /data/dev/bun/docs/bundler/index.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation Bundler Chunk Planning & Deterministic Ordering Engine:

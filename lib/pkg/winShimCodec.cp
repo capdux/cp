@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/windows-shim/bun_shim_impl.cp | Synced: 2026-11-22T11:02:40Z
+// Source: Absorbed from /data/dev/bun/src/install/windows-shim/bun_shim_impl.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/winShimCodec.cp — Windows .exe Shim Trailer, Shebang & Argv Quoting Engine
 // ============================================================================

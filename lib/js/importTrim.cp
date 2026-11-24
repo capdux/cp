@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/ImportScanner.cp | Synced: 2026-11-22T19:14:26Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/ImportScanner.cp | Synced: 2026-11-23T20:31:05Z
 // ============================================================================
 // lib/js/importTrim.cp — Zero-Alloc ESM / TypeScript Unused Import Trimmer
 // ============================================================================

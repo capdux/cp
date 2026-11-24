@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_alloc/heap_breakdown.cp | Synced: 2026-11-22T13:09:27Z
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/heap_breakdown.cp | Synced: 2026-11-24T05:08:11Z
 // ============================================================================
 // lib/bun_alloc/heapBreakdown.cp — Zero-Alloc Named Allocation Zones & Heap
 // Breakdown Profiler

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/guarded.cp | Synced: 2026-11-22T15:33:17Z
+// Source: Absorbed from /data/dev/bun/src/threading/guarded.cp | Synced: 2026-11-24T04:46:35Z
 // Zero-allocation mutex-guarded value containers (`Guarded<T>` & `GuardedBy<T, Lock>`).
 
 import { SpinLock } from "./spinLock.cp";

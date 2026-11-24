@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install.cp | Synced: 2026-11-22T12:17:37Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/isolatedPlan.cp — Production-Grade pnpm-Style Isolated Install Graph
 // Planner, Iterative Tarjan SCC Analyzer, Leaking-Peer Context Deduplicator &

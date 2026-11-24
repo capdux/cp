@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/build_command.cp | Synced: 2026-11-22T12:10:41Z
+// Source: Absorbed from /data/dev/bun/src/cli/build_command.cp | Synced: 2026-11-23T20:18:24Z
 // ============================================================================
 // lib/bundler/buildCommand.cp — Zero-Alloc `cap build` CLI, Matrix & Table Engine
 // ============================================================================

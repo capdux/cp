@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/font_face.cp | Synced: 2026-11-22T08:53:00Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/font_face.cp | Synced: 2026-11-23T21:39:27Z
 // Ported from Bun: /data/dev/bun/src/css/rules/font_face.cp & /data/dev/bun/docs/bundler/css.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation CSS `@font-face` rule parser & serializer:

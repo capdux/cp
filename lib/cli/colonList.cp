@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/colon_list_type.cp | Synced: 2026-11-22T03:50:35Z
+// Source: Absorbed from /data/dev/bun/src/cli/colon_list_type.cp | Synced: 2026-11-23T20:18:56Z
 // Pure-CP zero-allocation CLI `key:value` / `key=value` colon-list parser:
 // - Prefers whichever separator (`:` or `=`) appears first, matching Bun & esbuild CLI flags
 //   (e.g. `--define FOO:1`, `--define FOO=bar:baz`, `--loader .svg=text`)

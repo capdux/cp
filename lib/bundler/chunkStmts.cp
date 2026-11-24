@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/convertStmtsForChunk.cp | Synced: 2026-11-22T14:46:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/convertStmtsForChunk.cp | Synced: 2026-11-23T14:43:09Z
 // Pure-CP zero-allocation Production Bundler Chunk Statement Placement & ESM/CJS Lowering Pass
 // Aligned with Bun `convertStmtsForChunk.cp` & `docs/bundler/index.mdx`:
 // - Routes statements into 4 wrapper regions (`OutsideWrapperPrefix`, `InsideWrapperPrefix`, `InsideWrapperSuffix`, `OutsideWrapperSuffix`)

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateChunksInParallel.cp | Synced: 2026-11-21T18:49:10Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateChunksInParallel.cp | Synced: 2026-11-23T14:41:08Z
 // ============================================================================
 // lib/bundler/chunkEmitPool.cp — Parallel Chunk Emit Pool, Content Hashing & Manifest
 // ============================================================================

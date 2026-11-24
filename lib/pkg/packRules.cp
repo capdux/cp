@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/pack_command.cp | Synced: 2026-11-22T12:34:46Z
+// Source: Absorbed from /data/dev/bun/src/cli/pack_command.cp | Synced: 2026-11-23T20:20:54Z
 // ============================================================================
 // lib/pkg/packRules.cp — Production-Grade `cap pack` / `cap publish` File
 // Inclusion/Exclusion Rule Engine, Glob Matcher, Path Hygiene & Tarball

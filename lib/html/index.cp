@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/lolhtml_sys/lol_html.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/lolhtml_sys/lol_html.cp | Synced: 2026-11-23T22:01:50Z
 // lib/html/index.cp
 // Unified Public Exports for cap:html
 

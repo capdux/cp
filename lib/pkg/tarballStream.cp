@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/TarballStream.cp | Synced: 2026-11-22T12:17:07Z
+// Source: Absorbed from /data/dev/bun/src/install/TarballStream.cp | Synced: 2026-11-23T20:22:40Z
 // ============================================================================
 // lib/pkg/tarballStream.cp — Zero-Alloc Streaming USTAR/PAX/GNU Tarball Engine
 // ============================================================================

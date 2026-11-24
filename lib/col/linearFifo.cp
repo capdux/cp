@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/linear_fifo.cp | Synced: 2026-11-22T10:39:50Z
+// Source: Absorbed from /data/dev/bun/src/collections/linear_fifo.cp | Synced: 2026-11-23T21:09:11Z
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/linear_fifo.cp
 // Upstream Sync: Refer to bun/src/collections/linear_fifo.zig for future upstream updates.

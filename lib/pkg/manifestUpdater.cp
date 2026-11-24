@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/updatePackageJSONAndInstall.cp | Synced: 2026-11-21T23:53:49Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/updatePackageJSONAndInstall.cp | Synced: 2026-11-24T06:02:27Z
 // ============================================================================
 // lib/pkg/manifestUpdater.cp — Fidelity-Preserving Zero-Alloc Manifest Updater
 // ============================================================================

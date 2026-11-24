@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/filter_arg.cp | Synced: 2026-11-22T08:19:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/filter_arg.cp | Synced: 2026-11-23T20:18:30Z
 // Ported from Bun: /data/dev/bun/src/cli/filter_arg.cp & /data/dev/bun/docs/pm/filter.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation monorepo `--filter` / `-F` pattern parser, path normalizer,

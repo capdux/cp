@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/identity_context.cp | Synced: 2026-11-22T17:43:37Z
+// Source: Absorbed from /data/dev/bun/src/collections/identity_context.cp | Synced: 2026-11-23T21:08:11Z
 // ============================================================================
 // lib/collections/identityContext.cp — Zero-Rehash Identity Hash Contexts & Tables
 // ============================================================================

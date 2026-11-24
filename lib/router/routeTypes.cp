@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/route_types.cp | Synced: 2026-11-22T15:10:00Z
+// Source: Absorbed from /data/dev/bun/src/router/route_types.cp | Synced: 2026-11-23T22:06:23Z
 // Pure-CP zero-allocation Next.js / Bun FileSystemRouter Bracket Pattern Validator & Matcher:
 // - 32-bit packed `RouteTinyPtr` (u16 offset + u16 len) aligned with Bun `TinyPtr`
 // - Strict tokenizer & validator for static segments, `[param]`, `[...catchall]`, and `[[...opt]]`

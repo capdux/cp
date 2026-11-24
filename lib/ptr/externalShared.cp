@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ptr/external_shared.cp | Synced: 2026-11-19T20:38:57Z
+// Source: Absorbed from /data/dev/bun/src/ptr/external_shared.cp | Synced: 2026-11-23T22:02:32Z
 // External reference counted pointer for C/FFI interop
 import std from "std";
 

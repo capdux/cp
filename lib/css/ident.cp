@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/ident.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/values/ident.cp | Synced: 2026-11-23T21:44:18Z
 // Pure-CP zero-allocation W3C CSS Values Level 4 `<ident>`, `<custom-ident>`, `<dashed-ident>`,
 // CSS Modules `DashedIdentReference` (`--var from "..." | global`), and CSSOM identifier serializer.
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/patch/patch.cp | Synced: 2026-11-22T12:53:50Z
+// Source: Absorbed from /data/dev/bun/src/patch/patch.cp | Synced: 2026-11-23T22:04:34Z
 // lib/patch/diff.cp
 // Full Unified Diff Parser, Multi-File AST, Hunk Applicator (Exact + Fuzz/Offset) & Diff Generator
 // Absorbed from Bun src/patch/patch.cp

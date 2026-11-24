@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/prefix_handler.cp | Synced: 2026-11-22T13:41:00Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/prefix_handler.cp | Synced: 2026-11-23T21:35:26Z
 // Pure-CP zero-allocation CSS Property Fallback Handler (LightningCSS / Bun `FallbackHandler`).
 // Manages progressive-enhancement fallback emission & declaration deduplication within a rule block:
 // - Emits compatible fallback declarations before modern values (e.g. `oklch`/`oklab`/`lab`/`lch`/`color-mix`/`display-p3`)

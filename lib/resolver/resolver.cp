@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/resolver/resolver.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/resolver/resolver.cp | Synced: 2026-11-23T20:39:48Z
 // ============================================================================
 // lib/resolver/resolver.cp — Module Resolver, Conditions & StatHash Cache Key
 // ============================================================================
@@ -323,21 +323,21 @@ pub struct ModuleResolver {
         return null;
     }
 
-    fn tryStatHash(path: []const u8): StatHash? {
+    static fn tryStatHash(path: []const u8): StatHash? {
         const h = StatHash.fromPath(path) catch {
             return null;
         };
         return h;
     }
 
-    fn tryParseDataUrl(specifier: []const u8): DataURL? {
+    static fn tryParseDataUrl(specifier: []const u8): DataURL? {
         const d = DataURL.parse(specifier) catch {
             return null;
         };
         return d;
     }
 
-    fn buildFileResult(resolved_path: []const u8, mod_type: ModuleType): ResolveResult {
+    static fn buildFileResult(resolved_path: []const u8, mod_type: ModuleType): ResolveResult {
         let inferred_type = mod_type;
         if (inferred_type == .Unknown) {
             if (std.mem.endsWith(u8, resolved_path, ".mjs") || std.mem.endsWith(u8, resolved_path, ".cp")) {

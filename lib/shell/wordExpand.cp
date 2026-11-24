@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/states/Expansion.cp | Synced: 2026-11-22T14:50:00Z
+// Source: Absorbed from /data/dev/bun/src/shell/states/Expansion.cp | Synced: 2026-11-24T06:13:09Z
 // Pure-CP zero-allocation POSIX / Bun Shell Word Expansion State Machine:
 // - Handles literals, quoted literals, `$VAR`/`"$VAR"`, leading tilde (`~` / `~/...`),
 //   command substitutions `$(...)` / `"$(...)"`, and unquoted glob trigger detection

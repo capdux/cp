@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/migration.cp | Synced: 2026-11-22T11:02:50Z
+// Source: Absorbed from /data/dev/bun/src/install/migration.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/migration.cp — Multi-Ecosystem Lockfile Migrator & Dependency Analyzer
 // Absorbed from Bun src/install/{migration.cp,yarn.cp,pnpm.cp}
@@ -175,7 +175,7 @@ pub struct LockfileMigrator {
     // 1. npm package-lock.json (lockfileVersion 2 & 3)
     // ------------------------------------------------------------------------
 
-    fn extractNpmNameFromModulesPath(pkg_path: []const u8): []const u8 {
+    static fn extractNpmNameFromModulesPath(pkg_path: []const u8): []const u8 {
         if (pkg_path.len == 0) return "";
         if (idx := std.mem.lastIndexOf(u8, pkg_path, "node_modules/")) {
             return pkg_path[idx + 13 ..];
@@ -183,7 +183,7 @@ pub struct LockfileMigrator {
         return pkg_path;
     }
 
-    fn findNpmScopedPackageId(
+    static fn findNpmScopedPackageId(
         entries: []const NpmPkgEntryMeta,
         parent_path: []const u8,
         dep_name: []const u8,
@@ -219,7 +219,7 @@ pub struct LockfileMigrator {
         return INVALID_PACKAGE_ID;
     }
 
-    fn addNpmDepEdges(
+    static fn addNpmDepEdges(
         allocator: std.mem.Allocator,
         lf: *Lockfile,
         from_id: PackageID,
@@ -372,7 +372,7 @@ pub struct LockfileMigrator {
     // 2. Yarn v1 yarn.lock (indented key-value blocks)
     // ------------------------------------------------------------------------
 
-    fn extractYarnSpecName(spec: []const u8): []const u8 {
+    static fn extractYarnSpecName(spec: []const u8): []const u8 {
         const s = std.mem.trim(u8, spec, " \t\r\n\"'");
         if (s.len == 0) return "";
         const search_from: usize = if (s[0] == '@') 1 else 0;
@@ -382,7 +382,7 @@ pub struct LockfileMigrator {
         return s;
     }
 
-    fn stripQuotes(s: []const u8): []const u8 {
+    static fn stripQuotes(s: []const u8): []const u8 {
         const t = std.mem.trim(u8, s, " \t\r\n");
         if (t.len >= 2 && ((t[0] == '"' && t[t.len - 1] == '"') || (t[0] == '\'' && t[t.len - 1] == '\''))) {
             return t[1 .. t.len - 1];
@@ -390,12 +390,12 @@ pub struct LockfileMigrator {
         return t;
     }
 
-    fn tryParseJson(allocator: std.mem.Allocator, bytes: []const u8): JsonValue? {
+    static fn tryParseJson(allocator: std.mem.Allocator, bytes: []const u8): JsonValue? {
         const v = JSON.parse(allocator, bytes) catch return null;
         return v;
     }
 
-    fn splitYarnKeyVal(trimmed: []const u8): KeyValPair {
+    static fn splitYarnKeyVal(trimmed: []const u8): KeyValPair {
         let i: usize = 0;
         let in_quote = false;
         while (i < trimmed.len) : (i += 1) {
@@ -591,7 +591,7 @@ pub struct LockfileMigrator {
     // ------------------------------------------------------------------------
 
     /// Strips peer-dependency / patch suffixes from pnpm keys: e.g. `/lodash@4.17.21(foo@1.0.0)` -> `lodash@4.17.21`.
-    fn stripPnpmKeySuffix(raw_key: []const u8): []const u8 {
+    static fn stripPnpmKeySuffix(raw_key: []const u8): []const u8 {
         let k = std.mem.trimStart(u8, raw_key, "/");
         if (paren := std.mem.indexOfScalar(u8, k, '(')) {
             k = k[0..paren];
@@ -599,7 +599,7 @@ pub struct LockfileMigrator {
         return k;
     }
 
-    fn splitPnpmNameAndVersion(clean_key: []const u8): NameVersionPair {
+    static fn splitPnpmNameAndVersion(clean_key: []const u8): NameVersionPair {
         const search_from: usize = if (clean_key.len > 0 && clean_key[0] == '@') 1 else 0;
         if (at_idx := std.mem.indexOfScalarPos(u8, clean_key, search_from, '@')) {
             return NameVersionPair{ name: clean_key[0..at_idx], version: clean_key[at_idx + 1 ..] };
@@ -610,7 +610,7 @@ pub struct LockfileMigrator {
         return NameVersionPair{ name: clean_key, version: "0.0.0" };
     }
 
-    fn addPnpmImporterEdges(
+    static fn addPnpmImporterEdges(
         allocator: std.mem.Allocator,
         lf: *Lockfile,
         from_id: PackageID,
@@ -654,7 +654,7 @@ pub struct LockfileMigrator {
         }
     }
 
-    fn stripYamlComment(line: []const u8): []const u8 {
+    static fn stripYamlComment(line: []const u8): []const u8 {
         let in_sq = false;
         let in_dq = false;
         let i: usize = 0;
@@ -673,7 +673,7 @@ pub struct LockfileMigrator {
         return std.mem.trimEnd(u8, line, " \t");
     }
 
-    fn unquoteYamlScalar(raw: []const u8): []const u8 {
+    static fn unquoteYamlScalar(raw: []const u8): []const u8 {
         const t = std.mem.trim(u8, raw, " \t\r");
         if (t.len >= 2 && ((t[0] == '\'' && t[t.len - 1] == '\'') || (t[0] == '"' && t[t.len - 1] == '"'))) {
             return t[1 .. t.len - 1];
@@ -681,7 +681,7 @@ pub struct LockfileMigrator {
         return t;
     }
 
-    fn parseYamlScalar(allocator: std.mem.Allocator, raw: []const u8): ConfValue! {
+    static fn parseYamlScalar(allocator: std.mem.Allocator, raw: []const u8): ConfValue! {
         const t = std.mem.trim(u8, raw, " \t\r");
         if (t.len == 0 || std.mem.eql(u8, t, "null") || std.mem.eql(u8, t, "~")) {
             return ConfValue.makeNull();
@@ -718,7 +718,7 @@ pub struct LockfileMigrator {
         return ConfValue.makeString(t);
     }
 
-    fn findYamlKeyColon(s: []const u8): usize? {
+    static fn findYamlKeyColon(s: []const u8): usize? {
         let in_sq = false;
         let in_dq = false;
         let i: usize = 0;
@@ -737,7 +737,7 @@ pub struct LockfileMigrator {
         return null;
     }
 
-    fn parseYamlBlock(allocator: std.mem.Allocator, lines: []const YamlLine, idx: *usize, min_indent: usize): ConfValue! {
+    static fn parseYamlBlock(allocator: std.mem.Allocator, lines: []const YamlLine, idx: *usize, min_indent: usize): ConfValue! {
         if (idx.* >= lines.len || lines[idx.*].indent < min_indent) {
             return ConfValue.makeObject(try allocator.alloc(ConfField, 0));
         }
@@ -1070,7 +1070,7 @@ pub struct IntegrityAuditReport {
 }
 
 pub struct DependencyAnalyzer {
-    fn dfsWhy(
+    static fn dfsWhy(
         allocator: std.mem.Allocator,
         lf: &Lockfile,
         cur_id: PackageID,

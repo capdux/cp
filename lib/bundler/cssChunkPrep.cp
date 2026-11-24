@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/prepareCssAstsForChunk.cp | Synced: 2026-11-22T13:32:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/prepareCssAstsForChunk.cp | Synced: 2026-11-23T14:41:08Z
 // Pure-CP zero-allocation CSS Chunk AST preparation engine.
 // Faithfully implements Bun's `prepareCssAstsForChunk` invariants:
 // - Prefix `@import` / `ignored` stripping while preserving interleaved `@layer` statements (Regression #28914)

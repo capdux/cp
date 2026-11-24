@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/options_types/import_record.cp | Synced: 2026-11-22T17:04:13Z
+// Source: Absorbed from /data/dev/bun/src/options_types/import_record.cp | Synced: 2026-11-23T22:02:19Z
 // Pure-CP zero-allocation import record metadata, 12-kind ImportKind classifier,
 // 15-bit packed ImportRecordFlags, ImportRecordTag, ImportRecordPrintMode,
 // namespace-aware printable path formatter, and fixed-capacity ImportRecordList.

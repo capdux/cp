@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/HTMLImportManifest.cp | Synced: 2026-11-22T18:50:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/HTMLImportManifest.cp | Synced: 2026-11-23T14:41:07Z
 // Pure-CP zero-allocation HTML Import Manifest builder & RFC 8259 JSON serializer
 // (generates `{"index":...,"files":[{"input":...,"path":...,"loader":...,"isEntry":...,"headers":{"etag":...,"content-type":...}}]}`).
 

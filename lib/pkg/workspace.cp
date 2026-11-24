@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile.cp | Synced: 2026-11-23T20:26:39Z
 // ============================================================================
 // lib/pkg/workspace.cp — Monorepo Workspaces, Catalogs & Member DAG Engine
 // Absorbed from Bun src/install/{lockfile.cp,PnpmMatcher.cp}
@@ -618,7 +618,7 @@ pub struct WorkspaceGraph {
         return null;
     }
 
-    fn dfsCycle(members: []const WorkspaceMember, idx: usize, state: []u8): bool {
+    static fn dfsCycle(members: []const WorkspaceMember, idx: usize, state: []u8): bool {
         state[idx] = 1;
         for (edge of members[idx].edges.items) {
             if (t := edge.resolved_member_idx) {
@@ -647,7 +647,7 @@ pub struct WorkspaceGraph {
         return false;
     }
 
-    fn dfsTopo(
+    static fn dfsTopo(
         members: []const WorkspaceMember,
         idx: usize,
         state: []u8,

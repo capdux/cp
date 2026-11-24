@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/properties/border_radius.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/properties/border_radius.cp | Synced: 2026-11-23T21:12:04Z
 //! CSS Backgrounds Level 3 `border-radius` shorthand parser & shortest-form serializer
 //! (supports 1–4 horizontal radii + optional `/ 1–4 vertical radii` elliptical corners).
 

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/options_types/CommandTag.cp | Synced: 2026-11-22T17:27:55Z
+// Source: Absorbed from /data/dev/bun/src/options_types/CommandTag.cp | Synced: 2026-11-23T22:02:17Z
 // Pure-CP zero-allocation top-level CLI subcommand discriminant (`CliCommandTag`),
 // bun.report crash-report character codes, canonical name/alias lookup, and
 // configuration-loading / global-option / NPM-domain capability predicates.

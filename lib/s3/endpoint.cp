@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/s3_signing/credentials.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/s3_signing/credentials.cp | Synced: 2026-11-24T04:52:32Z
 // Ported from Bun: /data/dev/bun/src/s3_signing/credentials.cp & /data/dev/bun/docs/runtime/s3.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation S3 Multi-Cloud Endpoint Parser, Region/Bucket Guesser,

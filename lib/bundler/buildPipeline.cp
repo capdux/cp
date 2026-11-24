@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/transpiler.cp | Synced: 2026-11-22T12:43:49Z
+// Source: Absorbed from /data/dev/bun/src/bundler/transpiler.cp | Synced: 2026-11-23T14:41:45Z
 // ============================================================================
 // lib/bundler/buildPipeline.cp — Zero-Alloc Build Pipeline & Incremental Cache
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/runner.cp | Synced: 2026-11-22T14:57:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/test/parallel/runner.cp | Synced: 2026-11-23T21:09:52Z
 // Pure-CP zero-allocation Parallel Test Runner Coordinator/Worker Bootstrap Planner:
 // - Computes effective worker count `K = min(parallel, N)` and serial fallback (`K <= 1`)
 // - Resolves `scale_up_after_ms` from CLI override or `BUN_TEST_PARALLEL_SCALE_MS` (default 5ms)

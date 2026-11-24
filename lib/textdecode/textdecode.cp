@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/webcore/TextDecoder.cp | Synced: 2026-11-22T12:53:50Z
+// Source: Absorbed from /data/dev/bun/src/runtime/webcore/TextDecoder.cp | Synced: 2026-11-23T20:50:27Z
 
 const UTF8_FFFD: [3]u8 = [0xEF, 0xBF, 0xBD];
 

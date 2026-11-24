@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewReader.cp | Synced: 2026-11-22T03:37:30Z
+// Source: Absorbed from /data/dev/bun/src/sql/mysql/protocol/NewReader.cp | Synced: 2026-11-24T04:40:47Z
 // Reference-hardened against blackbeam/rust_mysql_common (MIT/Apache-2.0)
 // Pure-CP zero-allocation MySQL wire-protocol binary reader:
 // - Streaming message bookmarking (`markMessageStart` / `setOffsetFromStart` / `rewindToMessageStart`)

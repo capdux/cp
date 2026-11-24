@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/LinkerContext.cp | Synced: 2026-11-22T13:25:01Z
+// Source: Absorbed from /data/dev/bun/src/bundler/LinkerContext.cp | Synced: 2026-11-23T14:44:58Z
 // ============================================================================
 // lib/bundler/chunkGraph.cp — Zero-Alloc Linker Chunk Graph & Code-Splitting Engine
 // ============================================================================

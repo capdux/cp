@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/rules.cp | Synced: 2026-11-23T22:58:36Z
 // lib/css/engine/rules.cp
 // Modern CSS At-Rule AST, Evaluation & Range Lowering:
 // SupportsAst, MediaRangeQuery (Level 4 -> legacy), ContainerQuery, CascadeLayer/LayerManager, FontFaceRule, PropertyRule, ScopeRule
@@ -69,13 +69,13 @@ pub struct SupportsAst {
         return idx;
     }
 
-    fn skipWs(s: []const u8, pos_in: usize): usize {
+    static fn skipWs(s: []const u8, pos_in: usize): usize {
         let p = pos_in;
         while (p < s.len && (s[p] == ' ' || s[p] == '\t' || s[p] == '\r' || s[p] == '\n')) p += 1;
         return p;
     }
 
-    fn matchWord(s: []const u8, pos: usize, word: []const u8): usize? {
+    static fn matchWord(s: []const u8, pos: usize, word: []const u8): usize? {
         const p = SupportsAst.skipWs(s, pos);
         if (p + word.len > s.len) return null;
         if (!std.ascii.eqlIgnoreCase(s[p .. p + word.len], word)) return null;
@@ -403,7 +403,7 @@ pub struct MediaRangeQuery {
         }
     }
 
-    fn writeBoundLegacy(feature: []const u8, op: MediaComparison, val_str: []const u8, out_buf: []u8, pos_in: usize): usize {
+    static fn writeBoundLegacy(feature: []const u8, op: MediaComparison, val_str: []const u8, out_buf: []u8, pos_in: usize): usize {
         let pos = pos_in;
         pos = engAppendBytes(out_buf, pos, "(");
         let adj_buf: [64]u8 = [0; 64];
@@ -446,7 +446,7 @@ pub struct MediaRangeQuery {
         return out_buf[0..pos];
     }
 
-    fn evalOp(actual: f64, op: MediaComparison, target: f64): bool {
+    static fn evalOp(actual: f64, op: MediaComparison, target: f64): bool {
         return switch (op) {
             .Eq => @abs(actual - target) < 0.0001,
             .Gt => actual > target,

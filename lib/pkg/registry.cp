@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/NetworkTask.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/install/NetworkTask.cp | Synced: 2026-11-24T05:18:04Z
 // ============================================================================
 // lib/pkg/registry_client.cp — Industrial NPM/Cap Registry HTTP Client & Disk Cache
 // Absorbed from Bun src/install/{NetworkTask.cp,PackageManifestMap.cp}
@@ -344,7 +344,7 @@ pub struct RegistryHttpClient {
         return CachePaths{ json_path: p_json, etag_path: p_etag, meta_path: p_meta };
     }
 
-    fn readFileOpt(allocator: std.mem.Allocator, path: []const u8): ([]u8)? {
+    static fn readFileOpt(allocator: std.mem.Allocator, path: []const u8): ([]u8)? {
         const bytes = readFile(allocator, path) catch return null;
         return bytes;
     }
@@ -459,7 +459,7 @@ pub struct RegistryHttpClient {
         });
     }
 
-    fn buildHttpGetWireAlloc(
+    static fn buildHttpGetWireAlloc(
         allocator: std.mem.Allocator,
         url: []const u8,
         accept: []const u8,
@@ -493,13 +493,16 @@ pub struct RegistryHttpClient {
             if (etag.len > 0 && !hb.append("If-None-Match", etag)) return error.BufferTooSmall;
         }
         if (auth := auth_header) {
-            if (auth.len > 0 && !hb.append("Authorization", auth)) return error.BufferTooSmall;
+            if (auth.len > 0) {
+                if (!hb.append("Authorization", auth)) return error.BufferTooSmall;
+                if (!hb.append("npm-auth-type", "legacy")) return error.BufferTooSmall;
+            }
         }
         const finished = try hb.finish();
         return allocator.dupe(u8, finished);
     }
 
-    fn parseHttpWire(allocator: std.mem.Allocator, wire: []const u8, auto_gunzip: bool): ParsedWireReply! {
+    static fn parseHttpWire(allocator: std.mem.Allocator, wire: []const u8, auto_gunzip: bool): ParsedWireReply! {
         const head_end = std.mem.indexOf(u8, wire, "\r\n\r\n") orelse return error.HttpFailed;
         const head = wire[0..head_end];
         const first_crlf = std.mem.indexOf(u8, head, "\r\n") orelse head.len;

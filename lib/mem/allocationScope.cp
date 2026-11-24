@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_alloc/allocation_scope.cp | Synced: 2026-11-22T13:16:47Z
+// Source: Absorbed from /data/dev/bun/src/bun_alloc/allocation_scope.cp | Synced: 2026-11-24T05:07:24Z
 // lib/mem/allocation_scope.cp
 // Production-grade AllocationScope with live leak tracking, peak bytes, dangling/double-free detection & reporting
 

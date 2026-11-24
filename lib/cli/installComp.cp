@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/install_completions_command.cp | Synced: 2026-11-22T07:24:30Z
+// Source: Absorbed from /data/dev/bun/src/cli/install_completions_command.cp | Synced: 2026-11-23T20:18:24Z
 // Pure-CP zero-allocation shell completions installer path planner:
 // - Maps `CompletionShell` -> canonical completion filename (`_bun` / `bun.fish` / `bun.completion.bash`)
 // - Generates ordered candidate completion directories for Fish, Zsh (including `$fpath`), and Bash

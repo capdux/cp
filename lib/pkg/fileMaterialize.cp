@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/isolated_install/FileCopier.cp | Synced: 2026-11-22T12:45:15Z
+// Source: Absorbed from /data/dev/bun/src/install/isolated_install/FileCopier.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/fileMaterialize.cp — Package Tree Materialization, Diff & Exec-Bit Planner
 // ============================================================================

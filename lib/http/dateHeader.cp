@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/runtime/timer/DateHeaderTimer.cp | Synced: 2026-11-22T18:23:53Z
+// Source: Absorbed from /data/dev/bun/src/runtime/timer/DateHeaderTimer.cp | Synced: 2026-11-23T20:39:52Z
 // ============================================================================
 // lib/http/dateHeader.cp — Zero-Alloc HTTP Date Header Timer & IMF-fixdate Cache
 // ============================================================================

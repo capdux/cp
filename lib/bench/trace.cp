@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/perf/tracy.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/perf/tracy.cp | Synced: 2026-11-23T22:05:02Z
 // lib/bench/trace.cp
 // Zero-Allocation Nanosecond Perf Trace Ring Buffer & Chrome Trace Event JSON Exporter
 
@@ -189,7 +189,7 @@ pub struct TraceRingBuffer<const CAP: usize> {
         _.epoch_ns = HwTimer.nowNs();
     }
 
-    fn writeBytes(out: []u8, pos: usize, s: []const u8): usize {
+    static fn writeBytes(out: []u8, pos: usize, s: []const u8): usize {
         if (pos + s.len > out.len) {
             return pos;
         }
@@ -201,7 +201,7 @@ pub struct TraceRingBuffer<const CAP: usize> {
         return pos + s.len;
     }
 
-    fn writeJsonEscaped(out: []u8, pos: usize, s: []const u8): usize {
+    static fn writeJsonEscaped(out: []u8, pos: usize, s: []const u8): usize {
         let p = pos;
         p = TraceRingBuffer<CAP>.writeBytes(out, p, "\"");
         let i: usize = 0;
@@ -229,7 +229,7 @@ pub struct TraceRingBuffer<const CAP: usize> {
         return p;
     }
 
-    fn writeMicros(out: []u8, pos: usize, ns: u64): usize {
+    static fn writeMicros(out: []u8, pos: usize, ns: u64): usize {
         const whole = ns / 1000;
         const frac = ns % 1000;
         const written = std.fmt.bufPrint(out[pos..], "{d}.{d:0>3}", .{ whole, frac }) catch return pos;

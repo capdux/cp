@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/postProcessCSSChunk.cp | Synced: 2026-11-22T06:23:36Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/postProcessCSSChunk.cp | Synced: 2026-11-23T14:41:08Z
 // Pure-CP zero-allocation CSS chunk post-processor:
 // stitches ordered CSS module compile outputs with bundle source comments (`/* path */`),
 // CSS banner/footer injection, trailing-newline normalization, and SourceMap line/column offset tracking.

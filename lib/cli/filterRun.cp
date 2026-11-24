@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/filter_run.cp | Synced: 2026-11-22T10:21:35Z
+// Source: Absorbed from /data/dev/bun/src/cli/filter_run.cp | Synced: 2026-11-23T20:18:52Z
 // Ported from Bun: /data/dev/bun/src/cli/filter_run.cp & /data/dev/bun/docs/pm/filter.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation monorepo `--filter` / `--workspaces` script execution scheduler:

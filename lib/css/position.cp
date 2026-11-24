@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/position.cp | Synced: 2026-11-21T17:05:36Z
+// Source: Absorbed from /data/dev/bun/src/css/values/position.cp | Synced: 2026-11-23T22:34:11Z
 // Pure-CP zero-allocation CSS `<position>` 1/2/3/4-value parser and canonical
 // serializer (used by background-position, object-position, mask-position, gradients).
 

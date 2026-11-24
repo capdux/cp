@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/rules/style.cp | Synced: 2026-11-22T13:35:00Z
+// Source: Absorbed from /data/dev/bun/src/css/rules/style.cp | Synced: 2026-11-23T21:39:29Z
 // Pure-CP zero-allocation CSS StyleRule model, rule deduplication hash, declaration merger & nesting flattener.
 // Faithfully mirrors Bun/LightningCSS `StyleRule` semantics:
 // - `isEmpty()` check (empty selectors or empty declarations & nested rules)

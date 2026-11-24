@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/update_interactive_command.cp | Synced: 2026-11-21T23:04:12Z
+// Source: Absorbed from /data/dev/bun/src/cli/update_interactive_command.cp | Synced: 2026-11-23T20:20:17Z
 // ============================================================================
 // lib/cli/interactiveUpdate.cp — Interactive Dependency Upgrade TUI & Diff Engine
 // ============================================================================

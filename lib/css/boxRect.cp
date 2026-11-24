@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/rect.cp | Synced: 2026-11-22T17:16:18Z
+// Source: Absorbed from /data/dev/bun/src/css/values/rect.cp | Synced: 2026-11-23T21:42:54Z
 // Pure-CP zero-allocation CSS 4-side box shorthand (`CssBoxRect`) and 2-component (`CssSize2D`)
 // parser (function/calc-aware tokenizer) and minimal-component CSS serializer.
 

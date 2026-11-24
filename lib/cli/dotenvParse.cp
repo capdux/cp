@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/env.cp | Synced: 2026-11-21T14:19:48Z
+// Source: Absorbed from /data/dev/bun/src/bun_core/env.cp | Synced: 2026-11-23T21:04:41Z
 
 /// `.env` 值的引号类型枚举
 pub enum DotEnvQuote: u8 {

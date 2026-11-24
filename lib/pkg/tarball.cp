@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/extract_tarball.cp | Synced: 2026-11-22T11:02:38Z
+// Source: Absorbed from /data/dev/bun/src/install/extract_tarball.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/tarball.cp — Safe Tarball (.tgz / .tar.gz) Builder, Verifier & Extractor
 // Absorbed from Bun src/install/{extract_tarball.cp,TarballStream.cp}
@@ -174,7 +174,7 @@ pub struct TarballExtractor {
         return true;
     }
 
-    fn extractLinkname(tar_buf: []const u8, entry_start: usize): []const u8 {
+    static fn extractLinkname(tar_buf: []const u8, entry_start: usize): []const u8 {
         if (entry_start + 257 > tar_buf.len) return "";
         const field = tar_buf[entry_start + 157 .. entry_start + 257];
         let end: usize = 0;

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sourcemap/ParsedSourceMap.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/sourcemap/ParsedSourceMap.cp | Synced: 2026-11-24T04:35:15Z
 // ============================================================================
 // lib/sourcemap/parsed_source_map.cp — SourceMap v3 JSON 解析、序列化与完整映射反查
 // 吸收自 Bun src/sourcemap/ParsedSourceMap.cp

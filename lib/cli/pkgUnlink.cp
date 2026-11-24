@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/unlink_command.cp | Synced: 2026-11-22T01:23:37Z
+// Source: Absorbed from /data/dev/bun/src/cli/unlink_command.cp | Synced: 2026-11-23T20:20:17Z
 // ============================================================================
 // lib/cli/pkgUnlink.cp — `cap unlink` Transaction Planner & Symlink Safety Engine
 // ============================================================================

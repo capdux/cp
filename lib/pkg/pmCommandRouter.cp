@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/package_manager_command.cp | Synced: 2026-11-22T12:42:30Z
+// Source: Absorbed from /data/dev/bun/src/cli/package_manager_command.cp | Synced: 2026-11-24T06:10:11Z
 // ============================================================================
 // lib/pkg/pmCommandRouter.cp — Zero-Alloc `cap pm` Router, Tree & Cache Auditor
 // ============================================================================

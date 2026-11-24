@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/declaration.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/declaration.cp | Synced: 2026-11-23T21:32:43Z
 // Ported from Bun: /data/dev/bun/src/css/declaration.cp & /data/dev/bun/docs/bundler/css.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation CSS DeclarationBlock Parser, Deduplicating Minifier & Serializer:

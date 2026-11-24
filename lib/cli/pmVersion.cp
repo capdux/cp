@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/pm_version_command.cp | Synced: 2026-11-22T12:43:45Z
+// Source: Absorbed from /data/dev/bun/src/cli/pm_version_command.cp | Synced: 2026-11-23T20:20:17Z
 // Pure-CP zero-allocation `pm version` semver bump calculator, argument parser,
 // prerelease identifier resolver, `from-git` tag normalizer, and `%s` commit message formatter.
 

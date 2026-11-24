@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/bundle_v2.cp | Synced: 2026-11-22T12:08:55Z
+// Source: Absorbed from /data/dev/bun/src/bundler/bundle_v2.cp | Synced: 2026-11-23T14:50:13Z
 // ============================================================================
 // lib/bundler/bundleCoordinator.cp — Zero-Alloc Bundler Coordinator & VLQ Engine
 // ============================================================================

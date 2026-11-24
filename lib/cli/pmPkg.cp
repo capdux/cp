@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/pm_pkg_command.cp | Synced: 2026-11-22T12:43:45Z
+// Source: Absorbed from /data/dev/bun/src/cli/pm_pkg_command.cp | Synced: 2026-11-24T05:43:52Z
 // Pure-CP zero-allocation `pm pkg` (`get` / `set` / `delete` / `fix`) subcommand parser,
 // dot & bracket property path parser (`scripts.build`, `contributors[0]`, `workspaces.0`,
 // `scripts[test:watch]`, `scripts["build.prod"]`), `key=value` assignment parser, and `--json` value classifier.

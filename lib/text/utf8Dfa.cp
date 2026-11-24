@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/utf8.cp | Synced: 2026-11-21T12:33:35Z
+// Source: Absorbed from /data/dev/bun/src/unicode/uucode_lib/src/utf8.cp | Synced: 2026-11-24T04:44:14Z
 //! Bjoern Hoehrmann's branchless UTF-8 DFA decoder + fast ASCII codepoint predicates.
 
 export const UTF8_ACCEPT: usize = 0;

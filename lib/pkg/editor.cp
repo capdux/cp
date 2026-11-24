@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageJSONEditor.cp | Synced: 2026-11-22T12:36:10Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageJSONEditor.cp | Synced: 2026-11-24T06:00:32Z
 // Pure-CP zero-allocation package.json dependency, trustedDependencies & patchedDependencies editor:
 // Bun dependency group precedence (optional > dev > prod > peer), version pin preservation (~, ^, exact, npm: alias),
 // cross-group deduplication/migration, alphabetized trustedDependencies, and deterministic JSON formatting.

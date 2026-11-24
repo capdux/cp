@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-22T16:34:55Z
+// Source: Absorbed from /data/dev/bun/src/bun_core/fmt.cp | Synced: 2026-11-23T21:05:21Z
 // Pure-CP zero-allocation human-readable formatting utilities: byte sizes,
 // nanosecond durations, URL credential/UUID/token redaction, and CLI table borders.
 

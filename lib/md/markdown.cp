@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/root.cp | Synced: 2026-11-20T09:14:07Z
+// Source: Absorbed from /data/dev/bun/src/md/root.cp | Synced: 2026-11-23T21:59:12Z
 // lib/md/markdown.cp
 // CommonMark / GFM Markdown Parser, HTML Renderer & Terminal ANSI Renderer
 // Absorbed from Bun src/md/root.cp, html_renderer.cp & ansi_renderer.cp

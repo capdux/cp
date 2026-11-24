@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql_jsc/shared/SQLDataCell.cp | Synced: 2026-11-23T02:00:04Z
+// Source: Absorbed from /data/dev/bun/src/sql_jsc/shared/SQLDataCell.cp | Synced: 2026-11-23T14:40:34Z
 // Pure-CP zero-allocation cross-dialect SQL result cell (`SqlDataCell`) and fixed-capacity row buffer.
 // Mirrors Bun's 15-tag SQLDataCellTag ABI, SQLDataCellFlags layout bitset, and typed zero-copy accessors.
 

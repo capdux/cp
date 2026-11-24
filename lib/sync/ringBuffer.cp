@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-24T04:46:33Z
 // ============================================================================
 // Absorbed from Bun: bun/src/threading/ring_buffer.cp
 // Upstream Sync: Refer to bun/src/threading/ring_buffer.zig for future upstream updates.
@@ -41,7 +41,7 @@ pub fn MpmcQueue(comptime T: type, comptime Capacity: usize): type {
                 const turn = slot.turn.load(.acquire);
                 const diff = @as(i64, @intCast(turn)) - @as(i64, @intCast(head));
                 if (diff == 0) {
-                    if (_.head.cmpxchgWeak(head, head + 1, .monotonic, .monotonic)) |next_head| {
+                    if (next_head := _.head.cmpxchgWeak(head, head + 1, .monotonic, .monotonic)) {
                         head = next_head;
                     } else {
                         slot.storage = item;
@@ -63,7 +63,7 @@ pub fn MpmcQueue(comptime T: type, comptime Capacity: usize): type {
                 const turn = slot.turn.load(.acquire);
                 const diff = @as(i64, @intCast(turn)) - @as(i64, @intCast(tail + 1));
                 if (diff == 0) {
-                    if (_.tail.cmpxchgWeak(tail, tail + 1, .monotonic, .monotonic)) |next_tail| {
+                    if (next_tail := _.tail.cmpxchgWeak(tail, tail + 1, .monotonic, .monotonic)) {
                         tail = next_tail;
                     } else {
                         const item = slot.storage;

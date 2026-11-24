@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/builtin/export.cp | Synced: 2026-11-22T18:31:16Z
+// Source: Absorbed from /data/dev/bun/src/shell/builtin/export.cp | Synced: 2026-11-24T04:33:35Z
 // ============================================================================
 // lib/shell/exportBuiltin.cp — Zero-Alloc POSIX `export` Builtin & Env Table
 // ============================================================================

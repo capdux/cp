@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/lockfile/bun.lock.cp | Synced: 2026-11-22T12:47:25Z
+// Source: Absorbed from /data/dev/bun/src/install/lockfile/bun.lock.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/textLockfile.cp — Human-Readable JSONC Text Lockfile Parser, Formatter & Diff
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerResolution.cp | Synced: 2026-11-22T14:15:00Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerResolution.cp | Synced: 2026-11-23T20:22:19Z
 // Pure-CP zero-allocation Package Manager Resolution Assignment,
 // Scoped Registry Routing, Resolution Graph Verification & Disk-Cache Version Picker.
 // Aligned with Bun `src/install/PackageManager/PackageManagerResolution.cp`

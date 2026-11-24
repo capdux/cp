@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/source.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/io/source.cp | Synced: 2026-11-23T21:45:25Z
 /**
  * CP I/O Source, FileType & Non-blocking Poll State (cap:io)
  * 对应 Bun src/io/source.zig 与 src/io/pipes.zig 中的流源探测与 Poll 抽象

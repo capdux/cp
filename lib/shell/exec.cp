@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/interpreter.cp | Synced: 2026-11-22T12:28:39Z
+// Source: Absorbed from /data/dev/bun/src/shell/interpreter.cp | Synced: 2026-11-24T04:52:35Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/interpreter.cp & subproc.cp
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.

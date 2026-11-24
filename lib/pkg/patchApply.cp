@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/patch_install.cp | Synced: 2026-11-22T12:19:29Z
+// Source: Absorbed from /data/dev/bun/src/install/patch_install.cp | Synced: 2026-11-23T20:24:05Z
 // ============================================================================
 // lib/pkg/patchApply.cp — Industrial Zero-Alloc Unified Diff / Git Patch Engine
 // ============================================================================

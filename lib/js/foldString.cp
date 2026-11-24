@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/foldStringAddition.cp | Synced: 2026-11-22T16:18:43Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/foldStringAddition.cp | Synced: 2026-11-23T20:31:03Z
 // Pure-CP zero-allocation JS/TS compile-time string & template literal addition folder.
 // Aligns with Bun's AST constant folding semantics (Normal vs NestedLeft, tagged template guard,
 // side-effect-free primitive coercion, and empty-string identity elimination).

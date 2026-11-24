@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerDirectories.cp | Synced: 2026-11-22T12:41:20Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerDirectories.cp | Synced: 2026-11-23T20:22:40Z
 // Pure-CP zero-allocation Bun package manager cache directory resolver & folder naming engine:
 // multi-tier cache/temp directory resolution (explicit > BUN_INSTALL_CACHE_DIR > BUN_INSTALL > XDG > HOME > local),
 // NPM/GitHub/Tarball cache folder formatters (`@@@1`, `_patch_hash=...`, long registry host hashing),

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewReader.cp | Synced: 2026-11-22T03:45:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewReader.cp | Synced: 2026-11-24T04:40:50Z
 // Reference-hardened against sfackler/rust-postgres (MIT/Apache-2.0)
 // Pure-CP zero-allocation PostgreSQL wire-protocol binary reader:
 // - Streaming message bookmarking (`markMessageStart` / `offsetFromStart` / `rewindToMessageStart`)

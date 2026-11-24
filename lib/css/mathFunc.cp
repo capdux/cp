@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/calc.cp | Synced: 2026-11-22T13:20:00Z
+// Source: Absorbed from /data/dev/bun/src/css/values/calc.cp | Synced: 2026-11-23T22:59:33Z
 // Pure-CP zero-allocation CSS Values & Units Level 4 Math Functions & Constants evaluator.
 // Supports all 21 W3C CSS Math functions:
 //   Basic & comparison: calc(), min(), max(), clamp()

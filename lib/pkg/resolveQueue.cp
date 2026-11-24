@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerEnqueue.cp | Synced: 2026-11-22T12:17:37Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/PackageManagerEnqueue.cp | Synced: 2026-11-23T20:22:19Z
 // ============================================================================
 // lib/pkg/resolveQueue.cp — Zero-Alloc Dependency Resolve Queue & SemVer Engine
 // ============================================================================

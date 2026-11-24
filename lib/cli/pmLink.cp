@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/link_command.cp | Synced: 2026-11-22T15:00:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/link_command.cp | Synced: 2026-11-23T20:18:24Z
 // Pure-CP zero-allocation `bun link` / `bun link <pkg>` / `bun unlink` CLI Planner:
 // - Validates NPM package names (unscoped & `@scope/name`, <= 214 chars, traversal-safe)
 // - Classifies CLI invocations (`RegisterLocal`, `LinkIntoProject`, `UnlinkLocal`) with `--save` support

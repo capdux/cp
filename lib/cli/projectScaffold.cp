@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/init_command.cp | Synced: 2026-11-22T12:10:31Z
+// Source: Absorbed from /data/dev/bun/src/cli/init_command.cp | Synced: 2026-11-23T20:18:24Z
 // ============================================================================
 // lib/cli/projectScaffold.cp — Zero-Alloc Project Scaffold & Template Engine
 // ============================================================================

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/printer.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/css/printer.cp | Synced: 2026-11-23T21:32:49Z
 // lib/css/engine/compiler.cp
 // LightningCSS Full Compilation Pipeline:
 // CssCompileOptions, CssCompileStats, CssModulesHasher & CssCompiler (Nesting + Media Ranges + Prefixing + Logical + Minify/Pretty + CSS Modules)
@@ -263,7 +263,7 @@ pub struct CssCompiler {
         return final_slice;
     }
 
-    fn compileBlock(
+    static fn compileBlock(
         src: []const u8,
         opts: CssCompileOptions,
         out_buf: []u8,
@@ -324,7 +324,7 @@ pub struct CssCompiler {
         return pos;
     }
 
-    fn writeIndent(out_buf: []u8, pos_in: usize, depth: usize, minify: bool): usize {
+    static fn writeIndent(out_buf: []u8, pos_in: usize, depth: usize, minify: bool): usize {
         if (minify) return pos_in;
         let pos = pos_in;
         let d: usize = 0;
@@ -336,7 +336,7 @@ pub struct CssCompiler {
         return pos;
     }
 
-    fn emitRule(
+    static fn emitRule(
         rule_chunk: []const u8,
         opts: CssCompileOptions,
         out_buf: []u8,
@@ -419,7 +419,7 @@ pub struct CssCompiler {
         return pos;
     }
 
-    fn emitDeclarations(
+    static fn emitDeclarations(
         body: []const u8,
         opts: CssCompileOptions,
         out_buf: []u8,

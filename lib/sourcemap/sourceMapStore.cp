@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bake/DevServer/SourceMapStore.cp | Synced: 2026-11-22T17:17:12Z
+// Source: Absorbed from /data/dev/bun/src/bake/DevServer/SourceMapStore.cp | Synced: 2026-11-23T21:02:19Z
 // Pure-CP zero-allocation DevServer SourceMapStore (`/_bun/client/{id}.js.map`):
 // 64-bit tagged StoreSourceId (InitialResponse generation vs HmrChunk 63-bit hash),
 // strong reference counting with a bounded 16-entry / 10-second weak-ref grace cache

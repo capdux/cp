@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageInstaller.cp | Synced: 2026-11-22T10:19:14Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageInstaller.cp | Synced: 2026-11-23T20:22:19Z
 // ============================================================================
 // lib/pkg/installOrchestrator.cp — Zero-Alloc Install Diff, DAG & Rollback Engine
 // ============================================================================

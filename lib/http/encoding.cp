@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/Encoding.cp | Synced: 2026-11-20T04:57:55Z
+// Source: Absorbed from /data/dev/bun/src/http_types/Encoding.cp | Synced: 2026-11-23T21:45:24Z
 // lib/http/encoding.cp
 // CP HTTP Content & Transfer Encoding & Accept-Encoding Negotiation (cap:http)
 

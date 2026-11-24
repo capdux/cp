@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bake/DevServer/HotReloadEvent.cp | Synced: 2026-11-22T17:07:40Z
+// Source: Absorbed from /data/dev/bun/src/bake/DevServer/HotReloadEvent.cp | Synced: 2026-11-23T21:02:16Z
 // Pure-CP zero-allocation HMR event batch accumulator designed to pair with
 // `WatcherAtomicRelay<HotReloadBatch>`: deduplicates changed files & watched
 // directories, joins directory+subpath notifications into a compact NUL-delimited

@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/bunx_command.cp | Synced: 2026-11-22T10:34:15Z
+// Source: Absorbed from /data/dev/bun/src/cli/bunx_command.cp | Synced: 2026-11-23T20:18:24Z
 // Ported from Bun: /data/dev/bun/src/cli/bunx_command.cp & /data/dev/bun/docs/pm/bunx.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation `bunx` / `bun x` CLI option parser, `create-*` package prefixer,

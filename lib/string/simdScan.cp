@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.cp | Synced: 2026-11-22T13:00:28Z
+// Source: Absorbed from /data/dev/bun/src/string/immutable.cp | Synced: 2026-11-24T04:42:18Z
 // lib/string/simd_scan.cp
 // 16-byte SIMD (@Vector(16, u8)) high-speed string scanner
 // Absorbed from bun/src/string/immutable.zig & bun/src/string/immutable/unicode.zig

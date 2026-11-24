@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/Arguments.cp | Synced: 2026-11-22T12:08:44Z
+// Source: Absorbed from /data/dev/bun/src/cli/Arguments.cp | Synced: 2026-11-23T20:18:24Z
 // ============================================================================
 // lib/cli/capArgs.cp — Zero-Alloc Declarative CLI Router, Parser & Help Engine
 // ============================================================================

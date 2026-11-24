@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/array_list.cp | Synced: 2026-11-22T10:57:41Z
+// Source: Absorbed from /data/dev/bun/src/collections/array_list.cp | Synced: 2026-11-23T21:09:11Z
 // Pure-CP zero-allocation external-slice-backed generic SliceList<T>
 // (no hardcoded capacity limits; full ArrayList semantics: append, insert, orderedRemove,
 // swapRemove, replaceRange, appendNTimes, resize, shrinkRetainingCapacity, reverse).

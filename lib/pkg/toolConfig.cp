@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/bunfig.cp | Synced: 2026-11-22T12:11:00Z
+// Source: Absorbed from /data/dev/bun/src/cli/bunfig.cp | Synced: 2026-11-23T20:18:24Z
 // ============================================================================
 // lib/pkg/toolConfig.cp — Zero-Alloc Multi-Layer Toolchain Configuration Engine
 // ============================================================================

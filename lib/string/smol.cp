@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/SmolStr.cp | Synced: 2026-11-22T20:44:10Z
+// Source: Absorbed from /data/dev/bun/src/string/SmolStr.cp | Synced: 2026-11-24T04:42:22Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/string/SmolStr.cp
 // Upstream Sync: Refer to /data/dev/bun/src/string/SmolStr.zig for future upstream updates.

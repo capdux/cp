@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/css/values/size.cp | Synced: 2026-11-20T05:43:17Z
+// Source: Absorbed from /data/dev/bun/src/css/values/size.cp | Synced: 2026-11-23T21:43:43Z
 // ============================================================================
 // lib/css/size2d.cp — Zero-Alloc CSS Typed 2D Pairs (`Size2D<Number>`,
 // `Size2D<LengthPercentage>`) & Elliptical 4-Corner Radii

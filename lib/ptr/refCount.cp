@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/ptr/ref_count.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/ptr/ref_count.cp | Synced: 2026-11-23T22:20:27Z
 // Intrusive single-threaded and thread-safe reference counting mixin & RefPtr smart pointer
 import std from "std";
 import { PtrThreadLock } from "./rawRefCount.cp";

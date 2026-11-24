@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp | Synced: 2026-11-22T09:00:00Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp | Synced: 2026-11-23T14:41:08Z
 // Ported from Bun: /data/dev/bun/src/bundler/linker_context/findAllImportedPartsInJSOrder.cp & /data/dev/bun/docs/bundler/index.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation JS Chunk Part Ordering & Linearization Engine:

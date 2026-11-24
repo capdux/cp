@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateCodeForLazyExport.cp | Synced: 2026-11-22T12:46:58Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateCodeForLazyExport.cp | Synced: 2026-11-23T14:41:08Z
 // Pure-CP zero-allocation Bundler Lazy Export planner & CSS Modules `composes` resolver:
 // ESM tree-shakeable named export promotion vs CJS `module.exports` / N-API `__require` planning,
 // default export identifier sanitization (`<stem>_default`), and cycle-safe recursive

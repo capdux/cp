@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/open.cp | Synced: 2026-11-22T07:03:30Z
+// Source: Absorbed from /data/dev/bun/src/cli/open.cp | Synced: 2026-11-23T20:20:17Z
 // Pure-CP zero-allocation editor detection (`EDITOR`/`VISUAL`/user preference),
 // macOS `.app` fallback path table, cross-platform URL opener command builder,
 // and editor-specific `file:line:column` argv generator (`Bun.openInEditor` core).

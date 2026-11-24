@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManagerTask.cp | Synced: 2026-11-21T22:18:15Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManagerTask.cp | Synced: 2026-11-23T20:22:19Z
 // ============================================================================
 // lib/pkg/pmTaskGraph.cp — Heterogeneous Package Task DAG, Channel Throttling & Retry
 // ============================================================================

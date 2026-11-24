@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/processDependencyList.cp | Synced: 2026-11-22T02:32:04Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/processDependencyList.cp | Synced: 2026-11-23T20:22:19Z
 // ============================================================================
 // lib/pkg/depListNormalize.cp — Zero-Alloc All-Protocol Dep Normalizer & Overrides
 // ============================================================================

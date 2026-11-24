@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/Chunk.cp | Synced: 2026-11-22T10:29:17Z
+// Source: Absorbed from /data/dev/bun/src/bundler/Chunk.cp | Synced: 2026-11-23T14:43:12Z
 // Ported from Bun: /data/dev/bun/src/bundler/Chunk.cp & /data/dev/bun/docs/bundler/standalone-html.mdx
 // Synced: 2026-11-22
 // Pure-CP zero-allocation bundler Chunk OutputPiece assembler:

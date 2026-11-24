@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateCodeForFileInChunkJS.cp | Synced: 2026-11-20T16:10:08Z
+// Source: Absorbed from /data/dev/bun/src/bundler/linker_context/generateCodeForFileInChunkJS.cp | Synced: 2026-11-23T14:41:08Z
 // ============================================================================
 // lib/bundler/chunkCodeEmit.cp — Chunk Module Wrapper, Line Tracking & Safe Minifier
 // ============================================================================

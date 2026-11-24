@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/bin.cp | Synced: 2026-11-22T13:44:00Z
+// Source: Absorbed from /data/dev/bun/src/install/bin.cp | Synced: 2026-11-23T20:22:40Z
 // Pure-CP zero-allocation `package.json` `bin` / `directories.bin` normalizer,
 // `npm-normalize-package-bin` security sanitizer, and `node_modules/.bin` link planner.
 // Models Bun's `Bin` & `Bin.Linker` invariants:

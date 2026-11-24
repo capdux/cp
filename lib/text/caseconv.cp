@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T13:00:28Z (Identifier Case Converter)
+// Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-24T04:42:24Z (Identifier Case Converter)
 // Pure-CP zero-allocation acronym-aware identifier case converter (snake, screaming_snake, kebab, camel, pascal).
 
 fn isUpper(b: u8): bool {
@@ -32,7 +32,7 @@ export struct WordIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(src: []const u8): WordIter {
+    pub static fn init(src: []const u8): WordIter {
         return WordIter { src: src, pos: 0 };
     }
 

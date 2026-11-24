@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/bake/DevServer/HmrSocket.cp | Synced: 2026-11-22T17:19:47Z
+// Source: Absorbed from /data/dev/bun/src/bake/DevServer/HmrSocket.cp | Synced: 2026-11-23T20:58:46Z
 // Pure-CP zero-allocation Bun DevServer HMR WebSocket protocol codec & session state:
 // localhost privilege check (127.0.0.1 / ::1), 17-byte version handshake frame,
 // 9-byte hex init frame, topic subscription bitmask diffing, active route tracking,

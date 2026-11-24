@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/install/PackageManager/runTasks.cp | Synced: 2026-11-21T21:39:53Z
+// Source: Absorbed from /data/dev/bun/src/install/PackageManager/runTasks.cp | Synced: 2026-11-23T20:24:39Z
 // ============================================================================
 // lib/pkg/scriptRunner.cp — Zero-Alloc Lifecycle & Monorepo Script Task Engine
 // ============================================================================

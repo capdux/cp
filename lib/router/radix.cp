@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/router/Router.cp | Synced: 2026-11-22T11:02:25Z
+// Source: Absorbed from /data/dev/bun/src/router/Router.cp | Synced: 2026-11-23T22:08:19Z
 // lib/router/radix.cp
 // High-performance 5-tier Radix-Tree / Trie router for CP Web applications
 import { ParamMap } from "./paramMap";
@@ -105,7 +105,7 @@ pub fn RadixNode(comptime T: type): type {
         wildcard_child: (*Self)? = null,
         optional_catch_all_child: (*Self)? = null,
 
-        pub static fn create(allocator: std.mem.Allocator, segment: []const u8) *Self {
+        pub static fn create(allocator: std.mem.Allocator, segment: []const u8): *Self {
             let node = allocator.create(Self) catch unreachable;
             node.segment = segment;
             node.is_param = false;
@@ -192,11 +192,11 @@ pub fn Router(comptime T: type): type {
         options: RouterOptions = RouterOptions{},
         total_routes: usize = 0,
 
-        pub fn init(allocator: std.mem.Allocator) Self {
+        pub static fn init(allocator: std.mem.Allocator): Self {
             return Self.initWithOptions(allocator, RouterOptions{});
         }
 
-        pub static fn initWithOptions(allocator: std.mem.Allocator, options: RouterOptions) Self {
+        pub static fn initWithOptions(allocator: std.mem.Allocator, options: RouterOptions): Self {
             let r = Self{
                 trees: undefined,
                 allocator: allocator,
@@ -210,7 +210,7 @@ pub fn Router(comptime T: type): type {
             return r;
         }
 
-        pub fn methodIndex(method: []const u8) usize {
+        pub static fn methodIndex(method: []const u8): usize {
             if (std.ascii.eqlIgnoreCase(method, "GET")) return 0;
             if (std.ascii.eqlIgnoreCase(method, "POST")) return 1;
             if (std.ascii.eqlIgnoreCase(method, "PUT")) return 2;
@@ -416,7 +416,7 @@ pub fn Router(comptime T: type): type {
             return child;
         }
 
-        fn insertSegment(*_, parent: *Node, seg: []const u8) *Node {
+        fn insertSegment(*_, parent: *Node, seg: []const u8): *Node {
             return _.insertSegmentChecked(parent, seg) catch parent;
         }
 

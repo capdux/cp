@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/threading/channel.cp | Synced: 2026-11-24T04:46:33Z
 // Thread-safe bounded channel in CP
 // High-throughput CSP communication primitive
 import mutexMod from "./mutex";
@@ -103,7 +103,7 @@ pub fn Channel(comptime T: type): type {
             return true;
         }
 
-        pub fn recv(*_): !?T {
+        pub fn recv(*_): T?! {
             _.mutex.lock();
             defer _.mutex.unlock();
 

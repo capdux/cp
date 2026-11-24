@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-22T13:13:23Z
+// Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-24T04:51:05Z
 // ============================================================================
 // Absorbed from Bun: /data/dev/bun/src/shell/
 // Upstream Sync: Refer to /data/dev/bun/src/shell/ for future upstream updates.
@@ -437,7 +437,7 @@ pub struct Parser {
         }
     }
 
-    fn ensurePool(pool_opt: *(*AstPool!)?): *AstPool! {
+    static fn ensurePool(pool_opt: *(*AstPool!)?): *AstPool! {
         if (p := pool_opt.*) {
             return p;
         }
@@ -445,7 +445,7 @@ pub struct Parser {
         return pool_opt.*.?;
     }
 
-    fn isStopToken(tok: Token, stop_mode: u8): bool {
+    static fn isStopToken(tok: Token, stop_mode: u8): bool {
         // stop_mode:
         // 0 = top-level (EOF)
         // 1 = subshell ')'

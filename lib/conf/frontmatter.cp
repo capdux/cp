@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/md/parser.cp | Synced: 2026-11-22T12:49:17Z (Markdown YAML/TOML Frontmatter Extractor)
+// Source: Absorbed from /data/dev/bun/src/md/parser.cp | Synced: 2026-11-23T22:00:12Z (Markdown YAML/TOML Frontmatter Extractor)
 
 /// Frontmatter 格式类型枚举
 pub enum FrontmatterKind: u8 {

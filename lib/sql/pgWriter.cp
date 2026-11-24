@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp | Synced: 2026-11-22T03:32:00Z
+// Source: Absorbed from /data/dev/bun/src/sql/postgres/protocol/NewWriter.cp | Synced: 2026-11-24T04:40:51Z
 // Reference-hardened against sfackler/rust-postgres (MIT/Apache-2.0)
 // Pure-CP zero-allocation PostgreSQL wire-protocol binary frame writer:
 // - Big-endian integer/float encoders (u16/short/u32/i32/i64/f32/f64)

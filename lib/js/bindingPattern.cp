@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser/ast/Binding.cp | Synced: 2026-11-22T05:53:45Z
+// Source: Absorbed from /data/dev/bun/src/js_parser/ast/Binding.cp | Synced: 2026-11-23T20:35:04Z
 // ============================================================================
 // lib/js/bindingPattern.cp — Zero-Alloc ECMAScript Destructuring Binding AST,
 // Static Semantics (`BoundNames`), Duplicate Guard & Assignment-Target Lowering

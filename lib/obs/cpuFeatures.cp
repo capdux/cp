@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/crash_handler/CPUFeatures.cp | Synced: 2026-11-22T15:23:33Z
+// Source: Absorbed from /data/dev/bun/src/crash_handler/CPUFeatures.cp | Synced: 2026-11-23T21:08:14Z
 // Zero-allocation cross-architecture CPU feature flags (x86_64 & aarch64) for crash diagnostics.
 
 /// Recommended caller buffer capacity for formatting space-separated CPU feature lists.

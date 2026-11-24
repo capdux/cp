@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/baby_list.cp | Synced: 2026-11-22T10:37:30Z
+// Source: Absorbed from /data/dev/bun/src/collections/baby_list.cp | Synced: 2026-11-23T21:09:11Z
 // ============================================================================
 // Absorbed from Bun: bun/src/collections/baby_list.cp
 // Upstream Sync: Refer to bun/src/collections/baby_list.zig for future upstream updates.

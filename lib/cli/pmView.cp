@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/cli/pm_view_command.cp | Synced: 2026-11-22T06:31:59Z
+// Source: Absorbed from /data/dev/bun/src/cli/pm_view_command.cp | Synced: 2026-11-23T20:20:17Z
 // Pure-CP zero-allocation `bun info` / `bun pm view` package metadata query & card renderer:
 // scoped spec parser, registry URL encoder, dot/bracket property path parser,
 // human-readable metadata card formatter, recent-versions hint, and JSON error formatter.
