@@ -201,7 +201,7 @@ fn usage() void {
         \\
         \\Usage:
         \\  cap <file.cp|dir>             Run a CP file or directory directly (Debug)
-        \\  cap run [options] <file|script> Run a script or file (-m/--modular, --parallel-obj)
+        \\  cap run [options] <file|script> Run a script or file (-m modular+parallel .o cache)
         \\  cap build [target] [options]  Build a CP package or directory
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
         \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
@@ -242,8 +242,8 @@ fn usage() void {
         \\  --opt=<debug|safe|fast|small> Specify optimization mode explicitly
         \\  -o, --out-dir=<dir>           Override output directory (default: bin or cap.json)
         \\  --cache-dir=<path>            Override Zig compiler cache directory (isolates concurrent builds)
-        \\  -m, --modular                 Enable modular multi-file Zig codegen (cpc compile --emit-dir)
-        \\  --parallel-obj                Enable parallel per-module .o caching & incremental linking (with -m)
+        \\  -m, --modular                 Modular codegen + parallel .o cache & incremental link (disable with --no-parallel)
+        \\  -p, --parallel-obj            Alias for -m (parallel per-module .o cache & incremental link)
         \\  --emit-types                  Emit .d.cp type definitions even when building executables
         \\  --timings                     Print per-stage build timings breakdown in ms
         \\  -t, --target=<triple>         Cross-compile for specific target triple
@@ -280,11 +280,11 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
                 \\
             , .{});
             return true;
-        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
-            run_opts.is_modular = true;
-        } else if (std.mem.eql(u8, arg, "--parallel-obj")) {
+        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             run_opts.is_modular = true;
             run_opts.parallel_obj = true;
+        } else if (std.mem.eql(u8, arg, "--no-parallel")) {
+            run_opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "-B") or std.mem.eql(u8, arg, "--force")) {
             run_opts.force_rebuild = true;
         } else if (target_opt == null) {
@@ -2215,10 +2215,11 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
             opts.emit_types = true;
         } else if (std.mem.eql(u8, arg, "--timings")) {
             opts.timings = true;
-        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
+        } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             opts.is_modular = true;
-        } else if (std.mem.eql(u8, arg, "--parallel-obj")) {
             opts.parallel_obj = true;
+        } else if (std.mem.eql(u8, arg, "--no-parallel")) {
+            opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "--safe")) {
             opts.optimize_mode = "ReleaseSafe";
         } else if (std.mem.startsWith(u8, arg, "--opt=")) {
