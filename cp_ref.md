@@ -366,10 +366,14 @@ CP对他们来说 = **保留Zig全部能力，叠加Rust安全检查 + TS风格�
 | `cap remove <pkg>`              | -            | **依赖卸载**：清理指定依赖项及其孤立软链接，同步更新 `cap.json` 清单。                                              | **已全面实装** |
 | `cap update [pkg]`              | -            | **语义化版本升级**：按照 `^`/`~` 规则安全升级依赖包至符合 Semver 规范的最新版本。                                   | **已全面实装** |
 | `cap bench <file.cp>`           | ReleaseFast  | **微秒级基准测试**：纳秒级高精度计时度量状态机、闭包与数据吞吐耗时。                                                | **已全面实装** |
+| `cap install` / `cap i`         | -            | **依赖与 Workspace 安装**：展开 `workspaces`、`workspace:*`、`file:` 与远程包，支持 `--production`/`--prod`（跳过 `dev`）、`--frozen-lockfile`、`--rebuild`。 | **已全面实装** |
+| `cap rebuild [pkg]`             | -            | **原生 C/C++ 静态库重编**：按 `bin` 声明跨平台交叉编译（`--target=<os-arch\|all>`、`--filter <pkg>`、`--write-prebuilt`），默认 `-g0` 瘦身产物。 | **已全面实装** |
+| `cap pack [options]`            | -            | **双格式归档打包**：默认将主包与平台预编译二进制分离打包为 `.tar.zst` + `pack-manifest.json`；`--npm`/`--tgz` 输出带 `package/` 前缀与合成 `package.json` 的标准 Gzip `.tgz`。 | **已全面实装** |
+| `cap publish [options]`         | -            | **npm / Verdaccio 生态直发**：自动由 `cap.json` 合成 `package.json` 打包 `.tgz`，读取 `CAP_TOKEN`/`NPM_TOKEN`/`~/.npmrc` 直发官方 npm 或私有仓库（支持 `--registry`/`--access`/`--tag`/`--otp`/`--dry-run`）。 | **已全面实装** |
+| `cap cache <dir\|ls\|clean>`    | -            | **全局缓存治理**：查看或清理 `~/.cap/cache/` 下的历史归档与预编译缓存。                                             | **已全面实装** |
+| `cap pm ls` / `cap why <pkg>`   | -            | **依赖审计与溯源**：列出 `cap_modules/` 已安装包及 `bin` 产物（支持 `--filter`），追踪某依赖包的引入路径。           | **已全面实装** |
 | `cap fmt`                       | -            | **代码格式化**：原生百毫秒级格式化全部 `.cp` 源代码，保持工业级统一风格。                                           | **规划实现**   |
 | `cap lint`                      | -            | **静态分析与安全审计**：扫描生命周期逃逸、借用冲突与性能反模式。                                                    | **规划实现**   |
-| `cap publish`                   | -            | **去中心化生态发布**：将编译好的原生包或源码包签名并发布至 CP 官方 Registry。                                       | **规划实现**   |
-| `cap cache clean`               | -            | **全局缓存治理**：检查并清理 `~/.cap/cache/` 下的历史过期缓存。                                                     | **规划实现**   |
 
 ---
 
@@ -393,86 +397,92 @@ flowchart TD
 
 ---
 
-### 2.4 `cap.json` 工程清单权威规范
+### 2.4 `cap.json` 2.0 工程清单、四大依赖与生态分发权威规范
 
-#### 1. `cap.json` 示例
+#### 1. `cap.json` 2.0 完整示例
 
-每个 CP 工程均以根目录下的 `cap.json` 作为唯一工程元数据清单与构建指挥塔：
+每个 CP 工程均以根目录下的 `cap.json` 作为唯一工程元数据清单与构建指挥塔（推荐使用极简 3 字母零下划线键名 `ver`/`dep`/`dev`/`bin`/`sys`，同时 **100% 向后兼容**读取 `version`/`dependencies`/`dev_dependencies`/`bin_dependencies`/`sys_dependencies`）：
 
 ```json
 {
   "name": "nexus-agent",
-  "version": "1.0.0",
-  "description": "High-concurrency distributed AI Agent built with CP & Nest",
-  "author": "Antigravity Team",
-  "license": "Apache-2.0",
+  "ver": "1.0.0",
+  "description": "High-concurrency distributed AI Agent built with CP",
+  "license": "MIT",
   "main": "src/main.cp",
   "opt": "fast",
+  "registry": "https://registry.capdux.dev",
+  "workspaces": ["packages/*", "packages/@cap/*"],
   "scripts": {
     "start": "cap src/main.cp",
     "build:prod": "cap build -r -f",
     "test": "cap test",
     "bench": "cap bench"
   },
-  "dependencies": {
-    "tensor-math": "^0.2.1",
-    "http-router": "~1.0.0",
-    "agent-actor": "1.2.0"
+  "dep": {
+    "@cap/picohttp": "workspace:*",
+    "@cap/yyjson": "^0.10.0",
+    "@cap/usearch": "^2.26.6"
   },
-  "dev_dependencies": {
-    "test-kit": "^0.1.0"
+  "dev": {
+    "@cap/hdrhistogram": "workspace:*"
   },
-  "bin_dependencies": {
-    "quickjs": {
-      "path": "vendor/quickjs",
-      "src": [
-        "quickjs.c",
-        "quickjs-libc.c",
-        "cutils.c",
-        "libbf.c"
-      ],
+  "bin": {
+    "picohttp": {
+      "path": "c",
+      "src": ["picohttpparser.c"],
       "include": ["."],
       "flag": ["-D_GNU_SOURCE"],
-      "opt": "fast"
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    },
+    "usearch": {
+      "path": "c",
+      "src": ["lib.cpp"],
+      "include": ["../include"],
+      "flag": ["-O3", "-std=c++17"],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
     }
   },
-  "workspaces": ["packages/*"],
-  "build": {
-    "entry": "src/main.cp",
-    "opt": "fast",
-    "out_dir": "bin",
-    "link_libs": ["c", "m"],
-    "sys": {
-      "z": {
-        "linux": "libz.so.1",
-        "mac": "libz.dylib",
-        "win": "zlib1.dll"
-      }
-    }
-  },
-  "nest": {
-    "mailbox_capacity": 65536,
-    "reduction_slice": 2000
-  },
-  "runtime": {
-    "workers": "auto",
-    "max_blocking": 512
+  "sys": {
+    "c": {},
+    "pthread": {},
+    "duckdb": { "prebuilt": "prebuilt" },
+    "z": { "linux": "libz.so.1", "mac": "libz.dylib", "win": "zlib1.dll" },
+    "optlib": { "optional": true }
   }
 }
 ```
 
-> **`cap.json` 与中央索引 (`lib/cap.json`) 精炼设计规范**：
-> 1. **`opt` 统一人体工程学命名**：支持 `"debug"` / `"safe"` / `"fast"` / `"small"`，替代旧版冗长的 `"default_opt": "ReleaseSmall"`；
-> 2. **`path` 相对作用域推导**：`bin` 库指定 `path` 后，其下的 `src` 与 `include` 无需反复拼装前缀；若省略 `include`，构建工具默认以当前 `path` 作为头文件包含路径；
-> 3. **`src` / `include` / `flag` 简洁键名**：
->    - `src`：源文件列表（替代 `sources`）；
->    - `include`：头文件路径列表（替代 `include_dirs`）；
->    - `flag`：透传给底层 C/C++ 编译器（如 Clang / Zig CC）的宏定义及编译选项（如 `-D_GNU_SOURCE`，替代 `c_flags`）；
-> 4. **静态库默认约定**：`bin` 依赖项默认为静态库，废除冗余的 `"type": "static_lib"`；
-> 5. **`sys` 命名字典与精炼平台键**：采用 `"sys": { "库名": { "linux": "...", "mac": "...", "win": "..." } }`，支持多动态库独立命名，平台键简化为 `mac` 与 `win`（兼容 `macos`/`windows`）；
-> 6. **`lib` 路径精准映射与平滑回退**：
->    - 目录映射：配置 `path: "http"` 时，优先在该目录下查找 `index.cp` / `main.cp` 或同名 `.cp` 文件；
->    - 单文件映射：配置 `path: "http/server.cp"` 时，import `cap:http` 直接解析为该文件；若文件不存在则平滑回退至默认 `lib/` 目录。
+#### 2. 四大一级依赖、按需链接与双格式打包/发布实战
+
+> **`cap.json` 2.0 核心设计规范**：
+> 1. **四大一级依赖键**：
+>    - **`dep`**（运行时依赖，兼容 `dependencies`/`deps`）：`cap add <pkg>` 写入；
+>    - **`dev`**（开发依赖，兼容 `dev_dependencies`/`devDependencies`）：`cap add <pkg> -d` 写入；`cap install --production`（或 `--prod`）自动跳过；
+>    - **`bin`**（静态库依赖，兼容 `bin_dependencies`）：支持多库独立声明、C（`zig cc`）与 C++（`zig c++` + 自动注入 `-lc++`）跨平台编译，默认注入 `-g0 -ffunction-sections -fdata-sections` 产出瘦身 `.a`（体积降 70%~84%）。三态解析：随包 `prebuilt/<os>-<arch>/lib<k>.a`（0ms 命中）→ `~/.cap/cache/native/` → Zig 自动编译缓存；
+>    - **`sys`**（动态/系统库依赖，兼容 `sys_dependencies`）：编译期存在性校验（缺失且非 `optional` 立即报错）+ 自动注入 `-L`/`-l`/`-Wl,-rpath`，运行期 `cap run` 自动注入 `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`；
+> 2. **Workspace 多包协同（对标 pnpm / Bun）**：支持 `workspaces` glob（如 `packages/@cap/*`）、`workspace:*` 零拷贝软链协议与 `--filter <pkg>` 局部重编/审计；
+> 3. **AST 级按需链接树摇（On-Demand Link Tree-Shaking）**：`cpc` 仅对实际被代码引用的外部包在生成物顶部输出 `// @cap-used-pkg: <pkg>`，`cap build`/`run`/`test` 仅链接实际使用包的 `bin`/`sys` 产物，未引用的包 **0 字节体积影响**；
+> 4. **`.tar.zst` + `.tgz` 魔数双格式兼容与 `cap publish`**：
+>    - `cap` 静态内嵌 Zstd 与 libdeflate（零外部 `tar`/`zstd`/`gzip` CLI 依赖）；
+>    - **CP 原生分包**：`cap pack` 产出纯源码主包（`<pkg>-<ver>.tar.zst`）+ 分平台预编译包（`<pkg>-<ver>-<os>-<arch>.tar.zst`）与 `pack-manifest.json`；
+>    - **npm / Verdaccio 兼容直发**：`cap publish` 自动将 `cap.json` 合成最小 `package.json`，生成带 `package/` 前缀的标准 Gzip `.tgz` 与 SHA-1 `shasum` / `sha512-...` SRI，按 `CAP_TOKEN` > `NPM_TOKEN` > `~/.npmrc` 鉴权后 `PUT` 发布；
+>    - **魔数自动解压与验签**：下载安装时先强制验签（`sha256` / `sha512` SRI / `shasum`），再根据文件头魔数自动分发（`28 B5 2F FD` → Zstd；`1F 8B` → Gzip 并自动剥离 `package/` 前缀）并执行严格路径防穿越校验。
+
+```bash
+# 示例 1：交叉编译双平台瘦身静态库并打包分平台 .tar.zst
+cap rebuild --target=all --write-prebuilt
+cap pack --out=dist/
+
+# 示例 2：本地预览并直接发布 CP 包到官方 npm Registry
+cap publish --dry-run
+CAP_TOKEN=npm_xxxx cap publish --access=public --tag=latest
+
+# 示例 3：直接从 npmjs.org 安装 CP 包（自动魔数识别 .tgz + sha512 验签 + 剥离 package/）
+CAP_REGISTRY=https://registry.npmjs.org cap add @cap/picohttp@1.0.0
+```
 
 ### 2.5 cap.lock (Lockfile) 机制
 

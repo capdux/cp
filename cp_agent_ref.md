@@ -86,7 +86,7 @@ export * from "./sub_module.cp";
 ```
 - **架构铁律**：复合多文件库统一使用 `lib/<name>/index.cp` 作为唯一对外出口，根目录下严禁创建多余同名门面文件（如严禁创建 `lib/io.cp`）。
 
-### 4. `cap.json` 极简工程清单、Workspace 与工具链 CLI (`cap` & `cpc`) [SYNC_PENDING: 2026-11-24]
+### 4. `cap.json` 极简工程清单、Workspace 与工具链 CLI (`cap` & `cpc`)
 ```json
 {
   "name": "nexus-agent",
