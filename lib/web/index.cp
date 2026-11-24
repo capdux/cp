@@ -167,12 +167,19 @@ export {
     MultipartPart,
     MultipartDocument,
     MultipartBuilder,
+    DEFAULT_MAX_HEADERS_PER_PART,
+    scalarMpFindDashOrCrlf,
+    simdMpFindDashOrCrlf,
+    isValidMultipartBoundary,
     extractBoundary,
     parse,
     parseWithLimits,
 } from "./multipart.cp";
 
 export {
+    URI_TEMPLATE_DEFAULT_MAX_OUTPUT,
+    scalarUriFindBrace,
+    simdUriFindBrace,
     UriTemplateError,
     TemplateOp,
     AssocPair,

@@ -1,8 +1,16 @@
+// Reference-hardened against rwf2/multer (MIT) & RFC 7578/6570
 // Source: cp/lib/uritemplate/template.cp (RFC 6570 Level 1-4 URI Template Parser, Expander & Variable Extractor)
 // Pure CP zero-C-dependency RFC 6570 URI Template engine for REST API clients,
-// OpenAPI/MCP dynamic endpoints, and route parameter extraction.
+// OpenAPI/MCP dynamic endpoints, and route parameter extraction, with 16-lane SIMD brace scanning
+// (`simdUriFindBrace`) and output expansion limit protection (`URI_TEMPLATE_DEFAULT_MAX_OUTPUT`).
 
 const std = @import("std");
+
+/// Module-local 16-lane byte vector alias for URI Template lexical brace scanning.
+type UriTplVec16u8 = @Vector(16, u8);
+
+/// Default maximum expanded URI output length (64 KiB) to guard against expansion blowup.
+pub const URI_TEMPLATE_DEFAULT_MAX_OUTPUT: usize = 65536;
 
 /// Errors returned during URI template parsing, variable binding, or expansion.
 pub err UriTemplateError {
@@ -11,7 +19,43 @@ pub err UriTemplateError {
     InvalidOperator,
     InvalidVarName,
     InvalidModifier,
+    OutputTooLarge,
     OutOfMemory,
+}
+
+// ============================================================================
+// 16-Lane SIMD Brace Scanner (0-Diff with Scalar Reference)
+// ============================================================================
+
+/// Scalar reference: finds the first index of `'{'` or `'}'` in `s`, or `null`.
+pub fn scalarUriFindBrace(s: []const u8): usize? {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '{' || c == '}') return i;
+    }
+    return null;
+}
+
+/// 16-lane SIMD accelerated scanner for `'{'` or `'}'` (wired into `UriTemplate.parse`).
+pub fn simdUriFindBrace(s: []const u8): usize? {
+    const v_open: UriTplVec16u8 = @splat('{');
+    const v_close: UriTplVec16u8 = @splat('}');
+    let i: usize = 0;
+    while (i + 16 <= s.len) {
+        const v: UriTplVec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_open) | (v == v_close);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '{' || c == '}') return i;
+    }
+    return null;
 }
 
 /// RFC 6570 expression operators (Levels 1 through 4).
@@ -79,7 +123,7 @@ pub struct AssocPair {
     value: []const u8;
 }
 
-const VarKind = enum {
+const UriVarKind = enum {
     Scalar,
     List,
     Assoc,
@@ -87,15 +131,15 @@ const VarKind = enum {
 
 pub type OwnedBytes = []u8;
 
-struct VarEntry {
+struct UriVarEntry {
     name: []u8;
-    kind: VarKind;
+    kind: UriVarKind;
     scalar: []u8 = [];
     list: [][]u8 = [];
-    assoc: []AssocPairOwned = [];
+    assoc: []UriAssocPairOwned = [];
 }
 
-struct AssocPairOwned {
+struct UriAssocPairOwned {
     key: []u8;
     value: []u8;
 }
@@ -103,10 +147,10 @@ struct AssocPairOwned {
 /// Variable bindings container supporting scalar strings, string lists, and associative maps.
 pub struct TemplateVars {
     alloc: std.mem.Allocator;
-    entries: std.ArrayList(VarEntry) = .empty;
+    entries: std.ArrayList(UriVarEntry) = .empty;
 
     /// Initialize an empty variable binding container.
-    pub fn init(alloc: std.mem.Allocator): TemplateVars {
+    pub static fn init(alloc: std.mem.Allocator): TemplateVars {
         return TemplateVars{
             alloc: alloc,
             entries: .empty,
@@ -122,7 +166,7 @@ pub struct TemplateVars {
         _.entries.deinit(_.alloc);
     }
 
-    fn freeEntry(*_, entry: *VarEntry) {
+    fn freeEntry(*_, entry: *UriVarEntry) {
         _.alloc.free(entry.name);
         switch (entry.kind) {
             .Scalar => {
@@ -154,7 +198,7 @@ pub struct TemplateVars {
         return null;
     }
 
-    fn getEntry(name: []const u8): (&VarEntry)? {
+    fn getEntry(name: []const u8): (&UriVarEntry)? {
         let i: usize = 0;
         while (i < _.entries.items.len) : (i += 1) {
             if (std.mem.eql(u8, _.entries.items[i].name, name)) {
@@ -172,7 +216,7 @@ pub struct TemplateVars {
         if (idx := _.findIndex(name)) {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             _.freeEntry(&_.entries.items[idx]);
-            _.entries.items[idx] = VarEntry{
+            _.entries.items[idx] = UriVarEntry{
                 name: name_copy,
                 kind: .Scalar,
                 scalar: val_copy,
@@ -181,7 +225,7 @@ pub struct TemplateVars {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             errdefer _.alloc.free(name_copy);
 
-            _.entries.append(_.alloc, VarEntry{
+            _.entries.append(_.alloc, UriVarEntry{
                 name: name_copy,
                 kind: .Scalar,
                 scalar: val_copy,
@@ -208,7 +252,7 @@ pub struct TemplateVars {
         if (idx := _.findIndex(name)) {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             _.freeEntry(&_.entries.items[idx]);
-            _.entries.items[idx] = VarEntry{
+            _.entries.items[idx] = UriVarEntry{
                 name: name_copy,
                 kind: .List,
                 list: copied,
@@ -217,7 +261,7 @@ pub struct TemplateVars {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             errdefer _.alloc.free(name_copy);
 
-            _.entries.append(_.alloc, VarEntry{
+            _.entries.append(_.alloc, UriVarEntry{
                 name: name_copy,
                 kind: .List,
                 list: copied,
@@ -227,7 +271,7 @@ pub struct TemplateVars {
 
     /// Bind an associative list of key-value pairs to a variable name (overwrites any previous binding).
     pub fn setAssoc(*_, name: []const u8, pairs: []const AssocPair): void ! UriTemplateError {
-        let copied = _.alloc.alloc(AssocPairOwned, pairs.len) catch return UriTemplateError.OutOfMemory;
+        let copied = _.alloc.alloc(UriAssocPairOwned, pairs.len) catch return UriTemplateError.OutOfMemory;
         let built: usize = 0;
         errdefer {
             let k: usize = 0;
@@ -242,7 +286,7 @@ pub struct TemplateVars {
             const k_copy = _.alloc.dupe(u8, pairs[built].key) catch return UriTemplateError.OutOfMemory;
             errdefer _.alloc.free(k_copy);
             const v_copy = _.alloc.dupe(u8, pairs[built].value) catch return UriTemplateError.OutOfMemory;
-            copied[built] = AssocPairOwned{
+            copied[built] = UriAssocPairOwned{
                 key: k_copy,
                 value: v_copy,
             };
@@ -251,7 +295,7 @@ pub struct TemplateVars {
         if (idx := _.findIndex(name)) {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             _.freeEntry(&_.entries.items[idx]);
-            _.entries.items[idx] = VarEntry{
+            _.entries.items[idx] = UriVarEntry{
                 name: name_copy,
                 kind: .Assoc,
                 assoc: copied,
@@ -260,7 +304,7 @@ pub struct TemplateVars {
             const name_copy = _.alloc.dupe(u8, name) catch return UriTemplateError.OutOfMemory;
             errdefer _.alloc.free(name_copy);
 
-            _.entries.append(_.alloc, VarEntry{
+            _.entries.append(_.alloc, UriVarEntry{
                 name: name_copy,
                 kind: .Assoc,
                 assoc: copied,
@@ -269,33 +313,33 @@ pub struct TemplateVars {
     }
 }
 
-struct VarSpec {
+struct UriVarSpec {
     name: []u8;
     explode: bool = false;
     max_len: usize? = null;
 }
 
-struct ExprPart {
+struct UriExprPart {
     op: TemplateOp;
-    vars: []VarSpec;
+    vars: []UriVarSpec;
 }
 
-enum TemplatePart {
+enum UriTemplatePart {
     Literal: []u8,
-    Expr: ExprPart,
+    Expr: UriExprPart,
 }
 
 /// Parsed RFC 6570 Level 1-4 URI Template.
 pub struct UriTemplate {
     alloc: std.mem.Allocator;
-    parts: []TemplatePart;
+    parts: []UriTemplatePart;
 
-    /// Parse and validate an RFC 6570 URI template pattern.
-    pub fn parse(alloc: std.mem.Allocator, pattern: []const u8): UriTemplate ! UriTemplateError {
-        let part_list: std.ArrayList(TemplatePart) = .empty;
+    /// Parse and validate an RFC 6570 URI template pattern using 16-lane SIMD brace scanning.
+    pub static fn parse(alloc: std.mem.Allocator, pattern: []const u8): UriTemplate ! UriTemplateError {
+        let part_list: std.ArrayList(UriTemplatePart) = .empty;
         errdefer {
             for (part of part_list.items) {
-                freeTemplatePart(alloc, part);
+                uriFreeTemplatePart(alloc, part);
             }
             part_list.deinit(alloc);
         }
@@ -304,48 +348,42 @@ pub struct UriTemplate {
         let lit_start: usize = 0;
 
         while (i < pattern.len) {
-            const ch = pattern[i];
+            const rel_opt = simdUriFindBrace(pattern[i..]);
+            if (rel_opt == null) {
+                break;
+            }
+            const brace_pos = i + rel_opt.?;
+            const ch = pattern[brace_pos];
             if (ch == '}') {
                 return UriTemplateError.UnexpectedCloseBrace;
             }
-            if (ch == '{') {
-                if (i > lit_start) {
-                    const lit = alloc.dupe(u8, pattern[lit_start..i]) catch return UriTemplateError.OutOfMemory;
-                    errdefer alloc.free(lit);
-                    part_list.append(alloc, TemplatePart{ .Literal = lit }) catch return UriTemplateError.OutOfMemory;
-                }
-
-                const expr_start = i + 1;
-                let close_idx: usize? = null;
-                let j = expr_start;
-                while (j < pattern.len) : (j += 1) {
-                    if (pattern[j] == '}') {
-                        close_idx = j;
-                        break;
-                    }
-                    if (pattern[j] == '{') {
-                        return UriTemplateError.UnclosedExpression;
-                    }
-                }
-
-                if (close_idx == null) return UriTemplateError.UnclosedExpression;
-                const end_idx = close_idx.?;
-                const expr_body = pattern[expr_start..end_idx];
-                const parsed_expr = parseExpression(alloc, expr_body)?;
-                errdefer freeExprPart(alloc, parsed_expr);
-                part_list.append(alloc, TemplatePart{ .Expr = parsed_expr }) catch return UriTemplateError.OutOfMemory;
-
-                i = end_idx + 1;
-                lit_start = i;
-                continue;
+            // ch == '{'
+            if (brace_pos > lit_start) {
+                const lit = alloc.dupe(u8, pattern[lit_start..brace_pos]) catch return UriTemplateError.OutOfMemory;
+                errdefer alloc.free(lit);
+                part_list.append(alloc, UriTemplatePart{ .Literal = lit }) catch return UriTemplateError.OutOfMemory;
             }
-            i += 1;
+
+            const expr_start = brace_pos + 1;
+            const inner_rel = simdUriFindBrace(pattern[expr_start..]) orelse return UriTemplateError.UnclosedExpression;
+            const end_idx = expr_start + inner_rel;
+            if (pattern[end_idx] == '{') {
+                return UriTemplateError.UnclosedExpression;
+            }
+
+            const expr_body = pattern[expr_start..end_idx];
+            const parsed_expr = uriParseExpression(alloc, expr_body)?;
+            errdefer uriFreeExprPart(alloc, parsed_expr);
+            part_list.append(alloc, UriTemplatePart{ .Expr = parsed_expr }) catch return UriTemplateError.OutOfMemory;
+
+            i = end_idx + 1;
+            lit_start = i;
         }
 
         if (lit_start < pattern.len) {
             const lit = alloc.dupe(u8, pattern[lit_start..pattern.len]) catch return UriTemplateError.OutOfMemory;
             errdefer alloc.free(lit);
-            part_list.append(alloc, TemplatePart{ .Literal = lit }) catch return UriTemplateError.OutOfMemory;
+            part_list.append(alloc, UriTemplatePart{ .Literal = lit }) catch return UriTemplateError.OutOfMemory;
         }
 
         const owned_parts = part_list.toOwnedSlice(alloc) catch return UriTemplateError.OutOfMemory;
@@ -358,7 +396,7 @@ pub struct UriTemplate {
     /// Release all memory owned by the parsed URI template.
     pub fn deinit(*_) {
         for (part of _.parts) {
-            freeTemplatePart(_.alloc, part);
+            uriFreeTemplatePart(_.alloc, part);
         }
         if (_.parts.len > 0) {
             _.alloc.free(_.parts);
@@ -401,27 +439,42 @@ pub struct UriTemplate {
         return names.toOwnedSlice(alloc) catch return UriTemplateError.OutOfMemory;
     }
 
-    /// Expand the URI template using the supplied variable bindings (RFC 6570 Levels 1-4).
-    pub fn expand(alloc: std.mem.Allocator, vars: *TemplateVars): []u8 ! UriTemplateError {
+    /// Expand the URI template with an explicit `max_output_len` cap to prevent expansion blowup.
+    pub fn expandWithLimit(alloc: std.mem.Allocator, vars: *TemplateVars, max_output_len: usize): []u8 ! UriTemplateError {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(alloc);
 
         for (part of _.parts) {
             switch (part) {
                 .Literal => |lit| {
-                    out.appendSlice(alloc, lit) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, &out, lit, max_output_len)?;
                 },
                 .Expr => |expr| {
-                    expandExpression(alloc, &out, expr, vars)?;
+                    uriExpandExpression(alloc, &out, expr, vars, max_output_len)?;
                 },
             }
         }
 
         return out.toOwnedSlice(alloc) catch return UriTemplateError.OutOfMemory;
     }
+
+    /// Expand the URI template using the supplied variable bindings (RFC 6570 Levels 1-4).
+    pub fn expand(alloc: std.mem.Allocator, vars: *TemplateVars): []u8 ! UriTemplateError {
+        return _.expandWithLimit(alloc, vars, URI_TEMPLATE_DEFAULT_MAX_OUTPUT);
+    }
 }
 
-fn freeExprPart(alloc: std.mem.Allocator, expr: ExprPart) {
+fn uriAppendBoundedByte(alloc: std.mem.Allocator, out: *std.ArrayList(u8), b: u8, max_len: usize): void ! UriTemplateError {
+    if (out.items.len >= max_len) return UriTemplateError.OutputTooLarge;
+    out.append(alloc, b) catch return UriTemplateError.OutOfMemory;
+}
+
+fn uriAppendBoundedSlice(alloc: std.mem.Allocator, out: *std.ArrayList(u8), s: []const u8, max_len: usize): void ! UriTemplateError {
+    if (s.len > max_len || out.items.len > max_len - s.len) return UriTemplateError.OutputTooLarge;
+    out.appendSlice(alloc, s) catch return UriTemplateError.OutOfMemory;
+}
+
+fn uriFreeExprPart(alloc: std.mem.Allocator, expr: UriExprPart) {
     for (vs of expr.vars) {
         alloc.free(vs.name);
     }
@@ -430,25 +483,25 @@ fn freeExprPart(alloc: std.mem.Allocator, expr: ExprPart) {
     }
 }
 
-fn freeTemplatePart(alloc: std.mem.Allocator, part: TemplatePart) {
+fn uriFreeTemplatePart(alloc: std.mem.Allocator, part: UriTemplatePart) {
     switch (part) {
         .Literal => |lit| alloc.free(lit),
-        .Expr => |expr| freeExprPart(alloc, expr),
+        .Expr => |expr| uriFreeExprPart(alloc, expr),
     }
 }
 
-fn isHexDigit(c: u8): bool {
+fn uriIsHexDigit(c: u8): bool {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
-fn isVarChar(c: u8): bool {
+fn uriIsVarChar(c: u8): bool {
     return (c >= 'a' && c <= 'z') ||
         (c >= 'A' && c <= 'Z') ||
         (c >= '0' && c <= '9') ||
         c == '_';
 }
 
-fn validateVarName(name: []const u8): bool {
+fn uriValidateVarName(name: []const u8): bool {
     if (name.len == 0) return false;
     if (name[0] == '.' || name[name.len - 1] == '.') return false;
 
@@ -465,17 +518,17 @@ fn validateVarName(name: []const u8): bool {
         prev_dot = false;
         if (c == '%') {
             if (i + 2 >= name.len) return false;
-            if (!isHexDigit(name[i + 1]) || !isHexDigit(name[i + 2])) return false;
+            if (!uriIsHexDigit(name[i + 1]) || !uriIsHexDigit(name[i + 2])) return false;
             i += 3;
             continue;
         }
-        if (!isVarChar(c)) return false;
+        if (!uriIsVarChar(c)) return false;
         i += 1;
     }
     return true;
 }
 
-fn parseVarSpec(alloc: std.mem.Allocator, raw: []const u8): VarSpec ! UriTemplateError {
+fn uriParseVarSpec(alloc: std.mem.Allocator, raw: []const u8): UriVarSpec ! UriTemplateError {
     if (raw.len == 0) return UriTemplateError.InvalidVarName;
 
     let explode = false;
@@ -518,19 +571,19 @@ fn parseVarSpec(alloc: std.mem.Allocator, raw: []const u8): VarSpec ! UriTemplat
     }
 
     const name_slice = raw[0..name_end];
-    if (!validateVarName(name_slice)) {
+    if (!uriValidateVarName(name_slice)) {
         return UriTemplateError.InvalidVarName;
     }
 
     const owned_name = alloc.dupe(u8, name_slice) catch return UriTemplateError.OutOfMemory;
-    return VarSpec{
+    return UriVarSpec{
         name: owned_name,
         explode: explode,
         max_len: max_len,
     };
 }
 
-fn parseExpression(alloc: std.mem.Allocator, body: []const u8): ExprPart ! UriTemplateError {
+fn uriParseExpression(alloc: std.mem.Allocator, body: []const u8): UriExprPart ! UriTemplateError {
     if (body.len == 0) return UriTemplateError.InvalidVarName;
 
     let op = TemplateOp.Simple;
@@ -564,7 +617,7 @@ fn parseExpression(alloc: std.mem.Allocator, body: []const u8): ExprPart ! UriTe
 
     if (rest.len == 0) return UriTemplateError.InvalidVarName;
 
-    let specs: std.ArrayList(VarSpec) = .empty;
+    let specs: std.ArrayList(UriVarSpec) = .empty;
     errdefer {
         for (vs of specs.items) {
             alloc.free(vs.name);
@@ -576,7 +629,7 @@ fn parseExpression(alloc: std.mem.Allocator, body: []const u8): ExprPart ! UriTe
     let i: usize = 0;
     while (i <= rest.len) : (i += 1) {
         if (i == rest.len || rest[i] == ',') {
-            const spec = parseVarSpec(alloc, rest[start..i])?;
+            const spec = uriParseVarSpec(alloc, rest[start..i])?;
             errdefer alloc.free(spec.name);
             specs.append(alloc, spec) catch return UriTemplateError.OutOfMemory;
             start = i + 1;
@@ -584,20 +637,20 @@ fn parseExpression(alloc: std.mem.Allocator, body: []const u8): ExprPart ! UriTe
     }
 
     const owned_specs = specs.toOwnedSlice(alloc) catch return UriTemplateError.OutOfMemory;
-    return ExprPart{
+    return UriExprPart{
         op: op,
         vars: owned_specs,
     };
 }
 
-fn isUnreserved(c: u8): bool {
+fn uriIsUnreserved(c: u8): bool {
     return (c >= 'a' && c <= 'z') ||
         (c >= 'A' && c <= 'Z') ||
         (c >= '0' && c <= '9') ||
         c == '-' || c == '.' || c == '_' || c == '~';
 }
 
-fn isReserved(c: u8): bool {
+fn uriIsReserved(c: u8): bool {
     return switch (c) {
         ':', '/', '?', '#', '[', ']', '@',
         '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=' => true,
@@ -605,45 +658,46 @@ fn isReserved(c: u8): bool {
     };
 }
 
-fn appendPctEncoded(alloc: std.mem.Allocator, out: *std.ArrayList(u8), byte: u8): void ! UriTemplateError {
+fn uriAppendPctEncoded(alloc: std.mem.Allocator, out: *std.ArrayList(u8), byte: u8, max_len: usize): void ! UriTemplateError {
     const hex = "0123456789ABCDEF";
     const buf: [3]u8 = ['%', hex[byte >> 4], hex[byte & 0x0F]];
-    out.appendSlice(alloc, buf[0..3]) catch return UriTemplateError.OutOfMemory;
+    uriAppendBoundedSlice(alloc, out, buf[0..3], max_len)?;
 }
 
-fn appendEncoded(
+fn uriAppendEncoded(
     alloc: std.mem.Allocator,
     out: *std.ArrayList(u8),
     value: []const u8,
     allow_reserved: bool,
+    max_len: usize,
 ): void ! UriTemplateError {
     let i: usize = 0;
     while (i < value.len) {
         const c = value[i];
-        if (isUnreserved(c)) {
-            out.append(alloc, c) catch return UriTemplateError.OutOfMemory;
+        if (uriIsUnreserved(c)) {
+            uriAppendBoundedByte(alloc, out, c, max_len)?;
             i += 1;
             continue;
         }
         if (allow_reserved) {
-            if (isReserved(c)) {
-                out.append(alloc, c) catch return UriTemplateError.OutOfMemory;
+            if (uriIsReserved(c)) {
+                uriAppendBoundedByte(alloc, out, c, max_len)?;
                 i += 1;
                 continue;
             }
-            if (c == '%' && i + 2 < value.len && isHexDigit(value[i + 1]) && isHexDigit(value[i + 2])) {
-                out.appendSlice(alloc, value[i .. i + 3]) catch return UriTemplateError.OutOfMemory;
+            if (c == '%' && i + 2 < value.len && uriIsHexDigit(value[i + 1]) && uriIsHexDigit(value[i + 2])) {
+                uriAppendBoundedSlice(alloc, out, value[i .. i + 3], max_len)?;
                 i += 3;
                 continue;
             }
         }
-        appendPctEncoded(alloc, out, c)?;
+        uriAppendPctEncoded(alloc, out, c, max_len)?;
         i += 1;
     }
 }
 
 /// Truncate UTF-8 string to at most `max_chars` Unicode codepoints (RFC 6570 Section 2.4.1).
-fn truncateUtf8Prefix(s: []const u8, max_chars: usize): []const u8 {
+fn uriTruncateUtf8Prefix(s: []const u8, max_chars: usize): []const u8 {
     let byte_idx: usize = 0;
     let char_count: usize = 0;
     while (byte_idx < s.len && char_count < max_chars) {
@@ -668,11 +722,12 @@ fn truncateUtf8Prefix(s: []const u8, max_chars: usize): []const u8 {
     return s[0..byte_idx];
 }
 
-fn expandExpression(
+fn uriExpandExpression(
     alloc: std.mem.Allocator,
     out: *std.ArrayList(u8),
-    expr: ExprPart,
+    expr: UriExprPart,
     vars: *TemplateVars,
+    max_len: usize,
 ): void ! UriTemplateError {
     const op = expr.op;
     const allow_res = op.allowReserved();
@@ -686,64 +741,64 @@ fn expandExpression(
             .Scalar => {
                 let raw_val: []const u8 = entry.scalar;
                 if (ml := vs.max_len) {
-                    raw_val = truncateUtf8Prefix(entry.scalar, ml);
+                    raw_val = uriTruncateUtf8Prefix(entry.scalar, ml);
                 }
                 if (is_first) {
-                    out.appendSlice(alloc, op.first()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.first(), max_len)?;
                     is_first = false;
                 } else {
-                    out.appendSlice(alloc, op.sep()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.sep(), max_len)?;
                 }
                 if (named) {
-                    out.appendSlice(alloc, vs.name) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, vs.name, max_len)?;
                     if (raw_val.len == 0) {
-                        out.appendSlice(alloc, op.ifEmpty()) catch return UriTemplateError.OutOfMemory;
+                        uriAppendBoundedSlice(alloc, out, op.ifEmpty(), max_len)?;
                     } else {
-                        out.append(alloc, '=') catch return UriTemplateError.OutOfMemory;
-                        appendEncoded(alloc, out, raw_val, allow_res)?;
+                        uriAppendBoundedByte(alloc, out, '=', max_len)?;
+                        uriAppendEncoded(alloc, out, raw_val, allow_res, max_len)?;
                     }
                 } else {
-                    appendEncoded(alloc, out, raw_val, allow_res)?;
+                    uriAppendEncoded(alloc, out, raw_val, allow_res, max_len)?;
                 }
             },
             .List => {
                 if (entry.list.len == 0) continue;
                 if (is_first) {
-                    out.appendSlice(alloc, op.first()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.first(), max_len)?;
                     is_first = false;
                 } else {
-                    out.appendSlice(alloc, op.sep()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.sep(), max_len)?;
                 }
 
                 if (!vs.explode) {
                     if (named) {
-                        out.appendSlice(alloc, vs.name) catch return UriTemplateError.OutOfMemory;
-                        out.append(alloc, '=') catch return UriTemplateError.OutOfMemory;
+                        uriAppendBoundedSlice(alloc, out, vs.name, max_len)?;
+                        uriAppendBoundedByte(alloc, out, '=', max_len)?;
                     }
                     let idx: usize = 0;
                     while (idx < entry.list.len) : (idx += 1) {
                         if (idx > 0) {
-                            out.append(alloc, ',') catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedByte(alloc, out, ',', max_len)?;
                         }
-                        appendEncoded(alloc, out, entry.list[idx], allow_res)?;
+                        uriAppendEncoded(alloc, out, entry.list[idx], allow_res, max_len)?;
                     }
                 } else {
                     let idx: usize = 0;
                     while (idx < entry.list.len) : (idx += 1) {
                         if (idx > 0) {
-                            out.appendSlice(alloc, op.sep()) catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedSlice(alloc, out, op.sep(), max_len)?;
                         }
                         const item = entry.list[idx];
                         if (named) {
-                            out.appendSlice(alloc, vs.name) catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedSlice(alloc, out, vs.name, max_len)?;
                             if (item.len == 0) {
-                                out.appendSlice(alloc, op.ifEmpty()) catch return UriTemplateError.OutOfMemory;
+                                uriAppendBoundedSlice(alloc, out, op.ifEmpty(), max_len)?;
                             } else {
-                                out.append(alloc, '=') catch return UriTemplateError.OutOfMemory;
-                                appendEncoded(alloc, out, item, allow_res)?;
+                                uriAppendBoundedByte(alloc, out, '=', max_len)?;
+                                uriAppendEncoded(alloc, out, item, allow_res, max_len)?;
                             }
                         } else {
-                            appendEncoded(alloc, out, item, allow_res)?;
+                            uriAppendEncoded(alloc, out, item, allow_res, max_len)?;
                         }
                     }
                 }
@@ -751,39 +806,39 @@ fn expandExpression(
             .Assoc => {
                 if (entry.assoc.len == 0) continue;
                 if (is_first) {
-                    out.appendSlice(alloc, op.first()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.first(), max_len)?;
                     is_first = false;
                 } else {
-                    out.appendSlice(alloc, op.sep()) catch return UriTemplateError.OutOfMemory;
+                    uriAppendBoundedSlice(alloc, out, op.sep(), max_len)?;
                 }
 
                 if (!vs.explode) {
                     if (named) {
-                        out.appendSlice(alloc, vs.name) catch return UriTemplateError.OutOfMemory;
-                        out.append(alloc, '=') catch return UriTemplateError.OutOfMemory;
+                        uriAppendBoundedSlice(alloc, out, vs.name, max_len)?;
+                        uriAppendBoundedByte(alloc, out, '=', max_len)?;
                     }
                     let idx: usize = 0;
                     while (idx < entry.assoc.len) : (idx += 1) {
                         if (idx > 0) {
-                            out.append(alloc, ',') catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedByte(alloc, out, ',', max_len)?;
                         }
-                        appendEncoded(alloc, out, entry.assoc[idx].key, allow_res)?;
-                        out.append(alloc, ',') catch return UriTemplateError.OutOfMemory;
-                        appendEncoded(alloc, out, entry.assoc[idx].value, allow_res)?;
+                        uriAppendEncoded(alloc, out, entry.assoc[idx].key, allow_res, max_len)?;
+                        uriAppendBoundedByte(alloc, out, ',', max_len)?;
+                        uriAppendEncoded(alloc, out, entry.assoc[idx].value, allow_res, max_len)?;
                     }
                 } else {
                     let idx: usize = 0;
                     while (idx < entry.assoc.len) : (idx += 1) {
                         if (idx > 0) {
-                            out.appendSlice(alloc, op.sep()) catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedSlice(alloc, out, op.sep(), max_len)?;
                         }
                         const pair = entry.assoc[idx];
-                        appendEncoded(alloc, out, pair.key, allow_res)?;
+                        uriAppendEncoded(alloc, out, pair.key, allow_res, max_len)?;
                         if (named && pair.value.len == 0) {
-                            out.appendSlice(alloc, op.ifEmpty()) catch return UriTemplateError.OutOfMemory;
+                            uriAppendBoundedSlice(alloc, out, op.ifEmpty(), max_len)?;
                         } else {
-                            out.append(alloc, '=') catch return UriTemplateError.OutOfMemory;
-                            appendEncoded(alloc, out, pair.value, allow_res)?;
+                            uriAppendBoundedByte(alloc, out, '=', max_len)?;
+                            uriAppendEncoded(alloc, out, pair.value, allow_res, max_len)?;
                         }
                     }
                 }

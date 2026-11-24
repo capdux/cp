@@ -114,6 +114,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **HdrHistogram_rust** (`HdrHistogram`) | <https://github.com/HdrHistogram/HdrHistogram_rust> | MIT OR Apache-2.0 | `lib/obs/hdrHist.cp`, `lib/obs/openmetrics.cp` | Copyright (c) 2016-2024 HdrHistogram Contributors (OpenMetrics 1.0) |
 | **pcap-parser** (`rusticata`) | <https://github.com/rusticata/pcap-parser> | MIT OR Apache-2.0 | `lib/binfmt/pcap.cp`, `lib/binfmt/pcapng.cp` | Copyright (c) 2017-2024 Pierre Chifflier (Rusticata) |
 | **ropey** (`cessen`) & **crossbeam** (`crossbeam-rs`) | <https://github.com/cessen/ropey> | MIT / Apache-2.0 | `lib/ds/rope.cp`, `lib/ds/skiplist.cp` | Copyright (c) 2018-2024 Nathan Vegdahl / Crossbeam Developers |
+| **multer** (`rwf2`) | <https://github.com/rwf2/multer> | MIT | `lib/web/multipart.cp`, `lib/web/uritemplate.cp` | Copyright (c) 2020-2024 Rousan Ali / rwf2 (RFC 7578 / RFC 6570) |
 
 ---
 

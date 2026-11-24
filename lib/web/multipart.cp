@@ -1,10 +1,16 @@
+// Reference-hardened against rwf2/multer (MIT) & RFC 7578/6570
 // Source: cp/lib/multipart/multipart.cp (Pure CP RFC 7578 multipart/form-data Parser, Boundary Extractor & Builder)
-// Zero-C-dependency RFC 7578 multipart/form-data boundary extractor, binary-safe parser, and builder.
+// Zero-C-dependency RFC 7578 multipart/form-data boundary extractor, binary-safe parser, and builder
+// with 16-lane @Vector(16, u8) SIMD (`MpUriVec16u8`) boundary/CRLF scanning and header/part DoS bounds.
 
 const std = @import("std");
 
+/// Module-local 16-lane byte vector alias for multipart boundary & CRLF scanning hot paths.
+type MpUriVec16u8 = @Vector(16, u8);
+
 pub const DEFAULT_MAX_PARTS: usize = 1024;
 pub const DEFAULT_MAX_PART_BYTES: usize = 64 * 1024 * 1024;
+pub const DEFAULT_MAX_HEADERS_PER_PART: usize = 64;
 
 /// Error set returned by `cap:multipart` extraction, parsing, and building operations.
 pub err MultipartError {
@@ -16,6 +22,42 @@ pub err MultipartError {
     PartTooLarge,
     InvalidHeaderValue,
     OutOfMemory,
+}
+
+// ============================================================================
+// 16-Lane SIMD Boundary / CRLF Scanner (0-Diff with Scalar Reference)
+// ============================================================================
+
+/// Scalar reference: finds the first index of `'-'`, `'\r'`, or `'\n'` in `s`, or `null`.
+pub fn scalarMpFindDashOrCrlf(s: []const u8): usize? {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '-' || c == '\r' || c == '\n') return i;
+    }
+    return null;
+}
+
+/// 16-lane SIMD accelerated scanner for `'-'`, `'\r'`, or `'\n'` (wired into multipart boundary search).
+pub fn simdMpFindDashOrCrlf(s: []const u8): usize? {
+    const v_dash: MpUriVec16u8 = @splat('-');
+    const v_cr: MpUriVec16u8 = @splat('\r');
+    const v_lf: MpUriVec16u8 = @splat('\n');
+    let i: usize = 0;
+    while (i + 16 <= s.len) {
+        const v: MpUriVec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_dash) | (v == v_cr) | (v == v_lf);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '-' || c == '\r' || c == '\n') return i;
+    }
+    return null;
 }
 
 /// A single parsed `multipart/form-data` part.
@@ -81,20 +123,20 @@ pub struct MultipartDocument {
     }
 }
 
-fn trimWs(s: []const u8): []const u8 {
+fn mpTrimWs(s: []const u8): []const u8 {
     return std.mem.trim(u8, s, " \t\r\n");
 }
 
-fn hasCtl(s: []const u8): bool {
+fn mpHasCtl(s: []const u8): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         const ch = s[i];
-        if (ch == '\r' || ch == '\n' || ch == 0) return true;
+        if (ch < 0x20 || ch == 0x7F) return true;
     }
     return false;
 }
 
-fn isBoundaryCharNoSpace(ch: u8): bool {
+fn mpIsBoundaryCharNoSpace(ch: u8): bool {
     if (ch >= '0' && ch <= '9') return true;
     if (ch >= 'A' && ch <= 'Z') return true;
     if (ch >= 'a' && ch <= 'z') return true;
@@ -103,14 +145,16 @@ fn isBoundaryCharNoSpace(ch: u8): bool {
         ch == '=' || ch == '?';
 }
 
-fn isValidBoundary(boundary: []const u8): bool {
+/// Validates an RFC 2046 §5.1.1 / RFC 7578 multipart boundary (1..=70 bytes, legal `bchars`,
+/// no trailing space, no CR/LF/control bytes).
+pub fn isValidMultipartBoundary(boundary: []const u8): bool {
     if (boundary.len == 0 || boundary.len > 70) return false;
     let i: usize = 0;
     while (i < boundary.len) : (i += 1) {
         const ch = boundary[i];
         if (ch == ' ') {
             if (i == boundary.len - 1) return false;
-        } else if (!isBoundaryCharNoSpace(ch)) {
+        } else if (!mpIsBoundaryCharNoSpace(ch)) {
             return false;
         }
     }
@@ -120,11 +164,12 @@ fn isValidBoundary(boundary: []const u8): bool {
 /// Extracts and validates the `boundary` parameter from a `Content-Type: multipart/form-data; ...` header.
 /// Supports case-insensitive media type/parameter names, semicolon-separated parameters, and quoted values.
 pub fn extractBoundary(content_type_header: []const u8): ([]const u8) ! MultipartError {
-    const trimmed = trimWs(content_type_header);
+    if (mpHasCtl(content_type_header)) return MultipartError.InvalidContentType;
+    const trimmed = mpTrimWs(content_type_header);
     if (trimmed.len == 0) return MultipartError.InvalidContentType;
 
     const semi_idx = std.mem.indexOfScalar(u8, trimmed, ';') ?? trimmed.len;
-    const media_type = trimWs(trimmed[0..semi_idx]);
+    const media_type = mpTrimWs(trimmed[0..semi_idx]);
     if (!std.ascii.eqlIgnoreCase(media_type, "multipart/form-data")) {
         return MultipartError.InvalidContentType;
     }
@@ -160,8 +205,8 @@ pub fn extractBoundary(content_type_header: []const u8): ([]const u8) ! Multipar
         }
 
         if (eq := eq_pos) {
-            const key = trimWs(trimmed[param_start..eq]);
-            let val = trimWs(trimmed[eq + 1 .. pos]);
+            const key = mpTrimWs(trimmed[param_start..eq]);
+            let val = mpTrimWs(trimmed[eq + 1 .. pos]);
             if (std.ascii.eqlIgnoreCase(key, "boundary")) {
                 if (val.len >= 2 && val[0] == '"') {
                     if (val[val.len - 1] != '"') return MultipartError.InvalidBoundary;
@@ -169,7 +214,7 @@ pub fn extractBoundary(content_type_header: []const u8): ([]const u8) ! Multipar
                 } else if (std.mem.indexOfScalar(u8, val, '"') != null) {
                     return MultipartError.InvalidBoundary;
                 }
-                if (!isValidBoundary(val)) return MultipartError.InvalidBoundary;
+                if (!isValidMultipartBoundary(val)) return MultipartError.InvalidBoundary;
                 return val;
             }
         }
@@ -178,12 +223,12 @@ pub fn extractBoundary(content_type_header: []const u8): ([]const u8) ! Multipar
     return MultipartError.InvalidBoundary;
 }
 
-priv struct BoundaryMatch {
+priv struct MpBoundaryMatch {
     is_closing: bool = false,
     next_pos: usize = 0,
 }
 
-fn matchBoundaryAt(body: []const u8, pos: usize, dash_bnd: []const u8): BoundaryMatch? {
+fn mpMatchBoundaryAt(body: []const u8, pos: usize, dash_bnd: []const u8): MpBoundaryMatch? {
     if (pos + dash_bnd.len > body.len) return null;
     if (!std.mem.eql(u8, body[pos .. pos + dash_bnd.len], dash_bnd)) return null;
 
@@ -193,26 +238,28 @@ fn matchBoundaryAt(body: []const u8, pos: usize, dash_bnd: []const u8): Boundary
         if (end_after == body.len || body[end_after] == '\r' || body[end_after] == '\n' ||
             body[end_after] == ' ' || body[end_after] == '\t')
         {
-            return BoundaryMatch{ is_closing: true, next_pos: end_after };
+            return MpBoundaryMatch{ is_closing: true, next_pos: end_after };
         }
         return null;
     }
 
     if (after + 2 <= body.len && body[after] == '\r' && body[after + 1] == '\n') {
-        return BoundaryMatch{ is_closing: false, next_pos: after + 2 };
+        return MpBoundaryMatch{ is_closing: false, next_pos: after + 2 };
     }
     if (after < body.len && body[after] == '\n') {
-        return BoundaryMatch{ is_closing: false, next_pos: after + 1 };
+        return MpBoundaryMatch{ is_closing: false, next_pos: after + 1 };
     }
     return null;
 }
 
-fn findFirstBoundary(body: []const u8, dash_bnd: []const u8): BoundaryMatch? {
+/// 16-lane SIMD accelerated search for the first boundary delimiter (`--boundary`).
+fn mpFindFirstBoundary(body: []const u8, dash_bnd: []const u8): MpBoundaryMatch? {
     let search_pos: usize = 0;
     while (search_pos < body.len) {
-        const idx = std.mem.indexOfPos(u8, body, search_pos, dash_bnd) ?? return null;
-        if (idx == 0 || body[idx - 1] == '\n') {
-            if (m := matchBoundaryAt(body, idx, dash_bnd)) {
+        const rel = simdMpFindDashOrCrlf(body[search_pos..]) ?? return null;
+        const idx = search_pos + rel;
+        if (body[idx] == '-' && (idx == 0 || body[idx - 1] == '\n')) {
+            if (m := mpMatchBoundaryAt(body, idx, dash_bnd)) {
                 return m;
             }
         }
@@ -221,27 +268,32 @@ fn findFirstBoundary(body: []const u8, dash_bnd: []const u8): BoundaryMatch? {
     return null;
 }
 
-priv struct NextBoundaryResult {
+priv struct MpNextBoundaryResult {
     data_end: usize = 0,
-    match_info: BoundaryMatch = BoundaryMatch{},
+    match_info: MpBoundaryMatch = MpBoundaryMatch{},
 }
 
-fn findNextBoundary(body: []const u8, data_start: usize, dash_bnd: []const u8): NextBoundaryResult? {
+/// 16-lane SIMD accelerated search for the next boundary delimiter after `data_start`.
+/// Strictly rejects fake prefixes such as `--boundary_extra`.
+fn mpFindNextBoundary(body: []const u8, data_start: usize, dash_bnd: []const u8): MpNextBoundaryResult? {
     let search_pos = data_start;
     while (search_pos < body.len) {
-        const idx = std.mem.indexOfPos(u8, body, search_pos, dash_bnd) ?? return null;
-        let data_end: usize = idx;
-        let valid_line_start = false;
-        if (idx >= 2 && body[idx - 2] == '\r' && body[idx - 1] == '\n') {
-            data_end = idx - 2;
-            valid_line_start = true;
-        } else if (idx >= 1 && body[idx - 1] == '\n') {
-            data_end = idx - 1;
-            valid_line_start = true;
-        }
-        if (valid_line_start && data_end >= data_start) {
-            if (m := matchBoundaryAt(body, idx, dash_bnd)) {
-                return NextBoundaryResult{ data_end: data_end, match_info: m };
+        const rel = simdMpFindDashOrCrlf(body[search_pos..]) ?? return null;
+        const idx = search_pos + rel;
+        if (body[idx] == '-') {
+            let data_end: usize = idx;
+            let valid_line_start = false;
+            if (idx >= 2 && body[idx - 2] == '\r' && body[idx - 1] == '\n') {
+                data_end = idx - 2;
+                valid_line_start = true;
+            } else if (idx >= 1 && body[idx - 1] == '\n') {
+                data_end = idx - 1;
+                valid_line_start = true;
+            }
+            if (valid_line_start && data_end >= data_start) {
+                if (m := mpMatchBoundaryAt(body, idx, dash_bnd)) {
+                    return MpNextBoundaryResult{ data_end: data_end, match_info: m };
+                }
             }
         }
         search_pos = idx + 1;
@@ -249,7 +301,7 @@ fn findNextBoundary(body: []const u8, data_start: usize, dash_bnd: []const u8): 
     return null;
 }
 
-fn unescapeQuotedAlloc(allocator: std.mem.Allocator, raw: []const u8): ([]u8) ! MultipartError {
+fn mpUnescapeQuotedAlloc(allocator: std.mem.Allocator, raw: []const u8): ([]u8) ! MultipartError {
     let out_len: usize = 0;
     let i: usize = 0;
     while (i < raw.len) : (i += 1) {
@@ -271,7 +323,7 @@ fn unescapeQuotedAlloc(allocator: std.mem.Allocator, raw: []const u8): ([]u8) ! 
     return out;
 }
 
-priv struct DispositionParsed {
+priv struct MpDispositionParsed {
     name: ([]u8)? = null,
     filename: ([]u8)? = null,
 
@@ -283,13 +335,14 @@ priv struct DispositionParsed {
     }
 }
 
-fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8): DispositionParsed ! MultipartError {
-    let res = DispositionParsed{};
+fn mpParseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8): MpDispositionParsed ! MultipartError {
+    if (mpHasCtl(header_val)) return MultipartError.MalformedPartHeader;
+    let res = MpDispositionParsed{};
     let pos: usize = 0;
 
     // Skip disposition-type (e.g., "form-data") up to first ';'
     const first_semi = std.mem.indexOfScalar(u8, header_val, ';') ?? header_val.len;
-    const disp_type = trimWs(header_val[0..first_semi]);
+    const disp_type = mpTrimWs(header_val[0..first_semi]);
     if (!std.ascii.eqlIgnoreCase(disp_type, "form-data")) {
         return MultipartError.MalformedPartHeader;
     }
@@ -308,7 +361,7 @@ fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8)
         if (pos >= header_val.len || header_val[pos] == ';') {
             continue;
         }
-        const key = trimWs(header_val[key_start..pos]);
+        const key = mpTrimWs(header_val[key_start..pos]);
         pos += 1; // skip '='
 
         while (pos < header_val.len && (header_val[pos] == ' ' || header_val[pos] == '\t')) {
@@ -339,12 +392,12 @@ fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8)
             while (pos < header_val.len && header_val[pos] != ';') {
                 pos += 1;
             }
-            raw_val = trimWs(header_val[val_start..pos]);
+            raw_val = mpTrimWs(header_val[val_start..pos]);
         }
 
         if (std.ascii.eqlIgnoreCase(key, "name")) {
             const duped = if (is_quoted)
-                (unescapeQuotedAlloc(allocator, raw_val) catch {
+                (mpUnescapeQuotedAlloc(allocator, raw_val) catch {
                     res.deinit(allocator);
                     return MultipartError.OutOfMemory;
                 })
@@ -353,11 +406,16 @@ fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8)
                     res.deinit(allocator);
                     return MultipartError.OutOfMemory;
                 });
+            if (mpHasCtl(duped)) {
+                allocator.free(duped);
+                res.deinit(allocator);
+                return MultipartError.InvalidHeaderValue;
+            }
             if (old := res.name) allocator.free(old);
             res.name = duped;
         } else if (std.ascii.eqlIgnoreCase(key, "filename")) {
             const duped = if (is_quoted)
-                (unescapeQuotedAlloc(allocator, raw_val) catch {
+                (mpUnescapeQuotedAlloc(allocator, raw_val) catch {
                     res.deinit(allocator);
                     return MultipartError.OutOfMemory;
                 })
@@ -366,6 +424,11 @@ fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8)
                     res.deinit(allocator);
                     return MultipartError.OutOfMemory;
                 });
+            if (mpHasCtl(duped)) {
+                allocator.free(duped);
+                res.deinit(allocator);
+                return MultipartError.InvalidHeaderValue;
+            }
             if (old := res.filename) allocator.free(old);
             res.filename = duped;
         }
@@ -374,7 +437,7 @@ fn parseContentDisposition(allocator: std.mem.Allocator, header_val: []const u8)
     return res;
 }
 
-fn freePartsSlice(allocator: std.mem.Allocator, parts: []MultipartPart, count: usize) {
+fn mpFreePartsSlice(allocator: std.mem.Allocator, parts: []MultipartPart, count: usize) {
     let i: usize = 0;
     while (i < count) : (i += 1) {
         allocator.free(parts[i].name);
@@ -393,6 +456,7 @@ pub fn parse(allocator: std.mem.Allocator, boundary: []const u8, body: []const u
 }
 
 /// Parses a binary-safe `multipart/form-data` payload with explicit part count and per-part byte limits.
+/// Enforces `DEFAULT_MAX_HEADERS_PER_PART` per part to defend against header-count exhaustion.
 pub fn parseWithLimits(
     allocator: std.mem.Allocator,
     boundary: []const u8,
@@ -400,7 +464,7 @@ pub fn parseWithLimits(
     max_parts: usize,
     max_part_bytes: usize,
 ): MultipartDocument ! MultipartError {
-    if (!isValidBoundary(boundary)) return MultipartError.InvalidBoundary;
+    if (!isValidMultipartBoundary(boundary)) return MultipartError.InvalidBoundary;
 
     let dash_bnd_buf: [72]u8 = undefined;
     dash_bnd_buf[0] = '-';
@@ -408,7 +472,7 @@ pub fn parseWithLimits(
     @memcpy(dash_bnd_buf[2 .. 2 + boundary.len], boundary);
     const dash_bnd = dash_bnd_buf[0 .. 2 + boundary.len];
 
-    const first = findFirstBoundary(body, dash_bnd) orelse return MultipartError.MissingEndBoundary;
+    const first = mpFindFirstBoundary(body, dash_bnd) orelse return MultipartError.MissingEndBoundary;
     if (first.is_closing) {
         return MultipartDocument{ parts: [] };
     }
@@ -419,17 +483,18 @@ pub fn parseWithLimits(
 
     let cursor: usize = first.next_pos;
     while (true) {
-        let disp: DispositionParsed = DispositionParsed{};
+        let disp: MpDispositionParsed = MpDispositionParsed{};
         let raw_ct: []const u8 = "text/plain";
         let has_disp = false;
         let data_start: usize = cursor;
+        let header_count: usize = 0;
 
         // Parse part headers until blank line (\r\n or \n)
         while (true) {
             const nl_idx_opt = std.mem.indexOfScalarPos(u8, body, cursor, '\n');
             if (nl_idx_opt == null) {
                 disp.deinit(allocator);
-                freePartsSlice(allocator, parts_buf, parts_len);
+                mpFreePartsSlice(allocator, parts_buf, parts_len);
                 return MultipartError.MalformedPartHeader;
             }
             const nl_idx = nl_idx_opt.?;
@@ -444,29 +509,41 @@ pub fn parseWithLimits(
                 break;
             }
 
+            header_count += 1;
+            if (header_count > DEFAULT_MAX_HEADERS_PER_PART) {
+                disp.deinit(allocator);
+                mpFreePartsSlice(allocator, parts_buf, parts_len);
+                return MultipartError.MalformedPartHeader;
+            }
+
             const colon_opt = std.mem.indexOfScalar(u8, line, ':');
             if (colon_opt == null) {
                 disp.deinit(allocator);
-                freePartsSlice(allocator, parts_buf, parts_len);
+                mpFreePartsSlice(allocator, parts_buf, parts_len);
                 return MultipartError.MalformedPartHeader;
             }
             const colon = colon_opt.?;
-            const hname = trimWs(line[0..colon]);
-            const hval = trimWs(line[colon + 1 ..]);
-            if (hname.len == 0) {
+            const hname = mpTrimWs(line[0..colon]);
+            const hval = mpTrimWs(line[colon + 1 ..]);
+            if (hname.len == 0 || mpHasCtl(hname)) {
                 disp.deinit(allocator);
-                freePartsSlice(allocator, parts_buf, parts_len);
+                mpFreePartsSlice(allocator, parts_buf, parts_len);
                 return MultipartError.MalformedPartHeader;
             }
 
             if (std.ascii.eqlIgnoreCase(hname, "Content-Disposition")) {
                 disp.deinit(allocator);
-                disp = parseContentDisposition(allocator, hval) catch |e| {
-                    freePartsSlice(allocator, parts_buf, parts_len);
+                disp = mpParseContentDisposition(allocator, hval) catch |e| {
+                    mpFreePartsSlice(allocator, parts_buf, parts_len);
                     return e;
                 };
                 has_disp = true;
             } else if (std.ascii.eqlIgnoreCase(hname, "Content-Type")) {
+                if (mpHasCtl(hval)) {
+                    disp.deinit(allocator);
+                    mpFreePartsSlice(allocator, parts_buf, parts_len);
+                    return MultipartError.InvalidHeaderValue;
+                }
                 if (hval.len > 0) {
                     raw_ct = hval;
                 }
@@ -475,50 +552,50 @@ pub fn parseWithLimits(
 
         if (!has_disp) {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.MalformedPartHeader;
         }
         const part_name = disp.name orelse {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.MalformedPartHeader;
         };
         if (part_name.len == 0) {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.MalformedPartHeader;
         }
 
-        const next_res_opt = findNextBoundary(body, data_start, dash_bnd);
+        const next_res_opt = mpFindNextBoundary(body, data_start, dash_bnd);
         if (next_res_opt == null) {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.MissingEndBoundary;
         }
         const next_res = next_res_opt.?;
 
         if (parts_len >= max_parts) {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.TooManyParts;
         }
 
         const raw_data = body[data_start..next_res.data_end];
         if (raw_data.len > max_part_bytes) {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.PartTooLarge;
         }
 
         const ct_duped = allocator.dupe(u8, raw_ct) catch {
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.OutOfMemory;
         };
         const data_duped = allocator.dupe(u8, raw_data) catch {
             allocator.free(ct_duped);
             disp.deinit(allocator);
-            freePartsSlice(allocator, parts_buf, parts_len);
+            mpFreePartsSlice(allocator, parts_buf, parts_len);
             return MultipartError.OutOfMemory;
         };
 
@@ -529,7 +606,7 @@ pub fn parseWithLimits(
                     allocator.free(data_duped);
                     allocator.free(ct_duped);
                     disp.deinit(allocator);
-                    freePartsSlice(allocator, parts_buf, parts_len);
+                    mpFreePartsSlice(allocator, parts_buf, parts_len);
                     return MultipartError.OutOfMemory;
                 })
             else
@@ -537,7 +614,7 @@ pub fn parseWithLimits(
                     allocator.free(data_duped);
                     allocator.free(ct_duped);
                     disp.deinit(allocator);
-                    freePartsSlice(allocator, parts_buf, parts_len);
+                    mpFreePartsSlice(allocator, parts_buf, parts_len);
                     return MultipartError.OutOfMemory;
                 });
             parts_buf = new_buf;
@@ -566,7 +643,7 @@ pub fn parseWithLimits(
     return MultipartDocument{ parts: final_parts };
 }
 
-/// Incremental `multipart/form-data` payload builder with CR/LF header injection protection.
+/// Incremental `multipart/form-data` payload builder with CR/LF/control header injection protection.
 pub struct MultipartBuilder {
     allocator: std.mem.Allocator = undefined,
     boundary_buf: [72]u8 = undefined,
@@ -576,7 +653,7 @@ pub struct MultipartBuilder {
 
     /// Initializes a `MultipartBuilder` with an explicit validated `boundary`.
     pub static fn init(allocator: std.mem.Allocator, boundary: []const u8): MultipartBuilder ! MultipartError {
-        if (!isValidBoundary(boundary)) return MultipartError.InvalidBoundary;
+        if (!isValidMultipartBoundary(boundary)) return MultipartError.InvalidBoundary;
         let b = MultipartBuilder{
             allocator: allocator,
             boundary_buf: undefined,
@@ -627,9 +704,9 @@ pub struct MultipartBuilder {
         }
     }
 
-    /// Appends a text form field. Rejects empty or CR/LF/NUL-containing field names.
+    /// Appends a text form field. Rejects empty or CR/LF/control-containing field names.
     pub fn addField(*_, name: []const u8, value: []const u8): void ! MultipartError {
-        if (name.len == 0 || hasCtl(name)) return MultipartError.InvalidHeaderValue;
+        if (name.len == 0 || mpHasCtl(name)) return MultipartError.InvalidHeaderValue;
         const bnd = _.boundary_buf[0.._.boundary_len];
         _.appendBytes("--")?;
         _.appendBytes(bnd)?;
@@ -640,7 +717,7 @@ pub struct MultipartBuilder {
         _.appendBytes("\r\n")?;
     }
 
-    /// Appends a file part with filename and Content-Type. Rejects CR/LF/NUL injection in header fields.
+    /// Appends a file part with filename and Content-Type. Rejects CR/LF/control injection in header fields.
     pub fn addFile(
         *_,
         name: []const u8,
@@ -648,7 +725,7 @@ pub struct MultipartBuilder {
         content_type: []const u8,
         data: []const u8,
     ): void ! MultipartError {
-        if (name.len == 0 || hasCtl(name) || hasCtl(filename) || hasCtl(content_type)) {
+        if (name.len == 0 || mpHasCtl(name) || mpHasCtl(filename) || mpHasCtl(content_type)) {
             return MultipartError.InvalidHeaderValue;
         }
         const bnd = _.boundary_buf[0.._.boundary_len];

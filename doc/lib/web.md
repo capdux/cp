@@ -26,8 +26,8 @@
 | `lib/web/http2.cp` | RFC 9113 HTTP/2 二进制帧、流状态与流控（对标 `hyperium/h2` MIT 加固 + 16-lane SIMD 前言/行切分原语 & 零堆 `validateHttp2FrameStrict`） | `CONNECTION_PREFACE`, `Http2FrameHeader`, `simdH2SseFindLineBreak`, `simdH2SseBytesEqual`, `hasConnectionPreface`, `validateHttp2Preface`, `validateHttp2FrameStrict`, `encodeFrame`, `FrameStreamDecoder`, `FlowWindow`, `Http2Stream`, `encodeSettings`, `decodeSettings`, `encodePing`, `encodeGoaway`, `encodeWindowUpdate`（测试：`cap/test/testWebH2SseRustRefSuite.cp`） |
 | `lib/web/http3.cp` | RFC 9114 HTTP/3 帧与 QPACK 静态/动态头编解码 | `encodeH3Frame`, `decodeFrames`, `decodeFramesWithMaxSize`, `freeFrames`, `encodeQpackHeaders`, `decodeQpackHeaders`, `H3_DEFAULT_MAX_FRAME_SIZE`, `H3Frame` |
 | `lib/web/sse.cp` | WHATWG Server-Sent Events (SSE) 流式解析与编码（对标 `hyperium/h2`/WHATWG SSE 加固 + 16-lane SIMD 换行/NUL 扫描与字段比对） | `SseParser`, `SseEncoder`, `SseEvent`, `SseError`（测试：`cap/test/testWebH2SseRustRefSuite.cp`） |
-| `lib/web/multipart.cp` | RFC 7578 `multipart/form-data` 解析与构造 | `extractBoundary`, `parse`, `parseWithLimits`, `MultipartBuilder`, `MultipartDocument`, `MultipartPart`, `MultipartError` |
-| `lib/web/uritemplate.cp` | RFC 6570 Level 1–4 URI Template 展开 | `UriTemplate`, `TemplateVars`, `AssocPair`, `TemplateOp`, `UriTemplateError` |
+| `lib/web/multipart.cp` | RFC 7578 `multipart/form-data` 解析与构造（对标 `rwf2/multer` MIT & RFC 7578 加固 + 16-lane SIMD `simdMpFindDashOrCrlf`、`DEFAULT_MAX_HEADERS_PER_PART` 与注入防护） | `extractBoundary`, `isValidMultipartBoundary`, `parse`, `parseWithLimits`, `MultipartBuilder`, `MultipartDocument`, `MultipartPart`, `MultipartError`（测试：`cap/test/testWebMultipartUriRustRefSuite.cp`） |
+| `lib/web/uritemplate.cp` | RFC 6570 Level 1–4 URI Template 展开（对标 RFC 6570 加固 + 16-lane SIMD `simdUriFindBrace` 与 `expandWithLimit`/`URI_TEMPLATE_DEFAULT_MAX_OUTPUT`） | `UriTemplate`, `TemplateVars`, `AssocPair`, `TemplateOp`, `UriTemplateError`（测试：`cap/test/testWebMultipartUriRustRefSuite.cp`） |
 
 ### 3. 内容聚合、爬虫协议与浏览器/DOM 查询（5 个子模块）
 
