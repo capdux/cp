@@ -104,6 +104,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **quinn** (`quinn-rs`) | <https://github.com/quinn-rs/quinn> | MIT OR Apache-2.0 | `lib/net/quicLoss.cp` | Copyright (c) 2018-2024 Quinn Contributors (RFC 9002) |
 | **raft-rs** (`tikv`) | <https://github.com/tikv/raft-rs> | Apache-2.0 | `lib/db/raftVote.cp`, `lib/db/raftLog.cp` | Copyright (c) 2017-2024 TiKV Project Authors |
 | **rusty-http-cache-semantics** (`kornelski`) | <https://github.com/kornelski/rusty-http-cache-semantics> | BSD-2-Clause | `lib/web/cachePolicy.cp`, `lib/web/contentNeg.cp`, `lib/web/rateHeader.cp` | Copyright (c) 2017-2024 Kornel Lesiński (RFC 9111 / RFC 9110) |
+| **earcutr** (`donbright`) & **parry** (`dimforge`) | <https://github.com/dimforge/parry> | ISC / Apache-2.0 | `lib/gfx/earcut.cp`, `lib/gfx/gjk.cp` | Copyright (c) 2018-2024 Mapbox / Dimforge Contributors |
 
 ---
 

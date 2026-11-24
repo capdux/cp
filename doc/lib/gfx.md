@@ -25,8 +25,8 @@
 | `lib/gfx/ktx.cp` | `lib/ktx` | `Ktx1Header`, `Ktx2Header`, `Ktx2LevelIndex`, `parseKtx1`, `parseKtx2` 等（Khronos KTX 1.1 / KTX2 GPU 纹理容器解析） |
 | `lib/gfx/icc.cp` | `lib/icc` | `IccHeader`, `IccTagEntry`, `parseIccHeader`, `IccTagIter` 等（ICC 色彩配置文件解析） |
 | `lib/gfx/bezier.cp` | `lib/bezier` | `Vec2`, `BBox2`, `QuadBezier`, `CubicBezier` 等（2D 二次/三次贝塞尔曲线求值、切线、细分、包围盒与弧长） |
-| `lib/gfx/earcut.cp` | `lib/earcut` | `EarcutPoint`, `earcutTriangulate` 等（2D 简单多边形耳切法三角剖分与面积计算） |
-| `lib/gfx/gjk.cp` | `lib/gjk` | `SatContact`, `GjkResult`, `gjkIntersects`, `satConvexPolygons` 等（2D GJK 凸包碰撞检测、Minkowski 支撑与 SAT 穿透流形，共享 `bezier.cp` 的 `Vec2`） |
+| `lib/gfx/earcut.cp` | `lib/earcut` | `EARCUT_MAX_ITERATIONS`, `Point2D`, `TriangleIdx`, `PolyBounds2D`, `simdPolyBounds2d`/`scalarPolyBounds2d`, `signedArea`, `polygonArea`, `isConvex`, `pointInTriangle`, `pointInPolygon`, `triangulate`, `triangulateWithHoles`, `triangulationTotalArea`（对标 `donbright/earcutr` ISC 加固：带孔桥接消孔、NaN/Inf/退化/重复顶点防死循环与 4-lane `@Vector(4, f64)` SIMD AABB；测试：`cap/test/testGfxGeomRustRefSuite.cp`） |
+| `lib/gfx/gjk.cp` | `lib/gjk` | `GJK_MAX_ITERATIONS`, `SatContact`, `GjkResult`, `simdGjkSupportIndex`/`scalarGjkSupportIndex`, `polygonCentroid`, `translatePolygon`, `polygonSupport`, `minkowskiSupport`, `gjkIntersects`, `satCollide`, `circlePolygonCollide`（对标 `dimforge/parry` Apache-2.0 加固：NaN/Inf/零方向/退化单纯形防死循环、对称性保证与 4-lane `@Vector(4, f64)` SIMD 支撑顶点检索；测试：`cap/test/testGfxGeomRustRefSuite.cp`） |
 | `lib/gfx/perlin.cp` | `lib/perlin` | `PerlinNoise`, `perlin2d`, `perlin3d`, `fbm2d` 等（Perlin 程序化噪声与分形布朗运动） |
 | `lib/gfx/quat.cp` | `lib/quat` | `Vec3`, `EulerAngles`, `Mat3`, `Quat`（3D 单位四元数旋转、欧拉角/矩阵互转与 SLERP 球面插值） |
 | `lib/gfx/ecs.cp` | `lib/ecs` | `EcsError`, `Entity`, `World` 等（稀疏集 Sparse-Set Entity Component System） |

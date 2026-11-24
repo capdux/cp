@@ -190,8 +190,12 @@ export {
 
 // --- earcut ---
 export {
+    EARCUT_MAX_ITERATIONS,
     Point2D,
     TriangleIdx,
+    PolyBounds2D,
+    simdPolyBounds2d,
+    scalarPolyBounds2d,
     signedArea,
     polygonArea,
     isCounterClockwise,
@@ -199,13 +203,17 @@ export {
     pointInTriangle,
     pointInPolygon,
     triangulate,
+    triangulateWithHoles,
     triangulationTotalArea,
 } from "./earcut.cp";
 
 // --- gjk ---
 export {
+    GJK_MAX_ITERATIONS,
     SatContact,
     GjkResult,
+    simdGjkSupportIndex,
+    scalarGjkSupportIndex,
     polygonCentroid,
     translatePolygon,
     polygonSupport,
