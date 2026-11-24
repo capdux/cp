@@ -1600,7 +1600,9 @@ pub fn demoMmrSelect() {
 }
 ```
 
-### 34. 零堆分配 SIMD `@l2sq` 残差乘积量化索引 (`ivfPq.cp`)
+### 34. 零堆分配 4-Lane SIMD 残差乘积量化索引 (`ivfPq.cp`)
+
+> 对标加固基准：`unum-cloud/usearch` & `djc/instant-distance`（Apache-2.0 / MIT）；4-lane `@Vector(4, f32)` SIMD `simdVecIdxL2SqF32` 粗排与 ADC 加速、严格子空间整除与 `NaN`/`±Inf` 拦截、防乘法溢出/截断/尾随垃圾/CRC32 单比特篡改快照校验；回归测试：`cap/test/testVectorIndexSnapRustRefSuite.cp`
 
 对标 FAISS `IndexIVFPQ` 的 100% 纯 CP 零动态堆分配粗到精近似最近邻检索引擎，原生调用 `@l2sq` 硬件算子：
 
@@ -1692,6 +1694,8 @@ pub fn demoIvfPqFlatSnapshot(flat_vecs: []const f32)! {
 ```
 
 ### 35. 无上限外部缓冲多层 HNSW 检索与 CRC32 二进制快照持久化引擎 (`hnswFlat.cp`)
+
+> 对标加固基准：`unum-cloud/usearch` & `djc/instant-distance`（Apache-2.0 / MIT）；4-lane `@Vector(4, f32)` SIMD `simdVecIdxL2SqF32`/`simdVecIdxDotF32`、严格 `NaN`/`±Inf` 拦截（`hnswHasFiniteVec` / `InvalidVector`）与防乘法溢出/截断/图越界/CRC32 单比特篡改快照校验；回归测试：`cap/test/testVectorIndexSnapRustRefSuite.cp`
 
 彻底解除小容量上限的 100% 纯 CP 零动态堆分配多层 HNSW 检索引擎。节点向量池、元数据、L0/上层邻接表与零清零访问戳全部由调用方以外部切片传入，原生使用 `@l2sq`/`@dot` SIMD 加速，支持十万级向量检索与零重训二进制快照热加载：
 

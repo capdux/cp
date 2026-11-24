@@ -95,7 +95,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **RustCrypto/SSH** (`ssh-encoding`, `ssh-key`) | <https://github.com/RustCrypto/SSH> | MIT / Apache-2.0 | `lib/net/sshWire.cp`, `lib/net/sshKeys.cp`, `lib/net/sshOpensshKey.cp`, `lib/net/sshSig.cp` | Copyright (c) 2021-2024 RustCrypto Developers |
 | **roaring-rs** (`RoaringBitmap`) | <https://github.com/RoaringBitmap/roaring-rs> | MIT / Apache-2.0 | `lib/ds/roaring.cp` | Copyright (c) 2015-2024 RoaringBitmap Contributors |
 | **similar** (`mitsuhiko`) | <https://github.com/mitsuhiko/similar> | Apache-2.0 | `lib/text/myersDiff.cp`, `lib/text/unifiedDiff.cp` | Copyright (c) 2021-2024 Armin Ronacher |
-| **roxmltree** (`RazrFalcon`) | <https://github.com/RazrFalcon/roxmltree> | MIT / Apache-2.0 | `lib/xml/parser.cp`, `lib/xml/escape.cp`, `lib/xml/writer.cp` | Copyright (c) 2018-2024 Yevhenii Reizner (RazrFalcon) |
+| **roxmltree** (`RazrFalcon`) | <https://github.com/RazrFalcon/roxmltree> | MIT / Apache-2.0 | `lib/xml/parser.cp`, `lib/xml/escape.cp`, `lib/xml/writer.cp`, `lib/doc/docx.cp`, `lib/doc/pptx.cp` | Copyright (c) 2018-2024 Yevhenii Reizner (RazrFalcon) (ECMA-376 OOXML) |
 | **object** (`gimli-rs`) | <https://github.com/gimli-rs/object> | MIT OR Apache-2.0 | `lib/binfmt/macho.cp`, `lib/binfmt/coff.cp` | Copyright (c) 2016-2024 Gimli Contributors |
 | **opentelemetry-rust** (`open-telemetry`) | <https://github.com/open-telemetry/opentelemetry-rust> | Apache-2.0 | `lib/obs/traceParent.cp`, `lib/obs/w3cTraceContext.cp`, `lib/obs/baggage.cp` | Copyright (c) 2019-2024 OpenTelemetry Authors |
 | **ebml-iterable** (`austinleroy`) | <https://github.com/austinleroy/ebml-iterable> | MIT | `lib/media/ebml.cp`, `lib/media/mkv.cp` | Copyright (c) 2020-2024 Austin LeRoy (RFC 8794 / RFC 9559) |
@@ -115,6 +115,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **pcap-parser** (`rusticata`) | <https://github.com/rusticata/pcap-parser> | MIT OR Apache-2.0 | `lib/binfmt/pcap.cp`, `lib/binfmt/pcapng.cp` | Copyright (c) 2017-2024 Pierre Chifflier (Rusticata) |
 | **ropey** (`cessen`) & **crossbeam** (`crossbeam-rs`) | <https://github.com/cessen/ropey> | MIT / Apache-2.0 | `lib/ds/rope.cp`, `lib/ds/skiplist.cp` | Copyright (c) 2018-2024 Nathan Vegdahl / Crossbeam Developers |
 | **multer** (`rwf2`) | <https://github.com/rwf2/multer> | MIT | `lib/web/multipart.cp`, `lib/web/uritemplate.cp` | Copyright (c) 2020-2024 Rousan Ali / rwf2 (RFC 7578 / RFC 6570) |
+| **usearch** (`unum-cloud`) & **instant-distance** (`djc`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 / MIT | `lib/vector/hnswFlat.cp`, `lib/vector/ivfPq.cp` | Copyright (c) 2022-2024 Unum Cloud / Dirkjan Ochtman |
 
 ---
 

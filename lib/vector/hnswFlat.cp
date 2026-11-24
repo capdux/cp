@@ -1,15 +1,18 @@
-// Origin: Pure-CP Stdlib (Unbounded External-Buffer Multi-Layer HNSW Index & CRC32 Binary Snapshot Engine) | Created: 2026-11-23
+// Reference-hardened against unum-cloud/usearch & djc/instant-distance (Apache-2.0 / MIT)
+// Origin: Pure-CP Stdlib (Unbounded External-Buffer Multi-Layer HNSW Index & CRC32 Binary Snapshot Engine + 4-Lane SIMD) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice HNSW ANN retrieval & persistence engine:
 //   - Caller-owned external buffers (`vecs`, `nodes`, `l0_neighbors`, `upper_neighbors`, `visited_marks`)
 //     supporting arbitrary `dim` and thousands-to-hundreds-of-thousands of vectors without static toy limits
-//   - CP native SIMD `@l2sq` and `@dot` distance kernels (`l2_sq | cosine | neg_dot`) with cached `inv_norm`
-//   - Full Malkov & Yashunin (2018) multi-layer HNSW: geometric level sampling, greedy upper descent,
-//     beam `ef` search with O(1) stamp-based visited tracking, and Algorithm 4 `SELECT-NEIGHBORS-HEURISTIC`
-//     diversity-preserving neighbor selection with bidirectional pruning
-//   - Soft-deletion tombstones (`markDeleted` / `isDeleted`), online `computeRecallAtK` ground-truth calibrator,
-//     and full IEEE CRC32-verified binary snapshot `serializeSnapshot` / `deserializeSnapshot` for instant reload
+//   - 4-lane `@Vector(4, f32)` SIMD `simdVecIdxL2SqF32` / `simdVecIdxDotF32` distance kernels (`l2_sq | cosine | neg_dot`)
+//   - Strict NaN/±Inf rejection, checked-overflow CRC32 binary snapshot deserialization, and soft-deletion tombstones
 
 const std = @import("std");
+
+type VecIdxVec4f32 = @Vector(4, f32);
+
+const HNSW_SM64_INC: u64 = (@as(u64, 0x9E3779B9) << 32) | 0x7F4A7C15;
+const HNSW_SM64_M1: u64 = (@as(u64, 0xBF58476D) << 32) | 0x1CE4E5B9;
+const HNSW_SM64_M2: u64 = (@as(u64, 0x94D049BB) << 32) | 0x133111EB;
 
 // ============================================================================
 // 1. Constants, Error Set, Configuration & External Buffer Sizing Helpers
@@ -36,6 +39,7 @@ const SNAPSHOT_CRC_BYTES: usize = 4;
 /// Error set returned by HNSW index construction, query, and snapshot operations.
 pub err HnswFlatError {
     InvalidConfig,
+    InvalidVector,
     DimMismatch,
     CapacityFull,
     BufferTooSmall,
@@ -59,7 +63,7 @@ pub struct HnswFlatConfig {
     m_max0: usize = 32;
     ef_construction: usize = 64;
     metric: HnswFlatMetric = HnswFlatMetric.l2_sq;
-    seed: u64 = 0x9E3779B97F4A7C15;
+    seed: u64 = HNSW_SM64_INC;
 
     /// Returns `true` iff all structural parameters are valid and consistent.
     fn isValid(): bool {
@@ -132,14 +136,102 @@ pub struct HnswFlatStats {
 }
 
 // ============================================================================
-// 3. Internal Math, PRNG, Binary Encoding & IEEE CRC32 Helpers
+// 3. 4-Lane @Vector(4, f32) SIMD Distance Kernels + Scalar References & Helpers
 // ============================================================================
 
+fn vecIdxLoad4f32(v: []const f32, off: usize): VecIdxVec4f32 {
+    const vec: VecIdxVec4f32 = [v[off], v[off + 1], v[off + 2], v[off + 3]];
+    return vec;
+}
+
+/// 4-lane `@Vector(4, f32)` SIMD squared Euclidean distance (hot path for HNSW & IVF-PQ).
+pub fn simdVecIdxL2SqF32(a: []const f32, b: []const f32): f32 {
+    const n = if (a.len <= b.len) a.len else b.len;
+    let acc_v: VecIdxVec4f32 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const va = vecIdxLoad4f32(a, i);
+        const vb = vecIdxLoad4f32(b, i);
+        const diff = va - vb;
+        acc_v = acc_v + (diff * diff);
+        i += 4;
+    }
+    let sum: f32 = @reduce(.Add, acc_v);
+    while (i < n) : (i += 1) {
+        const d: f32 = a[i] - b[i];
+        sum += d * d;
+    }
+    return sum;
+}
+
+/// Scalar reference for `simdVecIdxL2SqF32` (differential precision verification).
+pub fn scalarVecIdxL2SqF32(a: []const f32, b: []const f32): f32 {
+    const n = if (a.len <= b.len) a.len else b.len;
+    let sum: f32 = 0.0;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        const d: f32 = a[i] - b[i];
+        sum += d * d;
+    }
+    return sum;
+}
+
+/// 4-lane `@Vector(4, f32)` SIMD dot product (hot path for HNSW cosine/neg_dot).
+pub fn simdVecIdxDotF32(a: []const f32, b: []const f32): f32 {
+    const n = if (a.len <= b.len) a.len else b.len;
+    let acc_v: VecIdxVec4f32 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const va = vecIdxLoad4f32(a, i);
+        const vb = vecIdxLoad4f32(b, i);
+        acc_v = acc_v + (va * vb);
+        i += 4;
+    }
+    let sum: f32 = @reduce(.Add, acc_v);
+    while (i < n) : (i += 1) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+
+/// Scalar reference for `simdVecIdxDotF32` (differential precision verification).
+pub fn scalarVecIdxDotF32(a: []const f32, b: []const f32): f32 {
+    const n = if (a.len <= b.len) a.len else b.len;
+    let sum: f32 = 0.0;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+
+/// Returns `true` iff every element in `v` is finite (neither `NaN` nor `±Inf`).
+pub fn hnswHasFiniteVec(v: []const f32): bool {
+    let i: usize = 0;
+    while (i < v.len) : (i += 1) {
+        if (std.math.isNan(v[i]) || std.math.isInf(v[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn hnswCheckedMul(a: usize, b: usize): usize? {
+    if (a == 0 || b == 0) return 0;
+    if (a > std.math.maxInt(usize) / b) return null;
+    return a * b;
+}
+
+fn hnswCheckedAdd(a: usize, b: usize): usize? {
+    if (a > std.math.maxInt(usize) - b) return null;
+    return a + b;
+}
+
 fn splitmix64Next(state: *u64): u64 {
-    state.* +%= 0x9E3779B97F4A7C15;
+    state.* +%= HNSW_SM64_INC;
     let z: u64 = state.*;
-    z = (z ^ (z >> 30)) *% 0xBF58476D1CE4E5B9;
-    z = (z ^ (z >> 27)) *% 0x94D049BB133111EB;
+    z = (z ^ (z >> 30)) *% HNSW_SM64_M1;
+    z = (z ^ (z >> 27)) *% HNSW_SM64_M2;
     return z ^ (z >> 31);
 }
 
@@ -152,7 +244,7 @@ fn uniformOpen01(state: *u64): f64 {
 }
 
 fn computeInvNormF32(v: []const f32): f32 {
-    const n2: f32 = @dot(v, v);
+    const n2: f32 = simdVecIdxDotF32(v, v);
     if (n2 <= 1.0e-20 || std.math.isNan(n2) || std.math.isInf(n2)) {
         return 0.0;
     }
@@ -278,10 +370,10 @@ pub struct HnswFlatIndex {
     entry_point: u32 = HNSW_FLAT_INVALID_ID;
     upper_used: usize = 0;
     visit_stamp: u32 = 0;
-    rng_state: u64 = 0x9E3779B97F4A7C15;
+    rng_state: u64 = HNSW_SM64_INC;
 
     /// Initializes an empty `HnswFlatIndex` bound to caller-provided external slices.
-    static fn init(
+    pub static fn init(
         cfg: HnswFlatConfig,
         vecs: *[]f32,
         nodes: *[]HnswFlatNode,
@@ -292,9 +384,11 @@ pub struct HnswFlatIndex {
         if (!cfg.isValid()) {
             return HnswFlatError.InvalidConfig;
         }
-        if (vecs.len < hnswVecBufLen(cfg) ||
+        const need_vecs = hnswCheckedMul(cfg.max_nodes, cfg.dim) orelse return HnswFlatError.InvalidConfig;
+        const need_l0 = hnswCheckedMul(cfg.max_nodes, cfg.m_max0) orelse return HnswFlatError.InvalidConfig;
+        if (vecs.len < need_vecs ||
             nodes.len < cfg.max_nodes ||
-            l0_neighbors.len < hnswL0AdjBufLen(cfg) ||
+            l0_neighbors.len < need_l0 ||
             upper_neighbors.len < cfg.m ||
             visited_marks.len < cfg.max_nodes)
         {
@@ -308,18 +402,18 @@ pub struct HnswFlatIndex {
 
         return HnswFlatIndex{
             cfg: cfg,
-            vecs: vecs.*,
-            nodes: nodes.*,
-            l0_neighbors: l0_neighbors.*,
-            upper_neighbors: upper_neighbors.*,
-            visited_marks: visited_marks.*,
+            vecs: vecs,
+            nodes: nodes,
+            l0_neighbors: l0_neighbors,
+            upper_neighbors: upper_neighbors,
+            visited_marks: visited_marks,
             node_count: 0,
             deleted_count: 0,
             max_level: 0,
             entry_point: HNSW_FLAT_INVALID_ID,
             upper_used: 0,
             visit_stamp: 0,
-            rng_state: if (cfg.seed == 0) 0x9E3779B97F4A7C15 else cfg.seed,
+            rng_state: if (cfg.seed == 0) HNSW_SM64_INC else cfg.seed,
         };
     }
 
@@ -343,32 +437,32 @@ pub struct HnswFlatIndex {
     fn distQueryToNode(query: []const f32, q_inv_norm: f32, node_idx: usize): f32 {
         const v = vecSliceOf(node_idx);
         if (cfg.metric == HnswFlatMetric.l2_sq) {
-            return @l2sq(query, v);
+            return simdVecIdxL2SqF32(query, v);
         }
         if (cfg.metric == HnswFlatMetric.neg_dot) {
-            return -@dot(query, v);
+            return -simdVecIdxDotF32(query, v);
         }
         const denom_inv: f32 = q_inv_norm * nodes[node_idx].inv_norm;
         if (denom_inv <= 0.0) {
             return 1.0;
         }
-        return 1.0 - (@dot(query, v) * denom_inv);
+        return 1.0 - (simdVecIdxDotF32(query, v) * denom_inv);
     }
 
     fn distNodeToNode(a_idx: usize, b_idx: usize): f32 {
         const va = vecSliceOf(a_idx);
         const vb = vecSliceOf(b_idx);
         if (cfg.metric == HnswFlatMetric.l2_sq) {
-            return @l2sq(va, vb);
+            return simdVecIdxL2SqF32(va, vb);
         }
         if (cfg.metric == HnswFlatMetric.neg_dot) {
-            return -@dot(va, vb);
+            return -simdVecIdxDotF32(va, vb);
         }
         const denom_inv: f32 = nodes[a_idx].inv_norm * nodes[b_idx].inv_norm;
         if (denom_inv <= 0.0) {
             return 1.0;
         }
-        return 1.0 - (@dot(va, vb) * denom_inv);
+        return 1.0 - (simdVecIdxDotF32(va, vb) * denom_inv);
     }
 
     fn neighborDegree(node_idx: usize, level: usize): usize {
@@ -503,7 +597,7 @@ pub struct HnswFlatIndex {
 
                 const d: f32 = distQueryToNode(query, q_inv_norm, nb_idx);
                 if (res_len < ef || d < out_dists[res_len - 1]) {
-                    cand_len = sortedInsertBounded(*cand_ids_s, *cand_dists_s, cand_len, HNSW_FLAT_MAX_EF, nb, d);
+                    cand_len = sortedInsertBounded(cand_ids_s, cand_dists_s, cand_len, HNSW_FLAT_MAX_EF, nb, d);
                     res_len = sortedInsertBounded(out_ids, out_dists, res_len, ef, nb, d);
                 }
             }
@@ -595,21 +689,25 @@ pub struct HnswFlatIndex {
         while (i < cur_deg) : (i += 1) {
             const existing: u32 = neighborAt(nb_idx, level, i);
             const d: f32 = distNodeToNode(nb_idx, @as(usize, existing));
-            c_len = sortedInsertBounded(*c_ids_s, *c_dists_s, c_len, HNSW_FLAT_MAX_PRUNE_CANDS, existing, d);
+            c_len = sortedInsertBounded(c_ids_s, c_dists_s, c_len, HNSW_FLAT_MAX_PRUNE_CANDS, existing, d);
         }
         const d_new: f32 = distNodeToNode(nb_idx, @as(usize, new_id));
-        c_len = sortedInsertBounded(*c_ids_s, *c_dists_s, c_len, HNSW_FLAT_MAX_PRUNE_CANDS, new_id, d_new);
+        c_len = sortedInsertBounded(c_ids_s, c_dists_s, c_len, HNSW_FLAT_MAX_PRUNE_CANDS, new_id, d_new);
 
         let pruned: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = [0; HNSW_FLAT_MAX_PRUNE_CANDS];
         let pruned_s: []u32 = pruned[0..];
-        const kept: usize = selectNeighborsHeuristic(c_ids[0..], c_dists[0..], c_len, max_deg, *pruned_s);
+        const kept: usize = selectNeighborsHeuristic(c_ids[0..], c_dists[0..], c_len, max_deg, pruned_s);
         setNeighbors(nb_idx, level, pruned[0..], kept);
     }
 
     /// Inserts a vector with `doc_id` into the HNSW graph and returns its internal `node_idx`.
-    fn insert(*_, doc_id: u64, vec: []const f32): u32 ! HnswFlatError {
+    /// Rejects non-finite (`NaN`/`±Inf`) vectors with `HnswFlatError.InvalidVector`.
+    pub fn insert(*_, doc_id: u64, vec: []const f32): u32 ! HnswFlatError {
         if (vec.len != cfg.dim) {
             return HnswFlatError.DimMismatch;
+        }
+        if (!hnswHasFiniteVec(vec)) {
+            return HnswFlatError.InvalidVector;
         }
         if (node_count >= cfg.max_nodes) {
             return HnswFlatError.CapacityFull;
@@ -678,12 +776,12 @@ pub struct HnswFlatIndex {
                 curr_ep,
                 cfg.ef_construction,
                 lc,
-                *w_ids_s,
-                *w_dists_s,
+                w_ids_s,
+                w_dists_s,
             );
 
             const max_conn: usize = if (lc == 0) cfg.m_max0 else cfg.m;
-            const n_sel: usize = selectNeighborsHeuristic(w_ids[0..], w_dists[0..], w_len, max_conn, *sel_ids_s);
+            const n_sel: usize = selectNeighborsHeuristic(w_ids[0..], w_dists[0..], w_len, max_conn, sel_ids_s);
             setNeighbors(new_idx, lc, sel_ids[0..], n_sel);
 
             let s_i: usize = 0;
@@ -705,8 +803,9 @@ pub struct HnswFlatIndex {
     }
 
     /// Searches for up to `top_k` live (non-deleted) nearest neighbors to `query_vec`.
+    /// Rejects non-finite (`NaN`/`±Inf`) queries with `HnswFlatError.InvalidVector`.
     /// Writes hits in strictly ascending distance order into `out_hits` and returns hit count.
-    fn search(
+    pub fn search(
         *_,
         query_vec: []const f32,
         top_k: usize,
@@ -715,6 +814,9 @@ pub struct HnswFlatIndex {
     ): usize ! HnswFlatError {
         if (query_vec.len != cfg.dim) {
             return HnswFlatError.DimMismatch;
+        }
+        if (!hnswHasFiniteVec(query_vec)) {
+            return HnswFlatError.InvalidVector;
         }
         if (node_count == 0 || entry_point == HNSW_FLAT_INVALID_ID || top_k == 0 || out_hits.len == 0) {
             return 0;
@@ -744,7 +846,7 @@ pub struct HnswFlatIndex {
         let w_ids_s: []u32 = w_ids[0..];
         let w_dists_s: []f32 = w_dists[0..];
 
-        const w_len: usize = searchLayerEf(query_vec, q_inv_norm, curr_ep, eff_ef, 0, *w_ids_s, *w_dists_s);
+        const w_len: usize = searchLayerEf(query_vec, q_inv_norm, curr_ep, eff_ef, 0, w_ids_s, w_dists_s);
 
         let written: usize = 0;
         let i: usize = 0;
@@ -784,7 +886,7 @@ pub struct HnswFlatIndex {
     }
 
     /// Computes exact brute-force Top-K vs ANN `search` Recall@K in `[0.0, 1.0]` for online calibration.
-    fn computeRecallAtK(
+    pub fn computeRecallAtK(
         *_,
         query_vec: []const f32,
         top_k: usize,
@@ -792,7 +894,7 @@ pub struct HnswFlatIndex {
         gt_hits_buf: *[]HnswFlatHit,
         ann_hits_buf: *[]HnswFlatHit,
     ): f32 {
-        if (query_vec.len != cfg.dim || top_k == 0 || node_count == 0) {
+        if (query_vec.len != cfg.dim || !hnswHasFiniteVec(query_vec) || top_k == 0 || node_count == 0) {
             return 0.0;
         }
         let k_lim: usize = top_k;
@@ -939,15 +1041,15 @@ pub struct HnswFlatIndex {
         }
 
         // 6. Trailing IEEE CRC32 checksum.
-        const crc: u32 = crc32Ieee(out_bytes.*[0..off]);
+        const crc: u32 = crc32Ieee(out_bytes[0..off]);
         writeU32Le(out_bytes, off, crc);
         off += SNAPSHOT_CRC_BYTES;
         return off;
     }
 
-    /// Validates magic, version, bounds, and IEEE CRC32 checksum, then reconstructs a ready-to-query
-    /// `HnswFlatIndex` directly into caller-provided slices with zero retraining.
-    static fn deserializeSnapshot(
+    /// Validates magic, version, checked-overflow bounds, graph integrity, finite vectors,
+    /// and IEEE CRC32 checksum, then reconstructs a ready-to-query `HnswFlatIndex` with zero retraining.
+    pub static fn deserializeSnapshot(
         bytes: []const u8,
         vecs: *[]f32,
         nodes: *[]HnswFlatNode,
@@ -1003,19 +1105,38 @@ pub struct HnswFlatIndex {
         if (node_count > cfg.max_nodes || deleted_count > node_count || max_level >= HNSW_FLAT_MAX_LEVELS) {
             return HnswFlatError.InvalidSnapshot;
         }
+        if (node_count == 0) {
+            if (entry_point != HNSW_FLAT_INVALID_ID || upper_used != 0) {
+                return HnswFlatError.InvalidSnapshot;
+            }
+        } else {
+            if (@as(usize, entry_point) >= node_count) {
+                return HnswFlatError.InvalidSnapshot;
+            }
+        }
 
-        const expected_payload: usize = SNAPSHOT_HEADER_BYTES +
-            node_count * SNAPSHOT_NODE_BYTES +
-            node_count * cfg.dim * 4 +
-            node_count * cfg.m_max0 * 4 +
-            upper_used * 4;
+        // Checked-overflow exact payload size verification
+        const node_bytes = hnswCheckedMul(node_count, SNAPSHOT_NODE_BYTES) orelse return HnswFlatError.InvalidSnapshot;
+        const total_floats = hnswCheckedMul(node_count, cfg.dim) orelse return HnswFlatError.InvalidSnapshot;
+        const vec_bytes = hnswCheckedMul(total_floats, 4) orelse return HnswFlatError.InvalidSnapshot;
+        const total_l0 = hnswCheckedMul(node_count, cfg.m_max0) orelse return HnswFlatError.InvalidSnapshot;
+        const l0_bytes = hnswCheckedMul(total_l0, 4) orelse return HnswFlatError.InvalidSnapshot;
+        const up_bytes = hnswCheckedMul(upper_used, 4) orelse return HnswFlatError.InvalidSnapshot;
+
+        let expected_payload = hnswCheckedAdd(SNAPSHOT_HEADER_BYTES, node_bytes) orelse return HnswFlatError.InvalidSnapshot;
+        expected_payload = hnswCheckedAdd(expected_payload, vec_bytes) orelse return HnswFlatError.InvalidSnapshot;
+        expected_payload = hnswCheckedAdd(expected_payload, l0_bytes) orelse return HnswFlatError.InvalidSnapshot;
+        expected_payload = hnswCheckedAdd(expected_payload, up_bytes) orelse return HnswFlatError.InvalidSnapshot;
+
         if (payload_len != expected_payload) {
             return HnswFlatError.InvalidSnapshot;
         }
 
-        if (vecs.len < hnswVecBufLen(cfg) ||
+        const need_vecs = hnswCheckedMul(cfg.max_nodes, cfg.dim) orelse return HnswFlatError.InvalidSnapshot;
+        const need_l0 = hnswCheckedMul(cfg.max_nodes, cfg.m_max0) orelse return HnswFlatError.InvalidSnapshot;
+        if (vecs.len < need_vecs ||
             nodes.len < cfg.max_nodes ||
-            l0_neighbors.len < hnswL0AdjBufLen(cfg) ||
+            l0_neighbors.len < need_l0 ||
             upper_neighbors.len < upper_used ||
             visited_marks.len < cfg.max_nodes)
         {
@@ -1033,39 +1154,71 @@ pub struct HnswFlatIndex {
         let off: usize = SNAPSHOT_HEADER_BYTES;
         let i: usize = 0;
         while (i < node_count) : (i += 1) {
+            const nd_level = bytes[off + 8];
+            const nd_l0_deg = readU16Le(bytes, off + 10);
+            const nd_up_off = readU32Le(bytes, off + 12);
+            const nd_inv_norm = bitsToF32(readU32Le(bytes, off + 16));
+            if (@as(usize, nd_level) >= HNSW_FLAT_MAX_LEVELS ||
+                @as(usize, nd_l0_deg) > cfg.m_max0 ||
+                std.math.isNan(nd_inv_norm) ||
+                std.math.isInf(nd_inv_norm))
+            {
+                return HnswFlatError.InvalidSnapshot;
+            }
+            if (nd_level > 0) {
+                const up_need = hnswCheckedMul(@as(usize, nd_level), cfg.m) orelse return HnswFlatError.InvalidSnapshot;
+                const up_end = hnswCheckedAdd(@as(usize, nd_up_off), up_need) orelse return HnswFlatError.InvalidSnapshot;
+                if (up_end > upper_used) {
+                    return HnswFlatError.InvalidSnapshot;
+                }
+            }
             let nd = HnswFlatNode{
                 doc_id: readU64Le(bytes, off),
-                level: bytes[off + 8],
+                level: nd_level,
                 deleted: bytes[off + 9] != 0,
-                l0_deg: readU16Le(bytes, off + 10),
-                upper_offset: readU32Le(bytes, off + 12),
-                inv_norm: bitsToF32(readU32Le(bytes, off + 16)),
+                l0_deg: nd_l0_deg,
+                upper_offset: nd_up_off,
+                inv_norm: nd_inv_norm,
             };
             let lv: usize = 0;
             while (lv < HNSW_FLAT_MAX_LEVELS) : (lv += 1) {
-                nd.upper_deg[lv] = bytes[off + 20 + lv];
+                const udeg = bytes[off + 20 + lv];
+                if (@as(usize, udeg) > cfg.m) {
+                    return HnswFlatError.InvalidSnapshot;
+                }
+                nd.upper_deg[lv] = udeg;
             }
             nodes[i] = nd;
             off += SNAPSHOT_NODE_BYTES;
         }
 
-        const total_floats: usize = node_count * cfg.dim;
         let vf: usize = 0;
         while (vf < total_floats) : (vf += 1) {
-            vecs[vf] = bitsToF32(readU32Le(bytes, off));
+            const fv = bitsToF32(readU32Le(bytes, off));
+            if (std.math.isNan(fv) || std.math.isInf(fv)) {
+                return HnswFlatError.InvalidSnapshot;
+            }
+            vecs[vf] = fv;
             off += 4;
         }
 
-        const total_l0: usize = node_count * cfg.m_max0;
         let l0_i: usize = 0;
         while (l0_i < total_l0) : (l0_i += 1) {
-            l0_neighbors[l0_i] = readU32Le(bytes, off);
+            const nb = readU32Le(bytes, off);
+            if (nb != HNSW_FLAT_INVALID_ID && @as(usize, nb) >= node_count) {
+                return HnswFlatError.InvalidSnapshot;
+            }
+            l0_neighbors[l0_i] = nb;
             off += 4;
         }
 
         let up_i: usize = 0;
         while (up_i < upper_used) : (up_i += 1) {
-            upper_neighbors[up_i] = readU32Le(bytes, off);
+            const nb = readU32Le(bytes, off);
+            if (nb != HNSW_FLAT_INVALID_ID && @as(usize, nb) >= node_count) {
+                return HnswFlatError.InvalidSnapshot;
+            }
+            upper_neighbors[up_i] = nb;
             off += 4;
         }
 

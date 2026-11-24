@@ -1,12 +1,26 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc SIMD @l2sq Residual IVF-PQ Approximate Nearest Neighbor Engine) | Created: 2026-11-23
+// Reference-hardened against unum-cloud/usearch & djc/instant-distance (Apache-2.0 / MIT)
+// Origin: Pure-CP Stdlib (Zero-Alloc 4-Lane SIMD Residual IVF-PQ Approximate Nearest Neighbor Engine) | Created: 2026-11-23
 // Pure CP zero-heap-allocation Residual Inverted File + Product Quantization (FAISS IndexIVFPQ-style):
-//   - Two-stage deterministic K-Means training powered by CP native `@l2sq` SIMD distance:
-//       1) Coarse quantizer clustering into `nlist` centroids
-//       2) Per-subspace residual PQ codebook clustering (`r = x - c_l`) into `m_subspaces x ksub` centroids
-//   - Compact `[IVFPQ_MAX_SUBSPACES]u8` residual code storage with O(1) intrusive inverted lists
-//   - Vector reconstruction (`reconstruct`) summing coarse centroid + quantized subspace residuals
-//   - Multi-probe Asymmetric Distance Computation (ADC) search precomputing `[m_subspaces][ksub]f32`
-//     distance tables per probed list and scoring each candidate in O(M) table lookups
+//   - Two-stage deterministic K-Means training powered by 4-lane `@Vector(4, f32)` SIMD `simdVecIdxL2SqF32`
+//   - Strict subspace divisibility (`m > 0 && dim % m == 0`), NaN/±Inf rejection, and checked-overflow CRC32 snapshots
+
+const std = @import("std");
+import { simdVecIdxL2SqF32, hnswHasFiniteVec } from "./hnswFlat.cp";
+
+const IVFPQ_SM64_INC: u64 = (@as(u64, 0x9E3779B9) << 32) | 0x7F4A7C15;
+const IVFPQ_SM64_M1: u64 = (@as(u64, 0xBF58476D) << 32) | 0x1CE4E5B9;
+const IVFPQ_SM64_M2: u64 = (@as(u64, 0x94D049BB) << 32) | 0x133111EB;
+
+fn ivfPqCheckedMul(a: usize, b: usize): usize? {
+    if (a == 0 || b == 0) return 0;
+    if (a > std.math.maxInt(usize) / b) return null;
+    return a * b;
+}
+
+fn ivfPqCheckedAdd(a: usize, b: usize): usize? {
+    if (a > std.math.maxInt(usize) - b) return null;
+    return a + b;
+}
 
 // ============================================================================
 // 1. Constants, Errors & Data Models
@@ -121,10 +135,10 @@ pub struct IvfPqIndex {
 
     fn nearestCoarse(vec: []const f32, active_lists: usize): usize {
         let best_c: usize = 0;
-        let best_d: f32 = @l2sq(vec, coarseSlice(0));
+        let best_d: f32 = simdVecIdxL2SqF32(vec, coarseSlice(0));
         let c: usize = 1;
         while (c < active_lists) : (c += 1) {
-            const d: f32 = @l2sq(vec, coarseSlice(c));
+            const d: f32 = simdVecIdxL2SqF32(vec, coarseSlice(c));
             if (d < best_d) {
                 best_d = d;
                 best_c = c;
@@ -136,11 +150,11 @@ pub struct IvfPqIndex {
     fn nearestSubCentroid(m: usize, sub_vec: []const f32, active_k: usize): usize {
         const off0 = pqCentroidOffset(m, 0);
         let best_k: usize = 0;
-        let best_d: f32 = @l2sq(sub_vec, pq_codebooks[off0 .. off0 + dsub]);
+        let best_d: f32 = simdVecIdxL2SqF32(sub_vec, pq_codebooks[off0 .. off0 + dsub]);
         let k: usize = 1;
         while (k < active_k) : (k += 1) {
             const off = pqCentroidOffset(m, k);
-            const d: f32 = @l2sq(sub_vec, pq_codebooks[off .. off + dsub]);
+            const d: f32 = simdVecIdxL2SqF32(sub_vec, pq_codebooks[off .. off + dsub]);
             if (d < best_d) {
                 best_d = d;
                 best_k = k;
@@ -158,6 +172,9 @@ pub struct IvfPqIndex {
         }
         if (flat_vecs.len < num_vecs * cfg.dim) {
             return IvfPqError.DimMismatch;
+        }
+        if (!hnswHasFiniteVec(flat_vecs[0 .. num_vecs * cfg.dim])) {
+            return IvfPqError.InvalidParams;
         }
 
         const dim = cfg.dim;
@@ -177,7 +194,7 @@ pub struct IvfPqIndex {
             while (v < num_vecs) : (v += 1) {
                 const v_slice: []const f32 = flat_vecs[v * dim .. v * dim + dim];
                 const nearest_c = nearestCoarse(v_slice, c_init);
-                const md: f32 = @l2sq(v_slice, coarseSlice(nearest_c));
+                const md: f32 = simdVecIdxL2SqF32(v_slice, coarseSlice(nearest_c));
                 if (md > far_dist) {
                     far_dist = md;
                     far_idx = v;
@@ -265,7 +282,7 @@ pub struct IvfPqIndex {
                     }
                     const nk = nearestSubCentroid(m, res_sub[0..dsub], k_init);
                     const nk_off = pqCentroidOffset(m, nk);
-                    const dist: f32 = @l2sq(res_sub[0..dsub], pq_codebooks[nk_off .. nk_off + dsub]);
+                    const dist: f32 = simdVecIdxL2SqF32(res_sub[0..dsub], pq_codebooks[nk_off .. nk_off + dsub]);
                     if (dist > best_d) {
                         best_d = dist;
                         best_v = v;
@@ -334,6 +351,7 @@ pub struct IvfPqIndex {
     fn add(*_, doc_id: u64, vec: []const f32): u16 ! IvfPqError {
         if (!trained) return IvfPqError.NotTrained;
         if (vec.len != cfg.dim) return IvfPqError.DimMismatch;
+        if (!hnswHasFiniteVec(vec)) return IvfPqError.InvalidParams;
         if (doc_count >= IVFPQ_MAX_DOCS) return IvfPqError.CapacityFull;
 
         const list_id = nearestCoarse(vec, cfg.nlist);
@@ -393,18 +411,18 @@ pub struct IvfPqIndex {
     /// precomputes `[m_subspaces][ksub]f32` residual distance tables per list, and returns
     /// hits sorted ascending by `(approx_l2_sq, doc_id)`.
     fn search(*_, query_vec: []const f32, nprobe: usize, out_hits: *[]IvfPqHit): usize {
-        if (!trained || query_vec.len != cfg.dim || out_hits.len == 0 || doc_count == 0) return 0;
+        if (!trained || query_vec.len != cfg.dim || !hnswHasFiniteVec(query_vec) || out_hits.len == 0 || doc_count == 0) return 0;
 
         let eff_nprobe: usize = if (nprobe == 0) cfg.nprobe else nprobe;
         if (eff_nprobe > cfg.nlist) eff_nprobe = cfg.nlist;
 
-        // 1. Rank coarse lists by `@l2sq(query_vec, coarse_centroid[l])` ascending.
+        // 1. Rank coarse lists by `simdVecIdxL2SqF32(query_vec, coarse_centroid[l])` ascending.
         let list_order: [IVFPQ_MAX_LISTS]usize = [0; IVFPQ_MAX_LISTS];
         let list_dists: [IVFPQ_MAX_LISTS]f32 = [0.0; IVFPQ_MAX_LISTS];
         let l: usize = 0;
         while (l < cfg.nlist) : (l += 1) {
             list_order[l] = l;
-            list_dists[l] = @l2sq(query_vec, coarseSlice(l));
+            list_dists[l] = simdVecIdxL2SqF32(query_vec, coarseSlice(l));
         }
 
         let a: usize = 0;
@@ -450,7 +468,7 @@ pub struct IvfPqIndex {
                 let k: usize = 0;
                 while (k < cfg.ksub) : (k += 1) {
                     const cb_off = pqCentroidOffset(m, k);
-                    adc[m * IVFPQ_MAX_KSUB + k] = @l2sq(q_sub, pq_codebooks[cb_off .. cb_off + dsub]);
+                    adc[m * IVFPQ_MAX_KSUB + k] = simdVecIdxL2SqF32(q_sub, pq_codebooks[cb_off .. cb_off + dsub]);
                 }
             }
 
@@ -545,6 +563,7 @@ const IVFPQ_SNAPSHOT_CRC_BYTES: usize = 4;
 /// Error set for unbounded `IvfPqFlatIndex` operations and binary snapshot persistence.
 pub err IvfPqFlatError {
     InvalidConfig,
+    InvalidVector,
     DimMismatch,
     NotTrained,
     CapacityFull,
@@ -562,7 +581,7 @@ pub struct IvfPqFlatConfig {
     m_subspaces: usize = 8;
     ksub: usize = 16;
     train_iters: usize = 8;
-    seed: u64 = 0x9E3779B97F4A7C15;
+    seed: u64 = IVFPQ_SM64_INC;
 
     /// Validates configuration constraints (`dim % m_subspaces == 0`, `1 <= ksub <= 256`, positive sizes).
     fn isValid(): bool {
@@ -634,18 +653,18 @@ pub fn ivfPqSnapshotMaxBytes(cfg: IvfPqFlatConfig, doc_count: usize): usize {
 // ---- Internal Deterministic SplitMix64 PRNG, Little-Endian & IEEE CRC32 ----
 
 struct IvfPqRng {
-    state: u64 = 0x9E3779B97F4A7C15;
+    state: u64 = IVFPQ_SM64_INC;
 
     static fn init(seed: u64): IvfPqRng {
-        const s: u64 = if (seed == 0) 0x9E3779B97F4A7C15 else seed;
+        const s: u64 = if (seed == 0) IVFPQ_SM64_INC else seed;
         return IvfPqRng{ state: s };
     }
 
     fn nextU64(*_): u64 {
-        state = state +% 0x9E3779B97F4A7C15;
+        state = state +% IVFPQ_SM64_INC;
         let z: u64 = state;
-        z = (z ^ (z >> 30)) *% 0xBF58476D1CE4E5B9;
-        z = (z ^ (z >> 27)) *% 0x94D049BB133111EB;
+        z = (z ^ (z >> 30)) *% IVFPQ_SM64_M1;
+        z = (z ^ (z >> 27)) *% IVFPQ_SM64_M2;
         return z ^ (z >> 31);
     }
 
@@ -781,10 +800,10 @@ pub struct IvfPqFlatIndex {
 
     fn nearestCoarse(vec: []const f32, active_lists: usize): usize {
         let best_c: usize = 0;
-        let best_d: f32 = @l2sq(vec, coarseSlice(0));
+        let best_d: f32 = simdVecIdxL2SqF32(vec, coarseSlice(0));
         let c: usize = 1;
         while (c < active_lists) : (c += 1) {
-            const d: f32 = @l2sq(vec, coarseSlice(c));
+            const d: f32 = simdVecIdxL2SqF32(vec, coarseSlice(c));
             if (d < best_d) {
                 best_d = d;
                 best_c = c;
@@ -796,11 +815,11 @@ pub struct IvfPqFlatIndex {
     fn nearestSubCentroid(m: usize, sub_vec: []const f32, active_k: usize): usize {
         const off0 = pqCentroidOffset(m, 0);
         let best_k: usize = 0;
-        let best_d: f32 = @l2sq(sub_vec, pq_codebooks[off0 .. off0 + dsub]);
+        let best_d: f32 = simdVecIdxL2SqF32(sub_vec, pq_codebooks[off0 .. off0 + dsub]);
         let k: usize = 1;
         while (k < active_k) : (k += 1) {
             const off = pqCentroidOffset(m, k);
-            const d: f32 = @l2sq(sub_vec, pq_codebooks[off .. off + dsub]);
+            const d: f32 = simdVecIdxL2SqF32(sub_vec, pq_codebooks[off .. off + dsub]);
             if (d < best_d) {
                 best_d = d;
                 best_k = k;
@@ -825,6 +844,9 @@ pub struct IvfPqFlatIndex {
         if (flat_vecs.len < num_vecs * cfg.dim) {
             return IvfPqFlatError.DimMismatch;
         }
+        if (!hnswHasFiniteVec(flat_vecs[0 .. num_vecs * cfg.dim])) {
+            return IvfPqFlatError.InvalidVector;
+        }
         if (work_f32.len < ivfPqTrainWorkF32Len(cfg, num_vecs)
             || work_u32.len < ivfPqTrainWorkU32Len(cfg, num_vecs))
         {
@@ -848,7 +870,7 @@ pub struct IvfPqFlatIndex {
 
         let v: usize = 0;
         while (v < num_vecs) : (v += 1) {
-            min_dists[v] = @l2sq(flat_vecs[v * dim .. v * dim + dim], coarseSlice(0));
+            min_dists[v] = simdVecIdxL2SqF32(flat_vecs[v * dim .. v * dim + dim], coarseSlice(0));
         }
 
         let c_init: usize = 1;
@@ -883,7 +905,7 @@ pub struct IvfPqFlatIndex {
             const new_c: []const f32 = coarseSlice(c_init);
             v = 0;
             while (v < num_vecs) : (v += 1) {
-                const dist: f32 = @l2sq(flat_vecs[v * dim .. v * dim + dim], new_c);
+                const dist: f32 = simdVecIdxL2SqF32(flat_vecs[v * dim .. v * dim + dim], new_c);
                 if (dist < min_dists[v]) {
                     min_dists[v] = dist;
                 }
@@ -959,7 +981,7 @@ pub struct IvfPqFlatIndex {
                 while (sd < dsub) : (sd += 1) {
                     res_sub[sd] = flat_vecs[v * dim + sub_start + sd] - coarse_centroids[cv_off + sd];
                 }
-                min_dists[v] = @l2sq(res_sub[0..dsub], pq_codebooks[cb0_off .. cb0_off + dsub]);
+                min_dists[v] = simdVecIdxL2SqF32(res_sub[0..dsub], pq_codebooks[cb0_off .. cb0_off + dsub]);
             }
 
             let k_init: usize = 1;
@@ -999,7 +1021,7 @@ pub struct IvfPqFlatIndex {
                     while (sd < dsub) : (sd += 1) {
                         res_sub[sd] = flat_vecs[v * dim + sub_start + sd] - coarse_centroids[cv_off + sd];
                     }
-                    const dist: f32 = @l2sq(res_sub[0..dsub], pq_codebooks[dst_cb .. dst_cb + dsub]);
+                    const dist: f32 = simdVecIdxL2SqF32(res_sub[0..dsub], pq_codebooks[dst_cb .. dst_cb + dsub]);
                     if (dist < min_dists[v]) {
                         min_dists[v] = dist;
                     }
@@ -1057,6 +1079,7 @@ pub struct IvfPqFlatIndex {
     fn add(*_, doc_id: u64, vec: []const f32): u32 ! IvfPqFlatError {
         if (!trained) return IvfPqFlatError.NotTrained;
         if (vec.len != cfg.dim) return IvfPqFlatError.DimMismatch;
+        if (!hnswHasFiniteVec(vec)) return IvfPqFlatError.InvalidVector;
         if (doc_count >= cfg.max_docs) return IvfPqFlatError.CapacityFull;
 
         const list_id = nearestCoarse(vec, cfg.nlist);
@@ -1163,6 +1186,7 @@ pub struct IvfPqFlatIndex {
     ): usize ! IvfPqFlatError {
         if (!trained) return IvfPqFlatError.NotTrained;
         if (query_vec.len != cfg.dim) return IvfPqFlatError.DimMismatch;
+        if (!hnswHasFiniteVec(query_vec)) return IvfPqFlatError.InvalidVector;
         if (adc_lut_work.len < ivfPqSearchWorkF32Len(cfg)) {
             return IvfPqFlatError.BufferTooSmall;
         }
@@ -1179,7 +1203,7 @@ pub struct IvfPqFlatIndex {
         // 1. Compute distance from query to every coarse centroid
         let l: usize = 0;
         while (l < cfg.nlist) : (l += 1) {
-            list_dists[l] = @l2sq(query_vec, coarseSlice(l));
+            list_dists[l] = simdVecIdxL2SqF32(query_vec, coarseSlice(l));
         }
 
         // 2. Iteratively select top `eff_nprobe` closest coarse lists & score active docs in O(M)
@@ -1215,7 +1239,7 @@ pub struct IvfPqFlatIndex {
                 let k: usize = 0;
                 while (k < cfg.ksub) : (k += 1) {
                     const cb_off = pqCentroidOffset(m, k);
-                    adc[m * cfg.ksub + k] = @l2sq(q_sub, pq_codebooks[cb_off .. cb_off + dsub]);
+                    adc[m * cfg.ksub + k] = simdVecIdxL2SqF32(q_sub, pq_codebooks[cb_off .. cb_off + dsub]);
                 }
             }
 
@@ -1387,8 +1411,33 @@ pub fn serializeIvfPqSnapshot(idx: IvfPqFlatIndex, out_bytes: []u8): usize ! Ivf
     return pos;
 }
 
-/// Deserializes an `IvfPqFlatIndex` snapshot with full magic, version, length, bounds, and
-/// IEEE CRC32 verification into caller-provided backing slices (zero re-training).
+fn ivfPqCheckedSnapshotBytes(cfg: IvfPqFlatConfig, doc_count: usize): usize? {
+    const coarse_floats = ivfPqCheckedMul(cfg.nlist, cfg.dim) orelse return null;
+    const coarse_bytes = ivfPqCheckedMul(coarse_floats, 4) orelse return null;
+    const cb_floats = ivfPqCheckedMul(cfg.ksub, cfg.dim) orelse return null;
+    const codebook_bytes = ivfPqCheckedMul(cb_floats, 4) orelse return null;
+    const codes_bytes = ivfPqCheckedMul(doc_count, cfg.m_subspaces) orelse return null;
+    const doc_id_bytes = ivfPqCheckedMul(doc_count, 8) orelse return null;
+    const deleted_bytes = doc_count;
+    const heads_bytes = ivfPqCheckedMul(cfg.nlist, 4) orelse return null;
+    const next_bytes = ivfPqCheckedMul(doc_count, 4) orelse return null;
+    const counts_bytes = ivfPqCheckedMul(cfg.nlist, 4) orelse return null;
+
+    let total: usize = IVFPQ_SNAPSHOT_HEADER_BYTES;
+    total = ivfPqCheckedAdd(total, coarse_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, codebook_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, codes_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, doc_id_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, deleted_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, heads_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, next_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, counts_bytes) orelse return null;
+    total = ivfPqCheckedAdd(total, IVFPQ_SNAPSHOT_CRC_BYTES) orelse return null;
+    return total;
+}
+
+/// Deserializes an `IvfPqFlatIndex` snapshot with full magic, version, checked-overflow length,
+/// finite-float, code/link bounds, and IEEE CRC32 verification into caller-provided backing slices.
 pub fn deserializeIvfPqSnapshot(
     bytes: []const u8,
     coarse_centroids: []f32,
@@ -1427,8 +1476,8 @@ pub fn deserializeIvfPqSnapshot(
         return IvfPqFlatError.InvalidSnapshot;
     }
 
-    const expected_len: usize = ivfPqSnapshotMaxBytes(cfg, doc_count);
-    if (bytes.len < expected_len) {
+    const expected_len = ivfPqCheckedSnapshotBytes(cfg, doc_count) orelse return IvfPqFlatError.InvalidSnapshot;
+    if (bytes.len != expected_len) {
         return IvfPqFlatError.InvalidSnapshot;
     }
 
@@ -1458,6 +1507,9 @@ pub fn deserializeIvfPqSnapshot(
     let i: usize = 0;
     while (i < coarse_len) : (i += 1) {
         const fval: f32 = @bitCast(readLeU32(bytes, pos));
+        if (std.math.isNan(fval) || std.math.isInf(fval)) {
+            return IvfPqFlatError.InvalidSnapshot;
+        }
         idx.coarse_centroids[i] = fval;
         pos += 4;
     }
@@ -1466,6 +1518,9 @@ pub fn deserializeIvfPqSnapshot(
     i = 0;
     while (i < cb_len) : (i += 1) {
         const fval: f32 = @bitCast(readLeU32(bytes, pos));
+        if (std.math.isNan(fval) || std.math.isInf(fval)) {
+            return IvfPqFlatError.InvalidSnapshot;
+        }
         idx.pq_codebooks[i] = fval;
         pos += 4;
     }
@@ -1473,7 +1528,11 @@ pub fn deserializeIvfPqSnapshot(
     const codes_len = doc_count * cfg.m_subspaces;
     i = 0;
     while (i < codes_len) : (i += 1) {
-        idx.codes[i] = bytes[pos];
+        const code_v = bytes[pos];
+        if (@as(usize, code_v) >= cfg.ksub) {
+            return IvfPqFlatError.InvalidSnapshot;
+        }
+        idx.codes[i] = code_v;
         pos += 1;
     }
 
@@ -1491,13 +1550,21 @@ pub fn deserializeIvfPqSnapshot(
 
     i = 0;
     while (i < cfg.nlist) : (i += 1) {
-        idx.list_heads[i] = readLeU32(bytes, pos);
+        const head_v = readLeU32(bytes, pos);
+        if (head_v != IVFPQ_INVALID_LINK && @as(usize, head_v) >= doc_count) {
+            return IvfPqFlatError.InvalidSnapshot;
+        }
+        idx.list_heads[i] = head_v;
         pos += 4;
     }
 
     i = 0;
     while (i < doc_count) : (i += 1) {
-        idx.list_next[i] = readLeU32(bytes, pos);
+        const next_v = readLeU32(bytes, pos);
+        if (next_v != IVFPQ_INVALID_LINK && @as(usize, next_v) >= doc_count) {
+            return IvfPqFlatError.InvalidSnapshot;
+        }
+        idx.list_next[i] = next_v;
         pos += 4;
     }
 
