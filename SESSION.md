@@ -3795,3 +3795,20 @@
   > 已定位并修复工单 `task-bun-20261124-struct-addr-of` 根因（[borrow.rs](file:///data/dev/cp/cpc/src/codegen/borrow.rs#L959)：`is_zig_heap_ptr_type` 中内置堆类名表 `Task`/`Server`/`Request` 等抢先匹配了已注册为 `value_classes` 的 `const Task = struct { ... };`，导致 `&_.tasks[idx]` 误判 `already_ptr=true` 而丢弃 `&`），并新增回归测试 [testHotfixStructAddrOf.cp](file:///data/dev/cp/cap/test/testHotfixStructAddrOf.cp)。
   >
   > 正在等待 `sync_cpc.sh release` 构建部署完成，随后立即验证复现用例、跑通测试、`resolve` 结单并提交。
+
+### 2026-11-24（下游工单全量补录：`task-bun-20261124-multiline-string`）[ticket:task-bun-20261124-multiline-string]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-24 16:44:03` | 状态：`resolved` | 结单：`2026-11-24T16:48:00`
+- **报错/需求摘要**：cpc 将 Zig 多行字符串 \\line1 \\line2 错误拆分为 const s = "line1"; _ = "line2"; 导致后续行全部丢失
+- **结单与处理汇报**：Fixed Zig-style multiline string literal lexing in cpc/src/lexer.rs: consecutive \\ lines separated by newline+indent are merged into a single StringLiteral joined by \n (with CR trim and \ / " escaping). Release cpc deployed, verified repro_multiline_string.cp + zig ast-check + cap/test/testHotfixMultilineString.cp PASS.
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 16:39:04）[step:21882]
+- **用户完整原始指令**：
+  > 你计划还要完成多少标准库的加固/优化/补全
+- **完整回复与执行汇报**：
+  > 正在实时统计 `lib/` 全量模块与已加固模块分布（刚已完成 **Wave 36 10/10 收官**，提交 `8de6c296`），马上给出精确底数与明确的收口路线图。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 16:44:29）[step:21903]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261124-multiline-string)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 已定位并修复工单 `task-bun-20261124-multiline-string`（[lexer.rs](file:///data/dev/cp/cpc/src/lexer.rs#L218) 连续 `\\` 多行字符串在词法阶段未合并），正在完成 release 编译部署与复现/回归测试验证，完成后立即 `resolve` 结单。
