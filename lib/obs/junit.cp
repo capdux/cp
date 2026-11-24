@@ -503,7 +503,7 @@ pub struct JunitSuiteIter {
     pos: usize,
     malformed: bool,
 
-    fn init(data: []const u8): JunitSuiteIter {
+    static fn init(data: []const u8): JunitSuiteIter {
         return JunitSuiteIter{
             data: data,
             pos: skipBom(data),
@@ -575,7 +575,7 @@ pub struct JunitCaseIter {
     pos: usize,
     malformed: bool,
 
-    fn init(suite_body: []const u8): JunitCaseIter {
+    static fn init(suite_body: []const u8): JunitCaseIter {
         return JunitCaseIter{
             data: suite_body,
             pos: skipBom(suite_body),

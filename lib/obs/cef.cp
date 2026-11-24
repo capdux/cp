@@ -251,7 +251,7 @@ pub struct CefExtIter {
     ext: []const u8 = "",
     pos: usize = 0,
 
-    pub fn init(extension: []const u8): CefExtIter {
+    pub static fn init(extension: []const u8): CefExtIter {
         return CefExtIter {
             ext: extension,
             pos: 0,

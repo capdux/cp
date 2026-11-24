@@ -14,7 +14,7 @@
 
 | 文件路径 | 核心职责 |
 | :--- | :--- |
-| `lib/obs/openmetrics.cp` | OpenMetrics / Prometheus Exposition 文本指标解析器（`MetricsDocument`, `parse`） |
+| `lib/obs/openmetrics.cp` | OpenMetrics 1.0 / Prometheus Exposition 文本指标解析与序列化器（对标 OpenMetrics 1.0 加固：严格 Metric/Label 名称校验、`+Inf`/`-Inf`/`NaN`、控制字符与 CRLF 拦截、16-lane SIMD `simdOmFindNeedEscape`；测试：`cap/test/testObsHdrMetricsRustRefSuite.cp`） |
 | `lib/obs/cef.cp` | ArcSight CEF Rev 25 SIEM 日志解析、转义解码与头部格式化 |
 | `lib/obs/leef.cp` | IBM QRadar LEEF 1.0/2.0 SIEM 日志解析与属性遍历 |
 | `lib/obs/clf.cp` | NCSA Common & Combined HTTP 访问日志流式解析与聚合统计 |
@@ -193,6 +193,8 @@ pub fn demoOnlineAnomalyDetector() {
 ```
 
 ### 零堆分配 HDR 对数线性高精度延迟直方图与协同遗漏校正示例 (`hdrHist.cp`)
+
+> 对标加固基准：`HdrHistogram/HdrHistogram_rust`（MIT OR Apache-2.0）& OpenMetrics 1.0；4-lane `@Vector(4, u64)` SIMD 饱和桶合并与总样本归约（`simdHdrMergeBuckets` / `simdHdrSumBuckets`）、`recordValue` / `merge` 饱和防溢出与分位数单调性守卫；回归测试：`cap/test/testObsHdrMetricsRustRefSuite.cp`
 
 面向高并发微服务、存储引擎与 AI Agent 推理网关的 100% 纯 CP 零动态堆分配 HdrHistogram 风格延迟直方图内核（恒定 1920 桶内联存储，覆盖 `[0, 34_359_738_367]` 动态范围，相对误差 `<= 1.5625%`）：
 

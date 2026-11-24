@@ -1,13 +1,19 @@
+// Reference-hardened against HdrHistogram/HdrHistogram_rust (MIT OR Apache-2.0) & OpenMetrics 1.0
 // Origin: Pure-CP Stdlib (AI-Native Zero-Alloc HDR Log-Linear High-Dynamic-Range Latency Histogram) | Created: 2026-11-22
 // Pure CP zero-heap-allocation HdrHistogram-style log-linear latency histogram with constant memory,
 // O(1) bit-level bucket mapping (~1.56% max relative error across microsecond-to-hour dynamic range),
-// Coordinated Omission correction, and lossless multi-shard merging:
+// Coordinated Omission correction, saturating u64 overflow protection, and 4-lane SIMD bucket aggregation:
+//   - 4-lane @Vector(4, u64) SIMD (`HdrVec4u64`) saturating merge (`simdHdrMergeBuckets`) and
+//     saturating total sample reduction (`simdHdrSumBuckets`) with 0-diff scalar references
 //   - Exact 1:1 linear base band for [0, 127], followed by 28 binary log-linear scales (64 sub-buckets/scale)
 //   - Covers [0, 34_359_738_367] (~9.5 hours in microseconds) in fixed 1920 u64 inline buckets
 //   - `record_with_expected_interval` backfills hidden stalled samples (Coordinated Omission correction)
-//   - `merge_from` supports lossless cross-worker/cross-thread aggregation
+//   - `merge_from` / `merge` supports saturating cross-worker/cross-thread aggregation
 
 const std = @import("std");
+
+/// Module-local 4-lane u64 vector alias for HDR histogram bucket hot paths.
+type HdrVec4u64 = @Vector(4, u64);
 
 // ============================================================================
 // 1. Histogram Geometry Constants
@@ -24,9 +30,75 @@ pub const HDR_MAX_SUPPORTED_VALUE: u64 = ((128 as u64) << 28) - 1;
 
 const HDR_LINEAR_LIMIT: u64 = 128;
 const HDR_MAX_CO_BACKFILL_STEPS: usize = 100_000;
+const HDR_U64_MAX: u64 = std.math.maxInt(u64);
 
 // ============================================================================
-// 2. Quantile Summary Model
+// 2. 4-Lane SIMD Saturating Bucket Aggregation Primitives (0-Diff with Scalar)
+// ============================================================================
+
+fn hdrSatAddU64(a: u64, b: u64): u64 {
+    return if (a > HDR_U64_MAX - b) HDR_U64_MAX else (a + b);
+}
+
+/// Scalar reference: saturating element-wise bucket addition (`dst[i] = sat_add(dst[i], src[i])`).
+pub fn scalarHdrMergeBuckets(dst: *[]u64, src: []const u64) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = hdrSatAddU64(dst[i], src[i]);
+    }
+}
+
+/// 4-lane SIMD accelerated saturating bucket merge (`dst[i] = sat_add(dst[i], src[i])`).
+pub fn simdHdrMergeBuckets(dst: *[]u64, src: []const u64) {
+    const n = if (dst.len < src.len) dst.len else src.len;
+    const max_v: HdrVec4u64 = @splat(HDR_U64_MAX);
+    let i: usize = 0;
+    while (i + 4 <= n) {
+        const vd: HdrVec4u64 = dst[i .. i + 4][0..4].*;
+        const vs: HdrVec4u64 = src[i .. i + 4][0..4].*;
+        const sum = vd +% vs;
+        const overflow = sum < vd;
+        dst[i .. i + 4][0..4].* = @select(u64, overflow, max_v, sum);
+        i += 4;
+    }
+    while (i < n) : (i += 1) {
+        dst[i] = hdrSatAddU64(dst[i], src[i]);
+    }
+}
+
+/// Scalar reference: saturating total sample count across all histogram buckets.
+pub fn scalarHdrSumBuckets(buckets: []const u64): u64 {
+    let total: u64 = 0;
+    let i: usize = 0;
+    while (i < buckets.len) : (i += 1) {
+        total = hdrSatAddU64(total, buckets[i]);
+    }
+    return total;
+}
+
+/// 4-lane SIMD accelerated saturating total sample count across all histogram buckets.
+pub fn simdHdrSumBuckets(buckets: []const u64): u64 {
+    const max_v: HdrVec4u64 = @splat(HDR_U64_MAX);
+    let acc_v: HdrVec4u64 = @splat(0);
+    let i: usize = 0;
+    while (i + 4 <= buckets.len) {
+        const v: HdrVec4u64 = buckets[i .. i + 4][0..4].*;
+        const sum = acc_v +% v;
+        const overflow = sum < acc_v;
+        acc_v = @select(u64, overflow, max_v, sum);
+        i += 4;
+    }
+    const lanes: [4]u64 = acc_v;
+    let total: u64 = hdrSatAddU64(hdrSatAddU64(lanes[0], lanes[1]), hdrSatAddU64(lanes[2], lanes[3]));
+    while (i < buckets.len) : (i += 1) {
+        total = hdrSatAddU64(total, buckets[i]);
+    }
+    return total;
+}
+
+// ============================================================================
+// 3. Quantile Summary Model
 // ============================================================================
 
 /// Comprehensive latency distribution summary produced by `HdrHistogram.summarize`.
@@ -43,7 +115,7 @@ pub struct HdrQuantileSummary {
 }
 
 // ============================================================================
-// 3. Zero-Alloc HdrHistogram Engine
+// 4. Zero-Alloc HdrHistogram Engine
 // ============================================================================
 
 /// Zero-heap-allocation log-linear high-dynamic-range histogram.
@@ -114,7 +186,12 @@ pub struct HdrHistogram {
         return _.record_n(val, 1);
     }
 
-    /// Records `count` identical observations of `val` in O(1).
+    /// Alias for `record` matching `HdrHistogram_rust` naming (`recordValue`).
+    fn recordValue(*_, val: u64): bool {
+        return _.record_n(val, 1);
+    }
+
+    /// Records `count` identical observations of `val` in O(1) with saturating u64 overflow protection.
     /// Returns `false` if `val` exceeded `max_trackable_val` (clamped and counted in `clamped_count`).
     fn record_n(*_, val: u64, count: u64): bool {
         if (count == 0) {
@@ -124,7 +201,7 @@ pub struct HdrHistogram {
         const eff_val = if (was_clamped) _.max_trackable_val else val;
         const bucket = HdrHistogram.value_to_bucket(eff_val);
 
-        _.buckets[bucket] += count;
+        _.buckets[bucket] = hdrSatAddU64(_.buckets[bucket], count);
         if (_.total_count == 0) {
             _.min_val = eff_val;
             _.max_val = eff_val;
@@ -136,9 +213,9 @@ pub struct HdrHistogram {
                 _.max_val = eff_val;
             }
         }
-        _.total_count += count;
+        _.total_count = hdrSatAddU64(_.total_count, count);
         if (was_clamped) {
-            _.clamped_count += count;
+            _.clamped_count = hdrSatAddU64(_.clamped_count, count);
         }
         _.sum_f64 += (eff_val as f64) * (count as f64);
         return !was_clamped;
@@ -163,6 +240,7 @@ pub struct HdrHistogram {
 
     /// Returns the latency value at quantile `q in [0.0, 1.0]` (e.g., `0.50`, `0.99`, `0.999`).
     /// Returns `0` for empty histograms or invalid (`NaN`, `Inf`, `< 0.0`, `> 1.0`) quantiles.
+    /// Guarantees monotonicity: `min_val <= value_at_quantile(q1) <= value_at_quantile(q2) <= max_val` for `q1 <= q2`.
     fn value_at_quantile(q: f64): u64 {
         if (_.total_count == 0 || std.math.isNan(q) || std.math.isInf(q) || q < 0.0 || q > 1.0) {
             return 0;
@@ -175,12 +253,12 @@ pub struct HdrHistogram {
         }
 
         const raw_rank: f64 = std.math.ceil(q * (_.total_count as f64));
-        let target_rank: u64 = raw_rank as u64;
+        let target_rank: u64 = if (raw_rank >= (_.total_count as f64))
+            _.total_count
+        else
+            (raw_rank as u64);
         if (target_rank == 0) {
             target_rank = 1;
-        }
-        if (target_rank > _.total_count) {
-            target_rank = _.total_count;
         }
 
         let cumulative: u64 = 0;
@@ -190,10 +268,12 @@ pub struct HdrHistogram {
             if (c == 0) {
                 continue;
             }
-            cumulative += c;
+            cumulative = hdrSatAddU64(cumulative, c);
             if (cumulative >= target_rank) {
-                const upper = HdrHistogram.bucket_upper_bound(b);
-                return if (upper > _.max_val) _.max_val else upper;
+                let upper = HdrHistogram.bucket_upper_bound(b);
+                if (upper < _.min_val) upper = _.min_val;
+                if (upper > _.max_val) upper = _.max_val;
+                return upper;
             }
         }
         return _.max_val;
@@ -217,7 +297,8 @@ pub struct HdrHistogram {
         };
     }
 
-    /// Losslessly merges all bucket counts and summary aggregates from `other` into this histogram.
+    /// Merges all bucket counts and summary aggregates from `other` into this histogram using
+    /// 4-lane SIMD saturating addition (`simdHdrMergeBuckets`) and `simdHdrSumBuckets`.
     /// Returns `false` if `max_trackable_val` configurations differ.
     fn merge_from(*_, other: HdrHistogram): bool {
         if (_.max_trackable_val != other.max_trackable_val) {
@@ -226,10 +307,7 @@ pub struct HdrHistogram {
         if (other.total_count == 0) {
             return true;
         }
-        let i: usize = 0;
-        while (i < HDR_TOTAL_BUCKETS) : (i += 1) {
-            _.buckets[i] += other.buckets[i];
-        }
+        simdHdrMergeBuckets(_.buckets[0..], other.buckets[0..]);
         if (_.total_count == 0) {
             _.min_val = other.min_val;
             _.max_val = other.max_val;
@@ -241,10 +319,15 @@ pub struct HdrHistogram {
                 _.max_val = other.max_val;
             }
         }
-        _.total_count += other.total_count;
-        _.clamped_count += other.clamped_count;
+        _.total_count = simdHdrSumBuckets(_.buckets[0..]);
+        _.clamped_count = hdrSatAddU64(_.clamped_count, other.clamped_count);
         _.sum_f64 += other.sum_f64;
         return true;
+    }
+
+    /// Alias for `merge_from` matching `HdrHistogram_rust` naming (`merge`).
+    fn merge(*_, other: HdrHistogram): bool {
+        return _.merge_from(other);
     }
 
     /// Clears all recorded samples while preserving `max_trackable_val`.

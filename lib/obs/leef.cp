@@ -252,7 +252,7 @@ pub struct LeefAttrIter {
     delim: u8 = LEEF_DEFAULT_DELIM,
     pos: usize = 0,
 
-    pub fn init(attributes_slice: []const u8, delimiter: u8): LeefAttrIter {
+    pub static fn init(attributes_slice: []const u8, delimiter: u8): LeefAttrIter {
         return LeefAttrIter {
             attrs: attributes_slice,
             delim: delimiter,

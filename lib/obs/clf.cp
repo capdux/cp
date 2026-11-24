@@ -300,7 +300,7 @@ pub struct ClfIter {
     pos: usize,
     skipped_malformed: u32,
 
-    fn init(data: []const u8): ClfIter {
+    static fn init(data: []const u8): ClfIter {
         return ClfIter{
             data: data,
             pos: 0,

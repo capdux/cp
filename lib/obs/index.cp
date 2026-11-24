@@ -4,6 +4,10 @@
 // --- OpenMetrics / Prometheus Exposition Format ---
 
 export {
+    isValidMetricName,
+    isValidLabelName,
+    scalarOmFindNeedEscape,
+    simdOmFindNeedEscape,
     MetricType,
     Label,
     Sample,
@@ -180,6 +184,10 @@ export {
     HDR_NUM_SCALES,
     HDR_TOTAL_BUCKETS,
     HDR_MAX_SUPPORTED_VALUE,
+    scalarHdrMergeBuckets,
+    simdHdrMergeBuckets,
+    scalarHdrSumBuckets,
+    simdHdrSumBuckets,
     HdrQuantileSummary,
     HdrHistogram,
 } from "./hdrHist.cp";
