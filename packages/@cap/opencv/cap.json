@@ -1,0 +1,37 @@
+{
+  "name": "@cap/opencv",
+  "ver": "4.10.0",
+  "description": "OpenCV (v4.10.0) core + imgproc computer vision library for CP via prebuilt dynamic libraries",
+  "main": "src/index.cp",
+  "license": "Apache-2.0",
+  "bin": {
+    "opencv_shim": {
+      "path": ".",
+      "src": [
+        "c/opencv_ffi.cpp"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3",
+        "-std=c++17"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "opencv_imgproc": {
+      "prebuilt": "prebuilt"
+    },
+    "opencv_core": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {},
+    "m": {},
+    "pthread": {},
+    "dl": {}
+  }
+}
