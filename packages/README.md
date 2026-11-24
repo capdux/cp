@@ -52,6 +52,8 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/opencv` | `4.10.0` | Apache-2.0 | Prebuilt dynamic (`sys`) | Computer vision `core` + `imgproc` (Blur/Canny/Resize, 10.4 MB) |
 | `@cap/expat` | `2.6.4` | MIT | C static (`bin`) | Fast streaming XML SAX parser (`libexpat`, 299 KB) |
 | `@cap/mbedtls` | `3.6.2` | Apache-2.0 | C static (`bin`) | Lightweight ARM Mbed TLS crypto/SHA256/AES-GCM core (80 KB) |
+| `@cap/snappy` | `1.2.1` | BSD-3-Clause | C++17 static (`bin`) | Google high-speed compression (Kafka/Parquet/RocksDB, 67 KB) |
+| `@cap/xxhash` | `0.8.3` | BSD-2-Clause | C static (`bin`) | Ultra-fast XXH3/XXH64 non-cryptographic hashing (51 KB) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 

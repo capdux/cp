@@ -1,0 +1,27 @@
+{
+  "name": "@cap/xxhash",
+  "ver": "0.8.3",
+  "description": "xxHash 0.8.3 extremely fast non-cryptographic hash algorithm (XXH32/XXH64/XXH3) for CP",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "bin": {
+    "xxhash": {
+      "path": "c",
+      "src": [
+        "xxhash.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}

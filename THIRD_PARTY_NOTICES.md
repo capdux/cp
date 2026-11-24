@@ -163,6 +163,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **OpenCV 4.10.0** (`@cap/opencv`) | <https://github.com/opencv/opencv> | Apache-2.0 | `packages/@cap/opencv/` | Copyright (c) 2000-2024 OpenCV team |
 | **libexpat 2.6.4** (`@cap/expat`) | <https://github.com/libexpat/libexpat> | MIT | `packages/@cap/expat/` | Copyright (c) 1998-2024 Expat development team |
 | **Mbed TLS 3.6.2** (`@cap/mbedtls`) | <https://github.com/Mbed-TLS/mbedtls> | Apache-2.0 | `packages/@cap/mbedtls/` | Copyright (c) The Mbed TLS Contributors |
+| **Snappy 1.2.1** (`@cap/snappy`) | <https://github.com/google/snappy> | BSD-3-Clause | `packages/@cap/snappy/` | Copyright (c) 2011 Google Inc. |
+| **xxHash 0.8.3** (`@cap/xxhash`) | <https://github.com/Cyan4973/xxHash> | BSD-2-Clause | `packages/@cap/xxhash/` | Copyright (c) 2012-2024 Yann Collet |
 
 ---
 

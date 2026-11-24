@@ -1,0 +1,34 @@
+{
+  "name": "@cap/snappy",
+  "ver": "1.2.1",
+  "description": "Google Snappy 1.2.1 fast compression/decompression library (Kafka/Parquet/LevelDB/RocksDB) for CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "snappy": {
+      "path": "c",
+      "src": [
+        "snappy.cc",
+        "snappy-sinksource.cc",
+        "snappy-stubs-internal.cc",
+        "snappy-c.cc"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-std=c++17",
+        "-DSNAPPY_HAVE_SSSE3=0",
+        "-DSNAPPY_HAVE_BMI2=0",
+        "-DSNAPPY_HAVE_NEON=0"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
