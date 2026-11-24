@@ -1,17 +1,18 @@
 // Origin: Pure-CP Stdlib (Unbounded-Slice RFC 9002 QUIC Loss/PTO, RFC 9000 ACK Ranges, RFC 9438 CUBIC & BBRv1) | Created: 2026-11-23
+// Reference-hardened against quinn-rs/quinn (MIT OR Apache-2.0) & RFC 9002
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice transport-layer recovery & congestion engine:
-//   - RFC 9000 `QuicAckSet`: descending coalesced ACK ranges with O(log R) binary search
-//   - RFC 9002 `QuicRttState` & `QuicLossDetector`: ack_delay-clamped SRTT/RTTVAR, exponential PTO backoff,
-//     packet threshold (`kPacketThreshold = 3`) & time threshold (`9/8 * max(srtt, latest_rtt)`) loss detection
-//   - RFC 9438 `CubicState`: Slow Start, multiplicative decrease (`beta = 0.7`) with per-RTT recovery guard,
-//     cubic concave/convex recovery `W_cubic(t)` & TCP-friendly estimator `W_est(t)`
-//   - BBRv1 `BbrController`: 10-round windowed `max_bw_bps` + `min_rtt_us` tracker with full 4-state machine
-//     (`startup -> drain -> probe_bw [8-phase gain cycle] -> probe_rtt`) and BDP/pacing rate control
+//   - RFC 9000 `QuicAckSet`: descending coalesced ACK ranges (`insertPacket`, `insertRange`) with O(log R) binary search,
+//     strict `first_pn > last_pn` rejection & `u64::MAX` wraparound-free arithmetic
+//   - RFC 9002 `QuicRttState` & `QuicLossDetector`: saturating ack_delay-clamped SRTT/RTTVAR, clamped exponential PTO backoff,
+//     packet threshold (`kPacketThreshold = 3`) & time threshold (`9/8 * max(srtt, latest_rtt)`) with 4-lane `@Vector(4, u64)` SIMD
+//   - RFC 9438 `CubicState`, BBRv1 `BbrController`, & `QuicPacer`: overflow-safe u128/saturating math & div-by-zero guards
 
 const std = @import("std");
 
+type QuicVec4u64 = @Vector(4, u64);
+
 // ============================================================================
-// 1. Constants & Error Set
+// 1. Constants, Error Set & Saturating / SIMD Helpers
 // ============================================================================
 
 /// RFC 9002 §6.1.1 packet reordering threshold (`kPacketThreshold = 3`).
@@ -26,6 +27,8 @@ pub const QUIC_GRANULARITY_US: u64 = 1_000;
 /// RFC 9000 default maximum UDP payload size in bytes (`1200 B`).
 pub const QUIC_MAX_DATAGRAM_DEFAULT: u32 = 1200;
 
+const QUIC_MAX_U64: u64 = ~@as(u64, 0);
+const QUIC_MAX_U32: u32 = 0xFFFF_FFFF;
 const BBR_BW_WINDOW_LEN: usize = 10;
 const BBR_STARTUP_GAIN: f64 = 2.8853900817779268; // 2 / ln(2)
 const BBR_DRAIN_GAIN: f64 = 0.34657359027997264;  // ln(2) / 2
@@ -40,9 +43,137 @@ pub err QuicLossError {
     InvalidConfig,
 }
 
+fn satAddU64(a: u64, b: u64): u64 {
+    if (a > QUIC_MAX_U64 - b) return QUIC_MAX_U64;
+    return a + b;
+}
+
+fn satSubU64(a: u64, b: u64): u64 {
+    return if (a >= b) a - b else 0;
+}
+
+fn satMulDivU64(a: u64, b: u64, denom: u64): u64 {
+    if (denom == 0) return QUIC_MAX_U64;
+    const num: u128 = @as(u128, a) * @as(u128, b);
+    const q: u128 = num / @as(u128, denom);
+    if (q >= @as(u128, QUIC_MAX_U64)) return QUIC_MAX_U64;
+    return @as(u64, @intCast(q));
+}
+
+fn clampFloatToU64(x: f64): u64 {
+    if (std.math.isNan(x) || x <= 0.0) return 0;
+    if (std.math.isInf(x) || x >= 18446744073709549568.0) return QUIC_MAX_U64;
+    return @as(u64, @intFromFloat(x));
+}
+
 fn cbrtPos(x: f64): f64 {
-    if (x <= 0.0) return 0.0;
+    if (std.math.isNan(x) || x <= 0.0) return 0.0;
     return std.math.pow(f64, x, 1.0 / 3.0);
+}
+
+/// Scalar reference: returns the minimum `u64` in `vals`, or `u64::MAX` if empty.
+pub fn scalarQuicMinU64(vals: []const u64): u64 {
+    let best: u64 = QUIC_MAX_U64;
+    let i: usize = 0;
+    while (i < vals.len) : (i += 1) {
+        if (vals[i] < best) best = vals[i];
+    }
+    return best;
+}
+
+/// 4-lane `@Vector(4, u64)` SIMD minimum scan over `vals` (0-diff vs `scalarQuicMinU64`).
+pub fn simdQuicMinU64(vals: []const u64): u64 {
+    if (vals.len == 0) return QUIC_MAX_U64;
+    let i: usize = 0;
+    let acc: QuicVec4u64 = @splat(QUIC_MAX_U64);
+    while (i + 4 <= vals.len) : (i += 4) {
+        const chunk: QuicVec4u64 = vals[i..][0..4].*;
+        acc = @select(u64, chunk < acc, chunk, acc);
+    }
+    let best: u64 = acc[0];
+    if (acc[1] < best) best = acc[1];
+    if (acc[2] < best) best = acc[2];
+    if (acc[3] < best) best = acc[3];
+    while (i < vals.len) : (i += 1) {
+        if (vals[i] < best) best = vals[i];
+    }
+    return best;
+}
+
+/// Scalar reference: counts active in-flight packets satisfying RFC 9002 packet-threshold
+/// (`pn + 3 <= largest_acked`) or time-threshold (`sent_time_us <= lost_send_time_us`).
+pub fn scalarQuicCountLossCandidates(
+    pns: []const u64,
+    sent_times: []const u64,
+    active_flags: []const u64,
+    largest_acked: u64,
+    lost_send_time_us: u64,
+): usize {
+    const n_min1: usize = if (pns.len < sent_times.len) pns.len else sent_times.len;
+    const n: usize = if (n_min1 < active_flags.len) n_min1 else active_flags.len;
+    const has_pkt_thresh: bool = largest_acked >= QUIC_PACKET_THRESHOLD;
+    const pkt_cutoff: u64 = if (has_pkt_thresh) largest_acked - QUIC_PACKET_THRESHOLD else 0;
+
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        if (active_flags[i] == 0) continue;
+        const pn: u64 = pns[i];
+        if (pn > largest_acked) continue;
+        const hit_pkt: bool = has_pkt_thresh && (pn <= pkt_cutoff);
+        const hit_time: bool = sent_times[i] <= lost_send_time_us;
+        if (hit_pkt || hit_time) {
+            total += 1;
+        }
+    }
+    return total;
+}
+
+/// 4-lane `@Vector(4, u64)` SIMD batch scan counting RFC 9002 loss candidates
+/// (0-diff vs `scalarQuicCountLossCandidates`).
+pub fn simdQuicCountLossCandidates(
+    pns: []const u64,
+    sent_times: []const u64,
+    active_flags: []const u64,
+    largest_acked: u64,
+    lost_send_time_us: u64,
+): usize {
+    const n_min1: usize = if (pns.len < sent_times.len) pns.len else sent_times.len;
+    const n: usize = if (n_min1 < active_flags.len) n_min1 else active_flags.len;
+    const has_pkt_thresh: bool = largest_acked >= QUIC_PACKET_THRESHOLD;
+    const pkt_cutoff: u64 = if (has_pkt_thresh) largest_acked - QUIC_PACKET_THRESHOLD else 0;
+
+    const v_zero: QuicVec4u64 = @splat(0);
+    const v_largest: QuicVec4u64 = @splat(largest_acked);
+    const v_cutoff: QuicVec4u64 = @splat(pkt_cutoff);
+    const v_lost_t: QuicVec4u64 = @splat(lost_send_time_us);
+
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i + 4 <= n) : (i += 4) {
+        const vp: QuicVec4u64 = pns[i..][0..4].*;
+        const vt: QuicVec4u64 = sent_times[i..][0..4].*;
+        const va: QuicVec4u64 = active_flags[i..][0..4].*;
+
+        const m_act: u4 = @bitCast(va != v_zero);
+        const m_le: u4 = @bitCast(vp <= v_largest);
+        const m_pkt: u4 = if (has_pkt_thresh) @bitCast(vp <= v_cutoff) else 0;
+        const m_time: u4 = @bitCast(vt <= v_lost_t);
+        const m_hit: u4 = m_act & m_le & (m_pkt | m_time);
+        total += @as(usize, @popCount(m_hit));
+    }
+
+    while (i < n) : (i += 1) {
+        if (active_flags[i] == 0) continue;
+        const pn: u64 = pns[i];
+        if (pn > largest_acked) continue;
+        const hit_pkt: bool = has_pkt_thresh && (pn <= pkt_cutoff);
+        const hit_time: bool = sent_times[i] <= lost_send_time_us;
+        if (hit_pkt || hit_time) {
+            total += 1;
+        }
+    }
+    return total;
 }
 
 // ============================================================================
@@ -66,7 +197,7 @@ pub struct QuicAckSet {
             return QuicLossError.BufferTooSmall;
         }
         return QuicAckSet{
-            ranges: buf.*,
+            ranges: buf,
             count: 0,
         };
     }
@@ -118,55 +249,64 @@ pub struct QuicAckSet {
         return false;
     }
 
+    /// Inserts closed range `[first_pn, last_pn]` (`first_pn <= last_pn`), rejecting invalid
+    /// inverted ranges (`first_pn > last_pn`), coalescing overlapping/adjacent ranges, and guarding `u64::MAX`.
+    fn insertRange(*_, first_pn: u64, last_pn: u64): void ! QuicLossError {
+        if (first_pn > last_pn) {
+            return QuicLossError.InvalidRange;
+        }
+
+        // Find first range `lo` that could overlap or be adjacent on the high side:
+        // ranges are strictly descending, so we skip ranges strictly above `last_pn + 1`.
+        let lo: usize = 0;
+        while (lo < count) : (lo += 1) {
+            const rg = ranges[lo];
+            const strictly_above: bool = (last_pn < QUIC_MAX_U64) && (rg.first_pn > last_pn + 1);
+            if (!strictly_above) break;
+        }
+
+        // Find end `hi` of ranges that overlap or are adjacent to `[first_pn, last_pn]`.
+        let merged_first: u64 = first_pn;
+        let merged_last: u64 = last_pn;
+        let hi: usize = lo;
+        while (hi < count) : (hi += 1) {
+            const rg = ranges[hi];
+            const strictly_below: bool = (rg.last_pn < QUIC_MAX_U64) && (rg.last_pn + 1 < merged_first);
+            if (strictly_below) break;
+            if (rg.first_pn < merged_first) merged_first = rg.first_pn;
+            if (rg.last_pn > merged_last) merged_last = rg.last_pn;
+        }
+
+        const span: usize = hi - lo;
+        if (span == 0) {
+            if (count >= ranges.len) {
+                return QuicLossError.TableFull;
+            }
+            let k: usize = count;
+            while (k > lo) {
+                ranges[k] = ranges[k - 1];
+                k -= 1;
+            }
+            ranges[lo] = QuicAckRange{ first_pn: merged_first, last_pn: merged_last };
+            count += 1;
+            return;
+        }
+
+        ranges[lo] = QuicAckRange{ first_pn: merged_first, last_pn: merged_last };
+        if (span > 1) {
+            const shift: usize = span - 1;
+            let s: usize = hi;
+            while (s < count) : (s += 1) {
+                ranges[s - shift] = ranges[s];
+            }
+            count -= shift;
+        }
+    }
+
     /// Inserts packet number `pn`, automatically coalescing adjacent or overlapping ranges
     /// while preserving strict descending order (`ranges[i].first_pn > ranges[i+1].last_pn + 1`).
     fn insertPacket(*_, pn: u64): void ! QuicLossError {
-        // Locate first range `idx` where `ranges[idx].last_pn < pn` (or containing `pn`).
-        let idx: usize = 0;
-        while (idx < count) : (idx += 1) {
-            const rg = ranges[idx];
-            if (pn >= rg.first_pn && pn <= rg.last_pn) {
-                return; // Already present.
-            }
-            if (pn > rg.last_pn) {
-                break;
-            }
-        }
-
-        const merge_left: bool = idx > 0 && (ranges[idx - 1].first_pn == pn + 1);
-        const merge_right: bool = idx < count && (ranges[idx].last_pn + 1 == pn);
-
-        if (merge_left && merge_right) {
-            // Bridge two adjacent ranges into one and compact left.
-            ranges[idx - 1].first_pn = ranges[idx].first_pn;
-            let s: usize = idx + 1;
-            while (s < count) : (s += 1) {
-                ranges[s - 1] = ranges[s];
-            }
-            count -= 1;
-            return;
-        }
-        if (merge_left) {
-            ranges[idx - 1].first_pn = pn;
-            return;
-        }
-        if (merge_right) {
-            ranges[idx].last_pn = pn;
-            return;
-        }
-
-        if (count >= ranges.len) {
-            return QuicLossError.TableFull;
-        }
-
-        // Shift right and insert singleton `[pn, pn]` at `idx`.
-        let k: usize = count;
-        while (k > idx) {
-            ranges[k] = ranges[k - 1];
-            k -= 1;
-        }
-        ranges[idx] = QuicAckRange{ first_pn: pn, last_pn: pn };
-        count += 1;
+        return insertRange(pn, pn);
     }
 }
 
@@ -198,7 +338,7 @@ pub struct QuicRttState {
     }
 
     /// Updates RTT statistics from a new `latest_rtt` sample per RFC 9002 §5.3, clamping
-    /// `ack_delay_us` to `max_ack_delay_us` and guarding against `adjusted_rtt < min_rtt`.
+    /// `ack_delay_us` to `max_ack_delay_us` and using saturating u128 arithmetic to prevent overflow.
     fn update(*_, latest_rtt: u64, ack_delay_us: u64, max_ack_delay_us: u64) {
         latest_rtt_us = latest_rtt;
         if (first_sample) {
@@ -215,7 +355,7 @@ pub struct QuicRttState {
 
         const clamped_delay: u64 = if (ack_delay_us > max_ack_delay_us) max_ack_delay_us else ack_delay_us;
         let adjusted_rtt: u64 = latest_rtt;
-        if (latest_rtt >= min_rtt_us + clamped_delay) {
+        if (latest_rtt >= satAddU64(min_rtt_us, clamped_delay)) {
             adjusted_rtt = latest_rtt - clamped_delay;
         }
 
@@ -223,20 +363,21 @@ pub struct QuicRttState {
             smoothed_rtt_us - adjusted_rtt
         else
             adjusted_rtt - smoothed_rtt_us;
-        rttvar_us = (rttvar_us * 3 + diff) / 4;
-        smoothed_rtt_us = (smoothed_rtt_us * 7 + adjusted_rtt) / 8;
+        const next_var: u128 = (@as(u128, rttvar_us) * 3 + @as(u128, diff)) / 4;
+        const next_srtt: u128 = (@as(u128, smoothed_rtt_us) * 7 + @as(u128, adjusted_rtt)) / 8;
+        rttvar_us = if (next_var >= @as(u128, QUIC_MAX_U64)) QUIC_MAX_U64 else @as(u64, @intCast(next_var));
+        smoothed_rtt_us = if (next_srtt >= @as(u128, QUIC_MAX_U64)) QUIC_MAX_U64 else @as(u64, @intCast(next_srtt));
     }
 
-    /// Computes Probe Timeout (PTO) duration with exponential backoff `2^pto_count` per RFC 9002 §6.2.1.
+    /// Computes Probe Timeout (PTO) duration with clamped exponential backoff `2^pto_count` per RFC 9002 §6.2.1.
     fn ptoDurationUs(max_ack_delay_us: u64, pto_count: u32): u64 {
-        const four_var: u64 = rttvar_us * 4;
+        const four_var: u64 = satMulDivU64(rttvar_us, 4, 1);
         const var_term: u64 = if (four_var > QUIC_GRANULARITY_US) four_var else QUIC_GRANULARITY_US;
-        const base: u64 = smoothed_rtt_us + var_term + max_ack_delay_us;
+        const base: u64 = satAddU64(satAddU64(smoothed_rtt_us, var_term), max_ack_delay_us);
         const shift: u6 = if (pto_count > 16) 16 else @as(u6, @intCast(pto_count));
-        const max_u64: u64 = 0xFFFF_FFFF_FFFF_FFFF;
-        const max_before_shift: u64 = max_u64 >> shift;
+        const max_before_shift: u64 = QUIC_MAX_U64 >> shift;
         if (base >= max_before_shift) {
-            return max_u64;
+            return QUIC_MAX_U64;
         }
         return base << shift;
     }
@@ -287,7 +428,7 @@ pub struct QuicLossDetector {
             return QuicLossError.BufferTooSmall;
         }
         return QuicLossDetector{
-            sent_packets: sent_packets.*,
+            sent_packets: sent_packets,
             count: 0,
             max_ack_delay_us: max_ack_delay_us,
             rtt: QuicRttState.init(),
@@ -335,7 +476,7 @@ pub struct QuicLossDetector {
         };
         count += 1;
         if (in_fl) {
-            bytes_in_flight += @as(u64, bytes);
+            bytes_in_flight = satAddU64(bytes_in_flight, @as(u64, bytes));
         }
         if (ack_eliciting) {
             ack_eliciting_in_flight += 1;
@@ -354,38 +495,97 @@ pub struct QuicLossDetector {
         else
             rtt.smoothed_rtt_us;
         // RFC 9002 §6.1.2: loss_delay = max(9/8 * max(latest_rtt, smoothed_rtt), kGranularity)
-        const scaled_rtt: u64 = (max_rtt * 9) / 8;
+        const scaled_rtt: u64 = satMulDivU64(max_rtt, 9, 8);
         const loss_delay: u64 = if (scaled_rtt > QUIC_GRANULARITY_US) scaled_rtt else QUIC_GRANULARITY_US;
-        const lost_send_time: u64 = if (now_us > loss_delay) now_us - loss_delay else 0;
+        const lost_send_time: u64 = satSubU64(now_us, loss_delay);
+        const has_pkt_thresh: bool = largest_acked_pn >= QUIC_PACKET_THRESHOLD;
+        const pkt_cutoff: u64 = if (has_pkt_thresh) largest_acked_pn - QUIC_PACKET_THRESHOLD else 0;
 
-        let i: usize = 0;
+        // 4-lane SIMD batch pre-scan & min candidate-time reduction on chunks of 4 packets
+        let chunk_base: usize = 0;
+        let min_cand_time: u64 = QUIC_MAX_U64;
+        while (chunk_base + 4 <= count) : (chunk_base += 4) {
+            let pns4: [4]u64 = [0; 4];
+            let ts4: [4]u64 = [0; 4];
+            let act4: [4]u64 = [0; 4];
+            let cand4: [4]u64 = [QUIC_MAX_U64; 4];
+            let lane: usize = 0;
+            while (lane < 4) : (lane += 1) {
+                const pkt = sent_packets[chunk_base + lane];
+                pns4[lane] = pkt.pn;
+                ts4[lane] = pkt.sent_time_us;
+                act4[lane] = if (!pkt.acked && !pkt.lost) 1 else 0;
+            }
+
+            const loss_cnt: usize = simdQuicCountLossCandidates(
+                pns4[0..],
+                ts4[0..],
+                act4[0..],
+                largest_acked_pn,
+                lost_send_time,
+            );
+
+            lane = 0;
+            while (lane < 4) : (lane += 1) {
+                const idx = chunk_base + lane;
+                if (act4[lane] == 0) continue;
+                const pn: u64 = pns4[lane];
+                if (pn > largest_acked_pn) continue;
+
+                const hit: bool = loss_cnt > 0 && ((has_pkt_thresh && pn <= pkt_cutoff) || (ts4[lane] <= lost_send_time));
+                if (hit) {
+                    sent_packets[idx].lost = true;
+                    if (sent_packets[idx].in_flight) {
+                        sent_packets[idx].in_flight = false;
+                        const b: u64 = @as(u64, sent_packets[idx].bytes);
+                        bytes_in_flight = satSubU64(bytes_in_flight, b);
+                        outcome.newly_lost_bytes = satAddU64(outcome.newly_lost_bytes, b);
+                    }
+                    if (sent_packets[idx].ack_eliciting && ack_eliciting_in_flight > 0) {
+                        ack_eliciting_in_flight -= 1;
+                    }
+                    outcome.newly_lost_packets += 1;
+                } else {
+                    cand4[lane] = satAddU64(ts4[lane], loss_delay);
+                }
+            }
+            const chunk_min: u64 = simdQuicMinU64(cand4[0..]);
+            if (chunk_min < min_cand_time) {
+                min_cand_time = chunk_min;
+            }
+        }
+
+        // Scalar tail for remaining < 4 packets
+        let i: usize = chunk_base;
         while (i < count) : (i += 1) {
             if (sent_packets[i].acked || sent_packets[i].lost) continue;
             const pn: u64 = sent_packets[i].pn;
             if (pn > largest_acked_pn) continue;
 
-            const pkt_threshold_hit: bool = (largest_acked_pn >= pn + QUIC_PACKET_THRESHOLD);
-            const time_threshold_hit: bool = (sent_packets[i].sent_time_us <= lost_send_time);
+            const pkt_threshold_hit: bool = has_pkt_thresh && (pn <= pkt_cutoff);
+            const time_threshold_hit: bool = sent_packets[i].sent_time_us <= lost_send_time;
 
             if (pkt_threshold_hit || time_threshold_hit) {
                 sent_packets[i].lost = true;
                 if (sent_packets[i].in_flight) {
                     sent_packets[i].in_flight = false;
                     const b: u64 = @as(u64, sent_packets[i].bytes);
-                    bytes_in_flight = if (bytes_in_flight >= b) bytes_in_flight - b else 0;
-                    outcome.newly_lost_bytes += b;
+                    bytes_in_flight = satSubU64(bytes_in_flight, b);
+                    outcome.newly_lost_bytes = satAddU64(outcome.newly_lost_bytes, b);
                 }
                 if (sent_packets[i].ack_eliciting && ack_eliciting_in_flight > 0) {
                     ack_eliciting_in_flight -= 1;
                 }
                 outcome.newly_lost_packets += 1;
             } else {
-                const candidate_time: u64 = sent_packets[i].sent_time_us + loss_delay;
-                if (loss_time_us == 0 || candidate_time < loss_time_us) {
-                    loss_time_us = candidate_time;
+                const candidate_time: u64 = satAddU64(sent_packets[i].sent_time_us, loss_delay);
+                if (candidate_time < min_cand_time) {
+                    min_cand_time = candidate_time;
                 }
             }
         }
+
+        loss_time_us = if (min_cand_time == QUIC_MAX_U64) 0 else min_cand_time;
         outcome.loss_time_us = loss_time_us;
     }
 
@@ -465,7 +665,7 @@ pub struct QuicLossDetector {
             return 0;
         }
         const pto: u64 = rtt.ptoDurationUs(max_ack_delay_us, pto_count);
-        const deadline: u64 = time_of_last_ack_eliciting_us + pto;
+        const deadline: u64 = satAddU64(time_of_last_ack_eliciting_us, pto);
         return if (deadline < now_us) now_us else deadline;
     }
 
@@ -476,7 +676,9 @@ pub struct QuicLossDetector {
             detectLostPackets(now_us, *outcome);
             return outcome;
         }
-        pto_count += 1;
+        if (pto_count < QUIC_MAX_U32) {
+            pto_count += 1;
+        }
         return outcome;
     }
 }
@@ -488,7 +690,7 @@ pub struct QuicLossDetector {
 /// RFC 9438 CUBIC congestion control state machine.
 pub struct CubicState {
     cwnd_bytes: u64 = 12_000;
-    ssthresh_bytes: u64 = 0xFFFF_FFFF_FFFF_FFFF;
+    ssthresh_bytes: u64 = QUIC_MAX_U64;
     w_max_bytes: f64 = 0.0;
     k_sec: f64 = 0.0;
     epoch_start_us: u64 = 0;
@@ -504,7 +706,7 @@ pub struct CubicState {
         const eff_cwnd: u64 = if (init_cwnd < min_cwnd) min_cwnd else init_cwnd;
         return CubicState{
             cwnd_bytes: eff_cwnd,
-            ssthresh_bytes: 0xFFFF_FFFF_FFFF_FFFF,
+            ssthresh_bytes: QUIC_MAX_U64,
             mss: eff_mss,
         };
     }
@@ -519,8 +721,9 @@ pub struct CubicState {
         epoch_start_us = 0;
         w_max_bytes = @as(f64, @floatFromInt(cwnd_bytes));
 
-        const reduced: u64 = @as(u64, @intFromFloat(w_max_bytes * beta));
-        const min_cwnd: u64 = mss * 2;
+        const eff_mss: u64 = if (mss == 0) @as(u64, QUIC_MAX_DATAGRAM_DEFAULT) else mss;
+        const reduced: u64 = clampFloatToU64(w_max_bytes * beta);
+        const min_cwnd: u64 = satMulDivU64(eff_mss, 2, 1);
         ssthresh_bytes = if (reduced > min_cwnd) reduced else min_cwnd;
         cwnd_bytes = ssthresh_bytes;
     }
@@ -529,14 +732,20 @@ pub struct CubicState {
     fn onAck(*_, acked_bytes: u64, rtt_us: u64, now_us: u64) {
         if (acked_bytes == 0) return;
 
+        const eff_mss: u64 = if (mss == 0) @as(u64, QUIC_MAX_DATAGRAM_DEFAULT) else mss;
+        const min_cwnd: u64 = satMulDivU64(eff_mss, 2, 1);
+        if (cwnd_bytes < min_cwnd) {
+            cwnd_bytes = min_cwnd;
+        }
+
         // Slow Start: exponential growth until ssthresh.
         if (cwnd_bytes < ssthresh_bytes) {
-            cwnd_bytes += acked_bytes;
+            cwnd_bytes = satAddU64(cwnd_bytes, acked_bytes);
             return;
         }
 
         // Congestion Avoidance: RFC 9438 cubic curve + TCP-friendly region.
-        const mss_f: f64 = @as(f64, @floatFromInt(mss));
+        const mss_f: f64 = @as(f64, @floatFromInt(eff_mss));
         const cwnd_pkts: f64 = @as(f64, @floatFromInt(cwnd_bytes)) / mss_f;
         if (w_max_bytes < @as(f64, @floatFromInt(cwnd_bytes))) {
             w_max_bytes = @as(f64, @floatFromInt(cwnd_bytes));
@@ -554,7 +763,7 @@ pub struct CubicState {
 
         const rtt_eff_us: u64 = if (rtt_us == 0) QUIC_GRANULARITY_US else rtt_us;
         const rtt_sec: f64 = @as(f64, @floatFromInt(rtt_eff_us)) / 1.0e6;
-        const elapsed_us: u64 = if (now_us >= epoch_start_us) now_us - epoch_start_us else 0;
+        const elapsed_us: u64 = satSubU64(now_us, epoch_start_us);
         const t_sec: f64 = @as(f64, @floatFromInt(elapsed_us)) / 1.0e6 + rtt_sec;
 
         const dt: f64 = t_sec - k_sec;
@@ -565,23 +774,28 @@ pub struct CubicState {
         const w_est_pkts: f64 = w_max_pkts * beta + alpha_cubic * (t_sec / rtt_sec);
 
         const target_pkts: f64 = if (w_cubic_pkts > w_est_pkts) w_cubic_pkts else w_est_pkts;
-        if (target_pkts > cwnd_pkts) {
+        if (target_pkts > cwnd_pkts && cwnd_pkts > 0.0) {
             const delta_pkts: f64 = target_pkts - cwnd_pkts;
             const inc_bytes_f: f64 = (delta_pkts / cwnd_pkts) * @as(f64, @floatFromInt(acked_bytes));
-            const inc_bytes: u64 = @as(u64, @intFromFloat(inc_bytes_f));
-            cwnd_bytes += if (inc_bytes > 0) inc_bytes else 1;
+            const inc_bytes: u64 = clampFloatToU64(inc_bytes_f);
+            cwnd_bytes = satAddU64(cwnd_bytes, if (inc_bytes > 0) inc_bytes else 1);
         } else {
-            // Minimum additive progress when already near target.
-            const min_inc: u64 = (acked_bytes * mss) / (cwnd_bytes * 100);
-            cwnd_bytes += if (min_inc > 0) min_inc else 1;
+            // Minimum additive progress when already near target (u128 overflow-safe).
+            const denom: u128 = @as(u128, cwnd_bytes) * 100;
+            const min_inc_128: u128 = if (denom > 0) (@as(u128, acked_bytes) * @as(u128, eff_mss)) / denom else 1;
+            const min_inc: u64 = if (min_inc_128 >= @as(u128, QUIC_MAX_U64)) QUIC_MAX_U64 else @as(u64, @intCast(min_inc_128));
+            cwnd_bytes = satAddU64(cwnd_bytes, if (min_inc > 0) min_inc else 1);
         }
     }
 
-    /// Computes recommended pacing rate in bytes per second.
+    /// Computes recommended pacing rate in bytes per second (overflow-safe u128 arithmetic).
     fn pacingRateBps(rtt_us: u64): u64 {
         const eff_rtt: u64 = if (rtt_us == 0) QUIC_INITIAL_RTT_US else rtt_us;
         const gain_num: u64 = if (cwnd_bytes < ssthresh_bytes) 200 else 125;
-        return (cwnd_bytes * 10_000 * gain_num) / eff_rtt;
+        const num: u128 = @as(u128, cwnd_bytes) * @as(u128, 10_000) * @as(u128, gain_num);
+        const q: u128 = num / @as(u128, eff_rtt);
+        if (q >= @as(u128, QUIC_MAX_U64)) return QUIC_MAX_U64;
+        return @as(u64, @intCast(q));
     }
 }
 
@@ -683,7 +897,7 @@ pub struct BbrController {
         now_us: u64,
     ) {
         if (interval_us > 0 && delivered_bytes > 0) {
-            const bw_bps: u64 = (delivered_bytes * 1_000_000) / interval_us;
+            const bw_bps: u64 = satMulDivU64(delivered_bytes, 1_000_000, interval_us);
             recordBandwidthSample(bw_bps);
         }
 
@@ -693,14 +907,14 @@ pub struct BbrController {
             if (min_rtt_us == 0 || rtt_us <= min_rtt_us) {
                 min_rtt_us = rtt_us;
                 min_rtt_stamp_us = now_us;
-            } else if (now_us >= min_rtt_stamp_us + BBR_MIN_RTT_EXPIRY_US) {
+            } else if (now_us >= satAddU64(min_rtt_stamp_us, BBR_MIN_RTT_EXPIRY_US)) {
                 min_rtt_expired = true;
             }
         }
 
         // Handle ProbeRTT entry & exit.
         if (cur_mode == BbrMode.probe_rtt) {
-            if (now_us >= probe_rtt_start_us + BBR_PROBE_RTT_DURATION_US) {
+            if (now_us >= satAddU64(probe_rtt_start_us, BBR_PROBE_RTT_DURATION_US)) {
                 min_rtt_stamp_us = now_us;
                 if (filled_pipe) {
                     enterProbeBw(now_us);
@@ -724,12 +938,14 @@ pub struct BbrController {
         // State transitions: Startup -> Drain -> ProbeBW
         if (cur_mode == BbrMode.startup) {
             // Check full pipe: bandwidth grew by >= 25%?
-            const threshold: u64 = (full_bw_bps * 125) / 100;
+            const threshold: u64 = satMulDivU64(full_bw_bps, 125, 100);
             if (max_bw_bps >= threshold && max_bw_bps > full_bw_bps) {
                 full_bw_bps = max_bw_bps;
                 full_bw_rounds = 0;
             } else if (max_bw_bps > 0) {
-                full_bw_rounds += 1;
+                if (full_bw_rounds < QUIC_MAX_U32) {
+                    full_bw_rounds += 1;
+                }
                 if (full_bw_rounds >= 3) {
                     filled_pipe = true;
                     cur_mode = BbrMode.drain;
@@ -744,7 +960,7 @@ pub struct BbrController {
             }
         } else if (cur_mode == BbrMode.probe_bw) {
             const eff_rtt: u64 = if (min_rtt_us > 0) min_rtt_us else QUIC_INITIAL_RTT_US;
-            if (now_us >= cycle_stamp_us + eff_rtt) {
+            if (now_us >= satAddU64(cycle_stamp_us, eff_rtt)) {
                 cycle_index = (cycle_index + 1) % 8;
                 cycle_stamp_us = now_us;
                 pacing_gain = probeBwGainAt(cycle_index);
@@ -754,30 +970,33 @@ pub struct BbrController {
 
     /// Computes estimated Bandwidth-Delay Product (BDP) in bytes.
     fn bdpBytes(): u64 {
+        const eff_mss: u64 = if (mss == 0) @as(u64, QUIC_MAX_DATAGRAM_DEFAULT) else mss;
         const eff_rtt: u64 = if (min_rtt_us > 0) min_rtt_us else QUIC_INITIAL_RTT_US;
         if (max_bw_bps == 0) {
-            return mss * 10;
+            return satMulDivU64(eff_mss, 10, 1);
         }
-        const bdp: u64 = (max_bw_bps * eff_rtt) / 1_000_000;
-        const floor_bdp: u64 = mss * 4;
+        const bdp: u64 = satMulDivU64(max_bw_bps, eff_rtt, 1_000_000);
+        const floor_bdp: u64 = satMulDivU64(eff_mss, 4, 1);
         return if (bdp < floor_bdp) floor_bdp else bdp;
     }
 
     /// Returns current target pacing rate in bytes per second (`max_bw_bps * pacing_gain`).
     fn pacingRateBps(): u64 {
+        const eff_mss: u64 = if (mss == 0) @as(u64, QUIC_MAX_DATAGRAM_DEFAULT) else mss;
         if (max_bw_bps == 0) {
-            return (mss * 10 * 1_000_000) / QUIC_INITIAL_RTT_US;
+            return satMulDivU64(satMulDivU64(eff_mss, 10, 1), 1_000_000, QUIC_INITIAL_RTT_US);
         }
-        return @as(u64, @intFromFloat(@as(f64, @floatFromInt(max_bw_bps)) * pacing_gain));
+        return clampFloatToU64(@as(f64, @floatFromInt(max_bw_bps)) * pacing_gain);
     }
 
     /// Returns current congestion window in bytes (`4 * mss` during `probe_rtt`, else `cwnd_gain * BDP`).
     fn cwndBytes(): u64 {
-        const min_cwnd: u64 = mss * 4;
+        const eff_mss: u64 = if (mss == 0) @as(u64, QUIC_MAX_DATAGRAM_DEFAULT) else mss;
+        const min_cwnd: u64 = satMulDivU64(eff_mss, 4, 1);
         if (cur_mode == BbrMode.probe_rtt) {
             return min_cwnd;
         }
-        const target: u64 = @as(u64, @intFromFloat(@as(f64, @floatFromInt(bdpBytes())) * cwnd_gain));
+        const target: u64 = clampFloatToU64(@as(f64, @floatFromInt(bdpBytes())) * cwnd_gain);
         return if (target < min_cwnd) min_cwnd else target;
     }
 }
@@ -822,8 +1041,10 @@ pub struct QuicPacer {
 
         const added: f64 = (@as(f64, @floatFromInt(rate_bps)) * @as(f64, @floatFromInt(dt_us))) / 1.0e6;
         const cap_f: f64 = @as(f64, @floatFromInt(max_burst_bytes));
-        tokens_bytes += added;
-        if (tokens_bytes > cap_f) {
+        if (!std.math.isNan(added)) {
+            tokens_bytes += added;
+        }
+        if (std.math.isNan(tokens_bytes) || tokens_bytes > cap_f) {
             tokens_bytes = cap_f;
         }
     }
@@ -840,7 +1061,7 @@ pub struct QuicPacer {
         refill(now_us);
         tokens_bytes -= @as(f64, @floatFromInt(packet_bytes));
         const min_debt: f64 = -@as(f64, @floatFromInt(max_burst_bytes));
-        if (tokens_bytes < min_debt) {
+        if (std.math.isNan(tokens_bytes) || tokens_bytes < min_debt) {
             tokens_bytes = min_debt;
         }
     }
@@ -853,6 +1074,6 @@ pub struct QuicPacer {
         if (tokens_bytes >= need) return now_us;
         const deficit: f64 = need - tokens_bytes;
         const wait_us_f: f64 = (deficit * 1.0e6) / @as(f64, @floatFromInt(rate_bps));
-        return now_us + @as(u64, @intFromFloat(std.math.ceil(wait_us_f)));
+        return satAddU64(now_us, clampFloatToU64(std.math.ceil(wait_us_f)));
     }
 }

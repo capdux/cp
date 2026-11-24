@@ -874,13 +874,14 @@ pub fn demoActiveHealthProber() {
 
 ## 无上限外部切片 RFC 9002 QUIC 丢包探测/PTO、ACK 区间合并与 CUBIC + BBRv1 拥塞控制引擎 (`quicLoss.cp`)
 
-面向高 BDP 现代传输层的 100% 纯 CP 零动态堆分配传输控制内核，在途包追踪表与 ACK 区间数组均由调用方外部切片驱动，无小容量硬上限：
+对标 `quinn-rs/quinn` (`quinn-proto`, MIT OR Apache-2.0) 与 RFC 9002 / RFC 9000 / RFC 9438，面向高 BDP 现代传输层的 100% 纯 CP 零动态堆分配传输控制内核（集成 4-lane `@Vector(4, u64)` SIMD 丢包候选扫描与最小时间戳归约、全程饱和无溢出算术）：
 
-- **常量与错误集**：
+- **常量、错误集与 4-lane SIMD 原语**：
   - `QUIC_PACKET_THRESHOLD = 3`、`QUIC_INITIAL_RTT_US = 333_000`、`QUIC_GRANULARITY_US = 1_000`、`QUIC_MAX_DATAGRAM_DEFAULT = 1200`
   - `QuicLossError`（`InvalidRange | TableFull | BufferTooSmall | InvalidConfig`）
+  - `simdQuicCountLossCandidates` / `scalarQuicCountLossCandidates`、`simdQuicMinU64` / `scalarQuicMinU64`
 - **RFC 9000 ACK 区间合并与二分集合 (`QuicAckRange` / `QuicAckSet`)**：
-  - `QuicAckSet.init(*buf)` / `insertPacket(*_, pn)`（自动合并相邻/重叠区间并维持严格降序）/ `contains(pn)`（O(log R) 二分查找）/ `largestAcked()` / `rangeCount()` / `gapCount()` / `activeRanges()`
+  - `QuicAckSet.init(*buf)` / `insertPacket(*_, pn)` / `insertRange(*_, first_pn, last_pn)`（拒绝 `first_pn > last_pn`、自动合并乱序/重叠/相邻区间并防 `u64::MAX` 回绕）/ `contains(pn)`（O(log R) 二分查找）/ `largestAcked()` / `rangeCount()` / `gapCount()` / `activeRanges()`
 - **RFC 9002 RTT 估计器与丢包/PTO 探测 (`QuicRttState` / `QuicLossDetector`)**：
   - `QuicRttState`：`update(*_, latest_rtt, ack_delay_us, max_ack_delay_us)`（按 §5.3 钳位 `ack_delay` 并保护 `min_rtt`）、`ptoDurationUs(max_ack_delay_us, pto_count)`（指数退避 `2^pto_count`）
   - `QuicLossDetector`：`init(*sent_packets, max_ack_delay_us)` / `onPacketSent(...)`（表满自动压缩已结包）/ `onAckReceived(...)`（包门槛 `>= 3` + 时间门槛 `9/8 * max(srtt, latest_rtt)`）/ `nextTimerDeadlineUs(now_us)` / `onLossDetectionTimeout(*_, now_us)`

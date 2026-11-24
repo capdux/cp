@@ -101,6 +101,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **ebml-iterable** (`austinleroy`) | <https://github.com/austinleroy/ebml-iterable> | MIT | `lib/media/ebml.cp`, `lib/media/mkv.cp` | Copyright (c) 2020-2024 Austin LeRoy (RFC 8794 / RFC 9559) |
 | **tower-http** (`tower-rs`) | <https://github.com/tower-rs/tower-http> | MIT | `lib/web/corsGuard.cp`, `lib/web/cspPolicy.cp`, `lib/web/etagPrecond.cp` | Copyright (c) 2021-2024 Tower Contributors |
 | **hyperloglog** (`pwoolcoc`) & **t-digest** (Ted Dunning) | <https://github.com/pwoolcoc/hyperloglog> | MIT / Apache-2.0 | `lib/ds/hll.cp`, `lib/ds/tdigest.cp` | Copyright (c) 2015-2024 Paul Woolcock / Ted Dunning |
+| **quinn** (`quinn-rs`) | <https://github.com/quinn-rs/quinn> | MIT OR Apache-2.0 | `lib/net/quicLoss.cp` | Copyright (c) 2018-2024 Quinn Contributors (RFC 9002) |
 
 ---
 
