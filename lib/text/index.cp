@@ -97,14 +97,18 @@ export {
 } from "./markdownChunk.cp";
 
 export {
+    UNIFIED_DIFF_MAX_HUNK_LINES,
     DiffHunkHeader,
     DiffLineKind,
     DiffOp,
     PatchApplyStatus,
     PatchApplyResult,
+    UnifiedDiffError,
     parseHunkHeader,
     parseDiffOp,
     applyUnifiedPatch,
+    applyUnifiedDiff,
+    generateUnifiedDiff,
 } from "./unifiedDiff.cp";
 
 export {
@@ -325,6 +329,7 @@ export {
 
 // --- myersDiff ---
 export {
+    DEFAULT_MAX_EDIT_STEPS,
     DiffError,
     DiffKind,
     LineDiff,
@@ -332,10 +337,18 @@ export {
     DiffOptions,
     LineDiffResult,
     ByteDiffResult,
+    scalarBytesEqual,
+    simdCommonPrefixLen,
+    scalarCommonPrefixLen,
+    simdCommonSuffixLen,
+    scalarCommonSuffixLen,
+    simdFindNewline,
+    scalarFindNewline,
     areLinesEqual,
     splitLines,
     diffLines,
     diffBytes,
+    diffBytesWithMaxSteps,
     formatLineDiff,
 } from "./myersDiff.cp";
 

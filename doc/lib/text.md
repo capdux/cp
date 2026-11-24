@@ -590,3 +590,15 @@ pub fn demoCodePatternMatch(src: string) {
 | `countScalar` / `sliceByGraphemesScalar` / 标量参考函数 | `lib/text/grapheme.cp` | 提供标量参考实现与 SIMD 0 差异对拍保障 |
 
 - **权威回归与 Fuzz 套件**：`cap/test/testTextGraphemeRustRefSuite.cp` 覆盖 CRLF、组合变音符、韩文音节、2/3/4 个国旗 RI、ZWJ 家庭 Emoji（`👨‍👩‍👧‍👦`）、肤色修饰符（`👋🏽`）、中日混排、`sliceByGraphemes` 零截断、16-lane SIMD vs 标量 0 差异对拍，以及 1,600 组确定性 PRNG 有效/畸形 UTF-8 字节流 Fuzz（全量字节拼接 100% 还原原串且 `count == 迭代次数`）。
+
+## Wave 35 工业级安全加固与 16-Lane SIMD 加速（`myersDiff.cp` & `unifiedDiff.cp` 对标 `mitsuhiko/similar` Apache-2.0）
+
+`lib/text/myersDiff.cp` 与 `lib/text/unifiedDiff.cp` 已对照 `mitsuhiko/similar`（Apache-2.0）与 Unified Diff 规范完成前后缀裁剪、步数上限防 OOM、Unified Diff 全闭环生成与严苛校验、以及 16-lane `@Vector(16, u8)` SIMD 加速，保持 100% 向后兼容：
+
+| 加固项 / 新增符号 | 所在文件 | 工程价值 |
+|---|---|---|
+| 前后缀公共行/字节裁剪 + `DEFAULT_MAX_EDIT_STEPS` (8192) / `diffBytesWithMaxSteps` | `lib/text/myersDiff.cp` | 进入 Myers 搜索矩阵前先裁剪公共前后缀（相同/纯增/纯删零矩阵分配）；`DiffOptions.max_edit_steps` 强制拦截超大差异防 OOM/死循环 |
+| `simdCommonPrefixLen` / `simdCommonSuffixLen` / `simdFindNewline` / `simdBytesEqual`（配标量参考） | `lib/text/myersDiff.cp` | 纯 CP 16-lane `@Vector(16, u8)` 前后缀扫描、`\n` 行切分与等值比较，已接入 `splitLines`、`areLinesEqual`、`diffBytes` 与 `unifiedDiff.cp` 热路径 |
+| `generateUnifiedDiff` / `applyUnifiedDiff` / `UnifiedDiffError` / `UNIFIED_DIFF_MAX_HUNK_LINES` | `lib/text/unifiedDiff.cp` | 完整 Unified Diff 生成与分配式应用闭环（支持空文件、CRLF/LF 混合保留、`\ No newline at end of file`），保证 `apply(old, diff(old, new)) == new` 字节级精确往返；`parseHunkHeader` 拦截 0 行 hunk、非法 `0` 起始行、`u32` 溢出及超上限 count |
+
+- **权威回归与 Fuzz 套件**：`cap/test/testTextDiffRustRefSuite.cp` 覆盖 Myers 经典/边界（空/相同/全异/单行/无尾换行/CRLF/步数上限拦截）、Unified Diff 生成+解析+应用往返闭环与畸形补丁拒绝、16-lane SIMD vs 标量 0..257B 全长度 0 差异对拍，以及 1,600 组确定性 PRNG 随机文本 diff->apply 往返与畸形 Unified Diff 解析 Fuzz（0 panic / 0 OOB / 0 死循环）。

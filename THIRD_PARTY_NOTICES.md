@@ -94,6 +94,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **totp-rs** (`constantoine`) | <https://github.com/constantoine/totp-rs> | MIT | `lib/auth/totpHotp.cp`, `lib/auth/oauthPkce.cp` | Copyright (c) 2020-2024 Cleo Rebert (constantoine) |
 | **RustCrypto/SSH** (`ssh-encoding`, `ssh-key`) | <https://github.com/RustCrypto/SSH> | MIT / Apache-2.0 | `lib/net/sshWire.cp`, `lib/net/sshKeys.cp`, `lib/net/sshOpensshKey.cp`, `lib/net/sshSig.cp` | Copyright (c) 2021-2024 RustCrypto Developers |
 | **roaring-rs** (`RoaringBitmap`) | <https://github.com/RoaringBitmap/roaring-rs> | MIT / Apache-2.0 | `lib/ds/roaring.cp` | Copyright (c) 2015-2024 RoaringBitmap Contributors |
+| **similar** (`mitsuhiko`) | <https://github.com/mitsuhiko/similar> | Apache-2.0 | `lib/text/myersDiff.cp`, `lib/text/unifiedDiff.cp` | Copyright (c) 2021-2024 Armin Ronacher |
 
 ---
 
