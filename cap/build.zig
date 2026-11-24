@@ -15,6 +15,25 @@ pub fn build(b: *std.Build) void {
         .file = b.path("../packages/@cap/zstd/c/zstd.c"),
         .flags = &.{ "-O2", "-DZSTD_MULTITHREAD=0" },
     });
+    // Statically link libdeflate (MIT) for zero-CLI RFC 1952 gzip (.tgz) compression & decompression
+    root_mod.addIncludePath(b.path("../vendor/libdeflate"));
+    root_mod.addIncludePath(b.path("../vendor/libdeflate/lib"));
+    const deflate_flags: []const []const u8 = &.{ "-O2", "-std=c99" };
+    root_mod.addCSourceFiles(.{
+        .root = b.path("../vendor/libdeflate/lib"),
+        .files = &.{
+            "adler32.c",
+            "crc32.c",
+            "deflate_compress.c",
+            "deflate_decompress.c",
+            "gzip_compress.c",
+            "gzip_decompress.c",
+            "utils.c",
+            "x86/cpu_features.c",
+            "arm/cpu_features.c",
+        },
+        .flags = deflate_flags,
+    });
 
     const exe = b.addExecutable(.{
         .name = "cap",

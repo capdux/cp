@@ -1128,6 +1128,7 @@ const BinaryPackEntry = struct {
 pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var target_opt: ?[]const u8 = null;
     var out_dir: []const u8 = ".";
+    var npm_mode = false;
 
     var i: usize = 0;
     while (i < args.len) : (i += 1) {
@@ -1146,8 +1147,10 @@ pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void 
                 i += 1;
                 out_dir = args[i];
             }
+        } else if (std.mem.eql(u8, arg, "--npm") or std.mem.eql(u8, arg, "--tgz")) {
+            npm_mode = true;
         } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            std.debug.print("Usage: cap pack [--target=<os-arch|all>] [--out=<dir>]\n", .{});
+            std.debug.print("Usage: cap pack [--npm|--tgz] [--target=<os-arch|all>] [--out=<dir>]\n", .{});
             return;
         }
     }
@@ -1212,13 +1215,49 @@ pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void 
     const safe_name = try tarballSafeName(allocator, mf.name);
     defer allocator.free(safe_name);
 
-    // 1. Pack main source archive (<safe_name>-<ver>.tar.zst)
+    // 1. Pack main source archive (<safe_name>-<ver>.tar.zst, or .tgz with --npm)
     var main_files: std.ArrayList([]const u8) = .empty;
     defer {
         for (main_files.items) |f| allocator.free(f);
         main_files.deinit(allocator);
     }
     try collectFilesRecursive(allocator, ".", "", &main_files, pb_dirs.items, out_abs);
+
+    if (npm_mode) {
+        const pkg_json_bytes = try registry.synthesizePackageJson(
+            allocator,
+            mf.name,
+            mf.version,
+            mf.main,
+            mf.license,
+            mf.description,
+            &mf.dependencies,
+            &mf.dev_dependencies,
+        );
+        defer allocator.free(pkg_json_bytes);
+
+        const tgz_name = try std.fmt.allocPrint(allocator, "{s}-{s}.tgz", .{ safe_name, mf.version });
+        defer allocator.free(tgz_name);
+        const tgz_out_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, tgz_name });
+        defer allocator.free(tgz_out_path);
+
+        var tgz_res = try archive.packDirToTgz(allocator, ".", main_files.items, pkg_json_bytes, tgz_out_path);
+        defer tgz_res.deinit(allocator);
+
+        const ratio: f64 = if (tgz_res.raw_size > 0)
+            (@as(f64, @floatFromInt(tgz_res.compressed_size)) / @as(f64, @floatFromInt(tgz_res.raw_size))) * 100.0
+        else
+            0.0;
+        std.debug.print("✓ Packed npm .tgz: {s} ({d} files, {d} B -> {d} B, {d:.1}%)\n", .{
+            tgz_name,
+            tgz_res.file_count,
+            tgz_res.raw_size,
+            tgz_res.compressed_size,
+            ratio,
+        });
+        std.debug.print("  shasum:    {s}\n  integrity: {s}\n", .{ tgz_res.shasum, tgz_res.integrity });
+        return;
+    }
 
     const main_tarball_name = try std.fmt.allocPrint(allocator, "{s}-{s}.tar.zst", .{ safe_name, mf.version });
     defer allocator.free(main_tarball_name);
@@ -1393,4 +1432,156 @@ pub fn handlePack(allocator: std.mem.Allocator, args: []const []const u8) !void 
     try writer.end();
 
     std.debug.print("✓ Wrote manifest: {s}\n", .{manifest_path});
+}
+
+pub fn handlePublish(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    var opts = registry.PublishOptions{};
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.startsWith(u8, arg, "--registry=")) {
+            opts.registry = arg["--registry=".len..];
+        } else if (std.mem.eql(u8, arg, "--registry")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                opts.registry = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--access=")) {
+            opts.access = arg["--access=".len..];
+        } else if (std.mem.eql(u8, arg, "--access")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                opts.access = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--tag=")) {
+            opts.tag = arg["--tag=".len..];
+        } else if (std.mem.eql(u8, arg, "--tag")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                opts.tag = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--otp=")) {
+            opts.otp = arg["--otp=".len..];
+        } else if (std.mem.eql(u8, arg, "--otp")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                opts.otp = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--dry-run")) {
+            opts.dry_run = true;
+        } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            std.debug.print(
+                "Usage: cap publish [--registry=<url>] [--access=public|restricted] [--tag=<tag>] [--otp=<code>] [--dry-run]\n",
+                .{},
+            );
+            return;
+        }
+    }
+
+    const content = main_mod.fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024) catch {
+        std.debug.print("Error: cap.json not found in current directory.\n", .{});
+        return error.ManifestNotFound;
+    };
+    defer allocator.free(content);
+    var mf = try manifest.Manifest.parse(allocator, content);
+    defer mf.deinit(allocator);
+
+    // Resolve target registry: --registry > CAP_REGISTRY > cap.json "registry" > https://registry.npmjs.org
+    const target_registry = blk: {
+        if (opts.registry) |r| {
+            if (r.len > 0) break :blk try allocator.dupe(u8, std.mem.trimEnd(u8, r, "/"));
+        }
+        if (main_mod.global_env.get("CAP_REGISTRY")) |env_r| {
+            if (env_r.len > 0) break :blk try allocator.dupe(u8, std.mem.trimEnd(u8, env_r, "/"));
+        }
+        if (mf.registry) |mr| {
+            if (mr.len > 0) break :blk try allocator.dupe(u8, std.mem.trimEnd(u8, mr, "/"));
+        }
+        break :blk try allocator.dupe(u8, registry.NPM_DEFAULT_REGISTRY);
+    };
+    defer allocator.free(target_registry);
+
+    // Collect source files (exclude prebuilt/ so npm main tarball stays lean and portable)
+    var pb_dirs: std.ArrayList([]const u8) = .empty;
+    defer pb_dirs.deinit(allocator);
+    try pb_dirs.append(allocator, "prebuilt");
+    {
+        var bit = mf.bin_dependencies.iterator();
+        while (bit.next()) |entry| {
+            if (entry.value_ptr.prebuilt) |pb| {
+                var dup = false;
+                for (pb_dirs.items) |existing| {
+                    if (std.mem.eql(u8, existing, pb)) {
+                        dup = true;
+                        break;
+                    }
+                }
+                if (!dup) try pb_dirs.append(allocator, pb);
+            }
+        }
+    }
+
+    var main_files: std.ArrayList([]const u8) = .empty;
+    defer {
+        for (main_files.items) |f| allocator.free(f);
+        main_files.deinit(allocator);
+    }
+    try collectFilesRecursive(allocator, ".", "", &main_files, pb_dirs.items, null);
+
+    const pkg_json_bytes = try registry.synthesizePackageJson(
+        allocator,
+        mf.name,
+        mf.version,
+        mf.main,
+        mf.license,
+        mf.description,
+        &mf.dependencies,
+        &mf.dev_dependencies,
+    );
+    defer allocator.free(pkg_json_bytes);
+
+    var tgz_res = try archive.packDirToTgz(allocator, ".", main_files.items, pkg_json_bytes, null);
+    defer tgz_res.deinit(allocator);
+
+    std.debug.print("📦 Package:   {s}@{s}\n", .{ mf.name, mf.version });
+    std.debug.print("   Registry:  {s}\n", .{target_registry});
+    std.debug.print("   Tarball:   .tgz ({d} files, {d} B -> {d} B)\n", .{
+        tgz_res.file_count,
+        tgz_res.raw_size,
+        tgz_res.compressed_size,
+    });
+    std.debug.print("   shasum:    {s}\n", .{tgz_res.shasum});
+    std.debug.print("   integrity: {s}\n", .{tgz_res.integrity});
+
+    if (opts.dry_run) {
+        std.debug.print("✓ Dry-run complete (no network request sent).\n", .{});
+        return;
+    }
+
+    const token = (try registry.resolveAuthToken(allocator, target_registry)) orelse {
+        std.debug.print(
+            "Error: No auth token found for {s}. Set CAP_TOKEN, NPM_TOKEN, or configure //host/:_authToken in ~/.npmrc.\n",
+            .{target_registry},
+        );
+        return error.MissingAuthToken;
+    };
+    defer allocator.free(token);
+
+    try registry.publishToRegistry(
+        allocator,
+        target_registry,
+        mf.name,
+        mf.version,
+        pkg_json_bytes,
+        &tgz_res,
+        opts,
+        token,
+    );
+    std.debug.print("✓ Published {s}@{s} to {s} (tag: {s})\n", .{
+        mf.name,
+        mf.version,
+        target_registry,
+        opts.tag,
+    });
 }

@@ -143,7 +143,7 @@ fn parseArtifactFromVersionObj(
             };
         }
     }
-    // npm-compatible format: { "dist": { "tarball": "...", "integrity": "..." } }
+    // npm-compatible format: { "dist": { "tarball": "...", "integrity": "sha512-...", "shasum": "<40hex>" } }
     if (ver_obj.get("dist")) |dist_val| {
         if (dist_val == .object) {
             if (dist_val.object.get("tarball")) |tb| {
@@ -152,6 +152,10 @@ fn parseArtifactFromVersionObj(
                     if (dist_val.object.get("integrity")) |iv| {
                         if (iv == .string and iv.string.len > 0) {
                             integ = try allocator.dupe(u8, iv.string);
+                        }
+                    } else if (dist_val.object.get("shasum")) |sv| {
+                        if (sv == .string and sv.string.len > 0) {
+                            integ = try allocator.dupe(u8, sv.string);
                         }
                     }
                     return ResolvedArtifact{
@@ -333,26 +337,22 @@ pub fn downloadAndExtractResolved(
     const main_bytes = try httpGetBytes(allocator, main_url);
     defer allocator.free(main_bytes);
 
-    // Verify integrity before creating/writing destination directory
-    const actual_integrity = try archive.computeSha256Hex(allocator, main_bytes);
-    errdefer allocator.free(actual_integrity);
-
+    // Verify integrity before creating/writing destination directory (supports sha256/sha512 SRI & sha1)
     if (resolved.main_pkg.integrity) |expected| {
-        if (expected.len > 0 and !std.mem.eql(u8, actual_integrity, expected)) {
-            std.debug.print("Error: IntegrityMismatch for {s}@{s} (expected {s}, got {s})\n", .{
-                pkg_name,
-                resolved.version,
-                expected,
-                actual_integrity,
-            });
-            return error.IntegrityMismatch;
+        if (expected.len > 0) {
+            try archive.verifyIntegrity(allocator, main_bytes, expected);
         }
     }
+    const actual_integrity = if (resolved.main_pkg.integrity) |exp|
+        (if (exp.len > 0) try allocator.dupe(u8, exp) else try archive.computeSha256Hex(allocator, main_bytes))
+    else
+        try archive.computeSha256Hex(allocator, main_bytes);
+    errdefer allocator.free(actual_integrity);
 
-    // Extract main package; remove cache_pkg_dir if anything fails afterwards
+    // Extract main package (auto-detects .tar.zst vs .tgz by magic bytes); remove cache_pkg_dir on failure
     errdefer cleanupDir(cache_pkg_dir);
     try native.ensureDirPath(cache_pkg_dir);
-    try archive.extractTarZstWithVerify(allocator, main_bytes, cache_pkg_dir, resolved.main_pkg.integrity);
+    try archive.extractArchiveAuto(allocator, main_bytes, cache_pkg_dir, resolved.main_pkg.integrity);
 
     var has_prebuilt = false;
     if (resolved.binary_pkg) |bin_art| {
@@ -363,7 +363,7 @@ pub fn downloadAndExtractResolved(
         const bin_bytes = try httpGetBytes(allocator, bin_url);
         defer allocator.free(bin_bytes);
 
-        try archive.extractTarZstWithVerify(allocator, bin_bytes, cache_pkg_dir, bin_art.integrity);
+        try archive.extractArchiveAuto(allocator, bin_bytes, cache_pkg_dir, bin_art.integrity);
         has_prebuilt = true;
     }
 
@@ -375,7 +375,7 @@ pub fn downloadAndExtractResolved(
     };
 }
 
-/// One-shot remote registry fetch + SHA-256 verify + extract into `cache_pkg_dir`.
+/// One-shot remote registry fetch + integrity verify + magic-byte auto-extract into `cache_pkg_dir`.
 pub fn fetchAndInstallFromRegistry(
     allocator: std.mem.Allocator,
     registry_url: []const u8,
@@ -387,4 +387,257 @@ pub fn fetchAndInstallFromRegistry(
     var resolved = try resolvePackageMeta(allocator, registry_url, pkg_name, ver_spec, target_key);
     defer resolved.deinit(allocator);
     return try downloadAndExtractResolved(allocator, registry_url, pkg_name, &resolved, cache_pkg_dir, target_key);
+}
+
+pub const NPM_DEFAULT_REGISTRY = "https://registry.npmjs.org";
+
+pub const PublishOptions = struct {
+    registry: ?[]const u8 = null,
+    access: []const u8 = "public",
+    tag: []const u8 = "latest",
+    otp: ?[]const u8 = null,
+    dry_run: bool = false,
+};
+
+/// Resolves publish auth token with precedence:
+/// `CAP_TOKEN` > `NPM_TOKEN` > `~/.npmrc` (`//<host>/:_authToken=...` or `_authToken=...`).
+pub fn resolveAuthToken(allocator: std.mem.Allocator, registry_url: []const u8) !?[]const u8 {
+    if (main_mod.global_env.get("CAP_TOKEN")) |tok| {
+        if (tok.len > 0) return try allocator.dupe(u8, tok);
+    }
+    if (main_mod.global_env.get("NPM_TOKEN")) |tok| {
+        if (tok.len > 0) return try allocator.dupe(u8, tok);
+    }
+
+    const home = main_mod.global_env.get("HOME") orelse main_mod.global_env.get("USERPROFILE") orelse return null;
+    const npmrc_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ home, ".npmrc" });
+    defer allocator.free(npmrc_path);
+
+    const content = blk: {
+        if (npmrc_path.len > 0 and npmrc_path[0] == '/') {
+            var root_dir = std.Io.Dir.openDirAbsolute(main_mod.global_io, "/", .{}) catch return null;
+            defer root_dir.close(main_mod.global_io);
+            break :blk root_dir.readFileAlloc(main_mod.global_io, npmrc_path[1..], allocator, @fromBackingInt(@intCast(1024 * 1024))) catch return null;
+        }
+        break :blk std.Io.Dir.readFileAlloc(.cwd(), main_mod.global_io, npmrc_path, allocator, @fromBackingInt(@intCast(1024 * 1024))) catch return null;
+    };
+    defer allocator.free(content);
+
+    // Strip scheme from registry_url to match `//registry.npmjs.org/:_authToken=...`
+    var host_part = registry_url;
+    if (std.mem.startsWith(u8, host_part, "https://")) {
+        host_part = host_part["https://".len..];
+    } else if (std.mem.startsWith(u8, host_part, "http://")) {
+        host_part = host_part["http://".len..];
+    }
+    host_part = std.mem.trimEnd(u8, host_part, "/");
+
+    var fallback_token: ?[]const u8 = null;
+    var lines = std.mem.splitScalar(u8, content, '\n');
+    while (lines.next()) |raw_line| {
+        const line = std.mem.trim(u8, raw_line, " \t\r");
+        if (line.len == 0 or line[0] == '#' or line[0] == ';') continue;
+        if (std.mem.indexOf(u8, line, "_authToken=")) |pos| {
+            const val = std.mem.trim(u8, line[pos + "_authToken=".len ..], " \t\"'");
+            if (val.len == 0) continue;
+            if (std.mem.indexOf(u8, line, host_part) != null) {
+                if (fallback_token) |ft| allocator.free(ft);
+                return try allocator.dupe(u8, val);
+            }
+            if (fallback_token == null and std.mem.startsWith(u8, line, "_authToken=")) {
+                fallback_token = try allocator.dupe(u8, val);
+            }
+        }
+    }
+    return fallback_token;
+}
+
+/// Synthesizes a minimal npm-compatible `package.json` from a parsed `cap.json` manifest
+/// so that official `registry.npmjs.org` / Verdaccio accepts the `.tgz` tarball.
+pub fn synthesizePackageJson(
+    allocator: std.mem.Allocator,
+    name: []const u8,
+    version: []const u8,
+    main_entry: ?[]const u8,
+    license: ?[]const u8,
+    description: ?[]const u8,
+    deps: *const std.StringHashMap([]const u8),
+    dev_deps: *const std.StringHashMap([]const u8),
+) ![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const aa = arena.allocator();
+
+    var root = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try root.put(aa, "name", .{ .string = name });
+    try root.put(aa, "version", .{ .string = version });
+    if (description) |d| {
+        if (d.len > 0) try root.put(aa, "description", .{ .string = d });
+    }
+    if (main_entry) |m| {
+        if (m.len > 0) try root.put(aa, "main", .{ .string = m });
+    }
+    try root.put(aa, "license", .{ .string = license orelse "MIT" });
+
+    if (deps.count() > 0) {
+        var dobj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+        var it = deps.iterator();
+        while (it.next()) |e| {
+            try dobj.put(aa, e.key_ptr.*, .{ .string = e.value_ptr.* });
+        }
+        try root.put(aa, "dependencies", .{ .object = dobj });
+    }
+    if (dev_deps.count() > 0) {
+        var dobj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+        var it = dev_deps.iterator();
+        while (it.next()) |e| {
+            try dobj.put(aa, e.key_ptr.*, .{ .string = e.value_ptr.* });
+        }
+        try root.put(aa, "devDependencies", .{ .object = dobj });
+    }
+
+    var out: std.Io.Writer.Allocating = .init(allocator);
+    errdefer out.deinit();
+    try std.json.Stringify.value(std.json.Value{ .object = root }, .{ .whitespace = .indent_2 }, &out.writer);
+    try out.writer.writeAll("\n");
+    return try out.toOwnedSlice();
+}
+
+/// Builds an npm-compatible `PUT /<encoded_pkg>` JSON publish payload with base64 `_attachments`
+/// and uploads it to the target registry.
+pub fn publishToRegistry(
+    allocator: std.mem.Allocator,
+    registry_url: []const u8,
+    pkg_name: []const u8,
+    version: []const u8,
+    pkg_json_bytes: []const u8,
+    tgz_res: *const archive.TgzPackResult,
+    opts: PublishOptions,
+    auth_token: []const u8,
+) !void {
+    const base = std.mem.trimEnd(u8, registry_url, "/");
+    const encoded_name = try encodePkgName(allocator, pkg_name);
+    defer allocator.free(encoded_name);
+
+    // npm attachment filename convention: "<name>-<version>.tgz"
+    const att_name = try std.fmt.allocPrint(allocator, "{s}-{s}.tgz", .{ pkg_name, version });
+    defer allocator.free(att_name);
+    const tarball_url = try std.fmt.allocPrint(allocator, "{s}/{s}/-/{s}-{s}.tgz", .{
+        base,
+        encoded_name,
+        blk: {
+            if (std.mem.lastIndexOfScalar(u8, pkg_name, '/')) |idx| break :blk pkg_name[idx + 1 ..];
+            break :blk pkg_name;
+        },
+        version,
+    });
+    defer allocator.free(tarball_url);
+
+    // Base64-encode the .tgz bytes for `_attachments`
+    const b64_len = std.base64.standard.Encoder.calcSize(tgz_res.tgz_bytes.len);
+    const b64_buf = try allocator.alloc(u8, b64_len);
+    defer allocator.free(b64_buf);
+    _ = std.base64.standard.Encoder.encode(b64_buf, tgz_res.tgz_bytes);
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const aa = arena.allocator();
+
+    // Parse synthetic package.json to embed inside versions[version]
+    const parsed_pkg = try std.json.parseFromSlice(std.json.Value, aa, pkg_json_bytes, .{});
+    if (parsed_pkg.value != .object) return error.InvalidRegistryMetadata;
+    var ver_obj = parsed_pkg.value.object;
+
+    const ver_id = try std.fmt.allocPrint(aa, "{s}@{s}", .{ pkg_name, version });
+    try ver_obj.put(aa, "_id", .{ .string = ver_id });
+
+    var dist_obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try dist_obj.put(aa, "integrity", .{ .string = tgz_res.integrity });
+    try dist_obj.put(aa, "shasum", .{ .string = tgz_res.shasum });
+    try dist_obj.put(aa, "tarball", .{ .string = tarball_url });
+    try dist_obj.put(aa, "fileCount", .{ .integer = @intCast(tgz_res.file_count) });
+    try dist_obj.put(aa, "unpackedSize", .{ .integer = @intCast(tgz_res.raw_size) });
+    try ver_obj.put(aa, "dist", .{ .object = dist_obj });
+
+    var versions_obj = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try versions_obj.put(aa, version, .{ .object = ver_obj });
+
+    var dist_tags = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try dist_tags.put(aa, opts.tag, .{ .string = version });
+
+    var att_entry = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try att_entry.put(aa, "content_type", .{ .string = "application/octet-stream" });
+    try att_entry.put(aa, "data", .{ .string = b64_buf });
+    try att_entry.put(aa, "length", .{ .integer = @intCast(tgz_res.tgz_bytes.len) });
+
+    var attachments = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try attachments.put(aa, att_name, .{ .object = att_entry });
+
+    var payload_root = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+    try payload_root.put(aa, "_id", .{ .string = pkg_name });
+    try payload_root.put(aa, "name", .{ .string = pkg_name });
+    try payload_root.put(aa, "access", .{ .string = opts.access });
+    try payload_root.put(aa, "dist-tags", .{ .object = dist_tags });
+    try payload_root.put(aa, "versions", .{ .object = versions_obj });
+    try payload_root.put(aa, "_attachments", .{ .object = attachments });
+
+    var body_out: std.Io.Writer.Allocating = .init(allocator);
+    defer body_out.deinit();
+    try std.json.Stringify.value(std.json.Value{ .object = payload_root }, .{}, &body_out.writer);
+    const payload_bytes = try body_out.toOwnedSlice();
+    defer allocator.free(payload_bytes);
+
+    const put_url = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ base, encoded_name });
+    defer allocator.free(put_url);
+
+    const auth_hdr = try std.fmt.allocPrint(allocator, "Bearer {s}", .{auth_token});
+    defer allocator.free(auth_hdr);
+
+    var hdrs_list: std.ArrayList(std.http.Header) = .empty;
+    defer hdrs_list.deinit(allocator);
+    try hdrs_list.append(allocator, .{ .name = "authorization", .value = auth_hdr });
+    try hdrs_list.append(allocator, .{ .name = "content-type", .value = "application/json" });
+    try hdrs_list.append(allocator, .{ .name = "accept", .value = "application/json" });
+    try hdrs_list.append(allocator, .{ .name = "npm-command", .value = "publish" });
+    if (opts.otp) |otp_code| {
+        if (otp_code.len > 0) {
+            try hdrs_list.append(allocator, .{ .name = "npm-otp", .value = otp_code });
+        }
+    }
+
+    var client: std.http.Client = .{
+        .allocator = allocator,
+        .io = main_mod.global_io,
+    };
+    defer client.deinit();
+
+    var resp_writer: std.Io.Writer.Allocating = .init(allocator);
+    defer resp_writer.deinit();
+
+    std.debug.print("  ↑ Publishing {s}@{s} -> {s} (tag={s}, access={s}, {d} B .tgz)\n", .{
+        pkg_name,
+        version,
+        put_url,
+        opts.tag,
+        opts.access,
+        tgz_res.compressed_size,
+    });
+
+    const res = client.fetch(.{
+        .location = .{ .url = put_url },
+        .method = .PUT,
+        .payload = payload_bytes,
+        .extra_headers = hdrs_list.items,
+        .response_writer = &resp_writer.writer,
+    }) catch |err| {
+        std.debug.print("Error: HTTP PUT publish failed for {s}: {s}\n", .{ put_url, @errorName(err) });
+        return error.PublishFailed;
+    };
+
+    const status_code = @backingInt(res.status);
+    if (status_code < 200 or status_code >= 300) {
+        const resp_body = resp_writer.written();
+        std.debug.print("Error: Registry rejected publish with HTTP {d}: {s}\n", .{ status_code, resp_body });
+        return error.PublishRejected;
+    }
 }
