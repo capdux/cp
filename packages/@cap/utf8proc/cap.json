@@ -1,0 +1,27 @@
+{
+  "name": "@cap/utf8proc",
+  "ver": "2.10.0",
+  "description": "Clean Unicode 16.0 normalization (NFC/NFD/NFKC/NFKD), case-folding & charwidth library for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "utf8proc": {
+      "path": "c",
+      "src": [
+        "utf8proc.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-DUTF8PROC_STATIC"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  }
+}
