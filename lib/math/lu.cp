@@ -1,19 +1,55 @@
+// Reference-hardened against statrs-dev/statrs (MIT) & dimforge/nalgebra (Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc Doolittle Partial-Pivoting LU Decomposition, Linear Solver, Determinant, Inverse & O(n) Thomas Tridiagonal Solver) | Created: 2026-11-22
 
 import std from "std";
 
 const THOMAS_PIVOT_EPS: f64 = 1.0e-15;
+type LuMathNumVec4f64 = @Vector(4, f64);
 
 fn isFiniteF64(x: f64): bool {
     return (x == x) && ((x - x) == 0.0);
 }
 
-fn absF64(x: f64): f64 {
+fn luAbsF64(x: f64): f64 {
     return if (x < 0.0) 0.0 - x else x;
 }
 
 fn checkMatLen(buf_len: usize, n: usize): bool {
     return n > 0 && (buf_len / n) >= n;
+}
+
+/// 4-lane `@Vector(4, f64)` SIMD dot product over equal-length finite slices `a` and `b`.
+/// Returns `null` if lengths differ or any element / result is non-finite.
+pub fn luSimdDotF64(a: []const f64, b: []const f64): f64? {
+    if (a.len != b.len) {
+        return null;
+    }
+    const n: usize = a.len;
+    let v_acc: LuMathNumVec4f64 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) : (i += 4) {
+        const va: LuMathNumVec4f64 = a[i .. i + 4][0..4].*;
+        const vb: LuMathNumVec4f64 = b[i .. i + 4][0..4].*;
+        if (!isFiniteF64(va[0]) || !isFiniteF64(va[1]) || !isFiniteF64(va[2]) || !isFiniteF64(va[3]) ||
+            !isFiniteF64(vb[0]) || !isFiniteF64(vb[1]) || !isFiniteF64(vb[2]) || !isFiniteF64(vb[3]))
+        {
+            return null;
+        }
+        v_acc += va * vb;
+    }
+    let acc: f64 = @reduce(.Add, v_acc);
+    while (i < n) : (i += 1) {
+        const av: f64 = a[i];
+        const bv: f64 = b[i];
+        if (!isFiniteF64(av) || !isFiniteF64(bv)) {
+            return null;
+        }
+        acc += av * bv;
+    }
+    if (!isFiniteF64(acc)) {
+        return null;
+    }
+    return acc;
 }
 
 /// Metadata returned by `luFactorize` describing the row permutation and numerical conditioning.
@@ -72,10 +108,10 @@ pub fn luFactorize(
     while (k < n) {
         // Partial pivoting: select row r in [k, n) with maximum |lu_mat[r, k]|
         let pivot_row = k;
-        let max_abs = absF64(lu_mat[k * n + k]);
+        let max_abs = luAbsF64(lu_mat[k * n + k]);
         let r = k + 1;
         while (r < n) {
-            const cand = absF64(lu_mat[r * n + k]);
+            const cand = luAbsF64(lu_mat[r * n + k]);
             if (cand > max_abs) {
                 max_abs = cand;
                 pivot_row = r;
@@ -108,17 +144,32 @@ pub fn luFactorize(
         }
 
         const pivot = lu_mat[k * n + k];
+        const piv_off: usize = k * n;
         let row = k + 1;
         while (row < n) {
-            const factor = lu_mat[row * n + k] / pivot;
+            const row_off: usize = row * n;
+            const factor = lu_mat[row_off + k] / pivot;
             if (!isFiniteF64(factor)) {
                 return null;
             }
-            lu_mat[row * n + k] = factor;
+            lu_mat[row_off + k] = factor;
+            const v_fac: LuMathNumVec4f64 = @splat(factor);
             let col = k + 1;
-            while (col < n) {
-                lu_mat[row * n + col] = lu_mat[row * n + col] - factor * lu_mat[k * n + col];
-                col += 1;
+            while (col + 4 <= n) : (col += 4) {
+                const vr: LuMathNumVec4f64 = lu_mat[row_off + col .. row_off + col + 4][0..4].*;
+                const vp: LuMathNumVec4f64 = lu_mat[piv_off + col .. piv_off + col + 4][0..4].*;
+                const vu: LuMathNumVec4f64 = vr - v_fac * vp;
+                if (!isFiniteF64(vu[0]) || !isFiniteF64(vu[1]) || !isFiniteF64(vu[2]) || !isFiniteF64(vu[3])) {
+                    return null;
+                }
+                lu_mat[row_off + col .. row_off + col + 4][0..4].* = vu;
+            }
+            while (col < n) : (col += 1) {
+                const updated = lu_mat[row_off + col] - factor * lu_mat[piv_off + col];
+                if (!isFiniteF64(updated)) {
+                    return null;
+                }
+                lu_mat[row_off + col] = updated;
             }
             row += 1;
         }
@@ -160,30 +211,34 @@ pub fn luSolve(
         i += 1;
     }
 
-    // Forward substitution: L * y = P * b (unit lower triangular L)
-    i = 0;
-    while (i < n) {
-        let sum = x_out[i];
-        let j: usize = 0;
-        while (j < i) {
-            sum = sum - lu_mat[i * n + j] * x_out[j];
-            j += 1;
+    // Forward substitution: L * y = P * b (unit lower triangular L) with 4-lane SIMD dot product
+    let fi: usize = 0;
+    while (fi < n) : (fi += 1) {
+        const row_off: usize = fi * n;
+        let sum = x_out[fi];
+        if (fi > 0) {
+            const dot_opt = luSimdDotF64(lu_mat[row_off .. row_off + fi], x_out[0..fi]);
+            if (dot_opt == null) return false;
+            sum -= dot_opt.?;
+            if (!isFiniteF64(sum)) return false;
         }
-        x_out[i] = sum;
-        i += 1;
+        x_out[fi] = sum;
     }
 
-    // Back substitution: U * x = y
+    // Back substitution: U * x = y with 4-lane SIMD dot product
     let rev = n;
     while (rev > 0) {
         rev -= 1;
+        const row_off: usize = rev * n;
         let sum = x_out[rev];
-        let j = rev + 1;
-        while (j < n) {
-            sum = sum - lu_mat[rev * n + j] * x_out[j];
-            j += 1;
+        const next_col: usize = rev + 1;
+        if (next_col < n) {
+            const dot_opt = luSimdDotF64(lu_mat[row_off + next_col .. row_off + n], x_out[next_col..n]);
+            if (dot_opt == null) return false;
+            sum -= dot_opt.?;
+            if (!isFiniteF64(sum)) return false;
         }
-        const diag = lu_mat[rev * n + rev];
+        const diag = lu_mat[row_off + rev];
         if (!isFiniteF64(diag) || diag == 0.0) {
             return false;
         }
@@ -198,18 +253,43 @@ pub fn luSolve(
 }
 
 /// Computes `det(A) = info.sign * prod_i U[i, i]` from a pre-factorized `lu_mat`.
-/// Returns `0.0` if `n == 0` or `lu_mat` is undersized.
+/// Returns `0.0` if `n == 0`, `lu_mat` is undersized, or any diagonal entry is non-finite.
 pub fn luDeterminant(lu_mat: []const f64, info: LuInfo, n: usize): f64 {
-    if (!checkMatLen(lu_mat.len, n)) {
+    if (!checkMatLen(lu_mat.len, n) || !isFiniteF64(info.sign)) {
         return 0.0;
     }
     let det = info.sign;
     let i: usize = 0;
     while (i < n) {
-        det = det * lu_mat[i * n + i];
+        const d = lu_mat[i * n + i];
+        if (!isFiniteF64(d)) {
+            return 0.0;
+        }
+        det = det * d;
         i += 1;
     }
-    return det;
+    return if (isFiniteF64(det)) det else 0.0;
+}
+
+/// Computes `ln(|det(A)|) = sum_i ln(|U[i, i]|)` from a pre-factorized `lu_mat` without
+/// intermediate overflow or underflow. Returns `null` if invalid, singular, or non-finite.
+pub fn luLogDet(lu_mat: []const f64, info: LuInfo, n: usize): f64? {
+    if (!checkMatLen(lu_mat.len, n) || !isFiniteF64(info.sign)) {
+        return null;
+    }
+    let acc: f64 = 0.0;
+    let i: usize = 0;
+    while (i < n) : (i += 1) {
+        const d = luAbsF64(lu_mat[i * n + i]);
+        if (!isFiniteF64(d) || d <= 0.0) {
+            return null;
+        }
+        acc += std.math.log(f64, std.math.e, d);
+    }
+    if (!isFiniteF64(acc)) {
+        return null;
+    }
+    return acc;
 }
 
 /// Computes the explicit matrix inverse `A^-1` into row-major `inv_out[0..n*n]`
@@ -266,13 +346,12 @@ pub fn matVecResidualInf(
     let max_res: f64 = 0.0;
     let i: usize = 0;
     while (i < n) {
-        let ax: f64 = 0.0;
-        let j: usize = 0;
-        while (j < n) {
-            ax = ax + a[i * n + j] * x[j];
-            j += 1;
+        const row_off: usize = i * n;
+        const ax_opt = luSimdDotF64(a[row_off .. row_off + n], x[0..n]);
+        if (ax_opt == null || !isFiniteF64(b[i])) {
+            return std.math.inf(f64);
         }
-        const err = absF64(ax - b[i]);
+        const err = luAbsF64(ax_opt.? - b[i]);
         if (!isFiniteF64(err)) {
             return std.math.inf(f64);
         }
@@ -327,7 +406,7 @@ pub fn solveTridiagonal(
     }
 
     const b0 = diag[0];
-    if (absF64(b0) <= THOMAS_PIVOT_EPS) {
+    if (luAbsF64(b0) <= THOMAS_PIVOT_EPS) {
         return false;
     }
     if (n == 1) {
@@ -337,28 +416,43 @@ pub fn solveTridiagonal(
 
     c_scratch[0] = upper[0] / b0;
     d_scratch[0] = rhs[0] / b0;
+    if (!isFiniteF64(c_scratch[0]) || !isFiniteF64(d_scratch[0])) {
+        return false;
+    }
 
     let i: usize = 1;
     while (i < n) {
         const ai = lower[i - 1];
         const denom = diag[i] - ai * c_scratch[i - 1];
-        if (!isFiniteF64(denom) || absF64(denom) <= THOMAS_PIVOT_EPS) {
+        if (!isFiniteF64(denom) || luAbsF64(denom) <= THOMAS_PIVOT_EPS) {
             return false;
         }
         if (i + 1 < n) {
             c_scratch[i] = upper[i] / denom;
+            if (!isFiniteF64(c_scratch[i])) {
+                return false;
+            }
         } else {
             c_scratch[i] = 0.0;
         }
         d_scratch[i] = (rhs[i] - ai * d_scratch[i - 1]) / denom;
+        if (!isFiniteF64(d_scratch[i])) {
+            return false;
+        }
         i += 1;
     }
 
     x_out[n - 1] = d_scratch[n - 1];
+    if (!isFiniteF64(x_out[n - 1])) {
+        return false;
+    }
     let rev = n - 1;
     while (rev > 0) {
         rev -= 1;
         x_out[rev] = d_scratch[rev] - c_scratch[rev] * x_out[rev + 1];
+        if (!isFiniteF64(x_out[rev])) {
+            return false;
+        }
     }
 
     return true;

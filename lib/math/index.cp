@@ -59,9 +59,11 @@ export {
 
 export {
     LuInfo,
+    luSimdDotF64,
     luFactorize,
     luSolve,
     luDeterminant,
+    luLogDet,
     luInverse,
     matVecResidualInf,
     solveTridiagonal,
@@ -510,6 +512,10 @@ export {
     MultiRegressionResult,
     fitRidgeRegression,
     predictLinear,
+    simdMathSumF64,
+    simdMathDotF64,
+    simdMathSumSqDiffF64,
+    logSumExp,
 } from "./statsDist.cp";
 
 // --- Unbounded-Slice Numerical Optimization & Two-Phase Simplex LP ---

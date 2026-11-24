@@ -1,3 +1,4 @@
+// Reference-hardened against statrs-dev/statrs (MIT) & dimforge/nalgebra (Apache-2.0)
 // Origin: Pure-CP Stdlib (Unbounded-Slice Probability Distributions, Hypothesis Testing & OLS/Ridge Regression Suite) | Created: 2026-11-23
 // 100% pure CP, zero dynamic heap allocation, unbounded caller-slice statistical computing engine:
 //   - High-precision special functions: 9-term Lanczos `logGamma` (< 1e-13), `regularizedIncompleteGammaP/Q`
@@ -41,6 +42,8 @@ pub err StatsDistError {
     BufferTooSmall,
 }
 
+type MathNumVec4f64 = @Vector(4, f64);
+
 fn isFinite(x: f64): bool {
     return !std.math.isNan(x) && !std.math.isInf(x);
 }
@@ -53,6 +56,140 @@ fn clampF64(x: f64, lo: f64, hi: f64): f64 {
     if (x < lo) return lo;
     if (x > hi) return hi;
     return x;
+}
+
+// ============================================================================
+// 1b. 4-Lane SIMD Hot-Path Kernels & Numerically Stable Aggregators
+// ============================================================================
+
+/// 4-lane `@Vector(4, f64)` SIMD sum over `xs` with strict finite validation.
+pub fn simdMathSumF64(xs: []const f64): f64 ! StatsDistError {
+    if (xs.len == 0) {
+        return StatsDistError.EmptySample;
+    }
+    const n: usize = xs.len;
+    let v_acc: MathNumVec4f64 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) : (i += 4) {
+        const v: MathNumVec4f64 = xs[i .. i + 4][0..4].*;
+        if (!isFinite(v[0]) || !isFinite(v[1]) || !isFinite(v[2]) || !isFinite(v[3])) {
+            return StatsDistError.InvalidParameter;
+        }
+        v_acc += v;
+    }
+    let total: f64 = @reduce(.Add, v_acc);
+    while (i < n) : (i += 1) {
+        const x: f64 = xs[i];
+        if (!isFinite(x)) {
+            return StatsDistError.InvalidParameter;
+        }
+        total += x;
+    }
+    if (!isFinite(total)) {
+        return StatsDistError.InvalidParameter;
+    }
+    return total;
+}
+
+/// 4-lane `@Vector(4, f64)` SIMD dot product over equal-length finite slices `xs` and `ys`.
+pub fn simdMathDotF64(xs: []const f64, ys: []const f64): f64 ! StatsDistError {
+    if (xs.len != ys.len) {
+        return StatsDistError.LengthMismatch;
+    }
+    if (xs.len == 0) {
+        return StatsDistError.EmptySample;
+    }
+    const n: usize = xs.len;
+    let v_acc: MathNumVec4f64 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) : (i += 4) {
+        const vx: MathNumVec4f64 = xs[i .. i + 4][0..4].*;
+        const vy: MathNumVec4f64 = ys[i .. i + 4][0..4].*;
+        if (!isFinite(vx[0]) || !isFinite(vx[1]) || !isFinite(vx[2]) || !isFinite(vx[3]) ||
+            !isFinite(vy[0]) || !isFinite(vy[1]) || !isFinite(vy[2]) || !isFinite(vy[3]))
+        {
+            return StatsDistError.InvalidParameter;
+        }
+        v_acc += vx * vy;
+    }
+    let total: f64 = @reduce(.Add, v_acc);
+    while (i < n) : (i += 1) {
+        const a: f64 = xs[i];
+        const b: f64 = ys[i];
+        if (!isFinite(a) || !isFinite(b)) {
+            return StatsDistError.InvalidParameter;
+        }
+        total += a * b;
+    }
+    if (!isFinite(total)) {
+        return StatsDistError.InvalidParameter;
+    }
+    return total;
+}
+
+/// 4-lane `@Vector(4, f64)` SIMD sum of squared deviations `sum_i (xs[i] - mean)^2`.
+pub fn simdMathSumSqDiffF64(xs: []const f64, mean: f64): f64 ! StatsDistError {
+    if (!isFinite(mean)) {
+        return StatsDistError.InvalidParameter;
+    }
+    if (xs.len == 0) {
+        return StatsDistError.EmptySample;
+    }
+    const n: usize = xs.len;
+    const v_mean: MathNumVec4f64 = @splat(mean);
+    let v_acc: MathNumVec4f64 = @splat(0.0);
+    let i: usize = 0;
+    while (i + 4 <= n) : (i += 4) {
+        const vx: MathNumVec4f64 = xs[i .. i + 4][0..4].*;
+        if (!isFinite(vx[0]) || !isFinite(vx[1]) || !isFinite(vx[2]) || !isFinite(vx[3])) {
+            return StatsDistError.InvalidParameter;
+        }
+        const vd: MathNumVec4f64 = vx - v_mean;
+        v_acc += vd * vd;
+    }
+    let total: f64 = @reduce(.Add, v_acc);
+    while (i < n) : (i += 1) {
+        const x: f64 = xs[i];
+        if (!isFinite(x)) {
+            return StatsDistError.InvalidParameter;
+        }
+        const d: f64 = x - mean;
+        total += d * d;
+    }
+    if (!isFinite(total)) {
+        return StatsDistError.InvalidParameter;
+    }
+    return total;
+}
+
+/// Numerically stable `log(sum_i exp(xs[i]))` using max-shift to prevent overflow and underflow.
+pub fn logSumExp(xs: []const f64): f64 ! StatsDistError {
+    if (xs.len == 0) {
+        return StatsDistError.EmptySample;
+    }
+    const n: usize = xs.len;
+    let max_v: f64 = xs[0];
+    if (!isFinite(max_v)) {
+        return StatsDistError.InvalidParameter;
+    }
+    let i: usize = 1;
+    while (i < n) : (i += 1) {
+        const v: f64 = xs[i];
+        if (!isFinite(v)) {
+            return StatsDistError.InvalidParameter;
+        }
+        if (v > max_v) max_v = v;
+    }
+    let sum_exp: f64 = 0.0;
+    let j: usize = 0;
+    while (j < n) : (j += 1) {
+        sum_exp += std.math.exp(xs[j] - max_v);
+    }
+    const out: f64 = max_v + std.math.log(f64, std.math.e, sum_exp);
+    if (!isFinite(out)) {
+        return StatsDistError.InvalidParameter;
+    }
+    return out;
 }
 
 // ============================================================================
@@ -120,6 +257,7 @@ fn gammaSeriesP(a: f64, x: f64): f64 {
 fn gammaContinuedFracQ(a: f64, x: f64): f64 {
     const gln: f64 = logGamma(a);
     let b: f64 = x + 1.0 - a;
+    if (absF64(b) < FPMIN_F64) b = FPMIN_F64;
     let c: f64 = 1.0 / FPMIN_F64;
     let d: f64 = 1.0 / b;
     let h: f64 = d;
@@ -254,10 +392,16 @@ pub fn normalInvCdf(p: f64): f64 {
             ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0);
     }
 
-    // One Halley refinement step using full-precision erfcApprox.
-    const err_p: f64 = 0.5 * erfcApprox(-x / SQRT_2_F64) - p;
-    const u: f64 = err_p * SQRT_2PI_F64 * std.math.exp(0.5 * x * x);
-    x -= u / (1.0 + 0.5 * x * u);
+    // One Halley refinement step using full-precision erfcApprox (overflow-guarded for extreme tails).
+    const exp_arg: f64 = 0.5 * x * x;
+    if (exp_arg < 700.0) {
+        const err_p: f64 = 0.5 * erfcApprox(-x / SQRT_2_F64) - p;
+        const u: f64 = err_p * SQRT_2PI_F64 * std.math.exp(exp_arg);
+        const denom: f64 = 1.0 + 0.5 * x * u;
+        if (isFinite(u) && isFinite(denom) && absF64(denom) > 1.0e-12) {
+            x -= u / denom;
+        }
+    }
     return x;
 }
 
@@ -331,7 +475,9 @@ pub fn normalPdf(x: f64, mu: f64, sigma: f64): f64 ! StatsDistError {
         return StatsDistError.InvalidParameter;
     }
     const z: f64 = (x - mu) / sigma;
-    return std.math.exp(-0.5 * z * z) / (sigma * SQRT_2PI_F64);
+    if (!isFinite(z)) return 0.0;
+    const ln_val: f64 = -0.5 * z * z - std.math.log(f64, std.math.e, sigma) - LN_SQRT_2PI_F64;
+    return std.math.exp(ln_val);
 }
 
 /// Normal distribution cumulative distribution function `P(X <= x)`.
@@ -369,7 +515,11 @@ pub fn studentTCdf(t: f64, df: f64): f64 ! StatsDistError {
     if (t == 0.0) {
         return 0.5;
     }
-    const x: f64 = df / (df + t * t);
+    const ratio: f64 = absF64(t) / std.math.sqrt(df);
+    if (!isFinite(ratio) || ratio > 1.0e150) {
+        return if (t > 0.0) 1.0 else 0.0;
+    }
+    const x: f64 = 1.0 / (1.0 + ratio * ratio);
     const ib: f64 = regularizedIncompleteBeta(0.5 * df, 0.5, x);
     if (t > 0.0) {
         return clampF64(1.0 - 0.5 * ib, 0.0, 1.0);
@@ -496,7 +646,8 @@ pub fn chiSquarePpf(p: f64, df: f64): f64 ! StatsDistError {
 
     let iter: usize = 0;
     while (iter < 64) : (iter += 1) {
-        const f: f64 = chiSquareCdf(x, df)? - p;
+        const cdf_x: f64 = chiSquareCdf(x, df)?;
+        const f: f64 = cdf_x - p;
         if (absF64(f) < 1.0e-13) {
             break;
         }
@@ -528,7 +679,9 @@ pub fn fDistCdf(x: f64, df1: f64, df2: f64): f64 ! StatsDistError {
         return StatsDistError.InvalidParameter;
     }
     if (x <= 0.0) return 0.0;
-    const z: f64 = (df1 * x) / (df1 * x + df2);
+    const ratio: f64 = (df1 / df2) * x;
+    if (!isFinite(ratio)) return 1.0;
+    const z: f64 = ratio / (1.0 + ratio);
     return regularizedIncompleteBeta(0.5 * df1, 0.5 * df2, z);
 }
 
@@ -579,6 +732,9 @@ pub fn poissonCdf(k: u64, lambda: f64): f64 ! StatsDistError {
     if (!isFinite(lambda) || lambda <= 0.0) {
         return StatsDistError.InvalidParameter;
     }
+    if (k == std.math.maxInt(u64)) {
+        return 1.0;
+    }
     return regularizedIncompleteGammaQ(@as(f64, @floatFromInt(k + 1)), lambda);
 }
 
@@ -601,6 +757,7 @@ pub struct DescriptiveStats {
 
 /// Computes descriptive statistics (unbiased sample variance, Fisher-Pearson adjusted skewness &
 /// excess kurtosis, min/max, and standard error of the mean) for an arbitrary-length slice.
+/// Uses Welford online mean (immune to sum overflow) + 4-lane SIMD compensated central moments.
 pub fn describeSample(xs: []const f64): DescriptiveStats ! StatsDistError {
     if (xs.len == 0) {
         return StatsDistError.EmptySample;
@@ -609,27 +766,44 @@ pub fn describeSample(xs: []const f64): DescriptiveStats ! StatsDistError {
     const n: usize = xs.len;
     const nf: f64 = @as(f64, @floatFromInt(n));
 
-    let sum: f64 = 0.0;
     let min_v: f64 = xs[0];
     let max_v: f64 = xs[0];
+    let mean: f64 = 0.0;
     let i: usize = 0;
     while (i < n) : (i += 1) {
         const v: f64 = xs[i];
         if (!isFinite(v)) {
             return StatsDistError.InvalidParameter;
         }
-        sum += v;
+        const k: f64 = @as(f64, @floatFromInt(i + 1));
+        mean += (v - mean) / k;
         if (v < min_v) min_v = v;
         if (v > max_v) max_v = v;
     }
-    const mean: f64 = sum / nf;
+    if (!isFinite(mean)) {
+        return StatsDistError.InvalidParameter;
+    }
 
-    // Two-pass compensated central moments (m2, m3, m4).
-    let comp_sum: f64 = 0.0;
-    let m2: f64 = 0.0;
-    let m3: f64 = 0.0;
-    let m4: f64 = 0.0;
+    // Two-pass compensated central moments (m2, m3, m4) with 4-lane SIMD hot path.
+    const v_mean: MathNumVec4f64 = @splat(mean);
+    let v_comp: MathNumVec4f64 = @splat(0.0);
+    let v_m2: MathNumVec4f64 = @splat(0.0);
+    let v_m3: MathNumVec4f64 = @splat(0.0);
+    let v_m4: MathNumVec4f64 = @splat(0.0);
     let j: usize = 0;
+    while (j + 4 <= n) : (j += 4) {
+        const vx: MathNumVec4f64 = xs[j .. j + 4][0..4].*;
+        const vd: MathNumVec4f64 = vx - v_mean;
+        const vd2: MathNumVec4f64 = vd * vd;
+        v_comp += vd;
+        v_m2 += vd2;
+        v_m3 += vd2 * vd;
+        v_m4 += vd2 * vd2;
+    }
+    let comp_sum: f64 = @reduce(.Add, v_comp);
+    let m2: f64 = @reduce(.Add, v_m2);
+    let m3: f64 = @reduce(.Add, v_m3);
+    let m4: f64 = @reduce(.Add, v_m4);
     while (j < n) : (j += 1) {
         const d: f64 = xs[j] - mean;
         comp_sum += d;
@@ -637,6 +811,9 @@ pub fn describeSample(xs: []const f64): DescriptiveStats ! StatsDistError {
         m2 += d2;
         m3 += d2 * d;
         m4 += d2 * d2;
+    }
+    if (!isFinite(m2)) {
+        return StatsDistError.InvalidParameter;
     }
     // Apply two-pass correction to m2 to eliminate residual rounding error.
     let corrected_m2: f64 = m2 - (comp_sum * comp_sum) / nf;
@@ -647,17 +824,23 @@ pub fn describeSample(xs: []const f64): DescriptiveStats ! StatsDistError {
     const sem: f64 = if (n > 1) std_dev / std.math.sqrt(nf) else 0.0;
 
     let skewness: f64 = 0.0;
-    if (n >= 3 && std_dev > 0.0) {
+    if (n >= 3 && std_dev > 0.0 && isFinite(m3)) {
         const s3: f64 = std_dev * std_dev * std_dev;
-        skewness = (nf / ((nf - 1.0) * (nf - 2.0))) * (m3 / s3);
+        if (isFinite(s3) && s3 > 0.0) {
+            const sk: f64 = (nf / ((nf - 1.0) * (nf - 2.0))) * (m3 / s3);
+            if (isFinite(sk)) skewness = sk;
+        }
     }
 
     let kurtosis: f64 = 0.0;
-    if (n >= 4 && variance > 0.0) {
+    if (n >= 4 && variance > 0.0 && isFinite(m4)) {
         const s4: f64 = variance * variance;
-        const term1: f64 = (nf * (nf + 1.0)) / ((nf - 1.0) * (nf - 2.0) * (nf - 3.0)) * (m4 / s4);
-        const term2: f64 = (3.0 * (nf - 1.0) * (nf - 1.0)) / ((nf - 2.0) * (nf - 3.0));
-        kurtosis = term1 - term2;
+        if (isFinite(s4) && s4 > 0.0) {
+            const term1: f64 = (nf * (nf + 1.0)) / ((nf - 1.0) * (nf - 2.0) * (nf - 3.0)) * (m4 / s4);
+            const term2: f64 = (3.0 * (nf - 1.0) * (nf - 1.0)) / ((nf - 2.0) * (nf - 3.0));
+            const ku: f64 = term1 - term2;
+            if (isFinite(ku)) kurtosis = ku;
+        }
     }
 
     return DescriptiveStats{
@@ -747,7 +930,13 @@ pub fn welchTwoSampleTTest(xs: []const f64, ys: []const f64): TTestResult ! Stat
     const t_stat: f64 = mean_diff / se;
 
     const denom_df: f64 = (vx_n * vx_n) / (nx - 1.0) + (vy_n * vy_n) / (ny - 1.0);
+    if (denom_df <= 0.0 || !isFinite(denom_df)) {
+        return StatsDistError.ZeroVariance;
+    }
     const df: f64 = (se2 * se2) / denom_df;
+    if (!isFinite(df) || df <= 0.0) {
+        return StatsDistError.ZeroVariance;
+    }
     const cdf_abs: f64 = studentTCdf(absF64(t_stat), df)?;
     const p_val: f64 = clampF64(2.0 * (1.0 - cdf_abs), 0.0, 1.0);
 
@@ -802,6 +991,9 @@ pub fn chiSquareGoodnessOfFit(
         chi2 += (diff * diff) / e;
     }
 
+    if (!isFinite(chi2)) {
+        return StatsDistError.InvalidParameter;
+    }
     const df: f64 = @as(f64, @floatFromInt(observed.len - 1));
     const p_val: f64 = regularizedIncompleteGammaQ(0.5 * df, 0.5 * chi2);
     return ChiSquareTestResult{
@@ -837,29 +1029,38 @@ pub fn pearsonCorrelationTest(
 
     const n: usize = xs.len;
     const nf: f64 = @as(f64, @floatFromInt(n));
-    let sum_x: f64 = 0.0;
-    let sum_y: f64 = 0.0;
-    let i: usize = 0;
-    while (i < n) : (i += 1) {
-        if (!isFinite(xs[i]) || !isFinite(ys[i])) {
-            return StatsDistError.InvalidParameter;
-        }
-        sum_x += xs[i];
-        sum_y += ys[i];
-    }
+    const sum_x: f64 = simdMathSumF64(xs)?;
+    const sum_y: f64 = simdMathSumF64(ys)?;
     const mx: f64 = sum_x / nf;
     const my: f64 = sum_y / nf;
 
-    let sxx: f64 = 0.0;
-    let syy: f64 = 0.0;
-    let sxy: f64 = 0.0;
+    const v_mx: MathNumVec4f64 = @splat(mx);
+    const v_my: MathNumVec4f64 = @splat(my);
+    let v_sxx: MathNumVec4f64 = @splat(0.0);
+    let v_syy: MathNumVec4f64 = @splat(0.0);
+    let v_sxy: MathNumVec4f64 = @splat(0.0);
     let j: usize = 0;
+    while (j + 4 <= n) : (j += 4) {
+        const vx: MathNumVec4f64 = xs[j .. j + 4][0..4].*;
+        const vy: MathNumVec4f64 = ys[j .. j + 4][0..4].*;
+        const vdx: MathNumVec4f64 = vx - v_mx;
+        const vdy: MathNumVec4f64 = vy - v_my;
+        v_sxx += vdx * vdx;
+        v_syy += vdy * vdy;
+        v_sxy += vdx * vdy;
+    }
+    let sxx: f64 = @reduce(.Add, v_sxx);
+    let syy: f64 = @reduce(.Add, v_syy);
+    let sxy: f64 = @reduce(.Add, v_sxy);
     while (j < n) : (j += 1) {
         const dx: f64 = xs[j] - mx;
         const dy: f64 = ys[j] - my;
         sxx += dx * dx;
         syy += dy * dy;
         sxy += dx * dy;
+    }
+    if (!isFinite(sxx) || !isFinite(syy) || !isFinite(sxy)) {
+        return StatsDistError.InvalidParameter;
     }
 
     if (sxx <= 0.0 || syy <= 0.0) {
@@ -920,29 +1121,38 @@ pub fn fitSimpleOls(
 
     const n: usize = xs.len;
     const nf: f64 = @as(f64, @floatFromInt(n));
-    let sum_x: f64 = 0.0;
-    let sum_y: f64 = 0.0;
-    let i: usize = 0;
-    while (i < n) : (i += 1) {
-        if (!isFinite(xs[i]) || !isFinite(ys[i])) {
-            return StatsDistError.InvalidParameter;
-        }
-        sum_x += xs[i];
-        sum_y += ys[i];
-    }
+    const sum_x: f64 = simdMathSumF64(xs)?;
+    const sum_y: f64 = simdMathSumF64(ys)?;
     const mx: f64 = sum_x / nf;
     const my: f64 = sum_y / nf;
 
-    let sxx: f64 = 0.0;
-    let syy: f64 = 0.0;
-    let sxy: f64 = 0.0;
+    const v_mx: MathNumVec4f64 = @splat(mx);
+    const v_my: MathNumVec4f64 = @splat(my);
+    let v_sxx: MathNumVec4f64 = @splat(0.0);
+    let v_syy: MathNumVec4f64 = @splat(0.0);
+    let v_sxy: MathNumVec4f64 = @splat(0.0);
     let j: usize = 0;
+    while (j + 4 <= n) : (j += 4) {
+        const vx: MathNumVec4f64 = xs[j .. j + 4][0..4].*;
+        const vy: MathNumVec4f64 = ys[j .. j + 4][0..4].*;
+        const vdx: MathNumVec4f64 = vx - v_mx;
+        const vdy: MathNumVec4f64 = vy - v_my;
+        v_sxx += vdx * vdx;
+        v_syy += vdy * vdy;
+        v_sxy += vdx * vdy;
+    }
+    let sxx: f64 = @reduce(.Add, v_sxx);
+    let syy: f64 = @reduce(.Add, v_syy);
+    let sxy: f64 = @reduce(.Add, v_sxy);
     while (j < n) : (j += 1) {
         const dx: f64 = xs[j] - mx;
         const dy: f64 = ys[j] - my;
         sxx += dx * dx;
         syy += dy * dy;
         sxy += dx * dy;
+    }
+    if (!isFinite(sxx) || !isFinite(syy) || !isFinite(sxy)) {
+        return StatsDistError.InvalidParameter;
     }
 
     if (sxx <= 0.0) {
@@ -1013,6 +1223,9 @@ pub fn fitRidgeRegression(
     }
     if (n_samples == 0 || y.len == 0) {
         return StatsDistError.EmptySample;
+    }
+    if (n_samples > std.math.maxInt(usize) / n_features) {
+        return StatsDistError.InvalidParameter;
     }
     if (y.len != n_samples || x_rows.len < n_samples * n_features) {
         return StatsDistError.LengthMismatch;
@@ -1124,8 +1337,14 @@ pub fn fitRidgeRegression(
         n_features: n_features,
         intercept: rhs[0],
     };
+    if (!isFinite(rhs[0])) {
+        return StatsDistError.SingularMatrix;
+    }
     let f2: usize = 0;
     while (f2 < n_features) : (f2 += 1) {
+        if (!isFinite(rhs[f2 + 1])) {
+            return StatsDistError.SingularMatrix;
+        }
         res.coeffs[f2] = rhs[f2 + 1];
     }
 
@@ -1162,21 +1381,21 @@ pub fn fitRidgeRegression(
     return res;
 }
 
-/// Evaluates `res.intercept + dot(res.coeffs[0..n_features], x_row[0..n_features])`.
+/// Evaluates `res.intercept + dot(res.coeffs[0..n_features], x_row[0..n_features])` via 4-lane SIMD.
 pub fn predictLinear(
     res: MultiRegressionResult,
     x_row: []const f64,
 ): f64 ! StatsDistError {
-    if (res.n_features == 0 || res.n_features > STATS_MAX_FEATURES) {
+    if (res.n_features == 0 || res.n_features > STATS_MAX_FEATURES || !isFinite(res.intercept)) {
         return StatsDistError.InvalidParameter;
     }
     if (x_row.len < res.n_features) {
         return StatsDistError.LengthMismatch;
     }
-    let acc: f64 = res.intercept;
-    let i: usize = 0;
-    while (i < res.n_features) : (i += 1) {
-        acc += res.coeffs[i] * x_row[i];
+    const dot_val: f64 = simdMathDotF64(res.coeffs[0..res.n_features], x_row[0..res.n_features])?;
+    const acc: f64 = res.intercept + dot_val;
+    if (!isFinite(acc)) {
+        return StatsDistError.InvalidParameter;
     }
     return acc;
 }

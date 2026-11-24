@@ -440,3 +440,14 @@ fn demoOptimize() {
   - `KalmanFilterN`（任意 $n$ 维状态 / $m$ 维观测空间滤波器，Joseph 稳定协方差更新 + 马氏距离新息门控）。
 - **异常检测、变点检测与预测指标**：
   - `detectAnomaliesZScore`（滑窗 Z-Score）、`detectAnomaliesMad`（抗离群值污染 Robust MAD）、`CusumChangeDetector`（双边 Page-Hinkley/CUSUM 在线变点检测）、`evalForecastMetrics`（MAE/RMSE/MAPE/sMAPE/$R^2$）。
+
+---
+
+## 统计分布/回归与部分主元 LU 数值加固（对标 `statrs-dev/statrs` MIT & `dimforge/nalgebra` Apache-2.0：`statsDist.cp` / `lu.cp`）
+
+- **`statsDist.cp`（概率分布、假设检验与 OLS/Ridge 回归加固）**：
+  - **4-lane `@Vector(4, f64)` SIMD 热路径算子**：`simdMathSumF64`、`simdMathDotF64`、`simdMathSumSqDiffF64` 与数值稳定 `logSumExp`（最大偏移防上下溢），直连 `describeSample`、`pearsonCorrelationTest`、`fitSimpleOls`、`predictLinear`。
+  - **数值稳定与边界防护**：Welford 在线均值 + 补偿中心矩防大偏移相消；`normalPdf` 对数域求值、`normalInvCdf` 尾区 Halley 溢出守卫、`studentTCdf`/`fDistCdf` 比例缩放防 `Inf/Inf=NaN`、`poissonCdf` `u64::MAX` 守卫、`gammaContinuedFracQ` 零分母守卫、全入口严格拦截 NaN/±Inf/空切片/域外参数/奇异矩阵。
+- **`lu.cp`（部分主元 LU 分解与 Thomas 三对角求解加固）**：
+  - **4-lane `@Vector(4, f64)` SIMD 加速**：`luSimdDotF64` 与主元消去/前后代/残差评估热路径 4-lane SIMD 向量化。
+  - **数值稳定与防溢出**：新增 `luLogDet`（对数绝对行列式防大矩阵上下溢）；全链路消元、前后代、`luDeterminant` 与 `solveTridiagonal` 严格检测非有限中间值，拒绝静默输出 NaN/Inf。
