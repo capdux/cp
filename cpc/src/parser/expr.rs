@@ -1758,6 +1758,11 @@ impl<'a> Parser<'a> {
                 | Token::Import
                 | Token::Export
                 | Token::Pub
+                | Token::Private
+                | Token::Union
+                | Token::Implements
+                | Token::Defer
+                | Token::ErrDefer
                 | Token::Const
                 | Token::Let
                 | Token::Var
@@ -1838,6 +1843,11 @@ impl<'a> Parser<'a> {
             Token::Import => "import".to_string(),
             Token::Export => "export".to_string(),
             Token::Pub => "pub".to_string(),
+            Token::Private => self.input[span.start..span.end].to_string(),
+            Token::Union => "union".to_string(),
+            Token::Implements => "implements".to_string(),
+            Token::Defer => "defer".to_string(),
+            Token::ErrDefer => "errdefer".to_string(),
             Token::Const => "const".to_string(),
             Token::Let => "let".to_string(),
             Token::Var => "var".to_string(),
