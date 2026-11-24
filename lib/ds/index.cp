@@ -142,7 +142,15 @@ export {
 } from "./cuckoo.cp";
 
 export {
+    HLL_MIN_PRECISION,
+    HLL_MAX_PRECISION,
+    HLL_SERIAL_HEADER_LEN,
     HllError,
+    simdHllMergeRegisters,
+    scalarHllMergeRegisters,
+    simdHllCountZeros,
+    scalarHllCountZeros,
+    validateHllSerialized,
     HyperLogLog,
 } from "./hll.cp";
 
@@ -165,8 +173,15 @@ export {
 } from "./roaring.cp";
 
 export {
+    TDIGEST_MIN_COMPRESSION,
+    TDIGEST_MAX_COMPRESSION,
     TDigestError,
     Centroid,
+    TdMinMax,
+    simdTdSumWeightsF64,
+    scalarTdSumWeightsF64,
+    simdTdMinMaxF64,
+    scalarTdMinMaxF64,
     TDigest,
 } from "./tdigest.cp";
 

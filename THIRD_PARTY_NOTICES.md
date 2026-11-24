@@ -100,6 +100,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **opentelemetry-rust** (`open-telemetry`) | <https://github.com/open-telemetry/opentelemetry-rust> | Apache-2.0 | `lib/obs/traceParent.cp`, `lib/obs/w3cTraceContext.cp`, `lib/obs/baggage.cp` | Copyright (c) 2019-2024 OpenTelemetry Authors |
 | **ebml-iterable** (`austinleroy`) | <https://github.com/austinleroy/ebml-iterable> | MIT | `lib/media/ebml.cp`, `lib/media/mkv.cp` | Copyright (c) 2020-2024 Austin LeRoy (RFC 8794 / RFC 9559) |
 | **tower-http** (`tower-rs`) | <https://github.com/tower-rs/tower-http> | MIT | `lib/web/corsGuard.cp`, `lib/web/cspPolicy.cp`, `lib/web/etagPrecond.cp` | Copyright (c) 2021-2024 Tower Contributors |
+| **hyperloglog** (`pwoolcoc`) & **t-digest** (Ted Dunning) | <https://github.com/pwoolcoc/hyperloglog> | MIT / Apache-2.0 | `lib/ds/hll.cp`, `lib/ds/tdigest.cp` | Copyright (c) 2015-2024 Paul Woolcock / Ted Dunning |
 
 ---
 

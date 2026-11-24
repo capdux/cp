@@ -64,9 +64,9 @@
 - **`circBuf.cp`**：`RingError`, `RingBuffer`
 - **`bitset.cp`**：`BitSet`, `BitSetError`
 - **`cuckoo.cp`**：`CuckooError`, `CuckooStats`, `CuckooFilter`
-- **`hll.cp`**：`HllError`, `HyperLogLog`
+- **`hll.cp`**（对标 `pwoolcoc/hyperloglog` MIT 加固 + 16-lane `@Vector(16, u8)` SIMD 寄存器合并/零计数）：`HLL_MIN_PRECISION`/`HLL_MAX_PRECISION`、`HllError`、`HyperLogLog`、`validateHllSerialized`、`simdHllMergeRegisters`/`scalarHllMergeRegisters`、`simdHllCountZeros`/`scalarHllCountZeros`（回归测试：`cap/test/testDsSketchesRustRefSuite.cp`）
 - **`roaring.cp`**：`ROARING_SERIAL_COOKIE_NO_RUNCONTAINER` (`12346`), `ROARING_SERIAL_COOKIE_RUNCONTAINER` (`12347`), `ROARING_NO_OFFSET_THRESHOLD` (`4`), `RoaringError`, `RoaringBitmap`（`init`, `deinit`, `clone`, `add`, `addRange`, `addRangeInclusive`, `removeVal`, `contains`, `cardinality`, `isEmpty`, `minimum`, `maximum`, `rank`, `select`, `isSubset`, `isDisjoint`, `equals`, `containerCount`, `isContainerBitset`, `bitAnd`, `bitOr`, `bitAndNot`, `bitXor`, `andCardinality`, `intersects`, `toSlice`, `serialize`, `deserialize`, `serializePortable`, `deserializePortable`）, `scalarBitmapPopcount`, `simdBitmapPopcount`, `scalarBitmapAnd`, `simdBitmapAnd`, `scalarBitmapOr`, `simdBitmapOr`, `scalarBitmapXor`, `simdBitmapXor`, `scalarBitmapAndNot`, `simdBitmapAndNot`；回归测试：`cap/test/testDsRoaringRustRefSuite.cp`（边界与 4095/4096/4097 阈值震荡、集合代数律与参考模型差分、Portable Format 12346/12347 编解码与畸形字节流拦截、4-lane SIMD 0 差异对拍、1,600 组确定性 PRNG Fuzz）
-- **`tdigest.cp`**：`TDigestError`, `Centroid`, `TDigest`
+- **`tdigest.cp`**（对标 Dunning t-digest Apache-2.0 加固 + 4-lane `@Vector(4, f64)` SIMD 权重求和/极值扫描）：`TDIGEST_MIN_COMPRESSION`/`TDIGEST_MAX_COMPRESSION`、`TDigestError`、`Centroid`、`TdMinMax`、`TDigest`（严格拒绝 `NaN`/`±Inf`/非正权重，支持 `addBatch`/`merge`/`quantile`）、`simdTdSumWeightsF64`/`scalarTdSumWeightsF64`、`simdTdMinMaxF64`/`scalarTdMinMaxF64`（回归测试：`cap/test/testDsSketchesRustRefSuite.cp`）
 
 ---
 
