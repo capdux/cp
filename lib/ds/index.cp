@@ -49,6 +49,8 @@ export {
     IntervalError,
     Interval,
     IntervalTree,
+    scalarIntervalCountOverlaps,
+    simdIntervalCountOverlaps,
 } from "./intervalTree.cp";
 
 // --- Spatial Indexes ---
@@ -194,7 +196,11 @@ export {
 // === Consolidated Wave-2 Data Structures, CRDTs, Consistent Hashing & Graph/Text Indexes ===
 
 // --- bptree ---
-export { BPlusTree } from "./bptree.cp";
+export {
+    BPlusTree,
+    scalarBptCountLessI64,
+    simdBptCountLessI64,
+} from "./bptree.cp";
 
 // --- crdt_pn ---
 pub import { GCounter, PNCounter, LWWRegister, GSet, CounterEntry } from "./crdtPn.cp";

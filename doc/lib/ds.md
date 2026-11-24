@@ -538,3 +538,14 @@ pub fn demoSparseSet() {
 | `cap:static_hashmap` | `lib/ds/staticHashMap.cp` | `StaticHashMap`, `KeyValue`, `Slot`, `StringContext`, `AsciiIgnoreCaseContext`, `IntContext`, `fnv1a64`, `fnv1a64AsciiLower`, `splitmix64` |
 | `cap:object_pool` | `lib/ds/objectPool.cp` | `ObjectPool`, `PoolNode` |
 | `cap:exact_matcher` | `lib/ds/exactMatcher.cp` | `ExactSizeMatcher`, `Matcher4`, `Matcher8`, `Matcher16`, `packU32`, `packU32Lower`, `packU64`, `packU64Lower`, `packU128`, `packU128Lower` |
+
+---
+
+## B+ 树与增强区间树深度加固（对标 `rust-lang/rust` BTree & `rust-bio/rust-bio` IntervalTree MIT OR Apache-2.0：`bptree.cp` / `intervalTree.cp`）
+
+- **`bptree.cp`（有序 B+ 树索引加固）**：
+  - **4-lane `@Vector(4, i64)` SIMD 槽位定位**：`simdBptCountLessI64` / `scalarBptCountLessI64`（0 差异对拍），`i64` 键查找/插入/删除/范围扫描热路径直连 4-lane SIMD。
+  - **结构不变量与安全边界**：新增 `contains`、`isEmpty` 与 `verifyInvariants()`（校验全叶等深、节点键数 `[MIN_KEYS, MAX_KEYS]`、键严格单调递增、分隔键界定与叶链表完整递增遍历）。
+- **`intervalTree.cp`（增强区间树加固）**：
+  - **4-lane `@Vector(4, i64)` SIMD 重叠批量计数**：`simdIntervalCountOverlaps` / `scalarIntervalCountOverlaps`（0 差异对拍），新增 `countOverlaps` 热路径直连 4-lane SIMD 批处理。
+  - **严苛边界与增强属性校验**：全入口严格拦截 `low > high` 返回 `IntervalError.InvalidInterval`，新增 `isEmpty` 与 `verifyInvariants()`（校验 BST 序、`low <= high`、精确增强属性 `max_high` 与节点计数）。
