@@ -1,14 +1,103 @@
 // Origin: Pure-CP Stdlib (RFC 9111 HTTP Cache Freshness, Cache-Control Parser & SWR/SIE Evaluator) | Created: 2026-11-22
+// Reference-hardened against kornelski/rusty-http-cache-semantics (BSD-2-Clause) & RFC 9111/9110
 // 100% pure CP zero-heap-allocation HTTP caching policy engine:
-//   - Case-insensitive RFC 9111 Cache-Control parser (quoted values, extension skipping, overflow/negative guard)
+//   - Case-insensitive RFC 9111 Cache-Control parser (quoted values, extension skipping, overflow/negative guard,
+//     16-lane `@Vector(16, u8)` SIMD directive matching & delimiter scanning)
 //   - RFC 9111 §4.2 freshness lifetime (s-maxage > max-age > Expires-Date > 10% Last-Modified heuristic) & current age
-//   - Shared vs private storability checks (no-store, private, Authorization)
+//   - Shared vs private storability checks (no-store absolute override, private, Authorization)
 //   - Lookup verdict engine: fresh_hit | stale_while_revalidate | stale_if_error | revalidate_required | miss_bypass
 
 const std = @import("std");
 
+type WebSemVec16u8 = @Vector(16, u8);
+
 /// RFC 9111 §1.2.2 recommended maximum representable delta-seconds (2^31).
 pub const CACHE_MAX_DELTA_SECONDS: u64 = 2147483648;
+
+// ============================================================================
+// 16-Lane SIMD Primitives (Scalar 0-Diff Reference)
+// ============================================================================
+
+fn ccToLowerAscii(c: u8): u8 {
+    if (c >= 'A' && c <= 'Z') {
+        return c + 32;
+    }
+    return c;
+}
+
+/// Scalar reference: ASCII case-insensitive byte equality.
+pub fn scalarWebSemAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (ccToLowerAscii(a[i]) != ccToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD ASCII case-insensitive equality (0-diff vs `scalarWebSemAsciiLowerEql`).
+pub fn simdWebSemAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const n: usize = a.len;
+    const v_A: WebSemVec16u8 = @splat('A');
+    const v_26: WebSemVec16u8 = @splat(26);
+    const v_32: WebSemVec16u8 = @splat(32);
+    const v_0: WebSemVec16u8 = @splat(0);
+
+    while (i + 16 <= n) : (i += 16) {
+        const va: WebSemVec16u8 = a[i..][0..16].*;
+        const vb: WebSemVec16u8 = b[i..][0..16].*;
+        const la: WebSemVec16u8 = va + @select(u8, (va -% v_A) < v_26, v_32, v_0);
+        const lb: WebSemVec16u8 = vb + @select(u8, (vb -% v_A) < v_26, v_32, v_0);
+        const eq_mask: u16 = @bitCast(la == lb);
+        if (eq_mask != 0xFFFF) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (ccToLowerAscii(a[i]) != ccToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
+
+/// Scalar reference: returns the first index `>= start` containing `,`, `;`, `=`, or `"`, else `s.len`.
+pub fn scalarWebSemFindDelim(s: []const u8, start: usize): usize {
+    if (start >= s.len) return s.len;
+    let i: usize = start;
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == ',' || c == ';' || c == '=' || c == '"') return i;
+    }
+    return s.len;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD scan for HTTP syntax delimiters (`,`, `;`, `=`, `"`) starting at `start`.
+/// Exact 0-diff parity with `scalarWebSemFindDelim`.
+pub fn simdWebSemFindDelim(s: []const u8, start: usize): usize {
+    if (start >= s.len) return s.len;
+    let i: usize = start;
+    const n: usize = s.len;
+    const v_comma: WebSemVec16u8 = @splat(',');
+    const v_semi: WebSemVec16u8 = @splat(';');
+    const v_eq: WebSemVec16u8 = @splat('=');
+    const v_quote: WebSemVec16u8 = @splat('"');
+
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: WebSemVec16u8 = s[i..][0..16].*;
+        const m1: u16 = @bitCast(chunk == v_comma);
+        const m2: u16 = @bitCast(chunk == v_semi);
+        const m3: u16 = @bitCast(chunk == v_eq);
+        const m4: u16 = @bitCast(chunk == v_quote);
+        const m: u16 = m1 | m2 | m3 | m4;
+        if (m != 0) {
+            return i + @as(usize, @ctz(m));
+        }
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == ',' || c == ';' || c == '=' || c == '"') return i;
+    }
+    return n;
+}
 
 // ============================================================================
 // Enums & Data Models (100% Zero-Heap Value Semantics)
@@ -87,18 +176,11 @@ pub struct CacheLookupDecision {
 // Internal ASCII / Numeric Helpers
 // ============================================================================
 
-fn isOws(c: u8): bool {
+fn ccIsOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn isTokenChar(c: u8): bool {
+fn ccIsTokenChar(c: u8): bool {
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
         return true;
     }
@@ -107,46 +189,54 @@ fn isTokenChar(c: u8): bool {
         c == '`' || c == '|' || c == '~';
 }
 
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
+fn ccHasIllegalCtrl(s: []const u8): bool {
     let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
+    const n: usize = s.len;
+    const v_20: WebSemVec16u8 = @splat(0x20);
+    const v_7f: WebSemVec16u8 = @splat(0x7F);
+    const v_tab: WebSemVec16u8 = @splat(0x09);
+
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: WebSemVec16u8 = s[i..][0..16].*;
+        const m_lt: u16 = @bitCast(chunk < v_20);
+        const m_tab: u16 = @bitCast(chunk == v_tab);
+        const m_del: u16 = @bitCast(chunk == v_7f);
+        if (((m_lt & ~m_tab) | m_del) != 0) return true;
     }
-    return true;
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
+    }
+    return false;
 }
 
-fn saturatingAddU64(a: u64, b: u64): u64 {
-    const max_v: u64 = std.math.maxInt(u64);
+fn ccSaturatingAddU64(a: u64, b: u64): u64 {
+    const max_v: u64 = ~@as(u64, 0);
     if (a > max_v - b) {
         return max_v;
     }
     return a + b;
 }
 
-fn diffPosI64ToU64(later: i64, earlier: i64): u64 {
+fn ccDiffPosI64ToU64(later: i64, earlier: i64): u64 {
     if (later <= earlier) {
         return 0;
     }
-    // Safe even across negative/positive i64 boundaries via i128
     const diff: i128 = (later as i128) - (earlier as i128);
     if (diff <= 0) return 0;
-    const max_u64: i128 = std.math.maxInt(u64) as i128;
-    if (diff >= max_u64) return std.math.maxInt(u64);
+    const max_u64_v: u64 = ~@as(u64, 0);
+    const max_u64: i128 = max_u64_v as i128;
+    if (diff >= max_u64) return max_u64_v;
     return diff as u64;
 }
 
 /// Parses a non-negative ASCII decimal delta-seconds value with strict overflow & negative rejection.
-fn parseDeltaSeconds(raw: []const u8): u64? {
+fn ccParseDeltaSeconds(raw: []const u8): u64? {
     if (raw.len == 0) {
         return null;
     }
     let acc: u64 = 0;
-    const max_v: u64 = std.math.maxInt(u64);
+    const max_v: u64 = ~@as(u64, 0);
     let i: usize = 0;
     while (i < raw.len) : (i += 1) {
         const c: u8 = raw[i];
@@ -162,7 +252,7 @@ fn parseDeltaSeconds(raw: []const u8): u64? {
     return acc;
 }
 
-fn isHeuristicallyCacheableStatus(code: u16): bool {
+fn ccIsHeuristicallyCacheableStatus(code: u16): bool {
     return code == 200 || code == 203 || code == 204 || code == 206 ||
         code == 300 || code == 301 || code == 308 ||
         code == 404 || code == 405 || code == 410 || code == 414 || code == 501;
@@ -181,24 +271,20 @@ pub fn parseCacheControl(header: string): CacheControl? {
     const bytes: []const u8 = header;
     let cc = CacheControl.empty();
 
-    // Reject CR/LF/NUL injection early
-    let chk: usize = 0;
-    while (chk < bytes.len) : (chk += 1) {
-        const b: u8 = bytes[chk];
-        if (b == '\r' || b == '\n' || b == 0) {
-            return null;
-        }
+    // 16-lane SIMD control-byte / CR / LF / NUL injection guard
+    if (ccHasIllegalCtrl(bytes)) {
+        return null;
     }
 
     let pos: usize = 0;
     while (pos < bytes.len) {
         // Skip leading whitespace and empty comma elements
-        while (pos < bytes.len && (isOws(bytes[pos]) || bytes[pos] == ',')) : (pos += 1) {}
+        while (pos < bytes.len && (ccIsOws(bytes[pos]) || bytes[pos] == ',')) : (pos += 1) {}
         if (pos >= bytes.len) break;
 
         // Parse directive name token
         const name_start: usize = pos;
-        while (pos < bytes.len && isTokenChar(bytes[pos])) : (pos += 1) {}
+        while (pos < bytes.len && ccIsTokenChar(bytes[pos])) : (pos += 1) {}
         const name_end: usize = pos;
         if (name_end == name_start) {
             return null;
@@ -206,22 +292,20 @@ pub fn parseCacheControl(header: string): CacheControl? {
         const name: []const u8 = bytes[name_start..name_end];
 
         // Skip optional whitespace before '=' or ','
-        while (pos < bytes.len && isOws(bytes[pos])) : (pos += 1) {}
+        while (pos < bytes.len && ccIsOws(bytes[pos])) : (pos += 1) {}
 
         let has_value: bool = false;
         let val_start: usize = 0;
         let val_end: usize = 0;
-        let was_quoted: bool = false;
 
         if (pos < bytes.len && bytes[pos] == '=') {
             has_value = true;
             pos += 1;
-            while (pos < bytes.len && isOws(bytes[pos])) : (pos += 1) {}
+            while (pos < bytes.len && ccIsOws(bytes[pos])) : (pos += 1) {}
             if (pos >= bytes.len) {
                 return null;
             }
             if (bytes[pos] == '"') {
-                was_quoted = true;
                 pos += 1;
                 val_start = pos;
                 let closed: bool = false;
@@ -245,9 +329,14 @@ pub fn parseCacheControl(header: string): CacheControl? {
                 }
             } else {
                 val_start = pos;
-                while (pos < bytes.len && bytes[pos] != ',' && !isOws(bytes[pos])) : (pos += 1) {
-                    if (bytes[pos] == '"') {
-                        return null;
+                const dpos: usize = simdWebSemFindDelim(bytes, pos);
+                while (pos < dpos && !ccIsOws(bytes[pos])) : (pos += 1) {}
+                if (pos == dpos && pos < bytes.len) {
+                    if (bytes[pos] == '"') return null;
+                    if (bytes[pos] != ',') {
+                        while (pos < bytes.len && bytes[pos] != ',' && !ccIsOws(bytes[pos])) : (pos += 1) {
+                            if (bytes[pos] == '"') return null;
+                        }
                     }
                 }
                 val_end = pos;
@@ -256,7 +345,7 @@ pub fn parseCacheControl(header: string): CacheControl? {
                 }
             }
             // After value, only OWS then ',' or end-of-header is valid
-            while (pos < bytes.len && isOws(bytes[pos])) : (pos += 1) {}
+            while (pos < bytes.len && ccIsOws(bytes[pos])) : (pos += 1) {}
             if (pos < bytes.len && bytes[pos] != ',') {
                 return null;
             }
@@ -265,55 +354,53 @@ pub fn parseCacheControl(header: string): CacheControl? {
         }
 
         const val_slice: []const u8 = if (has_value) bytes[val_start..val_end] else bytes[0..0];
-        * = was_quoted;
 
-        // Match known directives (case-insensitive)
-        if (eqIgnoreCase(name, "no-store")) {
+        // Match known directives via 16-lane SIMD ASCII case-insensitive equality
+        if (simdWebSemAsciiLowerEql(name, "no-store")) {
             cc.no_store = true;
-        } else if (eqIgnoreCase(name, "no-cache")) {
+        } else if (simdWebSemAsciiLowerEql(name, "no-cache")) {
             cc.no_cache = true;
-        } else if (eqIgnoreCase(name, "private")) {
+        } else if (simdWebSemAsciiLowerEql(name, "private")) {
             cc.is_private = true;
-        } else if (eqIgnoreCase(name, "public")) {
+        } else if (simdWebSemAsciiLowerEql(name, "public")) {
             cc.is_public = true;
-        } else if (eqIgnoreCase(name, "must-revalidate")) {
+        } else if (simdWebSemAsciiLowerEql(name, "must-revalidate")) {
             cc.must_revalidate = true;
-        } else if (eqIgnoreCase(name, "proxy-revalidate")) {
+        } else if (simdWebSemAsciiLowerEql(name, "proxy-revalidate")) {
             cc.proxy_revalidate = true;
-        } else if (eqIgnoreCase(name, "immutable")) {
+        } else if (simdWebSemAsciiLowerEql(name, "immutable")) {
             cc.immutable = true;
-        } else if (eqIgnoreCase(name, "only-if-cached")) {
+        } else if (simdWebSemAsciiLowerEql(name, "only-if-cached")) {
             cc.only_if_cached = true;
-        } else if (eqIgnoreCase(name, "max-age")) {
+        } else if (simdWebSemAsciiLowerEql(name, "max-age")) {
             if (!has_value) return null;
-            const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+            const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
             cc.max_age = secs;
-        } else if (eqIgnoreCase(name, "s-maxage")) {
+        } else if (simdWebSemAsciiLowerEql(name, "s-maxage")) {
             if (!has_value) return null;
-            const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+            const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
             cc.s_maxage = secs;
-        } else if (eqIgnoreCase(name, "min-fresh")) {
+        } else if (simdWebSemAsciiLowerEql(name, "min-fresh")) {
             if (!has_value) return null;
-            const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+            const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
             cc.min_fresh = secs;
-        } else if (eqIgnoreCase(name, "max-stale")) {
+        } else if (simdWebSemAsciiLowerEql(name, "max-stale")) {
             cc.has_max_stale = true;
             if (has_value) {
-                const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+                const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
                 cc.max_stale = secs;
             } else {
                 cc.max_stale = null;
             }
-        } else if (eqIgnoreCase(name, "stale-while-revalidate")) {
+        } else if (simdWebSemAsciiLowerEql(name, "stale-while-revalidate")) {
             if (!has_value) return null;
-            const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+            const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
             cc.stale_while_revalidate = secs;
-        } else if (eqIgnoreCase(name, "stale-if-error")) {
+        } else if (simdWebSemAsciiLowerEql(name, "stale-if-error")) {
             if (!has_value) return null;
-            const secs: u64 = parseDeltaSeconds(val_slice) ?? return null;
+            const secs: u64 = ccParseDeltaSeconds(val_slice) ?? return null;
             cc.stale_if_error = secs;
         }
-        // Unknown extension directives are safely skipped per RFC 9111 §5.2.3
 
         if (pos < bytes.len && bytes[pos] == ',') {
             pos += 1;
@@ -349,7 +436,7 @@ pub fn isResponseStorable(resp: StoredResponseMeta, scope: CacheScope): bool {
         }
     }
 
-    if (isHeuristicallyCacheableStatus(resp.status_code)) {
+    if (ccIsHeuristicallyCacheableStatus(resp.status_code)) {
         return true;
     }
     // Other status codes require explicit caching permission / freshness lifetime
@@ -380,12 +467,12 @@ pub fn computeFreshnessLifetime(resp: StoredResponseMeta, scope: CacheScope): u6
 
     const ref_date: i64 = resp.date_sec ?? resp.response_time_sec;
     if (exp := resp.expires_sec) {
-        return diffPosI64ToU64(exp, ref_date);
+        return ccDiffPosI64ToU64(exp, ref_date);
     }
 
-    if (isHeuristicallyCacheableStatus(resp.status_code)) {
+    if (ccIsHeuristicallyCacheableStatus(resp.status_code)) {
         if (lm := resp.last_modified_sec) {
-            return diffPosI64ToU64(ref_date, lm) / 10;
+            return ccDiffPosI64ToU64(ref_date, lm) / 10;
         }
     }
 
@@ -396,13 +483,13 @@ pub fn computeFreshnessLifetime(resp: StoredResponseMeta, scope: CacheScope): u6
 pub fn computeCurrentAge(resp: StoredResponseMeta, now_sec: i64): u64 {
     let apparent_age: u64 = 0;
     if (date_v := resp.date_sec) {
-        apparent_age = diffPosI64ToU64(resp.response_time_sec, date_v);
+        apparent_age = ccDiffPosI64ToU64(resp.response_time_sec, date_v);
     }
-    const response_delay: u64 = diffPosI64ToU64(resp.response_time_sec, resp.request_time_sec);
-    const corrected_age_value: u64 = saturatingAddU64(resp.age_header_sec, response_delay);
+    const response_delay: u64 = ccDiffPosI64ToU64(resp.response_time_sec, resp.request_time_sec);
+    const corrected_age_value: u64 = ccSaturatingAddU64(resp.age_header_sec, response_delay);
     const corrected_initial_age: u64 = if (apparent_age > corrected_age_value) apparent_age else corrected_age_value;
-    const resident_time: u64 = diffPosI64ToU64(now_sec, resp.response_time_sec);
-    return saturatingAddU64(corrected_initial_age, resident_time);
+    const resident_time: u64 = ccDiffPosI64ToU64(now_sec, resp.response_time_sec);
+    return ccSaturatingAddU64(corrected_initial_age, resident_time);
 }
 
 // ============================================================================

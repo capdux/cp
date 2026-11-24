@@ -317,7 +317,7 @@ pub fn demoCorsGuard() {
 
 ### 零分配 RFC 9111 HTTP 缓存新鲜度与 `Cache-Control` 裁决引擎 (`cachePolicy.cp`)
 
-面向 CDN、API 网关与 HTTP 客户端缓存的 100% 纯 CP 零动态堆分配 RFC 9111 + RFC 5861 缓存策略与新鲜度裁决引擎：
+对标 `kornelski/rusty-http-cache-semantics` (BSD-2-Clause) 与 RFC 9111/9110，面向 CDN、API 网关与 HTTP 客户端缓存的 100% 纯 CP 零动态堆分配缓存策略引擎（集成 16-lane `@Vector(16, u8)` SIMD 原语 `simdWebSemAsciiLowerEql` / `simdWebSemFindDelim` 及对应标量参考）：
 
 - **常量、枚举与数据模型**：
   - `CACHE_MAX_DELTA_SECONDS = 2147483648`
@@ -359,7 +359,7 @@ pub fn demoCachePolicy() {
 
 ### 零分配 RFC 9110 HTTP 内容协商与 `Vary` 响应头引擎 (`contentNeg.cp`)
 
-面向现代 HTTP 网关、API 服务端与 CDN 边缘节点的 100% 纯 CP 零动态堆分配 **RFC 9110 §12 Content Negotiation** 引擎：
+对标 `kornelski/rusty-http-cache-semantics` (BSD-2-Clause) 与 RFC 9110 §12 的 100% 纯 CP 零动态堆分配 **Content Negotiation & Vary** 引擎（热路径直连 16-lane SIMD 分隔符扫描与 ASCII 大小写不敏感比对）：
 
 - **常量与枚举**：
   - `NEG_Q_MAX = 1000`（千分比整数权重 0..1000，零浮点漂移）、`NEG_MAX_ITEMS = 32`、`NEG_VARY_MAX_HEADERS = 16`
@@ -405,7 +405,7 @@ pub fn demoContentNeg() {
 
 ### 零分配 IETF `RateLimit`/`RateLimit-Policy` 与 `Retry-After` 限流响应头编解码与退避规划器 (`rateHeader.cp`)
 
-面向 HTTP API 网关、代理与高可靠 HTTP 客户端的 100% 纯 CP 零动态堆分配限流响应头编解码与重试退避规划引擎：
+对标 `kornelski/rusty-http-cache-semantics` (BSD-2-Clause) 与 IETF RateLimit / RFC 9110 §10.2.3 的 100% 纯 CP 零动态堆分配限流响应头编解码与重试退避规划引擎（16-lane SIMD 加速参数解析与饱和时间差防溢出）：
 
 - **常量与数据模型**：
   - `RATE_HDR_MAX_NAME_LEN = 48`、`RATE_HDR_MAX_PK_LEN = 64`

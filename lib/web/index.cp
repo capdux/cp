@@ -351,6 +351,10 @@ export {
 // --- Zero-Alloc RFC 9111 HTTP Cache Freshness, Cache-Control Parser & SWR/SIE Evaluator ---
 export {
     CACHE_MAX_DELTA_SECONDS,
+    scalarWebSemAsciiLowerEql,
+    simdWebSemAsciiLowerEql,
+    scalarWebSemFindDelim,
+    simdWebSemFindDelim,
     CacheScope,
     CacheLookupVerdict,
     CacheControl,
