@@ -1,0 +1,10 @@
+{
+  "name": "cp-native-pkg-demo",
+  "ver": "1.0.0",
+  "main": "src/main.cp",
+  "license": "MIT",
+  "dep": {
+    "@cap/lz4": "file:../../packages/@cap/lz4",
+    "@cap/yyjson": "file:../../packages/@cap/yyjson"
+  }
+}
