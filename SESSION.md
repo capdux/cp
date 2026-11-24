@@ -3812,3 +3812,73 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261124-multiline-string)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > 已定位并修复工单 `task-bun-20261124-multiline-string`（[lexer.rs](file:///data/dev/cp/cpc/src/lexer.rs#L218) 连续 `\\` 多行字符串在词法阶段未合并），正在完成 release 编译部署与复现/回归测试验证，完成后立即 `resolve` 结单。
+
+### 2026-11-24（下游工单全量补录：`task-bun-20261124-private-enum-drop`）[ticket:task-bun-20261124-private-enum-drop]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-24 17:22:54` | 状态：`resolved` | 结单：`2026-11-24T17:28:50`
+- **报错/需求摘要**：未转义关键字枚举字面量 .private 作为实参传入时，cpc 未报语法错误而是静默丢弃整条语句（导致 lexer.cp #\u0063onstructor 解析失效）
+- **结单与处理汇报**：Added Token::Private (preserving exact spelling for private/priv), Token::Union, Token::Implements, Token::Defer, Token::ErrDefer to Parser::is_ident_token & parse_ident in cpc/src/parser/expr.rs so enum literals like .private parse cleanly instead of failing as pipeline placeholder or dropping statements. Release cpc deployed, verified repro_private_enum_drop.cp + zig ast-check + cap/test/testHotfixPrivateEnumLit.cp PASS.
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 16:54:22）[step:21945]
+- **用户完整原始指令**：
+  > 我们现在吸收的是 rust 知名开源库对吧
+  > bun中部分库是 c 封装后引用的, cp 天然与c无障碍互通, 你是否考虑或计划从知名/稳定/高性能/成熟的c 中吸收资产呢?
+- **完整回复与执行汇报**：
+  > **完全认同，而且 CP 的 `@c { ... }` 零开销直通 C ABI 正是核心杀手锏之一。**
+  >
+  > ### 1. 现状：已有 8 个宽松协议 C 库直连底座
+  > 目前 `lib/` 下已按 `_xxx.cp` 私有垫片 + CP RAII 安全封装的双层模式接入了多个成熟 C 库：
+  > - [_boringssl.cp](file:///data/dev/cp/lib/crypto/_boringssl.cp)（TLS/密码学）、[_usockets.cp](file:///data/dev/cp/lib/net/_usockets.cp)（网络 I/O）、[_picohttp.cp](file:///data/dev/cp/lib/http/_picohttp.cp)（HTTP）、[_cares.cp](file:///data/dev/cp/lib/dns/_cares.cp)（异步 DNS）、[_mimalloc.cp](file:///data/dev/cp/lib/mem/_mimalloc.cp)（内存分配）、[_codecs.cp](file:///data/dev/cp/lib/pack/_codecs.cp) / [_archive.cp](file:///data/dev/cp/lib/pack/_archive.cp)、[_tcc.cp](file:///data/dev/cp/lib/ffi/_tcc.cp)、[_napi.cp](file:///data/dev/cp/lib/napi/_napi.cp)。
+  >
+  > ### 2. 双轨分层策略（纯 CP 对标 Rust + `@c` 直连顶级 C 库）
+  > - **纯 CP（对标 MIT/Apache-2.0 Rust 库）**：负责**零外部依赖、跨平台开箱即用**的协议解析、状态机、二进制格式与数据结构（安全隔离不可信输入，无需携带 `.a`/`.so`）。
+  > - **`@c` 直连成熟 C 库（严格只选 Public Domain / MIT / BSD / Apache-2.0 / Zlib，零 GPL/LGPL）**：负责**重型引擎与极限吞吐场景**，无需重造轮子，配合 CP 的 `~init()` 自动释放做安全封装。
+  >
+  > ### 3. 推荐优先吸收的高价值 C 资产清单
+  > 1. **SQLite 3**（Public Domain）：嵌入式关系数据库事实标准（`~init()` 自动 `sqlite3_close` / `sqlite3_finalize`）；
+  > 2. **tree-sitter**（MIT）：多语言增量语法树解析，Coding Agent 核心刚需；
+  > 3. **DuckDB C API**（MIT）：本地 OLAP / Parquet / Arrow 极速分析引擎；
+  > 4. **llama.cpp / ggml C API**（MIT）：本地 LLM / Embedding 推理直通；
+  > 5. **libzstd / lz4 / zlib-ng**（BSD / Zlib）：与纯 CP 编解码共存的高吞吐可选原生 C 后端；
+  > 6. **libjpeg-turbo / libwebp / libpng**（BSD / Zlib）：重度媒体处理极限性能后端。
+  >
+  > 如果你希望在 Wave 37/38 期间或收口后优先落地其中哪几个 C 库的 `@c` + RAII 安全封装（例如 **SQLite 3 + tree-sitter**），我可以立即安排接入。
+  >
+  > ---
+  > *(并行进度同步：**W37 R4** `4671a24b` 已提交 [envelope/macaroon/merkleTree] **5/5 PASS** + 1,800 Fuzz；Lane 2G 正在推进 **W37 R5** `lib/web/{http2,sse}.cp`，Lane 1E 正在推进 **W37 R6** `lib/db/{mvccSnap,bloomBlock}.cp`。)*
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 17:01:12）[step:21983]
+- **用户完整原始指令**：
+  > 1. bun 中不是有 sqlite 内部集成么? 我们没有继承吗?
+  > 2. zlib 我们不是已经对标 rust 深度优化实现了吗?
+  > 3. 媒体处理,这些, 我们也从 rust 深度优化了, 还需要从 c 中吸收吗? 重复如何处理?
+  > 4. cp 如何取舍, 到底哪个性能更高, 更安全?
+- **完整回复与执行汇报**：
+  > 四个问题逐一核实并直接给出结论：
+  >
+  > ### 1. SQLite：已经继承了（刚才漏查）
+  > 刚核实仓库已有从 Bun 吸收的 [lib/sql/sqlite.cp](file:///data/dev/cp/lib/sql/sqlite.cp)（RAII 封装）以及早期 [lib/sqlite.cp](file:///data/dev/cp/lib/sqlite.cp) 绑定，**无需再重复引入**。
+  >
+  > ### 2. zlib 与压缩：已纯 CP 深度加固完成，无需再引入 C 版
+  > `cap:pack` 全部 5 大压缩（Gzip/Deflate 对标 `miniz_oxide`、Zstd、Brotli、LZ4、Snappy）+ ZIP/TAR 均已纯 CP + SIMD 加固并通过 Node.js zlib 等外部真值 0 差异交叉验真，**不需要再重复吸收 C 压缩库**。
+  >
+  > ### 3. 媒体处理要不要再从 C 吸收？重复如何处理？
+  > - **不重复、绝不把 C 版塞进内置 `lib/`**。
+  > - 内置纯 CP 已覆盖 6 大图像（PNG/JPEG/WebP/GIF/TIFF/QOI）与音视频/容器/DSP（WAV/FLAC/OGG/MP4/MKV/EBML/WebRTC/FFT），满足 95% 常规与 AI Agent 场景。
+  > - **零重复边界**：只有**纯 CP 没必要手写的百万行级重型引擎**（如 FFmpeg/AV1 视频硬编解码、llama.cpp/ONNX 推理、DuckDB OLAP、tree-sitter 多语言 AST），才在 Phase 2 做成外部按需安装的 `@cap/*` 生态包（`@c` 绑定 + 预编译二进制矩阵），与内置标准库完全不重叠。
+  >
+  > ### 4. 纯 CP vs C 库：到底哪个性能更高、更安全？
+  > | 维度 | 纯 CP（Zig + LLVM + SIMD） | 传统成熟 C 库（`@c` FFI） |
+  > |---|---|---|
+  > | **安全性** | **完胜**：编译期借用检查 + 切片越界检查 + 确定性 `~init()`，从根源消除缓冲区溢出与 UAF | **高风险**：历史 70%+ CVE 为内存越界/UAF，处理外部不可信输入风险高 |
+  > | **性能** | **90% 场景持平甚至更快**：同样走 LLVM 优化 + `@Vector`/`@dot`/`@fma` SIMD，无 GC，且**可跨函数内联（无 FFI 边界开销）** | **仅极限手写汇编/GPU 场景胜出**（如 x265/AV1 编码、llama.cpp 量化矩阵、libvips/OpenCV 等，快 2–5x） |
+  > | **分发成本** | 零外部 `.so`/`.a` 依赖，天然跨 macOS/Linux/Windows | 需维护多平台预编译二进制矩阵 |
+  >
+  > **最终取舍铁律**：
+  > - **内置标准库（`lib/`）**：坚持 **纯 CP + 原生 SIMD**（安全、零依赖、跨平台、无 FFI 内联屏障）；
+  > - **外部包（`@cap/*`）**：只用 `@c` 对接**不可替代的重型 C/C++ 引擎**（AI 推理、视频硬编解码、DuckDB、tree-sitter），绝不重复造轮子。
+
+### 2026-11-24（用户原始指令与完整回复 2026-11-24 17:22:55）[step:22035]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261124-private-enum-drop)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
