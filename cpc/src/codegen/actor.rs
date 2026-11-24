@@ -56,12 +56,14 @@ impl Codegen {
     }
 
     pub fn get_func_receiver_mode(func: &Function) -> ReceiverMode {
-        if func.is_static
-            || func
-                .meta
-                .iter()
-                .any(|m| m.name.sym == "extern" || m.name.sym == "c")
-        {
+        let is_extern_fn = func.meta.iter().any(|m| m.name.sym == "extern");
+        let is_c_fn = func.meta.iter().any(|m| m.name.sym == "c");
+        let has_explicit_c_receiver = func.params.first().map_or(false, |p| {
+            p.ident.sym == "this"
+                || p.ident.sym == "self"
+                || (p.ident.sym == "_" && matches!(p.ty, Type::Auto | Type::Any))
+        });
+        if func.is_static || is_extern_fn || (is_c_fn && !has_explicit_c_receiver) {
             return ReceiverMode::Static;
         }
         if let Some(first) = func.params.first() {
@@ -468,10 +470,13 @@ impl Codegen {
             if self.value_classes.contains(c) || self.enum_defs.contains_key(c) {
                 Self::get_func_receiver_mode(func)
             } else if func.is_static
-                || func
-                    .meta
-                    .iter()
-                    .any(|m| m.name.sym == "extern" || m.name.sym == "c")
+                || func.meta.iter().any(|m| m.name.sym == "extern")
+                || (func.meta.iter().any(|m| m.name.sym == "c")
+                    && !func.params.first().map_or(false, |p| {
+                        p.ident.sym == "this"
+                            || p.ident.sym == "self"
+                            || (p.ident.sym == "_" && matches!(p.ty, Type::Auto | Type::Any))
+                    }))
             {
                 ReceiverMode::Static
             } else if func.ident.sym == "init"

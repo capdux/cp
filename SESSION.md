@@ -4888,3 +4888,14 @@
   > 收到新的编译器待处理工单(1条: task-bun-20261125-struct-extern-fn-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > 正在编译部署 `cpc` 并验证复现用例与回归测试，完成后立即汇报结果。
+
+### 2026-11-25（下游工单全量补录：`task-bun-20261125-c-method-self`）[ticket:task-bun-20261125-c-method-self]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-25 04:52:37` | 状态：`resolved` | 结单：`2026-11-25T04:56:13`
+- **报错/需求摘要**：struct 内无其他参数的 @c pub fn foo(*_) 被降低为 pub fn foo(_: *anyopaque) callconv(.c)，体内的 _ 却被降为 self，导致 ast-check 报 use of undeclared identifier 'self'
+- **结单与处理汇报**：已修复并部署 release 版 cpc：区分 struct/enum 内的 extern fn（始终静态）与带显式接收者（*_ / this / self）的 @c 实例方法（保留 ReceiverMode 并正确生成 pub fn getX(self: *Foo) callconv(.c) i32）。实测 repro_c_method_self.cp（zig ast-check PASS）、cap/test/testHotfixStructExternFnSelf.cp（PASS，覆盖 extern fn、@c 静态回调与 @c pub fn(*_) 实例方法）以及 /data/dev/bun/src/napi/napi.cp（bad_self_extern=0，zig ast-check PASS）。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 04:52:38）[step:23136]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261125-c-method-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 正在构建发布版 `cpc` 并验证 `repro_c_method_self.cp`、`repro_struct_extern_fn_self.cp`、回归测试与 `napi.cp`，完成后立即汇报并结单。

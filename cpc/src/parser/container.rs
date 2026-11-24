@@ -483,11 +483,17 @@ impl<'a> Parser<'a> {
                 method.is_static = true;
             }
             method.meta.extend(meta_list);
-            if method
-                .meta
-                .iter()
-                .any(|m| m.name.sym == "extern" || m.name.sym == "c")
-            {
+            let is_extern_fn = method.meta.iter().any(|m| m.name.sym == "extern");
+            let is_c_fn = method.meta.iter().any(|m| m.name.sym == "c");
+            let has_explicit_receiver = method.params.first().map_or(false, |p| {
+                p.ident.sym == "this"
+                    || p.ident.sym == "self"
+                    || (p.ident.sym == "_"
+                        && (matches!(p.ty, Type::Auto | Type::Any)
+                            || (!method.body.body.is_empty()
+                                && matches!(&p.ty, Type::Ref(id) if id.sym == ident.sym || id.sym == "This" || id.sym == "Self" || id.sym == "@This()"))))
+            });
+            if is_extern_fn || (is_c_fn && !has_explicit_receiver) {
                 method.is_static = true;
             }
             method.is_pub = member_is_pub;
@@ -884,11 +890,14 @@ impl<'a> Parser<'a> {
             if is_method {
                 let mut method = self.parse_function()?;
                 method.meta.extend(meta_list);
-                if method
-                    .meta
-                    .iter()
-                    .any(|m| m.name.sym == "extern" || m.name.sym == "c")
-                {
+                let is_extern_fn = method.meta.iter().any(|m| m.name.sym == "extern");
+                let is_c_fn = method.meta.iter().any(|m| m.name.sym == "c");
+                let has_explicit_receiver = method.params.first().map_or(false, |p| {
+                    p.ident.sym == "this"
+                        || p.ident.sym == "self"
+                        || (p.ident.sym == "_" && matches!(p.ty, Type::Auto | Type::Any))
+                });
+                if is_extern_fn || (is_c_fn && !has_explicit_receiver) {
                     method.is_static = true;
                 }
                 if method_is_pub {

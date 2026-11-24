@@ -13,6 +13,14 @@ pub struct Foo {
         return a + b;
     }
 
+    @c pub fn getLenMut(*_): usize {
+        return _.len;
+    }
+
+    @c pub fn noopMut(*_) {
+        return;
+    }
+
     pub fn toJS(): usize {
         return Foo__toJS(&_, 1);
     }
@@ -40,5 +48,9 @@ fn main() {
     if (cb_direct != 30) {
         @panic("expected 30 from direct Foo.cCallback");
     }
+    if (f.getLenMut() != 4) {
+        @panic("expected 4 from @c receiver method");
+    }
+    f.noopMut();
     @print("PASS testHotfixStructExternFnSelf");
 }
