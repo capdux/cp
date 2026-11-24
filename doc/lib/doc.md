@@ -179,7 +179,8 @@ pub fn demoCsvTable() {
 
 - **关系表与超链接解析/生成**：`DocxRel`、`parseDocxRelsXml`、`lookupDocxRelTarget`、`buildDocxRelsXml`；
 - **富文本/表格/批注解析**：`parseDocxDocumentXml`（保留段落与表格交错顺序，解析 `Heading1..6`、列表 `<w:numPr>`、对齐 `<w:jc>`、加粗/斜体/下划线/删除线/字号、`<w:tab/>`/`<w:br/>`、XML 实体解码、`<w:hyperlink>` URL 关联及 `<w:tbl>` 含 `gridSpan` 跨列合并）与 `parseDocxCommentsXml`（审阅批注 `id`/`author`/`date`/正文）；
-- **XML 生成与 Markdown 双向互转**：`buildDocxDocumentXml`、`docxXmlToMarkdown`、`markdownToDocxXml` 及中英文字数统计 `computeDocxWordStats`（`paragraph_count`/`table_count`/`char_count`/`english_word_count`/`cjk_char_count`）。
+- **XML 生成与 Markdown 双向互转**：`buildDocxDocumentXml`、`docxXmlToMarkdown`、`markdownToDocxXml` 及中英文字数统计 `computeDocxWordStats`（`paragraph_count`/`table_count`/`char_count`/`english_word_count`/`cjk_char_count`）；
+- **OOXML 安全与 16-lane SIMD 加固（对标 `roxmltree` / ECMA-376）**：`OOXML_MAX_ZIP_ENTRIES`、`OOXML_MAX_PART_SIZE`、`OOXML_MAX_TOTAL_UNCOMPRESSED`、`OOXML_MAX_XML_DEPTH`、`isSafeOoxmlPartPath`（拦截 `../`/绝对路径/盘符/NUL）、`validateDocxStrict`（零堆校验 ZIP 容器与 XML 良构/实体/代理对/控制字节/未闭合标签），以及 16-lane `@Vector(16, u8)` 热路径原语 `simdOoxmlFindTagOrAmp`/`simdOoxmlBytesEqual`（含标量基线）。
 
 ### 生产级零堆 OOXML PPTX 幻灯片/表格/演讲者备注解析生成与大纲导出 (`pptx.cp`)
 
@@ -187,7 +188,8 @@ pub fn demoCsvTable() {
 
 - **演示文稿尺寸与 EMU/磅换算**：`EMU_PER_PT` (`12700`)、`PPTX_SLIDE_16_9_CX/CY`、`emuToPt`/`ptToEmu`、`parsePptxPresentationXml`、`buildPptxPresentationXml`；
 - **富文本形状/原生表格/备注解析与生成**：`parsePptxSlideXml`（解析占位符 `title`/`ctrTitle`/`subTitle`/`body`/`ftr`/`sldNum`、EMU 几何 `<a:off>`/`<a:ext>`、多级项目符号 `lvl`、粗斜体/字号/RGB 颜色与原生 `<a:tbl>` 表格）、`parsePptxNotesXml`、`buildPptxSlideXml`、`buildPptxNotesXml`；
-- **大纲 Markdown 导出与多语言统计**：`pptxSlideXmlToMarkdown`（`## Slide N: ...` + 缩进项目符号 + GFM 表格 + `> Notes: ...`）与 `computePptxSlideStats`（中英文词/字数 + 备注字数）。
+- **大纲 Markdown 导出与多语言统计**：`pptxSlideXmlToMarkdown`（`## Slide N: ...` + 缩进项目符号 + GFM 表格 + `> Notes: ...`）与 `computePptxSlideStats`（中英文词/字数 + 备注字数）；
+- **OOXML 安全与 16-lane SIMD 加固（对标 `roxmltree` / ECMA-376）**：`validatePptxStrict`（零堆校验 `.pptx` ZIP 包路径穿越、资源上限、`ppt/presentation.xml` 与 `ppt/slides/slide*.xml` 核心部件完整性及严格 XML 实体/闭合标签校验），共享 16-lane SIMD 文本扫描与标签匹配。
 
 ---
 

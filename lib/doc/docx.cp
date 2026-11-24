@@ -1,6 +1,98 @@
+// Reference-hardened against RazrFalcon/roxmltree & ECMA-376 OOXML (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc OOXML DOCX WordprocessingML & CoreProps Parser) | Created: 2026-11-22
 
 import { Simd } from "../simd/index.cp";
+
+type OoxmlVec16u8 = @Vector(16, u8);
+
+/// OOXML ZIP 安全上限：单包最大条目数（防条目耗尽）
+pub const OOXML_MAX_ZIP_ENTRIES: usize = 4096;
+/// OOXML ZIP 安全上限：单个 XML 部件最大解压字节数（64 MiB）
+pub const OOXML_MAX_PART_SIZE: u64 = 67108864;
+/// OOXML ZIP 安全上限：全包累计最大解压字节数（256 MiB）
+pub const OOXML_MAX_TOTAL_UNCOMPRESSED: u64 = 268435456;
+/// OOXML XML 最大元素嵌套深度
+pub const OOXML_MAX_XML_DEPTH: usize = 128;
+
+/// 标量基线：扫描首个 `<`、`>` 或 `&` 字节位置
+pub fn scalarOoxmlFindTagOrAmp(data: []const u8): usize? {
+    let i: usize = 0;
+    while (i < data.len) : (i += 1) {
+        const c = data[i];
+        if (c == '<' || c == '>' || c == '&') return i;
+    }
+    return null;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD 扫描首个 `<`、`>` 或 `&` 字节位置（与标量 0 差异）
+pub fn simdOoxmlFindTagOrAmp(data: []const u8): usize? {
+    const v_lt: OoxmlVec16u8 = @splat('<');
+    const v_gt: OoxmlVec16u8 = @splat('>');
+    const v_amp: OoxmlVec16u8 = @splat('&');
+    let i: usize = 0;
+    while (i + 16 <= data.len) {
+        const chunk: OoxmlVec16u8 = data[i .. i + 16][0..16].*;
+        const hit = (chunk == v_lt) | (chunk == v_gt) | (chunk == v_amp);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < data.len) : (i += 1) {
+        const c = data[i];
+        if (c == '<' || c == '>' || c == '&') return i;
+    }
+    return null;
+}
+
+/// 标量基线：XML 标签名与 OOXML 部件路径字节相等比较
+pub fn scalarOoxmlBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD XML 标签名与 OOXML 部件路径相等比较（与标量 0 差异）
+pub fn simdOoxmlBytesEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: OoxmlVec16u8 = a[i .. i + 16][0..16].*;
+        const vb: OoxmlVec16u8 = b[i .. i + 16][0..16].*;
+        const diff = va ^ vb;
+        if (@reduce(.Or, diff) != 0) return false;
+        i += 16;
+    }
+    while (i < a.len) : (i += 1) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+/// 校验 OOXML ZIP 内部部件路径安全性（拒绝 `../` 路径穿越、绝对路径、盘符、反斜杠、NUL 与控制字节）
+pub fn isSafeOoxmlPartPath(path: []const u8): bool {
+    if (path.len == 0 || path.len > 4096) return false;
+    if (path[0] == '/' || path[0] == '\\') return false;
+    if (path.len >= 2 && path[1] == ':') return false;
+    let seg_start: usize = 0;
+    let i: usize = 0;
+    while (i < path.len) : (i += 1) {
+        const c = path[i];
+        if (c == 0 || c < 0x20 || c == '\\') return false;
+        if (c == '/') {
+            const seg = path[seg_start..i];
+            if (seg.len == 2 && seg[0] == '.' && seg[1] == '.') return false;
+            seg_start = i + 1;
+        }
+    }
+    const last_seg = path[seg_start..path.len];
+    if (last_seg.len == 2 && last_seg[0] == '.' && last_seg[1] == '.') return false;
+    return true;
+}
 
 /// OOXML WordprocessingML 主文档 Content-Type (`[Content_Types].xml`)
 pub const DOCX_MAIN_CONTENT_TYPE: []const u8 = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
@@ -49,13 +141,7 @@ fn toLowerAscii(c: u8): u8 {
 }
 
 fn strEql(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
+    return simdOoxmlBytesEqual(a, b);
 }
 
 fn startsWith(haystack: []const u8, prefix: []const u8): bool {
@@ -634,7 +720,7 @@ fn parseNumericEntity(body: []const u8): u32? {
             i += 1;
         }
     }
-    if (cp == 0 || (cp >= 0xD800 && cp <= 0xDFFF) || cp > 0x10FFFF) {
+    if (cp == 0 || (cp < 0x20 && cp != 0x09 && cp != 0x0A && cp != 0x0D) || (cp >= 0xD800 && cp <= 0xDFFF) || cp == 0xFFFE || cp == 0xFFFF || cp > 0x10FFFF) {
         return null;
     }
     return cp;
@@ -643,6 +729,23 @@ fn parseNumericEntity(body: []const u8): u32? {
 fn emitUnescapedText(src: []const u8, out: []u8, out_len: *usize): bool {
     let i: usize = 0;
     while (i < src.len) {
+        const hit_rel = simdOoxmlFindTagOrAmp(src[i..src.len]);
+        let stop: usize = src.len;
+        if (rel := hit_rel) {
+            stop = i + rel;
+        }
+        if (stop > i) {
+            const run_len = stop - i;
+            const cur = out_len.*;
+            if (cur + run_len > out.len) return false;
+            let k: usize = 0;
+            while (k < run_len) : (k += 1) {
+                out[cur + k] = src[i + k];
+            }
+            out_len.* = cur + run_len;
+            i = stop;
+            if (i >= src.len) break;
+        }
         if (src[i] == '&') {
             let semi = i + 1;
             const max_semi = if (i + 16 < src.len) i + 16 else src.len;
@@ -876,6 +979,12 @@ pub err DocxError {
     InvalidComments,
     InvalidMarkdown,
     InvalidParameter,
+    UnsafePartPath,
+    ResourceLimitExceeded,
+    MissingCorePart,
+    InvalidArchive,
+    InvalidEntity,
+    UnclosedTag,
 }
 
 fn appendDocxBytes(out: []u8, pos: usize, src: []const u8): usize ! DocxError {
@@ -1906,4 +2015,231 @@ pub fn computeDocxWordStats(doc_xml: []const u8, text_scratch: []u8): DocxWordSt
         }
     }
     return stats;
+}
+
+// ============================================================================
+// 7. Hardened OOXML Security & Structural Validators (roxmltree / ECMA-376)
+// ============================================================================
+
+fn docxReadU16Le(data: []const u8, off: usize): u16 {
+    return (data[off] as u16) | ((data[off + 1] as u16) << 8);
+}
+
+fn docxReadU32Le(data: []const u8, off: usize): u32 {
+    return (data[off] as u32)
+        | ((data[off + 1] as u32) << 8)
+        | ((data[off + 2] as u32) << 16)
+        | ((data[off + 3] as u32) << 24);
+}
+
+fn docxValidateEntityRun(seg: []const u8): void ! DocxError {
+    let i: usize = 0;
+    while (i < seg.len) {
+        const hit_rel = simdOoxmlFindTagOrAmp(seg[i..seg.len]) ?? break;
+        i += hit_rel;
+        if (seg[i] == '&') {
+            let semi = i + 1;
+            const max_semi = if (i + 16 < seg.len) i + 16 else seg.len;
+            while (semi < max_semi && seg[semi] != ';' && seg[semi] != '&' && seg[semi] != '<') : (semi += 1) {}
+            if (semi >= max_semi || seg[semi] != ';') return DocxError.InvalidEntity;
+            const ent = seg[(i + 1)..semi];
+            if (simdOoxmlBytesEqual(ent, "amp")
+                || simdOoxmlBytesEqual(ent, "lt")
+                || simdOoxmlBytesEqual(ent, "gt")
+                || simdOoxmlBytesEqual(ent, "quot")
+                || simdOoxmlBytesEqual(ent, "apos"))
+            {
+                i = semi + 1;
+                continue;
+            }
+            if (ent.len >= 2 && ent[0] == '#') {
+                if (parseNumericEntity(ent[1..ent.len]) == null) return DocxError.InvalidEntity;
+                i = semi + 1;
+                continue;
+            }
+            return DocxError.InvalidEntity;
+        }
+        i += 1;
+    }
+}
+
+fn docxValidateXmlStrict(xml: []const u8): void ! DocxError {
+    if (xml.len == 0) return DocxError.InvalidXml;
+    if ((xml.len as u64) > OOXML_MAX_PART_SIZE) return DocxError.ResourceLimitExceeded;
+
+    let j: usize = 0;
+    while (j < xml.len) : (j += 1) {
+        const b = xml[j];
+        if (b < 0x20 && b != '\t' && b != '\n' && b != '\r') {
+            return DocxError.InvalidXml;
+        }
+    }
+
+    let pos = skipProlog(xml);
+    if (pos >= xml.len || xml[pos] != '<') return DocxError.InvalidXml;
+
+    let stack: [128][]const u8 = [""; 128];
+    let depth: usize = 0;
+    let saw_root = false;
+
+    while (pos < xml.len) {
+        if (xml[pos] != '<') {
+            const text_start = pos;
+            while (pos < xml.len) {
+                if (rel := simdOoxmlFindTagOrAmp(xml[pos..xml.len])) {
+                    pos += rel;
+                    if (xml[pos] == '<') break;
+                    pos += 1;
+                } else {
+                    pos = xml.len;
+                    break;
+                }
+            }
+            const seg = xml[text_start..pos];
+            if (depth == 0) {
+                let k: usize = 0;
+                while (k < seg.len) : (k += 1) {
+                    if (!isXmlSpace(seg[k])) return DocxError.InvalidXml;
+                }
+            } else {
+                docxValidateEntityRun(seg)?;
+            }
+            continue;
+        }
+        if (startsWith(xml[pos..xml.len], "<!--")) {
+            const next = skipComment(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 7 && xml[xml.len - 3] == '-' && xml[xml.len - 2] == '-' && xml[xml.len - 1] == '>')) {
+                return DocxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (startsWith(xml[pos..xml.len], "<![CDATA[")) {
+            const next = skipCdata(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 12 && xml[xml.len - 3] == ']' && xml[xml.len - 2] == ']' && xml[xml.len - 1] == '>')) {
+                return DocxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (startsWith(xml[pos..xml.len], "<?")) {
+            const next = skipPi(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 4 && xml[xml.len - 2] == '?' && xml[xml.len - 1] == '>')) {
+                return DocxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (startsWith(xml[pos..xml.len], "<!")) {
+            const next = skipDecl(xml, pos);
+            if (next >= xml.len && xml[xml.len - 1] != '>') return DocxError.UnclosedTag;
+            pos = next;
+            continue;
+        }
+        const tag_end = findTagEnd(xml, pos) ?? return DocxError.UnclosedTag;
+        if (pos + 1 < tag_end && xml[pos + 1] == '/') {
+            const cname = parseTagName(xml, pos + 2, tag_end);
+            if (cname.len == 0 || depth == 0) return DocxError.UnclosedTag;
+            if (!simdOoxmlBytesEqual(stack[depth - 1], cname)) return DocxError.UnclosedTag;
+            depth -= 1;
+            pos = tag_end + 1;
+            continue;
+        }
+        const oname = parseTagName(xml, pos + 1, tag_end);
+        if (oname.len == 0) return DocxError.InvalidXml;
+        if (depth == 0) {
+            if (saw_root) return DocxError.InvalidXml;
+            saw_root = true;
+        }
+        if (!isSelfClosingTag(xml, pos, tag_end)) {
+            if (depth >= OOXML_MAX_XML_DEPTH) return DocxError.ResourceLimitExceeded;
+            stack[depth] = oname;
+            depth += 1;
+        }
+        pos = tag_end + 1;
+    }
+
+    if (!saw_root || depth != 0) return DocxError.UnclosedTag;
+}
+
+/// 零堆严格校验 DOCX（同时支持完整 `.docx` ZIP 包与原始 `word/document.xml`）
+/// 拦截 ZIP 路径穿越、资源耗尽、缺失 `word/document.xml`/`[Content_Types].xml`、非法 XML 实体与未闭合标签
+pub fn validateDocxStrict(data: []const u8): void ! DocxError {
+    if (data.len < 4) return DocxError.InvalidDocument;
+
+    if (data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04) {
+        let pos: usize = 0;
+        let entry_count: usize = 0;
+        let total_uncomp: u64 = 0;
+        let has_content_types = false;
+        let has_word_doc = false;
+
+        while (pos + 4 <= data.len && data[pos] == 0x50 && data[pos + 1] == 0x4B && data[pos + 2] == 0x03 && data[pos + 3] == 0x04) {
+            if (pos + 30 > data.len) return DocxError.InvalidArchive;
+            entry_count += 1;
+            if (entry_count > OOXML_MAX_ZIP_ENTRIES) return DocxError.ResourceLimitExceeded;
+
+            const method = docxReadU16Le(data, pos + 8);
+            const comp_size = docxReadU32Le(data, pos + 18) as u64;
+            const uncomp_size = docxReadU32Le(data, pos + 22) as u64;
+            const name_len = docxReadU16Le(data, pos + 26) as usize;
+            const extra_len = docxReadU16Le(data, pos + 28) as usize;
+
+            if (uncomp_size > OOXML_MAX_PART_SIZE) return DocxError.ResourceLimitExceeded;
+            if (total_uncomp > OOXML_MAX_TOTAL_UNCOMPRESSED - uncomp_size) return DocxError.ResourceLimitExceeded;
+            total_uncomp += uncomp_size;
+
+            const name_start = pos + 30;
+            if (name_start + name_len > data.len) return DocxError.InvalidArchive;
+            const name = data[name_start..(name_start + name_len)];
+            if (!isSafeOoxmlPartPath(name)) return DocxError.UnsafePartPath;
+
+            const payload_start = name_start + name_len + extra_len;
+            if (payload_start > data.len) return DocxError.InvalidArchive;
+            if (comp_size > (data.len - payload_start) as u64) return DocxError.InvalidArchive;
+            const payload_end = payload_start + (comp_size as usize);
+
+            if (simdOoxmlBytesEqual(name, "[Content_Types].xml")) {
+                has_content_types = true;
+                if (method == 0) {
+                    docxValidateXmlStrict(data[payload_start..payload_end])?;
+                }
+            } else if (simdOoxmlBytesEqual(name, "word/document.xml")) {
+                has_word_doc = true;
+                if (method == 0) {
+                    const doc_xml = data[payload_start..payload_end];
+                    if (!isWordDocumentXml(doc_xml)) return DocxError.InvalidDocument;
+                    docxValidateXmlStrict(doc_xml)?;
+                }
+            }
+            pos = payload_end;
+        }
+
+        let cd_count: usize = 0;
+        while (pos + 4 <= data.len && data[pos] == 0x50 && data[pos + 1] == 0x4B && data[pos + 2] == 0x01 && data[pos + 3] == 0x02) {
+            if (pos + 46 > data.len) return DocxError.InvalidArchive;
+            cd_count += 1;
+            if (cd_count > OOXML_MAX_ZIP_ENTRIES) return DocxError.ResourceLimitExceeded;
+            const cd_uncomp = docxReadU32Le(data, pos + 24) as u64;
+            if (cd_uncomp > OOXML_MAX_PART_SIZE) return DocxError.ResourceLimitExceeded;
+            const name_len = docxReadU16Le(data, pos + 28) as usize;
+            const extra_len = docxReadU16Le(data, pos + 30) as usize;
+            const comment_len = docxReadU16Le(data, pos + 32) as usize;
+            const name_start = pos + 46;
+            if (name_start + name_len > data.len) return DocxError.InvalidArchive;
+            if (!isSafeOoxmlPartPath(data[name_start..(name_start + name_len)])) return DocxError.UnsafePartPath;
+            const next_pos = name_start + name_len + extra_len + comment_len;
+            if (next_pos > data.len) return DocxError.InvalidArchive;
+            pos = next_pos;
+        }
+
+        if (pos + 22 > data.len || data[pos] != 0x50 || data[pos + 1] != 0x4B || data[pos + 2] != 0x05 || data[pos + 3] != 0x06) {
+            return DocxError.InvalidArchive;
+        }
+        if (!has_content_types || !has_word_doc) return DocxError.MissingCorePart;
+        return;
+    }
+
+    if (!isWordDocumentXml(data)) return DocxError.InvalidDocument;
+    docxValidateXmlStrict(data)?;
 }

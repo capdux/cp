@@ -1,6 +1,16 @@
+// Reference-hardened against RazrFalcon/roxmltree & ECMA-376 OOXML (MIT OR Apache-2.0)
 // Origin: Pure-CP Stdlib (Zero-Alloc OOXML PPTX PresentationML & DrawingML Parser) | Created: 2026-11-22
 
 import { Simd } from "../simd/index.cp";
+import {
+    OOXML_MAX_ZIP_ENTRIES,
+    OOXML_MAX_PART_SIZE,
+    OOXML_MAX_TOTAL_UNCOMPRESSED,
+    OOXML_MAX_XML_DEPTH,
+    simdOoxmlFindTagOrAmp,
+    simdOoxmlBytesEqual,
+    isSafeOoxmlPartPath,
+} from "./docx.cp";
 
 /// OOXML PresentationML 主演示文稿 Content-Type (`[Content_Types].xml`)
 pub const PPTX_MAIN_CONTENT_TYPE: []const u8 = "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml";
@@ -38,25 +48,19 @@ pub struct PptxSlideStats {
     pic_count: usize = 0,
 }
 
-fn isXmlSpace(c: u8): bool {
+fn pptxIsXmlSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-fn isTagDelim(c: u8): bool {
-    return isXmlSpace(c) || c == '>' || c == '/';
+fn pptxIsTagDelim(c: u8): bool {
+    return pptxIsXmlSpace(c) || c == '>' || c == '/';
 }
 
-fn strEql(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
+fn pptxStrEql(a: []const u8, b: []const u8): bool {
+    return simdOoxmlBytesEqual(a, b);
 }
 
-fn startsWith(haystack: []const u8, prefix: []const u8): bool {
+fn pptxStartsWith(haystack: []const u8, prefix: []const u8): bool {
     if (haystack.len < prefix.len) return false;
     let i: usize = 0;
     while (i < prefix.len) {
@@ -67,14 +71,14 @@ fn startsWith(haystack: []const u8, prefix: []const u8): bool {
 }
 
 fn isNsTag(qname: []const u8, ns: u8, local: []const u8): bool {
-    if (strEql(qname, local)) return true;
+    if (pptxStrEql(qname, local)) return true;
     if (qname.len == local.len + 2 && qname[0] == ns && qname[1] == ':') {
-        return strEql(qname[2..qname.len], local);
+        return pptxStrEql(qname[2..qname.len], local);
     }
     return false;
 }
 
-fn skipComment(xml: []const u8, pos: usize): usize {
+fn pptxSkipComment(xml: []const u8, pos: usize): usize {
     let i = pos + 4;
     while (i + 2 < xml.len) {
         if (xml[i] == '-' && xml[i + 1] == '-' && xml[i + 2] == '>') {
@@ -85,7 +89,7 @@ fn skipComment(xml: []const u8, pos: usize): usize {
     return xml.len;
 }
 
-fn skipCdata(xml: []const u8, pos: usize): usize {
+fn pptxSkipCdata(xml: []const u8, pos: usize): usize {
     let i = pos + 9;
     while (i + 2 < xml.len) {
         if (xml[i] == ']' && xml[i + 1] == ']' && xml[i + 2] == '>') {
@@ -96,7 +100,7 @@ fn skipCdata(xml: []const u8, pos: usize): usize {
     return xml.len;
 }
 
-fn skipPi(xml: []const u8, pos: usize): usize {
+fn pptxSkipPi(xml: []const u8, pos: usize): usize {
     let i = pos + 2;
     while (i + 1 < xml.len) {
         if (xml[i] == '?' && xml[i + 1] == '>') {
@@ -107,7 +111,7 @@ fn skipPi(xml: []const u8, pos: usize): usize {
     return xml.len;
 }
 
-fn skipDecl(xml: []const u8, pos: usize): usize {
+fn pptxSkipDecl(xml: []const u8, pos: usize): usize {
     let i = pos + 2;
     let in_quote: u8 = 0;
     while (i < xml.len) {
@@ -124,7 +128,7 @@ fn skipDecl(xml: []const u8, pos: usize): usize {
     return xml.len;
 }
 
-fn findTagEnd(xml: []const u8, lt_pos: usize): usize? {
+fn pptxFindTagEnd(xml: []const u8, lt_pos: usize): usize? {
     let i = lt_pos + 1;
     let in_quote: u8 = 0;
     while (i < xml.len) {
@@ -144,46 +148,46 @@ fn findTagEnd(xml: []const u8, lt_pos: usize): usize? {
     return null;
 }
 
-fn parseTagName(xml: []const u8, name_start: usize, tag_end: usize): []const u8 {
+fn pptxParseTagName(xml: []const u8, name_start: usize, tag_end: usize): []const u8 {
     let i = name_start;
-    while (i < tag_end && !isTagDelim(xml[i])) {
+    while (i < tag_end && !pptxIsTagDelim(xml[i])) {
         i += 1;
     }
     return xml[name_start..i];
 }
 
-fn isSelfClosingTag(xml: []const u8, lt_pos: usize, tag_end: usize): bool {
+fn pptxIsSelfClosingTag(xml: []const u8, lt_pos: usize, tag_end: usize): bool {
     if (tag_end <= lt_pos + 1) return false;
     let i = tag_end - 1;
-    while (i > lt_pos && isXmlSpace(xml[i])) {
+    while (i > lt_pos && pptxIsXmlSpace(xml[i])) {
         i -= 1;
     }
     return xml[i] == '/';
 }
 
 /// 跳过 UTF-8 BOM、空白、XML 声明/PI、注释和 DOCTYPE，定位首个根元素 `<`
-fn skipProlog(xml: []const u8): usize {
+fn pptxSkipProlog(xml: []const u8): usize {
     let pos: usize = 0;
     if (xml.len >= 3 && xml[0] == 0xEF && xml[1] == 0xBB && xml[2] == 0xBF) {
         pos = 3;
     }
     while (pos < xml.len) {
-        while (pos < xml.len && isXmlSpace(xml[pos])) {
+        while (pos < xml.len && pptxIsXmlSpace(xml[pos])) {
             pos += 1;
         }
         if (pos >= xml.len || xml[pos] != '<') {
             return pos;
         }
-        if (startsWith(xml[pos..xml.len], "<!--")) {
-            pos = skipComment(xml, pos);
+        if (pptxStartsWith(xml[pos..xml.len], "<!--")) {
+            pos = pptxSkipComment(xml, pos);
             continue;
         }
-        if (startsWith(xml[pos..xml.len], "<?")) {
-            pos = skipPi(xml, pos);
+        if (pptxStartsWith(xml[pos..xml.len], "<?")) {
+            pos = pptxSkipPi(xml, pos);
             continue;
         }
-        if (startsWith(xml[pos..xml.len], "<!")) {
-            pos = skipDecl(xml, pos);
+        if (pptxStartsWith(xml[pos..xml.len], "<!")) {
+            pos = pptxSkipDecl(xml, pos);
             continue;
         }
         return pos;
@@ -195,33 +199,33 @@ fn skipProlog(xml: []const u8): usize {
 fn extractAttrExact(tag: []const u8, target_name: []const u8): ([]const u8)? {
     if (tag.len < 3 || tag[0] != '<') return null;
     let i: usize = 1;
-    while (i < tag.len && !isTagDelim(tag[i])) {
+    while (i < tag.len && !pptxIsTagDelim(tag[i])) {
         i += 1;
     }
     while (i < tag.len) {
-        while (i < tag.len && (isXmlSpace(tag[i]) || tag[i] == '/')) {
+        while (i < tag.len && (pptxIsXmlSpace(tag[i]) || tag[i] == '/')) {
             i += 1;
         }
         if (i >= tag.len || tag[i] == '>') break;
         const name_start = i;
-        while (i < tag.len && !isXmlSpace(tag[i]) && tag[i] != '=' && tag[i] != '>' && tag[i] != '/') {
+        while (i < tag.len && !pptxIsXmlSpace(tag[i]) && tag[i] != '=' && tag[i] != '>' && tag[i] != '/') {
             i += 1;
         }
         const attr_name = tag[name_start..i];
-        while (i < tag.len && isXmlSpace(tag[i])) {
+        while (i < tag.len && pptxIsXmlSpace(tag[i])) {
             i += 1;
         }
         if (i >= tag.len || tag[i] != '=') {
             continue;
         }
         i += 1;
-        while (i < tag.len && isXmlSpace(tag[i])) {
+        while (i < tag.len && pptxIsXmlSpace(tag[i])) {
             i += 1;
         }
         if (i >= tag.len) break;
         const quote = tag[i];
         if (quote != '"' && quote != '\'') {
-            while (i < tag.len && !isXmlSpace(tag[i]) && tag[i] != '>' && tag[i] != '/') {
+            while (i < tag.len && !pptxIsXmlSpace(tag[i]) && tag[i] != '>' && tag[i] != '/') {
                 i += 1;
             }
             continue;
@@ -234,7 +238,7 @@ fn extractAttrExact(tag: []const u8, target_name: []const u8): ([]const u8)? {
         if (i >= tag.len) break;
         const val = tag[val_start..i];
         i += 1;
-        if (strEql(attr_name, target_name)) {
+        if (pptxStrEql(attr_name, target_name)) {
             return val;
         }
     }
@@ -249,7 +253,7 @@ fn parseU64Dec(s: []const u8): u64? {
         const c = s[i];
         if (c < '0' || c > '9') return null;
         const d: u64 = u64(c - '0');
-        if (val > (18446744073709551615 - d) / 10) return null;
+        if (val > 1844674407370955161 || (val == 1844674407370955161 && d > 5)) return null;
         val = val * 10 + d;
         i += 1;
     }
@@ -263,11 +267,11 @@ fn parseU32Dec(s: []const u8): u32? {
 }
 
 fn hasRootTag(xml: []const u8, ns: u8, local: []const u8): bool {
-    const pos = skipProlog(xml);
+    const pos = pptxSkipProlog(xml);
     if (pos >= xml.len || xml[pos] != '<') return false;
     if (pos + 1 >= xml.len || xml[pos + 1] == '/') return false;
-    const tag_end = findTagEnd(xml, pos) ?? return false;
-    const name = parseTagName(xml, pos + 1, tag_end);
+    const tag_end = pptxFindTagEnd(xml, pos) ?? return false;
+    const name = pptxParseTagName(xml, pos + 1, tag_end);
     return isNsTag(name, ns, local);
 }
 
@@ -296,25 +300,25 @@ pub fn parsePptxSlideSize(pres_xml: []const u8): PptxSlideSize? {
             pos += 1;
             continue;
         }
-        if (startsWith(pres_xml[pos..pres_xml.len], "<!--")) {
-            pos = skipComment(pres_xml, pos);
+        if (pptxStartsWith(pres_xml[pos..pres_xml.len], "<!--")) {
+            pos = pptxSkipComment(pres_xml, pos);
             continue;
         }
-        if (startsWith(pres_xml[pos..pres_xml.len], "<![CDATA[")) {
-            pos = skipCdata(pres_xml, pos);
+        if (pptxStartsWith(pres_xml[pos..pres_xml.len], "<![CDATA[")) {
+            pos = pptxSkipCdata(pres_xml, pos);
             continue;
         }
-        if (startsWith(pres_xml[pos..pres_xml.len], "<?")) {
-            pos = skipPi(pres_xml, pos);
+        if (pptxStartsWith(pres_xml[pos..pres_xml.len], "<?")) {
+            pos = pptxSkipPi(pres_xml, pos);
             continue;
         }
-        if (startsWith(pres_xml[pos..pres_xml.len], "<!")) {
-            pos = skipDecl(pres_xml, pos);
+        if (pptxStartsWith(pres_xml[pos..pres_xml.len], "<!")) {
+            pos = pptxSkipDecl(pres_xml, pos);
             continue;
         }
-        const tag_end = findTagEnd(pres_xml, pos) ?? break;
+        const tag_end = pptxFindTagEnd(pres_xml, pos) ?? break;
         if (pos + 1 < tag_end && pres_xml[pos + 1] != '/') {
-            const name = parseTagName(pres_xml, pos + 1, tag_end);
+            const name = pptxParseTagName(pres_xml, pos + 1, tag_end);
             if (isNsTag(name, 'p', "sldSz")) {
                 const tag = pres_xml[pos .. tag_end + 1];
                 const cx_str = extractAttrExact(tag, "cx") ?? return null;
@@ -358,24 +362,24 @@ pub struct PptxSlideRefIter {
                 _.pos += 1;
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<!--")) {
-                _.pos = skipComment(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<!--")) {
+                _.pos = pptxSkipComment(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<![CDATA[")) {
-                _.pos = skipCdata(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<![CDATA[")) {
+                _.pos = pptxSkipCdata(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<?")) {
-                _.pos = skipPi(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<?")) {
+                _.pos = pptxSkipPi(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<!")) {
-                _.pos = skipDecl(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<!")) {
+                _.pos = pptxSkipDecl(_.xml, _.pos);
                 continue;
             }
 
-            const tag_end_opt = findTagEnd(_.xml, _.pos);
+            const tag_end_opt = pptxFindTagEnd(_.xml, _.pos);
             if (tag_end_opt == null) {
                 _.done = true;
                 _.pos = _.xml.len;
@@ -384,7 +388,7 @@ pub struct PptxSlideRefIter {
             const tag_end = tag_end_opt ?? return null;
 
             if (_.pos + 1 < tag_end && _.xml[_.pos + 1] == '/') {
-                const cname = parseTagName(_.xml, _.pos + 2, tag_end);
+                const cname = pptxParseTagName(_.xml, _.pos + 2, tag_end);
                 _.pos = tag_end + 1;
                 if (_.in_list && isNsTag(cname, 'p', "sldIdLst")) {
                     _.done = true;
@@ -393,10 +397,10 @@ pub struct PptxSlideRefIter {
                 continue;
             }
 
-            const name = parseTagName(_.xml, _.pos + 1, tag_end);
+            const name = pptxParseTagName(_.xml, _.pos + 1, tag_end);
             if (!_.in_list) {
                 if (isNsTag(name, 'p', "sldIdLst")) {
-                    if (isSelfClosingTag(_.xml, _.pos, tag_end)) {
+                    if (pptxIsSelfClosingTag(_.xml, _.pos, tag_end)) {
                         _.done = true;
                         _.pos = tag_end + 1;
                         return null;
@@ -443,24 +447,24 @@ pub struct PptxParagraphIter {
                 _.pos += 1;
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<!--")) {
-                _.pos = skipComment(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<!--")) {
+                _.pos = pptxSkipComment(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<![CDATA[")) {
-                _.pos = skipCdata(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<![CDATA[")) {
+                _.pos = pptxSkipCdata(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<?")) {
-                _.pos = skipPi(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<?")) {
+                _.pos = pptxSkipPi(_.xml, _.pos);
                 continue;
             }
-            if (startsWith(_.xml[_.pos.._.xml.len], "<!")) {
-                _.pos = skipDecl(_.xml, _.pos);
+            if (pptxStartsWith(_.xml[_.pos.._.xml.len], "<!")) {
+                _.pos = pptxSkipDecl(_.xml, _.pos);
                 continue;
             }
 
-            const tag_end_opt = findTagEnd(_.xml, _.pos);
+            const tag_end_opt = pptxFindTagEnd(_.xml, _.pos);
             if (tag_end_opt == null) {
                 _.pos = _.xml.len;
                 return null;
@@ -472,14 +476,14 @@ pub struct PptxParagraphIter {
                 continue;
             }
 
-            const name = parseTagName(_.xml, _.pos + 1, tag_end);
+            const name = pptxParseTagName(_.xml, _.pos + 1, tag_end);
             if (!isNsTag(name, 'a', "p")) {
                 _.pos = tag_end + 1;
                 continue;
             }
 
             const para_start = _.pos;
-            if (isSelfClosingTag(_.xml, para_start, tag_end)) {
+            if (pptxIsSelfClosingTag(_.xml, para_start, tag_end)) {
                 _.pos = tag_end + 1;
                 return _.xml[para_start .. tag_end + 1];
             }
@@ -491,24 +495,24 @@ pub struct PptxParagraphIter {
                     scan += 1;
                     continue;
                 }
-                if (startsWith(_.xml[scan.._.xml.len], "<!--")) {
-                    scan = skipComment(_.xml, scan);
+                if (pptxStartsWith(_.xml[scan.._.xml.len], "<!--")) {
+                    scan = pptxSkipComment(_.xml, scan);
                     continue;
                 }
-                if (startsWith(_.xml[scan.._.xml.len], "<![CDATA[")) {
-                    scan = skipCdata(_.xml, scan);
+                if (pptxStartsWith(_.xml[scan.._.xml.len], "<![CDATA[")) {
+                    scan = pptxSkipCdata(_.xml, scan);
                     continue;
                 }
-                if (startsWith(_.xml[scan.._.xml.len], "<?")) {
-                    scan = skipPi(_.xml, scan);
+                if (pptxStartsWith(_.xml[scan.._.xml.len], "<?")) {
+                    scan = pptxSkipPi(_.xml, scan);
                     continue;
                 }
-                if (startsWith(_.xml[scan.._.xml.len], "<!")) {
-                    scan = skipDecl(_.xml, scan);
+                if (pptxStartsWith(_.xml[scan.._.xml.len], "<!")) {
+                    scan = pptxSkipDecl(_.xml, scan);
                     continue;
                 }
 
-                const sub_end_opt = findTagEnd(_.xml, scan);
+                const sub_end_opt = pptxFindTagEnd(_.xml, scan);
                 if (sub_end_opt == null) {
                     _.pos = _.xml.len;
                     return null;
@@ -516,7 +520,7 @@ pub struct PptxParagraphIter {
                 const sub_end = sub_end_opt ?? return null;
 
                 if (scan + 1 < sub_end && _.xml[scan + 1] == '/') {
-                    const cname = parseTagName(_.xml, scan + 2, sub_end);
+                    const cname = pptxParseTagName(_.xml, scan + 2, sub_end);
                     if (isNsTag(cname, 'a', "p")) {
                         depth -= 1;
                         if (depth == 0) {
@@ -526,8 +530,8 @@ pub struct PptxParagraphIter {
                         }
                     }
                 } else {
-                    const oname = parseTagName(_.xml, scan + 1, sub_end);
-                    if (isNsTag(oname, 'a', "p") && !isSelfClosingTag(_.xml, scan, sub_end)) {
+                    const oname = pptxParseTagName(_.xml, scan + 1, sub_end);
+                    if (isNsTag(oname, 'a', "p") && !pptxIsSelfClosingTag(_.xml, scan, sub_end)) {
                         depth += 1;
                     }
                 }
@@ -541,7 +545,7 @@ pub struct PptxParagraphIter {
     }
 }
 
-fn emitByte(out: []u8, out_len: *usize, b: u8): bool {
+fn pptxEmitByte(out: []u8, out_len: *usize, b: u8): bool {
     const p = out_len.*;
     if (p >= out.len) return false;
     out[p] = b;
@@ -549,43 +553,43 @@ fn emitByte(out: []u8, out_len: *usize, b: u8): bool {
     return true;
 }
 
-fn emitUtf8(out: []u8, out_len: *usize, cp: u32): bool {
+fn pptxEmitUtf8(out: []u8, out_len: *usize, cp: u32): bool {
     if (cp <= 0x7F) {
-        return emitByte(out, out_len, cp as u8);
+        return pptxEmitByte(out, out_len, cp as u8);
     }
     if (cp <= 0x7FF) {
-        if (!emitByte(out, out_len, (0xC0 | ((cp >> 6) & 0x1F)) as u8)) return false;
-        return emitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
+        if (!pptxEmitByte(out, out_len, (0xC0 | ((cp >> 6) & 0x1F)) as u8)) return false;
+        return pptxEmitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
     }
     if (cp <= 0xFFFF) {
-        if (!emitByte(out, out_len, (0xE0 | ((cp >> 12) & 0x0F)) as u8)) return false;
-        if (!emitByte(out, out_len, (0x80 | ((cp >> 6) & 0x3F)) as u8)) return false;
-        return emitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
+        if (!pptxEmitByte(out, out_len, (0xE0 | ((cp >> 12) & 0x0F)) as u8)) return false;
+        if (!pptxEmitByte(out, out_len, (0x80 | ((cp >> 6) & 0x3F)) as u8)) return false;
+        return pptxEmitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
     }
     if (cp <= 0x10FFFF) {
-        if (!emitByte(out, out_len, (0xF0 | ((cp >> 18) & 0x07)) as u8)) return false;
-        if (!emitByte(out, out_len, (0x80 | ((cp >> 12) & 0x3F)) as u8)) return false;
-        if (!emitByte(out, out_len, (0x80 | ((cp >> 6) & 0x3F)) as u8)) return false;
-        return emitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
+        if (!pptxEmitByte(out, out_len, (0xF0 | ((cp >> 18) & 0x07)) as u8)) return false;
+        if (!pptxEmitByte(out, out_len, (0x80 | ((cp >> 12) & 0x3F)) as u8)) return false;
+        if (!pptxEmitByte(out, out_len, (0x80 | ((cp >> 6) & 0x3F)) as u8)) return false;
+        return pptxEmitByte(out, out_len, (0x80 | (cp & 0x3F)) as u8);
     }
     return false;
 }
 
-fn parseHexDigit(c: u8): u32? {
+fn pptxParseHexDigit(c: u8): u32? {
     if (c >= '0' && c <= '9') return u32(c - '0');
     if (c >= 'a' && c <= 'f') return u32(c - 'a') + 10;
     if (c >= 'A' && c <= 'F') return u32(c - 'A') + 10;
     return null;
 }
 
-fn parseNumericEntity(body: []const u8): u32? {
+fn pptxParseNumericEntity(body: []const u8): u32? {
     if (body.len == 0) return null;
     let cp: u32 = 0;
     if (body[0] == 'x' || body[0] == 'X') {
         if (body.len == 1) return null;
         let i: usize = 1;
         while (i < body.len) {
-            const d = parseHexDigit(body[i]) ?? return null;
+            const d = pptxParseHexDigit(body[i]) ?? return null;
             if (cp > 0x10FFFF) return null;
             cp = cp * 16 + d;
             if (cp > 0x10FFFF) return null;
@@ -602,15 +606,32 @@ fn parseNumericEntity(body: []const u8): u32? {
             i += 1;
         }
     }
-    if (cp == 0 || (cp >= 0xD800 && cp <= 0xDFFF) || cp > 0x10FFFF) {
+    if (cp == 0 || (cp < 0x20 && cp != 0x09 && cp != 0x0A && cp != 0x0D) || (cp >= 0xD800 && cp <= 0xDFFF) || cp == 0xFFFE || cp == 0xFFFF || cp > 0x10FFFF) {
         return null;
     }
     return cp;
 }
 
-fn emitUnescapedText(src: []const u8, out: []u8, out_len: *usize): bool {
+fn pptxEmitUnescapedText(src: []const u8, out: []u8, out_len: *usize): bool {
     let i: usize = 0;
     while (i < src.len) {
+        const hit_rel = simdOoxmlFindTagOrAmp(src[i..src.len]);
+        let stop: usize = src.len;
+        if (rel := hit_rel) {
+            stop = i + rel;
+        }
+        if (stop > i) {
+            const run_len = stop - i;
+            const cur = out_len.*;
+            if (cur + run_len > out.len) return false;
+            let k: usize = 0;
+            while (k < run_len) : (k += 1) {
+                out[cur + k] = src[i + k];
+            }
+            out_len.* = cur + run_len;
+            i = stop;
+            if (i >= src.len) break;
+        }
         if (src[i] == '&') {
             let semi = i + 1;
             const max_semi = if (i + 16 < src.len) i + 16 else src.len;
@@ -619,36 +640,36 @@ fn emitUnescapedText(src: []const u8, out: []u8, out_len: *usize): bool {
             }
             if (semi < max_semi && src[semi] == ';') {
                 const ent = src[i + 1 .. semi];
-                if (strEql(ent, "amp")) {
-                    if (!emitByte(out, out_len, '&')) return false;
+                if (pptxStrEql(ent, "amp")) {
+                    if (!pptxEmitByte(out, out_len, '&')) return false;
                     i = semi + 1;
                     continue;
-                } else if (strEql(ent, "lt")) {
-                    if (!emitByte(out, out_len, '<')) return false;
+                } else if (pptxStrEql(ent, "lt")) {
+                    if (!pptxEmitByte(out, out_len, '<')) return false;
                     i = semi + 1;
                     continue;
-                } else if (strEql(ent, "gt")) {
-                    if (!emitByte(out, out_len, '>')) return false;
+                } else if (pptxStrEql(ent, "gt")) {
+                    if (!pptxEmitByte(out, out_len, '>')) return false;
                     i = semi + 1;
                     continue;
-                } else if (strEql(ent, "quot")) {
-                    if (!emitByte(out, out_len, '"')) return false;
+                } else if (pptxStrEql(ent, "quot")) {
+                    if (!pptxEmitByte(out, out_len, '"')) return false;
                     i = semi + 1;
                     continue;
-                } else if (strEql(ent, "apos")) {
-                    if (!emitByte(out, out_len, '\'')) return false;
+                } else if (pptxStrEql(ent, "apos")) {
+                    if (!pptxEmitByte(out, out_len, '\'')) return false;
                     i = semi + 1;
                     continue;
                 } else if (ent.len >= 2 && ent[0] == '#') {
-                    if (cp := parseNumericEntity(ent[1..ent.len])) {
-                        if (!emitUtf8(out, out_len, cp)) return false;
+                    if (cp := pptxParseNumericEntity(ent[1..ent.len])) {
+                        if (!pptxEmitUtf8(out, out_len, cp)) return false;
                         i = semi + 1;
                         continue;
                     }
                 }
             }
         }
-        if (!emitByte(out, out_len, src[i])) return false;
+        if (!pptxEmitByte(out, out_len, src[i])) return false;
         i += 1;
     }
     return true;
@@ -663,62 +684,62 @@ fn extractDrawingParagraphText(para_xml: []const u8, out: []u8): usize? {
             pos += 1;
             continue;
         }
-        if (startsWith(para_xml[pos..para_xml.len], "<!--")) {
-            pos = skipComment(para_xml, pos);
+        if (pptxStartsWith(para_xml[pos..para_xml.len], "<!--")) {
+            pos = pptxSkipComment(para_xml, pos);
             continue;
         }
-        if (startsWith(para_xml[pos..para_xml.len], "<![CDATA[")) {
-            pos = skipCdata(para_xml, pos);
+        if (pptxStartsWith(para_xml[pos..para_xml.len], "<![CDATA[")) {
+            pos = pptxSkipCdata(para_xml, pos);
             continue;
         }
-        if (startsWith(para_xml[pos..para_xml.len], "<?")) {
-            pos = skipPi(para_xml, pos);
+        if (pptxStartsWith(para_xml[pos..para_xml.len], "<?")) {
+            pos = pptxSkipPi(para_xml, pos);
             continue;
         }
-        if (startsWith(para_xml[pos..para_xml.len], "<!")) {
-            pos = skipDecl(para_xml, pos);
+        if (pptxStartsWith(para_xml[pos..para_xml.len], "<!")) {
+            pos = pptxSkipDecl(para_xml, pos);
             continue;
         }
 
-        const tag_end = findTagEnd(para_xml, pos) ?? break;
+        const tag_end = pptxFindTagEnd(para_xml, pos) ?? break;
         if (pos + 1 < tag_end && para_xml[pos + 1] == '/') {
             pos = tag_end + 1;
             continue;
         }
 
-        const name = parseTagName(para_xml, pos + 1, tag_end);
+        const name = pptxParseTagName(para_xml, pos + 1, tag_end);
         if (isNsTag(name, 'a', "t")) {
-            if (isSelfClosingTag(para_xml, pos, tag_end)) {
+            if (pptxIsSelfClosingTag(para_xml, pos, tag_end)) {
                 pos = tag_end + 1;
                 continue;
             }
             pos = tag_end + 1;
             while (pos < para_xml.len) {
                 if (para_xml[pos] == '<') {
-                    if (startsWith(para_xml[pos..para_xml.len], "<![CDATA[")) {
+                    if (pptxStartsWith(para_xml[pos..para_xml.len], "<![CDATA[")) {
                         const cdata_start = pos + 9;
-                        const cdata_after = skipCdata(para_xml, pos);
-                        const cdata_end = if (cdata_after >= cdata_start + 3 && startsWith(para_xml[cdata_after - 3 .. cdata_after], "]]>")) cdata_after - 3 else cdata_after;
+                        const cdata_after = pptxSkipCdata(para_xml, pos);
+                        const cdata_end = if (cdata_after >= cdata_start + 3 && pptxStartsWith(para_xml[cdata_after - 3 .. cdata_after], "]]>")) cdata_after - 3 else cdata_after;
                         let k = cdata_start;
                         while (k < cdata_end) {
-                            if (!emitByte(out, *out_len, para_xml[k])) return null;
+                            if (!pptxEmitByte(out, *out_len, para_xml[k])) return null;
                             k += 1;
                         }
                         pos = cdata_after;
                         continue;
                     }
-                    if (startsWith(para_xml[pos..para_xml.len], "<!--")) {
-                        pos = skipComment(para_xml, pos);
+                    if (pptxStartsWith(para_xml[pos..para_xml.len], "<!--")) {
+                        pos = pptxSkipComment(para_xml, pos);
                         continue;
                     }
-                    const c_end_opt = findTagEnd(para_xml, pos);
+                    const c_end_opt = pptxFindTagEnd(para_xml, pos);
                     if (c_end_opt == null) {
                         pos = para_xml.len;
                         break;
                     }
                     const c_end = c_end_opt ?? break;
                     if (pos + 1 < c_end && para_xml[pos + 1] == '/') {
-                        const cname = parseTagName(para_xml, pos + 2, c_end);
+                        const cname = pptxParseTagName(para_xml, pos + 2, c_end);
                         if (isNsTag(cname, 'a', "t")) {
                             pos = c_end + 1;
                             break;
@@ -731,17 +752,17 @@ fn extractDrawingParagraphText(para_xml: []const u8, out: []u8): usize? {
                 while (pos < para_xml.len && para_xml[pos] != '<') {
                     pos += 1;
                 }
-                if (!emitUnescapedText(para_xml[text_start..pos], out, *out_len)) {
+                if (!pptxEmitUnescapedText(para_xml[text_start..pos], out, *out_len)) {
                     return null;
                 }
             }
             continue;
         } else if (isNsTag(name, 'a', "br")) {
-            if (!emitByte(out, *out_len, '\n')) return null;
+            if (!pptxEmitByte(out, *out_len, '\n')) return null;
             pos = tag_end + 1;
             continue;
         } else if (isNsTag(name, 'a', "tab")) {
-            if (!emitByte(out, *out_len, '\t')) return null;
+            if (!pptxEmitByte(out, *out_len, '\t')) return null;
             pos = tag_end + 1;
             continue;
         }
@@ -765,7 +786,7 @@ pub fn extractSlideText(slide_xml: []const u8, out: []u8): usize? {
 
     while (para := it.next()) {
         if (para_idx > 0) {
-            if (!emitByte(out, *out_len, '\n')) return null;
+            if (!pptxEmitByte(out, *out_len, '\n')) return null;
         }
         const written = extractDrawingParagraphText(para, out[out_len..out.len]) ?? return null;
         out_len += written;
@@ -788,26 +809,26 @@ pub fn summarizeSlide(slide_xml: []const u8): PptxSlideStats {
             pos += 1;
             continue;
         }
-        if (startsWith(slide_xml[pos..slide_xml.len], "<!--")) {
-            pos = skipComment(slide_xml, pos);
+        if (pptxStartsWith(slide_xml[pos..slide_xml.len], "<!--")) {
+            pos = pptxSkipComment(slide_xml, pos);
             continue;
         }
-        if (startsWith(slide_xml[pos..slide_xml.len], "<![CDATA[")) {
-            pos = skipCdata(slide_xml, pos);
+        if (pptxStartsWith(slide_xml[pos..slide_xml.len], "<![CDATA[")) {
+            pos = pptxSkipCdata(slide_xml, pos);
             continue;
         }
-        if (startsWith(slide_xml[pos..slide_xml.len], "<?")) {
-            pos = skipPi(slide_xml, pos);
+        if (pptxStartsWith(slide_xml[pos..slide_xml.len], "<?")) {
+            pos = pptxSkipPi(slide_xml, pos);
             continue;
         }
-        if (startsWith(slide_xml[pos..slide_xml.len], "<!")) {
-            pos = skipDecl(slide_xml, pos);
+        if (pptxStartsWith(slide_xml[pos..slide_xml.len], "<!")) {
+            pos = pptxSkipDecl(slide_xml, pos);
             continue;
         }
 
-        const tag_end = findTagEnd(slide_xml, pos) ?? break;
+        const tag_end = pptxFindTagEnd(slide_xml, pos) ?? break;
         if (pos + 1 < tag_end && slide_xml[pos + 1] != '/') {
-            const name = parseTagName(slide_xml, pos + 1, tag_end);
+            const name = pptxParseTagName(slide_xml, pos + 1, tag_end);
             if (isNsTag(name, 'p', "sp")) {
                 stats.shape_count += 1;
             } else if (isNsTag(name, 'a', "p")) {
@@ -850,6 +871,12 @@ pub err PptxError {
     InvalidSlide,
     InvalidNotes,
     InvalidParameter,
+    UnsafePartPath,
+    ResourceLimitExceeded,
+    MissingCorePart,
+    InvalidArchive,
+    InvalidEntity,
+    UnclosedTag,
 }
 
 /// Converts OOXML EMU to typographic points (`emu / 12700.0`).
@@ -953,22 +980,22 @@ fn findPptxMatchingClose(xml: []const u8, body_start: usize, target_local: []con
             const rel: usize = Simd.indexOfByte(xml[pos..xml.len], '<') ?? return null;
             pos += rel;
         }
-        if (startsWith(xml[pos..xml.len], "<!--")) { pos = skipComment(xml, pos); continue; }
-        if (startsWith(xml[pos..xml.len], "<![CDATA[")) { pos = skipCdata(xml, pos); continue; }
-        if (startsWith(xml[pos..xml.len], "<?")) { pos = skipPi(xml, pos); continue; }
-        if (startsWith(xml[pos..xml.len], "<!")) { pos = skipDecl(xml, pos); continue; }
-        const gt = findTagEnd(xml, pos) ?? return null;
+        if (pptxStartsWith(xml[pos..xml.len], "<!--")) { pos = pptxSkipComment(xml, pos); continue; }
+        if (pptxStartsWith(xml[pos..xml.len], "<![CDATA[")) { pos = pptxSkipCdata(xml, pos); continue; }
+        if (pptxStartsWith(xml[pos..xml.len], "<?")) { pos = pptxSkipPi(xml, pos); continue; }
+        if (pptxStartsWith(xml[pos..xml.len], "<!")) { pos = pptxSkipDecl(xml, pos); continue; }
+        const gt = pptxFindTagEnd(xml, pos) ?? return null;
         if (pos + 1 < gt && xml[pos + 1] == '/') {
-            const cname = pptxLocalName(parseTagName(xml, pos + 2, gt));
-            if (strEql(cname, target_local)) {
+            const cname = pptxLocalName(pptxParseTagName(xml, pos + 2, gt));
+            if (pptxStrEql(cname, target_local)) {
                 depth -= 1;
                 if (depth == 0) {
                     return PptxCloseSpan{ inner_end: pos, after_close: gt + 1 };
                 }
             }
         } else if (pos + 1 < gt) {
-            const oname = pptxLocalName(parseTagName(xml, pos + 1, gt));
-            if (strEql(oname, target_local) && !isSelfClosingTag(xml, pos, gt)) {
+            const oname = pptxLocalName(pptxParseTagName(xml, pos + 1, gt));
+            if (pptxStrEql(oname, target_local) && !pptxIsSelfClosingTag(xml, pos, gt)) {
                 depth += 1;
             }
         }
@@ -1050,12 +1077,12 @@ pub enum PptxPlaceholderKind {
 }
 
 fn parsePlaceholderKind(t: []const u8): PptxPlaceholderKind {
-    if (strEql(t, "title")) return PptxPlaceholderKind.title;
-    if (strEql(t, "ctrTitle")) return PptxPlaceholderKind.ctr_title;
-    if (strEql(t, "subTitle")) return PptxPlaceholderKind.sub_title;
-    if (strEql(t, "body")) return PptxPlaceholderKind.body;
-    if (strEql(t, "ftr")) return PptxPlaceholderKind.footer;
-    if (strEql(t, "sldNum")) return PptxPlaceholderKind.slide_num;
+    if (pptxStrEql(t, "title")) return PptxPlaceholderKind.title;
+    if (pptxStrEql(t, "ctrTitle")) return PptxPlaceholderKind.ctr_title;
+    if (pptxStrEql(t, "subTitle")) return PptxPlaceholderKind.sub_title;
+    if (pptxStrEql(t, "body")) return PptxPlaceholderKind.body;
+    if (pptxStrEql(t, "ftr")) return PptxPlaceholderKind.footer;
+    if (pptxStrEql(t, "sldNum")) return PptxPlaceholderKind.slide_num;
     if (t.len == 0) return PptxPlaceholderKind.body;
     return PptxPlaceholderKind.other;
 }
@@ -1139,28 +1166,28 @@ fn parseDrawingRun(run_inner: []const u8, text_slab: []u8, slab_pos: *usize): Pp
 
     while (pos < run_inner.len) {
         if (run_inner[pos] != '<') { pos += 1; continue; }
-        const gt = findTagEnd(run_inner, pos) orelse break;
+        const gt = pptxFindTagEnd(run_inner, pos) orelse break;
         if (pos + 1 < gt && run_inner[pos + 1] == '/') {
-            if (strEql(pptxLocalName(parseTagName(run_inner, pos + 2, gt)), "rPr")) in_rpr = false;
+            if (pptxStrEql(pptxLocalName(pptxParseTagName(run_inner, pos + 2, gt)), "rPr")) in_rpr = false;
             pos = gt + 1;
             continue;
         }
         const tag = run_inner[pos..(gt + 1)];
-        const lname = pptxLocalName(parseTagName(run_inner, pos + 1, gt));
-        const sc = isSelfClosingTag(run_inner, pos, gt);
+        const lname = pptxLocalName(pptxParseTagName(run_inner, pos + 1, gt));
+        const sc = pptxIsSelfClosingTag(run_inner, pos, gt);
 
-        if (strEql(lname, "rPr")) {
+        if (pptxStrEql(lname, "rPr")) {
             if (bv := extractAttrExact(tag, "b")) {
-                run.bold = strEql(bv, "1") || strEql(bv, "true");
+                run.bold = pptxStrEql(bv, "1") || pptxStrEql(bv, "true");
             }
             if (iv := extractAttrExact(tag, "i")) {
-                run.italic = strEql(iv, "1") || strEql(iv, "true");
+                run.italic = pptxStrEql(iv, "1") || pptxStrEql(iv, "true");
             }
             if (sv := extractAttrExact(tag, "sz")) {
                 if (sz := parseU32Dec(sv)) run.font_size_centipt = sz;
             }
             in_rpr = !sc;
-        } else if (in_rpr && strEql(lname, "srgbClr")) {
+        } else if (in_rpr && pptxStrEql(lname, "srgbClr")) {
             if (cv := extractAttrExact(tag, "val")) {
                 if (cv.len == 6) {
                     let ci: usize = 0;
@@ -1170,9 +1197,9 @@ fn parseDrawingRun(run_inner: []const u8, text_slab: []u8, slab_pos: *usize): Pp
                     run.has_color = true;
                 }
             }
-        } else if (strEql(lname, "t") && !sc) {
+        } else if (pptxStrEql(lname, "t") && !sc) {
             if (cl := findPptxMatchingClose(run_inner, gt + 1, "t")) {
-                if (!emitUnescapedText(run_inner[(gt + 1)..cl.inner_end], text_slab, slab_pos)) {
+                if (!pptxEmitUnescapedText(run_inner[(gt + 1)..cl.inner_end], text_slab, slab_pos)) {
                     return PptxError.BufferTooSmall;
                 }
                 pos = cl.after_close;
@@ -1197,19 +1224,19 @@ fn parseDrawingParagraph(
 
     while (pos < p_inner.len) {
         if (p_inner[pos] != '<') { pos += 1; continue; }
-        const gt = findTagEnd(p_inner, pos) orelse break;
+        const gt = pptxFindTagEnd(p_inner, pos) orelse break;
         if (pos + 1 < gt && p_inner[pos + 1] != '/') {
             const tag = p_inner[pos..(gt + 1)];
-            const lname = pptxLocalName(parseTagName(p_inner, pos + 1, gt));
-            const sc = isSelfClosingTag(p_inner, pos, gt);
-            if (strEql(lname, "pPr")) {
+            const lname = pptxLocalName(pptxParseTagName(p_inner, pos + 1, gt));
+            const sc = pptxIsSelfClosingTag(p_inner, pos, gt);
+            if (pptxStrEql(lname, "pPr")) {
                 if (lv := extractAttrExact(tag, "lvl")) {
                     if (n := parseU32Dec(lv)) para.level = n as u8;
                 }
                 if (al := extractAttrExact(tag, "algn")) {
                     para.alignment = al;
                 }
-            } else if (strEql(lname, "r") && !sc) {
+            } else if (pptxStrEql(lname, "r") && !sc) {
                 if (cl := findPptxMatchingClose(p_inner, gt + 1, "r")) {
                     if (run_cnt.* >= out_runs.len) return PptxError.SlotOverflow;
                     const r = parseDrawingRun(p_inner[(gt + 1)..cl.inner_end], text_slab, slab_pos)?;
@@ -1242,15 +1269,15 @@ fn parsePptxShapeElement(
 
     while (pos < sp_inner.len) {
         if (sp_inner[pos] != '<') { pos += 1; continue; }
-        const gt = findTagEnd(sp_inner, pos) orelse break;
+        const gt = pptxFindTagEnd(sp_inner, pos) orelse break;
         if (pos + 1 < gt && sp_inner[pos + 1] != '/') {
             const tag = sp_inner[pos..(gt + 1)];
-            const lname = pptxLocalName(parseTagName(sp_inner, pos + 1, gt));
-            const sc = isSelfClosingTag(sp_inner, pos, gt);
-            if (strEql(lname, "ph")) {
+            const lname = pptxLocalName(pptxParseTagName(sp_inner, pos + 1, gt));
+            const sc = pptxIsSelfClosingTag(sp_inner, pos, gt);
+            if (pptxStrEql(lname, "ph")) {
                 const pt = extractAttrExact(tag, "type") ?? "";
                 sh.placeholder = parsePlaceholderKind(pt);
-            } else if (strEql(lname, "off")) {
+            } else if (pptxStrEql(lname, "off")) {
                 if (xs := extractAttrExact(tag, "x")) {
                     if (xv := parseI64Dec(xs)) sh.rect.x = xv;
                 }
@@ -1258,7 +1285,7 @@ fn parsePptxShapeElement(
                     if (yv := parseI64Dec(ys)) sh.rect.y = yv;
                 }
                 sh.has_rect = true;
-            } else if (strEql(lname, "ext")) {
+            } else if (pptxStrEql(lname, "ext")) {
                 if (cxs := extractAttrExact(tag, "cx")) {
                     if (cxv := parseU64Dec(cxs)) sh.rect.cx = cxv;
                 }
@@ -1266,7 +1293,7 @@ fn parsePptxShapeElement(
                     if (cyv := parseU64Dec(cys)) sh.rect.cy = cyv;
                 }
                 sh.has_rect = true;
-            } else if (strEql(lname, "p") && !sc) {
+            } else if (pptxStrEql(lname, "p") && !sc) {
                 if (cl := findPptxMatchingClose(sp_inner, gt + 1, "p")) {
                     if (para_cnt.* >= out_paras.len) return PptxError.SlotOverflow;
                     const p = parseDrawingParagraph(sp_inner[(gt + 1)..cl.inner_end], out_runs, run_cnt, text_slab, slab_pos)?;
@@ -1297,20 +1324,20 @@ fn parseDrawingTable(
 
     while (pos < tbl_inner.len) {
         if (tbl_inner[pos] != '<') { pos += 1; continue; }
-        const gt = findTagEnd(tbl_inner, pos) orelse break;
+        const gt = pptxFindTagEnd(tbl_inner, pos) orelse break;
         if (pos + 1 < gt && tbl_inner[pos + 1] != '/') {
-            const lname = pptxLocalName(parseTagName(tbl_inner, pos + 1, gt));
-            if (strEql(lname, "tr") && !isSelfClosingTag(tbl_inner, pos, gt)) {
+            const lname = pptxLocalName(pptxParseTagName(tbl_inner, pos + 1, gt));
+            if (pptxStrEql(lname, "tr") && !pptxIsSelfClosingTag(tbl_inner, pos, gt)) {
                 if (tr_cl := findPptxMatchingClose(tbl_inner, gt + 1, "tr")) {
                     const tr_body = tbl_inner[(gt + 1)..tr_cl.inner_end];
                     let rpos: usize = 0;
                     let col_i: usize = 0;
                     while (rpos < tr_body.len) {
                         if (tr_body[rpos] != '<') { rpos += 1; continue; }
-                        const cgt = findTagEnd(tr_body, rpos) orelse break;
+                        const cgt = pptxFindTagEnd(tr_body, rpos) orelse break;
                         if (rpos + 1 < cgt && tr_body[rpos + 1] != '/') {
-                            const cln = pptxLocalName(parseTagName(tr_body, rpos + 1, cgt));
-                            if (strEql(cln, "tc") && !isSelfClosingTag(tr_body, rpos, cgt)) {
+                            const cln = pptxLocalName(pptxParseTagName(tr_body, rpos + 1, cgt));
+                            if (pptxStrEql(cln, "tc") && !pptxIsSelfClosingTag(tr_body, rpos, cgt)) {
                                 if (tc_cl := findPptxMatchingClose(tr_body, cgt + 1, "tc")) {
                                     if (cell_cnt.* >= out_cells.len) return PptxError.SlotOverflow;
                                     const tstart: usize = slab_pos.*;
@@ -1357,15 +1384,15 @@ pub fn parsePptxSlideXml(
     if (!isSlideXml(slide_xml)) return PptxError.InvalidSlide;
     let res = PptxParsedSlide{};
     let slab_pos: usize = 0;
-    let pos: usize = skipProlog(slide_xml);
+    let pos: usize = pptxSkipProlog(slide_xml);
 
     while (pos < slide_xml.len) {
         if (slide_xml[pos] != '<') { pos += 1; continue; }
-        if (startsWith(slide_xml[pos..slide_xml.len], "<!--")) { pos = skipComment(slide_xml, pos); continue; }
-        const gt = findTagEnd(slide_xml, pos) orelse return PptxError.InvalidXml;
+        if (pptxStartsWith(slide_xml[pos..slide_xml.len], "<!--")) { pos = pptxSkipComment(slide_xml, pos); continue; }
+        const gt = pptxFindTagEnd(slide_xml, pos) orelse return PptxError.InvalidXml;
         if (pos + 1 < gt && slide_xml[pos + 1] != '/') {
-            const qname = parseTagName(slide_xml, pos + 1, gt);
-            const sc = isSelfClosingTag(slide_xml, pos, gt);
+            const qname = pptxParseTagName(slide_xml, pos + 1, gt);
+            const sc = pptxIsSelfClosingTag(slide_xml, pos, gt);
             if (isNsTag(qname, 'p', "sp") && !sc) {
                 const cl = findPptxMatchingClose(slide_xml, gt + 1, "sp") orelse return PptxError.InvalidXml;
                 if (res.shape_count >= out_shapes.len) return PptxError.SlotOverflow;
@@ -1730,4 +1757,246 @@ pub fn computePptxSlideStats(
         st.notes_word_count = nw + ncjk;
     }
     return st;
+}
+
+// ============================================================================
+// 6. Hardened OOXML PPTX Security & Structural Validator (roxmltree / ECMA-376)
+// ============================================================================
+
+fn pptxReadU16Le(data: []const u8, off: usize): u16 {
+    return (data[off] as u16) | ((data[off + 1] as u16) << 8);
+}
+
+fn pptxReadU32Le(data: []const u8, off: usize): u32 {
+    return (data[off] as u32)
+        | ((data[off + 1] as u32) << 8)
+        | ((data[off + 2] as u32) << 16)
+        | ((data[off + 3] as u32) << 24);
+}
+
+fn pptxEndsWith(haystack: []const u8, suffix: []const u8): bool {
+    if (haystack.len < suffix.len) return false;
+    return simdOoxmlBytesEqual(haystack[(haystack.len - suffix.len)..haystack.len], suffix);
+}
+
+fn pptxValidateEntityRun(seg: []const u8): void ! PptxError {
+    let i: usize = 0;
+    while (i < seg.len) {
+        const hit_rel = simdOoxmlFindTagOrAmp(seg[i..seg.len]) ?? break;
+        i += hit_rel;
+        if (seg[i] == '&') {
+            let semi = i + 1;
+            const max_semi = if (i + 16 < seg.len) i + 16 else seg.len;
+            while (semi < max_semi && seg[semi] != ';' && seg[semi] != '&' && seg[semi] != '<') : (semi += 1) {}
+            if (semi >= max_semi || seg[semi] != ';') return PptxError.InvalidEntity;
+            const ent = seg[(i + 1)..semi];
+            if (simdOoxmlBytesEqual(ent, "amp")
+                || simdOoxmlBytesEqual(ent, "lt")
+                || simdOoxmlBytesEqual(ent, "gt")
+                || simdOoxmlBytesEqual(ent, "quot")
+                || simdOoxmlBytesEqual(ent, "apos"))
+            {
+                i = semi + 1;
+                continue;
+            }
+            if (ent.len >= 2 && ent[0] == '#') {
+                if (pptxParseNumericEntity(ent[1..ent.len]) == null) return PptxError.InvalidEntity;
+                i = semi + 1;
+                continue;
+            }
+            return PptxError.InvalidEntity;
+        }
+        i += 1;
+    }
+}
+
+fn pptxValidateXmlStrict(xml: []const u8): void ! PptxError {
+    if (xml.len == 0) return PptxError.InvalidXml;
+    if ((xml.len as u64) > OOXML_MAX_PART_SIZE) return PptxError.ResourceLimitExceeded;
+
+    let j: usize = 0;
+    while (j < xml.len) : (j += 1) {
+        const b = xml[j];
+        if (b < 0x20 && b != '\t' && b != '\n' && b != '\r') {
+            return PptxError.InvalidXml;
+        }
+    }
+
+    let pos = pptxSkipProlog(xml);
+    if (pos >= xml.len || xml[pos] != '<') return PptxError.InvalidXml;
+
+    let stack: [128][]const u8 = [""; 128];
+    let depth: usize = 0;
+    let saw_root = false;
+
+    while (pos < xml.len) {
+        if (xml[pos] != '<') {
+            const text_start = pos;
+            while (pos < xml.len) {
+                if (rel := simdOoxmlFindTagOrAmp(xml[pos..xml.len])) {
+                    pos += rel;
+                    if (xml[pos] == '<') break;
+                    pos += 1;
+                } else {
+                    pos = xml.len;
+                    break;
+                }
+            }
+            const seg = xml[text_start..pos];
+            if (depth == 0) {
+                let k: usize = 0;
+                while (k < seg.len) : (k += 1) {
+                    if (!pptxIsXmlSpace(seg[k])) return PptxError.InvalidXml;
+                }
+            } else {
+                pptxValidateEntityRun(seg)?;
+            }
+            continue;
+        }
+        if (pptxStartsWith(xml[pos..xml.len], "<!--")) {
+            const next = pptxSkipComment(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 7 && xml[xml.len - 3] == '-' && xml[xml.len - 2] == '-' && xml[xml.len - 1] == '>')) {
+                return PptxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (pptxStartsWith(xml[pos..xml.len], "<![CDATA[")) {
+            const next = pptxSkipCdata(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 12 && xml[xml.len - 3] == ']' && xml[xml.len - 2] == ']' && xml[xml.len - 1] == '>')) {
+                return PptxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (pptxStartsWith(xml[pos..xml.len], "<?")) {
+            const next = pptxSkipPi(xml, pos);
+            if (next >= xml.len && !(xml.len >= pos + 4 && xml[xml.len - 2] == '?' && xml[xml.len - 1] == '>')) {
+                return PptxError.UnclosedTag;
+            }
+            pos = next;
+            continue;
+        }
+        if (pptxStartsWith(xml[pos..xml.len], "<!")) {
+            const next = pptxSkipDecl(xml, pos);
+            if (next >= xml.len && xml[xml.len - 1] != '>') return PptxError.UnclosedTag;
+            pos = next;
+            continue;
+        }
+        const tag_end = pptxFindTagEnd(xml, pos) ?? return PptxError.UnclosedTag;
+        if (pos + 1 < tag_end && xml[pos + 1] == '/') {
+            const cname = pptxParseTagName(xml, pos + 2, tag_end);
+            if (cname.len == 0 || depth == 0) return PptxError.UnclosedTag;
+            if (!simdOoxmlBytesEqual(stack[depth - 1], cname)) return PptxError.UnclosedTag;
+            depth -= 1;
+            pos = tag_end + 1;
+            continue;
+        }
+        const oname = pptxParseTagName(xml, pos + 1, tag_end);
+        if (oname.len == 0) return PptxError.InvalidXml;
+        if (depth == 0) {
+            if (saw_root) return PptxError.InvalidXml;
+            saw_root = true;
+        }
+        if (!pptxIsSelfClosingTag(xml, pos, tag_end)) {
+            if (depth >= OOXML_MAX_XML_DEPTH) return PptxError.ResourceLimitExceeded;
+            stack[depth] = oname;
+            depth += 1;
+        }
+        pos = tag_end + 1;
+    }
+
+    if (!saw_root || depth != 0) return PptxError.UnclosedTag;
+}
+
+/// 零堆严格校验 PPTX（同时支持完整 `.pptx` ZIP 包与原始 `presentation.xml`/`slide*.xml`/`notesSlide*.xml`）
+/// 拦截 ZIP 路径穿越、资源耗尽、缺失 `ppt/presentation.xml` 或 `ppt/slides/slide*.xml`、非法 XML 实体与未闭合标签
+pub fn validatePptxStrict(data: []const u8): void ! PptxError {
+    if (data.len < 4) return PptxError.InvalidPresentation;
+
+    if (data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04) {
+        let pos: usize = 0;
+        let entry_count: usize = 0;
+        let total_uncomp: u64 = 0;
+        let has_content_types = false;
+        let has_presentation = false;
+        let has_slide = false;
+
+        while (pos + 4 <= data.len && data[pos] == 0x50 && data[pos + 1] == 0x4B && data[pos + 2] == 0x03 && data[pos + 3] == 0x04) {
+            if (pos + 30 > data.len) return PptxError.InvalidArchive;
+            entry_count += 1;
+            if (entry_count > OOXML_MAX_ZIP_ENTRIES) return PptxError.ResourceLimitExceeded;
+
+            const method = pptxReadU16Le(data, pos + 8);
+            const comp_size = pptxReadU32Le(data, pos + 18) as u64;
+            const uncomp_size = pptxReadU32Le(data, pos + 22) as u64;
+            const name_len = pptxReadU16Le(data, pos + 26) as usize;
+            const extra_len = pptxReadU16Le(data, pos + 28) as usize;
+
+            if (uncomp_size > OOXML_MAX_PART_SIZE) return PptxError.ResourceLimitExceeded;
+            if (total_uncomp > OOXML_MAX_TOTAL_UNCOMPRESSED - uncomp_size) return PptxError.ResourceLimitExceeded;
+            total_uncomp += uncomp_size;
+
+            const name_start = pos + 30;
+            if (name_start + name_len > data.len) return PptxError.InvalidArchive;
+            const name = data[name_start..(name_start + name_len)];
+            if (!isSafeOoxmlPartPath(name)) return PptxError.UnsafePartPath;
+
+            const payload_start = name_start + name_len + extra_len;
+            if (payload_start > data.len) return PptxError.InvalidArchive;
+            if (comp_size > (data.len - payload_start) as u64) return PptxError.InvalidArchive;
+            const payload_end = payload_start + (comp_size as usize);
+
+            if (simdOoxmlBytesEqual(name, "[Content_Types].xml")) {
+                has_content_types = true;
+                if (method == 0) {
+                    pptxValidateXmlStrict(data[payload_start..payload_end])?;
+                }
+            } else if (simdOoxmlBytesEqual(name, "ppt/presentation.xml")) {
+                has_presentation = true;
+                if (method == 0) {
+                    const pres_xml = data[payload_start..payload_end];
+                    if (!isPresentationXml(pres_xml)) return PptxError.InvalidPresentation;
+                    pptxValidateXmlStrict(pres_xml)?;
+                }
+            } else if (pptxStartsWith(name, "ppt/slides/slide") && pptxEndsWith(name, ".xml")) {
+                has_slide = true;
+                if (method == 0) {
+                    const sld_xml = data[payload_start..payload_end];
+                    if (!isSlideXml(sld_xml)) return PptxError.InvalidSlide;
+                    pptxValidateXmlStrict(sld_xml)?;
+                }
+            }
+            pos = payload_end;
+        }
+
+        let cd_count: usize = 0;
+        while (pos + 4 <= data.len && data[pos] == 0x50 && data[pos + 1] == 0x4B && data[pos + 2] == 0x01 && data[pos + 3] == 0x02) {
+            if (pos + 46 > data.len) return PptxError.InvalidArchive;
+            cd_count += 1;
+            if (cd_count > OOXML_MAX_ZIP_ENTRIES) return PptxError.ResourceLimitExceeded;
+            const cd_uncomp = pptxReadU32Le(data, pos + 24) as u64;
+            if (cd_uncomp > OOXML_MAX_PART_SIZE) return PptxError.ResourceLimitExceeded;
+            const name_len = pptxReadU16Le(data, pos + 28) as usize;
+            const extra_len = pptxReadU16Le(data, pos + 30) as usize;
+            const comment_len = pptxReadU16Le(data, pos + 32) as usize;
+            const name_start = pos + 46;
+            if (name_start + name_len > data.len) return PptxError.InvalidArchive;
+            if (!isSafeOoxmlPartPath(data[name_start..(name_start + name_len)])) return PptxError.UnsafePartPath;
+            const next_pos = name_start + name_len + extra_len + comment_len;
+            if (next_pos > data.len) return PptxError.InvalidArchive;
+            pos = next_pos;
+        }
+
+        if (pos + 22 > data.len || data[pos] != 0x50 || data[pos + 1] != 0x4B || data[pos + 2] != 0x05 || data[pos + 3] != 0x06) {
+            return PptxError.InvalidArchive;
+        }
+        if (!has_content_types || !has_presentation || !has_slide) return PptxError.MissingCorePart;
+        return;
+    }
+
+    if (!isPresentationXml(data) && !isSlideXml(data) && !isNotesSlideXml(data)) {
+        return PptxError.InvalidPresentation;
+    }
+    pptxValidateXmlStrict(data)?;
 }

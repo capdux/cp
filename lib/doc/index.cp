@@ -64,6 +64,16 @@ export {
 export {
     DOCX_MAIN_CONTENT_TYPE,
     DOCX_HYPERLINK_REL_TYPE,
+    OOXML_MAX_ZIP_ENTRIES,
+    OOXML_MAX_PART_SIZE,
+    OOXML_MAX_TOTAL_UNCOMPRESSED,
+    OOXML_MAX_XML_DEPTH,
+    scalarOoxmlFindTagOrAmp,
+    simdOoxmlFindTagOrAmp,
+    scalarOoxmlBytesEqual,
+    simdOoxmlBytesEqual,
+    isSafeOoxmlPartPath,
+    validateDocxStrict,
     DocxError,
     DocxCoreProps,
     DocxParagraph,
@@ -181,6 +191,7 @@ export {
     pptxSlideXmlToMarkdown,
     PptxDetailedStats,
     computePptxSlideStats,
+    validatePptxStrict,
 } from "./pptx.cp";
 
 // --- EPUB 2/3 OCF & OPF E-Book Package ---
