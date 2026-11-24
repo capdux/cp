@@ -1,9 +1,22 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft COFF / PE-COFF Object Parser) | Created: 2026-11-22
+// Reference-hardened against gimli-rs/object (MIT/Apache-2.0)
+// Origin: Pure-CP Stdlib (Zero-Alloc Microsoft COFF / PE-COFF Object Parser + 16-Lane SIMD Scanner) | Created: 2026-11-22
+
+import { simdObjTrimNul16, simdObjBytesEqual } from "./macho.cp";
 
 pub const COFF_HEADER_SIZE: usize = 20;
 pub const COFF_SECTION_SIZE: usize = 40;
 pub const COFF_SYMBOL_SIZE: usize = 18;
 pub const COFF_RELOC_SIZE: usize = 10;
+
+pub const PE_DOS_MAGIC: u16 = 0x5A4D;
+pub const PE32_OPT_MAGIC: u16 = 0x010B;
+pub const PE32PLUS_OPT_MAGIC: u16 = 0x020B;
+pub const PE32_MIN_OPT_HEADER_SIZE: u16 = 96;
+pub const PE32PLUS_MIN_OPT_HEADER_SIZE: u16 = 112;
+
+/// Safety bounds preventing resource exhaustion & multiplication overflow
+pub const COFF_MAX_SECTIONS: u16 = 4096;
+pub const COFF_MAX_SYMBOLS: u32 = 1_000_000;
 
 // Machine Types
 pub const MACHINE_UNKNOWN: u16 = 0x0000;
@@ -32,6 +45,19 @@ pub const SYM_UNDEFINED: i16 = 0;
 pub const SYM_ABSOLUTE: i16 = -1;
 pub const SYM_DEBUG: i16 = -2;
 
+pub err CoffError {
+    TruncatedHeader,
+    InvalidMachine,
+    InvalidPeSignature,
+    InvalidOptionalHeader,
+    TooManySections,
+    SectionTableOutOfBounds,
+    SectionDataOutOfBounds,
+    TooManySymbols,
+    SymbolTableOutOfBounds,
+    InvalidStringTable,
+}
+
 fn readU16Le(buf: []const u8, off: usize): u16 {
     const b0 = buf[off] as u16;
     const b1 = buf[off + 1] as u16;
@@ -51,7 +77,7 @@ fn readU32Le(buf: []const u8, off: usize): u32 {
 }
 
 fn copy8(src: []const u8, off: usize): [8]u8 {
-    let out: [8]u8 = undefined;
+    let out: [8]u8 = [0; 8];
     let i: usize = 0;
     while (i < 8) {
         out[i] = src[off + i];
@@ -88,6 +114,26 @@ pub fn isKnownCoffMachine(machine: u16): bool {
         machine == MACHINE_AMD64 ||
         machine == MACHINE_ARM64 ||
         machine == MACHINE_RISCV64;
+}
+
+/// Locates the 20-byte COFF `IMAGE_FILE_HEADER` offset inside either a PE image (MZ + `PE\0\0`)
+/// or a standalone COFF `.obj` buffer (offset `0`). Returns `null` if MZ header is malformed.
+pub fn locateCoffHeaderOffset(data: []const u8): usize? {
+    if (data.len >= 2 && readU16Le(data, 0) == PE_DOS_MAGIC) {
+        if (data.len < 64) return null;
+        const pe_off_u64: u64 = readU32Le(data, 60) as u64;
+        const total_u64: u64 = data.len as u64;
+        if (pe_off_u64 > total_u64 || 4 > total_u64 - pe_off_u64) return null;
+        const pe_off = pe_off_u64 as usize;
+        if (!simdObjBytesEqual(data[pe_off .. pe_off + 4], "PE\x00\x00")) {
+            return null;
+        }
+        const coff_off = pe_off + 4;
+        if (coff_off > data.len || COFF_HEADER_SIZE > data.len - coff_off) return null;
+        return coff_off;
+    }
+    if (data.len < COFF_HEADER_SIZE) return null;
+    return 0;
 }
 
 /// Parsed 20-byte COFF file header (`IMAGE_FILE_HEADER`).
@@ -129,13 +175,9 @@ pub struct CoffSection {
         return (_.characteristics & SCN_MEM_EXECUTE) != 0;
     }
 
-    /// Returns the NUL-trimmed short name slice from `raw_name[0..8]`.
+    /// Returns the NUL-trimmed short name slice from `raw_name[0..8]` using SIMD NUL scan.
     fn shortName(): []const u8 {
-        let end: usize = 0;
-        while (end < 8 && _.raw_name[end] != 0) {
-            end += 1;
-        }
-        return _.raw_name[0..end];
+        return simdObjTrimNul16(_.raw_name[0..8]);
     }
 }
 
@@ -174,7 +216,7 @@ pub struct CoffReloc {
     reloc_type: u16,
 }
 
-/// Zero-copy view of a parsed COFF / PE-COFF `.obj` file.
+/// Zero-copy view of a parsed COFF / PE-COFF `.obj` or PE32/PE32+ file.
 pub struct CoffObject {
     raw: []const u8,
     header: CoffHeader,
@@ -188,7 +230,7 @@ pub struct CoffObject {
             return null;
         }
         const off = _.sec_table_off + idx * COFF_SECTION_SIZE;
-        if (off + COFF_SECTION_SIZE > _.raw.len) {
+        if (off > _.raw.len || COFF_SECTION_SIZE > _.raw.len - off) {
             return null;
         }
         return CoffSection {
@@ -202,6 +244,22 @@ pub struct CoffObject {
             characteristics: readU32Le(_.raw, off + 36),
             raw_off: off,
         };
+    }
+
+    /// Finds the first section whose resolved name matches `target` using 16-lane SIMD comparison.
+    pub fn findSectionByName(target: []const u8): CoffSection? {
+        let i: usize = 0;
+        const count = _.header.num_sections as usize;
+        while (i < count) : (i += 1) {
+            if (sec := _.sectionAt(i)) {
+                if (name := _.sectionName(sec)) {
+                    if (simdObjBytesEqual(name, target)) {
+                        return sec;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /// Returns a zero-copy slice of the raw section data.
@@ -228,31 +286,25 @@ pub struct CoffObject {
         }
         const start = _.str_table_off + rel;
         const limit = _.str_table_off + _.str_table_len;
-        let end = start;
-        while (end < limit && _.raw[end] != 0) {
-            end += 1;
-        }
-        if (end >= limit) {
+        const trimmed = simdObjTrimNul16(_.raw[start..limit]);
+        if (trimmed.len >= limit - start) {
             return null;
         }
-        return _.raw[start..end];
+        return trimmed;
     }
 
     /// Resolves the section name, supporting `/<decimal>` long names in the COFF string table.
     fn sectionName(sec: CoffSection): ([]const u8)? {
-        let len: usize = 0;
-        while (len < 8 && sec.raw_name[len] != 0) {
-            len += 1;
-        }
-        if (len >= 2 && sec.raw_name[0] == '/') {
-            if (off := parseDecimalU32(sec.raw_name[1..len])) {
+        const trimmed = simdObjTrimNul16(sec.raw_name[0..8]);
+        if (trimmed.len >= 2 && trimmed[0] == '/') {
+            if (off := parseDecimalU32(trimmed[1..])) {
                 return _.stringAt(off);
             }
         }
-        if (sec.raw_off + len > _.raw.len) {
+        if (sec.raw_off + trimmed.len > _.raw.len) {
             return null;
         }
-        return _.raw[sec.raw_off .. sec.raw_off + len];
+        return _.raw[sec.raw_off .. sec.raw_off + trimmed.len];
     }
 
     /// Returns the symbol table entry at 0-based index `idx`.
@@ -260,10 +312,13 @@ pub struct CoffObject {
         if (_.header.ptr_to_symbol_table == 0 || idx >= (_.header.num_symbols as usize)) {
             return null;
         }
-        const off = (_.header.ptr_to_symbol_table as usize) + idx * COFF_SYMBOL_SIZE;
-        if (off + COFF_SYMBOL_SIZE > _.raw.len) {
+        const sym_base = _.header.ptr_to_symbol_table as u64;
+        const rel = (idx as u64) * (COFF_SYMBOL_SIZE as u64);
+        const total = _.raw.len as u64;
+        if (sym_base > total || rel > total - sym_base || (COFF_SYMBOL_SIZE as u64) > total - sym_base - rel) {
             return null;
         }
+        const off = (sym_base + rel) as usize;
         const zeroes = readU32Le(_.raw, off);
         let str_off: u32? = null;
         if (zeroes == 0) {
@@ -286,14 +341,11 @@ pub struct CoffObject {
         if (off := sym.str_table_offset) {
             return _.stringAt(off);
         }
-        let len: usize = 0;
-        while (len < 8 && sym.raw_name[len] != 0) {
-            len += 1;
-        }
-        if (sym.raw_off + len > _.raw.len) {
+        const trimmed = simdObjTrimNul16(sym.raw_name[0..8]);
+        if (sym.raw_off + trimmed.len > _.raw.len) {
             return null;
         }
-        return _.raw[sym.raw_off .. sym.raw_off + len];
+        return _.raw[sym.raw_off .. sym.raw_off + trimmed.len];
     }
 
     /// Returns relocation entry `idx` for section `sec`.
@@ -301,12 +353,13 @@ pub struct CoffObject {
         if (idx >= (sec.num_relocs as usize)) {
             return null;
         }
-        const start = sec.ptr_to_relocs as usize;
-        const rel_off = idx * COFF_RELOC_SIZE;
-        if (start > _.raw.len || rel_off > _.raw.len - start || _.raw.len - start - rel_off < COFF_RELOC_SIZE) {
+        const start = sec.ptr_to_relocs as u64;
+        const rel_off = (idx as u64) * (COFF_RELOC_SIZE as u64);
+        const total = _.raw.len as u64;
+        if (start > total || rel_off > total - start || (COFF_RELOC_SIZE as u64) > total - start - rel_off) {
             return null;
         }
-        const off = start + rel_off;
+        const off = (start + rel_off) as usize;
         return CoffReloc {
             virtual_addr: readU32Le(_.raw, off),
             symbol_idx: readU32Le(_.raw, off + 4),
@@ -315,28 +368,46 @@ pub struct CoffObject {
     }
 }
 
-/// Parses and validates a COFF / PE-COFF `.obj` buffer.
-/// Validates the 20B header, section table bounds, symbol table bounds, and 4B string table size.
-pub fn parseCoff(data: []const u8): CoffObject? {
-    if (data.len < COFF_HEADER_SIZE) {
+fn parseCoffAtOffset(data: []const u8, hdr_off: usize): CoffObject? {
+    if (hdr_off > data.len || COFF_HEADER_SIZE > data.len - hdr_off) {
         return null;
     }
 
-    const machine = readU16Le(data, 0);
+    const machine = readU16Le(data, hdr_off);
     if (!isKnownCoffMachine(machine)) {
         return null;
     }
 
-    const num_sections = readU16Le(data, 2);
-    const timestamp = readU32Le(data, 4);
-    const ptr_to_symbol_table = readU32Le(data, 8);
-    const num_symbols = readU32Le(data, 12);
-    const size_of_opt_header = readU16Le(data, 16);
-    const characteristics = readU16Le(data, 18);
+    const num_sections = readU16Le(data, hdr_off + 2);
+    if (num_sections > COFF_MAX_SECTIONS) {
+        return null;
+    }
+    const timestamp = readU32Le(data, hdr_off + 4);
+    const ptr_to_symbol_table = readU32Le(data, hdr_off + 8);
+    const num_symbols = readU32Le(data, hdr_off + 12);
+    const size_of_opt_header = readU16Le(data, hdr_off + 16);
+    const characteristics = readU16Le(data, hdr_off + 18);
 
-    const sec_table_off = COFF_HEADER_SIZE + (size_of_opt_header as usize);
-    const sec_table_bytes = (num_sections as usize) * COFF_SECTION_SIZE;
-    if (sec_table_off > data.len || sec_table_bytes > data.len - sec_table_off) {
+    const opt_off = hdr_off + COFF_HEADER_SIZE;
+    const total_u64 = data.len as u64;
+    if ((opt_off as u64) + (size_of_opt_header as u64) > total_u64) {
+        return null;
+    }
+    if (size_of_opt_header > 0) {
+        if (size_of_opt_header < 2) return null;
+        const opt_magic = readU16Le(data, opt_off);
+        if (opt_magic == PE32_OPT_MAGIC) {
+            if (size_of_opt_header < PE32_MIN_OPT_HEADER_SIZE) return null;
+        } else if (opt_magic == PE32PLUS_OPT_MAGIC) {
+            if (size_of_opt_header < PE32PLUS_MIN_OPT_HEADER_SIZE) return null;
+        } else {
+            return null;
+        }
+    }
+
+    const sec_table_off = opt_off + (size_of_opt_header as usize);
+    const sec_table_bytes: u64 = (num_sections as u64) * (COFF_SECTION_SIZE as u64);
+    if ((sec_table_off as u64) > total_u64 || sec_table_bytes > total_u64 - (sec_table_off as u64)) {
         return null;
     }
 
@@ -347,22 +418,26 @@ pub fn parseCoff(data: []const u8): CoffObject? {
             return null;
         }
     } else {
-        const sym_off = ptr_to_symbol_table as usize;
-        const sym_bytes = (num_symbols as usize) * COFF_SYMBOL_SIZE;
-        if (sym_off > data.len || sym_bytes > data.len - sym_off) {
+        if (num_symbols > COFF_MAX_SYMBOLS) {
             return null;
         }
-        const st_off = sym_off + sym_bytes;
-        if (st_off < data.len) {
-            if (data.len - st_off < 4) {
+        const sym_off: u64 = ptr_to_symbol_table as u64;
+        const sym_bytes: u64 = (num_symbols as u64) * (COFF_SYMBOL_SIZE as u64);
+        if (sym_off > total_u64 || sym_bytes > total_u64 - sym_off) {
+            return null;
+        }
+        const st_off_u64 = sym_off + sym_bytes;
+        if (st_off_u64 < total_u64) {
+            if (total_u64 - st_off_u64 < 4) {
                 return null;
             }
-            const st_size = readU32Le(data, st_off) as usize;
-            if (st_size < 4 || st_size > data.len - st_off) {
+            const st_off = st_off_u64 as usize;
+            const st_size: u64 = readU32Le(data, st_off) as u64;
+            if (st_size < 4 || st_size > total_u64 - st_off_u64) {
                 return null;
             }
             str_table_off = st_off;
-            str_table_len = st_size;
+            str_table_len = st_size as usize;
         }
     }
 
@@ -381,4 +456,111 @@ pub fn parseCoff(data: []const u8): CoffObject? {
         str_table_off: str_table_off,
         str_table_len: str_table_len,
     };
+}
+
+/// Parses and validates a standalone COFF `.obj` buffer (offset 0).
+pub fn parseCoff(data: []const u8): CoffObject? {
+    return parseCoffAtOffset(data, 0);
+}
+
+/// Parses and validates either a PE32/PE32+ image (MZ + `PE\0\0` + COFF) or a standalone COFF `.obj`.
+pub fn parsePeOrCoff(data: []const u8): CoffObject? {
+    const hdr_off = locateCoffHeaderOffset(data) ?? return null;
+    return parseCoffAtOffset(data, hdr_off);
+}
+
+/// Zero-allocation strict validator for COFF `.obj` and PE32/PE32+ images aligned with `gimli-rs/object`.
+/// Verifies MZ/PE signatures, machine ID, optional header magic/size, section table bounds,
+/// every section's `PointerToRawData + SizeOfRawData` & relocations, and symbol/string table bounds.
+pub fn validateCoffStrict(data: []const u8): CoffError!void {
+    if (data.len < COFF_HEADER_SIZE) return err.TruncatedHeader;
+
+    let hdr_off: usize = 0;
+    if (readU16Le(data, 0) == PE_DOS_MAGIC) {
+        if (data.len < 64) return err.TruncatedHeader;
+        const pe_off_u64: u64 = readU32Le(data, 60) as u64;
+        const total_u64: u64 = data.len as u64;
+        if (pe_off_u64 > total_u64 || 4 > total_u64 - pe_off_u64) return err.InvalidPeSignature;
+        const pe_off = pe_off_u64 as usize;
+        if (!simdObjBytesEqual(data[pe_off .. pe_off + 4], "PE\x00\x00")) {
+            return err.InvalidPeSignature;
+        }
+        hdr_off = pe_off + 4;
+        if (hdr_off > data.len || COFF_HEADER_SIZE > data.len - hdr_off) return err.TruncatedHeader;
+    }
+
+    const machine = readU16Le(data, hdr_off);
+    if (!isKnownCoffMachine(machine)) return err.InvalidMachine;
+
+    const num_sections = readU16Le(data, hdr_off + 2);
+    if (num_sections > COFF_MAX_SECTIONS) return err.TooManySections;
+
+    const ptr_to_symbol_table = readU32Le(data, hdr_off + 8);
+    const num_symbols = readU32Le(data, hdr_off + 12);
+    const size_of_opt_header = readU16Le(data, hdr_off + 16);
+
+    const total_u64: u64 = data.len as u64;
+    const opt_off: usize = hdr_off + COFF_HEADER_SIZE;
+    if ((opt_off as u64) + (size_of_opt_header as u64) > total_u64) {
+        return err.InvalidOptionalHeader;
+    }
+    if (size_of_opt_header > 0) {
+        if (size_of_opt_header < 2) return err.InvalidOptionalHeader;
+        const opt_magic = readU16Le(data, opt_off);
+        if (opt_magic == PE32_OPT_MAGIC) {
+            if (size_of_opt_header < PE32_MIN_OPT_HEADER_SIZE) return err.InvalidOptionalHeader;
+        } else if (opt_magic == PE32PLUS_OPT_MAGIC) {
+            if (size_of_opt_header < PE32PLUS_MIN_OPT_HEADER_SIZE) return err.InvalidOptionalHeader;
+        } else {
+            return err.InvalidOptionalHeader;
+        }
+    }
+
+    const sec_table_off: usize = opt_off + (size_of_opt_header as usize);
+    const sec_table_bytes: u64 = (num_sections as u64) * (COFF_SECTION_SIZE as u64);
+    if ((sec_table_off as u64) > total_u64 || sec_table_bytes > total_u64 - (sec_table_off as u64)) {
+        return err.SectionTableOutOfBounds;
+    }
+
+    // Validate every section's raw data and relocation table bounds
+    let si: usize = 0;
+    while (si < (num_sections as usize)) : (si += 1) {
+        const s_off = sec_table_off + si * COFF_SECTION_SIZE;
+        const size_of_raw_data: u64 = readU32Le(data, s_off + 16) as u64;
+        const ptr_to_raw_data: u64 = readU32Le(data, s_off + 20) as u64;
+        const ptr_to_relocs: u64 = readU32Le(data, s_off + 24) as u64;
+        const num_relocs: u64 = readU16Le(data, s_off + 32) as u64;
+
+        if (size_of_raw_data > 0) {
+            if (ptr_to_raw_data > total_u64 || size_of_raw_data > total_u64 - ptr_to_raw_data) {
+                return err.SectionDataOutOfBounds;
+            }
+        }
+        if (num_relocs > 0) {
+            const rel_bytes: u64 = num_relocs * (COFF_RELOC_SIZE as u64);
+            if (ptr_to_relocs > total_u64 || rel_bytes > total_u64 - ptr_to_relocs) {
+                return err.SectionDataOutOfBounds;
+            }
+        }
+    }
+
+    // Validate symbol table & string table bounds
+    if (ptr_to_symbol_table == 0) {
+        if (num_symbols != 0) return err.SymbolTableOutOfBounds;
+    } else {
+        if (num_symbols > COFF_MAX_SYMBOLS) return err.TooManySymbols;
+        const sym_off: u64 = ptr_to_symbol_table as u64;
+        const sym_bytes: u64 = (num_symbols as u64) * (COFF_SYMBOL_SIZE as u64);
+        if (sym_off > total_u64 || sym_bytes > total_u64 - sym_off) {
+            return err.SymbolTableOutOfBounds;
+        }
+        const st_off_u64 = sym_off + sym_bytes;
+        if (st_off_u64 < total_u64) {
+            if (total_u64 - st_off_u64 < 4) return err.InvalidStringTable;
+            const st_size: u64 = readU32Le(data, st_off_u64 as usize) as u64;
+            if (st_size < 4 || st_size > total_u64 - st_off_u64) {
+                return err.InvalidStringTable;
+            }
+        }
+    }
 }

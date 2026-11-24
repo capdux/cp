@@ -13,7 +13,7 @@
 
 | 子模块 | 核心职责 | 主要公开符号（含防冲突别名） |
 | :--- | :--- | :--- |
-| `macho.cp` | Apple Mach-O 32/64 与 Universal Fat Binary 解析 | `MachoKind`, `MachoHeader`, `MachoLoadCmd`, `FatArchEntry`, `detectMachoKind`, `parseMachoHeader`, `MachoLoadCmdIter`, `FatArchIter` |
+| `macho.cp` | Apple Mach-O 32/64 与 Universal Fat Binary 解析（对标 `gimli-rs/object` MIT/Apache-2.0 加固 + 16-lane SIMD NUL 裁剪/名称比对 & 零堆严格校验器） | `MachoKind`, `MH_MAGIC`/`MH_CIGAM`/`MH_MAGIC_64`/`MH_CIGAM_64`, `FAT_MAGIC`/`FAT_MAGIC_64`, `LC_SEGMENT`/`LC_SEGMENT_64`, `MachoError`, `MachoHeader`, `MachoLoadCmd`, `MachoSegment`, `MachoSection`, `FatArchEntry`, `simdObjTrimNul16`, `simdObjBytesEqual`, `detectMachoKind`, `parseMachoHeader`, `MachoLoadCmdIter`, `parseMachoSegment`, `parseMachoSectionAt`, `findMachoSection`, `extractFatArchSlice`, `FatArchIter`, `validateMachoStrict`（测试：`cap/test/testBinfmtObjectRustRefSuite.cp`） |
 | `pcapng.cp` | PCAPng 抓包区块（SHB/IDB/EPB/Options）零分配解析 | `PcapngBlock`, `ShbInfo`, `IdbInfo`, `EpbPacket`, `PcapngOption`, `isPcapng`, `PcapngBlockIter`, `parseShb`, `parseIdb`, `parseEpb` |
 | `vmdk.cp` | VMware VMDK SparseExtentHeader 与文本描述符解析 | `VmdkSparseHeader`, `isVmdkSparse`, `parseVmdkSparseHeader`, `VmdkExtent`, `VmdkExtentIter`, `VmdkDescriptor`, `parseVmdkDescriptor` |
 | `netcdf.cp` | Unidata NetCDF CDF-1/CDF-2/CDF-5 头与维度/变量/属性迭代 | `NetcdfFormat`, `NetcdfType`, `NetcdfHeader`, `detectNetcdfFormat`, `parseNetcdfHeader`, `NetcdfDimIter`, `NetcdfAttrIter`, `NetcdfVarIter` |
@@ -79,7 +79,7 @@ pub fn demoBinfmt() {
 
 | 子模块文件 | 领域分类 | 核心导出说明 |
 | :--- | :--- | :--- |
-| `lib/binfmt/coff.cp` | COFF / PE Object File | `isCoff`, `parseCoffHeader`, `CoffSectionIter`, `CoffSymbolIter` |
+| `lib/binfmt/coff.cp` | COFF / PE32 / PE32+ Object File（对标 `gimli-rs/object` MIT/Apache-2.0 加固 + 16-lane SIMD NUL 裁剪/名称比对 & 零堆严格校验器） | `CoffError`, `PE_DOS_MAGIC`, `PE32_OPT_MAGIC`, `PE32PLUS_OPT_MAGIC`, `COFF_MAX_SECTIONS`, `COFF_MAX_SYMBOLS`, `isKnownCoffMachine`, `locateCoffHeaderOffset`, `CoffHeader`, `CoffSection`, `CoffSymbol`, `CoffReloc`, `CoffObject`（含 `findSectionByName`）, `parseCoff`, `parsePeOrCoff`, `validateCoffStrict`（测试：`cap/test/testBinfmtObjectRustRefSuite.cp`） |
 | `lib/binfmt/bincode.cp` | Rust Bincode v1/v2 二进制编解码 | `BincodeReader`, `BincodeWriter`, `BincodeConfig` |
 | `lib/binfmt/borsh.cp` | Borsh 确定性二进制编解码 | `BorshReader`, `BorshWriter` |
 | `lib/binfmt/marshal.cp` | Ruby Marshal 4.8 二进制解析 | `isMarshal`, `parseMarshalHeader`, `MarshalReader` |

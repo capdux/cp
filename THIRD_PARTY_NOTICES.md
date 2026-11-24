@@ -96,6 +96,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **roaring-rs** (`RoaringBitmap`) | <https://github.com/RoaringBitmap/roaring-rs> | MIT / Apache-2.0 | `lib/ds/roaring.cp` | Copyright (c) 2015-2024 RoaringBitmap Contributors |
 | **similar** (`mitsuhiko`) | <https://github.com/mitsuhiko/similar> | Apache-2.0 | `lib/text/myersDiff.cp`, `lib/text/unifiedDiff.cp` | Copyright (c) 2021-2024 Armin Ronacher |
 | **roxmltree** (`RazrFalcon`) | <https://github.com/RazrFalcon/roxmltree> | MIT / Apache-2.0 | `lib/xml/parser.cp`, `lib/xml/escape.cp`, `lib/xml/writer.cp` | Copyright (c) 2018-2024 Yevhenii Reizner (RazrFalcon) |
+| **object** (`gimli-rs`) | <https://github.com/gimli-rs/object> | MIT OR Apache-2.0 | `lib/binfmt/macho.cp`, `lib/binfmt/coff.cp` | Copyright (c) 2016-2024 Gimli Contributors |
 
 ---
 
