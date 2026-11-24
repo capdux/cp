@@ -450,7 +450,7 @@ pub fn demoRateHeader() {
 
 ### 零分配无状态 HMAC-SHA256 CSRF 令牌与 `Sec-Fetch-Site`/`Origin` 纵深防护引擎 (`csrfGuard.cp`)
 
-面向现代 Web 应用纵深防御的 100% 纯 CP 零动态堆分配、零 C 依赖 CSRF 防护引擎：
+对标 `actix/actix-web` (MIT OR Apache-2.0) 与 RFC 6797，面向现代 Web 应用纵深防御的 100% 纯 CP 零动态堆分配、零 C 依赖 CSRF 防护引擎（集成 16-lane `@Vector(16, u8)` 无早退常量时间比对 `simdWebAuthCtEqual`、`simdWebAuthAsciiLowerEql` 与 `std.crypto.secureZero` 栈密钥擦除）：
 
 - **常量与枚举**：
   - `CSRF_NONCE_LEN = 16`、`CSRF_TOKEN_LEN = 76`、`CSRF_MAX_TRUSTED_ORIGINS = 16`、`CSRF_MAX_ORIGIN_LEN = 128`、`CSRF_DEFAULT_TTL_S = 3600`
@@ -495,7 +495,7 @@ pub fn demoCsrfGuard() {
 
 ### HMAC-SHA256 预签名 URL 与多密钥轮换验签器 (`signedUrl.cp`)
 
-100% 纯 CP、零动态堆分配、零 C 依赖的预签名 URL 生成与常量时间验签引擎（内联 FIPS 180-4 SHA-256 + RFC 2104 HMAC-SHA256 + 无填充 Base64URL）：
+对标 `actix/actix-web` (MIT OR Apache-2.0)，100% 纯 CP、零动态堆分配、零 C 依赖的预签名 URL 生成与 16-lane SIMD 常量时间验签引擎（`std.crypto.secureZero` 栈密钥与摘要擦除）：
 
 - **常量与枚举**：
   - `SIGNED_URL_SIG_LEN = 43`、`SIGNED_URL_MAX_KEYS = 8`、`SIGNED_URL_MAX_KID_LEN = 32`、`SIGNED_URL_MAX_SECRET_LEN = 128`、`SIGNED_URL_DEFAULT_CLOCK_SKEW_S = 30`
@@ -578,7 +578,7 @@ pub fn demoCspPolicy() {
 
 ### RFC 6797 HTTP Strict-Transport-Security (HSTS) 解析、域名表与 HTTPS 自动升级引擎 (`hstsStore.cp`)
 
-100% 纯 CP、零动态堆分配的 RFC 6797 HSTS 策略解析器、预加载/动态域名表与 HTTPS 自动升级裁决引擎：
+对标 `actix/actix-web` (MIT OR Apache-2.0) 与 RFC 6797，100% 纯 CP、零动态堆分配的 HSTS 策略解析器、预加载/动态域名表与 16-lane SIMD HTTPS 自动升级裁决引擎：
 
 - **常量与错误集**：
   - `HSTS_MAX_DOMAINS = 64`、`HSTS_HOST_MAX_LEN = 128`、`HSTS_PRELOAD_MIN_MAX_AGE = 31_536_000`

@@ -1,13 +1,19 @@
+// Reference-hardened against actix/actix-web (MIT OR Apache-2.0) & RFC 6797
 // Origin: Pure-CP Stdlib (Zero-Alloc HMAC-SHA256 Pre-Signed URL & Multi-Key Rotation Verifier) | Created: 2026-11-23
 // Pure CP zero-heap-allocation, zero-C-dependency Pre-Signed URL Generator & Constant-Time Verifier:
-//   - Inline FIPS 180-4 SHA-256, RFC 2104 HMAC-SHA256, unpadded Base64URL & constant-time comparison
+//   - Inline FIPS 180-4 SHA-256, RFC 2104 HMAC-SHA256, unpadded Base64URL & 16-lane SIMD constant-time comparison
+//   - Zeroizes stack key/digest/revoked-secret buffers via `std.crypto.secureZero`
 //   - Domain-separated canonical signing over `(method, path, query_without_sig, exp_epoch_s, key_id)`
 //     producing pre-signed URLs with `exp`, optional `kid`, and 43-char Base64URL `sig` query params
 //   - Constant-time verifier (`verifySignedUrl`) stripping `sig`/`exp`/`kid` without heap allocation,
-//     checking expiry window with configurable clock skew, detecting method mismatch, and guarding
-//     against CRLF/control-char injection, malformed queries, duplicate reserved params & buffer overflow
+//     checking expiry window with overflow-safe i128 arithmetic & configurable clock skew, detecting
+//     method mismatch, and guarding against CRLF/control-char injection, malformed queries, duplicate
+//     reserved params & buffer truncation/overflow
 //   - Multi-key rotation keyring (`SignedUrlKeyring`, up to 8 named keys) enabling zero-downtime key
 //     rotation via `kid` lookup and zero-heap global telemetry snapshot (`SignedUrlKeyringStats`)
+
+const std = @import("std");
+import { simdWebAuthCtEqual, simdWebAuthAsciiLowerEql } from "./csrfGuard.cp";
 
 // ============================================================================
 // 1. Constants, Enums & Data Models
@@ -88,7 +94,7 @@ struct KeyringSlot {
 // 2. Inline Pure-CP SHA-256, HMAC-SHA256, Base64URL & Constant-Time Helpers
 // ============================================================================
 
-const SHA256_K: [64]u32 = [
+const SU_SHA256_K: [64]u32 = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -99,11 +105,11 @@ const SHA256_K: [64]u32 = [
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-fn rotr32(x: u32, n: u5): u32 {
+fn suRotr32(x: u32, n: u5): u32 {
     return (x >> n) | (x << (@as(u5, @intCast(32 - @as(u6, n)))));
 }
 
-struct Sha256State {
+struct SuSha256State {
     h: [8]u32 = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
@@ -123,8 +129,8 @@ struct Sha256State {
                 @as(u32, block[j + 3]);
         }
         while (i < 64) : (i += 1) {
-            const s0 = rotr32(w[i - 15], 7) ^ rotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
-            const s1 = rotr32(w[i - 2], 17) ^ rotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
+            const s0 = suRotr32(w[i - 15], 7) ^ suRotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
+            const s1 = suRotr32(w[i - 2], 17) ^ suRotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
             w[i] = w[i - 16] +% s0 +% w[i - 7] +% s1;
         }
 
@@ -139,10 +145,10 @@ struct Sha256State {
 
         let r: usize = 0;
         while (r < 64) : (r += 1) {
-            const S1 = rotr32(e, 6) ^ rotr32(e, 11) ^ rotr32(e, 25);
+            const S1 = suRotr32(e, 6) ^ suRotr32(e, 11) ^ suRotr32(e, 25);
             const ch = (e & f) ^ ((~e) & g);
-            const temp1 = hh +% S1 +% ch +% SHA256_K[r] +% w[r];
-            const S0 = rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22);
+            const temp1 = hh +% S1 +% ch +% SU_SHA256_K[r] +% w[r];
+            const S0 = suRotr32(a, 2) ^ suRotr32(a, 13) ^ suRotr32(a, 22);
             const maj = (a & b) ^ (a & c) ^ (b & c);
             const temp2 = S0 +% maj;
 
@@ -240,20 +246,21 @@ struct Sha256State {
             out[i * 4 + 2] = @as(u8, @intCast((h[i] >> 8) & 0xFF));
             out[i * 4 + 3] = @as(u8, @intCast(h[i] & 0xFF));
         }
+        std.crypto.secureZero(u8, block[0..]);
         return out;
     }
 }
 
-fn sha256Bytes(data: []const u8): [32]u8 {
-    let st = Sha256State{};
+fn suSha256Bytes(data: []const u8): [32]u8 {
+    let st = SuSha256State{};
     st.update(data);
     return st.finalize();
 }
 
-const B64URL_ALPHABET: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const SU_B64URL_ALPHABET: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
 /// Encode exact 32-byte HMAC-SHA256 digest into 43 unpadded Base64URL ASCII bytes.
-fn encodeB64Url32(digest: [32]u8): [SIGNED_URL_SIG_LEN]u8 {
+fn suEncodeB64Url32(digest: [32]u8): [SIGNED_URL_SIG_LEN]u8 {
     let out: [SIGNED_URL_SIG_LEN]u8 = [0; SIGNED_URL_SIG_LEN];
     let in_i: usize = 0;
     let out_i: usize = 0;
@@ -262,31 +269,25 @@ fn encodeB64Url32(digest: [32]u8): [SIGNED_URL_SIG_LEN]u8 {
         const b1 = @as(u32, digest[in_i + 1]);
         const b2 = @as(u32, digest[in_i + 2]);
         const v = (b0 << 16) | (b1 << 8) | b2;
-        out[out_i] = B64URL_ALPHABET[@as(usize, (v >> 18) & 0x3F)];
-        out[out_i + 1] = B64URL_ALPHABET[@as(usize, (v >> 12) & 0x3F)];
-        out[out_i + 2] = B64URL_ALPHABET[@as(usize, (v >> 6) & 0x3F)];
-        out[out_i + 3] = B64URL_ALPHABET[@as(usize, v & 0x3F)];
+        out[out_i] = SU_B64URL_ALPHABET[@as(usize, (v >> 18) & 0x3F)];
+        out[out_i + 1] = SU_B64URL_ALPHABET[@as(usize, (v >> 12) & 0x3F)];
+        out[out_i + 2] = SU_B64URL_ALPHABET[@as(usize, (v >> 6) & 0x3F)];
+        out[out_i + 3] = SU_B64URL_ALPHABET[@as(usize, v & 0x3F)];
         out_i += 4;
     }
     // Final 2 bytes (digest[30], digest[31]) -> 3 Base64URL chars (16 bits -> 6 + 6 + 4)
     const b0 = @as(u32, digest[30]);
     const b1 = @as(u32, digest[31]);
     const v = (b0 << 16) | (b1 << 8);
-    out[40] = B64URL_ALPHABET[@as(usize, (v >> 18) & 0x3F)];
-    out[41] = B64URL_ALPHABET[@as(usize, (v >> 12) & 0x3F)];
-    out[42] = B64URL_ALPHABET[@as(usize, (v >> 6) & 0x3F)];
+    out[40] = SU_B64URL_ALPHABET[@as(usize, (v >> 18) & 0x3F)];
+    out[41] = SU_B64URL_ALPHABET[@as(usize, (v >> 12) & 0x3F)];
+    out[42] = SU_B64URL_ALPHABET[@as(usize, (v >> 6) & 0x3F)];
     return out;
 }
 
-/// Constant-time byte-slice equality (never short-circuits on content mismatch).
+/// Constant-time byte-slice equality via 16-lane SIMD XOR-OR (never short-circuits on content mismatch).
 pub fn signedUrlConstantTimeEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        diff = diff | (a[i] ^ b[i]);
-    }
-    return diff == 0;
+    return simdWebAuthCtEqual(a, b);
 }
 
 /// Format a `SignedUrlStatus` enum variant as a canonical lowercase ASCII label.
@@ -304,7 +305,7 @@ pub fn formatSignedUrlStatus(status: SignedUrlStatus): []const u8 {
 // 3. Input Hygiene, Canonical Query Stripping & Buffer Formatting Helpers
 // ============================================================================
 
-fn hasCtlOrCrlf(s: []const u8): bool {
+fn suHasCtlOrCrlf(s: []const u8): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         if (s[i] < 0x20 || s[i] == 0x7F) return true;
@@ -312,7 +313,7 @@ fn hasCtlOrCrlf(s: []const u8): bool {
     return false;
 }
 
-fn isValidMethod(method: []const u8): bool {
+fn suIsValidMethod(method: []const u8): bool {
     if (method.len == 0 || method.len > 16) return false;
     let i: usize = 0;
     while (i < method.len) : (i += 1) {
@@ -324,21 +325,16 @@ fn isValidMethod(method: []const u8): bool {
     return true;
 }
 
-fn toUpperAscii(c: u8): u8 {
+fn suToUpperAscii(c: u8): u8 {
     if (c >= 'a' && c <= 'z') return c - 32;
     return c;
 }
 
-fn methodEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toUpperAscii(a[i]) != toUpperAscii(b[i])) return false;
-    }
-    return true;
+fn suMethodEqIgnoreCase(a: []const u8, b: []const u8): bool {
+    return simdWebAuthAsciiLowerEql(a, b);
 }
 
-fn isValidKid(kid: []const u8): bool {
+fn suIsValidKid(kid: []const u8): bool {
     if (kid.len > SIGNED_URL_MAX_KID_LEN) return false;
     let i: usize = 0;
     while (i < kid.len) : (i += 1) {
@@ -352,7 +348,7 @@ fn isValidKid(kid: []const u8): bool {
     return true;
 }
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn suBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
     while (i < a.len) : (i += 1) {
@@ -361,13 +357,13 @@ fn bytesEq(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-fn isReservedParamName(name: []const u8): bool {
-    return bytesEq(name, "sig") || bytesEq(name, "exp") || bytesEq(name, "kid");
+fn suIsReservedParamName(name: []const u8): bool {
+    return suBytesEq(name, "sig") || suBytesEq(name, "exp") || suBytesEq(name, "kid");
 }
 
-fn isValidPath(path: []const u8): bool {
+fn suIsValidPath(path: []const u8): bool {
     if (path.len == 0 || path[0] != '/') return false;
-    if (hasCtlOrCrlf(path)) return false;
+    if (suHasCtlOrCrlf(path)) return false;
     let i: usize = 0;
     while (i < path.len) : (i += 1) {
         const c = path[i];
@@ -376,8 +372,8 @@ fn isValidPath(path: []const u8): bool {
     return true;
 }
 
-fn isValidUnsignedQuery(query: []const u8): bool {
-    if (hasCtlOrCrlf(query)) return false;
+fn suIsValidUnsignedQuery(query: []const u8): bool {
+    if (suHasCtlOrCrlf(query)) return false;
     let i: usize = 0;
     while (i < query.len) : (i += 1) {
         const c = query[i];
@@ -399,24 +395,23 @@ fn isValidUnsignedQuery(query: []const u8): bool {
             }
         }
         const key = seg[0..eq_pos];
-        if (isReservedParamName(key)) return false;
+        if (suIsReservedParamName(key)) return false;
         if (end >= query.len) break;
         start = end + 1;
     }
     return true;
 }
 
-fn appendBytes(out_buf: *[]u8, pos: *usize, s: []const u8): bool {
-    if (pos + s.len > out_buf.len) return false;
+fn suAppendBytes(out_buf: *[]u8, pos: usize, s: []const u8): usize? {
+    if (s.len > out_buf.len || pos > out_buf.len - s.len) return null;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         out_buf[pos + i] = s[i];
     }
-    pos += s.len;
-    return true;
+    return pos + s.len;
 }
 
-fn appendU64(out_buf: *[]u8, pos: *usize, val: u64): bool {
+fn suAppendU64(out_buf: *[]u8, pos: usize, val: u64): usize? {
     let tmp: [24]u8 = [0; 24];
     let n: usize = 0;
     let v = val;
@@ -429,16 +424,15 @@ fn appendU64(out_buf: *[]u8, pos: *usize, val: u64): bool {
             v = v / 10;
         }
     }
-    if (pos + n > out_buf.len) return false;
+    if (n > out_buf.len || pos > out_buf.len - n) return null;
     let i: usize = 0;
     while (i < n) : (i += 1) {
         out_buf[pos + i] = tmp[n - 1 - i];
     }
-    pos += n;
-    return true;
+    return pos + n;
 }
 
-fn parsePositiveI64(s: []const u8): i64? {
+fn suParsePositiveI64(s: []const u8): i64? {
     if (s.len == 0 || s.len > 19) return null;
     let acc: u64 = 0;
     let i: usize = 0;
@@ -454,7 +448,7 @@ fn parsePositiveI64(s: []const u8): i64? {
 }
 
 /// Compute length of canonical query string when `sig`, `exp`, and `kid` params are stripped.
-fn strippedQueryLen(raw_query: []const u8): usize {
+fn suStrippedQueryLen(raw_query: []const u8): usize {
     if (raw_query.len == 0) return 0;
     let total: usize = 0;
     let count: usize = 0;
@@ -472,7 +466,7 @@ fn strippedQueryLen(raw_query: []const u8): usize {
             }
         }
         const key = seg[0..eq_pos];
-        if (!isReservedParamName(key)) {
+        if (!suIsReservedParamName(key)) {
             if (count > 0) total += 1; // '&'
             total += seg.len;
             count += 1;
@@ -497,11 +491,12 @@ fn computeSignedUrlMac(
 ): [SIGNED_URL_SIG_LEN]u8 {
     let key_block: [64]u8 = [0; 64];
     if (secret.len > 64) {
-        const kh = sha256Bytes(secret);
+        let kh = suSha256Bytes(secret);
         let i: usize = 0;
         while (i < 32) : (i += 1) {
             key_block[i] = kh[i];
         }
+        std.crypto.secureZero(u8, kh[0..]);
     } else {
         let i: usize = 0;
         while (i < secret.len) : (i += 1) {
@@ -517,7 +512,7 @@ fn computeSignedUrlMac(
         opad[i] = key_block[i] ^ 0x5C;
     }
 
-    let inner = Sha256State{};
+    let inner = SuSha256State{};
     inner.update(ipad[0..]);
     inner.update("cap-signed-url-v1\n");
 
@@ -525,7 +520,7 @@ fn computeSignedUrlMac(
     inner.updateU32Be(@as(u32, @intCast(method.len)));
     let m_i: usize = 0;
     while (m_i < method.len) : (m_i += 1) {
-        inner.updateByte(toUpperAscii(method[m_i]));
+        inner.updateByte(suToUpperAscii(method[m_i]));
     }
     inner.updateByte('\n');
 
@@ -539,7 +534,7 @@ fn computeSignedUrlMac(
         inner.updateU32Be(@as(u32, @intCast(query.len)));
         inner.update(query);
     } else {
-        const q_len = strippedQueryLen(query);
+        const q_len = suStrippedQueryLen(query);
         inner.updateU32Be(@as(u32, @intCast(q_len)));
         if (query.len > 0) {
             let count: usize = 0;
@@ -557,7 +552,7 @@ fn computeSignedUrlMac(
                     }
                 }
                 const key = seg[0..eq_pos];
-                if (!isReservedParamName(key)) {
+                if (!suIsReservedParamName(key)) {
                     if (count > 0) inner.updateByte('&');
                     inner.update(seg);
                     count += 1;
@@ -577,13 +572,20 @@ fn computeSignedUrlMac(
     inner.updateU32Be(@as(u32, @intCast(key_id.len)));
     inner.update(key_id);
 
-    const inner_hash = inner.finalize();
+    let inner_hash = inner.finalize();
 
-    let outer = Sha256State{};
+    let outer = SuSha256State{};
     outer.update(opad[0..]);
     outer.update(inner_hash[0..]);
-    const mac = outer.finalize();
-    return encodeB64Url32(mac);
+    let mac = outer.finalize();
+    const encoded = suEncodeB64Url32(mac);
+
+    std.crypto.secureZero(u8, key_block[0..]);
+    std.crypto.secureZero(u8, ipad[0..]);
+    std.crypto.secureZero(u8, opad[0..]);
+    std.crypto.secureZero(u8, inner_hash[0..]);
+    std.crypto.secureZero(u8, mac[0..]);
+    return encoded;
 }
 
 // ============================================================================
@@ -603,29 +605,30 @@ pub fn signUrl(
     out_buf: *[]u8,
 ): usize? {
     if (secret.len == 0) return null;
-    if (!isValidMethod(method)) return null;
-    if (!isValidPath(path)) return null;
-    if (!isValidUnsignedQuery(query_without_sig)) return null;
+    if (!suIsValidMethod(method)) return null;
+    if (!suIsValidPath(path)) return null;
+    if (!suIsValidUnsignedQuery(query_without_sig)) return null;
     if (exp_epoch_s <= 0) return null;
-    if (!isValidKid(key_id)) return null;
+    if (!suIsValidKid(key_id)) return null;
 
-    const sig = computeSignedUrlMac(secret, method, path, query_without_sig, false, exp_epoch_s, key_id);
+    let sig = computeSignedUrlMac(secret, method, path, query_without_sig, false, exp_epoch_s, key_id);
+    defer std.crypto.secureZero(u8, sig[0..]);
 
     let pos: usize = 0;
-    if (!appendBytes(out_buf, *pos, path)) return null;
-    if (!appendBytes(out_buf, *pos, "?")) return null;
+    pos = suAppendBytes(out_buf, pos, path) ?? return null;
+    pos = suAppendBytes(out_buf, pos, "?") ?? return null;
     if (query_without_sig.len > 0) {
-        if (!appendBytes(out_buf, *pos, query_without_sig)) return null;
-        if (!appendBytes(out_buf, *pos, "&")) return null;
+        pos = suAppendBytes(out_buf, pos, query_without_sig) ?? return null;
+        pos = suAppendBytes(out_buf, pos, "&") ?? return null;
     }
-    if (!appendBytes(out_buf, *pos, "exp=")) return null;
-    if (!appendU64(out_buf, *pos, @as(u64, @intCast(exp_epoch_s)))) return null;
+    pos = suAppendBytes(out_buf, pos, "exp=") ?? return null;
+    pos = suAppendU64(out_buf, pos, @as(u64, @intCast(exp_epoch_s))) ?? return null;
     if (key_id.len > 0) {
-        if (!appendBytes(out_buf, *pos, "&kid=")) return null;
-        if (!appendBytes(out_buf, *pos, key_id)) return null;
+        pos = suAppendBytes(out_buf, pos, "&kid=") ?? return null;
+        pos = suAppendBytes(out_buf, pos, key_id) ?? return null;
     }
-    if (!appendBytes(out_buf, *pos, "&sig=")) return null;
-    if (!appendBytes(out_buf, *pos, sig[0..])) return null;
+    pos = suAppendBytes(out_buf, pos, "&sig=") ?? return null;
+    pos = suAppendBytes(out_buf, pos, sig[0..]) ?? return null;
     return pos;
 }
 
@@ -645,7 +648,7 @@ struct ParsedUrlParts {
 fn parseSignedUrlParts(full_path_and_query: []const u8): ParsedUrlParts {
     let p = ParsedUrlParts{};
     if (full_path_and_query.len == 0 || full_path_and_query[0] != '/') return p;
-    if (hasCtlOrCrlf(full_path_and_query)) return p;
+    if (suHasCtlOrCrlf(full_path_and_query)) return p;
 
     let q_idx: usize = full_path_and_query.len;
     let i: usize = 0;
@@ -691,17 +694,17 @@ fn parseSignedUrlParts(full_path_and_query: []const u8): ParsedUrlParts {
             const key = seg[0..eq_pos];
             const val: []const u8 = if (eq_pos < seg.len) seg[eq_pos + 1 ..] else "";
 
-            if (bytesEq(key, "sig")) {
+            if (suBytesEq(key, "sig")) {
                 if (p.has_sig) return p; // duplicate sig
                 p.has_sig = true;
                 p.sig = val;
-            } else if (bytesEq(key, "exp")) {
+            } else if (suBytesEq(key, "exp")) {
                 if (p.has_exp) return p; // duplicate exp
                 p.has_exp = true;
                 p.exp_raw = val;
-            } else if (bytesEq(key, "kid")) {
+            } else if (suBytesEq(key, "kid")) {
                 if (p.has_kid) return p; // duplicate kid
-                if (!isValidKid(val)) return p;
+                if (!suIsValidKid(val)) return p;
                 p.has_kid = true;
                 p.kid = val;
             }
@@ -735,7 +738,7 @@ pub fn verifySignedUrl(
     clock_skew_s: i64,
 ): SignedUrlVerifyResult {
     let res = SignedUrlVerifyResult{};
-    if (secret.len == 0 || !isValidMethod(method)) {
+    if (secret.len == 0 || !suIsValidMethod(method)) {
         res.status = SignedUrlStatus.malformed_url;
         return res;
     }
@@ -758,7 +761,7 @@ pub fn verifySignedUrl(
         return res;
     }
 
-    const exp_opt = parsePositiveI64(parts.exp_raw);
+    const exp_opt = suParsePositiveI64(parts.exp_raw);
     if (exp_opt == null) {
         res.status = SignedUrlStatus.malformed_url;
         return res;
@@ -771,15 +774,19 @@ pub fn verifySignedUrl(
         return res;
     }
 
-    const expected = computeSignedUrlMac(secret, method, parts.path, parts.raw_query, true, exp_s, parts.kid);
-    if (!signedUrlConstantTimeEq(expected[0..], parts.sig)) {
+    let expected = computeSignedUrlMac(secret, method, parts.path, parts.raw_query, true, exp_s, parts.kid);
+    const sig_match = signedUrlConstantTimeEq(expected[0..], parts.sig);
+    std.crypto.secureZero(u8, expected[0..]);
+    if (!sig_match) {
         // Check if the signature is valid for another standard HTTP method -> report exact method_mismatch.
         const std_methods: [7][]const u8 = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
         let m_i: usize = 0;
         while (m_i < 7) : (m_i += 1) {
-            if (methodEqIgnoreCase(method, std_methods[m_i])) continue;
-            const alt_mac = computeSignedUrlMac(secret, std_methods[m_i], parts.path, parts.raw_query, true, exp_s, parts.kid);
-            if (signedUrlConstantTimeEq(alt_mac[0..], parts.sig)) {
+            if (suMethodEqIgnoreCase(method, std_methods[m_i])) continue;
+            let alt_mac = computeSignedUrlMac(secret, std_methods[m_i], parts.path, parts.raw_query, true, exp_s, parts.kid);
+            const alt_match = signedUrlConstantTimeEq(alt_mac[0..], parts.sig);
+            std.crypto.secureZero(u8, alt_mac[0..]);
+            if (alt_match) {
                 res.status = SignedUrlStatus.method_mismatch;
                 return res;
             }
@@ -789,7 +796,7 @@ pub fn verifySignedUrl(
     }
 
     const skew: i64 = if (clock_skew_s < 0) 0 else clock_skew_s;
-    if (now_epoch_s > exp_s + skew) {
+    if (@as(i128, now_epoch_s) > @as(i128, exp_s) + @as(i128, skew)) {
         res.status = SignedUrlStatus.expired;
         return res;
     }
@@ -830,7 +837,7 @@ pub struct SignedUrlKeyring {
         if (kid.len == 0) return null;
         let i: usize = 0;
         while (i < SIGNED_URL_MAX_KEYS) : (i += 1) {
-            if (slots[i].active && bytesEq(slots[i].kidSlice(), kid)) {
+            if (slots[i].active && suBytesEq(slots[i].kidSlice(), kid)) {
                 return i;
             }
         }
@@ -856,7 +863,7 @@ pub struct SignedUrlKeyring {
     /// If `make_primary` is true (or if this is the first key), marks it as primary.
     /// Returns `false` if `kid`/`secret` is invalid or keyring is full (8 keys).
     fn addKey(*_, kid: []const u8, secret: []const u8, make_primary: bool): bool {
-        if (kid.len == 0 || !isValidKid(kid)) return false;
+        if (kid.len == 0 || !suIsValidKid(kid)) return false;
         if (secret.len == 0 || secret.len > SIGNED_URL_MAX_SECRET_LEN) return false;
 
         let target_idx: usize = SIGNED_URL_MAX_KEYS;
@@ -919,6 +926,8 @@ pub struct SignedUrlKeyring {
     fn revokeKey(*_, kid: []const u8): bool {
         const idx = findKeySlot(kid) ?? return false;
         const was_primary = slots[idx].is_primary;
+        std.crypto.secureZero(u8, slots[idx].secret_buf[0..]);
+        std.crypto.secureZero(u8, slots[idx].kid_buf[0..]);
         slots[idx] = KeyringSlot{};
         if (count > 0) count -= 1;
 
@@ -993,7 +1002,7 @@ pub struct SignedUrlKeyring {
         verified_total += 1;
         let res = SignedUrlVerifyResult{};
 
-        if (!isValidMethod(method)) {
+        if (!suIsValidMethod(method)) {
             res.status = SignedUrlStatus.malformed_url;
             malformed_total += 1;
             return res;

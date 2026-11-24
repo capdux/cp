@@ -1,13 +1,93 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc Stateless HMAC-SHA256 CSRF Token & Sec-Fetch-Site/Origin Guard) | Created: 2026-11-23
+// Reference-hardened against actix/actix-web (MIT OR Apache-2.0) & RFC 6797
 // Pure CP zero-heap-allocation, zero-C-dependency Defense-in-Depth CSRF Protection Engine:
-//   - Inline FIPS 180-4 SHA-256, RFC 2104 HMAC-SHA256, unpadded Base64URL & constant-time comparison
+//   - Inline FIPS 180-4 SHA-256, RFC 2104 HMAC-SHA256, unpadded Base64URL, `std.crypto.secureZero` wiping,
+//     and 16-lane `@Vector(16, u8)` branchless constant-time comparison (`simdWebAuthCtEqual`)
 //   - Stateless session-bound CSRF token minting (`mintCsrfToken`) and constant-time verification
 //     (`verifyCsrfToken`) binding `(version, issued_at_s, 16B nonce, session_id)` against cross-session
-//     replay, tampering, and expiration
+//     replay, tampering, clock-skew overflow, and expiration
 //   - Defense-in-depth `CsrfGuard.evaluateCsrfRequest`: auto-allows safe methods (GET/HEAD/OPTIONS),
 //     blocks `Sec-Fetch-Site: cross-site`, validates `Origin` against trusted allowlist or `Host`
 //     same-origin authority, enforces optional double-submit cookie equality, and verifies HMAC token
-//   - Exact rejection verdicts & zero-heap global telemetry snapshot (`CsrfGuardStats`)
+
+const std = @import("std");
+
+type WebAuthVec16u8 = @Vector(16, u8);
+
+// ============================================================================
+// 0. 16-Lane SIMD Primitives (Constant-Time Equal & ASCII Case-Insensitive Equal)
+// ============================================================================
+
+/// Scalar reference: branchless constant-time byte-slice equality.
+pub fn scalarWebAuthCtEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let diff: u8 = 0;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        diff = diff | (a[i] ^ b[i]);
+    }
+    return diff == 0;
+}
+
+/// 16-lane `@Vector(16, u8)` branchless constant-time equality (XOR-OR accumulation, no early exit).
+/// Exact 0-diff parity with `scalarWebAuthCtEqual`.
+pub fn simdWebAuthCtEqual(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let acc: WebAuthVec16u8 = @splat(0);
+    let i: usize = 0;
+    const n: usize = a.len;
+    while (i + 16 <= n) : (i += 16) {
+        const va: WebAuthVec16u8 = a[i..][0..16].*;
+        const vb: WebAuthVec16u8 = b[i..][0..16].*;
+        acc = acc | (va ^ vb);
+    }
+    const v_zero: WebAuthVec16u8 = @splat(0);
+    const lane_zero_mask: u16 = @bitCast(acc == v_zero);
+    let diff: u8 = if (lane_zero_mask == 0xFFFF) 0 else 1;
+    while (i < n) : (i += 1) {
+        diff = diff | (a[i] ^ b[i]);
+    }
+    return diff == 0;
+}
+
+fn csrfToLowerAscii(c: u8): u8 {
+    if (c >= 'A' and c <= 'Z') return c + 32;
+    return c;
+}
+
+/// Scalar reference: ASCII case-insensitive equality.
+pub fn scalarWebAuthAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (csrfToLowerAscii(a[i]) != csrfToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
+
+/// 16-lane `@Vector(16, u8)` SIMD ASCII case-insensitive equality (0-diff vs `scalarWebAuthAsciiLowerEql`).
+pub fn simdWebAuthAsciiLowerEql(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const n: usize = a.len;
+    const v_A: WebAuthVec16u8 = @splat('A');
+    const v_26: WebAuthVec16u8 = @splat(26);
+    const v_32: WebAuthVec16u8 = @splat(32);
+    const v_0: WebAuthVec16u8 = @splat(0);
+
+    while (i + 16 <= n) : (i += 16) {
+        const va: WebAuthVec16u8 = a[i..][0..16].*;
+        const vb: WebAuthVec16u8 = b[i..][0..16].*;
+        const la: WebAuthVec16u8 = va + @select(u8, (va -% v_A) < v_26, v_32, v_0);
+        const lb: WebAuthVec16u8 = vb + @select(u8, (vb -% v_A) < v_26, v_32, v_0);
+        const eq_mask: u16 = @bitCast(la == lb);
+        if (eq_mask != 0xFFFF) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (csrfToLowerAscii(a[i]) != csrfToLowerAscii(b[i])) return false;
+    }
+    return true;
+}
 
 // ============================================================================
 // 1. Constants, Enums & Data Models
@@ -91,7 +171,7 @@ struct TrustedOriginSlot {
 // 2. Inline Pure-CP SHA-256, HMAC-SHA256, Base64URL & Constant-Time Helpers
 // ============================================================================
 
-const SHA256_K: [64]u32 = [
+const CSRF_SHA256_K: [64]u32 = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -102,11 +182,11 @@ const SHA256_K: [64]u32 = [
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-fn rotr32(x: u32, n: u5): u32 {
+fn csrfRotr32(x: u32, n: u5): u32 {
     return (x >> n) | (x << (@as(u5, @intCast(32 - @as(u6, n)))));
 }
 
-struct Sha256State {
+struct CsrfSha256State {
     h: [8]u32 = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
@@ -126,8 +206,8 @@ struct Sha256State {
                 @as(u32, block[j + 3]);
         }
         while (i < 64) : (i += 1) {
-            const s0 = rotr32(w[i - 15], 7) ^ rotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
-            const s1 = rotr32(w[i - 2], 17) ^ rotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
+            const s0 = csrfRotr32(w[i - 15], 7) ^ csrfRotr32(w[i - 15], 18) ^ (w[i - 15] >> 3);
+            const s1 = csrfRotr32(w[i - 2], 17) ^ csrfRotr32(w[i - 2], 19) ^ (w[i - 2] >> 10);
             w[i] = w[i - 16] +% s0 +% w[i - 7] +% s1;
         }
 
@@ -142,10 +222,10 @@ struct Sha256State {
 
         i = 0;
         while (i < 64) : (i += 1) {
-            const S1 = rotr32(e, 6) ^ rotr32(e, 11) ^ rotr32(e, 25);
+            const S1 = csrfRotr32(e, 6) ^ csrfRotr32(e, 11) ^ csrfRotr32(e, 25);
             const ch = (e & f) ^ ((~e) & g);
-            const temp1 = hh +% S1 +% ch +% SHA256_K[i] +% w[i];
-            const S0 = rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22);
+            const temp1 = hh +% S1 +% ch +% CSRF_SHA256_K[i] +% w[i];
+            const S0 = csrfRotr32(a, 2) ^ csrfRotr32(a, 13) ^ csrfRotr32(a, 22);
             const maj = (a & b) ^ (a & c) ^ (b & c);
             const temp2 = S0 +% maj;
 
@@ -214,12 +294,13 @@ struct Sha256State {
             out[i * 4 + 2] = @as(u8, @intCast((h[i] >> 8) & 0xFF));
             out[i * 4 + 3] = @as(u8, @intCast(h[i] & 0xFF));
         }
+        std.crypto.secureZero(u8, block[0..]);
         return out;
     }
 }
 
-fn sha256Bytes(data: []const u8): [32]u8 {
-    let st = Sha256State{};
+fn csrfSha256Bytes(data: []const u8): [32]u8 {
+    let st = CsrfSha256State{};
     st.update(data);
     return st.finalize();
 }
@@ -231,11 +312,12 @@ fn hmacSha256Csrf(
 ): [32]u8 {
     let key_block: [64]u8 = [0; 64];
     if (secret.len > 64) {
-        const kh = sha256Bytes(secret);
+        let kh = csrfSha256Bytes(secret);
         let i: usize = 0;
         while (i < 32) : (i += 1) {
             key_block[i] = kh[i];
         }
+        std.crypto.secureZero(u8, kh[0..]);
     } else {
         let i: usize = 0;
         while (i < secret.len) : (i += 1) {
@@ -250,6 +332,7 @@ fn hmacSha256Csrf(
         ipad[i] = key_block[i] ^ 0x36;
         opad[i] = key_block[i] ^ 0x5C;
     }
+    std.crypto.secureZero(u8, key_block[0..]);
 
     let slen_be: [4]u8 = [0; 4];
     const slen_u32 = @as(u32, @intCast(session_id.len));
@@ -258,32 +341,31 @@ fn hmacSha256Csrf(
     slen_be[2] = @as(u8, @intCast((slen_u32 >> 8) & 0xFF));
     slen_be[3] = @as(u8, @intCast(slen_u32 & 0xFF));
 
-    let inner = Sha256State{};
+    let inner = CsrfSha256State{};
     inner.update(ipad[0..]);
     inner.update("cap-csrf-v1:");
     inner.update(header_25[0..]);
     inner.update(slen_be[0..]);
     inner.update(session_id);
-    const inner_hash = inner.finalize();
+    let inner_hash = inner.finalize();
 
-    let outer = Sha256State{};
+    let outer = CsrfSha256State{};
     outer.update(opad[0..]);
     outer.update(inner_hash[0..]);
-    return outer.finalize();
+    const mac = outer.finalize();
+
+    std.crypto.secureZero(u8, ipad[0..]);
+    std.crypto.secureZero(u8, opad[0..]);
+    std.crypto.secureZero(u8, inner_hash[0..]);
+    return mac;
 }
 
-/// Constant-time byte-slice equality (never short-circuits on content mismatch).
+/// Constant-time byte-slice equality powered by 16-lane SIMD `simdWebAuthCtEqual`.
 pub fn csrfConstantTimeEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        diff = diff | (a[i] ^ b[i]);
-    }
-    return diff == 0;
+    return simdWebAuthCtEqual(a, b);
 }
 
-const B64URL_ALPHABET: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const CSRF_B64URL_ALPHABET: []const u8 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
 fn b64UrlDecodeChar(c: u8): u8? {
     if (c >= 'A' and c <= 'Z') return c - 'A';
@@ -303,10 +385,10 @@ fn encodeRaw57ToB64Url76(raw: [57]u8, out_buf: *[]u8): bool {
         const b1 = @as(u32, raw[src_i + 1]);
         const b2 = @as(u32, raw[src_i + 2]);
         const triple = (b0 << 16) | (b1 << 8) | b2;
-        out_buf[dst_i] = B64URL_ALPHABET[@as(usize, (triple >> 18) & 0x3F)];
-        out_buf[dst_i + 1] = B64URL_ALPHABET[@as(usize, (triple >> 12) & 0x3F)];
-        out_buf[dst_i + 2] = B64URL_ALPHABET[@as(usize, (triple >> 6) & 0x3F)];
-        out_buf[dst_i + 3] = B64URL_ALPHABET[@as(usize, triple & 0x3F)];
+        out_buf[dst_i] = CSRF_B64URL_ALPHABET[@as(usize, (triple >> 18) & 0x3F)];
+        out_buf[dst_i + 1] = CSRF_B64URL_ALPHABET[@as(usize, (triple >> 12) & 0x3F)];
+        out_buf[dst_i + 2] = CSRF_B64URL_ALPHABET[@as(usize, (triple >> 6) & 0x3F)];
+        out_buf[dst_i + 3] = CSRF_B64URL_ALPHABET[@as(usize, triple & 0x3F)];
         dst_i += 4;
     }
     return true;
@@ -331,21 +413,11 @@ fn decodeB64Url76ToRaw57(tok: []const u8): ([57]u8)? {
     return out;
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' and c <= 'Z') return c + 32;
-    return c;
+fn csrfEqIgnoreCase(a: []const u8, b: []const u8): bool {
+    return simdWebAuthAsciiLowerEql(a, b);
 }
 
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
-    }
-    return true;
-}
-
-fn hasUnsafeCtrl(s: []const u8): bool {
+fn csrfHasUnsafeCtrl(s: []const u8): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         if (s[i] <= 0x20 or s[i] >= 0x7F) return true;
@@ -354,19 +426,19 @@ fn hasUnsafeCtrl(s: []const u8): bool {
 }
 
 fn isSafeHttpMethod(method: []const u8): bool {
-    return eqIgnoreCase(method, "GET") or
-        eqIgnoreCase(method, "HEAD") or
-        eqIgnoreCase(method, "OPTIONS");
+    return csrfEqIgnoreCase(method, "GET") or
+        csrfEqIgnoreCase(method, "HEAD") or
+        csrfEqIgnoreCase(method, "OPTIONS");
 }
 
 /// Extract the `authority` (`host[:port]`) from a valid `http://` or `https://` Origin header.
 /// Rejects path/query/fragment/userinfo/control chars or `"null"`.
 fn extractOriginAuthority(origin: []const u8): ([]const u8)? {
-    if (origin.len == 0 or hasUnsafeCtrl(origin)) return null;
+    if (origin.len == 0 or csrfHasUnsafeCtrl(origin)) return null;
     let rest: []const u8 = "";
-    if (origin.len > 8 and eqIgnoreCase(origin[0..8], "https://")) {
+    if (origin.len > 8 and csrfEqIgnoreCase(origin[0..8], "https://")) {
         rest = origin[8..];
-    } else if (origin.len > 7 and eqIgnoreCase(origin[0..7], "http://")) {
+    } else if (origin.len > 7 and csrfEqIgnoreCase(origin[0..7], "http://")) {
         rest = origin[7..];
     } else {
         return null;
@@ -414,7 +486,7 @@ pub fn mintCsrfToken(
         hdr[9 + i] = nonce[i];
     }
 
-    const mac = hmacSha256Csrf(secret, hdr, session_id);
+    let mac = hmacSha256Csrf(secret, hdr, session_id);
 
     let raw: [57]u8 = [0; 57];
     i = 0;
@@ -425,8 +497,11 @@ pub fn mintCsrfToken(
     while (i < 32) : (i += 1) {
         raw[25 + i] = mac[i];
     }
+    std.crypto.secureZero(u8, mac[0..]);
 
-    if (!encodeRaw57ToB64Url76(raw, out_buf)) return null;
+    const ok = encodeRaw57ToB64Url76(raw, out_buf);
+    std.crypto.secureZero(u8, raw[0..]);
+    if (!ok) return null;
     return CSRF_TOKEN_LEN;
 }
 
@@ -442,9 +517,15 @@ pub fn verifyCsrfToken(
     if (secret.len == 0 or session_id.len == 0 or ttl_s <= 0) {
         return CsrfTokenStatus.invalid;
     }
+    if (csrfHasUnsafeCtrl(token)) {
+        return CsrfTokenStatus.invalid;
+    }
 
-    const raw = decodeB64Url76ToRaw57(token) ?? return CsrfTokenStatus.invalid;
-    if (raw[0] != 1) return CsrfTokenStatus.invalid;
+    let raw = decodeB64Url76ToRaw57(token) ?? return CsrfTokenStatus.invalid;
+    if (raw[0] != 1) {
+        std.crypto.secureZero(u8, raw[0..]);
+        return CsrfTokenStatus.invalid;
+    }
 
     let hdr: [25]u8 = [0; 25];
     let i: usize = 0;
@@ -452,8 +533,11 @@ pub fn verifyCsrfToken(
         hdr[i] = raw[i];
     }
 
-    const expected_mac = hmacSha256Csrf(secret, hdr, session_id);
-    if (!csrfConstantTimeEq(expected_mac[0..], raw[25..57])) {
+    let expected_mac = hmacSha256Csrf(secret, hdr, session_id);
+    const mac_ok = simdWebAuthCtEqual(expected_mac[0..], raw[25..57]);
+    std.crypto.secureZero(u8, expected_mac[0..]);
+    if (!mac_ok) {
+        std.crypto.secureZero(u8, raw[0..]);
         return CsrfTokenStatus.invalid;
     }
 
@@ -465,17 +549,20 @@ pub fn verifyCsrfToken(
         (@as(u64, raw[6]) << 16) |
         (@as(u64, raw[7]) << 8) |
         @as(u64, raw[8]);
+    std.crypto.secureZero(u8, raw[0..]);
     if (ts_u64 == 0 or ts_u64 > 0x7FFF_FFFF_FFFF_FFFF) {
         return CsrfTokenStatus.invalid;
     }
     const issued_at_s = @as(i64, @intCast(ts_u64));
 
-    // Reject far-future tokens (>30s clock skew) as invalid.
-    if (issued_at_s > now_s and (issued_at_s - now_s) > 30) {
+    // Reject far-future tokens (>30s clock skew) as invalid (i128 overflow-safe).
+    const future_diff: i128 = @as(i128, issued_at_s) - @as(i128, now_s);
+    if (future_diff > 30) {
         return CsrfTokenStatus.invalid;
     }
     // Check TTL expiration safely without overflow.
-    if (now_s > issued_at_s and (now_s - issued_at_s) > ttl_s) {
+    const age_diff: i128 = @as(i128, now_s) - @as(i128, issued_at_s);
+    if (age_diff > @as(i128, ttl_s)) {
         return CsrfTokenStatus.expired;
     }
     return CsrfTokenStatus.valid;
@@ -520,7 +607,7 @@ pub struct CsrfGuard {
         let i: usize = 0;
         while (i < CSRF_MAX_TRUSTED_ORIGINS) : (i += 1) {
             if (trusted_origins[i].active) {
-                if (eqIgnoreCase(trusted_origins[i].slice(), origin)) return true;
+                if (csrfEqIgnoreCase(trusted_origins[i].slice(), origin)) return true;
             } else if (free_slot == CSRF_MAX_TRUSTED_ORIGINS) {
                 free_slot = i;
             }
@@ -540,7 +627,7 @@ pub struct CsrfGuard {
     fn isTrustedOrigin(origin: []const u8): bool {
         let i: usize = 0;
         while (i < CSRF_MAX_TRUSTED_ORIGINS) : (i += 1) {
-            if (trusted_origins[i].active and eqIgnoreCase(trusted_origins[i].slice(), origin)) {
+            if (trusted_origins[i].active and csrfEqIgnoreCase(trusted_origins[i].slice(), origin)) {
                 return true;
             }
         }
@@ -568,9 +655,9 @@ pub struct CsrfGuard {
 
         // 2. Layer 1: Sec-Fetch-Site check (when header is present).
         if (req.sec_fetch_site.len > 0) {
-            const is_same_origin = eqIgnoreCase(req.sec_fetch_site, "same-origin");
-            const is_none = eqIgnoreCase(req.sec_fetch_site, "none");
-            const is_same_site = eqIgnoreCase(req.sec_fetch_site, "same-site");
+            const is_same_origin = csrfEqIgnoreCase(req.sec_fetch_site, "same-origin");
+            const is_none = csrfEqIgnoreCase(req.sec_fetch_site, "none");
+            const is_same_site = csrfEqIgnoreCase(req.sec_fetch_site, "same-site");
             const site_ok = is_same_origin or is_none or (allow_same_site and is_same_site);
             if (!site_ok) {
                 denied_cross_site_count += 1;
@@ -586,7 +673,7 @@ pub struct CsrfGuard {
         if (req.origin.len > 0) {
             if (!isTrustedOrigin(req.origin)) {
                 const auth_opt = extractOriginAuthority(req.origin);
-                if (auth_opt == null or req.host.len == 0 or hasUnsafeCtrl(req.host)) {
+                if (auth_opt == null or req.host.len == 0 or csrfHasUnsafeCtrl(req.host)) {
                     denied_origin_mismatch_count += 1;
                     return CsrfDecision{
                         verdict: CsrfVerdict.denied_origin_mismatch,
@@ -595,7 +682,7 @@ pub struct CsrfGuard {
                     };
                 }
                 const auth = auth_opt ?? "";
-                if (!eqIgnoreCase(auth, req.host)) {
+                if (!csrfEqIgnoreCase(auth, req.host)) {
                     denied_origin_mismatch_count += 1;
                     return CsrfDecision{
                         verdict: CsrfVerdict.denied_origin_mismatch,

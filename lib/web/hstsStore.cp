@@ -1,13 +1,15 @@
 // Origin: Pure-CP Stdlib (RFC 6797 HTTP Strict-Transport-Security Parser, Store & HTTPS Upgrade Engine) | Created: 2026-11-23
+// Reference-hardened against actix/actix-web (MIT OR Apache-2.0) & RFC 6797
 // 100% pure CP zero-heap-allocation RFC 6797 HSTS policy engine:
-//   - Strict `parseHstsHeader` / `formatHstsHeader`: case-insensitive directives, quoted `max-age`,
-//     duplicate-directive rejection, invalid `max-age` rejection, and CRLF/NUL injection guard
+//   - Strict `parseHstsHeader` / `formatHstsHeader`: 16-lane SIMD case-insensitive directives, quoted `max-age`,
+//     duplicate-directive rejection, invalid/negative/overflowing `max-age` rejection, and CRLF/CTL injection guard
 //   - RFC 6797 §8.1.1 host eligibility (`isHstsEligibleHost`): rejects IPv4/IPv6 literals, empty/malformed
 //     hosts, and normalizes lowercase + strips trailing FQDN dot
 //   - `HstsStore`: dynamic & immutable preload domain registry (`<= 64` domains), exact-match-first
-//     with multi-level parent `includeSubDomains` walk, `max-age=0` dynamic revocation, and TTL eviction
+//     with strict dot-boundary parent `includeSubDomains` walk, `max-age=0` dynamic revocation, and TTL eviction
 
 const std = @import("std");
+import { simdWebAuthAsciiLowerEql } from "./csrfGuard.cp";
 
 // ============================================================================
 // 1. Constants, Error Set & Data Models
@@ -83,20 +85,21 @@ pub struct HstsStoreStats {
 // 2. Internal String, Host Normalization & Validation Helpers
 // ============================================================================
 
-fn hasCrlfOrNul(s: []const u8): bool {
+fn hstsHasCtrlOrCrlf(s: []const u8): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        if (s[i] == '\r' || s[i] == '\n' || s[i] == 0) return true;
+        const c = s[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7F) return true;
     }
     return false;
 }
 
-fn toLowerAscii(c: u8): u8 {
+fn hstsToLowerAscii(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') return c + 32;
     return c;
 }
 
-fn trimOws(s: []const u8): []const u8 {
+fn hstsTrimOws(s: []const u8): []const u8 {
     let start: usize = 0;
     while (start < s.len && (s[start] == ' ' || s[start] == '\t')) : (start += 1) {}
     let end: usize = s.len;
@@ -104,37 +107,23 @@ fn trimOws(s: []const u8): []const u8 {
     return s[start..end];
 }
 
-fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
-    }
-    return true;
+fn hstsAsciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
+    return simdWebAuthAsciiLowerEql(a, b);
 }
 
-fn bytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
-
-fn isAlphaNumAscii(c: u8): bool {
+fn hstsIsAlphaNumAscii(c: u8): bool {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
 }
 
-fn isDigitAscii(c: u8): bool {
+fn hstsIsDigitAscii(c: u8): bool {
     return c >= '0' && c <= '9';
 }
 
 /// Validates and normalizes `raw_host` into `out_buf` (lowercase, trailing FQDN dot stripped).
 /// Rejects IPv4/IPv6 literals with `HstsError.IpLiteralDisallowed` per RFC 6797 §8.1.1.
 fn normalizeHstsHost(raw_host: []const u8, out_buf: *[HSTS_HOST_MAX_LEN]u8): usize ! HstsError {
-    if (hasCrlfOrNul(raw_host)) return HstsError.CrlfRejected;
-    let trimmed: []const u8 = trimOws(raw_host);
+    if (hstsHasCtrlOrCrlf(raw_host)) return HstsError.CrlfRejected;
+    let trimmed: []const u8 = hstsTrimOws(raw_host);
     if (trimmed.len == 0) return HstsError.InvalidHost;
 
     // Strip a single trailing FQDN dot (e.g. "example.com.")
@@ -164,9 +153,9 @@ fn normalizeHstsHost(raw_host: []const u8, out_buf: *[HSTS_HOST_MAX_LEN]u8): usi
             let k: usize = label_start;
             while (k < i) : (k += 1) {
                 const ch: u8 = trimmed[k];
-                if (!isAlphaNumAscii(ch) && ch != '-') return HstsError.InvalidHost;
-                if (!isDigitAscii(ch)) all_digits = false;
-                out_buf[k] = toLowerAscii(ch);
+                if (!hstsIsAlphaNumAscii(ch) && ch != '-') return HstsError.InvalidHost;
+                if (!hstsIsDigitAscii(ch)) all_digits = false;
+                out_buf[k] = hstsToLowerAscii(ch);
             }
             if (!at_end) {
                 out_buf[i] = '.';
@@ -197,10 +186,10 @@ pub fn isHstsEligibleHost(host: []const u8): bool {
 fn parseDecimalU64(s: []const u8): u64 ! HstsError {
     if (s.len == 0) return HstsError.InvalidMaxAge;
     let acc: u64 = 0;
-    const max_u64: u64 = std.math.maxInt(u64);
+    const max_u64: u64 = ~@as(u64, 0);
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        if (!isDigitAscii(s[i])) return HstsError.InvalidMaxAge;
+        if (!hstsIsDigitAscii(s[i])) return HstsError.InvalidMaxAge;
         const d: u64 = @as(u64, s[i] - '0');
         if (acc > (max_u64 - d) / 10) return HstsError.InvalidMaxAge;
         acc = acc * 10 + d;
@@ -210,12 +199,12 @@ fn parseDecimalU64(s: []const u8): u64 ! HstsError {
 
 /// Parses an RFC 6797 `Strict-Transport-Security` header value into `HstsPolicy`.
 ///
-/// - Case-insensitive directive names (`max-age`, `includeSubDomains`, `preload`).
+/// - Case-insensitive directive names (`max-age`, `includeSubDomains`, `preload`) via 16-lane SIMD.
 /// - Supports optional quoted `max-age="31536000"`.
-/// - Rejects CRLF/NUL injection, missing `max-age`, duplicate directives, and non-numeric `max-age`.
+/// - Rejects CRLF/control-byte injection, missing `max-age`, duplicate directives, and non-numeric `max-age`.
 pub fn parseHstsHeader(header: []const u8): HstsPolicy ! HstsError {
-    if (hasCrlfOrNul(header)) return HstsError.CrlfRejected;
-    const trimmed: []const u8 = trimOws(header);
+    if (hstsHasCtrlOrCrlf(header)) return HstsError.CrlfRejected;
+    const trimmed: []const u8 = hstsTrimOws(header);
     if (trimmed.len == 0) return HstsError.EmptyHeader;
 
     let pol = HstsPolicy{};
@@ -228,7 +217,7 @@ pub fn parseHstsHeader(header: []const u8): HstsPolicy ! HstsError {
         let next_semi: usize = pos;
         while (next_semi < trimmed.len && trimmed[next_semi] != ';') : (next_semi += 1) {}
 
-        const seg: []const u8 = trimOws(trimmed[pos..next_semi]);
+        const seg: []const u8 = hstsTrimOws(trimmed[pos..next_semi]);
         if (seg.len > 0) {
             let eq_pos: usize = seg.len;
             let k: usize = 0;
@@ -239,11 +228,11 @@ pub fn parseHstsHeader(header: []const u8): HstsPolicy ! HstsError {
                 }
             }
 
-            const dir_name: []const u8 = trimOws(seg[0..eq_pos]);
+            const dir_name: []const u8 = hstsTrimOws(seg[0..eq_pos]);
             const has_val: bool = eq_pos < seg.len;
-            let dir_val: []const u8 = if (has_val) trimOws(seg[eq_pos + 1 .. seg.len]) else seg[0..0];
+            let dir_val: []const u8 = if (has_val) hstsTrimOws(seg[eq_pos + 1 .. seg.len]) else seg[0..0];
 
-            if (asciiEqlIgnoreCase(dir_name, "max-age")) {
+            if (hstsAsciiEqlIgnoreCase(dir_name, "max-age")) {
                 if (seen_max_age) return HstsError.DuplicateDirective;
                 if (!has_val) return HstsError.InvalidMaxAge;
                 if (dir_val.len >= 2 && dir_val[0] == '"' && dir_val[dir_val.len - 1] == '"') {
@@ -251,12 +240,12 @@ pub fn parseHstsHeader(header: []const u8): HstsPolicy ! HstsError {
                 }
                 pol.max_age_sec = parseDecimalU64(dir_val)?;
                 seen_max_age = true;
-            } else if (asciiEqlIgnoreCase(dir_name, "includeSubDomains")) {
+            } else if (hstsAsciiEqlIgnoreCase(dir_name, "includeSubDomains")) {
                 if (seen_subdomains) return HstsError.DuplicateDirective;
                 if (has_val) return HstsError.InvalidMaxAge;
                 pol.include_subdomains = true;
                 seen_subdomains = true;
-            } else if (asciiEqlIgnoreCase(dir_name, "preload")) {
+            } else if (hstsAsciiEqlIgnoreCase(dir_name, "preload")) {
                 if (seen_preload) return HstsError.DuplicateDirective;
                 if (has_val) return HstsError.InvalidMaxAge;
                 pol.preload = true;
@@ -334,7 +323,7 @@ pub struct HstsStore {
     fn findExactNormalized(norm_host: []const u8): usize? {
         let i: usize = 0;
         while (i < HSTS_MAX_DOMAINS) : (i += 1) {
-            if (entries[i].active && bytesEqual(entries[i].host(), norm_host)) {
+            if (entries[i].active && simdWebAuthAsciiLowerEql(entries[i].host(), norm_host)) {
                 return i;
             }
         }

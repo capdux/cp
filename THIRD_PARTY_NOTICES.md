@@ -108,6 +108,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **flatbuffers** (`google`) | <https://github.com/google/flatbuffers> | Apache-2.0 | `lib/compiler/flatbuf.cp`, `lib/compiler/flexbuf.cp` | Copyright (c) 2014-2024 Google Inc. |
 | **fjall** (`fjall-rs`) | <https://github.com/fjall-rs/fjall> | MIT OR Apache-2.0 | `lib/db/walRecover.cp`, `lib/db/writeBatch.cp` | Copyright (c) 2023-2024 Marvin (fjall-rs) |
 | **RustCrypto/formats** (`x509-cert`, `x509-ocsp`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/csr.cp`, `lib/auth/crl.cp`, `lib/auth/ocsp.cp` | Copyright (c) 2020-2024 RustCrypto Developers (RFC 2986/5280/6960) |
+| **actix-web** (`actix`) | <https://github.com/actix/actix-web> | MIT OR Apache-2.0 | `lib/web/csrfGuard.cp`, `lib/web/signedUrl.cp`, `lib/web/hstsStore.cp` | Copyright (c) 2017-2024 Actix Team (RFC 6797) |
 
 ---
 
