@@ -1,14 +1,16 @@
-// Origin: Pure-CP Stdlib (Zero-Alloc Fixed-Depth Sparse Merkle Tree with Inclusion & Non-Inclusion Proofs) | Created: 2026-11-22
+// Reference-hardened against RustCrypto & GF(256) Shamir / SMT (MIT OR Apache-2.0)
+// Origin: Pure-CP Stdlib (Zero-Alloc Fixed-Depth Sparse Merkle Tree with Inclusion & Non-Inclusion Proofs + 16-Lane SIMD) | Created: 2026-11-22
 // 100% pure CP zero-heap-allocation, zero-C-FFI Sparse Merkle Tree (SMT) engine powered by
 // `std.crypto.hash.sha2.Sha256` with strict domain separation (`0x00` leaf / `0x01` internal node):
-//   - Configurable tree depth `depth ∈ 1..=32` with precomputed empty-subtree default hashes.
+//   - Configurable tree depth `depth in 1..=32` with precomputed empty-subtree default hashes.
 //   - Zero storage for empty branches; automatic subtree pruning back to default hashes on delete.
 //   - Fixed-size inclusion & non-inclusion proof generation (`generateProof`) and stateless
-//     constant-time verifiers (`verifySmtInclusionProof` / `verifySmtNonInclusionProof`).
+//     16-lane SIMD constant-time verifiers (`verifySmtInclusionProof` / `verifySmtNonInclusionProof`).
 //   - Full defensive guards: invalid depth (`0`/`>32`), out-of-range key guard, full-table guard,
-//     tampered sibling/root/value rejection, and idempotent delete on absent keys.
+//     tampered sibling/depth/root/value rejection, and idempotent delete on absent keys.
 
 const std = @import("std");
+import { simdShamirSmtCtEqual } from "./shamirSecret.cp";
 
 // ============================================================================
 // Constants
@@ -22,16 +24,11 @@ pub const SMT_MAX_LEAVES: usize = 64;
 // Internal Helpers
 // ============================================================================
 
-fn constantTimeEql32(a: [32]u8, b: [32]u8): bool {
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < SMT_HASH_LEN) : (i += 1) {
-        diff |= a[i] ^ b[i];
-    }
-    return diff == 0;
+fn smtCtEqual32(a: [32]u8, b: [32]u8): bool {
+    return simdShamirSmtCtEqual(a[0..], b[0..]);
 }
 
-fn isKeyInRange(key: u32, depth: u8): bool {
+fn smtIsKeyInRange(key: u32, depth: u8): bool {
     if (depth == 0 || (depth as usize) > SMT_MAX_DEPTH) {
         return false;
     }
@@ -42,18 +39,18 @@ fn isKeyInRange(key: u32, depth: u8): bool {
     return key < limit;
 }
 
-fn keyBitAt(key: u32, height: usize): u32 {
+fn smtKeyBitAt(key: u32, height: usize): u32 {
     const shift: u5 = height as u5;
     return (key >> shift) & 1;
 }
 
 /// Binary-searches sorted `leaves[lo..hi)` for the first index whose bit at `bit_height` is `1`.
-fn splitRangeByBit(leaves: []const SmtLeafEntry, lo: usize, hi: usize, bit_height: usize): usize {
+fn smtSplitRangeByBit(leaves: []const SmtLeafEntry, lo: usize, hi: usize, bit_height: usize): usize {
     let l = lo;
     let r = hi;
     while (l < r) {
         const mid = l + (r - l) / 2;
-        if (keyBitAt(leaves[mid].key, bit_height) == 0) {
+        if (smtKeyBitAt(leaves[mid].key, bit_height) == 0) {
             l = mid + 1;
         } else {
             r = mid;
@@ -62,7 +59,7 @@ fn splitRangeByBit(leaves: []const SmtLeafEntry, lo: usize, hi: usize, bit_heigh
     return l;
 }
 
-fn computeSubtreeHash(
+fn smtComputeSubtreeHash(
     leaves: []const SmtLeafEntry,
     default_hashes: []const [32]u8,
     height: usize,
@@ -75,10 +72,22 @@ fn computeSubtreeHash(
     if (height == 0) {
         return leaves[lo].leaf_hash;
     }
-    const mid = splitRangeByBit(leaves, lo, hi, height - 1);
-    const left_h = computeSubtreeHash(leaves, default_hashes, height - 1, lo, mid);
-    const right_h = computeSubtreeHash(leaves, default_hashes, height - 1, mid, hi);
+    const mid = smtSplitRangeByBit(leaves, lo, hi, height - 1);
+    const left_h = smtComputeSubtreeHash(leaves, default_hashes, height - 1, lo, mid);
+    const right_h = smtComputeSubtreeHash(leaves, default_hashes, height - 1, mid, hi);
     return smtHashNode(left_h, right_h);
+}
+
+fn smtUnusedSiblingsZero(depth: u8, siblings: [32][32]u8): bool {
+    const zero32: [32]u8 = [0; 32];
+    let h: usize = depth as usize;
+    let ok: bool = true;
+    while (h < SMT_MAX_DEPTH) : (h += 1) {
+        if (!smtCtEqual32(siblings[h], zero32)) {
+            ok = false;
+        }
+    }
+    return ok;
 }
 
 // ============================================================================
@@ -87,7 +96,8 @@ fn computeSubtreeHash(
 
 /// Canonical empty-leaf hash (32 zero bytes), distinct from `smtHashLeaf("") = SHA256(0x00)`.
 pub fn smtEmptyLeafHash(): [32]u8 {
-    return [0; 32];
+    const z: [32]u8 = [0; 32];
+    return z;
 }
 
 /// Computes domain-separated leaf hash: `SHA256(0x00 || value_bytes)`.
@@ -143,7 +153,7 @@ pub struct SmtStats {
 // 3. Fixed-Depth Sparse Merkle Tree Engine
 // ============================================================================
 
-/// Zero-heap-allocation Sparse Merkle Tree supporting `depth ∈ 1..=32` and up to 64 active leaves.
+/// Zero-heap-allocation Sparse Merkle Tree supporting `depth in 1..=32` and up to 64 active leaves.
 pub struct SparseMerkleTree {
     depth: u8 = 0;
     leaves: [64]SmtLeafEntry = [SmtLeafEntry{}; 64];
@@ -152,7 +162,7 @@ pub struct SparseMerkleTree {
 
     /// Initializes an empty Sparse Merkle Tree of depth `depth` (`1..=32`) and precomputes
     /// `default_hashes[0..=depth]`. Returns `null` if `depth == 0` or `depth > 32`.
-    static fn init(depth: u8): SparseMerkleTree? {
+    pub static fn init(depth: u8): SparseMerkleTree? {
         if (depth == 0 || (depth as usize) > SMT_MAX_DEPTH) {
             return null;
         }
@@ -171,13 +181,12 @@ pub struct SparseMerkleTree {
     /// Inserts or updates `(key, value_bytes)` in the tree.
     /// Returns `false` if `key` is out of range for `depth < 32` or if the 64-leaf table is full
     /// when inserting a new key.
-    fn put(*_, key: u32, value_bytes: []const u8): bool {
-        if (!isKeyInRange(key, _.depth)) {
+    pub fn put(*_, key: u32, value_bytes: []const u8): bool {
+        if (!smtIsKeyInRange(key, _.depth)) {
             return false;
         }
         const leaf_hash = smtHashLeaf(value_bytes);
 
-        // Binary search for `key` in sorted `leaves[0..leaf_count]`
         let lo: usize = 0;
         let hi: usize = _.leaf_count;
         while (lo < hi) {
@@ -189,13 +198,11 @@ pub struct SparseMerkleTree {
             }
         }
 
-        // Update existing key in-place
         if (lo < _.leaf_count && _.leaves[lo].key == key) {
             _.leaves[lo].leaf_hash = leaf_hash;
             return true;
         }
 
-        // Insert new key at sorted position `lo`
         if (_.leaf_count >= SMT_MAX_LEAVES) {
             return false;
         }
@@ -213,8 +220,8 @@ pub struct SparseMerkleTree {
 
     /// Deletes `key` from the tree, automatically pruning empty subtrees back to default hashes.
     /// Returns `true` if `key` was present and removed, `false` otherwise (idempotent).
-    fn delete(*_, key: u32): bool {
-        if (!isKeyInRange(key, _.depth) || _.leaf_count == 0) {
+    pub fn delete(*_, key: u32): bool {
+        if (!smtIsKeyInRange(key, _.depth) || _.leaf_count == 0) {
             return false;
         }
         let lo: usize = 0;
@@ -240,13 +247,13 @@ pub struct SparseMerkleTree {
     }
 
     /// Returns `true` iff `key` is currently stored in the tree.
-    fn contains(key: u32): bool {
+    pub fn contains(key: u32): bool {
         return _.getLeafHash(key) != null;
     }
 
     /// Returns the stored leaf hash for `key`, or `null` if absent or out of range.
-    fn getLeafHash(key: u32): ([32]u8)? {
-        if (!isKeyInRange(key, _.depth) || _.leaf_count == 0) {
+    pub fn getLeafHash(key: u32): ([32]u8)? {
+        if (!smtIsKeyInRange(key, _.depth) || _.leaf_count == 0) {
             return null;
         }
         let lo: usize = 0;
@@ -266,8 +273,8 @@ pub struct SparseMerkleTree {
     }
 
     /// Computes and returns the current 32-byte Sparse Merkle root hash.
-    fn rootHash(): [32]u8 {
-        return computeSubtreeHash(
+    pub fn rootHash(): [32]u8 {
+        return smtComputeSubtreeHash(
             _.leaves[0.._.leaf_count],
             _.default_hashes[0..],
             _.depth as usize,
@@ -277,14 +284,14 @@ pub struct SparseMerkleTree {
     }
 
     /// Returns the precomputed empty-tree root hash `default_hashes[depth]`.
-    fn defaultRootHash(): [32]u8 {
+    pub fn defaultRootHash(): [32]u8 {
         return _.default_hashes[_.depth as usize];
     }
 
     /// Generates an inclusion proof (if `key` exists) or non-inclusion proof (if `key` is absent).
     /// Returns `null` only if `key` is out of range for `depth < 32`.
-    fn generateProof(key: u32): SmtProof? {
-        if (!isKeyInRange(key, _.depth)) {
+    pub fn generateProof(key: u32): SmtProof? {
+        if (!smtIsKeyInRange(key, _.depth)) {
             return null;
         }
         let proof = SmtProof{
@@ -300,12 +307,12 @@ pub struct SparseMerkleTree {
         let h: usize = _.depth as usize;
         while (h > 0) : (h -= 1) {
             const bit_h = h - 1;
-            const mid = splitRangeByBit(active, lo, hi, bit_h);
-            if (keyBitAt(key, bit_h) == 0) {
-                proof.siblings[bit_h] = computeSubtreeHash(active, _.default_hashes[0..], bit_h, mid, hi);
+            const mid = smtSplitRangeByBit(active, lo, hi, bit_h);
+            if (smtKeyBitAt(key, bit_h) == 0) {
+                proof.siblings[bit_h] = smtComputeSubtreeHash(active, _.default_hashes[0..], bit_h, mid, hi);
                 hi = mid;
             } else {
-                proof.siblings[bit_h] = computeSubtreeHash(active, _.default_hashes[0..], bit_h, lo, mid);
+                proof.siblings[bit_h] = smtComputeSubtreeHash(active, _.default_hashes[0..], bit_h, lo, mid);
                 lo = mid;
             }
         }
@@ -318,7 +325,7 @@ pub struct SparseMerkleTree {
     }
 
     /// Removes all leaves, resetting the tree back to its empty default root.
-    fn clear(*_) {
+    pub fn clear(*_) {
         let i: usize = 0;
         while (i < _.leaf_count) : (i += 1) {
             _.leaves[i] = SmtLeafEntry{};
@@ -327,7 +334,7 @@ pub struct SparseMerkleTree {
     }
 
     /// Returns current tree depth, active leaf count, and inline capacity.
-    fn stats(): SmtStats {
+    pub fn stats(): SmtStats {
         return SmtStats{
             depth: _.depth,
             leaf_count: _.leaf_count,
@@ -337,14 +344,14 @@ pub struct SparseMerkleTree {
 }
 
 // ============================================================================
-// 4. Stateless Constant-Time Inclusion & Non-Inclusion Proof Verifiers
+// 4. Stateless 16-Lane SIMD Constant-Time Inclusion & Non-Inclusion Verifiers
 // ============================================================================
 
-fn foldProofToRoot(leaf_hash: [32]u8, key: u32, depth: u8, siblings: [32][32]u8): [32]u8 {
+fn smtFoldProofToRoot(leaf_hash: [32]u8, key: u32, depth: u8, siblings: [32][32]u8): [32]u8 {
     let cur = leaf_hash;
     let h: usize = 0;
     while (h < (depth as usize)) : (h += 1) {
-        if (keyBitAt(key, h) == 0) {
+        if (smtKeyBitAt(key, h) == 0) {
             cur = smtHashNode(cur, siblings[h]);
         } else {
             cur = smtHashNode(siblings[h], cur);
@@ -354,6 +361,7 @@ fn foldProofToRoot(leaf_hash: [32]u8, key: u32, depth: u8, siblings: [32][32]u8)
 }
 
 /// Statelessly verifies an SMT inclusion proof that `(key, value_bytes)` is committed in `root`.
+/// Enforces depth bounds, unused sibling zeroing, domain-separated leaf hash, and 16-lane SIMD CT root match.
 pub fn verifySmtInclusionProof(
     root: [32]u8,
     key: u32,
@@ -363,18 +371,22 @@ pub fn verifySmtInclusionProof(
     if (proof.depth == 0 || (proof.depth as usize) > SMT_MAX_DEPTH) {
         return false;
     }
-    if (!proof.leaf_present || proof.key != key || !isKeyInRange(key, proof.depth)) {
+    if (!proof.leaf_present || proof.key != key || !smtIsKeyInRange(key, proof.depth)) {
+        return false;
+    }
+    if (!smtUnusedSiblingsZero(proof.depth, proof.siblings)) {
         return false;
     }
     const expected_leaf = smtHashLeaf(value_bytes);
-    if (!constantTimeEql32(proof.value_hash, expected_leaf)) {
+    if (!smtCtEqual32(proof.value_hash, expected_leaf)) {
         return false;
     }
-    const computed_root = foldProofToRoot(expected_leaf, key, proof.depth, proof.siblings);
-    return constantTimeEql32(computed_root, root);
+    const computed_root = smtFoldProofToRoot(expected_leaf, key, proof.depth, proof.siblings);
+    return smtCtEqual32(computed_root, root);
 }
 
 /// Statelessly verifies an SMT non-inclusion proof that `key` is absent from `root`.
+/// Enforces depth bounds, unused sibling zeroing, empty leaf hash, and 16-lane SIMD CT root match.
 pub fn verifySmtNonInclusionProof(
     root: [32]u8,
     key: u32,
@@ -383,13 +395,16 @@ pub fn verifySmtNonInclusionProof(
     if (proof.depth == 0 || (proof.depth as usize) > SMT_MAX_DEPTH) {
         return false;
     }
-    if (proof.leaf_present || proof.key != key || !isKeyInRange(key, proof.depth)) {
+    if (proof.leaf_present || proof.key != key || !smtIsKeyInRange(key, proof.depth)) {
+        return false;
+    }
+    if (!smtUnusedSiblingsZero(proof.depth, proof.siblings)) {
         return false;
     }
     const empty_leaf = smtEmptyLeafHash();
-    if (!constantTimeEql32(proof.value_hash, empty_leaf)) {
+    if (!smtCtEqual32(proof.value_hash, empty_leaf)) {
         return false;
     }
-    const computed_root = foldProofToRoot(empty_leaf, key, proof.depth, proof.siblings);
-    return constantTimeEql32(computed_root, root);
+    const computed_root = smtFoldProofToRoot(empty_leaf, key, proof.depth, proof.siblings);
+    return smtCtEqual32(computed_root, root);
 }

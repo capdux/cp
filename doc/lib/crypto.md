@@ -365,6 +365,8 @@ pub fn demoEnvelopeSeal() {
 
 ### 零分配 GF(256) Shamir `(k, n)` 门限密钥分片与拉格朗日插值重构引擎 (`shamirSecret.cp`)
 
+> 对标加固基准：`RustCrypto` & GF(256) Shamir / SMT（MIT OR Apache-2.0）；16-lane `@Vector(16, u8)` SIMD 无早退常量时间比对 `simdShamirSmtCtEqual` 与批量 GF(256) 异或累加 `simdShamirSmtXor`、全分片最大门限校验与全链路 `std.crypto.secureZero` 擦除系数/权重/失败输出；回归测试：`cap/test/testCryptoShamirSmtRustRefSuite.cp`
+
 面向密钥托管、分布式钱包与零信任秘密恢复的 100% 纯 CP 零动态堆分配、零 C FFI 依赖 Shamir `(k, n)` 门限秘密共享引擎：
 
 - **常量时间 GF(256) 有限域原语（AES 不可约多项式 `0x11B`）**：
@@ -405,6 +407,8 @@ pub fn demoShamirSecretSharing() {
 ---
 
 ## 零分配稀疏默克尔树（Sparse Merkle Tree，`sparseMerkle.cp`）
+
+> 对标加固基准：`RustCrypto` & GF(256) Shamir / SMT（MIT OR Apache-2.0）；16-lane `@Vector(16, u8)` SIMD 无早退常量时间根比对（`simdShamirSmtCtEqual`）与高位未用兄弟全零防深度伪造校验；回归测试：`cap/test/testCryptoShamirSmtRustRefSuite.cp`
 
 面向可验证键值存储、零知识状态承诺与撤销列表的 100% 纯 CP 零动态堆分配、零 C FFI 依赖稀疏默克尔树引擎（基于 `std.crypto.hash.sha2.Sha256` 严格域分离 `0x00` 叶子 / `0x01` 内部节点）：
 
