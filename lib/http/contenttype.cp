@@ -59,7 +59,7 @@ export struct ContentTypeParamIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(params_raw: []const u8): ContentTypeParamIter {
+    pub static fn init(params_raw: []const u8): ContentTypeParamIter {
         return ContentTypeParamIter { src: params_raw, pos: 0 };
     }
 

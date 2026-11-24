@@ -188,7 +188,7 @@ struct LineState {
     isa: u32,
     discriminator: u32,
 
-    fn reset(default_is_stmt: bool): LineState {
+    static fn reset(default_is_stmt: bool): LineState {
         return LineState{
             .address = 0,
             .op_index = 0,

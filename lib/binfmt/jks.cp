@@ -193,7 +193,7 @@ pub struct JksCertIter {
     version: u32,
     malformed: bool,
 
-    fn init(certs_slice: []const u8, cert_count: u32, version: u32): JksCertIter {
+    static fn init(certs_slice: []const u8, cert_count: u32, version: u32): JksCertIter {
         return JksCertIter{
             data: certs_slice,
             pos: 0,
@@ -226,7 +226,7 @@ pub struct JksEntryIter {
     version: u32,
     malformed: bool,
 
-    fn init(data: []const u8): JksEntryIter {
+    static fn init(data: []const u8): JksEntryIter {
         if (hdr := parseJksHeader(data)) {
             return JksEntryIter{
                 data: data,

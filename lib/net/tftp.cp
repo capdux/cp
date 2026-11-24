@@ -81,7 +81,7 @@ pub struct TftpOptIter {
     offset: usize,
     failed: bool,
 
-    fn init(options_bytes: []const u8): TftpOptIter {
+    static fn init(options_bytes: []const u8): TftpOptIter {
         return TftpOptIter{
             .data = options_bytes,
             .offset = 0,

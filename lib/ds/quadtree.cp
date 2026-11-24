@@ -308,7 +308,7 @@ pub struct QuadTree {
         _.active_nodes -= 1;
     }
 
-    priv fn canSubdivide(node: QuadNode, new_x: f64, new_y: f64): bool {
+    priv static fn canSubdivide(node: QuadNode, new_x: f64, new_y: f64): bool {
         if (node.mid_x <= node.min_x || node.mid_x >= node.max_x) return false;
         if (node.mid_y <= node.min_y || node.mid_y >= node.max_y) return false;
         for (e of node.entries.items) {

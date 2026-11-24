@@ -107,7 +107,7 @@ pub struct CdpTlvIter {
     offset: usize,
     failed: bool,
 
-    fn init(tlv_bytes: []const u8): CdpTlvIter {
+    static fn init(tlv_bytes: []const u8): CdpTlvIter {
         return CdpTlvIter{
             .data = tlv_bytes,
             .offset = 0,

@@ -13,7 +13,7 @@ export struct BitSet {
     bit_len: usize,
     alloc: std.mem.Allocator,
 
-    fn wordCount(bit_len: usize) -> usize {
+    static fn wordCount(bit_len: usize) -> usize {
         if (bit_len == 0) {
             return 0;
         }

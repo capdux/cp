@@ -369,7 +369,7 @@ pub struct HybridRleDecoder {
 
     /// Initializes a streaming decoder over `data` for `expected_count` values at `bit_width ∈ 0..=32`.
     /// Returns `null` if `bit_width > 32`.
-    fn init(data: []const u8, bit_width: u8, expected_count: usize): HybridRleDecoder? {
+    static fn init(data: []const u8, bit_width: u8, expected_count: usize): HybridRleDecoder? {
         if (bit_width > HYBRID_RLE_MAX_BIT_WIDTH) {
             return null;
         }

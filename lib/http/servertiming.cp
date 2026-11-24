@@ -149,7 +149,7 @@ export struct ServerTimingIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): ServerTimingIter {
+    static fn init(header: []const u8): ServerTimingIter {
         return ServerTimingIter{
             src: header,
             pos: 0,

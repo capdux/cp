@@ -211,7 +211,7 @@ export struct KeyPair {
         return KeyPair.fromSeed(seed_buf);
     }
 
-    pub fn fromSeed(seed_bytes: [32]u8): Ed25519Error!KeyPair {
+    pub static fn fromSeed(seed_bytes: [32]u8): Ed25519Error!KeyPair {
         const kp = Ed25519.KeyPair.generateDeterministic(seed_bytes) catch {
             return Ed25519Error.KeyGenerationFailed;
         };

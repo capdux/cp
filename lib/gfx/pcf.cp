@@ -146,7 +146,7 @@ pub struct PcfTocIter {
     remaining: u32 = 0,
     done: bool = true,
 
-    fn init(data: []const u8): PcfTocIter {
+    static fn init(data: []const u8): PcfTocIter {
         if (!isPcf(data)) {
             return PcfTocIter { data: data, pos: 0, remaining: 0, done: true };
         }

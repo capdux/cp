@@ -57,7 +57,7 @@ export struct DigestIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): DigestIter {
+    pub static fn init(header: []const u8): DigestIter {
         return DigestIter { src: header, pos: 0 };
     }
 
@@ -166,7 +166,7 @@ export struct WantDigestIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): WantDigestIter {
+    pub static fn init(header: []const u8): WantDigestIter {
         return WantDigestIter { src: header, pos: 0 };
     }
 

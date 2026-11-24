@@ -241,7 +241,7 @@ pub struct AdtsIter {
     pos: usize,
     done: bool,
 
-    fn init(data: []const u8): AdtsIter {
+    static fn init(data: []const u8): AdtsIter {
         return AdtsIter{
             .data = data,
             .pos = 0,

@@ -73,7 +73,7 @@ export struct HostsIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): HostsIter {
+    pub static fn init(content: []const u8): HostsIter {
         let start: usize = 0;
         if (content.len >= 3 && content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF) {
             start = 3;

@@ -195,7 +195,7 @@ pub struct GcodeWordIter {
     line: []const u8,
     pos: usize,
 
-    pub fn init(line: []const u8): GcodeWordIter {
+    pub static fn init(line: []const u8): GcodeWordIter {
         return GcodeWordIter {
             line: line,
             pos: 0,
@@ -364,7 +364,7 @@ pub struct GcodeIter {
     program: []const u8,
     pos: usize,
 
-    pub fn init(program: []const u8): GcodeIter {
+    pub static fn init(program: []const u8): GcodeIter {
         return GcodeIter {
             program: program,
             pos: 0,

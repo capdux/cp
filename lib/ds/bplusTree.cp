@@ -14,7 +14,7 @@ struct Node {
     prev_leaf: u32,
     next_leaf: u32,
 
-    fn init(is_leaf: bool): Node {
+    static fn init(is_leaf: bool): Node {
         return Node{
             .is_leaf = is_leaf,
             .keys = std.ArrayList([]u8).empty,

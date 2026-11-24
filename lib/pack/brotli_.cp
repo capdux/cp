@@ -40,7 +40,7 @@ struct BitReader {
     byte_pos: usize,
     bit_pos: u4,
 
-    fn init(data: []const u8): BitReader {
+    static fn init(data: []const u8): BitReader {
         return BitReader{
             data: data,
             byte_pos: 0,
@@ -105,7 +105,7 @@ struct BitWriter {
     cur_byte: u8,
     bit_count: u4,
 
-    fn init(): BitWriter {
+    static fn init(): BitWriter {
         return BitWriter{
             buf: std.ArrayList(u8).empty,
             cur_byte: 0,
@@ -292,7 +292,7 @@ struct HuffmanTree {
         }
     }
 
-    fn build(alloc: std.mem.Allocator, lengths: []const u8): HuffmanTree ! BrotliError {
+    static fn build(alloc: std.mem.Allocator, lengths: []const u8): HuffmanTree ! BrotliError {
         let counts: [16]u16 = [0; 16];
         let nonzero_count: usize = 0;
         let single_sym: u16 = 0;

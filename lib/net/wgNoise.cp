@@ -25,7 +25,7 @@ pub struct WgKeyPair {
     pub private_key: [32]u8,
     pub public_key: [32]u8,
 
-    pub fn generate() -> !WgKeyPair {
+    pub static fn generate() -> !WgKeyPair {
         const kp = X25519.KeyPair.generate();
         return WgKeyPair {
             .private_key = kp.secret_key,

@@ -78,7 +78,7 @@ pub struct SysctlIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): SysctlIter {
+    static fn init(content: []const u8): SysctlIter {
         let start: usize = 0;
         if (content.len >= 3 && content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF) {
             start = 3;

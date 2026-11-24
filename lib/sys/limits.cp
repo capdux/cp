@@ -90,7 +90,7 @@ pub struct ProcLimitsIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): ProcLimitsIter {
+    static fn init(content: []const u8): ProcLimitsIter {
         return ProcLimitsIter {
             src: content,
             pos: 0,

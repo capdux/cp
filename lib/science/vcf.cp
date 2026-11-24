@@ -390,7 +390,7 @@ pub struct VcfRecordIter {
     pos: usize,
     had_error: bool,
 
-    pub fn init(data: []const u8): VcfRecordIter {
+    pub static fn init(data: []const u8): VcfRecordIter {
         return VcfRecordIter {
             data: data,
             pos: 0,

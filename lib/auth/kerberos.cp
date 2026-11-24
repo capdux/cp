@@ -217,7 +217,7 @@ pub struct KrbStringIter {
     data: []const u8,
     pos: usize,
 
-    pub fn init(data: []const u8): KrbStringIter {
+    pub static fn init(data: []const u8): KrbStringIter {
         return KrbStringIter{
             .data = data,
             .pos = 0,

@@ -370,7 +370,7 @@ pub struct MessageReader {
     segments: []ByteSlice,
     limit: TraversalLimit,
 
-    pub fn init(alloc: std.mem.Allocator, frame_bytes: []const u8, limit: TraversalLimit): CapnpError!MessageReader {
+    pub static fn init(alloc: std.mem.Allocator, frame_bytes: []const u8, limit: TraversalLimit): CapnpError!MessageReader {
         if (frame_bytes.len < 4) {
             return CapnpError.TruncatedFrame;
         }

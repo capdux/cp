@@ -501,7 +501,7 @@ pub struct SdfPropIter {
     pos: usize,
     done: bool,
 
-    fn init(record_slice: []const u8): SdfPropIter {
+    static fn init(record_slice: []const u8): SdfPropIter {
         let pos: usize = 0;
         let found_end = false;
         while (line := nextLine(record_slice, *pos)) {
@@ -616,7 +616,7 @@ pub struct SdfRecordIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): SdfRecordIter {
+    static fn init(data: []const u8): SdfRecordIter {
         return SdfRecordIter{
             data: data,
             pos: 0,

@@ -29,7 +29,7 @@ pub struct BlobUuid {
     }
 
     /// Parses a 36-character canonical hyphenated UUID (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
-    fn parse(s: []const u8): BlobUuid? {
+    static fn parse(s: []const u8): BlobUuid? {
         if (s.len != UUID_STR_LEN) {
             return null;
         }

@@ -43,7 +43,7 @@ pub struct QpackHeader {
     value: []const u8,
     qpack_index: i32,
 
-    fn init(name: []const u8, value: []const u8, qpack_index: i32): QpackHeader {
+    static fn init(name: []const u8, value: []const u8, qpack_index: i32): QpackHeader {
         return QpackHeader {
             name: name,
             value: value,

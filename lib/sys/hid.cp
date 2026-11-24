@@ -119,7 +119,7 @@ pub struct HidItemIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(desc: []const u8): HidItemIter {
+    pub static fn init(desc: []const u8): HidItemIter {
         return HidItemIter{
             .desc = desc,
             .pos = 0,

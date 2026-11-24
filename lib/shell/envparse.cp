@@ -69,7 +69,7 @@ pub struct ShellEnvIter {
     pos: usize;
     line_no: usize;
 
-    fn init(content: []const u8): ShellEnvIter {
+    static fn init(content: []const u8): ShellEnvIter {
         let start: usize = 0;
         if (content.len >= 3 && content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF) {
             start = 3;

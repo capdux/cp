@@ -18,7 +18,7 @@ pub struct NodeEndpoint {
     pub host: []const u8,
     pub port: u16,
 
-    pub fn init(host: []const u8, port: u16): NodeEndpoint {
+    pub static fn init(host: []const u8, port: u16): NodeEndpoint {
         return NodeEndpoint{
             .host = host,
             .port = port,

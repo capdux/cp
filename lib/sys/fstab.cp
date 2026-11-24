@@ -92,7 +92,7 @@ export struct FstabEntry {
     pass_no: u32;
 
     /// 解析单行 fstab / mounts 记录（跳过空行与 `#` 注释；4~6 空白分隔字段，省略 dump_freq/pass_no 默认为 0）
-    fn parseLine(raw: []const u8): FstabEntry? {
+    static fn parseLine(raw: []const u8): FstabEntry? {
         const line = trimAscii(raw);
         if (line.len == 0 || line[0] == '#') {
             return null;
@@ -198,7 +198,7 @@ export struct MountIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): MountIter {
+    static fn init(content: []const u8): MountIter {
         return MountIter{
             src: content,
             pos: 0,

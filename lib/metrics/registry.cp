@@ -383,7 +383,7 @@ pub struct MetricsRegistry {
         return MetricsHistogram.fromStatePtr(state_ptr);
     }
 
-    fn exportEntryPrometheus(out: *std.ArrayList(u8), alloc: std.mem.Allocator, e: MetricEntry): void ! MetricsError {
+    static fn exportEntryPrometheus(out: *std.ArrayList(u8), alloc: std.mem.Allocator, e: MetricEntry): void ! MetricsError {
         if (e.kind == MetricKind.Counter) {
             out.appendSlice(alloc, e.name) catch return MetricsError.OutOfMemory;
             appendPromLabelBlock(out, alloc, e.labels)?;
@@ -513,7 +513,7 @@ pub struct MetricsRegistry {
         return out.toOwnedSlice(alloc) catch return MetricsError.OutOfMemory;
     }
 
-    fn appendJsonLabels(out: *std.ArrayList(u8), alloc: std.mem.Allocator, labels: []const OwnedLabel): void ! MetricsError {
+    static fn appendJsonLabels(out: *std.ArrayList(u8), alloc: std.mem.Allocator, labels: []const OwnedLabel): void ! MetricsError {
         out.append(alloc, '{') catch return MetricsError.OutOfMemory;
         let i: usize = 0;
         while (i < labels.len) : (i += 1) {

@@ -428,7 +428,7 @@ pub struct BrowserFieldMap {
         return _.entries.len;
     }
 
-    fn matchKeyVariants(entry: BrowserMappingEntry, spec: []const u8): bool {
+    static fn matchKeyVariants(entry: BrowserMappingEntry, spec: []const u8): bool {
         if (std.mem.eql(u8, entry.key, spec) || std.mem.eql(u8, entry.norm_key, spec)) {
             return true;
         }

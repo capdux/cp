@@ -125,7 +125,7 @@ pub struct IrcTagIter {
     raw: []const u8,
     offset: usize,
 
-    fn init(tags_raw: []const u8): IrcTagIter {
+    static fn init(tags_raw: []const u8): IrcTagIter {
         let start: usize = 0;
         if (tags_raw.len > 0 && tags_raw[0] == '@') {
             start = 1;
@@ -347,7 +347,7 @@ pub struct IrcParamIter {
     offset: usize,
     done: bool,
 
-    fn init(params_raw: []const u8): IrcParamIter {
+    static fn init(params_raw: []const u8): IrcParamIter {
         return IrcParamIter {
             raw: params_raw,
             offset: 0,

@@ -64,11 +64,11 @@ pub struct IndexedMinHeap<V> {
         _.free_head = NULL_SLOT;
     }
 
-    fn makeHandle(slot_idx: u32, gen: u32): u32 {
+    static fn makeHandle(slot_idx: u32, gen: u32): u32 {
         return ((gen & GEN_MASK) << SLOT_BITS) | (slot_idx & SLOT_MASK);
     }
 
-    fn nextGen(gen: u32): u32 {
+    static fn nextGen(gen: u32): u32 {
         const next = (gen + 1) & GEN_MASK;
         return if (next == 0) 1 else next;
     }

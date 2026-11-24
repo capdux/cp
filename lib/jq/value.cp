@@ -40,32 +40,32 @@ pub struct JqValue {
     arr_val: []JqValue = [],
     obj_val: []JqObjEntry = [],
 
-    pub fn nullVal(): JqValue {
+    pub static fn nullVal(): JqValue {
         return .{ .tag = .Null };
     }
 
-    pub fn boolVal(v: bool): JqValue {
+    pub static fn boolVal(v: bool): JqValue {
         return .{ .tag = .Bool, .bool_val = v };
     }
 
-    pub fn intVal(v: i64): JqValue {
+    pub static fn intVal(v: i64): JqValue {
         return .{ .tag = .Int, .int_val = v };
     }
 
-    pub fn floatVal(v: f64): JqValue {
+    pub static fn floatVal(v: f64): JqValue {
         return .{ .tag = .Float, .float_val = v };
     }
 
-    pub fn stringVal(alloc: std.mem.Allocator, s: []const u8): !JqValue {
+    pub static fn stringVal(alloc: std.mem.Allocator, s: []const u8): !JqValue {
         const dup = try alloc.dupe(u8, s);
         return .{ .tag = .String, .str_val = dup };
     }
 
-    pub fn arrayVal(items: []JqValue): JqValue {
+    pub static fn arrayVal(items: []JqValue): JqValue {
         return .{ .tag = .Array, .arr_val = items };
     }
 
-    pub fn objectVal(entries: []JqObjEntry): JqValue {
+    pub static fn objectVal(entries: []JqObjEntry): JqValue {
         return .{ .tag = .Object, .obj_val = entries };
     }
 

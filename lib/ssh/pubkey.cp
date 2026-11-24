@@ -106,7 +106,7 @@ export struct SshPubKey {
 
     /// Parse a single OpenSSH public key or `authorized_keys` line.
     /// Supports optional leading options (e.g. `no-pty,command="/bin/echo hi" ssh-ed25519 AAAA... user@host`).
-    pub fn parseLine(raw_line: []const u8): SshPubKey? {
+    pub static fn parseLine(raw_line: []const u8): SshPubKey? {
         let end = raw_line.len;
         while (end > 0 && (raw_line[end - 1] == '\r' || raw_line[end - 1] == '\n' || isWs(raw_line[end - 1]))) {
             end -= 1;

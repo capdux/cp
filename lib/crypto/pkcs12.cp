@@ -436,7 +436,7 @@ pub struct Pkcs12SafeIter {
     failed: bool = false,
 
     /// Initializes the iterator from the DER-encoded `AuthenticatedSafe` `SEQUENCE`.
-    pub fn init(auth_safe_der: []const u8): Pkcs12SafeIter {
+    pub static fn init(auth_safe_der: []const u8): Pkcs12SafeIter {
         if (auth_safe_der.len == 0) {
             return Pkcs12SafeIter {
                 data: "",
@@ -547,7 +547,7 @@ pub struct Pkcs12BagIter {
     failed: bool = false,
 
     /// Initializes the iterator from the DER-encoded `SafeContents` `SEQUENCE`.
-    pub fn init(safe_contents_der: []const u8): Pkcs12BagIter {
+    pub static fn init(safe_contents_der: []const u8): Pkcs12BagIter {
         if (safe_contents_der.len == 0) {
             return Pkcs12BagIter {
                 data: "",

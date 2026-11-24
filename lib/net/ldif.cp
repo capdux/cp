@@ -266,7 +266,7 @@ pub struct LdifAttrIter {
     pos: usize,
     malformed: bool,
 
-    fn init(slice: []const u8): LdifAttrIter {
+    static fn init(slice: []const u8): LdifAttrIter {
         return LdifAttrIter{
             data: slice,
             pos: 0,
@@ -305,7 +305,7 @@ pub struct LdifIter {
     version: u32,
     seen_entry: bool,
 
-    fn init(data: []const u8): LdifIter {
+    static fn init(data: []const u8): LdifIter {
         return LdifIter{
             data: data,
             pos: 0,

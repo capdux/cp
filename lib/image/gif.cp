@@ -215,7 +215,7 @@ struct GifBitReader {
     nbits: u32,
     eof: bool,
 
-    fn init(src: []const u8, start_offset: usize): GifBitReader {
+    static fn init(src: []const u8, start_offset: usize): GifBitReader {
         return GifBitReader{
             src: src,
             i: start_offset,
@@ -301,7 +301,7 @@ struct GifBitWriter {
     block_buf: [255]u8,
     block_len: usize,
 
-    fn init(): GifBitWriter {
+    static fn init(): GifBitWriter {
         return GifBitWriter{
             acc: 0,
             nbits: 0,

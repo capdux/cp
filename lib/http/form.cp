@@ -107,7 +107,7 @@ export struct FormIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(body: []const u8): FormIter {
+    pub static fn init(body: []const u8): FormIter {
         let start: usize = 0;
         if (body.len > 0 && body[0] == '?') start = 1;
         return FormIter { src: body, pos: start };

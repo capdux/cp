@@ -254,7 +254,7 @@ pub struct DiameterAvpIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(avps_slice: []const u8): DiameterAvpIter {
+    pub static fn init(avps_slice: []const u8): DiameterAvpIter {
         return DiameterAvpIter {
             data: avps_slice,
             pos: 0,

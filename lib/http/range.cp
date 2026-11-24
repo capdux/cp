@@ -111,7 +111,7 @@ export struct ByteRangeIter {
     had_error: bool,
 
     /// Initialize iterator from a `Range` header value (must start with `bytes=`, case-insensitive).
-    pub fn init(header: []const u8): ByteRangeIter? {
+    pub static fn init(header: []const u8): ByteRangeIter? {
         const s = trimWs(header);
         if (s.len < 7) return null;
         let eq_pos: usize? = null;

@@ -41,7 +41,7 @@ export struct UserAgentIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(ua: []const u8): UserAgentIter {
+    pub static fn init(ua: []const u8): UserAgentIter {
         return UserAgentIter { src: ua, pos: 0 };
     }
 

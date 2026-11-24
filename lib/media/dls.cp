@@ -261,7 +261,7 @@ pub struct DlsInstIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(lins_slice: []const u8): DlsInstIter {
+    static fn init(lins_slice: []const u8): DlsInstIter {
         return DlsInstIter {
             src: lins_slice,
             pos: 0,
@@ -334,7 +334,7 @@ pub struct DlsWaveIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(wvpl_slice: []const u8): DlsWaveIter {
+    static fn init(wvpl_slice: []const u8): DlsWaveIter {
         return DlsWaveIter {
             src: wvpl_slice,
             pos: 0,

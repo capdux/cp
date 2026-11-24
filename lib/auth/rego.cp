@@ -62,7 +62,7 @@ pub struct RegoIter {
     input: []const u8,
     pos: usize,
 
-    fn init(input: []const u8): RegoIter {
+    static fn init(input: []const u8): RegoIter {
         return RegoIter{
             .input = input,
             .pos = 0,

@@ -202,7 +202,7 @@ pub struct NmeaFieldIter {
     pos: usize = 0,
     has_more: bool = false,
 
-    fn init(fields_slice: []const u8): NmeaFieldIter {
+    static fn init(fields_slice: []const u8): NmeaFieldIter {
         return NmeaFieldIter {
             src: fields_slice,
             pos: 0,

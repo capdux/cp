@@ -86,7 +86,7 @@ export struct Mailbox {
 
     /// Parse a single RFC 5322 mailbox: `user@example.com`, `<user@example.com>`,
     /// `Alice Smith <alice@example.com>`, or `"Smith, Alice" <alice@example.com>`.
-    pub fn parse(raw: []const u8): Mailbox? {
+    pub static fn parse(raw: []const u8): Mailbox? {
         const s = trimWs(raw);
         if (s.len == 0) return null;
 

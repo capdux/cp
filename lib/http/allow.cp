@@ -98,7 +98,7 @@ export struct AllowIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): AllowIter {
+    static fn init(header: []const u8): AllowIter {
         return AllowIter{
             src: header,
             pos: 0,

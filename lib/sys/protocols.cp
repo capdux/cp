@@ -55,7 +55,7 @@ pub struct ProtocolEntry {
     aliases: []const u8,
 
     /// Parse a single `/etc/protocols` line, stripping trailing `\r` and `#` inline comments.
-    fn parseLine(raw: []const u8): ProtocolEntry? {
+    static fn parseLine(raw: []const u8): ProtocolEntry? {
         let end = raw.len;
         if (end > 0 && raw[end - 1] == '\r') {
             end -= 1;
@@ -152,7 +152,7 @@ pub struct EtcProtocolsIter {
     src: []const u8,
     pos: usize,
 
-    fn init(content: []const u8): EtcProtocolsIter {
+    static fn init(content: []const u8): EtcProtocolsIter {
         return EtcProtocolsIter {
             src: content,
             pos: 0,

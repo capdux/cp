@@ -194,7 +194,7 @@ export struct AcceptIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): AcceptIter {
+    pub static fn init(header: []const u8): AcceptIter {
         return AcceptIter { src: header, pos: 0 };
     }
 
@@ -231,7 +231,7 @@ export struct AcceptEncodingIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): AcceptEncodingIter {
+    pub static fn init(header: []const u8): AcceptEncodingIter {
         return AcceptEncodingIter { src: header, pos: 0 };
     }
 
@@ -260,7 +260,7 @@ export struct AcceptLanguageIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): AcceptLanguageIter {
+    pub static fn init(header: []const u8): AcceptLanguageIter {
         return AcceptLanguageIter { src: header, pos: 0 };
     }
 

@@ -193,7 +193,7 @@ pub struct VrmlLexer {
     pos: usize,
     malformed: bool,
 
-    pub fn init(src: []const u8): VrmlLexer {
+    pub static fn init(src: []const u8): VrmlLexer {
         return VrmlLexer {
             src: src,
             pos: 0,
@@ -201,7 +201,7 @@ pub struct VrmlLexer {
         };
     }
 
-    pub fn initAt(src: []const u8, start_pos: usize): VrmlLexer {
+    pub static fn initAt(src: []const u8, start_pos: usize): VrmlLexer {
         const clamped = if (start_pos <= src.len) start_pos else src.len;
         return VrmlLexer {
             src: src,

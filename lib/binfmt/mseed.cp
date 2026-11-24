@@ -364,7 +364,7 @@ pub struct MseedIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(data: []const u8): MseedIter {
+    pub static fn init(data: []const u8): MseedIter {
         return MseedIter {
             data: data,
             pos: 0,

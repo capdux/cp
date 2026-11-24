@@ -463,7 +463,7 @@ pub struct ArenaEloTable {
     }
 
     /// Computes standard Logistic expected win probability for rating `elo_a` vs `elo_b`.
-    fn expectedScore(elo_a: f64, elo_b: f64): f64 {
+    static fn expectedScore(elo_a: f64, elo_b: f64): f64 {
         const exp_val: f64 = (elo_b - elo_a) / 400.0;
         return 1.0 / (1.0 + std.math.pow(f64, 10.0, exp_val));
     }

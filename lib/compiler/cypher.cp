@@ -129,7 +129,7 @@ pub struct CypherIter {
     input: []const u8,
     pos: usize,
 
-    fn init(input: []const u8): CypherIter {
+    static fn init(input: []const u8): CypherIter {
         return CypherIter{
             .input = input,
             .pos = 0,

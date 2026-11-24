@@ -185,7 +185,7 @@ pub struct InchiLayerIter {
     is_first: bool,
     done: bool,
 
-    fn init(s: []const u8): InchiLayerIter {
+    static fn init(s: []const u8): InchiLayerIter {
         if (slash_pos := validateInchiPrefixAndVersion(s)) {
             return InchiLayerIter{
                 data: s,

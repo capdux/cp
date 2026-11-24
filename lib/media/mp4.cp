@@ -277,7 +277,7 @@ pub struct BoxCursor {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): BoxCursor {
+    static fn init(data: []const u8): BoxCursor {
         return BoxCursor{
             .data = data,
             .pos = 0,

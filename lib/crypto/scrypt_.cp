@@ -15,7 +15,7 @@ pub struct ScryptParams {
     p: u30,
     max_mem_bytes: usize,
 
-    pub fn init(ln: u6, r: u30, p: u30, max_mem_bytes: usize): ScryptParams {
+    pub static fn init(ln: u6, r: u30, p: u30, max_mem_bytes: usize): ScryptParams {
         return ScryptParams{
             .ln = ln,
             .r = r,

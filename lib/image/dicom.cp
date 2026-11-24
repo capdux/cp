@@ -316,7 +316,7 @@ pub struct DicomIter {
 
     /// Initializes a streaming iterator over a valid DICOM PS3.10 buffer.
     /// Returns `null` if `isDicom(data)` is `false`.
-    pub fn init(data: []const u8): DicomIter? {
+    pub static fn init(data: []const u8): DicomIter? {
         if (!isDicom(data)) {
             return null;
         }

@@ -97,7 +97,7 @@ pub struct HnswIndex {
     vectors: std.ArrayList(f32),
     id_map: std.AutoHashMapUnmanaged(u64, usize),
 
-    pub fn init(alloc: std.mem.Allocator, dim: usize, metric: DistanceMetric, config: HnswConfig): !HnswIndex {
+    pub static fn init(alloc: std.mem.Allocator, dim: usize, metric: DistanceMetric, config: HnswConfig): !HnswIndex {
         if (dim == 0) {
             return HnswError.EmptyVector;
         }

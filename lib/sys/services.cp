@@ -67,7 +67,7 @@ pub struct ServiceEntry {
     aliases: []const u8,
 
     /// Parse a single `/etc/services` line, stripping trailing `\r` and `#` comments.
-    fn parseLine(raw: []const u8): ServiceEntry? {
+    static fn parseLine(raw: []const u8): ServiceEntry? {
         let end = raw.len;
         if (end > 0 && raw[end - 1] == '\r') {
             end -= 1;
@@ -183,7 +183,7 @@ pub struct EtcServicesIter {
     src: []const u8,
     pos: usize,
 
-    fn init(content: []const u8): EtcServicesIter {
+    static fn init(content: []const u8): EtcServicesIter {
         return EtcServicesIter {
             src: content,
             pos: 0,

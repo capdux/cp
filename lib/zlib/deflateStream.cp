@@ -14,7 +14,7 @@ struct BitReader {
     bit_buf: u32,
     bit_count: u5,
 
-    pub fn init(data: []const u8): BitReader {
+    pub static fn init(data: []const u8): BitReader {
         return BitReader{
             .data = data,
             .byte_pos = 0,
@@ -78,7 +78,7 @@ struct HuffTree {
     counts: [16]u16,
     symbols: [288]u16,
 
-    pub fn build(lengths: []const u8): HuffTree ! ZlibError {
+    pub static fn build(lengths: []const u8): HuffTree ! ZlibError {
         let tree = HuffTree{
             .counts = [0; 16],
             .symbols = [0; 288],

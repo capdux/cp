@@ -148,7 +148,7 @@ pub struct CifLexer {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(data: []const u8): CifLexer {
+    pub static fn init(data: []const u8): CifLexer {
         return CifLexer {
             data: data,
             pos: 0,
@@ -267,7 +267,7 @@ pub struct CifPairIter {
     lexer: CifLexer = CifLexer {},
     failed: bool = false,
 
-    pub fn init(data: []const u8): CifPairIter {
+    pub static fn init(data: []const u8): CifPairIter {
         return CifPairIter {
             lexer: CifLexer.init(data),
             failed: false,
@@ -408,7 +408,7 @@ pub struct CifRowIter {
     col_count: u32 = 0,
     failed: bool = false,
 
-    pub fn init(values_slice: []const u8, col_count: u32): CifRowIter {
+    pub static fn init(values_slice: []const u8, col_count: u32): CifRowIter {
         return CifRowIter {
             data: values_slice,
             lexer: CifLexer.init(values_slice),

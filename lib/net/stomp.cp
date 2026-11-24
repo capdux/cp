@@ -397,7 +397,7 @@ pub struct StompStreamParser {
         _.frames.deinit(_.alloc);
     }
 
-    fn findByte(haystack: []const u8, needle: u8): usize? {
+    static fn findByte(haystack: []const u8, needle: u8): usize? {
         let i: usize = 0;
         while (i < haystack.len) : (i += 1) {
             if (haystack[i] == needle) {

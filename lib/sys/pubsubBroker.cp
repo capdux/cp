@@ -167,7 +167,7 @@ pub struct PubSubBroker {
         _.retained.deinit(_.allocator);
     }
 
-    fn dupeOwned(alloc: std.mem.Allocator, src: string): string ! PubSubError {
+    static fn dupeOwned(alloc: std.mem.Allocator, src: string): string ! PubSubError {
         if (src.len == 0) {
             return "";
         }
@@ -180,7 +180,7 @@ pub struct PubSubBroker {
         }
     }
 
-    fn makeMessage(alloc: std.mem.Allocator, seq: u64, topic: string, payload: string, retained: bool): BrokerMessage ! PubSubError {
+    static fn makeMessage(alloc: std.mem.Allocator, seq: u64, topic: string, payload: string, retained: bool): BrokerMessage ! PubSubError {
         const owned_topic = PubSubBroker.dupeOwned(alloc, topic)?;
         errdefer PubSubBroker.freeOwned(alloc, owned_topic);
         const owned_payload = PubSubBroker.dupeOwned(alloc, payload)?;

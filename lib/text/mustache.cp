@@ -133,7 +133,7 @@ pub struct MustacheIter {
     pos: usize,
     has_error: bool,
 
-    fn init(template: []const u8): MustacheIter {
+    static fn init(template: []const u8): MustacheIter {
         return MustacheIter {
             src: template,
             pos: 0,

@@ -274,7 +274,7 @@ pub struct IgmpV3RecordIter {
     remaining: u16 = 0,
     failed: bool = false,
 
-    pub fn init(records_slice: []const u8, num_records: u16): IgmpV3RecordIter {
+    pub static fn init(records_slice: []const u8, num_records: u16): IgmpV3RecordIter {
         return IgmpV3RecordIter {
             data: records_slice,
             pos: 0,

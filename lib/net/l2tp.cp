@@ -54,7 +54,7 @@ pub struct L2tpAvpIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(avp_bytes: []const u8): L2tpAvpIter {
+    pub static fn init(avp_bytes: []const u8): L2tpAvpIter {
         return L2tpAvpIter {
             data: avp_bytes,
             pos: 0,

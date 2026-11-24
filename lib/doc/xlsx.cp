@@ -589,7 +589,7 @@ pub struct XlsxSheetIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(workbook_xml: []const u8): XlsxSheetIter {
+    static fn init(workbook_xml: []const u8): XlsxSheetIter {
         return XlsxSheetIter {
             src: workbook_xml,
             pos: 0,
@@ -918,7 +918,7 @@ pub struct XlsxSharedStringIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(sst_xml: []const u8): XlsxSharedStringIter {
+    static fn init(sst_xml: []const u8): XlsxSharedStringIter {
         return XlsxSharedStringIter {
             src: sst_xml,
             pos: 0,
@@ -1069,7 +1069,7 @@ pub struct XlsxCellIter {
     has_row: bool = false,
     next_col: u32 = 0,
 
-    fn init(sheet_xml: []const u8): XlsxCellIter {
+    static fn init(sheet_xml: []const u8): XlsxCellIter {
         let i: usize = 0;
         while (i < sheet_xml.len) {
             if (sheet_xml[i] != '<') {

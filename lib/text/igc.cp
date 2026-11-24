@@ -355,7 +355,7 @@ pub struct IgcFixIter {
     data: []const u8,
     pos: usize,
 
-    pub fn init(data: []const u8): IgcFixIter {
+    pub static fn init(data: []const u8): IgcFixIter {
         return IgcFixIter {
             data: data,
             pos: 0,

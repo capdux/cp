@@ -76,7 +76,7 @@ export struct OsReleaseIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): OsReleaseIter {
+    pub static fn init(content: []const u8): OsReleaseIter {
         return OsReleaseIter { src: content, pos: 0 };
     }
 

@@ -251,7 +251,7 @@ pub struct MadtEntryIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(bytes: []const u8): MadtEntryIter {
+    pub static fn init(bytes: []const u8): MadtEntryIter {
         return MadtEntryIter{
             .bytes = bytes,
             .pos = 0,
@@ -394,7 +394,7 @@ pub struct McfgEntryIter {
     bytes: []const u8,
     pos: usize,
 
-    pub fn init(bytes: []const u8): McfgEntryIter {
+    pub static fn init(bytes: []const u8): McfgEntryIter {
         return McfgEntryIter{
             .bytes = bytes,
             .pos = 0,

@@ -127,12 +127,10 @@ pub struct WatchOptions {
     pub ignore_patterns: []const []const u8 = [],
 }
 
-pub type WatchCallback = *const fn (event: WatchEvent, ctx: *anyopaque) void;
+pub type WatchCallback = *const fn (event: WatchEvent, ctx: *!) void;
 
 pub fn getNowMs(): i64 {
     let ts: std.os.linux.timespec = .{ .sec = 0, .nsec = 0 };
-    __zig__ {
-        _ = std.os.linux.clock_gettime(.MONOTONIC, &ts);
-    }
+    * = std.os.linux.clock_gettime(.MONOTONIC, &ts);
     return (ts.sec * 1000) + @divTrunc(ts.nsec, 1_000_000);
 }

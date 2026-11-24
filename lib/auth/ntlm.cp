@@ -135,7 +135,7 @@ pub struct NtlmAvPairIter {
     saw_eol: bool,
     truncated: bool,
 
-    pub fn init(data: []const u8): NtlmAvPairIter {
+    pub static fn init(data: []const u8): NtlmAvPairIter {
         return NtlmAvPairIter{
             .data = data,
             .pos = 0,

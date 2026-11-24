@@ -549,7 +549,7 @@ pub struct X3dMetaIter {
     section: []const u8,
     pos: usize,
 
-    pub fn init(xml: []const u8): X3dMetaIter {
+    pub static fn init(xml: []const u8): X3dMetaIter {
         if (isX3d(xml)) {
             const start = skipUtf8Bom(xml);
             if (root := findElementSpanRange(xml, start, xml.len, "X3D")) {
@@ -630,7 +630,7 @@ pub struct X3dNodeIter {
     pos: usize,
     cur_depth: u16,
 
-    pub fn init(xml: []const u8): X3dNodeIter {
+    pub static fn init(xml: []const u8): X3dNodeIter {
         if (isX3d(xml)) {
             const start = skipUtf8Bom(xml);
             if (root := findElementSpanRange(xml, start, xml.len, "X3D")) {

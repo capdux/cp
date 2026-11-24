@@ -129,7 +129,7 @@ export struct TrailerFieldIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): TrailerFieldIter {
+    static fn init(header: []const u8): TrailerFieldIter {
         return TrailerFieldIter{
             src: header,
             pos: 0,

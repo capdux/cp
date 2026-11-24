@@ -248,7 +248,7 @@ pub struct NsfeChunkIter {
     done: bool,
     malformed: bool,
 
-    pub fn init(data: []const u8): NsfeChunkIter {
+    pub static fn init(data: []const u8): NsfeChunkIter {
         if (!isNsfe(data)) {
             return NsfeChunkIter {
                 data: data,

@@ -48,7 +48,7 @@ export struct ClearSiteData {
     execution_contexts: bool,
     client_hints: bool,
 
-    pub fn none(): ClearSiteData {
+    pub static fn none(): ClearSiteData {
         return ClearSiteData {
             cache: false,
             cookies: false,
@@ -58,7 +58,7 @@ export struct ClearSiteData {
         };
     }
 
-    pub fn all(): ClearSiteData {
+    pub static fn all(): ClearSiteData {
         return ClearSiteData {
             cache: true,
             cookies: true,

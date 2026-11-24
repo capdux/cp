@@ -210,7 +210,7 @@ pub struct SsdpHeaderIter {
     offset: usize,
     done: bool,
 
-    fn init(headers_bytes: []const u8): SsdpHeaderIter {
+    static fn init(headers_bytes: []const u8): SsdpHeaderIter {
         return SsdpHeaderIter {
             data: headers_bytes,
             offset: 0,

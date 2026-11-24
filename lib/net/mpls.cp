@@ -85,7 +85,7 @@ pub struct MplsLabelIter {
     stack_bytes: []const u8,
     offset: usize,
 
-    fn init(stack_bytes: []const u8): MplsLabelIter {
+    static fn init(stack_bytes: []const u8): MplsLabelIter {
         return MplsLabelIter{
             .stack_bytes = stack_bytes,
             .offset = 0,

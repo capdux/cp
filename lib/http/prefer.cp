@@ -61,7 +61,7 @@ export struct PreferIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): PreferIter {
+    pub static fn init(header: []const u8): PreferIter {
         return PreferIter { src: header, pos: 0 };
     }
 

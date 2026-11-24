@@ -6,7 +6,7 @@ import { CelUnaryOp, CelBinaryOp, CelMacroKind, CelExpr } from "./parser.cp";
 pub struct CelEvalOptions {
     max_steps: usize,
 
-    pub fn defaults(): CelEvalOptions {
+    pub static fn defaults(): CelEvalOptions {
         return CelEvalOptions{ .max_steps = 10000 };
     }
 }

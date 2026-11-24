@@ -85,15 +85,15 @@ pub struct McpId {
     int_val: i64 = 0,
     str_val: []const u8 = "",
 
-    pub fn none(): McpId {
+    pub static fn none(): McpId {
         return McpId{ .kind = McpIdKind.None };
     }
 
-    pub fn fromInt(v: i64): McpId {
+    pub static fn fromInt(v: i64): McpId {
         return McpId{ .kind = McpIdKind.Int, .int_val = v };
     }
 
-    pub fn fromString(s: []const u8): McpId {
+    pub static fn fromString(s: []const u8): McpId {
         return McpId{ .kind = McpIdKind.String, .str_val = s };
     }
 

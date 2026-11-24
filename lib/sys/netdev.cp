@@ -76,7 +76,7 @@ pub struct ProcNetDevIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): ProcNetDevIter {
+    static fn init(content: []const u8): ProcNetDevIter {
         return ProcNetDevIter {
             src: content,
             pos: 0,

@@ -80,7 +80,7 @@ export struct ContentEncodingIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): ContentEncodingIter {
+    static fn init(header: []const u8): ContentEncodingIter {
         return ContentEncodingIter{
             src: header,
             pos: 0,

@@ -193,7 +193,7 @@ pub struct AgentMemoryConsolidator {
         };
     }
 
-    fn normalizeInto(dst: *[MEM_CONSOL_MAX_DIM]f32, src: []const f32, dim: usize): bool {
+    static fn normalizeInto(dst: *[MEM_CONSOL_MAX_DIM]f32, src: []const f32, dim: usize): bool {
         if (src.len != dim || !allFiniteF32(src)) return false;
         const nsq: f32 = @dot(src, src);
         if (!isFiniteF32(nsq) || nsq <= NORM_SQ_EPS) return false;

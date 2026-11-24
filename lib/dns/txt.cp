@@ -82,7 +82,7 @@ export struct TxtTagIter {
     src: []const u8;
     pos: usize;
 
-    fn init(record: []const u8): TxtTagIter {
+    static fn init(record: []const u8): TxtTagIter {
         return TxtTagIter{
             src: record,
             pos: 0,

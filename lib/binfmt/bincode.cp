@@ -18,21 +18,21 @@ pub struct BincodeConfig {
     endian: BincodeEndian,
     int_encoding: BincodeIntEncoding,
 
-    fn legacy(): BincodeConfig {
+    static fn legacy(): BincodeConfig {
         return BincodeConfig{
             .endian = BincodeEndian.little,
             .int_encoding = BincodeIntEncoding.fixed,
         };
     }
 
-    fn standard(): BincodeConfig {
+    static fn standard(): BincodeConfig {
         return BincodeConfig{
             .endian = BincodeEndian.little,
             .int_encoding = BincodeIntEncoding.varint,
         };
     }
 
-    fn bigEndianFixed(): BincodeConfig {
+    static fn bigEndianFixed(): BincodeConfig {
         return BincodeConfig{
             .endian = BincodeEndian.big,
             .int_encoding = BincodeIntEncoding.fixed,
@@ -99,7 +99,7 @@ pub struct BincodeWriter {
     pos: usize,
     cfg: BincodeConfig,
 
-    fn init(buf: []u8, cfg: BincodeConfig): BincodeWriter {
+    static fn init(buf: []u8, cfg: BincodeConfig): BincodeWriter {
         return BincodeWriter{
             .buf = buf,
             .pos = 0,
@@ -322,7 +322,7 @@ pub struct BincodeReader {
     pos: usize,
     cfg: BincodeConfig,
 
-    fn init(data: []const u8, cfg: BincodeConfig): BincodeReader {
+    static fn init(data: []const u8, cfg: BincodeConfig): BincodeReader {
         return BincodeReader{
             .data = data,
             .pos = 0,

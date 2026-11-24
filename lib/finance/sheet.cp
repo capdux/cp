@@ -344,7 +344,7 @@ pub struct Spreadsheet {
         };
     }
 
-    fn appendCsvText(alloc: std.mem.Allocator, out: *std.ArrayList(u8), s: string): ! {
+    static fn appendCsvText(alloc: std.mem.Allocator, out: *std.ArrayList(u8), s: string): ! {
         let needs_quote = false;
         for (ch of s) {
             if (ch == ',' || ch == '"' || ch == '\n' || ch == '\r') {

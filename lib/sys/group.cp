@@ -55,7 +55,7 @@ pub struct GroupMemberIter {
     members: []const u8,
     pos: usize,
 
-    fn init(members: []const u8): GroupMemberIter {
+    static fn init(members: []const u8): GroupMemberIter {
         return GroupMemberIter {
             members: members,
             pos: 0,
@@ -88,7 +88,7 @@ pub struct GroupEntry {
     members: []const u8,
 
     /// Parse a single 4-field colon-delimited `/etc/group` line.
-    fn parseLine(raw: []const u8): GroupEntry? {
+    static fn parseLine(raw: []const u8): GroupEntry? {
         let end = raw.len;
         if (end > 0 && raw[end - 1] == '\r') {
             end -= 1;
@@ -148,7 +148,7 @@ pub struct EtcGroupIter {
     src: []const u8,
     pos: usize,
 
-    fn init(content: []const u8): EtcGroupIter {
+    static fn init(content: []const u8): EtcGroupIter {
         return EtcGroupIter {
             src: content,
             pos: 0,

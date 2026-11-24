@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/linear_fifo.cp | Synced: 2026-11-22T10:39:50Z
+// Source: Absorbed from /data/dev/bun/src/collections/linear_fifo.cp | Synced: 2026-11-24T07:05:00Z
 // Pure-CP zero-allocation generic ring-buffer FIFO (`StaticLinearFifo`)
 // supporting item/slice read/write, peek, discard, unget, and wrap-around.
 

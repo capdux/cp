@@ -405,7 +405,7 @@ pub struct Xor8Filter {
     }
 
     /// Build an Xor8Filter directly from 64-bit hashes. Duplicate hashes are automatically deduplicated.
-    pub fn buildHashes(allocator: std.mem.Allocator, hashes: []const u64): Xor8Filter ! XorFilterError {
+    pub static fn buildHashes(allocator: std.mem.Allocator, hashes: []const u64): Xor8Filter ! XorFilterError {
         if (hashes.len == 0) {
             return Xor8Filter{
                 alloc: allocator,
@@ -554,7 +554,7 @@ pub struct Xor16Filter {
     }
 
     /// Build an Xor16Filter directly from 64-bit hashes. Duplicate hashes are automatically deduplicated.
-    pub fn buildHashes(allocator: std.mem.Allocator, hashes: []const u64): Xor16Filter ! XorFilterError {
+    pub static fn buildHashes(allocator: std.mem.Allocator, hashes: []const u64): Xor16Filter ! XorFilterError {
         if (hashes.len == 0) {
             return Xor16Filter{
                 alloc: allocator,

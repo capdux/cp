@@ -66,7 +66,7 @@ pub struct IpfixFieldSpecIter {
     remaining_fields: u16,
     failed: bool,
 
-    fn init(fields_bytes: []const u8, field_count: u16): IpfixFieldSpecIter {
+    static fn init(fields_bytes: []const u8, field_count: u16): IpfixFieldSpecIter {
         return IpfixFieldSpecIter{
             .data = fields_bytes,
             .offset = 0,
@@ -130,7 +130,7 @@ pub struct IpfixTemplateIter {
     offset: usize,
     failed: bool,
 
-    fn init(set_body: []const u8): IpfixTemplateIter {
+    static fn init(set_body: []const u8): IpfixTemplateIter {
         return IpfixTemplateIter{
             .data = set_body,
             .offset = 0,
@@ -222,7 +222,7 @@ pub struct IpfixSetIter {
     offset: usize,
     failed: bool,
 
-    fn init(sets_bytes: []const u8): IpfixSetIter {
+    static fn init(sets_bytes: []const u8): IpfixSetIter {
         return IpfixSetIter{
             .data = sets_bytes,
             .offset = 0,

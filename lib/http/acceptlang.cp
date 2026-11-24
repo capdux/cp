@@ -228,7 +228,7 @@ export struct AcceptLanguageIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): AcceptLanguageIter {
+    static fn init(header: []const u8): AcceptLanguageIter {
         return AcceptLanguageIter{
             src: header,
             pos: 0,

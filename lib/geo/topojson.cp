@@ -690,7 +690,7 @@ pub struct TopoArcIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(arcs_slice: []const u8): TopoArcIter {
+    static fn init(arcs_slice: []const u8): TopoArcIter {
         const start = skipWs(arcs_slice, 0);
         if (start >= arcs_slice.len || arcs_slice[start] != '[') {
             return TopoArcIter { src: arcs_slice, pos: arcs_slice.len, done: true };
@@ -763,7 +763,7 @@ pub struct TopoArcPointIter {
     acc_x: f64 = 0.0,
     acc_y: f64 = 0.0,
 
-    fn init(arc_slice: []const u8, transform: TopoTransform): TopoArcPointIter {
+    static fn init(arc_slice: []const u8, transform: TopoTransform): TopoArcPointIter {
         const start = skipWs(arc_slice, 0);
         if (start >= arc_slice.len || arc_slice[start] != '[') {
             return TopoArcPointIter {
@@ -882,7 +882,7 @@ pub struct TopoObjectIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(objects_slice: []const u8): TopoObjectIter {
+    static fn init(objects_slice: []const u8): TopoObjectIter {
         const start = skipWs(objects_slice, 0);
         if (start >= objects_slice.len || objects_slice[start] != '{') {
             return TopoObjectIter { src: objects_slice, pos: objects_slice.len, done: true };

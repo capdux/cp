@@ -140,7 +140,7 @@ struct Parser {
     out: OutBuf,
     emit: bool,
 
-    fn init(input: []const u8, out: []u8, emit: bool): Parser {
+    static fn init(input: []const u8, out: []u8, emit: bool): Parser {
         let start: usize = 0;
         if (input.len >= 3 && input[0] == 0xEF && input[1] == 0xBB && input[2] == 0xBF) {
             start = 3;

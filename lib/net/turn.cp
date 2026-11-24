@@ -132,7 +132,7 @@ pub struct TurnAttrIter {
     offset: usize,
     failed: bool,
 
-    fn init(attrs_bytes: []const u8): TurnAttrIter {
+    static fn init(attrs_bytes: []const u8): TurnAttrIter {
         return TurnAttrIter {
             data: attrs_bytes,
             offset: 0,

@@ -162,7 +162,7 @@ pub struct RomfsDirIter {
     cur_offset: usize,
     steps: usize,
 
-    pub fn init(raw: []const u8, full_size: usize, start_offset: usize): RomfsDirIter {
+    pub static fn init(raw: []const u8, full_size: usize, start_offset: usize): RomfsDirIter {
         return RomfsDirIter{
             .raw = raw,
             .full_size = full_size,

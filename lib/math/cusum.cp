@@ -31,7 +31,7 @@ pub struct CusumDetector {
 
     /// Initializes a two-sided CUSUM detector.
     /// Requires finite parameters with `drift_k >= 0` and `threshold_h > 0`.
-    fn init(target_mean: f64, drift_k: f64, threshold_h: f64): CusumDetector? {
+    static fn init(target_mean: f64, drift_k: f64, threshold_h: f64): CusumDetector? {
         if (
             !isFiniteF64(target_mean) ||
             !isFiniteF64(drift_k) ||

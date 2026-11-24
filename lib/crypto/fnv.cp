@@ -51,7 +51,7 @@ fn mulFnv128(h: u128): u128 {
 pub struct Fnv1a32 {
     state: u32;
 
-    pub fn init(): Fnv1a32 {
+    pub static fn init(): Fnv1a32 {
         return Fnv1a32 { state: FNV32_OFFSET_BASIS };
     }
 
@@ -76,7 +76,7 @@ pub struct Fnv1a32 {
 pub struct Fnv1a64 {
     state: u64;
 
-    pub fn init(): Fnv1a64 {
+    pub static fn init(): Fnv1a64 {
         return Fnv1a64 { state: FNV64_OFFSET_BASIS };
     }
 
@@ -101,7 +101,7 @@ pub struct Fnv1a64 {
 pub struct Fnv1a128 {
     state: u128;
 
-    pub fn init(): Fnv1a128 {
+    pub static fn init(): Fnv1a128 {
         return Fnv1a128 { state: FNV128_OFFSET_BASIS };
     }
 
@@ -126,7 +126,7 @@ pub struct Fnv1a128 {
 pub struct Fnv1_32 {
     state: u32;
 
-    pub fn init(): Fnv1_32 {
+    pub static fn init(): Fnv1_32 {
         return Fnv1_32 { state: FNV32_OFFSET_BASIS };
     }
 
@@ -151,7 +151,7 @@ pub struct Fnv1_32 {
 pub struct Fnv1_64 {
     state: u64;
 
-    pub fn init(): Fnv1_64 {
+    pub static fn init(): Fnv1_64 {
         return Fnv1_64 { state: FNV64_OFFSET_BASIS };
     }
 
@@ -176,7 +176,7 @@ pub struct Fnv1_64 {
 pub struct Fnv1_128 {
     state: u128;
 
-    pub fn init(): Fnv1_128 {
+    pub static fn init(): Fnv1_128 {
         return Fnv1_128 { state: FNV128_OFFSET_BASIS };
     }
 

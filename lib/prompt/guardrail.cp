@@ -304,7 +304,7 @@ pub struct PromptGuardrailScanner {
         return true;
     }
 
-    fn recordFinding(
+    static fn recordFinding(
         out_findings: *[]GuardrailFinding,
         report: *GuardrailScanReport,
         cat: GuardrailCategory,

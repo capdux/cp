@@ -317,7 +317,7 @@ pub struct BdfGlyphIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(data: []const u8): BdfGlyphIter {
+    static fn init(data: []const u8): BdfGlyphIter {
         return BdfGlyphIter {
             src: data,
             pos: 0,

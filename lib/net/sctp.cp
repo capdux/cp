@@ -134,7 +134,7 @@ pub struct SctpChunkIter {
     offset: usize,
     failed: bool,
 
-    fn init(chunks_slice: []const u8): SctpChunkIter {
+    static fn init(chunks_slice: []const u8): SctpChunkIter {
         return SctpChunkIter{
             .data = chunks_slice,
             .offset = 0,

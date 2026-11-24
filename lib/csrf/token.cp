@@ -187,7 +187,7 @@ pub struct CsrfProtector {
         return CsrfProtector.initWithMaxAge(secret, DEFAULT_EXPIRATION_MS);
     }
 
-    pub fn initWithMaxAge(secret: []const u8, max_age_ms: u64): !CsrfProtector {
+    pub static fn initWithMaxAge(secret: []const u8, max_age_ms: u64): !CsrfProtector {
         if (secret.len == 0) {
             return CsrfError.InvalidSecret;
         }

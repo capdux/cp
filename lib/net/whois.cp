@@ -166,7 +166,7 @@ pub struct WhoisFieldIter {
     body: []const u8,
     offset: usize,
 
-    fn init(body: []const u8): WhoisFieldIter {
+    static fn init(body: []const u8): WhoisFieldIter {
         return WhoisFieldIter {
             body: body,
             offset: 0,

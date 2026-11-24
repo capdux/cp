@@ -108,7 +108,7 @@ pub struct IccTagIter {
     pos: usize,
     remaining: u32,
 
-    fn init(data: []const u8): IccTagIter {
+    static fn init(data: []const u8): IccTagIter {
         if (hdr := parseIccHeader(data)) {
             const bound: usize = hdr.profile_size as usize;
             if (bound >= ICC_TAG_TABLE_OFFSET + 4) {

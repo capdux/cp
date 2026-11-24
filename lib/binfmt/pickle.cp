@@ -215,7 +215,7 @@ pub struct PickleIter {
     done: bool,
     had_error: bool,
 
-    fn init(data: []const u8): PickleIter {
+    static fn init(data: []const u8): PickleIter {
         return PickleIter{
             .data = data,
             .pos = 0,

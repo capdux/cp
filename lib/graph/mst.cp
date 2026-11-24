@@ -50,7 +50,7 @@ pub struct DisjointSet {
 
     /// Initializes `num_nodes` singleton sets using caller-owned `parent` and `rank` slices.
     /// Returns `null` if either slice has length `< num_nodes`.
-    fn init(num_nodes: usize, parent: []usize, rank: []u8): DisjointSet? {
+    static fn init(num_nodes: usize, parent: []usize, rank: []u8): DisjointSet? {
         if (parent.len < num_nodes || rank.len < num_nodes) {
             return null;
         }

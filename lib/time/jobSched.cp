@@ -36,7 +36,7 @@ struct ReadyHeap {
         _.items.deinit(alloc);
     }
 
-    fn lessThan(jobs: []const Job, a_idx: usize, b_idx: usize): bool {
+    static fn lessThan(jobs: []const Job, a_idx: usize, b_idx: usize): bool {
         const a = jobs[a_idx];
         const b = jobs[b_idx];
         const ap = a.priority as u8;
@@ -108,7 +108,7 @@ struct DelayedHeap {
         _.items.deinit(alloc);
     }
 
-    fn lessThan(jobs: []const Job, a_idx: usize, b_idx: usize): bool {
+    static fn lessThan(jobs: []const Job, a_idx: usize, b_idx: usize): bool {
         const a = jobs[a_idx];
         const b = jobs[b_idx];
         if (a.run_at_ms != b.run_at_ms) {
@@ -185,7 +185,7 @@ struct LeaseHeap {
         _.items.deinit(alloc);
     }
 
-    fn lessThan(a: LeaseEntry, b: LeaseEntry): bool {
+    static fn lessThan(a: LeaseEntry, b: LeaseEntry): bool {
         if (a.lease_until_ms != b.lease_until_ms) {
             return a.lease_until_ms < b.lease_until_ms;
         }
@@ -337,14 +337,14 @@ pub struct JobQueue {
         _.dead_letter_count = 0;
     }
 
-    fn dupeOwned(alloc: std.mem.Allocator, src: string): string! {
+    static fn dupeOwned(alloc: std.mem.Allocator, src: string): string! {
         if (src.len == 0) {
             return "";
         }
         return alloc.dupe(u8, src) catch return QueueError.OutOfMemory;
     }
 
-    fn freeOwned(alloc: std.mem.Allocator, s: string) {
+    static fn freeOwned(alloc: std.mem.Allocator, s: string) {
         if (s.len > 0) {
             alloc.free(s);
         }

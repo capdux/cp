@@ -67,7 +67,7 @@ pub struct Tensor {
         return Tensor.full(alloc, shape, 1.0);
     }
 
-    pub fn full(alloc: std.mem.Allocator, shape: []const usize, val: f32): Tensor! {
+    pub static fn full(alloc: std.mem.Allocator, shape: []const usize, val: f32): Tensor! {
         const total = computeElementCount(shape)?;
         let buf = alloc.alloc(f32, total)?;
         let i: usize = 0;

@@ -258,7 +258,7 @@ pub struct GedcomLineIter {
     has_prev: bool,
     malformed: bool,
 
-    fn init(data: []const u8): GedcomLineIter {
+    static fn init(data: []const u8): GedcomLineIter {
         return GedcomLineIter{
             data: data,
             pos: skipBom(data),

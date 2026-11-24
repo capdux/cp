@@ -67,7 +67,7 @@ pub struct Nf5RecordIter {
     pos: usize = 0,
     remaining: u16 = 0,
 
-    pub fn init(records_bytes: []const u8, count: u16): Nf5RecordIter {
+    pub static fn init(records_bytes: []const u8, count: u16): Nf5RecordIter {
         return Nf5RecordIter {
             data: records_bytes,
             pos: 0,
@@ -142,7 +142,7 @@ pub struct Nf9FieldSpecIter {
     pos: usize = 0,
     remaining: u16 = 0,
 
-    pub fn init(fields_bytes: []const u8, field_count: u16): Nf9FieldSpecIter {
+    pub static fn init(fields_bytes: []const u8, field_count: u16): Nf9FieldSpecIter {
         return Nf9FieldSpecIter {
             data: fields_bytes,
             pos: 0,
@@ -182,7 +182,7 @@ pub struct Nf9TemplateIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(flowset_body: []const u8): Nf9TemplateIter {
+    pub static fn init(flowset_body: []const u8): Nf9TemplateIter {
         return Nf9TemplateIter {
             data: flowset_body,
             pos: 0,
@@ -260,7 +260,7 @@ pub struct Nf9FlowSetIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(flowsets_bytes: []const u8): Nf9FlowSetIter {
+    pub static fn init(flowsets_bytes: []const u8): Nf9FlowSetIter {
         return Nf9FlowSetIter {
             data: flowsets_bytes,
             pos: 0,

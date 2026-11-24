@@ -223,7 +223,7 @@ pub struct PsdResourceIter {
     pos: usize,
     done: bool,
 
-    fn init(image_resources: []const u8): PsdResourceIter {
+    static fn init(image_resources: []const u8): PsdResourceIter {
         return PsdResourceIter{
             .data = image_resources,
             .pos = 0,

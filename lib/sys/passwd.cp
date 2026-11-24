@@ -52,7 +52,7 @@ export struct PasswdEntry {
     shell: []const u8,
 
     /// Parse a single 7-field colon-delimited `/etc/passwd` line.
-    pub fn parseLine(raw: []const u8): PasswdEntry? {
+    pub static fn parseLine(raw: []const u8): PasswdEntry? {
         let end = raw.len;
         if (end > 0 && raw[end - 1] == '\r') end -= 1;
         const line = raw[0..end];
@@ -95,7 +95,7 @@ export struct PasswdIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): PasswdIter {
+    pub static fn init(content: []const u8): PasswdIter {
         return PasswdIter { src: content, pos: 0 };
     }
 
@@ -134,7 +134,7 @@ export struct GroupEntry {
     members_csv: []const u8,
 
     /// Parse a single 4-field colon-delimited `/etc/group` line.
-    pub fn parseLine(raw: []const u8): GroupEntry? {
+    pub static fn parseLine(raw: []const u8): GroupEntry? {
         let end = raw.len;
         if (end > 0 && raw[end - 1] == '\r') end -= 1;
         const line = raw[0..end];
@@ -175,7 +175,7 @@ export struct GroupIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): GroupIter {
+    pub static fn init(content: []const u8): GroupIter {
         return GroupIter { src: content, pos: 0 };
     }
 

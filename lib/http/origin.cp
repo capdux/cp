@@ -86,7 +86,7 @@ export struct Origin {
 
     /// Parse a WHATWG tuple origin from a URL or `Origin` header (e.g. `"https://Example.COM:443/path"`).
     /// Returns null for opaque origins (`"null"`, `data:`, `file:`, missing authority, or invalid port).
-    pub fn parse(raw: []const u8): Origin? {
+    pub static fn parse(raw: []const u8): Origin? {
         // Find "://"
         let sep: usize? = null;
         let i: usize = 0;

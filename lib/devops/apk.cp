@@ -201,7 +201,7 @@ pub struct ApkSigPairIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(block: ApkSigningBlock): ApkSigPairIter {
+    pub static fn init(block: ApkSigningBlock): ApkSigPairIter {
         return ApkSigPairIter {
             pairs: block.pairs_slice,
             pos: 0,

@@ -52,15 +52,15 @@ pub struct ArithEval {
         return false;
     }
 
-    fn isIdentStart(c: u8): bool {
+    static fn isIdentStart(c: u8): bool {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
     }
 
-    fn isIdentCont(c: u8): bool {
+    static fn isIdentCont(c: u8): bool {
         return ArithEval.isIdentStart(c) || (c >= '0' && c <= '9');
     }
 
-    fn readVar(env: *ShellEnv, name: []const u8): i64 {
+    static fn readVar(env: *ShellEnv, name: []const u8): i64 {
         if (val := env.get(name)) {
             const trimmed = std.mem.trim(u8, val, " \t\r\n");
             if (trimmed.len == 0) return 0;
@@ -69,7 +69,7 @@ pub struct ArithEval {
         return 0;
     }
 
-    fn writeVar(env: *ShellEnv, name: []const u8, val: i64) {
+    static fn writeVar(env: *ShellEnv, name: []const u8, val: i64) {
         let tmp: [32]u8 = [0; 32];
         const s = std.fmt.bufPrint(tmp[0..32], "{d}", .{val}) catch "0";
         * = env.set(name, s, false);

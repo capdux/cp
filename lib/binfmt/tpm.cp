@@ -257,7 +257,7 @@ pub struct TpmPcrSelectIter {
     pos: usize,
     remaining: u32,
 
-    pub fn init(data: []const u8, count: u32): TpmPcrSelectIter {
+    pub static fn init(data: []const u8, count: u32): TpmPcrSelectIter {
         return TpmPcrSelectIter{
             .data = data,
             .pos = 0,

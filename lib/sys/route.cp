@@ -136,7 +136,7 @@ pub struct ProcRouteIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): ProcRouteIter {
+    static fn init(content: []const u8): ProcRouteIter {
         return ProcRouteIter {
             src: content,
             pos: 0,

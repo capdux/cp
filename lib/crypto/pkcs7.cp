@@ -410,7 +410,7 @@ pub struct Pkcs7CertIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(certificates_der: []const u8): Pkcs7CertIter {
+    pub static fn init(certificates_der: []const u8): Pkcs7CertIter {
         return Pkcs7CertIter {
             data: certificates_der,
             pos: 0,
@@ -442,7 +442,7 @@ pub struct Pkcs7SignerIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(signer_infos_set: []const u8): Pkcs7SignerIter {
+    pub static fn init(signer_infos_set: []const u8): Pkcs7SignerIter {
         return Pkcs7SignerIter {
             data: signer_infos_set,
             pos: 0,

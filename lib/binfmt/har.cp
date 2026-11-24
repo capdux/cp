@@ -497,7 +497,7 @@ pub struct HarEntryIter {
     done: bool,
     malformed: bool,
 
-    fn init(slice: []const u8): HarEntryIter {
+    static fn init(slice: []const u8): HarEntryIter {
         let arr = slice;
         let p: usize = skipBom(slice);
         skipWs(slice, *p);

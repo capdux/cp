@@ -331,7 +331,7 @@ pub struct SrecIter {
     pos: usize = 0,
     had_error: bool = false,
 
-    fn init(text: []const u8): SrecIter {
+    static fn init(text: []const u8): SrecIter {
         return SrecIter {
             src: text,
             pos: 0,

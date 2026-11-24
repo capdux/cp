@@ -58,7 +58,7 @@ pub struct SimHasher {
     feature_count: u64;
 
     /// Creates a zero-initialized `SimHasher`.
-    pub fn init(): SimHasher {
+    pub static fn init(): SimHasher {
         return SimHasher {
             weights: std.mem.zeroes([64]i64),
             feature_count: 0,

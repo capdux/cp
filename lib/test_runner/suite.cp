@@ -395,14 +395,14 @@ pub struct TestRunner {
         return _.addTestWithOptions(name, .Only, [], 0, cb);
     }
 
-    fn effectiveTestMode(tc: TestCase, ancestor_mode: TestMode): TestMode {
+    static fn effectiveTestMode(tc: TestCase, ancestor_mode: TestMode): TestMode {
         if (tc.mode == .Todo) return .Todo;
         if (tc.mode == .Skip || ancestor_mode == .Skip) return .Skip;
         if (tc.mode == .Only || ancestor_mode == .Only) return .Only;
         return .Normal;
     }
 
-    fn isTestRunnable(tc: TestCase, ancestor_mode: TestMode, eff_filter: TestFilter): bool {
+    static fn isTestRunnable(tc: TestCase, ancestor_mode: TestMode, eff_filter: TestFilter): bool {
         const eff_mode = TestRunner.effectiveTestMode(tc, ancestor_mode);
         if (eff_mode == .Skip || eff_mode == .Todo) return false;
         return eff_filter.matches(tc.full_name, tc.tags, eff_mode == .Only);

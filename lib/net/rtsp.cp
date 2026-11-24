@@ -587,7 +587,7 @@ pub struct RtspStreamParser {
         }
     }
 
-    fn parseStartLine(alloc: std.mem.Allocator, line: []const u8): RtspStartLine ! RtspError {
+    static fn parseStartLine(alloc: std.mem.Allocator, line: []const u8): RtspStartLine ! RtspError {
         if (line.len == 0) return RtspError.InvalidStartLine;
 
         if (std.mem.startsWith(u8, line, "RTSP/")) {

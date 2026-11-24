@@ -336,7 +336,7 @@ pub struct MinixDirIter {
     entry_size: usize,
     is_v3: bool,
 
-    pub fn init(sb: MinixSuperblock, dir_bytes: []const u8): MinixDirIter {
+    pub static fn init(sb: MinixSuperblock, dir_bytes: []const u8): MinixDirIter {
         return MinixDirIter{
             .data = dir_bytes,
             .pos = 0,

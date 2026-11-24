@@ -38,7 +38,7 @@ pub struct TokenBucket {
     last_refill_ms: i64,
 
     /// Initializes a full `TokenBucket` with `capacity` burst and `refill_per_sec` replenishment rate.
-    pub fn init(capacity: u64, refill_per_sec: f64, now_ms: i64): TokenBucket ! RateLimitError {
+    pub static fn init(capacity: u64, refill_per_sec: f64, now_ms: i64): TokenBucket ! RateLimitError {
         if (capacity == 0) {
             return RateLimitError.InvalidBurst;
         }

@@ -139,7 +139,7 @@ export struct MimeHeaderIter {
     pos: usize;
     had_error: bool;
 
-    fn init(headers_raw: []const u8): MimeHeaderIter {
+    static fn init(headers_raw: []const u8): MimeHeaderIter {
         return MimeHeaderIter{
             src: headers_raw,
             pos: 0,

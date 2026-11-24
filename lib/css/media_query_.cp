@@ -116,7 +116,7 @@ pub struct MediaEnv {
     hover: HoverKind,
     pointer: PointerKind,
 
-    fn desktop(): MediaEnv {
+    static fn desktop(): MediaEnv {
         return {
             media_type: MediaType.screen,
             width_px: 1440.0,

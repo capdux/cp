@@ -42,7 +42,7 @@ pub struct NtpTimestamp {
     seconds: u32,
     fraction: u32,
 
-    fn zero(): NtpTimestamp {
+    static fn zero(): NtpTimestamp {
         return NtpTimestamp{ .seconds = 0, .fraction = 0 };
     }
 

@@ -93,7 +93,7 @@ pub struct TacacsArgIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(lens: []const u8, data: []const u8): TacacsArgIter {
+    pub static fn init(lens: []const u8, data: []const u8): TacacsArgIter {
         return TacacsArgIter {
             lens: lens,
             data: data,

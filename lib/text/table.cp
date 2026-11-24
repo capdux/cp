@@ -56,7 +56,7 @@ pub struct Table {
         };
     }
 
-    fn freeStringSlice(alloc: std.mem.Allocator, items: [][]u8) {
+    static fn freeStringSlice(alloc: std.mem.Allocator, items: [][]u8) {
         for (item of items) {
             alloc.free(item);
         }
@@ -119,7 +119,7 @@ pub struct Table {
         })?;
     }
 
-    fn dupeCells(alloc: std.mem.Allocator, cells: []const string): ([][]u8)! {
+    static fn dupeCells(alloc: std.mem.Allocator, cells: []const string): ([][]u8)! {
         let out = alloc.alloc(ByteSlice, cells.len)?;
         let filled: usize = 0;
         errdefer {

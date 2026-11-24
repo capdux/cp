@@ -179,7 +179,7 @@ pub struct NtfsRunIter {
     done: bool,
     failed: bool,
 
-    pub fn init(runlist_bytes: []const u8): NtfsRunIter {
+    pub static fn init(runlist_bytes: []const u8): NtfsRunIter {
         return NtfsRunIter {
             data: runlist_bytes,
             offset: 0,

@@ -161,7 +161,7 @@ pub class JSON {
         return a.equals(b);
     }
 
-    pub fn stringify(obj: auto): string {
+    pub static fn stringify(obj: auto): string {
         return JSON.stringify(obj);
     }
 }
@@ -169,10 +169,12 @@ pub class JSON {
 pub const json = new JSON();
 
 // === W29-Sync R7: Consolidated RFC 6902 JSON Patch & RFC 7396 Merge Patch ===
+import json_patch_mod from "./jsonPatch.cp";
+pub const Rfc6902PatchOp = json_patch_mod.JsonPatchOp;
+pub const Rfc6902PatchError = json_patch_mod.JsonPatchError;
+
 export {
     PatchOpKind,
-    JsonPatchOp as Rfc6902PatchOp,
-    JsonPatchError,
     freeValue,
     cloneValue,
     valuesEqual,

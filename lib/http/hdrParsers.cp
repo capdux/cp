@@ -116,7 +116,7 @@ pub struct CacheControl {
         return cc;
     }
 
-    fn appendToken(buf: []u8, pos: *usize, tok: []const u8): ! {
+    static fn appendToken(buf: []u8, pos: *usize, tok: []const u8): ! {
         if (pos.* > 0) {
             if (pos.* + 2 > buf.len) return error.BufferTooSmall;
             buf[pos.*] = ',';

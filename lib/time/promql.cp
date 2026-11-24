@@ -323,7 +323,7 @@ struct Lexer {
     input: []const u8,
     pos: usize,
 
-    pub fn init(input: []const u8) -> Lexer {
+    pub static fn init(input: []const u8) -> Lexer {
         return Lexer{ input: input, pos: 0 };
     }
 
@@ -598,7 +598,7 @@ struct Parser {
     curr: Token,
     alloc: std.mem.Allocator,
 
-    pub fn init(alloc: std.mem.Allocator, input: []const u8) -> !Parser {
+    pub static fn init(alloc: std.mem.Allocator, input: []const u8) -> !Parser {
         let lex = Lexer.init(input);
         const first = lex.nextToken()?;
         return Parser{

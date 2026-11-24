@@ -482,7 +482,7 @@ pub struct Mol2AtomIter {
     done: bool,
     malformed: bool,
 
-    fn init(slice: []const u8): Mol2AtomIter {
+    static fn init(slice: []const u8): Mol2AtomIter {
         // 若传入的是完整 mol_slice，自动定位至 @<TRIPOS>ATOM 区段
         let scan: usize = 0;
         let has_any_rti = false;
@@ -546,7 +546,7 @@ pub struct Mol2BondIter {
     done: bool,
     malformed: bool,
 
-    fn init(slice: []const u8): Mol2BondIter {
+    static fn init(slice: []const u8): Mol2BondIter {
         let scan: usize = 0;
         let has_any_rti = false;
         while (line := nextLine(slice, *scan)) {
@@ -606,7 +606,7 @@ pub struct Mol2RecordIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): Mol2RecordIter {
+    static fn init(data: []const u8): Mol2RecordIter {
         return Mol2RecordIter{
             data: data,
             pos: 0,

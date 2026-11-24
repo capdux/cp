@@ -39,7 +39,7 @@ fn allocFilterHeader(alloc: std.mem.Allocator, key_count: usize, bits_per_key: u
 }
 
 pub struct BloomFilter {
-    pub fn build(alloc: std.mem.Allocator, keys: []const []const u8, bits_per_key: u32): ![]u8 {
+    pub static fn build(alloc: std.mem.Allocator, keys: []const []const u8, bits_per_key: u32): ![]u8 {
         let actual_bits: u64 = 0;
         let k: u32 = 0;
         let out = try allocFilterHeader(alloc, keys.len, bits_per_key, &actual_bits, &k);
@@ -59,7 +59,7 @@ pub struct BloomFilter {
         return out;
     }
 
-    pub fn mayContain(filter_bytes: []const u8, key: []const u8): bool {
+    pub static fn mayContain(filter_bytes: []const u8, key: []const u8): bool {
         if (filter_bytes.len < 2) {
             return true;
         }

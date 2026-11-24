@@ -191,7 +191,7 @@ pub struct Qcow2ExtIter {
     saw_end: bool,
     malformed: bool,
 
-    pub fn init(header: Qcow2Header, data: []const u8): Qcow2ExtIter {
+    pub static fn init(header: Qcow2Header, data: []const u8): Qcow2ExtIter {
         return Qcow2ExtIter{
             .image = data,
             .pos = header.header_length as usize,

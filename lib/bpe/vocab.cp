@@ -17,7 +17,7 @@ pub struct BpeVocab {
     pub owned_slices: std.ArrayList([]u8),
     pub next_id: u32,
 
-    pub fn init(alloc: std.mem.Allocator): BpeVocab {
+    pub static fn init(alloc: std.mem.Allocator): BpeVocab {
         return BpeVocab{
             .alloc = alloc,
             .token_to_id = std.StringHashMap(u32).init(alloc),

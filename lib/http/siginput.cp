@@ -445,7 +445,7 @@ export struct SignatureInputIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): SignatureInputIter {
+    static fn init(header: []const u8): SignatureInputIter {
         return SignatureInputIter{
             src: header,
             pos: 0,

@@ -147,7 +147,7 @@ pub struct Uf2Iter {
     offset: usize,
     malformed: bool,
 
-    pub fn init(data: []const u8): Uf2Iter {
+    pub static fn init(data: []const u8): Uf2Iter {
         if (data.len == 0 || (data.len % UF2_BLOCK_SIZE) != 0) {
             return Uf2Iter {
                 data: data,

@@ -208,7 +208,7 @@ export struct PermissionsPolicyIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): PermissionsPolicyIter {
+    static fn init(header: []const u8): PermissionsPolicyIter {
         return PermissionsPolicyIter{
             src: header,
             pos: 0,

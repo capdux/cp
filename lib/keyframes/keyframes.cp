@@ -30,7 +30,7 @@ pub struct KeyframesName {
 
     /// Parses `<custom-ident>` or quoted `<string>`.
     /// Rejects unquoted CSS-wide keywords (`none`, `initial`, `inherit`, `unset`, `default`, `revert`, `revert-layer`).
-    fn parse(raw: []const u8): KeyframesName? {
+    static fn parse(raw: []const u8): KeyframesName? {
         const s = trimSpaces(raw);
         if (s.len == 0) return null;
 
@@ -87,7 +87,7 @@ pub struct KeyframeSelector {
     pct: f64,
 
     /// Parses `from`, `to`, or a percentage in `[0%, 100%]`.
-    fn parse(raw: []const u8): KeyframeSelector? {
+    static fn parse(raw: []const u8): KeyframeSelector? {
         const s = trimSpaces(raw);
         if (s.len == 0) return null;
         if (eqlIgnoreCase(s, "from")) {

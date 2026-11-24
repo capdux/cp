@@ -52,13 +52,11 @@ pub struct InotifyBackend {
             buffer: undefined,
         };
 
-        __zig__ {
-            const raw_fd = std.os.linux.inotify_init1(std.os.linux.IN.NONBLOCK | std.os.linux.IN.CLOEXEC);
-            const signed_fd: isize = @bitCast(raw_fd);
-            if (signed_fd >= 0) {
-                backend.fd = @intCast(raw_fd);
-                backend.is_available = true;
-            }
+        const raw_fd = std.os.linux.inotify_init1(std.os.linux.IN.NONBLOCK | std.os.linux.IN.CLOEXEC);
+        const signed_fd: isize = @bitCast(raw_fd);
+        if (signed_fd >= 0) {
+            backend.fd = @intCast(raw_fd);
+            backend.is_available = true;
         }
 
         return backend;
@@ -73,16 +71,14 @@ pub struct InotifyBackend {
         @memcpy(c_path[0..path.len], path);
         c_path[path.len] = 0;
 
-        let fd = _.fd;
-        let res: i32 = -1;
-        __zig__ {
-            const raw_wd = std.os.linux.inotify_add_watch(@intCast(fd), @as([*:0]const u8, @ptrCast(&c_path)), mask);
-            const signed_wd: isize = @bitCast(raw_wd);
-            if (signed_wd >= 0) {
-                res = @intCast(raw_wd);
-            }
+        const raw_wd = unsafe {
+            std.os.linux.inotify_add_watch(@intCast(_.fd), @as([*:0]const u8, @ptrCast(&c_path)), mask)
+        };
+        const signed_wd: isize = @bitCast(raw_wd);
+        if (signed_wd >= 0) {
+            return @intCast(raw_wd);
         }
-        return res;
+        return -1;
     }
 
     pub fn removeWatch(*_, wd: i32): bool {
@@ -90,14 +86,9 @@ pub struct InotifyBackend {
             return false;
         }
 
-        let fd = _.fd;
-        let success: bool = false;
-        __zig__ {
-            const rc = std.os.linux.inotify_rm_watch(@intCast(fd), @intCast(wd));
-            const signed_rc: isize = @bitCast(rc);
-            success = (signed_rc == 0);
-        }
-        return success;
+        const rc = std.os.linux.inotify_rm_watch(@intCast(_.fd), @intCast(wd));
+        const signed_rc: isize = @bitCast(rc);
+        return signed_rc == 0;
     }
 
     pub fn readEvents(*_, out_raw: *[]InotifyRawEvent): usize {
@@ -105,14 +96,8 @@ pub struct InotifyBackend {
             return 0;
         }
 
-        let fd = _.fd;
-        let buf_ptr = &_.buffer;
-        let buf_len = _.buffer.len;
-        let bytes_read: isize = -1;
-        __zig__ {
-            const rc = std.os.linux.read(@intCast(fd), buf_ptr, buf_len);
-            bytes_read = @bitCast(rc);
-        }
+        const rc = std.os.linux.read(@intCast(_.fd), &_.buffer, _.buffer.len);
+        const bytes_read: isize = @bitCast(rc);
 
         if (bytes_read <= 0) {
             return 0;
@@ -123,17 +108,10 @@ pub struct InotifyBackend {
         let count: usize = 0;
 
         while (offset + 16 <= total_bytes && count < out_raw.len) {
-            let wd: i32 = 0;
-            let mask: u32 = 0;
-            let cookie: u32 = 0;
-            let ev_len: u32 = 0;
-
-            __zig__ {
-                wd = @as(*const align(1) i32, @ptrCast(&buf_ptr[offset])).*;
-                mask = @as(*const align(1) u32, @ptrCast(&buf_ptr[offset + 4])).*;
-                cookie = @as(*const align(1) u32, @ptrCast(&buf_ptr[offset + 8])).*;
-                ev_len = @as(*const align(1) u32, @ptrCast(&buf_ptr[offset + 12])).*;
-            }
+            const wd: i32 = std.mem.readInt(i32, _.buffer[offset..offset + 4][0..4], .little);
+            const mask: u32 = std.mem.readInt(u32, _.buffer[offset + 4..offset + 8][0..4], .little);
+            const cookie: u32 = std.mem.readInt(u32, _.buffer[offset + 8..offset + 12][0..4], .little);
+            const ev_len: u32 = std.mem.readInt(u32, _.buffer[offset + 12..offset + 16][0..4], .little);
 
             out_raw[count].wd = wd;
             out_raw[count].mask = mask;
@@ -166,10 +144,7 @@ pub struct InotifyBackend {
 
     pub fn close(*_) {
         if (_.is_available && _.fd >= 0) {
-            let fd = _.fd;
-            __zig__ {
-                _ = std.os.linux.close(@intCast(fd));
-            }
+            * = std.os.linux.close(@intCast(_.fd));
             _.fd = -1;
             _.is_available = false;
         }

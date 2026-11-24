@@ -159,7 +159,7 @@ pub struct PdfPage {
     size: PageSize = PageSize.a4(),
     content: std.ArrayList(u8) = .empty,
 
-    fn init(alloc: std.mem.Allocator, size: PageSize): PdfPage {
+    static fn init(alloc: std.mem.Allocator, size: PageSize): PdfPage {
         return PdfPage{
             allocator: alloc,
             size: size,

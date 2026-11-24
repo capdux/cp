@@ -200,7 +200,7 @@ pub struct WarcFieldIter {
     data: []const u8 = "",
     pos: usize = 0,
 
-    pub fn init(headers_slice: []const u8): WarcFieldIter {
+    pub static fn init(headers_slice: []const u8): WarcFieldIter {
         return WarcFieldIter {
             data: headers_slice,
             pos: 0,
@@ -267,7 +267,7 @@ pub struct WarcIter {
     pos: usize = 0,
     had_error: bool = false,
 
-    pub fn init(data: []const u8): WarcIter {
+    pub static fn init(data: []const u8): WarcIter {
         return WarcIter {
             data: data,
             pos: 0,

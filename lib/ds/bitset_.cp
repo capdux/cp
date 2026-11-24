@@ -27,7 +27,7 @@ pub struct BitSet {
     words: []u64 = [],
 
     /// Initialize an empty BitSet.
-    pub fn init(alloc: std.mem.Allocator): BitSet {
+    pub static fn init(alloc: std.mem.Allocator): BitSet {
         return BitSet{
             alloc: alloc,
             words: [],

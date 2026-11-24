@@ -1251,7 +1251,7 @@ pub struct RoaringBitmap {
     cap: usize = 0,
 
     /// Initialize an empty RoaringBitmap.
-    pub fn init(alloc: std.mem.Allocator): RoaringBitmap {
+    pub static fn init(alloc: std.mem.Allocator): RoaringBitmap {
         return RoaringBitmap{
             alloc: alloc,
             containers: [],

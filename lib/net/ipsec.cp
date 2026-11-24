@@ -250,7 +250,7 @@ pub struct Ikev2PayloadIter {
     current_type: u8 = PL_NONE,
     failed: bool = false,
 
-    pub fn init(payloads_slice: []const u8, first_payload: u8): Ikev2PayloadIter {
+    pub static fn init(payloads_slice: []const u8, first_payload: u8): Ikev2PayloadIter {
         return Ikev2PayloadIter {
             data: payloads_slice,
             pos: 0,

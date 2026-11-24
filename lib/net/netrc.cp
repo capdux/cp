@@ -66,7 +66,7 @@ export struct NetrcIter {
     pos: usize;
 
     /// 初始化 .netrc 流式解析器
-    fn init(src: []const u8): NetrcIter {
+    static fn init(src: []const u8): NetrcIter {
         return NetrcIter{
             src: src,
             pos: 0,

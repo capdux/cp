@@ -153,7 +153,7 @@ pub struct PimHelloOptIter {
     offset: usize,
     failed: bool,
 
-    fn init(body: []const u8): PimHelloOptIter {
+    static fn init(body: []const u8): PimHelloOptIter {
         return PimHelloOptIter{
             .data = body,
             .offset = 0,

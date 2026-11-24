@@ -664,7 +664,7 @@ pub struct EpubManifestIter {
     section: []const u8,
     pos: usize,
 
-    pub fn init(opf_xml: []const u8): EpubManifestIter {
+    pub static fn init(opf_xml: []const u8): EpubManifestIter {
         if (pkg := findElementSpan(opf_xml, 0, "package")) {
             if (man := findElementSpan(pkg.inner, 0, "manifest")) {
                 return EpubManifestIter {

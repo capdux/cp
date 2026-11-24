@@ -589,7 +589,7 @@ pub struct TransformOp {
         return op;
     }
 
-    fn parsePxOrZero(s: []const u8): f64? {
+    static fn parsePxOrZero(s: []const u8): f64? {
         const t = std.mem.trim(u8, s, " \t");
         if (std.mem.eql(u8, t, "0")) return 0.0;
         if (t.len > 2 && std.ascii.eqlIgnoreCase(t[t.len - 2 ..], "px")) {

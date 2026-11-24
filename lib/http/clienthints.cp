@@ -61,7 +61,7 @@ export struct BrandListIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): BrandListIter {
+    pub static fn init(header: []const u8): BrandListIter {
         return BrandListIter { src: header, pos: 0 };
     }
 

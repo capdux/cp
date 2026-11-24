@@ -39,7 +39,7 @@ pub struct NoProxyMatcher {
             (octets[3] as u32);
     }
 
-    fn trimWs(s: []const u8): []const u8 {
+    static fn trimWs(s: []const u8): []const u8 {
         let start: usize = 0;
         let end: usize = s.len;
         while (start < end && (s[start] == ' ' || s[start] == '\t')) : (start += 1) {}

@@ -53,7 +53,7 @@ pub struct MarcSubfieldIter {
     data: []const u8 = "",
     pos: usize = 0,
 
-    pub fn init(field_data: []const u8): MarcSubfieldIter {
+    pub static fn init(field_data: []const u8): MarcSubfieldIter {
         return MarcSubfieldIter {
             data: field_data,
             pos: 0,

@@ -213,7 +213,7 @@ struct Lexer {
     src: []const u8,
     pos: usize,
 
-    fn init(src: []const u8): Lexer {
+    static fn init(src: []const u8): Lexer {
         return Lexer{ .src = src, .pos = 0 };
     }
 
@@ -454,7 +454,7 @@ struct Parser {
     depth: usize,
     max_depth: usize,
 
-    fn init(alloc: std.mem.Allocator, src: []const u8, max_depth: usize): CelError!Parser {
+    static fn init(alloc: std.mem.Allocator, src: []const u8, max_depth: usize): CelError!Parser {
         let lex = Lexer.init(src);
         const first = try lex.nextToken(alloc);
         return Parser{

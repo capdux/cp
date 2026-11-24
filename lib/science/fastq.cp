@@ -165,7 +165,7 @@ pub struct FastqIter {
     pos: usize,
     had_error: bool,
 
-    pub fn init(data: []const u8): FastqIter {
+    pub static fn init(data: []const u8): FastqIter {
         return FastqIter {
             data: data,
             pos: 0,

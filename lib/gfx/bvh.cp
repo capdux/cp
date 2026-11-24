@@ -267,7 +267,7 @@ pub struct BvhJointIter {
     motion_after_pos: usize,
     malformed: bool,
 
-    pub fn init(data: []const u8): BvhJointIter {
+    pub static fn init(data: []const u8): BvhJointIter {
         return BvhJointIter {
             data: data,
             pos: 0,
@@ -528,7 +528,7 @@ pub struct BvhFloatIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(frame_line: []const u8): BvhFloatIter {
+    pub static fn init(frame_line: []const u8): BvhFloatIter {
         return BvhFloatIter {
             line: frame_line,
             pos: 0,

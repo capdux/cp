@@ -66,7 +66,7 @@ pub struct PppoeTagIter {
     done: bool,
     failed: bool,
 
-    fn init(payload: []const u8): PppoeTagIter {
+    static fn init(payload: []const u8): PppoeTagIter {
         return PppoeTagIter{
             .data = payload,
             .offset = 0,

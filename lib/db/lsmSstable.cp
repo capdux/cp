@@ -348,7 +348,7 @@ struct ReaderCursor {
     data_iter: BlockIter?,
     valid: bool,
 
-    pub fn init(alloc: std.mem.Allocator, reader: *const SstReader): !ReaderCursor {
+    pub static fn init(alloc: std.mem.Allocator, reader: *const SstReader): !ReaderCursor {
         const idx_reader = try BlockReader.init(reader.index_slice);
         return ReaderCursor{
             .alloc = alloc,

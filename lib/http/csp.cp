@@ -95,7 +95,7 @@ export struct CspSourceIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(value: []const u8): CspSourceIter {
+    pub static fn init(value: []const u8): CspSourceIter {
         return CspSourceIter { src: value, pos: 0 };
     }
 
@@ -116,7 +116,7 @@ export struct CspDirectiveIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(policy: []const u8): CspDirectiveIter {
+    pub static fn init(policy: []const u8): CspDirectiveIter {
         return CspDirectiveIter { src: policy, pos: 0 };
     }
 

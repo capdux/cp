@@ -94,7 +94,7 @@ export struct UpgradeIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): UpgradeIter {
+    static fn init(header: []const u8): UpgradeIter {
         return UpgradeIter{
             src: header,
             pos: 0,
@@ -144,7 +144,7 @@ export struct ConnectionTokenIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): ConnectionTokenIter {
+    static fn init(header: []const u8): ConnectionTokenIter {
         return ConnectionTokenIter{
             src: header,
             pos: 0,

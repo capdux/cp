@@ -181,7 +181,7 @@ pub struct FbxNodeIter {
     }
 
     /// Initializes an iterator over a slice whose first byte resides at absolute file offset `base_offset`.
-    fn initWithBase(slice: []const u8, base_offset: usize, is_64bit: bool): FbxNodeIter {
+    static fn initWithBase(slice: []const u8, base_offset: usize, is_64bit: bool): FbxNodeIter {
         return FbxNodeIter {
             src: slice,
             base_offset: base_offset,
@@ -276,7 +276,7 @@ pub struct FbxPropIter {
     remaining: u64 = 0,
     done: bool = true,
 
-    fn init(props_slice: []const u8, num_properties: u64): FbxPropIter {
+    static fn init(props_slice: []const u8, num_properties: u64): FbxPropIter {
         return FbxPropIter {
             src: props_slice,
             pos: 0,

@@ -384,8 +384,10 @@ export {
     compareKeys,
 } from "./bplusTypes.cp";
 
+import bplus_tree_mod from "./bplusTree.cp";
+pub const SlottedBPlusTree = bplus_tree_mod.BPlusTree;
+
 export {
-    BPlusTree as SlottedBPlusTree,
     RangeIter,
     NULL_NODE,
     MIN_ORDER,

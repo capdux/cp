@@ -58,7 +58,7 @@ export struct TableRowIter {
     row: []const u8,
     pos: usize,
 
-    pub fn init(raw_line: []const u8): TableRowIter {
+    pub static fn init(raw_line: []const u8): TableRowIter {
         let s = trimWs(raw_line);
         if (s.len > 0 && s[0] == '|') {
             s = s[1..];

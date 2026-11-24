@@ -100,7 +100,7 @@ pub struct RiffChunkIter {
     pos: usize,
     is_big_endian: bool,
 
-    fn init(data: []const u8): RiffChunkIter {
+    static fn init(data: []const u8): RiffChunkIter {
         if (hdr := parseRiffHeader(data)) {
             const end_pos: usize = ((8 as u64) + (hdr.file_size as u64)) as usize;
             return RiffChunkIter{

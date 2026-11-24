@@ -70,7 +70,7 @@ pub struct EtcShellsIter {
     src: []const u8,
     pos: usize,
 
-    fn init(content: []const u8): EtcShellsIter {
+    static fn init(content: []const u8): EtcShellsIter {
         return EtcShellsIter {
             src: content,
             pos: 0,

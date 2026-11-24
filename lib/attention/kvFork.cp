@@ -102,7 +102,7 @@ pub struct KvForkManager {
 
     /// Initializes a manager with `pool_blocks` physical KV blocks (`1..=KV_FORK_MAX_PHYS_BLOCKS`).
     /// Returns `null` if `pool_blocks == 0` or `pool_blocks > KV_FORK_MAX_PHYS_BLOCKS`.
-    pub fn init(pool_blocks: usize): KvForkManager? {
+    pub static fn init(pool_blocks: usize): KvForkManager? {
         if (pool_blocks == 0 || pool_blocks > KV_FORK_MAX_PHYS_BLOCKS) return null;
         let mgr = KvForkManager{
             phys_capacity: pool_blocks,

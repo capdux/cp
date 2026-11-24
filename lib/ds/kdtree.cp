@@ -193,7 +193,7 @@ pub struct KdTree<V> {
         return best_dim;
     }
 
-    fn partitionMedian(entries: []const KdPointEntry<V>, indices: []usize, lo: usize, hi: usize, target: usize, dim: usize) {
+    static fn partitionMedian(entries: []const KdPointEntry<V>, indices: []usize, lo: usize, hi: usize, target: usize, dim: usize) {
         let left = lo;
         let right = hi - 1;
         while (left < right) {

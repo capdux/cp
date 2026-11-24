@@ -215,7 +215,7 @@ export struct EditorConfigProps {
     insert_final_newline: bool?,
     max_line_length: u32?,
 
-    pub fn empty(): EditorConfigProps {
+    pub static fn empty(): EditorConfigProps {
         return EditorConfigProps {
             is_root: false,
             indent_style: IndentStyle.unset,

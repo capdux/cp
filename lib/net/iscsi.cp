@@ -179,7 +179,7 @@ pub struct IscsiKvIter {
     data: []const u8,
     offset: usize,
 
-    pub fn init(data_seg: []const u8): IscsiKvIter {
+    pub static fn init(data_seg: []const u8): IscsiKvIter {
         return IscsiKvIter {
             data: data_seg,
             offset: 0,

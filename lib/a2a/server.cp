@@ -15,7 +15,7 @@ struct OwnedPart {
     uri: []u8,
     data_json: []u8,
 
-    fn fromPart(alloc: std.mem.Allocator, p: proto.Part): !OwnedPart {
+    static fn fromPart(alloc: std.mem.Allocator, p: proto.Part): !OwnedPart {
         const t = try alloc.dupe(u8, p.text);
         errdefer alloc.free(t);
         const m = try alloc.dupe(u8, p.mime_type);
@@ -55,7 +55,7 @@ struct OwnedMessage {
     message_id: []u8,
     parts: std.ArrayList(OwnedPart),
 
-    fn fromMessage(alloc: std.mem.Allocator, msg: proto.Message): !OwnedMessage {
+    static fn fromMessage(alloc: std.mem.Allocator, msg: proto.Message): !OwnedMessage {
         const mid = try alloc.dupe(u8, msg.message_id);
         errdefer alloc.free(mid);
         let parts = std.ArrayList(OwnedPart).empty;
@@ -94,7 +94,7 @@ struct OwnedArtifact {
     append: bool,
     last_chunk: bool,
 
-    fn fromArtifact(alloc: std.mem.Allocator, art: proto.Artifact): !OwnedArtifact {
+    static fn fromArtifact(alloc: std.mem.Allocator, art: proto.Artifact): !OwnedArtifact {
         const aid = try alloc.dupe(u8, art.artifact_id);
         errdefer alloc.free(aid);
         const nm = try alloc.dupe(u8, art.name);

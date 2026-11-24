@@ -49,7 +49,7 @@ export struct MemInfoIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): MemInfoIter {
+    pub static fn init(content: []const u8): MemInfoIter {
         return MemInfoIter { src: content, pos: 0 };
     }
 

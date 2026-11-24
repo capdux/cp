@@ -145,7 +145,7 @@ struct Parser {
     pos: usize = 0,
     prog: *CompiledProgram,
 
-    fn isWs(c: u8): bool {
+    static fn isWs(c: u8): bool {
         return c == ' ' || c == '\t' || c == '\n' || c == '\r';
     }
 
@@ -155,15 +155,15 @@ struct Parser {
         }
     }
 
-    fn isDigit(c: u8): bool {
+    static fn isDigit(c: u8): bool {
         return c >= '0' && c <= '9';
     }
 
-    fn isNameFirst(c: u8): bool {
+    static fn isNameFirst(c: u8): bool {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
     }
 
-    fn isNameChar(c: u8): bool {
+    static fn isNameChar(c: u8): bool {
         return Parser.isNameFirst(c) || Parser.isDigit(c);
     }
 

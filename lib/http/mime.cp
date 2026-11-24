@@ -359,7 +359,7 @@ pub struct MimeType {
         return "application/octet-stream";
     }
 
-    fn resolveQuery(mime_or_ext: []const u8): MimeEntry? {
+    static fn resolveQuery(mime_or_ext: []const u8): MimeEntry? {
         if (std.mem.indexOfScalar(u8, mime_or_ext, '/') != null) {
             return MimeType.lookupMime(mime_or_ext);
         }

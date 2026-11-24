@@ -48,7 +48,7 @@ pub struct TinyLfuSketch {
 
     /// Initializes a 4-bit Count-Min Sketch that halves all counters every `reset_threshold` increments.
     /// Returns `null` if `reset_threshold == 0`.
-    fn init(reset_threshold: u64): TinyLfuSketch? {
+    static fn init(reset_threshold: u64): TinyLfuSketch? {
         if (reset_threshold == 0) {
             return null;
         }

@@ -49,7 +49,7 @@ export struct VaryIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(header: []const u8): VaryIter {
+    pub static fn init(header: []const u8): VaryIter {
         return VaryIter { src: header, pos: 0 };
     }
 

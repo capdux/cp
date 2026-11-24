@@ -72,7 +72,7 @@ pub struct CoapOptIter {
     last_num: u16 = 0,
     failed: bool = false,
 
-    pub fn init(options_bytes: []const u8): CoapOptIter {
+    pub static fn init(options_bytes: []const u8): CoapOptIter {
         return CoapOptIter {
             data: options_bytes,
             pos: 0,

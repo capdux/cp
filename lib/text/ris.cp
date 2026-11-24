@@ -177,7 +177,7 @@ pub struct RisTagIter {
     pos: usize,
     done: bool,
 
-    fn init(record_slice: []const u8): RisTagIter {
+    static fn init(record_slice: []const u8): RisTagIter {
         return RisTagIter{
             data: record_slice,
             pos: skipBom(record_slice),
@@ -302,7 +302,7 @@ pub struct RisIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): RisIter {
+    static fn init(data: []const u8): RisIter {
         return RisIter{
             data: data,
             pos: skipBom(data),

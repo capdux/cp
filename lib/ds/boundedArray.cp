@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/collections/bounded_array.cp | Synced: 2026-11-21T12:45:08Z
+// Source: Absorbed from /data/dev/bun/src/collections/bounded_array.cp | Synced: 2026-11-24T07:05:00Z
 //! Stack-allocated fixed-capacity dynamic array (`BoundedArray<T, capacity>`),
 //! zero heap allocations, with full slice/append/insert/remove operations.
 

@@ -212,7 +212,7 @@ export struct ContentLanguageIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): ContentLanguageIter {
+    static fn init(header: []const u8): ContentLanguageIter {
         return ContentLanguageIter{
             src: header,
             pos: 0,

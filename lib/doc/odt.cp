@@ -692,7 +692,7 @@ pub struct OdtBlockIter {
     section: []const u8,
     pos: usize,
 
-    pub fn init(content_xml: []const u8): OdtBlockIter {
+    pub static fn init(content_xml: []const u8): OdtBlockIter {
         if (body := findElementSpan(content_xml, 0, "body")) {
             if (txt := findElementSpan(body.inner, 0, "text")) {
                 return OdtBlockIter {

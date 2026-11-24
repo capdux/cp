@@ -61,7 +61,7 @@ pub struct StreamingHasher {
     alg: HashAlg,
     state: HasherState,
 
-    pub fn init(alg: HashAlg): StreamingHasher {
+    pub static fn init(alg: HashAlg): StreamingHasher {
         const st: HasherState = switch (alg) {
             .Sha1 => HasherState{ .Sha1 = std.crypto.hash.Sha1.init(.{}) },
             .Sha224 => HasherState{ .Sha224 = std.crypto.hash.sha2.Sha224.init(.{}) },

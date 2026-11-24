@@ -69,7 +69,7 @@ pub struct RouteMatch {
     params: [MAX_PARAMS]PathParam,
     param_count: usize,
 
-    pub fn init(handler_id: usize): RouteMatch {
+    pub static fn init(handler_id: usize): RouteMatch {
         let rm: RouteMatch = undefined;
         rm.handler_id = handler_id;
         rm.param_count = 0;
@@ -182,7 +182,7 @@ struct TrieNode {
     param_child: (*TrieNode)?,
     catch_all_child: (*TrieNode)?,
 
-    fn create(alloc: std.mem.Allocator, segment: []const u8, kind: NodeKind): RouterError!*TrieNode {
+    static fn create(alloc: std.mem.Allocator, segment: []const u8, kind: NodeKind): RouterError!*TrieNode {
         let node = alloc.create(TrieNode) catch return RouterError.OutOfMemory;
         node.* = TrieNode{
             .segment = segment,

@@ -462,7 +462,7 @@ pub struct FlacBlockIter {
     pos: usize,
     done: bool,
 
-    fn init(data: []const u8): FlacBlockIter {
+    static fn init(data: []const u8): FlacBlockIter {
         if (!isFlac(data)) {
             return FlacBlockIter{
                 .data = data[0..0],

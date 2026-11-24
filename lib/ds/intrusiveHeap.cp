@@ -1,4 +1,4 @@
-// Source: Absorbed from /data/dev/bun/src/io/heap.cp | Synced: 2026-11-22T12:49:17Z
+// Source: Absorbed from /data/dev/bun/src/io/heap.cp | Synced: 2026-11-24T07:05:00Z
 // Zero-allocation intrusive pairing heap with O(1) amortized insert/meld and O(log N) deleteMin/remove.
 
 /// Intrusive linkage field to embed as `heap: IntrusiveField(Self) = .{}` inside node structs.

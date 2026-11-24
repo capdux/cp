@@ -492,7 +492,7 @@ pub struct VmdkExtentIter {
     data: []const u8,
     pos: usize,
 
-    pub fn init(data: []const u8): VmdkExtentIter {
+    pub static fn init(data: []const u8): VmdkExtentIter {
         return VmdkExtentIter{
             .data = stripNul(data),
             .pos = 0,

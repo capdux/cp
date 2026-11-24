@@ -182,7 +182,7 @@ pub struct Rar5BlockIter {
     done: bool,
     has_err: bool,
 
-    pub fn init(data: []const u8): Rar5BlockIter {
+    pub static fn init(data: []const u8): Rar5BlockIter {
         if (!matchSig8(data)) {
             return Rar5BlockIter{
                 .data = data,
@@ -425,7 +425,7 @@ pub struct Rar4BlockIter {
     done: bool,
     has_err: bool,
 
-    pub fn init(data: []const u8): Rar4BlockIter {
+    pub static fn init(data: []const u8): Rar4BlockIter {
         if (!matchSig7(data)) {
             return Rar4BlockIter{
                 .data = data,

@@ -156,7 +156,7 @@ pub struct ProcMountsIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): ProcMountsIter {
+    static fn init(content: []const u8): ProcMountsIter {
         return ProcMountsIter {
             src: content,
             pos: 0,

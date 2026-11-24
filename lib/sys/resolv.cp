@@ -59,7 +59,7 @@ export struct NameserverIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): NameserverIter {
+    pub static fn init(content: []const u8): NameserverIter {
         return NameserverIter { src: content, pos: 0 };
     }
 
@@ -89,7 +89,7 @@ export struct ResolvOptions {
     use_vc: bool,
     trust_ad: bool,
 
-    pub fn defaults(): ResolvOptions {
+    pub static fn defaults(): ResolvOptions {
         return ResolvOptions {
             ndots: 1,
             timeout_sec: 5,

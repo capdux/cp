@@ -283,7 +283,7 @@ pub struct WkbRingIter {
     has_m: bool,
     point_stride: usize,
 
-    fn init(data: []const u8): WkbRingIter? {
+    static fn init(data: []const u8): WkbRingIter? {
         const hdr = parseWkbHeader(data) ?? return null;
         if (hdr.geom_type != WkbGeomType.polygon) {
             return null;
@@ -337,7 +337,7 @@ pub struct WkbChildIter {
     pos: usize,
     remaining_children: usize,
 
-    fn init(data: []const u8): WkbChildIter? {
+    static fn init(data: []const u8): WkbChildIter? {
         const hdr = parseWkbHeader(data) ?? return null;
         const is_multi = hdr.geom_type == WkbGeomType.multipoint ||
             hdr.geom_type == WkbGeomType.multilinestring ||
@@ -426,7 +426,7 @@ pub struct WkbWriter {
     pos: usize,
     little_endian: bool,
 
-    fn init(buf: []u8, little_endian: bool): WkbWriter {
+    static fn init(buf: []u8, little_endian: bool): WkbWriter {
         return WkbWriter{
             .buf = buf,
             .pos = 0,

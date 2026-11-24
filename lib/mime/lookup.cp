@@ -101,7 +101,7 @@ export struct ContentType {
     boundary: ([]const u8)?;
 
     /// 解析形如 `type/subtype; charset=utf-8; boundary="---abc"` 的 Content-Type 头部
-    fn parse(header: []const u8): ContentType? {
+    static fn parse(header: []const u8): ContentType? {
         const trimmed = trimAscii(header);
         if (trimmed.len == 0) {
             return null;

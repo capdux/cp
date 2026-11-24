@@ -329,7 +329,7 @@ pub struct FtpMlsxFactIter {
     data: []const u8,
     offset: usize,
 
-    fn init(facts_raw: []const u8): FtpMlsxFactIter {
+    static fn init(facts_raw: []const u8): FtpMlsxFactIter {
         return FtpMlsxFactIter{
             .data = facts_raw,
             .offset = 0,

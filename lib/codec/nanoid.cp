@@ -146,7 +146,7 @@ pub struct Ulid {
     value: u128,
 
     /// Constructs a `Ulid` from a 48-bit `timestamp_ms` and 80-bit `rand_bits`.
-    pub fn fromParts(timestamp_ms: u64, rand_bits: u128): Ulid ! IdError {
+    pub static fn fromParts(timestamp_ms: u64, rand_bits: u128): Ulid ! IdError {
         if (timestamp_ms > MAX_TIMESTAMP_MS) {
             return IdError.TimestampOutOfRange;
         }

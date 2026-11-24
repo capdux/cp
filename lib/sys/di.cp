@@ -293,7 +293,7 @@ pub struct ServiceScope {
     owned_instances: std.ArrayListUnmanaged(OwnedInstance) = .empty;
     resolution_stack: std.ArrayListUnmanaged(ResolutionFrame) = .empty;
 
-    pub fn init(container: *ServiceContainer, alloc: std.mem.Allocator, is_root: bool): ServiceScope {
+    pub static fn init(container: *ServiceContainer, alloc: std.mem.Allocator, is_root: bool): ServiceScope {
         return ServiceScope{
             container: container,
             alloc: alloc,

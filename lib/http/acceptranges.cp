@@ -81,7 +81,7 @@ export struct AcceptRangesIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): AcceptRangesIter {
+    static fn init(header: []const u8): AcceptRangesIter {
         return AcceptRangesIter{
             src: header,
             pos: 0,

@@ -229,7 +229,7 @@ pub struct NixIter {
     input: []const u8,
     pos: usize,
 
-    fn init(input: []const u8): NixIter {
+    static fn init(input: []const u8): NixIter {
         return NixIter{
             .input = input,
             .pos = 0,

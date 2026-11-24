@@ -271,7 +271,7 @@ pub struct ChunkState {
     pub blocks_compressed: u8,
     pub flags: u32,
 
-    pub fn init(key_words: [8]u32, chunk_counter: u64, flags: u32): ChunkState {
+    pub static fn init(key_words: [8]u32, chunk_counter: u64, flags: u32): ChunkState {
         return ChunkState {
             chaining_value: key_words,
             chunk_counter: chunk_counter,
@@ -343,7 +343,7 @@ pub struct Blake3Hasher {
     pub cv_stack_len: u8,
     pub flags: u32,
 
-    fn initInternal(key_words: [8]u32, flags: u32): Blake3Hasher {
+    static fn initInternal(key_words: [8]u32, flags: u32): Blake3Hasher {
         return Blake3Hasher {
             chunk_state: ChunkState.init(key_words, 0, flags),
             key_words: key_words,
@@ -360,16 +360,16 @@ pub struct Blake3Hasher {
         };
     }
 
-    pub fn init(): Blake3Hasher {
+    pub static fn init(): Blake3Hasher {
         return Blake3Hasher.initInternal(IV, 0);
     }
 
-    pub fn initKeyed(key: [32]u8): Blake3Hasher {
+    pub static fn initKeyed(key: [32]u8): Blake3Hasher {
         const kw = keyWordsFromBytes(key);
         return Blake3Hasher.initInternal(kw, KEYED_HASH);
     }
 
-    pub fn initDeriveKey(context: []const u8): Blake3Hasher {
+    pub static fn initDeriveKey(context: []const u8): Blake3Hasher {
         let context_hasher = Blake3Hasher.initInternal(IV, DERIVE_KEY_CONTEXT);
         context_hasher.update(context);
         let context_key: [32]u8 = [

@@ -119,7 +119,7 @@ pub struct LzhExtIter {
     pos: usize,
     next_size: usize,
 
-    pub fn init(ext_headers_bytes: []const u8): LzhExtIter {
+    pub static fn init(ext_headers_bytes: []const u8): LzhExtIter {
         if (ext_headers_bytes.len < 2) {
             return LzhExtIter{
                 .raw = ext_headers_bytes,
@@ -399,7 +399,7 @@ pub struct LzhEntryIter {
     done: bool,
     has_err: bool,
 
-    pub fn init(data: []const u8): LzhEntryIter {
+    pub static fn init(data: []const u8): LzhEntryIter {
         return LzhEntryIter{
             .data = data,
             .pos = 0,

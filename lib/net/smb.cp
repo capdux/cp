@@ -213,7 +213,7 @@ pub struct Smb2ChainIter {
     done: bool,
     malformed: bool,
 
-    pub fn init(data: []const u8): Smb2ChainIter {
+    pub static fn init(data: []const u8): Smb2ChainIter {
         return Smb2ChainIter{
             .data = data,
             .pos = 0,

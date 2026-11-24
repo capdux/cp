@@ -21,7 +21,7 @@ pub struct StreamingHmac {
     alg: HashAlg,
     state: HmacState,
 
-    pub fn init(alg: HashAlg, key: []const u8): StreamingHmac {
+    pub static fn init(alg: HashAlg, key: []const u8): StreamingHmac {
         const st: HmacState = switch (alg) {
             .Sha1 => HmacState{ .Sha1 = std.crypto.auth.hmac.HmacSha1.init(key) },
             .Sha224 => HmacState{ .Sha224 = std.crypto.auth.hmac.sha2.HmacSha224.init(key) },

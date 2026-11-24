@@ -164,7 +164,7 @@ pub struct NbnsAddrIter {
     rdata: []const u8,
     pos: usize,
 
-    pub fn init(rdata: []const u8): NbnsAddrIter {
+    pub static fn init(rdata: []const u8): NbnsAddrIter {
         return NbnsAddrIter{
             .rdata = rdata,
             .pos = 0,
@@ -211,7 +211,7 @@ pub struct NbnsStatIter {
     num_names: u8,
     idx: u8,
 
-    pub fn init(rdata: []const u8): NbnsStatIter? {
+    pub static fn init(rdata: []const u8): NbnsStatIter? {
         if (rdata.len < 1) {
             return null;
         }

@@ -210,7 +210,7 @@ pub struct UsdcSectionIter {
     remaining: u64 = 0,
     done: bool = true,
 
-    fn init(data: []const u8, boot: UsdcBootstrap): UsdcSectionIter {
+    static fn init(data: []const u8, boot: UsdcBootstrap): UsdcSectionIter {
         const data_len_u64 = data.len as u64;
         if (boot.toc_offset < (USDC_BOOTSTRAP_SIZE as u64) ||
             boot.toc_offset > data_len_u64 ||

@@ -214,7 +214,7 @@ pub struct ProcCpuInfoIter {
     src: []const u8;
     pos: usize;
 
-    fn init(content: []const u8): ProcCpuInfoIter {
+    static fn init(content: []const u8): ProcCpuInfoIter {
         return ProcCpuInfoIter {
             src: content,
             pos: 0,

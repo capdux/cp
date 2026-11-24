@@ -310,7 +310,7 @@ pub struct BpfProgIter {
     pc: usize,
     has_err: bool,
 
-    pub fn init(code: []const u8): BpfProgIter {
+    pub static fn init(code: []const u8): BpfProgIter {
         return BpfProgIter{
             .code = code,
             .pos = 0,

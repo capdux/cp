@@ -85,7 +85,7 @@ pub struct LldpTlvIter {
     seen_end: bool = false,
     failed: bool = false,
 
-    pub fn init(data: []const u8): LldpTlvIter {
+    pub static fn init(data: []const u8): LldpTlvIter {
         return LldpTlvIter {
             data: data,
             pos: 0,

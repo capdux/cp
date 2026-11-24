@@ -174,7 +174,7 @@ pub struct RadiusAttrIter {
     pos: usize,
     malformed: bool,
 
-    fn init(attrs_slice: []const u8): RadiusAttrIter {
+    static fn init(attrs_slice: []const u8): RadiusAttrIter {
         return RadiusAttrIter{
             data: attrs_slice,
             pos: 0,

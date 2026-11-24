@@ -395,7 +395,7 @@ pub struct BenchSuite {
         return _.cases[index];
     }
 
-    fn writeBytes(out: []u8, pos: usize, s: []const u8): usize {
+    static fn writeBytes(out: []u8, pos: usize, s: []const u8): usize {
         if (pos + s.len > out.len) {
             return pos;
         }

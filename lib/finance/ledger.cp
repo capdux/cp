@@ -194,7 +194,7 @@ pub struct Ledger {
         };
     }
 
-    fn linesMatch(existing: []const JournalLine, incoming: []const JournalLine): bool {
+    static fn linesMatch(existing: []const JournalLine, incoming: []const JournalLine): bool {
         if (existing.len != incoming.len) return false;
         let i: usize = 0;
         while (i < existing.len) : (i += 1) {

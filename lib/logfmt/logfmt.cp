@@ -70,7 +70,7 @@ export struct LogfmtIter {
     pos: usize,
     had_error: bool,
 
-    pub fn init(line: []const u8): LogfmtIter {
+    pub static fn init(line: []const u8): LogfmtIter {
         return LogfmtIter { src: line, pos: 0, had_error: false };
     }
 

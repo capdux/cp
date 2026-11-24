@@ -193,7 +193,7 @@ pub struct CigarIter {
     done: bool = true,
     had_error: bool = false,
 
-    fn init(cigar: []const u8): CigarIter {
+    static fn init(cigar: []const u8): CigarIter {
         if (cigar.len == 0) {
             return CigarIter { src: cigar, pos: 0, done: true, had_error: true };
         }
@@ -440,7 +440,7 @@ pub struct SamRecordIter {
     pos: usize = 0,
     had_error: bool = false,
 
-    fn init(data: []const u8): SamRecordIter {
+    static fn init(data: []const u8): SamRecordIter {
         return SamRecordIter {
             src: data,
             pos: 0,

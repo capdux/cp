@@ -71,7 +71,7 @@ export struct ViaIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): ViaIter {
+    static fn init(header: []const u8): ViaIter {
         return ViaIter{
             src: header,
             pos: 0,
