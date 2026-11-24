@@ -1,0 +1,48 @@
+{
+  "name": "@cap/libavif",
+  "ver": "1.2.1",
+  "description": "AOMediaCodec libavif (v1.2.1) AVIF/HEIF image container & pixel format library for CP",
+  "main": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "bin": {
+    "avif": {
+      "path": "c",
+      "src": [
+        "src/alpha.c",
+        "src/avif.c",
+        "src/colr.c",
+        "src/colrconvert.c",
+        "src/diag.c",
+        "src/exif.c",
+        "src/gainmap.c",
+        "src/io.c",
+        "src/mem.c",
+        "src/obu.c",
+        "src/properties.c",
+        "src/rawdata.c",
+        "src/read.c",
+        "src/reformat.c",
+        "src/reformat_libsharpyuv.c",
+        "src/reformat_libyuv.c",
+        "src/stream.c",
+        "src/utils.c",
+        "src/write.c",
+        "avif_ffi.c"
+      ],
+      "include": [
+        "include"
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-std=c99"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

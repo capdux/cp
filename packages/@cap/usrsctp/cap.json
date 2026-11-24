@@ -1,0 +1,59 @@
+{
+  "name": "@cap/usrsctp",
+  "ver": "0.9.5",
+  "description": "Portable userland SCTP stack (usrsctp 0.9.5.0) for WebRTC DataChannel in CP",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "usrsctp": {
+      "path": "c",
+      "src": [
+        "netinet/sctp_asconf.c",
+        "netinet/sctp_auth.c",
+        "netinet/sctp_bsd_addr.c",
+        "netinet/sctp_callout.c",
+        "netinet/sctp_cc_functions.c",
+        "netinet/sctp_crc32.c",
+        "netinet/sctp_indata.c",
+        "netinet/sctp_input.c",
+        "netinet/sctp_output.c",
+        "netinet/sctp_pcb.c",
+        "netinet/sctp_peeloff.c",
+        "netinet/sctp_sha1.c",
+        "netinet/sctp_ss_functions.c",
+        "netinet/sctp_sysctl.c",
+        "netinet/sctp_timer.c",
+        "netinet/sctp_userspace.c",
+        "netinet/sctp_usrreq.c",
+        "netinet/sctputil.c",
+        "netinet6/sctp6_usrreq.c",
+        "user_environment.c",
+        "user_mbuf.c",
+        "user_recv_thread.c",
+        "user_socket.c",
+        "usrsctp_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-g0",
+        "-D__Userspace__",
+        "-DSCTP_SIMPLE_ALLOCATOR",
+        "-DSCTP_PROCESS_LEVEL_LOCKS",
+        "-DINET",
+        "-DINET6",
+        "-D_GNU_SOURCE",
+        "-Wno-address-of-packed-member",
+        "-Wno-deprecated-declarations"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "pthread": {}
+  }
+}

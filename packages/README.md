@@ -46,6 +46,8 @@ All official `@cap/*` packages follow strict engineering and licensing standards
 | `@cap/dav1d` | `1.5.4` | BSD-2-Clause | Prebuilt dynamic (`sys`) | VideoLAN fastest royalty-free AV1 video decoder (1.8 MB) |
 | `@cap/vorbis` | `1.3.7` | BSD-3-Clause | C static (`bin`) | Xiph Ogg/Vorbis audio encoder & decoder |
 | `@cap/libvpx` | `1.15.0` | BSD-3-Clause | Prebuilt dynamic (`sys`) | Google royalty-free VP8/VP9 video codec (1.7 MB) |
+| `@cap/usrsctp` | `0.9.5` | BSD-3-Clause | C static (`bin`) | WebRTC DataChannel userspace SCTP stack (759 KB) |
+| `@cap/libavif` | `1.2.1` | BSD-2-Clause | C static (`bin`) | Next-gen AVIF image container & parser (311 KB) |
 
 > **Built-in Standard Library Note**: Core runtime essentials such as `cap:sqlite` (embedded SQLite 3.54.1 amalgamation, 2.64M lookups/s), `cap:regex` (Rust `regex-automata`-inspired SIMD + Lazy DFA), `cap:redis`, `cap:sql` (PostgreSQL/MySQL), `cap:http`, `cap:net`, `cap:crypto`, and `cap:image` are built into `lib/` and require **no `cap install`**.
 

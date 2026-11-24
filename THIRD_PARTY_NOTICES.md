@@ -157,6 +157,8 @@ The following permissively-licensed Rust reference implementations were audited 
 | **dav1d 1.5.4** (`@cap/dav1d`) | <https://code.videolan.org/videolan/dav1d> | BSD-2-Clause | `packages/@cap/dav1d/` | Copyright (c) 2018-2025 VideoLAN & dav1d Authors |
 | **libvorbis 1.3.7** (`@cap/vorbis`) | <https://github.com/xiph/vorbis> | BSD-3-Clause | `packages/@cap/vorbis/` | Copyright (c) 2002-2020 Xiph.Org Foundation |
 | **libvpx 1.15.0** (`@cap/libvpx`) | <https://github.com/webmproject/libvpx> | BSD-3-Clause | `packages/@cap/libvpx/` | Copyright (c) 2010-2025 The WebM Project Authors |
+| **usrsctp 0.9.5** (`@cap/usrsctp`) | <https://github.com/sctplab/usrsctp> | BSD-3-Clause | `packages/@cap/usrsctp/` | Copyright (c) 2001-2024 Michael Tuexen & Contributors |
+| **libavif 1.2.1** (`@cap/libavif`) | <https://github.com/AOMediaCodec/libavif> | BSD-2-Clause | `packages/@cap/libavif/` | Copyright (c) 2019 Joe Drago / AOMedia |
 
 ---
 
