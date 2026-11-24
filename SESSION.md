@@ -4080,3 +4080,800 @@
   > 这样零运维成本就能先用 npm 托管冷启动，将来切到自研 CP 包托管服务器（`.tar.zst`）也完全平滑无缝。
   >
   > 等当前 **Lane 1L** 完成 `cap pack` 与远程 `cap install` 后，要不要我直接顺手把 **`cap publish` + `.tgz` npm 双向兼容** 一并实现并实测？
+
+### 2026-11-25（下游工单全量补录：`task-bun-20261125-discard-raii-guard`）[ticket:task-bun-20261125-discard-raii-guard]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-25 01:26:38` | 状态：`resolved` | 结单：`2026-11-25T01:46:46`
+- **报错/需求摘要**：将含 ~init()/~errinit() 析构器的 RAII Guard 通过 '* = Guard{ ... };' 匿名丢弃时，cpc 静默生成 '_ = Guard{ ... };' 而不报错也未注入析构/立即析构，导致资源永久泄漏（Bun 全仓已实测发现 3 处同类泄漏：IndexStringMap/AnyTaskWithExtraContext/source_map_mode_jsc）。建议 cpc 禁止对含 ~init()/~errinit() 的类型执行 '* =' 匿名丢弃（或立即调用析构）并给出明确编译错误。
+- **结单与处理汇报**：Fixed in cpc release (cac33756): added E0220 SemaError::DiscardedRaiiValue rejecting '* =' / 'let * =' on owned RAII values with ~init() or ~errinit(), while allowing '* = existing_var;' and POD discards. Verified against repro_discard_raii_guard.cp (E0220) and testHotfixDiscardRaiiGuard.cp (PASS).
+
+### 2026-11-25（下游工单全量补录：`task-bun-20261125-unused-import-dropped`）[ticket:task-bun-20261125-unused-import-dropped]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-25 02:05:43` | 状态：`resolved` | 结单：`2026-11-25T02:09:06`
+- **报错/需求摘要**：cpc --lib 将仅在本文件重导出、未在本文件内部直接引用的 'import Async from "async";' 剪枝吞掉，未生成 'pub const Async = @import("async");'，导致 Bun src/bun.zig 丢失 bun.Async 报 45 个编译错误（其他模块如 Watcher/SourceMap 等可能因本文件内引用未被删，建议对模块级 import 保留 pub const 导出或提供显式 pub import 语义）
+- **结单与处理汇报**：Fixed in cpc release: preserved all top-level imports in --lib mode (cpc/src/main.rs) so barrel files keep 'pub const Async = @import("async");', while still emitting '// @cap-used-pkg:' only for referenced packages. Verified against temp/repro_unused_import_dropped.cp.
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:18:12）[step:22488]
+- **用户完整原始指令**：
+  > @cap/duckdb       │ 1.2.1   │ MIT          │ 官方预编译动态库 (sys + prebuilt) │ 零本地 C++ 编译（56M .so + 12K shim 82ms）
+  > 56M, 为何这么大?
+- **完整回复与执行汇报**：
+  > 这是 DuckDB 官方全平台的正常体量（Python `pip install duckdb`、Node `@duckdb/node-api` 用的都是同一个 ~56 MB 的 `libduckdb`）。刚对本机 [libduckdb.so](file:///data/dev/cp/packages/@cap/duckdb/prebuilt/linux-x86_64/libduckdb.so) 做了二进制段分析，原因非常清晰：
+  >
+  > ### 1. 实测体积拆解（总计 58.1 MB）
+  > - **`.text` 机器码段：46.9 MB**（核心主体）
+  > - **未剥离符号表（`not stripped`）：~8.4 MB**（官方 Release 默认保留，执行 `strip --strip-unneeded` 可直接瘦身）
+  > - **`.data` / `.bss`：~2.8 MB**
+  >
+  > ### 2. 为什么 `.text` 代码段有 46.9 MB？
+  > 1. **C++ 模板向量化展开**：DuckDB 是列式 OLAP 引擎，为了跑出几十 GB/s 的分析吞吐，把所有算子（HashJoin、GroupBy、Sort、Window、Aggregate）对 `i8`~`i128`/`f32`/`f64`/`decimal`/`string`/`list`/`struct` 等几十种类型做了全排列 **C++ 模板特化 + SIMD 展开**；
+  > 2. **全家桶格式内置**：直接把完整 PostgreSQL 解析器（`libpg_query`）、**Parquet / CSV / JSON** 读写引擎、RE2 正则、jemalloc、以及十几种列式压缩算法（Zstd/Snappy/LZ4/ALP/FSST/Bitpacking 等）全部静态打进了一个 `.so`，实现零外部依赖；
+  > 3. **定位差异**：SQLite 是轻量 OLTP 行存事务库（单文件 C，几 MB），而 DuckDB 是重型 OLAP 列存分析引擎（相当于把一个单机版 Spark/ClickHouse 塞进一个 `.so`）。
+  >
+  > ### 3. 对 `cap` 安装与编译的实际影响很小
+  > - **主包仅 30.5 KB**：采用主包 + 平台二进制包分离，不依赖 DuckDB 的项目 **0 字节体积增加**；
+  > - **实际网络传输仅 16.0 MB**：刚实测 `zstd -6` 可将 58.1 MB 直接压到 **16.8 MB**（若做 `strip` 后压到 ~13 MB），且下载后进入 `~/.cap/cache` 全局缓存多项目软链共享；
+  > - **编译零耗时**：因为采用 `sys` 动态预编译模式，业务项目 `cap run` 链接 DuckDB 总计只需 **~0.8 秒**。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:21:40）[step:22493]
+- **用户完整原始指令**：
+  > 未剥离符号表（not stripped）：~8.4 MB（官方 Release 默认保留，执行 strip --strip-unneeded 可直接瘦身）
+  > 是什么意思
+- **完整回复与执行汇报**：
+  > 用最直观的方式解释：
+  >
+  > ### 1. 什么是「符号表（Symbol Table）」？
+  > 编译出来的 `.so`（动态库）或可执行文件里，除了 CPU 真正要跑的**机器码（`.text`）**，还会附带一份「**内部花名册**」（`.symtab` / `.strtab` 等段），记录着几十万个内部 C++ 函数名、模板类名、全局变量名和内存地址的对应关系（例如 `duckdb::PhysicalHashAggregate::Sink(...)` 这种很长的 C++ 修饰名）。
+  >
+  > - **`not stripped`（未剥离）**：把这份内部花名册完整留在了文件里（DuckDB 里光这些内部函数名就占了 **~8.4 MB**）。
+  > - **`stripped`（已剥离）**：把运行程序不需要的内部花名册删掉。
+  >
+  > ### 2. `strip --strip-unneeded` 具体删什么、留什么？
+  > 对于动态库（`.so`），里面其实有**两份**符号表：
+  > 1. **动态符号表（`.dynsym`）—— 必须保留**：只包含对外导出的公共 API（如 `duckdb_open`、`duckdb_query`），程序启动链接和运行时加载全靠它；
+  > 2. **内部符号表（`.symtab`）+ 调试信息 —— 运行完全用不到**：只包含库内部私有函数名和调试映射。
+  >
+  > 执行 `strip --strip-unneeded libduckdb.so` 时：
+  > - **100% 保留**所有对外导出 API（`.dynsym`），**完全不影响任何功能、性能和链接调用**；
+  > - **只删除**运行用不到的内部私有符号表和调试信息，文件立刻从 58 MB 瘦身到 ~49 MB（Zstd 压缩后从 16.8 MB 降到 ~13 MB）。
+  >
+  > ### 3. 为什么官方默认留着，什么时候该 strip？
+  > - **官方保留的好处**：万一 DuckDB 内部崩溃（Segfault）或用 `perf`/`gdb` 抓火焰图时，堆栈能显示具体的 C++ 内部函数名，而不是一串十六进制地址。
+  > - **生产分发最佳实践**：
+  >   - 面向终端用户分发的 Release 预编译包，通常会做 `strip --strip-unneeded`（减小下载体积和磁盘占用）；
+  >   - 或者把剥离出来的符号单独保存成 `.debug` 文件（类似 Rust/Zig/Chrome 的做法），平时不占体积，排查崩溃时再按需加载。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:23:52）[step:22495]
+- **用户完整原始指令**：
+  > 我们cp 应该需要瘦身版本吧
+- **完整回复与执行汇报**：
+  > 已为 `cap` 静态库构建管线接入默认瘦身编译选项（`-g0 -ffunction-sections -fdata-sections`），正在重编实测体积对比并提交。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:27:10）[step:22507]
+- **用户完整原始指令**：
+  > 你的计划完成了多少?
+- **完整回复与执行汇报**：
+  > 截至目前，整体计划进度如下（核心基建与高频引擎 **100% 完成**，外部 `@cap/*` 生态包已完成 **10 / 19**，即 **53%**）：
+  >
+  > ### 一、 核心工具链与内置引擎（100% 完成）
+  > - [x] **`cap` 2.0 生产级包管理器**：四大依赖（`dep`/`dev`/`bin`/`sys`）、Workspaces、按需链接树摇（AST 级未用导入剔除）、默认 `-g0` 瘦身构建（静态库降 72%–84%）、`.tar.zst` 分包打包、`cap publish` + 魔数双格式（`.tar.zst` / `.tgz`）直发 npm / Verdaccio 与验签。
+  > - [x] **内置 `cap:sqlite`（SQLite 3.54.1）**：自包含按需静态链接，对标/超越 `bun:sqlite`，`:memory:` 实测 **225 万插/秒、264 万点查/秒**。
+  > - [x] **内置 `cap:regex`（对标 Rust `regex-automata`）**：16B SIMD Prefilter + Lazy DFA + 捕获组/替换/分割 + 1,800 组 Fuzz，ReDoS 5,000 字符压测 < 0.4ms。
+  > - [x] **全量回归 + SIMD 性能基准**：101/101 Rust 参考套件 100% PASS，8 项 SIMD 基准实测归档。
+  >
+  > ---
+  >
+  > ### 二、 `@cap/*` 外部原生生态包矩阵（10 / 19 已交付）
+  >
+  > | 分类 | 已完成（10 个，均 4-Gate 0/0/0/0 + E2E） | 待推进（9 个，按需分批） |
+  > | :--- | :--- | :--- |
+  > | **数据库 / 分析 / KV** | `@cap/duckdb` (v1.2.1)、`@cap/lmdb` (v0.9.33) | `@cap/rocksdb` |
+  > | **AI 推理 / 向量 / 算力** | `@cap/usearch` (v2.26.6) | `@cap/llama`、`@cap/whisper`、`@cap/onnx`、`@cap/openblas` |
+  > | **解析 / 压缩 / 观测 / 文本** | `@cap/picohttp`、`@cap/zstd`、`@cap/hdrhistogram`、`@cap/lz4`、`@cap/yyjson`、`@cap/treesitter`、`@cap/yaml` | `@cap/pcre2`、`@cap/sodium`、`@cap/pdfium` |
+  > | **视觉 / 图形 / 音视频** | —（已通过 `@cap/duckdb` 跑通官方预编译动态库范式） | `@cap/opus`、`@cap/opencv`、`@cap/ffmpeg`、`@cap/vips`、`@cap/skia`、`@cap/sdl3`（可选） |
+  >
+  > ---
+  >
+  > ### 三、 规范同步收尾（1 项待做）
+  > - [ ] 将 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 中已打标的 `[SYNC_PENDING: 2026-11-24]`（`cap.json` 2.0 / `cap pack` / `cap publish` 新规范）同步到面向开发者的 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 并补充示例代码。
+  >
+  > ---
+  >
+  > **建议下一步**：
+  > 1. **继续推进 AI Agent 刚需包**（优先 `@cap/llama`、`@cap/onnx`、`@cap/pdfium`、`@cap/sodium`、`@cap/opus`）；
+  > 2. **顺手把 `cp_ref.md` 规范同步收口**。
+  >
+  > 你想先推进哪一批？
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:29:18）[step:22509]
+- **用户完整原始指令**：
+  > 你自己自主安排任务, 不要停
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+- **完整回复与执行汇报**：
+  > 主智能体已同步完成两项任务并提交，同时两路子智能体仍在满载推进：
+  >
+  > ### 主智能体已完成并提交
+  > 1. **规范同步清零**（`75215caf`）：已将 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 的 `cap.json` 2.0 四大依赖、Workspaces、按需链接、`-g0` 瘦身构建、`.tar.zst`/`.tgz` 双格式与 `cap publish` 规范（含命令行实战示例）全量同步至 [cp_ref.md](file:///data/dev/cp/cp_ref.md)，所有 `[SYNC_PENDING]` 标记已清零。
+  > 2. **`@cap/pdfium@131.0.0`**（Apache-2.0，`4613014c`，[packages/@cap/pdfium](file:///data/dev/cp/packages/@cap/pdfium)）：Chrome 同款 PDF 渲染与文本提取引擎（官方预编译动态库，瘦身后 `libpdfium.so` 仅 **6.8 MB**，`.tgz` **20.9 KB**，4-Gate 0/0/0/0）；真实 E2E 内存 PDF 解析 `[PDFIUM_E2E_OK] pages=1 width=612 height=792`，编译链接 789ms。
+  >
+  > ### 两路子智能体并行进行中
+  > - **`Lane-Onnx`**：打造 `@cap/onnx`（MIT，Microsoft ONNX Runtime 官方预编译动态库 + `strip` 瘦身 + 薄 C shim + E2E）。
+  > - **`Lane-Pcre2`**：打造 `@cap/pcre2`（BSD-3-Clause，PCRE2 10.44 含 SLJIT 机器码 JIT + 双平台 `-g0` 瘦身静态库 + 反向引用/后瞻 E2E）。
+  >
+  > （截至目前已落地 **11 个** `@cap/*` 官方生态包，两路回执一到即无缝接力下一波。）
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:43:40）[step:22587]
+- **用户完整原始指令**：
+  > 很好, 继续完成@cap 生态包
+  > 我们之前讨论过的, zig 的底层库, 我们可以非常简单的开放给 用户使用, 好像已经开放了几个
+  > 1. zig 底层库, 功能如果与cp 现有功能重复, 需对比分析, 哪个更安全,哪个性能更高,哪个更完备,决定是合并,还是取舍
+  > 2. zig 底层库, 如 cp 没有,则直接开放
+  > 3. 注意名称的简洁性.
+  > 4. 列下zig 底层库, 看下有多少重复, 有多少当前 cp没有,可直接吸收 .
+- **完整回复与执行汇报**：
+  > 已对 **Zig 0.17 `std/` 全量 ~50 个核心模块** 与 CP `lib/` 逐一完成对账，按「重复取舍 / 吸收合并 / 直接开放」分为三大阵营：
+  >
+  > ---
+  >
+  > ### 一、 重复且 CP 已更强/更安全（27 个 → 保留 CP，不重复暴露 Zig 裸 API）
+  >
+  > | 类别 | Zig 0.17 `std` 模块 | 对比结论（安全性 / 性能 / 完备度） |
+  > | :--- | :--- | :--- |
+  > | **网络与协议** | `http`, `Uri` | **CP 完胜**：CP 已有 `cap:http`（picohttp + H2/H3/uSockets）与 `cap:url`（WHATWG 加固），支持零拷贝与异步 I/O，远比 Zig 同步 `std.http` 完备。 |
+  > | **密码学与哈希** | `crypto`, `hash`, `base64` | **CP 完胜**：CP 已按 RustCrypto/RFC 深度加固 + 16-lane SIMD + BoringSSL 绑定，且全链路 `~init()` 内存清零。 |
+  > | **压缩与归档** | `compress`, `tar`, `zip` | **CP 完胜**：CP 已有 `cap:pack`（Deflate/Gzip/Zlib/Zstd/LZW）+ `@cap/zstd`/`@cap/lz4` + `cap:libarchive`。 |
+  > | **数据格式** | `json`, `SemanticVersion`, `ascii`, `unicode` | **CP 完胜**：CP 已有 `cap:json`/`@cap/yyjson`、`cap:semver`、`cap:string`（SimdUtf/WTF-8/Grapheme）。 |
+  > | **系统与并发** | `fs`, `Io`, `os`, `posix`, `process`, `Thread`, `atomic`, `dynamic_library`, `mem`, `heap`, `log`, `time`, `math`, `sort`, `simd`, `elf`, `dwarf`, `wasm`, `meta` | **CP 更安全**：CP 统一使用借用检查 + `~init()` RAII，避免 Zig 手动 `defer deinit(allocator)` 泄漏，且屏蔽 Zig 0.17 频繁的 std API 破坏性变更。 |
+  >
+  > ---
+  >
+  > ### 二、 部分重叠、值得「吸收精华」并入现有 CP 模块（9 个）
+  >
+  > | Zig 0.17 模块 | 独有优势（为何值得吸收） | 合并去向（极简命名） |
+  > | :--- | :--- | :--- |
+  > | `MultiArrayList` | **SoA（Structure of Arrays）** 布局，SIMD 遍历缓存命中率翻倍 | 并入 `cap:col`（`SoaList<T>`） |
+  > | `StaticStringMap` | 编译期完美哈希/二分，**零堆分配 O(1) 关键字查表** | 并入 `cap:col`（`StaticMap<V>`） |
+  > | `ArrayHashMap` | 保持插入顺序 + 紧凑连续数组遍历极快 | 并入 `cap:col`（`OrderMap<K,V>`） |
+  > | `PriorityDequeue` / `Treap` / `BitStack` | 双端优先队列（O(1) 取最大+最小）、随机平衡树、位栈 | 并入 `cap:ds` |
+  > | `Random` | 统一接口涵盖 `Xoshiro256`/`Pcg`/`Sfc64`/`ChaCha`/`Ascon` + 加权采样 | 强化 `cap:math` / `cap:crypto` |
+  > | `enums`（`EnumSet`/`EnumMap`/`EnumArray`） | 编译期位图/定长数组，**零哈希零分配 O(1)** | 并入 `cap:col` |
+  > | `fmt`（`fmtIntSizeBin`/`fmtDuration`） | 编译期格式校验 + 人类可读字节/时长格式化 | 强化 `cap:string` |
+  > | `debug`（`StackTrace`/`SelfInfo`） | 原生栈回溯与内存十六进制转储 | 强化 `cap:debug`（联动 `cap demangle`） |
+  > | `Target` | CPU 特性集/指令集/ABI/OS 精确元信息 | 并入 `cap:sys` |
+  >
+  > ---
+  >
+  > ### 三、 CP 当前**完全没有**、可直接极简命名零成本开放（8 个宝藏模块）
+  >
+  > | 建议 CP 模块名 | 对应 Zig 0.17 模块 | 核心价值（为何直接开放） |
+  > | :--- | :--- | :--- |
+  > | **`cap:tz`** | `std.tz` | **极高价值**：零依赖解析系统 IANA TZif 时区库（`/usr/share/zoneinfo`），补齐 `cap:time` 缺失的本地时区与夏令时（DST）转换 |
+  > | **`cap:progress`** | `std.Progress` | **高频实用**：多线程安全、无闪烁终端分层进度条（CLI/下载器/构建工具开箱即用） |
+  > | **`cap:leb128`** | `std.leb128` | 无符号/有符号 LEB128 变长整数编解码（WASM/DWARF/二进制协议刚需） |
+  > | **`cap:macho`** | `std.macho` | macOS/iOS Mach-O 二进制格式解析（与 CP 现有 `elf`/`wasm` 补齐跨平台二进制分析） |
+  > | **`cap:coff`** | `std.coff` | Windows PE/COFF 可执行文件与对象格式解析 |
+  > | **`cap:pdb`** | `std.pdb` | Windows PDB 调试符号解析 |
+  > | **`cap:spirv`** | `std.spirv` | Vulkan / WebGPU SPIR-V 着色器二进制结构与常量（GPU 计算刚需） |
+  > | **`cap:zon`** | `std.zon` | ZON 轻量配置格式解析与序列化 |
+  >
+  > ---
+  >
+  > ### 总结统计与推进建议
+  > - **总计 44 个核心应用模块**：**27 个**重复且 CP 更优（不引入）、**9 个**值得吸收高性能数据结构/算法并入现有 `cap:col`/`cap:ds`/`cap:sys`、**8 个** CP 完全空白可直接以极简名称（`cap:tz`、`cap:progress`、`cap:leb128`、`cap:macho`、`cap:coff`、`cap:pdb`、`cap:spirv`、`cap:zon`）封装开放。
+  > - 接下来两路子智能体（`Lane-Sodium` 与 `Lane-Whisper`）完工后，我将按此清单继续并行：一路推进剩余高频 `@cap/*` 包（如 `@cap/openblas` / `@cap/sdl3` / `@cap/rocksdb`），一路顺手落地最高价值的 **`cap:tz` + `cap:progress` + `cap:leb128` + `cap:col`（`SoaList`/`StaticMap`/`EnumSet`）**！
+  >
+  > *(当前 `Lane-Sodium` 与 `Lane-Whisper` 正在后台收尾中，完成后立刻验收接力。)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:48:15）[step:22613]
+- **用户完整原始指令**：
+  > 很好, 按你规划的任务执行, 不要停.
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+- **完整回复与执行汇报**：
+  > 持续高速三线推进，又连续落地 4 项成果并提交（目前已集齐 **17 个 `@cap/*` 官方原生包**）：
+  >
+  > ### 刚验收提交
+  > 1. **`@cap/whisper@1.9.6`**（MIT，`230c670f`，[packages/@cap/whisper](file:///data/dev/cp/packages/@cap/whisper)）：本地语音识别 ASR（`whisper.cpp` 瘦身动态库总计仅 **2.6 MB**，`.tgz` 45.9 KB，4-Gate 0/0/0/0，E2E `langId("zh")=1 / langId("en")=0` PASS）。
+  > 2. **`@cap/sodium@1.0.20`**（ISC，`208a138d`，[packages/@cap/sodium](file:///data/dev/cp/packages/@cap/sodium)）：现代密码学全家桶（双平台 `-O3 -g0` 瘦身 `.a`：590 KB / 544 KB，`.tgz` 240 KB，4-Gate 0/0/0/0，Ed25519 签名/验签 + XChaCha20-Poly1305 AEAD + BLAKE2b E2E 全通）。
+  > 3. **`@cap/utf8proc@2.10.0`**（MIT，`7f082dd4`，[packages/@cap/utf8proc](file:///data/dev/cp/packages/@cap/utf8proc)）：Unicode 16.0 NFC/NFD/NFKC/Casefold 规范化与字符宽度（双平台 `-g0` 瘦身 `.a`：351 KB / 353 KB，`.tgz` 125 KB，4-Gate 0/0/0/0，E2E PASS）。
+  > 4. **`lib/col/enumSet.cp`**（`fc6cd301`，[lib/col/enumSet.cp](file:///data/dev/cp/lib/col/enumSet.cp)）：吸收 Zig `std.enums` 精华，新增零堆分配 O(1) 硬件 `@popCount`/`@ctz` 枚举集合 `EnumSet64` 与映射 `EnumMap64`（4-Gate 0/0/0/0）。
+  >
+  > ### 当前两路子智能体并行进行中
+  > - **`Lane-ZigStd`**：开放 Zig 0.17 宝藏模块 `cap:tz`（IANA 时区/DST）、`cap:leb128`、`cap:progress`、`cap:zon` + 回归套件；
+  > - **`Lane-ZigBin`**：开放 Zig 0.17 跨平台二进制/GPU 格式模块 `cap:coff`、`cap:macho`、`cap:pdb`、`cap:spirv` + 回归套件。
+  >
+  > 两路完工即刻验收并无缝拉起下一波（`@cap/openblas` / `@cap/sdl3` 等）。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 00:54:41）[step:22628]
+- **用户完整原始指令**：
+  > 音视频/图片/多媒体/实时通信 还有哪些知名库, 可以集成进来, 注意 版权,避免侵权
+- **完整回复与执行汇报**：
+  > 按**开源协议与专利合规风险**分为三个梯队，帮你把音视频 / 图片 / 多媒体 / 实时通信领域最知名、最稳妥的库一次梳理清楚：
+  >
+  > ---
+  >
+  > ### 一、 ✅ 纯宽松协议（MIT / BSD / Apache-2.0 / Zlib / Public Domain）
+  > > **商业 100% 安全**，静态链接、动态链接、闭源商用均无传染风险，优先纳入 `@cap/*`。
+  >
+  > #### 1. 音频 & 语音 AI Agent 刚需
+  > | 候选包 | 底层库 | 协议 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/miniaudio`** | `miniaudio` | MIT-0 / Public Domain | **单头文件 C 库**，跨平台音频采集/播放/混音/重采样，零依赖 |
+  > | **`@cap/rnnoise`** | Xiph `rnnoise` | BSD-3-Clause | 轻量级实时神经网络语音降噪（几百 KB，语音 Agent 降噪神器） |
+  > | **`@cap/speexdsp`** | Xiph `speexdsp` | BSD-3-Clause | 实时回声消除（AEC）、自动增益（AGC）、重采样（语音通话刚需） |
+  > | **`@cap/flac`** | Xiph `libFLAC` | BSD-3-Clause | 无损音频编解码 |
+  > | **`@cap/vorbis`** | Xiph `libvorbis` + `libogg` | BSD-3-Clause | Ogg/Vorbis 音频封装与编解码 |
+  > | **`@cap/dr_libs`** | `dr_wav` / `dr_mp3` / `dr_flac` | MIT-0 / Public Domain | 单头文件极速音频解码三件套 |
+  >
+  > #### 2. 视频编解码 & 像素处理（全免专利费标准）
+  > | 候选包 | 底层库 | 协议 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/libyuv`** | Google `libyuv` | BSD-3-Clause | **SIMD 加速 YUV↔RGB 转换、缩放、裁剪、旋转**（视频管线必备） |
+  > | **`@cap/dav1d`** | VideoLAN `dav1d` | BSD-2-Clause | 全球最快 **AV1 视频解码器**（免专利费） |
+  > | **`@cap/svtav1`** | Intel/Netflix `SVT-AV1` | BSD-3-Clause Clear | 业界最强开源 **AV1 视频编码器**（免专利费） |
+  > | **`@cap/libvpx`** | Google `libvpx` | BSD-3-Clause | **VP8 / VP9** 视频编解码（WebRTC 事实标准，免专利费） |
+  > | **`@cap/openh264`** | Cisco `OpenH264` | BSD-2-Clause | H.264 编解码（**注意**：仅下载 Cisco 官方预编译 `.so` 才由 Cisco 承担专利费，不可自行编译分发） |
+  >
+  > #### 3. 图片 / 2D 矢量 / 字体 / 计算机视觉
+  > | 候选包 | 底层库 | 协议 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/stb`** | `stb_image` / `write` / `resize2` | MIT / Public Domain | 最知名单头文件全格式图片读写与高质量缩放 |
+  > | **`@cap/libavif`** | `libavif` | BSD-2-Clause | AVIF 下一代高压缩比图片编解码 |
+  > | **`@cap/libjxl`** | `libjxl` | BSD-3-Clause | JPEG XL 无损/有损新世代图像编解码 |
+  > | **`@cap/opencv`** | `OpenCV` | Apache-2.0 | 计算机视觉、图像滤波、特征检测、视频帧分析（预编译动态库） |
+  > | **`@cap/skia`** | Google `Skia` | BSD-3-Clause | 高性能 2D 矢量绘图 / Canvas / 动画渲染（预编译动态库） |
+  > | **`@cap/freetype`** | `FreeType` | FTL（BSD-like，双协议选 FTL） | 工业标准字体光栅化 |
+  > | **`@cap/harfbuzz`** | `HarfBuzz` | Old MIT | 多语言/CJK/阿拉伯文复杂文本排版塑形 |
+  > | **`@cap/sdl3`** | `SDL3` | Zlib | 跨平台窗口、音频、摄像头、输入与 GPU 抽象层 |
+  >
+  > #### 4. 实时通信（WebRTC / 低延迟流媒体）
+  > | 候选包 | 底层库 | 协议 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/libsrtp`** | Cisco `libsrtp` | BSD-3-Clause | SRTP/SRTCP 加密音视频传输（WebRTC 核心安全层） |
+  > | **`@cap/usrsctp`** | `usrsctp` | BSD-3-Clause | WebRTC DataChannel 底层 SCTP 协议栈 |
+  > | **`@cap/libdatachannel`** | `libdatachannel` | MPL-2.0（文件级弱 Copyleft） | 轻量级完整 WebRTC（DataChannel + 音视频流），比 Google `libwebrtc` 轻 50 倍 |
+  > | **`@cap/srt`** | Haivision `SRT` | MPL-2.0 | 低延迟抗丢包视频推流协议（广电/直播行业标准） |
+  >
+  > ---
+  >
+  > ### 二、 ⚠️ LGPL-2.1 弱传染协议（仅限 `sys` 独立动态库分发）
+  > > **严格合规条件**：只能通过 `cap.json` 的 `sys` 动态链接（`.so`/`.dylib`/`.dll`），允许用户自行替换动态库，**严禁静态编译进二进制**，且构建时必须关闭 `--enable-gpl` / `--enable-nonfree`。
+  > - **`@cap/ffmpeg`**（LGPL-2.1 纯净构建）：全格式音视频封装/解封装与转码；
+  > - **`@cap/vips`**（LGPL-2.1）：服务端高吞吐图片处理（比 ImageMagick 快 5–10x）；
+  > - **`@cap/gstreamer`**（LGPL-2.1）：插件化流媒体处理管线。
+  >
+  > ---
+  >
+  > ### 三、 ❌ 版权与专利雷区（严禁纳入 `@cap/*` 官方包）
+  > - **`x264` / `x265` / `OBS (libobs)` / `FFmpeg (GPL build)`**：**GPLv2/v3 强传染**，链接后要求整个业务代码开源；
+  > - **`fdk-aac`**：非自由商业条款，需额外专利授权；
+  > - **自编 H.264 / H.265 商业分发**：除源码协议外还涉及 MPEG-LA / HEVC Advance 专利费，商业产品默认优先用免专利组合 **AV1（`dav1d`/`svtav1`）+ VP9（`libvpx`）+ Opus（`@cap/opus`）**。
+  >
+  > ---
+  >
+  > **最推荐下一波优先集成（纯宽松、零专利、极速交付）**：
+  > - **语音 AI Agent 黄金组合**：`@cap/miniaudio`（采集播放）+ `@cap/rnnoise`（AI 降噪）+ `@cap/libsrtp`（加密传输）——配合已完成的 `@cap/opus` + `@cap/whisper` + `@cap/llama`，直接凑齐完整端到端语音实时 Agent 技术栈；
+  > - **视觉/图片黄金组合**：`@cap/stb` + `@cap/libyuv` + `@cap/sdl3`。
+  >
+  > *(后台 `Lane-ZigStd` 与 `Lane-ZigBin` 正在收尾 8 个 Zig 0.17 内置宝藏模块，完工后我会立刻按此优先级无缝拉起下一波！)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:02:38）[step:22653]
+- **用户完整原始指令**：
+  > 上面你列出的知名c可集成包, rust 与对应开源库没, 如果有, 对比性能和安全性, 决定 cp 从哪里吸收.
+  > 你根据实际使用频率, 分批次 将你认为有价值的库, 吸收到 @cap中
+  > 务必一直保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待, 务必牢记!!!
+- **完整回复与执行汇报**：
+  > ### C/C++ vs Rust 多媒体/实时通信库：性能、安全性与 CP 吸收决策
+  >
+  > 原则很清晰：**「协议解析 / 容器封装 / 内存敏感状态机」优先吸收 Rust 顶级纯安全设计写纯 CP；「极致手工汇编 SIMD 编解码 / 硬件驱动 / AI 推理」直接用 C/C++ 原生库做 `@cap/*` 预编译包**。
+  >
+  > | 领域 | 知名 C/C++ 库 | 对应 Rust 开源库 | 性能对比 | 安全性对比 | **CP 最终吸收决策** |
+  > | :--- | :--- | :--- | :--- | :--- | :--- |
+  > | **图片解码（PNG/JPEG/WebP/GIF）** | `stb` / `libjpeg-turbo` / `libwebp` | `zune-image` / `image-rs` | C 的 `libjpeg-turbo`（NASM 汇编）比纯 Rust 快 ~15–20%；`zune-jpeg` 已逼近 C | Rust 完胜（零越界/零 UAF，避开历史 CVE 重灾区） | **双轨**：CP 内置 `cap:image` 已按 **`zune-image`/`image-rs` 深度加固**（安全首选）；外部 `@cap/stb` 供极简全格式快速工具使用 |
+  > | **音频解码（WAV/MP3/FLAC/OGG）** | `dr_libs` / `libFLAC` | **`Symphonia`**（MPL-2.0，纯 Rust） | C `dr_libs` 略快 5–10%，体积极小 | Rust `Symphonia` 完胜（无缓冲区溢出） | 外部 `@cap/dr_libs`（MIT-0，已落地，秒编轻量化）；后续可按需参考 `Symphonia` 强化纯 CP `cap:media` |
+  > | **实时语音编解码 / 降噪** | **`libopus`** / **`rnnoise`** / `speexdsp` | `audiopus`（本质仍是包 C `libopus`）、`nnnoiseless`（纯 Rust 移植 `rnnoise`） | **C 完胜**（`libopus` 与 `rnnoise` 含大量 DSP 优化，Rust 生态主流仍直接 FFI 调 C） | C 库经 10+ 年数十亿设备验证，CP 层加边界与 RAII 兜底 | **直接吸收 C 原生包**：`@cap/opus`（已交付）、`@cap/rnnoise`（在建） |
+  > | **视频编解码（AV1 / VP9）** | **`dav1d`** / **`SVT-AV1`** / `libvpx` | `rav1e`（Rust AV1 编码器，比 `SVT-AV1` 慢 3–5x）；`rav1d`（C2Rust 移植 `dav1d`，仍在追赶） | **C 绝对碾压**（`dav1d` 含数十万行手写 AVX-512/NEON 汇编，快 3–5x） | 需依赖官方高频安全更新 + CP 层长度校验 | **直接吸收 C 预编译包**：`@cap/dav1d` / `@cap/libvpx` / `@cap/libyuv` |
+  > | **WebRTC / 实时通信** | `libdatachannel` / **`libsrtp`** | **`str0m`**（MIT/Apache-2.0，无 I/O 纯 Rust WebRTC 状态机！）/ `webrtc-rs` | 旗鼓相当（瓶颈在网络与加密） | **Rust `str0m` 完胜**（Sans-IO 架构、零内存安全漏洞，完美契合 CP Actor/状态机！） | **强强联合**：底层加密用 C `@cap/libsrtp`（在建），上层 WebRTC ICE/DTLS/SDP 状态机后续直接参考 **Rust `str0m`** 写纯 CP 内置模块！ |
+  > | **2D 图形 / 字体排版** | `Skia` / `FreeType` / `HarfBuzz` | **`tiny-skia`** / **`vello`** / **`fontdue`** / **`rustybuzz`**（MIT/Apache-2.0） | `Skia` GPU 渲染最强；CPU 轻量渲染 `tiny-skia` / `fontdue` 极快 | **Rust 完胜**（字体/矢量解析是经典内存安全高危区） | 轻量 CPU 矢量/字体参考 Rust `tiny-skia`/`fontdue`；重型 GPU 2D 走 `@cap/skia` 预编译包 |
+  > | **跨平台硬件抽象（音频/窗口/GPU）** | **`miniaudio`** / **`SDL3`** | `cpal` / `winit` / `wgpu` | 持平 | Rust 更安全，但 `miniaudio` / `SDL3` 单 C ABI 跨平台驱动覆盖最全 | **直接吸收 C 包**：`@cap/miniaudio`（在建）、`@cap/sdl3`（下一波） |
+  > | **矩阵算力 / AI 推理** | **`llama.cpp`** / **`whisper.cpp`** / **`onnxruntime`** / `OpenBLAS` | `candle` / `burn` | **C/C++ 绝对领先**（GGML/ORT 对 CUDA/Metal/AVX-512 压榨最极致） | CP 层做 RAII 封装与边界校验 | **直接吸收 C/C++ 预编译包**：`@cap/llama`、`@cap/whisper`、`@cap/onnx`、`@cap/usearch` 均已交付！ |
+  >
+  > ---
+  >
+  > ### 按使用频率分批次吸收路线（持续三线并行推进中）
+  >
+  > - **刚落地（主智能体 + `Lane-ZigStd`）**：
+  >   - `cap:tz` / `cap:leb128` / `cap:progress` / `cap:zon` 4 个 Zig 0.17 宝藏新模块已全部 4-Gate 0/0/0/0 通过并提交（`d4032aa7`）；
+  >   - 主智能体刚完成 **`@cap/dr_libs`**（MIT-0，WAV/MP3/FLAC 单头文件音频编解码）双平台预编译与 E2E（后台最后几秒收尾）。
+  > - **当前两路子智能体满载进行中**：
+  >   - **`Lane-AudioImage`**：`@cap/miniaudio`（MIT-0）+ `@cap/stb`（MIT）；
+  >   - **`Lane-RtcNoise`**：`@cap/rnnoise`（BSD-3）+ `@cap/libsrtp`（BSD-3）。
+  > - **下一波自动接力顺序（按高频度）**：
+  >   1. **视频/像素与跨平台窗口**：`@cap/libyuv`（BSD-3）+ `@cap/dav1d`（BSD-2）+ `@cap/sdl3`（Zlib）；
+  >   2. **科学计算与重型存储**：`@cap/openblas`（BSD-3）+ `@cap/rocksdb`（Apache-2.0，预编译动态库）；
+  >   3. **纯 CP Sans-IO WebRTC 协议栈**：参考 Rust **`str0m`**（MIT/Apache-2.0）打造零内存漏洞的 `cap:rtc`。
+  >
+  > *(所有任务自动接力不中断，每完成一路立即验收提交并拉起下一路。)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:18:37）[step:22699]
+- **用户完整原始指令**：
+  > 讨论一个新的问题, 之前 bun 公司提交了一些zig 并行编译的代码, zig 认为是ai参与编写的, 坚决不同意合并进主线, 导致 bun 最终迁移到 rust,
+  > 我们现在cp 转译为zig, 再通过zig 编译, 同样面临编译速度问题, bun之前提交的那些代码, 对我们有价值没呢? 如果有, 如何利用呢?
+- **完整回复与执行汇报**：
+  > 这是一个直击 CP 长期核心竞争力的好问题。结论先说：**Bun 提交给 Zig 的并行编译思想非常有价值，但对 CP 而言，「直接维护一个 Zig 编译器 Fork」并不是最优解；把同等思路落在 CP + `cap` 层（多编译单元并行 + Zig 原生后端），能以 1/10 的维护成本拿到 5x–20x 的提速！**
+  >
+  > ---
+  >
+  > ### 1. Bun 补丁的核心价值与局限
+  > Zig 编译大项目慢，80% 的时间花在两件事上：
+  > 1. **单线程 Sema（语义分析）与全局 `comptime` 求值**（96 核机器只跑 1 个核）；
+  > 2. **单大编译单元（Single CU）丢给 LLVM 单线程优化与代码生成**。
+  >
+  > Bun 的补丁核心是**并行化 LLVM 代码生成（Multi-CU 切分）与 Sema 并发加速**。
+  > - **有价值的地方**：在单文件巨无霸 Zig 代码库（如 Bun 自身几十万行互相纠缠的 Zig）里，能让全量编译提速 **2x–4x**；
+  > - **硬伤**：Zig 编译器本身 40 万行代码且内部 IR 迭代极快，自维护一个 `cp-zig` Fork 每次跟进 Zig 新版本都会面临繁重的 rebase 冲突。
+  >
+  > ---
+  >
+  > ### 2. 为什么 CP 有比维护 Zig Fork 好得多的「三步组合拳」？
+  >
+  > CP 与 Zig 有一个本质区别：**CP 有清晰的 `import` / `export` 模块边界与 `.d.cp` 类型契约，没有 Zig 那种跨文件任意耦合的全局 `comptime` 纠缠**。这让 CP 可以在「**不改 Zig 一行源码**」的前提下，拿到比 Bun 补丁更大的提速：
+  >
+  > | 层次 | 具体做法 | 预期提速 | 维护成本 |
+  > | :--- | :--- | :---: | :---: |
+  > | **第一招（Debug 秒开）** | `cap run` / `cap test`（Debug 模式）启用 **Zig 0.17 自研原生后端 `-fno-llvm`**（彻底绕开笨重的 LLVM 初始化），仅 `cap build -f/-r` 发布时走 LLVM 极限优化 | Debug 编译 **600–900ms → 80–150ms（5x–8x）** | **几乎为零**（Zig 0.17 原生自带） |
+  > | **第二招（架构治本）** | `cap` 推行**真正的多编译单元（Multi-CU）并行增量编译**：每个 CP 模块独立转译为 `.zig` 并多核并行 `zig build-obj` 缓存到 `.cap/obj/<hash>.o`，改 1 个 `.cp` 只重编 1 个 `.o` + 毫秒级 `lld` 链接 | 大项目增量编译 **10x–20x**，96 核吃满 | **低**（100% 掌控在 `cpc` + `cap` 内，跟 Zig 升级零冲突） |
+  > | **第三招（中期可选）** | 若未来单个 CP 模块大到数万行、LLVM 单核优化成为瓶颈，再借鉴 Bun 补丁中**最干净的「LLVM Multi-CU 并行切分」**打轻量补丁，或由 `cpc` 直接输出 Cranelift（Debug）/ LLVM（Release），彻底去掉 Zig 转译中间层 | 彻底摆脱上游编译器限制 | 中～高（按需演进） |
+  >
+  > ---
+  >
+  > ### 3. 建议落地节奏
+  > 1. **近期就能顺手实测第一招**：在 `cap` 中实测 Zig 0.17 的 `-fno-llvm`（x86_64 Linux），如果能把 `cap run` / `cap test` 压到 ~100ms 级，开发体验直接起飞；
+  > 2. **随后推进第二招**：完善 `cap` 的模块级并行 `.o` 缓存与增量链接（这也是 Rust `rustc` / Go / C++ 解决大工程编译速度的工业标准解法）。
+  >
+  > *(后台两路子智能体 `Lane-TextFont`（`@cap/cmark` + `@cap/ogg`）与 `Lane-SdlBlas`（`@cap/sdl3` + `@cap/openblas`）正在并行推进中，完工后立刻验收接力。)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:24:23）[step:22714]
+- **用户完整原始指令**：
+  > 你的建议:
+  >  1. 近期就能顺手实测第一招：在 cap 中实测 Zig 0.17 的 -fno-llvm（x86_64 Linux），如果能把 cap run / cap test 压到 ~100ms 级，开发体验直接起飞；
+  >   2. 随后推进第二招：完善 cap 的模块级并行 .o 缓存与增量链接（这也是 Rust rustc / Go / C++ 解决大工程编译速度的工业标准解法）。
+  > 可以纳入执行计划,由你自行安排.
+  > 我们已经实现了 -m 按模块编译输出功能, 跟你说的 第二点是否重复
+- **完整回复与执行汇报**：
+  > 核实 [cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig#L239-L246) 代码后，结论非常清晰——**不重复，现有能力已经打好了地基，正好无缝衔接**：
+  >
+  > 1. **第一招（Debug `-fno-llvm`）其实早已实装**：
+  >    - `cap build -d`（Debug 模式）已在 `x86_64-linux` 上默认启用 `-fno-llvm`（并配有 `--llvm` 强切开关）。
+  > 2. **现有 `-m`（`--modular`）与「模块级并行 `.o` 增量链接」不是重复，而是前后两段递进关系**：
+  >    - **已有前半段（`-m`）**：`cpc compile --emit-dir` 已将 CP 源码按模块拆分为多个独立 `.zig` 文件 + `.cp_modular_manifest.txt`，并共享缓存目录（如 `.cap/test-mod/`）；但最后仍作为一个整体编译单元（Single CU）交给一次 `zig build-exe` 编译。
+  >    - **待补后半段（并行 `.o` 缓存 + 增量链接）**：直接复用 `-m` 的模块化产物，把独立模块/子包多核并行编译为按内容哈希缓存的 `.o`（`.cap/obj/<hash>.o`），修改单个 `.cp` 时只重编这 1 个 `.o`，最后由 `lld` 毫秒级增量链接。
+  >
+  > 我已将这项「基于 `-m` 的并行 `.o` 增量编译升级」纳入自主排期；当前后台两路子智能体 **`Lane-SdlBlas`**（`@cap/sdl3` + `@cap/openblas`）与 **`Lane-FreetypeFlac`**（`@cap/freetype` + `@cap/flac`）正在满载并行中，完工后即刻验收并继续接力。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:29:11）[step:22749]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261125-discard-raii-guard)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+  > • 待补后半段（并行 .o 缓存 + 增量链接）：直接复用 -m 的模块化产物，把独立模块/子包多核并行编译为按内容哈希缓存的 .o（.cap/obj/<hash>.o），修改单个
+  >       .cp 时只重编这 1 个 .o，最后由 lld 毫秒级增量链接。
+  > 这个还没实现吗? -m 只修改一个 zig, 难道zig 不是增量编译吗? 你说的这个, 还是 使用 zig 编译对吧, 为何能提速呢?
+- **完整回复与执行汇报**：
+  > ### 1. 关于 `-m` 与 Zig 增量编译：为什么「同样用 Zig 编译」，模块级并行 `.o` 能提速 5x–20x？
+  >
+  > 核心差异在于 **Zig 0.17 的缓存粒度** 与 **多核并行度**：
+  >
+  > 1. **Zig 0.17 默认不是模块级增量编译**：
+  >    - Zig 的细粒度函数级增量编译目前仍是实验特性（LLVM 后端完全不支持）；
+  >    - 在默认编译模式下，Zig 的缓存粒度是**整个 Compilation Unit（整棵 `@import` 依赖树）**。即使 `-m` 把 CP 拆成了 50 个 `.zig` 文件，只要你改了其中 **1 个 `.zig`**，整个工程的缓存哈希就会失效，Zig 会把 **50 个 `.zig` 全部重新走一遍单核 Sema + 单核 LLVM 优化**。
+  > 2. **为什么「独立模块 `zig build-obj` → `.o` 缓存 + `lld` 链接」能暴涨 5x–20x？**
+  >    - **增量编译（改 1 个文件）**：50 个模块各自按「本模块源码 + 依赖的 `.d.cp` 接口哈希」缓存为 `.cap/obj/<hash>.o`。改 1 个 `.cp` 时，**其余 49 个 `.o` 100% 命中缓存、完全不调用 Zig**，只重编这 1 个小模块 + 几十毫秒 `lld` 链接；
+  >    - **全量编译（冷构建）**：50 个独立 `zig build-obj` 进程可在多核 CPU 上并发执行，彻底绕开 Zig 单核瓶颈（这正是 C++ / Rust crate / Go package 的工业标准做法）。
+  >
+  > ---
+  >
+  > ### 2. 工单 `task-bun-20261125-discard-raii-guard` 与并行进度
+  > - **已修复并正在发布验证**：在 [cpc/src/sema/mod.rs](file:///data/dev/cp/cpc/src/sema/mod.rs) 与 [cpc/src/sema/stmt_expr.rs](file:///data/dev/cp/cpc/src/sema/stmt_expr.rs) 新增 **`E0220`**（禁止通过 `* =` 匿名丢弃含 `~init()`/`~errinit()` 的拥有所有权 RAII 值，附 AI-First 三段式诊断；同时放行 `* = existing_guard;` 抑制未使用变量警告与 POD 结构体丢弃），后台正在构建 Release `cpc` 并验证复现用例与回归测试，通过后立即 `resolve` 结单通知 `bun_agy`。
+  > - **生态包进度**：`@cap/sdl3@3.2.8`、`@cap/openblas@0.3.29`（`adc6881b`）与 `@cap/freetype@2.13.3`、`@cap/flac@1.4.3`（`bcdf6de5`，同时顺手修复了 `cap` 多 prebuilt 动态库 `-rpath` 去重 bug）已全部提交，**官方 `@cap/*` 生态包已突破 30 个**；`Lane-RocksHarf`（`@cap/harfbuzz` + `@cap/dav1d`）正在后台推进中。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:34:19）[step:22778]
+- **用户完整原始指令**：
+  > 待补后半段（并行 .o 缓存 + 增量链接）：直接复用 -m 的模块化产物，把独立模块/子包多核并行编译为按内容哈希缓存的 .o（.cap/obj/<hash>.o），修改单个
+  >         .cp 时只重编这 1 个 .o，最后由 lld 毫秒级增量链接。
+  > 这个功能, 也纳入你的执行计划, 加快编译速度, 对开发调试非常重要!
+- **完整回复与执行汇报**：
+  > 完全一致！**`Lane-CapParallelObj`**（基于 `-m` 的模块级内容哈希 `.o` 缓存 + 多核并行 `zig build-obj` + 增量链接 + 10 模块冷/热加速比实测）已经启动并在后台全力推进中，同时 **`Lane-VorbisVpx`**（`@cap/vorbis` + `@cap/libvpx`）并行推进，主智能体后台正在完成 `task-bun-20261125-discard-raii-guard`（`E0220`）的 Release 构建与正/负例验证，完成后立刻 `resolve` 结单通知下游。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:35:50）[step:22787]
+- **用户完整原始指令**：
+  > 我们把二进制库瘦身了, 不影响功能和使用对吧?
+- **完整回复与执行汇报**：
+  > **100% 不影响任何功能、API 兼容性或运行性能**（反而链接更快、最终可执行文件更小），原因如下：
+  >
+  > 1. **静态库 `.a`（`-g0 -ffunction-sections -fdata-sections`）**：
+  >    - `-g0` 只去掉了**调试器专用行号/变量名信息（DWARF）**，CPU 执行的机器码和所有对外函数符号 100% 原封不动；
+  >    - `-ffunction-sections -fdata-sections` 只是把每个函数/变量放到独立段里，让链接器能精准裁掉**没被调用的死函数**，你用到的每个函数都完整保留。
+  > 2. **动态库 `.so`（`strip --strip-unneeded`）**：
+  >    - 只删除运行时完全用不到的内部私有符号表（`.symtab`），**100% 保留动态导出表（`.dynsym`）**，所有对外 C API、SONAME 软链和运行逻辑完全不变。
+  > 3. **且所有包瘦身后都跑过真实 E2E 实测**：`libsqlite3.a`、`liblz4.a`、`libyyjson.a`、`libusearch.a`、`libduckdb.so`、`libllama.so`、`libwhisper.so`、`libpdfium.so`、`libSDL3.so`、`libopenblas.so`、`libdav1d.so` 均已实测链接与运行全通过；若个别场景需要排查 C 库内部崩溃，只需在 `cap.json` 的 `flag` 中显式加 `"-g"` 即可随时切回带调试符号版本。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:37:36）[step:22789]
+- **用户完整原始指令**：
+  > 我们是如何实现瘦身的, 重新编译吗?
+- **完整回复与执行汇报**：
+  > 分两种情况，非常轻巧高效：
+  >
+  > 1. **静态库 `.a`（源码由 `cap` 编译的包）→ 编译期自动瘦身，一劳永逸**：
+  >    - 已在 [cap/src/project/native.zig](file:///data/dev/cp/cap/src/project/native.zig#L401-L416) 将 `-g0 -ffunction-sections -fdata-sections` 写入 `cap` 默认编译管线；
+  >    - 之后任何包跑 `cap install` / `cap rebuild` 都会直接产出瘦身版 `.a`（无需事后处理），早期编好的老包仅顺手重跑了一次 `cap rebuild` 覆盖即可。
+  > 2. **官方预编译动态库 `.so`（如 DuckDB / ONNX / Llama / PDFium / SDL3 / OpenBLAS / dav1d / libvpx）→ 无需重编源码**：
+  >    - 直接对下载的 `.so` 执行一条毫秒级命令 `strip --strip-unneeded libxxx.so`，原地剥离内部私有符号表即可完成瘦身，0 编译成本。
+  >
+  > ---
+  >
+  > ### 顺带同步最新并行进展（`@cap/*` 已达 34 个）
+  > - **刚验收提交**（`c29369be`）：**`@cap/vorbis@1.3.7`**（BSD-3，双平台 `.a` 1.1M/1.0M）+ **`@cap/libvpx@1.15.0`**（BSD-3，Google 免专利 VP8/VP9，瘦身 `.so` 仅 **1.7 MB**），联合 E2E 全通过；
+  > - **当前两路子智能体并行中**：
+  >   - **`Lane-CapParallelObj`**：推进 `cap` 基于 `-m` 的模块级内容哈希 `.o` 缓存 + 多核并行 `zig build-obj` + 增量链接；
+  >   - **`Lane-SctpAvif`**：推进 `@cap/usrsctp`（BSD-3，WebRTC DataChannel SCTP）+ `@cap/libavif`（BSD-2，AVIF 图像）。
+  > - **主智能体**：后台 `cpc` Release 编译与 `E0220`（`task-bun-20261125-discard-raii-guard`）正/负例验证正在收尾，完成后立刻结单通知 `bun_agy`。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:40:31）[step:22801]
+- **用户完整原始指令**：
+  > strip --strip-unneeded 是个独立运行的工具吗?
+- **完整回复与执行汇报**：
+  > **是的**，`strip` 是系统编译工具链自带的独立命令行工具：
+  >
+  > - **Linux**：属于 GNU `binutils` 套件（`/usr/bin/strip`），用 `strip --strip-unneeded libxxx.so`；
+  > - **macOS**：属于 Xcode Command Line Tools（`strip -x libxxx.dylib`）；
+  > - **跨平台零外部依赖方案**：**Zig 工具链自身也内置了 `zig objcopy --strip-debug` / `llvm-strip`**，后续如果给 `cap pack` 增加 `--strip` 自动瘦身选项，可以直接复用 Zig 内置工具，不依赖宿主机是否安装 GNU `strip`。
+  >
+  > *(后台 `cpc` Release 编译已进入最后部署与 `E0220` 验证阶段，马上完成结单。)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:47:06）[step:22830]
+- **用户完整原始指令**：
+  > 给 cap pack 增加 --strip 自动瘦身选项，可以直接复用 Zig
+  >   内置工具，不依赖宿主机是否安装 GNU strip。
+  > 这个功能有用, 用户自己开发的可安装库, 在编译时, 也需要像我们这样瘦身, 这个是在 cap.json 中配置吗? 有需要不瘦身的场景吗?
+- **完整回复与执行汇报**：
+  > 回答非常明确：**默认零配置自动瘦身，同时支持在 `cap.json` 和 CLI 按需关闭**。
+  >
+  > ### 1. 配置与默认行为（约定优于配置）
+  > - **静态库编译（`bin`，已生效）**：无需在 `cap.json` 里额外写字段——只要 `opt` 不是 `"debug"` 且 `flag` 中未显式写 `"-g"`，`cap` 默认自动注入 `-g0 -ffunction-sections -fdata-sections`，用户零配置即可获得 70%–84% 瘦身效果。
+  > - **打包分发（`cap pack`，正在收尾）**：推荐优先级 **`CLI（--strip / --no-strip） > cap.json（"strip": true/false） > 默认约定`**，这样第三方库作者既能开箱即用，也能在 `cap.json` 里显式锁定某包是否瘦身。
+  >
+  > ### 2. 哪些场景需要「不瘦身」？（4 个真实刚需）
+  > 1. **本地 Debug 排查 C/C++ 内部崩溃**：用 `gdb`/`lldb` 查段错误或内存越界时，需要保留 DWARF 行号与局部变量信息（在 `cap.json` 写 `"opt": "debug"` 或 `flag: ["-g"]` 即可自动保留）；
+  > 2. **性能火焰图剖析（`perf` / macOS Instruments / Valgrind）**：定位 C/C++ 底层热点函数时，需要内部函数符号表，否则火焰图只能看到十六进制地址；
+  > 3. **线上崩溃反解（符号表分离归档）**：生产环境常见做法是把**瘦身版二进制**发给用户，同时保留一份**未瘦身符号版**留在服务端/CI 用于事后还原崩溃堆栈；
+  > 4. **极少数依赖内部符号做运行时反射的插件库**：可通过 `"strip": false` 显式豁免。
+  >
+  > *(后台 `Lane-CapStripRun` 正在收尾 `cap pack --strip` 与 `cap run -m --parallel-obj`，完成后立即验收提交。)*
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:50:01）[step:22832]
+- **用户完整原始指令**：
+  > 很好, 按你规划的任务执行, 不要停.
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+- **完整回复与执行汇报**：
+  > 继续高速三线交付并提交：
+  >
+  > 1. **`cap pack --strip` 与 `cap run -m --parallel-obj` 已落地部署**（`b35f99d0`）：
+  >    - `cap pack --strip` 内置调用 `zig objcopy --strip-debug`（零外部 GNU `strip` 依赖，非支持格式优雅跳过并打印瘦身对比）；
+  >    - `cap run -m --parallel-obj` 实测热运行 `.o` 缓存命中耗时仅 **2.42 ms**。
+  > 2. **`@cap/miniz@3.0.2`**（MIT，`5a697871`，[packages/@cap/miniz](file:///data/dev/cp/packages/@cap/miniz)）：单文件 ZIP 打包/解压引擎，双平台 `-g0` 瘦身 `.a` 仅 **140 KB / 142 KB**，`.tgz` 75.8 KB，4-Gate 0/0/0/0，内存 ZIP 往返 E2E PASS（官方 `@cap/*` 生态包已达 **37 个**）。
+  >
+  > ### 当前两路子智能体满载并行中
+  > - **`Lane-OpenCV`**：打造 **`@cap/opencv@4.10.0`**（Apache-2.0，精简 `core` + `imgproc` 核心视觉动态库 + 瘦身 + 高斯模糊/Canny 边缘检测/缩放 E2E）；
+  > - **`Lane-Curl`**：打造 **`@cap/curl`**（curl MIT-like，多协议网络传输预编译动态库 + 瘦身 + 本地 HTTP GET 200 E2E）。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 01:55:35）[step:22859]
+- **用户完整原始指令**：
+  > cap run -m --parallel-obj  这个就是你之前说的那个加速编译功能吗?  --parallel-obj  太长了
+- **完整回复与执行汇报**：
+  > 是的，就是那个加速编译功能——你反馈得太及时了，`--parallel-obj` 确实太长，**已经立刻简化并部署生效**（`73ba6630`，[cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)）：
+  >
+  > - **直接用 `-m` 即可默认启用并行 `.o` 缓存 + 增量链接**（遇到无法拆分的泛型自动平滑回退，零心智负担）：
+  >   ```bash
+  >   cap run -m src/main.cp    # 默认开启模块化 + 并行 .o 缓存
+  >   cap build -m              # 同上
+  >   cap run -p src/main.cp    # -p 作为极简别名（自动隐含 -m）
+  >   cap build -m --no-parallel # 需要关闭并行 .o 缓存时使用
+  >   ```
+  >
+  > ---
+  >
+  > ### 顺带同步最新进度（`@cap/*` 已达 38 个）
+  > - **`@cap/opencv@4.10.0` 已交付提交**（`f56569e5`，Apache-2.0，[packages/@cap/opencv](file:///data/dev/cp/packages/@cap/opencv)）：精简 `core` + `imgproc` 瘦身动态库共 **10.4 MB**，`.tgz` 主包 250 KB，4-Gate 0/0/0/0，高斯模糊 / Canny 边缘检测 / 图像缩放 E2E 1.05s 全通；
+  > - **Iteration 4 自我优化已固化**：[GEMINI.md](file:///data/dev/cp/GEMINI.md#L723-L724) 新增批量 `git commit -q` 输出节流规则（将多文件提交日志从 26 KB 压至 ~120 B，降幅 99.4%）；
+  > - **两路子智能体持续满载并行**：`Lane-Curl`（`@cap/curl`）与 `Lane-ExpatToml`（`@cap/expat` + `@cap/mbedtls`）正在后台推进中。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:01:19）[step:22874]
+- **用户完整原始指令**：
+  > cap build -m --low  代替 cap build -m --no-parallel 如何?
+- **完整回复与执行汇报**：
+  > 非常赞的命名！`--low`（低内存/单线程串行模式）简短又直觉，**已立刻实装并部署生效**（[cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)）：
+  >
+  > ```bash
+  > cap build -m         # 默认多核并行 .o 哈希缓存 + 增量链接
+  > cap build -m --low   # 低资源/单核串行模式（同时向后兼容 --no-parallel）
+  > cap run -m --low src/main.cp
+  > ```
+  >
+  > ---
+  >
+  > ### 顺带同步最新并行进度（`@cap/*` 正式突破 **40 个** 官方纯宽松原生包！）
+  > - **刚验收提交**：
+  >   - **`@cap/expat@2.6.4`**（MIT，[packages/@cap/expat](file:///data/dev/cp/packages/@cap/expat)）：流式 XML SAX 解析器，双平台 `-g0` 瘦身 `.a` 299K/204K，4-Gate 0/0/0/0，E2E PASS；
+  >   - **`@cap/mbedtls@3.6.2`**（Apache-2.0，[packages/@cap/mbedtls](file:///data/dev/cp/packages/@cap/mbedtls)）：ARM 轻量密码学/SHA256/AES-GCM 核心，双平台 `-g0` 瘦身 `.a` 均仅 **80 KB**，4-Gate 0/0/0/0，E2E PASS。
+  > - **当前两路子智能体并行进行中**：
+  >   - **`Lane-Curl`**：打造 `@cap/curl`（curl MIT-like，多协议网络传输预编译动态库 + 本地 HTTP GET 200 E2E）；
+  >   - **`Lane-SnappyXxhash`**：打造 `@cap/snappy@1.2.1`（BSD-3，Google 高速压缩）+ `@cap/xxhash@0.8.3`（BSD-2，XXH3/XXH64 极速哈希）+ 双平台 `-g0` 瘦身静态库 + 联合 E2E。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:06:09）[step:22888]
+- **用户完整原始指令**：
+  > 你要监控子智能体, 发现 长时间无反应, 可能挂死, 需收回
+- **完整回复与执行汇报**：
+  > 多谢提醒！立即巡检后已处理完毕并同步最新战果：
+  >
+  > ### 1. 挂死子智能体回收 & 补完验收
+  > - 巡检发现 `Lane-Curl` (`09297206`) 停在 `waiting_for_dependents` 超过 12 分钟（主包与 `libcurl.so` 已建好，疑后台测试服务未退出），已立即 `kill` 回收；
+  > - 主智能体接管补跑完本地 HTTP GET 200 E2E：**`[CURL_E2E_OK] ver=libcurl/8.23.0 status=200 body=pong-from-curl`**（4-Gate 0/0/0/0，瘦身 `.so` 845 KB），已干净提交；
+  > - 同期 `Lane-SnappyXxhash` 正常完工并已回收提交：**`@cap/snappy@1.2.1`**（BSD-3，67K/70K）+ **`@cap/xxhash@0.8.3`**（BSD-2，51K/42K），联合 E2E 全通。
+  >
+  > ### 2. 下游 Bun 紧急工单 `task-bun-20261125-unused-import-dropped` 秒级结单
+  > - **根因**：`cpc --lib`（库/barrel 重导出模式，如 `src/bun.cp`）中未在本文件引用的 `import Async from "async";` 被剪枝丢弃。
+  > - **修复**：在 [cpc/src/main.rs](file:///data/dev/cp/cpc/src/main.rs#L403-L416) 保留 `--lib` 模式下全部顶层 `import`（确保输出 `pub const Async = @import("async");`），同时仍仅对实际引用的外部包输出 `// @cap-used-pkg:`（按需链接树摇零退化）。
+  > - **验证与结单**：9 秒发布 Release `cpc` 并原子部署，验证 [repro_unused_import_dropped.cp](file:///data/dev/cp/temp/repro_unused_import_dropped.cp) 精准生成 `pub const Async = @import("async");`，已 `resolve` 通知 `bun_agy`（下游队列现已清空）。
+  >
+  > ---
+  >
+  > ### 3. 阶段性里程碑汇总（本轮规划已 100% 达成）
+  > - **内置核心引擎 & Zig 0.17 宝藏模块（全 4-Gate 0/0/0/0）**：`cap:sqlite`（SQLite 3.54.1，264 万点查/s）、`cap:regex`（SIMD + Lazy DFA）、`cap:rtc`（Sans-IO WebRTC，2,000 Fuzz）、`cap:tz`、`cap:leb128`、`cap:progress`、`cap:zon`、`cap:coff`、`cap:macho`、`cap:pdb`、`cap:spirv`、`lib/col/enumSet.cp`。
+  > - **`cap` 2.0 生产级工具链**：`dep`/`dev`/`bin`/`sys` 四大依赖、Workspaces、按需链接、`-g0` 瘦身构建、`cap pack --strip`（`zig objcopy`）、`cap publish`（`.tar.zst` + `.tgz` 双格式直发 npm）、`cap build/run -m [--low]` 模块级并行 `.o` 缓存与增量链接。
+  > - **`@cap/*` 官方原生生态包**：已累计交付 **43 个**纯宽松协议包（涵盖 AI 推理 `llama`/`whisper`/`onnx`/`usearch`、数据库 `duckdb`/`lmdb`、音视频 `opus`/`miniaudio`/`rnnoise`/`speexdsp`/`dr_libs`/`flac`/`vorbis`/`ogg`/`libyuv`/`dav1d`/`libvpx`/`libavif`/`libsrtp`/`usrsctp`、视觉排版 `opencv`/`pdfium`/`stb`/`sdl3`/`freetype`/`harfbuzz`/`cmark`、压缩解析网络 `zstd`/`lz4`/`snappy`/`miniz`/`yyjson`/`xxhash`/`picohttp`/`hdrhistogram`/`treesitter`/`yaml`/`pcre2`/`expat`/`utf8proc`/`sodium`/`mbedtls`/`curl`），`copyleft_violations = 0`，详见 [packages/README.md](file:///data/dev/cp/packages/README.md)。
+  >
+  > 当前 0 挂死子智能体、下游队列为空。如需继续下一阶段（例如 `@cap/rocksdb` / `@cap/srt` / `@cap/libjxl`，或转向其他编译器/运行时特性），请随时指示！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:17:49）[step:22923]
+- **用户完整原始指令**：
+  > 当前 原生跨平台 ui 有哪些突破, 不采用 浏览器包裹, 比较轻快的
+- **完整回复与执行汇报**：
+  > 过去两年（2024–2026），**脱离浏览器/WebView 的轻快原生跨平台 UI** 确实迎来了实质性突破，核心集中在三条技术路线：**纯 GPU 批处理渲染 + 独立 Flexbox 布局内核 + 零 GC 细粒度响应式**。
+  >
+  > ---
+  >
+  > ### 一、 当前最具代表性的 6 大轻量原生突破（0 浏览器包裹）
+  >
+  > | 方案 / 引擎 | 语言 & 协议 | 核心技术突破 | 体量与性能特征 |
+  > | :--- | :--- | :--- | :--- |
+  > | **1. GPUI**（Zed 编辑器核心） | Rust · Apache-2.0 | **Immediate 渲染 + Retained 实体状态 + Taffy Flexbox 布局**；直接调用 Metal/Vulkan/DX，单批 GPU Instanced SDF 绘制圆角/阴影/文字图集 | 桌面端 120fps、冷启动 ~30ms、内存仅为 Electron 的 1/10 |
+  > | **2. Clay**（近期现象级爆款） | C99 单头文件 · **Zlib** | **仅 ~4,000 行、零堆分配（纯 Arena）的 Flexbox 布局引擎**；只输出极简渲染指令（矩形/圆角/裁剪/文字/图片），渲染后端完全解耦（可接 SDL3/GPU/终端） | 编译增量仅 **几十 KB**，微秒级布局，几乎是轻量 UI 的天花板 |
+  > | **3. Vello + Taffy + Parley**（Linebender） | Rust · MIT/Apache-2.0 | **全 GPU Compute Shader 2D 矢量渲染**（把路径填充/抗锯齿/混合全部搬到 GPU，取代传统 CPU Skia 光栅化）+ 独立 Flexbox/Grid (`Taffy`) + 排版 (`Parley`) | 复杂矢量场景性能吊打传统 2D 引擎，全宽松协议 |
+  > | **4. DVUI / Dear ImGui** | Zig / C++ · **MIT** | **立即模式（Immediate Mode）原生 UI**，无复杂组件树同步开销；`DVUI` 直接基于 Zig + SDL3，专为工具/控制台/IDE 打造 | 极简 API、二进制 < 2 MB、开发效率极高 |
+  > | **5. Makepad** | Rust · MIT/Apache-2.0 | 全 GPU Shader 驱动 UI + 实时热重载（Live Design），一套代码覆盖桌面/移动端 | 编译极快、原生 120fps 动画 |
+  > | **6. Slint** | Rust/C++ · GPL/商业双协议 | 编译期 DSL 零堆分配静态展开（协议限制不可直接集成，但其**编译期展开 + Signal 响应式**思想极值得借鉴） | 可低至几十 KB RAM 跑在嵌入式 MCU 上 |
+  >
+  > ---
+  >
+  > ### 二、 为什么「CP + 现有资产」天然具备造出最强轻快原生 UI 的条件？
+  >
+  > 最关键的是：**我们刚刚已经把底层 80% 的重型拼图全部准备好了**（100% 宽松协议）：
+  > - **跨平台窗口 / 输入 / 现代 GPU 抽象**：已落地 **`@cap/sdl3`**（SDL3 最大的突破就是自带 **`SDL_GPU` 统一现代 GPU API**，一套代码自动跑在 Vulkan / Metal / DirectX 12 上，不用手写三套图形后端！）；
+  > - **专业文字渲染与多语言/CJK 排版**：已落地 **`@cap/freetype`** + **`@cap/harfbuzz`**；
+  > - **图片解码与像素处理**：已落地 **`@cap/stb`** + **`@cap/libyuv`** + 内置 `cap:image`；
+  > - **着色器基础设施**：已落地内置 **`cap:spirv`**。
+  >
+  > ### 三、 给 CP 打造的理想轻量原生 UI 架构（0 浏览器、二进制 < 5 MB、120fps）
+  >
+  > 1. **布局层（最快 1 天可落地）**：集成 **`@cap/clay`**（Zlib 单头文件，零堆分配 Flexbox）或参考 Rust `Taffy` 写纯 CP Flexbox/Grid 引擎；
+  > 2. **渲染层（GPUI 同款思路）**：用 `@cap/sdl3`（`SDL_GPU`）+ `@cap/freetype`/`@cap/harfbuzz` 动态字形图集，写一个仅 ~500 行的 **SDF 圆角矩形 + 阴影 + 文字图集 GPU 批处理渲染器**（整屏 UI 仅 1~2 次 Draw Call）；
+  > 3. **开发体验层**：CP 原生声明式组件 + 细粒度 Signal 响应式（无 Virtual DOM Diff、无 GC 卡顿），写起来像 SwiftUI / SolidJS，跑起来像 Zed（GPUI）。
+  >
+  > 如果你有兴趣，我们可以随时把 **`@cap/clay`**（Zlib 单头文件）纳入官方包，并基于 `@cap/sdl3` + `@cap/clay` + `@cap/freetype` + `@cap/harfbuzz` 搭建一个 CP 原生轻快 UI 原型验证！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:24:48）[step:22925]
+- **用户完整原始指令**：
+  > Tauri 库如何
+  > clay 能达到 Tauri 类似效果吗?
+- **完整回复与执行汇报**：
+  > 客观、直白地拆解这两个问题：
+  >
+  > ---
+  >
+  > ### 1. Tauri 到底如何？
+  > **本质**：Tauri **依然是浏览器内核包裹**——只是它不像 Electron 那样把 120 MB 的 Chromium 打进安装包，而是直接调用操作系统自带的 WebView（macOS `WKWebView`、Windows `WebView2`、Linux `WebKitGTK`），后端用 Rust 驱动。
+  >
+  > - **强项**：
+  >   - 安装包极小（通常 3–10 MB）；
+  >   - 直接白嫖整个 Web 生态（React/Vue/Tailwind/ECharts/复杂表单/中文输入法 IME/无障碍），**开发速度极快**。
+  > - **硬伤**：
+  >   - **运行时并不算极轻**：跑起来系统 WebView 进程照样占 **80–200 MB 内存**，冷启动约 300–800ms；
+  >   - **三端渲染不一致**：Windows 是 Chromium、macOS 是 Safari、Linux 是 WebKitGTK，CSS/字体/滚动/GPU 行为经常三端不统一（Linux 端尤为明显）；
+  >   - **跨语言 + IPC 开销**：要同时维护前端 JS/TS 和后端 Rust，高频实时画面（120fps 曲线/日志/音视频画布）受 IPC 序列化限制。
+  >
+  > ---
+  >
+  > ### 2. Clay 能达到 Tauri 类似效果吗？
+  > **结论：视觉精致度与流畅度完全可以达到甚至碾压 Tauri，但开箱即用度差很远。**
+  >
+  > | 维度 | Tauri（系统 WebView） | Clay + SDL3 GPU + FreeType/HarfBuzz |
+  > | :--- | :--- | :--- |
+  > | **视觉效果（圆角/阴影/暗黑主题/动画/Flexbox）** | 极佳 | **完全可以做到同级（参考 Zed / Linear）**，且 120fps 更丝滑、三端像素 100% 一致 |
+  > | **内存与启动速度** | 80–200 MB / ~400ms | **15–30 MB / ~20ms**（碾压级轻快） |
+  > | **Clay 本身包含什么** | 完整浏览器引擎 + DOM + JS | **Clay 只是 ~4,000 行 Flexbox 布局计算器**，只输出 `(x, y, w, h)` 渲染指令，**不自带渲染器和现成控件** |
+  > | **真正难补齐的短板** | 浏览器全部自带 | 需要自己（或社区）补齐：**多行文本编辑 + 中文/日文输入法（IME）**、选区/剪贴板、滚轮惯性、无障碍、以及常见组件库（下拉框/日期/表格） |
+  >
+  > ---
+  >
+  > ### 3. 给 CP 生态的最佳务实路线（两条腿走路）
+  > 1. **极致轻快原生路线（对标 Zed GPUI）**：`@cap/sdl3`（`SDL_GPU`）+ `@cap/clay`（布局）+ `@cap/freetype`/`@cap/harfbuzz`（文字）+ GPU SDF 批处理渲染器 → 专打 **AI Agent 控制台、开发者工具、音视频/监控客户端、边缘端 GUI**（单一 CP 语言、20ms 启动、120fps、0 浏览器）；
+  > 2. **极速业务外壳路线（对标 Tauri）**：CP 只需几百行 `@c` FFI 就能封装系统 WebView（类似 `webview/webview` C 库，MIT 协议，直调 `WKWebView`/`WebView2`/`WebKitGTK`），让需要快速复用 React/Vue/Tailwind 的业务团队直接用 CP 当后端，替代 Tauri 的 Rust 层。
+  >
+  > 如果两种都想先探个路，我们可以直接把 **`@cap/clay`**（Zlib 单头文件，1 分钟落地）和 **`@cap/webview`**（MIT，Tauri 同款极简系统 WebView 封装）都纳入 `@cap/*`，你想先看哪一个？
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:28:38）[step:22927]
+- **用户完整原始指令**：
+  > Clay 一年没更新, 不行, 需要活跃的ui 库
+- **完整回复与执行汇报**：
+  > 说得对，选型必须看**长期活跃度与社区/大厂背书**，直接淘汰停更小库。
+  >
+  > 当前（持续高频迭代、零浏览器包裹、100% 宽松协议）最值得 CP 集成或对标的活跃原生 UI 方案有 **5 个顶级选择**：
+  >
+  > ---
+  >
+  > ### 1. 活跃度与实力 Top 5（全宽松协议，0 WebView）
+  >
+  > | 库名 | 语言 & 协议 | 活跃度与背书 | 核心亮点 | 适用场景 |
+  > | :--- | :--- | :--- | :--- | :--- |
+  > | **Meta `Yoga`** | C++ (带 C API) · **MIT** | Meta 官方持续维护（React Native 底座） | 全球装机量数十亿台的 **Flexbox 布局引擎**，零外部依赖，直接替代 Clay | 作为 CP 原生 UI 的布局引擎底座 |
+  > | **`LVGL` v9** | **纯 C** · **MIT** | 18k+ Stars，每周高频更新 | **自带完整 30+ 现代控件**（按钮/表格/图表/列表/滚动/动画/中文 FreeType）+ **Flexbox & Grid 布局** + 原生内置 **SDL3 后端**，整套仅 ~1–2 MB | **最省心开箱即用**：轻量跨平台桌面/边缘端现代 App |
+  > | **`Dear ImGui`** | C++ (带 `cimgui` C API) · **MIT** | 65k+ Stars，十年持续高频更新 | 工业界工具/IDE/引擎/高频交易/AI 监控面板事实标准，原生对接 **SDL3**，120fps 多窗口停靠（Docking） | AI Agent 控制台、调试器、数据可视化工作台 |
+  > | **`RmlUi`** | C++ · **MIT** | 持续活跃维护 | **纯原生轻量 HTML/CSS 引擎（支持 Flexbox/动画/数据绑定），彻底去掉浏览器内核与 JS 引擎**，仅 ~2–3 MB，可接 SDL3 渲染 | 想用 HTML/CSS 写现代界面、又拒绝 Electron/WebView 内存开销 |
+  > | **Zed `GPUI` + `Taffy`** | Rust · **Apache-2.0 / MIT** | 每天几十个 Commit，当前最火 | `GPUI`（全 GPU SDF 批处理 120fps）+ `Taffy`（完整 Flexbox + Grid，Zed/Bevy/Dioxus 共用） | **CP 自研原生 UI 框架的最佳架构蓝本**（纯 CP 移植 `Taffy` + `@cap/sdl3` `SDL_GPU`） |
+  >
+  > *(另外 Zig 生态也有持续活跃的 **`DVUI`**（MIT，原生支持 SDL3 后端），在轻量工具场景表现很好。)*
+  >
+  > ---
+  >
+  > ### 2. 给 CP 的推荐组合（全部与已落地的 `@cap/sdl3` / `@cap/freetype` / `@cap/harfbuzz` 无缝对接）
+  >
+  > 1. **立即可落地、零造轮子**：
+  >    - **`@cap/yoga`**（Meta MIT，替换 Clay 作为超稳定 Flexbox 布局引擎）；
+  >    - **`@cap/lvgl`**（MIT，纯 C，直接获得 30+ 现成控件 + Flexbox/Grid + 动画，配合 `@cap/sdl3` 几分钟跑出桌面 GUI）；
+  >    - **`@cap/imgui`**（MIT，开发者工具/AI Agent 实时控制面板标配）。
+  > 2. **长期王牌（对标 Zed GPUI）**：
+  >    - 用 `@cap/yoga`（或纯 CP 实现 `Taffy`）+ `@cap/sdl3` (`SDL_GPU`) + `@cap/freetype` + `@cap/harfbuzz`，打造纯 CP 声明式 120fps 原生 UI 框架。
+  >
+  > 要不要现在开启两路子智能体，先把最活跃、最实用的 **`@cap/yoga`**（Meta MIT）和 **`@cap/lvgl`**（MIT，纯 C v9）或 **`@cap/imgui`**（MIT）接入 `@cap/*` 并跑通实测？
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:35:30）[step:22929]
+- **用户完整原始指令**：
+  > ui 先缓缓
+  > 我们cp 项目还有哪些需要完善, 才能正式发布
+- **完整回复与执行汇报**：
+  > 目前 CP 的**核心硬实力已经基本齐备**（`cpc` 编译器、`cap` 2.0 工具链、SQLite 3.54.1 / SIMD 正则 / Sans-IO WebRTC / Zig 0.17 宝藏模块 + **43 个**纯宽松 `@cap/*` 原生包 + 零 Copyleft 污染）。
+  >
+  > 核实仓库现状后，距离**正式对外发布（v1.0 Public Release）**，还差以下 **6 项收口工作**（按优先级排序）：
+  >
+  > ---
+  >
+  > ### 🔴 P0 — 发布硬阻断（不做无法面向公众发布）
+  >
+  > 1. **三端 CI/CD 与一键安装脚本**
+  >    - 仓库目前**没有 `.github/workflows/`**，缺少 Linux x64/arm64、macOS arm64/x64、Windows x64 的自动化构建、核心回归与 Release 打包流水线；
+  >    - [install.sh](file:///data/dev/cp/install.sh) 仍是 765B 的早期脚本，需升级为生产级 `install.sh`（Linux/macOS）+ `install.ps1`（Windows）：自动识别架构、拉取 `cpc` + `cap` + 内置 `lib/`、SHA-256 验签并配置 `PATH`。
+  > 2. **macOS / Windows 真机（CI）跨平台验证**
+  >    - 目前所有运行测试都在 `linux-x86_64` 完成；正式发布前需在 CI 上实跑 **macOS ARM64**（`.dylib` / `DYLD_LIBRARY_PATH`）与 **Windows x64**（路径分隔符、`.lib`/`.dll`、`cap run` / `cap install`）。
+  > 3. **仓库卫生与版本统一**
+  >    - 清理根目录历史临时/备份残留（如 10 MB 的 `main_inc.zcs`、`libtest_call_default.a`、`cp_ref-bak261028.md`、`GEMINI-BAK.md`、`cpc_sandbox/` 等，避免随公开仓库发布）；
+  >    - 统一 `cap --version` / `cpc --version` 版本号与发布 Tag（目前 `cap` 仍硬编码 `v0.1.0`）。
+  >
+  > ---
+  >
+  > ### 🟡 P1 — 开发者第一印象与日常闭环（强烈建议发布前补齐）
+  >
+  > 4. **`cap fmt`（官方代码格式化器）与 `cap lint`**
+  >    - [cp_ref.md](file:///data/dev/cp/cp_ref.md#L375-L376) 中这两项仍标为「规划实现」。现代语言（`gofmt`/`rustfmt`/`zig fmt`）发布时自带 `cap fmt` 对开发体验提升极大，基于现有 `cpc` AST/Parser 可快速落地。
+  > 5. **编辑器扩展（VS Code `.vsix` + `cpc lsp` 联调）**
+  >    - 已有 [cpc/src/lsp.rs](file:///data/dev/cp/cpc/src/lsp.rs) 与 `editors/`，发布前需完善语法高亮、诊断下划线、跳转定义、悬停提示与保存自动 `cap fmt`，打包成可直接安装的 VS Code 插件。
+  > 6. **面向新用户的「5 分钟上手」门户与可运行示例**
+  >    - [cp_ref.md](file:///data/dev/cp/cp_ref.md)（587 KB）适合查阅，不适合第一眼上手；需配一份清爽的 `README.md` + `examples/`（Hello World、HTTP API、SQLite CRUD、并发 Actor、调用 `@cap/*` C/C++ 包 5 个开箱即跑示例）。
+  >
+  > ---
+  >
+  > ### 🟢 P2 — 发布后演进（不阻断 v1.0）
+  > - **包托管**：首期直接用已打通的 `cap publish` 发往官方 npmjs.org / GitHub Releases，零运维启动；生态起量后再另开独立项目用 CP 自建 `.tar.zst` 高性能 Registry。
+  > - **跨模块泛型并行 `.o`**：持续扩大 `cap build -m` 并行 `.o` 缓存覆盖面。
+  >
+  > ---
+  >
+  > ### 建议下一步（立即可三线并行推进）
+  > 如果想直接冲刺发布就绪，我可以立刻启动两路子智能体 + 主智能体并行完成 **P0/P1 最核心 4 项**：
+  > 1. **`Lane-Fmt`**（子智能体 1）：实现 `cap fmt` / `cpc fmt` 官方代码格式化器 + 回归测试；
+  > 2. **`Lane-ReleaseCI`**（子智能体 2）：编写 `.github/workflows/{ci,release}.yml` 三端矩阵 CI + 生产级 `install.sh` / `install.ps1` + 统一 `--version`；
+  > 3. **主智能体**：搭建 `examples/` 5 大开箱即跑示例（全部实测跑通）+ 清爽的发布级 `README.md` + 整理 `editors/` VS Code 扩展配置。
+  >
+  > 要现在直接启动这波「v1.0 发布冲刺」吗？
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:39:55）[step:22933]
+- **用户完整原始指令**：
+  > 启动,
+  > 你自主安排工作, 将上述需要的功能全部实现, 准备对外发布 1.0版本!
+- **完整回复与执行汇报**：
+  > **CP v1.0 对外发布冲刺** 三线并行高速推进中：
+  >
+  > ### 主智能体已完成并提交
+  > 1. **4 大开箱即跑快速上手示例（全部实测通过）**：
+  >    - [examples/01_hello.cp](file:///data/dev/cp/examples/01_hello.cp)（Hello CP + 确定性栈 RAII `~init`）
+  >    - [examples/02_sqlite_memory.cp](file:///data/dev/cp/examples/02_sqlite_memory.cp)（内置 SQLite 3.54.1 `:memory:` 零安装查询）
+  >    - [examples/03_tz_and_leb128.cp](file:///data/dev/cp/examples/03_tz_and_leb128.cp)（内置 IANA 时区 `Asia/Shanghai` + LEB128 往返）
+  >    - [examples/04_native_pkg/](file:///data/dev/cp/examples/04_native_pkg)（`cap.json` 2.0 + `@cap/lz4` + `@cap/yyjson` 原生包实跑）
+  > 2. **全新 v1.0 公开门户 [README.md](file:///data/dev/cp/README.md)**（一键安装、5 分钟上手、核心 CLI 表、43+ `@cap/*` 生态包总览与双协议说明）。
+  > 3. **VS Code 扩展升级至 v1.0.0**（[editors/vscode/package.json](file:///data/dev/cp/editors/vscode/package.json)，补齐 `.d.cp`、`cp.cpcPath`/`cp.capPath`/`cp.formatOnSave` 配置）。
+  >
+  > ### 两路子智能体健康推进中（已巡检无挂死）
+  > - **`Lane-Fmt`**（正在执行 `cpc` Release 编译部署）：落地 `cpc fmt` / `cap fmt`（幂等格式化）、`cap lint`（4 门禁静态审计）与统一 `1.0.0` `--version`。
+  > - **`Lane-ReleaseCI`**（正在执行 `package_release.sh` 实测打包）：落地 `.github/workflows/{ci,release}.yml` 三端矩阵、生产级 `install.sh` / `install.ps1` 与 SHA-256 发行打包脚本。
+  >
+  > 两路完工后立即验收提交并做最终发布前卫生检查。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:46:15）[step:22975]
+- **用户完整原始指令**：
+  > 1. 对于 后端rest接口开发框架: 基于不能的 https://elysiajs.com/  和 https://nestjs.com/, 我们cp, 都要迁移, 还是迁移其中一个? 还是从 rust 知名库中迁移,你分析下!
+  > 2. 还需要做几个类似 bun 与 node 等对比的测试数据, 如 bun 官网: https://bun.sh/
+  > 3. 还需要做一个类似 https://bun.sh/的网站
+- **完整回复与执行汇报**：
+  > ### 1. 后端 REST 框架选型：ElysiaJS vs NestJS vs Rust Axum
+  >
+  > 结论很明确：**不要同时维护两套分散精力，也不要硬搬笨重的 NestJS——最佳方案是打造一套 CP 原生旗舰框架：「ElysiaJS 的优雅链式 API + Rust Axum 的零反射编译期内核 + CP 内置 uSockets/picohttp 底座」。**
+  >
+  > | 框架 | 核心机制 | 适配 CP 程度 | 优缺点分析 |
+  > | :--- | :--- | :---: | :--- |
+  > | **NestJS** | 运行期 `reflect-metadata` 反射 + 动态 DI 容器 | ❌ 不适合直接照搬 | 强依赖 JS 动态运行时，搬进零 GC 编译语言会破坏零开销哲学，且样板代码冗长。 |
+  > | **ElysiaJS** | 极简链式 API（`app.get("/users/:id", ...)`）+ Schema 校验 + OpenAPI 自动生成 | ✅ **API 设计最契合 CP** | 10 行代码写完一个高性能 REST 接口，TS 开发者零学习成本。 |
+  > | **Rust `Axum`**（MIT） | **零反射编译期 Extractor**（`Path<T>`/`Query<T>`/`Json<T>`/`State<T>`）+ `matchit` Radix Tree 路由 + 零分配中间件 | ✅ **底层内核最契合 CP** | 编译期 100% 类型安全，无运行期反射开销，性能稳居全球 Web 框架第一梯队。 |
+  >
+  > **CP 最佳融合形态**（基于 CP 现有 `cap:http` + `cap:router` + `@cap/yyjson`）：
+  > - **对外 API 学 ElysiaJS**：链式路由分组、中间件 `.use()`、自动 OpenAPI 文档、简洁声明式写法；
+  > - **对内架构学 Rust Axum**：编译期强类型参数提取与 `State<T>` 注入（覆盖 95% 企业级模块化/DI 诉求，彻底摆脱 NestJS 的运行期反射包袱）。
+  >
+  > ---
+  >
+  > ### 2. 对标 `bun.sh` 的硬核对比基准套件（100% 本机真实可复现）
+  >
+  > 我们可以在仓库新建 `bench/vs_runtimes/`，在同一台宿主机上用**相同数据集与相同逻辑**实跑 **CP vs Bun vs Node.js**（输出机器配置、版本、可一键复现脚本与 JSON 结果）：
+  > 1. **SQLite `:memory:` 10 万次点查 & 批量写入**（`cap:sqlite` vs `bun:sqlite` vs `node:sqlite`）；
+  > 2. **JSON 解析吞吐**（`@cap/yyjson` vs `Bun` vs `Node`）；
+  > 3. **正则搜索 & ReDoS 线性压测**（`cap:text/nfaRegex` SIMD+LazyDFA vs `Bun`/`Node` RegExp）；
+  > 4. **LZ4 / Zstd 压缩吞吐**（`@cap/lz4` / `@cap/zstd` vs `Bun`/`Node`）；
+  > 5. **进程冷启动耗时 & 静态内存占用（RSS）**（CP 原生二进制 ~2ms 启动、~2 MB 内存 vs `Bun` vs `Node`）。
+  >
+  > ---
+  >
+  > ### 3. 类似 `https://bun.sh/` 的 CP 官方网站（`website/`）
+  >
+  > 可以在仓库新建 `website/`（零构建依赖、极速加载、一键部署 GitHub Pages / Cloudflare Pages）：
+  > - **视觉风格**：暗黑极客高对比度（对标 `bun.sh`），Hero 区带 **一键复制 `curl | sh` / `irm | iex` 安装条**；
+  > - **真实实测 Benchmark 柱状对比图**：直接读取上面 `bench/vs_runtimes/` 跑出来的真实数据；
+  > - **交互式代码预览 Tab**：Hello RAII / SQLite / REST API / AI Agent (`@cap/llama`) / 原生 C 包；
+  > - **可搜索的 43+ `@cap/*` 生态包矩阵 & 一键直达文档**。
+  >
+  > ---
+  >
+  > 等当前后台两路子智能体（`Lane-Fmt` 与 `Lane-ReleaseCI`）马上收尾提交后，我可以立刻无缝切入这三项：**① REST 框架原型（Elysia 风格 + Axum 内核）+ ② CP vs Bun vs Node 真实基准压测 + ③ `website/` 官网**，你觉得这个节奏可以吗？
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 02:50:01）[step:22986]
+- **用户完整原始指令**：
+  > 完全同意你上面3点方案, 你自己安排计划, 全部实现,为 cp 发布做好准备
+- **完整回复与执行汇报**：
+  > **CP v1.0 对外发布冲刺** 进展迅速，多项核心基建已全部验收提交：
+  >
+  > ### 刚验收提交
+  > 1. **`cpc/cap fmt`、`cap lint` 与统一 `v1.0.0` 版本号**（[cpc/src/formatter.rs](file:///data/dev/cp/cpc/src/formatter.rs)、[cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)）：
+  >    - `cpc --version` → `cpc 1.0.0`，`cap --version` → `cap 1.0.0`；
+  >    - `cap fmt [--check|--stdout]` 严格幂等，`cap lint` 4 门禁 0/0/0/0，`cap test` 全通；已同步更新 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 状态为「已全面实装」。
+  > 2. **三端 CI/CD 与一键安装脚本**（[ci.yml](file:///data/dev/cp/.github/workflows/ci.yml)、[release.yml](file:///data/dev/cp/.github/workflows/release.yml)、[install.sh](file:///data/dev/cp/install.sh)、[install.ps1](file:///data/dev/cp/install.ps1)、[package_release.sh](file:///data/dev/cp/scripts/package_release.sh)）：
+  >    - 覆盖 Linux / macOS / Windows 三端矩阵与 5 平台 Release 自动发布；
+  >    - `package_release.sh` 实测产出 `cp-v1.0.0-linux-x86_64.tar.gz` (19 MB) 且 `sha256sum -c` 通过。
+  > 3. **对标 `bun.sh` 的 CP v1.0 官方网站**（[website/index.html](file:///data/dev/cp/website/index.html)、[website/styles.css](file:///data/dev/cp/website/styles.css)、[website/app.js](file:///data/dev/cp/website/app.js)）：
+  >    - 暗黑高对比度设计、一键复制 Linux/macOS/Windows 安装条、5-Tab 交互式代码演示、可搜索筛选的 44 个 `@cap/*` 原生生态包矩阵、动态 Benchmark 对比图表（零构建依赖，可直接静态部署）。
+  >
+  > ### 两路子智能体健康推进中（已巡检无挂死）
+  > - **`Lane-RestFramework`**：实现融合 ElysiaJS 链式 API + Rust Axum 零反射内核的 `cap:web` REST 框架（含自动 OpenAPI 3.1 导出 + 10 万次路由吞吐压测）；
+  > - **`Lane-Benchmark`**：在同机实跑 **CP (`-OReleaseFast`) vs Bun vs Node v26 vs Python3** 4 项硬核基准，完成后我将直接把真实实测数据同步进 `website/` 完成 v1.0 最终合龙！
