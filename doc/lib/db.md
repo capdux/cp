@@ -275,6 +275,8 @@ pub fn demoMvccSnapshot() {
 
 ### 零分配数据库槽页二进制布局、原地紧凑化与 CRC32 校验引擎 (`slottedPage.cp`)
 
+> 对标加固基准：`fjall-rs/lsm-tree`（MIT OR Apache-2.0）；16-lane `@Vector(16, u8)` SIMD 载荷拷贝加速与严格空间守恒校验；回归测试：`cap/test/testDbPageIndexRustRefSuite.cp`
+
 面向 PostgreSQL / SQLite 经典存储引擎的 100% 纯 CP 零动态堆分配 4KB/8KB（任意 `64..65535B`）槽页二进制布局引擎，直接操作调用方持有的 `page_buf: *[]u8` 实现零拷贝读写与 O(1) 额外内存原地紧凑化：
 
 - **二进制布局与常量**：
@@ -285,12 +287,12 @@ pub fn demoMvccSnapshot() {
   - `SlottedPageStatus`（`ok` | `invalid_page_size` | `invalid_magic` | `checksum_mismatch` | `corrupt_header` | `corrupt_slot_bounds` | `overlapping_records`）
   - `SlottedPageHeader`、`SlottedSlotMeta`（`isAlive()`, `isDeleted()`）、`SlottedFreeSpace`
 - **核心函数**：
-  - `initPage(*page, page_id, lsn, flags)` / `readPageHeader(page)` / `readSlotMeta(page, slot_id)` / `freeSpaceBytes(page)` / `setPageLsn(*page, lsn)`
+  - `initPage(*page, page_id, lsn, flags)` / `readPageHeader(page)` / `readSlotMeta(page, slot_id)` / `livePayloadBytes(page)` / `freeSpaceBytes(page)` / `setPageLsn(*page, lsn)`
   - `insertRecord(*page, record): u16?`：优先复用墓碑槽；连续空间不足但碎片可回收时自动触发原地 `compactPage`。
   - `getRecord(page, slot_id): ([]const u8)?`：零拷贝返回存活记录只读切片。
   - `updateRecordInPlace(*page, slot_id, new_record): bool`：等长/缩小原地覆写并累计碎片；扩容原子校验容量并在必要时自动紧凑化，失败不破坏原记录。
-  - `deleteRecord(*page, slot_id): bool` / `compactPage(*page): bool`（O(1) 额外内存反向无重叠搬移）
-  - `slottedPageCrc32(page)` / `sealChecksum(*page)` / `verifyPageIntegrity(page)`（全面校验页大小、Magic、CRC32、页头指针、槽边界与记录非重叠）
+  - `deleteRecord(*page, slot_id): bool` / `compactPage(*page): bool`（O(1) 额外内存，非重叠区 16-lane SIMD 搬移 + 重叠区反向安全搬移）
+  - `slottedPageCrc32(page)` / `sealChecksum(*page)` / `verifyPageIntegrity(page)`（全面校验页大小、Magic、CRC32、页头指针与碎片上界、槽标志/边界、空间守恒与记录非重叠）
 
 ```cp
 import {
@@ -510,15 +512,18 @@ pub fn demoArenaSkipList() {
 
 ### 零分配 RocksDB/LevelDB 前缀压缩数据块与稀疏块索引二分查找引擎 (`sstableIndex.cp`)
 
+> 对标加固基准：`fjall-rs/lsm-tree`（MIT OR Apache-2.0）；16-lane `@Vector(16, u8)` SIMD 公共前缀/字典序比较/拷贝加速；回归测试：`cap/test/testDbPageIndexRustRefSuite.cp`
+
 面向 LSM-Tree SSTable 磁盘数据块格式的 100% 纯 CP 零动态堆分配前缀压缩编解码与稀疏块索引引擎：
 
 - **常量与枚举**：
   - `PREFIX_BLOCK_DEFAULT_RESTART_INTERVAL = 16`、`PREFIX_BLOCK_MAX_BYTES = 4096`、`PREFIX_BLOCK_MAX_RESTARTS = 128`、`PREFIX_BLOCK_MAX_KEY_LEN = 256`、`SST_INDEX_MAX_BLOCKS = 64`、`SST_INDEX_MAX_KEY_LEN = 256`
   - `PrefixBlockStatus`（`ok | empty_key | key_too_long | out_of_order_key | already_finished | restarts_full | buffer_full | index_full`）
   - `PrefixBlockLookupStatus`（`found | not_found | buffer_too_small | corrupt_block`）
-- **核心类型**：
-  - `PrefixBlockBuilder`：每 `restart_interval` 条写入完整 Restart Point，中间记录以 `(shared_len, unshared_len, val_len)` LEB128 varint 前缀压缩编码，封口 `finish()` 写入 4B 小端 Restart Offset 数组与 4B count；强制严格递增键校验与前置空间原子预检，提供 `stats(): PrefixBlockStats` 压缩率遥测。
-  - `PrefixBlockReader` / `PrefixBlockCursor`：`open(data)` 完整校验截断、越界/非单调 Restart Offset 与 `shared_len == 0` 约束；`get(key, out_key, out_val)` 与 `seek(lower_key)` 执行 O(log R) Restart Point 二分查找 + 线性精确定位，零动态堆分配前向迭代。
+- **SIMD 热路径原语**：`simdPageCommonPrefixLen` / `scalarPageCommonPrefixLen`、`simdPageCompareLex` / `scalarPageCompareLex`、`simdPageCopyBytes` / `scalarPageCopyBytes`、`compareLexBytes`。
+- **核心类型与严苛校验**：
+  - `PrefixBlockBuilder`：每 `restart_interval` 条写入完整 Restart Point，中间记录以 `(shared_len, unshared_len, val_len)` LEB128 varint 前缀压缩编码，封口 `finish()` 写入 4B 小端 Restart Offset 数组与 4B count；强制严格递增键校验与防溢出前置空间原子预检，提供 `stats(): PrefixBlockStats` 压缩率遥测。
+  - `PrefixBlockReader` / `PrefixBlockCursor` / `validatePrefixBlockStrict(data)`：`open(data)` 完整校验截断、重启点上限、越界/非单调 Restart Offset、重启点键单调递增与 `shared_len == 0` 约束；`validateAllEntries()` / `validatePrefixBlockStrict()` 全块校验每条记录与重启点对齐；`get(key, out_key, out_val)` 与 `seek(lower_key)` 执行 O(log R) Restart Point 二分查找 + 线性精确定位，零动态堆分配前向迭代。
   - `SstSparseIndex`：定长 64 块围栏键（`last_key`）稀疏索引，支持 `addBlock` 严格递增围栏键写入、O(log B) 二分 `locateBlock(key)` 与区间裁剪 `locateRange(start_key, end_key)`。
 
 ```cp
