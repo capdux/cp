@@ -61,6 +61,8 @@ const manifest = @import("project/manifest.zig");
 const semver = @import("project/semver.zig");
 const resolver = @import("project/resolver.zig");
 const lock = @import("project/lock.zig");
+const native = @import("project/native.zig");
+const installer = @import("project/installer.zig");
 
 fn getCapRoot(allocator: std.mem.Allocator) ![]const u8 {
     if (global_env.get("CAP_ROOT")) |root| {
@@ -106,13 +108,21 @@ pub fn main(init: std.process.Init) !void {
     } else if (std.mem.eql(u8, cmd, "init")) {
         try handleInit(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "add")) {
-        try handleAdd(allocator, args[2..]);
+        try installer.handleAdd(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "remove") or std.mem.eql(u8, cmd, "rm")) {
-        try handleRemove(allocator, args[2..]);
+        try installer.handleRemove(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "update") or std.mem.eql(u8, cmd, "up")) {
-        try handleUpdate(allocator, args[2..]);
+        try installer.handleUpdate(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "install") or std.mem.eql(u8, cmd, "i")) {
-        try handleInstall(allocator);
+        try installer.handleInstall(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "rebuild")) {
+        try installer.handleRebuild(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "cache")) {
+        try installer.handleCache(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "why")) {
+        try installer.handleWhy(allocator, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "pm")) {
+        try installer.handlePm(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "test")) {
         try handleTest(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "fuzz")) {
@@ -194,10 +204,14 @@ fn usage() void {
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
         \\  cap init [app|agent|lib]      Initialize a new CP project template
-        \\  cap add <package> [-g] [-d]   Add a dependency (-g global, -d dev)
-        \\  cap remove <package>          Remove a dependency
-        \\  cap update [package]          Update dependencies according to semver
-        \\  cap install                   Install all dependencies from cap.json
+        \\  cap add <pkg> [-d] [-g]       Add a dependency (@scope/pkg, file:./..., -d dev, -g global)
+        \\  cap remove <package>          Remove a dependency from cap.json, cap.lock & cap_modules
+        \\  cap update [package]          Update dependencies and refresh cap.lock
+        \\  cap install [options]         Install dependencies (--frozen-lockfile, --rebuild)
+        \\  cap rebuild [pkg] [options]   Rebuild native C libs (--target=<os-arch|all>, --write-prebuilt)
+        \\  cap cache <dir|ls|clean>      Inspect or clean global ~/.cap/cache
+        \\  cap why <package>             Explain why a package is installed
+        \\  cap pm ls                     List installed packages in cap_modules/
         \\  cap sniff                     Detect hardware features (AVX2, CPU, OS)
         \\  cap help                      Show this help message
         \\
@@ -1269,6 +1283,42 @@ fn appendLinkArgs(
         }
     }
 
+    // 3.5 Installed cap_modules/ native C packages (prebuilt 0ms hit or auto zig cc build)
+    if (native.collectInstalledNativeDepsForTarget(allocator, ".", target_triple)) |native_deps_val| {
+        var native_deps = native_deps_val;
+        defer native_deps.deinit(allocator);
+        for (native_deps.include_dirs.items) |inc_dir| {
+            const inc_arg = try std.fmt.allocPrint(allocator, "-I{s}", .{inc_dir});
+            if (allocated_libs_len.* < allocated_libs.len) {
+                allocated_libs[allocated_libs_len.*] = inc_arg;
+                allocated_libs_len.* += 1;
+            }
+            addArg(args_buf, argc, inc_arg);
+        }
+        for (native_deps.static_libs.items) |static_lib| {
+            const lib_dup = try allocator.dupe(u8, static_lib);
+            if (allocated_libs_len.* < allocated_libs.len) {
+                allocated_libs[allocated_libs_len.*] = lib_dup;
+                allocated_libs_len.* += 1;
+            }
+            addArg(args_buf, argc, lib_dup);
+        }
+        for (native_deps.link_libs.items) |ll| {
+            const l_arg = if (std.mem.startsWith(u8, ll, "-l") or std.mem.startsWith(u8, ll, "-L"))
+                try allocator.dupe(u8, ll)
+            else
+                try std.fmt.allocPrint(allocator, "-l{s}", .{ll});
+            if (allocated_libs_len.* < allocated_libs.len) {
+                allocated_libs[allocated_libs_len.*] = l_arg;
+                allocated_libs_len.* += 1;
+            }
+            addArg(args_buf, argc, l_arg);
+        }
+        if (native_deps.static_libs.items.len > 0) {
+            addArg(args_buf, argc, "-lc");
+        }
+    } else |_| {}
+
     // 4. Fallback auto-detection for uSockets / QuickJS if not already linked
     if (fs_shim.cwd().statFile("zig-out/lib/libusockets.a") catch null != null) {
         addArg(args_buf, argc, "-Lzig-out/lib");
@@ -1337,6 +1387,10 @@ fn runFileWithOpt(allocator: std.mem.Allocator, filename: []const u8, opt_mode: 
         cpc_args_buf[cpc_argc] = "--output";
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = zig_file;
+        cpc_argc += 1;
+        cpc_args_buf[cpc_argc] = "-I";
+        cpc_argc += 1;
+        cpc_args_buf[cpc_argc] = "cap_modules";
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "-I";
         cpc_argc += 1;
@@ -2013,7 +2067,7 @@ fn compileSingleFile(
         const cpc_bin = try getCpcBin(allocator);
         defer allocator.free(cpc_bin);
         const cpc_start = std.Io.Timestamp.now(global_io, .awake);
-        var cpc_args_buf: [16][]const u8 = undefined;
+        var cpc_args_buf: [20][]const u8 = undefined;
         var cpc_argc: usize = 0;
         cpc_args_buf[cpc_argc] = cpc_bin;
         cpc_argc += 1;
@@ -2038,6 +2092,10 @@ fn compileSingleFile(
             cpc_args_buf[cpc_argc] = zig_file_buf.?;
             cpc_argc += 1;
         }
+        cpc_args_buf[cpc_argc] = "-I";
+        cpc_argc += 1;
+        cpc_args_buf[cpc_argc] = "cap_modules";
+        cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "-I";
         cpc_argc += 1;
         cpc_args_buf[cpc_argc] = "/data/dev/cp/cap/cap_modules";
@@ -2602,6 +2660,8 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8, is_modu
             test_mod_dir,
             filename,
             "-I",
+            "cap_modules",
+            "-I",
             "/data/dev/cp/cap/cap_modules",
             "-I",
             "/data/dev/cp/lib",
@@ -2633,6 +2693,8 @@ fn runTestSingleFile(allocator: std.mem.Allocator, filename: []const u8, is_modu
             filename,
             "--output",
             single_zig,
+            "-I",
+            "cap_modules",
             "-I",
             "/data/dev/cp/cap/cap_modules",
             "-I",

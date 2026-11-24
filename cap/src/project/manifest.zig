@@ -454,18 +454,115 @@ pub const CentralLibIndex = struct {
     }
 };
 
+pub const NativeConfig = struct {
+    lib_name: []const u8 = "",
+    c_sources: [][]const u8 = &.{},
+    include_dirs: [][]const u8 = &.{},
+    cflags: [][]const u8 = &.{},
+    link_libs: [][]const u8 = &.{},
+    prebuilt_dir: []const u8 = "",
+
+    pub fn deinit(self: *NativeConfig, allocator: std.mem.Allocator) void {
+        if (self.lib_name.len > 0) allocator.free(self.lib_name);
+        for (self.c_sources) |s| allocator.free(s);
+        if (self.c_sources.len > 0) allocator.free(self.c_sources);
+        for (self.include_dirs) |id| allocator.free(id);
+        if (self.include_dirs.len > 0) allocator.free(self.include_dirs);
+        for (self.cflags) |cf| allocator.free(cf);
+        if (self.cflags.len > 0) allocator.free(self.cflags);
+        for (self.link_libs) |ll| allocator.free(ll);
+        if (self.link_libs.len > 0) allocator.free(self.link_libs);
+        if (self.prebuilt_dir.len > 0) allocator.free(self.prebuilt_dir);
+    }
+
+    pub fn clone(self: NativeConfig, allocator: std.mem.Allocator) !NativeConfig {
+        var copy = NativeConfig{
+            .lib_name = if (self.lib_name.len > 0) try allocator.dupe(u8, self.lib_name) else "",
+            .prebuilt_dir = if (self.prebuilt_dir.len > 0) try allocator.dupe(u8, self.prebuilt_dir) else "",
+        };
+        if (self.c_sources.len > 0) {
+            const list = try allocator.alloc([]const u8, self.c_sources.len);
+            for (self.c_sources, 0..) |s, i| list[i] = try allocator.dupe(u8, s);
+            copy.c_sources = list;
+        }
+        if (self.include_dirs.len > 0) {
+            const list = try allocator.alloc([]const u8, self.include_dirs.len);
+            for (self.include_dirs, 0..) |id, i| list[i] = try allocator.dupe(u8, id);
+            copy.include_dirs = list;
+        }
+        if (self.cflags.len > 0) {
+            const list = try allocator.alloc([]const u8, self.cflags.len);
+            for (self.cflags, 0..) |cf, i| list[i] = try allocator.dupe(u8, cf);
+            copy.cflags = list;
+        }
+        if (self.link_libs.len > 0) {
+            const list = try allocator.alloc([]const u8, self.link_libs.len);
+            for (self.link_libs, 0..) |ll, i| list[i] = try allocator.dupe(u8, ll);
+            copy.link_libs = list;
+        }
+        return copy;
+    }
+
+    fn parseStringArray(allocator: std.mem.Allocator, val: std.json.Value) ![][]const u8 {
+        if (val == .array) {
+            var list = try allocator.alloc([]const u8, val.array.items.len);
+            for (val.array.items, 0..) |item, i| {
+                list[i] = try allocator.dupe(u8, if (item == .string) item.string else "");
+            }
+            return list;
+        } else if (val == .string) {
+            var list = try allocator.alloc([]const u8, 1);
+            list[0] = try allocator.dupe(u8, val.string);
+            return list;
+        }
+        return &.{};
+    }
+
+    pub fn parseValue(allocator: std.mem.Allocator, val: std.json.Value) !NativeConfig {
+        var cfg = NativeConfig{};
+        if (val != .object) return cfg;
+
+        if (val.object.get("lib_name")) |ln| {
+            if (ln == .string) cfg.lib_name = try allocator.dupe(u8, ln.string);
+        }
+        if (val.object.get("c_sources") orelse val.object.get("sources")) |srcs| {
+            cfg.c_sources = try parseStringArray(allocator, srcs);
+        }
+        if (val.object.get("include_dirs") orelse val.object.get("include")) |incs| {
+            cfg.include_dirs = try parseStringArray(allocator, incs);
+        }
+        if (val.object.get("cflags") orelse val.object.get("c_flags")) |cfs| {
+            cfg.cflags = try parseStringArray(allocator, cfs);
+        }
+        if (val.object.get("link_libs")) |lls| {
+            cfg.link_libs = try parseStringArray(allocator, lls);
+        }
+        if (val.object.get("prebuilt_dir")) |pd| {
+            if (pd == .string and pd.string.len > 0) {
+                cfg.prebuilt_dir = try allocator.dupe(u8, pd.string);
+            }
+        }
+        if (cfg.prebuilt_dir.len == 0) {
+            cfg.prebuilt_dir = try allocator.dupe(u8, "prebuilt");
+        }
+        return cfg;
+    }
+};
+
 pub const Manifest = struct {
     name: []const u8,
     version: []const u8,
     description: ?[]const u8 = null,
     main: ?[]const u8 = null,
     mode: ?[]const u8 = null,
+    workspaces: [][]const u8 = &.{},
     scripts: std.StringHashMap([]const u8),
     dependencies: std.StringHashMap([]const u8),
     dev_dependencies: std.StringHashMap([]const u8),
     bin_dependencies: std.StringHashMap(BinDependencyConfig),
     build_config: ?BuildConfig = null,
     nest_config: ?NestConfig = null,
+    native_config: ?NativeConfig = null,
 
     pub fn parse(allocator: std.mem.Allocator, contents: []const u8) !Manifest {
         var parsed = try std.json.parseFromSlice(std.json.Value, allocator, contents, .{});
@@ -643,18 +740,38 @@ pub const Manifest = struct {
             }
         }
 
+        var workspaces: [][]const u8 = &.{};
+        if (root.get("workspaces")) |ws| {
+            if (ws == .array) {
+                var list = try allocator.alloc([]const u8, ws.array.items.len);
+                for (ws.array.items, 0..) |item, i| {
+                    list[i] = try allocator.dupe(u8, if (item == .string) item.string else "");
+                }
+                workspaces = list;
+            }
+        }
+
+        var native_cfg: ?NativeConfig = null;
+        if (root.get("native")) |nv| {
+            if (nv == .object) {
+                native_cfg = try NativeConfig.parseValue(allocator, nv);
+            }
+        }
+
         return Manifest{
             .name = name,
             .version = version,
             .description = description,
             .main = main,
             .mode = mode,
+            .workspaces = workspaces,
             .scripts = scripts,
             .dependencies = deps,
             .dev_dependencies = dev_deps,
             .bin_dependencies = bin_deps,
             .build_config = build_cfg,
             .nest_config = nest_cfg,
+            .native_config = native_cfg,
         };
     }
 
@@ -778,6 +895,45 @@ pub const Manifest = struct {
             try root.object.put(aa, "nest", std.json.Value{ .object = n_map });
         }
 
+        if (self.workspaces.len > 0) {
+            var ws_arr = std.json.Array.init(aa);
+            for (self.workspaces) |w| {
+                try ws_arr.append(std.json.Value{ .string = w });
+            }
+            try root.object.put(aa, "workspaces", std.json.Value{ .array = ws_arr });
+        }
+
+        if (self.native_config) |nc| {
+            var nv_map = std.json.ObjectMap.init(aa, &.{}, &.{}) catch unreachable;
+            if (nc.lib_name.len > 0) {
+                try nv_map.put(aa, "lib_name", std.json.Value{ .string = nc.lib_name });
+            }
+            if (nc.c_sources.len > 0) {
+                var arr = std.json.Array.init(aa);
+                for (nc.c_sources) |s| try arr.append(std.json.Value{ .string = s });
+                try nv_map.put(aa, "c_sources", std.json.Value{ .array = arr });
+            }
+            if (nc.include_dirs.len > 0) {
+                var arr = std.json.Array.init(aa);
+                for (nc.include_dirs) |id| try arr.append(std.json.Value{ .string = id });
+                try nv_map.put(aa, "include_dirs", std.json.Value{ .array = arr });
+            }
+            if (nc.cflags.len > 0) {
+                var arr = std.json.Array.init(aa);
+                for (nc.cflags) |cf| try arr.append(std.json.Value{ .string = cf });
+                try nv_map.put(aa, "cflags", std.json.Value{ .array = arr });
+            }
+            if (nc.link_libs.len > 0) {
+                var arr = std.json.Array.init(aa);
+                for (nc.link_libs) |ll| try arr.append(std.json.Value{ .string = ll });
+                try nv_map.put(aa, "link_libs", std.json.Value{ .array = arr });
+            }
+            if (nc.prebuilt_dir.len > 0) {
+                try nv_map.put(aa, "prebuilt_dir", std.json.Value{ .string = nc.prebuilt_dir });
+            }
+            try root.object.put(aa, "native", std.json.Value{ .object = nv_map });
+        }
+
         var buf: [8192]u8 = undefined;
         var writer = out_file.writer(@import("../main.zig").global_io, &buf);
         try std.json.Stringify.value(root, .{ .whitespace = .indent_2 }, &writer.interface);
@@ -847,8 +1003,13 @@ pub const Manifest = struct {
             entry.value_ptr.deinit(allocator);
         }
         self.bin_dependencies.deinit();
+        for (self.workspaces) |w| allocator.free(w);
+        if (self.workspaces.len > 0) allocator.free(self.workspaces);
         if (self.build_config) |*bc| {
             bc.deinit(allocator);
+        }
+        if (self.native_config) |*nc| {
+            nc.deinit(allocator);
         }
     }
 
