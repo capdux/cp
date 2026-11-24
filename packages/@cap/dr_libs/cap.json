@@ -1,0 +1,27 @@
+{
+  "name": "@cap/dr_libs",
+  "ver": "0.13.17",
+  "description": "Single-header zero-dependency WAV, MP3, and FLAC audio decoders/encoders (dr_libs) for CP",
+  "main": "src/index.cp",
+  "license": "MIT-0",
+  "bin": {
+    "dr_libs": {
+      "path": "c",
+      "src": [
+        "dr_libs_impl.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {},
+    "m": {}
+  }
+}

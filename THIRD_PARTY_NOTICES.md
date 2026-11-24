@@ -139,6 +139,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **whisper.cpp 1.9.6** (`@cap/whisper`) | <https://github.com/ggml-org/whisper.cpp> | MIT | `packages/@cap/whisper/` | Copyright (c) 2023-2026 The ggml authors |
 | **libsodium 1.0.20** (`@cap/sodium`) | <https://github.com/jedisct1/libsodium> | ISC | `packages/@cap/sodium/` | Copyright (c) 2013-2024 Frank Denis |
 | **utf8proc 2.10.0** (`@cap/utf8proc`) | <https://github.com/JuliaStrings/utf8proc> | MIT | `packages/@cap/utf8proc/` | Copyright (c) 2014-2025 JuliaStrings / Jan Behrens |
+| **dr_libs 0.13.17** (`@cap/dr_libs`) | <https://github.com/mackron/dr_libs> | MIT-0 / Public Domain | `packages/@cap/dr_libs/` | Public Domain / MIT-0 (David Reid) |
 
 ---
 
