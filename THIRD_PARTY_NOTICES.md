@@ -122,6 +122,11 @@ The following permissively-licensed Rust reference implementations were audited 
 | **rust-std BTree & rust-bio** | <https://github.com/rust-bio/rust-bio> | MIT OR Apache-2.0 | `lib/ds/bptree.cp`, `lib/ds/intervalTree.cp` | Copyright (c) 2015-2024 The Rust Project & Rust-Bio Developers |
 | **RFC 5545 / RFC 6350** (iCalendar & vCard) | <https://www.rfc-editor.org/rfc/rfc5545> | MIT OR Apache-2.0 | `lib/doc/ical.cp`, `lib/doc/vcard.cp` | IETF RFC 5545 / RFC 6350 Specification Reference |
 | **picohttpparser / zstd / HdrHistogram_c** (Phase 2 `@cap/*` Native C Packages) | <https://github.com/facebook/zstd> | MIT / BSD-3-Clause / CC0-1.0 | `packages/@cap/picohttp/`, `packages/@cap/zstd/`, `packages/@cap/hdrhistogram/` | Copyright (c) H2O / Meta Platforms / HdrHistogram Contributors |
+| **SQLite 3.54.1 Amalgamation** | <https://www.sqlite.org/> | Public Domain | `vendor/sqlite/sqlite3.c`, `vendor/sqlite/sqlite3.h`, `lib/sqlite.cp`, `lib/sql/sqlite.cp` | Public Domain (D. Richard Hipp & SQLite Authors) |
+| **libdeflate 1.25** | <https://github.com/ebiggers/libdeflate> | MIT | `vendor/libdeflate/`, `cap/build.zig` (RFC 1952 `.tgz` gzip engine) | Copyright (c) 2016 Eric Biggers |
+| **LZ4 1.10.0** (`@cap/lz4`) | <https://github.com/lz4/lz4> | BSD-2-Clause | `packages/@cap/lz4/` | Copyright (c) 2011-2024 Yann Collet |
+| **yyjson 0.10.0** (`@cap/yyjson`) | <https://github.com/ibireme/yyjson> | MIT | `packages/@cap/yyjson/` | Copyright (c) 2020-2024 YaoYuan |
+| **LMDB 0.9.33** (`@cap/lmdb`) | <https://github.com/LMDB/lmdb> | OLDAP-2.8 | `packages/@cap/lmdb/` | Copyright (c) 2011-2024 Howard Chu / Symas Corp. |
 
 ---
 
