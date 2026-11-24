@@ -720,3 +720,5 @@ git status --porcelain cpc_dev/src
    - 批量跑多份 `cap/test/*.cp` 时统一使用 4 路并发 + 独立 `--cache-dir=.cap/ws_<tag>/<suite>` 避免缓存锁竞争与串台，PASS 项仅输出汇总计数、仅对 FAIL 项展开错误上下文。
 7. **`cap` 工具链原子构建脚本与报错降噪（实测降幅 79.4% 报错日志 Token，2026-11-24 Iteration 3）**：
    - 构建部署 `cap` 统一调用 `bash scripts/sync_cap.sh [debug|release|fmt]`（一键完成可选 `zig fmt` + `zig build` + 原子部署至 `/root/.cap/bin/cap`，成功仅输出 1 行 52B；失败自动折叠冗长的 `failed command:` 完整参数行与重复 `Build Summary` 树，实测将典型报错从 1,346B 压至 277B，降幅 79.4%），禁止再手写长串 `cd ... && zig build && cp ... && mv ...`。
+8. **大批量文件 Git 提交静默输出节流（实测降幅 99.4% 提交日志 Token，2026-11-25 Iteration 4）**：
+   - 凡单次提交涉及 > 10 个新增/修改文件（如引入 C 生态包或批量重构），统一执行 `git commit -q -m "<msg>" && git show --stat --format="%h %s" HEAD | tail -n 3`，避免打印长达 13KB–26KB 的 `create mode 100644 ...` 文件刷屏（26,106B → ~120B，降幅 99.4%）。
