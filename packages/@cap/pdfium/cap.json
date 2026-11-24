@@ -1,0 +1,15 @@
+{
+  "name": "@cap/pdfium",
+  "ver": "131.0.0",
+  "description": "Google PDFium PDF rendering & text extraction engine (prebuilt dynamic library) for CP",
+  "main": "src/index.cp",
+  "license": "Apache-2.0",
+  "sys": {
+    "pdfium": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {},
+    "m": {},
+    "pthread": {}
+  }
+}

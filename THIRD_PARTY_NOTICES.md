@@ -131,6 +131,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **USearch 2.26.6** (`@cap/usearch`) | <https://github.com/unum-cloud/usearch> | Apache-2.0 | `packages/@cap/usearch/` | Copyright (c) 2023-2025 Unum Cloud |
 | **libyaml 0.2.5** (`@cap/yaml`) | <https://github.com/yaml/libyaml> | MIT | `packages/@cap/yaml/` | Copyright (c) 2017-2020 Ingy döt Net & Kirill Simonov |
 | **DuckDB 1.2.1** (`@cap/duckdb`) | <https://github.com/duckdb/duckdb> | MIT | `packages/@cap/duckdb/` | Copyright (c) 2018-2025 Stichting DuckDB Foundation |
+| **PDFium** (`@cap/pdfium`) | <https://pdfium.googlesource.com/pdfium> | Apache-2.0 | `packages/@cap/pdfium/` | Copyright (c) The PDFium Authors / bblanchon pdfium-binaries |
 
 ---
 
