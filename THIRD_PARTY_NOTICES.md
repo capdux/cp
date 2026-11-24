@@ -133,6 +133,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **DuckDB 1.2.1** (`@cap/duckdb`) | <https://github.com/duckdb/duckdb> | MIT | `packages/@cap/duckdb/` | Copyright (c) 2018-2025 Stichting DuckDB Foundation |
 | **PDFium** (`@cap/pdfium`) | <https://pdfium.googlesource.com/pdfium> | Apache-2.0 | `packages/@cap/pdfium/` | Copyright (c) The PDFium Authors / bblanchon pdfium-binaries |
 | **PCRE2 10.44** (`@cap/pcre2`) | <https://github.com/PCRE2Project/pcre2> | BSD-3-Clause | `packages/@cap/pcre2/` | Copyright (c) 1997-2024 University of Cambridge / Zoltan Herczeg |
+| **ONNX Runtime 1.32.0** (`@cap/onnx`) | <https://github.com/microsoft/onnxruntime> | MIT | `packages/@cap/onnx/` | Copyright (c) Microsoft Corporation |
 
 ---
 

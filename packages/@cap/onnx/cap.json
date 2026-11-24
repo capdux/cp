@@ -1,0 +1,33 @@
+{
+  "name": "@cap/onnx",
+  "ver": "1.32.0",
+  "description": "ONNX Runtime (v1.32.0) high-performance ML inference engine for CP via official prebuilt dynamic library",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "onnx_shim": {
+      "path": ".",
+      "src": [
+        "c/onnx_ffi.c"
+      ],
+      "include": [
+        "include",
+        "c"
+      ],
+      "flag": [
+        "-O3"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "onnxruntime": {
+      "prebuilt": "prebuilt"
+    },
+    "c": {},
+    "m": {},
+    "pthread": {},
+    "dl": {}
+  }
+}
