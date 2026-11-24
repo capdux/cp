@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "request_id": "req_2026_11_24_agent_swarm_009481",
+    "timestamp": 1795512679,
+    "region": "us-east-1",
+    "cluster": "cp-beam-prod-07",
+    "version": "1.0.0",
+    "ok": true,
+    "latency_ms": 1.42
+  },
+  "config": {
+    "max_agents": 1000000,
+    "scheduler": "preemptive-reductions",
+    "zero_copy": true,
+    "gc_enabled": false,
+    "tags": ["native", "zig", "beam", "actor", "raii", "ai-agent"]
+  },
+  "items": [
+    {"id": 1001, "name": "agent-alpha-01", "role": "planner", "score": 98, "active": true, "tokens": 4120},
+    {"id": 1002, "name": "agent-beta-02", "role": "coder", "score": 95, "active": true, "tokens": 8240},
+    {"id": 1003, "name": "agent-gamma-03", "role": "reviewer", "score": 99, "active": true, "tokens": 3190},
+    {"id": 1004, "name": "agent-delta-04", "role": "tester", "score": 91, "active": false, "tokens": 2050},
+    {"id": 1005, "name": "agent-epsilon-05", "role": "researcher", "score": 97, "active": true, "tokens": 6430},
+    {"id": 1006, "name": "agent-zeta-06", "role": "optimizer", "score": 94, "active": true, "tokens": 5110},
+    {"id": 1007, "name": "agent-eta-07", "role": "deployer", "score": 89, "active": true, "tokens": 1875},
+    {"id": 1008, "name": "agent-theta-08", "role": "monitor", "score": 96, "active": true, "tokens": 2940},
+    {"id": 1009, "name": "agent-iota-09", "role": "auditor", "score": 93, "active": false, "tokens": 4520},
+    {"id": 1010, "name": "agent-kappa-10", "role": "synthesizer", "score": 100, "active": true, "tokens": 7310},
+    {"id": 1011, "name": "agent-lambda-11", "role": "indexer", "score": 92, "active": true, "tokens": 3890},
+    {"id": 1012, "name": "agent-mu-12", "role": "router", "score": 97, "active": true, "tokens": 6125}
+  ]
+}

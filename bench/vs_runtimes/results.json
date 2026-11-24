@@ -1,0 +1,203 @@
+{
+  "timestamp_utc": "2026-11-24T15:58:25Z",
+  "host": {
+    "cpu": {
+      "model": "Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz",
+      "logical_cpus": 96,
+      "arch": "x86_64",
+      "os": "Linux 6.12.0-280.el10.x86_64"
+    }
+  },
+  "runtimes": {
+    "cp": {
+      "cpc_version": "cpc 1.0.0",
+      "cap_version": "cap 1.0.0",
+      "zig_version": "0.17.0",
+      "opt_mode": "ReleaseFast"
+    },
+    "bun": {
+      "path": "/root/.bun/bin/bun",
+      "version": "1.3.14"
+    },
+    "node": {
+      "path": "/root/.nvm/versions/node/v26.1.0/bin/node",
+      "version": "v26.1.0"
+    },
+    "python3": {
+      "path": "/usr/bin/python3",
+      "version": "Python 3.12.15"
+    }
+  },
+  "benchmarks": {
+    "sqlite_memory": {
+      "description": "SQLite :memory: 100,000 batch inserts (single tx) + 100,000 PK point lookups",
+      "trials": 3,
+      "results": {
+        "cp": {
+          "write_ms": 117.553,
+          "read_ms": 150.767,
+          "total_ms": 268.32,
+          "checksum": 35002150000,
+          "ops_per_sec": 745378.7
+        },
+        "bun": {
+          "write_ms": 188.518,
+          "read_ms": 249.801,
+          "total_ms": 438.866,
+          "checksum": 35002150000,
+          "ops_per_sec": 455720.0
+        },
+        "node": {
+          "write_ms": 195.681,
+          "read_ms": 394.254,
+          "total_ms": 562.475,
+          "checksum": 35002150000,
+          "ops_per_sec": 355571.4
+        },
+        "python3": {
+          "write_ms": 294.739,
+          "read_ms": 772.199,
+          "total_ms": 1066.938,
+          "checksum": 35002150000,
+          "ops_per_sec": 187452.3
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 1.64,
+        "node": 2.1,
+        "python3": 3.98
+      }
+    },
+    "compute_zero_gc": {
+      "description": "Recursive fib(38) + 10,000,000 u32 FNV-1a array hash reduction (zero GC)",
+      "trials": 3,
+      "results": {
+        "cp": {
+          "fib_ms": 385.042,
+          "reduce_ms": 16.328,
+          "total_ms": 401.483,
+          "fib_res": 39088169,
+          "reduce_hash": 79652421,
+          "reduce_ops_per_sec": 612444880.0
+        },
+        "bun": {
+          "fib_ms": 619.409,
+          "reduce_ms": 183.355,
+          "total_ms": 795.173,
+          "fib_res": 39088169,
+          "reduce_hash": 79652421,
+          "reduce_ops_per_sec": 54539009.0
+        },
+        "node": {
+          "fib_ms": 1654.325,
+          "reduce_ms": 26.544,
+          "total_ms": 1680.869,
+          "fib_res": 39088169,
+          "reduce_hash": 79652421,
+          "reduce_ops_per_sec": 376732971.7
+        },
+        "python3": {
+          "fib_ms": 6795.514,
+          "reduce_ms": 2563.626,
+          "total_ms": 10391.923,
+          "fib_res": 39088169,
+          "reduce_hash": 79652421,
+          "reduce_ops_per_sec": 3900725.0
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 1.98,
+        "node": 4.19,
+        "python3": 25.88
+      }
+    },
+    "cold_start_and_size": {
+      "description": "Process cold-start latency (median of 20 runs) & binary/runtime size",
+      "warmup_runs": 2,
+      "measured_runs": 20,
+      "results": {
+        "cp": {
+          "median_ms": 1.606,
+          "min_ms": 1.454,
+          "max_ms": 1.8,
+          "runs": 20,
+          "binary_size_mb": 3.777,
+          "size_note": "standalone native binary"
+        },
+        "bun": {
+          "median_ms": 15.066,
+          "min_ms": 13.812,
+          "max_ms": 22.216,
+          "runs": 20,
+          "binary_size_mb": 88.456,
+          "size_note": "bun runtime binary"
+        },
+        "node": {
+          "median_ms": 32.143,
+          "min_ms": 28.84,
+          "max_ms": 41.68,
+          "runs": 20,
+          "binary_size_mb": 140.611,
+          "size_note": "node runtime binary"
+        },
+        "python3": {
+          "median_ms": 12.403,
+          "min_ms": 12.222,
+          "max_ms": 13.403,
+          "runs": 20,
+          "binary_size_mb": 0.015,
+          "size_note": "python3 ELF binary (excl. stdlib)"
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 9.38,
+        "node": 20.01,
+        "python3": 7.72
+      }
+    },
+    "json_parse": {
+      "description": "10,000 parses of medium JSON payload (@cap/yyjson vs JSON.parse vs json.loads)",
+      "trials": 3,
+      "payload_bytes": 1749,
+      "results": {
+        "cp": {
+          "parse_ms": 22.068,
+          "iterations": 10000,
+          "payload_bytes": 1749,
+          "checksum": 11740000,
+          "parses_per_sec": 453144.8,
+          "mb_per_sec": 755.83
+        },
+        "bun": {
+          "parse_ms": 108.738,
+          "iterations": 10000,
+          "payload_bytes": 1749,
+          "checksum": 11740000,
+          "parses_per_sec": 91964.2,
+          "mb_per_sec": 153.39
+        },
+        "node": {
+          "parse_ms": 81.367,
+          "iterations": 10000,
+          "payload_bytes": 1749,
+          "checksum": 11740000,
+          "parses_per_sec": 122899.9,
+          "mb_per_sec": 204.99
+        },
+        "python3": {
+          "parse_ms": 230.445,
+          "iterations": 10000,
+          "payload_bytes": 1749,
+          "checksum": 11740000,
+          "parses_per_sec": 43394.3,
+          "mb_per_sec": 72.38
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 4.93,
+        "node": 3.69,
+        "python3": 10.44
+      }
+    }
+  }
+}

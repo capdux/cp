@@ -51,20 +51,20 @@
 
           <div class="hero-stats">
             <div class="stat">
-              <div class="stat-val" id="hero-sqlite-stat">2.64M/s</div>
-              <div class="stat-lbl">SQLite :memory: Lookups</div>
+              <div class="stat-val" id="hero-startup-stat">1.61 ms</div>
+              <div class="stat-lbl">Cold Startup (9.4x vs Bun)</div>
             </div>
             <div class="stat">
-              <div class="stat-val" id="hero-startup-stat">&lt; 3 ms</div>
-              <div class="stat-lbl">Native Cold Startup</div>
+              <div class="stat-val" id="hero-sqlite-stat">1.64x / 2.10x</div>
+              <div class="stat-lbl">SQLite vs Bun / Node</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">755.8 MB/s</div>
+              <div class="stat-lbl">JSON Parse (4.93x vs Bun)</div>
             </div>
             <div class="stat">
               <div class="stat-val">43+</div>
               <div class="stat-lbl">Permissive @cap/* Packages</div>
-            </div>
-            <div class="stat">
-              <div class="stat-val">0 GC</div>
-              <div class="stat-lbl">Deterministic Stack RAII</div>
             </div>
           </div>
         </div>

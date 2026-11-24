@@ -70,26 +70,51 @@ fn main() {
 }`,
 };
 
-// Default benchmark dataset (automatically overwritten when ../bench/vs_runtimes/results.json is loaded)
+// Real verified same-machine benchmarks (Intel Xeon Platinum 8175M, Linux 6.12 x86_64)
+// CP v1.0.0 (-OReleaseFast) vs Bun 1.3.14 vs Node v26.1.0 vs Python 3.12.15
 const DEFAULT_BENCHMARKS = [
   {
-    title: "SQLite :memory: Point Lookups (100k)",
-    subtitle: "Higher is better (ops/sec) · Embedded SQLite 3.54.1",
-    higherIsBetter: true,
+    title: "Cold Startup Latency (20-run median)",
+    subtitle: "Lower is better (ms) · CP 1.61ms (9.38x faster than Bun, 20.01x vs Node)",
+    higherIsBetter: false,
     rows: [
-      { label: "CP v1.0 (cap:sqlite)", key: "cp", value: 2641434, display: "2.64M ops/s" },
-      { label: "Bun (bun:sqlite)", key: "bun", value: 1100000, display: "1.10M ops/s" },
-      { label: "Python 3 (sqlite3)", key: "py", value: 185000, display: "0.19M ops/s" },
+      { label: "CP v1.0 (3.78 MB native bin)", key: "cp", value: 1.61, display: "1.61 ms" },
+      { label: "Python 3.12.15", key: "py", value: 12.40, display: "12.40 ms" },
+      { label: "Bun 1.3.14 (88.5 MB)", key: "bun", value: 15.07, display: "15.07 ms" },
+      { label: "Node v26.1.0 (140.6 MB)", key: "node", value: 32.14, display: "32.14 ms" },
     ],
   },
   {
-    title: "SQLite :memory: Bulk Insert (100k)",
-    subtitle: "Higher is better (ops/sec) · Single transaction",
+    title: "JSON Parsing Throughput (10,000 × 1.75 KB)",
+    subtitle: "Higher is better (MB/s) · CP @cap/yyjson 4.93x faster than Bun",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 (cap:sqlite)", key: "cp", value: 2256356, display: "2.26M ops/s" },
-      { label: "Bun (bun:sqlite)", key: "bun", value: 920000, display: "0.92M ops/s" },
-      { label: "Python 3 (sqlite3)", key: "py", value: 210000, display: "0.21M ops/s" },
+      { label: "CP v1.0 (@cap/yyjson)", key: "cp", value: 755.8, display: "755.8 MB/s (22.07 ms)" },
+      { label: "Node v26.1.0 (JSON.parse)", key: "node", value: 205.0, display: "205.0 MB/s (81.37 ms)" },
+      { label: "Bun 1.3.14 (JSON.parse)", key: "bun", value: 153.4, display: "153.4 MB/s (108.74 ms)" },
+      { label: "Python 3.12 (json.loads)", key: "py", value: 72.4, display: "72.4 MB/s (230.44 ms)" },
+    ],
+  },
+  {
+    title: "SQLite :memory: 100K Insert + 100K Point Lookup",
+    subtitle: "Higher is better (ops/sec) · CP cap:sqlite 1.64x vs Bun, 2.10x vs Node",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 (cap:sqlite 3.54.1)", key: "cp", value: 745400, display: "745.4K ops/s (268.3 ms)" },
+      { label: "Bun 1.3.14 (bun:sqlite)", key: "bun", value: 455700, display: "455.7K ops/s (438.9 ms)" },
+      { label: "Node v26.1.0 (node:sqlite)", key: "node", value: 355600, display: "355.6K ops/s (562.5 ms)" },
+      { label: "Python 3.12 (sqlite3)", key: "py", value: 187500, display: "187.5K ops/s (1066.9 ms)" },
+    ],
+  },
+  {
+    title: "Zero-GC Compute (fib(38) + 10M u32 Reduction)",
+    subtitle: "Lower is better (ms) · CP 1.98x vs Bun, 4.19x vs Node, 25.88x vs Python",
+    higherIsBetter: false,
+    rows: [
+      { label: "CP v1.0 (-OReleaseFast)", key: "cp", value: 401.48, display: "401.5 ms" },
+      { label: "Bun 1.3.14", key: "bun", value: 795.17, display: "795.2 ms" },
+      { label: "Node v26.1.0", key: "node", value: 1680.87, display: "1,680.9 ms" },
+      { label: "Python 3.12.15", key: "py", value: 10391.92, display: "10,391.9 ms" },
     ],
   },
 ];
