@@ -24,6 +24,8 @@ export {
 } from "./rmq.cp";
 
 export {
+    SKIPLIST_MAX_LEVEL,
+    SKIPLIST_DEFAULT_MAX_LEVEL,
     SkipListError,
     SkipEntry,
     SkipList,
@@ -115,6 +117,10 @@ export {
     RopeError,
     Node,
     NodePtr,
+    simdRopeCountNewlines,
+    scalarRopeCountNewlines,
+    simdRopeFindNewline,
+    scalarRopeFindNewline,
 } from "./rope.cp";
 
 // --- Maps, Buffers, Bitsets & Probabilistic Sketches ---

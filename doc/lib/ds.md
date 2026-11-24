@@ -16,7 +16,7 @@
 | :--- | :--- |
 | `lib/ds/treap.cp` | 零分配随机平衡树（Treap）有序集合/字典与次序统计 |
 | `lib/ds/rmq.cp` | Sparse Table `O(1)` RMQ（Min/Max/ArgMin/GCD）、欧拉序 LCA 与滑动窗口极值 |
-| `lib/ds/skiplist.cp` | 32 层有序跳表 MemTable 与范围扫描索引 |
+| `lib/ds/skiplist.cp` | 32 层有序跳表 MemTable 与范围扫描索引（对标 `crossbeam-rs/crossbeam` MIT/Apache-2.0 加固：最大层数夹紧 `initClamped`、`upperBound`/`predecessor`/`successor`/`floor` 与严格单调不变量校验 `verifyInvariants`） |
 | `lib/ds/segtree.cp` | 树状数组（`FenwickTree`）与懒标记线段树（`LazySegmentTree`）区间查询/更新 |
 | `lib/ds/dsu.cp` | 路径压缩并查集（`DisjointSet`）、带权并查集（`WeightedDsu`）与可撤销并查集（`RollbackDsu`） |
 | `lib/ds/intervalTree.cp` | 泛型增广区间树（重叠区间检索与点刺查询） |
@@ -26,7 +26,7 @@
 | `lib/ds/suffix.cp` | 后缀数组、Kasai LCP 数组、模式范围搜索、不同子串计数与最长重复子串 |
 | `lib/ds/kmp.cp` | KMP 前缀函数、模式搜索、最短周期、Z-Algorithm 与 Manacher 最长回文子串 |
 | `lib/ds/ahoCorasick.cp` | Aho-Corasick 多模式自动机（对标 `BurntSushi/aho-corasick`：`Standard`/`LeftmostFirst`/`LeftmostLongest`、ASCII 大小写折叠、零堆扫描/批量替换与 `cap:simd` 预过滤） |
-| `lib/ds/rope.cp` | 平衡 Rope 文本缓冲（`O(log n)` 拼接、切分、插入、删除与行索引） |
+| `lib/ds/rope.cp` | 平衡 Rope 文本缓冲（对标 `cessen/ropey` MIT 加固：`O(log n)` 零分配删除重平衡、`splitAt`/`concat`/`verifyInvariants` 与 16-lane SIMD `\n` 计数/定位引擎） |
 | `lib/ds/bimap.cp` | 泛型双向 1-to-1 映射 `BiMap(K, V)` 与 `StringBiMap` |
 | `lib/ds/circBuf.cp` | 泛型环形队列/循环缓冲区 `RingBuffer(T)` |
 | `lib/ds/bitset.cp` | 64-bit 字加速位集合（`BitSet`，按位与/或/异或/计数/前导搜索） |
@@ -43,7 +43,7 @@
 ### 1. 有序树、区间查询与并查集
 - **`treap.cp`**：`TREAP_NIL`, `TreapNode`, `TreapEntry`, `Treap`
 - **`rmq.cp`**：`floorLog2`, `sparseTableCells`, `gcdU64`, `RmqMin`, `RmqMax`, `RmqArgMin`, `RangeGcd`, `EulerLca`, `slidingWindowMin`, `slidingWindowMax`
-- **`skiplist.cp`**：`SkipListError`, `SkipEntry`, `SkipList`
+- **`skiplist.cp`**：`SKIPLIST_MAX_LEVEL`, `SKIPLIST_DEFAULT_MAX_LEVEL`, `SkipListError`, `SkipEntry`, `SkipList`（`init`, `initClamped`, `initWithSeed`, `upsert`, `get`, `contains`, `removeKey`, `lowerBound`, `upperBound`, `predecessor`, `successor`, `floor`, `first`, `last`, `rangeScan`, `verifyInvariants`；测试：`cap/test/testDsRopeSkipRustRefSuite.cp`）
 - **`segtree.cp`**：`SegTreeError`, `RangeStats`, `FenwickTree`, `LazySegmentTree`
 - **`dsu.cp`**：`DsuError`, `DisjointSet`, `WeightedDsu`, `RollbackDsu`
 - **`intervalTree.cp`**：`IntervalError`, `Interval`, `IntervalTree`
@@ -57,7 +57,7 @@
 - **`suffix.cp`**：`SuffixWorkspace`, `OccurrenceRange`, `LongestRepeat`, `buildSuffixArray`, `buildLcpArray`, `findPatternRange`, `countDistinctSubstrings`, `longestRepeatedSubstring`
 - **`kmp.cp`**：`PalindromeSpan`, `computePrefixFunction`, `kmpFindFirst`, `kmpFindAll`, `kmpCount`, `shortestPeriod`, `computeZArray`, `manacherLongestPalindrome`, `countPalindromicSubstrings`
 - **`ahoCorasick.cp`**：`MatchKind`（`Standard` / `LeftmostFirst` / `LeftmostLongest`）, `AcError`, `AhoCorasickOptions`, `Match`, `AhoCorasick`（`init`, `initWithOptions`, `deinit`, `prefilterActive`, `prefilterByteCount`, `findFirst`, `findNextAt`, `findAllNonOverlapping`, `findAllOverlappingInto`, `findAllOverlapping`, `replaceAllInto`, `containsAny`）
-- **`rope.cp`**：`Rope`, `RopeError`, `Node`, `NodePtr`
+- **`rope.cp`**：`Rope`（`init`, `fromSlice`, `insert`, `delete`, `concat`, `splitAt`, `charAt`, `sliceRange`, `lineAt`, `lineCount`, `len`, `toString`, `verifyInvariants`）, `RopeError`, `Node`, `NodePtr`, `simdRopeCountNewlines`, `scalarRopeCountNewlines`, `simdRopeFindNewline`, `scalarRopeFindNewline`（测试：`cap/test/testDsRopeSkipRustRefSuite.cp`）
 
 ### 4. 映射、缓冲、位图与概率草图
 - **`bimap.cp`**：`BiMap`, `BiMapError`, `StringBiMap`
