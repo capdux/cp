@@ -107,6 +107,7 @@ The following permissively-licensed Rust reference implementations were audited 
 | **earcutr** (`donbright`) & **parry** (`dimforge`) | <https://github.com/dimforge/parry> | ISC / Apache-2.0 | `lib/gfx/earcut.cp`, `lib/gfx/gjk.cp` | Copyright (c) 2018-2024 Mapbox / Dimforge Contributors |
 | **flatbuffers** (`google`) | <https://github.com/google/flatbuffers> | Apache-2.0 | `lib/compiler/flatbuf.cp`, `lib/compiler/flexbuf.cp` | Copyright (c) 2014-2024 Google Inc. |
 | **fjall** (`fjall-rs`) | <https://github.com/fjall-rs/fjall> | MIT OR Apache-2.0 | `lib/db/walRecover.cp`, `lib/db/writeBatch.cp` | Copyright (c) 2023-2024 Marvin (fjall-rs) |
+| **RustCrypto/formats** (`x509-cert`, `x509-ocsp`) | <https://github.com/RustCrypto/formats> | MIT OR Apache-2.0 | `lib/auth/csr.cp`, `lib/auth/crl.cp`, `lib/auth/ocsp.cp` | Copyright (c) 2020-2024 RustCrypto Developers (RFC 2986/5280/6960) |
 
 ---
 

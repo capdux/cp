@@ -27,10 +27,10 @@
 | `lib/auth/asn1X509.cp` | Arena 驱动的 X.509 v3 证书元数据与 SHA-256 指纹检查器（`X509Inspector`） |
 | `lib/auth/pem.cp` | RFC 7468 PEM 块与证书链多块解析/编码器（对标 `RustCrypto/formats` `pem-rfc7468` MIT/Apache-2.0 加固：严格边界、规范 Base64 零填充尾位校验、`PemBundleIter` / `decodePemInto` / `encodePemStrict`、`cap:simd` 与 16-lane SIMD 加速） |
 | `lib/auth/x509.cp` | RFC 5280 X.509 v3 证书解析、RFC 6125 SAN/主机名匹配与有效期校验（对标 `RustCrypto/formats` 加固：`hasValidValidityOrder()`、16-lane SIMD 原始 DN 比对） |
-| `lib/auth/csr.cp` | RFC 2986 PKCS#10 证书签名请求（CSR）DER 解析器 |
-| `lib/auth/crl.cp` | RFC 5280 X.509 证书吊销列表（CRL）DER 解析与统计器 |
-| `lib/auth/ocsp.cp` | RFC 6960 在线证书状态协议（OCSP）请求与响应 DER 解析器 |
-| `lib/auth/index.cp` | `cap:auth` 与 `cap.auth` 统一零冲突公开导出入口（共 254 符号） |
+| `lib/auth/csr.cp` | RFC 2986 PKCS#10 证书签名请求（CSR）DER 解析器（对标 `RustCrypto/formats` MIT/Apache-2.0 加固：严格 DER 长度/不定长拒绝/深度与数量上限/`version == 0`/`validateCsrStrict`/16-lane SIMD `simdPkiBytesEqual` & `simdPkiCopyBytes`） |
+| `lib/auth/crl.cp` | RFC 5280 X.509 证书吊销列表（CRL）DER 解析与统计器（对标 `RustCrypto/formats` MIT/Apache-2.0 加固：严格 DER/时间/v1-v2/TBS 与外层签名算法一致/吊销条目防溢出/`validateCrlStrict`/SIMD 序列号查找 `findRevokedEntry` & `isSerialRevoked`） |
+| `lib/auth/ocsp.cp` | RFC 6960 在线证书状态协议（OCSP）请求与响应 DER 解析器（对标 `RustCrypto/formats` MIT/Apache-2.0 加固：严格状态枚举 `0..=6` 拒绝保留值 `4`/BasicOCSPResponse 边界/SIMD `ocspCertIdMatches` & `findSingleResponse`/`validateOcspStrict`） |
+| `lib/auth/index.cp` | `cap:auth` 与 `cap.auth` 统一零冲突公开导出入口（共 274 符号） |
 
 ---
 
@@ -51,7 +51,7 @@
 ### 3. PKI 与 X.509 证书体系
 - **ASN.1 DER（`asn1Der.cp`, `asn1X509.cp`）**：`DER_MAX_DEPTH` (`32`), `ASN1_MAX_DEPTH`, `Asn1Error`, `DerElement` (`copyBytesSimd` / `eqlBytesSimd` / `isValidIa5StringSimd` / `isValidPrintableStringSimd`), `DerReader`, `DerWriter`, `OidCodec` (`validate` / `encode` / `decode`), `X509CertInfo`, `X509Inspector`；回归测试：`cap/test/testAuthDerX509RustRefSuite.cp`（含 `RustCrypto/formats` `rsa2048-crt.der`、DER 6 类非规范编码拒绝、SIMD 0 差异对拍与 1,300 组 PRNG Fuzz）
 - **PEM（`pem.cp`）**：`PemError`, `PemHeader`, `PemBlock`, `PemDecodedSlice`, `PemRawSpan`, `PemBundleIter`, `parse`, `parseWithMaxBlocks`, `parseFirst`, `encode`, `encodePemStrict`, `encodeWithHeaders`, `encodeChain`, `decodePemInto`, `freeBlocks`（测试：`cap/test/testAuthPemRustRefSuite.cp`）
-- **X.509 / CSR / CRL / OCSP**：`X509Certificate` (`hasValidValidityOrder`), `parseAsn1Time`, `parseCsrDer`, `isCsrDer`, `parseCrlDer`, `summarizeCrl`, `parseOcspRequestDer`, `parseOcspResponseDer`
+- **X.509 / CSR / CRL / OCSP**：`X509Certificate` (`hasValidValidityOrder`), `parseAsn1Time`, `CSR_MAX_DER_LEN`, `CSR_MAX_DEPTH`, `CSR_MAX_RDNS`, `CSR_MAX_ATTRIBUTES`, `scalarPkiBytesEqual`, `simdPkiBytesEqual`, `scalarPkiCopyBytes`, `simdPkiCopyBytes`, `parseCsrDer`, `validateCsrStrict`, `isCsrDer`, `CRL_MAX_DER_LEN`, `CRL_MAX_DEPTH`, `CRL_MAX_REVOKED_ENTRIES`, `parseCrlDer`, `validateCrlStrict`, `summarizeCrl`, `OCSP_MAX_DER_LEN`, `OCSP_MAX_DEPTH`, `OCSP_MAX_ENTRIES`, `ocspCertIdMatches`, `parseOcspRequestDer`, `parseOcspResponseDer`, `validateOcspResponseStrict`, `validateOcspRequestStrict`, `validateOcspStrict`；回归测试：`cap/test/testAuthPkiExtRustRefSuite.cp`（含合法合成 DER CSR/CRL/OCSP 全解析与吊销查询、非规范 DER/截断/非法版本/保留状态/尾随垃圾拦截、16-lane SIMD 0 差异对拍与 1,800 组 PRNG Fuzz）
 
 ---
 

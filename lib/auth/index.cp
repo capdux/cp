@@ -278,6 +278,10 @@ export {
 } from "./x509.cp";
 
 export {
+    CSR_MAX_DER_LEN,
+    CSR_MAX_DEPTH,
+    CSR_MAX_RDNS,
+    CSR_MAX_ATTRIBUTES,
     OID_CN,
     OID_C,
     OID_L,
@@ -286,16 +290,24 @@ export {
     OID_OU,
     OID_EXTENSION_REQUEST,
     OID_SAN,
+    scalarPkiBytesEqual,
+    simdPkiBytesEqual,
+    scalarPkiCopyBytes,
+    simdPkiCopyBytes,
     CsrRdnAttr,
     CsrSanEntry,
     CsrParsed,
     CsrSubjectIter,
     CsrSanIter,
     parseCsrDer,
+    validateCsrStrict,
     isCsrDer,
 } from "./csr.cp";
 
 export {
+    CRL_MAX_DER_LEN,
+    CRL_MAX_DEPTH,
+    CRL_MAX_REVOKED_ENTRIES,
     OID_CRL_NUMBER,
     OID_CRL_REASON,
     CrlReason,
@@ -305,16 +317,21 @@ export {
     CrlStats,
     CrlRevokedIter,
     parseCrlDer,
+    validateCrlStrict,
     isCrlDer,
     summarizeCrl,
 } from "./crl.cp";
 
 export {
+    OCSP_MAX_DER_LEN,
+    OCSP_MAX_DEPTH,
+    OCSP_MAX_ENTRIES,
     OID_OCSP_BASIC,
     OcspResponseStatus,
     ocspResponseStatusFromU8,
     OcspCertStatus,
     OcspCertId,
+    ocspCertIdMatches,
     OcspSingleResponse,
     OcspResponse,
     OcspSingleIter,
@@ -322,4 +339,7 @@ export {
     OcspReqIter,
     parseOcspResponseDer,
     parseOcspRequestDer,
+    validateOcspResponseStrict,
+    validateOcspRequestStrict,
+    validateOcspStrict,
 } from "./ocsp.cp";

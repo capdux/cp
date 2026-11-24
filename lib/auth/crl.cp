@@ -1,7 +1,19 @@
+// Reference-hardened against RustCrypto/formats (MIT OR Apache-2.0) & RFC 2986/5280/6960
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 5280 X.509 CRL DER Parser) | Created: 2026-11-22
 // Pure CP zero-heap-allocation RFC 5280 Section 5 X.509 v1/v2 CRL ASN.1 DER parser:
-// TBSCertList raw slice for verification, UTCTime/GeneralizedTime support, revoked certificate
-// iteration with CRLReason extraction, O(N) serial lookup, and single-pass summarization.
+// TBSCertList raw slice for verification, UTCTime/GeneralizedTime strict validation, revoked certificate
+// iteration with CRLReason extraction, SIMD-accelerated serial lookup, and single-pass summarization.
+
+import { simdPkiBytesEqual } from "./csr.cp";
+
+/// Maximum accepted CRL DER input length (16 MiB) to guard against oversized allocations/DoS.
+pub const CRL_MAX_DER_LEN: usize = 16 * 1024 * 1024;
+
+/// Maximum ASN.1 DER container nesting depth enforced during strict CRL validation.
+pub const CRL_MAX_DEPTH: usize = 16;
+
+/// Maximum revoked certificate entries accepted before rejecting overflow / resource exhaustion.
+pub const CRL_MAX_REVOKED_ENTRIES: usize = 1000000;
 
 /// X.509 `cRLNumber` extension OID (`2.5.29.20`).
 pub const OID_CRL_NUMBER: []const u8 = "\x55\x1D\x14";
@@ -66,18 +78,28 @@ pub struct CrlParsed {
         return CrlRevokedIter.init(_.revoked_list_der);
     }
 
-    /// Performs a zero-allocation O(N) scan checking whether `serial_bytes` is revoked.
+    /// Finds and returns the revoked entry matching `serial_bytes` using 16-lane SIMD comparison.
     /// Automatically normalizes leading `0x00` DER sign padding bytes on both sides.
-    fn isSerialRevoked(serial_bytes: []const u8): bool {
-        const needle = stripLeadingZeros(serial_bytes);
+    fn findRevokedEntry(serial_bytes: []const u8): CrlRevokedEntry? {
+        const needle = crlStripLeadingZeros(serial_bytes);
         if (needle.len == 0) {
-            return false;
+            return null;
         }
         let it = _.revoked();
         while (entry := it.next()) {
-            if (bytesEqual(entry.serial_bytes, needle)) {
-                return true;
+            if (simdPkiBytesEqual(entry.serial_bytes, needle)) {
+                return entry;
             }
+        }
+        return null;
+    }
+
+    /// Performs a zero-allocation SIMD-accelerated O(N) scan checking whether `serial_bytes` is revoked.
+    /// Automatically normalizes leading `0x00` DER sign padding bytes on both sides.
+    fn isSerialRevoked(serial_bytes: []const u8): bool {
+        if (entry := _.findRevokedEntry(serial_bytes)) {
+            * = entry;
+            return true;
         }
         return false;
     }
@@ -91,18 +113,18 @@ pub struct CrlStats {
     has_next_update: bool = false,
 }
 
-const TAG_BOOLEAN: u8 = 0x01;
-const TAG_INTEGER: u8 = 0x02;
-const TAG_BIT_STRING: u8 = 0x03;
-const TAG_OCTET_STRING: u8 = 0x04;
-const TAG_OID: u8 = 0x06;
-const TAG_ENUMERATED: u8 = 0x0A;
-const TAG_UTC_TIME: u8 = 0x17;
-const TAG_GEN_TIME: u8 = 0x18;
-const TAG_SEQUENCE: u8 = 0x30;
-const TAG_CTX0_CONS: u8 = 0xA0;
+const CRL_TAG_BOOLEAN: u8 = 0x01;
+const CRL_TAG_INTEGER: u8 = 0x02;
+const CRL_TAG_BIT_STRING: u8 = 0x03;
+const CRL_TAG_OCTET_STRING: u8 = 0x04;
+const CRL_TAG_OID: u8 = 0x06;
+const CRL_TAG_ENUMERATED: u8 = 0x0A;
+const CRL_TAG_UTC_TIME: u8 = 0x17;
+const CRL_TAG_GEN_TIME: u8 = 0x18;
+const CRL_TAG_SEQUENCE: u8 = 0x30;
+const CRL_TAG_CTX0_CONS: u8 = 0xA0;
 
-struct DerTlv {
+struct CrlDerTlv {
     tag: u8,
     raw: []const u8,
     value: []const u8,
@@ -110,24 +132,10 @@ struct DerTlv {
 }
 
 // ---------------------------------------------------------------------------
-// Internal Strict ASN.1 DER Helpers
+// Internal Strict ASN.1 DER Helpers (RustCrypto/formats der compliant)
 // ---------------------------------------------------------------------------
 
-fn bytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn stripLeadingZeros(s: []const u8): []const u8 {
+fn crlStripLeadingZeros(s: []const u8): []const u8 {
     let start: usize = 0;
     while (start + 1 < s.len && s[start] == 0) {
         start += 1;
@@ -135,15 +143,99 @@ fn stripLeadingZeros(s: []const u8): []const u8 {
     return s[start..];
 }
 
-fn isTimeTag(tag: u8): bool {
-    return tag == TAG_UTC_TIME || tag == TAG_GEN_TIME;
+fn crlIsTimeTag(tag: u8): bool {
+    return tag == CRL_TAG_UTC_TIME || tag == CRL_TAG_GEN_TIME;
 }
 
-fn readDerTlv(data: []const u8, pos: usize): DerTlv? {
+fn crlParseTwoDigits(s: []const u8, idx: usize): u8? {
+    if (idx + 2 > s.len) {
+        return null;
+    }
+    const a = s[idx];
+    const b = s[idx + 1];
+    if (a < '0' || a > '9' || b < '0' || b > '9') {
+        return null;
+    }
+    return (a - '0') * 10 + (b - '0');
+}
+
+/// Validates RFC 5280 DER UTCTime (`YYMMDDHHMMSSZ`) or GeneralizedTime (`YYYYMMDDHHMMSSZ`).
+fn crlIsValidDerTime(tag: u8, val: []const u8): bool {
+    let off: usize = 0;
+    if (tag == CRL_TAG_UTC_TIME) {
+        if (val.len != 13 || val[12] != 'Z') {
+            return false;
+        }
+        if (crlParseTwoDigits(val, 0) == null) {
+            return false;
+        }
+        off = 2;
+    } else if (tag == CRL_TAG_GEN_TIME) {
+        if (val.len != 15 || val[14] != 'Z') {
+            return false;
+        }
+        if (crlParseTwoDigits(val, 0) == null || crlParseTwoDigits(val, 2) == null) {
+            return false;
+        }
+        off = 4;
+    } else {
+        return false;
+    }
+
+    const month = crlParseTwoDigits(val, off) ?? return false;
+    const day = crlParseTwoDigits(val, off + 2) ?? return false;
+    const hour = crlParseTwoDigits(val, off + 4) ?? return false;
+    const minute = crlParseTwoDigits(val, off + 6) ?? return false;
+    const second = crlParseTwoDigits(val, off + 8) ?? return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (hour > 23 || minute > 59 || second > 59) return false;
+    return true;
+}
+
+fn crlIsValidDerInteger(val: []const u8): bool {
+    if (val.len == 0) {
+        return false;
+    }
+    if (val.len > 1) {
+        if (val[0] == 0x00 && (val[1] & 0x80) == 0) {
+            return false;
+        }
+        if (val[0] == 0xFF && (val[1] & 0x80) != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn crlIsValidDerBoolean(val: []const u8): bool {
+    return val.len == 1 && (val[0] == 0x00 || val[0] == 0xFF);
+}
+
+fn crlIsValidDerOid(val: []const u8): bool {
+    if (val.len == 0 || (val[val.len - 1] & 0x80) != 0) {
+        return false;
+    }
+    let i: usize = 1;
+    let at_arc_start = true;
+    while (i < val.len) : (i += 1) {
+        const b = val[i];
+        if (at_arc_start && b == 0x80) {
+            return false;
+        }
+        at_arc_start = (b & 0x80) == 0;
+    }
+    return true;
+}
+
+fn crlReadDerTlv(data: []const u8, pos: usize): CrlDerTlv? {
     if (pos + 2 > data.len) {
         return null;
     }
     const tag = data[pos];
+    if (tag == 0x00 || (tag & 0x1F) == 0x1F) {
+        return null;
+    }
     const len_byte = data[pos + 1];
     let val_start: usize = pos + 2;
     let val_len: usize = 0;
@@ -152,6 +244,7 @@ fn readDerTlv(data: []const u8, pos: usize): DerTlv? {
         val_len = len_byte as usize;
     } else {
         const num_octets = (len_byte & 0x7F) as usize;
+        // Reject indefinite length (0x80) and > 4-byte lengths.
         if (num_octets == 0 || num_octets > 4) {
             return null;
         }
@@ -162,9 +255,8 @@ fn readDerTlv(data: []const u8, pos: usize): DerTlv? {
             return null;
         }
         let i: usize = 0;
-        while (i < num_octets) {
+        while (i < num_octets) : (i += 1) {
             val_len = (val_len << 8) | (data[val_start + i] as usize);
-            i += 1;
         }
         if (val_len < 128) {
             return null;
@@ -176,7 +268,7 @@ fn readDerTlv(data: []const u8, pos: usize): DerTlv? {
         return null;
     }
     const end = val_start + val_len;
-    return DerTlv {
+    return CrlDerTlv {
         tag: tag,
         raw: data[pos..end],
         value: data[val_start..end],
@@ -184,48 +276,89 @@ fn readDerTlv(data: []const u8, pos: usize): DerTlv? {
     };
 }
 
-fn parseAlgIdOid(seq_body: []const u8): ([]const u8)? {
-    if (oid_tlv := readDerTlv(seq_body, 0)) {
-        if (oid_tlv.tag != TAG_OID || oid_tlv.value.len == 0) {
+fn crlParseAlgIdOid(seq_body: []const u8): ([]const u8)? {
+    if (oid_tlv := crlReadDerTlv(seq_body, 0)) {
+        if (oid_tlv.tag != CRL_TAG_OID || !crlIsValidDerOid(oid_tlv.value)) {
             return null;
+        }
+        if (oid_tlv.next_pos < seq_body.len) {
+            if (param := crlReadDerTlv(seq_body, oid_tlv.next_pos)) {
+                if (param.next_pos != seq_body.len) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         }
         return oid_tlv.value;
     }
     return null;
 }
 
-fn stripZeroUnusedBitString(val: []const u8): ([]const u8)? {
-    if (val.len < 1 || val[0] != 0) {
+fn crlStripZeroUnusedBitString(val: []const u8): ([]const u8)? {
+    if (val.len < 2 || val[0] != 0) {
         return null;
     }
     return val[1..];
+}
+
+fn crlValidateDerTree(slice: []const u8, depth: usize, max_depth: usize): bool {
+    if (depth > max_depth) {
+        return false;
+    }
+    let pos: usize = 0;
+    while (pos < slice.len) {
+        if (tlv := crlReadDerTlv(slice, pos)) {
+            pos = tlv.next_pos;
+            if (tlv.tag == CRL_TAG_BOOLEAN && !crlIsValidDerBoolean(tlv.value)) {
+                return false;
+            }
+            if (tlv.tag == CRL_TAG_INTEGER && !crlIsValidDerInteger(tlv.value)) {
+                return false;
+            }
+            if (tlv.tag == CRL_TAG_OID && !crlIsValidDerOid(tlv.value)) {
+                return false;
+            }
+            if ((tlv.tag & 0x20) != 0) {
+                if (!crlValidateDerTree(tlv.value, depth + 1, max_depth)) {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+    return pos == slice.len;
 }
 
 /// Extracts `CRLReason` (`OID_CRL_REASON` -> `OCTET STRING` -> `ENUMERATED`) from `crlEntryExtensions`.
 fn extractCrlReason(exts_body: []const u8): CrlReason {
     let pos: usize = 0;
     while (pos < exts_body.len) {
-        if (ext := readDerTlv(exts_body, pos)) {
+        if (ext := crlReadDerTlv(exts_body, pos)) {
             pos = ext.next_pos;
-            if (ext.tag != TAG_SEQUENCE) {
+            if (ext.tag != CRL_TAG_SEQUENCE) {
                 continue;
             }
-            if (eoid := readDerTlv(ext.value, 0)) {
-                if (eoid.tag != TAG_OID || !bytesEqual(eoid.value, OID_CRL_REASON)) {
+            if (eoid := crlReadDerTlv(ext.value, 0)) {
+                if (eoid.tag != CRL_TAG_OID || !simdPkiBytesEqual(eoid.value, OID_CRL_REASON)) {
                     continue;
                 }
                 let fpos = eoid.next_pos;
-                if (fpos < ext.value.len && ext.value[fpos] == TAG_BOOLEAN) {
-                    if (crit := readDerTlv(ext.value, fpos)) {
+                if (fpos < ext.value.len && ext.value[fpos] == CRL_TAG_BOOLEAN) {
+                    if (crit := crlReadDerTlv(ext.value, fpos)) {
+                        if (!crlIsValidDerBoolean(crit.value)) {
+                            return CrlReason.none;
+                        }
                         fpos = crit.next_pos;
                     } else {
                         return CrlReason.none;
                     }
                 }
-                if (oct := readDerTlv(ext.value, fpos)) {
-                    if (oct.tag == TAG_OCTET_STRING) {
-                        if (en := readDerTlv(oct.value, 0)) {
-                            if (en.tag == TAG_ENUMERATED && en.value.len == 1) {
+                if (oct := crlReadDerTlv(ext.value, fpos)) {
+                    if (oct.tag == CRL_TAG_OCTET_STRING && oct.next_pos == ext.value.len) {
+                        if (en := crlReadDerTlv(oct.value, 0)) {
+                            if (en.tag == CRL_TAG_ENUMERATED && en.value.len == 1 && en.next_pos == oct.value.len) {
                                 return crlReasonFromU8(en.value[0]);
                             }
                         }
@@ -240,16 +373,21 @@ fn extractCrlReason(exts_body: []const u8): CrlReason {
 }
 
 // ---------------------------------------------------------------------------
-// Public CRL Parsing, Iteration & Summary API
+// Public CRL Parsing, Validation, Iteration & Summary API
 // ---------------------------------------------------------------------------
 
 /// Parses an RFC 5280 X.509 v1/v2 DER-encoded Certificate Revocation List.
-/// Strictly enforces valid DER encoding, `BIT STRING` `unused_bits == 0`, and zero trailing bytes.
+/// Strictly enforces canonical DER encoding, `BIT STRING` `unused_bits == 0`, valid time tags,
+/// and zero trailing bytes.
 pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
+    if (der_data.len == 0 || der_data.len > CRL_MAX_DER_LEN) {
+        return null;
+    }
+
     // Outer CertificateList SEQUENCE
     let outer_body: []const u8 = "";
-    if (outer := readDerTlv(der_data, 0)) {
-        if (outer.tag != TAG_SEQUENCE || outer.next_pos != der_data.len) {
+    if (outer := crlReadDerTlv(der_data, 0)) {
+        if (outer.tag != CRL_TAG_SEQUENCE || outer.next_pos != der_data.len) {
             return null;
         }
         outer_body = outer.value;
@@ -262,8 +400,8 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
     // 1. tbsCertList SEQUENCE
     let tbs_raw: []const u8 = "";
     let tbs_body: []const u8 = "";
-    if (tbs := readDerTlv(outer_body, pos)) {
-        if (tbs.tag != TAG_SEQUENCE) {
+    if (tbs := crlReadDerTlv(outer_body, pos)) {
+        if (tbs.tag != CRL_TAG_SEQUENCE) {
             return null;
         }
         tbs_raw = tbs.raw;
@@ -275,11 +413,11 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 2. signatureAlgorithm SEQUENCE
     let sig_alg_oid: []const u8 = "";
-    if (sa := readDerTlv(outer_body, pos)) {
-        if (sa.tag != TAG_SEQUENCE) {
+    if (sa := crlReadDerTlv(outer_body, pos)) {
+        if (sa.tag != CRL_TAG_SEQUENCE) {
             return null;
         }
-        if (oid := parseAlgIdOid(sa.value)) {
+        if (oid := crlParseAlgIdOid(sa.value)) {
             sig_alg_oid = oid;
         } else {
             return null;
@@ -289,13 +427,13 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
         return null;
     }
 
-    // 3. signatureValue BIT STRING (unused_bits == 0)
+    // 3. signatureValue BIT STRING (unused_bits == 0, non-empty)
     let signature: []const u8 = "";
-    if (sv := readDerTlv(outer_body, pos)) {
-        if (sv.tag != TAG_BIT_STRING || sv.next_pos != outer_body.len) {
+    if (sv := crlReadDerTlv(outer_body, pos)) {
+        if (sv.tag != CRL_TAG_BIT_STRING || sv.next_pos != outer_body.len) {
             return null;
         }
-        if (raw := stripZeroUnusedBitString(sv.value)) {
+        if (raw := crlStripZeroUnusedBitString(sv.value)) {
             signature = raw;
         } else {
             return null;
@@ -309,9 +447,9 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1a. Optional version INTEGER (v1 omits it -> 0; v2 encodes INTEGER 1)
     let version: u8 = 0;
-    if (tpos < tbs_body.len && tbs_body[tpos] == TAG_INTEGER) {
-        if (vt := readDerTlv(tbs_body, tpos)) {
-            if (vt.value.len != 1 || vt.value[0] > 1) {
+    if (tpos < tbs_body.len && tbs_body[tpos] == CRL_TAG_INTEGER) {
+        if (vt := crlReadDerTlv(tbs_body, tpos)) {
+            if (!crlIsValidDerInteger(vt.value) || vt.value.len != 1 || vt.value[0] > 1) {
                 return null;
             }
             version = vt.value[0];
@@ -323,11 +461,11 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1b. signature AlgorithmIdentifier SEQUENCE
     let tbs_sig_oid: []const u8 = "";
-    if (tsa := readDerTlv(tbs_body, tpos)) {
-        if (tsa.tag != TAG_SEQUENCE) {
+    if (tsa := crlReadDerTlv(tbs_body, tpos)) {
+        if (tsa.tag != CRL_TAG_SEQUENCE) {
             return null;
         }
-        if (oid := parseAlgIdOid(tsa.value)) {
+        if (oid := crlParseAlgIdOid(tsa.value)) {
             tbs_sig_oid = oid;
         } else {
             return null;
@@ -339,8 +477,8 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1c. issuer Name SEQUENCE
     let issuer_der: []const u8 = "";
-    if (iss := readDerTlv(tbs_body, tpos)) {
-        if (iss.tag != TAG_SEQUENCE) {
+    if (iss := crlReadDerTlv(tbs_body, tpos)) {
+        if (iss.tag != CRL_TAG_SEQUENCE) {
             return null;
         }
         issuer_der = iss.raw;
@@ -351,8 +489,8 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1d. thisUpdate Time (UTCTime or GeneralizedTime)
     let this_update: []const u8 = "";
-    if (tu := readDerTlv(tbs_body, tpos)) {
-        if (!isTimeTag(tu.tag) || tu.value.len == 0) {
+    if (tu := crlReadDerTlv(tbs_body, tpos)) {
+        if (!crlIsTimeTag(tu.tag) || !crlIsValidDerTime(tu.tag, tu.value)) {
             return null;
         }
         this_update = tu.value;
@@ -363,9 +501,9 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1e. Optional nextUpdate Time (UTCTime or GeneralizedTime)
     let next_update: []const u8 = "";
-    if (tpos < tbs_body.len && isTimeTag(tbs_body[tpos])) {
-        if (nu := readDerTlv(tbs_body, tpos)) {
-            if (nu.value.len == 0) {
+    if (tpos < tbs_body.len && crlIsTimeTag(tbs_body[tpos])) {
+        if (nu := crlReadDerTlv(tbs_body, tpos)) {
+            if (!crlIsValidDerTime(nu.tag, nu.value)) {
                 return null;
             }
             next_update = nu.value;
@@ -377,8 +515,8 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1f. Optional revokedCertificates SEQUENCE OF SEQUENCE
     let revoked_der: []const u8 = "";
-    if (tpos < tbs_body.len && tbs_body[tpos] == TAG_SEQUENCE) {
-        if (rev := readDerTlv(tbs_body, tpos)) {
+    if (tpos < tbs_body.len && tbs_body[tpos] == CRL_TAG_SEQUENCE) {
+        if (rev := crlReadDerTlv(tbs_body, tpos)) {
             revoked_der = rev.value;
             tpos = rev.next_pos;
         } else {
@@ -388,8 +526,8 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
 
     // 1g. Optional crlExtensions [0] EXPLICIT Extensions
     let extensions_der: []const u8 = "";
-    if (tpos < tbs_body.len && tbs_body[tpos] == TAG_CTX0_CONS) {
-        if (ext := readDerTlv(tbs_body, tpos)) {
+    if (tpos < tbs_body.len && tbs_body[tpos] == CRL_TAG_CTX0_CONS) {
+        if (ext := crlReadDerTlv(tbs_body, tpos)) {
             extensions_der = ext.value;
             tpos = ext.next_pos;
         } else {
@@ -415,6 +553,52 @@ pub fn parseCrlDer(der_data: []const u8): CrlParsed? {
     };
 }
 
+/// Zero-heap strict RFC 5280 CRL DER validator.
+/// Validates canonical DER tree depth (`CRL_MAX_DEPTH`), matching TBS/outer signature algorithm OIDs,
+/// v2 version requirement when `crlExtensions` is present, strict UTCTime/GeneralizedTime fields,
+/// and all `revokedCertificates` entries up to `CRL_MAX_REVOKED_ENTRIES`.
+pub fn validateCrlStrict(der_data: []const u8): bool {
+    if (der_data.len == 0 || der_data.len > CRL_MAX_DER_LEN) {
+        return false;
+    }
+    if (!crlValidateDerTree(der_data, 0, CRL_MAX_DEPTH)) {
+        return false;
+    }
+    if (crl := parseCrlDer(der_data)) {
+        // RFC 5280 Section 5.1.1.2: TBSCertList.signature MUST match outer signatureAlgorithm.
+        if (!simdPkiBytesEqual(crl.tbs_sig_alg_oid, crl.sig_alg_oid)) {
+            return false;
+        }
+        // RFC 5280 Section 5.1.2.7: crlExtensions MUST only appear in v2 CRLs (version == 1).
+        if (crl.extensions_der.len > 0) {
+            if (crl.version != 1) {
+                return false;
+            }
+            if (ext_seq := crlReadDerTlv(crl.extensions_der, 0)) {
+                if (ext_seq.tag != CRL_TAG_SEQUENCE || ext_seq.next_pos != crl.extensions_der.len) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        let it = crl.revoked();
+        let count: usize = 0;
+        while (entry := it.next()) {
+            * = entry;
+            count += 1;
+            if (count > CRL_MAX_REVOKED_ENTRIES) {
+                return false;
+            }
+        }
+        if (it.hasError()) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 /// Returns `true` if `der_data` is a strictly valid RFC 5280 DER CRL.
 pub fn isCrlDer(der_data: []const u8): bool {
     if (crl := parseCrlDer(der_data)) {
@@ -429,12 +613,14 @@ pub struct CrlRevokedIter {
     data: []const u8 = "",
     pos: usize = 0,
     failed: bool = false,
+    count: usize = 0,
 
-    pub fn init(revoked_list_der: []const u8): CrlRevokedIter {
+    pub static fn init(revoked_list_der: []const u8): CrlRevokedIter {
         return CrlRevokedIter {
             data: revoked_list_der,
             pos: 0,
             failed: false,
+            count: 0,
         };
     }
 
@@ -446,9 +632,13 @@ pub struct CrlRevokedIter {
         if (_.failed || _.pos >= _.data.len) {
             return null;
         }
+        if (_.count >= CRL_MAX_REVOKED_ENTRIES) {
+            _.failed = true;
+            return null;
+        }
         let body: []const u8 = "";
-        if (entry_seq := readDerTlv(_.data, _.pos)) {
-            if (entry_seq.tag != TAG_SEQUENCE) {
+        if (entry_seq := crlReadDerTlv(_.data, _.pos)) {
+            if (entry_seq.tag != CRL_TAG_SEQUENCE) {
                 _.failed = true;
                 return null;
             }
@@ -461,14 +651,14 @@ pub struct CrlRevokedIter {
 
         let cur: usize = 0;
 
-        // 1. userCertificate INTEGER (strip leading 0x00 DER sign byte)
+        // 1. userCertificate INTEGER (canonical, non-negative; strip leading 0x00 DER sign byte)
         let serial: []const u8 = "";
-        if (st := readDerTlv(body, cur)) {
-            if (st.tag != TAG_INTEGER || st.value.len == 0) {
+        if (st := crlReadDerTlv(body, cur)) {
+            if (st.tag != CRL_TAG_INTEGER || !crlIsValidDerInteger(st.value) || (st.value[0] & 0x80) != 0) {
                 _.failed = true;
                 return null;
             }
-            serial = stripLeadingZeros(st.value);
+            serial = crlStripLeadingZeros(st.value);
             cur = st.next_pos;
         } else {
             _.failed = true;
@@ -477,8 +667,8 @@ pub struct CrlRevokedIter {
 
         // 2. revocationDate Time
         let rev_date: []const u8 = "";
-        if (dt := readDerTlv(body, cur)) {
-            if (!isTimeTag(dt.tag) || dt.value.len == 0) {
+        if (dt := crlReadDerTlv(body, cur)) {
+            if (!crlIsTimeTag(dt.tag) || !crlIsValidDerTime(dt.tag, dt.value)) {
                 _.failed = true;
                 return null;
             }
@@ -492,8 +682,8 @@ pub struct CrlRevokedIter {
         // 3. Optional crlEntryExtensions SEQUENCE
         let reason = CrlReason.none;
         if (cur < body.len) {
-            if (exts := readDerTlv(body, cur)) {
-                if (exts.tag != TAG_SEQUENCE || exts.next_pos != body.len) {
+            if (exts := crlReadDerTlv(body, cur)) {
+                if (exts.tag != CRL_TAG_SEQUENCE || exts.next_pos != body.len) {
                     _.failed = true;
                     return null;
                 }
@@ -504,6 +694,7 @@ pub struct CrlRevokedIter {
             }
         }
 
+        _.count += 1;
         return CrlRevokedEntry {
             serial_bytes: serial,
             revocation_date: rev_date,
@@ -523,6 +714,9 @@ pub fn summarizeCrl(der_data: []const u8): CrlStats? {
         };
         let it = crl.revoked();
         while (entry := it.next()) {
+            if (stats.revoked_count == 0xFFFFFFFF) {
+                return null;
+            }
             stats.revoked_count += 1;
             if (entry.reason == CrlReason.key_compromise) {
                 stats.key_compromise_count += 1;
