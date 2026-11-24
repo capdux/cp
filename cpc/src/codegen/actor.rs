@@ -56,7 +56,12 @@ impl Codegen {
     }
 
     pub fn get_func_receiver_mode(func: &Function) -> ReceiverMode {
-        if func.is_static {
+        if func.is_static
+            || func
+                .meta
+                .iter()
+                .any(|m| m.name.sym == "extern" || m.name.sym == "c")
+        {
             return ReceiverMode::Static;
         }
         if let Some(first) = func.params.first() {
@@ -462,7 +467,12 @@ impl Codegen {
         self.current_receiver_mode = if let Some(c) = class_name {
             if self.value_classes.contains(c) || self.enum_defs.contains_key(c) {
                 Self::get_func_receiver_mode(func)
-            } else if func.is_static {
+            } else if func.is_static
+                || func
+                    .meta
+                    .iter()
+                    .any(|m| m.name.sym == "extern" || m.name.sym == "c")
+            {
                 ReceiverMode::Static
             } else if func.ident.sym == "init"
                 || func.ident.sym == "release"

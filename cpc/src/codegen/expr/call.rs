@@ -475,15 +475,21 @@ impl Codegen {
                             type_to_lookup = Some(obj.clone());
                         }
                         if let Some(target_type) = type_to_lookup {
-                            if let Some((params, _, _)) = self.lookup_method(&target_type, prop) {
-                                let non_recv_params: Vec<Param> = params
-                                    .into_iter()
-                                    .filter(|p| {
-                                        p.ident.sym != "this"
-                                            && p.ident.sym != "_"
-                                            && p.ident.sym != "self"
-                                    })
-                                    .collect();
+                            if let Some((params, _, target_recv_mode)) = self.lookup_method(&target_type, prop) {
+                                let non_recv_params: Vec<Param> = if target_recv_mode
+                                    == ReceiverMode::Static
+                                {
+                                    params
+                                } else {
+                                    params
+                                        .into_iter()
+                                        .filter(|p| {
+                                            p.ident.sym != "this"
+                                                && p.ident.sym != "_"
+                                                && p.ident.sym != "self"
+                                        })
+                                        .collect()
+                                };
                                 if call.args.len() < non_recv_params.len() {
                                     for p in &non_recv_params[call.args.len()..] {
                                         if let Some(def) = &p.default {
@@ -523,15 +529,21 @@ impl Codegen {
                             type_to_lookup = Some(obj.clone());
                         }
                         if let Some(target_type) = type_to_lookup {
-                            if let Some((params, _, _)) = self.lookup_method(&target_type, prop) {
-                                let non_recv_params: Vec<Param> = params
-                                    .into_iter()
-                                    .filter(|p| {
-                                        p.ident.sym != "this"
-                                            && p.ident.sym != "_"
-                                            && p.ident.sym != "self"
-                                    })
-                                    .collect();
+                            if let Some((params, _, target_recv_mode)) = self.lookup_method(&target_type, prop) {
+                                let non_recv_params: Vec<Param> = if target_recv_mode
+                                    == ReceiverMode::Static
+                                {
+                                    params
+                                } else {
+                                    params
+                                        .into_iter()
+                                        .filter(|p| {
+                                            p.ident.sym != "this"
+                                                && p.ident.sym != "_"
+                                                && p.ident.sym != "self"
+                                        })
+                                        .collect()
+                                };
                                 if call.args.len() < non_recv_params.len() {
                                     for p in &non_recv_params[call.args.len()..] {
                                         if let Some(def) = &p.default {
@@ -1051,14 +1063,20 @@ impl Codegen {
                                     }
                                 }
 
-                                let non_recv_params: Vec<Param> = params
-                                    .into_iter()
-                                    .filter(|p| {
-                                        p.ident.sym != "this"
-                                            && p.ident.sym != "_"
-                                            && p.ident.sym != "self"
-                                    })
-                                    .collect();
+                                let non_recv_params: Vec<Param> = if target_recv_mode
+                                    == ReceiverMode::Static
+                                {
+                                    params
+                                } else {
+                                    params
+                                        .into_iter()
+                                        .filter(|p| {
+                                            p.ident.sym != "this"
+                                                && p.ident.sym != "_"
+                                                && p.ident.sym != "self"
+                                        })
+                                        .collect()
+                                };
                                 let obj_code = self.generate_expr(&mem.obj);
                                 let mut args = String::new();
                                 for (idx, arg) in call.args.iter().enumerate() {
@@ -1345,14 +1363,20 @@ impl Codegen {
                                     }
                                     ReceiverMode::Static => {}
                                 }
-                                let non_recv_params: Vec<Param> = params
-                                    .into_iter()
-                                    .filter(|p| {
-                                        p.ident.sym != "this"
-                                            && p.ident.sym != "_"
-                                            && p.ident.sym != "self"
-                                    })
-                                    .collect();
+                                let non_recv_params: Vec<Param> = if target_recv_mode
+                                    == ReceiverMode::Static
+                                {
+                                    params
+                                } else {
+                                    params
+                                        .into_iter()
+                                        .filter(|p| {
+                                            p.ident.sym != "this"
+                                                && p.ident.sym != "_"
+                                                && p.ident.sym != "self"
+                                        })
+                                        .collect()
+                                };
                                 let mut args = String::new();
                                 for (idx, arg) in call.args.iter().enumerate() {
                                     let mut arg_is_move_param = false;
@@ -1400,7 +1424,16 @@ impl Codegen {
                                     }
                                 }
                                 if target_recv_mode == ReceiverMode::Static {
-                                    let call_res = format!("{}.{}({})", c_name, ident.sym, args);
+                                    let target_ns = if self
+                                        .class_defs
+                                        .get(&c_name)
+                                        .map_or(false, |c| !c.generic_params.is_empty())
+                                    {
+                                        "@This()"
+                                    } else {
+                                        c_name.as_str()
+                                    };
+                                    let call_res = format!("{}.{}({})", target_ns, ident.sym, args);
                                     return self.maybe_wrap_try_call(call_res, ret_ty.as_ref());
                                 }
                                 let self_str = if self.is_state_machine {

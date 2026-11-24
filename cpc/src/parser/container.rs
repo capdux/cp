@@ -483,6 +483,13 @@ impl<'a> Parser<'a> {
                 method.is_static = true;
             }
             method.meta.extend(meta_list);
+            if method
+                .meta
+                .iter()
+                .any(|m| m.name.sym == "extern" || m.name.sym == "c")
+            {
+                method.is_static = true;
+            }
             method.is_pub = member_is_pub;
             acc.methods.push(method);
         } else {
@@ -877,6 +884,13 @@ impl<'a> Parser<'a> {
             if is_method {
                 let mut method = self.parse_function()?;
                 method.meta.extend(meta_list);
+                if method
+                    .meta
+                    .iter()
+                    .any(|m| m.name.sym == "extern" || m.name.sym == "c")
+                {
+                    method.is_static = true;
+                }
                 if method_is_pub {
                     method.is_pub = true;
                 }

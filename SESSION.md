@@ -4877,3 +4877,14 @@
   > ### 两路子智能体健康推进中（已巡检无挂死）
   > - **`Lane-RestFramework`**：实现融合 ElysiaJS 链式 API + Rust Axum 零反射内核的 `cap:web` REST 框架（含自动 OpenAPI 3.1 导出 + 10 万次路由吞吐压测）；
   > - **`Lane-Benchmark`**：在同机实跑 **CP (`-OReleaseFast`) vs Bun vs Node v26 vs Python3** 4 项硬核基准，完成后我将直接把真实实测数据同步进 `website/` 完成 v1.0 最终合龙！
+
+### 2026-11-25（下游工单全量补录：`task-bun-20261125-struct-extern-fn-self`）[ticket:task-bun-20261125-struct-extern-fn-self]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-25 03:29:11` | 状态：`resolved` | 结单：`2026-11-25T03:43:16`
+- **报错/需求摘要**：cpc 将 struct 内部声明的 extern fn / @c fn 当作实例方法注入 self 首参，并将内部调用 Foo__toJS(&_, ...) 改写为 self.Foo__toJS(&self, ...)，导致 Bun 全仓 4 个 .cp 文件共 488 个 extern fn（含 napi.cp 475 个 V8API 符号、ZigString.cp 10 个、DevServer.cp 1 个、windows.cp 2 个）发生 ABI 参数寄存器错位与 SEGV
+- **结单与处理汇报**：已修复并部署 release 版 cpc：1) cpc/src/parser/container.rs 在 struct/class/union 与 enum 内解析 extern fn / @c fn 时自动标记 method.is_static=true；2) cpc/src/codegen/actor.rs 的 get_func_receiver_mode 与 generate_function 兜底将 extern/@c 函数强制判为 ReceiverMode::Static，禁止注入 self 首参；3) cpc/src/codegen/expr/call.rs 静态/extern 函数调用保留全部参数（含 _ 参数）并生成 Foo.Foo__toJS(&self, 1)（泛型容器用 @This()）。实测 repro_struct_extern_fn_self.cp、cap/test/testHotfixStructExternFnSelf.cp（PASS）及 /data/dev/bun/src/napi/napi.cp（570 个 extern fn，0 个 self 误 ...(截断)
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 03:29:12）[step:23028]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(1条: task-bun-20261125-struct-extern-fn-self)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 正在编译部署 `cpc` 并验证复现用例与回归测试，完成后立即汇报结果。
