@@ -592,6 +592,20 @@ export {
 } from "./server.cp";
 
 export {
+    TlsAlpnProto,
+    TlsConfig,
+    TlsConfigError,
+    validatePemCertBytes,
+    validatePemKeyBytes,
+    isTlsClientHello,
+    extractSniFromClientHello,
+    negotiateAlpn,
+    parseAlpnPreference,
+    tlsFatalAlertRecord,
+    validateTlsFiles,
+} from "./tls.cp";
+
+export {
     WS_SERVER_MAX_WORKERS,
     WsServerConfig,
     WsServer,

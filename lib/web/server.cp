@@ -11,6 +11,14 @@
 const std = @import("std");
 import { App, AppMethod, Context, Request, RequestArena, Response, HeaderKV } from "./app.cp";
 import { ComptimeRouteTable } from "./comptimeRouter.cp";
+import {
+    TlsConfig,
+    TlsConfigError,
+    isTlsClientHello,
+    parseAlpnPreference,
+    tlsFatalAlertRecord,
+    validateTlsFiles,
+} from "./tls.cp";
 
 pub const SERVER_MAX_WORKERS: usize = 64;
 pub const SERVER_READ_BUF_LEN: usize = 2048;
@@ -355,6 +363,7 @@ struct WorkerCtx {
     pin_cpu: bool,
     ws_path: string,
     ws_broadcast_mode: bool,
+    tls_enabled: bool,
     shutdown_grace_ms: u32,
     stop_flag: *i32,
     ready_count: *i32,
@@ -914,11 +923,20 @@ fn writeAllFd(fd: i32, data: string): bool {
                             let keep_alive = true;
                             const slice = conns[idx].read_buf[offset..conns[idx].read_len];
                             const consumed = parseHttp1Request(slice, *reusable_req, *keep_alive);
-                            if (consumed < 0) {
-                                should_close = true;
+                            if (consumed <= 0) {
+                                // Cold-path TLS ClientHello (0x16 0x03) sniff: 0 ns overhead on plaintext HTTP/1.1 hot path
+                                if (isTlsClientHello(slice)) {
+                                    const alert_code: u8 = if (wctx.tls_enabled) 0x28 else 0x46;
+                                    const alert_rec = tlsFatalAlertRecord(alert_code);
+                                    * = writeAllFd(fd, alert_rec[0..7]);
+                                    should_close = true;
+                                    break;
+                                }
+                                if (consumed < 0) {
+                                    should_close = true;
+                                }
                                 break;
                             }
-                            if (consumed == 0) break;
 
                             // Same-port HTTP -> WebSocket Upgrade check
                             if (wctx.ws_path.len > 0 && srvBytesEql(reusable_req.path, wctx.ws_path)) {
@@ -1044,6 +1062,9 @@ pub struct ServerConfig {
     ws_path: string = "";
     ws_broadcast_mode: bool = false;
     shutdown_grace_ms: u32 = 200;
+    tls_cert_path: string = "";
+    tls_key_path: string = "";
+    tls_alpn: string = "h2,http/1.1";
 }
 
 pub struct WebServer {
@@ -1063,6 +1084,23 @@ pub struct WebServer {
             stop_flag: 0,
             ready_count: 0,
         };
+    }
+
+    /// Returns true if both TLS certificate and private key paths are configured.
+    pub fn isTlsEnabled(): bool {
+        return _.config.tls_cert_path.len > 0 && _.config.tls_key_path.len > 0;
+    }
+
+    /// Validate configured TLS certificate/key files and PEM header/footer structure.
+    pub fn validateTlsConfig(): bool {
+        const cfg = TlsConfig{
+            enabled: _.isTlsEnabled(),
+            cert_path: _.config.tls_cert_path,
+            key_path: _.config.tls_key_path,
+            min_version: 0x0303,
+            alpn: parseAlpnPreference(_.config.tls_alpn),
+        };
+        return validateTlsFiles(cfg) == TlsConfigError.Ok;
     }
 
     /// Start N `SO_REUSEPORT` epoll worker threads in the background and wait until all are listening.
@@ -1086,6 +1124,7 @@ pub struct WebServer {
         _.worker_count = num_workers;
         _.stop_flag = 0;
         _.ready_count = 0;
+        const tls_on = _.isTlsEnabled();
 
         let i: usize = 0;
         while (i < num_workers) : (i += 1) {
@@ -1098,6 +1137,7 @@ pub struct WebServer {
                 pin_cpu: _.config.pin_cpu,
                 ws_path: _.config.ws_path,
                 ws_broadcast_mode: _.config.ws_broadcast_mode,
+                tls_enabled: tls_on,
                 shutdown_grace_ms: _.config.shutdown_grace_ms,
                 stop_flag: *_.stop_flag,
                 ready_count: *_.ready_count,
