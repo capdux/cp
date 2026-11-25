@@ -2914,6 +2914,104 @@ fn convert_inline_function_exprs(s: &str) -> String {
     out
 }
 
+/// Map JS/TS structured concurrency combinators (`Promise.all(...)` / `Promise.race(...)`)
+/// to CP structured concurrency primitives (`joinAll(...)` / `race(...)`) outside strings and comments.
+fn convert_promise_combinators(s: &str) -> String {
+    if !s.contains("Promise.") {
+        return s.to_string();
+    }
+    let bytes = s.as_bytes();
+    let mut out = String::with_capacity(s.len());
+    let mut i = 0usize;
+    let mut in_double = false;
+    let mut in_single = false;
+    let mut in_backtick = false;
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
+            out.push_str(&s[i..]);
+            break;
+        }
+        if in_double {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'"' {
+                in_double = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_single {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'\'' {
+                in_single = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_backtick {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'`' {
+                in_backtick = false;
+            }
+            i += 1;
+            continue;
+        }
+        if b == b'"' {
+            in_double = true;
+            out.push('"');
+            i += 1;
+            continue;
+        }
+        if b == b'\'' {
+            in_single = true;
+            out.push('\'');
+            i += 1;
+            continue;
+        }
+        if b == b'`' {
+            in_backtick = true;
+            out.push('`');
+            i += 1;
+            continue;
+        }
+
+        let prev_is_ident = i > 0 && is_ident_byte(bytes[i - 1]);
+        if !prev_is_ident {
+            if s[i..].starts_with("Promise.all(") {
+                out.push_str("joinAll(");
+                i += "Promise.all(".len();
+                continue;
+            }
+            if s[i..].starts_with("Promise.race(") {
+                out.push_str("race(");
+                i += "Promise.race(".len();
+                continue;
+            }
+        }
+
+        let ch = s[i..].chars().next().unwrap();
+        out.push(ch);
+        i += ch.len_utf8();
+    }
+    out
+}
+
 /// Apply core TS -> CP expression & statement rewrites on a single line.
 fn convert_ts_expr(raw: &str, todo_count: &mut usize) -> String {
     // Sanitize regex literals BEFORE single-quote conversion so regexes containing `'` or `` ` ``
@@ -2936,6 +3034,7 @@ fn convert_ts_expr(raw: &str, todo_count: &mut usize) -> String {
     s = replace_outside_strings(&s, "console.error(", "@print(");
     s = replace_outside_strings(&s, "console.warn(", "@print(");
     s = replace_outside_strings(&s, "console.info(", "@print(");
+    s = convert_promise_combinators(&s);
     s = convert_new_expressions(&s);
     // Unsigned right shift `>>>` -> `>>`
     s = replace_outside_strings(&s, ">>>", ">>");
@@ -4081,6 +4180,7 @@ pub fn transpile_ts_to_cp(
     let mut saw_complex_type = false;
     let mut saw_arrow_to_fn = false;
     let mut saw_mut_self = false;
+    let mut saw_promise_combinator = false;
 
     out.push_str(&format!(
         "// Migrated from TypeScript ({}) via cap from -ts\n\n",
@@ -5134,11 +5234,25 @@ pub fn transpile_ts_to_cp(
                     || pt.starts_with("while (")
                     || pt.starts_with("for (")
             });
-        let final_line = if closes_multiline_ctrl {
+        let mut final_line = if closes_multiline_ctrl {
             with_cf
         } else {
             maybe_append_semicolon(&with_cf, paren_depth, bracket_depth, next_code)
         };
+        let mapped_all = stmt_src.contains("Promise.all(") && conv.contains("joinAll(");
+        let mapped_race = stmt_src.contains("Promise.race(") && conv.contains("race(");
+        if mapped_all || mapped_race {
+            saw_promise_combinator = true;
+            if !final_line.contains("//") {
+                if mapped_all && mapped_race {
+                    final_line.push_str(" // migrated: Promise.all/race -> joinAll/race");
+                } else if mapped_all {
+                    final_line.push_str(" // migrated: Promise.all -> joinAll");
+                } else {
+                    final_line.push_str(" // migrated: Promise.race -> race");
+                }
+            }
+        }
         let (o, c) = count_braces(&final_line);
         brace_depth += o - c;
         if brace_depth < 0 {
@@ -5182,6 +5296,12 @@ pub fn transpile_ts_to_cp(
     if saw_complex_type {
         opt_notes
             .push("复杂 TS 条件/映射类型安全降级为显式 `TODO` 别名以保障 `cpc` 解析".to_string());
+    }
+    if saw_promise_combinator {
+        opt_notes.push(
+            "将 `Promise.all` / `Promise.race` 映射为 CP 结构化并发 `joinAll` / `race`"
+                .to_string(),
+        );
     }
 
     TranspileResult {
@@ -5928,5 +6048,30 @@ export const makeCounter = (n: number): Counter => new Counter(n);
         assert!(res
             .cp_code
             .contains("pub fn makeCounter(n: f64): Counter { return Counter.init(n); }"));
+    }
+
+    #[test]
+    fn test_promise_all_and_race_structured_concurrency() {
+        let ts = r#"
+export async function fetchDashboard(): Promise<void> {
+    const results = await Promise.all([fetchUsers(), fetchOrders()]);
+    const fastest = await Promise.race([fetchPrimary(), fetchBackup()]);
+    const literal = "Promise.all([untouched])";
+    console.log(results, fastest, literal);
+}
+"#;
+        let dep_map = HashMap::new();
+        let res = transpile_ts_to_cp(ts, "src/dashboard.ts", &dep_map);
+        assert!(res
+            .cp_code
+            .contains("const results = await joinAll([fetchUsers(), fetchOrders()]); // migrated: Promise.all -> joinAll"));
+        assert!(res
+            .cp_code
+            .contains("const fastest = await race([fetchPrimary(), fetchBackup()]); // migrated: Promise.race -> race"));
+        assert!(res
+            .cp_code
+            .contains("const literal = \"Promise.all([untouched])\";"));
+        assert!(res.opt_notes.iter().any(|n| n.contains("joinAll")));
+        assert!(cp_snippet_parses_ok(&res.cp_code));
     }
 }

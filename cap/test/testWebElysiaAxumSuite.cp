@@ -415,6 +415,62 @@ fn runTestFastVsSlowConsistency() {
     }
 }
 
+fn strContains(haystack: string, needle: string): bool {
+    if (needle.len == 0) return true;
+    if (needle.len > haystack.len) return false;
+    let i: usize = 0;
+    while (i + needle.len <= haystack.len) : (i += 1) {
+        let j: usize = 0;
+        let matched: bool = true;
+        while (j < needle.len) : (j += 1) {
+            if (haystack[i + j] != needle[j]) {
+                matched = false;
+                break;
+            }
+        }
+        if (matched) return true;
+    }
+    return false;
+}
+
+fn runTestServerTimingTrace() {
+    // Test 12: App.enableTrace(true/false) 8-stage Server-Timing header & zero-overhead toggle
+    let trace_app = App.init();
+    * = trace_app
+        .get("/ping", handlePublicPing)
+        .get("/users/:id", handleFastParam);
+
+    // Default (disabled): zero-hook fast-path, no Server-Timing header
+    if (trace_app.hookMask() != 0) @panic("Test 12a failed: default hookMask should be 0");
+    let r12a = trace_app.dispatch(Request.init(AppMethod.GET, "/ping"));
+    if (r12a.status != 200 || r12a.header("Server-Timing") != null) {
+        @panic("Test 12a failed: Server-Timing should not be present when trace is disabled");
+    }
+
+    // Enable tracing: Server-Timing header with routing;dur= and handler;dur=
+    * = trace_app.enableTrace(true);
+    if (trace_app.hookMask() == 0) @panic("Test 12b failed: hookMask should be non-zero when trace is enabled");
+    let r12b = trace_app.dispatch(Request.init(AppMethod.GET, "/users/42"));
+    if (r12b.status != 200 || !strEql(r12b.body, "42")) {
+        @panic("Test 12b failed: traced dispatch response mismatch");
+    }
+    if (st := r12b.header("Server-Timing")) {
+        if (!strContains(st, "routing;dur=") || !strContains(st, "handler;dur=")) {
+            @panic("Test 12b failed: Server-Timing missing routing/handler durations");
+        }
+    } else {
+        @panic("Test 12b failed: missing Server-Timing header when trace is enabled");
+    }
+
+    // Disable tracing again: restores hookMask == 0 and omits Server-Timing
+    * = trace_app.enableTrace(false);
+    if (trace_app.hookMask() != 0) @panic("Test 12c failed: hookMask should return to 0 after enableTrace(false)");
+    let r12c = trace_app.dispatch(Request.init(AppMethod.GET, "/ping"));
+    if (r12c.status != 200 || r12c.header("Server-Timing") != null) {
+        @panic("Test 12c failed: Server-Timing should not be present after enableTrace(false)");
+    }
+}
+
 fn main() {
     let app = App.init();
     * = app
@@ -542,6 +598,7 @@ fn main() {
     runTestResponseUtilsAndForms();
     runTestRouteAndGroupGuards();
     runTestFastVsSlowConsistency();
+    runTestServerTimingTrace();
 
-    @print("PASS testWebElysiaAxumSuite (11/11 suites)");
+    @print("PASS testWebElysiaAxumSuite (12/12 suites)");
 }

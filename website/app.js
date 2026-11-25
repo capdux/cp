@@ -99,12 +99,14 @@ const DEFAULT_BENCHMARKS = [
   {
     cat: "net",
     title: "Full Web Framework 16-Core (24 Routes, POST JSON + Validation, Err=0)",
-    subtitle: "Higher is better (QPS) · CP cap:web: 2.83x Bun Elysia, 3.32x Node Fastify · 41.4x–47.8x lower RSS",
+    subtitle: "Higher is better (QPS) · CP cap:web breaks 1.00M QPS (2.63x Elysia, 3.17x Fastify, 4.54x Koa, 5.06x Express) · 42.6x–47.7x lower RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 cap:web 16c (P99 0.13ms · 33.9 MB RSS)", key: "cp", value: 977586, display: "977,586 QPS" },
-      { label: "Bun 1.3.14 Elysia 16c (P99 0.51ms · 1,402.7 MB RSS)", key: "bun", value: 345207, display: "345,207 QPS" },
-      { label: "Node v26.1.0 Fastify 16c (P99 0.64ms · 1,621.4 MB RSS)", key: "node", value: 294450, display: "294,450 QPS" },
+      { label: "CP v1.0 cap:web 16c (P99 0.12ms · 34.2 MB RSS)", key: "cp", value: 1003068, display: "1,003,068 QPS" },
+      { label: "Bun 1.3.14 Elysia 16c (P99 0.41ms · 1,458.3 MB RSS)", key: "bun", value: 381468, display: "381,468 QPS" },
+      { label: "Node v26.1.0 Fastify 16c (P99 0.27ms · 1,632.2 MB RSS)", key: "node", value: 316092, display: "316,092 QPS" },
+      { label: "Node v26.1.0 Koa 16c (P99 0.51ms · 1,547.6 MB RSS)", key: "node", value: 221178, display: "221,178 QPS" },
+      { label: "Node v26.1.0 Express 16c (P99 0.51ms · 1,475.8 MB RSS)", key: "node", value: 198067, display: "198,067 QPS" },
     ],
   },
   {

@@ -310,4 +310,37 @@ fn main() {
         expect_eq(detectFileType("SQLite format 3") == null, true);
         expect_eq(detectFileType("plain unknown text payload") == null, true);
     });
+
+    test("8. ObjectSchema: recursive nested Object & Array validation", () => {
+        let addr_schema = ObjectSchema.init("Address");
+        * = addr_schema
+            .strField("city", true, 2, 64)
+            .intField("zip", true, 10000, 99999);
+
+        let item_schema = ObjectSchema.init("OrderItem");
+        * = item_schema
+            .strField("sku", true, 2, 32)
+            .intField("qty", true, 1, 1000);
+
+        let order_schema = ObjectSchema.init("Order");
+        * = order_schema
+            .objectField("shipping", true, &addr_schema)
+            .arrayField("tags", true, FieldKind.Str, 1, 5)
+            .objectArrayField("items", true, &item_schema, 1, 10);
+
+        const valid_json = "{\"shipping\":{\"city\":\"Tokyo\",\"zip\":10001},\"tags\":[\"vip\",\"fast\"],\"items\":[{\"sku\":\"GPU-H200\",\"qty\":4}]}";
+        const ok_rep = validateJsonObject(valid_json, &order_schema);
+        expect_eq(ok_rep.ok, true);
+
+        const bad_nested = "{\"shipping\":{\"city\":\"X\",\"zip\":99},\"tags\":[],\"items\":[{\"sku\":\"OK\",\"qty\":0}]}";
+        const bad_rep = validateJsonObject(bad_nested, &order_schema);
+        expect_eq(bad_rep.ok, false);
+        expect_eq(bad_rep.issue_count >= 4, true);
+
+        let oa_buf: [2048]u8 = [0; 2048];
+        const oa_len = schemaToOpenApiJson(&order_schema, oa_buf[0..]) ?? 0;
+        expect_eq(oa_len > 0, true);
+        expect_eq(containsSubstr(oa_buf[0..oa_len], "\"shipping\":{\"type\":\"object\"}"), true);
+        expect_eq(containsSubstr(oa_buf[0..oa_len], "\"tags\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":5}"), true);
+    });
 }

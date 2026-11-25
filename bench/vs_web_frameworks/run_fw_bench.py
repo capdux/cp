@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Real Web Framework Benchmark Runner:
-  CP (cap:web) vs Bun (Elysia) vs Node (Fastify)
+  CP (cap:web) vs Bun (Elysia) vs Node (Fastify / Koa / Express)
   24-route production-like app across 1c / 8c / 16c, grouped strictly by core count:
-    1c (CP / Bun Elysia / Node Fastify) -> 8c (CP / Bun Elysia / Node Fastify) -> 16c (CP / Bun Elysia / Node Fastify)
+    1c (CP / Bun Elysia / Node Fastify / Node Koa / Node Express) -> 8c (...) -> 16c (...)
 
 4 Benchmark Scenarios:
   1. GET  /health
@@ -13,7 +13,7 @@ Real Web Framework Benchmark Runner:
 
 Usage examples:
   python3 run_fw_bench.py
-  python3 run_fw_bench.py --only bun,node --cores 1 --duration 1.0 --warmup 0.2
+  python3 run_fw_bench.py --only express,koa --cores 1 --duration 0.5 --warmup 0.2
   python3 run_fw_bench.py --cores 1,8,16 --duration 2.5
 """
 
@@ -34,7 +34,9 @@ TEMP_DIR = ROOT / "temp"
 CP_FW_SRC = SUITE_DIR / "fw_cp.cp"
 CP_FW_BIN = TEMP_DIR / "fw_cp"
 BUN_FW_SRC = SUITE_DIR / "fw_bun_elysia.ts"
-NODE_FW_SRC = SUITE_DIR / "fw_node_fastify.mjs"
+FASTIFY_FW_SRC = SUITE_DIR / "fw_node_fastify.mjs"
+KOA_FW_SRC = SUITE_DIR / "fw_node_koa.mjs"
+EXPRESS_FW_SRC = SUITE_DIR / "fw_node_express.mjs"
 HTTP_FW_BENCH_C = TEMP_DIR / "http_fw_bench.c"
 HTTP_FW_BENCH_BIN = TEMP_DIR / "http_fw_bench_bin"
 OUT_JSON = SUITE_DIR / "fw_results.json"
@@ -552,14 +554,24 @@ def run_target(
         time.sleep(0.2)
 
 
+FW_ORDER = ["cp", "bun", "fastify", "koa", "express"]
+FW_LABELS = {
+    "cp": "CP (cap:web)",
+    "bun": "Bun (Elysia)",
+    "fastify": "Node (Fastify)",
+    "koa": "Node (Koa)",
+    "express": "Node (Express)",
+}
+
+
 def print_markdown_summary(all_res: dict, cores: list[int], frameworks: list[str]) -> None:
-    fw_labels = {"cp": "CP (cap:web)", "bun": "Bun (Elysia)", "node": "Node (Fastify)"}
+    ordered_fws = [fw for fw in FW_ORDER if fw in frameworks] + [fw for fw in frameworks if fw not in FW_ORDER]
     print("\n## Real Web Framework Benchmark Summary (24 Routes)\n")
     for c in cores:
         print(f"### {c} Core ({CORE_THREADS.get(c, 32)} Client Threads)\n")
         print("| Framework | GET /health (QPS) | GET :id/:postId+? (QPS) | POST /orders (QPS) | GET /me Auth+Cookie (QPS) | Total Err | Peak RSS (MB) |")
         print("| :--- | ---: | ---: | ---: | ---: | ---: | ---: |")
-        for fw in frameworks:
+        for fw in ordered_fws:
             key = f"{fw}_{c}c"
             if key not in all_res:
                 continue
@@ -567,7 +579,7 @@ def print_markdown_summary(all_res: dict, cores: list[int], frameworks: list[str
             sc = r["scenarios"]
             total_err = sum(sc[s["id"]]["err"] for s in SCENARIOS)
             print(
-                f"| {fw_labels[fw]} | "
+                f"| {FW_LABELS[fw]} | "
                 f"{sc['get_health']['qps']:,.0f} | "
                 f"{sc['get_params_query']['qps']:,.0f} | "
                 f"{sc['post_orders']['qps']:,.0f} | "
@@ -579,8 +591,12 @@ def print_markdown_summary(all_res: dict, cores: list[int], frameworks: list[str
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Real Web Framework Benchmark: CP vs Bun (Elysia) vs Node (Fastify)")
-    parser.add_argument("--only", default="cp,bun,node", help="Comma-separated frameworks: cp,bun,node")
+    parser = argparse.ArgumentParser(description="Real Web Framework Benchmark: CP vs Bun (Elysia) vs Node (Fastify/Koa/Express)")
+    parser.add_argument(
+        "--only",
+        default="cp,bun,fastify,koa,express",
+        help="Comma-separated frameworks: cp,bun,fastify,koa,express (alias: node->fastify)",
+    )
     parser.add_argument("--cores", default="1,8,16", help="Comma-separated core counts: 1,8,16")
     parser.add_argument("--duration", type=float, default=2.5, help="Benchmark duration per endpoint (sec)")
     parser.add_argument("--warmup", type=float, default=0.4, help="Warmup duration per endpoint (sec)")
@@ -588,7 +604,13 @@ def main():
     parser.add_argument("--output", default=str(OUT_JSON), help="Output JSON path")
     args = parser.parse_args()
 
-    frameworks = [x.strip().lower() for x in args.only.split(",") if x.strip()]
+    raw_fws = [x.strip().lower() for x in args.only.split(",") if x.strip()]
+    frameworks: list[str] = []
+    for fw in raw_fws:
+        mapped = "fastify" if fw == "node" else fw
+        if mapped not in frameworks:
+            frameworks.append(mapped)
+    frameworks = [fw for fw in FW_ORDER if fw in frameworks] + [fw for fw in frameworks if fw not in FW_ORDER]
     cores = [int(x.strip()) for x in args.cores.split(",") if x.strip()]
 
     bench_bin = ensure_http_bench_bin()
@@ -606,8 +628,12 @@ def main():
                 cmd = ["env", f"PORT={port}", f"WORKERS={c}", str(CP_FW_BIN)]
             elif fw == "bun":
                 cmd = ["bun", str(BUN_FW_SRC), "--port", str(port), "--workers", str(c)]
-            elif fw == "node":
-                cmd = ["node", str(NODE_FW_SRC), "--port", str(port), "--workers", str(c)]
+            elif fw == "fastify":
+                cmd = ["node", str(FASTIFY_FW_SRC), "--port", str(port), "--workers", str(c)]
+            elif fw == "koa":
+                cmd = ["node", str(KOA_FW_SRC), "--port", str(port), "--workers", str(c)]
+            elif fw == "express":
+                cmd = ["node", str(EXPRESS_FW_SRC), "--port", str(port), "--workers", str(c)]
             else:
                 raise ValueError(f"Unknown framework: {fw}")
             all_res[key] = run_target(

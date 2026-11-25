@@ -51,3 +51,9 @@ export {
     byExtension,
     byPath,
 } from "./type.cp";
+
+export {
+    FileKind,
+    FileTypeInfo,
+    detectFileType,
+} from "./fileType.cp";

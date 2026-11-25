@@ -419,6 +419,8 @@ pub struct Response {
     body: string = "";
     body_buf: [128]u8 = undefined;
     body_buf_len: usize = 0;
+    trace_buf: [128]u8 = undefined;
+    trace_buf_len: usize = 0;
     headers: [APP_MAX_HEADERS]HeaderKV = undefined;
     header_len: usize = 0;
 
@@ -550,6 +552,9 @@ pub struct Response {
     }
 
     pub fn header(name: string): string? {
+        if (_.trace_buf_len > 0 && asciiEqlIgnoreCase(name, "Server-Timing")) {
+            return _.trace_buf[0.._.trace_buf_len];
+        }
         let i: usize = 0;
         while (i < _.header_len) : (i += 1) {
             if (asciiEqlIgnoreCase(_.headers[i].name, name)) {
@@ -558,6 +563,67 @@ pub struct Response {
         }
         return null;
     }
+}
+
+/// Monotonic nanosecond clock (zero-alloc vDSO on Linux, POSIX clock_gettime elsewhere).
+fn appMonotonicNowNs(): u64 {
+    const app_builtin = @import("builtin");
+    if (comptime app_builtin.os.tag == .linux) {
+        let ts: std.os.linux.timespec = undefined;
+        * = std.os.linux.clock_gettime(.MONOTONIC, &ts);
+        const sec: u64 = if (ts.sec > 0) @intCast(ts.sec) else 0;
+        const nsec: u64 = if (ts.nsec > 0) @intCast(ts.nsec) else 0;
+        return sec * std.time.ns_per_s + nsec;
+    }
+    let ts: std.c.timespec = undefined;
+    * = std.c.clock_gettime(.MONOTONIC, &ts);
+    const sec: u64 = if (ts.sec > 0) @intCast(ts.sec) else 0;
+    const nsec: u64 = if (ts.nsec > 0) @intCast(ts.nsec) else 0;
+    return sec * std.time.ns_per_s + nsec;
+}
+
+fn writeU64Decimal(out_buf: []u8, pos: *usize, val: u64): bool {
+    let tmp: [24]u8 = [0; 24];
+    let n: usize = 0;
+    let v: u64 = val;
+    if (v == 0) {
+        return writeByte(out_buf, pos, '0');
+    }
+    while (v > 0) {
+        tmp[n] = (48 + ((v % 10) as u8)) as u8;
+        n += 1;
+        v = v / 10;
+    }
+    while (n > 0) {
+        n -= 1;
+        if (!writeByte(out_buf, pos, tmp[n])) return false;
+    }
+    return true;
+}
+
+fn writeDurationMs(out_buf: []u8, pos: *usize, dur_ns: u64): bool {
+    const us: u64 = dur_ns / 1000;
+    const ms_int: u64 = us / 1000;
+    const ms_frac: u64 = us % 1000;
+    if (!writeU64Decimal(out_buf, pos, ms_int)) return false;
+    if (!writeByte(out_buf, pos, '.')) return false;
+    if (!writeByte(out_buf, pos, ('0' + ((ms_frac / 100) as u8)) as u8)) return false;
+    if (!writeByte(out_buf, pos, ('0' + (((ms_frac / 10) % 10) as u8)) as u8)) return false;
+    return writeByte(out_buf, pos, ('0' + ((ms_frac % 10) as u8)) as u8);
+}
+
+fn attachServerTiming(out_resp: *Response, routing_ns: u64, handler_ns: u64, hooks_ns: u64) {
+    let pos: usize = 0;
+    * = writeRaw(out_resp.trace_buf[0..], *pos, "routing;dur=");
+    * = writeDurationMs(out_resp.trace_buf[0..], *pos, routing_ns);
+    * = writeRaw(out_resp.trace_buf[0..], *pos, ", handler;dur=");
+    * = writeDurationMs(out_resp.trace_buf[0..], *pos, handler_ns);
+    if (hooks_ns > 0) {
+        * = writeRaw(out_resp.trace_buf[0..], *pos, ", hooks;dur=");
+        * = writeDurationMs(out_resp.trace_buf[0..], *pos, hooks_ns);
+    }
+    out_resp.trace_buf_len = pos;
+    * = out_resp.setHeader("Server-Timing", out_resp.trace_buf[0..pos]);
 }
 
 // ============================================================================
@@ -1334,6 +1400,8 @@ pub struct Plugin {
 // 5. Flagship App Kernel (Radix Router + 8-Stage Lifecycle + Plugins + OpenAPI 3.1)
 // ============================================================================
 
+pub const HOOK_MASK_TRACE: u16 = 1 << 11;
+
 pub struct App {
     routes: [APP_MAX_ROUTES]RouteEntry = [RouteEntry{}; APP_MAX_ROUTES];
     route_len: usize = 0;
@@ -1361,6 +1429,7 @@ pub struct App {
     on_error_hook: ErrorHookFn? = null;
     fallback_handler: HandlerFn? = null;
     hook_mask: u16 = 0;
+    trace_enabled: bool = false;
 
     state_ptr: usize = 0;
     state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
@@ -1372,6 +1441,17 @@ pub struct App {
 
     pub fn hookMask(*_): u16 {
         return _.hook_mask;
+    }
+
+    /// Enable or disable 8-stage `Server-Timing` tracing (zero overhead on fast-path when disabled).
+    pub fn enableTrace(*_, enabled: bool): *App {
+        _.trace_enabled = enabled;
+        if (enabled) {
+            _.hook_mask |= HOOK_MASK_TRACE;
+        } else {
+            _.hook_mask &= (0xFFFF - HOOK_MASK_TRACE);
+        }
+        return _;
     }
 
     pub fn registerWithPrefixGuarded(
@@ -1895,19 +1975,34 @@ pub struct App {
             return;
         }
 
-        // Full 8-Stage Lifecycle Path (when global hooks or middlewares are registered)
+        // Full 8-Stage Lifecycle Path (when global hooks, middlewares, or trace are enabled)
         _.initContextForRequest(req, lookup_path, query_str, ctx);
+        const trace_on = _.trace_enabled;
+        let t_hooks_ns: u64 = 0;
+        let t_routing_ns: u64 = 0;
+        let t_handler_ns: u64 = 0;
 
         // Stage 1: onRequest hooks (zero-overhead skip when empty)
         if (_.on_request_len > 0) {
+            const t_s1: u64 = if (trace_on) appMonotonicNowNs() else 0;
             if (early := _.runHookChain(_.on_request_hooks, _.on_request_len, ctx)) {
+                if (trace_on) {
+                    const t_e1 = appMonotonicNowNs();
+                    t_hooks_ns += if (t_e1 >= t_s1) (t_e1 - t_s1) else 0;
+                }
                 out_resp.* = early;
+                if (trace_on) attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
                 return;
+            }
+            if (trace_on) {
+                const t_e1 = appMonotonicNowNs();
+                t_hooks_ns += if (t_e1 >= t_s1) (t_e1 - t_s1) else 0;
             }
         }
 
         // Legacy & Onion middleware chain
         if (_.middleware_len > 0) {
+            const t_mw0: u64 = if (trace_on) appMonotonicNowNs() else 0;
             let mw_idx: usize = 0;
             while (mw_idx < _.middleware_len) : (mw_idx += 1) {
                 if (mw := _.middlewares[mw_idx]) {
@@ -1915,21 +2010,35 @@ pub struct App {
                     if (!proceed || ctx.aborted) {
                         if (ctx.error_code != AppErrorCode.None) {
                             out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
-                            return;
+                        } else {
+                            out_resp.* = if (ctx.aborted)
+                                ctx.abort_response
+                            else
+                                Response.json(403, "{\"error\":\"Forbidden\"}");
+                            _.finalizeResponse(ctx, out_resp);
                         }
-                        out_resp.* = if (ctx.aborted)
-                            ctx.abort_response
-                        else
-                            Response.json(403, "{\"error\":\"Forbidden\"}");
-                        _.finalizeResponse(ctx, out_resp);
+                        if (trace_on) {
+                            const t_mw1 = appMonotonicNowNs();
+                            t_hooks_ns += if (t_mw1 >= t_mw0) (t_mw1 - t_mw0) else 0;
+                            attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                        }
                         return;
                     }
                 }
             }
+            if (trace_on) {
+                const t_mw1 = appMonotonicNowNs();
+                t_hooks_ns += if (t_mw1 >= t_mw0) (t_mw1 - t_mw0) else 0;
+            }
         }
 
         // Stage 2: O(1) Static Hash + Compressed Radix Trie Route Lookup
+        const t_r0: u64 = if (trace_on) appMonotonicNowNs() else 0;
         const rmatch = _.radix.lookup(ctx.method.methodIndex(), ctx.path);
+        if (trace_on) {
+            const t_r1 = appMonotonicNowNs();
+            t_routing_ns = if (t_r1 >= t_r0) (t_r1 - t_r0) else 0;
+        }
         if (rmatch.matched && rmatch.handler_id >= 0) {
             const matched = rmatch.handler_id as usize;
             ctx.matched_path = _.routes[matched].pathSlice();
@@ -1943,27 +2052,48 @@ pub struct App {
             ctx.param_len = if (rmatch.param_len < APP_MAX_PARAMS) rmatch.param_len else APP_MAX_PARAMS;
 
             // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle -> route before_hook
+            const t_s3_0: u64 = if (trace_on) appMonotonicNowNs() else 0;
             if (_.derive_len > 0) {
                 if (early := _.runHookChain(_.derive_hooks, _.derive_len, ctx)) {
                     out_resp.* = early;
+                    if (trace_on) {
+                        const t_s3_1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
+                        attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                    }
                     return;
                 }
             }
             if (_.on_parse_len > 0) {
                 if (early := _.runHookChain(_.on_parse_hooks, _.on_parse_len, ctx)) {
                     out_resp.* = early;
+                    if (trace_on) {
+                        const t_s3_1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
+                        attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                    }
                     return;
                 }
             }
             if (_.on_transform_len > 0) {
                 if (early := _.runHookChain(_.on_transform_hooks, _.on_transform_len, ctx)) {
                     out_resp.* = early;
+                    if (trace_on) {
+                        const t_s3_1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
+                        attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                    }
                     return;
                 }
             }
             if (_.on_before_len > 0) {
                 if (early := _.runHookChain(_.on_before_hooks, _.on_before_len, ctx)) {
                     out_resp.* = early;
+                    if (trace_on) {
+                        const t_s3_1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
+                        attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                    }
                     return;
                 }
             }
@@ -1972,33 +2102,56 @@ pub struct App {
                 if (!ok || ctx.aborted) {
                     if (ctx.error_code != AppErrorCode.None) {
                         out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
-                        return;
+                    } else {
+                        out_resp.* = if (ctx.aborted)
+                            ctx.abort_response
+                        else
+                            Response.json(403, "{\"error\":\"Forbidden\"}");
+                        _.finalizeResponse(ctx, out_resp);
                     }
-                    out_resp.* = if (ctx.aborted)
-                        ctx.abort_response
-                    else
-                        Response.json(403, "{\"error\":\"Forbidden\"}");
-                    _.finalizeResponse(ctx, out_resp);
+                    if (trace_on) {
+                        const t_s3_1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
+                        attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
+                    }
                     return;
                 }
+            }
+            if (trace_on && (_.derive_len > 0 || _.on_parse_len > 0 || _.on_transform_len > 0 || _.on_before_len > 0 || _.routes[matched].before_hook != null)) {
+                const t_s3_1 = appMonotonicNowNs();
+                t_hooks_ns += if (t_s3_1 >= t_s3_0) (t_s3_1 - t_s3_0) else 0;
             }
 
             // Stage 4: Handler execution
             if (h := _.routes[matched].handler) {
+                const t_h0: u64 = if (trace_on) appMonotonicNowNs() else 0;
                 out_resp.* = h(ctx);
+                if (trace_on) {
+                    const t_h1 = appMonotonicNowNs();
+                    t_handler_ns = if (t_h1 >= t_h0) (t_h1 - t_h0) else 0;
+                }
                 if (ctx.error_code != AppErrorCode.None) {
                     out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
+                    if (trace_on) attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
                     return;
                 }
                 if (rmatch.head_fallback_to_get) {
                     out_resp.body = "";
                     out_resp.body_buf_len = 0;
                 }
+                const t_af0: u64 = if (trace_on) appMonotonicNowNs() else 0;
                 if (ah := _.routes[matched].after_hook) {
                     ah(ctx, out_resp);
                 }
                 if (_.on_after_len > 0 || ctx.response_header_len > 0 || _.map_response_len > 0 || _.on_after_response_len > 0) {
                     _.finalizeResponse(ctx, out_resp);
+                }
+                if (trace_on) {
+                    if (_.routes[matched].after_hook != null || _.on_after_len > 0 || _.map_response_len > 0 || _.on_after_response_len > 0) {
+                        const t_af1 = appMonotonicNowNs();
+                        t_hooks_ns += if (t_af1 >= t_af0) (t_af1 - t_af0) else 0;
+                    }
+                    attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
                 }
                 return;
             }
@@ -2012,16 +2165,24 @@ pub struct App {
             }
             * = out_resp.setHeader("Allow", formatAllowHeaderValue(rmatch.allowed_mask));
             _.finalizeResponse(ctx, out_resp);
+            if (trace_on) attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
             return;
         }
 
         if (fb := _.fallback_handler) {
+            const t_fb0: u64 = if (trace_on) appMonotonicNowNs() else 0;
             out_resp.* = fb(ctx);
+            if (trace_on) {
+                const t_fb1 = appMonotonicNowNs();
+                t_handler_ns = if (t_fb1 >= t_fb0) (t_fb1 - t_fb0) else 0;
+            }
             _.finalizeResponse(ctx, out_resp);
+            if (trace_on) attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
             return;
         }
 
         out_resp.* = _.buildErrorResponse(ctx, AppErrorCode.NotFound, "{\"error\":\"Not Found\"}");
+        if (trace_on) attachServerTiming(out_resp, t_routing_ns, t_handler_ns, t_hooks_ns);
     }
 
     /// Pure zero-I/O HTTP request dispatcher (convenience wrapper over `dispatchInto`).

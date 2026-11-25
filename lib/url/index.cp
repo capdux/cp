@@ -25,3 +25,12 @@ export {
     base64Encode,
     base64Decode,
 } from "./dataUrl.cp";
+
+export {
+    fastDecodeUriComponentOpts,
+    fastDecodeUriComponent,
+    fastDecodeFormComponent,
+    QueryPair,
+    parseQueryPair,
+    findQueryParamDecoded,
+} from "./fastDecode.cp";

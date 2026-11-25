@@ -52,19 +52,25 @@ Measured on **Intel Xeon Platinum 8175M** (Linux 6.12 x86_64, idle CPU exclusive
 
 ### Full Web Framework Benchmark (24 Routes + Middleware + Params/Query + JSON Validation, Err=0)
 
-CP `cap:web` vs **Bun Elysia** vs **Node Fastify** (24 identical routes: 12 static, 8 `:param`, 2 wildcard, 2 POST JSON + global Cookie/Bearer auth middleware):
+CP `cap:web` vs **Bun Elysia** vs **Node Fastify / Koa / Express** (24 identical routes: 12 static, 8 `:param`, 2 wildcard, 2 POST JSON + global Cookie/Bearer auth middleware):
 
 | Cores | Framework | `GET /health` | `GET :id/:postId+?` | `POST /orders` (JSON) | `GET /me` (Cookie+Auth) | Peak RSS |
 | :---: | :--- | ---: | ---: | ---: | ---: | ---: |
-| **1c** | **CP v1.0.0 (`cap:web`)** | **116,469** | **111,592** | **111,536** | **112,327** | **6.4 MB** |
-| 1c | Bun 1.3.14 (`Elysia`) | 56,109 | 42,047 | 41,106 | 51,060 | 86.4 MB |
-| 1c | Node v26.1.0 (`Fastify`) | 36,267 | 33,659 | 24,267 | 29,572 | 97.4 MB |
-| **8c** | **CP v1.0.0 (`cap:web`)** | **602,224** | **691,439** | **679,413** | **657,812** | **19.3 MB** |
-| 8c | Bun 1.3.14 (`Elysia`) | 350,392 | 302,144 | 212,878 | 321,619 | 763.6 MB |
-| 8c | Node v26.1.0 (`Fastify`) | 252,491 | 238,924 | 175,220 | 217,368 | 852.4 MB |
-| **16c** | **CP v1.0.0 (`cap:web`)** | **962,608** | **984,689** | **977,586** | **957,553** | **33.9 MB** |
-| 16c | Bun 1.3.14 (`Elysia`) | 547,324 | 471,870 | 345,207 | 482,075 | 1,402.7 MB |
-| 16c | Node v26.1.0 (`Fastify`) | 411,132 | 394,936 | 294,450 | 420,927 | 1,621.4 MB |
+| **1c** | **CP v1.0.0 (`cap:web`)** | **97,741** | **100,370** | **112,069** | **97,496** | **6.5 MB** |
+| 1c | Bun 1.3.14 (`Elysia`) | 55,916 | 47,257 | 38,164 | 48,591 | 87.8 MB |
+| 1c | Node v26.1.0 (`Fastify`) | 34,815 | 33,338 | 25,713 | 35,431 | 96.5 MB |
+| 1c | Node v26.1.0 (`Koa`) | 21,498 | 17,835 | 18,026 | 22,403 | 99.4 MB |
+| 1c | Node v26.1.0 (`Express`) | 17,303 | 18,146 | 15,807 | 23,764 | 94.5 MB |
+| **8c** | **CP v1.0.0 (`cap:web`)** | **664,988** | **658,232** | **702,978** | **606,915** | **19.4 MB** |
+| 8c | Bun 1.3.14 (`Elysia`) | 352,901 | 307,496 | 269,542 | 333,864 | 769.1 MB |
+| 8c | Node v26.1.0 (`Fastify`) | 270,385 | 247,234 | 184,176 | 234,301 | 852.6 MB |
+| 8c | Node v26.1.0 (`Koa`) | 144,851 | 117,660 | 126,711 | 158,111 | 811.1 MB |
+| 8c | Node v26.1.0 (`Express`) | 178,467 | 156,151 | 103,592 | 151,436 | 774.5 MB |
+| **16c** | **CP v1.0.0 (`cap:web`)** | **1,064,536** | **905,928** | **1,003,068** | **998,920** | **34.2 MB** |
+| 16c | Bun 1.3.14 (`Elysia`) | 505,782 | 451,541 | 381,468 | 457,893 | 1,458.3 MB |
+| 16c | Node v26.1.0 (`Fastify`) | 424,895 | 420,859 | 316,092 | 445,585 | 1,632.2 MB |
+| 16c | Node v26.1.0 (`Koa`) | 265,640 | 224,002 | 221,178 | 277,967 | 1,547.6 MB |
+| 16c | Node v26.1.0 (`Express`) | 286,151 | 251,278 | 198,067 | 277,201 | 1,475.8 MB |
 
 ### Live TCP WebSocket (128B Masked Echo, Err=0)
 

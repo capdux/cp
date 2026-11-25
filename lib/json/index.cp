@@ -186,3 +186,17 @@ export {
     applyPatchJson,
     diff,
 } from "./jsonPatch.cp";
+
+export {
+    SCHEMA_MAX_FIELDS,
+    SCHEMA_MAX_ISSUES,
+    SCHEMA_MAX_JSON_DEPTH,
+    FieldKind,
+    FieldRule,
+    ObjectSchema,
+    ValidationIssue,
+    ValidationReport,
+    validateJsonObject,
+    exactMirrorJson,
+    schemaToOpenApiJson,
+} from "./schema.cp";
