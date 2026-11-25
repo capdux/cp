@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use super::deps::SourceLang;
 use super::{run_migrate, MigrateOptions};
 
+pub const DEFAULT_CAPDUX_REGISTRY_URL: &str = "https://registry.capdux.org/v1/registry.json";
 pub const DEFAULT_GITHUB_REGISTRY_URL: &str =
     "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json";
 

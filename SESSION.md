@@ -6130,3 +6130,106 @@
   > 收到新的编译器待处理工单(4条: task-bun-20261126-borrow-dangling-return,task-bun-20261126-codegen-edge-cases,task-bun-20261126-c-ffi-abi-guard,task-bun-20261126-cpc-fix-brief-enhancements)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > 正在构建并验证 4 条 `bun_agy` 编译器工单修复，完成后立即汇报并结单。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 09:54:23）[step:25151]
+- **用户完整原始指令**：
+  > 我们要搭建自己的 cap包平台,类似 npm和 crake, 这个平台域名, capdux.org 和 capdux.dev capdux.io 哪个更好?
+  > 我们能在 Cloudflare 上直接搭建吗? 需要付费吗? api 能在 Cloudflare worker中运行吗? 还是必须自己租个vps, 你有什么好的建议和方案?
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 09:54:48）[step:25152]
+- **用户完整原始指令**：
+  > 我们要搭建自己的 cap包平台,类似 npm和 crate, 这个平台域名, capdux.org 和 capdux.dev capdux.io 哪个更好?
+  > 我们能在 Cloudflare 上直接搭建吗? 需要付费吗? api 能在 Cloudflare worker中运行吗? 还是必须自己租个vps, 你有什么好的建议和方案?
+- **完整回复与执行汇报**：
+  > ### 1. 域名选型：`capdux.org` vs `capdux.dev` vs `capdux.io`
+  >
+  > | 域名 | 定位与心智 | 优缺点 | 推荐度 |
+  > |---|---|---|---|
+  > | **`capdux.org`** | 开源基础设施与包平台标准（对标 `npmjs.org`、`pypi.org`、`rubygems.org`、`rust-lang.org`、`ziglang.org`） | **权威、中立、长期可信**，企业防火墙/内网白名单最友好，续费最便宜（约 **$10/年**），无国别顶级域政策风险 | ⭐⭐⭐⭐⭐ **首选主域** |
+  > | **`capdux.dev`** | 开发者/工具文档向（对标 `pub.dev`、`pkg.go.dev`） | 极客感强、强制 HSTS HTTPS，续费约 **$12–$15/年** | ⭐⭐⭐⭐ 适合做文档站或辅助跳转 |
+  > | **`capdux.io`** | 科技创业/开源项目（对标 `crates.io`） | 认知度高但续费贵（**$35–$50/年**），且 `.io` 存在国别顶级域长期政策不确定性 | ⭐⭐⭐ 不建议作唯一主域 |
+  >
+  > **建议**：主平台定为 **`capdux.org`**（`capdux.org` 官网、`registry.capdux.org` API/稀疏索引、`dl.capdux.org` 包下载）；若预算允许，顺手买下 `capdux.dev` 做 301 跳转或文档站（`docs.capdux.dev`）防止品牌被抢注。
+  >
+  > ---
+  >
+  > ### 2. 能否直接在 Cloudflare 搭建？是否付费？API 能否跑在 Workers 中？
+  >
+  > **完全可以 100% 直接搭建在 Cloudflare 上，且是目前全球性价比最高、抗 DDoS 最强的包平台架构——前期几乎 $0/月（免费额度极高）！**
+  >
+  > 包管理平台（尤其是 `cap` 还要分发跨平台预编译二进制 `.so/.dylib/.dll`）**最烧钱的是下行带宽流量费**，而 **Cloudflare R2 出口流量永久免费（$0 Egress）**，这是自租 VPS 或 AWS S3 完全比不了的核心优势：
+  >
+  > | 组件 | 用途 | 免费额度 | 超出后费用 |
+  > |---|---|---|---|
+  > | **Cloudflare Pages** | 包搜索门户、README/文档/AI `.d.cp` 预览前端 | **无限流量、无限请求** | 免费 |
+  > | **Cloudflare Workers** | Registry API（登录鉴权、`cap publish`、搜索、下载计数） | **10 万次请求/天** | Paid 仅 **$5/月**（含 1,000 万请求/月） |
+  > | **Cloudflare D1** | 边缘 SQLite 数据库（用户、包元数据、版本、依赖、SRI 校验和、权限） | **500 万读/天 + 10 万写/天 + 5 GB** | 极低按量计费 |
+  > | **Cloudflare R2** | 对象存储（源码包 `.tgz`、预编译二进制、稀疏索引 JSON） | **10 GB + 1000 万次读/月 + 永久免出口流量费** | $0.015/GB/月（100 GB 仅 $1.5） |
+  >
+  > > 注：开通 R2 需要绑定信用卡/PayPal 验证，但在免费额度内实际账单为 **$0**。
+  >
+  > ---
+  >
+  > ### 3. 架构方案建议：零运维起步，平滑演进（无需一开始租 VPS）
+  >
+  > 借鉴 Rust `crates.io` 升级后的 **Sparse Index（稀疏静态索引）** 架构，95% 的 `cap install` 流量甚至不经过 API 服务器，直接命中 Cloudflare 全球 300+ 边缘 CDN：
+  >
+  > ```text
+  > 用户 CLI (cap install / cap publish / cap from -npm)
+  >   ├── 查包元数据 (95% 读流量) ──▶ index.capdux.org (R2 + CDN 缓存静态 JSON，零 Worker/DB 消耗)
+  >   ├── 下载源码/二进制包        ──▶ dl.capdux.org    (R2 自定义域名，永久免流量费 + SHA-512 SRI 校验)
+  >   ├── 发布/搜索/鉴权 API       ──▶ api.capdux.org   (Cloudflare Workers + D1 SQLite)
+  >   └── 网页门户/文档/搜索       ──▶ capdux.org       (Cloudflare Pages)
+  >
+  > 后台重计算（交叉编译预编译矩阵 / cap from -npm/-crate 自动转化 / 安全审计）
+  >   └── 阶段 1：GitHub Actions 免费 Runner（Linux/macOS/Windows 三端编译 → 自动上传 R2 + 回调 Worker 更新 D1）
+  >   └── 阶段 2（生态壮大后）：租 1 台 $5~$10/月 VPS 跑我们自己的 CP `cap:web` 控制面 + 构建机，下载流量继续留在 Cloudflare R2
+  > ```
+  >
+  > #### 为什么这个方案最适合 CP / `cap`？
+  > 1. **前期零成本、零运维**：除了域名 $10/年，前期服务器与带宽费接近 **$0**，天然抗流量突发与 DDoS。
+  > 2. **天然契合我们刚落地的 `packages/@cap/registry.json`**：把 `registry.json` 直接同步到 `index.capdux.org/registry.json`，全球 `cap from -npm` / `cap from -crate` 毫秒级直连查重，无需走 GitHub Raw（避免国内访问慢和限流）。
+  > 3. **重计算与在线分发解耦**：Workers 只做轻量鉴权、元数据入库与签发 R2 预签名上传 URL，不跑重编译；交叉编译与安全扫描交给 GitHub Actions（或后期轻量 VPS + `cap:web`），兼顾性能、成本与稳定性。
+  >
+  > 如果你打算启动搭建，我可以帮你直接设计好 **Registry API 协议规范（Sparse Index + `cap publish` + `cap install` + SRI 校验）**、**D1 数据库 Schema** 以及可直接部署的 **Cloudflare Workers + R2 服务端代码**。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 10:13:08）[step:25154]
+- **用户完整原始指令**：
+  > 可以, 已按你推荐在 Cloudflare 上注册好 capdux.org域名, 你参照 npm和crates.io, 完整设计并完成我们的 安装包平台, 压缩格式, 采用你之前建议的高压缩格式(cap install/add 已实现解压).
+  > 设计完成后, 部署到 Cloudflare, 你需要我提供什么, 账号密码,还是 api key? 最好由你完成部署.
+  > 这个独立项目的 路径, 你打算如何建? 不应该放在 cp 目录对吧, ../cap 如何, cap 包项目
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 10:13:35）[step:25159]
+- **用户完整原始指令**：
+  > 你可以继续开两个子智能体协助并行工作!
+- **完整回复与执行汇报**：
+  > 已按你的规划启动三路并行开发，先回答两个关键问题：
+  >
+  > ### 1. 独立项目路径
+  > - 已建立在 **`/data/dev/capdux/`**（与域名 `capdux.org` 1:1 对应，完全独立于 `/data/dev/cp/`，也避免与 `/data/dev/cp/cap/` CLI 源码目录混淆），已初始化独立 Git 仓库。
+  > - 压缩格式原生采用 `cap` 已实现的 **Zstd 高压缩 `.tar.zst`**（魔数 `28 B5 2F FD`，同时兼容 npm `.tgz` `1F 8B`），配合 Cloudflare R2 零出口流量费与 Sparse Index 静态边缘索引。
+  >
+  > ### 2. 部署到 Cloudflare 需要你提供什么？（**切勿提供账号密码！**）
+  > 只需要在 Cloudflare Dashboard 提供以下 **2 项**（用完随时可在后台一键撤销，安全可控）：
+  > 1. **`CLOUDFLARE_ACCOUNT_ID`**：Cloudflare Dashboard → 右侧栏 **Account ID**（32 位十六进制字符串）。
+  > 2. **`CLOUDFLARE_API_TOKEN`**：Cloudflare Dashboard → **My Profile → API Tokens → Create Token → Custom Token**，勾选以下 5 项最小权限即可：
+  >    - `Account` → **Workers Scripts** → `Edit`
+  >    - `Account` → **D1** → `Edit`
+  >    - `Account` → **Workers R2 Storage** → `Edit`
+  >    - `Zone` (`capdux.org`) → **Workers Routes** → `Edit`
+  >    - `Zone` (`capdux.org`) → **Zone** → `Read`
+  >
+  > > 提前确认：在 Cloudflare 后台开通一次 **R2**（免费额度 10GB + 永久免流量费，首次开通需在网页点一下启用）。你把这 2 项发给我后，我直接运行 [scripts/deploy.sh](file:///data/dev/capdux/scripts/deploy.sh) 自动建库、建桶、跑迁移、部署上线 `capdux.org`，并一键把官方 `@cap/*` 与 `@web/*` 包批量打包 `.tar.zst` 发布上去！
+  >
+  > ---
+  >
+  > ### 当前三路并行进度
+  > - **主智能体（已完成）**：已搭建 `/data/dev/capdux/` 核心骨架，含 [wrangler.toml](file:///data/dev/capdux/wrangler.toml)、[0001_init.sql](file:///data/dev/capdux/migrations/0001_init.sql)、[types.ts](file:///data/dev/capdux/worker/src/types.ts)、[auth.ts](file:///data/dev/capdux/worker/src/auth.ts)、[storage.ts](file:///data/dev/capdux/worker/src/storage.ts)、[deploy.sh](file:///data/dev/capdux/scripts/deploy.sh) 与 [README.md](file:///data/dev/capdux/README.md)。
+  > - **子智能体 1（进行中）**：正在实现完整 Registry / Search / Auth API 路由（`PUT /v1/publish`、Sparse Index、`GET /dl/...`、`GET /v1/registry.json`）及全套 `bun test` 端到端测试。
+  > - **子智能体 2（进行中）**：正在实现 `capdux.org` 深色极客风 SSR 门户（首页搜索、包详情、`.d.cp` AI 接口预览、预编译矩阵）与官方包批量 `.tar.zst` 发布脚本 `scripts/seed_official.ts`。
+  >
+  > 两路完工后我将立即全量跑绿测试并提交，随时等你提供 Token 即可一键上线！
