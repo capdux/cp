@@ -1,5 +1,9 @@
-// Source: Absorbed from /data/dev/bun/src/js_parser.zig | Synced: 2026-11-21T16:33:54Z (JSONC Barrel)
+// Source: Absorbed from /data/dev/bun/src/js_parser.zig & Rust `json_comments` crate (JSONC Barrel)
 export {
+    JsoncOptions,
+    stripJsoncWithOptions,
+    stripJsoncWithSpaces,
+    stripJsoncInPlace,
     stripJsonc,
     stripJsoncPreserveLines,
     hasJsoncComments,

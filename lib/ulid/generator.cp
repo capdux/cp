@@ -10,7 +10,7 @@ import {
 import { Ulid } from "./ulid.cp";
 
 fn fillCsprng(buf: []u8) {
-    std.crypto.random.bytes(buf);
+    * = std.os.linux.getrandom(buf.ptr, buf.len, 0);
 }
 
 fn currentUnixMs(): u64 {

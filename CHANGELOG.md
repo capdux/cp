@@ -63,3 +63,9 @@
 - `lib/etag/` & `doc/lib/etag.md` & `cap/test/testEtagDeep.cp`: 对标 Rust `etag` crate + RFC 9110 §8.8.3/§13.1/§13.2.2 深度优化，新增严格 `EntityTag`/`etagc` 校验、128-bit+len/SHA-256/`fromStat` 生成器、引号逗号安全 `ETagListIter`、`If-Range` 与 304/412 `evaluatePreconditions` 决策机（5/5 PASS）。
 - `lib/logfmt/` & `doc/lib/logfmt.md` & `cap/test/testLogfmtDeep.cp`: 对标 Rust `logfmt`/Go `go-logfmt` 深度优化，新增原子防注入构造器 `LogfmtEncoder`、类型化解析 `asInt`/`asUint`/`asFloat`/`asBool`、`getLogfmtInt`/`getLogfmtBool`/`countLogfmtFields` 与文档示例（3/3 PASS）。
 - `cp_lib_ref.md`: 同步更新 `cap:slugify`、`cap:sri`、`cap:etag`、`cap:logfmt` 索引契约。
+
+## [2026-11-26] - Wave 2A 生态丰富与标准库深度优化（新增 `@cap/msgpack`，深度优化 `cap:ulid` / `cap:jsonc`）
+- `packages/@cap/msgpack/` (`cap.json`, `src/index.cp`, `src/index.d.cp`, `README.md`) & `cap/test/testCapMsgpack.cp`: 新增纯 CP 零外部依赖 `@cap/msgpack` 包（对标 Rust `rmp` crate，完整 MessagePack 编解码器、`skipValue` 深度护栏，PASSED 1042ms）。
+- `lib/ulid/` & `doc/lib/ulid.md` & `cap/test/testUlidDeep.cp`: 对标 Rust `ulid` crate 新增 `fromU128`/`toU128`/`increment()`（80-bit 防溢出），修复 `generator.cp` 在 Zig 0.17 下的 CSPRNG 兼容性，补齐 3 组可运行文档示例（3/3 PASS）。
+- `lib/jsonc/` & `doc/lib/jsonc.md` & `cap/test/testJsoncDeep.cp`: 对标 Rust `json_comments` crate 新增 `JsoncOptions`/`stripJsoncWithOptions`/`stripJsoncWithSpaces`/`stripJsoncInPlace`（零额外缓冲原地剥离，1:1 保持行列偏移），补齐文档示例（3/3 PASS）。
+- `cp_lib_ref.md`: 同步更新 `cap:ulid`、`cap:jsonc` 索引契约。

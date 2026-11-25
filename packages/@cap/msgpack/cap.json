@@ -1,0 +1,7 @@
+{
+  "name": "@cap/msgpack",
+  "ver": "1.0.0",
+  "description": "Pure CP, zero-dependency, zero-heap-allocation industrial MessagePack encoder & decoder (full spec, big-endian, safe recursive skip)",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

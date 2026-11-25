@@ -41,3 +41,61 @@ import cap from "cap";
 - `MonotonicUlidGenerator.init(seed_bytes_opt: ([10]u8)?): MonotonicUlidGenerator`
 - `gen.generateAt(now_ms: u64): Ulid ! UlidError`（同毫秒内 80-bit 熵 `+1`，溢出返回 `MonotonicOverflow`；新毫秒自动重生成 CSPRNG 熵）
 - `gen.generate(): Ulid ! UlidError`（使用当前系统毫秒时间戳）
+
+- `Ulid.fromU128(val: u128): Ulid` / `u.toU128(): u128`（128 位大端无符号整数无损互转，对标 Rust `ulid` crate）
+- `u.increment(): Ulid?`（同毫秒内 80-bit 熵 `+1`，溢出返回 `null`，对标 Rust `Ulid::increment()`）
+
+## 使用示例
+
+### 示例 1：单调递增 ULID 生成与 Crockford Base32 编码
+
+```cp
+import { Ulid, MonotonicUlidGenerator } from "cap:ulid";
+
+fn demoGenerate() {
+    let gen = MonotonicUlidGenerator.init(null);
+    const id1 = gen.generateAt(1700000000000) catch return;
+    const id2 = gen.generateAt(1700000000000) catch return;
+
+    // 同一毫秒内严格递增：id1 < id2
+    const cmp = id1.compare(id2); // -1
+    const text = id1.encode();    // [26]u8，例如 "01HF7..."
+    * = cmp;
+    * = text;
+}
+```
+
+### 示例 2：容错解码、严格解码与 `u128` / `UUID` 无损互转
+
+```cp
+import { Ulid } from "cap:ulid";
+
+fn demoConvert() {
+    // 容错解码：支持小写、连字符及 I/L -> 1、O -> 0
+    const u = Ulid.decode("01ar3z-ndekts-v4rrff-q69g5f-av") catch return;
+    const raw_u128 = u.toU128();
+    const u2 = Ulid.fromU128(raw_u128); // 与 u 字节完全一致
+
+    // 无损互转为标准 36 字符 UUID
+    const uuid = u2.toUuidString();
+    const back = Ulid.fromUuidString(uuid[0..]) catch return;
+    const same = back.equals(u); // true
+    * = same;
+}
+```
+
+### 示例 3：同毫秒确定性递增（`increment()`）与边界溢出防护
+
+```cp
+import { Ulid } from "cap:ulid";
+
+fn demoIncrement() {
+    const base = Ulid.fromParts(1700000000000, [0; 10]) catch return;
+    const next = base.increment().?; // 熵末字节变为 1，时间戳不变
+
+    // 最大值 80-bit 全 0xFF 递增返回 null（防溢出污染时间戳）
+    const overflow = Ulid.max().increment(); // null
+    * = next;
+    * = overflow;
+}
+```

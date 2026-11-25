@@ -32,6 +32,46 @@ pub struct Ulid {
         return Ulid{ bytes: bytes };
     }
 
+    /// Constructs a Ulid from a 128-bit unsigned integer (big-endian layout, matching Rust `ulid::Ulid::from(u128)`).
+    pub static fn fromU128(val: u128): Ulid {
+        let b: [16]u8 = [0; 16];
+        let i: usize = 0;
+        while (i < 16) : (i += 1) {
+            const shift: u7 = ((15 - i) * 8) as u7;
+            b[i] = ((val >> shift) & 0xFF) as u8;
+        }
+        return Ulid{ bytes: b };
+    }
+
+    /// Converts this Ulid into a 128-bit unsigned integer (big-endian layout).
+    pub fn toU128(): u128 {
+        let v: u128 = 0;
+        let i: usize = 0;
+        while (i < 16) : (i += 1) {
+            v = (v << 8) | (_.bytes[i] as u128);
+        }
+        return v;
+    }
+
+    /// Returns a new Ulid with its 80-bit random entropy incremented by 1 within the same millisecond
+    /// (matching Rust `ulid::Ulid::increment()`). Returns `null` if the 80-bit entropy overflows.
+    pub fn increment(): Ulid? {
+        let next = _.bytes;
+        let i: usize = 15;
+        while (true) {
+            if (next[i] < 0xFF) {
+                next[i] += 1;
+                return Ulid{ bytes: next };
+            }
+            next[i] = 0;
+            if (i == 6) {
+                return null;
+            }
+            i -= 1;
+        }
+        return null;
+    }
+
     /// Constructs a Ulid from a 48-bit millisecond timestamp and 80-bit (10-byte) entropy.
     pub static fn fromParts(timestamp_ms: u64, ent: [10]u8): Ulid ! UlidError {
         if (timestamp_ms > ULID_MAX_TIMESTAMP) {

@@ -54,3 +54,6 @@
 ## 2026-11-26: Wave 1 三路并行生态丰富（`@cap/blake3` + `slugify`/`sri`/`etag`/`logfmt` 深度优化）
 - **并行分工**：主智能体连续完成 `cap:slugify`、`cap:sri`、`cap:logfmt` 深度优化与文档示例重构；子智能体 1 完成纯 CP 工业级 `@cap/blake3` 包及官方测试向量验证；子智能体 2 完成 `cap:etag` RFC 9110 全规范升级。
 - **质量守门**：所有改动均保持 100% 向后兼容、零堆分配、零 `any`/`?T`/`dec`，全部新增单测（`testCapBlake3`、`testSlugifyDeep`、`testSriDeep`、`testEtagDeep`、`testLogfmtDeep`）全绿通过。
+
+## 2026-11-26: Wave 2A 交付（`@cap/msgpack` + `cap:ulid` Zig 0.17 修复与 `u128`/`increment` + `cap:jsonc` 原地等宽空格替换）
+- 子智能体 3 交付 `@cap/msgpack`（含 `index.d.cp`、`README.md` 与边界/畸形报文单测）；主智能体同步完成 `cap:ulid` 与 `cap:jsonc` 深度优化与测试文档收口；子智能体 4（`lib/rate`）与子智能体 5（`@cap/cbor`）继续并行推进。
