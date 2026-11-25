@@ -1,0 +1,7 @@
+{
+  "name": "@cap/cbor",
+  "ver": "1.0.0",
+  "description": "Pure CP, zero-dependency, zero-heap-allocation industrial CBOR (RFC 8949) encoder & decoder (big-endian, canonical shortest integers, zero-copy, depth-guarded recursive skip)",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

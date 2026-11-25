@@ -57,3 +57,6 @@
 
 ## 2026-11-26: Wave 2A 交付（`@cap/msgpack` + `cap:ulid` Zig 0.17 修复与 `u128`/`increment` + `cap:jsonc` 原地等宽空格替换）
 - 子智能体 3 交付 `@cap/msgpack`（含 `index.d.cp`、`README.md` 与边界/畸形报文单测）；主智能体同步完成 `cap:ulid` 与 `cap:jsonc` 深度优化与测试文档收口；子智能体 4（`lib/rate`）与子智能体 5（`@cap/cbor`）继续并行推进。
+
+## 2026-11-26: Wave 2B 交付（`@cap/cbor` + `cap:rate` Rust `governor` GCRA 深度升级）
+- 子智能体 5 交付 `@cap/cbor`（RFC 8949 Appendix A 向量全绿）；子智能体 4 交付 `cap:rate` GCRA 与 IETF 限流响应头格式化器并修复既有子模块语法（`testRateDeep` 6/6 PASS）；同步完成 `cpc` release 版原子部署与下游工单 `task-bun-20261126-type-alias-int-literal` 结单。

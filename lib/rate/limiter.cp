@@ -1,6 +1,6 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T11:12:13Z (Token Bucket & Sliding Window Rate Limiter)
+// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T11:12:13Z (Token Bucket & Fixed Window Rate Limiter)
 
-const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
+const U64_MAX: u64 = std.math.maxInt(u64);
 
 fn satAddU64(a: u64, b: u64): u64 {
     if (a > U64_MAX - b) {
@@ -21,14 +21,14 @@ fn satMulU64(a: u64, b: u64): u64 {
 
 /// 纯整数毫令牌确定性令牌桶限流器（零外部依赖、零堆分配、亚秒级零精度损失）
 /// 内部以 1 token = 1000 milli-tokens 表示，因此每经过 1 ms 恰好补充 refill_per_sec 个毫令牌
-export struct SimpleTokenBucket {
+pub struct SimpleTokenBucket {
     capacity_milli: u64;
     tokens_milli: u64;
     refill_per_sec: u64;
     last_refill_ms: u64;
 
     /// 创建初始满桶的令牌桶限流器
-    fn init(capacity: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
+    pub static fn init(capacity: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
         const cap_milli = satMulU64(capacity, 1000);
         return SimpleTokenBucket{
             capacity_milli: cap_milli,
@@ -39,7 +39,7 @@ export struct SimpleTokenBucket {
     }
 
     /// 创建指定初始令牌数的令牌桶限流器（initial_tokens 自动钳制至 <= capacity）
-    fn initWithTokens(capacity: u64, initial_tokens: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
+    pub static fn initWithTokens(capacity: u64, initial_tokens: u64, refill_per_sec: u64, now_ms: u64): SimpleTokenBucket {
         const cap_milli = satMulU64(capacity, 1000);
         const clamped = if (initial_tokens > capacity) capacity else initial_tokens;
         return SimpleTokenBucket{
@@ -51,7 +51,7 @@ export struct SimpleTokenBucket {
     }
 
     /// 按当前时间戳补充令牌（防时钟回拨、防乘法/加法溢出，封顶至 capacity）
-    fn refill(*_, now_ms: u64) {
+    pub fn refill(*_, now_ms: u64) {
         if (now_ms <= _.last_refill_ms) {
             return;
         }
@@ -66,13 +66,13 @@ export struct SimpleTokenBucket {
     }
 
     /// 先补充令牌再返回当前可用整数令牌数
-    fn available(*_, now_ms: u64): u64 {
+    pub fn available(*_, now_ms: u64): u64 {
         _.refill(now_ms);
         return _.tokens_milli / 1000;
     }
 
     /// 尝试消费指定数量令牌；足够则扣减并返回 true，否则不扣减并返回 false
-    fn tryConsume(*_, tokens: u64, now_ms: u64): bool {
+    pub fn tryConsume(*_, tokens: u64, now_ms: u64): bool {
         _.refill(now_ms);
         if (tokens == 0) {
             return true;
@@ -89,7 +89,7 @@ export struct SimpleTokenBucket {
     }
 
     /// 计算凑足 tokens 个令牌所需等待的最少毫秒数；若超容量或 refill_per_sec == 0 且不足则返回 null
-    fn timeUntilReadyMs(*_, tokens: u64, now_ms: u64): u64? {
+    pub fn timeUntilReadyMs(*_, tokens: u64, now_ms: u64): u64? {
         _.refill(now_ms);
         if (tokens == 0) {
             return 0;
@@ -113,14 +113,14 @@ export struct SimpleTokenBucket {
 }
 
 /// 固定时间窗口限流器（零外部依赖、零堆分配、防时钟回拨绕过）
-export struct FixedWindowLimiter {
+pub struct FixedWindowLimiter {
     limit: u64;
     window_ms: u64;
     window_start_ms: u64;
     used: u64;
 
     /// 初始化固定窗口限流器
-    fn init(limit: u64, window_ms: u64, now_ms: u64): FixedWindowLimiter {
+    pub static fn init(limit: u64, window_ms: u64, now_ms: u64): FixedWindowLimiter {
         return FixedWindowLimiter{
             limit: limit,
             window_ms: window_ms,
@@ -130,7 +130,7 @@ export struct FixedWindowLimiter {
     }
 
     /// 尝试在当前时间窗口放行一次请求；超限返回 false
-    fn allow(*_, now_ms: u64): bool {
+    pub fn allow(*_, now_ms: u64): bool {
         if (_.window_ms > 0 && now_ms >= _.window_start_ms) {
             const elapsed = now_ms - _.window_start_ms;
             if (elapsed >= _.window_ms) {
@@ -147,7 +147,7 @@ export struct FixedWindowLimiter {
     }
 
     /// 查询当前时间窗口剩余可放行配额（只读，不修改内部状态）
-    fn remaining(now_ms: u64): u64 {
+    pub fn remaining(now_ms: u64): u64 {
         if (_.window_ms > 0 && now_ms >= _.window_start_ms) {
             if (now_ms - _.window_start_ms >= _.window_ms) {
                 return _.limit;
@@ -160,7 +160,7 @@ export struct FixedWindowLimiter {
     }
 
     /// 查询距离当前时间窗口重置还剩多少毫秒（只读）
-    fn resetAfterMs(now_ms: u64): u64 {
+    pub fn resetAfterMs(now_ms: u64): u64 {
         if (_.window_ms == 0) {
             return 0;
         }

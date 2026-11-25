@@ -1,10 +1,27 @@
-// Source: Absorbed from /data/dev/bun/src/http/HTTPContext.cp | Synced: 2026-11-22T11:12:13Z (Unified Rate Limiting Barrel)
+// Source: cp/lib/rate/index.cp (Unified Zero-Alloc Rate Limiting Suite)
+export {
+    NS_PER_SECOND,
+    NS_PER_MINUTE,
+    Quota,
+    RateDecision,
+    GcraLimiter,
+    RateLimitHeaderLengths,
+    formatRetryAfterSeconds,
+    formatResetAfterSeconds,
+    formatRateLimitHeaders,
+    formatRetryAfterHeader,
+} from "./gcra.cp";
+
+export {
+    RateLimitError,
+    TokenBucket,
+    BucketGcraLimiter,
+} from "./bucket.cp";
+
 export {
     SlidingWindowCounter,
     SlidingGcraLimiter,
 } from "./sliding.cp";
-
-export * from "./bucket.cp";
 
 export {
     SimpleTokenBucket,
