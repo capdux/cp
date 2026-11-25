@@ -1791,6 +1791,19 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn parse_type(&mut self) -> ParseResult<Type> {
+        if self.recursion_depth >= 64 {
+            return Err(ParseError::Generic(
+                "maximum type nesting depth exceeded".to_string(),
+                self.peek_span(),
+            ));
+        }
+        self.recursion_depth += 1;
+        let res = self.parse_type_inner();
+        self.recursion_depth -= 1;
+        res
+    }
+
+    fn parse_type_inner(&mut self) -> ParseResult<Type> {
         if self.peek() == Some(&Token::If) {
             self.bump()?; // consume 'if'
             self.expect(Token::LParen)?;

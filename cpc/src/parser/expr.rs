@@ -32,7 +32,16 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn parse_expr(&mut self) -> ParseResult<Expr> {
-        self.parse_bin_expr(0)
+        if self.recursion_depth >= 64 {
+            return Err(ParseError::Generic(
+                "maximum expression nesting depth exceeded".to_string(),
+                self.peek_span(),
+            ));
+        }
+        self.recursion_depth += 1;
+        let res = self.parse_bin_expr(0);
+        self.recursion_depth -= 1;
+        res
     }
 
     pub(super) fn parse_bin_expr(&mut self, min_prec: u8) -> ParseResult<Expr> {

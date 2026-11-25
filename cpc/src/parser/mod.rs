@@ -68,7 +68,13 @@ impl ParseError {
                     .with_help("check the syntax around this token."),
             },
             ParseError::ExpectedToken(expected, found, span) => {
-                if *expected == Token::LParen {
+                if *found == Token::Dec {
+                    Diagnostic::new("E0131", "'dec' is a reserved decimal type keyword in CP")
+                        .with_span(*span)
+                        .with_cause("'dec' is reserved for CP's built-in fixed-point decimal type and cannot be used as an identifier.")
+                        .with_help("choose a descriptive identifier name such as 'dec_buf', 'decoded', or 'decoder'.")
+                        .with_suggestion("rename 'dec' to 'dec_buf'")
+                } else if *expected == Token::LParen {
                     Diagnostic::new("E0101", "control flow statement must be enclosed in parentheses")
                         .with_span(*span)
                         .with_cause("in CP, control flow statements ('if', 'while', 'for') must be enclosed in parentheses to eliminate ambiguity with struct literal syntax and maintain syntax consistency.")
@@ -165,6 +171,7 @@ pub struct Parser<'a> {
     in_pipeline_rhs: usize,
     in_switch_arm: usize,
     in_paren_pattern: usize,
+    recursion_depth: usize,
     pub errors: Vec<Diagnostic>,
 }
 
@@ -180,6 +187,7 @@ impl<'a> Parser<'a> {
             in_pipeline_rhs: 0,
             in_switch_arm: 0,
             in_paren_pattern: 0,
+            recursion_depth: 0,
             errors: Vec::new(),
         }
     }
@@ -547,6 +555,7 @@ impl<'a> Parser<'a> {
             in_pipeline_rhs: self.in_pipeline_rhs,
             in_switch_arm: self.in_switch_arm,
             in_paren_pattern: self.in_paren_pattern,
+            recursion_depth: self.recursion_depth,
             errors: Vec::new(),
         }
     }

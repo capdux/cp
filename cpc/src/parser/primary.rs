@@ -6,6 +6,19 @@ use crate::Span;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_primary_expr(&mut self) -> ParseResult<Expr> {
+        if self.recursion_depth >= 64 {
+            return Err(ParseError::Generic(
+                "maximum primary expression nesting depth exceeded".to_string(),
+                self.peek_span(),
+            ));
+        }
+        self.recursion_depth += 1;
+        let res = self.parse_primary_expr_inner();
+        self.recursion_depth -= 1;
+        res
+    }
+
+    fn parse_primary_expr_inner(&mut self) -> ParseResult<Expr> {
         let (token, span) = self.bump()?;
         match token {
             Token::Try => {

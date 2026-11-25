@@ -6,6 +6,19 @@ use crate::Span;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_pattern(&mut self) -> ParseResult<Pattern> {
+        if self.recursion_depth >= 64 {
+            return Err(ParseError::Generic(
+                "maximum pattern nesting depth exceeded".to_string(),
+                self.peek_span(),
+            ));
+        }
+        self.recursion_depth += 1;
+        let res = self.parse_pattern_inner();
+        self.recursion_depth -= 1;
+        res
+    }
+
+    fn parse_pattern_inner(&mut self) -> ParseResult<Pattern> {
         let first = self.parse_single_pattern()?;
         if self.peek() == Some(&Token::Pipe)
             || (self.in_switch_arm > 0

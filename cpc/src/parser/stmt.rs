@@ -6,6 +6,19 @@ use crate::Span;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_stmt(&mut self) -> ParseResult<Stmt> {
+        if self.recursion_depth >= 64 {
+            return Err(ParseError::Generic(
+                "maximum statement nesting depth exceeded".to_string(),
+                self.peek_span(),
+            ));
+        }
+        self.recursion_depth += 1;
+        let res = self.parse_stmt_inner();
+        self.recursion_depth -= 1;
+        res
+    }
+
+    fn parse_stmt_inner(&mut self) -> ParseResult<Stmt> {
         if matches!(self.peek(), Some(Token::Ident(id)) if id == "comptime" || id == "inline") {
             let is_inline = matches!(self.peek(), Some(Token::Ident(id)) if id == "inline");
             let mut clone = self.clone_lookahead();
