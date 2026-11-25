@@ -365,10 +365,17 @@ impl Codegen {
                     }
                     _ => {
                         let r_code = self.generate_expr(right);
-                        if self.is_lib_mode {
+                        if self.is_lib_mode || r_code.trim_start().starts_with("@panic(") {
                             format!("(({}) orelse ({}))", l_code, r_code)
                         } else {
-                            format!("cp_null_coalesce({}, {})", l_code, r_code)
+                            let id = self.lambda_counter;
+                            self.lambda_counter += 1;
+                            format!(
+                                "(blk_nc_{id}: {{ const __nc_l_{id} = ({l}); if (comptime @typeInfo(@TypeOf(__nc_l_{id})) == .optional) {{ break :blk_nc_{id} __nc_l_{id} orelse ({r}); }} else if (comptime @typeInfo(@TypeOf(__nc_l_{id})) == .null) {{ break :blk_nc_{id} ({r}); }} else {{ break :blk_nc_{id} __nc_l_{id}; }} }})",
+                                id = id,
+                                l = l_code,
+                                r = r_code,
+                            )
                         }
                     }
                 }
