@@ -1,5 +1,7 @@
-// Source: Absorbed from /data/dev/bun/src/logger.zig | Synced: 2026-11-21T14:47:27Z (Structured logfmt Parser & Encoder)
-// Pure-CP zero-allocation logfmt key=value structured log line parser, lookup, and canonical encoder.
+// Source: Absorbed from /data/dev/bun/src/logger.zig & Rust `logfmt` / Go `go-logfmt`
+// Pure-CP zero-allocation logfmt key=value structured log line parser, typed lookup, and atomic encoder.
+
+import std from "std";
 
 fn isWs(b: u8): bool {
     return b == ' ' || b == '\t' || b == '\r' || b == '\n';
@@ -19,7 +21,7 @@ fn isValidKeyChar(b: u8): bool {
     return b > 0x20 && b != '=' && b != '"' && b != 0x7F;
 }
 
-export struct LogfmtField {
+pub struct LogfmtField {
     key: []const u8,
     raw_value: []const u8,
     is_quoted: bool,
@@ -63,9 +65,35 @@ export struct LogfmtField {
         }
         return out[0..w];
     }
+
+    /// Parse field value as signed 64-bit integer.
+    pub fn asInt(): i64? {
+        if (_.raw_value.len == 0) return null;
+        return std.fmt.parseInt(i64, _.raw_value, 10) catch return null;
+    }
+
+    /// Parse field value as unsigned 64-bit integer.
+    pub fn asUint(): u64? {
+        if (_.raw_value.len == 0) return null;
+        return std.fmt.parseInt(u64, _.raw_value, 10) catch return null;
+    }
+
+    /// Parse field value as 64-bit float.
+    pub fn asFloat(): f64? {
+        if (_.raw_value.len == 0) return null;
+        return std.fmt.parseFloat(f64, _.raw_value) catch return null;
+    }
+
+    /// Parse field value as boolean (`true`/`1` -> true, `false`/`0` -> false; bare flag -> true).
+    pub fn asBool(): bool? {
+        if (!_.has_value) return true;
+        if (strEq(_.raw_value, "true") || strEq(_.raw_value, "1")) return true;
+        if (strEq(_.raw_value, "false") || strEq(_.raw_value, "0")) return false;
+        return null;
+    }
 }
 
-export struct LogfmtIter {
+pub struct LogfmtIter {
     src: []const u8,
     pos: usize,
     had_error: bool,
@@ -172,7 +200,7 @@ export struct LogfmtIter {
 }
 
 /// Lookup a key in a logfmt line and decode its value into `out`.
-export fn getLogfmtValue(line: []const u8, key: []const u8, out: []u8): ([]const u8)? {
+pub fn getLogfmtValue(line: []const u8, key: []const u8, out: []u8): ([]const u8)? {
     let it = LogfmtIter.init(line);
     while (f := it.next()) {
         if (strEq(f.key, key)) {
@@ -180,6 +208,39 @@ export fn getLogfmtValue(line: []const u8, key: []const u8, out: []u8): ([]const
         }
     }
     return null;
+}
+
+/// Lookup a key in a logfmt line and parse it as `i64`.
+pub fn getLogfmtInt(line: []const u8, key: []const u8): i64? {
+    let it = LogfmtIter.init(line);
+    while (f := it.next()) {
+        if (strEq(f.key, key)) {
+            return f.asInt();
+        }
+    }
+    return null;
+}
+
+/// Lookup a key in a logfmt line and parse it as `bool`.
+pub fn getLogfmtBool(line: []const u8, key: []const u8): bool? {
+    let it = LogfmtIter.init(line);
+    while (f := it.next()) {
+        if (strEq(f.key, key)) {
+            return f.asBool();
+        }
+    }
+    return null;
+}
+
+/// Count valid fields in a logfmt line.
+pub fn countLogfmtFields(line: []const u8): usize {
+    let it = LogfmtIter.init(line);
+    let count: usize = 0;
+    while (f := it.next()) {
+        * = f;
+        count += 1;
+    }
+    return count;
 }
 
 fn valueNeedsQuotes(val: []const u8): bool {
@@ -195,7 +256,9 @@ fn valueNeedsQuotes(val: []const u8): bool {
 
 /// Append a `key=value` pair to `out` at `pos` (inserting a leading space if `pos > 0`).
 /// Automatically quotes and escapes values containing whitespace, `=`, `"`, `\`, `\n`, `\r`, `\t`.
-export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8): bool {
+/// Atomic on buffer overflow: restores `pos` to its original value if `false` is returned.
+pub fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8): bool {
+    const saved_pos = pos.*;
     if (key.len == 0) return false;
     let ki: usize = 0;
     while (ki < key.len) {
@@ -203,11 +266,17 @@ export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const
         ki += 1;
     }
     if (pos.* > 0) {
-        if (pos.* >= out.len) return false;
+        if (pos.* >= out.len) {
+            pos.* = saved_pos;
+            return false;
+        }
         out[pos.*] = ' ';
         pos.* += 1;
     }
-    if (pos.* + key.len + 1 > out.len) return false;
+    if (pos.* + key.len + 1 > out.len) {
+        pos.* = saved_pos;
+        return false;
+    }
     let i: usize = 0;
     while (i < key.len) {
         out[pos.* + i] = key[i];
@@ -218,7 +287,10 @@ export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const
     pos.* += 1;
 
     if (!valueNeedsQuotes(val)) {
-        if (pos.* + val.len > out.len) return false;
+        if (pos.* + val.len > out.len) {
+            pos.* = saved_pos;
+            return false;
+        }
         let vi: usize = 0;
         while (vi < val.len) {
             out[pos.* + vi] = val[vi];
@@ -228,7 +300,10 @@ export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const
         return true;
     }
 
-    if (pos.* >= out.len) return false;
+    if (pos.* >= out.len) {
+        pos.* = saved_pos;
+        return false;
+    }
     out[pos.*] = '"';
     pos.* += 1;
 
@@ -236,7 +311,10 @@ export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const
     while (vi < val.len) {
         const c = val[vi];
         if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t') {
-            if (pos.* + 2 > out.len) return false;
+            if (pos.* + 2 > out.len) {
+                pos.* = saved_pos;
+                return false;
+            }
             out[pos.*] = '\\';
             if (c == '\n') {
                 out[pos.* + 1] = 'n';
@@ -249,15 +327,101 @@ export fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const
             }
             pos.* += 2;
         } else {
-            if (pos.* >= out.len) return false;
+            if (pos.* >= out.len) {
+                pos.* = saved_pos;
+                return false;
+            }
             out[pos.*] = c;
             pos.* += 1;
         }
         vi += 1;
     }
 
-    if (pos.* >= out.len) return false;
+    if (pos.* >= out.len) {
+        pos.* = saved_pos;
+        return false;
+    }
     out[pos.*] = '"';
     pos.* += 1;
     return true;
+}
+
+/// Zero-allocation structured logfmt line builder (modeled after Rust `logfmt` / Go `go-logfmt`).
+pub struct LogfmtEncoder {
+    buf: []u8,
+    pos: usize = 0,
+
+    pub static fn init(buf: []u8): LogfmtEncoder {
+        return LogfmtEncoder{ buf: buf, pos: 0 };
+    }
+
+    pub fn written(): []const u8 {
+        return _.buf[0.._.pos];
+    }
+
+    pub fn reset(*_) {
+        _.pos = 0;
+    }
+
+    pub fn kvStr(*_, key: []const u8, val: []const u8): bool {
+        return appendLogfmtPair(_.buf, &_.pos, key, val);
+    }
+
+    pub fn kvInt(*_, key: []const u8, val: i64): bool {
+        let tmp: [32]u8 = [0; 32];
+        const s = std.fmt.bufPrint(tmp[0..], "{d}", .{val}) catch return false;
+        return appendLogfmtPair(_.buf, &_.pos, key, s);
+    }
+
+    pub fn kvUint(*_, key: []const u8, val: u64): bool {
+        let tmp: [32]u8 = [0; 32];
+        const s = std.fmt.bufPrint(tmp[0..], "{d}", .{val}) catch return false;
+        return appendLogfmtPair(_.buf, &_.pos, key, s);
+    }
+
+    pub fn kvFloat(*_, key: []const u8, val: f64): bool {
+        let tmp: [48]u8 = [0; 48];
+        const s = std.fmt.bufPrint(tmp[0..], "{d:.3}", .{val}) catch return false;
+        return appendLogfmtPair(_.buf, &_.pos, key, s);
+    }
+
+    pub fn kvBool(*_, key: []const u8, val: bool): bool {
+        return appendLogfmtPair(_.buf, &_.pos, key, if (val) "true" else "false");
+    }
+
+    pub fn kvFlag(*_, key: []const u8): bool {
+        const saved = _.pos;
+        if (key.len == 0) return false;
+        let ki: usize = 0;
+        while (ki < key.len) {
+            if (!isValidKeyChar(key[ki])) return false;
+            ki += 1;
+        }
+        if (_.pos > 0) {
+            if (_.pos >= _.buf.len) {
+                _.pos = saved;
+                return false;
+            }
+            _.buf[_.pos] = ' ';
+            _.pos += 1;
+        }
+        if (_.pos + key.len > _.buf.len) {
+            _.pos = saved;
+            return false;
+        }
+        let i: usize = 0;
+        while (i < key.len) {
+            _.buf[_.pos + i] = key[i];
+            i += 1;
+        }
+        _.pos += key.len;
+        return true;
+    }
+
+    pub fn endLine(*_): bool {
+        if (_.pos >= _.buf.len) return false;
+        _.buf[_.pos] = '\n';
+        _.pos += 1;
+        return true;
+    }
 }

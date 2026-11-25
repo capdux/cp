@@ -1,0 +1,7 @@
+{
+  "name": "@cap/blake3",
+  "ver": "1.0.0",
+  "description": "Pure CP, zero-dependency industrial BLAKE3 cryptographic hash implementation (standard, keyed, key-derivation, streaming & XOF)",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

@@ -1,8 +1,25 @@
-// Source: Absorbed from /data/dev/bun/src/http_types/ETag.cp | Synced: 2026-11-21T13:56:46Z
+// Source: Absorbed from /data/dev/bun/src/http_types/ETag.cp | Enhanced for RFC 9110 §8.8.3 / §13.1 / §13.2.2
 pub import {
+    EntityTag,
     ParsedETag,
+    PreconditionResult,
+    ETagListIter,
+    isValidEtagChar,
+    isValidOpaqueTag,
+    isWildcardHeader,
+    parseHeaderList,
+    ifNoneMatchTag,
+    ifMatchTag,
     ifNoneMatch,
     ifMatch,
+    ifRangeMatch,
+    evaluatePreconditions,
     generateStrong,
     generateWeak,
+    generateContentStrong,
+    generateContentWeak,
+    generateSha256Strong,
+    generateSha256Weak,
+    fromStat,
+    fromStatStrong,
 } from "./etag.cp";

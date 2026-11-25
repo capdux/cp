@@ -50,3 +50,7 @@
 - **审查结论**：CapSurf 下沉的 26 个 `lib/css/*.cp` 文件（+5,590/-62）属于纯增量 W3C CSSOM 校验器与 Color 4 / Stylesheet / `@supports` 规范增强，0 个既有导出签名被破坏，0 处不安全代码，26/26 文件 `cpc check` 零报错。
 - **全量回归验证**：在 `cap test -m` 模块化模式下运行全部 79 个 CSS 测试（17 个 `testCss*` + 61 个 `test_css_*` + 新增 `testCssValidationAndColor4`）。期间发现唯一失败项 `test_css_full.cp:96` 为历史遗留旧断言（`toRgbString` 在 `HEAD` 中已返回 W3C 0..1 浮点 alpha），修正后 79/79 全部 PASS。
 - **并行交付**：主智能体负责全量回归与缺陷定位，子智能体 A 编写 `cap/test/testCssValidationAndColor4.cp`，子智能体 B 同步 `doc/lib/css.md` 与 `cp_lib_ref.md`，三路零冲突收口提交。
+
+## 2026-11-26: Wave 1 三路并行生态丰富（`@cap/blake3` + `slugify`/`sri`/`etag`/`logfmt` 深度优化）
+- **并行分工**：主智能体连续完成 `cap:slugify`、`cap:sri`、`cap:logfmt` 深度优化与文档示例重构；子智能体 1 完成纯 CP 工业级 `@cap/blake3` 包及官方测试向量验证；子智能体 2 完成 `cap:etag` RFC 9110 全规范升级。
+- **质量守门**：所有改动均保持 100% 向后兼容、零堆分配、零 `any`/`?T`/`dec`，全部新增单测（`testCapBlake3`、`testSlugifyDeep`、`testSriDeep`、`testEtagDeep`、`testLogfmtDeep`）全绿通过。

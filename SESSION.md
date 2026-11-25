@@ -6046,3 +6046,16 @@
   > 3. 子智能体 B 正在同步更新 [css.md](file:///data/dev/cp/doc/lib/css.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
   >
   > 全部完成后立即汇总验证结果并统一提交。
+
+### 2026-11-26（下游工单全量补录：`task-bun-20261126-type-alias-int-literal`）[ticket:task-bun-20261126-type-alias-int-literal]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-26 02:36:42` | 状态：`pending` | 结单：`进行中`
+- **报错/需求摘要**：const CodePoint = i32; 别名后 let v: CodePoint = 0; 报 E0207 type mismatch: expected Ref(Ident { sym: CodePoint }), found I32，未解引用别名类型做双向字面量推导
+- **结单与处理汇报**：(处理中/未填写结单备注)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:38:17）[step:24621]
+- **用户完整原始指令**：
+  > 你没事时的工作, 与两个子智能体并行工作, 主智能体不可闲着等待, 也不可陷入长时间任务:
+  > 1. 继续吸收丰富  @cap 库.
+  > 2. 继续整理 lib中未深度优化的文件, 要求功能完备, 如有对应rust开源版, 则取过来进行深度优化, 丰富对应文档, 文档中有使用示例说明.
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)

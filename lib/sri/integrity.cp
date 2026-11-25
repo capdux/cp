@@ -4,7 +4,7 @@
 
 import std from "std";
 
-export const MAX_DIGEST_LEN: usize = 64; // SHA-512
+pub const MAX_DIGEST_LEN: usize = 64; // SHA-512
 
 export err SriError {
     InvalidFormat,
@@ -226,6 +226,120 @@ export struct Integrity {
         @memcpy(out[0..pfx.len], pfx);
         * = std.base64.standard.Encoder.encode(out[pfx.len..total], _.value[0..dlen]);
         return out[0..total];
+    }
+
+    /// Format raw digest bytes as lowercase hexadecimal string into `out`.
+    pub fn toHex(out: []u8): ([]const u8)! {
+        if (!_.tag.isSupported()) return err.UnsupportedAlgorithm;
+        const dlen = _.tag.digestLen();
+        const total = dlen * 2;
+        if (out.len < total) return err.BufferTooSmall;
+        const hex_chars = "0123456789abcdef";
+        let i: usize = 0;
+        while (i < dlen) : (i += 1) {
+            const b = _.value[i];
+            out[i * 2] = hex_chars[(b >> 4) & 0x0F];
+            out[i * 2 + 1] = hex_chars[b & 0x0F];
+        }
+        return out[0..total];
+    }
+}
+
+pub const MAX_SRI_ENTRIES: usize = 8;
+
+/// Multi-hash W3C SRI set (modeled after Rust `ssri::Integrity`).
+/// Supports multiple algorithms and multiple digests of the same strongest algorithm
+/// (e.g. dual-hash key rotation `"sha512-<a...> sha512-<b...> sha256-<c...>"`).
+export struct IntegrityList {
+    entries: [MAX_SRI_ENTRIES]Integrity = [Integrity{}; MAX_SRI_ENTRIES],
+    len: usize = 0,
+
+    pub fn isEmpty(): bool {
+        return _.len == 0;
+    }
+
+    /// Returns the strongest supported algorithm present in the list.
+    pub fn strongestTag(): IntegrityTag {
+        let best: IntegrityTag = .unknown;
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (_.entries[i].tag.strength() > best.strength()) {
+                best = _.entries[i].tag;
+            }
+        }
+        return best;
+    }
+
+    /// Adds an entry if not already present (deduplicating identical tag + digest).
+    pub fn push(*_, item: Integrity): bool {
+        if (!item.isSupported()) return false;
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (_.entries[i].eql(item)) return true;
+        }
+        if (_.len >= MAX_SRI_ENTRIES) return false;
+        _.entries[_.len] = item;
+        _.len += 1;
+        return true;
+    }
+
+    /// Merges all entries from `other` into this list (deduplicated).
+    pub fn concat(*_, other: IntegrityList) {
+        let i: usize = 0;
+        while (i < other.len) : (i += 1) {
+            * = _.push(other.entries[i]);
+        }
+    }
+
+    /// Parses all valid space-separated SRI tokens into an `IntegrityList`.
+    pub static fn parse(input: []const u8): IntegrityList! {
+        let list = IntegrityList{};
+        let pos: usize = 0;
+        while (pos < input.len) {
+            while (pos < input.len && (input[pos] == ' ' || input[pos] == '\t' || input[pos] == '\r' || input[pos] == '\n')) : (pos += 1) {}
+            if (pos >= input.len) break;
+            const start = pos;
+            while (pos < input.len && input[pos] != ' ' && input[pos] != '\t' && input[pos] != '\r' && input[pos] != '\n') : (pos += 1) {}
+            const tok = input[start..pos];
+            if (parsed := Integrity.parseSingle(tok)) {
+                * = list.push(parsed);
+            }
+        }
+        if (list.len == 0) return err.InvalidFormat;
+        return list;
+    }
+
+    /// Verifies `data` per W3C SRI §3.3.3: computes the strongest algorithm present
+    /// and succeeds if ANY entry with that strongest algorithm matches in constant time.
+    pub fn verify(data: []const u8): bool {
+        const best_tag = _.strongestTag();
+        if (!best_tag.isSupported()) return false;
+        const computed = Integrity.compute(best_tag, data) catch return false;
+        let matched = false;
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (_.entries[i].tag == best_tag && _.entries[i].eql(computed)) {
+                matched = true;
+            }
+        }
+        return matched;
+    }
+
+    /// Formats all entries separated by single spaces into `out`.
+    pub fn format(out: []u8): ([]const u8)! {
+        if (_.len == 0) return err.InvalidFormat;
+        let pos: usize = 0;
+        let i: usize = 0;
+        while (i < _.len) : (i += 1) {
+            if (i > 0) {
+                if (pos >= out.len) return err.BufferTooSmall;
+                out[pos] = ' ';
+                pos += 1;
+            }
+            const written = _.entries[i].format(out[pos..])?;
+            pos += written.len;
+        }
+        return out[0..pos];
     }
 }
 
