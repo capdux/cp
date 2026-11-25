@@ -1,13 +1,14 @@
-// SQLite Extreme Single-Thread & 8-Core Multi-Thread WAL Benchmark (`cap:sqlite`)
+// SQLite Extreme 1c / 8c / 16c Multi-Thread WAL Benchmark (`cap:sqlite`)
 // Statically linked against source-compiled `temp/sqlite3_extreme.o` with:
 //   -O3 -march=native -DSQLITE_THREADSAFE=2 -DSQLITE_DEFAULT_MEMSTATUS=0
 //   -DSQLITE_OMIT_PROGRESS_CALLBACK -DSQLITE_DQS=0 -DSQLITE_MAX_EXPR_DEPTH=0 -DSQLITE_OMIT_DEPRECATED
 //
 // Modes via env `SQLITE_BENCH_MODE`:
-//   - "write"             : 100,000 order inserts in 1 transaction with prepared statement reuse
-//   - "point_read"        : 200,000 indexed point lookups (`SELECT amount FROM orders WHERE id = ?`)
-//   - "wal_read_8t"       : 8 pthread workers x 200,000 = 1,600,000 concurrent WAL point reads
-//   - "batch_materialize" : 500 queries x 1,000 rows = 500,000 multi-column rows into `undefined` stack Arena
+//   - "write"             : 1c 100,000 order inserts in 1 transaction with prepared statement reuse (EXCLUSIVE)
+//   - "point_read"        : 1c 200,000 indexed point lookups (`SELECT amount FROM orders WHERE id = ?`) (EXCLUSIVE)
+//   - "wal_read_8t"       : 8c 8 pthread workers x 200,000 = 1,600,000 concurrent WAL point reads (NORMAL)
+//   - "wal_read_16t"      : 16c 16 pthread workers x 200,000 = 3,200,000 concurrent WAL point reads (NORMAL)
+//   - "batch_materialize" : 1c 500 queries x 1,000 rows = 500,000 multi-column rows into `undefined` stack Arena
 
 import {
     Database,
@@ -40,10 +41,15 @@ const MAX_THREADS: usize = 32;
 const ORDER_NOTE: []const u8 = "order_payload_item";
 
 const PRAGMA_WRITE_SQL: []const u8 =
-    "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
+    "PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
+
+const PRAGMA_POINT_READ_SQL: []const u8 =
+    "PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
 
 const PRAGMA_READ_SQL: []const u8 =
-    "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+    "PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+
+const PRAGMA_LOCKING_NORMAL_SQL: []const u8 = "PRAGMA locking_mode=NORMAL;";
 
 const SELECT_SQL: []const u8 = "SELECT amount FROM orders WHERE id = ?;";
 const SELECT_BATCH_SQL: []const u8 =
@@ -128,6 +134,8 @@ fn runWrite(db_path: []const u8) {
     db.commit() catch return;
     const t1 = HwTimer.nowNs();
 
+    db.exec(PRAGMA_LOCKING_NORMAL_SQL) catch {};
+
     let checksum: i64 = 0;
     {
         let chk = db.prepare("SELECT COUNT(*), SUM(amount) FROM orders;") catch return;
@@ -148,13 +156,13 @@ fn runWrite(db_path: []const u8) {
 }
 
 fn runPointRead(db_path: []const u8) {
-    let db = Database.open(db_path, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX) catch {
+    let db = Database.open(db_path, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX) catch {
         std.debug.print("{{\"error\":\"open_read_failed\"}}\n", .{});
         return;
     };
     defer db.close();
 
-    db.exec(PRAGMA_READ_SQL) catch {
+    db.exec(PRAGMA_POINT_READ_SQL) catch {
         std.debug.print("{{\"error\":\"pragma_read_failed\"}}\n", .{});
         return;
     };
@@ -177,6 +185,8 @@ fn runPointRead(db_path: []const u8) {
         sel.reset() catch return;
     }
     const t1 = HwTimer.nowNs();
+
+    db.exec(PRAGMA_LOCKING_NORMAL_SQL) catch {};
 
     const elapsed_ms: f64 = @as(f64, @floatFromInt(t1 - t0)) / 1_000_000.0;
     const ops_per_sec: f64 = @as(f64, @floatFromInt(POINT_QUERIES)) / (elapsed_ms / 1000.0);
@@ -251,7 +261,7 @@ struct WalWorkerCtx {
     return null;
 }
 
-fn runWalReadMulti(db_path: []const u8, num_threads: usize) {
+fn runWalReadMulti(db_path: []const u8, num_threads: usize, mode_name: []const u8) {
     let n: usize = num_threads;
     if (n < (1 as usize)) {
         n = 1 as usize;
@@ -319,8 +329,8 @@ fn runWalReadMulti(db_path: []const u8, num_threads: usize) {
     const peak_rss_mb: f64 = @as(f64, @floatFromInt(readVmHwmKb())) / 1024.0;
 
     std.debug.print(
-        "{{\"mode\":\"wal_read_8t\",\"threads\":{d},\"queries\":{d},\"elapsed_ms\":{d:.3},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
-        .{ n, total_queries, elapsed_ms, ops_per_sec, peak_rss_mb, total_checksum },
+        "{{\"mode\":\"{s}\",\"threads\":{d},\"queries\":{d},\"elapsed_ms\":{d:.3},\"ops_per_sec\":{d:.1},\"peak_rss_mb\":{d:.2},\"checksum\":{d}}}\n",
+        .{ mode_name, n, total_queries, elapsed_ms, ops_per_sec, peak_rss_mb, total_checksum },
     );
 }
 
@@ -433,14 +443,15 @@ fn runBatchMaterialize(db_path: []const u8) {
 fn main() {
     const mode = envStr("SQLITE_BENCH_MODE", "write");
     const db_path = envStr("SQLITE_BENCH_DB", "/tmp/cp_sqlite_extreme.db");
-    const threads: usize = @intCast(envInt("SQLITE_BENCH_THREADS", 8));
+    const default_threads: i32 = if (strEq(mode, "wal_read_16t")) 16 else 8;
+    const threads: usize = @intCast(envInt("SQLITE_BENCH_THREADS", default_threads));
 
     if (strEq(mode, "write")) {
         runWrite(db_path);
     } else if (strEq(mode, "point_read")) {
         runPointRead(db_path);
-    } else if (strEq(mode, "wal_read_8t")) {
-        runWalReadMulti(db_path, threads);
+    } else if (strEq(mode, "wal_read_8t") || strEq(mode, "wal_read_16t") || strEq(mode, "wal_read")) {
+        runWalReadMulti(db_path, threads, mode);
     } else if (strEq(mode, "batch_materialize")) {
         runBatchMaterialize(db_path);
     } else {

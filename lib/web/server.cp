@@ -9,7 +9,7 @@
 // ============================================================================
 
 const std = @import("std");
-import { App, AppMethod, Request, Response, HeaderKV } from "./app.cp";
+import { App, AppMethod, Context, Request, Response, HeaderKV } from "./app.cp";
 
 pub const SERVER_MAX_WORKERS: usize = 64;
 pub const SERVER_READ_BUF_LEN: usize = 2048;
@@ -396,6 +396,9 @@ fn writeAllFd(fd: i32, data: string): bool {
 
         let events: [SERVER_EPOLL_BATCH]EpollEventC = undefined;
         let write_buf: [SERVER_WRITE_BUF_LEN]u8 = undefined;
+        let reusable_req: Request = undefined;
+        let reusable_ctx: Context = undefined;
+        let reusable_resp: Response = undefined;
         let one: i32 = 1;
 
         while (@atomicLoad(i32, wctx.stop_flag, .acquire) == 0) {
@@ -475,17 +478,16 @@ fn writeAllFd(fd: i32, data: string): bool {
                     let wtotal: usize = 0;
                     let should_close = false;
                     while (offset < conns[idx].read_len) {
-                        let req = Request{};
                         let keep_alive = true;
                         const slice = conns[idx].read_buf[offset..conns[idx].read_len];
-                        const consumed = parseHttp1Request(slice, *req, *keep_alive);
+                        const consumed = parseHttp1Request(slice, *reusable_req, *keep_alive);
                         if (consumed < 0) {
                             should_close = true;
                             break;
                         }
                         if (consumed == 0) break;
 
-                        const resp = wctx.app.dispatch(req);
+                        wctx.app.dispatchInto(&reusable_req, *reusable_ctx, *reusable_resp);
                         if (wtotal + 1024 > SERVER_WRITE_BUF_LEN) {
                             if (!writeAllFd(fd, write_buf[0..wtotal])) {
                                 should_close = true;
@@ -493,7 +495,7 @@ fn writeAllFd(fd: i32, data: string): bool {
                             }
                             wtotal = 0;
                         }
-                        const wlen = serializeHttp1Response(*resp, keep_alive, write_buf[wtotal..]);
+                        const wlen = serializeHttp1Response(*reusable_resp, keep_alive, write_buf[wtotal..]);
                         wtotal += wlen;
                         offset += consumed as usize;
                         if (!keep_alive) {

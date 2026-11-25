@@ -1528,12 +1528,8 @@ pub struct App {
         return null;
     }
 
-    /// Pure zero-I/O HTTP request dispatcher:
-    /// 1. `onRequest` -> `middlewares` -> `derive`
-    /// 2. O(1) Static Hash / Compressed Radix Trie lookup (with Axum HEAD->GET fallback)
-    /// 3. `onParse` -> `onTransform` -> `onBeforeHandle` -> `handler`
-    /// 4. `onAfterHandle` -> header merge -> `mapResponse` -> `onAfterResponse`
-    pub fn dispatch(*_, req: Request): Response {
+    /// Zero-copy in-place dispatcher for high-throughput servers (reuses caller's `ctx` and `out_resp`).
+    pub fn dispatchInto(*_, req: *const Request, ctx: *Context, out_resp: *Response) {
         let clean_path = req.path;
         let query_str = req.raw_query;
         if (query_str.len == 0) {
@@ -1545,50 +1541,56 @@ pub struct App {
             }
         }
 
-        let ctx = Context{
-            method: req.method,
-            path: if (clean_path.len == 0) "/" else clean_path,
-            original_uri: req.path,
-            matched_path: "",
-            raw_query: query_str,
-            body: req.body,
-            headers: req.headers,
-            header_len: req.header_len,
-            params: undefined,
-            param_len: 0,
-            state_ptr: _.state_ptr,
-            state_kv: _.state_kv,
-            state_kv_len: _.state_kv_len,
-            derived_kv: undefined,
-            derived_kv_len: 0,
-            response_headers: undefined,
-            response_header_len: 0,
-            aborted: false,
-            abort_response: undefined,
-            error_code: AppErrorCode.None,
-            error_message: "",
-        };
+        ctx.method = req.method;
+        ctx.path = if (clean_path.len == 0) "/" else clean_path;
+        ctx.original_uri = req.path;
+        ctx.matched_path = "";
+        ctx.raw_query = query_str;
+        ctx.body = req.body;
+        let hi: usize = 0;
+        while (hi < req.header_len) : (hi += 1) {
+            ctx.headers[hi] = req.headers[hi];
+        }
+        ctx.header_len = req.header_len;
+        ctx.param_len = 0;
+        ctx.state_ptr = _.state_ptr;
+        let si: usize = 0;
+        while (si < _.state_kv_len) : (si += 1) {
+            ctx.state_kv[si] = _.state_kv[si];
+        }
+        ctx.state_kv_len = _.state_kv_len;
+        ctx.derived_kv_len = 0;
+        ctx.response_header_len = 0;
+        ctx.aborted = false;
+        ctx.error_code = AppErrorCode.None;
+        ctx.error_message = "";
 
-        // Stage 1: onRequest hooks
-        if (early := _.runHookChain(_.on_request_hooks, _.on_request_len, *ctx)) {
-            return early;
+        // Stage 1: onRequest hooks (zero-overhead skip when empty)
+        if (_.on_request_len > 0) {
+            if (early := _.runHookChain(_.on_request_hooks, _.on_request_len, ctx)) {
+                out_resp.* = early;
+                return;
+            }
         }
 
         // Legacy & Onion middleware chain
-        let mw_idx: usize = 0;
-        while (mw_idx < _.middleware_len) : (mw_idx += 1) {
-            if (mw := _.middlewares[mw_idx]) {
-                const proceed = mw(*ctx);
-                if (!proceed || ctx.aborted) {
-                    if (ctx.error_code != AppErrorCode.None) {
-                        return _.buildErrorResponse(*ctx, ctx.error_code, ctx.error_message);
+        if (_.middleware_len > 0) {
+            let mw_idx: usize = 0;
+            while (mw_idx < _.middleware_len) : (mw_idx += 1) {
+                if (mw := _.middlewares[mw_idx]) {
+                    const proceed = mw(ctx);
+                    if (!proceed || ctx.aborted) {
+                        if (ctx.error_code != AppErrorCode.None) {
+                            out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
+                            return;
+                        }
+                        out_resp.* = if (ctx.aborted)
+                            ctx.abort_response
+                        else
+                            Response.json(403, "{\"error\":\"Forbidden\"}");
+                        _.finalizeResponse(ctx, out_resp);
+                        return;
                     }
-                    let resp = if (ctx.aborted)
-                        ctx.abort_response
-                    else
-                        Response.json(403, "{\"error\":\"Forbidden\"}");
-                    _.finalizeResponse(*ctx, *resp);
-                    return resp;
                 }
             }
         }
@@ -1607,44 +1609,76 @@ pub struct App {
             }
             ctx.param_len = if (rmatch.param_len < APP_MAX_PARAMS) rmatch.param_len else APP_MAX_PARAMS;
 
-            // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle
-            if (early := _.runHookChain(_.derive_hooks, _.derive_len, *ctx)) return early;
-            if (early := _.runHookChain(_.on_parse_hooks, _.on_parse_len, *ctx)) return early;
-            if (early := _.runHookChain(_.on_transform_hooks, _.on_transform_len, *ctx)) return early;
-            if (early := _.runHookChain(_.on_before_hooks, _.on_before_len, *ctx)) return early;
+            // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle (zero-overhead skip when empty)
+            if (_.derive_len > 0) {
+                if (early := _.runHookChain(_.derive_hooks, _.derive_len, ctx)) {
+                    out_resp.* = early;
+                    return;
+                }
+            }
+            if (_.on_parse_len > 0) {
+                if (early := _.runHookChain(_.on_parse_hooks, _.on_parse_len, ctx)) {
+                    out_resp.* = early;
+                    return;
+                }
+            }
+            if (_.on_transform_len > 0) {
+                if (early := _.runHookChain(_.on_transform_hooks, _.on_transform_len, ctx)) {
+                    out_resp.* = early;
+                    return;
+                }
+            }
+            if (_.on_before_len > 0) {
+                if (early := _.runHookChain(_.on_before_hooks, _.on_before_len, ctx)) {
+                    out_resp.* = early;
+                    return;
+                }
+            }
 
             // Stage 4: Handler execution
             if (h := _.routes[matched].handler) {
-                let resp = h(*ctx);
+                out_resp.* = h(ctx);
                 if (ctx.error_code != AppErrorCode.None) {
-                    return _.buildErrorResponse(*ctx, ctx.error_code, ctx.error_message);
+                    out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
+                    return;
                 }
                 if (rmatch.head_fallback_to_get) {
-                    resp.body = "";
+                    out_resp.body = "";
+                    out_resp.body_buf_len = 0;
                 }
-                _.finalizeResponse(*ctx, *resp);
-                return resp;
+                if (_.on_after_len > 0 || ctx.response_header_len > 0 || _.map_response_len > 0 || _.on_after_response_len > 0) {
+                    _.finalizeResponse(ctx, out_resp);
+                }
+                return;
             }
         }
 
         // Stage 5: 405 Method Not Allowed vs Fallback / 404 Not Found
         if (rmatch.allowed_mask != 0) {
-            let resp = Response.json(405, "{\"error\":\"Method Not Allowed\"}");
+            out_resp.* = Response.json(405, "{\"error\":\"Method Not Allowed\"}");
             if (eh := _.on_error_hook) {
-                resp = eh(*ctx, AppErrorCode.MethodNotAllowed, "{\"error\":\"Method Not Allowed\"}");
+                out_resp.* = eh(ctx, AppErrorCode.MethodNotAllowed, "{\"error\":\"Method Not Allowed\"}");
             }
-            * = resp.setHeader("Allow", formatAllowHeaderValue(rmatch.allowed_mask));
-            _.finalizeResponse(*ctx, *resp);
-            return resp;
+            * = out_resp.setHeader("Allow", formatAllowHeaderValue(rmatch.allowed_mask));
+            _.finalizeResponse(ctx, out_resp);
+            return;
         }
 
         if (fb := _.fallback_handler) {
-            let resp = fb(*ctx);
-            _.finalizeResponse(*ctx, *resp);
-            return resp;
+            out_resp.* = fb(ctx);
+            _.finalizeResponse(ctx, out_resp);
+            return;
         }
 
-        return _.buildErrorResponse(*ctx, AppErrorCode.NotFound, "{\"error\":\"Not Found\"}");
+        out_resp.* = _.buildErrorResponse(ctx, AppErrorCode.NotFound, "{\"error\":\"Not Found\"}");
+    }
+
+    /// Pure zero-I/O HTTP request dispatcher (convenience wrapper over `dispatchInto`).
+    pub fn dispatch(*_, req: Request): Response {
+        let ctx: Context = undefined;
+        let resp: Response = undefined;
+        _.dispatchInto(&req, *ctx, *resp);
+        return resp;
     }
 
     /// Generate an OpenAPI 3.1.0 JSON specification document for all registered routes.

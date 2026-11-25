@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SQLite Extreme Single-Thread & 8-Core Multi-Thread WAL Benchmark Suite:
+SQLite Extreme 1c / 8c / 16c Multi-Thread WAL Benchmark Suite:
   CP (`cap:sqlite`, `-OReleaseFast` + source-compiled `sqlite3_extreme.o`)
   vs Bun (`bun:sqlite`)
   vs Node (`node:sqlite`)
@@ -11,19 +11,25 @@ Source-level SQLite3 compilation flags:
   -DSQLITE_OMIT_DEPRECATED
 
 Unified PRAGMA tuning across all three runtimes:
-  Write: PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;
-         PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;
-  Read : PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000;
-         PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;
+  Write (1c)     : PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL;
+                   PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;
+  PointRead (1c) : PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456;
+                   PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;
+  WAL Read (8/16): PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456;
+                   PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;
 
-Four core benchmarks (strict cross-runtime checksum verification + peak VmHWM/VmRSS MB):
-  1. Single-thread bulk insert: 100,000 order rows in 1 tx + prepared statement reuse
-  2. Single-thread indexed point lookup: 200,000 x `SELECT amount FROM orders WHERE id = ?`
-  3. 8-core concurrent WAL read (1,600,000 total queries):
+Five core benchmarks (strict cross-runtime checksum verification + peak VmHWM/VmRSS MB):
+  1. Single-thread bulk insert (1c, EXCLUSIVE): 100,000 order rows in 1 tx + prepared statement reuse
+  2. Single-thread indexed point lookup (1c, EXCLUSIVE): 200,000 x `SELECT amount FROM orders WHERE id = ?`
+  3. 8-core concurrent WAL read (8c, NORMAL, 1,600,000 total queries):
      - CP   : single process, 8 pthreads (each with independent read-only connection)
      - Bun  : 8 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
      - Node : 8 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
-  4. Batch row materialization (500 queries x 1,000 rows = 500,000 multi-column rows):
+  4. 16-core concurrent WAL read (16c, NORMAL, 3,200,000 total queries):
+     - CP   : single process, 16 pthreads (each with independent read-only connection)
+     - Bun  : 16 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
+     - Node : 16 concurrent processes (synchronized barrier start) -> total QPS & process-tree peak RSS MB
+  5. Batch row materialization (1c, 500 queries x 1,000 rows = 500,000 multi-column rows):
      - Table `orders_batch(id, cat_id, amount, status, customer, sku)` with `idx_orders_cat(cat_id)`
      - CP   : `undefined` stack/Arena linear buffer zero-GC materialization (`arena_pos = 0` O(1) reset)
      - Bun  : `bun:sqlite` `stmt.all(cat)` JS object/string array materialization
@@ -70,8 +76,10 @@ SQLITE_CFLAGS = [
 
 ORDERS = 100_000
 POINT_QUERIES = 200_000
-CONCURRENT_WORKERS = 8
-TOTAL_CONCURRENT_QUERIES = CONCURRENT_WORKERS * POINT_QUERIES
+CONCURRENT_WORKERS_8C = 8
+CONCURRENT_WORKERS_16C = 16
+TOTAL_CONCURRENT_QUERIES_8C = CONCURRENT_WORKERS_8C * POINT_QUERIES
+TOTAL_CONCURRENT_QUERIES_16C = CONCURRENT_WORKERS_16C * POINT_QUERIES
 BATCH_QUERIES = 500
 BATCH_ROWS_PER_QUERY = 1_000
 BATCH_CATS = 100
@@ -90,8 +98,9 @@ const ORDERS = 100000;
 const POINT_QUERIES = 200000;
 const ORDER_NOTE = "order_payload_item";
 
-const PRAGMA_WRITE = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
-const PRAGMA_READ = "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+const PRAGMA_WRITE = "PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
+const PRAGMA_POINT_READ = "PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+const PRAGMA_READ = "PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
 
 function readPeakRssMb() {
   const m = readFileSync("/proc/self/status", "utf8").match(/VmHWM:\s+(\d+)\s+kB/);
@@ -118,6 +127,7 @@ if (mode === "write") {
   insertAll();
   const t1 = Bun.nanoseconds();
 
+  db.exec("PRAGMA locking_mode=NORMAL;");
   const row = db.prepare("SELECT COUNT(*) AS cnt, SUM(amount) AS total FROM orders;").get();
   const checksum = Number(BigInt(row.cnt) + BigInt(row.total));
   db.close();
@@ -132,8 +142,8 @@ if (mode === "write") {
     checksum,
   }));
 } else if (mode === "point_read") {
-  const db = new Database(dbPath, { readonly: true });
-  db.exec(PRAGMA_READ);
+  const db = new Database(dbPath);
+  db.exec(PRAGMA_POINT_READ);
   const sel = db.prepare("SELECT amount FROM orders WHERE id = ?;");
 
   let checksum = 0n;
@@ -144,6 +154,7 @@ if (mode === "write") {
     if (row) checksum += BigInt(row.amount);
   }
   const t1 = Bun.nanoseconds();
+  db.exec("PRAGMA locking_mode=NORMAL;");
   db.close();
 
   const elapsed_ms = (t1 - t0) / 1e6;
@@ -244,8 +255,9 @@ const ORDERS = 100000;
 const POINT_QUERIES = 200000;
 const ORDER_NOTE = "order_payload_item";
 
-const PRAGMA_WRITE = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
-const PRAGMA_READ = "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+const PRAGMA_WRITE = "PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;";
+const PRAGMA_POINT_READ = "PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
+const PRAGMA_READ = "PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;";
 
 function readPeakRssMb() {
   const m = readFileSync("/proc/self/status", "utf8").match(/VmHWM:\s+(\d+)\s+kB/);
@@ -270,6 +282,7 @@ if (mode === "write") {
   db.exec("COMMIT;");
   const t1 = process.hrtime.bigint();
 
+  db.exec("PRAGMA locking_mode=NORMAL;");
   const row = db.prepare("SELECT COUNT(*) AS cnt, SUM(amount) AS total FROM orders;").get();
   const checksum = Number(BigInt(row.cnt) + BigInt(row.total));
   db.close();
@@ -284,8 +297,8 @@ if (mode === "write") {
     checksum,
   }));
 } else if (mode === "point_read") {
-  const db = new DatabaseSync(dbPath, { readOnly: true });
-  db.exec(PRAGMA_READ);
+  const db = new DatabaseSync(dbPath);
+  db.exec(PRAGMA_POINT_READ);
   const sel = db.prepare("SELECT amount FROM orders WHERE id = ?;");
 
   let checksum = 0n;
@@ -296,6 +309,7 @@ if (mode === "write") {
     if (row) checksum += BigInt(row.amount);
   }
   const t1 = process.hrtime.bigint();
+  db.exec("PRAGMA locking_mode=NORMAL;");
   db.close();
 
   const elapsed_ms = Number(t1 - t0) / 1e6;
@@ -553,6 +567,7 @@ def run_single_mode(
     db_path: Path,
     recreate_db: bool,
     trials: int = TRIALS,
+    threads: int = CONCURRENT_WORKERS_8C,
 ) -> dict[str, Any]:
     samples: list[dict[str, Any]] = []
     for _ in range(trials):
@@ -561,7 +576,7 @@ def run_single_mode(
         env = {
             "SQLITE_BENCH_MODE": mode,
             "SQLITE_BENCH_DB": str(db_path),
-            "SQLITE_BENCH_THREADS": str(CONCURRENT_WORKERS),
+            "SQLITE_BENCH_THREADS": str(threads),
         }
         rc, out, err, wait4_rss = run_with_peak_rss(cmd, env=env)
         if rc != 0:
@@ -591,7 +606,7 @@ def run_single_mode(
 def run_multiprocess_wal_read(
     cmd: list[str],
     db_path: Path,
-    workers: int = CONCURRENT_WORKERS,
+    workers: int = CONCURRENT_WORKERS_8C,
     trials: int = TRIALS,
 ) -> dict[str, Any]:
     """Launch `workers` independent processes, synchronize via READY/GO barrier, measure wall time & total tree RSS."""
@@ -669,7 +684,8 @@ def run_multiprocess_wal_read(
     checksums = {s["checksum"] for s in samples}
     if len(checksums) != 1:
         raise AssertionError(f"Inconsistent checksums across multiprocess trials: {checksums}")
-    ops_per_sec = round(TOTAL_CONCURRENT_QUERIES / (elapsed_ms / 1000.0), 1)
+    total_queries = workers * POINT_QUERIES
+    ops_per_sec = round(total_queries / (elapsed_ms / 1000.0), 1)
     return {
         "elapsed_ms": elapsed_ms,
         "ops_per_sec": ops_per_sec,
@@ -747,9 +763,9 @@ def main() -> int:
         node_script.write_text(NODE_BENCH_MJS, encoding="utf-8")
 
         # ------------------------------------------------------------------
-        # 1. Single-thread Bulk Write (100,000 rows in 1 tx)
+        # 1. Single-thread Bulk Write (1c, EXCLUSIVE, 100,000 rows in 1 tx)
         # ------------------------------------------------------------------
-        print("==> [1/4] Single-thread bulk write (100,000 rows, 1 tx, prepared stmt)...")
+        print("==> [1/5] Single-thread bulk write (1c, EXCLUSIVE, 100,000 rows, 1 tx, prepared stmt)...")
         write_res: dict[str, Any] = {}
         cp_write_db = work_dir / "write_cp.db"
         bun_write_db = work_dir / "write_bun.db"
@@ -765,19 +781,19 @@ def main() -> int:
                 raise AssertionError(f"Write checksum mismatch for {rt}: {v['checksum']} != {w_ck}")
 
         # Use the cleanly generated WAL database from CP write for all read benchmarks.
-        # Run a WAL checkpoint (keeping journal_mode=WAL) so pages reside in the main DB
-        # and PRAGMA mmap_size=268435456 takes effect fairly for all three runtimes.
+        # Ensure NORMAL locking mode + WAL checkpoint (keeping journal_mode=WAL) so pages reside
+        # in the main DB and PRAGMA mmap_size=268435456 takes effect fairly for all three runtimes.
         shared_wal_db = cp_write_db
         run_cmd_simple([
             bun_bin,
             "-e",
-            f'import {{ Database }} from "bun:sqlite"; const db = new Database({json.dumps(str(shared_wal_db))}); db.exec("PRAGMA wal_checkpoint(TRUNCATE);"); db.close();',
+            f'import {{ Database }} from "bun:sqlite"; const db = new Database({json.dumps(str(shared_wal_db))}); db.exec("PRAGMA locking_mode=NORMAL; PRAGMA wal_checkpoint(TRUNCATE);"); db.close();',
         ])
 
         # ------------------------------------------------------------------
-        # 2. Single-thread Indexed Point Read (200,000 queries)
+        # 2. Single-thread Indexed Point Read (1c, EXCLUSIVE, 200,000 queries)
         # ------------------------------------------------------------------
-        print("==> [2/4] Single-thread indexed point lookup (200,000 queries)...")
+        print("==> [2/5] Single-thread indexed point lookup (1c, EXCLUSIVE, 200,000 queries)...")
         point_res: dict[str, Any] = {}
         point_res["cp"] = run_single_mode([str(CP_BIN)], "point_read", shared_wal_db, recreate_db=False)
         point_res["bun"] = run_single_mode([bun_bin, str(bun_script)], "point_read", shared_wal_db, recreate_db=False)
@@ -788,26 +804,77 @@ def main() -> int:
             if v["checksum"] != p_ck:
                 raise AssertionError(f"Point-read checksum mismatch for {rt}: {v['checksum']} != {p_ck}")
 
+        # Explicitly reset WAL DB to NORMAL locking mode before 8c/16c concurrent reads.
+        run_cmd_simple([
+            bun_bin,
+            "-e",
+            f'import {{ Database }} from "bun:sqlite"; const db = new Database({json.dumps(str(shared_wal_db))}); db.exec("PRAGMA locking_mode=NORMAL; PRAGMA wal_checkpoint(TRUNCATE);"); db.close();',
+        ])
+
         # ------------------------------------------------------------------
-        # 3. 8-Core Concurrent WAL Read (1,600,000 total queries)
+        # 3. 8-Core Concurrent WAL Read (8c, NORMAL, 1,600,000 total queries)
         # ------------------------------------------------------------------
-        print("==> [3/4] 8-core concurrent WAL read (1,600,000 total queries)...")
+        print("==> [3/5] 8-core concurrent WAL read (8c, NORMAL, 1,600,000 total queries)...")
         wal8_res: dict[str, Any] = {}
-        wal8_res["cp"] = run_single_mode([str(CP_BIN)], "wal_read_8t", shared_wal_db, recreate_db=False)
+        wal8_res["cp"] = run_single_mode(
+            [str(CP_BIN)],
+            "wal_read_8t",
+            shared_wal_db,
+            recreate_db=False,
+            threads=CONCURRENT_WORKERS_8C,
+        )
         wal8_res["cp"]["processes"] = 1
-        wal8_res["cp"]["threads"] = CONCURRENT_WORKERS
-        wal8_res["bun"] = run_multiprocess_wal_read([bun_bin, str(bun_script)], shared_wal_db)
-        wal8_res["node"] = run_multiprocess_wal_read([node_bin, str(node_script)], shared_wal_db)
+        wal8_res["cp"]["threads"] = CONCURRENT_WORKERS_8C
+        wal8_res["bun"] = run_multiprocess_wal_read(
+            [bun_bin, str(bun_script)],
+            shared_wal_db,
+            workers=CONCURRENT_WORKERS_8C,
+        )
+        wal8_res["node"] = run_multiprocess_wal_read(
+            [node_bin, str(node_script)],
+            shared_wal_db,
+            workers=CONCURRENT_WORKERS_8C,
+        )
 
-        m_ck = wal8_res["cp"]["checksum"]
+        m8_ck = wal8_res["cp"]["checksum"]
         for rt, v in wal8_res.items():
-            if v["checksum"] != m_ck:
-                raise AssertionError(f"8-core WAL read checksum mismatch for {rt}: {v['checksum']} != {m_ck}")
+            if v["checksum"] != m8_ck:
+                raise AssertionError(f"8-core WAL read checksum mismatch for {rt}: {v['checksum']} != {m8_ck}")
 
         # ------------------------------------------------------------------
-        # 4. Batch Row Materialization (500 queries x 1,000 rows = 500,000 rows)
+        # 4. 16-Core Concurrent WAL Read (16c, NORMAL, 3,200,000 total queries)
         # ------------------------------------------------------------------
-        print("==> [4/4] Batch row materialization (500 queries x 1,000 rows = 500,000 multi-column rows)...")
+        print("==> [4/5] 16-core concurrent WAL read (16c, NORMAL, 3,200,000 total queries)...")
+        wal16_res: dict[str, Any] = {}
+        wal16_res["cp"] = run_single_mode(
+            [str(CP_BIN)],
+            "wal_read_16t",
+            shared_wal_db,
+            recreate_db=False,
+            threads=CONCURRENT_WORKERS_16C,
+        )
+        wal16_res["cp"]["processes"] = 1
+        wal16_res["cp"]["threads"] = CONCURRENT_WORKERS_16C
+        wal16_res["bun"] = run_multiprocess_wal_read(
+            [bun_bin, str(bun_script)],
+            shared_wal_db,
+            workers=CONCURRENT_WORKERS_16C,
+        )
+        wal16_res["node"] = run_multiprocess_wal_read(
+            [node_bin, str(node_script)],
+            shared_wal_db,
+            workers=CONCURRENT_WORKERS_16C,
+        )
+
+        m16_ck = wal16_res["cp"]["checksum"]
+        for rt, v in wal16_res.items():
+            if v["checksum"] != m16_ck:
+                raise AssertionError(f"16-core WAL read checksum mismatch for {rt}: {v['checksum']} != {m16_ck}")
+
+        # ------------------------------------------------------------------
+        # 5. Batch Row Materialization (500 queries x 1,000 rows = 500,000 rows)
+        # ------------------------------------------------------------------
+        print("==> [5/5] Batch row materialization (500 queries x 1,000 rows = 500,000 multi-column rows)...")
         batch_wal_db = work_dir / "batch_wal.db"
         build_batch_wal_db(batch_wal_db)
 
@@ -839,8 +906,9 @@ def main() -> int:
                 "node": {"path": node_bin, "version": get_version(node_bin)},
             },
             "pragmas": {
-                "write": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;",
-                "read": "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;",
+                "write": "PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;",
+                "point_read": "PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;",
+                "read": "PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;",
             },
             "trials": TRIALS,
             "benchmarks": {
@@ -867,10 +935,10 @@ def main() -> int:
                     },
                 },
                 "concurrent_8core_wal_read": {
-                    "workers": CONCURRENT_WORKERS,
+                    "workers": CONCURRENT_WORKERS_8C,
                     "queries_per_worker": POINT_QUERIES,
-                    "total_queries": TOTAL_CONCURRENT_QUERIES,
-                    "checksum": m_ck,
+                    "total_queries": TOTAL_CONCURRENT_QUERIES_8C,
+                    "checksum": m8_ck,
                     "results": wal8_res,
                     "cp_speedup_vs": {
                         "bun": ratio(wal8_res["bun"]["elapsed_ms"], wal8_res["cp"]["elapsed_ms"]),
@@ -879,6 +947,21 @@ def main() -> int:
                     "rss_savings_vs": {
                         "bun": ratio(wal8_res["bun"]["peak_rss_mb"], wal8_res["cp"]["peak_rss_mb"]),
                         "node": ratio(wal8_res["node"]["peak_rss_mb"], wal8_res["cp"]["peak_rss_mb"]),
+                    },
+                },
+                "concurrent_16core_wal_read": {
+                    "workers": CONCURRENT_WORKERS_16C,
+                    "queries_per_worker": POINT_QUERIES,
+                    "total_queries": TOTAL_CONCURRENT_QUERIES_16C,
+                    "checksum": m16_ck,
+                    "results": wal16_res,
+                    "cp_speedup_vs": {
+                        "bun": ratio(wal16_res["bun"]["elapsed_ms"], wal16_res["cp"]["elapsed_ms"]),
+                        "node": ratio(wal16_res["node"]["elapsed_ms"], wal16_res["cp"]["elapsed_ms"]),
+                    },
+                    "rss_savings_vs": {
+                        "bun": ratio(wal16_res["bun"]["peak_rss_mb"], wal16_res["cp"]["peak_rss_mb"]),
+                        "node": ratio(wal16_res["node"]["peak_rss_mb"], wal16_res["cp"]["peak_rss_mb"]),
                     },
                 },
                 "batch_row_materialization": {

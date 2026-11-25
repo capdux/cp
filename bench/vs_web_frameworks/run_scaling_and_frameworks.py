@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Multi-Core Scaling (1c / 4c / 8c / 16c) & Full Web Framework Benchmark:
-  - CP `cap:web` (single process, CPU-pinned SO_REUSEPORT epoll workers: 1c, 4c, 8c, 16c)
-  - Bun Web Framework (1c, 8c)
-  - Node Web Framework (1c, 8c)
+Multi-Core Scaling (1c / 8c / 16c) & Full Web Framework Benchmark:
+  - 1c:  cp_1c,  bun_1c,  node_1c  (16 client threads)
+  - 8c:  cp_8c,  bun_8c,  node_8c  (32 client threads)
+  - 16c: cp_16c, bun_16c, node_16c (48 client threads)
 Measures real TCP HTTP/1.1 Keep-Alive QPS, P50/P99 latency, and Peak VmRSS (MB).
 """
 import json
@@ -122,14 +122,18 @@ def run_target(name: str, cmd: list[str], port: int, threads: int = 32, duration
 
 def main():
     targets = [
+        # 1c (16 client threads)
         ("cp_1c", ["env", "PORT=18201", "WORKERS=1", str(CP_SERVER_BIN)], 18201, 16),
-        ("cp_4c", ["env", "PORT=18204", "WORKERS=4", str(CP_SERVER_BIN)], 18204, 32),
-        ("cp_8c", ["env", "PORT=18208", "WORKERS=8", str(CP_SERVER_BIN)], 18208, 32),
-        ("cp_16c", ["env", "PORT=18216", "WORKERS=16", str(CP_SERVER_BIN)], 18216, 48),
         ("bun_1c", ["bun", str(SUITE_DIR / "server_bun.ts"), "--port", "18221", "--workers", "1"], 18221, 16),
-        ("bun_8c", ["bun", str(SUITE_DIR / "server_bun.ts"), "--port", "18228", "--workers", "8"], 18228, 32),
         ("node_1c", ["node", str(SUITE_DIR / "server_node.mjs"), "--port", "18231", "--workers", "1"], 18231, 16),
+        # 8c (32 client threads)
+        ("cp_8c", ["env", "PORT=18208", "WORKERS=8", str(CP_SERVER_BIN)], 18208, 32),
+        ("bun_8c", ["bun", str(SUITE_DIR / "server_bun.ts"), "--port", "18228", "--workers", "8"], 18228, 32),
         ("node_8c", ["node", str(SUITE_DIR / "server_node.mjs"), "--port", "18238", "--workers", "8"], 18238, 32),
+        # 16c (48 client threads)
+        ("cp_16c", ["env", "PORT=18216", "WORKERS=16", str(CP_SERVER_BIN)], 18216, 48),
+        ("bun_16c", ["bun", str(SUITE_DIR / "server_bun.ts"), "--port", "18226", "--workers", "16"], 18226, 48),
+        ("node_16c", ["node", str(SUITE_DIR / "server_node.mjs"), "--port", "18236", "--workers", "16"], 18236, 48),
     ]
     all_res = {}
     for name, cmd, port, threads in targets:

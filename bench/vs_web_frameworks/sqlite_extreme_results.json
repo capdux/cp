@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-11-24T22:36:17Z",
+  "timestamp_utc": "2026-11-25T02:36:11Z",
   "host": {
     "cpu": {
       "model": "Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz",
@@ -23,7 +23,7 @@
     ],
     "sqlite_obj": "/data/dev/cp/temp/sqlite3_extreme.o",
     "sqlite_compile_sec": 0.0,
-    "cp_build_sec": 18.4,
+    "cp_build_sec": 19.6,
     "cp_bin": "/data/dev/cp/temp/sqlite_extreme_cp"
   },
   "runtimes": {
@@ -43,8 +43,9 @@
     }
   },
   "pragmas": {
-    "write": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;",
-    "read": "PRAGMA busy_timeout=5000; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;"
+    "write": "PRAGMA journal_mode=WAL; PRAGMA locking_mode=EXCLUSIVE; PRAGMA synchronous=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY;",
+    "point_read": "PRAGMA busy_timeout=5000; PRAGMA locking_mode=EXCLUSIVE; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;",
+    "read": "PRAGMA busy_timeout=5000; PRAGMA locking_mode=NORMAL; PRAGMA mmap_size=268435456; PRAGMA cache_size=-64000; PRAGMA temp_store=MEMORY; PRAGMA query_only=ON;"
   },
   "trials": 3,
   "benchmarks": {
@@ -53,42 +54,42 @@
       "checksum": 2510050000,
       "results": {
         "cp": {
-          "elapsed_ms": 56.441,
-          "ops_per_sec": 1771761.7,
-          "peak_rss_mb": 18.38,
+          "elapsed_ms": 48.823,
+          "ops_per_sec": 2048215.0,
+          "peak_rss_mb": 18.45,
           "checksum": 2510050000,
           "trials_ms": [
-            49.941,
-            56.749,
-            56.441
+            48.823,
+            49.731,
+            48.075
           ]
         },
         "bun": {
-          "elapsed_ms": 195.021,
-          "ops_per_sec": 512765.3,
-          "peak_rss_mb": 76.3,
+          "elapsed_ms": 97.38,
+          "ops_per_sec": 1026904.9,
+          "peak_rss_mb": 76.99,
           "checksum": 2510050000,
           "trials_ms": [
-            195.021,
-            242.901,
-            112.639
+            97.38,
+            95.763,
+            109.28
           ]
         },
         "node": {
-          "elapsed_ms": 112.525,
-          "ops_per_sec": 888691.4,
-          "peak_rss_mb": 59.07,
+          "elapsed_ms": 104.919,
+          "ops_per_sec": 953116.2,
+          "peak_rss_mb": 59.41,
           "checksum": 2510050000,
           "trials_ms": [
-            103.947,
-            112.525,
-            211.397
+            104.919,
+            102.393,
+            157.645
           ]
         }
       },
       "cp_speedup_vs": {
-        "bun": 3.46,
-        "node": 1.99
+        "bun": 1.99,
+        "node": 2.15
       }
     },
     "single_thread_point_read": {
@@ -96,46 +97,46 @@
       "checksum": 5019900000,
       "results": {
         "cp": {
-          "elapsed_ms": 1039.731,
-          "ops_per_sec": 192357.4,
-          "peak_rss_mb": 18.38,
+          "elapsed_ms": 314.63,
+          "ops_per_sec": 635667.3,
+          "peak_rss_mb": 18.45,
           "checksum": 5019900000,
           "trials_ms": [
-            1066.183,
-            1039.731,
-            970.201
+            314.63,
+            306.626,
+            390.137
           ]
         },
         "bun": {
-          "elapsed_ms": 982.257,
-          "ops_per_sec": 203612.7,
-          "peak_rss_mb": 91.94,
+          "elapsed_ms": 421.058,
+          "ops_per_sec": 474993.9,
+          "peak_rss_mb": 93.61,
           "checksum": 5019900000,
           "trials_ms": [
-            1173.007,
-            982.257,
-            950.559
+            428.988,
+            411.616,
+            421.058
           ]
         },
         "node": {
-          "elapsed_ms": 1032.033,
-          "ops_per_sec": 193792.3,
-          "peak_rss_mb": 69.06,
+          "elapsed_ms": 532.721,
+          "ops_per_sec": 375431.0,
+          "peak_rss_mb": 67.92,
           "checksum": 5019900000,
           "trials_ms": [
-            1032.033,
-            1016.164,
-            1225.506
+            532.538,
+            560.892,
+            532.721
           ]
         }
       },
       "cp_speedup_vs": {
-        "bun": 0.94,
-        "node": 0.99
+        "bun": 1.34,
+        "node": 1.69
       },
       "rss_savings_vs": {
-        "bun": 5.0,
-        "node": 3.76
+        "bun": 5.07,
+        "node": 3.68
       }
     },
     "concurrent_8core_wal_read": {
@@ -145,50 +146,103 @@
       "checksum": 40159200000,
       "results": {
         "cp": {
-          "elapsed_ms": 1313.318,
-          "ops_per_sec": 1218288.3,
-          "peak_rss_mb": 33.29,
+          "elapsed_ms": 2039.081,
+          "ops_per_sec": 784667.2,
+          "peak_rss_mb": 33.32,
           "checksum": 40159200000,
           "trials_ms": [
-            1313.318,
-            1298.357,
-            1466.982
+            2117.858,
+            2039.081,
+            2015.504
           ],
           "processes": 1,
           "threads": 8
         },
         "bun": {
-          "elapsed_ms": 2056.113,
-          "ops_per_sec": 778167.3,
-          "peak_rss_mb": 761.86,
+          "elapsed_ms": 4071.856,
+          "ops_per_sec": 392941.2,
+          "peak_rss_mb": 762.39,
           "checksum": 40159200000,
           "processes": 8,
           "trials_ms": [
-            2446.267,
-            2056.113,
-            1798.269
+            4071.856,
+            4018.02,
+            4080.384
           ]
         },
         "node": {
-          "elapsed_ms": 1953.647,
-          "ops_per_sec": 818981.1,
-          "peak_rss_mb": 553.6,
+          "elapsed_ms": 3903.269,
+          "ops_per_sec": 409912.8,
+          "peak_rss_mb": 539.49,
           "checksum": 40159200000,
           "processes": 8,
           "trials_ms": [
-            1953.647,
-            1744.858,
-            3048.051
+            3911.876,
+            3708.106,
+            3903.269
           ]
         }
       },
       "cp_speedup_vs": {
-        "bun": 1.57,
-        "node": 1.49
+        "bun": 2.0,
+        "node": 1.91
       },
       "rss_savings_vs": {
-        "bun": 22.89,
-        "node": 16.63
+        "bun": 22.88,
+        "node": 16.19
+      }
+    },
+    "concurrent_16core_wal_read": {
+      "workers": 16,
+      "queries_per_worker": 200000,
+      "total_queries": 3200000,
+      "checksum": 80318400000,
+      "results": {
+        "cp": {
+          "elapsed_ms": 4121.377,
+          "ops_per_sec": 776439.5,
+          "peak_rss_mb": 64.39,
+          "checksum": 80318400000,
+          "trials_ms": [
+            4121.377,
+            4139.33,
+            4084.904
+          ],
+          "processes": 1,
+          "threads": 16
+        },
+        "bun": {
+          "elapsed_ms": 10852.143,
+          "ops_per_sec": 294872.6,
+          "peak_rss_mb": 1521.07,
+          "checksum": 80318400000,
+          "processes": 16,
+          "trials_ms": [
+            10815.986,
+            10852.143,
+            11130.89
+          ]
+        },
+        "node": {
+          "elapsed_ms": 10960.493,
+          "ops_per_sec": 291957.7,
+          "peak_rss_mb": 1082.22,
+          "checksum": 80318400000,
+          "processes": 16,
+          "trials_ms": [
+            11026.273,
+            10960.493,
+            10890.249
+          ]
+        }
+      },
+      "cp_speedup_vs": {
+        "bun": 2.63,
+        "node": 2.66
+      },
+      "rss_savings_vs": {
+        "bun": 23.62,
+        "node": 16.81
       }
     },
     "batch_row_materialization": {
@@ -198,49 +252,49 @@
       "checksum": 37748250000,
       "results": {
         "cp": {
-          "elapsed_ms": 250.719,
-          "ops_per_sec": 1994264.5,
-          "peak_rss_mb": 27.4,
+          "elapsed_ms": 243.164,
+          "ops_per_sec": 2056225.4,
+          "peak_rss_mb": 28.25,
           "checksum": 37748250000,
           "trials_ms": [
-            249.493,
-            250.886,
-            250.719
+            243.222,
+            243.164,
+            237.264
           ],
-          "rows_per_sec": 1994264.5
+          "rows_per_sec": 2056225.4
         },
         "bun": {
-          "elapsed_ms": 601.58,
-          "ops_per_sec": 831144.7,
-          "peak_rss_mb": 122.11,
+          "elapsed_ms": 523.873,
+          "ops_per_sec": 954429.8,
+          "peak_rss_mb": 122.14,
           "checksum": 37748250000,
           "trials_ms": [
-            735.618,
-            546.364,
-            601.58
+            523.873,
+            521.991,
+            560.351
           ],
-          "rows_per_sec": 831144.7
+          "rows_per_sec": 954429.8
         },
         "node": {
-          "elapsed_ms": 993.721,
-          "ops_per_sec": 503159.3,
-          "peak_rss_mb": 97.53,
+          "elapsed_ms": 995.065,
+          "ops_per_sec": 502479.7,
+          "peak_rss_mb": 99.9,
           "checksum": 37748250000,
           "trials_ms": [
-            961.008,
-            1025.458,
-            993.721
+            927.001,
+            995.065,
+            996.675
           ],
-          "rows_per_sec": 503159.3
+          "rows_per_sec": 502479.7
         }
       },
       "cp_speedup_vs": {
-        "bun": 2.4,
-        "node": 3.96
+        "bun": 2.15,
+        "node": 4.09
       },
       "rss_savings_vs": {
-        "bun": 4.46,
-        "node": 3.56
+        "bun": 4.32,
+        "node": 3.54
       }
     }
   }

@@ -120,23 +120,25 @@ fn wsWriteBytes(dst: []u8, pos: *usize, s: string): bool {
 pub fn simdMaskXorCopy(dst: []u8, src: string, mask: [4]u8) {
     const n = src.len;
     if (n == 0) return;
-    let mask_arr: [32]u8 = [
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-    ];
-    const mask_vec: @Vector(32, u8) = mask_arr;
     let i: usize = 0;
-    while (i + 32 <= n) : (i += 32) {
-        const chunk: @Vector(32, u8) = src[i..][0..32].*;
-        const xored: @Vector(32, u8) = chunk ^ mask_vec;
-        const out32: [32]u8 = xored;
-        dst[i..][0..32].* = out32;
+    if (n >= 32) {
+        let mask_arr: [32]u8 = [
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+        ];
+        const mask_vec: @Vector(32, u8) = mask_arr;
+        while (i + 32 <= n) : (i += 32) {
+            const chunk: @Vector(32, u8) = src[i..][0..32].*;
+            const xored: @Vector(32, u8) = chunk ^ mask_vec;
+            const out32: [32]u8 = xored;
+            dst[i..][0..32].* = out32;
+        }
     }
     while (i < n) : (i += 1) {
         dst[i] = src[i] ^ mask[i & 3];
@@ -147,23 +149,25 @@ pub fn simdMaskXorCopy(dst: []u8, src: string, mask: [4]u8) {
 pub fn simdMaskXorInPlace(buf: []u8, mask: [4]u8) {
     const n = buf.len;
     if (n == 0) return;
-    let mask_arr: [32]u8 = [
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-        mask[0], mask[1], mask[2], mask[3],
-    ];
-    const mask_vec: @Vector(32, u8) = mask_arr;
     let i: usize = 0;
-    while (i + 32 <= n) : (i += 32) {
-        const chunk: @Vector(32, u8) = buf[i..][0..32].*;
-        const xored: @Vector(32, u8) = chunk ^ mask_vec;
-        const out32: [32]u8 = xored;
-        buf[i..][0..32].* = out32;
+    if (n >= 32) {
+        let mask_arr: [32]u8 = [
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+            mask[0], mask[1], mask[2], mask[3],
+        ];
+        const mask_vec: @Vector(32, u8) = mask_arr;
+        while (i + 32 <= n) : (i += 32) {
+            const chunk: @Vector(32, u8) = buf[i..][0..32].*;
+            const xored: @Vector(32, u8) = chunk ^ mask_vec;
+            const out32: [32]u8 = xored;
+            buf[i..][0..32].* = out32;
+        }
     }
     while (i < n) : (i += 1) {
         buf[i] = buf[i] ^ mask[i & 3];
@@ -629,8 +633,60 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         }
                     }
 
-                    // Stage 2: Process all complete WebSocket frames in buffer (Cork write aggregation)
+                    // Stage 2: Process WebSocket frames
                     if (!should_close && conns[idx].upgraded) {
+                        // Zero-copy single-frame fast path:
+                        // Client masked frames carry a 4-byte mask key, so server unmasked header
+                        // is always 4 bytes shorter and fits directly before the payload in read_buf.
+                        let handled_fast = false;
+                        if (offset == 0 && conns[idx].read_len >= 6) {
+                            const fb0 = conns[idx].read_buf[0];
+                            const fb1 = conns[idx].read_buf[1];
+                            const fop = fb0 & 0x0F;
+                            if ((fb1 & 0x80) != 0 && (fop == 0x1 || fop == 0x2 || fop == 0x9)) {
+                                const flen7 = (fb1 & 0x7F) as usize;
+                                const fout_op: u8 = if (fop == 0x9) 0xA else fop;
+                                if (flen7 < 126 && conns[idx].read_len == 6 + flen7) {
+                                    const fmask: [4]u8 = [
+                                        conns[idx].read_buf[2],
+                                        conns[idx].read_buf[3],
+                                        conns[idx].read_buf[4],
+                                        conns[idx].read_buf[5],
+                                    ];
+                                    simdMaskXorInPlace(conns[idx].read_buf[6 .. 6 + flen7], fmask);
+                                    conns[idx].read_buf[4] = (0x80 | fout_op) as u8;
+                                    conns[idx].read_buf[5] = flen7 as u8;
+                                    if (!wsWriteAllFd(fd, conns[idx].read_buf[4 .. 6 + flen7])) {
+                                        should_close = true;
+                                    }
+                                    conns[idx].read_len = 0;
+                                    handled_fast = true;
+                                } else if (flen7 == 126 && conns[idx].read_len >= 8) {
+                                    const fplen = ((conns[idx].read_buf[2] as usize) << 8)
+                                        | (conns[idx].read_buf[3] as usize);
+                                    if (conns[idx].read_len == 8 + fplen) {
+                                        const fmask: [4]u8 = [
+                                            conns[idx].read_buf[4],
+                                            conns[idx].read_buf[5],
+                                            conns[idx].read_buf[6],
+                                            conns[idx].read_buf[7],
+                                        ];
+                                        simdMaskXorInPlace(conns[idx].read_buf[8 .. 8 + fplen], fmask);
+                                        conns[idx].read_buf[4] = (0x80 | fout_op) as u8;
+                                        conns[idx].read_buf[5] = 126;
+                                        conns[idx].read_buf[6] = ((fplen >> 8) & 0xFF) as u8;
+                                        conns[idx].read_buf[7] = (fplen & 0xFF) as u8;
+                                        if (!wsWriteAllFd(fd, conns[idx].read_buf[4 .. 8 + fplen])) {
+                                            should_close = true;
+                                        }
+                                        conns[idx].read_len = 0;
+                                        handled_fast = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!handled_fast) {
                         let write_pos: usize = 0;
                         while (offset < conns[idx].read_len) {
                             const avail = conns[idx].read_len - offset;
@@ -732,6 +788,7 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                             if (!wsWriteAllFd(fd, write_buf[0..write_pos])) {
                                 should_close = true;
                             }
+                        }
                         }
                     }
 

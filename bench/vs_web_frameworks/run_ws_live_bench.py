@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """
 Real TCP WebSocket Echo benchmark suite (RFC 6455, 32/48 concurrent persistent connections,
-128-byte Masked Text frames):
-  - cp_ws_1c   (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 1 worker)
-  - cp_ws_8c   (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 8 workers)
-  - cp_ws_16c  (CP SO_REUSEPORT + epoll + CPU pin + Cork + 32B SIMD @Vector(32, u8), -OReleaseFast, 16 workers, 48 client threads)
-  - bun_ws_1c  (Bun.serve({ websocket }), 1 worker)
-  - bun_ws_8c  (Bun.serve({ websocket, reusePort: true }), 8 workers)
-  - node_ws_1c (Native Node http upgrade RFC 6455, 1 worker)
-  - node_ws_8c (Native Node cluster + http upgrade RFC 6455, 8 workers)
+128-byte Masked Text frames), grouped by core count (1c / 8c / 16c):
+  - 1c:  cp_ws_1c,  bun_ws_1c,  node_ws_1c  (32 client threads)
+  - 8c:  cp_ws_8c,  bun_ws_8c,  node_ws_8c  (32 client threads)
+  - 16c: cp_ws_16c, bun_ws_16c, node_ws_16c (48 client threads)
 
 Measures real msg/s, P50/P99 latency (ms), error count, and process-tree peak VmRSS (MB).
 Saves results to /data/dev/cp/bench/vs_web_frameworks/ws_live_results.json.
@@ -202,7 +198,7 @@ def run_target(name, cmd, port, threads, payload_size, duration, warmup):
 def main():
     parser = argparse.ArgumentParser(description="Real TCP WebSocket Echo Benchmark Suite")
     parser.add_argument("--threads", type=int, default=32, help="Concurrent WebSocket connections (default targets)")
-    parser.add_argument("--threads-16c", type=int, default=48, help="Concurrent WebSocket connections for cp_ws_16c")
+    parser.add_argument("--threads-16c", type=int, default=48, help="Concurrent WebSocket connections for 16c targets")
     parser.add_argument("--payload-size", type=int, default=128, help="Masked payload size in bytes")
     parser.add_argument("--duration", type=float, default=3.0, help="Measurement duration (sec)")
     parser.add_argument("--warmup", type=float, default=0.5, help="Warmup duration (sec)")
@@ -211,13 +207,18 @@ def main():
     ensure_binaries()
 
     targets = [
+        # 1c (32 client threads)
         ("cp_ws_1c", ["env", "PORT=18201", "WORKERS=1", str(CP_WS_BIN)], 18201, args.threads),
-        ("cp_ws_8c", ["env", "PORT=18202", "WORKERS=8", str(CP_WS_BIN)], 18202, args.threads),
-        ("cp_ws_16c", ["env", "PORT=18207", "WORKERS=16", str(CP_WS_BIN)], 18207, args.threads_16c),
         ("bun_ws_1c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18203", "--workers", "1"], 18203, args.threads),
-        ("bun_ws_8c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18204", "--workers", "8"], 18204, args.threads),
         ("node_ws_1c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18205", "--workers", "1"], 18205, args.threads),
+        # 8c (32 client threads)
+        ("cp_ws_8c", ["env", "PORT=18202", "WORKERS=8", str(CP_WS_BIN)], 18202, args.threads),
+        ("bun_ws_8c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18204", "--workers", "8"], 18204, args.threads),
         ("node_ws_8c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18206", "--workers", "8"], 18206, args.threads),
+        # 16c (48 client threads)
+        ("cp_ws_16c", ["env", "PORT=18207", "WORKERS=16", str(CP_WS_BIN)], 18207, args.threads_16c),
+        ("bun_ws_16c", ["bun", str(SUITE_DIR / "ws_server_bun.ts"), "--port", "18208", "--workers", "16"], 18208, args.threads_16c),
+        ("node_ws_16c", ["node", str(SUITE_DIR / "ws_server_node.mjs"), "--port", "18209", "--workers", "16"], 18209, args.threads_16c),
     ]
 
     results = {}
