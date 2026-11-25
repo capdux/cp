@@ -852,15 +852,105 @@ fn copyDir(src: []const u8, dest: []const u8) !void {
     _ = try child.wait(global_io);
 }
 
-fn getCpcBin(allocator: std.mem.Allocator) ![]const u8 {
-    if (global_env.get("CPC_BIN")) |custom_bin| {
-        if (custom_bin.len > 0) return try allocator.dupe(u8, custom_bin);
+fn isUsableBinaryFile(path: []const u8) bool {
+    if (path.len == 0) return false;
+    if (path[0] == '/') {
+        var f = std.Io.Dir.openFileAbsolute(global_io, path, .{}) catch return false;
+        defer f.close(global_io);
+        const st = f.stat(global_io) catch return false;
+        return st.kind != .directory;
     }
+    const st = fs_shim.cwd().statFile(path) catch return false;
+    return st.kind != .directory;
+}
+
+fn resolveCpcBinary(allocator: std.mem.Allocator) ![]const u8 {
+    // 1. Environment variable override: CPC_BIN
+    if (global_env.get("CPC_BIN")) |custom_bin| {
+        const trimmed = std.mem.trim(u8, custom_bin, " \t\r\n");
+        if (trimmed.len > 0) {
+            if (isUsableBinaryFile(trimmed) or std.mem.indexOfScalar(u8, trimmed, '/') == null) {
+                return try allocator.dupe(u8, trimmed);
+            }
+        }
+    }
+
+    // 1b. Optional project-local override: .cap/cpc_bin
     if (fs_shim.cwd().readFileAlloc(allocator, ".cap/cpc_bin", 512)) |content| {
+        defer allocator.free(content);
         const trimmed = std.mem.trim(u8, content, " \t\r\n");
-        if (trimmed.len > 0) return try allocator.dupe(u8, trimmed);
+        if (trimmed.len > 0 and isUsableBinaryFile(trimmed)) {
+            return try allocator.dupe(u8, trimmed);
+        }
     } else |_| {}
-    return try std.Io.Dir.path.join(allocator, &[_][]const u8{ cap_root, "cpc", "target", "release", "cpc" });
+
+    // 2. Sibling `cpc` in the same directory as current `cap` executable (e.g. /root/.cap/bin/cpc)
+    if (std.process.executableDirPathAlloc(global_io, allocator)) |exe_dir| {
+        defer allocator.free(exe_dir);
+        const sibling_cpc = try std.Io.Dir.path.join(allocator, &[_][]const u8{ exe_dir, "cpc" });
+        if (isUsableBinaryFile(sibling_cpc)) {
+            return sibling_cpc;
+        }
+        allocator.free(sibling_cpc);
+    } else |_| {}
+
+    // 3. Multi-level candidate paths (workspace-relative & well-known install paths)
+    const static_candidates = [_][]const u8{
+        "./bin/cpc",
+        "./cap/bin/cpc",
+        "/data/dev/cp/cap/bin/cpc",
+        "/root/.cap/bin/cpc",
+    };
+    for (static_candidates) |cand| {
+        if (isUsableBinaryFile(cand)) {
+            return try allocator.dupe(u8, cand);
+        }
+    }
+
+    const cap_root_candidates = [_][]const []const u8{
+        &[_][]const u8{ cap_root, "cap", "bin", "cpc" },
+        &[_][]const u8{ cap_root, "cpc", "target", "release", "cpc" },
+        &[_][]const u8{ cap_root, "cpc", "target", "debug", "cpc" },
+    };
+    for (cap_root_candidates) |parts| {
+        const cand = try std.Io.Dir.path.join(allocator, parts);
+        if (isUsableBinaryFile(cand)) {
+            return cand;
+        }
+        allocator.free(cand);
+    }
+
+    // 4. Fallback to PATH resolution
+    return try allocator.dupe(u8, "cpc");
+}
+
+fn resolveZigBinary(allocator: std.mem.Allocator) ![]const u8 {
+    // 1. Environment variable override: ZIG_BIN
+    if (global_env.get("ZIG_BIN")) |custom_bin| {
+        const trimmed = std.mem.trim(u8, custom_bin, " \t\r\n");
+        if (trimmed.len > 0) {
+            if (isUsableBinaryFile(trimmed) or std.mem.indexOfScalar(u8, trimmed, '/') == null) {
+                return try allocator.dupe(u8, trimmed);
+            }
+        }
+    }
+
+    // 2. Sibling `zig` in the same directory as current `cap` executable
+    if (std.process.executableDirPathAlloc(global_io, allocator)) |exe_dir| {
+        defer allocator.free(exe_dir);
+        const sibling_zig = try std.Io.Dir.path.join(allocator, &[_][]const u8{ exe_dir, "zig" });
+        if (isUsableBinaryFile(sibling_zig)) {
+            return sibling_zig;
+        }
+        allocator.free(sibling_zig);
+    } else |_| {}
+
+    // 3. Fallback to PATH resolution
+    return try allocator.dupe(u8, "zig");
+}
+
+fn getCpcBin(allocator: std.mem.Allocator) ![]const u8 {
+    return resolveCpcBinary(allocator);
 }
 
 fn addArg(args_buf: [][]const u8, argc: *usize, arg: []const u8) void {
@@ -1851,13 +1941,121 @@ fn computeWatchMtimeNs(filename: []const u8) i96 {
     return max_mtime;
 }
 
-fn runFileWatch(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !void {
-    std.debug.print("[watch] Watching {s} (polling every 250ms)...\n", .{filename});
-    var last_mtime = computeWatchMtimeNs(filename);
-    var active_child: ?std.process.Child = null;
-    defer if (active_child) |*ch| ch.kill(global_io);
+const LinuxInotifyWatcher = struct {
+    fd: if (builtin.os.tag == .linux) std.os.linux.fd_t else i32 = -1,
+    target_basename: []const u8 = "",
 
-    // Initial build & background start
+    fn init(allocator: std.mem.Allocator, watch_dir_path: []const u8, target_basename: []const u8) ?LinuxInotifyWatcher {
+        if (comptime builtin.os.tag != .linux) return null;
+
+        const init_rc = std.os.linux.inotify_init1(std.os.linux.IN.CLOEXEC | std.os.linux.IN.NONBLOCK);
+        if (std.os.linux.errno(init_rc) != .SUCCESS) return null;
+        const ifd: std.os.linux.fd_t = @intCast(init_rc);
+
+        const dir_buf = allocator.alloc(u8, watch_dir_path.len + 1) catch {
+            _ = std.os.linux.close(ifd);
+            return null;
+        };
+        defer allocator.free(dir_buf);
+        @memcpy(dir_buf[0..watch_dir_path.len], watch_dir_path);
+        dir_buf[watch_dir_path.len] = 0;
+
+        const mask: u32 = std.os.linux.IN.MODIFY |
+            std.os.linux.IN.CLOSE_WRITE |
+            std.os.linux.IN.MOVED_TO |
+            std.os.linux.IN.CREATE;
+        const wd_rc = std.os.linux.inotify_add_watch(ifd, @ptrCast(dir_buf.ptr), mask);
+        if (std.os.linux.errno(wd_rc) != .SUCCESS) {
+            _ = std.os.linux.close(ifd);
+            return null;
+        }
+
+        return .{
+            .fd = ifd,
+            .target_basename = target_basename,
+        };
+    }
+
+    fn deinit(self: *LinuxInotifyWatcher) void {
+        if (comptime builtin.os.tag != .linux) return;
+        if (self.fd >= 0) {
+            _ = std.os.linux.close(self.fd);
+            self.fd = -1;
+        }
+    }
+
+    fn drainRelevantEvents(self: *const LinuxInotifyWatcher) bool {
+        if (comptime builtin.os.tag != .linux) return false;
+        var buf: [4096]u8 align(@alignOf(std.os.linux.inotify_event)) = undefined;
+        var relevant = false;
+
+        while (true) {
+            const rc = std.os.linux.read(self.fd, &buf, buf.len);
+            const err = std.os.linux.errno(rc);
+            if (err == .AGAIN or err == .INTR) break;
+            if (err != .SUCCESS or rc == 0) break;
+
+            var offset: usize = 0;
+            while (offset + @sizeOf(std.os.linux.inotify_event) <= rc) {
+                const ev: *const std.os.linux.inotify_event = @ptrCast(@alignCast(&buf[offset]));
+                const step = @sizeOf(std.os.linux.inotify_event) + ev.len;
+                if (ev.getName()) |name| {
+                    const is_target = std.mem.eql(u8, name, self.target_basename);
+                    const is_cp = std.mem.endsWith(u8, name, ".cp") and !std.mem.endsWith(u8, name, ".d.cp");
+                    if (is_target or is_cp) {
+                        relevant = true;
+                    }
+                } else {
+                    relevant = true;
+                }
+                if (step == 0 or offset + step > rc) break;
+                offset += step;
+            }
+        }
+        return relevant;
+    }
+
+    /// Block with zero CPU usage until a relevant `.cp` event arrives, then debounce 50ms
+    /// to coalesce rapid consecutive saves. Returns false if the fd errored and should fall back.
+    fn waitForChange(self: *const LinuxInotifyWatcher) bool {
+        if (comptime builtin.os.tag != .linux) return false;
+        while (true) {
+            var pfd = [_]std.os.linux.pollfd{.{
+                .fd = self.fd,
+                .events = std.os.linux.POLL.IN,
+                .revents = 0,
+            }};
+            const prc = std.os.linux.poll(&pfd, 1, -1);
+            const perr = std.os.linux.errno(prc);
+            if (perr == .INTR) continue;
+            if (perr != .SUCCESS) return false;
+            if ((pfd[0].revents & (std.os.linux.POLL.ERR | std.os.linux.POLL.NVAL | std.os.linux.POLL.HUP)) != 0) {
+                return false;
+            }
+            if (prc > 0 and (pfd[0].revents & std.os.linux.POLL.IN) != 0) {
+                if (!self.drainRelevantEvents()) continue;
+
+                // 50ms debounce: coalesce bursty editor writes / atomic renames
+                while (true) {
+                    pfd[0].revents = 0;
+                    const drc = std.os.linux.poll(&pfd, 1, 50);
+                    const derr = std.os.linux.errno(drc);
+                    if (derr == .INTR) continue;
+                    if (derr != .SUCCESS or drc == 0) break;
+                    _ = self.drainRelevantEvents();
+                }
+                return true;
+            }
+        }
+    }
+};
+
+fn launchWatchedChild(
+    allocator: std.mem.Allocator,
+    filename: []const u8,
+    opts: RunOptions,
+    is_initial: bool,
+) ?std.process.Child {
     if (compileRunBinary(allocator, filename, opts)) |compiled| {
         defer compiled.deinit(allocator);
         var mf_opt: ?manifest.Manifest = null;
@@ -1869,46 +2067,72 @@ fn runFileWatch(allocator: std.mem.Allocator, filename: []const u8, opts: RunOpt
         } else |_| {}
         defer if (mf_opt) |*m| m.deinit(allocator);
 
-        active_child = spawnRunBinaryChild(allocator, compiled.run_path, mf_opt, compiled.scan_file) catch |err| blk: {
-            std.debug.print("[watch] Failed to launch process: {}\n", .{err});
-            break :blk null;
+        return spawnRunBinaryChild(allocator, compiled.run_path, mf_opt, compiled.scan_file) catch |err| {
+            if (is_initial) {
+                std.debug.print("[watch] Failed to launch process: {}\n", .{err});
+            } else {
+                std.debug.print("[watch] Failed to restart process: {}\n", .{err});
+            }
+            return null;
         };
     } else |err| {
-        std.debug.print("[watch] Initial build failed ({}), waiting for changes...\n", .{err});
+        if (is_initial) {
+            std.debug.print("[watch] Initial build failed ({}), waiting for changes...\n", .{err});
+        } else {
+            std.debug.print("[watch] Rebuild failed ({}), waiting for next change...\n", .{err});
+        }
+        return null;
     }
+}
+
+fn runFileWatch(allocator: std.mem.Allocator, filename: []const u8, opts: RunOptions) !void {
+    const watch_dir_path = std.Io.Dir.path.dirname(filename) orelse ".";
+    const target_basename = std.Io.Dir.path.basename(filename);
+
+    var inotify_watcher = LinuxInotifyWatcher.init(allocator, watch_dir_path, target_basename);
+    defer if (inotify_watcher) |*w| w.deinit();
+
+    if (inotify_watcher != null) {
+        std.debug.print("[watch] Watching {s} (Linux inotify, 50ms debounce)...\n", .{filename});
+    } else {
+        std.debug.print("[watch] Watching {s} (polling every 250ms)...\n", .{filename});
+    }
+
+    var last_mtime = computeWatchMtimeNs(filename);
+    var active_child: ?std.process.Child = launchWatchedChild(allocator, filename, opts, true);
+    defer if (active_child) |*ch| ch.kill(global_io);
 
     var rebuild_opts = opts;
     rebuild_opts.force_rebuild = true;
 
     while (true) {
-        std.Io.sleep(global_io, std.Io.Duration.fromMilliseconds(250), .awake) catch break;
-        const cur_mtime = computeWatchMtimeNs(filename);
-        if (cur_mtime > last_mtime) {
-            last_mtime = cur_mtime;
+        var changed = false;
+        if (inotify_watcher) |*w| {
+            if (w.waitForChange()) {
+                changed = true;
+                last_mtime = computeWatchMtimeNs(filename);
+            } else {
+                std.debug.print("[watch] inotify unavailable, falling back to 250ms mtime polling...\n", .{});
+                w.deinit();
+                inotify_watcher = null;
+                continue;
+            }
+        } else {
+            std.Io.sleep(global_io, std.Io.Duration.fromMilliseconds(250), .awake) catch break;
+            const cur_mtime = computeWatchMtimeNs(filename);
+            if (cur_mtime > last_mtime) {
+                last_mtime = cur_mtime;
+                changed = true;
+            }
+        }
+
+        if (changed) {
             if (active_child) |*ch| {
                 ch.kill(global_io);
                 active_child = null;
             }
             std.debug.print("[watch] Change detected, rebuilding...\n", .{});
-
-            if (compileRunBinary(allocator, filename, rebuild_opts)) |compiled| {
-                defer compiled.deinit(allocator);
-                var mf_opt: ?manifest.Manifest = null;
-                if (fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024)) |content| {
-                    defer allocator.free(content);
-                    if (manifest.Manifest.parse(allocator, content)) |mf| {
-                        mf_opt = mf;
-                    } else |_| {}
-                } else |_| {}
-                defer if (mf_opt) |*m| m.deinit(allocator);
-
-                active_child = spawnRunBinaryChild(allocator, compiled.run_path, mf_opt, compiled.scan_file) catch |err| blk: {
-                    std.debug.print("[watch] Failed to restart process: {}\n", .{err});
-                    break :blk null;
-                };
-            } else |err| {
-                std.debug.print("[watch] Rebuild failed ({}), waiting for next change...\n", .{err});
-            }
+            active_child = launchWatchedChild(allocator, filename, rebuild_opts, false);
         }
     }
 }
@@ -2146,9 +2370,12 @@ fn compileRunBinary(allocator: std.mem.Allocator, filename: []const u8, opts: Ru
     } else |_| {}
     defer if (mf_opt) |*m| m.deinit(allocator);
 
+    const zig_bin = try resolveZigBinary(allocator);
+    defer allocator.free(zig_bin);
+
     var build_args_buf: [512][]const u8 = undefined;
     var build_argc: usize = 0;
-    build_args_buf[build_argc] = "zig";
+    build_args_buf[build_argc] = zig_bin;
     build_argc += 1;
     build_args_buf[build_argc] = "build-exe";
     build_argc += 1;
