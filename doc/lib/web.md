@@ -711,3 +711,27 @@ pub fn demoHstsStore() {
 |---|---|---|
 | `cap:route_params` | `lib/web/routeParams.cp` | `Param`, `ParamMap`, `URLPath`, `parseURLPath` |
 | `cap:fs_router` | `lib/web/fsRouter.cp` | `RouteKind`, `SegmentKind`, `RouteSegment`, `RouteParam`, `FsRouteMatch`, `RoutePattern`, `FsRouter` |
+
+---
+
+## 最新核心框架增强 (`app.cp` / `server.cp` / `wsServer.cp` / `comptimeRouter.cp`)
+
+### 1. 请求级零 GC Arena (`RequestArena`) 与应用内核 (`lib/web/app.cp`)
+- **`RequestArena`**：24 字节轻量 8B 对齐 Bump-Pointer Arena（`initSlice`/`initRaw`/`alloc`/`dupe`/`reset`/`used`/`remaining`），挂载于 `Context.arena`，通过 `ctx.arenaAlloc(n): ([]u8)?` 与 `ctx.arenaDupe(s): string?` 使用；小数据路由零触碰零开销。
+- **Elysia / Axum 完备融合**：
+  - `Response` 快捷构造：`redirect` / `redirectTemporary`(302) / `redirectPermanent`(308) / `html` / `bytes`；
+  - `Context` 提取器：`form(key)`（`application/x-www-form-urlencoded`）、`multipartBoundary()` / `isMultipart()`；
+  - 单路由与分组级守卫：`getWithGuard`/`postWithGuard`/`routeLayer`/`RouteGroup.guard()`（支持子分组继承）；
+  - `hook_mask: u16` 零钩子快路径 + `App.enableTrace(bool)` 自动输出 W3C `Server-Timing` 响应头。
+
+### 2. 多核原生 HTTP/WS 服务器 (`lib/web/server.cp` & `lib/web/wsServer.cp`)
+- **`WebServer`**：`SO_REUSEPORT` 多核 + CPU 绑核 + 12B 紧致 `epoll` + 16B SIMD `srvFindCrlf` + 就地 `parseHttp1Request` + 每 Worker 预分配 64KB `RequestArena`（大响应体自动绕过 4KB 写缓冲零拷贝流式直发）+ `startWithComptime(*app, &ct_table)` + 同端口 HTTP→WS 升级（`ServerConfig.ws_path` / `ws_broadcast_mode`）+ 优雅停机排空（`shutdown_grace_ms`）。
+- **`WsServer`**：32B `@Vector(32, u8)` SIMD 掩码 + RFC 6455 握手 + 多核 Echo + `broadcast_mode: true` Topic Cork 零拷贝广播。
+
+### 3. 编译期路由表 (`lib/web/comptimeRouter.cp`)
+- `ComptimeRouteTable` 同时支持静态路由（64-bit 长度位图 + FNV-1a + 16B SIMD 比较）与编译期预切分 `:param`/`{param}` 动态路由（首段哈希预过滤），提供零拷贝 `dispatchInto(&req, *ctx, *resp)` 与 NestJS 风格 `ControllerSpec` / `controller(prefix, routes)`。
+
+### 4. 基础依赖独立归位（`lib/web/` 保留兼容 re-export 薄壳）
+- `fileType.cp` → `cap:mime/fileType`（`lib/mime/fileType.cp`）
+- `schema.cp` → `cap:json/schema`（`lib/json/schema.cp`）+ `cap:url/fastDecode`（`lib/url/fastDecode.cp`）
+- `radixRouter.cp` → `cap:router/radixRouter`（`lib/router/radixRouter.cp`）

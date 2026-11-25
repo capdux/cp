@@ -221,3 +221,14 @@ pub fn demoUrlAndQuery(): !void {
 ### 2. 安全边界与 SIMD 验证
 
 - **回归与 Fuzz 套件**：`cap/test/testUrlRustRefSuite.cp` 覆盖基础解析、IPv6/IPv4/域名/端口严格边界、点段与 `%2e%2e` 目录穿越归一化、特殊协议反斜杠归一化、严格百分号解码、`cap:simd` 与标量 0 差异对拍，以及 1,500 组确定性 PRNG 畸形输入 Fuzz（0 panic / 0 OOB / 0 死循环）。
+
+---
+
+## 16-Lane SIMD URI 快速解码与 Query 查找 (`cap:url/fastDecode` — `lib/url/fastDecode.cp`)
+
+基于 `@Vector(16, u8)` 的零堆分配 URI 百分号快速解码引擎（同时在 `cap:web` 中向后兼容 re-export）：
+
+- `fastDecodeUriComponent(input, out_buf): usize?`：16 字节块快路径跳过纯 ASCII 段，严格校验 `%XX` 十六进制转义（保留 `+` 原样）；
+- `fastDecodeFormComponent(input, out_buf): usize?`：`application/x-www-form-urlencoded` 语义（`+` 解码为空格）；
+- `fastDecodeUriComponentOpts(input, out_buf, plus_as_space): usize?`
+- `parseQueryPair(segment): QueryPair`、`findQueryParamDecoded(query, target_key, out_buf): usize?`（支持编码后的 Key 与 Value 零堆查找解码）。

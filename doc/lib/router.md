@@ -180,3 +180,15 @@ const id = reg.registerHtml("/dashboard", 1)?;
 const next_gen = reg.invalidateClientBundle(id)?; // 2; client_bundle & cached_response cleared
 * = next_gen;
 ```
+
+---
+
+## 零堆 O(1) 静态哈希 + 压缩 Radix 路由引擎 (`cap:router/radixRouter` — `lib/router/radixRouter.cp`)
+
+融合 Elysia `memoirist` 风格 FNV-1a 静态快表与 Axum `matchit` 压缩 Radix Trie 的零堆路由核心（同时在 `cap:web` 中向后兼容 re-export）：
+
+- **核心类型**：`RadixRouter`、`RadixMatchResult`、`RadixParam`。
+- **关键特性**：
+  - 静态路径 O(1) FNV-1a 开放寻址查表（`undefined` 零清零热路径）；
+  - 动态参数 `:param` / `{param}` 与通配符 `*wildcard` 匹配，严格遵循 `Static > Param > Wildcard` 优先级；
+  - 自动 `HEAD -> GET` 回退与 405 `allowed_mask` 位掩码输出。

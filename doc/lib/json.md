@@ -148,3 +148,19 @@ pub fn demoJsonRfcAndNdjson(): !void {
    - 需要对 JSON 载荷做哈希或密码学签名时，使用 `JSON.stringifyCanonical`（键名按字典序确定性排列、无多余空白）保证跨节点序列化字节完全一致。
 5. **RFC 6902 JSON Patch 与 RFC 7396 Merge Patch 完整实现（`jsonPatch.cp`，收敛自 `cap:json_patch`）**：
    - 导出：`PatchOpKind`, `Rfc6902PatchOp`, `JsonPatchError`, `resolvePointer`, `applyPatch`, `applyPatchJson`, `mergePatch`, `diff`, `freeOps`, `freeValue`, `cloneValue`, `valuesEqual`, `stringifyValue`。
+
+---
+
+## JSON Schema 递归校验、`exact-mirror` 裁剪与 OpenAPI 3.1.0 导出 (`cap:json/schema` — `lib/json/schema.cp`)
+
+零堆分配、零运行期反射的 JSON 对象校验与安全裁剪模块（同时在 `cap:web` 中向后兼容 re-export）：
+
+- **核心类型**：`FieldKind`（`Str` / `Int` / `Float` / `Bool` / `Email` / `Uuid` / `Url` / `Enum` / `Object` / `Array`）、`FieldRule`、`ObjectSchema`、`ValidationIssue`、`ValidationReport`。
+- **递归嵌套校验**：
+  - `schema.objectField(name, required, &sub_schema)`：校验嵌套 JSON 对象并递归合并子问题报告；
+  - `schema.arrayField(name, required, item_kind, min_items, max_items)`：校验标量数组类型与元素数量上下限；
+  - `schema.objectArrayField(name, required, &item_schema, min_items, max_items)`：校验对象数组并逐项递归校验。
+- **核心函数**：
+  - `validateJsonObject(json_body, &schema): ValidationReport`
+  - `exactMirrorJson(json_body, &schema, out_buf): usize?`（严格剥离未声明敏感字段）
+  - `schemaToOpenApiJson(&schema, out_buf): usize?`（导出 OpenAPI 3.1.0 / JSON Schema Draft 2020-12 片段）

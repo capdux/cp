@@ -125,3 +125,12 @@ pub fn demoMime(): ! {
    - 构造 `Content-Disposition: attachment` 响应头前，务必通过 `sanitizeFilename` 剥离路径分隔符（`/`、`\`）、控制字符与引号，并使用 `formatAttachment` / `decodeRfc5987` 安全处理非 ASCII 文件名（`filename*=UTF-8''...`）。
 4. **RFC 9110 `Accept` 内容协商质量权重（`ContentNegotiator`）**：
    - 严格校验 `q` 权重范围 `[0.0, 1.0]`（`q=0` 表示显式拒绝该媒体类型），并按精确类型 > 子类型通配（`text/*`）> 全局通配（`*/*`）的特异性择优匹配。
+
+---
+
+## 30 种文件头魔数嗅探 (`cap:mime/fileType` — `lib/mime/fileType.cp`)
+
+零堆分配二进制/文本文件头魔数探测引擎（同时在 `cap:web` 中向后兼容 re-export）：
+
+- **核心类型**：`FileKind`（覆盖 PNG/JPEG/GIF/WebP/AVIF/BMP/ICO、PDF/ZIP/GZIP/Zstd/XZ/BZ2/LZ4、MP4/WebM/MP3/FLAC/OGG/WAV、WASM/WOFF2/WOFF/TTF/OTF/SQLite3、以及 SVG/HTML/XML/JSON 文本启发式共 30 种格式）、`FileTypeInfo { kind, mime, ext }`。
+- **核心函数**：`detectFileType(bytes: string): FileTypeInfo?`（对空串、截断载荷与未知格式安全返回 `null`，无越界风险）。
