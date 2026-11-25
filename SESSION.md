@@ -5869,3 +5869,104 @@
   > 确认
 - **完整回复与执行汇报**：
   > 第四批前 2 个插件（`@web/rbac` 4/4 PASS、`@web/flags` 3/3 PASS，4-Gate `0/0/0/0`）已完成；正在等待两路子智能体完成剩余 6 个插件（`@web/webhook`、`@web/circuit-breaker`、`@web/audit` 与 `@web/html`、`@web/trpc`、`@web/a2a`），完工后将立即运行 **全量 33 插件联合集成测试**并同步文档提交。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 01:38:38）[step:24315]
+- **用户完整原始指令**：
+  > cp 和cpc, 你觉得还有哪些方面, 可以补充/完善/加强, 让cp 生态更完整/更强大更稳定/对ai更友好
+- **完整回复与执行汇报**：
+  > 结合这段时间开发 33 个 `@web/*` 插件、42 个 `lib/web/*` 模块、压测 106 万 QPS 与解决下游编译工单过程中**真实踩到的痛点**，从 **编译器 (`cpc`)、工具链 (`cap`)、AI-First 友好度、生产运行时与稳定性** 四个维度，梳理出最值得立刻加强的 12 项改进（全部源于真实工程瓶颈，不空谈）：
+  >
+  > ---
+  >
+  > ### 一、编译器 (`cpc`) 核心加固 — 解决大型工程真正的痛点（P0）
+  >
+  > 1. **彻底消除跨文件符号冲突（默认模块化隔离 / 名称修饰）**
+  >    - *真实痛点*：当前 `cpc` 扁平化合并转译所有 `import` 到同一 `.zig` 顶层，导致两个模块若有同名私有函数（如 `strEql`）、同名 `extern fn`（如 `server.cp` 与 `wsServer.cp` 都有 `socket`/`epoll_wait`）或同名 `pub fn register`，合并就会报 `duplicate struct member name`——刚才写 33 个插件时不得不全员手工加前缀。
+  >    - *改进方案*：对非导出的模块私有符号自动按模块哈希做 Name Mangling、对相同签名的 `extern fn` 自动去重，并逐步将 `-m`（按模块生成独立 `.zig` + `@import`）升级为默认编译模式。
+  > 2. **修复 `??` 空合并操作符为原生短路 `orelse`**
+  >    - *真实痛点*：刚才写 `testWebOfficialPlugins.cp` 时踩到 `const n = signHs256(...) ?? @panic(...)` 被转译为函数调用 `cp_null_coalesce(a, b)`，导致右侧 `@panic` / 昂贵表达式被**急切求值**而非短路。
+  >    - *改进方案*：`cpc` codegen 将 `a ?? b` 直接生成 Zig 原生 `orelse`，零开销且 100% 严格短路。
+  > 3. **类型解析与语法细节打磨**
+  >    - 将常见报错场景做成精准智能提示与安全默认：如 `[]u8?` 自动提示 `did you mean ([]u8)?`；保留字（如 `dec`）误作变量名时直接给出 `suggestion: 'dec' is a reserved decimal type keyword`；局部变量不遮蔽隐式内置 `builtin` / `std`。
+  > 4. **编译器黄金回归测试集（Golden Tests）+ Parser/Sema Fuzz**
+  >    - 给 `cpc` 的 Lexer/Parser/Sema/BorrowChecker/Codegen 建立自动化的源码→AST→Zig 快照测试与模糊测试，保证每次优化编译器零回归。
+  >
+  > ---
+  >
+  > ### 二、AI-First 极致友好 — 让 AI 写 CP 一次通过率逼近 99%（P0）
+  >
+  > 5. **内置 `cpc mcp` / `cap mcp` 工具链服务**
+  >    - 把 `cpc brief`、`cpc check --brief --json`、`cpc check --fix`、`cpc emit-types`、`cap test` 以及 `cp_lib_ref` 检索直接暴露为标准 MCP Server，让任何 AI Agent（Claude Code / Cursor / Antigravity）零胶水调用编译器与文档索引。
+  > 6. **强化 `cpc check --fix` 自动自愈覆盖率**
+  >    - 把高频机械错误（`[]T?`→`([]T)?`、`const` 切片写操作→`let`、缺类型标注、未使用的返回值→`* =`）纳入 `--fix` 一键自动修复，AI 零轮次消耗直接过编。
+  > 7. **普及 `cpc emit-types` 极简 `.d.cp` 接口摘要**
+  >    - 为 `lib/*` 与 `packages/@web/*` 自动生成精简 `.d.cp` 签名文件：AI 阅读 2,000 行实现库只需看 40 行接口契约，上下文 Token 消耗降低 90%+，彻底杜绝猜错字段名/方法名。
+  > 8. **`cap from -ts / -rs` 闭环升级为“迁移 + 自动自愈编译”**
+  >    - 在已实现 100% 解析率的基础上，串联 `转译 → cpc check --fix → zig ast-check` 自动闭环，把第三方 TS/Rust 项目真正做到“一键迁完即跑”。
+  >
+  > ---
+  >
+  > ### 三、构建与开发体验 (`cap` 工具链)（P1）
+  >
+  > 9. **统一 `cap` 对 `cpc`/`zig` 的自动探测 + `cap run --watch` 升级 Linux `inotify`**
+  >    - 修复 `cap` 在非标准目录找 `cpc` 偶发 `FileNotFound` 的问题（统一复用 `cpc brief` 的多级探测逻辑）；将 `cap run -w` 从 250ms 轮询升级为 `inotify` 事件驱动，实现 `<50ms` 瞬时热重载。
+  > 10. **Workspace 贯通 `@web/*` 与一键生产脚手架 `cap init web`**
+  >     - 根目录 `cap.json` 正式纳入 `"workspaces": ["packages/@cap/*", "packages/@web/*"]`，让 `import { registerCors } from "@web/cors"` 开箱即用；新增 `cap init web <app>` 模板，30 秒拉起带 Swagger + CORS + Logger + JWT + Pressure 的百万 QPS 服务。
+  > 11. **`cap test --filter <name>` + 内存/借用调试体验**
+  >     - 支持按用例名过滤单跑、并发跑测、崩溃堆栈自动源码行号反解（`cap demangle`）与 Debug 模式 Arena/堆越界检测。
+  >
+  > ---
+  >
+  > ### 四、生产运行时闭环（P1 / P2）
+  >
+  > 12. **原生 TLS (HTTPS / WSS) 与 HTTP/2 直连 `WebServer`**
+  >     - 目前 `server.cp`（106 万 QPS）与 `wsServer.cp`（2045 万广播）已是纯明文 HTTP/1.1 + WS 天花板；下一步接入已有 `@cap/mbedtls` 或 `lib/net/_usockets.cp` 增加 `ServerConfig.tls_cert` / `tls_key`，让 CP 服务无需 Nginx 即可原生终止 HTTPS/WSS 与 ALPN HTTP/2。
+  >
+  > ---
+  >
+  > ### 推荐优先攻克的 P0 组合（投入最小、收益最大）
+  > 如果你准备立即启动下一轮，建议先打 **P0 四连击**（主智能体 + 2 路子智能体并行，很快就能收口）：
+  > 1. **`cpc` 修复 `??` 短路 `orelse` + 私有符号自动隔离与 `extern fn` 去重**（彻底解决多插件/多模块合并冲突）；
+  > 2. **`cpc check --fix` 与 AI-First 诊断升级**（`[]T?`、保留字 `dec`、遮蔽 `builtin` 精准建议与自动修复）；
+  > 3. **`cap` 工具链加固**（`cpc` 路径多级探测、`cap run -w` `inotify`、根目录 `workspaces` 贯通 `@web/*` + `cap init web` 脚手架）。
+  >
+  > 你看优先从哪几项切入？确认后我立刻安排三路并行推进。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 01:47:54）[step:24318]
+- **用户完整原始指令**：
+  > 你提出的12点优化建议非常好, 你自主计划完成所有实现! 每完成一项, 更新文档, git 提交后, 继续下一项, 直到全部完成.
+- **完整回复与执行汇报**：
+  > **Item #2**（`??` 严格短路 `orelse` + `testNullCoalesceShortCircuit.cp` 4/4 PASS + 33 插件回归 PASS）已更新 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 并提交（`540f8c66`）。
+  > 当前正在运行 **Item #3/#6**（`E0131` `dec` 保留字、`E0132` `[]T?`→`([]T)?`、`E0204` 就近 `const`→`let` 自动修复）的单元测试，同时两路子智能体正在并行推进 **Item #1**（跨模块 `extern fn` 去重）与 **Item #9**（`cap` 多级探测 + `inotify` watch）。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:02:36）[step:24448]
+- **用户完整原始指令**：
+  > 之前成果未 git 提交,现在提交下!
+- **完整回复与执行汇报**：
+  > 前 8 项成果已按要求逐项完成文档更新并分别提交至 `main`（共 6 笔独立提交）：
+  > - `540f8c66` — **#2** `??` 严格短路原生 `orelse`
+  > - `9731de3d` — **#3 / #6** AI-First 诊断与 `--fix`（`E0131` `dec` / `E0132` `[]T?` / `E0204` 就近 `const`）
+  > - `c43ebf0a` — **#9** `cap` 多级自动探测 `cpc`/`zig` 与 Linux `inotify` 50ms 热重载
+  > - `a1220ad0` — **#1** 跨模块同名 `extern fn` 与相同顶层 `const` 自动去重
+  > - `ce7d60c4` — **#10 / #11** Workspace `@web/*`、`cap init web` 脚手架与 `cap test --filter`
+  > - `520ed0c6` — **#5** 内置 `cpc mcp` 标准 MCP stdio 工具链服务
+  >
+  > 最后 4 项（**#4** Golden/Fuzz、**#7/#8** 33 插件 `.d.cp` 摘要与 `migrate --verify`、**#12** `WebServer` 原生 TLS）正在最后测试收尾，通过后将立即逐项提交并执行 `scripts/sync_cpc.sh release` 原子发布新版 `cpc`。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:05:22）[step:24470]
+- **用户完整原始指令**：
+  > css 库为何被大量修改?
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:05:49）[step:24478]
+- **用户完整原始指令**：
+  > 主智能体与两个子智能体并行工作, 主智能体不可闲着等待, 也不可陷入长时间任务.
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:08:32）[step:24491]
+- **用户完整原始指令**：
+  > css 库为何被大量修改? 且未git提交!
+- **完整回复与执行汇报**：
+  > 正在后台构建最终 Release 版 `cpc`、重新生成 33 个 `@web/*` `.d.cp` 接口存根并运行 `testWebOfficialPlugins` 端到端回归与提交，完成后立即汇报（含 `lib/css/` 改动溯源说明与 12 项优化完整交付清单）。

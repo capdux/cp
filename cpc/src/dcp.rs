@@ -243,13 +243,13 @@ impl DcpEmitter {
             Type::Bool => "bool".to_string(),
             Type::String => "string".to_string(),
             Type::Void => "void".to_string(),
-            Type::Any => "any".to_string(),
+            Type::Any => "auto".to_string(),
             Type::Auto => "auto".to_string(),
             Type::Aligned { qual, inner } => format!("{}{}", qual, self.format_type(inner)),
             Type::PID => "PID".to_string(),
             Type::Unknown => "unknown".to_string(),
             Type::Array(inner) => format!("[]{}", self.format_type(inner)),
-            Type::FixedArray(inner, size) => format!("{}[{}]", self.format_type(inner), size),
+            Type::FixedArray(inner, size) => format!("[{}]{}", size, self.format_type(inner)),
             Type::Map(k, v) => format!("Map<{}, {}>", self.format_type(k), self.format_type(v)),
             Type::Dict(k, v) => format!("Dict<{}, {}>", self.format_type(k), self.format_type(v)),
             Type::Set(t) => format!("Set<{}>", self.format_type(t)),
@@ -292,7 +292,12 @@ impl DcpEmitter {
                 s
             }
             Type::ErrorUnion(inner) => format!("!{}", self.format_type(inner)),
-            Type::Optional(inner) => format!("?{}", self.format_type(inner)),
+            Type::Optional(inner) => match inner.as_ref() {
+                Type::Array(_) | Type::BorrowType { .. } | Type::Fn(_, _) => {
+                    format!("({})?", self.format_type(inner))
+                }
+                _ => format!("{}?", self.format_type(inner)),
+            },
             Type::BorrowType {
                 inner,
                 is_mut,

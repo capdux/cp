@@ -359,8 +359,8 @@ pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
             }
         }
 
-        // 2. Check directory defaults
-        let checks = vec!["index.d.cp", "index.cp", "main.d.cp", "main.cp"];
+        // 2. Check directory defaults (prefer source .cp over .d.cp stub when source is present)
+        let checks = vec!["index.cp", "index.d.cp", "main.cp", "main.d.cp"];
         for check in checks {
             let p = base.join(check);
             if p.exists() {
@@ -379,13 +379,13 @@ pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
                             .join(m_path.parent().unwrap_or(Path::new("")))
                             .join(m_path.file_stem().unwrap_or(std::ffi::OsStr::new("")));
 
-                        let dcp = m_base.with_extension("d.cp");
-                        if dcp.exists() {
-                            return Some(dcp);
-                        }
                         let cp = m_base.with_extension("cp");
                         if cp.exists() {
                             return Some(cp);
+                        }
+                        let dcp = m_base.with_extension("d.cp");
+                        if dcp.exists() {
+                            return Some(dcp);
                         }
                     }
                 }
@@ -393,15 +393,15 @@ pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
         }
     }
 
-    // 4. Check <base>.d.cp
-    let dcp_file = base.with_extension("d.cp");
-    if dcp_file.exists() {
-        return Some(dcp_file);
-    }
-    // 5. Check <base>.cp
+    // 4. Check <base>.cp (prefer source .cp over .d.cp stub)
     let cp_file = base.with_extension("cp");
     if cp_file.exists() {
         return Some(cp_file);
+    }
+    // 5. Check <base>.d.cp
+    let dcp_file = base.with_extension("d.cp");
+    if dcp_file.exists() {
+        return Some(dcp_file);
     }
 
     None
@@ -448,8 +448,8 @@ fn resolve_cap_from_manifest(search_source: &str, include_paths: &[PathBuf]) -> 
 
                             // Point 3: directory resolution
                             if target.is_dir() {
-                                // 1. index.d.cp / index.cp / main.d.cp / main.cp
-                                for f in &["index.d.cp", "index.cp", "main.d.cp", "main.cp"] {
+                                // 1. index.cp / index.d.cp / main.cp / main.d.cp (prefer source .cp)
+                                for f in &["index.cp", "index.d.cp", "main.cp", "main.d.cp"] {
                                     let check = target.join(f);
                                     if check.is_file() {
                                         return Some(check);
@@ -458,13 +458,13 @@ fn resolve_cap_from_manifest(search_source: &str, include_paths: &[PathBuf]) -> 
                                 // 2. same name as path dir (.cp / .d.cp)
                                 if let Some(dir_name) = target.file_name().and_then(|n| n.to_str())
                                 {
-                                    let check_dcp = target.join(format!("{}.d.cp", dir_name));
-                                    if check_dcp.is_file() {
-                                        return Some(check_dcp);
-                                    }
                                     let check_cp = target.join(format!("{}.cp", dir_name));
                                     if check_cp.is_file() {
                                         return Some(check_cp);
+                                    }
+                                    let check_dcp = target.join(format!("{}.d.cp", dir_name));
+                                    if check_dcp.is_file() {
+                                        return Some(check_dcp);
                                     }
                                 }
                             }

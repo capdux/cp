@@ -19,13 +19,13 @@ export class AuditRecord {
 export class AudRingSlot {
     seq: u64,
     status: u16,
-    method_buf: u8[AUD_MAX_METHOD_LEN],
+    method_buf: [AUD_MAX_METHOD_LEN]u8,
     method_len: usize,
-    path_buf: u8[AUD_MAX_PATH_LEN],
+    path_buf: [AUD_MAX_PATH_LEN]u8,
     path_len: usize,
-    actor_buf: u8[AUD_MAX_ACTOR_LEN],
+    actor_buf: [AUD_MAX_ACTOR_LEN]u8,
     actor_len: usize,
-    ip_buf: u8[AUD_MAX_IP_LEN],
+    ip_buf: [AUD_MAX_IP_LEN]u8,
     ip_len: usize,
     used: bool,
 }
@@ -45,7 +45,7 @@ export fn auditMaskHeaderValue(header_name: string, val: string): string;
 export fn auditCount(): usize;
 export fn auditTotalSeq(): u64;
 export fn auditReset();
-export fn auditRecordAt(chronological_idx: usize): ?AuditRecord;
+export fn auditRecordAt(chronological_idx: usize): AuditRecord?;
 export fn audAfterHandle(ctx: &mut Context, resp: &mut Response);
 export fn audHandleStatus(ctx: &mut Context): Response;
 export fn audCreatePlugin(cfg: AuditConfig): Plugin;

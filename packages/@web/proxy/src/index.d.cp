@@ -10,9 +10,9 @@ export class ProxyConfig {
 }
 
 export class ProxyRequestPlan {
-    target_path: u8[256],
+    target_path: [256]u8,
     target_path_len: usize,
-    host_header: u8[128],
+    host_header: [128]u8,
     host_header_len: usize,
     forwarded_for: string,
     forwarded_proto: string,
@@ -29,10 +29,10 @@ export fn pxHasTraversal(path: string): bool;
 export fn pxTrimTrailingSlash(s: string): string;
 export fn pxMatchesPrefix(req_path: string, raw_prefix: string): bool;
 export fn pxDefaultTransport(cfg: &ProxyConfig, ctx: &mut Context, target_path: string): Response;
-export fn buildProxyTargetPath(req_path: string, raw_query: string, cfg: ProxyConfig, out_buf: []u8): ?usize;
-export fn buildProxyRequestPlan(req_path: string, raw_query: string, cfg: ProxyConfig, client_ip: string): ?ProxyRequestPlan;
-export fn formatUpstreamHttp1Request(method: AppMethod, target_path: string, body: string, cfg: ProxyConfig, client_ip: string, out_buf: []u8): ?usize;
+export fn buildProxyTargetPath(req_path: string, raw_query: string, cfg: ProxyConfig, out_buf: []u8): usize?;
+export fn buildProxyRequestPlan(req_path: string, raw_query: string, cfg: ProxyConfig, client_ip: string): ProxyRequestPlan?;
+export fn formatUpstreamHttp1Request(method: AppMethod, target_path: string, body: string, cfg: ProxyConfig, client_ip: string, out_buf: []u8): usize?;
 export fn proxyHook(ctx: &mut Context): bool;
-export fn createProxyPlugin(cfg: ProxyConfig, transport: ?ProxyTransportFn): Plugin;
+export fn createProxyPlugin(cfg: ProxyConfig, transport: ProxyTransportFn?): Plugin;
 export fn registerProxy(app: &mut App, cfg: ProxyConfig): &mut App;
 export fn registerProxyWithTransport(app: &mut App, cfg: ProxyConfig, transport: ProxyTransportFn): &mut App;

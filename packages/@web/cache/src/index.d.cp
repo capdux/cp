@@ -11,12 +11,12 @@ export class CacheConfig {
 export class CacheEntry {
     used: bool,
     is_idem: bool,
-    key_buf: u8[128],
+    key_buf: [128]u8,
     key_len: usize,
     status: u16,
-    ct_buf: u8[64],
+    ct_buf: [64]u8,
     ct_len: usize,
-    body_buf: u8[1024],
+    body_buf: [1024]u8,
     body_len: usize,
     expires_at: u64,
     fn matches(key: string, idem: bool): bool;
@@ -32,7 +32,7 @@ export fn cacheBuildGetKey(ctx: &mut Context, out_buf: []u8): string;
 export fn cacheBuildIdemKey(ctx: &mut Context, idem_val: string, out_buf: []u8): string;
 export fn cacheIsWriteMethod(m: AppMethod): bool;
 export fn cacheEffectiveCap(): usize;
-export fn cacheFindEntry(key: string, is_idem: bool, now_sec: u64): ?usize;
+export fn cacheFindEntry(key: string, is_idem: bool, now_sec: u64): usize?;
 export fn cachePutEntry(key: string, is_idem: bool, resp: &mut Response, now_sec: u64);
 export fn setCacheTestClock(now_sec: u64);
 export fn resetCacheStore();

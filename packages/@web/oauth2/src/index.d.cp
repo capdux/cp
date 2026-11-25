@@ -12,7 +12,7 @@ export class OAuth2Config {
 }
 
 export class OaStateSlot {
-    buf: u8[OA_MAX_STATE_LEN],
+    buf: [OA_MAX_STATE_LEN]u8,
     len: usize,
     active: bool,
 }
@@ -27,11 +27,11 @@ export fn oaWriteUrlEncoded(out_buf: []u8, pos: &mut usize, s: string): bool;
 export fn oaWriteJsonEscaped(out_buf: []u8, pos: &mut usize, s: string): bool;
 export fn oaWriteU64(out_buf: []u8, pos: &mut usize, val: u64): bool;
 export fn oaHasQueryMark(s: string): bool;
-export fn oauth2BuildAuthorizeUrl(cfg: OAuth2Config, state: string, code_challenge: string, out_buf: []u8): ?usize;
+export fn oauth2BuildAuthorizeUrl(cfg: OAuth2Config, state: string, code_challenge: string, out_buf: []u8): usize?;
 export fn oauth2RegisterState(state: string);
 export fn oauth2ConsumeState(state: string): bool;
 export fn oauth2ResetStates();
-export fn oauth2BuildTokenFormBody(cfg: OAuth2Config, code: string, code_verifier: string, out_buf: []u8): ?usize;
+export fn oauth2BuildTokenFormBody(cfg: OAuth2Config, code: string, code_verifier: string, out_buf: []u8): usize?;
 export fn oaLoginHandler(ctx: &mut Context): Response;
 export fn oaCallbackHandler(ctx: &mut Context): Response;
 export fn registerOAuth2(app: &mut App, cfg: OAuth2Config): &mut App;

@@ -16,20 +16,20 @@ export class RateLimitDecision {
 
 export class RateLimitSlot {
     used: bool,
-    key_buf: u8[RATELIMIT_MAX_KEY_LEN],
+    key_buf: [RATELIMIT_MAX_KEY_LEN]u8,
     key_len: usize,
     window_start: u64,
     count: u32,
     fn matchesKey(key: string): bool;
-    fn setKey(_: any, key: string);
+    fn setKey(_: auto, key: string);
 }
 
 export class RateLimiter {
     config: RateLimitConfig,
-    slots: RateLimitSlot[RATELIMIT_MAX_SLOTS],
+    slots: [RATELIMIT_MAX_SLOTS]RateLimitSlot,
     fn init(cfg: RateLimitConfig): RateLimiter;
-    fn reset(_: any);
-    fn check(_: any, key: string, now_sec: u64): RateLimitDecision;
+    fn reset(_: auto);
+    fn check(_: auto, key: string, now_sec: u64): RateLimitDecision;
 }
 
 export fn monotonicNowSec(): u64;

@@ -36,3 +36,12 @@
 ## 2026-11-22: 新建 `cap:h2_encode` 吸收自 Bun http/h2_client/encode.cp 的纯 CP 零分配 HTTP/2 出站编码库：RFC 9113 请求头过滤、HPACK 动态表更新、客户端序言、HEADERS/CONTINUATION 分片与双窗口 DATA 帧编码（5/5 PASS，文档直写 `doc/lib/h2_encode.md`）
 从 /data/dev/bun/src/http/h2_client/encode.cp 吸收纯 CP 零分配 HTTP/2 出站编码库 cap:h2_encode（lib/h2_encode/{h2_encode,index}.cp），cpc check 0 错误，cap test 6/6 PASS (886ms)
 
+
+## 2026-11-26: 完成 CP & CPC 生态 12 项核心优化并发布 Release 编译器
+- **执行策略**：按“正确性 → AI 诊断/MCP → 工程体验 → 安全与传输”顺序，通过主智能体与多路子智能体并行推进，每完成一项即跑测、同步 `cp_agent_ref.md` / `cp_lib_ref.md` 并独立 Git 提交（共 9 个原子提交覆盖 12 项优化）。
+- **关键技术突破**：
+  1. `??` 严格短路求值改用原生 Zig `orelse` 块，彻底消除 RHS `@panic(...)` / 有副作用表达式在左值非空时被提前求值的隐患。
+  2. 跨模块同名 `extern fn` 与完全一致的顶层 `const` 合并去重，消除同时导入 `lib/web/server.cp` 与 `lib/web/wsServer.cp` 时的重复符号报错。
+  3. 解析器引入 64 层 `recursion_depth` 护栏，配合 300 轮确定性畸形输入 Fuzz 测试确保 Parser + Sema 零 Panic、零栈溢出。
+  4. `cpc mcp` 原生暴露 4 个 JSON-RPC 工具，`packages/@web/*` 33 个包全部生成 `.d.cp` 存根（8,804→1,103 行，-87.5%），显著降低 AI 代理开发 CP 项目的上下文消耗。
+  5. `cap` 新增 `inotify` 热重载、`cap init web`、`cap test --filter` 与 `cap:web` 原生纯 CP TLS 配置/SNI/ALPN 能力。

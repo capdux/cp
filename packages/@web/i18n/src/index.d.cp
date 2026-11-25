@@ -17,7 +17,7 @@ export class I18nEntry {
 export fn i18nAsciiLower(c: u8): u8;
 export fn i18nEqlIgnoreCase(a: string, b: string): bool;
 export fn i18nStrEql(a: string, b: string): bool;
-export fn i18nMatchLocale(supported: string, candidate: string): ?string;
+export fn i18nMatchLocale(supported: string, candidate: string): string?;
 export fn i18nNegotiateHeader(supported: string, accept_lang: string, fallback: string): string;
 export fn i18nResetCatalog();
 export fn i18nAddTranslation(locale: string, key: string, value: string): bool;

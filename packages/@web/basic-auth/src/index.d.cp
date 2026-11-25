@@ -11,8 +11,8 @@ export class BasicAuthConfig {
 }
 
 export fn baConstTimeEql(a: string, b: string): bool;
-export fn baDecodeVal(c: u8): ?u8;
-export fn basicAuthDecodeBase64(input: string, out_buf: []u8): ?usize;
+export fn baDecodeVal(c: u8): u8?;
+export fn basicAuthDecodeBase64(input: string, out_buf: []u8): usize?;
 export fn baStartsWithIgnoreCase(s: string, prefix: string): bool;
 export fn basicAuthHook(ctx: &mut Context): bool;
 export fn createBasicAuthPlugin(cfg: BasicAuthConfig): Plugin;

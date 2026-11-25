@@ -13,7 +13,7 @@ export enum TrpcProcKind {
 export class TrpcProcEntry {
     name: string,
     kind: TrpcProcKind,
-    handler: ?TrpcHandlerFn,
+    handler: TrpcHandlerFn?,
 }
 
 export fn trpcBytesEql(a: string, b: string): bool;
@@ -22,7 +22,7 @@ export fn trpcRegisterProc(name: string, kind: TrpcProcKind, handler: TrpcHandle
 export fn trpcQuery(name: string, handler: TrpcHandlerFn): bool;
 export fn trpcMutation(name: string, handler: TrpcHandlerFn): bool;
 export fn trpcReset();
-export fn trpcFindProcIndex(name: string): ?usize;
+export fn trpcFindProcIndex(name: string): usize?;
 export fn trpcWrapResult(raw_json: string): Response;
 export fn trpcGetHandler(ctx: &mut Context): Response;
 export fn trpcPostHandler(ctx: &mut Context): Response;

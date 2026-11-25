@@ -23,12 +23,12 @@ export class CronConfig {
 
 export class CronJob {
     used: bool,
-    name_buf: u8[CRON_MAX_NAME_LEN],
+    name_buf: [CRON_MAX_NAME_LEN]u8,
     name_len: usize,
-    expr_buf: u8[CRON_MAX_EXPR_LEN],
+    expr_buf: [CRON_MAX_EXPR_LEN]u8,
     expr_len: usize,
     expr: CronExpr,
-    handler: ?CronTaskFn,
+    handler: CronTaskFn?,
     paused: bool,
     run_count: u64,
     fn nameSlice(): string;
@@ -36,23 +36,23 @@ export class CronJob {
     fn matchesName(name: string): bool;
 }
 
-export fn cronParseU8(s: string): ?u8;
-export fn cronParseField(field: string, min_val: u8, max_val: u8, is_weekday: bool): ?u64;
+export fn cronParseU8(s: string): u8?;
+export fn cronParseField(field: string, min_val: u8, max_val: u8, is_weekday: bool): u64?;
 export fn cronWriteRaw(out_buf: []u8, pos: &mut usize, s: string): bool;
 export fn cronWriteU64(out_buf: []u8, pos: &mut usize, val: u64): bool;
-export fn parseCronExpr(expr: string): ?CronExpr;
+export fn parseCronExpr(expr: string): CronExpr?;
 export fn cronMatches(expr: &CronExpr, t: CronTime): bool;
 export class CronScheduler {
-    jobs: CronJob[CRON_MAX_JOBS],
+    jobs: [CRON_MAX_JOBS]CronJob,
     job_count: usize,
     fn init(): CronScheduler;
-    fn reset(_: any);
-    fn addJob(_: any, name: string, expr: string, handler: CronTaskFn): bool;
-    fn pauseJob(_: any, name: string): bool;
-    fn resumeJob(_: any, name: string): bool;
-    fn tick(_: any, t: CronTime): usize;
+    fn reset(_: auto);
+    fn addJob(_: auto, name: string, expr: string, handler: CronTaskFn): bool;
+    fn pauseJob(_: auto, name: string): bool;
+    fn resumeJob(_: auto, name: string): bool;
+    fn tick(_: auto, t: CronTime): usize;
     fn jobRunCount(name: string): u64;
-    fn formatStatusJson(out_buf: []u8): ?usize;
+    fn formatStatusJson(out_buf: []u8): usize?;
 }
 
 export fn cronGlobalScheduler(): &mut CronScheduler;

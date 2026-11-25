@@ -33,8 +33,8 @@ export class EnvValidationResult {
 }
 
 export fn envStrEql(a: string, b: string): bool;
-export fn envParseI64(s: string): ?i64;
+export fn envParseI64(s: string): i64?;
 export fn envIsValidBool(s: string): bool;
 export fn envInEnum(val: string, list: string): bool;
-export fn envLookupRaw(entries: &[]EnvKV, key: string): ?string;
+export fn envLookupRaw(entries: &[]EnvKV, key: string): string?;
 export fn registerEnv(app: &mut App, specs: &[]EnvVarSpec, entries: &[]EnvKV): EnvValidationResult;

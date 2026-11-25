@@ -20,7 +20,7 @@ export fn negotiateEncoding(accept_encoding: string, prefer_gzip: bool): Encodin
 export fn cmpCrc32(data: string): u32;
 export fn cmpWriteU16Le(out_buf: []u8, pos: usize, val: u16);
 export fn cmpWriteU32Le(out_buf: []u8, pos: usize, val: u32);
-export fn encodeGzipStored(src: string, out_buf: []u8): ?usize;
+export fn encodeGzipStored(src: string, out_buf: []u8): usize?;
 export fn compressResponseHook(ctx: &mut Context, resp: &mut Response);
 export fn createCompressPlugin(cfg: CompressConfig): Plugin;
 export fn registerCompress(app: &mut App, cfg: CompressConfig): &mut App;
