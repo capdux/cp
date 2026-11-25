@@ -164,7 +164,7 @@ export * from "./sub_module.cp";
 | `cpc check --brief [--json] [--max N] <file.cp>` | **AI 省 Token 聚合去重摘要模式（`-b`）**：按错误码 `code` 归并，每类仅输出一次 `help`/`suggestion` 及 `lines: [...]` 行号数组 |
 | `cpc check --fix <file.cp>` / `cpc fix <file.cp>` | **机械错误一键自动修复**：自动就地修复 `E0101`..`E0104`, `E0115`(`?T`->`T?`), `E0116`(补`:`), `E0118`(`\|v\|`->`:=`/`of`), `E0119`..`E0123`, `E0126`(`if (let v = e)`->`if (v := e)`), `E0131`(`dec`保留字重命名), `E0132`(`[]T?`->`([]T)?`), `E0204`(就近`const`->`let`) |
 | `python3 scripts/cpc_brief.py [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | `cpc brief` 的 Python 脚本包装版（同款 Zig 自动探测优先级与 4 项静态门禁；日常推荐直接使用内置 `cpc brief`） |
-| `cpc emit-types` / `demangle` / `lsp` | 生成 `.d.cp` 类型契约 / 反解崩溃堆栈（亦可用 `cap demangle`）/ 启动 LSP |
+| `cpc emit-types` / `demangle` / `lsp` / `mcp` | 生成 `.d.cp` 类型契约 / 反解崩溃堆栈（亦可用 `cap demangle`）/ 启动 LSP / 启动标准 MCP stdio 工具链服务（暴露 `cpc_check`/`cpc_brief`/`cpc_emit_types`/`cpc_search_stdlib`） |
 
 ---
 

@@ -8,6 +8,7 @@ pub mod diagnostic;
 pub mod formatter;
 pub mod lexer;
 pub mod lsp;
+pub mod mcp;
 pub mod migrate;
 pub mod modular;
 pub mod parser;

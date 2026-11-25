@@ -177,6 +177,8 @@ enum Commands {
     },
     /// Run Language Server Protocol daemon
     Lsp,
+    /// Run Model Context Protocol (MCP) JSON-RPC 2.0 server over stdio
+    Mcp,
 }
 
 fn compile_embedded_cap_module(
@@ -765,6 +767,9 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             Commands::Lsp => {
                 let rt = tokio::runtime::Runtime::new()?;
                 rt.block_on(cpc::lsp::run_lsp());
+            }
+            Commands::Mcp => {
+                cpc::mcp::run_mcp_stdio_server()?;
             }
         }
     } else if let Some(input) = cli.input {
