@@ -57,6 +57,11 @@ impl ParseError {
                     .with_cause("untyped 'any' is prohibited to ensure strict type safety and zero-cost runtime performance.")
                     .with_help("use a concrete strong type (e.g. i32, string), a generic type parameter '<T>', or '*anyopaque' for C pointers.")
                     .with_suggestion("replace 'any' with a concrete type or generic '<T>'"),
+                Token::Dec => Diagnostic::new("E0131", "'dec' is a reserved decimal type keyword in CP")
+                    .with_span(*span)
+                    .with_cause("'dec' is reserved for CP's built-in fixed-point decimal type and cannot be used as a variable or parameter name.")
+                    .with_help("choose a descriptive identifier name such as 'dec_buf', 'decoded', or 'decoder'.")
+                    .with_suggestion("rename 'dec' to 'dec_buf'"),
                 _ => Diagnostic::new("E0100", format!("unexpected token '{:?}'", tok))
                     .with_span(*span)
                     .with_cause(format!("parser encountered unexpected token '{:?}'", tok))

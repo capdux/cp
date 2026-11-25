@@ -162,7 +162,7 @@ export * from "./sub_module.cp";
 | `cpc [compile] <file.cp> -o <out.zig> [--lib] [--nest]` | 编译为 Zig 源码（`--lib` 省略 main；`--nest`/`-n` 开启 `@is_nest` 模式，整文件错误一次性输出） |
 | `cpc check [--json] <file.cp>` | 极速整文件静态语法与借用检查（自动折叠连锁错误 `cascade_of`，`--json` 输出含 `errors`/`root_errors` 与 `edits` 字节替换范围） |
 | `cpc check --brief [--json] [--max N] <file.cp>` | **AI 省 Token 聚合去重摘要模式（`-b`）**：按错误码 `code` 归并，每类仅输出一次 `help`/`suggestion` 及 `lines: [...]` 行号数组 |
-| `cpc check --fix <file.cp>` / `cpc fix <file.cp>` | **机械错误一键自动修复**：自动就地修复 `E0101`..`E0104`, `E0115`(`?T`->`T?`), `E0116`(补`:`), `E0118`(`\|v\|`->`:=`/`of`), `E0119`..`E0123`, `E0126`(`if (let v = e)`->`if (v := e)`) |
+| `cpc check --fix <file.cp>` / `cpc fix <file.cp>` | **机械错误一键自动修复**：自动就地修复 `E0101`..`E0104`, `E0115`(`?T`->`T?`), `E0116`(补`:`), `E0118`(`\|v\|`->`:=`/`of`), `E0119`..`E0123`, `E0126`(`if (let v = e)`->`if (v := e)`), `E0131`(`dec`保留字重命名), `E0132`(`[]T?`->`([]T)?`), `E0204`(就近`const`->`let`) |
 | `python3 scripts/cpc_brief.py [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | `cpc brief` 的 Python 脚本包装版（同款 Zig 自动探测优先级与 4 项静态门禁；日常推荐直接使用内置 `cpc brief`） |
 | `cpc emit-types` / `demangle` / `lsp` | 生成 `.d.cp` 类型契约 / 反解崩溃堆栈（亦可用 `cap demangle`）/ 启动 LSP |
 

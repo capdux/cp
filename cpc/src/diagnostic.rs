@@ -500,12 +500,43 @@ impl Diagnostic {
             }
         }
 
-        // 13. Const reassignment (E0204) -> change 'const' to 'let'
+        // 13. Const reassignment (E0204) -> change 'const' to 'let' (or locate nearest declaration before span)
         if self.code == "E0204" {
             if let (Some(code), Some(target)) = (source_code, self.message.split('\'').nth(1)) {
                 let pattern = format!("const {}", target);
+                let search_limit = self.span.map(|s| s.start.min(code.len())).unwrap_or(code.len());
+                if let Some(pos) = code[..search_limit].rfind(&pattern) {
+                    edits.push(DiagnosticEdit::new(pos, pos + 5, "let"));
+                    return edits;
+                }
                 if let Some(pos) = code.find(&pattern) {
                     edits.push(DiagnosticEdit::new(pos, pos + 5, "let"));
+                    return edits;
+                }
+            }
+        }
+
+        // 13b. Reserved 'dec' keyword used as identifier (E0131) -> rename to 'dec_buf'
+        if self.code == "E0131" {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let end = span.end.min(code.len());
+                let start = span.start.min(end);
+                if &code[start..end] == "dec" {
+                    edits.push(DiagnosticEdit::new(start, end, "dec_buf"));
+                    return edits;
+                }
+            }
+        }
+
+        // 13c. Optional-element slice `[]T?` mistaken for optional slice `([]T)?` (E0132)
+        if self.code == "E0132" {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let end = span.end.min(code.len());
+                let start = span.start.min(end);
+                let slice_txt = &code[start..end];
+                if slice_txt.starts_with("[]") && slice_txt.ends_with('?') {
+                    let inner = &slice_txt[..slice_txt.len() - 1];
+                    edits.push(DiagnosticEdit::new(start, end, format!("({})?", inner)));
                     return edits;
                 }
             }
@@ -1126,4 +1157,42 @@ pub fn from_compiler_error_msg(raw_msg: &str, source_code: Option<&str>) -> Diag
     }
 
     diag
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_autofix_e0131_dec_reserved_keyword() {
+        let src = "let dec: [16]u8 = undefined;";
+        let start = src.find("dec").unwrap();
+        let diag = Diagnostic::new("E0131", "'dec' is a reserved decimal type keyword in CP")
+            .with_span(Span { start, end: start + 3 });
+        let (fixed, count) = apply_fixes(src, &[diag]);
+        assert_eq!(count, 1);
+        assert_eq!(fixed, "let dec_buf: [16]u8 = undefined;");
+    }
+
+    #[test]
+    fn test_autofix_e0132_optional_slice_parens() {
+        let src = "fn alloc(n: usize): []u8? { return null; }";
+        let start = src.find("[]u8?").unwrap();
+        let diag = Diagnostic::new("E0132", "optional-element slice mistaken for optional slice")
+            .with_span(Span { start, end: start + 5 });
+        let (fixed, count) = apply_fixes(src, &[diag]);
+        assert_eq!(count, 1);
+        assert_eq!(fixed, "fn alloc(n: usize): ([]u8)? { return null; }");
+    }
+
+    #[test]
+    fn test_autofix_e0204_nearest_const_to_let() {
+        let src = "const x = 1;\nfn f() {\n    const x = 2;\n    x = 3;\n}\n";
+        let assign_pos = src.find("x = 3").unwrap();
+        let diag = Diagnostic::new("E0204", "cannot assign to const variable 'x'")
+            .with_span(Span { start: assign_pos, end: assign_pos + 1 });
+        let (fixed, count) = apply_fixes(src, &[diag]);
+        assert_eq!(count, 1);
+        assert!(fixed.contains("const x = 1;\nfn f() {\n    let x = 2;"));
+    }
 }

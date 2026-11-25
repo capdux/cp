@@ -2320,9 +2320,17 @@ impl Codegen {
                             _ => false,
                         };
                         if !allows_null {
+                            let slice_opt_hint = match &self.current_fn_ret_ty {
+                                Some(crate::ast::Type::Array(inner))
+                                    if matches!(inner.as_ref(), crate::ast::Type::Optional(_)) =>
+                                {
+                                    "\n  = help: in CP, '[]T?' parses as a slice of optional elements; wrap the slice in parentheses for an optional slice: '([]T)?'"
+                                }
+                                _ => "\n  = help: append '?' to the return type to make it optional (e.g., ': T?' or ': ([]u8)?')",
+                            };
                             panic!(
-                                "CP Compile Error: Cannot return 'null' from function '{}' whose return type is not optional '?T' (actual ret ty: {:?})",
-                                self.current_fn_zig_name, self.current_fn_ret_ty
+                                "CP Compile Error: Cannot return 'null' from function '{}' whose return type is not optional 'T?' (actual ret ty: {:?}){}",
+                                self.current_fn_zig_name, self.current_fn_ret_ty, slice_opt_hint
                             );
                         }
                     }
