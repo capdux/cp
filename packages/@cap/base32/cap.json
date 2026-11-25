@@ -1,7 +1,0 @@
-{
-  "name": "@cap/base32",
-  "ver": "1.0.0",
-  "description": "Zero-allocation RFC 4648, Extended Hex, Crockford, and z-base-32 encoder/decoder for CP (TOTP 2FA / Tor / IPFS / DNSSEC)",
-  "main": "src/index.cp",
-  "license": "MIT"
-}

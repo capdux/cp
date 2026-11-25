@@ -1,7 +1,0 @@
-{
-  "name": "@cap/mime",
-  "ver": "1.0.0",
-  "description": "Pure CP, zero-dependency, zero-heap-allocation IANA MIME type lookup, reverse extension mapping, charset and compressibility detection",
-  "main": "src/index.cp",
-  "license": "MIT"
-}

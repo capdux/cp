@@ -91,7 +91,7 @@ import {
     KIB,
     MIB,
     GB,
-} from "@cap/bytes";
+} from "cap:bytes";
 import { print } from "cap:io";
 
 pub fn main() {
@@ -120,7 +120,7 @@ import {
     formatCompact,
     MIB,
     MB,
-} from "@cap/bytes";
+} from "cap:bytes";
 import { print } from "cap:io";
 
 pub fn main() {
@@ -148,7 +148,7 @@ import {
     parseBytes,
     formatBytes,
     GIB,
-} from "@cap/bytes";
+} from "cap:bytes";
 import { print } from "cap:io";
 
 pub fn main() {

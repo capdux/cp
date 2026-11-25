@@ -9,7 +9,7 @@ import {
     mask,
     unmask,
     Crc32cHasher,
-} from "../../packages/@cap/crc32c/src/index.cp";
+} from "cap:hash/crc32c";
 
 fn main() {
     test("1. @cap/crc32c — RFC 3720 Official Test Vectors", () => {

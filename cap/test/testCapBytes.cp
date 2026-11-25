@@ -22,7 +22,7 @@ import {
     formatBinary,
     formatDecimal,
     formatCompact,
-} from "../../packages/@cap/bytes/src/index.cp";
+} from "cap:bytes";
 
 fn assert(cond: bool) {
     if (!cond) {

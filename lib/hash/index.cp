@@ -216,3 +216,15 @@ export {
     Backend,
     MaglevRouter,
 } from "./maglev.cp";
+
+// --- CRC32C (Castagnoli 0x82F63B78, GF(2) Combine, LevelDB/TFRecord Mask/Unmask) ---
+export {
+    CASTAGNOLI_POLY,
+    MASK_DELTA,
+    crc32c,
+    crc32cAppend,
+    crc32cCombine,
+    mask as crc32cMask,
+    unmask as crc32cUnmask,
+    Crc32cHasher,
+} from "./crc32c.cp";

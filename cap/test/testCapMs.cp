@@ -21,7 +21,7 @@ import {
     formatShort,
     formatLong,
     formatDurationNs,
-} from "../../packages/@cap/ms/src/index.cp";
+} from "cap:time/human";
 
 fn assert(cond: bool) {
     if (!cond) {

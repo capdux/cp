@@ -329,3 +329,26 @@ export {
     EventLoopDelayStats,
     EventLoopDelayMonitor,
 } from "./eventLoopDelay.cp";
+
+// --- Human-Readable Duration Parser & Formatter (npm `ms` + Rust `humantime` parity) ---
+export {
+    MsError,
+    NS_PER_US,
+    NS_PER_MS,
+    NS_PER_SEC,
+    NS_PER_MIN,
+    NS_PER_HOUR,
+    NS_PER_DAY,
+    NS_PER_WEEK,
+    MS_PER_SEC,
+    MS_PER_MIN,
+    MS_PER_HOUR,
+    MS_PER_DAY,
+    MS_PER_WEEK,
+    MS_PER_YEAR,
+    parseMs,
+    parseDurationNs,
+    formatShort,
+    formatLong,
+    formatDurationNs,
+} from "./human.cp";

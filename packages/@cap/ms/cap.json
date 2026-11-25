@@ -1,7 +1,0 @@
-{
-  "name": "@cap/ms",
-  "ver": "1.0.0",
-  "description": "Pure CP, zero-dependency, zero-allocation human-readable duration parser & formatter (compatible with npm `ms` and Rust `humantime`)",
-  "main": "src/index.cp",
-  "license": "MIT"
-}

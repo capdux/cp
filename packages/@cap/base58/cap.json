@@ -1,7 +1,0 @@
-{
-  "name": "@cap/base58",
-  "ver": "1.0.0",
-  "description": "Zero-allocation Base58 & Base58Check (Bitcoin/Solana/IPFS/Flickr/Ripple) encoder and decoder for CP (inspired by bs58)",
-  "main": "src/index.cp",
-  "license": "MIT"
-}

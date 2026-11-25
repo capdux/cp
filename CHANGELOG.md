@@ -88,3 +88,11 @@
 
 ## [2026-11-26] - Wave 3C 吸收 npm/Rust 高频基础生态包（`@cap/mime`）
 - `packages/@cap/mime/` & `cap/test/testCapMime.cp`: 零分配 IANA Media Types 双向映射库（对标 npm `mime-types` [~130M/wk] & Rust `mime_guess`，覆盖 109 个高频扩展名与 12 个历史别名、`lookupByExt`/`extensionForMime`/`defaultCharset`/`isCompressible`/`contentTypeHeader`，PASS 852ms）。
+
+## [2026-11-26] - 架构分层收敛：基础核心能力归位 `lib/` 内置标准库，`packages/@cap/` 零冗余
+- 归位 3 项真正填补内置库缺口的核心模块至 `lib/`：
+  - `lib/hash/crc32c.cp`（`cap:hash/crc32c`，同步导出至 `lib/hash/index.cp`，`testCapCrc32c` 3/3 PASS）
+  - `lib/time/human.cp`（`cap:time/human`，同步导出至 `lib/time/index.cp`，`testCapMs` PASS）
+  - `lib/bytes/`（新建 `cap:bytes` + `doc/lib/bytes.md`，`testCapBytes` PASS）
+- 清理与既有 `lib/{crypto,cbor,uuid,codec,mime,http}` 重叠的 11 个轻量 `@cap/*` 重复包，确立清晰双层边界：`lib/*` 承载零依赖核心基础库，`packages/@cap/*` 承载原生 C/C++ 绑定库与大型独立领域引擎包。
+- `cp_lib_ref.md`: 登记 `cap:bytes`、`cap:hash/crc32c`、`cap:time/human`。

@@ -69,3 +69,6 @@
 
 ## 2026-11-26: Wave 3C 交付 `@cap/mime`（MIT Clean-Room 纯 CP 实现）
 - 子智能体 4 交付 `@cap/mime`（109 IANA 扩展名 + 12 历史别名，`testCapMime` PASS 852ms），Wave 3 共 8 个高频 `@cap/*` 包全部 100% 验证提交完毕。
+
+## 2026-11-26: 确立 `lib/` vs `packages/@cap/` 架构双层分层规范并完成收敛去重
+- 核查发现 `lib/` 已有 `cbor`/`mime`/`uuid/nanoid`/`codec/base32+base58`/`crypto/blake3_`/`http/cookie`，遂将真正新增的 `crc32c`、`ms(human)`、`bytes` 归位内置标准库 `lib/`，并移除 `packages/@cap/` 中重复的 11 个轻量基础包，后续 `packages/@cap/*` 专注原生绑定与重量级独立引擎（如正在并行构建的 `@cap/lru` O(1) 缓存引擎与 `@cap/qs` 嵌套查询引擎）。
