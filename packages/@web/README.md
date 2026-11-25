@@ -1,8 +1,8 @@
-# Official `@web/*` Plugin Ecosystem for `cap:web` (17 Production Packages)
+# Official `@web/*` Plugin Ecosystem for `cap:web` (25 Production Packages)
 
 Production-ready, zero-GC, pure-CP plugins fusing the best of **ElysiaJS**, **Fastify**, and **Axum (`tower-http`)**. Every package lives under `packages/@web/<name>` with its own `cap.json`, zero external C runtime requirements, unique collision-free entry names, and 4-Gate `0/0/0/0` compliance.
 
-## Complete Official Plugin Matrix (17 Packages)
+## Complete Official Plugin Matrix (25 Packages)
 
 | Package | Path | Entry Function | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -23,3 +23,11 @@ Production-ready, zero-GC, pure-CP plugins fusing the best of **ElysiaJS**, **Fa
 | **`@web/session`** | `packages/@web/session` | `registerSession` | Signed tamper-proof Cookie Session (`<id>.<sig>`) + fixed-slot KV store + TTL + `HttpOnly`/`SameSite` |
 | **`@web/proxy`** | `packages/@web/proxy` | `registerProxy` | HTTP reverse proxy, safe prefix stripping, `X-Forwarded-*` injection & pluggable transport |
 | **`@web/cron`** | `packages/@web/cron` | `registerCron` | 5-field Cron parser (`*`/`*/n`/`a-b`/`a,b`), O(1) bitmask matcher, scheduler & `GET /_cron` status |
+| **`@web/env`** | `packages/@web/env` | `registerEnv` | Startup environment schema validation (required/default/int bounds/bool/enum) + App state injection |
+| **`@web/i18n`** | `packages/@web/i18n` | `registerI18n` | `?lang=` > Cookie > `Accept-Language` negotiation, `Content-Language` header & zero-heap catalog |
+| **`@web/oauth2`** | `packages/@web/oauth2` | `registerOAuth2` | OAuth2 / OIDC PKCE S256 authorize redirect, one-time anti-CSRF `state` & callback verification |
+| **`@web/graphql`** | `packages/@web/graphql` | `registerGraphQL` | `POST /graphql` query parser + depth guard + resolver dispatch & `GET /graphql` Playground |
+| **`@web/mcp`** | `packages/@web/mcp` | `registerMcp` | Model Context Protocol (MCP) Streamable HTTP JSON-RPC 2.0 server (`initialize`/`tools/list`/`tools/call`) |
+| **`@web/redis`** | `packages/@web/redis` | `registerRedis` | Thin Redis lifecycle adapter: namespaced keys, RESP2/3 encoder, App state & `/_redis/ping` |
+| **`@web/db`** | `packages/@web/db` | `registerDb` | Thin SQLite/Postgres/MySQL lifecycle adapter: auto-TX (2xx COMMIT / 4xx-5xx ROLLBACK) & `X-DB-Tx` |
+| **`@web/s3`** | `packages/@web/s3` | `registerS3` | Safe S3 object key normalization + pure-CP AWS SigV4 presigned URL endpoint (`/upload/presign`) |

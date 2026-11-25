@@ -1,0 +1,7 @@
+{
+  "name": "@web/graphql",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official GraphQL endpoint, depth-limit guard & GraphiQL Playground plugin for cap:web"
+}

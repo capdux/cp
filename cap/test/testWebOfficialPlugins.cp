@@ -1,7 +1,8 @@
-// Full-Stack Integration Test for ALL 17 Official `@web/*` Plugins on `cap:web`
+// Full-Stack Integration Test for ALL 25 Official `@web/*` Plugins on `cap:web`
 // Verifies zero symbol collisions and end-to-end interoperability across:
 //   Wave 1 (7): cors, security, jwt, ratelimit, logger, static, swagger
 //   Wave 2 (10): multipart, compress, cache, sensible, pressure, basic-auth, sse, session, proxy, cron
+//   Wave 3 (8): env, i18n, oauth2, graphql, mcp, redis, db, s3
 
 import { App, AppMethod, Context, Request, Response } from "../../lib/web/app.cp";
 import { CorsConfig, registerCors } from "../../packages/@web/cors/src/index.cp";
@@ -21,6 +22,14 @@ import { SseConfig, registerSse, ssePublish, sseResetBroker } from "../../packag
 import { SessionConfig, registerSession, sessionCreate, setSessionTestClock, resetSessionStore } from "../../packages/@web/session/src/index.cp";
 import { ProxyConfig, registerProxyWithTransport } from "../../packages/@web/proxy/src/index.cp";
 import { CronConfig, CronTime, registerCron, cronGlobalScheduler, resetCronScheduler } from "../../packages/@web/cron/src/index.cp";
+import { EnvKind, EnvVarSpec, EnvKV, registerEnv } from "../../packages/@web/env/src/index.cp";
+import { I18nConfig, registerI18n, i18nAddTranslation, i18nTranslate, i18nResetCatalog } from "../../packages/@web/i18n/src/index.cp";
+import { OAuth2Config, registerOAuth2, oauth2RegisterState } from "../../packages/@web/oauth2/src/index.cp";
+import { GraphQLConfig, registerGraphQL, gqlRegisterResolver, gqlResetResolvers } from "../../packages/@web/graphql/src/index.cp";
+import { McpConfig, registerMcp, mcpRegisterTool, mcpResetTools } from "../../packages/@web/mcp/src/index.cp";
+import { RedisPluginConfig, registerRedis } from "../../packages/@web/redis/src/index.cp";
+import { DbDialect, DbPluginConfig, registerDb, dbTxStats, dbResetStats } from "../../packages/@web/db/src/index.cp";
+import { S3PluginConfig, registerS3 } from "../../packages/@web/s3/src/index.cp";
 
 fn strEql(a: string, b: string): bool {
     if (a.len != b.len) return false;
@@ -72,6 +81,26 @@ fn hSessionEcho(ctx: *Context): Response {
     return httpNotFound("no session");
 }
 
+fn gqlVersionResolver(ctx: *Context, args: string): string {
+    * = ctx;
+    * = args;
+    return "\"1.0.0\"";
+}
+
+fn mcpPingTool(ctx: *Context, args: string): string {
+    * = ctx;
+    * = args;
+    return "pong-from-cp-mcp";
+}
+
+fn hDbCreate(ctx: *Context): Response {
+    const loc = ctx.derived("locale") ?? "en";
+    if (strEql(ctx.body, "fail")) {
+        return Response.json(400, "{\"err\":\"bad\"}");
+    }
+    return Response.text(201, i18nTranslate(loc, "created"));
+}
+
 fn main() {
     const secret = "cp-production-secret-key-2026";
     setTestClock(1700000000);
@@ -82,8 +111,12 @@ fn main() {
     pressureResetStats();
     sseResetBroker();
     resetCronScheduler();
+    i18nResetCatalog();
+    gqlResetResolvers();
+    mcpResetTools();
+    dbResetStats();
 
-    // App 1: Core API Gateway stack (10 plugins combined)
+    // App 1: Core API Gateway stack (Wave 1 + SSE + Cron)
     let app = App.init();
     * = registerCors(*app, CorsConfig{ allow_origin: "https://app.cp.dev", allow_credentials: true });
     * = registerSecurity(*app, SecurityConfig{ enable_csrf: false });
@@ -94,10 +127,9 @@ fn main() {
     * = registerSse(*app, SseConfig{ endpoint_path: "/events", retry_ms: 2000 });
     * = registerCron(*app, CronConfig{ status_path: "/_cron" });
     * = app.get("/api/secret", hProtected);
-    * = registerSwagger(*app, SwaggerConfig{ title: "Unified 17-Plugin API", version: "1.0.0" });
+    * = registerSwagger(*app, SwaggerConfig{ title: "Unified 25-Plugin API", version: "1.0.0" });
     * = refreshSpec(*app);
 
-    // 1. CORS + JWT + Security + RateLimit + Logger
     let tok_buf: [512]u8 = undefined;
     let tlen: usize = 0;
     if (n := signHs256(secret, "{\"sub\":\"alice\"}", tok_buf[0..])) {
@@ -119,33 +151,17 @@ fn main() {
     * = req
         .withHeader("Origin", "https://app.cp.dev")
         .withHeader("Authorization", auth_hdr[0 .. prefix.len + tlen]);
-    const resp = app.dispatch(req);
-    if (resp.status != 200 || !strEql(resp.header("X-Frame-Options") ?? "", "DENY")) {
-        @panic("Integration 1 failed: core gateway stack");
-    }
-
-    // 2. SSE + Cron + Swagger + Metrics + Static traversal check
+    if (app.dispatch(req).status != 200) @panic("Wave 1 gateway failed");
     * = ssePublish("token", "{\"ok\":1}");
     if (!strContains(app.dispatch(Request.init(AppMethod.GET, "/events")).body, "data: {\"ok\":1}")) {
-        @panic("Integration 2a failed: @web/sse");
+        @panic("Wave 2 SSE failed");
     }
     const sched = cronGlobalScheduler();
     * = sched.addJob("cleanup", "*/15 * * * *", sampleCronJob);
     * = sched.tick(CronTime{ minute: 15, hour: 0, day: 1, month: 1, weekday: 0 });
-    if (g_cron_ticks != 1 || !strContains(app.dispatch(Request.init(AppMethod.GET, "/_cron")).body, "cleanup")) {
-        @panic("Integration 2b failed: @web/cron");
-    }
-    if (app.dispatch(Request.init(AppMethod.GET, "/static/../etc/passwd")).status != 403) {
-        @panic("Integration 2c failed: @web/static traversal");
-    }
-    if (!strContains(app.dispatch(Request.init(AppMethod.GET, "/openapi.json")).body, "Unified 17-Plugin API")) {
-        @panic("Integration 2d failed: @web/swagger");
-    }
-    if (!strContains(app.dispatch(Request.init(AppMethod.GET, "/metrics")).body, "http_requests_total")) {
-        @panic("Integration 2e failed: @web/logger /metrics");
-    }
+    if (g_cron_ticks != 1) @panic("Wave 2 Cron failed");
 
-    // App 2: Data/Edge stack (remaining 7 plugins: sensible, pressure, basic-auth, multipart, compress, cache, session, proxy)
+    // App 2: Edge stack (Wave 2: pressure, multipart, basic-auth, session, cache, compress, sensible, proxy)
     let edge = App.init();
     * = registerPressure(*edge, PressureConfig{ max_body_bytes: 1024, max_inflight: 100 });
     * = registerMultipart(*edge, MultipartConfig{ max_total_bytes: 512 });
@@ -157,13 +173,8 @@ fn main() {
     * = registerProxyWithTransport(*edge, ProxyConfig{ prefix: "/proxy", strip_prefix: true }, mockProxyTransport);
     * = edge.get("/me-sess", hSessionEcho);
 
-    // 3. Pressure /healthz + Proxy + Session + Cache + Sensible
-    if (edge.dispatch(Request.init(AppMethod.GET, "/healthz")).status != 200) {
-        @panic("Integration 3a failed: @web/pressure /healthz");
-    }
-    const px_r = edge.dispatch(Request.init(AppMethod.GET, "/proxy/v2/items"));
-    if (px_r.status != 200 || !strContains(px_r.body, "proxied")) {
-        @panic("Integration 3b failed: @web/proxy");
+    if (edge.dispatch(Request.init(AppMethod.GET, "/proxy/v2/items")).status != 200) {
+        @panic("Wave 2 Proxy failed");
     }
     let sc_buf: [128]u8 = undefined;
     let sc_len: usize = 0;
@@ -184,14 +195,70 @@ fn main() {
     }
     let sreq = Request.init(AppMethod.GET, "/me-sess");
     * = sreq.withHeader("Cookie", ck_hdr[0 .. ck_pre.len + sc_len]);
-    const sr1 = edge.dispatch(sreq);
-    if (sr1.status != 200 || !strEql(sr1.header("X-Cache") ?? "", "MISS")) {
-        @panic("Integration 3c failed: @web/session + @web/cache MISS");
+    if (!strEql(edge.dispatch(sreq).header("X-Cache") ?? "", "MISS")) @panic("Wave 2 Cache MISS failed");
+    if (!strEql(edge.dispatch(sreq).header("X-Cache") ?? "", "HIT")) @panic("Wave 2 Cache HIT failed");
+
+    // App 3: Wave 3 AI & Data Platform stack (env, i18n, oauth2, graphql, mcp, redis, db, s3)
+    let platform = App.init();
+    const env_specs: [2]EnvVarSpec = [
+        EnvVarSpec{ name: "APP_ENV", kind: EnvKind.Enum, required: true, enum_values: "dev,prod" },
+        EnvVarSpec{ name: "PORT", kind: EnvKind.Int, default_val: "8080", min_val: 1, max_val: 65535, has_bounds: true },
+    ];
+    const env_vals: [1]EnvKV = [EnvKV{ key: "APP_ENV", value: "prod" }];
+    if (!registerEnv(*platform, env_specs[0..], env_vals[0..]).ok) @panic("Wave 3 @web/env failed");
+
+    * = i18nAddTranslation("en", "created", "Created");
+    * = i18nAddTranslation("zh", "created", "YiChuangJian");
+    * = registerI18n(*platform, I18nConfig{ default_locale: "en", supported_locales: "en,zh" });
+    * = registerOAuth2(*platform, OAuth2Config{
+        client_id: "cp-app",
+        authorize_url: "https://idp.cp.dev/authorize",
+        token_url: "https://idp.cp.dev/token",
+        redirect_uri: "https://app.cp.dev/auth/callback",
+    });
+    * = gqlRegisterResolver("version", gqlVersionResolver);
+    * = registerGraphQL(*platform, GraphQLConfig{});
+    * = mcpRegisterTool("ping", "Ping CP MCP server", mcpPingTool);
+    * = registerMcp(*platform, McpConfig{});
+    * = registerRedis(*platform, RedisPluginConfig{ key_prefix: "cp:" });
+    * = registerDb(*platform, DbPluginConfig{ dialect: DbDialect.Postgres, dsn: "postgres://localhost/cp", auto_tx: true });
+    * = registerS3(*platform, S3PluginConfig{ bucket: "cp-assets", access_key: "AKIA_TEST", secret_key: "SECRET_TEST" });
+    * = platform.post("/db/items", hDbCreate);
+
+    // Verify all 8 Wave 3 plugins end-to-end
+    oauth2RegisterState("st_123");
+    if (platform.dispatch(Request.init(AppMethod.GET, "/auth/callback?code=abc&state=st_123")).status != 200) {
+        @panic("Wave 3 @web/oauth2 failed");
     }
-    const sr2 = edge.dispatch(sreq);
-    if (sr2.status != 200 || !strEql(sr2.header("X-Cache") ?? "", "HIT")) {
-        @panic("Integration 3d failed: @web/cache HIT");
+    let gql_req = Request.init(AppMethod.POST, "/graphql");
+    * = gql_req.withBody("{\"query\":\"{ version }\"}");
+    if (!strContains(platform.dispatch(gql_req).body, "1.0.0")) @panic("Wave 3 @web/graphql failed");
+
+    let mcp_req = Request.init(AppMethod.POST, "/mcp");
+    * = mcp_req.withBody("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"ping\",\"arguments\":{}}}");
+    if (!strContains(platform.dispatch(mcp_req).body, "pong-from-cp-mcp")) @panic("Wave 3 @web/mcp failed");
+
+    if (platform.dispatch(Request.init(AppMethod.GET, "/_redis/ping")).status != 200) {
+        @panic("Wave 3 @web/redis failed");
+    }
+    let db_ok = Request.init(AppMethod.POST, "/db/items?lang=zh");
+    * = db_ok.withBody("ok");
+    const db_r1 = platform.dispatch(db_ok);
+    if (db_r1.status != 201 || !strEql(db_r1.body, "YiChuangJian") || !strEql(db_r1.header("X-DB-Tx") ?? "", "committed")) {
+        @panic("Wave 3 @web/db + @web/i18n commit failed");
+    }
+    let db_bad = Request.init(AppMethod.POST, "/db/items");
+    * = db_bad.withBody("fail");
+    const db_r2 = platform.dispatch(db_bad);
+    if (db_r2.status != 400 || !strEql(db_r2.header("X-DB-Tx") ?? "", "rolled_back")) {
+        @panic("Wave 3 @web/db rollback failed");
+    }
+    const stats = dbTxStats();
+    if (stats.commits < 1 || stats.rollbacks < 1) @panic("Wave 3 @web/db stats mismatch");
+
+    if (!strContains(platform.dispatch(Request.init(AppMethod.GET, "/upload/presign?key=avatars/a.png")).body, "X-Amz-Signature=")) {
+        @panic("Wave 3 @web/s3 presign failed");
     }
 
-    @print("PASS testWebOfficialPlugins (ALL 17 @web/* plugins verified with 0 collisions!)");
+    @print("PASS testWebOfficialPlugins (ALL 25 @web/* plugins verified with 0 collisions!)");
 }

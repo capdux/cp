@@ -1,0 +1,7 @@
+{
+  "name": "@web/env",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official startup environment schema validation & App state injection plugin for cap:web (inspired by @fastify/env)"
+}

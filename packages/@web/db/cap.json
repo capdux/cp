@@ -1,0 +1,7 @@
+{
+  "name": "@web/db",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official unified database context and request-scoped automatic transaction plugin for cap:web"
+}

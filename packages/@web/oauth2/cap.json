@@ -1,0 +1,7 @@
+{
+  "name": "@web/oauth2",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official OAuth 2.0 + RFC 7636 PKCE authorization plugin for cap:web"
+}

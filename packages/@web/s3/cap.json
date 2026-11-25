@@ -1,0 +1,7 @@
+{
+  "name": "@web/s3",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official S3 object key sanitizer and pure-CP AWS SigV4 presigned URL endpoint plugin for cap:web"
+}

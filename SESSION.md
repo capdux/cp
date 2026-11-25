@@ -5802,3 +5802,45 @@
   > ### 当前并行进度
   > - **主智能体（4/4 已完成且全绿，4-Gate `0/0/0/0`）**：`@web/sensible`（4/4 PASS）、`@web/pressure`（5/5 PASS）、`@web/basic-auth`（4/4 PASS）、`@web/sse`（3/3 PASS）。
   > - **两路子智能体并行开发中**：正在完成 `@web/multipart`、`@web/compress`、`@web/cache` 与 `@web/session`、`@web/proxy`、`@web/cron` 6 个插件，完成后将立即执行 **17 插件同台集成测试**并同步文档提交。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 21:25:05）[step:24223]
+- **用户完整原始指令**：
+  > 第三批有哪些, redis, 数据库这些需要纳入插件不呢?
+- **完整回复与执行汇报**：
+  > ### 一、Redis / 数据库要不要纳入 `@web/*`？——架构边界结论
+  >
+  > **驱动本身绝不放进 `@web/*`，但“接入 HTTP 生命周期的薄适配器”非常值得做成 `@web/*` 插件。**
+  >
+  > - **底层驱动已经在一级内置库里**：`cap:redis`、`cap:sqlite`、`cap:pg`、`cap:mysql`、`cap:s3`、`cap:oauth2`、`cap:graphql`、`cap:dotenv`、`cap:mcp` 在 `lib/` 中均已存在，CLI/定时任务/后台 Worker 可直接复用，不该绑定 Web；
+  > - **`@web/redis` / `@web/db` 的真正价值（对标 `@fastify/redis`、`@fastify/postgres`、`axum-sqlx-tx`）**是做 3 件纯 Web 生命周期的事：
+  >   1. **上下文注入**：把连接池/客户端句柄注入 `App` / `Context`，Handler 零样板代码直接取用；
+  >   2. **请求级事务托管**：`onBeforeHandle` 开启事务，Handler 返回 `2xx` 自动 `COMMIT`，返回 `4xx/5xx` 或 `abort` 自动 `ROLLBACK`；
+  >   3. **分布式桥接与探活**：为 `@web/cache` / `@web/session` / `@web/ratelimit` 提供分布式 Redis Key/命令适配，并接入 `/readyz` 健康检查。
+  >
+  > ---
+  >
+  > ### 二、第三批 8 个官方 `@web/*` 插件推荐清单（完成后总计 25 个全场景生态）
+  >
+  > #### A. Web 核心能力补齐（4 个）
+  > | 插件包 | 对标生态 | 复用 CP 底层 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@web/oauth2`** | `@fastify/oauth2` | `cap:oauth2` + `cap:auth` | OAuth2 / OIDC 授权跳转（`state` 防 CSRF + PKCE S256）与 `/auth/callback` 换取 Token 封装 |
+  > | **`@web/env`** | `@fastify/env` | `cap:dotenv` | 启动期强类型环境变量 Schema 校验（缺失/非法值直接拦截）并自动注入 `App` 状态 |
+  > | **`@web/graphql`** | `@elysiajs/graphql-yoga` / `mercurius` | `cap:graphql` | 自动挂载 `POST /graphql`（解析 Query/Variables + 深度限防）与 `GET /graphql` Playground |
+  > | **`@web/i18n`** | `@intlify/elysia` | `lib/web/contentNeg.cp` | 按 `Accept-Language` / `?lang=` / Cookie 自动协商语言，注入 `locale` 与零堆字典翻译 |
+  >
+  > #### B. 数据 / 存储 / AI 生命周期适配器（4 个，薄胶水层不重写驱动）
+  > | 插件包 | 对标生态 | 复用 CP 底层 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@web/redis`** | `@fastify/redis` | `cap:redis` | 连接配置注入、分布式 Cache/Session/RateLimit 命名空间 Key 与 RESP 命令适配 + 探活 |
+  > | **`@web/db`** | `@fastify/postgres` + `axum-sqlx-tx` | `cap:sqlite` / `cap:pg` / `cap:mysql` | 统一数据库上下文注入、请求级自动事务托管（2xx Commit / 4xx-5xx Rollback）与慢查询追踪 |
+  > | **`@web/s3`** | `elysia-s3` | `cap:s3` | 对象 Key 安全规范化与 SigV4 直传预签名端点（`GET /upload/presign`） |
+  > | **`@web/mcp`** | **CP AI-Native 特色** | `cap:mcp` + `@web/sse` | 一行把 `cap:web` 变为 **MCP (Model Context Protocol)** HTTP/SSE 工具服务端（`POST /mcp`） |
+  >
+  > 你确认这 **第三批 8 个 `@web/*` 插件**（或增删其中任意项）后，我立刻按 **主智能体 + 2 路子智能体并行** 全部落地并跑通 **25 插件联合集成测试**！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 21:28:57）[step:24227]
+- **用户完整原始指令**：
+  > 确认
+- **完整回复与执行汇报**：
+  > 第三批前 2 个插件（`@web/env` 3/3 PASS、`@web/i18n` 3/3 PASS，4-Gate `0/0/0/0`）已完成；正在等待两路子智能体完成剩余 6 个插件（`@web/oauth2`、`@web/graphql`、`@web/mcp` 与 `@web/redis`、`@web/db`、`@web/s3`），完工后将立即运行 **全量 25 插件联合集成测试**并同步文档提交。

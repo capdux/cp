@@ -253,3 +253,11 @@ const h = cap.hash.wyhash("hello");
 | **`@web/session`** | `packages/@web/session` | `SessionConfig`, `sessionCreate`/`Get`/`Destroy`, `formatSessionSetCookie`, `sessionHook`, `registerSession` — 签名防篡改 Cookie Session、固定槽 KV 存储与 TTL 过期控制 |
 | **`@web/proxy`** | `packages/@web/proxy` | `ProxyConfig`, `ProxyRequestPlan`, `buildProxyTargetPath`, `formatUpstreamHttp1Request`, `registerProxy`, `registerProxyWithTransport` — HTTP 反向代理前缀重写、`X-Forwarded-*` 注入与可插拔传输 |
 | **`@web/cron`** | `packages/@web/cron` | `CronTime`, `CronExpr`, `parseCronExpr`, `cronMatches`, `CronScheduler`, `cronGlobalScheduler`, `registerCron` — 5 字段 Cron 位图 O(1) 调度器与 `GET /_cron` 状态端点 |
+| **`@web/env`** | `packages/@web/env` | `EnvKind`, `EnvVarSpec`, `EnvKV`, `EnvValidationResult`, `registerEnv` — 启动期环境变量 Schema 校验（必填/默认/范围/枚举）与 `App.setState` 注入 |
+| **`@web/i18n`** | `packages/@web/i18n` | `I18nConfig`, `i18nMatchLocale`, `i18nNegotiateHeader`, `i18nAddTranslation`, `i18nTranslate`, `registerI18n` — `?lang=`/Cookie/`Accept-Language` 语言协商与零堆多语言翻译 |
+| **`@web/oauth2`** | `packages/@web/oauth2` | `OAuth2Config`, `oauth2BuildAuthorizeUrl`, `oauth2RegisterState`/`ConsumeState`, `oauth2BuildTokenFormBody`, `registerOAuth2` — OAuth2/OIDC PKCE S256 授权跳转与防重放回调校验 |
+| **`@web/graphql`** | `packages/@web/graphql` | `GraphQLConfig`, `gqlCheckQueryDepth`, `gqlRegisterResolver`, `registerGraphQL` — `POST /graphql` 深度限防查询分发与 `GET /graphql` Playground |
+| **`@web/mcp`** | `packages/@web/mcp` | `McpConfig`, `mcpRegisterTool`, `registerMcp` — AI Agent 原生 MCP Streamable HTTP JSON-RPC 2.0 服务端（`initialize`/`tools/list`/`tools/call`） |
+| **`@web/redis`** | `packages/@web/redis` | `RedisPluginConfig`, `redisBuildKey`, `redisEncodeRespCommand`, `registerRedis`/`WithPing` — Redis 命名空间 Key、RESP2/3 编码与 `/_redis/ping` 探活薄适配器 |
+| **`@web/db`** | `packages/@web/db` | `DbDialect`, `DbPluginConfig`, `DbTxStats`, `dbBeforeHandle`/`AfterHandle`, `registerDb`/`WithHook` — SQLite/Postgres/MySQL 请求级自动事务托管（2xx COMMIT / >=400 ROLLBACK） |
+| **`@web/s3`** | `packages/@web/s3` | `S3PluginConfig`, `s3NormalizeKey`, `s3BuildPresignedUrl`, `registerS3` — 对象 Key 安全防穿越与纯 CP AWS SigV4 预签名直传端点 |
