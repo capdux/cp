@@ -644,7 +644,7 @@ git status --porcelain cpc_dev/src
    - 复杂领域引擎不再为了“每轮凑 1 个 300 行小文件”而阉割关键能力；单核心模块按业务真实复杂度写透（通常 **800–1,500 行**，或按清晰子职责分多轮打磨成完整套件），补齐**核心算法 + 边界/数值稳定性 + 二进制持久化/流式编解码 + 权威基准值对照验证**（如 R/SciPy、RFC 测试向量、Parseval 定理、召回率实测）。
    - 单文件体量仍受总规范 `<= 3000` 行约束；超出时按职责拆分为同主包下的清晰子模块（并在 `index.cp` 统一导出）。
 3. **存量旧库回溯审查与深化补全（杜绝阉割版留存）**：
-   - “做深不做薄”**同样适用于此前已编写与已吸收的存量标准库**；必须定期系统回溯审查早期实现（尤其是检索/优化/统计/调度/通信/多媒体/文档处理中的小容量或浅层模块），凡存在功能不完备或小容量硬上限的模块，必须就地重构补全完整生产级功能与文档，不留“演示级阉割版”。
+   - “做深不做薄、做全不做残”**同样适用于此前已编写与已吸收的存量标准库**；必须定期系统回溯审查早期实现（尤其是检索/优化/统计/调度/通信/多媒体/文档处理中的小容量或浅层模块），凡存在功能不完备或小容量硬上限的模块，必须就地重构补全完整生产级功能与文档，不留“演示级阉割版”。
 4. **文档与可复用性闭环**：
    - 每个核心引擎必须同步补全 `doc/lib/<pkg>.md` 的架构说明、参数调优要点与端到端可运行示例，以及 `cp_lib_ref.md` 索引条目。
 
@@ -714,3 +714,54 @@ git status --porcelain cpc_dev/src
    - `scripts/sync_cpc.sh` 已统一注入 `RUSTFLAGS="${RUSTFLAGS:--Awarnings}"`，与 Rule 5 保持完全一致的 Cargo 编译指纹，彻底消除 `cargo check`/`cargo build` 与 `sync_cpc.sh` 交替执行时触发全量依赖重编与 120s 超时重试（同时节省 2 轮重试上下文 Token）。
 10. **词法器 `Lexer Error` 限流与批量自检静默（实测将 `cap from` 批量解析日志从 219 KB 压至 ~260 B，降幅 99.9%，2026-11-25 Iteration 6）**：
     - `cpc/src/lexer.rs` 对单文件 `Lexer Error` stderr 输出实施 5 条上限封顶并支持 `QUIET_LEXER` 原子静默；`cpc/src/migrate/mod.rs` 批量 `check_cp_parse` 自动开启静默模式，彻底杜绝大批量解析时百 KB 级无用刷屏污染上下文。
+
+
+---
+
+## 六、 CP 内置库（`lib/`）与 `@cap` 生态吸收指南（病毒式生态自我繁衍规范，2026-11-26）
+
+为持续、安全、高质量地吸收 **npm（Node/Bun 生态）** 与 **crates.io（Rust Cargo 生态）** 的高频优质资产，避免生态碎片化爆炸与版权风险，所有智能体与 `cap from` 工具链必须严格遵守以下五项铁律：
+
+### 1. 双层架构分层准则（杜绝重复与生态爆炸）
+
+| 层级 | 目录与导入方式 | 准入标准 | 典型示例 |
+| :--- | :--- | :--- | :--- |
+| **内置核心标准库** | `lib/<mod>/` (`import ... from "cap:<mod>"`) | **零 C 依赖、基础通用、被引用极广的底座能力**（编解码、哈希/校验、时间/单位、MIME/HTTP 基础头、通用协议原语）。凡发现被高频依赖的通用集成包，应吸收沉淀入 `lib/` 丰富 CP 底座。 | `cap:json`, `cap:cbor`, `cap:codec`, `cap:crypto`, `cap:hash` (`crc32c`), `cap:time` (`human`), `cap:bytes`, `cap:mime`, `cap:etag`, `cap:sri`, `cap:slugify`, `cap:logfmt`, `cap:rate`, `cap:ulid`, `cap:jsonc` |
+| **可选安装包** | `packages/@cap/<pkg>/` (`import ... from "@cap/<pkg>"`) | **① 原生 C/C++ 绑定库**（`@c` FFI + 预编译矩阵）；**② 大型独立领域引擎/框架级纯 CP 包**（独立数据结构、算法引擎、复杂解析器/渲染器/中间件），不适合塞入核心 stdlib，按需安装。 | 原生绑定：`@cap/duckdb`, `@cap/llama`, `@cap/opencv`, `@cap/zstd`；纯 CP 引擎：`@cap/lru`, `@cap/qs`, `@cap/retry`, `@cap/diff`, `@cap/template` |
+
+- **去重与融合原则（防生态爆炸）**：
+  - 吸收前**必须先检索** `packages/@cap/registry.json` 与 `lib/`、`packages/@cap/`、`packages/@web/`；
+  - 若 CP 生态**已有相同/高度重叠功能的库**：**严禁再造重复独立包**！应将新包的差异化亮点与兼容 API 融合进已有库（保持 100% 向后兼容），并在 `registry.json` 的 `aliases` 中登记该上游包名，同时提示用户直接使用已有 CP 库，降低安全审计与长期维护成本。
+
+### 2. 质量与性能铁律（“做深不做薄，做全不做残”）
+
+1. **功能完备**：对标上游最新稳定版核心 API 与 RFC/行业标准测试向量（如 RFC 3720、RFC 4648、RFC 6265、RFC 8949、RFC 9110、W3C SRI §3.3.3 等），绝不做玩具级半成品。
+2. **CP 专有性能优化（超越原包性能与内存安全）**：
+   - 优先**零堆分配**（栈切片 + 固定池）与 **`= undefined` 零清零初始化**（消除大栈池启动清零开销）；
+   - 合理使用 **Arena 批量分配**、**侵入式 O(1) 链表/哈希索引**、**纯整数/饱和算术（`+|`/`+%`）防溢出** 与 **SIMD（`@Vector`/`cap:simd`）向量加速**；
+   - 严格遵循 CP 所有权借用安全与 4 门禁（`0 any`、`0 ?T`、`0 dec`、`0 unsafe`，边界/畸形报文零 panic）。
+3. **四件套交付标准**：每个新吸收的 `@cap/<pkg>` 必须包含：`cap.json`、`src/index.cp`、`src/index.d.cp`（`cpc emit-types` 生成）、中文带完整可运行示例的 `README.md`，以及 `cap/test/testCap<Name>.cp` 深度回归测试；内置 `lib/<mod>` 必须同步更新 `doc/lib/<mod>.md`（带使用示例）与 `cp_lib_ref.md`。
+
+### 3. 版权与开源协议合规铁律
+
+1. **优先 Clean-Room 自主实现**：基于公开 RFC、W3C 规范、公开算法论文与公开 API 契约，以纯 CP 从零编写干净实现，统一声明 **`MIT`** 许可，并在 `README.md` 与 `THIRD_PARTY_NOTICES.md` 中清晰致谢所对标的生态规范。
+2. **宽松协议白名单**：引用或参考上游源码时，仅限 **MIT / Apache-2.0 / BSD-2-Clause / BSD-3-Clause / ISC / Zlib / CC0 / Unlicense** 协议；**严格禁止**拷贝或衍生 **GPL / AGPL / LGPL / SSPL** 等传染性协议源码。
+3. **溯源透明**：在 `packages/@cap/registry.json` 与 `cap.json` 中完整记录上游包名、仓库地址与协议类型。
+
+### 4. 运行依赖独立化与全局索引（`packages/@cap/registry.json`）
+
+1. **依赖隔离原则**：转换外部 npm / crates.io 包时，**仅递归处理运行依赖（`dependencies`）**，跳过开发依赖（`devDependencies`）；每个运行依赖**必须按其原始包名独立生成为独立 `@cap/<dep>` 包**（严禁将多个依赖粗暴合并进主包），并在主包 `cap.json` 的 `dep` 字段中声明引用。
+2. **全局去重索引（`packages/@cap/registry.json`）**：
+   - 集中登记所有已吸收/映射的 npm 与 crates.io 包，包含：`source_registry`（`npm` / `crates.io`）、`source_name`、`source_repo`（GitHub 地址）、`license`、`cp_target`（`cap:*` 或 `@cap/*`）、`kind`（`stdlib` / `package`）、`aliases`、`absorbed_at`；
+   - 该索引文件托管于 GitHub 仓库（可直接通过 Raw URL 访问），`cap from -npm <pkg[@ver]>` 与 `cap from -crate <name[@ver]>` 转换前**必须先查询本地/远端索引**：已转换过的包直接复用不再重复转换；命中同功能别名则直接提示用户使用对应 CP 包。
+
+### 5. `cap from -npm` / `cap from -crate` 生态自繁衍工作流
+
+- **命令形态**：
+  - `cap from -npm <pkg[@ver]> [--verify] [--out <dir>]`（查询 npm registry `https://registry.npmjs.org/<pkg>` + GitHub 源码）
+  - `cap from -crate <name[@ver]> [--verify] [--out <dir>]`（查询 crates.io `https://crates.io/api/v1/crates/<name>` + GitHub 源码）
+- **标准流水线**：
+  1. **查索引去重**：查 `packages/@cap/registry.json`（本地 + 可选远端 GitHub 索引），已存在则直接返回对应 `cap:*` / `@cap/*` 并提示用户使用；
+  2. **合规与元数据检查**：拉取 registry 元数据，校验开源协议白名单（拒绝 GPL/AGPL），解析运行依赖列表 `dependencies`（忽略 `devDependencies`）；
+  3. **递归独立转化依赖**：对尚未在索引中的运行依赖，逐个独立转化为 `@cap/<dep>` 并回写索引；
+  4. **生成与自愈校验**：按 CP 规范生成目标包骨架/转译代码、`cap.json`、`index.d.cp`、`README.md` 与测试文件，执行 `--verify` 编译校验闭环，并登记至 `packages/@cap/registry.json`。

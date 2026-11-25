@@ -1,0 +1,228 @@
+{
+  "version": "1.0.0",
+  "description": "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages absorbed from npm and crates.io.",
+  "github_raw_url": "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json",
+  "updated_at": "2026-11-26",
+  "entries": [
+    {
+      "source_registry": "npm",
+      "source_name": "ms",
+      "source_repo": "https://github.com/vercel/ms",
+      "license": "MIT",
+      "cp_target": "cap:time/human",
+      "kind": "stdlib",
+      "aliases": ["humantime", "pretty-ms"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bytes",
+      "source_repo": "https://github.com/visionmedia/bytes.js",
+      "license": "MIT",
+      "cp_target": "cap:bytes",
+      "kind": "stdlib",
+      "aliases": ["bytesize", "humansize", "pretty-bytes"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "nanoid",
+      "source_repo": "https://github.com/ai/nanoid",
+      "license": "MIT",
+      "cp_target": "cap:uuid",
+      "kind": "stdlib",
+      "aliases": ["nanoid-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mime-types",
+      "source_repo": "https://github.com/jshttp/mime-types",
+      "license": "MIT",
+      "cp_target": "cap:mime",
+      "kind": "stdlib",
+      "aliases": ["mime", "mime_guess", "mime-db"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cookie",
+      "source_repo": "https://github.com/jshttp/cookie",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["cookie-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "etag",
+      "source_repo": "https://github.com/jshttp/etag",
+      "license": "MIT",
+      "cp_target": "cap:etag",
+      "kind": "stdlib",
+      "aliases": ["etag-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ssri",
+      "source_repo": "https://github.com/zkat/ssri-rs",
+      "license": "Apache-2.0",
+      "cp_target": "cap:sri",
+      "kind": "stdlib",
+      "aliases": ["ssri-npm"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "slug",
+      "source_repo": "https://github.com/Stebalien/slug-rs",
+      "license": "MIT",
+      "cp_target": "cap:slugify",
+      "kind": "stdlib",
+      "aliases": ["slugify", "deunicode"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "logfmt",
+      "source_repo": "https://github.com/go-logfmt/logfmt",
+      "license": "MIT",
+      "cp_target": "cap:logfmt",
+      "kind": "stdlib",
+      "aliases": ["go-logfmt"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ulid",
+      "source_repo": "https://github.com/dylanhart/ulid-rs",
+      "license": "MIT",
+      "cp_target": "cap:ulid",
+      "kind": "stdlib",
+      "aliases": ["ulid-npm"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "json_comments",
+      "source_repo": "https://github.com/tmccombs/json-comments-rs",
+      "license": "Apache-2.0",
+      "cp_target": "cap:jsonc",
+      "kind": "stdlib",
+      "aliases": ["strip-json-comments", "jsonc-parser"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "governor",
+      "source_repo": "https://github.com/boinkor-net/governor",
+      "license": "MIT",
+      "cp_target": "cap:rate",
+      "kind": "stdlib",
+      "aliases": ["rate-limiter-flexible"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc32c",
+      "source_repo": "https://github.com/zowens/crc32c",
+      "license": "MIT",
+      "cp_target": "cap:hash/crc32c",
+      "kind": "stdlib",
+      "aliases": ["fast-crc32c", "sse4_crc32"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "blake3",
+      "source_repo": "https://github.com/BLAKE3-team/BLAKE3",
+      "license": "Apache-2.0",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["blake3-wasm"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bs58",
+      "source_repo": "https://github.com/mycorrhiza/bs58-rs",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["base58", "bs58check"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base32",
+      "source_repo": "https://github.com/andreasots/base32",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["hi-base32", "data-encoding"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ciborium",
+      "source_repo": "https://github.com/enarx/ciborium",
+      "license": "Apache-2.0",
+      "cp_target": "cap:cbor",
+      "kind": "stdlib",
+      "aliases": ["cbor", "minicbor", "rmp", "msgpack", "@msgpack/msgpack"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lru-cache",
+      "source_repo": "https://github.com/isaacs/node-lru-cache",
+      "license": "MIT",
+      "cp_target": "@cap/lru",
+      "kind": "package",
+      "aliases": ["lru", "quick-lru"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "qs",
+      "source_repo": "https://github.com/ljharb/qs",
+      "license": "MIT",
+      "cp_target": "@cap/qs",
+      "kind": "package",
+      "aliases": ["serde_qs", "query-string"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-retry",
+      "source_repo": "https://github.com/sindresorhus/p-retry",
+      "license": "MIT",
+      "cp_target": "@cap/retry",
+      "kind": "package",
+      "aliases": ["async-retry", "backoff", "backon"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "diff",
+      "source_repo": "https://github.com/kpdecker/jsdiff",
+      "license": "MIT",
+      "cp_target": "@cap/diff",
+      "kind": "package",
+      "aliases": ["similar", "diffy", "jsdiff"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "handlebars",
+      "source_repo": "https://github.com/handlebars-lang/handlebars.js",
+      "license": "MIT",
+      "cp_target": "@cap/template",
+      "kind": "package",
+      "aliases": ["mustache", "minijinja", "tera", "handlebars-rust"],
+      "absorbed_at": "2026-11-26"
+    }
+  ]
+}

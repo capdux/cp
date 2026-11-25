@@ -155,20 +155,29 @@ enum Commands {
         #[arg(short = 'm', long)]
         map: Option<PathBuf>,
     },
-    /// Migrate a TypeScript or Rust project (and its dependencies) to CP
+    /// Migrate a TypeScript/Rust project or absorb an npm/crates.io package to CP
     From {
-        /// Migrate from TypeScript/JavaScript project
+        /// Migrate from local TypeScript/JavaScript project directory
         #[arg(long)]
         ts: bool,
-        /// Migrate from Rust crate/workspace
+        /// Migrate from local Rust crate/workspace directory
         #[arg(long)]
         rs: bool,
-        /// Source project directory
-        src_dir: PathBuf,
-        /// Output directory (default: <src_dir>_cp)
+        /// Absorb an npm package by name (optional @version), deduplicating via @cap/registry.json
+        #[arg(long)]
+        npm: Option<String>,
+        /// Absorb a Rust crate from crates.io by name (optional @version), deduplicating via @cap/registry.json
+        #[arg(long = "crate")]
+        crate_pkg: Option<String>,
+        /// Source project directory (required for --ts / --rs)
+        src_dir: Option<PathBuf>,
+        /// Output directory (default: <src_dir>_cp for local, or packages/@cap for --npm/--crate)
         #[arg(short = 'o', long)]
         out: Option<PathBuf>,
-        /// Disable recursive conversion of Tier 3 local dependencies
+        /// Path to @cap deduplication registry JSON (default: packages/@cap/registry.json)
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Disable recursive conversion of runtime dependencies
         #[arg(long)]
         no_deps: bool,
         /// Maximum dependency recursion depth (default: 4)
@@ -711,66 +720,121 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             Commands::From {
                 ts,
                 rs,
+                npm,
+                crate_pkg,
                 src_dir,
                 out,
+                registry,
                 no_deps,
                 max_depth,
                 verify,
             } => {
-                use cpc::migrate::deps::SourceLang;
-                use cpc::migrate::{run_migrate, MigrateOptions};
-                let lang = if ts && !rs {
-                    SourceLang::Ts
-                } else if rs && !ts {
-                    SourceLang::Rs
+                if npm.is_some() || crate_pkg.is_some() {
+                    use cpc::migrate::registry::{
+                        locate_default_registry_path, run_registry_import, PackageEcosystem,
+                        RegistryImportOptions,
+                    };
+                    let (ecosystem, spec) = match (npm, crate_pkg) {
+                        (Some(s), None) => (PackageEcosystem::Npm, s),
+                        (None, Some(s)) => (PackageEcosystem::Crate, s),
+                        _ => {
+                            return Err(anyhow::anyhow!(
+                                "Specify only one of `--npm <pkg>` or `--crate <name>`"
+                            ));
+                        }
+                    };
+                    let registry_path = registry.unwrap_or_else(locate_default_registry_path);
+                    let packages_root = out.unwrap_or_else(|| PathBuf::from("packages/@cap"));
+                    let outcome = run_registry_import(RegistryImportOptions {
+                        ecosystem,
+                        spec: spec.clone(),
+                        registry_path: registry_path.clone(),
+                        packages_root,
+                        max_depth,
+                        verify,
+                        no_deps,
+                    })
+                    .map_err(|e| anyhow::anyhow!("{}", e))?;
+                    if outcome.already_existed {
+                        if outcome.kind == "stdlib" {
+                            println!(
+                                "[cap from] '{}' is already built into CP stdlib -> use: import {{ ... }} from \"{}\"; (zero installation needed, skipped duplicate conversion)",
+                                spec, outcome.cp_target
+                            );
+                        } else {
+                            println!(
+                                "[cap from] '{}' is already available in @cap registry -> use: \"{}\" (skipped duplicate conversion)",
+                                spec, outcome.cp_target
+                            );
+                        }
+                    } else {
+                        println!(
+                            "[cap from] Absorbed '{}' -> {} (independent packages generated: {}) | registry updated: {}",
+                            spec,
+                            outcome.cp_target,
+                            outcome.converted_packages.join(", "),
+                            registry_path.display()
+                        );
+                    }
                 } else {
-                    return Err(anyhow::anyhow!(
-                        "Specify exactly one source language: `--ts` (or `-ts`) or `--rs` (or `-rs`)"
-                    ));
-                };
-                let out_dir = out.unwrap_or_else(|| {
-                    let base = src_dir
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("migrated");
-                    PathBuf::from(format!("{}_cp", base))
-                });
-                let summary = run_migrate(MigrateOptions {
-                    lang,
-                    src_dir,
-                    out_dir: out_dir.clone(),
-                    recursive_deps: !no_deps,
-                    max_depth,
-                    verify,
-                })
-                .map_err(|e| anyhow::anyhow!("{}", e))?;
-                let total = summary.files.len();
-                let parse_ok = summary.files.iter().filter(|f| f.parse_ok).count();
-                let total_todos: usize = summary.files.iter().map(|f| f.todo_count).sum();
-                let pct = if total == 0 {
-                    100.0
-                } else {
-                    (parse_ok as f64) * 100.0 / (total as f64)
-                };
-                println!(
-                    "[cap from] Migrated '{}' -> {} | files={} (cpc parse ok: {}/{}, {:.1}%) | deps={} (recursive pkgs: {}) | TODOs={}",
-                    summary.project_name,
-                    out_dir.display(),
-                    total,
-                    parse_ok,
-                    total,
-                    pct,
-                    summary.deps.len(),
-                    summary.converted_dep_pkgs.len(),
-                    total_todos
-                );
-                if let Some(ref v) = summary.verify {
-                    println!("[cap from] {}", v.format_line());
+                    use cpc::migrate::deps::SourceLang;
+                    use cpc::migrate::{run_migrate, MigrateOptions};
+                    let lang = if ts && !rs {
+                        SourceLang::Ts
+                    } else if rs && !ts {
+                        SourceLang::Rs
+                    } else {
+                        return Err(anyhow::anyhow!(
+                            "Specify one mode: `--ts <dir>`, `--rs <dir>`, `--npm <pkg[@ver]>`, or `--crate <name[@ver]>`"
+                        ));
+                    };
+                    let src_dir = src_dir.ok_or_else(|| {
+                        anyhow::anyhow!("Missing <src_dir> argument for `--ts` / `--rs`")
+                    })?;
+                    let out_dir = out.unwrap_or_else(|| {
+                        let base = src_dir
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("migrated");
+                        PathBuf::from(format!("{}_cp", base))
+                    });
+                    let summary = run_migrate(MigrateOptions {
+                        lang,
+                        src_dir,
+                        out_dir: out_dir.clone(),
+                        recursive_deps: !no_deps,
+                        max_depth,
+                        verify,
+                    })
+                    .map_err(|e| anyhow::anyhow!("{}", e))?;
+                    let total = summary.files.len();
+                    let parse_ok = summary.files.iter().filter(|f| f.parse_ok).count();
+                    let total_todos: usize = summary.files.iter().map(|f| f.todo_count).sum();
+                    let pct = if total == 0 {
+                        100.0
+                    } else {
+                        (parse_ok as f64) * 100.0 / (total as f64)
+                    };
+                    println!(
+                        "[cap from] Migrated '{}' -> {} | files={} (cpc parse ok: {}/{}, {:.1}%) | deps={} (recursive pkgs: {}) | TODOs={}",
+                        summary.project_name,
+                        out_dir.display(),
+                        total,
+                        parse_ok,
+                        total,
+                        pct,
+                        summary.deps.len(),
+                        summary.converted_dep_pkgs.len(),
+                        total_todos
+                    );
+                    if let Some(ref v) = summary.verify {
+                        println!("[cap from] {}", v.format_line());
+                    }
+                    println!(
+                        "[cap from] Report written to: {}/migrate.md",
+                        out_dir.display()
+                    );
                 }
-                println!(
-                    "[cap from] Report written to: {}/migrate.md",
-                    out_dir.display()
-                );
             }
             Commands::Lsp => {
                 let rt = tokio::runtime::Runtime::new()?;

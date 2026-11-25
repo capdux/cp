@@ -101,3 +101,10 @@
 - `packages/@cap/lru/` & `cap/test/testCapLru.cp`: O(1) 侵入式双向链表 + 512 桶开放寻址 FNV-1a 哈希表 + `slots = undefined` 零初始化栈池 + TTL 过期 + 字节权重淘汰 + 命中率统计（对标 npm `lru-cache` [~150M/wk] & Rust `lru`，7/7 PASS）。
 - `packages/@cap/qs/` & `cap/test/testCapQs.cp`: 零堆分配深层嵌套 QueryString 解析与构造引擎（4 KiB `undefined` 栈解码池、方括号/点号嵌套、索引/空括号/逗号数组、严格 null、RFC 3986 percent 编解码、`max_depth`/`max_params` 资源耗尽防护，对标 npm `qs` [~120M/wk] & Rust `serde_qs`，7/7 PASS）。
 - `packages/@cap/retry/` & `cap/test/testCapRetry.cp`: 工业级重试与退避引擎（Fixed/Linear/Exponential/Fibonacci + AWS Full/Equal/Decorrelated Jitter + SplitMix64 + 失败分类/`Retry-After` + 总耗时预算 + Envoy 风格 `RetryBudget`，对标 npm `p-retry` & Rust `backoff`/`backon`，4/4 PASS）。
+
+## [2026-11-26] - 落地 `cap from -npm/-crate` 生态自繁衍引擎、`packages/@cap/registry.json` 全局去重索引与 Wave 5（`@cap/diff` & `@cap/template`）
+- `GEMINI.md`: 新增第六章《CP 内置库与 `@cap` 生态吸收指南（病毒式生态自我繁衍规范）》，固化双层分层、防重复融合、MIT/Apache-2.0 版权白名单、运行依赖独立化与全局索引规范。
+- `packages/@cap/registry.json`: 新建全局去重与映射索引（支持 GitHub Raw URL 访问），预登记 22 条高频 npm/crates.io 映射与别名。
+- `cpc/src/migrate/registry.rs`, `cpc/src/migrate/mod.rs`, `cpc/src/main.rs`, `cap/src/main.zig`: 新增 `cap from -npm <pkg[@ver]>` 与 `cap from -crate <name[@ver]>`（别名 `-cargo`），支持查索引去重/提醒、MIT/Apache-2.0 协议守门、运行依赖递归独立转换（跳过 devDependencies）与索引自动回写（4/4 单测 PASS）。
+- `packages/@cap/diff/` & `cap/test/testCapDiff.cp`: 新增纯 CP 零堆分配 Myers O(ND) Diff 引擎（FNV-1a 行哈希预过滤、紧凑三角形 `undefined` 栈 Trace 缓冲、GNU Unified Diff 与无损 `applyLineDiff`，对标 npm `diff` [~120M/wk] & Rust `similar`，6/6 PASS）。
+- `packages/@cap/template/` & `cap/test/testCapTemplate.cp`: 新增纯 CP 零堆分配模板引擎（默认 HTML XSS 转义、`{{{ raw }}}`、链式过滤器、`#if`/`else`/`#unless`/`#each` + `@index`/`@first`/`@last`/`this` + `MAX_BLOCK_DEPTH=16` 护栏，对标 npm `handlebars`/`mustache` & Rust `minijinja`/`tera`，7/7 PASS）。

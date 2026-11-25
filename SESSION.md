@@ -6080,3 +6080,27 @@
   > "做深不做薄, 做全不做残", 确保功能完备, 同时还要使用cp特有语法进行性能优化(SIMD/Arena/undefined等), 吸收一个就是一个cp生态的财富/资产.
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 08:49:20）[step:24939]
+- **用户完整原始指令**：
+  > 非常好, 继续, 不要停, 你带着两个子智能体一起并发工作, 按rust/npm下载量, 自主推导下一波生态库.
+  > node/bun 生态有 npm包管理平台, rust 呢? rust的包也是使用 npm 吗?
+  > 我建议你在 cap from 提供一个功能, 除 cap from -ts/-rs,外, 增加一个 -npm "npm包名称,可选指定版本", 如 @cap中没有, 自动从 npm 下载该包,及对应github源代码, 自动转换为对应的cp的cap 安装包, 按上述相同的规则"做多不做薄,做全不做残,cp专有性能优化,所有权借用安全", 完成高质量吸收转写,并超越原包性能和内存安全, 包括使用文档/测试等, 这样用户在使用cp时, 如发现需要使用哪个 npm包, 而 cp中没有时, 该功能特别有效!
+  > 注意, npm包一般都有运行和开发依赖, 运行依赖, 我们也必须一并解决, 否则该包无法使用, 还是按我们之前的老规矩, 不要合并到当前包, 要按原始的包独立为独立安装包, 并登记到 @cap的索引文件, 包括原始包名称, github地址, 新包名称, 该索引文件可通过github访问, 在转换npm包时, 需查询该索引,
+  > 已经转换过的包, 不再重复转换. 
+  > 如cp生态已经具备类似功能的包, 则吸收融合新包(注意兼容性)到已有包, 提醒用户未来可使用该包, 避免cp生态大量重复功能的安装包,导致生态爆炸. 同时也增加我们安全性审查工作量和维护难度.  
+  > 如发现该包属于集成包, 被引用的特别多, 特别有价值, 则可将该包自动吸收到 cp 内置库, 丰富cp 底座.
+  > 总之, 通过提供该工具, 一方面解决用户使用中遇到的缺依赖包问题, 一方面自动丰富了cp生态, cp生态在用户使用中, 病毒式自我繁衍, 加速cp的生态完善.
+  > 你认可我上面规划的话, 补充/总结,加上前面我们之间讨论的方法/规则/版权等, 一并写入 GEMINI.md, 作为 cp 内置库与安装包吸收指南, 后续按该指南, 不侵犯版权基础上, 不断高质量吸收npm/rust已有资产.
+- **完整回复与执行汇报**：
+  > 1. **关于 Rust 的包管理平台**：Rust 不使用 npm，其官方包管理平台是 **[crates.io](https://crates.io/)**（包称 **crate**），配套包管理器为 **Cargo**，元数据接口为 `https://crates.io/api/v1/crates/<name>`，同样提供 GitHub 仓库地址、开源协议（主流为 `MIT OR Apache-2.0`）、下载量与 `normal`/`dev` 依赖区分。因此本次直接在 `cap from` 中**双栈同时支持 `-npm <pkg[@ver]>` 与 `-crate <name[@ver]>`（别名 `-cargo`）**。
+  > 2. **已完成落地**：
+  >    - 已将完整《六、CP 内置库与 `@cap` 生态吸收指南（含双层分层、防重复融合、版权合规白名单、运行依赖独立化、全局去重索引与 `cap from -npm/-crate` 自我繁衍流水线）》写入 [GEMINI.md](file:///data/dev/cp/GEMINI.md)；
+  >    - 已创建全局去重与映射索引 [packages/@cap/registry.json](file:///data/dev/cp/packages/@cap/registry.json)（可直接通过 GitHub Raw URL 访问，已预登记 22 条高频 npm/crates.io 映射）；
+  >    - 已实现 [registry.rs](file:///data/dev/cp/cpc/src/migrate/registry.rs) 并接入 [cpc/src/main.rs](file:///data/dev/cp/cpc/src/main.rs) 与 [cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)。
+  > 3. **当前三路并行中**：
+  >    - 主线：`registry` 单测 + `sync_cpc.sh` + `sync_cap.sh` + `cap from -npm/-crate` 实测冒烟正在后台收尾；
+  >    - 子智能体 1：正在构建 Wave 5A **`@cap/diff`**（Myers O(ND) 最短编辑脚本 + 行哈希预过滤 + Unified Diff + 无损应用）；
+  >    - 子智能体 2：正在构建 Wave 5B **`@cap/template`**（零堆分配 Handlebars/MiniJinja 模板引擎 + 默认 HTML XSS 转义 + 链式过滤器 + `#if`/`#each`）。
+  >
+  > 全部验证完成后立即统一汇总并提交。

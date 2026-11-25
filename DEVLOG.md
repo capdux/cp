@@ -75,3 +75,6 @@
 
 ## 2026-11-26: Wave 4 三路并行交付 3 个重量级 `@cap/*` 独立生态引擎（`@cap/lru` + `@cap/qs` + `@cap/retry`）
 - 严格践行“做深不做薄，做全不做残 + CP 性能特性（`undefined` 零清零栈池、侵入式 O(1) 结构、零堆分配、饱和算术）”与 MIT Clean-Room 版权合规，三路并行全部 100% PASS。
+
+## 2026-11-26: 落地 `cap from -npm/-crate` 生态自繁衍引擎 + Wave 5（`@cap/diff` & `@cap/template`）
+- 主智能体将完整生态吸收指南写入 `GEMINI.md`，创建 `packages/@cap/registry.json` 并实现 `cpc/src/migrate/registry.rs` 与 `cap from -npm/-crate`；子智能体 1 交付 `@cap/diff`（6/6 PASS），子智能体 2 交付 `@cap/template`（7/7 PASS）。

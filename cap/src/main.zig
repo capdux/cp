@@ -347,7 +347,7 @@ fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
 fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
     if (args.len == 0) {
-        std.debug.print("Usage:\n  cap from -ts <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>]\n  cap from -rs <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>]\n", .{});
+        std.debug.print("Usage:\n  cap from -ts <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -rs <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -npm <pkg[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n  cap from -crate <name[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n", .{});
         std.process.exit(1);
     }
     const cpc_bin = try getCpcBin(allocator);
@@ -362,6 +362,10 @@ fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
             try cmd_list.append(allocator, "--ts");
         } else if (std.mem.eql(u8, a, "-rs")) {
             try cmd_list.append(allocator, "--rs");
+        } else if (std.mem.eql(u8, a, "-npm")) {
+            try cmd_list.append(allocator, "--npm");
+        } else if (std.mem.eql(u8, a, "-crate") or std.mem.eql(u8, a, "-cargo")) {
+            try cmd_list.append(allocator, "--crate");
         } else {
             try cmd_list.append(allocator, a);
         }

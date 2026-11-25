@@ -1,0 +1,7 @@
+{
+  "name": "@cap/template",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Mustache/Handlebars-compatible template engine with default HTML XSS escaping, chained pipeline filters, nested conditionals, list iteration, and depth guards for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

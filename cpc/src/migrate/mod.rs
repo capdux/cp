@@ -4,6 +4,7 @@
 // `cap.json` emission, and `migrate.md` report generation.
 
 pub mod deps;
+pub mod registry;
 pub mod rs;
 pub mod ts;
 
