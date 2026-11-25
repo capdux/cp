@@ -1,0 +1,7 @@
+{
+  "name": "@web/circuit-breaker",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official Envoy / Tower three-state circuit breaker (Closed / Open / HalfOpen) plugin for cap:web"
+}

@@ -1,8 +1,9 @@
-// Full-Stack Integration Test for ALL 25 Official `@web/*` Plugins on `cap:web`
+// Full-Stack Integration Test for ALL 33 Official `@web/*` Plugins on `cap:web`
 // Verifies zero symbol collisions and end-to-end interoperability across:
 //   Wave 1 (7): cors, security, jwt, ratelimit, logger, static, swagger
 //   Wave 2 (10): multipart, compress, cache, sensible, pressure, basic-auth, sse, session, proxy, cron
 //   Wave 3 (8): env, i18n, oauth2, graphql, mcp, redis, db, s3
+//   Wave 4 (8): rbac, flags, webhook, circuit-breaker, audit, html, trpc, a2a
 
 import { App, AppMethod, Context, Request, Response } from "../../lib/web/app.cp";
 import { CorsConfig, registerCors } from "../../packages/@web/cors/src/index.cp";
@@ -30,6 +31,14 @@ import { McpConfig, registerMcp, mcpRegisterTool, mcpResetTools } from "../../pa
 import { RedisPluginConfig, registerRedis } from "../../packages/@web/redis/src/index.cp";
 import { DbDialect, DbPluginConfig, registerDb, dbTxStats, dbResetStats } from "../../packages/@web/db/src/index.cp";
 import { S3PluginConfig, registerS3 } from "../../packages/@web/s3/src/index.cp";
+import { RbacConfig, registerRbac, rbacGrant, rbacProtect, rbacReset } from "../../packages/@web/rbac/src/index.cp";
+import { FlagsConfig, registerFlags, flagDefine, flagReset } from "../../packages/@web/flags/src/index.cp";
+import { WebhookConfig, registerWebhook, webhookSignHex, setWebhookTestClock, resetWebhookStore } from "../../packages/@web/webhook/src/index.cp";
+import { CircuitBreakerConfig, registerCircuitBreaker, cbSetTestClock, cbReset } from "../../packages/@web/circuit-breaker/src/index.cp";
+import { AuditConfig, registerAudit, auditCount, auditReset } from "../../packages/@web/audit/src/index.cp";
+import { HtmlConfig, registerHtml, htmlEscape } from "../../packages/@web/html/src/index.cp";
+import { TrpcConfig, registerTrpc, trpcQuery, trpcReset } from "../../packages/@web/trpc/src/index.cp";
+import { A2aConfig, registerA2a, a2aSetTaskHandler, a2aResetTasks } from "../../packages/@web/a2a/src/index.cp";
 
 fn strEql(a: string, b: string): bool {
     if (a.len != b.len) return false;
@@ -99,6 +108,23 @@ fn hDbCreate(ctx: *Context): Response {
         return Response.json(400, "{\"err\":\"bad\"}");
     }
     return Response.text(201, i18nTranslate(loc, "created"));
+}
+
+fn trpcHelloProc(ctx: *Context, input: string): string {
+    * = ctx;
+    * = input;
+    return "\"hello-trpc\"";
+}
+
+fn a2aEchoHandler(ctx: *Context, input: string): string {
+    * = ctx;
+    * = input;
+    return "done-by-cp-a2a";
+}
+
+fn hEnterpriseWrite(ctx: *Context): Response {
+    * = ctx;
+    return Response.json(201, "{\"saved\":true}");
 }
 
 fn main() {
@@ -260,5 +286,76 @@ fn main() {
         @panic("Wave 3 @web/s3 presign failed");
     }
 
-    @print("PASS testWebOfficialPlugins (ALL 25 @web/* plugins verified with 0 collisions!)");
+    // App 4: Wave 4 Enterprise Governance & AI Agent Stack (rbac, flags, webhook, circuit-breaker, audit, html, trpc, a2a)
+    rbacReset();
+    flagReset();
+    resetWebhookStore();
+    cbReset();
+    auditReset();
+    trpcReset();
+    a2aResetTasks();
+    setWebhookTestClock(1700000000);
+    cbSetTestClock(1700000000);
+
+    * = rbacGrant("admin", "ent:*");
+    * = rbacProtect(AppMethod.POST, "/ent/", "ent:write");
+    * = flagDefine("v2_engine", true, 100, "");
+    * = trpcQuery("hello", trpcHelloProc);
+    a2aSetTaskHandler(a2aEchoHandler);
+
+    let ent = App.init();
+    * = registerRbac(*ent, RbacConfig{ role_header: "X-Role", default_role: "guest" });
+    * = registerFlags(*ent, FlagsConfig{});
+    * = registerWebhook(*ent, WebhookConfig{ secret: "wh_sec", endpoint_path: "/webhooks" });
+    * = registerCircuitBreaker(*ent, CircuitBreakerConfig{ failure_threshold: 3, reset_timeout_secs: 30 });
+    * = registerAudit(*ent, AuditConfig{ status_path: "/_audit" });
+    * = registerHtml(*ent, HtmlConfig{});
+    * = registerTrpc(*ent, TrpcConfig{ base_path: "/trpc" });
+    * = registerA2a(*ent, A2aConfig{ agent_name: "cp-swarm-agent" });
+    * = ent.post("/ent/records", hEnterpriseWrite);
+
+    // Verify all 8 Wave 4 plugins end-to-end
+    let ent_req = Request.init(AppMethod.POST, "/ent/records");
+    * = ent_req.withHeader("X-Role", "admin").withHeader("X-Actor", "alice");
+    if (ent.dispatch(ent_req).status != 201 || auditCount() < 1) {
+        @panic("Wave 4 @web/rbac + @web/audit + @web/circuit-breaker failed");
+    }
+    if (!strContains(ent.dispatch(Request.init(AppMethod.GET, "/_flags")).body, "v2_engine")) {
+        @panic("Wave 4 @web/flags failed");
+    }
+    let esc_buf: [64]u8 = undefined;
+    const esc_len = htmlEscape("<b>hi</b>", esc_buf[0..]) ?? 0;
+    if (esc_len == 0 || !strContains(esc_buf[0..esc_len], "&lt;b&gt;")) {
+        @panic("Wave 4 @web/html failed");
+    }
+    if (!strContains(ent.dispatch(Request.init(AppMethod.GET, "/trpc/hello")).body, "hello-trpc")) {
+        @panic("Wave 4 @web/trpc failed");
+    }
+    if (!strContains(ent.dispatch(Request.init(AppMethod.GET, "/.well-known/agent.json")).body, "cp-swarm-agent")) {
+        @panic("Wave 4 @web/a2a card failed");
+    }
+    let a2a_req = Request.init(AppMethod.POST, "/a2a");
+    * = a2a_req.withBody("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tasks/send\",\"params\":{\"id\":\"t1\",\"message\":\"hi\"}}");
+    if (!strContains(ent.dispatch(a2a_req).body, "done-by-cp-a2a")) {
+        @panic("Wave 4 @web/a2a tasks/send failed");
+    }
+    let sig_buf: [64]u8 = undefined;
+    const wh_body = "{\"event\":\"paid\"}";
+    let slen: usize = 0;
+    if (sn2 := webhookSignHex("wh_sec", wh_body, sig_buf[0..])) {
+        slen = sn2;
+    } else {
+        @panic("webhookSignHex failed");
+    }
+    let wh_req = Request.init(AppMethod.POST, "/webhooks");
+    * = wh_req
+        .withHeader("X-Hub-Signature-256", sig_buf[0..slen])
+        .withHeader("X-Webhook-Timestamp", "1700000000")
+        .withHeader("X-Webhook-Id", "evt_1")
+        .withBody(wh_body);
+    if (ent.dispatch(wh_req).status != 200) {
+        @panic("Wave 4 @web/webhook failed");
+    }
+
+    @print("PASS testWebOfficialPlugins (ALL 33 @web/* plugins verified with 0 collisions!)");
 }

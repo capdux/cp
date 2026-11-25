@@ -1,8 +1,8 @@
-# Official `@web/*` Plugin Ecosystem for `cap:web` (25 Production Packages)
+# Official `@web/*` Plugin Ecosystem for `cap:web` (33 Production Packages)
 
 Production-ready, zero-GC, pure-CP plugins fusing the best of **ElysiaJS**, **Fastify**, and **Axum (`tower-http`)**. Every package lives under `packages/@web/<name>` with its own `cap.json`, zero external C runtime requirements, unique collision-free entry names, and 4-Gate `0/0/0/0` compliance.
 
-## Complete Official Plugin Matrix (25 Packages)
+## Complete Official Plugin Matrix (33 Packages)
 
 | Package | Path | Entry Function | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -31,3 +31,11 @@ Production-ready, zero-GC, pure-CP plugins fusing the best of **ElysiaJS**, **Fa
 | **`@web/redis`** | `packages/@web/redis` | `registerRedis` | Thin Redis lifecycle adapter: namespaced keys, RESP2/3 encoder, App state & `/_redis/ping` |
 | **`@web/db`** | `packages/@web/db` | `registerDb` | Thin SQLite/Postgres/MySQL lifecycle adapter: auto-TX (2xx COMMIT / 4xx-5xx ROLLBACK) & `X-DB-Tx` |
 | **`@web/s3`** | `packages/@web/s3` | `registerS3` | Safe S3 object key normalization + pure-CP AWS SigV4 presigned URL endpoint (`/upload/presign`) |
+| **`@web/rbac`** | `packages/@web/rbac` | `registerRbac` | Declarative RBAC with wildcard permissions (`*`, `orders:*`) & route-level `403` guards |
+| **`@web/flags`** | `packages/@web/flags` | `registerFlags` | Deterministic FNV-1a percentage rollout bucketing, allowlist targeting & `GET /_flags` |
+| **`@web/webhook`** | `packages/@web/webhook` | `registerWebhook` | Pure-CP HMAC-SHA256 webhook verification (GitHub/Stripe), timestamp skew & replay dedup |
+| **`@web/circuit-breaker`** | `packages/@web/circuit-breaker` | `registerCircuitBreaker` | `Closed / Open / HalfOpen` 3-state circuit breaker with `503` + `X-Circuit-State` + auto-recovery |
+| **`@web/audit`** | `packages/@web/audit` | `registerAudit` | Automatic write-operation audit ring buffer, sensitive header redaction & `GET /_audit` |
+| **`@web/html`** | `packages/@web/html` | `registerHtml` | Zero-heap XSS `htmlEscape`, `HtmlBuilder` SSR helper & HTMX (`HX-Redirect`/`HX-Trigger`) |
+| **`@web/trpc`** | `packages/@web/trpc` | `registerTrpc` | Type-safe Procedure RPC (`GET/POST /trpc/:proc`) with standard `result`/`error` envelope |
+| **`@web/a2a`** | `packages/@web/a2a` | `registerA2a` | Google Agent-to-Agent (A2A) protocol: `/.well-known/agent.json` Card & `/a2a` JSON-RPC 2.0 |

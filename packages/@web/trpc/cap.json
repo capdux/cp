@@ -1,0 +1,7 @@
+{
+  "name": "@web/trpc",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official type-safe tRPC-style query & mutation RPC router plugin for cap:web"
+}

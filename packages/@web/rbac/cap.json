@@ -1,0 +1,7 @@
+{
+  "name": "@web/rbac",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official declarative Role-Based Access Control (RBAC) with wildcard permissions & route guards for cap:web"
+}

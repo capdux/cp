@@ -261,3 +261,11 @@ const h = cap.hash.wyhash("hello");
 | **`@web/redis`** | `packages/@web/redis` | `RedisPluginConfig`, `redisBuildKey`, `redisEncodeRespCommand`, `registerRedis`/`WithPing` — Redis 命名空间 Key、RESP2/3 编码与 `/_redis/ping` 探活薄适配器 |
 | **`@web/db`** | `packages/@web/db` | `DbDialect`, `DbPluginConfig`, `DbTxStats`, `dbBeforeHandle`/`AfterHandle`, `registerDb`/`WithHook` — SQLite/Postgres/MySQL 请求级自动事务托管（2xx COMMIT / >=400 ROLLBACK） |
 | **`@web/s3`** | `packages/@web/s3` | `S3PluginConfig`, `s3NormalizeKey`, `s3BuildPresignedUrl`, `registerS3` — 对象 Key 安全防穿越与纯 CP AWS SigV4 预签名直传端点 |
+| **`@web/rbac`** | `packages/@web/rbac` | `RbacConfig`, `rbacGrant`, `rbacProtect`, `rbacCan`, `rbacGuardHook`, `registerRbac` — 声明式 RBAC（支持 `*`/`orders:*` 通配）与路由级 `403` 守卫 |
+| **`@web/flags`** | `packages/@web/flags` | `FlagsConfig`, `FeatureFlag`, `flagDefine`, `flagEval`, `flagBucket`, `registerFlags` — 确定性 FNV-1a 一致性百分比灰度分流、白名单与 `GET /_flags` |
+| **`@web/webhook`** | `packages/@web/webhook` | `WebhookConfig`, `webhookSignHex`, `webhookVerifySignature`, `setWebhookTestClock`, `resetWebhookStore`, `registerWebhook` — 纯 CP HMAC-SHA256 验签、时间戳漂移防重放与事件 ID 幂等去重 |
+| **`@web/circuit-breaker`** | `packages/@web/circuit-breaker` | `CircuitState`, `CircuitBreakerConfig`, `cbState`, `cbBeforeHandle`, `cbAfterHandle`, `registerCircuitBreaker` — `Closed/Open/HalfOpen` 三态熔断器与 `503` + `X-Circuit-State` 自愈 |
+| **`@web/audit`** | `packages/@web/audit` | `AuditConfig`, `AuditRecord`, `auditMaskHeaderValue`, `auditCount`, `registerAudit` — 写操作环形合规审计流水、敏感头自动脱敏与 `GET /_audit` |
+| **`@web/html`** | `packages/@web/html` | `HtmlConfig`, `htmlEscape`, `HtmlBuilder`, `htmlIsHtmx`, `htmlHxRedirect`, `htmlHxTrigger`, `registerHtml` — 零堆 XSS 转义、SSR 模板构建与 HTMX 协议助手 |
+| **`@web/trpc`** | `packages/@web/trpc` | `TrpcConfig`, `TrpcProcKind`, `trpcQuery`, `trpcMutation`, `registerTrpc` — 统一 Procedure RPC 路由（`GET/POST /trpc/:proc`）与标准 `result`/`error` 封装 |
+| **`@web/a2a`** | `packages/@web/a2a` | `A2aConfig`, `A2aTaskState`, `a2aSetTaskHandler`, `registerA2a` — Google A2A 协议（`GET /.well-known/agent.json` Agent Card 与 `POST /a2a` `tasks/send`/`get`/`cancel`） |

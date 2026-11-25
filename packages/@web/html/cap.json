@@ -1,0 +1,7 @@
+{
+  "name": "@web/html",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official HTML SSR, zero-heap XSS escaping, and HTMX helpers plugin for cap:web"
+}

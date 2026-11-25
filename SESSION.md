@@ -5844,3 +5844,28 @@
   > 确认
 - **完整回复与执行汇报**：
   > 第三批前 2 个插件（`@web/env` 3/3 PASS、`@web/i18n` 3/3 PASS，4-Gate `0/0/0/0`）已完成；正在等待两路子智能体完成剩余 6 个插件（`@web/oauth2`、`@web/graphql`、`@web/mcp` 与 `@web/redis`、`@web/db`、`@web/s3`），完工后将立即运行 **全量 25 插件联合集成测试**并同步文档提交。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 21:54:11）[step:24270]
+- **用户完整原始指令**：
+  > 第四批呢
+- **完整回复与执行汇报**：
+  > 前 3 批 25 个包已覆盖绝大多数常规 Web 与数据层场景。第四批建议聚焦 **企业级治理、SaaS 刚需与 AI Agent 互联**，精选 **8 个高价值官方 `@web/*` 插件**（完成后总计 **33 个**，无凑数项）：
+  >
+  > | 插件包 | 对标生态 / 协议 | 核心生产能力 |
+  > | :--- | :--- | :--- |
+  > | **`@web/rbac`** | Casbin / `axum-rbac` | 声明式角色-权限表（支持 `orders:*` 通配）、路由级权限守卫与自动 `403 Forbidden` 拦截 |
+  > | **`@web/webhook`** | Stripe / GitHub / Standard Webhooks | 纯 CP HMAC-SHA256 回调验签、时间戳漂移窗口防重放 + 事件 ID 幂等去重（重复投递安全返回 `200`） |
+  > | **`@web/circuit-breaker`** | Envoy / Tower Breaker | `Closed / Open / HalfOpen` 三态熔断状态机：统计 `5xx` 失败率自动熔断返回 `503` + `X-Circuit-State`，冷却后半开自愈 |
+  > | **`@web/html`** | `@elysiajs/html` / HTMX | 零堆 XSS 安全 HTML 转义、`HtmlBuilder` 模板拼装与 HTMX 协议快捷助手（`isHtmx` / `HX-Redirect` / `HX-Trigger`） |
+  > | **`@web/trpc`** | `@elysiajs/eden` / tRPC | 统一 Procedure RPC 路由（`GET /trpc/:proc` Query + `POST /trpc/:proc` Mutation）与标准 `result/error` 协议封装 |
+  > | **`@web/audit`** | 企业合规审计 | 自动捕获 `POST/PUT/PATCH/DELETE` 写操作审计流水（操作者/路径/状态/IP）、敏感头自动脱敏与 `/_audit` 查询 |
+  > | **`@web/flags`** | LaunchDarkly / Unleash | 确定性 FNV-1a 一致性百分比灰度分流 + 白名单定向放行 + `GET /_flags` 状态查询 |
+  > | **`@web/a2a`** | **Google A2A 协议（与 `@web/mcp` 组成 AI 双璧）** | 自动挂载 `GET /.well-known/agent.json`（Agent Card 发现）与 `POST /a2a`（`tasks/send` / `tasks/get` / `tasks/cancel` 任务状态机） |
+  >
+  > 确认这份 **第四批 8 个 `@web/*` 插件清单** 后，我立刻按 **主智能体 + 2 路子智能体并行** 全部落地并跑通 **全量 33 插件联合集成测试**！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 21:57:04）[step:24272]
+- **用户完整原始指令**：
+  > 确认
+- **完整回复与执行汇报**：
+  > 第四批前 2 个插件（`@web/rbac` 4/4 PASS、`@web/flags` 3/3 PASS，4-Gate `0/0/0/0`）已完成；正在等待两路子智能体完成剩余 6 个插件（`@web/webhook`、`@web/circuit-breaker`、`@web/audit` 与 `@web/html`、`@web/trpc`、`@web/a2a`），完工后将立即运行 **全量 33 插件联合集成测试**并同步文档提交。

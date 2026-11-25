@@ -1,0 +1,7 @@
+{
+  "name": "@web/audit",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official enterprise compliance write-operation audit log plugin with 32-slot ring buffer and sensitive header masking for cap:web"
+}

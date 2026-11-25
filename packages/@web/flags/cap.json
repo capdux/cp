@@ -1,0 +1,7 @@
+{
+  "name": "@web/flags",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official deterministic FNV-1a Feature Flags & percentage rollout plugin for cap:web"
+}
