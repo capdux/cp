@@ -627,6 +627,70 @@ fn attachServerTiming(out_resp: *Response, routing_ns: u64, handler_ns: u64, hoo
 }
 
 // ============================================================================
+// 1.5 Per-Request Bump-Pointer Arena (`RequestArena`) — O(1) Reset, Zero GC
+// ============================================================================
+
+/// Ultra-lightweight (24-byte) per-request bump-pointer arena backed by a
+/// per-worker pre-allocated slab or caller stack buffer.
+/// Small-payload routes never touch the arena (0 ns overhead); dynamic large
+/// JSON / HTML builders get O(1) allocation and O(1) `pos = 0` teardown.
+pub struct RequestArena {
+    buf: [*]u8 = undefined,
+    cap: usize = 0,
+    pos: usize = 0,
+
+    pub static fn initSlice(storage: []u8): RequestArena {
+        return RequestArena{
+            buf: storage.ptr,
+            cap: storage.len,
+            pos: 0,
+        };
+    }
+
+    pub static fn initRaw(ptr: [*]u8, capacity: usize): RequestArena {
+        return RequestArena{
+            buf: ptr,
+            cap: capacity,
+            pos: 0,
+        };
+    }
+
+    /// O(1) arena teardown (single integer store, zero memset).
+    pub fn reset(*_) {
+        _.pos = 0;
+    }
+
+    /// 8-byte aligned bump allocation; returns `null` if capacity would overflow.
+    pub fn alloc(*_, n: usize): ([]u8)? {
+        const aligned: usize = (_.pos + 7) & ~@as(usize, 7);
+        if (n > _.cap || aligned > _.cap - n) return null;
+        _.pos = aligned + n;
+        return _.buf[aligned .. aligned + n];
+    }
+
+    /// Copy `s` into the request arena with zero heap allocation.
+    pub fn dupe(*_, s: string): string? {
+        if (dst_raw := _.alloc(s.len)) {
+            let dst = dst_raw;
+            let i: usize = 0;
+            while (i < s.len) : (i += 1) {
+                dst[i] = s[i];
+            }
+            return dst;
+        }
+        return null;
+    }
+
+    pub fn used(): usize {
+        return _.pos;
+    }
+
+    pub fn remaining(): usize {
+        return if (_.cap >= _.pos) (_.cap - _.pos) else 0;
+    }
+}
+
+// ============================================================================
 // 2. Axum-Style Zero-Reflection Context & Extractors
 // ============================================================================
 
@@ -652,6 +716,23 @@ pub struct Context {
     abort_response: Response = undefined;
     error_code: AppErrorCode = AppErrorCode.None;
     error_message: string = "";
+    arena: *RequestArena? = null;
+
+    /// Allocate `n` bytes from the per-request bump-pointer arena (zero heap/GC).
+    pub fn arenaAlloc(*_, n: usize): ([]u8)? {
+        if (a := _.arena) {
+            return a.alloc(n);
+        }
+        return null;
+    }
+
+    /// Copy string `s` into the per-request arena (valid until response flush).
+    pub fn arenaDupe(*_, s: string): string? {
+        if (a := _.arena) {
+            return a.dupe(s);
+        }
+        return null;
+    }
 
     /// Extract a dynamic path parameter (`:id`, `{id}`, or `*wildcard`).
     pub fn param(name: string): string? {

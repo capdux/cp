@@ -5632,3 +5632,44 @@
   > - **1 核（全部 5 框架）**：已完成；
   > - **8 核（CP / Bun Elysia / Node Fastify / Node Koa）**：已完成，当前正在跑 `express_8c`；
   > - **16 核**：随后自动执行，预计约 50 秒内全部出数并汇总完整 5 框架对比表。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 15:50:34）[step:24021]
+- **用户完整原始指令**：
+  > 为何这次 突破100万啦, 恭喜!
+- **完整回复与执行汇报**：
+  > 这次 24 路由完整 `cap:web` 框架在 16 核下冲破 **106.5 万 QPS（`GET /health`）** 和 **100.3 万 QPS（`POST /orders` JSON 校验）**，核心是刚才叠加落地的 **4 刀底层优化** 把每请求的无效内存拷贝和 CPU 指令压到了底线：
+  >
+  > 1. **就地解析 `parseHttp1Request`，消灭每请求 ~1KB 结构体拷贝**（[lib/web/server.cp](file:///data/dev/cp/lib/web/server.cp)）
+  >    - 之前是在栈上构造 `let req = Request.init(...)` 再 `out_req.* = req` 整块赋值（`Request` 含 `[32]HeaderKV`，超 1KB）；
+  >    - 现在直接就地写入复用的 `out_req`，仅重置 `header_len = 0`，每请求省下一次完整的栈拷贝。
+  > 2. **`srvFindCrlf` 16B `@Vector(16, u8)` SIMD 加速**（[lib/web/server.cp](file:///data/dev/cp/lib/web/server.cp)）
+  >    - HTTP/1.1 请求行和每条 Header 都要扫描 `\r\n`；从逐字节循环升级为 16 字节并行向量扫描，大幅削减热路径指令数与分支预测失败。
+  > 3. **全链路 `undefined` 彻底消灭 `memset(0)`**（[lib/web/app.cp](file:///data/dev/cp/lib/web/app.cp)、[lib/web/server.cp](file:///data/dev/cp/lib/web/server.cp)）
+  >    - `Request`、`Context`、`Response`、`ConnBuf` 内的大固定数组全部改用 `undefined` + 仅归零计数 `*_len = 0`；
+  >    - 16 核每秒百万级请求下，少掉的是 **每秒数 GB 级别的无意义栈清零带宽**，L1/L2 Cache 压力骤降。
+  > 4. **单进程 16 核零锁 + 超小内存常驻 L3 Cache**
+  >    - `SO_REUSEPORT` + `sched_setaffinity` 绑核 + 12B 紧致 `epoll` + Cork 写合并，16 个 Worker 之间 **0 锁、0 GC 停顿**；
+  >    - 整进程峰值内存仅 **34.2 MB**（而 Bun/Node 16 进程吃掉 **1.45~1.63 GB** 并伴随 GC 抖动），CP 的热路径代码与连接缓冲几乎常驻 CPU 缓存，因此不仅吞吐破百万，P99 延迟还稳在 **0.103~0.117 ms**。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 15:52:37）[step:24023]
+- **用户完整原始指令**：
+  > 没有用到arena 吗?
+- **完整回复与执行汇报**：
+  > 说得很准，拆开来看：
+  >
+  > 1. **在 SQLite 500K 多列行物化中：已经用到了 Arena**
+  >    - [sqlite_extreme_cp.cp](file:///data/dev/cp/bench/vs_web_frameworks/sqlite_extreme_cp.cp) 采用连续内存 Bump-Pointer Arena + `undefined` 零清零，一次性批量物化 50 万行结构体并整块回收，跑出 **2.06M rows/s（28.3 MB）**，比 Bun 快 **2.15x**、比 Node 快 **4.09x**。
+  > 2. **在 `cap:web` 本次 106 万 QPS 的 HTTP 热路径中：没有调用通用的 `arena {}`，而是用了更极致的“每线程固定复用槽”**
+  >    - [lib/web/server.cp](file:///data/dev/cp/lib/web/server.cp) 每个 Worker 线程启动时一次性 `malloc` 扁平连接池 `conns[512]`，请求热路径直接原地复用 `reusable_req` / `reusable_ctx` / `reusable_resp` / `write_buf`（配合 `undefined` + 仅归零计数 `*_len = 0`），全程 **0 次 `malloc`/0 次 `free`**，本质上相当于一个固定尺寸的“隐式请求微 Arena”。
+  > 3. **哪里还需要真正的请求级动态 `RequestArena`（下一步很有价值的增强）**：
+  >    - 目前的固定栈缓冲（如 `Response.body_buf`）只适合中小 JSON/文本回包；
+  >    - 一旦真实业务 Handler 要**动态拼接几百条数据库记录的大 JSON 列表、渲染大 HTML 模板、或处理大 Multipart 表单**，固定小数组装不下；
+  >    - 如果给 `Context` 挂载一个 **每 Worker 复用的请求级 Bump-Pointer `RequestArena`（如 64KB 预分配块 + 溢出回退堆，请求结束 O(1) `arena.reset()` 归零）**，用户写任意动态大响应 Handler 时也能完全 **0 GC、0 碎片、接近裸指针速度**。
+  >
+  > 需要的话，下一步可以给 `Context` + `WebServer` 补上这个请求级 `RequestArena`（`ctx.alloc(n)` / `ctx.jsonArena(...)`）。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 15:54:36）[step:24025]
+- **用户完整原始指令**：
+  > 可以, 加上不影响当前小数据压测指标对吧
+- **完整回复与执行汇报**：
+  > `RequestArena`（每 Worker 64KB 请求级 Bump-Pointer Arena + 大响应零拷贝直发）已集成并通过回归测试（`testWebServerLive 5/5` 含 16KB 动态大响应实测、`testWebElysiaAxumSuite 12/12`）。正在重编 `temp/fw_cp` 并验证 16 核小数据吞吐零回退，完成后即提交并汇报实测结果。

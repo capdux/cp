@@ -9,12 +9,13 @@
 // ============================================================================
 
 const std = @import("std");
-import { App, AppMethod, Context, Request, Response, HeaderKV } from "./app.cp";
+import { App, AppMethod, Context, Request, RequestArena, Response, HeaderKV } from "./app.cp";
 import { ComptimeRouteTable } from "./comptimeRouter.cp";
 
 pub const SERVER_MAX_WORKERS: usize = 64;
 pub const SERVER_READ_BUF_LEN: usize = 2048;
 pub const SERVER_WRITE_BUF_LEN: usize = 4096;
+pub const SERVER_REQ_ARENA_BYTES: usize = 65536;
 pub const SERVER_EPOLL_BATCH: usize = 128;
 
 // Linux x86_64 POSIX / socket / epoll constants
@@ -256,6 +257,42 @@ fn parseHttp1Request(raw: string, out_req: *Request, out_keep_alive: *bool): isi
     }
     out_keep_alive.* = keep_alive;
     return (pos + content_len) as isize;
+}
+
+/// Serialize `Response` headers only into `out_buf` (used for zero-copy large arena body streaming).
+fn serializeHttp1ResponseHeaders(resp: *const Response, body_len: usize, keep_alive: bool, out_buf: []u8): usize {
+    let pos: usize = 0;
+    * = srvWriteBytes(out_buf, *pos, "HTTP/1.1 ");
+    * = srvWriteUsize(out_buf, *pos, resp.status as usize);
+    * = srvWriteBytes(out_buf, *pos, " ");
+    * = srvWriteBytes(out_buf, *pos, statusReasonPhrase(resp.status));
+    * = srvWriteBytes(out_buf, *pos, "\r\n");
+
+    if (resp.content_type.len > 0) {
+        * = srvWriteBytes(out_buf, *pos, "Content-Type: ");
+        * = srvWriteBytes(out_buf, *pos, resp.content_type);
+        * = srvWriteBytes(out_buf, *pos, "\r\n");
+    }
+    * = srvWriteBytes(out_buf, *pos, "Content-Length: ");
+    * = srvWriteUsize(out_buf, *pos, body_len);
+    * = srvWriteBytes(out_buf, *pos, "\r\n");
+
+    if (keep_alive) {
+        * = srvWriteBytes(out_buf, *pos, "Connection: keep-alive\r\n");
+    } else {
+        * = srvWriteBytes(out_buf, *pos, "Connection: close\r\n");
+    }
+
+    let i: usize = 0;
+    while (i < resp.header_len) : (i += 1) {
+        * = srvWriteBytes(out_buf, *pos, resp.headers[i].name);
+        * = srvWriteBytes(out_buf, *pos, ": ");
+        * = srvWriteBytes(out_buf, *pos, resp.headers[i].value);
+        * = srvWriteBytes(out_buf, *pos, "\r\n");
+    }
+
+    * = srvWriteBytes(out_buf, *pos, "\r\n");
+    return pos;
 }
 
 /// Serialize `Response` into `out_buf` as a single contiguous HTTP/1.1 buffer.
@@ -658,12 +695,24 @@ fn writeAllFd(fd: i32, data: string): bool {
             conns[ci].read_len = 0;
         }
 
+        // Pre-allocate per-worker 64KB RequestArena slab (0 alloc per request, O(1) reset)
+        const arena_raw = malloc(SERVER_REQ_ARENA_BYTES);
+        if (arena_raw == null) {
+            free(conn_raw);
+            * = close(epfd);
+            * = close(lfd);
+            return null;
+        }
+        const arena_ptr: [*]u8 = @ptrCast(arena_raw.?);
+        let reusable_arena = RequestArena.initRaw(arena_ptr, SERVER_REQ_ARENA_BYTES);
+
         let events: [SERVER_EPOLL_BATCH]EpollEventC = undefined;
         let write_buf: [SERVER_WRITE_BUF_LEN]u8 = undefined;
         let ws_subs: [512]i32 = undefined;
         let ws_sub_len: usize = 0;
         let reusable_req: Request = undefined;
         let reusable_ctx: Context = undefined;
+        reusable_ctx.arena = *reusable_arena;
         let reusable_resp: Response = undefined;
         let one: i32 = 1;
         let listener_active = true;
@@ -893,6 +942,12 @@ fn writeAllFd(fd: i32, data: string): bool {
                                 }
                             }
 
+                            // O(1) arena reset only if previous handler touched it (0 ns overhead for small routes)
+                            if (reusable_arena.pos != 0) {
+                                reusable_arena.reset();
+                            }
+                            reusable_ctx.arena = *reusable_arena;
+
                             // ComptimeRouteTable O(1) direct fast-path -> fallback to App.dispatchInto
                             let dispatched = false;
                             if (ct := wctx.comptime_table) {
@@ -902,15 +957,36 @@ fn writeAllFd(fd: i32, data: string): bool {
                                 wctx.app.dispatchInto(&reusable_req, *reusable_ctx, *reusable_resp);
                             }
 
-                            if (wtotal + 1024 > SERVER_WRITE_BUF_LEN) {
-                                if (!writeAllFd(fd, write_buf[0..wtotal])) {
+                            const resp_body = if (reusable_resp.body_buf_len > 0)
+                                reusable_resp.body_buf[0..reusable_resp.body_buf_len]
+                            else
+                                reusable_resp.body;
+
+                            if (resp_body.len + 512 > SERVER_WRITE_BUF_LEN) {
+                                // Large dynamic/arena response: flush pending cork buffer, send headers, then zero-copy body
+                                if (wtotal > 0) {
+                                    if (!writeAllFd(fd, write_buf[0..wtotal])) {
+                                        should_close = true;
+                                        break;
+                                    }
+                                    wtotal = 0;
+                                }
+                                const hlen = serializeHttp1ResponseHeaders(*reusable_resp, resp_body.len, keep_alive, write_buf[0..]);
+                                if (!writeAllFd(fd, write_buf[0..hlen]) || !writeAllFd(fd, resp_body)) {
                                     should_close = true;
                                     break;
                                 }
-                                wtotal = 0;
+                            } else {
+                                if (wtotal + resp_body.len + 512 > SERVER_WRITE_BUF_LEN) {
+                                    if (!writeAllFd(fd, write_buf[0..wtotal])) {
+                                        should_close = true;
+                                        break;
+                                    }
+                                    wtotal = 0;
+                                }
+                                const wlen = serializeHttp1Response(*reusable_resp, keep_alive, write_buf[wtotal..]);
+                                wtotal += wlen;
                             }
-                            const wlen = serializeHttp1Response(*reusable_resp, keep_alive, write_buf[wtotal..]);
-                            wtotal += wlen;
                             offset += consumed as usize;
                             if (!keep_alive) {
                                 should_close = true;
@@ -952,6 +1028,7 @@ fn writeAllFd(fd: i32, data: string): bool {
                 * = close(conns[ci].fd);
             }
         }
+        free(arena_raw);
         free(conn_raw);
         * = close(epfd);
         * = close(lfd);

@@ -52,12 +52,27 @@ fn hJsonEcho(ctx: *Context): Response {
     return Response.json(200, ctx.body);
 }
 
+fn hBigArena(ctx: *Context): Response {
+    if (buf_raw := ctx.arenaAlloc(16384)) {
+        let buf = buf_raw;
+        let i: usize = 0;
+        while (i < 16384) : (i += 1) {
+            buf[i] = 'A';
+        }
+        buf[0] = '[';
+        buf[16383] = ']';
+        return Response.text(200, buf);
+    }
+    return Response.text(500, "arena_oom");
+}
+
 fn main() {
     let app = App.init();
     * = app
         .get("/", hPing)
         .get("/id/:id", hIdQuery)
-        .post("/json", hJsonEcho);
+        .post("/json", hJsonEcho)
+        .get("/big", hBigArena);
 
     const port: u16 = 18923;
     let srv = WebServer.init(ServerConfig{
@@ -148,6 +163,31 @@ fn main() {
     }
     * = close(wsfd);
 
+    // Request 5: Large 16KB dynamic response built in per-request RequestArena (zero heap/GC)
+    const bigfd = socket(2, 1, 0);
+    if (bigfd < 0 || connect(bigfd, *addr, 16) < 0) {
+        srv.stop();
+        @panic("Request 5 connect failed");
+    }
+    const big_req = "GET /big HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    * = write(bigfd, big_req.ptr, big_req.len);
+    let total_big: usize = 0;
+    let saw_cl16384 = false;
+    let nb: isize = 0;
+    while (true) {
+        nb = read(bigfd, &rbuf[0], 2048);
+        if (nb <= 0) break;
+        if (total_big == 0 && containsStr(rbuf[0..(nb as usize)], "Content-Length: 16384")) {
+            saw_cl16384 = true;
+        }
+        total_big += nb as usize;
+    }
+    * = close(bigfd);
+    if (!saw_cl16384 || total_big < 16384 + 60) {
+        srv.stop();
+        @panic("Request 5 (16KB RequestArena response) failed");
+    }
+
     srv.stop();
-    @print("PASS testWebServerLive (2-worker SO_REUSEPORT epoll + HTTP/1.1 Keep-Alive + Same-Port WS Upgrade 4/4)");
+    @print("PASS testWebServerLive (2-worker SO_REUSEPORT epoll + HTTP/1.1 + Same-Port WS + 16KB RequestArena 5/5)");
 }
