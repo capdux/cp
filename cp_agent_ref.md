@@ -7,7 +7,7 @@
 
 ---
 
-## 一、 模块系统、工程清单与工具链 (`import` / `cap` / `cpc`)
+## 一、 模块系统、工程清单与工具链 (`import` / `cap` / `cpc`) [SYNC_PENDING: 2026-11-25]
 
 ### 1. 唯一合法导入语法 (`import`)
 ```typescript
@@ -80,7 +80,7 @@ export { AgentCore as default }; // 当前默认导出规范（暂不支持 pub 
 
 // 2. export 向下兼容保留，并用于聚合重导出（index.cp 单一真理出口规范）
 export { Reader, Writer, Closer } from "./traits.cp";
-export { BufferReader, BufferWriter } from "./buffer.cp";
+export { BufferReader, BufferWriter as BufWriter } from "./buffer.cp"; // 支持重导出别名 `Orig as Alias`
 export { add as sum, PI as TAU };
 export * from "./sub_module.cp";
 ```
@@ -147,7 +147,9 @@ export * from "./sub_module.cp";
 | 工具指令 | 核心用途与行为 |
 | :--- | :--- |
 | `cpc brief [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | **⭐ 推荐首选：内置原生多文件省 Token 联合校验器**（自动探测 Zig 优先级：`--zig` > `$ZIG_BIN` > `./vendor/zig/zig` > `../vendor/zig/zig` > `/data/dev/cp/vendor/zig/zig` > `zig`）：直接复用内部诊断引擎按 `code` 统计去重前 `N` 条根因 + `--lib` 代码生成 + `zig ast-check` + 4 项纯净度静态门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`，`--require-backup` 校验 `_.zig` 与膨胀比 `<=1.2`） |
-| `cap <file>` / `cap run <file>` | Debug 模式百毫秒级直接构建并运行（按需链接已引用包 + 运行期自动注入随包 `sys` 动态库 `LD_LIBRARY_PATH`） |
+| `cap <file>` / `cap run [-w\|--watch] <file>` | Debug 模式百毫秒级直接构建并运行（按需链接已引用包 + 运行期自动注入随包 `sys` 动态库 `LD_LIBRARY_PATH`；`-w`/`--watch` 监听 `.cp` 改动自动增量重编重启） |
+| `cap lint [--dead\|--deadcode] [path...]` | 运行语法、借用与 4 门禁静态检查；`--dead`/`--deadcode` 静态扫描未引用导出符号与孤立文件 |
+| `cap from <-ts\|-rs> <src_dir> [-o <out_dir>]` | 一键将 TypeScript / Rust 工程迁移为 CP（三层依赖解析：`cap:*` 内置 → `@cap/*` 官方 → 递归产出可发布 `cap_modules/<pkg>`；TS `Promise.all`/`Promise.race` 自动映射为 `joinAll`/`race`） |
 | `cap init [template]` / `add [-d] [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理 `dep`/`dev` |
 | `cap install [--production\|--prod] [--frozen-lockfile] [--rebuild] [--target=<os-arch>]` | 展开 `workspaces`、解析 `workspace:*`/`file:`/注册表依赖并预编译 `bin` C/C++ 静态库写入 `cap.lock`（`--production`/`--prod` 跳过 `dev`） |
 | `cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch\|all>] [--write-prebuilt]` | 遍历包内全部 `bin` 条目重编或全平台交叉编译（支持 C/C++），可选回写随包 `prebuilt/` |
@@ -1083,7 +1085,7 @@ switch (msg) {
 
 ---
 
-## 十三、 智能体 Top 29 绝对禁手清单 (Top 29 Antipatterns)
+## 十三、 智能体 Top 29 绝对禁手清单 (Top 29 Antipatterns) [SYNC_PENDING: 2026-11-25]
 
 | 禁手序号 | 错误幻觉写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 根因与规则说明 |
 | :---: | :--- | :--- | :--- |
@@ -1095,7 +1097,7 @@ switch (msg) {
 | **#6** | `if (opt) \|v\|` / `if (let v = opt)` / `for (arr) \|v\|` | `if (v := opt)` / `while (v := opt)` / `for (v of arr)` | 严禁 Zig 竖线捕获 `\|v\|`（`E0118`）与 `if (let v = ...)`（`E0126`），条件解包唯一合法语法为 Walrus `:=`，循环用 `for ... of` |
 | **#7** | `for (x of vec) { vec.push(1); }` | 先收集或使用索引，严禁遍历中增删 | `Loop-Borrow Lock`：遍历期间容器被借用锁死，禁止内部结构修改 |
 | **#8** | `fn next() ([]const u8)?` 或 `fn close(): void` | `fn next(): ([]const u8)?` / `fn close()` | 有返回值必须写 `: ReturnType`；无返回值一律省略 `: void`（含 `@c` 声明） |
-| **#9** | `fn f(): !usize` 或 `fn f(): ?[]const u8` | `fn f(): usize!` / `fn f(): ([]const u8)?` | 彻底废除前缀 `!T`/`?T`，确立类型主体居首的纯后缀体系 |
+| **#9** | `fn f(): !usize` 或 `fn f(): ?[]const u8` 或 `fn alloc(): []u8?` | `fn f(): usize!` / `fn f(): ([]const u8)?` / `fn alloc(): ([]u8)?` | 彻底废除前缀 `!T`/`?T`，确立类型主体居首的纯后缀体系；**可选切片必须加括号写 `([]T)?`**（`[]T?` 解析为元素可选切片而非可选切片） |
 | **#10** | `let n = "123" as i32;` | `let n = i32.parse("123")?;` | 禁止对字符串用 `as` 转换数值，必须走标准受检 `parse` 方法 |
 | **#11** | `fn fetch(url: string, opts: any)` | `fn fetch(url: string, opts: auto)` | CP 彻底废除 `any` 类型，泛型参数推导使用 `auto` |
 | **#12** | `@extern struct Bar` / `@c { pub extern fn f(): void; }` | `@c struct Bar` / `@c { fn f(); }` | `@c {}` 内无需重复写 `pub` 或 `extern`，导出整个块用 `pub @c {}` |
