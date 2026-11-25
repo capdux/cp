@@ -209,6 +209,8 @@ pub struct Codegen {
     pub modular_imported_symbols: HashSet<String>,
     pub cap_hub_prelude: Option<String>,
     pub single_file_cap_submod: bool,
+    pub emitted_extern_fns: HashSet<String>,
+    pub emitted_top_consts: HashMap<String, String>,
 }
 
 impl Codegen {
@@ -321,6 +323,8 @@ impl Codegen {
             modular_imported_symbols: HashSet::new(),
             cap_hub_prelude: None,
             single_file_cap_submod: false,
+            emitted_extern_fns: HashSet::new(),
+            emitted_top_consts: HashMap::new(),
         }
     }
 
@@ -473,6 +477,8 @@ impl Codegen {
     }
 
     pub fn generate_module(&mut self, module: &Module) -> String {
+        self.emitted_extern_fns.clear();
+        self.emitted_top_consts.clear();
         if let Some(ref inc_hash) = self.modular_inc_hash.clone() {
             self.writeln(&format!("// @cp_inc_hash:{}", inc_hash));
         }
@@ -1079,12 +1085,41 @@ impl Codegen {
         for item in &module.body {
             if let ModuleItem::Stmt(Stmt::Expr(Expr::Zig(zig))) = item {
                 let lowered = lower_struct_body(&zig.code);
+                let mut skip_extern_until_semi = false;
                 for line in lowered.lines() {
                     let trimmed = line.trim();
+                    if skip_extern_until_semi {
+                        if trimmed.contains(';') {
+                            skip_extern_until_semi = false;
+                        }
+                        continue;
+                    }
                     if trimmed == "const std = @import(\"std\");"
                         || trimmed == "pub const std = @import(\"std\");"
                     {
                         continue;
+                    }
+                    let stripped = trimmed
+                        .strip_prefix("pub ")
+                        .map(str::trim_start)
+                        .unwrap_or(trimmed);
+                    let extern_rest = stripped
+                        .strip_prefix("extern \"c\" fn ")
+                        .or_else(|| stripped.strip_prefix("extern \"C\" fn "))
+                        .or_else(|| stripped.strip_prefix("extern fn "));
+                    if let Some(rest) = extern_rest {
+                        if let Some(name) = rest
+                            .split(|c: char| c == '(' || c == '<' || c.is_whitespace())
+                            .next()
+                            .filter(|s| !s.is_empty())
+                        {
+                            if !self.emitted_extern_fns.insert(name.to_string()) {
+                                if !trimmed.contains(';') {
+                                    skip_extern_until_semi = true;
+                                }
+                                continue;
+                            }
+                        }
                     }
                     self.writeln(line);
                 }
@@ -1116,10 +1151,23 @@ impl Codegen {
                         } else {
                             "var"
                         };
-                        self.writeln(&format!(
+                        let decl_line = format!(
                             "{}{} {} {}{};",
                             pub_str, extern_str, kind_str, ident.sym, ty_str
-                        ));
+                        );
+                        let canonical_decl =
+                            format!("{} {} {}{};", extern_str, kind_str, ident.sym, ty_str);
+                        if var.kind == VarDeclKind::Const {
+                            if let Some(prev) = self.emitted_top_consts.get(&ident.sym) {
+                                if prev == &canonical_decl {
+                                    continue;
+                                }
+                            } else {
+                                self.emitted_top_consts
+                                    .insert(ident.sym.clone(), canonical_decl);
+                            }
+                        }
+                        self.writeln(&decl_line);
                     }
                 }
             }
@@ -1554,7 +1602,23 @@ impl Codegen {
                         };
                         self.is_comptime = saved_comptime;
                         self.in_container_const = saved_container_const;
-                        self.writeln(&format!("{} {}{} = {};", kw, ident.sym, ty_str, init_code));
+                        let decl_line = format!("{} {}{} = {};", kw, ident.sym, ty_str, init_code);
+                        let canonical_decl = format!(
+                            "{}{} {}{} = {};",
+                            export_prefix, kind_kw, ident.sym, ty_str, init_code
+                        );
+                        if var.kind == VarDeclKind::Const && !var.is_threadlocal && !var.is_export {
+                            if let Some(prev) = self.emitted_top_consts.get(&ident.sym) {
+                                if prev == &canonical_decl {
+                                    self.expected_array_elem_type = old_array_elem;
+                                    continue;
+                                }
+                            } else {
+                                self.emitted_top_consts
+                                    .insert(ident.sym.clone(), canonical_decl);
+                            }
+                        }
+                        self.writeln(&decl_line);
                     }
                     _ => {}
                 }

@@ -870,19 +870,41 @@ impl Codegen {
             if is_c && func.body.body.is_empty() {
                 let c_pub_prefix = if func.is_pub { "pub " } else { "" };
                 if let Some(alias) = c_alias {
-                    writeln!(
-                        self.output,
-                        "\nextern \"c\" fn {}({}) {}{};",
-                        alias, params_str, callconv_clause, zig_ret_ty
-                    )
-                    .unwrap();
-                    writeln!(
-                        self.output,
-                        "{}const {} = {};",
-                        c_pub_prefix, zig_name, alias
-                    )
-                    .unwrap();
+                    if class_name.is_none() {
+                        if self.emitted_extern_fns.insert(alias.clone()) {
+                            writeln!(
+                                self.output,
+                                "\nextern \"c\" fn {}({}) {}{};",
+                                alias, params_str, callconv_clause, zig_ret_ty
+                            )
+                            .unwrap();
+                        }
+                        let alias_line = format!("{}const {} = {};", c_pub_prefix, zig_name, alias);
+                        if self.emitted_top_consts.get(&zig_name).map(String::as_str)
+                            != Some(alias_line.as_str())
+                        {
+                            self.emitted_top_consts
+                                .insert(zig_name.clone(), alias_line.clone());
+                            writeln!(self.output, "{}", alias_line).unwrap();
+                        }
+                    } else {
+                        writeln!(
+                            self.output,
+                            "\nextern \"c\" fn {}({}) {}{};",
+                            alias, params_str, callconv_clause, zig_ret_ty
+                        )
+                        .unwrap();
+                        writeln!(
+                            self.output,
+                            "{}const {} = {};",
+                            c_pub_prefix, zig_name, alias
+                        )
+                        .unwrap();
+                    }
                 } else {
+                    if class_name.is_none() && !self.emitted_extern_fns.insert(zig_name.clone()) {
+                        return;
+                    }
                     writeln!(
                         self.output,
                         "\n{}extern \"c\" fn {}({}) {}{};",
