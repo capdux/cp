@@ -60,3 +60,6 @@
 
 ## 2026-11-26: Wave 2B 交付（`@cap/cbor` + `cap:rate` Rust `governor` GCRA 深度升级）
 - 子智能体 5 交付 `@cap/cbor`（RFC 8949 Appendix A 向量全绿）；子智能体 4 交付 `cap:rate` GCRA 与 IETF 限流响应头格式化器并修复既有子模块语法（`testRateDeep` 6/6 PASS）；同步完成 `cpc` release 版原子部署与下游工单 `task-bun-20261126-type-alias-int-literal` 结单。
+
+## 2026-11-26: Wave 3A 交付 5 个亿级高频 npm/Rust 对标 `@cap/*` 包（全部 MIT Clean-Room 纯 CP 实现）
+- 按 npm/crates.io 下载量与引用频度优先落地 `@cap/ms`、`@cap/bytes`、`@cap/nanoid`、`@cap/crc32c`、`@cap/base58` 五个零外部依赖、零堆分配、MIT 许可基础包，全部配备 `cap.json`、`src/index.cp`、`src/index.d.cp`、中文 `README.md`（含多组可运行示例与版权声明）及官方测试向量回归套件。

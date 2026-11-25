@@ -1,0 +1,7 @@
+{
+  "name": "@cap/crc32c",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CRC32C (Castagnoli 0x82F63B78) checksum, streaming hasher, GF(2) combine, and LevelDB/TFRecord mask/unmask for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

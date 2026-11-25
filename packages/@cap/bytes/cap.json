@@ -1,0 +1,7 @@
+{
+  "name": "@cap/bytes",
+  "ver": "1.0.0",
+  "description": "Pure CP, zero-dependency, zero-heap-allocation human-readable byte size parser and formatter (IEC binary & SI decimal)",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

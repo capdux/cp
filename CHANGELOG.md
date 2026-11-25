@@ -74,3 +74,10 @@
 - `packages/@cap/cbor/` (`cap.json`, `src/index.cp`, `src/index.d.cp`, `README.md`) & `cap/test/testCapCbor.cp`: 新增纯 CP 零外部依赖 `@cap/cbor` 包（严格对标 RFC 8949 与 Rust `minicbor`/`ciborium` crate，含 `CborEncoder`/`CborDecoder`、`MAX_CBOR_DEPTH=128` 护栏与 Appendix A 测试向量，PASSED 885ms）。
 - `lib/rate/` (`gcra.cp`, `bucket.cp`, `sliding.cp`, `limiter.cp`, `index.cp`) & `doc/lib/rate.md` & `cap/test/testRateDeep.cp`: 对标 Rust `governor` crate 新增全 `u128` 防溢出 GCRA 限流器（`Quota` / `RateDecision` / `GcraLimiter` / `checkNAt` / IETF `RateLimit-*` & `Retry-After` 响应头格式化器），修复旧 `self` 语法，补齐 3 组可运行文档示例（6/6 PASS）。
 - `cp_lib_ref.md`: 同步更新 `cap:rate` 索引契约。
+
+## [2026-11-26] - Wave 3A 吸收 npm/Rust 亿级高频基础生态包（5 个 MIT Clean-Room 纯 CP `@cap/*` 包）
+- `packages/@cap/nanoid/` & `cap/test/testCapNanoid.cp`: 加密安全 URL 友好短 ID 生成器（对标 npm `nanoid` [~90M/wk] & Rust `nanoid`，零取模偏差位掩码拒绝采样、OS CSPRNG、预设字母表、确定性测试接口，4/4 PASS）。
+- `packages/@cap/ms/` & `cap/test/testCapMs.cp`: 人类可读时长双向解析与格式化（对标 npm `ms` [~250M/wk] & Rust `humantime`，纯 128-bit 定点精确计算、多段复合时长、短/长/humantime 格式，PASS）。
+- `packages/@cap/bytes/` & `cap/test/testCapBytes.cp`: 字节大小 SI/IEC 双向解析与格式化（对标 npm `bytes` [~120M/wk] & Rust `bytesize`/`humansize`，纯整数 `u64`/`u128` 精确运算，PASS）。
+- `packages/@cap/crc32c/` & `cap/test/testCapCrc32c.cp`: CRC32C Castagnoli 校验和、流式哈希器、O(log N) GF(2) 并行分片合并与 LevelDB/RocksDB/TFRecord 屏蔽算法（对标 Rust `crc32c` & npm `fast-crc32c`，RFC 3720 官方向量 3/3 PASS）。
+- `packages/@cap/base58/` & `cap/test/testCapBase58.cp`: Base58 & Base58Check 编解码器（对标 Rust `bs58` & npm `bs58`，支持 Bitcoin/Solana/IPFS/Flickr/Ripple 字母表与双 SHA-256 恒定时间校验和，3/3 PASS）。

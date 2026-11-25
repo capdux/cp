@@ -1,0 +1,7 @@
+{
+  "name": "@cap/nanoid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation, cryptographically secure, URL-friendly NanoID generator with unbiased bitmask rejection sampling for CP (inspired by nanoid)",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
