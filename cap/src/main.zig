@@ -394,11 +394,11 @@ fn usage() void {
         \\  cap fmt [--check] [--stdout] [path...] Format CP source files (default: .)
         \\  cap lint [--dead] [path...]   Run syntax, borrow, 4-gate audit or --dead unused symbol check
         \\  cap from <-ts|-rs> <dir>      Migrate TypeScript or Rust project & deps to CP + migrate.md
-        \\  cap test [dir] [-m] [--fuzz]  Run test suite (default: test/) or libFuzzer
+        \\  cap test [dir] [options]      Run test suite (default: test/) (--filter/-k <pat>, -m, --fuzz)
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
-        \\  cap init [app|agent|lib]      Initialize a new CP project template
+        \\  cap init [app|agent|lib|web] [dir] Initialize a new CP project template (--template <name>)
         \\  cap add <pkg> [-d] [-g]       Add a dependency (@scope/pkg, file:./..., -d dev, -g global)
         \\  cap remove <package>          Remove a dependency from cap.json, cap.lock & cap_modules
         \\  cap update [package]          Update dependencies and refresh cap.lock
@@ -414,6 +414,7 @@ fn usage() void {
         \\  cap help                      Show this help message
         \\
         \\Test Options:
+        \\  --filter, -k <pattern>        Only run test files whose path contains <pattern>
         \\  -m, --modular                 Share modular Zig cache (.cap/test-mod/) across tests
         \\
         \\Fuzz Options:
@@ -3327,28 +3328,101 @@ fn compileSingleFile(
     if (any_failed) return error.BuildFailed;
 }
 
+fn isInitTemplateName(name: []const u8) bool {
+    return std.mem.eql(u8, name, "app") or
+        std.mem.eql(u8, name, "agent") or
+        std.mem.eql(u8, name, "lib") or
+        std.mem.eql(u8, name, "web");
+}
+
+fn joinInitPath(allocator: std.mem.Allocator, base_dir: []const u8, rel: []const u8) ![]u8 {
+    if (std.mem.eql(u8, base_dir, ".")) {
+        return try allocator.dupe(u8, rel);
+    }
+    return try std.Io.Dir.path.join(allocator, &[_][]const u8{ base_dir, rel });
+}
+
 fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
-    const template = if (args.len > 0) args[0] else "app";
+    var template: []const u8 = "app";
+    var template_explicit = false;
+    var target_dir: []const u8 = ".";
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--template") or std.mem.eql(u8, arg, "-t")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                template = args[i];
+                template_explicit = true;
+            }
+        } else if (std.mem.startsWith(u8, arg, "--template=")) {
+            template = arg["--template=".len..];
+            template_explicit = true;
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (!template_explicit and isInitTemplateName(arg)) {
+                template = arg;
+                template_explicit = true;
+            } else {
+                target_dir = arg;
+            }
+        }
+    }
+
     std.debug.print("Welcome to CAP (Concurrent Agent Packager)!\n", .{});
-    std.debug.print("Initializing project with '{s}' template...\n\n", .{template});
+    std.debug.print("Initializing project in '{s}' with '{s}' template...\n\n", .{ target_dir, template });
+
+    if (!std.mem.eql(u8, target_dir, ".")) {
+        try fs_shim.cwd().createDirPath(global_io, target_dir);
+    }
+
+    const src_dir = try joinInitPath(allocator, target_dir, "src");
+    defer allocator.free(src_dir);
+    const test_dir = try joinInitPath(allocator, target_dir, "test");
+    defer allocator.free(test_dir);
 
     // Create src and test directories
-    fs_shim.cwd().createDirPath(global_io, "src") catch {};
-    fs_shim.cwd().createDirPath(global_io, "test") catch {};
+    fs_shim.cwd().createDirPath(global_io, src_dir) catch {};
+    fs_shim.cwd().createDirPath(global_io, test_dir) catch {};
 
-    const cwd_path = try fs_shim.cwd().realpathAlloc(allocator, ".");
-    defer allocator.free(cwd_path);
-    const basename = std.Io.Dir.path.basename(cwd_path);
+    const target_real = try fs_shim.cwd().realpathAlloc(allocator, target_dir);
+    defer allocator.free(target_real);
+    const basename = std.Io.Dir.path.basename(target_real);
+
+    const cap_json_path = try joinInitPath(allocator, target_dir, "cap.json");
+    defer allocator.free(cap_json_path);
 
     // Create cap.json
-    if (fs_shim.cwd().statFile("cap.json")) |_| {
-        std.debug.print("cap.json already exists.\n", .{});
+    if (fs_shim.cwd().statFile(cap_json_path)) |_| {
+        std.debug.print("{s} already exists.\n", .{cap_json_path});
     } else |_| {
-        var file = try fs_shim.cwd().createFile("cap.json", .{});
+        var file = try fs_shim.cwd().createFile(cap_json_path, .{});
         defer file.close(global_io);
 
         var json_content: []u8 = undefined;
-        if (std.mem.eql(u8, template, "agent")) {
+        if (std.mem.eql(u8, template, "web")) {
+            json_content = try std.fmt.allocPrint(allocator,
+                \\{{
+                \\  "name": "{s}",
+                \\  "ver": "1.0.0",
+                \\  "description": "High-performance multi-core cap:web API server",
+                \\  "main": "src/main.cp",
+                \\  "opt": "fast",
+                \\  "scripts": {{
+                \\    "start": "cap src/main.cp",
+                \\    "build": "cap build -f",
+                \\    "test": "cap test"
+                \\  }},
+                \\  "dep": {{}},
+                \\  "dev": {{}},
+                \\  "build": {{
+                \\    "opt": "fast",
+                \\    "out_dir": "bin"
+                \\  }}
+                \\}}
+                \\
+            , .{basename});
+        } else if (std.mem.eql(u8, template, "agent")) {
             json_content = try std.fmt.allocPrint(allocator,
                 \\{{
                 \\  "name": "{s}",
@@ -3419,20 +3493,83 @@ fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
         }
         defer allocator.free(json_content);
         try file.writeStreamingAll(global_io, json_content);
-        std.debug.print("Created cap.json ({s} template)\n", .{template});
+        std.debug.print("Created {s} ({s} template)\n", .{ cap_json_path, template });
     }
 
     // Create entry file
     if (std.mem.eql(u8, template, "lib")) {
-        if (fs_shim.cwd().statFile("src/lib.cp")) |_| {} else |_| {
-            var file = try fs_shim.cwd().createFile("src/lib.cp", .{});
+        const lib_path = try joinInitPath(allocator, target_dir, "src/lib.cp");
+        defer allocator.free(lib_path);
+        if (fs_shim.cwd().statFile(lib_path)) |_| {} else |_| {
+            var file = try fs_shim.cwd().createFile(lib_path, .{});
             defer file.close(global_io);
             try file.writeStreamingAll(global_io, "export fn add(a: i32, b: i32): i32 {\n    return a + b;\n}\n");
-            std.debug.print("Created src/lib.cp\n", .{});
+            std.debug.print("Created {s}\n", .{lib_path});
+        }
+    } else if (std.mem.eql(u8, template, "web")) {
+        const main_path = try joinInitPath(allocator, target_dir, "src/main.cp");
+        defer allocator.free(main_path);
+        if (fs_shim.cwd().statFile(main_path)) |_| {} else |_| {
+            var file = try fs_shim.cwd().createFile(main_path, .{});
+            defer file.close(global_io);
+            const web_code =
+                \\import { App, Context, Response, WebServer, ServerConfig } from "cap:web";
+                \\
+                \\fn handleHealth(ctx: *Context): Response {
+                \\    * = ctx;
+                \\    return Response.json(200, "{\"status\":\"ok\",\"engine\":\"cap:web\"}");
+                \\}
+                \\
+                \\fn handleGetUser(ctx: *Context): Response {
+                \\    const id = ctx.param("id") ?? "";
+                \\    * = ctx.setHeader("x-powered-by", "cap:web");
+                \\    if (id.len == 0) {
+                \\        return Response.json(400, "{\"error\":\"missing_user_id\"}");
+                \\    }
+                \\    return Response.json(200, "{\"ok\":true,\"resource\":\"user\"}");
+                \\}
+                \\
+                \\fn handleEcho(ctx: *Context): Response {
+                \\    if (ctx.body.len == 0) {
+                \\        return Response.json(200, "{\"echo\":null}");
+                \\    }
+                \\    return Response.json(200, ctx.body);
+                \\}
+                \\
+                \\fn main() {
+                \\    let app = App.init();
+                \\    * = app
+                \\        .enableTrace(true)
+                \\        .get("/health", handleHealth)
+                \\        .get("/api/v1/users/:id", handleGetUser)
+                \\        .post("/api/v1/echo", handleEcho);
+                \\
+                \\    const port: u16 = 3000;
+                \\    const workers: usize = 4;
+                \\    let srv = WebServer.init(ServerConfig{
+                \\        port: port,
+                \\        workers: workers,
+                \\        backlog: 4096,
+                \\        pin_cpu: true,
+                \\        shutdown_grace_ms: 200,
+                \\    });
+                \\
+                \\    if (!srv.start(*app)) {
+                \\        @panic("Failed to start cap:web server");
+                \\    }
+                \\    @print("cap:web server listening on http://0.0.0.0:3000 (SO_REUSEPORT workers=4, trace=on)");
+                \\    srv.join();
+                \\}
+                \\
+            ;
+            try file.writeStreamingAll(global_io, web_code);
+            std.debug.print("Created {s} (Web production template)\n", .{main_path});
         }
     } else if (std.mem.eql(u8, template, "agent")) {
-        if (fs_shim.cwd().statFile("src/main.cp")) |_| {} else |_| {
-            var file = try fs_shim.cwd().createFile("src/main.cp", .{});
+        const main_path = try joinInitPath(allocator, target_dir, "src/main.cp");
+        defer allocator.free(main_path);
+        if (fs_shim.cwd().statFile(main_path)) |_| {} else |_| {
+            var file = try fs_shim.cwd().createFile(main_path, .{});
             defer file.close(global_io);
             const agent_code =
                 \\import { print } from "cap:io";
@@ -3449,33 +3586,39 @@ fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
                 \\
             ;
             try file.writeStreamingAll(global_io, agent_code);
-            std.debug.print("Created src/main.cp (Agent template)\n", .{});
+            std.debug.print("Created {s} (Agent template)\n", .{main_path});
         }
     } else {
-        if (fs_shim.cwd().statFile("src/main.cp")) |_| {} else |_| {
-            var file = try fs_shim.cwd().createFile("src/main.cp", .{});
+        const main_path = try joinInitPath(allocator, target_dir, "src/main.cp");
+        defer allocator.free(main_path);
+        if (fs_shim.cwd().statFile(main_path)) |_| {} else |_| {
+            var file = try fs_shim.cwd().createFile(main_path, .{});
             defer file.close(global_io);
             try file.writeStreamingAll(global_io, "import { print } from \"cap:io\";\n\nfn main(): ?void {\n    @print(\"Hello from CP! 🚀\");\n}\n");
-            std.debug.print("Created src/main.cp\n", .{});
+            std.debug.print("Created {s}\n", .{main_path});
         }
     }
 
     // Create default test file
-    if (fs_shim.cwd().statFile("test/test_basic.cp")) |_| {} else |_| {
-        var file = try fs_shim.cwd().createFile("test/test_basic.cp", .{});
+    const test_path = try joinInitPath(allocator, target_dir, "test/test_basic.cp");
+    defer allocator.free(test_path);
+    if (fs_shim.cwd().statFile(test_path)) |_| {} else |_| {
+        var file = try fs_shim.cwd().createFile(test_path, .{});
         defer file.close(global_io);
         try file.writeStreamingAll(global_io, "import { print } from \"cap:io\";\n\nfn main(): ?void {\n    @print(\"Basic test passed! ✓\");\n}\n");
-        std.debug.print("Created test/test_basic.cp\n", .{});
+        std.debug.print("Created {s}\n", .{test_path});
     }
 
     // Create .gitignore
-    if (fs_shim.cwd().statFile(".gitignore")) |_| {
-        std.debug.print(".gitignore already exists.\n", .{});
+    const gitignore_path = try joinInitPath(allocator, target_dir, ".gitignore");
+    defer allocator.free(gitignore_path);
+    if (fs_shim.cwd().statFile(gitignore_path)) |_| {
+        std.debug.print("{s} already exists.\n", .{gitignore_path});
     } else |_| {
-        var file = try fs_shim.cwd().createFile(".gitignore", .{});
+        var file = try fs_shim.cwd().createFile(gitignore_path, .{});
         defer file.close(global_io);
         try file.writeStreamingAll(global_io, ".cap/\nbin/\ncap_modules/\n*.cp.zig\n");
-        std.debug.print("Created .gitignore\n", .{});
+        std.debug.print("Created {s}\n", .{gitignore_path});
     }
 
     std.debug.print("\nDone! Run `cap start` to run your project, or `cap test` to run tests.\n", .{});
@@ -3484,6 +3627,7 @@ fn handleInit(allocator: std.mem.Allocator, args: []const []const u8) !void {
 pub const FuzzOptions = struct {
     is_fuzz: bool = false,
     is_modular: bool = false,
+    filter: ?[]const u8 = null,
     timeout: ?[]const u8 = null,
     jobs: ?[]const u8 = null,
     repro: ?[]const u8 = null,
@@ -3508,6 +3652,15 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
             fuzz_opts.is_fuzz = true;
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular")) {
             fuzz_opts.is_modular = true;
+        } else if (std.mem.eql(u8, arg, "--filter") or std.mem.eql(u8, arg, "-k")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                fuzz_opts.filter = args[i];
+            }
+        } else if (std.mem.startsWith(u8, arg, "--filter=")) {
+            fuzz_opts.filter = arg["--filter=".len..];
+        } else if (std.mem.startsWith(u8, arg, "-k=")) {
+            fuzz_opts.filter = arg["-k=".len..];
         } else if (std.mem.eql(u8, arg, "--timeout")) {
             if (i + 1 < args.len) {
                 i += 1;
@@ -3575,11 +3728,34 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
         try test_files.append(allocator, try allocator.dupe(u8, test_target));
     }
 
+    const discovered_total = test_files.items.len;
+    if (fuzz_opts.filter) |pat| {
+        if (pat.len > 0) {
+            var write_idx: usize = 0;
+            for (test_files.items) |f| {
+                if (std.mem.indexOf(u8, f, pat) != null) {
+                    test_files.items[write_idx] = f;
+                    write_idx += 1;
+                } else {
+                    allocator.free(f);
+                }
+            }
+            test_files.items.len = write_idx;
+        }
+    }
+
     if (test_files.items.len == 0) {
-        std.debug.print("No test files found in '{s}'.\n", .{test_target});
+        if (fuzz_opts.filter) |pat| {
+            std.debug.print("No test files matched filter '{s}' in '{s}' (scanned {d} file(s)).\n", .{ pat, test_target, discovered_total });
+        } else {
+            std.debug.print("No test files found in '{s}'.\n", .{test_target});
+        }
         return;
     }
 
+    if (fuzz_opts.filter) |pat| {
+        std.debug.print("Filter: '{s}' ({d}/{d} matched)\n", .{ pat, test_files.items.len, discovered_total });
+    }
     if (fuzz_opts.is_fuzz) {
         std.debug.print("Discovered {d} fuzz target(s). Running with LLVM libFuzzer + ASan...\n\n", .{test_files.items.len});
     } else if (fuzz_opts.is_modular) {
@@ -3613,14 +3789,23 @@ fn handleTestWithFuzz(allocator: std.mem.Allocator, args: []const []const u8, de
         } else |err| {
             failed_count += 1;
             std.debug.print("✗ FAILED ({s})\n", .{@errorName(err)});
+            if (err == error.TestExecutionFailed) {
+                std.debug.print("    ↳ Tip: run `cap demangle` to decode Zig stack traces back to original CP lines.\n", .{});
+            }
         }
     }
 
     const total_time = start_ts.durationTo(std.Io.Timestamp.now(global_io, .awake)).toMilliseconds();
     std.debug.print("\n--------------------------------------------------\n", .{});
     const label: []const u8 = if (fuzz_opts.is_fuzz) "Fuzzing" else "Tests";
+    if (fuzz_opts.filter) |pat| {
+        std.debug.print("Filter: \"{s}\" ({d}/{d} matched)\n", .{ pat, test_files.items.len, discovered_total });
+    }
     std.debug.print("{s}:  {d} passed, {d} failed, {d} total\n", .{ label, passed_count, failed_count, test_files.items.len });
     std.debug.print("Time:   {d}ms\n", .{total_time});
+    if (failed_count > 0) {
+        std.debug.print("Hint:   Run `cap demangle` to decode crash/panic stack traces to CP lines.\n", .{});
+    }
     std.debug.print("--------------------------------------------------\n", .{});
 
     if (failed_count > 0) return error.TestsFailed;

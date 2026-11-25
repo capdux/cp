@@ -150,7 +150,7 @@ export * from "./sub_module.cp";
 | `cap <file>` / `cap run [-w\|--watch] <file>` | Debug 模式百毫秒级直接构建并运行（多级自动探测 `cpc`/`zig` + 按需链接已引用包 + 运行期自动注入随包 `sys` 动态库；`-w`/`--watch` 基于 Linux `inotify` 50ms 防抖事件驱动热重载） |
 | `cap lint [--dead\|--deadcode] [path...]` | 运行语法、借用与 4 门禁静态检查；`--dead`/`--deadcode` 静态扫描未引用导出符号与孤立文件 |
 | `cap from <-ts\|-rs> <src_dir> [-o <out_dir>]` | 一键将 TypeScript / Rust 工程迁移为 CP（三层依赖解析：`cap:*` 内置 → `@cap/*` 官方 → 递归产出可发布 `cap_modules/<pkg>`；TS `Promise.all`/`Promise.race` 自动映射为 `joinAll`/`race`） |
-| `cap init [template]` / `add [-d] [-g]` | 初始化脚手架工程（`app`/`agent`/`lib`）；`add`/`remove`/`update` 管理 `dep`/`dev` |
+| `cap init [app\|agent\|lib\|web] [dir]` / `add [-d] [-g]` | 初始化脚手架工程（含 `web` 百万 QPS `cap:web` 生产模板）；`add`/`remove`/`update` 管理 `dep`/`dev` |
 | `cap install [--production\|--prod] [--frozen-lockfile] [--rebuild] [--target=<os-arch>]` | 展开 `workspaces`、解析 `workspace:*`/`file:`/注册表依赖并预编译 `bin` C/C++ 静态库写入 `cap.lock`（`--production`/`--prod` 跳过 `dev`） |
 | `cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch\|all>] [--write-prebuilt]` | 遍历包内全部 `bin` 条目重编或全平台交叉编译（支持 C/C++），可选回写随包 `prebuilt/` |
 | `cap pack [--npm] [--target=<os-arch\|all>] [--out=<dir>]` | 打包主包 `<pkg>-<ver>.tar.zst` + 分平台二进制包与 `pack-manifest.json`（`--npm` 产出 npm 兼容 `.tgz` + 合成 `package.json`） |
@@ -158,7 +158,7 @@ export * from "./sub_module.cp";
 | `cap pm ls [--filter <pkg>]` / `cap why <pkg>` / `cap cache <dir\|ls\|clean>` | 查看 `cap_modules/` 已安装包（含 `bin` 列表）、依赖溯源与 `~/.cap/cache` 缓存管理 |
 | `cap build [dir]` (`-r`/`-f`/`-s`/`-B`/`-n`) | 构建产物：`-r` 全平台矩阵、`-f` ReleaseFast、`-s` ReleaseSmall、`-B` 强制全量、`-n` (`--nest`) Nest 动态库 |
 | `cap build --lib` / `--obj` | 输出静态库 `.a` 或底层 `.o` 目标文件 |
-| `cap test [dir]` / `bench` / `clean` | 运行测试（`bin/test/`）、`bench` 基准测试、`clean` 清理 `.cap/` 与 `bin/` |
+| `cap test [--filter\|-k <pat>] [dir]` / `bench` / `clean` | 运行测试（支持 `--filter`/`-k` 按名过滤与 `cap demangle` 崩溃堆栈反解提示）、`bench` 基准测试、`clean` 清理 `.cap/` 与 `bin/` |
 | `cpc [compile] <file.cp> -o <out.zig> [--lib] [--nest]` | 编译为 Zig 源码（`--lib` 省略 main；`--nest`/`-n` 开启 `@is_nest` 模式，整文件错误一次性输出） |
 | `cpc check [--json] <file.cp>` | 极速整文件静态语法与借用检查（自动折叠连锁错误 `cascade_of`，`--json` 输出含 `errors`/`root_errors` 与 `edits` 字节替换范围） |
 | `cpc check --brief [--json] [--max N] <file.cp>` | **AI 省 Token 聚合去重摘要模式（`-b`）**：按错误码 `code` 归并，每类仅输出一次 `help`/`suggestion` 及 `lines: [...]` 行号数组 |
