@@ -63,7 +63,199 @@ const resolver = @import("project/resolver.zig");
 const lock = @import("project/lock.zig");
 const native = @import("project/native.zig");
 const installer = @import("project/installer.zig");
+const archive = @import("project/archive.zig");
 const modular_obj = @import("project/modular_obj.zig");
+
+fn readFileBytesAny(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
+    if (std.Io.Dir.path.isAbsolute(path)) {
+        var root_dir = try std.Io.Dir.openDirAbsolute(global_io, "/", .{});
+        defer root_dir.close(global_io);
+        return try root_dir.readFileAlloc(global_io, path[1..], allocator, @fromBackingInt(@intCast(256 * 1024 * 1024)));
+    }
+    return try std.Io.Dir.readFileAlloc(.cwd(), global_io, path, allocator, @fromBackingInt(@intCast(256 * 1024 * 1024)));
+}
+
+fn fileExistsAny(path: []const u8) bool {
+    if (std.Io.Dir.path.isAbsolute(path)) {
+        var root_dir = std.Io.Dir.openDirAbsolute(global_io, "/", .{}) catch return false;
+        defer root_dir.close(global_io);
+        _ = root_dir.statFile(global_io, path[1..], .{}) catch return false;
+        return true;
+    }
+    _ = std.Io.Dir.statFile(.cwd(), global_io, path, .{}) catch return false;
+    return true;
+}
+
+fn renamePathAny(old_path: []const u8, new_path: []const u8) !void {
+    if (std.Io.Dir.path.isAbsolute(old_path) or std.Io.Dir.path.isAbsolute(new_path)) {
+        var root_dir = try std.Io.Dir.openDirAbsolute(global_io, "/", .{});
+        defer root_dir.close(global_io);
+        const old_rel = if (std.Io.Dir.path.isAbsolute(old_path)) old_path[1..] else old_path;
+        const new_rel = if (std.Io.Dir.path.isAbsolute(new_path)) new_path[1..] else new_path;
+        if (std.Io.Dir.path.isAbsolute(old_path) and std.Io.Dir.path.isAbsolute(new_path)) {
+            return std.Io.Dir.rename(root_dir, old_rel, root_dir, new_rel, global_io);
+        }
+        return std.Io.Dir.rename(.cwd(), old_path, .cwd(), new_path, global_io);
+    }
+    return std.Io.Dir.rename(.cwd(), old_path, .cwd(), new_path, global_io);
+}
+
+fn tarballSafeNameLocal(allocator: std.mem.Allocator, pkg_name: []const u8) ![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(allocator);
+    const trimmed = if (pkg_name.len > 0 and pkg_name[0] == '@') pkg_name[1..] else pkg_name;
+    for (trimmed) |c| {
+        if (c == '/' or c == '\\' or c == ':') {
+            try out.append(allocator, '-');
+        } else {
+            try out.append(allocator, c);
+        }
+    }
+    return try out.toOwnedSlice(allocator);
+}
+
+fn isLocalArchiveArg(arg: []const u8) bool {
+    return std.mem.endsWith(u8, arg, ".cap") or
+        std.mem.endsWith(u8, arg, ".tar.zst") or
+        std.mem.endsWith(u8, arg, ".tgz");
+}
+
+fn tryHandleLocalArchiveAdd(allocator: std.mem.Allocator, args: []const []const u8) !bool {
+    var archive_arg: ?[]const u8 = null;
+    for (args) |arg| {
+        if (arg.len > 0 and arg[0] != '-') {
+            archive_arg = arg;
+            break;
+        }
+    }
+    const local_path = archive_arg orelse return false;
+    if (!isLocalArchiveArg(local_path)) return false;
+    if (!fileExistsAny(local_path)) return false;
+
+    const archive_bytes = try readFileBytesAny(allocator, local_path);
+    defer allocator.free(archive_bytes);
+
+    const stage_dir = ".cap/.tmp-local-archive-add";
+    fs_shim.cwd().deleteTree(stage_dir) catch {};
+    try fs_shim.cwd().createDirPath(global_io, stage_dir);
+    defer fs_shim.cwd().deleteTree(stage_dir) catch {};
+
+    try archive.extractArchiveAuto(allocator, archive_bytes, stage_dir, null);
+
+    const staged_manifest_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ stage_dir, "cap.json" });
+    defer allocator.free(staged_manifest_path);
+
+    var pkg_name_owned: ?[]u8 = null;
+    defer if (pkg_name_owned) |p| allocator.free(p);
+    var pkg_ver_owned: ?[]u8 = null;
+    defer if (pkg_ver_owned) |v| allocator.free(v);
+
+    if (fs_shim.cwd().readFileAlloc(allocator, staged_manifest_path, 1024 * 1024)) |mf_bytes| {
+        defer allocator.free(mf_bytes);
+        var mf = try manifest.Manifest.parse(allocator, mf_bytes);
+        defer mf.deinit(allocator);
+        if (mf.name.len > 0) {
+            pkg_name_owned = try allocator.dupe(u8, mf.name);
+        }
+        if (mf.version.len > 0) {
+            pkg_ver_owned = try allocator.dupe(u8, mf.version);
+        }
+    } else |_| {}
+
+    const pkg_name = pkg_name_owned orelse blk: {
+        const base = std.Io.Dir.path.basename(local_path);
+        const stripped = if (std.mem.endsWith(u8, base, ".tar.zst"))
+            base[0 .. base.len - ".tar.zst".len]
+        else if (std.mem.endsWith(u8, base, ".cap"))
+            base[0 .. base.len - ".cap".len]
+        else if (std.mem.endsWith(u8, base, ".tgz"))
+            base[0 .. base.len - ".tgz".len]
+        else
+            base;
+        pkg_name_owned = try allocator.dupe(u8, stripped);
+        break :blk pkg_name_owned.?;
+    };
+    const pkg_ver = pkg_ver_owned orelse "0.0.0";
+
+    const dest_dir = try std.Io.Dir.path.join(allocator, &[_][]const u8{ "cap_modules", pkg_name });
+    defer allocator.free(dest_dir);
+
+    if (std.Io.Dir.path.dirname(dest_dir)) |parent_dir| {
+        try fs_shim.cwd().createDirPath(global_io, parent_dir);
+    }
+    fs_shim.cwd().deleteTree(dest_dir) catch {};
+    try fs_shim.cwd().rename(stage_dir, dest_dir);
+
+    std.debug.print("✓ Installed local archive {s} -> {s}/ ({s}@{s})\n", .{
+        local_path,
+        dest_dir,
+        pkg_name,
+        pkg_ver,
+    });
+    return true;
+}
+
+fn handlePackCli(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    var out_dir: []const u8 = ".";
+    var zst_mode = false;
+    var npm_mode = false;
+    var forwarded: std.ArrayList([]const u8) = .empty;
+    defer forwarded.deinit(allocator);
+
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--zst") or std.mem.eql(u8, arg, "--tar-zst")) {
+            zst_mode = true;
+            continue;
+        } else if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            std.debug.print("Usage: cap pack [--zst] [--npm|--tgz] [--strip] [--target=<os-arch|all>] [--out=<dir>]\n", .{});
+            std.debug.print("  Default output format is Zstd-compressed .cap archive.\n", .{});
+            return;
+        } else if (std.mem.eql(u8, arg, "--npm") or std.mem.eql(u8, arg, "--tgz")) {
+            npm_mode = true;
+        } else if (std.mem.startsWith(u8, arg, "--out=")) {
+            out_dir = arg["--out=".len..];
+        } else if (std.mem.eql(u8, arg, "--out") or std.mem.eql(u8, arg, "-o")) {
+            if (i + 1 < args.len) {
+                try forwarded.append(allocator, arg);
+                i += 1;
+                out_dir = args[i];
+                try forwarded.append(allocator, args[i]);
+                continue;
+            }
+        }
+        try forwarded.append(allocator, arg);
+    }
+
+    try installer.handlePack(allocator, forwarded.items);
+
+    if (npm_mode or zst_mode) return;
+
+    // Default `.cap` mode: rename `<out_dir>/<safe_name>-<version>.tar.zst` -> `<out_dir>/<safe_name>-<version>.cap`
+    const content = fs_shim.cwd().readFileAlloc(allocator, "cap.json", 1024 * 1024) catch return;
+    defer allocator.free(content);
+    var mf = manifest.Manifest.parse(allocator, content) catch return;
+    defer mf.deinit(allocator);
+
+    const safe_name = try tarballSafeNameLocal(allocator, mf.name);
+    defer allocator.free(safe_name);
+
+    const zst_name = try std.fmt.allocPrint(allocator, "{s}-{s}.tar.zst", .{ safe_name, mf.version });
+    defer allocator.free(zst_name);
+    const cap_name = try std.fmt.allocPrint(allocator, "{s}-{s}.cap", .{ safe_name, mf.version });
+    defer allocator.free(cap_name);
+
+    const zst_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, zst_name });
+    defer allocator.free(zst_path);
+    const cap_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ out_dir, cap_name });
+    defer allocator.free(cap_path);
+
+    if (fileExistsAny(zst_path)) {
+        try renamePathAny(zst_path, cap_path);
+        std.debug.print("✓ Packaged .cap archive: {s}\n", .{cap_path});
+    }
+}
 
 fn getCapRoot(allocator: std.mem.Allocator) ![]const u8 {
     if (global_env.get("CAP_ROOT")) |root| {
@@ -109,6 +301,7 @@ pub fn main(init: std.process.Init) !void {
     } else if (std.mem.eql(u8, cmd, "init")) {
         try handleInit(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "add")) {
+        if (try tryHandleLocalArchiveAdd(allocator, args[2..])) return;
         try installer.handleAdd(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "remove") or std.mem.eql(u8, cmd, "rm")) {
         try installer.handleRemove(allocator, args[2..]);
@@ -119,7 +312,7 @@ pub fn main(init: std.process.Init) !void {
     } else if (std.mem.eql(u8, cmd, "rebuild")) {
         try installer.handleRebuild(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "pack")) {
-        try installer.handlePack(allocator, args[2..]);
+        try handlePackCli(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "publish")) {
         try installer.handlePublish(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "cache")) {
