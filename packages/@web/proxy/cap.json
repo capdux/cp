@@ -1,0 +1,7 @@
+{
+  "name": "@web/proxy",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official zero-heap HTTP reverse proxy plugin for cap:web (prefix stripping, traversal guard, HTTP/1.1 formatter, pluggable transport)"
+}

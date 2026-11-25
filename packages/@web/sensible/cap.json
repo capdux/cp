@@ -1,0 +1,7 @@
+{
+  "name": "@web/sensible",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official RFC 9457 Problem Details & standard HTTP error helpers plugin for cap:web (inspired by @fastify/sensible)"
+}

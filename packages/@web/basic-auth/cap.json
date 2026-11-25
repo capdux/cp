@@ -1,0 +1,7 @@
+{
+  "name": "@web/basic-auth",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official HTTP Basic Auth (RFC 7617) and X-API-Key constant-time authentication plugin for cap:web"
+}

@@ -5735,3 +5735,70 @@
   > 使用 @web/xxx 命名规范, 首批启动7个官方插件包,继续你的工作
 - **完整回复与执行汇报**：
   > `@web/cors`（5/5 PASS）、`@web/security`（6/6 PASS）及 [packages/@web/README.md](file:///data/dev/cp/packages/@web/README.md) 已完成并通过 4-Gate `0/0/0/0`。正在等待另外两路子智能体完成 `@web/jwt`、`@web/ratelimit`、`@web/logger`、`@web/static`、`@web/swagger` 5 个插件包，完工后将立即运行 7 插件全栈集成测试并提交。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 20:43:59）[step:24164]
+- **用户完整原始指令**：
+  > 7个插件远远不够, 查询下 elysia/fastify/Axum (tower-http) 网站的插件列表(官方和非官方), 按npm下载次数排序, 将排名靠前的整理出来, 分析后, 在@web中使用cp实现
+- **完整回复与执行汇报**：
+  > 已调研 **Fastify (`@fastify/*`)、Elysia (`@elysiajs/*` + 社区) 与 Axum (`tower-http` / `axum-extra`)** 三大生态的官方及热门社区插件清单，按 **npm 周下载量（以 Fastify/Elysia 真实统计为基准）与生产高频度** 汇总排序如下：
+  >
+  > ---
+  >
+  > ### 一、三大生态热门 Web 插件全景排行（按 npm 周下载量排序）
+  >
+  > | 排名 | 插件能力 | Fastify (`@fastify/*` 周下载) | Elysia (`@elysiajs/*`) | Axum (`tower-http` / 生态) | CP `@web/*` 现状 |
+  > | :---: | :--- | :--- | :--- | :--- | :---: |
+  > | **1** | **CORS 跨域** | `@fastify/cors` (~10.65M) | `@elysiajs/cors` (~975K) | `tower-http::cors` | ✅ `@web/cors` |
+  > | **2** | **静态文件托管** | `@fastify/static` (~8.41M) | `@elysiajs/static` (~88K) | `tower-http::fs` (`ServeDir`) | ✅ `@web/static` |
+  > | **3** | **Cookie / 表单解析** | `@fastify/cookie` (~5.53M)<br>`@fastify/formbody` | 内置 `cookie` / `form` | `axum-extra::cookie` / `Form` | ✅ 已内置于 `cap:web` |
+  > | **4** | **OpenAPI / Swagger UI** | `@fastify/swagger` (~4.81M) | `@elysiajs/swagger` (~289K)<br>`@elysiajs/openapi` | `utoipa-swagger-ui` | ✅ `@web/swagger` |
+  > | **5** | **安全头 Helmet + CSRF** | `@fastify/helmet` (~4.00M)<br>`@fastify/csrf-protection` | `elysia-helmet` | `tower-http::set-header` | ✅ `@web/security` |
+  > | **6** | **Multipart 文件上传** | `@fastify/multipart` (~3.96M) | 内置 `form-data` | `axum::extract::Multipart` | ❌ **缺 `@web/multipart`** |
+  > | **7** | **请求限流** | `@fastify/rate-limit` (~2.65M) | `elysia-rate-limit` | `tower_governor` | ✅ `@web/ratelimit` |
+  > | **8** | **响应压缩 (Gzip/Zstd)** | `@fastify/compress` (~1.90M) | 社区 compress | `tower-http::compression-full` | ❌ **缺 `@web/compress`** |
+  > | **9** | **JWT / Bearer 鉴权** | `@fastify/jwt` (~1.11M) | `@elysiajs/jwt` (~47K)<br>`@elysiajs/bearer` | `axum-auth` / `tower-http::auth` | ✅ `@web/jwt` |
+  > | **10** | **标准 HTTP 错误/工具** | `@fastify/sensible` (~862K) | `error()` / `status()` | `axum::response` | ❌ **缺 `@web/sensible`** |
+  > | **11** | **日志 / Trace / Metrics** | `pino` / `@fastify/otel` | `logixlysia` / `@elysiajs/otel` | `tower-http::trace` / `request-id` | ✅ `@web/logger` |
+  > | **12** | **过载保护 / 限体 / 探针** | `@fastify/under-pressure` (~362K) | — | `tower-http::limit` / `timeout` | ❌ **缺 `@web/pressure`** |
+  > | **13** | **Session 会话管理** | `@fastify/session` | `lucia-auth` | `tower-sessions` | ❌ **缺 `@web/session`** |
+  > | **14** | **反向代理 / 网关** | `@fastify/http-proxy` | — | `hyper` reverse proxy | ❌ **缺 `@web/proxy`** |
+  > | **15** | **Basic Auth / API Key** | `@fastify/basic-auth` | — | `tower-http::auth` | ❌ **缺 `@web/basic-auth`** |
+  > | **16** | **响应缓存 + 幂等防重放** | `@fastify/caching` | — | `tower-http` + idempotency | ❌ **缺 `@web/cache`** |
+  > | **17** | **SSE 流式推送 (AI 刚需)** | `fastify-sse-v2` | 内置 Generator SSE | `axum::response::Sse` | ❌ **缺 `@web/sse`** |
+  > | **18** | **定时任务 Cron** | `fastify-cron` | `@elysiajs/cron` | `tokio-cron-scheduler` | ❌ **缺 `@web/cron`** |
+  > | **19** | **OAuth2 / OIDC PKCE** | `@fastify/oauth2` | — | `axum-keycloak-auth` | ❌ **可选 `@web/oauth2`** |
+  > | **20** | **环境变量 Schema 校验** | `@fastify/env` | — | `envy` / `config` | ❌ **可选 `@web/env`** |
+  >
+  > ---
+  >
+  > ### 二、分析结论与第二批 10 个官方 `@web/*` 插件落地计划
+  >
+  > 目前我们已覆盖 Top 11 中的 7 项（加上内核内置 Cookie/Form 共 8 项）。补齐下表中排名最靠前的 **10 个高频插件** 后，`@web/*` 官方插件生态将达到 **17 个核心生产包**，基本覆盖 95%+ 真实后端与 AI 服务场景（且绝大部分可直接复用我们 `lib/` 已有纯 CP 底层模块，零外部 C 依赖、4-Gate `0/0/0/0`）：
+  >
+  > 1. **`@web/multipart`**（#6，3.96M/周）：基于 `lib/web/multipart.cp` + `cap:mime/fileType`，提供文件上传字段提取、单文件/总字节数限制与 MIME 白名单拦截。
+  > 2. **`@web/compress`**（#8，1.90M/周）：按 `Accept-Encoding` 自动协商压缩，设置 `Content-Encoding` 与 `Vary: Accept-Encoding`，小响应自动跳过。
+  > 3. **`@web/sensible`**（#10，862K/周）：RFC 9457 `Problem Details` 统一错误响应工厂（`badRequest`/`unauthorized`/`forbidden`/`notFound`/`conflict`/`unprocessable`/`tooManyRequests`/`internalError`）与 `assertOrAbort`。
+  > 4. **`@web/pressure`**（#12，362K/周）：请求体大小上限（`413 Payload Too Large`）、并发请求限流降载（`503 Service Unavailable` + `Retry-After`）与 K8s `GET /healthz` / `GET /readyz` 探针。
+  > 5. **`@web/session`**（#13）：签名防篡改 Cookie Session（HMAC-SHA256）+ 内存槽位会话存储 + TTL 过期与 `HttpOnly`/`SameSite`/`Secure` 自动下发。
+  > 6. **`@web/proxy`**（#14）：HTTP 反向代理请求构造、前缀重写、`X-Forwarded-For`/`Proto`/`Host` 注入与上游响应透传。
+  > 7. **`@web/basic-auth`**（#15）：HTTP Basic（`WWW-Authenticate: Basic realm=...` + 常量时间校验）与 `X-API-Key` 双模认证中间件。
+  > 8. **`@web/cache`**（#16）：GET 响应内存缓存（`X-Cache: HIT/MISS` + TTL + `Cache-Control`）与 POST `Idempotency-Key` 幂等防重放。
+  > 9. **`@web/sse`**（#17）：复用 `lib/web/sse.cp` + `sseBroker.cp`，一键构建 `text/event-stream` 事件流响应、`Last-Event-ID` 断线续传与心跳帧。
+  > 10. **`@web/cron`**（#18）：5 字段 Cron 表达式解析、下一次触发计算、多任务注册表与后台调度器。
+  >
+  > 确认这份 **第二批 10 个 `@web/*` 插件清单**（或需要把 `@web/oauth2` / `@web/env` 也一并纳入）后，我立刻按 **主智能体 + 2 路子智能体并行** 全部落地并跑通 17 插件联合测试！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 20:59:28）[step:24174]
+- **用户完整原始指令**：
+  > 确认, 
+  > 你计划从这三个框架中,如何获取呢? 两个或三个都有,你选其中一个, 还是把三者互补融合到cp中呢
+- **完整回复与执行汇报**：
+  > ### 三大框架取舍与互补融合策略
+  > 不单选某一家，而是**取三者最强交集 + 发挥 CP 零堆原生优势**：
+  > - **API 体验取 ElysiaJS**：`registerXxx(*app, Config{})` 一行挂载、零配置即具生产安全默认值；
+  > - **协议边界与工程健壮性取 Axum (`tower-http`) & Fastify**：吸收 `tower-http` 的严谨 HTTP 语义（`Vary: Accept-Encoding`、常量时间鉴权、413/503/`Retry-After`）与 Fastify 的成熟生产实践（`/healthz`/`/readyz` 探针、RFC 9457 统一错误、Multipart 限额与 MIME 校验、`X-Forwarded-*` 反向代理）；
+  > - **实现层 100% 纯 CP 零堆 / 零 GC**：彻底省去 JS Promise 堆对象与 Rust `Pin<Box<dyn Future>>` 装箱，统一采用唯一语义化导出名（`registerSensible`/`registerPressure`/`registerBasicAuth`/`registerSse` 等），确保全部 **17 个 `@web/*` 插件可同时挂载在同一 `App` 零符号冲突**。
+  >
+  > ### 当前并行进度
+  > - **主智能体（4/4 已完成且全绿，4-Gate `0/0/0/0`）**：`@web/sensible`（4/4 PASS）、`@web/pressure`（5/5 PASS）、`@web/basic-auth`（4/4 PASS）、`@web/sse`（3/3 PASS）。
+  > - **两路子智能体并行开发中**：正在完成 `@web/multipart`、`@web/compress`、`@web/cache` 与 `@web/session`、`@web/proxy`、`@web/cron` 6 个插件，完成后将立即执行 **17 插件同台集成测试**并同步文档提交。

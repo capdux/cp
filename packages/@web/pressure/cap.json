@@ -1,0 +1,7 @@
+{
+  "name": "@web/pressure",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official overload protection, body limit (413), load shedding (503), and K8s /healthz /readyz probes for cap:web"
+}

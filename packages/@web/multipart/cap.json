@@ -1,0 +1,7 @@
+{
+  "name": "@web/multipart",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official multipart/form-data parser and payload guard plugin for cap:web"
+}

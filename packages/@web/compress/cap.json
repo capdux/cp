@@ -1,0 +1,7 @@
+{
+  "name": "@web/compress",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official HTTP response compression plugin for cap:web with pure-CP zero-heap RFC 1952 Gzip encoder"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@web/cache",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official zero-heap response caching and Stripe-style Idempotency-Key plugin for cap:web"
+}
