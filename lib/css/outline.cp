@@ -285,3 +285,95 @@ pub struct CssOutline {
             eqlIgnoreCase(_.color, other.color);
     }
 }
+
+fn isOutlineIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isOutlineIdentChar(c: u8): bool {
+    return isOutlineIdentStart(c) || isDigit(c) || c == '-';
+}
+
+fn isOutlineWs(c: u8): bool {
+    return isSpace(c) || c == 0x0c;
+}
+
+fn consumeOutlineBalancedRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 1;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (ch == '(') p_depth += 1;
+        else if (ch == ')') {
+            p_depth -= 1;
+            if (p_depth == 0) return (b_depth == 0 && c_depth == 0 && i + 1 == s.len);
+        } else if (ch == '[') b_depth += 1;
+        else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') c_depth += 1;
+        else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isOutlineVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isOutlineWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isOutlineIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isOutlineWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeOutlineBalancedRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isOutlineWs(s[i])) i += 1;
+        if (i >= s.len || (!isOutlineIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isOutlineIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isOutlineWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeOutlineBalancedRest(s, i + 1);
+            if (isDigit(s[i])) {
+                while (i < s.len && isDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `outline-style` values.
+pub fn isValidCssOutlineStyleValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (isOutlineVarOrEnv(s)) return true;
+    return eqlIgnoreCase(s, "auto")
+        || eqlIgnoreCase(s, "none")
+        || eqlIgnoreCase(s, "dotted")
+        || eqlIgnoreCase(s, "dashed")
+        || eqlIgnoreCase(s, "solid")
+        || eqlIgnoreCase(s, "double")
+        || eqlIgnoreCase(s, "groove")
+        || eqlIgnoreCase(s, "ridge")
+        || eqlIgnoreCase(s, "inset")
+        || eqlIgnoreCase(s, "outset");
+}

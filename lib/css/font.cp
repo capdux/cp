@@ -1,5 +1,8 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/font.cp | Synced: 2026-11-23T21:12:04Z
 
+import { isValidCssMathSyntax } from "./mathFunc.cp";
+import { isValidCssLenPct } from "./length.cp";
+
 /// CSS Fonts Level 4 属性族解析错误集
 pub err CssFontError {
     InvalidWeight,
@@ -684,4 +687,247 @@ pub struct Font {
         }
         return pos;
     }
+}
+
+fn isFontWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\x0c';
+}
+
+fn isFontDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isFontIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isFontIdentChar(c: u8): bool {
+    return isFontIdentStart(c) || isFontDigit(c) || c == '-';
+}
+
+fn consumeFontBalancedRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 1;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    let quote: u8 = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (quote != 0) {
+            if (ch == '\\' && i + 1 < s.len) {
+                i += 2;
+                continue;
+            }
+            if (ch == quote) quote = 0;
+            i += 1;
+            continue;
+        }
+        if (ch == '"' || ch == '\'') {
+            quote = ch;
+        } else if (ch == '(') {
+            p_depth += 1;
+        } else if (ch == ')') {
+            p_depth -= 1;
+            if (p_depth == 0) {
+                return b_depth == 0 && c_depth == 0 && (i + 1 == s.len);
+            }
+        } else if (ch == '[') {
+            b_depth += 1;
+        } else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') {
+            c_depth += 1;
+        } else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isFontVarOrEnvCall(s: []const u8): bool {
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isFontWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isFontIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isFontWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeFontBalancedRest(s, i + 1);
+    }
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isFontWs(s[i])) i += 1;
+        if (i >= s.len || (!isFontIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isFontIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isFontWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeFontBalancedRest(s, i + 1);
+            if (isFontDigit(s[i])) {
+                while (i < s.len && isFontDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn skipFontParenGroup(s: []const u8, open_paren_pos: usize): usize {
+    let i = open_paren_pos + 1;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return i;
+}
+
+fn checkFontMathUnits(s: []const u8, allow_percent: bool): bool {
+    let i: usize = 0;
+    while (i < s.len) {
+        const c = s[i];
+        if (isFontIdentStart(c) || (c == '-' && i + 1 < s.len && (isFontIdentStart(s[i + 1]) || s[i + 1] == '-'))) {
+            const start = i;
+            i += 1;
+            while (i < s.len && isFontIdentChar(s[i])) i += 1;
+            const ident = s[start..i];
+            if (i < s.len && s[i] == '(' && (std.ascii.eqlIgnoreCase(ident, "var") || std.ascii.eqlIgnoreCase(ident, "env") || std.ascii.eqlIgnoreCase(ident, "sign") || std.ascii.eqlIgnoreCase(ident, "progress"))) {
+                i = skipFontParenGroup(s, i);
+            }
+            continue;
+        }
+        if (isFontDigit(c) || (c == '.' && i + 1 < s.len && isFontDigit(s[i + 1]))) {
+            while (i < s.len && isFontDigit(s[i])) i += 1;
+            if (i < s.len && s[i] == '.') {
+                i += 1;
+                while (i < s.len && isFontDigit(s[i])) i += 1;
+            }
+            if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+                let exp_i = i + 1;
+                if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+                if (exp_i < s.len && isFontDigit(s[exp_i])) {
+                    i = exp_i;
+                    while (i < s.len && isFontDigit(s[i])) i += 1;
+                }
+            }
+            if (i < s.len && s[i] == '%') {
+                if (!allow_percent) return false;
+                i += 1;
+                continue;
+            }
+            if (i < s.len && isFontIdentStart(s[i])) {
+                return false;
+            }
+            continue;
+        }
+        i += 1;
+    }
+    return true;
+}
+
+fn parseFontCssNumber(s: []const u8): f64? {
+    if (s.len == 0) return null;
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') i += 1;
+    if (i >= s.len) return null;
+
+    let has_digit = false;
+    while (i < s.len && isFontDigit(s[i])) {
+        has_digit = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        i += 1;
+        if (i >= s.len || !isFontDigit(s[i])) return null;
+        while (i < s.len && isFontDigit(s[i])) {
+            has_digit = true;
+            i += 1;
+        }
+    }
+    if (!has_digit) return null;
+
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        i += 1;
+        if (i < s.len && (s[i] == '+' || s[i] == '-')) i += 1;
+        if (i >= s.len || !isFontDigit(s[i])) return null;
+        while (i < s.len && isFontDigit(s[i])) i += 1;
+    }
+    if (i != s.len) return null;
+
+    const v = std.fmt.parseFloat(f64, s) catch return null;
+    if (std.math.isNan(v) || std.math.isInf(v)) return null;
+    return v;
+}
+
+/// Zero-allocation validator for CSS `font-weight` property values.
+pub fn isValidCssFontWeightValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (std.ascii.eqlIgnoreCase(s, "normal") ||
+        std.ascii.eqlIgnoreCase(s, "bold") ||
+        std.ascii.eqlIgnoreCase(s, "bolder") ||
+        std.ascii.eqlIgnoreCase(s, "lighter")) {
+        return true;
+    }
+    if (isFontVarOrEnvCall(s)) return true;
+    if (isValidCssMathSyntax(s)) {
+        return checkFontMathUnits(s, false);
+    }
+    if (v := parseFontCssNumber(s)) {
+        return v >= 1.0 && v <= 1000.0;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `font-stretch` property values.
+pub fn isValidCssFontStretchValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (std.ascii.eqlIgnoreCase(s, "normal") ||
+        std.ascii.eqlIgnoreCase(s, "ultra-condensed") ||
+        std.ascii.eqlIgnoreCase(s, "extra-condensed") ||
+        std.ascii.eqlIgnoreCase(s, "condensed") ||
+        std.ascii.eqlIgnoreCase(s, "semi-condensed") ||
+        std.ascii.eqlIgnoreCase(s, "semi-expanded") ||
+        std.ascii.eqlIgnoreCase(s, "expanded") ||
+        std.ascii.eqlIgnoreCase(s, "extra-expanded") ||
+        std.ascii.eqlIgnoreCase(s, "ultra-expanded")) {
+        return true;
+    }
+    if (isFontVarOrEnvCall(s)) return true;
+    if (isValidCssMathSyntax(s)) {
+        return checkFontMathUnits(s, true);
+    }
+    if (s.len >= 2 && s[s.len - 1] == '%') {
+        if (v := parseFontCssNumber(s[0 .. s.len - 1])) {
+            return v >= 0.0;
+        }
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `line-height` property values.
+pub fn isValidCssLineHeightValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (std.ascii.eqlIgnoreCase(s, "normal")) return true;
+    if (isFontVarOrEnvCall(s)) return true;
+    if (v := parseFontCssNumber(s)) {
+        return v >= 0.0;
+    }
+    return isValidCssLenPct(s, false);
 }

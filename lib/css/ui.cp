@@ -400,3 +400,98 @@ fn appendStr(out: []u8, offset: usize, src: []const u8): usize {
     }
     return pos;
 }
+
+fn isUiCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isUiCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isUiCssIdentChar(c: u8): bool {
+    return isUiCssIdentStart(c) || isUiCssDigit(c) || c == '-';
+}
+
+fn consumeUiBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isUiVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && asciiCaseEql(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isUiCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeUiBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && asciiCaseEql(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len || (!isUiCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isUiCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeUiBalancedCallRest(s, i + 1);
+            if (isUiCssDigit(s[i])) {
+                while (i < s.len && isUiCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `pointer-events` values.
+pub fn isValidCssPointerEventsValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isUiVarOrEnv(s)) return true;
+    return asciiCaseEql(s, "auto") ||
+        asciiCaseEql(s, "none") ||
+        asciiCaseEql(s, "visiblepainted") ||
+        asciiCaseEql(s, "visiblefill") ||
+        asciiCaseEql(s, "visiblestroke") ||
+        asciiCaseEql(s, "visible") ||
+        asciiCaseEql(s, "painted") ||
+        asciiCaseEql(s, "fill") ||
+        asciiCaseEql(s, "stroke") ||
+        asciiCaseEql(s, "all") ||
+        asciiCaseEql(s, "bounding-box");
+}
+
+/// Zero-allocation validator for CSS `user-select` values.
+pub fn isValidCssUserSelectValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isUiVarOrEnv(s)) return true;
+    return UserSelect.parse(s) != null;
+}
+
+/// Zero-allocation validator for CSS `resize` values.
+pub fn isValidCssResizeValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isUiVarOrEnv(s)) return true;
+    return Resize.parse(s) != null;
+}

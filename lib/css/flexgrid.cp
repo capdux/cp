@@ -1,5 +1,7 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/flex.cp | Synced: 2026-11-23T21:37:18Z
 
+import { isValidCssMathSyntax } from "./mathFunc.cp";
+
 /// CSS Flexbox / Box Alignment / Grid 布局属性解析错误集
 pub err CssLayoutError {
     InvalidFlexFlow,
@@ -621,4 +623,188 @@ pub struct TrackBreadth {
         } catch return err.BufferTooSmall;
         return res.len;
     }
+}
+
+fn isFlexCssWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+fn isFlexCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isFlexCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isFlexCssIdentChar(c: u8): bool {
+    return isFlexCssIdentStart(c) || isFlexCssDigit(c) || c == '-';
+}
+
+fn skipFlexBalancedParens(s: []const u8, open_pos: usize): usize {
+    let i = open_pos + 1;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return i;
+}
+
+fn consumeFlexBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isValidFlexVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isFlexCssWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isFlexCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isFlexCssWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeFlexBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isFlexCssWs(s[i])) i += 1;
+        if (i >= s.len || (!isFlexCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isFlexCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isFlexCssWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeFlexBalancedCallRest(s, i + 1);
+            if (isFlexCssDigit(s[i])) {
+                while (i < s.len && isFlexCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn checkFlexMathPureNumberOnly(s: []const u8): bool {
+    let i: usize = 0;
+    while (i < s.len) {
+        const c = s[i];
+        if (isFlexCssIdentStart(c) || (c == '-' && i + 1 < s.len && (isFlexCssIdentStart(s[i + 1]) || s[i + 1] == '-'))) {
+            const start = i;
+            i += 1;
+            while (i < s.len && isFlexCssIdentChar(s[i])) i += 1;
+            const ident = s[start..i];
+            if (i < s.len && s[i] == '(' && (std.ascii.eqlIgnoreCase(ident, "var") || std.ascii.eqlIgnoreCase(ident, "env"))) {
+                i = skipFlexBalancedParens(s, i);
+            }
+            continue;
+        }
+        if (isFlexCssDigit(c) || (c == '.' && i + 1 < s.len && isFlexCssDigit(s[i + 1]))) {
+            while (i < s.len && isFlexCssDigit(s[i])) i += 1;
+            if (i < s.len && s[i] == '.') {
+                i += 1;
+                while (i < s.len && isFlexCssDigit(s[i])) i += 1;
+            }
+            if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+                let exp_i = i + 1;
+                if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+                if (exp_i < s.len && isFlexCssDigit(s[exp_i])) {
+                    i = exp_i;
+                    while (i < s.len && isFlexCssDigit(s[i])) i += 1;
+                }
+            }
+            if (i < s.len && (s[i] == '%' || isFlexCssIdentStart(s[i]))) {
+                return false;
+            }
+            continue;
+        }
+        i += 1;
+    }
+    return true;
+}
+
+fn isNonNegativeFlexCssNumber(s: []const u8): bool {
+    if (s.len == 0) return false;
+    let i: usize = 0;
+    let is_neg = false;
+    if (s[i] == '+' || s[i] == '-') {
+        is_neg = (s[i] == '-');
+        i += 1;
+    }
+    if (i >= s.len) return false;
+
+    let has_digit = false;
+    let has_nonzero = false;
+    while (i < s.len && isFlexCssDigit(s[i])) {
+        has_digit = true;
+        if (s[i] != '0') has_nonzero = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        i += 1;
+        if (i >= s.len || !isFlexCssDigit(s[i])) return false;
+        while (i < s.len && isFlexCssDigit(s[i])) {
+            has_digit = true;
+            if (s[i] != '0') has_nonzero = true;
+            i += 1;
+        }
+    }
+    if (!has_digit) return false;
+
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        let exp_i = i + 1;
+        if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+        if (exp_i >= s.len || !isFlexCssDigit(s[exp_i])) return false;
+        i = exp_i;
+        while (i < s.len && isFlexCssDigit(s[i])) i += 1;
+    }
+
+    if (i != s.len) return false;
+    if (is_neg && has_nonzero) return false;
+    return true;
+}
+
+/// Zero-allocation validator for CSS `flex-grow` / `flex-shrink` property values.
+pub fn isValidCssFlexNumberValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidFlexVarOrEnv(s)) return true;
+    if (isValidCssMathSyntax(s)) {
+        return checkFlexMathPureNumberOnly(s);
+    }
+    return isNonNegativeFlexCssNumber(s);
+}
+
+/// Zero-allocation validator for CSS `order` property values.
+pub fn isValidCssOrderValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidFlexVarOrEnv(s)) return true;
+    if (isValidCssMathSyntax(s)) {
+        return checkFlexMathPureNumberOnly(s);
+    }
+
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') i += 1;
+    if (i >= s.len) return false;
+    while (i < s.len) : (i += 1) {
+        if (!isFlexCssDigit(s[i])) return false;
+    }
+    return true;
 }

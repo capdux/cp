@@ -273,3 +273,141 @@ pub struct CssContainerShorthand {
         return _.name.eql(other.name) && _.container_type == other.container_type;
     }
 }
+
+fn consumeBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isContainVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isSpace(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isSpace(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isSpace(s[i])) i += 1;
+        if (i >= s.len || !isIdentStart(s[i])) return false;
+        const name_start = i;
+        while (i < s.len && isIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isSpace(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBalancedCallRest(s, i + 1);
+            if (s[i] >= '0' && s[i] <= '9') {
+                while (i < s.len && s[i] >= '0' && s[i] <= '9') i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `contain` values.
+pub fn isValidCssContainValue(val: []const u8): bool {
+    const s = trimSpaces(val);
+    if (s.len == 0) return false;
+    if (isContainVarOrEnv(s)) return true;
+    if (eqlIgnoreCase(s, "none") || eqlIgnoreCase(s, "strict") || eqlIgnoreCase(s, "content")) return true;
+
+    let has_size = false;
+    let has_inline_size = false;
+    let has_layout = false;
+    let has_style = false;
+    let has_paint = false;
+    let count: usize = 0;
+
+    let i: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && isSpace(s[i])) i += 1;
+        if (i >= s.len) break;
+        const start = i;
+        while (i < s.len && !isSpace(s[i])) i += 1;
+        const tok = s[start..i];
+        if (count >= 4) return false;
+
+        if (eqlIgnoreCase(tok, "size")) {
+            if (has_size || has_inline_size) return false;
+            has_size = true;
+        } else if (eqlIgnoreCase(tok, "inline-size")) {
+            if (has_inline_size || has_size) return false;
+            has_inline_size = true;
+        } else if (eqlIgnoreCase(tok, "layout")) {
+            if (has_layout) return false;
+            has_layout = true;
+        } else if (eqlIgnoreCase(tok, "style")) {
+            if (has_style) return false;
+            has_style = true;
+        } else if (eqlIgnoreCase(tok, "paint")) {
+            if (has_paint) return false;
+            has_paint = true;
+        } else {
+            return false;
+        }
+        count += 1;
+    }
+    return count >= 1;
+}
+
+/// Zero-allocation validator for CSS `content-visibility` values.
+pub fn isValidCssContentVisibilityValue(val: []const u8): bool {
+    const s = trimSpaces(val);
+    if (s.len == 0) return false;
+    if (isContainVarOrEnv(s)) return true;
+    return eqlIgnoreCase(s, "visible") ||
+        eqlIgnoreCase(s, "auto") ||
+        eqlIgnoreCase(s, "hidden");
+}
+
+/// Zero-allocation validator for CSS `isolation` values.
+pub fn isValidCssIsolationValue(val: []const u8): bool {
+    const s = trimSpaces(val);
+    if (s.len == 0) return false;
+    if (isContainVarOrEnv(s)) return true;
+    return eqlIgnoreCase(s, "auto") || eqlIgnoreCase(s, "isolate");
+}
+
+/// Zero-allocation validator for CSS `mix-blend-mode` values.
+pub fn isValidCssMixBlendModeValue(val: []const u8): bool {
+    const s = trimSpaces(val);
+    if (s.len == 0) return false;
+    if (isContainVarOrEnv(s)) return true;
+    return eqlIgnoreCase(s, "normal") ||
+        eqlIgnoreCase(s, "multiply") ||
+        eqlIgnoreCase(s, "screen") ||
+        eqlIgnoreCase(s, "overlay") ||
+        eqlIgnoreCase(s, "darken") ||
+        eqlIgnoreCase(s, "lighten") ||
+        eqlIgnoreCase(s, "color-dodge") ||
+        eqlIgnoreCase(s, "color-burn") ||
+        eqlIgnoreCase(s, "hard-light") ||
+        eqlIgnoreCase(s, "soft-light") ||
+        eqlIgnoreCase(s, "difference") ||
+        eqlIgnoreCase(s, "exclusion") ||
+        eqlIgnoreCase(s, "hue") ||
+        eqlIgnoreCase(s, "saturation") ||
+        eqlIgnoreCase(s, "color") ||
+        eqlIgnoreCase(s, "luminosity") ||
+        eqlIgnoreCase(s, "plus-darker") ||
+        eqlIgnoreCase(s, "plus-lighter");
+}

@@ -599,3 +599,137 @@ pub struct TextDecoration {
         return pos;
     }
 }
+
+fn isTextWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\x0c';
+}
+
+fn isTextIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isTextIdentChar(c: u8): bool {
+    return isTextIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+}
+
+fn consumeTextBalancedRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 1;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (ch == '(') {
+            p_depth += 1;
+        } else if (ch == ')') {
+            p_depth -= 1;
+            if (p_depth == 0) {
+                return b_depth == 0 && c_depth == 0 && i + 1 == s.len;
+            }
+        } else if (ch == '[') {
+            b_depth += 1;
+        } else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') {
+            c_depth += 1;
+        } else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isTextVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isTextWs(s[i])) : (i += 1) {}
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isTextIdentChar(s[i])) : (i += 1) {}
+        if (i == name_start) return false;
+        while (i < s.len && isTextWs(s[i])) : (i += 1) {}
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeTextBalancedRest(s, i + 1);
+    }
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isTextWs(s[i])) : (i += 1) {}
+        if (i >= s.len || (!isTextIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isTextIdentChar(s[i])) : (i += 1) {}
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isTextWs(s[i])) : (i += 1) {}
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeTextBalancedRest(s, i + 1);
+            if (s[i] >= '0' && s[i] <= '9') {
+                while (i < s.len && s[i] >= '0' && s[i] <= '9') : (i += 1) {}
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `text-align` values.
+pub fn isValidCssTextAlignValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (isTextVarOrEnv(s)) return true;
+    return std.ascii.eqlIgnoreCase(s, "start")
+        || std.ascii.eqlIgnoreCase(s, "end")
+        || std.ascii.eqlIgnoreCase(s, "left")
+        || std.ascii.eqlIgnoreCase(s, "right")
+        || std.ascii.eqlIgnoreCase(s, "center")
+        || std.ascii.eqlIgnoreCase(s, "justify")
+        || std.ascii.eqlIgnoreCase(s, "match-parent")
+        || std.ascii.eqlIgnoreCase(s, "justify-all")
+        || std.ascii.eqlIgnoreCase(s, "-webkit-center")
+        || std.ascii.eqlIgnoreCase(s, "-webkit-left")
+        || std.ascii.eqlIgnoreCase(s, "-webkit-right");
+}
+
+/// Zero-allocation validator for CSS `white-space` values.
+pub fn isValidCssWhiteSpaceValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (isTextVarOrEnv(s)) return true;
+    return std.ascii.eqlIgnoreCase(s, "normal")
+        || std.ascii.eqlIgnoreCase(s, "nowrap")
+        || std.ascii.eqlIgnoreCase(s, "pre")
+        || std.ascii.eqlIgnoreCase(s, "pre-wrap")
+        || std.ascii.eqlIgnoreCase(s, "pre-line")
+        || std.ascii.eqlIgnoreCase(s, "break-spaces");
+}
+
+/// Zero-allocation validator for CSS `word-break` values.
+pub fn isValidCssWordBreakValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (isTextVarOrEnv(s)) return true;
+    return std.ascii.eqlIgnoreCase(s, "normal")
+        || std.ascii.eqlIgnoreCase(s, "break-all")
+        || std.ascii.eqlIgnoreCase(s, "keep-all")
+        || std.ascii.eqlIgnoreCase(s, "manual")
+        || std.ascii.eqlIgnoreCase(s, "break-word")
+        || std.ascii.eqlIgnoreCase(s, "auto-phrase");
+}
+
+/// Zero-allocation validator for CSS `overflow-wrap` / `word-wrap` values.
+pub fn isValidCssOverflowWrapValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (isTextVarOrEnv(s)) return true;
+    return std.ascii.eqlIgnoreCase(s, "normal")
+        || std.ascii.eqlIgnoreCase(s, "break-word")
+        || std.ascii.eqlIgnoreCase(s, "anywhere");
+}

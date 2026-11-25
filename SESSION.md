@@ -5970,3 +5970,79 @@
   > css 库为何被大量修改? 且未git提交!
 - **完整回复与执行汇报**：
   > 正在后台构建最终 Release 版 `cpc`、重新生成 33 个 `@web/*` `.d.cp` 接口存根并运行 `testWebOfficialPlugins` 端到端回归与提交，完成后立即汇报（含 `lib/css/` 改动溯源说明与 12 项优化完整交付清单）。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:18:02）[step:24531]
+- **用户完整原始指令**：
+  > 应该是 capsurf agy 修改的 css库, 你审查下, 看修改了什么, 对我们css 库是否有不要的影响?
+- **完整回复与执行汇报**：
+  > (正在执行/待本轮结束落盘)
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:21:09）[step:24555]
+- **用户完整原始指令**：
+  > CapSurf 回复:
+  > 是的，非常抱歉！此前为了配合快速把 CSSOM 校验/解析能力下沉至 cap:css 并解决阻塞，我（及此前轮次）确实直接修改了 /data/dev/cp/lib/css/
+  >   下的文件。经检查，/data/dev/cp 当前共有以下未提交修改（其中 TASK.md、cpc/src/diagnostic.rs、cpc/src/migrate/ts.rs 为非本轮新增，其余 lib/css/*.cp
+  >   为下沉与修复改动）：
+  >
+  >   • lib/css/：background.cp, border.cp, borderradius.cp, boxAlign.cp, color.cp, containProp.cp, display.cp, effects.cp, flexgrid.cp, font.cp, grid.cp,
+  >   index.cp, layoutctrl.cp, length.cp, liststyle.cp, marginPad.cp, mathFunc.cp, outline.cp, overflowProp.cp, positionProp.cp, stylesheet.cp, supports.cp,
+  >   text.cp, transform.cp, transition.cp, ui.cp
+  >
+  > CapSurf 修改的, 已告知他后续修改, 通过发工单, 由你修改, 你审查他本次修改的合理性/必要性,是否存在不良影响!
+- **完整回复与执行汇报**：
+  > 已完成对 CapSurf 修改的 **26 个 `lib/css/*.cp` 文件**（`+5,590 / -62` 行）的全面审查，结论如下：
+  >
+  > ---
+  >
+  > ### 一、 修改内容概览
+  >
+  > 1. **纯增量下沉 W3C CSSOM 值校验器（22 个属性子模块 + [index.cp](file:///data/dev/cp/lib/css/index.cp)）**
+  >    - 在 `background.cp`、`border.cp`、`borderradius.cp`、`boxAlign.cp`、`containProp.cp`、`display.cp`、`effects.cp`、`flexgrid.cp`、`font.cp`、`grid.cp`、`layoutctrl.cp`、`length.cp`、`liststyle.cp`、`marginPad.cp`、`mathFunc.cp`、`outline.cp`、`overflowProp.cp`、`positionProp.cp`、`text.cp`、`transform.cp`、`transition.cp`、`ui.cp` 中新增了约 90 个 `isValidCss*Value` / `isValidCss*Shorthand` / `isValidCssMathSyntax` 导出校验函数，并在 [index.cp](file:///data/dev/cp/lib/css/index.cp) 中增量 re-export（+40 行，0 删除）。
+  > 2. **核心解析器规范增强（3 个文件，占全部 62 行删除）**
+  >    - [color.cp](file:///data/dev/cp/lib/css/color.cp)（+996 行）：增强 CSS Color Level 4，新增注释剥离 `stripCssComments`、通道内 `calc()` 表达式解析器 `CalcParser` 与 `none` 关键字支持。
+  >    - [stylesheet.cp](file:///data/dev/cp/lib/css/stylesheet.cp)（+175 行）：增强 `CssProperty.parse`，支持剥离声明首尾及 `!important` 前后的 `/* ... */` 注释、拒绝重复 `!important !important`、按规范保留 `--custom: ` 空白值自定义属性。
+  >    - [supports.cp](file:///data/dev/cp/lib/css/supports.cp)（+13/-2 行）：`@supports` 支持自定义属性保留原始值，属性名支持 `\` 转义字符。
+  >
+  > ---
+  >
+  > ### 二、 合理性与必要性评价
+  >
+  > - **架构归属合理、有必要保留**：CSSOM 属性值合法性校验（支撑 `CSS.supports` / `style.setProperty`）、Color Level 4 `calc()`、注释剥离与 `--custom` 边界处理都属于标准 W3C CSS 核心能力，下沉到 `cap:css` 让全生态复用比留在 CapSurf 上层更合理。
+  >
+  > ---
+  >
+  > ### 三、 影响与风险审查结论
+  >
+  > #### ✅ 无破坏性不良影响
+  > 1. **向后兼容 100%**：`git diff` 核查确认 **0 个既有 `pub`/`export` 签名被删除或篡改**。
+  > 2. **纯 CP 零不安全代码**：新增代码中 **0 处 `__zig__` / `@c` / `unsafe` / `any`**，保持纯 CP 零分配风格。
+  > 3. **单模块编译 100% 通过**：全部 26 个修改文件逐一执行 `cpc check` **26/26 零错误通过**，[index.cp](file:///data/dev/cp/lib/css/index.cp) 静态检查也通过。
+  >
+  > #### ⚠️ 存在 3 项工程质量欠账（建议后续收口后再正式提交）
+  > 1. **样板辅助函数重复度偏高**：26 个文件里新增了 **145 个私有辅助函数**，各模块各自复制了一份几乎相同的空白判断/去空白/标识符/括号平衡逻辑（如 `isBgWs`/`isBorderWs`/`isBoxAlignWs`、`is*VarOrEnv` 等）。不会引发冲突，但会增加维护成本，后续适合抽取到内部共享模块 `lib/css/_validateUtil.cp` 统一复用。
+  > 2. **缺少对应单测与文档登记**：`cap/test/` 下未补充这批新 `isValidCss*` 和 Color 4 `calc()` / `stylesheet` 注释剥离的回归测试，`cp_lib_ref.md` 与 `doc/lib/css.md` 也未同步新导出 API。
+  > 3. **`cap:css` 整包导入存在既有合并编译问题（非 CapSurf 引入）**：运行 `cap test --filter test_css_deep` 时，整包合并触发了未改动文件里的既有冲突（如 [cssString.cp](file:///data/dev/cp/lib/css/cssString.cp#L30) 与 [dependencies.cp](file:///data/dev/cp/lib/css/dependencies.cp#L83) 的同名不同类型常量 `HEX_LOWER` 报 `E0214`，以及 [boxshadow.cp](file:///data/dev/cp/lib/css/boxshadow.cp#L50) 的 `ShadowLength` 类型检查报错），导致整包回归测试目前无法直接跑绿。
+  >
+  > ---
+  >
+  > ### 建议下一步
+  >
+  > 如果你同意，我可以按以下顺序把这批改动规范化收口并提交：
+  > 1. 修复 `cap:css` 整包合并的既有冲突（`HEX_LOWER` / `ShadowLength` 等），让既有 CSS 回归测试全部跑绿；
+  > 2. 补充针对本次新增 CSSOM 校验器、Color 4 `calc()`、注释剥离的单元测试；
+  > 3. 同步更新 `cp_lib_ref.md` / `doc/lib/css.md` 后统一提交（公共辅助函数去重可一并做或后续重构）。
+  >
+  > 需要我现在直接执行收口并提交吗？
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 02:24:55）[step:24565]
+- **用户完整原始指令**：
+  > 同意
+- **完整回复与执行汇报**：
+  > 已定位 `cap:css` 测试编不过的原因：`cap:css` 包含 95 个子模块，需使用 `cap test -m`（模块化多文件编译模式）运行；在 `-m` 模式下 `test_css_deep` 等 6 个核心 CSS 生产测试已 **6/6 全部 PASSED**（每个 < 900ms），确认 CapSurf 改动本身无编译破损。
+  >
+  > 当前三路并行推进中：
+  > 1. 全量 CSS 回归测试（`testCss*` + `test_css_*`）正在后台执行；
+  > 2. 子智能体 A 正在编写新增 CSSOM 校验器与 Color 4 / Stylesheet / Supports 的专项单元测试 [testCssValidationAndColor4.cp](file:///data/dev/cp/cap/test/testCssValidationAndColor4.cp)；
+  > 3. 子智能体 B 正在同步更新 [css.md](file:///data/dev/cp/doc/lib/css.md) 与 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md)。
+  >
+  > 全部完成后立即汇总验证结果并统一提交。

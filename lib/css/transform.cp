@@ -1,5 +1,7 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/transform.cp | Synced: 2026-11-23T21:39:24Z
 
+import { isValidCssMathSyntax } from "./mathFunc.cp";
+
 pub err Error {
     EmptyInput,
     UnknownFunction,
@@ -505,6 +507,7 @@ pub struct TransformOrigin {
     }
 }
 
+
 struct OriginCoord {
     val: f64,
     is_pct: bool,
@@ -873,6 +876,7 @@ pub struct Transform {
     }
 }
 
+
 fn splitCommaArgs(args_str: string, out: []string): usize! {
     const s = trimSpaces(args_str);
     if (s.len == 0) {
@@ -1138,4 +1142,490 @@ pub struct TransformList {
         }
         return buf[0..pos];
     }
+}
+
+// --- Zero-allocation CSS transform / rotate / scale syntax validators ---
+
+fn isCssWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c;
+}
+
+fn trimCssWs(s: []const u8): []const u8 {
+    let start: usize = 0;
+    let end: usize = s.len;
+    while (start < end && isCssWs(s[start])) { start += 1; }
+    while (end > start && isCssWs(s[end - 1])) { end -= 1; }
+    return s[start..end];
+}
+
+fn startsWithIgnoreCaseAscii(s: []const u8, prefix: []const u8): bool {
+    if (s.len < prefix.len) { return false; }
+    return eqlIgnoreCaseAscii(s[0..prefix.len], prefix);
+}
+
+fn isCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isCssIdentChar(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || isCssDigit(c) || c == '-' || c == '_';
+}
+
+fn parseCssNumberEnd(s: []const u8): usize? {
+    if (s.len == 0) { return null; }
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') {
+        i += 1;
+        if (i >= s.len) { return null; }
+    }
+    let has_digits = false;
+    while (i < s.len && isCssDigit(s[i])) {
+        has_digits = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        let j = i + 1;
+        let has_frac = false;
+        while (j < s.len && isCssDigit(s[j])) {
+            has_frac = true;
+            j += 1;
+        }
+        if (!has_frac) { return null; }
+        has_digits = true;
+        i = j;
+    }
+    if (!has_digits) { return null; }
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        let j = i + 1;
+        if (j < s.len && (s[j] == '+' || s[j] == '-')) {
+            j += 1;
+        }
+        let has_exp = false;
+        while (j < s.len && isCssDigit(s[j])) {
+            has_exp = true;
+            j += 1;
+        }
+        if (has_exp) {
+            i = j;
+        }
+    }
+    return i;
+}
+
+fn isCssNumber(s: []const u8): bool {
+    const end = parseCssNumberEnd(s) ?? return false;
+    return end == s.len;
+}
+
+fn isCssZeroNumber(s: []const u8): bool {
+    if (!isCssNumber(s)) { return false; }
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') { i += 1; }
+    while (i < s.len) {
+        const c = s[i];
+        if (c == 'e' || c == 'E') { break; }
+        if (c != '0' && c != '.') { return false; }
+        i += 1;
+    }
+    return true;
+}
+
+fn isCssAngleToken(s: []const u8): bool {
+    if (isCssZeroNumber(s)) { return true; }
+    const num_end = parseCssNumberEnd(s) ?? return false;
+    const unit = s[num_end..];
+    return eqlIgnoreCaseAscii(unit, "deg") ||
+        eqlIgnoreCaseAscii(unit, "rad") ||
+        eqlIgnoreCaseAscii(unit, "grad") ||
+        eqlIgnoreCaseAscii(unit, "turn");
+}
+
+fn isCssVarOrEnvCall(s: []const u8): bool {
+    let prefix_len: usize = 0;
+    if (startsWithIgnoreCaseAscii(s, "var(")) {
+        prefix_len = 4;
+    } else if (startsWithIgnoreCaseAscii(s, "env(")) {
+        prefix_len = 4;
+    } else {
+        return false;
+    }
+    if (s.len < prefix_len + 2 || s[s.len - 1] != ')') { return false; }
+    const inner = trimCssWs(s[prefix_len .. s.len - 1]);
+    return inner.len > 0;
+}
+
+fn isCssMathFuncCall(s: []const u8): bool {
+    return startsWithIgnoreCaseAscii(s, "calc(") ||
+        startsWithIgnoreCaseAscii(s, "min(") ||
+        startsWithIgnoreCaseAscii(s, "max(") ||
+        startsWithIgnoreCaseAscii(s, "clamp(") ||
+        startsWithIgnoreCaseAscii(s, "round(") ||
+        startsWithIgnoreCaseAscii(s, "mod(") ||
+        startsWithIgnoreCaseAscii(s, "rem(") ||
+        startsWithIgnoreCaseAscii(s, "abs(") ||
+        startsWithIgnoreCaseAscii(s, "sign(") ||
+        startsWithIgnoreCaseAscii(s, "sin(") ||
+        startsWithIgnoreCaseAscii(s, "cos(") ||
+        startsWithIgnoreCaseAscii(s, "tan(") ||
+        startsWithIgnoreCaseAscii(s, "asin(") ||
+        startsWithIgnoreCaseAscii(s, "acos(") ||
+        startsWithIgnoreCaseAscii(s, "atan(") ||
+        startsWithIgnoreCaseAscii(s, "atan2(") ||
+        startsWithIgnoreCaseAscii(s, "pow(") ||
+        startsWithIgnoreCaseAscii(s, "sqrt(") ||
+        startsWithIgnoreCaseAscii(s, "hypot(") ||
+        startsWithIgnoreCaseAscii(s, "log(") ||
+        startsWithIgnoreCaseAscii(s, "exp(");
+}
+
+fn isNumberReturningMathFunc(s: []const u8): bool {
+    return startsWithIgnoreCaseAscii(s, "sin(") ||
+        startsWithIgnoreCaseAscii(s, "cos(") ||
+        startsWithIgnoreCaseAscii(s, "tan(") ||
+        startsWithIgnoreCaseAscii(s, "pow(") ||
+        startsWithIgnoreCaseAscii(s, "sqrt(") ||
+        startsWithIgnoreCaseAscii(s, "log(") ||
+        startsWithIgnoreCaseAscii(s, "exp(");
+}
+
+fn nextCssTopToken(s: []const u8, pos: *usize, out_tok: *[]const u8): bool {
+    while (pos.* < s.len && isCssWs(s[pos.*])) {
+        pos.* += 1;
+    }
+    if (pos.* >= s.len) { return false; }
+    const start = pos.*;
+    let depth: usize = 0;
+    while (pos.* < s.len) {
+        const c = s[pos.*];
+        if (c == '"' || c == '\'') {
+            const q = c;
+            pos.* += 1;
+            while (pos.* < s.len) {
+                if (s[pos.*] == '\\' && pos.* + 1 < s.len) {
+                    pos.* += 2;
+                    continue;
+                }
+                if (s[pos.*] == q) {
+                    pos.* += 1;
+                    break;
+                }
+                pos.* += 1;
+            }
+            continue;
+        }
+        if (c == '(') {
+            depth += 1;
+            pos.* += 1;
+            continue;
+        }
+        if (c == ')') {
+            if (depth == 0) {
+                pos.* += 1;
+                out_tok.* = s[start..pos.*];
+                return true;
+            }
+            depth -= 1;
+            pos.* += 1;
+            continue;
+        }
+        if (depth == 0 && isCssWs(c)) {
+            break;
+        }
+        pos.* += 1;
+    }
+    out_tok.* = s[start..pos.*];
+    return depth == 0;
+}
+
+fn splitCssTopTokens(s: []const u8, out: [][]const u8): usize? {
+    let pos: usize = 0;
+    let count: usize = 0;
+    while (pos < s.len) {
+        while (pos < s.len && isCssWs(s[pos])) { pos += 1; }
+        if (pos >= s.len) { break; }
+        let tok: []const u8 = "";
+        if (!nextCssTopToken(s, *pos, *tok)) { return null; }
+        if (count >= out.len) { return null; }
+        out[count] = tok;
+        count += 1;
+    }
+    return count;
+}
+
+fn splitTopLevelCommas(inner: []const u8, out: [][]const u8): usize? {
+    let count: usize = 0;
+    let start: usize = 0;
+    let depth: usize = 0;
+    let i: usize = 0;
+    while (i < inner.len) {
+        const c = inner[i];
+        if (c == '"' || c == '\'') {
+            const q = c;
+            i += 1;
+            while (i < inner.len) {
+                if (inner[i] == '\\' && i + 1 < inner.len) {
+                    i += 2;
+                    continue;
+                }
+                if (inner[i] == q) {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        if (c == '(') {
+            depth += 1;
+        } else if (c == ')') {
+            if (depth == 0) { return null; }
+            depth -= 1;
+        } else if (depth == 0 && c == ',') {
+            const arg = trimCssWs(inner[start..i]);
+            if (arg.len == 0) { return null; }
+            if (count >= out.len) { return null; }
+            out[count] = arg;
+            count += 1;
+            start = i + 1;
+        }
+        i += 1;
+    }
+    if (depth != 0) { return null; }
+    const last = trimCssWs(inner[start..inner.len]);
+    if (last.len == 0) { return null; }
+    if (count >= out.len) { return null; }
+    out[count] = last;
+    count += 1;
+    return count;
+}
+
+fn getTransformFnArgRange(fn_name: []const u8, min_args: *usize, max_args: *usize): bool {
+    if (eqlIgnoreCaseAscii(fn_name, "matrix")) { min_args.* = 6; max_args.* = 6; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "matrix3d")) { min_args.* = 16; max_args.* = 16; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "translate")) { min_args.* = 1; max_args.* = 2; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "translatex")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "translatey")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "translatez")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "translate3d")) { min_args.* = 3; max_args.* = 3; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "scale")) { min_args.* = 1; max_args.* = 2; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "scalex")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "scaley")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "scalez")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "scale3d")) { min_args.* = 3; max_args.* = 3; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "rotate")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "rotatex")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "rotatey")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "rotatez")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "rotate3d")) { min_args.* = 4; max_args.* = 4; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "skew")) { min_args.* = 1; max_args.* = 2; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "skewx")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "skewy")) { min_args.* = 1; max_args.* = 1; return true; }
+    if (eqlIgnoreCaseAscii(fn_name, "perspective")) { min_args.* = 1; max_args.* = 1; return true; }
+    return false;
+}
+
+fn isTrigOrSignFuncName(name: []const u8): bool {
+    return eqlIgnoreCaseAscii(name, "sin") ||
+        eqlIgnoreCaseAscii(name, "cos") ||
+        eqlIgnoreCaseAscii(name, "tan") ||
+        eqlIgnoreCaseAscii(name, "asin") ||
+        eqlIgnoreCaseAscii(name, "acos") ||
+        eqlIgnoreCaseAscii(name, "atan") ||
+        eqlIgnoreCaseAscii(name, "atan2") ||
+        eqlIgnoreCaseAscii(name, "sign") ||
+        eqlIgnoreCaseAscii(name, "progress");
+}
+
+fn isValidScaleMathExpr(expr: []const u8): bool {
+    if (!isValidCssMathSyntax(expr)) { return false; }
+    let allow_dim_stack: [36]bool = [false; 36];
+    let depth: usize = 0;
+    let i: usize = 0;
+    while (i < expr.len) {
+        const c = expr[i];
+        if (c == '(') {
+            let allow = false;
+            if (i > 0) {
+                let j = i;
+                while (j > 0 && isCssIdentChar(expr[j - 1])) {
+                    j -= 1;
+                }
+                const fn_name = expr[j..i];
+                allow = isTrigOrSignFuncName(fn_name);
+            }
+            depth += 1;
+            if (depth >= allow_dim_stack.len) { return false; }
+            allow_dim_stack[depth] = allow;
+            i += 1;
+            continue;
+        }
+        if (c == ')') {
+            if (depth == 0) { return false; }
+            depth -= 1;
+            i += 1;
+            continue;
+        }
+        const prev_ok = i == 0 || (!isCssIdentChar(expr[i - 1]) && expr[i - 1] != '.');
+        if (prev_ok && (isCssDigit(c) || c == '.')) {
+            if (num_end := parseCssNumberEnd(expr[i..])) {
+                let u_start = i + num_end;
+                let u_end = u_start;
+                while (u_end < expr.len && ((expr[u_end] >= 'a' && expr[u_end] <= 'z') || (expr[u_end] >= 'A' && expr[u_end] <= 'Z'))) {
+                    u_end += 1;
+                }
+                if (u_end > u_start) {
+                    if (!allow_dim_stack[depth]) {
+                        return false;
+                    }
+                }
+                i = u_end;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    return true;
+}
+
+fn isValidRotateAngleToken(t: []const u8): bool {
+    if (isCssZeroNumber(t)) { return true; }
+    if (isCssVarOrEnvCall(t)) { return true; }
+    if (isCssMathFuncCall(t)) { return isValidCssMathSyntax(t); }
+    return isCssAngleToken(t);
+}
+
+fn isValidRotateNumToken(t: []const u8): bool {
+    if (isCssVarOrEnvCall(t)) { return true; }
+    if (isCssMathFuncCall(t)) { return isValidCssMathSyntax(t); }
+    return isCssNumber(t);
+}
+
+fn isAxisKeyword(t: []const u8): bool {
+    return eqlIgnoreCaseAscii(t, "x") || eqlIgnoreCaseAscii(t, "y") || eqlIgnoreCaseAscii(t, "z");
+}
+
+pub fn isValidCssTransformValue(val: []const u8): bool {
+    const trimmed = trimCssWs(val);
+    if (trimmed.len == 0) { return false; }
+    if (eqlIgnoreCaseAscii(trimmed, "none")) { return true; }
+
+    let pos: usize = 0;
+    let tok_count: usize = 0;
+    while (pos < trimmed.len) {
+        while (pos < trimmed.len && isCssWs(trimmed[pos])) { pos += 1; }
+        if (pos >= trimmed.len) { break; }
+        let t: []const u8 = "";
+        if (!nextCssTopToken(trimmed, *pos, *t)) { return false; }
+        tok_count += 1;
+
+        if (eqlIgnoreCaseAscii(t, "none") || t[t.len - 1] == ',') { return false; }
+        if (t.len < 3 || t[t.len - 1] != ')') { return false; }
+
+        let paren_idx: usize = 0;
+        let found_paren = false;
+        while (paren_idx < t.len) {
+            if (t[paren_idx] == '(') {
+                found_paren = true;
+                break;
+            }
+            if (!isCssIdentChar(t[paren_idx])) { return false; }
+            paren_idx += 1;
+        }
+        if (!found_paren || paren_idx == 0) { return false; }
+
+        const fn_name = t[0..paren_idx];
+        const inner = trimCssWs(t[paren_idx + 1 .. t.len - 1]);
+        if (eqlIgnoreCaseAscii(fn_name, "var") || eqlIgnoreCaseAscii(fn_name, "env")) {
+            if (inner.len == 0) { return false; }
+            continue;
+        }
+
+        let min_args: usize = 0;
+        let max_args: usize = 0;
+        if (!getTransformFnArgRange(fn_name, *min_args, *max_args)) { return false; }
+        if (inner.len == 0) { return false; }
+
+        let args: [16][]const u8 = [""; 16];
+        const argc = splitTopLevelCommas(inner, args[0..16]) ?? return false;
+        if (argc < min_args || argc > max_args) { return false; }
+
+        const is_rotate_or_skew = startsWithIgnoreCaseAscii(fn_name, "rotate") || startsWithIgnoreCaseAscii(fn_name, "skew");
+        const is_rotate3d = eqlIgnoreCaseAscii(fn_name, "rotate3d");
+
+        let ai: usize = 0;
+        while (ai < argc) {
+            const arg = args[ai];
+            if (isCssMathFuncCall(arg)) {
+                if (!isValidCssMathSyntax(arg)) { return false; }
+            }
+            if (is_rotate_or_skew && !(is_rotate3d && ai < 3)) {
+                if (isNumberReturningMathFunc(arg)) { return false; }
+            }
+            ai += 1;
+        }
+
+        if (eqlIgnoreCaseAscii(fn_name, "perspective")) {
+            const a0 = args[0];
+            if (!eqlIgnoreCaseAscii(a0, "none") && !isCssVarOrEnvCall(a0) && !isCssMathFuncCall(a0)) {
+                if (isCssNumber(a0) && !isCssZeroNumber(a0)) {
+                    return false;
+                }
+            }
+        }
+    }
+    return tok_count >= 1;
+}
+
+pub fn isValidCssRotateValue(val: []const u8): bool {
+    const trimmed = trimCssWs(val);
+    if (trimmed.len == 0) { return false; }
+    let toks: [5][]const u8 = [""; 5];
+    const n = splitCssTopTokens(trimmed, toks[0..5]) ?? return false;
+    if (n == 1) {
+        if (eqlIgnoreCaseAscii(toks[0], "none")) { return true; }
+        return isValidRotateAngleToken(toks[0]);
+    }
+    if (n == 2) {
+        return (isAxisKeyword(toks[0]) && isValidRotateAngleToken(toks[1])) ||
+            (isValidRotateAngleToken(toks[0]) && isAxisKeyword(toks[1]));
+    }
+    if (n == 4) {
+        if (isValidRotateNumToken(toks[0]) && isValidRotateNumToken(toks[1]) && isValidRotateNumToken(toks[2]) && isValidRotateAngleToken(toks[3])) {
+            return true;
+        }
+        if (isValidRotateAngleToken(toks[0]) && isValidRotateNumToken(toks[1]) && isValidRotateNumToken(toks[2]) && isValidRotateNumToken(toks[3])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+pub fn isValidCssScaleValue(val: []const u8): bool {
+    const trimmed = trimCssWs(val);
+    if (trimmed.len == 0) { return false; }
+    let toks: [4][]const u8 = [""; 4];
+    const n = splitCssTopTokens(trimmed, toks[0..4]) ?? return false;
+    if (n == 1 && eqlIgnoreCaseAscii(toks[0], "none")) { return true; }
+    if (n < 1 || n > 3) { return false; }
+
+    let i: usize = 0;
+    while (i < n) {
+        const t = toks[i];
+        if (isCssVarOrEnvCall(t)) {
+            i += 1;
+            continue;
+        }
+        if (isCssMathFuncCall(t)) {
+            if (!isValidScaleMathExpr(t)) { return false; }
+            i += 1;
+            continue;
+        }
+        if (t[t.len - 1] == '%') {
+            if (!isCssNumber(t[0 .. t.len - 1])) { return false; }
+        } else {
+            if (!isCssNumber(t)) { return false; }
+        }
+        i += 1;
+    }
+    return true;
 }

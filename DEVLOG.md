@@ -45,3 +45,8 @@
   3. 解析器引入 64 层 `recursion_depth` 护栏，配合 300 轮确定性畸形输入 Fuzz 测试确保 Parser + Sema 零 Panic、零栈溢出。
   4. `cpc mcp` 原生暴露 4 个 JSON-RPC 工具，`packages/@web/*` 33 个包全部生成 `.d.cp` 存根（8,804→1,103 行，-87.5%），显著降低 AI 代理开发 CP 项目的上下文消耗。
   5. `cap` 新增 `inotify` 热重载、`cap init web`、`cap test --filter` 与 `cap:web` 原生纯 CP TLS 配置/SNI/ALPN 能力。
+
+## 2026-11-26: 审查收口 `cap:css` 26 文件下沉改动并补齐专项测试与文档
+- **审查结论**：CapSurf 下沉的 26 个 `lib/css/*.cp` 文件（+5,590/-62）属于纯增量 W3C CSSOM 校验器与 Color 4 / Stylesheet / `@supports` 规范增强，0 个既有导出签名被破坏，0 处不安全代码，26/26 文件 `cpc check` 零报错。
+- **全量回归验证**：在 `cap test -m` 模块化模式下运行全部 79 个 CSS 测试（17 个 `testCss*` + 61 个 `test_css_*` + 新增 `testCssValidationAndColor4`）。期间发现唯一失败项 `test_css_full.cp:96` 为历史遗留旧断言（`toRgbString` 在 `HEAD` 中已返回 W3C 0..1 浮点 alpha），修正后 79/79 全部 PASS。
+- **并行交付**：主智能体负责全量回归与缺陷定位，子智能体 A 编写 `cap/test/testCssValidationAndColor4.cp`，子智能体 B 同步 `doc/lib/css.md` 与 `cp_lib_ref.md`，三路零冲突收口提交。

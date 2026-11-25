@@ -211,12 +211,14 @@ fn parseInParens(tree: *SupportsTree, s: []const u8, pos: *usize): u16? {
         // Try declaration `prop: value`
         if (colon := findTopLevelColon(inner)) {
             const prop = trimAscii(inner[0..colon]);
-            const val = trimAscii(inner[colon + 1 ..]);
-            if (isValidPropIdent(prop) && val.len > 0) {
+            const raw_val = inner[colon + 1 ..];
+            const val = trimAscii(raw_val);
+            const is_custom = (prop.len > 2 && prop[0] == '-' && prop[1] == '-');
+            if (isValidPropIdent(prop) && (val.len > 0 || is_custom)) {
                 return tree.pushNode(SupportsNode{
                     kind: .declaration,
                     prop: prop,
-                    value: val,
+                    value: if (is_custom) raw_val else val,
                     first_child: 0,
                     child_count: 0,
                 });
@@ -347,6 +349,11 @@ fn isValidPropIdent(s: []const u8): bool {
     if (s.len == 0) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
+        if (s[i] == '\\') {
+            if (i + 1 >= s.len) return false;
+            i += 1;
+            continue;
+        }
         if (!isIdentChar(s[i])) return false;
     }
     return true;

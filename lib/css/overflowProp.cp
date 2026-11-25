@@ -226,3 +226,138 @@ pub enum CssTextOverflowProp {
         return writeSlice(out, 0, _.asStr());
     }
 }
+
+fn isOverflowWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0c;
+}
+
+fn isOverflowIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isOverflowIdentChar(c: u8): bool {
+    return isOverflowIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+}
+
+fn consumeBalancedVarEnvRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 1;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (ch == '(') p_depth += 1;
+        else if (ch == ')') {
+            p_depth -= 1;
+            if (p_depth == 0) return (b_depth == 0 && c_depth == 0 && i + 1 == s.len);
+        } else if (ch == '[') b_depth += 1;
+        else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') c_depth += 1;
+        else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isVarOrEnvToken(s: []const u8): bool {
+    if (s.len >= 5 && eqlIgnoreAsciiCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isOverflowWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isOverflowIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isOverflowWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBalancedVarEnvRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqlIgnoreAsciiCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isOverflowWs(s[i])) i += 1;
+        if (i >= s.len || (!isOverflowIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isOverflowIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isOverflowWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBalancedVarEnvRest(s, i + 1);
+            if (s[i] >= '0' && s[i] <= '9') {
+                while (i < s.len && s[i] >= '0' && s[i] <= '9') i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn isValidOverflowToken(tok: []const u8): bool {
+    if (eqlIgnoreAsciiCase(tok, "visible") ||
+        eqlIgnoreAsciiCase(tok, "hidden") ||
+        eqlIgnoreAsciiCase(tok, "clip") ||
+        eqlIgnoreAsciiCase(tok, "scroll") ||
+        eqlIgnoreAsciiCase(tok, "auto") ||
+        eqlIgnoreAsciiCase(tok, "overlay"))
+    {
+        return true;
+    }
+    return isVarOrEnvToken(tok);
+}
+
+/// Zero-allocation validator for CSS `overflow`, `overflow-x`, and `overflow-y` values.
+pub fn isValidCssOverflowValue(val: []const u8, max_tokens: usize): bool {
+    if (max_tokens == 0) return false;
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    let i: usize = 0;
+    let tok_count: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && isOverflowWs(s[i])) : (i += 1) {}
+        if (i >= s.len) break;
+
+        const tok_start = i;
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (i < s.len) {
+            const ch = s[i];
+            if (p_depth == 0 && b_depth == 0 && c_depth == 0 && isOverflowWs(ch)) {
+                break;
+            }
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+            i += 1;
+        }
+        if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+        const tok = s[tok_start..i];
+        tok_count += 1;
+        if (tok_count > max_tokens) return false;
+        if (!isValidOverflowToken(tok)) return false;
+    }
+
+    return tok_count >= 1 && tok_count <= max_tokens;
+}

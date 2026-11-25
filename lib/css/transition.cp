@@ -1,5 +1,7 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/transition.cp | Synced: 2026-11-23T21:39:26Z
 
+import { isValidCssMathSyntax } from "./mathFunc.cp";
+
 /// CSS Transitions 1/2 解析与序列化错误集
 pub err CssTransitionError {
     InvalidTime,
@@ -502,4 +504,278 @@ pub struct TransitionList {
         }
         return pos;
     }
+}
+
+fn isTimeWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0c;
+}
+
+fn trimTimeWs(s: []const u8): []const u8 {
+    let start: usize = 0;
+    let end: usize = s.len;
+    while (start < end && isTimeWs(s[start])) { start += 1; }
+    while (end > start && isTimeWs(s[end - 1])) { end -= 1; }
+    return s[start..end];
+}
+
+fn isTimeIdentChar(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+}
+
+fn isStrictCssNumber(s: []const u8): bool {
+    if (s.len == 0) { return false; }
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') {
+        i += 1;
+        if (i >= s.len) { return false; }
+    }
+    let has_digits = false;
+    while (i < s.len && s[i] >= '0' && s[i] <= '9') {
+        has_digits = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        i += 1;
+        while (i < s.len && s[i] >= '0' && s[i] <= '9') {
+            has_digits = true;
+            i += 1;
+        }
+    }
+    if (!has_digits) { return false; }
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        i += 1;
+        if (i < s.len && (s[i] == '+' || s[i] == '-')) {
+            i += 1;
+        }
+        let has_exp = false;
+        while (i < s.len && s[i] >= '0' && s[i] <= '9') {
+            has_exp = true;
+            i += 1;
+        }
+        if (!has_exp) { return false; }
+    }
+    return i == s.len;
+}
+
+fn scanTimeMathArg(expr: []const u8): bool {
+    let has_time_or_var = false;
+    let i: usize = 0;
+    while (i < expr.len) {
+        const c = expr[i];
+        if (c == '"' || c == '\'') {
+            const q = c;
+            i += 1;
+            while (i < expr.len) {
+                if (expr[i] == '\\' && i + 1 < expr.len) {
+                    i += 2;
+                    continue;
+                }
+                if (expr[i] == q) {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-') {
+            const ident_start = i;
+            while (i < expr.len && isTimeIdentChar(expr[i])) {
+                i += 1;
+            }
+            const ident = expr[ident_start..i];
+            if (i < expr.len && expr[i] == '(' &&
+                (std.ascii.eqlIgnoreCase(ident, "var") || std.ascii.eqlIgnoreCase(ident, "env")))
+            {
+                has_time_or_var = true;
+                let depth: usize = 1;
+                i += 1;
+                while (i < expr.len && depth > 0) {
+                    if (expr[i] == '(') { depth += 1; }
+                    else if (expr[i] == ')') { depth -= 1; }
+                    i += 1;
+                }
+                continue;
+            }
+            continue;
+        }
+        const prev_ok = i == 0 || (!isTimeIdentChar(expr[i - 1]) && expr[i - 1] != '.');
+        const is_num_start = (c >= '0' && c <= '9') || (c == '.' && i + 1 < expr.len && expr[i + 1] >= '0' && expr[i + 1] <= '9');
+        if (prev_ok && is_num_start) {
+            while (i < expr.len && expr[i] >= '0' && expr[i] <= '9') { i += 1; }
+            if (i < expr.len && expr[i] == '.') {
+                i += 1;
+                while (i < expr.len && expr[i] >= '0' && expr[i] <= '9') { i += 1; }
+            }
+            if (i < expr.len && (expr[i] == 'e' || expr[i] == 'E')) {
+                let ei = i + 1;
+                if (ei < expr.len && (expr[ei] == '+' || expr[ei] == '-')) { ei += 1; }
+                let has_exp = false;
+                while (ei < expr.len && expr[ei] >= '0' && expr[ei] <= '9') {
+                    has_exp = true;
+                    ei += 1;
+                }
+                if (has_exp) { i = ei; }
+            }
+            if (i < expr.len && expr[i] == '%') {
+                return false;
+            }
+            const u_start = i;
+            while (i < expr.len && ((expr[i] >= 'a' && expr[i] <= 'z') || (expr[i] >= 'A' && expr[i] <= 'Z'))) {
+                i += 1;
+            }
+            if (i > u_start) {
+                const unit = expr[u_start..i];
+                if (std.ascii.eqlIgnoreCase(unit, "s") || std.ascii.eqlIgnoreCase(unit, "ms")) {
+                    has_time_or_var = true;
+                } else {
+                    return false;
+                }
+            }
+            continue;
+        }
+        i += 1;
+    }
+    return has_time_or_var;
+}
+
+fn validateTimeMathToken(tok: []const u8, fn_name: []const u8, inner: []const u8): bool {
+    if (!isValidCssMathSyntax(tok)) { return false; }
+    if (std.ascii.eqlIgnoreCase(fn_name, "min") ||
+        std.ascii.eqlIgnoreCase(fn_name, "max") ||
+        std.ascii.eqlIgnoreCase(fn_name, "clamp"))
+    {
+        let start: usize = 0;
+        let depth: usize = 0;
+        let i: usize = 0;
+        while (i <= inner.len) {
+            const at_end = i == inner.len;
+            if (!at_end) {
+                const c = inner[i];
+                if (c == '(') { depth += 1; }
+                else if (c == ')') {
+                    if (depth == 0) { return false; }
+                    depth -= 1;
+                }
+            }
+            if (at_end || (depth == 0 && inner[i] == ',')) {
+                const arg = trimTimeWs(inner[start..i]);
+                if (arg.len == 0 || !scanTimeMathArg(arg)) { return false; }
+                start = i + 1;
+            }
+            i += 1;
+        }
+        return depth == 0;
+    }
+    return scanTimeMathArg(inner);
+}
+
+fn isValidCssTimeToken(tok: []const u8, allow_negative: bool, allow_auto: bool): bool {
+    if (tok.len == 0) { return false; }
+
+    // 单个 token 校验：括号外不允许出现空白字符
+    let depth: usize = 0;
+    let first_paren: usize? = null;
+    let i: usize = 0;
+    while (i < tok.len) {
+        const c = tok[i];
+        if (c == '(') {
+            if (depth == 0 && first_paren == null) {
+                first_paren = i;
+            }
+            depth += 1;
+        } else if (c == ')') {
+            if (depth == 0) { return false; }
+            depth -= 1;
+            if (depth == 0 && i + 1 < tok.len) {
+                return false;
+            }
+        } else if (depth == 0 && isTimeWs(c)) {
+            return false;
+        }
+        i += 1;
+    }
+    if (depth != 0) { return false; }
+
+    if (allow_auto && std.ascii.eqlIgnoreCase(tok, "auto")) {
+        return true;
+    }
+
+    if (lp := first_paren) {
+        if (lp == 0 || tok[tok.len - 1] != ')') { return false; }
+        const fn_name = tok[0..lp];
+        let j: usize = 0;
+        while (j < fn_name.len) {
+            if (!isTimeIdentChar(fn_name[j])) { return false; }
+            j += 1;
+        }
+        const inner = trimTimeWs(tok[lp + 1 .. tok.len - 1]);
+        if (std.ascii.eqlIgnoreCase(fn_name, "var") || std.ascii.eqlIgnoreCase(fn_name, "env")) {
+            return inner.len > 0;
+        }
+        return validateTimeMathToken(tok, fn_name, inner);
+    }
+
+    // 简单 <number>(s|ms)
+    let num_str: []const u8 = "";
+    if (tok.len > 2 && std.ascii.eqlIgnoreCase(tok[tok.len - 2 ..], "ms")) {
+        num_str = tok[0 .. tok.len - 2];
+    } else if (tok.len > 1 && (tok[tok.len - 1] == 's' || tok[tok.len - 1] == 'S')) {
+        num_str = tok[0 .. tok.len - 1];
+    } else {
+        return false;
+    }
+
+    if (!isStrictCssNumber(num_str)) { return false; }
+    const v = std.fmt.parseFloat(f64, num_str) catch return false;
+    if (std.math.isNan(v) || std.math.isInf(v)) { return false; }
+    if (!allow_negative && v < 0.0) { return false; }
+    return true;
+}
+
+/// 校验 CSS `<time>` 列表属性值（`transition-duration` / `transition-delay` / `animation-duration` / `animation-delay`）
+pub fn isValidCssTimeListValue(val: []const u8, allow_negative: bool, allow_auto: bool): bool {
+    const s = trimTimeWs(val);
+    if (s.len == 0) { return false; }
+
+    let start: usize = 0;
+    let depth: usize = 0;
+    let pos: usize = 0;
+    while (pos <= s.len) {
+        const at_end = pos == s.len;
+        if (!at_end) {
+            const c = s[pos];
+            if (c == '"' || c == '\'') {
+                const q = c;
+                pos += 1;
+                while (pos < s.len) {
+                    if (s[pos] == '\\' && pos + 1 < s.len) {
+                        pos += 2;
+                        continue;
+                    }
+                    if (s[pos] == q) {
+                        pos += 1;
+                        break;
+                    }
+                    pos += 1;
+                }
+                continue;
+            }
+            if (c == '(') {
+                depth += 1;
+            } else if (c == ')') {
+                if (depth == 0) { return false; }
+                depth -= 1;
+            }
+        }
+        if (at_end || (depth == 0 && s[pos] == ',')) {
+            const part = trimTimeWs(s[start..pos]);
+            if (!isValidCssTimeToken(part, allow_negative, allow_auto)) {
+                return false;
+            }
+            start = pos + 1;
+        }
+        pos += 1;
+    }
+    return depth == 0;
 }

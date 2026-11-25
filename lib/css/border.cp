@@ -3,6 +3,8 @@
 // Border shorthand, BorderWidth/BorderStyle/BorderColor rect shorthands, and
 // logical start/end border shorthands.
 
+import { isValidCssLenPct } from "./length.cp";
+
 pub enum LineStyle: u8 {
     none = 0,
     hidden = 1,
@@ -718,4 +720,153 @@ fn writeColor(out: []u8, pos: usize, c: BorderColorValue): usize {
             return p;
         },
     }
+}
+
+fn isBorderIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isBorderIdentChar(c: u8): bool {
+    return isBorderIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+}
+
+fn isBorderWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0c;
+}
+
+fn consumeBalancedVarEnvRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 1;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (ch == '(') p_depth += 1;
+        else if (ch == ')') {
+            p_depth -= 1;
+            if (p_depth == 0) return (b_depth == 0 && c_depth == 0 && i + 1 == s.len);
+        } else if (ch == '[') b_depth += 1;
+        else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') c_depth += 1;
+        else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isVarOrEnvToken(s: []const u8): bool {
+    if (s.len >= 5 && eqIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isBorderWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isBorderIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isBorderWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBalancedVarEnvRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isBorderWs(s[i])) i += 1;
+        if (i >= s.len || (!isBorderIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isBorderIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isBorderWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBalancedVarEnvRest(s, i + 1);
+            if (s[i] >= '0' && s[i] <= '9') {
+                while (i < s.len && s[i] >= '0' && s[i] <= '9') i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn isValidBorderWidthToken(tok: []const u8): bool {
+    if (eqIgnoreCase(tok, "thin") || eqIgnoreCase(tok, "medium") || eqIgnoreCase(tok, "thick")) {
+        return true;
+    }
+    if (isVarOrEnvToken(tok)) return true;
+    if (std.mem.indexOfScalar(u8, tok, '%') != null) return false;
+    return isValidCssLenPct(tok, false);
+}
+
+fn isValidBorderStyleToken(tok: []const u8): bool {
+    if (isVarOrEnvToken(tok)) return true;
+    return LineStyle.parse(tok) != null;
+}
+
+fn isValidBorderTokenList(val: []const u8, max_tokens: usize, is_width: bool): bool {
+    if (max_tokens == 0) return false;
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    let i: usize = 0;
+    let tok_count: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && isBorderWs(s[i])) : (i += 1) {}
+        if (i >= s.len) break;
+
+        const tok_start = i;
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (i < s.len) {
+            const ch = s[i];
+            if (p_depth == 0 && b_depth == 0 && c_depth == 0 && isBorderWs(ch)) {
+                break;
+            }
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+            i += 1;
+        }
+        if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+        const tok = s[tok_start..i];
+        tok_count += 1;
+        if (tok_count > max_tokens) return false;
+        if (is_width) {
+            if (!isValidBorderWidthToken(tok)) return false;
+        } else {
+            if (!isValidBorderStyleToken(tok)) return false;
+        }
+    }
+
+    return tok_count >= 1 && tok_count <= max_tokens;
+}
+
+/// Zero-allocation validator for CSS `border-width` / `outline-width` values.
+pub fn isValidCssBorderWidthValue(val: []const u8, max_tokens: usize): bool {
+    return isValidBorderTokenList(val, max_tokens, true);
+}
+
+/// Zero-allocation validator for CSS `border-style` values.
+pub fn isValidCssBorderStyleValue(val: []const u8, max_tokens: usize): bool {
+    return isValidBorderTokenList(val, max_tokens, false);
 }

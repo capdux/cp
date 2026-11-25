@@ -366,3 +366,144 @@ fn appendStr(out: []u8, pos: usize, s: []const u8): usize {
     }
     return p;
 }
+
+fn isListStyleDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isListStyleIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isListStyleIdentChar(c: u8): bool {
+    return isListStyleIdentStart(c) || isListStyleDigit(c) || c == '-';
+}
+
+fn consumeListStyleBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    let in_quote: u8 = 0;
+    while (i < s.len && depth > 0) : (i += 1) {
+        const c = s[i];
+        if (in_quote != 0) {
+            if (c == '\\' && i + 1 < s.len) {
+                i += 1;
+            } else if (c == in_quote) {
+                in_quote = 0;
+            }
+        } else {
+            if (c == '"' || c == '\'') {
+                in_quote = c;
+            } else if (c == '(') {
+                depth += 1;
+            } else if (c == ')') {
+                depth -= 1;
+            }
+        }
+    }
+    return depth == 0 && in_quote == 0 && i == s.len;
+}
+
+fn isListStyleVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && startsWithIgnoreCase(s, "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) : (i += 1) {}
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isListStyleIdentChar(s[i])) : (i += 1) {}
+        if (i == name_start) return false;
+        while (i < s.len && isWs(s[i])) : (i += 1) {}
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeListStyleBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && startsWithIgnoreCase(s, "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) : (i += 1) {}
+        if (i >= s.len || (!isListStyleIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isListStyleIdentChar(s[i])) : (i += 1) {}
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isWs(s[i])) : (i += 1) {}
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeListStyleBalancedCallRest(s, i + 1);
+            if (isListStyleDigit(s[i])) {
+                while (i < s.len && isListStyleDigit(s[i])) : (i += 1) {}
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn isValidCssQuotedString(s: []const u8): bool {
+    if (s.len < 2) return false;
+    const q = s[0];
+    if ((q != '"' && q != '\'') || s[s.len - 1] != q) return false;
+    let i: usize = 1;
+    while (i < s.len - 1) : (i += 1) {
+        const c = s[i];
+        if (c == '\\') {
+            if (i + 1 >= s.len - 1) return false;
+            i += 1;
+            continue;
+        }
+        if (c == q || c == '\n' || c == '\r') return false;
+    }
+    return true;
+}
+
+fn isValidSymbolsFunc(s: []const u8): bool {
+    if (s.len < 10 || s[s.len - 1] != ')') return false;
+    if (!startsWithIgnoreCase(s, "symbols(")) return false;
+    if (!consumeListStyleBalancedCallRest(s, 8)) return false;
+    return trimAscii(s[8 .. s.len - 1]).len > 0;
+}
+
+fn isCssWideKeyword(s: []const u8): bool {
+    return eqIgnoreCase(s, "inherit") ||
+        eqIgnoreCase(s, "initial") ||
+        eqIgnoreCase(s, "unset") ||
+        eqIgnoreCase(s, "revert") ||
+        eqIgnoreCase(s, "revert-layer");
+}
+
+fn isValidCssCounterStyleIdent(s: []const u8): bool {
+    if (s.len == 0 || isCssWideKeyword(s)) return false;
+    if (s[0] == '-') {
+        if (s.len < 2 || s[1] == '-' || !isListStyleIdentStart(s[1])) return false;
+    } else if (!isListStyleIdentStart(s[0])) {
+        return false;
+    }
+    let i: usize = 1;
+    while (i < s.len) : (i += 1) {
+        if (!isListStyleIdentChar(s[i])) return false;
+    }
+    return true;
+}
+
+/// Zero-allocation validator for CSS `list-style-position` values.
+pub fn isValidCssListStylePositionValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isListStyleVarOrEnv(s)) return true;
+    return ListStylePosition.parse(s) != null;
+}
+
+/// Zero-allocation validator for CSS `list-style-type` values.
+pub fn isValidCssListStyleTypeValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isListStyleVarOrEnv(s)) return true;
+    if (eqIgnoreCase(s, "none")) return true;
+    if (PredefinedCounterStyle.parse(s) != null) return true;
+    if (isValidCssQuotedString(s)) return true;
+    if (isValidSymbolsFunc(s)) return true;
+    return isValidCssCounterStyleIdent(s);
+}

@@ -682,3 +682,386 @@ pub fn evalCssMathExpr(expr: []const u8): f64! {
     }
     return result;
 }
+
+const CSS_MATH_UNITS: [49][]const u8 = [
+    "px", "em", "rem", "ex", "rex", "cap", "rcap", "ch", "rch", "ic", "ric", "lh", "rlh",
+    "vw", "vh", "vi", "vb", "vmin", "vmax", "svw", "svh", "lvw", "lvh", "dvw", "dvh",
+    "cqw", "cqh", "cqi", "cqb", "cqmin", "cqmax",
+    "cm", "mm", "q", "in", "pt", "pc",
+    "deg", "rad", "grad", "turn",
+    "s", "ms", "hz", "khz", "dpi", "dpcm", "dppx", "fr",
+];
+
+fn isValidCssMathUnit(unit: []const u8): bool {
+    if (unit.len == 0) return false;
+    for (u of CSS_MATH_UNITS) {
+        if (eqlAsciiIgnoreCase(unit, u)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+struct CssMathSyntaxValidator {
+    src: []const u8,
+    pos: usize = 0,
+    depth: usize = 0,
+
+    fn skipWs(*_) {
+        while (_.pos < _.src.len) {
+            const c = _.src[_.pos];
+            if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c) {
+                _.pos += 1;
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn peek(): u8? {
+        if (_.pos >= _.src.len) return null;
+        return _.src[_.pos];
+    }
+
+    fn consumeBalancedFallback(*_): bool {
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (_.pos < _.src.len) {
+            const ch = _.src[_.pos];
+            if (ch == '(') {
+                p_depth += 1;
+                _.pos += 1;
+            } else if (ch == ')') {
+                if (p_depth == 0) {
+                    if (b_depth != 0 || c_depth != 0) return false;
+                    _.pos += 1;
+                    return true;
+                }
+                p_depth -= 1;
+                _.pos += 1;
+            } else if (ch == '[') {
+                b_depth += 1;
+                _.pos += 1;
+            } else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+                _.pos += 1;
+            } else if (ch == '{') {
+                c_depth += 1;
+                _.pos += 1;
+            } else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+                _.pos += 1;
+            } else {
+                _.pos += 1;
+            }
+        }
+        return false;
+    }
+
+    fn validateZeroArgCall(*_): bool {
+        _.skipWs();
+        if ((_.peek() ?? 0) != ')') return false;
+        _.pos += 1;
+        return true;
+    }
+
+    fn validateVarCall(*_): bool {
+        _.skipWs();
+        if (_.pos + 2 >= _.src.len) return false;
+        if (_.src[_.pos] != '-' || _.src[_.pos + 1] != '-') return false;
+        _.pos += 2;
+        const name_start = _.pos;
+        while (_.pos < _.src.len && isIdentChar(_.src[_.pos])) {
+            _.pos += 1;
+        }
+        if (_.pos == name_start) return false;
+        _.skipWs();
+        const ch = _.peek() ?? return false;
+        if (ch == ')') {
+            _.pos += 1;
+            return true;
+        }
+        if (ch != ',') return false;
+        _.pos += 1;
+        return _.consumeBalancedFallback();
+    }
+
+    fn validateEnvCall(*_): bool {
+        _.skipWs();
+        const first = _.peek() ?? return false;
+        if (!isIdentStart(first) && first != '-') return false;
+        const name_start = _.pos;
+        while (_.pos < _.src.len && isIdentChar(_.src[_.pos])) {
+            _.pos += 1;
+        }
+        if (_.pos == name_start) return false;
+        while (true) {
+            _.skipWs();
+            const ch = _.peek() ?? return false;
+            if (ch == ')') {
+                _.pos += 1;
+                return true;
+            }
+            if (ch == ',') {
+                _.pos += 1;
+                return _.consumeBalancedFallback();
+            }
+            if (isDigit(ch)) {
+                while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
+                    _.pos += 1;
+                }
+                continue;
+            }
+            return false;
+        }
+    }
+
+    fn validateNumberWithUnit(*_): bool {
+        let has_digit = false;
+        while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
+            has_digit = true;
+            _.pos += 1;
+        }
+        if (_.pos < _.src.len && _.src[_.pos] == '.') {
+            _.pos += 1;
+            while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
+                has_digit = true;
+                _.pos += 1;
+            }
+        }
+        if (!has_digit) return false;
+
+        if (_.pos < _.src.len && (_.src[_.pos] == 'e' || _.src[_.pos] == 'E')) {
+            let exp_pos = _.pos + 1;
+            if (exp_pos < _.src.len && (_.src[exp_pos] == '+' || _.src[exp_pos] == '-')) {
+                exp_pos += 1;
+            }
+            if (exp_pos < _.src.len && isDigit(_.src[exp_pos])) {
+                _.pos = exp_pos;
+                while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
+                    _.pos += 1;
+                }
+            }
+        }
+
+        const next = _.peek() ?? return true;
+        if (next == '%') {
+            _.pos += 1;
+            if (after := _.peek()) {
+                if (isIdentStart(after) || isDigit(after)) return false;
+            }
+            return true;
+        }
+        if (isIdentStart(next)) {
+            const unit_start = _.pos;
+            while (_.pos < _.src.len && (isIdentStart(_.src[_.pos]) || isDigit(_.src[_.pos]))) {
+                _.pos += 1;
+            }
+            return isValidCssMathUnit(_.src[unit_start.._.pos]);
+        }
+        return true;
+    }
+
+    fn validatePrimary(*_): bool {
+        _.skipWs();
+        if (_.depth >= CSS_MATH_MAX_DEPTH) return false;
+        const ch = _.peek() ?? return false;
+
+        if (ch == '(') {
+            _.pos += 1;
+            _.depth += 1;
+            if (!_.validateSum()) return false;
+            _.depth -= 1;
+            _.skipWs();
+            if ((_.peek() ?? 0) != ')') return false;
+            _.pos += 1;
+            return true;
+        }
+
+        if (isDigit(ch) || ch == '.') {
+            return _.validateNumberWithUnit();
+        }
+
+        if (isIdentStart(ch)) {
+            const start = _.pos;
+            while (_.pos < _.src.len && isIdentChar(_.src[_.pos])) {
+                _.pos += 1;
+            }
+            const ident = _.src[start.._.pos];
+            if ((_.peek() ?? 0) == '(') {
+                _.pos += 1;
+                _.depth += 1;
+                let ok = false;
+                if (eqlAsciiIgnoreCase(ident, "var")) {
+                    ok = _.validateVarCall();
+                } else if (eqlAsciiIgnoreCase(ident, "env")) {
+                    ok = _.validateEnvCall();
+                } else if (eqlAsciiIgnoreCase(ident, "sibling-index") || eqlAsciiIgnoreCase(ident, "sibling-count")) {
+                    ok = _.validateZeroArgCall();
+                } else if (kind := CssMathFuncKind.parse(ident)) {
+                    ok = _.validateFunctionCall(kind);
+                }
+                _.depth -= 1;
+                return ok;
+            }
+            return CssMathConstant.parse(ident) != null;
+        }
+
+        return false;
+    }
+
+    fn validateUnary(*_): bool {
+        _.skipWs();
+        const ch = _.peek() ?? return false;
+        if (ch == '+' || ch == '-') {
+            if (ch == '-' && _.pos + 9 <= _.src.len && eqlAsciiIgnoreCase(_.src[_.pos.._.pos + 9], "-infinity")) {
+                const after = _.pos + 9;
+                if (after >= _.src.len || !isIdentChar(_.src[after])) {
+                    _.pos = after;
+                    return true;
+                }
+            }
+            _.pos += 1;
+            _.skipWs();
+            if (next := _.peek()) {
+                if (next == '+' || next == '-') return false;
+            }
+            return _.validatePrimary();
+        }
+        return _.validatePrimary();
+    }
+
+    fn validateProduct(*_): bool {
+        if (!_.validateUnary()) return false;
+        while (true) {
+            _.skipWs();
+            const ch = _.peek() ?? break;
+            if (ch == '*' || ch == '/') {
+                _.pos += 1;
+                if (!_.validateUnary()) return false;
+            } else {
+                break;
+            }
+        }
+        return true;
+    }
+
+    fn validateSum(*_): bool {
+        if (!_.validateProduct()) return false;
+        while (true) {
+            _.skipWs();
+            const ch = _.peek() ?? break;
+            if (ch == '+' || ch == '-') {
+                _.pos += 1;
+                _.skipWs();
+                if (next := _.peek()) {
+                    if (next == '+') return false;
+                    if (next == '-') {
+                        const after = _.pos + 1;
+                        if (after >= _.src.len) return false;
+                        const c2 = _.src[after];
+                        const is_neg_inf = (_.pos + 9 <= _.src.len && eqlAsciiIgnoreCase(_.src[_.pos.._.pos + 9], "-infinity"));
+                        if (!isDigit(c2) && c2 != '.' && !is_neg_inf) return false;
+                    }
+                }
+                if (!_.validateProduct()) return false;
+            } else {
+                break;
+            }
+        }
+        return true;
+    }
+
+    fn validateRoundCall(*_): bool {
+        _.skipWs();
+        let has_strategy = false;
+        const saved = _.pos;
+        if (_.pos < _.src.len && isIdentStart(_.src[_.pos])) {
+            while (_.pos < _.src.len && isIdentChar(_.src[_.pos])) {
+                _.pos += 1;
+            }
+            const ident = _.src[saved.._.pos];
+            _.skipWs();
+            if ((_.peek() ?? 0) == ',') {
+                if (CssMathRoundingStrategy.parse(ident) != null) {
+                    has_strategy = true;
+                    _.pos += 1;
+                } else {
+                    _.pos = saved;
+                }
+            } else {
+                _.pos = saved;
+            }
+        }
+        const argc = _.validateArgList() ?? return false;
+        if (has_strategy) {
+            return argc == 2;
+        }
+        return argc == 2;
+    }
+
+    fn validateArgList(*_): usize? {
+        let count: usize = 0;
+        _.skipWs();
+        if ((_.peek() ?? 0) == ')') {
+            _.pos += 1;
+            return 0;
+        }
+        while (true) {
+            if (!_.validateSum()) return null;
+            count += 1;
+            _.skipWs();
+            const ch = _.peek() ?? return null;
+            if (ch == ',') {
+                _.pos += 1;
+                continue;
+            }
+            if (ch == ')') {
+                _.pos += 1;
+                return count;
+            }
+            return null;
+        }
+    }
+
+    fn validateFunctionCall(*_, kind: CssMathFuncKind): bool {
+        if (_.depth > CSS_MATH_MAX_DEPTH) return false;
+        if (kind == .Round) {
+            return _.validateRoundCall();
+        }
+        const argc = _.validateArgList() ?? return false;
+        return switch (kind) {
+            .Calc, .Abs, .Sign, .Sin, .Cos, .Tan, .Asin, .Acos, .Atan, .Sqrt, .Exp => argc == 1,
+            .Min, .Max, .Hypot => argc >= 1,
+            .Clamp => argc == 3,
+            .Mod, .Rem, .Atan2, .Pow => argc == 2,
+            .Log => argc == 1 || argc == 2,
+            .Round => false,
+        };
+    }
+}
+
+/// 零堆分配校验 W3C CSS Values & Units Level 4 数学表达式语法合法性
+/// 要求顶层必须是合法 CSS 数学函数（`calc`/`min`/`max`/`clamp`/`round`/`mod`/`rem`/`sin`..`exp`/`abs`/`sign`），
+/// 校验括号匹配、参数个数、W3C CSS 单位白名单、数学常量及 `var()`/`env()`/`sibling-index()`/`sibling-count()`。
+pub fn isValidCssMathSyntax(expr: []const u8): bool {
+    let v = CssMathSyntaxValidator{ src: expr };
+    v.skipWs();
+    const first = v.peek() ?? return false;
+    if (!isIdentStart(first)) return false;
+    const start = v.pos;
+    while (v.pos < v.src.len && isIdentChar(v.src[v.pos])) {
+        v.pos += 1;
+    }
+    const ident = v.src[start..v.pos];
+    if ((v.peek() ?? 0) != '(') return false;
+    const kind = CssMathFuncKind.parse(ident) ?? return false;
+    v.pos += 1;
+    v.depth = 1;
+    if (!v.validateFunctionCall(kind)) return false;
+    v.skipWs();
+    return v.pos == v.src.len;
+}

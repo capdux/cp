@@ -603,3 +603,117 @@ fn parseItemAlignFromCursor(
 
     return err.InvalidKeyword;
 }
+
+fn isBoxAlignWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c;
+}
+
+fn trimBoxAlignAscii(s: []const u8): []const u8 {
+    let start: usize = 0;
+    let end: usize = s.len;
+    while (start < end && isBoxAlignWs(s[start])) start += 1;
+    while (end > start && isBoxAlignWs(s[end - 1])) end -= 1;
+    return s[start..end];
+}
+
+fn isBoxAlignCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isBoxAlignCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isBoxAlignCssIdentChar(c: u8): bool {
+    return isBoxAlignCssIdentStart(c) || isBoxAlignCssDigit(c) || c == '-';
+}
+
+fn consumeBoxAlignBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isValidBoxAlignVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && eqlAsciiIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isBoxAlignWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isBoxAlignCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isBoxAlignWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBoxAlignBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqlAsciiIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isBoxAlignWs(s[i])) i += 1;
+        if (i >= s.len || (!isBoxAlignCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isBoxAlignCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isBoxAlignWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBoxAlignBalancedCallRest(s, i + 1);
+            if (isBoxAlignCssDigit(s[i])) {
+                while (i < s.len && isBoxAlignCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `flex-direction` values.
+pub fn isValidCssFlexDirectionValue(val: []const u8): bool {
+    const s = trimBoxAlignAscii(val);
+    if (s.len == 0) return false;
+    if (isValidBoxAlignVarOrEnv(s)) return true;
+    return eqlAsciiIgnoreCase(s, "row") ||
+        eqlAsciiIgnoreCase(s, "row-reverse") ||
+        eqlAsciiIgnoreCase(s, "column") ||
+        eqlAsciiIgnoreCase(s, "column-reverse");
+}
+
+/// Zero-allocation validator for CSS `flex-wrap` values.
+pub fn isValidCssFlexWrapValue(val: []const u8): bool {
+    const s = trimBoxAlignAscii(val);
+    if (s.len == 0) return false;
+    if (isValidBoxAlignVarOrEnv(s)) return true;
+    return eqlAsciiIgnoreCase(s, "nowrap") ||
+        eqlAsciiIgnoreCase(s, "wrap") ||
+        eqlAsciiIgnoreCase(s, "wrap-reverse");
+}
+
+/// Zero-allocation validator for CSS `align-self` / `align-items` values.
+pub fn isValidCssAlignSelfOrItemsValue(val: []const u8, allow_auto: bool): bool {
+    const s = trimBoxAlignAscii(val);
+    if (s.len == 0) return false;
+    if (isValidBoxAlignVarOrEnv(s)) return true;
+    let cur = TokenCursor.init(s);
+    * = parseItemAlignFromCursor(&cur, allow_auto, false, false) catch return false;
+    return cur.next() == null;
+}
+
+/// Zero-allocation validator for CSS `justify-content` / `align-content` values.
+pub fn isValidCssContentDistributionValue(val: []const u8, is_justify: bool): bool {
+    const s = trimBoxAlignAscii(val);
+    if (s.len == 0) return false;
+    if (isValidBoxAlignVarOrEnv(s)) return true;
+    let cur = TokenCursor.init(s);
+    * = parseContentAlignFromCursor(&cur, is_justify) catch return false;
+    return cur.next() == null;
+}

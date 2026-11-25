@@ -4,6 +4,7 @@
 // Absorbed from Bun src/css/values/{length,angle,time,percentage,calc}.cp
 
 const std = @import("std");
+import { isValidCssMathSyntax } from "./mathFunc.cp";
 
 pub enum CssUnit {
     Px,
@@ -386,4 +387,439 @@ pub struct CssCalc {
         }
         return res;
     }
+}
+
+const CSS_LEN_UNITS: [37][]const u8 = [
+    "px", "em", "rem", "ex", "rex", "cap", "rcap", "ch", "rch", "ic", "ric", "lh", "rlh",
+    "vw", "vh", "vi", "vb", "vmin", "vmax", "svw", "svh", "lvw", "lvh", "dvw", "dvh",
+    "cqw", "cqh", "cqi", "cqb", "cqmin", "cqmax",
+    "cm", "mm", "q", "in", "pt", "pc",
+];
+
+const CSS_NON_LEN_MATH_UNITS: [12][]const u8 = [
+    "deg", "rad", "grad", "turn",
+    "s", "ms", "hz", "khz", "dpi", "dpcm", "dppx", "fr",
+];
+
+fn isCssWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c;
+}
+
+fn isCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isCssIdentChar(c: u8): bool {
+    return isCssIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+}
+
+fn isCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isCssLengthUnit(unit: []const u8): bool {
+    for (u of CSS_LEN_UNITS) {
+        if (std.ascii.eqlIgnoreCase(unit, u)) return true;
+    }
+    return false;
+}
+
+fn isCssNonLengthMathUnit(unit: []const u8): bool {
+    for (u of CSS_NON_LEN_MATH_UNITS) {
+        if (std.ascii.eqlIgnoreCase(unit, u)) return true;
+    }
+    return false;
+}
+
+fn consumeBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let p_depth: usize = 0;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i < s.len) {
+        const ch = s[i];
+        if (ch == '(') {
+            p_depth += 1;
+        } else if (ch == ')') {
+            if (p_depth == 0) {
+                return b_depth == 0 && c_depth == 0 && i + 1 == s.len;
+            }
+            p_depth -= 1;
+        } else if (ch == '[') {
+            b_depth += 1;
+        } else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') {
+            c_depth += 1;
+        } else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        }
+        i += 1;
+    }
+    return false;
+}
+
+fn isValidVarOrEnvCall(s: []const u8): bool {
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isCssWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isCssWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && std.ascii.eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isCssWs(s[i])) i += 1;
+        if (i >= s.len || (!isCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isCssWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBalancedCallRest(s, i + 1);
+            if (isCssDigit(s[i])) {
+                while (i < s.len && isCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+fn skipBalancedParenGroup(s: []const u8, open_paren_pos: usize): usize {
+    let i = open_paren_pos + 1;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return i;
+}
+
+fn checkMathUnitsAllowed(s: []const u8, allow_length_units: bool): bool {
+    let i: usize = 0;
+    while (i < s.len) {
+        const c = s[i];
+        if (isCssIdentStart(c) || (c == '-' && i + 1 < s.len && (isCssIdentStart(s[i + 1]) || s[i + 1] == '-'))) {
+            const start = i;
+            i += 1;
+            while (i < s.len && isCssIdentChar(s[i])) i += 1;
+            const ident = s[start..i];
+            if (i < s.len && s[i] == '(' && (std.ascii.eqlIgnoreCase(ident, "var") || std.ascii.eqlIgnoreCase(ident, "env"))) {
+                i = skipBalancedParenGroup(s, i);
+            }
+            continue;
+        }
+        if (isCssDigit(c) || (c == '.' && i + 1 < s.len && isCssDigit(s[i + 1]))) {
+            while (i < s.len && isCssDigit(s[i])) i += 1;
+            if (i < s.len && s[i] == '.') {
+                i += 1;
+                while (i < s.len && isCssDigit(s[i])) i += 1;
+            }
+            if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+                let exp_i = i + 1;
+                if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+                if (exp_i < s.len && isCssDigit(s[exp_i])) {
+                    i = exp_i;
+                    while (i < s.len && isCssDigit(s[i])) i += 1;
+                }
+            }
+            if (i < s.len && s[i] == '%') {
+                i += 1;
+                continue;
+            }
+            if (i < s.len && isCssIdentStart(s[i])) {
+                const u_start = i;
+                while (i < s.len && (isCssIdentStart(s[i]) || isCssDigit(s[i]))) i += 1;
+                const unit = s[u_start..i];
+                if (!allow_length_units) return false;
+                if (isCssNonLengthMathUnit(unit)) return false;
+            }
+            continue;
+        }
+        i += 1;
+    }
+    return true;
+}
+
+fn scanOpacityMinMaxClampArg(arg: []const u8): bool {
+    // Recursively validate any nested min/max/clamp calls in arg
+    return checkOpacityMinMaxClampNoMixedPct(arg);
+}
+
+fn checkOpacityMinMaxClampNoMixedPct(s: []const u8): bool {
+    let i: usize = 0;
+    while (i < s.len) {
+        const c = s[i];
+        if (isCssIdentStart(c) || (c == '-' && i + 1 < s.len && (isCssIdentStart(s[i + 1]) || s[i + 1] == '-'))) {
+            const start = i;
+            i += 1;
+            while (i < s.len && isCssIdentChar(s[i])) i += 1;
+            const ident = s[start..i];
+            if (i < s.len && s[i] == '(') {
+                if (std.ascii.eqlIgnoreCase(ident, "var") || std.ascii.eqlIgnoreCase(ident, "env")) {
+                    i = skipBalancedParenGroup(s, i);
+                    continue;
+                }
+                if (std.ascii.eqlIgnoreCase(ident, "min") || std.ascii.eqlIgnoreCase(ident, "max") || std.ascii.eqlIgnoreCase(ident, "clamp")) {
+                    const call_end = skipBalancedParenGroup(s, i);
+                    const inner = s[i + 1 .. call_end - 1];
+                    let seen_pct = false;
+                    let seen_num = false;
+                    let arg_start: usize = 0;
+                    let depth: usize = 0;
+                    let j: usize = 0;
+                    while (j <= inner.len) {
+                        const at_sep = (j == inner.len) || (inner[j] == ',' && depth == 0);
+                        if (at_sep) {
+                            const arg = inner[arg_start..j];
+                            if (!scanOpacityMinMaxClampArg(arg)) return false;
+                            let arg_has_pct = false;
+                            let arg_has_num = false;
+                            let k: usize = 0;
+                            while (k < arg.len) {
+                                const ac = arg[k];
+                                if (isCssIdentStart(ac) || (ac == '-' && k + 1 < arg.len && (isCssIdentStart(arg[k + 1]) || arg[k + 1] == '-'))) {
+                                    const id_s = k;
+                                    k += 1;
+                                    while (k < arg.len && isCssIdentChar(arg[k])) k += 1;
+                                    const sub_id = arg[id_s..k];
+                                    if (k < arg.len && arg[k] == '(' && (std.ascii.eqlIgnoreCase(sub_id, "var") || std.ascii.eqlIgnoreCase(sub_id, "env"))) {
+                                        k = skipBalancedParenGroup(arg, k);
+                                    } else if (std.ascii.eqlIgnoreCase(sub_id, "pi") || std.ascii.eqlIgnoreCase(sub_id, "e") || std.ascii.eqlIgnoreCase(sub_id, "infinity") || std.ascii.eqlIgnoreCase(sub_id, "-infinity") || std.ascii.eqlIgnoreCase(sub_id, "nan")) {
+                                        arg_has_num = true;
+                                    }
+                                    continue;
+                                }
+                                if (ac == '%') {
+                                    arg_has_pct = true;
+                                    k += 1;
+                                    continue;
+                                }
+                                if (isCssDigit(ac) || (ac == '.' && k + 1 < arg.len && isCssDigit(arg[k + 1]))) {
+                                    arg_has_num = true;
+                                    while (k < arg.len && isCssDigit(arg[k])) k += 1;
+                                    if (k < arg.len && arg[k] == '.') {
+                                        k += 1;
+                                        while (k < arg.len && isCssDigit(arg[k])) k += 1;
+                                    }
+                                    if (k < arg.len && (arg[k] == 'e' || arg[k] == 'E')) {
+                                        let exp_k = k + 1;
+                                        if (exp_k < arg.len && (arg[exp_k] == '+' || arg[exp_k] == '-')) exp_k += 1;
+                                        if (exp_k < arg.len && isCssDigit(arg[exp_k])) {
+                                            k = exp_k;
+                                            while (k < arg.len && isCssDigit(arg[k])) k += 1;
+                                        }
+                                    }
+                                    continue;
+                                }
+                                k += 1;
+                            }
+                            if (arg_has_pct) {
+                                seen_pct = true;
+                            } else if (arg_has_num) {
+                                seen_num = true;
+                            }
+                            if (seen_pct && seen_num) return false;
+                            arg_start = j + 1;
+                        } else if (inner[j] == '(') {
+                            depth += 1;
+                        } else if (inner[j] == ')') {
+                            if (depth > 0) depth -= 1;
+                        }
+                        j += 1;
+                    }
+                    i = call_end;
+                    continue;
+                }
+            }
+            continue;
+        }
+        i += 1;
+    }
+    return true;
+}
+
+/// Zero-allocation validator for CSS `<length-percentage>` tokens.
+pub fn isValidCssLenPct(tok: []const u8, allow_negative: bool): bool {
+    const s = std.mem.trim(u8, tok, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    if (isValidVarOrEnvCall(s)) return true;
+
+    if (isValidCssMathSyntax(s)) {
+        return checkMathUnitsAllowed(s, true);
+    }
+
+    let i: usize = 0;
+    let is_neg = false;
+    if (s[i] == '+' || s[i] == '-') {
+        is_neg = (s[i] == '-');
+        i += 1;
+    }
+    if (i >= s.len) return false;
+
+    let has_digit = false;
+    let has_nonzero = false;
+    while (i < s.len && isCssDigit(s[i])) {
+        has_digit = true;
+        if (s[i] != '0') has_nonzero = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        i += 1;
+        if (i >= s.len || !isCssDigit(s[i])) return false;
+        while (i < s.len && isCssDigit(s[i])) {
+            has_digit = true;
+            if (s[i] != '0') has_nonzero = true;
+            i += 1;
+        }
+    }
+    if (!has_digit) return false;
+
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        let exp_i = i + 1;
+        if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+        if (exp_i < s.len && isCssDigit(s[exp_i])) {
+            i = exp_i;
+            while (i < s.len && isCssDigit(s[i])) i += 1;
+        }
+    }
+
+    if (!allow_negative && is_neg && has_nonzero) return false;
+
+    const unit = s[i..];
+    if (unit.len == 0) {
+        return !has_nonzero;
+    }
+    if (std.mem.eql(u8, unit, "%")) return true;
+    return isCssLengthUnit(unit);
+}
+
+/// Zero-allocation validator for CSS `translate` property values (`none` or 1..3 `<length-percentage>` / z `<length>`).
+pub fn isValidCssTranslateValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+    if (std.ascii.eqlIgnoreCase(s, "none")) return true;
+
+    let i: usize = 0;
+    let tok_count: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && isCssWs(s[i])) i += 1;
+        if (i >= s.len) break;
+
+        const tok_start = i;
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (i < s.len) {
+            const ch = s[i];
+            if (p_depth == 0 && b_depth == 0 && c_depth == 0 && isCssWs(ch)) {
+                break;
+            }
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+            i += 1;
+        }
+        if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+        const tok = s[tok_start..i];
+        tok_count += 1;
+        if (tok_count > 3) return false;
+        if (tok_count == 3 && std.mem.indexOfScalar(u8, tok, '%') != null) {
+            return false;
+        }
+        if (!isValidCssLenPct(tok, true)) return false;
+    }
+
+    return tok_count >= 1 && tok_count <= 3;
+}
+
+/// Zero-allocation validator for CSS `opacity` property values.
+fn hasSubstrIgnoreCase(hay: []const u8, needle: []const u8): bool {
+    if (needle.len == 0) return true;
+    if (hay.len < needle.len) return false;
+    let i: usize = 0;
+    while (i + needle.len <= hay.len) : (i += 1) {
+        if (std.ascii.eqlIgnoreCase(hay[i .. i + needle.len], needle)) return true;
+    }
+    return false;
+}
+
+pub fn isValidCssOpacityValue(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    if (isValidVarOrEnvCall(s)) return true;
+
+    if (isValidCssMathSyntax(s)) {
+        if (!checkMathUnitsAllowed(s, false)) return false;
+        if (std.mem.indexOfScalar(u8, s, '%') != null) {
+            if (hasSubstrIgnoreCase(s, "log(") || hasSubstrIgnoreCase(s, "exp(") ||
+                hasSubstrIgnoreCase(s, "pow(") || hasSubstrIgnoreCase(s, "sqrt(") ||
+                hasSubstrIgnoreCase(s, "sin(") || hasSubstrIgnoreCase(s, "cos(") ||
+                hasSubstrIgnoreCase(s, "tan(") || hasSubstrIgnoreCase(s, "asin(") ||
+                hasSubstrIgnoreCase(s, "acos(") || hasSubstrIgnoreCase(s, "atan(") ||
+                hasSubstrIgnoreCase(s, "atan2(")) {
+                return false;
+            }
+        }
+        return checkOpacityMinMaxClampNoMixedPct(s);
+    }
+
+    let i: usize = 0;
+    if (s[i] == '+' || s[i] == '-') i += 1;
+    if (i >= s.len) return false;
+
+    let has_digit = false;
+    while (i < s.len && isCssDigit(s[i])) {
+        has_digit = true;
+        i += 1;
+    }
+    if (i < s.len && s[i] == '.') {
+        i += 1;
+        if (i >= s.len || !isCssDigit(s[i])) return false;
+        while (i < s.len && isCssDigit(s[i])) {
+            has_digit = true;
+            i += 1;
+        }
+    }
+    if (!has_digit) return false;
+
+    if (i < s.len && (s[i] == 'e' || s[i] == 'E')) {
+        let exp_i = i + 1;
+        if (exp_i < s.len && (s[exp_i] == '+' || s[exp_i] == '-')) exp_i += 1;
+        if (exp_i < s.len && isCssDigit(s[exp_i])) {
+            i = exp_i;
+            while (i < s.len && isCssDigit(s[i])) i += 1;
+        }
+    }
+
+    const suffix = s[i..];
+    return suffix.len == 0 || std.mem.eql(u8, suffix, "%");
 }

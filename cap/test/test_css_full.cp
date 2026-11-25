@@ -93,7 +93,7 @@ fn main() {
         let fmt_buf: [32]u8 = [0; 32];
         expect_eq(std.mem.eql(u8, coral.toHex(fmt_buf[0..32]), "#ff7f50"), true);
         expect_eq(std.mem.eql(u8, coral.toRgbString(fmt_buf[0..32]), "rgb(255, 127, 80)"), true);
-        expect_eq(std.mem.eql(u8, h8.toRgbString(fmt_buf[0..32]), "rgba(59, 130, 246, 128)"), true);
+        expect_eq(std.mem.eql(u8, h8.toRgbString(fmt_buf[0..32]), "rgba(59, 130, 246, 0.501961)"), true);
 
         // Color mix & WCAG contrast
         const black = CssColor.rgb(0, 0, 0);

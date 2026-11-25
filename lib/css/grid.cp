@@ -862,3 +862,95 @@ pub struct CssGridTemplateAreas {
         return pos;
     }
 }
+
+fn isGridCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isGridCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isGridCssIdentChar(c: u8): bool {
+    return isGridCssIdentStart(c) || isGridCssDigit(c) || c == '-';
+}
+
+fn consumeGridBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isGridVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isGridCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeGridBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && eqlIgnoreCase(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len || (!isGridCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isGridCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeGridBalancedCallRest(s, i + 1);
+            if (isGridCssDigit(s[i])) {
+                while (i < s.len && isGridCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `grid-auto-flow` values.
+pub fn isValidCssGridAutoFlowValue(val: []const u8): bool {
+    const s = trimWs(val);
+    if (s.len == 0) return false;
+    if (isGridVarOrEnv(s)) return true;
+
+    let i: usize = 0;
+    while (i < s.len && !isWs(s[i])) i += 1;
+    const tok1 = s[0..i];
+
+    while (i < s.len && isWs(s[i])) i += 1;
+    if (i == s.len) {
+        return eqlIgnoreCase(tok1, "row") ||
+            eqlIgnoreCase(tok1, "column") ||
+            eqlIgnoreCase(tok1, "dense");
+    }
+
+    const tok2_start = i;
+    while (i < s.len && !isWs(s[i])) i += 1;
+    if (i != s.len) return false;
+    const tok2 = s[tok2_start..i];
+
+    if (eqlIgnoreCase(tok1, "dense")) {
+        return eqlIgnoreCase(tok2, "row") || eqlIgnoreCase(tok2, "column");
+    }
+    if (eqlIgnoreCase(tok1, "row") || eqlIgnoreCase(tok1, "column")) {
+        return eqlIgnoreCase(tok2, "dense");
+    }
+    return false;
+}

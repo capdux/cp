@@ -49,23 +49,85 @@ pub struct CssProperty {
 
     /// Parses a single CSS declaration such as `color: #ff0000 !important` or `--primary-gap: 1.5rem`.
     pub static fn parse(decl: []const u8): CssProperty? {
-        const s = std.mem.trim(u8, decl, " \t\r\n;");
+        let s = std.mem.trim(u8, decl, " \t\r\n;");
+        // Strip leading /* ... */ comments (and whitespace/semicolons between them)
+        while (s.len >= 2 && s[0] == '/' && s[1] == '*') {
+            let end_c: usize = 2;
+            while (end_c + 1 < s.len && !(s[end_c] == '*' && s[end_c + 1] == '/')) {
+                end_c += 1;
+            }
+            if (end_c + 1 < s.len) {
+                s = std.mem.trim(u8, s[end_c + 2 ..], " \t\r\n;");
+            } else {
+                return null;
+            }
+        }
         if (s.len == 0) {
             return null;
         }
         const colon_idx = std.mem.indexOfScalar(u8, s, ':') ?? return null;
-        const prop_name = std.mem.trim(u8, s[0..colon_idx], " \t\r\n");
+        let prop_name = std.mem.trim(u8, s[0..colon_idx], " \t\r\n");
+        // Strip trailing /* ... */ comment on property name
+        while (prop_name.len >= 4 && prop_name[prop_name.len - 2] == '*' && prop_name[prop_name.len - 1] == '/') {
+            if (open_c := std.mem.lastIndexOf(u8, prop_name[0 .. prop_name.len - 2], "/*")) {
+                prop_name = std.mem.trim(u8, prop_name[0..open_c], " \t\r\n");
+            } else {
+                break;
+            }
+        }
         if (prop_name.len == 0) {
             return null;
         }
         let val_part = std.mem.trim(u8, s[colon_idx + 1 ..], " \t\r\n");
+        while (val_part.len >= 4 && val_part[val_part.len - 2] == '*' && val_part[val_part.len - 1] == '/') {
+            if (open_c := std.mem.lastIndexOf(u8, val_part[0 .. val_part.len - 2], "/*")) {
+                val_part = std.mem.trim(u8, val_part[0..open_c], " \t\r\n");
+            } else {
+                break;
+            }
+        }
         let is_important = false;
         if (val_part.len >= 10 && std.ascii.eqlIgnoreCase(val_part[val_part.len - 10 ..], "!important")) {
             is_important = true;
             val_part = std.mem.trim(u8, val_part[0 .. val_part.len - 10], " \t\r\n");
+            while (val_part.len >= 4 && val_part[val_part.len - 2] == '*' && val_part[val_part.len - 1] == '/') {
+                if (open_c := std.mem.lastIndexOf(u8, val_part[0 .. val_part.len - 2], "/*")) {
+                    val_part = std.mem.trim(u8, val_part[0..open_c], " \t\r\n");
+                } else {
+                    break;
+                }
+            }
+            // Reject duplicate !important (e.g. `color: var(--a) !important !important`)
+            if (val_part.len >= 9 && std.ascii.eqlIgnoreCase(val_part[val_part.len - 9 ..], "important")) {
+                const before_imp = std.mem.trim(u8, val_part[0 .. val_part.len - 9], " \t\r\n");
+                if (before_imp.len > 0 && before_imp[before_imp.len - 1] == '!') {
+                    return null;
+                }
+            }
         }
         if (val_part.len == 0) {
-            return null;
+            if (std.mem.startsWith(u8, prop_name, "--")) {
+                if (orig_colon := std.mem.indexOfScalar(u8, decl, ':')) {
+                    if (orig_colon + 1 < decl.len) {
+                        const after_colon = decl[orig_colon + 1 ..];
+                        let has_ws = false;
+                        for (ch of after_colon) {
+                            if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') { has_ws = true; break; }
+                        }
+                        if (has_ws) {
+                            val_part = " ";
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         }
         return CssProperty {
             name: prop_name,
@@ -251,10 +313,36 @@ pub struct CssKeyframes {
         if (!std.ascii.startsWithIgnoreCase(s, "@keyframes")) {
             return null;
         }
-        const open_brace = std.mem.indexOfScalar(u8, s, '{') ?? return null;
-        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') ?? return null;
-        if (close_brace <= open_brace) {
-            return null;
+        let open_brace: usize = 0;
+        let found_open = false;
+        let ob_p: usize = 0;
+        let ob_b: usize = 0;
+        let ob_q: u8 = 0;
+        let ob_i: usize = 0;
+        while (ob_i < s.len) : (ob_i += 1) {
+            const oc = s[ob_i];
+            if (ob_q != 0) {
+                if (oc == '\\' && ob_i + 1 < s.len) { ob_i += 1; continue; }
+                if (oc == ob_q) ob_q = 0;
+                continue;
+            }
+            if (oc == '"' || oc == '\'') { ob_q = oc; continue; }
+            if (oc == '(') { ob_p += 1; continue; }
+            if (oc == ')' && ob_p > 0) { ob_p -= 1; continue; }
+            if (oc == '[') { ob_b += 1; continue; }
+            if (oc == ']' && ob_b > 0) { ob_b -= 1; continue; }
+            if (oc == '{' && ob_p == 0 && ob_b == 0) {
+                open_brace = ob_i;
+                found_open = true;
+                break;
+            }
+        }
+        if (!found_open) return null;
+        let close_brace = s.len;
+        if (cb := std.mem.lastIndexOfScalar(u8, s, '}')) {
+            if (cb > open_brace) {
+                close_brace = cb;
+            }
         }
 
         const anim_name = std.mem.trim(u8, s[10..open_brace], " \t\r\n");
@@ -473,6 +561,22 @@ fn splitTopLevelDecls(body: []const u8, rule: *CssRule) {
                 }
                 if (c == in_q) in_q = 0;
             } else {
+                if (i + 1 < body.len && c == '/' && body[i + 1] == '*') {
+                    const was_leading = (std.mem.trim(u8, body[start..i], " \t\r\n").len == 0);
+                    i += 2;
+                    while (i + 1 < body.len && !(body[i] == '*' && body[i + 1] == '/')) {
+                        i += 1;
+                    }
+                    if (i + 1 < body.len) {
+                        i += 2;
+                    } else {
+                        i = body.len;
+                    }
+                    if (was_leading) {
+                        start = i;
+                    }
+                    continue;
+                }
                 if (c == '"' || c == '\'') in_q = c;
                 else if (c == '(') p_depth += 1;
                 else if (c == ')' && p_depth > 0) p_depth -= 1;
@@ -520,10 +624,36 @@ pub struct CssStylesheetParser {
             };
         }
 
-        const open_brace = std.mem.indexOfScalar(u8, s, '{') ?? return null;
-        const close_brace = std.mem.lastIndexOfScalar(u8, s, '}') ?? return null;
-        if (close_brace <= open_brace) {
-            return null;
+        let open_brace: usize = 0;
+        let found_open = false;
+        let ob_p: usize = 0;
+        let ob_b: usize = 0;
+        let ob_q: u8 = 0;
+        let ob_i: usize = 0;
+        while (ob_i < s.len) : (ob_i += 1) {
+            const oc = s[ob_i];
+            if (ob_q != 0) {
+                if (oc == '\\' && ob_i + 1 < s.len) { ob_i += 1; continue; }
+                if (oc == ob_q) ob_q = 0;
+                continue;
+            }
+            if (oc == '"' || oc == '\'') { ob_q = oc; continue; }
+            if (oc == '(') { ob_p += 1; continue; }
+            if (oc == ')' && ob_p > 0) { ob_p -= 1; continue; }
+            if (oc == '[') { ob_b += 1; continue; }
+            if (oc == ']' && ob_b > 0) { ob_b -= 1; continue; }
+            if (oc == '{' && ob_p == 0 && ob_b == 0) {
+                open_brace = ob_i;
+                found_open = true;
+                break;
+            }
+        }
+        if (!found_open) return null;
+        let close_brace = s.len;
+        if (cb := std.mem.lastIndexOfScalar(u8, s, '}')) {
+            if (cb > open_brace) {
+                close_brace = cb;
+            }
         }
 
         const prelude = std.mem.trim(u8, s[0..open_brace], " \t\r\n");
@@ -591,6 +721,8 @@ pub struct CssStylesheetParser {
         let i: usize = 0;
         let rule_start: usize = 0;
         let brace_depth: usize = 0;
+        let paren_depth: usize = 0;
+        let bracket_depth: usize = 0;
         let in_quote: u8 = 0;
 
         while (i < css_text.len && count < out_rules.len) {
@@ -628,9 +760,17 @@ pub struct CssStylesheetParser {
 
             if (c == '"' || c == '\'') {
                 in_quote = c;
-            } else if (c == '{') {
+            } else if (c == '(') {
+                paren_depth += 1;
+            } else if (c == ')') {
+                if (paren_depth > 0) paren_depth -= 1;
+            } else if (c == '[') {
+                bracket_depth += 1;
+            } else if (c == ']') {
+                if (bracket_depth > 0) bracket_depth -= 1;
+            } else if (c == '{' && paren_depth == 0 && bracket_depth == 0) {
                 brace_depth += 1;
-            } else if (c == '}') {
+            } else if (c == '}' && paren_depth == 0 && bracket_depth == 0) {
                 if (brace_depth > 0) {
                     brace_depth -= 1;
                     if (brace_depth == 0) {
@@ -642,7 +782,7 @@ pub struct CssStylesheetParser {
                         rule_start = i + 1;
                     }
                 }
-            } else if (c == ';' && brace_depth == 0) {
+            } else if (c == ';' && brace_depth == 0 && paren_depth == 0 && bracket_depth == 0) {
                 const chunk = css_text[rule_start .. i + 1];
                 if (r := CssStylesheetParser.parseRule(chunk)) {
                     out_rules[count] = r;
@@ -651,6 +791,13 @@ pub struct CssStylesheetParser {
                 rule_start = i + 1;
             }
             i += 1;
+        }
+        if (brace_depth > 0 && rule_start < css_text.len && count < out_rules.len) {
+            const chunk = css_text[rule_start..css_text.len];
+            if (r := CssStylesheetParser.parseRule(chunk)) {
+                out_rules[count] = r;
+                count += 1;
+            }
         }
         return count;
     }

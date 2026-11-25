@@ -283,7 +283,7 @@ export struct Display {
 }
 
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\x0c';
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -325,4 +325,101 @@ fn appendStr(out: []u8, offset: usize, src: []const u8): usize {
         pos += 1;
     }
     return pos;
+}
+
+fn isCssDigit(c: u8): bool {
+    return c >= '0' && c <= '9';
+}
+
+fn isCssIdentStart(c: u8): bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+}
+
+fn isCssIdentChar(c: u8): bool {
+    return isCssIdentStart(c) || isCssDigit(c) || c == '-';
+}
+
+fn consumeBalancedCallRest(s: []const u8, start: usize): bool {
+    let i = start;
+    let depth: usize = 1;
+    while (i < s.len && depth > 0) {
+        if (s[i] == '(') depth += 1;
+        else if (s[i] == ')') depth -= 1;
+        i += 1;
+    }
+    return depth == 0 && i == s.len;
+}
+
+fn isValidVarOrEnv(s: []const u8): bool {
+    if (s.len >= 5 && asciiCaseEql(s[0..4], "var(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i + 2 >= s.len || s[i] != '-' || s[i + 1] != '-') return false;
+        i += 2;
+        const name_start = i;
+        while (i < s.len && isCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len) return false;
+        if (s[i] == ')') return i + 1 == s.len;
+        if (s[i] != ',') return false;
+        return consumeBalancedCallRest(s, i + 1);
+    }
+    if (s.len >= 5 && asciiCaseEql(s[0..4], "env(")) {
+        let i: usize = 4;
+        while (i < s.len && isWs(s[i])) i += 1;
+        if (i >= s.len || (!isCssIdentStart(s[i]) && s[i] != '-')) return false;
+        const name_start = i;
+        while (i < s.len && isCssIdentChar(s[i])) i += 1;
+        if (i == name_start) return false;
+        while (i < s.len) {
+            while (i < s.len && isWs(s[i])) i += 1;
+            if (i >= s.len) return false;
+            if (s[i] == ')') return i + 1 == s.len;
+            if (s[i] == ',') return consumeBalancedCallRest(s, i + 1);
+            if (isCssDigit(s[i])) {
+                while (i < s.len && isCssDigit(s[i])) i += 1;
+                continue;
+            }
+            return false;
+        }
+        return false;
+    }
+    return false;
+}
+
+/// Zero-allocation validator for CSS `display` values.
+pub fn isValidCssDisplayValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidVarOrEnv(s)) return true;
+    return Display.parse(s) != null;
+}
+
+/// Zero-allocation validator for CSS `position` values.
+pub fn isValidCssPositionValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidVarOrEnv(s)) return true;
+    return asciiCaseEql(s, "static") ||
+        asciiCaseEql(s, "relative") ||
+        asciiCaseEql(s, "absolute") ||
+        asciiCaseEql(s, "fixed") ||
+        asciiCaseEql(s, "sticky");
+}
+
+/// Zero-allocation validator for CSS `visibility` values.
+pub fn isValidCssVisibilityValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidVarOrEnv(s)) return true;
+    return Visibility.parse(s) != null;
+}
+
+/// Zero-allocation validator for CSS `box-sizing` values.
+pub fn isValidCssBoxSizingValue(val: []const u8): bool {
+    const s = trimAscii(val);
+    if (s.len == 0) return false;
+    if (isValidVarOrEnv(s)) return true;
+    return asciiCaseEql(s, "content-box") || asciiCaseEql(s, "border-box");
 }

@@ -1,5 +1,7 @@
 // Source: Absorbed from /data/dev/bun/src/css/properties/background.cp | Synced: 2026-11-23T21:37:18Z
 
+import { isValidCssLenPct } from "./length.cp";
+
 /// CSS Background 属性族解析错误集
 pub err CssBackgroundError {
     InvalidRepeat,
@@ -806,4 +808,138 @@ pub struct Background {
         }
         return pos;
     }
+}
+
+fn isBgWs(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0c;
+}
+
+fn trimBgWs(s: []const u8): []const u8 {
+    return std.mem.trim(u8, s, " \t\r\n\x0c");
+}
+
+fn isBgVarOrEnv(tok: []const u8): bool {
+    if (tok.len < 5) return false;
+    if (!std.ascii.eqlIgnoreCase(tok[0..4], "var(") && !std.ascii.eqlIgnoreCase(tok[0..4], "env(")) {
+        return false;
+    }
+    return isValidCssLenPct(tok, false);
+}
+
+fn isValidBgSizePairToken(tok: []const u8): bool {
+    return std.ascii.eqlIgnoreCase(tok, "auto") || isValidCssLenPct(tok, false);
+}
+
+fn isBgRepeatSingleAxisKw(tok: []const u8): bool {
+    return std.ascii.eqlIgnoreCase(tok, "repeat") ||
+        std.ascii.eqlIgnoreCase(tok, "space") ||
+        std.ascii.eqlIgnoreCase(tok, "round") ||
+        std.ascii.eqlIgnoreCase(tok, "no-repeat");
+}
+
+fn isValidBgLayerTokens(tok1: []const u8, tok2: []const u8, tok_count: usize, is_size: bool): bool {
+    if (is_size) {
+        if (tok_count == 1) {
+            return std.ascii.eqlIgnoreCase(tok1, "cover") ||
+                std.ascii.eqlIgnoreCase(tok1, "contain") ||
+                isValidBgSizePairToken(tok1);
+        }
+        return isValidBgSizePairToken(tok1) && isValidBgSizePairToken(tok2);
+    }
+    if (tok_count == 1) {
+        return isBgRepeatSingleAxisKw(tok1) ||
+            std.ascii.eqlIgnoreCase(tok1, "repeat-x") ||
+            std.ascii.eqlIgnoreCase(tok1, "repeat-y") ||
+            isBgVarOrEnv(tok1);
+    }
+    return isBgRepeatSingleAxisKw(tok1) && isBgRepeatSingleAxisKw(tok2);
+}
+
+fn validateBgLayerList(val: []const u8, is_size: bool): bool {
+    const s = trimBgWs(val);
+    if (s.len == 0) return false;
+
+    let i: usize = 0;
+    let layer_start: usize = 0;
+    let p_depth: usize = 0;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    while (i <= s.len) : (i += 1) {
+        const at_end = (i == s.len);
+        const at_comma = (!at_end && s[i] == ',' && p_depth == 0 && b_depth == 0 && c_depth == 0);
+        if (at_end || at_comma) {
+            if (at_end && (p_depth != 0 || b_depth != 0 || c_depth != 0)) return false;
+            const layer = trimBgWs(s[layer_start..i]);
+            if (layer.len == 0) return false;
+
+            let j: usize = 0;
+            let tok_count: usize = 0;
+            let tok1: []const u8 = "";
+            let tok2: []const u8 = "";
+            while (j < layer.len) {
+                while (j < layer.len && isBgWs(layer[j])) : (j += 1) {}
+                if (j >= layer.len) break;
+
+                const tok_start = j;
+                let tp: usize = 0;
+                let tb: usize = 0;
+                let tc: usize = 0;
+                while (j < layer.len) : (j += 1) {
+                    const ch = layer[j];
+                    if (tp == 0 && tb == 0 && tc == 0 && isBgWs(ch)) {
+                        break;
+                    }
+                    if (ch == '(') tp += 1;
+                    else if (ch == ')') {
+                        if (tp == 0) return false;
+                        tp -= 1;
+                    } else if (ch == '[') tb += 1;
+                    else if (ch == ']') {
+                        if (tb == 0) return false;
+                        tb -= 1;
+                    } else if (ch == '{') tc += 1;
+                    else if (ch == '}') {
+                        if (tc == 0) return false;
+                        tc -= 1;
+                    }
+                }
+                if (tp != 0 || tb != 0 || tc != 0) return false;
+
+                const tok = layer[tok_start..j];
+                tok_count += 1;
+                if (tok_count == 1) tok1 = tok;
+                else if (tok_count == 2) tok2 = tok;
+                else return false;
+            }
+            if (tok_count == 0) return false;
+            if (!isValidBgLayerTokens(tok1, tok2, tok_count, is_size)) return false;
+            layer_start = i + 1;
+        } else {
+            const ch = s[i];
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+        }
+    }
+    return true;
+}
+
+/// Zero-allocation validator for CSS `background-size` property values.
+pub fn isValidCssBgSizeValue(val: []const u8): bool {
+    return validateBgLayerList(val, true);
+}
+
+/// Zero-allocation validator for CSS `background-repeat` property values.
+pub fn isValidCssBgRepeatValue(val: []const u8): bool {
+    return validateBgLayerList(val, false);
 }

@@ -3,6 +3,8 @@
 // physical & logical shorthand parser, serializer, and browser-target lowering handler
 // (aligned with LightningCSS & Bun `NewSizeHandler` + `docs/bundler/css.mdx`).
 
+import { isValidCssLenPct } from "./length.cp";
+
 /// 单个输出声明表支持的最大普通物理/逻辑声明条数
 pub const CSS_MARGIN_PAD_MAX_DECLS: usize = 32;
 /// 单个输出声明表支持的最大方向性（LTR / RTL）降级声明条数
@@ -1020,4 +1022,62 @@ fn formatDeclList(decls: []const CssSpacingDecl, out: []u8, minify: bool): usize
         i += 1;
     }
     return pos;
+}
+
+fn isValidSpacingShorthand(val: []const u8, allow_auto: bool, allow_negative: bool): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    let i: usize = 0;
+    let tok_count: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && (isWs(s[i]) || s[i] == 0x0c)) : (i += 1) {}
+        if (i >= s.len) break;
+
+        const tok_start = i;
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (i < s.len) {
+            const ch = s[i];
+            if (p_depth == 0 && b_depth == 0 && c_depth == 0 && (isWs(ch) || ch == 0x0c)) {
+                break;
+            }
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+            i += 1;
+        }
+        if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+        const tok = s[tok_start..i];
+        tok_count += 1;
+        if (tok_count > 4) return false;
+        if (allow_auto && std.ascii.eqlIgnoreCase(tok, "auto")) {
+            continue;
+        }
+        if (!isValidCssLenPct(tok, allow_negative)) return false;
+    }
+
+    return tok_count >= 1 && tok_count <= 4;
+}
+
+/// Zero-allocation validator for CSS `margin` shorthand (`1..4` tokens, each `auto` or `<length-percentage>`).
+pub fn isValidCssMarginShorthand(val: []const u8): bool {
+    return isValidSpacingShorthand(val, true, true);
+}
+
+/// Zero-allocation validator for CSS `padding` shorthand (`1..4` tokens, each non-negative `<length-percentage>`).
+pub fn isValidCssPaddingShorthand(val: []const u8): bool {
+    return isValidSpacingShorthand(val, false, false);
 }

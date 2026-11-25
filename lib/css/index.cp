@@ -37,11 +37,15 @@ pub const BorderWidth = _border.BorderWidth;
 pub const CssBorderStyle = _border.BorderStyle;
 pub const BorderColor = _border.BorderColor;
 pub const BorderLogicalWidth = _border.BorderLogicalWidth;
+pub const isValidCssBorderWidthValue = _border.isValidCssBorderWidthValue;
+pub const isValidCssBorderStyleValue = _border.isValidCssBorderStyleValue;
 
 import _borderradius from "./borderradius.cp";
 pub const RadiusValue = _borderradius.RadiusValue;
 pub const CornerRadius = _borderradius.CornerRadius;
 pub const CssBorderRadius = _borderradius.BorderRadius;
+pub const isValidCssBorderRadiusShorthand = _borderradius.isValidCssBorderRadiusShorthand;
+pub const isValidCssBorderCornerRadius = _borderradius.isValidCssBorderCornerRadius;
 
 import _boxshadow from "./boxshadow.cp";
 pub const OutlineStyle = _boxshadow.OutlineStyle;
@@ -74,6 +78,8 @@ pub const FilterAngleUnit = _effects.FilterAngleUnit;
 pub const DropShadow = _effects.DropShadow;
 pub const Filter = _effects.Filter;
 pub const CssFilterList = _effects.FilterList;
+pub const isValidCssFilterValue = _effects.isValidCssFilterValue;
+pub const isValidCssBoxShadowValue = _effects.isValidCssBoxShadowValue;
 
 
 // --- Merged CSS Submodules (Batch 2) ---
@@ -98,6 +104,8 @@ pub const AlignContent = _flexgrid.AlignContent;
 pub const GridAutoFlow = _flexgrid.GridAutoFlow;
 pub const TrackBreadthKind = _flexgrid.TrackBreadthKind;
 pub const TrackBreadth = _flexgrid.TrackBreadth;
+pub const isValidCssFlexNumberValue = _flexgrid.isValidCssFlexNumberValue;
+pub const isValidCssOrderValue = _flexgrid.isValidCssOrderValue;
 
 import _geometry from "./geometry.cp";
 pub const CssRatio = _geometry.Ratio;
@@ -136,6 +144,16 @@ pub const LayoutPosition = _layoutctrl.Position;
 pub const LayoutContainerType = _layoutctrl.ContainerType;
 pub const ContainFlags = _layoutctrl.ContainFlags;
 pub const ZIndex = _layoutctrl.ZIndex;
+pub const isValidCssZIndexValue = _layoutctrl.isValidCssZIndexValue;
+pub const isValidCssFlexBasisValue = _layoutctrl.isValidCssFlexBasisValue;
+pub const isValidCssGapValue = _layoutctrl.isValidCssGapValue;
+pub const isValidCssAnimIterCountValue = _layoutctrl.isValidCssAnimIterCountValue;
+pub const isValidCssWritingModeValue = _layoutctrl.isValidCssWritingModeValue;
+pub const isValidCssDirectionValue = _layoutctrl.isValidCssDirectionValue;
+pub const isValidCssUnicodeBidiValue = _layoutctrl.isValidCssUnicodeBidiValue;
+pub const isValidCssFloatValue = _layoutctrl.isValidCssFloatValue;
+pub const isValidCssClearValue = _layoutctrl.isValidCssClearValue;
+pub const isValidCssObjectFitValue = _layoutctrl.isValidCssObjectFitValue;
 
 import _media from "./media.cp";
 pub const CssMediaError = _media.CssMediaError;
@@ -211,6 +229,9 @@ pub const TransformOrigin = _transform.TransformOrigin;
 pub const CssTransformKind = _transform.TransformKind;
 pub const Transform = _transform.Transform;
 pub const CssTransformList = _transform.TransformList;
+pub const isValidCssTransformValue = _transform.isValidCssTransformValue;
+pub const isValidCssRotateValue = _transform.isValidCssRotateValue;
+pub const isValidCssScaleValue = _transform.isValidCssScaleValue;
 
 import _transition from "./transition.cp";
 pub const CssTransitionError = _transition.CssTransitionError;
@@ -222,6 +243,7 @@ pub const TransitionEasingKind = _transition.TransitionEasingKind;
 pub const TransitionEasing = _transition.TransitionEasing;
 pub const CssTransition = _transition.Transition;
 pub const TransitionList = _transition.TransitionList;
+pub const isValidCssTimeListValue = _transition.isValidCssTimeListValue;
 
 import _ui from "./ui.cp";
 pub const UiColorScheme = _ui.ColorScheme;
@@ -230,6 +252,9 @@ pub const UserSelect = _ui.UserSelect;
 pub const CaretShape = _ui.CaretShape;
 pub const Appearance = _ui.Appearance;
 pub const CursorKeyword = _ui.CursorKeyword;
+pub const isValidCssPointerEventsValue = _ui.isValidCssPointerEventsValue;
+pub const isValidCssUserSelectValue = _ui.isValidCssUserSelectValue;
+pub const isValidCssResizeValue = _ui.isValidCssResizeValue;
 
 import _units from "./units.cp";
 pub const UnitAngleUnit = _units.AngleUnit;
@@ -385,6 +410,7 @@ export {
     CssGridTrackItem,
     CssGridTrackSizing,
     CssGridTemplateAreas,
+    isValidCssGridAutoFlowValue,
 } from "./grid.cp";
 
 export {
@@ -529,6 +555,7 @@ export {
     cssMathLog,
     cssMathAngleToRad,
     evalCssMathExpr,
+    isValidCssMathSyntax,
 } from "./mathFunc.cp";
 
 export {
@@ -546,6 +573,10 @@ export {
     CssPlaceContent,
     CssPlaceItems,
     CssPlaceSelf,
+    isValidCssFlexDirectionValue,
+    isValidCssFlexWrapValue,
+    isValidCssAlignSelfOrItemsValue,
+    isValidCssContentDistributionValue,
 } from "./boxAlign.cp";
 
 export {
@@ -599,6 +630,8 @@ export {
     CssSpacingDecl,
     CssSpacingOutput,
     CssBoxSpacingHandler,
+    isValidCssMarginShorthand,
+    isValidCssPaddingShorthand,
 } from "./marginPad.cp";
 
 export {
@@ -625,6 +658,7 @@ export {
     CssOutlineWidthKind,
     CssOutlineWidth,
     CssOutline,
+    isValidCssOutlineStyleValue,
 } from "./outline.cp";
 
 export {
@@ -642,6 +676,10 @@ export {
     CssContainType,
     CssContainerNameList,
     CssContainerShorthand,
+    isValidCssContainValue,
+    isValidCssContentVisibilityValue,
+    isValidCssIsolationValue,
+    isValidCssMixBlendModeValue,
 } from "./containProp.cp";
 
 export {
@@ -669,6 +707,7 @@ export {
     CssPositionPropError,
     CssPositionKind,
     CssPositionProp,
+    isValidCssInsetValue,
 } from "./positionProp.cp";
 
 export {
@@ -676,6 +715,7 @@ export {
     CssOverflowAxis,
     CssOverflowProp,
     CssTextOverflowProp,
+    isValidCssOverflowValue,
 } from "./overflowProp.cp";
 
 export {

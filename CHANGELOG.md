@@ -49,3 +49,9 @@
 - **#9 (`c43ebf0a`)** `cap/src/main.zig`: `cap` 多级自动发现 `cpc`/`zig` 二进制，新增 Linux `inotify` 50ms 防抖热重载监听。
 - **#10 / #11 (`ce7d60c4`)** `cap.json`, `cap/src/main.zig`: 根 `cap.json` 挂载 `packages/@web/*` workspace，新增 `cap init web <dir>` 生产级脚手架、`cap test --filter/-k <pat>` 过滤与 `cap demangle` 提示。
 - **#12 (`d2043c04`)** `lib/web/tls.cp`, `lib/web/server.cp`, `lib/web/index.cp`, `cap/test/testWebTlsConfig.cp`: 纯 CP TLS 1.2/1.3 配置、PEM 校验、ClientHello 探测、零分配 SNI 提取与 ALPN 协商（6/6 PASS）。
+
+## [2026-11-26] - 审查收口 `cap:css` CSSOM 值校验器与 Color 4 / Stylesheet / `@supports` 规范增强（79/79 CSS 测试全绿）
+- `lib/css/*.cp`（26 个文件）: 审查并收口 CapSurf 下沉的 59 项 `isValidCss*` CSSOM 属性值校验器、`CssColor` Color 4（`calc()` / `none` / `lab()` / `lch()` / `color()` / 注释剥离 / CSSOM 序列化）、`CssProperty.parse`（注释剥离 / 拒绝重复 `!important` / `--custom: ` 空白值）与 `@supports`（自定义属性与 `\` 转义字符），零破坏性变更、26/26 单文件 `cpc check` 通过。
+- `cap/test/testCssValidationAndColor4.cp`: 新增 12 项专项单元测试，覆盖 40 个 `isValidCss*` 函数合法/非法边界、Color 4、Stylesheet 与 `@supports` 增强（PASSED 947ms）。
+- `cap/test/test_css_full.cp`: 修正 L96 历史遗留断言 `"rgba(59, 130, 246, 128)"` → W3C 标准 `"rgba(59, 130, 246, 0.501961)"`，全量 CSS 回归达到 79/79 PASS。
+- `doc/lib/css.md`, `cp_lib_ref.md`: 同步登记全部 59 项新增 CSSOM 校验 API 与解析增强契约。

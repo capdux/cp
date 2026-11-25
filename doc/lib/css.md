@@ -65,17 +65,21 @@
 
 ### 2. CSS Color Level 4 (`CssColor`)
 
-支持 `#rgb` / `#rgba` / `#rrggbb` / `#rrggbbaa`、传统逗号与现代空格斜杠 `rgb()`/`rgba()`/`hsl()`/`hsla()`/`hwb()`/`oklab()`/`oklch()`（支持 `deg`/`rad`/`turn`/`grad` 角度）及全部 **148 个 W3C 标准命名色**（二分查找）。
+支持 `#rgb` / `#rgba` / `#rrggbb` / `#rrggbbaa`、传统逗号与现代空格斜杠 `rgb()`/`rgba()`/`hsl()`/`hsla()`/`hwb()`/`lab()`/`lch()`/`oklab()`/`oklch()`/`color()`（支持 `deg`/`rad`/`turn`/`grad` 角度、通道内 `calc(...)` 表达式、`none` 缺失分量关键字及 `/* ... */` 注释剥离）及全部 **148 个 W3C 标准命名色**（二分查找）。
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `CssColor.parse(input): CssColor?` | 解析任意 Hex / RGB / HSL / HWB / OKLAB / OKLCH / 命名色 |
+| `CssColor.parse(input): CssColor?` | 解析任意 Hex / RGB / HSL / HWB / Lab / LCH / OKLAB / OKLCH / `color()` / 命名色（支持 `calc()`、`none` 与注释剥离） |
 | `CssColor.rgb(r, g, b)` / `CssColor.rgba(r, g, b, a)` | 直接构造 sRGB 颜色对象 |
 | `CssColor.fromHsl(h, s, l, a)` / `fromHwb(h, w, b, a)` | HSL / HWB 转 sRGB |
+| `CssColor.fromLab(l, a, b, alpha)` / `fromLch(l, c, h, a)` | CIE Lab / LCH 色域转换至 sRGB |
 | `CssColor.fromOklab(l, a, b, alpha)` / `fromOklch(l, c, h, a)` | OKLAB / OKLCH 感知均匀色域转换至 sRGB |
+| `CssColor.fromColorSpace(space, c0, c1, c2, a): CssColor?` | 从 CSS Color 4 `color(<space> ...)` 宽色域转换至 sRGB |
 | `color.withAlpha(a)` / `lighten(pct)` / `darken(pct)` | 透明度替换与 HSL 亮度增减 |
 | `color.toHex(buf)` / `toRgbString(buf)` / `toHsl(&h, &s, &l)` | 格式化输出与 HSL 反算 |
+| `color.toCssomString(buf)` / `CssColor.parseColorToCssomString(input, buf)` | 按 W3C CSSOM 规范格式化或端到端解析并序列化颜色字符串 |
 | `color.luminance()` / `contrastRatio(other)` / `mix(other, w)` | WCAG 相对亮度、对比度与线性混色 |
+| `isValidCssColorSyntax(val): bool` | CSSOM 颜色语法校验（支持 Color 4、`color-mix()`、嵌套 `calc()` 与注释剥离） |
 
 ### 3. CSS Values, Units & `calc()` (`CssUnit`, `CssLength`, `CssCalc`)
 
@@ -113,7 +117,7 @@
 
 | API 签名 | 说明 |
 | :--- | :--- |
-| `CssProperty.parse(decl): CssProperty?` | 解析声明、`!important` 与 `--custom-prop` |
+| `CssProperty.parse(decl): CssProperty?` | 解析声明、`!important` 与 `--custom-prop`（支持 `/* ... */` 注释剥离、拒绝重复 `!important`、允许 `--custom: ` 空白值） |
 | `CssMediaQuery.parse(query)` / `matches(vw, is_dark)` / `matchesFull(...)` | 解析并评估 `min/max-width`、`min/max-height`、`prefers-color-scheme`、`prefers-reduced-motion`、`orientation` 与 `not` 取反 |
 | `CssKeyframes.parse(rule_text): CssKeyframes?` | 解析 `@keyframes` 与各关键帧步骤声明 |
 | `CssNesting.flatten(css_text, out_buf): []const u8` | 将 CSS Nesting（`&`、嵌套子选择器、嵌套 `@media`）展平为标准扁平 CSS |
@@ -1030,4 +1034,37 @@ const n2 = rad.toCss(buf[0..], true)?; // "8px 16px/4px 8px"
 * = n1;
 * = n2;
 ```
+
+---
+
+## 五、 CSSOM 属性值校验器（`isValidCss*`）与 Color 4 / Stylesheet / `@supports` 规范增强
+
+为支撑浏览器级 CSSOM（`CSSStyleDeclaration` / `CSS.supports()`）零堆分配快速校验，`cap:css` 在各对应子模块下沉并统一导出了 **59 个 `isValidCss*` 属性值校验器**，并同步加固了 Color 4、样式表声明解析与 `@supports` 条件解析。
+
+### 1. CSSOM 属性值校验器分组清单（59 项）
+
+| 分组 | 子模块 | 导出校验函数 |
+| :--- | :--- | :--- |
+| **色彩与数学/数值原语**（5） | `color.cp`、`mathFunc.cp`、`length.cp` | `isValidCssColorSyntax(val)`、`isValidCssMathSyntax(expr)`、`isValidCssLenPct(tok, allow_negative)`、`isValidCssTranslateValue(val)`、`isValidCssOpacityValue(val)` |
+| **盒模型、边框、轮廓与间距**（9） | `border.cp`、`borderradius.cp`、`marginPad.cp`、`outline.cp`、`positionProp.cp`、`overflowProp.cp` | `isValidCssBorderWidthValue(val, max_tokens)`、`isValidCssBorderStyleValue(val, max_tokens)`、`isValidCssBorderRadiusShorthand(val)`、`isValidCssBorderCornerRadius(val)`、`isValidCssMarginShorthand(val)`、`isValidCssPaddingShorthand(val)`、`isValidCssOutlineStyleValue(val)`、`isValidCssInsetValue(val, max_tokens)`、`isValidCssOverflowValue(val, max_tokens)` |
+| **显示、定位与布局控制**（14） | `display.cp`、`layoutctrl.cp` | `isValidCssDisplayValue(val)`、`isValidCssPositionValue(val)`、`isValidCssVisibilityValue(val)`、`isValidCssBoxSizingValue(val)`、`isValidCssZIndexValue(val)`、`isValidCssFlexBasisValue(val)`、`isValidCssGapValue(val, max_tokens)`、`isValidCssAnimIterCountValue(val)`、`isValidCssWritingModeValue(val)`、`isValidCssDirectionValue(val)`、`isValidCssUnicodeBidiValue(val)`、`isValidCssFloatValue(val)`、`isValidCssClearValue(val)`、`isValidCssObjectFitValue(val)` |
+| **Flexbox / Grid / Box Alignment**（7） | `flexgrid.cp`、`grid.cp`、`boxAlign.cp` | `isValidCssFlexNumberValue(val)`、`isValidCssOrderValue(val)`、`isValidCssGridAutoFlowValue(val)`、`isValidCssFlexDirectionValue(val)`、`isValidCssFlexWrapValue(val)`、`isValidCssAlignSelfOrItemsValue(val, allow_auto)`、`isValidCssContentDistributionValue(val, is_justify)` |
+| **背景、视觉特效与合成**（8） | `background.cp`、`effects.cp`、`containProp.cp` | `isValidCssBgSizeValue(val)`、`isValidCssBgRepeatValue(val)`、`isValidCssFilterValue(val)`、`isValidCssBoxShadowValue(val)`、`isValidCssContainValue(val)`、`isValidCssContentVisibilityValue(val)`、`isValidCssIsolationValue(val)`、`isValidCssMixBlendModeValue(val)` |
+| **字体、文本与列表**（9） | `font.cp`、`text.cp`、`liststyle.cp` | `isValidCssFontWeightValue(val)`、`isValidCssFontStretchValue(val)`、`isValidCssLineHeightValue(val)`、`isValidCssTextAlignValue(val)`、`isValidCssWhiteSpaceValue(val)`、`isValidCssWordBreakValue(val)`、`isValidCssOverflowWrapValue(val)`、`isValidCssListStylePositionValue(val)`、`isValidCssListStyleTypeValue(val)` |
+| **变换、过渡与用户界面**（7） | `transform.cp`、`transition.cp`、`ui.cp` | `isValidCssTransformValue(val)`、`isValidCssRotateValue(val)`、`isValidCssScaleValue(val)`、`isValidCssTimeListValue(val, allow_negative, allow_auto)`、`isValidCssPointerEventsValue(val)`、`isValidCssUserSelectValue(val)`、`isValidCssResizeValue(val)` |
+
+### 2. Color 4 / Stylesheet / `@supports` 核心解析增强
+
+- **`CssColor`（`lib/css/color.cp`）**：
+  - **Color 4 `calc()` 通道求值**：支持在色彩分量与 alpha 通道中嵌套 `calc(...)` 算术表达式（含 `%`、`deg`/`grad`/`turn`/`rad` 角度单位与 `pi`/`e`/`infinity`/`nan` 常量）；
+  - **`none` 缺失分量与注释剥离**：支持现代语法的 `none` 缺失通道关键字（如 `rgb(none 128 255 / none)`），并在解析前零分配剥离前置及内联 `/* ... */` 注释（未闭合注释安全拒绝）；
+  - **扩展色域与 CSSOM 序列化**：新增 `fromLab` / `fromLch` / `fromColorSpace` 与 `toCssomString` / `parseColorToCssomString` / `isValidCssColorSyntax`。
+- **`CssProperty.parse`（`lib/css/stylesheet.cp`）**：
+  - **注释剥离**：自动剥离声明前导、属性名尾部、属性值尾部及 `!important` 前的 `/* ... */` 注释（未闭合前导注释返回 `null`）；
+  - **重复 `!important` 拒绝**：严格拦截诸如 `color: var(--a) !important !important` 的重复优先级标记并返回 `null`；
+  - **自定义属性空白值（`--custom: `）**：遵循 W3C CSS Custom Properties Level 1，对 `--*` 自定义属性允许冒号后仅包含空白字符（归一化为 `" "`），同时对普通标准属性仍拒绝空值。
+- **`@supports`（`lib/css/supports.cp`）**：
+  - **自定义属性声明条件**：`SupportsTree` 的 `(prop: value)` 声明解析支持 `--*` 自定义属性，允许空值或纯空白值并保留原始值切片；
+  - **转义标识符**：属性名校验（`isValidPropIdent`）支持反斜杠转义序列（如 `\64 isplay`、`--foo\:bar`），并严格拒绝末尾悬空反斜杠。
+
 

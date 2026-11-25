@@ -3,6 +3,7 @@
 //! (supports 1–4 horizontal radii + optional `/ 1–4 vertical radii` elliptical corners).
 
 import std from "std";
+import { isValidCssLenPct } from "./length.cp";
 
 export struct RadiusValue {
     value: f32 = 0.0,
@@ -244,4 +245,94 @@ fn appendStr(out: []u8, offset: usize, src: []const u8): usize {
         pos += 1;
     }
     return pos;
+}
+
+fn isValidLenPctList(val: []const u8, min_tokens: usize, max_tokens: usize, allow_negative: bool): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    let i: usize = 0;
+    let tok_count: usize = 0;
+    while (i < s.len) {
+        while (i < s.len && (isWs(s[i]) || s[i] == 0x0c)) : (i += 1) {}
+        if (i >= s.len) break;
+
+        const tok_start = i;
+        let p_depth: usize = 0;
+        let b_depth: usize = 0;
+        let c_depth: usize = 0;
+        while (i < s.len) {
+            const ch = s[i];
+            if (p_depth == 0 && b_depth == 0 && c_depth == 0 && (isWs(ch) || ch == 0x0c)) {
+                break;
+            }
+            if (ch == '(') p_depth += 1;
+            else if (ch == ')') {
+                if (p_depth == 0) return false;
+                p_depth -= 1;
+            } else if (ch == '[') b_depth += 1;
+            else if (ch == ']') {
+                if (b_depth == 0) return false;
+                b_depth -= 1;
+            } else if (ch == '{') c_depth += 1;
+            else if (ch == '}') {
+                if (c_depth == 0) return false;
+                c_depth -= 1;
+            }
+            i += 1;
+        }
+        if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+        const tok = s[tok_start..i];
+        tok_count += 1;
+        if (tok_count > max_tokens) return false;
+        if (!isValidCssLenPct(tok, allow_negative)) return false;
+    }
+
+    return tok_count >= min_tokens && tok_count <= max_tokens;
+}
+
+/// Zero-allocation validator for CSS `border-radius` shorthand (`1..4` non-negative
+/// `<length-percentage>`, optional `/` followed by `1..4` non-negative `<length-percentage>`).
+pub fn isValidCssBorderRadiusShorthand(val: []const u8): bool {
+    const s = std.mem.trim(u8, val, " \t\r\n\x0c");
+    if (s.len == 0) return false;
+
+    let slash_idx: usize? = null;
+    let p_depth: usize = 0;
+    let b_depth: usize = 0;
+    let c_depth: usize = 0;
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const ch = s[i];
+        if (ch == '(') p_depth += 1;
+        else if (ch == ')') {
+            if (p_depth == 0) return false;
+            p_depth -= 1;
+        } else if (ch == '[') b_depth += 1;
+        else if (ch == ']') {
+            if (b_depth == 0) return false;
+            b_depth -= 1;
+        } else if (ch == '{') c_depth += 1;
+        else if (ch == '}') {
+            if (c_depth == 0) return false;
+            c_depth -= 1;
+        } else if (ch == '/' && p_depth == 0 && b_depth == 0 && c_depth == 0) {
+            if (slash_idx != null) return false;
+            slash_idx = i;
+        }
+    }
+    if (p_depth != 0 || b_depth != 0 || c_depth != 0) return false;
+
+    if (idx := slash_idx) {
+        return isValidLenPctList(s[0..idx], 1, 4, false)
+            && isValidLenPctList(s[idx + 1 ..], 1, 4, false);
+    }
+    return isValidLenPctList(s, 1, 4, false);
+}
+
+/// Zero-allocation validator for CSS `border-*-radius` corner properties
+/// (`1..2` non-negative `<length-percentage>`).
+pub fn isValidCssBorderCornerRadius(val: []const u8): bool {
+    return isValidLenPctList(val, 1, 2, false);
 }
