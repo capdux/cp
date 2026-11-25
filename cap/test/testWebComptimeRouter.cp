@@ -272,5 +272,37 @@ fn main() {
         @panic("Test 5d failed: TraceSpan.durationUs mismatch");
     }
 
-    @print("PASS testWebComptimeRouter (5/5 suites)");
+    // Test 6: Comptime Dynamic `:param` routes + zero-copy dispatchInto + ControllerSpec
+    let dyn_table = ComptimeRouteTable.init();
+    * = dyn_table.insert(routeGet("/health", handleHealth, "Health"));
+    * = dyn_table.insert(routeGet("/api/v1/users/:id/posts/:postId", handleHealth, "User Post"));
+    if (dyn_table.staticCount() != 1 || dyn_table.dynamicCount() != 1 || dyn_table.count() != 2) {
+        @panic("Test 6a failed: static/dynamic route counts mismatch");
+    }
+    let dyn_req = Request.init(AppMethod.GET, "/api/v1/users/42/posts/99?lang=en");
+    let dyn_ctx: Context = undefined;
+    let dyn_resp: Response = undefined;
+    if (!dyn_table.dispatchInto(&dyn_req, *dyn_ctx, *dyn_resp)) {
+        @panic("Test 6b failed: dispatchInto missed comptime dynamic route");
+    }
+    if (dyn_resp.status != 200) {
+        @panic("Test 6b failed: unexpected status");
+    }
+    if (uid := dyn_ctx.param("id")) {
+        if (!strEql(uid, "42")) @panic("Test 6c failed: param id mismatch");
+    } else {
+        @panic("Test 6c failed: missing param id");
+    }
+    if (pid := dyn_ctx.param("postId")) {
+        if (!strEql(pid, "99")) @panic("Test 6d failed: param postId mismatch");
+    } else {
+        @panic("Test 6d failed: missing param postId");
+    }
+    if (lang := dyn_ctx.query("lang")) {
+        if (!strEql(lang, "en")) @panic("Test 6e failed: query lang mismatch");
+    } else {
+        @panic("Test 6e failed: missing query lang");
+    }
+
+    @print("PASS testWebComptimeRouter (6/6 suites)");
 }

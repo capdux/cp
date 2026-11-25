@@ -71,7 +71,7 @@ fn main() {
 };
 
 // Real verified same-machine benchmarks (Intel Xeon Platinum 8175M, Linux 6.12 x86_64)
-// Sources: bench/vs_web_frameworks/{scaling_results,ws_live_results,ws_chat_results,sqlite_extreme_results,bun_official_results}.json, bench/vs_runtimes/results.json
+// Sources: bench/vs_web_frameworks/{scaling_results,fw_results,ws_live_results,ws_chat_results,sqlite_extreme_results,bun_official_results}.json, bench/vs_runtimes/results.json
 // CP v1.0.0 (-OReleaseFast) vs Bun 1.3.14 vs Node v26.1.0 vs Python 3.12.15
 const DEFAULT_BENCHMARKS = [
   {
@@ -94,6 +94,17 @@ const DEFAULT_BENCHMARKS = [
       { label: "CP v1.0 8c single-proc (P99 0.11ms · 19.2 MB RSS)", key: "cp", value: 792562, display: "792,562 QPS" },
       { label: "Bun 1.3.14 8c (8-proc · 422.8 MB RSS)", key: "bun", value: 322240, display: "322,240 QPS" },
       { label: "Node v26.1.0 8c (8-proc · 724.2 MB RSS)", key: "node", value: 201264, display: "201,264 QPS" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "Full Web Framework 16-Core (24 Routes, POST JSON + Validation, Err=0)",
+    subtitle: "Higher is better (QPS) · CP cap:web: 2.83x Bun Elysia, 3.32x Node Fastify · 41.4x–47.8x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 cap:web 16c (P99 0.13ms · 33.9 MB RSS)", key: "cp", value: 977586, display: "977,586 QPS" },
+      { label: "Bun 1.3.14 Elysia 16c (P99 0.51ms · 1,402.7 MB RSS)", key: "bun", value: 345207, display: "345,207 QPS" },
+      { label: "Node v26.1.0 Fastify 16c (P99 0.64ms · 1,621.4 MB RSS)", key: "node", value: 294450, display: "294,450 QPS" },
     ],
   },
   {

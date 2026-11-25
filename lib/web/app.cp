@@ -488,6 +488,52 @@ pub struct Response {
         };
     }
 
+    pub static fn redirect(status_code: u16, location: string): Response {
+        let r = Response{
+            status: status_code,
+            content_type: "",
+            body: "",
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
+            header_len: 0,
+        };
+        * = r.setHeader("Location", location);
+        return r;
+    }
+
+    pub static fn redirectTemporary(location: string): Response {
+        return Response.redirect(302, location);
+    }
+
+    pub static fn redirectPermanent(location: string): Response {
+        return Response.redirect(308, location);
+    }
+
+    pub static fn html(status_code: u16, body: string): Response {
+        return Response{
+            status: status_code,
+            content_type: "text/html; charset=utf-8",
+            body: body,
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
+            header_len: 0,
+        };
+    }
+
+    pub static fn bytes(status_code: u16, payload: string, content_type: string): Response {
+        return Response{
+            status: status_code,
+            content_type: content_type,
+            body: payload,
+            body_buf: undefined,
+            body_buf_len: 0,
+            headers: undefined,
+            header_len: 0,
+        };
+    }
+
     pub fn setHeader(*_, name: string, value: string): *Response {
         let i: usize = 0;
         while (i < _.header_len) : (i += 1) {
@@ -755,6 +801,69 @@ pub struct Context {
         _.aborted = true;
     }
 
+    /// Extract a form field from `application/x-www-form-urlencoded` body (`k1=v1&k2=v2`, zero-alloc slice).
+    pub fn form(key: string): string? {
+        if (key.len == 0 || _.body.len == 0) return null;
+        let pos: usize = 0;
+        const b = _.body;
+        while (pos <= b.len) {
+            let end: usize = pos;
+            while (end < b.len && b[end] != '&') : (end += 1) {}
+            const pair = b[pos..end];
+            if (pair.len > 0) {
+                if (eq_idx := findByte(pair, '=')) {
+                    const k = pair[0..eq_idx];
+                    if (bytesEql(k, key)) {
+                        return if (eq_idx + 1 <= pair.len) pair[eq_idx + 1 ..] else "";
+                    }
+                } else if (bytesEql(pair, key)) {
+                    return "";
+                }
+            }
+            if (end >= b.len) break;
+            pos = end + 1;
+        }
+        return null;
+    }
+
+    /// Extract the boundary parameter from a `Content-Type: multipart/...; boundary=...` header.
+    pub fn multipartBoundary(): string? {
+        if (ct := _.header("Content-Type")) {
+            if (semi_idx := findByte(ct, ';')) {
+                const media = trimAsciiSpaces(ct[0..semi_idx]);
+                if (media.len < 10 || !asciiEqlIgnoreCase(media[0..10], "multipart/")) {
+                    return null;
+                }
+                let pos: usize = semi_idx + 1;
+                while (pos < ct.len) {
+                    let end: usize = pos;
+                    while (end < ct.len && ct[end] != ';') : (end += 1) {}
+                    const part = trimAsciiSpaces(ct[pos..end]);
+                    if (part.len > 0) {
+                        if (eq_idx := findByte(part, '=')) {
+                            const k = trimAsciiSpaces(part[0..eq_idx]);
+                            if (asciiEqlIgnoreCase(k, "boundary")) {
+                                let val = trimAsciiSpaces(part[eq_idx + 1 ..]);
+                                if (val.len >= 2 && val[0] == '"' && val[val.len - 1] == '"') {
+                                    val = val[1 .. val.len - 1];
+                                }
+                                return if (val.len > 0) val else null;
+                            }
+                        }
+                    }
+                    if (end >= ct.len) break;
+                    pos = end + 1;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// Check whether this request has a valid `multipart/*` Content-Type with a boundary.
+    pub fn isMultipart(): bool {
+        return _.multipartBoundary() != null;
+    }
+
     /// Build a JSON response (`application/json; charset=utf-8`).
     pub fn json(status_code: u16, payload: string): Response {
         return Response.json(status_code, payload);
@@ -763,6 +872,36 @@ pub struct Context {
     /// Build a plain-text response (`text/plain; charset=utf-8`).
     pub fn text(status_code: u16, payload: string): Response {
         return Response.text(status_code, payload);
+    }
+
+    /// Build an HTML response (`text/html; charset=utf-8`).
+    pub fn html(status_code: u16, body: string): Response {
+        * = _;
+        return Response.html(status_code, body);
+    }
+
+    /// Build a binary/custom content-type response.
+    pub fn bytes(status_code: u16, payload: string, content_type: string): Response {
+        * = _;
+        return Response.bytes(status_code, payload, content_type);
+    }
+
+    /// Build a redirect response with `Location` header.
+    pub fn redirect(status_code: u16, location: string): Response {
+        * = _;
+        return Response.redirect(status_code, location);
+    }
+
+    /// Build a `302 Found` temporary redirect response.
+    pub fn redirectTemporary(location: string): Response {
+        * = _;
+        return Response.redirectTemporary(location);
+    }
+
+    /// Build a `308 Permanent Redirect` response.
+    pub fn redirectPermanent(location: string): Response {
+        * = _;
+        return Response.redirectPermanent(location);
     }
 
     /// Build a `204 No Content` response.
@@ -784,7 +923,21 @@ pub type HandlerFn = *const fn (*Context): Response;
 pub type MiddlewareFn = *const fn (*Context): bool;
 pub type LifecycleHookFn = *const fn (*Context): bool;
 pub type ResponseHookFn = *const fn (*Context, *Response): void;
+pub type BeforeHookFn = LifecycleHookFn;
+pub type AfterHookFn = ResponseHookFn;
 pub type ErrorHookFn = *const fn (*Context, AppErrorCode, string): Response;
+
+pub const HOOK_MASK_MIDDLEWARE: u16 = 1 << 0;
+pub const HOOK_MASK_ON_REQUEST: u16 = 1 << 1;
+pub const HOOK_MASK_ON_PARSE: u16 = 1 << 2;
+pub const HOOK_MASK_ON_TRANSFORM: u16 = 1 << 3;
+pub const HOOK_MASK_DERIVE: u16 = 1 << 4;
+pub const HOOK_MASK_ON_BEFORE: u16 = 1 << 5;
+pub const HOOK_MASK_ON_AFTER: u16 = 1 << 6;
+pub const HOOK_MASK_MAP_RESPONSE: u16 = 1 << 7;
+pub const HOOK_MASK_ON_AFTER_RESPONSE: u16 = 1 << 8;
+pub const HOOK_MASK_ON_ERROR: u16 = 1 << 9;
+pub const HOOK_MASK_GLOBAL_HEADERS: u16 = 1 << 10;
 
 pub enum RouteSegKind {
     Static,
@@ -808,6 +961,8 @@ pub struct RouteEntry {
     has_wildcard: bool = false;
     priority: u16 = 0;
     handler: HandlerFn? = null;
+    before_hook: BeforeHookFn? = null;
+    after_hook: AfterHookFn? = null;
 
     pub fn pathSlice(): string {
         return _.path_buf[0.._.path_len];
@@ -1009,29 +1164,38 @@ pub struct RouteGroup {
     app: *App;
     prefix_buf: [APP_MAX_PATH_LEN]u8 = [0; APP_MAX_PATH_LEN];
     prefix_len: usize = 0;
+    before_hook: BeforeHookFn? = null;
+    after_hook: AfterHookFn? = null;
+
+    /// Attach Elysia-style group-level guard hooks applied to all routes registered on this group.
+    pub fn guard(*_, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *RouteGroup {
+        _.before_hook = before_hook;
+        _.after_hook = after_hook;
+        return _;
+    }
 
     pub fn get(*_, path: string, handler: HandlerFn): *RouteGroup {
-        _.app.registerWithPrefix(AppMethod.GET, _.prefix_buf[0.._.prefix_len], path, "", handler);
+        _.app.registerWithPrefixGuarded(AppMethod.GET, _.prefix_buf[0.._.prefix_len], path, "", handler, _.before_hook, _.after_hook);
         return _;
     }
 
     pub fn post(*_, path: string, handler: HandlerFn): *RouteGroup {
-        _.app.registerWithPrefix(AppMethod.POST, _.prefix_buf[0.._.prefix_len], path, "", handler);
+        _.app.registerWithPrefixGuarded(AppMethod.POST, _.prefix_buf[0.._.prefix_len], path, "", handler, _.before_hook, _.after_hook);
         return _;
     }
 
     pub fn put(*_, path: string, handler: HandlerFn): *RouteGroup {
-        _.app.registerWithPrefix(AppMethod.PUT, _.prefix_buf[0.._.prefix_len], path, "", handler);
+        _.app.registerWithPrefixGuarded(AppMethod.PUT, _.prefix_buf[0.._.prefix_len], path, "", handler, _.before_hook, _.after_hook);
         return _;
     }
 
     pub fn delete(*_, path: string, handler: HandlerFn): *RouteGroup {
-        _.app.registerWithPrefix(AppMethod.DELETE, _.prefix_buf[0.._.prefix_len], path, "", handler);
+        _.app.registerWithPrefixGuarded(AppMethod.DELETE, _.prefix_buf[0.._.prefix_len], path, "", handler, _.before_hook, _.after_hook);
         return _;
     }
 
     pub fn patch(*_, path: string, handler: HandlerFn): *RouteGroup {
-        _.app.registerWithPrefix(AppMethod.PATCH, _.prefix_buf[0.._.prefix_len], path, "", handler);
+        _.app.registerWithPrefixGuarded(AppMethod.PATCH, _.prefix_buf[0.._.prefix_len], path, "", handler, _.before_hook, _.after_hook);
         return _;
     }
 
@@ -1040,6 +1204,8 @@ pub struct RouteGroup {
             app: _.app,
             prefix_buf: [0; APP_MAX_PATH_LEN],
             prefix_len: 0,
+            before_hook: _.before_hook,
+            after_hook: _.after_hook,
         };
         g.prefix_len = normalizeAndJoinPath(_.prefix_buf[0.._.prefix_len], sub_prefix, *g.prefix_buf);
         return g;
@@ -1194,6 +1360,7 @@ pub struct App {
     on_after_response_len: usize = 0;
     on_error_hook: ErrorHookFn? = null;
     fallback_handler: HandlerFn? = null;
+    hook_mask: u16 = 0;
 
     state_ptr: usize = 0;
     state_kv: [APP_MAX_STATE_KV]ParamKV = [ParamKV{}; APP_MAX_STATE_KV];
@@ -1203,13 +1370,19 @@ pub struct App {
         return App{};
     }
 
-    pub fn registerWithPrefix(
+    pub fn hookMask(*_): u16 {
+        return _.hook_mask;
+    }
+
+    pub fn registerWithPrefixGuarded(
         *_,
         method: AppMethod,
         prefix: string,
         path: string,
         summary: string,
         handler: HandlerFn,
+        before_hook: BeforeHookFn?,
+        after_hook: AfterHookFn?,
     ) {
         if (_.route_len >= APP_MAX_ROUTES) return;
         let entry = RouteEntry{
@@ -1222,6 +1395,8 @@ pub struct App {
             has_wildcard: false,
             priority: 0,
             handler: handler,
+            before_hook: before_hook,
+            after_hook: after_hook,
         };
         entry.path_len = normalizeAndJoinPath(prefix, path, *entry.path_buf);
         compileRouteSegments(*entry);
@@ -1229,6 +1404,68 @@ pub struct App {
         _.routes[route_idx] = entry;
         _.route_len += 1;
         * = _.radix.insert(method.methodIndex(), _.routes[route_idx].pathSlice(), route_idx as i32);
+    }
+
+    pub fn registerWithPrefix(
+        *_,
+        method: AppMethod,
+        prefix: string,
+        path: string,
+        summary: string,
+        handler: HandlerFn,
+    ) {
+        _.registerWithPrefixGuarded(method, prefix, path, summary, handler, null, null);
+    }
+
+    pub fn routeWithGuard(
+        *_,
+        method: AppMethod,
+        path: string,
+        handler: HandlerFn,
+        before_hook: BeforeHookFn?,
+        after_hook: AfterHookFn?,
+    ): *App {
+        _.registerWithPrefixGuarded(method, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    pub fn getWithGuard(*_, path: string, handler: HandlerFn, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        _.registerWithPrefixGuarded(AppMethod.GET, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    pub fn postWithGuard(*_, path: string, handler: HandlerFn, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        _.registerWithPrefixGuarded(AppMethod.POST, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    pub fn putWithGuard(*_, path: string, handler: HandlerFn, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        _.registerWithPrefixGuarded(AppMethod.PUT, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    pub fn deleteWithGuard(*_, path: string, handler: HandlerFn, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        _.registerWithPrefixGuarded(AppMethod.DELETE, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    pub fn patchWithGuard(*_, path: string, handler: HandlerFn, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        _.registerWithPrefixGuarded(AppMethod.PATCH, "", path, "", handler, before_hook, after_hook);
+        return _;
+    }
+
+    /// Axum `Router::route_layer`: attach route-level before/after hooks to the most recently registered route.
+    pub fn routeLayer(*_, before_hook: BeforeHookFn?, after_hook: AfterHookFn?): *App {
+        if (_.route_len > 0) {
+            const idx = _.route_len - 1;
+            if (before_hook != null) {
+                _.routes[idx].before_hook = before_hook;
+            }
+            if (after_hook != null) {
+                _.routes[idx].after_hook = after_hook;
+            }
+        }
+        return _;
     }
 
     pub fn route(*_, method: AppMethod, path: string, handler: HandlerFn): *App {
@@ -1280,6 +1517,7 @@ pub struct App {
         if (_.middleware_len < APP_MAX_MIDDLEWARES) {
             _.middlewares[_.middleware_len] = middleware;
             _.middleware_len += 1;
+            _.hook_mask |= HOOK_MASK_MIDDLEWARE;
         }
         return _;
     }
@@ -1290,6 +1528,7 @@ pub struct App {
         if (_.on_request_len < APP_MAX_HOOKS) {
             _.on_request_hooks[_.on_request_len] = hook;
             _.on_request_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_REQUEST;
         }
         return _;
     }
@@ -1298,6 +1537,7 @@ pub struct App {
         if (_.on_parse_len < APP_MAX_HOOKS) {
             _.on_parse_hooks[_.on_parse_len] = hook;
             _.on_parse_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_PARSE;
         }
         return _;
     }
@@ -1306,6 +1546,7 @@ pub struct App {
         if (_.on_transform_len < APP_MAX_HOOKS) {
             _.on_transform_hooks[_.on_transform_len] = hook;
             _.on_transform_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_TRANSFORM;
         }
         return _;
     }
@@ -1314,6 +1555,7 @@ pub struct App {
         if (_.derive_len < APP_MAX_HOOKS) {
             _.derive_hooks[_.derive_len] = hook;
             _.derive_len += 1;
+            _.hook_mask |= HOOK_MASK_DERIVE;
         }
         return _;
     }
@@ -1322,6 +1564,7 @@ pub struct App {
         if (_.on_before_len < APP_MAX_HOOKS) {
             _.on_before_hooks[_.on_before_len] = hook;
             _.on_before_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_BEFORE;
         }
         return _;
     }
@@ -1330,6 +1573,7 @@ pub struct App {
         if (_.on_after_len < APP_MAX_HOOKS) {
             _.on_after_hooks[_.on_after_len] = hook;
             _.on_after_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_AFTER;
         }
         return _;
     }
@@ -1338,6 +1582,7 @@ pub struct App {
         if (_.map_response_len < APP_MAX_HOOKS) {
             _.map_response_hooks[_.map_response_len] = hook;
             _.map_response_len += 1;
+            _.hook_mask |= HOOK_MASK_MAP_RESPONSE;
         }
         return _;
     }
@@ -1346,12 +1591,14 @@ pub struct App {
         if (_.on_after_response_len < APP_MAX_HOOKS) {
             _.on_after_response_hooks[_.on_after_response_len] = hook;
             _.on_after_response_len += 1;
+            _.hook_mask |= HOOK_MASK_ON_AFTER_RESPONSE;
         }
         return _;
     }
 
     pub fn onError(*_, hook: ErrorHookFn): *App {
         _.on_error_hook = hook;
+        _.hook_mask |= HOOK_MASK_ON_ERROR;
         return _;
     }
 
@@ -1408,7 +1655,7 @@ pub struct App {
             const r = sub.routes[i];
             if (h := r.handler) {
                 const sub_path = r.path_buf[0..r.path_len];
-                _.registerWithPrefix(r.method, prefix, sub_path, r.summary, h);
+                _.registerWithPrefixGuarded(r.method, prefix, sub_path, r.summary, h, r.before_hook, r.after_hook);
             }
         }
         return _;
@@ -1421,7 +1668,7 @@ pub struct App {
             const r = other.routes[i];
             if (h := r.handler) {
                 const other_path = r.path_buf[0..r.path_len];
-                _.registerWithPrefix(r.method, "", other_path, r.summary, h);
+                _.registerWithPrefixGuarded(r.method, "", other_path, r.summary, h, r.before_hook, r.after_hook);
             }
         }
         i = 0;
@@ -1528,6 +1775,36 @@ pub struct App {
         return null;
     }
 
+    fn initContextForRequest(*_, req: *const Request, lookup_path: string, query_str: string, ctx: *Context) {
+        ctx.method = req.method;
+        ctx.path = lookup_path;
+        ctx.original_uri = req.path;
+        ctx.matched_path = "";
+        ctx.raw_query = query_str;
+        ctx.body = req.body;
+        if (req.header_len > 0) {
+            let hi: usize = 0;
+            while (hi < req.header_len) : (hi += 1) {
+                ctx.headers[hi] = req.headers[hi];
+            }
+        }
+        ctx.header_len = req.header_len;
+        ctx.param_len = 0;
+        ctx.state_ptr = _.state_ptr;
+        if (_.state_kv_len > 0) {
+            let si: usize = 0;
+            while (si < _.state_kv_len) : (si += 1) {
+                ctx.state_kv[si] = _.state_kv[si];
+            }
+        }
+        ctx.state_kv_len = _.state_kv_len;
+        ctx.derived_kv_len = 0;
+        ctx.response_header_len = 0;
+        ctx.aborted = false;
+        ctx.error_code = AppErrorCode.None;
+        ctx.error_message = "";
+    }
+
     /// Zero-copy in-place dispatcher for high-throughput servers (reuses caller's `ctx` and `out_resp`).
     pub fn dispatchInto(*_, req: *const Request, ctx: *Context, out_resp: *Response) {
         let clean_path = req.path;
@@ -1540,30 +1817,86 @@ pub struct App {
                 }
             }
         }
+        const lookup_path = if (clean_path.len == 0) "/" else clean_path;
 
-        ctx.method = req.method;
-        ctx.path = if (clean_path.len == 0) "/" else clean_path;
-        ctx.original_uri = req.path;
-        ctx.matched_path = "";
-        ctx.raw_query = query_str;
-        ctx.body = req.body;
-        let hi: usize = 0;
-        while (hi < req.header_len) : (hi += 1) {
-            ctx.headers[hi] = req.headers[hi];
+        // Zero-Hook Fast-Path: skip all 8-stage lifecycle checks when no global hooks are registered
+        if (_.hook_mask == 0) {
+            const rmatch = _.radix.lookup(req.method.methodIndex(), lookup_path);
+            _.initContextForRequest(req, lookup_path, query_str, ctx);
+            if (rmatch.matched && rmatch.handler_id >= 0) {
+                const matched = rmatch.handler_id as usize;
+                ctx.matched_path = _.routes[matched].pathSlice();
+                if (rmatch.param_len > 0) {
+                    let p_i: usize = 0;
+                    while (p_i < rmatch.param_len && p_i < APP_MAX_PARAMS) : (p_i += 1) {
+                        ctx.params[p_i] = ParamKV{
+                            name: rmatch.params[p_i].name,
+                            value: rmatch.params[p_i].value,
+                        };
+                    }
+                    ctx.param_len = if (rmatch.param_len < APP_MAX_PARAMS) rmatch.param_len else APP_MAX_PARAMS;
+                }
+
+                // Route-level guard / route_layer before_hook (only if set on this route)
+                if (bh := _.routes[matched].before_hook) {
+                    const ok = bh(ctx);
+                    if (!ok || ctx.aborted) {
+                        if (ctx.error_code != AppErrorCode.None) {
+                            out_resp.* = Response.json(ctx.error_code.defaultStatus(), ctx.error_message);
+                        } else {
+                            out_resp.* = if (ctx.aborted)
+                                ctx.abort_response
+                            else
+                                Response.json(403, "{\"error\":\"Forbidden\"}");
+                        }
+                        if (ctx.response_header_len > 0) {
+                            mergeContextHeaders(ctx, out_resp);
+                        }
+                        return;
+                    }
+                }
+
+                if (h := _.routes[matched].handler) {
+                    out_resp.* = h(ctx);
+                    if (ctx.error_code != AppErrorCode.None) {
+                        out_resp.* = Response.json(ctx.error_code.defaultStatus(), ctx.error_message);
+                        if (ctx.response_header_len > 0) {
+                            mergeContextHeaders(ctx, out_resp);
+                        }
+                        return;
+                    }
+                    if (rmatch.head_fallback_to_get) {
+                        out_resp.body = "";
+                        out_resp.body_buf_len = 0;
+                    }
+                    if (ah := _.routes[matched].after_hook) {
+                        ah(ctx, out_resp);
+                    }
+                    if (ctx.response_header_len > 0) {
+                        mergeContextHeaders(ctx, out_resp);
+                    }
+                    return;
+                }
+            }
+
+            if (rmatch.allowed_mask != 0) {
+                out_resp.* = Response.json(405, "{\"error\":\"Method Not Allowed\"}");
+                * = out_resp.setHeader("Allow", formatAllowHeaderValue(rmatch.allowed_mask));
+                return;
+            }
+            if (fb := _.fallback_handler) {
+                out_resp.* = fb(ctx);
+                if (ctx.response_header_len > 0) {
+                    mergeContextHeaders(ctx, out_resp);
+                }
+                return;
+            }
+            out_resp.* = Response.json(404, "{\"error\":\"Not Found\"}");
+            return;
         }
-        ctx.header_len = req.header_len;
-        ctx.param_len = 0;
-        ctx.state_ptr = _.state_ptr;
-        let si: usize = 0;
-        while (si < _.state_kv_len) : (si += 1) {
-            ctx.state_kv[si] = _.state_kv[si];
-        }
-        ctx.state_kv_len = _.state_kv_len;
-        ctx.derived_kv_len = 0;
-        ctx.response_header_len = 0;
-        ctx.aborted = false;
-        ctx.error_code = AppErrorCode.None;
-        ctx.error_message = "";
+
+        // Full 8-Stage Lifecycle Path (when global hooks or middlewares are registered)
+        _.initContextForRequest(req, lookup_path, query_str, ctx);
 
         // Stage 1: onRequest hooks (zero-overhead skip when empty)
         if (_.on_request_len > 0) {
@@ -1609,7 +1942,7 @@ pub struct App {
             }
             ctx.param_len = if (rmatch.param_len < APP_MAX_PARAMS) rmatch.param_len else APP_MAX_PARAMS;
 
-            // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle (zero-overhead skip when empty)
+            // Stage 3: derive -> onParse -> onTransform -> onBeforeHandle -> route before_hook
             if (_.derive_len > 0) {
                 if (early := _.runHookChain(_.derive_hooks, _.derive_len, ctx)) {
                     out_resp.* = early;
@@ -1634,6 +1967,21 @@ pub struct App {
                     return;
                 }
             }
+            if (bh := _.routes[matched].before_hook) {
+                const ok = bh(ctx);
+                if (!ok || ctx.aborted) {
+                    if (ctx.error_code != AppErrorCode.None) {
+                        out_resp.* = _.buildErrorResponse(ctx, ctx.error_code, ctx.error_message);
+                        return;
+                    }
+                    out_resp.* = if (ctx.aborted)
+                        ctx.abort_response
+                    else
+                        Response.json(403, "{\"error\":\"Forbidden\"}");
+                    _.finalizeResponse(ctx, out_resp);
+                    return;
+                }
+            }
 
             // Stage 4: Handler execution
             if (h := _.routes[matched].handler) {
@@ -1645,6 +1993,9 @@ pub struct App {
                 if (rmatch.head_fallback_to_get) {
                     out_resp.body = "";
                     out_resp.body_buf_len = 0;
+                }
+                if (ah := _.routes[matched].after_hook) {
+                    ah(ctx, out_resp);
                 }
                 if (_.on_after_len > 0 || ctx.response_header_len > 0 || _.map_response_len > 0 || _.on_after_response_len > 0) {
                     _.finalizeResponse(ctx, out_resp);

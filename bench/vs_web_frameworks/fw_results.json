@@ -1,0 +1,425 @@
+{
+  "cp_1c": {
+    "port": 18310,
+    "threads": 16,
+    "scenarios": {
+      "get_health": {
+        "qps": 116468.67,
+        "p50_ms": 0.127,
+        "p99_ms": 0.261,
+        "ok": 291272,
+        "err": 0,
+        "mb_per_sec": 15.66,
+        "duration_sec": 2.501,
+        "rss_mb": 6.41
+      },
+      "get_params_query": {
+        "qps": 111591.71,
+        "p50_ms": 0.133,
+        "p99_ms": 0.274,
+        "ok": 279072,
+        "err": 0,
+        "mb_per_sec": 17.45,
+        "duration_sec": 2.501,
+        "rss_mb": 6.41
+      },
+      "post_orders": {
+        "qps": 111535.9,
+        "p50_ms": 0.133,
+        "p99_ms": 0.274,
+        "ok": 278930,
+        "err": 0,
+        "mb_per_sec": 16.27,
+        "duration_sec": 2.501,
+        "rss_mb": 6.41
+      },
+      "get_me_auth": {
+        "qps": 112327.17,
+        "p50_ms": 0.132,
+        "p99_ms": 0.273,
+        "ok": 280900,
+        "err": 0,
+        "mb_per_sec": 15.43,
+        "duration_sec": 2.501,
+        "rss_mb": 6.41
+      }
+    },
+    "peak_rss_mb": 6.41
+  },
+  "bun_1c": {
+    "port": 18311,
+    "threads": 16,
+    "scenarios": {
+      "get_health": {
+        "qps": 56108.96,
+        "p50_ms": 0.244,
+        "p99_ms": 1.047,
+        "ok": 140326,
+        "err": 0,
+        "mb_per_sec": 8.19,
+        "duration_sec": 2.501,
+        "rss_mb": 83.03
+      },
+      "get_params_query": {
+        "qps": 42046.99,
+        "p50_ms": 0.339,
+        "p99_ms": 1.217,
+        "ok": 105160,
+        "err": 0,
+        "mb_per_sec": 7.06,
+        "duration_sec": 2.501,
+        "rss_mb": 84.52
+      },
+      "post_orders": {
+        "qps": 41105.56,
+        "p50_ms": 0.348,
+        "p99_ms": 1.188,
+        "ok": 102804,
+        "err": 0,
+        "mb_per_sec": 6.47,
+        "duration_sec": 2.501,
+        "rss_mb": 86.4
+      },
+      "get_me_auth": {
+        "qps": 51059.88,
+        "p50_ms": 0.256,
+        "p99_ms": 1.02,
+        "ok": 127706,
+        "err": 0,
+        "mb_per_sec": 7.6,
+        "duration_sec": 2.501,
+        "rss_mb": 85.7
+      }
+    },
+    "peak_rss_mb": 86.4
+  },
+  "node_1c": {
+    "port": 18312,
+    "threads": 16,
+    "scenarios": {
+      "get_health": {
+        "qps": 36266.6,
+        "p50_ms": 0.428,
+        "p99_ms": 0.667,
+        "ok": 90722,
+        "err": 0,
+        "mb_per_sec": 6.99,
+        "duration_sec": 2.502,
+        "rss_mb": 94.91
+      },
+      "get_params_query": {
+        "qps": 33659.22,
+        "p50_ms": 0.458,
+        "p99_ms": 0.871,
+        "ok": 84182,
+        "err": 0,
+        "mb_per_sec": 7.22,
+        "duration_sec": 2.501,
+        "rss_mb": 94.95
+      },
+      "post_orders": {
+        "qps": 24267.34,
+        "p50_ms": 0.621,
+        "p99_ms": 1.258,
+        "ok": 60706,
+        "err": 0,
+        "mb_per_sec": 4.95,
+        "duration_sec": 2.502,
+        "rss_mb": 96.75
+      },
+      "get_me_auth": {
+        "qps": 29571.82,
+        "p50_ms": 0.572,
+        "p99_ms": 0.95,
+        "ok": 73959,
+        "err": 0,
+        "mb_per_sec": 5.78,
+        "duration_sec": 2.501,
+        "rss_mb": 97.4
+      }
+    },
+    "peak_rss_mb": 97.4
+  },
+  "cp_8c": {
+    "port": 18380,
+    "threads": 32,
+    "scenarios": {
+      "get_health": {
+        "qps": 602224.02,
+        "p50_ms": 0.043,
+        "p99_ms": 0.144,
+        "ok": 1506390,
+        "err": 0,
+        "mb_per_sec": 80.98,
+        "duration_sec": 2.501,
+        "rss_mb": 19.26
+      },
+      "get_params_query": {
+        "qps": 691438.83,
+        "p50_ms": 0.038,
+        "p99_ms": 0.135,
+        "ok": 1729435,
+        "err": 0,
+        "mb_per_sec": 108.14,
+        "duration_sec": 2.501,
+        "rss_mb": 19.26
+      },
+      "post_orders": {
+        "qps": 679412.56,
+        "p50_ms": 0.04,
+        "p99_ms": 0.128,
+        "ok": 1699450,
+        "err": 0,
+        "mb_per_sec": 99.13,
+        "duration_sec": 2.501,
+        "rss_mb": 19.26
+      },
+      "get_me_auth": {
+        "qps": 657811.76,
+        "p50_ms": 0.044,
+        "p99_ms": 0.126,
+        "ok": 1645386,
+        "err": 0,
+        "mb_per_sec": 90.34,
+        "duration_sec": 2.501,
+        "rss_mb": 19.26
+      }
+    },
+    "peak_rss_mb": 19.26
+  },
+  "bun_8c": {
+    "port": 18381,
+    "threads": 32,
+    "scenarios": {
+      "get_health": {
+        "qps": 350392.49,
+        "p50_ms": 0.073,
+        "p99_ms": 0.262,
+        "ok": 876405,
+        "err": 0,
+        "mb_per_sec": 51.13,
+        "duration_sec": 2.501,
+        "rss_mb": 733.33
+      },
+      "get_params_query": {
+        "qps": 302144.41,
+        "p50_ms": 0.089,
+        "p99_ms": 0.292,
+        "ok": 755724,
+        "err": 0,
+        "mb_per_sec": 50.71,
+        "duration_sec": 2.501,
+        "rss_mb": 747.18
+      },
+      "post_orders": {
+        "qps": 212878.07,
+        "p50_ms": 0.124,
+        "p99_ms": 0.776,
+        "ok": 532469,
+        "err": 0,
+        "mb_per_sec": 33.5,
+        "duration_sec": 2.501,
+        "rss_mb": 761.12
+      },
+      "get_me_auth": {
+        "qps": 321618.84,
+        "p50_ms": 0.075,
+        "p99_ms": 0.296,
+        "ok": 804440,
+        "err": 0,
+        "mb_per_sec": 47.85,
+        "duration_sec": 2.501,
+        "rss_mb": 763.57
+      }
+    },
+    "peak_rss_mb": 763.57
+  },
+  "node_8c": {
+    "port": 18382,
+    "threads": 32,
+    "scenarios": {
+      "get_health": {
+        "qps": 252491.2,
+        "p50_ms": 0.109,
+        "p99_ms": 0.332,
+        "ok": 631795,
+        "err": 0,
+        "mb_per_sec": 48.64,
+        "duration_sec": 2.502,
+        "rss_mb": 831.48
+      },
+      "get_params_query": {
+        "qps": 238924.23,
+        "p50_ms": 0.114,
+        "p99_ms": 0.407,
+        "ok": 597641,
+        "err": 0,
+        "mb_per_sec": 51.27,
+        "duration_sec": 2.501,
+        "rss_mb": 835.71
+      },
+      "post_orders": {
+        "qps": 175219.53,
+        "p50_ms": 0.16,
+        "p99_ms": 0.509,
+        "ok": 438275,
+        "err": 0,
+        "mb_per_sec": 35.76,
+        "duration_sec": 2.501,
+        "rss_mb": 851.49
+      },
+      "get_me_auth": {
+        "qps": 217368.19,
+        "p50_ms": 0.124,
+        "p99_ms": 0.325,
+        "ok": 543681,
+        "err": 0,
+        "mb_per_sec": 42.5,
+        "duration_sec": 2.501,
+        "rss_mb": 852.4
+      }
+    },
+    "peak_rss_mb": 852.4
+  },
+  "cp_16c": {
+    "port": 18460,
+    "threads": 48,
+    "scenarios": {
+      "get_health": {
+        "qps": 962608.18,
+        "p50_ms": 0.043,
+        "p99_ms": 0.115,
+        "ok": 2408470,
+        "err": 0,
+        "mb_per_sec": 129.44,
+        "duration_sec": 2.502,
+        "rss_mb": 33.94
+      },
+      "get_params_query": {
+        "qps": 984689.22,
+        "p50_ms": 0.04,
+        "p99_ms": 0.128,
+        "ok": 2463895,
+        "err": 0,
+        "mb_per_sec": 154.01,
+        "duration_sec": 2.502,
+        "rss_mb": 33.94
+      },
+      "post_orders": {
+        "qps": 977586.12,
+        "p50_ms": 0.042,
+        "p99_ms": 0.13,
+        "ok": 2445864,
+        "err": 0,
+        "mb_per_sec": 142.64,
+        "duration_sec": 2.502,
+        "rss_mb": 33.94
+      },
+      "get_me_auth": {
+        "qps": 957553.42,
+        "p50_ms": 0.04,
+        "p99_ms": 0.147,
+        "ok": 2396084,
+        "err": 0,
+        "mb_per_sec": 131.5,
+        "duration_sec": 2.502,
+        "rss_mb": 33.94
+      }
+    },
+    "peak_rss_mb": 33.94
+  },
+  "bun_16c": {
+    "port": 18461,
+    "threads": 48,
+    "scenarios": {
+      "get_health": {
+        "qps": 547324.28,
+        "p50_ms": 0.074,
+        "p99_ms": 0.237,
+        "ok": 1369660,
+        "err": 0,
+        "mb_per_sec": 79.86,
+        "duration_sec": 2.502,
+        "rss_mb": 1335.82
+      },
+      "get_params_query": {
+        "qps": 471869.58,
+        "p50_ms": 0.075,
+        "p99_ms": 0.481,
+        "ok": 1180544,
+        "err": 0,
+        "mb_per_sec": 79.2,
+        "duration_sec": 2.502,
+        "rss_mb": 1402.7
+      },
+      "post_orders": {
+        "qps": 345206.88,
+        "p50_ms": 0.103,
+        "p99_ms": 0.513,
+        "ok": 863661,
+        "err": 0,
+        "mb_per_sec": 54.32,
+        "duration_sec": 2.502,
+        "rss_mb": 1387.97
+      },
+      "get_me_auth": {
+        "qps": 482075.36,
+        "p50_ms": 0.073,
+        "p99_ms": 0.422,
+        "ok": 1206359,
+        "err": 0,
+        "mb_per_sec": 71.72,
+        "duration_sec": 2.502,
+        "rss_mb": 1377.52
+      }
+    },
+    "peak_rss_mb": 1402.7
+  },
+  "node_16c": {
+    "port": 18462,
+    "threads": 48,
+    "scenarios": {
+      "get_health": {
+        "qps": 411132.32,
+        "p50_ms": 0.111,
+        "p99_ms": 0.247,
+        "ok": 1029198,
+        "err": 0,
+        "mb_per_sec": 79.2,
+        "duration_sec": 2.503,
+        "rss_mb": 1587.84
+      },
+      "get_params_query": {
+        "qps": 394935.82,
+        "p50_ms": 0.113,
+        "p99_ms": 0.266,
+        "ok": 988059,
+        "err": 0,
+        "mb_per_sec": 84.74,
+        "duration_sec": 2.502,
+        "rss_mb": 1588.84
+      },
+      "post_orders": {
+        "qps": 294449.7,
+        "p50_ms": 0.115,
+        "p99_ms": 0.638,
+        "ok": 736747,
+        "err": 0,
+        "mb_per_sec": 60.09,
+        "duration_sec": 2.502,
+        "rss_mb": 1620.56
+      },
+      "get_me_auth": {
+        "qps": 420927.05,
+        "p50_ms": 0.107,
+        "p99_ms": 0.264,
+        "ok": 1053025,
+        "err": 0,
+        "mb_per_sec": 82.29,
+        "duration_sec": 2.502,
+        "rss_mb": 1621.41
+      }
+    },
+    "peak_rss_mb": 1621.41
+  }
+}

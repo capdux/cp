@@ -50,6 +50,22 @@ Measured on **Intel Xeon Platinum 8175M** (Linux 6.12 x86_64, idle CPU exclusive
 | 16c | Bun 1.3.14 (16-proc) | 582,171 | 540,996 | 442,279 | 801.3 MB |
 | 16c | Node v26.1.0 (16-proc) | 438,624 | 390,054 | 264,342 | 1,378.3 MB |
 
+### Full Web Framework Benchmark (24 Routes + Middleware + Params/Query + JSON Validation, Err=0)
+
+CP `cap:web` vs **Bun Elysia** vs **Node Fastify** (24 identical routes: 12 static, 8 `:param`, 2 wildcard, 2 POST JSON + global Cookie/Bearer auth middleware):
+
+| Cores | Framework | `GET /health` | `GET :id/:postId+?` | `POST /orders` (JSON) | `GET /me` (Cookie+Auth) | Peak RSS |
+| :---: | :--- | ---: | ---: | ---: | ---: | ---: |
+| **1c** | **CP v1.0.0 (`cap:web`)** | **116,469** | **111,592** | **111,536** | **112,327** | **6.4 MB** |
+| 1c | Bun 1.3.14 (`Elysia`) | 56,109 | 42,047 | 41,106 | 51,060 | 86.4 MB |
+| 1c | Node v26.1.0 (`Fastify`) | 36,267 | 33,659 | 24,267 | 29,572 | 97.4 MB |
+| **8c** | **CP v1.0.0 (`cap:web`)** | **602,224** | **691,439** | **679,413** | **657,812** | **19.3 MB** |
+| 8c | Bun 1.3.14 (`Elysia`) | 350,392 | 302,144 | 212,878 | 321,619 | 763.6 MB |
+| 8c | Node v26.1.0 (`Fastify`) | 252,491 | 238,924 | 175,220 | 217,368 | 852.4 MB |
+| **16c** | **CP v1.0.0 (`cap:web`)** | **962,608** | **984,689** | **977,586** | **957,553** | **33.9 MB** |
+| 16c | Bun 1.3.14 (`Elysia`) | 547,324 | 471,870 | 345,207 | 482,075 | 1,402.7 MB |
+| 16c | Node v26.1.0 (`Fastify`) | 411,132 | 394,936 | 294,450 | 420,927 | 1,621.4 MB |
+
 ### Live TCP WebSocket (128B Masked Echo, Err=0)
 
 | Cores | Runtime | Throughput (msg/s) | P50 / P99 Latency | Peak RSS |

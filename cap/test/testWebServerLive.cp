@@ -60,7 +60,13 @@ fn main() {
         .post("/json", hJsonEcho);
 
     const port: u16 = 18923;
-    let srv = WebServer.init(ServerConfig{ port: port, workers: 2, backlog: 128 });
+    let srv = WebServer.init(ServerConfig{
+        port: port,
+        workers: 2,
+        backlog: 128,
+        ws_path: "/ws",
+        shutdown_grace_ms: 50,
+    });
     if (!srv.start(*app)) {
         @panic("Failed to start WebServer on port 18923");
     }
@@ -116,6 +122,32 @@ fn main() {
     }
 
     * = close(cfd);
+
+    // Request 4: Same-port HTTP -> WebSocket Upgrade on /ws + Masked Echo
+    const wsfd = socket(2, 1, 0);
+    if (wsfd < 0 || connect(wsfd, *addr, 16) < 0) {
+        srv.stop();
+        @panic("Same-port WS connect failed");
+    }
+    const ws_req = "GET /ws HTTP/1.1\r\nHost: localhost\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n";
+    * = write(wsfd, ws_req.ptr, ws_req.len);
+    const n4 = read(wsfd, &rbuf[0], 2048);
+    if (n4 <= 0 || !containsStr(rbuf[0..(n4 as usize)], "101 Switching Protocols") || !containsStr(rbuf[0..(n4 as usize)], "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=")) {
+        * = close(wsfd);
+        srv.stop();
+        @panic("Request 4 (Same-port WS Upgrade 101) failed");
+    }
+    // Send masked "Hi" (0x81, 0x82, mask=0x11,0x22,0x33,0x44, 'H'^0x11=0x59, 'i'^0x22=0x4B)
+    let ws_frame: [8]u8 = [0x81, 0x82, 0x11, 0x22, 0x33, 0x44, 0x59, 0x4B];
+    * = write(wsfd, ws_frame[0..].ptr, 8);
+    const n5 = read(wsfd, &rbuf[0], 2048);
+    if (n5 != 4 || rbuf[0] != 0x81 || rbuf[1] != 2 || rbuf[2] != 'H' || rbuf[3] != 'i') {
+        * = close(wsfd);
+        srv.stop();
+        @panic("Request 4 (Same-port WS Echo) failed");
+    }
+    * = close(wsfd);
+
     srv.stop();
-    @print("PASS testWebServerLive (2-worker SO_REUSEPORT epoll + HTTP/1.1 Keep-Alive 3/3)");
+    @print("PASS testWebServerLive (2-worker SO_REUSEPORT epoll + HTTP/1.1 Keep-Alive + Same-Port WS Upgrade 4/4)");
 }

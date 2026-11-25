@@ -5342,3 +5342,75 @@
   > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
 - **完整回复与执行汇报**：
   > 正在等待 `temp/ws_chat_cp`（`-OReleaseFast`）编译完成，`cap/test/testWebSocketServerLive.cp` 已通过；编译就绪后将立即在空闲 CPU 下执行 32 客户端 WebSocket 聊天室广播对比压测。
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 14:29:29）[step:23780]
+- **用户完整原始指令**：
+  > 很好
+  > 我们现在来优化 web
+  > 我们的web 1:1 吸收 Elysia 和 Axum, 代码行数你已经做了对比, 发现了部分遗漏, 这些遗漏补全了吗?
+  > 两个库功能取舍融合完成了吗?
+  > 之前我们讨论的, 借鉴 Nest 宏来定义路由, 利用cp强大的编译期运行时和强大的元编程能力,以及刚才在基本压测时,做的 各种优化策略(undefined/Arena和SIMD等cp优化语法), 在路由上能达到性能天花板
+  > 还有其他我讨论的
+  > 这些工作, 你完成情况如何
+- **完整回复与执行汇报**：
+  > 以下是基于当前仓库源码的 **100% 实情盘点**（`lib/web/` 共 **42 个模块 / 27,281 行纯 CP**，全部通过 4-Gate `0/0/0/0`），逐一对照你关心的 4 个问题：
+  >
+  > ---
+  >
+  > ### 一、1:1 吸收 Elysia & Axum：已完成 vs 尚未闭环的遗漏
+  >
+  > #### ✅ 已完成融合（核心骨架与协议层已就绪）
+  > | 能力域 | CP 模块 | 对标吸收内容 |
+  > | :--- | :--- | :--- |
+  > | **路由引擎** | [radixRouter.cp](file:///data/dev/cp/lib/web/radixRouter.cp) (387L)<br>[comptimeRouter.cp](file:///data/dev/cp/lib/web/comptimeRouter.cp) (649L)<br>[fsRouter.cp](file:///data/dev/cp/lib/web/fsRouter.cp) (381L) | O(1) FNV-1a 静态哈希 + 压缩 Radix Trie（`:param` / `{param}` / `*wildcard`、`HEAD->GET`、Static>Param>Wildcard）；`comptime` 静态表 + 64-bit 长度位图 + W3C `Server-Timing` `LifecycleTrace`；文件系统路由 |
+  > | **应用内核** | [app.cp](file:///data/dev/cp/lib/web/app.cp) (1,803L) | Elysia 8 阶段生命周期（`onRequest`/`onParse`/`onTransform`/`derive`/`onBeforeHandle`/`onAfterHandle`/`mapResponse`/`onAfterResponse`/`onError`）、`Plugin`（`local`/`scoped`/`global`）、`setState`/`stateVal`；Axum `nest`/`merge`/`fallback`/`RouteGroup`/`matchedPath`/`originalUri`；RFC 6265 `cookie()`/`formatSetCookie()`；零拷贝 `dispatchInto(&req, *ctx, *resp)` |
+  > | **校验与 OpenAPI** | [schema.cp](file:///data/dev/cp/lib/web/schema.cp) (1,214L)<br>[fileType.cp](file:///data/dev/cp/lib/web/fileType.cp) (237L)<br>[openapiSpec.cp](file:///data/dev/cp/lib/web/openapiSpec.cp) (1,218L) | 16-lane SIMD `fastDecodeUriComponent`、零反射 `ObjectSchema`/`validateJsonObject`、`exactMirrorJson`、`schemaToOpenApiJson`、30 种文件魔数嗅探、OpenAPI 3.1.0 |
+  > | **原生多核运行时** | [server.cp](file:///data/dev/cp/lib/web/server.cp) (626L)<br>[wsServer.cp](file:///data/dev/cp/lib/web/wsServer.cp) (979L) | Linux `SO_REUSEPORT` + CPU 绑核 + 12B 紧致 `epoll` + Cork 写合并；32B SIMD 掩码 + Topic Cork 广播（20.45M msgs/s） |
+  > | **协议与安全套件** | `picohttp`/`http2`/`http3`/`sse`/`multipart`/`corsGuard`/`csrfGuard`/`cspPolicy`/`ratelimit`/`etagPrecond`/`signedUrl` 等 30+ 模块 | HTTP/1.1/2/3、SSE、Multipart、CORS/CSRF/CSP/HSTS/限流/熔断/幂等全齐 |
+  >
+  > #### ❌ 仍存在的 5 项关键遗漏（尚未彻底闭环）
+  > 1. **Elysia `compose.ts` / `sucrose.ts` 级“编译期零开销分发”尚未接入 [server.cp](file:///data/dev/cp/lib/web/server.cp) 主链路**：
+  >    - 目前 [server.cp](file:///data/dev/cp/lib/web/server.cp) 每次请求都走 `App.dispatchInto` -> 运行时 Radix 查表 + 全量 8 阶段钩子数组遍历判断（即使该路由没有任何钩子也要做空循环与分支判断）。
+  >    - [comptimeRouter.cp](file:///data/dev/cp/lib/web/comptimeRouter.cp) 已写完但**尚未接管 `App`/`HttpServer` 的默认快路径**，且目前**仅支持静态路径**，还不支持带 `:param` 的编译期路由分发。
+  > 2. **NestJS 风格声明式路由宏尚未闭环**：
+  >    - 目前 [comptimeRouter.cp](file:///data/dev/cp/lib/web/comptimeRouter.cp) 仍需手写 `StaticRouteSpec` 结构体数组，尚未利用 CP 的 `comptime` / 宏能力实现类似 NestJS 的声明式 `Controller`（一行定义路由 + 编译期自动展开完美哈希/跳转表 + 自动绑定 Schema 校验 + 自动注册 OpenAPI）。
+  > 3. **Axum / Elysia 常用提取器与响应体缺口**：
+  >    - `Response` 缺少 `Redirect`（301/302/307/308）、`Html`、`Bytes`、`FileResponse`（零拷贝 `sendfile` 静态文件）；
+  >    - `Context` 尚未一键桥接 `form()`（`application/x-www-form-urlencoded`）与 `multipart()`（桥接已有 [multipart.cp](file:///data/dev/cp/lib/web/multipart.cp)）；
+  >    - 缺少**路由级/分组级 `guard`（Elysia）与 `route_layer`（Axum）**（目前仅支持全局/插件级钩子）；
+  >    - [server.cp](file:///data/dev/cp/lib/web/server.cp) 缺少 Axum `with_graceful_shutdown` 风格的连接排空与空闲超时回收。
+  > 4. **同端口 HTTP + WebSocket 无缝升级未打通**：
+  >    - 目前 [server.cp](file:///data/dev/cp/lib/web/server.cp)（HTTP）与 [wsServer.cp](file:///data/dev/cp/lib/web/wsServer.cp)（WS）是两个独立端口的服务，尚未像 Elysia `app.ws("/chat", ...)` / Axum `WebSocketUpgrade` 那样在**同一 HTTP 端口按路径升级**。
+  > 5. **真实 Web 框架同台压测尚未执行**：
+  >    - 之前 [run_scaling_and_frameworks.py](file:///data/dev/cp/bench/vs_web_frameworks/run_scaling_and_frameworks.py) 对比的是裸 HTTP Server（`server_cp.cp` vs `Bun.serve` vs `Node http`）；
+  >    - **完整 Web 框架压测**（多路由表 20+ 条路由、静态 + `:id/:slug` 动态参数 + 通配符、JSON Schema 校验与序列化、Cookie/Header 提取、中间件链），CP `cap:web` vs Bun `Elysia` vs Node `Fastify` 尚未跑出同机实测数据。
+  >
+  > ---
+  >
+  > ### 二、路由性能天花板优化评估（`undefined` / Arena / SIMD / Comptime）
+  >
+  > 之前我们在 `RadixRouter` 局部验证了 `undefined` 消除 `memset(0)`（静态路由查表 55.4M -> 75.6M ops/s，+36.5%）和 `dispatchInto` 消除值拷贝（8c `POST /json` +26.8%），但**整条 Web 框架热路径仍有巨大可榨取空间**：
+  > - **编译期路由表直通（Comptime Perfect Dispatch）**：用 `comptime` 按 `method + path.len + 首尾字节/FNV-1a` 在编译期生成零运行时初始化的静态路由表，直接绕过动态 `RadixRouter` 查找，并支持编译期预编译的动态 `:param` 模板；
+  > - **钩子位掩码快路径（Hook Bitmask Fast-Path，超越 Elysia `sucrose.ts`）**：在 `App` 注册阶段维护 `hook_mask: u16`；若路由无钩子（`hook_mask == 0`），直接零分支调用 `handler(*ctx)`，把 8 阶段生命周期开销降为 **0 ns**；
+  > - **全链路 `undefined` + 请求级固定栈 Arena**：`Context`/`Response`/`ParamKV[16]`/`HeaderKV[32]` 全面使用 `undefined` + 仅重置计数 `len = 0`（彻底消灭每请求数 KB 的栈清零），配合 SIMD 路径分割/Query 解析/Header 匹配，把完整 `cap:web` 框架的吞吐量拉齐到接近裸 HTTP Server 的天花板。
+  >
+  > ---
+  >
+  > ### 三、建议立即启动的 3 路并行作战计划（主智能体 + 2 路子智能体）
+  >
+  > 1. **主智能体（路由性能天花板 + `server.cp` 深度打通）**：
+  >    - `App` 接入 `hook_mask` 零开销快路径 + 全链路 `undefined` 零清零 `Context`/`Response`；
+  >    - 升级 [comptimeRouter.cp](file:///data/dev/cp/lib/web/comptimeRouter.cp) 支持 **NestJS 风格声明式 Controller / 路由定义 + 静态与 `:param` 双模编译期分发**，并直通接入 [server.cp](file:///data/dev/cp/lib/web/server.cp) 热路径；
+  >    - 补齐同端口 `app.ws()` 路径升级 + 优雅停机连接排空。
+  > 2. **子智能体 A（补齐 Elysia & Axum 剩余 1:1 功能缺口）**：
+  >    - 在 [app.cp](file:///data/dev/cp/lib/web/app.cp) 中补全 `Response.redirect`/`html`/`bytes`/`file`、`Context.form()`/`multipart()`、分组与单路由级 `guard` / `route_layer`，并补齐回归测试 [testWebElysiaAxumSuite.cp](file:///data/dev/cp/cap/test/testWebElysiaAxumSuite.cp)。
+  > 3. **子智能体 B（构建真实 Web 框架同台压测套件）**：
+  >    - 搭建 `CP cap:web` vs `Bun Elysia` vs `Node Fastify`（1c / 8c / 16c，全员 `Err = 0`，20+ 混合路由：静态、动态 `:id/:name`、JSON Schema 校验与回包、Cookie/Header 提取、中间件链），待 A 与主智能体完工且 CPU 完全空闲后统一实测。
+  >
+  > 确认后我立刻按 **主智能体 + 2 路子智能体并行** 启动！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 14:34:30）[step:23790]
+- **用户完整原始指令**：
+  > 确认
+- **完整回复与执行汇报**：
+  > 三路并行开发与单元测试已全部通过（`testWebComptimeRouter 6/6`、`testWebServerLive 4/4` 含同端口 HTTP+WS 升级、`testWebElysiaAxumSuite 11/11`、`testWebFrameworkSuite 7/7`）。正在等待 `temp/fw_cp`（`-OReleaseFast`）编译结束，随后立即在空闲 CPU 上执行 `CP (cap:web)` vs `Bun (Elysia)` vs `Node (Fastify)` 1c/8c/16c 真实 Web 框架同台压测。

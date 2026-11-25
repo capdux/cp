@@ -598,6 +598,8 @@ export {
 
 export {
     StaticRouteSpec,
+    ControllerSpec,
+    ComptimeDynRoute,
     ComptimeRouteTable,
     TraceSpan,
     LifecycleTrace,
@@ -608,5 +610,6 @@ export {
     routePatch,
     routeHead,
     routeOptions,
+    controller,
     monotonicNowNs,
 } from "./comptimeRouter.cp";

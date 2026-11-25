@@ -16,11 +16,15 @@ import {
     App,
     AppMethod,
     Context,
+    Request,
     Response,
     HandlerFn,
+    ParamKV,
 } from "./app.cp";
 
 pub const COMPTIME_MAX_ROUTES: usize = 64;
+pub const COMPTIME_MAX_DYN_ROUTES: usize = 32;
+pub const COMPTIME_MAX_SEGS: usize = 8;
 pub const COMPTIME_HASH_BUCKETS: usize = 128;
 pub const COMPTIME_METHOD_SLOTS: usize = 7;
 pub const COMPTIME_LEN_BUCKETS: usize = 64;
@@ -32,10 +36,25 @@ pub const COMPTIME_LEN_BUCKETS: usize = 64;
 fn ctBytesEql(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    if (!@inComptime()) {
+        while (i + 16 <= a.len) : (i += 16) {
+            const va: @Vector(16, u8) = a[i .. i + 16][0..16].*;
+            const vb: @Vector(16, u8) = b[i .. i + 16][0..16].*;
+            if (@reduce(.Or, va != vb)) return false;
+        }
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
     return true;
+}
+
+fn ctHasParamMarker(path: string): bool {
+    let i: usize = 0;
+    while (i < path.len) : (i += 1) {
+        if (path[i] == ':' || path[i] == '{' || path[i] == '*') return true;
+    }
+    return false;
 }
 
 /// Deterministic 64-bit FNV-1a hash (safe for both `comptime` and runtime evaluation).
@@ -196,8 +215,78 @@ pub fn routeOptions(path: string, handler: HandlerFn, summary: string): StaticRo
     };
 }
 
+/// NestJS-style `@Controller(prefix)` declarative route group specification.
+pub struct ControllerSpec {
+    prefix: string,
+    routes: []const StaticRouteSpec,
+}
+
+/// Construct a NestJS-style declarative `@Controller(prefix, routes)` spec.
+pub fn controller(prefix: string, routes: []const StaticRouteSpec): ControllerSpec {
+    return ControllerSpec{
+        prefix: prefix,
+        routes: routes,
+    };
+}
+
+/// Pre-compiled segment for comptime dynamic `:param` / `{param}` routes.
+pub struct ComptimeDynSeg {
+    is_param: bool = false,
+    text: string = "",
+}
+
+/// Pre-compiled dynamic route entry (segment table + first-segment FNV-1a filter).
+pub struct ComptimeDynRoute {
+    occupied: bool = false,
+    method: AppMethod = AppMethod.GET,
+    path: string = "",
+    handler: HandlerFn? = null,
+    summary: string = "",
+    seg_count: usize = 0,
+    first_seg_is_static: bool = false,
+    first_seg_hash: u64 = 0,
+    segs: [COMPTIME_MAX_SEGS]ComptimeDynSeg = [ComptimeDynSeg{}; COMPTIME_MAX_SEGS],
+}
+
+fn compileDynRoute(spec: StaticRouteSpec): ComptimeDynRoute {
+    let dr = ComptimeDynRoute{
+        occupied: true,
+        method: spec.method,
+        path: spec.path,
+        handler: spec.handler,
+        summary: spec.summary,
+        seg_count: 0,
+        first_seg_is_static: false,
+        first_seg_hash: 0,
+        segs: [ComptimeDynSeg{}; COMPTIME_MAX_SEGS],
+    };
+    let pos: usize = 0;
+    const p = spec.path;
+    while (pos < p.len && dr.seg_count < COMPTIME_MAX_SEGS) {
+        while (pos < p.len && p[pos] == '/') : (pos += 1) {}
+        if (pos >= p.len) break;
+        const start = pos;
+        while (pos < p.len && p[pos] != '/') : (pos += 1) {}
+        const seg = p[start..pos];
+        const sidx = dr.seg_count;
+        if (seg.len > 1 && seg[0] == ':') {
+            dr.segs[sidx] = ComptimeDynSeg{ is_param: true, text: seg[1..] };
+        } else if (seg.len > 2 && seg[0] == '{' && seg[seg.len - 1] == '}') {
+            dr.segs[sidx] = ComptimeDynSeg{ is_param: true, text: seg[1 .. seg.len - 1] };
+        } else {
+            dr.segs[sidx] = ComptimeDynSeg{ is_param: false, text: seg };
+            if (sidx == 0) {
+                dr.first_seg_is_static = true;
+                dr.first_seg_hash = fnv1a64(seg);
+            }
+        }
+        dr.seg_count += 1;
+    }
+    return dr;
+}
+
 // ============================================================================
-// 2. Comptime-Precomputed Static Route Table (Length Bitmask + FNV-1a Buckets)
+// 2. Comptime-Precomputed Static + Dynamic Route Table (Length Bitmask + FNV-1a)
 // ============================================================================
 
 pub struct ComptimeBucket {
@@ -219,6 +308,8 @@ pub struct StaticLookupResult {
 pub struct ComptimeRouteTable {
     routes: [COMPTIME_MAX_ROUTES]StaticRouteSpec? = [null; COMPTIME_MAX_ROUTES],
     route_count: usize = 0,
+    dyn_routes: [COMPTIME_MAX_DYN_ROUTES]ComptimeDynRoute = [ComptimeDynRoute{}; COMPTIME_MAX_DYN_ROUTES],
+    dyn_count: usize = 0,
     buckets: [COMPTIME_HASH_BUCKETS]ComptimeBucket = [ComptimeBucket{}; COMPTIME_HASH_BUCKETS],
     len_mask: u64 = 0,
     len_counts: [COMPTIME_LEN_BUCKETS]u8 = [0; COMPTIME_LEN_BUCKETS],
@@ -231,9 +322,9 @@ pub struct ComptimeRouteTable {
         return ComptimeRouteTable{};
     }
 
-    /// Compile a slice of `StaticRouteSpec` into a pre-hashed, length-bucketed O(1) table.
+    /// Compile a slice of `StaticRouteSpec` (static + `:param` dynamic) into a pre-hashed O(1) table.
     /// Safe to evaluate at `comptime` (`const TABLE = ComptimeRouteTable.compile(SPECS[0..]);`)
-    /// so all FNV-1a hashes, length bitmasks, and buckets live in `.rodata` with zero init cost.
+    /// so all FNV-1a hashes, length bitmasks, buckets, and pre-split param templates live in `.rodata`.
     pub static fn compile(specs: []const StaticRouteSpec): ComptimeRouteTable {
         let table = ComptimeRouteTable.init();
         let i: usize = 0;
@@ -243,8 +334,14 @@ pub struct ComptimeRouteTable {
         return table;
     }
 
-    /// Insert a single `StaticRouteSpec` into the route table (works at `comptime` and runtime).
+    /// Insert a single `StaticRouteSpec` (static or `:param` dynamic) into the route table.
     pub fn insert(*_, spec: StaticRouteSpec): bool {
+        if (ctHasParamMarker(spec.path)) {
+            if (_.dyn_count >= COMPTIME_MAX_DYN_ROUTES) return false;
+            _.dyn_routes[_.dyn_count] = compileDynRoute(spec);
+            _.dyn_count += 1;
+            return true;
+        }
         if (_.route_count >= COMPTIME_MAX_ROUTES) return false;
         const m_idx = spec.method.methodIndex();
         if (m_idx >= COMPTIME_METHOD_SLOTS) return false;
@@ -299,9 +396,17 @@ pub struct ComptimeRouteTable {
         return false;
     }
 
-    /// Number of registered static routes.
+    /// Number of registered routes (static + comptime dynamic).
     pub fn count(): usize {
+        return _.route_count + _.dyn_count;
+    }
+
+    pub fn staticCount(): usize {
         return _.route_count;
+    }
+
+    pub fn dynamicCount(): usize {
+        return _.dyn_count;
     }
 
     /// O(1) check whether any static route has length `len`.
@@ -408,6 +513,116 @@ pub struct ComptimeRouteTable {
         return null;
     }
 
+    /// Zero-copy direct dispatch into `ctx` / `out_resp` for both static and comptime `:param` routes.
+    /// Returns `true` if handled, `false` on miss (caller falls back to `App.dispatchInto`).
+    pub fn dispatchInto(req: *const Request, ctx: *Context, out_resp: *Response): bool {
+        const path: string = req.path;
+        const query_str: string = req.raw_query;
+
+        // 1) O(1) Static Comptime Fast-Path (length bitmask + FNV-1a + SIMD compare)
+        const hit = _.lookup(req.method, path);
+        if (hit.matched && hit.route_idx >= 0) {
+            if (spec := _.routes[hit.route_idx as usize]) {
+                ctx.method = req.method;
+                ctx.path = path;
+                ctx.matched_path = spec.path;
+                ctx.original_uri = path;
+                ctx.raw_query = query_str;
+                ctx.body = req.body;
+                let hi: usize = 0;
+                while (hi < req.header_len) : (hi += 1) {
+                    ctx.headers[hi] = req.headers[hi];
+                }
+                ctx.header_len = req.header_len;
+                ctx.param_len = 0;
+                ctx.state_kv_len = 0;
+                ctx.derived_kv_len = 0;
+                ctx.response_header_len = 0;
+                ctx.aborted = false;
+
+                out_resp.* = spec.handler(ctx);
+                if (hit.head_fallback_to_get) {
+                    out_resp.body = "";
+                    out_resp.body_buf_len = 0;
+                }
+                return true;
+            }
+        }
+
+        // 2) Pre-compiled Dynamic `:param` Fast-Path (zero heap alloc, first-segment hash filter)
+        if (_.dyn_count == 0) return false;
+
+        let path_segs: [COMPTIME_MAX_SEGS]string = undefined;
+        let pseg_count: usize = 0;
+        let pos: usize = 0;
+        while (pos < path.len && pseg_count < COMPTIME_MAX_SEGS) {
+            while (pos < path.len && path[pos] == '/') : (pos += 1) {}
+            if (pos >= path.len) break;
+            const start = pos;
+            while (pos < path.len && path[pos] != '/') : (pos += 1) {}
+            const seg_s: string = path[start..pos];
+            path_segs[pseg_count] = seg_s;
+            pseg_count += 1;
+        }
+        if (pos < path.len) return false;
+        const first_hash: u64 = if (pseg_count > 0) fnv1a64(path_segs[0]) else 0;
+
+        let di: usize = 0;
+        while (di < _.dyn_count) : (di += 1) {
+            const dr = _.dyn_routes[di];
+            if (!dr.occupied || dr.seg_count != pseg_count) continue;
+            const method_ok = (dr.method == req.method) || (req.method == AppMethod.HEAD && dr.method == AppMethod.GET);
+            if (!method_ok) continue;
+            if (dr.first_seg_is_static && dr.first_seg_hash != first_hash) continue;
+
+            let matched = true;
+            let param_n: usize = 0;
+            let si: usize = 0;
+            while (si < pseg_count) : (si += 1) {
+                if (dr.segs[si].is_param) {
+                    ctx.params[param_n] = ParamKV{
+                        name: dr.segs[si].text,
+                        value: path_segs[si],
+                    };
+                    param_n += 1;
+                } else {
+                    if (!ctBytesEql(dr.segs[si].text, path_segs[si])) {
+                        matched = false;
+                        break;
+                    }
+                }
+            }
+            if (matched) {
+                if (h := dr.handler) {
+                    ctx.method = req.method;
+                    ctx.path = path;
+                    ctx.matched_path = dr.path;
+                    ctx.original_uri = path;
+                    ctx.raw_query = query_str;
+                    ctx.body = req.body;
+                    let hi: usize = 0;
+                    while (hi < req.header_len) : (hi += 1) {
+                        ctx.headers[hi] = req.headers[hi];
+                    }
+                    ctx.header_len = req.header_len;
+                    ctx.param_len = param_n;
+                    ctx.state_kv_len = 0;
+                    ctx.derived_kv_len = 0;
+                    ctx.response_header_len = 0;
+                    ctx.aborted = false;
+
+                    out_resp.* = h(ctx);
+                    if (req.method == AppMethod.HEAD && dr.method == AppMethod.GET) {
+                        out_resp.body = "";
+                        out_resp.body_buf_len = 0;
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /// Mount all routes from this comptime table into an `App` instance,
     /// preserving full 8-stage Elysia lifecycle hooks and OpenAPI 3.1.0 summaries.
     pub fn mountInto(app: *App): usize {
@@ -417,6 +632,16 @@ pub struct ComptimeRouteTable {
             if (spec := _.routes[i]) {
                 * = app.routeDoc(spec.method, spec.path, spec.summary, spec.handler);
                 mounted += 1;
+            }
+        }
+        let di: usize = 0;
+        while (di < _.dyn_count) : (di += 1) {
+            const dr = _.dyn_routes[di];
+            if (dr.occupied) {
+                if (h := dr.handler) {
+                    * = app.routeDoc(dr.method, dr.path, dr.summary, h);
+                    mounted += 1;
+                }
             }
         }
         return mounted;
@@ -431,6 +656,28 @@ pub struct ComptimeRouteTable {
                 app.registerWithPrefix(spec.method, prefix, spec.path, spec.summary, spec.handler);
                 mounted += 1;
             }
+        }
+        let di: usize = 0;
+        while (di < _.dyn_count) : (di += 1) {
+            const dr = _.dyn_routes[di];
+            if (dr.occupied) {
+                if (h := dr.handler) {
+                    app.registerWithPrefix(dr.method, prefix, dr.path, dr.summary, h);
+                    mounted += 1;
+                }
+            }
+        }
+        return mounted;
+    }
+
+    /// Mount a declarative `ControllerSpec` directly into an `App`.
+    pub static fn mountController(app: *App, ctrl: ControllerSpec): usize {
+        let mounted: usize = 0;
+        let i: usize = 0;
+        while (i < ctrl.routes.len) : (i += 1) {
+            const spec = ctrl.routes[i];
+            app.registerWithPrefix(spec.method, ctrl.prefix, spec.path, spec.summary, spec.handler);
+            mounted += 1;
         }
         return mounted;
     }
