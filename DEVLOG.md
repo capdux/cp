@@ -63,3 +63,6 @@
 
 ## 2026-11-26: Wave 3A 交付 5 个亿级高频 npm/Rust 对标 `@cap/*` 包（全部 MIT Clean-Room 纯 CP 实现）
 - 按 npm/crates.io 下载量与引用频度优先落地 `@cap/ms`、`@cap/bytes`、`@cap/nanoid`、`@cap/crc32c`、`@cap/base58` 五个零外部依赖、零堆分配、MIT 许可基础包，全部配备 `cap.json`、`src/index.cp`、`src/index.d.cp`、中文 `README.md`（含多组可运行示例与版权声明）及官方测试向量回归套件。
+
+## 2026-11-26: Wave 3B 交付 `@cap/base32` & `@cap/cookie`（全部 MIT Clean-Room 纯 CP 实现）
+- 子智能体 3 交付 `@cap/base32`（5/5 PASS），主智能体同步交付 `@cap/cookie`（3/3 PASS），子智能体 4 继续完成 `@cap/mime`。

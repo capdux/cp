@@ -1,0 +1,7 @@
+{
+  "name": "@cap/cookie",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 6265 HTTP Cookie header parser and Set-Cookie serializer (SameSite, HttpOnly, Secure, Partitioned) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

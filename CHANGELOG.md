@@ -81,3 +81,7 @@
 - `packages/@cap/bytes/` & `cap/test/testCapBytes.cp`: 字节大小 SI/IEC 双向解析与格式化（对标 npm `bytes` [~120M/wk] & Rust `bytesize`/`humansize`，纯整数 `u64`/`u128` 精确运算，PASS）。
 - `packages/@cap/crc32c/` & `cap/test/testCapCrc32c.cp`: CRC32C Castagnoli 校验和、流式哈希器、O(log N) GF(2) 并行分片合并与 LevelDB/RocksDB/TFRecord 屏蔽算法（对标 Rust `crc32c` & npm `fast-crc32c`，RFC 3720 官方向量 3/3 PASS）。
 - `packages/@cap/base58/` & `cap/test/testCapBase58.cp`: Base58 & Base58Check 编解码器（对标 Rust `bs58` & npm `bs58`，支持 Bitcoin/Solana/IPFS/Flickr/Ripple 字母表与双 SHA-256 恒定时间校验和，3/3 PASS）。
+
+## [2026-11-26] - Wave 3B 吸收 npm/Rust 高频基础生态包（`@cap/base32` & `@cap/cookie`）
+- `packages/@cap/base32/` & `cap/test/testCapBase32.cp`: 零分配 RFC 4648 Base32 / Base32hex / Crockford / Z-Base-32 编解码器（对标 Rust `base32`/`data-encoding` & npm `hi-base32`，含 RFC 4648 §10 全部官方向量与非零尾比特校验，5/5 PASS）。
+- `packages/@cap/cookie/` & `cap/test/testCapCookie.cp`: 零分配 RFC 6265 + CHIPS `Partitioned` Cookie 解析器与防注入 `Set-Cookie` 序列化器（对标 npm `cookie` [~110M/wk] & Rust `cookie`，3/3 PASS）。
