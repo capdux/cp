@@ -149,7 +149,7 @@ export * from "./sub_module.cp";
 | `cpc brief [-n 8] [--zig <path>] [--require-backup] [--keep-zig] <file.cp ...>` | **⭐ 推荐首选：内置原生多文件省 Token 联合校验器**（自动探测 Zig 优先级：`--zig` > `$ZIG_BIN` > `./vendor/zig/zig` > `../vendor/zig/zig` > `/data/dev/cp/vendor/zig/zig` > `zig`）：直接复用内部诊断引擎按 `code` 统计去重前 `N` 条根因 + `--lib` 代码生成 + `zig ast-check` + 4 项纯净度静态门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`，`--require-backup` 校验 `_.zig` 与膨胀比 `<=1.2`） |
 | `cap <file>` / `cap run [-w\|--watch] <file>` | Debug 模式百毫秒级直接构建并运行（多级自动探测 `cpc`/`zig` + 按需链接已引用包 + 运行期自动注入随包 `sys` 动态库；`-w`/`--watch` 基于 Linux `inotify` 50ms 防抖事件驱动热重载） |
 | `cap lint [--dead\|--deadcode] [path...]` | 运行语法、借用与 4 门禁静态检查；`--dead`/`--deadcode` 静态扫描未引用导出符号与孤立文件 |
-| `cap from <-ts\|-rs> <src_dir> [-o <out_dir>]` | 一键将 TypeScript / Rust 工程迁移为 CP（三层依赖解析：`cap:*` 内置 → `@cap/*` 官方 → 递归产出可发布 `cap_modules/<pkg>`；TS `Promise.all`/`Promise.race` 自动映射为 `joinAll`/`race`） |
+| `cap from <-ts\|-rs> <src_dir> [-o <out_dir>] [--verify]` | 一键将 TypeScript / Rust 工程迁移为 CP（三层依赖解析：`cap:*` 内置 → `@cap/*` 官方 → 递归产出可发布 `cap_modules/<pkg>`；TS `Promise.all`/`Promise.race` 自动映射为 `joinAll`/`race`；`--verify` 自动串联 `cpc check --fix` 自愈闭环） |
 | `cap init [app\|agent\|lib\|web] [dir]` / `add [-d] [-g]` | 初始化脚手架工程（含 `web` 百万 QPS `cap:web` 生产模板）；`add`/`remove`/`update` 管理 `dep`/`dev` |
 | `cap install [--production\|--prod] [--frozen-lockfile] [--rebuild] [--target=<os-arch>]` | 展开 `workspaces`、解析 `workspace:*`/`file:`/注册表依赖并预编译 `bin` C/C++ 静态库写入 `cap.lock`（`--production`/`--prod` 跳过 `dev`） |
 | `cap rebuild [pkg] [--filter <pkg>] [--target=<os-arch\|all>] [--write-prebuilt]` | 遍历包内全部 `bin` 条目重编或全平台交叉编译（支持 C/C++），可选回写随包 `prebuilt/` |

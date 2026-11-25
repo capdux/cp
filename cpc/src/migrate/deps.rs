@@ -74,6 +74,37 @@ pub struct FileReport {
     pub opt_notes: Vec<String>,
 }
 
+/// 单个 `.cp` 文件在 `--verify` 自愈闭环中的校验结果。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FileVerifyReport {
+    pub cp_rel_path: String,
+    pub clean: bool,
+    pub initial_errors: usize,
+    pub remaining_errors: usize,
+    pub fixes_applied: usize,
+    pub first_error: Option<String>,
+}
+
+/// `--verify` 串联自愈闭环的汇总报告。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerifySummary {
+    pub total_files: usize,
+    pub clean_files: usize,
+    pub auto_fixed_files: usize,
+    pub total_fixes_applied: usize,
+    pub file_results: Vec<FileVerifyReport>,
+}
+
+impl VerifySummary {
+    /// 生成标准化的单行汇总报告：`verified: X/Y clean, Z auto-fixed`
+    pub fn format_line(&self) -> String {
+        format!(
+            "verified: {}/{} clean, {} auto-fixed",
+            self.clean_files, self.total_files, self.auto_fixed_files
+        )
+    }
+}
+
 /// 项目级迁移汇总，用于生成 `cap.json` 与 `migrate.md`。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProjectMigrateSummary {
@@ -85,6 +116,8 @@ pub struct ProjectMigrateSummary {
     pub deps: Vec<DepMapping>,
     pub files: Vec<FileReport>,
     pub converted_dep_pkgs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verify: Option<VerifySummary>,
 }
 
 // ============================================================================

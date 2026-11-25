@@ -174,6 +174,9 @@ enum Commands {
         /// Maximum dependency recursion depth (default: 4)
         #[arg(long, default_value_t = 4)]
         max_depth: usize,
+        /// Run cpc syntax/semantic verification + mechanical auto-fix loop on emitted .cp files
+        #[arg(long)]
+        verify: bool,
     },
     /// Run Language Server Protocol daemon
     Lsp,
@@ -712,6 +715,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 out,
                 no_deps,
                 max_depth,
+                verify,
             } => {
                 use cpc::migrate::deps::SourceLang;
                 use cpc::migrate::{run_migrate, MigrateOptions};
@@ -737,6 +741,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     out_dir: out_dir.clone(),
                     recursive_deps: !no_deps,
                     max_depth,
+                    verify,
                 })
                 .map_err(|e| anyhow::anyhow!("{}", e))?;
                 let total = summary.files.len();
@@ -759,6 +764,9 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     summary.converted_dep_pkgs.len(),
                     total_todos
                 );
+                if let Some(ref v) = summary.verify {
+                    println!("[cap from] {}", v.format_line());
+                }
                 println!(
                     "[cap from] Report written to: {}/migrate.md",
                     out_dir.display()

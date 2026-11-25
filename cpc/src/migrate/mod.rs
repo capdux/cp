@@ -11,11 +11,13 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::diagnostic::{apply_fixes, mark_cascades, Diagnostic};
 use crate::parser::Parser;
+use crate::sema::Analyzer;
 use deps::{
     generate_cap_json, generate_migrate_md, locate_local_dep_source, parse_cargo_toml_deps,
     parse_package_json_deps, resolve_builtin_or_official, DepMapping, DepTier, FileReport,
-    ProjectMigrateSummary, SourceLang,
+    FileVerifyReport, ProjectMigrateSummary, SourceLang, VerifySummary,
 };
 use rs::transpile_rs_to_cp;
 use ts::transpile_ts_to_cp;
@@ -26,6 +28,7 @@ pub struct MigrateOptions {
     pub out_dir: PathBuf,
     pub recursive_deps: bool,
     pub max_depth: usize,
+    pub verify: bool,
 }
 
 fn sanitize_pkg_dir_name(name: &str) -> String {
@@ -106,6 +109,120 @@ fn check_cp_parse(cp_code: &str) -> (bool, Option<String>) {
     }
 }
 
+fn collect_cp_diagnostics(cp_code: &str) -> Vec<Diagnostic> {
+    use std::sync::atomic::Ordering;
+    let prev = crate::lexer::QUIET_LEXER.swap(true, Ordering::Relaxed);
+    let mut parser = Parser::new(cp_code);
+    let (mut module, mut all_diags) = parser.parse_module_with_recovery();
+    let mut analyzer = Analyzer::new();
+    let _ = analyzer.analyze_module(&mut module);
+    all_diags.extend(analyzer.get_diagnostics());
+    crate::lexer::QUIET_LEXER.store(prev, Ordering::Relaxed);
+    mark_cascades(&mut all_diags, Some(cp_code));
+    all_diags
+}
+
+/// 对单个产出的 `.cp` 文件执行 `cpc` 语法/语义检查，并对可自动修复的机械错误
+/// 迭代执行 `cpc::diagnostic::apply_fixes` 原地修复并重检（最多 3 轮）。
+pub fn verify_and_autofix_cp_file(
+    abs_path: &Path,
+    cp_rel_path: &str,
+) -> Result<(FileVerifyReport, usize, bool, Option<String>), String> {
+    let mut code = fs::read_to_string(abs_path).map_err(|e| {
+        format!(
+            "Failed to read {} for verification: {}",
+            abs_path.display(),
+            e
+        )
+    })?;
+
+    let mut diags = collect_cp_diagnostics(&code);
+    let initial_errors = diags.len();
+    let mut fixes_applied = 0usize;
+
+    if !diags.is_empty() {
+        for _ in 0..3 {
+            let (fixed_code, applied) = apply_fixes(&code, &diags);
+            if applied == 0 || fixed_code == code {
+                break;
+            }
+            fixes_applied += applied;
+            code = fixed_code;
+            diags = collect_cp_diagnostics(&code);
+            if diags.is_empty() {
+                break;
+            }
+        }
+        if fixes_applied > 0 {
+            fs::write(abs_path, &code)
+                .map_err(|e| format!("Failed to write auto-fixed {}: {}", abs_path.display(), e))?;
+        }
+    }
+
+    let remaining_errors = diags.len();
+    let clean = remaining_errors == 0;
+    let first_error = diags.first().map(|d| {
+        let brief: String = format!("[{}] {}", d.code, d.message)
+            .chars()
+            .take(120)
+            .collect();
+        brief
+    });
+    let cp_lines = code.lines().count();
+    let (parse_ok, parse_err) = check_cp_parse(&code);
+
+    Ok((
+        FileVerifyReport {
+            cp_rel_path: cp_rel_path.to_string(),
+            clean,
+            initial_errors,
+            remaining_errors,
+            fixes_applied,
+            first_error,
+        },
+        cp_lines,
+        parse_ok,
+        parse_err,
+    ))
+}
+
+/// 对迁移产出的全部 `.cp` 文件运行 `--verify` 串联自愈闭环，并同步更新 `FileReport`。
+pub fn verify_migrated_files(
+    out_dir: &Path,
+    file_reports: &mut [FileReport],
+) -> Result<VerifySummary, String> {
+    let mut file_results = Vec::with_capacity(file_reports.len());
+    let mut clean_files = 0usize;
+    let mut auto_fixed_files = 0usize;
+    let mut total_fixes_applied = 0usize;
+
+    for report in file_reports.iter_mut() {
+        let abs_path = out_dir.join(&report.cp_rel_path);
+        let (verify_rep, cp_lines, parse_ok, parse_err) =
+            verify_and_autofix_cp_file(&abs_path, &report.cp_rel_path)?;
+        report.cp_lines = cp_lines;
+        report.parse_ok = parse_ok;
+        report.parse_err = parse_err;
+
+        if verify_rep.clean {
+            clean_files += 1;
+        }
+        if verify_rep.fixes_applied > 0 {
+            auto_fixed_files += 1;
+            total_fixes_applied += verify_rep.fixes_applied;
+        }
+        file_results.push(verify_rep);
+    }
+
+    Ok(VerifySummary {
+        total_files: file_results.len(),
+        clean_files,
+        auto_fixed_files,
+        total_fixes_applied,
+        file_results,
+    })
+}
+
 fn migrate_project_recursive(
     lang: SourceLang,
     src_dir: &Path,
@@ -114,6 +231,7 @@ fn migrate_project_recursive(
     recursive_deps: bool,
     depth: usize,
     max_depth: usize,
+    verify: bool,
     visited: &mut HashSet<String>,
 ) -> Result<ProjectMigrateSummary, String> {
     if !src_dir.exists() {
@@ -152,6 +270,7 @@ fn migrate_project_recursive(
                                 recursive_deps,
                                 depth + 1,
                                 max_depth,
+                                verify,
                                 visited,
                             ) {
                                 Ok(sub) => {
@@ -221,6 +340,7 @@ fn migrate_project_recursive(
                                 recursive_deps,
                                 depth + 1,
                                 max_depth,
+                                verify,
                                 visited,
                             ) {
                                 Ok(sub) => {
@@ -326,6 +446,12 @@ fn migrate_project_recursive(
         });
     }
 
+    let verify_summary = if verify {
+        Some(verify_migrated_files(out_dir, &mut file_reports)?)
+    } else {
+        None
+    };
+
     let summary = ProjectMigrateSummary {
         project_name,
         version: project_version,
@@ -335,6 +461,7 @@ fn migrate_project_recursive(
         deps: dep_mappings,
         files: file_reports,
         converted_dep_pkgs,
+        verify: verify_summary,
     };
 
     // 3. Emit standalone `cap.json` and `migrate.md`
@@ -360,6 +487,135 @@ pub fn run_migrate(opts: MigrateOptions) -> Result<ProjectMigrateSummary, String
         opts.recursive_deps,
         0,
         opts.max_depth,
+        opts.verify,
         &mut visited,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn make_temp_dir(prefix: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!(
+            "cpc_migrate_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            nanos
+        ));
+        fs::create_dir_all(&dir).expect("create temp dir");
+        dir
+    }
+
+    #[test]
+    fn test_verify_summary_format_line() {
+        let summary = VerifySummary {
+            total_files: 5,
+            clean_files: 4,
+            auto_fixed_files: 2,
+            total_fixes_applied: 3,
+            file_results: Vec::new(),
+        };
+        assert_eq!(summary.format_line(), "verified: 4/5 clean, 2 auto-fixed");
+    }
+
+    #[test]
+    fn test_verify_and_autofix_clean_file() {
+        let dir = make_temp_dir("clean");
+        let file = dir.join("clean.cp");
+        let code = "export fn add(a: i32, b: i32): i32 {\n    return a + b;\n}\n";
+        fs::write(&file, code).unwrap();
+
+        let (rep, lines, parse_ok, parse_err) =
+            verify_and_autofix_cp_file(&file, "clean.cp").unwrap();
+        assert!(rep.clean, "expected clean file, got {:?}", rep);
+        assert_eq!(rep.initial_errors, 0);
+        assert_eq!(rep.remaining_errors, 0);
+        assert_eq!(rep.fixes_applied, 0);
+        assert_eq!(lines, 3);
+        assert!(parse_ok);
+        assert!(parse_err.is_none());
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_verify_and_autofix_mechanical_errors() {
+        let dir = make_temp_dir("autofix");
+        let file = dir.join("fixme.cp");
+        // Contains two mechanical errors fixable by cpc::diagnostic::apply_fixes:
+        // E0103 (`var` -> `let`) and E0101 (missing parens around `if` condition)
+        let broken = "export fn clamp(x: i32): i32 {\n    var y: i32 = x;\n    if y > 10 {\n        return 10;\n    }\n    return y;\n}\n";
+        fs::write(&file, broken).unwrap();
+
+        let (rep, _lines, parse_ok, _parse_err) =
+            verify_and_autofix_cp_file(&file, "fixme.cp").unwrap();
+        assert!(
+            rep.initial_errors >= 2,
+            "expected >= 2 initial mechanical errors, got {:?}",
+            rep
+        );
+        assert!(
+            rep.fixes_applied >= 2,
+            "expected >= 2 auto-fixes applied, got {:?}",
+            rep
+        );
+        assert!(
+            rep.clean,
+            "expected file to become clean after auto-fix, got {:?}",
+            rep
+        );
+        assert_eq!(rep.remaining_errors, 0);
+        assert!(parse_ok);
+
+        let fixed_on_disk = fs::read_to_string(&file).unwrap();
+        assert!(fixed_on_disk.contains("let y: i32 = x;"));
+        assert!(fixed_on_disk.contains("if (y > 10)"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_run_migrate_with_verify_end_to_end() {
+        let root = make_temp_dir("e2e");
+        let src_dir = root.join("ts_app");
+        let out_dir = root.join("cp_app");
+        fs::create_dir_all(src_dir.join("src")).unwrap();
+        fs::write(
+            src_dir.join("package.json"),
+            r#"{"name": "demo-verify", "version": "1.0.0"}"#,
+        )
+        .unwrap();
+        fs::write(
+            src_dir.join("src/math.ts"),
+            "export function sum(a: number, b: number): number {\n  return a + b;\n}\n",
+        )
+        .unwrap();
+
+        let summary = run_migrate(MigrateOptions {
+            lang: SourceLang::Ts,
+            src_dir: src_dir.clone(),
+            out_dir: out_dir.clone(),
+            recursive_deps: false,
+            max_depth: 1,
+            verify: true,
+        })
+        .expect("run_migrate with verify should succeed");
+
+        let v = summary.verify.expect("verify summary should be present");
+        assert_eq!(v.total_files, 1);
+        assert_eq!(v.clean_files, 1, "verify results: {:?}", v.file_results);
+        assert_eq!(
+            v.format_line(),
+            format!("verified: 1/1 clean, {} auto-fixed", v.auto_fixed_files)
+        );
+        assert!(out_dir.join("src/math.cp").exists());
+
+        let _ = fs::remove_dir_all(&root);
+    }
 }
