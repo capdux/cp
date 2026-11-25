@@ -5685,3 +5685,53 @@
   > 你新增的那些依赖内置库, 写入文档没有,包括新增的生态工具之类的
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 19:52:35）[step:24101]
+- **用户完整原始指令**：
+  > 我们现在有了 内置 web库, 性能非常强, web依赖插件, 你查询下, web 一般需要哪些插件, 我们是否应该将这些插件作为@cap 安装库提供, 否则一个空框架, 对于生产没有意义.
+- **完整回复与执行汇报**：
+  > 非常认同！一个再快的 Web 内核，如果没有开箱即用的生产插件生态，业务开发依然要重复造轮子。
+  >
+  > 对照 **Elysia (`@elysiajs/*`)**、**Fastify (`@fastify/*`)**、**Axum (`tower-http`)** 的生产标准，同时盘点我们 `lib/` 已有资产后，你会发现一个巨大优势：**我们 90% 的底层协议引擎其实已经在 `lib/` 里写好并测通了**，现在只需把它们封装为标准、独立可安装的 **`@cap/web-*`** 官方插件包（放在 `packages/@cap/web-*`，通过 `cap add @cap/web-xxx` 安装、`app.usePlugin(...)` 一行挂载），既保持 `cap:web` 内核零膨胀，又能秒级具备生产可用性。
+  >
+  > ---
+  >
+  > ### 一、生产级 Web 必备插件全景清单（建议统一命名 `@cap/web-*`）
+  >
+  > #### P0：生产 API 第一天就必须用到的 7 个核心插件（建议优先首批交付）
+  > | 官方插件包 | 对标生态 | 复用 CP 已有底层资产 | 解决的生产刚需 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/web-cors`** | `@elysiajs/cors` / `@fastify/cors` | [lib/web/corsGuard.cp](file:///data/dev/cp/lib/web/corsGuard.cp) | 自动处理 `OPTIONS` 预检、Origin 白名单、Credentials 与 `Access-Control-*` 头 |
+  > | **`@cap/web-jwt`** | `@elysiajs/jwt` + `bearer` / `@fastify/jwt` | `cap:jwt` + `cap:crypto` | HS256/RS256/EdDSA 签发与校验、`Authorization: Bearer` 自动鉴权注入 `ctx.derived` / 401 拦截 |
+  > | **`@cap/web-static`** | `@elysiajs/static` / `tower-http::ServeDir` | `cap:mime` (`fileType`) + `etagPrecond` + `cachePolicy` | 静态文件目录托管、路径防穿越（`..` 拦截）、`ETag` / `304`、`Range` 与大文件 `RequestArena`/直发 |
+  > | **`@cap/web-swagger`** | `@elysiajs/swagger` / `@fastify/swagger` | `app.toOpenApiJson` + `openapiSpec.cp` | 自动暴露 `GET /openapi.json` 与交互式 `GET /docs`（Scalar/Swagger UI）文档页 |
+  > | **`@cap/web-ratelimit`** | `@fastify/rate-limit` / `elysia-rate-limit` | [lib/web/ratelimit.cp](file:///data/dev/cp/lib/web/ratelimit.cp) + `rateHeader.cp` | 按 IP/Key 令牌桶限流，自动返回 `429` + IETF `RateLimit` / `Retry-After` 标准头 |
+  > | **`@cap/web-security`** | `@fastify/helmet` + `@fastify/csrf` | `cspPolicy.cp` + `csrfGuard.cp` + `hstsStore.cp` | 一键注入 HSTS / CSP / X-Frame-Options / Referrer-Policy 安全头与无状态 CSRF 防护 |
+  > | **`@cap/web-logger`** | `pino` / `tower-http::TraceLayer` | `cap:obs` (`structLog`/`openmetrics`/`traceParent`) + `App.enableTrace()` | `X-Request-Id`、`traceparent` 链路透传、JSON 结构化访问日志与 `/metrics` Prometheus 端点 |
+  >
+  > #### P1：中大型生产系统高频插件（第二批）
+  > | 官方插件包 | 对标生态 | 复用 CP 已有底层资产 | 核心能力 |
+  > | :--- | :--- | :--- | :--- |
+  > | **`@cap/web-compress`** | `@fastify/compress` | `cap:zlib` + `@cap/zstd` + `contentNeg.cp` | 按 `Accept-Encoding` 自动 Gzip / Zstd 响应压缩 |
+  > | **`@cap/web-session`** | `@fastify/session` | `cap:http/cookie` + `cap:crypto` + `cap:redis`/`cap:sqlite` | 加密签名 Cookie Session 与 Redis/SQLite 会话存储 |
+  > | **`@cap/web-oauth2`** | `@fastify/oauth2` | `cap:oauth2` + `cap:auth/oauthPkce` + `cap:webauthn` | OAuth2 / OIDC PKCE 与 Passkey 登录 |
+  > | **`@cap/web-cache`** | `tower-http` / Stripe 幂等 | `cachePolicy.cp` + `etagPrecond.cp` + `idempotency.cp` | HTTP 响应缓存 + `Idempotency-Key` 并发防重放 |
+  > | **`@cap/web-cron`** | `@elysiajs/cron` | `cap:cron` | 后台 Cron 定时任务调度 |
+  >
+  > #### P2：垂直协议扩展（按需）
+  > - **`@cap/web-sse`**（复用 `sse.cp` + `sseBroker.cp`，AI 流式输出 + `Last-Event-ID` 断线续传）
+  > - **`@cap/web-graphql`**（复用 `cap:graphql`，挂载 `/graphql` 端点与 Playground）
+  >
+  > ---
+  >
+  > ### 二、架构分工原则
+  > - **`cap:web`（内置核心）**：保持零外部依赖、极速编译，提供 `App` / `Plugin` 契约、`WebServer` / `WsServer`、`ComptimeRouteTable`、`RequestArena`；
+  > - **`packages/@cap/web-*`（官方可安装插件包）**：每个插件自带独立 `cap.json` + `src/index.cp` + 单元测试，纳入根目录 `workspaces` 管理，支持 `cap add @cap/web-cors` 一键安装、`cap pack` / `cap publish` 独立发版，且依托 `cap` 的按需链接机制，**不用的插件 0 编译与内存开销**。
+  >
+  > 你确认 **`@cap/web-*` 命名规范** 与 **首批启动 P0 全部 7 个官方插件包** 后，我立刻按 **主智能体 + 2 路子智能体并行** 把这 7 个生产插件包全部落地并跑通端到端测试！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 20:23:28）[step:24106]
+- **用户完整原始指令**：
+  > 使用 @web/xxx 命名规范, 首批启动7个官方插件包,继续你的工作
+- **完整回复与执行汇报**：
+  > `@web/cors`（5/5 PASS）、`@web/security`（6/6 PASS）及 [packages/@web/README.md](file:///data/dev/cp/packages/@web/README.md) 已完成并通过 4-Gate `0/0/0/0`。正在等待另外两路子智能体完成 `@web/jwt`、`@web/ratelimit`、`@web/logger`、`@web/static`、`@web/swagger` 5 个插件包，完工后将立即运行 7 插件全栈集成测试并提交。

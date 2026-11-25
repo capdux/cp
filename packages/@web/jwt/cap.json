@@ -1,0 +1,7 @@
+{
+  "name": "@web/jwt",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official zero-heap HS256 JWT authentication plugin for cap:web (pure-CP SHA-256, HMAC-SHA256, Base64URL)"
+}

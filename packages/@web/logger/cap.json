@@ -1,0 +1,7 @@
+{
+  "name": "@web/logger",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official production observability plugin for cap:web (X-Request-Id, W3C traceparent, JSON access logs, OpenMetrics /metrics)"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@web/static",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official zero-GC static file serving plugin for cap:web (path traversal guard, extension + magic-number MIME detection, FNV-1a ETag & 304 Not Modified)"
+}

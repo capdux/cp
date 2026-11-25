@@ -1,0 +1,7 @@
+{
+  "name": "@web/cors",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official CORS middleware plugin for cap:web (preflight OPTIONS, origin allowlist, credentials, exposed headers)"
+}

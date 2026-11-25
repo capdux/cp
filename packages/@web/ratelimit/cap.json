@@ -1,0 +1,7 @@
+{
+  "name": "@web/ratelimit",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "description": "Official zero-heap fixed-slot sliding-window rate limiter plugin for cap:web"
+}

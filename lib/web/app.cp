@@ -2269,6 +2269,7 @@ pub struct App {
     /// Pure zero-I/O HTTP request dispatcher (convenience wrapper over `dispatchInto`).
     pub fn dispatch(*_, req: Request): Response {
         let ctx: Context = undefined;
+        ctx.arena = null;
         let resp: Response = undefined;
         _.dispatchInto(&req, *ctx, *resp);
         return resp;
