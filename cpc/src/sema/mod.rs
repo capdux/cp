@@ -1276,9 +1276,21 @@ impl Analyzer {
 
         // Pass 3: Full Semantic Analysis & Type Checking
         for item in &module.body {
-            if let ModuleItem::Decl(Decl::TypeAlias(ta)) = item {
-                self.type_aliases
-                    .insert(ta.ident.sym.clone(), ta.target_ty.clone());
+            match item {
+                ModuleItem::Decl(Decl::TypeAlias(ta)) => {
+                    self.type_aliases
+                        .insert(ta.ident.sym.clone(), ta.target_ty.clone());
+                }
+                ModuleItem::Stmt(Stmt::Var(var))
+                    if var.kind == VarDeclKind::Const && var.ty.is_none() =>
+                {
+                    if let (Pattern::Ident(ident), Some(init)) = (&var.pat, &var.init) {
+                        if let Some(alias_ty) = self.extract_const_type_alias(init) {
+                            self.type_aliases.insert(ident.sym.clone(), alias_ty);
+                        }
+                    }
+                }
+                _ => {}
             }
         }
         for item in &module.body {
@@ -1302,6 +1314,42 @@ impl Analyzer {
             return Err(first);
         }
         Ok(())
+    }
+
+    pub(super) fn extract_const_type_alias(&self, init: &Expr) -> Option<Type> {
+        match init {
+            Expr::TypeVal { ty, .. } => Some(ty.clone()),
+            Expr::Ident(id) => match id.sym.as_str() {
+                "u8" => Some(Type::U8),
+                "i8" => Some(Type::I8),
+                "u16" => Some(Type::U16),
+                "i16" => Some(Type::I16),
+                "u32" => Some(Type::U32),
+                "i32" => Some(Type::I32),
+                "u64" => Some(Type::U64),
+                "i64" => Some(Type::I64),
+                "u128" => Some(Type::U128),
+                "i128" => Some(Type::I128),
+                "usize" => Some(Type::USize),
+                "isize" => Some(Type::ISize),
+                "f32" => Some(Type::F32),
+                "f64" => Some(Type::F64),
+                "bool" => Some(Type::Bool),
+                "string" => Some(Type::String),
+                "void" => Some(Type::Void),
+                "cstr" => Some(Type::CStr),
+                _ => {
+                    if let Some(existing) = self.type_aliases.get(&id.sym) {
+                        Some(existing.clone())
+                    } else if self.classes.contains_key(&id.sym) {
+                        Some(Type::Ref(id.clone()))
+                    } else {
+                        None
+                    }
+                }
+            },
+            _ => None,
+        }
     }
 
     pub fn register_imported_decl(&mut self, decl: &Decl) {

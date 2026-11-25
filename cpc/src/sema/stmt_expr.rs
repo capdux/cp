@@ -122,8 +122,8 @@ impl Analyzer {
                                         }),
                                     );
                                 }
-                            } else if let Expr::TypeVal { ty: alias_ty, .. } = init {
-                                self.type_aliases.insert(var_name, alias_ty.clone());
+                            } else if let Some(alias_ty) = self.extract_const_type_alias(init) {
+                                self.type_aliases.insert(var_name, alias_ty);
                             }
                         }
                     }
