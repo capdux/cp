@@ -531,7 +531,9 @@ impl Analyzer {
                                         || matches!(p.ty, Type::BorrowType { is_mut: true, .. }))
                             }));
                     let old_method_mut = self.current_method_is_mut;
+                    let old_method_val_recv = self.current_method_is_value_receiver;
                     self.current_method_is_mut = is_mut;
+                    self.current_method_is_value_receiver = !is_static && !is_mut;
 
                     let mut ro_params = std::collections::HashSet::new();
                     for p in &m.params {
@@ -580,6 +582,7 @@ impl Analyzer {
                     }
                     self.fn_param_vars.pop();
                     self.current_method_is_mut = old_method_mut;
+                    self.current_method_is_value_receiver = old_method_val_recv;
                     self.exit_scope();
                     self.exit_scope();
                     for k in added_method_bounds {

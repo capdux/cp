@@ -6104,3 +6104,29 @@
   >    - 子智能体 2：正在构建 Wave 5B **`@cap/template`**（零堆分配 Handlebars/MiniJinja 模板引擎 + 默认 HTML XSS 转义 + 链式过滤器 + `#if`/`#each`）。
   >
   > 全部验证完成后立即统一汇总并提交。
+
+### 2026-11-26（下游工单全量补录：`task-bun-20261126-borrow-dangling-return`）[ticket:task-bun-20261126-borrow-dangling-return]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-26 09:32:17` | 状态：`resolved` | 结单：`2026-11-26T09:48:35`
+- **报错/需求摘要**：[优化需求1/4: 所有权与借用检查深化] 场景: 1) ArrayBitSet.iterator 等方法省略 *_ 使用只读值接收者时，返回 &_.field 会指向局部栈拷贝造成悬垂指针，需前端静态拦截(要求 *_ 或 *const Self)；2) move 后在同一作用域继续读取变量(use-after-move)应由借用检查器静态报错拦截。
+- **结单与处理汇报**：Fixed in cpc/src/sema/{mod,decl,stmt_expr}.rs: added E0228 static interception for returning &_.field from value-receiver methods (suggesting '*_'), and verified E0203 use-after-move static check on repro_borrow_dangling_return.cp.
+
+### 2026-11-26（下游工单全量补录：`task-bun-20261126-codegen-edge-cases`）[ticket:task-bun-20261126-codegen-edge-cases]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-26 09:32:17` | 状态：`resolved` | 结单：`2026-11-26T09:48:35`
+- **报错/需求摘要**：[优化需求2/4: Codegen 边界修复] 场景: 在 50万行 Zig/Rust->CP 迁移中高频遇到 1) Xxx.exec(a,b,c) 多参数静态调用在特定场景被截断为单参；2) std.mem.sort(..., {}, ...) / std.sort(..., .{}, ...) 报 parameter 0 'void' cannot cast into '@TypeOf(.{})'；3) 自定义类型单参数 obj.slice(arg) 被误 lowering 为数组切片 obj[arg..]。
+- **结单与处理汇报**：Fixed in cpc/src/codegen/expr/call.rs: 1) narrowed .exec/.test special-casing to single-arg non-type receivers so multi-arg Command.exec(a,b,c) preserves all args; 2) skipped slice-lowering when custom struct defines .slice(); 3) normalized std.mem.sort/std.sort.* empty context literal. Verified repro_codegen_edge_cases.cp + zig ast-check PASS.
+
+### 2026-11-26（下游工单全量补录：`task-bun-20261126-c-ffi-abi-guard`）[ticket:task-bun-20261126-c-ffi-abi-guard]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-26 09:32:18` | 状态：`resolved` | 结单：`2026-11-26T09:48:35`
+- **报错/需求摘要**：[优化需求3/4: 跨语言 @c FFI ABI 尺寸守护] 场景: Bun 中 c-bindings.cpp 与 lshpack.c 因宏 -DLSXPACK_MAX_STRLEN 缺失导致 lsxpack_strlen_t 一侧 2B 另一侧 4B，编译期无报错但运行时 ASan 越界。希望 @c 结构体导入或新增机制支持自动/显式生成 C/Zig 结构体 sizeof/alignof 编译期对齐校验，防止静默 ABI 错位。
+- **结单与处理汇报**：Implemented in cpc/src/codegen/expr/builtin.rs: added zero-runtime-overhead compile-time ABI guards @assertLayout(Type, size[, align]) and @cAbiCheck(LocalType, CType) emitting comptime @sizeOf/@alignOf @compileError assertions. Verified with zig ast-check PASS.
+
+### 2026-11-26（下游工单全量补录：`task-bun-20261126-cpc-fix-brief-enhancements`）[ticket:task-bun-20261126-cpc-fix-brief-enhancements]
+- **工单来源**：`bun_agy`（项目 `bun` / 分类 `compiler_bug`） | 创建：`2026-11-26 09:32:18` | 状态：`resolved` | 结单：`2026-11-26T09:48:35`
+- **报错/需求摘要**：[优化需求4/4: cpc fix 与 check --brief 工具链增强] 场景: 迁移高频雷区 1) if (cond) .{...} 无 else 分支导致 Zig 编译报错，期望 cpc fix 自动补全 else @as(void, undefined)；2) switch 字符半开区间 '0'..'9' 易漏掉 '9'，期望 cpc check/fix 给出提示或自动修复为闭区间 '0'..='9'。
+- **结单与处理汇报**：Implemented in cpc/src/sema/{mod,stmt_expr}.rs, parser/primary.rs & diagnostic.rs: added E0133 (value-position if missing else -> auto-fixes ' else @as(void, undefined)') and W0134 (half-open switch char range '0'..'9' -> auto-fixes to '0'..='9'). Verified cpc check --brief & cpc fix -> Check successful.
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 09:32:19）[step:24987]
+- **用户完整原始指令**：
+  > 收到新的编译器待处理工单(4条: task-bun-20261126-borrow-dangling-return,task-bun-20261126-codegen-edge-cases,task-bun-20261126-c-ffi-abi-guard,task-bun-20261126-cpc-fix-brief-enhancements)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
+- **完整回复与执行汇报**：
+  > 正在构建并验证 4 条 `bun_agy` 编译器工单修复，完成后立即汇报并结单。

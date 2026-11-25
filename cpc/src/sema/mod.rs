@@ -37,6 +37,12 @@ pub enum SemaError {
     ReservedIdentifier(String, Span, bool),
     #[error("Cannot borrow '{0}' as mutable because it is also borrowed as immutable in the current scope at {1:?}")]
     MutableBorrowConflict(String, Span),
+    #[error("Cannot return pointer/reference to value receiver '_' at {0:?}")]
+    DanglingValueReceiverReturn(Span),
+    #[error("Value-position 'if' expression is missing an 'else' branch at {0:?}")]
+    MissingElseInValueIf(Span),
+    #[error("Half-open character range '{0}'..'{1}' in switch excludes upper bound '{1}' at {2:?}")]
+    HalfOpenCharSwitchRange(char, char, Span),
     #[error(
         "Compile Error: Meta '@{0}' can only be applied to {1}, but was applied to {2} at {3:?}"
     )]
@@ -296,6 +302,33 @@ impl SemaError {
                 "ensure immutable borrows of '{}' end before taking a mutable borrow, or clone the value.",
                 name
             )),
+
+            SemaError::DanglingValueReceiverReturn(span) => Diagnostic::new(
+                "E0228",
+                "cannot return pointer/reference to value receiver '_' (dangling stack pointer)",
+            )
+            .with_span(*span)
+            .with_cause("methods omitting '*_' receive '_' by value (stack copy); taking '&_.field' returns a pointer to the temporary stack copy that becomes dangling on return.")
+            .with_help("pass the receiver by pointer using '*_' so returned references point to the caller's instance.")
+            .with_suggestion("add '*_' as the first method parameter (e.g. 'pub fn iterator(*_): Iter')"),
+
+            SemaError::MissingElseInValueIf(span) => Diagnostic::new(
+                "E0133",
+                "value-position 'if' expression is missing an 'else' branch",
+            )
+            .with_span(*span)
+            .with_cause("in CP/Zig, an 'if' used as a value (e.g. struct field initializer or assignment RHS) must have an explicit 'else' branch.")
+            .with_help("add an 'else' branch (for void fields, use 'else @as(void, undefined)' or 'else {}').")
+            .with_suggestion("append ' else @as(void, undefined)' to the 'if' expression"),
+
+            SemaError::HalfOpenCharSwitchRange(lo, hi, span) => Diagnostic::new(
+                "W0134",
+                format!("half-open character range '{}'..'{}' in switch excludes '{}'", lo, hi, hi),
+            )
+            .with_span(*span)
+            .with_cause(format!("'..' is half-open and does not include the upper bound character '{}'.", hi))
+            .with_help("use inclusive range '..=' in switch/match arms for character ranges.")
+            .with_suggestion(format!("replace '{}'..'{}' with '{}'..='{}'", lo, hi, lo, hi)),
 
             SemaError::UseOfMovedValue(name, span) => Diagnostic::new(
                 "E0203",
@@ -640,6 +673,7 @@ pub struct Analyzer {
     pub fn_param_vars: Vec<std::collections::HashSet<String>>,
     pub local_borrow_vars: std::collections::HashSet<String>,
     pub current_method_is_mut: bool,
+    pub current_method_is_value_receiver: bool,
     pub errors: Vec<SemaError>,
 }
 
@@ -770,6 +804,7 @@ impl Analyzer {
             fn_param_vars: Vec::new(),
             local_borrow_vars: std::collections::HashSet::new(),
             current_method_is_mut: false,
+            current_method_is_value_receiver: false,
             errors: Vec::new(),
         }
     }

@@ -5,6 +5,77 @@ use crate::Span;
 use std::collections::HashMap;
 
 impl Analyzer {
+    fn expr_is_receiver_root(expr: &Expr) -> bool {
+        match expr {
+            Expr::Ident(id) => id.sym == "_" || id.sym == "this" || id.sym == "self",
+            Expr::Member(m) | Expr::OptMember(m) => Self::expr_is_receiver_root(&m.obj),
+            Expr::Index { obj, .. } => Self::expr_is_receiver_root(obj),
+            Expr::Slice(s) => Self::expr_is_receiver_root(&s.obj),
+            _ => false,
+        }
+    }
+
+    fn expr_takes_addr_of_receiver(expr: &Expr) -> bool {
+        match expr {
+            Expr::Borrow(inner, _) => Self::expr_is_receiver_root(inner),
+            Expr::Object(fields) | Expr::Dict(fields) => fields
+                .iter()
+                .any(|f| Self::expr_takes_addr_of_receiver(&f.val)),
+            Expr::ComptimeMap { entries, .. } => entries
+                .iter()
+                .any(|f| Self::expr_takes_addr_of_receiver(&f.val)),
+            Expr::EnumInit(ei) => {
+                ei.fields
+                    .as_ref()
+                    .map_or(false, |fs| fs.iter().any(|f| Self::expr_takes_addr_of_receiver(&f.val)))
+                    || ei
+                        .tuple_args
+                        .as_ref()
+                        .map_or(false, |ts| ts.iter().any(Self::expr_takes_addr_of_receiver))
+            }
+            Expr::New(c) | Expr::Call(c) | Expr::OptCall(c) => {
+                c.args.iter().any(Self::expr_takes_addr_of_receiver)
+            }
+            Expr::Array(els) => els.iter().any(Self::expr_takes_addr_of_receiver),
+            Expr::If { cons, alt, .. } => {
+                Self::expr_takes_addr_of_receiver(cons)
+                    || alt
+                        .as_ref()
+                        .map_or(false, |a| Self::expr_takes_addr_of_receiver(a))
+            }
+            _ => false,
+        }
+    }
+
+    fn check_half_open_char_pattern(&mut self, pat: &Pattern, span: Span) {
+        match pat {
+            Pattern::Range {
+                start: RangeBound::Int(a),
+                end: RangeBound::Int(b),
+                inclusive: false,
+            } => {
+                let is_common_char_range = (*a == b'0' as i64 && *b == b'9' as i64)
+                    || (*a == b'a' as i64 && *b == b'z' as i64)
+                    || (*a == b'A' as i64 && *b == b'Z' as i64)
+                    || (*a == b'a' as i64 && *b == b'f' as i64)
+                    || (*a == b'A' as i64 && *b == b'F' as i64);
+                if is_common_char_range {
+                    self.errors.push(SemaError::HalfOpenCharSwitchRange(
+                        (*a as u8) as char,
+                        (*b as u8) as char,
+                        span,
+                    ));
+                }
+            }
+            Pattern::Or(items) => {
+                for p in items {
+                    self.check_half_open_char_pattern(p, span);
+                }
+            }
+            _ => {}
+        }
+    }
+
     /// Returns `(type_name, dtor_kind)` if `ty` represents an owned value (not a borrow/raw pointer)
     /// whose struct/class defines `~init()` (`__cp_deinit`) or `~errinit()` (`__cp_errdeinit`).
     pub(super) fn find_owned_raii_destructor(&self, ty: &Type) -> Option<(String, String)> {
@@ -363,6 +434,12 @@ impl Analyzer {
             }
             Stmt::Return(r) => {
                 if let Some(arg) = &r.arg {
+                    if self.current_method_is_value_receiver
+                        && Self::expr_takes_addr_of_receiver(arg)
+                    {
+                        self.errors
+                            .push(SemaError::DanglingValueReceiverReturn(r.span));
+                    }
                     self.infer_type(arg)?;
                     self.analyze_expr(arg)?;
                 }
@@ -956,6 +1033,7 @@ impl Analyzer {
             Expr::Match(m) => {
                 self.analyze_expr(&m.disc)?;
                 for arm in &m.arms {
+                    self.check_half_open_char_pattern(&arm.pat, arm.span);
                     self.enter_scope();
                     self.bind_match_pattern(&arm.pat)?;
                     if let Some(cap) = &arm.capture {
@@ -994,6 +1072,23 @@ impl Analyzer {
             Expr::Object(fields) | Expr::Dict(fields) => {
                 for f in fields {
                     self.analyze_expr(&f.val)?;
+                }
+            }
+            Expr::ComptimeMap { entries, .. } => {
+                for f in entries {
+                    self.analyze_expr(&f.val)?;
+                }
+            }
+            Expr::EnumInit(ei) => {
+                if let Some(fields) = &ei.fields {
+                    for f in fields {
+                        self.analyze_expr(&f.val)?;
+                    }
+                }
+                if let Some(targs) = &ei.tuple_args {
+                    for a in targs {
+                        self.analyze_expr(a)?;
+                    }
                 }
             }
             Expr::Index { obj, index } => {
@@ -1517,8 +1612,15 @@ impl Analyzer {
                 }
             }
             Expr::If {
-                test, cons, alt, ..
+                test,
+                cons,
+                alt,
+                span,
+                ..
             } => {
+                if alt.is_none() {
+                    self.errors.push(SemaError::MissingElseInValueIf(*span));
+                }
                 self.analyze_expr(test)?;
                 let not_null_vars = Self::extract_not_null_vars(test);
                 let is_null_vars = Self::extract_is_null_vars(test);

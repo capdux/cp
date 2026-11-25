@@ -620,19 +620,24 @@ impl Codegen {
                         && !call.args.is_empty()
                         && call.args.len() <= 2
                         && {
-                            let is_sliceable = match &raw_obj_ty {
-                                Some(Type::Array(_)) | Some(Type::SentinelSlice(_, _)) => true,
-                                Some(Type::Ref(ref id)) => {
-                                    id.sym == "string"
-                                        || id.sym == "String"
-                                        || id.sym == "Array"
-                                        || id.sym == "Vec"
-                                        || id.sym.starts_with("[]")
-                                        || id.sym.starts_with("[*]")
-                                }
+                            let has_custom_slice_method = match &raw_obj_ty {
+                                Some(Type::Ref(ref id)) => self
+                                    .class_defs
+                                    .get(&id.sym)
+                                    .map_or(false, |c| c.methods.iter().any(|m| m.ident.sym == prop)),
                                 Some(Type::BorrowType { inner, .. }) => match &**inner {
-                                    Type::Array(_) | Type::SentinelSlice(_, _) => true,
-                                    Type::Ref(ref id) => {
+                                    Type::Ref(ref id) => self
+                                        .class_defs
+                                        .get(&id.sym)
+                                        .map_or(false, |c| c.methods.iter().any(|m| m.ident.sym == prop)),
+                                    _ => false,
+                                },
+                                _ => false,
+                            };
+                            let is_sliceable = !has_custom_slice_method
+                                && match &raw_obj_ty {
+                                    Some(Type::Array(_)) | Some(Type::SentinelSlice(_, _)) => true,
+                                    Some(Type::Ref(ref id)) => {
                                         id.sym == "string"
                                             || id.sym == "String"
                                             || id.sym == "Array"
@@ -640,10 +645,20 @@ impl Codegen {
                                             || id.sym.starts_with("[]")
                                             || id.sym.starts_with("[*]")
                                     }
+                                    Some(Type::BorrowType { inner, .. }) => match &**inner {
+                                        Type::Array(_) | Type::SentinelSlice(_, _) => true,
+                                        Type::Ref(ref id) => {
+                                            id.sym == "string"
+                                                || id.sym == "String"
+                                                || id.sym == "Array"
+                                                || id.sym == "Vec"
+                                                || id.sym.starts_with("[]")
+                                                || id.sym.starts_with("[*]")
+                                        }
+                                        _ => false,
+                                    },
                                     _ => false,
-                                },
-                                _ => false,
-                            };
+                                };
                             is_sliceable
                         }
                     {
@@ -688,14 +703,34 @@ impl Codegen {
                             let arg = self.generate_expr(&call.args[0]);
                             return format!("{}.exec({})", arg, obj);
                         }
-                    } else if prop == "test" && !call.args.is_empty() {
-                        let obj = self.generate_expr(&mem.obj);
-                        let arg = self.generate_expr(&call.args[0]);
-                        return format!("{}.@\"test\"({})", obj, arg);
-                    } else if prop == "exec" && !call.args.is_empty() {
-                        let obj = self.generate_expr(&mem.obj);
-                        let arg = self.generate_expr(&call.args[0]);
-                        return format!("{}.exec({})", obj, arg);
+                    } else if prop == "test" && call.args.len() == 1 {
+                        let is_type_receiver = match &*mem.obj {
+                            Expr::Ident(id) => {
+                                self.class_defs.contains_key(&id.sym)
+                                    || self.enum_defs.contains_key(&id.sym)
+                                    || id.sym.chars().next().map_or(false, |c| c.is_uppercase())
+                            }
+                            _ => false,
+                        };
+                        if !is_type_receiver {
+                            let obj = self.generate_expr(&mem.obj);
+                            let arg = self.generate_expr(&call.args[0]);
+                            return format!("{}.@\"test\"({})", obj, arg);
+                        }
+                    } else if prop == "exec" && call.args.len() == 1 {
+                        let is_type_receiver = match &*mem.obj {
+                            Expr::Ident(id) => {
+                                self.class_defs.contains_key(&id.sym)
+                                    || self.enum_defs.contains_key(&id.sym)
+                                    || id.sym.chars().next().map_or(false, |c| c.is_uppercase())
+                            }
+                            _ => false,
+                        };
+                        if !is_type_receiver {
+                            let obj = self.generate_expr(&mem.obj);
+                            let arg = self.generate_expr(&call.args[0]);
+                            return format!("{}.exec({})", obj, arg);
+                        }
                     } else if prop == "toString" && call.args.is_empty() {
                         let obj = self.generate_expr(&mem.obj);
                         if let Some(Type::Ref(id)) = self.infer_cp_type(&mem.obj) {
@@ -1819,6 +1854,16 @@ impl Codegen {
                     }
                     let param = fn_sig_opt.as_ref().and_then(|sig| sig.params.get(idx));
                     let mut gen_arg = self.generate_expr(arg);
+                    // Zig std.mem.sort / std.sort.* accept `.{}` or `{}` context;
+                    // normalize bare empty object literal `{}` passed as sort context to `{}` (void) when Zig expects void,
+                    // or `.{}` when called with std.sort.pdq/insertion/block/heap.
+                    if gen_arg == ".{}"
+                        && (callee == "std.mem.sort"
+                            || callee == "std.mem.sortUnstable"
+                            || callee.starts_with("std.sort."))
+                    {
+                        gen_arg = "{}".to_string();
+                    }
                     if let Some(p) = param {
                         if let Type::Ref(id) = &p.ty {
                             if id.sym == "BigInt" {

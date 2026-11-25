@@ -504,7 +504,10 @@ impl Diagnostic {
         if self.code == "E0204" {
             if let (Some(code), Some(target)) = (source_code, self.message.split('\'').nth(1)) {
                 let pattern = format!("const {}", target);
-                let search_limit = self.span.map(|s| s.start.min(code.len())).unwrap_or(code.len());
+                let search_limit = self
+                    .span
+                    .map(|s| s.start.min(code.len()))
+                    .unwrap_or(code.len());
                 if let Some(pos) = code[..search_limit].rfind(&pattern) {
                     edits.push(DiagnosticEdit::new(pos, pos + 5, "let"));
                     return edits;
@@ -538,6 +541,49 @@ impl Diagnostic {
                     let inner = &slice_txt[..slice_txt.len() - 1];
                     edits.push(DiagnosticEdit::new(start, end, format!("({})?", inner)));
                     return edits;
+                }
+            }
+        }
+
+        // 13d. Value-position `if (cond) expr` missing `else` branch (E0133) -> append ` else @as(void, undefined)`
+        if self.code == "E0133" {
+            if let (Some(span), Some(code)) = (self.span, source_code) {
+                let end = span.end.min(code.len());
+                edits.push(DiagnosticEdit::new(end, end, " else @as(void, undefined)"));
+                return edits;
+            }
+        }
+
+        // 13e. Half-open character range `'0'..'9'` in switch (W0134) -> inclusive `'0'..='9'`
+        if self.code == "W0134" {
+            if let Some(code) = source_code {
+                if let Some(span) = self.span {
+                    let end = span.end.min(code.len());
+                    let start = span.start.min(end);
+                    let seg = &code[start..end];
+                    if let Some(rel) = seg.find("..") {
+                        let abs_pos = start + rel;
+                        if !code[abs_pos..].starts_with("..=") {
+                            edits.push(DiagnosticEdit::new(abs_pos, abs_pos + 2, "..="));
+                            return edits;
+                        }
+                    }
+                }
+                // Fallback: locate exact `'lo'..'hi'` literal from message when arm span is zero
+                if let Some(start_q) = self.message.find('\'') {
+                    let rest = &self.message[start_q..];
+                    if let Some(end_sp) = rest.find(' ') {
+                        let pat = &rest[..end_sp];
+                        if let Some(pos) = code.find(pat) {
+                            if let Some(dots) = pat.find("..") {
+                                let abs_pos = pos + dots;
+                                if !code[abs_pos..].starts_with("..=") {
+                                    edits.push(DiagnosticEdit::new(abs_pos, abs_pos + 2, "..="));
+                                    return edits;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1168,7 +1214,10 @@ mod tests {
         let src = "let dec: [16]u8 = undefined;";
         let start = src.find("dec").unwrap();
         let diag = Diagnostic::new("E0131", "'dec' is a reserved decimal type keyword in CP")
-            .with_span(Span { start, end: start + 3 });
+            .with_span(Span {
+                start,
+                end: start + 3,
+            });
         let (fixed, count) = apply_fixes(src, &[diag]);
         assert_eq!(count, 1);
         assert_eq!(fixed, "let dec_buf: [16]u8 = undefined;");
@@ -1178,8 +1227,14 @@ mod tests {
     fn test_autofix_e0132_optional_slice_parens() {
         let src = "fn alloc(n: usize): []u8? { return null; }";
         let start = src.find("[]u8?").unwrap();
-        let diag = Diagnostic::new("E0132", "optional-element slice mistaken for optional slice")
-            .with_span(Span { start, end: start + 5 });
+        let diag = Diagnostic::new(
+            "E0132",
+            "optional-element slice mistaken for optional slice",
+        )
+        .with_span(Span {
+            start,
+            end: start + 5,
+        });
         let (fixed, count) = apply_fixes(src, &[diag]);
         assert_eq!(count, 1);
         assert_eq!(fixed, "fn alloc(n: usize): ([]u8)? { return null; }");
@@ -1189,8 +1244,11 @@ mod tests {
     fn test_autofix_e0204_nearest_const_to_let() {
         let src = "const x = 1;\nfn f() {\n    const x = 2;\n    x = 3;\n}\n";
         let assign_pos = src.find("x = 3").unwrap();
-        let diag = Diagnostic::new("E0204", "cannot assign to const variable 'x'")
-            .with_span(Span { start: assign_pos, end: assign_pos + 1 });
+        let diag =
+            Diagnostic::new("E0204", "cannot assign to const variable 'x'").with_span(Span {
+                start: assign_pos,
+                end: assign_pos + 1,
+            });
         let (fixed, count) = apply_fixes(src, &[diag]);
         assert_eq!(count, 1);
         assert!(fixed.contains("const x = 1;\nfn f() {\n    let x = 2;"));

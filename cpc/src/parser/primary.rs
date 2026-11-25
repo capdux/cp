@@ -2117,7 +2117,11 @@ impl<'a> Parser<'a> {
                     };
                     alt = Some(Box::new(alt_expr));
                 }
-                let end = self.peek_span().end;
+                let end = if let Some(ref a) = alt {
+                    right_span(a).end
+                } else {
+                    right_span(&cons).end
+                };
                 Ok(Expr::If {
                     span: Span { start, end },
                     test: Box::new(test),

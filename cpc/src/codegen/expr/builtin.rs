@@ -560,6 +560,36 @@ impl Codegen {
                     self.in_type_expr_ctx = saved;
                     format!("@alignOf({})", t)
                 }
+                "@assertLayout" if call.args.len() >= 2 && call.args.len() <= 3 => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
+                    let t = self.generate_expr(&call.args[0]);
+                    self.in_type_expr_ctx = saved;
+                    let exp_size = self.generate_expr(&call.args[1]);
+                    if call.args.len() == 3 {
+                        let exp_align = self.generate_expr(&call.args[2]);
+                        format!(
+                            "comptime {{ if (@sizeOf({0}) != {1}) @compileError(\"ABI size mismatch for {0}: expected {1}\"); if (@alignOf({0}) != {2}) @compileError(\"ABI align mismatch for {0}: expected {2}\"); }}",
+                            t, exp_size, exp_align
+                        )
+                    } else {
+                        format!(
+                            "comptime {{ if (@sizeOf({0}) != {1}) @compileError(\"ABI size mismatch for {0}: expected {1}\"); }}",
+                            t, exp_size
+                        )
+                    }
+                }
+                "@cAbiCheck" if call.args.len() == 2 => {
+                    let saved = self.in_type_expr_ctx;
+                    self.in_type_expr_ctx = true;
+                    let local_t = self.generate_expr(&call.args[0]);
+                    let c_t = self.generate_expr(&call.args[1]);
+                    self.in_type_expr_ctx = saved;
+                    format!(
+                        "comptime {{ if (@sizeOf({0}) != @sizeOf({1}) or @alignOf({0}) != @alignOf({1})) @compileError(\"Cross-language @c FFI ABI layout mismatch between {0} and {1}\"); }}",
+                        local_t, c_t
+                    )
+                }
                 "@import" if call.args.len() == 1 => {
                     if let Expr::Lit(Lit::Str(src)) = &call.args[0] {
                         if src == "cap" || src == "cap:core" {
