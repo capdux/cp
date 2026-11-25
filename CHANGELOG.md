@@ -96,3 +96,8 @@
   - `lib/bytes/`（新建 `cap:bytes` + `doc/lib/bytes.md`，`testCapBytes` PASS）
 - 清理与既有 `lib/{crypto,cbor,uuid,codec,mime,http}` 重叠的 11 个轻量 `@cap/*` 重复包，确立清晰双层边界：`lib/*` 承载零依赖核心基础库，`packages/@cap/*` 承载原生 C/C++ 绑定库与大型独立领域引擎包。
 - `cp_lib_ref.md`: 登记 `cap:bytes`、`cap:hash/crc32c`、`cap:time/human`。
+
+## [2026-11-26] - Wave 4 重量级独立 `@cap/*` 生态引擎（`@cap/lru`, `@cap/qs`, `@cap/retry`，全部 MIT Clean-Room + CP 性能特性优化）
+- `packages/@cap/lru/` & `cap/test/testCapLru.cp`: O(1) 侵入式双向链表 + 512 桶开放寻址 FNV-1a 哈希表 + `slots = undefined` 零初始化栈池 + TTL 过期 + 字节权重淘汰 + 命中率统计（对标 npm `lru-cache` [~150M/wk] & Rust `lru`，7/7 PASS）。
+- `packages/@cap/qs/` & `cap/test/testCapQs.cp`: 零堆分配深层嵌套 QueryString 解析与构造引擎（4 KiB `undefined` 栈解码池、方括号/点号嵌套、索引/空括号/逗号数组、严格 null、RFC 3986 percent 编解码、`max_depth`/`max_params` 资源耗尽防护，对标 npm `qs` [~120M/wk] & Rust `serde_qs`，7/7 PASS）。
+- `packages/@cap/retry/` & `cap/test/testCapRetry.cp`: 工业级重试与退避引擎（Fixed/Linear/Exponential/Fibonacci + AWS Full/Equal/Decorrelated Jitter + SplitMix64 + 失败分类/`Retry-After` + 总耗时预算 + Envoy 风格 `RetryBudget`，对标 npm `p-retry` & Rust `backoff`/`backon`，4/4 PASS）。

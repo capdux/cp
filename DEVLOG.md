@@ -72,3 +72,6 @@
 
 ## 2026-11-26: 确立 `lib/` vs `packages/@cap/` 架构双层分层规范并完成收敛去重
 - 核查发现 `lib/` 已有 `cbor`/`mime`/`uuid/nanoid`/`codec/base32+base58`/`crypto/blake3_`/`http/cookie`，遂将真正新增的 `crc32c`、`ms(human)`、`bytes` 归位内置标准库 `lib/`，并移除 `packages/@cap/` 中重复的 11 个轻量基础包，后续 `packages/@cap/*` 专注原生绑定与重量级独立引擎（如正在并行构建的 `@cap/lru` O(1) 缓存引擎与 `@cap/qs` 嵌套查询引擎）。
+
+## 2026-11-26: Wave 4 三路并行交付 3 个重量级 `@cap/*` 独立生态引擎（`@cap/lru` + `@cap/qs` + `@cap/retry`）
+- 严格践行“做深不做薄，做全不做残 + CP 性能特性（`undefined` 零清零栈池、侵入式 O(1) 结构、零堆分配、饱和算术）”与 MIT Clean-Room 版权合规，三路并行全部 100% PASS。
