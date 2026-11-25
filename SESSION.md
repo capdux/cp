@@ -5278,3 +5278,67 @@
   > 4. 重新Bench 对比测试, CP 性能必须提升, 不能损失功能和安全性!
 - **完整回复与执行汇报**：
   > 主智能体已完成 `App.dispatchInto(&req, *ctx, *resp)` 真零拷贝改造（消除每请求 ~1.5 KB 栈拷贝与空钩子数组拷贝，4 门禁 `0/0/0/0`，`testWebServerLive` PASS），正在构建 `-OReleaseFast` `server_cp`；同时 2 路并行子智能体正在分别完成 HTTP/WS 1c/8c/16c 全套配置与 `wsServer.cp` 优化，以及 SQLite 1c/8c/16c 优化。三路编译完工后即刻在空闲 CPU 下串行独占跑分，确保 100% 公平、按核数连续分组、三方零遗漏！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 13:53:52）[step:23705]
+- **用户完整原始指令**：
+  > 1. 你通过这几次真实测试数据比较, 分析本次cp改进, 性能提升方面, 有实际效果吗?
+  > 2. 这是 bun 官网 提供的WebSocket数据(基于bun 1.4 rust版本, 我们安装的bun是 1.3.14版本):
+  > Running a WebSocket chat server
+  > 32 clients broadcasting · messages per second (higher is better)
+  >
+  > msgs/s
+  > peak RAM
+  > Bun (publish)
+  > v1.4
+  >
+  > 4.17M
+  > 51 MB
+  > Bun (send)
+  > v1.4
+  > 159K
+  > 37 MB
+  > Deno
+  > v2.9.5
+  > 124K
+  > 1.2 GB
+  > ws (Node.js)
+  > v26.7.0
+  > 123K
+  > 78 MB
+  > 同等条件下, 我们比bun 快多少?
+- **完整回复与执行汇报**：
+  > ### 1. 本次 CP 改进是否有真实性能提升？（前后同机实测对照）
+  >
+  > **有明确、可复现的实质提升**，4 项优化均带来直接增益（且功能与 4 门禁 `0/0/0/0` 安全性零损失）：
+  >
+  > | 优化项 | 优化前 | 优化后（空闲 CPU 实测） | 真实增幅 |
+  > | :--- | :---: | :---: | :---: |
+  > | **`undefined` 消除 `RadixRouter` 栈 `memset(0)`** | 55.4M ops/s | **75.6M ops/s**（13.2 ns/op） | **+36.5%** |
+  > | **HTTP `App.dispatchInto` 真零拷贝 + 空钩子跳过**（8 核 `POST /json`） | 624,850 QPS (`0.141ms`) | **792,562 QPS** (`0.111ms`) | **+26.8%** |
+  > | **HTTP `App.dispatchInto`**（8 核 `GET /id/:id`） | 586,529 QPS (`0.166ms`) | **719,167 QPS** (`0.145ms`) | **+22.6%** |
+  > | **WebSocket 原地零拷贝 `simdMaskXorInPlace` + 绑核**（8 核 Echo） | 619,221 msg/s (`0.148ms`) | **693,456 msg/s** (`0.096ms`，超 Bun 8c **+20.1%**) | **+12.0%** |
+  > | **WebSocket 原地零拷贝**（16 核 Echo） | 945,974 msg/s | **1,002,530 msg/s**（31.7 MB RSS） | **+6.0%** |
+  > | **SQLite 1c `locking_mode=EXCLUSIVE` + 源码宏**（20 万点查） | 269,095 QPS | **635,667 QPS**（超 Bun 1.34x / Node 1.69x） | **+136.2%** |
+  >
+  > ---
+  >
+  > ### 2. 对标 Bun 官网「32 客户端聊天室广播」数据：同等条件下 CP 比 Bun 快多少？
+  >
+  > 必须先严守工程实事求是原则，区分**两种完全不同的测试口径**：
+  > - **我们刚才测的 `ws_live_results.json` 是「1 对 1 Echo」**（1 发 1 收），所以单核在 **108K–119K msg/s**；
+  > - **Bun 官网的 `Bun (publish)` 4.17M msg/s 是「32 客户端聊天室 1 对 32 扇出广播（Fan-Out Broadcast）」**：
+  >   - 32 个客户端加入同一个 Topic，每收到 1 条入站消息，服务器将其广播给全部 32 个客户端（1 收 = 32 条出站消息）；
+  >   - `Bun (publish)` 比 `Bun (send)`（159K）快 26 倍，是因为它在底层原生存了 Topic 订阅表：只编码 1 次 WebSocket 帧，再批量 Cork 写出给 32 个 Socket，避免了在 JS 里循环调 32 次 `ws.send()`。
+  >
+  > **诚实结论**：
+  > - **同等「32 客户端真实 TCP 聊天室广播（`publish` 模式）」我们尚未实测，绝不靠猜测报倍数。**
+  > - 如果我们在 [wsServer.cp](file:///data/dev/cp/lib/web/wsServer.cp) 中补上同款 **原生 Topic `publish` 零拷贝广播**（1 次 SIMD 解掩码 + 1 次构造 2B 帧头 + Cork 批量写出到同房间 32 个客户端，0 JS 胶水、0 GC），并在本机同条件下实测 **`CP (publish 1c)` vs `Bun 1.3.14 (publish 1c)` vs `Bun (send 1c)` vs `Node ws (1c)`**，才能给出 100% 可信的精确倍数（预计单核吞吐与内存都将极具竞争力，且峰值内存仅 ~5 MB vs Bun 的 51 MB）。
+  >
+  > 如需我立即为 `wsServer.cp` 实现原生 Topic `publish` 广播并跑出这份 **Bun 官网同款 32 客户端聊天室广播实测对比**，回复「**启动**」即可立刻执行！
+
+### 2026-11-25（用户原始指令与完整回复 2026-11-25 13:57:10）[step:23707]
+- **用户完整原始指令**：
+  > 启动
+  > 坚持保持开启两路子智能体, 主智能体与子智能体并行工作, 主智能体不可陷入长时间任务, 也不可闲着等待.记住!!!
+- **完整回复与执行汇报**：
+  > 正在等待 `temp/ws_chat_cp`（`-OReleaseFast`）编译完成，`cap/test/testWebSocketServerLive.cp` 已通过；编译就绪后将立即在空闲 CPU 下执行 32 客户端 WebSocket 聊天室广播对比压测。

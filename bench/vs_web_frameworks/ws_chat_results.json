@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-11-25T03:02:56Z",
+  "config": {
+    "clients": 32,
+    "duration": 3.0,
+    "warmup": 0.5,
+    "payload": 32,
+    "inflight": 16
+  },
+  "results": {
+    "cp_publish": {
+      "msgs_per_sec": 20447384.39,
+      "mb_per_sec": 624.0,
+      "recv_msgs": 61343304,
+      "sent_msgs": 1916906,
+      "err": 0,
+      "clients": 32,
+      "payload": 32,
+      "inflight": 16,
+      "duration_sec": 3.0,
+      "idle_rss_mb": 4.51,
+      "peak_rss_mb": 4.53,
+      "avg_rss_mb": 4.53
+    },
+    "bun_publish": {
+      "msgs_per_sec": 3541020.61,
+      "mb_per_sec": 108.06,
+      "recv_msgs": 10623106,
+      "sent_msgs": 342558,
+      "err": 0,
+      "clients": 32,
+      "payload": 32,
+      "inflight": 16,
+      "duration_sec": 3.0,
+      "idle_rss_mb": 38.04,
+      "peak_rss_mb": 73.08,
+      "avg_rss_mb": 50.73
+    },
+    "bun_send": {
+      "msgs_per_sec": 158685.12,
+      "mb_per_sec": 4.84,
+      "recv_msgs": 476056,
+      "sent_msgs": 15359,
+      "err": 0,
+      "clients": 32,
+      "payload": 32,
+      "inflight": 16,
+      "duration_sec": 3.0,
+      "idle_rss_mb": 38.23,
+      "peak_rss_mb": 47.36,
+      "avg_rss_mb": 44.48
+    },
+    "node_ws": {
+      "msgs_per_sec": 122941.82,
+      "mb_per_sec": 3.75,
+      "recv_msgs": 368827,
+      "sent_msgs": 11936,
+      "err": 0,
+      "clients": 32,
+      "payload": 32,
+      "inflight": 16,
+      "duration_sec": 3.0,
+      "idle_rss_mb": 60.62,
+      "peak_rss_mb": 71.62,
+      "avg_rss_mb": 69.34
+    }
+  }
+}

@@ -430,8 +430,28 @@ struct WsWorkerCtx {
     backlog: i32,
     worker_id: usize,
     pin_cpu: bool,
+    broadcast_mode: bool,
     stop_flag: *i32,
     ready_count: *i32,
+}
+
+fn wsRemoveSub(subs: *[512]i32, sub_len: *usize, fd: i32) {
+    let i: usize = 0;
+    while (i < sub_len.*) : (i += 1) {
+        if (subs[i] == fd) {
+            sub_len.* -= 1;
+            subs[i] = subs[sub_len.*];
+            return;
+        }
+    }
+}
+
+fn wsFlushBroadcast(subs: *[512]i32, sub_len: usize, payload: string) {
+    if (payload.len == 0 || sub_len == 0) return;
+    let si: usize = 0;
+    while (si < sub_len) : (si += 1) {
+        * = wsWriteAllFd(subs[si], payload);
+    }
 }
 
 fn wsPinCurrentThreadToCpu(cpu_id: usize) {
@@ -537,12 +557,16 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
 
         let events: [WS_EPOLL_BATCH]WsEpollEventC = undefined;
         let write_buf: [WS_WRITE_BUF_LEN]u8 = undefined;
+        let pub_buf: [65536]u8 = undefined;
+        let subs: [512]i32 = undefined;
+        let sub_len: usize = 0;
         let one: i32 = 1;
 
         while (@atomicLoad(i32, wctx.stop_flag, .acquire) == 0) {
             const nev = epoll_wait(epfd, &events[0], WS_EPOLL_BATCH as i32, 50);
             if (nev <= 0) continue;
 
+            let pub_len: usize = 0;
             let ei: usize = 0;
             while (ei < (nev as usize)) : (ei += 1) {
                 const ev = events[ei];
@@ -574,6 +598,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         continue;
                     }
                     if ((ev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) != 0) {
+                        if (wctx.broadcast_mode && conns[idx].upgraded) {
+                            wsRemoveSub(*subs, *sub_len, fd);
+                        }
                         * = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, null);
                         * = close(fd);
                         conns[idx].fd = -1;
@@ -584,6 +611,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
 
                     const rem = WS_READ_BUF_LEN - conns[idx].read_len;
                     if (rem == 0) {
+                        if (wctx.broadcast_mode && conns[idx].upgraded) {
+                            wsRemoveSub(*subs, *sub_len, fd);
+                        }
                         * = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, null);
                         * = close(fd);
                         conns[idx].fd = -1;
@@ -596,6 +626,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                     if (nread < 0) {
                         const err = __errno_location().*;
                         if (err == 11 || err == 4) continue;
+                        if (wctx.broadcast_mode && conns[idx].upgraded) {
+                            wsRemoveSub(*subs, *sub_len, fd);
+                        }
                         * = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, null);
                         * = close(fd);
                         conns[idx].fd = -1;
@@ -604,6 +637,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         continue;
                     }
                     if (nread == 0) {
+                        if (wctx.broadcast_mode && conns[idx].upgraded) {
+                            wsRemoveSub(*subs, *sub_len, fd);
+                        }
                         * = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, null);
                         * = close(fd);
                         conns[idx].fd = -1;
@@ -628,6 +664,10 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                                 should_close = true;
                             } else {
                                 conns[idx].upgraded = true;
+                                if (wctx.broadcast_mode && sub_len < 512) {
+                                    subs[sub_len] = fd;
+                                    sub_len += 1;
+                                }
                                 offset = consumed as usize;
                             }
                         }
@@ -639,7 +679,7 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         // Client masked frames carry a 4-byte mask key, so server unmasked header
                         // is always 4 bytes shorter and fits directly before the payload in read_buf.
                         let handled_fast = false;
-                        if (offset == 0 && conns[idx].read_len >= 6) {
+                        if (!wctx.broadcast_mode && offset == 0 && conns[idx].read_len >= 6) {
                             const fb0 = conns[idx].read_buf[0];
                             const fb1 = conns[idx].read_buf[1];
                             const fop = fb0 & 0x0F;
@@ -750,28 +790,49 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                                 } else if (payload_len > 65535) {
                                     need_hdr = 10;
                                 }
-                                if (write_pos + need_hdr + payload_len > WS_WRITE_BUF_LEN) {
-                                    if (!wsWriteAllFd(fd, write_buf[0..write_pos])) {
-                                        write_pos = 0;
-                                        should_close = true;
-                                        break;
+                                if (wctx.broadcast_mode && (opcode == 0x1 || opcode == 0x2)) {
+                                    if (pub_len + need_hdr + payload_len > 65536) {
+                                        wsFlushBroadcast(*subs, sub_len, pub_buf[0..pub_len]);
+                                        pub_len = 0;
                                     }
-                                    write_pos = 0;
-                                }
-                                const out_hdr = writeServerFrameHeader(write_buf[write_pos..], out_opcode, payload_len);
-                                if (masked) {
-                                    simdMaskXorCopy(
-                                        write_buf[write_pos + out_hdr .. write_pos + out_hdr + payload_len],
-                                        payload_slice,
-                                        mask_key,
-                                    );
+                                    const phdr = writeServerFrameHeader(pub_buf[pub_len..], out_opcode, payload_len);
+                                    if (masked) {
+                                        simdMaskXorCopy(
+                                            pub_buf[pub_len + phdr .. pub_len + phdr + payload_len],
+                                            payload_slice,
+                                            mask_key,
+                                        );
+                                    } else {
+                                        let pi: usize = 0;
+                                        while (pi < payload_len) : (pi += 1) {
+                                            pub_buf[pub_len + phdr + pi] = payload_slice[pi];
+                                        }
+                                    }
+                                    pub_len += phdr + payload_len;
                                 } else {
-                                    let pi: usize = 0;
-                                    while (pi < payload_len) : (pi += 1) {
-                                        write_buf[write_pos + out_hdr + pi] = payload_slice[pi];
+                                    if (write_pos + need_hdr + payload_len > WS_WRITE_BUF_LEN) {
+                                        if (!wsWriteAllFd(fd, write_buf[0..write_pos])) {
+                                            write_pos = 0;
+                                            should_close = true;
+                                            break;
+                                        }
+                                        write_pos = 0;
                                     }
+                                    const out_hdr = writeServerFrameHeader(write_buf[write_pos..], out_opcode, payload_len);
+                                    if (masked) {
+                                        simdMaskXorCopy(
+                                            write_buf[write_pos + out_hdr .. write_pos + out_hdr + payload_len],
+                                            payload_slice,
+                                            mask_key,
+                                        );
+                                    } else {
+                                        let pi: usize = 0;
+                                        while (pi < payload_len) : (pi += 1) {
+                                            write_buf[write_pos + out_hdr + pi] = payload_slice[pi];
+                                        }
+                                    }
+                                    write_pos += out_hdr + payload_len;
                                 }
-                                write_pos += out_hdr + payload_len;
 
                                 if (opcode == 0x8) {
                                     offset += frame_len;
@@ -793,6 +854,9 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                     }
 
                     if (should_close) {
+                        if (wctx.broadcast_mode && conns[idx].upgraded) {
+                            wsRemoveSub(*subs, *sub_len, fd);
+                        }
                         * = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, null);
                         * = close(fd);
                         conns[idx].fd = -1;
@@ -807,6 +871,11 @@ fn wsWriteAllFd(fd: i32, data: string): bool {
                         conns[idx].read_len = leftover;
                     }
                 }
+            }
+
+            // Flush all aggregated topic-broadcast frames across the entire epoll batch in 1 write per subscriber!
+            if (wctx.broadcast_mode && pub_len > 0) {
+                wsFlushBroadcast(*subs, sub_len, pub_buf[0..pub_len]);
             }
         }
 
@@ -829,6 +898,7 @@ pub struct WsServerConfig {
     workers: usize = 1;
     backlog: i32 = 4096;
     pin_cpu: bool = true;
+    broadcast_mode: bool = false;
 }
 
 pub struct WsServer {
@@ -870,6 +940,7 @@ pub struct WsServer {
                 backlog: _.config.backlog,
                 worker_id: i,
                 pin_cpu: _.config.pin_cpu,
+                broadcast_mode: _.config.broadcast_mode,
                 stop_flag: *_.stop_flag,
                 ready_count: *_.ready_count,
             };

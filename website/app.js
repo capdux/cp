@@ -71,65 +71,85 @@ fn main() {
 };
 
 // Real verified same-machine benchmarks (Intel Xeon Platinum 8175M, Linux 6.12 x86_64)
-// Sources: bench/vs_web_frameworks/http_results.json, bun_official_results.json, bench/vs_runtimes/results.json
+// Sources: bench/vs_web_frameworks/{scaling_results,ws_live_results,ws_chat_results,sqlite_extreme_results,bun_official_results}.json, bench/vs_runtimes/results.json
 // CP v1.0.0 (-OReleaseFast) vs Bun 1.3.14 vs Node v26.1.0 vs Python 3.12.15
 const DEFAULT_BENCHMARKS = [
   {
     cat: "net",
-    title: "HTTP/1.1 Multi-Core (GET /, Err=0 Keep-Alive)",
-    subtitle: "Higher is better (QPS) · CP 16c hits 1.06M QPS in 33.9 MB · CP 8c 1.46x Bun / 22x less RSS",
+    title: "HTTP/1.1 16-Core (POST /json, Err=0 Keep-Alive)",
+    subtitle: "Higher is better (QPS) · CP 16c: 2.17x Bun, 3.63x Node · 23.6x–40.6x lower RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 16c single-proc (P99 0.10ms · 33.9 MB RSS)", key: "cp", value: 1064581, display: "1,064,581 QPS" },
-      { label: "CP v1.0 8c single-proc (P99 0.13ms · 19.2 MB RSS)", key: "cp", value: 749811, display: "749,811 QPS" },
-      { label: "Bun 1.3.14 8c (8-proc · 409.6 MB RSS)", key: "bun", value: 512632, display: "512,632 QPS" },
-      { label: "Node v26.1.0 8c (8-proc · 697.3 MB RSS)", key: "node", value: 328329, display: "328,329 QPS" },
+      { label: "CP v1.0 16c single-proc (P99 0.14ms · 33.9 MB RSS)", key: "cp", value: 960055, display: "960,055 QPS" },
+      { label: "Bun 1.3.14 16c (16-proc · 801.3 MB RSS)", key: "bun", value: 442279, display: "442,279 QPS" },
+      { label: "Node v26.1.0 16c (16-proc · 1,378.3 MB RSS)", key: "node", value: 264342, display: "264,342 QPS" },
     ],
   },
   {
     cat: "net",
-    title: "HTTP/1.1 Multi-Core (POST /json, Err=0 Keep-Alive)",
-    subtitle: "Higher is better (QPS) · CP 16c breaks 1.03M QPS in 34 MB · CP 8c 1.85x Bun / 3.75x Node",
+    title: "HTTP/1.1 8-Core (POST /json, Err=0 Keep-Alive)",
+    subtitle: "Higher is better (QPS) · CP 8c: 2.46x Bun, 3.94x Node · 22.0x–37.7x lower RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 16c single-proc (P99 0.11ms · 34.0 MB RSS)", key: "cp", value: 1030217, display: "1,030,217 QPS" },
-      { label: "CP v1.0 8c single-proc (P99 0.14ms · 19.3 MB RSS)", key: "cp", value: 624850, display: "624,850 QPS" },
-      { label: "Bun 1.3.14 8c (8-proc · 423.2 MB RSS)", key: "bun", value: 337853, display: "337,853 QPS" },
-      { label: "Node v26.1.0 8c (8-proc · 734.8 MB RSS)", key: "node", value: 166479, display: "166,479 QPS" },
+      { label: "CP v1.0 8c single-proc (P99 0.11ms · 19.2 MB RSS)", key: "cp", value: 792562, display: "792,562 QPS" },
+      { label: "Bun 1.3.14 8c (8-proc · 422.8 MB RSS)", key: "bun", value: 322240, display: "322,240 QPS" },
+      { label: "Node v26.1.0 8c (8-proc · 724.2 MB RSS)", key: "node", value: 201264, display: "201,264 QPS" },
     ],
   },
   {
     cat: "net",
-    title: "Live TCP WebSocket Multi-Core (128B Masked Echo, Err=0)",
-    subtitle: "Higher is better (msg/s) · CP 16c hits 946K msg/s in 31.7 MB · CP 8c 23.2x–37.7x lower RSS",
+    title: "Live TCP WebSocket Chat Broadcast (32 Clients, 1-Core, Err=0)",
+    subtitle: "Higher is better (msgs/s) · CP publish: 5.77x Bun publish, 128.9x Bun send, 166.3x Node · 16.2x lower RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 16c 32B-SIMD (P99 0.11ms · 31.7 MB RSS)", key: "cp", value: 945974, display: "945,974 msg/s" },
-      { label: "CP v1.0 8c 32B-SIMD (P50 0.04ms · 17.1 MB RSS)", key: "cp", value: 645796, display: "645,796 msg/s" },
-      { label: "Bun 1.3.14 8c (8-proc · 397.1 MB RSS)", key: "bun", value: 654660, display: "654,660 msg/s" },
-      { label: "Node v26.1.0 8c (8-proc · 645.3 MB RSS)", key: "node", value: 437628, display: "437,628 msg/s" },
+      { label: "CP v1.0 publish (1c · 624.0 MB/s · 4.5 MB RSS)", key: "cp", value: 20447384, display: "20.45M msgs/s" },
+      { label: "Bun 1.3.14 publish (1c · 108.1 MB/s · 73.1 MB RSS)", key: "bun", value: 3541021, display: "3.54M msgs/s" },
+      { label: "Bun 1.3.14 send (1c · 4.8 MB/s · 47.4 MB RSS)", key: "bun", value: 158685, display: "158.7K msgs/s" },
+      { label: "Node v26.1.0 ws (1c · 3.8 MB/s · 71.6 MB RSS)", key: "node", value: 122942, display: "122.9K msgs/s" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "Live TCP WebSocket 16-Core (128B Masked Echo, Err=0)",
+    subtitle: "Higher is better (msg/s) · CP 16c breaks 1.00M msg/s in 31.7 MB · 23.5x–38.9x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 16c 32B-SIMD (P99 0.11ms · 31.7 MB RSS)", key: "cp", value: 1002530, display: "1,002,530 msg/s" },
+      { label: "Bun 1.3.14 16c (16-proc · 746.1 MB RSS)", key: "bun", value: 863226, display: "863,226 msg/s" },
+      { label: "Node v26.1.0 16c (16-proc · 1,234.1 MB RSS)", key: "node", value: 817645, display: "817,645 msg/s" },
+    ],
+  },
+  {
+    cat: "net",
+    title: "Live TCP WebSocket 8-Core (128B Masked Echo, Err=0)",
+    subtitle: "Higher is better (msg/s) · CP 8c: 1.20x Bun, 1.51x Node · 23.1x–37.7x lower RSS",
+    higherIsBetter: true,
+    rows: [
+      { label: "CP v1.0 8c 32B-SIMD (P99 0.10ms · 17.2 MB RSS)", key: "cp", value: 693456, display: "693,456 msg/s" },
+      { label: "Bun 1.3.14 8c (8-proc · 397.5 MB RSS)", key: "bun", value: 577571, display: "577,571 msg/s" },
+      { label: "Node v26.1.0 8c (8-proc · 647.6 MB RSS)", key: "node", value: 458735, display: "458,735 msg/s" },
     ],
   },
   {
     cat: "db",
-    title: "SQLite 8-Core Concurrent WAL Reads (1.6M queries)",
-    subtitle: "Higher is better (QPS) · 1.57x Bun 8c, 1.49x Node 8c · 22.9x lower RSS (33.3 vs 761.9 MB)",
+    title: "SQLite 16-Core Concurrent WAL Reads (3.2M queries)",
+    subtitle: "Higher is better (QPS) · 2.63x Bun 16c, 2.66x Node 16c · 23.6x lower RSS (64.4 vs 1,521.1 MB)",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 8-thread single-proc (33.3 MB RSS)", key: "cp", value: 1218288, display: "1,218,288 QPS" },
-      { label: "Bun 1.3.14 8-proc (761.9 MB RSS)", key: "bun", value: 778167, display: "778,167 QPS" },
-      { label: "Node v26.1.0 8-proc (553.6 MB RSS)", key: "node", value: 818981, display: "818,981 QPS" },
+      { label: "CP v1.0 16-thread single-proc (64.4 MB RSS)", key: "cp", value: 776440, display: "776,440 QPS" },
+      { label: "Bun 1.3.14 16-proc (1,521.1 MB RSS)", key: "bun", value: 294873, display: "294,873 QPS" },
+      { label: "Node v26.1.0 16-proc (1,082.2 MB RSS)", key: "node", value: 291958, display: "291,958 QPS" },
     ],
   },
   {
     cat: "db",
     title: "SQLite Batch Row Materialization (500K multi-col rows)",
-    subtitle: "Higher is better (rows/s) · CP undefined Arena zero-GC: 2.40x Bun, 3.96x Node · 4.5x less RSS",
+    subtitle: "Higher is better (rows/s) · CP Arena zero-GC: 2.15x Bun, 4.09x Node · 4.3x less RSS",
     higherIsBetter: true,
     rows: [
-      { label: "CP v1.0 Arena (250.7ms · 27.4 MB RSS)", key: "cp", value: 1994265, display: "1,994,265 rows/s" },
-      { label: "Bun 1.3.14 (601.6ms · 122.1 MB RSS)", key: "bun", value: 831145, display: "831,145 rows/s" },
-      { label: "Node v26.1.0 (993.7ms · 97.5 MB RSS)", key: "node", value: 503159, display: "503,159 rows/s" },
+      { label: "CP v1.0 Arena (243.2ms · 28.3 MB RSS)", key: "cp", value: 2056225, display: "2,056,225 rows/s" },
+      { label: "Bun 1.3.14 (523.9ms · 122.1 MB RSS)", key: "bun", value: 954430, display: "954,430 rows/s" },
+      { label: "Node v26.1.0 (995.1ms · 99.9 MB RSS)", key: "node", value: 502480, display: "502,480 rows/s" },
     ],
   },
   {

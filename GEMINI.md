@@ -80,20 +80,15 @@
 
 ## 多工作区拓扑与下游编译器权限授权 (CRITICAL)
 
-在执行下游生态迁移与编译器协同任务时，你（`cp_agy`）拥有 **多套紧密联动的核心工作区**（包括 `bun_agy` 与 `capsurf_agy`），并且拥有对下游源代码的完全读取、拷贝权限，复用下游智能体迁移到 CP 的成果，不用重新造轮子。
+cp项目（当前项目）路径为：`/data/dev/cp/`;
+下游capsurf项目路径为：`/data/dev/capsurf/`；
+下游bun项目路径为：`/data/dev/bun/`；
 
-```text
-/data/dev/
-├── bun/                      # 🔴 下游宿主工作区 1 (bun_agy)：Bun.js 1.3.14 源码仓库
-│   ├── src/                  # 待迁移与已迁移的 Zig / CP 源码
-│   ├── test/                 # Bun 原生测试套件
-│   └── build/                # Bun 构建产物区 (Ninja/CMake)
-├── capsurf/                  # 🔴 下游宿主工作区 2 (capsurf_agy)：CapSurf 源码仓库
-```
+在执行下游生态迁移与编译器协同任务时，你（`cp_agy`）拥有 **多套紧密联动的核心工作区**（包括 `bun_agy` 与 `capsurf_agy`），并且拥有对下游源代码的完全读取、拷贝权限，复用下游智能体迁移到 CP 的成果，不用重新造轮子。
 
 ### 授权直通声明（编译器自愈权限）
 
-- **权限开放**：下游目录 `/data/dev/bun` 与 `/data/dev/capsurf` 对你完全开放**读取权限**，不开放**修改、删除权限**！
+- **权限开放**：下游项目目录对你完全开放**读取权限**，不开放**修改、删除权限**！
 
 ## 二、 CP 语言架构总览与设计规范
 
@@ -123,7 +118,9 @@ CP 采用“脑、神经、肌肉、血液”四位一体机制，专为百万�
 
 - **Actor 模型**：`actor`, `spawn`, `receive`, `reply` 是一等公民。
 - **CPS 状态机重构**：`async/await` 的本质是状态机切分。遇到 `await` 时，切分 C 函数并保存上下文到 `CPContext`，将控制权交还 BEAM 调度器，等待消息唤醒。
-- **容错内存安全（Crash-Proof）**：跨越 `await` 的资源（显存、句柄）底层封装为 **NIF Resource Objects**。当 Agent 异常退出时，由 BEAM 回收机制自动触发 Zig 析构函数兜底，配合编译期主动注入的 `defer` 实现双重保障。
+
+<!--- **容错内存安全（Crash-Proof）**：跨越 `await` 的资源（显存、句柄）底层封装为 **NIF Resource Objects**。当 Agent 异常退出时，由 BEAM 回收机制自动触发 Zig 析构函数兜底，配合编译期主动注入的 `defer` 实现双重保障。-->
+
 - **零拷贝通信**：
   - **小数据**：物理值拷贝。
   - **大数据（Tensor/大文本）**：使用 `SharedTensor` / `Refc Binaries`，存储在全局共享堆，消息仅传递指针与原子引用计数（`std.atomic`）。
@@ -363,7 +360,8 @@ hello/
 
 ### 1. 双缓冲并行开发机制（`cpc_dev` vs `cpc`）
 
-当前有另一个智能体正在并行开展 Bun.js 迁移至 CP 的项目，期间也会修改 `cpc/src` 源码。
+热修工作路径为 `cpc/`。
+自研工作路径为 `cpc_dev/`。
 为避免两个智能体相互覆盖代码或阻塞等待，本项目采用 **“双缓冲隔离目录（`cpc_dev`）+ 乐观锁校验合并（CAS）”** 模式：
 
 - **日常开发与调试一律在 `cpc_dev/` 目录中进行**，与正式目录 `cpc/` 保持隔离，待测试全部通过后再按流程合并至 `cpc/`。
@@ -399,14 +397,9 @@ git status --porcelain cpc/src
 - **若 `cpc/src` 无变化**：直接进入第 4 步。
 - **若 `cpc/src` 有变化**：先用文件读取与编辑工具将 `cpc/src` 中的新增修改同步合并到 `cpc_dev/src` 中，重新编译 `cpc_dev` 并运行测试，确保兼容无误。
 
-4. **请求用户确认合并至正式版**：
+4. **合并代码并构建正式 Release 版 `cpc**`：
 
-- 向用户汇报测试结果，并询问：“**`cpc_dev` 测试已全部通过，是否现在合并到正式版 `cpc` 并生成新版本？**”
-- 等待用户暂停 Bun 项目的智能体并明确同意后，再执行下一步。
-
-5. **合并代码并构建正式 Release 版 `cpc**`：
-
-- 获得用户同意后，将 `cpc_dev/src` 的代码同步更新至 `cpc/src`，然后构建正式 Release 版本并更新到 `cap/bin/cpc`：
+- 将 `cpc_dev/src` 的代码同步更新至 `cpc/src`，然后构建正式 Release 版本并更新到 `cap/bin/cpc`：
 
 ```bash
 cargo build --release --manifest-path /data/dev/cp/cpc/Cargo.toml
@@ -418,7 +411,7 @@ cp /data/dev/cp/cpc/target/release/cpc /data/dev/cp/cap/bin/cpc
 
 ```
 
-6. **切换回正式版 `CPC_BIN` 进行最终验证**：
+5. **切换回正式版 `CPC_BIN` 进行最终验证**：
 
 - 通过 `export` 指令将当前终端的 `CPC_BIN` 指回正式版本路径（`/data/dev/cp/cap/bin/cpc` 已在系统 `PATH` 中，切换后直接执行测试命令即可，切勿在测试命令前拼接 `env CPC_BIN=...`）：
 
@@ -429,26 +422,17 @@ export CPC_BIN=/data/dev/cp/cap/bin/cpc
 
 - 运行一次 `cap` 测试，确认正式版二进制工作正常。
 
-7. **完成交付并恢复并行**：
+6. **完成交付并恢复并行**：
 
 - 汇报正式版 `cpc` 更新完毕，供用户恢复 Bun 迁移项目继续执行任务。
 
 ### 3. 多子智能体并行工作流（核心）
 
-#### 3.1 多子智能体并行开发cpc机制（`cpc_dev` vs `cpc_dev/agent_1`）
-
-cpc 源代码几万行，修改、编译、测试非常耗时，需要修改、测试cpc 源代码实现自愈功能时，需将多个功能分派给多个子智能体在各自拷贝的沙箱目录中修改、测试，加快cpc研发速度。
-
-为避免多个智能体相互覆盖代码或阻塞等待，本项目采用 **“多缓冲隔离目录（`cpc_dev/agent_1(1-9)`）+ 乐观锁校验合并（CAS）”** 模式：
-
-- 子智能体创建自己的cpc的拷贝目录，已经准备了9个： `cpc_dev/agent_1`、`cpc_dev/agent_2`。
-- **子智能体开发与调试一律在自己的 `cpc_dev/agent_*` 目录中进行**，与正式目录 `cpc/`、`cpc/cpc_dev` 保持隔离，待测试全部通过后再按流程合并至 `cpc/cpc_dev`。
-
-#### 3.2 后期 cpc 编译器基本稳定，工作中心转向 cpc 热修与标准库开发（2 路正交并发节能规范）
+#### 3.1 后期 cpc 编译器基本稳定，工作中心转向 cpc 热修与标准库开发（2 路正交并发节能规范）
 
 - **2 路正交标准库并发与分级模型选型（节约配额）**：
-  - **常规 2 路标准库并行子智能体**：日常严格保持 **2 个目录正交的子智能体**并显式指定 `Model: "inherit"`（继承主控模型）并行开发/吸收/审计不同 `lib/<mod>/` 模块，兼顾高吞吐与节约配额；
-  - **疑难 `cpc` 编译器热修子智能体**：收到下游 `bun_agy` / `capsurf_agy` 的深层 Rust 编译器前端/Codegen 热修工单时，临时单独开启专属热修子智能体并指定 **`Model: "inherit"`**（继承主控模型）确保疑难 Bug 一击精准定位，修完即刻回收恢复日常 2 路；
+  - **常规 2 路并行子智能体**：日常严格保持 **2 个目录正交的子智能体**并显式指定 `Model: "inherit"`（继承主控模型）并行自研/开发/吸收/审计，兼顾高吞吐与节约配额；自研cpc工作路径为cpc_dev；
+  - **`cpc` 编译器热修子智能体**：收到下游 `bun_agy` / `capsurf_agy` cpc编译器热修工单时，临时单独开启专属热修子智能体并指定 **`Model: "inherit"`**（继承主控模型）确保疑难 Bug 一击精准定位，修完即刻回收恢复日常 2 路；热修cpc工作路径为 `cpc`正式路径。
 - **子智能体原子发布纪律（杜绝下游误伤）**：子智能体开发新模块时，必须先写完所有新 `.cp` 文件并用 `cpc check --brief` 清零报错，**最后一步才将新导出写入 `lib/<mod>/index.cp`**，彻底防止并发构建的下游 `bun_agy`/`capsurf_agy` 读到半成品报错；
 - **子智能体三段式极速调试**：① 改代码期仅跑 `cpc check --brief <file.cp>`（~15ms）清零语法/借用；② 跑 `cap test -m <test.cp>` 复用 `.cap/test-mod/` 模块缓存（增量转译 1~3ms）；③ 最终用 `bash scripts/verify_module.sh <lib_dir> <test.cp>` 一键完成合规扫描与测试；主控信任验证输出并尽量合并相近完工的子智能体做单次文档更新与提交；
 - **后台守护通信**：跨 AGY 通信由 `systemd` 服务 `agy-comm.service` 常驻托管（详见 `/root/.agy/comm/COMM.md`），主控不再自建死循环轮询；收到热修工单后立即派单修复、`sync_cpc.sh release` 原子部署、`resolve` + `ack` 结单；
@@ -546,8 +530,8 @@ git status --porcelain cpc_dev/src
    - **免读声明**：明确告知无需再读 `cp_agent_ref.md` 或翻阅其他 `lib/` 学格式；
    - **唯一高频写法直给**：首行 `// Source:` 溯源；导出 `export { ... } from "./sub.cp";`；Zig 0.17 容器统一 `std.ArrayList(T).empty` + `append(alloc, item)` / `deinit(alloc)` / `toOwnedSlice(alloc)`（禁用旧 `.init(alloc)`）；控制流 `if (...)` / `while (...)` 必须带括号；禁用 `std.posix`、`@import("bun")` 与自定义 `.release(...)`/`.isLocked(...)` 方法名；
    - **两段式批量工具流**：同回合并行 `write_file` 全部子模块 -> 运行 1 次 `for f in lib/<mod>/*.cp; do cpc check --brief "$f" || exit 1; done`（注意 `cpc check` 每次仅接受单个文件参数，禁止直接传 `*.cp`）清零报错 -> 同回合并行 `write_file` `index.cp` + `doc/lib/<mod>.md`（4 段式）+ `cap/test/test_<mod>_production_deep.cp`（5 个 `test(...)`）-> 仅运行 1 次 `bash /data/dev/cp/scripts/verify_module.sh` 完成验收。
-4. **Bun 吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/bun/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，彻底剔除 JSValue/Bun 内部耦合，禁止整文件吞入上下文。
-5. **主控空隙巡检与日志驱动持续调优（不闲着铁律）**：在等待 2 路并发子智能体推进的间隙（或收到用户巡检指令时），主控主动执行全库 `lib/` 合规扫描（`std.posix` / `@import("bun")` / `// Source:` / `doc/lib/*.md` / `cp_lib_ref.md` 完整性）、盘点 `/data/dev/bun/src/` 剩余待吸收清单，并统计分析近期子智能体 `transcript.jsonl`（步数、工具分布、报错重试点），持续把新发现的卡点反哺固化到本规范与派发模板中。
+4. **吸收强制“大纲索引 + 局部切片读取”**：子智能体读取 `/data/dev/cp/src/` 大文件时，先用 `rg -n "^(pub )?(fn|struct|enum|const)"` 提取符号行号再分段精读，彻底剔除 JSValue/Bun 内部耦合，禁止整文件吞入上下文。
+5. **主控空隙巡检与日志驱动持续调优（不闲着铁律）**：在等待 2 路并发子智能体推进的间隙（或收到用户巡检指令时），主控主动执行全库 `lib/` 合规扫描（`std.posix` / `@import("bun")` / `// Source:` / `doc/lib/*.md` / `cp_lib_ref.md` 完整性）、盘点 `/data/dev/cp/src/` 剩余待吸收清单，并统计分析近期子智能体 `transcript.jsonl`（步数、工具分布、报错重试点），持续把新发现的卡点反哺固化到本规范与派发模板中。
 
 6. 主智能体不可陷入长回合连续编码循环，需负责开启两个子智能体做常规任务（如lib资产迁移）, 一个热修子智能体。
    主要负责巡检/审核/验收 子智能体工作成果, 及时回应我的指令/及时接收工单避免消息积压/及时安排子智能体处理/及时汇报阶段性成果,更新文档和git提交固化成果。并通过监控子智能体执行效率, 分析执行数据, 拿出改进方式方法, 检验有效, 写入 GEMINI.md固化, 实现自我成长进化。
@@ -652,6 +636,7 @@ git status --porcelain cpc_dev/src
 为避免标准库沦为“文件数量多、单个功能浅、难以直接用于生产”的浅层合集，所有新增与深化核心库必须严格遵守以下工程底线：
 
 ### 1. “做深不做薄”生产级实现铁律
+
 1. **解除小容量玩具上限（外部切片 / Arena 驱动）**：
    - 除协议规范本身规定小上限的场景（如 W3C `tracestate` 最多 32 项）外，**检索、优化、统计、调度、通信、多媒体等重型核心引擎严禁硬编码小容量定长数组（如 `MAX_DOCS = 256`、`MAX_TABLES = 8`）作为唯一上限**。
    - 必须优先采用**调用方传入任意长度外部切片/工作缓冲**（`[]f32`/`[]f64`/`[]u8`/`[]Node`）或 Arena 驱动，既保持 100% 纯 CP 零动态堆分配与内存安全，又能无缝承接十万级/高并发真实生产数据规模。
@@ -664,6 +649,7 @@ git status --porcelain cpc_dev/src
    - 每个核心引擎必须同步补全 `doc/lib/<pkg>.md` 的架构说明、参数调优要点与端到端可运行示例，以及 `cp_lib_ref.md` 索引条目。
 
 ### 2. 内置标准库（`cap:*`）vs 外部 `cap` 生态包分层边界与两阶段路线图
+
 1. **流媒体 / 实时语音（ASR/TTS）与音视频四层性能超越原则**：
    - **零 GC + 外部切片零拷贝**：音视频帧（PCM/RTP/fMP4/YUV420）全程原地切片视图传递，杜绝 GC 尾延迟尖刺；
    - **原生 SIMD 算子 + Zig `@Vector` 向量化**：利用 `@dot` / `@fma` / `@l2sq` / `@popCount` 加速 FFT、Biquad/FIR 滤波、Sinc 重采样、Mel 滤波器组、VAD 与图像卷积；
@@ -680,11 +666,10 @@ git status --porcelain cpc_dev/src
      - 图像与计算机视觉：`@cap/vips`（libvips）、`@cap/opencv`（OpenCV）、`@cap/magick`（ImageMagick）；
      - 推理运行时：`@cap/onnx`（ONNX Runtime）、`@cap/llama`（llama.cpp）。
 
-
-
-
 ### 3. 热路径强制 SIMD 加速与确定性 Fuzz 模糊测试门禁铁律 (CRITICAL)
+
 为真正发挥 CP 无 GC + 原生硬件加速的性能优势，并确保未经大规模生产流量洗礼的标准库具备零崩溃健壮性，所有新增核心引擎与存量深化模块必须严格执行以下双门禁：
+
 1. **热路径强制评估并接入 CP 原生 SIMD 加速**：
    - **数值与多媒体计算核**（矩阵 GEMM/GEMV、向量检索、卷积/FIR、Sinc 重采样、DCT/FFT、图像缩放/高斯模糊/PSNR、时间序列自相关 ACF、声学 Mel/MFCC）：必须优先使用 CP 原生 SIMD 算子（`@dot` / `@fma` / `@l2sq` / `@popCount`），并附带与朴素标量参考实现的精度对拍断言（通常 `< 1e-4`）；
    - **字节流、文档与协议扫描核**（CSV/PDF/OOXML/JSON/源码预扫描、Annex-B 起始码、EBSP 脱壳、分词大小写折叠）：必须优先调用 `cap:simd`（`Simd.indexOfByte` / `Simd.indexOfAny2` / `Simd.indexOfAny4` / `skipWhitespace` / `firstNonAscii` / `toLowerAscii` / `countByte`）替代逐字节标量循环，最大化吞吐。
@@ -693,7 +678,9 @@ git status --porcelain cpc_dev/src
    - 编解码器与标准协议模块必须优先与真实外部工业工具（`libjpeg-turbo` / `libwebp` / `zstd` / `node zlib` / `ffmpeg` / RFC 官方测试向量）做交叉验真，绝不“自写自测闭门造车”。
 
 ### 4. MIT/Apache-2.0 Rust 标杆仓 `_ref/` 对照迁移与测试集继承铁律 (CRITICAL)
+
 为确保 CP 内置核心库具备工业级稳定性、边缘场景完备度与商用合规性，新增与深化重型纯逻辑核心库优先采用“巨人肩膀”策略：
+
 1. **严格许可证白名单（商用合规底线）**：
    - 仅允许对照迁移 **MIT / Apache-2.0 / BSD-2-Clause / BSD-3-Clause / Zlib / ISC** 宽松许可的 Rust 标杆开源库；**严禁**引入任何 GPL / AGPL / LGPL 传染性代码；
    - 迁移模块顶部必须保留上游来源与许可证溯源注释，并统一登记至项目根目录 `THIRD_PARTY_NOTICES.md`。
@@ -706,6 +693,7 @@ git status --porcelain cpc_dev/src
    - 凡 FFmpeg、libopus、libvips、OpenCV、ImageMagick、ONNX Runtime、llama.cpp 等百万行级 C/C++ 重量级库，统一采用 `@c` FFI 轻量封装 + `cap add` 安装 + 预编译跨平台二进制矩阵（`.so`/`.dylib`/`.dll` + 全局缓存软链），绝不塞入内置 `lib/`。
 
 ### 5. 高吞吐与极致省 Token 自我优化铁律（实测固化，2026-11-24）
+
 1. **子智能体极简回执协议（实测单轮省 65%–70% 跨上下文 Token）**：
    - 主控派发任务时默认附带 `<= 12` 行极简回执要求（仅列改动文件/行数、核心新增符号、4 门禁结果、测试通过项与 Fuzz 规模），严禁回传大段源码或长测试日志；主控对用户汇报保持 `3–6` 行极简进度摘要。
 2. **子智能体 8 轮强制上下文轮换**：
