@@ -85,3 +85,6 @@
 ## [2026-11-26] - Wave 3B 吸收 npm/Rust 高频基础生态包（`@cap/base32` & `@cap/cookie`）
 - `packages/@cap/base32/` & `cap/test/testCapBase32.cp`: 零分配 RFC 4648 Base32 / Base32hex / Crockford / Z-Base-32 编解码器（对标 Rust `base32`/`data-encoding` & npm `hi-base32`，含 RFC 4648 §10 全部官方向量与非零尾比特校验，5/5 PASS）。
 - `packages/@cap/cookie/` & `cap/test/testCapCookie.cp`: 零分配 RFC 6265 + CHIPS `Partitioned` Cookie 解析器与防注入 `Set-Cookie` 序列化器（对标 npm `cookie` [~110M/wk] & Rust `cookie`，3/3 PASS）。
+
+## [2026-11-26] - Wave 3C 吸收 npm/Rust 高频基础生态包（`@cap/mime`）
+- `packages/@cap/mime/` & `cap/test/testCapMime.cp`: 零分配 IANA Media Types 双向映射库（对标 npm `mime-types` [~130M/wk] & Rust `mime_guess`，覆盖 109 个高频扩展名与 12 个历史别名、`lookupByExt`/`extensionForMime`/`defaultCharset`/`isCompressible`/`contentTypeHeader`，PASS 852ms）。
