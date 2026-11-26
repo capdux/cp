@@ -991,3 +991,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/prepend-http`** | `packages/@cap/prepend-http` | 对标 npm `prepend-http` v4 (**2000 万+/周**) — 安全补齐 URL `https://`/`http://` 协议头 |
 | **`@cap/normalize-url`** | `packages/@cap/normalize-url` | 对标 npm `normalize-url` (**2500 万+/周**, 复用 `@cap/prepend-http`) — URL 协议/主机小写、去默认端口与路径归一化 |
 | **`@cap/clean-stack`** | `packages/@cap/clean-stack` | 对标 npm `clean-stack` v5 (**5000 万+/周**) — 过滤运行时内部帧、`file://` 剥离与 `base_path`/`pretty` 路径归一化 |
+| **`@cap/humanize-url`** | `packages/@cap/humanize-url` | 对标 npm `humanize-url` v3 (**1500 万+/周**) — 零拷贝剥离协议头、`www.` 与尾部 `/` 美化展示 URL |
+| **`@cap/extract-stack`** | `packages/@cap/extract-stack` | 对标 npm `extract-stack` v2 (**2000 万+/周**) — 零拷贝从 Error 堆栈分离消息头与纯栈帧列表 |
+| **`@cap/http-content-range`** | `packages/@cap/http-content-range` | 对标 crates.io `http-content-range` — RFC 9110 `Content-Range` 解析（含 `*` 与 `Unsatisfied`）及格式化 |
+| **`@cap/path-clean`** | `packages/@cap/path-clean` | 对标 crates.io `path-clean` — Go `filepath.Clean` 语义零堆单遍词法路径清理与拼接 |
+| **`@cap/urlencoding`** | `packages/@cap/urlencoding` | 对标 crates.io `urlencoding` v2 — RFC 3986 百分号编码、严格/容错解码与 `encodedLen` |

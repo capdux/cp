@@ -1211,3 +1211,11 @@
 - `packages/@cap/normalize-url/` & `cap/test/testCapNormalizeUrl.cp`: npm `normalize-url`（2500 万+/周，复用 `@cap/prepend-http`，6/6 PASS）。
 - `packages/@cap/clean-stack/` & `cap/test/testCapCleanStack.cp`: npm `clean-stack` v5（5000 万+/周，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker C14 满 6 包光荣轮换为 Worker C15。
+
+### 2026-11-27 (Batch 136 — **新增 5 大零重复 Top-700 包：2 npm + 3 crates.io，30/30 单测 100% PASS**)
+- `packages/@cap/humanize-url/` & `cap/test/testCapHumanizeUrl.cp`: npm `humanize-url` v3（1500 万+/周，6/6 PASS）。
+- `packages/@cap/extract-stack/` & `cap/test/testCapExtractStack.cp`: npm `extract-stack` v2（2000 万+/周，6/6 PASS）。
+- `packages/@cap/http-content-range/` & `cap/test/testCapHttpContentRange.cp`: crates.io `http-content-range`（RFC 9110 `Content-Range`，6/6 PASS）。
+- `packages/@cap/path-clean/` & `cap/test/testCapPathClean.cp`: crates.io `path-clean`（单遍词法路径清洗，6/6 PASS）。
+- `packages/@cap/urlencoding/` & `cap/test/testCapUrlencoding.cp`: crates.io `urlencoding` v2（RFC 3986 百分号编解码，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册。

@@ -10945,6 +10945,46 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "humanize-url",
+      "source_repo": "https://github.com/sindresorhus/humanize-url",
+      "license": "MIT",
+      "cp_target": "@cap/humanize-url",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "extract-stack",
+      "source_repo": "https://github.com/sindresorhus/extract-stack",
+      "license": "MIT",
+      "cp_target": "@cap/extract-stack",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "http-content-range",
+      "source_repo": "https://github.com/briansmith/http-content-range",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/http-content-range",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "path-clean",
+      "source_repo": "https://github.com/danreeves/path-clean",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/path-clean",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

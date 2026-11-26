@@ -483,3 +483,6 @@
 
 ## 2026-11-27: Batch 135 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **714 包**，映射 **927 条**）！
 - 交付 crates.io `version-compare`、`http-range-header` 与 npm `prepend-http`、`normalize-url`（跨包复用）、`clean-stack`，全部 30/30 单测一遍过 100% PASS；Worker C14 满 6 包（36/36 PASS，总耗时 9 分钟）按 Rule #9 轮换换新为 Worker C15。
+
+## 2026-11-27: Batch 136 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **719 包**，映射 **932 条**）！
+- 交付 npm `humanize-url`、`extract-stack` 与 crates.io `http-content-range`、`path-clean`、`urlencoding`，全部 30/30 单测首轮一遍过 100% PASS。
