@@ -933,3 +933,12 @@
 - `packages/@cap/type-is/` & `cap/test/testCapTypeIs.cp`: npm Top 35 `type-is`（1.4 亿+/周，双包复用 `@cap/mime-types`+`@cap/unicase`，6/6 PASS）。
 - `packages/@cap/forwarded-http/` & `cap/test/testCapForwardedHttp.cp`: npm Top 45 `forwarded`（1 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 104 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 105 — 6 大核心协议与图算法/Arena 包全 6/6 PASS — `petgraph`+`bumpalo`+`css-select`+`range-parser`+`negotiator`+`media-typer`，官方 `.cap` 包突破 **616+**！)
+- `packages/@cap/css-select/` & `cap/test/testCapCssSelect.cp`: npm Top 30 `css-select`（1.8 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/range-parser/` & `cap/test/testCapRangeParser.cp`: npm Top 28 `range-parser`（1.7 亿+/周，6/6 PASS）。
+- `packages/@cap/negotiator/` & `cap/test/testCapNegotiator.cp`: npm Top 30 `negotiator`（1.5 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/media-typer/` & `cap/test/testCapMediaTyper.cp`: npm Top 40 `media-typer`（1.3 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/petgraph-core/` & `cap/test/testCapPetgraphCore.cp`: crates.io #110 `petgraph`（9.5 亿+，BFS/DFS/TopoSort/Dijkstra，6/6 PASS）。
+- `packages/@cap/bumpalo/` & `cap/test/testCapBumpalo.cp`: crates.io #145 `bumpalo`（8.5 亿+，对齐感知 Bump Arena，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 105 全部 6 个官方包映射。

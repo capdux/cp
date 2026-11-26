@@ -386,3 +386,6 @@
 ## 2026-11-27: Batch 104 六大高性能数据结构与 HTTP 中间件包全 6/6 PASS — 官方 `.cap` 包突破 **610 LIVE**！
 - 交付 Rust 零堆数据结构三件套 `slab`（11 亿+）、`slotmap`（5.5 亿+）、`ringbuf`（5 亿+）与 `mime_guess`（7 亿+，复用 `@cap/mime-types`），以及 npm `type-is`（1.4 亿+/周）与 `forwarded`（1 亿+/周），全部 36/36 单测 100% PASS。
 - 严格执行 `GEMINI.md` 第 9 条 6 包轮换策略：Worker C4（6/6，36/36 PASS）与 Worker N5（6/6，36/36 PASS）均已光荣轮换换新为 Worker C5 与 Worker N6。
+
+## 2026-11-27: Batch 105 六大核心包全 6/6 PASS — 官方 `.cap` 包突破 **616+**！
+- 交付 Rust 旗舰图算法库 `petgraph`（9.5 亿+）与线性分配器 `bumpalo`（8.5 亿+），以及 npm 高频 HTTP/CSS 四件套 `css-select`（1.8 亿+/周）、`range-parser`（1.7 亿+/周）、`negotiator`（1.5 亿+/周）、`media-typer`（1.3 亿+/周），全部 36/36 单测 100% PASS。

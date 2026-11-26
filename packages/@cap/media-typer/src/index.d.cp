@@ -1,22 +1,18 @@
 // Type definitions for CP
 
+import { foldAsciiByte, eqAscii } from "../../unicase/src/index.cp";
 export class MediaType {
-    type_start: usize,
-    type_len: usize,
-    subtype_start: usize,
-    subtype_len: usize,
-    suffix_start: usize,
-    suffix_len: usize,
-    has_suffix: bool,
     valid: bool,
+    main_type: string,
+    subtype: string,
+    suffix: string,
 }
 
-export fn mtInvalid(): MediaType;
-export fn mtIsAlphaNum(c: u8): bool;
-export fn mtIsTypeChar(c: u8): bool;
-export fn mtIsSubtypeChar(c: u8): bool;
-export fn mtIsValidTypeSlice(s: &[]u8): bool;
-export fn isValidToken(s: string): bool;
-export fn parse(input: string): MediaType;
-export fn testMediaType(input: string): bool;
-export fn format(t: string, subtype: string, suffix: string, out: []u8): usize;
+export fn mtIsAlphaNum(b: u8): bool;
+export fn mtIsRestrictedChar(b: u8): bool;
+export fn mtIsValidName(s: string): bool;
+export fn mtPushLower(out: []u8, pos: usize, s: string): usize;
+export fn testMediaType(raw: string): bool;
+export fn parseMediaType(raw: string): MediaType;
+export fn formatMediaType(main_type: string, subtype: string, suffix: string, out: []u8): usize;
+export fn mediaTypeEq(a: string, b: string): bool;

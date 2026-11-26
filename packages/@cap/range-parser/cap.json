@@ -2,8 +2,7 @@
   "name": "@cap/range-parser",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation RFC 9110 HTTP Range header parser and Content-Range formatter in pure CP",
+  "description": "Zero-heap RFC 7233 HTTP Range header parser with suffix ranges and interval combining (clean-room port of npm range-parser)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp",
-  "keywords": ["range-parser", "http", "range", "content-range", "rfc9110", "streaming", "zero-alloc"]
+  "types": "src/index.d.cp"
 }

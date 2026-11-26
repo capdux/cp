@@ -1,248 +1,110 @@
-// @cap/media-typer — Pure CP zero-allocation RFC 6838 media type parser & formatter
-// Parity with npm `media-typer` (RFC 6838 Section 4.2).
+// @cap/media-typer — Zero-heap RFC 6838 Media Type parser, validator, and formatter.
+// Clean-room MIT port of npm `media-typer` v1.1; reuses `@cap/unicase`.
+
+import { foldAsciiByte, eqAscii } from "../../unicase/src/index.cp";
 
 pub struct MediaType {
-    pub type_start: usize,
-    pub type_len: usize,
-    pub subtype_start: usize,
-    pub subtype_len: usize,
-    pub suffix_start: usize,
-    pub suffix_len: usize,
-    pub has_suffix: bool,
     pub valid: bool,
+    pub main_type: string,
+    pub subtype: string,
+    pub suffix: string,
 }
 
-fn mtInvalid(): MediaType {
-    return MediaType {
-        type_start: 0,
-        type_len: 0,
-        subtype_start: 0,
-        subtype_len: 0,
-        suffix_start: 0,
-        suffix_len: 0,
-        has_suffix: false,
-        valid: false,
-    };
+fn mtIsAlphaNum(b: u8): bool {
+    return (b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
 }
 
-fn mtIsAlphaNum(c: u8): bool {
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return true;
-    }
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return true;
-    }
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return true;
-    }
-    return false;
+fn mtIsRestrictedChar(b: u8): bool {
+    // RFC 6838 restricted-name-chars: ALPHA / DIGIT / "!" / "#" / "$" / "&" / "-" / "^" / "_" / "." / "+"
+    if (mtIsAlphaNum(b)) { return true; }
+    return b == 33 || b == 35 || b == 36 || b == 38 || b == 45 || b == 94 || b == 95 || b == 46 || b == 43;
 }
 
-fn mtIsTypeChar(c: u8): bool {
-    if (mtIsAlphaNum(c)) {
-        return true;
-    }
-    if (c == ('!' as u8) || c == ('#' as u8) || c == ('$' as u8) || c == ('&' as u8)) {
-        return true;
-    }
-    if (c == ('^' as u8) || c == ('_' as u8) || c == ('-' as u8)) {
-        return true;
-    }
-    return false;
-}
-
-fn mtIsSubtypeChar(c: u8): bool {
-    if (mtIsTypeChar(c) || c == ('.' as u8)) {
-        return true;
-    }
-    return false;
-}
-
-fn mtIsValidTypeSlice(s: []const u8): bool {
-    if (s.len == 0 || s.len > 127) {
-        return false;
-    }
-    if (!mtIsAlphaNum(s[0])) {
-        return false;
-    }
+fn mtIsValidName(s: string): bool {
+    if (s.len == 0 || s.len > 127) { return false; }
+    if (!mtIsAlphaNum(s[0])) { return false; }
     let i: usize = 1;
     while (i < s.len) {
-        if (!mtIsTypeChar(s[i])) {
-            return false;
-        }
+        if (!mtIsRestrictedChar(s[i])) { return false; }
         i = i + 1;
     }
     return true;
 }
 
-pub fn isValidToken(s: string): bool {
-    if (s.len == 0 || s.len > 127) {
-        return false;
-    }
-    if (!mtIsAlphaNum(s[0])) {
-        return false;
-    }
-    let i: usize = 1;
-    while (i < s.len) {
-        if (!mtIsSubtypeChar(s[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-pub fn parse(input: string): MediaType {
-    if (input.len == 0) {
-        return mtInvalid();
-    }
-
-    // Locate the single '/' separator; reject any extra '/'
-    let slash_pos: usize = 0;
-    let found_slash = false;
+fn mtPushLower(out: []u8, pos: usize, s: string): usize {
+    let p = pos;
     let i: usize = 0;
-    while (i < input.len) {
-        if (input[i] == ('/' as u8)) {
-            if (found_slash) {
-                return mtInvalid();
-            }
-            slash_pos = i;
-            found_slash = true;
+    while (i < s.len && p < out.len) {
+        out[p] = foldAsciiByte(s[i]);
+        p = p + 1;
+        i = i + 1;
+    }
+    return p;
+}
+
+/// Validates an RFC 6838 media type string (`type/subtype[+suffix]`).
+pub fn testMediaType(raw: string): bool {
+    return parseMediaType(raw).valid;
+}
+
+/// Parses an RFC 6838 media type into `(main_type, subtype, suffix)`.
+pub fn parseMediaType(raw: string): MediaType {
+    let invalid = MediaType { valid: false, main_type: "", subtype: "", suffix: "" };
+    if (raw.len == 0) { return invalid; }
+    let slash: usize = raw.len;
+    let i: usize = 0;
+    while (i < raw.len) {
+        if (raw[i] == 47) {
+            if (slash < raw.len) { return invalid; } // duplicate '/'
+            slash = i;
         }
         i = i + 1;
     }
+    if (slash == 0 || slash >= raw.len - 1) { return invalid; }
+    let t = raw[0..slash];
+    let rest = raw[slash + 1..raw.len];
+    if (!mtIsValidName(t)) { return invalid; }
 
-    if (!found_slash || slash_pos == 0 || slash_pos + 1 >= input.len) {
-        return mtInvalid();
-    }
-
-    // Validate type part (RFC 6838 restricted-name without '.' or '+')
-    let type_part = input[0..slash_pos];
-    if (!mtIsValidTypeSlice(type_part)) {
-        return mtInvalid();
-    }
-
-    // Validate full subtype+suffix part length and characters
-    let sub_start = slash_pos + 1;
-    let raw_sub = input[sub_start..input.len];
-    if (raw_sub.len == 0 || raw_sub.len > 127) {
-        return mtInvalid();
-    }
-    if (!mtIsAlphaNum(raw_sub[0])) {
-        return mtInvalid();
-    }
-
-    let last_plus: usize = 0;
-    let has_plus = false;
+    // Find last '+' in subtype for structured syntax suffix
+    let plus: usize = rest.len;
     let j: usize = 0;
-    while (j < raw_sub.len) {
-        let c = raw_sub[j];
-        if (c == ('+' as u8)) {
-            last_plus = j;
-            has_plus = true;
-        } else if (!mtIsSubtypeChar(c)) {
-            return mtInvalid();
-        }
+    while (j < rest.len) {
+        if (rest[j] == 43) { plus = j; }
         j = j + 1;
     }
 
-    if (has_plus) {
-        if (last_plus == 0 || last_plus + 1 >= raw_sub.len) {
-            return mtInvalid();
-        }
-        let suf_start = sub_start + last_plus + 1;
-        let suf_slice = input[suf_start..input.len];
-        if (!mtIsValidTypeSlice(suf_slice)) {
-            return mtInvalid();
-        }
-        return MediaType {
-            type_start: 0,
-            type_len: slash_pos,
-            subtype_start: sub_start,
-            subtype_len: last_plus,
-            suffix_start: suf_start,
-            suffix_len: input.len - suf_start,
-            has_suffix: true,
-            valid: true,
-        };
+    if (plus < rest.len) {
+        let sub = rest[0..plus];
+        let suf = rest[plus + 1..rest.len];
+        if (!mtIsValidName(sub) || !mtIsValidName(suf)) { return invalid; }
+        // Reject '+' inside suffix (already guaranteed by last '+') or inside main_type
+        return MediaType { valid: true, main_type: t, subtype: sub, suffix: suf };
     }
 
-    return MediaType {
-        type_start: 0,
-        type_len: slash_pos,
-        subtype_start: sub_start,
-        subtype_len: raw_sub.len,
-        suffix_start: 0,
-        suffix_len: 0,
-        has_suffix: false,
-        valid: true,
-    };
+    if (!mtIsValidName(rest)) { return invalid; }
+    return MediaType { valid: true, main_type: t, subtype: rest, suffix: "" };
 }
 
-pub fn testMediaType(input: string): bool {
-    let mt = parse(input);
-    return mt.valid;
+/// Formats `(main_type, subtype, suffix)` as lowercase RFC 6838 media type into `out`.
+/// Returns 0 if any component is invalid.
+pub fn formatMediaType(main_type: string, subtype: string, suffix: string, out: []u8): usize {
+    if (!mtIsValidName(main_type) || !mtIsValidName(subtype)) { return 0; }
+    if (suffix.len > 0 && !mtIsValidName(suffix)) { return 0; }
+    let p: usize = 0;
+    p = mtPushLower(out, p, main_type);
+    if (p < out.len) { out[p] = 47; p = p + 1; }
+    p = mtPushLower(out, p, subtype);
+    if (suffix.len > 0) {
+        if (p < out.len) { out[p] = 43; p = p + 1; }
+        p = mtPushLower(out, p, suffix);
+    }
+    return p;
 }
 
-pub fn format(t: string, subtype: string, suffix: string, out: []u8): usize {
-    if (!mtIsValidTypeSlice(t)) {
-        return 0;
-    }
-    if (!isValidToken(subtype)) {
-        return 0;
-    }
-
-    let has_suf = suffix.len > 0;
-    let need = t.len + 1 + subtype.len;
-    if (has_suf) {
-        if (!mtIsValidTypeSlice(suffix)) {
-            return 0;
-        }
-        if (subtype.len + 1 + suffix.len > 127) {
-            return 0;
-        }
-        need = need + 1 + suffix.len;
-    }
-
-    if (out.len < need) {
-        return 0;
-    }
-
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < t.len) {
-        out[pos] = t[i];
-        pos = pos + 1;
-        i = i + 1;
-    }
-    out[pos] = '/' as u8;
-    pos = pos + 1;
-
-    i = 0;
-    while (i < subtype.len) {
-        out[pos] = subtype[i];
-        pos = pos + 1;
-        i = i + 1;
-    }
-
-    if (has_suf) {
-        out[pos] = '+' as u8;
-        pos = pos + 1;
-        i = 0;
-        while (i < suffix.len) {
-            out[pos] = suffix[i];
-            pos = pos + 1;
-            i = i + 1;
-        }
-    }
-
-    return pos;
+/// Checks whether two media types are equivalent (case-insensitive per RFC 6838).
+pub fn mediaTypeEq(a: string, b: string): bool {
+    let pa = parseMediaType(a);
+    let pb = parseMediaType(b);
+    if (!pa.valid || !pb.valid) { return false; }
+    return eqAscii(pa.main_type, pb.main_type) && eqAscii(pa.subtype, pb.subtype) && eqAscii(pa.suffix, pb.suffix);
 }
-
-export {
-    MediaType,
-    parse,
-    testMediaType,
-    format,
-    isValidToken
-};

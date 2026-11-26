@@ -2941,12 +2941,12 @@
       "source_name": "petgraph",
       "source_repo": "https://github.com/petgraph/petgraph",
       "license": "MIT",
-      "cp_target": "cap:graph",
-      "kind": "stdlib",
+      "cp_target": "@cap/petgraph-core",
+      "kind": "package",
       "aliases": [
         "graphlib"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4223,12 +4223,12 @@
       "source_name": "bumpalo",
       "source_repo": "https://github.com/fitzgen/bumpalo",
       "license": "MIT",
-      "cp_target": "cap:mem",
-      "kind": "stdlib",
+      "cp_target": "@cap/bumpalo",
+      "kind": "package",
       "aliases": [
         "typed-arena"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10276,6 +10276,16 @@
       "source_repo": "https://github.com/orlp/slotmap",
       "license": "MIT",
       "cp_target": "@cap/slotmap",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "css-select",
+      "source_repo": "https://github.com/fb55/css-select",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/css-select",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

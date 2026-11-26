@@ -816,3 +816,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/slotmap`** | `packages/@cap/slotmap` | 对标 crates.io Top-220 `slotmap` v1 (5.5 亿+) — 防 ABA 代际索引槽位容器（`SlotMapI64` + `SecondaryMapI64`） |
 | **`@cap/forwarded-http`** | `packages/@cap/forwarded-http` | 对标 npm Top 45 `forwarded`/`proxy-addr` (1 亿+/周，跨包复用 `@cap/unicase`) — RFC 7239 `Forwarded` 与 `X-Forwarded-For` 信任代理链解析 |
 | **`@cap/type-is`** | `packages/@cap/type-is` | 对标 npm Top 35 `type-is` (1.4 亿+/周，双包复用 `@cap/mime-types`+`@cap/unicase`) — HTTP `Content-Type` 简写/通配/`+json` 后缀匹配器 |
+| **`@cap/css-select`** | `packages/@cap/css-select` | 对标 npm Top 30 `css-select` (1.8 亿+/周，跨包复用 `@cap/unicase`) — 零堆 CSS 选择器解析、W3C 优先级计算与元素匹配 |
+| **`@cap/media-typer`** | `packages/@cap/media-typer` | 对标 npm Top 40 `media-typer` (1.3 亿+/周，跨包复用 `@cap/unicase`) — RFC 6838 Media Type (`type/subtype+suffix`) 解析校验与格式化 |
+| **`@cap/range-parser`** | `packages/@cap/range-parser` | 对标 npm Top 28 `range-parser` (1.7 亿+/周) — RFC 7233 HTTP `Range` 字节区间解析、后缀计算与区间合并 |
+| **`@cap/negotiator`** | `packages/@cap/negotiator` | 对标 npm Top 30 `negotiator` (1.5 亿+/周，跨包复用 `@cap/unicase`) — RFC 7231 `Accept-Encoding`/`Language`/`Charset` 权重协商 |
+| **`@cap/bumpalo`** | `packages/@cap/bumpalo` | 对标 crates.io #145 `bumpalo` v3 (8.5 亿+) — 4KB 零堆对齐感知 Bump Arena 线性分配器与快照回滚 |
+| **`@cap/petgraph-core`** | `packages/@cap/petgraph-core` | 对标 crates.io #110 `petgraph` v0.6 (9.5 亿+) — 零堆有向/无向加权图（BFS/迭代 DFS/Kahn 拓扑排序/环检测/Dijkstra 最短路） |

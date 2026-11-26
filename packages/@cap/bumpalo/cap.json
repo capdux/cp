@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bumpalo",
+  "ver": "1.0.0",
+  "description": "Zero-allocation alignment-aware bump arena allocator (BumpArena, BumpSlice) with checkpoint/rewind and overflow protection (Rust bumpalo v3 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
