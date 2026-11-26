@@ -1,0 +1,12 @@
+{
+  "name": "@cap/rustls-pki-types",
+  "ver": "1.0.0",
+  "description": "Zero-allocation TLS/PKI core types (DnsName, ServerName, UnixTime, PEM object detection & DER decoding via @cap/pem-rfc7468) in pure CP (rustls-pki-types v1 parity).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/pem-rfc7468": "1.0.0"
+  },
+  "keywords": ["tls", "pki", "x509", "dns", "server-name", "pem", "der", "rustls", "zero-alloc"]
+}

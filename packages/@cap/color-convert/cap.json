@@ -1,0 +1,12 @@
+{
+  "name": "@cap/color-convert",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation color space conversions (RGB, HSV, HWB, HSL, CMYK, ANSI256, ANSI16, Hex, CSS keywords) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["color-convert", "color", "rgb", "hsv", "hwb", "hsl", "cmyk", "ansi256", "ansi16", "hex", "zero-alloc"],
+  "dependencies": {
+    "@cap/color-name": "1.0.0"
+  }
+}

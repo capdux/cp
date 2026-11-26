@@ -821,3 +821,11 @@
 - `packages/@cap/escalade/` & `cap/test/testCapEscalade.cp`: npm Top 95 `escalade`（复用 `@cap/normalize-path`，6/6 PASS）。
 - `packages/@cap/methods/` & `cap/test/testCapMethods.cp`: npm Top 65 `methods`（34 个 HTTP/WebDAV 方法，6/6 PASS）。
 - `packages/@cap/registry.json`: 推进至 **818 条**双生态映射（**npm=409 / crates.io=409 绝对 1:1 对称**，官方 `.cap` 包 538+）。
+
+### 2026-11-27 (Batch 93 — **Rustls 生态 35.8 亿下载全家桶贯通！** 6 个全新超重磅零堆包全部 6/6 PASS，映射冲至 824+)
+- `packages/@cap/rustls-webpki/` & `cap/test/testCapRustlsWebpki.cp`: crates.io #105 `rustls-webpki`（10.29 亿下载，复用 `@cap/x509-cert`，6/6 PASS）。
+- `packages/@cap/webpki-roots/` & `cap/test/testCapWebpkiRoots.cp`: crates.io #112 `webpki-roots`（9.74 亿下载，复用 `@cap/x509-cert`+`@cap/spki`，6/6 PASS）。
+- `packages/@cap/rustls-pemfile/` & `cap/test/testCapRustlsPemfile.cp`: crates.io #145 `rustls-pemfile`（8.5 亿下载，复用 `@cap/pem-rfc7468`，6/6 PASS）。
+- `packages/@cap/rustls-pki-types/` & `cap/test/testCapRustlsPkiTypes.cp`: crates.io #180 `rustls-pki-types`（7.27 亿下载，复用 `@cap/pem-rfc7468`，6/6 PASS）。
+- `packages/@cap/color-convert/` & `cap/test/testCapColorConvert.cp`: npm Top 28 `color-convert`（3 亿+/周，复用 `@cap/color-name`，6/6 PASS）。
+- `packages/@cap/ipaddr/` & `cap/test/testCapIpaddr.cp`: npm Top 55 `ipaddr.js`（2 亿+/周，RFC 5952，6/6 PASS）。

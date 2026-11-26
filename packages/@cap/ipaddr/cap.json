@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ipaddr",
+  "ver": "1.0.0",
+  "description": "Zero-allocation IPv4 & IPv6 parser, RFC 5952 formatter, CIDR matcher, IPv4-mapped IPv6 converter, and address range classifier (npm ipaddr.js parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

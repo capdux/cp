@@ -740,3 +740,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/color-name`** | `packages/@cap/color-name` | 对标 npm Top 30 `color-name` (3 亿+/周) — 全部 148 个 W3C CSS4 命名色 O(log n) 双向查表 |
 | **`@cap/escalade`** | `packages/@cap/escalade` | 对标 npm Top 95 `escalade` (1.2 亿+/周，跨包复用 `@cap/normalize-path`) — 跨平台零堆父目录向上遍历器 |
 | **`@cap/methods`** | `packages/@cap/methods` | 对标 npm Top 65 `methods` (1.2 亿+/周) — 34 个 RFC 9110/WebDAV HTTP 方法与安全/幂等/可缓存谓词 |
+| **`@cap/rustls-webpki`** | `packages/@cap/rustls-webpki` | 对标 crates.io #105 `rustls-webpki` (10.29 亿，跨包复用 `@cap/x509-cert`) — RFC 6125 主机名通配符验证与证书链/有效期校验 |
+| **`@cap/webpki-roots`** | `packages/@cap/webpki-roots` | 对标 crates.io #112 `webpki-roots` (9.74 亿，跨包复用 `@cap/x509-cert`+`@cap/spki`) — Mozilla NSS 20 权威根 CA 信任锚点库 |
+| **`@cap/rustls-pemfile`** | `packages/@cap/rustls-pemfile` | 对标 crates.io #145 `rustls-pemfile` (8.5 亿，跨包复用 `@cap/pem-rfc7468`) — 流式多证书/私钥 PEM 束迭代器 |
+| **`@cap/rustls-pki-types`** | `packages/@cap/rustls-pki-types` | 对标 crates.io #180 `rustls-pki-types` (7.27 亿，跨包复用 `@cap/pem-rfc7468`) — RFC 1035 DnsName/ServerName/UnixTime 与 PEM 类型识别 |
+| **`@cap/color-convert`** | `packages/@cap/color-convert` | 对标 npm Top 28 `color-convert` (3 亿+/周，跨包复用 `@cap/color-name`) — RGB/HSV/HWB/HSL/CMYK/ANSI16/256/Hex/Keyword 全空间转换 |
+| **`@cap/ipaddr`** | `packages/@cap/ipaddr` | 对标 npm Top 55 `ipaddr.js` (2 亿+/周) — IPv4/IPv6 解析、RFC 5952 格式化、CIDR 匹配与网段分类 |

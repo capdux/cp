@@ -1,0 +1,13 @@
+{
+  "name": "@cap/webpki-roots",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing @cap/x509-cert and @cap/spki (webpki-roots parity) in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/x509-cert": "1.0.0",
+    "@cap/spki": "1.0.0"
+  },
+  "keywords": ["webpki", "roots", "mozilla", "ca", "trust-anchors", "x509", "tls", "pki", "zero-alloc"]
+}

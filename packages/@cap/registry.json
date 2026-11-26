@@ -9951,6 +9951,68 @@
         "signature"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "proxy-addr",
+      "source_repo": "https://github.com/jshttp/proxy-addr",
+      "license": "MIT",
+      "cp_target": "@cap/proxy-addr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "parseurl",
+      "source_repo": "https://github.com/pillarjs/parseurl",
+      "license": "MIT",
+      "cp_target": "@cap/parseurl",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "glob-parent",
+      "source_repo": "https://github.com/gulpjs/glob-parent",
+      "license": "MIT",
+      "cp_target": "@cap/glob-parent",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustls-webpki",
+      "source_repo": "https://github.com/rustls/webpki",
+      "license": "MIT",
+      "cp_target": "@cap/rustls-webpki",
+      "kind": "package",
+      "aliases": [
+        "webpki"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "webpki-roots",
+      "source_repo": "https://github.com/rustls/webpki-roots",
+      "license": "MIT",
+      "cp_target": "@cap/webpki-roots",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustls-pki-types",
+      "source_repo": "https://github.com/rustls/pki-types",
+      "license": "MIT",
+      "cp_target": "@cap/rustls-pki-types",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
