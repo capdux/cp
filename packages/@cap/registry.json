@@ -10845,6 +10845,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ansi-align",
+      "source_repo": "https://github.com/nexdrew/ansi-align",
+      "license": "ISC",
+      "cp_target": "@cap/ansi-align",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "filenamify",
+      "source_repo": "https://github.com/sindresorhus/filenamify",
+      "license": "MIT",
+      "cp_target": "@cap/filenamify",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "path-slash",
+      "source_repo": "https://github.com/rhysd/path-slash",
+      "license": "MIT",
+      "cp_target": "@cap/path-slash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bytesize",
+      "source_repo": "https://github.com/hyunsik/bytesize",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/bytesize",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "shellexpand",
+      "source_repo": "https://gitlab.com/ijackson/rust-shellexpand",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/shellexpand",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

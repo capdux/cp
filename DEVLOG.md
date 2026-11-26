@@ -477,3 +477,6 @@
 ## 2026-11-27: Batch 133 剩余 3 组含反向依赖重复包 100% 清零收口 + 5 大零重复新包全 6/6 PASS！
 - 完成交接文档 `PROGRESS.md` 遗留的全部 3 组含反向依赖后缀重复包收口：`etag-http`→`etag`（同步迁移 `send`/`serve-static`）、`memchr-crate`→`memchr`（同步迁移 `bytecount`）、`p-limit-core`→`p-limit`（同步迁移 `p-locate`），7 份关联回归测试 42/42 100% PASS，全仓后缀重复包历史欠账清零。
 - 并行交付 5 个零重复 Top-700 独立包：`@cap/is-unicode-supported`（1 亿+/周）、`@cap/widest-line`（复用 `@cap/string-width`）、`@cap/trim-newlines`、`@cap/normpath`、`@cap/unicode-ident`（5 亿+），全部 30/30 单测首轮一遍过 100% PASS；并同步通过 `gen_agent_lib_ref.py` 刷新 `cp_agent_lib_ref.md`。
+
+## 2026-11-27: Batch 134 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **709 包**，映射 **922 条**）！
+- 交付 npm `ansi-align`（双包复用）、`filenamify` 与 crates.io `path-slash`、`bytesize`、`shellexpand`，全部 30/30 单测首轮一遍过 100% PASS；Worker N15 满 6 包（36/36 PASS，总耗时 6 分钟）按 Rule #9 轮换换新为 Worker N16。

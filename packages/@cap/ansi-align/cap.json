@@ -1,0 +1,29 @@
+{
+  "name": "@cap/ansi-align",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing @cap/string-width and @cap/widest-line for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "ISC",
+  "keywords": [
+    "ansi",
+    "align",
+    "center",
+    "right",
+    "left",
+    "terminal",
+    "unicode",
+    "cjk",
+    "zero-alloc"
+  ],
+  "dep": {
+    "@cap/string-width": "1.0.0",
+    "@cap/widest-line": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ansi-align",
+    "repo": "https://github.com/nexdrew/ansi-align",
+    "license": "ISC"
+  }
+}

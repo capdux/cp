@@ -1,0 +1,24 @@
+{
+  "name": "@cap/path-slash",
+  "ver": "1.0.0",
+  "desc": "Zero-heap POSIX '/' and Windows '\\' path separator conversion (UNC, drive letters, lossy UTF-8) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "path-slash",
+    "path",
+    "slash",
+    "backslash",
+    "windows",
+    "posix",
+    "cross-platform",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "path-slash",
+    "repo": "https://github.com/rhysd/path-slash",
+    "license": "MIT"
+  }
+}

@@ -1195,3 +1195,11 @@
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射、重指向 3 组收口映射，并运行 `gen_agent_lib_ref.py` 刷新极简速查手册。
 - `packages/@cap/strip-indent/` & `cap/test/testCapStripIndent.cp`: npm `strip-indent`（5000 万+/周，6/6 PASS）。
 - `packages/@cap/redent/` & `cap/test/testCapRedent.cp`: npm `redent`（4000 万+/周，双包复用 `@cap/strip-indent` + `@cap/indent-string`，6/6 PASS）。
+
+### 2026-11-27 (Batch 134 — **新增 5 大零重复 Top-700 包：2 npm + 3 crates.io，30/30 单测 100% PASS**)
+- `packages/@cap/ansi-align/` & `cap/test/testCapAnsiAlign.cp`: npm `ansi-align`（4000 万+/周，双包复用 `@cap/string-width` + `@cap/widest-line`，6/6 PASS）。
+- `packages/@cap/filenamify/` & `cap/test/testCapFilenamify.cp`: npm `filenamify` v6（3000 万+/周，Windows 保留名防护 + UTF-8 安全截断，6/6 PASS）。
+- `packages/@cap/path-slash/` & `cap/test/testCapPathSlash.cp`: crates.io `path-slash`（POSIX/Windows 斜杠双向转换，6/6 PASS）。
+- `packages/@cap/bytesize/` & `cap/test/testCapBytesize.cp`: crates.io `bytesize`（纯整数 SI/IEC 字节解析与格式化，6/6 PASS）。
+- `packages/@cap/shellexpand/` & `cap/test/testCapShellexpand.cp`: crates.io `shellexpand` v3（零堆 `~` 与 `$VAR`/`${VAR:-default}` 展开，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N15 满 6 包光荣轮换为 Worker N16。

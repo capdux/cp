@@ -981,3 +981,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/unicode-ident`** | `packages/@cap/unicode-ident` | 对标 crates.io **Top 100** `unicode-ident` (**5 亿+**) — UAX #31 Unicode 标识符 `isXidStart`/`isXidContinue`/`isValidIdent` |
 | **`@cap/strip-indent`** | `packages/@cap/strip-indent` | 对标 npm **Top 55** `strip-indent` (**5000 万+/周**) — 计算最小公共缩进并剥离多行文本前导空白 |
 | **`@cap/redent`** | `packages/@cap/redent` | 对标 npm **Top 65** `redent` (**4000 万+/周**, 双包复用 `@cap/strip-indent`+`@cap/indent-string`) — 剥离公共缩进后重新缩进多行文本 |
+| **`@cap/ansi-align`** | `packages/@cap/ansi-align` | 对标 npm `ansi-align` (**4000 万+/周**, 双包复用 `@cap/string-width`+`@cap/widest-line`) — ANSI/CJK 感知多行文本左/中/右视觉对齐 |
+| **`@cap/filenamify`** | `packages/@cap/filenamify` | 对标 npm `filenamify` v6 (**3000 万+/周**) — 跨平台安全文件名清洗、Windows 保留设备名防护与 UTF-8 安全截断 |
+| **`@cap/path-slash`** | `packages/@cap/path-slash` | 对标 crates.io `path-slash` — POSIX `/` 与 Windows `\` 路径零堆双向转换与 UNC/盘符归一化 |
+| **`@cap/bytesize`** | `packages/@cap/bytesize` | 对标 crates.io `bytesize` — 纯整数 SI/IEC 字节容量常量、`parseByteSize` 与 `formatSi`/`formatIec` |
+| **`@cap/shellexpand`** | `packages/@cap/shellexpand` | 对标 crates.io `shellexpand` v3 — 零堆 `~` 家目录与 `$VAR`/`${VAR:-default}`/`$$` Shell 变量展开 |
