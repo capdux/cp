@@ -394,3 +394,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/bech32`** | `packages/@cap/bech32` | 对标 Rust `bech32` / npm `bech32` — BIP-173 Bech32 与 BIP-350 Bech32m 6 字符 BCH 校验和零堆编解码 |
 | **`@cap/cobs`** | `packages/@cap/cobs` | 对标 Rust `cobs` — Consistent Overhead Byte Stuffing 帧同步字节填充、自定义哨兵 XOR 与流式 `CobsDecoder` |
 | **`@cap/rle`** | `packages/@cap/rle` | 对标 Rust `rle-decode-fast` / PackBits — Apple/TIFF PackBits RLE 与 Prometheus/Gorilla Delta/Delta-of-Delta 时序压缩 |
+| **`@cap/ahash`** | `packages/@cap/ahash` | 对标 Rust `ahash`（9.46 亿）— 4-key `RandomState` + 折叠乘加与旋转混淆轮高速抗 DoS 哈希 |
+| **`@cap/merkle`** | `packages/@cap/merkle` | 对标 Rust `rs_merkle` / npm `merkletreejs` — RFC 6962 域分离 SHA-256 默克尔哈希树与包含证明验真 |
+| **`@cap/toposort`** | `packages/@cap/toposort` | 对标 Rust `topological-sort` / npm `toposort` — Kahn 字典序最小拓扑排序、环路检测与并行执行层分层 |
+| **`@cap/disjoint-set`** | `packages/@cap/disjoint-set` | 对标 Rust `disjoint-sets` / `petgraph::unionfind` — 零堆路径减半与按大小合并并查集（Union-Find） |
+| **`@cap/fenwick`** | `packages/@cap/fenwick` | 对标 Rust `fenwick` — O(log N) 树状数组前缀和/区间和、O(N) 线性建树与 `lowerBound` 第 k 小查询 |
+| **`@cap/range-set`** | `packages/@cap/range-set` | 对标 Rust `rangemap` / npm `merge-ranges` — 零堆有序不重叠半开区间集合（自动合并、劈裂移除与跨度统计） |

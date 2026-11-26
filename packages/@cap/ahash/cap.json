@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ahash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation randomized high-speed non-cryptographic hasher with 4-key RandomState, folded multiply, and rotation rounds (Rust ahash parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

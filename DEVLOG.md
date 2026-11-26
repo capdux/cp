@@ -179,3 +179,6 @@
 
 ## 2026-11-26: Batch 38 吸收 6 大十亿级 Rust 核心 crate + 交付 `@cap/foldhash`/`@cap/bech32`/`@cap/cobs`/`@cap/rle`（总映射 295 条！）
 - 严格按 crates.io 真实下载榜去重吸收 `once_cell`（16.03 亿）→ `scopeguard`（11.93 亿）至 CP 标准库/语言原语，并交付 8.95 亿级 `@cap/foldhash` 与 `@cap/bech32`/`@cap/cobs`/`@cap/rle` 四大零堆纯 CP 包（全部 6/6 PASS），总映射突破 **295 条**！
+
+## 2026-11-26: Batch 39 双重里程碑：**305 条生态映射 + 210 个线上官方 `.cap` 包**！
+- 单批交付 6 大零堆数据结构与哈希算法包 `@cap/ahash`（9.46 亿）、`@cap/merkle`、`@cap/toposort`、`@cap/disjoint-set`、`@cap/fenwick`、`@cap/range-set`（全部 6/6 PASS），并去重直连 `zerocopy`（12.07 亿）、`crossbeam-utils`（11.66 亿）、`http-body`（11.34 亿）、`futures`（9.77 亿），总映射突破 **305 条**，`https://capdux.org` 线上官方包突破 **210 个**（0 失败）！

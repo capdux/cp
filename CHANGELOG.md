@@ -320,3 +320,12 @@
 - `packages/@cap/cobs/` & `cap/test/testCapCobs.cp`: Consistent Overhead Byte Stuffing 帧同步编码与流式 `CobsDecoder`（6/6 PASS）。
 - `packages/@cap/rle/` & `cap/test/testCapRle.cp`: Apple/TIFF PackBits RLE + Delta / Delta-of-Delta 时序压缩（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **295 条**高频映射（含 `once_cell`/`socket2`/`parking_lot`/`tokio`/`lazy_static`/`scopeguard` 6 大十亿级 Rust crate 去重直连）。
+
+## [2026-11-26] - Batch 39 里程碑：总生态映射突破 **305 条** + 线上官方包突破 **210 个**！（交付 `@cap/ahash`, `@cap/merkle`, `@cap/toposort`, `@cap/disjoint-set`, `@cap/fenwick`, `@cap/range-set`）
+- `packages/@cap/ahash/` & `cap/test/testCapAhash.cp`: 对标 Rust `ahash`（9.46 亿下载），4-key `RandomState` 高速非加密哈希（6/6 PASS）。
+- `packages/@cap/merkle/` & `cap/test/testCapMerkle.cp`: RFC 6962 域分离 SHA-256 默克尔树与审计证明（6/6 PASS）。
+- `packages/@cap/toposort/` & `cap/test/testCapToposort.cp`: Kahn 最小字典序拓扑排序、环路检测与并行层级（6/6 PASS）。
+- `packages/@cap/disjoint-set/` & `cap/test/testCapDisjointSet.cp`: 路径减半 + 按大小合并零堆并查集（6/6 PASS）。
+- `packages/@cap/fenwick/` & `cap/test/testCapFenwick.cp`: O(log N) 树状数组前缀/区间和与 `lowerBound`（6/6 PASS）。
+- `packages/@cap/range-set/` & `cap/test/testCapRangeSet.cp`: 零堆有序半开区间自动合并与劈裂集合（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **305 条**高频映射（含 `zerocopy`/`crossbeam-utils`/`http-body`/`futures` 去重直连）。

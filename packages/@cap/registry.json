@@ -2954,6 +2954,106 @@
       "kind": "package",
       "aliases": ["packbits", "rle"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zerocopy",
+      "source_repo": "https://github.com/google/zerocopy",
+      "license": "MIT",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": ["bytemuck"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crossbeam-utils",
+      "source_repo": "https://github.com/crossbeam-rs/crossbeam",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["crossbeam", "crossbeam-channel", "crossbeam-epoch"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "http-body",
+      "source_repo": "https://github.com/hyperium/http-body",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["http-body-util"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "futures",
+      "source_repo": "https://github.com/rust-lang/futures-rs",
+      "license": "MIT",
+      "cp_target": "cap:actor",
+      "kind": "stdlib",
+      "aliases": ["futures-util", "futures-core", "futures-channel"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ahash",
+      "source_repo": "https://github.com/tkaitchuck/aHash",
+      "license": "MIT",
+      "cp_target": "@cap/ahash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rs_merkle",
+      "source_repo": "https://github.com/antouhou/rs-merkle",
+      "license": "MIT",
+      "cp_target": "@cap/merkle",
+      "kind": "package",
+      "aliases": ["merkletreejs", "merkle"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "topological-sort",
+      "source_repo": "https://github.com/gifnksm/topological-sort-rs",
+      "license": "MIT",
+      "cp_target": "@cap/toposort",
+      "kind": "package",
+      "aliases": ["toposort"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "disjoint-sets",
+      "source_repo": "https://github.com/tov/disjoint-sets-rs",
+      "license": "MIT",
+      "cp_target": "@cap/disjoint-set",
+      "kind": "package",
+      "aliases": ["union-find", "dsu"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fenwick",
+      "source_repo": "https://github.com/pwoolcoc/fenwick",
+      "license": "MIT",
+      "cp_target": "@cap/fenwick",
+      "kind": "package",
+      "aliases": ["binary-indexed-tree"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rangemap",
+      "source_repo": "https://github.com/jeffparsons/rangemap",
+      "license": "MIT",
+      "cp_target": "@cap/range-set",
+      "kind": "package",
+      "aliases": ["range-set", "merge-ranges"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
