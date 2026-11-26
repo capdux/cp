@@ -1,0 +1,8 @@
+{
+  "name": "@cap/multipart-boundary",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 7578 multipart/form-data boundary extractor, part iterator, and Content-Disposition field/filename parser.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

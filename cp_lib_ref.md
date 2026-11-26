@@ -522,3 +522,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/totp-uri`** | `packages/@cap/totp-uri` | 对标 npm `otpauth` / Rust `totp-rs` — Google Authenticator `otpauth://totp|hotp` URI 解析、Base32 校验与序列化 |
 | **`@cap/ssh-key`** | `packages/@cap/ssh-key` | 对标 npm `sshpk` / Rust `ssh-key` — OpenSSH `authorized_keys` 公钥（Ed25519/RSA/ECDSA/FIDO2）解析与格式化 |
 | **`@cap/otel-baggage`** | `packages/@cap/otel-baggage` | 对标 OpenTelemetry W3C Baggage — 分布式追踪 `baggage` 头部零堆解析、百分号解码与序列化 |
+| **`@cap/jwt-parse`** | `packages/@cap/jwt-parse` | 对标 npm `jwt-decode` / Rust `jsonwebtoken` — RFC 7519 JWT 零拷贝三段拆分、Base64URL 解码、时间窗校验与 `alg:none` 拦截 |
+| **`@cap/arn-parse`** | `packages/@cap/arn-parse` | 对标 npm `@aws-sdk/util-arn-parser` / Rust `aws-arn` — AWS ARN 解析、IAM `*`/`?` 资源通配匹配与格式化 |
+| **`@cap/multipart-boundary`** | `packages/@cap/multipart-boundary` | 对标 npm `busboy` / Rust `multer` — RFC 7578 `multipart/form-data` 零拷贝边界提取与 Part 迭代器 |
+| **`@cap/http2-hpack`** | `packages/@cap/http2-hpack` | 对标 Rust `h2` / `hpack` — RFC 7541 HTTP/2 HPACK 61 项静态表、N-bit 前缀整数与索引头编解码 |
+| **`@cap/docker-ref`** | `packages/@cap/docker-ref` | 对标 Rust `oci-distribution` / npm `docker-image-parse` — OCI/Docker 镜像引用解析、校验与 `docker.io/library` 归一化 |
+| **`@cap/s3-uri`** | `packages/@cap/s3-uri` | 对标 npm `amazon-s3-uri` — AWS S3 / R2 / MinIO 三格式 URI 解析与 Bucket 命名规范校验 |

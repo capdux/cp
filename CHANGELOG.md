@@ -514,3 +514,12 @@
 - `packages/@cap/ssh-key/` & `cap/test/testCapSshKey.cp`: OpenSSH `authorized_keys` 公钥解析与格式化（6/6 PASS）。
 - `packages/@cap/otel-baggage/` & `cap/test/testCapOtelBaggage.cp`: W3C OpenTelemetry Baggage 头部编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **514 条**双生态映射（**npm=257 / crates.io=257** 绝对 1:1 平衡）。
+
+## [2026-11-26] - Batch 61 云原生与 HTTP/2 六件套（`@cap/jwt-parse`, `@cap/arn-parse`, `@cap/multipart-boundary`, `@cap/http2-hpack`, `@cap/docker-ref`, `@cap/s3-uri`），总映射突破 **523 条**！
+- `packages/@cap/jwt-parse/` & `cap/test/testCapJwtParse.cp`: RFC 7519 JWT 零拷贝解码与 `alg:none` 安全预检（6/6 PASS）。
+- `packages/@cap/arn-parse/` & `cap/test/testCapArnParse.cp`: AWS ARN 解析与 IAM 通配符匹配（6/6 PASS）。
+- `packages/@cap/multipart-boundary/` & `cap/test/testCapMultipartBoundary.cp`: RFC 7578 `multipart/form-data` 零拷贝 Part 迭代（6/6 PASS）。
+- `packages/@cap/http2-hpack/` & `cap/test/testCapHttp2Hpack.cp`: RFC 7541 HTTP/2 HPACK 静态表与前缀整数编解码（6/6 PASS）。
+- `packages/@cap/docker-ref/` & `cap/test/testCapDockerRef.cp`: OCI/Docker 镜像引用解析与规范化（6/6 PASS）。
+- `packages/@cap/s3-uri/` & `cap/test/testCapS3Uri.cp`: AWS S3 三格式 URI 解析与 Bucket 校验（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **523 条**双生态高频映射（**npm=262 / crates.io=261** 1:1 均衡）。

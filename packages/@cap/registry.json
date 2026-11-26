@@ -1623,7 +1623,7 @@
       "source_name": "oci-distribution",
       "source_repo": "https://github.com/krustlet/oci-distribution",
       "license": "Apache-2.0",
-      "cp_target": "@cap/oci-ref",
+      "cp_target": "@cap/docker-ref",
       "kind": "package",
       "aliases": [
         "docker-reference",
@@ -6401,6 +6401,121 @@
       "kind": "package",
       "aliases": [
         "opentelemetry-baggage"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jwt-decode",
+      "source_repo": "https://github.com/auth0/jwt-decode",
+      "license": "MIT",
+      "cp_target": "@cap/jwt-parse",
+      "kind": "package",
+      "aliases": [
+        "jws"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@aws-sdk/util-arn-parser",
+      "source_repo": "https://github.com/aws/aws-sdk-js-v3",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/arn-parse",
+      "kind": "package",
+      "aliases": [
+        "arn-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "busboy",
+      "source_repo": "https://github.com/mscdex/busboy",
+      "license": "MIT",
+      "cp_target": "@cap/multipart-boundary",
+      "kind": "package",
+      "aliases": [
+        "multer",
+        "dicer"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "amazon-s3-uri",
+      "source_repo": "https://github.com/jvdl/amazon-s3-uri",
+      "license": "MIT",
+      "cp_target": "@cap/s3-uri",
+      "kind": "package",
+      "aliases": [
+        "s3-uri"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "docker-image-parse",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/docker-ref",
+      "kind": "package",
+      "aliases": [
+        "docker-reference"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "h2",
+      "source_repo": "https://github.com/hyperium/h2",
+      "license": "MIT",
+      "cp_target": "@cap/http2-hpack",
+      "kind": "package",
+      "aliases": [
+        "hpack"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "multer",
+      "source_repo": "https://github.com/rousan/multer-rs",
+      "license": "MIT",
+      "cp_target": "@cap/multipart-boundary",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aws-arn",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/arn-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jsonwebtoken",
+      "source_repo": "https://github.com/Keats/jsonwebtoken",
+      "license": "MIT",
+      "cp_target": "@cap/jwt-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aws-sdk-s3",
+      "source_repo": "https://github.com/awslabs/aws-sdk-rust",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/s3-uri",
+      "kind": "package",
+      "aliases": [
+        "s3-uri"
       ],
       "absorbed_at": "2026-11-26"
     }

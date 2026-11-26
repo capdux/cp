@@ -1,0 +1,10 @@
+{
+  "name": "@cap/s3-uri",
+  "version": "1.0.0",
+  "description": "Zero-heap AWS S3 / R2 / MinIO URI parser (s3://, virtual-hosted-style, path-style) and bucket name validator for CP (compatible with npm amazon-s3-uri & Rust s3-uri)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["s3", "aws", "r2", "minio", "storage", "uri", "cloud"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/s3-uri"
+}

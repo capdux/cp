@@ -1,0 +1,9 @@
+{
+  "name": "@cap/docker-ref",
+  "ver": "1.0.0",
+  "description": "Zero-allocation OCI / Docker image reference parser, validator, and normalizer for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["docker", "oci", "container", "image-ref", "registry", "digest", "zero-alloc"]
+}

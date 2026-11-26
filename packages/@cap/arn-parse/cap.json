@@ -1,0 +1,8 @@
+{
+  "name": "@cap/arn-parse",
+  "version": "1.0.0",
+  "description": "Zero-heap AWS ARN (Amazon Resource Name) parser, formatter, partition validator, resource type extractor, and IAM wildcard matcher.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

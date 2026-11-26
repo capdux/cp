@@ -246,3 +246,6 @@
 
 ## 2026-11-26: Batch 60 达成 **60 批大满贯** — 328+ 官方 `.cap` 包 & **514 条双生态映射（npm=257 / crates.io=257 绝对 1:1）**！
 - 单批交付 `@cap/pem-parse`（Rust 1.5 亿+，6/6）、`@cap/grpc-frame`（6/6）、`@cap/socks5-frame`（1500 万+/周，6/6）、`@cap/totp-uri`（6/6）、`@cap/ssh-key`（6/6）、`@cap/otel-baggage`（6/6），全部零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 61 云原生与 HTTP/2 六件套全 6/6 PASS，线上官方包冲刺 **337+ 个**、总映射 **523 条（npm=262 / crates.io=261）**！
+- 交付 `@cap/jwt-parse`（4500 万+/周，6/6）、`@cap/arn-parse`（4000 万+/周，6/6）、`@cap/multipart-boundary`（4000 万+/周，6/6）、`@cap/http2-hpack`（6/6）、`@cap/docker-ref`（6/6）、`@cap/s3-uri`（6/6），双生态严丝合缝保持 1:1！
