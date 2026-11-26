@@ -1854,6 +1854,106 @@
       "kind": "stdlib",
       "aliases": ["serde_json"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "itoa",
+      "source_repo": "https://github.com/dtolnay/itoa",
+      "license": "MIT",
+      "cp_target": "cap:string",
+      "kind": "stdlib",
+      "aliases": ["ryu"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "heck",
+      "source_repo": "https://github.com/withoutboats/heck",
+      "license": "MIT",
+      "cp_target": "cap:string",
+      "kind": "stdlib",
+      "aliases": ["convert_case"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "log",
+      "source_repo": "https://github.com/rust-lang/log",
+      "license": "MIT",
+      "cp_target": "cap:logger",
+      "kind": "stdlib",
+      "aliases": ["tracing", "tracing-core"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "regex",
+      "source_repo": "https://github.com/rust-lang/regex",
+      "license": "MIT",
+      "cp_target": "@cap/pcre2",
+      "kind": "package",
+      "aliases": ["regex-automata", "regex-syntax"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "clap",
+      "source_repo": "https://github.com/clap-rs/clap",
+      "license": "MIT",
+      "cp_target": "cap:clap",
+      "kind": "stdlib",
+      "aliases": ["clap_builder", "clap_lex"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bytes",
+      "source_repo": "https://github.com/tokio-rs/bytes",
+      "license": "MIT",
+      "cp_target": "cap:bytes",
+      "kind": "stdlib",
+      "aliases": ["bytes-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "strsim",
+      "source_repo": "https://github.com/rapidfuzz/strsim-rs",
+      "license": "MIT",
+      "cp_target": "@cap/strsim",
+      "kind": "package",
+      "aliases": ["jaro-winkler", "string-similarity"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "http",
+      "source_repo": "https://github.com/hyperium/http",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["hyper", "reqwest", "httparse"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sha2",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["digest", "ring", "rustls"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "slab",
+      "source_repo": "https://github.com/tokio-rs/slab",
+      "license": "MIT",
+      "cp_target": "@cap/slab",
+      "kind": "package",
+      "aliases": ["generational-arena", "slotmap"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

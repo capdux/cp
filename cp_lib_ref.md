@@ -345,3 +345,5 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/json-schema`** | `packages/@cap/json-schema` | 对标 npm `ajv`/`zod`（5.42 亿/周）— 零堆 RFC 8259 + JSON Schema 类型/长度/区间/必填键/枚举白名单校验引擎 |
 | **`@cap/css-units`** | `packages/@cap/css-units` | 对标 npm `postcss-value-parser`/`css-unit-converter` — 26 种 CSS 长度/角度/时间/分辨率单位解析与 px/deg/ms 换算 |
 | **`@cap/http-errors`** | `packages/@cap/http-errors` | 对标 npm `http-errors`（2.53 亿/周）— 标准 4xx/5xx 构造器、expose 泄漏防护与 RFC 9457 `problem+json` 零堆序列化 |
+| **`@cap/strsim`** | `packages/@cap/strsim` | 对标 Rust `strsim`（13.25 亿总下载）— 零堆 7 合 1 字符串距离/相似度（Hamming/Levenshtein/OSA/Jaro/Jaro-Winkler/Sørensen-Dice） |
+| **`@cap/slab`** | `packages/@cap/slab` | 对标 Rust `slab`（11.92 亿总下载）— O(1) 侵入式空闲链表对象池与防 ABA 悬垂代数句柄 Generational Arena |

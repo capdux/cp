@@ -1,0 +1,8 @@
+{
+  "name": "@cap/slab",
+  "ver": "1.0.0",
+  "description": "Zero-allocation O(1) generational slab allocator and ABA-safe handle pool (Rust slab + generational-arena parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

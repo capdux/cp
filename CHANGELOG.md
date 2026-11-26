@@ -238,3 +238,8 @@
 
 ## [2026-11-26] - Batch 27 严格单调递减吸收 Rust crates.io Top 10（32.61 亿 → 17.87 亿总下载量）并建立 Rust 优先安全吸收线
 - `packages/@cap/registry.json`: 扩充至 **185 条**高频映射（按 crates.io 真实总下载量与被引用包数严格递减纳入 `hashbrown`/`getrandom`/`bitflags`/`rand`/`base64`/`indexmap`/`itertools`/`memchr`/`unicode-ident`/`serde`，全部精准去重直连 CP 内部标准库）。
+
+## [2026-11-26] - Batch 28 严格单调递减吸收 Rust crates.io 17.28 亿 → 11.92 亿 Top 10（`@cap/strsim`, `@cap/slab` + 8 项十亿级去重映射）
+- `packages/@cap/strsim/` & `cap/test/testCapStrsim.cp`: 7 合 1 零堆字符串距离与相似度算法（对标 Rust `strsim` **13.25 亿总下载**，6/6 PASS）。
+- `packages/@cap/slab/` & `cap/test/testCapSlab.cp`: O(1) 预分配对象池与防 ABA 代数句柄引擎（对标 Rust `slab` **11.92 亿总下载**，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **195 条**高频映射（新增 `itoa`/`heck`/`log`/`regex`/`clap`/`bytes`/`strsim`/`http`/`sha2`/`slab`）。

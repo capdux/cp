@@ -146,3 +146,6 @@
 
 ## 2026-11-26: Batch 27 正式启动 Rust crates.io 十亿级总榜严格递减吸收（32.61 亿 → 17.87 亿）
 - 完成 crates.io Top 10（去除 Rust 宏内部依赖）全量去重直连映射（`registry.json` 达 **185 条**），同时向 3 路子智能体并行派发 Rust 13.25 亿级 `@cap/strsim`、11.92 亿级 `@cap/slab` 与 npm 1.62 亿/周 `@cap/tsconfig-paths`。
+
+## 2026-11-26: Batch 28 严格单调递减完成 crates.io 17.28 亿 → 11.92 亿 Top 10（冲向 200 映射里程碑）
+- 交付 Rust 十亿级核心包 `@cap/strsim`（13.25 亿, 6/6 PASS）与 `@cap/slab`（11.92 亿, 6/6 PASS），完成 8 项十亿级 Rust crate 去重直连（`itoa`/`heck`/`log`/`regex`/`clap`/`bytes`/`http`/`sha2`），总映射达 **195 条**。

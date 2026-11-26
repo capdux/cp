@@ -1,0 +1,8 @@
+{
+  "name": "@cap/strsim",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 7-in-1 string distance & similarity metrics engine (Hamming, Levenshtein, Normalized Levenshtein, OSA, Jaro, Jaro-Winkler, Sorensen-Dice — Rust strsim parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
