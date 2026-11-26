@@ -1,0 +1,9 @@
+{
+  "name": "@cap/line-col",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation byte offset <-> 1-based (line, col) locator, zero-copy line extractor, and LF/CRLF line counter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["line-column", "line-index", "lsp", "compiler", "diagnostics", "source-map", "zero-alloc"]
+}

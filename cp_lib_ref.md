@@ -558,3 +558,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/shell-escape`** | `packages/@cap/shell-escape` | 对标 npm/Rust `shell-escape` — POSIX 单引号防注入转义、Windows `CommandLineToArgvW` 转义与环境变量名校验 |
 | **`@cap/utf16-codec`** | `packages/@cap/utf16-codec` | 对标 Rust `widestring` / npm `utf16` — 零堆 UTF-8 <-> UTF-16/UTF-16LE（含代理对与 BOM 检测）编解码 |
 | **`@cap/mime-sniff`** | `packages/@cap/mime-sniff` | 对标 npm `istextorbinary` / Rust `content_inspector` — WHATWG 二进制/文本判定与 HTML/XML/SVG/JSON 启发式嗅探 |
+| **`@cap/ansi-strip`** | `packages/@cap/ansi-strip` | 对标 npm `strip-ansi` / `ansi-regex` / Rust `strip-ansi-escapes` — 零堆 CSI/OSC/TrueColor ANSI 终端序列剥离与可见字数统计 |
+| **`@cap/camelcase`** | `packages/@cap/camelcase` | 对标 npm `camelcase` / `change-case` / Rust `heck` — 智能缩写切分与 camel/Pascal/snake/kebab/SCREAMING_SNAKE 五风格互转 |
+| **`@cap/trunc-utf8`** | `packages/@cap/trunc-utf8` | 对标 npm `cli-truncate` / Rust `unicode-truncate` — UTF-8 码点边界安全截断（永不劈裂中文/Emoji）与省略号追加 |
+| **`@cap/slugify`** | `packages/@cap/slugify` | 对标 npm `slugify` / Rust `slug` — 零堆 URL Slug 生成器（含 Latin-1/Extended-A 重音折叠与安全截断） |
+| **`@cap/title-case`** | `packages/@cap/title-case` | 对标 npm `title-case` / Rust `titlecase` — AP/Chicago 风格英文标题大小写规范化、小词处理与全大写缩写保留 |
+| **`@cap/line-col`** | `packages/@cap/line-col` | 对标 npm `line-column` / Rust `line-index` — 零堆字节偏移 <-> 1-based 行列号互转与 LF/CRLF 源码行提取 |

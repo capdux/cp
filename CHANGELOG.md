@@ -568,3 +568,12 @@
 - `packages/@cap/utf16-codec/` & `cap/test/testCapUtf16Codec.cp`: UTF-8 <-> UTF-16/LE 代理对与 BOM 编解码（6/6 PASS）。
 - `packages/@cap/mime-sniff/` & `cap/test/testCapMimeSniff.cp`: WHATWG 二进制/文本/HTML/JSON 内容嗅探（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **571 条**双生态高频映射（**npm=285 / crates.io=286** 绝对 1:1 均衡）。
+
+## [2026-11-26] - Batch 67 亿级文本与终端处理六件套（`@cap/ansi-strip`, `@cap/camelcase`, `@cap/trunc-utf8`, `@cap/slugify`, `@cap/title-case`, `@cap/line-col`），总映射突破 **580 条（npm=290 / crates.io=290）**！
+- `packages/@cap/ansi-strip/` & `cap/test/testCapAnsiStrip.cp`: 零堆 CSI/OSC ANSI 终端转义序列剥离（6/6 PASS）。
+- `packages/@cap/camelcase/` & `cap/test/testCapCamelcase.cp`: 五种编程命名风格与连续缩写智能互转（6/6 PASS）。
+- `packages/@cap/trunc-utf8/` & `cap/test/testCapTruncUtf8.cp`: UTF-8 码点安全截断与省略号拼接（6/6 PASS）。
+- `packages/@cap/slugify/` & `cap/test/testCapSlugify.cp`: Latin 重音折叠 URL Slug 生成器（6/6 PASS）。
+- `packages/@cap/title-case/` & `cap/test/testCapTitleCase.cp`: AP/Chicago 英文标题大小写与句首大写（6/6 PASS）。
+- `packages/@cap/line-col/` & `cap/test/testCapLineCol.cp`: 字节偏移 <-> 1-based 行列号定位与行提取（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **580 条**双生态映射（**npm=290 / crates.io=290** 绝对 1:1 对称）。

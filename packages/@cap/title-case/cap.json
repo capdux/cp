@@ -1,0 +1,9 @@
+{
+  "name": "@cap/title-case",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation AP/Chicago style English title-case, sentence-case, and capitalization engine in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["title-case", "titlecase", "sentence-case", "capitalize", "text", "typography", "zero-alloc"]
+}
