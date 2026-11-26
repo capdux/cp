@@ -361,3 +361,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/arrayvec`** | `packages/@cap/arrayvec` | 对标 Rust `arrayvec`（7.30 亿）— 零堆栈上定容字符串 `ArrayString64/256` 与定容向量 `ArrayVecI64/U64` |
 | **`@cap/unicode-seg`** | `packages/@cap/unicode-seg` | 对标 Rust `unicode-segmentation`（7.18 亿）— UAX #29 字素簇（Emoji ZWJ/国旗/重音/CRLF）与中英词边界切分 |
 | **`@cap/oid`** | `packages/@cap/oid` | 对标 Rust `const-oid`（6.90 亿）— ISO/IEC ASN.1 OID X.690 DER 双向编解码与 20 项核心 PKI/X.509 命名查表 |
+| **`@cap/bitset`** | `packages/@cap/bitset` | 对标 Rust `fixedbitset`/`bit-vec`/`bit-set`（合计 18 亿+）— 零堆 `BitSet256`/`BitSet1024` 位集合代数与 SWAR popcount |
+| **`@cap/half`** | `packages/@cap/half` | 对标 Rust `half`（5.99 亿）— IEEE 754 `f16` 半精度与 Google Brain `bf16` 脑浮点比特精确编解码（AI/Tensor） |
+| **`@cap/matchit`** | `packages/@cap/matchit` | 对标 Rust `matchit`（5.95 亿，`axum` 御用）— 零拷贝高优先级 URL 路由引擎（`static > :param/{param} > *catchall`） |
+| **`@cap/ordered-float`** | `packages/@cap/ordered-float` | 对标 Rust `ordered-float`（5.71 亿）— IEEE 754 全序比较、`NotNanF64` 约束与 NaN 安全原地排序/二分查找 |
+| **`@cap/data-encoding`** | `packages/@cap/data-encoding` | 对标 Rust `data-encoding`（5.58 亿）— RFC 4648 Base32 / Base32hex / Crockford Base32 / Base64url 零堆编解码 |

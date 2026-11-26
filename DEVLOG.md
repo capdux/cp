@@ -158,3 +158,6 @@
 
 ## 2026-11-26: Batch 31 严格单调递减完成 crates.io 8.24 亿 → 6.90 亿 Top 10（单批交付 5 大 Rust 核心包！）
 - 交付 `@cap/litemap`（6/6）、`@cap/siphash`（6/6）、`@cap/arrayvec`（6/6）、`@cap/unicode-seg`（6/6）、`@cap/oid`（6/6），去重直连 `hmac`/`mime`/`num-bigint`/`ipnet`/`glob`，总映射突破 **225 条**，线上官方包冲破 **170 个**！
+
+## 2026-11-26: Batch 32 严格单调递减完成 crates.io 6.41 亿 → 5.32 亿 Top 10（单批交付 5 大 Rust 核心包！）
+- 交付 `@cap/bitset`（6/6）、`@cap/half`（6/6）、`@cap/matchit`（6/6）、`@cap/ordered-float`（6/6）、`@cap/data-encoding`（6/6），去重直连 `petgraph`/`rustls-pemfile`/`quick-xml`/`simd-adler32`/`bstr`，总映射突破 **235 条**，线上官方包冲破 **176 个**！

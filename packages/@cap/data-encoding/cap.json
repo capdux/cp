@@ -1,0 +1,8 @@
+{
+  "name": "@cap/data-encoding",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 4648 Base32, Base32hex, Crockford Base32, and Base64url (no-pad) encoder/decoder for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

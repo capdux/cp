@@ -266,3 +266,11 @@
 - `packages/@cap/unicode-seg/` & `cap/test/testCapUnicodeSeg.cp`: UAX #29 字素簇与词边界切分（对标 `unicode-segmentation` 7.18 亿，6/6 PASS）。
 - `packages/@cap/oid/` & `cap/test/testCapOid.cp`: ASN.1 OID X.690 DER 编解码与 PKI 查表（对标 `const-oid` 6.90 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **225 条**高频映射（含 `hmac`/`mime`/`num-bigint`/`ipnet`/`glob` 内部库直连）。
+
+## [2026-11-26] - Batch 32 严格单调递减吸收 Rust crates.io 6.41 亿 → 5.32 亿 Top 10（单批交付 5 大 Rust 核心包，总映射突破 235 条）
+- `packages/@cap/bitset/` & `cap/test/testCapBitset.cp`: `BitSet256`/`BitSet1024` 位集合代数与高速扫描（对标 `fixedbitset`/`bit-vec`/`bit-set`，6/6 PASS）。
+- `packages/@cap/half/` & `cap/test/testCapHalf.cp`: IEEE 754 `f16` 与 `bf16` 比特精确编解码（对标 `half` 5.99 亿，6/6 PASS）。
+- `packages/@cap/matchit/` & `cap/test/testCapMatchit.cp`: `axum` 风格零拷贝高优先级 URL 路由引擎（对标 `matchit` 5.95 亿，6/6 PASS）。
+- `packages/@cap/ordered-float/` & `cap/test/testCapOrderedFloat.cp`: IEEE 754 全序浮点、`NotNanF64` 与安全排序（对标 `ordered-float` 5.71 亿，6/6 PASS）。
+- `packages/@cap/data-encoding/` & `cap/test/testCapDataEncoding.cp`: RFC 4648 Base32/Base32hex/Crockford/Base64url 编解码（对标 `data-encoding` 5.58 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **235 条**高频映射（含 `petgraph`/`rustls-pemfile`/`quick-xml`/`simd-adler32`/`bstr` 去重直连）。

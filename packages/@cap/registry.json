@@ -2254,6 +2254,106 @@
       "kind": "package",
       "aliases": ["asn1-oid", "oid"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fixedbitset",
+      "source_repo": "https://github.com/petgraph/fixedbitset",
+      "license": "MIT",
+      "cp_target": "@cap/bitset",
+      "kind": "package",
+      "aliases": ["bit-vec", "bit-set"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "petgraph",
+      "source_repo": "https://github.com/petgraph/petgraph",
+      "license": "MIT",
+      "cp_target": "cap:graph",
+      "kind": "stdlib",
+      "aliases": ["graphlib"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustls-pemfile",
+      "source_repo": "https://github.com/rustls/pemfile",
+      "license": "MIT",
+      "cp_target": "@cap/pem",
+      "kind": "package",
+      "aliases": ["pemfile"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "half",
+      "source_repo": "https://github.com/VoidStarKat/half-rs",
+      "license": "MIT",
+      "cp_target": "@cap/half",
+      "kind": "package",
+      "aliases": ["f16", "bfloat16"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "matchit",
+      "source_repo": "https://github.com/ibraheemdev/matchit",
+      "license": "MIT",
+      "cp_target": "@cap/matchit",
+      "kind": "package",
+      "aliases": ["axum-router", "radix-router"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "quick-xml",
+      "source_repo": "https://github.com/tafia/quick-xml",
+      "license": "MIT",
+      "cp_target": "cap:xml",
+      "kind": "stdlib",
+      "aliases": ["fast-xml-parser", "xml2js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "simd-adler32",
+      "source_repo": "https://github.com/mcountryman/simd-adler32",
+      "license": "MIT",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": ["adler32"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ordered-float",
+      "source_repo": "https://github.com/reem/rust-ordered-float",
+      "license": "MIT",
+      "cp_target": "@cap/ordered-float",
+      "kind": "package",
+      "aliases": ["not-nan", "total-float"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "data-encoding",
+      "source_repo": "https://github.com/ia0/data-encoding",
+      "license": "MIT",
+      "cp_target": "@cap/data-encoding",
+      "kind": "package",
+      "aliases": ["base32", "crockford-base32"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bstr",
+      "source_repo": "https://github.com/BurntSushi/bstr",
+      "license": "MIT",
+      "cp_target": "cap:bytes",
+      "kind": "stdlib",
+      "aliases": ["byte-string"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

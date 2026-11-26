@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bitset",
+  "ver": "1.0.0",
+  "description": "Zero-allocation fixed-size bitsets BitSet256/BitSet1024 with SWAR popcount, fast scanning, and set algebra (Rust fixedbitset / bit-set parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
