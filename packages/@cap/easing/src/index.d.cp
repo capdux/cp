@@ -1,0 +1,35 @@
+// Type definitions for CP
+
+export fn clamp01(t: f64): f64;
+export fn absF64(x: f64): f64;
+export fn sqrtF64(x: f64): f64;
+export fn sinF64(x_in: f64): f64;
+export fn cosF64(x: f64): f64;
+export fn linear(t: f64): f64;
+export fn quadIn(t_in: f64): f64;
+export fn quadOut(t_in: f64): f64;
+export fn quadInOut(t_in: f64): f64;
+export fn cubicIn(t_in: f64): f64;
+export fn cubicOut(t_in: f64): f64;
+export fn cubicInOut(t_in: f64): f64;
+export fn quartIn(t_in: f64): f64;
+export fn quartOut(t_in: f64): f64;
+export fn quartInOut(t_in: f64): f64;
+export fn quintIn(t_in: f64): f64;
+export fn quintOut(t_in: f64): f64;
+export fn quintInOut(t_in: f64): f64;
+export fn sineIn(t_in: f64): f64;
+export fn sineOut(t_in: f64): f64;
+export fn sineInOut(t_in: f64): f64;
+export fn circIn(t_in: f64): f64;
+export fn circOut(t_in: f64): f64;
+export fn circInOut(t_in: f64): f64;
+export fn backIn(t_in: f64): f64;
+export fn backOut(t_in: f64): f64;
+export fn backInOut(t_in: f64): f64;
+export fn bounceOut(t_in: f64): f64;
+export fn bounceIn(t_in: f64): f64;
+export fn bounceInOut(t_in: f64): f64;
+export fn sampleCurve(a: f64, b: f64, c: f64, u: f64): f64;
+export fn sampleCurveDeriv(a: f64, b: f64, c: f64, u: f64): f64;
+export fn cubicBezier(x1: f64, y1: f64, x2: f64, y2: f64, x_in: f64): f64;

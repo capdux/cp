@@ -382,3 +382,12 @@
 - `packages/@cap/crc8/` & `cap/test/testCapCrc8.cp`: SMBus/Maxim/SAE-J1850/AUTOSAR/CDMA2000/Bluetooth CRC-8（6/6 PASS）。
 - `packages/@cap/base62/` & `cap/test/testCapBase62.cp`: URL 安全 Base62 `u64`/定宽保序/字节切片编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **365 条**高频映射（含 `serde_urlencoded`/`utf8_iter`/`rayon`/`num_cpus` 去重直连）。
+
+## [2026-11-26] - Batch 46 里程碑：突破 **250 官方 `.cap` 包大关 + 375 条生态映射**！（交付 `@cap/glam`, `@cap/kd-tree`, `@cap/easing`, `@cap/spline`, `@cap/pid`, `@cap/kalman`）
+- `packages/@cap/glam/` & `cap/test/testCapGlam.cp`: 对标 Rust `glam`（4 亿+），`Vec3`/`Quat`/`Mat4` 3D 数学（6/6 PASS）。
+- `packages/@cap/kd-tree/` & `cap/test/testCapKdTree.cp`: 零堆平衡 2D KD-Tree 最近邻与半径检索（6/6 PASS）。
+- `packages/@cap/easing/` & `cap/test/testCapEasing.cp`: 25 种 Penner 缓动 + CSS `cubicBezier`（6/6 PASS）。
+- `packages/@cap/spline/` & `cap/test/testCapSpline.cp`: 自然三次样条 + Catmull-Rom + Bezier（6/6 PASS）。
+- `packages/@cap/pid/` & `cap/test/testCapPid.cp`: 工业级抗积分饱和 PID 控制器（6/6 PASS）。
+- `packages/@cap/kalman/` & `cap/test/testCapKalman.cp`: 1D/2D Joseph 稳定卡尔曼滤波器（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **375 条**高频映射（含 `schemars`/`event-listener`/`atomic-waker`/`env_logger` 去重直连）。

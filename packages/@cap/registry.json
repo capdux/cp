@@ -3654,6 +3654,106 @@
       "kind": "package",
       "aliases": ["radix62"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "schemars",
+      "source_repo": "https://github.com/GREsau/schemars",
+      "license": "MIT",
+      "cp_target": "@cap/json-schema",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "event-listener",
+      "source_repo": "https://github.com/smol-rs/event-listener",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "atomic-waker",
+      "source_repo": "https://github.com/smol-rs/atomic-waker",
+      "license": "MIT",
+      "cp_target": "cap:actor",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "env_logger",
+      "source_repo": "https://github.com/rust-cli/env_logger",
+      "license": "MIT",
+      "cp_target": "cap:log",
+      "kind": "stdlib",
+      "aliases": ["env-logger"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "glam",
+      "source_repo": "https://github.com/bitshifter/glam-rs",
+      "license": "MIT",
+      "cp_target": "@cap/glam",
+      "kind": "package",
+      "aliases": ["nalgebra", "cgmath"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "kiddo",
+      "source_repo": "https://github.com/sdd/kiddo",
+      "license": "MIT",
+      "cp_target": "@cap/kd-tree",
+      "kind": "package",
+      "aliases": ["kd-tree", "kdtree"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ezing",
+      "source_repo": "https://github.com/NyxCode/ezing",
+      "license": "MIT",
+      "cp_target": "@cap/easing",
+      "kind": "package",
+      "aliases": ["eases", "keyframe", "cubic-bezier"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "splines",
+      "source_repo": "https://github.com/phaazon/splines",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/spline",
+      "kind": "package",
+      "aliases": ["cubic-spline", "kurbo"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pid",
+      "source_repo": "https://github.com/braincore/pid-rs",
+      "license": "MIT",
+      "cp_target": "@cap/pid",
+      "kind": "package",
+      "aliases": ["pid-controller"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "kalman-filters",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/kalman",
+      "kind": "package",
+      "aliases": ["kfilter", "kalman"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

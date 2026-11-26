@@ -1,0 +1,9 @@
+{
+  "name": "@cap/pid",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation industrial PID feedback controller with term limits, anti-windup, and derivative-on-measurement in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["pid", "control", "feedback", "anti-windup", "robotics", "adaptive", "zero-alloc"]
+}

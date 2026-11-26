@@ -435,3 +435,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/fft`** | `packages/@cap/fft` | 对标 Rust `rustfft` / `microfft` — 零堆原地基-2 Cooley-Tukey FFT/IFFT、幅度谱与 Hann/Hamming 窗函数 |
 | **`@cap/crc8`** | `packages/@cap/crc8` | 对标 Rust `crc` 8-bit — SMBus / Maxim 1-Wire / SAE-J1850 / AUTOSAR / CDMA2000 / Bluetooth 六大 CRC-8 |
 | **`@cap/base62`** | `packages/@cap/base62` | 对标 Rust/npm `base62` — URL 安全 62 进制 `u64`（含定宽保序）与任意字节切片（保前导零）编解码 |
+| **`@cap/glam`** | `packages/@cap/glam` | 对标 Rust `glam`（4 亿+）— 零堆 3D 数学引擎：`Vec3`、`Quat` 单位四元数旋转与列主序 `Mat4` 矩阵变换 |
+| **`@cap/kd-tree`** | `packages/@cap/kd-tree` | 对标 Rust `kiddo` — 零堆静态平衡 2D KD-Tree 精确最近邻 `nearest` 与欧氏半径查询 `withinRadius` |
+| **`@cap/easing`** | `packages/@cap/easing` | 对标 Rust `ezing` / npm `eases` — 25 种 Robert Penner 标准缓动函数与 CSS `cubicBezier` 精确求解器 |
+| **`@cap/spline`** | `packages/@cap/spline` | 对标 Rust `splines` — Thomas 算法 O(N) 自然三次样条插值与求导、Catmull-Rom 与二次/三次 Bezier |
+| **`@cap/pid`** | `packages/@cap/pid` | 对标 Rust `pid` — 工业闭环 PID 控制器（抗积分饱和、Derivative-on-Measurement 与输出限幅） |
+| **`@cap/kalman`** | `packages/@cap/kalman` | 对标 Rust `kalman-filters` — 零堆 1D 标量与 2D 恒速 Joseph 稳定协方差卡尔曼滤波器 |

@@ -201,3 +201,6 @@
 
 ## 2026-11-26: Batch 45 突破 **240+ 线上官方 `.cap` 包 + 365 条生态映射**！
 - 交付 `@cap/suffix-array`（6/6）、`@cap/hamming`（6/6）、`@cap/bencode`（6/6）、`@cap/fft`（6/6）、`@cap/crc8`（6/6）、`@cap/base62`（6/6），并去重直连 `serde_urlencoded`（7.33 亿）、`utf8_iter`（7.30 亿）、`rayon`（6.98 亿）、`num_cpus`（6.92 亿），总映射突破 **365 条**！
+
+## 2026-11-26: Batch 46 历史里程碑：突破 **250 个线上官方 `.cap` 包 + 375 条生态映射**！
+- 交付图形/空间/控制六大引擎 `@cap/glam`（4 亿+，6/6）、`@cap/kd-tree`（6/6）、`@cap/easing`（6/6）、`@cap/spline`（6/6）、`@cap/pid`（6/6）、`@cap/kalman`（6/6），去重直连 `schemars`/`event-listener`/`atomic-waker`/`env_logger`，`https://capdux.org` 正式突破 **250 个官方 `.cap` 包**，总映射突破 **375 条**！

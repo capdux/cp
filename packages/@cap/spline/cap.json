@@ -1,0 +1,8 @@
+{
+  "name": "@cap/spline",
+  "version": "1.0.0",
+  "description": "Zero-heap Natural Cubic Spline (Thomas O(N)), Catmull-Rom spline, quadratic/cubic Bezier curves, smoothstep, and linear interpolation.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

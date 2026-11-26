@@ -1,0 +1,8 @@
+{
+  "name": "@cap/kalman",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 1D scalar and 2D constant-velocity Kalman filters with Joseph-form covariance update (Rust kalman-filters / kfilter parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
