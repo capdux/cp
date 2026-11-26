@@ -1580,13 +1580,10 @@
       "source_name": "hosted-git-info",
       "source_repo": "https://github.com/npm/hosted-git-info",
       "license": "ISC",
-      "cp_target": "@cap/git-url",
+      "cp_target": "@cap/hosted-git-info",
       "kind": "package",
-      "aliases": [
-        "git-url-parse",
-        "parse-github-url"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2515,15 +2512,11 @@
       "source_registry": "crates.io",
       "source_name": "sha2",
       "source_repo": "https://github.com/RustCrypto/hashes",
-      "license": "MIT",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
-      "aliases": [
-        "digest",
-        "ring",
-        "rustls"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/sha2-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3294,13 +3287,10 @@
       "source_name": "zip",
       "source_repo": "https://github.com/zip-rs/zip2",
       "license": "MIT",
-      "cp_target": "@cap/miniz",
+      "cp_target": "@cap/zip-core",
       "kind": "package",
-      "aliases": [
-        "jszip",
-        "adm-zip"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10847,6 +10837,26 @@
       "source_repo": "https://github.com/Lokathor/bytemuck",
       "license": "Zlib OR Apache-2.0 OR MIT",
       "cp_target": "@cap/bytemuck-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "read-pkg-up",
+      "source_repo": "https://github.com/sindresorhus/read-pkg-up",
+      "license": "MIT",
+      "cp_target": "@cap/read-pkg-up",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "semver-diff",
+      "source_repo": "https://github.com/sindresorhus/semver-diff",
+      "license": "MIT",
+      "cp_target": "@cap/semver-diff",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

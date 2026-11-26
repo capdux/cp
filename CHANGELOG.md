@@ -1125,3 +1125,11 @@
 - `packages/@cap/bytemuck-crate/` & `cap/test/testCapBytemuckCrate.cp`: crates.io **#22** `bytemuck`（**18 亿+**，POD 字节重解释，6/6 PASS）。
 - `packages/@cap/zerocopy-crate/` & `cap/test/testCapZerocopyCrate.cp`: crates.io **#25** `zerocopy`（**17.5 亿+**，复用 `@cap/bytemuck-crate`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 126 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 127 — **突破 719 官方 `.cap` 包！拿下 crates.io #14 `sha2`(19 亿)+`zip`(9 亿) + `hosted-git-info`(1.6 亿/周)+`read-pkg-up`+`semver-diff`**)
+- `packages/@cap/read-pkg-up/` & `cap/test/testCapReadPkgUp.cp`: npm Top 50 `read-pkg-up` v11（1 亿+/周，双包复用，6/6 PASS）。
+- `packages/@cap/hosted-git-info/` & `cap/test/testCapHostedGitInfo.cp`: npm **Top 25** `hosted-git-info`（1.6 亿+/周，6/6 PASS）。
+- `packages/@cap/semver-diff/` & `cap/test/testCapSemverDiff.cp`: npm Top 50 `semver-diff` v5（9000 万+/周，复用 `@cap/semver-range`，6/6 PASS）。
+- `packages/@cap/zip-core/` & `cap/test/testCapZipCore.cp`: crates.io **#130** `zip` v2（9 亿+，双包复用，6/6 PASS）。
+- `packages/@cap/sha2-crate/` & `cap/test/testCapSha2Crate.cp`: crates.io **#14** `sha2`（**19 亿+**，FIPS 180-4 SHA-256 & SHA-224，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 127 全部 5 个官方包映射。

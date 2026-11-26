@@ -941,3 +941,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/tar-core`** | `packages/@cap/tar-core` | 对标 crates.io **#100** `tar` v0.4 (**11 亿+**) — POSIX USTAR 512 字节归档头编解码、校验和验证与多条目游标 |
 | **`@cap/bytemuck-crate`** | `packages/@cap/bytemuck-crate` | 对标 crates.io **#22** `bytemuck` (**18 亿+**) — 零堆安全 POD 字节重解释、LE/BE 整数切片转换与对齐布局校验 |
 | **`@cap/zerocopy-crate`** | `packages/@cap/zerocopy-crate` | 对标 crates.io **#25** `zerocopy` (**17.5 亿+**, 复用 `@cap/bytemuck-crate`) — 零拷贝前后缀字节游标读写器与对齐校验 |
+| **`@cap/read-pkg-up`** | `packages/@cap/read-pkg-up` | 对标 npm Top 50 `read-pkg-up` v11 (**1 亿+/周**, 双包复用 `@cap/find-up`+`@cap/read-pkg`) — 向上查找并规范化最近 `package.json` |
+| **`@cap/hosted-git-info`** | `packages/@cap/hosted-git-info` | 对标 npm **Top 25** `hosted-git-info` (**1.6 亿+/周**) — GitHub/GitLab/Bitbucket 简写、SSH 与 HTTPS 仓库地址解析格式化 |
+| **`@cap/semver-diff`** | `packages/@cap/semver-diff` | 对标 npm Top 50 `semver-diff` v5 (9000 万+/周，复用 `@cap/semver-range`) — 精确语义化版本升级跨度判定与破坏性升级检测 |
+| **`@cap/zip-core`** | `packages/@cap/zip-core` | 对标 crates.io **#130** `zip` v2 (**9 亿+**, 双包复用 `@cap/crc32fast`+`@cap/bytemuck-crate`) — PKZIP Local/CD/EOCD 编解码与 CRC-32 校验 |
+| **`@cap/sha2-crate`** | `packages/@cap/sha2-crate` | 对标 crates.io **#14** `sha2` (**19 亿+**, 复用 `@cap/cookie-signature`) — FIPS 180-4 SHA-256 与 SHA-224 流式杂凑 |

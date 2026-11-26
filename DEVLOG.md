@@ -453,3 +453,6 @@
 
 ## 2026-11-27: Batch 126 六大 57 亿下载底层内存/归档/AEAD 包全 6/6 PASS — 官方包突破 **715+**！
 - 交付 crates.io **#22 `bytemuck`（18 亿+）**、**#25 `zerocopy`（17.5 亿+，复用 `@cap/bytemuck-crate`）**、**#100 `tar`（11 亿+）**、**#105 `chacha20poly1305`（10.5 亿+，三包复用）** 与 npm `normalize-package-data`（1.5 亿+/周）、`read-pkg`（1 亿+/周），全部 36/36 单测 100% PASS；Worker C10 & N11 均满 6 包（各 36/36 PASS）光荣轮换换新为 Worker C11 & N12。
+
+## 2026-11-27: Batch 127 五大 28 亿下载哈希/归档/包管理包全 6/6 PASS — 官方包达 **719+**！
+- 交付 crates.io **#14 `sha2`（19 亿+）**、**#130 `zip`（9 亿+，双包复用）** 与 npm **Top 25 `hosted-git-info`（1.6 亿+/周）**、`read-pkg-up`、`semver-diff`，全部 30/30 单测首轮一遍过 100% PASS。

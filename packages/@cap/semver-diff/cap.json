@@ -1,0 +1,12 @@
+{
+  "name": "@cap/semver-diff",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing @cap/semver-range.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/semver-range": "1.0.0"
+  },
+  "keywords": ["semver-diff", "semver", "version", "diff", "upgrade", "zero-alloc"]
+}
