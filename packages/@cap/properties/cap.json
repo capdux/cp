@@ -1,0 +1,8 @@
+{
+  "name": "@cap/properties",
+  "version": "1.0.0",
+  "description": "Zero-heap Java / Spring Boot / i18n .properties parser and formatter with =/:/space separators, backslash line continuations, comments, and \\uXXXX Unicode escapes.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

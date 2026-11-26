@@ -1,0 +1,8 @@
+{
+  "name": "@cap/cuid2",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic collision-resistant Cuid2 generator and validator with built-in SHA-256 and Base36 encoding (@paralleldrive/cuid2 / Rust cuid2 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

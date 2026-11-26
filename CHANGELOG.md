@@ -431,3 +431,13 @@
 - `packages/@cap/noise/` & `cap/test/testCapNoise.cp`: 2D/3D 改进 Perlin 噪声 + fBm + Ridged（6/6 PASS）。
 - `packages/@cap/astar/` & `cap/test/testCapAstar.cp`: 2D 网格 4/8 邻域 A* 最优寻路（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **425 条**高频映射（**npm=203 / crates.io=222** 1:1 均衡，含 `object`/`libloading` 去重直连）。
+
+## [2026-11-26] - Batch 52 双生态单批交付 **7 大全新独立包**（`@cap/glob-to-regex`, `@cap/cron-next`, `@cap/csv-line`, `@cap/duration-iso`, `@cap/properties`, `@cap/cuid2`, `@cap/retry-after`），总映射突破 **435 条**！
+- `packages/@cap/glob-to-regex/` & `cap/test/testCapGlobToRegex.cp`: 对标 npm `glob-to-regexp`（3500 万+/周）（6/6 PASS）。
+- `packages/@cap/cron-next/` & `cap/test/testCapCronNext.cp`: 对标 npm `cron-parser`（2500 万+/周）+ Rust `cron`（6/6 PASS）。
+- `packages/@cap/csv-line/` & `cap/test/testCapCsvLine.cp`: 对标 npm `csv-parse`/`papaparse`，RFC 4180 CSV/TSV（6/6 PASS）。
+- `packages/@cap/duration-iso/` & `cap/test/testCapDurationIso.cp`: ISO 8601 时长解析与格式化（6/6 PASS）。
+- `packages/@cap/properties/` & `cap/test/testCapProperties.cp`: Java `.properties` 与 `\uXXXX` 解析（6/6 PASS）。
+- `packages/@cap/cuid2/` & `cap/test/testCapCuid2.cp`: 零堆 SHA-256 Base36 分布式唯一 ID（6/6 PASS）。
+- `packages/@cap/retry-after/` & `cap/test/testCapRetryAfter.cp`: RFC 9110 `Retry-After` 双格式解析（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **435 条**高频映射（**npm=209 / crates.io=226** 1:1 均衡，含 `encoding_rs`/`minimal-lexical`/`rustc-demangle` 去重直连）。

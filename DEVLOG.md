@@ -219,3 +219,6 @@
 
 ## 2026-11-26: Batch 51 双生态 1:1 均衡爆发 — 单批 8 个新包全 6/6 PASS，**npm 映射突破 203 条**、总映射 **425 条**！
 - 单批交付 5 大亿级 npm 包（`@cap/encodeurl`/`@cap/clsx`/`@cap/strip-json-comments`/`@cap/ini`/`@cap/dotenv-expand`）+ 3 大 Rust 图形/游戏引擎包（`@cap/bvh`/`@cap/noise`/`@cap/astar`），全部 6/6 PASS，线上官方 `.cap` 包冲刺 **275+ 个**！
+
+## 2026-11-26: Batch 52 双生态单批交付 7 大新包，突破 **280+ 线上官方 `.cap` 包 + 435 条映射**！
+- 单批交付 `@cap/glob-to-regex`（6/6）、`@cap/cron-next`（6/6）、`@cap/csv-line`（6/6）、`@cap/duration-iso`（6/6）、`@cap/properties`（6/6）、`@cap/cuid2`（6/6）、`@cap/retry-after`（6/6），去重直连 `encoding_rs`/`minimal-lexical`/`rustc-demangle`，总映射突破 **435 条**（npm=209 / crates.io=226）！

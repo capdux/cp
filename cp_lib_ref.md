@@ -466,3 +466,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/bvh`** | `packages/@cap/bvh` | 对标 Rust `bvh` / `parry` — 零堆 3D AABB 包围体层次树碰撞重叠查询与 Slab 射线求交 `raycast` |
 | **`@cap/noise`** | `packages/@cap/noise` | 对标 Rust `noise` / npm `simplex-noise` — 2D/3D 改进 Perlin 梯度噪声、分形布朗运动 `fbm2D` 与山脊噪声 |
 | **`@cap/astar`** | `packages/@cap/astar` | 对标 Rust `pathfinding::astar` / npm `pathfinding` — 零堆 2D 障碍物网格 4/8 邻域 A* 最优寻路与路径回溯 |
+| **`@cap/glob-to-regex`** | `packages/@cap/glob-to-regex` | 对标 npm `glob-to-regexp`（3500 万+/周）— POSIX/glob 通配符转标准正则（支持 `**`、`[!a-z]`、`{a,b}`） |
+| **`@cap/cron-next`** | `packages/@cap/cron-next` | 对标 npm `cron-parser`（2500 万+/周）+ Rust `cron` — 5 段 POSIX Cron 位掩码解析与下次 UTC 触发计算 |
+| **`@cap/csv-line`** | `packages/@cap/csv-line` | 对标 npm `csv-parse` / `papaparse` — RFC 4180 零堆 CSV/TSV 单行解析、引号换行处理与防公式注入序列化 |
+| **`@cap/duration-iso`** | `packages/@cap/duration-iso` | 对标 npm `iso8601-duration` — ISO 8601 时长 `P1Y2M3DT4H5M6S` 解析、规范格式化与毫秒换算 |
+| **`@cap/properties`** | `packages/@cap/properties` | 对标 npm `properties-reader` / Rust `java-properties` — Java `.properties` 解析（多行续行与 `\uXXXX` 解码） |
+| **`@cap/cuid2`** | `packages/@cap/cuid2` | 对标 npm `@paralleldrive/cuid2` / Rust `cuid2` — 零堆 SHA-256 Base36 抗碰撞分布式唯一 ID 生成与校验 |
+| **`@cap/retry-after`** | `packages/@cap/retry-after` | 对标 Rust `retry-after` — RFC 9110 HTTP `Retry-After` 延迟秒数与 IMF-fixdate 日期双格式解析与等待计算 |

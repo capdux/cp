@@ -4254,6 +4254,106 @@
       "kind": "package",
       "aliases": ["a-star"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "glob-to-regexp",
+      "source_repo": "https://github.com/fitzgen/glob-to-regexp",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/glob-to-regex",
+      "kind": "package",
+      "aliases": ["glob-to-regex"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cron-parser",
+      "source_repo": "https://github.com/harrisiirak/cron-parser",
+      "license": "MIT",
+      "cp_target": "@cap/cron-next",
+      "kind": "package",
+      "aliases": ["cron", "croner"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "csv-parse",
+      "source_repo": "https://github.com/adaltas/node-csv",
+      "license": "MIT",
+      "cp_target": "@cap/csv-line",
+      "kind": "package",
+      "aliases": ["papaparse", "csv-stringify"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "iso8601-duration",
+      "source_repo": "https://github.com/tolu/ISO8601-duration",
+      "license": "MIT",
+      "cp_target": "@cap/duration-iso",
+      "kind": "package",
+      "aliases": ["tinyduration", "duration-iso"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "properties-reader",
+      "source_repo": "https://github.com/steveukx/properties",
+      "license": "MIT",
+      "cp_target": "@cap/properties",
+      "kind": "package",
+      "aliases": ["java-properties"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@paralleldrive/cuid2",
+      "source_repo": "https://github.com/paralleldrive/cuid2",
+      "license": "MIT",
+      "cp_target": "@cap/cuid2",
+      "kind": "package",
+      "aliases": ["cuid2", "cuid"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "encoding_rs",
+      "source_repo": "https://github.com/hsivonen/encoding_rs",
+      "license": "MIT",
+      "cp_target": "cap:unicode",
+      "kind": "stdlib",
+      "aliases": ["iconv-lite"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "minimal-lexical",
+      "source_repo": "https://github.com/Alexhuszagh/minimal-lexical",
+      "license": "MIT",
+      "cp_target": "cap:strconv",
+      "kind": "stdlib",
+      "aliases": ["lexical-core"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustc-demangle",
+      "source_repo": "https://github.com/rust-lang/rustc-demangle",
+      "license": "MIT",
+      "cp_target": "cap:debug",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "retry-after",
+      "source_repo": "https://github.com/jwilm/retry-after",
+      "license": "MIT",
+      "cp_target": "@cap/retry-after",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
