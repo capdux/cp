@@ -719,3 +719,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/slice-ansi`** | `packages/@cap/slice-ansi` | 对标 npm Top 100 `slice-ansi` (1.2 亿+/周，跨包复用 `@cap/anstyle-parse`+`@cap/unicode-width`) — ANSI 样式保活列宽切片与截断 |
 | **`@cap/has-flag`** | `packages/@cap/has-flag` | 对标 npm Top 50 `has-flag` (2.5 亿+/周) — POSIX `--` 感知 CLI 标志检测与 `--no-flag` 覆盖 |
 | **`@cap/toidentifier`** | `packages/@cap/toidentifier` | 对标 npm Top 80 `toidentifier` (9000 万+/周，`http-errors` 核心依赖) — 零堆标识符转换（Pascal/camel/CONST） |
+| **`@cap/pem-rfc7468`** | `packages/@cap/pem-rfc7468` | 对标 crates.io Top 500 `pem-rfc7468` (2.4 亿+，跨包复用 `@cap/base64ct`) — RFC 7468 零堆 PEM 编解码与标签校验 |
+| **`@cap/const-oid`** | `packages/@cap/const-oid` | 对标 crates.io Top 490 `const-oid` (2.9 亿+) — ITU-T X.690 §8.19 ASN.1 OID 解析、DER/TLV 编解码与标准 PKI OID |
+| **`@cap/der-asn1`** | `packages/@cap/der-asn1` | 对标 crates.io Top 470 `der` (3.0 亿+，跨包复用 `@cap/const-oid`) — 严格 X.690 DER 零拷贝读写器 |
+| **`@cap/spki`** | `packages/@cap/spki` | 对标 crates.io Top 510 `spki` (2.7 亿+，跨包复用 `@cap/const-oid`+`@cap/pem-rfc7468`) — RFC 5280/8410 公钥信息 DER/PEM |
+| **`@cap/cliui`** | `packages/@cap/cliui` | 对标 npm Top 70 `cliui` (1.5 亿+/周，3 包复用 `@cap/wrap-ansi`+`@cap/ansi-strip`+`@cap/unicode-width`) — 终端多列折行对齐布局引擎 |
+| **`@cap/y18n`** | `packages/@cap/y18n` | 对标 npm Top 85 `y18n` (1.2 亿+/周) — 零堆国际化词典与 `%s`/`%d` 单复数模板引擎 |
+| **`@cap/yocto-queue`** | `packages/@cap/yocto-queue` | 对标 npm Top 60 `yocto-queue` (2 亿+/周，`p-limit` 独立依赖) — 零堆固定环形缓冲 O(1) FIFO 队列 |
+| **`@cap/onetime`** | `packages/@cap/onetime` | 对标 npm Top 80 `onetime` (1.5 亿+/周) — 零堆单次执行守卫、严格模式与多键注册表 |

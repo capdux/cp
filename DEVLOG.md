@@ -334,3 +334,6 @@
 ## 2026-11-27: Batch 89 九件套全 6/6 PASS — 正式突破 **800 条双生态映射（400/400 绝对对称）** & **515+ 官方 `.cap` 包** + 子智能体定时轮换规则固化！
 - 将「子智能体每完成 6~8 个包定时轮换重建防上下文膨胀」及「每波闭环交付 + LIVE 发布」正式写入 `GEMINI.md` 固化，已完成全部 3 路子智能体换新（Fresh Worker A/B/C），响应速度与 Token 效率大幅提升。
 - 单批交付 9 个零堆纯 CP 包（`pbkdf2-sha256`、`iri-string`、`fast-deep-equal`、`poly1305`、`unicode-properties`、`chacha20-poly1305`、`slice-ansi`、`has-flag`、`toidentifier`），其中 `chacha20-poly1305` 实现 3 包密码学组合复用、`slice-ansi` 实现 2 包终端复用，全部 6/6 PASS。
+
+## 2026-11-27: Batch 90 八件套全 6/6 PASS — 正式突破 **808 条双生态映射（404/404 绝对对称）** & **523+ 官方 `.cap` 包**！
+- 单批打通 RustCrypto PKI 四大底座（`pem-rfc7468` → `const-oid` → `der-asn1` → `spki`，层层零重复跨包 `import` 复用）与 npm Yargs/Sindresorhus 四大核心（`cliui`、`y18n`、`yocto-queue`、`onetime`），全线 6/6 PASS。

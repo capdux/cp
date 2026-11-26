@@ -1,0 +1,9 @@
+{
+  "name": "@cap/y18n",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation internationalization (i18n) catalog and printf-style formatter (y18n parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["i18n", "y18n", "l10n", "locale", "translation", "printf", "yargs", "zero-alloc"]
+}

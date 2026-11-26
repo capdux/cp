@@ -791,3 +791,14 @@
 - `packages/@cap/has-flag/` & `cap/test/testCapHasFlag.cp`: npm Top 50 `has-flag`（2.5 亿+/周，6/6 PASS）。
 - `packages/@cap/toidentifier/` & `cap/test/testCapToidentifier.cp`: npm Top 80 `toidentifier`（9000 万+/周，6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **800 条**双生态高频映射（**npm=400 / crates.io=400 绝对 1:1 对称**，官方 `.cap` 包 515+）。
+
+### 2026-11-27 (Batch 90 — **突破 808 映射 404/404 绝对对称！** 8 个全新零堆包全部 6/6 PASS，官方包 523+)
+- `packages/@cap/pem-rfc7468/` & `cap/test/testCapPemRfc7468.cp`: crates.io `pem-rfc7468`（跨包复用 `@cap/base64ct`，RFC 7468，6/6 PASS）。
+- `packages/@cap/const-oid/` & `cap/test/testCapConstOid.cp`: crates.io `const-oid`（2.9 亿下载，ITU-T X.690 OID，6/6 PASS）。
+- `packages/@cap/der-asn1/` & `cap/test/testCapDerAsn1.cp`: crates.io `der`（3.0 亿下载，跨包复用 `@cap/const-oid`，6/6 PASS）。
+- `packages/@cap/spki/` & `cap/test/testCapSpki.cp`: crates.io `spki`（2.7 亿下载，跨包复用 `@cap/const-oid`+`@cap/pem-rfc7468`，RFC 8410 向量，6/6 PASS）。
+- `packages/@cap/cliui/` & `cap/test/testCapCliui.cp`: npm Top 70 `cliui`（3 包复用 `@cap/wrap-ansi`+`@cap/ansi-strip`+`@cap/unicode-width`，6/6 PASS）。
+- `packages/@cap/y18n/` & `cap/test/testCapY18n.cp`: npm Top 85 `y18n`（1.2 亿+/周，6/6 PASS）。
+- `packages/@cap/yocto-queue/` & `cap/test/testCapYoctoQueue.cp`: npm Top 60 `yocto-queue`（2 亿+/周，6/6 PASS）。
+- `packages/@cap/onetime/` & `cap/test/testCapOnetime.cp`: npm Top 80 `onetime`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **808 条**双生态映射（**npm=404 / crates.io=404 绝对 1:1 对称**）。

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/const-oid",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation ITU-T X.690 ASN.1 Object Identifier (OID) parser, encoder, and comparator (parity with RustCrypto const-oid)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

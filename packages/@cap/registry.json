@@ -9752,6 +9752,70 @@
         "aead"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cliui",
+      "source_repo": "https://github.com/yargs/cliui",
+      "license": "MIT",
+      "cp_target": "@cap/cliui",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "y18n",
+      "source_repo": "https://github.com/yargs/y18n",
+      "license": "MIT",
+      "cp_target": "@cap/y18n",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yocto-queue",
+      "source_repo": "https://github.com/sindresorhus/yocto-queue",
+      "license": "MIT",
+      "cp_target": "@cap/yocto-queue",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "onetime",
+      "source_repo": "https://github.com/sindresorhus/onetime",
+      "license": "MIT",
+      "cp_target": "@cap/onetime",
+      "kind": "package",
+      "aliases": [
+        "once"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "spki",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/spki",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "borsh",
+      "source_repo": "https://github.com/near/borsh-rs",
+      "license": "MIT",
+      "cp_target": "@cap/borsh",
+      "kind": "package",
+      "aliases": [
+        "borsh-derive"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

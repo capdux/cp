@@ -1,0 +1,12 @@
+{
+  "name": "@cap/der-asn1",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder reusing @cap/const-oid for OID TLV handling (RustCrypto der parity) in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/const-oid": "1.0.0"
+  },
+  "keywords": ["der", "asn1", "x690", "pki", "x509", "oid", "crypto", "zero-alloc"]
+}
