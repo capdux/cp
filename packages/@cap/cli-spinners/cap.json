@@ -1,0 +1,8 @@
+{
+  "name": "@cap/cli-spinners",
+  "ver": "1.0.0",
+  "description": "Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols (cli-spinners / ora / log-symbols parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

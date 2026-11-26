@@ -328,3 +328,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/stacktrace`** | `packages/@cap/stacktrace` | 对标 npm `error-stack-parser`/`stacktrace-parser`/`clean-stack` — V8/Firefox/Rust/Zig/CP 调用栈解析与内部帧清洗 |
 | **`@cap/oci-ref`** | `packages/@cap/oci-ref` | 对标 Rust `oci-distribution` / `docker-reference` — OCI/Docker 容器镜像地址解析、校验与规范化 |
 | **`@cap/card-bin`** | `packages/@cap/card-bin` | 对标 npm `credit-card-type`/`card-validator` — 8 大支付卡组织 BIN 识别、Luhn 校验、分组格式化与 PCI-DSS 脱敏 |
+| **`@cap/jcs`** | `packages/@cap/jcs` | 对标 npm `fast-json-stable-stringify`/`canonicalize` / Rust `serde_jcs` — RFC 8785 确定性规范 JSON 序列化与语义等价判定 |
+| **`@cap/cli-spinners`** | `packages/@cap/cli-spinners` | 对标 npm `cli-spinners`/`ora`/`log-symbols` — 12 套终端加载动画预设 + Unicode/ASCII 状态符号零堆引擎 |
+| **`@cap/strftime`** | `packages/@cap/strftime` | 对标 npm `strftime`/`dateformat` — 零堆 POSIX `strftime` 格式化、时区偏移、闰年与 RFC 3339/ISO-8601 UTC 渲染 |
+| **`@cap/calver`** | `packages/@cap/calver` | 对标 npm/Rust `calver` — 日历版本号（`YYYY.0M.MICRO`/`YYYY.MM.DD` + 预发布）零堆解析、比较与周期递增 |

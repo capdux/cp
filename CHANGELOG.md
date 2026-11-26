@@ -200,3 +200,10 @@
 - `packages/@cap/oci-ref/` & `cap/test/testCapOciRef.cp`: OCI/Docker 容器镜像引用解析、校验与规范化（对标 Rust `oci-distribution` / `docker-reference`，6/6 PASS）。
 - `packages/@cap/card-bin/` & `cap/test/testCapCardBin.cp`: 8 大支付卡组织 BIN 识别、Luhn 校验、分组格式化与 PCI-DSS 脱敏（对标 npm `credit-card-type` [4M/wk] & `card-validator`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **122 条**高频映射（新增 `chalk`/`picocolors` [260M/wk]、`@jridgewell/sourcemap-codec`/`vlq` [120M/wk]、`nanoid` [65M/wk]、`shell-quote` [45M/wk]、`ulid` [15M/wk]、`auth-header` [15M/wk] 去重映射 + Wave 20 四大独立包）。
+
+## [2026-11-26] - Wave 21 四路并行吸收 10 项高下载资产（`@cap/jcs`, `@cap/cli-spinners`, `@cap/strftime`, `@cap/calver` + 6 项超高下载去重映射）并突破 133 官方包
+- `packages/@cap/jcs/` & `cap/test/testCapJcs.cp`: RFC 8785 确定性规范 JSON 序列化与等价比较引擎（对标 npm `fast-json-stable-stringify` [55M/wk]，6/6 PASS）。
+- `packages/@cap/cli-spinners/` & `cap/test/testCapCliSpinners.cp`: 12 套终端 Spinner 预设 + `log-symbols` Unicode/ASCII 状态符号引擎（对标 npm `cli-spinners`/`ora` [35M/wk] & `log-symbols` [45M/wk]，6/6 PASS）。
+- `packages/@cap/strftime/` & `cap/test/testCapStrftime.cp`: 零堆 POSIX `strftime` 与 ISO-8601 日期格式化引擎（对标 npm `strftime`/`dateformat` [20M/wk]，6/6 PASS）。
+- `packages/@cap/calver/` & `cap/test/testCapCalver.cp`: Calendar Versioning 解析、比较与周期递增引擎（对标 npm/Rust `calver`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **132 条**高频映射（新增 `mime-types`/`ci-info`/`protobufjs`/`@msgpack/msgpack`/`base64url`/`cbor-x` 内部库直连映射 + Wave 21 四大独立包）。

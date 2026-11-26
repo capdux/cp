@@ -1,0 +1,8 @@
+{
+  "name": "@cap/calver",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Calendar Versioning (CalVer) parser, validator, comparator, bumper, and formatter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

@@ -1224,6 +1224,106 @@
       "kind": "package",
       "aliases": ["docker-reference", "parse-docker-image"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mime-types",
+      "source_repo": "https://github.com/jshttp/mime-types",
+      "license": "MIT",
+      "cp_target": "cap:mime",
+      "kind": "stdlib",
+      "aliases": ["mime-db", "mime", "mime_guess"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ci-info",
+      "source_repo": "https://github.com/watson/ci-info",
+      "license": "MIT",
+      "cp_target": "cap:cli",
+      "kind": "stdlib",
+      "aliases": ["is-ci"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "protobufjs",
+      "source_repo": "https://github.com/protobufjs/protobuf.js",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:compiler",
+      "kind": "stdlib",
+      "aliases": ["prost", "protobuf"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-json-stable-stringify",
+      "source_repo": "https://github.com/epoberezkin/fast-json-stable-stringify",
+      "license": "MIT",
+      "cp_target": "@cap/jcs",
+      "kind": "package",
+      "aliases": ["canonicalize", "json-stable-stringify", "serde_jcs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@msgpack/msgpack",
+      "source_repo": "https://github.com/msgpack/msgpack-javascript",
+      "license": "ISC",
+      "cp_target": "cap:binfmt",
+      "kind": "stdlib",
+      "aliases": ["msgpack-lite", "rmp-serde"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cli-spinners",
+      "source_repo": "https://github.com/sindresorhus/cli-spinners",
+      "license": "MIT",
+      "cp_target": "@cap/cli-spinners",
+      "kind": "package",
+      "aliases": ["ora", "log-symbols", "indicatif"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "base64url",
+      "source_repo": "https://github.com/brianloveswords/base64url",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["base64-url"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cbor-x",
+      "source_repo": "https://github.com/kriszyp/cbor-x",
+      "license": "MIT",
+      "cp_target": "cap:cbor",
+      "kind": "stdlib",
+      "aliases": ["cbor", "ciborium"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strftime",
+      "source_repo": "https://github.com/samsonjs/strftime",
+      "license": "MIT",
+      "cp_target": "@cap/strftime",
+      "kind": "package",
+      "aliases": ["dateformat"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "calver",
+      "source_repo": "https://github.com/muratgozel/node-calver",
+      "license": "MIT",
+      "cp_target": "@cap/calver",
+      "kind": "package",
+      "aliases": ["calendar-version"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

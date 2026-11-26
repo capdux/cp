@@ -124,3 +124,6 @@
 
 ## 2026-11-26: Wave 20 四路并行交付 `@cap/git-url` + `@cap/stacktrace` + `@cap/oci-ref` + `@cap/card-bin`
 - 保持 3 路子智能体 + 主智能体 4 路满载并行，全线一次通过：`@cap/git-url`（6/6）、`@cap/stacktrace`（6/6）、`@cap/oci-ref`（6/6）、`@cap/card-bin`（6/6），同时甄别去重 6 项超高下载资产（`chalk`/`vlq`/`nanoid`/`shell-quote`/`ulid`/`auth-header`），总映射突破 **122 条**，线上官方 `.cap` 包突破 **129 个**。
+
+## 2026-11-26: Wave 21 四路并行交付 `@cap/jcs` + `@cap/cli-spinners` + `@cap/strftime` + `@cap/calver`
+- 4 路并行全线一次通过：`@cap/jcs`（6/6）、`@cap/cli-spinners`（6/6）、`@cap/strftime`（6/6）、`@cap/calver`（6/6），并完成 6 项头部资产去重直连（`mime-types`/`ci-info`/`protobufjs`/`@msgpack/msgpack`/`base64url`/`cbor-x`），总映射达 **132 条**，线上官方 `.cap` 包突破 **133 个**。
