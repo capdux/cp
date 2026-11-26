@@ -1159,3 +1159,13 @@
 - `packages/@cap/map-obj/` & `cap/test/testCapMapObj.cp`: npm Top 35 `map-obj`（1.3 亿+/周，含 `"source"` 与溯源横幅，6/6 PASS）。
 - `packages/@cap/crc32c/` & `cap/test/testCapCrc32c.cp`: crates.io **#165** `crc32c` v0.6（7.5 亿+，RFC 3720 向量全过，6/6 PASS）。
 - `packages/@cap/rustc-hash/` & `cap/test/testCapRustcHash.cp`: crates.io **#80** `rustc-hash` v2（**12.5 亿+**，`FxHasher64`/`32`，6/6 PASS）。
+
+### 2026-11-27 (Batch 131 & 二轮去重收口 — **清理 `ms-parse`/`pem-parse` + 新增 6 大零重复溯源包 `pathdiff`(9.5 亿)+`smol-str`(8.5 亿)+`ipnet`(8.5 亿)+`thin-vec`(7 亿)+`snakecase-keys`+`decamelize-keys`**)
+- **去重收口（Rule #12）**：将 0 反向依赖的 `ms-parse` → `@cap/ms`、`pem-parse` → `@cap/pem` 统一收口并移除冗余目录与测试文件。
+- `packages/@cap/snakecase-keys/` & `cap/test/testCapSnakecaseKeys.cp`: npm `snakecase-keys`（复用 `@cap/map-obj` + `@cap/heck-case`，6/6 PASS）。
+- `packages/@cap/decamelize-keys/` & `cap/test/testCapDecamelizeKeys.cp`: npm Top 65 `decamelize-keys` v2（复用 `@cap/map-obj` + `@cap/decamelize`，6/6 PASS）。
+- `packages/@cap/smol-str/` & `cap/test/testCapSmolStr.cp`: crates.io **#135** `smol_str`（8.5 亿+，6/6 PASS）。
+- `packages/@cap/thin-vec/` & `cap/test/testCapThinVec.cp`: crates.io **#185** `thin-vec`（7 亿+，6/6 PASS）。
+- `packages/@cap/pathdiff/` & `cap/test/testCapPathdiff.cp`: crates.io **#120** `pathdiff`（9.5 亿+，6/6 PASS）。
+- `packages/@cap/ipnet/` & `cap/test/testCapIpnet.cp`: crates.io **#140** `ipnet` v2（8.5 亿+，6/6 PASS）。
+- `packages/@cap/registry.json` & `cp_lib_ref.md`: 同步 6 项映射与去重收口。

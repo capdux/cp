@@ -10,5 +10,5 @@ Zero-heap pure-CP small string with 24-byte inline storage (SSO) and zero-copy s
 - `SMOL_INLINE_CAP = 24`
 - `SmolStr.empty()`, `SmolStr.new(s: string)`, `SmolStr.fromInt(v: i64)`
 - `len()`, `isEmpty()`, `isInline()`, `byteAt(idx: usize): u8?`
-- `eq(other)`, `eqStr(s)`, `cmp(other)`, `startsWith(prefix)`, `endsWith(suffix)`
+- `eq(other)`, `eqStr(s)`, `cmp(other)`, `hasPrefix(prefix)` / `smolStartsWith`, `hasSuffix(suffix)` / `smolEndsWith`
 - `writeTo(out: []u8): usize`

@@ -466,3 +466,6 @@
 
 ## 2026-11-27: Batch 130 首轮去重收口（清理 12 组冗余后缀包）+ 五大零重复新包全 6/6 PASS！
 - 完成首轮生态去重：将 12 组 0 反向依赖后缀重复包收口回归标准主名，同步交付 crates.io **#80 `rustc-hash`（12.5 亿+）**、**#165 `crc32c`（7.5 亿+）** 与 npm `p-try`（1.6 亿+/周）、`is-plain-obj`（1.4 亿+/周）、`map-obj`（1.3 亿+/周），全部 30/30 单测一遍过 100% PASS，全部内置 `cap.json` `"source"` 与 `README.md` 溯源横幅。
+
+## 2026-11-27: Batch 131 六大 33.5 亿下载底层/网络/对象键包全 6/6 PASS + 二轮去重收口！
+- 交付 crates.io **#120 `pathdiff`（9.5 亿+）**、**#135 `smol_str`（8.5 亿+）**、**#140 `ipnet`（8.5 亿+）**、**#185 `thin-vec`（7 亿+）** 与 npm `snakecase-keys`（双包复用）、`decamelize-keys`（双包复用），全部 36/36 单测一遍过 100% PASS；同时将 `ms-parse`→`@cap/ms`、`pem-parse`→`@cap/pem` 二轮去重收口，并提交 `/data/dev/cap` Worker 原库名检索与溯源展示改动（`1c734ce`）。

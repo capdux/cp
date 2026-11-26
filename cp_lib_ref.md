@@ -961,3 +961,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/map-obj`** | `packages/@cap/map-obj` | 对标 npm Top 35 `map-obj` (**1.3 亿+/周**) — 零堆固定槽位对象条目键值映射、`pickKeys`/`omitKeys`/`mergeObjects` |
 | **`@cap/crc32c`** | `packages/@cap/crc32c` | 对标 crates.io **#165** `crc32c` v0.6 (**7.5 亿+**) — Castagnoli CRC-32C（RFC 3720 向量全过）、GF(2) `combine` 与 RocksDB/GCS 掩码 |
 | **`@cap/rustc-hash`** | `packages/@cap/rustc-hash` | 对标 crates.io **#80** `rustc-hash` v2 (**12.5 亿+**) — Rust 编译器官方超高速 `FxHasher64`/`FxHasher32` 非加密哈希 |
+| **`@cap/snakecase-keys`** | `packages/@cap/snakecase-keys` | 对标 npm `snakecase-keys` (双包复用 `@cap/map-obj`+`@cap/heck-case`) — 零堆对象键 `snake_case` 转换与 `exclude` 过滤 |
+| **`@cap/decamelize-keys`** | `packages/@cap/decamelize-keys` | 对标 npm Top 65 `decamelize-keys` v2 (双包复用 `@cap/map-obj`+`@cap/decamelize`) — 自定义分隔符对象键反驼峰转换与 `exclude` 过滤 |
+| **`@cap/smol-str`** | `packages/@cap/smol-str` | 对标 crates.io **#135** `smol_str` (**8.5 亿+**) — O(1) 克隆不可变内联短字符串（零堆纯 CP） |
+| **`@cap/thin-vec`** | `packages/@cap/thin-vec` | 对标 crates.io **#185** `thin-vec` (**7 亿+**) — 紧凑内联定容向量与栈式操作（零堆纯 CP） |
+| **`@cap/pathdiff`** | `packages/@cap/pathdiff` | 对标 crates.io **#120** `pathdiff` (**9.5 亿+**) — POSIX 路径归一化与相对路径差值构造（`diffPaths`） |
+| **`@cap/ipnet`** | `packages/@cap/ipnet` | 对标 crates.io **#140** `ipnet` v2 (**8.5 亿+**) — IPv4/CIDR 子网掩码、网络/广播地址、包含判定与 `supernet` 聚合引擎 |

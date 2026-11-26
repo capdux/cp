@@ -10,7 +10,7 @@
       "source_name": "ms",
       "source_repo": "https://github.com/vercel/ms",
       "license": "MIT",
-      "cp_target": "@cap/ms-parse",
+      "cp_target": "@cap/ms",
       "kind": "package",
       "aliases": [
         "humantime",
@@ -1243,20 +1243,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "ms",
-      "source_repo": "https://github.com/vercel/ms",
-      "license": "MIT",
-      "cp_target": "@cap/ms",
-      "kind": "package",
-      "aliases": [
-        "parse-duration",
-        "pretty-ms",
-        "humantime"
-      ],
-      "absorbed_at": "2026-11-27"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "strip-ansi",
       "source_repo": "https://github.com/chalk/strip-ansi",
       "license": "MIT",
@@ -1279,32 +1265,6 @@
         "json5-rs"
       ],
       "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "bytes",
-      "source_repo": "https://github.com/visionmedia/bytes.js",
-      "license": "MIT",
-      "cp_target": "@cap/bytes",
-      "kind": "package",
-      "aliases": [
-        "pretty-bytes",
-        "bytesize"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "etag",
-      "source_repo": "https://github.com/jshttp/etag",
-      "license": "MIT",
-      "cp_target": "@cap/etag-http",
-      "kind": "package",
-      "aliases": [
-        "fresh",
-        "http-etag"
-      ],
-      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -1393,19 +1353,6 @@
       "aliases": [
         "rust-ini",
         "ini-parser"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "cookie",
-      "source_repo": "https://github.com/jshttp/cookie",
-      "license": "MIT",
-      "cp_target": "cap:http",
-      "kind": "stdlib",
-      "aliases": [
-        "set-cookie-parser",
-        "cookie-rs"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -1525,30 +1472,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "nanoid",
-      "source_repo": "https://github.com/ai/nanoid",
-      "license": "MIT",
-      "cp_target": "cap:uuid",
-      "kind": "stdlib",
-      "aliases": [
-        "nanoid-rs"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "shell-quote",
-      "source_repo": "https://github.com/inspect-js/node-shell-quote",
-      "license": "MIT",
-      "cp_target": "@cap/shlex",
-      "kind": "package",
-      "aliases": [
-        "shescape"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "ulid",
       "source_repo": "https://github.com/ulid/javascript",
       "license": "MIT",
@@ -1620,20 +1543,6 @@
         "parse-docker-image"
       ],
       "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "mime-types",
-      "source_repo": "https://github.com/jshttp/mime-types",
-      "license": "MIT",
-      "cp_target": "@cap/mime-types",
-      "kind": "package",
-      "aliases": [
-        "mime-db",
-        "mime",
-        "mime_guess"
-      ],
-      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -1892,7 +1801,7 @@
       "source_name": "pem",
       "source_repo": "https://github.com/jcreekmore/pem-rs",
       "license": "MIT",
-      "cp_target": "@cap/pem-parse",
+      "cp_target": "@cap/pem",
       "kind": "package",
       "aliases": [
         "pem-jwk",
@@ -1964,19 +1873,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "lru-cache",
-      "source_repo": "https://github.com/isaacs/node-lru-cache",
-      "license": "ISC",
-      "cp_target": "@cap/lru",
-      "kind": "package",
-      "aliases": [
-        "quick-lru",
-        "lru"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "commander",
       "source_repo": "https://github.com/tj/commander.js",
       "license": "MIT",
@@ -2012,18 +1908,6 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "wrap-ansi",
-      "source_repo": "https://github.com/chalk/wrap-ansi",
-      "license": "MIT",
-      "cp_target": "@cap/wrap-ansi",
-      "kind": "package",
-      "aliases": [
-        "slice-ansi"
-      ],
-      "absorbed_at": "2026-11-26"
     },
     {
       "source_registry": "npm",
@@ -3367,19 +3251,6 @@
     },
     {
       "source_registry": "crates.io",
-      "source_name": "bs58",
-      "source_repo": "https://github.com/Nullus157/bs58-rs",
-      "license": "MIT",
-      "cp_target": "@cap/bs58",
-      "kind": "package",
-      "aliases": [
-        "base58",
-        "bs58check"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "crates.io",
       "source_name": "unsigned-varint",
       "source_repo": "https://github.com/paritytech/unsigned-varint",
       "license": "MIT",
@@ -3416,19 +3287,6 @@
       "aliases": [
         "ascii85",
         "base85"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "crates.io",
-      "source_name": "governor",
-      "source_repo": "https://github.com/boinkor-net/governor",
-      "license": "MIT",
-      "cp_target": "@cap/rate-header",
-      "kind": "package",
-      "aliases": [
-        "rate-limiter-flexible",
-        "gcra"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -3540,19 +3398,6 @@
       "kind": "package",
       "aliases": [
         "cms"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "crates.io",
-      "source_name": "ciborium",
-      "source_repo": "https://github.com/enarx/ciborium",
-      "license": "Apache-2.0",
-      "cp_target": "cap:cbor",
-      "kind": "stdlib",
-      "aliases": [
-        "ciborium-ll",
-        "ciborium-io"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -3917,18 +3762,6 @@
         "lz4-block"
       ],
       "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "crates.io",
-      "source_name": "roaring",
-      "source_repo": "https://github.com/RoaringBitmap/roaring-rs",
-      "license": "MIT",
-      "cp_target": "@cap/roaring-bitmap",
-      "kind": "package",
-      "aliases": [
-        "roaring-bitmap"
-      ],
-      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4349,18 +4182,6 @@
         "kmp"
       ],
       "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "crates.io",
-      "source_name": "aho-corasick",
-      "source_repo": "https://github.com/BurntSushi/aho-corasick",
-      "license": "MIT",
-      "cp_target": "@cap/aho-corasick",
-      "kind": "package",
-      "aliases": [
-        "ac-automaton"
-      ],
-      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4954,26 +4775,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "content-disposition",
-      "source_repo": "https://github.com/jshttp/content-disposition",
-      "license": "MIT",
-      "cp_target": "@cap/content-disposition",
-      "kind": "package",
-      "aliases": [],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "path-to-regexp",
-      "source_repo": "https://github.com/pillarjs/path-to-regexp",
-      "license": "MIT",
-      "cp_target": "@cap/path-to-regexp",
-      "kind": "package",
-      "aliases": [],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "crypto-js",
       "source_repo": "https://github.com/brix/crypto-js",
       "license": "MIT",
@@ -5090,16 +4891,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "range-parser",
-      "source_repo": "https://github.com/jshttp/range-parser",
-      "license": "MIT",
-      "cp_target": "@cap/range-parser",
-      "kind": "package",
-      "aliases": [],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "fresh",
       "source_repo": "https://github.com/jshttp/fresh",
       "license": "MIT",
@@ -5145,16 +4936,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "shell-quote",
-      "source_repo": "https://github.com/ljharb/shell-quote",
-      "license": "MIT",
-      "cp_target": "@cap/shell-quote",
-      "kind": "package",
-      "aliases": [],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "get-port",
       "source_repo": "https://github.com/sindresorhus/get-port",
       "license": "MIT",
@@ -5162,18 +4943,6 @@
       "kind": "stdlib",
       "aliases": [
         "portfinder"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "encodeurl",
-      "source_repo": "https://github.com/pillarjs/encodeurl",
-      "license": "MIT",
-      "cp_target": "@cap/encodeurl",
-      "kind": "package",
-      "aliases": [
-        "escape-string-regexp"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -5199,28 +4968,6 @@
       "aliases": [
         "comment-json"
       ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "ini",
-      "source_repo": "https://github.com/npm/ini",
-      "license": "ISC",
-      "cp_target": "@cap/ini",
-      "kind": "package",
-      "aliases": [
-        "rust-ini"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "dotenv-expand",
-      "source_repo": "https://github.com/motdotla/dotenv-expand",
-      "license": "BSD-2-Clause",
-      "cp_target": "@cap/dotenv-expand",
-      "kind": "package",
-      "aliases": [],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -5299,19 +5046,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "cron-parser",
-      "source_repo": "https://github.com/harrisiirak/cron-parser",
-      "license": "MIT",
-      "cp_target": "@cap/cron-parser",
-      "kind": "package",
-      "aliases": [
-        "cron",
-        "croner"
-      ],
-      "absorbed_at": "2026-11-27"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "csv-parse",
       "source_repo": "https://github.com/adaltas/node-csv",
       "license": "MIT",
@@ -5325,19 +5059,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "iso8601-duration",
-      "source_repo": "https://github.com/tolu/ISO8601-duration",
-      "license": "MIT",
-      "cp_target": "@cap/duration-iso",
-      "kind": "package",
-      "aliases": [
-        "tinyduration",
-        "duration-iso"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "properties-reader",
       "source_repo": "https://github.com/steveukx/properties",
       "license": "MIT",
@@ -5345,19 +5066,6 @@
       "kind": "package",
       "aliases": [
         "java-properties"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "@paralleldrive/cuid2",
-      "source_repo": "https://github.com/paralleldrive/cuid2",
-      "license": "MIT",
-      "cp_target": "@cap/cuid2",
-      "kind": "package",
-      "aliases": [
-        "cuid2",
-        "cuid"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -5439,31 +5147,6 @@
     },
     {
       "source_registry": "npm",
-      "source_name": "ndjson",
-      "source_repo": "https://github.com/ndjson/ndjson.js",
-      "license": "BSD-2-Clause",
-      "cp_target": "@cap/ndjson",
-      "kind": "package",
-      "aliases": [
-        "split2",
-        "jsonl"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "cache-control-parser",
-      "source_repo": "https://github.com/etienne-martin/cache-control-parser",
-      "license": "MIT",
-      "cp_target": "@cap/cache-control",
-      "kind": "package",
-      "aliases": [
-        "http-cache-semantics"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
       "source_name": "content-security-policy-builder",
       "source_repo": "https://github.com/helmetjs/content-security-policy-builder",
       "license": "MIT",
@@ -5473,16 +5156,6 @@
         "csp",
         "helmet-csp"
       ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "logfmt",
-      "source_repo": "https://github.com/csquared/node-logfmt",
-      "license": "MIT",
-      "cp_target": "@cap/logfmt",
-      "kind": "package",
-      "aliases": [],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -5554,19 +5227,6 @@
       "aliases": [
         "prometheus",
         "openmetrics"
-      ],
-      "absorbed_at": "2026-11-26"
-    },
-    {
-      "source_registry": "npm",
-      "source_name": "robots-parser",
-      "source_repo": "https://github.com/samclarke/robots-parser",
-      "license": "MIT",
-      "cp_target": "@cap/robots",
-      "kind": "package",
-      "aliases": [
-        "robotstxt",
-        "robots-txt"
       ],
       "absorbed_at": "2026-11-26"
     },
@@ -10948,6 +10608,48 @@
       "source_repo": "https://github.com/sindresorhus/map-obj",
       "license": "MIT",
       "cp_target": "@cap/map-obj",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "snakecase-keys",
+      "source_repo": "https://github.com/bendrucker/snakecase-keys",
+      "license": "MIT",
+      "cp_target": "@cap/snakecase-keys",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "smol_str",
+      "source_repo": "https://github.com/rust-analyzer/smol_str",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/smol-str",
+      "kind": "package",
+      "aliases": [
+        "smol-str"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "thin-vec",
+      "source_repo": "https://github.com/Gankra/thin-vec",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/thin-vec",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pathdiff",
+      "source_repo": "https://github.com/Manishearth/pathdiff",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/pathdiff",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

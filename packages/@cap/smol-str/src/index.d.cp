@@ -17,8 +17,10 @@ export class SmolStr {
     fn eq(other: SmolStr): bool;
     fn eqStr(s: string): bool;
     fn cmp(other: SmolStr): i32;
-    fn startsWith(prefix: string): bool;
-    fn endsWith(suffix: string): bool;
+    fn hasPrefix(prefix: string): bool;
+    fn hasSuffix(suffix: string): bool;
     fn writeTo(out: []u8): usize;
 }
 
+export fn smolStartsWith(s: SmolStr, prefix: string): bool;
+export fn smolEndsWith(s: SmolStr, suffix: string): bool;
