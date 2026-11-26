@@ -13603,6 +13603,46 @@
         "extend-shallow"
       ],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "smart-buffer",
+      "source_repo": "https://github.com/JoshGlazebrook/smart-buffer",
+      "license": "MIT",
+      "cp_target": "@cap/smart-buffer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "stack-utils",
+      "source_repo": "https://github.com/tapjs/stack-utils",
+      "license": "MIT",
+      "cp_target": "@cap/stack-utils",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ascii",
+      "source_repo": "https://github.com/tomprogrammer/rust-ascii",
+      "license": "MIT",
+      "cp_target": "@cap/ascii",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "nohash-hasher",
+      "source_repo": "https://github.com/paritytech/nohash-hasher",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/nohash-hasher",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

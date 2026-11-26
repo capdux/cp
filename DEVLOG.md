@@ -563,3 +563,7 @@
 
 ### 2026-11-26 — Batch 160 开发日志（863 `@cap/*` 包）
 - 三路并行交付 `color-quant`（#716）、`lexical-parse-float`（#766）、`resolv-conf`（#807）、`zod-validation-error`（#741）、`module-details-from-path`（#757）、`fast-fifo`（#824），全部一次通过 `cpc emit-types` 与 6/6 `cap test`。
+
+### 2026-11-26 — Batch 161 开发日志（867 `@cap/*` 包）
+- 三路并行交付 `smart-buffer`（#767）、`stack-utils`（#802）、`ascii`（#844）、`nohash-hasher`（#860），全部 6/6 PASS。
+- 踩坑备忘：`nohash-hasher` 中超过 `i64::MAX` 的 64 位无符号常量（如 `0x9E3779B97F4A7C15`）须拆分为高低 32 位 `((hi as u64) << 32) | (lo as u64)` 避免 Zig 后端字面量负值报错。

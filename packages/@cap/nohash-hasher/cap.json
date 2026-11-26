@@ -1,0 +1,15 @@
+{
+  "name": "@cap/nohash-hasher",
+  "version": "0.2.0",
+  "description": "Zero-overhead identity integer hasher and Fibonacci/SplitMix64 integer key mixers for hash maps",
+  "entry": "src/index.cp",
+  "license": "Apache-2.0",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "nohash-hasher",
+    "version": "0.2.0",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/paritytech/nohash-hasher"
+  }
+}

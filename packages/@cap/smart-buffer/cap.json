@@ -1,0 +1,16 @@
+{
+  "name": "@cap/smart-buffer",
+  "version": "4.2.0",
+  "description": "Zero-heap cursor-based binary reader/writer buffer with big/little-endian integer and string operations",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "smart-buffer",
+    "version": "4.2.0",
+    "license": "MIT",
+    "repository": "https://github.com/JoshGlazebrook/smart-buffer"
+  }
+}

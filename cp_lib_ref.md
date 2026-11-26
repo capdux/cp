@@ -1175,3 +1175,10 @@ const h = cap.hash.wyhash("hello");
 - `@cap/module-details-from-path` (`npm:module-details-from-path` #757, MIT) — `node_modules`/`cap_modules` 嵌套与 `@scope` 模块路径解析器。
 - `@cap/fast-fifo` (`npm:fast-fifo` #824, MIT) — 零堆 O(1) 2 的幂环形缓冲 FIFO 队列（`FifoI64`/`FifoStr`）。
 - 零重复映射：`indenter`→`@cap/redent`、`remove_dir_all`→`cap:fs`、`yoctocolors`→`@cap/picocolors`、`jszip`/`yauzl`/`archiver`→`cap:zip`、`bare-events`→`cap:event`、`path-browserify`→`@cap/pathe`、`crc32-stream`→`@cap/crc32`、`loupe`→`@cap/object-inspect`、`defu`/`defaults`→`@cap/deepmerge`。
+
+### Batch 161 — 双平台 Real Top 767–860（4 packages; 867 `@cap/*`!）
+
+- `@cap/smart-buffer` (`npm:smart-buffer` #767, MIT) — 零堆游标二进制读写缓冲器（BE/LE 整数字节与定长/NUL 结尾字符串）。
+- `@cap/stack-utils` (`npm:stack-utils` #802, MIT) — V8/Node/CP 堆栈帧解析器（具名帧、裸路径、`file://`、`<anonymous>`/`native`）。
+- `@cap/ascii` (`crates.io:ascii` #844, MIT) — 零堆 7-bit ASCII 校验、分类、大小写转换、修剪与忽略大小写比较库。
+- `@cap/nohash-hasher` (`crates.io:nohash-hasher` #860, Apache-2.0) — 零开销整型恒等哈希器与 Fibonacci/SplitMix64 整数混合器。

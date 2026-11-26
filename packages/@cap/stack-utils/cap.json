@@ -1,0 +1,16 @@
+{
+  "name": "@cap/stack-utils",
+  "version": "2.0.6",
+  "description": "Zero-heap V8 stack trace line parser extracting function name, file path, line, column, and native flag",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "stack-utils",
+    "version": "2.0.6",
+    "license": "MIT",
+    "repository": "https://github.com/tapjs/stack-utils"
+  }
+}
