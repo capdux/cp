@@ -1,0 +1,9 @@
+{
+  "name": "@cap/memchr-crate",
+  "ver": "1.0.0",
+  "description": "Zero-heap fast byte & substring search: memchr/2/3, memrchr/2/3, memmem, memrmem, and countByte (crates.io memchr equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

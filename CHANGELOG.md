@@ -1108,3 +1108,11 @@
 - `packages/@cap/make-dir/` & `cap/test/testCapMakeDir.cp`: npm Top 25 `make-dir`（1.6 亿+/周，递归目录创建规划，6/6 PASS）。
 - `packages/@cap/tiny-keccak/` & `cap/test/testCapTinyKeccak.cp`: crates.io **#160** `tiny-keccak` v2（7.5 亿+，SHA3-256 + Ethereum Keccak-256，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 124 全部 4 个官方包映射。
+
+### 2026-11-27 (Batch 125 — **突破 708 官方 `.cap` 包！拿下 44.5 亿下载三巨头 `memchr`(19 亿)+`zeroize`(17 亿)+`blake2`(8.5 亿) + `spdx-expression-parse` + `validate-npm-package-license`**)
+- `packages/@cap/spdx-expression-parse/` & `cap/test/testCapSpdxExpressionParse.cp`: npm **Top 25** `spdx-expression-parse` v4（1.6 亿+/周，复用 `@cap/spdx`，6/6 PASS）。
+- `packages/@cap/validate-npm-package-license/` & `cap/test/testCapValidateNpmPackageLicense.cp`: npm **Top 25** `validate-npm-package-license` v3（1.6 亿+/周，复用 `@cap/spdx-expression-parse`，6/6 PASS）。
+- `packages/@cap/blake2-crate/` & `cap/test/testCapBlake2Crate.cp`: crates.io **#140** `blake2` v0.10（8.5 亿+，RFC 7693 BLAKE2s-256，6/6 PASS）。
+- `packages/@cap/memchr-crate/` & `cap/test/testCapMemchrCrate.cp`: crates.io **#15** `memchr`（**19 亿+**，`memchr`/`memrchr`/`memmem`，6/6 PASS）。
+- `packages/@cap/zeroize/` & `cap/test/testCapZeroize.cp`: crates.io **#32** `zeroize`（**17 亿+**，密钥内存清零与容器，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 125 全部 5 个官方包映射。

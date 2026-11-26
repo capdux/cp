@@ -1,0 +1,12 @@
+{
+  "name": "@cap/spdx-expression-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SPDX license expression recursive-descent AST parser and evaluator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/spdx": "1.0.0"
+  },
+  "keywords": ["spdx", "spdx-expression-parse", "license", "ast", "parser", "zero-alloc"]
+}

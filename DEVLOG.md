@@ -447,3 +447,6 @@
 
 ## 2026-11-27: Batch 124 四大高频文件系统与密码海绵包全 6/6 PASS — 官方包达 **703+**！
 - 交付 crates.io **#160 `tiny-keccak`（7.5 亿+，SHA3-256 + Ethereum Keccak-256 全向量通过）** 与 npm **Top 20 `locate-path`（1.8 亿+/周）**、`make-dir`（1.6 亿+/周）、`path-exists`（1.5 亿+/周），全部 24/24 单测 100% PASS。
+
+## 2026-11-27: Batch 125 五大 44.5 亿下载系统/密码/SPDX 包全 6/6 PASS — 官方包突破 **708+**！
+- 交付 crates.io **#15 `memchr`（19 亿+）**、**#32 `zeroize`（17 亿+）**、**#140 `blake2`（8.5 亿+）** 与 npm **Top 25 `spdx-expression-parse`（1.6 亿+/周）**、`validate-npm-package-license`（1.6 亿+/周），全部 30/30 单测 100% PASS。

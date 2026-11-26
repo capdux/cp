@@ -930,3 +930,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/path-exists`** | `packages/@cap/path-exists` | 对标 npm Top 30 `path-exists` (**1.5 亿+/周**, 复用 `@cap/locate-path`) — 路径/文件/目录/非软链存在性判定与批量存在性统计 |
 | **`@cap/make-dir`** | `packages/@cap/make-dir` | 对标 npm Top 25 `make-dir` (**1.6 亿+/周**) — 递归目录创建前缀链规划、Windows/POSIX 非法字符校验与 `umask` 权限计算 |
 | **`@cap/tiny-keccak`** | `packages/@cap/tiny-keccak` | 对标 crates.io **#160** `tiny-keccak` v2 (**7.5 亿+**) — Keccak-f[1600] 24 轮海绵置换、NIST FIPS 202 SHA3-256 与 Ethereum Keccak-256 |
+| **`@cap/spdx-expression-parse`** | `packages/@cap/spdx-expression-parse` | 对标 npm **Top 25** `spdx-expression-parse` v4 (**1.6 亿+/周**, 复用 `@cap/spdx`) — SPDX 2.3 递归下降 AST (`AND`/`OR`/`WITH`/括号) 与满足性求值 |
+| **`@cap/validate-npm-package-license`** | `packages/@cap/validate-npm-package-license` | 对标 npm **Top 25** `validate-npm-package-license` v3 (**1.6 亿+/周**, 复用 `@cap/spdx-expression-parse`) — `package.json` 许可证字段校验 |
+| **`@cap/blake2-crate`** | `packages/@cap/blake2-crate` | 对标 crates.io **#140** `blake2` v0.10 (**8.5 亿+**) — RFC 7693 BLAKE2s-256 延迟压缩流式杂凑与密钥 MAC 模式 |
+| **`@cap/memchr-crate`** | `packages/@cap/memchr-crate` | 对标 crates.io **#15** `memchr` (**19 亿+**) — 高速字节/反向搜索 `memchr`/`2`/`3`、`memrchr` 与 Boyer-Moore-Horspool `memmem` |
+| **`@cap/zeroize`** | `packages/@cap/zeroize` | 对标 crates.io **#32** `zeroize` (**17 亿+**) — 密钥敏感内存安全清零与 `ZeroizingKey32`/`ZeroizingBuf64` 容器 |

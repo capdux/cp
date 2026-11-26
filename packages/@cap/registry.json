@@ -1454,14 +1454,10 @@
       "source_name": "spdx-expression-parse",
       "source_repo": "https://github.com/jslicense/spdx-expression-parse.js",
       "license": "MIT",
-      "cp_target": "@cap/spdx",
+      "cp_target": "@cap/spdx-expression-parse",
       "kind": "package",
-      "aliases": [
-        "spdx-satisfies",
-        "spdx-correct",
-        "spdx"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2383,13 +2379,11 @@
       "source_registry": "crates.io",
       "source_name": "memchr",
       "source_repo": "https://github.com/BurntSushi/memchr",
-      "license": "MIT",
-      "cp_target": "@cap/memchr",
+      "license": "Unlicense OR MIT",
+      "cp_target": "@cap/memchr-crate",
       "kind": "package",
-      "aliases": [
-        "memmem"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -2697,13 +2691,11 @@
       "source_registry": "crates.io",
       "source_name": "zeroize",
       "source_repo": "https://github.com/RustCrypto/utils",
-      "license": "MIT",
-      "cp_target": "@cap/subtle-ct",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/zeroize",
       "kind": "package",
-      "aliases": [
-        "secure-zero"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10825,6 +10817,26 @@
       "source_repo": "https://github.com/sindresorhus/make-dir",
       "license": "MIT",
       "cp_target": "@cap/make-dir",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "validate-npm-package-license",
+      "source_repo": "https://github.com/kemitchell/validate-npm-package-license.js",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/validate-npm-package-license",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "blake2",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/blake2-crate",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

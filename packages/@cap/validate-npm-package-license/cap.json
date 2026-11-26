@@ -1,0 +1,12 @@
+{
+  "name": "@cap/validate-npm-package-license",
+  "ver": "1.0.0",
+  "description": "Zero-allocation npm package license field validator supporting SPDX, UNLICENSED, SEE LICENSE IN, and legacy values for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/spdx-expression-parse": "1.0.0"
+  },
+  "keywords": ["npm", "license", "spdx", "validate", "package", "zero-alloc"]
+}
