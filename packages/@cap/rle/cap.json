@@ -1,0 +1,8 @@
+{
+  "name": "@cap/rle",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Apple/TIFF PackBits byte run-length compression and Prometheus/Gorilla-style Delta & Delta-of-Delta time-series integer encoding for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

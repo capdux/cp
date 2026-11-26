@@ -176,3 +176,6 @@
 
 ## 2026-11-26: Batch 37 历史性突破 **200 官方 `.cap` 包大关** + 285 条生态映射！
 - 交付分布式与概率算法四件套 `@cap/murmur3`（6/6）、`@cap/consistent-hash`（6/6）、`@cap/hyperloglog`（6/6）、`@cap/count-min`（6/6），去重直连 `ciborium`/`wasmparser`/`signal-hook`/`cookie`/`tiny-keccak`/`png`，`https://capdux.org` 线上官方 `.cap` 包正式突破 **200 个**，总映射达 **285 条**！
+
+## 2026-11-26: Batch 38 吸收 6 大十亿级 Rust 核心 crate + 交付 `@cap/foldhash`/`@cap/bech32`/`@cap/cobs`/`@cap/rle`（总映射 295 条！）
+- 严格按 crates.io 真实下载榜去重吸收 `once_cell`（16.03 亿）→ `scopeguard`（11.93 亿）至 CP 标准库/语言原语，并交付 8.95 亿级 `@cap/foldhash` 与 `@cap/bech32`/`@cap/cobs`/`@cap/rle` 四大零堆纯 CP 包（全部 6/6 PASS），总映射突破 **295 条**！

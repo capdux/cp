@@ -2854,6 +2854,106 @@
       "kind": "stdlib",
       "aliases": ["pngjs"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "once_cell",
+      "source_repo": "https://github.com/matklad/once_cell",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["once-cell"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "socket2",
+      "source_repo": "https://github.com/rust-lang/socket2",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "parking_lot",
+      "source_repo": "https://github.com/Amanieu/parking_lot",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["parking-lot", "parking_lot_core", "lock_api"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tokio",
+      "source_repo": "https://github.com/tokio-rs/tokio",
+      "license": "MIT",
+      "cp_target": "cap:actor",
+      "kind": "stdlib",
+      "aliases": ["async-std", "smol"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lazy_static",
+      "source_repo": "https://github.com/rust-lang-nursery/lazy-static.rs",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["lazy-static"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "scopeguard",
+      "source_repo": "https://github.com/bluss/scopeguard",
+      "license": "MIT",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": ["defer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "foldhash",
+      "source_repo": "https://github.com/orlp/foldhash",
+      "license": "Zlib",
+      "cp_target": "@cap/foldhash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bech32",
+      "source_repo": "https://github.com/rust-bitcoin/rust-bech32",
+      "license": "MIT",
+      "cp_target": "@cap/bech32",
+      "kind": "package",
+      "aliases": ["bech32m"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cobs",
+      "source_repo": "https://github.com/jamesmunns/cobs.rs",
+      "license": "MIT",
+      "cp_target": "@cap/cobs",
+      "kind": "package",
+      "aliases": ["corncobs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rle-decode-fast",
+      "source_repo": "https://github.com/okaneco/rle-decode-fast",
+      "license": "MIT",
+      "cp_target": "@cap/rle",
+      "kind": "package",
+      "aliases": ["packbits", "rle"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

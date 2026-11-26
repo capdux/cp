@@ -1,0 +1,269 @@
+// @cap/cobs — Zero-allocation Consistent Overhead Byte Stuffing (COBS) codec for CP
+// Clean-room MIT implementation inspired by Rust `cobs` and Cheshire & Baker (1999).
+
+pub const COBS_DECODER_CAP: usize = 512;
+
+// ---------------------------------------------------------------------------
+// 1. Core COBS Encoding & Decoding
+// ---------------------------------------------------------------------------
+
+/// Computes the maximum COBS encoded length (without trailing sentinel) for `source_len` bytes.
+pub fn max_encoded_len(source_len: usize) -> usize {
+    if (source_len == 0) {
+        return 1;
+    }
+    return source_len + (source_len / 254) + 1;
+}
+
+/// Encodes `src` using standard COBS (eliminating all `0x00` bytes, no trailing sentinel) into `dst`.
+/// Returns number of bytes written, or `0` if `dst` is too small.
+pub fn encode(src: []const u8, dst: []u8) -> usize {
+    if (dst.len == 0) {
+        return 0;
+    }
+    if (src.len == 0) {
+        dst[0] = 0x01;
+        return 1;
+    }
+
+    let code_idx: usize = 0;
+    let write_idx: usize = 1;
+    let code: u8 = 1;
+    let i: usize = 0;
+
+    while (i < src.len) {
+        const b = src[i];
+        if (b == 0) {
+            if (code_idx >= dst.len) {
+                return 0;
+            }
+            dst[code_idx] = code;
+            code_idx = write_idx;
+            write_idx += 1;
+            code = 1;
+        } else {
+            if (write_idx >= dst.len) {
+                return 0;
+            }
+            dst[write_idx] = b;
+            write_idx += 1;
+            code += 1;
+            if (code == 0xFF) {
+                if (code_idx >= dst.len) {
+                    return 0;
+                }
+                dst[code_idx] = 0xFF;
+                if (i + 1 < src.len) {
+                    code_idx = write_idx;
+                    write_idx += 1;
+                    code = 1;
+                } else {
+                    return write_idx;
+                }
+            }
+        }
+        i += 1;
+    }
+
+    if (code_idx >= dst.len) {
+        return 0;
+    }
+    dst[code_idx] = code;
+    return write_idx;
+}
+
+/// Decodes a standard COBS buffer `src` (without trailing `0x00`) into `dst`.
+/// Returns decoded byte count, or `-1` on invalid `0x00` byte, truncated block, or small `dst`.
+pub fn decode(src: []const u8, dst: []u8) -> i64 {
+    return decode_with_sentinel(src, dst, 0 as u8);
+}
+
+// ---------------------------------------------------------------------------
+// 2. Custom Sentinel (COBS/XOR)
+// ---------------------------------------------------------------------------
+
+/// Encodes `src` into `dst` eliminating `sentinel` via COBS + XOR `sentinel`.
+/// Returns bytes written, or `0` if `dst` is too small.
+pub fn encode_with_sentinel(src: []const u8, dst: []u8, sentinel: u8) -> usize {
+    const n = encode(src, dst);
+    if (n == 0 || sentinel == 0) {
+        return n;
+    }
+    let i: usize = 0;
+    while (i < n) {
+        dst[i] = dst[i] ^ sentinel;
+        i += 1;
+    }
+    return n;
+}
+
+/// Decodes a COBS/XOR buffer `src` with custom `sentinel` into `dst` (zero temporary buffers).
+/// Returns decoded byte count, or `-1` on malformed input or buffer overflow.
+pub fn decode_with_sentinel(src: []const u8, dst: []u8, sentinel: u8) -> i64 {
+    if (src.len == 0) {
+        return 0;
+    }
+    let read_idx: usize = 0;
+    let write_idx: usize = 0;
+
+    while (read_idx < src.len) {
+        const code = src[read_idx] ^ sentinel;
+        read_idx += 1;
+        if (code == 0) {
+            return -1;
+        }
+        const block_len = (code - 1) as usize;
+        if (read_idx + block_len > src.len) {
+            return -1;
+        }
+        if (write_idx + block_len > dst.len) {
+            return -1;
+        }
+        let k: usize = 0;
+        while (k < block_len) {
+            const b = src[read_idx] ^ sentinel;
+            if (b == 0) {
+                return -1;
+            }
+            dst[write_idx] = b;
+            read_idx += 1;
+            write_idx += 1;
+            k += 1;
+        }
+        if (code < 0xFF && read_idx < src.len) {
+            if (write_idx >= dst.len) {
+                return -1;
+            }
+            dst[write_idx] = 0;
+            write_idx += 1;
+        }
+    }
+
+    return write_idx as i64;
+}
+
+// ---------------------------------------------------------------------------
+// 3. Framed COBS (with trailing 0x00 delimiter)
+// ---------------------------------------------------------------------------
+
+/// Encodes `src` with COBS and appends a trailing `0x00` frame delimiter into `dst`.
+/// Returns total bytes written (including delimiter), or `0` if `dst` is too small.
+pub fn encode_framed(src: []const u8, dst: []u8) -> usize {
+    if (dst.len < 2) {
+        return 0;
+    }
+    const n = encode(src, dst[0..(dst.len - 1)]);
+    if (n == 0) {
+        return 0;
+    }
+    dst[n] = 0x00;
+    return n + 1;
+}
+
+/// Decodes a framed COBS buffer stopping at the first `0x00` delimiter.
+/// Returns decoded byte count, or `-1` on malformed frame or small `dst`.
+pub fn decode_framed(src: []const u8, dst: []u8) -> i64 {
+    let end: usize = 0;
+    while (end < src.len && src[end] != 0x00) {
+        end += 1;
+    }
+    return decode(src[0..end], dst);
+}
+
+// ---------------------------------------------------------------------------
+// 4. Streaming Incremental CobsDecoder (Fixed 512-byte Frame Buffer)
+// ---------------------------------------------------------------------------
+
+pub struct CobsDecoder {
+    pub buf: [512]u8,
+    pub write_len: usize,
+    pub block_rem: u8,
+    pub cur_code: u8,
+    pub has_data: bool,
+    pub failed: bool,
+    pub frame_ready: bool,
+
+    pub static fn init() -> CobsDecoder {
+        let buf: [512]u8 = undefined;
+        return CobsDecoder{
+            buf: buf,
+            write_len: 0,
+            block_rem: 0,
+            cur_code: 0,
+            has_data: false,
+            failed: false,
+            frame_ready: false,
+        };
+    }
+
+    pub fn reset(*_) {
+        _.write_len = 0;
+        _.block_rem = 0;
+        _.cur_code = 0;
+        _.has_data = false;
+        _.failed = false;
+        _.frame_ready = false;
+    }
+
+    /// Returns the most recently completed decoded frame slice.
+    pub fn frame() -> []const u8 {
+        return _.buf[0.._.write_len];
+    }
+
+    /// Feeds one byte from a `0x00`-delimited COBS stream.
+    /// Returns:
+    /// - `0`: need more bytes (or empty delimiter skipped)
+    /// - `> 0`: complete decoded frame length (call `frame()` immediately to read it)
+    /// - `-1`: framing error (truncated block or buffer overflow)
+    pub fn push(*_, byte: u8) -> i64 {
+        if (byte == 0x00) {
+            if (_.failed || _.block_rem > 0) {
+                _.reset();
+                return -1;
+            }
+            if (!_.has_data) {
+                // Empty frame / consecutive delimiter
+                _.reset();
+                return 0;
+            }
+            const completed_len = _.write_len as i64;
+            _.block_rem = 0;
+            _.cur_code = 0;
+            _.has_data = false;
+            _.failed = false;
+            _.frame_ready = true;
+            return completed_len;
+        }
+
+        if (_.frame_ready) {
+            _.reset();
+        }
+        if (_.failed) {
+            return -1;
+        }
+
+        if (_.block_rem == 0) {
+            if (_.has_data && _.cur_code < 0xFF) {
+                if (_.write_len >= COBS_DECODER_CAP) {
+                    _.failed = true;
+                    return -1;
+                }
+                _.buf[_.write_len] = 0x00;
+                _.write_len += 1;
+            }
+            _.cur_code = byte;
+            _.block_rem = byte - 1;
+            _.has_data = true;
+            return 0;
+        }
+
+        if (_.write_len >= COBS_DECODER_CAP) {
+            _.failed = true;
+            return -1;
+        }
+        _.buf[_.write_len] = byte;
+        _.write_len += 1;
+        _.block_rem -= 1;
+        return 0;
+    }
+}

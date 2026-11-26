@@ -390,3 +390,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/consistent-hash`** | `packages/@cap/consistent-hash` | 对标 Rust/npm `hashring` — 虚拟节点一致性哈希环、`O(log V)` 顺时针定位与去重多副本容灾 `getReplicas` |
 | **`@cap/hyperloglog`** | `packages/@cap/hyperloglog` | 对标 Rust `hyperloglog` / Redis HLL — 256 字节零堆概率基数估算（LinearCounting 纠偏）与分布式 `merge` |
 | **`@cap/count-min`** | `packages/@cap/count-min` | 对标 Rust `count-min-sketch` — 4×256 饱和计数器流式频次估算、分布式合并与 Heavy Hitter 热点检测 |
+| **`@cap/foldhash`** | `packages/@cap/foldhash` | 对标 Rust `foldhash`（8.95 亿）— `hashbrown` 默认 64×64→128-bit 折叠乘加高速非加密哈希（Fast/Quality 双模式） |
+| **`@cap/bech32`** | `packages/@cap/bech32` | 对标 Rust `bech32` / npm `bech32` — BIP-173 Bech32 与 BIP-350 Bech32m 6 字符 BCH 校验和零堆编解码 |
+| **`@cap/cobs`** | `packages/@cap/cobs` | 对标 Rust `cobs` — Consistent Overhead Byte Stuffing 帧同步字节填充、自定义哨兵 XOR 与流式 `CobsDecoder` |
+| **`@cap/rle`** | `packages/@cap/rle` | 对标 Rust `rle-decode-fast` / PackBits — Apple/TIFF PackBits RLE 与 Prometheus/Gorilla Delta/Delta-of-Delta 时序压缩 |

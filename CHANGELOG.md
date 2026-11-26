@@ -313,3 +313,10 @@
 - `packages/@cap/hyperloglog/` & `cap/test/testCapHyperloglog.cp`: 256 字节零堆 HyperLogLog 基数估算与分布式合并（6/6 PASS）。
 - `packages/@cap/count-min/` & `cap/test/testCapCountMin.cp`: Count-Min Sketch 流式频次估算与热点检测（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **285 条**高频映射（含 `ciborium`/`wasmparser`/`signal-hook`/`cookie`/`tiny-keccak`/`png` 去重直连）。
+
+## [2026-11-26] - Batch 38 交付 4 大 Rust 高速哈希与无损编码包（`@cap/foldhash`, `@cap/bech32`, `@cap/cobs`, `@cap/rle`），总映射突破 **295 条**！
+- `packages/@cap/foldhash/` & `cap/test/testCapFoldhash.cp`: 对标 Rust `foldhash`（8.95 亿下载），纯 64 位无溢出 128-bit 折叠乘加哈希（6/6 PASS）。
+- `packages/@cap/bech32/` & `cap/test/testCapBech32.cp`: BIP-173 Bech32 & BIP-350 Bech32m 6 字符 BCH 校验编解码（6/6 PASS）。
+- `packages/@cap/cobs/` & `cap/test/testCapCobs.cp`: Consistent Overhead Byte Stuffing 帧同步编码与流式 `CobsDecoder`（6/6 PASS）。
+- `packages/@cap/rle/` & `cap/test/testCapRle.cp`: Apple/TIFF PackBits RLE + Delta / Delta-of-Delta 时序压缩（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **295 条**高频映射（含 `once_cell`/`socket2`/`parking_lot`/`tokio`/`lazy_static`/`scopeguard` 6 大十亿级 Rust crate 去重直连）。
