@@ -241,13 +241,13 @@
       "source_name": "qs",
       "source_repo": "https://github.com/ljharb/qs",
       "license": "MIT",
-      "cp_target": "@cap/qs-lite",
+      "cp_target": "@cap/qs-parse",
       "kind": "package",
       "aliases": [
         "serde_qs",
         "query-string"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -1716,12 +1716,12 @@
       "source_name": "base64url",
       "source_repo": "https://github.com/brianloveswords/base64url",
       "license": "MIT",
-      "cp_target": "cap:codec",
-      "kind": "stdlib",
+      "cp_target": "@cap/base64-url",
+      "kind": "package",
       "aliases": [
         "base64-url"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2515,14 +2515,14 @@
       "source_name": "http",
       "source_repo": "https://github.com/hyperium/http",
       "license": "MIT",
-      "cp_target": "cap:http",
-      "kind": "stdlib",
+      "cp_target": "@cap/http-types",
+      "kind": "package",
       "aliases": [
         "hyper",
         "reqwest",
         "httparse"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -2767,13 +2767,13 @@
       "source_name": "hex",
       "source_repo": "https://github.com/KokaKiwi/rust-hex",
       "license": "MIT",
-      "cp_target": "@cap/hex",
+      "cp_target": "@cap/hex-crate",
       "kind": "package",
       "aliases": [
         "const-hex",
         "hex-encode"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -7140,12 +7140,12 @@
       "source_name": "convert_case",
       "source_repo": "https://github.com/rutrum/convert-case",
       "license": "MIT",
-      "cp_target": "@cap/camelcase",
+      "cp_target": "@cap/convert-case",
       "kind": "package",
       "aliases": [
         "inflector"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",

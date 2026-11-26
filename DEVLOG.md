@@ -398,3 +398,6 @@
 
 ## 2026-11-27: Batch 108 六大 CLI 渲染/文本算法/重试退避包全 6/6 PASS — 官方 `.cap` 包突破 **624+ LIVE**！
 - 交付 crates.io `strsim`（8.5 亿+）、`textwrap`（8 亿+，复用 `@cap/unicode-width`）、`serde_qs`（复用 `@cap/percent-encoding`）与 npm `ora`（复用 `@cap/ansi-escapes`）、`boxen`（复用 `@cap/string-width`）、`retry-backoff`，全部 36/36 单测 100% PASS；Worker N6 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N7。
+
+## 2026-11-27: Batch 109 五大 10 亿级底座包全 6/6 PASS — 官方 `.cap` 包突破 **629+**！
+- 全部 5 个包均实现 100% 跨包零重复复用：crates.io `hex`（15 亿+，复用 `@cap/data-encoding`）、`http`（11 亿+，复用 `@cap/unicase`）、`convert_case`（复用 `@cap/heck-case`），以及 npm `qs`（2 亿+/周，双包复用 `@cap/serde-qs`+`@cap/percent-encoding`）、`base64url`（复用 `@cap/data-encoding`），30/30 单测 100% PASS。

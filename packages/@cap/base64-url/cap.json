@@ -1,0 +1,11 @@
+{
+  "name": "@cap/base64-url",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 4648 Section 5 Base64URL (no-padding) encoder, decoder, and standard Base64 converter (clean-room port of npm base64url)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/data-encoding": "1.0.0"
+  }
+}

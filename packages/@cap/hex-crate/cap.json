@@ -1,0 +1,11 @@
+{
+  "name": "@cap/hex-crate",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap hexadecimal encoding, decoding, and validation (clean-room port of Rust hex crate)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/data-encoding": "1.0.0"
+  }
+}

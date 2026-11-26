@@ -840,3 +840,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/textwrap-crate`** | `packages/@cap/textwrap-crate` | 对标 crates.io #150 `textwrap` v0.16 (8 亿+，跨包复用 `@cap/unicode-width`) — 智能词边界折行、`indent`/`dedent`/`unfill` |
 | **`@cap/serde-qs`** | `packages/@cap/serde-qs` | 对标 crates.io Top-300 `serde_qs` (3.5 亿+，跨包复用 `@cap/percent-encoding`) — 嵌套方括号查询串解析与序列化 |
 | **`@cap/strsim`** | `packages/@cap/strsim` | 对标 crates.io #140 `strsim` (8.5 亿+) — Hamming/Levenshtein/OSA Damerau-Levenshtein/Jaro-Winkler/Dice 相似度 |
+| **`@cap/http-types`** | `packages/@cap/http-types` | 对标 crates.io #100 `http` v1 (11 亿+，跨包复用 `@cap/unicase`) — HTTP Method/60+ StatusCode/Version/HeaderName 基础类型 |
+| **`@cap/convert-case`** | `packages/@cap/convert-case` | 对标 crates.io Top-280 `convert_case` (4 亿+，跨包复用 `@cap/heck-case`) — 14 种风格命名转换统一调度器 |
+| **`@cap/hex-crate`** | `packages/@cap/hex-crate` | 对标 crates.io #45 `hex` (15 亿+，跨包复用 `@cap/data-encoding`) — 十六进制编解码、`0x` 前缀解析与校验 |
+| **`@cap/qs-parse`** | `packages/@cap/qs-parse` | 对标 npm Top 22 `qs` v6 (2 亿+/周，双包复用 `@cap/serde-qs`+`@cap/percent-encoding`) — 4 种数组格式嵌套查询串编解码 |
+| **`@cap/base64-url`** | `packages/@cap/base64-url` | 对标 npm `base64url` v3 (7000 万+/周，跨包复用 `@cap/data-encoding`) — RFC 4648 §5 无填充 Base64URL 编解码与互转 |

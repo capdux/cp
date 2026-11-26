@@ -969,3 +969,11 @@
 - `packages/@cap/boxen-ui/` & `cap/test/testCapBoxenUi.cp`: npm Top 70 `boxen` v8（7000 万+/周，复用 `@cap/string-width`，6/6 PASS）。
 - `packages/@cap/retry-backoff/` & `cap/test/testCapRetryBackoff.cp`: npm `p-retry`/`retry`（6000 万+/周，指数退避与确定性抖动，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 108 全部 6 个官方包映射（npm / crates.io 精准 1:1 平衡）。
+
+### 2026-11-27 (Batch 109 — 5 大 10 亿级核心底座包全 6/6 PASS — `hex`(15 亿)+`http`(11 亿)+`qs`(2 亿/周)+`convert_case`+`base64url`，官方 `.cap` 包突破 **629+**！)
+- `packages/@cap/hex-crate/` & `cap/test/testCapHexCrate.cp`: crates.io #45 `hex`（15 亿+，复用 `@cap/data-encoding`，6/6 PASS）。
+- `packages/@cap/http-types/` & `cap/test/testCapHttpTypes.cp`: crates.io #100 `http` v1（11 亿+，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/convert-case/` & `cap/test/testCapConvertCase.cp`: crates.io Top-280 `convert_case`（4 亿+，复用 `@cap/heck-case`，6/6 PASS）。
+- `packages/@cap/qs-parse/` & `cap/test/testCapQsParse.cp`: npm Top 22 `qs` v6（2 亿+/周，双包复用 `@cap/serde-qs`+`@cap/percent-encoding`，6/6 PASS）。
+- `packages/@cap/base64-url/` & `cap/test/testCapBase64Url.cp`: npm `base64url` v3（7000 万+/周，复用 `@cap/data-encoding`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 109 全部 5 个官方包映射。
