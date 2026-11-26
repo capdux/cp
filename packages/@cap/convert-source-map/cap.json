@@ -1,0 +1,14 @@
+{
+  "name": "@cap/convert-source-map",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation inline sourceMappingURL comment extractor, Base64 decoder/encoder, and comment stripper (clean-room MIT implementation of npm convert-source-map, #96 / 307M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "convert-source-map",
+    "repo": "https://github.com/thlorenz/convert-source-map",
+    "license": "MIT"
+  }
+}

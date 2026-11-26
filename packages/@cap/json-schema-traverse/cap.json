@@ -1,0 +1,14 @@
+{
+  "name": "@cap/json-schema-traverse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation JSON Schema traversal engine with RFC 6901 JSON Pointer generation for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "json-schema-traverse",
+    "repo": "https://github.com/epoberezkin/json-schema-traverse",
+    "license": "MIT"
+  }
+}

@@ -11173,6 +11173,66 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json-schema-traverse",
+      "source_repo": "https://github.com/epoberezkin/json-schema-traverse",
+      "license": "MIT",
+      "cp_target": "@cap/json-schema-traverse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "argparse",
+      "source_repo": "https://github.com/nodeca/argparse",
+      "license": "Python-2.0",
+      "cp_target": "@cap/argparse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "convert-source-map",
+      "source_repo": "https://github.com/thlorenz/convert-source-map",
+      "license": "MIT",
+      "cp_target": "@cap/convert-source-map",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tr46",
+      "source_repo": "https://github.com/jsdom/tr46",
+      "license": "MIT",
+      "cp_target": "@cap/idna-uts46",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "curve25519-dalek",
+      "source_repo": "https://github.com/dalek-cryptography/curve25519-dalek",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/curve25519-dalek",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "combine",
+      "source_repo": "https://github.com/Marwes/combine",
+      "license": "MIT",
+      "cp_target": "@cap/combine",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

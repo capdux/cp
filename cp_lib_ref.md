@@ -1015,3 +1015,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/js-tokens`** | `packages/@cap/js-tokens` | 对标 npm **#61** `js-tokens` (**3.81 亿/周**) — 零堆 JS/TS 词法分词器（Babel/ESLint 底层依赖） |
 | **`@cap/crypto-bigint`** | `packages/@cap/crypto-bigint` | 对标 crates.io **#405** `crypto-bigint` (**3.65 亿+**) — 恒定时间 256-bit 无符号大整数与模运算 |
 | **`@cap/sct`** | `packages/@cap/sct` | 对标 crates.io **#412** `sct` (**3.62 亿+**) — RFC 6962 Certificate Transparency SCT 线格式与列表解析 |
+| **`@cap/json-schema-traverse`** | `packages/@cap/json-schema-traverse` | 对标 npm **#30** `json-schema-traverse` (**4.77 亿/周**) — AJV JSON Schema 递归遍历与 RFC 6901 Pointer 查找 |
+| **`@cap/argparse`** | `packages/@cap/argparse` | 对标 npm **#63** `argparse` (**3.77 亿/周**) — Python 风格 CLI 参数解析器（短长标志/计数/位置参数/必填校验） |
+| **`@cap/convert-source-map`** | `packages/@cap/convert-source-map` | 对标 npm **#96** `convert-source-map` (**3.07 亿/周**) — 内联 Base64 `sourceMappingURL` 解析、生成与剥离 |
+| **`@cap/curve25519-dalek`** | `packages/@cap/curve25519-dalek` | 对标 crates.io **#421** `curve25519-dalek` (**3.54 亿+**) — 恒定时间 GF(2^255-19) 有限域与 RFC 7748 X25519 密钥协商 |
+| **`@cap/combine`** | `packages/@cap/combine` | 对标 crates.io **#424** `combine` (**3.54 亿+**) — 零拷贝回溯 `ParseCursor` 流式解析器组合子库 |

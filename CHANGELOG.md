@@ -1250,3 +1250,11 @@
 - `packages/@cap/crypto-bigint/` & `cap/test/testCapCryptoBigint.cp`: crates.io **#405** `crypto-bigint`（3.65 亿+，恒定时间 `U256` 与 secp256k1 模运算，6/6 PASS）。
 - `packages/@cap/sct/` & `cap/test/testCapSct.cp`: crates.io **#412** `sct`（3.62 亿+，RFC 6962 SCT 线格式，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N17 满 6 包轮换为 Worker N18。
+
+### 2026-11-27 (Batch 141 — **真实 Top 榜 5 大核心包：npm #30/#63/#96 + crates.io #421/#424，30/30 PASS**)
+- `packages/@cap/json-schema-traverse/` & `cap/test/testCapJsonSchemaTraverse.cp`: npm **#30** `json-schema-traverse`（4.77 亿/周，6/6 PASS）。
+- `packages/@cap/argparse/` & `cap/test/testCapArgparse.cp`: npm **#63** `argparse`（3.77 亿/周，6/6 PASS）。
+- `packages/@cap/convert-source-map/` & `cap/test/testCapConvertSourceMap.cp`: npm **#96** `convert-source-map`（3.07 亿/周，6/6 PASS）。
+- `packages/@cap/curve25519-dalek/` & `cap/test/testCapCurve25519Dalek.cp`: crates.io **#421** `curve25519-dalek`（3.54 亿+，RFC 7748 X25519 全向量 6/6 PASS）。
+- `packages/@cap/combine/` & `cap/test/testCapCombine.cp`: crates.io **#424** `combine`（3.54 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步 5 项新映射 + 将 npm **#78 `tr46`（3.41 亿/周）** 归并映射至已有 `@cap/idna-uts46`（零重复）；刷新 `cp_agent_lib_ref.md`；Worker C16 满 6 包光荣轮换。

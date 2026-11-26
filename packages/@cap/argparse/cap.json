@@ -1,0 +1,14 @@
+{
+  "name": "@cap/argparse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Python-style CLI argument parser supporting short/long flags, counts, bundling, and required checks for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Python-2.0",
+  "source": {
+    "registry": "npm",
+    "name": "argparse",
+    "repo": "https://github.com/nodeca/argparse",
+    "license": "Python-2.0"
+  }
+}
