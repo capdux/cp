@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ms-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation human-readable duration string parser and formatter (ms, s, m, h, d, w, y) for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ms", "duration", "humantime", "time", "parse", "format", "zero-alloc"]
+}

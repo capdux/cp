@@ -559,3 +559,12 @@
 - `packages/@cap/sql-escape/` & `cap/test/testCapSqlEscape.cp`: ANSI/PG/MySQL 字符串/标识符/LIKE 转义（6/6 PASS）。
 - `packages/@cap/cron-expr/` & `cap/test/testCapCronExpr.cp`: 5 段 Unix Cron 64-bit 位图编译与 O(1) 匹配（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **560+ 条**双生态高频映射（npm / crates.io 1:1 均衡）。
+
+## [2026-11-26] - Batch 66 亿级 CLI/文本/编码六件套（`@cap/ms-parse`, `@cap/proc-args`, `@cap/indent-strip`, `@cap/shell-escape`, `@cap/utf16-codec`, `@cap/mime-sniff`），总映射突破 **571 条**！
+- `packages/@cap/ms-parse/` & `cap/test/testCapMsParse.cp`: 人类可读时长解析与短/长格式输出（6/6 PASS）。
+- `packages/@cap/proc-args/` & `cap/test/testCapProcArgs.cp`: POSIX/GNU CLI 参数解析与 `-abc` 短簇拆分（6/6 PASS）。
+- `packages/@cap/indent-strip/` & `cap/test/testCapIndentStrip.cp`: 多行文本公共缩进剥离与统一缩进（6/6 PASS）。
+- `packages/@cap/shell-escape/` & `cap/test/testCapShellEscape.cp`: POSIX/Windows 命令行安全转义（6/6 PASS）。
+- `packages/@cap/utf16-codec/` & `cap/test/testCapUtf16Codec.cp`: UTF-8 <-> UTF-16/LE 代理对与 BOM 编解码（6/6 PASS）。
+- `packages/@cap/mime-sniff/` & `cap/test/testCapMimeSniff.cp`: WHATWG 二进制/文本/HTML/JSON 内容嗅探（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **571 条**双生态高频映射（**npm=285 / crates.io=286** 绝对 1:1 均衡）。

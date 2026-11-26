@@ -261,3 +261,6 @@
 
 ## 2026-11-26: Batch 65 亿级基础库六件套全 6/6 PASS，线上官方包冲刺 **363+ 个**、总映射 **560+ 条**！
 - 交付 `@cap/glob-match`（3.8 亿+/周，6/6）、`@cap/html-escape`（2.5 亿+/周，6/6）、`@cap/regex-escape`（2.4 亿+/周，6/6）、`@cap/magic-bytes`（7500 万+/周，6/6）、`@cap/sql-escape`（3500 万+/周，6/6）、`@cap/cron-expr`（3000 万+/周，6/6），全线零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 66 亿级 CLI/文本/编码六件套全 6/6 PASS，线上官方包冲刺 **367+ 个**、总映射 **571 条（npm=285 / crates.io=286）**！
+- 交付 `@cap/ms-parse`（3.2 亿+/周，6/6）、`@cap/proc-args`（1.8 亿+/周，6/6）、`@cap/indent-strip`（1.8 亿+/周，6/6）、`@cap/shell-escape`（2 亿+ Rust，6/6）、`@cap/utf16-codec`（6/6）、`@cap/mime-sniff`（6/6），全线零堆纯 CP 100% PASS！

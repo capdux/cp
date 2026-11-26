@@ -552,3 +552,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/magic-bytes`** | `packages/@cap/magic-bytes` | 对标 npm `file-type` / Rust `infer` — 25 种主流图片/归档/可执行/数据库/音视频二进制文件魔数零拷贝嗅探 |
 | **`@cap/sql-escape`** | `packages/@cap/sql-escape` | 对标 npm `sqlstring` / `pg-format` — ANSI/PG/MySQL SQL 字符串/标识符引号转义、`LIKE` 通配转义与 `?` 占位符统计 |
 | **`@cap/cron-expr`** | `packages/@cap/cron-expr` | 对标 npm `cron-parser` / Rust `cron` — 5 段 Unix Cron 64-bit 紧凑位图编译与 O(1) 时间点匹配（含标准宏） |
+| **`@cap/ms-parse`** | `packages/@cap/ms-parse` | 对标 npm `ms` / Rust `humantime` — 人类可读时长 (`"2 days"`, `"1.5h"`, `"-3s"`) 与毫秒双向解析及短/长格式化 |
+| **`@cap/proc-args`** | `packages/@cap/proc-args` | 对标 npm `minimist` / `mri` / Rust `lexopt` — 零堆 POSIX/GNU CLI 参数解析（`--key=val`、`-abc` 合并簇与 `--` 终止符） |
+| **`@cap/indent-strip`** | `packages/@cap/indent-strip` | 对标 npm `strip-indent` / `dedent` / Rust `indoc` — 多行文本最小公共缩进检测、剥离与统一缩进 |
+| **`@cap/shell-escape`** | `packages/@cap/shell-escape` | 对标 npm/Rust `shell-escape` — POSIX 单引号防注入转义、Windows `CommandLineToArgvW` 转义与环境变量名校验 |
+| **`@cap/utf16-codec`** | `packages/@cap/utf16-codec` | 对标 Rust `widestring` / npm `utf16` — 零堆 UTF-8 <-> UTF-16/UTF-16LE（含代理对与 BOM 检测）编解码 |
+| **`@cap/mime-sniff`** | `packages/@cap/mime-sniff` | 对标 npm `istextorbinary` / Rust `content_inspector` — WHATWG 二进制/文本判定与 HTML/XML/SVG/JSON 启发式嗅探 |

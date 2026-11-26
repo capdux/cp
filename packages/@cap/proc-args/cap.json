@@ -1,0 +1,9 @@
+{
+  "name": "@cap/proc-args",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation POSIX/GNU CLI argument parser (--flag, --key=val, --key val, -abc short clusters, -- terminator, stdin '-') in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["cli", "args", "argv", "minimist", "mri", "flags", "posix", "zero-alloc"]
+}

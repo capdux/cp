@@ -1,0 +1,8 @@
+{
+  "name": "@cap/utf16-codec",
+  "version": "1.0.0",
+  "description": "Zero-heap UTF-8 <-> UTF-16 / UTF-16LE codec with full surrogate pair support, lone-surrogate rejection, BOM detection, and UTF-16 unit counting.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

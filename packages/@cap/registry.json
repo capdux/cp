@@ -10,8 +10,8 @@
       "source_name": "ms",
       "source_repo": "https://github.com/vercel/ms",
       "license": "MIT",
-      "cp_target": "cap:time/human",
-      "kind": "stdlib",
+      "cp_target": "@cap/ms-parse",
+      "kind": "package",
       "aliases": [
         "humantime",
         "pretty-ms"
@@ -1249,8 +1249,8 @@
       "source_name": "ms",
       "source_repo": "https://github.com/vercel/ms",
       "license": "MIT",
-      "cp_target": "cap:time",
-      "kind": "stdlib",
+      "cp_target": "@cap/ms-parse",
+      "kind": "package",
       "aliases": [
         "parse-duration",
         "pretty-ms",
@@ -6945,6 +6945,106 @@
       "source_repo": "https://github.com/mdevils/html-entities",
       "license": "MIT",
       "cp_target": "@cap/html-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mri",
+      "source_repo": "https://github.com/lukeed/mri",
+      "license": "MIT",
+      "cp_target": "@cap/proc-args",
+      "kind": "package",
+      "aliases": [
+        "yargs-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dedent",
+      "source_repo": "https://github.com/dmnd/dedent",
+      "license": "MIT",
+      "cp_target": "@cap/indent-strip",
+      "kind": "package",
+      "aliases": [
+        "outdent"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shell-escape",
+      "source_repo": "https://github.com/xxorax/node-shell-escape",
+      "license": "MIT",
+      "cp_target": "@cap/shell-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "istextorbinary",
+      "source_repo": "https://github.com/bevry/istextorbinary",
+      "license": "MIT",
+      "cp_target": "@cap/mime-sniff",
+      "kind": "package",
+      "aliases": [
+        "isbinaryfile"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "utf16",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/utf16-codec",
+      "kind": "package",
+      "aliases": [
+        "ucs2"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lexopt",
+      "source_repo": "https://github.com/blyxxyz/lexopt",
+      "license": "MIT",
+      "cp_target": "@cap/proc-args",
+      "kind": "package",
+      "aliases": [
+        "pico-args"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "shell-escape",
+      "source_repo": "https://github.com/sfackler/shell-escape",
+      "license": "MIT",
+      "cp_target": "@cap/shell-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "widestring",
+      "source_repo": "https://github.com/starkat99/widestring-rs",
+      "license": "MIT",
+      "cp_target": "@cap/utf16-codec",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "content_inspector",
+      "source_repo": "https://github.com/sharkdp/content_inspector",
+      "license": "MIT",
+      "cp_target": "@cap/mime-sniff",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"

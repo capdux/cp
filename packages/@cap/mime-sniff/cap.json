@@ -1,0 +1,9 @@
+{
+  "name": "@cap/mime-sniff",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WHATWG MIME Sniffing Standard binary/text detector and HTML/XML/JSON/SVG content sniffer for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mime", "sniff", "whatwg", "binary", "text", "html", "json", "svg", "zero-alloc"]
+}
