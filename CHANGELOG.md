@@ -756,3 +756,16 @@
 - `packages/@cap/strip-bom/` & `cap/test/testCapStripBom.cp`: npm `strip-bom`（2.5 亿+/周，6/6 PASS）。
 - `packages/@cap/parse-ms/` & `cap/test/testCapParseMs.cp`: npm `parse-ms`（1.2 亿+/周独立依赖，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **770 条**双生态高频映射（**npm=385 / crates.io=385 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 87 — **780 映射 390/390 绝对对称！** 9 新包 + 第 9 个历史旧包重构，正式跨过 **500 官方 `.cap` 包终极里程碑！**)
+- `packages/@cap/kdtree-2d/` & `cap/test/testCapKdtree2d.cp`: 2D K-D 树最近邻与范围搜索（6/6 PASS）。
+- `packages/@cap/ray-cast/` & `cap/test/testCapRayCast.cp`: 2D/3D 射线求交（复用 `@cap/libm`，6/6 PASS）。
+- `packages/@cap/stringprep/` & `cap/test/testCapStringprep.cp`: crates.io `stringprep`（2.86 亿下载，6/6 PASS）。
+- `packages/@cap/base16ct/` & `cap/test/testCapBase16ct.cp`: crates.io #452 `base16ct`（3.25 亿下载，6/6 PASS）。
+- `packages/@cap/cargo-platform/` & `cap/test/testCapCargoPlatform.cp`: crates.io #500 `cargo-platform`（2.92 亿下载，6/6 PASS）。
+- `packages/@cap/binary-extensions/` & `cap/test/testCapBinaryExtensions.cp`: npm `binary-extensions`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/pretty-bytes/` & `cap/test/testCapPrettyBytes.cp`: npm `pretty-bytes`（2 亿+/周，6/6 PASS）。
+- `packages/@cap/strip-final-newline/` & `cap/test/testCapStripFinalNewline.cp`: npm `strip-final-newline`（2.5 亿+/周，6/6 PASS）。
+- `packages/@cap/indent-string/` & `cap/test/testCapIndentString.cp`: npm `indent-string`（1.8 亿+/周，6/6 PASS）。
+- `packages/@cap/pretty-ms/`: 第 9 个历史旧包跨包重构，真实 `import` 复用 `@cap/parse-ms`（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **780 条**双生态高频映射（**npm=390 / crates.io=390 绝对 1:1 对称**）。

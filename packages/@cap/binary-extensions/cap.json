@@ -1,0 +1,9 @@
+{
+  "name": "@cap/binary-extensions",
+  "ver": "1.0.0",
+  "desc": "Zero-heap O(log n) lookup of 127 common binary file extensions and categories in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["binary-extensions", "is-binary-path", "extensions", "file", "mime", "zero-heap"]
+}

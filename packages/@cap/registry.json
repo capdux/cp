@@ -9407,6 +9407,126 @@
         "bom-strip"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base16ct",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/base16ct",
+      "kind": "package",
+      "aliases": [
+        "ct-hex"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cargo-platform",
+      "source_repo": "https://github.com/rust-lang/cargo",
+      "license": "MIT",
+      "cp_target": "@cap/cargo-platform",
+      "kind": "package",
+      "aliases": [
+        "cfg-expr"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "stringprep",
+      "source_repo": "https://github.com/sfackler/rust-stringprep",
+      "license": "MIT",
+      "cp_target": "@cap/stringprep",
+      "kind": "package",
+      "aliases": [
+        "saslprep"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "urlencoding",
+      "source_repo": "https://github.com/kornelski/rust_urlencoding",
+      "license": "MIT",
+      "cp_target": "@cap/form-urlencoded",
+      "kind": "package",
+      "aliases": [
+        "percent-encode"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "binary-extensions",
+      "source_repo": "https://github.com/sindresorhus/binary-extensions",
+      "license": "MIT",
+      "cp_target": "@cap/binary-extensions",
+      "kind": "package",
+      "aliases": [
+        "bin-ext"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pretty-bytes",
+      "source_repo": "https://github.com/sindresorhus/pretty-bytes",
+      "license": "MIT",
+      "cp_target": "@cap/pretty-bytes",
+      "kind": "package",
+      "aliases": [
+        "filesize"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strip-final-newline",
+      "source_repo": "https://github.com/sindresorhus/strip-final-newline",
+      "license": "MIT",
+      "cp_target": "@cap/strip-final-newline",
+      "kind": "package",
+      "aliases": [
+        "trim-newline"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "indent-string",
+      "source_repo": "https://github.com/sindresorhus/indent-string",
+      "license": "MIT",
+      "cp_target": "@cap/indent-string",
+      "kind": "package",
+      "aliases": [
+        "indent"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kdbush",
+      "source_repo": "https://github.com/mourner/kdbush",
+      "license": "MIT",
+      "cp_target": "@cap/kdtree-2d",
+      "kind": "package",
+      "aliases": [
+        "kd-tree-javascript"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc-catalog",
+      "source_repo": "https://github.com/akhilles/crc-catalog",
+      "license": "MIT",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": [
+        "crc"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

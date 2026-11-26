@@ -693,3 +693,13 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/form-urlencoded`** | `packages/@cap/form-urlencoded` | 对标 crates.io `form_urlencoded` (11 亿+) / `urlencoding` (3.39 亿) — WHATWG 表单与百分号零堆编解码 |
 | **`@cap/strip-bom`** | `packages/@cap/strip-bom` | 对标 npm `strip-bom` (2.5 亿+/周) — UTF-8/16/32 BOM 检测与零拷贝剥离 |
 | **`@cap/parse-ms`** | `packages/@cap/parse-ms` | 对标 npm `parse-ms` (1.2 亿+/周，独立依赖) — 毫秒/亚毫秒拆解与还原（供 `@cap/pretty-ms` 复用） |
+
+| **`@cap/kdtree-2d`** | `packages/@cap/kdtree-2d` | 对标 npm `kdbush` / Rust `kiddo` — 原地平衡 2D K-D 树、剪枝最近邻与矩形/半径查询 |
+| **`@cap/ray-cast`** | `packages/@cap/ray-cast` | 对标 npm `ray-triangle-intersection`（跨包复用 `@cap/libm`）— 射线与平面/球体/Möller-Trumbore 三角形/2D 线段求交 |
+| **`@cap/stringprep`** | `packages/@cap/stringprep` | 对标 crates.io `stringprep` (2.86 亿) — RFC 3454 / RFC 4013 SASLprep & Nameprep 字符串预处理 |
+| **`@cap/base16ct`** | `packages/@cap/base16ct` | 对标 crates.io #452 `base16ct` (3.25 亿) — 零查找表恒定时间 Hex 大小写严格编解码 |
+| **`@cap/cargo-platform`** | `packages/@cap/cargo-platform` | 对标 crates.io #500 `cargo-platform` (2.92 亿) — LLVM Target Triple 与 `cfg(...)` 条件表达式求值器 |
+| **`@cap/binary-extensions`** | `packages/@cap/binary-extensions` | 对标 npm `binary-extensions` (1.5 亿+/周，独立依赖) — 127 项二进制扩展名 O(log n) 查表与 8 类识别 |
+| **`@cap/pretty-bytes`** | `packages/@cap/pretty-bytes` | 对标 npm `pretty-bytes` (2 亿+/周) — SI 1000 & IEC 1024 人类可读字节/比特大小格式化 |
+| **`@cap/strip-final-newline`** | `packages/@cap/strip-final-newline` | 对标 npm `strip-final-newline` (2.5 亿+/周，独立依赖) — 零拷贝尾随 LF/CRLF 剥离与规范化 |
+| **`@cap/indent-string`** | `packages/@cap/indent-string` | 对标 npm `indent-string` (1.8 亿+/周) — 零堆多行文本缩进器 |

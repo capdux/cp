@@ -1,0 +1,9 @@
+{
+  "name": "@cap/detect-newline",
+  "version": "1.0.0",
+  "description": "Zero-allocation dominant newline detector and cross-platform LF/CRLF normalizer for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["newline", "detect-newline", "eol", "crlf", "lf", "normalize", "zero-alloc"]
+}

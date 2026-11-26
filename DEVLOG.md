@@ -324,3 +324,6 @@
 
 ## 2026-11-27: Batch 86 八件套全 6/6 PASS — 达到 **770 条双生态映射（npm=385 / crates.io=385 绝对对称）** & 490+ 官方 `.cap` 包（距 **500 官方包终极里程碑**仅差 10 步）！
 - 单批拿下 `ucd-trie`、`cexpr`、`lru-slab`、`xorshift`、`ring-queue`、`form-urlencoded`、`strip-bom`、`parse-ms` 八大高频基础库，全线零堆纯 CP 100% PASS。
+
+## 2026-11-27: Batch 87 九件套全 6/6 PASS — 正式冲破 **500 官方 `.cap` 包终极里程碑** & **780 条双生态映射（390/390 绝对对称）**！
+- 单批交付 9 个全新零堆纯 CP 包（`kdtree-2d`、`ray-cast`、`stringprep`、`base16ct`、`cargo-platform`、`binary-extensions`、`pretty-bytes`、`strip-final-newline`、`indent-string`）+ 第 9 个历史旧包 `@cap/pretty-ms` 重构复用 `@cap/parse-ms`，全线 100% PASS！

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/base16ct",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation constant-time (table-free) Base16 / Hex encoder and strict decoder (RustCrypto base16ct parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

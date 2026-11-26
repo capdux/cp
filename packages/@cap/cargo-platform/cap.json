@@ -1,0 +1,9 @@
+{
+  "name": "@cap/cargo-platform",
+  "version": "1.0.0",
+  "description": "Zero-allocation LLVM/Rust target triple parser and Cargo cfg(...) expression evaluator for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["cargo", "platform", "target-triple", "cfg", "cross-compile", "zero-alloc"]
+}
