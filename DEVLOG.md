@@ -438,3 +438,6 @@
 
 ## 2026-11-27: Batch 121 六大 100% 跨包复用重磅包全 6/6 PASS — 突破 **690 官方 `.cap` 包里程碑**！
 - 本波 6 个包全部复用独立 `@cap/*` 依赖：crates.io **#38 `hmac`（16 亿+）**、**#95 `hkdf`（11 亿+）**、**#145 `rand_distr`（8 亿+）** 与 npm `chokidar`（1.6 亿+/周）、`lilconfig`、`listr2`，全部 36/36 单测 100% PASS；Worker C9 满 6 包（36/36 PASS）已光荣轮换换新为 Worker C10。
+
+## 2026-11-27: Batch 122 六大密码/查找/校验包全 6/6 PASS — 官方 `.cap` 包直抵 **696+**，总映射突破 **900 里程碑**！
+- 交付 crates.io **#35 `sha1`（16.5 亿+）**、**#65 `md-5`（13 亿+）**、**#155 `pbkdf2`（8 亿+，复用 `@cap/hmac-crate`）** 与 npm **Top 20 `find-up`（1.8 亿+/周）**、**Top 25 `validate-npm-package-name`（1.5 亿+/周）**、`enquirer`，全部 36/36 单测 100% PASS；Worker N10 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N11。

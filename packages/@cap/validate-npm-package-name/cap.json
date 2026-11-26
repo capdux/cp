@@ -1,0 +1,9 @@
+{
+  "name": "@cap/validate-npm-package-name",
+  "ver": "1.0.0",
+  "description": "Zero-heap npm/cap package name validator with scoped @org/pkg rules, reserved names, and legacy vs new validation (npm validate-npm-package-name equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

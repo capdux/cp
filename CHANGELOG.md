@@ -1085,3 +1085,12 @@
 - `packages/@cap/hmac-crate/` & `cap/test/testCapHmacCrate.cp`: crates.io **#38** `hmac`（**16 亿+**，复用 `@cap/cookie-signature`，RFC 4231 向量全过，6/6 PASS）。
 - `packages/@cap/hkdf-crate/` & `cap/test/testCapHkdfCrate.cp`: crates.io **#95** `hkdf`（**11 亿+**，复用 `@cap/hmac-crate`，RFC 5869 向量全过，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 121 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 122 — **突破 696 官方 `.cap` 包 & 900+ 上游映射！拿下 37.5 亿下载密码三巨头 `sha1`(16.5 亿)+`md-5`(13 亿)+`pbkdf2`(8 亿) + `find-up`(1.8 亿/周)+`validate-npm-package-name`(1.5 亿/周)+`enquirer`**)
+- `packages/@cap/enquirer/` & `cap/test/testCapEnquirer.cp`: npm Top 65 `enquirer` v2（复用 `@cap/picocolors`，6/6 PASS）。
+- `packages/@cap/validate-npm-package-name/` & `cap/test/testCapValidateNpmPackageName.cp`: npm Top 25 `validate-npm-package-name`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/find-up/` & `cap/test/testCapFindUp.cp`: npm Top 20 `find-up`（1.8 亿+/周，复用 `@cap/npm-run-path`，6/6 PASS）。
+- `packages/@cap/sha1-crate/` & `cap/test/testCapSha1Crate.cp`: crates.io **#35** `sha1` v0.10（**16.5 亿+**，FIPS 180-4 向量全过，6/6 PASS）。
+- `packages/@cap/md5-crate/` & `cap/test/testCapMd5Crate.cp`: crates.io **#65** `md-5`（**13 亿+**，RFC 1321 向量全过，6/6 PASS）。
+- `packages/@cap/pbkdf2-crate/` & `cap/test/testCapPbkdf2Crate.cp`: crates.io **#155** `pbkdf2`（**8 亿+**，复用 `@cap/hmac-crate`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 122 全部 6 个官方包映射。

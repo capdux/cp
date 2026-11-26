@@ -2131,13 +2131,10 @@
       "source_name": "find-up",
       "source_repo": "https://github.com/sindresorhus/find-up",
       "license": "MIT",
-      "cp_target": "cap:path",
-      "kind": "stdlib",
-      "aliases": [
-        "pkg-dir",
-        "locate-path"
-      ],
-      "absorbed_at": "2026-11-26"
+      "cp_target": "@cap/find-up",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -3101,13 +3098,13 @@
       "source_registry": "crates.io",
       "source_name": "md-5",
       "source_repo": "https://github.com/RustCrypto/hashes",
-      "license": "MIT",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/md5-crate",
+      "kind": "package",
       "aliases": [
         "md5"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3515,15 +3512,11 @@
       "source_registry": "crates.io",
       "source_name": "pbkdf2",
       "source_repo": "https://github.com/RustCrypto/password-hashes",
-      "license": "MIT",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
-      "aliases": [
-        "ed25519",
-        "ecdsa",
-        "aead"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/pbkdf2-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -6712,12 +6705,10 @@
       "source_name": "validate-npm-package-name",
       "source_repo": "https://github.com/npm/validate-npm-package-name",
       "license": "ISC",
-      "cp_target": "@cap/npm-spec",
+      "cp_target": "@cap/validate-npm-package-name",
       "kind": "package",
-      "aliases": [
-        "npm-package-arg"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -10770,6 +10761,26 @@
       "source_repo": "https://github.com/rust-random/rand",
       "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/rand-distr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "enquirer",
+      "source_repo": "https://github.com/enquirer/enquirer",
+      "license": "MIT",
+      "cp_target": "@cap/enquirer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sha1",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/sha1-crate",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

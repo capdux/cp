@@ -916,3 +916,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/rand-distr`** | `packages/@cap/rand-distr` | 对标 crates.io **#145** `rand_distr` v0.4 (**8 亿+**, 复用 `@cap/xoshiro256`) — 均匀/正态(Box-Muller)/指数/伯努利与加权离散分布采样 |
 | **`@cap/hmac-crate`** | `packages/@cap/hmac-crate` | 对标 crates.io **#38** `hmac` (**16 亿+**, 复用 `@cap/cookie-signature`) — RFC 2104/4231 流式 HMAC-SHA256 与恒定时间验签 |
 | **`@cap/hkdf-crate`** | `packages/@cap/hkdf-crate` | 对标 crates.io **#95** `hkdf` (**11 亿+**, 复用 `@cap/hmac-crate`) — RFC 5869 HKDF-SHA256 `extract`/`expand` 密钥派生函数 |
+| **`@cap/enquirer`** | `packages/@cap/enquirer` | 对标 npm Top 65 `enquirer` v2 (复用 `@cap/picocolors`) — 零堆交互式 CLI 提示器（`ConfirmPrompt`/`SelectPrompt`/`MultiSelectPrompt`） |
+| **`@cap/validate-npm-package-name`** | `packages/@cap/validate-npm-package-name` | 对标 npm Top 25 `validate-npm-package-name` (**1.5 亿+/周**) — npm/`@cap` 包名与 `@scope/pkg` 规则校验、`valid_for_new`/`valid_for_old` |
+| **`@cap/find-up`** | `packages/@cap/find-up` | 对标 npm Top 20 `find-up` (**1.8 亿+/周**, 复用 `@cap/npm-run-path`) — 向上遍历祖先目录查找器、`stop_at` 截断与多文件名优先级匹配 |
+| **`@cap/sha1-crate`** | `packages/@cap/sha1-crate` | 对标 crates.io **#35** `sha1` v0.10 (**16.5 亿+**) — FIPS 180-4 零堆流式 `Sha1Hasher` 与一步杂凑 |
+| **`@cap/md5-crate`** | `packages/@cap/md5-crate` | 对标 crates.io **#65** `md-5` / `md5` (**13 亿+**) — RFC 1321 零堆流式 `Md5Hasher` 与一步杂凑 |
+| **`@cap/pbkdf2-crate`** | `packages/@cap/pbkdf2-crate` | 对标 crates.io **#155** `pbkdf2` (**8 亿+**, 复用 `@cap/hmac-crate`) — RFC 2898/6070 PBKDF2-HMAC-SHA256 口令密钥派生 |
