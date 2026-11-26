@@ -1,323 +1,189 @@
-// @cap/num-rational — Zero-allocation exact rational number (`Ratio64`) engine for CP
-// Clean-room MIT implementation inspired by Rust `num-rational`.
+// packages/@cap/num-rational/src/index.cp
+// Zero-allocation exact 64-bit rational number library (`Ratio64`).
+// Clean-room MIT pure CP implementation inspired by Rust `num-rational` v0.4; reuses @cap/num-integer.
 
-// ---------------------------------------------------------------------------
-// Internal Math & String Helpers
-// ---------------------------------------------------------------------------
+import { gcdU64, divFloor, divCeil } from "../../num-integer/src/index.cp";
 
-fn absU64(n: i64) -> u64 {
-    if (n >= 0) {
-        return n as u64;
+fn nratAbsU64(v: i64): u64 {
+    if (v >= 0) {
+        return v as u64;
     }
-    return ((0 - (n + 1)) as u64) + 1;
+    return ((-(v + 1)) as u64) + 1;
 }
 
-/// Signed truncating division `a / b` where `b > 0`, using unsigned division internally.
-fn divTruncPos(a: i64, b_pos: i64) -> i64 {
-    const bu = b_pos as u64;
-    if (a >= 0) {
-        return ((a as u64) / bu) as i64;
+/// Normalize `(numer, denom)` with `denom != 0` into canonical form: `denom > 0` and `gcd(|numer|, denom) == 1`.
+fn nratReduce(numer: i64, denom: i64): Ratio64 {
+    if (numer == 0) {
+        return Ratio64 { numer: 0, denom: 1 };
     }
-    return -((absU64(a) / bu) as i64);
+    const neg: bool = (numer < 0) != (denom < 0);
+    const un: u64 = nratAbsU64(numer);
+    const ud: u64 = nratAbsU64(denom);
+    const g: u64 = gcdU64(un, ud);
+    const rn: u64 = un / g;
+    const rd: u64 = ud / g;
+    const final_n: i64 = if (neg) { -(rn as i64) } else { rn as i64 };
+    return Ratio64 {
+        numer: final_n,
+        denom: rd as i64,
+    };
 }
 
-/// Remainder magnitude `|a| % b` where `b > 0`.
-fn remMagPos(a: i64, b_pos: i64) -> u64 {
-    return absU64(a) % (b_pos as u64);
-}
-
-fn gcdU64(a: u64, b: u64) -> u64 {
-    let x = a;
-    let y = b;
-    while (y != 0) {
-        const t = x % y;
-        x = y;
-        y = t;
-    }
-    return x;
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimWs(s: string) -> string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && isWs(s[a])) {
-        a += 1;
-    }
-    while (b > a && isWs(s[b - 1])) {
-        b -= 1;
-    }
-    return s[a..b];
-}
-
-fn parseI64Strict(raw: string) -> i64? {
-    const s = trimWs(raw);
-    if (s.len == 0) {
-        return null;
-    }
-    let i: usize = 0;
-    let neg = false;
-    if (s[i] == '-') {
-        neg = true;
-        i += 1;
-    } else if (s[i] == '+') {
-        i += 1;
-    }
-    if (i >= s.len) {
-        return null;
-    }
-    let acc: u64 = 0;
-    const limit: u64 = if (neg) ((1 as u64) << 63) else (((1 as u64) << 63) - 1);
-    while (i < s.len) {
-        const c = s[i];
-        if (c < '0' || c > '9') {
-            return null;
-        }
-        const digit = (c - '0') as u64;
-        if (acc > (limit - digit) / 10) {
-            return null;
-        }
-        acc = acc * 10 + digit;
-        i += 1;
-    }
-    if (neg) {
-        if (acc == ((1 as u64) << 63)) {
-            return -9223372036854775807 - 1;
-        }
-        return -(acc as i64);
-    }
-    return acc as i64;
-}
-
-// ---------------------------------------------------------------------------
-// Public Ratio64 Struct
-// ---------------------------------------------------------------------------
-
+/// Exact 64-bit rational number in canonical reduced form (`denom > 0`, `gcd(|numer|, denom) == 1`).
 pub struct Ratio64 {
     pub numer: i64,
     pub denom: i64,
 
-    /// Constructs a reduced `Ratio64` with strictly positive `denom`.
-    /// Returns `null` if `denom == 0`.
-    pub static fn new(numer: i64, denom: i64) -> Ratio64? {
+    /// Construct a reduced rational `numer / denom`. Returns `null` if `denom == 0`.
+    pub static fn new(numer: i64, denom: i64): Ratio64? {
         if (denom == 0) {
             return null;
         }
-        if (numer == 0) {
-            return Ratio64{ numer: 0, denom: 1 };
-        }
-        let n = numer;
-        let d = denom;
-        if (d < 0) {
-            n = -n;
-            d = -d;
-        }
-        const g = gcdU64(absU64(n), d as u64) as i64;
-        return Ratio64{
-            numer: divTruncPos(n, g),
-            denom: divTruncPos(d, g),
-        };
+        return nratReduce(numer, denom);
     }
 
-    pub static fn fromInt(n: i64) -> Ratio64 {
-        return Ratio64{ numer: n, denom: 1 };
+    /// Construct an integer rational `n / 1`.
+    pub static fn fromInt(n: i64): Ratio64 {
+        return Ratio64 { numer: n, denom: 1 };
     }
 
-    pub static fn zero() -> Ratio64 {
-        return Ratio64{ numer: 0, denom: 1 };
+    /// Return additive identity `0 / 1`.
+    pub static fn zero(): Ratio64 {
+        return Ratio64 { numer: 0, denom: 1 };
     }
 
-    pub static fn one() -> Ratio64 {
-        return Ratio64{ numer: 1, denom: 1 };
+    /// Return multiplicative identity `1 / 1`.
+    pub static fn one(): Ratio64 {
+        return Ratio64 { numer: 1, denom: 1 };
     }
 
-    pub fn neg() -> Ratio64 {
-        return Ratio64{ numer: -_.numer, denom: _.denom };
-    }
-
-    pub fn abs() -> Ratio64 {
-        return Ratio64{
-            numer: if (_.numer < 0) -_.numer else _.numer,
-            denom: _.denom,
-        };
-    }
-
-    /// Returns the multiplicative inverse `denom / numer`, or `null` if zero.
-    pub fn recip() -> Ratio64? {
-        if (_.numer == 0) {
-            return null;
-        }
-        return Ratio64.new(_.denom, _.numer);
-    }
-
-    /// Exact addition with pre-reduction by `gcd(d1, d2)` to avoid intermediate overflow.
-    pub fn add(other: Ratio64) -> Ratio64 {
-        const g = gcdU64(_.denom as u64, other.denom as u64) as i64;
-        const d1_g = divTruncPos(_.denom, g);
-        const d2_g = divTruncPos(other.denom, g);
-        const n = _.numer * d2_g + other.numer * d1_g;
-        const d = d1_g * other.denom;
-        return Ratio64.new(n, d).?;
-    }
-
-    /// Exact subtraction `self - other`.
-    pub fn sub(other: Ratio64) -> Ratio64 {
-        return _.add(other.neg());
-    }
-
-    /// Exact multiplication with cross-cancellation to avoid intermediate overflow.
-    pub fn mul(other: Ratio64) -> Ratio64 {
-        if (_.numer == 0 || other.numer == 0) {
-            return Ratio64.zero();
-        }
-        const g1 = gcdU64(absU64(_.numer), other.denom as u64) as i64;
-        const g2 = gcdU64(absU64(other.numer), _.denom as u64) as i64;
-        const n = divTruncPos(_.numer, g1) * divTruncPos(other.numer, g2);
-        const d = divTruncPos(_.denom, g2) * divTruncPos(other.denom, g1);
-        return Ratio64.new(n, d).?;
-    }
-
-    /// Exact division `self / other`, returning `null` on division by zero.
-    pub fn div(other: Ratio64) -> Ratio64? {
-        const inv = other.recip();
-        if (inv == null) {
-            return null;
-        }
-        return _.mul(inv.?);
-    }
-
-    pub fn equals(other: Ratio64) -> bool {
-        return _.numer == other.numer && _.denom == other.denom;
-    }
-
-    pub fn isInteger() -> bool {
+    /// Return true if this rational is an exact integer (`denom == 1`).
+    pub fn isInteger(): bool {
         return _.denom == 1;
     }
 
-    /// Truncates toward zero.
-    pub fn trunc() -> i64 {
-        return divTruncPos(_.numer, _.denom);
+    /// Return true if equal to 0.
+    pub fn isZero(): bool {
+        return _.numer == 0;
     }
 
-    /// Rounds toward negative infinity.
-    pub fn floor() -> i64 {
-        const q = divTruncPos(_.numer, _.denom);
-        if (_.numer >= 0) {
-            return q;
+    /// Return true if strictly greater than 0.
+    pub fn isPositive(): bool {
+        return _.numer > 0;
+    }
+
+    /// Return true if strictly less than 0.
+    pub fn isNegative(): bool {
+        return _.numer < 0;
+    }
+
+    /// Exact addition with denominator GCD pre-reduction to minimize overflow risk.
+    pub fn add(other: Ratio64): Ratio64 {
+        const g: u64 = gcdU64(_.denom as u64, other.denom as u64);
+        const d1: u64 = (_.denom as u64) / g;
+        const d2: u64 = (other.denom as u64) / g;
+        const num: i64 = _.numer * (d2 as i64) + other.numer * (d1 as i64);
+        const den: i64 = (d1 * (other.denom as u64)) as i64;
+        return nratReduce(num, den);
+    }
+
+    /// Exact subtraction with denominator GCD pre-reduction.
+    pub fn sub(other: Ratio64): Ratio64 {
+        const g: u64 = gcdU64(_.denom as u64, other.denom as u64);
+        const d1: u64 = (_.denom as u64) / g;
+        const d2: u64 = (other.denom as u64) / g;
+        const num: i64 = _.numer * (d2 as i64) - other.numer * (d1 as i64);
+        const den: i64 = (d1 * (other.denom as u64)) as i64;
+        return nratReduce(num, den);
+    }
+
+    /// Exact multiplication with cross-cancellation to prevent intermediate overflow.
+    pub fn mul(other: Ratio64): Ratio64 {
+        if (_.numer == 0 || other.numer == 0) {
+            return Ratio64.zero();
         }
-        const r = remMagPos(_.numer, _.denom);
-        return if (r == 0) q else (q - 1);
+        const is_neg: bool = (_.numer < 0) != (other.numer < 0);
+        const n1: u64 = nratAbsU64(_.numer);
+        const d1: u64 = _.denom as u64;
+        const n2: u64 = nratAbsU64(other.numer);
+        const d2: u64 = other.denom as u64;
+
+        const g1: u64 = gcdU64(n1, d2);
+        const g2: u64 = gcdU64(n2, d1);
+        const rn: u64 = (n1 / g1) * (n2 / g2);
+        const rd: u64 = (d1 / g2) * (d2 / g1);
+        const final_n: i64 = if (is_neg) { -(rn as i64) } else { rn as i64 };
+        return Ratio64 { numer: final_n, denom: rd as i64 };
     }
 
-    /// Rounds toward positive infinity.
-    pub fn ceil() -> i64 {
-        const q = divTruncPos(_.numer, _.denom);
-        if (_.numer <= 0) {
-            return q;
+    /// Return multiplicative inverse `denom / numer`, or `null` if `numer == 0`.
+    pub fn recip(): Ratio64? {
+        if (_.numer == 0) {
+            return null;
         }
-        const r = remMagPos(_.numer, _.denom);
-        return if (r == 0) q else (q + 1);
+        if (_.numer < 0) {
+            return Ratio64 { numer: -_.denom, denom: -_.numer };
+        }
+        return Ratio64 { numer: _.denom, denom: _.numer };
     }
 
-    /// Exact ordering returning `-1`, `0`, or `1`.
-    pub fn cmp(other: Ratio64) -> i32 {
-        if (_.equals(other)) {
+    /// Exact division `_ / other`, returning `null` if `other` is zero.
+    pub fn div(other: Ratio64): Ratio64? {
+        if (inv := other.recip()) {
+            return _.mul(inv);
+        }
+        return null;
+    }
+
+    /// Arithmetic negation `-_`.
+    pub fn neg(): Ratio64 {
+        return Ratio64 { numer: -_.numer, denom: _.denom };
+    }
+
+    /// Absolute value `|_|`.
+    pub fn abs(): Ratio64 {
+        if (_.numer < 0) {
+            return Ratio64 { numer: -_.numer, denom: _.denom };
+        }
+        return Ratio64 { numer: _.numer, denom: _.denom };
+    }
+
+    /// Three-way comparison returning `-1` (`_ < other`), `0` (`_ == other`), or `1` (`_ > other`).
+    pub fn cmp(other: Ratio64): i32 {
+        if (_.numer == other.numer && _.denom == other.denom) {
             return 0;
         }
-        const q1 = _.floor();
-        const q2 = other.floor();
-        if (q1 != q2) {
-            return if (q1 < q2) -1 else 1;
+        const g: u64 = gcdU64(_.denom as u64, other.denom as u64);
+        const d1: u64 = (_.denom as u64) / g;
+        const d2: u64 = (other.denom as u64) / g;
+        const lhs: i64 = _.numer * (d2 as i64);
+        const rhs: i64 = other.numer * (d1 as i64);
+        if (lhs < rhs) {
+            return -1;
         }
-        // Same floor: compare non-negative fractional remainders r1/d1 vs r2/d2
-        const r1 = _.numer - q1 * _.denom;
-        const r2 = other.numer - q2 * other.denom;
-        const g = gcdU64(_.denom as u64, other.denom as u64) as i64;
-        const lhs = r1 * divTruncPos(other.denom, g);
-        const rhs = r2 * divTruncPos(_.denom, g);
-        if (lhs < rhs) return -1;
-        if (lhs > rhs) return 1;
+        if (lhs > rhs) {
+            return 1;
+        }
         return 0;
     }
 
-    pub fn toF64() -> f64 {
+    /// Exact equality check (O(1) thanks to canonical reduced representation).
+    pub fn eq(other: Ratio64): bool {
+        return _.numer == other.numer && _.denom == other.denom;
+    }
+
+    /// Greatest integer `<= _`.
+    pub fn floor(): i64 {
+        return divFloor(_.numer, _.denom);
+    }
+
+    /// Smallest integer `>= _`.
+    pub fn ceil(): i64 {
+        return divCeil(_.numer, _.denom);
+    }
+
+    /// Convert to 64-bit IEEE-754 floating point approximation.
+    pub fn toF64(): f64 {
         return (_.numer as f64) / (_.denom as f64);
     }
-}
-
-// ---------------------------------------------------------------------------
-// Parsing & Formatting (Zero Heap Allocation)
-// ---------------------------------------------------------------------------
-
-/// Parses a rational string such as `"3/4"`, `"-6/8"`, or `"42"` into a reduced `Ratio64`.
-pub fn parseRatio(s: string) -> Ratio64? {
-    const trimmed = trimWs(s);
-    if (trimmed.len == 0) {
-        return null;
-    }
-    let slash: usize = trimmed.len;
-    let i: usize = 0;
-    while (i < trimmed.len) {
-        if (trimmed[i] == '/') {
-            slash = i;
-            break;
-        }
-        i += 1;
-    }
-    if (slash >= trimmed.len) {
-        const n_opt = parseI64Strict(trimmed);
-        if (n_opt == null) return null;
-        return Ratio64.fromInt(n_opt.?);
-    }
-    const n_opt = parseI64Strict(trimmed[0..slash]);
-    const d_opt = parseI64Strict(trimmed[(slash + 1)..trimmed.len]);
-    if (n_opt == null || d_opt == null) {
-        return null;
-    }
-    return Ratio64.new(n_opt.?, d_opt.?);
-}
-
-fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
-    if (pos < out.len) {
-        out[pos] = c;
-        return pos + 1;
-    }
-    return pos;
-}
-
-fn appendI64(out: []u8, start_pos: usize, val: i64) -> usize {
-    let pos = start_pos;
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    if (val < 0) {
-        pos = appendByte(out, pos, '-');
-    }
-    let v = absU64(val);
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    while (v > 0) {
-        digits[len] = ('0' as u64 + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        pos = appendByte(out, pos, digits[k]);
-    }
-    return pos;
-}
-
-/// Formats `r` into `out` (`"5"` when `denom == 1`, otherwise `"2/3"`).
-pub fn formatRatio(r: Ratio64, out: []u8) -> string {
-    let pos = appendI64(out, 0 as usize, r.numer);
-    if (r.denom != 1) {
-        pos = appendByte(out, pos, '/');
-        pos = appendI64(out, pos, r.denom);
-    }
-    return out[0..pos];
 }

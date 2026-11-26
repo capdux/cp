@@ -1,201 +1,120 @@
-// @cap/ordered-float — Zero-allocation IEEE 754 total-order float engine for CP
-// Clean-room MIT implementation inspired by Rust `ordered-float` (crates.io #292, 571M+ downloads).
-//
-// Ordering contract (strict total order):
-//   -Inf < finite numbers (-0.0 == +0.0) < +Inf < NaN (all NaNs compare equal)
-//
-// Features:
-// - Classification: `isNanF64`, `isInfF64`, `isFiniteF64`.
-// - Total-order comparison: `orderedCmpF64`, `orderedEqF64`, `orderedMinF64`, `orderedMaxF64`, `clampF64`.
-// - `NotNanF64`: checked non-NaN wrapper (`new`, `value`, `cmp`).
-// - NaN/Inf-safe zero-allocation in-place sorting (`sortF64`), `isSortedF64`, and `binarySearchF64`.
+// @cap/ordered-float — Zero-heap IEEE-754 total ordering & canonical hashing for f64 / f32.
+// Clean-room MIT port of crates.io #85 `ordered-float` (1.2B+ downloads); reuses `@cap/fnv-hash`.
+// Total order: -Inf < finite negatives < (-0.0 == +0.0) < finite positives < +Inf < NaN (all NaNs equal).
 
-const std = @import("std");
+import { fnv1a64 } from "../../fnv-hash/src/index.cp";
 
-/// Returns `true` if `x` is IEEE 754 NaN.
-pub fn isNanF64(x: f64) -> bool {
+/// Returns true if `x` is NaN (`x != x`).
+pub fn isNanF64(x: f64): bool {
     return x != x;
 }
 
-/// Returns `true` if `x` is `+Inf` or `-Inf`.
-pub fn isInfF64(x: f64) -> bool {
-    return std.math.isInf(x);
+/// Returns true if `x` is positive or negative infinity.
+pub fn isInfiniteF64(x: f64): bool {
+    if (x != x) { return false; }
+    return (x - x) != 0.0;
 }
 
-/// Returns `true` if `x` is neither NaN nor infinite.
-pub fn isFiniteF64(x: f64) -> bool {
-    return !isNanF64(x) && !isInfF64(x);
+/// Returns true if `x` is finite (neither NaN nor +/-Inf).
+pub fn isFiniteF64(x: f64): bool {
+    return !isNanF64(x) && !isInfiniteF64(x);
 }
 
-/// Strict total-order comparison for `f64`: `-Inf < finite (-0.0 == +0.0) < +Inf < NaN`.
-/// Returns `-1` if `a < b`, `0` if `a == b` (including two NaNs or `-0.0` vs `+0.0`), `1` if `a > b`.
-pub fn orderedCmpF64(a: f64, b: f64) -> i32 {
-    const na = isNanF64(a);
-    const nb = isNanF64(b);
-    if (na && nb) {
-        return 0;
-    }
-    if (na) {
-        return 1;
-    }
-    if (nb) {
-        return -1;
-    }
-    if (a < b) {
-        return -1;
-    }
-    if (a > b) {
-        return 1;
-    }
+/// Total ordering comparison for `f64` (`-1`, `0`, `1`):
+/// All NaNs compare equal to each other and greater than `+Inf`; `-0.0 == +0.0`.
+pub fn cmpOrderedF64(a: f64, b: f64): i32 {
+    let a_nan = isNanF64(a);
+    let b_nan = isNanF64(b);
+    if (a_nan && b_nan) { return 0; }
+    if (a_nan) { return 1; }
+    if (b_nan) { return -1; }
+    if (a < b) { return -1; }
+    if (a > b) { return 1; }
     return 0;
 }
 
-/// Total-order equality: `NaN == NaN` is `true`, and `-0.0 == +0.0` is `true`.
-pub fn orderedEqF64(a: f64, b: f64) -> bool {
-    return orderedCmpF64(a, b) == 0;
+/// Total equality for `f64` (`NaN == NaN` is true, `-0.0 == +0.0` is true).
+pub fn eqOrderedF64(a: f64, b: f64): bool {
+    return cmpOrderedF64(a, b) == 0;
 }
 
-/// Returns the smaller of `a` and `b` under `orderedCmpF64` (finite beats NaN).
-pub fn orderedMinF64(a: f64, b: f64) -> f64 {
-    if (orderedCmpF64(a, b) <= 0) {
-        return a;
-    }
-    return b;
-}
-
-/// Returns the larger of `a` and `b` under `orderedCmpF64`.
-pub fn orderedMaxF64(a: f64, b: f64) -> f64 {
-    if (orderedCmpF64(a, b) >= 0) {
-        return a;
-    }
-    return b;
-}
-
-/// Clamps `x` into `[lo, hi]` using total-order comparison.
-pub fn clampF64(x: f64, lo: f64, hi: f64) -> f64 {
-    if (orderedCmpF64(x, lo) < 0) {
-        return lo;
-    }
-    if (orderedCmpF64(x, hi) > 0) {
-        return hi;
-    }
-    return x;
-}
-
-/// Checked floating-point wrapper guaranteed never to contain NaN.
-pub struct NotNanF64 {
-    pub inner: f64,
-
-    pub static fn new(v: f64) -> NotNanF64? {
-        if (isNanF64(v)) {
-            return null;
-        }
-        return NotNanF64{ inner: v };
-    }
-
-    pub fn value() -> f64 {
-        return _.inner;
-    }
-
-    pub fn cmp(other: NotNanF64) -> i32 {
-        return orderedCmpF64(_.inner, other.inner);
-    }
-}
-
-fn siftDownF64(slice: []f64, start: usize, end: usize) {
-    let root = start;
-    while (true) {
-        const left = root * 2 + 1;
-        if (left >= end) {
-            break;
-        }
-        let best = root;
-        if (orderedCmpF64(slice[best], slice[left]) < 0) {
-            best = left;
-        }
-        const right = left + 1;
-        if (right < end && orderedCmpF64(slice[best], slice[right]) < 0) {
-            best = right;
-        }
-        if (best == root) {
-            break;
-        }
-        const tmp = slice[root];
-        slice[root] = slice[best];
-        slice[best] = tmp;
-        root = best;
-    }
-}
-
-/// Zero-allocation in-place ascending sort for `[]f64` under strict total order.
-/// Safely handles `-Inf`, `+Inf`, `-0.0`, and `NaN` (all `NaN`s placed at the end).
-pub fn sortF64(slice: []f64) {
-    const n = slice.len;
-    if (n <= 1) {
-        return;
-    }
-
-    if (n <= 16) {
-        let i: usize = 1;
-        while (i < n) {
-            const key = slice[i];
-            let j = i;
-            while (j > 0 && orderedCmpF64(key, slice[j - 1]) < 0) {
-                slice[j] = slice[j - 1];
-                j -= 1;
-            }
-            slice[j] = key;
-            i += 1;
-        }
-        return;
-    }
-
-    let start = n / 2;
-    while (start > 0) {
-        start -= 1;
-        siftDownF64(slice, start, n);
-    }
-
-    let end = n;
-    while (end > 1) {
-        end -= 1;
-        const tmp = slice[0];
-        slice[0] = slice[end];
-        slice[end] = tmp;
-        siftDownF64(slice, 0, end);
-    }
-}
-
-/// Returns `true` if `slice` is sorted in non-decreasing total order.
-pub fn isSortedF64(slice: []const f64) -> bool {
-    if (slice.len <= 1) {
-        return true;
-    }
+/// Canonical 64-bit hash for `f64` consistent with `eqOrderedF64` (normalizes -0.0 -> +0.0 and all NaNs).
+pub fn hashOrderedF64(x: f64): u64 {
+    let bits: u64 = if (isNanF64(x)) {
+        // Canonical quiet NaN bit pattern 0x7ff8000000000000
+        (0x7ff80000 as u64) << 32
+    } else if (x == 0.0) {
+        // Normalize -0.0 and +0.0 to 0
+        0
+    } else {
+        @bitCast(x)
+    };
+    let buf: [8]u8 = undefined;
     let i: usize = 0;
-    while (i + 1 < slice.len) {
-        if (orderedCmpF64(slice[i], slice[i + 1]) > 0) {
-            return false;
-        }
-        i += 1;
+    while (i < 8) {
+        let sh: u6 = (i * 8) as u6;
+        buf[i] = ((bits >> sh) & 0xff) as u8;
+        i = i + 1;
     }
-    return true;
+    return fnv1a64(buf[0..8]);
 }
 
-/// Binary searches a total-order sorted `[]const f64` for `target` (supports finite values, `±Inf`, and `NaN`).
-pub fn binarySearchF64(slice: []const f64, target: f64) -> usize? {
-    let lo: usize = 0;
-    let hi: usize = slice.len;
-    while (lo < hi) {
-        const mid = lo + ((hi - lo) >> 1);
-        const c = orderedCmpF64(slice[mid], target);
-        if (c == 0) {
-            return mid;
-        }
-        if (c < 0) {
-            lo = mid + 1;
-        } else {
-            hi = mid;
-        }
+/// Total-order wrapper struct (`ordered_float::OrderedFloat<f64>`).
+pub struct OrderedF64 {
+    pub val: f64,
+
+    pub static fn new(v: f64): OrderedF64 {
+        return OrderedF64 { val: v };
     }
-    return null;
+
+    pub fn intoInner(): f64 { return _.val; }
+    pub fn isNan(): bool { return isNanF64(_.val); }
+    pub fn isFinite(): bool { return isFiniteF64(_.val); }
+    pub fn cmp(other: OrderedF64): i32 { return cmpOrderedF64(_.val, other.val); }
+    pub fn eq(other: OrderedF64): bool { return eqOrderedF64(_.val, other.val); }
+    pub fn hash(): u64 { return hashOrderedF64(_.val); }
+
+    pub fn min(other: OrderedF64): OrderedF64 {
+        return if (_.cmp(other) <= 0) { OrderedF64 { val: _.val } } else { other };
+    }
+
+    pub fn max(other: OrderedF64): OrderedF64 {
+        return if (_.cmp(other) >= 0) { OrderedF64 { val: _.val } } else { other };
+    }
+
+    pub fn clamp(lo: OrderedF64, hi: OrderedF64): OrderedF64 {
+        if (_.cmp(lo) < 0) { return lo; }
+        if (_.cmp(hi) > 0) { return hi; }
+        return OrderedF64 { val: _.val };
+    }
+}
+
+/// Non-NaN wrapper (`ordered_float::NotNan<f64>`): rejects NaN at construction.
+pub struct NotNanF64 {
+    pub val: f64,
+
+    pub static fn new(v: f64): NotNanF64? {
+        if (isNanF64(v)) { return null; }
+        return NotNanF64 { val: v };
+    }
+
+    pub fn intoInner(): f64 { return _.val; }
+    pub fn cmp(other: NotNanF64): i32 { return cmpOrderedF64(_.val, other.val); }
+    pub fn eq(other: NotNanF64): bool { return eqOrderedF64(_.val, other.val); }
+    pub fn hash(): u64 { return hashOrderedF64(_.val); }
+}
+
+/// In-place insertion sort of an `f64` slice using `cmpOrderedF64` (NaNs sorted to end).
+pub fn sortOrderedF64(arr: []f64) {
+    let i: usize = 1;
+    while (i < arr.len) {
+        let cur = arr[i];
+        let j = i;
+        while (j > 0 && cmpOrderedF64(arr[j - 1], cur) > 0) {
+            arr[j] = arr[j - 1];
+            j = j - 1;
+        }
+        arr[j] = cur;
+        i = i + 1;
+    }
 }

@@ -1,110 +1,122 @@
-// cap/test/testCapNumInteger.cp
-// Comprehensive unit tests for @cap/num-integer (Rust num-integer parity)
-
 import { test, expect_eq } from "cap:test";
 import {
+    ExtGcdResult,
+    gcdU64,
+    lcmU64,
+    extendedGcd,
     divFloor,
     modFloor,
     divCeil,
-    divEuclid,
-    remEuclid,
-    gcdU64,
-    lcmU64,
-    gcdI64,
-    lcmI64,
-    extendedGcd,
-    modInverse,
     isqrtU64,
     icbrtU64,
     binomialU64,
-    isPrimeU64,
-    averageFloor,
+    isEven,
+    isOdd,
+    nextMultipleOfU64,
+    prevMultipleOfU64,
 } from "../../packages/@cap/num-integer/src/index.cp";
 
 fn main() {
-    test("1. @cap/num-integer — floor, ceil & Euclidean division across all sign combinations", () => {
+    test("1. @cap/num-integer — gcdU64 & overflow-safe lcmU64", () => {
+        expect_eq(gcdU64(0, 0), 0 as u64);
+        expect_eq(gcdU64(0, 42), 42 as u64);
+        expect_eq(gcdU64(48, 18), 6 as u64);
+        expect_eq(gcdU64(1071, 462), 21 as u64);
+        expect_eq(gcdU64(17, 31), 1 as u64);
+
+        expect_eq(lcmU64(0, 12), 0 as u64);
+        expect_eq(lcmU64(12, 18), 36 as u64);
+        // Large inputs that would overflow if multiplied before dividing by gcd.
+        const big_a: u64 = 1000000000000;
+        const big_b: u64 = 1500000000000;
+        expect_eq(lcmU64(big_a, big_b), 3000000000000 as u64);
+    });
+
+    test("2. @cap/num-integer — extendedGcd Bezout identity a*x + b*y == gcd", () => {
+        const r1: ExtGcdResult = extendedGcd(240, 46);
+        expect_eq(r1.gcd, 2 as i64);
+        expect_eq(240 * r1.x + 46 * r1.y, r1.gcd);
+
+        const r2: ExtGcdResult = extendedGcd(-48, 18);
+        expect_eq(r2.gcd, 6 as i64);
+        expect_eq((-48) * r2.x + 18 * r2.y, r2.gcd);
+
+        const r3: ExtGcdResult = extendedGcd(-35, -15);
+        expect_eq(r3.gcd, 5 as i64);
+        expect_eq((-35) * r3.x + (-15) * r3.y, r3.gcd);
+
+        const r4: ExtGcdResult = extendedGcd(17, 0);
+        expect_eq(r4.gcd, 17 as i64);
+        expect_eq(17 * r4.x + 0 * r4.y, r4.gcd);
+    });
+
+    test("3. @cap/num-integer — divFloor, modFloor & divCeil across all sign combinations", () => {
+        // Positive / positive
         expect_eq(divFloor(7, 3), 2 as i64);
         expect_eq(modFloor(7, 3), 1 as i64);
+        expect_eq(divCeil(7, 3), 3 as i64);
+        expect_eq(divCeil(6, 3), 2 as i64);
+
+        // Negative / positive
         expect_eq(divFloor(-7, 3), -3 as i64);
         expect_eq(modFloor(-7, 3), 2 as i64);
+        expect_eq(divFloor(-7, 3) * 3 + modFloor(-7, 3), -7 as i64);
+        expect_eq(divCeil(-7, 3), -2 as i64);
+
+        // Positive / negative
         expect_eq(divFloor(7, -3), -3 as i64);
         expect_eq(modFloor(7, -3), -2 as i64);
+        expect_eq(divFloor(7, -3) * (-3) + modFloor(7, -3), 7 as i64);
+        expect_eq(divCeil(7, -3), -2 as i64);
+
+        // Negative / negative
         expect_eq(divFloor(-7, -3), 2 as i64);
         expect_eq(modFloor(-7, -3), -1 as i64);
-
-        expect_eq(divCeil(7, 3), 3 as i64);
-        expect_eq(divCeil(-7, 3), -2 as i64);
-        expect_eq(divCeil(6, 3), 2 as i64);
+        expect_eq(divFloor(-7, -3) * (-3) + modFloor(-7, -3), -7 as i64);
         expect_eq(divCeil(-7, -3), 3 as i64);
-
-        expect_eq(divEuclid(-7, 3), -3 as i64);
-        expect_eq(remEuclid(-7, 3), 2 as i64);
-        expect_eq(divEuclid(-7, -3), 3 as i64);
-        expect_eq(remEuclid(-7, -3), 2 as i64);
     });
 
-    test("2. @cap/num-integer — GCD, LCM, Extended GCD (Bezout) & modInverse", () => {
-        expect_eq(gcdU64(48 as u64, 18 as u64), 6 as u64);
-        expect_eq(gcdU64(0 as u64, 15 as u64), 15 as u64);
-        expect_eq(lcmU64(12 as u64, 18 as u64), 36 as u64);
-        expect_eq(lcmU64(0 as u64, 18 as u64), 0 as u64);
+    test("4. @cap/num-integer — Exact isqrtU64 & icbrtU64 up to u64::MAX", () => {
+        expect_eq(isqrtU64(0), 0 as u64);
+        expect_eq(isqrtU64(1), 1 as u64);
+        expect_eq(isqrtU64(15), 3 as u64);
+        expect_eq(isqrtU64(16), 4 as u64);
+        expect_eq(isqrtU64(1000000000000), 1000000 as u64);
+        expect_eq(isqrtU64(~(0 as u64)), 4294967295 as u64);
 
-        expect_eq(gcdI64(-48, 18), 6 as i64);
-        expect_eq(lcmI64(-12, 18), 36 as i64);
-
-        const eg = extendedGcd(240, 46);
-        expect_eq(eg.gcd, 2 as i64);
-        expect_eq(240 * eg.x + 46 * eg.y, eg.gcd);
-
-        expect_eq(modInverse(3, 11).?, 4 as i64);
-        expect_eq(modInverse(10, 17).?, 12 as i64);
-        expect_eq(modInverse(6, 9) == null, true);
-        expect_eq(modInverse(5, 0) == null, true);
+        expect_eq(icbrtU64(0), 0 as u64);
+        expect_eq(icbrtU64(1), 1 as u64);
+        expect_eq(icbrtU64(26), 2 as u64);
+        expect_eq(icbrtU64(27), 3 as u64);
+        expect_eq(icbrtU64(1000000000), 1000 as u64);
+        expect_eq(icbrtU64(~(0 as u64)), 2642245 as u64);
     });
 
-    test("3. @cap/num-integer — exact integer square root across full u64 range", () => {
-        expect_eq(isqrtU64(0 as u64), 0 as u64);
-        expect_eq(isqrtU64(1 as u64), 1 as u64);
-        expect_eq(isqrtU64(15 as u64), 3 as u64);
-        expect_eq(isqrtU64(16 as u64), 4 as u64);
-        expect_eq(isqrtU64(1000000 as u64), 1000 as u64);
-        // u64::MAX -> 4294967295 (2^32 - 1) without overflow
-        expect_eq(isqrtU64(0xFFFFFFFFFFFFFFFF as u64), 4294967295 as u64);
+    test("5. @cap/num-integer — Overflow-safe binomialU64 C(n, k)", () => {
+        expect_eq(binomialU64(5, 0), 1 as u64);
+        expect_eq(binomialU64(5, 5), 1 as u64);
+        expect_eq(binomialU64(5, 6), 0 as u64);
+        expect_eq(binomialU64(10, 3), 120 as u64);
+        expect_eq(binomialU64(20, 10), 184756 as u64);
+        expect_eq(binomialU64(60, 30), 118264581564861424 as u64);
     });
 
-    test("4. @cap/num-integer — exact integer cube root across full u64 range", () => {
-        expect_eq(icbrtU64(0 as u64), 0 as u64);
-        expect_eq(icbrtU64(1 as u64), 1 as u64);
-        expect_eq(icbrtU64(26 as u64), 2 as u64);
-        expect_eq(icbrtU64(27 as u64), 3 as u64);
-        expect_eq(icbrtU64(1000000000 as u64), 1000 as u64);
-        expect_eq(icbrtU64(0xFFFFFFFFFFFFFFFF as u64), 2642245 as u64);
-    });
+    test("6. @cap/num-integer — isEven, isOdd, nextMultipleOfU64 & prevMultipleOfU64", () => {
+        expect_eq(isEven(0), true);
+        expect_eq(isEven(-4), true);
+        expect_eq(isEven(7), false);
+        expect_eq(isOdd(-3), true);
+        expect_eq(isOdd(9), true);
+        expect_eq(isOdd(8), false);
 
-    test("5. @cap/num-integer — binomialU64 & isPrimeU64", () => {
-        expect_eq(binomialU64(5 as u64, 0 as u64), 1 as u64);
-        expect_eq(binomialU64(5 as u64, 2 as u64), 10 as u64);
-        expect_eq(binomialU64(10 as u64, 3 as u64), 120 as u64);
-        expect_eq(binomialU64(52 as u64, 5 as u64), 2598960 as u64);
-        expect_eq(binomialU64(5 as u64, 6 as u64), 0 as u64);
+        expect_eq(nextMultipleOfU64(0, 8), 0 as u64);
+        expect_eq(nextMultipleOfU64(1, 8), 8 as u64);
+        expect_eq(nextMultipleOfU64(16, 8), 16 as u64);
+        expect_eq(nextMultipleOfU64(17, 8), 24 as u64);
 
-        expect_eq(isPrimeU64(0 as u64), false);
-        expect_eq(isPrimeU64(1 as u64), false);
-        expect_eq(isPrimeU64(2 as u64), true);
-        expect_eq(isPrimeU64(3 as u64), true);
-        expect_eq(isPrimeU64(4 as u64), false);
-        expect_eq(isPrimeU64(97 as u64), true);
-        expect_eq(isPrimeU64(1000000007 as u64), true);
-        expect_eq(isPrimeU64(1000000009 as u64), true);
-        expect_eq(isPrimeU64(1000000005 as u64), false);
-    });
-
-    test("6. @cap/num-integer — overflow-free averageFloor", () => {
-        expect_eq(averageFloor(3, 4), 3 as i64);
-        expect_eq(averageFloor(-3, -4), -4 as i64);
-        expect_eq(averageFloor(-5, 2), -2 as i64);
-        const max64: i64 = 9223372036854775807;
-        expect_eq(averageFloor(max64, max64), max64);
-        expect_eq(averageFloor(max64, max64 - 2), max64 - 1);
+        expect_eq(prevMultipleOfU64(0, 8), 0 as u64);
+        expect_eq(prevMultipleOfU64(7, 8), 0 as u64);
+        expect_eq(prevMultipleOfU64(16, 8), 16 as u64);
+        expect_eq(prevMultipleOfU64(23, 8), 16 as u64);
     });
 }

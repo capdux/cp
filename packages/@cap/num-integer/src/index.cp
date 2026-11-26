@@ -1,140 +1,71 @@
-// @cap/num-integer — Zero-allocation integer number theory & exact division engine for CP
-// Clean-room MIT implementation inspired by Rust `num-integer` (crates.io #145, 888M+ downloads).
-//
-// Features:
-// - Exact floor, ceil, and Euclidean division/remainder (`divFloor`, `modFloor`, `divCeil`, `divEuclid`, `remEuclid`).
-// - GCD, overflow-safe LCM, Extended Euclidean algorithm (`extendedGcd`), and modular inverse (`modInverse`).
-// - Overflow-free integer square root (`isqrtU64`), cube root (`icbrtU64`), binomial coefficients (`binomialU64`),
-//   deterministic 6k±1 primality test (`isPrimeU64`), and overflow-free floor average (`averageFloor`).
-// - Pure integer arithmetic with zero heap allocation and zero floating-point inaccuracy.
+// packages/@cap/num-integer/src/index.cp
+// Zero-allocation integer number theory & exact integer division library.
+// Clean-room MIT pure CP implementation inspired by Rust `num-integer` v0.1.
 
-pub struct ExtendedGcd {
+/// Result of the extended Euclidean algorithm satisfying `a * x + b * y == gcd` with `gcd >= 0`.
+pub struct ExtGcdResult {
     pub gcd: i64,
     pub x: i64,
     pub y: i64,
 }
 
-fn absU64(v: i64) -> u64 {
-    if (v < 0) {
-        return ((0 - (v + 1)) as u64) + 1;
+/// Overflow-safe absolute value of signed 64-bit integer as `u64` (handles `i64::MIN`).
+fn nintAbsU64(v: i64): u64 {
+    if (v >= 0) {
+        return v as u64;
     }
-    return v as u64;
+    return ((-(v + 1)) as u64) + 1;
 }
 
-fn divTruncI64(a: i64, b: i64) -> i64 {
-    const qa: u64 = absU64(a) / absU64(b);
-    const neg = (a < 0) != (b < 0);
-    if (neg && qa > 0) {
-        return 0 - (qa as i64);
+/// Signed truncating division & remainder computed strictly via `u64` division.
+fn nintDivTruncRem(a: i64, b: i64, q_out: *i64, r_out: *i64) {
+    if (b == 0) {
+        q_out.* = 0;
+        r_out.* = 0;
+        return;
     }
-    return qa as i64;
+    const ua: u64 = nintAbsU64(a);
+    const ub: u64 = nintAbsU64(b);
+    const uq: u64 = ua / ub;
+    const ur: u64 = ua % ub;
+
+    const neg_q: bool = (a < 0) != (b < 0);
+    if (neg_q && uq != 0) {
+        q_out.* = -(uq as i64);
+    } else {
+        q_out.* = uq as i64;
+    }
+
+    if (a < 0 && ur != 0) {
+        r_out.* = -(ur as i64);
+    } else {
+        r_out.* = ur as i64;
+    }
 }
 
-fn remTruncI64(a: i64, b: i64) -> i64 {
-    const ra: u64 = absU64(a) % absU64(b);
-    if (a < 0 && ra > 0) {
-        return 0 - (ra as i64);
-    }
-    return ra as i64;
-}
-
-// ============================================================================
-// 1. Exact Floor, Ceil & Euclidean Division / Remainder
-// ============================================================================
-
-/// Floored integer division (rounds toward negative infinity).
-/// Example: `divFloor(-7, 3) == -3`.
-pub fn divFloor(a: i64, b: i64) -> i64 {
-    const q = divTruncI64(a, b);
-    const r = remTruncI64(a, b);
-    if (r != 0 && ((r < 0) != (b < 0))) {
-        return q - 1;
-    }
-    return q;
-}
-
-/// Floored modulo (same sign as divisor `b`).
-/// Satisfies `divFloor(a, b) * b + modFloor(a, b) == a`.
-pub fn modFloor(a: i64, b: i64) -> i64 {
-    const r = remTruncI64(a, b);
-    if (r != 0 && ((r < 0) != (b < 0))) {
-        return r + b;
-    }
-    return r;
-}
-
-/// Ceiling integer division (rounds toward positive infinity).
-/// Example: `divCeil(7, 3) == 3`, `divCeil(-7, 3) == -2`.
-pub fn divCeil(a: i64, b: i64) -> i64 {
-    const q = divTruncI64(a, b);
-    const r = remTruncI64(a, b);
-    if (r != 0 && ((r > 0) == (b > 0))) {
-        return q + 1;
-    }
-    return q;
-}
-
-/// Euclidean integer division paired with non-negative `remEuclid`.
-pub fn divEuclid(a: i64, b: i64) -> i64 {
-    const q = divTruncI64(a, b);
-    const r = remTruncI64(a, b);
-    if (r < 0) {
-        if (b > 0) {
-            return q - 1;
-        }
-        return q + 1;
-    }
-    return q;
-}
-
-/// Euclidean remainder guaranteed to lie in `[0, |b|)`.
-pub fn remEuclid(a: i64, b: i64) -> i64 {
-    const r = remTruncI64(a, b);
-    if (r < 0) {
-        if (b > 0) {
-            return r + b;
-        }
-        return r - b;
-    }
-    return r;
-}
-
-// ============================================================================
-// 2. GCD, LCM, Extended Euclidean Algorithm & Modular Inverse
-// ============================================================================
-
-/// Greatest common divisor for unsigned 64-bit integers.
-pub fn gcdU64(a: u64, b: u64) -> u64 {
-    let x = a;
-    let y = b;
+/// Greatest common divisor of two unsigned 64-bit integers (Euclidean algorithm).
+pub fn gcdU64(a: u64, b: u64): u64 {
+    let x: u64 = a;
+    let y: u64 = b;
     while (y != 0) {
-        const rem = x % y;
+        const t: u64 = x % y;
         x = y;
-        y = rem;
+        y = t;
     }
     return x;
 }
 
-/// Least common multiple for unsigned 64-bit integers (divides before multiplying to reduce overflow).
-pub fn lcmU64(a: u64, b: u64) -> u64 {
+/// Least common multiple of two unsigned 64-bit integers, dividing before multiplying to avoid overflow.
+pub fn lcmU64(a: u64, b: u64): u64 {
     if (a == 0 || b == 0) {
         return 0;
     }
-    return (a / gcdU64(a, b)) * b;
+    const g: u64 = gcdU64(a, b);
+    return (a / g) * b;
 }
 
-/// Non-negative greatest common divisor for signed 64-bit integers.
-pub fn gcdI64(a: i64, b: i64) -> i64 {
-    return gcdU64(absU64(a), absU64(b)) as i64;
-}
-
-/// Non-negative least common multiple for signed 64-bit integers.
-pub fn lcmI64(a: i64, b: i64) -> i64 {
-    return lcmU64(absU64(a), absU64(b)) as i64;
-}
-
-/// Extended Euclidean algorithm returning `{ gcd, x, y }` with `gcd >= 0` and `a*x + b*y == gcd`.
-pub fn extendedGcd(a: i64, b: i64) -> ExtendedGcd {
+/// Extended Euclidean algorithm returning `{ gcd, x, y }` such that `a * x + b * y == gcd` and `gcd >= 0`.
+pub fn extendedGcd(a: i64, b: i64): ExtGcdResult {
     let old_r: i64 = a;
     let r: i64 = b;
     let old_s: i64 = 1;
@@ -143,83 +74,115 @@ pub fn extendedGcd(a: i64, b: i64) -> ExtendedGcd {
     let t: i64 = 1;
 
     while (r != 0) {
-        const q = divTruncI64(old_r, r);
-        const next_r = old_r - (q * r);
-        old_r = r;
-        r = next_r;
+        let q: i64 = 0;
+        let rem: i64 = 0;
+        nintDivTruncRem(old_r, r, &q, &rem);
 
-        const next_s = old_s - (q * s);
+        old_r = r;
+        r = rem;
+
+        const next_s: i64 = old_s - q * s;
         old_s = s;
         s = next_s;
 
-        const next_t = old_t - (q * t);
+        const next_t: i64 = old_t - q * t;
         old_t = t;
         t = next_t;
     }
 
     if (old_r < 0) {
-        old_r = 0 - old_r;
-        old_s = 0 - old_s;
-        old_t = 0 - old_t;
+        old_r = -old_r;
+        old_s = -old_s;
+        old_t = -old_t;
     }
 
-    return ExtendedGcd{ gcd: old_r, x: old_s, y: old_t };
+    return ExtGcdResult {
+        gcd: old_r,
+        x: old_s,
+        y: old_t,
+    };
 }
 
-/// Computes the modular multiplicative inverse of `a` modulo `m` in `[0, m)`.
-/// Returns `null` if `m <= 0` or `gcd(a, m) != 1`.
-pub fn modInverse(a: i64, m: i64) -> i64? {
-    if (m <= 0) {
-        return null;
-    }
-    if (m == 1) {
+/// Mathematical floored integer division (rounds toward negative infinity).
+/// Returns 0 if `b == 0`.
+pub fn divFloor(a: i64, b: i64): i64 {
+    if (b == 0) {
         return 0;
     }
-    const eg = extendedGcd(a, m);
-    if (eg.gcd != 1) {
-        return null;
+    let q: i64 = 0;
+    let r: i64 = 0;
+    nintDivTruncRem(a, b, &q, &r);
+    if (r != 0 && ((r < 0) != (b < 0))) {
+        q -= 1;
     }
-    return remEuclid(eg.x, m);
+    return q;
 }
 
-// ============================================================================
-// 3. Integer Roots, Binomial Coefficients, Primality & Overflow-Free Average
-// ============================================================================
-
-/// Exact integer square root `floor(sqrt(n))` across the full `u64` domain (zero overflow).
-pub fn isqrtU64(n: u64) -> u64 {
-    let bit: u64 = (1 as u64) << 62;
-    while (bit > n) {
-        bit = bit >> 2;
+/// Mathematical floored modulo matching `divFloor` (`a == divFloor(a, b) * b + modFloor(a, b)`).
+/// Result has the same sign as `b` (or is 0). Returns 0 if `b == 0`.
+pub fn modFloor(a: i64, b: i64): i64 {
+    if (b == 0) {
+        return 0;
     }
-    let res: u64 = 0;
+    let q: i64 = 0;
+    let r: i64 = 0;
+    nintDivTruncRem(a, b, &q, &r);
+    if (r != 0 && ((r < 0) != (b < 0))) {
+        r += b;
+    }
+    return r;
+}
+
+/// Mathematical ceiling integer division (rounds toward positive infinity).
+/// Returns 0 if `b == 0`.
+pub fn divCeil(a: i64, b: i64): i64 {
+    if (b == 0) {
+        return 0;
+    }
+    let q: i64 = 0;
+    let r: i64 = 0;
+    nintDivTruncRem(a, b, &q, &r);
+    if (r != 0 && ((r > 0) == (b > 0))) {
+        q += 1;
+    }
+    return q;
+}
+
+/// Exact integer square root `floor(sqrt(n))` for all `u64` without overflow.
+pub fn isqrtU64(n: u64): u64 {
     let rem: u64 = n;
+    let res: u64 = 0;
+    let bit: u64 = (1 as u64) << (62 as u6);
+
+    while (bit > rem) {
+        bit = bit >> (2 as u6);
+    }
     while (bit != 0) {
         if (rem >= res + bit) {
             rem -= res + bit;
-            res = (res >> 1) + bit;
+            res = (res >> (1 as u6)) + bit;
         } else {
-            res = res >> 1;
+            res = res >> (1 as u6);
         }
-        bit = bit >> 2;
+        bit = bit >> (2 as u6);
     }
     return res;
 }
 
-/// Exact integer cube root `floor(cbrt(n))` across the full `u64` domain (zero overflow).
-pub fn icbrtU64(n: u64) -> u64 {
-    if (n <= 1) {
-        return n;
+/// Exact integer cube root `floor(cbrt(n))` for all `u64` without overflow.
+pub fn icbrtU64(n: u64): u64 {
+    if (n == 0) {
+        return 0;
     }
+    // floor(cbrt(u64::MAX)) == 2642245; 2642245^3 fits cleanly inside u64.
     let lo: u64 = 1;
-    // floor(cbrt(u64::MAX)) == 2642245
     let hi: u64 = 2642245;
     if (n < hi) {
         hi = n;
     }
     let ans: u64 = 1;
     while (lo <= hi) {
-        const mid: u64 = lo + ((hi - lo) >> 1);
+        const mid: u64 = lo + ((hi - lo) >> (1 as u6));
         const cube: u64 = mid * mid * mid;
         if (cube == n) {
             return mid;
@@ -234,50 +197,55 @@ pub fn icbrtU64(n: u64) -> u64 {
     return ans;
 }
 
-/// Computes binomial coefficient `C(n, k)` using GCD reduction at each step to prevent intermediate overflow.
-pub fn binomialU64(n: u64, k: u64) -> u64 {
+/// Exact binomial coefficient `C(n, k)` using step-wise GCD reduction to prevent intermediate overflow.
+pub fn binomialU64(n: u64, k: u64): u64 {
     if (k > n) {
         return 0;
     }
-    if (k == 0 || k == n) {
-        return 1;
+    let kk: u64 = k;
+    if (kk > n - kk) {
+        kk = n - kk;
     }
-    const kk: u64 = if (k > n - k) { n - k } else { k };
     let res: u64 = 1;
     let i: u64 = 1;
     while (i <= kk) {
         const num: u64 = n - kk + i;
         const g1: u64 = gcdU64(res, i);
-        const d1: u64 = i / g1;
-        res = (res / g1) * (num / d1);
+        const res_div: u64 = res / g1;
+        const den_div: u64 = i / g1;
+        const num_div: u64 = num / den_div;
+        res = res_div * num_div;
         i += 1;
     }
     return res;
 }
 
-/// Deterministic 6k±1 primality test for unsigned 64-bit integers.
-pub fn isPrimeU64(n: u64) -> bool {
-    if (n < 2) {
-        return false;
-    }
-    if (n == 2 || n == 3) {
-        return true;
-    }
-    if ((n % 2) == 0 || (n % 3) == 0) {
-        return false;
-    }
-    const limit = isqrtU64(n);
-    let i: u64 = 5;
-    while (i <= limit) {
-        if ((n % i) == 0 || (n % (i + 2)) == 0) {
-            return false;
-        }
-        i += 6;
-    }
-    return true;
+/// Returns true if `n` is even.
+pub fn isEven(n: i64): bool {
+    return (n & 1) == 0;
 }
 
-/// Overflow-free floored average `floor((a + b) / 2)` for signed 64-bit integers.
-pub fn averageFloor(a: i64, b: i64) -> i64 {
-    return (a & b) + ((a ^ b) >> 1);
+/// Returns true if `n` is odd.
+pub fn isOdd(n: i64): bool {
+    return (n & 1) != 0;
+}
+
+/// Returns the smallest multiple of `step` that is `>= n`. Returns `n` if `step == 0`.
+pub fn nextMultipleOfU64(n: u64, step: u64): u64 {
+    if (step == 0) {
+        return n;
+    }
+    const rem: u64 = n % step;
+    if (rem == 0) {
+        return n;
+    }
+    return n + (step - rem);
+}
+
+/// Returns the largest multiple of `step` that is `<= n`. Returns `n` if `step == 0`.
+pub fn prevMultipleOfU64(n: u64, step: u64): u64 {
+    if (step == 0) {
+        return n;
+    }
+    return n - (n % step);
 }

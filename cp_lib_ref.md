@@ -867,3 +867,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/cookie-crate`** | `packages/@cap/cookie-crate` | 对标 crates.io #145 `cookie` v0.18 (8.5 亿+，双包复用 `@cap/cookie-jar`+`@cap/percent-encoding`) — 链式 `CookieBuilder` 与百分号编码 Cookie |
 | **`@cap/finalhandler`** | `packages/@cap/finalhandler` | 对标 npm Top 35 `finalhandler` v2 (1.4 亿+/周，三包复用 `@cap/escape-html`+`@cap/http-types`+`@cap/itoa`) — 安全最终 HTTP 响应生成器 |
 | **`@cap/serve-static`** | `packages/@cap/serve-static` | 对标 npm Top 40 `serve-static` v2 (1.3 亿+/周，四包复用 `@cap/parseurl`+`@cap/mime-types`+`@cap/etag-http`+`@cap/itoa`) — 静态资源策略解析与头生成 |
+| **`@cap/raw-body`** | `packages/@cap/raw-body` | 对标 npm Top 30 `raw-body` v3 (1.5 亿+/周) — 零堆有界 HTTP 请求体读取器、长度/上限/编码校验与状态码映射 |
+| **`@cap/merge-descriptors`** | `packages/@cap/merge-descriptors` | 对标 npm Top 45 `merge-descriptors` v2 (1.2 亿+/周) — 零堆固定 32 槽位属性描述符表与 `configurable`/`redefine` 安全合并 |
+| **`@cap/num-integer`** | `packages/@cap/num-integer` | 对标 crates.io **#55** `num-integer` v0.1 (**14 亿+**) — 欧几里得/地板/天花板整数除法、GCD/LCM/扩展 GCD、整数开方与二项式系数 |
+| **`@cap/num-rational`** | `packages/@cap/num-rational` | 对标 crates.io #120 `num-rational` v0.4 (9.5 亿+，跨包复用 `@cap/num-integer`) — 约简有理数 `Ratio` 四则运算、比较、倒数与浮点转换 |
+| **`@cap/ordered-float`** | `packages/@cap/ordered-float` | 对标 crates.io **#85** `ordered-float` v4 (**12 亿+**, 跨包复用 `@cap/fnv-hash`) — 全序浮点 `OrderedFloat`、`NotNan` 守卫与规范化位哈希 |
+| **`@cap/approx`** | `packages/@cap/approx` | 对标 crates.io #130 `approx` v0.5 (9 亿+) — IEEE-754 `f64`/`f32` 绝对误差、相对误差与 ULPs 位距浮点近似比较 |
+| **`@cap/num-traits`** | `packages/@cap/num-traits` | 对标 crates.io **#10** `num-traits` v0.2 (**20 亿+**) — 零堆 Checked/Saturating 溢出安全算术、`clamp`/`signum`/`checkedPow` 与位计数/循环移位 |

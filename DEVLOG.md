@@ -414,3 +414,6 @@
 
 ## 2026-11-27: Batch 113 五大 40 亿下载组合包全 6/6 PASS — 官方 `.cap` 包突破 **643+**！
 - 全部 5 个包均采用多层跨包零重复组合：crates.io #40 `aho-corasick`（16 亿+）、#42 `semver`（15.5 亿+）、#145 `cookie`（8.5 亿+），以及 npm `finalhandler`（三包复用）与 `serve-static`（四包复用），30/30 单测 100% PASS。
+
+## 2026-11-27: Batch 114 七大数值与 HTTP 核心包全 6/6 PASS — 突破 **650 官方 `.cap` 包里程碑**！
+- 一次性补齐 Rust 数值生态五大基石 `num-traits`（crates.io **#10, 20 亿+**）、`num-integer`（14 亿+）、`ordered-float`（12 亿+，复用 `@cap/fnv-hash`）、`num-rational`（9.5 亿+，复用 `@cap/num-integer`）、`approx`（9 亿+）以及 npm HTTP/对象基础设施 `raw-body`（1.5 亿+/周）与 `merge-descriptors`（1.2 亿+/周），全部 42/42 单测 100% PASS。

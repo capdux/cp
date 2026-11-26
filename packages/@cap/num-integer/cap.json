@@ -1,8 +1,9 @@
 {
   "name": "@cap/num-integer",
   "ver": "1.0.0",
-  "description": "Zero-allocation integer number theory & exact floor/ceil/Euclidean division engine (GCD, LCM, Extended GCD, modular inverse, isqrt, icbrt, binomial, primality — Rust num-integer parity) for CP",
+  "description": "Zero-allocation integer number theory, overflow-safe GCD/LCM/extended-GCD, floor/ceil division, isqrt/icbrt, and binomial coefficients for CP.",
+  "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "keywords": ["num-integer", "math", "gcd", "lcm", "isqrt", "icbrt", "binomial", "zero-alloc"]
 }

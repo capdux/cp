@@ -2742,13 +2742,11 @@
       "source_registry": "crates.io",
       "source_name": "num-integer",
       "source_repo": "https://github.com/rust-num/num-integer",
-      "license": "MIT",
+      "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/num-integer",
       "kind": "package",
-      "aliases": [
-        "num-traits"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3018,11 +3016,8 @@
       "license": "MIT",
       "cp_target": "@cap/ordered-float",
       "kind": "package",
-      "aliases": [
-        "not-nan",
-        "total-float"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3126,13 +3121,11 @@
       "source_registry": "crates.io",
       "source_name": "num-rational",
       "source_repo": "https://github.com/rust-num/num-rational",
-      "license": "MIT",
+      "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/num-rational",
       "kind": "package",
-      "aliases": [
-        "fraction.js"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -9003,11 +8996,9 @@
       "source_name": "raw-body",
       "source_repo": "https://github.com/stream-utils/raw-body",
       "license": "MIT",
-      "cp_target": "@cap/block-buffer",
+      "cp_target": "@cap/raw-body",
       "kind": "package",
-      "aliases": [
-        "stream-buffer"
-      ],
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     },
     {
@@ -10396,6 +10387,36 @@
       "source_repo": "https://github.com/expressjs/serve-static",
       "license": "MIT",
       "cp_target": "@cap/serve-static",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "merge-descriptors",
+      "source_repo": "https://github.com/component/merge-descriptors",
+      "license": "MIT",
+      "cp_target": "@cap/merge-descriptors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "approx",
+      "source_repo": "https://github.com/brendanzab/approx",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/approx",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-traits",
+      "source_repo": "https://github.com/rust-num/num-traits",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/num-traits",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

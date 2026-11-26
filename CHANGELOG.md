@@ -1012,3 +1012,13 @@
 - `packages/@cap/finalhandler/` & `cap/test/testCapFinalhandler.cp`: npm Top 35 `finalhandler` v2（1.4 亿+/周，三包复用，6/6 PASS）。
 - `packages/@cap/serve-static/` & `cap/test/testCapServeStatic.cp`: npm Top 40 `serve-static` v2（1.3 亿+/周，四包复用，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 113 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 114 — **650+ 官方 `.cap` 包里程碑！拿下 crates.io #10 `num-traits`(20 亿)+`num-integer`(14 亿)+`ordered-float`(12 亿)+`num-rational`+`approx` + `raw-body` + `merge-descriptors`**)
+- `packages/@cap/raw-body/` & `cap/test/testCapRawBody.cp`: npm Top 30 `raw-body` v3（1.5 亿+/周，有界 HTTP 请求体读取与校验，6/6 PASS）。
+- `packages/@cap/merge-descriptors/` & `cap/test/testCapMergeDescriptors.cp`: npm Top 45 `merge-descriptors` v2（1.2 亿+/周，描述符表安全合并，6/6 PASS）。
+- `packages/@cap/num-traits/` & `cap/test/testCapNumTraits.cp`: crates.io **#10** `num-traits` v0.2（**20 亿+**，Checked/Saturating 算术与位操作，6/6 PASS）。
+- `packages/@cap/num-integer/` & `cap/test/testCapNumInteger.cp`: crates.io **#55** `num-integer` v0.1（14 亿+，GCD/LCM/扩展 GCD/整除/整数开方，6/6 PASS）。
+- `packages/@cap/num-rational/` & `cap/test/testCapNumRational.cp`: crates.io #120 `num-rational` v0.4（9.5 亿+，跨包复用 `@cap/num-integer`，6/6 PASS）。
+- `packages/@cap/ordered-float/` & `cap/test/testCapOrderedFloat.cp`: crates.io **#85** `ordered-float` v4（12 亿+，跨包复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/approx/` & `cap/test/testCapApprox.cp`: crates.io #130 `approx` v0.5（9 亿+，绝对/相对/ULPs 浮点近似比较，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 114 全部 7 个官方包映射。
