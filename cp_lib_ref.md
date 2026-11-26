@@ -302,3 +302,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/http-status`** | `packages/@cap/http-status` | 对标 npm `statuses`/`http-status-codes` — 69 个 RFC 9110/WebDAV/Cloudflare HTTP 状态码双向查询与语义判断 |
 | **`@cap/wcag`** | `packages/@cap/wcag` | 对标 npm `wcag-contrast` / Rust `contrast` — W3C WCAG 2.1/2.2 相对亮度、对比度、AA/AAA 评级与自动文字色推荐 |
 | **`@cap/didyoumean`** | `packages/@cap/didyoumean` | 对标 npm `didyoumean`/`fastest-levenshtein` — 零堆 Levenshtein/Damerau-Levenshtein 与 CLI 拼写纠错建议 |
+| **`@cap/human-number`** | `packages/@cap/human-number` | 对标 npm `numeral`/`millify`/`number-to-words` / Rust `num-format` — 千分位、中英文紧凑缩写、百分比、罗马数字双射与英文数字拼写 |
+| **`@cap/envsubst`** | `packages/@cap/envsubst` | 对标 npm `dotenv-expand` / Rust `shellexpand` — POSIX `${VAR:-def}`/`:+alt`/`:?err` 环境变量模板展开引擎 |
+| **`@cap/link-header`** | `packages/@cap/link-header` | 对标 npm `parse-link-header` / Rust `parse_link_header` — RFC 8288 HTTP `Link` 分页头零拷贝解析与构建 |

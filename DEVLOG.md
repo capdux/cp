@@ -99,3 +99,6 @@
 
 ## 2026-11-26: Wave 12 三路并行交付 `@cap/http-status` + `@cap/wcag` + `@cap/didyoumean` 并发布至 `capdux.org`
 - 三路并行洁净室交付 `@cap/http-status`（6/6 PASS）、`@cap/wcag`（6/6 PASS）、`@cap/didyoumean`（4/4 PASS），同步 68 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包总数突破 103）。
+
+## 2026-11-26: Wave 13 三路并行交付 `@cap/human-number` + `@cap/envsubst` + `@cap/link-header` 并发布至 `capdux.org`
+- 三路并行洁净室交付 `@cap/human-number`（6/6 PASS）、`@cap/envsubst`（6/6 PASS）、`@cap/link-header`（6/6 PASS），同步 73 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包总数突破 106）。

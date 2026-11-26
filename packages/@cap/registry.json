@@ -684,6 +684,56 @@
       "kind": "package",
       "aliases": ["fastest-levenshtein", "leven", "didyoumean2"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "numeral",
+      "source_repo": "https://github.com/adamwdraper/Numeral-js",
+      "license": "MIT",
+      "cp_target": "@cap/human-number",
+      "kind": "package",
+      "aliases": ["millify", "number-to-words", "num-format"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dotenv-expand",
+      "source_repo": "https://github.com/motdotla/dotenv-expand",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/envsubst",
+      "kind": "package",
+      "aliases": ["envsub", "shellexpand"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "parse-link-header",
+      "source_repo": "https://github.com/thlorenz/parse-link-header",
+      "license": "MIT",
+      "cp_target": "@cap/link-header",
+      "kind": "package",
+      "aliases": ["http-link-header", "parse_link_header"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cache-control-parser",
+      "source_repo": "https://github.com/etienne-martin/cache-control-parser",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["http-cache-semantics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "content-disposition",
+      "source_repo": "https://github.com/jshttp/content-disposition",
+      "license": "MIT",
+      "cp_target": "cap:mime",
+      "kind": "stdlib",
+      "aliases": ["content-disposition-rs"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

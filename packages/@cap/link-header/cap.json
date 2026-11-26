@@ -1,0 +1,7 @@
+{
+  "name": "@cap/link-header",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8288 HTTP Link header parser and builder with GitHub/REST pagination helpers for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

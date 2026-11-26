@@ -1,0 +1,7 @@
+{
+  "name": "@cap/human-number",
+  "ver": "1.0.0",
+  "description": "Zero-allocation human-readable number formatting (grouped thousands, EN/ZH compact suffixes, percentages, strict Roman numerals, and English words) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

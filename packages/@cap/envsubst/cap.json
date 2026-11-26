@@ -1,0 +1,7 @@
+{
+  "name": "@cap/envsubst",
+  "ver": "1.0.0",
+  "description": "Zero-allocation POSIX / Docker / K8s environment variable template expansion engine (dotenv-expand / envsub / Rust shellexpand parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

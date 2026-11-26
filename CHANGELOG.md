@@ -150,3 +150,9 @@
 - `packages/@cap/wcag/` & `cap/test/testCapWcag.cp`: W3C WCAG 2.1/2.2 色彩无障碍对比度计算、AA/AAA 评级与自动高对比文字色推荐（对标 npm `wcag-contrast` [8M/wk] & Rust `contrast`，6/6 PASS）。
 - `packages/@cap/didyoumean/` & `cap/test/testCapDidyoumean.cp`: 零堆分配 Levenshtein / Damerau-Levenshtein 换位编辑距离与 CLI/API 拼写建议引擎（对标 npm `didyoumean` [15M/wk] & `fastest-levenshtein` [30M/wk]，4/4 PASS）。
 - `packages/@cap/registry.json`: 扩充至 68 条高频映射并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 13 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/human-number`, `@cap/envsubst`, `@cap/link-header`）并发布至 `capdux.org`
+- `packages/@cap/human-number/` & `cap/test/testCapHumanNumber.cp`: 零堆分配人类可读数字格式化引擎（千分位、中英文紧凑缩写、百分比、规范罗马数字双向转换与英文拼写，对标 npm `numeral`/`millify`/`number-to-words` & Rust `num-format`，6/6 PASS）。
+- `packages/@cap/envsubst/` & `cap/test/testCapEnvsubst.cp`: 零堆 POSIX 环境变量模板展开引擎（`$VAR`/`${VAR:-def}`/`:+alt`/`:?err`/`$$` 转义，对标 npm `dotenv-expand` [35M/wk] & Rust `shellexpand` [15M/mo]，6/6 PASS）。
+- `packages/@cap/link-header/` & `cap/test/testCapLinkHeader.cp`: 零堆 RFC 8288 HTTP `Link` 分页头解析与构建器（对标 npm `parse-link-header` [10M/wk] & Rust `parse_link_header`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 73 条高频映射（新增 Wave 13 三大包 + `cache-control-parser`/`content-disposition` 标准库映射）并同步发布至 `https://capdux.org`。
