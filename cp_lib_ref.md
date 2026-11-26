@@ -442,3 +442,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/pid`** | `packages/@cap/pid` | 对标 Rust `pid` — 工业闭环 PID 控制器（抗积分饱和、Derivative-on-Measurement 与输出限幅） |
 | **`@cap/kalman`** | `packages/@cap/kalman` | 对标 Rust `kalman-filters` — 零堆 1D 标量与 2D 恒速 Joseph 稳定协方差卡尔曼滤波器 |
 | **`@cap/fill-range`** | `packages/@cap/fill-range` | 对标 npm `fill-range`（2.26 亿/周）— 零堆数字/字母/步长/零填充区间展开引擎（`01..05`/`a..z`/`-5..5..2`） |
+| **`@cap/debounce`** | `packages/@cap/debounce` | 对标 npm `lodash.debounce`（7445 万/周）+ `lodash.throttle` — 零堆确定性时钟驱动防抖/节流状态机（含 `maxWait`） |
+| **`@cap/syntax-highlight`** | `packages/@cap/syntax-highlight` | 对标 npm `highlight.js`（5802 万/周）+ `prismjs` — 零堆多语言词法高亮（Code/JSON/SQL，ANSI 与防 XSS HTML 输出） |
+| **`@cap/dns-packet`** | `packages/@cap/dns-packet` | 对标 npm `dns-packet`（2139 万/周）— RFC 1035 DNS 报文头、标签编码、`0xC0` 防环指针压缩解码与 Query 构造 |
+| **`@cap/sitemap`** | `packages/@cap/sitemap` | 对标 npm `sitemap`（882 万/周）— Sitemaps.org 0.9 `<urlset>`/`<sitemapindex>` XML 生成与实体转义 |

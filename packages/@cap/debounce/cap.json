@@ -1,0 +1,9 @@
+{
+  "name": "@cap/debounce",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation deterministic clock-driven Debouncer and Throttler state machines with leading/trailing/maxWait semantics in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["debounce", "throttle", "rate-limit", "scheduler", "lodash", "state-machine", "zero-alloc"]
+}

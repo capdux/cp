@@ -395,3 +395,10 @@
 ## [2026-11-26] - Batch 47 纯 npm 超高下载 Top 10（2.39 亿 → 8359 万/周，交付 `@cap/fill-range` + 9 大 Web/TS 去重直连，总映射突破 **385 条**！）
 - `packages/@cap/fill-range/` & `cap/test/testCapFillRange.cp`: 对标 npm `fill-range`（2.26 亿/周），零堆数字/字母/步长/零填充区间展开（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **385 条**高频映射（含 `form-data`/`body-parser`/`sharp`/`deepmerge`/`marked`/`cors`/`pg`/`decamelize`/`jsonwebtoken` 9 大亿级 npm 包去重直连）。
+
+## [2026-11-26] - Batch 48 纯 npm 超高下载 Top 10（8119 万 → 882 万/周，交付 `@cap/debounce`, `@cap/syntax-highlight`, `@cap/dns-packet`, `@cap/sitemap`，总映射突破 **395 条**！）
+- `packages/@cap/debounce/` & `cap/test/testCapDebounce.cp`: 对标 npm `lodash.debounce`（7445 万/周）+ `lodash.throttle`，确定性防抖/节流（6/6 PASS）。
+- `packages/@cap/syntax-highlight/` & `cap/test/testCapSyntaxHighlight.cp`: 对标 npm `highlight.js`（5802 万/周）+ `prismjs`，多语言词法高亮（6/6 PASS）。
+- `packages/@cap/dns-packet/` & `cap/test/testCapDnsPacket.cp`: 对标 npm `dns-packet`（2139 万/周），RFC 1035 DNS 编解码与防环指针解压（6/6 PASS）。
+- `packages/@cap/sitemap/` & `cap/test/testCapSitemap.cp`: 对标 npm `sitemap`（882 万/周），Sitemaps.org 0.9 XML 生成（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **395 条**高频映射（含 `pino`/`compression`/`ejs`/`moment`/`fast-diff`/`ioredis` 6 大千万级 npm 包去重直连）。

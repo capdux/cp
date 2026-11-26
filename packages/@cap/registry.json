@@ -3854,6 +3854,106 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pino",
+      "source_repo": "https://github.com/pinojs/pino",
+      "license": "MIT",
+      "cp_target": "@web/logger",
+      "kind": "package",
+      "aliases": ["winston", "morgan"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lodash.debounce",
+      "source_repo": "https://github.com/lodash/lodash",
+      "license": "MIT",
+      "cp_target": "@cap/debounce",
+      "kind": "package",
+      "aliases": ["lodash.throttle", "debounce", "throttle"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "compression",
+      "source_repo": "https://github.com/expressjs/compression",
+      "license": "MIT",
+      "cp_target": "@web/compress",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ejs",
+      "source_repo": "https://github.com/mde/ejs",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/template",
+      "kind": "package",
+      "aliases": ["eta", "nunjucks", "liquidjs", "hbs", "pug"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "highlight.js",
+      "source_repo": "https://github.com/highlightjs/highlight.js",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/syntax-highlight",
+      "kind": "package",
+      "aliases": ["prismjs", "shiki"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "moment",
+      "source_repo": "https://github.com/moment/moment",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["dayjs", "luxon"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-diff",
+      "source_repo": "https://github.com/jhchen/fast-diff",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/diff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ioredis",
+      "source_repo": "https://github.com/redis/ioredis",
+      "license": "MIT",
+      "cp_target": "@web/redis",
+      "kind": "package",
+      "aliases": ["redis"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dns-packet",
+      "source_repo": "https://github.com/mafintosh/dns-packet",
+      "license": "MIT",
+      "cp_target": "@cap/dns-packet",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sitemap",
+      "source_repo": "https://github.com/ekalinin/sitemap.js",
+      "license": "MIT",
+      "cp_target": "@cap/sitemap",
+      "kind": "package",
+      "aliases": ["sitemap.js"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

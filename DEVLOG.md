@@ -207,3 +207,6 @@
 
 ## 2026-11-26: Batch 47 全面切回 npm 超高下载榜（2.39 亿 → 8359 万/周），总映射突破 **385 条**！
 - 响应用户反馈平衡 npm 与 crates.io 吸收节奏：Batch 47 严格按 `api.npmjs.org` 真实周下载量单调递减吸收 `form-data`（2.39 亿/周）→ `jsonwebtoken`（8359 万/周），交付 `@cap/fill-range`（2.26 亿/周，6/6 PASS）并去重直连 9 大亿级 npm 包至 `@web/*`/`@cap/*`/`cap:*`，总映射突破 **385 条**！
+
+## 2026-11-26: Batch 48 连续补齐 npm 8119 万 → 882 万/周 Top 10（总映射 **395 条**，距 400 条映射仅一步之遥！）
+- 交付 4 大高频 npm 生态包 `@cap/debounce`（7445 万/周）、`@cap/syntax-highlight`（5802 万/周）、`@cap/dns-packet`（2139 万/周）、`@cap/sitemap`（882 万/周）（全部 6/6 PASS），并去重直连 `pino`/`compression`/`ejs`/`moment`/`fast-diff`/`ioredis`，npm 映射增至 **178 条**，总映射达 **395 条**！
