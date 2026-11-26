@@ -1,0 +1,20 @@
+{
+  "name": "@cap/nom-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation streaming parser combinator primitives (tag, tagNoCase, take, takeUntil, character classes, delimited/separated sequences, integer parsers) for CP (clean-room MIT, inspired by Rust nom v7).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  },
+  "keywords": [
+    "nom",
+    "parser",
+    "combinator",
+    "lexer",
+    "zero-alloc",
+    "streaming",
+    "protocol"
+  ]
+}

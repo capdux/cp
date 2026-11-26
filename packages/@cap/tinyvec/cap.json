@@ -1,0 +1,8 @@
+{
+  "name": "@cap/tinyvec",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap 100%-safe inline stack vector (TinyVecI64 & TinyVecU32) with insert, swapRemove, dedup, reverse, and binarySearch (clean-room port of Rust tinyvec)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

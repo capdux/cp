@@ -1,0 +1,11 @@
+{
+  "name": "@cap/vary-http",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7231 HTTP Vary header manipulation, deduplication, and wildcard handling (clean-room port of npm vary)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}

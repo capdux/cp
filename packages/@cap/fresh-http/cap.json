@@ -1,0 +1,12 @@
+{
+  "name": "@cap/fresh-http",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7232/9110 HTTP conditional request freshness evaluator (ETag weak/strong match, If-None-Match, If-Modified-Since, IMF-fixdate parser, Cache-Control no-cache) in pure CP (clean-room MIT counterpart to npm fresh v0.5).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["fresh", "http", "etag", "cache", "if-none-match", "if-modified-since", "rfc7232", "zero-heap"],
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}

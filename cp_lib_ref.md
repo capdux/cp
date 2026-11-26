@@ -804,3 +804,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/graphql-parse`** | `packages/@cap/graphql-parse` | 对标 npm Top 80 `graphql` v16 (7000 万+/周) — 零堆 GraphQL Spec 词法/递归下降语法解析与查询压缩器 |
 | **`@cap/cookie-jar`** | `packages/@cap/cookie-jar` | 对标 npm `cookie`/`tough-cookie` (跨包复用 `@cap/unicase`) — RFC 6265 Cookie/`Set-Cookie` 解析序列化与域名/路径匹配 Jar |
 | **`@cap/cors-headers`** | `packages/@cap/cors-headers` | 对标 npm Top 55 `cors` (8000 万+/周，双包复用 `@cap/unicase`+`@cap/wildmatch`) — Fetch/W3C CORS 策略求值与预检响应头生成器 |
+| **`@cap/helmet-headers`** | `packages/@cap/helmet-headers` | 对标 npm Top 65 `helmet` v8 (7000 万+/周) — 零堆 CSP/HSTS/XFO/COOP/CORP 安全响应头策略生成器（防 CRLF 注入） |
+| **`@cap/fresh-http`** | `packages/@cap/fresh-http` | 对标 npm Top 30 `fresh` (1.5 亿+/周，跨包复用 `@cap/unicase`) — RFC 7232/9110 条件请求新鲜度判定与 IMF-fixdate 解析 |
+| **`@cap/etag-http`** | `packages/@cap/etag-http` | 对标 npm Top 25 `etag` (1.8 亿+/周，跨包复用 `@cap/fnv-hash`) — RFC 7232 强/弱 ETag 生成、解析与强弱比较器 |
+| **`@cap/vary-http`** | `packages/@cap/vary-http` | 对标 npm Top 25 `vary` (2 亿+/周，跨包复用 `@cap/unicase`) — RFC 7231 `Vary` 响应头去重合并与 `*` 通配吸收 |
+| **`@cap/nom-parse`** | `packages/@cap/nom-parse` | 对标 crates.io #130 `nom` v7 (9 亿+，跨包复用 `@cap/unicase`) — 零堆流式解析器组合子（标签/字符类/序列/溢出安全数值解析） |
+| **`@cap/tinyvec`** | `packages/@cap/tinyvec` | 对标 crates.io #120 `tinyvec` (9.5 亿+) — 100% 安全零堆内联栈向量（`TinyVecI64`/`TinyVecU32`，支持 `binarySearch`/`dedup`/`swapRemove`） |

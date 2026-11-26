@@ -379,3 +379,6 @@
 
 ## 2026-11-27: Batch 102 六大核心包全 6/6 PASS — 官方 `.cap` 包推进至 **598**，冲刺 **600 包里程碑**！
 - 交付 crates.io `heck`（10 亿+）、`fixedbitset`（8.5 亿+）、`similar`（5 亿+）与 npm `graphql`、`tough-cookie`（复用 `@cap/unicase`）、`cors`（双包复用 `@cap/unicase`+`@cap/wildmatch`），全部 36/36 单测 100% PASS。
+
+## 2026-11-27: **Batch 103 正式突破 600 官方 `.cap` 包大关（604 LIVE）！**
+- 交付 npm HTTP 中间件四件套 `vary`（2 亿+/周）、`etag`（1.8 亿+/周）、`fresh`（1.5 亿+/周）、`helmet`（7000 万+/周）与 crates.io `tinyvec`（9.5 亿+）、`nom`（9 亿+），全部 36/36 单测 100% PASS，跨包复用 `@cap/unicase` 与 `@cap/fnv-hash`。

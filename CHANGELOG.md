@@ -915,3 +915,12 @@
 - `packages/@cap/cookie-jar/` & `cap/test/testCapCookieJar.cp`: npm `tough-cookie`（RFC 6265 CookieJar，复用 `@cap/unicase`，6/6 PASS）。
 - `packages/@cap/cors-headers/` & `cap/test/testCapCorsHeaders.cp`: npm Top 55 `cors`（8000 万+/周，双包复用 `@cap/unicase`+`@cap/wildmatch`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 102 全部 6 个官方包映射（npm / crates.io 严守 1:1 平衡）。
+
+### 2026-11-27 (Batch 103 — **正式突破 600 个官方 `.cap` 包里程碑 (604 LIVE)！** 6 大 HTTP/Rust 顶流包全 6/6 PASS)
+- `packages/@cap/helmet-headers/` & `cap/test/testCapHelmetHeaders.cp`: npm Top 65 `helmet` v8（7000 万+/周，6/6 PASS）。
+- `packages/@cap/fresh-http/` & `cap/test/testCapFreshHttp.cp`: npm Top 30 `fresh`（1.5 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/etag-http/` & `cap/test/testCapEtagHttp.cp`: npm Top 25 `etag`（1.8 亿+/周，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/vary-http/` & `cap/test/testCapVaryHttp.cp`: npm Top 25 `vary`（2 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/nom-parse/` & `cap/test/testCapNomParse.cp`: crates.io #130 `nom` v7（9 亿+，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/tinyvec/` & `cap/test/testCapTinyvec.cp`: crates.io #120 `tinyvec`（9.5 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 103 全部 6 个官方包映射。

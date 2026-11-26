@@ -1210,13 +1210,13 @@
       "source_name": "helmet",
       "source_repo": "https://github.com/helmetjs/helmet",
       "license": "MIT",
-      "cp_target": "cap:security",
-      "kind": "stdlib",
+      "cp_target": "@cap/helmet-headers",
+      "kind": "package",
       "aliases": [
         "content-security-policy-builder",
         "csp-header"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -1301,13 +1301,13 @@
       "source_name": "etag",
       "source_repo": "https://github.com/jshttp/etag",
       "license": "MIT",
-      "cp_target": "@cap/etag",
+      "cp_target": "@cap/etag-http",
       "kind": "package",
       "aliases": [
         "fresh",
         "http-etag"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -5168,20 +5168,20 @@
       "source_name": "fresh",
       "source_repo": "https://github.com/jshttp/fresh",
       "license": "MIT",
-      "cp_target": "@cap/fresh",
+      "cp_target": "@cap/fresh-http",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
       "source_name": "vary",
       "source_repo": "https://github.com/jshttp/vary",
       "license": "MIT",
-      "cp_target": "@cap/vary",
+      "cp_target": "@cap/vary-http",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -8774,7 +8774,7 @@
       "source_name": "nom",
       "source_repo": "https://github.com/rust-bakery/nom",
       "license": "MIT",
-      "cp_target": "@cap/nom-bytes",
+      "cp_target": "@cap/nom-parse",
       "kind": "package",
       "aliases": [
         "nom-parser"
@@ -10256,6 +10256,16 @@
       "source_repo": "https://github.com/mitsuhiko/similar",
       "license": "MIT",
       "cp_target": "@cap/similar-diff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tinyvec",
+      "source_repo": "https://github.com/Lokathor/tinyvec",
+      "license": "MIT",
+      "cp_target": "@cap/tinyvec",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
