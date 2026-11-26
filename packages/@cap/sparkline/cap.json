@@ -1,0 +1,19 @@
+{
+  "name": "@cap/sparkline",
+  "version": "1.0.0",
+  "description": "Zero-heap Unicode sparkline (▁▂▃▄▅▆▇█), horizontal bar chart, and summary statistics renderer for CLI & monitoring",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "sparkline",
+    "sparkly",
+    "asciichart",
+    "chart",
+    "cli",
+    "terminal",
+    "unicode",
+    "metrics",
+    "monitoring"
+  ]
+}

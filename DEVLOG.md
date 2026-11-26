@@ -114,3 +114,7 @@
 
 ## 2026-11-26: Wave 17 三路并行交付 `@cap/ascii-tree` + `@cap/url-join` + `@cap/text-stats` 并发布至 `capdux.org`
 - 三路并行洁净室交付 `@cap/ascii-tree`（4/4 PASS）、`@cap/url-join`（6/6 PASS）、`@cap/text-stats`（6/6 PASS），并新增 4 条内部库去重映射（`@langchain/textsplitters`/`helmet`/`soundex-code`/`macaddress`），总映射达 92 条，同步发布至 `https://capdux.org`（线上官方 `.cap` 包达 118+）。
+
+## 2026-11-26: Wave 18 达成 120 官方包 + 102 生态映射双里程碑（并升级为 4 路并行流水线）
+- 洁净室交付 `@cap/timeago`（6/6 PASS）、`@cap/markdown-strip`（6/6 PASS）、`@cap/sparkline`（6/6 PASS），并精准甄别去重 7 项头部 npm/crates.io 资产直连现有 `lib/`（`ms`→`cap:time`、`strip-ansi`→`cap:ansi`、`json5`→`cap:json5`、`bytes`→`cap:bytes`、`etag`→`cap:etag`、`gray-matter`→`cap:frontmatter`、`slugify`→`cap:slugify`），映射表突破 **102 条**，线上官方 `.cap` 包突破 **120 个**。
+- 按用户指令扩容至 **3 路子智能体 + 1 路主智能体（共 4 路并行）**，持续推进 Wave 19。

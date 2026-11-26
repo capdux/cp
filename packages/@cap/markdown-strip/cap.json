@@ -1,0 +1,7 @@
+{
+  "name": "@cap/markdown-strip",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Markdown to plain-text stripper and excerpt generator (remove-markdown / strip-markdown parity) for search indexing, summaries, and LLM context trimming in CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

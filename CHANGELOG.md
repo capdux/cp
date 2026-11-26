@@ -180,3 +180,9 @@
 - `packages/@cap/url-join/` & `cap/test/testCapUrlJoin.cp`: 零堆 RFC 3986 URL 路径/查询/锚点智能拼接引擎（对标 npm `url-join` [15M/wk]，6/6 PASS）。
 - `packages/@cap/text-stats/` & `cap/test/testCapTextStats.cp`: 零堆单遍 UTF-8 中英文本统计、阅读时长与 LLM Token 估算引擎（对标 npm `reading-time` & `word-count`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 92 条高频映射（新增 Wave 17 三大包 + `@langchain/textsplitters`/`helmet`/`soundex-code`/`macaddress` 标准库去重映射）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 18 按下载量吸收 10 项高频资产（`@cap/timeago`, `@cap/markdown-strip`, `@cap/sparkline` + 7 项头部 npm/crates 映射）并突破 120 官方包与 100 映射里程碑
+- `packages/@cap/timeago/` & `cap/test/testCapTimeago.cp`: 零堆确定性中英相对时间格式化引擎（对标 npm `timeago.js` / Rust `chrono-humanize`，6/6 PASS）。
+- `packages/@cap/markdown-strip/` & `cap/test/testCapMarkdownStrip.cp`: 零堆 Markdown 转纯文本与 UTF-8 安全摘要引擎（对标 npm `remove-markdown` [6M/wk]，6/6 PASS）。
+- `packages/@cap/sparkline/` & `cap/test/testCapSparkline.cp`: 零堆 Unicode 迷你折线图 `▁▂▃▄▅▆▇█`、1/8 精度水平柱状图与分桶降采样引擎（对标 npm `sparkly`/`asciichart`，6/6 PASS）。
+- `packages/@cap/registry.json`: 突破 **102 条**高频映射（新增 `ms` [190M/wk]、`strip-ansi` [180M/wk]、`json5` [90M/wk]、`bytes` [85M/wk]、`etag` [45M/wk]、`gray-matter` [15M/wk]、`slugify` [10M/wk] 直连内部 `cap:*` 标准库映射 + Wave 18 三大独立包）并同步发布至 `https://capdux.org`。

@@ -924,6 +924,106 @@
       "kind": "stdlib",
       "aliases": ["macaddr", "eui64"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ms",
+      "source_repo": "https://github.com/vercel/ms",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["parse-duration", "pretty-ms", "humantime"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strip-ansi",
+      "source_repo": "https://github.com/chalk/strip-ansi",
+      "license": "MIT",
+      "cp_target": "cap:ansi",
+      "kind": "stdlib",
+      "aliases": ["ansi-regex", "strip-ansi-escapes"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json5",
+      "source_repo": "https://github.com/json5/json5",
+      "license": "MIT",
+      "cp_target": "cap:json5",
+      "kind": "stdlib",
+      "aliases": ["json5-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bytes",
+      "source_repo": "https://github.com/visionmedia/bytes.js",
+      "license": "MIT",
+      "cp_target": "cap:bytes",
+      "kind": "stdlib",
+      "aliases": ["pretty-bytes", "bytesize"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "etag",
+      "source_repo": "https://github.com/jshttp/etag",
+      "license": "MIT",
+      "cp_target": "cap:etag",
+      "kind": "stdlib",
+      "aliases": ["fresh", "http-etag"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "gray-matter",
+      "source_repo": "https://github.com/jonschlinkert/gray-matter",
+      "license": "MIT",
+      "cp_target": "cap:frontmatter",
+      "kind": "stdlib",
+      "aliases": ["front-matter"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "slugify",
+      "source_repo": "https://github.com/simov/slugify",
+      "license": "MIT",
+      "cp_target": "cap:slugify",
+      "kind": "stdlib",
+      "aliases": ["slug"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "timeago.js",
+      "source_repo": "https://github.com/hustcc/timeago.js",
+      "license": "MIT",
+      "cp_target": "@cap/timeago",
+      "kind": "package",
+      "aliases": ["chrono-humanize", "timeago", "javascript-time-ago"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "remove-markdown",
+      "source_repo": "https://github.com/stiang/remove-markdown",
+      "license": "MIT",
+      "cp_target": "@cap/markdown-strip",
+      "kind": "package",
+      "aliases": ["strip-markdown", "markdown-to-txt"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sparkly",
+      "source_repo": "https://github.com/sindresorhus/sparkly",
+      "license": "MIT",
+      "cp_target": "@cap/sparkline",
+      "kind": "package",
+      "aliases": ["asciichart", "sparklines"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

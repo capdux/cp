@@ -317,3 +317,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ascii-tree`** | `packages/@cap/ascii-tree` | 对标 npm `archy`/`treeify` / Rust `ptree` — 零堆 Unicode/Rounded/ASCII 层级目录树渲染引擎 |
 | **`@cap/url-join`** | `packages/@cap/url-join` | 对标 npm `url-join` — 零堆 RFC 3986 协议保护、斜杠折叠、`?query`/`#hash` 智能合并与安全路径拼接 |
 | **`@cap/text-stats`** | `packages/@cap/text-stats` | 对标 npm `reading-time`/`word-count` — 零堆单遍 UTF-8 统计（中英分词、段落、句数、阅读时长与 LLM Token 估算） |
+| **`@cap/timeago`** | `packages/@cap/timeago` | 对标 npm `timeago.js`/`date-fns` / Rust `chrono-humanize` — 零堆中英相对时间（`3 minutes ago`/`刚刚`/`-45s`） |
+| **`@cap/markdown-strip`** | `packages/@cap/markdown-strip` | 对标 npm `remove-markdown`/`strip-markdown` — 零堆 Markdown 转纯文本、单行折叠与 UTF-8 词边界摘要截断 |
+| **`@cap/sparkline`** | `packages/@cap/sparkline` | 对标 npm `sparkly`/`asciichart` / Rust `sparklines` — 零堆 Unicode `▁▂▃▄▅▆▇█` 迷你折线图、1/8 块水平柱状图与分桶降采样 |
