@@ -1,0 +1,9 @@
+{
+  "name": "@cap/to-regex-range",
+  "version": "1.0.0",
+  "description": "Zero-allocation numeric range to compact regex pattern compiler and numeric range matcher for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["regex", "range", "to-regex-range", "glob", "braces", "pattern", "zero-alloc"]
+}

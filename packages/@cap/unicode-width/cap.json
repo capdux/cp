@@ -1,0 +1,9 @@
+{
+  "name": "@cap/unicode-width",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Unicode 15.1 East Asian Width & terminal display column width calculator with UTF-8 safe truncation for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["unicode", "unicode-width", "string-width", "cjk", "emoji", "terminal", "cli", "zero-alloc"]
+}

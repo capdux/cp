@@ -642,3 +642,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/bigint-u256`** | `packages/@cap/bigint-u256` | 对标 Rust `primitive-types` / `ruint` / npm `bn.js` — 256 位无符号大整数全套算术与十六进制编解码 |
 | **`@cap/quadtree-2d`** | `packages/@cap/quadtree-2d` | 对标 npm `d3-quadtree` / Rust `quadtree_rs` — 池化零堆 2D 四叉树空间索引与矩形/半径查询 |
 | **`@cap/decimal-fixed`** | `packages/@cap/decimal-fixed` | 对标 Rust `rust_decimal` (6000 万+) / npm `decimal.js` (5000 万+/周) — 金融级高精度十进制小数与银行家舍入 |
+
+| **`@cap/block-buffer`** | `packages/@cap/block-buffer` | 对标 crates.io #37 `block-buffer` (14.3 亿) — 64/128 字节固定块流式缓冲与 MD/PKCS#7/ISO7816/Zero 填充 |
+| **`@cap/unicode-width`** | `packages/@cap/unicode-width` | 对标 crates.io #110 `unicode-width` (10.1 亿) / npm `string-width` (3 亿+/周) — Unicode 终端列宽与安全截断 |
+| **`@cap/anstyle-parse`** | `packages/@cap/anstyle-parse` | 对标 crates.io #151 `anstyle-parse` (8.65 亿) — VT100/ANSI CSI/OSC/ESC 转义序列状态机解析器 |
+| **`@cap/is-number`** | `packages/@cap/is-number` | 对标 npm `is-number` (4 亿+/周，独立依赖) — 严格数字字符串（整数/浮点/科学计数/进制）与有限数校验 |
+| **`@cap/to-regex-range`** | `packages/@cap/to-regex-range` | 对标 npm `to-regex-range` (3 亿+/周，独立依赖) — 整数区间紧凑正则拆分与数值范围匹配 |
+| **`@cap/normalize-path`** | `packages/@cap/normalize-path` | 对标 npm `normalize-path` (3.5 亿+/周，独立依赖) — 跨平台路径反斜杠归一化、斜杠折叠与 UNC 前缀保留 |

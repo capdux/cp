@@ -303,3 +303,6 @@
 
 ## 2026-11-27: Batch 79 正式跨越 **700 条双生态映射里程碑（npm=350 / crates.io=350 绝对 1:1 对称）** & 443+ 官方 `.cap` 包 LIVE！
 - 交付 `@cap/convex-hull`、`@cap/geohash-pure`、`@cap/ramer-douglas-peucker`、`@cap/bigint-u256`、`@cap/quadtree-2d`、`@cap/decimal-fixed`（全 6/6 PASS），并完成 GitHub `origin/main` 脱敏推送。
+
+## 2026-11-27: Batch 80（80 批次里程碑！）六件套全 6/6 PASS — 达到 **710 条双生态映射（npm=355 / crates.io=355 绝对对称）**！
+- 精准打击 crates.io Top 37 `block-buffer`（14.3 亿）、Top 110 `unicode-width`（10.1 亿）、Top 151 `anstyle-parse`（8.65 亿）与 npm 3~4 亿/周核心独立依赖 `is-number`、`to-regex-range`、`normalize-path`，全线零堆纯 CP 100% PASS。

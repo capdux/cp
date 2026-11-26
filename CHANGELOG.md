@@ -684,3 +684,12 @@
 - `packages/@cap/quadtree-2d/` & `cap/test/testCapQuadtree2d.cp`: 池化零堆 2D 四叉树与矩形/半径查询（6/6 PASS）。
 - `packages/@cap/decimal-fixed/` & `cap/test/testCapDecimalFixed.cp`: 金融级高精度十进制 `Decimal`（6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **700 条**双生态高频映射（**npm=350 / crates.io=350 绝对 1:1 对称**，含 Top-82 Rust `shlex` 11.6 亿下载）。
+
+### 2026-11-27 (Batch 80 — 80 批次大里程碑！710 映射 355/355 绝对对称，全面吸收 Top-150 核心依赖链)
+- `packages/@cap/block-buffer/` & `cap/test/testCapBlockBuffer.cp`: crates.io #37 `block-buffer`（14.3 亿下载，6/6 PASS）。
+- `packages/@cap/unicode-width/` & `cap/test/testCapUnicodeWidth.cp`: crates.io #110 `unicode-width`（10.1 亿下载）+ npm `string-width`（6/6 PASS）。
+- `packages/@cap/anstyle-parse/` & `cap/test/testCapAnstyleParse.cp`: crates.io #151 `anstyle-parse`（8.65 亿下载，6/6 PASS）。
+- `packages/@cap/is-number/` & `cap/test/testCapIsNumber.cp`: npm `is-number`（4 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/to-regex-range/` & `cap/test/testCapToRegexRange.cp`: npm `to-regex-range`（3 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/normalize-path/` & `cap/test/testCapNormalizePath.cp`: npm `normalize-path`（3.5 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **710 条**双生态高频映射（**npm=355 / crates.io=355 绝对 1:1 对称**）。

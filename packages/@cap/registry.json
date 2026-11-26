@@ -8564,6 +8564,126 @@
         "quadtree-js"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "block-buffer",
+      "source_repo": "https://github.com/RustCrypto/utils",
+      "license": "MIT",
+      "cp_target": "@cap/block-buffer",
+      "kind": "package",
+      "aliases": [
+        "block-padding"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-width",
+      "source_repo": "https://github.com/unicode-rs/unicode-width",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-width",
+      "kind": "package",
+      "aliases": [
+        "east-asian-width"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "anstyle-parse",
+      "source_repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT",
+      "cp_target": "@cap/anstyle-parse",
+      "kind": "package",
+      "aliases": [
+        "vte-ansi"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crypto-common",
+      "source_repo": "https://github.com/RustCrypto/traits",
+      "license": "MIT",
+      "cp_target": "@cap/block-buffer",
+      "kind": "package",
+      "aliases": [
+        "digest-block"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "anstream",
+      "source_repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT",
+      "cp_target": "@cap/anstyle-parse",
+      "kind": "package",
+      "aliases": [
+        "strip-ansi-escapes"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-number",
+      "source_repo": "https://github.com/jonschlinkert/is-number",
+      "license": "MIT",
+      "cp_target": "@cap/is-number",
+      "kind": "package",
+      "aliases": [
+        "is-numeric"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "to-regex-range",
+      "source_repo": "https://github.com/micromatch/to-regex-range",
+      "license": "MIT",
+      "cp_target": "@cap/to-regex-range",
+      "kind": "package",
+      "aliases": [
+        "regex-range"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "normalize-path",
+      "source_repo": "https://github.com/jonschlinkert/normalize-path",
+      "license": "MIT",
+      "cp_target": "@cap/normalize-path",
+      "kind": "package",
+      "aliases": [
+        "unixify"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "eastasianwidth",
+      "source_repo": "https://github.com/komagata/eastasianwidth",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-width",
+      "kind": "package",
+      "aliases": [
+        "wcwidth"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-fullwidth-code-point",
+      "source_repo": "https://github.com/sindresorhus/is-fullwidth-code-point",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-width",
+      "kind": "package",
+      "aliases": [
+        "fullwidth"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/normalize-path",
+  "ver": "1.0.0",
+  "desc": "Zero-heap POSIX/Windows path normalizer (backslash conversion, slash collapsing, UNC & drive root preservation) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["normalize-path", "path", "posix", "windows", "unc", "slash", "zero-heap"]
+}
