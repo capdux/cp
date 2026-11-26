@@ -226,3 +226,8 @@
 - `packages/@cap/debug/` & `cap/test/testCapDebug.cp`: 零堆 `DEBUG` 命名空间通配符过滤（排除优先）、确定性配色与 `+ms` 耗时差引擎（对标 npm `debug` **968.8M/wk**，6/6 PASS）。
 - `packages/@cap/wrap-ansi/` & `cap/test/testCapWrapAnsi.cp`: 零堆 ANSI 颜色栈跨行续接折行与按列切片引擎（对标 npm `wrap-ansi` **614.8M/wk** & `slice-ansi`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **155 条**高频映射（新增 `minimatch` [10.07亿/wk]、`ansi-styles` [9.42亿/wk]、`lru-cache` [8.21亿/wk]、`commander` [7.82亿/wk]、`string-width` [7.34亿/wk]、`picomatch` [7.33亿/wk]、`glob` [5.52亿/wk] + `@cap/debug` + `@cap/wrap-ansi`）。
+
+## [2026-11-26] - Batch 25 严格单调递减吸收 npm 5.42 亿 → 3.99 亿/周 Top 10（`@cap/json-schema`, `@cap/css-units` + 8 项亿级去重映射）
+- `packages/@cap/json-schema/` & `cap/test/testCapJsonSchema.cp`: 零堆 JSON Schema Draft-07/2020-12 校验引擎（对标 npm `ajv` **542.0M/wk** & `zod` **467.6M/wk**，6/6 PASS）。
+- `packages/@cap/css-units/` & `cap/test/testCapCssUnits.cp`: 26 种 CSS 维度单位解析与换算引擎（对标 npm `postcss-value-parser`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **165 条**高频映射（新增 `ajv`/`source-map`/`which`/`p-limit`/`postcss`/`postcss-value-parser`/`find-up`/`ws`/`js-yaml`/`uuid`）。

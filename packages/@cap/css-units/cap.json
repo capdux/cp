@@ -1,0 +1,8 @@
+{
+  "name": "@cap/css-units",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS dimension, length, angle, time, and resolution parser and unit converter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

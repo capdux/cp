@@ -137,3 +137,6 @@
 
 ## 2026-11-26: Batch 24 严格单调递减完成 npm Top 10（12.17 亿 → 5.52 亿/周）
 - 交付 `@cap/debug`（9.69 亿/周, 6/6 PASS）与 `@cap/wrap-ansi`（6.15 亿/周, 6/6 PASS），并完成 7 项亿级周下载资产去重映射（`minimatch`/`ansi-styles`/`lru-cache`/`commander`/`string-width`/`picomatch`/`glob`），`registry.json` 突破 **155 条**，同步发布至 `https://capdux.org`。
+
+## 2026-11-26: Batch 25 严格单调递减完成 npm 5.42 亿 → 3.99 亿/周 Top 10
+- 交付 `@cap/json-schema`（5.42 亿/周, 6/6 PASS）与 `@cap/css-units`（6/6 PASS），完成 `source-map`/`which`/`p-limit`/`postcss`/`find-up`/`ws`/`js-yaml`/`uuid` 8 项亿级资产去重直连，`registry.json` 突破 **165 条**。

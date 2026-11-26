@@ -1,0 +1,8 @@
+{
+  "name": "@cap/json-schema",
+  "ver": "1.0.0",
+  "description": "Zero-allocation JSON Schema Draft-07/2020-12 validator operating directly on raw JSON strings for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

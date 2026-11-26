@@ -1554,6 +1554,106 @@
       "kind": "stdlib",
       "aliases": ["fast-glob", "globby"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ajv",
+      "source_repo": "https://github.com/ajv-validator/ajv",
+      "license": "MIT",
+      "cp_target": "@cap/json-schema",
+      "kind": "package",
+      "aliases": ["jsonschema", "zod"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "source-map",
+      "source_repo": "https://github.com/mozilla/source-map",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:sourcemap",
+      "kind": "stdlib",
+      "aliases": ["source-map-support"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "which",
+      "source_repo": "https://github.com/npm/node-which",
+      "license": "ISC",
+      "cp_target": "cap:which",
+      "kind": "stdlib",
+      "aliases": ["which-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-limit",
+      "source_repo": "https://github.com/sindresorhus/p-limit",
+      "license": "MIT",
+      "cp_target": "cap:parallel",
+      "kind": "stdlib",
+      "aliases": ["p-queue", "bottleneck"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "postcss",
+      "source_repo": "https://github.com/postcss/postcss",
+      "license": "MIT",
+      "cp_target": "cap:css",
+      "kind": "stdlib",
+      "aliases": ["css-tree", "lightningcss"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "postcss-value-parser",
+      "source_repo": "https://github.com/TrySound/postcss-value-parser",
+      "license": "MIT",
+      "cp_target": "@cap/css-units",
+      "kind": "package",
+      "aliases": ["parse-css-dimension", "css-unit-converter"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "find-up",
+      "source_repo": "https://github.com/sindresorhus/find-up",
+      "license": "MIT",
+      "cp_target": "cap:path",
+      "kind": "stdlib",
+      "aliases": ["pkg-dir", "locate-path"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ws",
+      "source_repo": "https://github.com/websockets/ws",
+      "license": "MIT",
+      "cp_target": "cap:ws",
+      "kind": "stdlib",
+      "aliases": ["tungstenite", "tokio-tungstenite"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "js-yaml",
+      "source_repo": "https://github.com/nodeca/js-yaml",
+      "license": "MIT",
+      "cp_target": "@cap/yaml",
+      "kind": "package",
+      "aliases": ["yaml", "serde_yaml"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "uuid",
+      "source_repo": "https://github.com/uuidjs/uuid",
+      "license": "MIT",
+      "cp_target": "cap:uuid",
+      "kind": "stdlib",
+      "aliases": ["uuid-rs"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -342,3 +342,5 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/hosts-file`** | `packages/@cap/hosts-file` | 对标 npm `hostile` / Rust `hostsfile` — `/etc/hosts` 多别名解析、IPv4/IPv6 正反向查表与对齐输出 |
 | **`@cap/debug`** | `packages/@cap/debug` | 对标 npm `debug`（9.69 亿/周）— 零堆命名空间通配符过滤（含 `-` 排除优先）、确定性 ANSI 配色与耗时差格式化 |
 | **`@cap/wrap-ansi`** | `packages/@cap/wrap-ansi` | 对标 npm `wrap-ansi`/`slice-ansi`（6.15 亿/周）— 零堆 ANSI 样式栈跨行续接折行、CJK 双宽与按列切片 |
+| **`@cap/json-schema`** | `packages/@cap/json-schema` | 对标 npm `ajv`/`zod`（5.42 亿/周）— 零堆 RFC 8259 + JSON Schema 类型/长度/区间/必填键/枚举白名单校验引擎 |
+| **`@cap/css-units`** | `packages/@cap/css-units` | 对标 npm `postcss-value-parser`/`css-unit-converter` — 26 种 CSS 长度/角度/时间/分辨率单位解析与 px/deg/ms 换算 |
