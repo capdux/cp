@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c** [`curl`](https://github.com/curl/curl)（`curl`）（包名 `@cap/curl`）。
+
 # @cap/curl
 
 Official CP binding for **libcurl (v8.23.0)** — multiprotocol network transfer library (HTTP, FTP, Proxy, Multipart) shipped with a prebuilt stripped `libcurl.so` and a thin C shim (`c/curl_ffi.c`) for zero-wait builds.

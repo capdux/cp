@@ -14,5 +14,11 @@
     "registry",
     "digest",
     "caprun"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "oci-distribution",
+    "repo": "https://github.com/oras-project/rust-oci-distribution",
+    "license": "Apache-2.0"
+  }
 }

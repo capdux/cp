@@ -25,5 +25,11 @@
   "sys": {
     "c": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "lmdb",
+    "repo": "https://git.openldap.org/openldap/openldap",
+    "license": "OLDAP-2.8"
   }
 }

@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`der`](https://github.com/RustCrypto/formats)（`MIT OR Apache-2.0`）（原库名 `der`，CP 包名 `@cap/der-asn1`）。
+
 # `@cap/der-asn1`
 
 Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder in pure CP (RustCrypto `der` parity). Reuses `@cap/const-oid` for canonical OID TLV (`0x06`) handling.

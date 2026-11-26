@@ -967,3 +967,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/thin-vec`** | `packages/@cap/thin-vec` | 对标 crates.io **#185** `thin-vec` (**7 亿+**) — 紧凑内联定容向量与栈式操作（零堆纯 CP） |
 | **`@cap/pathdiff`** | `packages/@cap/pathdiff` | 对标 crates.io **#120** `pathdiff` (**9.5 亿+**) — POSIX 路径归一化与相对路径差值构造（`diffPaths`） |
 | **`@cap/ipnet`** | `packages/@cap/ipnet` | 对标 crates.io **#140** `ipnet` v2 (**8.5 亿+**) — IPv4/CIDR 子网掩码、网络/广播地址、包含判定与 `supernet` 聚合引擎 |
+| **`@cap/kebabcase-keys`** | `packages/@cap/kebabcase-keys` | 对标 npm `kebabcase-keys` v1 (双包复用 `@cap/decamelize-keys`+`@cap/map-obj`) — 对象键与点分路径 `kebab-case` 批量转换 |
+| **`@cap/nanoid`** | `packages/@cap/nanoid` | 对标 npm **Top 25** `nanoid` v5 (**1 亿+/周**) — URL-safe 21 字符 ID 生成与无模偏差位掩码自定义字母表采样 |
+| **`@cap/cli-truncate`** | `packages/@cap/cli-truncate` | 对标 npm **Top 50** `cli-truncate` v4 (**8000 万+/周**, 双包复用 `@cap/string-width`+`@cap/slice-ansi`) — ANSI/CJK 安全终端三向截断 |
+| **`@cap/publicsuffix`** | `packages/@cap/publicsuffix` | 对标 crates.io **#210** `publicsuffix` (**6 亿+**) — PSL 公共后缀与可注册域名（eTLD / eTLD+1）解析及通配符/例外规则引擎 |
+| **`@cap/macaddr`** | `packages/@cap/macaddr` | 对标 crates.io `macaddr` v1 — IEEE 802 MAC-48/EUI-48 与 EUI-64（RFC 4291）解析、OUI 与多格式输出 |
+| **`@cap/relative-path`** | `packages/@cap/relative-path` | 对标 crates.io **#145** `relative-path` (**8 亿+**) — 跨平台可移植相对路径归一化、拼接、`stripPrefix` 与 `relativeTo` |
+| **`@cap/mitt`** | `packages/@cap/mitt` | 对标 npm **Top 45** `mitt` v3 (**5000 万+/周**) — 零堆 32 槽位函数式事件总线与 `"*"` 通配符分发 |
+| **`@cap/camino`** | `packages/@cap/camino` | 对标 crates.io **#75** `camino` v1 (**13 亿+**, 复用 `@cap/utf8-valid`) — 严格 UTF-8 校验绝对/相对路径引擎 `Utf8PathBuf` |

@@ -171,5 +171,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "opus",
+    "repo": "https://github.com/xiph/opus",
+    "license": "BSD-3-Clause"
   }
 }

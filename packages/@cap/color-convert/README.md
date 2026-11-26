@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`color-convert`](https://github.com/Qix-/color-convert)（`MIT`）（包名 `@cap/color-convert`）。
+
 # `@cap/color-convert`
 
 Zero-heap-allocation color space conversion library in pure CP (clean-room MIT implementation aligned with npm `color-convert` v2). Composes `@cap/color-name` directly for CSS4 keyword lookups with zero table duplication.

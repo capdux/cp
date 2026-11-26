@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`cron`](https://github.com/zslayton/cron)（`MIT OR Apache-2.0`）（原库名 `cron`，CP 包名 `@cap/cron-next`）。
+
 # @cap/cron-next
 
 Zero-allocation 5-field POSIX Cron bitmask parser and next UTC trigger timestamp calculator for CP — clean-room MIT parity with npm `cron-parser` (25M+/wk) and Rust `cron`.

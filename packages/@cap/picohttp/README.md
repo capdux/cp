@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c** [`picohttpparser`](https://github.com/h2o/picohttpparser)（`MIT`）（原库名 `picohttpparser`，CP 包名 `@cap/picohttp`）。
+
 # @cap/picohttp
 
 Official CP native package wrapping **PicoHTTPParser** (zero-copy HTTP/1.x request/response & chunked transfer decoder).

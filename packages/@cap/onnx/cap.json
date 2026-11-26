@@ -29,5 +29,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "onnxruntime",
+    "repo": "https://github.com/microsoft/onnxruntime",
+    "license": "MIT"
   }
 }

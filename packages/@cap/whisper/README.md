@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`whisper.cpp`](https://github.com/ggml-org/whisper.cpp)（`MIT`）（原库名 `whisper.cpp`，CP 包名 `@cap/whisper`）。
+
 # `@cap/whisper`
 
 High-performance local speech-to-text (ASR) engine for CP, powered by **`ggml-org/whisper.cpp` (`v1.9.6`, MIT License)** using prebuilt dynamic libraries (`sys.whisper.prebuilt`) with zero local C++ build time for consumers.

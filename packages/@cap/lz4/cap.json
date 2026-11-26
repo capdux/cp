@@ -23,5 +23,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "lz4",
+    "repo": "https://github.com/lz4/lz4",
+    "license": "BSD-2-Clause"
   }
 }

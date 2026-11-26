@@ -47,5 +47,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "vorbis",
+    "repo": "https://github.com/xiph/vorbis",
+    "license": "BSD-3-Clause"
   }
 }

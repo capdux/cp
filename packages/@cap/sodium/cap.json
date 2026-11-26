@@ -166,5 +166,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "libsodium",
+    "repo": "https://github.com/jedisct1/libsodium",
+    "license": "ISC"
   }
 }

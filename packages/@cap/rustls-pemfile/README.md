@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`rustls-pemfile`](https://github.com/rustls/pemfile)（`MIT OR Apache-2.0`）（包名 `@cap/rustls-pemfile`）。
+
 # `@cap/rustls-pemfile`
 
 Zero-allocation streaming TLS PEM bundle reader in pure CP (`rustls-pemfile` v2 parity). Reuses `@cap/pem-rfc7468` for RFC 7468 PEM framing, label validation, and Base64 decoding without duplicating any PEM or Base64 logic.

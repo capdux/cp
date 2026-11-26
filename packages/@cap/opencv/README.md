@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`opencv`](https://github.com/opencv/opencv)（`Apache-2.0`）（包名 `@cap/opencv`）。
+
 # `@cap/opencv`
 
 Lean computer vision binding for CP powered by **OpenCV (`4.10.0`, Apache-2.0 License)** — shipping only the stripped `core` + `imgproc` prebuilt dynamic libraries and a thin C-ABI shim for zero local OpenCV build time.

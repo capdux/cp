@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`unicode-segmentation`](https://github.com/unicode-rs/unicode-segmentation)（`MIT OR Apache-2.0`）（原库名 `unicode-segmentation`，CP 包名 `@cap/unicode-seg`）。
+
 # @cap/unicode-seg
 
 Zero-allocation UAX #29 Unicode grapheme cluster and word boundary segmentation engine for CP — clean-room MIT parity with Rust `unicode-segmentation`.

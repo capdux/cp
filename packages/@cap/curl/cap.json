@@ -27,5 +27,11 @@
       "prebuilt": "prebuilt"
     },
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "curl",
+    "repo": "https://github.com/curl/curl",
+    "license": "curl"
   }
 }

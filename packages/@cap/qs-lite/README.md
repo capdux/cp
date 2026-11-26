@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`qs`](https://github.com/ljharb/qs)（`BSD-3-Clause`）（原库名 `qs`，CP 包名 `@cap/qs-lite`）。
+
 # @cap/qs-lite
 
 Zero-heap `application/x-www-form-urlencoded` query string parser, lookup, and percent-encoding serializer for CP.

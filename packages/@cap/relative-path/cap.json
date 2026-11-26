@@ -1,0 +1,15 @@
+{
+  "name": "@cap/relative-path",
+  "version": "1.0.0",
+  "description": "Portable platform-independent relative path manipulation, normalization, joining, and resolution (zero-heap pure CP)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": ["path", "relative-path", "normalize", "join", "posix", "portable"],
+  "source": {
+    "registry": "crates.io",
+    "name": "relative-path",
+    "repo": "https://github.com/udoprog/relative-path",
+    "license": "MIT OR Apache-2.0"
+  }
+}

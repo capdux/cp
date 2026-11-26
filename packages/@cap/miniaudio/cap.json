@@ -26,5 +26,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "miniaudio",
+    "repo": "https://github.com/mackron/miniaudio",
+    "license": "MIT-0"
   }
 }

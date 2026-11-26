@@ -28,5 +28,11 @@
     "c": {},
     "m": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "usearch",
+    "repo": "https://github.com/unum-cloud/usearch",
+    "license": "Apache-2.0"
   }
 }

@@ -15,5 +15,11 @@
     "ai",
     "tensor",
     "ml"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "half",
+    "repo": "https://github.com/VoidStarKat/half-rs",
+    "license": "MIT OR Apache-2.0"
+  }
 }

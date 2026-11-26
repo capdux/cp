@@ -55,5 +55,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "libyuv",
+    "repo": "https://chromium.googlesource.com/libyuv/libyuv",
+    "license": "BSD-3-Clause"
   }
 }

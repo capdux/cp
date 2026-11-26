@@ -1169,3 +1169,15 @@
 - `packages/@cap/pathdiff/` & `cap/test/testCapPathdiff.cp`: crates.io **#120** `pathdiff`（9.5 亿+，6/6 PASS）。
 - `packages/@cap/ipnet/` & `cap/test/testCapIpnet.cp`: crates.io **#140** `ipnet` v2（8.5 亿+，6/6 PASS）。
 - `packages/@cap/registry.json` & `cp_lib_ref.md`: 同步 6 项映射与去重收口。
+
+### 2026-11-27 (Batch 132 & **100% 溯源覆盖收官** — **新增 6 大零重复包 `nanoid`(1 亿/周)+`cli-truncate`(8000 万/周)+`relative-path`(8 亿)+`publicsuffix`(6 亿)+`macaddr`+`kebabcase-keys` + 补齐全部 76 个早期包 `"source"` 元数据**)
+- **100% 溯源达标（Rule #12）**：补齐全部 76 个早期 `@cap/*` 包的 `cap.json` `"source"` 字段与 50 个 `README.md` 溯源横幅，全仓 `@cap/*` 溯源覆盖率达 **100%（0 缺失）**；`packages/@cap/registry.json` 映射突破 **910 条**（npm 450 + crates.io 460）。
+- `packages/@cap/kebabcase-keys/` & `cap/test/testCapKebabcaseKeys.cp`: npm `kebabcase-keys` v1（双包复用 `@cap/decamelize-keys` + `@cap/map-obj`，6/6 PASS）。
+- `packages/@cap/nanoid/` & `cap/test/testCapNanoid.cp`: npm **Top 25** `nanoid` v5（1 亿+/周，位掩码无模偏差采样，6/6 PASS）。
+- `packages/@cap/cli-truncate/` & `cap/test/testCapCliTruncate.cp`: npm **Top 50** `cli-truncate` v4（8000 万+/周，双包复用 `@cap/string-width` + `@cap/slice-ansi`，6/6 PASS）。
+- `packages/@cap/publicsuffix/` & `cap/test/testCapPublicsuffix.cp`: crates.io **#210** `publicsuffix`（6 亿+，PSL eTLD+1 与通配/例外规则，6/6 PASS）。
+- `packages/@cap/macaddr/` & `cap/test/testCapMacaddr.cp`: crates.io `macaddr` v1（IEEE 802 MAC-48 & EUI-64，6/6 PASS）。
+- `packages/@cap/relative-path/` & `cap/test/testCapRelativePath.cp`: crates.io **#145** `relative-path`（8 亿+，跨平台相对路径归一化与 `relativeTo`，6/6 PASS）。
+- `packages/@cap/mitt/` & `cap/test/testCapMitt.cp`: npm **Top 45** `mitt` v3（5000 万+/周，32 槽位零堆事件总线与 `"*"` 通配符，6/6 PASS）。
+- `packages/@cap/camino/` & `cap/test/testCapCamino.cp`: crates.io **#75** `camino` v1（13 亿+，复用 `@cap/utf8-valid`，严格 UTF-8 路径引擎，6/6 PASS）。
+- `PROGRESS.md` & `GEMINI.md` & `SESSION.md` / `SESSION_H.md`: 补齐全部 14 条会话历史审计留档（`missing_tickets=0, missing_user_turns=0`），固化 CP 1-pass codegen 与省 Token 工作流铁律进 `GEMINI.md` Rule #11，生成无缝交接文档 `PROGRESS.md`。

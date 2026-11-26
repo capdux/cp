@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`npm-package-arg`](https://github.com/npm/npm-package-arg)（`ISC`）（原库名 `npm-package-arg`，CP 包名 `@cap/npm-spec`）。
+
 # @cap/npm-spec
 
 Zero-heap npm package name validator and package specifier (`@scope/name@^1.2.3`) parser and formatter in pure CP.

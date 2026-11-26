@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`fixedbitset`](https://github.com/petgraph/fixedbitset)（`MIT OR Apache-2.0`）（原库名 `fixedbitset`，CP 包名 `@cap/bitset`）。
+
 # @cap/bitset
 
 Zero-allocation fixed-size bitsets (`BitSet256` / `BitSet1024`) with SWAR popcount, zero-word-skipping scanning, and full set algebra for CP — clean-room MIT parity with Rust `fixedbitset` (634M), `bit-vec` (618M), and `bit-set` (557M).

@@ -23,5 +23,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "dr_libs",
+    "repo": "https://github.com/mackron/dr_libs",
+    "license": "MIT-0"
   }
 }

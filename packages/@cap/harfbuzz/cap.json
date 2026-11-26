@@ -24,5 +24,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "harfbuzz",
+    "repo": "https://github.com/harfbuzz/harfbuzz",
+    "license": "MIT"
   }
 }

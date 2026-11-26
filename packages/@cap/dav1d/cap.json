@@ -28,5 +28,11 @@
     },
     "c": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "dav1d",
+    "repo": "https://code.videolan.org/videolan/dav1d",
+    "license": "BSD-2-Clause"
   }
 }

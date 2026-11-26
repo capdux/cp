@@ -2700,7 +2700,7 @@
       "source_name": "ipnet",
       "source_repo": "https://github.com/krisprice/ipnet",
       "license": "MIT",
-      "cp_target": "@cap/ip-range",
+      "cp_target": "@cap/ipnet",
       "kind": "package",
       "aliases": [
         "ipnetwork"
@@ -9168,7 +9168,7 @@
       "source_name": "decamelize-keys",
       "source_repo": "https://github.com/sindresorhus/decamelize-keys",
       "license": "MIT",
-      "cp_target": "@cap/camelcase-keys",
+      "cp_target": "@cap/decamelize-keys",
       "kind": "package",
       "aliases": [
         "snakecase-keys"
@@ -10650,6 +10650,136 @@
       "source_repo": "https://github.com/Manishearth/pathdiff",
       "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/pathdiff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kebabcase-keys",
+      "source_repo": "https://github.com/sindresorhus/kebabcase-keys",
+      "license": "MIT",
+      "cp_target": "@cap/kebabcase-keys",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "publicsuffix",
+      "source_repo": "https://github.com/rushmorem/publicsuffix",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/publicsuffix",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "macaddr",
+      "source_repo": "https://github.com/svartalf/rust-macaddr",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/macaddr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "relative-path",
+      "source_repo": "https://github.com/udoprog/relative-path",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/relative-path",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "git-url-parse",
+      "source_repo": "https://github.com/tjtelan/git-url-parse-rs",
+      "license": "MIT",
+      "cp_target": "@cap/git-url",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "http-status-codes",
+      "source_repo": "https://github.com/prettymuchbryce/http-status-codes",
+      "license": "MIT",
+      "cp_target": "@cap/http-status",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "npm-package-arg",
+      "source_repo": "https://github.com/npm/npm-package-arg",
+      "license": "ISC",
+      "cp_target": "@cap/npm-spec",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "redis",
+      "source_repo": "https://github.com/redis-rs/redis-rs",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/redis-url",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "regex-syntax",
+      "source_repo": "https://github.com/rust-lang/regex",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/regex-syntax",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "async-retry",
+      "source_repo": "https://github.com/vercel/async-retry",
+      "license": "MIT",
+      "cp_target": "@cap/retry",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "spdx",
+      "source_repo": "https://github.com/EmbarkStudios/spdx",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/spdx",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "validator",
+      "source_repo": "https://github.com/validatorjs/validator.js",
+      "license": "MIT",
+      "cp_target": "@cap/validator",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mitt",
+      "source_repo": "https://github.com/developit/mitt",
+      "license": "MIT",
+      "cp_target": "@cap/mitt",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

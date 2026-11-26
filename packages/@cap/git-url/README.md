@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`git-url-parse`](https://github.com/tjtelan/git-url-parse-rs)（`MIT`）（原库名 `git-url-parse`，CP 包名 `@cap/git-url`）。
+
 # @cap/git-url
 
 Zero-allocation Git repository URL parser and normalizer for CP — clean-room MIT parity with npm `hosted-git-info` and `git-url-parse`.

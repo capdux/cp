@@ -5,5 +5,11 @@
   "description": "Convert a camelized string into a lowercased one with a custom separator (clean-room CP implementation of npm decamelize)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "decamelize",
+    "repo": "https://github.com/sindresorhus/decamelize",
+    "license": "MIT"
+  }
 }

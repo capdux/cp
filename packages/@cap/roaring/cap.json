@@ -4,5 +4,11 @@
   "description": "Zero-allocation Roaring Bitmap with 16-bit high-key containers, binary search, rank, and set algebra (Rust roaring parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "roaring",
+    "repo": "https://github.com/RoaringBitmap/roaring-rs",
+    "license": "MIT OR Apache-2.0"
+  }
 }

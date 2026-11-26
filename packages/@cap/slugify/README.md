@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`slugify`](https://github.com/simov/slugify)（`MIT`）（包名 `@cap/slugify`）。
+
 # @cap/slugify
 
 Zero-allocation URL slug generator with UTF-8 Latin-1 / Latin Extended-A diacritic folding for CP.

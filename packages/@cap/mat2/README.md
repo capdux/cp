@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`glam`](https://github.com/bitshifter/glam-rs)（`MIT OR Apache-2.0`）（原库名 `glam`，CP 包名 `@cap/mat2`）。
+
 # @cap/mat2
 
 Zero-heap-allocation 2x2 matrix (`Mat2`) and 2D linear transformation library in pure CP with zero external dependencies (built-in range-reduced Taylor series `sinF64` / `cosF64`).

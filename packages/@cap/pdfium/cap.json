@@ -11,5 +11,11 @@
     "c": {},
     "m": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "pdfium",
+    "repo": "https://pdfium.googlesource.com/pdfium",
+    "license": "BSD-3-Clause"
   }
 }

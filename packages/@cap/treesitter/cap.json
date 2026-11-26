@@ -26,5 +26,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "tree-sitter",
+    "repo": "https://github.com/tree-sitter/tree-sitter",
+    "license": "MIT"
   }
 }

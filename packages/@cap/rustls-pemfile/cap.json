@@ -8,5 +8,21 @@
   "dependencies": {
     "@cap/pem-rfc7468": "1.0.0"
   },
-  "keywords": ["pem", "tls", "rustls", "x509", "certificate", "pkcs8", "pkcs1", "sec1", "zero-alloc"]
+  "keywords": [
+    "pem",
+    "tls",
+    "rustls",
+    "x509",
+    "certificate",
+    "pkcs8",
+    "pkcs1",
+    "sec1",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rustls-pemfile",
+    "repo": "https://github.com/rustls/pemfile",
+    "license": "MIT OR Apache-2.0"
+  }
 }

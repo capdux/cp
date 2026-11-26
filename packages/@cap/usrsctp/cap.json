@@ -55,5 +55,11 @@
   "sys": {
     "c": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "usrsctp",
+    "repo": "https://github.com/sctplab/usrsctp",
+    "license": "BSD-3-Clause"
   }
 }

@@ -44,5 +44,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "libsrtp",
+    "repo": "https://github.com/cisco/libsrtp",
+    "license": "BSD-3-Clause"
   }
 }

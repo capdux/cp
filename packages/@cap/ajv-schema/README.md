@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`ajv`](https://github.com/ajv-validator/ajv)（`MIT`）（原库名 `ajv`，CP 包名 `@cap/ajv-schema`）。
+
 # @cap/ajv-schema
 
 零堆分配的 CP 原生 JSON Schema Draft-07 / 2020-12 校验引擎，Clean-Room MIT 实现对标 npm Top 16 顶流包 `ajv` v8（2 亿+/周下载）。

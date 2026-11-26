@@ -32,5 +32,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "rnnoise",
+    "repo": "https://github.com/xiph/rnnoise",
+    "license": "BSD-3-Clause"
   }
 }

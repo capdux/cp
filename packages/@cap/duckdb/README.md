@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`duckdb`](https://github.com/duckdb/duckdb)（`MIT`）（包名 `@cap/duckdb`）。
+
 # `@cap/duckdb`
 
 In-process analytical SQL (OLAP) database engine for CP, powered by **DuckDB v1.2.1** (MIT License) using official prebuilt shared libraries (`sys.duckdb.prebuilt`) with zero local C++ build time.

@@ -38,5 +38,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "speexdsp",
+    "repo": "https://github.com/xiph/speexdsp",
+    "license": "BSD-3-Clause"
   }
 }

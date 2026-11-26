@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c** [`dav1d`](https://code.videolan.org/videolan/dav1d)（`BSD-2-Clause`）（包名 `@cap/dav1d`）。
+
 # @cap/dav1d
 
 VideoLAN `dav1d` (`1.5.4`) high-performance royalty-free AV1 video decoder for CP.

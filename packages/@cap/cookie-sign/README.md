@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`cookie-signature`](https://github.com/tj/node-cookie-signature)（`MIT`）（原库名 `cookie-signature`，CP 包名 `@cap/cookie-sign`）。
+
 # @cap/cookie-sign
 
 Zero-heap RFC 6265 Cookie parser, `Set-Cookie` formatter, and built-in HMAC-SHA256 constant-time cookie signing/verification in pure CP (zero external dependencies).

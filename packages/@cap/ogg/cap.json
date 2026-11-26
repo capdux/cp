@@ -25,5 +25,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "ogg",
+    "repo": "https://github.com/xiph/ogg",
+    "license": "BSD-3-Clause"
   }
 }

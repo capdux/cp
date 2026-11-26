@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c** [`OpenBLAS`](https://github.com/OpenMathLib/OpenBLAS)（`BSD-3-Clause`）（包名 `@cap/openblas`）。
+
 # @cap/openblas
 
 OpenBLAS (v0.3.29) high-performance BLAS matrix computation library for CP (`sgemm`, `dgemm`, `sdot`, `ddot`, `openblasGetConfig`), distributed with a prebuilt dynamic library (`libopenblas.so`) for zero local build overhead.

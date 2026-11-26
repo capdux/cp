@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`p-limit`](https://github.com/sindresorhus/p-limit)（`MIT`）（包名 `@cap/p-limit`）。
+
 # `@cap/p-limit`
 
 Zero-heap-allocation concurrency limiter and FIFO task slot scheduler in pure CP (clean-room MIT implementation inspired by npm `p-limit`).

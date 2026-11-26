@@ -30,5 +30,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "snappy",
+    "repo": "https://github.com/google/snappy",
+    "license": "BSD-3-Clause"
   }
 }

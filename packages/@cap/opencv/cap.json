@@ -33,5 +33,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "opencv",
+    "repo": "https://github.com/opencv/opencv",
+    "license": "Apache-2.0"
   }
 }

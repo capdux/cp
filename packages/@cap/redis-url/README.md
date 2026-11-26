@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`redis`](https://github.com/redis-rs/redis-rs)（`BSD-3-Clause`）（原库名 `redis`，CP 包名 `@cap/redis-url`）。
+
 # @cap/redis-url
 
 Zero-allocation Redis / Valkey / Sentinel connection URL parser (`redis://`, `rediss://`, `redis+unix://`, `unix://`) and password-redacting formatter for CP.

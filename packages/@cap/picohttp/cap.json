@@ -6,13 +6,23 @@
   "bin": {
     "picohttp": {
       "path": "c",
-      "src": ["picohttpparser.c"],
-      "include": ["."],
+      "src": [
+        "picohttpparser.c"
+      ],
+      "include": [
+        "."
+      ],
       "opt": "fast",
       "prebuilt": "prebuilt"
     }
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "picohttpparser",
+    "repo": "https://github.com/h2o/picohttpparser",
+    "license": "MIT"
   }
 }

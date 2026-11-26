@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`memchr`](https://github.com/BurntSushi/memchr)（`MIT OR Unlicense`）（包名 `@cap/memchr`）。
+
 # @cap/memchr
 
 Pure CP, zero-allocation SWAR-accelerated byte and substring search engine (clean-room MIT parity with Rust `memchr` v2).

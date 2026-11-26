@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`half`](https://github.com/VoidStarKat/half-rs)（`MIT OR Apache-2.0`）（包名 `@cap/half`）。
+
 # @cap/half
 
 Zero-heap IEEE 754 `binary16` (`f16`) and Google Brain `bfloat16` (`bf16`) bit-exact conversion and inspection codecs in pure CP (inspired by Rust `half`, 599M+ downloads).

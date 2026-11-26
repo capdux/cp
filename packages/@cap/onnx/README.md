@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`onnxruntime`](https://github.com/microsoft/onnxruntime)（`MIT`）（原库名 `onnxruntime`，CP 包名 `@cap/onnx`）。
+
 # `@cap/onnx`
 
 High-performance cross-platform ML inference engine for CP, powered by **Microsoft ONNX Runtime v1.32.0** (MIT License) using official prebuilt shared libraries (`sys.onnxruntime.prebuilt`) with zero local C++ build time.

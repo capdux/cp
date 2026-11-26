@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["slugify", "slug", "url", "seo", "latin", "diacritics", "utf8", "zero-alloc"]
+  "keywords": [
+    "slugify",
+    "slug",
+    "url",
+    "seo",
+    "latin",
+    "diacritics",
+    "utf8",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "slugify",
+    "repo": "https://github.com/simov/slugify",
+    "license": "MIT"
+  }
 }

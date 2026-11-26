@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`governor`](https://github.com/boinkor-net/governor)（`MIT`）（包名 `@cap/governor`）。
+
 # @cap/governor
 
 Zero-allocation deterministic GCRA (Generic Cell Rate Algorithm) and Token Bucket rate limiters for CP — clean-room MIT parity with Rust `governor` and npm `rate-limiter-flexible`.

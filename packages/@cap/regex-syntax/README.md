@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`regex-syntax`](https://github.com/rust-lang/regex)（`MIT OR Apache-2.0`）（包名 `@cap/regex-syntax`）。
+
 # @cap/regex-syntax
 
 Pure CP, zero-allocation regular expression syntax validator, metacharacter escaper, and literal prefix extractor (clean-room MIT parity with Rust `regex-syntax` v0.8).

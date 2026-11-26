@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`llama.cpp`](https://github.com/ggml-org/llama.cpp)（`MIT`）（原库名 `llama.cpp`，CP 包名 `@cap/llama`）。
+
 # `@cap/llama`
 
 High-performance local LLM inference engine for CP, powered by **`ggml-org/llama.cpp` (`b12676`, MIT License)** using official prebuilt dynamic libraries (`sys.llama.prebuilt`) with zero local C++ build time.

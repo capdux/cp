@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`spdx`](https://github.com/EmbarkStudios/spdx)（`MIT OR Apache-2.0`）（包名 `@cap/spdx`）。
+
 # @cap/spdx
 
 Zero-allocation SPDX 2.3 open-source license expression parser, validator, and compatibility evaluator for CP — clean-room MIT parity with npm `spdx-expression-parse` (55M/wk), `spdx-satisfies` (30M/wk), and Rust `spdx` (40M).

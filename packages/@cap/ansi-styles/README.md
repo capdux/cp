@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`ansi-styles`](https://github.com/chalk/ansi-styles)（`MIT`）（包名 `@cap/ansi-styles`）。
+
 # @cap/ansi-styles
 
 零堆分配的 CP 原生终端 ANSI SGR 转义样式库，Clean-Room MIT 实现对标 npm 顶流包 `ansi-styles`（4 亿+/周下载，`chalk` 核心依赖），跨包复用 `@cap/color-convert`（及传递依赖 `@cap/color-name`）。

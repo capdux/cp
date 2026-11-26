@@ -4,5 +4,11 @@
   "description": "Zero-allocation Git repository URL parser and normalizer (SCP SSH, HTTPS, SSH+port, hosted shorthands, GitLab nested groups) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "git-url-parse",
+    "repo": "https://github.com/tjtelan/git-url-parse-rs",
+    "license": "MIT"
+  }
 }

@@ -29,5 +29,11 @@
     "c": {},
     "m": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "libvpx",
+    "repo": "https://github.com/webmproject/libvpx",
+    "license": "BSD-3-Clause"
   }
 }

@@ -8,5 +8,20 @@
   "dependencies": {
     "@cap/libm": "^1.0.0"
   },
-  "keywords": ["raycast", "ray", "geometry", "3d", "triangle", "sphere", "plane", "zero-alloc"]
+  "keywords": [
+    "raycast",
+    "ray",
+    "geometry",
+    "3d",
+    "triangle",
+    "sphere",
+    "plane",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "parry3d",
+    "repo": "https://github.com/dimforge/parry",
+    "license": "Apache-2.0"
+  }
 }

@@ -23,5 +23,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "utf8proc",
+    "repo": "https://github.com/JuliaStrings/utf8proc",
+    "license": "MIT"
   }
 }

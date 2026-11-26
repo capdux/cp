@@ -39,5 +39,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "freetype",
+    "repo": "https://gitlab.freedesktop.org/freetype/freetype",
+    "license": "FTL"
   }
 }

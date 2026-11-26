@@ -4,5 +4,11 @@
   "description": "Zero-allocation fixed-size bitsets BitSet256/BitSet1024 with SWAR popcount, fast scanning, and set algebra (Rust fixedbitset / bit-set parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "fixedbitset",
+    "repo": "https://github.com/petgraph/fixedbitset",
+    "license": "MIT OR Apache-2.0"
+  }
 }

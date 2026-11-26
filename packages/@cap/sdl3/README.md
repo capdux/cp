@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c** [`SDL`](https://github.com/libsdl-org/SDL)（`Zlib`）（原库名 `SDL`，CP 包名 `@cap/sdl3`）。
+
 # @cap/sdl3
 
 SDL3 (v3.2.8) cross-platform window, audio, input, and GPU abstraction for CP, distributed with a prebuilt dynamic library (`libSDL3.so`) and a lightweight C ABI shim for zero local build overhead.

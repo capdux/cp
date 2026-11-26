@@ -44,5 +44,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "libavif",
+    "repo": "https://github.com/AOMediaCodec/libavif",
+    "license": "BSD-2-Clause"
   }
 }

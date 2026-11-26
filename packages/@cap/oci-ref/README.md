@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`oci-distribution`](https://github.com/oras-project/rust-oci-distribution)（`Apache-2.0`）（原库名 `oci-distribution`，CP 包名 `@cap/oci-ref`）。
+
 # @cap/oci-ref
 
 Zero-heap OCI / Docker container image reference parser, validator, and canonicalizer in pure CP.

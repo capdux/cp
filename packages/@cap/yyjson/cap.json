@@ -23,5 +23,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "yyjson",
+    "repo": "https://github.com/ibireme/yyjson",
+    "license": "MIT"
   }
 }

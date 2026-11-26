@@ -29,5 +29,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "duckdb",
+    "repo": "https://github.com/duckdb/duckdb",
+    "license": "MIT"
   }
 }

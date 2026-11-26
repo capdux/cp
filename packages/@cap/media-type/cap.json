@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["media-type", "mime", "content-type", "rfc9110", "rfc6838", "http", "zero-alloc"]
+  "keywords": [
+    "media-type",
+    "mime",
+    "content-type",
+    "rfc9110",
+    "rfc6838",
+    "http",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "mediatype",
+    "repo": "https://github.com/picoHz/mediatype",
+    "license": "MIT"
+  }
 }

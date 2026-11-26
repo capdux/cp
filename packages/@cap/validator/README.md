@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`validator`](https://github.com/validatorjs/validator.js)（`MIT`）（包名 `@cap/validator`）。
+
 # @cap/validator
 
 Zero-allocation schema & format validation engine for CP — clean-room MIT parity with npm `zod` / `validator` / `ajv` and Rust `validator`.

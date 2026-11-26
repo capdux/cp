@@ -29,5 +29,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "SDL",
+    "repo": "https://github.com/libsdl-org/SDL",
+    "license": "Zlib"
   }
 }

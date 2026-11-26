@@ -11,5 +11,11 @@
     "c": {},
     "m": {},
     "pthread": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "OpenBLAS",
+    "repo": "https://github.com/OpenMathLib/OpenBLAS",
+    "license": "BSD-3-Clause"
   }
 }

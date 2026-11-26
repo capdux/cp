@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`chacha20poly1305`](https://github.com/RustCrypto/AEADs)（`MIT OR Apache-2.0`）（原库名 `chacha20poly1305`，CP 包名 `@cap/chacha20-poly1305`）。
+
 # @cap/chacha20-poly1305
 
 Pure CP, zero-allocation RFC 8439 ChaCha20-Poly1305 and draft-irtf-cfrg-xchacha XChaCha20-Poly1305 AEAD cipher (parity with RustCrypto `chacha20poly1305`).

@@ -4,5 +4,11 @@
   "description": "Zero-allocation SPDX 2.3 license expression parser, validator, and compatibility evaluator for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "spdx",
+    "repo": "https://github.com/EmbarkStudios/spdx",
+    "license": "MIT OR Apache-2.0"
+  }
 }

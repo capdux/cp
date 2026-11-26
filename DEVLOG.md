@@ -469,3 +469,7 @@
 
 ## 2026-11-27: Batch 131 六大 33.5 亿下载底层/网络/对象键包全 6/6 PASS + 二轮去重收口！
 - 交付 crates.io **#120 `pathdiff`（9.5 亿+）**、**#135 `smol_str`（8.5 亿+）**、**#140 `ipnet`（8.5 亿+）**、**#185 `thin-vec`（7 亿+）** 与 npm `snakecase-keys`（双包复用）、`decamelize-keys`（双包复用），全部 36/36 单测一遍过 100% PASS；同时将 `ms-parse`→`@cap/ms`、`pem-parse`→`@cap/pem` 二轮去重收口，并提交 `/data/dev/cap` Worker 原库名检索与溯源展示改动（`1c734ce`）。
+
+## 2026-11-27: Batch 132 六大零重复高热度包全 6/6 PASS + 全仓 **100% `"source"` 溯源覆盖收官**！
+- 交付 npm **Top 25 `nanoid`（1 亿+/周）**、**Top 50 `cli-truncate`（8000 万+/周，双包复用）**、`kebabcase-keys`（双包复用）与 crates.io **#145 `relative-path`（8 亿+）**、**#210 `publicsuffix`（6 亿+）**、`macaddr`，全部 36/36 单测一遍过 100% PASS；Worker N13 & C12 均满 6 包（各 36/36 PASS）光荣轮换换新为 Worker N14 & C13。
+- 补齐全部剩余 76 个早期 `@cap/*` 包的 `cap.json` `"source"` 与 50 个 `README.md` 溯源横幅，全仓 `@cap/*` 溯源覆盖率正式达到 **100.0%（0 缺失）**，上游映射达 **910 条**（npm 450 + crates.io 460）。

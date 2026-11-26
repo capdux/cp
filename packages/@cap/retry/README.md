@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`async-retry`](https://github.com/vercel/async-retry)（`MIT`）（原库名 `async-retry`，CP 包名 `@cap/retry`）。
+
 # `@cap/retry` — 零分配工业级重试、退避、AWS 抖动与重试风暴预算引擎
 
 > 独立 Clean-Room 纯 CP 实现，对标 Rust `backoff`/`backon`、npm `p-retry`、AWS Architecture Blog《Exponential Backoff And Jitter》及 Envoy/Finagle Retry Budget 规范 | 许可协议：MIT

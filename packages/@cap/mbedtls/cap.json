@@ -38,5 +38,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "mbedtls",
+    "repo": "https://github.com/Mbed-TLS/mbedtls",
+    "license": "Apache-2.0"
   }
 }

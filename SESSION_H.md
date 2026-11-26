@@ -18885,3 +18885,47 @@ bun agy 按你的建议,优化了方案, 更新了 GEMINI.md 和 脚本文件
   >   2. 已新建两个高频外部生态包 `@cap/lz4`（BSD-2-Clause，[packages/@cap/lz4](file:///data/dev/cp/packages/@cap/lz4)）与 `@cap/yyjson`（MIT，[packages/@cap/yyjson](file:///data/dev/cp/packages/@cap/yyjson)），均通过 `cpc brief` 4 门禁 0/0/0/0，正在后台交叉编译 `linux-x86_64` / `linux-aarch64` 预编译静态库并跑 `cap publish --dry-run`。
   >
   > 各任务完成后将自动汇总验收并继续推进下一波次。
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 22:43:49）[step:26772]
+- **用户完整原始指令**：
+  > 为何后面连续都是 crate rust 包呢, npm 呢?
+- **完整回复与执行汇报**：
+  > 你指出的非常准确，确实是我的调度偏差：
+  >
+  > ### 1. 原因说明
+  > - 目前 `packages/@cap/registry.json` 总计 **375 条**映射中，**npm = 158 条**、**crates.io = 217 条**。
+  > - 在 Batch 24–26 跑完首批 npm Top 30 后，Batch 27 切入 crates.io Top 700 榜单并按下载量连续推进了 20 批，期间忘了**交替切回 npm 队列**，导致 `temp/global_top_rank.json` 里还有 **64 个超高周下载 npm 包**（如 `form-data` 2.39 亿/周、`fill-range` 2.26 亿/周、`body-parser` 2.13 亿/周、`sharp` 1.69 亿/周、`marked` 1.37 亿/周、`jsonwebtoken` 8359 万/周、`lodash.debounce` 7445 万/周、`highlight.js` 5802 万/周、`dns-packet` 2139 万/周、`sitemap` 882 万/周等）积压未处理。
+  >
+  > ### 2. 立即纠偏方案（从 Batch 47 起全面补齐 npm + 双生态 1:1 均衡推进）
+  > 1. **Batch 47–50 连续补齐 npm 超高下载榜**（严格按 `api.npmjs.org` 真实周下载量从 **2.39 亿/周 → 400 万/周** 单调递减吸收），把 npm 缺口先拉平；
+  > 2. 之后保持 **npm 与 crates.io 交替轮转**（例如奇数批 npm、偶数批 crates.io；两端都有的优先 Rust 并在 `registry.json` 双向建立别名映射），确保 TS/Node 与 Rust 迁移用户都能一站式找到常用包。
+  >
+  > ### 3. 当前 3 路子智能体已全部切至 npm 超高下载包并行施工中
+  > - **子智能体 #1**：[`@cap/fill-range`](file:///data/dev/cp/packages/@cap/fill-range) — 对标 npm `fill-range`（**2.26 亿/周**，数字/字母/步长/零填充区间展开）
+  > - **子智能体 #2**：[`@cap/debounce`](file:///data/dev/cp/packages/@cap/debounce) — 对标 npm `lodash.debounce` + `lodash.throttle`（**7445 万/周 + 3100 万/周**，确定性防抖与节流状态机）
+  > - **子智能体 #3**：[`@cap/syntax-highlight`](file:///data/dev/cp/packages/@cap/syntax-highlight) — 对标 npm `highlight.js`（**5802 万/周**）+ `prismjs`（**5033 万/周**，多语言词法高亮 ANSI/HTML 输出）
+  >
+  > > 附：刚顺手完成并提交的 **Batch 46**（`52cc3836`，`@cap/glam`、`@cap/kd-tree`、`@cap/easing`、`@cap/spline`、`@cap/pid`、`@cap/kalman`，全部 6/6 PASS）正在通过 `task-26783` 同步上线 `https://registry.capdux.org`（突破 **250 个官方 `.cap` 包 + 375 条映射**）；3 路 npm 子智能体一返回我立即收口 **Batch 47（纯 npm 2.39 亿 → 1.05 亿/周）** 并继续全速推进！
+
+### 2026-11-26（用户原始指令与完整回复 2026-11-26 22:52:27）[step:26833]
+- **用户完整原始指令**：
+  > 映射是什么意思, 这个包在还是不在? 实现映射到 cap内裤吗?
+- **完整回复与执行汇报**：
+  > **这个包的功能是真实存在的，不是空壳！** 我把“去重直连映射”和“新建独立包”的区别说清楚：
+  >
+  > ### 1. 什么是“去重直连映射”？
+  > 按照 `GEMINI.md` 的吸收原则（**绝不重复造轮子**），每评估一个 npm / crates.io 高下载包，我们会先核查 CP 现有资产，分三种情况处理：
+  >
+  > | 情况 | 含义 | 举例 | 实际代码在哪里？ |
+  > | :--- | :--- | :--- | :--- |
+  > | **A. 映射到 CP 内库 (`cap:*`)** | CP **内置标准库 `lib/`** 已经完整实现了这个功能，直接复用内库，不额外再写一份重复包 | `moment` → `cap:time`<br>`body-parser` → `cap:http`<br>`sharp` → `cap:image`<br>`tokio` → `cap:actor` | 就在 `/data/dev/cp/lib/` 里（`import ... from "cap:time"` 零安装直接用） |
+  > | **B. 映射到已有官方包 (`@web/*` / `@cap/*`)** | 我们之前已经写好并发布到 `capdux.org` 的官方包已经覆盖了它，避免同一功能拆出 3~4 个重复包 | `cors` → `@web/cors`<br>`jsonwebtoken` → `@web/jwt`<br>`form-data` → `@web/multipart`<br>`marked` → `@cap/cmark`<br>`pino` → `@web/logger` | 就在 `/data/dev/cp/packages/@web/` 或 `@cap/` 里，**已真实发布在 `capdux.org`**（`cap add @web/jwt` 直接装） |
+  > | **C. 新建独立 `@cap/*` 包** | CP 内库 `lib/` 和现有 `@cap/*`/`@web/*` **都没有**这个能力，我们洁净室从零写纯 CP 实现 + `.d.cp` + 6 组单测 100% PASS + 发布上线 | `fill-range` → [`@cap/fill-range`](file:///data/dev/cp/packages/@cap/fill-range/src/index.cp)<br>`cookie-signature` → [`@cap/cookie-sign`](file:///data/dev/cp/packages/@cap/cookie-sign/src/index.cp)<br>`path-to-regexp` → [`@cap/path-to-regexp`](file:///data/dev/cp/packages/@cap/path-to-regexp/src/index.cp)<br>`lodash.debounce` → [`@cap/debounce`](file:///data/dev/cp/packages/@cap/debounce/src/index.cp) | 新建在 `/data/dev/cp/packages/@cap/<名>/`，并真实打包上传至 `https://registry.capdux.org` |
+  >
+  > ### 2. 那 `registry.json` 里的“映射表”有什么用？
+  > [`packages/@cap/registry.json`](file:///data/dev/cp/packages/@cap/registry.json)（已同步到 `https://registry.capdux.org/v1/registry/sync`）相当于 **TS/Rust → CP 迁移导航图**：
+  > - 当 TS/Node 开发者想装 `jsonwebtoken`、`cors`、`moment` 或 Rust 开发者想装 `serde_json`、`tokio` 时，`cap` 包管理器 / `capdux.org` 搜索框 / 迁移工具查一下映射表，就能**直接告诉用户：“无需重复安装，CP 对应方案是 `@web/jwt` / `@web/cors` / `cap:time`”**。
+  >
+  > ### 3. 当前真实资产盘点
+  > - **`capdux.org` 线上真实可安装的官方 `.cap` 包**：**258 个**（全部有完整源码 + `.d.cp` + 100% 单测通过，不是空壳；刚又新完工 6/6 PASS 的 npm 包 [`@cap/cookie-sign`](file:///data/dev/cp/packages/@cap/cookie-sign/src/index.cp) 2.12 亿/周、[`@cap/path-to-regexp`](file:///data/dev/cp/packages/@cap/path-to-regexp/src/index.cp) 6500 万/周、[`@cap/cidr-tools`](file:///data/dev/cp/packages/@cap/cidr-tools/src/index.cp)）；
+  > - **3 路子智能体继续全速在跑 npm 高下载包**：`@cap/content-disposition`、`@cap/range-parser`、`@cap/accepts`，完工即刻收口 **Batch 49（突破 400 条映射 + 260+ 官方包）**！

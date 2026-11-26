@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **c++** [`harfbuzz`](https://github.com/harfbuzz/harfbuzz)（`MIT`）（包名 `@cap/harfbuzz`）。
+
 # @cap/harfbuzz
 
 HarfBuzz (`15.2.0`) industrial-standard OpenType text shaping engine (Latin, CJK, Arabic, Indic, Emoji) for CP.

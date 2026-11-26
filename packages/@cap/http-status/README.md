@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`http-status-codes`](https://github.com/prettymuchbryce/http-status-codes)（`MIT`）（原库名 `http-status-codes`，CP 包名 `@cap/http-status`）。
+
 # @cap/http-status
 
 Zero-allocation RFC 9110, WebDAV, and Cloudflare HTTP status code constants, bidirectional reason-phrase lookup, and semantic predicates for CP — clean-room MIT parity with npm `statuses` / `http-status-codes` and Rust `http::StatusCode`.

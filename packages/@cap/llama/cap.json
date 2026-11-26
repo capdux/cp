@@ -29,5 +29,11 @@
     "m": {},
     "pthread": {},
     "dl": {}
+  },
+  "source": {
+    "registry": "c++",
+    "name": "llama.cpp",
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "license": "MIT"
   }
 }

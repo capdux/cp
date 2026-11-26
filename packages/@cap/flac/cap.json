@@ -50,5 +50,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "flac",
+    "repo": "https://github.com/xiph/flac",
+    "license": "BSD-3-Clause"
   }
 }

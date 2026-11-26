@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`mediatype`](https://github.com/picoHz/mediatype)（`MIT`）（原库名 `mediatype`，CP 包名 `@cap/media-type`）。
+
 # @cap/media-type
 
 Zero-allocation RFC 9110 / RFC 6838 HTTP Media Type (MIME) parser, structured suffix extractor, and parameter matcher for CP.

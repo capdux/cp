@@ -782,10 +782,12 @@ git status --porcelain cpc_dev/src
 10. **每波闭环交付与 LIVE 发布铁律**：
     - 每波吸收完工后按序执行：① 更新 `packages/@cap/registry.json`（保持 npm / crates.io 1:1 均衡，补齐所有独立依赖映射）、`cp_lib_ref.md`、`CHANGELOG.md`、`DEVLOG.md`（日常严禁读写万行 `cp_ref.md`）；② 精确 `git add` + `git commit` + `git push origin main` 固化成果（严禁提交或泄露任何 API Token/凭据）；③ 后台异步触发 `https://registry.capdux.org` LIVE 发布并持续推进下一波，永不中断。
 11. **首轮一遍过 CP 编码清单（每 3 小时审计固化 — 大幅降低试错 Token 消耗）**：
-    - 严禁使用 `var`、`self.`、`this.` 以及 CP/Zig 保留标识符（`dec`、`from`、`align`）作为变量/参数/字段名；
-    - 结构体无 receiver 工厂方法一律声明 `pub static fn`，只读实例方法省略 `_`，变更方法声明 `*_`，字段名/方法名不与导入顶层函数重名；
-    - 高位 `u64` 字面量（`>= 0x8000_0000_0000_0000`）用 `((hi as u64) << 32) | (lo as u64)` 构造，非负有符号除法先转 `u64`；
+    - 严禁使用 `let mut`（CP `let` 默认可变）、`var`、`self.`、`this.`、`let _ =`（改用 `* = expr;` 丢弃返回值）、Zig 风格 `if (x) |v|`（改用 `if (v := x)`）、内联 `if (...) { a } else { b }` 表达式（先声明 `let n = a; if (...) { n = b; }`）以及 CP/Zig 保留标识符（`dec`、`from`、`align`）；
+    - 结构体无 receiver 工厂方法一律声明 `pub static fn`，只读实例方法省略 `_`，变更方法声明 `*_`；严禁将 `.startsWith`/`.endsWith` 作为结构体方法名（会被 `cpc` 拦截为 `std.mem.startsWith`，改用 `hasPrefix`/`hasSuffix`）；结构体方法名/字段名不得与导入顶层函数重名；
+    - 链式调用 `Type.staticFn(...).method(...)` 易导致局部类型推断退化，先绑定 `let x = Type.staticFn(...);` 再调用实例方法；返回固定数组 `[N]T` 先绑定局部类型变量再 `return`；不可变接收者切分 `[N]u8` 字段前先拷贝到本地 `let local: [N]u8 = _.field;`；避免 `*usize` 出参指针赋值（改用小结果结构体返回）；
+    - 高位 `u64` 字面量（`>= 0x8000_0000_0000_0000`）用 `((hi as u64) << 32) | (lo as u64)` 构造，非负有符号除法先转 `u64`，无符号防下溢严禁 `0 - x`（改用 XOR 掩码）；
     - 单测统一使用 `fn main() { test("...", () => { expect_eq(...); }); }`，私有辅助函数一律加 3~4 字符包前缀防模块展平冲突。
+    - **Token 极简工作流铁律**：① 批量合并独立 `write_file`/`edit_file`/`run_command` 调用，单轮完成 4 件套落盘 + 1 次命令完成 `cpc emit-types && cap test`；② 派发新任务前先用单条 shell `for p in ...; do test -d packages/@cap/$p ...` 批量验空防重复；③ 严禁在日常任务中读取万行 `cp_ref.md`；④ 定期跑 `python3 scripts/sync_session_audit.py --check` 保证 `SESSION.md` 零遗漏。
 12. **生态溯源、检索对齐与防重复铁律（用户 2026-11-27 固化）**：
     - **表格化汇报**：阶段汇报一律使用结构化 Markdown 表格，清晰列出包名、原平台与原库名、分类决策（`lib/` 内部库 vs `@cap/*` 安装包 vs 合并）、独立依赖复用关系与单测结果。
     - **`cap.json` 必须记录参考来源**：每个吸收包必须在 `cap.json` 中包含标准 `"source": { "registry": "npm|crates.io", "name": "<orig>", "repo": "<url>", "license": "<spdx>" }` 字段。

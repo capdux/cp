@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`parry3d`](https://github.com/dimforge/parry)（`Apache-2.0`）（原库名 `parry3d`，CP 包名 `@cap/ray-cast`）。
+
 # @cap/ray-cast
 
 Zero-heap-allocation 2D/3D geometric ray intersection library in pure CP, directly reusing `@cap/libm` (`sqrt`, `fabs`).

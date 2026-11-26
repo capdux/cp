@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`ipaddr.js`](https://github.com/whitequark/ipaddr.js)（`MIT`）（原库名 `ipaddr.js`，CP 包名 `@cap/ipaddr`）。
+
 # @cap/ipaddr
 
 Zero-allocation IPv4 & IPv6 parser, RFC 5952 canonical formatter, CIDR matcher, IPv4-mapped IPv6 converter, and IANA address range classifier for CP — clean-room MIT parity with npm `ipaddr.js`.

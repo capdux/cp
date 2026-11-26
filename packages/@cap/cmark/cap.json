@@ -42,5 +42,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "c",
+    "name": "cmark",
+    "repo": "https://github.com/commonmark/cmark",
+    "license": "BSD-2-Clause"
   }
 }

@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **npm** [`color-name`](https://github.com/colorjs/color-name)（`MIT`）（包名 `@cap/color-name`）。
+
 # `@cap/color-name`
 
 Zero-heap-allocation W3C CSS Color Level 4 named color table (all 148 standard colors) in pure CP (clean-room MIT implementation inspired by npm `color-name`).

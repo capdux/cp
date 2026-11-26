@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`roaring`](https://github.com/RoaringBitmap/roaring-rs)（`MIT OR Apache-2.0`）（包名 `@cap/roaring`）。
+
 # @cap/roaring
 
 Zero-allocation Roaring Bitmap (16-bit high-key containers with compact sorted 16-bit arrays) for CP — clean-room MIT parity with Rust `roaring`.

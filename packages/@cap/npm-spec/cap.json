@@ -4,5 +4,11 @@
   "description": "Zero-heap npm package name validator and package specifier (@scope/name@version) parser and formatter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "npm-package-arg",
+    "repo": "https://github.com/npm/npm-package-arg",
+    "license": "ISC"
+  }
 }

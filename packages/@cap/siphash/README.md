@@ -1,3 +1,6 @@
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：吸收自 **crates.io** [`siphasher`](https://github.com/jedisct1/rust-siphash)（`MIT OR Apache-2.0`）（原库名 `siphasher`，CP 包名 `@cap/siphash`）。
+
 # @cap/siphash
 
 Zero-allocation SipHash-2-4 and SipHash-1-3 keyed streaming PRF/hashers (HashDoS-resistant) for CP — clean-room MIT parity with Rust `siphasher` and the Aumasson-Bernstein SipHash specification.
