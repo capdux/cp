@@ -3647,12 +3647,12 @@
       "source_name": "cookie",
       "source_repo": "https://github.com/SergioBenitez/cookie-rs",
       "license": "MIT",
-      "cp_target": "cap:http",
-      "kind": "stdlib",
+      "cp_target": "@cap/cookie-crate",
+      "kind": "package",
       "aliases": [
         "cookie-jar"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4420,12 +4420,12 @@
       "source_name": "aho-corasick",
       "source_repo": "https://github.com/BurntSushi/aho-corasick",
       "license": "MIT",
-      "cp_target": "@cap/aho-corasick",
+      "cp_target": "@cap/aho-corasick-dfa",
       "kind": "package",
       "aliases": [
         "ac-automaton"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -8388,7 +8388,7 @@
       "source_name": "semver",
       "source_repo": "https://github.com/dtolnay/semver",
       "license": "MIT",
-      "cp_target": "@cap/semver-range",
+      "cp_target": "@cap/semver-crate",
       "kind": "package",
       "aliases": [
         "semver-parser"
@@ -10376,6 +10376,26 @@
       "source_repo": "https://github.com/sindresorhus/p-map",
       "license": "MIT",
       "cp_target": "@cap/p-map",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "finalhandler",
+      "source_repo": "https://github.com/pillarjs/finalhandler",
+      "license": "MIT",
+      "cp_target": "@cap/finalhandler",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "serve-static",
+      "source_repo": "https://github.com/expressjs/serve-static",
+      "license": "MIT",
+      "cp_target": "@cap/serve-static",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

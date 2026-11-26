@@ -862,3 +862,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/encodeurl`** | `packages/@cap/encodeurl` | 对标 npm Top 26 `encodeurl` v2 (1.8 亿+/周) — 幂等 URL 编码器（保留已有 `%XX`、编码不安全字符与 CRLF 防注入） |
 | **`@cap/content-disposition`** | `packages/@cap/content-disposition` | 对标 npm Top 32 `content-disposition` (1.5 亿+/周，双包复用 `@cap/percent-encoding`+`@cap/unicase`) — RFC 6266/5987 附件头解析格式化 |
 | **`@cap/p-map`** | `packages/@cap/p-map` | 对标 npm Top 55 `p-map` (9000 万+/周) — 有界并发分片规划器、均衡 Worker 切分与 `ConcurrencyPool` 调度器 |
+| **`@cap/aho-corasick-dfa`** | `packages/@cap/aho-corasick-dfa` | 对标 crates.io **#40** `aho-corasick` v1 (16 亿+，跨包复用 `@cap/unicase`) — 零堆多模式 Trie+BFS 失配链线性自动机 |
+| **`@cap/semver-crate`** | `packages/@cap/semver-crate` | 对标 crates.io **#42** `semver` v1 (15.5 亿+，跨包复用 `@cap/semver-range`) — Cargo 逗号多条件 `VersionReq` 与裸版本 `^` 语义 |
+| **`@cap/cookie-crate`** | `packages/@cap/cookie-crate` | 对标 crates.io #145 `cookie` v0.18 (8.5 亿+，双包复用 `@cap/cookie-jar`+`@cap/percent-encoding`) — 链式 `CookieBuilder` 与百分号编码 Cookie |
+| **`@cap/finalhandler`** | `packages/@cap/finalhandler` | 对标 npm Top 35 `finalhandler` v2 (1.4 亿+/周，三包复用 `@cap/escape-html`+`@cap/http-types`+`@cap/itoa`) — 安全最终 HTTP 响应生成器 |
+| **`@cap/serve-static`** | `packages/@cap/serve-static` | 对标 npm Top 40 `serve-static` v2 (1.3 亿+/周，四包复用 `@cap/parseurl`+`@cap/mime-types`+`@cap/etag-http`+`@cap/itoa`) — 静态资源策略解析与头生成 |

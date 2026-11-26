@@ -411,3 +411,6 @@
 
 ## 2026-11-27: Batch 112 七大重磅包全 6/6 PASS — 拿下 crates.io **#12 `bitflags`（19.5 亿）**，官方 `.cap` 包突破 **642+**！
 - 交付 crates.io `bitflags`（19.5 亿+）、`glob-match`、`enumflags2` 与 npm `parseurl`（1.8 亿+/周）、`encodeurl`（1.8 亿+/周）、`content-disposition`（1.5 亿+/周）、`p-map`，全部 42/42 单测 100% PASS。
+
+## 2026-11-27: Batch 113 五大 40 亿下载组合包全 6/6 PASS — 官方 `.cap` 包突破 **643+**！
+- 全部 5 个包均采用多层跨包零重复组合：crates.io #40 `aho-corasick`（16 亿+）、#42 `semver`（15.5 亿+）、#145 `cookie`（8.5 亿+），以及 npm `finalhandler`（三包复用）与 `serve-static`（四包复用），30/30 单测 100% PASS。

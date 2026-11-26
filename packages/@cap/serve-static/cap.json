@@ -1,0 +1,14 @@
+{
+  "name": "@cap/serve-static",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap HTTP static file request resolver, dotfile policy evaluator, Cache-Control builder, and MIME/ETag helper (clean-room port of npm serve-static)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/parseurl": "1.0.0",
+    "@cap/mime-types": "1.0.0",
+    "@cap/etag-http": "1.0.0",
+    "@cap/itoa": "1.0.0"
+  }
+}

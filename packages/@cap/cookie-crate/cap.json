@@ -1,0 +1,13 @@
+{
+  "name": "@cap/cookie-crate",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Rust-style CookieBuilder, percent-encoded Set-Cookie helpers, and removal cookie generator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/cookie-jar": "1.0.0",
+    "@cap/percent-encoding": "1.0.0"
+  },
+  "keywords": ["cookie", "set-cookie", "cookie-builder", "percent-encoding", "http", "zero-alloc"]
+}

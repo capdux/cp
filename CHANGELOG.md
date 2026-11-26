@@ -1004,3 +1004,11 @@
 - `packages/@cap/content-disposition/` & `cap/test/testCapContentDisposition.cp`: npm Top 32 `content-disposition`（1.5 亿+/周，双包复用 `@cap/percent-encoding`+`@cap/unicase`，6/6 PASS）。
 - `packages/@cap/p-map/` & `cap/test/testCapPMap.cp`: npm Top 55 `p-map`（9000 万+/周，并发分片与调度池，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 112 全部 7 个官方包映射。
+
+### 2026-11-27 (Batch 113 — **拿下 40 亿下载双巨头 `aho-corasick`(16 亿)+`semver`(15.5 亿) + `cookie` + `finalhandler` + `serve-static`，官方 `.cap` 包突破 643+！**)
+- `packages/@cap/aho-corasick-dfa/` & `cap/test/testCapAhoCorasickDfa.cp`: crates.io **#40** `aho-corasick` v1（16 亿+，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/semver-crate/` & `cap/test/testCapSemverCrate.cp`: crates.io **#42** `semver` v1（15.5 亿+，复用 `@cap/semver-range`，6/6 PASS）。
+- `packages/@cap/cookie-crate/` & `cap/test/testCapCookieCrate.cp`: crates.io #145 `cookie` v0.18（8.5 亿+，双包复用 `@cap/cookie-jar`+`@cap/percent-encoding`，6/6 PASS）。
+- `packages/@cap/finalhandler/` & `cap/test/testCapFinalhandler.cp`: npm Top 35 `finalhandler` v2（1.4 亿+/周，三包复用，6/6 PASS）。
+- `packages/@cap/serve-static/` & `cap/test/testCapServeStatic.cp`: npm Top 40 `serve-static` v2（1.3 亿+/周，四包复用，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 113 全部 5 个官方包映射。
