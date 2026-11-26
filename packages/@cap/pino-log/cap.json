@@ -1,0 +1,11 @@
+{
+  "name": "@cap/pino-log",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap structured NDJSON logger with numeric levels (10..60), safe JSON escaping, and child fields (clean-room port of npm pino)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/itoa": "1.0.0"
+  }
+}

@@ -2,8 +2,7 @@
   "name": "@cap/dotenv-expand",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation .env variable interpolation engine ($VAR, ${VAR}, :-, -, :+, nesting, cycle guard) in pure CP",
+  "description": "Zero-heap .env parser and POSIX variable expansion engine (${VAR}, ${VAR:-default}, $VAR, escaped \\$) (clean-room port of npm dotenv + dotenv-expand)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp",
-  "keywords": ["dotenv", "dotenv-expand", "env", "interpolation", "template", "config", "zero-alloc"]
+  "types": "src/index.d.cp"
 }

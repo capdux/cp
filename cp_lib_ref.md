@@ -827,3 +827,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/quick-lru`** | `packages/@cap/quick-lru` | 对标 npm Top 60 `quick-lru` (9000 万+/周，跨包复用 `@cap/fnv-hash`) — 双代 O(1) 轮转淘汰零堆 QuickLRU 缓存 |
 | **`@cap/data-encoding`** | `packages/@cap/data-encoding` | 对标 crates.io #155 `data-encoding` v2 (8 亿+) — 严格 RFC 4648 Hex/Base32/Base64/Base64URL（含非零尾位校验） |
 | **`@cap/lru-crate`** | `packages/@cap/lru-crate` | 对标 crates.io #135 `lru` (9 亿+，跨包复用 `@cap/fnv-hash`) — 侵入式双链表零堆 O(1) LRU 缓存（`LruCacheI64`） |
+| **`@cap/roaring-bitmap`** | `packages/@cap/roaring-bitmap` | 对标 crates.io Top-260 `roaring` v0.10 (4.5 亿+) — 全 `u32` 值域零堆压缩位图集合（`rank`/`min`/`max`/集合运算） |
+| **`@cap/toml-edit`** | `packages/@cap/toml-edit` | 对标 crates.io #125 `toml_edit` v0.22 (9 亿+) — 零堆 TOML v1.0 文档解析、原地更新与规范格式化引擎 |
+| **`@cap/snowflake-id`** | `packages/@cap/snowflake-id` | 对标分布式 64 位 Snowflake ID 标准（跨包复用 `@cap/itoa`）— 单调递增 ID 生成器、位域解码与时钟回拨保护 |
+| **`@cap/cron-parser`** | `packages/@cap/cron-parser` | 对标 npm Top 90 `cron-parser` v4 (6000 万+/周) — 5 字段位掩码 O(1) Cron 调度匹配与下次触发偏移搜索 |
+| **`@cap/dotenv-expand`** | `packages/@cap/dotenv-expand` | 对标 npm Top 50 `dotenv`+`dotenv-expand` (1 亿+/周) — `.env` 解析与 `${VAR:-default}`/`$VAR`/`\$` 变量展开 |
+| **`@cap/pino-log`** | `packages/@cap/pino-log` | 对标 npm Top 55 `pino` v9 (9000 万+/周，跨包复用 `@cap/itoa`) — 零堆结构化 NDJSON 日志器与安全 JSON 转义 |
+| **`@cap/morgan-log`** | `packages/@cap/morgan-log` | 对标 npm Top 60 `morgan` v1.10 (8000 万+/周，跨包复用 `@cap/itoa`) — Apache Combined/Common/Dev/Tiny HTTP 访问日志格式化 |

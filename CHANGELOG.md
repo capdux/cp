@@ -950,3 +950,13 @@
 - `packages/@cap/lru-crate/` & `cap/test/testCapLruCrate.cp`: crates.io #135 `lru`（9 亿+，复用 `@cap/fnv-hash`，6/6 PASS）。
 - `packages/@cap/data-encoding/` & `cap/test/testCapDataEncoding.cp`: crates.io #155 `data-encoding` v2（8 亿+，RFC 4648 严格编解码，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 106 全部 5 个官方包映射（npm / crates.io 精准 1:1 平衡）。
+
+### 2026-11-27 (Batch 107 — 7 大可观测性/配置/调度与位图顶流包全 6/6 PASS — `toml_edit`+`roaring`+`dotenv-expand`+`pino`+`morgan`+`cron-parser`+`snowflake-id`，官方 `.cap` 包突破 **628+**！)
+- `packages/@cap/toml-edit/` & `cap/test/testCapTomlEdit.cp`: crates.io #125 `toml_edit` v0.22（9 亿+，TOML v1.0 解析与格式化，6/6 PASS）。
+- `packages/@cap/roaring-bitmap/` & `cap/test/testCapRoaringBitmap.cp`: crates.io Top-260 `roaring` v0.10（4.5 亿+，全 `u32` 压缩位图，6/6 PASS）。
+- `packages/@cap/snowflake-id/` & `cap/test/testCapSnowflakeId.cp`: 64 位分布式 Snowflake ID 生成与解码（复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/dotenv-expand/` & `cap/test/testCapDotenvExpand.cp`: npm Top 50 `dotenv-expand`（1 亿+/周，6/6 PASS）。
+- `packages/@cap/pino-log/` & `cap/test/testCapPinoLog.cp`: npm Top 55 `pino` v9（9000 万+/周，复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/morgan-log/` & `cap/test/testCapMorganLog.cp`: npm Top 60 `morgan` v1.10（8000 万+/周，复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/cron-parser/` & `cap/test/testCapCronParser.cp`: npm Top 90 `cron-parser` v4（6000 万+/周，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 107 全部 7 个官方包映射。

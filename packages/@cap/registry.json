@@ -3939,12 +3939,12 @@
       "source_name": "toml_edit",
       "source_repo": "https://github.com/toml-rs/toml",
       "license": "MIT",
-      "cp_target": "cap:toml",
-      "kind": "stdlib",
+      "cp_target": "@cap/toml-edit",
+      "kind": "package",
       "aliases": [
         "toml-edit"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3988,12 +3988,12 @@
       "source_name": "roaring",
       "source_repo": "https://github.com/RoaringBitmap/roaring-rs",
       "license": "MIT",
-      "cp_target": "@cap/roaring",
+      "cp_target": "@cap/roaring-bitmap",
       "kind": "package",
       "aliases": [
         "roaring-bitmap"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4887,13 +4887,13 @@
       "source_name": "pino",
       "source_repo": "https://github.com/pinojs/pino",
       "license": "MIT",
-      "cp_target": "@web/logger",
+      "cp_target": "@cap/pino-log",
       "kind": "package",
       "aliases": [
         "winston",
         "morgan"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -5367,13 +5367,13 @@
       "source_name": "cron-parser",
       "source_repo": "https://github.com/harrisiirak/cron-parser",
       "license": "MIT",
-      "cp_target": "@cap/cron-next",
+      "cp_target": "@cap/cron-parser",
       "kind": "package",
       "aliases": [
         "cron",
         "croner"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -10296,6 +10296,26 @@
       "source_repo": "https://github.com/sindresorhus/quick-lru",
       "license": "MIT",
       "cp_target": "@cap/quick-lru",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "morgan",
+      "source_repo": "https://github.com/expressjs/morgan",
+      "license": "MIT",
+      "cp_target": "@cap/morgan-log",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "snowflake",
+      "source_repo": "https://github.com/capdux/cp",
+      "license": "MIT",
+      "cp_target": "@cap/snowflake-id",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

@@ -1,248 +1,200 @@
-// @cap/dotenv-expand — Zero-allocation .env Variable Interpolation Engine
-// Clean-room MIT implementation in pure CP.
-// Supports $VAR, ${VAR}, ${VAR:-default}, ${VAR-default}, ${VAR:+alt}, nested defaults,
-// escaped \$, and cycle-safe bounded recursive expansion (MAX_DEPTH = 8).
+// @cap/dotenv-expand — Zero-heap `.env` file parser & POSIX variable expansion engine.
+// Clean-room MIT port of npm `dotenv` + `dotenv-expand` (100M+/week).
 
-pub const MAX_DEPTH: usize = 8;
+pub const DE_MAX_VARS: usize = 32;
 
-pub struct EnvVar {
-    pub key: []const u8,
-    pub val: []const u8,
+pub struct EnvEntry {
+    pub key: string,
+    pub value: string,
 }
 
-fn sliceEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
+pub struct EnvMap {
+    pub entries: [32]EnvEntry,
+    pub count: usize,
+
+    pub static fn new(): EnvMap {
+        let empty = EnvEntry { key: "", value: "" };
+        let arr: [32]EnvEntry = undefined;
+        let i: usize = 0;
+        while (i < DE_MAX_VARS) { arr[i] = empty; i = i + 1; }
+        return EnvMap { entries: arr, count: 0 };
     }
+
+    pub fn len(): usize { return _.count; }
+
+    pub fn set(*_, key: string, val: string): bool {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (deStrEq(_.entries[i].key, key)) {
+                _.entries[i].value = val;
+                return true;
+            }
+            i = i + 1;
+        }
+        if (_.count >= DE_MAX_VARS) { return false; }
+        _.entries[_.count] = EnvEntry { key: key, value: val };
+        _.count = _.count + 1;
+        return true;
+    }
+
+    pub fn get(key: string): string? {
+        let i: usize = 0;
+        while (i < _.count) {
+            if (deStrEq(_.entries[i].key, key)) {
+                return _.entries[i].value;
+            }
+            i = i + 1;
+        }
+        return null;
+    }
+
+    pub fn has(key: string): bool {
+        return _.get(key) != null;
+    }
+}
+
+fn deStrEq(a: string, b: string): bool {
+    if (a.len != b.len) { return false; }
     let i: usize = 0;
     while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
+        if (a[i] != b[i]) { return false; }
+        i = i + 1;
     }
     return true;
 }
 
-fn isIdentStart(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }  // A-Z
-    if (b >= 97 && b <= 122) { return true; } // a-z
-    return b == 95;                           // '_'
+fn deIsWs(b: u8): bool {
+    return b == 32 || b == 9 || b == 13;
 }
 
-fn isIdentChar(b: u8) -> bool {
-    if (isIdentStart(b)) { return true; }
-    return b >= 48 && b <= 57;                // 0-9
+fn deIsVarChar(b: u8): bool {
+    return (b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57) || b == 95;
 }
 
-/// Returns true if `key` is defined in `vars`.
-pub fn hasVar(vars: []const EnvVar, key: []const u8) -> bool {
+fn deTrim(s: string): string {
+    let start: usize = 0;
+    while (start < s.len && deIsWs(s[start])) { start = start + 1; }
+    let end: usize = s.len;
+    while (end > start && deIsWs(s[end - 1])) { end = end - 1; }
+    return s[start..end];
+}
+
+fn dePush(out: []u8, pos: usize, s: string): usize {
+    let p = pos;
     let i: usize = 0;
-    while (i < vars.len) {
-        if (sliceEq(vars[i].key, key)) {
-            return true;
+    while (i < s.len && p < out.len) {
+        out[p] = s[i];
+        p = p + 1;
+        i = i + 1;
+    }
+    return p;
+}
+
+/// Parses a `.env` document (supporting `export KEY=VAL`, `#` comments, single/double quotes,
+/// inline `#` comments on unquoted values) into an `EnvMap`.
+pub fn parseDotenv(src: string): EnvMap {
+    let env = EnvMap.new();
+    let pos: usize = 0;
+    while (pos < src.len) {
+        let line_end = pos;
+        while (line_end < src.len && src[line_end] != 10) { line_end = line_end + 1; }
+        let line = deTrim(src[pos..line_end]);
+        pos = if (line_end < src.len) { line_end + 1 } else { src.len };
+
+        if (line.len == 0 || line[0] == 35) { continue; } // empty or '#' comment
+        let work = line;
+        if (work.len > 7 && deStrEq(work[0..7], "export ")) {
+            work = deTrim(work[7..work.len]);
         }
-        i += 1;
-    }
-    return false;
-}
+        let eq: usize = 0;
+        while (eq < work.len && work[eq] != 61) { eq = eq + 1; }
+        if (eq == 0 || eq >= work.len) { continue; }
 
-/// Returns the value associated with `key` in `vars`, or `""` if not found.
-pub fn lookupVar(vars: []const EnvVar, key: []const u8) -> []const u8 {
-    let i: usize = 0;
-    while (i < vars.len) {
-        if (sliceEq(vars[i].key, key)) {
-            return vars[i].val;
+        let key = deTrim(work[0..eq]);
+        let raw_val = deTrim(work[eq + 1..work.len]);
+        if (key.len == 0) { continue; }
+
+        let val = raw_val;
+        if (raw_val.len >= 2 && (raw_val[0] == 34 || raw_val[0] == 39) && raw_val[raw_val.len - 1] == raw_val[0]) {
+            val = raw_val[1..raw_val.len - 1];
+        } else {
+            // Strip inline `#` comment for unquoted values
+            let hash: usize = 0;
+            while (hash < raw_val.len && raw_val[hash] != 35) { hash = hash + 1; }
+            val = deTrim(raw_val[0..hash]);
         }
-        i += 1;
+        env.set(key, val);
     }
-    return "";
+    return env;
 }
 
-fn expandRec(tmpl: []const u8, vars: []const EnvVar, dst: []u8, start_out: usize, depth: usize) -> i64 {
-    if (depth > MAX_DEPTH) {
-        return start_out as i64;
-    }
-
+/// Expands `$VAR`, `${VAR}`, `${VAR:-default}`, `${VAR-default}`, and escaped `\$` in `template`
+/// using `env`, writing the expanded string into `out` and returning bytes written.
+pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
+    let p: usize = 0;
     let i: usize = 0;
-    let out = start_out;
-    const n = tmpl.len;
-
-    while (i < n) {
-        const ch = tmpl[i];
-
-        // Escaped dollar: \$ -> literal $
-        if (ch == 92 && i + 1 < n && tmpl[i + 1] == 36) {
-            if (out >= dst.len) {
-                return -1;
-            }
-            dst[out] = 36;
-            out += 1;
-            i += 2;
+    while (i < template.len) {
+        if (template[i] == 92 && i + 1 < template.len && template[i + 1] == 36) {
+            // Escaped "\$" -> literal "$"
+            if (p < out.len) { out[p] = 36; p = p + 1; }
+            i = i + 2;
             continue;
         }
-
-        if (ch == 36) {
-            // '$'
-            if (i + 1 < n && tmpl[i + 1] == 123) {
-                // "${...}"
-                const body_start = i + 2;
-                let scan = body_start;
-                let brace_depth: usize = 1;
-                while (scan < n && brace_depth > 0) {
-                    if (tmpl[scan] == 92 && scan + 1 < n) {
-                        scan += 2;
-                        continue;
-                    }
-                    if (tmpl[scan] == 36 && scan + 1 < n && tmpl[scan + 1] == 123) {
-                        brace_depth += 1;
-                        scan += 2;
-                        continue;
-                    }
-                    if (tmpl[scan] == 125) {
-                        brace_depth -= 1;
-                        if (brace_depth == 0) {
+        if (template[i] == 36 && i + 1 < template.len) {
+            if (template[i + 1] == 123) {
+                // Braced: ${VAR}, ${VAR:-default}, ${VAR-default}
+                let close = i + 2;
+                while (close < template.len && template[close] != 125) { close = close + 1; }
+                if (close < template.len) {
+                    let inner = template[i + 2..close];
+                    // Check for ":-" or "-"
+                    let sep: usize = inner.len;
+                    let colon_dash = false;
+                    let k: usize = 0;
+                    while (k < inner.len) {
+                        if (inner[k] == 58 && k + 1 < inner.len && inner[k + 1] == 45) {
+                            sep = k;
+                            colon_dash = true;
                             break;
                         }
+                        if (inner[k] == 45) {
+                            sep = k;
+                            break;
+                        }
+                        k = k + 1;
                     }
-                    scan += 1;
+                    let var_name = inner[0..sep];
+                    let has_default = sep < inner.len;
+                    let def_val = if (colon_dash) { inner[sep + 2..inner.len] } else if (has_default) { inner[sep + 1..inner.len] } else { "" };
+                    let found = env.get(var_name);
+                    if (found != null) {
+                        let fv = found ?? "";
+                        if (colon_dash && fv.len == 0) {
+                            p = dePush(out, p, def_val);
+                        } else {
+                            p = dePush(out, p, fv);
+                        }
+                    } else if (has_default) {
+                        p = dePush(out, p, def_val);
+                    }
+                    i = close + 1;
+                    continue;
                 }
-                if (brace_depth != 0) {
-                    // Unclosed "${"
-                    return -1;
+            } else if (deIsVarChar(template[i + 1])) {
+                // Bare $VAR
+                let end = i + 1;
+                while (end < template.len && deIsVarChar(template[end])) { end = end + 1; }
+                let var_name = template[i + 1..end];
+                let found = env.get(var_name);
+                if (found != null) {
+                    p = dePush(out, p, found ?? "");
                 }
-                const body_end = scan;
-
-                // Parse variable name inside ${...}
-                let name_end = body_start;
-                if (name_end < body_end && isIdentStart(tmpl[name_end])) {
-                    name_end += 1;
-                    while (name_end < body_end && isIdentChar(tmpl[name_end])) {
-                        name_end += 1;
-                    }
-                }
-                if (name_end == body_start) {
-                    return -1;
-                }
-
-                const name = tmpl[body_start..name_end];
-                const defined = hasVar(vars, name);
-                const val = lookupVar(vars, name);
-
-                if (name_end == body_end) {
-                    // ${VAR}
-                    if (defined && val.len > 0) {
-                        const next_out = expandRec(val, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                } else if (name_end + 1 < body_end && tmpl[name_end] == 58 && tmpl[name_end + 1] == 45) {
-                    // ${VAR:-default}: use default if unset OR empty
-                    if (!defined || val.len == 0) {
-                        const fallback = tmpl[name_end + 2..body_end];
-                        const next_out = expandRec(fallback, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    } else {
-                        const next_out = expandRec(val, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                } else if (tmpl[name_end] == 45) {
-                    // ${VAR-default}: use default ONLY if unset
-                    if (!defined) {
-                        const fallback = tmpl[name_end + 1..body_end];
-                        const next_out = expandRec(fallback, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    } else if (val.len > 0) {
-                        const next_out = expandRec(val, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                } else if (name_end + 1 < body_end && tmpl[name_end] == 58 && tmpl[name_end + 1] == 43) {
-                    // ${VAR:+alt}: use alt if set AND non-empty
-                    if (defined && val.len > 0) {
-                        const alt = tmpl[name_end + 2..body_end];
-                        const next_out = expandRec(alt, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                } else if (tmpl[name_end] == 43) {
-                    // ${VAR+alt}: use alt if set (even if empty)
-                    if (defined) {
-                        const alt = tmpl[name_end + 1..body_end];
-                        const next_out = expandRec(alt, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                } else {
-                    return -1;
-                }
-
-                i = body_end + 1;
+                i = end;
                 continue;
             }
-
-            if (i + 1 < n && isIdentStart(tmpl[i + 1])) {
-                // "$VAR"
-                const name_start = i + 1;
-                let name_end = name_start + 1;
-                while (name_end < n && isIdentChar(tmpl[name_end])) {
-                    name_end += 1;
-                }
-                const name = tmpl[name_start..name_end];
-                if (hasVar(vars, name)) {
-                    const val = lookupVar(vars, name);
-                    if (val.len > 0) {
-                        const next_out = expandRec(val, vars, dst, out, depth + 1);
-                        if (next_out < 0) {
-                            return -1;
-                        }
-                        out = next_out as usize;
-                    }
-                }
-                i = name_end;
-                continue;
-            }
-
-            // Standalone '$'
-            if (out >= dst.len) {
-                return -1;
-            }
-            dst[out] = 36;
-            out += 1;
-            i += 1;
-            continue;
         }
-
-        if (out >= dst.len) {
-            return -1;
-        }
-        dst[out] = ch;
-        out += 1;
-        i += 1;
+        if (p < out.len) { out[p] = template[i]; p = p + 1; }
+        i = i + 1;
     }
-
-    return out as i64;
-}
-
-/// Expands environment variable references in `template` using `vars` into `dst`.
-/// Returns the number of bytes written, or `-1` on syntax error (unclosed `${`) or insufficient buffer.
-pub fn expandValue(template: []const u8, vars: []const EnvVar, dst: []u8) -> i64 {
-    return expandRec(template, vars, dst, 0, 0);
+    return p;
 }

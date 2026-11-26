@@ -1,0 +1,11 @@
+{
+  "name": "@cap/snowflake-id",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap 64-bit Snowflake distributed ID generator, decoder, and comparator (Twitter/Discord epoch compatible)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/itoa": "1.0.0"
+  }
+}
