@@ -126,3 +126,9 @@
 - `packages/@cap/phone/` & `cap/test/testCapPhone.cp`: 零堆分配国际电话号码解析与格式化引擎（内置 45 国拨号区号与长度规则、支持 `+`/`00`/`tel:`/前导 0 剥离与 E.164/国际/国内/RFC 3966 四种格式输出，对标 npm `libphonenumber-js` & Rust `phonenumber`，6/6 PASS）。
 - `packages/@cap/expr/` & `cap/test/testCapExpr.cp`: 零堆分配安全数学与规则表达式求值引擎（完整优先级与短路逻辑、三元运算、右结合幂、64 变量环境、12 安全函数与 32 层深度护栏，对标 npm `expr-eval`/`filtrex` & Rust `evalexpr`/`meval`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 48 条高频映射（新增 Wave 8 三大包 + `otplib`/`ical`/`rrule`/`snowflake-id`/`uri-templates`/`opossum`/`dinero.js` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 91）。
+
+## [2026-11-26] - Wave 9 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/barcode`, `@cap/sqids`, `@cap/cron-desc`）并发布至 `capdux.org`
+- `packages/@cap/barcode/` & `cap/test/testCapBarcode.cp`: 零堆分配一维条码编码与 SVG 渲染引擎（EAN-13/UPC-A 含校验位、Code 128B 全 ASCII、Code 39 + SVG/ASCII 输出，对标 npm `jsbarcode` & Rust `barcoders`，5/5 PASS）。
+- `packages/@cap/sqids/` & `cap/test/testCapSqids.cp`: 零堆分配 YouTube 风格可逆无脏词短 ID 编码器（62 字符洗牌、52 词屏蔽重试、`min_length` 填充、多数字无损往返，对标 npm `sqids`/`hashids` & Rust `sqids`/`harsh`，6/6 PASS）。
+- `packages/@cap/cron-desc/` & `cap/test/testCapCronDesc.cp`: 零堆分配 Cron 表达式自然语言翻译引擎（5 字段 + 7 大宏、英文/中文双语、12h/24h 切换，对标 npm `cronstrue` & Rust `cron-descriptor`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 57 条高频映射（新增 Wave 9 三大包 + `ignore`/`negotiator`/`aho-corasick`/`ksuid`/`@paralleldrive/cuid2`/`roaring` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 94）。

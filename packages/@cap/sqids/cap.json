@@ -1,0 +1,7 @@
+{
+  "name": "@cap/sqids",
+  "ver": "1.0.0",
+  "description": "Zero-allocation YouTube-style reversible short ID generator (Sqids specification) with deterministic shuffle, min-length padding, and profanity blocklist for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

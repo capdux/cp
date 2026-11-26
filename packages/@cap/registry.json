@@ -484,6 +484,96 @@
       "kind": "stdlib",
       "aliases": ["currency.js", "rusty-money"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsbarcode",
+      "source_repo": "https://github.com/lindell/JsBarcode",
+      "license": "MIT",
+      "cp_target": "@cap/barcode",
+      "kind": "package",
+      "aliases": ["bwip-js", "barcoders", "ean13"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sqids",
+      "source_repo": "https://github.com/sqids/sqids-javascript",
+      "license": "MIT",
+      "cp_target": "@cap/sqids",
+      "kind": "package",
+      "aliases": ["hashids", "sqids-rs", "harsh"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cronstrue",
+      "source_repo": "https://github.com/bradymholt/cRonstrue",
+      "license": "MIT",
+      "cp_target": "@cap/cron-desc",
+      "kind": "package",
+      "aliases": ["cron-descriptor", "cron-to-text"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ignore",
+      "source_repo": "https://github.com/kaelzhang/node-ignore",
+      "license": "MIT",
+      "cp_target": "cap:git",
+      "kind": "stdlib",
+      "aliases": ["gitignore-parser", "ignore-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "negotiator",
+      "source_repo": "https://github.com/jshttp/negotiator",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["accepts", "accept-language"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aho-corasick",
+      "source_repo": "https://github.com/BurntSushi/aho-corasick",
+      "license": "MIT",
+      "cp_target": "cap:ds",
+      "kind": "stdlib",
+      "aliases": ["modern-ahocorasick", "ahocorasick"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ksuid",
+      "source_repo": "https://github.com/segmentio/ksuid",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["svix-ksuid", "ksuid-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@paralleldrive/cuid2",
+      "source_repo": "https://github.com/paralleldrive/cuid2",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["cuid", "cuid2-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "roaring",
+      "source_repo": "https://github.com/RoaringBitmap/roaring-rs",
+      "license": "MIT",
+      "cp_target": "cap:ds",
+      "kind": "stdlib",
+      "aliases": ["roaring-bitmap", "bitvec", "fastbitset"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

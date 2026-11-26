@@ -290,3 +290,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/redact`** | `packages/@cap/redact` | 对标 npm `fast-redact`/`maskdata` / Rust `secrecy` — 零堆 PII 与密钥脱敏（邮箱/Luhn卡号/JWT/API Key/手机号/IPv4/JSON 敏感字段） |
 | **`@cap/phone`** | `packages/@cap/phone` | 对标 npm `libphonenumber-js` / Rust `phonenumber` — 45 国拨号区号解析 + E.164/国际/国内/RFC 3966 多格式输出 |
 | **`@cap/expr`** | `packages/@cap/expr` | 对标 npm `expr-eval`/`filtrex` / Rust `evalexpr`/`meval` — 零堆安全递归下降数学与规则表达式求值（64 变量 + 12 内置函数 + 深度护栏） |
+| **`@cap/barcode`** | `packages/@cap/barcode` | 对标 npm `jsbarcode` / Rust `barcoders` — 零堆 EAN-13 / UPC-A / Code 128B / Code 39 编码与矢量 SVG/ASCII 渲染 |
+| **`@cap/sqids`** | `packages/@cap/sqids` | 对标 npm `sqids`/`hashids` / Rust `sqids`/`harsh` — YouTube 风格可逆无脏词短 ID 编解码（52 词屏蔽 + 最小长度填充） |
+| **`@cap/cron-desc`** | `packages/@cap/cron-desc` | 对标 npm `cronstrue` / Rust `cron-descriptor` — 5 字段 Cron 与 7 大宏的中英文自然语言翻译（12h/24h） |
