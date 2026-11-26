@@ -926,3 +926,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/pkg-dir`** | `packages/@cap/pkg-dir` | 对标 npm Top 35 `pkg-dir` (**1.3 亿+/周**, 双包复用 `@cap/find-up`+`@cap/npm-run-path`) — 向上定位最近 `package.json`/`cap.json` 包根目录 |
 | **`@cap/resolve-from`** | `packages/@cap/resolve-from` | 对标 npm Top 25 `resolve-from` (**1.5 亿+/周**, 双包复用 `@cap/find-up`+`@cap/npm-run-path`) — 相对/绝对/裸包/`@scope/pkg` 模块解析与扩展名探测 |
 | **`@cap/chacha20-crate`** | `packages/@cap/chacha20-crate` | 对标 crates.io **#115** `chacha20` v0.9 (**10 亿+**) — RFC 8439 ChaCha20 256-bit 流密码、`seek` 与块密钥流 |
+| **`@cap/locate-path`** | `packages/@cap/locate-path` | 对标 npm **Top 20** `locate-path` v7 (**1.8 亿+/周**, 复用 `@cap/find-up`) — 候选路径优先级定位、文件/目录类型与软链接过滤 |
+| **`@cap/path-exists`** | `packages/@cap/path-exists` | 对标 npm Top 30 `path-exists` (**1.5 亿+/周**, 复用 `@cap/locate-path`) — 路径/文件/目录/非软链存在性判定与批量存在性统计 |
+| **`@cap/make-dir`** | `packages/@cap/make-dir` | 对标 npm Top 25 `make-dir` (**1.6 亿+/周**) — 递归目录创建前缀链规划、Windows/POSIX 非法字符校验与 `umask` 权限计算 |
+| **`@cap/tiny-keccak`** | `packages/@cap/tiny-keccak` | 对标 crates.io **#160** `tiny-keccak` v2 (**7.5 亿+**) — Keccak-f[1600] 24 轮海绵置换、NIST FIPS 202 SHA3-256 与 Ethereum Keccak-256 |

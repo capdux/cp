@@ -1,0 +1,9 @@
+{
+  "name": "@cap/make-dir",
+  "ver": "1.0.0",
+  "description": "Zero-heap recursive directory creation planner with invalid-char validation, prefix chain generation, and octal permission mode (npm make-dir equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

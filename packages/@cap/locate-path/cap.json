@@ -1,0 +1,12 @@
+{
+  "name": "@cap/locate-path",
+  "ver": "1.0.0",
+  "description": "Zero-allocation path locator over candidate lists with entry-type, symlink, and ordering controls for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/find-up": "1.0.0"
+  },
+  "keywords": ["locate-path", "path", "fs", "locate", "find", "symlink", "zero-alloc"]
+}

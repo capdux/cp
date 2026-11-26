@@ -1,0 +1,8 @@
+{
+  "name": "@cap/tiny-keccak",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Keccak-f[1600] sponge with SHA3-256 (FIPS 202) and Keccak-256 (Ethereum) (Rust tiny-keccak parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

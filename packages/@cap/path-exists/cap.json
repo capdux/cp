@@ -1,0 +1,11 @@
+{
+  "name": "@cap/path-exists",
+  "ver": "1.0.0",
+  "description": "Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses @cap/locate-path)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/locate-path": "1.0.0"
+  }
+}

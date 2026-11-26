@@ -1101,3 +1101,10 @@
 - `packages/@cap/resolve-from/` & `cap/test/testCapResolveFrom.cp`: npm Top 25 `resolve-from`（1.5 亿+/周，双包复用 `@cap/find-up`+`@cap/npm-run-path`，6/6 PASS）。
 - `packages/@cap/chacha20-crate/` & `cap/test/testCapChacha20Crate.cp`: crates.io **#115** `chacha20` v0.9（**10 亿+**，RFC 8439 向量全过，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 123 全部 4 个官方包映射。
+
+### 2026-11-27 (Batch 124 — **突破 703 官方 `.cap` 包！拿下 `tiny-keccak`(7.5 亿+)+`locate-path`(1.8 亿/周)+`make-dir`(1.6 亿/周)+`path-exists`(1.5 亿/周)**)
+- `packages/@cap/locate-path/` & `cap/test/testCapLocatePath.cp`: npm **Top 20** `locate-path` v7（1.8 亿+/周，复用 `@cap/find-up`，6/6 PASS）。
+- `packages/@cap/path-exists/` & `cap/test/testCapPathExists.cp`: npm Top 30 `path-exists`（1.5 亿+/周，复用 `@cap/locate-path`，6/6 PASS）。
+- `packages/@cap/make-dir/` & `cap/test/testCapMakeDir.cp`: npm Top 25 `make-dir`（1.6 亿+/周，递归目录创建规划，6/6 PASS）。
+- `packages/@cap/tiny-keccak/` & `cap/test/testCapTinyKeccak.cp`: crates.io **#160** `tiny-keccak` v2（7.5 亿+，SHA3-256 + Ethereum Keccak-256，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 124 全部 4 个官方包映射。

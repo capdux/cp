@@ -3629,13 +3629,12 @@
       "source_name": "tiny-keccak",
       "source_repo": "https://github.com/debris/tiny-keccak",
       "license": "CC0-1.0",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
+      "cp_target": "@cap/tiny-keccak",
+      "kind": "package",
       "aliases": [
-        "sha3",
-        "keccak"
+        "sha3"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10796,6 +10795,36 @@
       "source_repo": "https://github.com/sindresorhus/resolve-from",
       "license": "MIT",
       "cp_target": "@cap/resolve-from",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "locate-path",
+      "source_repo": "https://github.com/sindresorhus/locate-path",
+      "license": "MIT",
+      "cp_target": "@cap/locate-path",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-exists",
+      "source_repo": "https://github.com/sindresorhus/path-exists",
+      "license": "MIT",
+      "cp_target": "@cap/path-exists",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "make-dir",
+      "source_repo": "https://github.com/sindresorhus/make-dir",
+      "license": "MIT",
+      "cp_target": "@cap/make-dir",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
