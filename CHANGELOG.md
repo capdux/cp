@@ -249,3 +249,12 @@
 - `packages/@cap/percent-encoding/` & `cap/test/testCapPercentEncoding.cp`: WHATWG/RFC 3986 128-bit `AsciiSet` 百分号编解码引擎（对标 Rust `percent-encoding` **11.58 亿总下载**，6/6 PASS）。
 - `packages/@cap/byteorder/` & `cap/test/testCapByteorder.cp`: 大小端二进制编解码与零越界单向 `ByteReader`/`ByteWriter`（对标 Rust `untrusted` **10.18 亿** + `byteorder` **9.93 亿**，6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **205 条**生态映射里程碑（新增 `fastrand`/`miniz_oxide`/`percent-encoding`/`time`/`url`/`errno`/`tempfile`/`chrono`/`untrusted`/`byteorder`）。
+
+## [2026-11-26] - Batch 30 严格单调递减吸收 Rust crates.io 10.77 亿 → 8.12 亿 Top 10（一口气交付 6 大 Rust 独立 `@cap` 包，总映射突破 215 条）
+- `packages/@cap/fnv/` & `cap/test/testCapFnv.cp`: FNV-1a 32/64 + FxHash 64（对标 `rustc-hash` 10.77 亿 + `fnv` 10.07 亿，6/6 PASS）。
+- `packages/@cap/subtle/` & `cap/test/testCapSubtle.cp`: 恒定时间防侧信道原语 + 安全内存清零（对标 `zeroize` 9.35 亿 + `subtle` 9.21 亿，6/6 PASS）。
+- `packages/@cap/crc32/` & `cap/test/testCapCrc32.cp`: IEEE CRC-32 / CRC-32C / Adler-32 + 增量合并（对标 `crc32fast` 9.18 亿，6/6 PASS）。
+- `packages/@cap/num-integer/` & `cap/test/testCapNumInteger.cp`: 精确整数除余/数论/GCD/Bézout/模逆元/整数根（对标 `num-integer` 8.88 亿，6/6 PASS）。
+- `packages/@cap/hex/` & `cap/test/testCapHex.cp`: 零堆十六进制编解码与 HexDump（对标 `hex` 8.43 亿，6/6 PASS）。
+- `packages/@cap/tinystr/` & `cap/test/testCapTinystr.cp`: `TinyStr4`/`TinyStr8` 寄存器打包短字符串（对标 `tinystr` 8.35 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **215 条**高频映射（含 `iana-time-zone`→`cap:tz`、`walkdir`→`cap:fs`）。

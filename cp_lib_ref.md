@@ -350,3 +350,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/fastrand`** | `packages/@cap/fastrand` | 对标 Rust `fastrand`（11.79 亿总下载）— 零堆 WyRand 64-bit PRNG、无偏区间采样与 Fisher-Yates 原地洗牌 |
 | **`@cap/percent-encoding`** | `packages/@cap/percent-encoding` | 对标 Rust `percent-encoding`（11.58 亿总下载）— WHATWG/RFC 3986 128-bit `AsciiSet` 字符集编解码与严格防注入解码 |
 | **`@cap/byteorder`** | `packages/@cap/byteorder` | 对标 Rust `untrusted`（10.18 亿）+ `byteorder`（9.93 亿）— 大小端二进制编解码与零越界单向 `ByteReader`/`ByteWriter` |
+| **`@cap/fnv`** | `packages/@cap/fnv` | 对标 Rust `rustc-hash`（10.77 亿）+ `fnv`（10.07 亿）— 零堆 FNV-1a 32/64-bit 与 FxHash 64-bit 高速流式哈希 |
+| **`@cap/subtle`** | `packages/@cap/subtle` | 对标 Rust `zeroize`（9.35 亿）+ `subtle`（9.21 亿）— 无分支恒定时间比较/条件选择/交换与防 DSE 安全内存清零 |
+| **`@cap/crc32`** | `packages/@cap/crc32` | 对标 Rust `crc32fast`（9.18 亿）— IEEE CRC-32 / Castagnoli CRC-32C / Adler-32 与 O(log N) 增量合并 |
+| **`@cap/num-integer`** | `packages/@cap/num-integer` | 对标 Rust `num-integer`（8.88 亿）— 地板/天花板/欧几里得除余、GCD/LCM/Bézout/模逆元、整数根与素性判定 |
+| **`@cap/hex`** | `packages/@cap/hex` | 对标 Rust `hex`（8.43 亿）— 零堆大小写十六进制编解码、严格校验与 16 字节/行 Canonical `hexDump` |
+| **`@cap/tinystr`** | `packages/@cap/tinystr` | 对标 Rust `tinystr`（8.35 亿）— `TinyStr4`/`TinyStr8` 寄存器打包短 ASCII 字符串与单指令 O(1) 比较 |

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/tinystr",
+  "ver": "1.0.0",
+  "description": "Zero-allocation register-packed short ASCII strings TinyStr4/TinyStr8 (Rust ICU4X tinystr parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

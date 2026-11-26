@@ -2054,6 +2054,106 @@
       "kind": "package",
       "aliases": ["endian-codec"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustc-hash",
+      "source_repo": "https://github.com/rust-lang/rustc-hash",
+      "license": "MIT",
+      "cp_target": "@cap/fnv",
+      "kind": "package",
+      "aliases": ["fxhash"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fnv",
+      "source_repo": "https://github.com/servo/rust-fnv",
+      "license": "MIT",
+      "cp_target": "@cap/fnv",
+      "kind": "package",
+      "aliases": ["fnv1a"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zeroize",
+      "source_repo": "https://github.com/RustCrypto/utils",
+      "license": "MIT",
+      "cp_target": "@cap/subtle",
+      "kind": "package",
+      "aliases": ["secure-zero"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "subtle",
+      "source_repo": "https://github.com/dalek-cryptography/subtle",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/subtle",
+      "kind": "package",
+      "aliases": ["constant-time"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc32fast",
+      "source_repo": "https://github.com/srijs/rust-crc32fast",
+      "license": "MIT",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": ["crc32c", "adler2", "crc-32"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-integer",
+      "source_repo": "https://github.com/rust-num/num-integer",
+      "license": "MIT",
+      "cp_target": "@cap/num-integer",
+      "kind": "package",
+      "aliases": ["num-traits"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "iana-time-zone",
+      "source_repo": "https://github.com/strawlab/iana-time-zone",
+      "license": "MIT",
+      "cp_target": "cap:tz",
+      "kind": "stdlib",
+      "aliases": ["chrono-tz"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hex",
+      "source_repo": "https://github.com/KokaKiwi/rust-hex",
+      "license": "MIT",
+      "cp_target": "@cap/hex",
+      "kind": "package",
+      "aliases": ["const-hex", "hex-encode"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tinystr",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "@cap/tinystr",
+      "kind": "package",
+      "aliases": ["tiny-ascii-str"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "walkdir",
+      "source_repo": "https://github.com/BurntSushi/walkdir",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": ["jwalk"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
