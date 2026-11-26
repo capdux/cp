@@ -1355,3 +1355,7 @@
 ### 2026-11-26 — Batch 153（npm Real Top 700 `#532..#673`：+12 `@cap/*` 包 + 14 条零重复映射，总计 816 `@cap/*`）
 - 新增 `packages/@cap/{d3-time,d3-time-format,d3-scale,vfile-message,strnum,abbrev,character-entities,ccount,chardet,space-separated-tokens,is-path-inside,class-variance-authority}/` 及对应 12 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（+26 映射条目，覆盖 30+ 个 npm Top 700 源码包）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 154（npm Real Top 700 `#294..#643`：+12 `@cap/*` 包 + 18 条零重复映射，总计 828 `@cap/*`）
+- 新增 `packages/@cap/{tinybench,dom-serializer,d3-shape,bl,d3-interpolate,nopt,bowser,property-information,sanitize-uri,express-rate-limit,cssstyle,object-hash}/` 及对应 12 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 更新 `packages/@cap/registry.json`（总映射 1,114+）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

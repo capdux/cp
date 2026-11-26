@@ -538,3 +538,7 @@
 ### 2026-11-26 — Batch 153 开发日志（816 `@cap/*` 包，冲刺 npm Top 700 收官）
 - 主智能体 + Worker N22（6/6 满额轮换为 N24）+ Worker N23（6/6 满额轮换为 N25）三路并行交付 12 个高价值纯 CP 包，全部通过 `cpc emit-types` 与 6/6 `cap test`。
 - 踩坑与经验：`chardet` 区分 GBK 汉字与 Shift-JIS 半角片假名时，将纯半角片假名置信度降为 65 低于 GBK 双字节 75 即可零误判；`character-entities` 一包覆盖 8 个 `wooorm`/HTML 实体相关 npm Top 700 包，极大压缩重复率。
+
+### 2026-11-26 — Batch 154 开发日志（828 `@cap/*` 包 + 全套 D3 数学/可视化核心收齐）
+- 三路并行交付 12 个高下载量纯 CP 包（含 `tinybench` #294、`dom-serializer` #305、`d3-shape` #403、`bl` #450、`d3-interpolate` #503 等），全部通过 `cpc emit-types` 与 6/6 `cap test`。
+- 同步补齐 `#92..#530` 中 18 条零重复标准库/已有生态映射（覆盖 `tinyglobby`/`graceful-fs`/`buffer`/`jose`/`express`/`hono`/`postcss-selector-parser` 等 20+ 高频包）。

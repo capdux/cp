@@ -12558,6 +12558,315 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tinybench",
+      "source_repo": "https://github.com/tinylibs/tinybench",
+      "license": "MIT",
+      "cp_target": "@cap/tinybench",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dom-serializer",
+      "source_repo": "https://github.com/cheeriojs/dom-serializer",
+      "license": "MIT",
+      "cp_target": "@cap/dom-serializer",
+      "kind": "package",
+      "aliases": [
+        "domelementtype",
+        "w3c-xmlserializer"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-shape",
+      "source_repo": "https://github.com/d3/d3-shape",
+      "license": "ISC",
+      "cp_target": "@cap/d3-shape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bl",
+      "source_repo": "https://github.com/rvagg/bl",
+      "license": "MIT",
+      "cp_target": "@cap/bl",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-interpolate",
+      "source_repo": "https://github.com/d3/d3-interpolate",
+      "license": "ISC",
+      "cp_target": "@cap/d3-interpolate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "nopt",
+      "source_repo": "https://github.com/npm/nopt",
+      "license": "ISC",
+      "cp_target": "@cap/nopt",
+      "kind": "package",
+      "aliases": [
+        "jackspeak",
+        "arg"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bowser",
+      "source_repo": "https://github.com/bowser-js/bowser",
+      "license": "MIT",
+      "cp_target": "@cap/bowser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "property-information",
+      "source_repo": "https://github.com/wooorm/property-information",
+      "license": "MIT",
+      "cp_target": "@cap/property-information",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "micromark-util-sanitize-uri",
+      "source_repo": "https://github.com/micromark/micromark",
+      "license": "MIT",
+      "cp_target": "@cap/sanitize-uri",
+      "kind": "package",
+      "aliases": [
+        "micromark-util-encode"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cssstyle",
+      "source_repo": "https://github.com/jsdom/cssstyle",
+      "license": "MIT",
+      "cp_target": "@cap/cssstyle",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "object-hash",
+      "source_repo": "https://github.com/puleos/object-hash",
+      "license": "MIT",
+      "cp_target": "@cap/object-hash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tinyglobby",
+      "source_repo": "https://github.com/SuperchupuDev/tinyglobby",
+      "license": "MIT",
+      "cp_target": "@cap/fast-glob",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "graceful-fs",
+      "source_repo": "https://github.com/isaacs/node-graceful-fs",
+      "license": "ISC",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "buffer",
+      "source_repo": "https://github.com/feross/buffer",
+      "license": "MIT",
+      "cp_target": "cap:buffer",
+      "kind": "stdlib",
+      "aliases": [
+        "safer-buffer",
+        "buffer-from"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jose",
+      "source_repo": "https://github.com/panva/jose",
+      "license": "MIT",
+      "cp_target": "@cap/jsonwebtoken",
+      "kind": "package",
+      "aliases": [
+        "jwa"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tinyexec",
+      "source_repo": "https://github.com/tinylibs/tinyexec",
+      "license": "MIT",
+      "cp_target": "cap:process",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "keyv",
+      "source_repo": "https://github.com/jaredwray/keyv",
+      "license": "MIT",
+      "cp_target": "@cap/lru-cache",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chai",
+      "source_repo": "https://github.com/chaijs/chai",
+      "license": "MIT",
+      "cp_target": "cap:test",
+      "kind": "stdlib",
+      "aliases": [
+        "assertion-error"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "express",
+      "source_repo": "https://github.com/expressjs/express",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [
+        "hono"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "std-env",
+      "source_repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "cp_target": "cap:env",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "postcss-selector-parser",
+      "source_repo": "https://github.com/postcss/postcss-selector-parser",
+      "license": "MIT",
+      "cp_target": "@cap/css-what",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cli-cursor",
+      "source_repo": "https://github.com/sindresorhus/cli-cursor",
+      "license": "MIT",
+      "cp_target": "@cap/ansi-escapes",
+      "kind": "package",
+      "aliases": [
+        "restore-cursor"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "web-streams-polyfill",
+      "source_repo": "https://github.com/MattiasBuelens/web-streams-polyfill",
+      "license": "MIT",
+      "cp_target": "@web/streams",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "router",
+      "source_repo": "https://github.com/pillarjs/router",
+      "license": "MIT",
+      "cp_target": "@cap/find-my-way",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "confbox",
+      "source_repo": "https://github.com/unjs/confbox",
+      "license": "MIT",
+      "cp_target": "cap:jsonc",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "abort-controller",
+      "source_repo": "https://github.com/mysticatea/abort-controller",
+      "license": "MIT",
+      "cp_target": "@web/abort-controller",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg-types",
+      "source_repo": "https://github.com/brianc/node-pg-types",
+      "license": "MIT",
+      "cp_target": "cap:pg",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "buffer-crc32",
+      "source_repo": "https://github.com/brianloveswords/buffer-crc32",
+      "license": "MIT",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "unist-util-stringify-position",
+      "source_repo": "https://github.com/syntax-tree/unist-util-stringify-position",
+      "license": "MIT",
+      "cp_target": "@cap/vfile-message",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

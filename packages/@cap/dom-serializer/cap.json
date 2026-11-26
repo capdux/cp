@@ -1,0 +1,15 @@
+{
+  "name": "@cap/dom-serializer",
+  "version": "2.0.0",
+  "description": "Zero-heap HTML/XML DOM node serializer (covers domelementtype and w3c-xmlserializer)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "dom-serializer",
+    "version": "2.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/cheeriojs/dom-serializer"
+  }
+}

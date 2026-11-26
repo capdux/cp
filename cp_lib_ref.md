@@ -1102,3 +1102,19 @@ const h = cap.hash.wyhash("hello");
 - `@cap/is-path-inside` (`npm:is-path-inside` #655, MIT) — 零分配路径穿越防护校验器。
 - `@cap/class-variance-authority` (`npm:class-variance-authority` #673, Apache-2.0) — `cva` 变体与复合变体样式组合器。
 - 零重复映射：`pg-int8`→`cap:pg`、`whatwg-encoding`→`@cap/iconv-lite`、`shell-quote`→`@cap/shell-quote`、`bignumber.js`→`@cap/bigdecimal`、`css.escape`→`@cap/cssesc`、`lodash.camelcase`→`@cap/camelcase`、`remark-parse`→`cap:md`、`expect`→`cap:test`、`jest-diff`→`@cap/diff`、`json-bigint`→`cap:json`、`node-int64`→`@cap/bigint-u256`、`acorn-walk`→`@cap/estree-walker`、`formdata-polyfill`→`@web/formdata`、`fetch-blob`→`@web/blob`。
+
+### Batch 154 — npm Real Top 700 (`#294..#643`, 12 packages + 18 zero-duplicate mappings; 828 `@cap/*`!)
+
+- `@cap/tinybench` (`npm:tinybench` #294, MIT) — 零堆微基准统计引擎（mean/ops_per_sec/min/max/p50/p75/p95/p99/stddev/RME）。
+- `@cap/dom-serializer` (`npm:dom-serializer` #305, MIT) — HTML/XML DOM 节点序列化器（覆盖 `domelementtype`/`w3c-xmlserializer`）。
+- `@cap/d3-shape` (`npm:d3-shape` #403, ISC) — SVG 折线/阶梯线/圆弧/饼图路径生成器。
+- `@cap/bl` (`npm:bl` #450, MIT) — 零堆分段 `BufferList`（跨块索引、切片拷贝、`consume`、大小端读写、跨块 `indexOf`）。
+- `@cap/d3-interpolate` (`npm:d3-interpolate` #503, ISC) — 数值/整数/离散/RGB/HSL/分段线性与均匀三次 B 样条插值器。
+- `@cap/nopt` (`npm:nopt` #535, ISC) — CLI 类型化参数与短参展开解析器（覆盖 `jackspeak`/`arg`）。
+- `@cap/bowser` (`npm:bowser` #554, MIT) — 零堆 User-Agent 浏览器/OS/渲染引擎/平台解析器。
+- `@cap/property-information` (`npm:property-information` #559, MIT) — HTML/SVG 属性与 DOM 属性名双向元信息查询库。
+- `@cap/sanitize-uri` (`npm:micromark-util-sanitize-uri` #563, MIT) — 安全协议校验与 RFC 3986 百分号编码器（防混淆协议绕过）。
+- `@cap/express-rate-limit` (`npm:express-rate-limit` #570, MIT) — 零堆固定窗口 HTTP 限流器与 IETF `RateLimit` 响应头格式化。
+- `@cap/cssstyle` (`npm:cssstyle` #610, MIT) — CSS 内联 `style` 声明解析、查询、修改与 `!important` 序列化器。
+- `@cap/object-hash` (`npm:object-hash` #643, MIT) — 键顺序无关的确定性结构化对象 FNV-1a 64-bit 哈希器。
+- 零重复映射：`tinyglobby`→`@cap/fast-glob`、`graceful-fs`→`cap:fs`、`buffer`/`safer-buffer`/`buffer-from`→`cap:buffer`、`jose`/`jwa`→`@cap/jsonwebtoken`、`tinyexec`→`cap:process`、`keyv`→`@cap/lru-cache`、`chai`→`cap:test`、`express`/`hono`→`cap:http`、`std-env`→`cap:env`、`postcss-selector-parser`→`@cap/css-what`、`cli-cursor`/`restore-cursor`→`@cap/ansi-escapes`、`web-streams-polyfill`→`@web/streams`、`router`→`@cap/find-my-way`、`confbox`→`cap:jsonc`、`abort-controller`→`@web/abort-controller`、`pg-types`→`cap:pg`、`buffer-crc32`→`@cap/crc32`、`unist-util-stringify-position`→`@cap/vfile-message`。
