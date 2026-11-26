@@ -240,3 +240,6 @@
 
 ## 2026-11-26: Batch 58 API 网关/RPC 五件套全 6/6 PASS，总映射冲刺 **495 条（npm=247 / crates.io=248）**、线上官方包突破 **319 个**！
 - 交付 `@cap/http-date`（1.8 亿+ Rust 下载，6/6）、`@cap/json-rpc`（6/6）、`@cap/cors-match`（6/6）、`@cap/rate-header`（6/6）、`@cap/user-agent-hints`（6/6），下一批 Batch 59 将正式跨过 **500+ 双生态映射大关**！
+
+## 2026-11-26: Batch 59 正式突破 **500+ 双生态映射里程碑（505 条，npm=252 / crates.io=253）+ 325+ 官方 `.cap` 包**！
+- 单批交付 `@cap/ws-frame`（1.1 亿+/周，6/6）、`@cap/accept-lang`（2500 万+/周，6/6）、`@cap/webhook-sig`（6/6）、`@cap/idempotency`（6/6）、`@cap/digest-auth`（6/6）、`@cap/proxy-proto`（6/6），全线零堆纯 CP 100% PASS！

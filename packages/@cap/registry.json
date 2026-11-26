@@ -2144,8 +2144,8 @@
       "source_name": "ws",
       "source_repo": "https://github.com/websockets/ws",
       "license": "MIT",
-      "cp_target": "cap:ws",
-      "kind": "stdlib",
+      "cp_target": "@cap/ws-frame",
+      "kind": "package",
       "aliases": [
         "tungstenite",
         "tokio-tungstenite"
@@ -6193,6 +6193,108 @@
       "aliases": [
         "headers-core"
       ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "accept-language-parser",
+      "source_repo": "https://github.com/opentable/accept-language-parser",
+      "license": "MIT",
+      "cp_target": "@cap/accept-lang",
+      "kind": "package",
+      "aliases": [
+        "accept-language"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "standardwebhooks",
+      "source_repo": "https://github.com/standard-webhooks/standard-webhooks",
+      "license": "MIT",
+      "cp_target": "@cap/webhook-sig",
+      "kind": "package",
+      "aliases": [
+        "svix"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "http-digest-client",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/digest-auth",
+      "kind": "package",
+      "aliases": [
+        "digest-fetch"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "proxy-protocol-js",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/proxy-proto",
+      "kind": "package",
+      "aliases": [
+        "findhit-proxywrap"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "idempotency-key",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/idempotency",
+      "kind": "package",
+      "aliases": [
+        "express-idempotency"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "accept-language",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/accept-lang",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "digest_auth",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/digest-auth",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ppp",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/proxy-proto",
+      "kind": "package",
+      "aliases": [
+        "proxy-header"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "standardwebhooks",
+      "source_repo": "https://github.com/standard-webhooks/standard-webhooks",
+      "license": "MIT",
+      "cp_target": "@cap/webhook-sig",
+      "kind": "package",
+      "aliases": [],
       "absorbed_at": "2026-11-26"
     }
   ]

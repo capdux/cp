@@ -1,0 +1,10 @@
+{
+  "name": "@cap/ws-frame",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 6455 WebSocket binary frame header encoder/decoder, XOR masking, and close status codec for CP (compatible with npm ws & Rust tungstenite)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["websocket", "ws", "rfc6455", "frame", "tungstenite", "network"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ws-frame"
+}

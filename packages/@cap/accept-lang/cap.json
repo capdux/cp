@@ -1,0 +1,8 @@
+{
+  "name": "@cap/accept-lang",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 9110 / BCP-47 Accept-Language quality weight parser and language negotiation engine.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/idempotency",
+  "ver": "1.0.0",
+  "description": "Zero-allocation IETF Idempotency-Key HTTP header parser, validator, RFC 8941 formatter, and request fingerprint state evaluator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["idempotency", "idempotency-key", "http", "ietf", "stripe", "payments", "zero-alloc"]
+}

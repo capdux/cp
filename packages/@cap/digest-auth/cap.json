@@ -1,0 +1,9 @@
+{
+  "name": "@cap/digest-auth",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 7616 / RFC 2617 HTTP Digest Authentication challenge & authorization parser and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["digest-auth", "http", "rfc7616", "rfc2617", "auth", "www-authenticate", "zero-alloc"]
+}

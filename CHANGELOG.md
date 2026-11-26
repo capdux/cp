@@ -496,3 +496,12 @@
 - `packages/@cap/rate-header/` & `cap/test/testCapRateHeader.cp`: IETF RateLimit Headers 解析与退避计算（6/6 PASS）。
 - `packages/@cap/user-agent-hints/` & `cap/test/testCapUserAgentHints.cp`: W3C `Sec-CH-UA` Client Hints 解析与 GREASE 过滤（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **495 条**双生态高频映射（**npm=247 / crates.io=248** 1:1 绝对均衡）。
+
+## [2026-11-26] - Batch 59 正式突破 **500+ 双生态映射大关（505 条）** — 交付 **6 大网络/安全协议新包**（`@cap/ws-frame`, `@cap/accept-lang`, `@cap/webhook-sig`, `@cap/idempotency`, `@cap/digest-auth`, `@cap/proxy-proto`）！
+- `packages/@cap/ws-frame/` & `cap/test/testCapWsFrame.cp`: RFC 6455 WebSocket 二进制帧与掩码编解码（6/6 PASS）。
+- `packages/@cap/accept-lang/` & `cap/test/testCapAcceptLang.cp`: RFC 9110 `Accept-Language` 权重排序与协商（6/6 PASS）。
+- `packages/@cap/webhook-sig/` & `cap/test/testCapWebhookSig.cp`: Stripe/GitHub/Standard Webhooks 防重放签名解析（6/6 PASS）。
+- `packages/@cap/idempotency/` & `cap/test/testCapIdempotency.cp`: IETF `Idempotency-Key` 请求指纹与四态判定（6/6 PASS）。
+- `packages/@cap/digest-auth/` & `cap/test/testCapDigestAuth.cp`: RFC 7616 HTTP Digest 认证头零拷贝编解码（6/6 PASS）。
+- `packages/@cap/proxy-proto/` & `cap/test/testCapProxyProto.cp`: HAProxy PROXY Protocol v1/v2 零堆解析编码（6/6 PASS）。
+- `packages/@cap/registry.json`: 突破 **505 条**双生态高频映射（**npm=252 / crates.io=253** 1:1 绝对均衡）。

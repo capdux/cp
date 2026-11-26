@@ -510,3 +510,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/cors-match`** | `packages/@cap/cors-match` | 对标 npm `cors` / Rust `tower-http::cors` — CORS Origin 精确/通配子域防伪造匹配与预检方法/头部校验 |
 | **`@cap/rate-header`** | `packages/@cap/rate-header` | 对标 npm `express-rate-limit` / Rust `governor` — IETF `RateLimit-Policy` 与结构化限流头零堆解析、格式化与重试延迟计算 |
 | **`@cap/user-agent-hints`** | `packages/@cap/user-agent-hints` | 对标 W3C Client Hints / Rust `sfv` — `Sec-CH-UA` 品牌列表解析、GREASE 过滤与移动/平台提取 |
+| **`@cap/ws-frame`** | `packages/@cap/ws-frame` | 对标 npm `ws` / Rust `tungstenite` — RFC 6455 WebSocket 零堆二进制帧头编解码、XOR 掩码与关闭码校验 |
+| **`@cap/accept-lang`** | `packages/@cap/accept-lang` | 对标 npm `accept-language-parser` / Rust `accept-language` — RFC 9110/BCP-47 `Accept-Language` 权重解析与最佳语言协商 |
+| **`@cap/webhook-sig`** | `packages/@cap/webhook-sig` | 对标 Stripe / GitHub / Standard Webhooks — 签名头零拷贝解析、时间戳防重放与恒定时间比对 |
+| **`@cap/idempotency`** | `packages/@cap/idempotency` | 对标 IETF `Idempotency-Key` — 支付/分布式 API 幂等键校验、请求指纹哈希与四态状态机 |
+| **`@cap/digest-auth`** | `packages/@cap/digest-auth` | 对标 npm `http-digest-client` / Rust `digest_auth` — RFC 7616 HTTP Digest 认证质询与响应头零堆编解码 |
+| **`@cap/proxy-proto`** | `packages/@cap/proxy-proto` | 对标 npm `proxy-protocol-js` / Rust `ppp` — HAProxy PROXY Protocol v1/v2 零堆帧编解码 |

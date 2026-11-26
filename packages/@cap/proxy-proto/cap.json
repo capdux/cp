@@ -1,0 +1,8 @@
+{
+  "name": "@cap/proxy-proto",
+  "version": "1.0.0",
+  "description": "Zero-heap HAProxy PROXY Protocol v1 (ASCII) and v2 (binary) parser and encoder for L4 client IP preservation.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
