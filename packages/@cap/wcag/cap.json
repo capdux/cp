@@ -1,0 +1,7 @@
+{
+  "name": "@cap/wcag",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C WCAG 2.1/2.2 color contrast ratio calculator, AA/AAA compliance grader, and accessible foreground color recommender (wcag-contrast / Rust contrast parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

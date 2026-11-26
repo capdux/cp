@@ -299,3 +299,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/sqlformat`** | `packages/@cap/sqlformat` | 对标 npm `sql-formatter` / Rust `sqlformat` — 词法安全 SQL 美化格式化、关键词大写与 `minifySql` 压缩 |
 | **`@cap/petname`** | `packages/@cap/petname` | 对标 npm `unique-names-generator`/`human-id` / Rust `petname` — 确定性 SplitMix64 可读容器/沙箱/子域名生成器 |
 | **`@cap/jsonflat`** | `packages/@cap/jsonflat` | 对标 npm `flat`/`dot-prop` — 零堆递归 JSON 扁平化（`a.b.0.c`）与点路径直取 |
+| **`@cap/http-status`** | `packages/@cap/http-status` | 对标 npm `statuses`/`http-status-codes` — 69 个 RFC 9110/WebDAV/Cloudflare HTTP 状态码双向查询与语义判断 |
+| **`@cap/wcag`** | `packages/@cap/wcag` | 对标 npm `wcag-contrast` / Rust `contrast` — W3C WCAG 2.1/2.2 相对亮度、对比度、AA/AAA 评级与自动文字色推荐 |
+| **`@cap/didyoumean`** | `packages/@cap/didyoumean` | 对标 npm `didyoumean`/`fastest-levenshtein` — 零堆 Levenshtein/Damerau-Levenshtein 与 CLI 拼写纠错建议 |

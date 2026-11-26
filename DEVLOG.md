@@ -96,3 +96,6 @@
 
 ## 2026-11-26: Wave 11 里程碑 — 突破 100 个官方 `.cap` 包（`@cap/sqlformat` + `@cap/petname` + `@cap/jsonflat`）
 - 三路并行洁净室交付 `@cap/sqlformat`（6/6 PASS）、`@cap/petname`（4/4 PASS）、`@cap/jsonflat`（4/4 PASS），同步 65 条去重映射至 `https://capdux.org`，线上官方 `.cap` 包正式达到 **100 / 100**（0 失败）。
+
+## 2026-11-26: Wave 12 三路并行交付 `@cap/http-status` + `@cap/wcag` + `@cap/didyoumean` 并发布至 `capdux.org`
+- 三路并行洁净室交付 `@cap/http-status`（6/6 PASS）、`@cap/wcag`（6/6 PASS）、`@cap/didyoumean`（4/4 PASS），同步 68 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包总数突破 103）。

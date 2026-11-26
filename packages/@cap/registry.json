@@ -654,6 +654,36 @@
       "kind": "package",
       "aliases": ["dot-prop", "flatten-json"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "statuses",
+      "source_repo": "https://github.com/jshttp/statuses",
+      "license": "MIT",
+      "cp_target": "@cap/http-status",
+      "kind": "package",
+      "aliases": ["http-status-codes", "http-status", "http-status-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "wcag-contrast",
+      "source_repo": "https://github.com/tmcw/wcag-contrast",
+      "license": "ISC",
+      "cp_target": "@cap/wcag",
+      "kind": "package",
+      "aliases": ["color-contrast-checker", "contrast", "get-contrast"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "didyoumean",
+      "source_repo": "https://github.com/dcporter/didyoumean.js",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/didyoumean",
+      "kind": "package",
+      "aliases": ["fastest-levenshtein", "leven", "didyoumean2"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

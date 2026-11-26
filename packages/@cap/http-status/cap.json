@@ -1,0 +1,7 @@
+{
+  "name": "@cap/http-status",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9110, WebDAV, and Cloudflare HTTP status code constants, bidirectional phrase lookup, and semantic predicates for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

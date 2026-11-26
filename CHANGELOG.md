@@ -144,3 +144,9 @@
 - `packages/@cap/petname/` & `cap/test/testCapPetname.cp`: 零堆确定性 SplitMix64 可读名称与 DNS 安全子域名生成器（赋能 `caprun` 沙箱命名，对标 npm `unique-names-generator`/`human-id` & Rust `petname`，4/4 PASS）。
 - `packages/@cap/jsonflat/` & `cap/test/testCapJsonflat.cp`: 零堆递归 JSON 扁平化与 `dot-prop` 路径直取引擎（对标 npm `flat`/`dot-prop`，4/4 PASS）。
 - `packages/@cap/registry.json`: 扩充至 65 条高频映射并同步发布至 `https://capdux.org`（线上官方 `.cap` 包总数正式突破 **100 个**里程碑！）。
+
+## [2026-11-26] - Wave 12 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/http-status`, `@cap/wcag`, `@cap/didyoumean`）并发布至 `capdux.org`
+- `packages/@cap/http-status/` & `cap/test/testCapHttpStatus.cp`: 69 个 IANA/RFC 9110/Cloudflare HTTP 状态码双向查询与语义判断（`isRetryable`/`isEmptyBody`/`isCacheableByDefault`，对标 npm `statuses` [80M/wk] & `http-status-codes` [30M/wk]，6/6 PASS）。
+- `packages/@cap/wcag/` & `cap/test/testCapWcag.cp`: W3C WCAG 2.1/2.2 色彩无障碍对比度计算、AA/AAA 评级与自动高对比文字色推荐（对标 npm `wcag-contrast` [8M/wk] & Rust `contrast`，6/6 PASS）。
+- `packages/@cap/didyoumean/` & `cap/test/testCapDidyoumean.cp`: 零堆分配 Levenshtein / Damerau-Levenshtein 换位编辑距离与 CLI/API 拼写建议引擎（对标 npm `didyoumean` [15M/wk] & `fastest-levenshtein` [30M/wk]，4/4 PASS）。
+- `packages/@cap/registry.json`: 扩充至 68 条高频映射并同步发布至 `https://capdux.org`。
