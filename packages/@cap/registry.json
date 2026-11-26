@@ -3,7 +3,7 @@
   "description": "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages absorbed from npm and crates.io.",
   "capdux_registry_url": "https://registry.capdux.org/v1/registry.json",
   "github_raw_url": "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json",
-  "updated_at": "2026-11-27",
+  "updated_at": "2026-11-26",
   "entries": [
     {
       "source_registry": "npm",
@@ -12117,6 +12117,186 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "figures",
+      "source_repo": "https://github.com/sindresorhus/figures",
+      "license": "MIT",
+      "cp_target": "@cap/figures",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ecdsa-sig-formatter",
+      "source_repo": "https://github.com/Brightspace/node-ecdsa-sig-formatter",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/ecdsa-sig-formatter",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lz-string",
+      "source_repo": "https://github.com/pieroxy/lz-string",
+      "license": "MIT",
+      "cp_target": "@cap/lz-string",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "postgres-interval",
+      "source_repo": "https://github.com/bendrucker/postgres-interval",
+      "license": "MIT",
+      "cp_target": "@cap/postgres-interval",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "postgres-date",
+      "source_repo": "https://github.com/bendrucker/postgres-date",
+      "license": "MIT",
+      "cp_target": "@cap/postgres-date",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "css-what",
+      "source_repo": "https://github.com/fb55/css-what",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/css-what",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-format",
+      "source_repo": "https://github.com/d3/d3-format",
+      "license": "ISC",
+      "cp_target": "@cap/d3-format",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "set-cookie-parser",
+      "source_repo": "https://github.com/nfriedly/set-cookie-parser",
+      "license": "MIT",
+      "cp_target": "@cap/set-cookie-parser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "nth-check",
+      "source_repo": "https://github.com/fb55/nth-check",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/nth-check",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cssesc",
+      "source_repo": "https://github.com/mathiasbynens/cssesc",
+      "license": "MIT",
+      "cp_target": "@cap/cssesc",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-ease",
+      "source_repo": "https://github.com/d3/d3-ease",
+      "license": "ISC",
+      "cp_target": "@cap/d3-ease",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-color",
+      "source_repo": "https://github.com/d3/d3-color",
+      "license": "ISC",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pngjs",
+      "source_repo": "https://github.com/pngjs/pngjs",
+      "license": "MIT",
+      "cp_target": "cap:png",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "minizlib",
+      "source_repo": "https://github.com/isaacs/minizlib",
+      "license": "MIT",
+      "cp_target": "cap:zlib",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "eventsource",
+      "source_repo": "https://github.com/EventSource/eventsource",
+      "license": "MIT",
+      "cp_target": "@cap/sse-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "micromark",
+      "source_repo": "https://github.com/micromark/micromark",
+      "license": "MIT",
+      "cp_target": "cap:md",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "min-indent",
+      "source_repo": "https://github.com/jamiebuilds/min-indent",
+      "license": "MIT",
+      "cp_target": "@cap/strip-indent",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "safe-stable-stringify",
+      "source_repo": "https://github.com/BridgeAR/safe-stable-stringify",
+      "license": "MIT",
+      "cp_target": "@cap/jcs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

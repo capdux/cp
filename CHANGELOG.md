@@ -1339,3 +1339,15 @@
 - `packages/@cap/rend/` & `cap/test/testCapRend.cp`: crates.io **#679** `rend`（1.85 亿+，6/6 PASS）。
 - `packages/@cap/id-arena/` & `cap/test/testCapIdArena.cp`: crates.io **#685** `id-arena`（1.83 亿+，6/6 PASS）。
 - **零重复归并（8 项高频包）**：`path-is-absolute`→`@cap/pathe`、`html-escaper`→`@cap/escape-html`、`sisteransi`→`@cap/ansi-escapes`、`pg-protocol`→`cap:pg`、`jsonc-parser`→`cap:jsonc`、`dirs-next`→`@cap/home-dir`、`aws-sigv4`→`cap:s3`、`xmlparser`→`@cap/saxes`；Worker C19 满 6 包光荣收官 crates.io Top 700！
+
+### 2026-11-26 — Batch 152（跨越 800 `@cap/*` 里程碑：新增 8 个 npm Real Top 700 包 + 12 条零重复映射）
+- 新增 `packages/@cap/figures/` + `cap/test/testCapFigures.cp`（`npm:figures` #473, 6/6 PASS）
+- 新增 `packages/@cap/ecdsa-sig-formatter/` + `cap/test/testCapEcdsaSigFormatter.cp`（`npm:ecdsa-sig-formatter` #475, 6/6 PASS）
+- 新增 `packages/@cap/postgres-interval/` + `cap/test/testCapPostgresInterval.cp`（`npm:postgres-interval` #501, 6/6 PASS）
+- 新增 `packages/@cap/postgres-date/` + `cap/test/testCapPostgresDate.cp`（`npm:postgres-date` #505, 6/6 PASS）
+- 新增 `packages/@cap/css-what/` + `cap/test/testCapCssWhat.cp`（`npm:css-what` #513, 6/6 PASS）
+- 新增 `packages/@cap/is-binary-path/` + `cap/test/testCapIsBinaryPath.cp`（`npm:is-binary-path` #534, 6/6 PASS）
+- 新增 `packages/@cap/set-cookie-parser/` + `cap/test/testCapSetCookieParser.cp`（`npm:set-cookie-parser` #537, 6/6 PASS）
+- 新增 `packages/@cap/nth-check/` + `cap/test/testCapNthCheck.cp`（`npm:nth-check` #544, 6/6 PASS）
+- 更新 `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`（总包数突破 **801**，新增 12 条零重复映射）。
+- 补增 Batch 152：`@cap/lz-string`（#494）、`@cap/d3-format`（#519）、`@cap/cssesc`（#548）、`@cap/d3-ease`（#568）及对应 4 套 `cap/test/testCap*.cp`（全部 6/6 PASS），本批次共 +12 包，总计 **805** 个 `@cap/*` 官方包。

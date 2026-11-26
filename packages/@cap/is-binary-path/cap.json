@@ -1,26 +1,15 @@
 {
   "name": "@cap/is-binary-path",
-  "ver": "1.0.0",
-  "desc": "Zero-heap binary/text file path classifier and batch filter composing @cap/binary-extensions in pure CP",
+  "version": "3.0.0",
+  "description": "Zero-allocation check if a file path has a known binary file extension (covers binary-extensions)",
+  "entry": "src/index.cp",
   "license": "MIT",
-  "main": "src/index.cp",
-  "types": "src/index.d.cp",
-  "dependencies": {
-    "@cap/binary-extensions": "^1.0.0"
-  },
-  "keywords": [
-    "is-binary-path",
-    "binary",
-    "text",
-    "filter",
-    "path",
-    "chokidar",
-    "zero-heap"
-  ],
+  "author": "CP Official Team",
   "source": {
-    "registry": "npm",
-    "name": "is-binary-path",
-    "repo": "https://github.com/sindresorhus/is-binary-path",
-    "license": "MIT"
+    "ecosystem": "npm",
+    "package": "is-binary-path",
+    "version": "3.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/sindresorhus/is-binary-path"
   }
 }

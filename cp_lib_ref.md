@@ -1070,3 +1070,19 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/pure-rand`** | `packages/@cap/pure-rand` | 对标 npm **#443** `pure-rand` (**1.24 亿/周**) — 不可变函数式 `Xoroshiro128Plus` PRNG、`jump()` 与无偏区间采样 |
 | **`@cap/rend`** | `packages/@cap/rend` | 对标 crates.io **#679** `rend` (**1.85 亿+**) — 跨平台显式大小端原语类型与越界安全切片读 |
 | **`@cap/id-arena`** | `packages/@cap/id-arena` | 对标 crates.io **#685** `id-arena` (**1.83 亿+**) — 零堆类型化句柄 `IdArena` 分配器（带防跨 Arena 校验） |
+
+### Batch 152 — npm Real Top 700 (`#473..#568`, 12 packages + 10 zero-duplicate mappings; 805 `@cap/*` Milestone!)
+
+- `@cap/figures` (`npm:figures` #473, MIT) — Unicode 终端符号集与 ASCII 回退（复用 `@cap/is-unicode-supported`）。
+- `@cap/ecdsa-sig-formatter` (`npm:ecdsa-sig-formatter` #475, Apache-2.0) — ASN.1 DER ↔ JOSE IEEE P1363 ECDSA 签名互转（ES256/ES384/ES512）。
+- `@cap/lz-string` (`npm:lz-string` #494, MIT) — 零堆 LZW 压缩与 Base64 / EncodedURIComponent 编解码。
+- `@cap/postgres-interval` (`npm:postgres-interval` #501, MIT) — PostgreSQL `INTERVAL` 文本/ISO-8601 解析与序列化。
+- `@cap/postgres-date` (`npm:postgres-date` #505, MIT) — PostgreSQL `DATE`/`TIMESTAMP`/`TIMESTAMPTZ`/`infinity`/`BC` 零分配解析与 UTC Unix 毫秒转换。
+- `@cap/css-what` (`npm:css-what` #513, BSD-2-Clause) — CSS 选择器词法解析器与反序列化器。
+- `@cap/d3-format` (`npm:d3-format` #519, ISC) — D3 数字格式化器（`f`/`,`/`$`/`%`/`s` SI 单位/`d`/`x`/`b`/`o`/`e`）。
+- `@cap/is-binary-path` (`npm:is-binary-path` #534, MIT) — 零分配二进制文件扩展名检测（覆盖 `binary-extensions`）。
+- `@cap/set-cookie-parser` (`npm:set-cookie-parser` #537, MIT) — RFC 6265 `Set-Cookie` 响应头零分配解析与多 Cookie 逗号安全切分。
+- `@cap/nth-check` (`npm:nth-check` #544, BSD-2-Clause) — CSS `:nth-child(An+B)` 微语法解析与 0-based 索引匹配器。
+- `@cap/cssesc` (`npm:cssesc` #548, MIT) — CSSOM 规范 CSS 标识符与字符串转义器。
+- `@cap/d3-ease` (`npm:d3-ease` #568, ISC) — 全套 D3 缓动曲线函数（linear/quad/cubic/poly/sin/exp/circle/bounce/back/elastic）。
+- 零重复映射：`d3-color`→`cap:color`、`pngjs`→`cap:png`、`minizlib`→`cap:zlib`、`eventsource`→`@cap/sse-parse`、`pg`→`cap:pg`、`p-map`→`@cap/p-all`、`micromark`→`cap:md`、`min-indent`→`@cap/strip-indent`、`safe-stable-stringify`→`@cap/jcs`、`dedent`→`@cap/redent`。
