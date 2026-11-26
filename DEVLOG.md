@@ -546,3 +546,6 @@
 ### 2026-11-26 — Batch 155 开发日志（834 `@cap/*` 包）
 - 收录 Worker N24/N25 满额轮换交付的 `browserslist-query`（#125）、`resolve-pkg-maps`（#377）、`cli-width`（#512）、`dompurify`（#546），叠加主智能体新增的 `unist-util-visit`（#507）与 `zod-to-json-schema`（#580），全部 6/6 PASS。
 - 同步补全 crates.io Top 700 中 7 条零重复标准库映射（`digest`/`memmap2`/`atty`/`unsafe-libyaml`/`num`/`web-time`/`libsqlite3-sys`）。
+
+### 2026-11-26 — Batch 156 开发日志（839 `@cap/*` 包）
+- 三路并行交付 `object-inspect`（#136, 262.6M/wk）、`file-entry-cache`（#221, 205.6M/wk）、`optionator`（#234, 196.4M/wk）、`levn`（#240, 195.2M/wk）、`istanbul-lib-coverage`（#539, 106.2M/wk），全部通过 `cpc emit-types` 与 6/6 `cap test`；`sync_session_audit.py --check` 校验 0 遗漏。

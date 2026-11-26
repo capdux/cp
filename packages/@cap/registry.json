@@ -13002,6 +13002,91 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "object-inspect",
+      "source_repo": "https://github.com/inspect-js/object-inspect",
+      "license": "MIT",
+      "cp_target": "@cap/object-inspect",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "file-entry-cache",
+      "source_repo": "https://github.com/jaredwray/cacheable",
+      "license": "MIT",
+      "cp_target": "@cap/file-entry-cache",
+      "kind": "package",
+      "aliases": [
+        "flat-cache"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "optionator",
+      "source_repo": "https://github.com/gkz/optionator",
+      "license": "MIT",
+      "cp_target": "@cap/optionator",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "levn",
+      "source_repo": "https://github.com/gkz/levn",
+      "license": "MIT",
+      "cp_target": "@cap/levn",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "istanbul-lib-coverage",
+      "source_repo": "https://github.com/istanbuljs/istanbuljs",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/istanbul-lib-coverage",
+      "kind": "package",
+      "aliases": [
+        "istanbul-reports",
+        "istanbul-lib-report"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "event-target-shim",
+      "source_repo": "https://github.com/mysticatea/event-target-shim",
+      "license": "MIT",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsonfile",
+      "source_repo": "https://github.com/jprichardson/node-jsonfile",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "write-file-atomic",
+      "source_repo": "https://github.com/npm/write-file-atomic",
+      "license": "ISC",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

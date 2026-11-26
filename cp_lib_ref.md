@@ -1128,3 +1128,12 @@ const h = cap.hash.wyhash("hello");
 - `@cap/dompurify` (`npm:dompurify` #546, Apache-2.0) — 零堆单遍 HTML 安全净化器（剥离脚本标签、`on*` 事件属性与危险协议）。
 - `@cap/zod-to-json-schema` (`npm:zod-to-json-schema` #580, MIT) — 零堆 JSON Schema Draft-07 构建与序列化器（适配 AI Tool Calling）。
 - 零重复 crates.io 映射：`digest`→`cap:crypto`、`memmap2`→`cap:fs`、`atty`→`cap:tty`、`unsafe-libyaml`→`cap:yaml`、`num`→`cap:math`、`web-time`→`cap:time`、`libsqlite3-sys`→`cap:sqlite`。
+
+### Batch 156 — npm Real Top 700 (`#136..#539`, 5 packages + 3 stdlib mappings; 839 `@cap/*`!)
+
+- `@cap/object-inspect` (`npm:object-inspect` #136, MIT) — 零堆调试值格式化与转义/截断检查器（字符串/布尔/整数/`<Buffer>`/数组）。
+- `@cap/file-entry-cache` (`npm:file-entry-cache` #221, MIT) — 零堆增量构建/Lint 文件元数据缓存器（覆盖 `flat-cache` #214）。
+- `@cap/optionator` (`npm:optionator` #234, MIT) — CLI 选项声明与自动对齐 `--help` 文档生成器。
+- `@cap/levn` (`npm:levn` #240, MIT) — 轻量值标记（Light Value Notation）标量/列表/对象解析器。
+- `@cap/istanbul-lib-coverage` (`npm:istanbul-lib-coverage` #539, BSD-3-Clause) — 代码覆盖率统计、合并与 LCOV 编解码器（覆盖 `istanbul-reports`/`istanbul-lib-report`）。
+- 零重复映射：`event-target-shim`→`cap:event`、`jsonfile`→`cap:json`、`write-file-atomic`→`cap:fs`。
