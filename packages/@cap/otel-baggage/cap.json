@@ -1,0 +1,9 @@
+{
+  "name": "@cap/otel-baggage",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation W3C Baggage (OpenTelemetry) HTTP header parser, percent-codec, and serializer in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["opentelemetry", "otel", "baggage", "w3c", "tracing", "distributed-tracing", "zero-alloc"]
+}

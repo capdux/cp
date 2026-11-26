@@ -1,0 +1,10 @@
+{
+  "name": "@cap/ssh-key",
+  "version": "1.0.0",
+  "description": "Zero-heap OpenSSH public key (ssh-ed25519, ssh-rsa, ecdsa-sha2-*, sk-ssh-*) authorized_keys parser, validator, and formatter for CP (compatible with npm sshpk & Rust ssh-key)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ssh", "openssh", "ed25519", "rsa", "authorized_keys", "sshpk", "security"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ssh-key"
+}

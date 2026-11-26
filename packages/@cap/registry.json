@@ -1902,7 +1902,7 @@
       "source_name": "pem",
       "source_repo": "https://github.com/jcreekmore/pem-rs",
       "license": "MIT",
-      "cp_target": "@cap/pem",
+      "cp_target": "@cap/pem-parse",
       "kind": "package",
       "aliases": [
         "pem-jwk",
@@ -6295,6 +6295,113 @@
       "cp_target": "@cap/webhook-sig",
       "kind": "package",
       "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tonic",
+      "source_repo": "https://github.com/hyperium/tonic",
+      "license": "MIT",
+      "cp_target": "@cap/grpc-frame",
+      "kind": "package",
+      "aliases": [
+        "grpc-codec"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fast-socks5",
+      "source_repo": "https://github.com/dizda/fast-socks5",
+      "license": "MIT",
+      "cp_target": "@cap/socks5-frame",
+      "kind": "package",
+      "aliases": [
+        "socks"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "totp-rs",
+      "source_repo": "https://github.com/constantoine/totp-rs",
+      "license": "MIT",
+      "cp_target": "@cap/totp-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ssh-key",
+      "source_repo": "https://github.com/RustCrypto/SSH",
+      "license": "MIT",
+      "cp_target": "@cap/ssh-key",
+      "kind": "package",
+      "aliases": [
+        "openssh-keys"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@grpc/grpc-js",
+      "source_repo": "https://github.com/grpc/grpc-node",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/grpc-frame",
+      "kind": "package",
+      "aliases": [
+        "grpc"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "socks",
+      "source_repo": "https://github.com/JoshGlazebrook/socks",
+      "license": "MIT",
+      "cp_target": "@cap/socks5-frame",
+      "kind": "package",
+      "aliases": [
+        "socks-proxy-agent"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "otpauth",
+      "source_repo": "https://github.com/hectorm/otpauth",
+      "license": "MIT",
+      "cp_target": "@cap/totp-uri",
+      "kind": "package",
+      "aliases": [
+        "speakeasy",
+        "otplib"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sshpk",
+      "source_repo": "https://github.com/TritonDataCenter/node-sshpk",
+      "license": "MIT",
+      "cp_target": "@cap/ssh-key",
+      "kind": "package",
+      "aliases": [
+        "ssh2-streams"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@opentelemetry/core",
+      "source_repo": "https://github.com/open-telemetry/opentelemetry-js",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/otel-baggage",
+      "kind": "package",
+      "aliases": [
+        "opentelemetry-baggage"
+      ],
       "absorbed_at": "2026-11-26"
     }
   ]

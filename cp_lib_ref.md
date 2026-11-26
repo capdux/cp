@@ -516,3 +516,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/idempotency`** | `packages/@cap/idempotency` | 对标 IETF `Idempotency-Key` — 支付/分布式 API 幂等键校验、请求指纹哈希与四态状态机 |
 | **`@cap/digest-auth`** | `packages/@cap/digest-auth` | 对标 npm `http-digest-client` / Rust `digest_auth` — RFC 7616 HTTP Digest 认证质询与响应头零堆编解码 |
 | **`@cap/proxy-proto`** | `packages/@cap/proxy-proto` | 对标 npm `proxy-protocol-js` / Rust `ppp` — HAProxy PROXY Protocol v1/v2 零堆帧编解码 |
+| **`@cap/pem-parse`** | `packages/@cap/pem-parse` | 对标 Rust `pem` / npm `pem` — RFC 7468 PEM 证书/私钥链零堆解析、Base64-DER 解码与 64 列折行编码 |
+| **`@cap/grpc-frame`** | `packages/@cap/grpc-frame` | 对标 npm `@grpc/grpc-js` / Rust `tonic` — gRPC 5 字节长度前缀帧、17 项标准状态码与 `grpc-timeout` 解析 |
+| **`@cap/socks5-frame`** | `packages/@cap/socks5-frame` | 对标 npm `socks` / Rust `fast-socks5` — RFC 1928/1929 SOCKS5 握手、认证与 IPv4/Domain/IPv6 帧编解码 |
+| **`@cap/totp-uri`** | `packages/@cap/totp-uri` | 对标 npm `otpauth` / Rust `totp-rs` — Google Authenticator `otpauth://totp|hotp` URI 解析、Base32 校验与序列化 |
+| **`@cap/ssh-key`** | `packages/@cap/ssh-key` | 对标 npm `sshpk` / Rust `ssh-key` — OpenSSH `authorized_keys` 公钥（Ed25519/RSA/ECDSA/FIDO2）解析与格式化 |
+| **`@cap/otel-baggage`** | `packages/@cap/otel-baggage` | 对标 OpenTelemetry W3C Baggage — 分布式追踪 `baggage` 头部零堆解析、百分号解码与序列化 |

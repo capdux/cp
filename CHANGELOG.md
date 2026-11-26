@@ -505,3 +505,12 @@
 - `packages/@cap/digest-auth/` & `cap/test/testCapDigestAuth.cp`: RFC 7616 HTTP Digest 认证头零拷贝编解码（6/6 PASS）。
 - `packages/@cap/proxy-proto/` & `cap/test/testCapProxyProto.cp`: HAProxy PROXY Protocol v1/v2 零堆解析编码（6/6 PASS）。
 - `packages/@cap/registry.json`: 突破 **505 条**双生态高频映射（**npm=252 / crates.io=253** 1:1 绝对均衡）。
+
+## [2026-11-26] - Batch 60 达成 **60 批大满贯** — 交付 **6 大安全/代理/可观测新包**（`@cap/pem-parse`, `@cap/grpc-frame`, `@cap/socks5-frame`, `@cap/totp-uri`, `@cap/ssh-key`, `@cap/otel-baggage`），总映射达 **514 条（npm=257 / crates.io=257）**！
+- `packages/@cap/pem-parse/` & `cap/test/testCapPemParse.cp`: RFC 7468 PEM 证书链零堆解析与 64 列编码（6/6 PASS）。
+- `packages/@cap/grpc-frame/` & `cap/test/testCapGrpcFrame.cp`: gRPC 5 字节帧、17 状态码与 timeout 解析（6/6 PASS）。
+- `packages/@cap/socks5-frame/` & `cap/test/testCapSocks5Frame.cp`: RFC 1928/1929 SOCKS5 代理帧编解码（6/6 PASS）。
+- `packages/@cap/totp-uri/` & `cap/test/testCapTotpUri.cp`: `otpauth://totp|hotp` 2FA URI 解析与序列化（6/6 PASS）。
+- `packages/@cap/ssh-key/` & `cap/test/testCapSshKey.cp`: OpenSSH `authorized_keys` 公钥解析与格式化（6/6 PASS）。
+- `packages/@cap/otel-baggage/` & `cap/test/testCapOtelBaggage.cp`: W3C OpenTelemetry Baggage 头部编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **514 条**双生态映射（**npm=257 / crates.io=257** 绝对 1:1 平衡）。

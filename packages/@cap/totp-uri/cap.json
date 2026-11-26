@@ -1,0 +1,9 @@
+{
+  "name": "@cap/totp-uri",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Google Authenticator otpauth:// TOTP/HOTP Key URI parser, Base32 secret validator, and builder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["totp", "hotp", "otpauth", "2fa", "mfa", "base32", "authenticator", "zero-alloc"]
+}

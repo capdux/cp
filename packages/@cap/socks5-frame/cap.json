@@ -1,0 +1,9 @@
+{
+  "name": "@cap/socks5-frame",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 1928 SOCKS5 and RFC 1929 username/password authentication frame encoder and decoder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["socks5", "rfc1928", "rfc1929", "proxy", "network", "frame", "zero-alloc"]
+}

@@ -243,3 +243,6 @@
 
 ## 2026-11-26: Batch 59 正式突破 **500+ 双生态映射里程碑（505 条，npm=252 / crates.io=253）+ 325+ 官方 `.cap` 包**！
 - 单批交付 `@cap/ws-frame`（1.1 亿+/周，6/6）、`@cap/accept-lang`（2500 万+/周，6/6）、`@cap/webhook-sig`（6/6）、`@cap/idempotency`（6/6）、`@cap/digest-auth`（6/6）、`@cap/proxy-proto`（6/6），全线零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 60 达成 **60 批大满贯** — 328+ 官方 `.cap` 包 & **514 条双生态映射（npm=257 / crates.io=257 绝对 1:1）**！
+- 单批交付 `@cap/pem-parse`（Rust 1.5 亿+，6/6）、`@cap/grpc-frame`（6/6）、`@cap/socks5-frame`（1500 万+/周，6/6）、`@cap/totp-uri`（6/6）、`@cap/ssh-key`（6/6）、`@cap/otel-baggage`（6/6），全部零堆纯 CP 100% PASS！
