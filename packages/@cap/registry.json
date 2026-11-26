@@ -12,7 +12,10 @@
       "license": "MIT",
       "cp_target": "cap:time/human",
       "kind": "stdlib",
-      "aliases": ["humantime", "pretty-ms"],
+      "aliases": [
+        "humantime",
+        "pretty-ms"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -22,7 +25,11 @@
       "license": "MIT",
       "cp_target": "cap:bytes",
       "kind": "stdlib",
-      "aliases": ["bytesize", "humansize", "pretty-bytes"],
+      "aliases": [
+        "bytesize",
+        "humansize",
+        "pretty-bytes"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -32,7 +39,9 @@
       "license": "MIT",
       "cp_target": "cap:uuid",
       "kind": "stdlib",
-      "aliases": ["nanoid-rs"],
+      "aliases": [
+        "nanoid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -42,7 +51,11 @@
       "license": "MIT",
       "cp_target": "cap:mime",
       "kind": "stdlib",
-      "aliases": ["mime", "mime_guess", "mime-db"],
+      "aliases": [
+        "mime",
+        "mime_guess",
+        "mime-db"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -52,7 +65,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["cookie-rs"],
+      "aliases": [
+        "cookie-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -62,7 +77,9 @@
       "license": "MIT",
       "cp_target": "cap:etag",
       "kind": "stdlib",
-      "aliases": ["etag-rs"],
+      "aliases": [
+        "etag-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -72,7 +89,9 @@
       "license": "Apache-2.0",
       "cp_target": "cap:sri",
       "kind": "stdlib",
-      "aliases": ["ssri-npm"],
+      "aliases": [
+        "ssri-npm"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -82,7 +101,10 @@
       "license": "MIT",
       "cp_target": "cap:slugify",
       "kind": "stdlib",
-      "aliases": ["slugify", "deunicode"],
+      "aliases": [
+        "slugify",
+        "deunicode"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -92,7 +114,9 @@
       "license": "MIT",
       "cp_target": "cap:logfmt",
       "kind": "stdlib",
-      "aliases": ["go-logfmt"],
+      "aliases": [
+        "go-logfmt"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -102,7 +126,9 @@
       "license": "MIT",
       "cp_target": "cap:ulid",
       "kind": "stdlib",
-      "aliases": ["ulid-npm"],
+      "aliases": [
+        "ulid-npm"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -112,7 +138,10 @@
       "license": "Apache-2.0",
       "cp_target": "cap:jsonc",
       "kind": "stdlib",
-      "aliases": ["strip-json-comments", "jsonc-parser"],
+      "aliases": [
+        "strip-json-comments",
+        "jsonc-parser"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -122,7 +151,9 @@
       "license": "MIT",
       "cp_target": "cap:rate",
       "kind": "stdlib",
-      "aliases": ["rate-limiter-flexible"],
+      "aliases": [
+        "rate-limiter-flexible"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -132,7 +163,10 @@
       "license": "MIT",
       "cp_target": "cap:hash/crc32c",
       "kind": "stdlib",
-      "aliases": ["fast-crc32c", "sse4_crc32"],
+      "aliases": [
+        "fast-crc32c",
+        "sse4_crc32"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -142,7 +176,9 @@
       "license": "Apache-2.0",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["blake3-wasm"],
+      "aliases": [
+        "blake3-wasm"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -152,7 +188,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["base58", "bs58check"],
+      "aliases": [
+        "base58",
+        "bs58check"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -162,7 +201,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["hi-base32", "data-encoding"],
+      "aliases": [
+        "hi-base32",
+        "data-encoding"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -172,7 +214,13 @@
       "license": "Apache-2.0",
       "cp_target": "cap:cbor",
       "kind": "stdlib",
-      "aliases": ["cbor", "minicbor", "rmp", "msgpack", "@msgpack/msgpack"],
+      "aliases": [
+        "cbor",
+        "minicbor",
+        "rmp",
+        "msgpack",
+        "@msgpack/msgpack"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -182,7 +230,10 @@
       "license": "MIT",
       "cp_target": "@cap/lru",
       "kind": "package",
-      "aliases": ["lru", "quick-lru"],
+      "aliases": [
+        "lru",
+        "quick-lru"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -192,7 +243,10 @@
       "license": "MIT",
       "cp_target": "@cap/qs",
       "kind": "package",
-      "aliases": ["serde_qs", "query-string"],
+      "aliases": [
+        "serde_qs",
+        "query-string"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -202,7 +256,11 @@
       "license": "MIT",
       "cp_target": "@cap/retry",
       "kind": "package",
-      "aliases": ["async-retry", "backoff", "backon"],
+      "aliases": [
+        "async-retry",
+        "backoff",
+        "backon"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -212,7 +270,11 @@
       "license": "MIT",
       "cp_target": "@cap/diff",
       "kind": "package",
-      "aliases": ["similar", "diffy", "jsdiff"],
+      "aliases": [
+        "similar",
+        "diffy",
+        "jsdiff"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -222,7 +284,12 @@
       "license": "MIT",
       "cp_target": "@cap/template",
       "kind": "package",
-      "aliases": ["mustache", "minijinja", "tera", "handlebars-rust"],
+      "aliases": [
+        "mustache",
+        "minijinja",
+        "tera",
+        "handlebars-rust"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -232,7 +299,13 @@
       "license": "MIT",
       "cp_target": "@cap/validator",
       "kind": "package",
-      "aliases": ["validator", "ajv", "joi", "valibot", "validator-rs"],
+      "aliases": [
+        "validator",
+        "ajv",
+        "joi",
+        "valibot",
+        "validator-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -242,7 +315,12 @@
       "license": "MIT",
       "cp_target": "@cap/table",
       "kind": "package",
-      "aliases": ["table", "comfy-table", "tabled", "prettytable"],
+      "aliases": [
+        "table",
+        "comfy-table",
+        "tabled",
+        "prettytable"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -252,7 +330,12 @@
       "license": "MIT",
       "cp_target": "@cap/faker",
       "kind": "package",
-      "aliases": ["faker", "chance", "fake", "fake-rs"],
+      "aliases": [
+        "faker",
+        "chance",
+        "fake",
+        "fake-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -262,7 +345,10 @@
       "license": "MIT",
       "cp_target": "cap:image",
       "kind": "stdlib",
-      "aliases": ["qrcode-rs", "fast_qr"],
+      "aliases": [
+        "qrcode-rs",
+        "fast_qr"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -272,7 +358,11 @@
       "license": "MIT",
       "cp_target": "cap:net",
       "kind": "stdlib",
-      "aliases": ["ip-cidr", "ipnetwork", "cidr"],
+      "aliases": [
+        "ip-cidr",
+        "ipnetwork",
+        "cidr"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -282,7 +372,12 @@
       "license": "Apache-2.0",
       "cp_target": "cap:ds",
       "kind": "stdlib",
-      "aliases": ["fuzzysort", "strsim", "fuzzy-matcher", "nucleo"],
+      "aliases": [
+        "fuzzysort",
+        "strsim",
+        "fuzzy-matcher",
+        "nucleo"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -292,7 +387,13 @@
       "license": "MIT",
       "cp_target": "cap:text",
       "kind": "stdlib",
-      "aliases": ["camelcase", "heck", "convert_case", "punycode", "idna"],
+      "aliases": [
+        "camelcase",
+        "heck",
+        "convert_case",
+        "punycode",
+        "idna"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -302,7 +403,9 @@
       "license": "ISC",
       "cp_target": "cap:semver",
       "kind": "stdlib",
-      "aliases": ["semver-rs"],
+      "aliases": [
+        "semver-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -312,7 +415,10 @@
       "license": "BSD-2-Clause",
       "cp_target": "cap:dotenv",
       "kind": "stdlib",
-      "aliases": ["dotenvy", "dotenv-rs"],
+      "aliases": [
+        "dotenvy",
+        "dotenv-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -322,7 +428,11 @@
       "license": "MIT",
       "cp_target": "cap:cron",
       "kind": "stdlib",
-      "aliases": ["croner", "cron", "node-cron"],
+      "aliases": [
+        "croner",
+        "cron",
+        "node-cron"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -332,7 +442,12 @@
       "license": "MIT",
       "cp_target": "@cap/decimal",
       "kind": "package",
-      "aliases": ["bignumber.js", "big.js", "rust_decimal", "bigdecimal"],
+      "aliases": [
+        "bignumber.js",
+        "big.js",
+        "rust_decimal",
+        "bigdecimal"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -342,7 +457,12 @@
       "license": "MIT",
       "cp_target": "@cap/useragent",
       "kind": "package",
-      "aliases": ["bowser", "woothee", "uaparser", "isbot"],
+      "aliases": [
+        "bowser",
+        "woothee",
+        "uaparser",
+        "isbot"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -352,7 +472,11 @@
       "license": "MIT",
       "cp_target": "@cap/pluralize",
       "kind": "package",
-      "aliases": ["inflection", "pluralizer", "cruet"],
+      "aliases": [
+        "inflection",
+        "pluralizer",
+        "cruet"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -362,7 +486,11 @@
       "license": "MIT",
       "cp_target": "cap:json",
       "kind": "stdlib",
-      "aliases": ["rfc6902", "json-patch", "jsonpointer"],
+      "aliases": [
+        "rfc6902",
+        "json-patch",
+        "jsonpointer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -372,7 +500,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["robotstxt", "texting_robots"],
+      "aliases": [
+        "robotstxt",
+        "texting_robots"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -382,7 +513,12 @@
       "license": "MIT",
       "cp_target": "cap:doc",
       "kind": "stdlib",
-      "aliases": ["feed", "feed-rs", "rss", "atom_syndication"],
+      "aliases": [
+        "feed",
+        "feed-rs",
+        "rss",
+        "atom_syndication"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -392,7 +528,11 @@
       "license": "MIT",
       "cp_target": "@cap/redact",
       "kind": "package",
-      "aliases": ["maskdata", "secrecy", "redact-pii"],
+      "aliases": [
+        "maskdata",
+        "secrecy",
+        "redact-pii"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -402,7 +542,11 @@
       "license": "MIT",
       "cp_target": "@cap/phone",
       "kind": "package",
-      "aliases": ["phonenumber", "google-libphonenumber", "awesome-phonenumber"],
+      "aliases": [
+        "phonenumber",
+        "google-libphonenumber",
+        "awesome-phonenumber"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -412,7 +556,12 @@
       "license": "MIT",
       "cp_target": "@cap/expr",
       "kind": "package",
-      "aliases": ["filtrex", "jexl", "evalexpr", "meval"],
+      "aliases": [
+        "filtrex",
+        "jexl",
+        "evalexpr",
+        "meval"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -422,7 +571,12 @@
       "license": "MIT",
       "cp_target": "cap:auth",
       "kind": "stdlib",
-      "aliases": ["speakeasy", "otpauth", "totp-rs", "totp-lite"],
+      "aliases": [
+        "speakeasy",
+        "otpauth",
+        "totp-rs",
+        "totp-lite"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -432,7 +586,12 @@
       "license": "MIT",
       "cp_target": "cap:doc",
       "kind": "stdlib",
-      "aliases": ["ics", "node-ical", "icalendar", "vcard"],
+      "aliases": [
+        "ics",
+        "node-ical",
+        "icalendar",
+        "vcard"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -442,7 +601,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["rrule-rs", "iso8601-duration"],
+      "aliases": [
+        "rrule-rs",
+        "iso8601-duration"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -452,7 +614,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["sonyflake", "snowflake-rs"],
+      "aliases": [
+        "sonyflake",
+        "snowflake-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -462,7 +627,10 @@
       "license": "MIT",
       "cp_target": "cap:web",
       "kind": "stdlib",
-      "aliases": ["url-template", "uritemplate"],
+      "aliases": [
+        "url-template",
+        "uritemplate"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -472,7 +640,11 @@
       "license": "Apache-2.0",
       "cp_target": "cap:fsm",
       "kind": "stdlib",
-      "aliases": ["cockatiel", "failsafe", "circuit-breaker"],
+      "aliases": [
+        "cockatiel",
+        "failsafe",
+        "circuit-breaker"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -482,7 +654,10 @@
       "license": "MIT",
       "cp_target": "cap:math",
       "kind": "stdlib",
-      "aliases": ["currency.js", "rusty-money"],
+      "aliases": [
+        "currency.js",
+        "rusty-money"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -492,7 +667,11 @@
       "license": "MIT",
       "cp_target": "@cap/barcode",
       "kind": "package",
-      "aliases": ["bwip-js", "barcoders", "ean13"],
+      "aliases": [
+        "bwip-js",
+        "barcoders",
+        "ean13"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -502,7 +681,11 @@
       "license": "MIT",
       "cp_target": "@cap/sqids",
       "kind": "package",
-      "aliases": ["hashids", "sqids-rs", "harsh"],
+      "aliases": [
+        "hashids",
+        "sqids-rs",
+        "harsh"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -512,7 +695,10 @@
       "license": "MIT",
       "cp_target": "@cap/cron-desc",
       "kind": "package",
-      "aliases": ["cron-descriptor", "cron-to-text"],
+      "aliases": [
+        "cron-descriptor",
+        "cron-to-text"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -522,7 +708,10 @@
       "license": "MIT",
       "cp_target": "cap:git",
       "kind": "stdlib",
-      "aliases": ["gitignore-parser", "ignore-rs"],
+      "aliases": [
+        "gitignore-parser",
+        "ignore-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -532,7 +721,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["accepts", "accept-language"],
+      "aliases": [
+        "accepts",
+        "accept-language"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -542,7 +734,10 @@
       "license": "MIT",
       "cp_target": "cap:ds",
       "kind": "stdlib",
-      "aliases": ["modern-ahocorasick", "ahocorasick"],
+      "aliases": [
+        "modern-ahocorasick",
+        "ahocorasick"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -552,7 +747,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["svix-ksuid", "ksuid-rs"],
+      "aliases": [
+        "svix-ksuid",
+        "ksuid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -562,7 +760,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["cuid", "cuid2-rs"],
+      "aliases": [
+        "cuid",
+        "cuid2-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -572,7 +773,11 @@
       "license": "MIT",
       "cp_target": "cap:ds",
       "kind": "stdlib",
-      "aliases": ["roaring-bitmap", "bitvec", "fastbitset"],
+      "aliases": [
+        "roaring-bitmap",
+        "bitvec",
+        "fastbitset"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -582,7 +787,10 @@
       "license": "MIT",
       "cp_target": "@cap/shlex",
       "kind": "package",
-      "aliases": ["shlex", "shlex-rs"],
+      "aliases": [
+        "shlex",
+        "shlex-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -592,7 +800,11 @@
       "license": "MIT",
       "cp_target": "@cap/textwrap",
       "kind": "package",
-      "aliases": ["word-wrap", "strip-indent", "textwrap"],
+      "aliases": [
+        "word-wrap",
+        "strip-indent",
+        "textwrap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -602,7 +814,11 @@
       "license": "MIT",
       "cp_target": "@cap/natsort",
       "kind": "package",
-      "aliases": ["natsort", "natord", "alphanumeric-sort"],
+      "aliases": [
+        "natsort",
+        "natord",
+        "alphanumeric-sort"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -612,7 +828,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["ibantools", "iban_validate"],
+      "aliases": [
+        "ibantools",
+        "iban_validate"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -622,7 +841,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["isbn2", "isbn-utils"],
+      "aliases": [
+        "isbn2",
+        "isbn-utils"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -632,7 +854,10 @@
       "license": "MIT",
       "cp_target": "@cap/sqlformat",
       "kind": "package",
-      "aliases": ["sqlformat", "sql-format"],
+      "aliases": [
+        "sqlformat",
+        "sql-format"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -642,7 +867,11 @@
       "license": "MIT",
       "cp_target": "@cap/petname",
       "kind": "package",
-      "aliases": ["human-id", "petname", "names"],
+      "aliases": [
+        "human-id",
+        "petname",
+        "names"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -652,7 +881,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/jsonflat",
       "kind": "package",
-      "aliases": ["dot-prop", "flatten-json"],
+      "aliases": [
+        "dot-prop",
+        "flatten-json"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -662,7 +894,11 @@
       "license": "MIT",
       "cp_target": "@cap/http-status",
       "kind": "package",
-      "aliases": ["http-status-codes", "http-status", "http-status-rs"],
+      "aliases": [
+        "http-status-codes",
+        "http-status",
+        "http-status-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -672,7 +908,11 @@
       "license": "ISC",
       "cp_target": "@cap/wcag",
       "kind": "package",
-      "aliases": ["color-contrast-checker", "contrast", "get-contrast"],
+      "aliases": [
+        "color-contrast-checker",
+        "contrast",
+        "get-contrast"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -682,7 +922,11 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/didyoumean",
       "kind": "package",
-      "aliases": ["fastest-levenshtein", "leven", "didyoumean2"],
+      "aliases": [
+        "fastest-levenshtein",
+        "leven",
+        "didyoumean2"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -692,7 +936,11 @@
       "license": "MIT",
       "cp_target": "@cap/human-number",
       "kind": "package",
-      "aliases": ["millify", "number-to-words", "num-format"],
+      "aliases": [
+        "millify",
+        "number-to-words",
+        "num-format"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -702,7 +950,10 @@
       "license": "BSD-2-Clause",
       "cp_target": "@cap/envsubst",
       "kind": "package",
-      "aliases": ["envsub", "shellexpand"],
+      "aliases": [
+        "envsub",
+        "shellexpand"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -712,7 +963,10 @@
       "license": "MIT",
       "cp_target": "@cap/link-header",
       "kind": "package",
-      "aliases": ["http-link-header", "parse_link_header"],
+      "aliases": [
+        "http-link-header",
+        "parse_link_header"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -722,7 +976,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["http-cache-semantics"],
+      "aliases": [
+        "http-cache-semantics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -732,7 +988,9 @@
       "license": "MIT",
       "cp_target": "cap:mime",
       "kind": "stdlib",
-      "aliases": ["content-disposition-rs"],
+      "aliases": [
+        "content-disposition-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -742,7 +1000,10 @@
       "license": "MIT",
       "cp_target": "@cap/forwarded",
       "kind": "package",
-      "aliases": ["proxy-addr", "forwarded-for"],
+      "aliases": [
+        "proxy-addr",
+        "forwarded-for"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -752,7 +1013,10 @@
       "license": "MIT",
       "cp_target": "@cap/path-to-regexp",
       "kind": "package",
-      "aliases": ["radix3", "url-pattern"],
+      "aliases": [
+        "radix3",
+        "url-pattern"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -762,7 +1026,11 @@
       "license": "MIT",
       "cp_target": "@cap/color-names",
       "kind": "package",
-      "aliases": ["color-convert", "color-string", "css-color-names"],
+      "aliases": [
+        "color-convert",
+        "color-string",
+        "css-color-names"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -772,7 +1040,11 @@
       "license": "ISC",
       "cp_target": "@cap/json-repair",
       "kind": "package",
-      "aliases": ["dirty-json", "llm_json", "json-repair"],
+      "aliases": [
+        "dirty-json",
+        "llm_json",
+        "json-repair"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -782,7 +1054,11 @@
       "license": "MIT",
       "cp_target": "@cap/html-entities",
       "kind": "package",
-      "aliases": ["escape-html", "html-entities", "html-escape"],
+      "aliases": [
+        "escape-html",
+        "html-entities",
+        "html-escape"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -792,7 +1068,11 @@
       "license": "MIT",
       "cp_target": "@cap/data-uri",
       "kind": "package",
-      "aliases": ["datauri", "data-url", "parse-data-url"],
+      "aliases": [
+        "datauri",
+        "data-url",
+        "parse-data-url"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -802,7 +1082,9 @@
       "license": "MIT",
       "cp_target": "cap:byterange",
       "kind": "stdlib",
-      "aliases": ["http-range-header"],
+      "aliases": [
+        "http-range-header"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -812,7 +1094,10 @@
       "license": "MIT",
       "cp_target": "@cap/content-type",
       "kind": "package",
-      "aliases": ["media-typer", "mime-parse"],
+      "aliases": [
+        "media-typer",
+        "mime-parse"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -822,7 +1107,10 @@
       "license": "ISC",
       "cp_target": "@cap/markdown-toc",
       "kind": "package",
-      "aliases": ["markdown-toc", "md-toc"],
+      "aliases": [
+        "markdown-toc",
+        "md-toc"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -832,7 +1120,10 @@
       "license": "MIT",
       "cp_target": "@cap/short-uuid",
       "kind": "package",
-      "aliases": ["uuid-translator", "short-uuid-rs"],
+      "aliases": [
+        "uuid-translator",
+        "short-uuid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -842,7 +1133,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["http-date", "retry-after"],
+      "aliases": [
+        "http-date",
+        "retry-after"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -852,7 +1146,10 @@
       "license": "MIT",
       "cp_target": "cap:string",
       "kind": "stdlib",
-      "aliases": ["lodash.escaperegexp", "escape-regexp"],
+      "aliases": [
+        "lodash.escaperegexp",
+        "escape-regexp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -862,7 +1159,11 @@
       "license": "MIT",
       "cp_target": "@cap/ascii-tree",
       "kind": "package",
-      "aliases": ["treeify", "ptree", "asciitree"],
+      "aliases": [
+        "treeify",
+        "ptree",
+        "asciitree"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -872,7 +1173,10 @@
       "license": "MIT",
       "cp_target": "@cap/url-join",
       "kind": "package",
-      "aliases": ["urljoin", "join-url"],
+      "aliases": [
+        "urljoin",
+        "join-url"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -882,7 +1186,10 @@
       "license": "MIT",
       "cp_target": "@cap/text-stats",
       "kind": "package",
-      "aliases": ["word-count", "text-statistics"],
+      "aliases": [
+        "word-count",
+        "text-statistics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -892,7 +1199,10 @@
       "license": "MIT",
       "cp_target": "cap:text",
       "kind": "stdlib",
-      "aliases": ["text-splitter", "recursive-character-text-splitter"],
+      "aliases": [
+        "text-splitter",
+        "recursive-character-text-splitter"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -902,7 +1212,10 @@
       "license": "MIT",
       "cp_target": "cap:security",
       "kind": "stdlib",
-      "aliases": ["content-security-policy-builder", "csp-header"],
+      "aliases": [
+        "content-security-policy-builder",
+        "csp-header"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -912,7 +1225,10 @@
       "license": "MIT",
       "cp_target": "cap:text",
       "kind": "stdlib",
-      "aliases": ["soundex", "rphonetic"],
+      "aliases": [
+        "soundex",
+        "rphonetic"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -922,7 +1238,10 @@
       "license": "MIT",
       "cp_target": "cap:net",
       "kind": "stdlib",
-      "aliases": ["macaddr", "eui64"],
+      "aliases": [
+        "macaddr",
+        "eui64"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -932,7 +1251,11 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["parse-duration", "pretty-ms", "humantime"],
+      "aliases": [
+        "parse-duration",
+        "pretty-ms",
+        "humantime"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -942,7 +1265,10 @@
       "license": "MIT",
       "cp_target": "cap:ansi",
       "kind": "stdlib",
-      "aliases": ["ansi-regex", "strip-ansi-escapes"],
+      "aliases": [
+        "ansi-regex",
+        "strip-ansi-escapes"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -952,7 +1278,9 @@
       "license": "MIT",
       "cp_target": "cap:json5",
       "kind": "stdlib",
-      "aliases": ["json5-rs"],
+      "aliases": [
+        "json5-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -962,7 +1290,10 @@
       "license": "MIT",
       "cp_target": "cap:bytes",
       "kind": "stdlib",
-      "aliases": ["pretty-bytes", "bytesize"],
+      "aliases": [
+        "pretty-bytes",
+        "bytesize"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -972,7 +1303,10 @@
       "license": "MIT",
       "cp_target": "cap:etag",
       "kind": "stdlib",
-      "aliases": ["fresh", "http-etag"],
+      "aliases": [
+        "fresh",
+        "http-etag"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -982,7 +1316,9 @@
       "license": "MIT",
       "cp_target": "cap:frontmatter",
       "kind": "stdlib",
-      "aliases": ["front-matter"],
+      "aliases": [
+        "front-matter"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -992,7 +1328,9 @@
       "license": "MIT",
       "cp_target": "cap:slugify",
       "kind": "stdlib",
-      "aliases": ["slug"],
+      "aliases": [
+        "slug"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1002,7 +1340,11 @@
       "license": "MIT",
       "cp_target": "@cap/timeago",
       "kind": "package",
-      "aliases": ["chrono-humanize", "timeago", "javascript-time-ago"],
+      "aliases": [
+        "chrono-humanize",
+        "timeago",
+        "javascript-time-ago"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1012,7 +1354,10 @@
       "license": "MIT",
       "cp_target": "@cap/markdown-strip",
       "kind": "package",
-      "aliases": ["strip-markdown", "markdown-to-txt"],
+      "aliases": [
+        "strip-markdown",
+        "markdown-to-txt"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1022,7 +1367,10 @@
       "license": "MIT",
       "cp_target": "@cap/sparkline",
       "kind": "package",
-      "aliases": ["asciichart", "sparklines"],
+      "aliases": [
+        "asciichart",
+        "sparklines"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1032,7 +1380,10 @@
       "license": "MIT",
       "cp_target": "cap:interchange",
       "kind": "stdlib",
-      "aliases": ["@iarna/toml", "smol-toml"],
+      "aliases": [
+        "@iarna/toml",
+        "smol-toml"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1042,7 +1393,10 @@
       "license": "ISC",
       "cp_target": "cap:interchange",
       "kind": "stdlib",
-      "aliases": ["rust-ini", "ini-parser"],
+      "aliases": [
+        "rust-ini",
+        "ini-parser"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1052,7 +1406,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["set-cookie-parser", "cookie-rs"],
+      "aliases": [
+        "set-cookie-parser",
+        "cookie-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1062,7 +1419,10 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["idna", "uts46"],
+      "aliases": [
+        "idna",
+        "uts46"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1072,7 +1432,9 @@
       "license": "Apache-2.0",
       "cp_target": "cap:sys",
       "kind": "stdlib",
-      "aliases": ["signal-exit"],
+      "aliases": [
+        "signal-exit"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1082,7 +1444,9 @@
       "license": "MIT",
       "cp_target": "cap:editorconfig",
       "kind": "stdlib",
-      "aliases": ["ec4rs"],
+      "aliases": [
+        "ec4rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1092,7 +1456,11 @@
       "license": "MIT",
       "cp_target": "@cap/spdx",
       "kind": "package",
-      "aliases": ["spdx-satisfies", "spdx-correct", "spdx"],
+      "aliases": [
+        "spdx-satisfies",
+        "spdx-correct",
+        "spdx"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1102,7 +1470,10 @@
       "license": "MIT",
       "cp_target": "@cap/boxen",
       "kind": "package",
-      "aliases": ["cli-boxes", "box-drawing"],
+      "aliases": [
+        "cli-boxes",
+        "box-drawing"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1112,7 +1483,10 @@
       "license": "MIT",
       "cp_target": "@cap/conventional-commits",
       "kind": "package",
-      "aliases": ["git-conventional", "commitlint"],
+      "aliases": [
+        "git-conventional",
+        "commitlint"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1122,7 +1496,10 @@
       "license": "CC0-1.0",
       "cp_target": "@cap/svg-badge",
       "kind": "package",
-      "aliases": ["gh-badges", "shields-badge"],
+      "aliases": [
+        "gh-badges",
+        "shields-badge"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1132,7 +1509,12 @@
       "license": "MIT",
       "cp_target": "cap:color",
       "kind": "stdlib",
-      "aliases": ["picocolors", "kleur", "colorette", "ansi-colors"],
+      "aliases": [
+        "picocolors",
+        "kleur",
+        "colorette",
+        "ansi-colors"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1142,7 +1524,10 @@
       "license": "MIT",
       "cp_target": "cap:sourcemap",
       "kind": "stdlib",
-      "aliases": ["vlq", "source-map-js"],
+      "aliases": [
+        "vlq",
+        "source-map-js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1152,7 +1537,9 @@
       "license": "MIT",
       "cp_target": "cap:uuid",
       "kind": "stdlib",
-      "aliases": ["nanoid-rs"],
+      "aliases": [
+        "nanoid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1162,7 +1549,9 @@
       "license": "MIT",
       "cp_target": "@cap/shlex",
       "kind": "package",
-      "aliases": ["shescape"],
+      "aliases": [
+        "shescape"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1172,7 +1561,10 @@
       "license": "MIT",
       "cp_target": "cap:ulid",
       "kind": "stdlib",
-      "aliases": ["ulidx", "ulid-rs"],
+      "aliases": [
+        "ulidx",
+        "ulid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1182,7 +1574,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["www-authenticate"],
+      "aliases": [
+        "www-authenticate"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1192,7 +1586,10 @@
       "license": "ISC",
       "cp_target": "@cap/git-url",
       "kind": "package",
-      "aliases": ["git-url-parse", "parse-github-url"],
+      "aliases": [
+        "git-url-parse",
+        "parse-github-url"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1202,7 +1599,10 @@
       "license": "MIT",
       "cp_target": "@cap/stacktrace",
       "kind": "package",
-      "aliases": ["stacktrace-parser", "clean-stack"],
+      "aliases": [
+        "stacktrace-parser",
+        "clean-stack"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1212,7 +1612,10 @@
       "license": "MIT",
       "cp_target": "@cap/card-bin",
       "kind": "package",
-      "aliases": ["card-validator", "luhn-card"],
+      "aliases": [
+        "card-validator",
+        "luhn-card"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1222,7 +1625,10 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/oci-ref",
       "kind": "package",
-      "aliases": ["docker-reference", "parse-docker-image"],
+      "aliases": [
+        "docker-reference",
+        "parse-docker-image"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1232,7 +1638,11 @@
       "license": "MIT",
       "cp_target": "cap:mime",
       "kind": "stdlib",
-      "aliases": ["mime-db", "mime", "mime_guess"],
+      "aliases": [
+        "mime-db",
+        "mime",
+        "mime_guess"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1242,7 +1652,9 @@
       "license": "MIT",
       "cp_target": "cap:cli",
       "kind": "stdlib",
-      "aliases": ["is-ci"],
+      "aliases": [
+        "is-ci"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1252,7 +1664,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "cap:compiler",
       "kind": "stdlib",
-      "aliases": ["prost", "protobuf"],
+      "aliases": [
+        "prost",
+        "protobuf"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1262,7 +1677,11 @@
       "license": "MIT",
       "cp_target": "@cap/jcs",
       "kind": "package",
-      "aliases": ["canonicalize", "json-stable-stringify", "serde_jcs"],
+      "aliases": [
+        "canonicalize",
+        "json-stable-stringify",
+        "serde_jcs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1272,7 +1691,10 @@
       "license": "ISC",
       "cp_target": "cap:binfmt",
       "kind": "stdlib",
-      "aliases": ["msgpack-lite", "rmp-serde"],
+      "aliases": [
+        "msgpack-lite",
+        "rmp-serde"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1282,7 +1704,11 @@
       "license": "MIT",
       "cp_target": "@cap/cli-spinners",
       "kind": "package",
-      "aliases": ["ora", "log-symbols", "indicatif"],
+      "aliases": [
+        "ora",
+        "log-symbols",
+        "indicatif"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1292,7 +1718,9 @@
       "license": "MIT",
       "cp_target": "cap:codec",
       "kind": "stdlib",
-      "aliases": ["base64-url"],
+      "aliases": [
+        "base64-url"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1302,7 +1730,10 @@
       "license": "MIT",
       "cp_target": "cap:cbor",
       "kind": "stdlib",
-      "aliases": ["cbor", "ciborium"],
+      "aliases": [
+        "cbor",
+        "ciborium"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1312,7 +1743,9 @@
       "license": "MIT",
       "cp_target": "@cap/strftime",
       "kind": "package",
-      "aliases": ["dateformat"],
+      "aliases": [
+        "dateformat"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1322,7 +1755,9 @@
       "license": "MIT",
       "cp_target": "@cap/calver",
       "kind": "package",
-      "aliases": ["calendar-version"],
+      "aliases": [
+        "calendar-version"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1332,7 +1767,10 @@
       "license": "MIT",
       "cp_target": "@cap/svg-path",
       "kind": "package",
-      "aliases": ["svg-path-parser", "svgtypes"],
+      "aliases": [
+        "svg-path-parser",
+        "svgtypes"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1342,7 +1780,10 @@
       "license": "MIT",
       "cp_target": "@cap/mail-addr",
       "kind": "package",
-      "aliases": ["email-addresses", "rfc5322-address"],
+      "aliases": [
+        "email-addresses",
+        "rfc5322-address"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1352,7 +1793,10 @@
       "license": "BSD-2-Clause",
       "cp_target": "cap:json",
       "kind": "stdlib",
-      "aliases": ["jsonlines", "serde_jsonlines"],
+      "aliases": [
+        "jsonlines",
+        "serde_jsonlines"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1362,7 +1806,9 @@
       "license": "MIT",
       "cp_target": "cap:net",
       "kind": "stdlib",
-      "aliases": ["netrc"],
+      "aliases": [
+        "netrc"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1372,7 +1818,9 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["tinyduration"],
+      "aliases": [
+        "tinyduration"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1382,7 +1830,9 @@
       "license": "MIT",
       "cp_target": "cap:git",
       "kind": "stdlib",
-      "aliases": ["github-codeowners"],
+      "aliases": [
+        "github-codeowners"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1392,7 +1842,9 @@
       "license": "MIT",
       "cp_target": "cap:docker",
       "kind": "stdlib",
-      "aliases": ["docker-file-parser"],
+      "aliases": [
+        "docker-file-parser"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1402,7 +1854,9 @@
       "license": "MIT",
       "cp_target": "cap:logfmt",
       "kind": "stdlib",
-      "aliases": ["logfmt-rs"],
+      "aliases": [
+        "logfmt-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1412,7 +1866,10 @@
       "license": "MIT",
       "cp_target": "@cap/keep-changelog",
       "kind": "package",
-      "aliases": ["changelog-parser", "parse-changelog"],
+      "aliases": [
+        "changelog-parser",
+        "parse-changelog"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1422,7 +1879,10 @@
       "license": "MIT",
       "cp_target": "@cap/subtitle",
       "kind": "package",
-      "aliases": ["srt-parser-2", "webvtt-parser"],
+      "aliases": [
+        "srt-parser-2",
+        "webvtt-parser"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1432,7 +1892,9 @@
       "license": "ISC",
       "cp_target": "@cap/ssri",
       "kind": "package",
-      "aliases": ["subresource-integrity"],
+      "aliases": [
+        "subresource-integrity"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1442,7 +1904,10 @@
       "license": "MIT",
       "cp_target": "@cap/pem",
       "kind": "package",
-      "aliases": ["pem-jwk", "rfc7468"],
+      "aliases": [
+        "pem-jwk",
+        "rfc7468"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1452,7 +1917,10 @@
       "license": "MIT",
       "cp_target": "@cap/bcp47",
       "kind": "package",
-      "aliases": ["bcp-47-match", "unic-langid"],
+      "aliases": [
+        "bcp-47-match",
+        "unic-langid"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1462,7 +1930,10 @@
       "license": "MIT",
       "cp_target": "@cap/hosts-file",
       "kind": "package",
-      "aliases": ["hostsfile", "etc-hosts"],
+      "aliases": [
+        "hostsfile",
+        "etc-hosts"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1472,7 +1943,9 @@
       "license": "ISC",
       "cp_target": "cap:glob",
       "kind": "stdlib",
-      "aliases": ["micromatch"],
+      "aliases": [
+        "micromatch"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1482,7 +1955,9 @@
       "license": "MIT",
       "cp_target": "@cap/debug",
       "kind": "package",
-      "aliases": ["debug-js"],
+      "aliases": [
+        "debug-js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1492,7 +1967,9 @@
       "license": "MIT",
       "cp_target": "cap:color",
       "kind": "stdlib",
-      "aliases": ["supports-color"],
+      "aliases": [
+        "supports-color"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1502,7 +1979,10 @@
       "license": "ISC",
       "cp_target": "@cap/lru",
       "kind": "package",
-      "aliases": ["quick-lru", "lru"],
+      "aliases": [
+        "quick-lru",
+        "lru"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1512,7 +1992,13 @@
       "license": "MIT",
       "cp_target": "cap:clap",
       "kind": "stdlib",
-      "aliases": ["yargs", "yargs-parser", "minimist", "cac", "clap"],
+      "aliases": [
+        "yargs",
+        "yargs-parser",
+        "minimist",
+        "cac",
+        "clap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1522,7 +2008,9 @@
       "license": "MIT",
       "cp_target": "cap:text",
       "kind": "stdlib",
-      "aliases": ["unicode-width"],
+      "aliases": [
+        "unicode-width"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1532,7 +2020,9 @@
       "license": "MIT",
       "cp_target": "cap:glob",
       "kind": "stdlib",
-      "aliases": ["globset"],
+      "aliases": [
+        "globset"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1542,7 +2032,9 @@
       "license": "MIT",
       "cp_target": "@cap/wrap-ansi",
       "kind": "package",
-      "aliases": ["slice-ansi"],
+      "aliases": [
+        "slice-ansi"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1552,7 +2044,10 @@
       "license": "ISC",
       "cp_target": "cap:glob",
       "kind": "stdlib",
-      "aliases": ["fast-glob", "globby"],
+      "aliases": [
+        "fast-glob",
+        "globby"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1562,7 +2057,10 @@
       "license": "MIT",
       "cp_target": "@cap/json-schema",
       "kind": "package",
-      "aliases": ["jsonschema", "zod"],
+      "aliases": [
+        "jsonschema",
+        "zod"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1572,7 +2070,9 @@
       "license": "BSD-3-Clause",
       "cp_target": "cap:sourcemap",
       "kind": "stdlib",
-      "aliases": ["source-map-support"],
+      "aliases": [
+        "source-map-support"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1582,7 +2082,9 @@
       "license": "ISC",
       "cp_target": "cap:which",
       "kind": "stdlib",
-      "aliases": ["which-rs"],
+      "aliases": [
+        "which-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1592,7 +2094,10 @@
       "license": "MIT",
       "cp_target": "cap:parallel",
       "kind": "stdlib",
-      "aliases": ["p-queue", "bottleneck"],
+      "aliases": [
+        "p-queue",
+        "bottleneck"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1602,7 +2107,10 @@
       "license": "MIT",
       "cp_target": "cap:css",
       "kind": "stdlib",
-      "aliases": ["css-tree", "lightningcss"],
+      "aliases": [
+        "css-tree",
+        "lightningcss"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1612,7 +2120,10 @@
       "license": "MIT",
       "cp_target": "@cap/css-units",
       "kind": "package",
-      "aliases": ["parse-css-dimension", "css-unit-converter"],
+      "aliases": [
+        "parse-css-dimension",
+        "css-unit-converter"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1622,7 +2133,10 @@
       "license": "MIT",
       "cp_target": "cap:path",
       "kind": "stdlib",
-      "aliases": ["pkg-dir", "locate-path"],
+      "aliases": [
+        "pkg-dir",
+        "locate-path"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1632,7 +2146,10 @@
       "license": "MIT",
       "cp_target": "cap:ws",
       "kind": "stdlib",
-      "aliases": ["tungstenite", "tokio-tungstenite"],
+      "aliases": [
+        "tungstenite",
+        "tokio-tungstenite"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1642,7 +2159,10 @@
       "license": "MIT",
       "cp_target": "@cap/yaml",
       "kind": "package",
-      "aliases": ["yaml", "serde_yaml"],
+      "aliases": [
+        "yaml",
+        "serde_yaml"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1652,7 +2172,9 @@
       "license": "MIT",
       "cp_target": "cap:uuid",
       "kind": "stdlib",
-      "aliases": ["uuid-rs"],
+      "aliases": [
+        "uuid-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1662,7 +2184,9 @@
       "license": "MIT",
       "cp_target": "cap:shell",
       "kind": "stdlib",
-      "aliases": ["execa"],
+      "aliases": [
+        "execa"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1672,7 +2196,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["got", "superagent"],
+      "aliases": [
+        "got",
+        "superagent"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1682,7 +2209,9 @@
       "license": "MIT",
       "cp_target": "cap:js",
       "kind": "stdlib",
-      "aliases": ["esprima"],
+      "aliases": [
+        "esprima"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1692,7 +2221,9 @@
       "license": "MIT",
       "cp_target": "cap:resolver",
       "kind": "stdlib",
-      "aliases": ["enhanced-resolve"],
+      "aliases": [
+        "enhanced-resolve"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1702,7 +2233,10 @@
       "license": "MIT",
       "cp_target": "cap:fs",
       "kind": "stdlib",
-      "aliases": ["mkdirp", "rimraf"],
+      "aliases": [
+        "mkdirp",
+        "rimraf"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1712,7 +2246,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["axios"],
+      "aliases": [
+        "axios"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1722,7 +2258,9 @@
       "license": "MIT",
       "cp_target": "cap:watcher",
       "kind": "stdlib",
-      "aliases": ["notify"],
+      "aliases": [
+        "notify"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1732,7 +2270,10 @@
       "license": "MIT",
       "cp_target": "@cap/http-errors",
       "kind": "package",
-      "aliases": ["problem-details", "rfc9457"],
+      "aliases": [
+        "problem-details",
+        "rfc9457"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1742,7 +2283,10 @@
       "license": "MIT",
       "cp_target": "cap:html",
       "kind": "stdlib",
-      "aliases": ["htmlparser2", "cheerio"],
+      "aliases": [
+        "htmlparser2",
+        "cheerio"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1752,7 +2296,9 @@
       "license": "MIT",
       "cp_target": "cap:url",
       "kind": "stdlib",
-      "aliases": ["parseurl"],
+      "aliases": [
+        "parseurl"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1762,7 +2308,9 @@
       "license": "MIT",
       "cp_target": "cap:ds",
       "kind": "stdlib",
-      "aliases": ["swisstable"],
+      "aliases": [
+        "swisstable"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1772,7 +2320,9 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["os-random"],
+      "aliases": [
+        "os-random"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1782,7 +2332,9 @@
       "license": "MIT",
       "cp_target": "cap:ds",
       "kind": "stdlib",
-      "aliases": ["enumflags2"],
+      "aliases": [
+        "enumflags2"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1792,7 +2344,10 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["rand_core", "rand_chacha"],
+      "aliases": [
+        "rand_core",
+        "rand_chacha"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1802,7 +2357,9 @@
       "license": "MIT",
       "cp_target": "cap:base64",
       "kind": "stdlib",
-      "aliases": ["js-base64"],
+      "aliases": [
+        "js-base64"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1812,7 +2369,9 @@
       "license": "MIT",
       "cp_target": "cap:collections",
       "kind": "stdlib",
-      "aliases": ["linked-hash-map"],
+      "aliases": [
+        "linked-hash-map"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1822,7 +2381,9 @@
       "license": "MIT",
       "cp_target": "cap:collections",
       "kind": "stdlib",
-      "aliases": ["lodash"],
+      "aliases": [
+        "lodash"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1832,7 +2393,9 @@
       "license": "MIT",
       "cp_target": "cap:simd",
       "kind": "stdlib",
-      "aliases": ["memmem"],
+      "aliases": [
+        "memmem"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1842,7 +2405,9 @@
       "license": "MIT",
       "cp_target": "cap:unicode",
       "kind": "stdlib",
-      "aliases": ["unicode-xid"],
+      "aliases": [
+        "unicode-xid"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1852,7 +2417,9 @@
       "license": "MIT",
       "cp_target": "cap:serde",
       "kind": "stdlib",
-      "aliases": ["serde_json"],
+      "aliases": [
+        "serde_json"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1862,7 +2429,9 @@
       "license": "MIT",
       "cp_target": "cap:string",
       "kind": "stdlib",
-      "aliases": ["ryu"],
+      "aliases": [
+        "ryu"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1872,7 +2441,9 @@
       "license": "MIT",
       "cp_target": "cap:string",
       "kind": "stdlib",
-      "aliases": ["convert_case"],
+      "aliases": [
+        "convert_case"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1882,7 +2453,10 @@
       "license": "MIT",
       "cp_target": "cap:logger",
       "kind": "stdlib",
-      "aliases": ["tracing", "tracing-core"],
+      "aliases": [
+        "tracing",
+        "tracing-core"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1892,7 +2466,10 @@
       "license": "MIT",
       "cp_target": "@cap/pcre2",
       "kind": "package",
-      "aliases": ["regex-automata", "regex-syntax"],
+      "aliases": [
+        "regex-automata",
+        "regex-syntax"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1902,7 +2479,10 @@
       "license": "MIT",
       "cp_target": "cap:clap",
       "kind": "stdlib",
-      "aliases": ["clap_builder", "clap_lex"],
+      "aliases": [
+        "clap_builder",
+        "clap_lex"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1912,7 +2492,9 @@
       "license": "MIT",
       "cp_target": "cap:bytes",
       "kind": "stdlib",
-      "aliases": ["bytes-rs"],
+      "aliases": [
+        "bytes-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1922,7 +2504,10 @@
       "license": "MIT",
       "cp_target": "@cap/strsim",
       "kind": "package",
-      "aliases": ["jaro-winkler", "string-similarity"],
+      "aliases": [
+        "jaro-winkler",
+        "string-similarity"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1932,7 +2517,11 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["hyper", "reqwest", "httparse"],
+      "aliases": [
+        "hyper",
+        "reqwest",
+        "httparse"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1942,7 +2531,11 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["digest", "ring", "rustls"],
+      "aliases": [
+        "digest",
+        "ring",
+        "rustls"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1952,7 +2545,10 @@
       "license": "MIT",
       "cp_target": "@cap/slab",
       "kind": "package",
-      "aliases": ["generational-arena", "slotmap"],
+      "aliases": [
+        "generational-arena",
+        "slotmap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1962,7 +2558,9 @@
       "license": "MIT",
       "cp_target": "@cap/fastrand",
       "kind": "package",
-      "aliases": ["wyrand"],
+      "aliases": [
+        "wyrand"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1972,7 +2570,11 @@
       "license": "MIT",
       "cp_target": "@cap/miniz",
       "kind": "package",
-      "aliases": ["flate2", "pako", "fflate"],
+      "aliases": [
+        "flate2",
+        "pako",
+        "fflate"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1982,7 +2584,9 @@
       "license": "MIT",
       "cp_target": "@cap/percent-encoding",
       "kind": "package",
-      "aliases": ["form_urlencoded"],
+      "aliases": [
+        "form_urlencoded"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -1992,7 +2596,10 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["time-core", "toml_datetime"],
+      "aliases": [
+        "time-core",
+        "toml_datetime"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2002,7 +2609,9 @@
       "license": "MIT",
       "cp_target": "cap:url",
       "kind": "stdlib",
-      "aliases": ["whatwg-url"],
+      "aliases": [
+        "whatwg-url"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2012,7 +2621,9 @@
       "license": "MIT",
       "cp_target": "cap:errno",
       "kind": "stdlib",
-      "aliases": ["rustix"],
+      "aliases": [
+        "rustix"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2022,7 +2633,9 @@
       "license": "MIT",
       "cp_target": "cap:fs",
       "kind": "stdlib",
-      "aliases": ["tmp"],
+      "aliases": [
+        "tmp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2032,7 +2645,11 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["dayjs", "date-fns", "luxon"],
+      "aliases": [
+        "dayjs",
+        "date-fns",
+        "luxon"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2042,7 +2659,9 @@
       "license": "ISC",
       "cp_target": "@cap/byteorder",
       "kind": "package",
-      "aliases": ["safe-reader"],
+      "aliases": [
+        "safe-reader"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2052,7 +2671,9 @@
       "license": "MIT",
       "cp_target": "@cap/byteorder",
       "kind": "package",
-      "aliases": ["endian-codec"],
+      "aliases": [
+        "endian-codec"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2062,7 +2683,9 @@
       "license": "MIT",
       "cp_target": "@cap/fnv",
       "kind": "package",
-      "aliases": ["fxhash"],
+      "aliases": [
+        "fxhash"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2072,7 +2695,9 @@
       "license": "MIT",
       "cp_target": "@cap/fnv",
       "kind": "package",
-      "aliases": ["fnv1a"],
+      "aliases": [
+        "fnv1a"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2082,7 +2707,9 @@
       "license": "MIT",
       "cp_target": "@cap/subtle",
       "kind": "package",
-      "aliases": ["secure-zero"],
+      "aliases": [
+        "secure-zero"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2092,7 +2719,9 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/subtle",
       "kind": "package",
-      "aliases": ["constant-time"],
+      "aliases": [
+        "constant-time"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2102,7 +2731,11 @@
       "license": "MIT",
       "cp_target": "@cap/crc32",
       "kind": "package",
-      "aliases": ["crc32c", "adler2", "crc-32"],
+      "aliases": [
+        "crc32c",
+        "adler2",
+        "crc-32"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2112,7 +2745,9 @@
       "license": "MIT",
       "cp_target": "@cap/num-integer",
       "kind": "package",
-      "aliases": ["num-traits"],
+      "aliases": [
+        "num-traits"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2122,7 +2757,9 @@
       "license": "MIT",
       "cp_target": "cap:tz",
       "kind": "stdlib",
-      "aliases": ["chrono-tz"],
+      "aliases": [
+        "chrono-tz"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2132,7 +2769,10 @@
       "license": "MIT",
       "cp_target": "@cap/hex",
       "kind": "package",
-      "aliases": ["const-hex", "hex-encode"],
+      "aliases": [
+        "const-hex",
+        "hex-encode"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2142,7 +2782,9 @@
       "license": "Unicode-3.0",
       "cp_target": "@cap/tinystr",
       "kind": "package",
-      "aliases": ["tiny-ascii-str"],
+      "aliases": [
+        "tiny-ascii-str"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2152,7 +2794,9 @@
       "license": "MIT",
       "cp_target": "cap:fs",
       "kind": "stdlib",
-      "aliases": ["jwalk"],
+      "aliases": [
+        "jwalk"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2162,7 +2806,9 @@
       "license": "Unicode-3.0",
       "cp_target": "@cap/litemap",
       "kind": "package",
-      "aliases": ["flat-map"],
+      "aliases": [
+        "flat-map"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2172,7 +2818,9 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["sha1"],
+      "aliases": [
+        "sha1"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2182,7 +2830,9 @@
       "license": "MIT",
       "cp_target": "cap:mime",
       "kind": "stdlib",
-      "aliases": ["mime-rs"],
+      "aliases": [
+        "mime-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2192,7 +2842,9 @@
       "license": "MIT",
       "cp_target": "cap:bigint",
       "kind": "stdlib",
-      "aliases": ["bignum"],
+      "aliases": [
+        "bignum"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2202,7 +2854,9 @@
       "license": "MIT",
       "cp_target": "cap:net",
       "kind": "stdlib",
-      "aliases": ["ipnetwork"],
+      "aliases": [
+        "ipnetwork"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2212,7 +2866,9 @@
       "license": "MIT",
       "cp_target": "cap:glob",
       "kind": "stdlib",
-      "aliases": ["glob-match"],
+      "aliases": [
+        "glob-match"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2222,7 +2878,10 @@
       "license": "MIT",
       "cp_target": "@cap/siphash",
       "kind": "package",
-      "aliases": ["siphash24", "siphash13"],
+      "aliases": [
+        "siphash24",
+        "siphash13"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2232,7 +2891,10 @@
       "license": "MIT",
       "cp_target": "@cap/arrayvec",
       "kind": "package",
-      "aliases": ["tinyvec", "smallvec"],
+      "aliases": [
+        "tinyvec",
+        "smallvec"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2242,7 +2904,10 @@
       "license": "MIT",
       "cp_target": "@cap/unicode-seg",
       "kind": "package",
-      "aliases": ["graphemer", "grapheme-splitter"],
+      "aliases": [
+        "graphemer",
+        "grapheme-splitter"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2252,7 +2917,10 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/oid",
       "kind": "package",
-      "aliases": ["asn1-oid", "oid"],
+      "aliases": [
+        "asn1-oid",
+        "oid"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2262,7 +2930,10 @@
       "license": "MIT",
       "cp_target": "@cap/bitset",
       "kind": "package",
-      "aliases": ["bit-vec", "bit-set"],
+      "aliases": [
+        "bit-vec",
+        "bit-set"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2272,7 +2943,9 @@
       "license": "MIT",
       "cp_target": "cap:graph",
       "kind": "stdlib",
-      "aliases": ["graphlib"],
+      "aliases": [
+        "graphlib"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2282,7 +2955,9 @@
       "license": "MIT",
       "cp_target": "@cap/pem",
       "kind": "package",
-      "aliases": ["pemfile"],
+      "aliases": [
+        "pemfile"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2292,7 +2967,10 @@
       "license": "MIT",
       "cp_target": "@cap/half",
       "kind": "package",
-      "aliases": ["f16", "bfloat16"],
+      "aliases": [
+        "f16",
+        "bfloat16"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2302,7 +2980,10 @@
       "license": "MIT",
       "cp_target": "@cap/matchit",
       "kind": "package",
-      "aliases": ["axum-router", "radix-router"],
+      "aliases": [
+        "axum-router",
+        "radix-router"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2312,7 +2993,10 @@
       "license": "MIT",
       "cp_target": "cap:xml",
       "kind": "stdlib",
-      "aliases": ["fast-xml-parser", "xml2js"],
+      "aliases": [
+        "fast-xml-parser",
+        "xml2js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2322,7 +3006,9 @@
       "license": "MIT",
       "cp_target": "@cap/crc32",
       "kind": "package",
-      "aliases": ["adler32"],
+      "aliases": [
+        "adler32"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2332,7 +3018,10 @@
       "license": "MIT",
       "cp_target": "@cap/ordered-float",
       "kind": "package",
-      "aliases": ["not-nan", "total-float"],
+      "aliases": [
+        "not-nan",
+        "total-float"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2342,7 +3031,10 @@
       "license": "MIT",
       "cp_target": "@cap/data-encoding",
       "kind": "package",
-      "aliases": ["base32", "crockford-base32"],
+      "aliases": [
+        "base32",
+        "crockford-base32"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2352,7 +3044,9 @@
       "license": "MIT",
       "cp_target": "cap:bytes",
       "kind": "stdlib",
-      "aliases": ["byte-string"],
+      "aliases": [
+        "byte-string"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2362,7 +3056,9 @@
       "license": "MIT",
       "cp_target": "@cap/unicase",
       "kind": "package",
-      "aliases": ["case-insensitive"],
+      "aliases": [
+        "case-insensitive"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2372,7 +3068,9 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["humantime-serde"],
+      "aliases": [
+        "humantime-serde"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2382,7 +3080,10 @@
       "license": "MIT",
       "cp_target": "@cap/zstd",
       "kind": "package",
-      "aliases": ["zstd-safe", "zstd-sys"],
+      "aliases": [
+        "zstd-safe",
+        "zstd-sys"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2392,7 +3093,9 @@
       "license": "MIT",
       "cp_target": "@cap/num-complex",
       "kind": "package",
-      "aliases": ["complex-js"],
+      "aliases": [
+        "complex-js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2402,7 +3105,9 @@
       "license": "MIT",
       "cp_target": "cap:which",
       "kind": "stdlib",
-      "aliases": ["which-bin"],
+      "aliases": [
+        "which-bin"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2412,7 +3117,9 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["md5"],
+      "aliases": [
+        "md5"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2422,7 +3129,9 @@
       "license": "MIT",
       "cp_target": "@cap/num-rational",
       "kind": "package",
-      "aliases": ["fraction.js"],
+      "aliases": [
+        "fraction.js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2432,7 +3141,9 @@
       "license": "MIT",
       "cp_target": "@cap/textwrap",
       "kind": "package",
-      "aliases": ["word-wrap"],
+      "aliases": [
+        "word-wrap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2442,7 +3153,9 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/target-triple",
       "kind": "package",
-      "aliases": ["target-triple"],
+      "aliases": [
+        "target-triple"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2452,7 +3165,9 @@
       "license": "MIT",
       "cp_target": "@cap/lru",
       "kind": "package",
-      "aliases": ["hashlink"],
+      "aliases": [
+        "hashlink"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2462,7 +3177,11 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/der",
       "kind": "package",
-      "aliases": ["asn1-der", "spki", "pkcs8"],
+      "aliases": [
+        "asn1-der",
+        "spki",
+        "pkcs8"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2472,7 +3191,9 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/pem",
       "kind": "package",
-      "aliases": ["pem-rs"],
+      "aliases": [
+        "pem-rs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2482,7 +3203,9 @@
       "license": "MIT",
       "cp_target": "cap:ws",
       "kind": "stdlib",
-      "aliases": ["tokio-tungstenite"],
+      "aliases": [
+        "tokio-tungstenite"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2492,7 +3215,10 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["aes", "hkdf"],
+      "aliases": [
+        "aes",
+        "hkdf"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2502,7 +3228,9 @@
       "license": "CC0-1.0",
       "cp_target": "@cap/subtle",
       "kind": "package",
-      "aliases": ["ct-eq"],
+      "aliases": [
+        "ct-eq"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2512,7 +3240,9 @@
       "license": "MIT",
       "cp_target": "@cap/bincode",
       "kind": "package",
-      "aliases": ["bincode-v2"],
+      "aliases": [
+        "bincode-v2"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2522,7 +3252,10 @@
       "license": "MIT",
       "cp_target": "@cap/indoc",
       "kind": "package",
-      "aliases": ["dedent", "unindent"],
+      "aliases": [
+        "dedent",
+        "unindent"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2532,7 +3265,10 @@
       "license": "MIT",
       "cp_target": "@cap/ringbuf",
       "kind": "package",
-      "aliases": ["arraydeque", "circular-buffer"],
+      "aliases": [
+        "arraydeque",
+        "circular-buffer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2542,7 +3278,10 @@
       "license": "MIT",
       "cp_target": "@cap/bloom",
       "kind": "package",
-      "aliases": ["bloomfilter", "bloom-filters"],
+      "aliases": [
+        "bloomfilter",
+        "bloom-filters"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2552,7 +3291,9 @@
       "license": "MIT",
       "cp_target": "@cap/toml-writer",
       "kind": "package",
-      "aliases": ["toml-stringify"],
+      "aliases": [
+        "toml-stringify"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2562,7 +3303,9 @@
       "license": "MIT",
       "cp_target": "@cap/multimap",
       "kind": "package",
-      "aliases": ["multi-map"],
+      "aliases": [
+        "multi-map"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2572,7 +3315,9 @@
       "license": "MIT",
       "cp_target": "cap:mime",
       "kind": "stdlib",
-      "aliases": ["mime-guess"],
+      "aliases": [
+        "mime-guess"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2582,7 +3327,10 @@
       "license": "MIT",
       "cp_target": "@cap/miniz",
       "kind": "package",
-      "aliases": ["jszip", "adm-zip"],
+      "aliases": [
+        "jszip",
+        "adm-zip"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2592,7 +3340,9 @@
       "license": "BSD-3-Clause",
       "cp_target": "cap:pack",
       "kind": "stdlib",
-      "aliases": ["brotli-decompressor"],
+      "aliases": [
+        "brotli-decompressor"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2602,7 +3352,10 @@
       "license": "MIT",
       "cp_target": "@cap/utf8-path",
       "kind": "package",
-      "aliases": ["utf8-path", "safe-path"],
+      "aliases": [
+        "utf8-path",
+        "safe-path"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2612,7 +3365,10 @@
       "license": "MIT",
       "cp_target": "@cap/utf8-valid",
       "kind": "package",
-      "aliases": ["utf-8", "utf8-validate"],
+      "aliases": [
+        "utf-8",
+        "utf8-validate"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2622,7 +3378,9 @@
       "license": "MIT",
       "cp_target": "@cap/xxhash",
       "kind": "package",
-      "aliases": ["xxhash-rust"],
+      "aliases": [
+        "xxhash-rust"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2632,7 +3390,10 @@
       "license": "MIT",
       "cp_target": "cap:pack",
       "kind": "stdlib",
-      "aliases": ["tar-stream", "node-tar"],
+      "aliases": [
+        "tar-stream",
+        "node-tar"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2642,7 +3403,11 @@
       "license": "MIT",
       "cp_target": "cap:csv",
       "kind": "stdlib",
-      "aliases": ["csv-core", "csv-parse", "papaparse"],
+      "aliases": [
+        "csv-core",
+        "csv-parse",
+        "papaparse"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2652,7 +3417,10 @@
       "license": "MIT",
       "cp_target": "@cap/pcg",
       "kind": "package",
-      "aliases": ["pcg32", "oorandom"],
+      "aliases": [
+        "pcg32",
+        "oorandom"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2662,7 +3430,10 @@
       "license": "MIT",
       "cp_target": "@cap/bs58",
       "kind": "package",
-      "aliases": ["base58", "bs58check"],
+      "aliases": [
+        "base58",
+        "bs58check"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2672,7 +3443,11 @@
       "license": "MIT",
       "cp_target": "@cap/varint",
       "kind": "package",
-      "aliases": ["leb128", "integer-encoding", "varint"],
+      "aliases": [
+        "leb128",
+        "integer-encoding",
+        "varint"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2682,7 +3457,11 @@
       "license": "MIT",
       "cp_target": "@cap/online-stats",
       "kind": "package",
-      "aliases": ["statrs", "welford", "simple-statistics"],
+      "aliases": [
+        "statrs",
+        "welford",
+        "simple-statistics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2692,7 +3471,10 @@
       "license": "MIT",
       "cp_target": "@cap/base85",
       "kind": "package",
-      "aliases": ["ascii85", "base85"],
+      "aliases": [
+        "ascii85",
+        "base85"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2702,7 +3484,10 @@
       "license": "MIT",
       "cp_target": "@cap/governor",
       "kind": "package",
-      "aliases": ["rate-limiter-flexible", "gcra"],
+      "aliases": [
+        "rate-limiter-flexible",
+        "gcra"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2712,7 +3497,10 @@
       "license": "MIT",
       "cp_target": "@cap/backoff",
       "kind": "package",
-      "aliases": ["exponential-backoff", "backo2"],
+      "aliases": [
+        "exponential-backoff",
+        "backo2"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2722,7 +3510,10 @@
       "license": "MIT",
       "cp_target": "cap:color",
       "kind": "stdlib",
-      "aliases": ["nu-ansi-term", "termcolor"],
+      "aliases": [
+        "nu-ansi-term",
+        "termcolor"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2732,7 +3523,10 @@
       "license": "MIT",
       "cp_target": "@cap/template",
       "kind": "package",
-      "aliases": ["handlebars-rs", "tera"],
+      "aliases": [
+        "handlebars-rs",
+        "tera"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2742,7 +3536,11 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["ed25519", "ecdsa", "aead"],
+      "aliases": [
+        "ed25519",
+        "ecdsa",
+        "aead"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2752,7 +3550,9 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["temporal"],
+      "aliases": [
+        "temporal"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2762,7 +3562,10 @@
       "license": "MIT",
       "cp_target": "@cap/murmur3",
       "kind": "package",
-      "aliases": ["fastmurmur3", "murmurhash3js"],
+      "aliases": [
+        "fastmurmur3",
+        "murmurhash3js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2772,7 +3575,9 @@
       "license": "MIT",
       "cp_target": "@cap/consistent-hash",
       "kind": "package",
-      "aliases": ["consistent-hashing"],
+      "aliases": [
+        "consistent-hashing"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2782,7 +3587,10 @@
       "license": "ISC",
       "cp_target": "@cap/hyperloglog",
       "kind": "package",
-      "aliases": ["hyperloglogplus", "hll"],
+      "aliases": [
+        "hyperloglogplus",
+        "hll"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2792,7 +3600,9 @@
       "license": "MIT",
       "cp_target": "@cap/count-min",
       "kind": "package",
-      "aliases": ["cms"],
+      "aliases": [
+        "cms"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2802,7 +3612,10 @@
       "license": "Apache-2.0",
       "cp_target": "cap:cbor",
       "kind": "stdlib",
-      "aliases": ["ciborium-ll", "ciborium-io"],
+      "aliases": [
+        "ciborium-ll",
+        "ciborium-io"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2812,7 +3625,9 @@
       "license": "Apache-2.0",
       "cp_target": "cap:wasm",
       "kind": "stdlib",
-      "aliases": ["wasm-decoder"],
+      "aliases": [
+        "wasm-decoder"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2822,7 +3637,9 @@
       "license": "MIT",
       "cp_target": "cap:sys",
       "kind": "stdlib",
-      "aliases": ["signal-hook-registry"],
+      "aliases": [
+        "signal-hook-registry"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2832,7 +3649,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["cookie-jar"],
+      "aliases": [
+        "cookie-jar"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2842,7 +3661,10 @@
       "license": "CC0-1.0",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["sha3", "keccak"],
+      "aliases": [
+        "sha3",
+        "keccak"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2852,7 +3674,9 @@
       "license": "MIT",
       "cp_target": "cap:png",
       "kind": "stdlib",
-      "aliases": ["pngjs"],
+      "aliases": [
+        "pngjs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2862,7 +3686,9 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["once-cell"],
+      "aliases": [
+        "once-cell"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2882,7 +3708,11 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["parking-lot", "parking_lot_core", "lock_api"],
+      "aliases": [
+        "parking-lot",
+        "parking_lot_core",
+        "lock_api"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2892,7 +3722,10 @@
       "license": "MIT",
       "cp_target": "cap:actor",
       "kind": "stdlib",
-      "aliases": ["async-std", "smol"],
+      "aliases": [
+        "async-std",
+        "smol"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2902,7 +3735,9 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["lazy-static"],
+      "aliases": [
+        "lazy-static"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2912,7 +3747,9 @@
       "license": "MIT",
       "cp_target": "cap:core",
       "kind": "stdlib",
-      "aliases": ["defer"],
+      "aliases": [
+        "defer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2932,7 +3769,9 @@
       "license": "MIT",
       "cp_target": "@cap/bech32",
       "kind": "package",
-      "aliases": ["bech32m"],
+      "aliases": [
+        "bech32m"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2942,7 +3781,9 @@
       "license": "MIT",
       "cp_target": "@cap/cobs",
       "kind": "package",
-      "aliases": ["corncobs"],
+      "aliases": [
+        "corncobs"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2952,7 +3793,10 @@
       "license": "MIT",
       "cp_target": "@cap/rle",
       "kind": "package",
-      "aliases": ["packbits", "rle"],
+      "aliases": [
+        "packbits",
+        "rle"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2962,7 +3806,9 @@
       "license": "MIT",
       "cp_target": "cap:mem",
       "kind": "stdlib",
-      "aliases": ["bytemuck"],
+      "aliases": [
+        "bytemuck"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2972,7 +3818,11 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["crossbeam", "crossbeam-channel", "crossbeam-epoch"],
+      "aliases": [
+        "crossbeam",
+        "crossbeam-channel",
+        "crossbeam-epoch"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2982,7 +3832,9 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["http-body-util"],
+      "aliases": [
+        "http-body-util"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -2992,7 +3844,11 @@
       "license": "MIT",
       "cp_target": "cap:actor",
       "kind": "stdlib",
-      "aliases": ["futures-util", "futures-core", "futures-channel"],
+      "aliases": [
+        "futures-util",
+        "futures-core",
+        "futures-channel"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3012,7 +3868,10 @@
       "license": "MIT",
       "cp_target": "@cap/merkle",
       "kind": "package",
-      "aliases": ["merkletreejs", "merkle"],
+      "aliases": [
+        "merkletreejs",
+        "merkle"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3022,7 +3881,9 @@
       "license": "MIT",
       "cp_target": "@cap/toposort",
       "kind": "package",
-      "aliases": ["toposort"],
+      "aliases": [
+        "toposort"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3032,7 +3893,10 @@
       "license": "MIT",
       "cp_target": "@cap/disjoint-set",
       "kind": "package",
-      "aliases": ["union-find", "dsu"],
+      "aliases": [
+        "union-find",
+        "dsu"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3042,7 +3906,9 @@
       "license": "MIT",
       "cp_target": "@cap/fenwick",
       "kind": "package",
-      "aliases": ["binary-indexed-tree"],
+      "aliases": [
+        "binary-indexed-tree"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3052,7 +3918,10 @@
       "license": "MIT",
       "cp_target": "@cap/range-set",
       "kind": "package",
-      "aliases": ["range-set", "merge-ranges"],
+      "aliases": [
+        "range-set",
+        "merge-ranges"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3072,7 +3941,9 @@
       "license": "MIT",
       "cp_target": "cap:toml",
       "kind": "stdlib",
-      "aliases": ["toml-edit"],
+      "aliases": [
+        "toml-edit"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3082,7 +3953,9 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["thread-local"],
+      "aliases": [
+        "thread-local"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3092,7 +3965,9 @@
       "license": "MIT",
       "cp_target": "cap:term",
       "kind": "stdlib",
-      "aliases": ["anstyle-query"],
+      "aliases": [
+        "anstyle-query"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3102,7 +3977,10 @@
       "license": "MIT",
       "cp_target": "@cap/lz4-block",
       "kind": "package",
-      "aliases": ["lz4", "lz4-block"],
+      "aliases": [
+        "lz4",
+        "lz4-block"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3112,7 +3990,9 @@
       "license": "MIT",
       "cp_target": "@cap/roaring",
       "kind": "package",
-      "aliases": ["roaring-bitmap"],
+      "aliases": [
+        "roaring-bitmap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3122,7 +4002,9 @@
       "license": "MIT",
       "cp_target": "@cap/tdigest",
       "kind": "package",
-      "aliases": ["t-digest"],
+      "aliases": [
+        "t-digest"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3132,7 +4014,10 @@
       "license": "MIT",
       "cp_target": "@cap/trie",
       "kind": "package",
-      "aliases": ["qp-trie", "trie-search"],
+      "aliases": [
+        "qp-trie",
+        "trie-search"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3142,7 +4027,9 @@
       "license": "MIT",
       "cp_target": "@cap/huffman",
       "kind": "package",
-      "aliases": ["huffman"],
+      "aliases": [
+        "huffman"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3152,7 +4039,9 @@
       "license": "MIT",
       "cp_target": "@cap/sieve-cache",
       "kind": "package",
-      "aliases": ["quick_cache"],
+      "aliases": [
+        "quick_cache"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3202,7 +4091,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/snappy-block",
       "kind": "package",
-      "aliases": ["snappy", "snappy-block"],
+      "aliases": [
+        "snappy",
+        "snappy-block"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3212,7 +4104,9 @@
       "license": "MIT",
       "cp_target": "@cap/bimap",
       "kind": "package",
-      "aliases": ["bijection"],
+      "aliases": [
+        "bijection"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3222,7 +4116,9 @@
       "license": "MIT",
       "cp_target": "@cap/geohash",
       "kind": "package",
-      "aliases": ["ngeohash"],
+      "aliases": [
+        "ngeohash"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3232,7 +4128,10 @@
       "license": "MIT",
       "cp_target": "@cap/geo-dist",
       "kind": "package",
-      "aliases": ["haversine", "geolib"],
+      "aliases": [
+        "haversine",
+        "geolib"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3242,7 +4141,10 @@
       "license": "MIT",
       "cp_target": "@cap/morton",
       "kind": "package",
-      "aliases": ["zorder", "hilbert"],
+      "aliases": [
+        "zorder",
+        "hilbert"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3252,7 +4154,9 @@
       "license": "MIT",
       "cp_target": "@cap/skiplist",
       "kind": "package",
-      "aliases": ["crossbeam-skiplist"],
+      "aliases": [
+        "crossbeam-skiplist"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3262,7 +4166,9 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["spin-lock"],
+      "aliases": [
+        "spin-lock"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3272,7 +4178,11 @@
       "license": "MIT",
       "cp_target": "@cap/adler32",
       "kind": "package",
-      "aliases": ["adler", "adler32", "adler-32"],
+      "aliases": [
+        "adler",
+        "adler32",
+        "adler-32"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3302,7 +4212,10 @@
       "license": "Unicode-3.0",
       "cp_target": "cap:unicode",
       "kind": "stdlib",
-      "aliases": ["unicode-normalization", "icu_properties"],
+      "aliases": [
+        "unicode-normalization",
+        "icu_properties"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3312,7 +4225,9 @@
       "license": "MIT",
       "cp_target": "cap:mem",
       "kind": "stdlib",
-      "aliases": ["typed-arena"],
+      "aliases": [
+        "typed-arena"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3322,7 +4237,10 @@
       "license": "MIT",
       "cp_target": "@cap/crc64",
       "kind": "package",
-      "aliases": ["crc64", "crc-64"],
+      "aliases": [
+        "crc64",
+        "crc-64"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3332,7 +4250,9 @@
       "license": "MIT",
       "cp_target": "@cap/fixed-point",
       "kind": "package",
-      "aliases": ["fixed-point"],
+      "aliases": [
+        "fixed-point"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3342,7 +4262,10 @@
       "license": "MIT",
       "cp_target": "@cap/priority-queue",
       "kind": "package",
-      "aliases": ["heap-js", "indexed-heap"],
+      "aliases": [
+        "heap-js",
+        "indexed-heap"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3352,7 +4275,9 @@
       "license": "MIT",
       "cp_target": "@cap/cuckoo-filter",
       "kind": "package",
-      "aliases": ["cuckoo-filter"],
+      "aliases": [
+        "cuckoo-filter"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3362,7 +4287,9 @@
       "license": "MIT",
       "cp_target": "cap:sync",
       "kind": "stdlib",
-      "aliases": ["work-stealing"],
+      "aliases": [
+        "work-stealing"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3382,7 +4309,9 @@
       "license": "MIT",
       "cp_target": "cap:url",
       "kind": "stdlib",
-      "aliases": ["idna"],
+      "aliases": [
+        "idna"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3392,7 +4321,9 @@
       "license": "MIT",
       "cp_target": "cap:strconv",
       "kind": "stdlib",
-      "aliases": ["dtoa"],
+      "aliases": [
+        "dtoa"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3402,7 +4333,10 @@
       "license": "MIT",
       "cp_target": "@cap/dijkstra",
       "kind": "package",
-      "aliases": ["dijkstra", "bellman-ford"],
+      "aliases": [
+        "dijkstra",
+        "bellman-ford"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3412,7 +4346,10 @@
       "license": "MIT",
       "cp_target": "@cap/reed-solomon",
       "kind": "package",
-      "aliases": ["reed-solomon", "erasure-coding"],
+      "aliases": [
+        "reed-solomon",
+        "erasure-coding"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3422,7 +4359,9 @@
       "license": "MIT",
       "cp_target": "@cap/bitstream",
       "kind": "package",
-      "aliases": ["bitstream"],
+      "aliases": [
+        "bitstream"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3432,7 +4371,9 @@
       "license": "MIT",
       "cp_target": "@cap/segment-tree",
       "kind": "package",
-      "aliases": ["rmq"],
+      "aliases": [
+        "rmq"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3442,7 +4383,10 @@
       "license": "MIT",
       "cp_target": "@cap/crc16",
       "kind": "package",
-      "aliases": ["crc-16", "modbus-crc"],
+      "aliases": [
+        "crc-16",
+        "modbus-crc"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3452,7 +4396,10 @@
       "license": "MIT",
       "cp_target": "@cap/xor-filter",
       "kind": "package",
-      "aliases": ["xor-filter", "xor8"],
+      "aliases": [
+        "xor-filter",
+        "xor8"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3462,7 +4409,10 @@
       "license": "MIT",
       "cp_target": "@cap/memmem",
       "kind": "package",
-      "aliases": ["memchr-memmem", "kmp"],
+      "aliases": [
+        "memchr-memmem",
+        "kmp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3472,7 +4422,9 @@
       "license": "MIT",
       "cp_target": "@cap/aho-corasick",
       "kind": "package",
-      "aliases": ["ac-automaton"],
+      "aliases": [
+        "ac-automaton"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3482,7 +4434,10 @@
       "license": "MIT",
       "cp_target": "cap:http",
       "kind": "stdlib",
-      "aliases": ["tower-service", "tower-layer"],
+      "aliases": [
+        "tower-service",
+        "tower-layer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3492,7 +4447,9 @@
       "license": "Unicode-3.0",
       "cp_target": "cap:mem",
       "kind": "stdlib",
-      "aliases": ["zerofrom"],
+      "aliases": [
+        "zerofrom"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3512,7 +4469,9 @@
       "license": "MIT",
       "cp_target": "cap:hash",
       "kind": "stdlib",
-      "aliases": ["phf_shared"],
+      "aliases": [
+        "phf_shared"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3522,7 +4481,9 @@
       "license": "MIT",
       "cp_target": "@cap/lzw",
       "kind": "package",
-      "aliases": ["lzw"],
+      "aliases": [
+        "lzw"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3532,7 +4493,10 @@
       "license": "MIT",
       "cp_target": "@cap/radix-sort",
       "kind": "package",
-      "aliases": ["radix-sort", "voracious_radix_sort"],
+      "aliases": [
+        "radix-sort",
+        "voracious_radix_sort"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3542,7 +4506,10 @@
       "license": "MIT",
       "cp_target": "@cap/bwt",
       "kind": "package",
-      "aliases": ["burrows-wheeler", "mtf"],
+      "aliases": [
+        "burrows-wheeler",
+        "mtf"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3552,7 +4519,10 @@
       "license": "MIT",
       "cp_target": "@cap/luhn",
       "kind": "package",
-      "aliases": ["damm", "verhoeff"],
+      "aliases": [
+        "damm",
+        "verhoeff"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3562,7 +4532,9 @@
       "license": "MIT",
       "cp_target": "cap:url",
       "kind": "stdlib",
-      "aliases": ["form_urlencoded"],
+      "aliases": [
+        "form_urlencoded"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3582,7 +4554,9 @@
       "license": "MIT",
       "cp_target": "cap:actor",
       "kind": "stdlib",
-      "aliases": ["rayon-core"],
+      "aliases": [
+        "rayon-core"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3592,7 +4566,9 @@
       "license": "MIT",
       "cp_target": "cap:os",
       "kind": "stdlib",
-      "aliases": ["num-cpus"],
+      "aliases": [
+        "num-cpus"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3602,7 +4578,10 @@
       "license": "MIT",
       "cp_target": "@cap/suffix-array",
       "kind": "package",
-      "aliases": ["suffix-array", "divsufsort"],
+      "aliases": [
+        "suffix-array",
+        "divsufsort"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3612,7 +4591,10 @@
       "license": "MIT",
       "cp_target": "@cap/hamming",
       "kind": "package",
-      "aliases": ["simhash", "hamming-weight"],
+      "aliases": [
+        "simhash",
+        "hamming-weight"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3622,7 +4604,10 @@
       "license": "MIT",
       "cp_target": "@cap/bencode",
       "kind": "package",
-      "aliases": ["bencode", "serde_bencode"],
+      "aliases": [
+        "bencode",
+        "serde_bencode"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3632,7 +4617,10 @@
       "license": "MIT",
       "cp_target": "@cap/fft",
       "kind": "package",
-      "aliases": ["microfft", "fft"],
+      "aliases": [
+        "microfft",
+        "fft"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3642,7 +4630,9 @@
       "license": "MIT",
       "cp_target": "@cap/crc8",
       "kind": "package",
-      "aliases": ["crc-8"],
+      "aliases": [
+        "crc-8"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3652,7 +4642,9 @@
       "license": "MIT",
       "cp_target": "@cap/base62",
       "kind": "package",
-      "aliases": ["radix62"],
+      "aliases": [
+        "radix62"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3692,7 +4684,9 @@
       "license": "MIT",
       "cp_target": "cap:log",
       "kind": "stdlib",
-      "aliases": ["env-logger"],
+      "aliases": [
+        "env-logger"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3702,7 +4696,10 @@
       "license": "MIT",
       "cp_target": "@cap/glam",
       "kind": "package",
-      "aliases": ["nalgebra", "cgmath"],
+      "aliases": [
+        "nalgebra",
+        "cgmath"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3712,7 +4709,10 @@
       "license": "MIT",
       "cp_target": "@cap/kd-tree",
       "kind": "package",
-      "aliases": ["kd-tree", "kdtree"],
+      "aliases": [
+        "kd-tree",
+        "kdtree"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3722,7 +4722,11 @@
       "license": "MIT",
       "cp_target": "@cap/easing",
       "kind": "package",
-      "aliases": ["eases", "keyframe", "cubic-bezier"],
+      "aliases": [
+        "eases",
+        "keyframe",
+        "cubic-bezier"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3732,7 +4736,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/spline",
       "kind": "package",
-      "aliases": ["cubic-spline", "kurbo"],
+      "aliases": [
+        "cubic-spline",
+        "kurbo"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3742,7 +4749,9 @@
       "license": "MIT",
       "cp_target": "@cap/pid",
       "kind": "package",
-      "aliases": ["pid-controller"],
+      "aliases": [
+        "pid-controller"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3752,7 +4761,10 @@
       "license": "MIT",
       "cp_target": "@cap/kalman",
       "kind": "package",
-      "aliases": ["kfilter", "kalman"],
+      "aliases": [
+        "kfilter",
+        "kalman"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3762,7 +4774,10 @@
       "license": "MIT",
       "cp_target": "@web/multipart",
       "kind": "package",
-      "aliases": ["busboy", "multer"],
+      "aliases": [
+        "busboy",
+        "multer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3792,7 +4807,9 @@
       "license": "Apache-2.0",
       "cp_target": "cap:image",
       "kind": "stdlib",
-      "aliases": ["jimp"],
+      "aliases": [
+        "jimp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3802,7 +4819,9 @@
       "license": "MIT",
       "cp_target": "cap:json",
       "kind": "stdlib",
-      "aliases": ["klona"],
+      "aliases": [
+        "klona"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3812,7 +4831,10 @@
       "license": "MIT",
       "cp_target": "@cap/cmark",
       "kind": "package",
-      "aliases": ["markdown-it", "remark"],
+      "aliases": [
+        "markdown-it",
+        "remark"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3832,7 +4854,10 @@
       "license": "MIT",
       "cp_target": "@web/db",
       "kind": "package",
-      "aliases": ["mysql2", "better-sqlite3"],
+      "aliases": [
+        "mysql2",
+        "better-sqlite3"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3842,7 +4867,9 @@
       "license": "MIT",
       "cp_target": "cap:string",
       "kind": "stdlib",
-      "aliases": ["kebab-case"],
+      "aliases": [
+        "kebab-case"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3862,7 +4889,10 @@
       "license": "MIT",
       "cp_target": "@web/logger",
       "kind": "package",
-      "aliases": ["winston", "morgan"],
+      "aliases": [
+        "winston",
+        "morgan"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3872,7 +4902,11 @@
       "license": "MIT",
       "cp_target": "@cap/debounce",
       "kind": "package",
-      "aliases": ["lodash.throttle", "debounce", "throttle"],
+      "aliases": [
+        "lodash.throttle",
+        "debounce",
+        "throttle"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3892,7 +4926,13 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/template",
       "kind": "package",
-      "aliases": ["eta", "nunjucks", "liquidjs", "hbs", "pug"],
+      "aliases": [
+        "eta",
+        "nunjucks",
+        "liquidjs",
+        "hbs",
+        "pug"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3902,7 +4942,10 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/syntax-highlight",
       "kind": "package",
-      "aliases": ["prismjs", "shiki"],
+      "aliases": [
+        "prismjs",
+        "shiki"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3912,7 +4955,10 @@
       "license": "MIT",
       "cp_target": "cap:time",
       "kind": "stdlib",
-      "aliases": ["dayjs", "luxon"],
+      "aliases": [
+        "dayjs",
+        "luxon"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3932,7 +4978,9 @@
       "license": "MIT",
       "cp_target": "@web/redis",
       "kind": "package",
-      "aliases": ["redis"],
+      "aliases": [
+        "redis"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3952,7 +5000,9 @@
       "license": "MIT",
       "cp_target": "@cap/sitemap",
       "kind": "package",
-      "aliases": ["sitemap.js"],
+      "aliases": [
+        "sitemap.js"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -3962,7 +5012,9 @@
       "license": "MIT",
       "cp_target": "@cap/cookie-sign",
       "kind": "package",
-      "aliases": ["cookie-parser"],
+      "aliases": [
+        "cookie-parser"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4012,7 +5064,9 @@
       "license": "MIT",
       "cp_target": "cap:crypto",
       "kind": "stdlib",
-      "aliases": ["bcrypt"],
+      "aliases": [
+        "bcrypt"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4022,7 +5076,9 @@
       "license": "BSD-3-Clause",
       "cp_target": "@cap/human-number",
       "kind": "package",
-      "aliases": ["pretty-bytes"],
+      "aliases": [
+        "pretty-bytes"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4032,7 +5088,10 @@
       "license": "MIT",
       "cp_target": "@cap/minisearch",
       "kind": "package",
-      "aliases": ["minisearch", "flexsearch"],
+      "aliases": [
+        "minisearch",
+        "flexsearch"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4042,7 +5101,9 @@
       "license": "BSD-2-Clause",
       "cp_target": "@cap/cidr-tools",
       "kind": "package",
-      "aliases": ["ip-cidr"],
+      "aliases": [
+        "ip-cidr"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4052,7 +5113,10 @@
       "license": "MIT",
       "cp_target": "@cap/color-space",
       "kind": "package",
-      "aliases": ["palette", "culori"],
+      "aliases": [
+        "palette",
+        "culori"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4062,7 +5126,9 @@
       "license": "MIT",
       "cp_target": "@cap/type-is",
       "kind": "package",
-      "aliases": ["media-typer"],
+      "aliases": [
+        "media-typer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4082,7 +5148,9 @@
       "license": "MIT",
       "cp_target": "cap:os",
       "kind": "stdlib",
-      "aliases": ["is-inside-container"],
+      "aliases": [
+        "is-inside-container"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4122,7 +5190,10 @@
       "license": "MIT",
       "cp_target": "cap:term",
       "kind": "stdlib",
-      "aliases": ["inquirer", "enquirer"],
+      "aliases": [
+        "inquirer",
+        "enquirer"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4132,7 +5203,9 @@
       "license": "MIT",
       "cp_target": "@cap/accepts",
       "kind": "package",
-      "aliases": ["negotiator"],
+      "aliases": [
+        "negotiator"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4152,7 +5225,9 @@
       "license": "MIT",
       "cp_target": "cap:net",
       "kind": "stdlib",
-      "aliases": ["portfinder"],
+      "aliases": [
+        "portfinder"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4162,7 +5237,9 @@
       "license": "MIT",
       "cp_target": "@cap/encodeurl",
       "kind": "package",
-      "aliases": ["escape-string-regexp"],
+      "aliases": [
+        "escape-string-regexp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4172,7 +5249,9 @@
       "license": "MIT",
       "cp_target": "@cap/clsx",
       "kind": "package",
-      "aliases": ["classnames"],
+      "aliases": [
+        "classnames"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4182,7 +5261,9 @@
       "license": "MIT",
       "cp_target": "@cap/strip-json-comments",
       "kind": "package",
-      "aliases": ["comment-json"],
+      "aliases": [
+        "comment-json"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4192,7 +5273,9 @@
       "license": "ISC",
       "cp_target": "@cap/ini",
       "kind": "package",
-      "aliases": ["rust-ini"],
+      "aliases": [
+        "rust-ini"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4212,7 +5295,9 @@
       "license": "MIT",
       "cp_target": "cap:wasm",
       "kind": "stdlib",
-      "aliases": ["gimli"],
+      "aliases": [
+        "gimli"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4222,7 +5307,9 @@
       "license": "ISC",
       "cp_target": "cap:ffi",
       "kind": "stdlib",
-      "aliases": ["dlopen"],
+      "aliases": [
+        "dlopen"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4232,7 +5319,10 @@
       "license": "MIT",
       "cp_target": "@cap/bvh",
       "kind": "package",
-      "aliases": ["parry", "aabb"],
+      "aliases": [
+        "parry",
+        "aabb"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4242,7 +5332,10 @@
       "license": "MIT",
       "cp_target": "@cap/noise",
       "kind": "package",
-      "aliases": ["simplex-noise", "perlin"],
+      "aliases": [
+        "simplex-noise",
+        "perlin"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4252,7 +5345,9 @@
       "license": "MIT",
       "cp_target": "@cap/astar",
       "kind": "package",
-      "aliases": ["a-star"],
+      "aliases": [
+        "a-star"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4262,7 +5357,9 @@
       "license": "BSD-2-Clause",
       "cp_target": "@cap/glob-to-regex",
       "kind": "package",
-      "aliases": ["glob-to-regex"],
+      "aliases": [
+        "glob-to-regex"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4272,7 +5369,10 @@
       "license": "MIT",
       "cp_target": "@cap/cron-next",
       "kind": "package",
-      "aliases": ["cron", "croner"],
+      "aliases": [
+        "cron",
+        "croner"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4282,7 +5382,10 @@
       "license": "MIT",
       "cp_target": "@cap/csv-line",
       "kind": "package",
-      "aliases": ["papaparse", "csv-stringify"],
+      "aliases": [
+        "papaparse",
+        "csv-stringify"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4292,7 +5395,10 @@
       "license": "MIT",
       "cp_target": "@cap/duration-iso",
       "kind": "package",
-      "aliases": ["tinyduration", "duration-iso"],
+      "aliases": [
+        "tinyduration",
+        "duration-iso"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4302,7 +5408,9 @@
       "license": "MIT",
       "cp_target": "@cap/properties",
       "kind": "package",
-      "aliases": ["java-properties"],
+      "aliases": [
+        "java-properties"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4312,7 +5420,10 @@
       "license": "MIT",
       "cp_target": "@cap/cuid2",
       "kind": "package",
-      "aliases": ["cuid2", "cuid"],
+      "aliases": [
+        "cuid2",
+        "cuid"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4322,7 +5433,9 @@
       "license": "MIT",
       "cp_target": "cap:unicode",
       "kind": "stdlib",
-      "aliases": ["iconv-lite"],
+      "aliases": [
+        "iconv-lite"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4332,7 +5445,9 @@
       "license": "MIT",
       "cp_target": "cap:strconv",
       "kind": "stdlib",
-      "aliases": ["lexical-core"],
+      "aliases": [
+        "lexical-core"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4372,7 +5487,9 @@
       "license": "MIT",
       "cp_target": "cap:os",
       "kind": "stdlib",
-      "aliases": ["opn"],
+      "aliases": [
+        "opn"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4392,7 +5509,10 @@
       "license": "BSD-2-Clause",
       "cp_target": "@cap/ndjson",
       "kind": "package",
-      "aliases": ["split2", "jsonl"],
+      "aliases": [
+        "split2",
+        "jsonl"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4402,7 +5522,9 @@
       "license": "MIT",
       "cp_target": "@cap/cache-control",
       "kind": "package",
-      "aliases": ["http-cache-semantics"],
+      "aliases": [
+        "http-cache-semantics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4412,7 +5534,10 @@
       "license": "MIT",
       "cp_target": "@cap/csp",
       "kind": "package",
-      "aliases": ["csp", "helmet-csp"],
+      "aliases": [
+        "csp",
+        "helmet-csp"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4432,7 +5557,10 @@
       "license": "MIT",
       "cp_target": "@cap/syslog",
       "kind": "package",
-      "aliases": ["glossy", "rfc5424"],
+      "aliases": [
+        "glossy",
+        "rfc5424"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4442,7 +5570,11 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/traceparent",
       "kind": "package",
-      "aliases": ["traceparent", "tracestate", "@opentelemetry/core"],
+      "aliases": [
+        "traceparent",
+        "tracestate",
+        "@opentelemetry/core"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4462,7 +5594,9 @@
       "license": "MIT",
       "cp_target": "cap:pdf",
       "kind": "stdlib",
-      "aliases": ["pdfkit"],
+      "aliases": [
+        "pdfkit"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4482,7 +5616,10 @@
       "license": "Apache-2.0",
       "cp_target": "@cap/prom-text",
       "kind": "package",
-      "aliases": ["prometheus", "openmetrics"],
+      "aliases": [
+        "prometheus",
+        "openmetrics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4492,7 +5629,10 @@
       "license": "MIT",
       "cp_target": "@cap/robots",
       "kind": "package",
-      "aliases": ["robotstxt", "robots-txt"],
+      "aliases": [
+        "robotstxt",
+        "robots-txt"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4502,7 +5642,11 @@
       "license": "MIT",
       "cp_target": "@cap/statsd",
       "kind": "package",
-      "aliases": ["node-statsd", "cadence", "statsd"],
+      "aliases": [
+        "node-statsd",
+        "cadence",
+        "statsd"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4512,7 +5656,10 @@
       "license": "MIT",
       "cp_target": "@cap/clf-log",
       "kind": "package",
-      "aliases": ["apache-log", "nginx-log"],
+      "aliases": [
+        "apache-log",
+        "nginx-log"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4522,7 +5669,11 @@
       "license": "MIT",
       "cp_target": "@cap/ical",
       "kind": "package",
-      "aliases": ["node-ical", "icalendar", "ics"],
+      "aliases": [
+        "node-ical",
+        "icalendar",
+        "ics"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4542,7 +5693,10 @@
       "license": "MIT",
       "cp_target": "@cap/vcard",
       "kind": "package",
-      "aliases": ["vcards-js", "vcf"],
+      "aliases": [
+        "vcards-js",
+        "vcf"
+      ],
       "absorbed_at": "2026-11-26"
     },
     {
@@ -4552,7 +5706,135 @@
       "license": "MIT",
       "cp_target": "@cap/netstring",
       "kind": "package",
-      "aliases": ["scgi-netstring"],
+      "aliases": [
+        "scgi-netstring"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "braces",
+      "source_repo": "https://github.com/micromatch/braces",
+      "license": "MIT",
+      "cp_target": "@cap/braces",
+      "kind": "package",
+      "aliases": [
+        "brace-expansion"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pako",
+      "source_repo": "https://github.com/nodeca/pako",
+      "license": "MIT",
+      "cp_target": "cap:zlib",
+      "kind": "stdlib",
+      "aliases": [
+        "fflate",
+        "zlib-sync"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ansi-escapes",
+      "source_repo": "https://github.com/sindresorhus/ansi-escapes",
+      "license": "MIT",
+      "cp_target": "@cap/ansi-escapes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "url-template",
+      "source_repo": "https://github.com/bramstein/url-template",
+      "license": "MIT",
+      "cp_target": "@cap/uri-template",
+      "kind": "package",
+      "aliases": [
+        "uri-templates",
+        "uritemplate"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsonpointer",
+      "source_repo": "https://github.com/janl/node-jsonpointer",
+      "license": "MIT",
+      "cp_target": "@cap/json-pointer",
+      "kind": "package",
+      "aliases": [
+        "json-pointer",
+        "fast-json-patch",
+        "jsonptr"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "eventsource-parser",
+      "source_repo": "https://github.com/rexxars/eventsource-parser",
+      "license": "MIT",
+      "cp_target": "@cap/sse-parse",
+      "kind": "package",
+      "aliases": [
+        "eventsource-stream",
+        "sse-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "resp",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/resp",
+      "kind": "package",
+      "aliases": [
+        "redis-parser",
+        "resp2"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mqttbytes",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/mqtt-packet",
+      "kind": "package",
+      "aliases": [
+        "mqtt-packet",
+        "rumqttc"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rss",
+      "source_repo": "https://github.com/rust-syndication/rss",
+      "license": "MIT",
+      "cp_target": "@cap/rss",
+      "kind": "package",
+      "aliases": [
+        "rss-parser",
+        "feed-rs"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "polyline",
+      "source_repo": "https://github.com/georust/polyline",
+      "license": "MIT",
+      "cp_target": "@cap/polyline",
+      "kind": "package",
+      "aliases": [
+        "@mapbox/polyline"
+      ],
       "absorbed_at": "2026-11-26"
     }
   ]

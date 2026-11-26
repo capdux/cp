@@ -460,3 +460,13 @@
 - `packages/@cap/vcard/` & `cap/test/testCapVcard.cp`: RFC 6350 vCard 4.0 电子名片编解码（6/6 PASS）。
 - `packages/@cap/netstring/` & `cap/test/testCapNetstring.cp`: Bernstein Netstring 二进制帧编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **455 条**高频映射（**npm=223 / crates.io=232** 均衡，含 `pdf-lib`/`clipboardy`/`sharded-slab` 去重直连）。
+
+## [2026-11-26] - Batch 55 突破 **300+ 官方 `.cap` 包里程碑（302 包 LIVE）** — 单批交付 **7 大协议/路径/地理新包**，总映射达 **465 条**！
+- `packages/@cap/uri-template/` & `cap/test/testCapUriTemplate.cp`: RFC 6570 URI Template Levels 1–4 零堆展开器（6/6 PASS）。
+- `packages/@cap/json-pointer/` & `cap/test/testCapJsonPointer.cp`: RFC 6901 JSON Pointer 解析与流式迭代（6/6 PASS）。
+- `packages/@cap/sse-parse/` & `cap/test/testCapSseParse.cp`: W3C `text/event-stream` 流式 SSE 解析器（6/6 PASS）。
+- `packages/@cap/resp/` & `cap/test/testCapResp.cp`: Redis RESP2 线协议帧编解码（6/6 PASS）。
+- `packages/@cap/mqtt-packet/` & `cap/test/testCapMqttPacket.cp`: OASIS MQTT v3.1.1 控制报文编解码（6/6 PASS）。
+- `packages/@cap/rss/` & `cap/test/testCapRss.cp`: RSS 2.0 XML 生成与标签提取（6/6 PASS）。
+- `packages/@cap/polyline/` & `cap/test/testCapPolyline.cp`: Google Encoded Polyline (precision 5/6) GPS 轨迹编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **465 条**高频映射（**npm=229 / crates.io=236** 均衡，含亿级 npm `braces`/`pako`/`ansi-escapes` 去重直连）。

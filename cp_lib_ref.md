@@ -486,3 +486,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ical`** | `packages/@cap/ical` | 对标 npm `ical-generator` / Rust `icalendar` — RFC 5545 `.ics` 日历事件生成、参数解析与文本转义 |
 | **`@cap/vcard`** | `packages/@cap/vcard` | 对标 npm `vcards-js` / Rust `vcard` — RFC 6350 vCard 4.0 `.vcf` 电子名片生成与带参数属性解析 |
 | **`@cap/netstring`** | `packages/@cap/netstring` | 对标 Bernstein Netstring — `<len>:<payload>,` 二进制安全自定界帧编解码（严格拒前导零与半包识别） |
+| **`@cap/uri-template`** | `packages/@cap/uri-template` | 对标 npm `url-template` / Rust `uritemplate` — RFC 6570 URI Template Levels 1–4 零堆展开、变量提取与合法性校验 |
+| **`@cap/json-pointer`** | `packages/@cap/json-pointer` | 对标 npm `jsonpointer` / `fast-json-patch` / Rust `jsonptr` — RFC 6901 JSON Pointer 路径解析、`~0`/`~1` 转义与流式迭代 |
+| **`@cap/sse-parse`** | `packages/@cap/sse-parse` | 对标 npm `eventsource-parser` / Rust `eventsource-stream` — W3C `text/event-stream` 跨分片流式 SSE 解析器（适配 LLM 流） |
+| **`@cap/resp`** | `packages/@cap/resp` | 对标 npm `redis-parser` / Rust `resp` — Redis RESP2 线协议零堆帧编解码与命令编码器 |
+| **`@cap/mqtt-packet`** | `packages/@cap/mqtt-packet` | 对标 npm `mqtt-packet` / Rust `mqttbytes` — OASIS MQTT v3.1.1 二进制控制报文（变长 Remaining Length / PUBLISH / PUBACK） |
+| **`@cap/rss`** | `packages/@cap/rss` | 对标 npm `rss-parser` / Rust `rss` — RSS 2.0 XML 零堆生成器与 CDATA 感知标签提取器 |
+| **`@cap/polyline`** | `packages/@cap/polyline` | 对标 npm `@mapbox/polyline` / Rust `polyline` — Google Encoded Polyline（precision 5/6）GPS 坐标轨迹差分编解码 |

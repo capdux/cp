@@ -1,0 +1,9 @@
+{
+  "name": "@cap/uri-template",
+  "ver": "0.1.0",
+  "description": "Zero-allocation RFC 6570 URI Template (Levels 1-4) expander and validator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["uri-template", "rfc6570", "url", "http", "router", "zero-alloc"]
+}

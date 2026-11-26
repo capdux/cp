@@ -1,0 +1,9 @@
+{
+  "name": "@cap/json-pointer",
+  "ver": "0.1.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 6901 JSON Pointer validator, escaper, segment navigator, array index parser, and iterator in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["json-pointer", "rfc6901", "json", "json-patch", "escape", "parser", "zero-alloc"]
+}

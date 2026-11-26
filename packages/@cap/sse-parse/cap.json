@@ -1,0 +1,9 @@
+{
+  "name": "@cap/sse-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C Server-Sent Events (text/event-stream) incremental streaming parser for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["sse", "eventsource", "event-stream", "streaming", "llm", "http", "zero-alloc"]
+}

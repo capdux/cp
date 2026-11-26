@@ -1,0 +1,8 @@
+{
+  "name": "@cap/resp",
+  "version": "1.0.0",
+  "description": "Zero-heap Redis RESP2 wire protocol streaming frame parser and command encoder.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
