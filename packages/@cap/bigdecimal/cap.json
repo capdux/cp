@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bigdecimal",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap exact base-10 financial arithmetic library with 18-digit precision, rounding, parsing, and formatting (clean-room port of Rust bigdecimal)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/tzfile",
+  "ver": "1.0.0",
+  "description": "Zero-heap RFC 8536 TZif binary header parser, POSIX TZ string parser, and UTC offset transition evaluator (crates.io tzfile equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

@@ -1056,3 +1056,12 @@
 - `packages/@cap/mint/` & `cap/test/testCapMint.cp`: crates.io #180 `mint`（7 亿+，图形/物理数学互操作标准类型，6/6 PASS）。
 - `packages/@cap/nalgebra/` & `cap/test/testCapNalgebra.cp`: crates.io **#110** `nalgebra`（10 亿+，复用 `@cap/mint`，线性代数与仿射变换，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增 Batch 118 全部 5 个官方包映射（885 mappings）。
+
+### 2026-11-27 (Batch 119 — **突破 676 官方 `.cap` 包！拿下 `ndarray`(9 亿+)+`execa`(1.4 亿/周)+`bigdecimal`+`tzfile`+`multipart`+`multer`**)
+- `packages/@cap/multer/` & `cap/test/testCapMulter.cp`: npm Top 55 `multer` v2（8000 万+/周，双包复用 `@cap/mediatype`+`@cap/mime-types`，6/6 PASS）。
+- `packages/@cap/execa/` & `cap/test/testCapExeca.cp`: npm Top 30 `execa`（1.4 亿+/周，复用 `@cap/npm-run-path`，6/6 PASS）。
+- `packages/@cap/bigdecimal/` & `cap/test/testCapBigdecimal.cp`: crates.io `bigdecimal` v0.4（金融级高精度十进制算术，6/6 PASS）。
+- `packages/@cap/ndarray/` & `cap/test/testCapNdarray.cp`: crates.io **#125** `ndarray`（9 亿+，2D/N-D 数值数组与矩阵乘，6/6 PASS）。
+- `packages/@cap/tzfile/` & `cap/test/testCapTzfile.cp`: crates.io `tzfile`（RFC 8536 TZif + POSIX TZ 解析，6/6 PASS）。
+- `packages/@cap/multipart/` & `cap/test/testCapMultipart.cp`: crates.io `multipart`（双包复用 `@cap/mediatype`+`@cap/unicase`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增 Batch 119 全部 6 个官方包映射（891 mappings）。

@@ -1,0 +1,12 @@
+{
+  "name": "@cap/multipart",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7578 multipart/form-data streaming reader, writer, and boundary extractor built on @cap/mediatype and @cap/unicase (clean-room port of Rust multipart/multer)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/mediatype": "1.0.0",
+    "@cap/unicase": "1.0.0"
+  }
+}

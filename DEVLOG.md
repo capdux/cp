@@ -429,3 +429,6 @@
 
 ## 2026-11-27: Batch 118 五大线性代数/GIS/静态流包全 6/6 PASS — 突破 **670 官方 `.cap` 包里程碑**！
 - 交付 crates.io #110 `nalgebra`（10 亿+，复用 `@cap/mint`）、#180 `mint`（7 亿+）、`geojson`（复用 `@cap/wkt`）与 npm `ee-first`（1.6 亿+/周）、`send`（1.4 亿+/周，四包复用），全部 30/30 单测 100% PASS，总映射达 885 项（npm=444, crates.io=441）。
+
+## 2026-11-27: Batch 119 六大科学计算/时区/进程/Multipart 包全 6/6 PASS — 官方 `.cap` 包突破 **676+**！
+- 交付 crates.io #125 `ndarray`（9 亿+）、`bigdecimal`、`tzfile`、`multipart`（双包复用）与 npm `execa`（1.4 亿+/周，复用 `@cap/npm-run-path`）、`multer`（双包复用），全部 36/36 单测 100% PASS，总映射达 891 项（npm=446, crates.io=445 精准 1:1 平衡）；Worker N9 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N10。

@@ -896,3 +896,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/geojson`** | `packages/@cap/geojson` | 对标 crates.io `geojson` v0.24 (复用 `@cap/wkt`) — RFC 7946 GeoJSON Geometry/Feature 零堆解析格式化与 WKT 互转 |
 | **`@cap/mint`** | `packages/@cap/mint` | 对标 crates.io #180 `mint` (**7 亿+**) — 零堆数学互操作标准类型 `Point2/3`、`Vector2/3/4`、`Quaternion`、`RowMatrix2/3/4`、`ColumnMatrix4` |
 | **`@cap/nalgebra`** | `packages/@cap/nalgebra` | 对标 crates.io **#110** `nalgebra` (**10 亿+**, 复用 `@cap/mint`) — 2D/3D/4D 线性代数矩阵乘法、行列式、逆矩阵与 3D 仿射变换 |
+| **`@cap/multer`** | `packages/@cap/multer` | 对标 npm Top 55 `multer` v2 (8000 万+/周，双包复用 `@cap/mediatype`+`@cap/mime-types`) — 上传策略、字段白名单、大小上限与 boundary 提取 |
+| **`@cap/execa`** | `packages/@cap/execa` | 对标 npm Top 30 `execa` (**1.4 亿+/周**, 复用 `@cap/npm-run-path`) — 子进程参数转义、`preferLocal` 路径解析、尾换行剥离与结果状态机 |
+| **`@cap/bigdecimal`** | `packages/@cap/bigdecimal` | 对标 crates.io `bigdecimal` v0.4 — 零堆金融级高精度十进制四则运算、防溢出长除法与 half-away-from-zero 舍入 |
+| **`@cap/ndarray`** | `packages/@cap/ndarray` | 对标 crates.io **#125** `ndarray` (**9 亿+**) — 零堆固定容量 2D/N-D 数值数组、矩阵乘、转置、重塑、点积与归约统计 |
+| **`@cap/tzfile`** | `packages/@cap/tzfile` | 对标 crates.io `tzfile` — RFC 8536 TZif 二进制头解析、POSIX TZ 字符串（`EST5EDT`/`AEST-10`）解析与夏令时跳变查表 |
+| **`@cap/multipart`** | `packages/@cap/multipart` | 对标 crates.io `multipart` / `multer-rs` (双包复用 `@cap/mediatype`+`@cap/unicase`) — RFC 7578 零堆流式 Multipart 编解码器 |

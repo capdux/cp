@@ -10644,6 +10644,70 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "multer",
+      "source_repo": "https://github.com/expressjs/multer",
+      "license": "MIT",
+      "cp_target": "@cap/multer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "execa",
+      "source_repo": "https://github.com/sindresorhus/execa",
+      "license": "MIT",
+      "cp_target": "@cap/execa",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bigdecimal",
+      "source_repo": "https://github.com/akubera/bigdecimal-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/bigdecimal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ndarray",
+      "source_repo": "https://github.com/rust-ndarray/ndarray",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/ndarray",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tzfile",
+      "source_repo": "https://github.com/x-hgg-x/tz-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/tzfile",
+      "kind": "package",
+      "aliases": [
+        "iana-time-zone"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "multipart",
+      "source_repo": "https://github.com/abonander/multipart",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/multipart",
+      "kind": "package",
+      "aliases": [
+        "multer-rs"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

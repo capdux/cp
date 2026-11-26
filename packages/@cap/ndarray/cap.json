@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ndarray",
+  "ver": "1.0.0",
+  "description": "Zero-heap fixed-capacity 2D/N-D numerical array with stride indexing, matmul, transpose, dot, and reductions (crates.io ndarray equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}
