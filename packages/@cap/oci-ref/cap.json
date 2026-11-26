@@ -1,0 +1,18 @@
+{
+  "name": "@cap/oci-ref",
+  "version": "1.0.0",
+  "description": "Zero-heap OCI / Docker container image reference parser, validator, and canonicalizer (registry, namespace, repo, tag, sha256 digest)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "oci",
+    "docker",
+    "container",
+    "image",
+    "reference",
+    "registry",
+    "digest",
+    "caprun"
+  ]
+}

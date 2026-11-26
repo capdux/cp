@@ -324,3 +324,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/boxen`** | `packages/@cap/boxen` | 对标 npm `boxen`/`cli-boxes` — 6 种边框样式、顶边框标题、CJK 双宽与 ANSI 穿透的零堆终端盒子渲染器 |
 | **`@cap/conventional-commits`** | `packages/@cap/conventional-commits` | 对标 npm `conventional-commits-parser` / Rust `git-conventional` — Conventional Commits 1.0.0 零拷贝解析与 Semver 升级推导 |
 | **`@cap/svg-badge`** | `packages/@cap/svg-badge` | 对标 npm `badge-maker`/`gh-badges` — Shields.io 风格 Flat/FlatSquare/Plastic SVG 状态徽章零堆生成器 |
+| **`@cap/git-url`** | `packages/@cap/git-url` | 对标 npm `hosted-git-info`/`git-url-parse` — SCP/HTTPS/SSH/简写 Git 仓库地址零拷贝解析与规范化 |
+| **`@cap/stacktrace`** | `packages/@cap/stacktrace` | 对标 npm `error-stack-parser`/`stacktrace-parser`/`clean-stack` — V8/Firefox/Rust/Zig/CP 调用栈解析与内部帧清洗 |
+| **`@cap/oci-ref`** | `packages/@cap/oci-ref` | 对标 Rust `oci-distribution` / `docker-reference` — OCI/Docker 容器镜像地址解析、校验与规范化 |
+| **`@cap/card-bin`** | `packages/@cap/card-bin` | 对标 npm `credit-card-type`/`card-validator` — 8 大支付卡组织 BIN 识别、Luhn 校验、分组格式化与 PCI-DSS 脱敏 |

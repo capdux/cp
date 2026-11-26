@@ -193,3 +193,10 @@
 - `packages/@cap/conventional-commits/` & `cap/test/testCapConventionalCommits.cp`: Conventional Commits 1.0.0 解析与 Semver 推导引擎（对标 npm `conventional-commits-parser` [18M/wk]，6/6 PASS）。
 - `packages/@cap/svg-badge/` & `cap/test/testCapSvgBadge.cp`: Shields.io 风格 Flat/FlatSquare/Plastic SVG 状态徽章零堆生成器（对标 npm `badge-maker` [3M/wk]，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **112 条**高频映射（新增 `toml`/`ini`/`cookie`/`punycode`/`human-signals`/`editorconfig` 内部库直连映射 + Wave 19 四大独立包）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 20 四路并行吸收 10 项高下载资产（`@cap/git-url`, `@cap/stacktrace`, `@cap/oci-ref`, `@cap/card-bin` + 6 项超高下载去重映射）并突破 129 官方包
+- `packages/@cap/git-url/` & `cap/test/testCapGitUrl.cp`: SCP/HTTPS/SSH/托管简写 Git 仓库地址零拷贝解析与规范化（对标 npm `hosted-git-info` [65M/wk] & `git-url-parse` [15M/wk]，6/6 PASS）。
+- `packages/@cap/stacktrace/` & `cap/test/testCapStacktrace.cp`: V8/SpiderMonkey/Rust/Zig/CP 多格式调用栈解析与内部帧清洗（对标 npm `error-stack-parser` [40M/wk] & `stacktrace-parser` [35M/wk]，6/6 PASS）。
+- `packages/@cap/oci-ref/` & `cap/test/testCapOciRef.cp`: OCI/Docker 容器镜像引用解析、校验与规范化（对标 Rust `oci-distribution` / `docker-reference`，6/6 PASS）。
+- `packages/@cap/card-bin/` & `cap/test/testCapCardBin.cp`: 8 大支付卡组织 BIN 识别、Luhn 校验、分组格式化与 PCI-DSS 脱敏（对标 npm `credit-card-type` [4M/wk] & `card-validator`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **122 条**高频映射（新增 `chalk`/`picocolors` [260M/wk]、`@jridgewell/sourcemap-codec`/`vlq` [120M/wk]、`nanoid` [65M/wk]、`shell-quote` [45M/wk]、`ulid` [15M/wk]、`auth-header` [15M/wk] 去重映射 + Wave 20 四大独立包）。

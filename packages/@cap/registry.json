@@ -1124,6 +1124,106 @@
       "kind": "package",
       "aliases": ["gh-badges", "shields-badge"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chalk",
+      "source_repo": "https://github.com/chalk/chalk",
+      "license": "MIT",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": ["picocolors", "kleur", "colorette", "ansi-colors"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@jridgewell/sourcemap-codec",
+      "source_repo": "https://github.com/jridgewell/sourcemap-codec",
+      "license": "MIT",
+      "cp_target": "cap:sourcemap",
+      "kind": "stdlib",
+      "aliases": ["vlq", "source-map-js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "nanoid",
+      "source_repo": "https://github.com/ai/nanoid",
+      "license": "MIT",
+      "cp_target": "cap:uuid",
+      "kind": "stdlib",
+      "aliases": ["nanoid-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shell-quote",
+      "source_repo": "https://github.com/inspect-js/node-shell-quote",
+      "license": "MIT",
+      "cp_target": "@cap/shlex",
+      "kind": "package",
+      "aliases": ["shescape"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ulid",
+      "source_repo": "https://github.com/ulid/javascript",
+      "license": "MIT",
+      "cp_target": "cap:ulid",
+      "kind": "stdlib",
+      "aliases": ["ulidx", "ulid-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "auth-header",
+      "source_repo": "https://github.com/izaakschroeder/auth-header",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["www-authenticate"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hosted-git-info",
+      "source_repo": "https://github.com/npm/hosted-git-info",
+      "license": "ISC",
+      "cp_target": "@cap/git-url",
+      "kind": "package",
+      "aliases": ["git-url-parse", "parse-github-url"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "error-stack-parser",
+      "source_repo": "https://github.com/stacktracejs/error-stack-parser",
+      "license": "MIT",
+      "cp_target": "@cap/stacktrace",
+      "kind": "package",
+      "aliases": ["stacktrace-parser", "clean-stack"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "credit-card-type",
+      "source_repo": "https://github.com/braintree/credit-card-type",
+      "license": "MIT",
+      "cp_target": "@cap/card-bin",
+      "kind": "package",
+      "aliases": ["card-validator", "luhn-card"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "oci-distribution",
+      "source_repo": "https://github.com/krustlet/oci-distribution",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/oci-ref",
+      "kind": "package",
+      "aliases": ["docker-reference", "parse-docker-image"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

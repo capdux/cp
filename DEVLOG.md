@@ -121,3 +121,6 @@
 
 ## 2026-11-26: Wave 19 四路并行交付 `@cap/spdx` + `@cap/boxen` + `@cap/conventional-commits` + `@cap/svg-badge`
 - 首轮 4 路并行全线一次通过：`@cap/spdx`（7/7）、`@cap/boxen`（6/6）、`@cap/conventional-commits`（6/6）、`@cap/svg-badge`（6/6），并完成 6 项超高下载量资产去重直连（`toml`/`ini`/`cookie`/`punycode`/`human-signals`/`editorconfig`），总映射达 **112 条**，同步发布至 `https://capdux.org`。
+
+## 2026-11-26: Wave 20 四路并行交付 `@cap/git-url` + `@cap/stacktrace` + `@cap/oci-ref` + `@cap/card-bin`
+- 保持 3 路子智能体 + 主智能体 4 路满载并行，全线一次通过：`@cap/git-url`（6/6）、`@cap/stacktrace`（6/6）、`@cap/oci-ref`（6/6）、`@cap/card-bin`（6/6），同时甄别去重 6 项超高下载资产（`chalk`/`vlq`/`nanoid`/`shell-quote`/`ulid`/`auth-header`），总映射突破 **122 条**，线上官方 `.cap` 包突破 **129 个**。

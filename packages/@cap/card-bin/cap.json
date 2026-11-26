@@ -1,0 +1,8 @@
+{
+  "name": "@cap/card-bin",
+  "ver": "1.0.0",
+  "description": "Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
