@@ -1,0 +1,7 @@
+{
+  "name": "@cap/redact",
+  "ver": "1.0.0",
+  "description": "Zero-allocation PII & secret redaction/masking engine (fast-redact / maskdata / secrecy parity: emails, Luhn credit cards, JWT/API tokens, phones, IPv4, and sensitive JSON fields) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

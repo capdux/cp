@@ -384,6 +384,106 @@
       "kind": "stdlib",
       "aliases": ["feed", "feed-rs", "rss", "atom_syndication"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-redact",
+      "source_repo": "https://github.com/davidmarkclements/fast-redact",
+      "license": "MIT",
+      "cp_target": "@cap/redact",
+      "kind": "package",
+      "aliases": ["maskdata", "secrecy", "redact-pii"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "libphonenumber-js",
+      "source_repo": "https://github.com/catamphetamine/libphonenumber-js",
+      "license": "MIT",
+      "cp_target": "@cap/phone",
+      "kind": "package",
+      "aliases": ["phonenumber", "google-libphonenumber", "awesome-phonenumber"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "expr-eval",
+      "source_repo": "https://github.com/silentmatt/expr-eval",
+      "license": "MIT",
+      "cp_target": "@cap/expr",
+      "kind": "package",
+      "aliases": ["filtrex", "jexl", "evalexpr", "meval"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "otplib",
+      "source_repo": "https://github.com/yeojz/otplib",
+      "license": "MIT",
+      "cp_target": "cap:auth",
+      "kind": "stdlib",
+      "aliases": ["speakeasy", "otpauth", "totp-rs", "totp-lite"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ical",
+      "source_repo": "https://github.com/peterbraden/ical.js",
+      "license": "MIT",
+      "cp_target": "cap:doc",
+      "kind": "stdlib",
+      "aliases": ["ics", "node-ical", "icalendar", "vcard"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rrule",
+      "source_repo": "https://github.com/jkbrzt/rrule",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["rrule-rs", "iso8601-duration"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "snowflake-id",
+      "source_repo": "https://github.com/dustinkirkland/snowflake",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["sonyflake", "snowflake-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "uri-templates",
+      "source_repo": "https://github.com/geraintluff/uri-templates",
+      "license": "MIT",
+      "cp_target": "cap:web",
+      "kind": "stdlib",
+      "aliases": ["url-template", "uritemplate"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "opossum",
+      "source_repo": "https://github.com/nodeshift/opossum",
+      "license": "Apache-2.0",
+      "cp_target": "cap:fsm",
+      "kind": "stdlib",
+      "aliases": ["cockatiel", "failsafe", "circuit-breaker"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dinero.js",
+      "source_repo": "https://github.com/dinerojs/dinero.js",
+      "license": "MIT",
+      "cp_target": "cap:math",
+      "kind": "stdlib",
+      "aliases": ["currency.js", "rusty-money"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -287,3 +287,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/decimal`** | `packages/@cap/decimal` | 对标 npm `decimal.js`/`bignumber.js` / Rust `rust_decimal` — 128-bit 精确十进制金融算术 + 6 种舍入（含银行家 HalfEven）+ 科学记数法 |
 | **`@cap/useragent`** | `packages/@cap/useragent` | 对标 npm `ua-parser-js`/`bowser` / Rust `woothee` — 零堆 HTTP User-Agent 浏览器/OS/设备/爬虫/AI Bot（GPTBot/ClaudeBot/DeepSeekBot）识别 |
 | **`@cap/pluralize`** | `packages/@cap/pluralize` | 对标 npm `pluralize`/`inflection` / Rust `pluralizer` — 56 组不规则词 + 36 个不可数词 + 大小写保持 + `pluralizeCount` + `ordinal` |
+| **`@cap/redact`** | `packages/@cap/redact` | 对标 npm `fast-redact`/`maskdata` / Rust `secrecy` — 零堆 PII 与密钥脱敏（邮箱/Luhn卡号/JWT/API Key/手机号/IPv4/JSON 敏感字段） |
+| **`@cap/phone`** | `packages/@cap/phone` | 对标 npm `libphonenumber-js` / Rust `phonenumber` — 45 国拨号区号解析 + E.164/国际/国内/RFC 3966 多格式输出 |
+| **`@cap/expr`** | `packages/@cap/expr` | 对标 npm `expr-eval`/`filtrex` / Rust `evalexpr`/`meval` — 零堆安全递归下降数学与规则表达式求值（64 变量 + 12 内置函数 + 深度护栏） |

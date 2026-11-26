@@ -84,3 +84,6 @@
 
 ## 2026-11-26: Wave 7 三路并行交付 `@cap/decimal` + `@cap/useragent` + `@cap/pluralize` 并发布至 `capdux.org`
 - 排查确认 `json-patch`、`robots.txt`、`rss/atom` 已内置于 `lib/{json,http,doc}` 并补登记至 `packages/@cap/registry.json`（达 38 条）；三路并行洁净室交付 `@cap/decimal`（5/5 PASS）、`@cap/useragent`（6/6 PASS）、`@cap/pluralize`（6/6 PASS），生成 `.d.cp` 存根、提交 Git 并发布上线至 `https://capdux.org`（线上官方包总数达 88）。
+
+## 2026-11-26: Wave 8 三路并行交付 `@cap/redact` + `@cap/phone` + `@cap/expr` 并发布至 `capdux.org`
+- 排查确认 `totp`/`ical`/`vcard`/`rrule`/`snowflake`/`uritemplate`/`breaker`/`decimalMoney` 已内置于 `lib/` 并全部补登记至 `packages/@cap/registry.json`（达 48 条）；三路并行洁净室交付 `@cap/redact`（5/5 PASS）、`@cap/phone`（6/6 PASS）、`@cap/expr`（6/6 PASS），生成 `.d.cp` 存根、提交 Git 并发布上线至 `https://capdux.org`（线上官方包总数达 91）。

@@ -1,0 +1,7 @@
+{
+  "name": "@cap/phone",
+  "ver": "1.0.0",
+  "description": "Zero-allocation international phone number parser, validator, and formatter (E.164, International, National, RFC 3966) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

@@ -120,3 +120,9 @@
 - `packages/@cap/useragent/` & `cap/test/testCapUserAgent.cp`: 零堆分配 HTTP `User-Agent` 解析引擎（桌面/移动/平板/CLI/搜索引擎爬虫/AI 爬虫如 `GPTBot`/`ClaudeBot`/`DeepSeekBot`/`PerplexityBot` 全识别，对标 npm `ua-parser-js`/`bowser` & Rust `woothee`，6/6 PASS）。
 - `packages/@cap/pluralize/` & `cap/test/testCapPluralize.cp`: 英文单复数与序数词变形引擎（56 组不规则词 + 36 个不可数词 + 大小写还原 + `pluralizeCount` + `ordinal`，对标 npm `pluralize`/`inflection` & Rust `pluralizer`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 38 条高频映射（新增 Wave 7 三大包 + `fast-json-patch`/`robots-parser`/`rss-parser` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 88）。
+
+## [2026-11-26] - Wave 8 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/redact`, `@cap/phone`, `@cap/expr`）并发布至 `capdux.org`
+- `packages/@cap/redact/` & `cap/test/testCapRedact.cp`: 零堆分配 PII 与密钥脱敏引擎（单值掩码 + 自由文本自动识别邮箱/Luhn 信用卡/JWT/API Token/手机号/IPv4 + JSON 敏感字段脱敏 + `containsSensitive`，对标 npm `fast-redact`/`maskdata` & Rust `secrecy`，5/5 PASS）。
+- `packages/@cap/phone/` & `cap/test/testCapPhone.cp`: 零堆分配国际电话号码解析与格式化引擎（内置 45 国拨号区号与长度规则、支持 `+`/`00`/`tel:`/前导 0 剥离与 E.164/国际/国内/RFC 3966 四种格式输出，对标 npm `libphonenumber-js` & Rust `phonenumber`，6/6 PASS）。
+- `packages/@cap/expr/` & `cap/test/testCapExpr.cp`: 零堆分配安全数学与规则表达式求值引擎（完整优先级与短路逻辑、三元运算、右结合幂、64 变量环境、12 安全函数与 32 层深度护栏，对标 npm `expr-eval`/`filtrex` & Rust `evalexpr`/`meval`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 48 条高频映射（新增 Wave 8 三大包 + `otplib`/`ical`/`rrule`/`snowflake-id`/`uri-templates`/`opossum`/`dinero.js` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 91）。

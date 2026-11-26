@@ -1,0 +1,7 @@
+{
+  "name": "@cap/expr",
+  "ver": "1.0.0",
+  "description": "Zero-allocation recursive-descent expression evaluation engine with variables, ternary/logical/math operators, built-in functions, and recursion depth guard for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
