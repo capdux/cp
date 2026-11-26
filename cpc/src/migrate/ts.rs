@@ -5299,8 +5299,7 @@ pub fn transpile_ts_to_cp(
     }
     if saw_promise_combinator {
         opt_notes.push(
-            "将 `Promise.all` / `Promise.race` 映射为 CP 结构化并发 `joinAll` / `race`"
-                .to_string(),
+            "将 `Promise.all` / `Promise.race` 映射为 CP 结构化并发 `joinAll` / `race`".to_string(),
         );
     }
 
