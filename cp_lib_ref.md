@@ -271,3 +271,16 @@ const h = cap.hash.wyhash("hello");
 | **`@web/html`** | `packages/@web/html` | `HtmlConfig`, `htmlEscape`, `HtmlBuilder`, `htmlIsHtmx`, `htmlHxRedirect`, `htmlHxTrigger`, `registerHtml` — 零堆 XSS 转义、SSR 模板构建与 HTMX 协议助手 |
 | **`@web/trpc`** | `packages/@web/trpc` | `TrpcConfig`, `TrpcProcKind`, `trpcQuery`, `trpcMutation`, `registerTrpc` — 统一 Procedure RPC 路由（`GET/POST /trpc/:proc`）与标准 `result`/`error` 封装 |
 | **`@web/a2a`** | `packages/@web/a2a` | `A2aConfig`, `A2aTaskState`, `a2aSetTaskHandler`, `registerA2a` — Google A2A 协议（`GET /.well-known/agent.json` Agent Card 与 `POST /a2a` `tasks/send`/`get`/`cancel`） |
+
+## 官方纯 CP 生态引擎包（`packages/@cap/*` — `cap add @cap/<name>`）
+
+| 包名 | 路径 | 对标生态 & 核心能力 |
+| :--- | :--- | :--- |
+| **`@cap/lru`** | `packages/@cap/lru` | 对标 npm `lru-cache` / Rust `lru` — O(1) 侵入式双向链表 + FNV-1a 哈希表 + TTL + 字节权重淘汰 |
+| **`@cap/qs`** | `packages/@cap/qs` | 对标 npm `qs` / Rust `serde_qs` — 零堆深层嵌套 QueryString 解析/构造 + RFC 3986 编解码 |
+| **`@cap/retry`** | `packages/@cap/retry` | 对标 npm `p-retry` / Rust `backoff` — Fixed/Linear/Exponential/Fibonacci + AWS Jitter + RetryBudget |
+| **`@cap/diff`** | `packages/@cap/diff` | 对标 npm `diff` / Rust `similar` — 零堆 Myers O(ND) Diff + GNU Unified Diff + 无损 Patch |
+| **`@cap/template`** | `packages/@cap/template` | 对标 npm `handlebars` / Rust `minijinja` — 零堆 XSS 自动转义模板引擎 + 链式过滤器 + 控制块 |
+| **`@cap/validator`** | `packages/@cap/validator` | 对标 npm `zod`/`validator`/`ajv` / Rust `validator` — 零堆格式校验（Email/URL/UUID/ULID/IP/CIDR/SemVer/ISO8601/Luhn/E.164）+ 栈式多错误收集器 |
+| **`@cap/table`** | `packages/@cap/table` | 对标 npm `cli-table3`/`table` / Rust `comfy-table`/`tabled` — 5 套边框预设 + ANSI/CJK 宽字符感知 + 对齐与截断排版 |
+| **`@cap/faker`** | `packages/@cap/faker` | 对标 npm `@faker-js/faker` / Rust `fake` — SplitMix64 + xoshiro256** 确定性种子测试数据与 Mock 生成器 |

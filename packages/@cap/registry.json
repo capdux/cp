@@ -224,6 +224,106 @@
       "kind": "package",
       "aliases": ["mustache", "minijinja", "tera", "handlebars-rust"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "zod",
+      "source_repo": "https://github.com/colinhacks/zod",
+      "license": "MIT",
+      "cp_target": "@cap/validator",
+      "kind": "package",
+      "aliases": ["validator", "ajv", "joi", "valibot", "validator-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cli-table3",
+      "source_repo": "https://github.com/cli-table/cli-table3",
+      "license": "MIT",
+      "cp_target": "@cap/table",
+      "kind": "package",
+      "aliases": ["table", "comfy-table", "tabled", "prettytable"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@faker-js/faker",
+      "source_repo": "https://github.com/faker-js/faker",
+      "license": "MIT",
+      "cp_target": "@cap/faker",
+      "kind": "package",
+      "aliases": ["faker", "chance", "fake", "fake-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "qrcode",
+      "source_repo": "https://github.com/soldair/node-qrcode",
+      "license": "MIT",
+      "cp_target": "cap:image",
+      "kind": "stdlib",
+      "aliases": ["qrcode-rs", "fast_qr"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ipaddr.js",
+      "source_repo": "https://github.com/whitequark/ipaddr.js",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": ["ip-cidr", "ipnetwork", "cidr"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fuse.js",
+      "source_repo": "https://github.com/krisk/Fuse",
+      "license": "Apache-2.0",
+      "cp_target": "cap:ds",
+      "kind": "stdlib",
+      "aliases": ["fuzzysort", "strsim", "fuzzy-matcher", "nucleo"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "change-case",
+      "source_repo": "https://github.com/blakeembrey/change-case",
+      "license": "MIT",
+      "cp_target": "cap:text",
+      "kind": "stdlib",
+      "aliases": ["camelcase", "heck", "convert_case", "punycode", "idna"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "semver",
+      "source_repo": "https://github.com/npm/node-semver",
+      "license": "ISC",
+      "cp_target": "cap:semver",
+      "kind": "stdlib",
+      "aliases": ["semver-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dotenv",
+      "source_repo": "https://github.com/motdotla/dotenv",
+      "license": "BSD-2-Clause",
+      "cp_target": "cap:dotenv",
+      "kind": "stdlib",
+      "aliases": ["dotenvy", "dotenv-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cron-parser",
+      "source_repo": "https://github.com/harrisiirak/cron-parser",
+      "license": "MIT",
+      "cp_target": "cap:cron",
+      "kind": "stdlib",
+      "aliases": ["croner", "cron", "node-cron"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

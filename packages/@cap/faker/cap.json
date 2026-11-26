@@ -1,0 +1,7 @@
+{
+  "name": "@cap/faker",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic fake data generator (xoshiro256** PRNG, person/network/text/commerce/UUIDv4/Luhn card/collections) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

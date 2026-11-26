@@ -108,3 +108,9 @@
 - `cpc/src/migrate/registry.rs`, `cpc/src/migrate/mod.rs`, `cpc/src/main.rs`, `cap/src/main.zig`: 新增 `cap from -npm <pkg[@ver]>` 与 `cap from -crate <name[@ver]>`（别名 `-cargo`），支持查索引去重/提醒、MIT/Apache-2.0 协议守门、运行依赖递归独立转换（跳过 devDependencies）与索引自动回写（4/4 单测 PASS）。
 - `packages/@cap/diff/` & `cap/test/testCapDiff.cp`: 新增纯 CP 零堆分配 Myers O(ND) Diff 引擎（FNV-1a 行哈希预过滤、紧凑三角形 `undefined` 栈 Trace 缓冲、GNU Unified Diff 与无损 `applyLineDiff`，对标 npm `diff` [~120M/wk] & Rust `similar`，6/6 PASS）。
 - `packages/@cap/template/` & `cap/test/testCapTemplate.cp`: 新增纯 CP 零堆分配模板引擎（默认 HTML XSS 转义、`{{{ raw }}}`、链式过滤器、`#if`/`else`/`#unless`/`#each` + `@index`/`@first`/`@last`/`this` + `MAX_BLOCK_DEPTH=16` 护栏，对标 npm `handlebars`/`mustache` & Rust `minijinja`/`tera`，7/7 PASS）。
+
+## [2026-11-26] - Wave 6 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/validator`, `@cap/table`, `@cap/faker`）并发布至 `capdux.org`
+- `packages/@cap/validator/` & `cap/test/testCapValidator.cp`: 零堆分配数据与格式校验引擎（Email/URL/UUID/ULID/IPv4/IPv6/CIDR/SemVer 2.0/ISO-8601 闰年感知日期时间/Luhn 信用卡/E.164 手机号/Base64/Slug + 栈式多错误收集器 `Validator`，对标 npm `zod`/`validator`/`ajv` & Rust `validator`，5/5 PASS）。
+- `packages/@cap/table/` & `cap/test/testCapTable.cp`: 纯 CP 终端/Markdown 表格排版引擎（5 套边框预设 Unicode/Rounded/Ascii/Markdown/Compact、左中右对齐、ANSI CSI/OSC 转义跳过与 CJK/Emoji 宽字符宽度感知、自动截断省略号与动态多列构建器，对标 npm `cli-table3`/`table` & Rust `comfy-table`/`tabled`，7/7 PASS）。
+- `packages/@cap/faker/` & `cap/test/testCapFaker.cp`: 零堆分配确定性种子（SplitMix64 + xoshiro256**）测试数据与 Mock 生成器（姓名/邮箱/用户名/E.164 手机/IPv4/IPv6/URL/RFC 4122 UUIDv4/颜色/公司/地址/ISO 日期/Luhn 校验信用卡/Fisher-Yates 洗牌与 Floyd 抽样，对标 npm `@faker-js/faker` & Rust `fake`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 32 条高频 npm/crates.io 映射（新增 Wave 6 三大包 + `qrcode`/`ipaddr.js`/`fuse.js`/`change-case`/`semver`/`dotenv`/`cron-parser` 标准库去重映射）并同步发布至 `https://capdux.org`。

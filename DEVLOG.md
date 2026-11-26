@@ -78,3 +78,6 @@
 
 ## 2026-11-26: 落地 `cap from -npm/-crate` 生态自繁衍引擎 + Wave 5（`@cap/diff` & `@cap/template`）
 - 主智能体将完整生态吸收指南写入 `GEMINI.md`，创建 `packages/@cap/registry.json` 并实现 `cpc/src/migrate/registry.rs` 与 `cap from -npm/-crate`；子智能体 1 交付 `@cap/diff`（6/6 PASS），子智能体 2 交付 `@cap/template`（7/7 PASS）。
+
+## 2026-11-26: Wave 6 三路并行交付 `@cap/validator` + `@cap/table` + `@cap/faker` 并发布至 `capdux.org`
+- 严格执行 `GEMINI.md` 去重铁律：先排查 `lib/` 确认 `qrcode`/`cidr`/`nanoid`/`msgpack`/`bloom`/`hll`/`caseconv` 均已内置标准库，直接补登记至 `packages/@cap/registry.json`（扩充至 32 条）；精选 3 个完全空白的千万级下载量引擎三路并行洁净室实现（`@cap/validator` 5/5 PASS、`@cap/table` 7/7 PASS、`@cap/faker` 6/6 PASS），生成 `.d.cp` 存根、提交 Git 并一键发布上线至 `https://capdux.org`（线上官方包总数达 85）。
