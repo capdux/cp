@@ -1282,3 +1282,11 @@
 - `packages/@cap/plotters-svg/` & `cap/test/testCapPlottersSvg.cp`: crates.io **#512** `plotters-svg`（2.81 亿+，6/6 PASS）。
 - **零重复归并**：`imurmurhash` (#211, 2.10 亿/周) → `@cap/murmur3`、`uri-js` (#218, 2.07 亿/周) → `@cap/fast-uri`、`eventemitter3` (#222, 2.04 亿/周) → `cap:event`。
 - `GEMINI.md` & `CP_PITFALLS.md`: 固化 3 小时效率审计 Iteration 7（`git push -q` 降噪 99.9%、实时真实榜单驱动、Python `-c` 零转义、`.toString`/`1.0e12`/`std.math.inf` 避坑）。
+
+### 2026-11-27 (Batch 145 — **真实 Top 榜 5 大核心包：npm #205/#219/#241 + crates.io #483/#525，30/30 PASS**)
+- `packages/@cap/ajv-formats/` & `cap/test/testCapAjvFormats.cp`: npm **#205** `ajv-formats`（2.12 亿/周，6/6 PASS）。
+- `packages/@cap/pathe/` & `cap/test/testCapPathe.cp`: npm **#219** `pathe`（2.07 亿/周，6/6 PASS）。
+- `packages/@cap/type-check/` & `cap/test/testCapTypeCheck.cp`: npm **#241** `type-check`（1.95 亿/周，6/6 PASS）。
+- `packages/@cap/ed25519/` & `cap/test/testCapEd25519.cp`: crates.io **#483** `ed25519`（3.04 亿+，6/6 PASS）。
+- `packages/@cap/predicates/` & `cap/test/testCapPredicates.cp`: crates.io **#525** `predicates`（2.66 亿+，6/6 PASS）。
+- **零重复归并**：`#262 deep-is` → `@cap/fast-deep-equal`、`#268 json-stable-stringify-without-jsonify` → `@cap/jcs`、`#269 tinyrainbow` → `@cap/picocolors`；Worker C17 满 6 包光荣轮换。

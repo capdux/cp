@@ -11417,6 +11417,86 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ajv-formats",
+      "source_repo": "https://github.com/ajv-validator/ajv-formats",
+      "license": "MIT",
+      "cp_target": "@cap/ajv-formats",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pathe",
+      "source_repo": "https://github.com/unjs/pathe",
+      "license": "MIT",
+      "cp_target": "@cap/pathe",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "type-check",
+      "source_repo": "https://github.com/gkz/type-check",
+      "license": "MIT",
+      "cp_target": "@cap/type-check",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "deep-is",
+      "source_repo": "https://github.com/thlorenz/deep-is",
+      "license": "MIT",
+      "cp_target": "@cap/fast-deep-equal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json-stable-stringify-without-jsonify",
+      "source_repo": "https://github.com/samn/json-stable-stringify",
+      "license": "MIT",
+      "cp_target": "@cap/jcs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tinyrainbow",
+      "source_repo": "https://github.com/tinylibs/tinyrainbow",
+      "license": "MIT",
+      "cp_target": "@cap/picocolors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ed25519",
+      "source_repo": "https://github.com/RustCrypto/signatures",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/ed25519",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "predicates",
+      "source_repo": "https://github.com/assert-rs/predicates-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/predicates",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

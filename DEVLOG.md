@@ -508,3 +508,6 @@
 ## 2026-11-27: Batch 144 + 3 小时效率审计固化 Iteration 7（官方 `@cap` 达 **757 包**，映射 **973 条**）！
 - 交付 npm **#148 `jsesc`（2.50 亿/周）**、**#171 `fast-uri`（2.29 亿/周，归并 `#218 uri-js`）**、**#238 `path-parse`（1.96 亿/周）** 与 crates.io **#509 `ctr`（2.84 亿+，复用 `@cap/aes`，NIST 官方向量全过）**、**#512 `plotters-svg`（2.81 亿+）**，同步零重复归并 `#211 imurmurhash` 与 `#222 eventemitter3`；30/30 单测 100% PASS。
 - 完成 3 小时效率与 Token 审计并固化 Iteration 7 至 `GEMINI.md` 与 `CP_PITFALLS.md`（`git push -q`、实时榜单驱动、Python `-c` 零转义及 3 条 1-pass codegen 避坑）。
+
+## 2026-11-27: Batch 145 真实 Top 榜 5 大核心包全 6/6 PASS（官方 `@cap` 达 **762 包**，映射 **981 条**）！
+- 交付 npm **#205 `ajv-formats`（2.12 亿/周）**、**#219 `pathe`（2.07 亿/周）**、**#241 `type-check`（1.95 亿/周）** 与 crates.io **#483 `ed25519`（3.04 亿+）**、**#525 `predicates`（2.66 亿+）**，同步零重复归并 3 个高频 npm 包；30/30 单测 100% PASS；Worker C17 满 6 包（36/36 PASS）光荣轮换。

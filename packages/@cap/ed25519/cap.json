@@ -1,0 +1,23 @@
+{
+  "name": "@cap/ed25519",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 8032 Ed25519 signature & key containers, canonical scalar S < L validation, RFC 8410 SPKI/PKCS#8 DER and hex codecs in pure CP",
+  "license": "Apache-2.0 OR MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "ed25519",
+    "signature",
+    "crypto",
+    "rfc8032",
+    "pkcs8",
+    "spki",
+    "der"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "ed25519",
+    "repo": "https://github.com/RustCrypto/signatures",
+    "license": "Apache-2.0 OR MIT"
+  }
+}

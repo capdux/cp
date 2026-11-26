@@ -1034,3 +1034,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/path-parse`** | `packages/@cap/path-parse` | 对标 npm **#238** `path-parse` (**1.96 亿/周**) — 零拷贝 POSIX/Win32 `path.parse()` 拆解引擎 |
 | **`@cap/ctr`** | `packages/@cap/ctr` | 对标 crates.io **#509** `ctr` (**2.84 亿+**, 复用 `@cap/aes`) — NIST SP 800-38A AES-128/256-CTR 流加密与 O(1) `seek` |
 | **`@cap/plotters-svg`** | `packages/@cap/plotters-svg` | 对标 crates.io **#512** `plotters-svg` (**2.81 亿+**) — 零堆纯 CP 矢量 SVG 绘图后端 |
+| **`@cap/ajv-formats`** | `packages/@cap/ajv-formats` | 对标 npm **#205** `ajv-formats` (**2.12 亿/周**) — JSON Schema RFC 3339 日期时间/Email/IPv4/IPv6/UUID/URI/JSON Pointer 全套格式校验 |
+| **`@cap/pathe`** | `packages/@cap/pathe` | 对标 npm **#219** `pathe` (**2.07 亿/周**) — UnJS 统一 POSIX `/` 跨平台路径归一化、拼接与 `relative` |
+| **`@cap/type-check`** | `packages/@cap/type-check` | 对标 npm **#241** `type-check` (**1.95 亿/周**) — ESLint 运行时类型表达式解析与校验（`A \| B` / `Maybe T` / `[T]`） |
+| **`@cap/ed25519`** | `packages/@cap/ed25519` | 对标 crates.io **#483** `ed25519` (**3.04 亿+**) — RFC 8032 Ed25519 签名规范性校验（$S<L$）与 RFC 8410 SPKI/PKCS#8 DER 编解码 |
+| **`@cap/predicates`** | `packages/@cap/predicates` | 对标 crates.io **#525** `predicates` (**2.66 亿+**) — 零堆 RPN 布尔/数值/字符串/浮点断言谓词组合引擎 |

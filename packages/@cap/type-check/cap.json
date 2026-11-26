@@ -1,0 +1,14 @@
+{
+  "name": "@cap/type-check",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation runtime type expression parser and validator supporting primitives, unions (A | B), Maybe T, arrays ([T]), tuples ((A, B)), and objects (clean-room MIT implementation of npm type-check, #241 / 195M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "type-check",
+    "repo": "https://github.com/gkz/type-check",
+    "license": "MIT"
+  }
+}
