@@ -1242,3 +1242,11 @@
 - `packages/@cap/potential-utf/` & `cap/test/testCapPotentialUtf.cp`: crates.io **#268** `potential_utf`（6.27 亿+，6/6 PASS）。
 - `packages/@cap/aes/` & `cap/test/testCapAes.cp`: crates.io **#349** `aes`（4.38 亿+，FIPS-197 C.1/C.2/C.3 & NIST KAT 6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册。
+
+### 2026-11-27 (Batch 140 — **真实 Top 榜 5 大核心包：npm #40/#58/#61 + crates.io #405/#412，30/30 PASS**)
+- `packages/@cap/yallist/` & `cap/test/testCapYallist.cp`: npm **#40** `yallist`（4.33 亿/周，6/6 PASS）。
+- `packages/@cap/magic-string/` & `cap/test/testCapMagicString.cp`: npm **#58** `magic-string`（3.88 亿/周，6/6 PASS）。
+- `packages/@cap/js-tokens/` & `cap/test/testCapJsTokens.cp`: npm **#61** `js-tokens`（3.81 亿/周，6/6 PASS）。
+- `packages/@cap/crypto-bigint/` & `cap/test/testCapCryptoBigint.cp`: crates.io **#405** `crypto-bigint`（3.65 亿+，恒定时间 `U256` 与 secp256k1 模运算，6/6 PASS）。
+- `packages/@cap/sct/` & `cap/test/testCapSct.cp`: crates.io **#412** `sct`（3.62 亿+，RFC 6962 SCT 线格式，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N17 满 6 包轮换为 Worker N18。

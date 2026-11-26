@@ -1,0 +1,14 @@
+{
+  "name": "@cap/crypto-bigint",
+  "ver": "1.0.0",
+  "description": "Zero-allocation constant-time fixed-width 256-bit unsigned integer (U256) arithmetic and modular operations (RustCrypto crypto-bigint parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Apache-2.0 OR MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "crypto-bigint",
+    "repo": "https://github.com/RustCrypto/crypto-bigint",
+    "license": "Apache-2.0 OR MIT"
+  }
+}

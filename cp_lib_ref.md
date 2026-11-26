@@ -1010,3 +1010,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/string-decoder`** | `packages/@cap/string-decoder` | 对标 npm **#62** `string_decoder` (**3.78 亿/周**) — 流式 UTF-8/UTF-16LE/Latin1 跨分片多字节缓冲解码器 |
 | **`@cap/potential-utf`** | `packages/@cap/potential-utf` | 对标 crates.io **#268** `potential_utf` (**6.27 亿+**) — ICU4X 未校验 UTF-8/UTF-16 按需校验与 Maximal Subpart 容错解码 |
 | **`@cap/aes`** | `packages/@cap/aes` | 对标 crates.io **#349** `aes` (**4.38 亿+**) — RustCrypto FIPS-197 AES-128/192/256 纯 CP 零堆块加密器（官方向量全过） |
+| **`@cap/yallist`** | `packages/@cap/yallist` | 对标 npm **#40** `yallist` (**4.33 亿/周**) — 64 槽零堆 freelist 双向链表 O(1) 操作 |
+| **`@cap/magic-string`** | `packages/@cap/magic-string` | 对标 npm **#58** `magic-string` (**3.88 亿/周**) — Rollup/Vite 原始偏移源码字符串编辑器 |
+| **`@cap/js-tokens`** | `packages/@cap/js-tokens` | 对标 npm **#61** `js-tokens` (**3.81 亿/周**) — 零堆 JS/TS 词法分词器（Babel/ESLint 底层依赖） |
+| **`@cap/crypto-bigint`** | `packages/@cap/crypto-bigint` | 对标 crates.io **#405** `crypto-bigint` (**3.65 亿+**) — 恒定时间 256-bit 无符号大整数与模运算 |
+| **`@cap/sct`** | `packages/@cap/sct` | 对标 crates.io **#412** `sct` (**3.62 亿+**) — RFC 6962 Certificate Transparency SCT 线格式与列表解析 |

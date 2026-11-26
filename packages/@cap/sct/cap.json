@@ -1,0 +1,14 @@
+{
+  "name": "@cap/sct",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 6962 Certificate Transparency Signed Certificate Timestamp (SCT) parser and encoder (rustls/sct.rs parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Apache-2.0 OR MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "sct",
+    "repo": "https://github.com/rustls/sct.rs",
+    "license": "Apache-2.0 OR MIT"
+  }
+}

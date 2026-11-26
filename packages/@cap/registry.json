@@ -11123,6 +11123,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yallist",
+      "source_repo": "https://github.com/isaacs/yallist",
+      "license": "ISC",
+      "cp_target": "@cap/yallist",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "magic-string",
+      "source_repo": "https://github.com/Rich-Harris/magic-string",
+      "license": "MIT",
+      "cp_target": "@cap/magic-string",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "js-tokens",
+      "source_repo": "https://github.com/lydell/js-tokens",
+      "license": "MIT",
+      "cp_target": "@cap/js-tokens",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crypto-bigint",
+      "source_repo": "https://github.com/RustCrypto/crypto-bigint",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/crypto-bigint",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sct",
+      "source_repo": "https://github.com/rustls/sct.rs",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/sct",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
