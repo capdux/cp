@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { toIdentifier } from "../../toidentifier/src/index.cp";
 export class HttpError {
     status: u16,
     code: string,
@@ -13,6 +14,7 @@ export class HttpError {
 }
 
 export fn statusTitle(status: u16): string;
+export fn errorClassName(status: u16, out: []u8): usize;
 export fn statusCodeName(status: u16): string;
 export fn createHttpError(status: u16, detail: string): HttpError;
 export fn badRequest(detail: string): HttpError;

@@ -337,3 +337,6 @@
 
 ## 2026-11-27: Batch 90 八件套全 6/6 PASS — 正式突破 **808 条双生态映射（404/404 绝对对称）** & **523+ 官方 `.cap` 包**！
 - 单批打通 RustCrypto PKI 四大底座（`pem-rfc7468` → `const-oid` → `der-asn1` → `spki`，层层零重复跨包 `import` 复用）与 npm Yargs/Sindresorhus 四大核心（`cliui`、`y18n`、`yocto-queue`、`onetime`），全线 6/6 PASS。
+
+## 2026-11-27: Batch 91 六件套 + 第 10 个历史旧包解耦全 6/6 PASS — 推进至 **815+ 双生态映射**！
+- 交付 `pkcs8`（4 包组合）、`sec1`（3 包组合）、`p-limit`（复用 `yocto-queue`）、`supports-color`（复用 `has-flag`）、`kind-of`、`decamelize`，并将 `@cap/http-errors` 重构接入 `@cap/toidentifier`，全线 6/6 PASS。

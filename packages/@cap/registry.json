@@ -9816,6 +9816,72 @@
         "borsh-derive"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "supports-color",
+      "source_repo": "https://github.com/chalk/supports-color",
+      "license": "MIT",
+      "cp_target": "@cap/supports-color",
+      "kind": "package",
+      "aliases": [
+        "colorette"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kind-of",
+      "source_repo": "https://github.com/jonschlinkert/kind-of",
+      "license": "MIT",
+      "cp_target": "@cap/kind-of",
+      "kind": "package",
+      "aliases": [
+        "isobject",
+        "is-plain-object",
+        "is-primitive"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pkcs8",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/pkcs8",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sec1",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/sec1",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hdrhistogram",
+      "source_repo": "https://github.com/HdrHistogram/HdrHistogram_rust",
+      "license": "MIT",
+      "cp_target": "@cap/hdrhistogram",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "indicatif",
+      "source_repo": "https://github.com/console-rs/indicatif",
+      "license": "MIT",
+      "cp_target": "@cap/indicatif",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

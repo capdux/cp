@@ -802,3 +802,12 @@
 - `packages/@cap/yocto-queue/` & `cap/test/testCapYoctoQueue.cp`: npm Top 60 `yocto-queue`（2 亿+/周，6/6 PASS）。
 - `packages/@cap/onetime/` & `cap/test/testCapOnetime.cp`: npm Top 80 `onetime`（1.5 亿+/周，6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **808 条**双生态映射（**npm=404 / crates.io=404 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 91 — **815+ 映射！** 6 个全新零堆包 + 第 10 个历史旧包 `@cap/http-errors` 解耦重构，全部 6/6 PASS)
+- `packages/@cap/pkcs8/` & `cap/test/testCapPkcs8.cp`: crates.io `pkcs8`（4 包复用 `@cap/spki`+`@cap/const-oid`+`@cap/pem-rfc7468`+`@cap/subtle-ct`，RFC 8410 §10.3 48 字节向量，6/6 PASS）。
+- `packages/@cap/sec1/` & `cap/test/testCapSec1.cp`: crates.io `sec1`（3 包复用 `@cap/const-oid`+`@cap/pem-rfc7468`+`@cap/subtle-ct`，SEC1 v2.0 + RFC 5915，6/6 PASS）。
+- `packages/@cap/p-limit/` & `cap/test/testCapPLimit.cp`: npm Top 25 `p-limit`（跨包复用 `@cap/yocto-queue`，6/6 PASS）。
+- `packages/@cap/supports-color/` & `cap/test/testCapSupportsColor.cp`: npm Top 20 `supports-color`（跨包复用 `@cap/has-flag`，6/6 PASS）。
+- `packages/@cap/kind-of/` & `cap/test/testCapKindOf.cp`: npm Top 90 `kind-of`（6/6 PASS）。
+- `packages/@cap/decamelize/` & `cap/test/testCapDecamelize.cp`: npm Top 75 `decamelize`（6/6 PASS）。
+- **第 10 个历史旧包解耦重构**：`packages/@cap/http-errors/` 声明依赖并导入 `@cap/toidentifier` 提供 `errorClassName`，回归 6/6 PASS。

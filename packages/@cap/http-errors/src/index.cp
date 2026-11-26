@@ -1,5 +1,8 @@
 // @cap/http-errors — Zero-allocation HTTP error constructors & RFC 9457 problem+json serializer
 // Clean-room MIT implementation inspired by npm `http-errors` and RFC 9457.
+// Reuses `@cap/toidentifier` with zero inline duplication.
+
+import { toIdentifier } from "../../toidentifier/src/index.cp";
 
 pub struct HttpError {
     pub status: u16,
@@ -44,7 +47,7 @@ pub struct HttpError {
 }
 
 // ---------------------------------------------------------------------------
-// Standard 4xx/5xx Metadata Lookup
+// Standard 4xx/5xx Metadata Lookup & Identifier Conversion (@cap/toidentifier)
 // ---------------------------------------------------------------------------
 
 fn statusTitle(status: u16) -> string {
@@ -77,6 +80,12 @@ fn statusTitle(status: u16) -> string {
         505 => return "HTTP Version Not Supported",
         else => return if (status >= 400 && status < 500) "Client Error" else "Internal Server Error",
     }
+}
+
+/// Formats the PascalCase error class name for `status` (e.g. 400 -> "BadRequest", 418 -> "ImATeapot")
+/// by delegating to `@cap/toidentifier`.
+pub fn errorClassName(status: u16, out: []u8): usize {
+    return toIdentifier(statusTitle(status), out);
 }
 
 fn statusCodeName(status: u16) -> string {

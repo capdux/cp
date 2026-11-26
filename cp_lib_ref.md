@@ -727,3 +727,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/y18n`** | `packages/@cap/y18n` | 对标 npm Top 85 `y18n` (1.2 亿+/周) — 零堆国际化词典与 `%s`/`%d` 单复数模板引擎 |
 | **`@cap/yocto-queue`** | `packages/@cap/yocto-queue` | 对标 npm Top 60 `yocto-queue` (2 亿+/周，`p-limit` 独立依赖) — 零堆固定环形缓冲 O(1) FIFO 队列 |
 | **`@cap/onetime`** | `packages/@cap/onetime` | 对标 npm Top 80 `onetime` (1.5 亿+/周) — 零堆单次执行守卫、严格模式与多键注册表 |
+| **`@cap/pkcs8`** | `packages/@cap/pkcs8` | 对标 crates.io Top 515 `pkcs8` (2.6 亿+，4 包复用 `@cap/spki`+`@cap/const-oid`+`@cap/pem-rfc7468`+`@cap/subtle-ct`) — RFC 5958/8410 私钥 DER/PEM 与安全擦除 |
+| **`@cap/sec1`** | `packages/@cap/sec1` | 对标 crates.io Top 535 `sec1` (2.5 亿+，3 包复用 `@cap/const-oid`+`@cap/pem-rfc7468`+`@cap/subtle-ct`) — SEC1 椭圆曲线点编解码 & RFC 5915 EC 私钥 |
+| **`@cap/p-limit`** | `packages/@cap/p-limit` | 对标 npm Top 25 `p-limit` (2.5 亿+/周，跨包复用 `@cap/yocto-queue`) — 零堆 O(1) 并发槽位限流调度器 |
+| **`@cap/supports-color`** | `packages/@cap/supports-color` | 对标 npm Top 20 `supports-color` (3 亿+/周，跨包复用 `@cap/has-flag`) — 终端 0/1/2/3 级色彩能力探测 |
+| **`@cap/kind-of`** | `packages/@cap/kind-of` | 对标 npm Top 90 `kind-of` (1.2 亿+/周，含 `isobject`/`is-plain-object`) — 零堆单遍值类型分类器 |
+| **`@cap/decamelize`** | `packages/@cap/decamelize` | 对标 npm Top 75 `decamelize` (1.2 亿+/周) — 零堆驼峰转分隔符与缩写保留 |
