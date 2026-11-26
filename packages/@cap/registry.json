@@ -12867,6 +12867,141 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "browserslist",
+      "source_repo": "https://github.com/browserslist/browserslist",
+      "license": "MIT",
+      "cp_target": "@cap/browserslist-query",
+      "kind": "package",
+      "aliases": [
+        "browserslist-query"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "resolve-pkg-maps",
+      "source_repo": "https://github.com/privatenumber/resolve-pkg-maps",
+      "license": "MIT",
+      "cp_target": "@cap/resolve-pkg-maps",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "unist-util-visit",
+      "source_repo": "https://github.com/syntax-tree/unist-util-visit",
+      "license": "MIT",
+      "cp_target": "@cap/unist-util-visit",
+      "kind": "package",
+      "aliases": [
+        "unist-util-visit-parents",
+        "unist-util-is"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cli-width",
+      "source_repo": "https://github.com/knownasilya/cli-width",
+      "license": "ISC",
+      "cp_target": "@cap/cli-width",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dompurify",
+      "source_repo": "https://github.com/cure53/DOMPurify",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/dompurify",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "zod-to-json-schema",
+      "source_repo": "https://github.com/StefanTerdell/zod-to-json-schema",
+      "license": "MIT",
+      "cp_target": "@cap/zod-to-json-schema",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "digest",
+      "source_repo": "https://github.com/RustCrypto/traits",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "memmap2",
+      "source_repo": "https://github.com/RazrFalcon/memmap2-rs",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "atty",
+      "source_repo": "https://github.com/softprops/atty",
+      "license": "MIT",
+      "cp_target": "cap:tty",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unsafe-libyaml",
+      "source_repo": "https://github.com/dtolnay/unsafe-libyaml",
+      "license": "MIT",
+      "cp_target": "cap:yaml",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num",
+      "source_repo": "https://github.com/rust-num/num",
+      "license": "MIT",
+      "cp_target": "cap:math",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "web-time",
+      "source_repo": "https://github.com/daxpedda/web-time",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "libsqlite3-sys",
+      "source_repo": "https://github.com/rusqlite/rusqlite",
+      "license": "MIT",
+      "cp_target": "cap:sqlite",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

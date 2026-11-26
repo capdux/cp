@@ -1359,3 +1359,7 @@
 ### 2026-11-26 — Batch 154（npm Real Top 700 `#294..#643`：+12 `@cap/*` 包 + 18 条零重复映射，总计 828 `@cap/*`）
 - 新增 `packages/@cap/{tinybench,dom-serializer,d3-shape,bl,d3-interpolate,nopt,bowser,property-information,sanitize-uri,express-rate-limit,cssstyle,object-hash}/` 及对应 12 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 1,114+）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 155（npm Real Top 700 `#125..#580`：+6 `@cap/*` 包 + 7 条 crates.io 标准库映射，总计 834 `@cap/*`）
+- 新增 `packages/@cap/{browserslist-query,resolve-pkg-maps,unist-util-visit,cli-width,dompurify,zod-to-json-schema}/` 及对应 6 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 更新 `packages/@cap/registry.json`（总映射 1,126+）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

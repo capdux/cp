@@ -1,0 +1,15 @@
+{
+  "name": "@cap/unist-util-visit",
+  "version": "5.0.0",
+  "description": "Zero-heap unist AST tree pre-order/post-order visitor and node matcher (covers unist-util-visit-parents and unist-util-is)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "unist-util-visit",
+    "version": "5.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/syntax-tree/unist-util-visit"
+  }
+}

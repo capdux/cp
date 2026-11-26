@@ -542,3 +542,7 @@
 ### 2026-11-26 — Batch 154 开发日志（828 `@cap/*` 包 + 全套 D3 数学/可视化核心收齐）
 - 三路并行交付 12 个高下载量纯 CP 包（含 `tinybench` #294、`dom-serializer` #305、`d3-shape` #403、`bl` #450、`d3-interpolate` #503 等），全部通过 `cpc emit-types` 与 6/6 `cap test`。
 - 同步补齐 `#92..#530` 中 18 条零重复标准库/已有生态映射（覆盖 `tinyglobby`/`graceful-fs`/`buffer`/`jose`/`express`/`hono`/`postcss-selector-parser` 等 20+ 高频包）。
+
+### 2026-11-26 — Batch 155 开发日志（834 `@cap/*` 包）
+- 收录 Worker N24/N25 满额轮换交付的 `browserslist-query`（#125）、`resolve-pkg-maps`（#377）、`cli-width`（#512）、`dompurify`（#546），叠加主智能体新增的 `unist-util-visit`（#507）与 `zod-to-json-schema`（#580），全部 6/6 PASS。
+- 同步补全 crates.io Top 700 中 7 条零重复标准库映射（`digest`/`memmap2`/`atty`/`unsafe-libyaml`/`num`/`web-time`/`libsqlite3-sys`）。

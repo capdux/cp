@@ -1,0 +1,22 @@
+{
+  "name": "@cap/dompurify",
+  "ver": "1.0.0",
+  "description": "Zero-allocation HTML sanitizer stripping blocked tags, event attributes, and unsafe URI schemes (npm DOMPurify parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Apache-2.0",
+  "keywords": [
+    "dompurify",
+    "html",
+    "sanitizer",
+    "security",
+    "filter",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "dompurify",
+    "repo": "https://github.com/cure53/DOMPurify",
+    "license": "Apache-2.0"
+  }
+}

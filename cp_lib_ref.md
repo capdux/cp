@@ -1118,3 +1118,13 @@ const h = cap.hash.wyhash("hello");
 - `@cap/cssstyle` (`npm:cssstyle` #610, MIT) — CSS 内联 `style` 声明解析、查询、修改与 `!important` 序列化器。
 - `@cap/object-hash` (`npm:object-hash` #643, MIT) — 键顺序无关的确定性结构化对象 FNV-1a 64-bit 哈希器。
 - 零重复映射：`tinyglobby`→`@cap/fast-glob`、`graceful-fs`→`cap:fs`、`buffer`/`safer-buffer`/`buffer-from`→`cap:buffer`、`jose`/`jwa`→`@cap/jsonwebtoken`、`tinyexec`→`cap:process`、`keyv`→`@cap/lru-cache`、`chai`→`cap:test`、`express`/`hono`→`cap:http`、`std-env`→`cap:env`、`postcss-selector-parser`→`@cap/css-what`、`cli-cursor`/`restore-cursor`→`@cap/ansi-escapes`、`web-streams-polyfill`→`@web/streams`、`router`→`@cap/find-my-way`、`confbox`→`cap:jsonc`、`abort-controller`→`@web/abort-controller`、`pg-types`→`cap:pg`、`buffer-crc32`→`@cap/crc32`、`unist-util-stringify-position`→`@cap/vfile-message`。
+
+### Batch 155 — npm Real Top 700 (`#125..#580`, 6 packages + 7 crates.io stdlib mappings; 834 `@cap/*`!)
+
+- `@cap/browserslist-query` (`npm:browserslist` #125, MIT) — Browserslist 目标查询解析与版本范围匹配器。
+- `@cap/resolve-pkg-maps` (`npm:resolve-pkg-maps` #377, MIT) — `package.json` `"exports"` 子路径通配符与条件导出解析器。
+- `@cap/unist-util-visit` (`npm:unist-util-visit` #507, MIT) — 零堆竞技场 `unist` AST 前序遍历、祖先链收集与节点匹配器（覆盖 `unist-util-visit-parents`/`unist-util-is`）。
+- `@cap/cli-width` (`npm:cli-width` #512, ISC) — 终端列宽与 `COLUMNS` 环境变量解析夹紧器。
+- `@cap/dompurify` (`npm:dompurify` #546, Apache-2.0) — 零堆单遍 HTML 安全净化器（剥离脚本标签、`on*` 事件属性与危险协议）。
+- `@cap/zod-to-json-schema` (`npm:zod-to-json-schema` #580, MIT) — 零堆 JSON Schema Draft-07 构建与序列化器（适配 AI Tool Calling）。
+- 零重复 crates.io 映射：`digest`→`cap:crypto`、`memmap2`→`cap:fs`、`atty`→`cap:tty`、`unsafe-libyaml`→`cap:yaml`、`num`→`cap:math`、`web-time`→`cap:time`、`libsqlite3-sys`→`cap:sqlite`。
