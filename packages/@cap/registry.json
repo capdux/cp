@@ -3354,6 +3354,106 @@
       "kind": "package",
       "aliases": ["cuckoo-filter"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crossbeam-deque",
+      "source_repo": "https://github.com/crossbeam-rs/crossbeam",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["work-stealing"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "same-file",
+      "source_repo": "https://github.com/BurntSushi/same-file",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "idna_adapter",
+      "source_repo": "https://github.com/hsivonen/idna_adapter",
+      "license": "MIT",
+      "cp_target": "cap:url",
+      "kind": "stdlib",
+      "aliases": ["idna"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zmij",
+      "source_repo": "https://github.com/dtolnay/zmij",
+      "license": "MIT",
+      "cp_target": "cap:strconv",
+      "kind": "stdlib",
+      "aliases": ["dtoa"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pathfinding",
+      "source_repo": "https://github.com/evenfurther/pathfinding",
+      "license": "MIT",
+      "cp_target": "@cap/dijkstra",
+      "kind": "package",
+      "aliases": ["dijkstra", "bellman-ford"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "reed-solomon-erasure",
+      "source_repo": "https://github.com/darrenldl/reed-solomon-erasure",
+      "license": "MIT",
+      "cp_target": "@cap/reed-solomon",
+      "kind": "package",
+      "aliases": ["reed-solomon", "erasure-coding"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bitstream-io",
+      "source_repo": "https://github.com/tuffy/bitstream-io",
+      "license": "MIT",
+      "cp_target": "@cap/bitstream",
+      "kind": "package",
+      "aliases": ["bitstream"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "segment-tree",
+      "source_repo": "https://github.com/Darksonn/segment-tree",
+      "license": "MIT",
+      "cp_target": "@cap/segment-tree",
+      "kind": "package",
+      "aliases": ["rmq"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc16",
+      "source_repo": "https://github.com/mrhooray/crc-rs",
+      "license": "MIT",
+      "cp_target": "@cap/crc16",
+      "kind": "package",
+      "aliases": ["crc-16", "modbus-crc"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "xorf",
+      "source_repo": "https://github.com/ayazhafiz/xorf",
+      "license": "MIT",
+      "cp_target": "@cap/xor-filter",
+      "kind": "package",
+      "aliases": ["xor-filter", "xor8"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -192,3 +192,6 @@
 
 ## 2026-11-26: Batch 42 交付 8.3 亿级 `@cap/adler32` 与四大算法包，总映射突破 **335 条**，线上官方包冲破 **225 个**！
 - 交付 `@cap/adler32`（6/6）、`@cap/crc64`（6/6）、`@cap/fixed-point`（6/6）、`@cap/priority-queue`（6/6）、`@cap/cuckoo-filter`（6/6），并去重直连 `spin`（8.44 亿）、`try-lock`（8.19 亿）、`utf8parse`（8.04 亿）、`icu_normalizer`（8.04 亿）、`bumpalo`（7.67 亿），总映射突破 **335 条**！
+
+## 2026-11-26: Batch 43 交付纠删码/位流/图最短路/线段树/Xor8 六大硬核引擎（总映射 **345 条**，冲刺 **230+ 官方 `.cap` 包**！）
+- 交付 `@cap/dijkstra`（6/6）、`@cap/reed-solomon`（6/6）、`@cap/bitstream`（6/6）、`@cap/segment-tree`（6/6）、`@cap/crc16`（6/6）、`@cap/xor-filter`（6/6），并去重直连 `crossbeam-deque`（8.06 亿）、`same-file`（7.90 亿）、`idna_adapter`（7.70 亿）、`zmij`（7.56 亿），总映射突破 **345 条**！

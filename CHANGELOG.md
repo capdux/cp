@@ -355,3 +355,12 @@
 - `packages/@cap/priority-queue/` & `cap/test/testCapPriorityQueue.cp`: 零堆可动态调权索引最小堆（6/6 PASS）。
 - `packages/@cap/cuckoo-filter/` & `cap/test/testCapCuckooFilter.cp`: 支持 O(1) 安全删除的布谷鸟过滤器（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **335 条**高频映射（含 `spin`/`try-lock`/`utf8parse`/`icu_normalizer`/`bumpalo` 8 亿级去重直连）。
+
+## [2026-11-26] - Batch 43 单批交付 6 大纠删码、位流、图算法与过滤器包（`@cap/dijkstra`, `@cap/reed-solomon`, `@cap/bitstream`, `@cap/segment-tree`, `@cap/crc16`, `@cap/xor-filter`），总映射突破 **345 条**！
+- `packages/@cap/dijkstra/` & `cap/test/testCapDijkstra.cp`: Dijkstra + Bellman-Ford 负环检测与路径回溯（6/6 PASS）。
+- `packages/@cap/reed-solomon/` & `cap/test/testCapReedSolomon.cp`: GF(2^8) 柯西矩阵纠删码与任意丢片恢复（6/6 PASS）。
+- `packages/@cap/bitstream/` & `cap/test/testCapBitstream.cp`: MSB/LSB 双端位流读写与 Exp-Golomb 编解码（6/6 PASS）。
+- `packages/@cap/segment-tree/` & `cap/test/testCapSegmentTree.cp`: O(log N) 迭代式线段树（`sum`/`min`/`max`）（6/6 PASS）。
+- `packages/@cap/crc16/` & `cap/test/testCapCrc16.cp`: CCITT-FALSE/XMODEM/MODBUS/KERMIT/ARC/USB CRC-16（6/6 PASS）。
+- `packages/@cap/xor-filter/` & `cap/test/testCapXorFilter.cp`: ACM JEA'2020 Xor8 静态指纹过滤器（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **345 条**高频映射（含 `crossbeam-deque`/`same-file`/`idna_adapter`/`zmij` 去重直连）。

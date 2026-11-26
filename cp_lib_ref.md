@@ -417,3 +417,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/fixed-point`** | `packages/@cap/fixed-point` | 对标 Rust `fixed` — 64 位 Q32.32 确定性无浮点漂移定点数算术（128 位拆半乘除、`sqrt`/`lerp`/`clamp`） |
 | **`@cap/priority-queue`** | `packages/@cap/priority-queue` | 对标 Rust `priority-queue` / npm `heap-js` — 零堆可动态调权索引最小堆（O(log N) `changePriority`/`remove`） |
 | **`@cap/cuckoo-filter`** | `packages/@cap/cuckoo-filter` | 对标 Rust `cuckoofilter` — CoNEXT'14 支持 O(1) 安全删除的 16-bit 指纹布谷鸟过滤器 |
+| **`@cap/dijkstra`** | `packages/@cap/dijkstra` | 对标 Rust `pathfinding` — 零堆压缩前向星加权图 Dijkstra 最短路、Bellman-Ford 负权/负环检测与路径回溯 |
+| **`@cap/reed-solomon`** | `packages/@cap/reed-solomon` | 对标 Rust `reed-solomon-erasure` — GF(2^8) 柯西系统矩阵纠删码编码、校验与高斯消元丢片恢复 |
+| **`@cap/bitstream`** | `packages/@cap/bitstream` | 对标 Rust `bitstream-io` — MSB/LSB 双模式 1..64 位流式读写器与 H.264/HEVC Exp-Golomb 编解码 |
+| **`@cap/segment-tree`** | `packages/@cap/segment-tree` | 对标 Rust `segment-tree` — 零堆 2×N 迭代式线段树，O(log N) 联合查询区间 `sum`/`min`/`max` 与单点更新 |
+| **`@cap/crc16`** | `packages/@cap/crc16` | 对标 Rust `crc16` — CCITT-FALSE / XMODEM / MODBUS / KERMIT / ARC / USB 六大工业 CRC-16 校验和 |
+| **`@cap/xor-filter`** | `packages/@cap/xor-filter` | 对标 Rust `xorf` — ACM JEA'2020 Xor8 静态完美指纹过滤器（3 次查表异或 O(1) 查询，零假阴性） |

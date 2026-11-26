@@ -1,0 +1,8 @@
+{
+  "name": "@cap/segment-tree",
+  "ver": "1.0.0",
+  "description": "Zero-allocation iterative 2*N Segment Tree with O(log N) rangeSum, rangeMin, rangeMax, and point updates (Rust segment-tree parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

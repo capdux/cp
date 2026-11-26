@@ -1,0 +1,9 @@
+{
+  "name": "@cap/crc16",
+  "version": "1.0.0",
+  "description": "Zero-heap industrial CRC-16 checksums (CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC/IBM, USB) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["crc16", "modbus", "xmodem", "ccitt", "kermit", "checksum", "iot"]
+}
