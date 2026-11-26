@@ -7148,3 +7148,9 @@
 - **复现用例**：`/data/dev/cp/temp/repro_css_boxshadow_e0207.cp`
 - **报错摘要**：`cap:css lib/css/boxshadow.cp:97-100 (BoxShadow 字段默认值 ShadowLength.zero()) 触发 E0207/E0216，阻塞 capsurf unit 测试编译`
 - **修复与验证**：修改 `cpc/src/resolver.rs` 与 `cpc/src/main.rs` 隔离导入模块与根模块语义检查（消除 35 条跨子模块扁平化误报），重命名 `lib/css/easing.cp` 中冲突枚举 `StepPosition` -> `CssStepPosition`，构建部署 `cpc (release)`；实测 `/data/dev/capsurf/test/unit/css/test_box_shadow_and_border_radius_edge.cp` (4/4 PASS) 与 `test_color_and_units.cp` (4/4 PASS)，已通过 `resolve_task.py` 结单并 `ack` 确认。
+
+### 2026-11-27 04:37 — 跨 AGY 协作工单结单：`task-capsurf-20261127-image-tiff-e0209`
+- **来源智能体**：`capsurf_agy`
+- **复现用例**：`/data/dev/cp/temp/repro_image_tiff_e0209.cp`
+- **报错摘要**：`cap:image lib/image/tiff.cp:477:17 @constCast 缺少 unsafe 块触发 E0209，阻塞 cap test --modular 编译`
+- **修复与验证**：将 `lib/image/tiff.cp:477` 改为 `pixels: unsafe { @constCast(pixels) },`，`cpc check lib/image/tiff.cp` 与 `cap build --modular /data/dev/cp/temp/repro_image_tiff_e0209.cp` 均 100% 通过，已 `resolve` 结单并 `ack` 确认。

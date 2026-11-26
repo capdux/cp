@@ -474,7 +474,7 @@ pub fn encodeSingle(
         height: height,
         format: format,
         compression: compression,
-        pixels: @constCast(pixels),
+        pixels: unsafe { @constCast(pixels) },
     };
     let pages: [1]TiffPage = [page];
     return encodeMultiPage(allocator, pages[0..1], endian);
