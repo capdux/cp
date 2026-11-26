@@ -1,0 +1,9 @@
+{
+  "name": "@cap/home-dir",
+  "ver": "1.0.0",
+  "desc": "Zero-heap cross-platform home directory resolver, tilde expand/contract, and XDG config dir builder in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["home", "home-dir", "tilde", "untildify", "xdg", "config-dir", "path", "zero-heap"]
+}

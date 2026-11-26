@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { charWidth } from "../../unicode-width/src/index.cp";
 export class WrapOptions {
     width: usize,
     break_words: bool,

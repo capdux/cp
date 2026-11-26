@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { charWidth } from "../../unicode-width/src/index.cp";
 export class Utf8Step {
     cp: u32,
     width: usize,

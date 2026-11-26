@@ -725,3 +725,12 @@
   - `packages/@cap/accepts/`：改为 `import` 复用 `@cap/negotiator`（代码精简 70%，6/6 PASS）。
   - `packages/@cap/braces/`：改为 `import` 复用 `@cap/fill-range`（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **740 条**双生态高频映射（**npm=370 / crates.io=370 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 84 — **750 映射大里程碑：npm=375 / crates.io=375 绝对 1:1 对称！** + 3 个终端旧包统一解耦)
+- `packages/@cap/half-f16/` & `cap/test/testCapHalfF16.cp`: IEEE 754 `f16` & Google `bf16` 半精度浮点（6/6 PASS）。
+- `packages/@cap/unicode-bidi/` & `cap/test/testCapUnicodeBidi.cp`: crates.io #278 `unicode-bidi`（6.04 亿下载，6/6 PASS）。
+- `packages/@cap/base64ct/` & `cap/test/testCapBase64ct.cp`: crates.io #299 `base64ct`（5.31 亿下载无查表恒定时间 Base64，6/6 PASS）。
+- `packages/@cap/home-dir/` & `cap/test/testCapHomeDir.cp`: crates.io #305 `home`（5.18 亿下载）+ npm `untildify`/`expand-tilde`（6/6 PASS）。
+- **历史终端旧包统一复用 `@cap/unicode-width`（18/18 零回归 PASS）**：
+  - `packages/@cap/wrap-ansi/`、`packages/@cap/boxen/`、`packages/@cap/textwrap/` 全部删除内联重复宽度表，改为 `import { charWidth }` 复用 `@cap/unicode-width`！
+- `packages/@cap/registry.json`: 正式突破 **750 条**双生态高频映射（**npm=375 / crates.io=375 绝对 1:1 对称**）。

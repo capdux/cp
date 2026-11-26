@@ -315,3 +315,6 @@
 
 ## 2026-11-27: Batch 83 达成 **740 条双生态映射（370/370 绝对对称）** + 首批 4 个历史旧包跨包依赖解耦重构全 6/6 零回归！
 - 新增 `@cap/zerotrie`（6.28 亿）、`@cap/media-typer`（1.8 亿+/周）、`@cap/negotiator`（1.5 亿+/周）、`@cap/ansi-regex`（4 亿+/周，跨生态复用 Rust `@cap/anstyle-parse`），并同步重构历史旧包 `@cap/glob-parent`、`@cap/type-is`、`@cap/accepts`（精简 70%）、`@cap/braces`，全面消除代码重复。
+
+## 2026-11-27: Batch 84 正式突破 **750 条双生态映射大里程碑（npm=375 / crates.io=375 绝对对称）**！
+- 交付 `@cap/half-f16`（AI/LLM `f16`/`bf16` 1.5 亿+）、`@cap/unicode-bidi`（6.04 亿）、`@cap/base64ct`（5.31 亿恒定时间 Base64）、`@cap/home-dir`（5.18 亿），并将 `@cap/wrap-ansi`、`@cap/boxen`、`@cap/textwrap` 三大终端包统一重构复用 `@cap/unicode-width`（累计已完成 **8 个历史旧包**跨包解耦重构）。

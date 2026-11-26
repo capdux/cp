@@ -2965,7 +2965,7 @@
       "source_name": "half",
       "source_repo": "https://github.com/VoidStarKat/half-rs",
       "license": "MIT",
-      "cp_target": "@cap/half",
+      "cp_target": "@cap/half-f16",
       "kind": "package",
       "aliases": [
         "f16",
@@ -9031,6 +9031,139 @@
       "kind": "package",
       "aliases": [
         "visible-length"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-bidi",
+      "source_repo": "https://github.com/servo/unicode-bidi",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-bidi",
+      "kind": "package",
+      "aliases": [
+        "uax9"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base64ct",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/base64ct",
+      "kind": "package",
+      "aliases": [
+        "ct-base64"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "home",
+      "source_repo": "https://github.com/rust-lang/cargo",
+      "license": "MIT",
+      "cp_target": "@cap/home-dir",
+      "kind": "package",
+      "aliases": [
+        "dirs-sys"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "filetime",
+      "source_repo": "https://github.com/alexcrichton/filetime",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [
+        "fs-mtime"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "untildify",
+      "source_repo": "https://github.com/sindresorhus/untildify",
+      "license": "MIT",
+      "cp_target": "@cap/home-dir",
+      "kind": "package",
+      "aliases": [
+        "tildify"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "expand-tilde",
+      "source_repo": "https://github.com/jonschlinkert/expand-tilde",
+      "license": "MIT",
+      "cp_target": "@cap/home-dir",
+      "kind": "package",
+      "aliases": [
+        "homedir-polyfill"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "os-homedir",
+      "source_repo": "https://github.com/sindresorhus/os-homedir",
+      "license": "MIT",
+      "cp_target": "@cap/home-dir",
+      "kind": "package",
+      "aliases": [
+        "user-home"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bidi-js",
+      "source_repo": "https://github.com/lojjic/bidi-js",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-bidi",
+      "kind": "package",
+      "aliases": [
+        "unicode-bidi"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@petamoriken/float16",
+      "source_repo": "https://github.com/petamoriken/float16",
+      "license": "MIT",
+      "cp_target": "@cap/half-f16",
+      "kind": "package",
+      "aliases": [
+        "float16"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "base64-arraybuffer",
+      "source_repo": "https://github.com/niklasvh/base64-arraybuffer",
+      "license": "MIT",
+      "cp_target": "@cap/base64ct",
+      "kind": "package",
+      "aliases": [
+        "base64-ct"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "phf_generator",
+      "source_repo": "https://github.com/rust-phf/rust-phf",
+      "license": "MIT",
+      "cp_target": "@cap/phf-hash",
+      "kind": "package",
+      "aliases": [
+        "phf",
+        "phf_shared"
       ],
       "absorbed_at": "2026-11-27"
     }

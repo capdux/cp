@@ -1,0 +1,9 @@
+{
+  "name": "@cap/phf-hash",
+  "version": "1.0.0",
+  "description": "Zero-allocation CHD Displace-Hash-Compress perfect hash table builder and O(1) lookup for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["phf", "perfect-hash", "chd", "hash", "lookup", "zero-alloc"]
+}

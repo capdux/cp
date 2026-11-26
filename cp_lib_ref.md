@@ -670,3 +670,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/media-typer`** | `packages/@cap/media-typer` | 对标 npm `media-typer` (1.8 亿+/周，独立依赖) — RFC 6838 媒体类型解析与格式化（已被 `@cap/type-is` 复用） |
 | **`@cap/negotiator`** | `packages/@cap/negotiator` | 对标 npm `negotiator` (1.5 亿+/周，独立依赖) — RFC 7231 HTTP 内容协商（已被 `@cap/accepts` 复用） |
 | **`@cap/ansi-regex`** | `packages/@cap/ansi-regex` | 对标 npm `ansi-regex` (4 亿+/周，跨包复用 `@cap/anstyle-parse`) — ANSI 转义序列定位、计数与剥离 |
+
+| **`@cap/half-f16`** | `packages/@cap/half-f16` | 对标 crates.io `half` (1.5 亿+) / npm `@petamoriken/float16` — IEEE 754 `f16` & Google `bf16` 半精度浮点与批量张量切片转换 |
+| **`@cap/unicode-bidi`** | `packages/@cap/unicode-bidi` | 对标 crates.io #278 `unicode-bidi` (6.04 亿) / npm `bidi-js` — Unicode UAX #9 双向文本分类、段落方向与视觉分段 |
+| **`@cap/base64ct`** | `packages/@cap/base64ct` | 对标 crates.io #299 `base64ct` (5.31 亿) — 零查找表恒定时间 RFC 4648 Base64 Std/URL 严格编解码 |
+| **`@cap/home-dir`** | `packages/@cap/home-dir` | 对标 crates.io #305 `home` (5.18 亿) / npm `untildify` / `expand-tilde` — 跨平台主目录解析、波浪号展开折叠与 XDG 配置目录 |

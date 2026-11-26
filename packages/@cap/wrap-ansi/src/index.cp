@@ -9,6 +9,8 @@
 //   styles and closing them cleanly with `\x1b[0m`.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
+import { charWidth } from "../../unicode-width/src/index.cp";
+
 const MAX_ACTIVE_SGR: usize = 8;
 
 struct Utf8Step {
@@ -53,29 +55,7 @@ fn decodeUtf8At(s: string, i: usize) -> Utf8Step {
 }
 
 fn codepointWidth(cp: u32) -> usize {
-    if (cp < 0x20 || cp == 0x7F) {
-        return 0;
-    }
-    if (cp >= 0x0300 && cp <= 0x036F) {
-        return 0;
-    }
-    if ((cp >= 0x1100 && cp <= 0x115F) ||
-        (cp >= 0x2E80 && cp <= 0x303E) ||
-        (cp >= 0x3041 && cp <= 0x33FF) ||
-        (cp >= 0x3400 && cp <= 0x4DBF) ||
-        (cp >= 0x4E00 && cp <= 0x9FFF) ||
-        (cp >= 0xA000 && cp <= 0xA4CF) ||
-        (cp >= 0xAC00 && cp <= 0xD7A3) ||
-        (cp >= 0xF900 && cp <= 0xFAFF) ||
-        (cp >= 0xFE10 && cp <= 0xFE6F) ||
-        (cp >= 0xFF01 && cp <= 0xFF60) ||
-        (cp >= 0xFFE0 && cp <= 0xFFE6) ||
-        (cp >= 0x1F300 && cp <= 0x1F9FF) ||
-        (cp >= 0x1FA70 && cp <= 0x1FAFF) ||
-        (cp >= 0x20000 && cp <= 0x3FFFF)) {
-        return 2;
-    }
-    return 1;
+    return charWidth(cp);
 }
 
 /// Returns the end index of an ANSI CSI sequence starting at `i` (`\x1b[...`), or `i` if none.
