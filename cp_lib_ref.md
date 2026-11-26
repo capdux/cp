@@ -340,3 +340,5 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/pem`** | `packages/@cap/pem` | 对标 Rust `pem` — RFC 7468 PEM 多块解析、RFC 1421 头剥离与 64 列折行编码 |
 | **`@cap/bcp47`** | `packages/@cap/bcp47` | 对标 npm `bcp-47` / Rust `unic-langid` — RFC 5646 语言标签解析、规范大小写与回退匹配 |
 | **`@cap/hosts-file`** | `packages/@cap/hosts-file` | 对标 npm `hostile` / Rust `hostsfile` — `/etc/hosts` 多别名解析、IPv4/IPv6 正反向查表与对齐输出 |
+| **`@cap/debug`** | `packages/@cap/debug` | 对标 npm `debug`（9.69 亿/周）— 零堆命名空间通配符过滤（含 `-` 排除优先）、确定性 ANSI 配色与耗时差格式化 |
+| **`@cap/wrap-ansi`** | `packages/@cap/wrap-ansi` | 对标 npm `wrap-ansi`/`slice-ansi`（6.15 亿/周）— 零堆 ANSI 样式栈跨行续接折行、CJK 双宽与按列切片 |

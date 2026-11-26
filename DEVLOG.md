@@ -134,3 +134,6 @@
 ## 2026-11-26: Wave 23 交付 4 大独立包并全面切换至「真实全球下载/引用总榜严格单调递减」模式
 - 交付 `@cap/ssri`（6/6）、`@cap/pem`（6/6）、`@cap/bcp47`（6/6）、`@cap/hosts-file`（6/6），总映射达 146 条，线上官方包突破 141 个。
 - 采纳用户纠偏：拉取 `api.npmjs.org` 与 `crates.io/api/v1/crates?sort=downloads` 真实实时数据构建严格单调递减总榜，后续每批 10 项严格按真实下载量从高到低依次切片，确保后批每项严格低于前批。
+
+## 2026-11-26: Batch 24 严格单调递减完成 npm Top 10（12.17 亿 → 5.52 亿/周）
+- 交付 `@cap/debug`（9.69 亿/周, 6/6 PASS）与 `@cap/wrap-ansi`（6.15 亿/周, 6/6 PASS），并完成 7 项亿级周下载资产去重映射（`minimatch`/`ansi-styles`/`lru-cache`/`commander`/`string-width`/`picomatch`/`glob`），`registry.json` 突破 **155 条**，同步发布至 `https://capdux.org`。

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/debug",
+  "ver": "1.0.0",
+  "description": "Zero-allocation namespace debug log filter, glob exclusion engine, deterministic ANSI coloring, and diff-ms formatter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

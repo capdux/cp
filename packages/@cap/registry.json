@@ -1464,6 +1464,96 @@
       "kind": "package",
       "aliases": ["hostsfile", "etc-hosts"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "minimatch",
+      "source_repo": "https://github.com/isaacs/minimatch",
+      "license": "ISC",
+      "cp_target": "cap:glob",
+      "kind": "stdlib",
+      "aliases": ["micromatch"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "debug",
+      "source_repo": "https://github.com/debug-js/debug",
+      "license": "MIT",
+      "cp_target": "@cap/debug",
+      "kind": "package",
+      "aliases": ["debug-js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ansi-styles",
+      "source_repo": "https://github.com/chalk/ansi-styles",
+      "license": "MIT",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": ["supports-color"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lru-cache",
+      "source_repo": "https://github.com/isaacs/node-lru-cache",
+      "license": "ISC",
+      "cp_target": "@cap/lru",
+      "kind": "package",
+      "aliases": ["quick-lru", "lru"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "commander",
+      "source_repo": "https://github.com/tj/commander.js",
+      "license": "MIT",
+      "cp_target": "cap:clap",
+      "kind": "stdlib",
+      "aliases": ["yargs", "yargs-parser", "minimist", "cac", "clap"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "string-width",
+      "source_repo": "https://github.com/sindresorhus/string-width",
+      "license": "MIT",
+      "cp_target": "cap:text",
+      "kind": "stdlib",
+      "aliases": ["unicode-width"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "picomatch",
+      "source_repo": "https://github.com/micromatch/picomatch",
+      "license": "MIT",
+      "cp_target": "cap:glob",
+      "kind": "stdlib",
+      "aliases": ["globset"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "wrap-ansi",
+      "source_repo": "https://github.com/chalk/wrap-ansi",
+      "license": "MIT",
+      "cp_target": "@cap/wrap-ansi",
+      "kind": "package",
+      "aliases": ["slice-ansi"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "glob",
+      "source_repo": "https://github.com/isaacs/node-glob",
+      "license": "ISC",
+      "cp_target": "cap:glob",
+      "kind": "stdlib",
+      "aliases": ["fast-glob", "globby"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

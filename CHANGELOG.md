@@ -221,3 +221,8 @@
 - `packages/@cap/bcp47/` & `cap/test/testCapBcp47.cp`: RFC 5646 / BCP-47 语言标签解析、规范化与回退匹配（6/6 PASS）。
 - `packages/@cap/hosts-file/` & `cap/test/testCapHostsFile.cp`: `/etc/hosts` 多别名解析、IPv4/IPv6 正反向查表与格式化（6/6 PASS）。
 - 建立 `temp/global_top_rank.json` 实时抓取 `crates.io` Top 200 总下载榜与 `api.npmjs.org` 真实周下载榜，后续批次严格按真实总下载量单调递减推进。
+
+## [2026-11-26] - Batch 24 严格按 npm 真实周下载量 Top 10（12.17 亿 → 5.52 亿/周）吸收 `@cap/debug`, `@cap/wrap-ansi` + 7 项亿级去重映射
+- `packages/@cap/debug/` & `cap/test/testCapDebug.cp`: 零堆 `DEBUG` 命名空间通配符过滤（排除优先）、确定性配色与 `+ms` 耗时差引擎（对标 npm `debug` **968.8M/wk**，6/6 PASS）。
+- `packages/@cap/wrap-ansi/` & `cap/test/testCapWrapAnsi.cp`: 零堆 ANSI 颜色栈跨行续接折行与按列切片引擎（对标 npm `wrap-ansi` **614.8M/wk** & `slice-ansi`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **155 条**高频映射（新增 `minimatch` [10.07亿/wk]、`ansi-styles` [9.42亿/wk]、`lru-cache` [8.21亿/wk]、`commander` [7.82亿/wk]、`string-width` [7.34亿/wk]、`picomatch` [7.33亿/wk]、`glob` [5.52亿/wk] + `@cap/debug` + `@cap/wrap-ansi`）。
