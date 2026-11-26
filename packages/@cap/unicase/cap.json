@@ -1,8 +1,11 @@
 {
   "name": "@cap/unicase",
   "ver": "1.0.0",
-  "description": "Zero-allocation case-insensitive string wrapper, comparison, search, and FNV-1a 64-bit hashing (Rust unicase parity) for CP",
+  "license": "MIT",
+  "description": "Zero-heap Unicode & ASCII case-insensitive comparison, ordering, matching, and hashing (clean-room port of Rust unicase)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "dependencies": {
+    "@cap/fnv-hash": "1.0.0"
+  }
 }

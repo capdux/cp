@@ -372,3 +372,7 @@
 ## 2026-11-27: **Batch 100 百波里程碑！** 11 大顶流包全 6/6 PASS — 官方 `.cap` 包突破 **588+**！
 - 一次性交付 npm **#1 `semver`**、**#6 `ms`**、`postcss`、`ansi-escapes`、`dot-prop`、`tsconfig-paths`、`mustache` 与 crates.io #95 `regex-lite`（10 亿+，Thompson NFA + PikeVM 防 ReDoS）、#115 `humantime`（9.5 亿+）、#125 `globset`（9 亿+）、#150 `csv-core`（8 亿+）共 **11 个高质量官方包**（66/66 单测 100% PASS）。
 - 严格执行 `GEMINI.md` 第 9 条 6 包轮换策略：清理 3 个已退役空闲旧子智能体，满 6 包后退役 Worker N3 并换新为 Worker N4（`@cap/marked-md`），Worker C3 领跑本周期最后 1 包（`@cap/unicode-segmentation` 13.5 亿+）。
+
+## 2026-11-27: Batch 101 七大 Unicode & Web 模板顶流包全 6/6 PASS — 官方 `.cap` 包突破 **591+**！
+- 主智能体与全新 2 路子智能体（Worker N5 + Worker C4）全速并行，一次性拿下 Rust Unicode 三巨头 `unicode-segmentation`（13.5 亿+）、`unicode-xid`（13 亿+）、`unicase`（12 亿+，复用 `@cap/fnv-hash`）与 `wildmatch`（复用 `@cap/unicase`），以及 npm 顶流 `mime-types`（2.5 亿+/周）、`marked`（1.2 亿+/周）、`ejs`（1 亿+/周），全部 42/42 单测 100% PASS。
+- 同步确认 `agy-comm.service` 处于 `active` 正常心跳状态、0 条待处理工单，每 3 小时定时审计 cron 已重启激活。

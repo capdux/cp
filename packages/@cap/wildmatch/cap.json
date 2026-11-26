@@ -1,0 +1,11 @@
+{
+  "name": "@cap/wildmatch",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap linear-time wildcard (*, ?, custom wildcards & case-insensitive) pattern matcher (clean-room port of Rust wildmatch)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}

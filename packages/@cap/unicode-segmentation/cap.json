@@ -1,0 +1,19 @@
+{
+  "name": "@cap/unicode-segmentation",
+  "ver": "1.0.0",
+  "description": "Zero-allocation UAX #29 Unicode extended grapheme cluster and word boundary segmentation for CP (clean-room MIT).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "unicode",
+    "unicode-segmentation",
+    "uax29",
+    "grapheme",
+    "word-boundary",
+    "emoji",
+    "cjk",
+    "hangul",
+    "zero-alloc"
+  ]
+}

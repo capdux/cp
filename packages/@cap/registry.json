@@ -1636,14 +1636,14 @@
       "source_name": "mime-types",
       "source_repo": "https://github.com/jshttp/mime-types",
       "license": "MIT",
-      "cp_target": "cap:mime",
-      "kind": "stdlib",
+      "cp_target": "@cap/mime-types",
+      "kind": "package",
       "aliases": [
         "mime-db",
         "mime",
         "mime_guess"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2902,13 +2902,13 @@
       "source_name": "unicode-segmentation",
       "source_repo": "https://github.com/unicode-rs/unicode-segmentation",
       "license": "MIT",
-      "cp_target": "@cap/unicode-seg",
+      "cp_target": "@cap/unicode-segmentation",
       "kind": "package",
       "aliases": [
         "graphemer",
         "grapheme-splitter"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4829,13 +4829,13 @@
       "source_name": "marked",
       "source_repo": "https://github.com/markedjs/marked",
       "license": "MIT",
-      "cp_target": "@cap/cmark",
+      "cp_target": "@cap/marked-md",
       "kind": "package",
       "aliases": [
         "markdown-it",
         "remark"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -4924,7 +4924,7 @@
       "source_name": "ejs",
       "source_repo": "https://github.com/mde/ejs",
       "license": "Apache-2.0",
-      "cp_target": "@cap/template",
+      "cp_target": "@cap/ejs-tpl",
       "kind": "package",
       "aliases": [
         "eta",
@@ -4933,7 +4933,7 @@
         "hbs",
         "pug"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -10216,6 +10216,26 @@
       "source_repo": "https://github.com/BurntSushi/rust-csv",
       "license": "MIT",
       "cp_target": "@cap/csv-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-xid",
+      "source_repo": "https://github.com/unicode-rs/unicode-xid",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-xid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wildmatch",
+      "source_repo": "https://github.com/becheran/wildmatch",
+      "license": "MIT",
+      "cp_target": "@cap/wildmatch",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

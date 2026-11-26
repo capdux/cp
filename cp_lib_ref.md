@@ -791,3 +791,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/tsconfig-paths`** | `packages/@cap/tsconfig-paths` | 对标 npm Top 100 `tsconfig-paths` (6000 万+/周) — TypeScript `baseUrl`/`paths` 通配符优先级路径解析器 |
 | **`@cap/mustache-tpl`** | `packages/@cap/mustache-tpl` | 对标 npm `mustache` v4 (跨包复用 `@cap/escape-html`) — 零堆 Mustache v1.4 模板引擎（防 XSS 插值、区块/反转区块、列表循环与注释） |
 | **`@cap/csv-core`** | `packages/@cap/csv-core` | 对标 crates.io #150 `csv-core` (8 亿+) — 10 状态零堆流式 RFC 4180 CSV 解析与写入状态机 |
+| **`@cap/marked-md`** | `packages/@cap/marked-md` | 对标 npm Top 35 `marked` v14 (1.2 亿+/周，跨包复用 `@cap/escape-html`) — 零堆 CommonMark/GFM Markdown → HTML 编译器 |
+| **`@cap/mime-types`** | `packages/@cap/mime-types` | 对标 npm Top 15 `mime-types` (2.5 亿+/周) — 95+ 扩展名/MIME/Charset/Content-Type 与可压缩性零堆解析 |
+| **`@cap/ejs-tpl`** | `packages/@cap/ejs-tpl` | 对标 npm Top 50 `ejs` v3 (1 亿+/周，跨包复用 `@cap/escape-html`) — 零堆 `<%=`/`<%-`/`<% if/repeat %>` 嵌入式模板引擎 |
+| **`@cap/unicode-segmentation`** | `packages/@cap/unicode-segmentation` | 对标 crates.io #60 `unicode-segmentation` (13.5 亿+) — UAX #29 扩展字素簇（含 Emoji ZWJ/国旗/韩文）与单词边界迭代器 |
+| **`@cap/unicode-xid`** | `packages/@cap/unicode-xid` | 对标 crates.io #70 `unicode-xid` (13 亿+) — UAX #31 Unicode 标识符字符判定与词法扫描器 |
+| **`@cap/unicase`** | `packages/@cap/unicase` | 对标 crates.io #80 `unicase` (12 亿+，跨包复用 `@cap/fnv-hash`) — 零堆 Unicode/ASCII 大小写无关包装器、折叠比较与流式哈希 |
+| **`@cap/wildmatch`** | `packages/@cap/wildmatch` | 对标 crates.io Top-400 `wildmatch` (4 亿+，跨包复用 `@cap/unicase`) — 防回溯迭代通配符与自定义 SQL LIKE 匹配器 |

@@ -896,3 +896,13 @@
 - `packages/@cap/globset/` & `cap/test/testCapGlobset.cp`: crates.io #125 `globset`（9 亿+，复用 `@cap/picomatch`+`@cap/normalize-path`，6/6 PASS）。
 - `packages/@cap/csv-core/` & `cap/test/testCapCsvCore.cp`: crates.io #150 `csv-core`（8 亿+，10 状态流式 RFC 4180 CSV 引擎，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 100 全部 11 个官方包映射。
+
+### 2026-11-27 (Batch 101 — 7 大 Unicode & Web 模板顶流包全 6/6 PASS — `unicode-segmentation`+`unicode-xid`+`unicase` 38.5 亿下载三连杀，官方 `.cap` 包突破 **591+**)
+- `packages/@cap/marked-md/` & `cap/test/testCapMarkedMd.cp`: npm Top 35 `marked` v14（1.2 亿+/周，复用 `@cap/escape-html`，6/6 PASS）。
+- `packages/@cap/mime-types/` & `cap/test/testCapMimeTypes.cp`: npm Top 15 `mime-types`（2.5 亿+/周，95+ MIME 映射，6/6 PASS）。
+- `packages/@cap/ejs-tpl/` & `cap/test/testCapEjsTpl.cp`: npm Top 50 `ejs` v3（1 亿+/周，复用 `@cap/escape-html`，6/6 PASS）。
+- `packages/@cap/unicode-segmentation/` & `cap/test/testCapUnicodeSegmentation.cp`: crates.io #60 `unicode-segmentation`（13.5 亿+，UAX #29 字素簇与词边界，6/6 PASS）。
+- `packages/@cap/unicode-xid/` & `cap/test/testCapUnicodeXid.cp`: crates.io #70 `unicode-xid`（13 亿+，UAX #31 标识符判定，6/6 PASS）。
+- `packages/@cap/unicase/` & `cap/test/testCapUnicase.cp`: crates.io #80 `unicase`（12 亿+，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/wildmatch/` & `cap/test/testCapWildmatch.cp`: crates.io Top-400 `wildmatch`（4 亿+，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 101 全部 7 个官方包映射。

@@ -1,0 +1,17 @@
+{
+  "name": "@cap/unicode-xid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation UAX #31 Unicode Identifier (XID_Start / XID_Continue) classification and identifier scanner for CP (clean-room MIT).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "unicode",
+    "unicode-xid",
+    "uax31",
+    "identifier",
+    "lexer",
+    "parser",
+    "zero-alloc"
+  ]
+}
