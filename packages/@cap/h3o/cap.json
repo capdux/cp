@@ -1,0 +1,8 @@
+{
+  "name": "@cap/h3o",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Uber H3 64-bit hexagonal hierarchical spatial index cell parser, constructor, hierarchy traversal, and area table (clean-room port of Rust h3o)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

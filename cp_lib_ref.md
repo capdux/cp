@@ -902,3 +902,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ndarray`** | `packages/@cap/ndarray` | 对标 crates.io **#125** `ndarray` (**9 亿+**) — 零堆固定容量 2D/N-D 数值数组、矩阵乘、转置、重塑、点积与归约统计 |
 | **`@cap/tzfile`** | `packages/@cap/tzfile` | 对标 crates.io `tzfile` — RFC 8536 TZif 二进制头解析、POSIX TZ 字符串（`EST5EDT`/`AEST-10`）解析与夏令时跳变查表 |
 | **`@cap/multipart`** | `packages/@cap/multipart` | 对标 crates.io `multipart` / `multer-rs` (双包复用 `@cap/mediatype`+`@cap/unicase`) — RFC 7578 零堆流式 Multipart 编解码器 |
+| **`@cap/formidable`** | `packages/@cap/formidable` | 对标 npm Top 60 `formidable` v3 (双包复用 `@cap/mediatype`+`@cap/content-disposition`) — 零拷贝 Multipart 表单字段与文件上传解析 |
+| **`@cap/fast-glob`** | `packages/@cap/fast-glob` | 对标 npm Top 25 `fast-glob` v3 (**1.6 亿+/周**, 复用 `@cap/glob-match`) — 正/否定模式集、`dot`/`deep`/转义与目录路径批量过滤 |
+| **`@cap/cosmiconfig`** | `packages/@cap/cosmiconfig` | 对标 npm Top 30 `cosmiconfig` v9 (**1.5 亿+/周**) — 8 项默认配置搜索顺序、加载器推导与 `stop_dir` 向上遍历规划器 |
+| **`@cap/h3o`** | `packages/@cap/h3o` | 对标 crates.io `h3o` v0.6 — Uber H3 64 位六边形层次空间索引、五边形判定、父子级导航与 0..15 分辨率面积表 |
+| **`@cap/s2`** | `packages/@cap/s2` | 对标 crates.io `s2` — Google S2 64 位球面 Hilbert `S2CellId` 层级/包含判定、`LatLng` 校验与大圆 Haversine 距离 |
+| **`@cap/statrs`** | `packages/@cap/statrs` | 对标 crates.io `statrs` v0.17 — 描述统计、`erf`/正态/指数/泊松分布、二项式系数与简单线性回归 |
+| **`@cap/crc32fast`** | `packages/@cap/crc32fast` | 对标 crates.io **#30** `crc32fast` (**17 亿+**) — IEEE 802.3 CRC-32 流式 `Crc32Hasher` 与 GF(2) 并行块合并 `combine` |
+| **`@cap/simdutf8`** | `packages/@cap/simdutf8` | 对标 crates.io **#135** `simdutf8` (**8.5 亿+**) — 4 字节 ASCII 快路径严格 RFC 3629 UTF-8 校验、`valid_up_to`/`error_len` 精确定位 |

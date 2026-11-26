@@ -1,0 +1,9 @@
+{
+  "name": "@cap/cosmiconfig",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP configuration file search planner, candidate path builder, and loader detector (clean-room MIT implementation of npm cosmiconfig v9)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

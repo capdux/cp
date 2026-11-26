@@ -1,0 +1,9 @@
+{
+  "name": "@cap/s2",
+  "ver": "1.0.0",
+  "description": "Zero-heap Google S2 spherical geometry: 64-bit S2CellId face/level/parent/child/contains, LatLng validation, and spherical distance (crates.io s2 equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

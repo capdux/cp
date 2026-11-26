@@ -1,0 +1,11 @@
+{
+  "name": "@cap/fast-glob",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP fast-glob pattern set, dynamic pattern detector, and path escaper (clean-room MIT implementation of npm fast-glob v3)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/glob-match": "1.0.0"
+  }
+}

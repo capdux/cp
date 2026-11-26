@@ -2728,15 +2728,11 @@
       "source_registry": "crates.io",
       "source_name": "crc32fast",
       "source_repo": "https://github.com/srijs/rust-crc32fast",
-      "license": "MIT",
-      "cp_target": "@cap/crc32",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/crc32fast",
       "kind": "package",
-      "aliases": [
-        "crc32c",
-        "adler2",
-        "crc-32"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3355,14 +3351,11 @@
       "source_registry": "crates.io",
       "source_name": "simdutf8",
       "source_repo": "https://github.com/rusticstuff/simdutf8",
-      "license": "MIT",
-      "cp_target": "@cap/utf8-valid",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/simdutf8",
       "kind": "package",
-      "aliases": [
-        "utf-8",
-        "utf8-validate"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -7963,11 +7956,9 @@
       "source_name": "statrs",
       "source_repo": "https://github.com/statrs-dev/statrs",
       "license": "MIT",
-      "cp_target": "@cap/stats-basic",
+      "cp_target": "@cap/statrs",
       "kind": "package",
-      "aliases": [
-        "average"
-      ],
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     },
     {
@@ -10707,6 +10698,56 @@
       "aliases": [
         "multer-rs"
       ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "formidable",
+      "source_repo": "https://github.com/node-formidable/formidable",
+      "license": "MIT",
+      "cp_target": "@cap/formidable",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-glob",
+      "source_repo": "https://github.com/mrmlnc/fast-glob",
+      "license": "MIT",
+      "cp_target": "@cap/fast-glob",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cosmiconfig",
+      "source_repo": "https://github.com/cosmiconfig/cosmiconfig",
+      "license": "MIT",
+      "cp_target": "@cap/cosmiconfig",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "h3o",
+      "source_repo": "https://github.com/HydroniumLabs/h3o",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/h3o",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "s2",
+      "source_repo": "https://github.com/roydbt/s2",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/s2",
+      "kind": "package",
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     }
   ]

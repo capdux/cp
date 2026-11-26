@@ -1065,3 +1065,14 @@
 - `packages/@cap/tzfile/` & `cap/test/testCapTzfile.cp`: crates.io `tzfile`（RFC 8536 TZif + POSIX TZ 解析，6/6 PASS）。
 - `packages/@cap/multipart/` & `cap/test/testCapMultipart.cp`: crates.io `multipart`（双包复用 `@cap/mediatype`+`@cap/unicase`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增 Batch 119 全部 6 个官方包映射（891 mappings）。
+
+### 2026-11-27 (Batch 120 — **8 包超级大波！突破 684 官方 `.cap` 包 & 899 映射！拿下 `crc32fast`(17 亿)+`simdutf8`(8.5 亿)+`fast-glob`(1.6 亿/周)+`cosmiconfig`(1.5 亿/周)+`h3o`+`s2`+`statrs`+`formidable`**)
+- `packages/@cap/formidable/` & `cap/test/testCapFormidable.cp`: npm Top 60 `formidable` v3（双包复用 `@cap/mediatype`+`@cap/content-disposition`，6/6 PASS）。
+- `packages/@cap/fast-glob/` & `cap/test/testCapFastGlob.cp`: npm Top 25 `fast-glob` v3（1.6 亿+/周，复用 `@cap/glob-match`，6/6 PASS）。
+- `packages/@cap/cosmiconfig/` & `cap/test/testCapCosmiconfig.cp`: npm Top 30 `cosmiconfig` v9（1.5 亿+/周，配置向上搜索规划器，6/6 PASS）。
+- `packages/@cap/h3o/` & `cap/test/testCapH3o.cp`: crates.io `h3o` v0.6（Uber H3 64 位六边形空间索引，6/6 PASS）。
+- `packages/@cap/s2/` & `cap/test/testCapS2.cp`: crates.io `s2`（Google S2 64 位球面几何与大圆距离，6/6 PASS）。
+- `packages/@cap/statrs/` & `cap/test/testCapStatrs.cp`: crates.io `statrs` v0.17（概率分布、描述统计与线性回归，6/6 PASS）。
+- `packages/@cap/crc32fast/` & `cap/test/testCapCrc32fast.cp`: crates.io **#30** `crc32fast`（**17 亿+**，CRC-32 + GF(2) combine，6/6 PASS）。
+- `packages/@cap/simdutf8/` & `cap/test/testCapSimdutf8.cp`: crates.io **#135** `simdutf8`（**8.5 亿+**，严格 RFC 3629 UTF-8 校验，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增 Batch 120 全部 8 个官方包映射（899 mappings）。

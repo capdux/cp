@@ -432,3 +432,6 @@
 
 ## 2026-11-27: Batch 119 六大科学计算/时区/进程/Multipart 包全 6/6 PASS — 官方 `.cap` 包突破 **676+**！
 - 交付 crates.io #125 `ndarray`（9 亿+）、`bigdecimal`、`tzfile`、`multipart`（双包复用）与 npm `execa`（1.4 亿+/周，复用 `@cap/npm-run-path`）、`multer`（双包复用），全部 36/36 单测 100% PASS，总映射达 891 项（npm=446, crates.io=445 精准 1:1 平衡）；Worker N9 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N10。
+
+## 2026-11-27: Batch 120 八大重量级包全 6/6 PASS — 突破 **684 官方 `.cap` 包 & 899 上游映射**！
+- 一次性交付 crates.io **#30 `crc32fast`（17 亿+）**、**#135 `simdutf8`（8.5 亿+）**、`h3o`、`s2`、`statrs` 与 npm `fast-glob`（1.6 亿+/周）、`cosmiconfig`（1.5 亿+/周）、`formidable`，全部 48/48 单测 100% PASS，总映射达 899 项（npm=449, crates.io=450）。

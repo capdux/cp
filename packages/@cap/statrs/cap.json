@@ -1,0 +1,8 @@
+{
+  "name": "@cap/statrs",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap descriptive statistics, probability distributions (Normal, Exponential, Poisson, Binomial), error function, and simple linear regression (clean-room port of Rust statrs)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
