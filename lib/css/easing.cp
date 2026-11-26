@@ -10,17 +10,17 @@ pub err CssEasingError {
 }
 
 /// CSS `steps()` 阶梯位置枚举（CSS Easing Functions Level 1 §2.3）
-pub enum StepPosition: u8 {
+pub enum CssStepPosition: u8 {
     start = 0,
     end = 1,
     jump_none = 2,
     jump_both = 3,
 
-    static fn default(): StepPosition {
+    static fn default(): CssStepPosition {
         return .end;
     }
 
-    static fn parse(input: string): StepPosition? {
+    static fn parse(input: string): CssStepPosition? {
         if (std.ascii.eqlIgnoreCase(input, "start") || std.ascii.eqlIgnoreCase(input, "jump-start")) {
             return .start;
         }
@@ -144,7 +144,7 @@ pub struct CubicBezier {
 /// 阶梯缓动函数参数（`steps(count, position)`）
 pub struct EasingSteps {
     count: u32 = 1,
-    position: StepPosition = StepPosition.end,
+    position: CssStepPosition = CssStepPosition.end,
 
     /// 按 W3C CSS Easing Functions Level 1 §2.3.1 规范计算阶梯输出进度。
     fn sample(t: f64): f64 {
@@ -153,7 +153,7 @@ pub struct EasingSteps {
             return 0.0;
         }
         let step: i64 = @intFromFloat(@floor(t * n_f));
-        if (_.position == StepPosition.start || _.position == StepPosition.jump_both) {
+        if (_.position == CssStepPosition.start || _.position == CssStepPosition.jump_both) {
             step += 1;
         }
         const jumps: i64 = switch (_.position) {
@@ -236,11 +236,11 @@ pub struct EasingFunction {
         };
     }
 
-    static fn makeSteps(count: u32, position: StepPosition): EasingFunction ! CssEasingError {
+    static fn makeSteps(count: u32, position: CssStepPosition): EasingFunction ! CssEasingError {
         if (count == 0) {
             return err.InvalidStepCount;
         }
-        if (position == StepPosition.jump_none && count < 2) {
+        if (position == CssStepPosition.jump_none && count < 2) {
             return err.InvalidStepCount;
         }
         return EasingFunction{
@@ -273,8 +273,8 @@ pub struct EasingFunction {
         if (std.ascii.eqlIgnoreCase(s, "ease-in")) { return EasingFunction.easeIn(); }
         if (std.ascii.eqlIgnoreCase(s, "ease-out")) { return EasingFunction.easeOut(); }
         if (std.ascii.eqlIgnoreCase(s, "ease-in-out")) { return EasingFunction.easeInOut(); }
-        if (std.ascii.eqlIgnoreCase(s, "step-start")) { return EasingFunction.makeSteps(1, StepPosition.start); }
-        if (std.ascii.eqlIgnoreCase(s, "step-end")) { return EasingFunction.makeSteps(1, StepPosition.end); }
+        if (std.ascii.eqlIgnoreCase(s, "step-start")) { return EasingFunction.makeSteps(1, CssStepPosition.start); }
+        if (std.ascii.eqlIgnoreCase(s, "step-end")) { return EasingFunction.makeSteps(1, CssStepPosition.end); }
 
         // 函数形式：name(args)
         const lparen = std.mem.indexOfScalar(u8, s, '(') ?? return err.InvalidEasing;
@@ -322,11 +322,11 @@ pub struct EasingFunction {
                 const cnt_tok = trimAscii(args_str[0..comma]);
                 const pos_tok = trimAscii(rest);
                 const cnt = std.fmt.parseInt(u32, cnt_tok, 10) catch return err.InvalidStepCount;
-                const step_pos = StepPosition.parse(pos_tok) ?? return err.InvalidStepPosition;
+                const step_pos = CssStepPosition.parse(pos_tok) ?? return err.InvalidStepPosition;
                 return EasingFunction.makeSteps(cnt, step_pos);
             } else {
                 const cnt = std.fmt.parseInt(u32, args_str, 10) catch return err.InvalidStepCount;
-                return EasingFunction.makeSteps(cnt, StepPosition.default());
+                return EasingFunction.makeSteps(cnt, CssStepPosition.default());
             }
         }
 
@@ -388,10 +388,10 @@ pub struct EasingFunction {
                 return formatted.len;
             },
             .steps => {
-                if (norm.steps.count == 1 && norm.steps.position == StepPosition.start) {
+                if (norm.steps.count == 1 && norm.steps.position == CssStepPosition.start) {
                     return writeStr(buf, 0, "step-start");
                 }
-                if (norm.steps.count == 1 && norm.steps.position == StepPosition.end) {
+                if (norm.steps.count == 1 && norm.steps.position == CssStepPosition.end) {
                     return writeStr(buf, 0, "step-end");
                 }
                 const formatted = std.fmt.bufPrint(

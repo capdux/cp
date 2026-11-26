@@ -1,0 +1,12 @@
+{
+  "name": "@cap/icu-locid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer reusing @cap/tinystr (ICU4X icu_locid parity) in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/tinystr": "1.0.0"
+  },
+  "keywords": ["icu", "icu4x", "locale", "bcp47", "uts35", "i18n", "tinystr", "zero-alloc"]
+}

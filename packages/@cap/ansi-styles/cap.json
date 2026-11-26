@@ -1,0 +1,11 @@
+{
+  "name": "@cap/ansi-styles",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "ANSI escape codes for styling strings in the terminal (clean-room CP implementation of npm ansi-styles)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/color-convert": "1.0.0"
+  }
+}

@@ -65,7 +65,7 @@ pub const CssContainerQuery = _container.ContainerQuery;
 
 import _easing from "./easing.cp";
 pub const CssEasingError = _easing.CssEasingError;
-pub const CssStepPosition = _easing.StepPosition;
+pub const CssStepPosition = _easing.CssStepPosition;
 pub const CssEasingKind = _easing.EasingKind;
 pub const CubicBezier = _easing.CubicBezier;
 pub const EasingSteps = _easing.EasingSteps;

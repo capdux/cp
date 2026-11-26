@@ -502,7 +502,29 @@ fn compile_file(
     };
 
     let mut analyzer = Analyzer::new();
-    let _ = analyzer.analyze_module(&mut module);
+    if !lib && !cap_hub.root_item_indices.is_empty() && cap_hub.root_item_indices.len() < module.body.len() {
+        let mut root_items = Vec::with_capacity(cap_hub.root_item_indices.len());
+        for (idx, item) in module.body.iter().enumerate() {
+            if cap_hub.root_item_indices.contains(&idx) {
+                root_items.push(item.clone());
+            } else {
+                match item {
+                    cpc::ast::ModuleItem::Decl(d) => analyzer.register_imported_decl(d),
+                    cpc::ast::ModuleItem::Stmt(cpc::ast::Stmt::Var(v)) => {
+                        analyzer.register_imported_var(v);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        let mut root_module = Module {
+            span: module.span.clone(),
+            body: root_items,
+        };
+        let _ = analyzer.analyze_module(&mut root_module);
+    } else {
+        let _ = analyzer.analyze_module(&mut module);
+    }
     all_diags.extend(analyzer.get_diagnostics());
 
     if !all_diags.is_empty() {

@@ -1,8 +1,10 @@
 {
   "name": "@cap/tinystr",
   "ver": "1.0.0",
-  "description": "Zero-allocation register-packed short ASCII strings TinyStr4/TinyStr8 (Rust ICU4X tinystr parity) for CP",
+  "description": "Zero-allocation stack-inline fixed-capacity ASCII strings (TinyAsciiStr4, TinyAsciiStr8, TinyAsciiStr16) with u32/u64 packing and BCP-47 case transforms (ICU4X tinystr parity) in pure CP.",
+  "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "dependencies": {},
+  "keywords": ["tinystr", "ascii", "icu4x", "bcp47", "locale", "zero-alloc", "stack-string"]
 }

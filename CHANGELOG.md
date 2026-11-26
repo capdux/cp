@@ -829,3 +829,15 @@
 - `packages/@cap/rustls-pki-types/` & `cap/test/testCapRustlsPkiTypes.cp`: crates.io #180 `rustls-pki-types`（7.27 亿下载，复用 `@cap/pem-rfc7468`，6/6 PASS）。
 - `packages/@cap/color-convert/` & `cap/test/testCapColorConvert.cp`: npm Top 28 `color-convert`（3 亿+/周，复用 `@cap/color-name`，6/6 PASS）。
 - `packages/@cap/ipaddr/` & `cap/test/testCapIpaddr.cp`: npm Top 55 `ipaddr.js`（2 亿+/周，RFC 5952，6/6 PASS）。
+
+### 2026-11-27 (Batch 94 — **修复 `capsurf_agy` 紧急工单 + 6 个超高频新包全部 6/6 PASS！** 映射达 829+)
+- **编译器热修（结单 `task-capsurf-20261126-css-boxshadow-e0207`）**：
+  - `cpc/src/resolver.rs` & `cpc/src/main.rs`: 在单文件编译模式下隔离导入模块与根模块的语义分析（通过 `root_item_indices` + `register_imported_decl`/`register_imported_var`），彻底消除导入多子模块标准库（如 `cap:css`）时的 35 条跨文件扁平化误报（E0207/E0214/E0216），并发布 `cpc (release)`。
+  - `lib/css/easing.cp` & `lib/css/index.cp`: 将 `StepPosition` 重命名为 `CssStepPosition` 消除与 `lib/css/engine/values.cp` 的枚举撞名。实测 `capsurf` `test_box_shadow_and_border_radius_edge.cp` (4/4 PASS) 与 `test_color_and_units.cp` (4/4 PASS)。
+- `packages/@cap/picomatch/` & `cap/test/testCapPicomatch.cp`: npm Top 15 `picomatch`（3.5 亿+/周，复用 `@cap/normalize-path`+`@cap/is-extglob`，6/6 PASS）。
+- `packages/@cap/micromatch/` & `cap/test/testCapMicromatch.cp`: npm Top 35 `micromatch`（2.5 亿+/周，复用 `@cap/picomatch`+`@cap/braces`，6/6 PASS）。
+- `packages/@cap/yargs-parser/` & `cap/test/testCapYargsParser.cp`: npm Top 45 `yargs-parser`（2.5 亿+/周，复用 `@cap/camelcase`+`@cap/decamelize`，6/6 PASS）。
+- `packages/@cap/ansi-styles/` & `cap/test/testCapAnsiStyles.cp`: npm Top 10 `ansi-styles`（4 亿+/周，复用 `@cap/color-convert`→`@cap/color-name`，6/6 PASS）。
+- `packages/@cap/tinystr/` & `cap/test/testCapTinystr.cp`: crates.io #260 `tinystr`（5.5 亿+，6/6 PASS）。
+- `packages/@cap/icu-locid/` & `cap/test/testCapIcuLocid.cp`: crates.io #255 `icu_locid`（5.5 亿+，复用 `@cap/tinystr`，6/6 PASS）。
+- `packages/@cap/normalize-path/src/index.cp` & `packages/@cap/decamelize/src/`: 消除跨包展平时的私有/重名符号冲突，100% 向后兼容。

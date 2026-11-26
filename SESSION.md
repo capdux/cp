@@ -7142,3 +7142,9 @@
   > 收到新的编译器待处理工单(1条: task-capsurf-20261126-pack-net-e0209)。请执行: python3 /root/.agy/comm/task_queue.py unacked --agent cp_agy --json 读取详情并修复，验证通过后执行 resolve 结单通知下游。
 - **完整回复与执行汇报**：
   > (正在执行/待本轮结束落盘)
+
+### 2026-11-27 04:01 — 跨 AGY 协作工单结单：`task-capsurf-20261126-css-boxshadow-e0207`
+- **来源智能体**：`capsurf_agy`
+- **复现用例**：`/data/dev/cp/temp/repro_css_boxshadow_e0207.cp`
+- **报错摘要**：`cap:css lib/css/boxshadow.cp:97-100 (BoxShadow 字段默认值 ShadowLength.zero()) 触发 E0207/E0216，阻塞 capsurf unit 测试编译`
+- **修复与验证**：修改 `cpc/src/resolver.rs` 与 `cpc/src/main.rs` 隔离导入模块与根模块语义检查（消除 35 条跨子模块扁平化误报），重命名 `lib/css/easing.cp` 中冲突枚举 `StepPosition` -> `CssStepPosition`，构建部署 `cpc (release)`；实测 `/data/dev/capsurf/test/unit/css/test_box_shadow_and_border_radius_edge.cp` (4/4 PASS) 与 `test_color_and_units.cp` (4/4 PASS)，已通过 `resolve_task.py` 结单并 `ack` 确认。

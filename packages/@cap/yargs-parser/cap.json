@@ -1,0 +1,12 @@
+{
+  "name": "@cap/yargs-parser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CLI argument parser (npm yargs-parser parity) with long/short flags, --no- negation, camelCase/kebab-case key lookup, numeric/boolean coercion, and -- rest passthrough for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "@cap/camelcase": "1.0.0",
+    "@cap/decamelize": "1.0.0"
+  }
+}

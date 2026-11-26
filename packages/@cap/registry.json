@@ -10013,6 +10013,38 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "micromatch",
+      "source_repo": "https://github.com/micromatch/micromatch",
+      "license": "MIT",
+      "cp_target": "@cap/micromatch",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yargs-parser",
+      "source_repo": "https://github.com/yargs/yargs-parser",
+      "license": "MIT",
+      "cp_target": "@cap/yargs-parser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "icu_locid",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "MIT",
+      "cp_target": "@cap/icu-locid",
+      "kind": "package",
+      "aliases": [
+        "icu_locale_core"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -746,3 +746,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/rustls-pki-types`** | `packages/@cap/rustls-pki-types` | 对标 crates.io #180 `rustls-pki-types` (7.27 亿，跨包复用 `@cap/pem-rfc7468`) — RFC 1035 DnsName/ServerName/UnixTime 与 PEM 类型识别 |
 | **`@cap/color-convert`** | `packages/@cap/color-convert` | 对标 npm Top 28 `color-convert` (3 亿+/周，跨包复用 `@cap/color-name`) — RGB/HSV/HWB/HSL/CMYK/ANSI16/256/Hex/Keyword 全空间转换 |
 | **`@cap/ipaddr`** | `packages/@cap/ipaddr` | 对标 npm Top 55 `ipaddr.js` (2 亿+/周) — IPv4/IPv6 解析、RFC 5952 格式化、CIDR 匹配与网段分类 |
+| **`@cap/picomatch`** | `packages/@cap/picomatch` | 对标 npm Top 15 `picomatch` (3.5 亿+/周，跨包复用 `@cap/normalize-path`+`@cap/is-extglob`) — 零堆高性能 Glob/Globstar/花括号匹配引擎 |
+| **`@cap/micromatch`** | `packages/@cap/micromatch` | 对标 npm Top 35 `micromatch` (2.5 亿+/周，跨包复用 `@cap/picomatch`+`@cap/braces`) — 批量路径过滤与正负向组合匹配套件 |
+| **`@cap/yargs-parser`** | `packages/@cap/yargs-parser` | 对标 npm Top 45 `yargs-parser` (2.5 亿+/周，跨包复用 `@cap/camelcase`+`@cap/decamelize`) — 零堆 POSIX/GNU 命令行参数解析器 |
+| **`@cap/ansi-styles`** | `packages/@cap/ansi-styles` | 对标 npm Top 10 `ansi-styles` (4 亿+/周，跨包复用 `@cap/color-convert`→`@cap/color-name`) — SGR 16/256/Truecolor 终端样式原语 |
+| **`@cap/tinystr`** | `packages/@cap/tinystr` | 对标 crates.io #260 `tinystr` (5.5 亿+) — ICU4X 栈内定长紧凑 ASCII 字符串 (`TinyAsciiStr4/8/16`) 与整字打包 |
+| **`@cap/icu-locid`** | `packages/@cap/icu-locid` | 对标 crates.io #255 `icu_locid`/`icu_locale_core` (5.5 亿+，跨包复用 `@cap/tinystr`) — UTS #35 / BCP-47 语言标签解析与 Likely Subtags |

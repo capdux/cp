@@ -284,6 +284,7 @@ pub struct CapHubResolution {
     pub aliases: BTreeSet<String>,
     pub mounted_ns: BTreeMap<String, PathBuf>,
     pub used_packages: BTreeSet<String>,
+    pub root_item_indices: HashSet<usize>,
 }
 
 pub fn extract_top_level_zig_pub_names(zig_code: &str) -> Vec<String> {
@@ -694,7 +695,7 @@ pub fn resolve_imports_with_cap_hub(
     include_paths: &[PathBuf],
     all_items: &mut Vec<ModuleItem>,
     processed: &mut HashSet<PathBuf>,
-    _is_root: bool,
+    is_root: bool,
     cap_hub: &mut CapHubResolution,
 ) -> anyhow::Result<()> {
     let abs_path = fs::canonicalize(path)?;
@@ -742,6 +743,9 @@ pub fn resolve_imports_with_cap_hub(
         match item {
             ModuleItem::Import(imp) => {
                 if is_cap_hub_source(&imp.source) {
+                    if is_root {
+                        cap_hub.root_item_indices.insert(all_items.len());
+                    }
                     all_items.push(ModuleItem::Import(imp));
                 } else if is_external_package_source(&imp.source) {
                     if !is_import_used(&imp, &referenced_idents) {
@@ -758,8 +762,14 @@ pub fn resolve_imports_with_cap_hub(
                             false,
                             cap_hub,
                         )?;
+                        if is_root {
+                            cap_hub.root_item_indices.insert(all_items.len());
+                        }
                         all_items.push(ModuleItem::Import(imp));
                     } else {
+                        if is_root {
+                            cap_hub.root_item_indices.insert(all_items.len());
+                        }
                         all_items.push(ModuleItem::Import(imp));
                     }
                 } else {
@@ -775,8 +785,14 @@ pub fn resolve_imports_with_cap_hub(
                             false,
                             cap_hub,
                         )?;
+                        if is_root {
+                            cap_hub.root_item_indices.insert(all_items.len());
+                        }
                         all_items.push(ModuleItem::Import(imp));
                     } else {
+                        if is_root {
+                            cap_hub.root_item_indices.insert(all_items.len());
+                        }
                         all_items.push(ModuleItem::Import(imp));
                     }
                 }
@@ -801,6 +817,9 @@ pub fn resolve_imports_with_cap_hub(
                             .filter(|sp| sp.exported.sym != sp.local.sym)
                             .collect();
                         if !aliased.is_empty() {
+                            if is_root {
+                                cap_hub.root_item_indices.insert(all_items.len());
+                            }
                             all_items.push(ModuleItem::Export(crate::ast::ExportStmt {
                                 span: exp.span,
                                 specifiers: aliased,
@@ -808,13 +827,22 @@ pub fn resolve_imports_with_cap_hub(
                             }));
                         }
                     } else {
+                        if is_root {
+                            cap_hub.root_item_indices.insert(all_items.len());
+                        }
                         all_items.push(ModuleItem::Export(exp));
                     }
                 } else {
+                    if is_root {
+                        cap_hub.root_item_indices.insert(all_items.len());
+                    }
                     all_items.push(ModuleItem::Export(exp));
                 }
             }
             _ => {
+                if is_root {
+                    cap_hub.root_item_indices.insert(all_items.len());
+                }
                 all_items.push(item);
             }
         }

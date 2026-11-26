@@ -1,363 +1,604 @@
-// @cap/tinystr — Zero-allocation register-packed short ASCII strings (TinyStr4 / TinyStr8) for CP
-// Clean-room MIT implementation inspired by Rust ICU4X `tinystr` (835M downloads).
+// packages/@cap/tinystr/src/index.cp
+// Zero-allocation stack-inline fixed-capacity ASCII strings in pure CP.
+// Clean-room MIT implementation (ICU4X tinystr v0.7/v0.8 parity).
 
-fn isValidAsciiByte(b: u8) -> bool {
-    return b >= (1 as u8) && b <= (127 as u8);
-}
+pub const TINYSTR_OK: i64 = 0;
+pub const TINYSTR_ERR_TOO_LONG: i64 = -1;
+pub const TINYSTR_ERR_NON_ASCII: i64 = -2;
+pub const TINYSTR_ERR_CONTAINS_NUL: i64 = -3;
 
-fn isAlphaByte(b: u8) -> bool {
-    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z');
-}
-
-fn isDigitByte(b: u8) -> bool {
-    return b >= '0' && b <= '9';
-}
-
-fn toLowerByte(b: u8) -> u8 {
-    if (b >= 'A' && b <= 'Z') {
+fn tsToLowerByte(b: u8): u8 {
+    if (b >= ('A' as u8) && b <= ('Z' as u8)) {
         return b + (32 as u8);
     }
     return b;
 }
 
-fn toUpperByte(b: u8) -> u8 {
-    if (b >= 'a' && b <= 'z') {
+fn tsToUpperByte(b: u8): u8 {
+    if (b >= ('a' as u8) && b <= ('z' as u8)) {
         return b - (32 as u8);
     }
     return b;
 }
 
-fn getByte32(raw: u32, idx: usize) -> u8 {
-    let v = raw;
+fn tsIsAlpha(b: u8): bool {
+    return (b >= ('A' as u8) && b <= ('Z' as u8))
+        || (b >= ('a' as u8) && b <= ('z' as u8));
+}
+
+fn tsIsDigit(b: u8): bool {
+    return b >= ('0' as u8) && b <= ('9' as u8);
+}
+
+fn tsIsAlnum(b: u8): bool {
+    return tsIsAlpha(b) || tsIsDigit(b);
+}
+
+fn tsIsLower(b: u8): bool {
+    return b >= ('a' as u8) && b <= ('z' as u8);
+}
+
+fn tsIsUpper(b: u8): bool {
+    return b >= ('A' as u8) && b <= ('Z' as u8);
+}
+
+fn tsValidateBytes(src: []const u8, max_len: usize): i64 {
+    if (src.len > max_len) {
+        return TINYSTR_ERR_TOO_LONG;
+    }
     let i: usize = 0;
-    while (i < idx) {
-        v = v / (256 as u32);
-        i += 1;
+    while (i < src.len) {
+        const ch = src[i];
+        if (ch == (0 as u8)) {
+            return TINYSTR_ERR_CONTAINS_NUL;
+        }
+        if (ch >= (0x80 as u8)) {
+            return TINYSTR_ERR_NON_ASCII;
+        }
+        i = i + 1;
     }
-    return (v & (0xFF as u32)) as u8;
+    return TINYSTR_OK;
 }
 
-fn putByte32(raw: u32, idx: usize, b: u8) -> u32 {
-    let shift: u32 = 1;
+fn tsValidatePacked(buf: []const u8): i64 {
+    let seen_nul = false;
     let i: usize = 0;
-    while (i < idx) {
-        shift = shift * (256 as u32);
-        i += 1;
+    while (i < buf.len) {
+        const ch = buf[i];
+        if (ch == (0 as u8)) {
+            seen_nul = true;
+        } else {
+            if (seen_nul) {
+                return TINYSTR_ERR_CONTAINS_NUL;
+            }
+            if (ch >= (0x80 as u8)) {
+                return TINYSTR_ERR_NON_ASCII;
+            }
+        }
+        i = i + 1;
     }
-    return raw | ((b as u32) * shift);
+    return TINYSTR_OK;
 }
 
-fn getByte64(raw: u64, idx: usize) -> u8 {
-    let v = raw;
+fn tsSliceLen(buf: []const u8): usize {
     let i: usize = 0;
-    while (i < idx) {
-        v = v / (256 as u64);
-        i += 1;
+    while (i < buf.len && buf[i] != (0 as u8)) {
+        i = i + 1;
     }
-    return (v & (0xFF as u64)) as u8;
+    return i;
 }
 
-fn putByte64(raw: u64, idx: usize, b: u8) -> u64 {
-    let shift: u64 = 1;
+fn tsCopyOut(src: []const u8, n: usize, out: []u8): usize {
+    let take = n;
+    if (out.len < take) {
+        take = out.len;
+    }
     let i: usize = 0;
-    while (i < idx) {
-        shift = shift * (256 as u64);
-        i += 1;
+    while (i < take) {
+        out[i] = src[i];
+        i = i + 1;
     }
-    return raw | ((b as u64) * shift);
+    return take;
 }
 
-pub struct TinyStr4 {
-    pub raw: u32,
-
-    pub static fn fromStr(s: string) -> TinyStr4? {
-        if (s.len == 0 || s.len > 4) {
-            return null;
-        }
-        let acc: u32 = 0;
-        let i: usize = 0;
-        while (i < s.len) {
-            const b = s[i];
-            if (!isValidAsciiByte(b)) {
-                return null;
-            }
-            acc = putByte32(acc, i, b);
-            i += 1;
-        }
-        return TinyStr4{ raw: acc };
+fn tsSliceEq(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) {
+        return false;
     }
-
-    pub fn len() -> usize {
-        let n: usize = 0;
-        while (n < 4) {
-            if (getByte32(_.raw, n) == (0 as u8)) {
-                break;
-            }
-            n += 1;
+    let i: usize = 0;
+    while (i < a.len) {
+        if (a[i] != b[i]) {
+            return false;
         }
-        return n;
+        i = i + 1;
     }
-
-    pub fn equals(other: TinyStr4) -> bool {
-        return _.raw == other.raw;
-    }
-
-    pub fn toAsciiLower() -> TinyStr4 {
-        let out: u32 = 0;
-        let i: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out = putByte32(out, i, toLowerByte(b));
-            i += 1;
-        }
-        return TinyStr4{ raw: out };
-    }
-
-    pub fn toAsciiUpper() -> TinyStr4 {
-        let out: u32 = 0;
-        let i: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out = putByte32(out, i, toUpperByte(b));
-            i += 1;
-        }
-        return TinyStr4{ raw: out };
-    }
-
-    pub fn toAsciiTitle() -> TinyStr4 {
-        let out: u32 = 0;
-        let i: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            const nb = if (i == 0) { toUpperByte(b) } else { toLowerByte(b) };
-            out = putByte32(out, i, nb);
-            i += 1;
-        }
-        return TinyStr4{ raw: out };
-    }
-
-    pub fn isAsciiAlpha() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isAlphaByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
-    }
-
-    pub fn isAsciiNumeric() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isDigitByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
-    }
-
-    pub fn isAsciiAlphanumeric() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 4) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isAlphaByte(b) && !isDigitByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
-    }
-
-    pub fn writeTo(out: []u8) -> string {
-        let pos: usize = 0;
-        let i: usize = 0;
-        while (i < 4 && pos < out.len) {
-            const b = getByte32(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out[pos] = b;
-            pos += 1;
-            i += 1;
-        }
-        return out[0..pos];
-    }
+    return true;
 }
 
-pub struct TinyStr8 {
-    pub raw: u64,
-
-    pub static fn fromStr(s: string) -> TinyStr8? {
-        if (s.len == 0 || s.len > 8) {
-            return null;
+fn tsSliceCmp(a: []const u8, b: []const u8): i32 {
+    let n = a.len;
+    if (b.len < n) {
+        n = b.len;
+    }
+    let i: usize = 0;
+    while (i < n) {
+        if (a[i] < b[i]) {
+            return -1 as i32;
         }
-        let acc: u64 = 0;
+        if (a[i] > b[i]) {
+            return 1 as i32;
+        }
+        i = i + 1;
+    }
+    if (a.len < b.len) {
+        return -1 as i32;
+    }
+    if (a.len > b.len) {
+        return 1 as i32;
+    }
+    return 0 as i32;
+}
+
+fn tsSliceEqIgnoreCase(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) {
+        return false;
+    }
+    let i: usize = 0;
+    while (i < a.len) {
+        if (tsToLowerByte(a[i]) != tsToLowerByte(b[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn tsAllAlpha(buf: []const u8, n: usize): bool {
+    let i: usize = 0;
+    while (i < n) {
+        if (!tsIsAlpha(buf[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn tsAllAlnum(buf: []const u8, n: usize): bool {
+    let i: usize = 0;
+    while (i < n) {
+        if (!tsIsAlnum(buf[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn tsAllDigit(buf: []const u8, n: usize): bool {
+    let i: usize = 0;
+    while (i < n) {
+        if (!tsIsDigit(buf[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn tsAllLower(buf: []const u8, n: usize): bool {
+    let i: usize = 0;
+    while (i < n) {
+        if (!tsIsLower(buf[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn tsAllUpper(buf: []const u8, n: usize): bool {
+    let i: usize = 0;
+    while (i < n) {
+        if (!tsIsUpper(buf[i])) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+/// 4-byte stack-inline ASCII string (`0x01..0x7F`, zero-padded), packable as `u32`.
+pub struct TinyAsciiStr4 {
+    pub bytes: [4]u8,
+
+    pub static fn empty(): TinyAsciiStr4 {
+        return TinyAsciiStr4 { bytes: [0; 4] };
+    }
+
+    pub static fn fromBytes(src: []const u8): TinyAsciiStr4Result {
+        const err = tsValidateBytes(src, 4);
+        if (err != TINYSTR_OK) {
+            return TinyAsciiStr4Result { ok: false, value: TinyAsciiStr4.empty(), err: err };
+        }
+        let b: [4]u8 = [0; 4];
         let i: usize = 0;
-        while (i < s.len) {
-            const b = s[i];
-            if (!isValidAsciiByte(b)) {
-                return null;
-            }
-            acc = putByte64(acc, i, b);
-            i += 1;
+        while (i < src.len) {
+            b[i] = src[i];
+            i = i + 1;
         }
-        return TinyStr8{ raw: acc };
+        return TinyAsciiStr4Result { ok: true, value: TinyAsciiStr4 { bytes: b }, err: TINYSTR_OK };
     }
 
-    pub fn len() -> usize {
-        let n: usize = 0;
-        while (n < 8) {
-            if (getByte64(_.raw, n) == (0 as u8)) {
-                break;
-            }
-            n += 1;
+    pub static fn fromStr(s: string): TinyAsciiStr4Result {
+        return TinyAsciiStr4.fromBytes(s);
+    }
+
+    pub static fn fromPackedU32(v: u32): TinyAsciiStr4Result {
+        let b: [4]u8 = [
+            (v & (0xFF as u32)) as u8,
+            ((v >> (8 as u5)) & (0xFF as u32)) as u8,
+            ((v >> (16 as u5)) & (0xFF as u32)) as u8,
+            ((v >> (24 as u5)) & (0xFF as u32)) as u8,
+        ];
+        const err = tsValidatePacked(b[0..4]);
+        if (err != TINYSTR_OK) {
+            return TinyAsciiStr4Result { ok: false, value: TinyAsciiStr4.empty(), err: err };
         }
-        return n;
+        return TinyAsciiStr4Result { ok: true, value: TinyAsciiStr4 { bytes: b }, err: TINYSTR_OK };
     }
 
-    pub fn equals(other: TinyStr8) -> bool {
-        return _.raw == other.raw;
+    pub fn toPackedU32(): u32 {
+        return (_.bytes[0] as u32)
+            | ((_.bytes[1] as u32) << (8 as u5))
+            | ((_.bytes[2] as u32) << (16 as u5))
+            | ((_.bytes[3] as u32) << (24 as u5));
     }
 
-    pub fn toAsciiLower() -> TinyStr8 {
-        let out: u64 = 0;
+    pub fn len(): usize {
+        return tsSliceLen(_.bytes[0..4]);
+    }
+
+    pub fn isEmpty(): bool {
+        return _.bytes[0] == (0 as u8);
+    }
+
+    pub fn asBytes(out: []u8): usize {
+        return tsCopyOut(_.bytes[0..4], _.len(), out);
+    }
+
+    pub fn byteAt(idx: usize): u8 {
+        if (idx >= 4) {
+            return 0 as u8;
+        }
+        return _.bytes[idx];
+    }
+
+    pub fn eq(other: TinyAsciiStr4): bool {
+        return tsSliceEq(_.bytes[0..4], other.bytes[0..4]);
+    }
+
+    pub fn cmp(other: TinyAsciiStr4): i32 {
+        return tsSliceCmp(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn eqIgnoreAsciiCase(other: TinyAsciiStr4): bool {
+        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn toAsciiLowercase(): TinyAsciiStr4 {
+        let b: [4]u8 = [0; 4];
         let i: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out = putByte64(out, i, toLowerByte(b));
-            i += 1;
+        while (i < 4) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
         }
-        return TinyStr8{ raw: out };
+        return TinyAsciiStr4 { bytes: b };
     }
 
-    pub fn toAsciiUpper() -> TinyStr8 {
-        let out: u64 = 0;
+    pub fn toAsciiUppercase(): TinyAsciiStr4 {
+        let b: [4]u8 = [0; 4];
         let i: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out = putByte64(out, i, toUpperByte(b));
-            i += 1;
+        while (i < 4) {
+            b[i] = tsToUpperByte(_.bytes[i]);
+            i = i + 1;
         }
-        return TinyStr8{ raw: out };
+        return TinyAsciiStr4 { bytes: b };
     }
 
-    pub fn toAsciiTitle() -> TinyStr8 {
-        let out: u64 = 0;
-        let i: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            const nb = if (i == 0) { toUpperByte(b) } else { toLowerByte(b) };
-            out = putByte64(out, i, nb);
-            i += 1;
+    pub fn toAsciiTitlecase(): TinyAsciiStr4 {
+        let b: [4]u8 = [0; 4];
+        b[0] = tsToUpperByte(_.bytes[0]);
+        let i: usize = 1;
+        while (i < 4) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
         }
-        return TinyStr8{ raw: out };
+        return TinyAsciiStr4 { bytes: b };
     }
 
-    pub fn isAsciiAlpha() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isAlphaByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
+    pub fn isAsciiAlphabetic(): bool {
+        return tsAllAlpha(_.bytes[0..4], _.len());
     }
 
-    pub fn isAsciiNumeric() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isDigitByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
+    pub fn isAsciiAlphanumeric(): bool {
+        return tsAllAlnum(_.bytes[0..4], _.len());
     }
 
-    pub fn isAsciiAlphanumeric() -> bool {
-        let i: usize = 0;
-        let count: usize = 0;
-        while (i < 8) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            if (!isAlphaByte(b) && !isDigitByte(b)) {
-                return false;
-            }
-            count += 1;
-            i += 1;
-        }
-        return count > 0;
+    pub fn isAsciiNumeric(): bool {
+        return tsAllDigit(_.bytes[0..4], _.len());
     }
 
-    pub fn writeTo(out: []u8) -> string {
-        let pos: usize = 0;
-        let i: usize = 0;
-        while (i < 8 && pos < out.len) {
-            const b = getByte64(_.raw, i);
-            if (b == (0 as u8)) {
-                break;
-            }
-            out[pos] = b;
-            pos += 1;
-            i += 1;
-        }
-        return out[0..pos];
+    pub fn isAsciiLowercase(): bool {
+        return tsAllLower(_.bytes[0..4], _.len());
+    }
+
+    pub fn isAsciiUppercase(): bool {
+        return tsAllUpper(_.bytes[0..4], _.len());
     }
 }
 
-export {
-    TinyStr4,
-    TinyStr8,
-};
+pub struct TinyAsciiStr4Result {
+    pub ok: bool,
+    pub value: TinyAsciiStr4,
+    pub err: i64,
+}
+
+/// 8-byte stack-inline ASCII string (`0x01..0x7F`, zero-padded), packable as `u64`.
+pub struct TinyAsciiStr8 {
+    pub bytes: [8]u8,
+
+    pub static fn empty(): TinyAsciiStr8 {
+        return TinyAsciiStr8 { bytes: [0; 8] };
+    }
+
+    pub static fn fromBytes(src: []const u8): TinyAsciiStr8Result {
+        const err = tsValidateBytes(src, 8);
+        if (err != TINYSTR_OK) {
+            return TinyAsciiStr8Result { ok: false, value: TinyAsciiStr8.empty(), err: err };
+        }
+        let b: [8]u8 = [0; 8];
+        let i: usize = 0;
+        while (i < src.len) {
+            b[i] = src[i];
+            i = i + 1;
+        }
+        return TinyAsciiStr8Result { ok: true, value: TinyAsciiStr8 { bytes: b }, err: TINYSTR_OK };
+    }
+
+    pub static fn fromStr(s: string): TinyAsciiStr8Result {
+        return TinyAsciiStr8.fromBytes(s);
+    }
+
+    pub static fn fromPackedU64(v: u64): TinyAsciiStr8Result {
+        let b: [8]u8 = [
+            (v & (0xFF as u64)) as u8,
+            ((v >> (8 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (16 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (24 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (32 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (40 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (48 as u6)) & (0xFF as u64)) as u8,
+            ((v >> (56 as u6)) & (0xFF as u64)) as u8,
+        ];
+        const err = tsValidatePacked(b[0..8]);
+        if (err != TINYSTR_OK) {
+            return TinyAsciiStr8Result { ok: false, value: TinyAsciiStr8.empty(), err: err };
+        }
+        return TinyAsciiStr8Result { ok: true, value: TinyAsciiStr8 { bytes: b }, err: TINYSTR_OK };
+    }
+
+    pub fn toPackedU64(): u64 {
+        return (_.bytes[0] as u64)
+            | ((_.bytes[1] as u64) << (8 as u6))
+            | ((_.bytes[2] as u64) << (16 as u6))
+            | ((_.bytes[3] as u64) << (24 as u6))
+            | ((_.bytes[4] as u64) << (32 as u6))
+            | ((_.bytes[5] as u64) << (40 as u6))
+            | ((_.bytes[6] as u64) << (48 as u6))
+            | ((_.bytes[7] as u64) << (56 as u6));
+    }
+
+    pub fn len(): usize {
+        return tsSliceLen(_.bytes[0..8]);
+    }
+
+    pub fn isEmpty(): bool {
+        return _.bytes[0] == (0 as u8);
+    }
+
+    pub fn asBytes(out: []u8): usize {
+        return tsCopyOut(_.bytes[0..8], _.len(), out);
+    }
+
+    pub fn byteAt(idx: usize): u8 {
+        if (idx >= 8) {
+            return 0 as u8;
+        }
+        return _.bytes[idx];
+    }
+
+    pub fn eq(other: TinyAsciiStr8): bool {
+        return tsSliceEq(_.bytes[0..8], other.bytes[0..8]);
+    }
+
+    pub fn cmp(other: TinyAsciiStr8): i32 {
+        return tsSliceCmp(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn eqIgnoreAsciiCase(other: TinyAsciiStr8): bool {
+        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn toAsciiLowercase(): TinyAsciiStr8 {
+        let b: [8]u8 = [0; 8];
+        let i: usize = 0;
+        while (i < 8) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr8 { bytes: b };
+    }
+
+    pub fn toAsciiUppercase(): TinyAsciiStr8 {
+        let b: [8]u8 = [0; 8];
+        let i: usize = 0;
+        while (i < 8) {
+            b[i] = tsToUpperByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr8 { bytes: b };
+    }
+
+    pub fn toAsciiTitlecase(): TinyAsciiStr8 {
+        let b: [8]u8 = [0; 8];
+        b[0] = tsToUpperByte(_.bytes[0]);
+        let i: usize = 1;
+        while (i < 8) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr8 { bytes: b };
+    }
+
+    pub fn isAsciiAlphabetic(): bool {
+        return tsAllAlpha(_.bytes[0..8], _.len());
+    }
+
+    pub fn isAsciiAlphanumeric(): bool {
+        return tsAllAlnum(_.bytes[0..8], _.len());
+    }
+
+    pub fn isAsciiNumeric(): bool {
+        return tsAllDigit(_.bytes[0..8], _.len());
+    }
+
+    pub fn isAsciiLowercase(): bool {
+        return tsAllLower(_.bytes[0..8], _.len());
+    }
+
+    pub fn isAsciiUppercase(): bool {
+        return tsAllUpper(_.bytes[0..8], _.len());
+    }
+}
+
+pub struct TinyAsciiStr8Result {
+    pub ok: bool,
+    pub value: TinyAsciiStr8,
+    pub err: i64,
+}
+
+/// 16-byte stack-inline ASCII string (`0x01..0x7F`, zero-padded).
+pub struct TinyAsciiStr16 {
+    pub bytes: [16]u8,
+
+    pub static fn empty(): TinyAsciiStr16 {
+        return TinyAsciiStr16 { bytes: [0; 16] };
+    }
+
+    pub static fn fromBytes(src: []const u8): TinyAsciiStr16Result {
+        const err = tsValidateBytes(src, 16);
+        if (err != TINYSTR_OK) {
+            return TinyAsciiStr16Result { ok: false, value: TinyAsciiStr16.empty(), err: err };
+        }
+        let b: [16]u8 = [0; 16];
+        let i: usize = 0;
+        while (i < src.len) {
+            b[i] = src[i];
+            i = i + 1;
+        }
+        return TinyAsciiStr16Result { ok: true, value: TinyAsciiStr16 { bytes: b }, err: TINYSTR_OK };
+    }
+
+    pub static fn fromStr(s: string): TinyAsciiStr16Result {
+        return TinyAsciiStr16.fromBytes(s);
+    }
+
+    pub fn len(): usize {
+        return tsSliceLen(_.bytes[0..16]);
+    }
+
+    pub fn isEmpty(): bool {
+        return _.bytes[0] == (0 as u8);
+    }
+
+    pub fn asBytes(out: []u8): usize {
+        return tsCopyOut(_.bytes[0..16], _.len(), out);
+    }
+
+    pub fn byteAt(idx: usize): u8 {
+        if (idx >= 16) {
+            return 0 as u8;
+        }
+        return _.bytes[idx];
+    }
+
+    pub fn eq(other: TinyAsciiStr16): bool {
+        return tsSliceEq(_.bytes[0..16], other.bytes[0..16]);
+    }
+
+    pub fn cmp(other: TinyAsciiStr16): i32 {
+        return tsSliceCmp(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn eqIgnoreAsciiCase(other: TinyAsciiStr16): bool {
+        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+    }
+
+    pub fn toAsciiLowercase(): TinyAsciiStr16 {
+        let b: [16]u8 = [0; 16];
+        let i: usize = 0;
+        while (i < 16) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr16 { bytes: b };
+    }
+
+    pub fn toAsciiUppercase(): TinyAsciiStr16 {
+        let b: [16]u8 = [0; 16];
+        let i: usize = 0;
+        while (i < 16) {
+            b[i] = tsToUpperByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr16 { bytes: b };
+    }
+
+    pub fn toAsciiTitlecase(): TinyAsciiStr16 {
+        let b: [16]u8 = [0; 16];
+        b[0] = tsToUpperByte(_.bytes[0]);
+        let i: usize = 1;
+        while (i < 16) {
+            b[i] = tsToLowerByte(_.bytes[i]);
+            i = i + 1;
+        }
+        return TinyAsciiStr16 { bytes: b };
+    }
+
+    pub fn isAsciiAlphabetic(): bool {
+        return tsAllAlpha(_.bytes[0..16], _.len());
+    }
+
+    pub fn isAsciiAlphanumeric(): bool {
+        return tsAllAlnum(_.bytes[0..16], _.len());
+    }
+
+    pub fn isAsciiNumeric(): bool {
+        return tsAllDigit(_.bytes[0..16], _.len());
+    }
+
+    pub fn isAsciiLowercase(): bool {
+        return tsAllLower(_.bytes[0..16], _.len());
+    }
+
+    pub fn isAsciiUppercase(): bool {
+        return tsAllUpper(_.bytes[0..16], _.len());
+    }
+}
+
+pub struct TinyAsciiStr16Result {
+    pub ok: bool,
+    pub value: TinyAsciiStr16,
+    pub err: i64,
+}

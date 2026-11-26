@@ -1,11 +1,11 @@
 // @cap/normalize-path — Zero-heap POSIX/Windows path normalizer in pure CP
 // MIT License — Clean-room implementation matching npm normalize-path semantics
 
-fn isSlash(ch: u8): bool {
+fn npIsSlash(ch: u8): bool {
     return ch == 47 || ch == 92; // '/' or '\\'
 }
 
-fn isAsciiAlpha(ch: u8): bool {
+fn npIsAsciiAlpha(ch: u8): bool {
     return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
 }
 
@@ -28,7 +28,7 @@ pub fn isUncPath(path: string): bool {
     if (path.len < 3) {
         return false;
     }
-    return isSlash(path[0]) && isSlash(path[1]) && !isSlash(path[2]);
+    return npIsSlash(path[0]) && npIsSlash(path[1]) && !npIsSlash(path[2]);
 }
 
 /// Normalize path separators into `out`:
@@ -62,7 +62,7 @@ pub fn normalizePath(path: string, strip_trailing: bool, out: []u8): usize {
 
     while (i < path.len) {
         const ch: u8 = path[i];
-        if (isSlash(ch)) {
+        if (npIsSlash(ch)) {
             if (!prev_slash) {
                 if (w >= out.len) {
                     truncated = true;
@@ -85,7 +85,7 @@ pub fn normalizePath(path: string, strip_trailing: bool, out: []u8): usize {
     }
 
     if (!truncated && strip_trailing && w > 1 && out[w - 1] == 47) {
-        const is_drive_root: bool = w == 3 && isAsciiAlpha(out[0]) && out[1] == 58;
+        const is_drive_root: bool = w == 3 && npIsAsciiAlpha(out[0]) && out[1] == 58;
         const is_unc_root: bool = unc && w == 2;
         if (!is_drive_root && !is_unc_root) {
             w -= 1;

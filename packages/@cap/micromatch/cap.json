@@ -1,0 +1,12 @@
+{
+  "name": "@cap/micromatch",
+  "ver": "1.0.0",
+  "description": "Zero-allocation glob matching suite (npm micromatch v4 parity) with brace range expansion, multi-pattern filtering, negation, and contains matching for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "@cap/picomatch": "1.0.0",
+    "@cap/braces": "1.0.0"
+  }
+}

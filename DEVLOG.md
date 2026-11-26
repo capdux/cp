@@ -348,3 +348,7 @@
 ## 2026-11-27: Batch 93 六大超重磅包全 6/6 PASS — 贯通 Rustls PKI/WebPKI 35.8 亿下载核心链路！
 - 一次性交付 `rustls-webpki`（10.29 亿）、`webpki-roots`（9.74 亿）、`rustls-pemfile`（8.5 亿）、`rustls-pki-types`（7.27 亿）四大 Rustls 顶流包 + npm `color-convert`（3 亿+/周）与 `ipaddr.js`（2 亿+/周），全线跨包零重复复用且 6/6 PASS。
 - 已配置每 3 小时定时任务自动审计 Token 消耗与子智能体轮换效率。
+
+## 2026-11-27: Batch 94 结单 `capsurf_agy` 阻塞工单 + 6 个超重磅零堆包全 6/6 PASS！
+- 修复 `task-capsurf-20261126-css-boxshadow-e0207`：定位根因为单文件模式下 `cpc` 将 `cap:css` 的 60+ 子模块全部扁平化后统一送入 `Analyzer::analyze_module`，导致跨子模块私有 `const PI`/`HEX_LOWER` 与方法签名互相覆盖引发 35 条 E0207/E0214/E0216 误报；通过在 `CapHubResolution` 追踪 `root_item_indices` 并用 `register_imported_decl/var` 预注册导入符号、仅对根模块执行完整语义检查，彻底根除误报并发布 release 编译器，实测 `capsurf` CSS 单元测试全部 4/4 PASS 并结单通知下游。
+- 同步交付 6 个顶级生态包（`picomatch`、`micromatch`、`yargs-parser`、`ansi-styles`、`tinystr`、`icu-locid`），合计覆盖超 23 亿下载生态，全部 6/6 PASS。
