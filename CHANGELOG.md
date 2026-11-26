@@ -657,3 +657,12 @@
 - `packages/@cap/bspline/` & `cap/test/testCapBspline.cp`: Hermite / Catmull-Rom / 均匀三次 B-Spline（6/6 PASS）。
 - `packages/@cap/color-hsl/` & `cap/test/testCapColorHsl.cp`: RGB / HSL / HSV / CMYK 色彩空间互转（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **670 条**双生态高频映射（**npm=335 / crates.io=335 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 77 — 680 映射精确 1:1 对称 & 432+ 官方包)
+- `packages/@cap/complex-num/` & `cap/test/testCapComplexNum.cp`: 复数四则、极坐标、欧拉指数与复平方根（6/6 PASS）。
+- `packages/@cap/pid-ctrl/` & `cap/test/testCapPidCtrl.cp`: 工业级 PID 控制器（抗积分饱和 & 测量微分，6/6 PASS）。
+- `packages/@cap/kalman1d/` & `cap/test/testCapKalman1d.cp`: 1D 标量卡尔曼滤波器（6/6 PASS）。
+- `packages/@cap/rational/` & `cap/test/testCapRational.cp`: 精确有理数/分数四则与比较（6/6 PASS）。
+- `packages/@cap/aabb2/` & `cap/test/testCapAabb2.cp`: 2D AABB 包围盒与 2D 射线 Slab 测试（6/6 PASS）。
+- `packages/@cap/aabb3/` & `cap/test/testCapAabb3.cp`: 3D AABB 包围盒与 3D 射线 Slab 测试（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **680 条**双生态高频映射（**npm=340 / crates.io=340 绝对 1:1 对称**）。

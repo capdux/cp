@@ -1,0 +1,9 @@
+{
+  "name": "@cap/aabb3",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 3D Axis-Aligned Bounding Box (AABB) collision detection, union/intersection, surface area/volume, and Kay-Kajiya slab raycast library for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["aabb", "aabb3", "3d", "collision", "raycast", "bvh", "geometry", "zero-alloc"]
+}

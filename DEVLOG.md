@@ -294,3 +294,6 @@
 
 ## 2026-11-27: Batch 76 六件套全 6/6 PASS — 达到 **670 条双生态映射（npm=335 / crates.io=335 绝对 1:1 对称）** & 425+ 官方 `.cap` 包！
 - 集中补齐图形/几何/色彩基础数学栈：`@cap/quat`、`@cap/bezier-curve`、`@cap/mat3`、`@cap/mat2`、`@cap/bspline`、`@cap/color-hsl`，全线零外部依赖、零堆分配、纯 CP 100% PASS。
+
+## 2026-11-27: Batch 77 六件套全 6/6 PASS — 达到 **680 条双生态映射（npm=340 / crates.io=340 绝对 1:1 对称）** & 432+ 官方 `.cap` 包！
+- 交付 `@cap/complex-num`（1.5 亿+）、`@cap/pid-ctrl`、`@cap/kalman1d`、`@cap/rational`（1 亿+）、`@cap/aabb2`、`@cap/aabb3`，全面补齐科学计算、控制滤波与 2D/3D 空间碰撞检测底座，全线零堆纯 CP 100% PASS。

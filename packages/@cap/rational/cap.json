@@ -1,0 +1,9 @@
+{
+  "name": "@cap/rational",
+  "ver": "1.0.0",
+  "desc": "Zero-heap exact rational number (fraction) arithmetic in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["rational", "fraction", "math", "exact", "arithmetic", "zero-heap"]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/pid-ctrl",
+  "version": "1.0.0",
+  "description": "Zero-heap industrial PID controller with anti-windup clamping and derivative filtering in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["pid", "controller", "control-theory", "robotics", "anti-windup", "feedback"]
+}

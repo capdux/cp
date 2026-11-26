@@ -8201,6 +8201,115 @@
         "hsl-to-rgb"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "complex.js",
+      "source_repo": "https://github.com/rawify/Complex.js",
+      "license": "MIT",
+      "cp_target": "@cap/complex-num",
+      "kind": "package",
+      "aliases": [
+        "complex"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "node-pid-controller",
+      "source_repo": "https://github.com/Philmod/node-pid-controller",
+      "license": "MIT",
+      "cp_target": "@cap/pid-ctrl",
+      "kind": "package",
+      "aliases": [
+        "pid-controller"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kalmanjs",
+      "source_repo": "https://github.com/wouterbulten/kalmanjs",
+      "license": "MIT",
+      "cp_target": "@cap/kalman1d",
+      "kind": "package",
+      "aliases": [
+        "kalman-filter"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fraction.js",
+      "source_repo": "https://github.com/rawify/Fraction.js",
+      "license": "MIT",
+      "cp_target": "@cap/rational",
+      "kind": "package",
+      "aliases": [
+        "rational"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "parry2d",
+      "source_repo": "https://github.com/dimforge/parry",
+      "license": "MIT",
+      "cp_target": "@cap/aabb2",
+      "kind": "package",
+      "aliases": [
+        "aabb2d"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "parry3d",
+      "source_repo": "https://github.com/dimforge/parry",
+      "license": "MIT",
+      "cp_target": "@cap/aabb3",
+      "kind": "package",
+      "aliases": [
+        "aabb3d"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "aabb-3d",
+      "source_repo": "https://github.com/chrisdickinson/aabb-3d",
+      "license": "MIT",
+      "cp_target": "@cap/aabb3",
+      "kind": "package",
+      "aliases": [
+        "aabb-2d",
+        "box-intersect"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fraction",
+      "source_repo": "https://github.com/dnsl48/fraction",
+      "license": "MIT",
+      "cp_target": "@cap/rational",
+      "kind": "package",
+      "aliases": [
+        "ratio"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pid_control",
+      "source_repo": "https://github.com/dfrg/pid_control",
+      "license": "MIT",
+      "cp_target": "@cap/pid-ctrl",
+      "kind": "package",
+      "aliases": [
+        "pid"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

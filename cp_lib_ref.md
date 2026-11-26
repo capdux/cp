@@ -621,3 +621,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/mat2`** | `packages/@cap/mat2` | 对标 npm `gl-mat2` / Rust `glam` — 2x2 线性变换矩阵、旋转/缩放/剪切、迹与求逆 |
 | **`@cap/bspline`** | `packages/@cap/bspline` | 对标 npm `b-spline` / Rust `bspline` — 三次 Hermite、Catmull-Rom 样条与均匀三次 B-Spline |
 | **`@cap/color-hsl`** | `packages/@cap/color-hsl` | 对标 npm `color-convert` / Rust `palette` — RGB / HSL / HSV / CMYK 全色彩空间互转与色调调控 |
+
+| **`@cap/complex-num`** | `packages/@cap/complex-num` | 对标 Rust `num-complex` (1.5 亿+) / npm `complex.js` — 复数代数、极坐标、欧拉指数与复平方根 |
+| **`@cap/pid-ctrl`** | `packages/@cap/pid-ctrl` | 对标 Rust `pid` / npm `node-pid-controller` — 抗积分饱和、无设定值微分冲击的工业级 PID 控制器 |
+| **`@cap/kalman1d`** | `packages/@cap/kalman1d` | 对标 npm `kalmanjs` — 1D 标量卡尔曼滤波器（传感器去噪、状态估计与预测） |
+| **`@cap/rational`** | `packages/@cap/rational` | 对标 Rust `num-rational` (1 亿+) / npm `fraction.js` — 精确 64 位最简有理数/分数算术 |
+| **`@cap/aabb2`** | `packages/@cap/aabb2` | 对标 Rust `parry2d` — 2D 轴对齐包围盒、交并集、欧氏距离与 2D Slab 射线相交 |
+| **`@cap/aabb3`** | `packages/@cap/aabb3` | 对标 Rust `parry3d` / npm `aabb-3d` — 3D 轴对齐包围盒、体积/表面积与 3D Kay-Kajiya Slab 射线检测 |
