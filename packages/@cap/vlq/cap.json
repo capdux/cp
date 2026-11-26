@@ -1,0 +1,8 @@
+{
+  "name": "@cap/vlq",
+  "version": "1.0.0",
+  "description": "Zero-heap Source Map v3 Base64 VLQ (Variable-Length Quantity) signed integer sequence encoder and decoder.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

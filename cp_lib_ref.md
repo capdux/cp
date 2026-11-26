@@ -575,3 +575,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/snowflake`** | `packages/@cap/snowflake` | 对标 npm `snowflake-id` / Rust `sonyflake` — 64-bit Twitter/Discord Snowflake 分布式 ID 生成、回拨检测与反解 |
 | **`@cap/bitflags`** | `packages/@cap/bitflags` | 对标 Rust `bitflags` / `enumflags2` — 零开销 64-bit 标志位集合代数（`contains`/`intersects`/`difference`/popcount） |
 | **`@cap/morse-code`** | `packages/@cap/morse-code` | 对标 npm `morse-decoder` / Rust `morse` — ITU-R M.1677 国际摩尔斯电码零堆编解码 |
+| **`@cap/vlq`** | `packages/@cap/vlq` | 对标 npm `@jridgewell/sourcemap-codec` / `vlq` / Rust `vlq` — Source Map v3 Base64 VLQ 有符号变长整数编解码 |
+| **`@cap/leb128`** | `packages/@cap/leb128` | 对标 Rust `leb128` — WebAssembly / DWARF 标准无符号 ULEB128 与有符号 SLEB128 变长整数零堆编解码 |
+| **`@cap/ksuid`** | `packages/@cap/ksuid` | 对标 npm `ksuid` / Rust `svix-ksuid` — Segment 20 字节 / 27 字符 Base62 时间排序唯一 ID 编解码 |
+| **`@cap/base32-crockford`** | `packages/@cap/base32-crockford` | 对标 npm `crockford-base32` / Rust `base32` — Crockford Base32 容错解码 (`I/L/O`) 与可选模 37 校验位 |
+| **`@cap/zbase32`** | `packages/@cap/zbase32` | 对标 npm/Rust `zbase32` — Zooko 人类友好 z-base-32 比特级无填充零堆编解码 |
+| **`@cap/ascii85`** | `packages/@cap/ascii85` | 对标 npm/Rust `ascii85` — Adobe Ascii85 / PostScript / PDF（含 `z` 全零压缩与 `<~...~>`）编解码 |

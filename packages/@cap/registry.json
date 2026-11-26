@@ -745,8 +745,8 @@
       "source_name": "ksuid",
       "source_repo": "https://github.com/segmentio/ksuid",
       "license": "MIT",
-      "cp_target": "cap:codec",
-      "kind": "stdlib",
+      "cp_target": "@cap/ksuid",
+      "kind": "package",
       "aliases": [
         "svix-ksuid",
         "ksuid-rs"
@@ -1522,8 +1522,8 @@
       "source_name": "@jridgewell/sourcemap-codec",
       "source_repo": "https://github.com/jridgewell/sourcemap-codec",
       "license": "MIT",
-      "cp_target": "cap:sourcemap",
-      "kind": "stdlib",
+      "cp_target": "@cap/vlq",
+      "kind": "package",
       "aliases": [
         "vlq",
         "source-map-js"
@@ -7374,6 +7374,114 @@
       "kind": "package",
       "aliases": [
         "hexplay"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "crockford-base32",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/base32-crockford",
+      "kind": "package",
+      "aliases": [
+        "base32-encode"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "zbase32",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/zbase32",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ascii85",
+      "source_repo": "https://github.com/noseglid/node-ascii85",
+      "license": "MIT",
+      "cp_target": "@cap/ascii85",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "leb128",
+      "source_repo": "https://github.com/gimli-rs/leb128",
+      "license": "MIT",
+      "cp_target": "@cap/leb128",
+      "kind": "package",
+      "aliases": [
+        "wasm-leb128"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "vlq",
+      "source_repo": "https://github.com/fitzgen/vlq",
+      "license": "MIT",
+      "cp_target": "@cap/vlq",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "svix-ksuid",
+      "source_repo": "https://github.com/svix/rust-ksuid",
+      "license": "MIT",
+      "cp_target": "@cap/ksuid",
+      "kind": "package",
+      "aliases": [
+        "ksuid"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zbase32",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/zbase32",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ascii85",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/ascii85",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "vlq",
+      "source_repo": "https://github.com/Rich-Harris/vlq",
+      "license": "MIT",
+      "cp_target": "@cap/vlq",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "leb",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/leb128",
+      "kind": "package",
+      "aliases": [
+        "leb128"
       ],
       "absorbed_at": "2026-11-26"
     }

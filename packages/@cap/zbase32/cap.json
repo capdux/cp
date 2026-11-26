@@ -1,0 +1,9 @@
+{
+  "name": "@cap/zbase32",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Zooko human-oriented z-base-32 encoder, decoder, and validator in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["zbase32", "base32", "encoding", "human-friendly", "zooko", "zero-alloc"]
+}

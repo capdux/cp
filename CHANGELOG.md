@@ -594,3 +594,12 @@
 - `packages/@cap/bitflags/` & `cap/test/testCapBitflags.cp`: 64-bit 标志位集合代数与位运算（6/6 PASS）。
 - `packages/@cap/morse-code/` & `cap/test/testCapMorseCode.cp`: ITU-R M.1677 国际摩尔斯电码编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **600 条**双生态高频映射（**npm=300 / crates.io=300** 完美对称）。
+
+## [2026-11-26] - Batch 70 达成 **70 批大满贯** — 交付 **6 大亿级二进制/文本编码与 ID 新包**（`@cap/vlq`, `@cap/leb128`, `@cap/ksuid`, `@cap/base32-crockford`, `@cap/zbase32`, `@cap/ascii85`），总映射达 **610 条（npm=305 / crates.io=305）**！
+- `packages/@cap/vlq/` & `cap/test/testCapVlq.cp`: Source Map v3 Base64 VLQ 编解码（6/6 PASS）。
+- `packages/@cap/leb128/` & `cap/test/testCapLeb128.cp`: WebAssembly/DWARF ULEB128 & SLEB128 编解码（6/6 PASS）。
+- `packages/@cap/ksuid/` & `cap/test/testCapKsuid.cp`: Segment KSUID 27 字符 Base62 编解码（6/6 PASS）。
+- `packages/@cap/base32-crockford/` & `cap/test/testCapBase32Crockford.cp`: Crockford Base32 容错与模 37 校验编解码（6/6 PASS）。
+- `packages/@cap/zbase32/` & `cap/test/testCapZbase32.cp`: Zooko z-base-32 人类友好编解码（6/6 PASS）。
+- `packages/@cap/ascii85/` & `cap/test/testCapAscii85.cp`: Adobe Ascii85 含 `z` 压缩与 `<~...~>` 编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **610 条**双生态高频映射（**npm=305 / crates.io=305** 绝对 1:1 对称）。

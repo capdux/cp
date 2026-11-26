@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ksuid",
+  "version": "1.0.0",
+  "description": "Zero-heap Segment KSUID (20-byte K-Sortable Unique IDentifier) 27-character Base62 encoder, decoder, validator, and comparator.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
