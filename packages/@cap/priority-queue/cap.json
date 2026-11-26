@@ -1,0 +1,8 @@
+{
+  "name": "@cap/priority-queue",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Indexed Binary Min-Heap with O(log N) dynamic changePriority and arbitrary remove (Rust priority-queue / heap-js parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

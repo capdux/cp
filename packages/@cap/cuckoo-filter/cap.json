@@ -1,0 +1,8 @@
+{
+  "name": "@cap/cuckoo-filter",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CoNEXT'14 Cuckoo Filter (256x4 16-bit fingerprint slots) with O(1) insert, contains, and safe delete for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

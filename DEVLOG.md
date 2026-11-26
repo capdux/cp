@@ -189,3 +189,6 @@
 ## 2026-11-26: 紧急热修 `task-capsurf-20261126-pack-net-e0209` + Batch 41 交付 6 大地理/压缩/有序结构包（总映射 **325 条**！）
 - 秒级热修 `lib/pack/tarPax.cp`、`lib/pack/zipWriter.cp`、`lib/net/sip.cp`、`lib/net/quic.cp` 4 处 E0209（补齐 `unsafe` 块，`fe3c9915`），立即结单解除 `capsurf` 阻塞。
 - 交付 `@cap/snappy-block`（6/6）、`@cap/bimap`（6/6）、`@cap/geohash`（6/6）、`@cap/geo-dist`（6/6）、`@cap/morton`（6/6）、`@cap/skiplist`（6/6），去重直连 `typenum`/`generic-array`/`equivalent`/`memoffset`，总映射突破 **325 条**！
+
+## 2026-11-26: Batch 42 交付 8.3 亿级 `@cap/adler32` 与四大算法包，总映射突破 **335 条**，线上官方包冲破 **225 个**！
+- 交付 `@cap/adler32`（6/6）、`@cap/crc64`（6/6）、`@cap/fixed-point`（6/6）、`@cap/priority-queue`（6/6）、`@cap/cuckoo-filter`（6/6），并去重直连 `spin`（8.44 亿）、`try-lock`（8.19 亿）、`utf8parse`（8.04 亿）、`icu_normalizer`（8.04 亿）、`bumpalo`（7.67 亿），总映射突破 **335 条**！

@@ -3254,6 +3254,106 @@
       "kind": "package",
       "aliases": ["crossbeam-skiplist"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "spin",
+      "source_repo": "https://github.com/mvdnes/spin-rs",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["spin-lock"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "adler2",
+      "source_repo": "https://github.com/oyvindln/adler2",
+      "license": "MIT",
+      "cp_target": "@cap/adler32",
+      "kind": "package",
+      "aliases": ["adler", "adler32", "adler-32"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "try-lock",
+      "source_repo": "https://github.com/seanmonstar/try-lock",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "utf8parse",
+      "source_repo": "https://github.com/alacritty/vte",
+      "license": "MIT",
+      "cp_target": "@cap/utf8-valid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "icu_normalizer",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "cap:unicode",
+      "kind": "stdlib",
+      "aliases": ["unicode-normalization", "icu_properties"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bumpalo",
+      "source_repo": "https://github.com/fitzgen/bumpalo",
+      "license": "MIT",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": ["typed-arena"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc64fast",
+      "source_repo": "https://github.com/srijs/rust-crc64fast",
+      "license": "MIT",
+      "cp_target": "@cap/crc64",
+      "kind": "package",
+      "aliases": ["crc64", "crc-64"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fixed",
+      "source_repo": "https://gitlab.com/tspiteri/fixed",
+      "license": "MIT",
+      "cp_target": "@cap/fixed-point",
+      "kind": "package",
+      "aliases": ["fixed-point"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "priority-queue",
+      "source_repo": "https://github.com/garro95/priority-queue",
+      "license": "MIT",
+      "cp_target": "@cap/priority-queue",
+      "kind": "package",
+      "aliases": ["heap-js", "indexed-heap"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cuckoofilter",
+      "source_repo": "https://github.com/seiflotfy/rust-cuckoofilter",
+      "license": "MIT",
+      "cp_target": "@cap/cuckoo-filter",
+      "kind": "package",
+      "aliases": ["cuckoo-filter"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -412,3 +412,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/geo-dist`** | `packages/@cap/geo-dist` | 对标 Rust `geo` / npm `geolib` — WGS-84 Haversine 大圆距离、航向角、目标点推算、中点与多边形包含 |
 | **`@cap/morton`** | `packages/@cap/morton` | 对标 Rust `morton-encoding` — 2D/3D Z-Order 莫顿码无分支位交错与 2D Hilbert 空间填充曲线 |
 | **`@cap/skiplist`** | `packages/@cap/skiplist` | 对标 Rust `skiplist` — 零堆静态节点池 + freelist 确定性跳表（`lowerBound` 与闭区间 `rangeCount`） |
+| **`@cap/adler32`** | `packages/@cap/adler32` | 对标 Rust `adler2`（8.3 亿+）— RFC 1950 Adler-32 流式校验、O(1) 滑动窗口滚动更新 `roll` 与分片合并 `combineAdler32` |
+| **`@cap/crc64`** | `packages/@cap/crc64` | 对标 Rust `crc64fast` — ECMA-182 / CRC-64-XZ / CRC-64-GO-ISO 三大工业标准 64 位校验和引擎 |
+| **`@cap/fixed-point`** | `packages/@cap/fixed-point` | 对标 Rust `fixed` — 64 位 Q32.32 确定性无浮点漂移定点数算术（128 位拆半乘除、`sqrt`/`lerp`/`clamp`） |
+| **`@cap/priority-queue`** | `packages/@cap/priority-queue` | 对标 Rust `priority-queue` / npm `heap-js` — 零堆可动态调权索引最小堆（O(log N) `changePriority`/`remove`） |
+| **`@cap/cuckoo-filter`** | `packages/@cap/cuckoo-filter` | 对标 Rust `cuckoofilter` — CoNEXT'14 支持 O(1) 安全删除的 16-bit 指纹布谷鸟过滤器 |

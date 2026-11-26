@@ -347,3 +347,11 @@
 - `packages/@cap/morton/` & `cap/test/testCapMorton.cp`: 2D/3D Morton 码与 2D Hilbert 空间曲线（6/6 PASS）。
 - `packages/@cap/skiplist/` & `cap/test/testCapSkiplist.cp`: 零堆静态节点池确定性跳表（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **325 条**高频映射（含 `typenum`/`generic-array`/`equivalent`/`memoffset` 去重直连）。
+
+## [2026-11-26] - Batch 42 交付 5 大校验和、定点数与概率/堆结构包（`@cap/adler32`, `@cap/crc64`, `@cap/fixed-point`, `@cap/priority-queue`, `@cap/cuckoo-filter`），总映射突破 **335 条**！
+- `packages/@cap/adler32/` & `cap/test/testCapAdler32.cp`: 对标 Rust `adler2`（8.3 亿+），RFC 1950 流式/滚动窗口/合并 Adler-32（6/6 PASS）。
+- `packages/@cap/crc64/` & `cap/test/testCapCrc64.cp`: ECMA-182 / XZ / GO-ISO 三标准 CRC-64（6/6 PASS）。
+- `packages/@cap/fixed-point/` & `cap/test/testCapFixedPoint.cp`: Q32.32 确定性定点数算术与 `sqrt`/`lerp`（6/6 PASS）。
+- `packages/@cap/priority-queue/` & `cap/test/testCapPriorityQueue.cp`: 零堆可动态调权索引最小堆（6/6 PASS）。
+- `packages/@cap/cuckoo-filter/` & `cap/test/testCapCuckooFilter.cp`: 支持 O(1) 安全删除的布谷鸟过滤器（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **335 条**高频映射（含 `spin`/`try-lock`/`utf8parse`/`icu_normalizer`/`bumpalo` 8 亿级去重直连）。
