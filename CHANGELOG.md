@@ -630,3 +630,12 @@
 - `packages/@cap/porter-stem/` & `cap/test/testCapPorterStem.cp`: Porter 英文词干提取（6/6 PASS）。
 - `packages/@cap/lcs-diff/` & `cap/test/testCapLcsDiff.cp`: LCS 长度、Diff 统计、相似度与最长公共子串（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **640 条**双生态高频映射（**npm=320 / crates.io=320 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 74 — 650 映射精确 1:1 对称 & 414 官方包)
+- `packages/@cap/siphash-pure/` & `cap/test/testCapSiphashPure.cp`: SipHash-2-4 & SipHash-1-3 官方向量全通过（6/6 PASS）。
+- `packages/@cap/xoshiro256/` & `cap/test/testCapXoshiro256.cp`: Xoshiro256** PRNG、SplitMix64 播种与 2^128 跳跃（6/6 PASS）。
+- `packages/@cap/pcg32/` & `cap/test/testCapPcg32.cp`: PCG32 PRNG、无偏范围采样与 O(log n) advance（6/6 PASS）。
+- `packages/@cap/wyhash/` & `cap/test/testCapWyhash.cp`: wyhash v4 64 位哈希与 WyRng（6/6 PASS）。
+- `packages/@cap/chacha-rng/` & `cap/test/testCapChachaRng.cp`: RFC 8439 ChaCha8/12/20 块生成与 CSPRNG（6/6 PASS）。
+- `packages/@cap/math-interp/` & `cap/test/testCapMathInterp.cp`: 插值、限幅、重映射、环绕与缓动曲线（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **650 条**双生态高频映射（**npm=325 / crates.io=325 绝对 1:1 对称**）。

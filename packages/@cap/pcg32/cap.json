@@ -1,0 +1,8 @@
+{
+  "name": "@cap/pcg32",
+  "version": "1.0.0",
+  "description": "Zero-heap Melissa O'Neill PCG-XSH-RR 32-bit deterministic PRNG with stream separation, unbiased bounded sampling, O(log n) advance, and byte filling.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

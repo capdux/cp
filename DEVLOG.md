@@ -285,3 +285,6 @@
 
 ## 2026-11-27: Batch 73 六件套全 6/6 PASS — 跨过 **410 官方 `.cap` 包 & 640 条双生态映射（npm=320 / crates.io=320 绝对 1:1 对称）**！
 - 交付 `@cap/fnv-hash`（Rust `fnv` 7 亿+）、`@cap/metaphone`、`@cap/bmh-search`、`@cap/kmp-search`、`@cap/porter-stem`、`@cap/lcs-diff`（Jest `diff-sequences` 1.2 亿+/周），覆盖哈希、语音编码、线性/次线性字符串搜索、词干提取与序列差分，全线零堆纯 CP 100% PASS。
+
+## 2026-11-27: Batch 74 六件套全 6/6 PASS — 达到 **650 条双生态映射（npm=325 / crates.io=325 绝对 1:1 对称）** & 414+ 官方 `.cap` 包！
+- 集中补齐高性能哈希与随机数矩阵：`@cap/siphash-pure`（2 亿+）、`@cap/xoshiro256`（1 亿+）、`@cap/pcg32`（1.5 亿+）、`@cap/wyhash`、`@cap/chacha-rng`（4 亿+，严格通过 RFC 8439 向量），以及数学插值缓动库 `@cap/math-interp`，全线零堆纯 CP 100% PASS。

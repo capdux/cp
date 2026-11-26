@@ -7830,6 +7830,127 @@
         "stem"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "siphash",
+      "source_repo": "https://github.com/jedisct1/siphash-js",
+      "license": "MIT",
+      "cp_target": "@cap/siphash-pure",
+      "kind": "package",
+      "aliases": [
+        "siphash24"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand_xoshiro",
+      "source_repo": "https://github.com/rust-random/rngs",
+      "license": "MIT",
+      "cp_target": "@cap/xoshiro256",
+      "kind": "package",
+      "aliases": [
+        "xoshiro256"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pcg-random",
+      "source_repo": "https://github.com/ThomWright/pcg-random",
+      "license": "MIT",
+      "cp_target": "@cap/pcg32",
+      "kind": "package",
+      "aliases": [
+        "pcg32"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wyhash",
+      "source_repo": "https://github.com/eldruin/wyhash-rs",
+      "license": "MIT",
+      "cp_target": "@cap/wyhash",
+      "kind": "package",
+      "aliases": [
+        "wyrand"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand_chacha",
+      "source_repo": "https://github.com/rust-random/rand",
+      "license": "MIT",
+      "cp_target": "@cap/chacha-rng",
+      "kind": "package",
+      "aliases": [
+        "chacha20-rng"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lerp",
+      "source_repo": "https://github.com/mattdesl/lerp",
+      "license": "MIT",
+      "cp_target": "@cap/math-interp",
+      "kind": "package",
+      "aliases": [
+        "clamp",
+        "remap"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "eases",
+      "source_repo": "https://github.com/mattdesl/eases",
+      "license": "MIT",
+      "cp_target": "@cap/math-interp",
+      "kind": "package",
+      "aliases": [
+        "easing-functions"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "smoothstep",
+      "source_repo": "https://github.com/mikolalysenko/smoothstep",
+      "license": "MIT",
+      "cp_target": "@cap/math-interp",
+      "kind": "package",
+      "aliases": [
+        "smootherstep"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "interpolation",
+      "source_repo": "https://github.com/PistonDevelopers/interpolation",
+      "license": "MIT",
+      "cp_target": "@cap/math-interp",
+      "kind": "package",
+      "aliases": [
+        "lerp"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "keyframe",
+      "source_repo": "https://github.com/HannesMann/keyframe",
+      "license": "MIT",
+      "cp_target": "@cap/math-interp",
+      "kind": "package",
+      "aliases": [
+        "easing"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

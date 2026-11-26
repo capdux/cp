@@ -1,0 +1,9 @@
+{
+  "name": "@cap/math-interp",
+  "version": "1.0.0",
+  "description": "Zero-heap interpolation, range remapping, angle conversion, and easing curves in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["lerp", "interpolation", "smoothstep", "easing", "clamp", "remap", "math"]
+}

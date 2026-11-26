@@ -1,0 +1,9 @@
+{
+  "name": "@cap/wyhash",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Wang Yi wyhash v4 64-bit hash and WyRng PRNG with overflow-free 128-bit multiply in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["wyhash", "wyrand", "hash", "prng", "64-bit", "fast-hash", "zero-alloc"]
+}

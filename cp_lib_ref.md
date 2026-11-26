@@ -600,3 +600,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/kmp-search`** | `packages/@cap/kmp-search` | 对标 Rust `kmp` — Knuth-Morris-Pratt O(N+M) 线性子串匹配与 LPS 前缀表 |
 | **`@cap/porter-stem`** | `packages/@cap/porter-stem` | 对标 npm `stemmer` / Rust `rust-stemmers` — Martin Porter (1980) Step 1–5 英文词干提取器 |
 | **`@cap/lcs-diff`** | `packages/@cap/lcs-diff` | 对标 npm `diff-sequences` (Jest 核心 1.2 亿+/周) / Rust `lcs-diff` — 最长公共子序列/子串与 Diff 统计 |
+
+| **`@cap/siphash-pure`** | `packages/@cap/siphash-pure` | 对标 Rust `siphasher` (2 亿+) / npm `siphash` — SipHash-2-4 与 SipHash-1-3 抗碰撞 PRF 哈希 |
+| **`@cap/xoshiro256`** | `packages/@cap/xoshiro256` | 对标 Rust `rand_xoshiro` (1 亿+) — Xoshiro256** 高速伪随机数与 2^128 并行跳跃 |
+| **`@cap/pcg32`** | `packages/@cap/pcg32` | 对标 Rust `rand_pcg` (1.5 亿+) / npm `pcg-random` — PCG-XSH-RR 32 位确定性 PRNG 与 O(log n) 跳转 |
+| **`@cap/wyhash`** | `packages/@cap/wyhash` | 对标 Rust `wyhash` — Wang Yi wyhash v4 64 位超高速哈希与 WyRng |
+| **`@cap/chacha-rng`** | `packages/@cap/chacha-rng` | 对标 Rust `rand_chacha` (4 亿+) — RFC 8439 ChaCha8/12/20 核心块生成器与 CSPRNG |
+| **`@cap/math-interp`** | `packages/@cap/math-interp` | 对标 npm `lerp` / `eases` / `smoothstep` — 零堆线性插值、区间重映射、角度转换与缓动曲线 |

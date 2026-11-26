@@ -1,0 +1,9 @@
+{
+  "name": "@cap/chacha-rng",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8439 ChaCha8 / ChaCha12 / ChaCha20 block function and CSPRNG for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["chacha20", "chacha8", "csprng", "rng", "rfc8439", "crypto", "random", "zero-alloc"]
+}
