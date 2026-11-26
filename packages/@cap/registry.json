@@ -734,6 +734,36 @@
       "kind": "stdlib",
       "aliases": ["content-disposition-rs"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "forwarded",
+      "source_repo": "https://github.com/jshttp/forwarded",
+      "license": "MIT",
+      "cp_target": "@cap/forwarded",
+      "kind": "package",
+      "aliases": ["proxy-addr", "forwarded-for"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-to-regexp",
+      "source_repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT",
+      "cp_target": "@cap/path-to-regexp",
+      "kind": "package",
+      "aliases": ["radix3", "url-pattern"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "color-name",
+      "source_repo": "https://github.com/colorjs/color-name",
+      "license": "MIT",
+      "cp_target": "@cap/color-names",
+      "kind": "package",
+      "aliases": ["color-convert", "color-string", "css-color-names"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

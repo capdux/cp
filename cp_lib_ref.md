@@ -305,3 +305,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/human-number`** | `packages/@cap/human-number` | 对标 npm `numeral`/`millify`/`number-to-words` / Rust `num-format` — 千分位、中英文紧凑缩写、百分比、罗马数字双射与英文数字拼写 |
 | **`@cap/envsubst`** | `packages/@cap/envsubst` | 对标 npm `dotenv-expand` / Rust `shellexpand` — POSIX `${VAR:-def}`/`:+alt`/`:?err` 环境变量模板展开引擎 |
 | **`@cap/link-header`** | `packages/@cap/link-header` | 对标 npm `parse-link-header` / Rust `parse_link_header` — RFC 8288 HTTP `Link` 分页头零拷贝解析与构建 |
+| **`@cap/forwarded`** | `packages/@cap/forwarded` | 对标 npm `forwarded`/`proxy-addr` — RFC 7239 `Forwarded` 与 `X-Forwarded-For` 防伪造代理链解析与内网 IP 判定 |
+| **`@cap/path-to-regexp`** | `packages/@cap/path-to-regexp` | 对标 npm `path-to-regexp` — 零堆路由命名参数/可选参数/通配符匹配与反向 URL 生成 |
+| **`@cap/color-names`** | `packages/@cap/color-names` | 对标 npm `color-name`/`color-convert` — 全部 148 个 W3C CSS Color 4 命名颜色二分查表 + RGB/HSL/HSV/HEX 互转 |

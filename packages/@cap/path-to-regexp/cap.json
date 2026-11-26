@@ -1,0 +1,7 @@
+{
+  "name": "@cap/path-to-regexp",
+  "ver": "1.0.1",
+  "description": "Zero-allocation Express/Hono-style URL route pattern matcher, named parameter extractor & reverse URL builder (path-to-regexp parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

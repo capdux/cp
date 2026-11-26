@@ -156,3 +156,9 @@
 - `packages/@cap/envsubst/` & `cap/test/testCapEnvsubst.cp`: 零堆 POSIX 环境变量模板展开引擎（`$VAR`/`${VAR:-def}`/`:+alt`/`:?err`/`$$` 转义，对标 npm `dotenv-expand` [35M/wk] & Rust `shellexpand` [15M/mo]，6/6 PASS）。
 - `packages/@cap/link-header/` & `cap/test/testCapLinkHeader.cp`: 零堆 RFC 8288 HTTP `Link` 分页头解析与构建器（对标 npm `parse-link-header` [10M/wk] & Rust `parse_link_header`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 73 条高频映射（新增 Wave 13 三大包 + `cache-control-parser`/`content-disposition` 标准库映射）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 14 突破 110 官方包！（`@cap/forwarded`, `@cap/path-to-regexp`, `@cap/color-names`）并发布至 `capdux.org`
+- `packages/@cap/forwarded/` & `cap/test/testCapForwarded.cp`: 零堆 RFC 7239 `Forwarded` 与 `X-Forwarded-For` 代理链解析与防伪造 `trusted_hops` 真实 IP 提取（对标 npm `forwarded` [45M/wk] & `proxy-addr` [50M/wk]，6/6 PASS）。
+- `packages/@cap/path-to-regexp/` & `cap/test/testCapPathToRegexp.cp`: 零堆 URL 路由模式匹配、命名/可选/通配参数提取与反向 `buildRoute` URL 构建器（对标 npm `path-to-regexp` [65M/wk]，4/4 PASS）。
+- `packages/@cap/color-names/` & `cap/test/testCapColorNames.cp`: 全部 148 个 W3C CSS Color 4 命名颜色二分查表 + RGB/HSL/HSV/HEX 互转与调色（对标 npm `color-name`/`color-convert` [95M/wk]，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 76 条高频映射并同步发布至 `https://capdux.org`（线上官方 `.cap` 包突破 **110 个**！）。
