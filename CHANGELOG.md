@@ -986,3 +986,11 @@
 - `packages/@cap/cuid2/` & `cap/test/testCapCuid2.cp`: npm `@paralleldrive/cuid2`（复用 `@cap/fnv-hash`，6/6 PASS）。
 - `GEMINI.md`: 每 3 小时效率审计固化第 11 条（首轮一遍过 CP 编码清单，减少反复编译试错 Token 损耗）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 110 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 111 — 5 大调度/查询串/枚举反射顶流包全 6/6 PASS — `strum`(9 亿)+`cron`+`querystring`+`p-queue`+`rrule`，官方 `.cap` 包突破 **639+**！)
+- `packages/@cap/strum-enum/` & `cap/test/testCapStrumEnum.cp`: crates.io #125 `strum`（9 亿+，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/cron-expr/` & `cap/test/testCapCronExpr.cp`: crates.io Top-310 `cron` v0.12（3.5 亿+，复用 `@cap/cron-parser`，6/6 PASS）。
+- `packages/@cap/querystring/` & `cap/test/testCapQuerystring.cp`: npm Top 35 `query-string` v9（1.5 亿+/周，复用 `@cap/percent-encoding`，6/6 PASS）。
+- `packages/@cap/p-queue/` & `cap/test/testCapPQueue.cp`: npm Top 65 `p-queue` v8（7500 万+/周，并发受限优先级队列，6/6 PASS）。
+- `packages/@cap/rrule-parse/` & `cap/test/testCapRruleParse.cp`: npm `rrule` v2（RFC 5545，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 111 全部 5 个官方包映射。

@@ -850,3 +850,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/parse5`** | `packages/@cap/parse5` | 对标 npm Top 28 `parse5` v7 (1.7 亿+/周，跨包复用 `@cap/unicase`) — 零堆 WHATWG HTML5 流式词法器与属性/纯文本提取 |
 | **`@cap/ulid-crate`** | `packages/@cap/ulid-crate` | 对标 crates.io Top-290 `ulid` v1 (3.8 亿+) — 128 位字典序可排序 ULID Crockford Base32 编解码与单调递增 |
 | **`@cap/cuid2`** | `packages/@cap/cuid2` | 对标 npm `@paralleldrive/cuid2` (跨包复用 `@cap/fnv-hash`) — 零堆 URL 安全防碰撞小写 CUID2 生成与校验器 |
+| **`@cap/querystring`** | `packages/@cap/querystring` | 对标 npm Top 35 `query-string` v9 (1.5 亿+/周，跨包复用 `@cap/percent-encoding`) — URL 查询串解析、拼接与单键提取 |
+| **`@cap/p-queue`** | `packages/@cap/p-queue` | 对标 npm Top 65 `p-queue` v8 (7500 万+/周) — 零堆并发受限优先级任务调度队列（`pause`/`start`/`markCompleted`） |
+| **`@cap/rrule-parse`** | `packages/@cap/rrule-parse` | 对标 npm `rrule` v2 (跨包复用 `@cap/unicase`) — RFC 5545 iCalendar `RRULE` 重复规则解析、校验与格式化 |
+| **`@cap/strum-enum`** | `packages/@cap/strum-enum` | 对标 crates.io #125 `strum` (9 亿+，跨包复用 `@cap/unicase`) — 零堆枚举变体字符串注册表、判别式查找与大小写无关解析 |
+| **`@cap/cron-expr`** | `packages/@cap/cron-expr` | 对标 crates.io Top-310 `cron` v0.12 (3.5 亿+，跨包复用 `@cap/cron-parser`) — 6 字段秒级位掩码 Cron 调度解析器 |

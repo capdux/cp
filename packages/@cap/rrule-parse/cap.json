@@ -1,0 +1,12 @@
+{
+  "name": "@cap/rrule-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 5545 iCalendar RRULE parser, validator & formatter (npm rrule v2 parity) composing @cap/unicase for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": ["rrule", "icalendar", "rfc5545", "recurrence", "calendar", "schedule", "zero-alloc"],
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}

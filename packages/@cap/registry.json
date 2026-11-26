@@ -599,13 +599,13 @@
       "source_name": "rrule",
       "source_repo": "https://github.com/jkbrzt/rrule",
       "license": "BSD-3-Clause",
-      "cp_target": "cap:time",
-      "kind": "stdlib",
+      "cp_target": "@cap/rrule-parse",
+      "kind": "package",
       "aliases": [
         "rrule-rs",
         "iso8601-duration"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -10336,6 +10336,36 @@
       "source_repo": "https://github.com/samscott89/serde_qs",
       "license": "MIT",
       "cp_target": "@cap/serde-qs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "querystring",
+      "source_repo": "https://github.com/sindresorhus/query-string",
+      "license": "MIT",
+      "cp_target": "@cap/querystring",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-queue",
+      "source_repo": "https://github.com/sindresorhus/p-queue",
+      "license": "MIT",
+      "cp_target": "@cap/p-queue",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "strum",
+      "source_repo": "https://github.com/Peternator7/strum",
+      "license": "MIT",
+      "cp_target": "@cap/strum-enum",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

@@ -1,0 +1,11 @@
+{
+  "name": "@cap/strum-enum",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap enum variant string registry, case-insensitive parser, discriminant lookup, and iteration (clean-room port of Rust strum)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}
