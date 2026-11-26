@@ -1,0 +1,13 @@
+{
+  "name": "@cap/flate2-core",
+  "ver": "1.0.0",
+  "description": "Zero-heap RFC 1952 Gzip & RFC 1950 Zlib stored-deflate framing codec with strict CRC-32/ISIZE/Adler-32 verification (crates.io flate2 equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/crc32fast": "1.0.0",
+    "@cap/adler32": "1.0.0",
+    "@cap/bytemuck-crate": "1.0.0"
+  }
+}

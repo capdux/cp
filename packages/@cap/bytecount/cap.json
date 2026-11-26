@@ -1,0 +1,11 @@
+{
+  "name": "@cap/bytecount",
+  "ver": "1.0.0",
+  "description": "Zero-heap fast byte frequency counting, SWAR 4-byte parallel counter, and UTF-8 char/line counters (crates.io bytecount equivalent, reuses @cap/memchr-crate)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/memchr-crate": "1.0.0"
+  }
+}

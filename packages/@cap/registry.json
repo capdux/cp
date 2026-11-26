@@ -2083,13 +2083,10 @@
       "source_name": "p-limit",
       "source_repo": "https://github.com/sindresorhus/p-limit",
       "license": "MIT",
-      "cp_target": "cap:parallel",
-      "kind": "stdlib",
-      "aliases": [
-        "p-queue",
-        "bottleneck"
-      ],
-      "absorbed_at": "2026-11-26"
+      "cp_target": "@cap/p-limit-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2845,14 +2842,11 @@
       "source_registry": "crates.io",
       "source_name": "siphasher",
       "source_repo": "https://github.com/jedisct1/rust-siphash",
-      "license": "MIT",
-      "cp_target": "@cap/siphash",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/siphasher",
       "kind": "package",
-      "aliases": [
-        "siphash24",
-        "siphash13"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10857,6 +10851,48 @@
       "source_repo": "https://github.com/sindresorhus/semver-diff",
       "license": "MIT",
       "cp_target": "@cap/semver-diff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rimraf",
+      "source_repo": "https://github.com/isaacs/rimraf",
+      "license": "ISC",
+      "cp_target": "@cap/rimraf-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "flate2",
+      "source_repo": "https://github.com/rust-lang/flate2-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/flate2-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ripemd",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/ripemd160",
+      "kind": "package",
+      "aliases": [
+        "ripemd160"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bytecount",
+      "source_repo": "https://github.com/llogiq/bytecount",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/bytecount",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

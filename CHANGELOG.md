@@ -1133,3 +1133,12 @@
 - `packages/@cap/zip-core/` & `cap/test/testCapZipCore.cp`: crates.io **#130** `zip` v2（9 亿+，双包复用，6/6 PASS）。
 - `packages/@cap/sha2-crate/` & `cap/test/testCapSha2Crate.cp`: crates.io **#14** `sha2`（**19 亿+**，FIPS 180-4 SHA-256 & SHA-224，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 127 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 128 — **突破 725 官方 `.cap` 包！拿下 37.5 亿下载三巨头 `flate2`(18.5 亿)+`siphasher`(12.5 亿)+`bytecount`(6.5 亿) + `p-limit`(2.5 亿/周)+`rimraf`(1.8 亿/周)+`ripemd160`**)
+- `packages/@cap/rimraf-core/` & `cap/test/testCapRimrafCore.cp`: npm **Top 20** `rimraf` v6（1.8 亿+/周，复用 `@cap/fast-glob`，6/6 PASS）。
+- `packages/@cap/p-limit-core/` & `cap/test/testCapPLimitCore.cp`: npm **Top 12** `p-limit` v6（**2.5 亿+/周**，复用 `@cap/p-queue`，6/6 PASS）。
+- `packages/@cap/flate2-core/` & `cap/test/testCapFlate2Core.cp`: crates.io **#18** `flate2` v1（**18.5 亿+**，三包复用 Gzip/Zlib 帧编解码，6/6 PASS）。
+- `packages/@cap/ripemd160/` & `cap/test/testCapRipemd160.cp`: crates.io `ripemd` v0.1（7 组官方向量全过，6/6 PASS）。
+- `packages/@cap/bytecount/` & `cap/test/testCapBytecount.cp`: crates.io **#190** `bytecount`（6.5 亿+，复用 `@cap/memchr-crate`，6/6 PASS）。
+- `packages/@cap/siphasher/` & `cap/test/testCapSiphasher.cp`: crates.io **#70** `siphasher`（**12.5 亿+**，SipHash-2-4/1-3 官方向量全过，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 128 全部 6 个官方包映射。

@@ -1,0 +1,12 @@
+{
+  "name": "@cap/p-limit-core",
+  "ver": "1.0.0",
+  "description": "Zero-allocation concurrency limiter core (npm p-limit v6 equivalent) for CP, reusing @cap/p-queue.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/p-queue": "1.0.0"
+  },
+  "keywords": ["p-limit", "concurrency", "limiter", "queue", "scheduler", "zero-alloc"]
+}

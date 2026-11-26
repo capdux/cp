@@ -946,3 +946,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/semver-diff`** | `packages/@cap/semver-diff` | 对标 npm Top 50 `semver-diff` v5 (9000 万+/周，复用 `@cap/semver-range`) — 精确语义化版本升级跨度判定与破坏性升级检测 |
 | **`@cap/zip-core`** | `packages/@cap/zip-core` | 对标 crates.io **#130** `zip` v2 (**9 亿+**, 双包复用 `@cap/crc32fast`+`@cap/bytemuck-crate`) — PKZIP Local/CD/EOCD 编解码与 CRC-32 校验 |
 | **`@cap/sha2-crate`** | `packages/@cap/sha2-crate` | 对标 crates.io **#14** `sha2` (**19 亿+**, 复用 `@cap/cookie-signature`) — FIPS 180-4 SHA-256 与 SHA-224 流式杂凑 |
+| **`@cap/rimraf-core`** | `packages/@cap/rimraf-core` | 对标 npm **Top 20** `rimraf` v6 (**1.8 亿+/周**, 复用 `@cap/fast-glob`) — 根目录保护、glob 过滤与自底向上安全删除规划器 |
+| **`@cap/p-limit-core`** | `packages/@cap/p-limit-core` | 对标 npm **Top 12** `p-limit` v6 (**2.5 亿+/周**, 复用 `@cap/p-queue`) — 零堆有界并发限流调度器与动态并发调整 |
+| **`@cap/flate2-core`** | `packages/@cap/flate2-core` | 对标 crates.io **#18** `flate2` v1 (**18.5 亿+**, 三包复用 `@cap/crc32fast`+`@cap/adler32`+`@cap/bytemuck-crate`) — RFC 1952 Gzip 与 RFC 1950 Zlib 帧编解码 |
+| **`@cap/ripemd160`** | `packages/@cap/ripemd160` | 对标 crates.io `ripemd` v0.1 — 80 轮双线 RIPEMD-160 160-bit 流式杂凑（7 组官方向量全过） |
+| **`@cap/bytecount`** | `packages/@cap/bytecount` | 对标 crates.io **#190** `bytecount` (**6.5 亿+**, 复用 `@cap/memchr-crate`) — SWAR 高速字节计数、UTF-8 码点与行数统计 |
+| **`@cap/siphasher`** | `packages/@cap/siphasher` | 对标 crates.io **#70** `siphasher` (**12.5 亿+**) — SipHash-2-4 与 SipHash-1-3 密钥 64 位哈希（Aumasson-Bernstein 官方向量全过） |
