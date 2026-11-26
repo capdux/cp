@@ -624,6 +624,36 @@
       "kind": "stdlib",
       "aliases": ["isbn2", "isbn-utils"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sql-formatter",
+      "source_repo": "https://github.com/sql-formatter-org/sql-formatter",
+      "license": "MIT",
+      "cp_target": "@cap/sqlformat",
+      "kind": "package",
+      "aliases": ["sqlformat", "sql-format"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "unique-names-generator",
+      "source_repo": "https://github.com/andreasonny83/unique-names-generator",
+      "license": "MIT",
+      "cp_target": "@cap/petname",
+      "kind": "package",
+      "aliases": ["human-id", "petname", "names"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "flat",
+      "source_repo": "https://github.com/hughsk/flat",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/jsonflat",
+      "kind": "package",
+      "aliases": ["dot-prop", "flatten-json"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

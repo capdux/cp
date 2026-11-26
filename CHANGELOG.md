@@ -138,3 +138,9 @@
 - `packages/@cap/textwrap/` & `cap/test/testCapTextwrap.cp`: 零堆分配 ANSI/CJK 感知智能断词换行、缩进、`dedent` 与截断引擎（对标 npm `wrap-ansi` [90M/wk] & Rust `textwrap` [35M/mo]，6/6 PASS）。
 - `packages/@cap/natsort/` & `cap/test/testCapNatsort.cp`: 零堆分配任意长度数字自然排序比较与原地排序引擎（对标 npm `natural-compare`/`natsort` [25M/wk] & Rust `natord`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 62 条高频映射（新增 Wave 10 三大包 + `iban`/`isbn3` 标准库映射）并同步发布至 `https://capdux.org`（线上官方包总数达 97）。
+
+## [2026-11-26] - Wave 11 突破 100 官方包里程碑！（`@cap/sqlformat`, `@cap/petname`, `@cap/jsonflat`）并发布至 `capdux.org`
+- `packages/@cap/sqlformat/` & `cap/test/testCapSqlformat.cp`: 零堆词法安全 SQL 美化格式化与压缩引擎（保护字符串/转义引号/行块注释、关键词大写、子句缩进与 `minifySql`，对标 npm `sql-formatter` & Rust `sqlformat`，6/6 PASS）。
+- `packages/@cap/petname/` & `cap/test/testCapPetname.cp`: 零堆确定性 SplitMix64 可读名称与 DNS 安全子域名生成器（赋能 `caprun` 沙箱命名，对标 npm `unique-names-generator`/`human-id` & Rust `petname`，4/4 PASS）。
+- `packages/@cap/jsonflat/` & `cap/test/testCapJsonflat.cp`: 零堆递归 JSON 扁平化与 `dot-prop` 路径直取引擎（对标 npm `flat`/`dot-prop`，4/4 PASS）。
+- `packages/@cap/registry.json`: 扩充至 65 条高频映射并同步发布至 `https://capdux.org`（线上官方 `.cap` 包总数正式突破 **100 个**里程碑！）。

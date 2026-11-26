@@ -93,3 +93,6 @@
 
 ## 2026-11-26: Wave 10 三路并行交付 `@cap/shlex` + `@cap/textwrap` + `@cap/natsort` 并发布至 `capdux.org`
 - 排查确认 `iban`/`isbn` 已内置于 `lib/codec/` 并补登记至 `packages/@cap/registry.json`（达 62 条）；三路并行洁净室交付 `@cap/shlex`（5/5 PASS）、`@cap/textwrap`（6/6 PASS）、`@cap/natsort`（6/6 PASS），生成 `.d.cp` 存根、提交 Git 并发布上线至 `https://capdux.org`（线上官方包总数达 97）。
+
+## 2026-11-26: Wave 11 里程碑 — 突破 100 个官方 `.cap` 包（`@cap/sqlformat` + `@cap/petname` + `@cap/jsonflat`）
+- 三路并行洁净室交付 `@cap/sqlformat`（6/6 PASS）、`@cap/petname`（4/4 PASS）、`@cap/jsonflat`（4/4 PASS），同步 65 条去重映射至 `https://capdux.org`，线上官方 `.cap` 包正式达到 **100 / 100**（0 失败）。

@@ -1,0 +1,7 @@
+{
+  "name": "@cap/petname",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic human-readable name generator for containers, sandboxes & subdomains (unique-names-generator / human-id / Rust petname parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

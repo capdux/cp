@@ -296,3 +296,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/shlex`** | `packages/@cap/shlex` | 对标 npm `shell-quote` / Rust `shlex` — 零堆 POSIX Shell 参数防注入转义与命令词法拆分 |
 | **`@cap/textwrap`** | `packages/@cap/textwrap` | 对标 npm `wrap-ansi`/`word-wrap` / Rust `textwrap` — ANSI/CJK 宽字符感知智能换行、缩进、`dedent` 与截断 |
 | **`@cap/natsort`** | `packages/@cap/natsort` | 对标 npm `natural-compare`/`natsort` / Rust `natord` — 任意精度数字自然序比较与原地排序 |
+| **`@cap/sqlformat`** | `packages/@cap/sqlformat` | 对标 npm `sql-formatter` / Rust `sqlformat` — 词法安全 SQL 美化格式化、关键词大写与 `minifySql` 压缩 |
+| **`@cap/petname`** | `packages/@cap/petname` | 对标 npm `unique-names-generator`/`human-id` / Rust `petname` — 确定性 SplitMix64 可读容器/沙箱/子域名生成器 |
+| **`@cap/jsonflat`** | `packages/@cap/jsonflat` | 对标 npm `flat`/`dot-prop` — 零堆递归 JSON 扁平化（`a.b.0.c`）与点路径直取 |

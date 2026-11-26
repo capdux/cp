@@ -1,0 +1,7 @@
+{
+  "name": "@cap/sqlformat",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SQL pretty-printer, keyword uppercasing normalizer, and minifier (sql-formatter / Rust sqlformat parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
