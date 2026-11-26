@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bytes-buf",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-copy byte buffer read/write cursors with big-endian and little-endian primitives (clean-room CP implementation of crates.io bytes)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

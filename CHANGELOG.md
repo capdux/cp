@@ -860,3 +860,10 @@
 - `packages/@cap/whatwg-url/` & `cap/test/testCapWhatwgUrl.cp`: crates.io #40 `url`（16 亿+，双包复用 `@cap/percent-encoding`+`@cap/idna-uts46`，6/6 PASS）。
 - `packages/@cap/itoa/` & `cap/test/testCapItoa.cp`: crates.io #35 `itoa`（17 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`: 推进至 **835 条**双生态映射（官方 `.cap` 包正式突破 **560+**）。
+
+### 2026-11-27 (Batch 97 — **50 亿+ 下载 Rust 核心三巨头 + `mathjs` 全部 6/6 PASS！** 官方包达 565+)
+- `packages/@cap/ryu-float/` & `cap/test/testCapRyuFloat.cp`: crates.io #45 `ryu`（15 亿+，复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/bytes-buf/` & `cap/test/testCapBytesBuf.cp`: crates.io #25 `bytes`（18 亿+，6/6 PASS）。
+- `packages/@cap/smallvec/` & `cap/test/testCapSmallvec.cp`: crates.io #30 `smallvec`（17 亿+，6/6 PASS）。
+- `packages/@cap/mathjs-expr/` & `cap/test/testCapMathjsExpr.cp`: npm `mathjs`（复用 `@cap/libm`，6/6 PASS）。
+- `packages/@cap/registry.json`: 更新至 **831+ 条**映射并同步将 15 个顶流包的目标指向独立 `@cap/*` 官方包。

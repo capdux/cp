@@ -765,3 +765,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/percent-encoding`** | `packages/@cap/percent-encoding` | 对标 crates.io #85 `percent-encoding` (12.5 亿+) — 全部 7 套 WHATWG URL 百分号编码集与宽严双模式解码 |
 | **`@cap/whatwg-url`** | `packages/@cap/whatwg-url` | 对标 crates.io #40 `url` (16 亿+，双包复用 `@cap/percent-encoding`+`@cap/idna-uts46`) — WHATWG URL 标准解析、IDNA 规范化与相对归约 |
 | **`@cap/itoa`** | `packages/@cap/itoa` | 对标 crates.io #35 `itoa` (17 亿+) — 200 字节两位查表高速整数转十进制/十六进制/任意进制 ASCII |
+| **`@cap/unflatten`** | `packages/@cap/unflatten` | 对标 npm `flat`/`unflatten` — 嵌套 JSON 点路径扁平化与无损反扁平化树重建 |
+| **`@cap/mathjs-expr`** | `packages/@cap/mathjs-expr` | 对标 npm `mathjs`（跨包复用 `@cap/libm`）— 零堆递归下降数学表达式引擎（14 个内置函数 + 变量作用域） |
+| **`@cap/ryu-float`** | `packages/@cap/ryu-float` | 对标 crates.io #45 `ryu` (15 亿+，跨包复用 `@cap/itoa`) — 最短精确 f64/f32 十进制与定点/科学计数法格式化 |
+| **`@cap/bytes-buf`** | `packages/@cap/bytes-buf` | 对标 crates.io #25 `bytes` (18 亿+) — 零拷贝 `BytesReader` & 固定栈 `BytesMut` 大/小端读写游标 |
+| **`@cap/smallvec`** | `packages/@cap/smallvec` | 对标 crates.io #30 `smallvec` (17 亿+) — 零堆内联栈向量 (`SmallVecU64`/`SmallVecU8`) 支持 `swapRemove`/`dedup` |

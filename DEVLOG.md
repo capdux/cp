@@ -359,3 +359,6 @@
 
 ## 2026-11-27: Batch 96 七大超重磅包全 6/6 PASS — 官方 `.cap` 包正式突破 **560+**！
 - 一次性拿下 crates.io 顶流三巨头 `itoa`（17 亿+）、`url`（16 亿+，双包复用 `percent-encoding`+`idna-uts46`）、`percent-encoding`（12.5 亿+）与 npm Top-20 四件套 `commander`（3.5 亿+/周）、`string-width`（3.5 亿+/周）、`escape-string-regexp`（3.5 亿+/周）、`shortid`，全部 6/6 PASS。
+
+## 2026-11-27: Batch 97 四大核心包全 6/6 PASS — 覆盖 Rust 50 亿+ 底座（`bytes`/`smallvec`/`ryu`）+ `mathjs`！
+- 交付 `@cap/bytes-buf`（18 亿+）、`@cap/smallvec`（17 亿+）、`@cap/ryu-float`（15 亿+，复用 `@cap/itoa`）、`@cap/mathjs-expr`（复用 `@cap/libm`），全部 6/6 PASS；同步升级 `registry.json` 中 15 个高频条目的 `cp_target` 精准指向对应独立 `@cap/*` 官方包。

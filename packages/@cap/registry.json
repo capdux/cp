@@ -706,8 +706,8 @@
       "source_name": "ignore",
       "source_repo": "https://github.com/kaelzhang/node-ignore",
       "license": "MIT",
-      "cp_target": "cap:git",
-      "kind": "stdlib",
+      "cp_target": "@cap/ignore",
+      "kind": "package",
       "aliases": [
         "gitignore-parser",
         "ignore-rs"
@@ -1144,7 +1144,7 @@
       "source_name": "escape-string-regexp",
       "source_repo": "https://github.com/sindresorhus/escape-string-regexp",
       "license": "MIT",
-      "cp_target": "@cap/regex-escape",
+      "cp_target": "@cap/escape-string-regexp",
       "kind": "package",
       "aliases": [
         "lodash.escaperegexp",
@@ -1507,8 +1507,8 @@
       "source_name": "chalk",
       "source_repo": "https://github.com/chalk/chalk",
       "license": "MIT",
-      "cp_target": "cap:color",
-      "kind": "stdlib",
+      "cp_target": "@cap/chalk",
+      "kind": "package",
       "aliases": [
         "picocolors",
         "kleur",
@@ -1941,7 +1941,7 @@
       "source_name": "minimatch",
       "source_repo": "https://github.com/isaacs/minimatch",
       "license": "ISC",
-      "cp_target": "@cap/glob-match",
+      "cp_target": "@cap/minimatch",
       "kind": "package",
       "aliases": [
         "micromatch"
@@ -1990,8 +1990,8 @@
       "source_name": "commander",
       "source_repo": "https://github.com/tj/commander.js",
       "license": "MIT",
-      "cp_target": "cap:clap",
-      "kind": "stdlib",
+      "cp_target": "@cap/commander",
+      "kind": "package",
       "aliases": [
         "yargs",
         "yargs-parser",
@@ -2006,8 +2006,8 @@
       "source_name": "string-width",
       "source_repo": "https://github.com/sindresorhus/string-width",
       "license": "MIT",
-      "cp_target": "cap:text",
-      "kind": "stdlib",
+      "cp_target": "@cap/string-width",
+      "kind": "package",
       "aliases": [
         "unicode-width"
       ],
@@ -2427,8 +2427,8 @@
       "source_name": "itoa",
       "source_repo": "https://github.com/dtolnay/itoa",
       "license": "MIT",
-      "cp_target": "cap:string",
-      "kind": "stdlib",
+      "cp_target": "@cap/itoa",
+      "kind": "package",
       "aliases": [
         "ryu"
       ],
@@ -2490,8 +2490,8 @@
       "source_name": "bytes",
       "source_repo": "https://github.com/tokio-rs/bytes",
       "license": "MIT",
-      "cp_target": "cap:bytes",
-      "kind": "stdlib",
+      "cp_target": "@cap/bytes-buf",
+      "kind": "package",
       "aliases": [
         "bytes-rs"
       ],
@@ -2607,8 +2607,8 @@
       "source_name": "url",
       "source_repo": "https://github.com/servo/rust-url",
       "license": "MIT",
-      "cp_target": "cap:url",
-      "kind": "stdlib",
+      "cp_target": "@cap/whatwg-url",
+      "kind": "package",
       "aliases": [
         "whatwg-url"
       ],
@@ -4210,8 +4210,8 @@
       "source_name": "icu_normalizer",
       "source_repo": "https://github.com/unicode-org/icu4x",
       "license": "Unicode-3.0",
-      "cp_target": "cap:unicode",
-      "kind": "stdlib",
+      "cp_target": "@cap/icu-normalizer",
+      "kind": "package",
       "aliases": [
         "unicode-normalization",
         "icu_properties"
@@ -10076,6 +10076,54 @@
       "cp_target": "@cap/shortid",
       "kind": "package",
       "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mathjs",
+      "source_repo": "https://github.com/josdejong/mathjs",
+      "license": "MIT",
+      "cp_target": "@cap/mathjs-expr",
+      "kind": "package",
+      "aliases": [
+        "expr-eval"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "unflatten",
+      "source_repo": "https://github.com/hughsk/flat",
+      "license": "MIT",
+      "cp_target": "@cap/unflatten",
+      "kind": "package",
+      "aliases": [
+        "flat"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ryu",
+      "source_repo": "https://github.com/dtolnay/ryu",
+      "license": "MIT",
+      "cp_target": "@cap/ryu-float",
+      "kind": "package",
+      "aliases": [
+        "dtoa"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "smallvec",
+      "source_repo": "https://github.com/servo/rust-smallvec",
+      "license": "MIT",
+      "cp_target": "@cap/smallvec",
+      "kind": "package",
+      "aliases": [
+        "tinyvec"
+      ],
       "absorbed_at": "2026-11-27"
     }
   ]
