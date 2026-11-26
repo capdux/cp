@@ -1,0 +1,16 @@
+{
+  "name": "@cap/markdown-table",
+  "version": "3.0.4",
+  "description": "Zero-heap GFM Markdown table renderer with automatic column width calculation and alignment padding",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "markdown-table",
+    "version": "3.0.4",
+    "license": "MIT",
+    "repository": "https://github.com/wooorm/markdown-table"
+  }
+}

@@ -13359,6 +13359,88 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "codespan-reporting",
+      "source_repo": "https://github.com/brendanzab/codespan",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/codespan-reporting",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "matrixmultiply",
+      "source_repo": "https://github.com/bluss/matrixmultiply",
+      "license": "MIT",
+      "cp_target": "@cap/matrixmultiply",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "debugid",
+      "source_repo": "https://github.com/getsentry/rust-debugid",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/debugid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "number_prefix",
+      "source_repo": "https://github.com/ogham/rust-number-prefix",
+      "license": "MIT",
+      "cp_target": "@cap/number-prefix",
+      "kind": "package",
+      "aliases": [
+        "number-prefix"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "password-hash",
+      "source_repo": "https://github.com/RustCrypto/password-hashes",
+      "license": "MIT",
+      "cp_target": "@cap/password-hash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cbc",
+      "source_repo": "https://github.com/RustCrypto/block-modes",
+      "license": "MIT",
+      "cp_target": "@cap/cbc",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "markdown-table",
+      "source_repo": "https://github.com/wooorm/markdown-table",
+      "license": "MIT",
+      "cp_target": "@cap/markdown-table",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "progress",
+      "source_repo": "https://github.com/visionmedia/node-progress",
+      "license": "MIT",
+      "cp_target": "@cap/progress",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

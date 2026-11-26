@@ -556,3 +556,7 @@
 ### 2026-11-26 — Batch 158 开发日志（849 `@cap/*` 包 + 双平台 Top 700 纯逻辑全量收官）
 - 收录 Worker N26/N27 收官交付的 `dom-accessibility-name`、`schema-utils`、`error-ex`、`test-exclude` 及主智能体完成的 `cesu8`（crates.io #789），全部 6/6 PASS。
 - 完成双平台真实下载量 Top 701–1000 榜单拉取，正式衔接 Top 701–800 连续吸收（Worker N28/N29 并行推进 `cbc`/`password-hash`/`matrixmultiply`/`markdown-table`）。
+
+### 2026-11-26 — Batch 159 开发日志（857 `@cap/*` 包，双平台 Top 701–800 推进）
+- 三路并行交付 8 个高下载量纯 CP 包（`codespan-reporting` #702、`matrixmultiply` #705、`debugid` #723、`number-prefix` #738、`password-hash` #747、`cbc` #772、`markdown-table` #719、`progress` #726），全部 6/6 PASS。
+- 效率观察：主智能体避免并发启动多个后台 `cap test`（会与子智能体争用 `.cap/zig-cache` 锁导致耗时拉长），串行执行单测保持 650ms 级极速。

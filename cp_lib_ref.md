@@ -1154,3 +1154,14 @@ const h = cap.hash.wyhash("hello");
 - `@cap/test-exclude` (`npm:test-exclude` #658, ISC) — 测试/覆盖率文件路径 Glob 包含与排除规则引擎。
 - `@cap/cesu8` (`crates.io:cesu8` #789, MIT) — 零堆 CESU-8 / Java Modified UTF-8 ↔ 标准 UTF-8 转码器。
 - 零重复 Top 701–800 映射：`zune-jpeg`→`cap:jpeg`、`sha-1`→`@cap/sha1-crate`、`byteorder-lite`→`@cap/byteorder`、`xml-rs`→`@cap/saxes`、`ctutils`→`@cap/subtle`、`rusqlite`→`cap:sqlite`、`leb128fmt`→`@cap/leb128`、`difflib`→`@cap/diff`、`yasna`→`@cap/der`、`xxhash-rust`→`@cap/xxhash`、`rgb`→`cap:color`、`style-to-object`/`inline-style-parser`→`@cap/cssstyle`、`crc-32`→`@cap/crc32`、`deep-eql`→`@cap/fast-deep-equal`、`rfdc`→`@cap/klona`、`b4a`→`cap:buffer`。
+
+### Batch 159 — 双平台 Real Top 701–800（8 packages; 857 `@cap/*`!）
+
+- `@cap/codespan-reporting` (`crates.io:codespan-reporting` #702, Apache-2.0) — Rustc 风格多行源码诊断渲染器（行号、波浪线 `^^^` 标注与 `= note:`）。
+- `@cap/matrixmultiply` (`crates.io:matrixmultiply` #705, MIT) — 零堆稠密通用矩阵乘法引擎（`sgemm`/`dgemm` 任意步长 + 32x32 分块优化）。
+- `@cap/debugid` (`crates.io:debugid` #723, Apache-2.0) — Sentry/Breakpad/PDB `DebugId`（128-bit UUID + appendix）解析与双格式渲染器。
+- `@cap/number-prefix` (`crates.io:number_prefix` #738, MIT) — SI 十进制（`k/M/G/T/P/E`）与 IEC 二进制（`Ki/Mi/Gi/Ti/Pi/Ei`）前缀格式化器。
+- `@cap/password-hash` (`crates.io:password-hash` #747, MIT) — PHC 密码哈希字符串格式解析、序列化与常量时间比较器。
+- `@cap/cbc` (`crates.io:cbc` #772, MIT) — AES-128/256-CBC 块加密模式与 PKCS#7 填充（直接复用 `@cap/aes`，通过 NIST SP 800-38A 向量）。
+- `@cap/markdown-table` (`npm:markdown-table` #719, MIT) — GFM Markdown 表格对齐与自动列宽渲染器。
+- `@cap/progress` (`npm:progress` #726, MIT) — 零堆终端进度条渲染器（`:bar`/`:percent`/`:current`/`:total`/`:etas`/`:elapseds`）。
