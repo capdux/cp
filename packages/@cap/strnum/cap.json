@@ -1,0 +1,15 @@
+{
+  "name": "@cap/strnum",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap configurable string-to-number parser for CP (clean-room MIT implementation of npm strnum).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "strnum",
+    "repo": "https://github.com/NaturalIntelligence/strnum",
+    "license": "MIT"
+  }
+}

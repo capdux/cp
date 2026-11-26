@@ -1086,3 +1086,19 @@ const h = cap.hash.wyhash("hello");
 - `@cap/cssesc` (`npm:cssesc` #548, MIT) — CSSOM 规范 CSS 标识符与字符串转义器。
 - `@cap/d3-ease` (`npm:d3-ease` #568, ISC) — 全套 D3 缓动曲线函数（linear/quad/cubic/poly/sin/exp/circle/bounce/back/elastic）。
 - 零重复映射：`d3-color`→`cap:color`、`pngjs`→`cap:png`、`minizlib`→`cap:zlib`、`eventsource`→`@cap/sse-parse`、`pg`→`cap:pg`、`p-map`→`@cap/p-all`、`micromark`→`cap:md`、`min-indent`→`@cap/strip-indent`、`safe-stable-stringify`→`@cap/jcs`、`dedent`→`@cap/redent`。
+
+### Batch 153 — npm Real Top 700 (`#532..#673`, 12 packages + 14 zero-duplicate mappings; 816 `@cap/*`!)
+
+- `@cap/d3-time` (`npm:d3-time` #532, ISC) — UTC 日历时间间隔运算（second/minute/hour/day/week/month/year floor/ceil/offset/count）。
+- `@cap/d3-time-format` (`npm:d3-time-format` #542, ISC) — UTC `strftime`/`strptime` 格式化与解析器。
+- `@cap/d3-scale` (`npm:d3-scale` #553, ISC) — 定量比例尺（Linear/Pow/Sqrt/Log/Quantize）。
+- `@cap/vfile-message` (`npm:vfile-message` #556, MIT) — 结构化 Lint/AST 诊断消息与 `unist` `Point`/`Position` 格式化（覆盖 `unist-util-position`/`vfile`）。
+- `@cap/strnum` (`npm:strnum` #557, MIT) — 可配置字符串转数字解析器（前导零/十六进制/科学计数法）。
+- `@cap/abbrev` (`npm:abbrev` #567, ISC) — 唯一无歧义前缀缩写计算与解析器。
+- `@cap/character-entities` (`npm:character-entities` #576, MIT) — HTML5 命名与数字字符实体编解码（覆盖 8 个实体相关 npm Top 700 包）。
+- `@cap/ccount` (`npm:ccount` #617, MIT) — 零分配字符/子串计数与最长连续序列查找（覆盖 `longest-streak`）。
+- `@cap/chardet` (`npm:chardet` #641, MIT) — 字符编码探测器（BOM/UTF-8/UTF-16/32/ASCII/Shift-JIS/GBK/Windows-1252/ISO-8859-1）。
+- `@cap/space-separated-tokens` (`npm:space-separated-tokens` #644, MIT) — HTML/SVG 空格与逗号分隔令牌解析与序列化（覆盖 `comma-separated-tokens`）。
+- `@cap/is-path-inside` (`npm:is-path-inside` #655, MIT) — 零分配路径穿越防护校验器。
+- `@cap/class-variance-authority` (`npm:class-variance-authority` #673, Apache-2.0) — `cva` 变体与复合变体样式组合器。
+- 零重复映射：`pg-int8`→`cap:pg`、`whatwg-encoding`→`@cap/iconv-lite`、`shell-quote`→`@cap/shell-quote`、`bignumber.js`→`@cap/bigdecimal`、`css.escape`→`@cap/cssesc`、`lodash.camelcase`→`@cap/camelcase`、`remark-parse`→`cap:md`、`expect`→`cap:test`、`jest-diff`→`@cap/diff`、`json-bigint`→`cap:json`、`node-int64`→`@cap/bigint-u256`、`acorn-walk`→`@cap/estree-walker`、`formdata-polyfill`→`@web/formdata`、`fetch-blob`→`@web/blob`。

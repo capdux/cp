@@ -12297,6 +12297,267 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-time",
+      "source_repo": "https://github.com/d3/d3-time",
+      "license": "ISC",
+      "cp_target": "@cap/d3-time",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-time-format",
+      "source_repo": "https://github.com/d3/d3-time-format",
+      "license": "ISC",
+      "cp_target": "@cap/d3-time-format",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-scale",
+      "source_repo": "https://github.com/d3/d3-scale",
+      "license": "ISC",
+      "cp_target": "@cap/d3-scale",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "vfile-message",
+      "source_repo": "https://github.com/vfile/vfile-message",
+      "license": "MIT",
+      "cp_target": "@cap/vfile-message",
+      "kind": "package",
+      "aliases": [
+        "unist-util-position",
+        "vfile"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strnum",
+      "source_repo": "https://github.com/NaturalIntelligence/strnum",
+      "license": "MIT",
+      "cp_target": "@cap/strnum",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "abbrev",
+      "source_repo": "https://github.com/npm/abbrev-js",
+      "license": "ISC",
+      "cp_target": "@cap/abbrev",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "character-entities",
+      "source_repo": "https://github.com/wooorm/character-entities",
+      "license": "MIT",
+      "cp_target": "@cap/character-entities",
+      "kind": "package",
+      "aliases": [
+        "character-entities-legacy",
+        "character-entities-html4",
+        "character-reference-invalid",
+        "decode-named-character-reference",
+        "parse-entities",
+        "stringify-entities",
+        "micromark-util-decode-numeric-character-reference"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ccount",
+      "source_repo": "https://github.com/wooorm/ccount",
+      "license": "MIT",
+      "cp_target": "@cap/ccount",
+      "kind": "package",
+      "aliases": [
+        "longest-streak"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chardet",
+      "source_repo": "https://github.com/runk/node-chardet",
+      "license": "MIT",
+      "cp_target": "@cap/chardet",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "space-separated-tokens",
+      "source_repo": "https://github.com/wooorm/space-separated-tokens",
+      "license": "MIT",
+      "cp_target": "@cap/space-separated-tokens",
+      "kind": "package",
+      "aliases": [
+        "comma-separated-tokens"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-path-inside",
+      "source_repo": "https://github.com/sindresorhus/is-path-inside",
+      "license": "MIT",
+      "cp_target": "@cap/is-path-inside",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "class-variance-authority",
+      "source_repo": "https://github.com/joe-bell/cva",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/class-variance-authority",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg-int8",
+      "source_repo": "https://github.com/brianc/node-pg-int8",
+      "license": "MIT",
+      "cp_target": "cap:pg",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "whatwg-encoding",
+      "source_repo": "https://github.com/jsdom/whatwg-encoding",
+      "license": "MIT",
+      "cp_target": "@cap/iconv-lite",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bignumber.js",
+      "source_repo": "https://github.com/MikeMcl/bignumber.js",
+      "license": "MIT",
+      "cp_target": "@cap/bigdecimal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "css.escape",
+      "source_repo": "https://github.com/mathiasbynens/CSS.escape",
+      "license": "MIT",
+      "cp_target": "@cap/cssesc",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lodash.camelcase",
+      "source_repo": "https://github.com/lodash/lodash",
+      "license": "MIT",
+      "cp_target": "@cap/camelcase",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "remark-parse",
+      "source_repo": "https://github.com/remarkjs/remark",
+      "license": "MIT",
+      "cp_target": "cap:md",
+      "kind": "stdlib",
+      "aliases": [
+        "mdast-util-from-markdown",
+        "mdast-util-to-markdown",
+        "micromark-core-commonmark"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "expect",
+      "source_repo": "https://github.com/jestjs/jest",
+      "license": "MIT",
+      "cp_target": "cap:test",
+      "kind": "stdlib",
+      "aliases": [
+        "jest-matcher-utils"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json-bigint",
+      "source_repo": "https://github.com/sidorares/json-bigint",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "node-int64",
+      "source_repo": "https://github.com/broofa/node-int64",
+      "license": "MIT",
+      "cp_target": "@cap/bigint-u256",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "acorn-walk",
+      "source_repo": "https://github.com/acornjs/acorn",
+      "license": "MIT",
+      "cp_target": "@cap/estree-walker",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "formdata-polyfill",
+      "source_repo": "https://github.com/jimmywarting/FormData",
+      "license": "MIT",
+      "cp_target": "@web/formdata",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fetch-blob",
+      "source_repo": "https://github.com/node-fetch/fetch-blob",
+      "license": "MIT",
+      "cp_target": "@web/blob",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

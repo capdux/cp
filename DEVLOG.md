@@ -534,3 +534,7 @@
 - 按 npm 真实周下载量排行推进 `#473..#544`，主智能体与 Worker N22 并行交付 8 个零依赖/复用现有底座的纯 CP 包，全部通过 `cpc emit-types` 与 6/6 `cap test`。
 - 踩坑记录：`postgres-date` 中 `i32`/`i64` 使用 `%`/`/` 在 Zig 后端要求 `@rem`/`@divFloor` 或转无符号 `u32`/`u64`；`set-cookie-parser` 中形参名 `from` 与关键字冲突，改为 `start_pos` 并在 `?? (0 as usize)` 显式标注类型后一次通过。
 - 对 12 个已有等价标准库/生态包的 npm 条目直接建立零重复映射，避免重复造轮子。
+
+### 2026-11-26 — Batch 153 开发日志（816 `@cap/*` 包，冲刺 npm Top 700 收官）
+- 主智能体 + Worker N22（6/6 满额轮换为 N24）+ Worker N23（6/6 满额轮换为 N25）三路并行交付 12 个高价值纯 CP 包，全部通过 `cpc emit-types` 与 6/6 `cap test`。
+- 踩坑与经验：`chardet` 区分 GBK 汉字与 Shift-JIS 半角片假名时，将纯半角片假名置信度降为 65 低于 GBK 双字节 75 即可零误判；`character-entities` 一包覆盖 8 个 `wooorm`/HTML 实体相关 npm Top 700 包，极大压缩重复率。

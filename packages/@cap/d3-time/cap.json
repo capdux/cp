@@ -1,0 +1,24 @@
+{
+  "name": "@cap/d3-time",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-allocation UTC calendar time interval arithmetic (second, minute, hour, day, week, month, year) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "d3",
+    "d3-time",
+    "time",
+    "calendar",
+    "utc",
+    "interval",
+    "hinnant",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "d3-time",
+    "repo": "https://github.com/d3/d3-time",
+    "license": "ISC"
+  }
+}

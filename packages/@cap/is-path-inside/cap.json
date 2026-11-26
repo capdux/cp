@@ -1,0 +1,15 @@
+{
+  "name": "@cap/is-path-inside",
+  "version": "4.0.0",
+  "description": "Zero-allocation path traversal guard checking whether child_path is strictly inside parent_path",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "is-path-inside",
+    "version": "4.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/sindresorhus/is-path-inside"
+  }
+}

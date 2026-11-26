@@ -1,0 +1,15 @@
+{
+  "name": "@cap/ccount",
+  "version": "2.0.1",
+  "description": "Zero-allocation character/substring occurrence counter and longest consecutive streak finder",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "ccount",
+    "version": "2.0.1",
+    "license": "MIT",
+    "repository": "https://github.com/wooorm/ccount"
+  }
+}

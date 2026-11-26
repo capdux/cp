@@ -1,0 +1,15 @@
+{
+  "name": "@cap/abbrev",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-heap unique unambiguous prefix abbreviation generator and resolver for CP (clean-room ISC implementation of npm abbrev).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "abbrev",
+    "repo": "https://github.com/npm/abbrev-js",
+    "license": "ISC"
+  }
+}
