@@ -1,0 +1,9 @@
+{
+  "name": "@cap/tar-core",
+  "ver": "1.0.0",
+  "description": "Zero-heap POSIX USTAR 512-byte tar archive header codec and streaming cursor (crates.io tar equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

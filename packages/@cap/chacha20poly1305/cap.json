@@ -1,0 +1,13 @@
+{
+  "name": "@cap/chacha20poly1305",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8439 ChaCha20-Poly1305 AEAD authenticated encryption (Rust chacha20poly1305 crate parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "@cap/chacha20-crate": "1.0.0",
+    "@cap/poly1305": "1.0.0",
+    "@cap/subtle-ct": "1.0.0"
+  }
+}

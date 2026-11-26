@@ -935,3 +935,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/blake2-crate`** | `packages/@cap/blake2-crate` | 对标 crates.io **#140** `blake2` v0.10 (**8.5 亿+**) — RFC 7693 BLAKE2s-256 延迟压缩流式杂凑与密钥 MAC 模式 |
 | **`@cap/memchr-crate`** | `packages/@cap/memchr-crate` | 对标 crates.io **#15** `memchr` (**19 亿+**) — 高速字节/反向搜索 `memchr`/`2`/`3`、`memrchr` 与 Boyer-Moore-Horspool `memmem` |
 | **`@cap/zeroize`** | `packages/@cap/zeroize` | 对标 crates.io **#32** `zeroize` (**17 亿+**) — 密钥敏感内存安全清零与 `ZeroizingKey32`/`ZeroizingBuf64` 容器 |
+| **`@cap/normalize-package-data`** | `packages/@cap/normalize-package-data` | 对标 npm **Top 25** `normalize-package-data` v6 (**1.5 亿+/周**, 双包复用) — `package.json` 元数据规范化、GitHub 简写展开与版本清洗 |
+| **`@cap/read-pkg`** | `packages/@cap/read-pkg` | 对标 npm Top 45 `read-pkg` v9 (**1 亿+/周**, 复用 `@cap/normalize-package-data`) — 零堆 `package.json` 顶层字段解析与自动规范化 |
+| **`@cap/chacha20poly1305`** | `packages/@cap/chacha20poly1305` | 对标 crates.io **#105** `chacha20poly1305` v0.10 (**10.5 亿+**, 三包复用) — RFC 8439 AEAD 认证加解密（官方 Section 2.8.2 向量全过） |
+| **`@cap/tar-core`** | `packages/@cap/tar-core` | 对标 crates.io **#100** `tar` v0.4 (**11 亿+**) — POSIX USTAR 512 字节归档头编解码、校验和验证与多条目游标 |
+| **`@cap/bytemuck-crate`** | `packages/@cap/bytemuck-crate` | 对标 crates.io **#22** `bytemuck` (**18 亿+**) — 零堆安全 POD 字节重解释、LE/BE 整数切片转换与对齐布局校验 |
+| **`@cap/zerocopy-crate`** | `packages/@cap/zerocopy-crate` | 对标 crates.io **#25** `zerocopy` (**17.5 亿+**, 复用 `@cap/bytemuck-crate`) — 零拷贝前后缀字节游标读写器与对齐校验 |

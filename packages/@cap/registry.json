@@ -3353,14 +3353,11 @@
       "source_registry": "crates.io",
       "source_name": "tar",
       "source_repo": "https://github.com/alexcrichton/tar-rs",
-      "license": "MIT",
-      "cp_target": "cap:pack",
-      "kind": "stdlib",
-      "aliases": [
-        "tar-stream",
-        "node-tar"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/tar-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -3764,13 +3761,11 @@
       "source_registry": "crates.io",
       "source_name": "zerocopy",
       "source_repo": "https://github.com/google/zerocopy",
-      "license": "MIT",
-      "cp_target": "cap:mem",
-      "kind": "stdlib",
-      "aliases": [
-        "bytemuck"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+      "cp_target": "@cap/zerocopy-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -6069,12 +6064,10 @@
       "source_name": "read-pkg",
       "source_repo": "https://github.com/sindresorhus/read-pkg",
       "license": "MIT",
-      "cp_target": "cap:json",
-      "kind": "stdlib",
-      "aliases": [
-        "read-pkg-up"
-      ],
-      "absorbed_at": "2026-11-26"
+      "cp_target": "@cap/read-pkg",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -9697,13 +9690,10 @@
       "source_registry": "crates.io",
       "source_name": "chacha20poly1305",
       "source_repo": "https://github.com/RustCrypto/AEADs",
-      "license": "MIT",
-      "cp_target": "@cap/chacha20-poly1305",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/chacha20poly1305",
       "kind": "package",
-      "aliases": [
-        "chacha20",
-        "aead"
-      ],
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     },
     {
@@ -10837,6 +10827,26 @@
       "source_repo": "https://github.com/RustCrypto/hashes",
       "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/blake2-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "normalize-package-data",
+      "source_repo": "https://github.com/npm/normalize-package-data",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/normalize-package-data",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bytemuck",
+      "source_repo": "https://github.com/Lokathor/bytemuck",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "cp_target": "@cap/bytemuck-crate",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

@@ -1116,3 +1116,12 @@
 - `packages/@cap/memchr-crate/` & `cap/test/testCapMemchrCrate.cp`: crates.io **#15** `memchr`（**19 亿+**，`memchr`/`memrchr`/`memmem`，6/6 PASS）。
 - `packages/@cap/zeroize/` & `cap/test/testCapZeroize.cp`: crates.io **#32** `zeroize`（**17 亿+**，密钥内存清零与容器，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 125 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 126 — **突破 715 官方 `.cap` 包！拿下 57 亿下载四大底座 `bytemuck`(18 亿)+`zerocopy`(17.5 亿)+`tar`(11 亿)+`chacha20poly1305`(10.5 亿) + `normalize-package-data` + `read-pkg`**)
+- `packages/@cap/normalize-package-data/` & `cap/test/testCapNormalizePackageData.cp`: npm **Top 25** `normalize-package-data` v6（1.5 亿+/周，双包复用，6/6 PASS）。
+- `packages/@cap/read-pkg/` & `cap/test/testCapReadPkg.cp`: npm Top 45 `read-pkg` v9（1 亿+/周，复用 `@cap/normalize-package-data`，6/6 PASS）。
+- `packages/@cap/chacha20poly1305/` & `cap/test/testCapChacha20poly1305.cp`: crates.io **#105** `chacha20poly1305` v0.10（**10.5 亿+**，三包复用，RFC 8439 AEAD 全过，6/6 PASS）。
+- `packages/@cap/tar-core/` & `cap/test/testCapTarCore.cp`: crates.io **#100** `tar` v0.4（**11 亿+**，POSIX USTAR 编解码游标，6/6 PASS）。
+- `packages/@cap/bytemuck-crate/` & `cap/test/testCapBytemuckCrate.cp`: crates.io **#22** `bytemuck`（**18 亿+**，POD 字节重解释，6/6 PASS）。
+- `packages/@cap/zerocopy-crate/` & `cap/test/testCapZerocopyCrate.cp`: crates.io **#25** `zerocopy`（**17.5 亿+**，复用 `@cap/bytemuck-crate`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 126 全部 6 个官方包映射。
