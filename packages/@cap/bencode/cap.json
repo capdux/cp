@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bencode",
+  "version": "1.0.0",
+  "description": "BitTorrent BEP-3 deterministic binary Bencode streaming encoder, zero-copy decoder, validator, and dict lookup.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

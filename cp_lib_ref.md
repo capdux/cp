@@ -429,3 +429,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/radix-sort`** | `packages/@cap/radix-sort` | 对标 Rust `radsort` — O(N) 线性无比较 256 桶 LSD 基数排序（支持 `u32`/`i32`/`u64`/`i64`/`f64` IEEE-754 保序） |
 | **`@cap/bwt`** | `packages/@cap/bwt` | 对标 Burrows-Wheeler + MTF — bzip2 核心块排序前置变换、O(N) LF-Mapping 逆变换与 Move-To-Front 编解码 |
 | **`@cap/luhn`** | `packages/@cap/luhn` | 对标 Rust/npm `luhn` — ISO/IEC 7812 Luhn Mod-10 + Damm + Verhoeff 工业级防错位校验码三合一 |
+| **`@cap/suffix-array`** | `packages/@cap/suffix-array` | 对标 Rust `suffix` — 零堆静态后缀数组 + Kasai O(N) LCP 数组、O(M log N) 二分搜索与最长重复子串 |
+| **`@cap/hamming`** | `packages/@cap/hamming` | 对标 Rust `hamming` / `simhash` — SWAR Popcount、字节汉明距离、64-bit SimHash 与 Hamming(7,4) 单位纠错 |
+| **`@cap/bencode`** | `packages/@cap/bencode` | 对标 Rust `bendy` / npm `bencode` — BitTorrent BEP-3 零堆确定性编解码器与严格字典序校验 |
+| **`@cap/fft`** | `packages/@cap/fft` | 对标 Rust `rustfft` / `microfft` — 零堆原地基-2 Cooley-Tukey FFT/IFFT、幅度谱与 Hann/Hamming 窗函数 |
+| **`@cap/crc8`** | `packages/@cap/crc8` | 对标 Rust `crc` 8-bit — SMBus / Maxim 1-Wire / SAE-J1850 / AUTOSAR / CDMA2000 / Bluetooth 六大 CRC-8 |
+| **`@cap/base62`** | `packages/@cap/base62` | 对标 Rust/npm `base62` — URL 安全 62 进制 `u64`（含定宽保序）与任意字节切片（保前导零）编解码 |

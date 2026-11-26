@@ -373,3 +373,12 @@
 - `packages/@cap/bwt/` & `cap/test/testCapBwt.cp`: Burrows-Wheeler 块排序变换 + Move-To-Front（6/6 PASS）。
 - `packages/@cap/luhn/` & `cap/test/testCapLuhn.cp`: ISO 7812 Luhn + Damm + Verhoeff 三合一校验码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **355 条**高频映射（含 `tower`/`yoke`/`zerovec`/`phf` 去重直连）。
+
+## [2026-11-26] - Batch 45 单批交付 6 大频谱、索引、协议与编码包（`@cap/suffix-array`, `@cap/hamming`, `@cap/bencode`, `@cap/fft`, `@cap/crc8`, `@cap/base62`），总映射突破 **365 条**！
+- `packages/@cap/suffix-array/` & `cap/test/testCapSuffixArray.cp`: 后缀数组 + Kasai O(N) LCP 与最长重复子串（6/6 PASS）。
+- `packages/@cap/hamming/` & `cap/test/testCapHamming.cp`: SWAR Popcount、SimHash64 与 Hamming(7,4) 单位纠错（6/6 PASS）。
+- `packages/@cap/bencode/` & `cap/test/testCapBencode.cp`: BitTorrent BEP-3 确定性编解码与规范校验（6/6 PASS）。
+- `packages/@cap/fft/` & `cap/test/testCapFft.cp`: 原地基-2 Cooley-Tukey FFT/IFFT 与 Hann/Hamming 窗（6/6 PASS）。
+- `packages/@cap/crc8/` & `cap/test/testCapCrc8.cp`: SMBus/Maxim/SAE-J1850/AUTOSAR/CDMA2000/Bluetooth CRC-8（6/6 PASS）。
+- `packages/@cap/base62/` & `cap/test/testCapBase62.cp`: URL 安全 Base62 `u64`/定宽保序/字节切片编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **365 条**高频映射（含 `serde_urlencoded`/`utf8_iter`/`rayon`/`num_cpus` 去重直连）。

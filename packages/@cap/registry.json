@@ -3554,6 +3554,106 @@
       "kind": "package",
       "aliases": ["damm", "verhoeff"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "serde_urlencoded",
+      "source_repo": "https://github.com/nox/serde_urlencoded",
+      "license": "MIT",
+      "cp_target": "cap:url",
+      "kind": "stdlib",
+      "aliases": ["form_urlencoded"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "utf8_iter",
+      "source_repo": "https://github.com/hsivonen/utf8_iter",
+      "license": "MIT",
+      "cp_target": "@cap/utf8-valid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rayon",
+      "source_repo": "https://github.com/rayon-rs/rayon",
+      "license": "MIT",
+      "cp_target": "cap:actor",
+      "kind": "stdlib",
+      "aliases": ["rayon-core"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num_cpus",
+      "source_repo": "https://github.com/seanmonstar/num_cpus",
+      "license": "MIT",
+      "cp_target": "cap:os",
+      "kind": "stdlib",
+      "aliases": ["num-cpus"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "suffix",
+      "source_repo": "https://github.com/BurntSushi/suffix",
+      "license": "MIT",
+      "cp_target": "@cap/suffix-array",
+      "kind": "package",
+      "aliases": ["suffix-array", "divsufsort"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hamming",
+      "source_repo": "https://github.com/huonw/hamming",
+      "license": "MIT",
+      "cp_target": "@cap/hamming",
+      "kind": "package",
+      "aliases": ["simhash", "hamming-weight"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bendy",
+      "source_repo": "https://github.com/P3KI/bendy",
+      "license": "MIT",
+      "cp_target": "@cap/bencode",
+      "kind": "package",
+      "aliases": ["bencode", "serde_bencode"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rustfft",
+      "source_repo": "https://github.com/ejmahler/RustFFT",
+      "license": "MIT",
+      "cp_target": "@cap/fft",
+      "kind": "package",
+      "aliases": ["microfft", "fft"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "crc8",
+      "source_repo": "https://github.com/mrhooray/crc-rs",
+      "license": "MIT",
+      "cp_target": "@cap/crc8",
+      "kind": "package",
+      "aliases": ["crc-8"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base62",
+      "source_repo": "https://github.com/fbernier/base62",
+      "license": "MIT",
+      "cp_target": "@cap/base62",
+      "kind": "package",
+      "aliases": ["radix62"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

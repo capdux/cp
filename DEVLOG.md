@@ -198,3 +198,6 @@
 
 ## 2026-11-26: Batch 44 交付 18.26 亿级 `@cap/memmem` + 14.50 亿级 `@cap/aho-corasick` 等六大引擎（总映射 **355 条**，冲刺 **240 官方 `.cap` 包**！）
 - 交付 `@cap/memmem`（6/6）、`@cap/aho-corasick`（6/6）、`@cap/lzw`（6/6）、`@cap/radix-sort`（6/6）、`@cap/bwt`（6/6）、`@cap/luhn`（6/6），并去重直连 `tower`（8.85 亿）、`yoke`（8.34 亿）、`zerovec`（8.23 亿）、`phf`（7.63 亿），总映射突破 **355 条**！
+
+## 2026-11-26: Batch 45 突破 **240+ 线上官方 `.cap` 包 + 365 条生态映射**！
+- 交付 `@cap/suffix-array`（6/6）、`@cap/hamming`（6/6）、`@cap/bencode`（6/6）、`@cap/fft`（6/6）、`@cap/crc8`（6/6）、`@cap/base62`（6/6），并去重直连 `serde_urlencoded`（7.33 亿）、`utf8_iter`（7.30 亿）、`rayon`（6.98 亿）、`num_cpus`（6.92 亿），总映射突破 **365 条**！
