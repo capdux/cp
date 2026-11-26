@@ -665,3 +665,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/prost-wire`** | `packages/@cap/prost-wire` | 对标 crates.io #208 `prost` (7.42 亿，跨包复用 `@cap/varint`) — Protocol Buffers Wire Format 零堆编解码 |
 | **`@cap/powerfmt`** | `packages/@cap/powerfmt` | 对标 crates.io #210 `powerfmt` (7.36 亿) — 零堆多进制整数格式化、对齐填充与千分位分组 |
 | **`@cap/libm`** | `packages/@cap/libm` | 对标 crates.io #266 `libm` (6.26 亿) — 全生态纯 CP IEEE 754 `f64` 数学基石库（三角/指对/双曲/舍入） |
+
+| **`@cap/zerotrie`** | `packages/@cap/zerotrie` | 对标 crates.io #264 `zerotrie` (6.28 亿) — 零堆紧凑左孩子右兄弟前缀树与最长前缀匹配 |
+| **`@cap/media-typer`** | `packages/@cap/media-typer` | 对标 npm `media-typer` (1.8 亿+/周，独立依赖) — RFC 6838 媒体类型解析与格式化（已被 `@cap/type-is` 复用） |
+| **`@cap/negotiator`** | `packages/@cap/negotiator` | 对标 npm `negotiator` (1.5 亿+/周，独立依赖) — RFC 7231 HTTP 内容协商（已被 `@cap/accepts` 复用） |
+| **`@cap/ansi-regex`** | `packages/@cap/ansi-regex` | 对标 npm `ansi-regex` (4 亿+/周，跨包复用 `@cap/anstyle-parse`) — ANSI 转义序列定位、计数与剥离 |

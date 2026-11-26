@@ -1,0 +1,8 @@
+{
+  "name": "@cap/media-typer",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 6838 media type parser and formatter (npm media-typer parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

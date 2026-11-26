@@ -4,5 +4,8 @@
   "description": "Zero-heap ECMA-48 / ANSI terminal escape sequence stripper (CSI, OSC, 2-byte ESC) and visible character counter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/anstyle-parse": "^1.0.0"
+  }
 }

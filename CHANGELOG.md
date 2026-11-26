@@ -713,3 +713,15 @@
 - `packages/@cap/powerfmt/` & `cap/test/testCapPowerfmt.cp`: crates.io #210 `powerfmt`（7.36 亿下载，6/6 PASS）。
 - `packages/@cap/libm/` & `cap/test/testCapLibm.cp`: crates.io #266 `libm`（6.26 亿下载全生态数学基石，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **730 条**双生态高频映射（**npm=365 / crates.io=365 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 83 — 740 映射 370/370 绝对对称！4 新独立包 + 4 历史旧包深度重构解耦)
+- `packages/@cap/zerotrie/` & `cap/test/testCapZerotrie.cp`: crates.io #264 `zerotrie`（6.28 亿下载，6/6 PASS）。
+- `packages/@cap/media-typer/` & `cap/test/testCapMediaTyper.cp`: npm `media-typer`（1.8 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/negotiator/` & `cap/test/testCapNegotiator.cp`: npm `negotiator`（1.5 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/ansi-regex/` & `cap/test/testCapAnsiRegex.cp`: npm `ansi-regex`（4 亿+/周，复用 `@cap/anstyle-parse`，6/6 PASS）。
+- **历史旧包跨包依赖重构（零重复代码、100% 回归 PASS）**：
+  - `packages/@cap/glob-parent/`：改为 `import` 复用 `@cap/is-extglob`（6/6 PASS）。
+  - `packages/@cap/type-is/`：改为 `import` 复用 `@cap/media-typer`（6/6 PASS）。
+  - `packages/@cap/accepts/`：改为 `import` 复用 `@cap/negotiator`（代码精简 70%，6/6 PASS）。
+  - `packages/@cap/braces/`：改为 `import` 复用 `@cap/fill-range`（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **740 条**双生态高频映射（**npm=370 / crates.io=370 绝对 1:1 对称**）。

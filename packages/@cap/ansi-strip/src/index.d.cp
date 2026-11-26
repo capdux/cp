@@ -1,7 +1,6 @@
 // Type definitions for CP
 
-export fn skipAnsiAt(input: string, pos: usize): usize;
-export fn hasAnsi(input: string): bool;
+import { TOKEN_TEXT, AnsiToken, tokenizeAnsi, stripAnsiToBuf, hasAnsi, visibleByteLen } from "../../anstyle-parse/src/index.cp";
 export fn strippedLen(input: string): usize;
 export fn stripAnsi(input: string, out: []u8): usize;
 export fn visibleAsciiCount(input: string): usize;

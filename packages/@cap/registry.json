@@ -719,8 +719,8 @@
       "source_name": "negotiator",
       "source_repo": "https://github.com/jshttp/negotiator",
       "license": "MIT",
-      "cp_target": "cap:http",
-      "kind": "stdlib",
+      "cp_target": "@cap/negotiator",
+      "kind": "package",
       "aliases": [
         "accepts",
         "accept-language"
@@ -5842,7 +5842,7 @@
       "source_name": "media-typer",
       "source_repo": "https://github.com/jshttp/media-typer",
       "license": "MIT",
-      "cp_target": "@cap/media-type",
+      "cp_target": "@cap/media-typer",
       "kind": "package",
       "aliases": [
         "mediatype",
@@ -7054,7 +7054,7 @@
       "source_name": "ansi-regex",
       "source_repo": "https://github.com/chalk/ansi-regex",
       "license": "MIT",
-      "cp_target": "@cap/ansi-strip",
+      "cp_target": "@cap/ansi-regex",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
@@ -8923,6 +8923,114 @@
       "kind": "package",
       "aliases": [
         "commas"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zerotrie",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "MIT",
+      "cp_target": "@cap/zerotrie",
+      "kind": "package",
+      "aliases": [
+        "prefix-trie"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ident_case",
+      "source_repo": "https://github.com/TedDriggs/ident_case",
+      "license": "MIT",
+      "cp_target": "@cap/camelcase",
+      "kind": "package",
+      "aliases": [
+        "case-conv"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "serde_yaml",
+      "source_repo": "https://github.com/dtolnay/serde-yaml",
+      "license": "MIT",
+      "cp_target": "@cap/yaml",
+      "kind": "package",
+      "aliases": [
+        "serde_yml"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "toml_parser",
+      "source_repo": "https://github.com/toml-rs/toml",
+      "license": "MIT",
+      "cp_target": "@cap/toml",
+      "kind": "package",
+      "aliases": [
+        "toml_edit"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "axum",
+      "source_repo": "https://github.com/tokio-rs/axum",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [
+        "axum-core"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "trie-prefix-tree",
+      "source_repo": "https://github.com/lyndseybrowning/trie-prefix-tree",
+      "license": "MIT",
+      "cp_target": "@cap/zerotrie",
+      "kind": "package",
+      "aliases": [
+        "trie-search"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "raw-body",
+      "source_repo": "https://github.com/stream-utils/raw-body",
+      "license": "MIT",
+      "cp_target": "@cap/block-buffer",
+      "kind": "package",
+      "aliases": [
+        "stream-buffer"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "wcwidth",
+      "source_repo": "https://github.com/timoxley/wcwidth",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-width",
+      "kind": "package",
+      "aliases": [
+        "char-width"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "string-length",
+      "source_repo": "https://github.com/sindresorhus/string-length",
+      "license": "MIT",
+      "cp_target": "@cap/ansi-strip",
+      "kind": "package",
+      "aliases": [
+        "visible-length"
       ],
       "absorbed_at": "2026-11-27"
     }

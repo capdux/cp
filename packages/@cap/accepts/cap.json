@@ -1,8 +1,11 @@
 {
   "name": "@cap/accepts",
   "ver": "1.0.0",
-  "description": "Zero-allocation RFC 9110 HTTP content negotiation engine for Accept, Accept-Encoding, and Accept-Language headers (npm accepts / negotiator parity) for CP",
+  "description": "Zero-allocation RFC 9110 HTTP content negotiation engine for Accept, Accept-Encoding, and Accept-Language headers, composing @cap/negotiator for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@cap/negotiator": "^1.0.0"
+  }
 }

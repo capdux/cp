@@ -312,3 +312,6 @@
 
 ## 2026-11-27: Batch 82 七件套全 6/6 PASS — 达到 **730 条双生态映射（npm=365 / crates.io=365 绝对对称）**！
 - 单批拿下 Rust `time` 底层依赖三件套（`deranged` 8.01 亿、`num-conv` 7.53 亿、`powerfmt` 7.36 亿）+ `prost`（7.42 亿，复用 `@cap/varint`）+ 全生态数学基石 `libm`（6.26 亿）+ npm `shebang-command`/`anymatch` 跨包复用交付！
+
+## 2026-11-27: Batch 83 达成 **740 条双生态映射（370/370 绝对对称）** + 首批 4 个历史旧包跨包依赖解耦重构全 6/6 零回归！
+- 新增 `@cap/zerotrie`（6.28 亿）、`@cap/media-typer`（1.8 亿+/周）、`@cap/negotiator`（1.5 亿+/周）、`@cap/ansi-regex`（4 亿+/周，跨生态复用 Rust `@cap/anstyle-parse`），并同步重构历史旧包 `@cap/glob-parent`、`@cap/type-is`、`@cap/accepts`（精简 70%）、`@cap/braces`，全面消除代码重复。

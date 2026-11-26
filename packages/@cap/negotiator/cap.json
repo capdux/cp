@@ -1,0 +1,9 @@
+{
+  "name": "@cap/negotiator",
+  "ver": "1.0.0",
+  "desc": "Zero-heap RFC 7231 HTTP content negotiation (Accept, Accept-Encoding, Accept-Language) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["negotiator", "http", "accept", "content-negotiation", "rfc7231", "zero-heap"]
+}

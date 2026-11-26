@@ -1,0 +1,9 @@
+{
+  "name": "@cap/zerotrie",
+  "version": "1.0.0",
+  "description": "Zero-allocation compact left-child right-sibling prefix trie (ZeroTrie) for fast static/pooled key-to-u32 lookup and longest-prefix matching in CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["zerotrie", "trie", "prefix-tree", "lookup", "router", "zero-alloc"]
+}

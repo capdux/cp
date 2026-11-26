@@ -1,36 +1,39 @@
 // @cap/type-is — Zero-allocation HTTP Content-Type MIME matcher for CP
 // Clean-room MIT implementation inspired by npm `type-is` (227M/wk).
+// Delegates RFC 6838 media-type parsing & validation to `@cap/media-typer`.
 
-fn isSpace(c: u8) -> bool {
+import { MediaType, parse, testMediaType } from "../../media-typer/src/index.cp";
+
+fn tiIsSpace(c: u8) -> bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-fn toLowerAscii(c: u8) -> u8 {
+fn tiToLowerAscii(c: u8) -> u8 {
     if (c >= 'A' && c <= 'Z') {
         return c + (32 as u8);
     }
     return c;
 }
 
-fn trimSlice(s: []const u8) -> []const u8 {
+fn tiTrimSlice(s: []const u8) -> []const u8 {
     let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
+    while (start < s.len && tiIsSpace(s[start])) {
         start += 1;
     }
     let end: usize = s.len;
-    while (end > start && isSpace(s[end - (1 as usize)])) {
+    while (end > start && tiIsSpace(s[end - (1 as usize)])) {
         end -= 1;
     }
     return s[start..end];
 }
 
-fn eqIgnoreCase(a: []const u8, b: []const u8) -> bool {
+fn tiEqIgnoreCase(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (tiToLowerAscii(a[i]) != tiToLowerAscii(b[i])) {
             return false;
         }
         i += 1;
@@ -38,26 +41,11 @@ fn eqIgnoreCase(a: []const u8, b: []const u8) -> bool {
     return true;
 }
 
-fn endsWithIgnoreCase(s: []const u8, suffix: []const u8) -> bool {
-    if (suffix.len > s.len) {
-        return false;
-    }
-    const off = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (toLowerAscii(s[off + i]) != toLowerAscii(suffix[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isStar(s: []const u8) -> bool {
+fn tiIsStar(s: []const u8) -> bool {
     return s.len == (1 as usize) && s[0] == '*';
 }
 
-fn findSingleSlash(s: []const u8) -> i64 {
+fn tiFindSingleSlash(s: []const u8) -> i64 {
     let idx: i64 = -1;
     let i: usize = 0;
     while (i < s.len) {
@@ -72,6 +60,20 @@ fn findSingleSlash(s: []const u8) -> i64 {
     return idx;
 }
 
+fn tiMatchStructuredSuffix(ct: []const u8, parsed: MediaType, plusSuffix: []const u8) -> bool {
+    if (plusSuffix.len < (2 as usize) || plusSuffix[0] != '+') {
+        return false;
+    }
+    const bare = plusSuffix[1..plusSuffix.len];
+    if (parsed.has_suffix) {
+        const ctSuffix = ct[parsed.suffix_start..(parsed.suffix_start + parsed.suffix_len)];
+        return tiEqIgnoreCase(ctSuffix, bare);
+    }
+    // Also match bare subtype equal to suffix name (e.g. "application/json" matches "+json")
+    const ctSub = ct[parsed.subtype_start..(parsed.subtype_start + parsed.subtype_len)];
+    return tiEqIgnoreCase(ctSub, bare);
+}
+
 pub fn stripParams(content_type: []const u8) -> []const u8 {
     let semi: usize = content_type.len;
     let i: usize = 0;
@@ -82,80 +84,72 @@ pub fn stripParams(content_type: []const u8) -> []const u8 {
         }
         i += 1;
     }
-    return trimSlice(content_type[0..semi]);
+    return tiTrimSlice(content_type[0..semi]);
 }
 
 pub fn normalizeType(short_or_mime: []const u8) -> []const u8 {
-    const s = trimSlice(short_or_mime);
-    if (eqIgnoreCase(s, "json")) { return "application/json"; }
-    if (eqIgnoreCase(s, "urlencoded")) { return "application/x-www-form-urlencoded"; }
-    if (eqIgnoreCase(s, "multipart")) { return "multipart/*"; }
-    if (eqIgnoreCase(s, "html")) { return "text/html"; }
-    if (eqIgnoreCase(s, "text")) { return "text/plain"; }
-    if (eqIgnoreCase(s, "xml")) { return "application/xml"; }
-    if (eqIgnoreCase(s, "js")) { return "text/javascript"; }
-    if (eqIgnoreCase(s, "css")) { return "text/css"; }
-    if (eqIgnoreCase(s, "bin")) { return "application/octet-stream"; }
+    const s = tiTrimSlice(short_or_mime);
+    if (tiEqIgnoreCase(s, "json")) { return "application/json"; }
+    if (tiEqIgnoreCase(s, "urlencoded")) { return "application/x-www-form-urlencoded"; }
+    if (tiEqIgnoreCase(s, "multipart")) { return "multipart/*"; }
+    if (tiEqIgnoreCase(s, "html")) { return "text/html"; }
+    if (tiEqIgnoreCase(s, "text")) { return "text/plain"; }
+    if (tiEqIgnoreCase(s, "xml")) { return "application/xml"; }
+    if (tiEqIgnoreCase(s, "js")) { return "text/javascript"; }
+    if (tiEqIgnoreCase(s, "css")) { return "text/css"; }
+    if (tiEqIgnoreCase(s, "bin")) { return "application/octet-stream"; }
     return s;
-}
-
-fn matchStructuredSuffix(ctSub: []const u8, plusSuffix: []const u8) -> bool {
-    if (plusSuffix.len < (2 as usize) || plusSuffix[0] != '+') {
-        return false;
-    }
-    // Match "vnd.api+json" or "problem+json"
-    if (endsWithIgnoreCase(ctSub, plusSuffix)) {
-        return true;
-    }
-    // Also match bare subtype equal to suffix name (e.g. "application/json" matches "+json")
-    const bare = plusSuffix[1..plusSuffix.len];
-    return eqIgnoreCase(ctSub, bare);
 }
 
 pub fn mimeMatch(content_type: []const u8, pattern: []const u8) -> bool {
     const ct = stripParams(content_type);
-    const ctSlash = findSingleSlash(ct);
-    if (ctSlash <= (0 as i64) || ((ctSlash as usize) + (1 as usize)) >= ct.len) {
+    const parsed = parse(ct);
+    if (!parsed.valid) {
         return false;
     }
-    const ctType = trimSlice(ct[0..(ctSlash as usize)]);
-    const ctSub = trimSlice(ct[((ctSlash as usize) + (1 as usize))..ct.len]);
-    if (ctType.len == (0 as usize) || ctSub.len == (0 as usize)) {
-        return false;
-    }
+    const ctType = ct[parsed.type_start..(parsed.type_start + parsed.type_len)];
+    const ctFullSub = ct[parsed.subtype_start..ct.len];
 
-    const patTrim = trimSlice(pattern);
+    const patTrim = tiTrimSlice(pattern);
     if (patTrim.len == (0 as usize)) {
         return false;
     }
-    if (isStar(patTrim)) {
+    if (tiIsStar(patTrim)) {
         return true;
     }
     // RFC 6839 structured suffix pattern like "+json", "+xml"
     if (patTrim[0] == '+') {
-        return matchStructuredSuffix(ctSub, patTrim);
+        return tiMatchStructuredSuffix(ct, parsed, patTrim);
     }
 
     const norm = normalizeType(patTrim);
-    const pSlash = findSingleSlash(norm);
+    if (testMediaType(norm)) {
+        const pParsed = parse(norm);
+        const pType = norm[pParsed.type_start..(pParsed.type_start + pParsed.type_len)];
+        const pFullSub = norm[pParsed.subtype_start..norm.len];
+        return tiEqIgnoreCase(pType, ctType) && tiEqIgnoreCase(pFullSub, ctFullSub);
+    }
+
+    // Wildcard or type/+suffix pattern (e.g. "image/*", "*/json", "*/*", "application/+json")
+    const pSlash = tiFindSingleSlash(norm);
     if (pSlash <= (0 as i64) || ((pSlash as usize) + (1 as usize)) >= norm.len) {
         return false;
     }
-    const pType = trimSlice(norm[0..(pSlash as usize)]);
-    const pSub = trimSlice(norm[((pSlash as usize) + (1 as usize))..norm.len]);
+    const pType = tiTrimSlice(norm[0..(pSlash as usize)]);
+    const pSub = tiTrimSlice(norm[((pSlash as usize) + (1 as usize))..norm.len]);
     if (pType.len == (0 as usize) || pSub.len == (0 as usize)) {
         return false;
     }
 
-    const typeOk = isStar(pType) || eqIgnoreCase(pType, ctType);
+    const typeOk = tiIsStar(pType) || tiEqIgnoreCase(pType, ctType);
     if (!typeOk) {
         return false;
     }
-    if (isStar(pSub) || eqIgnoreCase(pSub, ctSub)) {
+    if (tiIsStar(pSub) || tiEqIgnoreCase(pSub, ctFullSub)) {
         return true;
     }
     if (pSub[0] == '+') {
-        return matchStructuredSuffix(ctSub, pSub);
+        return tiMatchStructuredSuffix(ct, parsed, pSub);
     }
     return false;
 }
