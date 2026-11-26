@@ -1,0 +1,12 @@
+{
+  "name": "@cap/accept-header",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7231 HTTP Accept header parser and media-type negotiator with quality-factor & specificity ranking (clean-room port of Rust accept-header)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/negotiator": "1.0.0",
+    "@cap/unicase": "1.0.0"
+  }
+}

@@ -1032,3 +1032,11 @@
 - `packages/@cap/iso8601/` & `cap/test/testCapIso8601.cp`: crates.io #250 `iso8601`（4.5 亿+，完整日历/周/序数日期+时间+周期，6/6 PASS）。
 - `packages/@cap/rfc3339/` & `cap/test/testCapRfc3339.cp`: crates.io `rfc3339`（复用 `@cap/iso8601`，严格 RFC 3339 与 Unix Epoch 双向换算，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 115 全部 7 个官方包映射。
+
+### 2026-11-27 (Batch 116 — **突破 660 LIVE 官方 `.cap` 包！新增 `colorette`(1.5 亿+/周)+`npm-run-path`(1.4 亿+/周)+`parse-duration`+`mediatype`+`accept-header`**)
+- `packages/@cap/colorette/` & `cap/test/testCapColorette.cp`: npm Top 20 `colorette` v2（1.5 亿+/周，复用 `@cap/ansi-styles`，6/6 PASS）。
+- `packages/@cap/npm-run-path/` & `cap/test/testCapNpmRunPath.cp`: npm Top 30 `npm-run-path`（1.4 亿+/周，祖先 `.bin` 路径构建，6/6 PASS）。
+- `packages/@cap/parse-duration/` & `cap/test/testCapParseDuration.cp`: crates.io `parse_duration`（复合/小数时长解析格式化，6/6 PASS）。
+- `packages/@cap/mediatype/` & `cap/test/testCapMediatype.cp`: crates.io `mediatype`（双包复用 `@cap/media-typer`+`@cap/unicase`，6/6 PASS）。
+- `packages/@cap/accept-header/` & `cap/test/testCapAcceptHeader.cp`: crates.io `accept-header`（双包复用 `@cap/negotiator`+`@cap/unicase`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增 Batch 116 全部 5 个官方包映射（875 mappings）。

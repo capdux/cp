@@ -881,3 +881,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/num-iter`** | `packages/@cap/num-iter` | 对标 crates.io #140 `num-iter` v0.1 (**8.5 亿+**, 复用 `@cap/num-integer`) — 溢出安全 `RangeStep`/`RangeStepInclusive`/`RangeStepU64` 步进迭代器 |
 | **`@cap/iso8601`** | `packages/@cap/iso8601` | 对标 crates.io #250 `iso8601` (4.5 亿+) — 零堆 ISO-8601 日历/周/序数日期、时区时间、日期时间与 `P...T...` 周期解析格式化 |
 | **`@cap/rfc3339`** | `packages/@cap/rfc3339` | 对标 crates.io `rfc3339` (复用 `@cap/iso8601`) — 严格 RFC 3339 时间戳解析、O(1) Unix Epoch 双向换算与 UTC 格式化 |
+| **`@cap/colorette`** | `packages/@cap/colorette` | 对标 npm Top 20 `colorette` v2 (**1.5 亿+/周**, 复用 `@cap/ansi-styles`) — 零堆全套标准/亮色终端 ANSI 样式与 `NO_COLOR`/`TERM=dumb` 探测 |
+| **`@cap/npm-run-path`** | `packages/@cap/npm-run-path` | 对标 npm Top 30 `npm-run-path` (**1.4 亿+/周**) — 向上遍历祖先 `node_modules/.bin`/`cap_modules/.bin` 与跨平台 `PATH` 构建器 |
+| **`@cap/parse-duration`** | `packages/@cap/parse-duration` | 对标 crates.io `parse_duration` / `duration-str` — 零堆复合人类可读时长解析（含小数单位与 `µs`）与格式化 |
+| **`@cap/mediatype`** | `packages/@cap/mediatype` | 对标 crates.io `mediatype` (双包复用 `@cap/media-typer`+`@cap/unicase`) — 结构化 MIME 类型/参数表/`+suffix` 判定与规范化输出 |
+| **`@cap/accept-header`** | `packages/@cap/accept-header` | 对标 crates.io `accept-header` (双包复用 `@cap/negotiator`+`@cap/unicase`) — HTTP `Accept` 质量因子排序与最佳媒体类型协商 |

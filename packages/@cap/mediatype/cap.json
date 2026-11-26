@@ -1,0 +1,12 @@
+{
+  "name": "@cap/mediatype",
+  "ver": "1.0.0",
+  "description": "Zero-heap structured MIME MediaType parser, parameter store, essence/suffix extractor, and RFC 6838 formatter (crates.io mediatype equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/media-typer": "1.0.0",
+    "@cap/unicase": "1.0.0"
+  }
+}

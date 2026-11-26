@@ -10492,6 +10492,58 @@
         "humantime-rfc3339"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "colorette",
+      "source_repo": "https://github.com/jorgebucaran/colorette",
+      "license": "MIT",
+      "cp_target": "@cap/colorette",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "npm-run-path",
+      "source_repo": "https://github.com/sindresorhus/npm-run-path",
+      "license": "MIT",
+      "cp_target": "@cap/npm-run-path",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "parse_duration",
+      "source_repo": "https://github.com/zeta12ti/parse_duration",
+      "license": "MIT",
+      "cp_target": "@cap/parse-duration",
+      "kind": "package",
+      "aliases": [
+        "duration-str"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mediatype",
+      "source_repo": "https://github.com/picoHz/mediatype",
+      "license": "MIT",
+      "cp_target": "@cap/mediatype",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "accept-header",
+      "source_repo": "https://github.com/djc/accept-header",
+      "license": "MIT",
+      "cp_target": "@cap/accept-header",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

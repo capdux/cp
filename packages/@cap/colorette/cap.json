@@ -1,0 +1,11 @@
+{
+  "name": "@cap/colorette",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP terminal ANSI color formatter with nested close-code recovery (clean-room MIT implementation of npm colorette v2)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/ansi-styles": "1.0.0"
+  }
+}
