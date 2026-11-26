@@ -11589,6 +11589,136 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "esquery",
+      "source_repo": "https://github.com/estools/esquery",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/esquery",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "parse-json",
+      "source_repo": "https://github.com/sindresorhus/parse-json",
+      "license": "MIT",
+      "cp_target": "@cap/parse-json",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "proxy-from-env",
+      "source_repo": "https://github.com/Rob--W/proxy-from-env",
+      "license": "MIT",
+      "cp_target": "@cap/proxy-from-env",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "termtree",
+      "source_repo": "https://github.com/rust-cli/termtree",
+      "license": "MIT",
+      "cp_target": "@cap/termtree",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "litrs",
+      "source_repo": "https://github.com/LukasKalbertodt/litrs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/litrs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "compact_str",
+      "source_repo": "https://github.com/ParkMyCar/compact_str",
+      "license": "MIT",
+      "cp_target": "@cap/smol-str",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "toml_write",
+      "source_repo": "https://github.com/toml-rs/toml",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/toml-writer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "dotenvy",
+      "source_repo": "https://github.com/allan2/dotenvy",
+      "license": "MIT",
+      "cp_target": "cap:dotenv",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "der-parser",
+      "source_repo": "https://github.com/rusticata/der-parser",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/der",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "simple_asn1",
+      "source_repo": "https://github.com/acw/simple_asn1",
+      "license": "ISC",
+      "cp_target": "@cap/der",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "asn1-rs",
+      "source_repo": "https://github.com/rusticata/asn1-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/der",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pulldown-cmark",
+      "source_repo": "https://github.com/pulldown-cmark/pulldown-cmark",
+      "license": "MIT",
+      "cp_target": "cap:md",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "yaml-rust",
+      "source_repo": "https://github.com/chyh1990/yaml-rust",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "cap:yaml",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

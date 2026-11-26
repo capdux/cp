@@ -1045,3 +1045,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ieee754`** | `packages/@cap/ieee754` | 对标 npm **#293** `ieee754` (**1.73 亿/周**) — IEEE-754 f32/f64 大小端位级保真二进制读写（含 `-0.0`/`NaN`/`Inf`） |
 | **`@cap/env-filter`** | `packages/@cap/env-filter` | 对标 crates.io **#544** `env_filter` (**2.57 亿+**) — `RUST_LOG` 模块前缀最长匹配日志过滤引擎 |
 | **`@cap/wasm-encoder`** | `packages/@cap/wasm-encoder` | 对标 crates.io **#555** `wasm-encoder` (**2.48 亿+**) — Bytecode Alliance WebAssembly 1.0 二进制模块低层编码器 |
+| **`@cap/esquery`** | `packages/@cap/esquery` | 对标 npm **#247** `esquery` (**1.94 亿/周**) — ESLint 核心 AST CSS-like 选择器解析与匹配引擎 |
+| **`@cap/parse-json`** | `packages/@cap/parse-json` | 对标 npm **#254** `parse-json` (**1.92 亿/周**) — 带精准行列号、错误分类与代码帧渲染的 RFC 8259 JSON 诊断器 |
+| **`@cap/proxy-from-env`** | `packages/@cap/proxy-from-env` | 对标 npm **#303** `proxy-from-env` (**1.69 亿/周**) — `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` 代理路由与通配符绕过引擎 |
+| **`@cap/termtree`** | `packages/@cap/termtree` | 对标 crates.io **#575** `termtree` (**2.33 亿+**) — 零堆命令行 Unicode/ASCII 树状结构渲染器 |
+| **`@cap/litrs`** | `packages/@cap/litrs` | 对标 crates.io **#576** `litrs` (**2.32 亿+**) — Rust 字面量词法解析与转义还原器（含 `r#"..."#`） |

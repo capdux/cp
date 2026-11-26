@@ -1299,3 +1299,11 @@
 - `packages/@cap/env-filter/` & `cap/test/testCapEnvFilter.cp`: crates.io **#544** `env_filter`（2.57 亿+，6/6 PASS）。
 - `packages/@cap/wasm-encoder/` & `cap/test/testCapWasmEncoder.cp`: crates.io **#555** `wasm-encoder`（2.48 亿+，6/6 PASS）。
 - **零重复归并**：`#562 sha1_smol` → `@cap/sha1-crate`、`#563 ansi_term` → `cap:ansi`、`#568 predicates-core` → `@cap/predicates`；Worker N19 满 6 包光荣轮换为 Worker N20。
+
+### 2026-11-27 (Batch 147 — **正式突破 1,000 条上游映射里程碑！5 大真实 Top 榜核心包，30/30 PASS**)
+- `packages/@cap/esquery/` & `cap/test/testCapEsquery.cp`: npm **#247** `esquery`（1.94 亿/周，6/6 PASS）。
+- `packages/@cap/parse-json/` & `cap/test/testCapParseJson.cp`: npm **#254** `parse-json`（1.92 亿/周，6/6 PASS）。
+- `packages/@cap/proxy-from-env/` & `cap/test/testCapProxyFromEnv.cp`: npm **#303** `proxy-from-env`（1.69 亿/周，6/6 PASS）。
+- `packages/@cap/termtree/` & `cap/test/testCapTermtree.cp`: crates.io **#575** `termtree`（2.33 亿+，6/6 PASS）。
+- `packages/@cap/litrs/` & `cap/test/testCapLitrs.cp`: crates.io **#576** `litrs`（2.32 亿+，6/6 PASS）。
+- **零重复归并（8 项 2.1 亿~2.3 亿 crates.io 高频包）**：`compact_str`→`@cap/smol-str`、`toml_write`→`@cap/toml-writer`、`dotenvy`→`cap:dotenv`、`der-parser`/`simple_asn1`/`asn1-rs`→`@cap/der`、`pulldown-cmark`→`cap:md`、`yaml-rust`→`cap:yaml`；上游映射正式突破 **1,000 条（达 1,003 条）**！

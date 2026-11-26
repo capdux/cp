@@ -1,0 +1,23 @@
+{
+  "name": "@cap/parse-json",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8259 JSON diagnostic validator with line/column locations and codeFrame rendering (npm parse-json v8 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "parse-json",
+    "json",
+    "diagnostics",
+    "code-frame",
+    "validator",
+    "rfc8259",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "parse-json",
+    "repo": "https://github.com/sindresorhus/parse-json",
+    "license": "MIT"
+  }
+}
