@@ -1273,3 +1273,12 @@
 - `packages/@cap/utf-8/` & `cap/test/testCapUtf8.cp`: crates.io **#444** `utf-8`（3.32 亿+，6/6 PASS）。
 - `packages/@cap/ciborium-ll/` & `cap/test/testCapCiboriumLl.cp`: crates.io **#467** `ciborium-ll`（3.15 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 4 项新映射 + 将 npm **#153 `base64-js`（2.40 亿/周）** 归并至内置 `cap:encoding`，刷新极简速查手册。
+
+### 2026-11-27 (Batch 144 + **3 小时效率审计固化 Iteration 7** — **5 大真实 Top 榜核心包，30/30 PASS**)
+- `packages/@cap/jsesc/` & `cap/test/testCapJsesc.cp`: npm **#148** `jsesc`（2.50 亿/周，6/6 PASS）。
+- `packages/@cap/fast-uri/` & `cap/test/testCapFastUri.cp`: npm **#171** `fast-uri`（2.29 亿/周，同步归并 `#218 uri-js` 2.07 亿/周，6/6 PASS）。
+- `packages/@cap/path-parse/` & `cap/test/testCapPathParse.cp`: npm **#238** `path-parse`（1.96 亿/周，6/6 PASS）。
+- `packages/@cap/ctr/` & `cap/test/testCapCtr.cp`: crates.io **#509** `ctr`（2.84 亿+，复用 `@cap/aes`，NIST SP 800-38A F.5.1/F.5.5 向量 6/6 PASS）。
+- `packages/@cap/plotters-svg/` & `cap/test/testCapPlottersSvg.cp`: crates.io **#512** `plotters-svg`（2.81 亿+，6/6 PASS）。
+- **零重复归并**：`imurmurhash` (#211, 2.10 亿/周) → `@cap/murmur3`、`uri-js` (#218, 2.07 亿/周) → `@cap/fast-uri`、`eventemitter3` (#222, 2.04 亿/周) → `cap:event`。
+- `GEMINI.md` & `CP_PITFALLS.md`: 固化 3 小时效率审计 Iteration 7（`git push -q` 降噪 99.9%、实时真实榜单驱动、Python `-c` 零转义、`.toString`/`1.0e12`/`std.math.inf` 避坑）。

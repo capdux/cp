@@ -11335,6 +11335,88 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsesc",
+      "source_repo": "https://github.com/mathiasbynens/jsesc",
+      "license": "MIT",
+      "cp_target": "@cap/jsesc",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-uri",
+      "source_repo": "https://github.com/fastify/fast-uri",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/fast-uri",
+      "kind": "package",
+      "aliases": [
+        "uri-js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "uri-js",
+      "source_repo": "https://github.com/garycourt/uri-js",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/fast-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "imurmurhash",
+      "source_repo": "https://github.com/jensyt/imurmurhash-js",
+      "license": "MIT",
+      "cp_target": "@cap/murmur3",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "eventemitter3",
+      "source_repo": "https://github.com/primus/eventemitter3",
+      "license": "MIT",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-parse",
+      "source_repo": "https://github.com/jbgutierrez/path-parse",
+      "license": "MIT",
+      "cp_target": "@cap/path-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ctr",
+      "source_repo": "https://github.com/RustCrypto/block-modes",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/ctr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "plotters-svg",
+      "source_repo": "https://github.com/plotters-rs/plotters",
+      "license": "MIT",
+      "cp_target": "@cap/plotters-svg",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

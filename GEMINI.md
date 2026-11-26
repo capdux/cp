@@ -715,6 +715,11 @@ git status --porcelain cpc_dev/src
    - `scripts/sync_cpc.sh` 已统一注入 `RUSTFLAGS="${RUSTFLAGS:--Awarnings}"`，与 Rule 5 保持完全一致的 Cargo 编译指纹，彻底消除 `cargo check`/`cargo build` 与 `sync_cpc.sh` 交替执行时触发全量依赖重编与 120s 超时重试（同时节省 2 轮重试上下文 Token）。
 10. **词法器 `Lexer Error` 限流与批量自检静默（实测将 `cap from` 批量解析日志从 219 KB 压至 ~260 B，降幅 99.9%，2026-11-25 Iteration 6）**：
     - `cpc/src/lexer.rs` 对单文件 `Lexer Error` stderr 输出实施 5 条上限封顶并支持 `QUIET_LEXER` 原子静默；`cpc/src/migrate/mod.rs` 批量 `check_cp_parse` 自动开启静默模式，彻底杜绝大批量解析时百 KB 级无用刷屏污染上下文。
+11. **`git push -q` 静默推送 + 实时真实榜单驱动 + 单行 Python 零转义铁律（2026-11-27 3 小时审计固化 Iteration 7）**：
+    - **`git push -q` 降噪 99.9%**：所有推送统一使用 `git push -q origin main && echo "PUSH_OK"`，将 ~11KB 进度条刷屏压缩为 7 字节；单测验收统一加 `| tail -n 8` 过滤横幅；
+    - **真实下载量实时榜单驱动**：使用 `scripts/fetch_real_top700.py` 拉取 `crates.io/api/v1/crates?sort=downloads` 与 `wooorm/npm-high-impact` + `api.npmjs.org` 实时榜单落盘 `temp/real_top700_*.json`，所有派发严格按差集真实下载量降序执行，杜绝凭记忆估算下载量或吸收低下载长尾包浪费算力；
+    - **单行 `python3 -c '...'` 零反斜杠转义铁律**：禁止在单行 Python f-string 内写 `\"` 转义（Python 3.12 必报 `SyntaxError` 浪费整轮重试），统一改用 `"%s" % (d["k"],)` 格式化；
+    - **CP 1-Pass Codegen 新增 3 条一遍过避坑**：① 结构体方法避免命名为 `.toString(...)`（会被 `cpc` sema 固定推断返回 `string`，写入缓冲返回长度统一命名 `.writeTo(out): usize`）；② 科学计数法字面量必须带小数点（写 `1.0e12` 而非 `1e12`）；③ 浮点无穷/NaN 严禁写编译期 `1.0 / 0.0`，统一使用 `std.math.inf(f64)` / `std.math.nan(f64)`。
 
 ---
 

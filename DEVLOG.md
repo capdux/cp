@@ -504,3 +504,7 @@
 
 ## 2026-11-27: Batch 143 真实 Top 榜 4 大核心包全 6/6 PASS（官方 `@cap` 达 **753 包**，映射 **965 条**）！
 - 交付 npm **#200 `whatwg-mimetype`（2.15 亿/周）**、**#201 `esutils`（2.15 亿/周）** 与 crates.io **#444 `utf-8`（3.32 亿+）**、**#467 `ciborium-ll`（3.15 亿+）**，同时将 npm **#153 `base64-js`（2.40 亿/周）** 无重复映射至内置 `cap:encoding`，24/24 单测首轮一遍过 100% PASS。
+
+## 2026-11-27: Batch 144 + 3 小时效率审计固化 Iteration 7（官方 `@cap` 达 **757 包**，映射 **973 条**）！
+- 交付 npm **#148 `jsesc`（2.50 亿/周）**、**#171 `fast-uri`（2.29 亿/周，归并 `#218 uri-js`）**、**#238 `path-parse`（1.96 亿/周）** 与 crates.io **#509 `ctr`（2.84 亿+，复用 `@cap/aes`，NIST 官方向量全过）**、**#512 `plotters-svg`（2.81 亿+）**，同步零重复归并 `#211 imurmurhash` 与 `#222 eventemitter3`；30/30 单测 100% PASS。
+- 完成 3 小时效率与 Token 审计并固化 Iteration 7 至 `GEMINI.md` 与 `CP_PITFALLS.md`（`git push -q`、实时榜单驱动、Python `-c` 零转义及 3 条 1-pass codegen 避坑）。

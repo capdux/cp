@@ -1029,3 +1029,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/esutils`** | `packages/@cap/esutils` | 对标 npm **#201** `esutils` (**2.15 亿/周**) — ECMAScript 关键字/保留字/标识符/行终止符判定工具集 |
 | **`@cap/utf-8`** | `packages/@cap/utf-8` | 对标 crates.io **#444** `utf-8` (**3.32 亿+**) — 零拷贝增量流式 UTF-8 解码器与 RFC 3629 错误诊断 |
 | **`@cap/ciborium-ll`** | `packages/@cap/ciborium-ll` | 对标 crates.io **#467** `ciborium-ll` (**3.15 亿+**) — RFC 8949 低层流式 CBOR 编解码原语（含不定长与浮点） |
+| **`@cap/jsesc`** | `packages/@cap/jsesc` | 对标 npm **#148** `jsesc` (**2.50 亿/周**) — Mathias Bynens/Babel JS/JSON 字符串安全转义引擎 |
+| **`@cap/fast-uri`** | `packages/@cap/fast-uri` | 对标 npm **#171** `fast-uri` (**2.29 亿/周**, 归并 `#218 uri-js`) — Fastify/AJV RFC 3986 极速 URI 解析与相对解析 |
+| **`@cap/path-parse`** | `packages/@cap/path-parse` | 对标 npm **#238** `path-parse` (**1.96 亿/周**) — 零拷贝 POSIX/Win32 `path.parse()` 拆解引擎 |
+| **`@cap/ctr`** | `packages/@cap/ctr` | 对标 crates.io **#509** `ctr` (**2.84 亿+**, 复用 `@cap/aes`) — NIST SP 800-38A AES-128/256-CTR 流加密与 O(1) `seek` |
+| **`@cap/plotters-svg`** | `packages/@cap/plotters-svg` | 对标 crates.io **#512** `plotters-svg` (**2.81 亿+**) — 零堆纯 CP 矢量 SVG 绘图后端 |

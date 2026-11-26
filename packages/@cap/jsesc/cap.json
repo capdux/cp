@@ -1,0 +1,14 @@
+{
+  "name": "@cap/jsesc",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation JavaScript & JSON string escaper with ES6 code point, script-context, and minimal modes (clean-room MIT implementation of npm jsesc v3, #148 / 250M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "jsesc",
+    "repo": "https://github.com/mathiasbynens/jsesc",
+    "license": "MIT"
+  }
+}
