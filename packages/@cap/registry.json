@@ -11923,6 +11923,70 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "split2",
+      "source_repo": "https://github.com/mcollina/split2",
+      "license": "ISC",
+      "cp_target": "@cap/split2",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "xml-name-validator",
+      "source_repo": "https://github.com/jsdom/xml-name-validator",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/xml-name-validator",
+      "kind": "package",
+      "aliases": [
+        "xmlchars"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "xmlchars",
+      "source_repo": "https://github.com/lddubeau/xmlchars",
+      "license": "MIT",
+      "cp_target": "@cap/xml-name-validator",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-potential-custom-element-name",
+      "source_repo": "https://github.com/mathiasbynens/is-potential-custom-element-name",
+      "license": "MIT",
+      "cp_target": "@cap/is-potential-custom-element-name",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand_hc",
+      "source_repo": "https://github.com/rust-random/rand",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/rand-hc",
+      "kind": "package",
+      "aliases": [
+        "rand-hc"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "getopts",
+      "source_repo": "https://github.com/rust-lang/getopts",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/getopts",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

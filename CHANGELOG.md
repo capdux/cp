@@ -1323,3 +1323,11 @@
 - `packages/@cap/utf16-iter/` & `cap/test/testCapUtf16Iter.cp`: crates.io **#621** `utf16_iter`（2.08 亿+，6/6 PASS）。
 - `packages/@cap/vec-map/` & `cap/test/testCapVecMap.cp`: crates.io **#660** `vec_map`（1.92 亿+，6/6 PASS）。
 - **零重复归并（7 项高频包）**：`events`→`cap:event`、`ip-address`→`@cap/ipaddr`、`get-east-asian-width`→`@cap/is-fullwidth-code-point`、`sax`→`@cap/saxes`、`owo-colors`→`cap:ansi`、`base64-simd`→`cap:encoding`、`gif`→`cap:gif`；Worker N20 满 6 包光荣轮换为 Worker N21。
+
+### 2026-11-27 (Batch 150 里程碑 — **5 大真实 Top 榜核心包：npm #351/#356/#407 + crates.io #664/#668，30/30 PASS，官方 `@cap` 达 790 包！**)
+- `packages/@cap/split2/` & `cap/test/testCapSplit2.cp`: npm **#351** `split2`（1.50 亿/周，6/6 PASS）。
+- `packages/@cap/xml-name-validator/` & `cap/test/testCapXmlNameValidator.cp`: npm **#356** `xml-name-validator`（1.48 亿/周，同步覆盖 `#354 xmlchars`，6/6 PASS）。
+- `packages/@cap/is-potential-custom-element-name/` & `cap/test/testCapIsPotentialCustomElementName.cp`: npm **#407** `is-potential-custom-element-name`（1.32 亿/周，6/6 PASS）。
+- `packages/@cap/rand-hc/` & `cap/test/testCapRandHc.cp`: crates.io **#664** `rand_hc`（1.91 亿+，eSTREAM 官方向量一致，6/6 PASS）。
+- `packages/@cap/getopts/` & `cap/test/testCapGetopts.cp`: crates.io **#668** `getopts`（1.89 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 6 项映射（含 `xmlchars`）并刷新极简速查手册。

@@ -523,3 +523,6 @@
 
 ## 2026-11-27: Batch 149 六大真实 Top 榜核心包全 6/6 PASS（官方 `@cap` 达 **783 包**，映射 **1,023 条**）！
 - 交付 npm **#327 `cjs-module-lexer`**、**#329 `html-encoding-sniffer`**、**#345 `d3-array`**、**#400 `d3-path`** 与 crates.io **#621 `utf16_iter`**、**#660 `vec_map`**，同步零重复归并 7 个高频包；36/36 单测 100% PASS；Worker N20 满 6 包（36/36 PASS）轮换为 Worker N21。
+
+## 2026-11-27: Batch 150 里程碑！五大真实 Top 榜核心包全 6/6 PASS（官方 `@cap` 达 **790 包**，映射 **1,029 条**）！
+- 交付 npm **#351 `split2`**、**#356 `xml-name-validator`（含 `#354 xmlchars`）**、**#407 `is-potential-custom-element-name`** 与 crates.io **#664 `rand_hc`（eSTREAM 官方向量精确命中）**、**#668 `getopts`**，30/30 单测 100% PASS。

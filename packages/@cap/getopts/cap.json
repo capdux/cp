@@ -1,0 +1,23 @@
+{
+  "name": "@cap/getopts",
+  "version": "1.0.0",
+  "description": "Zero-allocation POSIX/GNU command-line option parser (short flags, clustered flags, --opt=val, -- separator, required options) in pure CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "getopts",
+    "cli",
+    "args",
+    "argv",
+    "options",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "getopts",
+    "repo": "https://github.com/rust-lang/getopts",
+    "license": "MIT OR Apache-2.0"
+  }
+}

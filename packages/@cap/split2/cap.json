@@ -1,0 +1,23 @@
+{
+  "name": "@cap/split2",
+  "version": "1.0.0",
+  "description": "Zero-allocation streaming line splitter across arbitrary chunk boundaries (LF & CRLF) in pure CP",
+  "license": "ISC",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "split",
+    "split2",
+    "stream",
+    "lines",
+    "newline",
+    "crlf",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "split2",
+    "repo": "https://github.com/mcollina/split2",
+    "license": "ISC"
+  }
+}

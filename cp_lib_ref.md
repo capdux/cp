@@ -1060,3 +1060,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/d3-path`** | `packages/@cap/d3-path` | 对标 npm **#400** `d3-path` (**1.34 亿/周**) — Canvas2D 风格 SVG 路径 `d` 属性序列化构造器 |
 | **`@cap/utf16-iter`** | `packages/@cap/utf16-iter` | 对标 crates.io **#621** `utf16_iter` (**2.08 亿+**) — ICU4X 零堆双向 UTF-16 码点迭代器与代理对解码 |
 | **`@cap/vec-map`** | `packages/@cap/vec-map` | 对标 crates.io **#660** `vec_map` (**1.92 亿+**) — 128-bit 位图 O(1) 小整数键稀疏映射表 |
+| **`@cap/split2`** | `packages/@cap/split2` | 对标 npm **#351** `split2` (**1.50 亿/周**) — 零堆跨分片流式行切分器（`\n`/`\r\n`/溢出保护） |
+| **`@cap/xml-name-validator`** | `packages/@cap/xml-name-validator` | 对标 npm **#356** `xml-name-validator` (**1.48 亿/周**, 含 `#354 xmlchars`) — W3C XML 1.0 `Char`/`Name`/`NCName`/`QName` 校验 |
+| **`@cap/is-potential-custom-element-name`** | `packages/@cap/is-potential-custom-element-name` | 对标 npm **#407** `is-potential-custom-element-name` (**1.32 亿/周**) — WHATWG HTML §4.13.2 自定义元素名校验 |
+| **`@cap/rand-hc`** | `packages/@cap/rand-hc` | 对标 crates.io **#664** `rand_hc` (**1.91 亿+**) — eSTREAM HC-128 密码学流密码 PRNG（官方向量精确一致） |
+| **`@cap/getopts`** | `packages/@cap/getopts` | 对标 crates.io **#668** `getopts` (**1.89 亿+**) — Rust 官方 POSIX/GNU 命令行选项解析器 |

@@ -1,0 +1,23 @@
+{
+  "name": "@cap/rand-hc",
+  "version": "1.0.0",
+  "description": "Zero-allocation HC-128 eSTREAM cryptographic stream cipher PRNG (Hongjun Wu specification) in pure CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "rand",
+    "hc128",
+    "csprng",
+    "prng",
+    "estream",
+    "crypto",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_hc",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT OR Apache-2.0"
+  }
+}
