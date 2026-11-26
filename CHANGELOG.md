@@ -1307,3 +1307,10 @@
 - `packages/@cap/termtree/` & `cap/test/testCapTermtree.cp`: crates.io **#575** `termtree`（2.33 亿+，6/6 PASS）。
 - `packages/@cap/litrs/` & `cap/test/testCapLitrs.cp`: crates.io **#576** `litrs`（2.32 亿+，6/6 PASS）。
 - **零重复归并（8 项 2.1 亿~2.3 亿 crates.io 高频包）**：`compact_str`→`@cap/smol-str`、`toml_write`→`@cap/toml-writer`、`dotenvy`→`cap:dotenv`、`der-parser`/`simple_asn1`/`asn1-rs`→`@cap/der`、`pulldown-cmark`→`cap:md`、`yaml-rust`→`cap:yaml`；上游映射正式突破 **1,000 条（达 1,003 条）**！
+
+### 2026-11-27 (Batch 148 — **4 大真实 Top 榜核心包：npm #306/#314 + crates.io #583/#601，24/24 PASS**)
+- `packages/@cap/saxes/` & `cap/test/testCapSaxes.cp`: npm **#306** `saxes`（1.68 亿/周，6/6 PASS）。
+- `packages/@cap/doctrine/` & `cap/test/testCapDoctrine.cp`: npm **#314** `doctrine`（1.66 亿/周，6/6 PASS）。
+- `packages/@cap/aes-gcm/` & `cap/test/testCapAesGcm.cp`: crates.io **#583** `aes-gcm`（2.29 亿+，双包复用 `@cap/aes`+`@cap/ghash-gf128`，NIST SP 800-38D 6 组官方向量全过，6/6 PASS）。
+- `packages/@cap/oid-registry/` & `cap/test/testCapOidRegistry.cp`: crates.io **#601** `oid-registry`（2.21 亿+，6/6 PASS）。
+- **零重复归并**：`#335 tldts-core` → `@cap/publicsuffix`、`#337 json-parse-even-better-errors` → `@cap/parse-json`、`#341 data-urls` → `@cap/data-uri`；Worker C18 满 6 包光荣轮换。

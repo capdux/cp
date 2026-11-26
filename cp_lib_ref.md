@@ -1050,3 +1050,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/proxy-from-env`** | `packages/@cap/proxy-from-env` | 对标 npm **#303** `proxy-from-env` (**1.69 亿/周**) — `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` 代理路由与通配符绕过引擎 |
 | **`@cap/termtree`** | `packages/@cap/termtree` | 对标 crates.io **#575** `termtree` (**2.33 亿+**) — 零堆命令行 Unicode/ASCII 树状结构渲染器 |
 | **`@cap/litrs`** | `packages/@cap/litrs` | 对标 crates.io **#576** `litrs` (**2.32 亿+**) — Rust 字面量词法解析与转义还原器（含 `r#"..."#`） |
+| **`@cap/saxes`** | `packages/@cap/saxes` | 对标 npm **#306** `saxes` (**1.68 亿/周**) — 零堆流式 SAX XML 1.0 事件解析、标签闭合校验与实体解码 |
+| **`@cap/doctrine`** | `packages/@cap/doctrine` | 对标 npm **#314** `doctrine` (**1.66 亿/周**) — ESLint JSDoc `@param`/`@returns`/`@type`/`@deprecated` 解析器 |
+| **`@cap/aes-gcm`** | `packages/@cap/aes-gcm` | 对标 crates.io **#583** `aes-gcm` (**2.29 亿+**, 双包复用 `@cap/aes`+`@cap/ghash-gf128`) — NIST SP 800-38D AES-128/256-GCM AEAD |
+| **`@cap/oid-registry`** | `packages/@cap/oid-registry` | 对标 crates.io **#601** `oid-registry` (**2.21 亿+**) — 36 项 X.509/PKCS/TLS/NIST OID 静态表与 DER 编解码 |

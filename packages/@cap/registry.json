@@ -11719,6 +11719,76 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "saxes",
+      "source_repo": "https://github.com/lddubeau/saxes",
+      "license": "ISC",
+      "cp_target": "@cap/saxes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "doctrine",
+      "source_repo": "https://github.com/eslint/doctrine",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/doctrine",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tldts-core",
+      "source_repo": "https://github.com/remusao/tldts",
+      "license": "MIT",
+      "cp_target": "@cap/publicsuffix",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json-parse-even-better-errors",
+      "source_repo": "https://github.com/npm/json-parse-even-better-errors",
+      "license": "MIT",
+      "cp_target": "@cap/parse-json",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "data-urls",
+      "source_repo": "https://github.com/jsdom/data-urls",
+      "license": "MIT",
+      "cp_target": "@cap/data-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aes-gcm",
+      "source_repo": "https://github.com/RustCrypto/AEADs",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/aes-gcm",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "oid-registry",
+      "source_repo": "https://github.com/rusticata/oid-registry",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/oid-registry",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
