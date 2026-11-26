@@ -710,3 +710,12 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ghash-gf128`** | `packages/@cap/ghash-gf128` | 对标 crates.io `universal-hash` / `ghash` (2.91 亿) — NIST SP 800-38D 无分支 GF(2^128) GHASH 认证器 |
 | **`@cap/hkdf-sha256`** | `packages/@cap/hkdf-sha256` | 对标 crates.io `hkdf` (2.5 亿+，跨包复用 `@cap/cookie-signature`) — RFC 5869 HKDF-SHA256 密钥派生 |
 | **`@cap/atoi`** | `packages/@cap/atoi` | 对标 crates.io `atoi` (2.62 亿) — 字节切片零堆溢出安全多进制整数解析 |
+| **`@cap/pbkdf2-sha256`** | `packages/@cap/pbkdf2-sha256` | 对标 crates.io `pbkdf2`（跨包复用 `@cap/cookie-signature`）— RFC 7914 PBKDF2-HMAC-SHA256 密钥派生 |
+| **`@cap/iri-string`** | `packages/@cap/iri-string` | 对标 crates.io #540 `iri-string` (2.65 亿) — RFC 3986/3987 零堆 IRI/URI 解析与相对引用归约 |
+| **`@cap/fast-deep-equal`** | `packages/@cap/fast-deep-equal` | 对标 npm `fast-deep-equal` (2 亿+/周) — 键序无关深层 JSON 相等比较与类型判定 |
+| **`@cap/poly1305`** | `packages/@cap/poly1305` | 对标 crates.io #550 `poly1305` (2.5 亿+，跨包复用 `@cap/subtle-ct`) — RFC 8439 §2.5 恒定时间 Poly1305 MAC |
+| **`@cap/unicode-properties`** | `packages/@cap/unicode-properties` | 对标 crates.io #530 `unicode-properties` (2.69 亿) — UAX #31 标识符、Unicode White_Space、UTS #51 Emoji 属性 |
+| **`@cap/chacha20-poly1305`** | `packages/@cap/chacha20-poly1305` | 对标 crates.io #520 `chacha20poly1305` (2.8 亿+，3 包组合复用 `@cap/poly1305`+`@cap/chacha-rng`+`@cap/subtle-ct`) — RFC 8439 & XChaCha20-Poly1305 AEAD |
+| **`@cap/slice-ansi`** | `packages/@cap/slice-ansi` | 对标 npm Top 100 `slice-ansi` (1.2 亿+/周，跨包复用 `@cap/anstyle-parse`+`@cap/unicode-width`) — ANSI 样式保活列宽切片与截断 |
+| **`@cap/has-flag`** | `packages/@cap/has-flag` | 对标 npm Top 50 `has-flag` (2.5 亿+/周) — POSIX `--` 感知 CLI 标志检测与 `--no-flag` 覆盖 |
+| **`@cap/toidentifier`** | `packages/@cap/toidentifier` | 对标 npm Top 80 `toidentifier` (9000 万+/周，`http-errors` 核心依赖) — 零堆标识符转换（Pascal/camel/CONST） |

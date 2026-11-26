@@ -1,0 +1,9 @@
+{
+  "name": "@cap/has-flag",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Check if CLI argv contains a specific flag (clean-room CP implementation of npm has-flag)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

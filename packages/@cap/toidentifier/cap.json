@@ -1,0 +1,9 @@
+{
+  "name": "@cap/toidentifier",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Convert a string of words to a PascalCase/camelCase identifier (clean-room CP implementation of npm toidentifier)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

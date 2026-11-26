@@ -778,3 +778,16 @@
 - `packages/@cap/hkdf-sha256/` & `cap/test/testCapHkdfSha256.cp`: crates.io `hkdf`（复用 `@cap/cookie-signature`，通过 RFC 5869 全 3 组官方向量，6/6 PASS）。
 - `packages/@cap/atoi/` & `cap/test/testCapAtoi.cp`: crates.io `atoi`（2.62 亿下载，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **790 条**双生态高频映射（**npm=395 / crates.io=395 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 89 — **800 映射终极里程碑 400/400 绝对对称！** 9 个全新零堆包全部 6/6 PASS + 规则固化入 `GEMINI.md`)
+- `GEMINI.md`: 固化第 9 条（子智能体 6~8 包轻量定时轮换防上下文膨胀与 Token 激增）与第 10 条（每波闭环交付、git push 及 LIVE 发布铁律）。
+- `packages/@cap/pbkdf2-sha256/` & `cap/test/testCapPbkdf2Sha256.cp`: crates.io `pbkdf2`（跨包复用 `@cap/cookie-signature`，通过 RFC 7914 全 4 组官方向量，6/6 PASS）。
+- `packages/@cap/iri-string/` & `cap/test/testCapIriString.cp`: crates.io #540 `iri-string`（2.65 亿下载，RFC 3986 §5.4 官方向量，6/6 PASS）。
+- `packages/@cap/fast-deep-equal/` & `cap/test/testCapFastDeepEqual.cp`: npm `fast-deep-equal`（2 亿+/周，6/6 PASS）。
+- `packages/@cap/poly1305/` & `cap/test/testCapPoly1305.cp`: crates.io #550 `poly1305`（跨包复用 `@cap/subtle-ct`，RFC 8439 §2.5.2 官方向量，6/6 PASS）。
+- `packages/@cap/unicode-properties/` & `cap/test/testCapUnicodeProperties.cp`: crates.io #530 `unicode-properties`（2.69 亿下载，UAX #31/UTS #51，6/6 PASS）。
+- `packages/@cap/chacha20-poly1305/` & `cap/test/testCapChacha20Poly1305.cp`: crates.io #520 `chacha20poly1305`（2.8 亿+，3 包组合复用 `@cap/poly1305`+`@cap/chacha-rng`+`@cap/subtle-ct`，通过 RFC 8439 §2.8.2 & XChaCha20 §2.2.1 官方向量，6/6 PASS）。
+- `packages/@cap/slice-ansi/` & `cap/test/testCapSliceAnsi.cp`: npm Top 100 `slice-ansi`（1.2 亿+/周，跨包复用 `@cap/anstyle-parse`+`@cap/unicode-width`，6/6 PASS）。
+- `packages/@cap/has-flag/` & `cap/test/testCapHasFlag.cp`: npm Top 50 `has-flag`（2.5 亿+/周，6/6 PASS）。
+- `packages/@cap/toidentifier/` & `cap/test/testCapToidentifier.cp`: npm Top 80 `toidentifier`（9000 万+/周，6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **800 条**双生态高频映射（**npm=400 / crates.io=400 绝对 1:1 对称**，官方 `.cap` 包 515+）。

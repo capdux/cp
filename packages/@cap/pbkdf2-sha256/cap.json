@@ -1,0 +1,11 @@
+{
+  "name": "@cap/pbkdf2-sha256",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 2898 / RFC 8018 PBKDF2-HMAC-SHA256 password-based key derivation and constant-time verification",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/cookie-signature": "^1.0.0"
+  }
+}

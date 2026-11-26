@@ -3,7 +3,7 @@
   "description": "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages absorbed from npm and crates.io.",
   "capdux_registry_url": "https://registry.capdux.org/v1/registry.json",
   "github_raw_url": "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json",
-  "updated_at": "2026-11-26",
+  "updated_at": "2026-11-27",
   "entries": [
     {
       "source_registry": "npm",
@@ -9646,6 +9646,110 @@
       "kind": "package",
       "aliases": [
         "anes"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-deep-equal",
+      "source_repo": "https://github.com/epoberezkin/fast-deep-equal",
+      "license": "MIT",
+      "cp_target": "@cap/fast-deep-equal",
+      "kind": "package",
+      "aliases": [
+        "deep-equal",
+        "dequal"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "slice-ansi",
+      "source_repo": "https://github.com/chalk/slice-ansi",
+      "license": "MIT",
+      "cp_target": "@cap/slice-ansi",
+      "kind": "package",
+      "aliases": [
+        "cli-truncate"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "has-flag",
+      "source_repo": "https://github.com/sindresorhus/has-flag",
+      "license": "MIT",
+      "cp_target": "@cap/has-flag",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "toidentifier",
+      "source_repo": "https://github.com/dougwilson/toidentifier",
+      "license": "MIT",
+      "cp_target": "@cap/toidentifier",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pretty-ms",
+      "source_repo": "https://github.com/sindresorhus/pretty-ms",
+      "license": "MIT",
+      "cp_target": "@cap/pretty-ms",
+      "kind": "package",
+      "aliases": [
+        "humanize-duration"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "iri-string",
+      "source_repo": "https://github.com/lo48576/iri-string",
+      "license": "MIT",
+      "cp_target": "@cap/iri-string",
+      "kind": "package",
+      "aliases": [
+        "fluent-uri"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "poly1305",
+      "source_repo": "https://github.com/RustCrypto/universal-hashes",
+      "license": "MIT",
+      "cp_target": "@cap/poly1305",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-properties",
+      "source_repo": "https://github.com/unicode-rs/unicode-properties",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-properties",
+      "kind": "package",
+      "aliases": [
+        "unicode-xid"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "chacha20poly1305",
+      "source_repo": "https://github.com/RustCrypto/AEADs",
+      "license": "MIT",
+      "cp_target": "@cap/chacha20-poly1305",
+      "kind": "package",
+      "aliases": [
+        "chacha20",
+        "aead"
       ],
       "absorbed_at": "2026-11-27"
     }

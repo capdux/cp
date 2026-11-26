@@ -715,7 +715,6 @@ git status --porcelain cpc_dev/src
 10. **词法器 `Lexer Error` 限流与批量自检静默（实测将 `cap from` 批量解析日志从 219 KB 压至 ~260 B，降幅 99.9%，2026-11-25 Iteration 6）**：
     - `cpc/src/lexer.rs` 对单文件 `Lexer Error` stderr 输出实施 5 条上限封顶并支持 `QUIET_LEXER` 原子静默；`cpc/src/migrate/mod.rs` 批量 `check_cp_parse` 自动开启静默模式，彻底杜绝大批量解析时百 KB 级无用刷屏污染上下文。
 
-
 ---
 
 ## 六、 CP 内置库（`lib/`）与 `@cap` 生态吸收指南（病毒式生态自我繁衍规范，2026-11-26）
@@ -724,10 +723,10 @@ git status --porcelain cpc_dev/src
 
 ### 1. 双层架构分层准则（杜绝重复与生态爆炸）
 
-| 层级 | 目录与导入方式 | 准入标准 | 典型示例 |
-| :--- | :--- | :--- | :--- |
-| **内置核心标准库** | `lib/<mod>/` (`import ... from "cap:<mod>"`) | **零 C 依赖、基础通用、被引用极广的底座能力**（编解码、哈希/校验、时间/单位、MIME/HTTP 基础头、通用协议原语）。凡发现被高频依赖的通用集成包，应吸收沉淀入 `lib/` 丰富 CP 底座。 | `cap:json`, `cap:cbor`, `cap:codec`, `cap:crypto`, `cap:hash` (`crc32c`), `cap:time` (`human`), `cap:bytes`, `cap:mime`, `cap:etag`, `cap:sri`, `cap:slugify`, `cap:logfmt`, `cap:rate`, `cap:ulid`, `cap:jsonc` |
-| **可选安装包** | `packages/@cap/<pkg>/` (`import ... from "@cap/<pkg>"`) | **① 原生 C/C++ 绑定库**（`@c` FFI + 预编译矩阵）；**② 大型独立领域引擎/框架级纯 CP 包**（独立数据结构、算法引擎、复杂解析器/渲染器/中间件），不适合塞入核心 stdlib，按需安装。 | 原生绑定：`@cap/duckdb`, `@cap/llama`, `@cap/opencv`, `@cap/zstd`；纯 CP 引擎：`@cap/lru`, `@cap/qs`, `@cap/retry`, `@cap/diff`, `@cap/template` |
+| 层级               | 目录与导入方式                                          | 准入标准                                                                                                                                                                        | 典型示例                                                                                                                                                                                                         |
+| :----------------- | :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **内置核心标准库** | `lib/<mod>/` (`import ... from "cap:<mod>"`)            | **零 C 依赖、基础通用、被引用极广的底座能力**（编解码、哈希/校验、时间/单位、MIME/HTTP 基础头、通用协议原语）。凡发现被高频依赖的通用集成包，应吸收沉淀入 `lib/` 丰富 CP 底座。 | `cap:json`, `cap:cbor`, `cap:codec`, `cap:crypto`, `cap:hash` (`crc32c`), `cap:time` (`human`), `cap:bytes`, `cap:mime`, `cap:etag`, `cap:sri`, `cap:slugify`, `cap:logfmt`, `cap:rate`, `cap:ulid`, `cap:jsonc` |
+| **可选安装包**     | `packages/@cap/<pkg>/` (`import ... from "@cap/<pkg>"`) | **① 原生 C/C++ 绑定库**（`@c` FFI + 预编译矩阵）；**② 大型独立领域引擎/框架级纯 CP 包**（独立数据结构、算法引擎、复杂解析器/渲染器/中间件），不适合塞入核心 stdlib，按需安装。  | 原生绑定：`@cap/duckdb`, `@cap/llama`, `@cap/opencv`, `@cap/zstd`；纯 CP 引擎：`@cap/lru`, `@cap/qs`, `@cap/retry`, `@cap/diff`, `@cap/template`                                                                 |
 
 - **去重与融合原则（防生态爆炸）**：
   - 吸收前**必须先检索** `packages/@cap/registry.json` 与 `lib/`、`packages/@cap/`、`packages/@web/`；
@@ -765,3 +764,20 @@ git status --porcelain cpc_dev/src
   2. **合规与元数据检查**：拉取 registry 元数据，校验开源协议白名单（拒绝 GPL/AGPL），解析运行依赖列表 `dependencies`（忽略 `devDependencies`）；
   3. **递归独立转化依赖**：对尚未在索引中的运行依赖，逐个独立转化为 `@cap/<dep>` 并回写索引；
   4. **生成与自愈校验**：按 CP 规范生成目标包骨架/转译代码、`cap.json`、`index.d.cp`、`README.md` 与测试文件，执行 `--verify` 编译校验闭环，并登记至 `packages/@cap/registry.json`。
+
+## 库吸收补充
+
+1. 拿到npm 和 crates平台包的真实下载量, 把npm 和 crate 前 700名的包及其依赖包全部吸收尽量.
+2. 这些包的引用包, 要作为独立包, 一并导入, 比如一个包引用了3个其他包, 我们要把这3个包, 单独吸收到@cap,等于一共 4个包.
+3. 之前已经吸收的, 如果没有这样做, 需重新分离为该模式, 作为独立包, 因为独立包同时会被其他包引用,避免代码重复.
+4. 你自己思考判断, 做好从 npm 和 crate 吸收优良资产任务, 不要混乱, 不要重复, 确保cp 中生态完整, 用户无论从 ts 或 rust 迁移到 cp, 常用的包, cp 都有, 5.
+5. 确保吸收后功能完整没有残缺遗漏, 确保包的质量, "做多不做薄, 性能优化".
+6. 你是库专家, 充分发挥你的专业能力, 做好这件至关重要的事情, 让前期你辛苦完成的cp, 发扬光大!
+7. 确保开启并三个子智能体,与主智能体一起工作, 主智能体不可空闲等待,也不可陷入长时间任务. 子智能体收回后立刻新发, 确保三个子智能体在线.
+8. 每波吸收后, 更新文档, 及时git提交并push, 固化成果， 然后继续下一波, 不要停, 完成两个平台排名各前700包及其依赖包.
+9. **子智能体轻量定时轮换规则（防上下文膨胀与 Token 激增）**：
+   - 每个子智能体在连续完成 **6~8 个包**（或运行上下文显著增长）后，主智能体必须在交付当前包后立即调用 `manage_subagents(Action="kill")` 回收旧子智能体，并同步通过 `invoke_subagent` 派生全新的零历史子智能体顶替上岗；
+   - 轮换期间始终保持 **3 路子智能体 + 1 路主智能体（共 4 路并行）** 满载运行，严禁长期让单一子智能体累积数百轮工具日志导致每轮重传海量 Token；
+   - 若某子智能体长时间卡死无响应（如超过预期时间无进展），主智能体可主动检查其状态并果断 `kill` 重建新路，避免算力空转。
+10. **每波闭环交付与 LIVE 发布铁律**：
+    - 每波吸收完工后按序执行：① 更新 `packages/@cap/registry.json`（保持 npm / crates.io 1:1 均衡，补齐所有独立依赖映射）、`cp_lib_ref.md`、`CHANGELOG.md`、`DEVLOG.md`（日常严禁读写万行 `cp_ref.md`）；② 精确 `git add` + `git commit` + `git push origin main` 固化成果（严禁提交或泄露任何 API Token/凭据）；③ 后台异步触发 `https://registry.capdux.org` LIVE 发布并持续推进下一波，永不中断。
