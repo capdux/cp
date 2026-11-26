@@ -1654,6 +1654,106 @@
       "kind": "stdlib",
       "aliases": ["uuid-rs"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cross-spawn",
+      "source_repo": "https://github.com/moxystudio/node-cross-spawn",
+      "license": "MIT",
+      "cp_target": "cap:shell",
+      "kind": "stdlib",
+      "aliases": ["execa"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "undici",
+      "source_repo": "https://github.com/nodejs/undici",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["got", "superagent"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "acorn",
+      "source_repo": "https://github.com/acornjs/acorn",
+      "license": "MIT",
+      "cp_target": "cap:js",
+      "kind": "stdlib",
+      "aliases": ["esprima"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "resolve",
+      "source_repo": "https://github.com/browserify/resolve",
+      "license": "MIT",
+      "cp_target": "cap:resolver",
+      "kind": "stdlib",
+      "aliases": ["enhanced-resolve"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fs-extra",
+      "source_repo": "https://github.com/jprichardson/node-fs-extra",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": ["mkdirp", "rimraf"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "node-fetch",
+      "source_repo": "https://github.com/node-fetch/node-fetch",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["axios"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chokidar",
+      "source_repo": "https://github.com/paulmillr/chokidar",
+      "license": "MIT",
+      "cp_target": "cap:watcher",
+      "kind": "stdlib",
+      "aliases": ["notify"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "http-errors",
+      "source_repo": "https://github.com/jshttp/http-errors",
+      "license": "MIT",
+      "cp_target": "@cap/http-errors",
+      "kind": "package",
+      "aliases": ["problem-details", "rfc9457"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "parse5",
+      "source_repo": "https://github.com/inikulin/parse5",
+      "license": "MIT",
+      "cp_target": "cap:html",
+      "kind": "stdlib",
+      "aliases": ["htmlparser2", "cheerio"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "encodeurl",
+      "source_repo": "https://github.com/pillarjs/encodeurl",
+      "license": "MIT",
+      "cp_target": "cap:url",
+      "kind": "stdlib",
+      "aliases": ["parseurl"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

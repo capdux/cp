@@ -231,3 +231,7 @@
 - `packages/@cap/json-schema/` & `cap/test/testCapJsonSchema.cp`: 零堆 JSON Schema Draft-07/2020-12 校验引擎（对标 npm `ajv` **542.0M/wk** & `zod` **467.6M/wk**，6/6 PASS）。
 - `packages/@cap/css-units/` & `cap/test/testCapCssUnits.cp`: 26 种 CSS 维度单位解析与换算引擎（对标 npm `postcss-value-parser`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **165 条**高频映射（新增 `ajv`/`source-map`/`which`/`p-limit`/`postcss`/`postcss-value-parser`/`find-up`/`ws`/`js-yaml`/`uuid`）。
+
+## [2026-11-26] - Batch 26 严格单调递减吸收 npm 3.61 亿 → 2.42 亿/周 Top 10（`@cap/http-errors` + 9 项亿级去重映射）
+- `packages/@cap/http-errors/` & `cap/test/testCapHttpErrors.cp`: 16 个标准 4xx/5xx 快捷构造器、可重试判定与 RFC 9457 `problem+json` 序列化（对标 npm `http-errors` **253.4M/wk**，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **175 条**高频映射（新增 `cross-spawn`/`undici`/`acorn`/`resolve`/`fs-extra`/`node-fetch`/`chokidar`/`http-errors`/`parse5`/`encodeurl`）。

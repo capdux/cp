@@ -344,3 +344,4 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/wrap-ansi`** | `packages/@cap/wrap-ansi` | 对标 npm `wrap-ansi`/`slice-ansi`（6.15 亿/周）— 零堆 ANSI 样式栈跨行续接折行、CJK 双宽与按列切片 |
 | **`@cap/json-schema`** | `packages/@cap/json-schema` | 对标 npm `ajv`/`zod`（5.42 亿/周）— 零堆 RFC 8259 + JSON Schema 类型/长度/区间/必填键/枚举白名单校验引擎 |
 | **`@cap/css-units`** | `packages/@cap/css-units` | 对标 npm `postcss-value-parser`/`css-unit-converter` — 26 种 CSS 长度/角度/时间/分辨率单位解析与 px/deg/ms 换算 |
+| **`@cap/http-errors`** | `packages/@cap/http-errors` | 对标 npm `http-errors`（2.53 亿/周）— 标准 4xx/5xx 构造器、expose 泄漏防护与 RFC 9457 `problem+json` 零堆序列化 |

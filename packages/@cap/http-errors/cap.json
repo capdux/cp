@@ -1,0 +1,8 @@
+{
+  "name": "@cap/http-errors",
+  "ver": "1.0.0",
+  "description": "Zero-allocation HTTP 4xx/5xx error constructors and RFC 9457 application/problem+json serializer for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

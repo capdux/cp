@@ -140,3 +140,6 @@
 
 ## 2026-11-26: Batch 25 严格单调递减完成 npm 5.42 亿 → 3.99 亿/周 Top 10
 - 交付 `@cap/json-schema`（5.42 亿/周, 6/6 PASS）与 `@cap/css-units`（6/6 PASS），完成 `source-map`/`which`/`p-limit`/`postcss`/`find-up`/`ws`/`js-yaml`/`uuid` 8 项亿级资产去重直连，`registry.json` 突破 **165 条**。
+
+## 2026-11-26: Batch 26 严格单调递减完成 npm 3.61 亿 → 2.42 亿/周 Top 10
+- 交付 `@cap/http-errors`（2.53 亿/周, 6/6 PASS），完成 `cross-spawn`/`undici`/`acorn`/`resolve`/`fs-extra`/`node-fetch`/`chokidar`/`parse5`/`encodeurl` 9 项亿级资产去重直连，`registry.json` 突破 **175 条**。
