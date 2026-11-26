@@ -1,0 +1,8 @@
+{
+  "name": "@cap/basic-auth",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 7617 HTTP Basic Authentication parser, encoder, constant-time verifier, and WWW-Authenticate challenge formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

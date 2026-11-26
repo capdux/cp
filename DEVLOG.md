@@ -234,3 +234,6 @@
 
 ## 2026-11-26: Batch 56 双生态 6 大高频新包全 6/6 PASS，线上官方 `.cap` 包冲刺 **309+ 个**、总映射 **475 条**！
 - 交付 `@cap/etag`（2.1 亿/周，6/6）、`@cap/bytes`（2.0 亿/周，6/6）、`@cap/media-type`（2.0 亿/周，6/6）、`@cap/stomp`（6/6）、`@cap/iban`（6/6）、`@cap/isbn`（6/6），去重直连 `tsconfig-paths`/`tar`/`fast-xml-parser`/`forwarded-header-value`，双生态精准达到 **npm=235 vs crates.io=240**！
+
+## 2026-11-26: Batch 57 HTTP 核心六件套全 6/6 PASS，线上官方 `.cap` 包冲刺 **314+ 个**！
+- 交付 `@cap/qs-lite`（2.4 亿/周，6/6）、`@cap/statuses`（2.3 亿/周，6/6）、`@cap/basic-auth`（1.3 亿/周，6/6）、`@cap/cookie-jar`（7500 万/周，6/6）、`@cap/bearer-auth`（6/6）、`@cap/server-timing`（6/6），直连 `date-fns`/`http-auth-basic`/`cookie_store`/`serde_urlencoded`！

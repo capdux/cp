@@ -499,3 +499,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/stomp`** | `packages/@cap/stomp` | 对标 npm `@stomp/stompjs` / Rust `stomp` — STOMP 1.2 WebSocket/MQ 文本消息帧零拷贝编解码（支持含 NUL body 与心跳） |
 | **`@cap/iban`** | `packages/@cap/iban` | 对标 npm `ibantools` / Rust `iban_validate` — ISO 13616 88 国 IBAN 国际银行账号 Mod-97 校验、格式化与校验位生成 |
 | **`@cap/isbn`** | `packages/@cap/isbn` | 对标 npm `isbn3` / Rust `isbn` — ISO 2108 ISBN-10/ISBN-13/ISSN/EAN-13 校验与 10/13 互转 |
+| **`@cap/qs-lite`** | `packages/@cap/qs-lite` | 对标 npm `qs` / `query-string` / Rust `serde_urlencoded` — 零堆 `application/x-www-form-urlencoded` 解析、查找与序列化 |
+| **`@cap/statuses`** | `packages/@cap/statuses` | 对标 npm `statuses` / Rust `http::StatusCode` — 62 个 IANA 标准 HTTP 状态码 O(log N) 查询、短语反查与分类判定 |
+| **`@cap/basic-auth`** | `packages/@cap/basic-auth` | 对标 npm `basic-auth` / Rust `http-auth-basic` — RFC 7617 Basic 认证零堆编解码、恒定时间比对与质询头生成 |
+| **`@cap/cookie-jar`** | `packages/@cap/cookie-jar` | 对标 npm `tough-cookie` / Rust `cookie_store` — RFC 6265 域/路径防伪造匹配、`Set-Cookie` 解析与 `Cookie` 头组装 |
+| **`@cap/bearer-auth`** | `packages/@cap/bearer-auth` | 对标 npm `express-bearer-token` / Rust `axum-extra` — RFC 6750 Bearer Token 提取、JWT 预检与恒定时间校验 |
+| **`@cap/server-timing`** | `packages/@cap/server-timing` | 对标 npm/Rust `server-timing` — W3C `Server-Timing` 性能追踪响应头零堆解析、格式化与总耗时汇总 |

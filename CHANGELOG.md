@@ -479,3 +479,12 @@
 - `packages/@cap/iban/` & `cap/test/testCapIban.cp`: ISO 13616 88 国 IBAN Mod-97 校验与格式化（6/6 PASS）。
 - `packages/@cap/isbn/` & `cap/test/testCapIsbn.cp`: ISBN-10/13/ISSN/EAN-13 校验与互转（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **475 条**高频映射（**npm=235 / crates.io=240** 1:1 均衡，含亿级 `tsconfig-paths`/`tar`/`fast-xml-parser`/`forwarded-header-value` 去重直连）。
+
+## [2026-11-26] - Batch 57 HTTP 认证/状态/查询/Cookie 六件套（`@cap/qs-lite`, `@cap/statuses`, `@cap/basic-auth`, `@cap/cookie-jar`, `@cap/bearer-auth`, `@cap/server-timing`）全 6/6 PASS！
+- `packages/@cap/qs-lite/` & `cap/test/testCapQsLite.cp`: 零堆 URL 查询字符串解析与序列化（6/6 PASS）。
+- `packages/@cap/statuses/` & `cap/test/testCapStatuses.cp`: 62 个 IANA HTTP 状态码二分查询与分类判定（6/6 PASS）。
+- `packages/@cap/basic-auth/` & `cap/test/testCapBasicAuth.cp`: RFC 7617 Basic 认证编解码与恒定时间校验（6/6 PASS）。
+- `packages/@cap/cookie-jar/` & `cap/test/testCapCookieJar.cp`: RFC 6265 Cookie 域/路径匹配与组装（6/6 PASS）。
+- `packages/@cap/bearer-auth/` & `cap/test/testCapBearerAuth.cp`: RFC 6750 Bearer Token 提取与 JWT 预检（6/6 PASS）。
+- `packages/@cap/server-timing/` & `cap/test/testCapServerTiming.cp`: W3C `Server-Timing` 响应性能头编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 同步扩充并升级 `qs`/`statuses`/`basic-auth`/`tough-cookie`/`express-bearer-token`/`server-timing`/`date-fns`/`http-auth-basic`/`cookie_store`/`serde_urlencoded` 映射。

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bearer-auth",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 6750 HTTP Bearer token extractor, JWT structure precheck, constant-time verifier, and WWW-Authenticate challenge formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bearer", "auth", "rfc6750", "jwt", "http", "www-authenticate", "constant-time", "zero-alloc"]
+}

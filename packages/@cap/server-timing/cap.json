@@ -1,0 +1,9 @@
+{
+  "name": "@cap/server-timing",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation W3C Server-Timing HTTP response header parser and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["server-timing", "http", "w3c", "performance", "observability", "tracing", "zero-alloc"]
+}

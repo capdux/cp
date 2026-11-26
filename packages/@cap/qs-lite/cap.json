@@ -1,0 +1,10 @@
+{
+  "name": "@cap/qs-lite",
+  "version": "1.0.0",
+  "description": "Zero-heap application/x-www-form-urlencoded query string parser, lookup, and percent-encoding serializer for CP (compatible with npm qs, query-string & Rust serde_urlencoded)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["qs", "query-string", "urlencoded", "http", "url", "form"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/qs-lite"
+}

@@ -241,7 +241,7 @@
       "source_name": "qs",
       "source_repo": "https://github.com/ljharb/qs",
       "license": "MIT",
-      "cp_target": "@cap/qs",
+      "cp_target": "@cap/qs-lite",
       "kind": "package",
       "aliases": [
         "serde_qs",
@@ -892,7 +892,7 @@
       "source_name": "statuses",
       "source_repo": "https://github.com/jshttp/statuses",
       "license": "MIT",
-      "cp_target": "@cap/http-status",
+      "cp_target": "@cap/statuses",
       "kind": "package",
       "aliases": [
         "http-status-codes",
@@ -5960,6 +5960,110 @@
       "aliases": [
         "@iarna/toml",
         "smol-toml"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "basic-auth",
+      "source_repo": "https://github.com/jshttp/basic-auth",
+      "license": "MIT",
+      "cp_target": "@cap/basic-auth",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tough-cookie",
+      "source_repo": "https://github.com/salesforce/tough-cookie",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/cookie-jar",
+      "kind": "package",
+      "aliases": [
+        "cookiejar"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "express-bearer-token",
+      "source_repo": "https://github.com/tkellen/js-express-bearer-token",
+      "license": "MIT",
+      "cp_target": "@cap/bearer-auth",
+      "kind": "package",
+      "aliases": [
+        "bearer-token"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "server-timing",
+      "source_repo": "https://github.com/yosuke-furukawa/server-timing",
+      "license": "MIT",
+      "cp_target": "@cap/server-timing",
+      "kind": "package",
+      "aliases": [
+        "server-timing-header"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "date-fns",
+      "source_repo": "https://github.com/date-fns/date-fns",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": [
+        "dayjs",
+        "luxon"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "http-auth-basic",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/basic-auth",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cookie_store",
+      "source_repo": "https://github.com/pfernie/cookie_store",
+      "license": "MIT",
+      "cp_target": "@cap/cookie-jar",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lodash",
+      "source_repo": "https://github.com/lodash/lodash",
+      "license": "MIT",
+      "cp_target": "@cap/dot-prop",
+      "kind": "package",
+      "aliases": [
+        "lodash-es",
+        "underscore"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "xml2js",
+      "source_repo": "https://github.com/Leonidas-from-XIV/node-xml2js",
+      "license": "MIT",
+      "cp_target": "cap:xml",
+      "kind": "stdlib",
+      "aliases": [
+        "xmlbuilder"
       ],
       "absorbed_at": "2026-11-26"
     }

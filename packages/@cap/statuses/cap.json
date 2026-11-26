@@ -1,0 +1,8 @@
+{
+  "name": "@cap/statuses",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 9110 / IANA HTTP status code lookup, reason phrases, reverse lookup, and category predicates (npm statuses parity).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
