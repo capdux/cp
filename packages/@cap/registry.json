@@ -13087,6 +13087,64 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "https-proxy-agent",
+      "source_repo": "https://github.com/TooTallNate/proxy-agents",
+      "license": "MIT",
+      "cp_target": "@cap/https-proxy-agent",
+      "kind": "package",
+      "aliases": [
+        "http-proxy-agent",
+        "agent-base"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "immer",
+      "source_repo": "https://github.com/immerjs/immer",
+      "license": "MIT",
+      "cp_target": "@cap/immer-patches",
+      "kind": "package",
+      "aliases": [
+        "immer-patches"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pkg-types",
+      "source_repo": "https://github.com/unjs/pkg-types",
+      "license": "MIT",
+      "cp_target": "@cap/pkg-types",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "trough",
+      "source_repo": "https://github.com/wooorm/trough",
+      "license": "MIT",
+      "cp_target": "@cap/trough",
+      "kind": "package",
+      "aliases": [
+        "unified",
+        "zwitch"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "webpack-sources",
+      "source_repo": "https://github.com/webpack/webpack-sources",
+      "license": "MIT",
+      "cp_target": "@cap/webpack-sources",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

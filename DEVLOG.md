@@ -549,3 +549,6 @@
 
 ### 2026-11-26 — Batch 156 开发日志（839 `@cap/*` 包）
 - 三路并行交付 `object-inspect`（#136, 262.6M/wk）、`file-entry-cache`（#221, 205.6M/wk）、`optionator`（#234, 196.4M/wk）、`levn`（#240, 195.2M/wk）、`istanbul-lib-coverage`（#539, 106.2M/wk），全部通过 `cpc emit-types` 与 6/6 `cap test`；`sync_session_audit.py --check` 校验 0 遗漏。
+
+### 2026-11-26 — Batch 157 开发日志（844 `@cap/*` 包）
+- 三路并行交付 `https-proxy-agent`（#60, 386.9M/wk）、`immer-patches`（#593）、`pkg-types`（#595）、`trough`（#653）、`webpack-sources`（#687），全部一次通过 `cpc emit-types` 与 6/6 `cap test`。

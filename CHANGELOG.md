@@ -1367,3 +1367,7 @@
 ### 2026-11-26 — Batch 156（npm Real Top 700 `#136..#539`：+5 `@cap/*` 包 + 3 条零重复映射，总计 839 `@cap/*`）
 - 新增 `packages/@cap/{object-inspect,file-entry-cache,optionator,levn,istanbul-lib-coverage}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 1,134）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 157（npm Real Top 700 `#60..#687`：+5 `@cap/*` 包，总计 844 `@cap/*`）
+- 新增 `packages/@cap/{https-proxy-agent,immer-patches,pkg-types,trough,webpack-sources}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 更新 `packages/@cap/registry.json`（总映射 1,139）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

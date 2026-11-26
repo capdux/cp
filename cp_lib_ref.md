@@ -1137,3 +1137,11 @@ const h = cap.hash.wyhash("hello");
 - `@cap/levn` (`npm:levn` #240, MIT) — 轻量值标记（Light Value Notation）标量/列表/对象解析器。
 - `@cap/istanbul-lib-coverage` (`npm:istanbul-lib-coverage` #539, BSD-3-Clause) — 代码覆盖率统计、合并与 LCOV 编解码器（覆盖 `istanbul-reports`/`istanbul-lib-report`）。
 - 零重复映射：`event-target-shim`→`cap:event`、`jsonfile`→`cap:json`、`write-file-atomic`→`cap:fs`。
+
+### Batch 157 — npm Real Top 700 (`#60..#687`, 5 packages; 844 `@cap/*`!)
+
+- `@cap/https-proxy-agent` (`npm:https-proxy-agent` #60, MIT) — HTTP/HTTPS 代理 URL 解析与 RFC 9110 `CONNECT` 隧道请求构造器（覆盖 `http-proxy-agent`/`agent-base`）。
+- `@cap/immer-patches` (`npm:immer` #593, MIT) — 结构化状态补丁（Add/Replace/Remove）、Undo 逆向补丁与 RFC 6901 JSON Pointer 编解码器。
+- `@cap/pkg-types` (`npm:pkg-types` #595, MIT) — `package.json`/`cap.json` 清单字段零分配解析与包名规范校验器。
+- `@cap/trough` (`npm:trough` #653, MIT) — 零堆中间件流水线执行引擎与标签分发器（覆盖 `unified`/`zwitch`）。
+- `@cap/webpack-sources` (`npm:webpack-sources` #687, MIT) — 零堆源码拼接与区间替换渲染器（`ReplaceSource`/`concatSources`）。
