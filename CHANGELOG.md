@@ -977,3 +977,12 @@
 - `packages/@cap/qs-parse/` & `cap/test/testCapQsParse.cp`: npm Top 22 `qs` v6（2 亿+/周，双包复用 `@cap/serde-qs`+`@cap/percent-encoding`，6/6 PASS）。
 - `packages/@cap/base64-url/` & `cap/test/testCapBase64Url.cp`: npm `base64url` v3（7000 万+/周，复用 `@cap/data-encoding`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 109 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 110 — 5 大前端解析/模板与分布式 ID 顶流包全 6/6 PASS + 3 小时审计固化 `GEMINI.md` 第 11 条！)
+- `packages/@cap/acorn-parse/` & `cap/test/testCapAcornParse.cp`: npm Top 25 `acorn` v8（1.8 亿+/周，ES2024 词法分析与 ESM 扫描，6/6 PASS）。
+- `packages/@cap/parse5/` & `cap/test/testCapParse5.cp`: npm Top 28 `parse5` v7（1.7 亿+/周，WHATWG HTML5 流式词法器，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/handlebars-tpl/` & `cap/test/testCapHandlebarsTpl.cp`: npm Top 75 `handlebars` v4（6500 万+/周，复用 `@cap/escape-html`，6/6 PASS）。
+- `packages/@cap/ulid-crate/` & `cap/test/testCapUlidCrate.cp`: crates.io Top-290 `ulid` v1（3.8 亿+，128 位 Crockford Base32 ULID，6/6 PASS）。
+- `packages/@cap/cuid2/` & `cap/test/testCapCuid2.cp`: npm `@paralleldrive/cuid2`（复用 `@cap/fnv-hash`，6/6 PASS）。
+- `GEMINI.md`: 每 3 小时效率审计固化第 11 条（首轮一遍过 CP 编码清单，减少反复编译试错 Token 损耗）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 110 全部 5 个官方包映射。

@@ -1,8 +1,11 @@
 {
   "name": "@cap/cuid2",
   "ver": "1.0.0",
-  "description": "Zero-allocation deterministic collision-resistant Cuid2 generator and validator with built-in SHA-256 and Base36 encoding (@paralleldrive/cuid2 / Rust cuid2 parity) for CP",
+  "license": "MIT",
+  "description": "Zero-heap collision-resistant, URL-safe, lowercase CUID2 ID generator and validator (clean-room port of npm @paralleldrive/cuid2)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "dependencies": {
+    "@cap/fnv-hash": "1.0.0"
+  }
 }

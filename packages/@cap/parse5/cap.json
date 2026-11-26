@@ -1,0 +1,11 @@
+{
+  "name": "@cap/parse5",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap WHATWG HTML5 streaming tokenizer, attribute extractor, and text stripper (clean-room port of npm parse5)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
+}

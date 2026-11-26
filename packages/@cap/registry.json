@@ -124,12 +124,12 @@
       "source_name": "ulid",
       "source_repo": "https://github.com/dylanhart/ulid-rs",
       "license": "MIT",
-      "cp_target": "@cap/ulid",
+      "cp_target": "@cap/ulid-crate",
       "kind": "package",
       "aliases": [
         "ulid-npm"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -282,7 +282,7 @@
       "source_name": "handlebars",
       "source_repo": "https://github.com/handlebars-lang/handlebars.js",
       "license": "MIT",
-      "cp_target": "@cap/template",
+      "cp_target": "@cap/handlebars-tpl",
       "kind": "package",
       "aliases": [
         "mustache",
@@ -290,7 +290,7 @@
         "tera",
         "handlebars-rust"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2207,12 +2207,12 @@
       "source_name": "acorn",
       "source_repo": "https://github.com/acornjs/acorn",
       "license": "MIT",
-      "cp_target": "cap:js",
-      "kind": "stdlib",
+      "cp_target": "@cap/acorn-parse",
+      "kind": "package",
       "aliases": [
         "esprima"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2281,13 +2281,13 @@
       "source_name": "parse5",
       "source_repo": "https://github.com/inikulin/parse5",
       "license": "MIT",
-      "cp_target": "cap:html",
-      "kind": "stdlib",
+      "cp_target": "@cap/parse5",
+      "kind": "package",
       "aliases": [
         "htmlparser2",
         "cheerio"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",

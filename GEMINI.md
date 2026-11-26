@@ -781,3 +781,8 @@ git status --porcelain cpc_dev/src
    - 若某子智能体长时间卡死无响应（如超过预期时间无进展），主智能体可主动检查其状态并果断 `kill` 重建新路，避免算力空转。
 10. **每波闭环交付与 LIVE 发布铁律**：
     - 每波吸收完工后按序执行：① 更新 `packages/@cap/registry.json`（保持 npm / crates.io 1:1 均衡，补齐所有独立依赖映射）、`cp_lib_ref.md`、`CHANGELOG.md`、`DEVLOG.md`（日常严禁读写万行 `cp_ref.md`）；② 精确 `git add` + `git commit` + `git push origin main` 固化成果（严禁提交或泄露任何 API Token/凭据）；③ 后台异步触发 `https://registry.capdux.org` LIVE 发布并持续推进下一波，永不中断。
+11. **首轮一遍过 CP 编码清单（每 3 小时审计固化 — 大幅降低试错 Token 消耗）**：
+    - 严禁使用 `var`、`self.`、`this.` 以及 CP/Zig 保留标识符（`dec`、`from`、`align`）作为变量/参数/字段名；
+    - 结构体无 receiver 工厂方法一律声明 `pub static fn`，只读实例方法省略 `_`，变更方法声明 `*_`，字段名不与方法名重名；
+    - 高位 `u64` 字面量（`>= 0x8000_0000_0000_0000`）用 `((hi as u64) << 32) | (lo as u64)` 构造，非负有符号除法先转 `u64`；
+    - 单测统一使用 `fn main() { test("...", () => { expect_eq(...); }); }`，私有辅助函数一律加 3~4 字符包前缀防模块展平冲突。

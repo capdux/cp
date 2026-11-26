@@ -845,3 +845,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/hex-crate`** | `packages/@cap/hex-crate` | 对标 crates.io #45 `hex` (15 亿+，跨包复用 `@cap/data-encoding`) — 十六进制编解码、`0x` 前缀解析与校验 |
 | **`@cap/qs-parse`** | `packages/@cap/qs-parse` | 对标 npm Top 22 `qs` v6 (2 亿+/周，双包复用 `@cap/serde-qs`+`@cap/percent-encoding`) — 4 种数组格式嵌套查询串编解码 |
 | **`@cap/base64-url`** | `packages/@cap/base64-url` | 对标 npm `base64url` v3 (7000 万+/周，跨包复用 `@cap/data-encoding`) — RFC 4648 §5 无填充 Base64URL 编解码与互转 |
+| **`@cap/handlebars-tpl`** | `packages/@cap/handlebars-tpl` | 对标 npm Top 75 `handlebars` v4 (6500 万+/周，跨包复用 `@cap/escape-html`) — 零堆 Handlebars 模板与内置 helper 引擎 |
+| **`@cap/acorn-parse`** | `packages/@cap/acorn-parse` | 对标 npm Top 25 `acorn` v8 (1.8 亿+/周) — 零堆 ES2024 JavaScript 词法分析器、括号平衡校验与 ESM import 提取器 |
+| **`@cap/parse5`** | `packages/@cap/parse5` | 对标 npm Top 28 `parse5` v7 (1.7 亿+/周，跨包复用 `@cap/unicase`) — 零堆 WHATWG HTML5 流式词法器与属性/纯文本提取 |
+| **`@cap/ulid-crate`** | `packages/@cap/ulid-crate` | 对标 crates.io Top-290 `ulid` v1 (3.8 亿+) — 128 位字典序可排序 ULID Crockford Base32 编解码与单调递增 |
+| **`@cap/cuid2`** | `packages/@cap/cuid2` | 对标 npm `@paralleldrive/cuid2` (跨包复用 `@cap/fnv-hash`) — 零堆 URL 安全防碰撞小写 CUID2 生成与校验器 |
