@@ -1,0 +1,12 @@
+{
+  "name": "@cap/chalk",
+  "ver": "1.0.0",
+  "description": "Zero-allocation terminal string styling library (npm chalk v5 parity) with automatic color level detection & Truecolor/256/16/plain downsampling for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "@cap/ansi-styles": "1.0.0",
+    "@cap/supports-color": "1.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@cap/icu-normalizer",
+  "ver": "1.0.0",
+  "description": "Zero-allocation UAX #15 Unicode NFC / NFD / NFKC / NFKD normalization, canonical combining class ordering, Hangul algorithmic (de)composition, and Latin/compatibility mappings (ICU4X icu_normalizer parity) in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "keywords": ["icu", "icu4x", "unicode", "normalization", "nfc", "nfd", "nfkc", "nfkd", "uax15", "zero-alloc"]
+}

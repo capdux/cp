@@ -752,3 +752,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ansi-styles`** | `packages/@cap/ansi-styles` | 对标 npm Top 10 `ansi-styles` (4 亿+/周，跨包复用 `@cap/color-convert`→`@cap/color-name`) — SGR 16/256/Truecolor 终端样式原语 |
 | **`@cap/tinystr`** | `packages/@cap/tinystr` | 对标 crates.io #260 `tinystr` (5.5 亿+) — ICU4X 栈内定长紧凑 ASCII 字符串 (`TinyAsciiStr4/8/16`) 与整字打包 |
 | **`@cap/icu-locid`** | `packages/@cap/icu-locid` | 对标 crates.io #255 `icu_locid`/`icu_locale_core` (5.5 亿+，跨包复用 `@cap/tinystr`) — UTS #35 / BCP-47 语言标签解析与 Likely Subtags |
+| **`@cap/yargs`** | `packages/@cap/yargs` | 对标 npm Top 30 `yargs` (3 亿+/周，3 包复用 `@cap/yargs-parser`+`@cap/cliui`+`@cap/y18n`) — 命令/选项/别名/多列帮助 CLI 框架 |
+| **`@cap/chalk`** | `packages/@cap/chalk` | 对标 npm Top 5 `chalk` (5 亿+/周，6 包深度复用链 `@cap/ansi-styles`+`@cap/supports-color`) — 终端 0/1/2/3 级自动降级着色器 |
+| **`@cap/minimatch`** | `packages/@cap/minimatch` | 对标 npm Top 8 `minimatch` (4 亿+/周，跨包复用 `@cap/micromatch`+`@cap/picomatch`) — 完整兼容选项的 Glob 匹配与批量过滤 |
+| **`@cap/ignore`** | `packages/@cap/ignore` | 对标 npm Top 22 `ignore` (2.5 亿+/周，跨包复用 `@cap/minimatch`+`@cap/normalize-path`) — `.gitignore` 规范规则引擎 |
+| **`@cap/icu-normalizer`** | `packages/@cap/icu-normalizer` | 对标 crates.io #270 `icu_normalizer` (5.3 亿+) — UAX #15 NFC/NFD/NFKC/NFKD 规范化与韩文全音节算法分解合成 |
+| **`@cap/idna-uts46`** | `packages/@cap/idna-uts46` | 对标 crates.io #120 `idna` (9.5 亿+，跨包复用 `@cap/icu-normalizer`+`@cap/punycode`) — UTS #46 & RFC 3492 国际化域名编解码 |

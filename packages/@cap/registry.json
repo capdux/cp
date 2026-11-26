@@ -10045,6 +10045,28 @@
         "icu_locale_core"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yargs",
+      "source_repo": "https://github.com/yargs/yargs",
+      "license": "MIT",
+      "cp_target": "@cap/yargs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "idna",
+      "source_repo": "https://github.com/servo/rust-url",
+      "license": "MIT",
+      "cp_target": "@cap/idna-uts46",
+      "kind": "package",
+      "aliases": [
+        "idna_adapter"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

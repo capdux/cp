@@ -1,0 +1,12 @@
+{
+  "name": "@cap/ignore",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap .gitignore specification rule engine (clean-room CP implementation of npm ignore)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/minimatch": "1.0.0",
+    "@cap/normalize-path": "1.0.0"
+  }
+}

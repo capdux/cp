@@ -352,3 +352,7 @@
 ## 2026-11-27: Batch 94 结单 `capsurf_agy` 阻塞工单 + 6 个超重磅零堆包全 6/6 PASS！
 - 修复 `task-capsurf-20261126-css-boxshadow-e0207`：定位根因为单文件模式下 `cpc` 将 `cap:css` 的 60+ 子模块全部扁平化后统一送入 `Analyzer::analyze_module`，导致跨子模块私有 `const PI`/`HEX_LOWER` 与方法签名互相覆盖引发 35 条 E0207/E0214/E0216 误报；通过在 `CapHubResolution` 追踪 `root_item_indices` 并用 `register_imported_decl/var` 预注册导入符号、仅对根模块执行完整语义检查，彻底根除误报并发布 release 编译器，实测 `capsurf` CSS 单元测试全部 4/4 PASS 并结单通知下游。
 - 同步交付 6 个顶级生态包（`picomatch`、`micromatch`、`yargs-parser`、`ansi-styles`、`tinystr`、`icu-locid`），合计覆盖超 23 亿下载生态，全部 6/6 PASS。
+
+## 2026-11-27: Batch 95 六大 Top-30 旗舰包全 6/6 PASS — 官方 `.cap` 包突破 **554+**！
+- 一次性收割 npm Top 5 `chalk`（5 亿+/周）、Top 8 `minimatch`（4 亿+/周）、Top 22 `ignore`（2.5 亿+/周）、Top 30 `yargs`（3 亿+/周）与 crates.io #120 `idna`（9.5 亿+）、#270 `icu_normalizer`（5.3 亿+），全部依托前期独立依赖包实现多层零重复跨包 `import` 组合。
+- 2 路子智能体均已按 `GEMINI.md` 第 9 条完成 6 包轮换换新为 Worker N2（`@cap/commander`）与 Worker C2（`@cap/percent-encoding` 12.5 亿+）。

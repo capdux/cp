@@ -841,3 +841,12 @@
 - `packages/@cap/tinystr/` & `cap/test/testCapTinystr.cp`: crates.io #260 `tinystr`（5.5 亿+，6/6 PASS）。
 - `packages/@cap/icu-locid/` & `cap/test/testCapIcuLocid.cp`: crates.io #255 `icu_locid`（5.5 亿+，复用 `@cap/tinystr`，6/6 PASS）。
 - `packages/@cap/normalize-path/src/index.cp` & `packages/@cap/decamelize/src/`: 消除跨包展平时的私有/重名符号冲突，100% 向后兼容。
+
+### 2026-11-27 (Batch 95 — **Top-30 旗舰收割波！** `chalk`/`minimatch`/`yargs`/`ignore`/`idna`/`icu-normalizer` 6 大包全 6/6 PASS，官方包 554+)
+- `packages/@cap/yargs/` & `cap/test/testCapYargs.cp`: npm Top 30 `yargs`（3 亿+/周，3 包复用 `@cap/yargs-parser`+`@cap/cliui`+`@cap/y18n`，6/6 PASS）。
+- `packages/@cap/chalk/` & `cap/test/testCapChalk.cp`: npm Top 5 `chalk`（5 亿+/周，贯通 6 包深度复用链，6/6 PASS）。
+- `packages/@cap/minimatch/` & `cap/test/testCapMinimatch.cp`: npm Top 8 `minimatch`（4 亿+/周，复用 `@cap/micromatch`+`@cap/picomatch`，6/6 PASS）。
+- `packages/@cap/ignore/` & `cap/test/testCapIgnore.cp`: npm Top 22 `ignore`（2.5 亿+/周，复用 `@cap/minimatch`+`@cap/normalize-path`，6/6 PASS）。
+- `packages/@cap/icu-normalizer/` & `cap/test/testCapIcuNormalizer.cp`: crates.io #270 `icu_normalizer`（5.3 亿+，UAX #15 NFC/NFD/NFKC/NFKD，6/6 PASS）。
+- `packages/@cap/idna-uts46/` & `cap/test/testCapIdnaUts46.cp`: crates.io #120 `idna`（9.5 亿+，复用 `@cap/icu-normalizer`+`@cap/punycode`，6/6 PASS）。
+- `packages/@cap/registry.json`: 推进至 **831+ 条**双生态映射（官方 `.cap` 包突破 **554+**）。
