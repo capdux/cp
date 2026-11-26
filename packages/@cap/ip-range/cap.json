@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ip-range",
+  "version": "1.0.0",
+  "description": "Zero-heap IPv4 address parser/formatter, CIDR subnet range containment & overlap engine, and RFC special-use address classifier.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

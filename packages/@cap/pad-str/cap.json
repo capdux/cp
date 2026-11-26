@@ -1,0 +1,9 @@
+{
+  "name": "@cap/pad-str",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation UTF-8 codepoint-aware string padding (padStart, padEnd, padCenter) and repeatStr in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["pad", "left-pad", "pad-start", "pad-end", "align", "utf8", "repeat", "zero-alloc"]
+}

@@ -267,3 +267,6 @@
 
 ## 2026-11-26: Batch 67 亿级文本/终端六件套全 6/6 PASS，线上官方包冲刺 **373+ 个**、总映射 **580 条（npm=290 / crates.io=290 绝对 1:1）**！
 - 交付 `@cap/ansi-strip`（3.5 亿+/周，6/6）、`@cap/camelcase`（2.1 亿+/周 & Rust 4 亿+，6/6）、`@cap/trunc-utf8`（1.2 亿+/周，6/6）、`@cap/slugify`（3000 万+/周，6/6）、`@cap/title-case`（2500 万+/周，6/6）、`@cap/line-col`（6/6），全线零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 68 亿级域名/网段/自然排序六件套全 6/6 PASS，线上官方包冲刺 **379+ 个**、总映射 **589 条（npm=294 / crates.io=295）**！
+- 交付 `@cap/punycode`（2.5 亿+/周 & Rust 5 亿+，6/6）、`@cap/ip-range`（1.5 亿+/周 & Rust 1.5 亿+，6/6）、`@cap/natural-cmp`（5000 万+/周，6/6）、`@cap/word-count`（6/6）、`@cap/roman-num`（6/6）、`@cap/pad-str`（6/6），下一批 Batch 69 即正式迈向 **600 映射大关**！

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/word-count",
+  "ver": "1.0.0",
+  "description": "Zero-allocation multilingual (Latin + CJK) word/character/line counter and reading-time estimator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["word-count", "reading-time", "cjk", "utf8", "text", "analytics", "zero-alloc"]
+}

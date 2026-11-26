@@ -1,0 +1,9 @@
+{
+  "name": "@cap/punycode",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 3492 Punycode / IDNA (xn--...) encoder and decoder for internationalized domain names in CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["punycode", "idna", "rfc3492", "domain", "dns", "unicode", "zero-alloc"]
+}

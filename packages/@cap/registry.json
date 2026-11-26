@@ -1417,8 +1417,8 @@
       "source_name": "punycode",
       "source_repo": "https://github.com/mathiasbynens/punycode.js",
       "license": "MIT",
-      "cp_target": "cap:codec",
-      "kind": "stdlib",
+      "cp_target": "@cap/punycode",
+      "kind": "package",
       "aliases": [
         "idna",
         "uts46"
@@ -2852,8 +2852,8 @@
       "source_name": "ipnet",
       "source_repo": "https://github.com/krisprice/ipnet",
       "license": "MIT",
-      "cp_target": "cap:net",
-      "kind": "stdlib",
+      "cp_target": "@cap/ip-range",
+      "kind": "package",
       "aliases": [
         "ipnetwork"
       ],
@@ -7145,6 +7145,114 @@
       "aliases": [
         "inflector"
       ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "romans",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/roman-num",
+      "kind": "package",
+      "aliases": [
+        "roman-numerals"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pad",
+      "source_repo": "https://github.com/adaltas/node-pad",
+      "license": "MIT",
+      "cp_target": "@cap/pad-str",
+      "kind": "package",
+      "aliases": [
+        "left-pad"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "natord",
+      "source_repo": "https://github.com/lifthrasiir/rust-natord",
+      "license": "MIT",
+      "cp_target": "@cap/natural-cmp",
+      "kind": "package",
+      "aliases": [
+        "alphanumeric-sort"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "words-count",
+      "source_repo": "https://github.com/magiclen/words-count",
+      "license": "MIT",
+      "cp_target": "@cap/word-count",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "roman",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/roman-num",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pad",
+      "source_repo": "https://github.com/ogham/rust-pad",
+      "license": "MIT",
+      "cp_target": "@cap/pad-str",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "punycode",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/punycode",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ip-range-check",
+      "source_repo": "https://github.com/danielcompton/ip-range-check",
+      "license": "MIT",
+      "cp_target": "@cap/ip-range",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "left-pad",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/pad-str",
+      "kind": "package",
+      "aliases": [
+        "pad-left"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "word-count",
+      "source_repo": "https://github.com/yuehu/word-count",
+      "license": "MIT",
+      "cp_target": "@cap/word-count",
+      "kind": "package",
+      "aliases": [],
       "absorbed_at": "2026-11-26"
     }
   ]

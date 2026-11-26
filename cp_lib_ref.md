@@ -564,3 +564,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/slugify`** | `packages/@cap/slugify` | 对标 npm `slugify` / Rust `slug` — 零堆 URL Slug 生成器（含 Latin-1/Extended-A 重音折叠与安全截断） |
 | **`@cap/title-case`** | `packages/@cap/title-case` | 对标 npm `title-case` / Rust `titlecase` — AP/Chicago 风格英文标题大小写规范化、小词处理与全大写缩写保留 |
 | **`@cap/line-col`** | `packages/@cap/line-col` | 对标 npm `line-column` / Rust `line-index` — 零堆字节偏移 <-> 1-based 行列号互转与 LF/CRLF 源码行提取 |
+| **`@cap/punycode`** | `packages/@cap/punycode` | 对标 npm `punycode` / Rust `idna` — RFC 3492 IDNA 国际化域名 `xn--` Bootstring 双向零堆编解码 |
+| **`@cap/ip-range`** | `packages/@cap/ip-range` | 对标 npm `ipaddr.js` / Rust `ipnet` — IPv4 严格解析（防前导零 SSRF）、CIDR 范围/重叠检测与 RFC 保留地址分类 |
+| **`@cap/natural-cmp`** | `packages/@cap/natural-cmp` | 对标 npm `natural-compare` / Rust `natord` — 无溢出任意位数人类自然序比较器与 Ciura 原地排序 |
+| **`@cap/word-count`** | `packages/@cap/word-count` | 对标 npm `reading-time` / Rust `words-count` — 中英日韩多语言字数/词数/行数统计与阅读时长估算 |
+| **`@cap/roman-num`** | `packages/@cap/roman-num` | 对标 npm `romans` / Rust `roman` — 严格规范罗马数字 (`1..3999`) 双向编解码（全范围往返验证） |
+| **`@cap/pad-str`** | `packages/@cap/pad-str` | 对标 npm `pad` / `left-pad` / Rust `pad` — UTF-8 码点感知左/右/居中对齐填充与重复拼接 |

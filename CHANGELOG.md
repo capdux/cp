@@ -577,3 +577,12 @@
 - `packages/@cap/title-case/` & `cap/test/testCapTitleCase.cp`: AP/Chicago 英文标题大小写与句首大写（6/6 PASS）。
 - `packages/@cap/line-col/` & `cap/test/testCapLineCol.cp`: 字节偏移 <-> 1-based 行列号定位与行提取（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **580 条**双生态映射（**npm=290 / crates.io=290** 绝对 1:1 对称）。
+
+## [2026-11-26] - Batch 68 亿级域名/网段/自然排序六件套（`@cap/punycode`, `@cap/ip-range`, `@cap/natural-cmp`, `@cap/word-count`, `@cap/roman-num`, `@cap/pad-str`），总映射突破 **589 条**！
+- `packages/@cap/punycode/` & `cap/test/testCapPunycode.cp`: RFC 3492 IDNA `xn--` Punycode 编解码（6/6 PASS）。
+- `packages/@cap/ip-range/` & `cap/test/testCapIpRange.cp`: IPv4 严格解析、CIDR 重叠检测与 RFC 保留网段分类（6/6 PASS）。
+- `packages/@cap/natural-cmp/` & `cap/test/testCapNaturalCmp.cp`: 无溢出自然序比较与 Ciura 原地排序（6/6 PASS）。
+- `packages/@cap/word-count/` & `cap/test/testCapWordCount.cp`: 中英日韩多语言字数统计与阅读时长估算（6/6 PASS）。
+- `packages/@cap/roman-num/` & `cap/test/testCapRomanNum.cp`: 1..3999 严格规范罗马数字双向编解码（6/6 PASS）。
+- `packages/@cap/pad-str/` & `cap/test/testCapPadStr.cp`: UTF-8 码点感知字符串对齐填充与重复（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **589 条**双生态高频映射（**npm=294 / crates.io=295** 绝对 1:1 均衡）。

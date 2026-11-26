@@ -1,0 +1,9 @@
+{
+  "name": "@cap/roman-num",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation strict Roman numeral (1..3999) bidirectional parser, validator, and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["roman", "romans", "numerals", "parser", "formatter", "zero-alloc"]
+}
