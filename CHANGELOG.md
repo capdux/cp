@@ -281,3 +281,12 @@
 - `packages/@cap/num-rational/` & `cap/test/testCapNumRational.cp`: `Ratio64` 精确自动约分有理数引擎（对标 `num-rational` 4.90 亿，6/6 PASS）。
 - `packages/@cap/target-triple/` & `cap/test/testCapTargetTriple.cp`: LLVM/Rust/Zig 目标三元组解析器（对标 `target-lexicon` 4.79 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **245 条**高频映射（含 `humantime`/`zstd`/`which`/`md-5`/`textwrap`/`lru` 去重直连）。
+
+## [2026-11-26] - Batch 34 吸收 10 项 Rust 生态核心资产（交付 6 大独立 `@cap` 包，总映射突破 **255 条**里程碑！）
+- `packages/@cap/der/` & `cap/test/testCapDer.cp`: ITU-T X.690 ASN.1 DER 严格 TLV 编解码（对标 `der` 6.13 亿，6/6 PASS）。
+- `packages/@cap/bincode/` & `cap/test/testCapBincode.cp`: bincode v2 紧凑二进制 Varint/ZigZag 序列化（对标 `bincode` 3.91 亿，6/6 PASS）。
+- `packages/@cap/indoc/` & `cap/test/testCapIndoc.cp`: 多行文本去缩进与 `stripMargin` 引擎（对标 `indoc` 3.86 亿，6/6 PASS）。
+- `packages/@cap/ringbuf/` & `cap/test/testCapRingbuf.cp`: 2 的幂位掩码双端环形队列与流式 `ByteRingBuf`（6/6 PASS）。
+- `packages/@cap/bloom/` & `cap/test/testCapBloom.cp`: Kirsch-Mitzenmacher 双哈希零堆布隆过滤器（6/6 PASS）。
+- `packages/@cap/toml-writer/` & `cap/test/testCapTomlWriter.cp`: 零堆 TOML 1.0 序列化格式化器（对标 `toml_writer` 3.21 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **255 条**高频生态映射（含 `pem-rfc7468`/`tungstenite`/`chacha20`/`constant_time_eq` 去重直连）。

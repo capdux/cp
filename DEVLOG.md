@@ -164,3 +164,6 @@
 
 ## 2026-11-26: Batch 33 严格单调递减完成 crates.io 5.16 亿 → 4.67 亿 Top 10（总映射突破 245 条！）
 - 交付 `@cap/unicase`（6/6）、`@cap/num-complex`（6/6）、`@cap/num-rational`（6/6）、`@cap/target-triple`（6/6），去重直连 `humantime`/`zstd`/`which`/`md-5`/`textwrap`/`lru`，总映射达 **245 条**，线上官方包冲破 **180 个**！
+
+## 2026-11-26: Batch 34 单批交付 6 大 Rust 核心包，突破 **255 条映射 + 185 官方包**双里程碑！
+- 交付 `@cap/der`（6/6）、`@cap/bincode`（6/6）、`@cap/indoc`（6/6）、`@cap/ringbuf`（6/6）、`@cap/bloom`（6/6）、`@cap/toml-writer`（6/6），总映射突破 **255 条**，线上官方包冲破 **185 个**！

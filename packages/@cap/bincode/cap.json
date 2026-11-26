@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bincode",
+  "ver": "1.0.0",
+  "description": "Zero-allocation bincode v2 compact binary serializer & zero-copy decoder (LE varint, ZigZag signed ints, length-prefixed strings, Option, fixed LE integers — Rust bincode parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

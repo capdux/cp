@@ -2454,6 +2454,106 @@
       "kind": "package",
       "aliases": ["hashlink"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "der",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/der",
+      "kind": "package",
+      "aliases": ["asn1-der", "spki", "pkcs8"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pem-rfc7468",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/pem",
+      "kind": "package",
+      "aliases": ["pem-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tungstenite",
+      "source_repo": "https://github.com/snapview/tungstenite-rs",
+      "license": "MIT",
+      "cp_target": "cap:ws",
+      "kind": "stdlib",
+      "aliases": ["tokio-tungstenite"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "chacha20",
+      "source_repo": "https://github.com/RustCrypto/stream-ciphers",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["aes", "hkdf"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "constant_time_eq",
+      "source_repo": "https://github.com/cesarb/constant_time_eq",
+      "license": "CC0-1.0",
+      "cp_target": "@cap/subtle",
+      "kind": "package",
+      "aliases": ["ct-eq"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bincode",
+      "source_repo": "https://github.com/bincode-org/bincode",
+      "license": "MIT",
+      "cp_target": "@cap/bincode",
+      "kind": "package",
+      "aliases": ["bincode-v2"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "indoc",
+      "source_repo": "https://github.com/dtolnay/indoc",
+      "license": "MIT",
+      "cp_target": "@cap/indoc",
+      "kind": "package",
+      "aliases": ["dedent", "unindent"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ringbuf",
+      "source_repo": "https://github.com/agerasev/ringbuf",
+      "license": "MIT",
+      "cp_target": "@cap/ringbuf",
+      "kind": "package",
+      "aliases": ["arraydeque", "circular-buffer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fastbloom",
+      "source_repo": "https://github.com/tomtomwombat/fastbloom",
+      "license": "MIT",
+      "cp_target": "@cap/bloom",
+      "kind": "package",
+      "aliases": ["bloomfilter", "bloom-filters"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "toml_writer",
+      "source_repo": "https://github.com/toml-rs/toml",
+      "license": "MIT",
+      "cp_target": "@cap/toml-writer",
+      "kind": "package",
+      "aliases": ["toml-stringify"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

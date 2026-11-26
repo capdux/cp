@@ -370,3 +370,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/num-complex`** | `packages/@cap/num-complex` | 对标 Rust `num-complex`（4.96 亿）— `Complex64` 复数四则、Smith 防溢出除法、极坐标与欧拉公式/平方根 |
 | **`@cap/num-rational`** | `packages/@cap/num-rational` | 对标 Rust `num-rational`（4.90 亿）— `Ratio64` 自动约分有理数分数四则、精确比较与取整 |
 | **`@cap/target-triple`** | `packages/@cap/target-triple` | 对标 Rust `target-lexicon`（4.79 亿）— LLVM/Rust/Zig 2/3/4 段目标三元组解析与平台后缀判定 |
+| **`@cap/der`** | `packages/@cap/der` | 对标 Rust `der`（6.13 亿）— ITU-T X.690 ASN.1 DER 严格最小长度 TLV 编解码（与 `@cap/pem`/`@cap/oid` 合体 PKI 三件套） |
+| **`@cap/bincode`** | `packages/@cap/bincode` | 对标 Rust `bincode` v2（3.91 亿）— 零堆 Varint + ZigZag + 长度前缀紧凑二进制序列化引擎 |
+| **`@cap/indoc`** | `packages/@cap/indoc` | 对标 Rust `indoc`（3.86 亿）/ npm `dedent` — 零堆多行文本去公共缩进、`indent`、`stripMargin` 与 CRLF 规范化 |
+| **`@cap/ringbuf`** | `packages/@cap/ringbuf` | 对标 Rust `ringbuf`/`arraydeque` — 2 的幂位掩码 O(1) 双端环形队列 `RingDequeI64` 与流式 `ByteRingBuf` |
+| **`@cap/bloom`** | `packages/@cap/bloom` | 对标 Rust `fastbloom`/`bloomfilter` — Kirsch-Mitzenmacher 双哈希零堆布隆过滤器（1024/4096 bit）与分布式合并 |
+| **`@cap/toml-writer`** | `packages/@cap/toml-writer` | 对标 Rust `toml_writer`（3.21 亿）— 零堆 TOML 1.0 序列化写入器（裸/引号键、转义、节头、数组表） |

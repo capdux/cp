@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ringbuf",
+  "ver": "1.0.0",
+  "description": "Zero-allocation power-of-two masked ring deque (RingDequeI64) and streaming byte ring buffer (ByteRingBuf) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
