@@ -1,0 +1,9 @@
+{
+  "name": "@cap/netstring",
+  "version": "1.0.0",
+  "description": "Zero-heap D. J. Bernstein Netstring (len:payload,) framing encoder and streaming decoder in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["netstring", "framing", "scgi", "protocol", "binary", "zero-heap"]
+}

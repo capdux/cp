@@ -450,3 +450,13 @@
 - `packages/@cap/syslog/` & `cap/test/testCapSyslog.cp`: RFC 5424 Syslog 报文编解码（6/6 PASS）。
 - `packages/@cap/traceparent/` & `cap/test/testCapTraceparent.cp`: W3C Trace Context `traceparent`/`tracestate`（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **445 条**高频映射（**npm=216 / crates.io=229** 均衡，含 `tslib`/`open`/`is-plain-object`/`allocator-api2` 去重直连）。
+
+## [2026-11-26] - Batch 54 双生态单批交付 **7 大全新独立包**（`@cap/prom-text`, `@cap/robots`, `@cap/statsd`, `@cap/clf-log`, `@cap/ical`, `@cap/vcard`, `@cap/netstring`），总映射突破 **455 条**！
+- `packages/@cap/prom-text/` & `cap/test/testCapPromText.cp`: Prometheus `/metrics` 文本序列化器（6/6 PASS）。
+- `packages/@cap/robots/` & `cap/test/testCapRobots.cp`: RFC 9309 `robots.txt` 规则评估引擎（6/6 PASS）。
+- `packages/@cap/statsd/` & `cap/test/testCapStatsd.cp`: StatsD / DogStatsD UDP 指标编解码（6/6 PASS）。
+- `packages/@cap/clf-log/` & `cap/test/testCapClfLog.cp`: Apache/Nginx Common & Combined 访问日志解析（6/6 PASS）。
+- `packages/@cap/ical/` & `cap/test/testCapIcal.cp`: RFC 5545 `.ics` 日历事件生成与解析（6/6 PASS）。
+- `packages/@cap/vcard/` & `cap/test/testCapVcard.cp`: RFC 6350 vCard 4.0 电子名片编解码（6/6 PASS）。
+- `packages/@cap/netstring/` & `cap/test/testCapNetstring.cp`: Bernstein Netstring 二进制帧编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **455 条**高频映射（**npm=223 / crates.io=232** 均衡，含 `pdf-lib`/`clipboardy`/`sharded-slab` 去重直连）。

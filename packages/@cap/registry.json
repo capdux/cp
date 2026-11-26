@@ -4454,6 +4454,106 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pdf-lib",
+      "source_repo": "https://github.com/Hopding/pdf-lib",
+      "license": "MIT",
+      "cp_target": "cap:pdf",
+      "kind": "stdlib",
+      "aliases": ["pdfkit"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "clipboardy",
+      "source_repo": "https://github.com/sindresorhus/clipboardy",
+      "license": "MIT",
+      "cp_target": "cap:term",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "prom-client",
+      "source_repo": "https://github.com/siimon/prom-client",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/prom-text",
+      "kind": "package",
+      "aliases": ["prometheus", "openmetrics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "robots-parser",
+      "source_repo": "https://github.com/samclarke/robots-parser",
+      "license": "MIT",
+      "cp_target": "@cap/robots",
+      "kind": "package",
+      "aliases": ["robotstxt", "robots-txt"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hot-shots",
+      "source_repo": "https://github.com/brightcove/hot-shots",
+      "license": "MIT",
+      "cp_target": "@cap/statsd",
+      "kind": "package",
+      "aliases": ["node-statsd", "cadence", "statsd"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "clf-parser",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/clf-log",
+      "kind": "package",
+      "aliases": ["apache-log", "nginx-log"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ical-generator",
+      "source_repo": "https://github.com/sebbo2002/ical-generator",
+      "license": "MIT",
+      "cp_target": "@cap/ical",
+      "kind": "package",
+      "aliases": ["node-ical", "icalendar", "ics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sharded-slab",
+      "source_repo": "https://github.com/hawkw/sharded-slab",
+      "license": "MIT",
+      "cp_target": "@cap/slab",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "vcard",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/vcard",
+      "kind": "package",
+      "aliases": ["vcards-js", "vcf"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "netstring",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/netstring",
+      "kind": "package",
+      "aliases": ["scgi-netstring"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

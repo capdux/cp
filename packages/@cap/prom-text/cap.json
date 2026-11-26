@@ -1,0 +1,8 @@
+{
+  "name": "@cap/prom-text",
+  "version": "1.0.0",
+  "description": "Zero-heap Prometheus / OpenMetrics text exposition format serializer with strict metric/label validation and escaping.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

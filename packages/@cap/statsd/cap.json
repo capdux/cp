@@ -1,0 +1,8 @@
+{
+  "name": "@cap/statsd",
+  "version": "1.0.0",
+  "description": "Zero-heap StatsD and DogStatsD UDP metric packet encoder/decoder supporting Counter, Timing, Gauge, Set, sample rates, and tags.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

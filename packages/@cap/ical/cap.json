@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ical",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 5545 iCalendar (.ics) VCALENDAR/VEVENT generator and parser in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ical", "icalendar", "ics", "rfc5545", "calendar", "vevent", "zero-alloc"]
+}

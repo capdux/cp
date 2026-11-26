@@ -479,3 +479,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/logfmt`** | `packages/@cap/logfmt` | 对标 npm/Rust `logfmt` — 云原生 `k=v` 结构化键值日志零堆解析（含引号转义/裸标志）与序列化写入器 |
 | **`@cap/syslog`** | `packages/@cap/syslog` | 对标 Rust `syslog` / npm `glossy` — RFC 5424 Syslog 日志 PRI 编解码、结构化数据解析与格式化 |
 | **`@cap/traceparent`** | `packages/@cap/traceparent` | 对标 OpenTelemetry / W3C Trace Context — 严格 55 字节 `traceparent` 解析、子 Span 派生与 `tracestate` 查询 |
+| **`@cap/prom-text`** | `packages/@cap/prom-text` | 对标 npm `prom-client` / Rust `prometheus` — Prometheus `/metrics` Exposition 文本写入器与标签转义 |
+| **`@cap/robots`** | `packages/@cap/robots` | 对标 npm `robots-parser` / Rust `robotstxt` — RFC 9309 `robots.txt` 路径合规判定、`Crawl-delay` 与 `Sitemap` |
+| **`@cap/statsd`** | `packages/@cap/statsd` | 对标 npm `hot-shots` / Rust `cadence` — StatsD & DogStatsD UDP 指标报文编解码（含采样率与 `#tag`） |
+| **`@cap/clf-log`** | `packages/@cap/clf-log` | 对标 Apache/Nginx CLF — Common/Combined 访问日志零拷贝解析与格式化 |
+| **`@cap/ical`** | `packages/@cap/ical` | 对标 npm `ical-generator` / Rust `icalendar` — RFC 5545 `.ics` 日历事件生成、参数解析与文本转义 |
+| **`@cap/vcard`** | `packages/@cap/vcard` | 对标 npm `vcards-js` / Rust `vcard` — RFC 6350 vCard 4.0 `.vcf` 电子名片生成与带参数属性解析 |
+| **`@cap/netstring`** | `packages/@cap/netstring` | 对标 Bernstein Netstring — `<len>:<payload>,` 二进制安全自定界帧编解码（严格拒前导零与半包识别） |
