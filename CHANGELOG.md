@@ -532,3 +532,12 @@
 - `packages/@cap/ldap-dn/` & `cap/test/testCapLdapDn.cp`: RFC 4514 LDAP DN 解析与转义（6/6 PASS）。
 - `packages/@cap/magnet-uri/` & `cap/test/testCapMagnetUri.cp`: BitTorrent v1/v2 Magnet URI 解析与构建（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **533 条**双生态映射（**npm=267 / crates.io=266** 绝对 1:1 均衡）。
+
+## [2026-11-26] - Batch 63 突破 **350 官方 `.cap` 包大关** — 交付 **6 大 RFC/W3C/CNCF 标识协议新包**（`@cap/geo-uri`, `@cap/mailto-uri`, `@cap/tel-uri`, `@cap/urn-parse`, `@cap/spiffe-id`, `@cap/did-parse`），总映射达 **542 条（npm=271 / crates.io=271）**！
+- `packages/@cap/geo-uri/` & `cap/test/testCapGeoUri.cp`: RFC 5870 `geo:` 2D/3D 地理坐标 URI 解析与格式化（6/6 PASS）。
+- `packages/@cap/mailto-uri/` & `cap/test/testCapMailtoUri.cp`: RFC 6068 `mailto:` URI 解析与百分号编码（6/6 PASS）。
+- `packages/@cap/tel-uri/` & `cap/test/testCapTelUri.cp`: RFC 3966 `tel:` URI 与 E.164 国际电话归一化（6/6 PASS）。
+- `packages/@cap/urn-parse/` & `cap/test/testCapUrnParse.cp`: RFC 8141 URN 解析与等价比较（6/6 PASS）。
+- `packages/@cap/spiffe-id/` & `cap/test/testCapSpiffeId.cp`: CNCF SPIFFE 零信任工作负载 ID 解析与校验（6/6 PASS）。
+- `packages/@cap/did-parse/` & `cap/test/testCapDidParse.cp`: W3C DID Core 1.0 去中心化身份解析（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **542 条**双生态高频映射（**npm=271 / crates.io=271** 绝对 1:1 均衡）。

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/spiffe-id",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CNCF SPIFFE ID (spiffe://<trust-domain>/<path>) parser, strict security validator, and formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["spiffe", "spire", "istio", "envoy", "zero-trust", "mtls", "security", "zero-alloc"]
+}

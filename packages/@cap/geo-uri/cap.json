@@ -1,0 +1,9 @@
+{
+  "name": "@cap/geo-uri",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 5870 geo: URI parser, coordinate validator, and formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["geo-uri", "rfc5870", "geo", "gps", "wgs84", "coordinates", "zero-alloc"]
+}

@@ -6622,6 +6622,108 @@
         "magnet-uri"
       ],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "geo-uri",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/geo-uri",
+      "kind": "package",
+      "aliases": [
+        "geo-url"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mailto-link",
+      "source_repo": "https://github.com/sindresorhus/mailto-link",
+      "license": "MIT",
+      "cp_target": "@cap/mailto-uri",
+      "kind": "package",
+      "aliases": [
+        "mailto"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "urn-lib",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/urn-parse",
+      "kind": "package",
+      "aliases": [
+        "urn-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "did-resolver",
+      "source_repo": "https://github.com/decentralized-identity/did-resolver",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/did-parse",
+      "kind": "package",
+      "aliases": [
+        "did-jwt"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "phonenumber",
+      "source_repo": "https://github.com/whisperfish/rust-phonenumber",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/tel-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "urn",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/urn-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "spiffe",
+      "source_repo": "https://github.com/maxlambrecht/rust-spiffe",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/spiffe-id",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ssi-dids",
+      "source_repo": "https://github.com/spruceid/ssi",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/did-parse",
+      "kind": "package",
+      "aliases": [
+        "did-url"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mailto",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/mailto-uri",
+      "kind": "package",
+      "aliases": [
+        "geo-uri"
+      ],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

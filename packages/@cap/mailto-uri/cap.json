@@ -1,0 +1,9 @@
+{
+  "name": "@cap/mailto-uri",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 6068 mailto: URI parser, recipient counter, email checker, and percent-encoding builder in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mailto", "rfc6068", "email", "uri", "url", "parser", "zero-alloc"]
+}

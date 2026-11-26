@@ -534,3 +534,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/purl`** | `packages/@cap/purl` | 对标 npm `packageurl-js` / Rust `packageurl` — SBOM 供应链标准 Package URL (`pkg:type/ns/name@ver`) 解析与序列化 |
 | **`@cap/ldap-dn`** | `packages/@cap/ldap-dn` | 对标 npm `ldapjs` / Rust `ldap3` — RFC 4514 LDAP Distinguished Name 零堆解析、值转义与属性查找 |
 | **`@cap/magnet-uri`** | `packages/@cap/magnet-uri` | 对标 npm `magnet-uri` / Rust `magnet-url` — BitTorrent v1 (`btih`) & v2 (`btmh`) Magnet URI 解析与构建 |
+| **`@cap/geo-uri`** | `packages/@cap/geo-uri` | 对标 npm/Rust `geo-uri` — RFC 5870 `geo:lat,lng[,alt];crs=wgs84;u=...` 地理坐标 URI 解析与格式化 |
+| **`@cap/mailto-uri`** | `packages/@cap/mailto-uri` | 对标 npm `mailto-link` / Rust `mailto` — RFC 6068 `mailto:` 多收件人、主题/正文百分号编码与解析 |
+| **`@cap/tel-uri`** | `packages/@cap/tel-uri` | 对标 npm `libphonenumber-js` / Rust `phonenumber` — RFC 3966 `tel:` URI 与 E.164 国际号码归一化 |
+| **`@cap/urn-parse`** | `packages/@cap/urn-parse` | 对标 npm `urn-lib` / Rust `urn` — RFC 8141 `urn:<nid>:<nss>` 零堆解析、等价比较与规范化 |
+| **`@cap/spiffe-id`** | `packages/@cap/spiffe-id` | 对标 CNCF SPIFFE `spiffe` — `spiffe://<trust-domain>/<path>` 零信任工作负载身份解析与防路径穿越校验 |
+| **`@cap/did-parse`** | `packages/@cap/did-parse` | 对标 npm `did-resolver` / Rust `ssi-dids` — W3C DID Core 1.0 `did:<method>:<id>` 去中心化身份解析 |

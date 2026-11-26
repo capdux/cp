@@ -1,0 +1,8 @@
+{
+  "name": "@cap/tel-uri",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 3966 tel: URI parser, E.164 international phone number normalizer/validator, and URI formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

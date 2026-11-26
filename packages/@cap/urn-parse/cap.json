@@ -1,0 +1,9 @@
+{
+  "name": "@cap/urn-parse",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 8141 Uniform Resource Name (URN) parser, equivalence comparator, and canonical formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["urn", "rfc8141", "uri", "isbn", "uuid", "parser", "zero-alloc"]
+}

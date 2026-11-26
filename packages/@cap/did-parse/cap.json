@@ -1,0 +1,8 @@
+{
+  "name": "@cap/did-parse",
+  "version": "1.0.0",
+  "description": "Zero-heap W3C DID Core 1.0 Decentralized Identifier & DID URL parser, strict character validator, and formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
