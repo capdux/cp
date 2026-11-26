@@ -306,3 +306,6 @@
 
 ## 2026-11-27: Batch 80（80 批次里程碑！）六件套全 6/6 PASS — 达到 **710 条双生态映射（npm=355 / crates.io=355 绝对对称）**！
 - 精准打击 crates.io Top 37 `block-buffer`（14.3 亿）、Top 110 `unicode-width`（10.1 亿）、Top 151 `anstyle-parse`（8.65 亿）与 npm 3~4 亿/周核心独立依赖 `is-number`、`to-regex-range`、`normalize-path`，全线零堆纯 CP 100% PASS。
+
+## 2026-11-27: Batch 81 七件套全 6/6 PASS — 达到 **720 条双生态映射（npm=360 / crates.io=360 绝对对称）**！
+- 单批拿下 crates.io #62 `winnow`（12.4 亿）、#127 `anstyle`（9.57 亿）、#135 `nom`（9.38 亿）与 npm 5 个 2.5~3.5 亿/周核心独立依赖包，并落地真实跨包依赖复用（`@cap/is-glob` -> `@cap/is-extglob`、`@cap/anstyle` -> `@cap/anstyle-parse`）。

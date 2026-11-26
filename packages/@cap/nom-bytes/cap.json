@@ -1,0 +1,9 @@
+{
+  "name": "@cap/nom-bytes",
+  "ver": "1.0.0",
+  "description": "Zero-allocation byte-level zero-copy parser combinators (winnow / nom parity) with rollback-on-failure cursor semantics for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["nom", "winnow", "parser", "combinator", "zero-copy", "bytes", "cursor", "zero-alloc"]
+}

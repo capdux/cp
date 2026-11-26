@@ -649,3 +649,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/is-number`** | `packages/@cap/is-number` | 对标 npm `is-number` (4 亿+/周，独立依赖) — 严格数字字符串（整数/浮点/科学计数/进制）与有限数校验 |
 | **`@cap/to-regex-range`** | `packages/@cap/to-regex-range` | 对标 npm `to-regex-range` (3 亿+/周，独立依赖) — 整数区间紧凑正则拆分与数值范围匹配 |
 | **`@cap/normalize-path`** | `packages/@cap/normalize-path` | 对标 npm `normalize-path` (3.5 亿+/周，独立依赖) — 跨平台路径反斜杠归一化、斜杠折叠与 UNC 前缀保留 |
+
+| **`@cap/is-extglob`** | `packages/@cap/is-extglob` | 对标 npm `is-extglob` (3 亿+/周，独立依赖) — Bash/Micromatch 扩展通配符检测与嵌套括号计数 |
+| **`@cap/is-glob`** | `packages/@cap/is-glob` | 对标 npm `is-glob` (3.5 亿+/周，跨包复用 `@cap/is-extglob`) — Glob 模式严格/宽松检测 |
+| **`@cap/slash`** | `packages/@cap/slash` | 对标 npm `slash` (3.5 亿+/周，独立依赖) — Windows `\` 转 POSIX `/`（完整保留 `\\?\` 扩展路径） |
+| **`@cap/shebang-regex`** | `packages/@cap/shebang-regex` | 对标 npm `shebang-regex` (2.5 亿+/周，独立依赖) — 脚本行首 `#!` 匹配与剥离 |
+| **`@cap/path-key`** | `packages/@cap/path-key` | 对标 npm `path-key` (2.5 亿+/周，独立依赖) — 跨平台 `PATH` 环境变量键名解析与条目拆分 |
+| **`@cap/anstyle`** | `packages/@cap/anstyle` | 对标 crates.io #127 `anstyle` (9.57 亿，依赖 `@cap/anstyle-parse`) — 16/256/RGB 终端样式与 SGR 渲染 |
+| **`@cap/nom-bytes`** | `packages/@cap/nom-bytes` | 对标 crates.io #62 `winnow` (12.4 亿) / #135 `nom` (9.38 亿) — 零拷贝字节流解析组合子与回滚游标 |

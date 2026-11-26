@@ -1,0 +1,12 @@
+{
+  "name": "@cap/is-glob",
+  "version": "1.0.0",
+  "description": "Zero-allocation glob pattern detector reusing @cap/is-extglob for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/is-extglob": "^1.0.0"
+  },
+  "keywords": ["glob", "is-glob", "extglob", "micromatch", "pattern", "zero-alloc"]
+}

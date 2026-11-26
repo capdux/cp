@@ -1,0 +1,9 @@
+{
+  "name": "@cap/shebang-regex",
+  "version": "1.0.0",
+  "description": "Zero-allocation shebang (#!) line matcher and stripper for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["shebang", "shebang-regex", "hashbang", "cli", "spawn", "zero-alloc"]
+}

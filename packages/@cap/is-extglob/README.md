@@ -1,0 +1,13 @@
+# @cap/is-extglob
+
+Zero-heap-allocation Bash/Micromatch extended glob (`@(...)`, `!(...)`, `*(...)`, `+(...)`, `?(...)`) detector in pure CP (parity with npm `is-extglob`).
+
+## Features
+
+- `isExtglob(str: string): bool`: returns `true` if `str` contains an unescaped, properly closed extglob pattern.
+- `findExtglobStart(str: string): i64`: returns the byte offset of the first valid extglob, or `-1` if none exists.
+- `countExtglobs(str: string): usize`: counts top-level valid extglob groups (correctly handling nested parentheses and backslash escapes).
+
+## License
+
+MIT

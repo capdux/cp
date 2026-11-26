@@ -693,3 +693,13 @@
 - `packages/@cap/to-regex-range/` & `cap/test/testCapToRegexRange.cp`: npm `to-regex-range`（3 亿+/周独立依赖，6/6 PASS）。
 - `packages/@cap/normalize-path/` & `cap/test/testCapNormalizePath.cp`: npm `normalize-path`（3.5 亿+/周独立依赖，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **710 条**双生态高频映射（**npm=355 / crates.io=355 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 81 — 720 映射 360/360 绝对对称！跨包依赖复用落地 + 40 亿级 crates.io 头部吸收)
+- `packages/@cap/is-extglob/` & `cap/test/testCapIsExtglob.cp`: npm `is-extglob`（3 亿+/周独立前置依赖，6/6 PASS）。
+- `packages/@cap/is-glob/` & `cap/test/testCapIsGlob.cp`: npm `is-glob`（3.5 亿+/周，直接 `import` 复用 `@cap/is-extglob`，6/6 PASS）。
+- `packages/@cap/slash/` & `cap/test/testCapSlash.cp`: npm `slash`（3.5 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/shebang-regex/` & `cap/test/testCapShebangRegex.cp`: npm `shebang-regex`（2.5 亿+/周独立前置依赖，6/6 PASS）。
+- `packages/@cap/path-key/` & `cap/test/testCapPathKey.cp`: npm `path-key`（2.5 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/anstyle/` & `cap/test/testCapAnstyle.cp`: crates.io #127 `anstyle`（9.57 亿下载，依赖 `@cap/anstyle-parse`，6/6 PASS）。
+- `packages/@cap/nom-bytes/` & `cap/test/testCapNomBytes.cp`: crates.io #62 `winnow`（12.4 亿）+ #135 `nom`（9.38 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **720 条**双生态高频映射（**npm=360 / crates.io=360 绝对 1:1 对称**）。

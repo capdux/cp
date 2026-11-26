@@ -1,0 +1,9 @@
+{
+  "name": "@cap/is-extglob",
+  "version": "1.0.0",
+  "description": "Zero-allocation Bash/Micromatch extglob pattern detector (@(...), !(...), *(...), +(...), ?(...)) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["extglob", "is-extglob", "glob", "micromatch", "pattern", "zero-alloc"]
+}

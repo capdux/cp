@@ -8684,6 +8684,126 @@
         "fullwidth"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-extglob",
+      "source_repo": "https://github.com/jonschlinkert/is-extglob",
+      "license": "MIT",
+      "cp_target": "@cap/is-extglob",
+      "kind": "package",
+      "aliases": [
+        "extglob"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-glob",
+      "source_repo": "https://github.com/micromatch/is-glob",
+      "license": "MIT",
+      "cp_target": "@cap/is-glob",
+      "kind": "package",
+      "aliases": [
+        "glob-detect"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "slash",
+      "source_repo": "https://github.com/sindresorhus/slash",
+      "license": "MIT",
+      "cp_target": "@cap/slash",
+      "kind": "package",
+      "aliases": [
+        "to-posix-path"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shebang-regex",
+      "source_repo": "https://github.com/sindresorhus/shebang-regex",
+      "license": "MIT",
+      "cp_target": "@cap/shebang-regex",
+      "kind": "package",
+      "aliases": [
+        "shebang"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-key",
+      "source_repo": "https://github.com/sindresorhus/path-key",
+      "license": "MIT",
+      "cp_target": "@cap/path-key",
+      "kind": "package",
+      "aliases": [
+        "env-path-key"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "anstyle",
+      "source_repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT",
+      "cp_target": "@cap/anstyle",
+      "kind": "package",
+      "aliases": [
+        "anstyle-style"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "winnow",
+      "source_repo": "https://github.com/winnow-rs/winnow",
+      "license": "MIT",
+      "cp_target": "@cap/nom-bytes",
+      "kind": "package",
+      "aliases": [
+        "winnow-parser"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "nom",
+      "source_repo": "https://github.com/rust-bakery/nom",
+      "license": "MIT",
+      "cp_target": "@cap/nom-bytes",
+      "kind": "package",
+      "aliases": [
+        "nom-parser"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ppv-lite86",
+      "source_repo": "https://github.com/cryptocorrosion/cryptocorrosion",
+      "license": "MIT",
+      "cp_target": "@cap/chacha-rng",
+      "kind": "package",
+      "aliases": [
+        "chacha-simd"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "is_terminal_polyfill",
+      "source_repo": "https://github.com/polyfill-rs/is_terminal_polyfill",
+      "license": "MIT",
+      "cp_target": "cap:io",
+      "kind": "stdlib",
+      "aliases": [
+        "is-terminal"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

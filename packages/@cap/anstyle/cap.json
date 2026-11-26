@@ -1,0 +1,12 @@
+{
+  "name": "@cap/anstyle",
+  "ver": "1.0.0",
+  "desc": "Zero-heap ANSI terminal styling model (16-color, 256-color, truecolor RGB, SGR effects) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/anstyle-parse": "^1.0.0"
+  },
+  "keywords": ["ansi", "anstyle", "color", "terminal", "sgr", "rgb", "zero-heap"]
+}
