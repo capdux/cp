@@ -1,5 +1,8 @@
 # `@cap/fresh`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fresh` ([https://github.com/jshttp/fresh](https://github.com/jshttp/fresh))
+
 Zero-heap-allocation RFC 9110 HTTP conditional request freshness testing in pure CP.
 
 ## Features

@@ -4,5 +4,11 @@
   "description": "Zero-allocation Aho-Corasick multi-pattern O(N + Z) automaton with LCRS trie, BFS failure links, and dictionary suffix links (Rust aho-corasick parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "aho-corasick",
+    "repo": "https://github.com/BurntSushi/aho-corasick",
+    "license": "MIT"
+  }
 }

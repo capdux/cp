@@ -1,5 +1,8 @@
 # @cap/vary
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:vary` ([https://github.com/jshttp/vary](https://github.com/jshttp/vary))
+
 Zero-heap RFC 9110 HTTP `Vary` response header manipulation in pure CP (npm `vary` parity).
 
 ## Features

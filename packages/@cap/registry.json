@@ -124,7 +124,7 @@
       "source_name": "ulid",
       "source_repo": "https://github.com/dylanhart/ulid-rs",
       "license": "MIT",
-      "cp_target": "@cap/ulid-crate",
+      "cp_target": "@cap/ulid",
       "kind": "package",
       "aliases": [
         "ulid-npm"
@@ -160,14 +160,11 @@
       "source_registry": "crates.io",
       "source_name": "crc32c",
       "source_repo": "https://github.com/zowens/crc32c",
-      "license": "MIT",
-      "cp_target": "cap:hash/crc32c",
-      "kind": "stdlib",
-      "aliases": [
-        "fast-crc32c",
-        "sse4_crc32"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/crc32c",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -241,7 +238,7 @@
       "source_name": "qs",
       "source_repo": "https://github.com/ljharb/qs",
       "license": "MIT",
-      "cp_target": "@cap/qs-parse",
+      "cp_target": "@cap/qs",
       "kind": "package",
       "aliases": [
         "serde_qs",
@@ -998,7 +995,7 @@
       "source_name": "forwarded",
       "source_repo": "https://github.com/jshttp/forwarded",
       "license": "MIT",
-      "cp_target": "@cap/forwarded-http",
+      "cp_target": "@cap/forwarded",
       "kind": "package",
       "aliases": [
         "proxy-addr",
@@ -1464,7 +1461,7 @@
       "source_name": "boxen",
       "source_repo": "https://github.com/sindresorhus/boxen",
       "license": "MIT",
-      "cp_target": "@cap/boxen-ui",
+      "cp_target": "@cap/boxen",
       "kind": "package",
       "aliases": [
         "cli-boxes",
@@ -2011,7 +2008,7 @@
       "source_name": "picomatch",
       "source_repo": "https://github.com/micromatch/picomatch",
       "license": "MIT",
-      "cp_target": "@cap/picomatch-core",
+      "cp_target": "@cap/picomatch",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
@@ -2313,7 +2310,7 @@
       "source_name": "bitflags",
       "source_repo": "https://github.com/bitflags/bitflags",
       "license": "MIT",
-      "cp_target": "@cap/bitflags-crate",
+      "cp_target": "@cap/bitflags",
       "kind": "package",
       "aliases": [
         "enumflags2"
@@ -2657,13 +2654,13 @@
       "source_registry": "crates.io",
       "source_name": "rustc-hash",
       "source_repo": "https://github.com/rust-lang/rustc-hash",
-      "license": "MIT",
-      "cp_target": "@cap/fnv",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/rustc-hash",
       "kind": "package",
       "aliases": [
         "fxhash"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -2736,7 +2733,7 @@
       "source_name": "hex",
       "source_repo": "https://github.com/KokaKiwi/rust-hex",
       "license": "MIT",
-      "cp_target": "@cap/hex-crate",
+      "cp_target": "@cap/hex",
       "kind": "package",
       "aliases": [
         "const-hex",
@@ -3098,7 +3095,7 @@
       "source_name": "textwrap",
       "source_repo": "https://github.com/mgeisler/textwrap",
       "license": "MIT",
-      "cp_target": "@cap/textwrap-crate",
+      "cp_target": "@cap/textwrap",
       "kind": "package",
       "aliases": [
         "word-wrap"
@@ -3122,7 +3119,7 @@
       "source_name": "lru",
       "source_repo": "https://github.com/jeromefroe/lru-rs",
       "license": "MIT",
-      "cp_target": "@cap/lru-crate",
+      "cp_target": "@cap/lru",
       "kind": "package",
       "aliases": [
         "hashlink"
@@ -4358,7 +4355,7 @@
       "source_name": "aho-corasick",
       "source_repo": "https://github.com/BurntSushi/aho-corasick",
       "license": "MIT",
-      "cp_target": "@cap/aho-corasick-dfa",
+      "cp_target": "@cap/aho-corasick",
       "kind": "package",
       "aliases": [
         "ac-automaton"
@@ -5106,7 +5103,7 @@
       "source_name": "fresh",
       "source_repo": "https://github.com/jshttp/fresh",
       "license": "MIT",
-      "cp_target": "@cap/fresh-http",
+      "cp_target": "@cap/fresh",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
@@ -5116,7 +5113,7 @@
       "source_name": "vary",
       "source_repo": "https://github.com/jshttp/vary",
       "license": "MIT",
-      "cp_target": "@cap/vary-http",
+      "cp_target": "@cap/vary",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
@@ -10921,6 +10918,36 @@
       "source_repo": "https://github.com/sindresorhus/p-timeout",
       "license": "MIT",
       "cp_target": "@cap/p-timeout-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-try",
+      "source_repo": "https://github.com/sindresorhus/p-try",
+      "license": "MIT",
+      "cp_target": "@cap/p-try",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-plain-obj",
+      "source_repo": "https://github.com/sindresorhus/is-plain-obj",
+      "license": "MIT",
+      "cp_target": "@cap/is-plain-obj",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "map-obj",
+      "source_repo": "https://github.com/sindresorhus/map-obj",
+      "license": "MIT",
+      "cp_target": "@cap/map-obj",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

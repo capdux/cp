@@ -1,5 +1,8 @@
 # @cap/hex
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:hex` ([https://github.com/KokaKiwi/rust-hex](https://github.com/KokaKiwi/rust-hex))
+
 Zero-allocation hexadecimal encoder/decoder, fixed-width `u32`/`u64` hex formatters, and canonical 16-bytes/line HexDump utility for CP — clean-room MIT parity with Rust `hex`.
 
 零堆分配的 CP 十六进制编解码与 HexDump 调试引擎，支持大小写编码、严格解码与 `0x`/`0X` 前缀、定长 32/64 位整数十六进制格式化以及经典 16 字节/行 Hex+ASCII 调试转储（纯 CP 洁净室 MIT 实现）。

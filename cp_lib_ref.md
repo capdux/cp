@@ -956,3 +956,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/seahash`** | `packages/@cap/seahash` | 对标 crates.io #220 `seahash` v4 (**5.5 亿+**) — 4 通道并行 SeaHash 64-bit 哈希与 PCG 扩散函数 |
 | **`@cap/p-locate`** | `packages/@cap/p-locate` | 对标 npm **Top 15** `p-locate` v7 (**2.2 亿+/周**, 复用 `@cap/p-limit-core`) — 有界并发候选定位器与 `preserve_order` 优先级语义 |
 | **`@cap/p-timeout-core`** | `packages/@cap/p-timeout-core` | 对标 npm Top 45 `p-timeout` v6 (**1 亿+/周**) — 零堆截止时间守卫、超时回退与状态机取消 |
+| **`@cap/p-try`** | `packages/@cap/p-try` | 对标 npm **Top 25** `p-try` v3 (**1.6 亿+/周**) — 零堆同步/异步执行结果封装、安全整数解析与除法防 panic |
+| **`@cap/is-plain-obj`** | `packages/@cap/is-plain-obj` | 对标 npm Top 30 `is-plain-obj` v4 (**1.4 亿+/周**) — 纯对象原型判定、JSON 对象字面量校验与原型污染危险键扫描 |
+| **`@cap/map-obj`** | `packages/@cap/map-obj` | 对标 npm Top 35 `map-obj` (**1.3 亿+/周**) — 零堆固定槽位对象条目键值映射、`pickKeys`/`omitKeys`/`mergeObjects` |
+| **`@cap/crc32c`** | `packages/@cap/crc32c` | 对标 crates.io **#165** `crc32c` v0.6 (**7.5 亿+**) — Castagnoli CRC-32C（RFC 3720 向量全过）、GF(2) `combine` 与 RocksDB/GCS 掩码 |
+| **`@cap/rustc-hash`** | `packages/@cap/rustc-hash` | 对标 crates.io **#80** `rustc-hash` v2 (**12.5 亿+**) — Rust 编译器官方超高速 `FxHasher64`/`FxHasher32` 非加密哈希 |

@@ -1151,3 +1151,11 @@
 - `packages/@cap/*/cap.json` & `README.md`: 批量回填 **612 个**官方包的 `"source"` 字段（含 `registry`/`name`/`repo`/`license`）与 **609 个** `README.md` 参考/吸收来源横幅（含改名说明）。
 - `GEMINI.md`: 固化第 12 条（表格汇报、溯源字段、`capdux.org` 原库名检索、吸收前必查 `lib/` & `@cap/` 防重复决策矩阵）。
 - `/data/dev/cap/worker/src/{routes/search.ts,web.ts}`: 升级 `capdux.org` 搜索 API、首页卡片与详情页，支持直接按原库名/别名检索并显式展示 `from npm:<orig>` / `crates.io:<orig>` 与改名提示。
+
+### 2026-11-27 (Batch 130 & 首轮去重收口 — **合并清理 12 组后缀重叠包 + 新增 5 大零重复溯源包 `rustc-hash`(12.5 亿)+`crc32c`(7.5 亿)+`p-try`+`is-plain-obj`+`map-obj`**)
+- **去重收口（Rule #12）**：将 12 组 0 反向依赖的后缀重叠包（`aho-corasick-dfa`、`bitflags-crate`、`boxen-ui`、`forwarded-http`、`fresh-http`、`hex-crate`、`lru-crate`、`picomatch-core`、`qs-parse`、`textwrap-crate`、`ulid-crate`、`vary-http`）映射统一收口至标准主名包并移除冗余副本，消除选择困难。
+- `packages/@cap/p-try/` & `cap/test/testCapPTry.cp`: npm **Top 25** `p-try` v3（1.6 亿+/周，含 `"source"` 与溯源横幅，6/6 PASS）。
+- `packages/@cap/is-plain-obj/` & `cap/test/testCapIsPlainObj.cp`: npm Top 30 `is-plain-obj` v4（1.4 亿+/周，含 `"source"` 与溯源横幅，6/6 PASS）。
+- `packages/@cap/map-obj/` & `cap/test/testCapMapObj.cp`: npm Top 35 `map-obj`（1.3 亿+/周，含 `"source"` 与溯源横幅，6/6 PASS）。
+- `packages/@cap/crc32c/` & `cap/test/testCapCrc32c.cp`: crates.io **#165** `crc32c` v0.6（7.5 亿+，RFC 3720 向量全过，6/6 PASS）。
+- `packages/@cap/rustc-hash/` & `cap/test/testCapRustcHash.cp`: crates.io **#80** `rustc-hash` v2（**12.5 亿+**，`FxHasher64`/`32`，6/6 PASS）。

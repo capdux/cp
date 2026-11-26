@@ -16,12 +16,18 @@
     "zero-alloc"
   ],
   "source": {
-    "registry": "npm",
+    "registry": "crates.io",
     "name": "ulid",
-    "repo": "https://github.com/ulid/javascript",
+    "repo": "https://github.com/dylanhart/ulid-rs",
     "license": "MIT"
   },
   "sources": [
+    {
+      "registry": "crates.io",
+      "name": "ulid",
+      "repo": "https://github.com/dylanhart/ulid-rs",
+      "license": "MIT"
+    },
     {
       "registry": "npm",
       "name": "ulid",

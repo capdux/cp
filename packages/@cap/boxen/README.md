@@ -1,5 +1,8 @@
 # @cap/boxen
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:boxen` ([https://github.com/sindresorhus/boxen](https://github.com/sindresorhus/boxen))
+
 零堆分配的 CP CLI 终端边框盒子渲染引擎 — 洁净室 MIT 实现，对标 npm `boxen`。
 
 Zero-allocation CLI terminal box renderer for CP — clean-room MIT parity with npm `boxen`.

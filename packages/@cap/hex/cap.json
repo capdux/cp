@@ -4,5 +4,11 @@
   "description": "Zero-allocation hexadecimal encoder/decoder, fixed-width integer hex formatter, and canonical HexDump utility for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "hex",
+    "repo": "https://github.com/KokaKiwi/rust-hex",
+    "license": "MIT"
+  }
 }

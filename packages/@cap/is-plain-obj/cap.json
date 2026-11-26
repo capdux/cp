@@ -1,0 +1,14 @@
+{
+  "name": "@cap/is-plain-obj",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap plain object metadata checker, JSON object literal validator, and prototype-pollution key guard (clean-room port of npm is-plain-obj)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "is-plain-obj",
+    "repo": "https://github.com/sindresorhus/is-plain-obj",
+    "license": "MIT"
+  }
+}

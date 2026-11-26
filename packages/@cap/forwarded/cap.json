@@ -5,9 +5,23 @@
   "main": "src/index.cp",
   "license": "MIT",
   "source": {
-    "registry": "crates.io",
-    "name": "forwarded-header-value",
-    "repo": "https://github.com/cp-lang/cp",
+    "registry": "npm",
+    "name": "forwarded",
+    "repo": "https://github.com/jshttp/forwarded",
     "license": "MIT"
-  }
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "forwarded",
+      "repo": "https://github.com/jshttp/forwarded",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "forwarded-header-value",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ]
 }

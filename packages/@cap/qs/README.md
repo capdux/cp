@@ -1,5 +1,8 @@
 # `@cap/qs` — 零分配嵌套查询字符串解析与序列化器
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:qs` ([https://github.com/ljharb/qs](https://github.com/ljharb/qs))
+
 > 独立 Clean-Room 纯 CP 实现（严格对标 npm `qs` [周下载 120M+] 与 Rust `serde_qs` crate）| 许可协议：MIT
 
 ## 架构概述

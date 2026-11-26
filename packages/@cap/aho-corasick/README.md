@@ -1,5 +1,8 @@
 # @cap/aho-corasick
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:aho-corasick` ([https://github.com/BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick))
+
 Zero-allocation Aho-Corasick multi-pattern O(N + Z) search automaton with LCRS static node pool, BFS failure links, and dictionary suffix links for CP — clean-room MIT parity with Rust `aho-corasick` (1.45B downloads on crates.io).
 
 纯 CP 零堆分配 AC 自动机多模式串线性时间搜索引擎（静态 256 节点 LCRS Trie + 64 模式上限），支持全量重叠后缀匹配，适用于日志关键字扫描、敏感词过滤、WAF 规则匹配与入侵检测。

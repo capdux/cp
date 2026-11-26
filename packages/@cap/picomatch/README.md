@@ -1,5 +1,8 @@
 # @cap/picomatch
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:picomatch` ([https://github.com/micromatch/picomatch](https://github.com/micromatch/picomatch))
+
 Zero-allocation glob matching engine & static base scanner for CP — clean-room MIT parity with npm `picomatch` v4. Reuses `@cap/normalize-path` and `@cap/is-extglob`.
 
 纯 CP 零堆分配高频通配符匹配引擎（对标 npm `picomatch` v4），完整支持 `*`/`?`/`**` globstar、字符类 `[a-z]`/`[!0-9]`、嵌套花括号 `{a,b,c}`、前导 `!`/`!!` 取反、点文件保护、`nocase`/`basename`/`noglobstar` 选项、组合规则过滤与 `scanBase` 静态前缀提取。
