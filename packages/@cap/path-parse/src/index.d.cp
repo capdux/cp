@@ -10,6 +10,11 @@ export class ParsedPath {
 
 export fn pprIsWinSep(b: u8): bool;
 export fn pprIsAlpha(b: u8): bool;
-export fn pprSplitBaseExt(base: string): [string, string];
+export class PprNameExt {
+    name: string,
+    ext: string,
+}
+
+export fn pprSplitBaseExt(base: string): PprNameExt;
 export fn parsePosix(path: string): ParsedPath;
 export fn parseWin32(path: string): ParsedPath;

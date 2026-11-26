@@ -17,9 +17,14 @@ fn pprIsAlpha(b: u8): bool {
     return (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
 }
 
-fn pprSplitBaseExt(base: string): [string, string] {
+struct PprNameExt {
+    name: string,
+    ext: string,
+}
+
+fn pprSplitBaseExt(base: string): PprNameExt {
     if (base.len == 0) {
-        return ["", ""];
+        return PprNameExt { name: "", ext: "" };
     }
     // Find last '.' after index 0 (dotfiles like ".gitignore" have empty ext)
     let dot: usize = 0;
@@ -36,13 +41,13 @@ fn pprSplitBaseExt(base: string): [string, string] {
         }
     }
     if (!found) {
-        return [base, ""];
+        return PprNameExt { name: base, ext: "" };
     }
     // Special case: ".." has name="..", ext=""
     if (base.len == 2 && base[0] == 46 && base[1] == 46) {
-        return [base, ""];
+        return PprNameExt { name: base, ext: "" };
     }
-    return [base[0..dot], base[dot..base.len]];
+    return PprNameExt { name: base[0..dot], ext: base[dot..base.len] };
 }
 
 /// Parses a POSIX path into `{ root, dir, base, ext, name }` with zero allocation.
@@ -98,8 +103,8 @@ pub fn parsePosix(path: string): ParsedPath {
         root: root,
         dir: dir,
         base: base,
-        ext: parts[1],
-        name: parts[0],
+        ext: parts.ext,
+        name: parts.name,
     };
 }
 
@@ -156,8 +161,8 @@ pub fn parseWin32(path: string): ParsedPath {
         root: root,
         dir: dir,
         base: base,
-        ext: parts[1],
-        name: parts[0],
+        ext: parts.ext,
+        name: parts.name,
     };
 }
 
