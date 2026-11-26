@@ -1,0 +1,8 @@
+{
+  "name": "@cap/fastrand",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WyRand 64-bit PRNG with unbiased range sampling, 53-bit unit floats, Fisher-Yates shuffle, and alphanumeric generation for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

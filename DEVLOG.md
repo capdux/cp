@@ -149,3 +149,6 @@
 
 ## 2026-11-26: Batch 28 严格单调递减完成 crates.io 17.28 亿 → 11.92 亿 Top 10（冲向 200 映射里程碑）
 - 交付 Rust 十亿级核心包 `@cap/strsim`（13.25 亿, 6/6 PASS）与 `@cap/slab`（11.92 亿, 6/6 PASS），完成 8 项十亿级 Rust crate 去重直连（`itoa`/`heck`/`log`/`regex`/`clap`/`bytes`/`http`/`sha2`），总映射达 **195 条**。
+
+## 2026-11-26: Batch 29 严格单调递减完成 crates.io 11.79 亿 → 9.93 亿 Top 10（突破 205 映射里程碑！）
+- 交付 Rust 十亿级核心包 `@cap/fastrand`（11.79 亿, 6/6）、`@cap/percent-encoding`（11.58 亿, 6/6）、`@cap/byteorder`（`untrusted` 10.18 亿 + `byteorder` 9.93 亿, 6/6），`registry.json` 正式突破 **205 条**生态映射！

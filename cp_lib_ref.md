@@ -347,3 +347,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/http-errors`** | `packages/@cap/http-errors` | 对标 npm `http-errors`（2.53 亿/周）— 标准 4xx/5xx 构造器、expose 泄漏防护与 RFC 9457 `problem+json` 零堆序列化 |
 | **`@cap/strsim`** | `packages/@cap/strsim` | 对标 Rust `strsim`（13.25 亿总下载）— 零堆 7 合 1 字符串距离/相似度（Hamming/Levenshtein/OSA/Jaro/Jaro-Winkler/Sørensen-Dice） |
 | **`@cap/slab`** | `packages/@cap/slab` | 对标 Rust `slab`（11.92 亿总下载）— O(1) 侵入式空闲链表对象池与防 ABA 悬垂代数句柄 Generational Arena |
+| **`@cap/fastrand`** | `packages/@cap/fastrand` | 对标 Rust `fastrand`（11.79 亿总下载）— 零堆 WyRand 64-bit PRNG、无偏区间采样与 Fisher-Yates 原地洗牌 |
+| **`@cap/percent-encoding`** | `packages/@cap/percent-encoding` | 对标 Rust `percent-encoding`（11.58 亿总下载）— WHATWG/RFC 3986 128-bit `AsciiSet` 字符集编解码与严格防注入解码 |
+| **`@cap/byteorder`** | `packages/@cap/byteorder` | 对标 Rust `untrusted`（10.18 亿）+ `byteorder`（9.93 亿）— 大小端二进制编解码与零越界单向 `ByteReader`/`ByteWriter` |

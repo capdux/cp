@@ -1954,6 +1954,106 @@
       "kind": "package",
       "aliases": ["generational-arena", "slotmap"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fastrand",
+      "source_repo": "https://github.com/smol-rs/fastrand",
+      "license": "MIT",
+      "cp_target": "@cap/fastrand",
+      "kind": "package",
+      "aliases": ["wyrand"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "miniz_oxide",
+      "source_repo": "https://github.com/Frommi/miniz_oxide",
+      "license": "MIT",
+      "cp_target": "@cap/miniz",
+      "kind": "package",
+      "aliases": ["flate2", "pako", "fflate"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "percent-encoding",
+      "source_repo": "https://github.com/servo/rust-url",
+      "license": "MIT",
+      "cp_target": "@cap/percent-encoding",
+      "kind": "package",
+      "aliases": ["form_urlencoded"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "time",
+      "source_repo": "https://github.com/time-rs/time",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["time-core", "toml_datetime"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "url",
+      "source_repo": "https://github.com/servo/rust-url",
+      "license": "MIT",
+      "cp_target": "cap:url",
+      "kind": "stdlib",
+      "aliases": ["whatwg-url"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "errno",
+      "source_repo": "https://github.com/lambda-fairy/rust-errno",
+      "license": "MIT",
+      "cp_target": "cap:errno",
+      "kind": "stdlib",
+      "aliases": ["rustix"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tempfile",
+      "source_repo": "https://github.com/Stebalien/tempfile",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": ["tmp"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "chrono",
+      "source_repo": "https://github.com/chronotope/chrono",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["dayjs", "date-fns", "luxon"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "untrusted",
+      "source_repo": "https://github.com/briansmith/untrusted",
+      "license": "ISC",
+      "cp_target": "@cap/byteorder",
+      "kind": "package",
+      "aliases": ["safe-reader"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "byteorder",
+      "source_repo": "https://github.com/BurntSushi/byteorder",
+      "license": "MIT",
+      "cp_target": "@cap/byteorder",
+      "kind": "package",
+      "aliases": ["endian-codec"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

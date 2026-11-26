@@ -1,0 +1,18 @@
+{
+  "name": "@cap/byteorder",
+  "version": "1.0.1",
+  "description": "Zero-heap big-endian/little-endian binary codecs & bounds-checked untrusted ByteReader/ByteWriter (inspired by Rust byteorder + untrusted)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "byteorder",
+    "untrusted",
+    "endian",
+    "binary",
+    "reader",
+    "writer",
+    "codec",
+    "protocol"
+  ]
+}

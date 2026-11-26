@@ -243,3 +243,9 @@
 - `packages/@cap/strsim/` & `cap/test/testCapStrsim.cp`: 7 合 1 零堆字符串距离与相似度算法（对标 Rust `strsim` **13.25 亿总下载**，6/6 PASS）。
 - `packages/@cap/slab/` & `cap/test/testCapSlab.cp`: O(1) 预分配对象池与防 ABA 代数句柄引擎（对标 Rust `slab` **11.92 亿总下载**，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **195 条**高频映射（新增 `itoa`/`heck`/`log`/`regex`/`clap`/`bytes`/`strsim`/`http`/`sha2`/`slab`）。
+
+## [2026-11-26] - Batch 29 严格单调递减吸收 Rust crates.io 11.79 亿 → 9.93 亿 Top 10（`@cap/fastrand`, `@cap/percent-encoding`, `@cap/byteorder`）并突破 205 条生态映射里程碑
+- `packages/@cap/fastrand/` & `cap/test/testCapFastrand.cp`: WyRand 64-bit 零堆伪随机数与无偏采样引擎（对标 Rust `fastrand` **11.79 亿总下载**，6/6 PASS）。
+- `packages/@cap/percent-encoding/` & `cap/test/testCapPercentEncoding.cp`: WHATWG/RFC 3986 128-bit `AsciiSet` 百分号编解码引擎（对标 Rust `percent-encoding` **11.58 亿总下载**，6/6 PASS）。
+- `packages/@cap/byteorder/` & `cap/test/testCapByteorder.cp`: 大小端二进制编解码与零越界单向 `ByteReader`/`ByteWriter`（对标 Rust `untrusted` **10.18 亿** + `byteorder` **9.93 亿**，6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **205 条**生态映射里程碑（新增 `fastrand`/`miniz_oxide`/`percent-encoding`/`time`/`url`/`errno`/`tempfile`/`chrono`/`untrusted`/`byteorder`）。
