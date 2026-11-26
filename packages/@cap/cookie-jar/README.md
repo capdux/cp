@@ -1,19 +1,13 @@
 # @cap/cookie-jar
 
-Zero-allocation RFC 6265 HTTP Cookie domain/path matcher, `Set-Cookie` parser, and `Cookie` header builder for CP.
+Clean-room MIT, zero-heap RFC 6265 HTTP Cookie & `Set-Cookie` parser, serializer, and domain/path matching `CookieJar` for CP.
 
-## Features
+## Dependencies
+- `@cap/unicase` (`1.0.0`) — reused for case-insensitive attribute names and RFC 6265 domain suffix matching.
 
-- **Zero heap allocation**: zero-copy `CookieEntry` fields and caller-supplied `[]u8` output buffers.
-- **RFC 6265 matching**: `domainMatches` (dot-boundary suffix check blocking spoofed domains like `evil-example.com`), `pathMatches`, and `defaultPath`.
-- **Full attribute parsing**: `parseSetCookie` handles `Domain`, `Path`, `Max-Age`, `Secure`, `HttpOnly`, and `SameSite` (`None`/`Lax`/`Strict`).
-- **Safe request assembly**: `shouldSend` enforces HTTPS for `Secure` cookies and drops expired (`Max-Age <= 0`) cookies; `buildCookieHeader` assembles `k1=v1; k2=v2` without partial truncation.
-
-## Usage
-
-```cp
-import { CookieEntry, parseSetCookie, buildCookieHeader } from "@cap/cookie-jar";
-
-let c = CookieEntry{ name: "", value: "", domain: "", path: "", max_age: 0, has_max_age: false, secure: false, http_only: false, same_site: 0 };
-* = parseSetCookie("sid=xyz; Domain=.example.com; Path=/api; Secure; HttpOnly; SameSite=Strict", "api.example.com", "/api/login", &c);
-```
+## API
+- `parseSetCookie(header)` — parses `Set-Cookie` into `Cookie` (`name`, `value`, `domain`, `path`, `max_age`, `secure`, `http_only`, `same_site`)
+- `serializeSetCookie(cookie, out)` — formats `Set-Cookie` header
+- `getCookieHeaderValue(header, name)` — extracts value from `Cookie:` request header
+- `domainMatches(host, cookie_domain)` & `pathMatches(req_path, cookie_path)`
+- `CookieJar` (`new`, `size`, `setFromHeader`, `buildCookieHeader`)

@@ -906,3 +906,12 @@
 - `packages/@cap/unicase/` & `cap/test/testCapUnicase.cp`: crates.io #80 `unicase`（12 亿+，复用 `@cap/fnv-hash`，6/6 PASS）。
 - `packages/@cap/wildmatch/` & `cap/test/testCapWildmatch.cp`: crates.io Top-400 `wildmatch`（4 亿+，复用 `@cap/unicase`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 101 全部 7 个官方包映射。
+
+### 2026-11-27 (Batch 102 — 6 大高频核心包全 6/6 PASS — `heck`+`fixedbitset`+`similar`+`graphql`+`cookie-jar`+`cors`，官方 `.cap` 包逼近 **600 大关 (598)**！)
+- `packages/@cap/heck-case/` & `cap/test/testCapHeckCase.cp`: crates.io #105 `heck` v0.5（10 亿+，8 种命名风格，6/6 PASS）。
+- `packages/@cap/similar-diff/` & `cap/test/testCapSimilarDiff.cp`: crates.io Top-250 `similar` v2（5 亿+，LCS Diff & Unified Diff，6/6 PASS）。
+- `packages/@cap/fixedbitset/` & `cap/test/testCapFixedbitset.cp`: crates.io #140 `fixedbitset`（8.5 亿+，1024 位零堆位集与集合代数，6/6 PASS）。
+- `packages/@cap/graphql-parse/` & `cap/test/testCapGraphqlParse.cp`: npm Top 80 `graphql` v16（7000 万+/周，词法/语法解析与压缩，6/6 PASS）。
+- `packages/@cap/cookie-jar/` & `cap/test/testCapCookieJar.cp`: npm `tough-cookie`（RFC 6265 CookieJar，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/cors-headers/` & `cap/test/testCapCorsHeaders.cp`: npm Top 55 `cors`（8000 万+/周，双包复用 `@cap/unicase`+`@cap/wildmatch`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 102 全部 6 个官方包映射（npm / crates.io 严守 1:1 平衡）。

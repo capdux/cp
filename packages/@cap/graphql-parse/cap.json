@@ -1,0 +1,9 @@
+{
+  "name": "@cap/graphql-parse",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap GraphQL Spec lexer, recursive-descent document parser/validator, and query minifier in pure CP (clean-room MIT counterpart to npm graphql v16 parser).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["graphql", "parser", "lexer", "ast", "minify", "query", "zero-heap"]
+}

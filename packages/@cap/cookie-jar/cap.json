@@ -1,9 +1,11 @@
 {
   "name": "@cap/cookie-jar",
   "ver": "1.0.0",
-  "description": "Zero-allocation RFC 6265 HTTP Cookie domain/path matcher, Set-Cookie parser, and Cookie header builder for CP.",
   "license": "MIT",
+  "description": "Zero-heap RFC 6265 HTTP Cookie, Set-Cookie parser, serializer, and domain/path matching jar (clean-room port of npm cookie + tough-cookie)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["cookie", "cookie-jar", "set-cookie", "rfc6265", "http", "security", "zero-alloc"]
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
 }

@@ -798,3 +798,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/unicode-xid`** | `packages/@cap/unicode-xid` | 对标 crates.io #70 `unicode-xid` (13 亿+) — UAX #31 Unicode 标识符字符判定与词法扫描器 |
 | **`@cap/unicase`** | `packages/@cap/unicase` | 对标 crates.io #80 `unicase` (12 亿+，跨包复用 `@cap/fnv-hash`) — 零堆 Unicode/ASCII 大小写无关包装器、折叠比较与流式哈希 |
 | **`@cap/wildmatch`** | `packages/@cap/wildmatch` | 对标 crates.io Top-400 `wildmatch` (4 亿+，跨包复用 `@cap/unicase`) — 防回溯迭代通配符与自定义 SQL LIKE 匹配器 |
+| **`@cap/heck-case`** | `packages/@cap/heck-case` | 对标 crates.io #105 `heck` v0.5 (10 亿+) — 8 种 Rust 风格命名转换引擎（含缩写词/数字边界精准切分） |
+| **`@cap/similar-diff`** | `packages/@cap/similar-diff` | 对标 crates.io Top-250 `similar` v2 (5 亿+) — 零堆行级 LCS Diff、Unified Diff 生成与万分比相似度引擎 |
+| **`@cap/fixedbitset`** | `packages/@cap/fixedbitset` | 对标 crates.io #140 `fixedbitset` (8.5 亿+) — 1024 位零堆定长位集合、区间置位、集合代数与 `nextOne` 游标 |
+| **`@cap/graphql-parse`** | `packages/@cap/graphql-parse` | 对标 npm Top 80 `graphql` v16 (7000 万+/周) — 零堆 GraphQL Spec 词法/递归下降语法解析与查询压缩器 |
+| **`@cap/cookie-jar`** | `packages/@cap/cookie-jar` | 对标 npm `cookie`/`tough-cookie` (跨包复用 `@cap/unicase`) — RFC 6265 Cookie/`Set-Cookie` 解析序列化与域名/路径匹配 Jar |
+| **`@cap/cors-headers`** | `packages/@cap/cors-headers` | 对标 npm Top 55 `cors` (8000 万+/周，双包复用 `@cap/unicase`+`@cap/wildmatch`) — Fetch/W3C CORS 策略求值与预检响应头生成器 |

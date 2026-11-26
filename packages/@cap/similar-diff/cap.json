@@ -1,0 +1,18 @@
+{
+  "name": "@cap/similar-diff",
+  "ver": "1.0.0",
+  "description": "Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT, inspired by Rust similar v2).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "diff",
+    "similar",
+    "lcs",
+    "unified-diff",
+    "patch",
+    "text-diff",
+    "similarity",
+    "zero-alloc"
+  ]
+}

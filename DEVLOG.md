@@ -376,3 +376,6 @@
 ## 2026-11-27: Batch 101 七大 Unicode & Web 模板顶流包全 6/6 PASS — 官方 `.cap` 包突破 **591+**！
 - 主智能体与全新 2 路子智能体（Worker N5 + Worker C4）全速并行，一次性拿下 Rust Unicode 三巨头 `unicode-segmentation`（13.5 亿+）、`unicode-xid`（13 亿+）、`unicase`（12 亿+，复用 `@cap/fnv-hash`）与 `wildmatch`（复用 `@cap/unicase`），以及 npm 顶流 `mime-types`（2.5 亿+/周）、`marked`（1.2 亿+/周）、`ejs`（1 亿+/周），全部 42/42 单测 100% PASS。
 - 同步确认 `agy-comm.service` 处于 `active` 正常心跳状态、0 条待处理工单，每 3 小时定时审计 cron 已重启激活。
+
+## 2026-11-27: Batch 102 六大核心包全 6/6 PASS — 官方 `.cap` 包推进至 **598**，冲刺 **600 包里程碑**！
+- 交付 crates.io `heck`（10 亿+）、`fixedbitset`（8.5 亿+）、`similar`（5 亿+）与 npm `graphql`、`tough-cookie`（复用 `@cap/unicase`）、`cors`（双包复用 `@cap/unicase`+`@cap/wildmatch`），全部 36/36 单测 100% PASS。

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/fixedbitset",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap fixed-capacity 1024-bit set with range operations, popcount, and set algebra (clean-room port of Rust fixedbitset)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

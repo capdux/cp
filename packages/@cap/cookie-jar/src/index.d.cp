@@ -1,6 +1,7 @@
 // Type definitions for CP
 
-export class CookieEntry {
+import { eqAscii, endsWithIgnoreCase } from "../../unicase/src/index.cp";
+export class Cookie {
     name: string,
     value: string,
     domain: string,
@@ -12,15 +13,23 @@ export class CookieEntry {
     same_site: u8,
 }
 
-export fn cjToLower(c: u8): u8;
-export fn cjIsSpace(c: u8): bool;
-export fn cjTrim(s: &[]u8): &[]u8;
-export fn cjEqIgnoreCase(a: &[]u8, b: &[]u8): bool;
-export fn cjIsIpv4Literal(host: &[]u8): bool;
-export fn cjParseI64(s: &[]u8, out: &mut i64): bool;
+export fn cjIsWs(b: u8): bool;
+export fn cjTrim(s: string): string;
+export fn cjStrEq(a: string, b: string): bool;
+export fn cjPush(out: []u8, pos: usize, s: string): usize;
+export fn cjPushI64(out: []u8, pos: usize, v: i64): usize;
+export fn cjParseI64(s: string, ok_out: []bool): i64;
+export fn parseSetCookie(header: string): Cookie;
+export fn serializeSetCookie(c: Cookie, out: []u8): usize;
+export fn getCookieHeaderValue(header: string, name: string): string?;
 export fn domainMatches(host: string, cookie_domain: string): bool;
 export fn pathMatches(req_path: string, cookie_path: string): bool;
-export fn defaultPath(req_uri_path: string): string;
-export fn parseSetCookie(header: string, req_host: string, req_path: string, out: &mut CookieEntry): bool;
-export fn shouldSend(cookie: CookieEntry, host: string, path: string, is_https: bool): bool;
-export fn buildCookieHeader(cookies: &[]CookieEntry, host: string, path: string, is_https: bool, out: []u8): usize;
+export class CookieJar {
+    items: [32]Cookie,
+    count: usize,
+    fn new(): CookieJar;
+    fn size(): usize;
+    fn setFromHeader(_: auto, set_cookie_header: string): bool;
+    fn buildCookieHeader(host: string, req_path: string, is_https: bool, out: []u8): usize;
+}
+

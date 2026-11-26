@@ -2439,12 +2439,12 @@
       "source_name": "heck",
       "source_repo": "https://github.com/withoutboats/heck",
       "license": "MIT",
-      "cp_target": "@cap/camelcase",
+      "cp_target": "@cap/heck-case",
       "kind": "package",
       "aliases": [
         "convert_case"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -2928,13 +2928,13 @@
       "source_name": "fixedbitset",
       "source_repo": "https://github.com/petgraph/fixedbitset",
       "license": "MIT",
-      "cp_target": "@cap/bitset",
+      "cp_target": "@cap/fixedbitset",
       "kind": "package",
       "aliases": [
         "bit-vec",
         "bit-set"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -4842,10 +4842,10 @@
       "source_name": "cors",
       "source_repo": "https://github.com/expressjs/cors",
       "license": "MIT",
-      "cp_target": "@web/cors",
+      "cp_target": "@cap/cors-headers",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -10236,6 +10236,26 @@
       "source_repo": "https://github.com/becheran/wildmatch",
       "license": "MIT",
       "cp_target": "@cap/wildmatch",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "graphql",
+      "source_repo": "https://github.com/graphql/graphql-js",
+      "license": "MIT",
+      "cp_target": "@cap/graphql-parse",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "similar",
+      "source_repo": "https://github.com/mitsuhiko/similar",
+      "license": "MIT",
+      "cp_target": "@cap/similar-diff",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
