@@ -876,3 +876,9 @@
 - `packages/@cap/prettier-fmt/` & `cap/test/testCapPrettierFmt.cp`: npm `prettier`（JSON/CSS 格式化器，6/6 PASS）。
 - `packages/@cap/change-case/` & `cap/test/testCapChangeCase.cp`: npm Top 110 `change-case` v5（复用 `@cap/camelcase`+`@cap/decamelize`，12 种风格，6/6 PASS）。
 - `packages/@cap/registry.json`: 推进至 **837+ 条**映射（官方 `.cap` 包突破 **571+**）。
+
+### 2026-11-27 (Batch 99 — **冲刺百波大关！** `zod`/`which`/`bstr`/`bitvec` 4 大包全 6/6 PASS，官方包 576+)
+- `packages/@cap/zod-schema/` & `cap/test/testCapZodSchema.cp`: npm Top 25 `zod`（1.5 亿+/周，复用 `@cap/kind-of`+`@cap/whatwg-url`，6/6 PASS）。
+- `packages/@cap/which-bin/` & `cap/test/testCapWhichBin.cp`: npm Top 20 `which`（2 亿+/周，复用 `@cap/normalize-path`，6/6 PASS）。
+- `packages/@cap/bstr/` & `cap/test/testCapBstr.cp`: crates.io #90 `bstr`（11 亿+，复用 `@cap/memchr`，6/6 PASS）。
+- `packages/@cap/bitvec/` & `cap/test/testCapBitvec.cp`: crates.io #210 `bitvec`（6 亿+，6/6 PASS）。

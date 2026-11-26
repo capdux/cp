@@ -1,0 +1,12 @@
+{
+  "name": "@cap/ajv-schema",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap JSON Schema Draft-07 / 2020-12 validation engine for CP (clean-room MIT implementation of npm ajv v8).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/zod-schema": "1.0.0",
+    "@cap/ipaddr": "1.0.0"
+  }
+}

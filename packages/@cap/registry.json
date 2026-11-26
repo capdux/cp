@@ -297,7 +297,7 @@
       "source_name": "zod",
       "source_repo": "https://github.com/colinhacks/zod",
       "license": "MIT",
-      "cp_target": "@cap/validator",
+      "cp_target": "@cap/zod-schema",
       "kind": "package",
       "aliases": [
         "validator",
@@ -2080,8 +2080,8 @@
       "source_name": "which",
       "source_repo": "https://github.com/npm/node-which",
       "license": "ISC",
-      "cp_target": "cap:which",
-      "kind": "stdlib",
+      "cp_target": "@cap/which-bin",
+      "kind": "package",
       "aliases": [
         "which-rs"
       ],
@@ -2379,8 +2379,8 @@
       "source_name": "itertools",
       "source_repo": "https://github.com/rust-itertools/itertools",
       "license": "MIT",
-      "cp_target": "cap:collections",
-      "kind": "stdlib",
+      "cp_target": "@cap/itertools",
+      "kind": "package",
       "aliases": [
         "lodash"
       ],
@@ -3042,8 +3042,8 @@
       "source_name": "bstr",
       "source_repo": "https://github.com/BurntSushi/bstr",
       "license": "MIT",
-      "cp_target": "cap:bytes",
-      "kind": "stdlib",
+      "cp_target": "@cap/bstr",
+      "kind": "package",
       "aliases": [
         "byte-string"
       ],
@@ -10158,6 +10158,16 @@
       "aliases": [
         "hast"
       ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bitvec",
+      "source_repo": "https://github.com/ferrilab/bitvec",
+      "license": "MIT",
+      "cp_target": "@cap/bitvec",
+      "kind": "package",
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     }
   ]

@@ -1,0 +1,11 @@
+{
+  "name": "@cap/bstr",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation byte string utilities (Rust bstr v1 parity) powered by @cap/memchr SWAR search, line splitting, lossy UTF-8 decoding, and ASCII transforms",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/memchr": "1.0.0"
+  }
+}

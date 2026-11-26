@@ -365,3 +365,6 @@
 
 ## 2026-11-27: Batch 98 六大顶流包全 6/6 PASS — 拿下 Crates.io **全站 #1 `hashbrown`（32.6 亿）** + #11 `indexmap` + #16 `memchr`（合计 70.6 亿下载）！
 - 交付 `@cap/hashbrown`、`@cap/indexmap`、`@cap/memchr` 三大 Rust 基础设施之王 + npm `terser-minify`、`prettier-fmt`、`change-case`，全部 6/6 PASS，官方 `.cap` 包突破 **571+**。
+
+## 2026-11-27: Batch 99 四大核心包全 6/6 PASS — 推进至 **576+ 官方 `.cap` 包**，即将迎来 **Batch 100 百波里程碑**！
+- 交付 `@cap/zod-schema`、`@cap/which-bin`、`@cap/bstr`（11 亿+，复用 `@cap/memchr`）、`@cap/bitvec`（6 亿+），全部 6/6 PASS。

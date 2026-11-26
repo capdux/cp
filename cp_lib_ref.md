@@ -776,3 +776,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/terser-minify`** | `packages/@cap/terser-minify` | 对标 npm `terser` — 单遍词法安全 JS/TS/CSS 压缩器（保留版权头与字符串/模板字面量） |
 | **`@cap/prettier-fmt`** | `packages/@cap/prettier-fmt` | 对标 npm `prettier` — 零堆 JSON/CSS 代码美化格式化器 |
 | **`@cap/change-case`** | `packages/@cap/change-case` | 对标 npm Top 110 `change-case` v5 (8000 万+/周，跨包复用 `@cap/camelcase`+`@cap/decamelize`) — 12 种命名风格全量转换 |
+| **`@cap/zod-schema`** | `packages/@cap/zod-schema` | 对标 npm Top 25 `zod` v3 (1.5 亿+/周，跨包复用 `@cap/kind-of`+`@cap/whatwg-url`) — 零堆 JSON Schema/对象字段校验与多错误收集 |
+| **`@cap/which-bin`** | `packages/@cap/which-bin` | 对标 npm Top 20 `which` (2 亿+/周，跨包复用 `@cap/normalize-path`) — 跨平台 POSIX/Windows `PATH`+`PATHEXT` 可执行路径解析器 |
+| **`@cap/bstr`** | `packages/@cap/bstr` | 对标 crates.io #90 `bstr` (11 亿+，跨包复用 `@cap/memchr`) — 零堆字节字符串查找、行切分、替换与 RFC 3629 UTF-8 有损转换 |
+| **`@cap/bitvec`** | `packages/@cap/bitvec` | 对标 crates.io #210 `bitvec` (6 亿+) — 512 位零堆紧凑位向量、popcount、字级位运算与 `firstOne`/`lastOne` |
