@@ -2754,6 +2754,106 @@
       "kind": "stdlib",
       "aliases": ["temporal"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "murmur3",
+      "source_repo": "https://github.com/stusmall/murmur3",
+      "license": "MIT",
+      "cp_target": "@cap/murmur3",
+      "kind": "package",
+      "aliases": ["fastmurmur3", "murmurhash3js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hashring",
+      "source_repo": "https://github.com/jeromefroe/hashring-rs",
+      "license": "MIT",
+      "cp_target": "@cap/consistent-hash",
+      "kind": "package",
+      "aliases": ["consistent-hashing"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hyperloglog",
+      "source_repo": "https://github.com/jedisct1/rust-hyperloglog",
+      "license": "ISC",
+      "cp_target": "@cap/hyperloglog",
+      "kind": "package",
+      "aliases": ["hyperloglogplus", "hll"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "count-min-sketch",
+      "source_repo": "https://github.com/amansarda/count-min-sketch",
+      "license": "MIT",
+      "cp_target": "@cap/count-min",
+      "kind": "package",
+      "aliases": ["cms"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ciborium",
+      "source_repo": "https://github.com/enarx/ciborium",
+      "license": "Apache-2.0",
+      "cp_target": "cap:cbor",
+      "kind": "stdlib",
+      "aliases": ["ciborium-ll", "ciborium-io"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wasmparser",
+      "source_repo": "https://github.com/bytecodealliance/wasm-tools",
+      "license": "Apache-2.0",
+      "cp_target": "cap:wasm",
+      "kind": "stdlib",
+      "aliases": ["wasm-decoder"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "signal-hook",
+      "source_repo": "https://github.com/vorner/signal-hook",
+      "license": "MIT",
+      "cp_target": "cap:sys",
+      "kind": "stdlib",
+      "aliases": ["signal-hook-registry"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cookie",
+      "source_repo": "https://github.com/SergioBenitez/cookie-rs",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["cookie-jar"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tiny-keccak",
+      "source_repo": "https://github.com/debris/tiny-keccak",
+      "license": "CC0-1.0",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["sha3", "keccak"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "png",
+      "source_repo": "https://github.com/image-rs/image-png",
+      "license": "MIT",
+      "cp_target": "cap:png",
+      "kind": "stdlib",
+      "aliases": ["pngjs"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

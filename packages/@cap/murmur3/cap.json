@@ -1,0 +1,17 @@
+{
+  "name": "@cap/murmur3",
+  "version": "1.0.0",
+  "description": "Zero-heap MurmurHash3 (32-bit x86 & 128-bit x64) deterministic non-cryptographic hash functions for sharding, Kafka/Cassandra/ClickHouse partitioning",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "murmur3",
+    "murmurhash",
+    "murmurhash3",
+    "hash",
+    "sharding",
+    "partition",
+    "zero-alloc"
+  ]
+}

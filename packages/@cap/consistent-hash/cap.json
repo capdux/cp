@@ -1,0 +1,8 @@
+{
+  "name": "@cap/consistent-hash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation consistent hash ring with virtual nodes, O(log V) binary search routing, and deduplicated replica selection for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

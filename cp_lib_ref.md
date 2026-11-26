@@ -386,3 +386,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/base85`** | `packages/@cap/base85` | 对标 Rust `z85`/`ascii85` — ZeroMQ Z85 (RFC 32) 与 Adobe Ascii85 (`z` 压缩与 `<~...~>`) 零堆编解码 |
 | **`@cap/governor`** | `packages/@cap/governor` | 对标 Rust `governor` — GCRA 单状态限流器与浮点令牌桶 `TokenBucket`（零系统时钟依赖） |
 | **`@cap/backoff`** | `packages/@cap/backoff` | 对标 Rust `backoff` — 指数/线性退避与 AWS Full/Equal/Decorrelated 抖动算法（防惊群效应） |
+| **`@cap/murmur3`** | `packages/@cap/murmur3` | 对标 Rust `murmur3` / npm `murmurhash3js` — Austin Appleby MurmurHash3 32-bit/128-bit 比特精确实现 |
+| **`@cap/consistent-hash`** | `packages/@cap/consistent-hash` | 对标 Rust/npm `hashring` — 虚拟节点一致性哈希环、`O(log V)` 顺时针定位与去重多副本容灾 `getReplicas` |
+| **`@cap/hyperloglog`** | `packages/@cap/hyperloglog` | 对标 Rust `hyperloglog` / Redis HLL — 256 字节零堆概率基数估算（LinearCounting 纠偏）与分布式 `merge` |
+| **`@cap/count-min`** | `packages/@cap/count-min` | 对标 Rust `count-min-sketch` — 4×256 饱和计数器流式频次估算、分布式合并与 Heavy Hitter 热点检测 |

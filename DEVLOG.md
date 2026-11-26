@@ -173,3 +173,6 @@
 
 ## 2026-11-26: Batch 36 单批交付 6 大 Rust 独立包，总映射突破 275 条，线上包数达 196（距 200 包仅 4 步！）
 - 交付 `@cap/bs58`（6/6）、`@cap/varint`（6/6）、`@cap/online-stats`（6/6）、`@cap/base85`（6/6）、`@cap/governor`（6/6）、`@cap/backoff`（6/6），去重直连 `yansi`/`tinytemplate`/`pbkdf2`/`jiff`，总映射达 **275 条**！
+
+## 2026-11-26: Batch 37 历史性突破 **200 官方 `.cap` 包大关** + 285 条生态映射！
+- 交付分布式与概率算法四件套 `@cap/murmur3`（6/6）、`@cap/consistent-hash`（6/6）、`@cap/hyperloglog`（6/6）、`@cap/count-min`（6/6），去重直连 `ciborium`/`wasmparser`/`signal-hook`/`cookie`/`tiny-keccak`/`png`，`https://capdux.org` 线上官方 `.cap` 包正式突破 **200 个**，总映射达 **285 条**！

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/hyperloglog",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 256-byte HyperLogLog cardinality estimator with LinearCounting small-range correction and distributed merge (Rust hyperloglog / Redis PFADD/PFCOUNT/PFMERGE parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

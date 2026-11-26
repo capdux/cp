@@ -306,3 +306,10 @@
 - `packages/@cap/governor/` & `cap/test/testCapGovernor.cp`: GCRA 与令牌桶确定性限流器（6/6 PASS）。
 - `packages/@cap/backoff/` & `cap/test/testCapBackoff.cp`: 指数/线性退避与 AWS 抖动算法（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **275 条**高频映射（含 `yansi`/`tinytemplate`/`pbkdf2`/`jiff` 去重直连）。
+
+## [2026-11-26] - Batch 37 历史里程碑：突破 **200 官方 `.cap` 包 + 285 条映射**！（交付 `@cap/murmur3`, `@cap/consistent-hash`, `@cap/hyperloglog`, `@cap/count-min`）
+- `packages/@cap/murmur3/` & `cap/test/testCapMurmur3.cp`: MurmurHash3 32-bit x86 & 128-bit x64 比特精确实现（6/6 PASS）。
+- `packages/@cap/consistent-hash/` & `cap/test/testCapConsistentHash.cp`: 虚拟节点一致性哈希环与去重多副本 `getReplicas`（6/6 PASS）。
+- `packages/@cap/hyperloglog/` & `cap/test/testCapHyperloglog.cp`: 256 字节零堆 HyperLogLog 基数估算与分布式合并（6/6 PASS）。
+- `packages/@cap/count-min/` & `cap/test/testCapCountMin.cp`: Count-Min Sketch 流式频次估算与热点检测（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **285 条**高频映射（含 `ciborium`/`wasmparser`/`signal-hook`/`cookie`/`tiny-keccak`/`png` 去重直连）。
