@@ -11069,6 +11069,60 @@
         "pep440-rs"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "emoji-regex",
+      "source_repo": "https://github.com/mathiasbynens/emoji-regex",
+      "license": "MIT",
+      "cp_target": "@cap/emoji-regex",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "balanced-match",
+      "source_repo": "https://github.com/juliangruber/balanced-match",
+      "license": "MIT",
+      "cp_target": "@cap/balanced-match",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "string_decoder",
+      "source_repo": "https://github.com/nodejs/string_decoder",
+      "license": "MIT",
+      "cp_target": "@cap/string-decoder",
+      "kind": "package",
+      "aliases": [
+        "string-decoder"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "potential_utf",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "@cap/potential-utf",
+      "kind": "package",
+      "aliases": [
+        "potential-utf"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aes",
+      "source_repo": "https://github.com/RustCrypto/block-ciphers",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/aes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

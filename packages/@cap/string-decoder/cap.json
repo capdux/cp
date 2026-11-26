@@ -1,0 +1,14 @@
+{
+  "name": "@cap/string-decoder",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation streaming multi-byte UTF-8/UTF-16/Latin1/Base64 string decoder preserving incomplete boundary bytes across chunks (clean-room MIT implementation of npm string_decoder, #62 / 378M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "string_decoder",
+    "repo": "https://github.com/nodejs/string_decoder",
+    "license": "MIT"
+  }
+}

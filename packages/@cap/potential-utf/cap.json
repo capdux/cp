@@ -1,0 +1,14 @@
+{
+  "name": "@cap/potential-utf",
+  "ver": "1.0.0",
+  "description": "Zero-allocation potentially-ill-formed UTF-8, UTF-16, and Unicode scalar value wrappers (ICU4X potential_utf parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Unicode-3.0",
+  "source": {
+    "registry": "crates.io",
+    "name": "potential_utf",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "Unicode-3.0"
+  }
+}

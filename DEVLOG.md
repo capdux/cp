@@ -489,3 +489,6 @@
 
 ## 2026-11-27: Batch 137 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **724 包**，映射 **936 条**）！
 - 交付 npm **Top 20 `is-fullwidth-code-point`（1.8 亿+/周）**、`humanize-string`（跨包复用 `@cap/decamelize`）、`titleize` 与 crates.io `humansize`、`oorandom`（PCG32 官方向量一致），全部 30/30 单测一遍过 100% PASS；Worker N16 满 6 包（36/36 PASS，7 分钟）轮换换新为 Worker N17。
+
+## 2026-11-27: Batch 139 真实 Top 榜首波 5 大超级核心包全 6/6 PASS（官方 `@cap` 达 **733 包**，映射 **944 条**）！
+- 严格按 `scripts/fetch_real_top700.py` 实时拉取的双平台真实下载量榜单降序交付：npm **#17 `emoji-regex`（5.98 亿/周）**、**#18 `balanced-match`（5.78 亿/周）**、**#62 `string_decoder`（3.78 亿/周）** 与 crates.io **#268 `potential_utf`（6.27 亿+）**、**#349 `aes`（4.38 亿+，FIPS-197 AES-128/192/256 全向量通过）**，30/30 单测一遍过 100% PASS。

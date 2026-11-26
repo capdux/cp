@@ -1234,3 +1234,11 @@
 - `packages/@cap/unicode-script/` & `cap/test/testCapUnicodeScript.cp`: crates.io `unicode-script`（6/6 PASS）。
 - `packages/@cap/pep440-rs/` & `cap/test/testCapPep440Rs.cp`: crates.io `pep440_rs`（6/6 PASS）。
 - `scripts/fetch_real_top700.py`: 新增双平台真实下载量 Top 700 实时拉取与差集校准脚本，后续严格按真实下载量从高到低吸收。
+
+### 2026-11-27 (Batch 139 — **真实下载量 Top 榜首波 5 大重量级包：npm #17/#18/#62 + crates.io #268/#349，30/30 PASS**)
+- `packages/@cap/emoji-regex/` & `cap/test/testCapEmojiRegex.cp`: npm **#17** `emoji-regex`（5.98 亿/周，6/6 PASS）。
+- `packages/@cap/balanced-match/` & `cap/test/testCapBalancedMatch.cp`: npm **#18** `balanced-match`（5.78 亿/周，6/6 PASS）。
+- `packages/@cap/string-decoder/` & `cap/test/testCapStringDecoder.cp`: npm **#62** `string_decoder`（3.78 亿/周，6/6 PASS）。
+- `packages/@cap/potential-utf/` & `cap/test/testCapPotentialUtf.cp`: crates.io **#268** `potential_utf`（6.27 亿+，6/6 PASS）。
+- `packages/@cap/aes/` & `cap/test/testCapAes.cp`: crates.io **#349** `aes`（4.38 亿+，FIPS-197 C.1/C.2/C.3 & NIST KAT 6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册。
