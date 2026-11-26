@@ -9527,6 +9527,127 @@
         "crc"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-binary-path",
+      "source_repo": "https://github.com/sindresorhus/is-binary-path",
+      "license": "MIT",
+      "cp_target": "@cap/is-binary-path",
+      "kind": "package",
+      "aliases": [
+        "binary-path"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "camelcase-keys",
+      "source_repo": "https://github.com/sindresorhus/camelcase-keys",
+      "license": "MIT",
+      "cp_target": "@cap/camelcase-keys",
+      "kind": "package",
+      "aliases": [
+        "decamelize-keys"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "detect-newline",
+      "source_repo": "https://github.com/sindresorhus/detect-newline",
+      "license": "MIT",
+      "cp_target": "@cap/detect-newline",
+      "kind": "package",
+      "aliases": [
+        "normalize-newline"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "futoin-hkdf",
+      "source_repo": "https://github.com/futoin/util-js-hkdf",
+      "license": "MIT",
+      "cp_target": "@cap/hkdf-sha256",
+      "kind": "package",
+      "aliases": [
+        "hkdf"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "decamelize-keys",
+      "source_repo": "https://github.com/sindresorhus/decamelize-keys",
+      "license": "MIT",
+      "cp_target": "@cap/camelcase-keys",
+      "kind": "package",
+      "aliases": [
+        "snakecase-keys"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rfc6979",
+      "source_repo": "https://github.com/RustCrypto/signatures",
+      "license": "MIT",
+      "cp_target": "@cap/rfc6979",
+      "kind": "package",
+      "aliases": [
+        "hmac-drbg"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "universal-hash",
+      "source_repo": "https://github.com/RustCrypto/universal-hashes",
+      "license": "MIT",
+      "cp_target": "@cap/ghash-gf128",
+      "kind": "package",
+      "aliases": [
+        "ghash",
+        "polyval"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hkdf",
+      "source_repo": "https://github.com/RustCrypto/KDFs",
+      "license": "MIT",
+      "cp_target": "@cap/hkdf-sha256",
+      "kind": "package",
+      "aliases": [
+        "rfc5869"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "atoi",
+      "source_repo": "https://github.com/pacman82/atoi-rs",
+      "license": "MIT",
+      "cp_target": "@cap/atoi",
+      "kind": "package",
+      "aliases": [
+        "atoi_simd"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "colored",
+      "source_repo": "https://github.com/colored-rs/colored",
+      "license": "MIT",
+      "cp_target": "@cap/anstyle",
+      "kind": "package",
+      "aliases": [
+        "anes"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

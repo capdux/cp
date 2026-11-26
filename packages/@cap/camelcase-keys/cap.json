@@ -1,0 +1,12 @@
+{
+  "name": "@cap/camelcase-keys",
+  "ver": "1.0.0",
+  "desc": "Zero-heap streaming JSON object key case converter (camelCase, snake_case, PascalCase) composing @cap/camelcase in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/camelcase": "^1.0.0"
+  },
+  "keywords": ["camelcase-keys", "decamelize-keys", "json", "camelcase", "snake-case", "zero-heap"]
+}

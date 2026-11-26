@@ -703,3 +703,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/pretty-bytes`** | `packages/@cap/pretty-bytes` | 对标 npm `pretty-bytes` (2 亿+/周) — SI 1000 & IEC 1024 人类可读字节/比特大小格式化 |
 | **`@cap/strip-final-newline`** | `packages/@cap/strip-final-newline` | 对标 npm `strip-final-newline` (2.5 亿+/周，独立依赖) — 零拷贝尾随 LF/CRLF 剥离与规范化 |
 | **`@cap/indent-string`** | `packages/@cap/indent-string` | 对标 npm `indent-string` (1.8 亿+/周) — 零堆多行文本缩进器 |
+
+| **`@cap/is-binary-path`** | `packages/@cap/is-binary-path` | 对标 npm `is-binary-path` (1.5 亿+/周，跨包复用 `@cap/binary-extensions`) — 二进制/文本路径判定与批处理过滤 |
+| **`@cap/camelcase-keys`** | `packages/@cap/camelcase-keys` | 对标 npm `camelcase-keys` / `decamelize-keys` (1.5 亿+/周，跨包复用 `@cap/camelcase`) — 流式 JSON 对象键风格转换 |
+| **`@cap/rfc6979`** | `packages/@cap/rfc6979` | 对标 crates.io #489 `rfc6979` (2.98 亿，跨包复用 `@cap/cookie-signature`) — 确定性 ECDSA HMAC-SHA256 DRBG |
+| **`@cap/ghash-gf128`** | `packages/@cap/ghash-gf128` | 对标 crates.io `universal-hash` / `ghash` (2.91 亿) — NIST SP 800-38D 无分支 GF(2^128) GHASH 认证器 |
+| **`@cap/hkdf-sha256`** | `packages/@cap/hkdf-sha256` | 对标 crates.io `hkdf` (2.5 亿+，跨包复用 `@cap/cookie-signature`) — RFC 5869 HKDF-SHA256 密钥派生 |
+| **`@cap/atoi`** | `packages/@cap/atoi` | 对标 crates.io `atoi` (2.62 亿) — 字节切片零堆溢出安全多进制整数解析 |

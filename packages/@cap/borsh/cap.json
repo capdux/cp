@@ -1,0 +1,9 @@
+{
+  "name": "@cap/borsh",
+  "version": "1.0.0",
+  "description": "Zero-allocation canonical little-endian Borsh binary serializer and deserializer for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["borsh", "binary", "serialization", "little-endian", "solana", "near", "zero-alloc"]
+}

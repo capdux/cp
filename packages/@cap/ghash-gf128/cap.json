@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ghash-gf128",
+  "version": "1.0.0",
+  "description": "Zero-allocation NIST SP 800-38D GF(2^128) universal hash (GHASH for AES-GCM) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ghash", "gf128", "aes-gcm", "universal-hash", "crypto", "nist", "zero-alloc"]
+}

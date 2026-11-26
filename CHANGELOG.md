@@ -769,3 +769,12 @@
 - `packages/@cap/indent-string/` & `cap/test/testCapIndentString.cp`: npm `indent-string`（1.8 亿+/周，6/6 PASS）。
 - `packages/@cap/pretty-ms/`: 第 9 个历史旧包跨包重构，真实 `import` 复用 `@cap/parse-ms`（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **780 条**双生态高频映射（**npm=390 / crates.io=390 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 88 — **790 映射 395/395 绝对对称！** 6 个新包全部 6/6 PASS，官方包冲至 506+)
+- `packages/@cap/is-binary-path/` & `cap/test/testCapIsBinaryPath.cp`: npm `is-binary-path`（复用 `@cap/binary-extensions`，6/6 PASS）。
+- `packages/@cap/camelcase-keys/` & `cap/test/testCapCamelcaseKeys.cp`: npm `camelcase-keys`/`decamelize-keys`（复用 `@cap/camelcase`，6/6 PASS）。
+- `packages/@cap/rfc6979/` & `cap/test/testCapRfc6979.cp`: crates.io #489 `rfc6979`（复用 `@cap/cookie-signature`，通过 RFC 6979 NIST P-256 官方向量，6/6 PASS）。
+- `packages/@cap/ghash-gf128/` & `cap/test/testCapGhashGf128.cp`: crates.io `universal-hash`（通过 NIST SP 800-38D 官方向量，6/6 PASS）。
+- `packages/@cap/hkdf-sha256/` & `cap/test/testCapHkdfSha256.cp`: crates.io `hkdf`（复用 `@cap/cookie-signature`，通过 RFC 5869 全 3 组官方向量，6/6 PASS）。
+- `packages/@cap/atoi/` & `cap/test/testCapAtoi.cp`: crates.io `atoi`（2.62 亿下载，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **790 条**双生态高频映射（**npm=395 / crates.io=395 绝对 1:1 对称**）。

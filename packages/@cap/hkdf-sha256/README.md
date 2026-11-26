@@ -1,0 +1,15 @@
+# @cap/hkdf-sha256
+
+Pure CP, zero-allocation RFC 5869 HKDF-SHA256 key derivation function (parity with RustCrypto `hkdf`).
+
+Reuses `hmacSha256` and streaming SHA-256 primitives from `@cap/cookie-signature`.
+
+## API
+
+- `hkdfExtract(salt: []u8, ikm: []u8, out_prk32: []u8): bool` — RFC 5869 Section 2.2 (empty salt defaults to 32 zero bytes)
+- `hkdfExpand(prk32: []u8, info: []u8, out_okm: []u8): bool` — RFC 5869 Section 2.3 (`0 <= L <= 8160`)
+- `hkdfDerive(salt: []u8, ikm: []u8, info: []u8, out_okm: []u8): bool` — One-shot Extract + Expand
+
+## License
+
+MIT

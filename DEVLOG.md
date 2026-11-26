@@ -327,3 +327,6 @@
 
 ## 2026-11-27: Batch 87 九件套全 6/6 PASS — 正式冲破 **500 官方 `.cap` 包终极里程碑** & **780 条双生态映射（390/390 绝对对称）**！
 - 单批交付 9 个全新零堆纯 CP 包（`kdtree-2d`、`ray-cast`、`stringprep`、`base16ct`、`cargo-platform`、`binary-extensions`、`pretty-bytes`、`strip-final-newline`、`indent-string`）+ 第 9 个历史旧包 `@cap/pretty-ms` 重构复用 `@cap/parse-ms`，全线 100% PASS！
+
+## 2026-11-27: Batch 88 六件套全 6/6 PASS — 达到 **790 条双生态映射（395/395 绝对对称）** & **506+ 官方 `.cap` 包**！
+- 交付 `@cap/is-binary-path`、`@cap/camelcase-keys`、`@cap/rfc6979`、`@cap/ghash-gf128`、`@cap/hkdf-sha256`、`@cap/atoi`，全部 6/6 PASS 且通过全部 RFC/NIST 官方密码学向量，持续坚持跨包依赖零重复复用。
