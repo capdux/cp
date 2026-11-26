@@ -628,3 +628,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/rational`** | `packages/@cap/rational` | 对标 Rust `num-rational` (1 亿+) / npm `fraction.js` — 精确 64 位最简有理数/分数算术 |
 | **`@cap/aabb2`** | `packages/@cap/aabb2` | 对标 Rust `parry2d` — 2D 轴对齐包围盒、交并集、欧氏距离与 2D Slab 射线相交 |
 | **`@cap/aabb3`** | `packages/@cap/aabb3` | 对标 Rust `parry3d` / npm `aabb-3d` — 3D 轴对齐包围盒、体积/表面积与 3D Kay-Kajiya Slab 射线检测 |
+
+| **`@cap/perlin-noise`** | `packages/@cap/perlin-noise` | 对标 npm `perlin-noise` / Rust `noise` — Ken Perlin 1D/2D/3D 梯度噪声、fBm 分形与山脊噪声 |
+| **`@cap/fft-radix2`** | `packages/@cap/fft-radix2` | 对标 npm `fft.js` / Rust `rustfft` — 原地 Cooley-Tukey Radix-2 FFT / IFFT 与幅值频谱 |
+| **`@cap/fixed-q16`** | `packages/@cap/fixed-q16` | 对标 Rust `fixed` — 确定性 Q16.16 定点数四则运算、取整、限幅与插值 |
+| **`@cap/haversine-geo`** | `packages/@cap/haversine-geo` | 对标 npm/Rust `haversine` — WGS-84 球面大圆距离、方位角、中点与目标点推算 |
+| **`@cap/polygon2d`** | `packages/@cap/polygon2d` | 对标 npm `point-in-polygon` / Rust `geo` — 2D 多边形面积、质心、射线法内外检测与凹凸判断 |
+| **`@cap/mat4`** | `packages/@cap/mat4` | 对标 npm `gl-mat4` — 4x4 3D 变换矩阵、三轴旋转、透视/正交投影与 LookAt 视图矩阵 |

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/mat4",
+  "version": "1.0.0",
+  "description": "Zero-allocation 4x4 3D graphics transformation matrix library (translation, scale, rotation, perspective, orthographic, lookAt) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mat4", "matrix", "3d", "graphics", "transform", "projection", "lookat", "zero-alloc"]
+}

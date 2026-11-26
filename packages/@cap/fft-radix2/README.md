@@ -1,0 +1,16 @@
+# @cap/fft-radix2
+
+Zero-heap-allocation in-place iterative Cooley-Tukey Radix-2 Fast Fourier Transform (FFT / IFFT) and magnitude spectrum library in pure CP with zero external dependencies.
+
+## Features
+
+- `isPowerOfTwo(n: usize): bool`
+- `fftInPlace(re: []f64, im: []f64): bool`: bit-reversal permutation + iterative radix-2 butterflies
+- `ifftInPlace(re: []f64, im: []f64): bool`: conjugate -> FFT -> conjugate & scale by `1/N`
+- `magnitudeSpectrum(re: []const f64, im: []const f64, out_mag: []f64): usize`
+- `dominantBin(re: []const f64, im: []const f64): usize`
+- Built-in Taylor-series `sinF64` / `cosF64` and Newton-Raphson `sqrtF64`.
+
+## License
+
+MIT

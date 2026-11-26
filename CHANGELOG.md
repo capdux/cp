@@ -666,3 +666,12 @@
 - `packages/@cap/aabb2/` & `cap/test/testCapAabb2.cp`: 2D AABB 包围盒与 2D 射线 Slab 测试（6/6 PASS）。
 - `packages/@cap/aabb3/` & `cap/test/testCapAabb3.cp`: 3D AABB 包围盒与 3D 射线 Slab 测试（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **680 条**双生态高频映射（**npm=340 / crates.io=340 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 78 — 690 映射精确 1:1 对称 & 437+ 官方包，正式启动 Top-700 + 独立依赖拆分)
+- `packages/@cap/perlin-noise/` & `cap/test/testCapPerlinNoise.cp`: 1D/2D/3D Perlin 梯度噪声、fBm 与山脊噪声（6/6 PASS）。
+- `packages/@cap/fft-radix2/` & `cap/test/testCapFftRadix2.cp`: 原地 Radix-2 FFT / IFFT 与频谱分析（6/6 PASS）。
+- `packages/@cap/fixed-q16/` & `cap/test/testCapFixedQ16.cp`: Q16.16 确定性定点数算术（6/6 PASS）。
+- `packages/@cap/haversine-geo/` & `cap/test/testCapHaversineGeo.cp`: WGS-84 Haversine 球面距离与方位角（6/6 PASS）。
+- `packages/@cap/polygon2d/` & `cap/test/testCapPolygon2d.cp`: 2D 多边形面积、质心、射线法与凹凸性（6/6 PASS）。
+- `packages/@cap/mat4/` & `cap/test/testCapMat4.cp`: 4x4 3D 变换/投影/LookAt 矩阵（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **690 条**双生态高频映射（**npm=345 / crates.io=345 绝对 1:1 对称**，含 Top-59 Rust `semver` 12.5 亿下载）。

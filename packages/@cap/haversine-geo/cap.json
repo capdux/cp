@@ -1,0 +1,9 @@
+{
+  "name": "@cap/haversine-geo",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WGS-84 spherical Haversine great-circle distance, initial bearing, midpoint, and destination point calculator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["haversine", "geo", "gps", "distance", "bearing", "wgs84", "coordinates", "zero-alloc"]
+}

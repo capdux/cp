@@ -8310,6 +8310,139 @@
         "pid"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "perlin-noise",
+      "source_repo": "https://github.com/andrewrk/node-perlin-noise",
+      "license": "MIT",
+      "cp_target": "@cap/perlin-noise",
+      "kind": "package",
+      "aliases": [
+        "simplex-noise"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fft.js",
+      "source_repo": "https://github.com/indutny/fft.js",
+      "license": "MIT",
+      "cp_target": "@cap/fft-radix2",
+      "kind": "package",
+      "aliases": [
+        "fft-js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "haversine",
+      "source_repo": "https://github.com/njj/haversine",
+      "license": "MIT",
+      "cp_target": "@cap/haversine-geo",
+      "kind": "package",
+      "aliases": [
+        "geolib"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "haversine",
+      "source_repo": "https://github.com/gavinuhma/haversine",
+      "license": "MIT",
+      "cp_target": "@cap/haversine-geo",
+      "kind": "package",
+      "aliases": [
+        "geo-distance"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "point-in-polygon",
+      "source_repo": "https://github.com/substack/point-in-polygon",
+      "license": "MIT",
+      "cp_target": "@cap/polygon2d",
+      "kind": "package",
+      "aliases": [
+        "robust-point-in-polygon"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "gl-mat4",
+      "source_repo": "https://github.com/stackgl/gl-mat4",
+      "license": "MIT",
+      "cp_target": "@cap/mat4",
+      "kind": "package",
+      "aliases": [
+        "mat4"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "semver",
+      "source_repo": "https://github.com/dtolnay/semver",
+      "license": "MIT",
+      "cp_target": "@cap/semver-range",
+      "kind": "package",
+      "aliases": [
+        "semver-parser"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "uuid",
+      "source_repo": "https://github.com/uuid-rs/uuid",
+      "license": "MIT",
+      "cp_target": "@cap/uuid-v7",
+      "kind": "package",
+      "aliases": [
+        "uuid-v4",
+        "uuid-v7"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "geo-types",
+      "source_repo": "https://github.com/georust/geo",
+      "license": "MIT",
+      "cp_target": "@cap/polygon2d",
+      "kind": "package",
+      "aliases": [
+        "polygon"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "nalgebra-glm",
+      "source_repo": "https://github.com/dimforge/nalgebra",
+      "license": "MIT",
+      "cp_target": "@cap/mat4",
+      "kind": "package",
+      "aliases": [
+        "mat4"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "microfft",
+      "source_repo": "https://gitlab.com/ra_kete/microfft-rs",
+      "license": "MIT",
+      "cp_target": "@cap/fft-radix2",
+      "kind": "package",
+      "aliases": [
+        "fft"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

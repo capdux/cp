@@ -297,3 +297,6 @@
 
 ## 2026-11-27: Batch 77 六件套全 6/6 PASS — 达到 **680 条双生态映射（npm=340 / crates.io=340 绝对 1:1 对称）** & 432+ 官方 `.cap` 包！
 - 交付 `@cap/complex-num`（1.5 亿+）、`@cap/pid-ctrl`、`@cap/kalman1d`、`@cap/rational`（1 亿+）、`@cap/aabb2`、`@cap/aabb3`，全面补齐科学计算、控制滤波与 2D/3D 空间碰撞检测底座，全线零堆纯 CP 100% PASS。
+
+## 2026-11-27: Batch 78 六件套全 6/6 PASS — 达到 **690 条双生态映射（npm=345 / crates.io=345 绝对 1:1 对称）** & 437+ 官方 `.cap` 包！
+- 交付 `@cap/perlin-noise`、`@cap/fft-radix2`、`@cap/fixed-q16`、`@cap/haversine-geo`、`@cap/polygon2d`、`@cap/mat4`（全 6/6 PASS），并按新阶段指令全面切入 **npm/crates.io Top 700 + 独立依赖包拆分复用** 路线。

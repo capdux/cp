@@ -1,0 +1,9 @@
+{
+  "name": "@cap/polygon2d",
+  "ver": "1.0.0",
+  "desc": "Zero-heap 2D polygon geometry (Shoelace area, centroid, perimeter, ray-casting containment, convexity) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["polygon", "geometry", "2d", "point-in-polygon", "shoelace", "centroid", "zero-heap"]
+}
