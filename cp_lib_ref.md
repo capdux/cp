@@ -308,3 +308,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/forwarded`** | `packages/@cap/forwarded` | 对标 npm `forwarded`/`proxy-addr` — RFC 7239 `Forwarded` 与 `X-Forwarded-For` 防伪造代理链解析与内网 IP 判定 |
 | **`@cap/path-to-regexp`** | `packages/@cap/path-to-regexp` | 对标 npm `path-to-regexp` — 零堆路由命名参数/可选参数/通配符匹配与反向 URL 生成 |
 | **`@cap/color-names`** | `packages/@cap/color-names` | 对标 npm `color-name`/`color-convert` — 全部 148 个 W3C CSS Color 4 命名颜色二分查表 + RGB/HSL/HSV/HEX 互转 |
+| **`@cap/json-repair`** | `packages/@cap/json-repair` | 对标 npm `jsonrepair` / Rust `llm_json` — LLM/AI 坏 JSON 自动修复（去围栏/注释、补引号、去尾逗号、转 Python 字面量、补闭合括号） |
+| **`@cap/html-entities`** | `packages/@cap/html-entities` | 对标 npm `he`/`escape-html`/`html-entities` — XSS 转义 + 61 命名实体 + 全 Unicode 十进制/十六进制 UTF-8 编解码 |
+| **`@cap/data-uri`** | `packages/@cap/data-uri` | 对标 npm `data-uri-to-buffer` / Rust `data-url` — RFC 2397 `data:` URI 解析、Base64/百分号解码与构建 |

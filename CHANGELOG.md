@@ -162,3 +162,9 @@
 - `packages/@cap/path-to-regexp/` & `cap/test/testCapPathToRegexp.cp`: 零堆 URL 路由模式匹配、命名/可选/通配参数提取与反向 `buildRoute` URL 构建器（对标 npm `path-to-regexp` [65M/wk]，4/4 PASS）。
 - `packages/@cap/color-names/` & `cap/test/testCapColorNames.cp`: 全部 148 个 W3C CSS Color 4 命名颜色二分查表 + RGB/HSL/HSV/HEX 互转与调色（对标 npm `color-name`/`color-convert` [95M/wk]，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 76 条高频映射并同步发布至 `https://capdux.org`（线上官方 `.cap` 包突破 **110 个**！）。
+
+## [2026-11-26] - Wave 15 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/json-repair`, `@cap/html-entities`, `@cap/data-uri`）并发布至 `capdux.org`
+- `packages/@cap/json-repair/` & `cap/test/testCapJsonRepair.cp`: 零堆 LLM/坏 JSON 自动修复引擎（对标 npm `jsonrepair` & Rust `llm_json`，5/5 PASS）。
+- `packages/@cap/html-entities/` & `cap/test/testCapHtmlEntities.cp`: 零堆 HTML5 实体编解码与 XSS 转义引擎（对标 npm `he` [55M/wk] & `escape-html` [70M/wk]，6/6 PASS）。
+- `packages/@cap/data-uri/` & `cap/test/testCapDataUri.cp`: 零堆 RFC 2397 `data:` URI 解析、Base64/百分号解码与编码引擎（对标 npm `data-uri-to-buffer` [15M/wk] & Rust `data-url`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 80 条高频映射（新增 Wave 15 三大包 + `range-parser` 标准库映射）并同步发布至 `https://capdux.org`。

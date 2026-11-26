@@ -1,0 +1,279 @@
+// @cap/json-repair — Zero-allocation malformed & LLM-generated JSON repair engine for CP
+// Clean-room MIT implementation inspired by npm `jsonrepair`, `dirty-json`, and Rust `llm_json`.
+
+const MAX_STACK: usize = 64;
+
+fn isWs(c: u8) -> bool {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+fn isIdentStart(c: u8) -> bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$';
+}
+
+fn isIdentChar(c: u8) -> bool {
+    return isIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+}
+
+fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
+    if (pos < out.len) {
+        out[pos] = c;
+        return pos + 1;
+    }
+    return pos;
+}
+
+fn appendStr(out: []u8, pos: usize, s: string) -> usize {
+    let p = pos;
+    let i: usize = 0;
+    while (i < s.len && p < out.len) {
+        out[p] = s[i];
+        p += 1;
+        i += 1;
+    }
+    return p;
+}
+
+fn strEq(a: string, b: string) -> bool {
+    if (a.len != b.len) {
+        return false;
+    }
+    let i: usize = 0;
+    while (i < a.len) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
+
+fn stripMarkdownFence(raw: string) -> string {
+    // Trim leading whitespace and optional ```json ... ``` wrapper common in LLM outputs
+    let start: usize = 0;
+    let end = raw.len;
+    while (start < end && isWs(raw[start])) {
+        start += 1;
+    }
+    while (end > start && isWs(raw[end - 1])) {
+        end -= 1;
+    }
+    if (end - start >= 3 && raw[start] == '`' && raw[start + 1] == '`' && raw[start + 2] == '`') {
+        start += 3;
+        while (start < end && raw[start] != '\n') {
+            start += 1;
+        }
+        if (start < end && raw[start] == '\n') {
+            start += 1;
+        }
+        if (end - start >= 3 && raw[end - 3] == '`' && raw[end - 2] == '`' && raw[end - 1] == '`') {
+            end -= 3;
+        }
+    }
+    while (start < end && isWs(raw[start])) {
+        start += 1;
+    }
+    while (end > start && isWs(raw[end - 1])) {
+        end -= 1;
+    }
+    return raw[start..end];
+}
+
+fn skipWsAndComments(s: string, start: usize) -> usize {
+    let i = start;
+    while (i < s.len) {
+        if (isWs(s[i])) {
+            i += 1;
+            continue;
+        }
+        // Single-line comment // ...
+        if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '/') {
+            i += 2;
+            while (i < s.len && s[i] != '\n') {
+                i += 1;
+            }
+            continue;
+        }
+        // Block comment /* ... */
+        if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '*') {
+            i += 2;
+            while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) {
+                i += 1;
+            }
+            if (i + 1 < s.len) {
+                i += 2;
+            } else {
+                i = s.len;
+            }
+            continue;
+        }
+        break;
+    }
+    return i;
+}
+
+pub fn repairJson(raw: string, out: []u8) -> string {
+    const s = stripMarkdownFence(raw);
+    let pos: usize = 0;
+    let stack: [MAX_STACK]u8 = undefined; // stores expected closing char '}' or ']'
+    let sp: usize = 0;
+
+    let i: usize = 0;
+    while (i < s.len) {
+        i = skipWsAndComments(s, i);
+        if (i >= s.len) {
+            break;
+        }
+        const c = s[i];
+
+        // Opening containers
+        if (c == '{' || c == '[') {
+            pos = appendByte(out, pos, c);
+            if (sp < MAX_STACK) {
+                stack[sp] = if (c == '{') { '}' as u8 } else { ']' as u8 };
+                sp += 1;
+            }
+            i += 1;
+            continue;
+        }
+
+        // Closing containers
+        if (c == '}' || c == ']') {
+            // Strip any trailing comma right before closing bracket
+            while (pos > 0 && isWs(out[pos - 1])) {
+                pos -= 1;
+            }
+            if (pos > 0 && out[pos - 1] == ',') {
+                pos -= 1;
+            }
+            if (sp > 0) {
+                pos = appendByte(out, pos, stack[sp - 1]);
+                sp -= 1;
+            } else {
+                pos = appendByte(out, pos, c);
+            }
+            i += 1;
+            continue;
+        }
+
+        // Punctuation ':' and ','
+        if (c == ':' || c == ',') {
+            // Skip duplicate commas
+            if (c == ',' && pos > 0 && out[pos - 1] == ',') {
+                i += 1;
+                continue;
+            }
+            pos = appendByte(out, pos, c);
+            i += 1;
+            continue;
+        }
+
+        // Double-quoted or single-quoted string
+        if (c == '"' || c == '\'') {
+            const quote = c;
+            pos = appendByte(out, pos, '"');
+            i += 1;
+            while (i < s.len) {
+                const sc = s[i];
+                if (sc == '\\' && i + 1 < s.len) {
+                    const nxt = s[i + 1];
+                    if (quote == '\'' && nxt == '\'') {
+                        pos = appendByte(out, pos, '\'');
+                    } else {
+                        pos = appendByte(out, pos, '\\');
+                        pos = appendByte(out, pos, nxt);
+                    }
+                    i += 2;
+                    continue;
+                }
+                if (sc == quote) {
+                    i += 1;
+                    break;
+                }
+                if (quote == '\'' && sc == '"') {
+                    pos = appendStr(out, pos, "\\\"");
+                } else if (sc == '\n') {
+                    pos = appendStr(out, pos, "\\n");
+                } else if (sc == '\r') {
+                    pos = appendStr(out, pos, "\\r");
+                } else if (sc == '\t') {
+                    pos = appendStr(out, pos, "\\t");
+                } else {
+                    pos = appendByte(out, pos, sc);
+                }
+                i += 1;
+            }
+            pos = appendByte(out, pos, '"');
+            continue;
+        }
+
+        // Bare identifiers: unquoted object keys, Python True/False/None, undefined, or bare string values
+        if (isIdentStart(c)) {
+            const start_id = i;
+            while (i < s.len && isIdentChar(s[i])) {
+                i += 1;
+            }
+            const word = s[start_id..i];
+            const after = skipWsAndComments(s, i);
+            if (after < s.len && s[after] == ':') {
+                // Unquoted object key -> quote it
+                pos = appendByte(out, pos, '"');
+                pos = appendStr(out, pos, word);
+                pos = appendByte(out, pos, '"');
+            } else if (strEq(word, "true") || strEq(word, "True") || strEq(word, "TRUE")) {
+                pos = appendStr(out, pos, "true");
+            } else if (strEq(word, "false") || strEq(word, "False") || strEq(word, "FALSE")) {
+                pos = appendStr(out, pos, "false");
+            } else if (strEq(word, "null") || strEq(word, "None") || strEq(word, "NULL") || strEq(word, "undefined")) {
+                pos = appendStr(out, pos, "null");
+            } else {
+                // Unknown bare word in value position -> quote as string
+                pos = appendByte(out, pos, '"');
+                pos = appendStr(out, pos, word);
+                pos = appendByte(out, pos, '"');
+            }
+            continue;
+        }
+
+        // Numbers (including negative, floats, scientific)
+        if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+            if (c == '+') {
+                i += 1; // JSON forbids leading '+'
+            } else {
+                pos = appendByte(out, pos, c);
+                i += 1;
+            }
+            while (i < s.len) {
+                const nc = s[i];
+                const ok = (nc >= '0' && nc <= '9') || nc == '.' || nc == 'e' || nc == 'E' || nc == '+' || nc == '-';
+                if (!ok) {
+                    break;
+                }
+                pos = appendByte(out, pos, nc);
+                i += 1;
+            }
+            continue;
+        }
+
+        // Skip stray unexpected characters
+        i += 1;
+    }
+
+    // Strip any dangling trailing comma before auto-closing truncated containers
+    while (pos > 0 && isWs(out[pos - 1])) {
+        pos -= 1;
+    }
+    if (pos > 0 && out[pos - 1] == ',') {
+        pos -= 1;
+    }
+    // Auto-close any unclosed objects/arrays (common in truncated LLM streams)
+    while (sp > 0) {
+        sp -= 1;
+        pos = appendByte(out, pos, stack[sp]);
+    }
+    return out[0..pos];
+}
+
+export {
+    repairJson,
+};

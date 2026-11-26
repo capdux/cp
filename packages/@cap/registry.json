@@ -764,6 +764,46 @@
       "kind": "package",
       "aliases": ["color-convert", "color-string", "css-color-names"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsonrepair",
+      "source_repo": "https://github.com/josdejong/jsonrepair",
+      "license": "ISC",
+      "cp_target": "@cap/json-repair",
+      "kind": "package",
+      "aliases": ["dirty-json", "llm_json", "json-repair"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "he",
+      "source_repo": "https://github.com/mathiasbynens/he",
+      "license": "MIT",
+      "cp_target": "@cap/html-entities",
+      "kind": "package",
+      "aliases": ["escape-html", "html-entities", "html-escape"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "data-uri-to-buffer",
+      "source_repo": "https://github.com/TooTallNate/proxy-agents",
+      "license": "MIT",
+      "cp_target": "@cap/data-uri",
+      "kind": "package",
+      "aliases": ["datauri", "data-url", "parse-data-url"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "range-parser",
+      "source_repo": "https://github.com/jshttp/range-parser",
+      "license": "MIT",
+      "cp_target": "cap:byterange",
+      "kind": "stdlib",
+      "aliases": ["http-range-header"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

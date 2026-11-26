@@ -1,0 +1,7 @@
+{
+  "name": "@cap/data-uri",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 2397 Data URI parser, Base64/percent decoder, and encoder for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
