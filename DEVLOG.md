@@ -408,3 +408,6 @@
 
 ## 2026-11-27: Batch 111 五大调度/查询串/枚举包全 6/6 PASS — 官方 `.cap` 包突破 **639+**！
 - 交付 crates.io `strum`（9 亿+，复用 `@cap/unicase`）、`cron`（3.5 亿+，复用 `@cap/cron-parser`）与 npm `querystring`（1.5 亿+/周，复用 `@cap/percent-encoding`）、`p-queue`、`rrule`，全部 30/30 单测 100% PASS；Worker N7 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N8。
+
+## 2026-11-27: Batch 112 七大重磅包全 6/6 PASS — 拿下 crates.io **#12 `bitflags`（19.5 亿）**，官方 `.cap` 包突破 **642+**！
+- 交付 crates.io `bitflags`（19.5 亿+）、`glob-match`、`enumflags2` 与 npm `parseurl`（1.8 亿+/周）、`encodeurl`（1.8 亿+/周）、`content-disposition`（1.5 亿+/周）、`p-map`，全部 42/42 单测 100% PASS。

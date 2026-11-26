@@ -1,9 +1,9 @@
 {
   "name": "@cap/glob-match",
   "ver": "1.0.0",
-  "description": "Zero-allocation POSIX and .gitignore glob path matcher (*, **, ?, [...], !negation) with ReDoS-free bounded backtracking for CP.",
+  "description": "Zero-allocation, anti-backtracking path glob and brace alternation matching engine for CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["glob", "minimatch", "picomatch", "gitignore", "wildcard", "path", "zero-alloc"]
+  "keywords": ["glob", "glob-match", "wildcard", "pattern", "path", "brace-expansion", "zero-alloc"]
 }

@@ -1,22 +1,60 @@
 # `@cap/parseurl`
 
-Zero-heap, zero-copy HTTP request URL parser in pure CP (clean-room counterpart to npm `parseurl`).
+Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety validator for CP. Clean-room MIT implementation inspired by Express `parseurl`.
 
 ## Features
 
-- **100% Zero Heap Allocation & Zero Copy**: Returns exact byte-range spans (`ParsedUrl`) directly into the input URL string.
-- **Fast Path & Full URI Support**: Handles relative request targets (`/users/42?sort=asc`), `#hash` truncation, empty queries (`/a?`), and full absolute URIs (`https://host:8443/v2/users?id=1`).
-- **Security Guards**: Rejects empty inputs and ASCII control characters (`< 0x20`, `0x7F`), plus fast `hasDotDotSegment` path-traversal detection and `stripQueryAndHash`.
+- **Single-pass O(N) zero-copy parsing**: Splits origin-form (`/api/v1/users?page=2&sort=asc#top`) and absolute-form (`http://host:8080/a/b?x=1`) request URLs into `pathname`, `search`, `query`, `hash`, and `path` slices without heap allocation.
+- **RFC-accurate pathname decoding**: `decodePathname` decodes `%XX` sequences while preserving literal `+` characters (unlike form query decoding).
+- **Path traversal & null-byte protection**: `isSafeRequestPath` rejects `\0` (`%00`), `\` (`%5C`), and `..` (`%2E%2E`) traversal segments while permitting benign dots like `/files/a..b.txt`.
+- **On-demand query parameter extraction**: Delegates to `@cap/querystring` (`pickQueryParam` / `unescapeQuery`) with zero duplication.
 
-## Quick Start
+## API
+
+### `ParsedRequestUrl`
 
 ```cp
-import { parseUrl, stripQueryAndHash, hasDotDotSegment } from "@cap/parseurl";
+pub struct ParsedRequestUrl {
+    pub href: string,
+    pub path: string,
+    pub pathname: string,
+    pub search: string,
+    pub query: string,
+    pub hash: string,
+    pub has_query: bool,
 
-const u = "/search?q=cp&lang=zh#top";
-const p = parseUrl(u);
-const pathname = stripQueryAndHash(u); // "/search"
-const safe = !hasDotDotSegment(pathname); // true
+    pub static fn empty(): ParsedRequestUrl
+}
+```
+
+### Functions
+
+- `parseRequestUrl(raw_url: string): ParsedRequestUrl` — Single-pass zero-copy splitter for origin-form and absolute-form HTTP request URLs.
+- `decodePathname(pathname: string, out: []u8): usize` — Percent-decodes a pathname into `out`, preserving literal `+`.
+- `isSafeRequestPath(pathname: string): bool` — Validates that a pathname has no null bytes, backslashes, or `..` traversal segments (both raw and percent-encoded).
+- `getRequestQueryParam(raw_url: string, key: string, out: []u8): usize?` — Extracts and decodes a query parameter by key via `@cap/querystring`.
+- `decodeQueryValue(raw: string, out: []u8): usize` — Decodes a query value (`+` -> space and `%XX`) via `@cap/querystring`.
+
+## Example
+
+```cp
+import {
+    parseRequestUrl,
+    decodePathname,
+    isSafeRequestPath,
+    getRequestQueryParam
+} from "@cap/parseurl";
+
+let u = parseRequestUrl("/api/v1/users?page=2&sort=asc#top");
+// u.pathname == "/api/v1/users"
+// u.search   == "?page=2&sort=asc"
+// u.query    == "page=2&sort=asc"
+// u.hash     == "#top"
+// u.path     == "/api/v1/users?page=2&sort=asc"
+
+let buf: [64]u8 = undefined;
+let page_len = getRequestQueryParam(u.href, "page", buf[0..64]);
+// page_len == 1, buf[0..1] == "2"
 ```
 
 ## License

@@ -1,9 +1,11 @@
 {
   "name": "@cap/parseurl",
   "ver": "1.0.0",
-  "desc": "Zero-heap zero-copy HTTP request URL pathname/search/query parser in pure CP",
   "license": "MIT",
+  "description": "Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety checker for CP (clean-room parity with Express parseurl)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["parseurl", "url", "http", "pathname", "query", "express", "zero-heap"]
+  "dependencies": {
+    "@cap/querystring": "1.0.0"
+  }
 }

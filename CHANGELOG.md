@@ -994,3 +994,13 @@
 - `packages/@cap/p-queue/` & `cap/test/testCapPQueue.cp`: npm Top 65 `p-queue` v8（7500 万+/周，并发受限优先级队列，6/6 PASS）。
 - `packages/@cap/rrule-parse/` & `cap/test/testCapRruleParse.cp`: npm `rrule` v2（RFC 5545，复用 `@cap/unicase`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 111 全部 5 个官方包映射。
+
+### 2026-11-27 (Batch 112 — **拿下 crates.io #12 `bitflags`(19.5 亿) + 6 大高频 HTTP/Glob 包全 6/6 PASS，官方 `.cap` 包突破 642+！**)
+- `packages/@cap/bitflags-crate/` & `cap/test/testCapBitflagsCrate.cp`: crates.io **#12** `bitflags` v2（19.5 亿+，32/64 位标志集合，6/6 PASS）。
+- `packages/@cap/glob-match/` & `cap/test/testCapGlobMatch.cp`: crates.io Top-320 `glob-match`（3 亿+，防回溯 Glob & 花括号交替，6/6 PASS）。
+- `packages/@cap/enumflags2/` & `cap/test/testCapEnumflags2.cp`: crates.io Top-330 `enumflags2`（3 亿+，64 位安全标志集，6/6 PASS）。
+- `packages/@cap/parseurl/` & `cap/test/testCapParseurl.cp`: npm Top 25 `parseurl`（1.8 亿+/周，复用 `@cap/querystring`，6/6 PASS）。
+- `packages/@cap/encodeurl/` & `cap/test/testCapEncodeurl.cp`: npm Top 26 `encodeurl` v2（1.8 亿+/周，幂等 URL 编码，6/6 PASS）。
+- `packages/@cap/content-disposition/` & `cap/test/testCapContentDisposition.cp`: npm Top 32 `content-disposition`（1.5 亿+/周，双包复用 `@cap/percent-encoding`+`@cap/unicase`，6/6 PASS）。
+- `packages/@cap/p-map/` & `cap/test/testCapPMap.cp`: npm Top 55 `p-map`（9000 万+/周，并发分片与调度池，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 112 全部 7 个官方包映射。

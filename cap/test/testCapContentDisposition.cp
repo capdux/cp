@@ -1,114 +1,113 @@
 // cap/test/testCapContentDisposition.cp
-// Comprehensive unit tests for @cap/content-disposition (RFC 6266 / RFC 5987)
+// Comprehensive unit tests for @cap/content-disposition (6 test suites)
 
 import { test, expect_eq } from "cap:test";
 import {
-    DISP_INLINE,
-    DISP_ATTACHMENT,
-    DISP_FORM_DATA,
-    ParsedDisposition,
-    format,
-    parse,
+    ContentDisposition,
+    parseContentDisposition,
+    formatContentDisposition,
+    decodeFilenameStar,
+    sanitizeFilename
 } from "../../packages/@cap/content-disposition/src/index.cp";
 
-fn sliceEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn main() {
-    test("1. @cap/content-disposition — inline & attachment without filename", () => {
-        let dst: [64]u8 = undefined;
-        let out: [64]u8 = undefined;
-
-        const n1: i64 = format(DISP_INLINE, "", dst[0..64]);
-        expect_eq(sliceEq(dst[0..(n1 as usize)], "inline"), true);
-        const p1: ParsedDisposition = parse(dst[0..(n1 as usize)], out[0..64]);
-        expect_eq(p1.ok, true);
-        expect_eq(p1.kind, DISP_INLINE);
-        expect_eq(p1.filename_len, 0 as usize);
-
-        const n2: i64 = format(DISP_ATTACHMENT, "", dst[0..64]);
-        expect_eq(sliceEq(dst[0..(n2 as usize)], "attachment"), true);
-        const p2: ParsedDisposition = parse(dst[0..(n2 as usize)], out[0..64]);
-        expect_eq(p2.ok, true);
-        expect_eq(p2.kind, DISP_ATTACHMENT);
-        expect_eq(p2.filename_len, 0 as usize);
+    test("1. parseContentDisposition — attachment with filename and filename*", () => {
+        const hdr = "attachment; filename=\"report.pdf\"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf";
+        const cd: ContentDisposition = parseContentDisposition(hdr);
+        expect_eq(cd.valid, true);
+        expect_eq(cd.isAttachment(), true);
+        expect_eq(cd.isInline(), false);
+        expect_eq(cd.hasFilename(), true);
+        expect_eq(cd.disp_type, "attachment");
+        expect_eq(cd.filename, "report.pdf");
+        expect_eq(cd.filename_star, "UTF-8''%E6%8A%A5%E5%91%8A.pdf");
     });
 
-    test("2. @cap/content-disposition — pure ASCII filename format & parse round-trip", () => {
-        let dst: [128]u8 = undefined;
-        const n: i64 = format(DISP_ATTACHMENT, "report-2026.pdf", dst[0..128]);
-        expect_eq(n > 0, true);
-        expect_eq(
-            sliceEq(dst[0..(n as usize)], "attachment; filename=\"report-2026.pdf\""),
-            true,
-        );
+    test("2. parseContentDisposition — case-insensitive matching, inline & invalid headers", () => {
+        const cd1 = parseContentDisposition("  INLINE ; FILENAME=avatar.png ; Size=1024 ");
+        expect_eq(cd1.valid, true);
+        expect_eq(cd1.isInline(), true);
+        expect_eq(cd1.isAttachment(), false);
+        expect_eq(cd1.filename, "avatar.png");
 
-        let out: [64]u8 = undefined;
-        const p: ParsedDisposition = parse(dst[0..(n as usize)], out[0..64]);
-        expect_eq(p.ok, true);
-        expect_eq(p.kind, DISP_ATTACHMENT);
-        expect_eq(p.is_utf8, false);
-        expect_eq(sliceEq(out[0..p.filename_len], "report-2026.pdf"), true);
+        const cd2 = parseContentDisposition("ATTACHMENT; FILENAME* = utf-8'zh'%E6%B5%8B%E8%AF%95.txt");
+        expect_eq(cd2.valid, true);
+        expect_eq(cd2.isAttachment(), true);
+        expect_eq(cd2.filename_star, "utf-8'zh'%E6%B5%8B%E8%AF%95.txt");
+
+        // Malformed headers must fail cleanly
+        expect_eq(parseContentDisposition("").valid, false);
+        expect_eq(parseContentDisposition("   ").valid, false);
+        expect_eq(parseContentDisposition("attachment; filename=\"unterminated.pdf").valid, false);
+        expect_eq(parseContentDisposition("attachment; brokenparam").valid, false);
     });
 
-    test("3. @cap/content-disposition — UTF-8 filename emits filename*=UTF-8'' & decodes cleanly", () => {
-        const utf8_name = "报告.pdf";
-        let dst: [256]u8 = undefined;
-        const n: i64 = format(DISP_ATTACHMENT, utf8_name, dst[0..256]);
-        expect_eq(n > 0, true);
+    test("3. formatContentDisposition — ASCII filename, default type & empty filename", () => {
+        let out: [256]u8 = undefined;
 
-        let out: [64]u8 = undefined;
-        const p: ParsedDisposition = parse(dst[0..(n as usize)], out[0..64]);
-        expect_eq(p.ok, true);
-        expect_eq(p.kind, DISP_ATTACHMENT);
-        expect_eq(p.is_utf8, true);
-        expect_eq(sliceEq(out[0..p.filename_len], utf8_name), true);
+        const n1 = formatContentDisposition("attachment", "report.pdf", out[0..256]);
+        expect_eq(out[0..n1], "attachment; filename=\"report.pdf\"");
+
+        const n2 = formatContentDisposition("inline", "photo.png", out[0..256]);
+        expect_eq(out[0..n2], "inline; filename=\"photo.png\"");
+
+        const n3 = formatContentDisposition("", "data.csv", out[0..256]);
+        expect_eq(out[0..n3], "attachment; filename=\"data.csv\"");
+
+        const n4 = formatContentDisposition("attachment", "", out[0..256]);
+        expect_eq(out[0..n4], "attachment");
     });
 
-    test("4. @cap/content-disposition — strips directory path prefixes to basename", () => {
-        let dst: [128]u8 = undefined;
-        const n1: i64 = format(DISP_ATTACHMENT, "../../etc/passwd", dst[0..128]);
-        expect_eq(sliceEq(dst[0..(n1 as usize)], "attachment; filename=\"passwd\""), true);
+    test("4. formatContentDisposition — UTF-8 non-ASCII filename auto-emits RFC 5987 filename*", () => {
+        let out: [256]u8 = undefined;
+        const n = formatContentDisposition("attachment", "报告.pdf", out[0..256]);
+        const formatted = out[0..n];
+        expect_eq(formatted, "attachment; filename=\"??.pdf\"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf");
 
-        const n2: i64 = format(DISP_ATTACHMENT, "C:\\Users\\demo\\secret.txt", dst[0..128]);
-        expect_eq(sliceEq(dst[0..(n2 as usize)], "attachment; filename=\"secret.txt\""), true);
+        // Round-trip parse and decode
+        const parsed = parseContentDisposition(formatted);
+        expect_eq(parsed.valid, true);
+        expect_eq(parsed.isAttachment(), true);
+        expect_eq(parsed.filename, "??.pdf");
+        expect_eq(parsed.filename_star, "UTF-8''%E6%8A%A5%E5%91%8A.pdf");
+
+        let decoded: [128]u8 = undefined;
+        const dn = decodeFilenameStar(parsed.filename_star, decoded[0..128]);
+        expect_eq(decoded[0..dn], "报告.pdf");
     });
 
-    test("5. @cap/content-disposition — quoted escapes & unquoted token parsing", () => {
-        let out: [64]u8 = undefined;
-        const p1: ParsedDisposition = parse("attachment; filename=plain.txt", out[0..64]);
-        expect_eq(p1.ok, true);
-        expect_eq(p1.kind, DISP_ATTACHMENT);
-        expect_eq(sliceEq(out[0..p1.filename_len], "plain.txt"), true);
+    test("5. decodeFilenameStar — UTF-8, language tag, ISO-8859-1 & malformed inputs", () => {
+        let buf: [128]u8 = undefined;
 
-        const p2: ParsedDisposition = parse("form-data; name=\"file\"; filename=\"a\\\"b;c.txt\"", out[0..64]);
-        expect_eq(p2.ok, true);
-        expect_eq(p2.kind, DISP_FORM_DATA);
-        expect_eq(sliceEq(out[0..p2.filename_len], "a\"b;c.txt"), true);
+        const n1 = decodeFilenameStar("UTF-8''%E6%8A%A5%E5%91%8A.pdf", buf[0..128]);
+        expect_eq(buf[0..n1], "报告.pdf");
+
+        const n2 = decodeFilenameStar("utf-8'en'hello%20world%21.txt", buf[0..128]);
+        expect_eq(buf[0..n2], "hello world!.txt");
+
+        const n3 = decodeFilenameStar("ISO-8859-1''%A3%20rates.pdf", buf[0..128]);
+        expect_eq(buf[0..n3], "£ rates.pdf");
+
+        // Invalid syntax returns 0
+        expect_eq(decodeFilenameStar("no-quotes-here", buf[0..128]), 0 as usize);
+        expect_eq(decodeFilenameStar("UTF-8'missing-second", buf[0..128]), 0 as usize);
+        expect_eq(decodeFilenameStar("''empty-charset", buf[0..128]), 0 as usize);
     });
 
-    test("6. @cap/content-disposition — rejects invalid headers & tiny buffers", () => {
-        let dst: [8]u8 = undefined;
-        expect_eq(format(99, "a.txt", dst[0..8]), -1 as i64);
-        expect_eq(format(DISP_ATTACHMENT, "report.pdf", dst[0..8]), -1 as i64);
+    test("6. sanitizeFilename — strips path traversal, control chars & rejects dot segments", () => {
+        let buf: [128]u8 = undefined;
 
-        let out: [4]u8 = undefined;
-        expect_eq(parse("", out[0..4]).ok, false);
-        expect_eq(parse("unknown; filename=\"a.txt\"", out[0..4]).ok, false);
-        // Output buffer too small for filename
-        expect_eq(parse("attachment; filename=\"toolong.pdf\"", out[0..4]).ok, false);
-        // Malformed percent encoding
-        expect_eq(parse("attachment; filename*=UTF-8''%ZZ", out[0..4]).ok, false);
+        const n1 = sanitizeFilename("../../etc/passwd", buf[0..128]);
+        expect_eq(buf[0..n1], "passwd");
+
+        const n2 = sanitizeFilename("C:\\Users\\admin\\Downloads\\invoice.pdf", buf[0..128]);
+        expect_eq(buf[0..n2], "invoice.pdf");
+
+        const n3 = sanitizeFilename("safe\r\nname\x00.txt", buf[0..128]);
+        expect_eq(buf[0..n3], "safename.txt");
+
+        expect_eq(sanitizeFilename("..", buf[0..128]), 0 as usize);
+        expect_eq(sanitizeFilename(".", buf[0..128]), 0 as usize);
+        expect_eq(sanitizeFilename("///", buf[0..128]), 0 as usize);
     });
 }

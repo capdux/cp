@@ -2,8 +2,7 @@
   "name": "@cap/encodeurl",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation RFC 3986 non-double-encoding URL encoder and RegExp metacharacter escaper in pure CP",
+  "description": "Zero-heap idempotent URL encoder that percent-encodes unsafe characters without double-encoding existing %XX sequences (clean-room port of npm encodeurl)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp",
-  "keywords": ["encodeurl", "url", "rfc3986", "escape-string-regexp", "regexp", "http", "location", "zero-alloc"]
+  "types": "src/index.d.cp"
 }

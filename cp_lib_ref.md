@@ -855,3 +855,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/rrule-parse`** | `packages/@cap/rrule-parse` | 对标 npm `rrule` v2 (跨包复用 `@cap/unicase`) — RFC 5545 iCalendar `RRULE` 重复规则解析、校验与格式化 |
 | **`@cap/strum-enum`** | `packages/@cap/strum-enum` | 对标 crates.io #125 `strum` (9 亿+，跨包复用 `@cap/unicase`) — 零堆枚举变体字符串注册表、判别式查找与大小写无关解析 |
 | **`@cap/cron-expr`** | `packages/@cap/cron-expr` | 对标 crates.io Top-310 `cron` v0.12 (3.5 亿+，跨包复用 `@cap/cron-parser`) — 6 字段秒级位掩码 Cron 调度解析器 |
+| **`@cap/bitflags-crate`** | `packages/@cap/bitflags-crate` | 对标 crates.io **#12** `bitflags` v2 (19.5 亿+) — 32/64 位定义掩码位标志容器（`fromBits`/`truncate`/`retain`/集合代数） |
+| **`@cap/glob-match`** | `packages/@cap/glob-match` | 对标 crates.io Top-320 `glob-match` (3 亿+) — 防回溯 `*`/`**`/`?`/`[a-z]`/`{a,b}` 高速路径 Glob 匹配与捕获 |
+| **`@cap/enumflags2`** | `packages/@cap/enumflags2` | 对标 crates.io Top-330 `enumflags2` (3 亿+) — 64 位类型安全枚举位标志集合与 O(1) `nextFlag` 游标 |
+| **`@cap/parseurl`** | `packages/@cap/parseurl` | 对标 npm Top 25 `parseurl` (1.8 亿+/周，跨包复用 `@cap/querystring`) — 单遍 O(N) HTTP 请求 URL 切分与路径穿越防护 |
+| **`@cap/encodeurl`** | `packages/@cap/encodeurl` | 对标 npm Top 26 `encodeurl` v2 (1.8 亿+/周) — 幂等 URL 编码器（保留已有 `%XX`、编码不安全字符与 CRLF 防注入） |
+| **`@cap/content-disposition`** | `packages/@cap/content-disposition` | 对标 npm Top 32 `content-disposition` (1.5 亿+/周，双包复用 `@cap/percent-encoding`+`@cap/unicase`) — RFC 6266/5987 附件头解析格式化 |
+| **`@cap/p-map`** | `packages/@cap/p-map` | 对标 npm Top 55 `p-map` (9000 万+/周) — 有界并发分片规划器、均衡 Worker 切分与 `ConcurrencyPool` 调度器 |

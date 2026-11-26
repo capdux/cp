@@ -1,152 +1,80 @@
-// @cap/encodeurl — Zero-allocation RFC 3986 Non-Double-Encoding URL Encoder & RegExp Escaper
-// Clean-room MIT implementation in pure CP.
+// @cap/encodeurl — Zero-heap idempotent URL encoder modeled on npm `encodeurl` v2 (180M+/week).
+// Clean-room MIT implementation: percent-encodes spaces, control chars, non-ASCII, quotes,
+// `<`, `>`, `\`, `^`, `` ` ``, `{`, `|`, `}`, and lone `%`, while preserving valid `%XX` sequences.
 
-fn isHexDigit(b: u8) -> bool {
-    if (b >= 48 && b <= 57) {
-        return true; // '0'..'9'
-    }
-    if (b >= 65 && b <= 70) {
-        return true; // 'A'..'F'
-    }
-    if (b >= 97 && b <= 102) {
-        return true; // 'a'..'f'
-    }
-    return false;
+fn euIsHex(b: u8): bool {
+    return (b >= 48 && b <= 57) || (b >= 65 && b <= 70) || (b >= 97 && b <= 102);
 }
 
-fn hexUpper(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
-    }
-    return 55 + nibble; // 'A' = 65 = 55 + 10
+fn euNeedsEncode(b: u8): bool {
+    // Encode CTL (<=0x20, 0x7F), non-ASCII (>=0x80), and unsafe ASCII:
+    // '"' (34), '<' (60), '>' (62), '\' (92), '^' (94), '`' (96), '{' (123), '|' (124), '}' (125)
+    if (b <= 32 || b >= 127) { return true; }
+    return b == 34 || b == 60 || b == 62 || b == 92 || b == 94 || b == 96 ||
+        b == 123 || b == 124 || b == 125;
 }
 
-/// Returns true if `b` is an unescaped RFC 3986 URI character (excluding '%').
-fn isSafeUriByte(b: u8) -> bool {
-    if (b >= 48 && b <= 57) { return true; }   // 0-9
-    if (b >= 65 && b <= 90) { return true; }   // A-Z
-    if (b >= 97 && b <= 122) { return true; }  // a-z
-    // Unreserved: - . _ ~
-    if (b == 45 || b == 46 || b == 95 || b == 126) { return true; }
-    // Gen-delims: : / ? # [ ] @
-    if (b == 58 || b == 47 || b == 63 || b == 35 || b == 91 || b == 93 || b == 64) { return true; }
-    // Sub-delims: ! $ & ' ( ) * + , ; =
-    if (b == 33 || b == 36 || b == 38 || b == 39 || b == 40 || b == 41 || b == 42 || b == 43 || b == 44 || b == 59 || b == 61) {
-        return true;
-    }
-    return false;
-}
-
-/// Encodes a URL string to a valid RFC 3986 URI without double-encoding existing `%XX` sequences.
-/// Unpaired `%` is encoded as `%25`; spaces, controls, `< > " \ ^ ` { | }`, and non-ASCII bytes
-/// are percent-encoded using uppercase hex. Returns bytes written, or `-1` if `dst` is too small.
-pub fn encodeUrl(url: []const u8, dst: []u8) -> i64 {
+/// Encodes a URL string into `out`, preserving existing valid `%XX` sequences (idempotent).
+pub fn encodeUrl(url: string, out: []u8): usize {
+    let hex: string = "0123456789ABCDEF";
+    let p: usize = 0;
     let i: usize = 0;
-    let out: usize = 0;
-    const n = url.len;
-
-    while (i < n) {
-        const b = url[i];
-        if (b == 37) {
-            // '%'
-            if (i + 2 < n && isHexDigit(url[i + 1]) && isHexDigit(url[i + 2])) {
-                if (out + 3 > dst.len) {
-                    return -1;
+    while (i < url.len) {
+        let b = url[i];
+        if (b == 37) { // '%'
+            if (i + 2 < url.len && euIsHex(url[i + 1]) && euIsHex(url[i + 2])) {
+                // Already valid %XX sequence — preserve verbatim
+                if (p + 3 <= out.len) {
+                    out[p] = 37;
+                    out[p + 1] = url[i + 1];
+                    out[p + 2] = url[i + 2];
+                    p = p + 3;
                 }
-                dst[out] = 37;
-                dst[out + 1] = url[i + 1];
-                dst[out + 2] = url[i + 2];
-                out += 3;
-                i += 3;
-            } else {
-                if (out + 3 > dst.len) {
-                    return -1;
-                }
-                dst[out] = 37;     // '%'
-                dst[out + 1] = 50; // '2'
-                dst[out + 2] = 53; // '5'
-                out += 3;
-                i += 1;
+                i = i + 3;
+                continue;
             }
-        } else if (isSafeUriByte(b)) {
-            if (out + 1 > dst.len) {
-                return -1;
+            // Lone '%' -> "%25"
+            if (p + 3 <= out.len) {
+                out[p] = 37;
+                out[p + 1] = 50; // '2'
+                out[p + 2] = 53; // '5'
+                p = p + 3;
             }
-            dst[out] = b;
-            out += 1;
-            i += 1;
-        } else {
-            if (out + 3 > dst.len) {
-                return -1;
-            }
-            dst[out] = 37;
-            dst[out + 1] = hexUpper((b >> 4) & 0x0F);
-            dst[out + 2] = hexUpper(b & 0x0F);
-            out += 3;
-            i += 1;
+            i = i + 1;
+            continue;
         }
+        if (euNeedsEncode(b)) {
+            if (p + 3 <= out.len) {
+                out[p] = 37;
+                out[p + 1] = hex[((b >> 4) & 15) as usize];
+                out[p + 2] = hex[(b & 15) as usize];
+                p = p + 3;
+            }
+        } else {
+            if (p < out.len) {
+                out[p] = b;
+                p = p + 1;
+            }
+        }
+        i = i + 1;
     }
-
-    return out as i64;
+    return p;
 }
 
-/// Zero-copy check returning true if `url` is already validly RFC 3986 encoded.
-pub fn isEncodedUrl(url: []const u8) -> bool {
+/// Returns true if `url` is already safely encoded and `encodeUrl` would not alter it.
+pub fn isEncodedUrl(url: string): bool {
     let i: usize = 0;
-    const n = url.len;
-    while (i < n) {
-        const b = url[i];
+    while (i < url.len) {
+        let b = url[i];
         if (b == 37) {
-            if (i + 2 < n && isHexDigit(url[i + 1]) && isHexDigit(url[i + 2])) {
-                i += 3;
-            } else {
+            if (i + 2 >= url.len || !euIsHex(url[i + 1]) || !euIsHex(url[i + 2])) {
                 return false;
             }
-        } else if (isSafeUriByte(b)) {
-            i += 1;
-        } else {
-            return false;
+            i = i + 3;
+            continue;
         }
+        if (euNeedsEncode(b)) { return false; }
+        i = i + 1;
     }
     return true;
-}
-
-fn isRegExpMeta(b: u8) -> bool {
-    // \ ^ $ * + ? . ( ) | { } [ ] -
-    if (b == 92 || b == 94 || b == 36 || b == 42 || b == 43 || b == 63 || b == 46) {
-        return true;
-    }
-    if (b == 40 || b == 41 || b == 124 || b == 123 || b == 125 || b == 91 || b == 93 || b == 45) {
-        return true;
-    }
-    return false;
-}
-
-/// Escapes all regular expression metacharacters (`\ ^ $ * + ? . ( ) | { } [ ] -`).
-/// Returns bytes written into `dst`, or `-1` if `dst` is too small.
-pub fn escapeRegExp(src: []const u8, dst: []u8) -> i64 {
-    let i: usize = 0;
-    let out: usize = 0;
-    const n = src.len;
-
-    while (i < n) {
-        const b = src[i];
-        if (isRegExpMeta(b)) {
-            if (out + 2 > dst.len) {
-                return -1;
-            }
-            dst[out] = 92; // '\'
-            dst[out + 1] = b;
-            out += 2;
-        } else {
-            if (out + 1 > dst.len) {
-                return -1;
-            }
-            dst[out] = b;
-            out += 1;
-        }
-        i += 1;
-    }
-
-    return out as i64;
 }

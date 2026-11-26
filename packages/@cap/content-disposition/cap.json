@@ -1,8 +1,12 @@
 {
   "name": "@cap/content-disposition",
-  "version": "1.0.0",
-  "description": "Zero-heap RFC 6266 / RFC 5987 HTTP Content-Disposition header parser and formatter with UTF-8 percent-encoding and path traversal stripping.",
+  "ver": "1.0.0",
   "license": "MIT",
+  "description": "Zero-allocation RFC 6266 / RFC 5987 HTTP Content-Disposition header parser, formatter, filename* decoder, and filename sanitizer for CP",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/percent-encoding": "1.0.0",
+    "@cap/unicase": "1.0.0"
+  }
 }

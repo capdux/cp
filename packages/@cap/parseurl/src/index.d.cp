@@ -1,24 +1,23 @@
 // Type definitions for CP
 
-export class ParsedUrl {
-    path_start: usize,
-    path_len: usize,
-    pathname_start: usize,
-    pathname_len: usize,
-    search_start: usize,
-    search_len: usize,
-    query_start: usize,
-    query_len: usize,
+import { pickQueryParam, unescapeQuery } from "../../querystring/src/index.cp";
+export fn purlIsAlpha(b: u8): bool;
+export fn purlIsSchemeChar(b: u8): bool;
+export fn purlHexVal(ch: u8): u8;
+export fn purlFindOriginEnd(raw_url: string): usize;
+export class ParsedRequestUrl {
+    href: string,
+    path: string,
+    pathname: string,
+    search: string,
+    query: string,
+    hash: string,
     has_query: bool,
-    has_scheme: bool,
-    valid: bool,
+    fn empty(): ParsedRequestUrl;
 }
 
-export fn invalidUrl(): ParsedUrl;
-export fn isAsciiAlpha(ch: u8): bool;
-export fn isSchemeChar(ch: u8): bool;
-export fn hasControlChar(s: string): bool;
-export fn detectSchemeEnd(url: string): usize;
-export fn parseUrl(url: string): ParsedUrl;
-export fn hasDotDotSegment(pathname: string): bool;
-export fn stripQueryAndHash(url: string): string;
+export fn parseRequestUrl(raw_url: string): ParsedRequestUrl;
+export fn decodePathname(pathname: string, out: []u8): usize;
+export fn isSafeRequestPath(pathname: string): bool;
+export fn getRequestQueryParam(raw_url: string, key: string, out: []u8): usize?;
+export fn decodeQueryValue(raw: string, out: []u8): usize;

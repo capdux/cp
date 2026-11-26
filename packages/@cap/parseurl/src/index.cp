@@ -1,153 +1,237 @@
-// @cap/parseurl — Zero-heap zero-copy HTTP request URL parser in pure CP
-// MIT License — Clean-room implementation inspired by npm `parseurl`
+// @cap/parseurl — Pure CP zero-allocation fast HTTP request URL splitter.
+// Clean-room MIT implementation inspired by Express `parseurl` fastparse.
+// Composes `@cap/querystring` for on-demand query parameter extraction & decoding.
 
-pub struct ParsedUrl {
-    pub path_start: usize,
-    pub path_len: usize,
-    pub pathname_start: usize,
-    pub pathname_len: usize,
-    pub search_start: usize,
-    pub search_len: usize,
-    pub query_start: usize,
-    pub query_len: usize,
-    pub has_query: bool,
-    pub has_scheme: bool,
-    pub valid: bool,
+import { pickQueryParam, unescapeQuery } from "../../querystring/src/index.cp";
+
+fn purlIsAlpha(b: u8): bool {
+    return (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
 }
 
-fn invalidUrl(): ParsedUrl {
-    return ParsedUrl {
-        path_start: 0,
-        path_len: 0,
-        pathname_start: 0,
-        pathname_len: 0,
-        search_start: 0,
-        search_len: 0,
-        query_start: 0,
-        query_len: 0,
-        has_query: false,
-        has_scheme: false,
-        valid: false,
-    };
+fn purlIsSchemeChar(b: u8): bool {
+    if (purlIsAlpha(b)) { return true; }
+    if (b >= 48 && b <= 57) { return true; } // 0-9
+    return b == 0x2B || b == 0x2D || b == 0x2E; // '+', '-', '.'
 }
 
-fn isAsciiAlpha(ch: u8): bool {
-    return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
+fn purlHexVal(ch: u8): u8 {
+    if (ch >= 48 && ch <= 57) { return ch - 48; }
+    if (ch >= 65 && ch <= 70) { return ch - 55; }
+    if (ch >= 97 && ch <= 102) { return ch - 87; }
+    return 255;
 }
 
-fn isSchemeChar(ch: u8): bool {
-    return isAsciiAlpha(ch) || (ch >= 48 && ch <= 57) || ch == 43 || ch == 45 || ch == 46; // + - .
-}
-
-fn hasControlChar(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        const ch: u8 = s[i];
-        if (ch < 0x20 || ch == 0x7F) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
-
-/// Detect `scheme://` at start of `url`. Returns index right after `://`, or `0` if none.
-fn detectSchemeEnd(url: string): usize {
-    if (url.len < 4 || !isAsciiAlpha(url[0])) {
+// Detects an absolute-form URI prefix (`scheme://authority`) and returns the index
+// where the origin-form path/query/hash begins, or 0 if not absolute-form.
+fn purlFindOriginEnd(raw_url: string): usize {
+    if (raw_url.len < 4 || !purlIsAlpha(raw_url[0])) {
         return 0;
     }
     let i: usize = 1;
-    while (i < url.len && isSchemeChar(url[i])) {
-        i += 1;
+    while (i < raw_url.len && purlIsSchemeChar(raw_url[i])) {
+        i = i + 1;
     }
-    if (i + 2 < url.len && url[i] == 58 && url[i + 1] == 47 && url[i + 2] == 47) { // "://"
-        return i + 3;
+    if (i + 2 >= raw_url.len) {
+        return 0;
     }
-    return 0;
+    if (raw_url[i] != 0x3A || raw_url[i + 1] != 0x2F || raw_url[i + 2] != 0x2F) { // "://"
+        return 0;
+    }
+    let j = i + 3;
+    while (j < raw_url.len) {
+        let b = raw_url[j];
+        if (b == 0x2F || b == 0x3F || b == 0x23) { // '/', '?', '#'
+            return j;
+        }
+        j = j + 1;
+    }
+    return raw_url.len;
 }
 
-/// Zero-copy HTTP request URL parser (relative request-target or full absolute URI).
-/// Extracts spans for `path` (pathname+search), `pathname`, `search` (with `?`), and `query` (without `?`).
-/// Rejects empty strings and ASCII control characters (`< 0x20` or `0x7F`).
-pub fn parseUrl(url: string): ParsedUrl {
-    if (url.len == 0 || hasControlChar(url)) {
-        return invalidUrl();
+/// Zero-copy parsed HTTP request URL components (matching Express `parseurl`).
+pub struct ParsedRequestUrl {
+    pub href: string,
+    pub path: string,
+    pub pathname: string,
+    pub search: string,
+    pub query: string,
+    pub hash: string,
+    pub has_query: bool,
+
+    pub static fn empty(): ParsedRequestUrl {
+        return ParsedRequestUrl {
+            href: "",
+            path: "",
+            pathname: "",
+            search: "",
+            query: "",
+            hash: "",
+            has_query: false
+        };
+    }
+}
+
+/// Single-pass O(N) zero-allocation HTTP request URL splitter.
+/// Handles origin-form (`/api/v1/users?page=2&sort=asc#top`),
+/// absolute-form (`http://host:8080/a/b?x=1`), and empty strings.
+pub fn parseRequestUrl(raw_url: string): ParsedRequestUrl {
+    if (raw_url.len == 0) {
+        return ParsedRequestUrl.empty();
     }
 
-    let base_start: usize = 0;
-    let has_scheme: bool = false;
+    let origin_end = purlFindOriginEnd(raw_url);
+    let has_origin = origin_end > 0;
+    let start = origin_end;
 
-    // Fast path: relative URI starting with '/' skips scheme detection entirely
-    if (url[0] != 47) {
-        const after_scheme: usize = detectSchemeEnd(url);
-        if (after_scheme > 0) {
-            has_scheme = true;
-            let a: usize = after_scheme;
-            while (a < url.len && url[a] != 47 && url[a] != 63 && url[a] != 35) {
-                a += 1;
-            }
-            base_start = a;
-        }
+    if (has_origin && start >= raw_url.len) {
+        return ParsedRequestUrl {
+            href: raw_url,
+            path: "/",
+            pathname: "/",
+            search: "",
+            query: "",
+            hash: "",
+            has_query: false
+        };
     }
 
-    let hash_pos: usize = url.len;
-    let q_pos: usize = url.len;
-    let i: usize = base_start;
-    while (i < url.len) {
-        const ch: u8 = url[i];
-        if (ch == 35) { // '#'
-            hash_pos = i;
+    let q_pos = raw_url.len;
+    let h_pos = raw_url.len;
+    let i = start;
+    while (i < raw_url.len) {
+        let b = raw_url[i];
+        if (b == 0x3F && q_pos == raw_url.len) { // '?'
+            q_pos = i;
+        } else if (b == 0x23) { // '#'
+            h_pos = i;
             break;
         }
-        if (ch == 63 && q_pos == url.len) { // first '?'
-            q_pos = i;
-        }
-        i += 1;
+        i = i + 1;
     }
 
-    const effective_q: usize = if (q_pos < hash_pos) q_pos else hash_pos;
-    const has_query: bool = q_pos < hash_pos;
+    let path_end = h_pos;
+    let hash_str = if (h_pos < raw_url.len) { raw_url[h_pos..raw_url.len] } else { "" };
 
-    return ParsedUrl {
-        path_start: base_start,
-        path_len: hash_pos - base_start,
-        pathname_start: base_start,
-        pathname_len: effective_q - base_start,
-        search_start: effective_q,
-        search_len: if (has_query) hash_pos - effective_q else 0,
-        query_start: if (has_query) effective_q + 1 else hash_pos,
-        query_len: if (has_query) hash_pos - (effective_q + 1) else 0,
-        has_query: has_query,
-        has_scheme: has_scheme,
-        valid: true,
+    if (q_pos < path_end) {
+        let p_name = if (q_pos == start && has_origin) { "/" } else { raw_url[start..q_pos] };
+        return ParsedRequestUrl {
+            href: raw_url,
+            path: raw_url[start..path_end],
+            pathname: p_name,
+            search: raw_url[q_pos..path_end],
+            query: raw_url[(q_pos + 1)..path_end],
+            hash: hash_str,
+            has_query: true
+        };
+    }
+
+    let p_name = if (path_end == start && has_origin) { "/" } else { raw_url[start..path_end] };
+    return ParsedRequestUrl {
+        href: raw_url,
+        path: p_name,
+        pathname: p_name,
+        search: "",
+        query: "",
+        hash: hash_str,
+        has_query: false
     };
 }
 
-/// Fast path-traversal guard: returns true if `pathname` contains any `..` path segment.
-pub fn hasDotDotSegment(pathname: string): bool {
+/// Percent-decodes an HTTP request `pathname` into `out`, preserving literal `+`
+/// characters (unlike `application/x-www-form-urlencoded` query decoding).
+pub fn decodePathname(pathname: string, out: []u8): usize {
+    let pos: usize = 0;
     let i: usize = 0;
-    while (i < pathname.len) {
-        // Skip delimiters '/' or '\\'
-        while (i < pathname.len && (pathname[i] == 47 || pathname[i] == 92)) {
-            i += 1;
+    while (i < pathname.len && pos < out.len) {
+        let b = pathname[i];
+        if (b == 0x25 && i + 2 < pathname.len) { // '%'
+            let hi = purlHexVal(pathname[i + 1]);
+            let lo = purlHexVal(pathname[i + 2]);
+            if (hi != 255 && lo != 255) {
+                out[pos] = ((hi << 4) | lo) as u8;
+                pos = pos + 1;
+                i = i + 3;
+                continue;
+            }
         }
-        const seg_start: usize = i;
-        while (i < pathname.len && pathname[i] != 47 && pathname[i] != 92) {
-            i += 1;
-        }
-        if (i - seg_start == 2 && pathname[seg_start] == 46 && pathname[seg_start + 1] == 46) {
-            return true;
-        }
+        out[pos] = b;
+        pos = pos + 1;
+        i = i + 1;
     }
-    return false;
+    return pos;
 }
 
-/// Zero-copy slice returning the pure pathname (without scheme/authority, `?query`, or `#hash`).
-/// Returns `""` if `url` is invalid or has an empty pathname.
-pub fn stripQueryAndHash(url: string): string {
-    const p: ParsedUrl = parseUrl(url);
-    if (!p.valid || p.pathname_len == 0) {
-        return "";
+/// Checks whether a request `pathname` is safe against null bytes (`\0` / `%00`),
+/// backslashes (`\` / `%5C`), and parent-directory traversal (`..` / `%2E%2E` segments).
+pub fn isSafeRequestPath(pathname: string): bool {
+    if (pathname.len == 0) {
+        return false;
     }
-    return url[p.pathname_start .. p.pathname_start + p.pathname_len];
+
+    let i: usize = 0;
+    let seg_len: usize = 0;
+    let seg_dots: usize = 0;
+
+    while (i < pathname.len) {
+        let ch = pathname[i];
+        let step: usize = 1;
+
+        if (ch == 0x25 && i + 2 < pathname.len) { // '%'
+            let hi = purlHexVal(pathname[i + 1]);
+            let lo = purlHexVal(pathname[i + 2]);
+            if (hi != 255 && lo != 255) {
+                ch = ((hi << 4) | lo) as u8;
+                step = 3;
+            }
+        }
+
+        if (ch == 0x00 || ch == 0x5C) { // '\0' or '\'
+            return false;
+        }
+
+        if (ch == 0x2F) { // '/'
+            if (seg_len == 2 && seg_dots == 2) {
+                return false;
+            }
+            seg_len = 0;
+            seg_dots = 0;
+        } else {
+            seg_len = seg_len + 1;
+            if (ch == 0x2E) { // '.'
+                seg_dots = seg_dots + 1;
+            }
+        }
+
+        i = i + step;
+    }
+
+    if (seg_len == 2 && seg_dots == 2) {
+        return false;
+    }
+    return true;
 }
+
+/// Extracts and decodes the first query parameter matching `key` from `raw_url`
+/// by delegating to `@cap/querystring`. Returns bytes written or `null` if absent.
+pub fn getRequestQueryParam(raw_url: string, key: string, out: []u8): usize? {
+    let parsed = parseRequestUrl(raw_url);
+    if (!parsed.has_query || parsed.query.len == 0) {
+        return null;
+    }
+    return pickQueryParam(parsed.query, key, out);
+}
+
+/// Decodes a URL query component (converting `+` to space and `%XX` to bytes)
+/// via `@cap/querystring.unescapeQuery`.
+pub fn decodeQueryValue(raw: string, out: []u8): usize {
+    return unescapeQuery(raw, out);
+}
+
+export {
+    ParsedRequestUrl,
+    parseRequestUrl,
+    decodePathname,
+    isSafeRequestPath,
+    getRequestQueryParam,
+    decodeQueryValue
+};

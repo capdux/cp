@@ -1,0 +1,9 @@
+{
+  "name": "@cap/enumflags2",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 64-bit type-safe enum bitflags set with valid-mask protection for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["enumflags2", "bitflags", "bitset", "flags", "mask", "zero-alloc"]
+}

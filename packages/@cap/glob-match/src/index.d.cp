@@ -1,12 +1,17 @@
 // Type definitions for CP
 
-export fn gmIsSpace(c: u8): bool;
-export fn gmTrim(s: &[]u8): &[]u8;
-export fn gmContainsByte(s: &[]u8, target: u8): bool;
-export fn gmMatchCharClass(pattern: &[]u8, pi: usize, ch: u8, next_pi: &mut usize): i32;
-export fn isMatch(pattern: string, path: string): bool;
-export fn isMatchAny(patterns: &[]string, path: string): bool;
-export fn gmBasename(path: &[]u8): &[]u8;
-export fn gmRuleMatchesPath(rule: &[]u8, path: &[]u8): bool;
-export fn isIgnored(rules: &[]string, path: string): bool;
-export fn hasGlobMagic(pattern: string): bool;
+export class GlobSpan {
+    start: usize,
+    end: usize,
+}
+
+export fn gbmFindClassClose(pattern: string, open_idx: usize): usize;
+export fn gbmMatchCharClass(pattern: string, open_idx: usize, close_idx: usize, ch: u8): bool;
+export fn gbmMatchCore(pattern: string, path: string, record_caps: bool, out_caps: []GlobSpan, out_count: &mut usize): bool;
+export fn gbmFindBracePair(pattern: string, open_out: &mut usize, close_out: &mut usize): bool;
+export fn gbmCopySlice(dst: []u8, pos: usize, src: string, s: usize, e: usize): usize;
+export fn gbmMatchWithBraces(pattern: string, path: string, depth: usize, steps: &mut usize, record_caps: bool, out_caps: []GlobSpan, out_count: &mut usize): bool;
+export fn globMatch(pattern: string, path: string): bool;
+export fn globMatchAny(patterns: &[]string, path: string): bool;
+export fn globMatchCaptures(pattern: string, path: string, out_caps: []GlobSpan): usize;
+export fn isStaticGlob(pattern: string): bool;

@@ -1,412 +1,408 @@
-// @cap/content-disposition — Zero-heap RFC 6266 / RFC 5987 HTTP Content-Disposition codec
-// MIT License (clean-room CP implementation)
+// @cap/content-disposition — Pure CP zero-allocation RFC 6266 / RFC 5987
+// HTTP Content-Disposition header parser, formatter, filename* decoder & sanitizer.
+// Clean-room MIT implementation inspired by npm `content-disposition`.
 
-pub const DISP_INVALID: u8 = 0;
-pub const DISP_INLINE: u8 = 1;
-pub const DISP_ATTACHMENT: u8 = 2;
-pub const DISP_FORM_DATA: u8 = 3;
+import { AsciiSet, componentSet, percentEncode, percentDecode } from "../../percent-encoding/src/index.cp";
+import { eqAscii } from "../../unicase/src/index.cp";
 
-pub struct ParsedDisposition {
-    pub kind: u8,
-    pub filename_len: usize,
-    pub is_utf8: bool,
-    pub ok: bool,
+fn cdspIsOws(b: u8): bool {
+    return b == 0x20 || b == 0x09;
 }
 
-fn isWs(c: u8) -> bool {
-    return c == ' ' as u8 || c == '\t' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isRfc5987AttrChar(c: u8) -> bool {
-    if ((c >= 'a' as u8 && c <= 'z' as u8) || (c >= 'A' as u8 && c <= 'Z' as u8) || (c >= '0' as u8 && c <= '9' as u8)) {
+fn cdspIsTokenChar(b: u8): bool {
+    if (b >= 48 && b <= 57) { return true; }   // 0-9
+    if (b >= 65 && b <= 90) { return true; }   // A-Z
+    if (b >= 97 && b <= 122) { return true; }  // a-z
+    if (b == 0x21 || b == 0x23 || b == 0x24 || b == 0x25 || b == 0x26 ||
+        b == 0x27 || b == 0x2A || b == 0x2B || b == 0x2D || b == 0x2E ||
+        b == 0x5E || b == 0x5F || b == 0x60 || b == 0x7C || b == 0x7E) {
         return true;
     }
-    return c == '!' as u8 || c == '#' as u8 || c == '$' as u8 || c == '&' as u8
-        || c == '+' as u8 || c == '-' as u8 || c == '.' as u8 || c == '^' as u8
-        || c == '_' as u8 || c == '`' as u8 || c == '|' as u8 || c == '~' as u8;
+    return false;
 }
 
-fn hexUpper(nib: u8) -> u8 {
-    if (nib < 10) {
-        return ('0' as u8) + nib;
+fn cdspSkipOws(s: string, start: usize): usize {
+    let i = start;
+    while (i < s.len && cdspIsOws(s[i])) {
+        i = i + 1;
     }
-    return ('A' as u8) + (nib - 10);
+    return i;
 }
 
-fn fromHexDigit(c: u8) -> i32 {
-    if (c >= '0' as u8 && c <= '9' as u8) {
-        return (c - ('0' as u8)) as i32;
-    }
-    if (c >= 'a' as u8 && c <= 'f' as u8) {
-        return (c - ('a' as u8) + 10) as i32;
-    }
-    if (c >= 'A' as u8 && c <= 'F' as u8) {
-        return (c - ('A' as u8) + 10) as i32;
-    }
-    return -1;
-}
-
-fn appendSlice(dst: []u8, pos: usize, src: []const u8) -> i64 {
-    if (src.len > dst.len - pos) {
-        return -1;
-    }
+fn cdspHasNonAscii(s: string): bool {
     let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
+    while (i < s.len) {
+        if (s[i] >= 0x80) {
+            return true;
+        }
+        i = i + 1;
     }
-    return (pos + src.len) as i64;
+    return false;
 }
 
-fn appendByte(dst: []u8, pos: usize, b: u8) -> i64 {
-    if (pos >= dst.len) {
-        return -1;
+fn cdspWriteByte(out: []u8, pos: usize, b: u8): usize {
+    if (pos >= out.len) {
+        return pos;
     }
-    dst[pos] = b;
-    return (pos + 1) as i64;
+    out[pos] = b;
+    return pos + 1;
 }
 
-pub fn format(kind: u8, filename: []const u8, dst: []u8) -> i64 {
-    let p: i64 = 0;
-    if (kind == DISP_INLINE) {
-        p = appendSlice(dst, 0, "inline");
-    } else if (kind == DISP_ATTACHMENT) {
-        p = appendSlice(dst, 0, "attachment");
-    } else if (kind == DISP_FORM_DATA) {
-        p = appendSlice(dst, 0, "form-data");
-    } else {
-        return -1;
-    }
-    if (p < 0) {
-        return -1;
-    }
-
-    if (filename.len == 0) {
-        return p;
-    }
-
-    // Strip any directory path prefix ('/' or '\') to prevent path traversal
-    let base_start: usize = 0;
+fn cdspWriteStr(out: []u8, pos: usize, s: string): usize {
+    let p = pos;
     let i: usize = 0;
-    while (i < filename.len) {
-        if (filename[i] == '/' as u8 || filename[i] == '\\' as u8) {
-            base_start = i + 1;
-        }
-        i += 1;
+    while (i < s.len && p < out.len) {
+        out[p] = s[i];
+        p = p + 1;
+        i = i + 1;
     }
-    if (base_start >= filename.len) {
-        return p;
-    }
-    const base: []const u8 = filename[base_start..filename.len];
-
-    // Check if any non-ASCII or control characters exist
-    let has_non_ascii: bool = false;
-    i = 0;
-    while (i < base.len) {
-        if (base[i] < 0x20 || base[i] >= 0x7F) {
-            has_non_ascii = true;
-            break;
-        }
-        i += 1;
-    }
-
-    p = appendSlice(dst, p as usize, "; filename=\"");
-    if (p < 0) {
-        return -1;
-    }
-
-    i = 0;
-    while (i < base.len) {
-        const c: u8 = base[i];
-        if (c < 0x20 || c >= 0x7F) {
-            p = appendByte(dst, p as usize, '?' as u8);
-        } else if (c == '"' as u8 || c == '\\' as u8) {
-            p = appendByte(dst, p as usize, '\\' as u8);
-            if (p < 0) {
-                return -1;
-            }
-            p = appendByte(dst, p as usize, c);
-        } else {
-            p = appendByte(dst, p as usize, c);
-        }
-        if (p < 0) {
-            return -1;
-        }
-        i += 1;
-    }
-
-    p = appendByte(dst, p as usize, '"' as u8);
-    if (p < 0) {
-        return -1;
-    }
-
-    if (has_non_ascii) {
-        p = appendSlice(dst, p as usize, "; filename*=UTF-8''");
-        if (p < 0) {
-            return -1;
-        }
-        i = 0;
-        while (i < base.len) {
-            const c: u8 = base[i];
-            if (isRfc5987AttrChar(c)) {
-                p = appendByte(dst, p as usize, c);
-                if (p < 0) {
-                    return -1;
-                }
-            } else {
-                p = appendByte(dst, p as usize, '%' as u8);
-                if (p < 0) {
-                    return -1;
-                }
-                p = appendByte(dst, p as usize, hexUpper((c >> 4) & 0x0F));
-                if (p < 0) {
-                    return -1;
-                }
-                p = appendByte(dst, p as usize, hexUpper(c & 0x0F));
-                if (p < 0) {
-                    return -1;
-                }
-            }
-            i += 1;
-        }
-    }
-
     return p;
 }
 
-fn decodePercent(src: []const u8, dst: []u8) -> i64 {
-    let out_pos: usize = 0;
+fn cdspWriteAsciiFallback(out: []u8, pos: usize, s: string): usize {
+    let p = pos;
     let i: usize = 0;
-    while (i < src.len) {
-        if (src[i] == '%' as u8) {
-            if (i + 2 >= src.len) {
-                return -1;
+    while (i < s.len) {
+        let b = s[i];
+        if (b < 0x80) {
+            if (b == 0x22 || b == 0x5C) {
+                if (p + 2 > out.len) { break; }
+                out[p] = 0x5C; // '\'
+                out[p + 1] = b;
+                p = p + 2;
+            } else if (b >= 0x20 && b <= 0x7E) {
+                if (p >= out.len) { break; }
+                out[p] = b;
+                p = p + 1;
             }
-            const hi: i32 = fromHexDigit(src[i + 1]);
-            const lo: i32 = fromHexDigit(src[i + 2]);
-            if (hi < 0 || lo < 0) {
-                return -1;
-            }
-            if (out_pos >= dst.len) {
-                return -1;
-            }
-            dst[out_pos] = (((hi as u32) << 4) | (lo as u32)) as u8;
-            out_pos += 1;
-            i += 3;
+            i = i + 1;
         } else {
-            if (out_pos >= dst.len) {
-                return -1;
+            if (p >= out.len) { break; }
+            out[p] = 0x3F; // '?'
+            p = p + 1;
+            i = i + 1;
+            while (i < s.len && (s[i] & 0xC0) == 0x80) {
+                i = i + 1;
             }
-            dst[out_pos] = src[i];
-            out_pos += 1;
-            i += 1;
         }
     }
-    return out_pos as i64;
+    return p;
 }
 
-fn decodeQuotedOrToken(val: []const u8, dst: []u8) -> i64 {
-    if (val.len == 0) {
-        return 0;
-    }
-    let out_pos: usize = 0;
-    if (val[0] == '"' as u8) {
-        if (val.len < 2 || val[val.len - 1] != '"' as u8) {
-            return -1;
-        }
-        let i: usize = 1;
-        const limit: usize = val.len - 1;
-        while (i < limit) {
-            if (val[i] == '\\' as u8 && i + 1 < limit) {
-                i += 1;
-            }
-            if (out_pos >= dst.len) {
-                return -1;
-            }
-            dst[out_pos] = val[i];
-            out_pos += 1;
-            i += 1;
-        }
-        return out_pos as i64;
-    }
-    if (val.len > dst.len) {
-        return -1;
-    }
-    let i: usize = 0;
-    while (i < val.len) {
-        dst[out_pos] = val[i];
-        out_pos += 1;
-        i += 1;
-    }
-    return out_pos as i64;
+fn cdspRfc5987Set(): AsciiSet {
+    let s = componentSet();
+    s.add(0x27); // '\''
+    s.add(0x28); // '('
+    s.add(0x29); // ')'
+    s.add(0x2A); // '*'
+    return s;
 }
 
-pub fn parse(header: []const u8, filename_out: []u8) -> ParsedDisposition {
-    const fail = ParsedDisposition {
-        kind: DISP_INVALID,
-        filename_len: 0,
-        is_utf8: false,
-        ok: false,
-    };
+fn cdspIsControl(b: u8): bool {
+    return b < 0x20 || b == 0x7F;
+}
 
-    let pos: usize = 0;
-    while (pos < header.len && isWs(header[pos])) {
-        pos += 1;
-    }
-    if (pos >= header.len) {
-        return fail;
-    }
+/// Parsed RFC 6266 HTTP `Content-Disposition` header value (zero-copy slices).
+pub struct ContentDisposition {
+    pub valid: bool,
+    pub disp_type: string,
+    pub filename: string,
+    pub filename_star: string,
 
-    // Read disposition type up to ';'
-    let type_end: usize = pos;
-    while (type_end < header.len && header[type_end] != ';' as u8) {
-        type_end += 1;
-    }
-    let trimmed_end: usize = type_end;
-    while (trimmed_end > pos && isWs(header[trimmed_end - 1])) {
-        trimmed_end -= 1;
-    }
-    const type_slice: []const u8 = header[pos..trimmed_end];
-
-    let kind: u8 = DISP_INVALID;
-    if (eqIgnoreCase(type_slice, "inline")) {
-        kind = DISP_INLINE;
-    } else if (eqIgnoreCase(type_slice, "attachment")) {
-        kind = DISP_ATTACHMENT;
-    } else if (eqIgnoreCase(type_slice, "form-data")) {
-        kind = DISP_FORM_DATA;
-    } else {
-        return fail;
+    pub static fn invalid(): ContentDisposition {
+        return ContentDisposition {
+            valid: false,
+            disp_type: "",
+            filename: "",
+            filename_star: ""
+        };
     }
 
-    pos = type_end;
-    if (pos < header.len && header[pos] == ';' as u8) {
-        pos += 1;
-    }
-
-    let has_utf8: bool = false;
-    let final_len: usize = 0;
-
-    while (pos < header.len) {
-        while (pos < header.len && isWs(header[pos])) {
-            pos += 1;
+    pub fn isAttachment(): bool {
+        if (!_.valid) {
+            return false;
         }
-        if (pos >= header.len) {
+        return eqAscii(_.disp_type, "attachment");
+    }
+
+    pub fn isInline(): bool {
+        if (!_.valid) {
+            return false;
+        }
+        return eqAscii(_.disp_type, "inline");
+    }
+
+    pub fn hasFilename(): bool {
+        return _.filename.len > 0 || _.filename_star.len > 0;
+    }
+}
+
+/// Parses an RFC 6266 / RFC 5987 `Content-Disposition` header value with zero heap allocation.
+/// Matches `attachment`, `inline`, `filename`, and `filename*` case-insensitively.
+pub fn parseContentDisposition(header: string): ContentDisposition {
+    let i = cdspSkipOws(header, 0);
+    if (i >= header.len) {
+        return ContentDisposition.invalid();
+    }
+
+    // Parse disposition-type token
+    let type_start = i;
+    while (i < header.len && cdspIsTokenChar(header[i])) {
+        i = i + 1;
+    }
+    if (i == type_start) {
+        return ContentDisposition.invalid();
+    }
+    let disp = header[type_start..i];
+    let fname: string = "";
+    let fstar: string = "";
+
+    i = cdspSkipOws(header, i);
+    while (i < header.len) {
+        if (header[i] != 0x3B) { // ';'
+            return ContentDisposition.invalid();
+        }
+        i = cdspSkipOws(header, i + 1);
+        if (i >= header.len) {
             break;
         }
 
-        // Scan parameter segment respecting quoted strings
-        let seg_end: usize = pos;
-        let in_quote: bool = false;
-        while (seg_end < header.len) {
-            const c: u8 = header[seg_end];
-            if (in_quote) {
-                if (c == '\\' as u8 && seg_end + 1 < header.len) {
-                    seg_end += 2;
+        // Parse parameter name
+        let key_start = i;
+        while (i < header.len && cdspIsTokenChar(header[i])) {
+            i = i + 1;
+        }
+        if (i == key_start) {
+            return ContentDisposition.invalid();
+        }
+        let key = header[key_start..i];
+
+        i = cdspSkipOws(header, i);
+        if (i >= header.len || header[i] != 0x3D) { // '='
+            return ContentDisposition.invalid();
+        }
+        i = cdspSkipOws(header, i + 1);
+        if (i >= header.len) {
+            return ContentDisposition.invalid();
+        }
+
+        // Parse parameter value (quoted-string or token)
+        let val: string = "";
+        if (header[i] == 0x22) { // '"'
+            i = i + 1;
+            let val_start = i;
+            let closed = false;
+            while (i < header.len) {
+                let ch = header[i];
+                if (ch == 0x5C) { // '\'
+                    if (i + 1 >= header.len) {
+                        return ContentDisposition.invalid();
+                    }
+                    i = i + 2;
                     continue;
                 }
-                if (c == '"' as u8) {
-                    in_quote = false;
-                }
-            } else {
-                if (c == '"' as u8) {
-                    in_quote = true;
-                } else if (c == ';' as u8) {
+                if (ch == 0x22) { // closing '"'
+                    val = header[val_start..i];
+                    i = i + 1;
+                    closed = true;
                     break;
                 }
+                i = i + 1;
             }
-            seg_end += 1;
+            if (!closed) {
+                return ContentDisposition.invalid();
+            }
+        } else {
+            let val_start = i;
+            while (i < header.len && header[i] != 0x3B && !cdspIsOws(header[i])) {
+                if (cdspIsControl(header[i]) || header[i] == 0x22) {
+                    return ContentDisposition.invalid();
+                }
+                i = i + 1;
+            }
+            if (i == val_start) {
+                return ContentDisposition.invalid();
+            }
+            val = header[val_start..i];
         }
 
-        // Find '=' inside [pos, seg_end)
-        let eq_pos: usize = pos;
-        while (eq_pos < seg_end && header[eq_pos] != '=' as u8) {
-            eq_pos += 1;
-        }
-        if (eq_pos < seg_end) {
-            let k_end: usize = eq_pos;
-            while (k_end > pos && isWs(header[k_end - 1])) {
-                k_end -= 1;
-            }
-            let v_start: usize = eq_pos + 1;
-            let v_end: usize = seg_end;
-            while (v_start < v_end && isWs(header[v_start])) {
-                v_start += 1;
-            }
-            while (v_end > v_start && isWs(header[v_end - 1])) {
-                v_end -= 1;
-            }
-
-            const key_slice: []const u8 = header[pos..k_end];
-            const val_slice: []const u8 = header[v_start..v_end];
-
-            if (eqIgnoreCase(key_slice, "filename*")) {
-                // RFC 5987 format: charset'language'value (e.g. UTF-8''...)
-                let q1: usize = 0;
-                while (q1 < val_slice.len && val_slice[q1] != '\'' as u8) {
-                    q1 += 1;
-                }
-                if (q1 + 1 >= val_slice.len) {
-                    return fail;
-                }
-                let q2: usize = q1 + 1;
-                while (q2 < val_slice.len && val_slice[q2] != '\'' as u8) {
-                    q2 += 1;
-                }
-                if (q2 >= val_slice.len) {
-                    return fail;
-                }
-                const charset: []const u8 = val_slice[0..q1];
-                if (!eqIgnoreCase(charset, "utf-8")) {
-                    return fail;
-                }
-                const encoded_part: []const u8 = val_slice[(q2 + 1)..val_slice.len];
-                const d_len: i64 = decodePercent(encoded_part, filename_out);
-                if (d_len < 0) {
-                    return fail;
-                }
-                has_utf8 = true;
-                final_len = d_len as usize;
-            } else if (eqIgnoreCase(key_slice, "filename") && !has_utf8) {
-                const d_len: i64 = decodeQuotedOrToken(val_slice, filename_out);
-                if (d_len < 0) {
-                    return fail;
-                }
-                final_len = d_len as usize;
-            }
+        if (eqAscii(key, "filename")) {
+            fname = val;
+        } else if (eqAscii(key, "filename*")) {
+            fstar = val;
         }
 
-        pos = seg_end;
-        if (pos < header.len && header[pos] == ';' as u8) {
-            pos += 1;
+        i = cdspSkipOws(header, i);
+    }
+
+    return ContentDisposition {
+        valid: true,
+        disp_type: disp,
+        filename: fname,
+        filename_star: fstar
+    };
+}
+
+/// Strips path traversal (`/` and `\`) and control characters (`0x00..=0x1F`, `0x7F`)
+/// to produce a safe download basename in `out`. Returns bytes written.
+pub fn sanitizeFilename(raw: string, out: []u8): usize {
+    if (raw.len == 0 || out.len == 0) {
+        return 0;
+    }
+
+    // Strip trailing slashes
+    let end = raw.len;
+    while (end > 0 && (raw[end - 1] == 0x2F || raw[end - 1] == 0x5C)) {
+        end = end - 1;
+    }
+    if (end == 0) {
+        return 0;
+    }
+
+    // Find last '/' or '\' before `end`
+    let start: usize = 0;
+    let i: usize = 0;
+    while (i < end) {
+        if (raw[i] == 0x2F || raw[i] == 0x5C) {
+            start = i + 1;
+        }
+        i = i + 1;
+    }
+
+    // Copy non-control bytes
+    let pos: usize = 0;
+    let j = start;
+    while (j < end && pos < out.len) {
+        let b = raw[j];
+        if (!cdspIsControl(b)) {
+            out[pos] = b;
+            pos = pos + 1;
+        }
+        j = j + 1;
+    }
+
+    // Reject relative directory names "." and ".."
+    if (pos == 1 && out[0] == 0x2E) {
+        return 0;
+    }
+    if (pos == 2 && out[0] == 0x2E && out[1] == 0x2E) {
+        return 0;
+    }
+
+    return pos;
+}
+
+/// Decodes an RFC 5987 `filename*` value (e.g. `UTF-8''%E6%8A%A5%E5%91%8A.pdf`)
+/// into `out` via `@cap/percent-encoding`. Supports UTF-8, US-ASCII, and ISO-8859-1.
+pub fn decodeFilenameStar(raw_star: string, out: []u8): usize {
+    if (raw_star.len == 0 || out.len == 0) {
+        return 0;
+    }
+
+    // Locate first '\''
+    let q1: usize = 0;
+    let found1 = false;
+    while (q1 < raw_star.len) {
+        if (raw_star[q1] == 0x27) {
+            found1 = true;
+            break;
+        }
+        q1 = q1 + 1;
+    }
+    if (!found1 || q1 == 0) {
+        return 0;
+    }
+
+    // Locate second '\''
+    let q2 = q1 + 1;
+    let found2 = false;
+    while (q2 < raw_star.len) {
+        if (raw_star[q2] == 0x27) {
+            found2 = true;
+            break;
+        }
+        q2 = q2 + 1;
+    }
+    if (!found2) {
+        return 0;
+    }
+
+    let charset = raw_star[0..q1];
+    let encoded = raw_star[q2 + 1..raw_star.len];
+
+    if (eqAscii(charset, "UTF-8") || eqAscii(charset, "UTF8") ||
+        eqAscii(charset, "US-ASCII") || eqAscii(charset, "ASCII")) {
+        return percentDecode(encoded, out);
+    }
+
+    if (eqAscii(charset, "ISO-8859-1") || eqAscii(charset, "LATIN1")) {
+        let tmp: [512]u8 = undefined;
+        let raw_len = percentDecode(encoded, tmp[0..512]);
+        let pos: usize = 0;
+        let k: usize = 0;
+        while (k < raw_len) {
+            let b = tmp[k];
+            if (b < 0x80) {
+                if (pos >= out.len) { break; }
+                out[pos] = b;
+                pos = pos + 1;
+            } else {
+                if (pos + 2 > out.len) { break; }
+                out[pos] = (0xC0 | (b >> 6)) as u8;
+                out[pos + 1] = (0x80 | (b & 0x3F)) as u8;
+                pos = pos + 2;
+            }
+            k = k + 1;
+        }
+        return pos;
+    }
+
+    return 0;
+}
+
+/// Formats an RFC 6266 / RFC 5987 `Content-Disposition` header value into `out`.
+/// - Pure ASCII filenames emit `<type>; filename="..."`.
+/// - Non-ASCII filenames emit `<type>; filename="<ascii-fallback>"; filename*=UTF-8''<encoded>`.
+/// - Automatically sanitizes `filename` against path traversal and control characters.
+pub fn formatContentDisposition(disp_type: string, filename: string, out: []u8): usize {
+    if (out.len == 0) {
+        return 0;
+    }
+
+    let eff_type = if (disp_type.len > 0) { disp_type } else { "attachment" };
+    let pos = cdspWriteStr(out, 0, eff_type);
+
+    if (filename.len == 0) {
+        return pos;
+    }
+
+    let safe_buf: [512]u8 = undefined;
+    let safe_len = sanitizeFilename(filename, safe_buf[0..512]);
+    if (safe_len == 0) {
+        return pos;
+    }
+    let safe_name = safe_buf[0..safe_len];
+
+    pos = cdspWriteStr(out, pos, "; filename=\"");
+    pos = cdspWriteAsciiFallback(out, pos, safe_name);
+    pos = cdspWriteByte(out, pos, 0x22); // '"'
+
+    if (cdspHasNonAscii(safe_name)) {
+        pos = cdspWriteStr(out, pos, "; filename*=UTF-8''");
+        if (pos < out.len) {
+            let enc_set = cdspRfc5987Set();
+            let written = percentEncode(safe_name, enc_set, out[pos..out.len]);
+            pos = pos + written;
         }
     }
 
-    return ParsedDisposition {
-        kind: kind,
-        filename_len: final_len,
-        is_utf8: has_utf8,
-        ok: true,
-    };
+    return pos;
 }
+
+export {
+    ContentDisposition,
+    parseContentDisposition,
+    formatContentDisposition,
+    decodeFilenameStar,
+    sanitizeFilename
+};

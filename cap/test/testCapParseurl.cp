@@ -1,110 +1,123 @@
+// cap/test/testCapParseurl.cp
+// Comprehensive unit tests for @cap/parseurl (6 test suites)
+
 import { test, expect_eq } from "cap:test";
 import {
-    ParsedUrl,
-    parseUrl,
-    hasDotDotSegment,
-    stripQueryAndHash,
+    ParsedRequestUrl,
+    parseRequestUrl,
+    decodePathname,
+    isSafeRequestPath,
+    getRequestQueryParam,
+    decodeQueryValue
 } from "../../packages/@cap/parseurl/src/index.cp";
 
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn main() {
-    test("1. @cap/parseurl — Plain relative path '/api/items' fast path", () => {
-        const u: string = "/api/items";
-        const p: ParsedUrl = parseUrl(u);
-        expect_eq(p.valid, true);
-        expect_eq(p.has_scheme, false);
-        expect_eq(p.has_query, false);
-        expect_eq(strEq(u[p.path_start .. p.path_start + p.path_len], "/api/items"), true);
-        expect_eq(strEq(u[p.pathname_start .. p.pathname_start + p.pathname_len], "/api/items"), true);
-        expect_eq(p.search_len, 0);
-        expect_eq(p.query_len, 0);
-        expect_eq(strEq(stripQueryAndHash(u), "/api/items"), true);
+    test("1. parseRequestUrl — full origin-form URL with query and hash", () => {
+        const u: ParsedRequestUrl = parseRequestUrl("/api/v1/users?page=2&sort=asc#top");
+        expect_eq(u.href, "/api/v1/users?page=2&sort=asc#top");
+        expect_eq(u.pathname, "/api/v1/users");
+        expect_eq(u.search, "?page=2&sort=asc");
+        expect_eq(u.query, "page=2&sort=asc");
+        expect_eq(u.hash, "#top");
+        expect_eq(u.path, "/api/v1/users?page=2&sort=asc");
+        expect_eq(u.has_query, true);
     });
 
-    test("2. @cap/parseurl — Query string '/search?q=cp&lang=zh' extracts all spans", () => {
-        const u: string = "/search?q=cp&lang=zh";
-        const p: ParsedUrl = parseUrl(u);
-        expect_eq(p.valid, true);
-        expect_eq(p.has_query, true);
-        expect_eq(strEq(u[p.path_start .. p.path_start + p.path_len], "/search?q=cp&lang=zh"), true);
-        expect_eq(strEq(u[p.pathname_start .. p.pathname_start + p.pathname_len], "/search"), true);
-        expect_eq(strEq(u[p.search_start .. p.search_start + p.search_len], "?q=cp&lang=zh"), true);
-        expect_eq(strEq(u[p.query_start .. p.query_start + p.query_len], "q=cp&lang=zh"), true);
+    test("2. parseRequestUrl — absolute-form HTTP/HTTPS URLs", () => {
+        const u1 = parseRequestUrl("http://host:8080/a/b?x=1");
+        expect_eq(u1.pathname, "/a/b");
+        expect_eq(u1.search, "?x=1");
+        expect_eq(u1.query, "x=1");
+        expect_eq(u1.path, "/a/b?x=1");
+        expect_eq(u1.hash, "");
+        expect_eq(u1.has_query, true);
+
+        const u2 = parseRequestUrl("https://example.com");
+        expect_eq(u2.pathname, "/");
+        expect_eq(u2.path, "/");
+        expect_eq(u2.has_query, false);
+
+        const u3 = parseRequestUrl("https://example.com?k=v#sec");
+        expect_eq(u3.pathname, "/");
+        expect_eq(u3.query, "k=v");
+        expect_eq(u3.hash, "#sec");
+        expect_eq(u3.has_query, true);
     });
 
-    test("3. @cap/parseurl — Empty query '/a?' sets has_query=true, search='?', query=''", () => {
-        const u: string = "/a?";
-        const p: ParsedUrl = parseUrl(u);
-        expect_eq(p.valid, true);
-        expect_eq(p.has_query, true);
-        expect_eq(strEq(u[p.pathname_start .. p.pathname_start + p.pathname_len], "/a"), true);
-        expect_eq(strEq(u[p.search_start .. p.search_start + p.search_len], "?"), true);
-        expect_eq(p.query_len, 0);
+    test("3. parseRequestUrl — plain path, hash-only & empty string edge cases", () => {
+        const u1 = parseRequestUrl("/static/app.js");
+        expect_eq(u1.pathname, "/static/app.js");
+        expect_eq(u1.path, "/static/app.js");
+        expect_eq(u1.search, "");
+        expect_eq(u1.query, "");
+        expect_eq(u1.hash, "");
+        expect_eq(u1.has_query, false);
+
+        const u2 = parseRequestUrl("/docs#intro?notquery");
+        expect_eq(u2.pathname, "/docs");
+        expect_eq(u2.hash, "#intro?notquery");
+        expect_eq(u2.has_query, false);
+
+        const u3 = parseRequestUrl("");
+        expect_eq(u3.href, "");
+        expect_eq(u3.pathname, "");
+        expect_eq(u3.path, "");
+        expect_eq(u3.has_query, false);
     });
 
-    test("4. @cap/parseurl — Hash fragment '/a?b=1#top' is excluded from path/search/query", () => {
-        const u: string = "/a?b=1#top?ignored";
-        const p: ParsedUrl = parseUrl(u);
-        expect_eq(p.valid, true);
-        expect_eq(p.has_query, true);
-        expect_eq(strEq(u[p.path_start .. p.path_start + p.path_len], "/a?b=1"), true);
-        expect_eq(strEq(u[p.pathname_start .. p.pathname_start + p.pathname_len], "/a"), true);
-        expect_eq(strEq(u[p.search_start .. p.search_start + p.search_len], "?b=1"), true);
-        expect_eq(strEq(u[p.query_start .. p.query_start + p.query_len], "b=1"), true);
+    test("4. decodePathname — decodes %XX while preserving literal '+'", () => {
+        let out: [128]u8 = undefined;
 
-        const u_hash_only: string = "/docs/intro#section-2";
-        const p2: ParsedUrl = parseUrl(u_hash_only);
-        expect_eq(p2.valid, true);
-        expect_eq(p2.has_query, false);
-        expect_eq(strEq(stripQueryAndHash(u_hash_only), "/docs/intro"), true);
+        const n1 = decodePathname("/docs/c++%20guide/a+b%2F1.txt", out[0..128]);
+        expect_eq(out[0..n1], "/docs/c++ guide/a+b/1.txt");
+
+        const n2 = decodePathname("/files/%E6%8A%A5%E5%91%8A.pdf", out[0..128]);
+        expect_eq(out[0..n2], "/files/报告.pdf");
+
+        // Malformed % sequence preserved verbatim
+        const n3 = decodePathname("/100%zz/ok%", out[0..128]);
+        expect_eq(out[0..n3], "/100%zz/ok%");
     });
 
-    test("5. @cap/parseurl — Absolute URI strips scheme & authority cleanly", () => {
-        const u: string = "https://host:8443/v2/users?id=1#profile";
-        const p: ParsedUrl = parseUrl(u);
-        expect_eq(p.valid, true);
-        expect_eq(p.has_scheme, true);
-        expect_eq(p.has_query, true);
-        expect_eq(strEq(u[p.path_start .. p.path_start + p.path_len], "/v2/users?id=1"), true);
-        expect_eq(strEq(u[p.pathname_start .. p.pathname_start + p.pathname_len], "/v2/users"), true);
-        expect_eq(strEq(u[p.query_start .. p.query_start + p.query_len], "id=1"), true);
-        expect_eq(strEq(stripQueryAndHash(u), "/v2/users"), true);
+    test("5. isSafeRequestPath — rejects NUL, backslash & '..' traversal segments", () => {
+        expect_eq(isSafeRequestPath("/api/v1/users"), true);
+        expect_eq(isSafeRequestPath("/files/a..b.txt"), true);
+        expect_eq(isSafeRequestPath("/files/.../report.pdf"), true);
 
-        // Origin-only URL with no trailing slash
-        const u_origin: string = "http://example.com?k=v";
-        const p_orig: ParsedUrl = parseUrl(u_origin);
-        expect_eq(p_orig.valid, true);
-        expect_eq(p_orig.has_scheme, true);
-        expect_eq(p_orig.pathname_len, 0);
-        expect_eq(strEq(u_origin[p_orig.query_start .. p_orig.query_start + p_orig.query_len], "k=v"), true);
+        expect_eq(isSafeRequestPath(""), false);
+        expect_eq(isSafeRequestPath("/api/../secret"), false);
+        expect_eq(isSafeRequestPath("/.."), false);
+        expect_eq(isSafeRequestPath("../etc/passwd"), false);
+        expect_eq(isSafeRequestPath("/%2e%2e/etc/passwd"), false);
+        expect_eq(isSafeRequestPath("/a\\b"), false);
+        expect_eq(isSafeRequestPath("/a%5Cb"), false);
+        expect_eq(isSafeRequestPath("/a\x00b"), false);
+        expect_eq(isSafeRequestPath("/a%00b"), false);
     });
 
-    test("6. @cap/parseurl — hasDotDotSegment & empty/control-char rejection", () => {
-        expect_eq(hasDotDotSegment("/a/../b"), true);
-        expect_eq(hasDotDotSegment("../etc/passwd"), true);
-        expect_eq(hasDotDotSegment("/a/b/.."), true);
-        expect_eq(hasDotDotSegment("/a/b..c/d"), false);
-        expect_eq(hasDotDotSegment("/a/.../b"), false);
-        expect_eq(hasDotDotSegment("/clean/path"), false);
+    test("6. getRequestQueryParam & decodeQueryValue — delegates to @cap/querystring", () => {
+        let out: [128]u8 = undefined;
+        const url = "http://api.local:8080/search?q=hello+world&tag=cp%2Dlang&page=3#results";
 
-        expect_eq(parseUrl("").valid, false);
-        expect_eq(strEq(stripQueryAndHash(""), ""), true);
+        const qLen = getRequestQueryParam(url, "q", out[0..128]);
+        expect_eq(qLen != null, true);
+        if (qLen != null) {
+            expect_eq(out[0..qLen], "hello world");
+        }
 
-        let bad_ctrl: [8]u8 = [47, 97, 13, 10, 47, 98, 0, 0]; // "/a\r\n/b"
-        expect_eq(parseUrl(bad_ctrl[0..6]).valid, false);
-        expect_eq(strEq(stripQueryAndHash(bad_ctrl[0..6]), ""), true);
+        const tagLen = getRequestQueryParam(url, "tag", out[0..128]);
+        expect_eq(tagLen != null, true);
+        if (tagLen != null) {
+            expect_eq(out[0..tagLen], "cp-lang");
+        }
+
+        const missing = getRequestQueryParam(url, "nonexistent", out[0..128]);
+        expect_eq(missing == null, true);
+
+        const noQuery = getRequestQueryParam("/no/query/here", "q", out[0..128]);
+        expect_eq(noQuery == null, true);
+
+        const dvLen = decodeQueryValue("foo+bar%21", out[0..128]);
+        expect_eq(out[0..dvLen], "foo bar!");
     });
 }
