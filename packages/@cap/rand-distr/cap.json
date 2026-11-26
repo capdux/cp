@@ -1,0 +1,11 @@
+{
+  "name": "@cap/rand-distr",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap probability distribution samplers (Uniform, Normal Box-Muller, Exponential, Bernoulli, WeightedIndex) built on @cap/xoshiro256 (clean-room port of Rust rand_distr)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/xoshiro256": "1.0.0"
+  }
+}

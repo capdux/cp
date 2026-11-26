@@ -1,0 +1,11 @@
+{
+  "name": "@cap/chokidar-core",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP file watcher state machine, snapshot differ, debounce engine, and glob ignore filter (clean-room MIT implementation of npm chokidar v4 core)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/fast-glob": "1.0.0"
+  }
+}

@@ -435,3 +435,6 @@
 
 ## 2026-11-27: Batch 120 八大重量级包全 6/6 PASS — 突破 **684 官方 `.cap` 包 & 899 上游映射**！
 - 一次性交付 crates.io **#30 `crc32fast`（17 亿+）**、**#135 `simdutf8`（8.5 亿+）**、`h3o`、`s2`、`statrs` 与 npm `fast-glob`（1.6 亿+/周）、`cosmiconfig`（1.5 亿+/周）、`formidable`，全部 48/48 单测 100% PASS，总映射达 899 项（npm=449, crates.io=450）。
+
+## 2026-11-27: Batch 121 六大 100% 跨包复用重磅包全 6/6 PASS — 突破 **690 官方 `.cap` 包里程碑**！
+- 本波 6 个包全部复用独立 `@cap/*` 依赖：crates.io **#38 `hmac`（16 亿+）**、**#95 `hkdf`（11 亿+）**、**#145 `rand_distr`（8 亿+）** 与 npm `chokidar`（1.6 亿+/周）、`lilconfig`、`listr2`，全部 36/36 单测 100% PASS；Worker C9 满 6 包（36/36 PASS）已光荣轮换换新为 Worker C10。

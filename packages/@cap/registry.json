@@ -2256,12 +2256,10 @@
       "source_name": "chokidar",
       "source_repo": "https://github.com/paulmillr/chokidar",
       "license": "MIT",
-      "cp_target": "cap:watcher",
-      "kind": "stdlib",
-      "aliases": [
-        "notify"
-      ],
-      "absorbed_at": "2026-11-26"
+      "cp_target": "@cap/chokidar-core",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2809,13 +2807,11 @@
       "source_registry": "crates.io",
       "source_name": "hmac",
       "source_repo": "https://github.com/RustCrypto/MACs",
-      "license": "MIT",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
-      "aliases": [
-        "sha1"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/hmac-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -9599,12 +9595,10 @@
       "source_registry": "crates.io",
       "source_name": "hkdf",
       "source_repo": "https://github.com/RustCrypto/KDFs",
-      "license": "MIT",
-      "cp_target": "@cap/hkdf-sha256",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/hkdf-crate",
       "kind": "package",
-      "aliases": [
-        "rfc5869"
-      ],
+      "aliases": [],
       "absorbed_at": "2026-11-27"
     },
     {
@@ -10746,6 +10740,36 @@
       "source_repo": "https://github.com/roydbt/s2",
       "license": "Apache-2.0",
       "cp_target": "@cap/s2",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lilconfig",
+      "source_repo": "https://github.com/antonk52/lilconfig",
+      "license": "MIT",
+      "cp_target": "@cap/lilconfig",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "listr2",
+      "source_repo": "https://github.com/listr2/listr2",
+      "license": "MIT",
+      "cp_target": "@cap/listr2",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand_distr",
+      "source_repo": "https://github.com/rust-random/rand",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/rand-distr",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

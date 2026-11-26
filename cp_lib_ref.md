@@ -910,3 +910,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/statrs`** | `packages/@cap/statrs` | 对标 crates.io `statrs` v0.17 — 描述统计、`erf`/正态/指数/泊松分布、二项式系数与简单线性回归 |
 | **`@cap/crc32fast`** | `packages/@cap/crc32fast` | 对标 crates.io **#30** `crc32fast` (**17 亿+**) — IEEE 802.3 CRC-32 流式 `Crc32Hasher` 与 GF(2) 并行块合并 `combine` |
 | **`@cap/simdutf8`** | `packages/@cap/simdutf8` | 对标 crates.io **#135** `simdutf8` (**8.5 亿+**) — 4 字节 ASCII 快路径严格 RFC 3629 UTF-8 校验、`valid_up_to`/`error_len` 精确定位 |
+| **`@cap/lilconfig`** | `packages/@cap/lilconfig` | 对标 npm Top 50 `lilconfig` v3 (9000 万+/周，复用 `@cap/cosmiconfig`) — 精简 6 项配置搜索列表与自定义加载器注册表 |
+| **`@cap/chokidar-core`** | `packages/@cap/chokidar-core` | 对标 npm Top 25 `chokidar` v4 (**1.6 亿+/周**, 复用 `@cap/fast-glob`) — 文件监听快照差分、`ignore_initial`/`await_write_finish` 防抖与事件队列 |
+| **`@cap/listr2`** | `packages/@cap/listr2` | 对标 npm Top 70 `listr2` (复用 `@cap/picocolors`) — CLI 任务列表状态机、重试预算、`exit_on_error` 熔断与 ANSI 状态行渲染 |
+| **`@cap/rand-distr`** | `packages/@cap/rand-distr` | 对标 crates.io **#145** `rand_distr` v0.4 (**8 亿+**, 复用 `@cap/xoshiro256`) — 均匀/正态(Box-Muller)/指数/伯努利与加权离散分布采样 |
+| **`@cap/hmac-crate`** | `packages/@cap/hmac-crate` | 对标 crates.io **#38** `hmac` (**16 亿+**, 复用 `@cap/cookie-signature`) — RFC 2104/4231 流式 HMAC-SHA256 与恒定时间验签 |
+| **`@cap/hkdf-crate`** | `packages/@cap/hkdf-crate` | 对标 crates.io **#95** `hkdf` (**11 亿+**, 复用 `@cap/hmac-crate`) — RFC 5869 HKDF-SHA256 `extract`/`expand` 密钥派生函数 |

@@ -1076,3 +1076,12 @@
 - `packages/@cap/crc32fast/` & `cap/test/testCapCrc32fast.cp`: crates.io **#30** `crc32fast`（**17 亿+**，CRC-32 + GF(2) combine，6/6 PASS）。
 - `packages/@cap/simdutf8/` & `cap/test/testCapSimdutf8.cp`: crates.io **#135** `simdutf8`（**8.5 亿+**，严格 RFC 3629 UTF-8 校验，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增 Batch 120 全部 8 个官方包映射（899 mappings）。
+
+### 2026-11-27 (Batch 121 — **突破 690 官方 `.cap` 包 & 900+ 上游映射！100% 跨包复用！拿下 `hmac`(16 亿)+`hkdf`(11 亿)+`rand_distr`(8 亿)+`chokidar`(1.6 亿/周)+`lilconfig`+`listr2`**)
+- `packages/@cap/lilconfig/` & `cap/test/testCapLilconfig.cp`: npm Top 50 `lilconfig` v3（9000 万+/周，复用 `@cap/cosmiconfig`，6/6 PASS）。
+- `packages/@cap/chokidar-core/` & `cap/test/testCapChokidarCore.cp`: npm Top 25 `chokidar` v4（1.6 亿+/周，复用 `@cap/fast-glob`，6/6 PASS）。
+- `packages/@cap/listr2/` & `cap/test/testCapListr2.cp`: npm Top 70 `listr2`（复用 `@cap/picocolors`，6/6 PASS）。
+- `packages/@cap/rand-distr/` & `cap/test/testCapRandDistr.cp`: crates.io **#145** `rand_distr` v0.4（8 亿+，复用 `@cap/xoshiro256`，6/6 PASS）。
+- `packages/@cap/hmac-crate/` & `cap/test/testCapHmacCrate.cp`: crates.io **#38** `hmac`（**16 亿+**，复用 `@cap/cookie-signature`，RFC 4231 向量全过，6/6 PASS）。
+- `packages/@cap/hkdf-crate/` & `cap/test/testCapHkdfCrate.cp`: crates.io **#95** `hkdf`（**11 亿+**，复用 `@cap/hmac-crate`，RFC 5869 向量全过，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 121 全部 6 个官方包映射。

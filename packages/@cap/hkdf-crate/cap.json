@@ -1,0 +1,11 @@
+{
+  "name": "@cap/hkdf-crate",
+  "ver": "1.0.0",
+  "description": "Zero-heap RFC 5869 HKDF-SHA256 key derivation function (extract, expand, one-shot) (crates.io hkdf equivalent, reuses @cap/hmac-crate)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/hmac-crate": "1.0.0"
+  }
+}
