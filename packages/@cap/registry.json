@@ -804,6 +804,56 @@
       "kind": "stdlib",
       "aliases": ["http-range-header"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "content-type",
+      "source_repo": "https://github.com/jshttp/content-type",
+      "license": "MIT",
+      "cp_target": "@cap/content-type",
+      "kind": "package",
+      "aliases": ["media-typer", "mime-parse"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "github-slugger",
+      "source_repo": "https://github.com/Flet/github-slugger",
+      "license": "ISC",
+      "cp_target": "@cap/markdown-toc",
+      "kind": "package",
+      "aliases": ["markdown-toc", "md-toc"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "short-uuid",
+      "source_repo": "https://github.com/oculus42/short-uuid",
+      "license": "MIT",
+      "cp_target": "@cap/short-uuid",
+      "kind": "package",
+      "aliases": ["uuid-translator", "short-uuid-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "httpdate",
+      "source_repo": "https://github.com/pyfisch/httpdate",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["http-date", "retry-after"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "escape-string-regexp",
+      "source_repo": "https://github.com/sindresorhus/escape-string-regexp",
+      "license": "MIT",
+      "cp_target": "cap:string",
+      "kind": "stdlib",
+      "aliases": ["lodash.escaperegexp", "escape-regexp"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

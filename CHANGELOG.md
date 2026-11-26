@@ -168,3 +168,9 @@
 - `packages/@cap/html-entities/` & `cap/test/testCapHtmlEntities.cp`: 零堆 HTML5 实体编解码与 XSS 转义引擎（对标 npm `he` [55M/wk] & `escape-html` [70M/wk]，6/6 PASS）。
 - `packages/@cap/data-uri/` & `cap/test/testCapDataUri.cp`: 零堆 RFC 2397 `data:` URI 解析、Base64/百分号解码与编码引擎（对标 npm `data-uri-to-buffer` [15M/wk] & Rust `data-url`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 80 条高频映射（新增 Wave 15 三大包 + `range-parser` 标准库映射）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 16 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/content-type`, `@cap/markdown-toc`, `@cap/short-uuid`）并发布至 `capdux.org`
+- `packages/@cap/content-type/` & `cap/test/testCapContentType.cp`: RFC 9110/6838 HTTP `Content-Type` 解析与规范化格式化（对标 npm `content-type` [70M/wk] & `media-typer` [55M/wk]，6/6 PASS）。
+- `packages/@cap/markdown-toc/` & `cap/test/testCapMarkdownToc.cp`: Markdown 标题大纲提取、GitHub 锚点去重与嵌套 TOC 渲染（对标 npm `github-slugger` [35M/wk] & `markdown-toc`，4/4 PASS）。
+- `packages/@cap/short-uuid/` & `cap/test/testCapShortUuid.cp`: 128-bit UUID 无损双向短 ID 编解码（Flickr Base58 / Base62 / Cookie Base90，对标 npm `short-uuid` [5M/wk]，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 85 条高频映射（新增 Wave 16 三大包 + `httpdate`/`escape-string-regexp` 标准库映射）并同步发布至 `https://capdux.org`。

@@ -311,3 +311,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/json-repair`** | `packages/@cap/json-repair` | 对标 npm `jsonrepair` / Rust `llm_json` — LLM/AI 坏 JSON 自动修复（去围栏/注释、补引号、去尾逗号、转 Python 字面量、补闭合括号） |
 | **`@cap/html-entities`** | `packages/@cap/html-entities` | 对标 npm `he`/`escape-html`/`html-entities` — XSS 转义 + 61 命名实体 + 全 Unicode 十进制/十六进制 UTF-8 编解码 |
 | **`@cap/data-uri`** | `packages/@cap/data-uri` | 对标 npm `data-uri-to-buffer` / Rust `data-url` — RFC 2397 `data:` URI 解析、Base64/百分号解码与构建 |
+| **`@cap/content-type`** | `packages/@cap/content-type` | 对标 npm `content-type`/`media-typer` — RFC 9110/6838 媒体类型、`+suffix` 与引号参数零堆解析与格式化 |
+| **`@cap/markdown-toc`** | `packages/@cap/markdown-toc` | 对标 npm `github-slugger`/`markdown-toc` — Markdown 标题大纲提取、GitHub 锚点去重与嵌套目录渲染 |
+| **`@cap/short-uuid`** | `packages/@cap/short-uuid` | 对标 npm `short-uuid` — 128-bit UUID 无损双向压缩（Flickr Base58 / Base62 / Cookie Base90） |

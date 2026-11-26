@@ -108,3 +108,6 @@
 
 ## 2026-11-26: Wave 15 三路并行交付 `@cap/json-repair` + `@cap/html-entities` + `@cap/data-uri` 并发布至 `capdux.org`
 - 三路并行洁净室交付 `@cap/json-repair`（5/5 PASS）、`@cap/html-entities`（6/6 PASS）、`@cap/data-uri`（6/6 PASS），同步 80 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包突破 113）。
+
+## 2026-11-26: Wave 16 三路并行交付 `@cap/content-type` + `@cap/markdown-toc` + `@cap/short-uuid` 并发布至 `capdux.org`
+- 三路并行洁净室交付 `@cap/content-type`（6/6 PASS）、`@cap/markdown-toc`（4/4 PASS）、`@cap/short-uuid`（6/6 PASS），同步 85 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包突破 116）。
