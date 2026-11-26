@@ -1,0 +1,12 @@
+{
+  "name": "@cap/regex-lite",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation linear-time Thompson NFA regex engine (Rust regex-lite v0.1 parity) composing @cap/regex-syntax and @cap/memchr",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/regex-syntax": "1.0.0",
+    "@cap/memchr": "1.0.0"
+  }
+}

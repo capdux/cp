@@ -1,0 +1,30 @@
+// Type definitions for CP
+
+export fn pushByte(out: []u8, pos: usize, b: u8): usize;
+export fn pushStr(out: []u8, pos: usize, s: string): usize;
+export fn pushUsize(out: []u8, pos: usize, val: usize): usize;
+export fn cursorTo(x: usize, out: []u8): string;
+export fn cursorToXY(x: usize, y: usize, out: []u8): string;
+export fn cursorMove(dx: i32, dy: i32, out: []u8): string;
+export fn cursorUp(n: usize, out: []u8): string;
+export fn cursorDown(n: usize, out: []u8): string;
+export fn cursorForward(n: usize, out: []u8): string;
+export fn cursorBackward(n: usize, out: []u8): string;
+export fn cursorLeft(): string;
+export fn cursorSave(): string;
+export fn cursorRestore(): string;
+export fn cursorHide(): string;
+export fn cursorShow(): string;
+export fn eraseLine(): string;
+export fn eraseEndLine(): string;
+export fn eraseStartLine(): string;
+export fn eraseDown(): string;
+export fn eraseUp(): string;
+export fn eraseScreen(): string;
+export fn clearTerminal(): string;
+export fn scrollUp(): string;
+export fn scrollDown(): string;
+export fn eraseLines(count: usize, out: []u8): string;
+export fn hyperlink(text: string, url: string, out: []u8): string;
+export fn setWindowTitle(title: string, out: []u8): string;
+export fn beep(): string;

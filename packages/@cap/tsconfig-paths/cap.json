@@ -1,0 +1,8 @@
+{
+  "name": "@cap/tsconfig-paths",
+  "ver": "1.0.0",
+  "description": "Zero-allocation TypeScript tsconfig.json baseUrl + paths alias wildcard matcher and path resolver for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

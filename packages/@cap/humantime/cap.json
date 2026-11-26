@@ -1,0 +1,11 @@
+{
+  "name": "@cap/humantime",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap human-readable duration parser/formatter and RFC 3339 timestamp codec (clean-room CP implementation of crates.io humantime)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/itoa": "1.0.0"
+  }
+}

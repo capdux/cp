@@ -1249,14 +1249,14 @@
       "source_name": "ms",
       "source_repo": "https://github.com/vercel/ms",
       "license": "MIT",
-      "cp_target": "@cap/ms-parse",
+      "cp_target": "@cap/ms",
       "kind": "package",
       "aliases": [
         "parse-duration",
         "pretty-ms",
         "humantime"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -2105,13 +2105,13 @@
       "source_name": "postcss",
       "source_repo": "https://github.com/postcss/postcss",
       "license": "MIT",
-      "cp_target": "cap:css",
-      "kind": "stdlib",
+      "cp_target": "@cap/postcss-parse",
+      "kind": "package",
       "aliases": [
         "css-tree",
         "lightningcss"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -3066,12 +3066,12 @@
       "source_name": "humantime",
       "source_repo": "https://github.com/tailhook/humantime",
       "license": "MIT",
-      "cp_target": "cap:time",
-      "kind": "stdlib",
+      "cp_target": "@cap/humantime",
+      "kind": "package",
       "aliases": [
         "humantime-serde"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10166,6 +10166,56 @@
       "source_repo": "https://github.com/ferrilab/bitvec",
       "license": "MIT",
       "cp_target": "@cap/bitvec",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dot-prop",
+      "source_repo": "https://github.com/sindresorhus/dot-prop",
+      "license": "MIT",
+      "cp_target": "@cap/dot-prop",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mustache",
+      "source_repo": "https://github.com/janl/mustache.js",
+      "license": "MIT",
+      "cp_target": "@cap/mustache-tpl",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "globset",
+      "source_repo": "https://github.com/BurntSushi/ripgrep",
+      "license": "MIT",
+      "cp_target": "@cap/globset",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "regex-lite",
+      "source_repo": "https://github.com/rust-lang/regex",
+      "license": "MIT",
+      "cp_target": "@cap/regex-lite",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "csv-core",
+      "source_repo": "https://github.com/BurntSushi/rust-csv",
+      "license": "MIT",
+      "cp_target": "@cap/csv-core",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

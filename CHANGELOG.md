@@ -882,3 +882,17 @@
 - `packages/@cap/which-bin/` & `cap/test/testCapWhichBin.cp`: npm Top 20 `which`（2 亿+/周，复用 `@cap/normalize-path`，6/6 PASS）。
 - `packages/@cap/bstr/` & `cap/test/testCapBstr.cp`: crates.io #90 `bstr`（11 亿+，复用 `@cap/memchr`，6/6 PASS）。
 - `packages/@cap/bitvec/` & `cap/test/testCapBitvec.cp`: crates.io #210 `bitvec`（6 亿+，6/6 PASS）。
+
+### 2026-11-27 (Batch 100 — **百波里程碑！** 11 大顶流包全 6/6 PASS — npm #1 `semver` + #6 `ms` + `postcss` + `regex-lite` + `csv-core`，官方 `.cap` 包突破 **588+**)
+- `packages/@cap/semver-range/` & `cap/test/testCapSemverRange.cp`: npm **#1** `semver`（4 亿+/周，6/6 PASS）。
+- `packages/@cap/ms/` & `cap/test/testCapMs.cp`: npm **#6** `ms`（4 亿+/周，复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/postcss-parse/` & `cap/test/testCapPostcssParse.cp`: npm Top 25 `postcss`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/ansi-escapes/` & `cap/test/testCapAnsiEscapes.cp`: npm Top 40 `ansi-escapes`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/dot-prop/` & `cap/test/testCapDotProp.cp`: npm Top 60 `dot-prop`（1 亿+/周，6/6 PASS）。
+- `packages/@cap/tsconfig-paths/` & `cap/test/testCapTsconfigPaths.cp`: npm Top 100 `tsconfig-paths`（6000 万+/周，6/6 PASS）。
+- `packages/@cap/mustache-tpl/` & `cap/test/testCapMustacheTpl.cp`: npm `mustache` v4（复用 `@cap/escape-html`，6/6 PASS）。
+- `packages/@cap/regex-lite/` & `cap/test/testCapRegexLite.cp`: crates.io #95 `regex-lite`（10 亿+，复用 `@cap/regex-syntax`+`@cap/memchr`，Thompson NFA + PikeVM，6/6 PASS）。
+- `packages/@cap/humantime/` & `cap/test/testCapHumantime.cp`: crates.io #115 `humantime`（9.5 亿+，复用 `@cap/itoa`，6/6 PASS）。
+- `packages/@cap/globset/` & `cap/test/testCapGlobset.cp`: crates.io #125 `globset`（9 亿+，复用 `@cap/picomatch`+`@cap/normalize-path`，6/6 PASS）。
+- `packages/@cap/csv-core/` & `cap/test/testCapCsvCore.cp`: crates.io #150 `csv-core`（8 亿+，10 状态流式 RFC 4180 CSV 引擎，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 100 全部 11 个官方包映射。

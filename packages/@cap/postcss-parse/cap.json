@@ -1,0 +1,9 @@
+{
+  "name": "@cap/postcss-parse",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap CSS AST parser, query/mutation engine, and serializer for CP (clean-room MIT implementation of npm postcss v8).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

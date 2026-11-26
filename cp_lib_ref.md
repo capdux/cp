@@ -780,3 +780,14 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/which-bin`** | `packages/@cap/which-bin` | 对标 npm Top 20 `which` (2 亿+/周，跨包复用 `@cap/normalize-path`) — 跨平台 POSIX/Windows `PATH`+`PATHEXT` 可执行路径解析器 |
 | **`@cap/bstr`** | `packages/@cap/bstr` | 对标 crates.io #90 `bstr` (11 亿+，跨包复用 `@cap/memchr`) — 零堆字节字符串查找、行切分、替换与 RFC 3629 UTF-8 有损转换 |
 | **`@cap/bitvec`** | `packages/@cap/bitvec` | 对标 crates.io #210 `bitvec` (6 亿+) — 512 位零堆紧凑位向量、popcount、字级位运算与 `firstOne`/`lastOne` |
+| **`@cap/globset`** | `packages/@cap/globset` | 对标 crates.io #125 `globset` (9 亿+，双包复用 `@cap/picomatch`+`@cap/normalize-path`) — 多规则 Glob 集合与优先级匹配器 |
+| **`@cap/postcss-parse`** | `packages/@cap/postcss-parse` | 对标 npm Top 25 `postcss` (1.5 亿+/周) — 零堆 CSS AST 词法/语法解析、At-Rule/选择器/声明遍历与序列化 |
+| **`@cap/humantime`** | `packages/@cap/humantime` | 对标 crates.io #115 `humantime` (9.5 亿+，跨包复用 `@cap/itoa`) — 人类可读时长解析格式化与 RFC 3339 时间戳编解码 |
+| **`@cap/regex-lite`** | `packages/@cap/regex-lite` | 对标 crates.io #95 `regex-lite` (10 亿+，双包复用 `@cap/regex-syntax`+`@cap/memchr`) — Thompson NFA + PikeVM 线性时间防 ReDoS 正则引擎 |
+| **`@cap/semver-range`** | `packages/@cap/semver-range` | 对标 npm **全站 #1** `semver` (4 亿+/周) — SemVer 2.0 解析、比较、`^`/`~`/`x`/连字符/OR 范围求值与 `maxSatisfying` |
+| **`@cap/ms`** | `packages/@cap/ms` | 对标 npm **#6** `ms` (4 亿+/周，跨包复用 `@cap/itoa`) — 毫秒时长解析与短/长格式互转 |
+| **`@cap/ansi-escapes`** | `packages/@cap/ansi-escapes` | 对标 npm Top 40 `ansi-escapes` (1.5 亿+/周) — 终端光标定位、清屏擦除、OSC-8 超链接与窗口标题转义序列 |
+| **`@cap/dot-prop`** | `packages/@cap/dot-prop` | 对标 npm Top 60 `dot-prop` (1 亿+/周) — 支持转义点号与数组索引的零堆 JSON 点路径深度读取 |
+| **`@cap/tsconfig-paths`** | `packages/@cap/tsconfig-paths` | 对标 npm Top 100 `tsconfig-paths` (6000 万+/周) — TypeScript `baseUrl`/`paths` 通配符优先级路径解析器 |
+| **`@cap/mustache-tpl`** | `packages/@cap/mustache-tpl` | 对标 npm `mustache` v4 (跨包复用 `@cap/escape-html`) — 零堆 Mustache v1.4 模板引擎（防 XSS 插值、区块/反转区块、列表循环与注释） |
+| **`@cap/csv-core`** | `packages/@cap/csv-core` | 对标 crates.io #150 `csv-core` (8 亿+) — 10 状态零堆流式 RFC 4180 CSV 解析与写入状态机 |
