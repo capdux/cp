@@ -207,3 +207,10 @@
 - `packages/@cap/strftime/` & `cap/test/testCapStrftime.cp`: 零堆 POSIX `strftime` 与 ISO-8601 日期格式化引擎（对标 npm `strftime`/`dateformat` [20M/wk]，6/6 PASS）。
 - `packages/@cap/calver/` & `cap/test/testCapCalver.cp`: Calendar Versioning 解析、比较与周期递增引擎（对标 npm/Rust `calver`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **132 条**高频映射（新增 `mime-types`/`ci-info`/`protobufjs`/`@msgpack/msgpack`/`base64url`/`cbor-x` 内部库直连映射 + Wave 21 四大独立包）。
+
+## [2026-11-26] - Wave 22 四路并行吸收 10 项高下载资产（`@cap/svg-path`, `@cap/mail-addr`, `@cap/keep-changelog`, `@cap/subtitle` + 6 项去重映射）并突破 138 官方包
+- `packages/@cap/svg-path/` & `cap/test/testCapSvgPath.cp`: SVG 全 20 命令零堆解析、2D 包围盒计算与规范回写（对标 npm `parse-svg-path` [15M/wk] & `svg-path-parser` [12M/wk]，6/6 PASS）。
+- `packages/@cap/mail-addr/` & `cap/test/testCapMailAddr.cp`: RFC 5322 邮件地址与多收件人列表零拷贝解析与格式化（对标 npm `addressparser` [10M/wk]，6/6 PASS）。
+- `packages/@cap/keep-changelog/` & `cap/test/testCapKeepChangelog.cp`: Keep a Changelog 1.1.0 解析、版本检索与分类计数（对标 npm `keep-a-changelog` [3M/wk]，6/6 PASS）。
+- `packages/@cap/subtitle/` & `cap/test/testCapSubtitle.cp`: SRT & WebVTT 字幕解析、时间轴偏移与双向转换（对标 npm `subtitle` [2M/wk]，v1.0.1 6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **142 条**高频映射（新增 `ndjson`/`netrc-parser`/`iso8601-duration`/`codeowners`/`dockerfile-ast`/`logfmt` 内部库直连映射 + Wave 22 四大独立包）。

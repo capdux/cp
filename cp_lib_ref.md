@@ -332,3 +332,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/cli-spinners`** | `packages/@cap/cli-spinners` | 对标 npm `cli-spinners`/`ora`/`log-symbols` — 12 套终端加载动画预设 + Unicode/ASCII 状态符号零堆引擎 |
 | **`@cap/strftime`** | `packages/@cap/strftime` | 对标 npm `strftime`/`dateformat` — 零堆 POSIX `strftime` 格式化、时区偏移、闰年与 RFC 3339/ISO-8601 UTC 渲染 |
 | **`@cap/calver`** | `packages/@cap/calver` | 对标 npm/Rust `calver` — 日历版本号（`YYYY.0M.MICRO`/`YYYY.MM.DD` + 预发布）零堆解析、比较与周期递增 |
+| **`@cap/svg-path`** | `packages/@cap/svg-path` | 对标 npm `parse-svg-path`/`svg-path-parser` — SVG 全部 20 命令零堆解析、相对坐标包围盒计算与规范化回写 |
+| **`@cap/mail-addr`** | `packages/@cap/mail-addr` | 对标 npm `addressparser`/`email-addresses` — RFC 5322 邮件地址/显示名/多收件人列表零拷贝解析与转义格式化 |
+| **`@cap/keep-changelog`** | `packages/@cap/keep-changelog` | 对标 npm `keep-a-changelog`/`changelog-parser` — Keep a Changelog 1.1.0 版本检索、分类计数与标题格式化 |
+| **`@cap/subtitle`** | `packages/@cap/subtitle` | 对标 npm `subtitle`/`srt-parser-2` — SRT & WebVTT 字幕解析、毫秒时间轴偏移与无损双向转换 |

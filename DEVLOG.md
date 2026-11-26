@@ -127,3 +127,6 @@
 
 ## 2026-11-26: Wave 21 四路并行交付 `@cap/jcs` + `@cap/cli-spinners` + `@cap/strftime` + `@cap/calver`
 - 4 路并行全线一次通过：`@cap/jcs`（6/6）、`@cap/cli-spinners`（6/6）、`@cap/strftime`（6/6）、`@cap/calver`（6/6），并完成 6 项头部资产去重直连（`mime-types`/`ci-info`/`protobufjs`/`@msgpack/msgpack`/`base64url`/`cbor-x`），总映射达 **132 条**，线上官方 `.cap` 包突破 **133 个**。
+
+## 2026-11-26: Wave 22 四路并行交付 `@cap/svg-path` + `@cap/mail-addr` + `@cap/keep-changelog` + `@cap/subtitle`
+- 保持 3 路子智能体收回即新派满载并行，Wave 22 全部 4 包通过验证：`@cap/svg-path`（6/6）、`@cap/mail-addr`（6/6）、`@cap/keep-changelog`（6/6）、`@cap/subtitle`（6/6），去重直连 6 项内部库（`ndjson`/`netrc-parser`/`iso8601-duration`/`codeowners`/`dockerfile-ast`/`logfmt`），总映射突破 **142 条**。

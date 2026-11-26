@@ -1,0 +1,8 @@
+{
+  "name": "@cap/svg-path",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SVG path `d` attribute parser, bounding box calculator, and canonical formatter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

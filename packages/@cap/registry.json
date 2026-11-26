@@ -1324,6 +1324,106 @@
       "kind": "package",
       "aliases": ["calendar-version"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "parse-svg-path",
+      "source_repo": "https://github.com/jkroso/parse-svg-path",
+      "license": "MIT",
+      "cp_target": "@cap/svg-path",
+      "kind": "package",
+      "aliases": ["svg-path-parser", "svgtypes"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "addressparser",
+      "source_repo": "https://github.com/nodemailer/addressparser",
+      "license": "MIT",
+      "cp_target": "@cap/mail-addr",
+      "kind": "package",
+      "aliases": ["email-addresses", "rfc5322-address"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ndjson",
+      "source_repo": "https://github.com/ndjson/ndjson.js",
+      "license": "BSD-2-Clause",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": ["jsonlines", "serde_jsonlines"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "netrc-parser",
+      "source_repo": "https://github.com/jdx/netrc-parser",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": ["netrc"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "iso8601-duration",
+      "source_repo": "https://github.com/tolu/ISO8601-duration",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["tinyduration"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "codeowners",
+      "source_repo": "https://github.com/beaugunderson/codeowners",
+      "license": "MIT",
+      "cp_target": "cap:git",
+      "kind": "stdlib",
+      "aliases": ["github-codeowners"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dockerfile-ast",
+      "source_repo": "https://github.com/rcjsuen/dockerfile-ast",
+      "license": "MIT",
+      "cp_target": "cap:docker",
+      "kind": "stdlib",
+      "aliases": ["docker-file-parser"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "logfmt",
+      "source_repo": "https://github.com/csquared/node-logfmt",
+      "license": "MIT",
+      "cp_target": "cap:logfmt",
+      "kind": "stdlib",
+      "aliases": ["logfmt-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "keep-a-changelog",
+      "source_repo": "https://github.com/oscarotero/keep-a-changelog",
+      "license": "MIT",
+      "cp_target": "@cap/keep-changelog",
+      "kind": "package",
+      "aliases": ["changelog-parser", "parse-changelog"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "subtitle",
+      "source_repo": "https://github.com/gsantiago/subtitle.js",
+      "license": "MIT",
+      "cp_target": "@cap/subtitle",
+      "kind": "package",
+      "aliases": ["srt-parser-2", "webvtt-parser"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
