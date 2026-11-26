@@ -1,0 +1,9 @@
+{
+  "name": "@cap/redis-url",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Redis / Valkey / Sentinel connection URL parser (redis://, rediss://, unix://) and password-redacting formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["redis", "valkey", "url", "connection-string", "tls", "acl", "zero-alloc"]
+}

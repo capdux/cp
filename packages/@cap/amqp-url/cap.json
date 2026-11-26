@@ -1,0 +1,9 @@
+{
+  "name": "@cap/amqp-url",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation AMQP 0-9-1 / RabbitMQ URI parser (amqp/amqps, IPv6, %2F vhost, heartbeat) and password-redacting formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["amqp", "amqps", "rabbitmq", "uri", "url", "messaging", "zero-alloc"]
+}

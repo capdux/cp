@@ -1,0 +1,9 @@
+{
+  "name": "@cap/purl",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Package URL (PURL) parser, validator, qualifier lookup, and canonical serializer (SBOM standard) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["purl", "packageurl", "sbom", "supply-chain", "spdx", "cyclonedx", "zero-alloc"]
+}

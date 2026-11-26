@@ -528,3 +528,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/http2-hpack`** | `packages/@cap/http2-hpack` | 对标 Rust `h2` / `hpack` — RFC 7541 HTTP/2 HPACK 61 项静态表、N-bit 前缀整数与索引头编解码 |
 | **`@cap/docker-ref`** | `packages/@cap/docker-ref` | 对标 Rust `oci-distribution` / npm `docker-image-parse` — OCI/Docker 镜像引用解析、校验与 `docker.io/library` 归一化 |
 | **`@cap/s3-uri`** | `packages/@cap/s3-uri` | 对标 npm `amazon-s3-uri` — AWS S3 / R2 / MinIO 三格式 URI 解析与 Bucket 命名规范校验 |
+| **`@cap/pg-dsn`** | `packages/@cap/pg-dsn` | 对标 npm `pg-connection-string` / Rust `tokio-postgres` — PostgreSQL URI 与 libpq 键值连接串双格式零堆解析与脱敏 |
+| **`@cap/redis-url`** | `packages/@cap/redis-url` | 对标 npm `ioredis` / Rust `redis` — Redis/Valkey `redis://`/`rediss://`/`unix://` 连接串解析与密码脱敏 |
+| **`@cap/amqp-url`** | `packages/@cap/amqp-url` | 对标 npm `amqplib` / Rust `lapin` — AMQP 0-9-1 / RabbitMQ 连接串（默认端口 5672/5671、`%2F` vhost）解析 |
+| **`@cap/purl`** | `packages/@cap/purl` | 对标 npm `packageurl-js` / Rust `packageurl` — SBOM 供应链标准 Package URL (`pkg:type/ns/name@ver`) 解析与序列化 |
+| **`@cap/ldap-dn`** | `packages/@cap/ldap-dn` | 对标 npm `ldapjs` / Rust `ldap3` — RFC 4514 LDAP Distinguished Name 零堆解析、值转义与属性查找 |
+| **`@cap/magnet-uri`** | `packages/@cap/magnet-uri` | 对标 npm `magnet-uri` / Rust `magnet-url` — BitTorrent v1 (`btih`) & v2 (`btmh`) Magnet URI 解析与构建 |

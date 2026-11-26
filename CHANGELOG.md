@@ -523,3 +523,12 @@
 - `packages/@cap/docker-ref/` & `cap/test/testCapDockerRef.cp`: OCI/Docker 镜像引用解析与规范化（6/6 PASS）。
 - `packages/@cap/s3-uri/` & `cap/test/testCapS3Uri.cp`: AWS S3 三格式 URI 解析与 Bucket 校验（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **523 条**双生态高频映射（**npm=262 / crates.io=261** 1:1 均衡）。
+
+## [2026-11-26] - Batch 62 数据库/消息队列连接串与企业身份六件套（`@cap/pg-dsn`, `@cap/redis-url`, `@cap/amqp-url`, `@cap/purl`, `@cap/ldap-dn`, `@cap/magnet-uri`），总映射突破 **533 条**！
+- `packages/@cap/pg-dsn/` & `cap/test/testCapPgDsn.cp`: PostgreSQL URI/libpq 连接串双格式解析与脱敏（6/6 PASS）。
+- `packages/@cap/redis-url/` & `cap/test/testCapRedisUrl.cp`: Redis/Valkey TCP/TLS/Unix 连接串解析与脱敏（6/6 PASS）。
+- `packages/@cap/amqp-url/` & `cap/test/testCapAmqpUrl.cp`: RabbitMQ/AMQP 连接串解析与 vhost 处理（6/6 PASS）。
+- `packages/@cap/purl/` & `cap/test/testCapPurl.cp`: SBOM Package URL 规范解析与序列化（6/6 PASS）。
+- `packages/@cap/ldap-dn/` & `cap/test/testCapLdapDn.cp`: RFC 4514 LDAP DN 解析与转义（6/6 PASS）。
+- `packages/@cap/magnet-uri/` & `cap/test/testCapMagnetUri.cp`: BitTorrent v1/v2 Magnet URI 解析与构建（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **533 条**双生态映射（**npm=267 / crates.io=266** 绝对 1:1 均衡）。

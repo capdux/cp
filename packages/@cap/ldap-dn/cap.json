@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ldap-dn",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 4514 LDAP Distinguished Name parser, value escaper/unescaper, validator, and case-insensitive attribute lookup.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

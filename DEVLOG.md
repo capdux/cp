@@ -249,3 +249,6 @@
 
 ## 2026-11-26: Batch 61 云原生与 HTTP/2 六件套全 6/6 PASS，线上官方包冲刺 **337+ 个**、总映射 **523 条（npm=262 / crates.io=261）**！
 - 交付 `@cap/jwt-parse`（4500 万+/周，6/6）、`@cap/arn-parse`（4000 万+/周，6/6）、`@cap/multipart-boundary`（4000 万+/周，6/6）、`@cap/http2-hpack`（6/6）、`@cap/docker-ref`（6/6）、`@cap/s3-uri`（6/6），双生态严丝合缝保持 1:1！
+
+## 2026-11-26: Batch 62 数据库/MQ 连接串与企业身份六件套全 6/6 PASS，线上官方包冲刺 **343+ 个**、总映射 **533 条（npm=267 / crates.io=266）**！
+- 交付 `@cap/pg-dsn`（3500 万+/周，6/6）、`@cap/redis-url`（6/6）、`@cap/amqp-url`（6/6）、`@cap/purl`（6/6）、`@cap/ldap-dn`（6/6）、`@cap/magnet-uri`（6/6），全线零堆纯 CP 100% PASS！

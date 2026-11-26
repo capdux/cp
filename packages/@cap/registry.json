@@ -6518,6 +6518,110 @@
         "s3-uri"
       ],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg-connection-string",
+      "source_repo": "https://github.com/brianc/node-postgres",
+      "license": "MIT",
+      "cp_target": "@cap/pg-dsn",
+      "kind": "package",
+      "aliases": [
+        "postgres-uri"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "amqplib",
+      "source_repo": "https://github.com/amqp-node/amqplib",
+      "license": "MIT",
+      "cp_target": "@cap/amqp-url",
+      "kind": "package",
+      "aliases": [
+        "amqp-uri"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "packageurl-js",
+      "source_repo": "https://github.com/package-url/packageurl-js",
+      "license": "MIT",
+      "cp_target": "@cap/purl",
+      "kind": "package",
+      "aliases": [
+        "purl"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ldapjs",
+      "source_repo": "https://github.com/ldapjs/node-ldapjs",
+      "license": "MIT",
+      "cp_target": "@cap/ldap-dn",
+      "kind": "package",
+      "aliases": [
+        "ldap-dn"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tokio-postgres",
+      "source_repo": "https://github.com/sfackler/rust-postgres",
+      "license": "MIT",
+      "cp_target": "@cap/pg-dsn",
+      "kind": "package",
+      "aliases": [
+        "postgres"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lapin",
+      "source_repo": "https://github.com/amqp-rs/lapin",
+      "license": "MIT",
+      "cp_target": "@cap/amqp-url",
+      "kind": "package",
+      "aliases": [
+        "amq-protocol-uri"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "packageurl",
+      "source_repo": "https://github.com/althonos/packageurl.rs",
+      "license": "MIT",
+      "cp_target": "@cap/purl",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ldap3",
+      "source_repo": "https://github.com/inejge/ldap3",
+      "license": "MIT",
+      "cp_target": "@cap/ldap-dn",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "magnet-url",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/magnet-uri",
+      "kind": "package",
+      "aliases": [
+        "magnet-uri"
+      ],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

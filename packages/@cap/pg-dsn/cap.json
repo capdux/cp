@@ -1,0 +1,8 @@
+{
+  "name": "@cap/pg-dsn",
+  "version": "1.0.0",
+  "description": "Zero-heap PostgreSQL connection string parser and URI builder supporting both postgresql:// URIs and libpq key=value DSNs.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
