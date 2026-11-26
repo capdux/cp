@@ -11027,6 +11027,48 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-all",
+      "source_repo": "https://github.com/sindresorhus/p-all",
+      "license": "MIT",
+      "cp_target": "@cap/p-all",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-settle",
+      "source_repo": "https://github.com/sindresorhus/p-settle",
+      "license": "MIT",
+      "cp_target": "@cap/p-settle",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-script",
+      "source_repo": "https://github.com/unicode-rs/unicode-script",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/unicode-script",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pep440_rs",
+      "source_repo": "https://github.com/astral-sh/uv",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/pep440-rs",
+      "kind": "package",
+      "aliases": [
+        "pep440-rs"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -1227,3 +1227,10 @@
 - `packages/@cap/humansize/` & `cap/test/testCapHumansize.cp`: crates.io `humansize` v2（多预设人类可读字节格式化，6/6 PASS）。
 - `packages/@cap/oorandom/` & `cap/test/testCapOorandom.cp`: crates.io `oorandom`（PCG32/PCG64 确定性 PRNG，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N16 满 6 包光荣轮换为 Worker N17。
+
+### 2026-11-27 (Batch 138 — **新增 4 包 + 引入 `scripts/fetch_real_top700.py` 真实下载量排行校准**)
+- `packages/@cap/p-all/` & `cap/test/testCapPAll.cp`: npm `p-all` v5（复用 `@cap/p-limit`，6/6 PASS）。
+- `packages/@cap/p-settle/` & `cap/test/testCapPSettle.cp`: npm `p-settle` v5（复用 `@cap/p-limit`，6/6 PASS）。
+- `packages/@cap/unicode-script/` & `cap/test/testCapUnicodeScript.cp`: crates.io `unicode-script`（6/6 PASS）。
+- `packages/@cap/pep440-rs/` & `cap/test/testCapPep440Rs.cp`: crates.io `pep440_rs`（6/6 PASS）。
+- `scripts/fetch_real_top700.py`: 新增双平台真实下载量 Top 700 实时拉取与差集校准脚本，后续严格按真实下载量从高到低吸收。

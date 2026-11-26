@@ -1001,3 +1001,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/is-fullwidth-code-point`** | `packages/@cap/is-fullwidth-code-point` | 对标 npm **Top 20** `is-fullwidth-code-point` v5 (**1.8 亿+/周**) — Unicode UAX #11 东亚宽/全角码点与列宽判定 |
 | **`@cap/humansize`** | `packages/@cap/humansize` | 对标 crates.io `humansize` v2 — `DECIMAL`/`BINARY`/`WINDOWS` 多预设零堆人类可读字节格式化 |
 | **`@cap/oorandom`** | `packages/@cap/oorandom` | 对标 crates.io `oorandom` — 零依赖 PCG32 (`Rand32`) 与 `Rand64` 确定性伪随机数生成器 |
+| **`@cap/p-all`** | `packages/@cap/p-all` | 对标 npm `p-all` v5 (复用 `@cap/p-limit`) — 零堆有界并发批处理调度与 `stop_on_error` 短路取消 |
+| **`@cap/p-settle`** | `packages/@cap/p-settle` | 对标 npm `p-settle` v5 (复用 `@cap/p-limit`) — 零堆有界并发 `allSettled` 调度与状态统计 |
+| **`@cap/unicode-script`** | `packages/@cap/unicode-script` | 对标 crates.io `unicode-script` — 14 大 Unicode 文字系统查表与 `dominantScript` 统计 |
+| **`@cap/pep440-rs`** | `packages/@cap/pep440-rs` | 对标 crates.io `pep440_rs` (Astral `uv`) — PEP 440 Python 版本解析、排序与说明符匹配 |
