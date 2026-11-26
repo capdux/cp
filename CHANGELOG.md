@@ -411,3 +411,12 @@
 - `packages/@cap/cidr-tools/` & `cap/test/testCapCidrTools.cp`: 对标 npm `cidr-tools`，IPv4 CIDR 合并与差集排除（6/6 PASS）。
 - `packages/@cap/color-space/` & `cap/test/testCapColorSpace.cp`: 对标 npm `color-convert`/Rust `palette`，OKLab/OKLCH/HSL/HSV 色彩转换（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **405 条**高频映射（npm 达 **188 条**，含 `crypto-js`/`semver-compare`/`bcryptjs`/`filesize` 去重直连）。
+
+## [2026-11-26] - Batch 50 纯 npm 2 亿级 HTTP 核心大满贯（`@cap/type-is`, `@cap/range-parser`, `@cap/fresh`, `@cap/vary`, `@cap/accepts`, `@cap/shell-quote`），总映射突破 **415 条**！
+- `packages/@cap/type-is/` & `cap/test/testCapTypeIs.cp`: 对标 npm `type-is`（2.27 亿/周），MIME 短名/通配/`+json` 匹配（6/6 PASS）。
+- `packages/@cap/range-parser/` & `cap/test/testCapRangeParser.cp`: 对标 npm `range-parser`，RFC 9110 `Range`/`Content-Range`（6/6 PASS）。
+- `packages/@cap/fresh/` & `cap/test/testCapFresh.cp`: 对标 npm `fresh`，ETag + `If-Modified-Since` 304 新鲜度校验（6/6 PASS）。
+- `packages/@cap/vary/` & `cap/test/testCapVary.cp`: 对标 npm `vary`（1.77 亿/周），RFC 9110 `Vary` 头去重与 `*` 合并（6/6 PASS）。
+- `packages/@cap/accepts/` & `cap/test/testCapAccepts.cp`: 对标 npm `accepts`+`negotiator`，HTTP 内容协商引擎（6/6 PASS）。
+- `packages/@cap/shell-quote/` & `cap/test/testCapShellQuote.cp`: 对标 npm `shell-quote`，POSIX 防注入引号转义与分词（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **415 条**高频映射（npm 达 **198 条**，含 `is-wsl`/`is-docker`/`prompts`/`get-port` 去重直连）。

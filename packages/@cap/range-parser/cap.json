@@ -1,0 +1,9 @@
+{
+  "name": "@cap/range-parser",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 9110 HTTP Range header parser and Content-Range formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["range-parser", "http", "range", "content-range", "rfc9110", "streaming", "zero-alloc"]
+}

@@ -452,3 +452,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/minisearch`** | `packages/@cap/minisearch` | 对标 npm `lunr`（995 万/周）+ `minisearch` — 零堆内存倒排索引、BM25 相关性排序与前缀自动补全检索 |
 | **`@cap/cidr-tools`** | `packages/@cap/cidr-tools` | 对标 npm `cidr-tools` / `ip-cidr` — 零堆 IPv4 CIDR 解析、包含/重叠判断、最小前缀块 `merge` 与差集 `exclude` |
 | **`@cap/color-space`** | `packages/@cap/color-space` | 对标 npm `color-convert` / Rust `palette` — sRGB ↔ Linear ↔ HSL ↔ HSV ↔ OKLab ↔ OKLCH 转换与感知混合 |
+| **`@cap/type-is`** | `packages/@cap/type-is` | 对标 npm `type-is`（2.27 亿/周）— HTTP `Content-Type` 参数剥离、短名别名、通配符与 `+json`/`+xml` 后缀匹配 |
+| **`@cap/range-parser`** | `packages/@cap/range-parser` | 对标 npm `range-parser`（2.00 亿+/周）— RFC 9110 `Range: bytes=...` 解析、多段合并、`Content-Range` 与 416 检测 |
+| **`@cap/fresh`** | `packages/@cap/fresh` | 对标 npm `fresh`（1.80 亿+/周）— RFC 9110 条件请求缓存新鲜度判定（`If-None-Match` ETag + `If-Modified-Since` + `no-cache`） |
+| **`@cap/vary`** | `packages/@cap/vary` | 对标 npm `vary`（1.77 亿/周）— RFC 9110 `Vary` 响应头去重追加、字段合法性校验与 `*` 通配吞并 |
+| **`@cap/accepts`** | `packages/@cap/accepts` | 对标 npm `accepts` + `negotiator`（7500 万+/周）— RFC 9110 `Accept`/`Accept-Encoding`/`Accept-Language` 内容协商 |
+| **`@cap/shell-quote`** | `packages/@cap/shell-quote` | 对标 npm `shell-quote`（4500 万+/周）— POSIX Shell 防注入参数转义与命令行引号/反斜杠分词器 |

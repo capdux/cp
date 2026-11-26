@@ -4054,6 +4054,106 @@
       "kind": "package",
       "aliases": ["palette", "culori"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "type-is",
+      "source_repo": "https://github.com/jshttp/type-is",
+      "license": "MIT",
+      "cp_target": "@cap/type-is",
+      "kind": "package",
+      "aliases": ["media-typer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-wsl",
+      "source_repo": "https://github.com/sindresorhus/is-wsl",
+      "license": "MIT",
+      "cp_target": "cap:os",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-docker",
+      "source_repo": "https://github.com/sindresorhus/is-docker",
+      "license": "MIT",
+      "cp_target": "cap:os",
+      "kind": "stdlib",
+      "aliases": ["is-inside-container"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "range-parser",
+      "source_repo": "https://github.com/jshttp/range-parser",
+      "license": "MIT",
+      "cp_target": "@cap/range-parser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fresh",
+      "source_repo": "https://github.com/jshttp/fresh",
+      "license": "MIT",
+      "cp_target": "@cap/fresh",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "vary",
+      "source_repo": "https://github.com/jshttp/vary",
+      "license": "MIT",
+      "cp_target": "@cap/vary",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "prompts",
+      "source_repo": "https://github.com/terkelg/prompts",
+      "license": "MIT",
+      "cp_target": "cap:term",
+      "kind": "stdlib",
+      "aliases": ["inquirer", "enquirer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "accepts",
+      "source_repo": "https://github.com/jshttp/accepts",
+      "license": "MIT",
+      "cp_target": "@cap/accepts",
+      "kind": "package",
+      "aliases": ["negotiator"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shell-quote",
+      "source_repo": "https://github.com/ljharb/shell-quote",
+      "license": "MIT",
+      "cp_target": "@cap/shell-quote",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "get-port",
+      "source_repo": "https://github.com/sindresorhus/get-port",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": ["portfinder"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

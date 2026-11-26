@@ -1,0 +1,9 @@
+{
+  "name": "@cap/shell-quote",
+  "version": "1.0.0",
+  "description": "Zero-heap POSIX shell argument quoting and command-line tokenization in pure CP (modeled after npm shell-quote)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["shell-quote", "posix", "cli", "argv", "escaping", "zero-heap"]
+}

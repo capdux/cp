@@ -1,0 +1,8 @@
+{
+  "name": "@cap/type-is",
+  "ver": "1.0.0",
+  "description": "Zero-allocation HTTP Content-Type MIME matcher supporting short aliases, wildcards, and RFC 6839 structured suffixes (npm type-is parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
