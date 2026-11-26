@@ -282,3 +282,6 @@
 
 ## 2026-11-26: Batch 72 正式跨越 **400+ 官方 `.cap` 包终极里程碑（403 官方 `.cap` 包 LIVE + 630 条双生态映射）**！
 - 单批交付 `@cap/base32-rfc`（6/6）、`@cap/css-color`（6/6）、`@cap/levenshtein`（8000 万+/周，6/6）、`@cap/jaro-winkler`（6/6）、`@cap/dice-coeff`（3500 万+/周，6/6）、`@cap/rot13`（6/6），全线零堆纯 CP 100% PASS，双生态稳定保持 1:1（npm=316 / crates.io=314）！
+
+## 2026-11-27: Batch 73 六件套全 6/6 PASS — 跨过 **410 官方 `.cap` 包 & 640 条双生态映射（npm=320 / crates.io=320 绝对 1:1 对称）**！
+- 交付 `@cap/fnv-hash`（Rust `fnv` 7 亿+）、`@cap/metaphone`、`@cap/bmh-search`、`@cap/kmp-search`、`@cap/porter-stem`、`@cap/lcs-diff`（Jest `diff-sequences` 1.2 亿+/周），覆盖哈希、语音编码、线性/次线性字符串搜索、词干提取与序列差分，全线零堆纯 CP 100% PASS。

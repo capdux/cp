@@ -1,0 +1,9 @@
+{
+  "name": "@cap/porter-stem",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Martin Porter (1980) English Stemmer (Steps 1a-5b) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["porter", "stemmer", "nlp", "search", "inverted-index", "english", "zero-alloc"]
+}

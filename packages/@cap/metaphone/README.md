@@ -1,0 +1,19 @@
+# `@cap/metaphone`
+
+Zero-heap-allocation Lawrence Philips Metaphone English phonetic encoder in pure CP.
+
+## Features
+
+- **`metaphone`**: Encodes English words into phonetic keys handling silent initial pairs (`KN`/`GN`/`PN`/`AE`/`WR`), `PH -> F`, `SH`/`CH`/`TIA`/`TIO -> X`, `TH -> 0`, `WH -> W`, `CK -> K`, silent `GH`, and initial-only vowels.
+- **`soundsLike`**: Fast 4-character phonetic equality predicate.
+- **Zero Heap Allocation**: Pure CP, stack-only, no FFI.
+
+## API
+
+```cp
+import { metaphone, soundsLike } from "@cap/metaphone";
+```
+
+## License
+
+MIT

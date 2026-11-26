@@ -1,0 +1,9 @@
+{
+  "name": "@cap/kmp-search",
+  "ver": "1.0.0",
+  "description": "Zero-allocation O(N+M) Knuth-Morris-Pratt (KMP) substring search and LPS failure function engine for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["kmp", "search", "substring", "pattern-matching", "lps", "linear-time", "zero-alloc"]
+}

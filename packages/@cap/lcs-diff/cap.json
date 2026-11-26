@@ -1,0 +1,8 @@
+{
+  "name": "@cap/lcs-diff",
+  "version": "1.0.0",
+  "description": "Zero-heap Longest Common Subsequence (LCS) length, diff insert/delete stats, LCS similarity, and Longest Common Substring locator.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -7707,6 +7707,129 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@sindresorhus/fnv1a",
+      "source_repo": "https://github.com/sindresorhus/fnv1a",
+      "license": "MIT",
+      "cp_target": "@cap/fnv-hash",
+      "kind": "package",
+      "aliases": [
+        "fnv1a",
+        "fnv-plus"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "metaphone",
+      "source_repo": "https://github.com/words/metaphone",
+      "license": "MIT",
+      "cp_target": "@cap/metaphone",
+      "kind": "package",
+      "aliases": [
+        "double-metaphone"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "boyer-moore-magiclen",
+      "source_repo": "https://github.com/magiclen/boyer-moore-magiclen",
+      "license": "MIT",
+      "cp_target": "@cap/bmh-search",
+      "kind": "package",
+      "aliases": [
+        "bmh",
+        "boyer-moore"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "kmp",
+      "source_repo": "https://github.com/magiclen/kmp",
+      "license": "MIT",
+      "cp_target": "@cap/kmp-search",
+      "kind": "package",
+      "aliases": [
+        "knuth-morris-pratt"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "stemmer",
+      "source_repo": "https://github.com/words/stemmer",
+      "license": "MIT",
+      "cp_target": "@cap/porter-stem",
+      "kind": "package",
+      "aliases": [
+        "porter-stemmer"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rust-stemmers",
+      "source_repo": "https://github.com/CurrySoftware/rust-stemmers",
+      "license": "MIT",
+      "cp_target": "@cap/porter-stem",
+      "kind": "package",
+      "aliases": [
+        "porter-stemmer"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "diff-sequences",
+      "source_repo": "https://github.com/jestjs/jest",
+      "license": "MIT",
+      "cp_target": "@cap/lcs-diff",
+      "kind": "package",
+      "aliases": [
+        "fast-diff",
+        "lcs"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lcs-diff",
+      "source_repo": "https://github.com/bokuweb/lcs-diff",
+      "license": "MIT",
+      "cp_target": "@cap/lcs-diff",
+      "kind": "package",
+      "aliases": [
+        "similar-lcs"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "const-fnv1a-hash",
+      "source_repo": "https://github.com/jonasbb/const-fnv1a-hash",
+      "license": "MIT",
+      "cp_target": "@cap/fnv-hash",
+      "kind": "package",
+      "aliases": [
+        "fnv1a-const"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "porter-stemmer",
+      "source_repo": "https://github.com/jwilm/porter-stemmer",
+      "license": "MIT",
+      "cp_target": "@cap/porter-stem",
+      "kind": "package",
+      "aliases": [
+        "stem"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

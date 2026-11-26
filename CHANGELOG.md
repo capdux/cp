@@ -621,3 +621,12 @@
 - `packages/@cap/dice-coeff/` & `cap/test/testCapDiceCoeff.cp`: Sørensen-Dice Bigram 多重集相似度（6/6 PASS）。
 - `packages/@cap/rot13/` & `cap/test/testCapRot13.cp`: ROT13 / ROT47 / Caesar / Atbash 字母表置换（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **630 条**双生态高频映射（**npm=316 / crates.io=314** 1:1 均衡）。
+
+### 2026-11-27 (Batch 73 — 640 映射精确 1:1 对称 & 410 官方包)
+- `packages/@cap/fnv-hash/` & `cap/test/testCapFnvHash.cp`: FNV-1 / FNV-1a 32/64 位流式哈希（6/6 PASS）。
+- `packages/@cap/metaphone/` & `cap/test/testCapMetaphone.cp`: Metaphone 语音编码器（6/6 PASS）。
+- `packages/@cap/bmh-search/` & `cap/test/testCapBmhSearch.cp`: Boyer-Moore-Horspool 快速字节子串搜索（6/6 PASS）。
+- `packages/@cap/kmp-search/` & `cap/test/testCapKmpSearch.cp`: KMP 线性时间搜索与 LPS 构造（6/6 PASS）。
+- `packages/@cap/porter-stem/` & `cap/test/testCapPorterStem.cp`: Porter 英文词干提取（6/6 PASS）。
+- `packages/@cap/lcs-diff/` & `cap/test/testCapLcsDiff.cp`: LCS 长度、Diff 统计、相似度与最长公共子串（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **640 条**双生态高频映射（**npm=320 / crates.io=320 绝对 1:1 对称**）。

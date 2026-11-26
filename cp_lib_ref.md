@@ -593,3 +593,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/jaro-winkler`** | `packages/@cap/jaro-winkler` | 对标 npm/Rust `jaro-winkler` — Jaro & Jaro-Winkler 字符串相似度与实体对齐打分 |
 | **`@cap/dice-coeff`** | `packages/@cap/dice-coeff` | 对标 npm `string-similarity` / Rust `strsim` — Sørensen-Dice 2-gram 多重集相似度与模糊候选查找 |
 | **`@cap/rot13`** | `packages/@cap/rot13` | 对标 npm `rot13-cipher` / Rust `rot13` — ROT13 / ROT47 / Caesar Shift / Atbash 零堆对称置换 |
+
+| **`@cap/fnv-hash`** | `packages/@cap/fnv-hash` | 对标 Rust `fnv` (7 亿+) / npm `@sindresorhus/fnv1a` — FNV-1 & FNV-1a 32/64 位流式零堆哈希 |
+| **`@cap/metaphone`** | `packages/@cap/metaphone` | 对标 npm `metaphone` / Rust `rphonetic` — Lawrence Philips Metaphone 语音编码算法 |
+| **`@cap/bmh-search`** | `packages/@cap/bmh-search` | 对标 Rust `boyer-moore-magiclen` — Boyer-Moore-Horspool 256 字节坏字符表子串搜索 |
+| **`@cap/kmp-search`** | `packages/@cap/kmp-search` | 对标 Rust `kmp` — Knuth-Morris-Pratt O(N+M) 线性子串匹配与 LPS 前缀表 |
+| **`@cap/porter-stem`** | `packages/@cap/porter-stem` | 对标 npm `stemmer` / Rust `rust-stemmers` — Martin Porter (1980) Step 1–5 英文词干提取器 |
+| **`@cap/lcs-diff`** | `packages/@cap/lcs-diff` | 对标 npm `diff-sequences` (Jest 核心 1.2 亿+/周) / Rust `lcs-diff` — 最长公共子序列/子串与 Diff 统计 |
