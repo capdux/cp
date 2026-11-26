@@ -182,3 +182,6 @@
 
 ## 2026-11-26: Batch 39 双重里程碑：**305 条生态映射 + 210 个线上官方 `.cap` 包**！
 - 单批交付 6 大零堆数据结构与哈希算法包 `@cap/ahash`（9.46 亿）、`@cap/merkle`、`@cap/toposort`、`@cap/disjoint-set`、`@cap/fenwick`、`@cap/range-set`（全部 6/6 PASS），并去重直连 `zerocopy`（12.07 亿）、`crossbeam-utils`（11.66 亿）、`http-body`（11.34 亿）、`futures`（9.77 亿），总映射突破 **305 条**，`https://capdux.org` 线上官方包突破 **210 个**（0 失败）！
+
+## 2026-11-26: Batch 40 交付压缩/位图/流式统计/缓存六大硬核引擎（总映射突破 **315 条**，线上官方包达 **213+**！）
+- 交付 `@cap/lz4-block`（6/6）、`@cap/roaring`（6/6）、`@cap/tdigest`（6/6）、`@cap/trie`（6/6）、`@cap/huffman`（6/6）、`@cap/sieve-cache`（6/6），并去重直连 `either`（12.87 亿）、`toml_edit`（10.79 亿）、`thread_local`（8.77 亿）、`colorchoice`（8.45 亿），总映射突破 **315 条**！

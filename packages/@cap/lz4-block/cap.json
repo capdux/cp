@@ -1,0 +1,8 @@
+{
+  "name": "@cap/lz4-block",
+  "ver": "1.0.0",
+  "description": "Zero-allocation LZ4 Raw Block lossless compressor & decompressor with fixed 4096-entry hash table, overlapping RLE match copy, and size-prefixed framing (Rust lz4_flex / LZ4 Block Format parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

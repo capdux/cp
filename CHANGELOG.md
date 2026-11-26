@@ -329,3 +329,12 @@
 - `packages/@cap/fenwick/` & `cap/test/testCapFenwick.cp`: O(log N) 树状数组前缀/区间和与 `lowerBound`（6/6 PASS）。
 - `packages/@cap/range-set/` & `cap/test/testCapRangeSet.cp`: 零堆有序半开区间自动合并与劈裂集合（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **305 条**高频映射（含 `zerocopy`/`crossbeam-utils`/`http-body`/`futures` 去重直连）。
+
+## [2026-11-26] - Batch 40 单批交付 6 大压缩、索引与缓存算法包（`@cap/lz4-block`, `@cap/roaring`, `@cap/tdigest`, `@cap/trie`, `@cap/huffman`, `@cap/sieve-cache`），总映射突破 **315 条**！
+- `packages/@cap/lz4-block/` & `cap/test/testCapLz4Block.cp`: 标准 LZ4 Raw Block 极速块压缩与解压（6/6 PASS）。
+- `packages/@cap/roaring/` & `cap/test/testCapRoaring.cp`: 高 16 位分桶 Roaring Bitmap 压缩位图与集合代数（6/6 PASS）。
+- `packages/@cap/tdigest/` & `cap/test/testCapTdigest.cp`: Merging T-Digest 流式尾部延迟分位数估算与分布式合并（6/6 PASS）。
+- `packages/@cap/trie/` & `cap/test/testCapTrie.cp`: 零堆 LCRS 静态池字节前缀树与 LPM（6/6 PASS）。
+- `packages/@cap/huffman/` & `cap/test/testCapHuffman.cp`: RFC 1951 Canonical Huffman 规范霍夫曼编解码（6/6 PASS）。
+- `packages/@cap/sieve-cache/` & `cap/test/testCapSieveCache.cp`: NSDI'24 SIEVE 缓存淘汰引擎（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **315 条**高频映射（含 `either`/`toml_edit`/`thread_local`/`colorchoice` 去重直连）。

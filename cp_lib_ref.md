@@ -400,3 +400,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/disjoint-set`** | `packages/@cap/disjoint-set` | 对标 Rust `disjoint-sets` / `petgraph::unionfind` — 零堆路径减半与按大小合并并查集（Union-Find） |
 | **`@cap/fenwick`** | `packages/@cap/fenwick` | 对标 Rust `fenwick` — O(log N) 树状数组前缀和/区间和、O(N) 线性建树与 `lowerBound` 第 k 小查询 |
 | **`@cap/range-set`** | `packages/@cap/range-set` | 对标 Rust `rangemap` / npm `merge-ranges` — 零堆有序不重叠半开区间集合（自动合并、劈裂移除与跨度统计） |
+| **`@cap/lz4-block`** | `packages/@cap/lz4-block` | 对标 Rust `lz4_flex` — 标准 LZ4 Raw Block 极速无损块压缩/解压（4096 槽栈上哈希表 + 重叠 RLE 拷贝） |
+| **`@cap/roaring`** | `packages/@cap/roaring` | 对标 Rust `roaring` — 高 16 位分桶压缩位图、双层二分查找、`rank` 与并/交/差集合代数 |
+| **`@cap/tdigest`** | `packages/@cap/tdigest` | 对标 Rust `tdigest` — Ted Dunning Merging T-Digest 恒定内存高精度 P95/P99/P99.9 分位数与分布式 `merge` |
+| **`@cap/trie`** | `packages/@cap/trie` | 对标 Rust `radix_trie` / npm `trie-search` — 零堆 LCRS 512 节点静态池字节前缀树与最长前缀匹配 LPM |
+| **`@cap/huffman`** | `packages/@cap/huffman` | 对标 Rust `huffman-compress` — RFC 1951 规范霍夫曼前缀码表构建、16 位限长与 MSB-first 位流编解码 |
+| **`@cap/sieve-cache`** | `packages/@cap/sieve-cache` | 对标 Rust `sieve-cache` — NSDI'24 SIEVE 缓存淘汰算法（`hand` 第二次机会扫描、抗扫描污染与命中统计） |

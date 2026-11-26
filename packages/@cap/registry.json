@@ -3054,6 +3054,106 @@
       "kind": "package",
       "aliases": ["range-set", "merge-ranges"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "either",
+      "source_repo": "https://github.com/rayon-rs/either",
+      "license": "MIT",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "toml_edit",
+      "source_repo": "https://github.com/toml-rs/toml",
+      "license": "MIT",
+      "cp_target": "cap:toml",
+      "kind": "stdlib",
+      "aliases": ["toml-edit"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "thread_local",
+      "source_repo": "https://github.com/Amanieu/thread_local-rs",
+      "license": "MIT",
+      "cp_target": "cap:sync",
+      "kind": "stdlib",
+      "aliases": ["thread-local"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "colorchoice",
+      "source_repo": "https://github.com/clap-rs/anstyle",
+      "license": "MIT",
+      "cp_target": "cap:term",
+      "kind": "stdlib",
+      "aliases": ["anstyle-query"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lz4_flex",
+      "source_repo": "https://github.com/PSeitz/lz4_flex",
+      "license": "MIT",
+      "cp_target": "@cap/lz4-block",
+      "kind": "package",
+      "aliases": ["lz4", "lz4-block"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "roaring",
+      "source_repo": "https://github.com/RoaringBitmap/roaring-rs",
+      "license": "MIT",
+      "cp_target": "@cap/roaring",
+      "kind": "package",
+      "aliases": ["roaring-bitmap"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tdigest",
+      "source_repo": "https://github.com/MnO2/t-digest",
+      "license": "MIT",
+      "cp_target": "@cap/tdigest",
+      "kind": "package",
+      "aliases": ["t-digest"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "radix_trie",
+      "source_repo": "https://github.com/michaelsproul/rust_radix_trie",
+      "license": "MIT",
+      "cp_target": "@cap/trie",
+      "kind": "package",
+      "aliases": ["qp-trie", "trie-search"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "huffman-compress",
+      "source_repo": "https://github.com/sozu-proxy/huffman-compress",
+      "license": "MIT",
+      "cp_target": "@cap/huffman",
+      "kind": "package",
+      "aliases": ["huffman"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sieve-cache",
+      "source_repo": "https://github.com/jedisct1/rust-sieve-cache",
+      "license": "MIT",
+      "cp_target": "@cap/sieve-cache",
+      "kind": "package",
+      "aliases": ["quick_cache"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/sieve-cache",
+  "ver": "1.0.0",
+  "description": "Zero-allocation NSDI'24 SIEVE cache eviction engine with static doubly-linked pool and open-addressing index for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

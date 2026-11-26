@@ -1,0 +1,8 @@
+{
+  "name": "@cap/roaring",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Roaring Bitmap with 16-bit high-key containers, binary search, rank, and set algebra (Rust roaring parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
