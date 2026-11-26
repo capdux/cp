@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ini",
+  "version": "1.0.0",
+  "description": "Zero-heap INI / .gitconfig / .npmrc / .editorconfig parser and writer with sections, comments, quoted values, and typed getters.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

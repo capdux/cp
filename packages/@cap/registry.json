@@ -4154,6 +4154,106 @@
       "kind": "stdlib",
       "aliases": ["portfinder"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "encodeurl",
+      "source_repo": "https://github.com/pillarjs/encodeurl",
+      "license": "MIT",
+      "cp_target": "@cap/encodeurl",
+      "kind": "package",
+      "aliases": ["escape-string-regexp"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "clsx",
+      "source_repo": "https://github.com/lukeed/clsx",
+      "license": "MIT",
+      "cp_target": "@cap/clsx",
+      "kind": "package",
+      "aliases": ["classnames"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strip-json-comments",
+      "source_repo": "https://github.com/sindresorhus/strip-json-comments",
+      "license": "MIT",
+      "cp_target": "@cap/strip-json-comments",
+      "kind": "package",
+      "aliases": ["comment-json"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ini",
+      "source_repo": "https://github.com/npm/ini",
+      "license": "ISC",
+      "cp_target": "@cap/ini",
+      "kind": "package",
+      "aliases": ["rust-ini"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dotenv-expand",
+      "source_repo": "https://github.com/motdotla/dotenv-expand",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/dotenv-expand",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "object",
+      "source_repo": "https://github.com/gimli-rs/object",
+      "license": "MIT",
+      "cp_target": "cap:wasm",
+      "kind": "stdlib",
+      "aliases": ["gimli"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "libloading",
+      "source_repo": "https://github.com/nagisa/rust_libloading",
+      "license": "ISC",
+      "cp_target": "cap:ffi",
+      "kind": "stdlib",
+      "aliases": ["dlopen"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bvh",
+      "source_repo": "https://github.com/svenstaro/bvh",
+      "license": "MIT",
+      "cp_target": "@cap/bvh",
+      "kind": "package",
+      "aliases": ["parry", "aabb"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "noise",
+      "source_repo": "https://github.com/Razaekel/noise-rs",
+      "license": "MIT",
+      "cp_target": "@cap/noise",
+      "kind": "package",
+      "aliases": ["simplex-noise", "perlin"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "astar",
+      "source_repo": "https://github.com/evenfurther/pathfinding",
+      "license": "MIT",
+      "cp_target": "@cap/astar",
+      "kind": "package",
+      "aliases": ["a-star"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

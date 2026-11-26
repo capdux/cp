@@ -216,3 +216,6 @@
 
 ## 2026-11-26: Batch 50 达成 **50 批大满贯** — 交付 6 大亿级 npm HTTP 核心包，总映射突破 **415 条**，线上官方包冲破 **270 个**！
 - 单批交付 `@cap/type-is`（2.27 亿/周）、`@cap/range-parser`（2.0 亿+/周）、`@cap/fresh`（1.8 亿+/周）、`@cap/vary`（1.77 亿/周）、`@cap/accepts`（7500 万+/周）、`@cap/shell-quote`（4500 万+/周）（全部 6/6 PASS），npm 映射跃升至 **198 条**（与 crates.io 217 条实现均衡），从 Batch 51 起进入 **npm / crates.io 1:1 交替轮转**！
+
+## 2026-11-26: Batch 51 双生态 1:1 均衡爆发 — 单批 8 个新包全 6/6 PASS，**npm 映射突破 203 条**、总映射 **425 条**！
+- 单批交付 5 大亿级 npm 包（`@cap/encodeurl`/`@cap/clsx`/`@cap/strip-json-comments`/`@cap/ini`/`@cap/dotenv-expand`）+ 3 大 Rust 图形/游戏引擎包（`@cap/bvh`/`@cap/noise`/`@cap/astar`），全部 6/6 PASS，线上官方 `.cap` 包冲刺 **275+ 个**！

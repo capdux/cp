@@ -1,0 +1,9 @@
+{
+  "name": "@cap/noise",
+  "version": "1.0.0",
+  "description": "Zero-heap 2D/3D Improved Perlin Noise, Value Noise, and Fractal Brownian Motion (fBm) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["noise", "perlin", "fbm", "procedural", "terrain", "graphics", "zero-heap"]
+}

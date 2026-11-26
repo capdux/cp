@@ -458,3 +458,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/vary`** | `packages/@cap/vary` | 对标 npm `vary`（1.77 亿/周）— RFC 9110 `Vary` 响应头去重追加、字段合法性校验与 `*` 通配吞并 |
 | **`@cap/accepts`** | `packages/@cap/accepts` | 对标 npm `accepts` + `negotiator`（7500 万+/周）— RFC 9110 `Accept`/`Accept-Encoding`/`Accept-Language` 内容协商 |
 | **`@cap/shell-quote`** | `packages/@cap/shell-quote` | 对标 npm `shell-quote`（4500 万+/周）— POSIX Shell 防注入参数转义与命令行引号/反斜杠分词器 |
+| **`@cap/encodeurl`** | `packages/@cap/encodeurl` | 对标 npm `encodeurl`（2.3 亿+/周）+ `escape-string-regexp` — RFC 3986 非双重编码 URL 转义与正则元字符转义 |
+| **`@cap/clsx`** | `packages/@cap/clsx` | 对标 npm `clsx`（1.74 亿/周）+ `classnames` — 零堆条件 CSS 类名拼接、空白归一化与词边界去重构建器 |
+| **`@cap/strip-json-comments`** | `packages/@cap/strip-json-comments` | 对标 npm `strip-json-comments`（1.5 亿+/周）— JSONC 注释与尾逗号剥离（支持保持原行列号） |
+| **`@cap/ini`** | `packages/@cap/ini` | 对标 npm `ini`（9500 万+/周）+ Rust `rust-ini` — 零堆 INI/CONF 配置文件解析器与序列化写入器 |
+| **`@cap/dotenv-expand`** | `packages/@cap/dotenv-expand` | 对标 npm `dotenv-expand`（5500 万+/周）— `.env` `${VAR:-default}`/`${VAR:+alt}` 递归插值与防环保护 |
+| **`@cap/bvh`** | `packages/@cap/bvh` | 对标 Rust `bvh` / `parry` — 零堆 3D AABB 包围体层次树碰撞重叠查询与 Slab 射线求交 `raycast` |
+| **`@cap/noise`** | `packages/@cap/noise` | 对标 Rust `noise` / npm `simplex-noise` — 2D/3D 改进 Perlin 梯度噪声、分形布朗运动 `fbm2D` 与山脊噪声 |
+| **`@cap/astar`** | `packages/@cap/astar` | 对标 Rust `pathfinding::astar` / npm `pathfinding` — 零堆 2D 障碍物网格 4/8 邻域 A* 最优寻路与路径回溯 |

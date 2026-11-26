@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bvh",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation static 3D AABB Bounding Volume Hierarchy (BVH) with overlap queries and slab raycasting in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bvh", "aabb", "raycast", "3d", "collision", "spatial", "graphics", "zero-alloc"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/astar",
+  "version": "1.0.0",
+  "description": "Zero-heap 2D grid A* shortest pathfinding engine with 4-way Manhattan & 8-way Octile diagonal search and path reconstruction.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -420,3 +420,14 @@
 - `packages/@cap/accepts/` & `cap/test/testCapAccepts.cp`: 对标 npm `accepts`+`negotiator`，HTTP 内容协商引擎（6/6 PASS）。
 - `packages/@cap/shell-quote/` & `cap/test/testCapShellQuote.cp`: 对标 npm `shell-quote`，POSIX 防注入引号转义与分词（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **415 条**高频映射（npm 达 **198 条**，含 `is-wsl`/`is-docker`/`prompts`/`get-port` 去重直连）。
+
+## [2026-11-26] - Batch 51 双生态 1:1 均衡单批交付 **8 大全新独立包**（`@cap/encodeurl`, `@cap/clsx`, `@cap/strip-json-comments`, `@cap/ini`, `@cap/dotenv-expand`, `@cap/bvh`, `@cap/noise`, `@cap/astar`），总映射突破 **425 条**！
+- `packages/@cap/encodeurl/` & `cap/test/testCapEncodeurl.cp`: 对标 npm `encodeurl`（2.3 亿+/周）+ `escape-string-regexp`（6/6 PASS）。
+- `packages/@cap/clsx/` & `cap/test/testCapClsx.cp`: 对标 npm `clsx`（1.74 亿/周）+ `classnames`（6/6 PASS）。
+- `packages/@cap/strip-json-comments/` & `cap/test/testCapStripJsonComments.cp`: 对标 npm `strip-json-comments`（1.5 亿+/周）（6/6 PASS）。
+- `packages/@cap/ini/` & `cap/test/testCapIni.cp`: 对标 npm `ini`（9500 万+/周）+ Rust `rust-ini`（6/6 PASS）。
+- `packages/@cap/dotenv-expand/` & `cap/test/testCapDotenvExpand.cp`: 对标 npm `dotenv-expand`（5500 万+/周）（6/6 PASS）。
+- `packages/@cap/bvh/` & `cap/test/testCapBvh.cp`: 3D AABB BVH 碰撞查询与 Slab 射线求交（6/6 PASS）。
+- `packages/@cap/noise/` & `cap/test/testCapNoise.cp`: 2D/3D 改进 Perlin 噪声 + fBm + Ridged（6/6 PASS）。
+- `packages/@cap/astar/` & `cap/test/testCapAstar.cp`: 2D 网格 4/8 邻域 A* 最优寻路（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **425 条**高频映射（**npm=203 / crates.io=222** 1:1 均衡，含 `object`/`libloading` 去重直连）。

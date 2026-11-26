@@ -1,0 +1,9 @@
+{
+  "name": "@cap/dotenv-expand",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation .env variable interpolation engine ($VAR, ${VAR}, :-, -, :+, nesting, cycle guard) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["dotenv", "dotenv-expand", "env", "interpolation", "template", "config", "zero-alloc"]
+}

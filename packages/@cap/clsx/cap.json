@@ -1,0 +1,8 @@
+{
+  "name": "@cap/clsx",
+  "version": "1.0.0",
+  "description": "Zero-heap conditional CSS class name builder with whitespace normalization, deduplication, and word-boundary checks (npm clsx/classnames parity).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}
