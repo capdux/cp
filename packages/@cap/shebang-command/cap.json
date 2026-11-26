@@ -1,0 +1,12 @@
+{
+  "name": "@cap/shebang-command",
+  "version": "1.0.0",
+  "description": "Zero-allocation shebang executable command extractor reusing @cap/shebang-regex for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/shebang-regex": "^1.0.0"
+  },
+  "keywords": ["shebang", "shebang-command", "spawn", "cli", "env", "zero-alloc"]
+}

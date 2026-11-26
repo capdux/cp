@@ -309,3 +309,6 @@
 
 ## 2026-11-27: Batch 81 七件套全 6/6 PASS — 达到 **720 条双生态映射（npm=360 / crates.io=360 绝对对称）**！
 - 单批拿下 crates.io #62 `winnow`（12.4 亿）、#127 `anstyle`（9.57 亿）、#135 `nom`（9.38 亿）与 npm 5 个 2.5~3.5 亿/周核心独立依赖包，并落地真实跨包依赖复用（`@cap/is-glob` -> `@cap/is-extglob`、`@cap/anstyle` -> `@cap/anstyle-parse`）。
+
+## 2026-11-27: Batch 82 七件套全 6/6 PASS — 达到 **730 条双生态映射（npm=365 / crates.io=365 绝对对称）**！
+- 单批拿下 Rust `time` 底层依赖三件套（`deranged` 8.01 亿、`num-conv` 7.53 亿、`powerfmt` 7.36 亿）+ `prost`（7.42 亿，复用 `@cap/varint`）+ 全生态数学基石 `libm`（6.26 亿）+ npm `shebang-command`/`anymatch` 跨包复用交付！

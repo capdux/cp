@@ -1,0 +1,12 @@
+{
+  "name": "@cap/prost-wire",
+  "version": "1.0.0",
+  "description": "Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing @cap/varint (ULEB128 + ZigZag) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/varint": "^1.0.0"
+  },
+  "keywords": ["protobuf", "prost", "wire", "varint", "zigzag", "serialization", "zero-alloc"]
+}

@@ -703,3 +703,13 @@
 - `packages/@cap/anstyle/` & `cap/test/testCapAnstyle.cp`: crates.io #127 `anstyle`（9.57 亿下载，依赖 `@cap/anstyle-parse`，6/6 PASS）。
 - `packages/@cap/nom-bytes/` & `cap/test/testCapNomBytes.cp`: crates.io #62 `winnow`（12.4 亿）+ #135 `nom`（9.38 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **720 条**双生态高频映射（**npm=360 / crates.io=360 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 82 — 730 映射 365/365 绝对对称！一次性吸收 Rust `time` 核心依赖三件套 + `prost` + `libm`)
+- `packages/@cap/shebang-command/` & `cap/test/testCapShebangCommand.cp`: npm `shebang-command`（2.5 亿+/周，复用 `@cap/shebang-regex`，6/6 PASS）。
+- `packages/@cap/anymatch/` & `cap/test/testCapAnymatch.cp`: npm `anymatch`（2 亿+/周，复用 `@cap/normalize-path` + `@cap/is-glob`，6/6 PASS）。
+- `packages/@cap/deranged/` & `cap/test/testCapDeranged.cp`: crates.io #187 `deranged`（8.01 亿下载，6/6 PASS）。
+- `packages/@cap/num-conv/` & `cap/test/testCapNumConv.cp`: crates.io #206 `num-conv`（7.53 亿下载，6/6 PASS）。
+- `packages/@cap/prost-wire/` & `cap/test/testCapProstWire.cp`: crates.io #208 `prost`（7.42 亿下载，复用 `@cap/varint`，6/6 PASS）。
+- `packages/@cap/powerfmt/` & `cap/test/testCapPowerfmt.cp`: crates.io #210 `powerfmt`（7.36 亿下载，6/6 PASS）。
+- `packages/@cap/libm/` & `cap/test/testCapLibm.cp`: crates.io #266 `libm`（6.26 亿下载全生态数学基石，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **730 条**双生态高频映射（**npm=365 / crates.io=365 绝对 1:1 对称**）。

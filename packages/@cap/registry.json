@@ -8804,6 +8804,127 @@
         "is-terminal"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shebang-command",
+      "source_repo": "https://github.com/kevva/shebang-command",
+      "license": "MIT",
+      "cp_target": "@cap/shebang-command",
+      "kind": "package",
+      "aliases": [
+        "shebang-cmd"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "anymatch",
+      "source_repo": "https://github.com/micromatch/anymatch",
+      "license": "MIT",
+      "cp_target": "@cap/anymatch",
+      "kind": "package",
+      "aliases": [
+        "match-any"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "google-protobuf",
+      "source_repo": "https://github.com/protocolbuffers/protobuf-javascript",
+      "license": "MIT",
+      "cp_target": "@cap/prost-wire",
+      "kind": "package",
+      "aliases": [
+        "protobuf-wire"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "deranged",
+      "source_repo": "https://github.com/jhpratt/deranged",
+      "license": "MIT",
+      "cp_target": "@cap/deranged",
+      "kind": "package",
+      "aliases": [
+        "ranged-int"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-conv",
+      "source_repo": "https://github.com/jhpratt/num-conv",
+      "license": "MIT",
+      "cp_target": "@cap/num-conv",
+      "kind": "package",
+      "aliases": [
+        "checked-cast"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "prost",
+      "source_repo": "https://github.com/tokio-rs/prost",
+      "license": "MIT",
+      "cp_target": "@cap/prost-wire",
+      "kind": "package",
+      "aliases": [
+        "prost-types",
+        "protobuf"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "powerfmt",
+      "source_repo": "https://github.com/jhpratt/powerfmt",
+      "license": "MIT",
+      "cp_target": "@cap/powerfmt",
+      "kind": "package",
+      "aliases": [
+        "smart-fmt"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "libm",
+      "source_repo": "https://github.com/rust-lang/libm",
+      "license": "MIT",
+      "cp_target": "@cap/libm",
+      "kind": "package",
+      "aliases": [
+        "micromath"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pbf",
+      "source_repo": "https://github.com/mapbox/pbf",
+      "license": "MIT",
+      "cp_target": "@cap/prost-wire",
+      "kind": "package",
+      "aliases": [
+        "proto-wire"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "format-number",
+      "source_repo": "https://github.com/comfuture/format-number",
+      "license": "MIT",
+      "cp_target": "@cap/powerfmt",
+      "kind": "package",
+      "aliases": [
+        "commas"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/deranged",
+  "version": "1.0.0",
+  "description": "Zero-heap ranged bounded integers with checked, saturating, and clamped arithmetic matching Rust deranged in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["deranged", "ranged", "bounded", "integer", "checked", "saturating", "time"]
+}

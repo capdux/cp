@@ -657,3 +657,11 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/path-key`** | `packages/@cap/path-key` | 对标 npm `path-key` (2.5 亿+/周，独立依赖) — 跨平台 `PATH` 环境变量键名解析与条目拆分 |
 | **`@cap/anstyle`** | `packages/@cap/anstyle` | 对标 crates.io #127 `anstyle` (9.57 亿，依赖 `@cap/anstyle-parse`) — 16/256/RGB 终端样式与 SGR 渲染 |
 | **`@cap/nom-bytes`** | `packages/@cap/nom-bytes` | 对标 crates.io #62 `winnow` (12.4 亿) / #135 `nom` (9.38 亿) — 零拷贝字节流解析组合子与回滚游标 |
+
+| **`@cap/shebang-command`** | `packages/@cap/shebang-command` | 对标 npm `shebang-command` (2.5 亿+/周，跨包复用 `@cap/shebang-regex`) — 解析脚本 shebang 可执行命令与参数 |
+| **`@cap/anymatch`** | `packages/@cap/anymatch` | 对标 npm `anymatch` (2 亿+/周，跨包复用 `@cap/normalize-path` + `@cap/is-glob`) — 多规则与否定排除路径匹配器 |
+| **`@cap/deranged`** | `packages/@cap/deranged` | 对标 crates.io #187 `deranged` (8.01 亿) — 有界范围整数与 checked/saturating/wrapping 运算 |
+| **`@cap/num-conv`** | `packages/@cap/num-conv` | 对标 crates.io #206 `num-conv` (7.53 亿) — 无损扩展、显式截断、安全检查与饱和整数转换 |
+| **`@cap/prost-wire`** | `packages/@cap/prost-wire` | 对标 crates.io #208 `prost` (7.42 亿，跨包复用 `@cap/varint`) — Protocol Buffers Wire Format 零堆编解码 |
+| **`@cap/powerfmt`** | `packages/@cap/powerfmt` | 对标 crates.io #210 `powerfmt` (7.36 亿) — 零堆多进制整数格式化、对齐填充与千分位分组 |
+| **`@cap/libm`** | `packages/@cap/libm` | 对标 crates.io #266 `libm` (6.26 亿) — 全生态纯 CP IEEE 754 `f64` 数学基石库（三角/指对/双曲/舍入） |
