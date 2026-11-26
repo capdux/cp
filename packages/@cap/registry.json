@@ -11987,6 +11987,136 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "env-paths",
+      "source_repo": "https://github.com/sindresorhus/env-paths",
+      "license": "MIT",
+      "cp_target": "@cap/env-paths",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sprintf-js",
+      "source_repo": "https://github.com/alexei/sprintf.js",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/sprintf-js",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pure-rand",
+      "source_repo": "https://github.com/dubzzz/pure-rand",
+      "license": "MIT",
+      "cp_target": "@cap/pure-rand",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-is-absolute",
+      "source_repo": "https://github.com/sindresorhus/path-is-absolute",
+      "license": "MIT",
+      "cp_target": "@cap/pathe",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "html-escaper",
+      "source_repo": "https://github.com/WebReflection/html-escaper",
+      "license": "MIT",
+      "cp_target": "@cap/escape-html",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sisteransi",
+      "source_repo": "https://github.com/terkelg/sisteransi",
+      "license": "MIT",
+      "cp_target": "@cap/ansi-escapes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg-protocol",
+      "source_repo": "https://github.com/brianc/node-postgres",
+      "license": "MIT",
+      "cp_target": "cap:pg",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsonc-parser",
+      "source_repo": "https://github.com/microsoft/node-jsonc-parser",
+      "license": "MIT",
+      "cp_target": "cap:jsonc",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rend",
+      "source_repo": "https://github.com/rkyv/rend",
+      "license": "MIT",
+      "cp_target": "@cap/rend",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "id-arena",
+      "source_repo": "https://github.com/fitzgen/id-arena",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/id-arena",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "dirs-next",
+      "source_repo": "https://github.com/xdg-rs/dirs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/home-dir",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aws-sigv4",
+      "source_repo": "https://github.com/smithy-lang/smithy-rs",
+      "license": "Apache-2.0",
+      "cp_target": "cap:s3",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "xmlparser",
+      "source_repo": "https://github.com/RazrFalcon/xmlparser",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/saxes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

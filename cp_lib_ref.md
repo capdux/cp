@@ -1065,3 +1065,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/is-potential-custom-element-name`** | `packages/@cap/is-potential-custom-element-name` | 对标 npm **#407** `is-potential-custom-element-name` (**1.32 亿/周**) — WHATWG HTML §4.13.2 自定义元素名校验 |
 | **`@cap/rand-hc`** | `packages/@cap/rand-hc` | 对标 crates.io **#664** `rand_hc` (**1.91 亿+**) — eSTREAM HC-128 密码学流密码 PRNG（官方向量精确一致） |
 | **`@cap/getopts`** | `packages/@cap/getopts` | 对标 crates.io **#668** `getopts` (**1.89 亿+**) — Rust 官方 POSIX/GNU 命令行选项解析器 |
+| **`@cap/env-paths`** | `packages/@cap/env-paths` | 对标 npm **#371** `env-paths` (**1.44 亿/周**) — 跨平台 Linux XDG / macOS / Windows 应用目录推导器 |
+| **`@cap/sprintf-js`** | `packages/@cap/sprintf-js` | 对标 npm **#386** `sprintf-js` (**1.39 亿/周**) — 零堆 C 风格 `sprintf` 格式化引擎（`%s`/`%d`/`%x`/`%f` 及宽度精度） |
+| **`@cap/pure-rand`** | `packages/@cap/pure-rand` | 对标 npm **#443** `pure-rand` (**1.24 亿/周**) — 不可变函数式 `Xoroshiro128Plus` PRNG、`jump()` 与无偏区间采样 |
+| **`@cap/rend`** | `packages/@cap/rend` | 对标 crates.io **#679** `rend` (**1.85 亿+**) — 跨平台显式大小端原语类型与越界安全切片读 |
+| **`@cap/id-arena`** | `packages/@cap/id-arena` | 对标 crates.io **#685** `id-arena` (**1.83 亿+**) — 零堆类型化句柄 `IdArena` 分配器（带防跨 Arena 校验） |

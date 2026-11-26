@@ -1,0 +1,24 @@
+{
+  "name": "@cap/env-paths",
+  "version": "1.0.0",
+  "description": "Zero-allocation cross-platform application directory resolver (Linux XDG, macOS Library, Windows AppData) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "env-paths",
+    "xdg",
+    "paths",
+    "config",
+    "cache",
+    "data",
+    "appdata",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "env-paths",
+    "repo": "https://github.com/sindresorhus/env-paths",
+    "license": "MIT"
+  }
+}

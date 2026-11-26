@@ -1331,3 +1331,11 @@
 - `packages/@cap/rand-hc/` & `cap/test/testCapRandHc.cp`: crates.io **#664** `rand_hc`（1.91 亿+，eSTREAM 官方向量一致，6/6 PASS）。
 - `packages/@cap/getopts/` & `cap/test/testCapGetopts.cp`: crates.io **#668** `getopts`（1.89 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 6 项映射（含 `xmlchars`）并刷新极简速查手册。
+
+### 2026-11-27 (Batch 151 — **crates.io 真实 Top 700 纯逻辑全量收官！+ 5 大核心包，30/30 PASS**)
+- `packages/@cap/env-paths/` & `cap/test/testCapEnvPaths.cp`: npm **#371** `env-paths`（1.44 亿/周，6/6 PASS）。
+- `packages/@cap/sprintf-js/` & `cap/test/testCapSprintfJs.cp`: npm **#386** `sprintf-js`（1.39 亿/周，6/6 PASS）。
+- `packages/@cap/pure-rand/` & `cap/test/testCapPureRand.cp`: npm **#443** `pure-rand`（1.24 亿/周，6/6 PASS）。
+- `packages/@cap/rend/` & `cap/test/testCapRend.cp`: crates.io **#679** `rend`（1.85 亿+，6/6 PASS）。
+- `packages/@cap/id-arena/` & `cap/test/testCapIdArena.cp`: crates.io **#685** `id-arena`（1.83 亿+，6/6 PASS）。
+- **零重复归并（8 项高频包）**：`path-is-absolute`→`@cap/pathe`、`html-escaper`→`@cap/escape-html`、`sisteransi`→`@cap/ansi-escapes`、`pg-protocol`→`cap:pg`、`jsonc-parser`→`cap:jsonc`、`dirs-next`→`@cap/home-dir`、`aws-sigv4`→`cap:s3`、`xmlparser`→`@cap/saxes`；Worker C19 满 6 包光荣收官 crates.io Top 700！

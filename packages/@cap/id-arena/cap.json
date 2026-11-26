@@ -1,0 +1,23 @@
+{
+  "name": "@cap/id-arena",
+  "version": "1.0.0",
+  "description": "Zero-allocation typed handle arena allocator with arena_id cross-arena misuse protection in pure CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "id-arena",
+    "arena",
+    "allocator",
+    "handle",
+    "typed-id",
+    "graph",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "id-arena",
+    "repo": "https://github.com/fitzgen/id-arena",
+    "license": "MIT OR Apache-2.0"
+  }
+}

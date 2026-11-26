@@ -526,3 +526,6 @@
 
 ## 2026-11-27: Batch 150 里程碑！五大真实 Top 榜核心包全 6/6 PASS（官方 `@cap` 达 **790 包**，映射 **1,029 条**）！
 - 交付 npm **#351 `split2`**、**#356 `xml-name-validator`（含 `#354 xmlchars`）**、**#407 `is-potential-custom-element-name`** 与 crates.io **#664 `rand_hc`（eSTREAM 官方向量精确命中）**、**#668 `getopts`**，30/30 单测 100% PASS。
+
+## 2026-11-27: Batch 151 — **crates.io 真实 Top 700 纯逻辑全量收官**！官方 `@cap` 达 **795 包**，映射 **1,042 条**！
+- 交付 npm **#371 `env-paths`**、**#386 `sprintf-js`**、**#443 `pure-rand`** 与 crates.io 收官包 **#679 `rend`**、**#685 `id-arena`**（30/30 PASS），同步零重复归并 8 个高频包；crates.io 真实 Top 700 纯逻辑包全面收官，两路子智能体转入双路合力冲刺 npm 真实 Top 700 剩余区间（`#494..#700`）。
