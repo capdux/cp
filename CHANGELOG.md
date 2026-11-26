@@ -924,3 +924,12 @@
 - `packages/@cap/nom-parse/` & `cap/test/testCapNomParse.cp`: crates.io #130 `nom` v7（9 亿+，复用 `@cap/unicase`，6/6 PASS）。
 - `packages/@cap/tinyvec/` & `cap/test/testCapTinyvec.cp`: crates.io #120 `tinyvec`（9.5 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 103 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 104 — 6 大高性能数据结构与 HTTP 中间件包全 6/6 PASS — `slab`+`slotmap`+`ringbuf`+`mime_guess`+`type-is`+`forwarded`，官方 `.cap` 包突破 **610 LIVE**！)
+- `packages/@cap/slab-alloc/` & `cap/test/testCapSlabAlloc.cp`: crates.io #90 `slab`（11 亿+，O(1) 空闲链表对象池，6/6 PASS）。
+- `packages/@cap/mime-guess/` & `cap/test/testCapMimeGuess.cp`: crates.io #180 `mime_guess` v2（7 亿+，复用 `@cap/mime-types`，6/6 PASS）。
+- `packages/@cap/slotmap/` & `cap/test/testCapSlotmap.cp`: crates.io Top-220 `slotmap` v1（5.5 亿+，防 ABA 代际索引，6/6 PASS）。
+- `packages/@cap/ringbuf/` & `cap/test/testCapRingbuf.cp`: crates.io Top-240 `ringbuf`（5 亿+，2 的幂环形缓冲，6/6 PASS）。
+- `packages/@cap/type-is/` & `cap/test/testCapTypeIs.cp`: npm Top 35 `type-is`（1.4 亿+/周，双包复用 `@cap/mime-types`+`@cap/unicase`，6/6 PASS）。
+- `packages/@cap/forwarded-http/` & `cap/test/testCapForwardedHttp.cp`: npm Top 45 `forwarded`（1 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 104 全部 6 个官方包映射。

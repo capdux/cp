@@ -1,0 +1,8 @@
+{
+  "name": "@cap/slotmap",
+  "ver": "1.0.0",
+  "description": "Zero-allocation generational-index slot map (SlotKey, SlotMapI64, SecondaryMapI64) with O(1) free-list and strict ABA protection (Rust slotmap v1 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

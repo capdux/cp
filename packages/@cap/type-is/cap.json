@@ -1,11 +1,12 @@
 {
   "name": "@cap/type-is",
   "ver": "1.0.0",
-  "description": "Zero-allocation HTTP Content-Type MIME matcher supporting short aliases, wildcards, and RFC 6839 structured suffixes (npm type-is parity) for CP",
+  "license": "MIT",
+  "description": "Zero-heap HTTP Content-Type matcher supporting shorthands, wildcards (text/*), and structured suffixes (+json) (clean-room port of npm type-is)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT",
   "dependencies": {
-    "@cap/media-typer": "^1.0.0"
+    "@cap/mime-types": "1.0.0",
+    "@cap/unicase": "1.0.0"
   }
 }

@@ -810,3 +810,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/vary-http`** | `packages/@cap/vary-http` | 对标 npm Top 25 `vary` (2 亿+/周，跨包复用 `@cap/unicase`) — RFC 7231 `Vary` 响应头去重合并与 `*` 通配吸收 |
 | **`@cap/nom-parse`** | `packages/@cap/nom-parse` | 对标 crates.io #130 `nom` v7 (9 亿+，跨包复用 `@cap/unicase`) — 零堆流式解析器组合子（标签/字符类/序列/溢出安全数值解析） |
 | **`@cap/tinyvec`** | `packages/@cap/tinyvec` | 对标 crates.io #120 `tinyvec` (9.5 亿+) — 100% 安全零堆内联栈向量（`TinyVecI64`/`TinyVecU32`，支持 `binarySearch`/`dedup`/`swapRemove`） |
+| **`@cap/mime-guess`** | `packages/@cap/mime-guess` | 对标 crates.io #180 `mime_guess` v2 (7 亿+，跨包复用 `@cap/mime-types`) — 跨平台文件路径/扩展名 MIME 推断器 |
+| **`@cap/slab-alloc`** | `packages/@cap/slab-alloc` | 对标 crates.io #90 `slab` (11 亿+) — 零堆预分配 O(1) 侵入式空闲链表对象池（`SlabI64`） |
+| **`@cap/ringbuf`** | `packages/@cap/ringbuf` | 对标 crates.io Top-240 `ringbuf` (5 亿+) — 2 的幂零堆 O(1) 环形缓冲区（`RingBufU8`/`RingBufI64`，支持批量切片与覆盖模式） |
+| **`@cap/slotmap`** | `packages/@cap/slotmap` | 对标 crates.io Top-220 `slotmap` v1 (5.5 亿+) — 防 ABA 代际索引槽位容器（`SlotMapI64` + `SecondaryMapI64`） |
+| **`@cap/forwarded-http`** | `packages/@cap/forwarded-http` | 对标 npm Top 45 `forwarded`/`proxy-addr` (1 亿+/周，跨包复用 `@cap/unicase`) — RFC 7239 `Forwarded` 与 `X-Forwarded-For` 信任代理链解析 |
+| **`@cap/type-is`** | `packages/@cap/type-is` | 对标 npm Top 35 `type-is` (1.4 亿+/周，双包复用 `@cap/mime-types`+`@cap/unicase`) — HTTP `Content-Type` 简写/通配/`+json` 后缀匹配器 |

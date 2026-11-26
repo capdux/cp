@@ -1,0 +1,19 @@
+{
+  "name": "@cap/mime-guess",
+  "ver": "1.0.0",
+  "description": "Zero-allocation file path and extension MIME type guesser for CP (clean-room MIT, inspired by Rust mime_guess v2, powered by @cap/mime-types).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/mime-types": "1.0.0"
+  },
+  "keywords": [
+    "mime",
+    "mime-guess",
+    "content-type",
+    "extension",
+    "http",
+    "zero-alloc"
+  ]
+}
