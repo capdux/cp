@@ -1145,3 +1145,12 @@ const h = cap.hash.wyhash("hello");
 - `@cap/pkg-types` (`npm:pkg-types` #595, MIT) — `package.json`/`cap.json` 清单字段零分配解析与包名规范校验器。
 - `@cap/trough` (`npm:trough` #653, MIT) — 零堆中间件流水线执行引擎与标签分发器（覆盖 `unified`/`zwitch`）。
 - `@cap/webpack-sources` (`npm:webpack-sources` #687, MIT) — 零堆源码拼接与区间替换渲染器（`ReplaceSource`/`concatSources`）。
+
+### Batch 158 — Top 700 收官 + Top 701–800 首战（5 packages + 16 zero-duplicate mappings; 849 `@cap/*`!）
+
+- `@cap/dom-accessibility-name` (`npm:dom-accessibility-api` #233, MIT) — W3C 可访问名称（AccName）与描述计算器。
+- `@cap/schema-utils` (`npm:schema-utils` #349, MIT) — 零堆配置项 Schema（必填/长度/数值区间/枚举）校验器。
+- `@cap/error-ex` (`npm:error-ex` #402, MIT) — 结构化错误与上下文模板格式化器。
+- `@cap/test-exclude` (`npm:test-exclude` #658, ISC) — 测试/覆盖率文件路径 Glob 包含与排除规则引擎。
+- `@cap/cesu8` (`crates.io:cesu8` #789, MIT) — 零堆 CESU-8 / Java Modified UTF-8 ↔ 标准 UTF-8 转码器。
+- 零重复 Top 701–800 映射：`zune-jpeg`→`cap:jpeg`、`sha-1`→`@cap/sha1-crate`、`byteorder-lite`→`@cap/byteorder`、`xml-rs`→`@cap/saxes`、`ctutils`→`@cap/subtle`、`rusqlite`→`cap:sqlite`、`leb128fmt`→`@cap/leb128`、`difflib`→`@cap/diff`、`yasna`→`@cap/der`、`xxhash-rust`→`@cap/xxhash`、`rgb`→`cap:color`、`style-to-object`/`inline-style-parser`→`@cap/cssstyle`、`crc-32`→`@cap/crc32`、`deep-eql`→`@cap/fast-deep-equal`、`rfdc`→`@cap/klona`、`b4a`→`cap:buffer`。

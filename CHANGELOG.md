@@ -1371,3 +1371,8 @@
 ### 2026-11-26 — Batch 157（npm Real Top 700 `#60..#687`：+5 `@cap/*` 包，总计 844 `@cap/*`）
 - 新增 `packages/@cap/{https-proxy-agent,immer-patches,pkg-types,trough,webpack-sources}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 1,139）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 158（双平台 Top 700 圆满收官 + Top 701–800 启航：+5 `@cap/*` 包 + 16 条零重复映射，总计 849 `@cap/*`）
+- 新增 `packages/@cap/{dom-accessibility-name,schema-utils,error-ex,test-exclude,cesu8}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 优化 `scripts/gen_agent_lib_ref.py` 紧凑列表格式，`cp_agent_lib_ref.md` 缩减至 42KB（-89.5%）
+- 更新 `packages/@cap/registry.json`（总映射 1,158）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

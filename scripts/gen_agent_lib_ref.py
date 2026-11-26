@@ -225,9 +225,9 @@ def main():
         cat = classify_pkg(pkg, sreg)
         # Only annotate original name if renamed (different from pkg dir)
         if sname and sname.lower() != pkg.lower():
-            grouped[cat].append(f"`{pkg}`(←{sname})")
+            grouped[cat].append(f"{pkg}(←{sname})")
         else:
-            grouped[cat].append(f"`{pkg}`")
+            grouped[cat].append(pkg)
 
     npm_cnt = sum(1 for e in reg["entries"] if e.get("source_registry") == "npm")
     cr_cnt = sum(1 for e in reg["entries"] if e.get("source_registry") == "crates.io")
@@ -274,7 +274,7 @@ def main():
         if not items:
             continue
         lines.append(f"### {cat} ({len(items)})")
-        lines.append(" · ".join(items))
+        lines.append(", ".join(items))
         lines.append("")
 
     content = "\n".join(lines).rstrip() + "\n"

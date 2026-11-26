@@ -1,0 +1,15 @@
+{
+  "name": "@cap/dom-accessibility-name",
+  "version": "0.6.3",
+  "description": "Zero-heap W3C Accessible Name and Description computation (AccName) in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "dom-accessibility-api",
+    "version": "0.6.3",
+    "license": "MIT",
+    "repository": "https://github.com/eps1lon/dom-accessibility-api"
+  }
+}

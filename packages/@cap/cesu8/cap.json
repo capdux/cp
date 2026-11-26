@@ -1,0 +1,15 @@
+{
+  "name": "@cap/cesu8",
+  "version": "1.1.0",
+  "description": "Zero-heap CESU-8 and Java Modified UTF-8 (MUTF-8) to/from standard UTF-8 transcoder",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "cesu8",
+    "version": "1.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/emk/cesu8-rs"
+  }
+}

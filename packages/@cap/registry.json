@@ -13145,6 +13145,220 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "dom-accessibility-api",
+      "source_repo": "https://github.com/eps1lon/dom-accessibility-api",
+      "license": "MIT",
+      "cp_target": "@cap/dom-accessibility-name",
+      "kind": "package",
+      "aliases": [
+        "dom-accessibility-name"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "schema-utils",
+      "source_repo": "https://github.com/webpack/schema-utils",
+      "license": "MIT",
+      "cp_target": "@cap/schema-utils",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "error-ex",
+      "source_repo": "https://github.com/Qix-/node-error-ex",
+      "license": "MIT",
+      "cp_target": "@cap/error-ex",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "test-exclude",
+      "source_repo": "https://github.com/istanbuljs/test-exclude",
+      "license": "ISC",
+      "cp_target": "@cap/test-exclude",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cesu8",
+      "source_repo": "https://github.com/emk/cesu8-rs",
+      "license": "MIT",
+      "cp_target": "@cap/cesu8",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zune-jpeg",
+      "source_repo": "https://github.com/etemesi254/zune-image",
+      "license": "MIT",
+      "cp_target": "cap:jpeg",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sha-1",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT",
+      "cp_target": "@cap/sha1-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "byteorder-lite",
+      "source_repo": "https://github.com/image-rs/byteorder-lite",
+      "license": "MIT",
+      "cp_target": "@cap/byteorder",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "xml-rs",
+      "source_repo": "https://github.com/kornelski/xml-rs",
+      "license": "MIT",
+      "cp_target": "@cap/saxes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ctutils",
+      "source_repo": "https://github.com/RustCrypto/utils",
+      "license": "MIT",
+      "cp_target": "@cap/subtle",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rusqlite",
+      "source_repo": "https://github.com/rusqlite/rusqlite",
+      "license": "MIT",
+      "cp_target": "cap:sqlite",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "leb128fmt",
+      "source_repo": "https://github.com/timothee-haudebourg/leb128fmt",
+      "license": "MIT",
+      "cp_target": "@cap/leb128",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "difflib",
+      "source_repo": "https://github.com/Dima4ka/difflib",
+      "license": "MIT",
+      "cp_target": "@cap/diff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "yasna",
+      "source_repo": "https://github.com/masnagam/rust-yasna",
+      "license": "MIT",
+      "cp_target": "@cap/der",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "xxhash-rust",
+      "source_repo": "https://github.com/DoumanAsh/xxhash-rust",
+      "license": "BSL-1.0",
+      "cp_target": "@cap/xxhash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rgb",
+      "source_repo": "https://github.com/kornelski/rust-rgb",
+      "license": "MIT",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "style-to-object",
+      "source_repo": "https://github.com/remarkablemark/style-to-object",
+      "license": "MIT",
+      "cp_target": "@cap/cssstyle",
+      "kind": "package",
+      "aliases": [
+        "inline-style-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "crc-32",
+      "source_repo": "https://github.com/SheetJS/js-crc32",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "deep-eql",
+      "source_repo": "https://github.com/chaijs/deep-eql",
+      "license": "MIT",
+      "cp_target": "@cap/fast-deep-equal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rfdc",
+      "source_repo": "https://github.com/davidmarkclements/rfdc",
+      "license": "MIT",
+      "cp_target": "@cap/klona",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "b4a",
+      "source_repo": "https://github.com/holepunchto/b4a",
+      "license": "Apache-2.0",
+      "cp_target": "cap:buffer",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

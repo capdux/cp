@@ -552,3 +552,7 @@
 
 ### 2026-11-26 — Batch 157 开发日志（844 `@cap/*` 包）
 - 三路并行交付 `https-proxy-agent`（#60, 386.9M/wk）、`immer-patches`（#593）、`pkg-types`（#595）、`trough`（#653）、`webpack-sources`（#687），全部一次通过 `cpc emit-types` 与 6/6 `cap test`。
+
+### 2026-11-26 — Batch 158 开发日志（849 `@cap/*` 包 + 双平台 Top 700 纯逻辑全量收官）
+- 收录 Worker N26/N27 收官交付的 `dom-accessibility-name`、`schema-utils`、`error-ex`、`test-exclude` 及主智能体完成的 `cesu8`（crates.io #789），全部 6/6 PASS。
+- 完成双平台真实下载量 Top 701–1000 榜单拉取，正式衔接 Top 701–800 连续吸收（Worker N28/N29 并行推进 `cbc`/`password-hash`/`matrixmultiply`/`markdown-table`）。
