@@ -167,3 +167,6 @@
 
 ## 2026-11-26: Batch 34 单批交付 6 大 Rust 核心包，突破 **255 条映射 + 185 官方包**双里程碑！
 - 交付 `@cap/der`（6/6）、`@cap/bincode`（6/6）、`@cap/indoc`（6/6）、`@cap/ringbuf`（6/6）、`@cap/bloom`（6/6）、`@cap/toml-writer`（6/6），总映射突破 **255 条**，线上官方包冲破 **185 个**！
+
+## 2026-11-26: Batch 35 严格单调递减完成 crates.io 3.81 亿 → 2.95 亿 Top 10（总映射突破 265 条！）
+- 交付 `@cap/multimap`（6/6）、`@cap/utf8-path`（6/6）、`@cap/utf8-valid`（6/6）、`@cap/pcg`（6/6），去重直连 `mime_guess`/`zip`/`brotli`/`twox-hash`/`tar`/`csv`，总映射达 **265 条**，线上官方包冲破 **190 个**！

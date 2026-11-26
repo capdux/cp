@@ -1,0 +1,18 @@
+{
+  "name": "@cap/pcg",
+  "version": "1.0.0",
+  "description": "Zero-heap PCG32 (XSH-RR) pseudorandom number generator with independent streams and O(log N) jump-ahead (inspired by Rust rand_pcg)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "pcg",
+    "pcg32",
+    "rand_pcg",
+    "prng",
+    "random",
+    "simulation",
+    "monte-carlo",
+    "deterministic"
+  ]
+}

@@ -290,3 +290,10 @@
 - `packages/@cap/bloom/` & `cap/test/testCapBloom.cp`: Kirsch-Mitzenmacher 双哈希零堆布隆过滤器（6/6 PASS）。
 - `packages/@cap/toml-writer/` & `cap/test/testCapTomlWriter.cp`: 零堆 TOML 1.0 序列化格式化器（对标 `toml_writer` 3.21 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 正式突破 **255 条**高频生态映射（含 `pem-rfc7468`/`tungstenite`/`chacha20`/`constant_time_eq` 去重直连）。
+
+## [2026-11-26] - Batch 35 严格单调递减吸收 Rust crates.io 3.81 亿 → 2.95 亿 Top 10（交付 4 大 Rust 核心包，总映射突破 265 条）
+- `packages/@cap/multimap/` & `cap/test/testCapMultimap.cp`: 零堆一键多值保序映射表（对标 `multimap` 3.81 亿，6/6 PASS）。
+- `packages/@cap/utf8-path/` & `cap/test/testCapUtf8Path.cp`: UTF-8 路径规范化与防目录穿越 `safeJoin`（对标 `camino` 3.41 亿，6/6 PASS）。
+- `packages/@cap/utf8-valid/` & `cap/test/testCapUtf8Valid.cp`: RFC 3629 严格 UTF-8 验证与 `U+FFFD` 有损修复（对标 `simdutf8` 3.30 亿，6/6 PASS）。
+- `packages/@cap/pcg/` & `cap/test/testCapPcg.cp`: PCG32 独立流 PRNG 与 O(log N) 跳跃（对标 `rand_pcg` 2.95 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **265 条**高频映射（含 `mime_guess`/`zip`/`brotli`/`twox-hash`/`tar`/`csv` 去重直连）。

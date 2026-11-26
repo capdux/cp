@@ -1,0 +1,8 @@
+{
+  "name": "@cap/utf8-path",
+  "ver": "1.0.0",
+  "description": "Zero-allocation UTF-8 path manipulation, normalization, relative path calculation, and traversal-safe sandboxing (Rust camino parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

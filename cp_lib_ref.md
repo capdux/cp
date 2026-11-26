@@ -376,3 +376,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ringbuf`** | `packages/@cap/ringbuf` | 对标 Rust `ringbuf`/`arraydeque` — 2 的幂位掩码 O(1) 双端环形队列 `RingDequeI64` 与流式 `ByteRingBuf` |
 | **`@cap/bloom`** | `packages/@cap/bloom` | 对标 Rust `fastbloom`/`bloomfilter` — Kirsch-Mitzenmacher 双哈希零堆布隆过滤器（1024/4096 bit）与分布式合并 |
 | **`@cap/toml-writer`** | `packages/@cap/toml-writer` | 对标 Rust `toml_writer`（3.21 亿）— 零堆 TOML 1.0 序列化写入器（裸/引号键、转义、节头、数组表） |
+| **`@cap/multimap`** | `packages/@cap/multimap` | 对标 Rust `multimap`（3.81 亿）— 零堆一键多值保序映射表（HTTP Header/多值 Query/倒排索引） |
+| **`@cap/utf8-path`** | `packages/@cap/utf8-path` | 对标 Rust `camino`（3.41 亿）— 零堆 UTF-8 路径规范化、相对路径与防路径穿越沙箱 `safeJoin` |
+| **`@cap/utf8-valid`** | `packages/@cap/utf8-valid` | 对标 Rust `utf-8`/`simdutf8`（3.31 亿）— RFC 3629 严格 UTF-8 验证、首错定位、`U+FFFD` 修复与 UTF-16 长度 |
+| **`@cap/pcg`** | `packages/@cap/pcg` | 对标 Rust `rand_pcg`（2.95 亿）— PCG32 `XSH-RR` 独立流伪随机数与 O(log N) 跳跃 `advance`（比特精确） |

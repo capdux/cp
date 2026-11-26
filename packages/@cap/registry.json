@@ -2554,6 +2554,106 @@
       "kind": "package",
       "aliases": ["toml-stringify"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "multimap",
+      "source_repo": "https://github.com/havarnov/multimap",
+      "license": "MIT",
+      "cp_target": "@cap/multimap",
+      "kind": "package",
+      "aliases": ["multi-map"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mime_guess",
+      "source_repo": "https://github.com/abonander/mime_guess",
+      "license": "MIT",
+      "cp_target": "cap:mime",
+      "kind": "stdlib",
+      "aliases": ["mime-guess"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zip",
+      "source_repo": "https://github.com/zip-rs/zip2",
+      "license": "MIT",
+      "cp_target": "@cap/miniz",
+      "kind": "package",
+      "aliases": ["jszip", "adm-zip"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "brotli",
+      "source_repo": "https://github.com/dropbox/rust-brotli",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:pack",
+      "kind": "stdlib",
+      "aliases": ["brotli-decompressor"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "camino",
+      "source_repo": "https://github.com/camino-rs/camino",
+      "license": "MIT",
+      "cp_target": "@cap/utf8-path",
+      "kind": "package",
+      "aliases": ["utf8-path", "safe-path"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "simdutf8",
+      "source_repo": "https://github.com/rusticstuff/simdutf8",
+      "license": "MIT",
+      "cp_target": "@cap/utf8-valid",
+      "kind": "package",
+      "aliases": ["utf-8", "utf8-validate"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "twox-hash",
+      "source_repo": "https://github.com/shepmaster/twox-hash",
+      "license": "MIT",
+      "cp_target": "@cap/xxhash",
+      "kind": "package",
+      "aliases": ["xxhash-rust"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tar",
+      "source_repo": "https://github.com/alexcrichton/tar-rs",
+      "license": "MIT",
+      "cp_target": "cap:pack",
+      "kind": "stdlib",
+      "aliases": ["tar-stream", "node-tar"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "csv",
+      "source_repo": "https://github.com/BurntSushi/rust-csv",
+      "license": "MIT",
+      "cp_target": "cap:csv",
+      "kind": "stdlib",
+      "aliases": ["csv-core", "csv-parse", "papaparse"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand_pcg",
+      "source_repo": "https://github.com/rust-random/rand",
+      "license": "MIT",
+      "cp_target": "@cap/pcg",
+      "kind": "package",
+      "aliases": ["pcg32", "oorandom"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
