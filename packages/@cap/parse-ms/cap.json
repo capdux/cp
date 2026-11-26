@@ -1,0 +1,9 @@
+{
+  "name": "@cap/parse-ms",
+  "ver": "1.0.0",
+  "desc": "Zero-heap millisecond breakdown (days/hours/minutes/seconds/ms/us/ns) and reconstruction in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["parse-ms", "to-milliseconds", "time", "duration", "milliseconds", "zero-heap"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ucd-trie",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation compressed two-level bitmap Trie for O(1) Unicode codepoint membership queries (ucd-trie parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

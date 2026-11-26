@@ -1,0 +1,9 @@
+{
+  "name": "@cap/lru-slab",
+  "version": "1.0.0",
+  "description": "Zero-heap pre-allocated O(1) intrusive LRU slab cache matching crates.io #415 lru-slab (358M+ downloads) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["lru", "slab", "cache", "o1", "zero-heap", "intrusive"]
+}

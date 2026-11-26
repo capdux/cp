@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ring-queue",
+  "ver": "1.0.0",
+  "desc": "Zero-heap bounded ring queue (RingQueueU64) and wrap-around byte ring buffer (ByteRing) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ring-queue", "ring-buffer", "queue", "fifo", "circular-buffer", "crossbeam-queue", "zero-heap"]
+}

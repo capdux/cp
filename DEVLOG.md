@@ -321,3 +321,6 @@
 
 ## 2026-11-27: Batch 85 八件套全 6/6 PASS — 达到 **760 条双生态映射（npm=380 / crates.io=380 绝对对称）** & 482+ 官方 `.cap` 包！
 - 一次性交付 Express 生态 5 大核心独立依赖（`proxy-addr`、`parseurl`、`escape-html`、`cookie-signature`、`depd`）+ Rust Top 350 核心 3 件套（`quinn-varint` 4.59 亿、`subtle-ct` 8 亿+、`dunce` 4.33 亿），全部 6/6 PASS 且持续贯彻跨包依赖复用。
+
+## 2026-11-27: Batch 86 八件套全 6/6 PASS — 达到 **770 条双生态映射（npm=385 / crates.io=385 绝对对称）** & 490+ 官方 `.cap` 包（距 **500 官方包终极里程碑**仅差 10 步）！
+- 单批拿下 `ucd-trie`、`cexpr`、`lru-slab`、`xorshift`、`ring-queue`、`form-urlencoded`、`strip-bom`、`parse-ms` 八大高频基础库，全线零堆纯 CP 100% PASS。

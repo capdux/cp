@@ -684,3 +684,12 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/quinn-varint`** | `packages/@cap/quinn-varint` | 对标 crates.io #339 `quinn-proto` (4.59 亿) — RFC 9000 QUIC 变长整数与长包头解析 |
 | **`@cap/subtle-ct`** | `packages/@cap/subtle-ct` | 对标 crates.io `subtle` (8 亿+) / `zeroize` (6 亿+) / npm `tsscmp` — 无分支恒定时间密码学原语与敏感内存清零 |
 | **`@cap/dunce`** | `packages/@cap/dunce` | 对标 crates.io #351 `dunce` (4.33 亿) — Windows UNC `\\?\` 路径安全精简与保留设备名防护 |
+
+| **`@cap/ucd-trie`** | `packages/@cap/ucd-trie` | 对标 crates.io #385 `ucd-trie` (3.82 亿) — 64 码点分块共享零块高压缩 Unicode 集合双层位图 Trie |
+| **`@cap/cexpr`** | `packages/@cap/cexpr` | 对标 crates.io #403 `cexpr` (3.65 亿) — 完整 C 语言常量表达式递归下降解析与求值器 |
+| **`@cap/lru-slab`** | `packages/@cap/lru-slab` | 对标 crates.io #415 `lru-slab` (3.58 亿) — 预分配 O(1) 侵入式双向链表 LRU Slab 缓存 |
+| **`@cap/xorshift`** | `packages/@cap/xorshift` | 对标 crates.io #423 `rand_xorshift` (3.53 亿) / npm `xorshift` — Xorshift128/64*/32 伪随机数族 |
+| **`@cap/ring-queue`** | `packages/@cap/ring-queue` | 对标 crates.io #342 `crossbeam-queue` (4.55 亿) / npm `denque` — O(1) 零堆有界环形队列与字节环形缓冲 |
+| **`@cap/form-urlencoded`** | `packages/@cap/form-urlencoded` | 对标 crates.io `form_urlencoded` (11 亿+) / `urlencoding` (3.39 亿) — WHATWG 表单与百分号零堆编解码 |
+| **`@cap/strip-bom`** | `packages/@cap/strip-bom` | 对标 npm `strip-bom` (2.5 亿+/周) — UTF-8/16/32 BOM 检测与零拷贝剥离 |
+| **`@cap/parse-ms`** | `packages/@cap/parse-ms` | 对标 npm `parse-ms` (1.2 亿+/周，独立依赖) — 毫秒/亚毫秒拆解与还原（供 `@cap/pretty-ms` 复用） |

@@ -745,3 +745,14 @@
 - `packages/@cap/subtle-ct/` & `cap/test/testCapSubtleCt.cp`: crates.io `subtle`（8 亿+）& `zeroize`（6 亿+，6/6 PASS）。
 - `packages/@cap/dunce/` & `cap/test/testCapDunce.cp`: crates.io #351 `dunce`（4.33 亿下载，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **760 条**双生态高频映射（**npm=380 / crates.io=380 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 86 — **770 映射 385/385 绝对对称！** 8 个重磅独立包全 6/6 PASS，冲向 500 官方包)
+- `packages/@cap/ucd-trie/` & `cap/test/testCapUcdTrie.cp`: crates.io #385 `ucd-trie`（3.82 亿下载，6/6 PASS）。
+- `packages/@cap/cexpr/` & `cap/test/testCapCexpr.cp`: crates.io #403 `cexpr`（3.65 亿下载，6/6 PASS）。
+- `packages/@cap/lru-slab/` & `cap/test/testCapLruSlab.cp`: crates.io #415 `lru-slab`（3.58 亿下载，6/6 PASS）。
+- `packages/@cap/xorshift/` & `cap/test/testCapXorshift.cp`: crates.io #423 `rand_xorshift`（3.53 亿下载，6/6 PASS）。
+- `packages/@cap/ring-queue/` & `cap/test/testCapRingQueue.cp`: crates.io #342 `crossbeam-queue`（4.55 亿下载，6/6 PASS）。
+- `packages/@cap/form-urlencoded/` & `cap/test/testCapFormUrlencoded.cp`: crates.io `form_urlencoded`（11 亿+，6/6 PASS）。
+- `packages/@cap/strip-bom/` & `cap/test/testCapStripBom.cp`: npm `strip-bom`（2.5 亿+/周，6/6 PASS）。
+- `packages/@cap/parse-ms/` & `cap/test/testCapParseMs.cp`: npm `parse-ms`（1.2 亿+/周独立依赖，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **770 条**双生态高频映射（**npm=385 / crates.io=385 绝对 1:1 对称**）。
