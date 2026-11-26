@@ -1,298 +1,310 @@
-// @cap/percent-encoding — Zero-allocation WHATWG & RFC 3986 percent-encoding engine for CP
-// Clean-room MIT implementation inspired by Rust `percent-encoding` (1.15B downloads).
+// @cap/percent-encoding — Pure CP zero-allocation WHATWG URL Standard percent-encoding
+// Clean-room MIT implementation with full parity to Rust `percent-encoding` & WHATWG URL Standard.
 
-fn bit64(idx: u8) -> u64 {
-    let v: u64 = 1;
-    let i: u8 = 0;
-    while (i < idx) {
-        v = v * (2 as u64);
-        i += 1;
-    }
-    return v;
+fn peBitMask(byte: u8): u32 {
+    return (1 as u32) << ((byte & 31) as u5);
 }
 
+fn peHexUpper(nib: u8): u8 {
+    let n = nib & 0x0F;
+    if (n < 10) {
+        return 48 + n;
+    }
+    return 55 + n;
+}
+
+fn peHexVal(ch: u8): u8 {
+    if (ch >= 48 && ch <= 57) {
+        return ch - 48;
+    }
+    if (ch >= 65 && ch <= 70) {
+        return ch - 55;
+    }
+    if (ch >= 97 && ch <= 102) {
+        return ch - 87;
+    }
+    return 255;
+}
+
+/// 128-bit ASCII bitmap for O(1) percent-encode membership lookup.
+/// Non-ASCII bytes (>= 0x80) are always percent-encoded per WHATWG URL Standard.
 pub struct AsciiSet {
-    pub lo: u64,
-    pub hi: u64,
+    pub bits: [4]u32,
 
-    pub static fn empty() -> AsciiSet {
-        return AsciiSet{
-            lo: 0 as u64,
-            hi: 0 as u64,
-        };
+    pub static fn empty(): AsciiSet {
+        let b: [4]u32 = [0, 0, 0, 0];
+        return AsciiSet { bits: b };
     }
 
-    pub fn add(*_, b: u8) {
-        if (b < 64) {
-            const m = bit64(b);
-            _.lo = _.lo | m;
-        } else if (b < 128) {
-            const m = bit64(b - (64 as u8));
-            _.hi = _.hi | m;
+    pub fn add(*_, byte: u8) {
+        if (byte >= 0x80) {
+            return;
         }
+        let wi: usize = (byte >> 5) as usize;
+        _.bits[wi] = _.bits[wi] | peBitMask(byte);
     }
 
-    pub fn remove(*_, b: u8) {
-        if (b < 64) {
-            const m = bit64(b);
-            if ((_.lo & m) != (0 as u64)) {
-                _.lo = _.lo ^ m;
-            }
-        } else if (b < 128) {
-            const m = bit64(b - (64 as u8));
-            if ((_.hi & m) != (0 as u64)) {
-                _.hi = _.hi ^ m;
-            }
+    pub fn remove(*_, byte: u8) {
+        if (byte >= 0x80) {
+            return;
         }
+        let wi: usize = (byte >> 5) as usize;
+        _.bits[wi] = _.bits[wi] & (~peBitMask(byte));
     }
 
-    pub fn contains(b: u8) -> bool {
-        if (b >= 128) {
+    pub fn unionWith(other: AsciiSet): AsciiSet {
+        let b: [4]u32 = [
+            _.bits[0] | other.bits[0],
+            _.bits[1] | other.bits[1],
+            _.bits[2] | other.bits[2],
+            _.bits[3] | other.bits[3]
+        ];
+        return AsciiSet { bits: b };
+    }
+
+    pub fn shouldPercentEncode(byte: u8): bool {
+        if (byte >= 0x80) {
             return true;
         }
-        if (b < 64) {
-            const m = bit64(b);
-            return (_.lo & m) != (0 as u64);
-        }
-        const m = bit64(b - (64 as u8));
-        return (_.hi & m) != (0 as u64);
+        let wi: usize = (byte >> 5) as usize;
+        return (_.bits[wi] & peBitMask(byte)) != 0;
     }
 }
 
-pub fn controlsSet() -> AsciiSet {
-    let s = AsciiSet.empty();
-    let b: u8 = 0;
-    while (b <= 0x1F) {
-        s.add(b);
-        b += 1;
-    }
-    s.add(0x7F as u8);
-    return s;
+/// WHATWG C0 control percent-encode set: 0x00..=0x1F, 0x7F, and all non-ASCII (>= 0x80).
+pub fn controlsSet(): AsciiSet {
+    let b: [4]u32 = [
+        0xFFFFFFFF as u32,
+        0 as u32,
+        0 as u32,
+        0x80000000 as u32
+    ];
+    return AsciiSet { bits: b };
 }
 
-pub fn fragmentSet() -> AsciiSet {
+/// WHATWG fragment percent-encode set: controls + ' ', '"', '<', '>', '`'.
+pub fn fragmentSet(): AsciiSet {
     let s = controlsSet();
-    s.add(' ');
-    s.add('"');
-    s.add('<');
-    s.add('>');
-    s.add('`');
+    s.add(0x20); // ' '
+    s.add(0x22); // '"'
+    s.add(0x3C); // '<'
+    s.add(0x3E); // '>'
+    s.add(0x60); // '`'
     return s;
 }
 
-pub fn querySet() -> AsciiSet {
+/// WHATWG query percent-encode set: controls + ' ', '"', '#', '<', '>'.
+pub fn querySet(): AsciiSet {
     let s = controlsSet();
-    s.add(' ');
-    s.add('"');
-    s.add('#');
-    s.add('<');
-    s.add('>');
+    s.add(0x20); // ' '
+    s.add(0x22); // '"'
+    s.add(0x23); // '#'
+    s.add(0x3C); // '<'
+    s.add(0x3E); // '>'
     return s;
 }
 
-pub fn pathSegmentSet() -> AsciiSet {
-    let s = querySet();
-    s.add('?');
-    s.add('`');
-    s.add('{');
-    s.add('}');
-    s.add('/');
+/// WHATWG path percent-encode set: fragment + '#', '?', '{', '}'.
+pub fn pathSet(): AsciiSet {
+    let s = fragmentSet();
+    s.add(0x23); // '#'
+    s.add(0x3F); // '?'
+    s.add(0x7B); // '{'
+    s.add(0x7D); // '}'
     return s;
 }
 
-pub fn userinfoSet() -> AsciiSet {
-    let s = pathSegmentSet();
-    s.add(':');
-    s.add(';');
-    s.add('=');
-    s.add('@');
-    s.add('[');
-    s.add('\\');
-    s.add(']');
-    s.add('^');
-    s.add('|');
+/// WHATWG userinfo percent-encode set: path + '/', ':', ';', '=', '@', '[', '\', ']', '^', '|'.
+pub fn userinfoSet(): AsciiSet {
+    let s = pathSet();
+    s.add(0x2F); // '/'
+    s.add(0x3A); // ':'
+    s.add(0x3B); // ';'
+    s.add(0x3D); // '='
+    s.add(0x40); // '@'
+    s.add(0x5B); // '['
+    s.add(0x5C); // '\'
+    s.add(0x5D); // ']'
+    s.add(0x5E); // '^'
+    s.add(0x7C); // '|'
     return s;
 }
 
-fn isAsciiAlnum(b: u8) -> bool {
-    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9');
+/// WHATWG component percent-encode set: userinfo + '$', '%', '&', '+', ','.
+pub fn componentSet(): AsciiSet {
+    let s = userinfoSet();
+    s.add(0x24); // '$'
+    s.add(0x25); // '%'
+    s.add(0x26); // '&'
+    s.add(0x2B); // '+'
+    s.add(0x2C); // ','
+    return s;
 }
 
-pub fn nonAlphanumericSet() -> AsciiSet {
-    let s = AsciiSet.empty();
-    let b: u8 = 0;
-    while (b < 128) {
-        if (!isAsciiAlnum(b)) {
-            s.add(b);
+/// Non-alphanumeric percent-encode set: encodes all bytes except ASCII A-Z, a-z, 0-9.
+pub fn nonAlphanumericSet(): AsciiSet {
+    let b: [4]u32 = [
+        0xFFFFFFFF as u32,
+        0xFFFFFFFF as u32,
+        0xFFFFFFFF as u32,
+        0xFFFFFFFF as u32
+    ];
+    let s = AsciiSet { bits: b };
+    let c: u8 = 48; // '0'..'9'
+    while (c <= 57) {
+        s.remove(c);
+        c = c + 1;
+    }
+    c = 65; // 'A'..'Z'
+    while (c <= 90) {
+        s.remove(c);
+        c = c + 1;
+    }
+    c = 97; // 'a'..'z'
+    while (c <= 122) {
+        s.remove(c);
+        c = c + 1;
+    }
+    return s;
+}
+
+/// Computes the exact encoded byte length for `input` under `set`.
+pub fn percentEncodeLen(input: []const u8, set: AsciiSet): usize {
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i < input.len) {
+        if (set.shouldPercentEncode(input[i])) {
+            total = total + 3;
+        } else {
+            total = total + 1;
         }
-        b += 1;
+        i = i + 1;
     }
-    return s;
+    return total;
 }
 
-pub fn rfc3986UnreservedSet() -> AsciiSet {
-    let s = nonAlphanumericSet();
-    s.remove('-');
-    s.remove('.');
-    s.remove('_');
-    s.remove('~');
-    return s;
-}
-
-fn hexUpperChar(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return '0' + nibble;
-    }
-    return 'A' + (nibble - (10 as u8));
-}
-
-fn hexVal(c: u8) -> i16 {
-    if (c >= '0' && c <= '9') {
-        return (c - '0') as i16;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return (c - 'A' + (10 as u8)) as i16;
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (c - 'a' + (10 as u8)) as i16;
-    }
-    return -1 as i16;
-}
-
-pub fn percentEncode(input: string, set: AsciiSet, out: []u8) -> string {
+/// Percent-encodes `input` into `out` using uppercase `%XX` notation.
+/// Automatically encodes all non-ASCII bytes (>= 0x80).
+/// Stops safely without overflowing `out` or emitting truncated `%` sequences.
+pub fn percentEncode(input: []const u8, set: AsciiSet, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
-        const b = input[i];
-        if (set.contains(b)) {
+        let b = input[i];
+        if (set.shouldPercentEncode(b)) {
             if (pos + 3 > out.len) {
                 break;
             }
-            out[pos] = '%';
-            out[pos + 1] = hexUpperChar(b / (16 as u8));
-            out[pos + 2] = hexUpperChar(b % (16 as u8));
-            pos += 3;
+            out[pos] = 0x25; // '%'
+            out[pos + 1] = peHexUpper(b >> 4);
+            out[pos + 2] = peHexUpper(b & 0x0F);
+            pos = pos + 3;
         } else {
-            if (pos + 1 > out.len) {
+            if (pos >= out.len) {
                 break;
             }
             out[pos] = b;
-            pos += 1;
+            pos = pos + 1;
         }
-        i += 1;
+        i = i + 1;
     }
-    return out[0..pos];
+    return pos;
 }
 
-pub fn percentDecode(input: string, out: []u8) -> string {
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < input.len && pos < out.len) {
-        if (input[i] == '%' && i + 2 < input.len) {
-            const hi = hexVal(input[i + 1]);
-            const lo = hexVal(input[i + 2]);
-            if (hi >= 0 && lo >= 0) {
-                out[pos] = ((hi * (16 as i16)) + lo) as u8;
-                pos += 1;
-                i += 3;
-                continue;
-            }
-        }
-        out[pos] = input[i];
-        pos += 1;
-        i += 1;
-    }
-    return out[0..pos];
-}
-
-pub fn percentDecodeStrict(input: string, out: []u8) -> string? {
+/// Lenient percent-decoding (Rust `percent_decode` parity).
+/// Valid `%XX` sequences (case-insensitive) are decoded to bytes;
+/// malformed or incomplete `%` sequences are preserved verbatim.
+pub fn percentDecode(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
         if (pos >= out.len) {
-            return null;
+            break;
         }
-        if (input[i] == '%') {
-            if (i + 2 >= input.len) {
-                return null;
-            }
-            const hi = hexVal(input[i + 1]);
-            const lo = hexVal(input[i + 2]);
-            if (hi < 0 || lo < 0) {
-                return null;
-            }
-            out[pos] = ((hi * (16 as i16)) + lo) as u8;
-            pos += 1;
-            i += 3;
-        } else {
-            out[pos] = input[i];
-            pos += 1;
-            i += 1;
-        }
-    }
-    return out[0..pos];
-}
-
-fn isFormUnescaped(b: u8) -> bool {
-    return isAsciiAlnum(b) || b == '*' || b == '-' || b == '.' || b == '_';
-}
-
-pub fn formUrlEncode(input: string, out: []u8) -> string {
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < input.len) {
-        const b = input[i];
-        if (b == ' ') {
-            if (pos + 1 > out.len) {
-                break;
-            }
-            out[pos] = '+';
-            pos += 1;
-        } else if (isFormUnescaped(b)) {
-            if (pos + 1 > out.len) {
-                break;
-            }
-            out[pos] = b;
-            pos += 1;
-        } else {
-            if (pos + 3 > out.len) {
-                break;
-            }
-            out[pos] = '%';
-            out[pos + 1] = hexUpperChar(b / (16 as u8));
-            out[pos + 2] = hexUpperChar(b % (16 as u8));
-            pos += 3;
-        }
-        i += 1;
-    }
-    return out[0..pos];
-}
-
-pub fn formUrlDecode(input: string, out: []u8) -> string {
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < input.len && pos < out.len) {
-        if (input[i] == '+') {
-            out[pos] = ' ';
-            pos += 1;
-            i += 1;
-            continue;
-        }
-        if (input[i] == '%' && i + 2 < input.len) {
-            const hi = hexVal(input[i + 1]);
-            const lo = hexVal(input[i + 2]);
-            if (hi >= 0 && lo >= 0) {
-                out[pos] = ((hi * (16 as i16)) + lo) as u8;
-                pos += 1;
-                i += 3;
+        let b = input[i];
+        if (b == 0x25 && i + 2 < input.len) {
+            let hi = peHexVal(input[i + 1]);
+            let lo = peHexVal(input[i + 2]);
+            if (hi != 255 && lo != 255) {
+                out[pos] = ((hi << 4) | lo) as u8;
+                pos = pos + 1;
+                i = i + 3;
                 continue;
             }
         }
-        out[pos] = input[i];
-        pos += 1;
-        i += 1;
+        out[pos] = b;
+        pos = pos + 1;
+        i = i + 1;
     }
-    return out[0..pos];
+    return pos;
+}
+
+/// Strict percent-decoding.
+/// Returns the decoded byte length (>= 0), or -1 if any `%` is incomplete,
+/// has non-hex digits, or `out` is too small.
+pub fn percentDecodeStrict(input: string, out: []u8): i64 {
+    let pos: usize = 0;
+    let i: usize = 0;
+    while (i < input.len) {
+        let b = input[i];
+        if (b == 0x25) {
+            if (i + 2 >= input.len) {
+                return -1;
+            }
+            let hi = peHexVal(input[i + 1]);
+            let lo = peHexVal(input[i + 2]);
+            if (hi == 255 || lo == 255) {
+                return -1;
+            }
+            if (pos >= out.len) {
+                return -1;
+            }
+            out[pos] = ((hi << 4) | lo) as u8;
+            pos = pos + 1;
+            i = i + 3;
+        } else {
+            if (pos >= out.len) {
+                return -1;
+            }
+            out[pos] = b;
+            pos = pos + 1;
+            i = i + 1;
+        }
+    }
+    return pos as i64;
+}
+
+/// Form `application/x-www-form-urlencoded` compatible decoding.
+/// Decodes `+` to space (`0x20`) and valid `%XX` sequences to bytes (lenient on malformed `%`).
+pub fn percentDecodePlus(input: string, out: []u8): usize {
+    let pos: usize = 0;
+    let i: usize = 0;
+    while (i < input.len) {
+        if (pos >= out.len) {
+            break;
+        }
+        let b = input[i];
+        if (b == 0x2B) { // '+'
+            out[pos] = 0x20; // ' '
+            pos = pos + 1;
+            i = i + 1;
+            continue;
+        }
+        if (b == 0x25 && i + 2 < input.len) {
+            let hi = peHexVal(input[i + 1]);
+            let lo = peHexVal(input[i + 2]);
+            if (hi != 255 && lo != 255) {
+                out[pos] = ((hi << 4) | lo) as u8;
+                pos = pos + 1;
+                i = i + 3;
+                continue;
+            }
+        }
+        out[pos] = b;
+        pos = pos + 1;
+        i = i + 1;
+    }
+    return pos;
 }
 
 export {
@@ -300,13 +312,13 @@ export {
     controlsSet,
     fragmentSet,
     querySet,
-    pathSegmentSet,
+    pathSet,
     userinfoSet,
+    componentSet,
     nonAlphanumericSet,
-    rfc3986UnreservedSet,
+    percentEncodeLen,
     percentEncode,
     percentDecode,
     percentDecodeStrict,
-    formUrlEncode,
-    formUrlDecode,
+    percentDecodePlus
 };

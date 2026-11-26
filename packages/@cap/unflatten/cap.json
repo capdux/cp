@@ -1,0 +1,9 @@
+{
+  "name": "@cap/unflatten",
+  "ver": "1.0.0",
+  "description": "Zero-allocation nested JSON flatten & unflatten library (npm flat/unflatten parity) with custom delimiter, max_depth, safe array mode, and round-trip reconstruction for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": ["json", "flat", "flatten", "unflatten", "nested", "object", "zero-alloc"]
+}

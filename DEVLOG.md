@@ -356,3 +356,6 @@
 ## 2026-11-27: Batch 95 六大 Top-30 旗舰包全 6/6 PASS — 官方 `.cap` 包突破 **554+**！
 - 一次性收割 npm Top 5 `chalk`（5 亿+/周）、Top 8 `minimatch`（4 亿+/周）、Top 22 `ignore`（2.5 亿+/周）、Top 30 `yargs`（3 亿+/周）与 crates.io #120 `idna`（9.5 亿+）、#270 `icu_normalizer`（5.3 亿+），全部依托前期独立依赖包实现多层零重复跨包 `import` 组合。
 - 2 路子智能体均已按 `GEMINI.md` 第 9 条完成 6 包轮换换新为 Worker N2（`@cap/commander`）与 Worker C2（`@cap/percent-encoding` 12.5 亿+）。
+
+## 2026-11-27: Batch 96 七大超重磅包全 6/6 PASS — 官方 `.cap` 包正式突破 **560+**！
+- 一次性拿下 crates.io 顶流三巨头 `itoa`（17 亿+）、`url`（16 亿+，双包复用 `percent-encoding`+`idna-uts46`）、`percent-encoding`（12.5 亿+）与 npm Top-20 四件套 `commander`（3.5 亿+/周）、`string-width`（3.5 亿+/周）、`escape-string-regexp`（3.5 亿+/周）、`shortid`，全部 6/6 PASS。

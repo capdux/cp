@@ -1,0 +1,9 @@
+{
+  "name": "@cap/shortid",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "URL-friendly non-sequential short unique ID generator and validator (clean-room CP implementation of npm shortid)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

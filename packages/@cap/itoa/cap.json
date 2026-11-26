@@ -1,0 +1,9 @@
+{
+  "name": "@cap/itoa",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Fast zero-heap two-digits-per-step integer-to-ASCII formatter (clean-room CP implementation of crates.io itoa)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

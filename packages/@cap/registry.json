@@ -10067,6 +10067,16 @@
         "idna_adapter"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shortid",
+      "source_repo": "https://github.com/dylang/shortid",
+      "license": "MIT",
+      "cp_target": "@cap/shortid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

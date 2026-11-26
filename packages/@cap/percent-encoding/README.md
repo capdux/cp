@@ -1,43 +1,42 @@
 # @cap/percent-encoding
 
-Zero-allocation WHATWG & RFC 3986 percent-encoding engine with customizable 128-bit `AsciiSet` bitmaps for CP — clean-room MIT parity with Rust `percent-encoding` (1.15B downloads on crates.io).
+Pure CP, zero-allocation WHATWG URL Standard percent-encoding and decoding library (clean-room MIT parity with Rust `percent-encoding`).
 
-纯 CP 零堆分配 WHATWG / RFC 3986 可定制字符集百分号编解码引擎，内置 7 套标准字符集与严格/宽容双模式解码，防止 URL 注入与畸形编码攻击。
+## Features
 
-## Install / 安装
-
-```bash
-cap add @cap/percent-encoding
-```
+- **128-bit `AsciiSet` Bitmap**: O(1) per-byte lookup via `bits: [4]u32` with `add`, `remove`, `unionWith`, and `shouldPercentEncode`. Automatically encodes all non-ASCII bytes (`>= 0x80`).
+- **Complete WHATWG URL Standard Sets**:
+  - `controlsSet()` — C0 controls (`0x00..=0x1F`), `0x7F`, and non-ASCII
+  - `fragmentSet()` — controls + ` `, `"`, `<`, `>`, `` ` ``
+  - `querySet()` — controls + ` `, `"`, `#`, `<`, `>`
+  - `pathSet()` — fragment + `#`, `?`, `{`, `}`
+  - `userinfoSet()` — path + `/`, `:`, `;`, `=`, `@`, `[`, `\`, `]`, `^`, `|`
+  - `componentSet()` — userinfo + `$`, `%`, `&`, `+`, `,`
+  - `nonAlphanumericSet()` — everything except ASCII `A-Z`, `a-z`, `0-9`
+- **Zero Heap Allocation**: Writes directly into caller-provided `[]u8` buffers with exact length pre-calculation (`percentEncodeLen`) and overflow-safe bounds checks.
+- **Lenient, Strict, and Form Decoders**: `percentDecode` (preserves invalid `%`), `percentDecodeStrict` (returns `-1` on invalid `%`), and `percentDecodePlus` (`+` -> space for `application/x-www-form-urlencoded`).
 
 ## API
 
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `AsciiSet` | `struct { lo: u64, hi: u64 }` | 128-bit ASCII bitmap (`empty`, `add`, `remove`, `contains`; non-ASCII `>= 0x80` always encoded) |
-| `controlsSet` | `() -> AsciiSet` | `0x00..0x1F` + `0x7F` |
-| `fragmentSet` | `() -> AsciiSet` | `controls` + space `" < > \`` |
-| `querySet` | `() -> AsciiSet` | `controls` + space `" # < >` |
-| `pathSegmentSet` | `() -> AsciiSet` | `query` + `? \` { } /` |
-| `userinfoSet` | `() -> AsciiSet` | `pathSegment` + `: ; = @ [ \ ] ^ \|` |
-| `nonAlphanumericSet` | `() -> AsciiSet` | Encode everything except `A-Z a-z 0-9` |
-| `rfc3986UnreservedSet` | `() -> AsciiSet` | Encode everything except `A-Z a-z 0-9 - . _ ~` |
-| `percentEncode` | `(input: string, set: AsciiSet, out: []u8) -> string` | Uppercase `%XX` percent-encoding |
-| `percentDecode` | `(input: string, out: []u8) -> string` | Lenient percent-decoding (preserves invalid `%`) |
-| `percentDecodeStrict` | `(input: string, out: []u8) -> string?` | Strict percent-decoding (`null` on malformed `%ZZ` / truncated `%A`) |
-| `formUrlEncode` / `formUrlDecode` | `(input: string, out: []u8) -> string` | `application/x-www-form-urlencoded` (`space` ↔ `+`) |
+- `struct AsciiSet { bits: [4]u32 }`
+  - `AsciiSet.empty(): AsciiSet`
+  - `add(*_, byte: u8)`
+  - `remove(*_, byte: u8)`
+  - `unionWith(other: AsciiSet): AsciiSet`
+  - `shouldPercentEncode(byte: u8): bool`
+- `controlsSet(): AsciiSet`
+- `fragmentSet(): AsciiSet`
+- `querySet(): AsciiSet`
+- `pathSet(): AsciiSet`
+- `userinfoSet(): AsciiSet`
+- `componentSet(): AsciiSet`
+- `nonAlphanumericSet(): AsciiSet`
+- `percentEncodeLen(input: []const u8, set: AsciiSet): usize`
+- `percentEncode(input: []const u8, set: AsciiSet, out: []u8): usize`
+- `percentDecode(input: string, out: []u8): usize`
+- `percentDecodeStrict(input: string, out: []u8): i64`
+- `percentDecodePlus(input: string, out: []u8): usize`
 
-## Usage / 使用示例
+## License
 
-```cp
-import {
-    pathSegmentSet,
-    percentEncode,
-    percentDecodeStrict,
-    formUrlEncode,
-} from "@cap/percent-encoding";
-
-let out: [128]u8 = undefined;
-const enc = percentEncode("a/b?c=1", pathSegmentSet(), out[0..128]);
-// "a%2Fb%3Fc=1"
-```
+MIT

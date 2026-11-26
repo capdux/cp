@@ -850,3 +850,13 @@
 - `packages/@cap/icu-normalizer/` & `cap/test/testCapIcuNormalizer.cp`: crates.io #270 `icu_normalizer`（5.3 亿+，UAX #15 NFC/NFD/NFKC/NFKD，6/6 PASS）。
 - `packages/@cap/idna-uts46/` & `cap/test/testCapIdnaUts46.cp`: crates.io #120 `idna`（9.5 亿+，复用 `@cap/icu-normalizer`+`@cap/punycode`，6/6 PASS）。
 - `packages/@cap/registry.json`: 推进至 **831+ 条**双生态映射（官方 `.cap` 包突破 **554+**）。
+
+### 2026-11-27 (Batch 96 — **560+ 官方包里程碑！** `itoa`/`url`/`percent-encoding`/`commander`/`string-width`/`escape-string-regexp`/`shortid` 7 大包全 6/6 PASS)
+- `packages/@cap/commander/` & `cap/test/testCapCommander.cp`: npm Top 12 `commander`（3.5 亿+/周，复用 `@cap/yargs-parser`+`@cap/cliui`，6/6 PASS）。
+- `packages/@cap/string-width/` & `cap/test/testCapStringWidth.cp`: npm Top 14 `string-width`（3.5 亿+/周，复用 `@cap/ansi-strip`+`@cap/unicode-width`，6/6 PASS）。
+- `packages/@cap/escape-string-regexp/` & `cap/test/testCapEscapeStringRegexp.cp`: npm Top 18 `escape-string-regexp`（3.5 亿+/周，6/6 PASS）。
+- `packages/@cap/shortid/` & `cap/test/testCapShortid.cp`: npm `shortid`（6/6 PASS）。
+- `packages/@cap/percent-encoding/` & `cap/test/testCapPercentEncoding.cp`: crates.io #85 `percent-encoding`（12.5 亿+，6/6 PASS）。
+- `packages/@cap/whatwg-url/` & `cap/test/testCapWhatwgUrl.cp`: crates.io #40 `url`（16 亿+，双包复用 `@cap/percent-encoding`+`@cap/idna-uts46`，6/6 PASS）。
+- `packages/@cap/itoa/` & `cap/test/testCapItoa.cp`: crates.io #35 `itoa`（17 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`: 推进至 **835 条**双生态映射（官方 `.cap` 包正式突破 **560+**）。

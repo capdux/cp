@@ -1,28 +1,26 @@
 // Type definitions for CP
 
-export fn bit64(idx: u8): u64;
+export fn peBitMask(byte: u8): u32;
+export fn peHexUpper(nib: u8): u8;
+export fn peHexVal(ch: u8): u8;
 export class AsciiSet {
-    lo: u64,
-    hi: u64,
+    bits: [4]u32,
     fn empty(): AsciiSet;
-    fn add(_: auto, b: u8);
-    fn remove(_: auto, b: u8);
-    fn contains(b: u8): bool;
+    fn add(_: auto, byte: u8);
+    fn remove(_: auto, byte: u8);
+    fn unionWith(other: AsciiSet): AsciiSet;
+    fn shouldPercentEncode(byte: u8): bool;
 }
 
 export fn controlsSet(): AsciiSet;
 export fn fragmentSet(): AsciiSet;
 export fn querySet(): AsciiSet;
-export fn pathSegmentSet(): AsciiSet;
+export fn pathSet(): AsciiSet;
 export fn userinfoSet(): AsciiSet;
-export fn isAsciiAlnum(b: u8): bool;
+export fn componentSet(): AsciiSet;
 export fn nonAlphanumericSet(): AsciiSet;
-export fn rfc3986UnreservedSet(): AsciiSet;
-export fn hexUpperChar(nibble: u8): u8;
-export fn hexVal(c: u8): i16;
-export fn percentEncode(input: string, set: AsciiSet, out: []u8): string;
-export fn percentDecode(input: string, out: []u8): string;
-export fn percentDecodeStrict(input: string, out: []u8): string?;
-export fn isFormUnescaped(b: u8): bool;
-export fn formUrlEncode(input: string, out: []u8): string;
-export fn formUrlDecode(input: string, out: []u8): string;
+export fn percentEncodeLen(input: &[]u8, set: AsciiSet): usize;
+export fn percentEncode(input: &[]u8, set: AsciiSet, out: []u8): usize;
+export fn percentDecode(input: string, out: []u8): usize;
+export fn percentDecodeStrict(input: string, out: []u8): i64;
+export fn percentDecodePlus(input: string, out: []u8): usize;

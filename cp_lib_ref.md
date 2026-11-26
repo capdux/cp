@@ -758,3 +758,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ignore`** | `packages/@cap/ignore` | 对标 npm Top 22 `ignore` (2.5 亿+/周，跨包复用 `@cap/minimatch`+`@cap/normalize-path`) — `.gitignore` 规范规则引擎 |
 | **`@cap/icu-normalizer`** | `packages/@cap/icu-normalizer` | 对标 crates.io #270 `icu_normalizer` (5.3 亿+) — UAX #15 NFC/NFD/NFKC/NFKD 规范化与韩文全音节算法分解合成 |
 | **`@cap/idna-uts46`** | `packages/@cap/idna-uts46` | 对标 crates.io #120 `idna` (9.5 亿+，跨包复用 `@cap/icu-normalizer`+`@cap/punycode`) — UTS #46 & RFC 3492 国际化域名编解码 |
+| **`@cap/commander`** | `packages/@cap/commander` | 对标 npm Top 12 `commander` v12 (3.5 亿+/周，跨包复用 `@cap/yargs-parser`+`@cap/cliui`) — 声明式 CLI 命令/选项/参数解析与帮助渲染 |
+| **`@cap/string-width`** | `packages/@cap/string-width` | 对标 npm Top 14 `string-width` v7 (3.5 亿+/周，跨包复用 `@cap/ansi-strip`+`@cap/unicode-width`) — ANSI/CJK/Emoji ZWJ 终端列宽计算与对齐 |
+| **`@cap/escape-string-regexp`** | `packages/@cap/escape-string-regexp` | 对标 npm Top 18 `escape-string-regexp` v5 (3.5 亿+/周) — 零堆正则元字符与 `-` (`\x2d`) 转义/反转义 |
+| **`@cap/shortid`** | `packages/@cap/shortid` | 对标 npm `shortid` — URL 安全非顺序短唯一 ID 生成与集群 worker 反解 |
+| **`@cap/percent-encoding`** | `packages/@cap/percent-encoding` | 对标 crates.io #85 `percent-encoding` (12.5 亿+) — 全部 7 套 WHATWG URL 百分号编码集与宽严双模式解码 |
+| **`@cap/whatwg-url`** | `packages/@cap/whatwg-url` | 对标 crates.io #40 `url` (16 亿+，双包复用 `@cap/percent-encoding`+`@cap/idna-uts46`) — WHATWG URL 标准解析、IDNA 规范化与相对归约 |
+| **`@cap/itoa`** | `packages/@cap/itoa` | 对标 crates.io #35 `itoa` (17 亿+) — 200 字节两位查表高速整数转十进制/十六进制/任意进制 ASCII |
