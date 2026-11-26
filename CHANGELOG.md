@@ -235,3 +235,6 @@
 ## [2026-11-26] - Batch 26 严格单调递减吸收 npm 3.61 亿 → 2.42 亿/周 Top 10（`@cap/http-errors` + 9 项亿级去重映射）
 - `packages/@cap/http-errors/` & `cap/test/testCapHttpErrors.cp`: 16 个标准 4xx/5xx 快捷构造器、可重试判定与 RFC 9457 `problem+json` 序列化（对标 npm `http-errors` **253.4M/wk**，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **175 条**高频映射（新增 `cross-spawn`/`undici`/`acorn`/`resolve`/`fs-extra`/`node-fetch`/`chokidar`/`http-errors`/`parse5`/`encodeurl`）。
+
+## [2026-11-26] - Batch 27 严格单调递减吸收 Rust crates.io Top 10（32.61 亿 → 17.87 亿总下载量）并建立 Rust 优先安全吸收线
+- `packages/@cap/registry.json`: 扩充至 **185 条**高频映射（按 crates.io 真实总下载量与被引用包数严格递减纳入 `hashbrown`/`getrandom`/`bitflags`/`rand`/`base64`/`indexmap`/`itertools`/`memchr`/`unicode-ident`/`serde`，全部精准去重直连 CP 内部标准库）。

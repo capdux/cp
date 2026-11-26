@@ -1754,6 +1754,106 @@
       "kind": "stdlib",
       "aliases": ["parseurl"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hashbrown",
+      "source_repo": "https://github.com/rust-lang/hashbrown",
+      "license": "MIT",
+      "cp_target": "cap:ds",
+      "kind": "stdlib",
+      "aliases": ["swisstable"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "getrandom",
+      "source_repo": "https://github.com/rust-random/getrandom",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["os-random"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bitflags",
+      "source_repo": "https://github.com/bitflags/bitflags",
+      "license": "MIT",
+      "cp_target": "cap:ds",
+      "kind": "stdlib",
+      "aliases": ["enumflags2"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rand",
+      "source_repo": "https://github.com/rust-random/rand",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["rand_core", "rand_chacha"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base64",
+      "source_repo": "https://github.com/marshallpierce/rust-base64",
+      "license": "MIT",
+      "cp_target": "cap:base64",
+      "kind": "stdlib",
+      "aliases": ["js-base64"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "indexmap",
+      "source_repo": "https://github.com/indexmap-rs/indexmap",
+      "license": "MIT",
+      "cp_target": "cap:collections",
+      "kind": "stdlib",
+      "aliases": ["linked-hash-map"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "itertools",
+      "source_repo": "https://github.com/rust-itertools/itertools",
+      "license": "MIT",
+      "cp_target": "cap:collections",
+      "kind": "stdlib",
+      "aliases": ["lodash"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "memchr",
+      "source_repo": "https://github.com/BurntSushi/memchr",
+      "license": "MIT",
+      "cp_target": "cap:simd",
+      "kind": "stdlib",
+      "aliases": ["memmem"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-ident",
+      "source_repo": "https://github.com/dtolnay/unicode-ident",
+      "license": "MIT",
+      "cp_target": "cap:unicode",
+      "kind": "stdlib",
+      "aliases": ["unicode-xid"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "serde",
+      "source_repo": "https://github.com/serde-rs/serde",
+      "license": "MIT",
+      "cp_target": "cap:serde",
+      "kind": "stdlib",
+      "aliases": ["serde_json"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

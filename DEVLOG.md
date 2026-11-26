@@ -143,3 +143,6 @@
 
 ## 2026-11-26: Batch 26 严格单调递减完成 npm 3.61 亿 → 2.42 亿/周 Top 10
 - 交付 `@cap/http-errors`（2.53 亿/周, 6/6 PASS），完成 `cross-spawn`/`undici`/`acorn`/`resolve`/`fs-extra`/`node-fetch`/`chokidar`/`parse5`/`encodeurl` 9 项亿级资产去重直连，`registry.json` 突破 **175 条**。
+
+## 2026-11-26: Batch 27 正式启动 Rust crates.io 十亿级总榜严格递减吸收（32.61 亿 → 17.87 亿）
+- 完成 crates.io Top 10（去除 Rust 宏内部依赖）全量去重直连映射（`registry.json` 达 **185 条**），同时向 3 路子智能体并行派发 Rust 13.25 亿级 `@cap/strsim`、11.92 亿级 `@cap/slab` 与 npm 1.62 亿/周 `@cap/tsconfig-paths`。
