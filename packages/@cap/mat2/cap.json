@@ -1,0 +1,9 @@
+{
+  "name": "@cap/mat2",
+  "version": "1.0.0",
+  "description": "Zero-allocation 2x2 matrix and 2D linear transform library for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mat2", "matrix", "2d", "linear-algebra", "transform", "math", "zero-alloc"]
+}

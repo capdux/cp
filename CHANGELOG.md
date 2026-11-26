@@ -648,3 +648,12 @@
 - `packages/@cap/fletcher/` & `cap/test/testCapFletcher.cp`: Fletcher-16/32/64 校验和（6/6 PASS）。
 - `packages/@cap/running-avg/` & `cap/test/testCapRunningAvg.cp`: EMA / SMA / WMA 流式移动平均（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **660 条**双生态高频映射（**npm=330 / crates.io=330 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 76 — 670 映射精确 1:1 对称 & 425+ 官方包)
+- `packages/@cap/quat/` & `cap/test/testCapQuat.cp`: 3D 单位四元数、旋转与 SLERP/NLERP（6/6 PASS）。
+- `packages/@cap/bezier-curve/` & `cap/test/testCapBezierCurve.cp`: 二/三次贝塞尔曲线、de Casteljau 分割与 CSS `cubic-bezier`（6/6 PASS）。
+- `packages/@cap/mat3/` & `cap/test/testCapMat3.cp`: 3x3 矩阵与 2D 仿射变换（6/6 PASS）。
+- `packages/@cap/mat2/` & `cap/test/testCapMat2.cp`: 2x2 矩阵与 2D 线性变换（6/6 PASS）。
+- `packages/@cap/bspline/` & `cap/test/testCapBspline.cp`: Hermite / Catmull-Rom / 均匀三次 B-Spline（6/6 PASS）。
+- `packages/@cap/color-hsl/` & `cap/test/testCapColorHsl.cp`: RGB / HSL / HSV / CMYK 色彩空间互转（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **670 条**双生态高频映射（**npm=335 / crates.io=335 绝对 1:1 对称**）。

@@ -614,3 +614,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/vec3`** | `packages/@cap/vec3` | 对标 npm `gl-matrix` / Rust `glam` — 3D 空间向量、右手叉积、反射、投影与限长 |
 | **`@cap/fletcher`** | `packages/@cap/fletcher` | 对标 Rust `fletcher` — Fletcher-16/32/64 位置敏感流式校验和 |
 | **`@cap/running-avg`** | `packages/@cap/running-avg` | 对标 npm `moving-averages` — 零堆 EMA / 环形窗口 SMA / 加权 WMA 移动平均 |
+
+| **`@cap/quat`** | `packages/@cap/quat` | 对标 npm `quaternion` / Rust `cgmath` — 3D 单位四元数旋转、欧拉角转换、SLERP 与 NLERP |
+| **`@cap/bezier-curve`** | `packages/@cap/bezier-curve` | 对标 npm `bezier-easing` / Rust `kurbo` — 二/三次贝塞尔求值、导数、de Casteljau 分割与 CSS `cubic-bezier` 求解 |
+| **`@cap/mat3`** | `packages/@cap/mat3` | 对标 npm `gl-mat3` / Rust `cgmath` — 3x3 矩阵与 2D 齐次仿射变换、行列式与求逆 |
+| **`@cap/mat2`** | `packages/@cap/mat2` | 对标 npm `gl-mat2` / Rust `glam` — 2x2 线性变换矩阵、旋转/缩放/剪切、迹与求逆 |
+| **`@cap/bspline`** | `packages/@cap/bspline` | 对标 npm `b-spline` / Rust `bspline` — 三次 Hermite、Catmull-Rom 样条与均匀三次 B-Spline |
+| **`@cap/color-hsl`** | `packages/@cap/color-hsl` | 对标 npm `color-convert` / Rust `palette` — RGB / HSL / HSV / CMYK 全色彩空间互转与色调调控 |

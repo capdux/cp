@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bezier-curve",
+  "version": "1.0.0",
+  "description": "Zero-allocation quadratic/cubic Bezier curves, de Casteljau splitting, arc length, and CSS cubic-bezier easing for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bezier", "curve", "cubic-bezier", "easing", "de-casteljau", "geometry", "zero-alloc"]
+}

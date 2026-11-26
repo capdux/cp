@@ -8078,6 +8078,129 @@
         "ema"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "quaternion",
+      "source_repo": "https://github.com/rawify/Quaternion.js",
+      "license": "MIT",
+      "cp_target": "@cap/quat",
+      "kind": "package",
+      "aliases": [
+        "gl-quat"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bezier-easing",
+      "source_repo": "https://github.com/gre/bezier-easing",
+      "license": "MIT",
+      "cp_target": "@cap/bezier-curve",
+      "kind": "package",
+      "aliases": [
+        "bezier-js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "kurbo",
+      "source_repo": "https://github.com/linebender/kurbo",
+      "license": "MIT",
+      "cp_target": "@cap/bezier-curve",
+      "kind": "package",
+      "aliases": [
+        "bezier"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lyon_geom",
+      "source_repo": "https://github.com/nical/lyon",
+      "license": "MIT",
+      "cp_target": "@cap/bezier-curve",
+      "kind": "package",
+      "aliases": [
+        "cubic-bezier"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "gl-mat3",
+      "source_repo": "https://github.com/stackgl/gl-mat3",
+      "license": "MIT",
+      "cp_target": "@cap/mat3",
+      "kind": "package",
+      "aliases": [
+        "gl-mat2",
+        "mat3"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cgmath",
+      "source_repo": "https://github.com/rustgd/cgmath",
+      "license": "MIT",
+      "cp_target": "@cap/mat3",
+      "kind": "package",
+      "aliases": [
+        "mat2",
+        "mat3",
+        "quat"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "b-spline",
+      "source_repo": "https://github.com/thibauts/b-spline",
+      "license": "MIT",
+      "cp_target": "@cap/bspline",
+      "kind": "package",
+      "aliases": [
+        "catmull-rom"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bspline",
+      "source_repo": "https://github.com/Twinklebear/bspline",
+      "license": "MIT",
+      "cp_target": "@cap/bspline",
+      "kind": "package",
+      "aliases": [
+        "splines"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "palette",
+      "source_repo": "https://github.com/Ogeon/palette",
+      "license": "MIT",
+      "cp_target": "@cap/color-hsl",
+      "kind": "package",
+      "aliases": [
+        "colors-transform"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tinycolor2",
+      "source_repo": "https://github.com/bgrins/TinyColor",
+      "license": "MIT",
+      "cp_target": "@cap/color-hsl",
+      "kind": "package",
+      "aliases": [
+        "hsl-to-rgb"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
