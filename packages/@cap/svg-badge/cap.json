@@ -1,0 +1,18 @@
+{
+  "name": "@cap/svg-badge",
+  "version": "1.0.0",
+  "description": "Zero-heap Shields.io-style SVG status badge generator (flat, flat-square, plastic) with XML escaping and named colors",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "badge",
+    "svg",
+    "shields",
+    "badge-maker",
+    "gh-badges",
+    "status",
+    "ci",
+    "readme"
+  ]
+}

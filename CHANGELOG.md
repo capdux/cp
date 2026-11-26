@@ -186,3 +186,10 @@
 - `packages/@cap/markdown-strip/` & `cap/test/testCapMarkdownStrip.cp`: 零堆 Markdown 转纯文本与 UTF-8 安全摘要引擎（对标 npm `remove-markdown` [6M/wk]，6/6 PASS）。
 - `packages/@cap/sparkline/` & `cap/test/testCapSparkline.cp`: 零堆 Unicode 迷你折线图 `▁▂▃▄▅▆▇█`、1/8 精度水平柱状图与分桶降采样引擎（对标 npm `sparkly`/`asciichart`，6/6 PASS）。
 - `packages/@cap/registry.json`: 突破 **102 条**高频映射（新增 `ms` [190M/wk]、`strip-ansi` [180M/wk]、`json5` [90M/wk]、`bytes` [85M/wk]、`etag` [45M/wk]、`gray-matter` [15M/wk]、`slugify` [10M/wk] 直连内部 `cap:*` 标准库映射 + Wave 18 三大独立包）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 19 四路并行吸收 10 项高下载资产（`@cap/spdx`, `@cap/boxen`, `@cap/conventional-commits`, `@cap/svg-badge` + 6 项头部去重映射）并发布至 `capdux.org`
+- `packages/@cap/spdx/` & `cap/test/testCapSpdx.cp`: 43 项 SPDX 元数据 + 递归下降表达式解析与白名单/宽松协议求值（对标 npm `spdx-expression-parse` [55M/wk] & Rust `spdx`，7/7 PASS）。
+- `packages/@cap/boxen/` & `cap/test/testCapBoxen.cp`: 6 种终端边框、标题嵌入、CJK 宽字符与 ANSI 穿透零堆渲染器（对标 npm `boxen` [25M/wk]，6/6 PASS）。
+- `packages/@cap/conventional-commits/` & `cap/test/testCapConventionalCommits.cp`: Conventional Commits 1.0.0 解析与 Semver 推导引擎（对标 npm `conventional-commits-parser` [18M/wk]，6/6 PASS）。
+- `packages/@cap/svg-badge/` & `cap/test/testCapSvgBadge.cp`: Shields.io 风格 Flat/FlatSquare/Plastic SVG 状态徽章零堆生成器（对标 npm `badge-maker` [3M/wk]，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **112 条**高频映射（新增 `toml`/`ini`/`cookie`/`punycode`/`human-signals`/`editorconfig` 内部库直连映射 + Wave 19 四大独立包）并同步发布至 `https://capdux.org`。

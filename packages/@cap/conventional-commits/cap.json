@@ -1,0 +1,8 @@
+{
+  "name": "@cap/conventional-commits",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Conventional Commits 1.0.0 parser, formatter, and Semver bump recommender for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

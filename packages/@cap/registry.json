@@ -1024,6 +1024,106 @@
       "kind": "package",
       "aliases": ["asciichart", "sparklines"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "toml",
+      "source_repo": "https://github.com/toml-rs/toml",
+      "license": "MIT",
+      "cp_target": "cap:interchange",
+      "kind": "stdlib",
+      "aliases": ["@iarna/toml", "smol-toml"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ini",
+      "source_repo": "https://github.com/npm/ini",
+      "license": "ISC",
+      "cp_target": "cap:interchange",
+      "kind": "stdlib",
+      "aliases": ["rust-ini", "ini-parser"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cookie",
+      "source_repo": "https://github.com/jshttp/cookie",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["set-cookie-parser", "cookie-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "punycode",
+      "source_repo": "https://github.com/mathiasbynens/punycode.js",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["idna", "uts46"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "human-signals",
+      "source_repo": "https://github.com/ehmicky/human-signals",
+      "license": "Apache-2.0",
+      "cp_target": "cap:sys",
+      "kind": "stdlib",
+      "aliases": ["signal-exit"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "editorconfig",
+      "source_repo": "https://github.com/editorconfig/editorconfig-core-js",
+      "license": "MIT",
+      "cp_target": "cap:editorconfig",
+      "kind": "stdlib",
+      "aliases": ["ec4rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "spdx-expression-parse",
+      "source_repo": "https://github.com/jslicense/spdx-expression-parse.js",
+      "license": "MIT",
+      "cp_target": "@cap/spdx",
+      "kind": "package",
+      "aliases": ["spdx-satisfies", "spdx-correct", "spdx"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "boxen",
+      "source_repo": "https://github.com/sindresorhus/boxen",
+      "license": "MIT",
+      "cp_target": "@cap/boxen",
+      "kind": "package",
+      "aliases": ["cli-boxes", "box-drawing"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "conventional-commits-parser",
+      "source_repo": "https://github.com/conventional-changelog/conventional-changelog",
+      "license": "MIT",
+      "cp_target": "@cap/conventional-commits",
+      "kind": "package",
+      "aliases": ["git-conventional", "commitlint"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "badge-maker",
+      "source_repo": "https://github.com/badges/shields",
+      "license": "CC0-1.0",
+      "cp_target": "@cap/svg-badge",
+      "kind": "package",
+      "aliases": ["gh-badges", "shields-badge"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/spdx",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SPDX 2.3 license expression parser, validator, and compatibility evaluator for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

@@ -320,3 +320,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/timeago`** | `packages/@cap/timeago` | 对标 npm `timeago.js`/`date-fns` / Rust `chrono-humanize` — 零堆中英相对时间（`3 minutes ago`/`刚刚`/`-45s`） |
 | **`@cap/markdown-strip`** | `packages/@cap/markdown-strip` | 对标 npm `remove-markdown`/`strip-markdown` — 零堆 Markdown 转纯文本、单行折叠与 UTF-8 词边界摘要截断 |
 | **`@cap/sparkline`** | `packages/@cap/sparkline` | 对标 npm `sparkly`/`asciichart` / Rust `sparklines` — 零堆 Unicode `▁▂▃▄▅▆▇█` 迷你折线图、1/8 块水平柱状图与分桶降采样 |
+| **`@cap/spdx`** | `packages/@cap/spdx` | 对标 npm `spdx-expression-parse`/`spdx-satisfies` / Rust `spdx` — 43 项 SPDX 许可证元数据 + 零堆递归下降表达式解析与兼容性求值 |
+| **`@cap/boxen`** | `packages/@cap/boxen` | 对标 npm `boxen`/`cli-boxes` — 6 种边框样式、顶边框标题、CJK 双宽与 ANSI 穿透的零堆终端盒子渲染器 |
+| **`@cap/conventional-commits`** | `packages/@cap/conventional-commits` | 对标 npm `conventional-commits-parser` / Rust `git-conventional` — Conventional Commits 1.0.0 零拷贝解析与 Semver 升级推导 |
+| **`@cap/svg-badge`** | `packages/@cap/svg-badge` | 对标 npm `badge-maker`/`gh-badges` — Shields.io 风格 Flat/FlatSquare/Plastic SVG 状态徽章零堆生成器 |
