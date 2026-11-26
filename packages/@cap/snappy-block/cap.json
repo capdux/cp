@@ -1,0 +1,8 @@
+{
+  "name": "@cap/snappy-block",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Google Snappy Raw Block lossless compressor & decompressor with varint32 header, Literal/Copy-1/Copy-2/Copy-4 tags, and overlapping RLE support (Rust snap parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

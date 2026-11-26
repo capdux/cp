@@ -1,0 +1,8 @@
+{
+  "name": "@cap/morton",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 2D/3D Z-Order (Morton) bit-interleaving codec and 2D Hilbert space-filling curve mapper for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

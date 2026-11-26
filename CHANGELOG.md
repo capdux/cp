@@ -338,3 +338,12 @@
 - `packages/@cap/huffman/` & `cap/test/testCapHuffman.cp`: RFC 1951 Canonical Huffman 规范霍夫曼编解码（6/6 PASS）。
 - `packages/@cap/sieve-cache/` & `cap/test/testCapSieveCache.cp`: NSDI'24 SIEVE 缓存淘汰引擎（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **315 条**高频映射（含 `either`/`toml_edit`/`thread_local`/`colorchoice` 去重直连）。
+
+## [2026-11-26] - Batch 41 单批交付 6 大地理空间、压缩与有序结构包（`@cap/snappy-block`, `@cap/bimap`, `@cap/geohash`, `@cap/geo-dist`, `@cap/morton`, `@cap/skiplist`），总映射突破 **325 条**！
+- `packages/@cap/snappy-block/` & `cap/test/testCapSnappyBlock.cp`: Google Snappy Raw Block 极速无损压缩与解压（6/6 PASS）。
+- `packages/@cap/bimap/` & `cap/test/testCapBimap.cp`: 零堆严格双向 1-to-1 键值映射表（6/6 PASS）。
+- `packages/@cap/geohash/` & `cap/test/testCapGeohash.cp`: Base32 Geohash 编解码、包围盒与 8 邻域（6/6 PASS）。
+- `packages/@cap/geo-dist/` & `cap/test/testCapGeoDist.cp`: WGS-84 Haversine/航向角/目标点/中点/多边形包含（6/6 PASS）。
+- `packages/@cap/morton/` & `cap/test/testCapMorton.cp`: 2D/3D Morton 码与 2D Hilbert 空间曲线（6/6 PASS）。
+- `packages/@cap/skiplist/` & `cap/test/testCapSkiplist.cp`: 零堆静态节点池确定性跳表（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **325 条**高频映射（含 `typenum`/`generic-array`/`equivalent`/`memoffset` 去重直连）。

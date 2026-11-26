@@ -1,0 +1,8 @@
+{
+  "name": "@cap/geohash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction neighbor finder (Rust geohash / ngeohash parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

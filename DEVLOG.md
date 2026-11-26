@@ -185,3 +185,7 @@
 
 ## 2026-11-26: Batch 40 交付压缩/位图/流式统计/缓存六大硬核引擎（总映射突破 **315 条**，线上官方包达 **213+**！）
 - 交付 `@cap/lz4-block`（6/6）、`@cap/roaring`（6/6）、`@cap/tdigest`（6/6）、`@cap/trie`（6/6）、`@cap/huffman`（6/6）、`@cap/sieve-cache`（6/6），并去重直连 `either`（12.87 亿）、`toml_edit`（10.79 亿）、`thread_local`（8.77 亿）、`colorchoice`（8.45 亿），总映射突破 **315 条**！
+
+## 2026-11-26: 紧急热修 `task-capsurf-20261126-pack-net-e0209` + Batch 41 交付 6 大地理/压缩/有序结构包（总映射 **325 条**！）
+- 秒级热修 `lib/pack/tarPax.cp`、`lib/pack/zipWriter.cp`、`lib/net/sip.cp`、`lib/net/quic.cp` 4 处 E0209（补齐 `unsafe` 块，`fe3c9915`），立即结单解除 `capsurf` 阻塞。
+- 交付 `@cap/snappy-block`（6/6）、`@cap/bimap`（6/6）、`@cap/geohash`（6/6）、`@cap/geo-dist`（6/6）、`@cap/morton`（6/6）、`@cap/skiplist`（6/6），去重直连 `typenum`/`generic-array`/`equivalent`/`memoffset`，总映射突破 **325 条**！

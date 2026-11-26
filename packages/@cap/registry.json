@@ -3154,6 +3154,106 @@
       "kind": "package",
       "aliases": ["quick_cache"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "typenum",
+      "source_repo": "https://github.com/paholg/typenum",
+      "license": "MIT",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "generic-array",
+      "source_repo": "https://github.com/fizyk20/generic-array",
+      "license": "MIT",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "equivalent",
+      "source_repo": "https://github.com/indexmap-rs/equivalent",
+      "license": "MIT",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "memoffset",
+      "source_repo": "https://github.com/Gilnaa/memoffset",
+      "license": "MIT",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "snap",
+      "source_repo": "https://github.com/BurntSushi/rust-snappy",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/snappy-block",
+      "kind": "package",
+      "aliases": ["snappy", "snappy-block"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bimap",
+      "source_repo": "https://github.com/billyrieger/bimap-rs",
+      "license": "MIT",
+      "cp_target": "@cap/bimap",
+      "kind": "package",
+      "aliases": ["bijection"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "geohash",
+      "source_repo": "https://github.com/georust/geohash",
+      "license": "MIT",
+      "cp_target": "@cap/geohash",
+      "kind": "package",
+      "aliases": ["ngeohash"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "geo",
+      "source_repo": "https://github.com/georust/geo",
+      "license": "MIT",
+      "cp_target": "@cap/geo-dist",
+      "kind": "package",
+      "aliases": ["haversine", "geolib"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "morton-encoding",
+      "source_repo": "https://github.com/morton-encoding/morton-encoding",
+      "license": "MIT",
+      "cp_target": "@cap/morton",
+      "kind": "package",
+      "aliases": ["zorder", "hilbert"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "skiplist",
+      "source_repo": "https://github.com/JP-Ellis/rust-skiplist",
+      "license": "MIT",
+      "cp_target": "@cap/skiplist",
+      "kind": "package",
+      "aliases": ["crossbeam-skiplist"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

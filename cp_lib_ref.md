@@ -406,3 +406,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/trie`** | `packages/@cap/trie` | 对标 Rust `radix_trie` / npm `trie-search` — 零堆 LCRS 512 节点静态池字节前缀树与最长前缀匹配 LPM |
 | **`@cap/huffman`** | `packages/@cap/huffman` | 对标 Rust `huffman-compress` — RFC 1951 规范霍夫曼前缀码表构建、16 位限长与 MSB-first 位流编解码 |
 | **`@cap/sieve-cache`** | `packages/@cap/sieve-cache` | 对标 Rust `sieve-cache` — NSDI'24 SIEVE 缓存淘汰算法（`hand` 第二次机会扫描、抗扫描污染与命中统计） |
+| **`@cap/snappy-block`** | `packages/@cap/snappy-block` | 对标 Rust `snap` — Google Snappy Raw Block 极速无损块压缩/解压（Literal + Copy-1/2/4 完整兼容） |
+| **`@cap/bimap`** | `packages/@cap/bimap` | 对标 Rust `bimap` — 零堆严格双向 1-to-1 键值映射表（左右唯一性约束与冲突自动覆盖/拒绝） |
+| **`@cap/geohash`** | `packages/@cap/geohash` | 对标 Rust `geohash` / npm `ngeohash` — Base32 Geohash 经纬度编解码、包围盒与 8 邻域网格计算 |
+| **`@cap/geo-dist`** | `packages/@cap/geo-dist` | 对标 Rust `geo` / npm `geolib` — WGS-84 Haversine 大圆距离、航向角、目标点推算、中点与多边形包含 |
+| **`@cap/morton`** | `packages/@cap/morton` | 对标 Rust `morton-encoding` — 2D/3D Z-Order 莫顿码无分支位交错与 2D Hilbert 空间填充曲线 |
+| **`@cap/skiplist`** | `packages/@cap/skiplist` | 对标 Rust `skiplist` — 零堆静态节点池 + freelist 确定性跳表（`lowerBound` 与闭区间 `rangeCount`） |
