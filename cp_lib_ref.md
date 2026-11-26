@@ -284,3 +284,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/validator`** | `packages/@cap/validator` | 对标 npm `zod`/`validator`/`ajv` / Rust `validator` — 零堆格式校验（Email/URL/UUID/ULID/IP/CIDR/SemVer/ISO8601/Luhn/E.164）+ 栈式多错误收集器 |
 | **`@cap/table`** | `packages/@cap/table` | 对标 npm `cli-table3`/`table` / Rust `comfy-table`/`tabled` — 5 套边框预设 + ANSI/CJK 宽字符感知 + 对齐与截断排版 |
 | **`@cap/faker`** | `packages/@cap/faker` | 对标 npm `@faker-js/faker` / Rust `fake` — SplitMix64 + xoshiro256** 确定性种子测试数据与 Mock 生成器 |
+| **`@cap/decimal`** | `packages/@cap/decimal` | 对标 npm `decimal.js`/`bignumber.js` / Rust `rust_decimal` — 128-bit 精确十进制金融算术 + 6 种舍入（含银行家 HalfEven）+ 科学记数法 |
+| **`@cap/useragent`** | `packages/@cap/useragent` | 对标 npm `ua-parser-js`/`bowser` / Rust `woothee` — 零堆 HTTP User-Agent 浏览器/OS/设备/爬虫/AI Bot（GPTBot/ClaudeBot/DeepSeekBot）识别 |
+| **`@cap/pluralize`** | `packages/@cap/pluralize` | 对标 npm `pluralize`/`inflection` / Rust `pluralizer` — 56 组不规则词 + 36 个不可数词 + 大小写保持 + `pluralizeCount` + `ordinal` |

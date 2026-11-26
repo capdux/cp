@@ -114,3 +114,9 @@
 - `packages/@cap/table/` & `cap/test/testCapTable.cp`: 纯 CP 终端/Markdown 表格排版引擎（5 套边框预设 Unicode/Rounded/Ascii/Markdown/Compact、左中右对齐、ANSI CSI/OSC 转义跳过与 CJK/Emoji 宽字符宽度感知、自动截断省略号与动态多列构建器，对标 npm `cli-table3`/`table` & Rust `comfy-table`/`tabled`，7/7 PASS）。
 - `packages/@cap/faker/` & `cap/test/testCapFaker.cp`: 零堆分配确定性种子（SplitMix64 + xoshiro256**）测试数据与 Mock 生成器（姓名/邮箱/用户名/E.164 手机/IPv4/IPv6/URL/RFC 4122 UUIDv4/颜色/公司/地址/ISO 日期/Luhn 校验信用卡/Fisher-Yates 洗牌与 Floyd 抽样，对标 npm `@faker-js/faker` & Rust `fake`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 32 条高频 npm/crates.io 映射（新增 Wave 6 三大包 + `qrcode`/`ipaddr.js`/`fuse.js`/`change-case`/`semver`/`dotenv`/`cron-parser` 标准库去重映射）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 7 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/decimal`, `@cap/useragent`, `@cap/pluralize`）并发布至 `capdux.org`
+- `packages/@cap/decimal/` & `cap/test/testCapDecimal.cp`: 零堆分配 128-bit 精确十进制金融算术引擎（精确加减乘除、除零安全返回、6 种舍入含银行家 `HalfEven`、科学记数法解析与 `toFixed` 栈缓冲格式化，对标 npm `decimal.js`/`bignumber.js` & Rust `rust_decimal`，5/5 PASS）。
+- `packages/@cap/useragent/` & `cap/test/testCapUserAgent.cp`: 零堆分配 HTTP `User-Agent` 解析引擎（桌面/移动/平板/CLI/搜索引擎爬虫/AI 爬虫如 `GPTBot`/`ClaudeBot`/`DeepSeekBot`/`PerplexityBot` 全识别，对标 npm `ua-parser-js`/`bowser` & Rust `woothee`，6/6 PASS）。
+- `packages/@cap/pluralize/` & `cap/test/testCapPluralize.cp`: 英文单复数与序数词变形引擎（56 组不规则词 + 36 个不可数词 + 大小写还原 + `pluralizeCount` + `ordinal`，对标 npm `pluralize`/`inflection` & Rust `pluralizer`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 38 条高频映射（新增 Wave 7 三大包 + `fast-json-patch`/`robots-parser`/`rss-parser` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 88）。

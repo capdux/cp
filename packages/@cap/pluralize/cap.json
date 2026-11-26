@@ -1,0 +1,7 @@
+{
+  "name": "@cap/pluralize",
+  "ver": "1.0.0",
+  "description": "Zero-allocation English pluralization, singularization, irregular/uncountable dictionary, count formatting & ordinal engine for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

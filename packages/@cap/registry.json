@@ -324,6 +324,66 @@
       "kind": "stdlib",
       "aliases": ["croner", "cron", "node-cron"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "decimal.js",
+      "source_repo": "https://github.com/MikeMcl/decimal.js",
+      "license": "MIT",
+      "cp_target": "@cap/decimal",
+      "kind": "package",
+      "aliases": ["bignumber.js", "big.js", "rust_decimal", "bigdecimal"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ua-parser-js",
+      "source_repo": "https://github.com/faisalman/ua-parser-js",
+      "license": "MIT",
+      "cp_target": "@cap/useragent",
+      "kind": "package",
+      "aliases": ["bowser", "woothee", "uaparser", "isbot"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pluralize",
+      "source_repo": "https://github.com/plurals/pluralize",
+      "license": "MIT",
+      "cp_target": "@cap/pluralize",
+      "kind": "package",
+      "aliases": ["inflection", "pluralizer", "cruet"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-json-patch",
+      "source_repo": "https://github.com/Starcounter-Jack/JSON-Patch",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": ["rfc6902", "json-patch", "jsonpointer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "robots-parser",
+      "source_repo": "https://github.com/samclarke/robots-parser",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["robotstxt", "texting_robots"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rss-parser",
+      "source_repo": "https://github.com/rbren/rss-parser",
+      "license": "MIT",
+      "cp_target": "cap:doc",
+      "kind": "stdlib",
+      "aliases": ["feed", "feed-rs", "rss", "atom_syndication"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

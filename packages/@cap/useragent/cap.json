@@ -1,0 +1,7 @@
+{
+  "name": "@cap/useragent",
+  "ver": "1.0.0",
+  "description": "Zero-allocation User-Agent parser with Browser/OS/Device/Engine detection, Search & AI Bot classification (GPTBot/ClaudeBot/PerplexityBot/Bytespider), and CLI runtime identification for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
