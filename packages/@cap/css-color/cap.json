@@ -1,0 +1,9 @@
+{
+  "name": "@cap/css-color",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS Color Level 4 functional color parser (rgb/rgba/hsl/hsla with comma and space/slash syntax), formatter, and RGB <-> HSL converter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["css", "color", "rgb", "rgba", "hsl", "hsla", "css-color-4", "zero-alloc"]
+}

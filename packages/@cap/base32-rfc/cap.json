@@ -1,0 +1,9 @@
+{
+  "name": "@cap/base32-rfc",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 4648 Section 6/7 standard Base32 (A-Z2-7) and Base32hex (0-9A-V) encoder and decoder in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["base32", "base32hex", "rfc4648", "encoding", "decoding", "totp", "zero-alloc"]
+}

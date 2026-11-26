@@ -279,3 +279,6 @@
 
 ## 2026-11-26: Batch 71 六件套全 6/6 PASS — 官方包冲至 **397 个（距 400 包仅差 3 步！）**、总映射 **620 条（npm=310 / crates.io=310 绝对 1:1 对称）**！
 - 交付 `@cap/quoted-printable`、`@cap/hex-color`、`@cap/base36`、`@cap/zigzag`、`@cap/uuencode`、`@cap/soundex`（全 6/6 PASS），下一批 Batch 72 将正式跨越 **400 官方 `.cap` 包终极里程碑**！
+
+## 2026-11-26: Batch 72 正式跨越 **400+ 官方 `.cap` 包终极里程碑（403 官方 `.cap` 包 LIVE + 630 条双生态映射）**！
+- 单批交付 `@cap/base32-rfc`（6/6）、`@cap/css-color`（6/6）、`@cap/levenshtein`（8000 万+/周，6/6）、`@cap/jaro-winkler`（6/6）、`@cap/dice-coeff`（3500 万+/周，6/6）、`@cap/rot13`（6/6），全线零堆纯 CP 100% PASS，双生态稳定保持 1:1（npm=316 / crates.io=314）！

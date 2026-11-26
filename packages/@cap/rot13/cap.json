@@ -1,0 +1,8 @@
+{
+  "name": "@cap/rot13",
+  "version": "1.0.0",
+  "description": "Zero-heap ROT13, ROT47, arbitrary Caesar shift, and Atbash alphabet substitution utilities.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

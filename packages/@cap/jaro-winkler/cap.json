@@ -1,0 +1,9 @@
+{
+  "name": "@cap/jaro-winkler",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Jaro and Jaro-Winkler string similarity metrics and best-match finder in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["jaro", "jaro-winkler", "similarity", "fuzzy", "strsim", "deduplication", "zero-alloc"]
+}

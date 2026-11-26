@@ -587,3 +587,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/zigzag`** | `packages/@cap/zigzag` | 对标 Rust `zigzag` / `integer-encoding` — Protobuf/Avro 32/64-bit ZigZag 双射与 ZigZag-Varint 流式编解码 |
 | **`@cap/uuencode`** | `packages/@cap/uuencode` | 对标 npm/Rust `uuencode` — POSIX/Unix 45 字节行 `uuencode`/`uudecode`（含 `begin`/`end` 帧）零堆编解码 |
 | **`@cap/soundex`** | `packages/@cap/soundex` | 对标 npm `soundex-code` / Rust `rphonetic` — NARA American Soundex 语音编码与模糊人名相似度匹配 |
+| **`@cap/base32-rfc`** | `packages/@cap/base32-rfc` | 对标 npm `hi-base32` / Rust `base32` — RFC 4648 §6/§7 标准 Base32 与 `base32hex` 零堆编解码 |
+| **`@cap/css-color`** | `packages/@cap/css-color` | 对标 npm `color-parse` / Rust `csscolorparser` — CSS Color Level 4 `rgb`/`rgba`/`hsl`/`hsla` 解析与 RGB<->HSL 互转 |
+| **`@cap/levenshtein`** | `packages/@cap/levenshtein` | 对标 npm `fastest-levenshtein` / Rust `levenshtein` — Levenshtein & OSA Damerau-Levenshtein 编辑距离与最近词匹配 |
+| **`@cap/jaro-winkler`** | `packages/@cap/jaro-winkler` | 对标 npm/Rust `jaro-winkler` — Jaro & Jaro-Winkler 字符串相似度与实体对齐打分 |
+| **`@cap/dice-coeff`** | `packages/@cap/dice-coeff` | 对标 npm `string-similarity` / Rust `strsim` — Sørensen-Dice 2-gram 多重集相似度与模糊候选查找 |
+| **`@cap/rot13`** | `packages/@cap/rot13` | 对标 npm `rot13-cipher` / Rust `rot13` — ROT13 / ROT47 / Caesar Shift / Atbash 零堆对称置换 |

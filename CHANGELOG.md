@@ -612,3 +612,12 @@
 - `packages/@cap/uuencode/` & `cap/test/testCapUuencode.cp`: POSIX `uuencode`/`uudecode` 零堆编解码（6/6 PASS）。
 - `packages/@cap/soundex/` & `cap/test/testCapSoundex.cp`: NARA American Soundex 语音编码与匹配（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **620 条**双生态高频映射（**npm=310 / crates.io=310** 绝对 1:1 对称）。
+
+## [2026-11-26] - Batch 72 正式跨越 **400+ 官方 `.cap` 包终极里程碑（403 包 LIVE + 630 条双生态映射）**！
+- `packages/@cap/base32-rfc/` & `cap/test/testCapBase32Rfc.cp`: RFC 4648 标准 Base32 与 `base32hex` 编解码（6/6 PASS）。
+- `packages/@cap/css-color/` & `cap/test/testCapCssColor.cp`: CSS Color Level 4 函数式颜色解析与 HSL/RGB 互转（6/6 PASS）。
+- `packages/@cap/levenshtein/` & `cap/test/testCapLevenshtein.cp`: Levenshtein & Damerau-Levenshtein 编辑距离与最近词查找（6/6 PASS）。
+- `packages/@cap/jaro-winkler/` & `cap/test/testCapJaroWinkler.cp`: Jaro & Jaro-Winkler 字符串相似度算法（6/6 PASS）。
+- `packages/@cap/dice-coeff/` & `cap/test/testCapDiceCoeff.cp`: Sørensen-Dice Bigram 多重集相似度（6/6 PASS）。
+- `packages/@cap/rot13/` & `cap/test/testCapRot13.cp`: ROT13 / ROT47 / Caesar / Atbash 字母表置换（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **630 条**双生态高频映射（**npm=316 / crates.io=314** 1:1 均衡）。

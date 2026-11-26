@@ -7595,6 +7595,118 @@
         "tinycolor2"
       ],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hi-base32",
+      "source_repo": "https://github.com/emn178/hi-base32",
+      "license": "MIT",
+      "cp_target": "@cap/base32-rfc",
+      "kind": "package",
+      "aliases": [
+        "thirty-two"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "color-parse",
+      "source_repo": "https://github.com/colorjs/color-parse",
+      "license": "MIT",
+      "cp_target": "@cap/css-color",
+      "kind": "package",
+      "aliases": [
+        "color-convert"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fastest-levenshtein",
+      "source_repo": "https://github.com/ka-weihe/fastest-levenshtein",
+      "license": "MIT",
+      "cp_target": "@cap/levenshtein",
+      "kind": "package",
+      "aliases": [
+        "fast-levenshtein"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jaro-winkler",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/jaro-winkler",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "string-similarity",
+      "source_repo": "https://github.com/aceakash/string-similarity",
+      "license": "MIT",
+      "cp_target": "@cap/dice-coeff",
+      "kind": "package",
+      "aliases": [
+        "dice-coefficient"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rot13-cipher",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/rot13",
+      "kind": "package",
+      "aliases": [
+        "caesar-shift"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "csscolorparser",
+      "source_repo": "https://github.com/mazznoer/csscolorparser-rs",
+      "license": "MIT",
+      "cp_target": "@cap/css-color",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "levenshtein",
+      "source_repo": "https://github.com/wooorm/levenshtein-rs",
+      "license": "MIT",
+      "cp_target": "@cap/levenshtein",
+      "kind": "package",
+      "aliases": [
+        "edit-distance"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rot13",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/rot13",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jaro-winkler",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/jaro-winkler",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
