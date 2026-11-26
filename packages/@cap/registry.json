@@ -574,6 +574,56 @@
       "kind": "stdlib",
       "aliases": ["roaring-bitmap", "bitvec", "fastbitset"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "shell-quote",
+      "source_repo": "https://github.com/ljharb/shell-quote",
+      "license": "MIT",
+      "cp_target": "@cap/shlex",
+      "kind": "package",
+      "aliases": ["shlex", "shlex-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "wrap-ansi",
+      "source_repo": "https://github.com/chalk/wrap-ansi",
+      "license": "MIT",
+      "cp_target": "@cap/textwrap",
+      "kind": "package",
+      "aliases": ["word-wrap", "strip-indent", "textwrap"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "natural-compare",
+      "source_repo": "https://github.com/litejs/natural-compare-lite",
+      "license": "MIT",
+      "cp_target": "@cap/natsort",
+      "kind": "package",
+      "aliases": ["natsort", "natord", "alphanumeric-sort"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "iban",
+      "source_repo": "https://github.com/arhs/iban.js",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["ibantools", "iban_validate"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "isbn3",
+      "source_repo": "https://github.com/inventaire/isbn3",
+      "license": "MIT",
+      "cp_target": "cap:codec",
+      "kind": "stdlib",
+      "aliases": ["isbn2", "isbn-utils"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

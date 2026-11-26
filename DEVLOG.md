@@ -90,3 +90,6 @@
 
 ## 2026-11-26: Wave 9 三路并行交付 `@cap/barcode` + `@cap/sqids` + `@cap/cron-desc` 并发布至 `capdux.org`
 - 排查确认 `ignore`/`negotiator`/`aho-corasick`/`ksuid`/`cuid2`/`roaring` 均已内置于 `lib/` 并全部补登记至 `packages/@cap/registry.json`（达 57 条）；三路并行洁净室交付 `@cap/barcode`（5/5 PASS）、`@cap/sqids`（6/6 PASS）、`@cap/cron-desc`（6/6 PASS），生成 `.d.cp` 存根、提交 Git 并发布上线至 `https://capdux.org`（线上官方包总数达 94）。
+
+## 2026-11-26: Wave 10 三路并行交付 `@cap/shlex` + `@cap/textwrap` + `@cap/natsort` 并发布至 `capdux.org`
+- 排查确认 `iban`/`isbn` 已内置于 `lib/codec/` 并补登记至 `packages/@cap/registry.json`（达 62 条）；三路并行洁净室交付 `@cap/shlex`（5/5 PASS）、`@cap/textwrap`（6/6 PASS）、`@cap/natsort`（6/6 PASS），生成 `.d.cp` 存根、提交 Git 并发布上线至 `https://capdux.org`（线上官方包总数达 97）。

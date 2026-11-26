@@ -132,3 +132,9 @@
 - `packages/@cap/sqids/` & `cap/test/testCapSqids.cp`: 零堆分配 YouTube 风格可逆无脏词短 ID 编码器（62 字符洗牌、52 词屏蔽重试、`min_length` 填充、多数字无损往返，对标 npm `sqids`/`hashids` & Rust `sqids`/`harsh`，6/6 PASS）。
 - `packages/@cap/cron-desc/` & `cap/test/testCapCronDesc.cp`: 零堆分配 Cron 表达式自然语言翻译引擎（5 字段 + 7 大宏、英文/中文双语、12h/24h 切换，对标 npm `cronstrue` & Rust `cron-descriptor`，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 57 条高频映射（新增 Wave 9 三大包 + `ignore`/`negotiator`/`aho-corasick`/`ksuid`/`@paralleldrive/cuid2`/`roaring` 标准库去重映射）并同步发布至 `https://capdux.org`（线上官方包总数达 94）。
+
+## [2026-11-26] - Wave 10 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/shlex`, `@cap/textwrap`, `@cap/natsort`）并发布至 `capdux.org`
+- `packages/@cap/shlex/` & `cap/test/testCapShlex.cp`: 零堆分配 POSIX Shell 安全转义与词法拆分引擎（单/双引号、转义、注释、防注入元字符检测，对标 npm `shell-quote` [45M/wk] & Rust `shlex` [25M/mo]，5/5 PASS）。
+- `packages/@cap/textwrap/` & `cap/test/testCapTextwrap.cp`: 零堆分配 ANSI/CJK 感知智能断词换行、缩进、`dedent` 与截断引擎（对标 npm `wrap-ansi` [90M/wk] & Rust `textwrap` [35M/mo]，6/6 PASS）。
+- `packages/@cap/natsort/` & `cap/test/testCapNatsort.cp`: 零堆分配任意长度数字自然排序比较与原地排序引擎（对标 npm `natural-compare`/`natsort` [25M/wk] & Rust `natord`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 62 条高频映射（新增 Wave 10 三大包 + `iban`/`isbn3` 标准库映射）并同步发布至 `https://capdux.org`（线上官方包总数达 97）。

@@ -1,0 +1,7 @@
+{
+  "name": "@cap/shlex",
+  "ver": "1.0.0",
+  "description": "Zero-allocation POSIX shell quoting, command-line lexical splitting & injection guard (shell-quote / Rust shlex parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}

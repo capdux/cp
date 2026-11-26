@@ -293,3 +293,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/barcode`** | `packages/@cap/barcode` | 对标 npm `jsbarcode` / Rust `barcoders` — 零堆 EAN-13 / UPC-A / Code 128B / Code 39 编码与矢量 SVG/ASCII 渲染 |
 | **`@cap/sqids`** | `packages/@cap/sqids` | 对标 npm `sqids`/`hashids` / Rust `sqids`/`harsh` — YouTube 风格可逆无脏词短 ID 编解码（52 词屏蔽 + 最小长度填充） |
 | **`@cap/cron-desc`** | `packages/@cap/cron-desc` | 对标 npm `cronstrue` / Rust `cron-descriptor` — 5 字段 Cron 与 7 大宏的中英文自然语言翻译（12h/24h） |
+| **`@cap/shlex`** | `packages/@cap/shlex` | 对标 npm `shell-quote` / Rust `shlex` — 零堆 POSIX Shell 参数防注入转义与命令词法拆分 |
+| **`@cap/textwrap`** | `packages/@cap/textwrap` | 对标 npm `wrap-ansi`/`word-wrap` / Rust `textwrap` — ANSI/CJK 宽字符感知智能换行、缩进、`dedent` 与截断 |
+| **`@cap/natsort`** | `packages/@cap/natsort` | 对标 npm `natural-compare`/`natsort` / Rust `natord` — 任意精度数字自然序比较与原地排序 |

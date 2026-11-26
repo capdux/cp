@@ -1,0 +1,7 @@
+{
+  "name": "@cap/natsort",
+  "ver": "1.0.0",
+  "description": "Zero-allocation natural / alphanumeric string comparison and in-place sorting (natural-compare / natsort / natord parity, arbitrary-length integer segments without overflow) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
