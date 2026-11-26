@@ -1039,3 +1039,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/type-check`** | `packages/@cap/type-check` | 对标 npm **#241** `type-check` (**1.95 亿/周**) — ESLint 运行时类型表达式解析与校验（`A \| B` / `Maybe T` / `[T]`） |
 | **`@cap/ed25519`** | `packages/@cap/ed25519` | 对标 crates.io **#483** `ed25519` (**3.04 亿+**) — RFC 8032 Ed25519 签名规范性校验（$S<L$）与 RFC 8410 SPKI/PKCS#8 DER 编解码 |
 | **`@cap/predicates`** | `packages/@cap/predicates` | 对标 crates.io **#525** `predicates` (**2.66 亿+**) — 零堆 RPN 布尔/数值/字符串/浮点断言谓词组合引擎 |
+| **`@cap/flatted`** | `packages/@cap/flatted` | 对标 npm **#208** `flatted` (**2.10 亿/周**) — 循环引用安全扁平化 JSON 图编码与还原 |
+| **`@cap/tapable`** | `packages/@cap/tapable` | 对标 npm **#242** `tapable` (**1.95 亿/周**) — Webpack/Rspack `SyncHook`/`SyncBailHook`/`SyncWaterfallHook`/`SyncLoopHook` 插件钩子引擎 |
+| **`@cap/fastq`** | `packages/@cap/fastq` | 对标 npm **#253** `fastq` (**1.92 亿/周**) — 零堆 O(1) 环形缓冲固定并发工作队列（`push`/`unshift`/`pause`/`kill`） |
+| **`@cap/ieee754`** | `packages/@cap/ieee754` | 对标 npm **#293** `ieee754` (**1.73 亿/周**) — IEEE-754 f32/f64 大小端位级保真二进制读写（含 `-0.0`/`NaN`/`Inf`） |
+| **`@cap/env-filter`** | `packages/@cap/env-filter` | 对标 crates.io **#544** `env_filter` (**2.57 亿+**) — `RUST_LOG` 模块前缀最长匹配日志过滤引擎 |
+| **`@cap/wasm-encoder`** | `packages/@cap/wasm-encoder` | 对标 crates.io **#555** `wasm-encoder` (**2.48 亿+**) — Bytecode Alliance WebAssembly 1.0 二进制模块低层编码器 |

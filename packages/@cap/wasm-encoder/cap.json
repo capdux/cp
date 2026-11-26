@@ -1,0 +1,14 @@
+{
+  "name": "@cap/wasm-encoder",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WebAssembly 1.0 binary module encoder with LEB128 and standard section builders (Bytecode Alliance wasm-encoder parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Apache-2.0 WITH LLVM-exception",
+  "source": {
+    "registry": "crates.io",
+    "name": "wasm-encoder",
+    "repo": "https://github.com/bytecodealliance/wasm-tools",
+    "license": "Apache-2.0 WITH LLVM-exception"
+  }
+}

@@ -1290,3 +1290,12 @@
 - `packages/@cap/ed25519/` & `cap/test/testCapEd25519.cp`: crates.io **#483** `ed25519`（3.04 亿+，6/6 PASS）。
 - `packages/@cap/predicates/` & `cap/test/testCapPredicates.cp`: crates.io **#525** `predicates`（2.66 亿+，6/6 PASS）。
 - **零重复归并**：`#262 deep-is` → `@cap/fast-deep-equal`、`#268 json-stable-stringify-without-jsonify` → `@cap/jcs`、`#269 tinyrainbow` → `@cap/picocolors`；Worker C17 满 6 包光荣轮换。
+
+### 2026-11-27 (Batch 146 — **6 大真实 Top 榜核心包：npm #208/#242/#253/#293 + crates.io #544/#555，36/36 PASS，映射达 990 条！**)
+- `packages/@cap/flatted/` & `cap/test/testCapFlatted.cp`: npm **#208** `flatted`（2.10 亿/周，6/6 PASS）。
+- `packages/@cap/tapable/` & `cap/test/testCapTapable.cp`: npm **#242** `tapable`（1.95 亿/周，6/6 PASS）。
+- `packages/@cap/fastq/` & `cap/test/testCapFastq.cp`: npm **#253** `fastq`（1.92 亿/周，6/6 PASS）。
+- `packages/@cap/ieee754/` & `cap/test/testCapIeee754.cp`: npm **#293** `ieee754`（1.73 亿/周，6/6 PASS）。
+- `packages/@cap/env-filter/` & `cap/test/testCapEnvFilter.cp`: crates.io **#544** `env_filter`（2.57 亿+，6/6 PASS）。
+- `packages/@cap/wasm-encoder/` & `cap/test/testCapWasmEncoder.cp`: crates.io **#555** `wasm-encoder`（2.48 亿+，6/6 PASS）。
+- **零重复归并**：`#562 sha1_smol` → `@cap/sha1-crate`、`#563 ansi_term` → `cap:ansi`、`#568 predicates-core` → `@cap/predicates`；Worker N19 满 6 包光荣轮换为 Worker N20。

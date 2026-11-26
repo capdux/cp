@@ -11497,6 +11497,98 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "flatted",
+      "source_repo": "https://github.com/WebReflection/flatted",
+      "license": "ISC",
+      "cp_target": "@cap/flatted",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tapable",
+      "source_repo": "https://github.com/webpack/tapable",
+      "license": "MIT",
+      "cp_target": "@cap/tapable",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fastq",
+      "source_repo": "https://github.com/mcollina/fastq",
+      "license": "ISC",
+      "cp_target": "@cap/fastq",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ieee754",
+      "source_repo": "https://github.com/feross/ieee754",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/ieee754",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "env_filter",
+      "source_repo": "https://github.com/rust-cli/env_logger",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/env-filter",
+      "kind": "package",
+      "aliases": [
+        "env-filter"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wasm-encoder",
+      "source_repo": "https://github.com/bytecodealliance/wasm-tools",
+      "license": "Apache-2.0 WITH LLVM-exception",
+      "cp_target": "@cap/wasm-encoder",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sha1_smol",
+      "source_repo": "https://github.com/mitsuhiko/rust-sha1",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/sha1-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ansi_term",
+      "source_repo": "https://github.com/ogham/rust-ansi-term",
+      "license": "MIT",
+      "cp_target": "cap:ansi",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "predicates-core",
+      "source_repo": "https://github.com/assert-rs/predicates-rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/predicates",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
