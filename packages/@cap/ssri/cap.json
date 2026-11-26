@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ssri",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C Subresource Integrity (SRI) parser, validator, constant-time matcher, and formatter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

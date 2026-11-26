@@ -130,3 +130,7 @@
 
 ## 2026-11-26: Wave 22 四路并行交付 `@cap/svg-path` + `@cap/mail-addr` + `@cap/keep-changelog` + `@cap/subtitle`
 - 保持 3 路子智能体收回即新派满载并行，Wave 22 全部 4 包通过验证：`@cap/svg-path`（6/6）、`@cap/mail-addr`（6/6）、`@cap/keep-changelog`（6/6）、`@cap/subtitle`（6/6），去重直连 6 项内部库（`ndjson`/`netrc-parser`/`iso8601-duration`/`codeowners`/`dockerfile-ast`/`logfmt`），总映射突破 **142 条**。
+
+## 2026-11-26: Wave 23 交付 4 大独立包并全面切换至「真实全球下载/引用总榜严格单调递减」模式
+- 交付 `@cap/ssri`（6/6）、`@cap/pem`（6/6）、`@cap/bcp47`（6/6）、`@cap/hosts-file`（6/6），总映射达 146 条，线上官方包突破 141 个。
+- 采纳用户纠偏：拉取 `api.npmjs.org` 与 `crates.io/api/v1/crates?sort=downloads` 真实实时数据构建严格单调递减总榜，后续每批 10 项严格按真实下载量从高到低依次切片，确保后批每项严格低于前批。

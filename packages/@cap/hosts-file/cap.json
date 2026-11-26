@@ -1,0 +1,8 @@
+{
+  "name": "@cap/hosts-file",
+  "ver": "1.0.0",
+  "description": "Zero-allocation POSIX/Windows /etc/hosts parser, case-insensitive forward/family/reverse lookup, and canonical formatter (hostile / Rust hostsfile parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

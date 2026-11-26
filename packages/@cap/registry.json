@@ -1424,6 +1424,46 @@
       "kind": "package",
       "aliases": ["srt-parser-2", "webvtt-parser"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ssri",
+      "source_repo": "https://github.com/npm/ssri",
+      "license": "ISC",
+      "cp_target": "@cap/ssri",
+      "kind": "package",
+      "aliases": ["subresource-integrity"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pem",
+      "source_repo": "https://github.com/jcreekmore/pem-rs",
+      "license": "MIT",
+      "cp_target": "@cap/pem",
+      "kind": "package",
+      "aliases": ["pem-jwk", "rfc7468"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bcp-47",
+      "source_repo": "https://github.com/words/bcp-47",
+      "license": "MIT",
+      "cp_target": "@cap/bcp47",
+      "kind": "package",
+      "aliases": ["bcp-47-match", "unic-langid"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hostile",
+      "source_repo": "https://github.com/feross/hostile",
+      "license": "MIT",
+      "cp_target": "@cap/hosts-file",
+      "kind": "package",
+      "aliases": ["hostsfile", "etc-hosts"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

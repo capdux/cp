@@ -336,3 +336,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/mail-addr`** | `packages/@cap/mail-addr` | 对标 npm `addressparser`/`email-addresses` — RFC 5322 邮件地址/显示名/多收件人列表零拷贝解析与转义格式化 |
 | **`@cap/keep-changelog`** | `packages/@cap/keep-changelog` | 对标 npm `keep-a-changelog`/`changelog-parser` — Keep a Changelog 1.1.0 版本检索、分类计数与标题格式化 |
 | **`@cap/subtitle`** | `packages/@cap/subtitle` | 对标 npm `subtitle`/`srt-parser-2` — SRT & WebVTT 字幕解析、毫秒时间轴偏移与无损双向转换 |
+| **`@cap/ssri`** | `packages/@cap/ssri` | 对标 npm `ssri` — W3C Subresource Integrity 多算法解析、最强算法挑选与恒定时间匹配 |
+| **`@cap/pem`** | `packages/@cap/pem` | 对标 Rust `pem` — RFC 7468 PEM 多块解析、RFC 1421 头剥离与 64 列折行编码 |
+| **`@cap/bcp47`** | `packages/@cap/bcp47` | 对标 npm `bcp-47` / Rust `unic-langid` — RFC 5646 语言标签解析、规范大小写与回退匹配 |
+| **`@cap/hosts-file`** | `packages/@cap/hosts-file` | 对标 npm `hostile` / Rust `hostsfile` — `/etc/hosts` 多别名解析、IPv4/IPv6 正反向查表与对齐输出 |

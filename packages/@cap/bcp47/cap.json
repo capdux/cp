@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bcp47",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 5646 / BCP-47 language tag parser, canonicalizer, and fallback locale matcher for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

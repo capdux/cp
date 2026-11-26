@@ -214,3 +214,10 @@
 - `packages/@cap/keep-changelog/` & `cap/test/testCapKeepChangelog.cp`: Keep a Changelog 1.1.0 解析、版本检索与分类计数（对标 npm `keep-a-changelog` [3M/wk]，6/6 PASS）。
 - `packages/@cap/subtitle/` & `cap/test/testCapSubtitle.cp`: SRT & WebVTT 字幕解析、时间轴偏移与双向转换（对标 npm `subtitle` [2M/wk]，v1.0.1 6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **142 条**高频映射（新增 `ndjson`/`netrc-parser`/`iso8601-duration`/`codeowners`/`dockerfile-ast`/`logfmt` 内部库直连映射 + Wave 22 四大独立包）。
+
+## [2026-11-26] - Wave 23 交付 `@cap/ssri`, `@cap/pem`, `@cap/bcp47`, `@cap/hosts-file` 并建立 npm/crates.io 真实下载总榜排序引擎
+- `packages/@cap/ssri/` & `cap/test/testCapSsri.cp`: W3C SRI 多算法完整性校验串解析与恒定时间匹配（6/6 PASS）。
+- `packages/@cap/pem/` & `cap/test/testCapPem.cp`: RFC 7468 PEM 多块解析与 64 列编码器（6/6 PASS）。
+- `packages/@cap/bcp47/` & `cap/test/testCapBcp47.cp`: RFC 5646 / BCP-47 语言标签解析、规范化与回退匹配（6/6 PASS）。
+- `packages/@cap/hosts-file/` & `cap/test/testCapHostsFile.cp`: `/etc/hosts` 多别名解析、IPv4/IPv6 正反向查表与格式化（6/6 PASS）。
+- 建立 `temp/global_top_rank.json` 实时抓取 `crates.io` Top 200 总下载榜与 `api.npmjs.org` 真实周下载榜，后续批次严格按真实总下载量单调递减推进。
