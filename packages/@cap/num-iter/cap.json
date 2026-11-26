@@ -1,0 +1,11 @@
+{
+  "name": "@cap/num-iter",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap stepped numeric range iterators for signed and unsigned 64-bit integers with overflow-safe inclusive/exclusive bounds (clean-room port of Rust num-iter)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/num-integer": "1.0.0"
+  }
+}

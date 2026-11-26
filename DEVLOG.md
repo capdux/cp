@@ -417,3 +417,6 @@
 
 ## 2026-11-27: Batch 114 七大数值与 HTTP 核心包全 6/6 PASS — 突破 **650 官方 `.cap` 包里程碑**！
 - 一次性补齐 Rust 数值生态五大基石 `num-traits`（crates.io **#10, 20 亿+**）、`num-integer`（14 亿+）、`ordered-float`（12 亿+，复用 `@cap/fnv-hash`）、`num-rational`（9.5 亿+，复用 `@cap/num-integer`）、`approx`（9 亿+）以及 npm HTTP/对象基础设施 `raw-body`（1.5 亿+/周）与 `merge-descriptors`（1.2 亿+/周），全部 42/42 单测 100% PASS。
+
+## 2026-11-27: Batch 115 七大终端样式/Cookie/时间数值包全 6/6 PASS — 官方 `.cap` 包突破 **655 LIVE**！
+- 交付 npm `picocolors`（3 亿+/周）、`kleur`（1.5 亿+/周）、`cookie-parser`（1.2 亿+/周）与 crates.io `num-iter`（8.5 亿+）、`iso8601`（4.5 亿+）、`rfc3339`、`float-cmp`，7 个包中有 6 个跨包复用独立 `@cap/*` 依赖，42/42 单测 100% PASS；Worker N8 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N9。

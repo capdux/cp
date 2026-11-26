@@ -1022,3 +1022,13 @@
 - `packages/@cap/ordered-float/` & `cap/test/testCapOrderedFloat.cp`: crates.io **#85** `ordered-float` v4（12 亿+，跨包复用 `@cap/fnv-hash`，6/6 PASS）。
 - `packages/@cap/approx/` & `cap/test/testCapApprox.cp`: crates.io #130 `approx` v0.5（9 亿+，绝对/相对/ULPs 浮点近似比较，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 114 全部 7 个官方包映射。
+
+### 2026-11-27 (Batch 115 — **突破 655 LIVE 官方 `.cap` 包！拿下 npm Top 10 `picocolors`(3 亿+/周)+`kleur`(1.5 亿+/周)+`cookie-parser` + crates.io `num-iter`(8.5 亿+)+`iso8601`+`rfc3339`+`float-cmp`**)
+- `packages/@cap/picocolors/` & `cap/test/testCapPicocolors.cp`: npm **Top 10** `picocolors` v1（3 亿+/周，复用 `@cap/ansi-styles`，6/6 PASS）。
+- `packages/@cap/kleur/` & `cap/test/testCapKleur.cp`: npm Top 25 `kleur` v4（1.5 亿+/周，复用 `@cap/ansi-styles`，6/6 PASS）。
+- `packages/@cap/cookie-parser/` & `cap/test/testCapCookieParser.cp`: npm Top 35 `cookie-parser`（1.2 亿+/周，双包复用 `@cap/cookie-jar`+`@cap/cookie-signature`，6/6 PASS）。
+- `packages/@cap/float-cmp/` & `cap/test/testCapFloatCmp.cp`: crates.io `float-cmp` v0.10（复用 `@cap/approx`，6/6 PASS）。
+- `packages/@cap/num-iter/` & `cap/test/testCapNumIter.cp`: crates.io #140 `num-iter` v0.1（8.5 亿+，复用 `@cap/num-integer`，6/6 PASS）。
+- `packages/@cap/iso8601/` & `cap/test/testCapIso8601.cp`: crates.io #250 `iso8601`（4.5 亿+，完整日历/周/序数日期+时间+周期，6/6 PASS）。
+- `packages/@cap/rfc3339/` & `cap/test/testCapRfc3339.cp`: crates.io `rfc3339`（复用 `@cap/iso8601`，严格 RFC 3339 与 Unix Epoch 双向换算，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 115 全部 7 个官方包映射。

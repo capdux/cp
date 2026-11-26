@@ -1,0 +1,11 @@
+{
+  "name": "@cap/rfc3339",
+  "ver": "1.0.0",
+  "description": "Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter (reuses @cap/iso8601)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/iso8601": "1.0.0"
+  }
+}

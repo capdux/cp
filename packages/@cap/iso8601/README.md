@@ -1,0 +1,10 @@
+# `@cap/iso8601`
+
+Zero-heap ISO-8601 date (calendar/week/ordinal), time, timezone offset, datetime, and duration parser & formatter — clean-room CP equivalent of crates.io `iso8601`.
+
+## Features
+- `parseDate` (supports `YYYY-MM-DD`, `YYYYMMDD`, week dates `YYYY-Www-D`, ordinal dates `YYYY-DDD`, leap-year validation)
+- `parseTime` (supports `HH:MM:SS.sss`, `Z`, `±HH:MM`, `±HHMM`, leap second `60`)
+- `parseDateTime` & `formatDateTime`
+- `parseDuration` (supports `P1Y2M3DT4H5M6.789S`, `P2W`)
+- `isLeapYear`, `daysInMonth`

@@ -874,3 +874,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ordered-float`** | `packages/@cap/ordered-float` | 对标 crates.io **#85** `ordered-float` v4 (**12 亿+**, 跨包复用 `@cap/fnv-hash`) — 全序浮点 `OrderedFloat`、`NotNan` 守卫与规范化位哈希 |
 | **`@cap/approx`** | `packages/@cap/approx` | 对标 crates.io #130 `approx` v0.5 (9 亿+) — IEEE-754 `f64`/`f32` 绝对误差、相对误差与 ULPs 位距浮点近似比较 |
 | **`@cap/num-traits`** | `packages/@cap/num-traits` | 对标 crates.io **#10** `num-traits` v0.2 (**20 亿+**) — 零堆 Checked/Saturating 溢出安全算术、`clamp`/`signum`/`checkedPow` 与位计数/循环移位 |
+| **`@cap/picocolors`** | `packages/@cap/picocolors` | 对标 npm **Top 10** `picocolors` v1 (**3 亿+/周**, 复用 `@cap/ansi-styles`) — 零堆终端 ANSI 颜色格式化、`NO_COLOR`/`FORCE_COLOR` 探测与嵌套还原 |
+| **`@cap/kleur`** | `packages/@cap/kleur` | 对标 npm Top 25 `kleur` v4 (**1.5 亿+/周**, 复用 `@cap/ansi-styles`) — 零堆 8 层可组合链式 ANSI 样式构建器 `KleurChain` |
+| **`@cap/cookie-parser`** | `packages/@cap/cookie-parser` | 对标 npm Top 35 `cookie-parser` (1.2 亿+/周，双包复用 `@cap/cookie-jar`+`@cap/cookie-signature`) — HTTP Cookie 解析、HMAC 验签、密钥轮换与 `j:` JSON 提取 |
+| **`@cap/float-cmp`** | `packages/@cap/float-cmp` | 对标 crates.io `float-cmp` v0.10 (复用 `@cap/approx`) — `F64Margin`/`F32Margin` 绝对+ULPs 双阈值比较、比例比较与近似全序 |
+| **`@cap/num-iter`** | `packages/@cap/num-iter` | 对标 crates.io #140 `num-iter` v0.1 (**8.5 亿+**, 复用 `@cap/num-integer`) — 溢出安全 `RangeStep`/`RangeStepInclusive`/`RangeStepU64` 步进迭代器 |
+| **`@cap/iso8601`** | `packages/@cap/iso8601` | 对标 crates.io #250 `iso8601` (4.5 亿+) — 零堆 ISO-8601 日历/周/序数日期、时区时间、日期时间与 `P...T...` 周期解析格式化 |
+| **`@cap/rfc3339`** | `packages/@cap/rfc3339` | 对标 crates.io `rfc3339` (复用 `@cap/iso8601`) — 严格 RFC 3339 时间戳解析、O(1) Unix Epoch 双向换算与 UTC 格式化 |

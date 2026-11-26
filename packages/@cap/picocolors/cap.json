@@ -1,0 +1,11 @@
+{
+  "name": "@cap/picocolors",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ultra-fast terminal ANSI color & style formatter with nested close-code recovery and NO_COLOR/FORCE_COLOR detection for CP (clean-room parity with npm picocolors)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/ansi-styles": "1.0.0"
+  }
+}

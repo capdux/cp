@@ -10420,6 +10420,78 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "picocolors",
+      "source_repo": "https://github.com/alexeyraspopov/picocolors",
+      "license": "ISC",
+      "cp_target": "@cap/picocolors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kleur",
+      "source_repo": "https://github.com/lukeed/kleur",
+      "license": "MIT",
+      "cp_target": "@cap/kleur",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cookie-parser",
+      "source_repo": "https://github.com/expressjs/cookie-parser",
+      "license": "MIT",
+      "cp_target": "@cap/cookie-parser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "float-cmp",
+      "source_repo": "https://github.com/mikedilger/float-cmp",
+      "license": "MIT",
+      "cp_target": "@cap/float-cmp",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-iter",
+      "source_repo": "https://github.com/rust-num/num-iter",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/num-iter",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "iso8601",
+      "source_repo": "https://github.com/badboy/iso8601",
+      "license": "MIT",
+      "cp_target": "@cap/iso8601",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rfc3339",
+      "source_repo": "https://github.com/chronotope/chrono",
+      "license": "MIT",
+      "cp_target": "@cap/rfc3339",
+      "kind": "package",
+      "aliases": [
+        "humantime-rfc3339"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
