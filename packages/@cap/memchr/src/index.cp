@@ -244,7 +244,7 @@ pub fn memchrCount(needle: u8, haystack: []const u8): usize {
         return 0;
     }
     let splat = mcSplatByte(needle);
-    let count: usize = 0;
+    let hits: usize = 0;
     let i: usize = 0;
     while (i + 8 <= len) {
         let word = mcLoadU64Le(haystack, i);
@@ -252,7 +252,7 @@ pub fn memchrCount(needle: u8, haystack: []const u8): usize {
             let k: usize = 0;
             while (k < 8) {
                 if (haystack[i + k] == needle) {
-                    count = count + 1;
+                    hits = hits + 1;
                 }
                 k = k + 1;
             }
@@ -261,11 +261,11 @@ pub fn memchrCount(needle: u8, haystack: []const u8): usize {
     }
     while (i < len) {
         if (haystack[i] == needle) {
-            count = count + 1;
+            hits = hits + 1;
         }
         i = i + 1;
     }
-    return count;
+    return hits;
 }
 
 /// Locates all occurrences of `needle` in `haystack`, writing offsets into `out_offsets`.
@@ -364,6 +364,11 @@ pub fn memmemRfind(haystack: []const u8, needle: []const u8): i64 {
     return -1;
 }
 
+/// Alias for `memchrCount`, counting all occurrences of `needle` in `haystack`.
+pub fn countByte(needle: u8, haystack: []const u8): usize {
+    return memchrCount(needle, haystack);
+}
+
 export {
     memchr,
     memchr2,
@@ -372,6 +377,7 @@ export {
     memrchr2,
     memrchr3,
     memchrCount,
+    countByte,
     memchrFindAll,
     memmemFind,
     memmemRfind

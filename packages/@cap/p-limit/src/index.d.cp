@@ -26,6 +26,9 @@ export class PLimit {
     fn submit(_: auto, task_id: u64): SubmitResult;
     fn complete(_: auto): CompleteResult;
     fn clearQueue(_: auto): usize;
+    fn enqueue(_: auto, task_id: u64): bool;
+    fn startNext(_: auto): u64?;
+    fn finishOne(_: auto): bool;
     fn drainReady(_: auto, out: []u64): usize;
 }
 

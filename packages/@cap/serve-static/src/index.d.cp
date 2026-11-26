@@ -2,7 +2,7 @@
 
 import { parseRequestUrl, isSafeRequestPath } from "../../parseurl/src/index.cp";
 import { lookup, contentType } from "../../mime-types/src/index.cp";
-import { generateStatEtag } from "../../etag-http/src/index.cp";
+import { generateStatEtag } from "../../etag/src/index.cp";
 import { formatU64 } from "../../itoa/src/index.cp";
 export class ServeStaticOptions {
     index_file: string,

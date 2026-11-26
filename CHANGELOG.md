@@ -1181,3 +1181,17 @@
 - `packages/@cap/mitt/` & `cap/test/testCapMitt.cp`: npm **Top 45** `mitt` v3（5000 万+/周，32 槽位零堆事件总线与 `"*"` 通配符，6/6 PASS）。
 - `packages/@cap/camino/` & `cap/test/testCapCamino.cp`: crates.io **#75** `camino` v1（13 亿+，复用 `@cap/utf8-valid`，严格 UTF-8 路径引擎，6/6 PASS）。
 - `PROGRESS.md` & `GEMINI.md` & `SESSION.md` / `SESSION_H.md`: 补齐全部 14 条会话历史审计留档（`missing_tickets=0, missing_user_turns=0`），固化 CP 1-pass codegen 与省 Token 工作流铁律进 `GEMINI.md` Rule #11，生成无缝交接文档 `PROGRESS.md`。
+
+### 2026-11-27 (Batch 133 — **剩余 3 组含反向依赖后缀重复包全部清零收口** + **新增 5 大零重复高热度包**)
+- **后缀重复包 100% 清零收口（Rule #12）**：
+  - `@cap/etag-http` → 合并进 `@cap/etag`（补齐 `compareStrong`/`compareWeak` 并加 `etg*` 私有前缀消除跨包 `strEq` 冲突），迁移 `@cap/send`、`@cap/serve-static` 依赖与测试（`testCapEtag`/`testCapSend`/`testCapServeStatic` 18/18 PASS），移除 `packages/@cap/etag-http`；
+  - `@cap/memchr-crate` → 合并进 `@cap/memchr`（补齐 `countByte` 别名并修复 `memchrCount` 局部变量遮蔽），迁移 `@cap/bytecount` 依赖与测试（`testCapMemchr`/`testCapBytecount` 12/12 PASS），移除 `packages/@cap/memchr-crate`；
+  - `@cap/p-limit-core` → 合并进 `@cap/p-limit`（新增 `enqueue`/`startNext`/`finishOne` 两阶段调度方法），迁移 `@cap/p-locate` 依赖与测试（`testCapPLimit`/`testCapPLocate` 12/12 PASS），移除 `packages/@cap/p-limit-core`。
+- `packages/@cap/is-unicode-supported/` & `cap/test/testCapIsUnicodeSupported.cp`: npm `is-unicode-supported` v2（1 亿+/周，6/6 PASS）。
+- `packages/@cap/widest-line/` & `cap/test/testCapWidestLine.cp`: npm `widest-line`（7000 万+/周，复用 `@cap/string-width`，6/6 PASS）。
+- `packages/@cap/trim-newlines/` & `cap/test/testCapTrimNewlines.cp`: npm `trim-newlines` v5（5000 万+/周，零拷贝，6/6 PASS）。
+- `packages/@cap/normpath/` & `cap/test/testCapNormpath.cp`: crates.io `normpath`（跨平台 POSIX/Windows/UNC 路径规范化，6/6 PASS）。
+- `packages/@cap/unicode-ident/` & `cap/test/testCapUnicodeIdent.cp`: crates.io Top 100 `unicode-ident`（5 亿+，UAX #31 标识符判定，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射、重指向 3 组收口映射，并运行 `gen_agent_lib_ref.py` 刷新极简速查手册。
+- `packages/@cap/strip-indent/` & `cap/test/testCapStripIndent.cp`: npm `strip-indent`（5000 万+/周，6/6 PASS）。
+- `packages/@cap/redent/` & `cap/test/testCapRedent.cp`: npm `redent`（4000 万+/周，双包复用 `@cap/strip-indent` + `@cap/indent-string`，6/6 PASS）。

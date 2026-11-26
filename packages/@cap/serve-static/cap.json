@@ -8,7 +8,7 @@
   "dependencies": {
     "@cap/parseurl": "1.0.0",
     "@cap/mime-types": "1.0.0",
-    "@cap/etag-http": "1.0.0",
+    "@cap/etag": "1.0.0",
     "@cap/itoa": "1.0.0"
   },
   "source": {

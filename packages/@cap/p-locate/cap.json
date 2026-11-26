@@ -1,12 +1,12 @@
 {
   "name": "@cap/p-locate",
   "ver": "1.0.0",
-  "description": "Zero-allocation bounded-concurrency ordered/unordered locator planner (npm p-locate v7 equivalent) for CP, reusing @cap/p-limit-core.",
+  "description": "Zero-allocation bounded-concurrency ordered/unordered locator planner (npm p-locate v7 equivalent) for CP, reusing @cap/p-limit.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
-    "@cap/p-limit-core": "1.0.0"
+    "@cap/p-limit": "1.0.0"
   },
   "keywords": [
     "p-locate",

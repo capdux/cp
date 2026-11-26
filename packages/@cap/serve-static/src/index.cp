@@ -1,10 +1,10 @@
 // @cap/serve-static — Zero-heap static file HTTP request policy & response helper.
 // Clean-room MIT port of npm `serve-static` v2 (130M+/week);
-// composes `@cap/parseurl`, `@cap/mime-types`, `@cap/etag-http`, and `@cap/itoa`.
+// composes `@cap/parseurl`, `@cap/mime-types`, `@cap/etag`, and `@cap/itoa`.
 
 import { parseRequestUrl, isSafeRequestPath } from "../../parseurl/src/index.cp";
 import { lookup, contentType } from "../../mime-types/src/index.cp";
-import { generateStatEtag } from "../../etag-http/src/index.cp";
+import { generateStatEtag } from "../../etag/src/index.cp";
 import { formatU64 } from "../../itoa/src/index.cp";
 
 pub const DOTFILE_IGNORE: u8 = 0; // 404 Not Found
@@ -124,7 +124,7 @@ pub fn formatCacheControl(max_age_secs: u64, immutable: bool, out: []u8): usize 
     return p;
 }
 
-/// Builds a weak stat ETag via `@cap/etag-http` and full Content-Type via `@cap/mime-types`.
+/// Builds a weak stat ETag via `@cap/etag` and full Content-Type via `@cap/mime-types`.
 pub fn formatStaticEtag(size_bytes: u64, mtime_ms: u64, out: []u8): usize {
     return generateStatEtag(size_bytes, mtime_ms, out);
 }

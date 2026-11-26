@@ -1,0 +1,24 @@
+{
+  "name": "@cap/unicode-ident",
+  "ver": "1.0.0",
+  "desc": "Zero-heap UAX #31 Unicode identifier classification (XID_Start / XID_Continue) and UTF-8 identifier scanner in pure CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "unicode",
+    "unicode-ident",
+    "uax31",
+    "xid",
+    "identifier",
+    "lexer",
+    "utf8",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-ident",
+    "repo": "https://github.com/dtolnay/unicode-ident",
+    "license": "MIT OR Apache-2.0"
+  }
+}

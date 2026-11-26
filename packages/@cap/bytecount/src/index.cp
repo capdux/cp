@@ -1,4 +1,4 @@
-import { countByte } from "../../memchr-crate/src/index.cp";
+import { countByte } from "../../memchr/src/index.cp";
 
 pub fn count(haystack: []u8, needle: u8): usize {
     return countByte(needle, haystack);

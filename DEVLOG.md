@@ -473,3 +473,7 @@
 ## 2026-11-27: Batch 132 六大零重复高热度包全 6/6 PASS + 全仓 **100% `"source"` 溯源覆盖收官**！
 - 交付 npm **Top 25 `nanoid`（1 亿+/周）**、**Top 50 `cli-truncate`（8000 万+/周，双包复用）**、`kebabcase-keys`（双包复用）与 crates.io **#145 `relative-path`（8 亿+）**、**#210 `publicsuffix`（6 亿+）**、`macaddr`，全部 36/36 单测一遍过 100% PASS；Worker N13 & C12 均满 6 包（各 36/36 PASS）光荣轮换换新为 Worker N14 & C13。
 - 补齐全部剩余 76 个早期 `@cap/*` 包的 `cap.json` `"source"` 与 50 个 `README.md` 溯源横幅，全仓 `@cap/*` 溯源覆盖率正式达到 **100.0%（0 缺失）**，上游映射达 **910 条**（npm 450 + crates.io 460）。
+
+## 2026-11-27: Batch 133 剩余 3 组含反向依赖重复包 100% 清零收口 + 5 大零重复新包全 6/6 PASS！
+- 完成交接文档 `PROGRESS.md` 遗留的全部 3 组含反向依赖后缀重复包收口：`etag-http`→`etag`（同步迁移 `send`/`serve-static`）、`memchr-crate`→`memchr`（同步迁移 `bytecount`）、`p-limit-core`→`p-limit`（同步迁移 `p-locate`），7 份关联回归测试 42/42 100% PASS，全仓后缀重复包历史欠账清零。
+- 并行交付 5 个零重复 Top-700 独立包：`@cap/is-unicode-supported`（1 亿+/周）、`@cap/widest-line`（复用 `@cap/string-width`）、`@cap/trim-newlines`、`@cap/normpath`、`@cap/unicode-ident`（5 亿+），全部 30/30 单测首轮一遍过 100% PASS；并同步通过 `gen_agent_lib_ref.py` 刷新 `cp_agent_lib_ref.md`。

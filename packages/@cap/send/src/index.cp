@@ -1,9 +1,9 @@
 // @cap/send — Pure CP zero-allocation static file streaming planner.
 // Clean-room MIT implementation inspired by npm `send` v1.
-// Reuses `@cap/encodeurl`, `@cap/etag-http`, `@cap/range-parser`, and `@cap/mime-types`.
+// Reuses `@cap/encodeurl`, `@cap/etag`, `@cap/range-parser`, and `@cap/mime-types`.
 
 import { encodeUrl } from "../../encodeurl/src/index.cp";
-import { generateStatEtag, compareWeak } from "../../etag-http/src/index.cp";
+import { generateStatEtag, compareWeak } from "../../etag/src/index.cp";
 import {
     RANGE_OK,
     parseRange,
@@ -193,7 +193,7 @@ pub fn planSendFile(
     let mime_opt = lookup(req_path);
     let mime: string = if (mime_opt != null) { mime_opt.? } else { "application/octet-stream" };
 
-    // 4. ETag generation & If-None-Match 304 negotiation via `@cap/etag-http`
+    // 4. ETag generation & If-None-Match 304 negotiation via `@cap/etag`
     if (opts.etag) {
         let etag_len: usize = generateStatEtag(file_size, mtime_ms, etag_out);
         if (etag_len > 0 && if_none_match.len > 0) {

@@ -1,8 +1,8 @@
 // packages/@cap/p-locate/src/index.cp
 // Zero-allocation bounded-concurrency locator planner for CP.
-// Clean-room MIT pure CP implementation of npm `p-locate` v7, reusing `@cap/p-limit-core`.
+// Clean-room MIT pure CP implementation of npm `p-locate` v7, reusing `@cap/p-limit`.
 
-import { PLimit } from "../../p-limit-core/src/index.cp";
+import { PLimit } from "../../p-limit/src/index.cp";
 
 pub const PLOC_MAX_CANDIDATES: usize = 32;
 
@@ -46,14 +46,13 @@ pub struct PLocatePlanner {
 
     /// Creates a new `PLocatePlanner`. Returns `null` if `opts.concurrency == 0`.
     pub static fn new(opts: PLocateOptions): PLocatePlanner? {
-        let lim_opt: PLimit? = PLimit.new(opts.concurrency);
-        if (lim_opt == null) {
+        if (opts.concurrency == 0) {
             return null;
         }
         let arr: [32]LocateCandidate = [plocEmptyCandidate(); 32];
         return PLocatePlanner {
             opts: opts,
-            limiter: lim_opt ?? PLimit.single(),
+            limiter: PLimit.new(opts.concurrency),
             items: arr,
             count: 0,
             settled: false,
@@ -67,7 +66,7 @@ pub struct PLocatePlanner {
         let arr: [32]LocateCandidate = [plocEmptyCandidate(); 32];
         return PLocatePlanner {
             opts: PLocateOptions.defaults(),
-            limiter: PLimit.new(4) ?? PLimit.single(),
+            limiter: PLimit.new(4),
             items: arr,
             count: 0,
             settled: false,
@@ -81,7 +80,7 @@ pub struct PLocatePlanner {
         if (_.settled || _.count >= PLOC_MAX_CANDIDATES) {
             return false;
         }
-        if (!_.limiter.submit(id)) {
+        if (!_.limiter.enqueue(id as u64)) {
             return false;
         }
         _.items[_.count] = LocateCandidate {
@@ -98,7 +97,10 @@ pub struct PLocatePlanner {
         if (_.settled) {
             return null;
         }
-        return _.limiter.startNext();
+        if (nid := _.limiter.startNext()) {
+            return nid as u32;
+        }
+        return null;
     }
 
     /// Reports the predicate result for `id`.

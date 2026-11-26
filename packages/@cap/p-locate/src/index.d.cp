@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-import { PLimit } from "../../p-limit-core/src/index.cp";
+import { PLimit } from "../../p-limit/src/index.cp";
 export class PLocateOptions {
     concurrency: usize,
     preserve_order: bool,

@@ -947,14 +947,13 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/zip-core`** | `packages/@cap/zip-core` | 对标 crates.io **#130** `zip` v2 (**9 亿+**, 双包复用 `@cap/crc32fast`+`@cap/bytemuck-crate`) — PKZIP Local/CD/EOCD 编解码与 CRC-32 校验 |
 | **`@cap/sha2-crate`** | `packages/@cap/sha2-crate` | 对标 crates.io **#14** `sha2` (**19 亿+**, 复用 `@cap/cookie-signature`) — FIPS 180-4 SHA-256 与 SHA-224 流式杂凑 |
 | **`@cap/rimraf-core`** | `packages/@cap/rimraf-core` | 对标 npm **Top 20** `rimraf` v6 (**1.8 亿+/周**, 复用 `@cap/fast-glob`) — 根目录保护、glob 过滤与自底向上安全删除规划器 |
-| **`@cap/p-limit-core`** | `packages/@cap/p-limit-core` | 对标 npm **Top 12** `p-limit` v6 (**2.5 亿+/周**, 复用 `@cap/p-queue`) — 零堆有界并发限流调度器与动态并发调整 |
 | **`@cap/flate2-core`** | `packages/@cap/flate2-core` | 对标 crates.io **#18** `flate2` v1 (**18.5 亿+**, 三包复用 `@cap/crc32fast`+`@cap/adler32`+`@cap/bytemuck-crate`) — RFC 1952 Gzip 与 RFC 1950 Zlib 帧编解码 |
 | **`@cap/ripemd160`** | `packages/@cap/ripemd160` | 对标 crates.io `ripemd` v0.1 — 80 轮双线 RIPEMD-160 160-bit 流式杂凑（7 组官方向量全过） |
-| **`@cap/bytecount`** | `packages/@cap/bytecount` | 对标 crates.io **#190** `bytecount` (**6.5 亿+**, 复用 `@cap/memchr-crate`) — SWAR 高速字节计数、UTF-8 码点与行数统计 |
+| **`@cap/bytecount`** | `packages/@cap/bytecount` | 对标 crates.io **#190** `bytecount` (**6.5 亿+**, 复用 `@cap/memchr`) — SWAR 高速字节计数、UTF-8 码点与行数统计 |
 | **`@cap/siphasher`** | `packages/@cap/siphasher` | 对标 crates.io **#70** `siphasher` (**12.5 亿+**) — SipHash-2-4 与 SipHash-1-3 密钥 64 位哈希（Aumasson-Bernstein 官方向量全过） |
 | **`@cap/twox-hash`** | `packages/@cap/twox-hash` | 对标 crates.io **#135** `twox-hash` v2 (**8.5 亿+**) — XXHash32/XXHash64 流式高速哈希（Cyan4973 官方向量全过） |
 | **`@cap/seahash`** | `packages/@cap/seahash` | 对标 crates.io #220 `seahash` v4 (**5.5 亿+**) — 4 通道并行 SeaHash 64-bit 哈希与 PCG 扩散函数 |
-| **`@cap/p-locate`** | `packages/@cap/p-locate` | 对标 npm **Top 15** `p-locate` v7 (**2.2 亿+/周**, 复用 `@cap/p-limit-core`) — 有界并发候选定位器与 `preserve_order` 优先级语义 |
+| **`@cap/p-locate`** | `packages/@cap/p-locate` | 对标 npm **Top 15** `p-locate` v7 (**2.2 亿+/周**, 复用 `@cap/p-limit`) — 有界并发候选定位器与 `preserve_order` 优先级语义 |
 | **`@cap/p-timeout-core`** | `packages/@cap/p-timeout-core` | 对标 npm Top 45 `p-timeout` v6 (**1 亿+/周**) — 零堆截止时间守卫、超时回退与状态机取消 |
 | **`@cap/p-try`** | `packages/@cap/p-try` | 对标 npm **Top 25** `p-try` v3 (**1.6 亿+/周**) — 零堆同步/异步执行结果封装、安全整数解析与除法防 panic |
 | **`@cap/is-plain-obj`** | `packages/@cap/is-plain-obj` | 对标 npm Top 30 `is-plain-obj` v4 (**1.4 亿+/周**) — 纯对象原型判定、JSON 对象字面量校验与原型污染危险键扫描 |
@@ -975,3 +974,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/relative-path`** | `packages/@cap/relative-path` | 对标 crates.io **#145** `relative-path` (**8 亿+**) — 跨平台可移植相对路径归一化、拼接、`stripPrefix` 与 `relativeTo` |
 | **`@cap/mitt`** | `packages/@cap/mitt` | 对标 npm **Top 45** `mitt` v3 (**5000 万+/周**) — 零堆 32 槽位函数式事件总线与 `"*"` 通配符分发 |
 | **`@cap/camino`** | `packages/@cap/camino` | 对标 crates.io **#75** `camino` v1 (**13 亿+**, 复用 `@cap/utf8-valid`) — 严格 UTF-8 校验绝对/相对路径引擎 `Utf8PathBuf` |
+| **`@cap/is-unicode-supported`** | `packages/@cap/is-unicode-supported` | 对标 npm **Top 25** `is-unicode-supported` v2 (**1 亿+/周**) — 跨平台终端 Unicode 支持环境探测与安全降级 |
+| **`@cap/widest-line`** | `packages/@cap/widest-line` | 对标 npm **Top 55** `widest-line` (**7000 万+/周**, 复用 `@cap/string-width`) — 多行文本（含 ANSI/CJK/Emoji）最大视觉列宽计算 |
+| **`@cap/trim-newlines`** | `packages/@cap/trim-newlines` | 对标 npm **Top 65** `trim-newlines` v5 (**5000 万+/周**) — 零拷贝字符串首尾 CR/LF 换行符裁剪 |
+| **`@cap/normpath`** | `packages/@cap/normpath` | 对标 crates.io `normpath` — 零堆跨平台 POSIX/Windows/UNC 路径词法规范化与越界检测 |
+| **`@cap/unicode-ident`** | `packages/@cap/unicode-ident` | 对标 crates.io **Top 100** `unicode-ident` (**5 亿+**) — UAX #31 Unicode 标识符 `isXidStart`/`isXidContinue`/`isValidIdent` |
+| **`@cap/strip-indent`** | `packages/@cap/strip-indent` | 对标 npm **Top 55** `strip-indent` (**5000 万+/周**) — 计算最小公共缩进并剥离多行文本前导空白 |
+| **`@cap/redent`** | `packages/@cap/redent` | 对标 npm **Top 65** `redent` (**4000 万+/周**, 双包复用 `@cap/strip-indent`+`@cap/indent-string`) — 剥离公共缩进后重新缩进多行文本 |

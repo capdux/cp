@@ -127,6 +127,33 @@ pub struct PLimit {
         return dropped;
     }
 
+    /// Enqueue a task ID into the pending queue without immediately consuming an active slot.
+    pub fn enqueue(*_, task_id: u64): bool {
+        return _.queue.enqueue(task_id);
+    }
+
+    /// Start the next pending task if an active slot is available, returning its task ID.
+    pub fn startNext(*_): u64? {
+        if (_.active >= _.limit || _.queue.isEmpty()) {
+            return null;
+        }
+        const pop: PopU64Result = _.queue.dequeue();
+        if (!pop.ok) {
+            return null;
+        }
+        _.active += 1;
+        return pop.value;
+    }
+
+    /// Release one active slot without automatically dequeuing the next task.
+    pub fn finishOne(*_): bool {
+        if (_.active == 0) {
+            return false;
+        }
+        _.active -= 1;
+        return true;
+    }
+
     /// Pop up to `min(limit - active, pending, out.len)` queued tasks into `out`,
     /// transitioning each popped task into the active state.
     pub fn drainReady(*_, out: []u64): usize {

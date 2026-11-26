@@ -7,7 +7,7 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/encodeurl": "1.0.0",
-    "@cap/etag-http": "1.0.0",
+    "@cap/etag": "1.0.0",
     "@cap/range-parser": "1.0.0",
     "@cap/mime-types": "1.0.0"
   },

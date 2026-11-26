@@ -8,7 +8,7 @@ Clean-room MIT, zero-heap HTTP static file request resolver, dotfile policy eval
 ## Dependencies
 - `@cap/parseurl` (`1.0.0`) — fast request URL splitting and path traversal defense
 - `@cap/mime-types` (`1.0.0`) — MIME & Content-Type resolution
-- `@cap/etag-http` (`1.0.0`) — weak stat-based ETag generation
+- `@cap/etag` (`1.0.0`) — weak stat-based ETag generation
 - `@cap/itoa` (`1.0.0`) — zero-heap `max-age` formatting
 
 ## API

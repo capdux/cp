@@ -1,0 +1,23 @@
+{
+  "name": "@cap/strip-indent",
+  "ver": "1.0.0",
+  "description": "Zero-allocation leading whitespace stripper (npm strip-indent + min-indent parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "strip-indent",
+    "min-indent",
+    "indent",
+    "dedent",
+    "whitespace",
+    "string",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "strip-indent",
+    "repo": "https://github.com/sindresorhus/strip-indent",
+    "license": "MIT"
+  }
+}

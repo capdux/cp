@@ -1,0 +1,14 @@
+{
+  "name": "@cap/trim-newlines",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation trimming of leading and trailing CR/LF newlines from strings (clean-room MIT implementation of npm trim-newlines v5)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "trim-newlines",
+    "repo": "https://github.com/sindresorhus/trim-newlines",
+    "license": "MIT"
+  }
+}

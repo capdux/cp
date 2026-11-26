@@ -1,7 +1,7 @@
 // Type definitions for CP
 
 import { encodeUrl } from "../../encodeurl/src/index.cp";
-import { generateStatEtag, compareWeak } from "../../etag-http/src/index.cp";
+import { generateStatEtag, compareWeak } from "../../etag/src/index.cp";
 import { RANGE_OK, parseRange, rangeByteLength } from "../../range-parser/src/index.cp";
 import { lookup } from "../../mime-types/src/index.cp";
 export fn sndStrEq(a: string, b: string): bool;

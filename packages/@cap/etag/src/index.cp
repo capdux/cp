@@ -6,11 +6,11 @@ pub struct EntityTag {
     pub tag: string,
 }
 
-fn isSpace(b: u8) -> bool {
+fn etgIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
 }
 
-fn isEtagChar(b: u8) -> bool {
+fn etgIsEtagChar(b: u8) -> bool {
     // RFC 9110 etagc = %x21 / %x23-7E / obs-text (%x80-FF)
     if (b == 0x21) { return true; }
     if (b >= 0x23 && b <= 0x7E) { return true; }
@@ -18,7 +18,7 @@ fn isEtagChar(b: u8) -> bool {
     return false;
 }
 
-fn strEq(a: string, b: string) -> bool {
+fn etgStrEq(a: string, b: string) -> bool {
     if (a.len != b.len) {
         return false;
     }
@@ -37,10 +37,10 @@ fn strEq(a: string, b: string) -> bool {
 pub fn parseEtag(input: string, out: *EntityTag) -> bool {
     let a: usize = 0;
     let b: usize = input.len;
-    while (a < b && isSpace(input[a])) {
+    while (a < b && etgIsSpace(input[a])) {
         a += 1;
     }
-    while (b > a && isSpace(input[b - 1])) {
+    while (b > a && etgIsSpace(input[b - 1])) {
         b -= 1;
     }
 
@@ -59,7 +59,7 @@ pub fn parseEtag(input: string, out: *EntityTag) -> bool {
     const inner_end = b - 1;
     let i = inner_start;
     while (i < inner_end) {
-        if (!isEtagChar(input[i])) {
+        if (!etgIsEtagChar(input[i])) {
             return false;
         }
         i += 1;
@@ -105,22 +105,22 @@ pub fn strongEqual(a: EntityTag, b: EntityTag) -> bool {
     if (a.weak || b.weak) {
         return false;
     }
-    return strEq(a.tag, b.tag);
+    return etgStrEq(a.tag, b.tag);
 }
 
 /// RFC 9110 weak comparison: ignores weakness flag and compares opaque-tag bytes.
 pub fn weakEqual(a: EntityTag, b: EntityTag) -> bool {
-    return strEq(a.tag, b.tag);
+    return etgStrEq(a.tag, b.tag);
 }
 
-fn hexLower(nibble: u8) -> u8 {
+fn etgHexLower(nibble: u8) -> u8 {
     if (nibble < 10) {
         return 48 + nibble;
     }
     return 87 + nibble; // 'a' = 97 = 87 + 10
 }
 
-fn writeHexU64(val: u64, out: []u8, start: usize) -> usize {
+fn etgWriteHexU64(val: u64, out: []u8, start: usize) -> usize {
     let rev: [16]u8 = undefined;
     let n: usize = 0;
     let v = val;
@@ -129,7 +129,7 @@ fn writeHexU64(val: u64, out: []u8, start: usize) -> usize {
         n = 1;
     } else {
         while (v > 0) {
-            rev[n] = hexLower((v & 0x0F) as u8);
+            rev[n] = etgHexLower((v & 0x0F) as u8);
             v = v >> 4;
             n += 1;
         }
@@ -142,7 +142,7 @@ fn writeHexU64(val: u64, out: []u8, start: usize) -> usize {
     return n;
 }
 
-fn hexLenU64(val: u64) -> usize {
+fn etgHexLenU64(val: u64) -> usize {
     if (val == 0) {
         return 1;
     }
@@ -158,8 +158,8 @@ fn hexLenU64(val: u64) -> usize {
 /// Generates a weak stat-based ETag `W/"<hex-size>-<hex-mtime>"` (matching Express/npm `etag`).
 /// Returns bytes written, or `0` if `out` is too small.
 pub fn generateStatEtag(size: u64, mtime_ms: u64, out: []u8) -> usize {
-    const s_len = hexLenU64(size);
-    const m_len = hexLenU64(mtime_ms);
+    const s_len = etgHexLenU64(size);
+    const m_len = etgHexLenU64(mtime_ms);
     const needed = 3 + s_len + 1 + m_len + 1; // W/" + size + - + mtime + "
     if (needed > out.len) {
         return 0;
@@ -169,16 +169,16 @@ pub fn generateStatEtag(size: u64, mtime_ms: u64, out: []u8) -> usize {
     out[w + 1] = 47; // '/'
     out[w + 2] = 34; // '"'
     w += 3;
-    w += writeHexU64(size, out, w);
+    w += etgWriteHexU64(size, out, w);
     out[w] = 45;     // '-'
     w += 1;
-    w += writeHexU64(mtime_ms, out, w);
+    w += etgWriteHexU64(mtime_ms, out, w);
     out[w] = 34;     // '"'
     w += 1;
     return w;
 }
 
-fn fnv1a64(data: []const u8) -> u64 {
+fn etgFnv1a64(data: []const u8) -> u64 {
     const offset: u64 = ((0xCBF29CE4 as u64) << 32) | (0x84222325 as u64);
     const prime: u64 = ((0x00000100 as u64) << 32) | (0x000001B3 as u64);
     let h: u64 = offset;
@@ -195,13 +195,13 @@ fn fnv1a64(data: []const u8) -> u64 {
 /// using FNV-1a 64-bit. Returns bytes written, or `0` if `out` is too small.
 pub fn generateContentEtag(data: []const u8, weak: bool, out: []u8) -> usize {
     const dlen = data.len as u64;
-    const hash = fnv1a64(data);
+    const hash = etgFnv1a64(data);
     let prefix_len: usize = 0;
     if (weak) {
         prefix_len = 2;
     }
-    const l_len = hexLenU64(dlen);
-    const h_len = hexLenU64(hash);
+    const l_len = etgHexLenU64(dlen);
+    const h_len = etgHexLenU64(hash);
     const needed = prefix_len + 1 + l_len + 1 + h_len + 1;
     if (needed > out.len) {
         return 0;
@@ -214,22 +214,22 @@ pub fn generateContentEtag(data: []const u8, weak: bool, out: []u8) -> usize {
     }
     out[w] = 34; // '"'
     w += 1;
-    w += writeHexU64(dlen, out, w);
+    w += etgWriteHexU64(dlen, out, w);
     out[w] = 45; // '-'
     w += 1;
-    w += writeHexU64(hash, out, w);
+    w += etgWriteHexU64(hash, out, w);
     out[w] = 34; // '"'
     w += 1;
     return w;
 }
 
-fn matchHeaderList(header: string, current: EntityTag, require_strong: bool) -> bool {
+fn etgMatchHeaderList(header: string, current: EntityTag, require_strong: bool) -> bool {
     let a: usize = 0;
     let b: usize = header.len;
-    while (a < b && isSpace(header[a])) {
+    while (a < b && etgIsSpace(header[a])) {
         a += 1;
     }
-    while (b > a && isSpace(header[b - 1])) {
+    while (b > a && etgIsSpace(header[b - 1])) {
         b -= 1;
     }
     if (a >= b) {
@@ -274,10 +274,30 @@ fn matchHeaderList(header: string, current: EntityTag, require_strong: bool) -> 
 
 /// Evaluates an `If-None-Match` header against `current` using RFC 9110 weak comparison.
 pub fn matchIfNoneMatch(header: string, current: EntityTag) -> bool {
-    return matchHeaderList(header, current, false);
+    return etgMatchHeaderList(header, current, false);
 }
 
 /// Evaluates an `If-Match` header against `current` using RFC 9110 strong comparison.
 pub fn matchIfMatch(header: string, current: EntityTag) -> bool {
-    return matchHeaderList(header, current, true);
+    return etgMatchHeaderList(header, current, true);
+}
+
+/// RFC 9110 strong comparison directly on raw ETag strings (`"abc"` vs `"abc"`).
+pub fn compareStrong(a: string, b: string): bool {
+    let pa = EntityTag { weak: false, tag: "" };
+    let pb = EntityTag { weak: false, tag: "" };
+    if (!parseEtag(a, &pa) || !parseEtag(b, &pb)) {
+        return false;
+    }
+    return strongEqual(pa, pb);
+}
+
+/// RFC 9110 weak comparison directly on raw ETag strings (ignoring `W/`).
+pub fn compareWeak(a: string, b: string): bool {
+    let pa = EntityTag { weak: false, tag: "" };
+    let pb = EntityTag { weak: false, tag: "" };
+    if (!parseEtag(a, &pa) || !parseEtag(b, &pb)) {
+        return false;
+    }
+    return weakEqual(pa, pb);
 }

@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-import { countByte } from "../../memchr-crate/src/index.cp";
+import { countByte } from "../../memchr/src/index.cp";
 export fn count(haystack: []u8, needle: u8): usize;
 export fn countFast(haystack: []u8, needle: u8): usize;
 export fn numChars(utf8_bytes: []u8): usize;

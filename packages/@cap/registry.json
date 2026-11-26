@@ -1964,7 +1964,7 @@
       "source_name": "p-limit",
       "source_repo": "https://github.com/sindresorhus/p-limit",
       "license": "MIT",
-      "cp_target": "@cap/p-limit-core",
+      "cp_target": "@cap/p-limit",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
@@ -2255,7 +2255,7 @@
       "source_name": "memchr",
       "source_repo": "https://github.com/BurntSushi/memchr",
       "license": "Unlicense OR MIT",
-      "cp_target": "@cap/memchr-crate",
+      "cp_target": "@cap/memchr",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
@@ -10780,6 +10780,68 @@
       "source_repo": "https://github.com/developit/mitt",
       "license": "MIT",
       "cp_target": "@cap/mitt",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-unicode-supported",
+      "source_repo": "https://github.com/sindresorhus/is-unicode-supported",
+      "license": "MIT",
+      "cp_target": "@cap/is-unicode-supported",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "widest-line",
+      "source_repo": "https://github.com/sindresorhus/widest-line",
+      "license": "MIT",
+      "cp_target": "@cap/widest-line",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "trim-newlines",
+      "source_repo": "https://github.com/sindresorhus/trim-newlines",
+      "license": "MIT",
+      "cp_target": "@cap/trim-newlines",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "normpath",
+      "source_repo": "https://github.com/dylni/normpath",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/normpath",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "strip-indent",
+      "source_repo": "https://github.com/sindresorhus/strip-indent",
+      "license": "MIT",
+      "cp_target": "@cap/strip-indent",
+      "kind": "package",
+      "aliases": [
+        "min-indent"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "redent",
+      "source_repo": "https://github.com/sindresorhus/redent",
+      "license": "MIT",
+      "cp_target": "@cap/redent",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

@@ -17,3 +17,4 @@ export fn memchrCount(needle: u8, haystack: &[]u8): usize;
 export fn memchrFindAll(needle: u8, haystack: &[]u8, out_offsets: []usize): usize;
 export fn memmemFind(haystack: &[]u8, needle: &[]u8): i64;
 export fn memmemRfind(haystack: &[]u8, needle: &[]u8): i64;
+export fn countByte(needle: u8, haystack: &[]u8): usize;
