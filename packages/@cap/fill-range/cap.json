@@ -1,0 +1,8 @@
+{
+  "name": "@cap/fill-range",
+  "version": "1.0.0",
+  "description": "Zero-heap numeric, alphabetic, stepped, and zero-padded range expansion engine (npm fill-range parity).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -391,3 +391,7 @@
 - `packages/@cap/pid/` & `cap/test/testCapPid.cp`: 工业级抗积分饱和 PID 控制器（6/6 PASS）。
 - `packages/@cap/kalman/` & `cap/test/testCapKalman.cp`: 1D/2D Joseph 稳定卡尔曼滤波器（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **375 条**高频映射（含 `schemars`/`event-listener`/`atomic-waker`/`env_logger` 去重直连）。
+
+## [2026-11-26] - Batch 47 纯 npm 超高下载 Top 10（2.39 亿 → 8359 万/周，交付 `@cap/fill-range` + 9 大 Web/TS 去重直连，总映射突破 **385 条**！）
+- `packages/@cap/fill-range/` & `cap/test/testCapFillRange.cp`: 对标 npm `fill-range`（2.26 亿/周），零堆数字/字母/步长/零填充区间展开（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **385 条**高频映射（含 `form-data`/`body-parser`/`sharp`/`deepmerge`/`marked`/`cors`/`pg`/`decamelize`/`jsonwebtoken` 9 大亿级 npm 包去重直连）。

@@ -3754,6 +3754,106 @@
       "kind": "package",
       "aliases": ["kfilter", "kalman"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "form-data",
+      "source_repo": "https://github.com/form-data/form-data",
+      "license": "MIT",
+      "cp_target": "@web/multipart",
+      "kind": "package",
+      "aliases": ["busboy", "multer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fill-range",
+      "source_repo": "https://github.com/jonschlinkert/fill-range",
+      "license": "MIT",
+      "cp_target": "@cap/fill-range",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "body-parser",
+      "source_repo": "https://github.com/expressjs/body-parser",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sharp",
+      "source_repo": "https://github.com/lovell/sharp",
+      "license": "Apache-2.0",
+      "cp_target": "cap:image",
+      "kind": "stdlib",
+      "aliases": ["jimp"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "deepmerge",
+      "source_repo": "https://github.com/TehShrike/deepmerge",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": ["klona"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "marked",
+      "source_repo": "https://github.com/markedjs/marked",
+      "license": "MIT",
+      "cp_target": "@cap/cmark",
+      "kind": "package",
+      "aliases": ["markdown-it", "remark"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cors",
+      "source_repo": "https://github.com/expressjs/cors",
+      "license": "MIT",
+      "cp_target": "@web/cors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg",
+      "source_repo": "https://github.com/brianc/node-postgres",
+      "license": "MIT",
+      "cp_target": "@web/db",
+      "kind": "package",
+      "aliases": ["mysql2", "better-sqlite3"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "decamelize",
+      "source_repo": "https://github.com/sindresorhus/decamelize",
+      "license": "MIT",
+      "cp_target": "cap:string",
+      "kind": "stdlib",
+      "aliases": ["kebab-case"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jsonwebtoken",
+      "source_repo": "https://github.com/auth0/node-jsonwebtoken",
+      "license": "MIT",
+      "cp_target": "@web/jwt",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

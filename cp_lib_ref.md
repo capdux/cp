@@ -441,3 +441,4 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/spline`** | `packages/@cap/spline` | 对标 Rust `splines` — Thomas 算法 O(N) 自然三次样条插值与求导、Catmull-Rom 与二次/三次 Bezier |
 | **`@cap/pid`** | `packages/@cap/pid` | 对标 Rust `pid` — 工业闭环 PID 控制器（抗积分饱和、Derivative-on-Measurement 与输出限幅） |
 | **`@cap/kalman`** | `packages/@cap/kalman` | 对标 Rust `kalman-filters` — 零堆 1D 标量与 2D 恒速 Joseph 稳定协方差卡尔曼滤波器 |
+| **`@cap/fill-range`** | `packages/@cap/fill-range` | 对标 npm `fill-range`（2.26 亿/周）— 零堆数字/字母/步长/零填充区间展开引擎（`01..05`/`a..z`/`-5..5..2`） |

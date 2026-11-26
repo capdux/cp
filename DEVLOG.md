@@ -204,3 +204,6 @@
 
 ## 2026-11-26: Batch 46 历史里程碑：突破 **250 个线上官方 `.cap` 包 + 375 条生态映射**！
 - 交付图形/空间/控制六大引擎 `@cap/glam`（4 亿+，6/6）、`@cap/kd-tree`（6/6）、`@cap/easing`（6/6）、`@cap/spline`（6/6）、`@cap/pid`（6/6）、`@cap/kalman`（6/6），去重直连 `schemars`/`event-listener`/`atomic-waker`/`env_logger`，`https://capdux.org` 正式突破 **250 个官方 `.cap` 包**，总映射突破 **375 条**！
+
+## 2026-11-26: Batch 47 全面切回 npm 超高下载榜（2.39 亿 → 8359 万/周），总映射突破 **385 条**！
+- 响应用户反馈平衡 npm 与 crates.io 吸收节奏：Batch 47 严格按 `api.npmjs.org` 真实周下载量单调递减吸收 `form-data`（2.39 亿/周）→ `jsonwebtoken`（8359 万/周），交付 `@cap/fill-range`（2.26 亿/周，6/6 PASS）并去重直连 9 大亿级 npm 包至 `@web/*`/`@cap/*`/`cap:*`，总映射突破 **385 条**！
