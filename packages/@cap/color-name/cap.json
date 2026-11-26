@@ -1,0 +1,9 @@
+{
+  "name": "@cap/color-name",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation W3C CSS Color Level 4 named color table (148 colors) with O(log n) binary lookup in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["color-name", "css", "color", "rgb", "hex", "w3c", "zero-alloc"]
+}

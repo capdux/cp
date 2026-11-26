@@ -811,3 +811,13 @@
 - `packages/@cap/kind-of/` & `cap/test/testCapKindOf.cp`: npm Top 90 `kind-of`（6/6 PASS）。
 - `packages/@cap/decamelize/` & `cap/test/testCapDecamelize.cp`: npm Top 75 `decamelize`（6/6 PASS）。
 - **第 10 个历史旧包解耦重构**：`packages/@cap/http-errors/` 声明依赖并导入 `@cap/toidentifier` 提供 `errorClassName`，回归 6/6 PASS。
+
+### 2026-11-27 (Batch 92 — **818 映射 409/409 绝对对称！** 7 个全新零堆包全部 6/6 PASS + 3 路子智能体全员完成首轮 6 包轮换重建)
+- `packages/@cap/x509-cert/` & `cap/test/testCapX509Cert.cp`: crates.io `x509-cert`（4 包复用 `@cap/der-asn1`+`@cap/const-oid`+`@cap/spki`+`@cap/pem-rfc7468`，6/6 PASS）。
+- `packages/@cap/pkcs1/` & `cap/test/testCapPkcs1.cp`: crates.io `pkcs1`（3 包复用 `@cap/der-asn1`+`@cap/pem-rfc7468`+`@cap/subtle-ct`，6/6 PASS）。
+- `packages/@cap/block-padding/` & `cap/test/testCapBlockPadding.cp`: crates.io `block-padding`/`cipher`（复用 `@cap/subtle-ct` 恒定时间 PKCS#7 去填充，6/6 PASS）。
+- `packages/@cap/ecdsa-sig/` & `cap/test/testCapEcdsaSig.cp`: crates.io `ecdsa`/`signature`（复用 `@cap/der-asn1`+`@cap/subtle-ct`，RFC 6979 P-256 向量 & BIP-62 Low-S，6/6 PASS）。
+- `packages/@cap/color-name/` & `cap/test/testCapColorName.cp`: npm Top 30 `color-name`（148 个 W3C CSS4 命名色 O(log n)，6/6 PASS）。
+- `packages/@cap/escalade/` & `cap/test/testCapEscalade.cp`: npm Top 95 `escalade`（复用 `@cap/normalize-path`，6/6 PASS）。
+- `packages/@cap/methods/` & `cap/test/testCapMethods.cp`: npm Top 65 `methods`（34 个 HTTP/WebDAV 方法，6/6 PASS）。
+- `packages/@cap/registry.json`: 推进至 **818 条**双生态映射（**npm=409 / crates.io=409 绝对 1:1 对称**，官方 `.cap` 包 538+）。

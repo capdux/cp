@@ -1,0 +1,22 @@
+# @cap/x509-cert
+
+Pure CP, zero-allocation RFC 5280 X.509 v1/v2/v3 Certificate DER & PEM parser and encoder (parity with RustCrypto `x509-cert`).
+
+Composes 4 official CP PKI packages with zero code duplication:
+- `@cap/der-asn1` for strict ITU-T X.690 DER reading/writing
+- `@cap/const-oid` for DN attribute OIDs (`CN`, `O`, `C`)
+- `@cap/spki` for `AlgorithmIdentifier` & `SubjectPublicKeyInfo`
+- `@cap/pem-rfc7468` for `CERTIFICATE` PEM encoding/decoding
+
+## API
+
+- `X509Validity`: `fromStrs(not_before, not_after)` (UTCTime `0x17` & GeneralizedTime `0x18`)
+- `X509Name`: `init(cn, org, country)`, `eq(other)`
+- `X509Certificate`: `version` (1/2/3), `serial`, `signature_alg`, `issuer`, `validity`, `subject`, `spki`, `signature`
+- `encodeX509Der(cert, out): i64` / `decodeX509Der(der): X509DecodeResult`
+- `encodeX509Pem(cert, crlf, out): i64` / `decodeX509Pem(pem): X509DecodeResult`
+- `isSelfSigned(cert): bool`
+
+## License
+
+MIT

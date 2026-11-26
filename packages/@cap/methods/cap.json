@@ -1,0 +1,9 @@
+{
+  "name": "@cap/methods",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "HTTP methods supported by RFC 9110 / WebDAV with safe/idempotent/cacheable predicates (clean-room CP implementation of npm methods)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@cap/escalade",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap ancestor directory path walker (clean-room CP implementation of npm escalade)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/normalize-path": "1.0.0"
+  }
+}

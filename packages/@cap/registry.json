@@ -9882,6 +9882,75 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "escalade",
+      "source_repo": "https://github.com/lukeed/escalade",
+      "license": "MIT",
+      "cp_target": "@cap/escalade",
+      "kind": "package",
+      "aliases": [
+        "find-up",
+        "pkg-dir"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "methods",
+      "source_repo": "https://github.com/jshttp/methods",
+      "license": "MIT",
+      "cp_target": "@cap/methods",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "x509-cert",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/x509-cert",
+      "kind": "package",
+      "aliases": [
+        "x509-parser"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pkcs1",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT",
+      "cp_target": "@cap/pkcs1",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "block-padding",
+      "source_repo": "https://github.com/RustCrypto/utils",
+      "license": "MIT",
+      "cp_target": "@cap/block-padding",
+      "kind": "package",
+      "aliases": [
+        "cipher"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ecdsa",
+      "source_repo": "https://github.com/RustCrypto/signatures",
+      "license": "MIT",
+      "cp_target": "@cap/ecdsa-sig",
+      "kind": "package",
+      "aliases": [
+        "signature"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -733,3 +733,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/supports-color`** | `packages/@cap/supports-color` | 对标 npm Top 20 `supports-color` (3 亿+/周，跨包复用 `@cap/has-flag`) — 终端 0/1/2/3 级色彩能力探测 |
 | **`@cap/kind-of`** | `packages/@cap/kind-of` | 对标 npm Top 90 `kind-of` (1.2 亿+/周，含 `isobject`/`is-plain-object`) — 零堆单遍值类型分类器 |
 | **`@cap/decamelize`** | `packages/@cap/decamelize` | 对标 npm Top 75 `decamelize` (1.2 亿+/周) — 零堆驼峰转分隔符与缩写保留 |
+| **`@cap/x509-cert`** | `packages/@cap/x509-cert` | 对标 crates.io `x509-cert` (2.5 亿+，4 包复用 `@cap/der-asn1`+`@cap/const-oid`+`@cap/spki`+`@cap/pem-rfc7468`) — RFC 5280 X.509 v3 证书 DER/PEM 编解码 |
+| **`@cap/pkcs1`** | `packages/@cap/pkcs1` | 对标 crates.io `pkcs1` (2.3 亿+，3 包复用 `@cap/der-asn1`+`@cap/pem-rfc7468`+`@cap/subtle-ct`) — RFC 8017 RSA 公私钥 DER/PEM 与安全擦除 |
+| **`@cap/block-padding`** | `packages/@cap/block-padding` | 对标 crates.io `block-padding`/`cipher` (3 亿+，跨包复用 `@cap/subtle-ct`) — 恒定时间 PKCS#7/ISO7816/X9.23 填充与 128-bit CTR 计数器 |
+| **`@cap/ecdsa-sig`** | `packages/@cap/ecdsa-sig` | 对标 crates.io `ecdsa`/`signature` (2.5 亿+，跨包复用 `@cap/der-asn1`+`@cap/subtle-ct`) — ECDSA P-256/P-384 固定/DER 签名转换与 BIP-62 Low-S 归一化 |
+| **`@cap/color-name`** | `packages/@cap/color-name` | 对标 npm Top 30 `color-name` (3 亿+/周) — 全部 148 个 W3C CSS4 命名色 O(log n) 双向查表 |
+| **`@cap/escalade`** | `packages/@cap/escalade` | 对标 npm Top 95 `escalade` (1.2 亿+/周，跨包复用 `@cap/normalize-path`) — 跨平台零堆父目录向上遍历器 |
+| **`@cap/methods`** | `packages/@cap/methods` | 对标 npm Top 65 `methods` (1.2 亿+/周) — 34 个 RFC 9110/WebDAV HTTP 方法与安全/幂等/可缓存谓词 |
