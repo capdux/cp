@@ -106,7 +106,7 @@ pub struct PaxTarWriter {
         const init_cap: usize = 4096;
         const raw: [*]u8 = @alloc(init_cap);
         return PaxTarWriter {
-            buf: raw[0..init_cap],
+            buf: unsafe { raw[0..init_cap] },
             len: 0,
         };
     }

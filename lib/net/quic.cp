@@ -314,7 +314,7 @@ pub class AckFrame {
     pub largest_acked: u64,
     pub ack_delay: u64,
     pub first_ack_range: u64,
-    pub ranges: []AckRange = @constCast(&EMPTY_ACK_RANGES),
+    pub ranges: []AckRange = unsafe { @constCast(&EMPTY_ACK_RANGES) },
 }
 
 /// RFC 9000 §19.6 CRYPTO Frame.

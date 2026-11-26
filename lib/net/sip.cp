@@ -116,7 +116,7 @@ pub class SipMessage {
     pub start_line: SipStartLine,
     pub headers: []SipHeader,
     pub body: []const u8,
-    owned_values: [][]u8 = @constCast(&EMPTY_U8_SLICES),
+    owned_values: [][]u8 = unsafe { @constCast(&EMPTY_U8_SLICES) },
 
     /// Releases all heap-allocated header slices and folded-header buffers owned by this message.
     pub fn deinit(*_, allocator: std.mem.Allocator) {

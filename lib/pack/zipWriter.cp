@@ -57,9 +57,9 @@ pub struct ZipWriter {
         const lraw: [*]u8 = @alloc(init_local_cap);
         const craw: [*]u8 = @alloc(init_cd_cap);
         return ZipWriter {
-            local_buf: lraw[0..init_local_cap],
+            local_buf: unsafe { lraw[0..init_local_cap] },
             local_len: 0,
-            cd_buf: craw[0..init_cd_cap],
+            cd_buf: unsafe { craw[0..init_cd_cap] },
             cd_len: 0,
             entry_count: 0,
             comment: "",
