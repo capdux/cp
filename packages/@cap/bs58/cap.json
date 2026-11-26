@@ -1,0 +1,8 @@
+{
+  "name": "@cap/bs58",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Base58 encoder/decoder supporting Bitcoin, Ripple, and Flickr alphabets with leading-zero preservation (Rust bs58 / npm bs58 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

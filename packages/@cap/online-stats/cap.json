@@ -1,0 +1,8 @@
+{
+  "name": "@cap/online-stats",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Welford streaming statistics, Chan parallel merge, OLS linear regression, and linear-interpolated percentiles for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

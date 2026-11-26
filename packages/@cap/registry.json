@@ -2654,6 +2654,106 @@
       "kind": "package",
       "aliases": ["pcg32", "oorandom"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bs58",
+      "source_repo": "https://github.com/Nullus157/bs58-rs",
+      "license": "MIT",
+      "cp_target": "@cap/bs58",
+      "kind": "package",
+      "aliases": ["base58", "bs58check"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unsigned-varint",
+      "source_repo": "https://github.com/paritytech/unsigned-varint",
+      "license": "MIT",
+      "cp_target": "@cap/varint",
+      "kind": "package",
+      "aliases": ["leb128", "integer-encoding", "varint"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "average",
+      "source_repo": "https://github.com/vks/average",
+      "license": "MIT",
+      "cp_target": "@cap/online-stats",
+      "kind": "package",
+      "aliases": ["statrs", "welford", "simple-statistics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "z85",
+      "source_repo": "https://github.com/murar8/z85",
+      "license": "MIT",
+      "cp_target": "@cap/base85",
+      "kind": "package",
+      "aliases": ["ascii85", "base85"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "governor",
+      "source_repo": "https://github.com/boinkor-net/governor",
+      "license": "MIT",
+      "cp_target": "@cap/governor",
+      "kind": "package",
+      "aliases": ["rate-limiter-flexible", "gcra"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "backoff",
+      "source_repo": "https://github.com/ihrwein/backoff",
+      "license": "MIT",
+      "cp_target": "@cap/backoff",
+      "kind": "package",
+      "aliases": ["exponential-backoff", "backo2"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "yansi",
+      "source_repo": "https://github.com/SergioBenitez/yansi",
+      "license": "MIT",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": ["nu-ansi-term", "termcolor"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tinytemplate",
+      "source_repo": "https://github.com/bheisler/TinyTemplate",
+      "license": "MIT",
+      "cp_target": "@cap/template",
+      "kind": "package",
+      "aliases": ["handlebars-rs", "tera"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pbkdf2",
+      "source_repo": "https://github.com/RustCrypto/password-hashes",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["ed25519", "ecdsa", "aead"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jiff",
+      "source_repo": "https://github.com/BurntSushi/jiff",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["temporal"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

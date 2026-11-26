@@ -1,0 +1,8 @@
+{
+  "name": "@cap/governor",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic GCRA (Generic Cell Rate Algorithm) and Token Bucket rate limiters for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

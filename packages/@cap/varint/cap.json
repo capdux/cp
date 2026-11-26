@@ -1,0 +1,8 @@
+{
+  "name": "@cap/varint",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf ZigZag, and QUIC RFC 9000 varint) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

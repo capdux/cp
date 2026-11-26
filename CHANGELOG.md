@@ -297,3 +297,12 @@
 - `packages/@cap/utf8-valid/` & `cap/test/testCapUtf8Valid.cp`: RFC 3629 严格 UTF-8 验证与 `U+FFFD` 有损修复（对标 `simdutf8` 3.30 亿，6/6 PASS）。
 - `packages/@cap/pcg/` & `cap/test/testCapPcg.cp`: PCG32 独立流 PRNG 与 O(log N) 跳跃（对标 `rand_pcg` 2.95 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **265 条**高频映射（含 `mime_guess`/`zip`/`brotli`/`twox-hash`/`tar`/`csv` 去重直连）。
+
+## [2026-11-26] - Batch 36 单批交付 6 大 Rust 独立 `@cap` 包（`@cap/bs58`, `@cap/varint`, `@cap/online-stats`, `@cap/base85`, `@cap/governor`, `@cap/backoff`），总映射突破 275 条
+- `packages/@cap/bs58/` & `cap/test/testCapBs58.cp`: Bitcoin/Ripple/Flickr Base58 零堆编解码（6/6 PASS）。
+- `packages/@cap/varint/` & `cap/test/testCapVarint.cp`: ULEB128/SLEB128/ZigZag/QUIC RFC 9000 变长整数（6/6 PASS）。
+- `packages/@cap/online-stats/` & `cap/test/testCapOnlineStats.cp`: Welford 流式方差 + Chan 并行合并 + 线性回归 + 分位数（6/6 PASS）。
+- `packages/@cap/base85/` & `cap/test/testCapBase85.cp`: ZeroMQ Z85 RFC 32 与 Adobe Ascii85 编解码（6/6 PASS）。
+- `packages/@cap/governor/` & `cap/test/testCapGovernor.cp`: GCRA 与令牌桶确定性限流器（6/6 PASS）。
+- `packages/@cap/backoff/` & `cap/test/testCapBackoff.cp`: 指数/线性退避与 AWS 抖动算法（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **275 条**高频映射（含 `yansi`/`tinytemplate`/`pbkdf2`/`jiff` 去重直连）。

@@ -170,3 +170,6 @@
 
 ## 2026-11-26: Batch 35 严格单调递减完成 crates.io 3.81 亿 → 2.95 亿 Top 10（总映射突破 265 条！）
 - 交付 `@cap/multimap`（6/6）、`@cap/utf8-path`（6/6）、`@cap/utf8-valid`（6/6）、`@cap/pcg`（6/6），去重直连 `mime_guess`/`zip`/`brotli`/`twox-hash`/`tar`/`csv`，总映射达 **265 条**，线上官方包冲破 **190 个**！
+
+## 2026-11-26: Batch 36 单批交付 6 大 Rust 独立包，总映射突破 275 条，线上包数达 196（距 200 包仅 4 步！）
+- 交付 `@cap/bs58`（6/6）、`@cap/varint`（6/6）、`@cap/online-stats`（6/6）、`@cap/base85`（6/6）、`@cap/governor`（6/6）、`@cap/backoff`（6/6），去重直连 `yansi`/`tinytemplate`/`pbkdf2`/`jiff`，总映射达 **275 条**！

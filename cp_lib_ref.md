@@ -380,3 +380,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/utf8-path`** | `packages/@cap/utf8-path` | 对标 Rust `camino`（3.41 亿）— 零堆 UTF-8 路径规范化、相对路径与防路径穿越沙箱 `safeJoin` |
 | **`@cap/utf8-valid`** | `packages/@cap/utf8-valid` | 对标 Rust `utf-8`/`simdutf8`（3.31 亿）— RFC 3629 严格 UTF-8 验证、首错定位、`U+FFFD` 修复与 UTF-16 长度 |
 | **`@cap/pcg`** | `packages/@cap/pcg` | 对标 Rust `rand_pcg`（2.95 亿）— PCG32 `XSH-RR` 独立流伪随机数与 O(log N) 跳跃 `advance`（比特精确） |
+| **`@cap/bs58`** | `packages/@cap/bs58` | 对标 Rust/npm `bs58` — Bitcoin/Ripple/Flickr 三字母表零堆 Base58 编解码（严格保留前导零） |
+| **`@cap/varint`** | `packages/@cap/varint` | 对标 Rust `unsigned-varint`/`leb128` — ULEB128 / SLEB128 / ZigZag / QUIC RFC 9000 四合一变长整数编解码 |
+| **`@cap/online-stats`** | `packages/@cap/online-stats` | 对标 Rust `average`/`criterion` — Welford 流式方差、Chan 并行合并、最小二乘线性回归与 P50/P90/P95/P99 分位数 |
+| **`@cap/base85`** | `packages/@cap/base85` | 对标 Rust `z85`/`ascii85` — ZeroMQ Z85 (RFC 32) 与 Adobe Ascii85 (`z` 压缩与 `<~...~>`) 零堆编解码 |
+| **`@cap/governor`** | `packages/@cap/governor` | 对标 Rust `governor` — GCRA 单状态限流器与浮点令牌桶 `TokenBucket`（零系统时钟依赖） |
+| **`@cap/backoff`** | `packages/@cap/backoff` | 对标 Rust `backoff` — 指数/线性退避与 AWS Full/Equal/Decorrelated 抖动算法（防惊群效应） |
