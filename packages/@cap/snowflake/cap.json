@@ -1,0 +1,8 @@
+{
+  "name": "@cap/snowflake",
+  "version": "1.0.0",
+  "description": "Zero-heap 64-bit Twitter/Discord Snowflake distributed ID generator, decomposer, clock-rollback guard, and decimal formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

@@ -124,8 +124,8 @@
       "source_name": "ulid",
       "source_repo": "https://github.com/dylanhart/ulid-rs",
       "license": "MIT",
-      "cp_target": "cap:ulid",
-      "kind": "stdlib",
+      "cp_target": "@cap/ulid",
+      "kind": "package",
       "aliases": [
         "ulid-npm"
       ],
@@ -1559,8 +1559,8 @@
       "source_name": "ulid",
       "source_repo": "https://github.com/ulid/javascript",
       "license": "MIT",
-      "cp_target": "cap:ulid",
-      "kind": "stdlib",
+      "cp_target": "@cap/ulid",
+      "kind": "package",
       "aliases": [
         "ulidx",
         "ulid-rs"
@@ -2330,8 +2330,8 @@
       "source_name": "bitflags",
       "source_repo": "https://github.com/bitflags/bitflags",
       "license": "MIT",
-      "cp_target": "cap:ds",
-      "kind": "stdlib",
+      "cp_target": "@cap/bitflags",
+      "kind": "package",
       "aliases": [
         "enumflags2"
       ],
@@ -7253,6 +7253,128 @@
       "cp_target": "@cap/word-count",
       "kind": "package",
       "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "uuidv7",
+      "source_repo": "https://github.com/LiosK/uuidv7",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/uuid-v7",
+      "kind": "package",
+      "aliases": [
+        "uuid-v7"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bitfield",
+      "source_repo": "https://github.com/fb55/bitfield",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/bitflags",
+      "kind": "package",
+      "aliases": [
+        "bitflags"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "morse-decoder",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/morse-code",
+      "kind": "package",
+      "aliases": [
+        "morse"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ulidx",
+      "source_repo": "https://github.com/perry-mitchell/ulidx",
+      "license": "MIT",
+      "cp_target": "@cap/ulid",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@sapphire/snowflake",
+      "source_repo": "https://github.com/sapphiredev/utilities",
+      "license": "MIT",
+      "cp_target": "@cap/snowflake",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "uuid7",
+      "source_repo": "https://github.com/LiosK/uuid7-rs",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/uuid-v7",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sonyflake",
+      "source_repo": "https://github.com/sony/sonyflake",
+      "license": "MIT",
+      "cp_target": "@cap/snowflake",
+      "kind": "package",
+      "aliases": [
+        "snowflaked"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "morse",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/morse-code",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "enumflags2",
+      "source_repo": "https://github.com/meithecatte/enumflags2",
+      "license": "MIT",
+      "cp_target": "@cap/bitflags",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hexdump-nodejs",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/hex-dump",
+      "kind": "package",
+      "aliases": [
+        "buffer-hexdump"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "pretty-hex",
+      "source_repo": "https://github.com/wolandr/pretty-hex",
+      "license": "MIT",
+      "cp_target": "@cap/hex-dump",
+      "kind": "package",
+      "aliases": [
+        "hexplay"
+      ],
       "absorbed_at": "2026-11-26"
     }
   ]

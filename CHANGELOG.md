@@ -586,3 +586,11 @@
 - `packages/@cap/roman-num/` & `cap/test/testCapRomanNum.cp`: 1..3999 严格规范罗马数字双向编解码（6/6 PASS）。
 - `packages/@cap/pad-str/` & `cap/test/testCapPadStr.cp`: UTF-8 码点感知字符串对齐填充与重复（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **589 条**双生态高频映射（**npm=294 / crates.io=295** 绝对 1:1 均衡）。
+
+## [2026-11-26] - Batch 69 正式突破 **600 双生态映射里程碑（npm=300 / crates.io=300 绝对 1:1 对称！）** — 交付分布式 ID 三巨头与 Bitflags 五件套（`@cap/ulid`, `@cap/uuid-v7`, `@cap/snowflake`, `@cap/bitflags`, `@cap/morse-code`）！
+- `packages/@cap/ulid/` & `cap/test/testCapUlid.cp`: ULID 128-bit Crockford Base32 编解码与单调递增（6/6 PASS）。
+- `packages/@cap/uuid-v7/` & `cap/test/testCapUuidV7.cp`: RFC 9562 UUIDv7 编解码与时间戳提取（6/6 PASS）。
+- `packages/@cap/snowflake/` & `cap/test/testCapSnowflake.cp`: 64-bit Twitter/Discord Snowflake 分布式 ID 生成与反解（6/6 PASS）。
+- `packages/@cap/bitflags/` & `cap/test/testCapBitflags.cp`: 64-bit 标志位集合代数与位运算（6/6 PASS）。
+- `packages/@cap/morse-code/` & `cap/test/testCapMorseCode.cp`: ITU-R M.1677 国际摩尔斯电码编解码（6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **600 条**双生态高频映射（**npm=300 / crates.io=300** 完美对称）。

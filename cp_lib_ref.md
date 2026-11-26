@@ -570,3 +570,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/word-count`** | `packages/@cap/word-count` | 对标 npm `reading-time` / Rust `words-count` — 中英日韩多语言字数/词数/行数统计与阅读时长估算 |
 | **`@cap/roman-num`** | `packages/@cap/roman-num` | 对标 npm `romans` / Rust `roman` — 严格规范罗马数字 (`1..3999`) 双向编解码（全范围往返验证） |
 | **`@cap/pad-str`** | `packages/@cap/pad-str` | 对标 npm `pad` / `left-pad` / Rust `pad` — UTF-8 码点感知左/右/居中对齐填充与重复拼接 |
+| **`@cap/ulid`** | `packages/@cap/ulid` | 对标 npm/Rust `ulid` — 128-bit 48-bit ms 时间戳 Crockford Base32 26 字符 ULID 编解码与同毫秒单调递增 |
+| **`@cap/uuid-v7`** | `packages/@cap/uuid-v7` | 对标 npm `uuidv7` / Rust `uuid7` — RFC 9562 UUIDv7 48-bit 时间戳排序 UUID 编解码与时间戳提取 |
+| **`@cap/snowflake`** | `packages/@cap/snowflake` | 对标 npm `snowflake-id` / Rust `sonyflake` — 64-bit Twitter/Discord Snowflake 分布式 ID 生成、回拨检测与反解 |
+| **`@cap/bitflags`** | `packages/@cap/bitflags` | 对标 Rust `bitflags` / `enumflags2` — 零开销 64-bit 标志位集合代数（`contains`/`intersects`/`difference`/popcount） |
+| **`@cap/morse-code`** | `packages/@cap/morse-code` | 对标 npm `morse-decoder` / Rust `morse` — ITU-R M.1677 国际摩尔斯电码零堆编解码 |

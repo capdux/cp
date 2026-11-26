@@ -1,0 +1,9 @@
+{
+  "name": "@cap/hex-dump",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation canonical hexdump -C 16-byte-per-line binary debugger, spaced hex encoder, and first-diff locator in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["hexdump", "hex", "pretty-hex", "binary", "debug", "dump", "zero-alloc"]
+}

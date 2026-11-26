@@ -1,0 +1,9 @@
+{
+  "name": "@cap/uuid-v7",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 9562 UUIDv7 constructor, 36-byte formatter, parser, timestamp extractor, and comparator in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["uuid", "uuidv7", "rfc9562", "id", "timestamp", "sortable", "zero-alloc"]
+}
