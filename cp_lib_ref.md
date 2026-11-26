@@ -986,3 +986,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/path-slash`** | `packages/@cap/path-slash` | 对标 crates.io `path-slash` — POSIX `/` 与 Windows `\` 路径零堆双向转换与 UNC/盘符归一化 |
 | **`@cap/bytesize`** | `packages/@cap/bytesize` | 对标 crates.io `bytesize` — 纯整数 SI/IEC 字节容量常量、`parseByteSize` 与 `formatSi`/`formatIec` |
 | **`@cap/shellexpand`** | `packages/@cap/shellexpand` | 对标 crates.io `shellexpand` v3 — 零堆 `~` 家目录与 `$VAR`/`${VAR:-default}`/`$$` Shell 变量展开 |
+| **`@cap/version-compare`** | `packages/@cap/version-compare` | 对标 crates.io `version-compare` — 任意段数版本串比较、`VersionCmp` 与操作符 `satisfies` |
+| **`@cap/http-range-header`** | `packages/@cap/http-range-header` | 对标 crates.io `http-range-header` — RFC 9110 `Range: bytes=...` 解析、边界校验与 `Content-Range` 格式化 |
+| **`@cap/prepend-http`** | `packages/@cap/prepend-http` | 对标 npm `prepend-http` v4 (**2000 万+/周**) — 安全补齐 URL `https://`/`http://` 协议头 |
+| **`@cap/normalize-url`** | `packages/@cap/normalize-url` | 对标 npm `normalize-url` (**2500 万+/周**, 复用 `@cap/prepend-http`) — URL 协议/主机小写、去默认端口与路径归一化 |
+| **`@cap/clean-stack`** | `packages/@cap/clean-stack` | 对标 npm `clean-stack` v5 (**5000 万+/周**) — 过滤运行时内部帧、`file://` 剥离与 `base_path`/`pretty` 路径归一化 |

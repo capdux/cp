@@ -1,0 +1,23 @@
+{
+  "name": "@cap/prepend-http",
+  "ver": "1.0.0",
+  "description": "Zero-allocation utility to prepend https:// or http:// to humanized URLs (npm prepend-http v4 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "prepend-http",
+    "url",
+    "http",
+    "https",
+    "protocol",
+    "scheme",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "prepend-http",
+    "repo": "https://github.com/sindresorhus/prepend-http",
+    "license": "MIT"
+  }
+}

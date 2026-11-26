@@ -1,0 +1,26 @@
+{
+  "name": "@cap/normalize-url",
+  "ver": "1.0.0",
+  "description": "Zero-allocation URL normalization utility (npm normalize-url parity) composing @cap/prepend-http for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "normalize-url",
+    "url",
+    "normalize",
+    "http",
+    "https",
+    "canonical",
+    "zero-alloc"
+  ],
+  "dep": {
+    "@cap/prepend-http": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "normalize-url",
+    "repo": "https://github.com/sindresorhus/normalize-url",
+    "license": "MIT"
+  }
+}

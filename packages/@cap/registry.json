@@ -10895,6 +10895,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "version-compare",
+      "source_repo": "https://github.com/timvisee/version-compare",
+      "license": "MIT",
+      "cp_target": "@cap/version-compare",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "http-range-header",
+      "source_repo": "https://github.com/MarcusGrass/http-range-header",
+      "license": "MIT",
+      "cp_target": "@cap/http-range-header",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "prepend-http",
+      "source_repo": "https://github.com/sindresorhus/prepend-http",
+      "license": "MIT",
+      "cp_target": "@cap/prepend-http",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "normalize-url",
+      "source_repo": "https://github.com/sindresorhus/normalize-url",
+      "license": "MIT",
+      "cp_target": "@cap/normalize-url",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "clean-stack",
+      "source_repo": "https://github.com/sindresorhus/clean-stack",
+      "license": "MIT",
+      "cp_target": "@cap/clean-stack",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

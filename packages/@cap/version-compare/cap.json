@@ -1,0 +1,22 @@
+{
+  "name": "@cap/version-compare",
+  "ver": "1.0.0",
+  "desc": "Zero-heap flexible version string comparison (multi-segment, v-prefix, prerelease ordering, operator matching) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "version-compare",
+    "version",
+    "semver",
+    "compare",
+    "prerelease",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "version-compare",
+    "repo": "https://github.com/timvisee/version-compare",
+    "license": "MIT"
+  }
+}

@@ -1203,3 +1203,11 @@
 - `packages/@cap/bytesize/` & `cap/test/testCapBytesize.cp`: crates.io `bytesize`（纯整数 SI/IEC 字节解析与格式化，6/6 PASS）。
 - `packages/@cap/shellexpand/` & `cap/test/testCapShellexpand.cp`: crates.io `shellexpand` v3（零堆 `~` 与 `$VAR`/`${VAR:-default}` 展开，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N15 满 6 包光荣轮换为 Worker N16。
+
+### 2026-11-27 (Batch 135 — **新增 5 大零重复 Top-700 包：3 npm + 2 crates.io，30/30 单测 100% PASS**)
+- `packages/@cap/version-compare/` & `cap/test/testCapVersionCompare.cp`: crates.io `version-compare`（多段版本比较与 `satisfies`，6/6 PASS）。
+- `packages/@cap/http-range-header/` & `cap/test/testCapHttpRangeHeader.cp`: crates.io `http-range-header`（RFC 9110 `Range` 解析与校验，6/6 PASS）。
+- `packages/@cap/prepend-http/` & `cap/test/testCapPrependHttp.cp`: npm `prepend-http` v4（2000 万+/周，6/6 PASS）。
+- `packages/@cap/normalize-url/` & `cap/test/testCapNormalizeUrl.cp`: npm `normalize-url`（2500 万+/周，复用 `@cap/prepend-http`，6/6 PASS）。
+- `packages/@cap/clean-stack/` & `cap/test/testCapCleanStack.cp`: npm `clean-stack` v5（5000 万+/周，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker C14 满 6 包光荣轮换为 Worker C15。
