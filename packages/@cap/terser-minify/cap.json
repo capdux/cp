@@ -1,0 +1,9 @@
+{
+  "name": "@cap/terser-minify",
+  "ver": "1.0.0",
+  "description": "Zero-allocation lexer-safe JS/TS/CSS code minifier (npm terser parity) preserving strings, templates, legal comments, keyword spacing, and unary operator separation for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": ["terser", "minify", "minifier", "js", "ts", "css", "compressor", "zero-alloc"]
+}

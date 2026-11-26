@@ -770,3 +770,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ryu-float`** | `packages/@cap/ryu-float` | 对标 crates.io #45 `ryu` (15 亿+，跨包复用 `@cap/itoa`) — 最短精确 f64/f32 十进制与定点/科学计数法格式化 |
 | **`@cap/bytes-buf`** | `packages/@cap/bytes-buf` | 对标 crates.io #25 `bytes` (18 亿+) — 零拷贝 `BytesReader` & 固定栈 `BytesMut` 大/小端读写游标 |
 | **`@cap/smallvec`** | `packages/@cap/smallvec` | 对标 crates.io #30 `smallvec` (17 亿+) — 零堆内联栈向量 (`SmallVecU64`/`SmallVecU8`) 支持 `swapRemove`/`dedup` |
+| **`@cap/hashbrown`** | `packages/@cap/hashbrown` | 对标 crates.io **全站 #1** `hashbrown` (32.6 亿+，跨包复用 `@cap/fnv-hash`) — SwissTable H2 控制字节零堆哈希表与集合 |
+| **`@cap/indexmap`** | `packages/@cap/indexmap` | 对标 crates.io #11 `indexmap` (19.75 亿+，跨包复用 `@cap/fnv-hash`) — 密集保序数组 + 开放定址桶 O(1) 保序哈希表 |
+| **`@cap/memchr`** | `packages/@cap/memchr` | 对标 crates.io #16 `memchr` (18.26 亿+) — SWAR 8 字节并行掩码高速字节/多字节/子串正反向搜索引擎 |
+| **`@cap/terser-minify`** | `packages/@cap/terser-minify` | 对标 npm `terser` — 单遍词法安全 JS/TS/CSS 压缩器（保留版权头与字符串/模板字面量） |
+| **`@cap/prettier-fmt`** | `packages/@cap/prettier-fmt` | 对标 npm `prettier` — 零堆 JSON/CSS 代码美化格式化器 |
+| **`@cap/change-case`** | `packages/@cap/change-case` | 对标 npm Top 110 `change-case` v5 (8000 万+/周，跨包复用 `@cap/camelcase`+`@cap/decamelize`) — 12 种命名风格全量转换 |

@@ -385,8 +385,8 @@
       "source_name": "change-case",
       "source_repo": "https://github.com/blakeembrey/change-case",
       "license": "MIT",
-      "cp_target": "cap:text",
-      "kind": "stdlib",
+      "cp_target": "@cap/change-case",
+      "kind": "package",
       "aliases": [
         "camelcase",
         "heck",
@@ -2306,8 +2306,8 @@
       "source_name": "hashbrown",
       "source_repo": "https://github.com/rust-lang/hashbrown",
       "license": "MIT",
-      "cp_target": "cap:ds",
-      "kind": "stdlib",
+      "cp_target": "@cap/hashbrown",
+      "kind": "package",
       "aliases": [
         "swisstable"
       ],
@@ -2367,8 +2367,8 @@
       "source_name": "indexmap",
       "source_repo": "https://github.com/indexmap-rs/indexmap",
       "license": "MIT",
-      "cp_target": "cap:collections",
-      "kind": "stdlib",
+      "cp_target": "@cap/indexmap",
+      "kind": "package",
       "aliases": [
         "linked-hash-map"
       ],
@@ -2391,8 +2391,8 @@
       "source_name": "memchr",
       "source_repo": "https://github.com/BurntSushi/memchr",
       "license": "MIT",
-      "cp_target": "cap:simd",
-      "kind": "stdlib",
+      "cp_target": "@cap/memchr",
+      "kind": "package",
       "aliases": [
         "memmem"
       ],
@@ -10123,6 +10123,40 @@
       "kind": "package",
       "aliases": [
         "tinyvec"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "terser",
+      "source_repo": "https://github.com/terser/terser",
+      "license": "MIT",
+      "cp_target": "@cap/terser-minify",
+      "kind": "package",
+      "aliases": [
+        "uglify-js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "prettier",
+      "source_repo": "https://github.com/prettier/prettier",
+      "license": "MIT",
+      "cp_target": "@cap/prettier-fmt",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rehype",
+      "source_repo": "https://github.com/rehypejs/rehype",
+      "license": "MIT",
+      "cp_target": "@cap/rehype-ast",
+      "kind": "package",
+      "aliases": [
+        "hast"
       ],
       "absorbed_at": "2026-11-27"
     }

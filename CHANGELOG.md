@@ -867,3 +867,12 @@
 - `packages/@cap/smallvec/` & `cap/test/testCapSmallvec.cp`: crates.io #30 `smallvec`（17 亿+，6/6 PASS）。
 - `packages/@cap/mathjs-expr/` & `cap/test/testCapMathjsExpr.cp`: npm `mathjs`（复用 `@cap/libm`，6/6 PASS）。
 - `packages/@cap/registry.json`: 更新至 **831+ 条**映射并同步将 15 个顶流包的目标指向独立 `@cap/*` 官方包。
+
+### 2026-11-27 (Batch 98 — **Crates.io 全站 #1 `hashbrown` + #11 `indexmap` + #16 `memchr` 70.6 亿下载三冠王！** 6 个新包全 6/6 PASS，官方包 571+)
+- `packages/@cap/hashbrown/` & `cap/test/testCapHashbrown.cp`: crates.io **#1** `hashbrown`（32.6 亿+，SwissTable H2 控制字节，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/indexmap/` & `cap/test/testCapIndexmap.cp`: crates.io #11 `indexmap`（19.75 亿+，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/memchr/` & `cap/test/testCapMemchr.cp`: crates.io #16 `memchr`（18.26 亿+，SWAR 8 字节并行加速，6/6 PASS）。
+- `packages/@cap/terser-minify/` & `cap/test/testCapTerserMinify.cp`: npm `terser`（JS/CSS 词法安全压缩器，6/6 PASS）。
+- `packages/@cap/prettier-fmt/` & `cap/test/testCapPrettierFmt.cp`: npm `prettier`（JSON/CSS 格式化器，6/6 PASS）。
+- `packages/@cap/change-case/` & `cap/test/testCapChangeCase.cp`: npm Top 110 `change-case` v5（复用 `@cap/camelcase`+`@cap/decamelize`，12 种风格，6/6 PASS）。
+- `packages/@cap/registry.json`: 推进至 **837+ 条**映射（官方 `.cap` 包突破 **571+**）。

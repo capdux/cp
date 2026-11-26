@@ -1,0 +1,8 @@
+{
+  "name": "@cap/memchr",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation SWAR-accelerated byte and substring search engine (Rust memchr v2 parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

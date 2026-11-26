@@ -362,3 +362,6 @@
 
 ## 2026-11-27: Batch 97 四大核心包全 6/6 PASS — 覆盖 Rust 50 亿+ 底座（`bytes`/`smallvec`/`ryu`）+ `mathjs`！
 - 交付 `@cap/bytes-buf`（18 亿+）、`@cap/smallvec`（17 亿+）、`@cap/ryu-float`（15 亿+，复用 `@cap/itoa`）、`@cap/mathjs-expr`（复用 `@cap/libm`），全部 6/6 PASS；同步升级 `registry.json` 中 15 个高频条目的 `cp_target` 精准指向对应独立 `@cap/*` 官方包。
+
+## 2026-11-27: Batch 98 六大顶流包全 6/6 PASS — 拿下 Crates.io **全站 #1 `hashbrown`（32.6 亿）** + #11 `indexmap` + #16 `memchr`（合计 70.6 亿下载）！
+- 交付 `@cap/hashbrown`、`@cap/indexmap`、`@cap/memchr` 三大 Rust 基础设施之王 + npm `terser-minify`、`prettier-fmt`、`change-case`，全部 6/6 PASS，官方 `.cap` 包突破 **571+**。
