@@ -675,3 +675,12 @@
 - `packages/@cap/polygon2d/` & `cap/test/testCapPolygon2d.cp`: 2D 多边形面积、质心、射线法与凹凸性（6/6 PASS）。
 - `packages/@cap/mat4/` & `cap/test/testCapMat4.cp`: 4x4 3D 变换/投影/LookAt 矩阵（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **690 条**双生态高频映射（**npm=345 / crates.io=345 绝对 1:1 对称**，含 Top-59 Rust `semver` 12.5 亿下载）。
+
+### 2026-11-27 (Batch 79 — 跨越 **700 条双生态映射里程碑**：npm=350 / crates.io=350 绝对 1:1 对称！)
+- `packages/@cap/convex-hull/` & `cap/test/testCapConvexHull.cp`: Andrew 单调链 2D 凸包（6/6 PASS）。
+- `packages/@cap/geohash-pure/` & `cap/test/testCapGeohashPure.cp`: Geohash Base32 编码解码与边界盒（6/6 PASS）。
+- `packages/@cap/ramer-douglas-peucker/` & `cap/test/testCapRamerDouglasPeucker.cp`: 非递归 RDP 2D 折线抽稀（6/6 PASS）。
+- `packages/@cap/bigint-u256/` & `cap/test/testCapBigintU256.cp`: 256 位无符号大整数 `U256`（6/6 PASS）。
+- `packages/@cap/quadtree-2d/` & `cap/test/testCapQuadtree2d.cp`: 池化零堆 2D 四叉树与矩形/半径查询（6/6 PASS）。
+- `packages/@cap/decimal-fixed/` & `cap/test/testCapDecimalFixed.cp`: 金融级高精度十进制 `Decimal`（6/6 PASS）。
+- `packages/@cap/registry.json`: 正式突破 **700 条**双生态高频映射（**npm=350 / crates.io=350 绝对 1:1 对称**，含 Top-82 Rust `shlex` 11.6 亿下载）。

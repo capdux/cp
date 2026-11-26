@@ -635,3 +635,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/haversine-geo`** | `packages/@cap/haversine-geo` | 对标 npm/Rust `haversine` — WGS-84 球面大圆距离、方位角、中点与目标点推算 |
 | **`@cap/polygon2d`** | `packages/@cap/polygon2d` | 对标 npm `point-in-polygon` / Rust `geo` — 2D 多边形面积、质心、射线法内外检测与凹凸判断 |
 | **`@cap/mat4`** | `packages/@cap/mat4` | 对标 npm `gl-mat4` — 4x4 3D 变换矩阵、三轴旋转、透视/正交投影与 LookAt 视图矩阵 |
+
+| **`@cap/convex-hull`** | `packages/@cap/convex-hull` | 对标 npm `monotone-chain-convex-hull` — Andrew 单调链 2D 凸包、面积与周长 |
+| **`@cap/geohash-pure`** | `packages/@cap/geohash-pure` | 对标 npm `ngeohash` / Rust `geohash` — Base32 Geohash 空间编码解码与经纬度边界盒 |
+| **`@cap/ramer-douglas-peucker`** | `packages/@cap/ramer-douglas-peucker` | 对标 npm `simplify-js` — 非递归零堆 Ramer-Douglas-Peucker 2D 折线抽稀 |
+| **`@cap/bigint-u256`** | `packages/@cap/bigint-u256` | 对标 Rust `primitive-types` / `ruint` / npm `bn.js` — 256 位无符号大整数全套算术与十六进制编解码 |
+| **`@cap/quadtree-2d`** | `packages/@cap/quadtree-2d` | 对标 npm `d3-quadtree` / Rust `quadtree_rs` — 池化零堆 2D 四叉树空间索引与矩形/半径查询 |
+| **`@cap/decimal-fixed`** | `packages/@cap/decimal-fixed` | 对标 Rust `rust_decimal` (6000 万+) / npm `decimal.js` (5000 万+/周) — 金融级高精度十进制小数与银行家舍入 |

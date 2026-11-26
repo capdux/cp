@@ -1,0 +1,9 @@
+{
+  "name": "@cap/quadtree-2d",
+  "ver": "1.0.0",
+  "description": "Zero-allocation pooled 2D QuadTree spatial index supporting point insertion, automatic subdivision, rectangular range queries, and radius queries for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["quadtree", "spatial-index", "2d", "collision", "range-query", "geometry", "zero-alloc"]
+}

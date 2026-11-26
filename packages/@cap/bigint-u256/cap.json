@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bigint-u256",
+  "version": "1.0.0",
+  "description": "Zero-allocation 256-bit unsigned big integer arithmetic (4x u64 limbs) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bigint", "u256", "uint256", "math", "crypto", "ethereum", "zero-alloc"]
+}

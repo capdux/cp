@@ -1,0 +1,9 @@
+{
+  "name": "@cap/decimal-fixed",
+  "ver": "1.0.0",
+  "desc": "Zero-heap fixed-point financial decimal arithmetic (scale 0..12) with banker's rounding in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["decimal", "fixed-point", "financial", "money", "rounding", "zero-heap"]
+}

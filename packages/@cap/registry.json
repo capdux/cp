@@ -8443,6 +8443,127 @@
         "fft"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "monotone-chain-convex-hull",
+      "source_repo": "https://github.com/mikolalysenko/monotone-chain-convex-hull",
+      "license": "MIT",
+      "cp_target": "@cap/convex-hull",
+      "kind": "package",
+      "aliases": [
+        "convex-hull",
+        "hull.js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ngeohash",
+      "source_repo": "https://github.com/sunng87/node-geohash",
+      "license": "MIT",
+      "cp_target": "@cap/geohash-pure",
+      "kind": "package",
+      "aliases": [
+        "geohash"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "simplify-js",
+      "source_repo": "https://github.com/mourner/simplify-js",
+      "license": "MIT",
+      "cp_target": "@cap/ramer-douglas-peucker",
+      "kind": "package",
+      "aliases": [
+        "douglas-peucker"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bn.js",
+      "source_repo": "https://github.com/indutny/bn.js",
+      "license": "MIT",
+      "cp_target": "@cap/bigint-u256",
+      "kind": "package",
+      "aliases": [
+        "bignumber.js"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "shlex",
+      "source_repo": "https://github.com/comex/rust-shlex",
+      "license": "MIT",
+      "cp_target": "@cap/shlex",
+      "kind": "package",
+      "aliases": [
+        "shell-words"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "primitive-types",
+      "source_repo": "https://github.com/paritytech/parity-common",
+      "license": "MIT",
+      "cp_target": "@cap/bigint-u256",
+      "kind": "package",
+      "aliases": [
+        "uint"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ruint",
+      "source_repo": "https://github.com/recmo/uint",
+      "license": "MIT",
+      "cp_target": "@cap/bigint-u256",
+      "kind": "package",
+      "aliases": [
+        "u256"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rust_decimal",
+      "source_repo": "https://github.com/paupino/rust-decimal",
+      "license": "MIT",
+      "cp_target": "@cap/decimal-fixed",
+      "kind": "package",
+      "aliases": [
+        "bigdecimal"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "quadtree_rs",
+      "source_repo": "https://github.com/ambuc/quadtree_rs",
+      "license": "MIT",
+      "cp_target": "@cap/quadtree-2d",
+      "kind": "package",
+      "aliases": [
+        "quadtree"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-quadtree",
+      "source_repo": "https://github.com/d3/d3-quadtree",
+      "license": "MIT",
+      "cp_target": "@cap/quadtree-2d",
+      "kind": "package",
+      "aliases": [
+        "quadtree-js"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

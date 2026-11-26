@@ -1,0 +1,9 @@
+{
+  "name": "@cap/convex-hull",
+  "ver": "1.0.0",
+  "desc": "Zero-heap 2D Andrew's monotone chain convex hull, area, and perimeter in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["convex-hull", "monotone-chain", "geometry", "2d", "polygon", "zero-heap"]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ramer-douglas-peucker",
+  "version": "1.0.0",
+  "description": "Zero-heap Ramer-Douglas-Peucker 2D polyline simplification for GPS tracks and vector graphics in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["rdp", "simplify", "polyline", "douglas-peucker", "geo", "gis", "vector"]
+}

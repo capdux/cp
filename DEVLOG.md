@@ -300,3 +300,6 @@
 
 ## 2026-11-27: Batch 78 六件套全 6/6 PASS — 达到 **690 条双生态映射（npm=345 / crates.io=345 绝对 1:1 对称）** & 437+ 官方 `.cap` 包！
 - 交付 `@cap/perlin-noise`、`@cap/fft-radix2`、`@cap/fixed-q16`、`@cap/haversine-geo`、`@cap/polygon2d`、`@cap/mat4`（全 6/6 PASS），并按新阶段指令全面切入 **npm/crates.io Top 700 + 独立依赖包拆分复用** 路线。
+
+## 2026-11-27: Batch 79 正式跨越 **700 条双生态映射里程碑（npm=350 / crates.io=350 绝对 1:1 对称）** & 443+ 官方 `.cap` 包 LIVE！
+- 交付 `@cap/convex-hull`、`@cap/geohash-pure`、`@cap/ramer-douglas-peucker`、`@cap/bigint-u256`、`@cap/quadtree-2d`、`@cap/decimal-fixed`（全 6/6 PASS），并完成 GitHub `origin/main` 脱敏推送。
