@@ -1,0 +1,8 @@
+{
+  "name": "@cap/litemap",
+  "ver": "1.0.0",
+  "description": "Zero-allocation compact sorted flat-array map with O(log N) binary search and deterministic ordered iteration (Rust ICU4X litemap parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

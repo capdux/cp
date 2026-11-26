@@ -356,3 +356,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/num-integer`** | `packages/@cap/num-integer` | 对标 Rust `num-integer`（8.88 亿）— 地板/天花板/欧几里得除余、GCD/LCM/Bézout/模逆元、整数根与素性判定 |
 | **`@cap/hex`** | `packages/@cap/hex` | 对标 Rust `hex`（8.43 亿）— 零堆大小写十六进制编解码、严格校验与 16 字节/行 Canonical `hexDump` |
 | **`@cap/tinystr`** | `packages/@cap/tinystr` | 对标 Rust `tinystr`（8.35 亿）— `TinyStr4`/`TinyStr8` 寄存器打包短 ASCII 字符串与单指令 O(1) 比较 |
+| **`@cap/litemap`** | `packages/@cap/litemap` | 对标 Rust `litemap`（8.24 亿）— 零堆平坦有序数组 + `O(log N)` 二分查找紧凑键值表 |
+| **`@cap/siphash`** | `packages/@cap/siphash` | 对标 Rust `siphasher`（7.36 亿）— 防 HashDoS 带密钥 SipHash-2-4 与 SipHash-1-3 流式哈希（比特精确） |
+| **`@cap/arrayvec`** | `packages/@cap/arrayvec` | 对标 Rust `arrayvec`（7.30 亿）— 零堆栈上定容字符串 `ArrayString64/256` 与定容向量 `ArrayVecI64/U64` |
+| **`@cap/unicode-seg`** | `packages/@cap/unicode-seg` | 对标 Rust `unicode-segmentation`（7.18 亿）— UAX #29 字素簇（Emoji ZWJ/国旗/重音/CRLF）与中英词边界切分 |
+| **`@cap/oid`** | `packages/@cap/oid` | 对标 Rust `const-oid`（6.90 亿）— ISO/IEC ASN.1 OID X.690 DER 双向编解码与 20 项核心 PKI/X.509 命名查表 |

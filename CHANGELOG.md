@@ -258,3 +258,11 @@
 - `packages/@cap/hex/` & `cap/test/testCapHex.cp`: 零堆十六进制编解码与 HexDump（对标 `hex` 8.43 亿，6/6 PASS）。
 - `packages/@cap/tinystr/` & `cap/test/testCapTinystr.cp`: `TinyStr4`/`TinyStr8` 寄存器打包短字符串（对标 `tinystr` 8.35 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **215 条**高频映射（含 `iana-time-zone`→`cap:tz`、`walkdir`→`cap:fs`）。
+
+## [2026-11-26] - Batch 31 严格单调递减吸收 Rust crates.io 8.24 亿 → 6.90 亿 Top 10（单批交付 5 大 Rust 核心包，总映射突破 225 条）
+- `packages/@cap/litemap/` & `cap/test/testCapLitemap.cp`: 零堆紧凑有序二分查找映射表（对标 `litemap` 8.24 亿，6/6 PASS）。
+- `packages/@cap/siphash/` & `cap/test/testCapSiphash.cp`: 防 HashDoS 带密钥 SipHash-2-4/1-3 流式哈希（对标 `siphasher` 7.36 亿，6/6 PASS）。
+- `packages/@cap/arrayvec/` & `cap/test/testCapArrayvec.cp`: 零堆栈上定容字符串与定容向量（对标 `arrayvec` 7.30 亿，6/6 PASS）。
+- `packages/@cap/unicode-seg/` & `cap/test/testCapUnicodeSeg.cp`: UAX #29 字素簇与词边界切分（对标 `unicode-segmentation` 7.18 亿，6/6 PASS）。
+- `packages/@cap/oid/` & `cap/test/testCapOid.cp`: ASN.1 OID X.690 DER 编解码与 PKI 查表（对标 `const-oid` 6.90 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **225 条**高频映射（含 `hmac`/`mime`/`num-bigint`/`ipnet`/`glob` 内部库直连）。

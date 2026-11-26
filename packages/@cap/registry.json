@@ -2154,6 +2154,106 @@
       "kind": "stdlib",
       "aliases": ["jwalk"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "litemap",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "@cap/litemap",
+      "kind": "package",
+      "aliases": ["flat-map"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "hmac",
+      "source_repo": "https://github.com/RustCrypto/MACs",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["sha1"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mime",
+      "source_repo": "https://github.com/hyperium/mime",
+      "license": "MIT",
+      "cp_target": "cap:mime",
+      "kind": "stdlib",
+      "aliases": ["mime-rs"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-bigint",
+      "source_repo": "https://github.com/rust-num/num-bigint",
+      "license": "MIT",
+      "cp_target": "cap:bigint",
+      "kind": "stdlib",
+      "aliases": ["bignum"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ipnet",
+      "source_repo": "https://github.com/krisprice/ipnet",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": ["ipnetwork"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "glob",
+      "source_repo": "https://github.com/rust-lang/glob",
+      "license": "MIT",
+      "cp_target": "cap:glob",
+      "kind": "stdlib",
+      "aliases": ["glob-match"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "siphasher",
+      "source_repo": "https://github.com/jedisct1/rust-siphash",
+      "license": "MIT",
+      "cp_target": "@cap/siphash",
+      "kind": "package",
+      "aliases": ["siphash24", "siphash13"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "arrayvec",
+      "source_repo": "https://github.com/bluss/arrayvec",
+      "license": "MIT",
+      "cp_target": "@cap/arrayvec",
+      "kind": "package",
+      "aliases": ["tinyvec", "smallvec"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-segmentation",
+      "source_repo": "https://github.com/unicode-rs/unicode-segmentation",
+      "license": "MIT",
+      "cp_target": "@cap/unicode-seg",
+      "kind": "package",
+      "aliases": ["graphemer", "grapheme-splitter"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "const-oid",
+      "source_repo": "https://github.com/RustCrypto/formats",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/oid",
+      "kind": "package",
+      "aliases": ["asn1-oid", "oid"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -155,3 +155,6 @@
 
 ## 2026-11-26: Batch 30 严格单调递减完成 crates.io 10.77 亿 → 8.12 亿 Top 10（单批交付 6 大 Rust 核心包！）
 - 3 路子智能体收回即新派全速推进，一次性通过 6 大 Rust 8–10 亿级独立包：`@cap/fnv`（6/6）、`@cap/subtle`（6/6）、`@cap/crc32`（6/6）、`@cap/num-integer`（6/6）、`@cap/hex`（6/6）、`@cap/tinystr`（6/6），总映射突破 **215 条**，线上官方包冲破 **164 个**！
+
+## 2026-11-26: Batch 31 严格单调递减完成 crates.io 8.24 亿 → 6.90 亿 Top 10（单批交付 5 大 Rust 核心包！）
+- 交付 `@cap/litemap`（6/6）、`@cap/siphash`（6/6）、`@cap/arrayvec`（6/6）、`@cap/unicode-seg`（6/6）、`@cap/oid`（6/6），去重直连 `hmac`/`mime`/`num-bigint`/`ipnet`/`glob`，总映射突破 **225 条**，线上官方包冲破 **170 个**！

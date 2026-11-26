@@ -1,0 +1,8 @@
+{
+  "name": "@cap/oid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ISO/IEC ASN.1 Object Identifier (OID) X.690 DER encoder/decoder and PKI registry (Rust const-oid parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}
