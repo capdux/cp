@@ -470,3 +470,12 @@
 - `packages/@cap/rss/` & `cap/test/testCapRss.cp`: RSS 2.0 XML 生成与标签提取（6/6 PASS）。
 - `packages/@cap/polyline/` & `cap/test/testCapPolyline.cp`: Google Encoded Polyline (precision 5/6) GPS 轨迹编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **465 条**高频映射（**npm=229 / crates.io=236** 均衡，含亿级 npm `braces`/`pako`/`ansi-escapes` 去重直连）。
+
+## [2026-11-26] - Batch 56 双生态均衡交付 **6 大高频新包**（`@cap/etag`, `@cap/bytes`, `@cap/media-type`, `@cap/stomp`, `@cap/iban`, `@cap/isbn`），总映射突破 **475 条**！
+- `packages/@cap/etag/` & `cap/test/testCapEtag.cp`: RFC 9110 HTTP `ETag` 生成解析与 `If-Match`/`If-None-Match` 强弱匹配（6/6 PASS）。
+- `packages/@cap/bytes/` & `cap/test/testCapBytes.cp`: IEC/SI 字节大小零堆解析与人类可读格式化（6/6 PASS）。
+- `packages/@cap/media-type/` & `cap/test/testCapMediaType.cp`: RFC 6838/9110 MIME 媒体类型与 `+suffix` 解析（6/6 PASS）。
+- `packages/@cap/stomp/` & `cap/test/testCapStomp.cp`: STOMP 1.2 MQ 协议帧零拷贝编解码（6/6 PASS）。
+- `packages/@cap/iban/` & `cap/test/testCapIban.cp`: ISO 13616 88 国 IBAN Mod-97 校验与格式化（6/6 PASS）。
+- `packages/@cap/isbn/` & `cap/test/testCapIsbn.cp`: ISBN-10/13/ISSN/EAN-13 校验与互转（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **475 条**高频映射（**npm=235 / crates.io=240** 1:1 均衡，含亿级 `tsconfig-paths`/`tar`/`fast-xml-parser`/`forwarded-header-value` 去重直连）。

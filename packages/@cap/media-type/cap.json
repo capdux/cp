@@ -1,0 +1,9 @@
+{
+  "name": "@cap/media-type",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9110 / RFC 6838 HTTP Media Type (MIME) parser, structured suffix extractor, and parameter matcher for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["media-type", "mime", "content-type", "rfc9110", "rfc6838", "http", "zero-alloc"]
+}

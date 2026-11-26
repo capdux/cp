@@ -1,0 +1,9 @@
+{
+  "name": "@cap/isbn",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ISO 2108 ISBN-10, ISBN-13, ISSN, and EAN-13 validator and converter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["isbn", "isbn10", "isbn13", "issn", "ean13", "gtin13", "barcode", "zero-alloc"]
+}

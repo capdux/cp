@@ -1,0 +1,10 @@
+{
+  "name": "@cap/bytes",
+  "version": "1.0.0",
+  "description": "Zero-heap human-readable byte size parser and formatter (IEC binary KiB/MiB/GiB & SI decimal KB/MB/GB) for CP (compatible with npm bytes, pretty-bytes, and Rust bytesize)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bytes", "bytesize", "pretty-bytes", "size", "humanize", "iec", "si"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bytes"
+}

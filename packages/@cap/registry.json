@@ -23,8 +23,8 @@
       "source_name": "bytes",
       "source_repo": "https://github.com/visionmedia/bytes.js",
       "license": "MIT",
-      "cp_target": "cap:bytes",
-      "kind": "stdlib",
+      "cp_target": "@cap/bytes",
+      "kind": "package",
       "aliases": [
         "bytesize",
         "humansize",
@@ -75,8 +75,8 @@
       "source_name": "etag",
       "source_repo": "https://github.com/jshttp/etag",
       "license": "MIT",
-      "cp_target": "cap:etag",
-      "kind": "stdlib",
+      "cp_target": "@cap/etag",
+      "kind": "package",
       "aliases": [
         "etag-rs"
       ],
@@ -1288,8 +1288,8 @@
       "source_name": "bytes",
       "source_repo": "https://github.com/visionmedia/bytes.js",
       "license": "MIT",
-      "cp_target": "cap:bytes",
-      "kind": "stdlib",
+      "cp_target": "@cap/bytes",
+      "kind": "package",
       "aliases": [
         "pretty-bytes",
         "bytesize"
@@ -1301,8 +1301,8 @@
       "source_name": "etag",
       "source_repo": "https://github.com/jshttp/etag",
       "license": "MIT",
-      "cp_target": "cap:etag",
-      "kind": "stdlib",
+      "cp_target": "@cap/etag",
+      "kind": "package",
       "aliases": [
         "fresh",
         "http-etag"
@@ -5834,6 +5834,132 @@
       "kind": "package",
       "aliases": [
         "@mapbox/polyline"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "media-typer",
+      "source_repo": "https://github.com/jshttp/media-typer",
+      "license": "MIT",
+      "cp_target": "@cap/media-type",
+      "kind": "package",
+      "aliases": [
+        "mediatype",
+        "mime-type"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tsconfig-paths",
+      "source_repo": "https://github.com/dividab/tsconfig-paths",
+      "license": "MIT",
+      "cp_target": "@cap/tsconfig-paths",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tar",
+      "source_repo": "https://github.com/isaacs/node-tar",
+      "license": "ISC",
+      "cp_target": "cap:pack",
+      "kind": "stdlib",
+      "aliases": [
+        "tar-stream",
+        "tar-fs"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-xml-parser",
+      "source_repo": "https://github.com/NaturalIntelligence/fast-xml-parser",
+      "license": "MIT",
+      "cp_target": "cap:xml",
+      "kind": "stdlib",
+      "aliases": [
+        "xml2js",
+        "xml-js"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "forwarded-header-value",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/forwarded",
+      "kind": "package",
+      "aliases": [
+        "forwarded",
+        "proxy-addr"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "stomp",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/stomp",
+      "kind": "package",
+      "aliases": [
+        "@stomp/stompjs",
+        "stompjs"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "iban_validate",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/iban",
+      "kind": "package",
+      "aliases": [
+        "ibantools",
+        "iban"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "isbn",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/isbn",
+      "kind": "package",
+      "aliases": [
+        "isbn3",
+        "isbn-utils"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fflate",
+      "source_repo": "https://github.com/101arrowz/fflate",
+      "license": "MIT",
+      "cp_target": "cap:zlib",
+      "kind": "stdlib",
+      "aliases": [
+        "uzip"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "toml",
+      "source_repo": "https://github.com/BinaryMuse/toml-node",
+      "license": "MIT",
+      "cp_target": "cap:toml",
+      "kind": "stdlib",
+      "aliases": [
+        "@iarna/toml",
+        "smol-toml"
       ],
       "absorbed_at": "2026-11-26"
     }

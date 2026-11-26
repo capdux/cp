@@ -1,0 +1,8 @@
+{
+  "name": "@cap/iban",
+  "version": "1.0.0",
+  "description": "Zero-heap ISO 13616 IBAN validator, ISO 7064 Mod-97-10 checksum engine, check-digit generator, and electronic/friendly formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

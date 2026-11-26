@@ -493,3 +493,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/mqtt-packet`** | `packages/@cap/mqtt-packet` | 对标 npm `mqtt-packet` / Rust `mqttbytes` — OASIS MQTT v3.1.1 二进制控制报文（变长 Remaining Length / PUBLISH / PUBACK） |
 | **`@cap/rss`** | `packages/@cap/rss` | 对标 npm `rss-parser` / Rust `rss` — RSS 2.0 XML 零堆生成器与 CDATA 感知标签提取器 |
 | **`@cap/polyline`** | `packages/@cap/polyline` | 对标 npm `@mapbox/polyline` / Rust `polyline` — Google Encoded Polyline（precision 5/6）GPS 坐标轨迹差分编解码 |
+| **`@cap/etag`** | `packages/@cap/etag` | 对标 npm `etag` / Rust `etag` — RFC 9110 强/弱 `ETag` 解析生成与 `If-None-Match`/`If-Match` 匹配引擎 |
+| **`@cap/bytes`** | `packages/@cap/bytes` | 对标 npm `bytes` / `pretty-bytes` / Rust `bytesize` — 零堆 IEC 二进制 (`KiB/MiB`) 与 SI 十进制 (`KB/MB`) 字节解析与格式化 |
+| **`@cap/media-type`** | `packages/@cap/media-type` | 对标 npm `media-typer` / Rust `mediatype` — RFC 6838/9110 MIME 媒体类型解析、`+suffix` 后缀提取与参数查询 |
+| **`@cap/stomp`** | `packages/@cap/stomp` | 对标 npm `@stomp/stompjs` / Rust `stomp` — STOMP 1.2 WebSocket/MQ 文本消息帧零拷贝编解码（支持含 NUL body 与心跳） |
+| **`@cap/iban`** | `packages/@cap/iban` | 对标 npm `ibantools` / Rust `iban_validate` — ISO 13616 88 国 IBAN 国际银行账号 Mod-97 校验、格式化与校验位生成 |
+| **`@cap/isbn`** | `packages/@cap/isbn` | 对标 npm `isbn3` / Rust `isbn` — ISO 2108 ISBN-10/ISBN-13/ISSN/EAN-13 校验与 10/13 互转 |
