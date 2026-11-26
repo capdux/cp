@@ -366,3 +366,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/matchit`** | `packages/@cap/matchit` | 对标 Rust `matchit`（5.95 亿，`axum` 御用）— 零拷贝高优先级 URL 路由引擎（`static > :param/{param} > *catchall`） |
 | **`@cap/ordered-float`** | `packages/@cap/ordered-float` | 对标 Rust `ordered-float`（5.71 亿）— IEEE 754 全序比较、`NotNanF64` 约束与 NaN 安全原地排序/二分查找 |
 | **`@cap/data-encoding`** | `packages/@cap/data-encoding` | 对标 Rust `data-encoding`（5.58 亿）— RFC 4648 Base32 / Base32hex / Crockford Base32 / Base64url 零堆编解码 |
+| **`@cap/unicase`** | `packages/@cap/unicase` | 对标 Rust `unicase`（5.16 亿）— 零堆大小写不敏感包装、三向比较、前后缀/子串查找与 FNV-1a 折叠哈希 |
+| **`@cap/num-complex`** | `packages/@cap/num-complex` | 对标 Rust `num-complex`（4.96 亿）— `Complex64` 复数四则、Smith 防溢出除法、极坐标与欧拉公式/平方根 |
+| **`@cap/num-rational`** | `packages/@cap/num-rational` | 对标 Rust `num-rational`（4.90 亿）— `Ratio64` 自动约分有理数分数四则、精确比较与取整 |
+| **`@cap/target-triple`** | `packages/@cap/target-triple` | 对标 Rust `target-lexicon`（4.79 亿）— LLVM/Rust/Zig 2/3/4 段目标三元组解析与平台后缀判定 |

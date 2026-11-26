@@ -274,3 +274,10 @@
 - `packages/@cap/ordered-float/` & `cap/test/testCapOrderedFloat.cp`: IEEE 754 全序浮点、`NotNanF64` 与安全排序（对标 `ordered-float` 5.71 亿，6/6 PASS）。
 - `packages/@cap/data-encoding/` & `cap/test/testCapDataEncoding.cp`: RFC 4648 Base32/Base32hex/Crockford/Base64url 编解码（对标 `data-encoding` 5.58 亿，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **235 条**高频映射（含 `petgraph`/`rustls-pemfile`/`quick-xml`/`simd-adler32`/`bstr` 去重直连）。
+
+## [2026-11-26] - Batch 33 严格单调递减吸收 Rust crates.io 5.16 亿 → 4.67 亿 Top 10（交付 4 大 Rust 核心包，总映射突破 245 条）
+- `packages/@cap/unicase/` & `cap/test/testCapUnicase.cp`: 零堆大小写不敏感包装、查找与 FNV-1a 折叠哈希（对标 `unicase` 5.16 亿，6/6 PASS）。
+- `packages/@cap/num-complex/` & `cap/test/testCapNumComplex.cp`: `Complex64` 复数代数与欧拉复变函数（对标 `num-complex` 4.96 亿，6/6 PASS）。
+- `packages/@cap/num-rational/` & `cap/test/testCapNumRational.cp`: `Ratio64` 精确自动约分有理数引擎（对标 `num-rational` 4.90 亿，6/6 PASS）。
+- `packages/@cap/target-triple/` & `cap/test/testCapTargetTriple.cp`: LLVM/Rust/Zig 目标三元组解析器（对标 `target-lexicon` 4.79 亿，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **245 条**高频映射（含 `humantime`/`zstd`/`which`/`md-5`/`textwrap`/`lru` 去重直连）。

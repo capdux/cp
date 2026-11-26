@@ -1,0 +1,8 @@
+{
+  "name": "@cap/unicase",
+  "ver": "1.0.0",
+  "description": "Zero-allocation case-insensitive string wrapper, comparison, search, and FNV-1a 64-bit hashing (Rust unicase parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

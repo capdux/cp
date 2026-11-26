@@ -1,0 +1,20 @@
+# @cap/target-triple
+
+Zero-heap LLVM / Rust / Zig target triple parser and platform metadata resolver in pure CP (inspired by Rust `target-lexicon`, 479M+ downloads).
+
+Supports 2-part (`wasm32-wasi`), 3-part (`aarch64-apple-darwin`, Zig-style `x86_64-linux-musl`), and 4-part (`x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc`) triples, resolving pointer width, endianness, executable suffix, and shared library suffix.
+
+## Install
+
+```bash
+cap add @cap/target-triple
+```
+
+## Usage
+
+```cp
+import { parseTargetTriple, exeSuffix, dylibSuffix } from "@cap/target-triple";
+
+const t = parseTargetTriple("x86_64-unknown-linux-gnu");
+// t.pointer_width == 64, t.is_little_endian == true, dylibSuffix(t) == ".so"
+```

@@ -2354,6 +2354,106 @@
       "kind": "stdlib",
       "aliases": ["byte-string"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicase",
+      "source_repo": "https://github.com/seanmonstar/unicase",
+      "license": "MIT",
+      "cp_target": "@cap/unicase",
+      "kind": "package",
+      "aliases": ["case-insensitive"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "humantime",
+      "source_repo": "https://github.com/tailhook/humantime",
+      "license": "MIT",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": ["humantime-serde"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zstd",
+      "source_repo": "https://github.com/gyscos/zstd-rs",
+      "license": "MIT",
+      "cp_target": "@cap/zstd",
+      "kind": "package",
+      "aliases": ["zstd-safe", "zstd-sys"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-complex",
+      "source_repo": "https://github.com/rust-num/num-complex",
+      "license": "MIT",
+      "cp_target": "@cap/num-complex",
+      "kind": "package",
+      "aliases": ["complex-js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "which",
+      "source_repo": "https://github.com/harryfei/which-rs",
+      "license": "MIT",
+      "cp_target": "cap:which",
+      "kind": "stdlib",
+      "aliases": ["which-bin"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "md-5",
+      "source_repo": "https://github.com/RustCrypto/hashes",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["md5"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-rational",
+      "source_repo": "https://github.com/rust-num/num-rational",
+      "license": "MIT",
+      "cp_target": "@cap/num-rational",
+      "kind": "package",
+      "aliases": ["fraction.js"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "textwrap",
+      "source_repo": "https://github.com/mgeisler/textwrap",
+      "license": "MIT",
+      "cp_target": "@cap/textwrap",
+      "kind": "package",
+      "aliases": ["word-wrap"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "target-lexicon",
+      "source_repo": "https://github.com/bytecodealliance/target-lexicon",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/target-triple",
+      "kind": "package",
+      "aliases": ["target-triple"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lru",
+      "source_repo": "https://github.com/jeromefroe/lru-rs",
+      "license": "MIT",
+      "cp_target": "@cap/lru",
+      "kind": "package",
+      "aliases": ["hashlink"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
