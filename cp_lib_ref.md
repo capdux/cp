@@ -581,3 +581,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/base32-crockford`** | `packages/@cap/base32-crockford` | 对标 npm `crockford-base32` / Rust `base32` — Crockford Base32 容错解码 (`I/L/O`) 与可选模 37 校验位 |
 | **`@cap/zbase32`** | `packages/@cap/zbase32` | 对标 npm/Rust `zbase32` — Zooko 人类友好 z-base-32 比特级无填充零堆编解码 |
 | **`@cap/ascii85`** | `packages/@cap/ascii85` | 对标 npm/Rust `ascii85` — Adobe Ascii85 / PostScript / PDF（含 `z` 全零压缩与 `<~...~>`）编解码 |
+| **`@cap/quoted-printable`** | `packages/@cap/quoted-printable` | 对标 npm `quoted-printable` / Rust `quoted_printable` — RFC 2045 §6.7 MIME 邮件 76 列软折行与 `=XX` 编解码 |
+| **`@cap/hex-color`** | `packages/@cap/hex-color` | 对标 npm `hex-rgb` / `colord` — `#RGB`/`#RGBA`/`#RRGGBB`/`#RRGGBBAA` 解析、Alpha 合成与 BT.601 亮暗判定 |
+| **`@cap/base36`** | `packages/@cap/base36` | 对标 npm `base36` / Rust `radix_fmt` — Base36 与任意 `2..36` 进制 64-bit 无符号整数防溢出编解码 |
+| **`@cap/zigzag`** | `packages/@cap/zigzag` | 对标 Rust `zigzag` / `integer-encoding` — Protobuf/Avro 32/64-bit ZigZag 双射与 ZigZag-Varint 流式编解码 |
+| **`@cap/uuencode`** | `packages/@cap/uuencode` | 对标 npm/Rust `uuencode` — POSIX/Unix 45 字节行 `uuencode`/`uudecode`（含 `begin`/`end` 帧）零堆编解码 |
+| **`@cap/soundex`** | `packages/@cap/soundex` | 对标 npm `soundex-code` / Rust `rphonetic` — NARA American Soundex 语音编码与模糊人名相似度匹配 |

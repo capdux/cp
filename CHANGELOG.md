@@ -603,3 +603,12 @@
 - `packages/@cap/zbase32/` & `cap/test/testCapZbase32.cp`: Zooko z-base-32 人类友好编解码（6/6 PASS）。
 - `packages/@cap/ascii85/` & `cap/test/testCapAscii85.cp`: Adobe Ascii85 含 `z` 压缩与 `<~...~>` 编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **610 条**双生态高频映射（**npm=305 / crates.io=305** 绝对 1:1 对称）。
+
+## [2026-11-26] - Batch 71 编解码/颜色/语音算法六件套（`@cap/quoted-printable`, `@cap/hex-color`, `@cap/base36`, `@cap/zigzag`, `@cap/uuencode`, `@cap/soundex`），官方包冲至 **397 个**（距 **400 包终极里程碑**仅差 3 步！），总映射 **620 条（310/310）**！
+- `packages/@cap/quoted-printable/` & `cap/test/testCapQuotedPrintable.cp`: RFC 2045 Quoted-Printable 76 列软折行编解码（6/6 PASS）。
+- `packages/@cap/hex-color/` & `cap/test/testCapHexColor.cp`: CSS 十六进制颜色解析、Alpha 合成与亮暗判定（6/6 PASS）。
+- `packages/@cap/base36/` & `cap/test/testCapBase36.cp`: Base36 与 2..36 任意进制防溢出编解码（6/6 PASS）。
+- `packages/@cap/zigzag/` & `cap/test/testCapZigzag.cp`: 32/64-bit ZigZag 与 ZigZag-Varint 流式编解码（6/6 PASS）。
+- `packages/@cap/uuencode/` & `cap/test/testCapUuencode.cp`: POSIX `uuencode`/`uudecode` 零堆编解码（6/6 PASS）。
+- `packages/@cap/soundex/` & `cap/test/testCapSoundex.cp`: NARA American Soundex 语音编码与匹配（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **620 条**双生态高频映射（**npm=310 / crates.io=310** 绝对 1:1 对称）。

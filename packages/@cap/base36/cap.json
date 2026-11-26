@@ -1,0 +1,8 @@
+{
+  "name": "@cap/base36",
+  "version": "1.0.0",
+  "description": "Zero-heap Base36 and arbitrary radix 2..36 unsigned 64-bit integer encoder, overflow-safe decoder, and validator.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

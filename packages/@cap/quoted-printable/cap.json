@@ -1,0 +1,9 @@
+{
+  "name": "@cap/quoted-printable",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 2045 Section 6.7 MIME Quoted-Printable encoder and decoder with 76-col soft line breaks in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["quoted-printable", "mime", "rfc2045", "email", "encoding", "zero-alloc"]
+}

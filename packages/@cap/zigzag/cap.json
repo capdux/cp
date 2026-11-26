@@ -1,0 +1,9 @@
+{
+  "name": "@cap/zigzag",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation 32-bit/64-bit ZigZag bijection and ZigZag-Varint streaming codec (Protobuf/Avro/Parquet/CBOR) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["zigzag", "varint", "protobuf", "avro", "parquet", "encoding", "zero-alloc"]
+}

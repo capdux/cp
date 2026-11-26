@@ -1,0 +1,10 @@
+{
+  "name": "@cap/soundex",
+  "version": "1.0.0",
+  "description": "Zero-heap American Soundex phonetic algorithm encoder and phonetic match engine for CP (compatible with npm soundex-code & Rust rphonetic)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["soundex", "phonetic", "fuzzy", "search", "nlp", "name-matching"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/soundex"
+}

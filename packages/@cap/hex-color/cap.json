@@ -1,0 +1,9 @@
+{
+  "name": "@cap/hex-color",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS hex color (#RGB, #RGBA, #RRGGBB, #RRGGBBAA) parser, formatter, Porter-Duff source-over blender, luminance, and RGB inverter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["color", "hex", "rgba", "css", "blend", "porter-duff", "luminance", "zero-alloc"]
+}

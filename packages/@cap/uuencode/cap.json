@@ -1,0 +1,8 @@
+{
+  "name": "@cap/uuencode",
+  "version": "1.0.0",
+  "description": "Zero-heap POSIX/Unix uuencode and uudecode codec supporting 45-byte lines, backtick/space zero encoding, and begin/end frames.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

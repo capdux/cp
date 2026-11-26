@@ -1223,8 +1223,8 @@
       "source_name": "soundex-code",
       "source_repo": "https://github.com/words/soundex-code",
       "license": "MIT",
-      "cp_target": "cap:text",
-      "kind": "stdlib",
+      "cp_target": "@cap/soundex",
+      "kind": "package",
       "aliases": [
         "soundex",
         "rphonetic"
@@ -7482,6 +7482,117 @@
       "kind": "package",
       "aliases": [
         "leb128"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "quoted-printable",
+      "source_repo": "https://github.com/mathiasbynens/quoted-printable",
+      "license": "MIT",
+      "cp_target": "@cap/quoted-printable",
+      "kind": "package",
+      "aliases": [
+        "libqp"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "hex-rgb",
+      "source_repo": "https://github.com/sindresorhus/hex-rgb",
+      "license": "MIT",
+      "cp_target": "@cap/hex-color",
+      "kind": "package",
+      "aliases": [
+        "rgb-hex",
+        "colord"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "base36",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/base36",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "uuencode",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/uuencode",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "quoted_printable",
+      "source_repo": "https://github.com/staktrace/quoted-printable",
+      "license": "MIT",
+      "cp_target": "@cap/quoted-printable",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zigzag",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/zigzag",
+      "kind": "package",
+      "aliases": [
+        "integer-encoding"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "radix_fmt",
+      "source_repo": "https://github.com/davimiku/radix_fmt",
+      "license": "MIT",
+      "cp_target": "@cap/base36",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rphonetic",
+      "source_repo": "https://github.com/dalboris/rphonetic",
+      "license": "MIT",
+      "cp_target": "@cap/soundex",
+      "kind": "package",
+      "aliases": [
+        "soundex"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "uuencode",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/uuencode",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "colord",
+      "source_repo": "https://github.com/omgovich/colord",
+      "license": "MIT",
+      "cp_target": "@cap/hex-color",
+      "kind": "package",
+      "aliases": [
+        "tinycolor2"
       ],
       "absorbed_at": "2026-11-26"
     }
