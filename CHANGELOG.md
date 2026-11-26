@@ -734,3 +734,14 @@
 - **历史终端旧包统一复用 `@cap/unicode-width`（18/18 零回归 PASS）**：
   - `packages/@cap/wrap-ansi/`、`packages/@cap/boxen/`、`packages/@cap/textwrap/` 全部删除内联重复宽度表，改为 `import { charWidth }` 复用 `@cap/unicode-width`！
 - `packages/@cap/registry.json`: 正式突破 **750 条**双生态高频映射（**npm=375 / crates.io=375 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 85 — **760 映射 380/380 绝对对称！** 8 个重磅独立包全 6/6 PASS)
+- `packages/@cap/proxy-addr/` & `cap/test/testCapProxyAddr.cp`: npm `proxy-addr`（1.5 亿+/周，6/6 PASS）。
+- `packages/@cap/parseurl/` & `cap/test/testCapParseurl.cp`: npm `parseurl`（1.8 亿+/周，6/6 PASS）。
+- `packages/@cap/escape-html/` & `cap/test/testCapEscapeHtml.cp`: npm `escape-html`（2 亿+/周，6/6 PASS）。
+- `packages/@cap/cookie-signature/` & `cap/test/testCapCookieSignature.cp`: npm `cookie-signature`（1.2 亿+/周，复用 `@cap/base64ct`，6/6 PASS）。
+- `packages/@cap/depd/` & `cap/test/testCapDepd.cp`: npm `depd`（1.5 亿+/周，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/quinn-varint/` & `cap/test/testCapQuinnVarint.cp`: crates.io #339 `quinn-proto`（4.59 亿下载，6/6 PASS）。
+- `packages/@cap/subtle-ct/` & `cap/test/testCapSubtleCt.cp`: crates.io `subtle`（8 亿+）& `zeroize`（6 亿+，6/6 PASS）。
+- `packages/@cap/dunce/` & `cap/test/testCapDunce.cp`: crates.io #351 `dunce`（4.33 亿下载，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **760 条**双生态高频映射（**npm=380 / crates.io=380 绝对 1:1 对称**）。

@@ -675,3 +675,12 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/unicode-bidi`** | `packages/@cap/unicode-bidi` | 对标 crates.io #278 `unicode-bidi` (6.04 亿) / npm `bidi-js` — Unicode UAX #9 双向文本分类、段落方向与视觉分段 |
 | **`@cap/base64ct`** | `packages/@cap/base64ct` | 对标 crates.io #299 `base64ct` (5.31 亿) — 零查找表恒定时间 RFC 4648 Base64 Std/URL 严格编解码 |
 | **`@cap/home-dir`** | `packages/@cap/home-dir` | 对标 crates.io #305 `home` (5.18 亿) / npm `untildify` / `expand-tilde` — 跨平台主目录解析、波浪号展开折叠与 XDG 配置目录 |
+
+| **`@cap/proxy-addr`** | `packages/@cap/proxy-addr` | 对标 npm `proxy-addr` (1.5 亿+/周) — `X-Forwarded-For` 可信代理链解析与防 IP 伪造 |
+| **`@cap/parseurl`** | `packages/@cap/parseurl` | 对标 npm `parseurl` (1.8 亿+/周) — 零拷贝 HTTP 请求 URI 路径/查询串高速解析与 `..` 穿越检测 |
+| **`@cap/escape-html`** | `packages/@cap/escape-html` | 对标 npm `escape-html` (2 亿+/周) / `he` / `entities` — 零堆 HTML 实体转义与还原 |
+| **`@cap/cookie-signature`** | `packages/@cap/cookie-signature` | 对标 npm `cookie-signature` (1.2 亿+/周，跨包复用 `@cap/base64ct`) — HMAC-SHA256 签名 Cookie 与恒定时间验签 |
+| **`@cap/depd`** | `packages/@cap/depd` | 对标 npm `depd` (1.5 亿+/周，跨包复用 `@cap/fnv-hash`) — 弃用警告格式化与去重追踪器 |
+| **`@cap/quinn-varint`** | `packages/@cap/quinn-varint` | 对标 crates.io #339 `quinn-proto` (4.59 亿) — RFC 9000 QUIC 变长整数与长包头解析 |
+| **`@cap/subtle-ct`** | `packages/@cap/subtle-ct` | 对标 crates.io `subtle` (8 亿+) / `zeroize` (6 亿+) / npm `tsscmp` — 无分支恒定时间密码学原语与敏感内存清零 |
+| **`@cap/dunce`** | `packages/@cap/dunce` | 对标 crates.io #351 `dunce` (4.33 亿) — Windows UNC `\\?\` 路径安全精简与保留设备名防护 |

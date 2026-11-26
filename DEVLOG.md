@@ -318,3 +318,6 @@
 
 ## 2026-11-27: Batch 84 正式突破 **750 条双生态映射大里程碑（npm=375 / crates.io=375 绝对对称）**！
 - 交付 `@cap/half-f16`（AI/LLM `f16`/`bf16` 1.5 亿+）、`@cap/unicode-bidi`（6.04 亿）、`@cap/base64ct`（5.31 亿恒定时间 Base64）、`@cap/home-dir`（5.18 亿），并将 `@cap/wrap-ansi`、`@cap/boxen`、`@cap/textwrap` 三大终端包统一重构复用 `@cap/unicode-width`（累计已完成 **8 个历史旧包**跨包解耦重构）。
+
+## 2026-11-27: Batch 85 八件套全 6/6 PASS — 达到 **760 条双生态映射（npm=380 / crates.io=380 绝对对称）** & 482+ 官方 `.cap` 包！
+- 一次性交付 Express 生态 5 大核心独立依赖（`proxy-addr`、`parseurl`、`escape-html`、`cookie-signature`、`depd`）+ Rust Top 350 核心 3 件套（`quinn-varint` 4.59 亿、`subtle-ct` 8 亿+、`dunce` 4.33 亿），全部 6/6 PASS 且持续贯彻跨包依赖复用。

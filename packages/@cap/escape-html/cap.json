@@ -1,0 +1,9 @@
+{
+  "name": "@cap/escape-html",
+  "ver": "1.0.0",
+  "desc": "Zero-heap single-pass HTML entity escaper and unescaper (&, <, >, \", ') in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["escape-html", "html", "escape", "unescape", "entities", "express", "zero-heap"]
+}

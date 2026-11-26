@@ -1,0 +1,9 @@
+{
+  "name": "@cap/subtle-ct",
+  "version": "1.0.0",
+  "description": "Zero-allocation branchless constant-time cryptographic primitives (Choice, ctEq, ctLt, ctSelect, ctCondSwap, zeroizeBytes) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["subtle", "constant-time", "zeroize", "crypto", "branchless", "zero-alloc"]
+}

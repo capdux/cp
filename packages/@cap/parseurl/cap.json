@@ -1,0 +1,9 @@
+{
+  "name": "@cap/parseurl",
+  "ver": "1.0.0",
+  "desc": "Zero-heap zero-copy HTTP request URL pathname/search/query parser in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["parseurl", "url", "http", "pathname", "query", "express", "zero-heap"]
+}
