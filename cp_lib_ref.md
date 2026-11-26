@@ -446,3 +446,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/syntax-highlight`** | `packages/@cap/syntax-highlight` | 对标 npm `highlight.js`（5802 万/周）+ `prismjs` — 零堆多语言词法高亮（Code/JSON/SQL，ANSI 与防 XSS HTML 输出） |
 | **`@cap/dns-packet`** | `packages/@cap/dns-packet` | 对标 npm `dns-packet`（2139 万/周）— RFC 1035 DNS 报文头、标签编码、`0xC0` 防环指针压缩解码与 Query 构造 |
 | **`@cap/sitemap`** | `packages/@cap/sitemap` | 对标 npm `sitemap`（882 万/周）— Sitemaps.org 0.9 `<urlset>`/`<sitemapindex>` XML 生成与实体转义 |
+| **`@cap/cookie-sign`** | `packages/@cap/cookie-sign` | 对标 npm `cookie-signature`（2.12 亿/周）+ `cookie-parser` — RFC 6265 Cookie 解析、`Set-Cookie` 与 HMAC-SHA256 恒定时间签名 |
+| **`@cap/content-disposition`** | `packages/@cap/content-disposition` | 对标 npm `content-disposition` — RFC 6266/5987 附件头格式化与 UTF-8 文件名解析（自动防路径穿越） |
+| **`@cap/path-to-regexp`** | `packages/@cap/path-to-regexp` | 对标 npm `path-to-regexp`（6500 万/周）— 零堆路由模式编译、`:param`/`*wildcard` 参数提取与 `buildPath` 反向拼装 |
+| **`@cap/minisearch`** | `packages/@cap/minisearch` | 对标 npm `lunr`（995 万/周）+ `minisearch` — 零堆内存倒排索引、BM25 相关性排序与前缀自动补全检索 |
+| **`@cap/cidr-tools`** | `packages/@cap/cidr-tools` | 对标 npm `cidr-tools` / `ip-cidr` — 零堆 IPv4 CIDR 解析、包含/重叠判断、最小前缀块 `merge` 与差集 `exclude` |
+| **`@cap/color-space`** | `packages/@cap/color-space` | 对标 npm `color-convert` / Rust `palette` — sRGB ↔ Linear ↔ HSL ↔ HSV ↔ OKLab ↔ OKLCH 转换与感知混合 |

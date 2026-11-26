@@ -1,26 +1,27 @@
-# @cap/path-to-regexp
+# `@cap/path-to-regexp`
 
-Zero-allocation Express/Hono-style URL route pattern matcher, named parameter extractor & reverse URL builder for CP — clean-room MIT parity with npm `path-to-regexp` (65M/wk).
-
-## Install
-
-```bash
-cap add @cap/path-to-regexp
-```
+Zero-heap-allocation URL route pattern compiler, parameter extractor, and reverse path builder in pure CP.
 
 ## Features
 
-- **Named Parameters**: `/users/:id/posts/:postId`
-- **Optional Parameters**: `/archive/:year/:month?`
-- **Wildcard Catch-All**: `/files/*filepath`
-- **Reverse URL Builder**: `buildRoute("/users/:id/posts/:postId", params, out)` → `"/users/42/posts/99"`
-- **Query & Trailing Slash Normalization**: automatically ignores `?query` / `#hash` and normalizes trailing `/`.
+- **Route Syntax**: Static literals, named `:param`, optional `:param?`, and multi-segment `*wildcard`.
+- **Zero-Copy Extraction**: `RoutePattern.matchPath` returns exact byte ranges (`ParamSlice`) into the original `pattern` and `path`.
+- **Reverse Path Builder**: `buildPath` substitutes parameter slices into a route pattern into a caller buffer.
+- **Zero Heap Allocation**: Pure CP, stack-only, no FFI (`MAX_SEGMENTS = 16`, `MAX_PARAMS = 8`).
 
-## Usage
+## API
 
 ```cp
-import { matchRoute, buildRoute, ParamPair } from "@cap/path-to-regexp";
-
-const m = matchRoute("/packages/:scope/:name", "/packages/@cap/lru?v=1");
-// m.matched == true, m.get("scope") == "@cap", m.get("name") == "lru"
+import {
+    MAX_SEGMENTS,
+    MAX_PARAMS,
+    ParamSlice,
+    MatchResult,
+    RoutePattern,
+    buildPath,
+} from "@cap/path-to-regexp";
 ```
+
+## License
+
+MIT

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/color-space",
+  "ver": "1.0.0",
+  "description": "Zero-allocation color space conversion engine (sRGB, Linear RGB, HSL, HSV, OKLab, OKLCH) and perceptual color mixing (Rust palette / color-convert parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

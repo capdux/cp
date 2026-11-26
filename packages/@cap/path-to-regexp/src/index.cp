@@ -1,251 +1,320 @@
-// @cap/path-to-regexp — Zero-allocation URL route pattern matcher & reverse URL builder for CP
-// Clean-room MIT implementation inspired by npm `path-to-regexp` (65M/wk).
+// @cap/path-to-regexp — Zero-allocation URL Route Pattern Matcher & Builder
+// Clean-room MIT implementation in pure CP.
+// Supports static segments, named `:param`, optional `:param?`, and `*wildcard` segments.
 
-const MAX_PARAMS: usize = 16;
+pub const MAX_SEGMENTS: usize = 16;
+pub const MAX_PARAMS: usize = 8;
+const MAX_PATTERN_LEN: usize = 256;
 
-pub struct ParamPair {
-    pub name: string,
-    pub value: string,
+const SEG_LITERAL: u8 = 0;
+const SEG_PARAM: u8 = 1;
+const SEG_OPT_PARAM: u8 = 2;
+const SEG_WILDCARD: u8 = 3;
+
+pub struct ParamSlice {
+    pub name_start: usize,
+    pub name_len: usize,
+    pub val_start: usize,
+    pub val_len: usize,
 }
 
-pub struct RouteMatch {
+pub struct MatchResult {
     pub matched: bool,
-    pub params: [MAX_PARAMS]ParamPair,
     pub param_count: usize,
+    pub params: [8]ParamSlice,
+}
 
-    pub static fn miss() -> RouteMatch {
-        let p: [MAX_PARAMS]ParamPair = undefined;
-        return RouteMatch{
-            matched: false,
-            params: p,
-            param_count: 0,
+struct Segment {
+    kind: u8,
+    start: usize,
+    len: usize,
+}
+
+fn emptyMatchResult() -> MatchResult {
+    let params: [8]ParamSlice = undefined;
+    let i: usize = 0;
+    while (i < MAX_PARAMS) {
+        params[i] = ParamSlice {
+            name_start: 0,
+            name_len: 0,
+            val_start: 0,
+            val_len: 0,
         };
+        i += 1;
     }
+    return MatchResult {
+        matched: false,
+        param_count: 0,
+        params: params,
+    };
+}
 
-    pub static fn okEmpty() -> RouteMatch {
-        let p: [MAX_PARAMS]ParamPair = undefined;
-        return RouteMatch{
-            matched: true,
-            params: p,
-            param_count: 0,
-        };
-    }
+pub struct RoutePattern {
+    pat_buf: [256]u8,
+    pat_len: usize,
+    segments: [16]Segment,
+    seg_count: usize,
+    param_count: usize,
 
-    pub fn pushParam(*_, name: string, value: string) {
-        if (_.param_count < MAX_PARAMS) {
-            _.params[_.param_count] = ParamPair{ name: name, value: value };
-            _.param_count += 1;
+    /// Compiles a route pattern such as `/users/:id/posts/:postId?` or `/files/*path`.
+    pub static fn compile(pattern: []const u8) -> RoutePattern {
+        let pat_buf: [256]u8 = undefined;
+        let plen = pattern.len;
+        if (plen > MAX_PATTERN_LEN) {
+            plen = MAX_PATTERN_LEN;
         }
-    }
+        let c: usize = 0;
+        while (c < plen) {
+            pat_buf[c] = pattern[c];
+            c += 1;
+        }
 
-    pub fn get(name: string) -> string? {
+        let segments: [16]Segment = undefined;
+        let seg_count: usize = 0;
+        let param_count: usize = 0;
+
         let i: usize = 0;
-        while (i < _.param_count) {
-            if (strEq(_.params[i].name, name)) {
-                return _.params[i].value;
+        while (i < plen && seg_count < MAX_SEGMENTS) {
+            while (i < plen && pat_buf[i] == 47) {
+                i += 1; // skip '/'
             }
-            i += 1;
+            if (i >= plen) {
+                break;
+            }
+            const seg_start = i;
+            while (i < plen && pat_buf[i] != 47) {
+                i += 1;
+            }
+            const seg_end = i;
+            const seg_len = seg_end - seg_start;
+
+            if (pat_buf[seg_start] == 58) {
+                // ':' named parameter
+                const nstart = seg_start + 1;
+                let nlen = seg_len - 1;
+                let kind: u8 = SEG_PARAM;
+                if (nlen > 0 && pat_buf[seg_end - 1] == 63) {
+                    // '?' optional parameter
+                    kind = SEG_OPT_PARAM;
+                    nlen -= 1;
+                }
+                segments[seg_count] = Segment {
+                    kind: kind,
+                    start: nstart,
+                    len: nlen,
+                };
+                seg_count += 1;
+                param_count += 1;
+            } else if (pat_buf[seg_start] == 42) {
+                // '*' wildcard parameter
+                segments[seg_count] = Segment {
+                    kind: SEG_WILDCARD,
+                    start: seg_start + 1,
+                    len: seg_len - 1,
+                };
+                seg_count += 1;
+                param_count += 1;
+                break;
+            } else {
+                segments[seg_count] = Segment {
+                    kind: SEG_LITERAL,
+                    start: seg_start,
+                    len: seg_len,
+                };
+                seg_count += 1;
+            }
         }
-        return null;
+
+        return RoutePattern {
+            pat_buf: pat_buf,
+            pat_len: plen,
+            segments: segments,
+            seg_count: seg_count,
+            param_count: param_count,
+        };
     }
 
-    pub fn has(name: string) -> bool {
-        return _.get(name) != null;
+    /// Returns the number of parsed route segments.
+    pub fn segmentCount() -> usize {
+        return _.seg_count;
     }
-}
 
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
+    /// Returns the number of parameter/wildcard segments in the compiled pattern.
+    pub fn paramCount() -> usize {
+        return _.param_count;
     }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
+
+    /// Matches `path` against this compiled route pattern (zero-copy offset extraction).
+    /// Trailing slashes are normalized.
+    pub fn matchPath(path: []const u8) -> MatchResult {
+        let res = emptyMatchResult();
+
+        // Trim trailing '/'
+        let eff_len = path.len;
+        while (eff_len > 0 && path[eff_len - 1] == 47) {
+            eff_len -= 1;
         }
-        i += 1;
-    }
-    return true;
-}
 
-fn nextSlash(s: string, start: usize) -> usize {
-    let i = start;
-    while (i < s.len && s[i] != '/') {
-        i += 1;
-    }
-    return i;
-}
+        let pos: usize = 0;
+        let si: usize = 0;
+        let pcount: usize = 0;
 
-fn stripQueryAndTrailingSlash(path: string) -> string {
-    let end = path.len;
-    let i: usize = 0;
-    while (i < path.len) {
-        if (path[i] == '?' || path[i] == '#') {
-            end = i;
-            break;
+        while (si < _.seg_count) {
+            while (pos < eff_len && path[pos] == 47) {
+                pos += 1;
+            }
+
+            const seg = _.segments[si];
+
+            if (seg.kind == SEG_WILDCARD) {
+                if (pcount < MAX_PARAMS) {
+                    res.params[pcount] = ParamSlice {
+                        name_start: seg.start,
+                        name_len: seg.len,
+                        val_start: pos,
+                        val_len: eff_len - pos,
+                    };
+                    pcount += 1;
+                }
+                pos = eff_len;
+                si += 1;
+                break;
+            }
+
+            if (pos >= eff_len) {
+                if (seg.kind == SEG_OPT_PARAM) {
+                    si += 1;
+                    continue;
+                }
+                return res;
+            }
+
+            const val_start = pos;
+            while (pos < eff_len && path[pos] != 47) {
+                pos += 1;
+            }
+            const val_len = pos - val_start;
+
+            if (seg.kind == SEG_LITERAL) {
+                if (val_len != seg.len) {
+                    return res;
+                }
+                let k: usize = 0;
+                while (k < seg.len) {
+                    if (_.pat_buf[seg.start + k] != path[val_start + k]) {
+                        return res;
+                    }
+                    k += 1;
+                }
+            } else {
+                // SEG_PARAM or SEG_OPT_PARAM
+                if (pcount < MAX_PARAMS) {
+                    res.params[pcount] = ParamSlice {
+                        name_start: seg.start,
+                        name_len: seg.len,
+                        val_start: val_start,
+                        val_len: val_len,
+                    };
+                    pcount += 1;
+                }
+            }
+
+            si += 1;
         }
-        i += 1;
-    }
-    while (end > 1 && path[end - 1] == '/') {
-        end -= 1;
-    }
-    return path[0..end];
-}
 
-fn stripTrailingSlashOnly(s: string) -> string {
-    let end = s.len;
-    while (end > 1 && s[end - 1] == '/') {
-        end -= 1;
-    }
-    return s[0..end];
-}
-
-pub fn matchRoute(pattern_raw: string, path_raw: string) -> RouteMatch {
-    const pattern = stripTrailingSlashOnly(pattern_raw);
-    const path = stripQueryAndTrailingSlash(path_raw);
-
-    let res = RouteMatch.okEmpty();
-    let pi: usize = 0;
-    let si: usize = 0;
-
-    // Skip leading '/'
-    if (pi < pattern.len && pattern[pi] == '/') {
-        pi += 1;
-    }
-    if (si < path.len && path[si] == '/') {
-        si += 1;
-    }
-
-    while (pi < pattern.len) {
-        const p_end = nextSlash(pattern, pi);
-        const p_seg = pattern[pi..p_end];
-
-        // Wildcard catch-all: "*name" or "*"
-        if (p_seg.len > 0 && p_seg[0] == '*') {
-            const wname = if (p_seg.len > 1) { p_seg[1..p_seg.len] } else { "wildcard" };
-            const rest = if (si <= path.len) { path[si..path.len] } else { "" };
-            res.pushParam(wname, rest);
+        while (pos < eff_len && path[pos] == 47) {
+            pos += 1;
+        }
+        if (pos < eff_len) {
             return res;
         }
 
-        // Optional named parameter: ":id?"
-        if (p_seg.len >= 3 && p_seg[0] == ':' && p_seg[p_seg.len - 1] == '?') {
-            const pname = p_seg[1..p_seg.len - 1];
-            if (si < path.len) {
-                const s_end = nextSlash(path, si);
-                res.pushParam(pname, path[si..s_end]);
-                si = if (s_end < path.len) { s_end + 1 } else { path.len };
-            }
-            pi = if (p_end < pattern.len) { p_end + 1 } else { pattern.len };
-            continue;
-        }
+        res.matched = true;
+        res.param_count = pcount;
+        return res;
+    }
+}
 
-        // Path exhausted before required pattern segment
-        if (si >= path.len) {
-            return RouteMatch.miss();
+/// Builds a concrete URL path by substituting `param_values` into `pattern` in order.
+/// Returns the written byte length, or `-1` if a required parameter is missing or `dst` is too small.
+pub fn buildPath(pattern: []const u8, param_values: []const []const u8, dst: []u8) -> i64 {
+    const compiled = RoutePattern.compile(pattern);
+    if (compiled.seg_count == 0) {
+        if (dst.len < 1) {
+            return -1;
         }
-        const s_end = nextSlash(path, si);
-        const s_seg = path[si..s_end];
+        dst[0] = 47; // '/'
+        return 1;
+    }
 
-        if (p_seg.len >= 2 && p_seg[0] == ':') {
-            // Required named parameter ":id"
-            if (s_seg.len == 0) {
-                return RouteMatch.miss();
+    let out_pos: usize = 0;
+    let val_idx: usize = 0;
+    let si: usize = 0;
+
+    while (si < compiled.seg_count) {
+        const seg = compiled.segments[si];
+        if (seg.kind == SEG_LITERAL) {
+            if (out_pos + 1 + seg.len > dst.len) {
+                return -1;
             }
-            res.pushParam(p_seg[1..p_seg.len], s_seg);
+            dst[out_pos] = 47;
+            out_pos += 1;
+            let k: usize = 0;
+            while (k < seg.len) {
+                dst[out_pos] = compiled.pat_buf[seg.start + k];
+                out_pos += 1;
+                k += 1;
+            }
+        } else if (seg.kind == SEG_PARAM || seg.kind == SEG_WILDCARD) {
+            if (val_idx >= param_values.len) {
+                return -1;
+            }
+            const val = param_values[val_idx];
+            val_idx += 1;
+            if (seg.kind == SEG_PARAM && val.len == 0) {
+                return -1;
+            }
+            if (out_pos + 1 + val.len > dst.len) {
+                return -1;
+            }
+            dst[out_pos] = 47;
+            out_pos += 1;
+            let k: usize = 0;
+            while (k < val.len) {
+                dst[out_pos] = val[k];
+                out_pos += 1;
+                k += 1;
+            }
         } else {
-            // Static segment exact match
-            if (!strEq(p_seg, s_seg)) {
-                return RouteMatch.miss();
+            // SEG_OPT_PARAM
+            if (val_idx < param_values.len) {
+                const val = param_values[val_idx];
+                val_idx += 1;
+                if (val.len > 0) {
+                    if (out_pos + 1 + val.len > dst.len) {
+                        return -1;
+                    }
+                    dst[out_pos] = 47;
+                    out_pos += 1;
+                    let k: usize = 0;
+                    while (k < val.len) {
+                        dst[out_pos] = val[k];
+                        out_pos += 1;
+                        k += 1;
+                    }
+                }
             }
         }
-
-        pi = if (p_end < pattern.len) { p_end + 1 } else { pattern.len };
-        si = if (s_end < path.len) { s_end + 1 } else { path.len };
+        si += 1;
     }
 
-    if (si < path.len) {
-        return RouteMatch.miss();
-    }
-    return res;
-}
-
-pub fn isRouteMatch(pattern: string, path: string) -> bool {
-    return matchRoute(pattern, path).matched;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn findParam(params: []ParamPair, name: string) -> string? {
-    let i: usize = 0;
-    while (i < params.len) {
-        if (strEq(params[i].name, name)) {
-            return params[i].value;
+    if (out_pos == 0) {
+        if (dst.len < 1) {
+            return -1;
         }
-        i += 1;
+        dst[0] = 47;
+        return 1;
     }
-    return null;
+
+    return out_pos as i64;
 }
-
-pub fn buildRoute(pattern_raw: string, params: []ParamPair, out: []u8) -> string? {
-    const pattern = stripTrailingSlashOnly(pattern_raw);
-    if (strEq(pattern, "/")) {
-        const n = appendStr(out, 0 as usize, "/");
-        return out[0..n];
-    }
-
-    let pos: usize = 0;
-    let pi: usize = 0;
-    if (pi < pattern.len && pattern[pi] == '/') {
-        pi += 1;
-    }
-
-    while (pi < pattern.len) {
-        const p_end = nextSlash(pattern, pi);
-        const p_seg = pattern[pi..p_end];
-
-        if (p_seg.len >= 3 && p_seg[0] == ':' && p_seg[p_seg.len - 1] == '?') {
-            const pname = p_seg[1..p_seg.len - 1];
-            const val = findParam(params, pname);
-            if (val != null) {
-                pos = appendStr(out, pos, "/");
-                pos = appendStr(out, pos, val ?? "");
-            }
-        } else if (p_seg.len >= 2 && (p_seg[0] == ':' || p_seg[0] == '*')) {
-            const pname = p_seg[1..p_seg.len];
-            const val = findParam(params, pname);
-            if (val == null) {
-                return null; // missing required param
-            }
-            pos = appendStr(out, pos, "/");
-            pos = appendStr(out, pos, val ?? "");
-        } else {
-            pos = appendStr(out, pos, "/");
-            pos = appendStr(out, pos, p_seg);
-        }
-
-        pi = if (p_end < pattern.len) { p_end + 1 } else { pattern.len };
-    }
-
-    if (pos == 0) {
-        pos = appendStr(out, pos, "/");
-    }
-    return out[0..pos];
-}
-
-export {
-    ParamPair,
-    RouteMatch,
-    matchRoute,
-    isRouteMatch,
-    buildRoute,
-};

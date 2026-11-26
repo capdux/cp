@@ -1,0 +1,8 @@
+{
+  "name": "@cap/cookie-sign",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 6265 Cookie parser, Set-Cookie header formatter, and built-in HMAC-SHA256 constant-time cookie signing/verification.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

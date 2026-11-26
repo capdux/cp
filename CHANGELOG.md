@@ -402,3 +402,12 @@
 - `packages/@cap/dns-packet/` & `cap/test/testCapDnsPacket.cp`: 对标 npm `dns-packet`（2139 万/周），RFC 1035 DNS 编解码与防环指针解压（6/6 PASS）。
 - `packages/@cap/sitemap/` & `cap/test/testCapSitemap.cp`: 对标 npm `sitemap`（882 万/周），Sitemaps.org 0.9 XML 生成（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **395 条**高频映射（含 `pino`/`compression`/`ejs`/`moment`/`fast-diff`/`ioredis` 6 大千万级 npm 包去重直连）。
+
+## [2026-11-26] - Batch 49 纯 npm 里程碑：突破 **405 条映射 + 260+ 官方 `.cap` 包**！（交付 `@cap/cookie-sign`, `@cap/content-disposition`, `@cap/path-to-regexp`, `@cap/minisearch`, `@cap/cidr-tools`, `@cap/color-space`）
+- `packages/@cap/cookie-sign/` & `cap/test/testCapCookieSign.cp`: 对标 npm `cookie-signature`（2.12 亿/周），HMAC-SHA256 Cookie 签名与 RFC 6265 解析（6/6 PASS）。
+- `packages/@cap/content-disposition/` & `cap/test/testCapContentDisposition.cp`: 对标 npm `content-disposition`，RFC 6266/5987 编解码（6/6 PASS）。
+- `packages/@cap/path-to-regexp/` & `cap/test/testCapPathToRegexp.cp`: 对标 npm `path-to-regexp`（6500 万/周），路由匹配与反向 URL 生成（6/6 PASS）。
+- `packages/@cap/minisearch/` & `cap/test/testCapMinisearch.cp`: 对标 npm `lunr`/`minisearch`，零堆倒排索引与 BM25 全文检索（6/6 PASS）。
+- `packages/@cap/cidr-tools/` & `cap/test/testCapCidrTools.cp`: 对标 npm `cidr-tools`，IPv4 CIDR 合并与差集排除（6/6 PASS）。
+- `packages/@cap/color-space/` & `cap/test/testCapColorSpace.cp`: 对标 npm `color-convert`/Rust `palette`，OKLab/OKLCH/HSL/HSV 色彩转换（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **405 条**高频映射（npm 达 **188 条**，含 `crypto-js`/`semver-compare`/`bcryptjs`/`filesize` 去重直连）。

@@ -210,3 +210,6 @@
 
 ## 2026-11-26: Batch 48 连续补齐 npm 8119 万 → 882 万/周 Top 10（总映射 **395 条**，距 400 条映射仅一步之遥！）
 - 交付 4 大高频 npm 生态包 `@cap/debounce`（7445 万/周）、`@cap/syntax-highlight`（5802 万/周）、`@cap/dns-packet`（2139 万/周）、`@cap/sitemap`（882 万/周）（全部 6/6 PASS），并去重直连 `pino`/`compression`/`ejs`/`moment`/`fast-diff`/`ioredis`，npm 映射增至 **178 条**，总映射达 **395 条**！
+
+## 2026-11-26: Batch 49 纯 npm 历史里程碑：**405 条生态映射 + 260+ 线上官方 `.cap` 包**！
+- 单批交付 6 大高下载 npm 独立包 `@cap/cookie-sign`（2.12 亿/周）、`@cap/content-disposition`、`@cap/path-to-regexp`（6500 万/周）、`@cap/minisearch`（995 万/周）、`@cap/cidr-tools`、`@cap/color-space`（全部 6/6 PASS），并去重直连 `crypto-js`/`semver-compare`/`bcryptjs`/`filesize`，总映射正式突破 **405 条**（npm=188 / crates.io=217 趋近均衡）！

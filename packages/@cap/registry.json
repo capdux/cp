@@ -3954,6 +3954,106 @@
       "kind": "package",
       "aliases": ["sitemap.js"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cookie-signature",
+      "source_repo": "https://github.com/tj/node-cookie-signature",
+      "license": "MIT",
+      "cp_target": "@cap/cookie-sign",
+      "kind": "package",
+      "aliases": ["cookie-parser"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "content-disposition",
+      "source_repo": "https://github.com/jshttp/content-disposition",
+      "license": "MIT",
+      "cp_target": "@cap/content-disposition",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-to-regexp",
+      "source_repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT",
+      "cp_target": "@cap/path-to-regexp",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "crypto-js",
+      "source_repo": "https://github.com/brix/crypto-js",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "semver-compare",
+      "source_repo": "https://github.com/substack/semver-compare",
+      "license": "MIT",
+      "cp_target": "cap:semver",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bcryptjs",
+      "source_repo": "https://github.com/dcodeIO/bcrypt.js",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": ["bcrypt"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "filesize",
+      "source_repo": "https://github.com/avoidwork/filesize.js",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/human-number",
+      "kind": "package",
+      "aliases": ["pretty-bytes"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lunr",
+      "source_repo": "https://github.com/olivernn/lunr.js",
+      "license": "MIT",
+      "cp_target": "@cap/minisearch",
+      "kind": "package",
+      "aliases": ["minisearch", "flexsearch"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cidr-tools",
+      "source_repo": "https://github.com/silverwind/cidr-tools",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/cidr-tools",
+      "kind": "package",
+      "aliases": ["ip-cidr"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "color-convert",
+      "source_repo": "https://github.com/Qix-/color-convert",
+      "license": "MIT",
+      "cp_target": "@cap/color-space",
+      "kind": "package",
+      "aliases": ["palette", "culori"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
