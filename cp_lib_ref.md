@@ -822,3 +822,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/negotiator`** | `packages/@cap/negotiator` | 对标 npm Top 30 `negotiator` (1.5 亿+/周，跨包复用 `@cap/unicase`) — RFC 7231 `Accept-Encoding`/`Language`/`Charset` 权重协商 |
 | **`@cap/bumpalo`** | `packages/@cap/bumpalo` | 对标 crates.io #145 `bumpalo` v3 (8.5 亿+) — 4KB 零堆对齐感知 Bump Arena 线性分配器与快照回滚 |
 | **`@cap/petgraph-core`** | `packages/@cap/petgraph-core` | 对标 crates.io #110 `petgraph` v0.6 (9.5 亿+) — 零堆有向/无向加权图（BFS/迭代 DFS/Kahn 拓扑排序/环检测/Dijkstra 最短路） |
+| **`@cap/content-type`** | `packages/@cap/content-type` | 对标 npm Top 25 `content-type` (1.8 亿+/周，跨包复用 `@cap/unicase`) — RFC 7231 `Content-Type` 头解析与引号转义格式化 |
+| **`@cap/path-to-regexp`** | `packages/@cap/path-to-regexp` | 对标 npm Top 20 `path-to-regexp` v8 (2 亿+/周，跨包复用 `@cap/unicase`) — Express/Router 路由模板匹配、命名/通配参数提取与反向生成 |
+| **`@cap/quick-lru`** | `packages/@cap/quick-lru` | 对标 npm Top 60 `quick-lru` (9000 万+/周，跨包复用 `@cap/fnv-hash`) — 双代 O(1) 轮转淘汰零堆 QuickLRU 缓存 |
+| **`@cap/data-encoding`** | `packages/@cap/data-encoding` | 对标 crates.io #155 `data-encoding` v2 (8 亿+) — 严格 RFC 4648 Hex/Base32/Base64/Base64URL（含非零尾位校验） |
+| **`@cap/lru-crate`** | `packages/@cap/lru-crate` | 对标 crates.io #135 `lru` (9 亿+，跨包复用 `@cap/fnv-hash`) — 侵入式双链表零堆 O(1) LRU 缓存（`LruCacheI64`） |

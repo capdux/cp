@@ -1,35 +1,28 @@
 // Type definitions for CP
 
-export class ParamSlice {
-    name_start: usize,
-    name_len: usize,
-    val_start: usize,
-    val_len: usize,
+import { eqAscii } from "../../unicase/src/index.cp";
+export fn ptrStrEq(a: string, b: string): bool;
+export fn ptrSegEq(a: string, b: string, case_sensitive: bool): bool;
+export fn ptrTrimSlashes(s: string): string;
+export fn ptrFindSegEnd(s: string, pos: usize): usize;
+export fn ptrSkipSlashes(s: string, pos: usize): usize;
+export fn ptrWriteByte(out: []u8, pos: usize, b: u8): usize;
+export fn ptrWriteSlice(out: []u8, pos: usize, s: string): usize;
+export fn ptrFindParam(params: &[]RouteParam, name: string): string?;
+export class RouteParam {
+    name: string,
+    value: string,
+    fn new(name: string, value: string): RouteParam;
 }
 
-export class MatchResult {
+export class RouteMatch {
     matched: bool,
+    params: [16]RouteParam,
     param_count: usize,
-    params: [8]ParamSlice,
+    fn noMatch(): RouteMatch;
+    fn getParam(name: string): string?;
 }
 
-export class Segment {
-    kind: u8,
-    start: usize,
-    len: usize,
-}
-
-export fn emptyMatchResult(): MatchResult;
-export class RoutePattern {
-    pat_buf: [256]u8,
-    pat_len: usize,
-    segments: [16]Segment,
-    seg_count: usize,
-    param_count: usize,
-    fn compile(pattern: &[]u8): RoutePattern;
-    fn segmentCount(): usize;
-    fn paramCount(): usize;
-    fn matchPath(path: &[]u8): MatchResult;
-}
-
-export fn buildPath(pattern: &[]u8, param_values: &[]&[]u8, dst: []u8): i64;
+export fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatch;
+export fn compilePath(pattern: string, params: &[]RouteParam, out: []u8): usize;
+export fn countRouteParams(pattern: string): usize;

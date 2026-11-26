@@ -1,363 +1,587 @@
-// @cap/data-encoding — Zero-allocation RFC 4648 Base32/Base32hex/Crockford/Base64url codec
-// Clean-room MIT implementation inspired by Rust `data-encoding` and RFC 4648.
+// @cap/data-encoding — Zero-allocation strict RFC 4648 Base16/Hex, Base32, Base64/Base64URL codec for CP
+// Clean-room MIT implementation inspired by Rust `data-encoding` v2 (800M+ downloads).
+// Enforces canonical RFC 4648 §3.5 non-zero trailing-bit rejection and precise error position reporting.
 
-const BASE32_ALPHA: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-const BASE32HEX_ALPHA: string = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-const CROCKFORD_ALPHA: string = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-const BASE64URL_ALPHA: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+pub struct DecodeResult {
+    pub ok: bool,
+    pub len: usize,
+    pub error_pos: usize,
 
-// ---------------------------------------------------------------------------
-// Internal Base32 Core
-// ---------------------------------------------------------------------------
-
-fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
-    if (pos < out.len) {
-        out[pos] = c;
-        return pos + 1;
+    pub static fn success(n: usize) -> DecodeResult {
+        return DecodeResult{
+            ok: true,
+            len: n,
+            error_pos: 0 as usize,
+        };
     }
-    return pos;
+
+    pub static fn fail(pos: usize) -> DecodeResult {
+        return DecodeResult{
+            ok: false,
+            len: 0 as usize,
+            error_pos: pos,
+        };
+    }
 }
 
-fn encodeBase32Core(input: string, alpha: string, pad: bool, out: []u8) -> string {
-    if (input.len == 0) {
-        return out[0..0];
+fn dencHexDigit(v: u8, upper: bool) -> u8 {
+    if (v < (10 as u8)) {
+        return (48 as u8) + v;
     }
-    let pos: usize = 0;
+    if (upper) {
+        return (65 as u8) + (v - (10 as u8));
+    }
+    return (97 as u8) + (v - (10 as u8));
+}
+
+fn dencHexVal(c: u8) -> u8 {
+    if (c >= (48 as u8) && c <= (57 as u8)) {
+        return c - (48 as u8);
+    }
+    if (c >= (65 as u8) && c <= (70 as u8)) {
+        return (c - (65 as u8)) + (10 as u8);
+    }
+    if (c >= (97 as u8) && c <= (102 as u8)) {
+        return (c - (97 as u8)) + (10 as u8);
+    }
+    return 0xFF as u8;
+}
+
+fn dencB32Char(v: u8) -> u8 {
+    if (v < (26 as u8)) {
+        return (65 as u8) + v;
+    }
+    return (50 as u8) + (v - (26 as u8));
+}
+
+fn dencB32Val(c: u8) -> u8 {
+    if (c >= (65 as u8) && c <= (90 as u8)) {
+        return c - (65 as u8);
+    }
+    if (c >= (50 as u8) && c <= (55 as u8)) {
+        return (c - (50 as u8)) + (26 as u8);
+    }
+    return 0xFF as u8;
+}
+
+fn dencB64Char(v: u8, url_safe: bool) -> u8 {
+    if (v < (26 as u8)) {
+        return (65 as u8) + v;
+    }
+    if (v < (52 as u8)) {
+        return (97 as u8) + (v - (26 as u8));
+    }
+    if (v < (62 as u8)) {
+        return (48 as u8) + (v - (52 as u8));
+    }
+    if (v == (62 as u8)) {
+        if (url_safe) {
+            return 45 as u8; // '-'
+        }
+        return 43 as u8; // '+'
+    }
+    if (url_safe) {
+        return 95 as u8; // '_'
+    }
+    return 47 as u8; // '/'
+}
+
+fn dencB64Val(c: u8, url_safe: bool) -> u8 {
+    if (c >= (65 as u8) && c <= (90 as u8)) {
+        return c - (65 as u8);
+    }
+    if (c >= (97 as u8) && c <= (122 as u8)) {
+        return (c - (97 as u8)) + (26 as u8);
+    }
+    if (c >= (48 as u8) && c <= (57 as u8)) {
+        return (c - (48 as u8)) + (52 as u8);
+    }
+    if (url_safe) {
+        if (c == (45 as u8)) {
+            return 62 as u8;
+        }
+        if (c == (95 as u8)) {
+            return 63 as u8;
+        }
+        return 0xFF as u8;
+    }
+    if (c == (43 as u8)) {
+        return 62 as u8;
+    }
+    if (c == (47 as u8)) {
+        return 63 as u8;
+    }
+    return 0xFF as u8;
+}
+
+fn dencHexEncodeImpl(src: []const u8, upper: bool, out: []u8) -> usize {
+    let need = src.len * (2 as usize);
+    if (out.len < need) {
+        return 0 as usize;
+    }
     let i: usize = 0;
-
-    // Full 5-byte (40-bit) -> 8-char blocks
-    while (i + 5 <= input.len) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        const b2 = input[i + 2] as u32;
-        const b3 = input[i + 3] as u32;
-        const b4 = input[i + 4] as u32;
-
-        pos = appendByte(out, pos, alpha[(b0 >> 3) as usize]);
-        pos = appendByte(out, pos, alpha[(((b0 & 0x07) << 2) | (b1 >> 6)) as usize]);
-        pos = appendByte(out, pos, alpha[((b1 >> 1) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[(((b1 & 0x01) << 4) | (b2 >> 4)) as usize]);
-        pos = appendByte(out, pos, alpha[(((b2 & 0x0F) << 1) | (b3 >> 7)) as usize]);
-        pos = appendByte(out, pos, alpha[((b3 >> 2) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[(((b3 & 0x03) << 3) | (b4 >> 5)) as usize]);
-        pos = appendByte(out, pos, alpha[(b4 & 0x1F) as usize]);
-        i += 5;
+    while (i < src.len) {
+        let b = src[i];
+        out[i * (2 as usize)] = dencHexDigit(b / (16 as u8), upper);
+        out[i * (2 as usize) + (1 as usize)] = dencHexDigit(b & (0x0F as u8), upper);
+        i += 1;
     }
-
-    const rem = input.len - i;
-    if (rem == 1) {
-        const b0 = input[i] as u32;
-        pos = appendByte(out, pos, alpha[(b0 >> 3) as usize]);
-        pos = appendByte(out, pos, alpha[((b0 & 0x07) << 2) as usize]);
-        if (pad) {
-            let k: usize = 0;
-            while (k < 6) { pos = appendByte(out, pos, '='); k += 1; }
-        }
-    } else if (rem == 2) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        pos = appendByte(out, pos, alpha[(b0 >> 3) as usize]);
-        pos = appendByte(out, pos, alpha[(((b0 & 0x07) << 2) | (b1 >> 6)) as usize]);
-        pos = appendByte(out, pos, alpha[((b1 >> 1) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[((b1 & 0x01) << 4) as usize]);
-        if (pad) {
-            let k: usize = 0;
-            while (k < 4) { pos = appendByte(out, pos, '='); k += 1; }
-        }
-    } else if (rem == 3) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        const b2 = input[i + 2] as u32;
-        pos = appendByte(out, pos, alpha[(b0 >> 3) as usize]);
-        pos = appendByte(out, pos, alpha[(((b0 & 0x07) << 2) | (b1 >> 6)) as usize]);
-        pos = appendByte(out, pos, alpha[((b1 >> 1) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[(((b1 & 0x01) << 4) | (b2 >> 4)) as usize]);
-        pos = appendByte(out, pos, alpha[((b2 & 0x0F) << 1) as usize]);
-        if (pad) {
-            let k: usize = 0;
-            while (k < 3) { pos = appendByte(out, pos, '='); k += 1; }
-        }
-    } else if (rem == 4) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        const b2 = input[i + 2] as u32;
-        const b3 = input[i + 3] as u32;
-        pos = appendByte(out, pos, alpha[(b0 >> 3) as usize]);
-        pos = appendByte(out, pos, alpha[(((b0 & 0x07) << 2) | (b1 >> 6)) as usize]);
-        pos = appendByte(out, pos, alpha[((b1 >> 1) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[(((b1 & 0x01) << 4) | (b2 >> 4)) as usize]);
-        pos = appendByte(out, pos, alpha[(((b2 & 0x0F) << 1) | (b3 >> 7)) as usize]);
-        pos = appendByte(out, pos, alpha[((b3 >> 2) & 0x1F) as usize]);
-        pos = appendByte(out, pos, alpha[((b3 & 0x03) << 3) as usize]);
-        if (pad) {
-            pos = appendByte(out, pos, '=');
-        }
-    }
-
-    return out[0..pos];
+    return need;
 }
 
-fn base32Val(c: u8) -> u8? {
-    if (c >= 'A' && c <= 'Z') return c - 'A';
-    if (c >= '2' && c <= '7') return (c - '2') + 26;
-    return null;
-}
-
-fn base32HexVal(c: u8) -> u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'V') return (c - 'A') + 10;
-    return null;
-}
-
-fn crockfordVal(c: u8) -> u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    // Tolerate visually ambiguous characters per Crockford spec
-    if (c == 'o' || c == 'O') return 0;
-    if (c == 'i' || c == 'I' || c == 'l' || c == 'L') return 1;
-    let u = c;
-    if (u >= 'a' && u <= 'z') {
-        u -= 32;
+/// Computes exact encoded length for Base64 / Base64URL.
+pub fn base64EncodeLen(n: usize, pad: bool) -> usize {
+    if (n == (0 as usize)) {
+        return 0 as usize;
     }
-    if (u >= 'A' && u <= 'H') return (u - 'A') + 10;
-    if (u >= 'J' && u <= 'K') return (u - 'J') + 18;
-    if (u >= 'M' && u <= 'N') return (u - 'M') + 20;
-    if (u >= 'P' && u <= 'T') return (u - 'P') + 22;
-    if (u >= 'V' && u <= 'Z') return (u - 'V') + 27;
-    return null;
+    if (pad) {
+        return ((n + (2 as usize)) / (3 as usize)) * (4 as usize);
+    }
+    let full = (n / (3 as usize)) * (4 as usize);
+    let rem = n % (3 as usize);
+    if (rem == (0 as usize)) {
+        return full;
+    }
+    if (rem == (1 as usize)) {
+        return full + (2 as usize);
+    }
+    return full + (3 as usize);
 }
 
-fn decodeBase32Standard(encoded: string, is_hex: bool, out: []u8) -> string? {
-    if (encoded.len == 0) {
-        return out[0..0];
+/// Computes exact encoded length for RFC 4648 Base32.
+pub fn base32EncodeLen(n: usize, pad: bool) -> usize {
+    if (n == (0 as usize)) {
+        return 0 as usize;
+    }
+    if (pad) {
+        return ((n + (4 as usize)) / (5 as usize)) * (8 as usize);
+    }
+    let full = (n / (5 as usize)) * (8 as usize);
+    let rem = n % (5 as usize);
+    if (rem == (0 as usize)) {
+        return full;
+    }
+    if (rem == (1 as usize)) {
+        return full + (2 as usize);
+    }
+    if (rem == (2 as usize)) {
+        return full + (4 as usize);
+    }
+    if (rem == (3 as usize)) {
+        return full + (5 as usize);
+    }
+    return full + (7 as usize);
+}
+
+/// Encodes `src` as lowercase hexadecimal into `out`. Returns bytes written (0 if `out` too small).
+pub fn hexLowerEncode(src: []const u8, out: []u8) -> usize {
+    return dencHexEncodeImpl(src, false, out);
+}
+
+/// Encodes `src` as uppercase hexadecimal into `out`. Returns bytes written (0 if `out` too small).
+pub fn hexUpperEncode(src: []const u8, out: []u8) -> usize {
+    return dencHexEncodeImpl(src, true, out);
+}
+
+/// Decodes hexadecimal (accepting both upper & lower case) into `out`.
+pub fn hexDecode(src: []const u8, out: []u8) -> DecodeResult {
+    if (src.len == (0 as usize)) {
+        return DecodeResult.success(0 as usize);
+    }
+    if ((src.len % (2 as usize)) != (0 as usize)) {
+        return DecodeResult.fail(src.len - (1 as usize));
+    }
+    let out_len = src.len / (2 as usize);
+    if (out.len < out_len) {
+        return DecodeResult.fail(0 as usize);
+    }
+    let i: usize = 0;
+    while (i < out_len) {
+        let hi = dencHexVal(src[i * (2 as usize)]);
+        if (hi == (0xFF as u8)) {
+            return DecodeResult.fail(i * (2 as usize));
+        }
+        let lo = dencHexVal(src[i * (2 as usize) + (1 as usize)]);
+        if (lo == (0xFF as u8)) {
+            return DecodeResult.fail(i * (2 as usize) + (1 as usize));
+        }
+        out[i] = (hi * (16 as u8)) | lo;
+        i += 1;
+    }
+    return DecodeResult.success(out_len);
+}
+
+/// Encodes `src` using RFC 4648 Base32 alphabet (`A-Z`, `2-7`) with optional `=` padding.
+pub fn base32Encode(src: []const u8, pad: bool, out: []u8) -> usize {
+    let need = base32EncodeLen(src.len, pad);
+    if (out.len < need) {
+        return 0 as usize;
+    }
+    let in_i: usize = 0;
+    let out_i: usize = 0;
+    while (in_i + (5 as usize) <= src.len) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        let b2 = src[in_i + (2 as usize)] as u32;
+        let b3 = src[in_i + (3 as usize)] as u32;
+        let b4 = src[in_i + (4 as usize)] as u32;
+
+        out[out_i] = dencB32Char((b0 / (8 as u32)) as u8);
+        out[out_i + (1 as usize)] = dencB32Char((((b0 & (7 as u32)) * (4 as u32)) | (b1 / (64 as u32))) as u8);
+        out[out_i + (2 as usize)] = dencB32Char(((b1 / (2 as u32)) & (31 as u32)) as u8);
+        out[out_i + (3 as usize)] = dencB32Char((((b1 & (1 as u32)) * (16 as u32)) | (b2 / (16 as u32))) as u8);
+        out[out_i + (4 as usize)] = dencB32Char((((b2 & (15 as u32)) * (2 as u32)) | (b3 / (128 as u32))) as u8);
+        out[out_i + (5 as usize)] = dencB32Char(((b3 / (4 as u32)) & (31 as u32)) as u8);
+        out[out_i + (6 as usize)] = dencB32Char((((b3 & (3 as u32)) * (8 as u32)) | (b4 / (32 as u32))) as u8);
+        out[out_i + (7 as usize)] = dencB32Char((b4 & (31 as u32)) as u8);
+
+        in_i += 5;
+        out_i += 8;
     }
 
-    // Count trailing '=' padding
-    let data_len = encoded.len;
+    let rem = src.len - in_i;
+    if (rem == (1 as usize)) {
+        let b0 = src[in_i] as u32;
+        out[out_i] = dencB32Char((b0 / (8 as u32)) as u8);
+        out[out_i + (1 as usize)] = dencB32Char(((b0 & (7 as u32)) * (4 as u32)) as u8);
+        out_i += 2;
+        if (pad) {
+            let p: usize = 0;
+            while (p < (6 as usize)) {
+                out[out_i] = 61 as u8; // '='
+                out_i += 1;
+                p += 1;
+            }
+        }
+    } else if (rem == (2 as usize)) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        out[out_i] = dencB32Char((b0 / (8 as u32)) as u8);
+        out[out_i + (1 as usize)] = dencB32Char((((b0 & (7 as u32)) * (4 as u32)) | (b1 / (64 as u32))) as u8);
+        out[out_i + (2 as usize)] = dencB32Char(((b1 / (2 as u32)) & (31 as u32)) as u8);
+        out[out_i + (3 as usize)] = dencB32Char(((b1 & (1 as u32)) * (16 as u32)) as u8);
+        out_i += 4;
+        if (pad) {
+            let p: usize = 0;
+            while (p < (4 as usize)) {
+                out[out_i] = 61 as u8;
+                out_i += 1;
+                p += 1;
+            }
+        }
+    } else if (rem == (3 as usize)) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        let b2 = src[in_i + (2 as usize)] as u32;
+        out[out_i] = dencB32Char((b0 / (8 as u32)) as u8);
+        out[out_i + (1 as usize)] = dencB32Char((((b0 & (7 as u32)) * (4 as u32)) | (b1 / (64 as u32))) as u8);
+        out[out_i + (2 as usize)] = dencB32Char(((b1 / (2 as u32)) & (31 as u32)) as u8);
+        out[out_i + (3 as usize)] = dencB32Char((((b1 & (1 as u32)) * (16 as u32)) | (b2 / (16 as u32))) as u8);
+        out[out_i + (4 as usize)] = dencB32Char(((b2 & (15 as u32)) * (2 as u32)) as u8);
+        out_i += 5;
+        if (pad) {
+            let p: usize = 0;
+            while (p < (3 as usize)) {
+                out[out_i] = 61 as u8;
+                out_i += 1;
+                p += 1;
+            }
+        }
+    } else if (rem == (4 as usize)) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        let b2 = src[in_i + (2 as usize)] as u32;
+        let b3 = src[in_i + (3 as usize)] as u32;
+        out[out_i] = dencB32Char((b0 / (8 as u32)) as u8);
+        out[out_i + (1 as usize)] = dencB32Char((((b0 & (7 as u32)) * (4 as u32)) | (b1 / (64 as u32))) as u8);
+        out[out_i + (2 as usize)] = dencB32Char(((b1 / (2 as u32)) & (31 as u32)) as u8);
+        out[out_i + (3 as usize)] = dencB32Char((((b1 & (1 as u32)) * (16 as u32)) | (b2 / (16 as u32))) as u8);
+        out[out_i + (4 as usize)] = dencB32Char((((b2 & (15 as u32)) * (2 as u32)) | (b3 / (128 as u32))) as u8);
+        out[out_i + (5 as usize)] = dencB32Char(((b3 / (4 as u32)) & (31 as u32)) as u8);
+        out[out_i + (6 as usize)] = dencB32Char(((b3 & (3 as u32)) * (8 as u32)) as u8);
+        out_i += 7;
+        if (pad) {
+            out[out_i] = 61 as u8;
+            out_i += 1;
+        }
+    }
+
+    return out_i;
+}
+
+/// Decodes RFC 4648 Base32 (padded or unpadded) with strict canonical trailing-bit verification.
+pub fn base32Decode(src: []const u8, out: []u8) -> DecodeResult {
+    if (src.len == (0 as usize)) {
+        return DecodeResult.success(0 as usize);
+    }
+
+    let data_len = src.len;
     let pad_count: usize = 0;
-    while (data_len > 0 && encoded[data_len - 1] == '=') {
+    while (data_len > (0 as usize) && src[data_len - (1 as usize)] == (61 as u8)) {
         data_len -= 1;
         pad_count += 1;
     }
 
-    if (pad_count > 0) {
-        if ((encoded.len % 8) != 0) {
-            return null;
+    if (pad_count > (0 as usize)) {
+        if ((src.len % (8 as usize)) != (0 as usize)) {
+            return DecodeResult.fail(data_len);
         }
-        if (pad_count != 1 && pad_count != 3 && pad_count != 4 && pad_count != 6) {
-            return null;
+        if (pad_count != (1 as usize) && pad_count != (3 as usize) && pad_count != (4 as usize) && pad_count != (6 as usize)) {
+            return DecodeResult.fail(data_len);
         }
     }
 
-    const rem_chars = data_len % 8;
-    if (rem_chars == 1 || rem_chars == 3 || rem_chars == 6) {
-        return null;
+    let rem = data_len % (8 as usize);
+    if (rem == (1 as usize) || rem == (3 as usize) || rem == (6 as usize)) {
+        return DecodeResult.fail(data_len - (1 as usize));
     }
 
-    let pos: usize = 0;
-    let bits: u32 = 0;
-    let bit_count: u32 = 0;
-    let i: usize = 0;
-    while (i < data_len) {
-        const v_opt = if (is_hex) base32HexVal(encoded[i]) else base32Val(encoded[i]);
-        if (v_opt == null) {
-            return null;
-        }
-        bits = (bits << 5) | (v_opt.? as u32);
-        bit_count += 5;
-        if (bit_count >= 8) {
-            bit_count -= 8;
-            if (pos >= out.len) {
-                return null;
+    let full_blocks = data_len / (8 as usize);
+    let tail_bytes: usize = 0;
+    if (rem == (2 as usize)) {
+        tail_bytes = 1 as usize;
+    } else if (rem == (4 as usize)) {
+        tail_bytes = 2 as usize;
+    } else if (rem == (5 as usize)) {
+        tail_bytes = 3 as usize;
+    } else if (rem == (7 as usize)) {
+        tail_bytes = 4 as usize;
+    }
+    let total_out = full_blocks * (5 as usize) + tail_bytes;
+    if (out.len < total_out) {
+        return DecodeResult.fail(0 as usize);
+    }
+
+    let in_i: usize = 0;
+    let out_i: usize = 0;
+    while (in_i + (8 as usize) <= data_len) {
+        let v: [8]u32 = undefined;
+        let k: usize = 0;
+        while (k < (8 as usize)) {
+            let d = dencB32Val(src[in_i + k]);
+            if (d == (0xFF as u8)) {
+                return DecodeResult.fail(in_i + k);
             }
-            out[pos] = ((bits >> bit_count) & 0xFF) as u8;
-            pos += 1;
+            v[k] = d as u32;
+            k += 1;
         }
-        i += 1;
+        out[out_i] = ((v[0] * (8 as u32)) | (v[1] / (4 as u32))) as u8;
+        out[out_i + (1 as usize)] = (((v[1] & (3 as u32)) * (64 as u32)) | (v[2] * (2 as u32)) | (v[3] / (16 as u32))) as u8;
+        out[out_i + (2 as usize)] = (((v[3] & (15 as u32)) * (16 as u32)) | (v[4] / (2 as u32))) as u8;
+        out[out_i + (3 as usize)] = (((v[4] & (1 as u32)) * (128 as u32)) | (v[5] * (4 as u32)) | (v[6] / (8 as u32))) as u8;
+        out[out_i + (4 as usize)] = (((v[6] & (7 as u32)) * (32 as u32)) | v[7]) as u8;
+
+        in_i += 8;
+        out_i += 5;
     }
 
-    // Strict canonical check: unused trailing bits must be zero
-    if (bit_count > 0) {
-        const mask: u32 = ((1 as u32) << bit_count) - 1;
-        if ((bits & mask) != 0) {
-            return null;
-        }
-    }
-
-    return out[0..pos];
-}
-
-// ---------------------------------------------------------------------------
-// 1. RFC 4648 Base32
-// ---------------------------------------------------------------------------
-
-/// Encodes `input` using RFC 4648 Base32 (`A-Z2-7`), with optional `'='` padding.
-pub fn encodeBase32(input: string, pad: bool, out: []u8) -> string {
-    return encodeBase32Core(input, BASE32_ALPHA, pad, out);
-}
-
-/// Strictly decodes RFC 4648 Base32 (`A-Z2-7`, padded or unpadded) into `out`.
-/// Rejects invalid characters, bad padding, and non-zero trailing bits.
-pub fn decodeBase32(encoded: string, out: []u8) -> string? {
-    return decodeBase32Standard(encoded, false, out);
-}
-
-// ---------------------------------------------------------------------------
-// 2. RFC 4648 Base32hex
-// ---------------------------------------------------------------------------
-
-/// Encodes `input` using RFC 4648 Base32hex (`0-9A-V`, preserves binary lexicographical order).
-pub fn encodeBase32Hex(input: string, pad: bool, out: []u8) -> string {
-    return encodeBase32Core(input, BASE32HEX_ALPHA, pad, out);
-}
-
-/// Strictly decodes RFC 4648 Base32hex (`0-9A-V`, padded or unpadded) into `out`.
-pub fn decodeBase32Hex(encoded: string, out: []u8) -> string? {
-    return decodeBase32Standard(encoded, true, out);
-}
-
-// ---------------------------------------------------------------------------
-// 3. Crockford Base32
-// ---------------------------------------------------------------------------
-
-/// Encodes `input` using Crockford Base32 (`0-9A-HJKMNP-TV-Z`, unpadded).
-pub fn encodeCrockford(input: string, out: []u8) -> string {
-    return encodeBase32Core(input, CROCKFORD_ALPHA, false, out);
-}
-
-/// Decodes Crockford Base32 into `out`.
-/// Case-insensitive, maps `i/I/l/L -> 1`, `o/O -> 0`, and ignores `'-'` hyphens.
-pub fn decodeCrockford(encoded: string, out: []u8) -> string? {
-    if (encoded.len == 0) {
-        return out[0..0];
-    }
-    let pos: usize = 0;
-    let bits: u32 = 0;
-    let bit_count: u32 = 0;
-    let sym_count: usize = 0;
-    let i: usize = 0;
-    while (i < encoded.len) {
-        const c = encoded[i];
-        if (c == '-') {
-            i += 1;
-            continue;
-        }
-        const v_opt = crockfordVal(c);
-        if (v_opt == null) {
-            return null;
-        }
-        sym_count += 1;
-        bits = (bits << 5) | (v_opt.? as u32);
-        bit_count += 5;
-        if (bit_count >= 8) {
-            bit_count -= 8;
-            if (pos >= out.len) {
-                return null;
+    if (rem > (0 as usize)) {
+        let v: [7]u32 = undefined;
+        let k: usize = 0;
+        while (k < rem) {
+            let d = dencB32Val(src[in_i + k]);
+            if (d == (0xFF as u8)) {
+                return DecodeResult.fail(in_i + k);
             }
-            out[pos] = ((bits >> bit_count) & 0xFF) as u8;
-            pos += 1;
+            v[k] = d as u32;
+            k += 1;
         }
-        i += 1;
-    }
 
-    const rem = sym_count % 8;
-    if (rem == 1 || rem == 3 || rem == 6) {
-        return null;
-    }
-    if (bit_count > 0) {
-        const mask: u32 = ((1 as u32) << bit_count) - 1;
-        if ((bits & mask) != 0) {
-            return null;
-        }
-    }
-    return out[0..pos];
-}
-
-// ---------------------------------------------------------------------------
-// 4. RFC 4648 Base64url (No Padding)
-// ---------------------------------------------------------------------------
-
-fn b64UrlVal(c: u8) -> u8? {
-    if (c >= 'A' && c <= 'Z') return c - 'A';
-    if (c >= 'a' && c <= 'z') return (c - 'a') + 26;
-    if (c >= '0' && c <= '9') return (c - '0') + 52;
-    if (c == '-') return 62;
-    if (c == '_') return 63;
-    return null;
-}
-
-/// Encodes `input` using RFC 4648 Base64url (`A-Za-z0-9-_`) without `'='` padding.
-pub fn encodeBase64UrlNoPad(input: string, out: []u8) -> string {
-    if (input.len == 0) {
-        return out[0..0];
-    }
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i + 3 <= input.len) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        const b2 = input[i + 2] as u32;
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(b0 >> 2) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(((b1 & 0x0F) << 2) | (b2 >> 6)) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(b2 & 0x3F) as usize]);
-        i += 3;
-    }
-
-    const rem = input.len - i;
-    if (rem == 1) {
-        const b0 = input[i] as u32;
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(b0 >> 2) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[((b0 & 0x03) << 4) as usize]);
-    } else if (rem == 2) {
-        const b0 = input[i] as u32;
-        const b1 = input[i + 1] as u32;
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(b0 >> 2) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize]);
-        pos = appendByte(out, pos, BASE64URL_ALPHA[((b1 & 0x0F) << 2) as usize]);
-    }
-
-    return out[0..pos];
-}
-
-/// Strictly decodes unpadded RFC 4648 Base64url (`A-Za-z0-9-_`) into `out`.
-/// Rejects `'='`, `'+'`, `'/'`, invalid lengths (`len % 4 == 1`), and non-zero trailing bits.
-pub fn decodeBase64UrlNoPad(encoded: string, out: []u8) -> string? {
-    if (encoded.len == 0) {
-        return out[0..0];
-    }
-    const rem = encoded.len % 4;
-    if (rem == 1) {
-        return null;
-    }
-
-    let pos: usize = 0;
-    let bits: u32 = 0;
-    let bit_count: u32 = 0;
-    let i: usize = 0;
-    while (i < encoded.len) {
-        const v_opt = b64UrlVal(encoded[i]);
-        if (v_opt == null) {
-            return null;
-        }
-        bits = (bits << 6) | (v_opt.? as u32);
-        bit_count += 6;
-        if (bit_count >= 8) {
-            bit_count -= 8;
-            if (pos >= out.len) {
-                return null;
+        if (rem == (2 as usize)) {
+            if ((v[1] & (3 as u32)) != (0 as u32)) {
+                return DecodeResult.fail(in_i + (1 as usize));
             }
-            out[pos] = ((bits >> bit_count) & 0xFF) as u8;
-            pos += 1;
+            out[out_i] = ((v[0] * (8 as u32)) | (v[1] / (4 as u32))) as u8;
+            out_i += 1;
+        } else if (rem == (4 as usize)) {
+            if ((v[3] & (15 as u32)) != (0 as u32)) {
+                return DecodeResult.fail(in_i + (3 as usize));
+            }
+            out[out_i] = ((v[0] * (8 as u32)) | (v[1] / (4 as u32))) as u8;
+            out[out_i + (1 as usize)] = (((v[1] & (3 as u32)) * (64 as u32)) | (v[2] * (2 as u32)) | (v[3] / (16 as u32))) as u8;
+            out_i += 2;
+        } else if (rem == (5 as usize)) {
+            if ((v[4] & (1 as u32)) != (0 as u32)) {
+                return DecodeResult.fail(in_i + (4 as usize));
+            }
+            out[out_i] = ((v[0] * (8 as u32)) | (v[1] / (4 as u32))) as u8;
+            out[out_i + (1 as usize)] = (((v[1] & (3 as u32)) * (64 as u32)) | (v[2] * (2 as u32)) | (v[3] / (16 as u32))) as u8;
+            out[out_i + (2 as usize)] = (((v[3] & (15 as u32)) * (16 as u32)) | (v[4] / (2 as u32))) as u8;
+            out_i += 3;
+        } else if (rem == (7 as usize)) {
+            if ((v[6] & (7 as u32)) != (0 as u32)) {
+                return DecodeResult.fail(in_i + (6 as usize));
+            }
+            out[out_i] = ((v[0] * (8 as u32)) | (v[1] / (4 as u32))) as u8;
+            out[out_i + (1 as usize)] = (((v[1] & (3 as u32)) * (64 as u32)) | (v[2] * (2 as u32)) | (v[3] / (16 as u32))) as u8;
+            out[out_i + (2 as usize)] = (((v[3] & (15 as u32)) * (16 as u32)) | (v[4] / (2 as u32))) as u8;
+            out[out_i + (3 as usize)] = (((v[4] & (1 as u32)) * (128 as u32)) | (v[5] * (4 as u32)) | (v[6] / (8 as u32))) as u8;
+            out_i += 4;
         }
-        i += 1;
     }
 
-    if (bit_count > 0) {
-        const mask: u32 = ((1 as u32) << bit_count) - 1;
-        if ((bits & mask) != 0) {
-            return null;
+    return DecodeResult.success(out_i);
+}
+
+/// Encodes `src` using RFC 4648 Base64 or Base64URL with optional `=` padding.
+pub fn base64Encode(src: []const u8, url_safe: bool, pad: bool, out: []u8) -> usize {
+    let need = base64EncodeLen(src.len, pad);
+    if (out.len < need) {
+        return 0 as usize;
+    }
+    let in_i: usize = 0;
+    let out_i: usize = 0;
+    while (in_i + (3 as usize) <= src.len) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        let b2 = src[in_i + (2 as usize)] as u32;
+
+        out[out_i] = dencB64Char((b0 / (4 as u32)) as u8, url_safe);
+        out[out_i + (1 as usize)] = dencB64Char((((b0 & (3 as u32)) * (16 as u32)) | (b1 / (16 as u32))) as u8, url_safe);
+        out[out_i + (2 as usize)] = dencB64Char((((b1 & (15 as u32)) * (4 as u32)) | (b2 / (64 as u32))) as u8, url_safe);
+        out[out_i + (3 as usize)] = dencB64Char((b2 & (63 as u32)) as u8, url_safe);
+
+        in_i += 3;
+        out_i += 4;
+    }
+
+    let rem = src.len - in_i;
+    if (rem == (1 as usize)) {
+        let b0 = src[in_i] as u32;
+        out[out_i] = dencB64Char((b0 / (4 as u32)) as u8, url_safe);
+        out[out_i + (1 as usize)] = dencB64Char(((b0 & (3 as u32)) * (16 as u32)) as u8, url_safe);
+        out_i += 2;
+        if (pad) {
+            out[out_i] = 61 as u8;
+            out[out_i + (1 as usize)] = 61 as u8;
+            out_i += 2;
+        }
+    } else if (rem == (2 as usize)) {
+        let b0 = src[in_i] as u32;
+        let b1 = src[in_i + (1 as usize)] as u32;
+        out[out_i] = dencB64Char((b0 / (4 as u32)) as u8, url_safe);
+        out[out_i + (1 as usize)] = dencB64Char((((b0 & (3 as u32)) * (16 as u32)) | (b1 / (16 as u32))) as u8, url_safe);
+        out[out_i + (2 as usize)] = dencB64Char(((b1 & (15 as u32)) * (4 as u32)) as u8, url_safe);
+        out_i += 3;
+        if (pad) {
+            out[out_i] = 61 as u8;
+            out_i += 1;
+        }
+    }
+    return out_i;
+}
+
+/// Decodes RFC 4648 Base64 or Base64URL (padded or unpadded) with strict canonical trailing-bit verification.
+pub fn base64Decode(src: []const u8, url_safe: bool, out: []u8) -> DecodeResult {
+    if (src.len == (0 as usize)) {
+        return DecodeResult.success(0 as usize);
+    }
+
+    let data_len = src.len;
+    let pad_count: usize = 0;
+    while (data_len > (0 as usize) && src[data_len - (1 as usize)] == (61 as u8)) {
+        data_len -= 1;
+        pad_count += 1;
+    }
+
+    if (pad_count > (0 as usize)) {
+        if ((src.len % (4 as usize)) != (0 as usize)) {
+            return DecodeResult.fail(data_len);
+        }
+        if (pad_count > (2 as usize)) {
+            return DecodeResult.fail(data_len);
         }
     }
 
-    return out[0..pos];
+    let rem = data_len % (4 as usize);
+    if (rem == (1 as usize)) {
+        return DecodeResult.fail(data_len - (1 as usize));
+    }
+
+    let full_blocks = data_len / (4 as usize);
+    let tail_bytes: usize = 0;
+    if (rem == (2 as usize)) {
+        tail_bytes = 1 as usize;
+    } else if (rem == (3 as usize)) {
+        tail_bytes = 2 as usize;
+    }
+    let total_out = full_blocks * (3 as usize) + tail_bytes;
+    if (out.len < total_out) {
+        return DecodeResult.fail(0 as usize);
+    }
+
+    let in_i: usize = 0;
+    let out_i: usize = 0;
+    while (in_i + (4 as usize) <= data_len) {
+        let d0 = dencB64Val(src[in_i], url_safe);
+        if (d0 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i);
+        }
+        let d1 = dencB64Val(src[in_i + (1 as usize)], url_safe);
+        if (d1 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (1 as usize));
+        }
+        let d2 = dencB64Val(src[in_i + (2 as usize)], url_safe);
+        if (d2 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (2 as usize));
+        }
+        let d3 = dencB64Val(src[in_i + (3 as usize)], url_safe);
+        if (d3 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (3 as usize));
+        }
+
+        let v0 = d0 as u32;
+        let v1 = d1 as u32;
+        let v2 = d2 as u32;
+        let v3 = d3 as u32;
+
+        out[out_i] = ((v0 * (4 as u32)) | (v1 / (16 as u32))) as u8;
+        out[out_i + (1 as usize)] = (((v1 & (15 as u32)) * (16 as u32)) | (v2 / (4 as u32))) as u8;
+        out[out_i + (2 as usize)] = (((v2 & (3 as u32)) * (64 as u32)) | v3) as u8;
+
+        in_i += 4;
+        out_i += 3;
+    }
+
+    if (rem == (2 as usize)) {
+        let d0 = dencB64Val(src[in_i], url_safe);
+        if (d0 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i);
+        }
+        let d1 = dencB64Val(src[in_i + (1 as usize)], url_safe);
+        if (d1 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (1 as usize));
+        }
+        let v0 = d0 as u32;
+        let v1 = d1 as u32;
+        if ((v1 & (15 as u32)) != (0 as u32)) {
+            return DecodeResult.fail(in_i + (1 as usize));
+        }
+        out[out_i] = ((v0 * (4 as u32)) | (v1 / (16 as u32))) as u8;
+        out_i += 1;
+    } else if (rem == (3 as usize)) {
+        let d0 = dencB64Val(src[in_i], url_safe);
+        if (d0 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i);
+        }
+        let d1 = dencB64Val(src[in_i + (1 as usize)], url_safe);
+        if (d1 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (1 as usize));
+        }
+        let d2 = dencB64Val(src[in_i + (2 as usize)], url_safe);
+        if (d2 == (0xFF as u8)) {
+            return DecodeResult.fail(in_i + (2 as usize));
+        }
+        let v0 = d0 as u32;
+        let v1 = d1 as u32;
+        let v2 = d2 as u32;
+        if ((v2 & (3 as u32)) != (0 as u32)) {
+            return DecodeResult.fail(in_i + (2 as usize));
+        }
+        out[out_i] = ((v0 * (4 as u32)) | (v1 / (16 as u32))) as u8;
+        out[out_i + (1 as usize)] = (((v1 & (15 as u32)) * (16 as u32)) | (v2 / (4 as u32))) as u8;
+        out_i += 2;
+    }
+
+    return DecodeResult.success(out_i);
 }

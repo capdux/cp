@@ -1,7 +1,11 @@
 {
   "name": "@cap/content-type",
   "ver": "1.0.0",
-  "description": "Zero-allocation RFC 9110 / RFC 6838 HTTP Content-Type media type parser, parameter extractor, and formatter (content-type / media-typer parity) for CP",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7231 HTTP Content-Type header parser and formatter with quoted-string unescaping (clean-room port of content-type)",
   "main": "src/index.cp",
-  "license": "MIT"
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
 }

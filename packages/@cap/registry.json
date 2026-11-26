@@ -3163,12 +3163,12 @@
       "source_name": "lru",
       "source_repo": "https://github.com/jeromefroe/lru-rs",
       "license": "MIT",
-      "cp_target": "@cap/lru",
+      "cp_target": "@cap/lru-crate",
       "kind": "package",
       "aliases": [
         "hashlink"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10286,6 +10286,16 @@
       "source_repo": "https://github.com/fb55/css-select",
       "license": "BSD-2-Clause",
       "cp_target": "@cap/css-select",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "quick-lru",
+      "source_repo": "https://github.com/sindresorhus/quick-lru",
+      "license": "MIT",
+      "cp_target": "@cap/quick-lru",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

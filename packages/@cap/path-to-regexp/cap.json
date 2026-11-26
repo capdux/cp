@@ -2,8 +2,10 @@
   "name": "@cap/path-to-regexp",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation URL route pattern compiler, parameter extractor, and reverse path builder in pure CP",
+  "description": "Zero-heap Express/Router URL path template matching, parameter extraction, and reverse route compilation (clean-room port of path-to-regexp v8)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["path-to-regexp", "router", "url", "express", "params", "wildcard", "zero-alloc"]
+  "dependencies": {
+    "@cap/unicase": "1.0.0"
+  }
 }

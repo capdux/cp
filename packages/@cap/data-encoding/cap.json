@@ -1,7 +1,7 @@
 {
   "name": "@cap/data-encoding",
   "ver": "1.0.0",
-  "description": "Zero-allocation RFC 4648 Base32, Base32hex, Crockford Base32, and Base64url (no-pad) encoder/decoder for CP",
+  "description": "Zero-allocation strict RFC 4648 Base16/Hex, Base32, and Base64/Base64URL codec with canonical trailing-bit verification (Rust data-encoding v2 parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT"

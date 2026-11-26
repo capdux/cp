@@ -1,0 +1,11 @@
+{
+  "name": "@cap/lru-crate",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap O(1) LRU cache (LruCacheI64) using intrusive doubly-linked list and open-addressed hash table (clean-room port of Rust lru)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/fnv-hash": "1.0.0"
+  }
+}

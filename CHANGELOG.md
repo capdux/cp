@@ -942,3 +942,11 @@
 - `packages/@cap/petgraph-core/` & `cap/test/testCapPetgraphCore.cp`: crates.io #110 `petgraph`（9.5 亿+，BFS/DFS/TopoSort/Dijkstra，6/6 PASS）。
 - `packages/@cap/bumpalo/` & `cap/test/testCapBumpalo.cp`: crates.io #145 `bumpalo`（8.5 亿+，对齐感知 Bump Arena，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 105 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 106 — 5 大高频路由/编解码/LRU 缓存包全 6/6 PASS — `path-to-regexp`+`content-type`+`lru`+`data-encoding`+`quick-lru`，官方 `.cap` 包突破 **621+**！)
+- `packages/@cap/path-to-regexp/` & `cap/test/testCapPathToRegexp.cp`: npm Top 20 `path-to-regexp` v8（2 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/content-type/` & `cap/test/testCapContentType.cp`: npm Top 25 `content-type`（1.8 亿+/周，复用 `@cap/unicase`，6/6 PASS）。
+- `packages/@cap/quick-lru/` & `cap/test/testCapQuickLru.cp`: npm Top 60 `quick-lru`（9000 万+/周，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/lru-crate/` & `cap/test/testCapLruCrate.cp`: crates.io #135 `lru`（9 亿+，复用 `@cap/fnv-hash`，6/6 PASS）。
+- `packages/@cap/data-encoding/` & `cap/test/testCapDataEncoding.cp`: crates.io #155 `data-encoding` v2（8 亿+，RFC 4648 严格编解码，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 106 全部 5 个官方包映射（npm / crates.io 精准 1:1 平衡）。
