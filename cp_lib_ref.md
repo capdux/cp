@@ -1165,3 +1165,13 @@ const h = cap.hash.wyhash("hello");
 - `@cap/cbc` (`crates.io:cbc` #772, MIT) — AES-128/256-CBC 块加密模式与 PKCS#7 填充（直接复用 `@cap/aes`，通过 NIST SP 800-38A 向量）。
 - `@cap/markdown-table` (`npm:markdown-table` #719, MIT) — GFM Markdown 表格对齐与自动列宽渲染器。
 - `@cap/progress` (`npm:progress` #726, MIT) — 零堆终端进度条渲染器（`:bar`/`:percent`/`:current`/`:total`/`:etas`/`:elapseds`）。
+
+### Batch 160 — 双平台 Real Top 716–830（6 packages + 9 zero-duplicate mappings; 863 `@cap/*`!）
+
+- `@cap/color-quant` (`crates.io:color_quant` #716, MIT) — 零堆 256 色调色板量化器（6×6×6 Web-safe + 3-3-2 桶直方图量化与最近色映射）。
+- `@cap/lexical-parse-float` (`crates.io:lexical-parse-float` #766, MIT) — 零堆严格浮点与 2..36 进制整数字符串解析器（覆盖 `lexical-util`/`lexical-parse-integer`）。
+- `@cap/resolv-conf` (`crates.io:resolv-conf` #807, MIT) — POSIX `/etc/resolv.conf` DNS 解析配置（`nameserver`/`search`/`domain`/`options`）解析器。
+- `@cap/zod-validation-error` (`npm:zod-validation-error` #741, MIT) — 人类可读 Schema 校验错误聚合与格式化器。
+- `@cap/module-details-from-path` (`npm:module-details-from-path` #757, MIT) — `node_modules`/`cap_modules` 嵌套与 `@scope` 模块路径解析器。
+- `@cap/fast-fifo` (`npm:fast-fifo` #824, MIT) — 零堆 O(1) 2 的幂环形缓冲 FIFO 队列（`FifoI64`/`FifoStr`）。
+- 零重复映射：`indenter`→`@cap/redent`、`remove_dir_all`→`cap:fs`、`yoctocolors`→`@cap/picocolors`、`jszip`/`yauzl`/`archiver`→`cap:zip`、`bare-events`→`cap:event`、`path-browserify`→`@cap/pathe`、`crc32-stream`→`@cap/crc32`、`loupe`→`@cap/object-inspect`、`defu`/`defaults`→`@cap/deepmerge`。

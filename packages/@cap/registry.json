@@ -13441,6 +13441,168 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "color_quant",
+      "source_repo": "https://github.com/image-rs/color_quant",
+      "license": "MIT",
+      "cp_target": "@cap/color-quant",
+      "kind": "package",
+      "aliases": [
+        "color-quant"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lexical-parse-float",
+      "source_repo": "https://github.com/Alexhuszagh/rust-lexical",
+      "license": "MIT",
+      "cp_target": "@cap/lexical-parse-float",
+      "kind": "package",
+      "aliases": [
+        "lexical-util",
+        "lexical-parse-integer"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "resolv-conf",
+      "source_repo": "https://github.com/tailhook/resolv-conf",
+      "license": "MIT",
+      "cp_target": "@cap/resolv-conf",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "zod-validation-error",
+      "source_repo": "https://github.com/causaly/zod-validation-error",
+      "license": "MIT",
+      "cp_target": "@cap/zod-validation-error",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "module-details-from-path",
+      "source_repo": "https://github.com/watson/module-details-from-path",
+      "license": "MIT",
+      "cp_target": "@cap/module-details-from-path",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-fifo",
+      "source_repo": "https://github.com/mafintosh/fast-fifo",
+      "license": "MIT",
+      "cp_target": "@cap/fast-fifo",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "indenter",
+      "source_repo": "https://github.com/yaahc/indenter",
+      "license": "MIT",
+      "cp_target": "@cap/redent",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "remove_dir_all",
+      "source_repo": "https://github.com/XAMPPRocky/remove_dir_all",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yoctocolors",
+      "source_repo": "https://github.com/sindresorhus/yoctocolors",
+      "license": "MIT",
+      "cp_target": "@cap/picocolors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jszip",
+      "source_repo": "https://github.com/Stuk/jszip",
+      "license": "MIT",
+      "cp_target": "cap:zip",
+      "kind": "stdlib",
+      "aliases": [
+        "yauzl",
+        "archiver",
+        "zip-stream"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bare-events",
+      "source_repo": "https://github.com/holepunchto/bare-events",
+      "license": "Apache-2.0",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "path-browserify",
+      "source_repo": "https://github.com/browserify/path-browserify",
+      "license": "MIT",
+      "cp_target": "@cap/pathe",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "crc32-stream",
+      "source_repo": "https://github.com/archiverjs/node-crc32-stream",
+      "license": "MIT",
+      "cp_target": "@cap/crc32",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "loupe",
+      "source_repo": "https://github.com/chaijs/loupe",
+      "license": "MIT",
+      "cp_target": "@cap/object-inspect",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "defu",
+      "source_repo": "https://github.com/unjs/defu",
+      "license": "MIT",
+      "cp_target": "@cap/deepmerge",
+      "kind": "package",
+      "aliases": [
+        "defaults",
+        "extend-shallow"
+      ],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

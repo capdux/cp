@@ -1380,3 +1380,7 @@
 ### 2026-11-26 — Batch 159（双平台 Real Top 701–800：+8 `@cap/*` 包，突破 857 `@cap/*`！）
 - 新增 `packages/@cap/{codespan-reporting,matrixmultiply,debugid,number-prefix,password-hash,cbc,markdown-table,progress}/` 及对应 8 套 `cap/test/testCap*.cp`（全部 6/6 PASS；`@cap/cbc` 复用 `@cap/aes` 通过 NIST SP 800-38A 官方向量）
 - 更新 `packages/@cap/registry.json`（总映射 1,168）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 160（双平台 Real Top 716–830：+6 `@cap/*` 包 + 9 条零重复映射，总计 863 `@cap/*`）
+- 新增 `packages/@cap/{color-quant,lexical-parse-float,resolv-conf,zod-validation-error,module-details-from-path,fast-fifo}/` 及对应 6 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 更新 `packages/@cap/registry.json`（总映射 1,182）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

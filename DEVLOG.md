@@ -560,3 +560,6 @@
 ### 2026-11-26 — Batch 159 开发日志（857 `@cap/*` 包，双平台 Top 701–800 推进）
 - 三路并行交付 8 个高下载量纯 CP 包（`codespan-reporting` #702、`matrixmultiply` #705、`debugid` #723、`number-prefix` #738、`password-hash` #747、`cbc` #772、`markdown-table` #719、`progress` #726），全部 6/6 PASS。
 - 效率观察：主智能体避免并发启动多个后台 `cap test`（会与子智能体争用 `.cap/zig-cache` 锁导致耗时拉长），串行执行单测保持 650ms 级极速。
+
+### 2026-11-26 — Batch 160 开发日志（863 `@cap/*` 包）
+- 三路并行交付 `color-quant`（#716）、`lexical-parse-float`（#766）、`resolv-conf`（#807）、`zod-validation-error`（#741）、`module-details-from-path`（#757）、`fast-fifo`（#824），全部一次通过 `cpc emit-types` 与 6/6 `cap test`。
