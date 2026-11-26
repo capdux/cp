@@ -401,8 +401,8 @@
       "source_name": "semver",
       "source_repo": "https://github.com/npm/node-semver",
       "license": "ISC",
-      "cp_target": "cap:semver",
-      "kind": "stdlib",
+      "cp_target": "@cap/semver-range",
+      "kind": "package",
       "aliases": [
         "semver-rs"
       ],
@@ -6723,6 +6723,120 @@
       "aliases": [
         "geo-uri"
       ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "validate-npm-package-name",
+      "source_repo": "https://github.com/npm/validate-npm-package-name",
+      "license": "ISC",
+      "cp_target": "@cap/npm-spec",
+      "kind": "package",
+      "aliases": [
+        "npm-package-arg"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mysql2",
+      "source_repo": "https://github.com/sidorares/node-mysql2",
+      "license": "MIT",
+      "cp_target": "@cap/mysql-dsn",
+      "kind": "package",
+      "aliases": [
+        "mysql"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mongodb-connection-string-url",
+      "source_repo": "https://github.com/mongodb-js/devtools-shared",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/mongo-uri",
+      "kind": "package",
+      "aliases": [
+        "mongodb"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "kafkajs",
+      "source_repo": "https://github.com/tulios/kafkajs",
+      "license": "MIT",
+      "cp_target": "@cap/kafka-topic",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@atproto/syntax",
+      "source_repo": "https://github.com/bluesky-social/atproto",
+      "license": "MIT",
+      "cp_target": "@cap/at-uri",
+      "kind": "package",
+      "aliases": [
+        "at-uri"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "semver-range",
+      "source_repo": "https://github.com/dtolnay/semver",
+      "license": "MIT",
+      "cp_target": "@cap/semver-range",
+      "kind": "package",
+      "aliases": [
+        "node-semver"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mysql",
+      "source_repo": "https://github.com/blackbeam/rust-mysql-simple",
+      "license": "MIT",
+      "cp_target": "@cap/mysql-dsn",
+      "kind": "package",
+      "aliases": [
+        "mysql_async"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mongodb",
+      "source_repo": "https://github.com/mongodb/mongo-rust-driver",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/mongo-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rdkafka",
+      "source_repo": "https://github.com/fede1024/rust-rdkafka",
+      "license": "MIT",
+      "cp_target": "@cap/kafka-topic",
+      "kind": "package",
+      "aliases": [
+        "rskafka"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "atrium-api",
+      "source_repo": "https://github.com/sugyan/atrium",
+      "license": "MIT",
+      "cp_target": "@cap/at-uri",
+      "kind": "package",
+      "aliases": [],
       "absorbed_at": "2026-11-26"
     }
   ]

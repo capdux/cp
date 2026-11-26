@@ -255,3 +255,6 @@
 
 ## 2026-11-26: Batch 63 正式突破 **350 官方 `.cap` 包里程碑 + 542 条双生态映射（npm=271 / crates.io=271 绝对 1:1）**！
 - 单批交付 6 大标准 URI/身份协议包：`@cap/geo-uri`（6/6）、`@cap/mailto-uri`（6/6）、`@cap/tel-uri`（6/6）、`@cap/urn-parse`（6/6）、`@cap/spiffe-id`（6/6）、`@cap/did-parse`（6/6），全线零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 64 亿级包管/数据库/Kafka 六件套全 6/6 PASS，线上官方包冲刺 **357+ 个**、总映射 **551 条（npm=275 / crates.io=276）**！
+- 交付 `@cap/semver-range`（3.5 亿+/周，6/6）、`@cap/npm-spec`（1.4 亿+/周，6/6）、`@cap/mysql-dsn`（6/6）、`@cap/mongo-uri`（6/6）、`@cap/kafka-topic`（6/6）、`@cap/at-uri`（6/6），全线零堆纯 CP 100% PASS！

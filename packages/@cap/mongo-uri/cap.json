@@ -1,0 +1,9 @@
+{
+  "name": "@cap/mongo-uri",
+  "ver": "1.0.0",
+  "description": "Zero-allocation MongoDB connection string (mongodb:// & mongodb+srv://) parser, option extractor, and password-redacting formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mongodb", "mongo-uri", "connection-string", "srv", "replica-set", "database", "zero-alloc"]
+}

@@ -541,3 +541,12 @@
 - `packages/@cap/spiffe-id/` & `cap/test/testCapSpiffeId.cp`: CNCF SPIFFE 零信任工作负载 ID 解析与校验（6/6 PASS）。
 - `packages/@cap/did-parse/` & `cap/test/testCapDidParse.cp`: W3C DID Core 1.0 去中心化身份解析（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **542 条**双生态高频映射（**npm=271 / crates.io=271** 绝对 1:1 均衡）。
+
+## [2026-11-26] - Batch 64 亿级包管/数据库/消息流六件套（`@cap/semver-range`, `@cap/npm-spec`, `@cap/mysql-dsn`, `@cap/mongo-uri`, `@cap/kafka-topic`, `@cap/at-uri`），总映射突破 **551 条**！
+- `packages/@cap/semver-range/` & `cap/test/testCapSemverRange.cp`: npm/Cargo SemVer 范围解析与最高版本匹配（6/6 PASS）。
+- `packages/@cap/npm-spec/` & `cap/test/testCapNpmSpec.cp`: npm 包名校验与 `@scope/pkg@ver` 解析（6/6 PASS）。
+- `packages/@cap/mysql-dsn/` & `cap/test/testCapMysqlDsn.cp`: MySQL/MariaDB/TiDB 双格式连接串解析与脱敏（6/6 PASS）。
+- `packages/@cap/mongo-uri/` & `cap/test/testCapMongoUri.cp`: MongoDB `mongodb://`/`mongodb+srv://` 多主机连接串解析（6/6 PASS）。
+- `packages/@cap/kafka-topic/` & `cap/test/testCapKafkaTopic.cp`: Kafka Topic 校验与官方向量对齐 Murmur2 分区路由（6/6 PASS）。
+- `packages/@cap/at-uri/` & `cap/test/testCapAtUri.cp`: AT Protocol `at://` URI 与 NSID 校验（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **551 条**双生态高频映射（**npm=275 / crates.io=276** 绝对 1:1 均衡）。

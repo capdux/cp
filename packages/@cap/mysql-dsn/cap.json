@@ -1,0 +1,10 @@
+{
+  "name": "@cap/mysql-dsn",
+  "version": "1.0.0",
+  "description": "Zero-heap MySQL / MariaDB / TiDB connection string parser (mysql:// URI & Go-style user:pass@tcp(host:port)/db) with password redaction for CP (compatible with npm mysql2 & Rust mysql)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["mysql", "mariadb", "tidb", "dsn", "database", "connection-string"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/mysql-dsn"
+}

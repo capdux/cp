@@ -540,3 +540,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/urn-parse`** | `packages/@cap/urn-parse` | 对标 npm `urn-lib` / Rust `urn` — RFC 8141 `urn:<nid>:<nss>` 零堆解析、等价比较与规范化 |
 | **`@cap/spiffe-id`** | `packages/@cap/spiffe-id` | 对标 CNCF SPIFFE `spiffe` — `spiffe://<trust-domain>/<path>` 零信任工作负载身份解析与防路径穿越校验 |
 | **`@cap/did-parse`** | `packages/@cap/did-parse` | 对标 npm `did-resolver` / Rust `ssi-dids` — W3C DID Core 1.0 `did:<method>:<id>` 去中心化身份解析 |
+| **`@cap/semver-range`** | `packages/@cap/semver-range` | 对标 npm `semver` Range / Rust `semver::VersionReq` — 零堆 SemVer 范围 (`^`/`~`/`>=`/`||`/`1.2.x`) 匹配与最高版本挑选 |
+| **`@cap/npm-spec`** | `packages/@cap/npm-spec` | 对标 npm `validate-npm-package-name` / `npm-package-arg` — npm 包名规范校验与 `@scope/pkg@ver` 规格解析 |
+| **`@cap/mysql-dsn`** | `packages/@cap/mysql-dsn` | 对标 npm `mysql2` / Rust `mysql` — MySQL/MariaDB/TiDB `mysql://` URI 与 Go-MySQL DSN 双格式解析与密码脱敏 |
+| **`@cap/mongo-uri`** | `packages/@cap/mongo-uri` | 对标 npm `mongodb-connection-string-url` / Rust `mongodb` — `mongodb://` & `mongodb+srv://` 副本集连接串解析与脱敏 |
+| **`@cap/kafka-topic`** | `packages/@cap/kafka-topic` | 对标 npm `kafkajs` / Rust `rdkafka` — Kafka Topic 规范校验与精确对齐 Java `Utils.murmur2` 分区路由 |
+| **`@cap/at-uri`** | `packages/@cap/at-uri` | 对标 npm `@atproto/syntax` / Rust `atrium-api` — AT Protocol / Bluesky `at://` URI 与 NSID/rkey 校验 |

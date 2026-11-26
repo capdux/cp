@@ -1,0 +1,9 @@
+{
+  "name": "@cap/at-uri",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation AT Protocol / Bluesky at:// URI, NSID, and Record Key (rkey) validator, parser, and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["atproto", "bluesky", "at-uri", "nsid", "rkey", "did", "parser", "zero-alloc"]
+}

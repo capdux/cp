@@ -1,0 +1,9 @@
+{
+  "name": "@cap/semver-range",
+  "ver": "1.0.0",
+  "description": "Zero-allocation npm / Cargo SemVer version range parser and matcher (^, ~, >=, <=, >, <, =, *, x, ||) for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["semver", "version", "range", "caret", "tilde", "cargo", "npm", "zero-alloc"]
+}

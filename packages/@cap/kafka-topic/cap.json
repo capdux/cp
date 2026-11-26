@@ -1,0 +1,9 @@
+{
+  "name": "@cap/kafka-topic",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Apache Kafka / Redpanda topic validator, official Murmur2 DefaultPartitioner hash, and Topic-Partition parser in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["kafka", "redpanda", "murmur2", "partitioner", "topic", "streaming", "zero-alloc"]
+}
