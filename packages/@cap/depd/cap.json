@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/fnv-hash": "^1.0.0"
   },
-  "keywords": ["depd", "deprecate", "deprecation", "warning", "express", "cli"]
+  "keywords": [
+    "depd",
+    "deprecate",
+    "deprecation",
+    "warning",
+    "express",
+    "cli"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "depd",
+    "repo": "https://github.com/dougwilson/nodejs-depd",
+    "license": "MIT"
+  }
 }

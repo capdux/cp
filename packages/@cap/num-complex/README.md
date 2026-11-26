@@ -1,5 +1,8 @@
 # @cap/num-complex
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:num-complex` ([https://github.com/rust-num/num-complex](https://github.com/rust-num/num-complex))
+
 零堆分配的 CP 复数数学引擎（`Complex64`） — 洁净室 MIT 实现，对标 Rust crates.io #317 `num-complex`（4.96 亿+ 总下载），服务 FFT、DSP、信号处理与科学计算。
 
 Zero-allocation `Complex64` arithmetic, Smith overflow-safe division, polar coordinates, Euler `exp`, principal `sqrt`, and formatting for CP — clean-room MIT parity with Rust `num-complex` (496M+ downloads).

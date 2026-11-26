@@ -1,5 +1,8 @@
 # @cap/calver
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:calver` ([https://github.com/muratgozel/node-calver](https://github.com/muratgozel/node-calver))
+
 Zero-allocation Calendar Versioning (CalVer) parser, validator, comparator, bumper, and formatter for CP — clean-room MIT parity with npm `calver` and Rust `calver` (covering Ubuntu / Pip / Twisted / Unity / JetBrains / Black CalVer styles).
 
 零堆分配的 CP 日历版本号（CalVer）解析、校验、比较、周期递增与格式化引擎，完整支持 2/4 位年份、零填充月份、日级与 micro 版本号、预发布修饰符（`-alpha.1`/`b2`/`-rc.1`）以及闰年日期合法性校验（纯 CP 洁净室 MIT 实现）。

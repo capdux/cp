@@ -1,5 +1,8 @@
 # @cap/varint
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unsigned-varint` ([https://github.com/paritytech/unsigned-varint](https://github.com/paritytech/unsigned-varint))（原库名 `unsigned-varint` → CP 包名 `@cap/varint`）
+
 Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf ZigZag, and QUIC RFC 9000 varint) for CP — clean-room MIT parity with Rust `unsigned-varint`, `leb128`, and `integer-encoding`.
 
 零堆分配的 CP 变长整数 3 合 1 编解码引擎，统一实现 Unsigned/Signed LEB128（WASM / Protobuf / DWARF / libp2p）、ZigZag 有符号编码（Protobuf `sint64`）与 QUIC RFC 9000 2-bit 前缀变长整数，严格防 64-bit 溢出与截断流（纯 CP 洁净室 MIT 实现）。

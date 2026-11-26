@@ -5,5 +5,11 @@
   "description": "Fast zero-heap value & JSON/literal type classifier (clean-room CP implementation of npm kind-of)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "kind-of",
+    "repo": "https://github.com/jonschlinkert/kind-of",
+    "license": "MIT"
+  }
 }

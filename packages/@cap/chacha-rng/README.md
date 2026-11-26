@@ -1,5 +1,8 @@
 # @cap/chacha-rng
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rand_chacha` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand)) / `crates.io:ppv-lite86` ([https://github.com/cryptocorrosion/cryptocorrosion](https://github.com/cryptocorrosion/cryptocorrosion))（原库名 `rand_chacha` → CP 包名 `@cap/chacha-rng`）
+
 Zero-allocation RFC 8439 ChaCha8 / ChaCha12 / ChaCha20 block function and seekable CSPRNG for CP.
 
 ## Features

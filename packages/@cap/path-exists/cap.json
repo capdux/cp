@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/locate-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "path-exists",
+    "repo": "https://github.com/sindresorhus/path-exists",
+    "license": "MIT"
   }
 }

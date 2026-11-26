@@ -15,5 +15,11 @@
     "extension",
     "http",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "mime_guess",
+    "repo": "https://github.com/abonander/mime_guess",
+    "license": "MIT"
+  }
 }

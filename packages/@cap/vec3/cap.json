@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["vec3", "vector", "3d", "math", "geometry", "linear-algebra", "zero-alloc"]
+  "keywords": [
+    "vec3",
+    "vector",
+    "3d",
+    "math",
+    "geometry",
+    "linear-algebra",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "gl-matrix",
+    "repo": "https://github.com/toji/gl-matrix",
+    "license": "MIT"
+  }
 }

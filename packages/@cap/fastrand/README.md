@@ -1,5 +1,8 @@
 # @cap/fastrand
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fastrand` ([https://github.com/smol-rs/fastrand](https://github.com/smol-rs/fastrand))
+
 Zero-allocation WyRand 64-bit PRNG for CP — clean-room MIT parity with Rust `fastrand`.
 
 零堆分配的 CP 超高速 WyRand 64-bit 伪随机数引擎，支持确定性种子、独立子流 `fork`、拒绝采样无偏区间、53-bit 精度 `[0.0, 1.0)` 浮点、字节填充、Fisher-Yates 原地洗牌与随机字母数字串生成（纯 CP 洁净室 MIT 实现）。

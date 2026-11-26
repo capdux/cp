@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap string similarity & edit-distance metrics: Hamming, Levenshtein, OSA Damerau-Levenshtein, Jaro-Winkler, and Sorensen-Dice (clean-room port of Rust strsim)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "strsim",
+    "repo": "https://github.com/rapidfuzz/strsim-rs",
+    "license": "MIT"
+  }
 }

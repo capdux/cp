@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/base64ct": "^1.0.0"
   },
-  "keywords": ["cookie", "cookie-signature", "hmac", "sha256", "signing", "http", "zero-alloc"]
+  "keywords": [
+    "cookie",
+    "cookie-signature",
+    "hmac",
+    "sha256",
+    "signing",
+    "http",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "cookie-signature",
+    "repo": "https://github.com/tj/node-cookie-signature",
+    "license": "MIT"
+  }
 }

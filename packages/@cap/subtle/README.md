@@ -1,5 +1,8 @@
 # @cap/subtle
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:constant_time_eq` ([https://github.com/cesarb/constant_time_eq](https://github.com/cesarb/constant_time_eq))（原库名 `constant_time_eq` → CP 包名 `@cap/subtle`）
+
 零堆分配的 CP 恒定时间（Constant-Time）防时序侧信道比较/条件选择/交换与敏感内存安全清零引擎 — 洁净室 MIT 实现，对标 Rust crates.io #136 `zeroize`（9.35 亿总下载）+ #139 `subtle`（9.21 亿总下载）。
 
 Zero-allocation constant-time cryptographic comparison, branchless selection/swap, and DSE-resistant memory zeroization primitives for CP — clean-room MIT parity with Rust `subtle` and `zeroize`.

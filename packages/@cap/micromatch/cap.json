@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/picomatch": "1.0.0",
     "@cap/braces": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "micromatch",
+    "repo": "https://github.com/micromatch/micromatch",
+    "license": "MIT"
   }
 }

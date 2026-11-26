@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["normalize-path", "path", "posix", "windows", "unc", "slash", "zero-heap"]
+  "keywords": [
+    "normalize-path",
+    "path",
+    "posix",
+    "windows",
+    "unc",
+    "slash",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "normalize-path",
+    "repo": "https://github.com/jonschlinkert/normalize-path",
+    "license": "MIT"
+  }
 }

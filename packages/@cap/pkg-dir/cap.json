@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/find-up": "1.0.0",
     "@cap/npm-run-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "pkg-dir",
+    "repo": "https://github.com/sindresorhus/pkg-dir",
+    "license": "MIT"
   }
 }

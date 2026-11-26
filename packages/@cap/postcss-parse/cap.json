@@ -5,5 +5,11 @@
   "description": "Zero-heap CSS AST parser, query/mutation engine, and serializer for CP (clean-room MIT implementation of npm postcss v8).",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "postcss",
+    "repo": "https://github.com/postcss/postcss",
+    "license": "MIT"
+  }
 }

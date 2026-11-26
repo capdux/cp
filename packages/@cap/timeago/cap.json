@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation deterministic relative time formatter (EN/ZH, Long/Short/Compact) for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "timeago.js",
+    "repo": "https://github.com/hustcc/timeago.js",
+    "license": "MIT"
+  }
 }

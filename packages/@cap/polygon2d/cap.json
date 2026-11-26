@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["polygon", "geometry", "2d", "point-in-polygon", "shoelace", "centroid", "zero-heap"]
+  "keywords": [
+    "polygon",
+    "geometry",
+    "2d",
+    "point-in-polygon",
+    "shoelace",
+    "centroid",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "point-in-polygon",
+    "repo": "https://github.com/substack/point-in-polygon",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "point-in-polygon",
+      "repo": "https://github.com/substack/point-in-polygon",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "geo-types",
+      "repo": "https://github.com/georust/geo",
+      "license": "MIT"
+    }
+  ]
 }

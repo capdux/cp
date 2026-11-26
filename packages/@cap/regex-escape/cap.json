@@ -4,5 +4,11 @@
   "description": "Zero-heap regular expression literal escaper, character-class escaper, unescaper, and metacharacter detector.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "regex-escape",
+    "repo": "https://github.com/rust-lang/regex",
+    "license": "MIT"
+  }
 }

@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/fast-glob": "1.0.0"
   },
-  "keywords": ["rimraf", "rm", "delete", "bottom-up", "preserve-root", "glob", "zero-alloc"]
+  "keywords": [
+    "rimraf",
+    "rm",
+    "delete",
+    "bottom-up",
+    "preserve-root",
+    "glob",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "rimraf",
+    "repo": "https://github.com/isaacs/rimraf",
+    "license": "ISC"
+  }
 }

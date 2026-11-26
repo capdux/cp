@@ -1,5 +1,8 @@
 # `@cap/perlin-noise`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:perlin-noise` ([https://github.com/andrewrk/node-perlin-noise](https://github.com/andrewrk/node-perlin-noise))
+
 Zero-heap Ken Perlin improved 1D / 2D / 3D gradient noise, Fractal Brownian Motion (`fbm2D`), and ridged multifractal noise (`ridge2D`) in pure CP.
 
 ## Features

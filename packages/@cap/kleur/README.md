@@ -1,5 +1,8 @@
 # `@cap/kleur`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:kleur` ([https://github.com/lukeed/kleur](https://github.com/lukeed/kleur))
+
 Zero-allocation composable chainable ANSI terminal style builder for CP with nested close and reset recovery. Clean-room MIT implementation inspired by npm `kleur` v4, composing `@cap/ansi-styles`.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/shebang-regex
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shebang-regex` ([https://github.com/sindresorhus/shebang-regex](https://github.com/sindresorhus/shebang-regex))
+
 Zero-heap-allocation shebang (`#!`) line detector, matcher, and body-offset stripper in pure CP (parity with npm `shebang-regex`).
 
 ## Features

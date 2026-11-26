@@ -1,5 +1,8 @@
 # @cap/vcard
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:vcard` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-allocation RFC 6350 vCard 4.0 (`.vcf`) contact formatter and parser for CP.
 
 ## Features

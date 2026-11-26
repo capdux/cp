@@ -1,5 +1,8 @@
 # @cap/bigdecimal
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bigdecimal` ([https://github.com/akubera/bigdecimal-rs](https://github.com/akubera/bigdecimal-rs))
+
 Clean-room MIT, zero-heap exact base-10 financial arithmetic library for CP — modeled on crates.io `bigdecimal` v0.4.
 
 ## Features

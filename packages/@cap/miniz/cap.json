@@ -23,5 +23,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "miniz_oxide",
+    "repo": "https://github.com/Frommi/miniz_oxide",
+    "license": "MIT"
   }
 }

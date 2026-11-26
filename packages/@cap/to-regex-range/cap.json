@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["regex", "range", "to-regex-range", "glob", "braces", "pattern", "zero-alloc"]
+  "keywords": [
+    "regex",
+    "range",
+    "to-regex-range",
+    "glob",
+    "braces",
+    "pattern",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "to-regex-range",
+    "repo": "https://github.com/micromatch/to-regex-range",
+    "license": "MIT"
+  }
 }

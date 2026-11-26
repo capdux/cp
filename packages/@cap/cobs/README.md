@@ -1,5 +1,8 @@
 # @cap/cobs
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cobs` ([https://github.com/jamesmunns/cobs.rs](https://github.com/jamesmunns/cobs.rs))
+
 Zero-allocation Consistent Overhead Byte Stuffing (COBS), custom-sentinel COBS/XOR, framed codec, and streaming `CobsDecoder` for CP — clean-room MIT parity with Rust `cobs` and Cheshire & Baker (1999).
 
 零堆分配的 CP COBS 无歧义字节填充与帧同步编码引擎，广泛用于串口通信、嵌入式协议、RPC 与二进制流分帧（纯 CP 洁净室 MIT 实现）。

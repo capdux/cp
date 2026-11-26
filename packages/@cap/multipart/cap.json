@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/mediatype": "1.0.0",
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "multipart",
+    "repo": "https://github.com/abonander/multipart",
+    "license": "MIT OR Apache-2.0"
   }
 }

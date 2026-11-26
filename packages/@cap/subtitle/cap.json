@@ -14,5 +14,11 @@
     "timecode",
     "media",
     "video"
-  ]
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "subtitle",
+    "repo": "https://github.com/gsantiago/subtitle.js",
+    "license": "MIT"
+  }
 }

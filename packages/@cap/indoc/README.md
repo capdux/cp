@@ -1,5 +1,8 @@
 # @cap/indoc
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:indoc` ([https://github.com/dtolnay/indoc](https://github.com/dtolnay/indoc))
+
 Zero-allocation multiline string `dedent`, `indent`, `stripMargin`, `trimBlankLines`, and newline normalization engine for CP — clean-room MIT parity with Rust `indoc`, npm `dedent`, and Kotlin `trimMargin`.
 
 零堆分配的 CP 多行文本去缩进与模板对齐引擎，专为 SQL / HTML / YAML / LLM Prompt 嵌入式多行字符串打造，支持公共最小缩进剥离、相对嵌套缩进保留、Kotlin/Scala 风格 `stripMargin('|')` 与 CRLF 换行规范化（纯 CP 洁净室 MIT 实现）。

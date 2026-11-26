@@ -1,5 +1,8 @@
 # `@cap/zigzag`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:zigzag` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap-allocation 32-bit & 64-bit ZigZag bijection and ZigZag-Varint streaming codec (Protobuf / Apache Avro / Parquet / CBOR) in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/logfmt`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:logfmt` ([https://github.com/csquared/node-logfmt](https://github.com/csquared/node-logfmt))
+
 Zero-heap-allocation `logfmt` structured key=value log parser and writer in pure CP.
 
 ## Features

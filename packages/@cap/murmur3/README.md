@@ -1,5 +1,8 @@
 # @cap/murmur3
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:murmur3` ([https://github.com/stusmall/murmur3](https://github.com/stusmall/murmur3))
+
 Zero-heap Austin Appleby MurmurHash3 (32-bit x86 & 128-bit x64) implementation in pure CP (replaces Rust `murmur3` & npm `murmurhash3js`).
 
 Bit-exact reference implementation suitable for Kafka/Cassandra/ClickHouse partitioning, consistent hashing, and bloom filters.

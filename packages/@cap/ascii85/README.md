@@ -1,5 +1,8 @@
 # @cap/ascii85
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ascii85` ([https://github.com/noseglid/node-ascii85](https://github.com/noseglid/node-ascii85)) / `crates.io:ascii85` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-allocation Adobe Ascii85 (PostScript / PDF base-85) encoder and decoder for CP.
 
 ## Features

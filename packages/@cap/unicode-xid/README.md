@@ -1,5 +1,8 @@
 # `@cap/unicode-xid`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicode-xid` ([https://github.com/unicode-rs/unicode-xid](https://github.com/unicode-rs/unicode-xid))
+
 Zero-allocation **UAX #31** Unicode Identifier (`XID_Start` / `XID_Continue`) classifier and lexer scanner for CP (clean-room MIT implementation inspired by Rust's `unicode-xid`).
 
 ## Features

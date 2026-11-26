@@ -1,5 +1,8 @@
 # @cap/multer
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:multer` ([https://github.com/expressjs/multer](https://github.com/expressjs/multer))
+
 零堆分配的纯 CP `multipart/form-data` 上传边界解析与策略校验库，Clean-Room MIT 实现对标 npm Top 55 包 `multer` v2（周下载 8000 万+），跨包复用 `@cap/mediatype` 与 `@cap/mime-types`。
 
 ## 特性

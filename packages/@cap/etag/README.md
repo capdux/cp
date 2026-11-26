@@ -1,5 +1,8 @@
 # `@cap/etag`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:etag` ([https://github.com/jshttp/etag](https://github.com/jshttp/etag))
+
 Zero-heap-allocation RFC 9110 HTTP `ETag` generator, parser, and `If-None-Match` / `If-Match` evaluator in pure CP.
 
 ## Features

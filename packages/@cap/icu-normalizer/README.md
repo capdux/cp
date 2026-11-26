@@ -1,5 +1,8 @@
 # `@cap/icu-normalizer`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:icu_normalizer` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))（原库名 `icu_normalizer` → CP 包名 `@cap/icu-normalizer`）
+
 Zero-allocation UAX #15 Unicode NFC / NFD / NFKC / NFKD text normalizer in pure CP (ICU4X `icu_normalizer` parity).
 
 ## API

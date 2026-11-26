@@ -1,5 +1,8 @@
 # @cap/ulid-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ulid` ([https://github.com/dylanhart/ulid-rs](https://github.com/dylanhart/ulid-rs))（原库名 `ulid` → CP 包名 `@cap/ulid-crate`）
+
 Zero-allocation 128-bit lexicographically sortable ULID encoder, decoder, and monotonic generator for CP — clean-room MIT parity with crates.io `ulid` v1 and the ULID Specification.
 
 ## Installation

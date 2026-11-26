@@ -1,5 +1,8 @@
 # @cap/siphash-pure
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:siphash` ([https://github.com/jedisct1/siphash-js](https://github.com/jedisct1/siphash-js))（原库名 `siphash` → CP 包名 `@cap/siphash-pure`）
+
 Zero-allocation SipHash-2-4 and SipHash-1-3 64-bit keyed HashDoS-resistant pseudorandom function (PRF) for CP.
 
 ## Features

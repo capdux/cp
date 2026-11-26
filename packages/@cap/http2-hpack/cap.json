@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["http2", "hpack", "rfc7541", "headers", "compression", "zero-alloc"]
+  "keywords": [
+    "http2",
+    "hpack",
+    "rfc7541",
+    "headers",
+    "compression",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "h2",
+    "repo": "https://github.com/hyperium/h2",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/unicode-width
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicode-width` ([https://github.com/unicode-rs/unicode-width](https://github.com/unicode-rs/unicode-width)) / `npm:eastasianwidth` ([https://github.com/komagata/eastasianwidth](https://github.com/komagata/eastasianwidth)) / `npm:is-fullwidth-code-point` ([https://github.com/sindresorhus/is-fullwidth-code-point](https://github.com/sindresorhus/is-fullwidth-code-point)) / `npm:wcwidth` ([https://github.com/timoxley/wcwidth](https://github.com/timoxley/wcwidth))
+
 Zero-allocation Unicode 15.1 East Asian Width and terminal display column width engine for CP (Rust `unicode-width` & npm `string-width` parity).
 
 ## Features

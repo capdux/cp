@@ -13,5 +13,11 @@
     "lexer",
     "parser",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-xid",
+    "repo": "https://github.com/unicode-rs/unicode-xid",
+    "license": "MIT"
+  }
 }

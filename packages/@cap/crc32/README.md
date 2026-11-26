@@ -1,5 +1,8 @@
 # @cap/crc32
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:simd-adler32` ([https://github.com/mcountryman/simd-adler32](https://github.com/mcountryman/simd-adler32)) / `crates.io:crc-catalog` ([https://github.com/akhilles/crc-catalog](https://github.com/akhilles/crc-catalog))（原库名 `simd-adler32` → CP 包名 `@cap/crc32`）
+
 Zero-allocation IEEE 802.3 CRC-32, Castagnoli CRC-32C, Adler-32, and O(log N) CRC-32 combine engine for CP — clean-room MIT parity with Rust `crc32fast` (918M downloads on crates.io).
 
 纯 CP 零堆分配高速校验和引擎，完整覆盖 IEEE CRC-32（ZIP/GZIP/PNG/Ethernet）、Castagnoli CRC-32C（RocksDB/gRPC/S3/iSCSI/EXT4）、Adler-32（RFC 1950）与多线程分块 O(log N) 增量合并。

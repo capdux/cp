@@ -1,5 +1,8 @@
 # @cap/ignore
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ignore` ([https://github.com/kaelzhang/node-ignore](https://github.com/kaelzhang/node-ignore))
+
 零堆分配的 CP 原生 `.gitignore` 规范规则引擎，Clean-Room MIT 实现对标 npm 顶流包 `ignore`（2.5 亿+/周下载），跨包复用 `@cap/minimatch` 与 `@cap/normalize-path`。
 
 ## 特性

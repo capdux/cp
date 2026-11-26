@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/unicase": "1.0.0",
     "@cap/wildmatch": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "cors",
+    "repo": "https://github.com/expressjs/cors",
+    "license": "MIT"
   }
 }

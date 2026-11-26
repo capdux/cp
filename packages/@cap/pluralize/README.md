@@ -1,5 +1,8 @@
 # `@cap/pluralize` — Zero-Allocation English Pluralization & Ordinal Engine
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:pluralize` ([https://github.com/plurals/pluralize](https://github.com/plurals/pluralize))
+
 > Clean-room pure-CP implementation modeled after npm `pluralize`, `inflection`, and Rust `pluralizer` | License: MIT
 
 ## Overview / 概述

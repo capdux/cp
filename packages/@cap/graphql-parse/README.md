@@ -1,5 +1,8 @@
 # `@cap/graphql-parse`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:graphql` ([https://github.com/graphql/graphql-js](https://github.com/graphql/graphql-js))（原库名 `graphql` → CP 包名 `@cap/graphql-parse`）
+
 Zero-heap GraphQL Spec lexer, recursive-descent document parser/validator, and query minifier in pure CP (clean-room MIT counterpart to npm `graphql` v16 parser).
 
 ## Features

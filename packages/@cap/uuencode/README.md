@@ -1,5 +1,8 @@
 # @cap/uuencode
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:uuencode` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:uuencode` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap POSIX/Unix `uuencode` and `uudecode` codec in pure CP.
 
 ## Features

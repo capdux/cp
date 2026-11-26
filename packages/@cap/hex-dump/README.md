@@ -1,5 +1,8 @@
 # `@cap/hex-dump`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:hexdump-nodejs` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:pretty-hex` ([https://github.com/wolandr/pretty-hex](https://github.com/wolandr/pretty-hex))（原库名 `hexdump-nodejs` → CP 包名 `@cap/hex-dump`）
+
 Zero-heap-allocation canonical `hexdump -C` binary debugger, spaced hex encoder, and first-diff locator in pure CP.
 
 ## Features

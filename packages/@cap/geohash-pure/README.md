@@ -1,5 +1,8 @@
 # @cap/geohash-pure
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ngeohash` ([https://github.com/sunng87/node-geohash](https://github.com/sunng87/node-geohash))（原库名 `ngeohash` → CP 包名 `@cap/geohash-pure`）
+
 Zero-allocation Geohash Base32 spatial coordinate encoder, decoder, and bounding box library for CP.
 
 ## Features

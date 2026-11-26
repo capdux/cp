@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/p-queue": "1.0.0"
   },
-  "keywords": ["p-limit", "concurrency", "limiter", "queue", "scheduler", "zero-alloc"]
+  "keywords": [
+    "p-limit",
+    "concurrency",
+    "limiter",
+    "queue",
+    "scheduler",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "p-limit",
+    "repo": "https://github.com/sindresorhus/p-limit",
+    "license": "MIT"
+  }
 }

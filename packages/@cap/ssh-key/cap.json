@@ -5,6 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ssh", "openssh", "ed25519", "rsa", "authorized_keys", "sshpk", "security"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ssh-key"
+  "keywords": [
+    "ssh",
+    "openssh",
+    "ed25519",
+    "rsa",
+    "authorized_keys",
+    "sshpk",
+    "security"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ssh-key",
+  "source": {
+    "registry": "crates.io",
+    "name": "ssh-key",
+    "repo": "https://github.com/RustCrypto/SSH",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "ssh-key",
+      "repo": "https://github.com/RustCrypto/SSH",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "sshpk",
+      "repo": "https://github.com/TritonDataCenter/node-sshpk",
+      "license": "MIT"
+    }
+  ]
 }

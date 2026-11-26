@@ -1,5 +1,8 @@
 # @cap/short-uuid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:short-uuid` ([https://github.com/oculus42/short-uuid](https://github.com/oculus42/short-uuid))
+
 Zero-allocation 128-bit UUID to 22-character Flickr Base58 / URL Base62 / Cookie Base90 lossless short ID translator for CP — clean-room MIT parity with npm `short-uuid` and `uuid-translator`.
 
 零堆分配的 CP 128-bit UUID 无损双向短 ID 压缩与还原引擎，支持将 36 字符标准 UUID（或 32 字符紧凑十六进制 UUID）无损压缩为定长 22 字符 `FLICKR_BASE58` / `URL_BASE62` 或 20 字符 `COOKIE_BASE90` URL 安全短 ID，100% 保证全 0 至全 F 极值双向无损往返（纯 CP 洁净室 MIT 实现）。

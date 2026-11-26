@@ -1,5 +1,8 @@
 # @cap/strftime
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:strftime` ([https://github.com/samsonjs/strftime](https://github.com/samsonjs/strftime))
+
 Zero-heap POSIX `strftime` and proleptic Gregorian calendar formatter in pure CP (replaces npm `strftime` / `dateformat` [20M/wk]).
 
 Supports `%Y`, `%y`, `%m`, `%d`, `%e`, `%H`, `%I`, `%M`, `%S`, `%p`, `%P`, `%a`, `%A`, `%b`, `%B`, `%j`, `%w`, `%u`, `%F`, `%T`, `%R`, `%z`, `%Z`, `%n`, `%t`, `%%`.

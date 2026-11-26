@@ -5,5 +5,33 @@
   "description": "Zero-allocation Jaro and Jaro-Winkler string similarity metrics and best-match finder in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["jaro", "jaro-winkler", "similarity", "fuzzy", "strsim", "deduplication", "zero-alloc"]
+  "keywords": [
+    "jaro",
+    "jaro-winkler",
+    "similarity",
+    "fuzzy",
+    "strsim",
+    "deduplication",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "jaro-winkler",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "jaro-winkler",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "jaro-winkler",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ]
 }

@@ -1,5 +1,8 @@
 # @cap/nom-bytes
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:winnow` ([https://github.com/winnow-rs/winnow](https://github.com/winnow-rs/winnow))（原库名 `winnow` → CP 包名 `@cap/nom-bytes`）
+
 Zero-allocation byte-level zero-copy parser combinators for CP (`winnow` / `nom` parity).
 
 ## Features

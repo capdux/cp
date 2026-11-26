@@ -1,5 +1,8 @@
 # `@cap/decimal-fixed`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rust_decimal` ([https://github.com/paupino/rust-decimal](https://github.com/paupino/rust-decimal))（原库名 `rust_decimal` → CP 包名 `@cap/decimal-fixed`）
+
 Zero-heap fixed-point financial decimal arithmetic (`mantissa * 10^(-scale)`, `scale` in `0..12`) in pure CP. Eliminates IEEE-754 floating-point drift (`0.1 + 0.2 == 0.3`).
 
 ## Features

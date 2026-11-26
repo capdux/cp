@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["enumflags2", "bitflags", "bitset", "flags", "mask", "zero-alloc"]
+  "keywords": [
+    "enumflags2",
+    "bitflags",
+    "bitset",
+    "flags",
+    "mask",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "enumflags2",
+    "repo": "https://github.com/meithecatte/enumflags2",
+    "license": "MIT"
+  }
 }

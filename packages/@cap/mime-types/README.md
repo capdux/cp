@@ -1,5 +1,8 @@
 # `@cap/mime-types`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mime-types` ([https://github.com/jshttp/mime-types](https://github.com/jshttp/mime-types))
+
 Zero-heap MIME type, file extension, charset, `Content-Type` header, and HTTP compressibility resolver in pure CP (clean-room MIT counterpart to npm `mime-types` v2.1).
 
 ## Features

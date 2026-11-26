@@ -4,5 +4,11 @@
   "description": "Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction neighbor finder (Rust geohash / ngeohash parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "geohash",
+    "repo": "https://github.com/georust/geohash",
+    "license": "MIT"
+  }
 }

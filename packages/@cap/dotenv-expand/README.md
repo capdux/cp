@@ -1,5 +1,8 @@
 # @cap/dotenv-expand
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:dotenv-expand` ([https://github.com/motdotla/dotenv-expand](https://github.com/motdotla/dotenv-expand))
+
 Clean-room MIT, zero-heap `.env` parser and POSIX variable expansion engine for CP — modeled on npm's `dotenv` + `dotenv-expand`.
 
 ## API

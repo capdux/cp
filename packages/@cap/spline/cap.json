@@ -4,5 +4,11 @@
   "description": "Zero-heap Natural Cubic Spline (Thomas O(N)), Catmull-Rom spline, quadratic/cubic Bezier curves, smoothstep, and linear interpolation.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "splines",
+    "repo": "https://github.com/phaazon/splines",
+    "license": "BSD-3-Clause"
+  }
 }

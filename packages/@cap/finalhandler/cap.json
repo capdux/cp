@@ -9,5 +9,11 @@
     "@cap/escape-html": "1.0.0",
     "@cap/http-types": "1.0.0",
     "@cap/itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "finalhandler",
+    "repo": "https://github.com/pillarjs/finalhandler",
+    "license": "MIT"
   }
 }

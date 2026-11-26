@@ -1,5 +1,8 @@
 # `@cap/shell-quote`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shell-quote` ([https://github.com/ljharb/shell-quote](https://github.com/ljharb/shell-quote))
+
 Zero-heap POSIX shell argument quoting (`quoteArg`, `quoteArgs`) and command-line tokenization (`splitCommand`) in pure CP, modeled after npm `shell-quote`. Safely escapes metacharacters, spaces, and single quotes to prevent shell injection.
 
 零堆分配纯 CP POSIX Shell 参数安全转义与命令行分词器，对标 npm `shell-quote`，支持单/双引号、反斜杠转义与安全防命令注入引号包裹。

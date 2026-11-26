@@ -10,5 +10,11 @@
     "@cap/etag-http": "1.0.0",
     "@cap/range-parser": "1.0.0",
     "@cap/mime-types": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "send",
+    "repo": "https://github.com/pillarjs/send",
+    "license": "MIT"
   }
 }

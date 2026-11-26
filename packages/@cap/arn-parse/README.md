@@ -1,5 +1,8 @@
 # @cap/arn-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:@aws-sdk/util-arn-parser` ([https://github.com/aws/aws-sdk-js-v3](https://github.com/aws/aws-sdk-js-v3)) / `crates.io:aws-arn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `@aws-sdk/util-arn-parser` → CP 包名 `@cap/arn-parse`）
+
 Zero-heap AWS ARN (Amazon Resource Name) parser, formatter, partition validator, resource type extractor, and IAM wildcard matcher in pure CP.
 
 ## Features

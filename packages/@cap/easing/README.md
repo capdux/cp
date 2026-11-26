@@ -1,5 +1,8 @@
 # @cap/easing
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ezing` ([https://github.com/NyxCode/ezing](https://github.com/NyxCode/ezing))（原库名 `ezing` → CP 包名 `@cap/easing`）
+
 Zero-allocation Robert Penner animation easing function family and CSS `cubic-bezier(x1, y1, x2, y2)` solver for CP — clean-room MIT parity with Rust `ezing` / `keyframe` and npm `eases`.
 
 纯 CP 零堆分配动画缓动函数库，完整实现 Robert Penner 缓动家族（Linear / Quad / Cubic / Quart / Quint / Sine / Circ / Back / Bounce）与牛顿+二分双保险 CSS `cubic-bezier` 求解器。

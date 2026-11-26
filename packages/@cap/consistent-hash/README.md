@@ -1,5 +1,8 @@
 # @cap/consistent-hash
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:hashring` ([https://github.com/jeromefroe/hashring-rs](https://github.com/jeromefroe/hashring-rs))（原库名 `hashring` → CP 包名 `@cap/consistent-hash`）
+
 Zero-allocation consistent hash ring with virtual nodes, `O(log V)` binary-search clockwise routing, and deduplicated replica selection for CP — clean-room MIT parity with Rust `hashring` and npm `hashring`.
 
 零堆分配的 CP 一致性哈希环引擎，支持最多 32 个物理节点、256 个有序虚拟节点槽位、FNV-1a + SplitMix 雪崩哈希、`O(log V)` 二分顺时针定位与去重多副本容灾路由，适用于分布式缓存分片、多节点 `caprun` Agent 路由与负载均衡（纯 CP 洁净室 MIT 实现）。

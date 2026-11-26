@@ -5,5 +5,35 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["unicode", "bidi", "uax9", "rtl", "ltr", "i18n", "arabic", "hebrew", "zero-alloc"]
+  "keywords": [
+    "unicode",
+    "bidi",
+    "uax9",
+    "rtl",
+    "ltr",
+    "i18n",
+    "arabic",
+    "hebrew",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-bidi",
+    "repo": "https://github.com/servo/unicode-bidi",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "unicode-bidi",
+      "repo": "https://github.com/servo/unicode-bidi",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "bidi-js",
+      "repo": "https://github.com/lojjic/bidi-js",
+      "license": "MIT"
+    }
+  ]
 }

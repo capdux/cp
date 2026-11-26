@@ -1,5 +1,8 @@
 # @cap/data-uri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:data-uri-to-buffer` ([https://github.com/TooTallNate/proxy-agents](https://github.com/TooTallNate/proxy-agents))（原库名 `data-uri-to-buffer` → CP 包名 `@cap/data-uri`）
+
 Zero-allocation RFC 2397 `data:[<mediatype>][;base64],<data>` URI parser, Base64/percent decoder, and builder for CP — clean-room MIT parity with npm `data-uri-to-buffer` / `datauri` and Rust `data-url`.
 
 零堆分配的 CP RFC 2397 Data URI 解析、Base64/百分号解码与编码构建引擎，支持默认 `text/plain;charset=US-ASCII`、大小写无关 `data:` 与 `;base64`、UTF-8 百分号解码以及二进制载荷无损 Base64 往返（纯 CP 洁净室 MIT 实现）。

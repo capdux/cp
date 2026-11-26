@@ -1,5 +1,8 @@
 # @cap/form-urlencoded
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:querystringify` ([https://github.com/unshiftio/querystringify](https://github.com/unshiftio/querystringify)) / `crates.io:urlencoding` ([https://github.com/kornelski/rust_urlencoding](https://github.com/kornelski/rust_urlencoding))（原库名 `querystringify` → CP 包名 `@cap/form-urlencoded`）
+
 Zero-heap-allocation WHATWG `application/x-www-form-urlencoded` parser, serializer, and percent-encoding codec in pure CP (inspired by Rust `form_urlencoded` & `percent-encoding`).
 
 ## Features

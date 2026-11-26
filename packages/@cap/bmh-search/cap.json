@@ -4,5 +4,11 @@
   "description": "Zero-heap Boyer-Moore-Horspool sublinear substring search with reusable 256-byte bad-character table, reverse search, counting, and ASCII case-insensitive search.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "boyer-moore-magiclen",
+    "repo": "https://github.com/magiclen/boyer-moore-magiclen",
+    "license": "MIT"
+  }
 }

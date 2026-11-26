@@ -1,5 +1,8 @@
 # @cap/debug
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:debug` ([https://github.com/debug-js/debug](https://github.com/debug-js/debug))
+
 Zero-allocation namespace debug log filter, glob exclusion engine, deterministic ANSI coloring, and diff-ms formatter for CP — clean-room MIT parity with npm `debug`.
 
 零堆分配的 CP 命名空间调试日志过滤与格式化引擎，完整支持 npm `DEBUG` 环境变量语法（逗号/空格分隔、任意 `*` 通配符、`-` 前缀排除优先）、确定性 ANSI 配色与 `+ms`/`+s`/`+m`/`+h` 耗时差格式化（纯 CP 洁净室 MIT 实现）。

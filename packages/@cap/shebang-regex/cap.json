@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["shebang", "shebang-regex", "hashbang", "cli", "spawn", "zero-alloc"]
+  "keywords": [
+    "shebang",
+    "shebang-regex",
+    "hashbang",
+    "cli",
+    "spawn",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "shebang-regex",
+    "repo": "https://github.com/sindresorhus/shebang-regex",
+    "license": "MIT"
+  }
 }

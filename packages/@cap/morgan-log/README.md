@@ -1,5 +1,8 @@
 # @cap/morgan-log
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:morgan` ([https://github.com/expressjs/morgan](https://github.com/expressjs/morgan))（原库名 `morgan` → CP 包名 `@cap/morgan-log`）
+
 Clean-room MIT, zero-heap HTTP access log template formatting engine for CP — modeled on npm `morgan` v1.10.
 
 ## Dependencies

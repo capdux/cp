@@ -1,5 +1,8 @@
 # @cap/mat3
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:gl-mat3` ([https://github.com/stackgl/gl-mat3](https://github.com/stackgl/gl-mat3)) / `crates.io:cgmath` ([https://github.com/rustgd/cgmath](https://github.com/rustgd/cgmath))（原库名 `gl-mat3` → CP 包名 `@cap/mat3`）
+
 Zero-allocation 3x3 row-major matrix and 2D affine transform library for CP with built-in Taylor-series `sin`/`cos` (zero external dependencies).
 
 ## Features

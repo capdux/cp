@@ -1,5 +1,8 @@
 # @cap/semver-range
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:semver` ([https://github.com/npm/node-semver](https://github.com/npm/node-semver)) / `crates.io:semver-range` ([https://github.com/dtolnay/semver](https://github.com/dtolnay/semver))（原库名 `semver` → CP 包名 `@cap/semver-range`）
+
 零堆分配的 CP 原生 SemVer 2.0.0 与 npm 版本范围求值引擎，Clean-Room MIT 实现对标 npm 全站 Top 1 顶流包 `semver`（4 亿+/周下载）。
 
 ## 特性

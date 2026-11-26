@@ -1,5 +1,8 @@
 # @cap/wrap-ansi
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:wrap-ansi` ([https://github.com/chalk/wrap-ansi](https://github.com/chalk/wrap-ansi))
+
 零堆分配的 CP ANSI 颜色保持折行与按可见列宽截断引擎 — 洁净室 MIT 实现，对标 npm `wrap-ansi`（6.15 亿/周）与 `slice-ansi`（5.5 亿/周）。
 
 Zero-allocation ANSI-preserving text wrapper and visible-column slicer for CP — clean-room MIT parity with npm `wrap-ansi` (615M/wk) and `slice-ansi` (550M/wk).

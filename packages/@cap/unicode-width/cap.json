@@ -5,5 +5,46 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["unicode", "unicode-width", "string-width", "cjk", "emoji", "terminal", "cli", "zero-alloc"]
+  "keywords": [
+    "unicode",
+    "unicode-width",
+    "string-width",
+    "cjk",
+    "emoji",
+    "terminal",
+    "cli",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-width",
+    "repo": "https://github.com/unicode-rs/unicode-width",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "unicode-width",
+      "repo": "https://github.com/unicode-rs/unicode-width",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "eastasianwidth",
+      "repo": "https://github.com/komagata/eastasianwidth",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "is-fullwidth-code-point",
+      "repo": "https://github.com/sindresorhus/is-fullwidth-code-point",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "wcwidth",
+      "repo": "https://github.com/timoxley/wcwidth",
+      "license": "MIT"
+    }
+  ]
 }

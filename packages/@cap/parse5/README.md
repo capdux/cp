@@ -1,5 +1,8 @@
 # @cap/parse5
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:parse5` ([https://github.com/inikulin/parse5](https://github.com/inikulin/parse5))
+
 Clean-room MIT, zero-heap WHATWG HTML5 streaming tokenizer, attribute parser, and plain-text extractor for CP — modeled on npm's `parse5` v7.
 
 ## Dependencies

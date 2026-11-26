@@ -1,5 +1,8 @@
 # `@cap/anymatch`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:anymatch` ([https://github.com/micromatch/anymatch](https://github.com/micromatch/anymatch))
+
 Zero-heap file path & glob matcher with `!pattern` negation support in pure CP (clean-room counterpart to npm `anymatch`). Directly composes `@cap/normalize-path` and `@cap/is-glob`.
 
 ## Features

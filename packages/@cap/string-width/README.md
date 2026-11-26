@@ -1,5 +1,8 @@
 # @cap/string-width
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:string-width` ([https://github.com/sindresorhus/string-width](https://github.com/sindresorhus/string-width))
+
 Zero-allocation visual terminal column width calculator for CP — clean-room MIT parity with npm `string-width` v7. Composes `@cap/ansi-strip` and `@cap/unicode-width` with zero duplication.
 
 纯 CP 零堆分配终端可见列宽计算库（对标 npm `string-width` v7），复用 `@cap/ansi-strip`（剥离 ANSI CSI/SGR/OSC 转义序列）与 `@cap/unicode-width`（计算 Unicode 15.1 码点与东亚全角/模糊宽度）。

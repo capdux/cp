@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["spiffe", "spire", "istio", "envoy", "zero-trust", "mtls", "security", "zero-alloc"]
+  "keywords": [
+    "spiffe",
+    "spire",
+    "istio",
+    "envoy",
+    "zero-trust",
+    "mtls",
+    "security",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "spiffe",
+    "repo": "https://github.com/maxlambrecht/rust-spiffe",
+    "license": "Apache-2.0"
+  }
 }

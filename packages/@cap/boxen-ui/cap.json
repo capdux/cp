@@ -5,8 +5,24 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["boxen", "box", "border", "terminal", "cli", "unicode", "ansi", "cjk", "zero-alloc"],
+  "keywords": [
+    "boxen",
+    "box",
+    "border",
+    "terminal",
+    "cli",
+    "unicode",
+    "ansi",
+    "cjk",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/string-width": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "boxen",
+    "repo": "https://github.com/sindresorhus/boxen",
+    "license": "MIT"
   }
 }

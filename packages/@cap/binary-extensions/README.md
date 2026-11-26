@@ -1,5 +1,8 @@
 # `@cap/binary-extensions`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:binary-extensions` ([https://github.com/sindresorhus/binary-extensions](https://github.com/sindresorhus/binary-extensions))
+
 Zero-heap O(log n) lookup of 127 common binary file extensions and categories in pure CP (clean-room counterpart to npm `binary-extensions` & `is-binary-path`).
 
 ## Features

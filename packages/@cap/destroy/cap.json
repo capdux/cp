@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/on-finished": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "destroy",
+    "repo": "https://github.com/stream-utils/destroy",
+    "license": "MIT"
   }
 }

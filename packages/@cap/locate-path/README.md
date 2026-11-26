@@ -1,5 +1,8 @@
 # @cap/locate-path
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:locate-path` ([https://github.com/sindresorhus/locate-path](https://github.com/sindresorhus/locate-path))
+
 Zero-allocation, Clean-room MIT implementation of `locate-path` v7 core semantics for CP, reusing `joinDirAndName` from `@cap/find-up`.
 
 ## Features

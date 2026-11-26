@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/media-typer": "1.0.0",
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "mediatype",
+    "repo": "https://github.com/picoHz/mediatype",
+    "license": "MIT"
   }
 }

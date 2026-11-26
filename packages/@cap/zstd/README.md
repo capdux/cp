@@ -1,5 +1,8 @@
 # @cap/zstd
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:zstd` ([https://github.com/gyscos/zstd-rs](https://github.com/gyscos/zstd-rs))
+
 Official CP native package wrapping **Zstandard (`libzstd`)** single-file amalgamation.
 
 - **License**: BSD-3-Clause (Upstream: `facebook/zstd`)

@@ -1,5 +1,8 @@
 # @cap/content-type
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:content-type` ([https://github.com/jshttp/content-type](https://github.com/jshttp/content-type))
+
 Clean-room MIT, zero-heap RFC 7231 HTTP `Content-Type` header parser and formatter for CP — modeled on npm `content-type` v1.0.
 
 ## Dependencies

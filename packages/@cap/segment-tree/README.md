@@ -1,5 +1,8 @@
 # @cap/segment-tree
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:segment-tree` ([https://github.com/Darksonn/segment-tree](https://github.com/Darksonn/segment-tree))
+
 Zero-allocation iterative 2×N Segment Tree simultaneously supporting O(log N) `rangeSum`, `rangeMin` (RMQ), `rangeMax`, and point updates (`set` / `add`) for CP — clean-room MIT parity with Rust `segment-tree`.
 
 纯 CP 零堆分配迭代式线段树（最大容量 256），O(N) 自底向上建树，O(log N) 单次查询同步返回区间和/最小值/最大值，适用于时序指标聚合、金融 K 线极值查询与在线流式分析。

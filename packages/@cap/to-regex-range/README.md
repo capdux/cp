@@ -1,5 +1,8 @@
 # @cap/to-regex-range
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:to-regex-range` ([https://github.com/micromatch/to-regex-range](https://github.com/micromatch/to-regex-range))
+
 Zero-heap-allocation numeric range to compact regex pattern compiler and decimal range matcher in pure CP (parity with npm `to-regex-range`).
 
 ## Features

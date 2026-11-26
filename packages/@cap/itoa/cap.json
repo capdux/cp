@@ -5,5 +5,11 @@
   "description": "Fast zero-heap two-digits-per-step integer-to-ASCII formatter (clean-room CP implementation of crates.io itoa)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "itoa",
+    "repo": "https://github.com/dtolnay/itoa",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/hashbrown
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:hashbrown` ([https://github.com/rust-lang/hashbrown](https://github.com/rust-lang/hashbrown))
+
 零堆分配的 CP 原生 SwissTable 风格控制字节哈希表与集合，Clean-Room MIT 实现对标 crates.io **全站第 1 名**包 `hashbrown`（32.6 亿+ 下载），跨包复用 `@cap/fnv-hash`。
 
 ## 特性

@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/percent-encoding": "1.0.0",
     "@cap/idna-uts46": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "url",
+    "repo": "https://github.com/servo/rust-url",
+    "license": "MIT"
   }
 }

@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["rdp", "simplify", "polyline", "douglas-peucker", "geo", "gis", "vector"]
+  "keywords": [
+    "rdp",
+    "simplify",
+    "polyline",
+    "douglas-peucker",
+    "geo",
+    "gis",
+    "vector"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "simplify-js",
+    "repo": "https://github.com/mourner/simplify-js",
+    "license": "MIT"
+  }
 }

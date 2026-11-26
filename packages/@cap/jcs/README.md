@@ -1,5 +1,8 @@
 # @cap/jcs
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fast-json-stable-stringify` ([https://github.com/epoberezkin/fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify))（原库名 `fast-json-stable-stringify` → CP 包名 `@cap/jcs`）
+
 零堆分配的 RFC 8785 JSON Canonicalization Scheme (JCS) 确定性规范化 JSON 引擎 — 洁净室 MIT 实现，对标 npm `fast-json-stable-stringify` / `canonicalize` 与 Rust `serde_jcs`，适用于数字签名、Webhook HMAC、缓存 Key 与内容寻址。
 
 Zero-allocation RFC 8785 JSON Canonicalization Scheme (JCS) deterministic serializer & semantic equivalence checker for CP — clean-room MIT parity with npm `fast-json-stable-stringify`, `canonicalize`, and Rust `serde_jcs`.

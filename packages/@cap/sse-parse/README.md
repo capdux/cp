@@ -1,5 +1,8 @@
 # @cap/sse-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:eventsource-parser` ([https://github.com/rexxars/eventsource-parser](https://github.com/rexxars/eventsource-parser))（原库名 `eventsource-parser` → CP 包名 `@cap/sse-parse`）
+
 Zero-allocation W3C Server-Sent Events (`text/event-stream`) incremental streaming parser for CP.
 
 ## Features

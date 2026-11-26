@@ -1,5 +1,8 @@
 # `@cap/shell-escape`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shell-escape` ([https://github.com/xxorax/node-shell-escape](https://github.com/xxorax/node-shell-escape)) / `crates.io:shell-escape` ([https://github.com/sfackler/shell-escape](https://github.com/sfackler/shell-escape))
+
 Zero-heap-allocation POSIX `sh` and Windows `CommandLineToArgvW` argument escaper, command joiner, and environment variable validator in pure CP.
 
 ## Features

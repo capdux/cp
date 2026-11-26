@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["aabb", "aabb2", "2d", "collision", "geometry", "raycast", "slab", "zero-alloc"]
+  "keywords": [
+    "aabb",
+    "aabb2",
+    "2d",
+    "collision",
+    "geometry",
+    "raycast",
+    "slab",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "parry2d",
+    "repo": "https://github.com/dimforge/parry",
+    "license": "MIT"
+  }
 }

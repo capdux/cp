@@ -1,5 +1,8 @@
 # @cap/docker-ref
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:oci-distribution` ([https://github.com/krustlet/oci-distribution](https://github.com/krustlet/oci-distribution)) / `npm:docker-image-parse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `oci-distribution` → CP 包名 `@cap/docker-ref`）
+
 Zero-allocation OCI / Docker image reference parser, validator, and canonical normalizer for CP.
 
 ## Features

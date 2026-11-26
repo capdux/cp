@@ -1,5 +1,8 @@
 # @cap/mathjs-expr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mathjs` ([https://github.com/josdejong/mathjs](https://github.com/josdejong/mathjs))（原库名 `mathjs` → CP 包名 `@cap/mathjs-expr`）
+
 Zero-allocation mathematical expression parser & evaluator for CP — clean-room MIT parity with npm `mathjs` expression evaluation. Composes `@cap/libm` with zero duplication.
 
 纯 CP 零堆分配数学表达式解析与求值引擎（对标 npm `mathjs`），复用 `@cap/libm` 提供三角、指数、对数、幂与取整函数，支持自定义变量作用域、内置数学常量与严格错误码检测。

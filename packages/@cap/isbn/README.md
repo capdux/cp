@@ -1,5 +1,8 @@
 # @cap/isbn
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:isbn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-allocation ISO 2108 ISBN-10, ISBN-13, ISSN, and EAN-13 validator and converter for CP.
 
 ## Features

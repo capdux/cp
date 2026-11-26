@@ -1,5 +1,8 @@
 # `@cap/parse-ms`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:parse-ms` ([https://github.com/sindresorhus/parse-ms](https://github.com/sindresorhus/parse-ms))
+
 Zero-heap millisecond breakdown (`days`, `hours`, `minutes`, `seconds`, `milliseconds`, `microseconds`, `nanoseconds`) and reconstruction in pure CP (clean-room counterpart to npm `parse-ms` & `to-milliseconds`).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/micromatch
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:micromatch` ([https://github.com/micromatch/micromatch](https://github.com/micromatch/micromatch))
+
 Zero-allocation glob matching suite for CP — clean-room MIT parity with npm `micromatch` v4. Composes `@cap/picomatch` and `@cap/braces` with zero duplication.
 
 纯 CP 零堆分配顶级 Glob 匹配套件（对标 npm `micromatch` v4），在 `@cap/picomatch` 通配符引擎与 `@cap/braces` 数值/字母范围展开之上提供全套集合匹配、批量过滤、反向过滤与子路径包含 API。

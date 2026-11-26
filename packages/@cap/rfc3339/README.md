@@ -1,5 +1,8 @@
 # `@cap/rfc3339`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rfc3339` ([https://github.com/chronotope/chrono](https://github.com/chronotope/chrono))
+
 Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter — clean-room CP package reusing `@cap/iso8601`.
 
 ## Features

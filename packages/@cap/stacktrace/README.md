@@ -1,5 +1,8 @@
 # @cap/stacktrace
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:error-stack-parser` ([https://github.com/stacktracejs/error-stack-parser](https://github.com/stacktracejs/error-stack-parser))（原库名 `error-stack-parser` → CP 包名 `@cap/stacktrace`）
+
 零堆分配的 CP 多语言调用栈解析与清洗引擎 — 洁净室 MIT 实现，对标 npm `error-stack-parser`、`stacktrace-parser` 与 `clean-stack`。
 
 Zero-allocation multi-language stack trace parser & cleaner for CP — clean-room MIT parity with npm `error-stack-parser`, `stacktrace-parser`, and `clean-stack`.

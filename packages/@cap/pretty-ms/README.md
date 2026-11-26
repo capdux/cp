@@ -1,5 +1,8 @@
 # @cap/pretty-ms
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:pretty-ms` ([https://github.com/sindresorhus/pretty-ms](https://github.com/sindresorhus/pretty-ms))
+
 零堆分配的 CP 毫秒高精度分解与多风格可读时长格式化引擎 — 洁净室 MIT 实现，对标 npm `pretty-ms` + `parse-ms`（~1.8 亿/周）。
 
 Zero-allocation millisecond decomposer and human-readable duration formatter for CP — clean-room MIT parity with npm `pretty-ms` and `parse-ms` (~180M/wk).

@@ -1,5 +1,8 @@
 # @cap/base64ct
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:base64ct` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats)) / `npm:base64-arraybuffer` ([https://github.com/niklasvh/base64-arraybuffer](https://github.com/niklasvh/base64-arraybuffer))
+
 Pure CP, zero-allocation, constant-time (table-free) Base64 encoder and strict canonical RFC 4648 decoder (parity with RustCrypto `base64ct`).
 
 ## Security & Design

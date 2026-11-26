@@ -1,5 +1,8 @@
 # `@cap/nom-parse`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:nom` ([https://github.com/rust-bakery/nom](https://github.com/rust-bakery/nom))（原库名 `nom` → CP 包名 `@cap/nom-parse`）
+
 Zero-allocation streaming parser combinator primitives for CP (clean-room MIT implementation inspired by Rust's `nom` v7).
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/mint`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:mint` ([https://github.com/kvark/mint](https://github.com/kvark/mint))
+
 Zero-heap Math Interoperability Standard Types for CP graphics, physics, and scientific libraries — clean-room CP equivalent of crates.io `mint`.
 
 ## Features

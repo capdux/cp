@@ -1,5 +1,8 @@
 # `@cap/metaphone`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:metaphone` ([https://github.com/words/metaphone](https://github.com/words/metaphone))
+
 Zero-heap-allocation Lawrence Philips Metaphone English phonetic encoder in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/geo-uri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:geo-uri` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-allocation RFC 5870 `geo:` URI parser, coordinate validator, and formatter for CP.
 
 ## Features

@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/find-up": "1.0.0"
   },
-  "keywords": ["locate-path", "path", "fs", "locate", "find", "symlink", "zero-alloc"]
+  "keywords": [
+    "locate-path",
+    "path",
+    "fs",
+    "locate",
+    "find",
+    "symlink",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "locate-path",
+    "repo": "https://github.com/sindresorhus/locate-path",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/unicase
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicase` ([https://github.com/seanmonstar/unicase](https://github.com/seanmonstar/unicase))
+
 Clean-room MIT, zero-heap Unicode & ASCII case-insensitive comparison, ordering, matching, and hashing library for CP — modeled on Rust's `unicase` crate.
 
 ## Dependencies

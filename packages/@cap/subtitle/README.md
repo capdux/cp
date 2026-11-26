@@ -1,5 +1,8 @@
 # @cap/subtitle
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:subtitle` ([https://github.com/gsantiago/subtitle.js](https://github.com/gsantiago/subtitle.js))
+
 Zero-heap SRT & WebVTT subtitle parser, timecode formatter, cue time-shifter, and lossless SRT ↔ WebVTT converter in pure CP (replaces npm `subtitle` / `srt-parser-2`).
 
 ## Install

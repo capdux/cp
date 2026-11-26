@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/percent-encoding": "1.0.0",
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "content-disposition",
+    "repo": "https://github.com/jshttp/content-disposition",
+    "license": "MIT"
   }
 }

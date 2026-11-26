@@ -1,5 +1,8 @@
 # @cap/itertools
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:itertools` ([https://github.com/rust-itertools/itertools](https://github.com/rust-itertools/itertools))
+
 Pure CP, zero-allocation iterator combinators and sequence algorithms (clean-room MIT parity with Rust `itertools`).
 
 ## Features

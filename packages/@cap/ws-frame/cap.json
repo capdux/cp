@@ -5,6 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["websocket", "ws", "rfc6455", "frame", "tungstenite", "network"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ws-frame"
+  "keywords": [
+    "websocket",
+    "ws",
+    "rfc6455",
+    "frame",
+    "tungstenite",
+    "network"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ws-frame",
+  "source": {
+    "registry": "npm",
+    "name": "ws",
+    "repo": "https://github.com/websockets/ws",
+    "license": "MIT"
+  }
 }

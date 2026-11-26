@@ -4,5 +4,11 @@
   "description": "Zero-allocation static-pool deterministic skip list (O(log N) ordered map, lowerBound, rangeCount, freelist reuse) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "skiplist",
+    "repo": "https://github.com/JP-Ellis/rust-skiplist",
+    "license": "MIT"
+  }
 }

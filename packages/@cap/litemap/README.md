@@ -1,5 +1,8 @@
 # @cap/litemap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:litemap` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))
+
 零堆分配的 CP 紧凑有序二分查找映射表 — 洁净室 MIT 实现，对标 Rust ICU4X `litemap`（crates.io #168，8.24 亿+ 总下载）。平坦有序数组存储、零哈希表开销、`O(log N)` 二分查找与天然按键升序遍历。
 
 Zero-allocation compact sorted flat-array map with `O(log N)` binary search and deterministic ordered iteration for CP — clean-room MIT parity with Rust ICU4X `litemap` (824M+ downloads).

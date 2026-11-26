@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/spdx-expression-parse": "1.0.0"
   },
-  "keywords": ["npm", "license", "spdx", "validate", "package", "zero-alloc"]
+  "keywords": [
+    "npm",
+    "license",
+    "spdx",
+    "validate",
+    "package",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "validate-npm-package-license",
+    "repo": "https://github.com/kemitchell/validate-npm-package-license.js",
+    "license": "Apache-2.0"
+  }
 }

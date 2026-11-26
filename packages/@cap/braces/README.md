@@ -1,5 +1,8 @@
 # @cap/braces
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:braces` ([https://github.com/micromatch/braces](https://github.com/micromatch/braces))
+
 Zero-allocation Bash/Glob brace expansion and sequence range generator for CP — clean-room MIT parity with npm `braces` + `fill-range` (~500M/wk).
 
 纯 CP 零堆分配 Bash/Glob 花括号展开与序列范围生成器，使用固定输出缓冲区与零拷贝偏移索引，内置展开上限防爆保护。

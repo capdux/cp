@@ -1,5 +1,8 @@
 # `@cap/template` — 零分配、默认 XSS 安全防护模板引擎
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tinytemplate` ([https://github.com/bheisler/TinyTemplate](https://github.com/bheisler/TinyTemplate))（原库名 `tinytemplate` → CP 包名 `@cap/template`）
+
 > 独立 Clean-Room 纯 CP 实现（严格对标 npm `handlebars` / `mustache` [周下载 60M+] 与 Rust `minijinja` / `tera` crate）| 许可协议：MIT
 
 ## 架构概述

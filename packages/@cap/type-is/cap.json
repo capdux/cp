@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/mime-types": "1.0.0",
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "type-is",
+    "repo": "https://github.com/jshttp/type-is",
+    "license": "MIT"
   }
 }

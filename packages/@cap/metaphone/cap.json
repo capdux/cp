@@ -5,5 +5,19 @@
   "description": "Zero-allocation Lawrence Philips Metaphone English phonetic encoding algorithm in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["metaphone", "phonetic", "soundex", "fuzzy", "search", "nlp", "zero-alloc"]
+  "keywords": [
+    "metaphone",
+    "phonetic",
+    "soundex",
+    "fuzzy",
+    "search",
+    "nlp",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "metaphone",
+    "repo": "https://github.com/words/metaphone",
+    "license": "MIT"
+  }
 }

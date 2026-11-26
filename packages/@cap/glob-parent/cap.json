@@ -7,5 +7,11 @@
   "license": "MIT",
   "dependencies": {
     "@cap/is-extglob": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "glob-parent",
+    "repo": "https://github.com/gulpjs/glob-parent",
+    "license": "MIT"
   }
 }

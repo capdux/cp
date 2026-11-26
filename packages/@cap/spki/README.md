@@ -1,5 +1,8 @@
 # @cap/spki
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:spki` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 Pure CP, zero-allocation RFC 5280 `SubjectPublicKeyInfo` (SPKI) and `AlgorithmIdentifier` DER/PEM codec (parity with RustCrypto `spki`).
 
 Reuses `@cap/const-oid` for ITU-T X.690 OID encoding/decoding and `@cap/pem-rfc7468` for RFC 7468 `PUBLIC KEY` PEM encoding/decoding.

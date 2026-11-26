@@ -5,8 +5,22 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["querystring", "query-string", "url", "parse", "stringify", "http", "zero-alloc"],
+  "keywords": [
+    "querystring",
+    "query-string",
+    "url",
+    "parse",
+    "stringify",
+    "http",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/percent-encoding": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "querystring",
+    "repo": "https://github.com/sindresorhus/query-string",
+    "license": "MIT"
   }
 }

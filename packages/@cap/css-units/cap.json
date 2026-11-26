@@ -4,5 +4,11 @@
   "description": "Zero-allocation CSS dimension, length, angle, time, and resolution parser and unit converter for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "postcss-value-parser",
+    "repo": "https://github.com/TrySound/postcss-value-parser",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/dice-coeff
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:string-similarity` ([https://github.com/aceakash/string-similarity](https://github.com/aceakash/string-similarity))（原库名 `string-similarity` → CP 包名 `@cap/dice-coeff`）
+
 Zero-allocation Sørensen-Dice bigram string similarity coefficient and best-match finder for CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/disjoint-set`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:disjoint-sets` ([https://github.com/tov/disjoint-sets-rs](https://github.com/tov/disjoint-sets-rs))（原库名 `disjoint-sets` → CP 包名 `@cap/disjoint-set`）
+
 Zero-heap Disjoint Set Union (Union-Find) data structure in pure CP, featuring path halving and union by size. Ideal for connected components, Kruskal MST, equivalence classes, and cycle detection in undirected graphs.
 
 零堆分配纯 CP 并查集（Disjoint Set Union / Union-Find），内置路径减半压缩与按秩/大小合并，适用于无向图连通分量、Kruskal 最小生成树、等价类划分与环路检测。

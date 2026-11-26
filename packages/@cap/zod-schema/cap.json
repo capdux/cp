@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/kind-of": "1.0.0",
     "@cap/whatwg-url": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "zod",
+    "repo": "https://github.com/colinhacks/zod",
+    "license": "MIT"
   }
 }

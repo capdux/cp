@@ -5,8 +5,22 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["cron", "cron-expr", "schedule", "seconds", "timer", "bitmask", "zero-alloc"],
+  "keywords": [
+    "cron",
+    "cron-expr",
+    "schedule",
+    "seconds",
+    "timer",
+    "bitmask",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/cron-parser": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "cron",
+    "repo": "https://github.com/zslayton/cron",
+    "license": "MIT"
   }
 }

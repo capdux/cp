@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Pure CP zero-allocation reverse-proxy client IP resolver and trusted proxy chain validator (npm proxy-addr parity)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "proxy-addr",
+    "repo": "https://github.com/jshttp/proxy-addr",
+    "license": "MIT"
+  }
 }

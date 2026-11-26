@@ -5,5 +5,11 @@
   "description": "Zero-heap pure CP multi-emitter first-event race listener with automatic cleanup (clean-room MIT implementation of npm ee-first v1)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "ee-first",
+    "repo": "https://github.com/jonathanong/ee-first",
+    "license": "MIT"
+  }
 }

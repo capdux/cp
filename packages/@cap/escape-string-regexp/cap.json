@@ -5,5 +5,11 @@
   "description": "Escape RegExp special characters in a string (clean-room CP implementation of npm escape-string-regexp)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "escape-string-regexp",
+    "repo": "https://github.com/sindresorhus/escape-string-regexp",
+    "license": "MIT"
+  }
 }

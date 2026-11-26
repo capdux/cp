@@ -1,5 +1,8 @@
 # `@cap/bwt`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bwt` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap-allocation Burrows-Wheeler Transform (BWT) and Move-To-Front (MTF) reversible compression preprocessing engine in pure CP.
 
 ## Features

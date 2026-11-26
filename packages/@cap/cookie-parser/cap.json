@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/cookie-jar": "1.0.0",
     "@cap/cookie-signature": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "cookie-parser",
+    "repo": "https://github.com/expressjs/cookie-parser",
+    "license": "MIT"
   }
 }

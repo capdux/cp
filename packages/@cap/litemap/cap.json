@@ -4,5 +4,11 @@
   "description": "Zero-allocation compact sorted flat-array map with O(log N) binary search and deterministic ordered iteration (Rust ICU4X litemap parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "litemap",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "Unicode-3.0"
+  }
 }

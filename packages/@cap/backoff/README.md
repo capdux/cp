@@ -1,5 +1,8 @@
 # @cap/backoff
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:backoff` ([https://github.com/ihrwein/backoff](https://github.com/ihrwein/backoff))
+
 Zero-allocation deterministic retry backoff engine with Exponential, Linear, and AWS Full/Equal/Decorrelated Jitter for CP — clean-room MIT parity with Rust `backoff` and npm `exponential-backoff`.
 
 纯 CP 零堆分配、零系统时钟依赖的确定性退避重试算法引擎，完整支持固定退避、线性退避、指数退避与 AWS 标准 Full / Equal / Decorrelated 抖动算法，专治 RPC/HTTP/LLM API 重试惊群效应。

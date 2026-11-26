@@ -1,5 +1,8 @@
 # @cap/vary-http
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:vary` ([https://github.com/jshttp/vary](https://github.com/jshttp/vary))（原库名 `vary` → CP 包名 `@cap/vary-http`）
+
 Clean-room MIT, zero-heap RFC 7231 HTTP `Vary` header manipulation library for CP — modeled on npm's `vary` v1.1.
 
 ## Dependencies

@@ -4,5 +4,11 @@
   "description": "Zero-allocation ISO/IEC ASN.1 Object Identifier (OID) X.690 DER encoder/decoder and PKI registry (Rust const-oid parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "const-oid",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "Apache-2.0"
+  }
 }

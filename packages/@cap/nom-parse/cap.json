@@ -16,5 +16,11 @@
     "zero-alloc",
     "streaming",
     "protocol"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "nom",
+    "repo": "https://github.com/rust-bakery/nom",
+    "license": "MIT"
+  }
 }

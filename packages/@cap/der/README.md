@@ -1,5 +1,8 @@
 # @cap/der
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:der` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 零堆分配的 CP ITU-T X.690 ASN.1 DER TLV 编解码引擎 — 洁净室 MIT 实现，对标 RustCrypto `der`（crates.io #274，6.13 亿+ 总下载），服务 X.509 证书、PKI 与 JWT/ASN.1 安全协议。
 
 Zero-allocation ITU-T X.690 ASN.1 DER TLV encoder & strict canonical decoder for CP — clean-room MIT parity with RustCrypto `der` (613M+ downloads).

@@ -1,5 +1,8 @@
 # @cap/tsconfig-paths
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:tsconfig-paths` ([https://github.com/dividab/tsconfig-paths](https://github.com/dividab/tsconfig-paths))
+
 Zero-allocation TypeScript `tsconfig.json` `baseUrl` + `paths` alias wildcard matcher and path resolver for CP — clean-room MIT parity with npm `tsconfig-paths`.
 
 零堆分配的 CP `tsconfig.json` 路径别名匹配与展开引擎，严格遵循 TypeScript 官方优先级规范（精确匹配 > 最长静态前缀通配符 > 通用 `*`），支持多目标回退候选展开与路径规范化拼接（纯 CP 洁净室 MIT 实现）。

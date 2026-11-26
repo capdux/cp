@@ -1,5 +1,8 @@
 # @cap/send
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:send` ([https://github.com/pillarjs/send](https://github.com/pillarjs/send))
+
 零堆分配的纯 CP 静态文件传输规划引擎，Clean-Room MIT 实现对标 npm Top 35 包 `send` v1（周下载 1.4 亿+），跨包复用 `@cap/encodeurl`、`@cap/etag-http`、`@cap/range-parser` 与 `@cap/mime-types`。
 
 ## 特性

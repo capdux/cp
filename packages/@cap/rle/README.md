@@ -1,5 +1,8 @@
 # @cap/rle
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rle-decode-fast` ([https://github.com/okaneco/rle-decode-fast](https://github.com/okaneco/rle-decode-fast))（原库名 `rle-decode-fast` → CP 包名 `@cap/rle`）
+
 零堆分配的 CP 轻量级字节游程压缩（Apple/TIFF PackBits RLE）与时序整数差值编码（Prometheus/Gorilla Delta & Delta-of-Delta）引擎 — 洁净室 MIT 实现。
 
 Zero-allocation Apple/TIFF PackBits byte run-length compression and Prometheus/Gorilla-style Delta & Delta-of-Delta time-series integer encoding for CP.

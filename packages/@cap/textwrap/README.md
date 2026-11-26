@@ -1,5 +1,8 @@
 # @cap/textwrap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:wrap-ansi` ([https://github.com/chalk/wrap-ansi](https://github.com/chalk/wrap-ansi))（原库名 `wrap-ansi` → CP 包名 `@cap/textwrap`）
+
 Zero-allocation ANSI-aware text wrapping, display width calculation, CJK wide-character breaking, `indent`/`dedent`, and display-width truncation for CP — clean-room MIT parity with npm `wrap-ansi` / `word-wrap` / `strip-indent` and Rust `textwrap`.
 
 零堆分配的 CP 文本换行与排版引擎，完整支持 ANSI 彩色转义序列感知、UTF-8 与 CJK 全角宽字符列宽计算、按词边界换行、超长单词硬切分、`indent`/`dedent` 缩进处理以及按显示宽度截断（纯 CP 洁净室 MIT 实现）。

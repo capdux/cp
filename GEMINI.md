@@ -783,6 +783,16 @@ git status --porcelain cpc_dev/src
     - 每波吸收完工后按序执行：① 更新 `packages/@cap/registry.json`（保持 npm / crates.io 1:1 均衡，补齐所有独立依赖映射）、`cp_lib_ref.md`、`CHANGELOG.md`、`DEVLOG.md`（日常严禁读写万行 `cp_ref.md`）；② 精确 `git add` + `git commit` + `git push origin main` 固化成果（严禁提交或泄露任何 API Token/凭据）；③ 后台异步触发 `https://registry.capdux.org` LIVE 发布并持续推进下一波，永不中断。
 11. **首轮一遍过 CP 编码清单（每 3 小时审计固化 — 大幅降低试错 Token 消耗）**：
     - 严禁使用 `var`、`self.`、`this.` 以及 CP/Zig 保留标识符（`dec`、`from`、`align`）作为变量/参数/字段名；
-    - 结构体无 receiver 工厂方法一律声明 `pub static fn`，只读实例方法省略 `_`，变更方法声明 `*_`，字段名不与方法名重名；
+    - 结构体无 receiver 工厂方法一律声明 `pub static fn`，只读实例方法省略 `_`，变更方法声明 `*_`，字段名/方法名不与导入顶层函数重名；
     - 高位 `u64` 字面量（`>= 0x8000_0000_0000_0000`）用 `((hi as u64) << 32) | (lo as u64)` 构造，非负有符号除法先转 `u64`；
     - 单测统一使用 `fn main() { test("...", () => { expect_eq(...); }); }`，私有辅助函数一律加 3~4 字符包前缀防模块展平冲突。
+12. **生态溯源、检索对齐与防重复铁律（用户 2026-11-27 固化）**：
+    - **表格化汇报**：阶段汇报一律使用结构化 Markdown 表格，清晰列出包名、原平台与原库名、分类决策（`lib/` 内部库 vs `@cap/*` 安装包 vs 合并）、独立依赖复用关系与单测结果。
+    - **`cap.json` 必须记录参考来源**：每个吸收包必须在 `cap.json` 中包含标准 `"source": { "registry": "npm|crates.io", "name": "<orig>", "repo": "<url>", "license": "<spdx>" }` 字段。
+    - **`capdux.org` 包介绍与 `README.md` 必须注明原库来源**：`README.md` 顶部与 `capdux.org` 详情页必须显式展示参考/吸收来源（平台、原库名、原仓库链接），特别是已改名的包。
+    - **注册检索必须可按原库名检索并展示原库名**：`capdux.org` 的 `/v1/search` 与首页搜索框必须关联 `upstream_mappings` 表，支持直接搜索原库名/别名，并在检索结果卡片与 API 返回中标明 `source_registry` + `source_name`，方便人类与 AI 精准替换依赖项。
+    - **吸收与依赖分离前的强制生态去重决策矩阵（严禁重复堆积）**：
+      - 无论是目标包还是分离出来的独立依赖包，编码前**必须先检索 `lib/` 与 `packages/@cap/` 及 `registry.json`**；
+      - ① **高频底层通用能力**（全生态大量引用）→ 优先纳入已有分类的内部标准库 `lib/<cat>/`（无需单独安装），在 `registry.json` 中指向 `cap:<cat>`；
+      - ② **CP 生态已有相同/高度类似包** → **严禁另起 `-crate`/`-core`/`-http` 重复造轮子！** 优先直接复用现有包，或将缺失的高价值特性合并增强到现有包中；
+      - ③ **CP 生态尚无对应能力且属独立生态包** → 新增 `@cap/<name>`，并在内部优先 `import` 复用 CP 生态已有的 `lib/*` 或 `@cap/*` 同功能库，避免选择困难。

@@ -1,5 +1,8 @@
 # `@cap/glob-match`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:glob-match` ([https://github.com/devongovett/glob-match](https://github.com/devongovett/glob-match))
+
 Zero-allocation, anti-backtracking path glob and brace alternation matching engine for CP (clean-room MIT, inspired by `glob-match` v0.2).
 
 ## Features

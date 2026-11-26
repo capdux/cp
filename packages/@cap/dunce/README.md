@@ -1,5 +1,8 @@
 # `@cap/dunce`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:dunce` ([https://gitlab.com/kornelski/dunce](https://gitlab.com/kornelski/dunce))
+
 Zero-heap safe Windows verbatim UNC (`\\?\`) path simplifier in pure CP (clean-room counterpart to Rust `dunce`).
 
 ## Features

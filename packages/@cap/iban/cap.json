@@ -4,5 +4,11 @@
   "description": "Zero-heap ISO 13616 IBAN validator, ISO 7064 Mod-97-10 checksum engine, check-digit generator, and electronic/friendly formatter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "iban_validate",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  }
 }

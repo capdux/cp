@@ -1,5 +1,8 @@
 # `@cap/xoshiro256`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rand_xoshiro` ([https://github.com/rust-random/rngs](https://github.com/rust-random/rngs))（原库名 `rand_xoshiro` → CP 包名 `@cap/xoshiro256`）
+
 Zero-heap-allocation Blackman & Vigna `xoshiro256**` PRNG with `SplitMix64` seeding, unbiased `nextRange`, `2^128` jump substreams, and Fisher-Yates `shuffleU32` in pure CP.
 
 ## Features

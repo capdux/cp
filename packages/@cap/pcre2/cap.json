@@ -55,5 +55,11 @@
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "regex",
+    "repo": "https://github.com/rust-lang/regex",
+    "license": "MIT"
   }
 }

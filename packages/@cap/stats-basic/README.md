@@ -1,5 +1,8 @@
 # @cap/stats-basic
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:simple-statistics` ([https://github.com/simple-statistics/simple-statistics](https://github.com/simple-statistics/simple-statistics))（原库名 `simple-statistics` → CP 包名 `@cap/stats-basic`）
+
 Zero-heap Welford online statistics, Chan parallel merge, and descriptive statistics in pure CP (zero external dependencies).
 
 ## Features

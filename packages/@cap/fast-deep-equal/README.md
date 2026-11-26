@@ -1,5 +1,8 @@
 # `@cap/fast-deep-equal`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fast-deep-equal` ([https://github.com/epoberezkin/fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal))
+
 Zero-heap semantic JSON deep equality checker and root value classifier in pure CP (clean-room counterpart to npm `fast-deep-equal` & `kind-of` / `is-plain-obj`).
 
 ## Features

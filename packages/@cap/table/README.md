@@ -1,5 +1,8 @@
 # `@cap/table` — Zero-Dependency CLI Table Renderer
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cli-table3` ([https://github.com/cli-table/cli-table3](https://github.com/cli-table/cli-table3))（原库名 `cli-table3` → CP 包名 `@cap/table`）
+
 > Clean-room pure-CP CLI table rendering library modeled after npm `cli-table3` / `table` and Rust `comfy-table` / `tabled` | MIT License
 >
 > 零外部依赖的纯 CP 终端表格渲染库，对标 npm `cli-table3` / `table` 与 Rust `comfy-table` / `tabled`（MIT 协议）。

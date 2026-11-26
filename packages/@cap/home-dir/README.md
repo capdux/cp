@@ -1,5 +1,8 @@
 # `@cap/home-dir`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:home` ([https://github.com/rust-lang/cargo](https://github.com/rust-lang/cargo)) / `npm:untildify` ([https://github.com/sindresorhus/untildify](https://github.com/sindresorhus/untildify)) / `npm:expand-tilde` ([https://github.com/jonschlinkert/expand-tilde](https://github.com/jonschlinkert/expand-tilde)) / `npm:os-homedir` ([https://github.com/sindresorhus/os-homedir](https://github.com/sindresorhus/os-homedir)) / `crates.io:dirs` ([https://github.com/dirs-dev/dirs-rs](https://github.com/dirs-dev/dirs-rs))（原库名 `home` → CP 包名 `@cap/home-dir`）
+
 Zero-heap cross-platform home directory resolver, tilde expansion/contraction, and XDG config directory builder in pure CP (clean-room counterpart to Rust `home` + npm `untildify`/`tildify`).
 
 ## Features

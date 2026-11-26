@@ -1,5 +1,8 @@
 # `@cap/jaro-winkler`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jaro-winkler` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:jaro-winkler` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap-allocation Jaro and Jaro-Winkler string similarity metrics and best-match finder in pure CP.
 
 ## Features

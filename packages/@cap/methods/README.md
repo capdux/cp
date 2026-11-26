@@ -1,5 +1,8 @@
 # @cap/methods
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:methods` ([https://github.com/jshttp/methods](https://github.com/jshttp/methods))
+
 零堆分配的 CP 原生 HTTP/WebDAV 方法表与 RFC 9110 谓词库，Clean-Room MIT 实现对标 npm 顶流包 `methods`（1.2 亿+/周下载，Express / Koa 核心依赖）。
 
 ## 特性

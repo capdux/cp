@@ -1,5 +1,8 @@
 # @cap/lz4-block
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:lz4_flex` ([https://github.com/PSeitz/lz4_flex](https://github.com/PSeitz/lz4_flex))（原库名 `lz4_flex` → CP 包名 `@cap/lz4-block`）
+
 零堆分配的 CP LZ4 Raw Block 超高速无损压缩与解压引擎 — 洁净室 MIT 实现，对标 Rust `lz4_flex` 与官方 LZ4 Block Format 规范，采用固定 4096 槽栈哈希表（8KB），100% 字节流兼容。
 
 Zero-allocation LZ4 Raw Block lossless compressor & decompressor for CP — clean-room MIT parity with Rust `lz4_flex` and the official LZ4 Block Format.

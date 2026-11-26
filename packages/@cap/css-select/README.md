@@ -1,5 +1,8 @@
 # @cap/css-select
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:css-select` ([https://github.com/fb55/css-select](https://github.com/fb55/css-select))
+
 Clean-room MIT, zero-heap CSS selector parser, W3C Selectors Level 4 specificity calculator, and compound/list element matching engine for CP — modeled on `css-select` + `css-what`.
 
 ## Dependencies

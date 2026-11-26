@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap priority task queue with concurrency limit, pause/resume, and active/pending tracking (clean-room port of npm p-queue)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "p-queue",
+    "repo": "https://github.com/sindresorhus/p-queue",
+    "license": "MIT"
+  }
 }

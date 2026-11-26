@@ -1,5 +1,8 @@
 # @cap/rimraf-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:rimraf` ([https://github.com/isaacs/rimraf](https://github.com/isaacs/rimraf))（原库名 `rimraf` → CP 包名 `@cap/rimraf-core`）
+
 Zero-allocation, Clean-room MIT implementation of `rimraf` v6 core safety guards and bottom-up deletion planning for CP, reusing `@cap/fast-glob`.
 
 ## Features

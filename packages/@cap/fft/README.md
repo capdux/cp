@@ -1,5 +1,8 @@
 # @cap/fft
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rustfft` ([https://github.com/ejmahler/RustFFT](https://github.com/ejmahler/RustFFT))（原库名 `rustfft` → CP 包名 `@cap/fft`）
+
 Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and Hann/Hamming windowing for CP — clean-room MIT parity with Rust `rustfft` and `microfft`.
 
 纯 CP 零堆分配原地快速傅里叶变换（FFT / IFFT）与信号加窗引擎，零外部依赖内置高精度三角函数，适用于音频 DSP、语音特征提取、振动频谱分析与多项式卷积。

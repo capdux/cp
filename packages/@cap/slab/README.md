@@ -1,5 +1,8 @@
 # @cap/slab
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:sharded-slab` ([https://github.com/hawkw/sharded-slab](https://github.com/hawkw/sharded-slab))（原库名 `sharded-slab` → CP 包名 `@cap/slab`）
+
 Zero-allocation O(1) generational slab allocator and ABA-safe handle pool for CP — clean-room MIT parity with Rust `slab` (1.19B downloads on crates.io) + `generational-arena`.
 
 纯 CP 零堆分配 O(1) 侵入式空闲链表对象池与防悬垂代数句柄引擎，适用于连接池、定时器句柄、事件源与资源表映射。

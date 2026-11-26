@@ -5,6 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["s3", "aws", "r2", "minio", "storage", "uri", "cloud"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/s3-uri"
+  "keywords": [
+    "s3",
+    "aws",
+    "r2",
+    "minio",
+    "storage",
+    "uri",
+    "cloud"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/s3-uri",
+  "source": {
+    "registry": "npm",
+    "name": "amazon-s3-uri",
+    "repo": "https://github.com/jvdl/amazon-s3-uri",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "amazon-s3-uri",
+      "repo": "https://github.com/jvdl/amazon-s3-uri",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "aws-sdk-s3",
+      "repo": "https://github.com/awslabs/aws-sdk-rust",
+      "license": "Apache-2.0"
+    }
+  ]
 }

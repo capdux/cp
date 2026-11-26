@@ -5,8 +5,22 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["rrule", "icalendar", "rfc5545", "recurrence", "calendar", "schedule", "zero-alloc"],
+  "keywords": [
+    "rrule",
+    "icalendar",
+    "rfc5545",
+    "recurrence",
+    "calendar",
+    "schedule",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "rrule",
+    "repo": "https://github.com/jkbrzt/rrule",
+    "license": "BSD-3-Clause"
   }
 }

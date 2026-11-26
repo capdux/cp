@@ -1,5 +1,8 @@
 # `@cap/tinystr`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tinystr` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))
+
 Zero-allocation stack-inline fixed-capacity ASCII strings in pure CP (ICU4X `tinystr` v0.7/v0.8 parity). Strictly enforces non-NUL 7-bit ASCII (`0x01..0x7F`) for O(1) BCP-47 locale tags, currency codes, script subtags, and protocol identifiers.
 
 ## Types

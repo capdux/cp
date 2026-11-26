@@ -1,5 +1,8 @@
 # @cap/markdown-strip
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:remove-markdown` ([https://github.com/stiang/remove-markdown](https://github.com/stiang/remove-markdown))（原库名 `remove-markdown` → CP 包名 `@cap/markdown-strip`）
+
 零堆分配的 CP Markdown 转纯文本与摘要截断引擎 — 洁净室 MIT 实现，对标 npm `remove-markdown` / `strip-markdown`，专为全文搜索索引、摘要生成与 LLM 上下文瘦身打造。
 
 Zero-allocation Markdown to plain-text stripper and UTF-8 safe excerpt generator for CP — clean-room MIT parity with npm `remove-markdown` and `strip-markdown`.

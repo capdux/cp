@@ -1,5 +1,8 @@
 # @cap/chacha20poly1305
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:chacha20poly1305` ([https://github.com/RustCrypto/AEADs](https://github.com/RustCrypto/AEADs))
+
 Zero-allocation RFC 8439 ChaCha20-Poly1305 AEAD authenticated encryption for CP — clean-room MIT parity with Rust `chacha20poly1305` v0.10 (crates.io #105).
 
 纯 CP 零堆分配 RFC 8439 ChaCha20-Poly1305 认证加密（AEAD），组合复用 `@cap/chacha20-crate`、`@cap/poly1305` 与 `@cap/subtle-ct`，支持分离标签原地加解密、恒定时间标签验签与敏感密钥零化。

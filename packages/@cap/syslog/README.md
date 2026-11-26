@@ -1,5 +1,8 @@
 # @cap/syslog
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:syslog` ([https://github.com/Geal/rust-syslog](https://github.com/Geal/rust-syslog))
+
 Zero-heap RFC 5424 Syslog message parser and formatter in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/csv-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:csv-core` ([https://github.com/BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv))
+
 Pure CP, zero-allocation streaming RFC 4180 CSV reader and writer state machine (clean-room MIT parity with Rust `csv-core` v0.2).
 
 ## Design

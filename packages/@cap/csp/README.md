@@ -1,5 +1,8 @@
 # @cap/csp
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:content-security-policy-builder` ([https://github.com/helmetjs/content-security-policy-builder](https://github.com/helmetjs/content-security-policy-builder))（原库名 `content-security-policy-builder` → CP 包名 `@cap/csp`）
+
 Zero-allocation W3C Content-Security-Policy 3 header builder and parser for CP.
 
 ## Features

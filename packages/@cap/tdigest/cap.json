@@ -4,5 +4,11 @@
   "description": "Zero-allocation Merging T-Digest streaming quantile (P50/P95/P99/P99.9) and CDF estimator with distributed merge for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "tdigest",
+    "repo": "https://github.com/MnO2/t-digest",
+    "license": "MIT"
+  }
 }

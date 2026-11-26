@@ -1,5 +1,8 @@
 # @cap/syntax-highlight
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:highlight.js` ([https://github.com/highlightjs/highlight.js](https://github.com/highlightjs/highlight.js))（原库名 `highlight.js` → CP 包名 `@cap/syntax-highlight`）
+
 Zero-allocation multi-language lexer and syntax highlighter (Code, JSON, SQL) with ANSI terminal coloring and XSS-safe HTML output for CP — clean-room MIT parity with npm `highlight.js` (58M/wk) and `prismjs` (50M/wk).
 
 纯 CP 零堆分配多语言词法分析与语法高亮引擎，支持 CP/TS/Rust/C 通用代码、JSON 与 SQL，提供零拷贝 `Token` 切片、ANSI 终端彩色输出与防 XSS 转义 HTML `<span class="hl-...">` 输出。

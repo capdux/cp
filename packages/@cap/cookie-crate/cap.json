@@ -9,5 +9,18 @@
     "@cap/cookie-jar": "1.0.0",
     "@cap/percent-encoding": "1.0.0"
   },
-  "keywords": ["cookie", "set-cookie", "cookie-builder", "percent-encoding", "http", "zero-alloc"]
+  "keywords": [
+    "cookie",
+    "set-cookie",
+    "cookie-builder",
+    "percent-encoding",
+    "http",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "cookie",
+    "repo": "https://github.com/SergioBenitez/cookie-rs",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/cli-spinners
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cli-spinners` ([https://github.com/sindresorhus/cli-spinners](https://github.com/sindresorhus/cli-spinners))
+
 Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols for CP — clean-room MIT parity with npm `cli-spinners` (35M/wk), `ora` (35M/wk), and `log-symbols` (45M/wk).
 
 纯 CP 零堆分配终端加载动画帧集与状态指示器引擎，内置 12 套高频 Spinner 动画预设与 Unicode/ASCII 状态符号。

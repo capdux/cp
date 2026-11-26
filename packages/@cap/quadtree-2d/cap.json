@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["quadtree", "spatial-index", "2d", "collision", "range-query", "geometry", "zero-alloc"]
+  "keywords": [
+    "quadtree",
+    "spatial-index",
+    "2d",
+    "collision",
+    "range-query",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "quadtree_rs",
+    "repo": "https://github.com/ambuc/quadtree_rs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "quadtree_rs",
+      "repo": "https://github.com/ambuc/quadtree_rs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "d3-quadtree",
+      "repo": "https://github.com/d3/d3-quadtree",
+      "license": "MIT"
+    }
+  ]
 }

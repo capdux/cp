@@ -1,5 +1,8 @@
 # @cap/bezier-curve
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:bezier-easing` ([https://github.com/gre/bezier-easing](https://github.com/gre/bezier-easing)) / `crates.io:kurbo` ([https://github.com/linebender/kurbo](https://github.com/linebender/kurbo)) / `crates.io:lyon_geom` ([https://github.com/nical/lyon](https://github.com/nical/lyon))（原库名 `bezier-easing` → CP 包名 `@cap/bezier-curve`）
+
 Zero-heap-allocation quadratic & cubic Bezier curve evaluation, first derivatives, de Casteljau splitting, chord-sum arc length approximation, and CSS `cubic-bezier(x1, y1, x2, y2)` easing solver in pure CP.
 
 ## Features

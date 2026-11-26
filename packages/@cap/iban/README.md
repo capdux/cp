@@ -1,5 +1,8 @@
 # @cap/iban
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:iban_validate` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `iban_validate` → CP 包名 `@cap/iban`）
+
 Zero-heap ISO 13616 IBAN validator, ISO 7064 Mod-97-10 checksum engine, check-digit generator, and electronic/friendly formatter in pure CP.
 
 ## Features

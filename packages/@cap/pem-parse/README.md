@@ -1,5 +1,8 @@
 # @cap/pem-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:pem` ([https://github.com/jcreekmore/pem-rs](https://github.com/jcreekmore/pem-rs))（原库名 `pem` → CP 包名 `@cap/pem-parse`）
+
 Zero-heap RFC 7468 PEM encapsulation parser, chain iterator, Base64 body decoder, and 64-column encoder in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/faker` — Zero-Allocation Deterministic Fake Data Generator
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:@faker-js/faker` ([https://github.com/faker-js/faker](https://github.com/faker-js/faker))（原库名 `@faker-js/faker` → CP 包名 `@cap/faker`）
+
 > Clean-room pure-CP implementation modeled after npm `@faker-js/faker` & Rust `fake` | License: MIT
 
 ## Overview / 概述

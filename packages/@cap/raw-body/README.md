@@ -1,5 +1,8 @@
 # `@cap/raw-body`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:raw-body` ([https://github.com/stream-utils/raw-body](https://github.com/stream-utils/raw-body))
+
 Zero-allocation HTTP request body byte-limit enforcer, `Content-Length` verifier, streaming chunk accumulator, and strict RFC 3629 UTF-8 validator for CP. Clean-room MIT implementation inspired by npm `raw-body` v3.
 
 ## Features

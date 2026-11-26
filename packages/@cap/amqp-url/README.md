@@ -1,5 +1,8 @@
 # `@cap/amqp-url`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:amqplib` ([https://github.com/amqp-node/amqplib](https://github.com/amqp-node/amqplib)) / `crates.io:lapin` ([https://github.com/amqp-rs/lapin](https://github.com/amqp-rs/lapin))（原库名 `amqplib` → CP 包名 `@cap/amqp-url`）
+
 Zero-heap-allocation AMQP 0-9-1 / RabbitMQ connection URI parser and log-redacting formatter in pure CP.
 
 ## Features

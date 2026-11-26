@@ -1,5 +1,8 @@
 # @cap/markdown-toc
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:github-slugger` ([https://github.com/Flet/github-slugger](https://github.com/Flet/github-slugger))（原库名 `github-slugger` → CP 包名 `@cap/markdown-toc`）
+
 Zero-allocation Markdown heading outline extractor, GitHub-compatible anchor slugger & automatic nested TOC generator for CP — clean-room MIT parity with npm `github-slugger` (35M/wk) and `markdown-toc`.
 
 ## Install

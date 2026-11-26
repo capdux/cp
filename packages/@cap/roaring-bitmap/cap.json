@@ -4,5 +4,11 @@
   "description": "Zero-allocation compressed roaring bitmap set for full u32 domain with chunked sorted containers, rank/min/max, range insert, and set algebra (Rust roaring v0.10 parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "roaring",
+    "repo": "https://github.com/RoaringBitmap/roaring-rs",
+    "license": "MIT"
+  }
 }

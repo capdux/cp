@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["quaternion", "quat", "3d", "rotation", "slerp", "math", "zero-heap"]
+  "keywords": [
+    "quaternion",
+    "quat",
+    "3d",
+    "rotation",
+    "slerp",
+    "math",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "quaternion",
+    "repo": "https://github.com/rawify/Quaternion.js",
+    "license": "MIT"
+  }
 }

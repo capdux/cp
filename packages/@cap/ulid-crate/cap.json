@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ulid", "uuid", "id", "crockford", "base32", "sortable", "monotonic", "zero-alloc"]
+  "keywords": [
+    "ulid",
+    "uuid",
+    "id",
+    "crockford",
+    "base32",
+    "sortable",
+    "monotonic",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "ulid",
+    "repo": "https://github.com/dylanhart/ulid-rs",
+    "license": "MIT"
+  }
 }

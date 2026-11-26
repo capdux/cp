@@ -5,5 +5,32 @@
   "description": "Zero-allocation RFC 2045 Section 6.7 MIME Quoted-Printable encoder and decoder with 76-col soft line breaks in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["quoted-printable", "mime", "rfc2045", "email", "encoding", "zero-alloc"]
+  "keywords": [
+    "quoted-printable",
+    "mime",
+    "rfc2045",
+    "email",
+    "encoding",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "quoted-printable",
+    "repo": "https://github.com/mathiasbynens/quoted-printable",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "quoted-printable",
+      "repo": "https://github.com/mathiasbynens/quoted-printable",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "quoted_printable",
+      "repo": "https://github.com/staktrace/quoted-printable",
+      "license": "MIT"
+    }
+  ]
 }

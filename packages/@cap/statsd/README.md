@@ -1,5 +1,8 @@
 # @cap/statsd
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:hot-shots` ([https://github.com/brightcove/hot-shots](https://github.com/brightcove/hot-shots))（原库名 `hot-shots` → CP 包名 `@cap/statsd`）
+
 Zero-heap StatsD and DogStatsD UDP metric packet encoder/decoder in pure CP.
 
 ## Features

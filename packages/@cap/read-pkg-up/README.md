@@ -1,5 +1,8 @@
 # @cap/read-pkg-up
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:read-pkg-up` ([https://github.com/sindresorhus/read-pkg-up](https://github.com/sindresorhus/read-pkg-up))
+
 Zero-allocation, Clean-room MIT implementation of `read-pkg-up` v11 core semantics for CP, reusing `@cap/find-up` and `@cap/read-pkg`.
 
 ## Features

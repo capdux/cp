@@ -1,5 +1,8 @@
 # @cap/spiffe-id
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:spiffe` ([https://github.com/maxlambrecht/rust-spiffe](https://github.com/maxlambrecht/rust-spiffe))（原库名 `spiffe` → CP 包名 `@cap/spiffe-id`）
+
 Zero-allocation CNCF SPIFFE ID (`spiffe://<trust-domain>/<workload-path>`) parser, strict security validator, and formatter for CP.
 
 ## Features

@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["netstring", "framing", "scgi", "protocol", "binary", "zero-heap"]
+  "keywords": [
+    "netstring",
+    "framing",
+    "scgi",
+    "protocol",
+    "binary",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "netstring",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  }
 }

@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation spell-suggestion & edit-distance engine (didyoumean / fastest-levenshtein / Rust strsim parity: Levenshtein, Damerau-Levenshtein, Jaro-Winkler & CLI command suggestion) for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "didyoumean",
+    "repo": "https://github.com/dcporter/didyoumean.js",
+    "license": "Apache-2.0"
+  }
 }

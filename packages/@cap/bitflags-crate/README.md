@@ -1,5 +1,8 @@
 # @cap/bitflags-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bitflags` ([https://github.com/bitflags/bitflags](https://github.com/bitflags/bitflags))（原库名 `bitflags` → CP 包名 `@cap/bitflags-crate`）
+
 Clean-room MIT, zero-heap Rust `bitflags` v2 style `Flags32` & `Flags64` for CP — modeled on crates.io #12 `bitflags` (1.95B+ downloads).
 
 ## API

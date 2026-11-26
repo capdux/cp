@@ -4,5 +4,11 @@
   "description": "Zero-heap RFC 9110 / IANA HTTP status code lookup, reason phrases, reverse lookup, and category predicates (npm statuses parity).",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "statuses",
+    "repo": "https://github.com/jshttp/statuses",
+    "license": "MIT"
+  }
 }

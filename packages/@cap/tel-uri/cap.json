@@ -4,5 +4,11 @@
   "description": "Zero-heap RFC 3966 tel: URI parser, E.164 international phone number normalizer/validator, and URI formatter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "phonenumber",
+    "repo": "https://github.com/whisperfish/rust-phonenumber",
+    "license": "Apache-2.0"
+  }
 }

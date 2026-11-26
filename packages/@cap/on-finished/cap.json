@@ -5,5 +5,11 @@
   "license": "MIT",
   "entry": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "on-finished",
+    "repo": "https://github.com/jshttp/on-finished",
+    "license": "MIT"
+  }
 }

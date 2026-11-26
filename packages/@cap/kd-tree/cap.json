@@ -5,5 +5,19 @@
   "description": "Zero-allocation static 2D KD-Tree spatial index with exact nearest-neighbor and radius range queries in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["kd-tree", "kdtree", "spatial", "nearest-neighbor", "range-query", "geometry", "zero-alloc"]
+  "keywords": [
+    "kd-tree",
+    "kdtree",
+    "spatial",
+    "nearest-neighbor",
+    "range-query",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "kiddo",
+    "repo": "https://github.com/sdd/kiddo",
+    "license": "MIT"
+  }
 }

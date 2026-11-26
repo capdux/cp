@@ -1,5 +1,8 @@
 # @cap/statuses
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:statuses` ([https://github.com/jshttp/statuses](https://github.com/jshttp/statuses))
+
 Zero-heap RFC 9110 / IANA HTTP status code lookup, reason phrases, reverse lookup, and category predicates in pure CP (npm `statuses` / Rust `http::StatusCode` parity).
 
 ## Features

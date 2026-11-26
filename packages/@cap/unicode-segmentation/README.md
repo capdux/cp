@@ -1,5 +1,8 @@
 # `@cap/unicode-segmentation`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicode-segmentation` ([https://github.com/unicode-rs/unicode-segmentation](https://github.com/unicode-rs/unicode-segmentation))
+
 Zero-allocation **UAX #29** Unicode Extended Grapheme Cluster and Word Boundary segmentation engine for CP (clean-room MIT implementation inspired by Rust's `unicode-segmentation`).
 
 ## Features

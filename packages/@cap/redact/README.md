@@ -1,5 +1,8 @@
 # @cap/redact
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fast-redact` ([https://github.com/davidmarkclements/fast-redact](https://github.com/davidmarkclements/fast-redact))（原库名 `fast-redact` → CP 包名 `@cap/redact`）
+
 Zero-allocation PII & secret redaction/masking engine for CP — clean-room MIT parity with npm `fast-redact` / `maskdata` and Rust `secrecy`.
 
 ## Install

@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap descriptive statistics, probability distributions (Normal, Exponential, Poisson, Binomial), error function, and simple linear regression (clean-room port of Rust statrs)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "statrs",
+    "repo": "https://github.com/statrs-dev/statrs",
+    "license": "MIT"
+  }
 }

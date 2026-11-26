@@ -1,5 +1,8 @@
 # @cap/normalize-package-data
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:normalize-package-data` ([https://github.com/npm/normalize-package-data](https://github.com/npm/normalize-package-data))
+
 Zero-allocation, Clean-room MIT implementation of `normalize-package-data` v6 for CP, reusing `@cap/validate-npm-package-name` and `@cap/validate-npm-package-license`.
 
 ## Features

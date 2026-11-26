@@ -5,6 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bytes", "bytesize", "pretty-bytes", "size", "humanize", "iec", "si"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bytes"
+  "keywords": [
+    "bytes",
+    "bytesize",
+    "pretty-bytes",
+    "size",
+    "humanize",
+    "iec",
+    "si"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bytes",
+  "source": {
+    "registry": "npm",
+    "name": "bytes",
+    "repo": "https://github.com/visionmedia/bytes.js",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bytes",
+      "repo": "https://github.com/visionmedia/bytes.js",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "bytes",
+      "repo": "https://github.com/visionmedia/bytes.js",
+      "license": "MIT"
+    }
+  ]
 }

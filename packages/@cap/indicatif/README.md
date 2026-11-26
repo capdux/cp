@@ -1,5 +1,8 @@
 # `@cap/indicatif`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:indicatif` ([https://github.com/console-rs/indicatif](https://github.com/console-rs/indicatif))
+
 Zero-heap terminal progress bar, throughput, and ETA renderer in pure CP (clean-room counterpart to Rust `indicatif`). Directly composes `@cap/pretty-bytes` and `@cap/pretty-ms`.
 
 ## Features

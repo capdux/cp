@@ -1,5 +1,8 @@
 # @cap/lcs-diff
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:diff-sequences` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest)) / `crates.io:lcs-diff` ([https://github.com/bokuweb/lcs-diff](https://github.com/bokuweb/lcs-diff))（原库名 `diff-sequences` → CP 包名 `@cap/lcs-diff`）
+
 Zero-heap Longest Common Subsequence (LCS) length, diff insert/delete stats, LCS similarity, and Longest Common Substring locator in pure CP.
 
 ## Features

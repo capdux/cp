@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["block-buffer", "crypto", "hash", "padding", "pkcs7", "iso7816", "merkle-damgard", "zero-alloc"]
+  "keywords": [
+    "block-buffer",
+    "crypto",
+    "hash",
+    "padding",
+    "pkcs7",
+    "iso7816",
+    "merkle-damgard",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "block-buffer",
+    "repo": "https://github.com/RustCrypto/utils",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "block-buffer",
+      "repo": "https://github.com/RustCrypto/utils",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "crypto-common",
+      "repo": "https://github.com/RustCrypto/traits",
+      "license": "MIT"
+    }
+  ]
 }

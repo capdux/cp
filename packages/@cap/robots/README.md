@@ -1,5 +1,8 @@
 # @cap/robots
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:robots-parser` ([https://github.com/samclarke/robots-parser](https://github.com/samclarke/robots-parser))（原库名 `robots-parser` → CP 包名 `@cap/robots`）
+
 Zero-allocation RFC 9309 `robots.txt` rule parser and URL compliance engine for CP.
 
 ## Features

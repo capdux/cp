@@ -1,5 +1,8 @@
 # `@cap/rustls-pki-types`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rustls-pki-types` ([https://github.com/rustls/pki-types](https://github.com/rustls/pki-types))
+
 Zero-allocation TLS/PKI core types in pure CP (`rustls-pki-types` v1 parity). Reuses `@cap/pem-rfc7468` for RFC 7468 PEM label detection and DER decoding.
 
 ## API

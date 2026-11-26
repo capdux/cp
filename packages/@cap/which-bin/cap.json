@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/normalize-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "which",
+    "repo": "https://github.com/npm/node-which",
+    "license": "ISC"
   }
 }

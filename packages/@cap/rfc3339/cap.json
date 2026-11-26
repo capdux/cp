@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/iso8601": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "rfc3339",
+    "repo": "https://github.com/chronotope/chrono",
+    "license": "MIT"
   }
 }

@@ -14,5 +14,11 @@
     "rfc3339",
     "calendar",
     "timestamp"
-  ]
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "strftime",
+    "repo": "https://github.com/samsonjs/strftime",
+    "license": "MIT"
+  }
 }

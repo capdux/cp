@@ -1,5 +1,8 @@
 # `@cap/line-col`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:line-column` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:line-index` ([https://github.com/rust-lang/rust-analyzer](https://github.com/rust-lang/rust-analyzer))（原库名 `line-column` → CP 包名 `@cap/line-col`）
+
 Zero-heap-allocation byte offset <-> 1-based `(line, col)` locator, zero-copy source line extractor, and LF/CRLF line counter in pure CP.
 
 ## Features

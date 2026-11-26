@@ -1,5 +1,8 @@
 # @cap/tel-uri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:phonenumber` ([https://github.com/whisperfish/rust-phonenumber](https://github.com/whisperfish/rust-phonenumber))（原库名 `phonenumber` → CP 包名 `@cap/tel-uri`）
+
 Zero-heap RFC 3966 `tel:` URI parser, E.164 international phone number normalizer/validator, and URI formatter in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/num-rational`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:num-rational` ([https://github.com/rust-num/num-rational](https://github.com/rust-num/num-rational))
+
 Zero-allocation exact 64-bit rational number (`Ratio64`) arithmetic library for CP (clean-room MIT, inspired by Rust `num-rational` v0.4).
 
 ## Dependencies (Zero Duplication)

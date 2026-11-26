@@ -1,5 +1,8 @@
 # @cap/did-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:did-resolver` ([https://github.com/decentralized-identity/did-resolver](https://github.com/decentralized-identity/did-resolver)) / `crates.io:ssi-dids` ([https://github.com/spruceid/ssi](https://github.com/spruceid/ssi))（原库名 `did-resolver` → CP 包名 `@cap/did-parse`）
+
 Zero-heap W3C DID Core 1.0 Decentralized Identifier & DID URL parser, strict character validator, and formatter in pure CP.
 
 ## Features

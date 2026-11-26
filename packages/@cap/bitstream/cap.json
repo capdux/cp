@@ -4,5 +4,11 @@
   "description": "Zero-allocation MSB-first & LSB-first BitReader and BitWriter supporting 0..64-bit reads/writes, peek, byte alignment, and H.264/HEVC Exp-Golomb coding (Rust bitstream-io parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "bitstream-io",
+    "repo": "https://github.com/tuffy/bitstream-io",
+    "license": "MIT"
+  }
 }

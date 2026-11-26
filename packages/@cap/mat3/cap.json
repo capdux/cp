@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["mat3", "matrix", "affine", "transform", "2d", "linear-algebra", "graphics", "zero-alloc"]
+  "keywords": [
+    "mat3",
+    "matrix",
+    "affine",
+    "transform",
+    "2d",
+    "linear-algebra",
+    "graphics",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "gl-mat3",
+    "repo": "https://github.com/stackgl/gl-mat3",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "gl-mat3",
+      "repo": "https://github.com/stackgl/gl-mat3",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "cgmath",
+      "repo": "https://github.com/rustgd/cgmath",
+      "license": "MIT"
+    }
+  ]
 }

@@ -4,5 +4,11 @@
   "description": "Zero-allocation UTF-8 path manipulation, normalization, relative path calculation, and traversal-safe sandboxing (Rust camino parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "camino",
+    "repo": "https://github.com/camino-rs/camino",
+    "license": "MIT"
+  }
 }

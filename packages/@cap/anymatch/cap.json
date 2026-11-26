@@ -9,5 +9,19 @@
     "@cap/normalize-path": "^1.0.0",
     "@cap/is-glob": "^1.0.0"
   },
-  "keywords": ["anymatch", "glob", "matcher", "filter", "path", "chokidar", "zero-heap"]
+  "keywords": [
+    "anymatch",
+    "glob",
+    "matcher",
+    "filter",
+    "path",
+    "chokidar",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "anymatch",
+    "repo": "https://github.com/micromatch/anymatch",
+    "license": "MIT"
+  }
 }

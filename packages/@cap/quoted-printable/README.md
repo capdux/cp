@@ -1,5 +1,8 @@
 # `@cap/quoted-printable`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:quoted-printable` ([https://github.com/mathiasbynens/quoted-printable](https://github.com/mathiasbynens/quoted-printable)) / `crates.io:quoted_printable` ([https://github.com/staktrace/quoted-printable](https://github.com/staktrace/quoted-printable))
+
 Zero-heap-allocation RFC 2045 Section 6.7 MIME Quoted-Printable encoder and decoder in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/borsh
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:borsh` ([https://github.com/near/borsh-rs](https://github.com/near/borsh-rs))
+
 Zero-heap-allocation canonical little-endian Borsh binary serializer and deserializer in pure CP (inspired by NEAR / Solana `borsh`).
 
 ## Features

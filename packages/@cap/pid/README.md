@@ -1,5 +1,8 @@
 # `@cap/pid`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:pid` ([https://github.com/braincore/pid-rs](https://github.com/braincore/pid-rs))
+
 Zero-heap-allocation industrial PID closed-loop feedback controller in pure CP.
 
 ## Features

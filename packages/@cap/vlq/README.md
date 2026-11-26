@@ -1,5 +1,8 @@
 # @cap/vlq
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:@jridgewell/sourcemap-codec` ([https://github.com/jridgewell/sourcemap-codec](https://github.com/jridgewell/sourcemap-codec)) / `crates.io:vlq` ([https://github.com/fitzgen/vlq](https://github.com/fitzgen/vlq)) / `npm:vlq` ([https://github.com/Rich-Harris/vlq](https://github.com/Rich-Harris/vlq))（原库名 `@jridgewell/sourcemap-codec` → CP 包名 `@cap/vlq`）
+
 Zero-heap Source Map v3 Base64 VLQ (Variable-Length Quantity) signed integer sequence encoder and decoder in pure CP.
 
 ## Features

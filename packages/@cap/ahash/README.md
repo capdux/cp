@@ -1,5 +1,8 @@
 # @cap/ahash
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ahash` ([https://github.com/tkaitchuck/aHash](https://github.com/tkaitchuck/aHash))
+
 Zero-allocation randomized high-speed non-cryptographic hasher with 4-key `RandomState`, folded-multiply mixing, and rotation rounds for CP — clean-room MIT parity with Rust `ahash` (946M downloads on crates.io).
 
 纯 CP 零堆分配高速随机化非加密哈希器，采用 4-key `RandomState` + 64×64→128-bit 折叠乘加与数据相关旋转混淆轮，兼顾极速吞吐与 HashDoS 抗性。

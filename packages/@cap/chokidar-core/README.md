@@ -1,5 +1,8 @@
 # @cap/chokidar-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:chokidar` ([https://github.com/paulmillr/chokidar](https://github.com/paulmillr/chokidar))（原库名 `chokidar` → CP 包名 `@cap/chokidar-core`）
+
 Zero-heap, pure CP file watcher core state machine, snapshot differ, write-finish debouncer, and glob ignore filter (clean-room MIT implementation inspired by npm `chokidar` v4).
 
 ## Features

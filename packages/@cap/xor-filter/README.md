@@ -1,5 +1,8 @@
 # @cap/xor-filter
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:xorf` ([https://github.com/ayazhafiz/xorf](https://github.com/ayazhafiz/xorf))（原库名 `xorf` → CP 包名 `@cap/xor-filter`）
+
 零堆分配的 CP Xor8 静态指纹过滤器 — 洁净室 MIT 实现，对标 Graf & Lemire ACM JEA 2020 论文与 Rust `xorf` crate，比 Bloom Filter 节省 ~30% 空间，单次查询仅 3 次查表异或 `B[h0] ^ B[h1] ^ B[h2] == fp`，0% 假阴性，理论假阳性率仅 1/256（~0.39%）。
 
 Zero-allocation Xor8 static fingerprint filter for CP — clean-room MIT parity with Rust `xorf` (Graf & Lemire, ACM JEA 2020).

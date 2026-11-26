@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/fast-glob": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "chokidar",
+    "repo": "https://github.com/paulmillr/chokidar",
+    "license": "MIT"
   }
 }

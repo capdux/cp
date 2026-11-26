@@ -1,5 +1,8 @@
 # @cap/multimap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:multimap` ([https://github.com/havarnov/multimap](https://github.com/havarnov/multimap))
+
 零堆分配的 CP 一键多值映射表（保持插入顺序，容量 128） — 洁净室 MIT 实现，对标 Rust crates.io #390 `multimap`（3.81 亿+ 总下载），适用于 HTTP 多值 Header、URL 多值 Query、标签倒排索引与事件路由。
 
 Zero-allocation insertion-ordered one-to-many string multimap for CP — clean-room MIT parity with Rust `multimap` (381M+ downloads).

@@ -1,5 +1,8 @@
 # `@cap/marked-md`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:marked` ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))（原库名 `marked` → CP 包名 `@cap/marked-md`）
+
 Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP (clean-room MIT counterpart to npm `marked` v14).
 
 ## Features

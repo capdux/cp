@@ -5,5 +5,34 @@
   "description": "Zero-allocation Stripe, GitHub (X-Hub-Signature-256), and Standard Webhooks signature parser, replay window guard, and constant-time verifier in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["webhook", "stripe", "github", "standardwebhooks", "signature", "hmac", "constant-time", "zero-alloc"]
+  "keywords": [
+    "webhook",
+    "stripe",
+    "github",
+    "standardwebhooks",
+    "signature",
+    "hmac",
+    "constant-time",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "standardwebhooks",
+    "repo": "https://github.com/standard-webhooks/standard-webhooks",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "standardwebhooks",
+      "repo": "https://github.com/standard-webhooks/standard-webhooks",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "standardwebhooks",
+      "repo": "https://github.com/standard-webhooks/standard-webhooks",
+      "license": "MIT"
+    }
+  ]
 }

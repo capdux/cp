@@ -1,5 +1,8 @@
 # `@cap/enumflags2`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:enumflags2` ([https://github.com/meithecatte/enumflags2](https://github.com/meithecatte/enumflags2))
+
 Zero-allocation 64-bit type-safe enum bitflags set with `valid_mask` protection for CP (clean-room MIT, inspired by `enumflags2` v0.7).
 
 ## Features

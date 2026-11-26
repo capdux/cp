@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation bilingual EN/CJK document statistics, reading-time estimator, and LLM token estimator for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "reading-time",
+    "repo": "https://github.com/ngryman/reading-time",
+    "license": "MIT"
+  }
 }

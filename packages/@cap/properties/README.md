@@ -1,5 +1,8 @@
 # @cap/properties
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:properties-reader` ([https://github.com/steveukx/properties](https://github.com/steveukx/properties))（原库名 `properties-reader` → CP 包名 `@cap/properties`）
+
 Zero-heap Java / Spring Boot / Android / i18n `.properties` configuration parser and formatter in pure CP.
 
 ## Features

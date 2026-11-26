@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/camelcase": "1.0.0",
     "@cap/decamelize": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "yargs-parser",
+    "repo": "https://github.com/yargs/yargs-parser",
+    "license": "MIT"
   }
 }

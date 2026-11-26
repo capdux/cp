@@ -4,5 +4,11 @@
   "description": "Zero-allocation URL router with static, named (:id / {id}), and catch-all (*rest / {*rest}) priority matching (Rust matchit parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "matchit",
+    "repo": "https://github.com/ibraheemdev/matchit",
+    "license": "MIT"
+  }
 }

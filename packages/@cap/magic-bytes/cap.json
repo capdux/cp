@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["magic-bytes", "file-type", "mime", "sniffer", "binary", "infer", "zero-alloc"]
+  "keywords": [
+    "magic-bytes",
+    "file-type",
+    "mime",
+    "sniffer",
+    "binary",
+    "infer",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "file-type",
+    "repo": "https://github.com/sindresorhus/file-type",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "file-type",
+      "repo": "https://github.com/sindresorhus/file-type",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "infer",
+      "repo": "https://github.com/bojand/infer",
+      "license": "MIT"
+    }
+  ]
 }

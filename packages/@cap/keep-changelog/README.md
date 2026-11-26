@@ -1,5 +1,8 @@
 # @cap/keep-changelog
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:keep-a-changelog` ([https://github.com/oscarotero/keep-a-changelog](https://github.com/oscarotero/keep-a-changelog))（原库名 `keep-a-changelog` → CP 包名 `@cap/keep-changelog`）
+
 零堆分配的 Keep a Changelog 1.1.0 规范解析、版本检索与发布标题生成引擎 — 洁净室 MIT 实现，对标 npm `keep-a-changelog` / `changelog-parser` 与 Rust `parse-changelog`。
 
 Zero-allocation Keep a Changelog 1.1.0 parser, release lookup, section counter, and header formatter for CP — clean-room MIT parity with npm `keep-a-changelog`, `changelog-parser`, and Rust `parse-changelog`.

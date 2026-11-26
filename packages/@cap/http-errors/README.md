@@ -1,5 +1,8 @@
 # @cap/http-errors
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:http-errors` ([https://github.com/jshttp/http-errors](https://github.com/jshttp/http-errors))
+
 Zero-allocation HTTP 4xx/5xx error constructors and RFC 9457 `application/problem+json` serializer for CP — clean-room MIT parity with npm `http-errors` and RFC 9457.
 
 零堆分配的 CP HTTP 标准错误构造与 RFC 9457 `application/problem+json` 序列化引擎，4xx 默认 `expose = true`、5xx 默认 `expose = false` 防内部堆栈泄漏，内置全部常用 4xx/5xx 快捷构造器与安全 JSON 转义（纯 CP 洁净室 MIT 实现）。

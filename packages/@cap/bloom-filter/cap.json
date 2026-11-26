@@ -5,5 +5,31 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bloom-filter", "probabilistic", "set", "hash", "zero-heap"]
+  "keywords": [
+    "bloom-filter",
+    "probabilistic",
+    "set",
+    "hash",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bloom-filters",
+    "repo": "https://github.com/Callidon/bloom-filters",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bloom-filters",
+      "repo": "https://github.com/Callidon/bloom-filters",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "bloomfilter",
+      "repo": "https://github.com/jedisct1/rust-bloom-filter",
+      "license": "MIT"
+    }
+  ]
 }

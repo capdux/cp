@@ -1,5 +1,8 @@
 # @cap/http2-hpack
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:h2` ([https://github.com/hyperium/h2](https://github.com/hyperium/h2))（原库名 `h2` → CP 包名 `@cap/http2-hpack`）
+
 Zero-allocation RFC 7541 HTTP/2 HPACK core primitives: full 61-entry static table, N-bit prefixed integer codec, and indexed header field encoder for CP.
 
 ## Features

@@ -5,5 +5,11 @@
   "description": "Zero-allocation property descriptor table and safe descriptor merge engine for CP (clean-room parity with npm merge-descriptors v2)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "merge-descriptors",
+    "repo": "https://github.com/component/merge-descriptors",
+    "license": "MIT"
+  }
 }

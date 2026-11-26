@@ -1,5 +1,8 @@
 # @cap/parse-duration
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:parse_duration` ([https://github.com/zeta12ti/parse_duration](https://github.com/zeta12ti/parse_duration))（原库名 `parse_duration` → CP 包名 `@cap/parse-duration`）
+
 Clean-room MIT, zero-heap human-readable duration parser and formatter for CP — modeled on crates.io `parse_duration` / `duration-str`.
 
 ## Features

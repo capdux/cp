@@ -1,5 +1,8 @@
 # @cap/oid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:const-oid` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))（原库名 `const-oid` → CP 包名 `@cap/oid`）
+
 Zero-allocation ISO/IEC ASN.1 Object Identifier (OID) X.690 DER encoder/decoder and PKI registry for CP — clean-room MIT parity with Rust `const-oid` (690M downloads on crates.io).
 
 纯 CP 零堆分配 ASN.1 对象标识符 (OID) X.690 DER 编解码与 X.509/TLS/PKI 命名查表引擎。

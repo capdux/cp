@@ -1,5 +1,8 @@
 # @cap/chacha20-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:chacha20` ([https://github.com/RustCrypto/stream-ciphers](https://github.com/RustCrypto/stream-ciphers))（原库名 `chacha20` → CP 包名 `@cap/chacha20-crate`）
+
 Zero-allocation RFC 8439 ChaCha20 stream cipher (256-bit key, 96-bit nonce, 32-bit block counter) for CP — clean-room MIT parity with Rust `chacha20` v0.9 (crates.io #115).
 
 纯 CP 零堆分配 RFC 8439 ChaCha20 流密码实现，支持 256 位密钥、96 位 Nonce、32 位块计数器跳转 (`seek`) 与跨 64 字节块任意长度流式原地加解密 (`applyKeystream`)。

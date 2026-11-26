@@ -14,5 +14,25 @@
     "crypto",
     "key",
     "ssh"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rustls-pemfile",
+    "repo": "https://github.com/rustls/pemfile",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "rustls-pemfile",
+      "repo": "https://github.com/rustls/pemfile",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "pem-rfc7468",
+      "repo": "https://github.com/RustCrypto/formats",
+      "license": "Apache-2.0"
+    }
   ]
 }

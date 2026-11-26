@@ -1,5 +1,8 @@
 # `@cap/diff` — 零分配 Myers O(ND) 文本与字符 Diff 引擎
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:diff` ([https://github.com/kpdecker/jsdiff](https://github.com/kpdecker/jsdiff)) / `npm:fast-diff` ([https://github.com/jhchen/fast-diff](https://github.com/jhchen/fast-diff))
+
 > 独立 Clean-Room 纯 CP 实现（严格对标 npm `diff` [周下载 120M+] 与 Rust `similar` crate）| 许可协议：MIT
 
 ## 架构概述

@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap fixed-capacity 1024-bit set with range operations, popcount, and set algebra (clean-room port of Rust fixedbitset)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "fixedbitset",
+    "repo": "https://github.com/petgraph/fixedbitset",
+    "license": "MIT"
+  }
 }

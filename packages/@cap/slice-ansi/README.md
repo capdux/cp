@@ -1,5 +1,8 @@
 # `@cap/slice-ansi`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:slice-ansi` ([https://github.com/chalk/slice-ansi](https://github.com/chalk/slice-ansi))
+
 Zero-heap-allocation ANSI-preserving terminal column slicer and truncator in pure CP.
 
 Reuses [`@cap/anstyle-parse`](../anstyle-parse) for VT100/ANSI CSI/OSC/ESC tokenization and SGR parameter parsing, and [`@cap/unicode-width`](../unicode-width) for East Asian / CJK double-width and zero-width column measurement.

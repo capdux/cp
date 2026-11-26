@@ -1,5 +1,8 @@
 # @cap/cookie-signature
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cookie-signature` ([https://github.com/tj/node-cookie-signature](https://github.com/tj/node-cookie-signature))
+
 Zero-heap-allocation HMAC-SHA256 signed cookie generator and constant-time verifier in pure CP (parity with npm `cookie-signature`), directly reusing `@cap/base64ct` for constant-time unpadded Base64 encoding.
 
 ## Dependencies

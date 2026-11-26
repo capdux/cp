@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/num-integer": "1.0.0"
   },
-  "keywords": ["num-rational", "rational", "fraction", "ratio", "math", "exact-arithmetic", "zero-alloc"]
+  "keywords": [
+    "num-rational",
+    "rational",
+    "fraction",
+    "ratio",
+    "math",
+    "exact-arithmetic",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "num-rational",
+    "repo": "https://github.com/rust-num/num-rational",
+    "license": "MIT OR Apache-2.0"
+  }
 }

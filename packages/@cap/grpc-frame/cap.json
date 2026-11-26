@@ -5,5 +5,34 @@
   "description": "Zero-allocation gRPC over HTTP/2 length-prefixed frame codec, 17 status codes, and grpc-timeout parser/formatter in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["grpc", "http2", "framing", "protobuf", "rpc", "grpc-status", "grpc-timeout", "zero-alloc"]
+  "keywords": [
+    "grpc",
+    "http2",
+    "framing",
+    "protobuf",
+    "rpc",
+    "grpc-status",
+    "grpc-timeout",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "tonic",
+    "repo": "https://github.com/hyperium/tonic",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "tonic",
+      "repo": "https://github.com/hyperium/tonic",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "@grpc/grpc-js",
+      "repo": "https://github.com/grpc/grpc-node",
+      "license": "Apache-2.0"
+    }
+  ]
 }

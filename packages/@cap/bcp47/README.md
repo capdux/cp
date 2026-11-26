@@ -1,5 +1,8 @@
 # @cap/bcp47
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:bcp-47` ([https://github.com/words/bcp-47](https://github.com/words/bcp-47))（原库名 `bcp-47` → CP 包名 `@cap/bcp47`）
+
 Zero-allocation RFC 5646 / BCP-47 language tag parser, canonicalizer, and fallback locale matcher for CP — clean-room MIT parity with npm `bcp-47` / `bcp-47-match` and Rust `unic-langid`.
 
 零堆分配的 CP RFC 5646 / BCP-47 语言标签解析、规范化大小写与回退匹配引擎，同时兼容 `-` 与 `_` 分隔符，完整识别 `language`、`script`、`region`（ISO-3166 & UN M.49）、`variant`、`extension`（如 `u-ca-gregory`）与 `private_use`（`x-...`）子标签（纯 CP 洁净室 MIT 实现）。

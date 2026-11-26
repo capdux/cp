@@ -1,5 +1,8 @@
 # @cap/regex-lite
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:regex-lite` ([https://github.com/rust-lang/regex](https://github.com/rust-lang/regex))
+
 Pure CP, zero-allocation linear-time Thompson NFA regex engine (clean-room MIT parity with Rust `regex-lite` v0.1).
 
 ## Design & Reuse

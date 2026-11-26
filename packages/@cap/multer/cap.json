@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/mediatype": "1.0.0",
     "@cap/mime-types": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "multer",
+    "repo": "https://github.com/expressjs/multer",
+    "license": "MIT"
   }
 }

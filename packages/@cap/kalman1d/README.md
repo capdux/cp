@@ -1,5 +1,8 @@
 # @cap/kalman1d
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:kalmanjs` ([https://github.com/wouterbulten/kalmanjs](https://github.com/wouterbulten/kalmanjs))（原库名 `kalmanjs` → CP 包名 `@cap/kalman1d`）
+
 Zero-allocation 1D scalar Kalman filter for sensor denoising, smoothing, and linear state prediction in CP.
 
 ## Features

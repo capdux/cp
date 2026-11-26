@@ -1,5 +1,8 @@
 # @cap/bincode
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bincode` ([https://github.com/bincode-org/bincode](https://github.com/bincode-org/bincode))
+
 零堆分配的 CP 紧凑二进制序列化与零拷贝反序列化引擎 — 洁净室 MIT 实现，对标 Rust crates.io #381 `bincode` v2（3.91 亿+ 总下载），专为高性能 RPC 与持久化打造。
 
 Zero-allocation bincode v2 compact binary serializer & zero-copy decoder for CP — clean-room MIT parity with Rust `bincode` v2 (391M+ downloads).

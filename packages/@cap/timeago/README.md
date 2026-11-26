@@ -1,5 +1,8 @@
 # @cap/timeago
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:timeago.js` ([https://github.com/hustcc/timeago.js](https://github.com/hustcc/timeago.js))（原库名 `timeago.js` → CP 包名 `@cap/timeago`）
+
 Zero-allocation deterministic relative time formatter for CP — clean-room MIT parity with npm `timeago.js` / `date-fns/formatDistance` and Rust `chrono-humanize` / `timeago`.
 
 零堆分配、确定性的 CP 相对时间格式化引擎，不依赖任何系统时钟调用，支持中英文（`En` / `Zh`）与长短紧凑多风格（`Long` / `Short` / `formatCompact`），精准处理单复数与过去/未来时间差（纯 CP 洁净室 MIT 实现）。

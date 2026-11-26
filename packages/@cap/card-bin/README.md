@@ -1,5 +1,8 @@
 # @cap/card-bin
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:credit-card-type` ([https://github.com/braintree/credit-card-type](https://github.com/braintree/credit-card-type))（原库名 `credit-card-type` → CP 包名 `@cap/card-bin`）
+
 Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP — clean-room MIT parity with npm `credit-card-type` (4M/wk) and `card-validator` (3M/wk).
 
 纯 CP 零堆分配支付卡 BIN 组织识别、Luhn 模 10 校验、标准分组格式化与 PCI-DSS 脱敏引擎。

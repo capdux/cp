@@ -4,5 +4,11 @@
   "description": "Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and Hann/Hamming windowing (Rust rustfft / microfft parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "rustfft",
+    "repo": "https://github.com/ejmahler/RustFFT",
+    "license": "MIT"
+  }
 }

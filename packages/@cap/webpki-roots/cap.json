@@ -9,5 +9,21 @@
     "@cap/x509-cert": "1.0.0",
     "@cap/spki": "1.0.0"
   },
-  "keywords": ["webpki", "roots", "mozilla", "ca", "trust-anchors", "x509", "tls", "pki", "zero-alloc"]
+  "keywords": [
+    "webpki",
+    "roots",
+    "mozilla",
+    "ca",
+    "trust-anchors",
+    "x509",
+    "tls",
+    "pki",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "webpki-roots",
+    "repo": "https://github.com/rustls/webpki-roots",
+    "license": "MIT"
+  }
 }

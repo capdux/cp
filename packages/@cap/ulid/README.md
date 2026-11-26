@@ -1,5 +1,8 @@
 # @cap/ulid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ulid` ([https://github.com/ulid/javascript](https://github.com/ulid/javascript)) / `npm:ulidx` ([https://github.com/perry-mitchell/ulidx](https://github.com/perry-mitchell/ulidx))
+
 Zero-allocation ULID (Universally Unique Lexicographically Sortable Identifier: 48-bit Unix ms timestamp + 80-bit entropy, Crockford Base32) encoder, decoder, validator, and monotonic incrementer for CP.
 
 ## Features

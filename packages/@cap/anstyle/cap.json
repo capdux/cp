@@ -8,5 +8,39 @@
   "dependencies": {
     "@cap/anstyle-parse": "^1.0.0"
   },
-  "keywords": ["ansi", "anstyle", "color", "terminal", "sgr", "rgb", "zero-heap"]
+  "keywords": [
+    "ansi",
+    "anstyle",
+    "color",
+    "terminal",
+    "sgr",
+    "rgb",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "anstyle",
+    "repo": "https://github.com/rust-cli/anstyle",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "anstyle",
+      "repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "console",
+      "repo": "https://github.com/console-rs/console",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "colored",
+      "repo": "https://github.com/colored-rs/colored",
+      "license": "MIT"
+    }
+  ]
 }

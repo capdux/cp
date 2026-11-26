@@ -1,5 +1,8 @@
 # `@cap/phone` — 零分配国际电话号码解析、校验与格式化引擎
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:libphonenumber-js` ([https://github.com/catamphetamine/libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js))（原库名 `libphonenumber-js` → CP 包名 `@cap/phone`）
+
 > Zero-allocation international phone number parser, validator, and formatter for CP (Clean-room MIT implementation modeled after npm `libphonenumber-js` and Rust `phonenumber`).
 
 ## 概述 / Overview

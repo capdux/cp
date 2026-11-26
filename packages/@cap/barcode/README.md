@@ -1,5 +1,8 @@
 # @cap/barcode
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jsbarcode` ([https://github.com/lindell/JsBarcode](https://github.com/lindell/JsBarcode))（原库名 `jsbarcode` → CP 包名 `@cap/barcode`）
+
 Zero-allocation 1D barcode encoder & SVG renderer for CP — clean-room MIT parity with npm `jsbarcode` and Rust `barcoders`.
 
 ## Install

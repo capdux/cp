@@ -1,5 +1,8 @@
 # @cap/textwrap-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:textwrap` ([https://github.com/mgeisler/textwrap](https://github.com/mgeisler/textwrap))（原库名 `textwrap` → CP 包名 `@cap/textwrap-crate`）
+
 Zero-allocation smart word wrapping, indentation, dedentation, and paragraph unfilling engine for CP — clean-room MIT parity with crates.io `textwrap` v0.16.
 
 Composes [`@cap/unicode-width`](../unicode-width) for accurate Unicode 15.1 / CJK / Emoji terminal display column width calculation with zero code duplication.

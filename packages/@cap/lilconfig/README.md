@@ -1,5 +1,8 @@
 # @cap/lilconfig
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:lilconfig` ([https://github.com/antonk52/lilconfig](https://github.com/antonk52/lilconfig))
+
 Zero-heap, pure CP lightweight configuration explorer (clean-room MIT implementation inspired by npm `lilconfig` v3).
 
 ## Features

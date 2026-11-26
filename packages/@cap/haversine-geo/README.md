@@ -1,5 +1,8 @@
 # @cap/haversine-geo
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:haversine` ([https://github.com/njj/haversine](https://github.com/njj/haversine)) / `crates.io:haversine` ([https://github.com/gavinuhma/haversine](https://github.com/gavinuhma/haversine))（原库名 `haversine` → CP 包名 `@cap/haversine-geo`）
+
 Zero-allocation WGS-84 spherical Haversine great-circle distance, initial bearing, midpoint, and destination point engine for CP (zero external dependencies).
 
 ## Features

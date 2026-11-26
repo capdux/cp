@@ -1,5 +1,8 @@
 # @cap/whatwg-url
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:url` ([https://github.com/servo/rust-url](https://github.com/servo/rust-url))（原库名 `url` → CP 包名 `@cap/whatwg-url`）
+
 Pure CP, zero-allocation WHATWG URL Standard parser, normalizer, and relative URL resolver (clean-room MIT parity with Rust `url` v2).
 
 ## Dependencies

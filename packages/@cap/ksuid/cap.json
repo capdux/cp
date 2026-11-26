@@ -4,5 +4,25 @@
   "description": "Zero-heap Segment KSUID (20-byte K-Sortable Unique IDentifier) 27-character Base62 encoder, decoder, validator, and comparator.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "ksuid",
+    "repo": "https://github.com/segmentio/ksuid",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "ksuid",
+      "repo": "https://github.com/segmentio/ksuid",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "svix-ksuid",
+      "repo": "https://github.com/svix/rust-ksuid",
+      "license": "MIT"
+    }
+  ]
 }

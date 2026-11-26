@@ -1,5 +1,8 @@
 # @cap/glam
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:glam` ([https://github.com/bitshifter/glam-rs](https://github.com/bitshifter/glam-rs))
+
 Zero-heap 3D math library (`Vec3`, unit `Quat`, column-major `Mat4`) in pure CP with zero external dependencies.
 
 ## Features

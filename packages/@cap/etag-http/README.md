@@ -1,5 +1,8 @@
 # @cap/etag-http
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:etag` ([https://github.com/jshttp/etag](https://github.com/jshttp/etag))（原库名 `etag` → CP 包名 `@cap/etag-http`）
+
 Clean-room MIT, zero-heap RFC 7232 HTTP strong/weak ETag generator, parser, and comparator for CP — modeled on npm's `etag` v1.8.
 
 ## Dependencies

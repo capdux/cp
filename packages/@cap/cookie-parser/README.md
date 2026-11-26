@@ -1,5 +1,8 @@
 # `@cap/cookie-parser`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cookie-parser` ([https://github.com/expressjs/cookie-parser](https://github.com/expressjs/cookie-parser))
+
 Zero-heap HTTP `Cookie` header parser with HMAC-SHA256 signed cookie (`s:`) verification, multi-secret key rotation, and JSON cookie (`j:`) prefix extraction — clean-room CP equivalent of npm `cookie-parser`.
 
 Reuses `@cap/cookie-jar` and `@cap/cookie-signature` as independent packages.

@@ -1,5 +1,8 @@
 # `@cap/y18n`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:y18n` ([https://github.com/yargs/y18n](https://github.com/yargs/y18n))
+
 Zero-heap-allocation internationalization (i18n) catalog and printf-style formatter in pure CP (clean-room MIT implementation inspired by npm `y18n`).
 
 ## Features

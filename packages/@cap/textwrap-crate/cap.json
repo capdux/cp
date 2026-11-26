@@ -5,8 +5,24 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["textwrap", "wrap", "fill", "indent", "dedent", "unfill", "unicode-width", "cli", "zero-alloc"],
+  "keywords": [
+    "textwrap",
+    "wrap",
+    "fill",
+    "indent",
+    "dedent",
+    "unfill",
+    "unicode-width",
+    "cli",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/unicode-width": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "textwrap",
+    "repo": "https://github.com/mgeisler/textwrap",
+    "license": "MIT"
   }
 }

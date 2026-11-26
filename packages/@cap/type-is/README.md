@@ -1,5 +1,8 @@
 # @cap/type-is
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:type-is` ([https://github.com/jshttp/type-is](https://github.com/jshttp/type-is))
+
 Clean-room MIT, zero-heap HTTP `Content-Type` matcher for CP — modeled on npm's `type-is` v1.6.
 
 ## Dependencies

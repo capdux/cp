@@ -1,5 +1,8 @@
 # @cap/vec2
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:victor` ([https://github.com/maxkueng/victor](https://github.com/maxkueng/victor)) / `crates.io:euclid` ([https://github.com/servo/euclid](https://github.com/servo/euclid))（原库名 `victor` → CP 包名 `@cap/vec2`）
+
 Zero-allocation 2D vector math and planar geometry library for CP with built-in Newton-Raphson `sqrt` and Taylor-series `sin`/`cos` (zero external dependencies).
 
 ## Features

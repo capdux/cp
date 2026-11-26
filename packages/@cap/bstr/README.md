@@ -1,5 +1,8 @@
 # @cap/bstr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bstr` ([https://github.com/BurntSushi/bstr](https://github.com/BurntSushi/bstr))
+
 Pure CP, zero-allocation byte string utilities (clean-room MIT parity with Rust `bstr` v1).
 
 ## Design & Reuse

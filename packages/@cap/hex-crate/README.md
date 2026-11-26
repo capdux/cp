@@ -1,5 +1,8 @@
 # @cap/hex-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:hex` ([https://github.com/KokaKiwi/rust-hex](https://github.com/KokaKiwi/rust-hex))（原库名 `hex` → CP 包名 `@cap/hex-crate`）
+
 Clean-room MIT, zero-heap hexadecimal encoding, decoding, and validation library for CP — modeled on Rust's `hex` crate (1.5B+ downloads).
 
 ## Dependencies

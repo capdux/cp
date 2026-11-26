@@ -1,5 +1,8 @@
 # `@cap/lru` — 零堆分配 O(1) 工业级 LRU 缓存
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:lru-cache` ([https://github.com/isaacs/node-lru-cache](https://github.com/isaacs/node-lru-cache)) / `npm:lru-cache` ([https://github.com/isaacs/node-lru-cache](https://github.com/isaacs/node-lru-cache))（原库名 `lru-cache` → CP 包名 `@cap/lru`）
+
 > 独立 Clean-Room 纯 CP 实现，严格对标 npm `lru-cache`（周下载 150M+）与 Rust `lru` crate | 零外部依赖 | 许可协议：MIT
 
 ## 概述

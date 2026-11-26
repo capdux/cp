@@ -6,5 +6,11 @@
   "license": "MIT",
   "dependencies": {
     "@cap/unicode-width": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "wrap-ansi",
+    "repo": "https://github.com/chalk/wrap-ansi",
+    "license": "MIT"
   }
 }

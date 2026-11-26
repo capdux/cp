@@ -4,5 +4,11 @@
   "description": "Zero-allocation LZ4 Raw Block lossless compressor & decompressor with fixed 4096-entry hash table, overlapping RLE match copy, and size-prefixed framing (Rust lz4_flex / LZ4 Block Format parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "lz4_flex",
+    "repo": "https://github.com/PSeitz/lz4_flex",
+    "license": "MIT"
+  }
 }

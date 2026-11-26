@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["fletcher", "fletcher16", "fletcher32", "fletcher64", "checksum", "hash"]
+  "keywords": [
+    "fletcher",
+    "fletcher16",
+    "fletcher32",
+    "fletcher64",
+    "checksum",
+    "hash"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "fletcher",
+    "repo": "https://github.com/aaronriekenberg/rust-fletcher",
+    "license": "MIT"
+  }
 }

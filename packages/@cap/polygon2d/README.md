@@ -1,5 +1,8 @@
 # `@cap/polygon2d`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:point-in-polygon` ([https://github.com/substack/point-in-polygon](https://github.com/substack/point-in-polygon)) / `crates.io:geo-types` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `point-in-polygon` → CP 包名 `@cap/polygon2d`）
+
 Zero-heap 2D polygon geometry algorithms in pure CP: Shoelace signed/unsigned area, winding direction, perimeter, centroid, ray-casting point-in-polygon with edge tolerance, and convexity check.
 
 ## Features

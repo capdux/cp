@@ -4,5 +4,11 @@
   "description": "Zero-allocation Consistent Overhead Byte Stuffing (COBS), custom-sentinel COBS/XOR, framed codec, and streaming CobsDecoder for CP",
   "main": "src/index.cp",
   "types": "index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "cobs",
+    "repo": "https://github.com/jamesmunns/cobs.rs",
+    "license": "MIT"
+  }
 }

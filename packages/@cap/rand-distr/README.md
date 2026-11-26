@@ -1,5 +1,8 @@
 # @cap/rand-distr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rand_distr` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand))（原库名 `rand_distr` → CP 包名 `@cap/rand-distr`）
+
 Clean-room MIT, zero-heap probability distribution samplers for CP — modeled on crates.io `rand_distr` v0.4 and built on [`@cap/xoshiro256`](../xoshiro256/README.md).
 
 ## Features

@@ -4,5 +4,11 @@
   "description": "Zero-allocation IPv4 CIDR parser, formatter, overlap/containment checker, merge, and exclude engine (npm cidr-tools / ip-cidr parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "cidr-tools",
+    "repo": "https://github.com/silverwind/cidr-tools",
+    "license": "BSD-2-Clause"
+  }
 }

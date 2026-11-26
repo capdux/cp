@@ -1,5 +1,8 @@
 # @cap/arrayvec
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:arrayvec` ([https://github.com/bluss/arrayvec](https://github.com/bluss/arrayvec))
+
 零堆分配的 CP 栈上定容字符串与定容向量容器 — 洁净室 MIT 实现，对标 Rust crates.io #214 `arrayvec`（7.30 亿+ 总下载），专为无 GC 高并发热路径与协议拼装打造。
 
 Zero-allocation stack-backed fixed-capacity containers (`ArrayString64`, `ArrayString256`, `ArrayVecI64`, `ArrayVecU64`) for CP — clean-room MIT parity with Rust `arrayvec` (730M+ downloads).

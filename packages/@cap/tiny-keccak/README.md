@@ -1,5 +1,8 @@
 # @cap/tiny-keccak
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tiny-keccak` ([https://github.com/debris/tiny-keccak](https://github.com/debris/tiny-keccak))
+
 Zero-allocation Keccak-f[1600] 24-round sponge implementation providing NIST FIPS 202 `Sha3_256` and original Ethereum `Keccak256` for CP — clean-room MIT parity with Rust `tiny-keccak` v2 (crates.io #160).
 
 纯 CP 零堆分配 Keccak-f[1600] 24 轮海绵置换实现（完整 theta/rho/pi/chi/iota 五步），同时支持标准 NIST FIPS 202 `Sha3_256`（域分隔 `0x06`）与以太坊 `Keccak256`（域分隔 `0x01`）。

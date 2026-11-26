@@ -1,5 +1,8 @@
 # `@cap/pkcs8`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:pkcs8` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 Zero-allocation RFC 5958 PKCS#8 `PrivateKeyInfo` (v1) / `OneAsymmetricKey` (v2) & RFC 8410 Ed25519 DER/PEM codec in pure CP (RustCrypto `pkcs8` parity).
 
 ## Reused Ecosystem Packages

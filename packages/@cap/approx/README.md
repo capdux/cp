@@ -1,5 +1,8 @@
 # @cap/approx
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:approx` ([https://github.com/brendanzab/approx](https://github.com/brendanzab/approx))
+
 Clean-room MIT, zero-heap IEEE-754 floating-point approximate equality library for CP — modeled on crates.io #130 `approx` (900M+ downloads).
 
 ## API

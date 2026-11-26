@@ -1,5 +1,8 @@
 # `@cap/debounce`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:lodash.debounce` ([https://github.com/lodash/lodash](https://github.com/lodash/lodash))（原库名 `lodash.debounce` → CP 包名 `@cap/debounce`）
+
 Zero-heap-allocation, deterministic clock-driven `Debouncer` and `Throttler` state machines in pure CP.
 
 ## Features

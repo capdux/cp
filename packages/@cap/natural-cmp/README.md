@@ -1,5 +1,8 @@
 # @cap/natural-cmp
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:natord` ([https://github.com/lifthrasiir/rust-natord](https://github.com/lifthrasiir/rust-natord))（原库名 `natord` → CP 包名 `@cap/natural-cmp`）
+
 Zero-heap arbitrary-precision human natural sort comparator and in-place sorter in pure CP.
 
 ## Features

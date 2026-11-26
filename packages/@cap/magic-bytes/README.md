@@ -1,5 +1,8 @@
 # @cap/magic-bytes
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:file-type` ([https://github.com/sindresorhus/file-type](https://github.com/sindresorhus/file-type)) / `crates.io:infer` ([https://github.com/bojand/infer](https://github.com/bojand/infer))（原库名 `file-type` → CP 包名 `@cap/magic-bytes`）
+
 Zero-allocation binary file magic bytes signature sniffer for CP.
 
 ## Features

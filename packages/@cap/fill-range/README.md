@@ -1,5 +1,8 @@
 # @cap/fill-range
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fill-range` ([https://github.com/jonschlinkert/fill-range](https://github.com/jonschlinkert/fill-range))
+
 Zero-heap numeric, alphabetic, stepped, and zero-padded range expansion engine in pure CP (npm `fill-range` parity).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/huffman
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:huffman-compress` ([https://github.com/sozu-proxy/huffman-compress](https://github.com/sozu-proxy/huffman-compress))（原库名 `huffman-compress` → CP 包名 `@cap/huffman`）
+
 零堆分配的 CP RFC 1951 规范霍夫曼（Canonical Huffman）前缀编码器与解码器 — 洁净室 MIT 实现，对标 Rust `huffman-compress` 与 RFC 1951 §3.2.2，支持全 256 符号表与 16 位限长。
 
 Zero-allocation RFC 1951 Canonical Huffman prefix encoder & decoder for CP — clean-room MIT parity with Rust `huffman-compress` and RFC 1951.

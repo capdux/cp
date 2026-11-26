@@ -9,5 +9,11 @@
     "@cap/yargs-parser": "1.0.0",
     "@cap/cliui": "1.0.0",
     "@cap/y18n": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "yargs",
+    "repo": "https://github.com/yargs/yargs",
+    "license": "MIT"
   }
 }

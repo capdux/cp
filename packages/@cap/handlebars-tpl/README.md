@@ -1,5 +1,8 @@
 # @cap/handlebars-tpl
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:handlebars` ([https://github.com/handlebars-lang/handlebars.js](https://github.com/handlebars-lang/handlebars.js))（原库名 `handlebars` → CP 包名 `@cap/handlebars-tpl`）
+
 Zero-allocation Handlebars template engine for CP — clean-room MIT parity with npm `handlebars` v4. Composes `@cap/escape-html` for XSS-safe `{{var}}` escaping with zero duplication.
 
 纯 CP 零堆分配 Handlebars 模板引擎（对标 npm `handlebars` v4），跨包复用 `@cap/escape-html` 实现 `{{var}}` 自动 HTML 转义防 XSS。

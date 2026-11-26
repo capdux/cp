@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["lru", "slab", "cache", "o1", "zero-heap", "intrusive"]
+  "keywords": [
+    "lru",
+    "slab",
+    "cache",
+    "o1",
+    "zero-heap",
+    "intrusive"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "lru-slab",
+    "repo": "https://github.com/rustls/lru-slab",
+    "license": "MIT"
+  }
 }

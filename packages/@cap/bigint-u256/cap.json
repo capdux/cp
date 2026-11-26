@@ -5,5 +5,39 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bigint", "u256", "uint256", "math", "crypto", "ethereum", "zero-alloc"]
+  "keywords": [
+    "bigint",
+    "u256",
+    "uint256",
+    "math",
+    "crypto",
+    "ethereum",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bn.js",
+    "repo": "https://github.com/indutny/bn.js",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bn.js",
+      "repo": "https://github.com/indutny/bn.js",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "primitive-types",
+      "repo": "https://github.com/paritytech/parity-common",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "ruint",
+      "repo": "https://github.com/recmo/uint",
+      "license": "MIT"
+    }
+  ]
 }

@@ -10,5 +10,11 @@
     "@cap/const-oid": "1.0.0",
     "@cap/spki": "1.0.0",
     "@cap/pem-rfc7468": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "x509-cert",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
   }
 }

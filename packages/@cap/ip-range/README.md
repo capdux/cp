@@ -1,5 +1,8 @@
 # @cap/ip-range
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ipnet` ([https://github.com/krisprice/ipnet](https://github.com/krisprice/ipnet)) / `npm:ip-range-check` ([https://github.com/danielcompton/ip-range-check](https://github.com/danielcompton/ip-range-check))（原库名 `ipnet` → CP 包名 `@cap/ip-range`）
+
 Zero-heap IPv4 address parser/formatter, CIDR subnet containment & overlap engine, and RFC special-use address classifier in pure CP.
 
 ## Features

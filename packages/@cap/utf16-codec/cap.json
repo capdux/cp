@@ -4,5 +4,25 @@
   "description": "Zero-heap UTF-8 <-> UTF-16 / UTF-16LE codec with full surrogate pair support, lone-surrogate rejection, BOM detection, and UTF-16 unit counting.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "utf16",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "utf16",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "widestring",
+      "repo": "https://github.com/starkat99/widestring-rs",
+      "license": "MIT"
+    }
+  ]
 }

@@ -1,5 +1,8 @@
 # @cap/clsx
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:clsx` ([https://github.com/lukeed/clsx](https://github.com/lukeed/clsx))
+
 Zero-heap conditional CSS class name builder, whitespace normalizer, and deduplicator in pure CP (npm `clsx` / `classnames` parity).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/morton
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:morton-encoding` ([https://github.com/morton-encoding/morton-encoding](https://github.com/morton-encoding/morton-encoding))（原库名 `morton-encoding` → CP 包名 `@cap/morton`）
+
 Zero-allocation 2D/3D Z-Order (Morton) bit-interleaving codec and 2D Hilbert space-filling curve mapper for CP — clean-room MIT parity with Rust `morton-encoding`.
 
 零堆分配的 CP 空间索引位交错引擎，无分支魔数掩码实现 2D（32×32 → 64-bit）与 3D（21×21×21 → 63-bit）莫顿码编解码及 2D Hilbert 空间填充曲线（`order 1..=16`），适用于四叉树/八叉树、GIS 网格、游戏空间分区与 OLAP 多维聚簇索引（纯 CP 洁净室 MIT 实现）。

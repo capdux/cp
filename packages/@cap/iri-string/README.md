@@ -1,5 +1,8 @@
 # @cap/iri-string
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:iri-string` ([https://github.com/lo48576/iri-string](https://github.com/lo48576/iri-string))
+
 Zero-heap-allocation RFC 3986 / RFC 3987 URI/IRI parser, dot-segment normalizer, and relative reference resolver in pure CP (inspired by Rust `iri-string`).
 
 ## Features

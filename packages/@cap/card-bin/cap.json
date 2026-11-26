@@ -4,5 +4,11 @@
   "description": "Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "credit-card-type",
+    "repo": "https://github.com/braintree/credit-card-type",
+    "license": "MIT"
+  }
 }

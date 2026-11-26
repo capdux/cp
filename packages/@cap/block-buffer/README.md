@@ -1,5 +1,8 @@
 # @cap/block-buffer
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:block-buffer` ([https://github.com/RustCrypto/utils](https://github.com/RustCrypto/utils)) / `crates.io:crypto-common` ([https://github.com/RustCrypto/traits](https://github.com/RustCrypto/traits))
+
 Zero-allocation fixed-size cryptographic block streaming buffers (`BlockBuffer64`, `BlockBuffer128`) and standard padding primitives for CP (RustCrypto `block-buffer` parity).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/utf8-path
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:camino` ([https://github.com/camino-rs/camino](https://github.com/camino-rs/camino))（原库名 `camino` → CP 包名 `@cap/utf8-path`）
+
 Zero-allocation UTF-8 path manipulation, normalization, relative path calculation, and traversal-safe sandboxing (`safeJoin`) for CP — clean-room MIT parity with Rust `camino` (341M downloads on crates.io).
 
 纯 CP 零堆分配 UTF-8 路径操作与安全沙箱引擎，支持 POSIX/Windows 路径规范化、组件剖析、最小相对路径计算及严格防路径穿越 `safeJoin`。

@@ -1,5 +1,8 @@
 # @cap/mime-sniff
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:istextorbinary` ([https://github.com/bevry/istextorbinary](https://github.com/bevry/istextorbinary)) / `crates.io:content_inspector` ([https://github.com/sharkdp/content_inspector](https://github.com/sharkdp/content_inspector))（原库名 `istextorbinary` → CP 包名 `@cap/mime-sniff`）
+
 Zero-allocation WHATWG MIME Sniffing Standard binary/text detector and HTML/XML/JSON/SVG content sniffer for CP.
 
 ## Features

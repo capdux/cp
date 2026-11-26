@@ -5,5 +5,20 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["acorn", "javascript", "es2024", "lexer", "tokenizer", "esm", "parser", "zero-alloc"]
+  "keywords": [
+    "acorn",
+    "javascript",
+    "es2024",
+    "lexer",
+    "tokenizer",
+    "esm",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "acorn",
+    "repo": "https://github.com/acornjs/acorn",
+    "license": "MIT"
+  }
 }

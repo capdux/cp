@@ -1,5 +1,8 @@
 # `@cap/half-f16`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:half` ([https://github.com/VoidStarKat/half-rs](https://github.com/VoidStarKat/half-rs)) / `npm:@petamoriken/float16` ([https://github.com/petamoriken/float16](https://github.com/petamoriken/float16))（原库名 `half` → CP 包名 `@cap/half-f16`）
+
 Zero-heap IEEE 754 `f16` (binary16) and Google `bf16` (Brain Float 16) codec and arithmetic in pure CP (clean-room counterpart to Rust `half`). Designed for AI/LLM tensor weights, Safetensors, ONNX, and GPU interop.
 
 ## Features

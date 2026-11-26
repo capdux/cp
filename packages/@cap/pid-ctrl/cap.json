@@ -5,5 +5,32 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["pid", "controller", "control-theory", "robotics", "anti-windup", "feedback"]
+  "keywords": [
+    "pid",
+    "controller",
+    "control-theory",
+    "robotics",
+    "anti-windup",
+    "feedback"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "node-pid-controller",
+    "repo": "https://github.com/Philmod/node-pid-controller",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "node-pid-controller",
+      "repo": "https://github.com/Philmod/node-pid-controller",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "pid_control",
+      "repo": "https://github.com/dfrg/pid_control",
+      "license": "MIT"
+    }
+  ]
 }

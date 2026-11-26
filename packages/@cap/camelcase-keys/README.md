@@ -1,5 +1,8 @@
 # `@cap/camelcase-keys`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:camelcase-keys` ([https://github.com/sindresorhus/camelcase-keys](https://github.com/sindresorhus/camelcase-keys)) / `npm:decamelize-keys` ([https://github.com/sindresorhus/decamelize-keys](https://github.com/sindresorhus/decamelize-keys))
+
 Zero-heap streaming JSON object key case converter (`camelCase`, `snake_case`, `PascalCase`) in pure CP (clean-room counterpart to npm `camelcase-keys` & `decamelize-keys`). Directly composes `@cap/camelcase`.
 
 ## Features

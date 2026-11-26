@@ -1,5 +1,8 @@
 # @cap/cidr-tools
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cidr-tools` ([https://github.com/silverwind/cidr-tools](https://github.com/silverwind/cidr-tools))
+
 Zero-allocation IPv4 CIDR block set-algebra engine (`parse`, `format`, `contains`, `overlaps`, `mergeCidrs`, `excludeCidr`) for CP — clean-room MIT parity with npm `cidr-tools` and `ip-cidr`.
 
 纯 CP 零堆分配 IPv4 CIDR 块集合运算引擎，支持相邻/重叠路由自动最小前缀聚合与安全组差集排除，适用于云防火墙、WAF 黑白名单与路由表优化。

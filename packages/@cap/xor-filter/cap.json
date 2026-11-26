@@ -4,5 +4,11 @@
   "description": "Zero-allocation Xor8 static fingerprint filter (Graf & Lemire ACM JEA 2020 / Rust xorf parity) with O(1) 3-lookup XOR queries and ~0.39% false-positive rate for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "xorf",
+    "repo": "https://github.com/ayazhafiz/xorf",
+    "license": "MIT"
+  }
 }

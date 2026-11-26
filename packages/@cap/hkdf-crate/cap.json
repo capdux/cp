@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/hmac-crate": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "hkdf",
+    "repo": "https://github.com/RustCrypto/KDFs",
+    "license": "MIT OR Apache-2.0"
   }
 }

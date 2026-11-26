@@ -1,5 +1,8 @@
 # @cap/wcag
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:wcag-contrast` ([https://github.com/tmcw/wcag-contrast](https://github.com/tmcw/wcag-contrast))（原库名 `wcag-contrast` → CP 包名 `@cap/wcag`）
+
 零堆分配的 W3C WCAG 2.1/2.2 色彩无障碍对比度计算、AA/AAA 评级与自动高对比前景色推荐引擎 — 洁净室 MIT 实现，对标 npm `wcag-contrast` / `color-contrast-checker` 与 Rust `contrast`。
 
 Zero-allocation W3C WCAG 2.1/2.2 color contrast calculator, AA/AAA compliance grader, and accessible foreground color recommender for CP — clean-room MIT parity with npm `wcag-contrast` and Rust `contrast`.

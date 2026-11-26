@@ -5,8 +5,22 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["http", "http-types", "status-code", "method", "headers", "rfc9110", "zero-alloc"],
+  "keywords": [
+    "http",
+    "http-types",
+    "status-code",
+    "method",
+    "headers",
+    "rfc9110",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "http",
+    "repo": "https://github.com/hyperium/http",
+    "license": "MIT"
   }
 }

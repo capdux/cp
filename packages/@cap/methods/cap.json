@@ -5,5 +5,11 @@
   "description": "HTTP methods supported by RFC 9110 / WebDAV with safe/idempotent/cacheable predicates (clean-room CP implementation of npm methods)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "methods",
+    "repo": "https://github.com/jshttp/methods",
+    "license": "MIT"
+  }
 }

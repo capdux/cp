@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["aabb", "aabb3", "3d", "collision", "raycast", "bvh", "geometry", "zero-alloc"]
+  "keywords": [
+    "aabb",
+    "aabb3",
+    "3d",
+    "collision",
+    "raycast",
+    "bvh",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "parry3d",
+    "repo": "https://github.com/dimforge/parry",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "parry3d",
+      "repo": "https://github.com/dimforge/parry",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "aabb-3d",
+      "repo": "https://github.com/chrisdickinson/aabb-3d",
+      "license": "MIT"
+    }
+  ]
 }

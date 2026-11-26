@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/micromatch": "1.0.0",
     "@cap/picomatch": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "minimatch",
+    "repo": "https://github.com/isaacs/minimatch",
+    "license": "ISC"
   }
 }

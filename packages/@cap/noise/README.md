@@ -1,5 +1,8 @@
 # `@cap/noise`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:noise` ([https://github.com/Razaekel/noise-rs](https://github.com/Razaekel/noise-rs))
+
 Zero-heap 2D/3D Improved Perlin Noise, Fractal Brownian Motion (fBm), and Ridged Multifractal procedural noise generator in pure CP, modeled after Rust's `noise` crate.
 
 零堆分配纯 CP 程序化噪声引擎，对标 Rust `noise` crate，内置可设种子的 2D/3D 改进 Perlin 梯度噪声、分形布朗运动 `fbm2D` 与山脊分形 `ridged2D`，适用于地形生成、纹理与图形特效。

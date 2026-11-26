@@ -4,5 +4,11 @@
   "description": "Zero-allocation W3C Subresource Integrity (SRI) parser, validator, constant-time matcher, and formatter for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "ssri",
+    "repo": "https://github.com/npm/ssri",
+    "license": "ISC"
+  }
 }

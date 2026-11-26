@@ -1,5 +1,8 @@
 # @cap/jsonflat
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:flat` ([https://github.com/hughsk/flat](https://github.com/hughsk/flat))（原库名 `flat` → CP 包名 `@cap/jsonflat`）
+
 Zero-allocation JSON flattening (`a.b.0.c`), `dot-prop` path lookup & flat JSON serialization for CP — clean-room MIT parity with npm `flat` and `dot-prop`.
 
 ## Install

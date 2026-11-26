@@ -1,5 +1,8 @@
 # @cap/csv-line
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:csv-parse` ([https://github.com/adaltas/node-csv](https://github.com/adaltas/node-csv))（原库名 `csv-parse` → CP 包名 `@cap/csv-line`）
+
 Zero-heap RFC 4180 CSV/TSV record parser and serializer in pure CP (npm `csv-parse` / `papaparse` parity).
 
 ## Features

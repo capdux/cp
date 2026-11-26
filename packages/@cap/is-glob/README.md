@@ -1,5 +1,8 @@
 # @cap/is-glob
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:is-glob` ([https://github.com/micromatch/is-glob](https://github.com/micromatch/is-glob))
+
 Zero-heap-allocation glob pattern detector in pure CP (parity with npm `is-glob`), directly reusing `@cap/is-extglob` for Bash/Micromatch extglob detection.
 
 ## Dependencies

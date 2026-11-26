@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/unicase": "1.0.0"
   },
-  "keywords": ["aho-corasick", "dfa", "multi-pattern", "string-search", "automaton", "zero-alloc"]
+  "keywords": [
+    "aho-corasick",
+    "dfa",
+    "multi-pattern",
+    "string-search",
+    "automaton",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "aho-corasick",
+    "repo": "https://github.com/BurntSushi/aho-corasick",
+    "license": "MIT"
+  }
 }

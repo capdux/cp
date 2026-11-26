@@ -4,5 +4,11 @@
   "description": "Zero-heap 3D math library with Vec3, unit Quat, and column-major Mat4 (Rust glam parity, pure CP with built-in sqrt/sin/cos).",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "glam",
+    "repo": "https://github.com/bitshifter/glam-rs",
+    "license": "MIT"
+  }
 }

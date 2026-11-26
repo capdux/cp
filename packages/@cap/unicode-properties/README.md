@@ -1,5 +1,8 @@
 # `@cap/unicode-properties`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicode-properties` ([https://github.com/unicode-rs/unicode-properties](https://github.com/unicode-rs/unicode-properties))
+
 Zero-allocation Unicode character properties, UAX #31 identifier validation (`XID_Start` / `XID_Continue`), `White_Space`, `Default_Ignorable_Code_Point`, and UTS #51 Emoji classification in pure CP.
 
 ## API

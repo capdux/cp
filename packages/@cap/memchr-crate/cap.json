@@ -5,5 +5,11 @@
   "license": "MIT",
   "entry": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "memchr",
+    "repo": "https://github.com/BurntSushi/memchr",
+    "license": "Unlicense OR MIT"
+  }
 }

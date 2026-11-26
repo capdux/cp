@@ -1,5 +1,8 @@
 # @cap/kind-of
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:kind-of` ([https://github.com/jonschlinkert/kind-of](https://github.com/jonschlinkert/kind-of))
+
 零堆分配的 CP 原生值类型识别库，Clean-Room MIT 实现对标 npm 顶流包 `kind-of`（1.2 亿+/周下载，同时覆盖 `isobject` / `is-plain-object` / `is-primitive` 语义）。
 
 ## 特性

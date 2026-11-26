@@ -1,5 +1,8 @@
 # @cap/ssri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ssri` ([https://github.com/npm/ssri](https://github.com/npm/ssri))
+
 Zero-allocation W3C Subresource Integrity (SRI) multi-algorithm parser, validator, constant-time matcher, and formatter for CP — clean-room MIT parity with npm `ssri` (85M/wk).
 
 纯 CP 零堆分配 W3C Subresource Integrity (SRI) 多算法完整性校验串解析、恒定时间比对与规范化输出引擎，适用于 `cap.lock`、包管理校验与 `<script integrity="...">`。

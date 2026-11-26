@@ -4,5 +4,11 @@
   "description": "Zero-allocation Apple/TIFF PackBits byte run-length compression and Prometheus/Gorilla-style Delta & Delta-of-Delta time-series integer encoding for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "rle-decode-fast",
+    "repo": "https://github.com/okaneco/rle-decode-fast",
+    "license": "MIT"
+  }
 }

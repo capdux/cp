@@ -4,5 +4,11 @@
   "description": "Zero-heap Prometheus / OpenMetrics text exposition format serializer with strict metric/label validation and escaping.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "prom-client",
+    "repo": "https://github.com/siimon/prom-client",
+    "license": "Apache-2.0"
+  }
 }

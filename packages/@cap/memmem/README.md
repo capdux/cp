@@ -1,5 +1,8 @@
 # @cap/memmem
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:memmem` ([https://github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr))
+
 Zero-allocation byte-substring search engine with precompiled BMH + KMP `Finder`, reverse search `rfind`, and non-overlapping `count` for CP — clean-room MIT parity with Rust `memchr::memmem` (1.82B downloads on crates.io).
 
 纯 CP 零堆分配字节子串搜索引擎，结合 Boyer-Moore-Horspool 坏字符快跳与 KMP 最坏 O(N+M) 线性防退化算法，支持二进制零字节帧搜索、反向查找与不重叠计数。

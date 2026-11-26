@@ -1,5 +1,8 @@
 # @cap/base16ct
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:base16ct` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 Pure CP, zero-allocation, constant-time (table-free) Base16 / Hex encoder and strict decoder (parity with RustCrypto `base16ct`).
 
 ## Security & Design

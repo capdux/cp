@@ -1,5 +1,8 @@
 # @cap/fixed-point
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fixed` ([https://gitlab.com/tspiteri/fixed](https://gitlab.com/tspiteri/fixed))（原库名 `fixed` → CP 包名 `@cap/fixed-point`）
+
 零堆分配的 CP 64 位有符号 Q32.32 确定性定点数算术引擎 — 洁净室 MIT 实现，对标 Rust `fixed` crate，跨平台比特级完全一致、零浮点漂移，适用于游戏帧同步锁步、嵌入式无 FPU 信号处理与确定性金融计算。
 
 Zero-allocation signed 64-bit Q32.32 deterministic fixed-point arithmetic engine for CP — clean-room MIT parity with Rust `fixed`.

@@ -1,5 +1,8 @@
 # `@cap/forwarded-http`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:forwarded` ([https://github.com/jshttp/forwarded](https://github.com/jshttp/forwarded))（原库名 `forwarded` → CP 包名 `@cap/forwarded-http`）
+
 Zero-heap RFC 7239 `Forwarded` & `X-Forwarded-For` proxy chain parser, trusted-hop client IP extractor, and loopback IP detector in pure CP (clean-room MIT counterpart to npm `forwarded` + `proxy-addr`).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/ucd-trie
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ucd-trie` ([https://github.com/BurntSushi/ucd-generate](https://github.com/BurntSushi/ucd-generate))
+
 Pure CP, zero-allocation compressed two-level bitmap Trie for O(1) Unicode codepoint set membership queries (parity with Rust `ucd-trie`).
 
 ## Architecture

@@ -4,5 +4,11 @@
   "description": "Zero-allocation Binary Indexed Tree (Fenwick Tree) with O(log N) prefix/range sums and binary-lifting lowerBound for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "fenwick",
+    "repo": "https://github.com/pwoolcoc/fenwick",
+    "license": "MIT"
+  }
 }

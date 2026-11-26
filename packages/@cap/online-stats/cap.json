@@ -4,5 +4,11 @@
   "description": "Zero-allocation Welford streaming statistics, Chan parallel merge, OLS linear regression, and linear-interpolated percentiles for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "average",
+    "repo": "https://github.com/vks/average",
+    "license": "MIT"
+  }
 }

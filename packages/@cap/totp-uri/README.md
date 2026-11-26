@@ -1,5 +1,8 @@
 # @cap/totp-uri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:totp-rs` ([https://github.com/constantoine/totp-rs](https://github.com/constantoine/totp-rs)) / `npm:otpauth` ([https://github.com/hectorm/otpauth](https://github.com/hectorm/otpauth))（原库名 `totp-rs` → CP 包名 `@cap/totp-uri`）
+
 Zero-allocation Google Authenticator Key URI Format (`otpauth://totp/...` and `otpauth://hotp/...`) parser, Base32 secret validator, and URI builder for CP.
 
 ## Features

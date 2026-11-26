@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["mongodb", "mongo-uri", "connection-string", "srv", "replica-set", "database", "zero-alloc"]
+  "keywords": [
+    "mongodb",
+    "mongo-uri",
+    "connection-string",
+    "srv",
+    "replica-set",
+    "database",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "mongodb-connection-string-url",
+    "repo": "https://github.com/mongodb-js/devtools-shared",
+    "license": "Apache-2.0"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "mongodb-connection-string-url",
+      "repo": "https://github.com/mongodb-js/devtools-shared",
+      "license": "Apache-2.0"
+    },
+    {
+      "registry": "crates.io",
+      "name": "mongodb",
+      "repo": "https://github.com/mongodb/mongo-rust-driver",
+      "license": "Apache-2.0"
+    }
+  ]
 }

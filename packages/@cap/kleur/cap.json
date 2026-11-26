@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/ansi-styles": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "kleur",
+    "repo": "https://github.com/lukeed/kleur",
+    "license": "MIT"
   }
 }

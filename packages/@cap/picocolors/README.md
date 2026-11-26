@@ -1,5 +1,8 @@
 # `@cap/picocolors`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:picocolors` ([https://github.com/alexeyraspopov/picocolors](https://github.com/alexeyraspopov/picocolors))
+
 Zero-allocation ultra-fast terminal ANSI color & style formatter for CP with nested close-code recovery and `NO_COLOR`/`FORCE_COLOR` environment detection. Clean-room MIT implementation inspired by npm `picocolors` v1, composing `@cap/ansi-styles`.
 
 ## Features

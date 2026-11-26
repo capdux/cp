@@ -1,5 +1,8 @@
 # @cap/regex-escape
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:regex-escape` ([https://github.com/rust-lang/regex](https://github.com/rust-lang/regex))
+
 Zero-heap regular expression literal escaper, character-class escaper, unescaper, and metacharacter detector in pure CP.
 
 ## Features

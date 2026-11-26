@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/memchr": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "bstr",
+    "repo": "https://github.com/BurntSushi/bstr",
+    "license": "MIT"
   }
 }

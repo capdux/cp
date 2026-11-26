@@ -1,5 +1,8 @@
 # @cap/querystring
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:querystring` ([https://github.com/sindresorhus/query-string](https://github.com/sindresorhus/query-string))
+
 Zero-allocation URL query string parser, stringifier, and parameter extractor for CP — clean-room MIT parity with Node.js `querystring` and npm `query-string` v9. Composes `@cap/percent-encoding` with zero duplication.
 
 纯 CP 零堆分配 URL 查询串解析与拼接库（对标 Node.js `querystring` 与 npm `query-string` v9），跨包复用 `@cap/percent-encoding` 实现 RFC/WHATWG URL 编解码。

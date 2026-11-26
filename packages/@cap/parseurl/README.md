@@ -1,5 +1,8 @@
 # `@cap/parseurl`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:parseurl` ([https://github.com/pillarjs/parseurl](https://github.com/pillarjs/parseurl))
+
 Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety validator for CP. Clean-room MIT implementation inspired by Express `parseurl`.
 
 ## Features

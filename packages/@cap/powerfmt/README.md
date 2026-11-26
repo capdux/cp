@@ -1,5 +1,8 @@
 # `@cap/powerfmt`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:powerfmt` ([https://github.com/jhpratt/powerfmt](https://github.com/jhpratt/powerfmt)) / `npm:format-number` ([https://github.com/comfuture/format-number](https://github.com/comfuture/format-number))
+
 Zero-heap high-performance integer formatting in pure CP (clean-room counterpart to Rust `powerfmt`).
 
 ## Features

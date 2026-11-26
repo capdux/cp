@@ -1,5 +1,8 @@
 # `@cap/proc-args`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mri` ([https://github.com/lukeed/mri](https://github.com/lukeed/mri)) / `crates.io:lexopt` ([https://github.com/blyxxyz/lexopt](https://github.com/blyxxyz/lexopt))（原库名 `mri` → CP 包名 `@cap/proc-args`）
+
 Zero-heap-allocation POSIX/GNU CLI argument parser in pure CP.
 
 ## Features

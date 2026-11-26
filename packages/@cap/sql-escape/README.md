@@ -1,5 +1,8 @@
 # `@cap/sql-escape`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:sqlstring` ([https://github.com/mysqljs/sqlstring](https://github.com/mysqljs/sqlstring)) / `npm:pg-format` ([https://github.com/datalanche/node-pg-format](https://github.com/datalanche/node-pg-format))（原库名 `sqlstring` → CP 包名 `@cap/sql-escape`）
+
 Zero-heap-allocation ANSI SQL / PostgreSQL / MySQL literal, identifier, and `LIKE` pattern escaper with placeholder counter in pure CP.
 
 ## Features

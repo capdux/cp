@@ -1,5 +1,8 @@
 # @cap/astar
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:astar` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))
+
 Zero-heap 2D grid A* heuristic shortest-pathfinding engine in pure CP.
 
 ## Features

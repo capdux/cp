@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["fast-deep-equal", "deep-equal", "json", "equal", "kind-of", "is-plain-obj", "zero-heap"]
+  "keywords": [
+    "fast-deep-equal",
+    "deep-equal",
+    "json",
+    "equal",
+    "kind-of",
+    "is-plain-obj",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "fast-deep-equal",
+    "repo": "https://github.com/epoberezkin/fast-deep-equal",
+    "license": "MIT"
+  }
 }

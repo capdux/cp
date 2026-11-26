@@ -5,5 +5,19 @@
   "description": "Zero-allocation Blackman & Vigna xoshiro256** PRNG with SplitMix64 seeding, unbiased nextRange, 2^128 jump, and Fisher-Yates shuffle in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["xoshiro256", "prng", "random", "splitmix64", "shuffle", "deterministic", "zero-alloc"]
+  "keywords": [
+    "xoshiro256",
+    "prng",
+    "random",
+    "splitmix64",
+    "shuffle",
+    "deterministic",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_xoshiro",
+    "repo": "https://github.com/rust-random/rngs",
+    "license": "MIT"
+  }
 }

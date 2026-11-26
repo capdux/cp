@@ -4,5 +4,11 @@
   "description": "Zero-allocation Calendar Versioning (CalVer) parser, validator, comparator, bumper, and formatter for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "calver",
+    "repo": "https://github.com/muratgozel/node-calver",
+    "license": "MIT"
+  }
 }

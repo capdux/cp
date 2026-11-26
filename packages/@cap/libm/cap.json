@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Pure CP zero-allocation IEEE 754 f64 math library (libm parity)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "libm",
+    "repo": "https://github.com/rust-lang/libm",
+    "license": "MIT"
+  }
 }

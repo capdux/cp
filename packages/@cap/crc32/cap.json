@@ -4,5 +4,25 @@
   "description": "Zero-allocation IEEE CRC-32, Castagnoli CRC-32C, Adler-32, and O(log N) CRC-32 combine engine (Rust crc32fast parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "simd-adler32",
+    "repo": "https://github.com/mcountryman/simd-adler32",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "simd-adler32",
+      "repo": "https://github.com/mcountryman/simd-adler32",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "crc-catalog",
+      "repo": "https://github.com/akhilles/crc-catalog",
+      "license": "MIT"
+    }
+  ]
 }

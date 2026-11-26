@@ -1,5 +1,8 @@
 # @cap/range-set
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rangemap` ([https://github.com/jeffparsons/rangemap](https://github.com/jeffparsons/rangemap))（原库名 `rangemap` → CP 包名 `@cap/range-set`）
+
 零堆分配的 CP 有序不重叠半开区间集合 `[start, end)` — 洁净室 MIT 实现，对标 Rust `rangemap` / `range-set` 与 npm `merge-ranges`，自动合并相邻/重叠区间，支持区间差集与中间劈裂、$O(\log N)$ 二分点查/区间覆盖/重叠检测与覆盖总长统计。
 
 Zero-allocation sorted disjoint half-open interval set `[start, end)` for CP — clean-room MIT parity with Rust `rangemap`/`range-set` and npm `merge-ranges`.

@@ -1,5 +1,8 @@
 # @cap/text-stats
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:reading-time` ([https://github.com/ngryman/reading-time](https://github.com/ngryman/reading-time))（原库名 `reading-time` → CP 包名 `@cap/text-stats`）
+
 Zero-allocation bilingual English & CJK document statistics, reading-time estimator, and LLM token estimator for CP — clean-room MIT parity with npm `reading-time` and `word-count`.
 
 零堆分配的 CP 中英文混合文档统计与阅读时长估算引擎，一次遍历即可输出字节数、字符数、英文词数、CJK 字数、行数、非空行数、段落数、句子数、预估阅读秒/分钟以及 LLM Token 估算数，适用于 CMS、知识库与 AI RAG 流水线（纯 CP 洁净室 MIT 实现）。

@@ -8,5 +8,39 @@
   "dependencies": {
     "@cap/varint": "^1.0.0"
   },
-  "keywords": ["protobuf", "prost", "wire", "varint", "zigzag", "serialization", "zero-alloc"]
+  "keywords": [
+    "protobuf",
+    "prost",
+    "wire",
+    "varint",
+    "zigzag",
+    "serialization",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "google-protobuf",
+    "repo": "https://github.com/protocolbuffers/protobuf-javascript",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "google-protobuf",
+      "repo": "https://github.com/protocolbuffers/protobuf-javascript",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "prost",
+      "repo": "https://github.com/tokio-rs/prost",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "pbf",
+      "repo": "https://github.com/mapbox/pbf",
+      "license": "MIT"
+    }
+  ]
 }

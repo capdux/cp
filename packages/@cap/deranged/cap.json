@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["deranged", "ranged", "bounded", "integer", "checked", "saturating", "time"]
+  "keywords": [
+    "deranged",
+    "ranged",
+    "bounded",
+    "integer",
+    "checked",
+    "saturating",
+    "time"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "deranged",
+    "repo": "https://github.com/jhpratt/deranged",
+    "license": "MIT"
+  }
 }

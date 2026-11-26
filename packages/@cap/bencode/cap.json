@@ -4,5 +4,11 @@
   "description": "BitTorrent BEP-3 deterministic binary Bencode streaming encoder, zero-copy decoder, validator, and dict lookup.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "bendy",
+    "repo": "https://github.com/P3KI/bendy",
+    "license": "MIT"
+  }
 }

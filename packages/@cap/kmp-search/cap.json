@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["kmp", "search", "substring", "pattern-matching", "lps", "linear-time", "zero-alloc"]
+  "keywords": [
+    "kmp",
+    "search",
+    "substring",
+    "pattern-matching",
+    "lps",
+    "linear-time",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "kmp",
+    "repo": "https://github.com/magiclen/kmp",
+    "license": "MIT"
+  }
 }

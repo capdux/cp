@@ -5,5 +5,11 @@
   "license": "MIT",
   "entry": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "tar",
+    "repo": "https://github.com/alexcrichton/tar-rs",
+    "license": "MIT OR Apache-2.0"
+  }
 }

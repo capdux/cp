@@ -1,5 +1,8 @@
 # @cap/num-traits
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:num-traits` ([https://github.com/rust-num/num-traits](https://github.com/rust-num/num-traits))
+
 Clean-room MIT, zero-heap overflow-safe numeric arithmetic and bit-manipulation library for CP — modeled on crates.io #10 `num-traits` v0.2 (2B+ downloads).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/cosmiconfig
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cosmiconfig` ([https://github.com/cosmiconfig/cosmiconfig](https://github.com/cosmiconfig/cosmiconfig))
+
 Zero-heap, pure CP configuration file discovery planner, candidate path builder, and loader detector (clean-room MIT implementation inspired by npm `cosmiconfig` v9).
 
 ## Features

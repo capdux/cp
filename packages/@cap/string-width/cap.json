@@ -5,9 +5,24 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["string-width", "ansi", "unicode", "cjk", "emoji", "terminal", "width", "zero-alloc"],
+  "keywords": [
+    "string-width",
+    "ansi",
+    "unicode",
+    "cjk",
+    "emoji",
+    "terminal",
+    "width",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/ansi-strip": "1.0.0",
     "@cap/unicode-width": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "string-width",
+    "repo": "https://github.com/sindresorhus/string-width",
+    "license": "MIT"
   }
 }

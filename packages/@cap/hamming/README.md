@@ -1,5 +1,8 @@
 # `@cap/hamming`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:hamming` ([https://github.com/huonw/hamming](https://github.com/huonw/hamming))
+
 Zero-heap-allocation Hamming distance, byte popcount weight, 64-bit Charikar SimHash, and Hamming(7,4) single-error-correcting code in pure CP.
 
 ## Features

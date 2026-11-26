@@ -1,5 +1,8 @@
 # @cap/ms-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ms` ([https://github.com/vercel/ms](https://github.com/vercel/ms))（原库名 `ms` → CP 包名 `@cap/ms-parse`）
+
 Zero-allocation human-readable duration string parser and formatter (`ms`, `s`, `m`, `h`, `d`, `w`, `y`) for CP.
 
 ## Features

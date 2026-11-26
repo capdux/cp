@@ -1,5 +1,8 @@
 # @cap/morse-code
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:morse-decoder` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:morse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `morse-decoder` → CP 包名 `@cap/morse-code`）
+
 Zero-heap ITU-R M.1677 International Morse Code encoder and decoder in pure CP.
 
 ## Features

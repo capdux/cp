@@ -5,5 +5,32 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["client-hints", "sec-ch-ua", "user-agent", "rfc8941", "http", "zero-alloc"]
+  "keywords": [
+    "client-hints",
+    "sec-ch-ua",
+    "user-agent",
+    "rfc8941",
+    "http",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "sfv",
+    "repo": "https://github.com/undef1nd/sfv",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "sfv",
+      "repo": "https://github.com/undef1nd/sfv",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "ua-client-hints",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ]
 }

@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/anstyle-parse": "^1.0.0"
   },
-  "keywords": ["ansi-regex", "ansi", "escape", "vt100", "terminal", "strip-ansi"]
+  "keywords": [
+    "ansi-regex",
+    "ansi",
+    "escape",
+    "vt100",
+    "terminal",
+    "strip-ansi"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ansi-regex",
+    "repo": "https://github.com/chalk/ansi-regex",
+    "license": "MIT"
+  }
 }

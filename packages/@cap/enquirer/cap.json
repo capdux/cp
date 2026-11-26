@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/picocolors": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "enquirer",
+    "repo": "https://github.com/enquirer/enquirer",
+    "license": "MIT"
   }
 }

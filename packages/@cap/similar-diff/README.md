@@ -1,5 +1,8 @@
 # `@cap/similar-diff`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:similar` ([https://github.com/mitsuhiko/similar](https://github.com/mitsuhiko/similar))（原库名 `similar` → CP 包名 `@cap/similar-diff`）
+
 Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT implementation inspired by Rust's `similar` v2).
 
 ## Features

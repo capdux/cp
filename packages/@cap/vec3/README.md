@@ -1,5 +1,8 @@
 # @cap/vec3
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:gl-matrix` ([https://github.com/toji/gl-matrix](https://github.com/toji/gl-matrix))（原库名 `gl-matrix` → CP 包名 `@cap/vec3`）
+
 High-performance, zero-heap-allocation 3D vector (`Vec3`) and spatial geometry library in pure CP with zero external dependencies (uses built-in Newton-Raphson `sqrtF64`).
 
 ## Features

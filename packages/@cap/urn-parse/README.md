@@ -1,5 +1,8 @@
 # `@cap/urn-parse`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:urn-lib` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:urn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `urn-lib` → CP 包名 `@cap/urn-parse`）
+
 Zero-heap-allocation RFC 8141 Uniform Resource Name (URN) parser, equivalence comparator, and canonical formatter in pure CP.
 
 ## Features

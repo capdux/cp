@@ -1,5 +1,8 @@
 # @cap/globset
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:globset` ([https://github.com/BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep))
+
 Pure CP, zero-allocation multi-glob set matcher and override engine (clean-room MIT parity with Rust `globset` v0.4 & `ignore::overrides`).
 
 ## Design & Reuse

@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation English pluralization, singularization, irregular/uncountable dictionary, count formatting & ordinal engine for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "pluralize",
+    "repo": "https://github.com/plurals/pluralize",
+    "license": "MIT"
+  }
 }

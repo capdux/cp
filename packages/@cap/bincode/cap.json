@@ -4,5 +4,11 @@
   "description": "Zero-allocation bincode v2 compact binary serializer & zero-copy decoder (LE varint, ZigZag signed ints, length-prefixed strings, Option, fixed LE integers — Rust bincode parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "bincode",
+    "repo": "https://github.com/bincode-org/bincode",
+    "license": "MIT"
+  }
 }

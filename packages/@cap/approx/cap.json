@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap IEEE-754 floating-point approximate equality: abs_diff_eq, relative_eq, and ulps_eq for f64 and f32 (clean-room port of Rust approx)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "approx",
+    "repo": "https://github.com/brendanzab/approx",
+    "license": "Apache-2.0"
+  }
 }

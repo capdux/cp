@@ -1,5 +1,8 @@
 # @cap/proxy-proto
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:proxy-protocol-js` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:ppp` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `proxy-protocol-js` → CP 包名 `@cap/proxy-proto`）
+
 Zero-heap HAProxy PROXY Protocol v1 (ASCII) and v2 (binary 12-byte signature) parser and encoder in pure CP.
 
 ## Features

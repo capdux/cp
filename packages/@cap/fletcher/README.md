@@ -1,5 +1,8 @@
 # @cap/fletcher
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fletcher` ([https://github.com/aaronriekenberg/rust-fletcher](https://github.com/aaronriekenberg/rust-fletcher))
+
 Zero-heap Fletcher-16, Fletcher-32, and Fletcher-64 position-sensitive checksums in pure CP.
 
 ## API

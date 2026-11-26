@@ -9,5 +9,11 @@
     "@cap/const-oid": "1.0.0",
     "@cap/pem-rfc7468": "1.0.0",
     "@cap/subtle-ct": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "sec1",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
   }
 }

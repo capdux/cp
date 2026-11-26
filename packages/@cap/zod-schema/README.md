@@ -1,5 +1,8 @@
 # @cap/zod-schema
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:zod` ([https://github.com/colinhacks/zod](https://github.com/colinhacks/zod))（原库名 `zod` → CP 包名 `@cap/zod-schema`）
+
 零堆分配的 CP 原生类型安全数据校验框架，Clean-Room MIT 实现对标 npm Top 25 顶流包 `zod` v3（1.5 亿+/周下载）。
 
 跨包零重复复用 `@cap/kind-of`（运行时字面量类型判别）与 `@cap/whatwg-url`（WHATWG 标准 URL 解析校验），单遍扫描顶层 JSON 对象并一次性收集全部字段错误。

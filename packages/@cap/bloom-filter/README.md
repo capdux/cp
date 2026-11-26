@@ -1,5 +1,8 @@
 # `@cap/bloom-filter`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:bloom-filters` ([https://github.com/Callidon/bloom-filters](https://github.com/Callidon/bloom-filters)) / `crates.io:bloomfilter` ([https://github.com/jedisct1/rust-bloom-filter](https://github.com/jedisct1/rust-bloom-filter))（原库名 `bloom-filters` → CP 包名 `@cap/bloom-filter`）
+
 Zero-heap classic Bloom filter in pure CP using Kirsch-Mitzenmacher double hashing (`FNV-1a 64-bit` + `DJB2/Murmur3 fmix64`).
 
 ## Features

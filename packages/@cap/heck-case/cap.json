@@ -15,5 +15,11 @@
     "title-case",
     "train-case",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "heck",
+    "repo": "https://github.com/withoutboats/heck",
+    "license": "MIT"
+  }
 }

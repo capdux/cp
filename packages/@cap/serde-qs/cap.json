@@ -5,8 +5,23 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["serde-qs", "qs", "querystring", "query", "url", "percent-encoding", "nested", "zero-alloc"],
+  "keywords": [
+    "serde-qs",
+    "qs",
+    "querystring",
+    "query",
+    "url",
+    "percent-encoding",
+    "nested",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/percent-encoding": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "serde_qs",
+    "repo": "https://github.com/samscott89/serde_qs",
+    "license": "MIT"
   }
 }

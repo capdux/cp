@@ -1,5 +1,8 @@
 # @cap/bs58
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bs58` ([https://github.com/Nullus157/bs58-rs](https://github.com/Nullus157/bs58-rs))
+
 零堆分配的 CP Base58 多字母表编解码引擎 — 洁净室 MIT 实现，对标 Rust `bs58` 与 npm `bs58`，完整支持 Bitcoin、Ripple、Flickr 三套标准字母表，广泛用于 Solana、Bitcoin、IPFS/CID 与分布式节点 ID。
 
 Zero-allocation Base58 multi-alphabet encoder/decoder (`Bitcoin`, `Ripple`, `Flickr`) for CP — clean-room MIT parity with Rust `bs58` and npm `bs58`.

@@ -1,5 +1,8 @@
 # @cap/basic-auth
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:basic-auth` ([https://github.com/jshttp/basic-auth](https://github.com/jshttp/basic-auth)) / `crates.io:http-auth-basic` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap RFC 7617 HTTP Basic Authentication parser, encoder, constant-time verifier, and `WWW-Authenticate` challenge formatter in pure CP.
 
 ## Features

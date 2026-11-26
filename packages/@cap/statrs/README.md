@@ -1,5 +1,8 @@
 # @cap/statrs
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:statrs` ([https://github.com/statrs-dev/statrs](https://github.com/statrs-dev/statrs))
+
 Clean-room MIT, zero-heap descriptive statistics, probability distributions, and linear regression library for CP — modeled on crates.io `statrs` v0.17.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/rss`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rss` ([https://github.com/rust-syndication/rss](https://github.com/rust-syndication/rss))
+
 Zero-heap-allocation RSS 2.0 XML feed generator and CDATA-aware tag extractor in pure CP.
 
 ## Features

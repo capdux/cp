@@ -1,5 +1,8 @@
 # @cap/mail-addr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:addressparser` ([https://github.com/nodemailer/addressparser](https://github.com/nodemailer/addressparser))（原库名 `addressparser` → CP 包名 `@cap/mail-addr`）
+
 Zero-allocation RFC 5322 email address and recipient list parser and formatter for CP — clean-room MIT parity with npm `addressparser` / `email-addresses` (10M/wk) and `nodemailer`.
 
 纯 CP 零堆分配 RFC 5322 邮件地址与收件人列表解析/格式化引擎，全部零拷贝切片，支持最多 32 个逗号分隔收件人。

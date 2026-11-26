@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/x509-cert": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "rustls-webpki",
+    "repo": "https://github.com/rustls/webpki",
+    "license": "MIT"
   }
 }

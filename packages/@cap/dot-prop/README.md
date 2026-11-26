@@ -1,5 +1,8 @@
 # @cap/dot-prop
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:lodash` ([https://github.com/lodash/lodash](https://github.com/lodash/lodash)) / `npm:dot-prop` ([https://github.com/sindresorhus/dot-prop](https://github.com/sindresorhus/dot-prop))（原库名 `lodash` → CP 包名 `@cap/dot-prop`）
+
 Zero-allocation dot-path parser and deep JSON path reader for CP — clean-room MIT parity with npm `dot-prop` + `lodash.get` / `dlv` (~280M/wk).
 
 纯 CP 零堆分配 JSON 点路径解析与深度读取引擎，支持 `a.b[0].c`、`a.0.b`、转义键 `config.a\.b.value` 直接零拷贝查询原始 JSON 文本，无需构建堆 AST。

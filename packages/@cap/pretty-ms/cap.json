@@ -7,5 +7,11 @@
   "license": "MIT",
   "dependencies": {
     "@cap/parse-ms": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "pretty-ms",
+    "repo": "https://github.com/sindresorhus/pretty-ms",
+    "license": "MIT"
   }
 }

@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/glob-match": "1.0.0"
   },
-  "keywords": ["picomatch", "glob", "extglob", "scan", "wildcard", "path", "zero-alloc"]
+  "keywords": [
+    "picomatch",
+    "glob",
+    "extglob",
+    "scan",
+    "wildcard",
+    "path",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "picomatch",
+    "repo": "https://github.com/micromatch/picomatch",
+    "license": "MIT"
+  }
 }

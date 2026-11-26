@@ -1,5 +1,8 @@
 # `@cap/grpc-frame`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tonic` ([https://github.com/hyperium/tonic](https://github.com/hyperium/tonic)) / `npm:@grpc/grpc-js` ([https://github.com/grpc/grpc-node](https://github.com/grpc/grpc-node))（原库名 `tonic` → CP 包名 `@cap/grpc-frame`）
+
 Zero-heap-allocation gRPC over HTTP/2 Length-Prefixed Message frame codec, 17 canonical `grpc-status` codes, and `grpc-timeout` header parser/formatter in pure CP.
 
 ## Features

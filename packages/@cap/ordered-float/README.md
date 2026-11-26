@@ -1,5 +1,8 @@
 # @cap/ordered-float
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ordered-float` ([https://github.com/reem/rust-ordered-float](https://github.com/reem/rust-ordered-float))
+
 Clean-room MIT, zero-heap IEEE-754 total ordering, canonical hashing, `OrderedF64`, `NotNanF64`, and `sortOrderedF64` for CP — modeled on crates.io #85 `ordered-float` (1.2B+ downloads).
 
 ## Dependencies

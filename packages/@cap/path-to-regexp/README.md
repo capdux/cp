@@ -1,5 +1,8 @@
 # @cap/path-to-regexp
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:path-to-regexp` ([https://github.com/pillarjs/path-to-regexp](https://github.com/pillarjs/path-to-regexp)) / `npm:path-to-regexp` ([https://github.com/pillarjs/path-to-regexp](https://github.com/pillarjs/path-to-regexp))
+
 Clean-room MIT, zero-heap Express/Router URL path template matching, parameter extraction, and reverse route compilation engine for CP — modeled on npm `path-to-regexp` v8.
 
 ## Dependencies

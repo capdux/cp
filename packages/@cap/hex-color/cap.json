@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["color", "hex", "rgba", "css", "blend", "porter-duff", "luminance", "zero-alloc"]
+  "keywords": [
+    "color",
+    "hex",
+    "rgba",
+    "css",
+    "blend",
+    "porter-duff",
+    "luminance",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "hex-rgb",
+    "repo": "https://github.com/sindresorhus/hex-rgb",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "hex-rgb",
+      "repo": "https://github.com/sindresorhus/hex-rgb",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "colord",
+      "repo": "https://github.com/omgovich/colord",
+      "license": "MIT"
+    }
+  ]
 }

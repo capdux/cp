@@ -1,5 +1,8 @@
 # @cap/data-encoding
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:data-encoding` ([https://github.com/ia0/data-encoding](https://github.com/ia0/data-encoding))
+
 Zero-allocation strict RFC 4648 Base16/Hex, Base32, and Base64/Base64URL codec with canonical trailing-bit validation and precise error position reporting for CP — clean-room MIT parity with Rust `data-encoding` v2 (800M+ downloads).
 
 纯 CP 零堆分配严格 RFC 4648 编解码库，内置非零尾位拒绝（RFC 4648 §3.5）与精确错误偏移定位，适用于 JWT、TOTP/OTP 密钥、哈希指纹与二进制协议传输。

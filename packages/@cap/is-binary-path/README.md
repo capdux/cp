@@ -1,5 +1,8 @@
 # `@cap/is-binary-path`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:is-binary-path` ([https://github.com/sindresorhus/is-binary-path](https://github.com/sindresorhus/is-binary-path))
+
 Zero-heap binary/text file path classifier and batch filter in pure CP (clean-room counterpart to npm `is-binary-path`). Directly composes `@cap/binary-extensions` without duplicating extension tables.
 
 ## Features

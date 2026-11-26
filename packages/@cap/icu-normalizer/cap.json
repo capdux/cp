@@ -6,5 +6,22 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
-  "keywords": ["icu", "icu4x", "unicode", "normalization", "nfc", "nfd", "nfkc", "nfkd", "uax15", "zero-alloc"]
+  "keywords": [
+    "icu",
+    "icu4x",
+    "unicode",
+    "normalization",
+    "nfc",
+    "nfd",
+    "nfkc",
+    "nfkd",
+    "uax15",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "icu_normalizer",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "Unicode-3.0"
+  }
 }

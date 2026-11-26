@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["urlencoded", "form", "percent-encoding", "querystring", "url", "whatwg", "zero-alloc"]
+  "keywords": [
+    "urlencoded",
+    "form",
+    "percent-encoding",
+    "querystring",
+    "url",
+    "whatwg",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "querystringify",
+    "repo": "https://github.com/unshiftio/querystringify",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "querystringify",
+      "repo": "https://github.com/unshiftio/querystringify",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "urlencoding",
+      "repo": "https://github.com/kornelski/rust_urlencoding",
+      "license": "MIT"
+    }
+  ]
 }

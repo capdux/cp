@@ -1,5 +1,8 @@
 # @cap/cron-parser
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cron-parser` ([https://github.com/harrisiirak/cron-parser](https://github.com/harrisiirak/cron-parser))
+
 Clean-room MIT, zero-heap 5-field standard Cron expression parser, bitmask representation, and time matching engine for CP — modeled on npm `cron-parser` v4.
 
 ## API

@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "pino",
+    "repo": "https://github.com/pinojs/pino",
+    "license": "MIT"
   }
 }

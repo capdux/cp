@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/num-integer": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "num-iter",
+    "repo": "https://github.com/rust-num/num-iter",
+    "license": "MIT OR Apache-2.0"
   }
 }

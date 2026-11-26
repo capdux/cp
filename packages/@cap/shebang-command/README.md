@@ -1,5 +1,8 @@
 # @cap/shebang-command
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shebang-command` ([https://github.com/kevva/shebang-command](https://github.com/kevva/shebang-command))
+
 Zero-heap-allocation shebang executable command and argument extractor in pure CP (parity with npm `shebang-command`), directly reusing `@cap/shebang-regex`.
 
 ## Dependencies

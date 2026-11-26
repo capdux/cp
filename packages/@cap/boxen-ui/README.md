@@ -1,5 +1,8 @@
 # @cap/boxen-ui
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:boxen` ([https://github.com/sindresorhus/boxen](https://github.com/sindresorhus/boxen))（原库名 `boxen` → CP 包名 `@cap/boxen-ui`）
+
 Zero-allocation terminal Unicode box layout renderer for CP — clean-room MIT parity with npm `boxen` v8. Composes `@cap/string-width` for accurate ANSI escape sequence and CJK double-width character alignment.
 
 纯 CP 零堆分配终端 Unicode 边框盒子排版渲染器（对标 npm `boxen` v8），跨包复用 `@cap/string-width` 实现精确的 ANSI 样式码与 CJK 全角字符列宽对齐。

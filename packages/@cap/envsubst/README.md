@@ -1,5 +1,8 @@
 # @cap/envsubst
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:dotenv-expand` ([https://github.com/motdotla/dotenv-expand](https://github.com/motdotla/dotenv-expand))（原库名 `dotenv-expand` → CP 包名 `@cap/envsubst`）
+
 零堆分配的 POSIX / Docker / Kubernetes 风格环境变量模板展开引擎 — 洁净室 MIT 实现，对标 npm `dotenv-expand` / `envsub` 与 Rust `shellexpand`。
 
 Zero-allocation POSIX / Docker / K8s environment variable template expansion engine for CP — clean-room MIT parity with npm `dotenv-expand`, `envsub`, and Rust `shellexpand`.

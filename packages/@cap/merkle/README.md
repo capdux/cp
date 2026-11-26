@@ -1,5 +1,8 @@
 # @cap/merkle
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rs_merkle` ([https://github.com/antouhou/rs-merkle](https://github.com/antouhou/rs-merkle))（原库名 `rs_merkle` → CP 包名 `@cap/merkle`）
+
 Zero-allocation RFC 6962 domain-separated SHA-256 Merkle tree and inclusion proof verifier for CP — clean-room MIT parity with Rust `rs_merkle` and npm `merkletreejs`.
 
 纯 CP 零堆分配默克尔哈希树与审计证明引擎，内置标准 FIPS 180-4 SHA-256，严格采用 RFC 6962 域分离前缀（`0x00 || leaf` / `0x01 || left || right`）防御二次原像攻击，适用于 `capdux.org` 透明日志、分布式状态同步与数据防篡改。

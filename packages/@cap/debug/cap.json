@@ -4,5 +4,11 @@
   "description": "Zero-allocation namespace debug log filter, glob exclusion engine, deterministic ANSI coloring, and diff-ms formatter for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "debug",
+    "repo": "https://github.com/debug-js/debug",
+    "license": "MIT"
+  }
 }

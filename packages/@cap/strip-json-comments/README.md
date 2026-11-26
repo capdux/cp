@@ -1,5 +1,8 @@
 # @cap/strip-json-comments
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:strip-json-comments` ([https://github.com/sindresorhus/strip-json-comments](https://github.com/sindresorhus/strip-json-comments))
+
 Zero-allocation JSONC (`//` & `/* ... */`) comment and trailing-comma stripper with line/column-preserving whitespace mode for CP — clean-room MIT parity with npm `strip-json-comments` (150M+/wk).
 
 纯 CP 零堆分配 JSONC 预处理引擎（如 `tsconfig.json` / `cap.json`），严格保护字符串内 `//` 与 `\"` 转义，支持空格替换以 100% 保持原行号与列号。

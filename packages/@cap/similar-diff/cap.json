@@ -14,5 +14,11 @@
     "text-diff",
     "similarity",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "similar",
+    "repo": "https://github.com/mitsuhiko/similar",
+    "license": "MIT"
+  }
 }

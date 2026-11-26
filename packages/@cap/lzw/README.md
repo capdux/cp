@@ -1,5 +1,8 @@
 # @cap/lzw
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:weezl` ([https://github.com/image-rs/lzw](https://github.com/image-rs/lzw))（原库名 `weezl` → CP 包名 `@cap/lzw`）
+
 零堆分配的 CP GIF/TIFF/PDF 工业标准 LZW 字典无损压缩与解压引擎 — 洁净室 MIT 实现，对标 Rust `weezl`，支持 Clear(256) / EOI(257) 控制码、9..12 位可变码宽自增、4096 项静态字典自动清空与 `KwKwK` 自引用特例。
 
 Zero-allocation GIF/TIFF/PDF LZW dictionary lossless compressor & decompressor for CP — clean-room MIT parity with Rust `weezl`.

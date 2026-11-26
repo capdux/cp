@@ -1,5 +1,8 @@
 # @cap/utf8-valid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:utf8parse` ([https://github.com/alacritty/vte](https://github.com/alacritty/vte)) / `crates.io:utf8_iter` ([https://github.com/hsivonen/utf8_iter](https://github.com/hsivonen/utf8_iter))（原库名 `utf8parse` → CP 包名 `@cap/utf8-valid`）
+
 Zero-allocation RFC 3629 strict UTF-8 validator, WHATWG lossy repair (`U+FFFD`), ASCII fast-path, and UTF-16 code-unit length calculator for CP — clean-room MIT parity with Rust `utf-8` and `simdutf8`.
 
 零堆分配的 CP RFC 3629 严格 UTF-8 验证与有损修复引擎，精准拦截过长编码（`0xC0/0xC1`, `0xE0 0x80..0x9F`, `0xF0 0x80..0x8F`）、UTF-16 代理区（`U+D800..U+DFFF`）、超 `U+10FFFF` 与末尾截断，支持 WHATWG 最大非法子段 `U+FFFD` 替换与 LSP/JS 互操作 `utf16Len` 计算（纯 CP 洁净室 MIT 实现）。

@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/find-up": "1.0.0",
     "@cap/npm-run-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "resolve-from",
+    "repo": "https://github.com/sindresorhus/resolve-from",
+    "license": "MIT"
   }
 }

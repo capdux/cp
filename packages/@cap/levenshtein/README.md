@@ -1,5 +1,8 @@
 # @cap/levenshtein
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fastest-levenshtein` ([https://github.com/ka-weihe/fastest-levenshtein](https://github.com/ka-weihe/fastest-levenshtein)) / `crates.io:levenshtein` ([https://github.com/wooorm/levenshtein-rs](https://github.com/wooorm/levenshtein-rs))（原库名 `fastest-levenshtein` → CP 包名 `@cap/levenshtein`）
+
 Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition distance, normalized similarity, and closest-match lookup in pure CP.
 
 ## Features

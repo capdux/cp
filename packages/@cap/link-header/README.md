@@ -1,5 +1,8 @@
 # @cap/link-header
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:parse-link-header` ([https://github.com/thlorenz/parse-link-header](https://github.com/thlorenz/parse-link-header))（原库名 `parse-link-header` → CP 包名 `@cap/link-header`）
+
 Zero-allocation RFC 8288 HTTP `Link` header parser and builder with GitHub / Stripe / REST API pagination helpers for CP — clean-room MIT parity with npm `parse-link-header` / `http-link-header` and Rust `parse_link_header`.
 
 零堆分配的 CP RFC 8288 HTTP `Link` 响应头解析与构建引擎，支持 GitHub/Stripe/REST API 分页链接解析与生成、引号内含逗号/分号、多 `rel` 关系、无引号参数值与畸形输入安全容错（纯 CP 洁净室 MIT 实现）。

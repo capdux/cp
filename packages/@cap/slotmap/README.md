@@ -1,5 +1,8 @@
 # @cap/slotmap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:slotmap` ([https://github.com/orlp/slotmap](https://github.com/orlp/slotmap))
+
 Zero-allocation generational-index slot map (`SlotKey`, `SlotMapI64`, `SecondaryMapI64`) with O(1) free-list and strict ABA dangling-key protection for CP — clean-room MIT parity with Rust `slotmap` v1 (550M+ downloads).
 
 纯 CP 零堆分配代际索引安全槽位容器，适用于 ECS 实体管理、图节点/边索引、连接句柄表与无锁/固定内存资源池。

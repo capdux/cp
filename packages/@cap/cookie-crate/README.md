@@ -1,5 +1,8 @@
 # `@cap/cookie-crate`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cookie` ([https://github.com/SergioBenitez/cookie-rs](https://github.com/SergioBenitez/cookie-rs))（原库名 `cookie` → CP 包名 `@cap/cookie-crate`）
+
 Zero-allocation Rust-style `CookieBuilder`, percent-encoded `Set-Cookie` parser/formatter, and removal cookie generator for CP (clean-room MIT, inspired by Rust `cookie` v0.18).
 
 ## Dependencies (Zero Duplication)

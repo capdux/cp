@@ -1,5 +1,8 @@
 # @cap/utf16-codec
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:utf16` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:widestring` ([https://github.com/starkat99/widestring-rs](https://github.com/starkat99/widestring-rs))（原库名 `utf16` → CP 包名 `@cap/utf16-codec`）
+
 Zero-heap UTF-8 <-> UTF-16 / UTF-16LE codec with full surrogate pair support, lone-surrogate rejection, BOM detection, and UTF-16 code-unit counting in pure CP.
 
 ## Features

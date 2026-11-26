@@ -9,5 +9,20 @@
     "@cap/icu-normalizer": "1.0.0",
     "@cap/punycode": "1.0.0"
   },
-  "keywords": ["idna", "uts46", "punycode", "domain", "dns", "unicode", "nfc", "zero-alloc"]
+  "keywords": [
+    "idna",
+    "uts46",
+    "punycode",
+    "domain",
+    "dns",
+    "unicode",
+    "nfc",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "idna",
+    "repo": "https://github.com/servo/rust-url",
+    "license": "MIT"
+  }
 }

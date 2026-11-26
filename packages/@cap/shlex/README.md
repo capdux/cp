@@ -1,5 +1,8 @@
 # @cap/shlex
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shell-quote` ([https://github.com/ljharb/shell-quote](https://github.com/ljharb/shell-quote)) / `npm:shell-quote` ([https://github.com/inspect-js/node-shell-quote](https://github.com/inspect-js/node-shell-quote)) / `crates.io:shlex` ([https://github.com/comex/rust-shlex](https://github.com/comex/rust-shlex))（原库名 `shell-quote` → CP 包名 `@cap/shlex`）
+
 Zero-allocation POSIX shell quoting, command-line lexical splitting & injection guard for CP — clean-room MIT parity with npm `shell-quote` and Rust `shlex`.
 
 ## Install

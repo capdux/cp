@@ -5,5 +5,11 @@
   "description": "Convert a string of words to a PascalCase/camelCase identifier (clean-room CP implementation of npm toidentifier)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "toidentifier",
+    "repo": "https://github.com/dougwilson/toidentifier",
+    "license": "MIT"
+  }
 }

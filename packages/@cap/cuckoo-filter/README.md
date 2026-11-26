@@ -1,5 +1,8 @@
 # @cap/cuckoo-filter
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cuckoofilter` ([https://github.com/seiflotfy/rust-cuckoofilter](https://github.com/seiflotfy/rust-cuckoofilter))（原库名 `cuckoofilter` → CP 包名 `@cap/cuckoo-filter`）
+
 Zero-allocation CoNEXT'14 Cuckoo Filter (`256` buckets × `4` slots = `1024` 16-bit fingerprints) with O(1) `insert`, `contains`, and safe `delete` for CP — clean-room MIT parity with Fan et al. (CoNEXT'14) and Rust `cuckoofilter`.
 
 零堆分配的 CP 布谷鸟过滤器，相比传统 Bloom Filter 支持 O(1) 安全删除（`delete`）且在高负载下空间效率更高，适用于缓存穿透拦截、流式去重与网络路由表（纯 CP 洁净室 MIT 实现）。

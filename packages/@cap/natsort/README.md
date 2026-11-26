@@ -1,5 +1,8 @@
 # @cap/natsort
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:natural-compare` ([https://github.com/litejs/natural-compare-lite](https://github.com/litejs/natural-compare-lite))（原库名 `natural-compare` → CP 包名 `@cap/natsort`）
+
 零堆分配的 CP 自然序（Alphanumeric / Natural Sort）字符串比较与原地排序库 — 洁净室 MIT 实现，对标 npm `natural-compare` / `natsort` 与 Rust `natord` / `alphanumeric-sort`。
 
 Zero-allocation natural / alphanumeric string comparison and in-place sorting for CP — clean-room MIT parity with npm `natural-compare` / `natsort` and Rust `natord` / `alphanumeric-sort`.

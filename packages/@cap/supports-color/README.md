@@ -1,5 +1,8 @@
 # `@cap/supports-color`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:supports-color` ([https://github.com/chalk/supports-color](https://github.com/chalk/supports-color))
+
 Zero-heap-allocation terminal color capability detection in pure CP (clean-room MIT implementation inspired by npm `supports-color` v9).
 
 Reuses [`@cap/has-flag`](../has-flag) for CLI flag detection (`--no-color`, `--color=16m`, `--color=256`, `--color`, etc., honoring `--`).

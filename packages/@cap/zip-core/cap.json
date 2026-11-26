@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/crc32fast": "1.0.0",
     "@cap/bytemuck-crate": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "zip",
+    "repo": "https://github.com/zip-rs/zip2",
+    "license": "MIT"
   }
 }

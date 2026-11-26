@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/normalize-package-data": "1.0.0"
   },
-  "keywords": ["read-pkg", "package.json", "json", "metadata", "normalize", "zero-alloc"]
+  "keywords": [
+    "read-pkg",
+    "package.json",
+    "json",
+    "metadata",
+    "normalize",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "read-pkg",
+    "repo": "https://github.com/sindresorhus/read-pkg",
+    "license": "MIT"
+  }
 }

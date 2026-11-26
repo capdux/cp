@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/regex-syntax": "1.0.0",
     "@cap/memchr": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "regex-lite",
+    "repo": "https://github.com/rust-lang/regex",
+    "license": "MIT"
   }
 }

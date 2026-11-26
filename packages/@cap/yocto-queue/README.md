@@ -1,5 +1,8 @@
 # @cap/yocto-queue
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:yocto-queue` ([https://github.com/sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue))
+
 零堆分配的 CP 原生 O(1) FIFO 队列，Clean-Room MIT 实现对标 npm 顶流包 `yocto-queue`（2 亿+/周下载，`p-limit` / `p-queue` 核心底层依赖）。
 
 ## 特性

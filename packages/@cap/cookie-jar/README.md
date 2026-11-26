@@ -1,5 +1,8 @@
 # @cap/cookie-jar
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:tough-cookie` ([https://github.com/salesforce/tough-cookie](https://github.com/salesforce/tough-cookie)) / `crates.io:cookie_store` ([https://github.com/pfernie/cookie_store](https://github.com/pfernie/cookie_store))（原库名 `tough-cookie` → CP 包名 `@cap/cookie-jar`）
+
 Clean-room MIT, zero-heap RFC 6265 HTTP Cookie & `Set-Cookie` parser, serializer, and domain/path matching `CookieJar` for CP.
 
 ## Dependencies

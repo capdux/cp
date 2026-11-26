@@ -1,5 +1,8 @@
 # @cap/h3o
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:h3o` ([https://github.com/HydroniumLabs/h3o](https://github.com/HydroniumLabs/h3o))
+
 Clean-room MIT, zero-heap Uber H3 64-bit hexagonal hierarchical spatial index library for CP — modeled on crates.io `h3o` v0.6.
 
 ## Features

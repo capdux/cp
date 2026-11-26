@@ -1,5 +1,8 @@
 # `@cap/stomp`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:stomp` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap-allocation STOMP 1.2 messaging protocol frame encoder, decoder, and header escaper in pure CP.
 
 ## Features

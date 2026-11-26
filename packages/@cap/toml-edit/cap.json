@@ -4,5 +4,11 @@
   "description": "Zero-allocation TOML v1.0 document parser, typed query/mutation engine, and canonical formatter (Rust toml_edit v0.22 parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "toml_edit",
+    "repo": "https://github.com/toml-rs/toml",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/dijkstra
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:pathfinding` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))（原库名 `pathfinding` → CP 包名 `@cap/dijkstra`）
+
 Zero-allocation weighted shortest-path engine (Dijkstra + Bellman-Ford with negative-cycle detection + path reconstruction) for CP — clean-room MIT parity with Rust `pathfinding` and `petgraph::algo::dijkstra`.
 
 纯 CP 零堆分配静态图加权最短路径引擎（压缩前向星邻接表，最多 64 节点 / 256 边），支持非负权 Dijkstra、负权边 Bellman-Ford 与可达负环检测及前驱路径回溯。

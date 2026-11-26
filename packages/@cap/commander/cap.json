@@ -5,9 +5,23 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["cli", "commander", "options", "subcommands", "help", "argv", "zero-alloc"],
+  "keywords": [
+    "cli",
+    "commander",
+    "options",
+    "subcommands",
+    "help",
+    "argv",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/yargs-parser": "1.0.0",
     "@cap/cliui": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "commander",
+    "repo": "https://github.com/tj/commander.js",
+    "license": "MIT"
   }
 }

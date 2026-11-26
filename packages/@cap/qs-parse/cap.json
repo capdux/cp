@@ -5,9 +5,24 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["qs", "querystring", "query", "parse", "stringify", "express", "http", "zero-alloc"],
+  "keywords": [
+    "qs",
+    "querystring",
+    "query",
+    "parse",
+    "stringify",
+    "express",
+    "http",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/percent-encoding": "1.0.0",
     "@cap/serde-qs": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "qs",
+    "repo": "https://github.com/ljharb/qs",
+    "license": "MIT"
   }
 }

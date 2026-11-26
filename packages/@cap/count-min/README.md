@@ -1,5 +1,8 @@
 # @cap/count-min
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:count-min-sketch` ([https://github.com/amansarda/count-min-sketch](https://github.com/amansarda/count-min-sketch))（原库名 `count-min-sketch` → CP 包名 `@cap/count-min`）
+
 Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter detector for CP — clean-room MIT parity with Rust `count-min-sketch` and Redis `CMS.INCRBY`.
 
 纯 CP 零堆分配流式频次估算引擎（4 行 × 256 列饱和计数器），严格保证永不低估真实频次，支持分布式节点合并与热点 Key 检测。

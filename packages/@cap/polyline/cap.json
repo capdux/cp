@@ -5,6 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["polyline", "gps", "geo", "mapbox", "coordinates", "encoding"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/polyline"
+  "keywords": [
+    "polyline",
+    "gps",
+    "geo",
+    "mapbox",
+    "coordinates",
+    "encoding"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/polyline",
+  "source": {
+    "registry": "crates.io",
+    "name": "polyline",
+    "repo": "https://github.com/georust/polyline",
+    "license": "MIT"
+  }
 }

@@ -9,5 +9,19 @@
     "@cap/pretty-bytes": "^1.0.0",
     "@cap/pretty-ms": "^1.0.0"
   },
-  "keywords": ["indicatif", "progress", "progress-bar", "eta", "terminal", "cli", "zero-heap"]
+  "keywords": [
+    "indicatif",
+    "progress",
+    "progress-bar",
+    "eta",
+    "terminal",
+    "cli",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "indicatif",
+    "repo": "https://github.com/console-rs/indicatif",
+    "license": "MIT"
+  }
 }

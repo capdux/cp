@@ -8,5 +8,32 @@
   "dependencies": {
     "@cap/camelcase": "^1.0.0"
   },
-  "keywords": ["camelcase-keys", "decamelize-keys", "json", "camelcase", "snake-case", "zero-heap"]
+  "keywords": [
+    "camelcase-keys",
+    "decamelize-keys",
+    "json",
+    "camelcase",
+    "snake-case",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "camelcase-keys",
+    "repo": "https://github.com/sindresorhus/camelcase-keys",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "camelcase-keys",
+      "repo": "https://github.com/sindresorhus/camelcase-keys",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "decamelize-keys",
+      "repo": "https://github.com/sindresorhus/decamelize-keys",
+      "license": "MIT"
+    }
+  ]
 }

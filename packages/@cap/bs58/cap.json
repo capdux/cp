@@ -4,5 +4,11 @@
   "description": "Zero-allocation Base58 encoder/decoder supporting Bitcoin, Ripple, and Flickr alphabets with leading-zero preservation (Rust bs58 / npm bs58 parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "bs58",
+    "repo": "https://github.com/Nullus157/bs58-rs",
+    "license": "MIT"
+  }
 }

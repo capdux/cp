@@ -1,5 +1,8 @@
 # @cap/negotiator
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:negotiator` ([https://github.com/jshttp/negotiator](https://github.com/jshttp/negotiator))
+
 Clean-room MIT, zero-heap RFC 7231 HTTP Content Negotiation library for CP — modeled on npm's `negotiator` v0.6.
 
 ## Dependencies

@@ -4,5 +4,11 @@
   "description": "Zero-heap RFC 1035 DNS binary packet encoder/decoder with 12-byte header, domain label encoding, 0xC0 compression pointer decoding, and query builder.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "dns-packet",
+    "repo": "https://github.com/mafintosh/dns-packet",
+    "license": "MIT"
+  }
 }

@@ -4,5 +4,25 @@
   "description": "Zero-heap RFC 4514 LDAP Distinguished Name parser, value escaper/unescaper, validator, and case-insensitive attribute lookup.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "ldapjs",
+    "repo": "https://github.com/ldapjs/node-ldapjs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "ldapjs",
+      "repo": "https://github.com/ldapjs/node-ldapjs",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "ldap3",
+      "repo": "https://github.com/inejge/ldap3",
+      "license": "MIT"
+    }
+  ]
 }

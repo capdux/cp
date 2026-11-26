@@ -5,8 +5,22 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["handlebars", "template", "mustache", "html", "xss", "render", "zero-alloc"],
+  "keywords": [
+    "handlebars",
+    "template",
+    "mustache",
+    "html",
+    "xss",
+    "render",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "handlebars",
+    "repo": "https://github.com/handlebars-lang/handlebars.js",
+    "license": "MIT"
   }
 }

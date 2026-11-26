@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["css", "color", "rgb", "rgba", "hsl", "hsla", "css-color-4", "zero-alloc"]
+  "keywords": [
+    "css",
+    "color",
+    "rgb",
+    "rgba",
+    "hsl",
+    "hsla",
+    "css-color-4",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "color-parse",
+    "repo": "https://github.com/colorjs/color-parse",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "color-parse",
+      "repo": "https://github.com/colorjs/color-parse",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "csscolorparser",
+      "repo": "https://github.com/mazznoer/csscolorparser-rs",
+      "license": "MIT"
+    }
+  ]
 }

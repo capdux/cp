@@ -1,5 +1,8 @@
 # `@cap/webpki-roots`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:webpki-roots` ([https://github.com/rustls/webpki-roots](https://github.com/rustls/webpki-roots))
+
 Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store in pure CP (`webpki-roots` parity). Reuses `@cap/x509-cert` (`X509Certificate`, `X509Name`) and `@cap/spki` (`encodeSpkiDer`, `fingerprintSpki`).
 
 ## Constants

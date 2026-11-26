@@ -1,5 +1,8 @@
 # `@cap/rational`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fraction.js` ([https://github.com/rawify/Fraction.js](https://github.com/rawify/Fraction.js)) / `crates.io:fraction` ([https://github.com/dnsl48/fraction](https://github.com/dnsl48/fraction))（原库名 `fraction.js` → CP 包名 `@cap/rational`）
+
 Zero-heap exact rational number (fraction) arithmetic in pure CP. Always maintains canonical reduced form (`denom > 0`, `gcd(|numer|, denom) == 1`).
 
 ## Features

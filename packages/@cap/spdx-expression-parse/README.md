@@ -1,5 +1,8 @@
 # @cap/spdx-expression-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:spdx-expression-parse` ([https://github.com/jslicense/spdx-expression-parse.js](https://github.com/jslicense/spdx-expression-parse.js))
+
 Zero-allocation, Clean-room MIT implementation of `spdx-expression-parse` v4 for CP, reusing `@cap/spdx` for SPDX license ID validation.
 
 ## Features

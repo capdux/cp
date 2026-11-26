@@ -1,5 +1,8 @@
 # `@cap/execa`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:execa` ([https://github.com/sindresorhus/execa](https://github.com/sindresorhus/execa))
+
 Zero-heap subprocess command builder, POSIX argument escaper, `preferLocal` PATH resolver, and `ExecaResult` inspector — clean-room CP equivalent of npm `execa`.
 
 Reuses `@cap/npm-run-path` as an independent package.

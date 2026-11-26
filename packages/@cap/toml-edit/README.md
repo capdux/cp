@@ -1,5 +1,8 @@
 # @cap/toml-edit
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:toml_edit` ([https://github.com/toml-rs/toml](https://github.com/toml-rs/toml))（原库名 `toml_edit` → CP 包名 `@cap/toml-edit`）
+
 Zero-allocation TOML v1.0 document parser, typed query/editor, and canonical formatter (`TomlDoc`, `TomlEntry`) for CP — clean-room MIT parity with Rust `toml_edit` v0.22 (900M+ downloads).
 
 纯 CP 零堆分配 TOML v1.0 文档解析、修改与规范化输出引擎，支持 `[table]` / `[a.b]` 节头、点分键（`a.b = 1`）、`#` 注释、基础/字面字符串、带下划线整数（`1_000`）/负整数、布尔值与无损格式化往返。

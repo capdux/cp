@@ -5,5 +5,20 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["terser", "minify", "minifier", "js", "ts", "css", "compressor", "zero-alloc"]
+  "keywords": [
+    "terser",
+    "minify",
+    "minifier",
+    "js",
+    "ts",
+    "css",
+    "compressor",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "terser",
+    "repo": "https://github.com/terser/terser",
+    "license": "MIT"
+  }
 }

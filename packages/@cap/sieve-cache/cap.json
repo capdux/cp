@@ -4,5 +4,11 @@
   "description": "Zero-allocation NSDI'24 SIEVE cache eviction engine with static doubly-linked pool and open-addressing index for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "sieve-cache",
+    "repo": "https://github.com/jedisct1/rust-sieve-cache",
+    "license": "MIT"
+  }
 }

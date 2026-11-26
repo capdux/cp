@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["totp", "hotp", "otpauth", "2fa", "mfa", "base32", "authenticator", "zero-alloc"]
+  "keywords": [
+    "totp",
+    "hotp",
+    "otpauth",
+    "2fa",
+    "mfa",
+    "base32",
+    "authenticator",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "totp-rs",
+    "repo": "https://github.com/constantoine/totp-rs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "totp-rs",
+      "repo": "https://github.com/constantoine/totp-rs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "otpauth",
+      "repo": "https://github.com/hectorm/otpauth",
+      "license": "MIT"
+    }
+  ]
 }

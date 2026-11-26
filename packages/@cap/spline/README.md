@@ -1,5 +1,8 @@
 # @cap/spline
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:splines` ([https://github.com/phaazon/splines](https://github.com/phaazon/splines))（原库名 `splines` → CP 包名 `@cap/spline`）
+
 Zero-heap Natural Cubic Spline (Thomas O(N)), Catmull-Rom spline, quadratic/cubic Bezier curves, smoothstep, and linear interpolation in pure CP.
 
 ## Features

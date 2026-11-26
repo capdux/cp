@@ -5,5 +5,39 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bezier", "curve", "cubic-bezier", "easing", "de-casteljau", "geometry", "zero-alloc"]
+  "keywords": [
+    "bezier",
+    "curve",
+    "cubic-bezier",
+    "easing",
+    "de-casteljau",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bezier-easing",
+    "repo": "https://github.com/gre/bezier-easing",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bezier-easing",
+      "repo": "https://github.com/gre/bezier-easing",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "kurbo",
+      "repo": "https://github.com/linebender/kurbo",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "lyon_geom",
+      "repo": "https://github.com/nical/lyon",
+      "license": "MIT"
+    }
+  ]
 }

@@ -1,5 +1,8 @@
 # @cap/color-hsl
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:palette` ([https://github.com/Ogeon/palette](https://github.com/Ogeon/palette)) / `npm:tinycolor2` ([https://github.com/bgrins/TinyColor](https://github.com/bgrins/TinyColor))（原库名 `palette` → CP 包名 `@cap/color-hsl`）
+
 Zero-allocation RGB / HSL / HSV / CMYK color space conversion, hue rotation, lighten/darken, and linear RGB mixing library for CP.
 
 ## Features

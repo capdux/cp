@@ -1,5 +1,8 @@
 # @cap/ksuid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ksuid` ([https://github.com/segmentio/ksuid](https://github.com/segmentio/ksuid)) / `crates.io:svix-ksuid` ([https://github.com/svix/rust-ksuid](https://github.com/svix/rust-ksuid))
+
 Zero-heap Segment KSUID (20-byte K-Sortable Unique IDentifier) 27-character Base62 encoder, decoder, validator, and comparator in pure CP.
 
 ## Features

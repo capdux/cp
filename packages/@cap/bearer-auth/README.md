@@ -1,5 +1,8 @@
 # `@cap/bearer-auth`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:express-bearer-token` ([https://github.com/tkellen/js-express-bearer-token](https://github.com/tkellen/js-express-bearer-token))（原库名 `express-bearer-token` → CP 包名 `@cap/bearer-auth`）
+
 Zero-heap-allocation RFC 6750 HTTP Bearer token extractor, JWT structure precheck, constant-time verifier, and `WWW-Authenticate` challenge formatter in pure CP.
 
 ## Features

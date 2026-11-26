@@ -5,5 +5,33 @@
   "description": "Zero-allocation RFC 7616 / RFC 2617 HTTP Digest Authentication challenge & authorization parser and formatter in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["digest-auth", "http", "rfc7616", "rfc2617", "auth", "www-authenticate", "zero-alloc"]
+  "keywords": [
+    "digest-auth",
+    "http",
+    "rfc7616",
+    "rfc2617",
+    "auth",
+    "www-authenticate",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "http-digest-client",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "http-digest-client",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "digest_auth",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ]
 }

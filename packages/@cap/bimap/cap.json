@@ -5,5 +5,17 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bimap", "bidirectional-map", "bijection", "lookup", "zero-heap"]
+  "keywords": [
+    "bimap",
+    "bidirectional-map",
+    "bijection",
+    "lookup",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "bimap",
+    "repo": "https://github.com/billyrieger/bimap-rs",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/petgraph-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:petgraph` ([https://github.com/petgraph/petgraph](https://github.com/petgraph/petgraph))（原库名 `petgraph` → CP 包名 `@cap/petgraph-core`）
+
 Zero-allocation directed/undirected graph (`DiGraph`) and classic graph algorithms (BFS, iterative DFS, Kahn topological sort, cycle detection, Dijkstra shortest paths, reachability) for CP — clean-room MIT parity with Rust `petgraph` v0.6 (950M+ downloads).
 
 纯 CP 零堆分配固定容量图引擎（64 节点 / 256 加权边），适用于依赖解析、任务 DAG 调度、路由最短路径与编译器控制流图分析。

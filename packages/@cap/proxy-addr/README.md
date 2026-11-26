@@ -1,5 +1,8 @@
 # @cap/proxy-addr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:proxy-addr` ([https://github.com/jshttp/proxy-addr](https://github.com/jshttp/proxy-addr))
+
 Pure CP, zero-allocation reverse-proxy client IP resolver and trusted proxy chain validator (parity with npm `proxy-addr`).
 
 ## Features

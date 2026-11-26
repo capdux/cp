@@ -1,5 +1,8 @@
 # @cap/cache-control
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cache-control-parser` ([https://github.com/etienne-martin/cache-control-parser](https://github.com/etienne-martin/cache-control-parser))（原库名 `cache-control-parser` → CP 包名 `@cap/cache-control`）
+
 Zero-allocation RFC 9111 HTTP `Cache-Control` directive parser, serializer, and shared/private TTL calculator for CP — clean-room MIT parity with npm `cache-control-parser` and Rust `http-cache-semantics`.
 
 纯 CP 零堆分配 RFC 9111 HTTP `Cache-Control` 指令解析、序列化与共享/私有缓存有效 TTL 计算引擎。

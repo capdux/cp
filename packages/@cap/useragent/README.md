@@ -1,5 +1,8 @@
 # `@cap/useragent` — Zero-Allocation User-Agent Parser & Bot Classifier
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ua-parser-js` ([https://github.com/faisalman/ua-parser-js](https://github.com/faisalman/ua-parser-js))（原库名 `ua-parser-js` → CP 包名 `@cap/useragent`）
+
 > Clean-room pure-CP User-Agent parser modeled after npm `ua-parser-js`, `bowser`, and Rust `woothee` | MIT License
 >
 > 零堆分配纯 CP User-Agent 解析器与爬虫/AI 爬虫识别引擎，对标 npm `ua-parser-js` / `bowser` 与 Rust `woothee`（MIT 协议）。

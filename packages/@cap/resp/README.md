@@ -1,5 +1,8 @@
 # @cap/resp
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:resp` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap Redis RESP2 wire protocol streaming frame parser and command encoder in pure CP.
 
 ## Features

@@ -14,5 +14,11 @@
     "status",
     "ci",
     "readme"
-  ]
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "badge-maker",
+    "repo": "https://github.com/badges/shields",
+    "license": "CC0-1.0"
+  }
 }

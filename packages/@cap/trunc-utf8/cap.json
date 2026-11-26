@@ -5,6 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["utf8", "truncate", "ellipsis", "unicode", "string", "cli-truncate"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/trunc-utf8"
+  "keywords": [
+    "utf8",
+    "truncate",
+    "ellipsis",
+    "unicode",
+    "string",
+    "cli-truncate"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/trunc-utf8",
+  "source": {
+    "registry": "npm",
+    "name": "cli-truncate",
+    "repo": "https://github.com/sindresorhus/cli-truncate",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "cli-truncate",
+      "repo": "https://github.com/sindresorhus/cli-truncate",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "unicode-truncate",
+      "repo": "https://github.com/Aetf/unicode-truncate",
+      "license": "MIT"
+    }
+  ]
 }

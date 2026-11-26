@@ -1,5 +1,8 @@
 # @cap/online-stats
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:average` ([https://github.com/vks/average](https://github.com/vks/average))（原库名 `average` → CP 包名 `@cap/online-stats`）
+
 Zero-allocation Welford streaming statistics, Chan parallel merge, OLS linear regression, and linear-interpolated percentiles for CP — clean-room MIT parity with Rust `average` / `criterion` statistical kernels.
 
 纯 CP 零堆分配流式统计与基准指标引擎，支持抗大偏移灾难性抵消的 Welford 单遍方差/标准差、Chan 并行合并、最小二乘线性回归及 P50/P90/P95/P99/IQR 分位数计算。

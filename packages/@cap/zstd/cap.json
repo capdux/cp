@@ -6,14 +6,26 @@
   "bin": {
     "zstd": {
       "path": "c",
-      "src": ["zstd.c"],
-      "include": ["."],
-      "flag": ["-DZSTD_DISABLE_ASM"],
+      "src": [
+        "zstd.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-DZSTD_DISABLE_ASM"
+      ],
       "opt": "fast",
       "prebuilt": "prebuilt"
     }
   },
   "sys": {
     "c": {}
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "zstd",
+    "repo": "https://github.com/gyscos/zstd-rs",
+    "license": "MIT"
   }
 }

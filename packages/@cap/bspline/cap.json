@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["bspline", "catmull-rom", "hermite", "spline", "interpolation", "curve", "zero-heap"]
+  "keywords": [
+    "bspline",
+    "catmull-rom",
+    "hermite",
+    "spline",
+    "interpolation",
+    "curve",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "b-spline",
+    "repo": "https://github.com/thibauts/b-spline",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "b-spline",
+      "repo": "https://github.com/thibauts/b-spline",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "bspline",
+      "repo": "https://github.com/Twinklebear/bspline",
+      "license": "MIT"
+    }
+  ]
 }

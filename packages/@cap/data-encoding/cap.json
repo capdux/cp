@@ -4,5 +4,11 @@
   "description": "Zero-allocation strict RFC 4648 Base16/Hex, Base32, and Base64/Base64URL codec with canonical trailing-bit verification (Rust data-encoding v2 parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "data-encoding",
+    "repo": "https://github.com/ia0/data-encoding",
+    "license": "MIT"
+  }
 }

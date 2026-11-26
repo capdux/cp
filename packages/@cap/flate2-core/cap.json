@@ -9,5 +9,11 @@
     "@cap/crc32fast": "1.0.0",
     "@cap/adler32": "1.0.0",
     "@cap/bytemuck-crate": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "flate2",
+    "repo": "https://github.com/rust-lang/flate2-rs",
+    "license": "MIT OR Apache-2.0"
   }
 }

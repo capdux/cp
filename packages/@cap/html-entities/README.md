@@ -1,5 +1,8 @@
 # @cap/html-entities
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:he` ([https://github.com/mathiasbynens/he](https://github.com/mathiasbynens/he))（原库名 `he` → CP 包名 `@cap/html-entities`）
+
 零堆分配的 HTML5 命名字符实体与数字字符引用 UTF-8 编解码引擎 — 洁净室 MIT 实现，对标 npm `he` / `escape-html` / `html-entities` 与 Rust `html-escape`。
 
 Zero-allocation HTML5 named entity & numeric character reference UTF-8 encoder/decoder and XSS escaper for CP — clean-room MIT parity with npm `he`, `escape-html`, `html-entities`, and Rust `html-escape`.

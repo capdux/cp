@@ -4,5 +4,25 @@
   "description": "Zero-allocation JSON Schema Draft-07/2020-12 validator operating directly on raw JSON strings for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "ajv",
+    "repo": "https://github.com/ajv-validator/ajv",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "ajv",
+      "repo": "https://github.com/ajv-validator/ajv",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "schemars",
+      "repo": "https://github.com/GREsau/schemars",
+      "license": "MIT"
+    }
+  ]
 }

@@ -5,5 +5,19 @@
   "description": "Zero-allocation Hamming distance, byte popcount weight, 64-bit Charikar SimHash, and Hamming(7,4) error-correcting code in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["hamming", "popcount", "simhash", "ecc", "hamming74", "deduplication", "zero-alloc"]
+  "keywords": [
+    "hamming",
+    "popcount",
+    "simhash",
+    "ecc",
+    "hamming74",
+    "deduplication",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "hamming",
+    "repo": "https://github.com/huonw/hamming",
+    "license": "MIT"
+  }
 }

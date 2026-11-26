@@ -1,5 +1,8 @@
 # @cap/ldap-dn
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ldapjs` ([https://github.com/ldapjs/node-ldapjs](https://github.com/ldapjs/node-ldapjs)) / `crates.io:ldap3` ([https://github.com/inejge/ldap3](https://github.com/inejge/ldap3))（原库名 `ldapjs` → CP 包名 `@cap/ldap-dn`）
+
 Zero-heap RFC 4514 LDAP Distinguished Name parser, value escaper/unescaper, validator, and case-insensitive attribute lookup in pure CP.
 
 ## Features

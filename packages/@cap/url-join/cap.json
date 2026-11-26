@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation smart URL joiner, slash/dot-segment path normalizer, query merger, and trailing-slash utilities (url-join / ufo parity) for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "url-join",
+    "repo": "https://github.com/jfromaniello/url-join",
+    "license": "MIT"
+  }
 }

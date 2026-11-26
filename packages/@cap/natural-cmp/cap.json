@@ -4,5 +4,11 @@
   "description": "Zero-heap arbitrary-precision human natural sort comparator, case-insensitive comparator, and in-place sorter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "natord",
+    "repo": "https://github.com/lifthrasiir/rust-natord",
+    "license": "MIT"
+  }
 }

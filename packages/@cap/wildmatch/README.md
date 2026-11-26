@@ -1,5 +1,8 @@
 # @cap/wildmatch
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:wildmatch` ([https://github.com/becheran/wildmatch](https://github.com/becheran/wildmatch))
+
 Clean-room MIT, zero-heap iterative wildcard pattern matcher for CP — modeled on Rust's `wildmatch` crate.
 
 ## Dependencies

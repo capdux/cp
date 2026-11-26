@@ -1,5 +1,8 @@
 # `@cap/duration-iso`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:iso8601-duration` ([https://github.com/tolu/ISO8601-duration](https://github.com/tolu/ISO8601-duration))（原库名 `iso8601-duration` → CP 包名 `@cap/duration-iso`）
+
 Zero-heap-allocation ISO 8601 duration parser, canonical formatter, and millisecond converter in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/helmet-headers`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:helmet` ([https://github.com/helmetjs/helmet](https://github.com/helmetjs/helmet))（原库名 `helmet` → CP 包名 `@cap/helmet-headers`）
+
 Zero-heap HTTP security response headers policy generator in pure CP (clean-room MIT counterpart to npm `helmet` v8).
 
 ## Features

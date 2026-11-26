@@ -1,5 +1,8 @@
 # `@cap/uuid-v7`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:uuidv7` ([https://github.com/LiosK/uuidv7](https://github.com/LiosK/uuidv7)) / `crates.io:uuid7` ([https://github.com/LiosK/uuid7-rs](https://github.com/LiosK/uuid7-rs)) / `crates.io:uuid` ([https://github.com/uuid-rs/uuid](https://github.com/uuid-rs/uuid))（原库名 `uuidv7` → CP 包名 `@cap/uuid-v7`）
+
 Zero-heap-allocation RFC 9562 UUIDv7 constructor, 36-byte formatter, parser, timestamp extractor, and comparator in pure CP.
 
 ## Features

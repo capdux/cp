@@ -1,5 +1,8 @@
 # @cap/target-triple
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:target-lexicon` ([https://github.com/bytecodealliance/target-lexicon](https://github.com/bytecodealliance/target-lexicon))（原库名 `target-lexicon` → CP 包名 `@cap/target-triple`）
+
 Zero-heap LLVM / Rust / Zig target triple parser and platform metadata resolver in pure CP (inspired by Rust `target-lexicon`, 479M+ downloads).
 
 Supports 2-part (`wasm32-wasi`), 3-part (`aarch64-apple-darwin`, Zig-style `x86_64-linux-musl`), and 4-part (`x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc`) triples, resolving pointer width, endianness, executable suffix, and shared library suffix.

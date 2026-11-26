@@ -1,5 +1,8 @@
 # @cap/multipart
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:multipart` ([https://github.com/abonander/multipart](https://github.com/abonander/multipart))
+
 Clean-room MIT, zero-heap RFC 7578 `multipart/form-data` streaming reader, writer, and boundary extractor for CP — modeled on crates.io `multipart` / `multer`, built on [`@cap/mediatype`](../mediatype/README.md) and [`@cap/unicase`](../unicase/README.md).
 
 ## Features

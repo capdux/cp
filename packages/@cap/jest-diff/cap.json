@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/similar-diff": "1.0.0",
     "@cap/picocolors": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "jest-diff",
+    "repo": "https://github.com/jestjs/jest",
+    "license": "MIT"
   }
 }

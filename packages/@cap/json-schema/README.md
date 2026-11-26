@@ -1,5 +1,8 @@
 # @cap/json-schema
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ajv` ([https://github.com/ajv-validator/ajv](https://github.com/ajv-validator/ajv)) / `crates.io:schemars` ([https://github.com/GREsau/schemars](https://github.com/GREsau/schemars))（原库名 `ajv` → CP 包名 `@cap/json-schema`）
+
 Zero-allocation JSON Schema Draft-07 / 2020-12 validator operating directly on raw RFC 8259 JSON strings for CP — clean-room MIT parity with npm `ajv` and Rust `jsonschema`.
 
 零堆分配的 CP JSON Schema 校验引擎，无需构建动态堆 AST，直接对原始 JSON 字符串进行单遍词法与结构校验，支持类型检测（精准区分 `Integer`/`Number`）、字符串 `minLength`/`maxLength`、数值 `minimum`/`maximum` 与开区间、数组 `minItems`/`maxItems`、对象顶层 `required` 必填键及 `enum` 白名单（纯 CP 洁净室 MIT 实现）。

@@ -4,5 +4,11 @@
   "description": "Zero-allocation RFC 7693 BLAKE2s-256 streaming cryptographic hash & keyed MAC (Rust blake2 crate parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "blake2",
+    "repo": "https://github.com/RustCrypto/hashes",
+    "license": "MIT OR Apache-2.0"
+  }
 }

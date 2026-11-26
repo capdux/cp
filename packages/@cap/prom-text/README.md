@@ -1,5 +1,8 @@
 # @cap/prom-text
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:prom-client` ([https://github.com/siimon/prom-client](https://github.com/siimon/prom-client))（原库名 `prom-client` → CP 包名 `@cap/prom-text`）
+
 Zero-heap Prometheus / OpenMetrics `/metrics` text exposition format serializer in pure CP.
 
 ## Features

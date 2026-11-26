@@ -1,5 +1,8 @@
 # @cap/minimatch
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:minimatch` ([https://github.com/isaacs/minimatch](https://github.com/isaacs/minimatch))
+
 零堆分配的 CP 原生 Glob 匹配工具，Clean-Room MIT 实现对标 npm 顶流包 `minimatch`（4 亿+/周下载），跨包零重复复用 `@cap/micromatch` 与 `@cap/picomatch`。
 
 ## 特性

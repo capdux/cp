@@ -1,5 +1,8 @@
 # @cap/url-join
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:url-join` ([https://github.com/jfromaniello/url-join](https://github.com/jfromaniello/url-join))
+
 零堆分配的智能 URL 拼接、斜杠规范化、相对路径 `.` / `..` 折叠与 Query/Hash 合并引擎 — 洁净室 MIT 实现，对标 npm `url-join` 与 `ufo`。
 
 Zero-allocation smart URL joiner, slash/dot-segment path normalizer, query merger, and trailing-slash utilities for CP — clean-room MIT parity with npm `url-join` and `ufo`.

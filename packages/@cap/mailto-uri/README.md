@@ -1,5 +1,8 @@
 # `@cap/mailto-uri`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mailto-link` ([https://github.com/sindresorhus/mailto-link](https://github.com/sindresorhus/mailto-link)) / `crates.io:mailto` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mailto-link` → CP 包名 `@cap/mailto-uri`）
+
 Zero-heap-allocation RFC 6068 `mailto:` URI parser, recipient counter, email validator, and percent-encoding builder in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/json-repair
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jsonrepair` ([https://github.com/josdejong/jsonrepair](https://github.com/josdejong/jsonrepair))（原库名 `jsonrepair` → CP 包名 `@cap/json-repair`）
+
 Zero-allocation malformed & LLM-generated JSON repair engine for CP — clean-room MIT parity with npm `jsonrepair` / `dirty-json` and Rust `llm_json`.
 
 ## Install

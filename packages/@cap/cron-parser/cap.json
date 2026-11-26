@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap 5-field standard Cron expression parser, bitmask scheduler, and time matcher (clean-room port of cron-parser v4)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "cron-parser",
+    "repo": "https://github.com/harrisiirak/cron-parser",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/ee-first
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ee-first` ([https://github.com/jonathanong/ee-first](https://github.com/jonathanong/ee-first))
+
 零堆分配的纯 CP 多事件源首个事件竞态监听器，Clean-Room MIT 实现对标 npm Top 30 包 `ee-first` v1（周下载 1.6 亿+）。
 
 ## 特性

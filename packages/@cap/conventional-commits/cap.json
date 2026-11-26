@@ -4,5 +4,11 @@
   "description": "Zero-allocation Conventional Commits 1.0.0 parser, formatter, and Semver bump recommender for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "conventional-commits-parser",
+    "repo": "https://github.com/conventional-changelog/conventional-changelog",
+    "license": "MIT"
+  }
 }

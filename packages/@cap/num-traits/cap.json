@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap overflow-safe numeric operations and bit manipulation primitives: checked/saturating arithmetic, clamp, signum, absDiff, checkedPow, powers of two, popcount, clz, ctz, and rotations (clean-room port of Rust num-traits)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "num-traits",
+    "repo": "https://github.com/rust-num/num-traits",
+    "license": "MIT OR Apache-2.0"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/json-rpc
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:jsonrpc-core` ([https://github.com/paritytech/jsonrpc](https://github.com/paritytech/jsonrpc)) / `npm:json-rpc-2.0` ([https://github.com/shawninder/json-rpc-2.0](https://github.com/shawninder/json-rpc-2.0)) / `crates.io:jsonrpsee` ([https://github.com/paritytech/jsonrpsee](https://github.com/paritytech/jsonrpsee))（原库名 `jsonrpc-core` → CP 包名 `@cap/json-rpc`）
+
 Zero-heap JSON-RPC 2.0 protocol encoder, envelope validator, batch detector, and standard error codes in pure CP.
 
 ## Features

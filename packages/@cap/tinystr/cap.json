@@ -6,5 +6,19 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
-  "keywords": ["tinystr", "ascii", "icu4x", "bcp47", "locale", "zero-alloc", "stack-string"]
+  "keywords": [
+    "tinystr",
+    "ascii",
+    "icu4x",
+    "bcp47",
+    "locale",
+    "zero-alloc",
+    "stack-string"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "tinystr",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "Unicode-3.0"
+  }
 }

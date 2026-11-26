@@ -1,5 +1,8 @@
 # `@cap/bvh`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bvh` ([https://github.com/svenstaro/bvh](https://github.com/svenstaro/bvh))
+
 Zero-heap-allocation static 3D AABB Bounding Volume Hierarchy (BVH) in pure CP.
 
 ## Features

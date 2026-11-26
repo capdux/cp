@@ -1,5 +1,8 @@
 # @cap/fft-radix2
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fft.js` ([https://github.com/indutny/fft.js](https://github.com/indutny/fft.js)) / `crates.io:microfft` ([https://gitlab.com/ra_kete/microfft-rs](https://gitlab.com/ra_kete/microfft-rs))（原库名 `fft.js` → CP 包名 `@cap/fft-radix2`）
+
 Zero-heap-allocation in-place iterative Cooley-Tukey Radix-2 Fast Fourier Transform (FFT / IFFT) and magnitude spectrum library in pure CP with zero external dependencies.
 
 ## Features

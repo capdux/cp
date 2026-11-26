@@ -1,5 +1,8 @@
 # `@cap/destroy`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:destroy` ([https://github.com/stream-utils/destroy](https://github.com/stream-utils/destroy))
+
 Zero-heap safe idempotent stream and file-descriptor destroyer with lifecycle completion guard — clean-room CP equivalent of npm `destroy`.
 
 Reuses `@cap/on-finished` as an independent package.

@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["noise", "perlin", "fbm", "procedural", "terrain", "graphics", "zero-heap"]
+  "keywords": [
+    "noise",
+    "perlin",
+    "fbm",
+    "procedural",
+    "terrain",
+    "graphics",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "noise",
+    "repo": "https://github.com/Razaekel/noise-rs",
+    "license": "MIT"
+  }
 }

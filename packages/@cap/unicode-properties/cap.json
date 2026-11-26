@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["unicode", "unicode-properties", "unicode-ident", "xid", "emoji", "whitespace", "uax31", "zero-alloc"]
+  "keywords": [
+    "unicode",
+    "unicode-properties",
+    "unicode-ident",
+    "xid",
+    "emoji",
+    "whitespace",
+    "uax31",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-properties",
+    "repo": "https://github.com/unicode-rs/unicode-properties",
+    "license": "MIT"
+  }
 }

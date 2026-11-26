@@ -1,5 +1,8 @@
 # @cap/detect-newline
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:detect-newline` ([https://github.com/sindresorhus/detect-newline](https://github.com/sindresorhus/detect-newline))
+
 Zero-heap-allocation dominant newline detector and cross-platform LF/CRLF normalizer in pure CP (inspired by Sindre Sorhus `detect-newline`).
 
 ## Features

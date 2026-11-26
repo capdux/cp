@@ -1,5 +1,8 @@
 # `@cap/bspline`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:b-spline` ([https://github.com/thibauts/b-spline](https://github.com/thibauts/b-spline)) / `crates.io:bspline` ([https://github.com/Twinklebear/bspline](https://github.com/Twinklebear/bspline))（原库名 `b-spline` → CP 包名 `@cap/bspline`）
+
 Zero-heap cubic Hermite, Catmull-Rom, and uniform cubic B-Spline curve interpolation in pure CP.
 
 ## Features

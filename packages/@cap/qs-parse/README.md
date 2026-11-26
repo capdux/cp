@@ -1,5 +1,8 @@
 # @cap/qs-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:qs` ([https://github.com/ljharb/qs](https://github.com/ljharb/qs))（原库名 `qs` → CP 包名 `@cap/qs-parse`）
+
 Zero-allocation Express/Node nested query string parser and serializer for CP — clean-room MIT parity with npm `qs` v6. Composes `@cap/serde-qs` and `@cap/percent-encoding` with zero duplication.
 
 纯 CP 零堆分配 Express/Node 嵌套查询串解析与格式化引擎（对标 npm `qs` v6），跨包复用 `@cap/serde-qs`（嵌套括号路径解析）与 `@cap/percent-encoding`（WHATWG/RFC 百分号编解码）。

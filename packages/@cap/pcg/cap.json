@@ -14,5 +14,11 @@
     "simulation",
     "monte-carlo",
     "deterministic"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_pcg",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT"
+  }
 }

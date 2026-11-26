@@ -1,5 +1,8 @@
 # `@cap/kafka-topic`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:kafkajs` ([https://github.com/tulios/kafkajs](https://github.com/tulios/kafkajs)) / `crates.io:rdkafka` ([https://github.com/fede1024/rust-rdkafka](https://github.com/fede1024/rust-rdkafka))（原库名 `kafkajs` → CP 包名 `@cap/kafka-topic`）
+
 Zero-heap-allocation Apache Kafka / Redpanda topic validator, official Murmur2 `DefaultPartitioner` hash, and Topic-Partition parser in pure CP.
 
 ## Features

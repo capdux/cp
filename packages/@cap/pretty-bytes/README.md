@@ -1,5 +1,8 @@
 # @cap/pretty-bytes
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:pretty-bytes` ([https://github.com/sindresorhus/pretty-bytes](https://github.com/sindresorhus/pretty-bytes))
+
 Pure CP, zero-allocation human-readable byte and bit size formatter (parity with npm `pretty-bytes`).
 
 ## Features

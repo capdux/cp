@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/querystring": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "parseurl",
+    "repo": "https://github.com/pillarjs/parseurl",
+    "license": "MIT"
   }
 }

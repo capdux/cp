@@ -1,5 +1,8 @@
 # @cap/ndjson
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ndjson` ([https://github.com/ndjson/ndjson.js](https://github.com/ndjson/ndjson.js))
+
 Zero-heap NDJSON / JSON Lines streaming incremental line splitter, scanner, and writer in pure CP (npm `ndjson` / `split2` parity).
 
 ## Features

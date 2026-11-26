@@ -1,5 +1,8 @@
 # `@cap/jwt-parse`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jwt-decode` ([https://github.com/auth0/jwt-decode](https://github.com/auth0/jwt-decode)) / `crates.io:jsonwebtoken` ([https://github.com/Keats/jsonwebtoken](https://github.com/Keats/jsonwebtoken))（原库名 `jwt-decode` → CP 包名 `@cap/jwt-parse`）
+
 Zero-heap-allocation RFC 7519 JWT segment splitter, Base64URL decoder, `exp`/`nbf` leeway validator, and `alg:none` guard in pure CP.
 
 ## Features

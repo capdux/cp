@@ -1,5 +1,8 @@
 # @cap/slash
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:slash` ([https://github.com/sindresorhus/slash](https://github.com/sindresorhus/slash))
+
 Zero-allocation Windows backslash <-> POSIX forward-slash path converter for CP (npm `slash` parity).
 
 ## Features

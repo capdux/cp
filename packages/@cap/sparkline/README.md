@@ -1,5 +1,8 @@
 # @cap/sparkline
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:sparkly` ([https://github.com/sindresorhus/sparkly](https://github.com/sindresorhus/sparkly))（原库名 `sparkly` → CP 包名 `@cap/sparkline`）
+
 Zero-heap Unicode sparkline (`▁▂▃▄▅▆▇█`), fractional horizontal bar chart (`▏▎▍▌▋▊▉█`), bucket downsampling, and summary statistics renderer for CLI & observability dashboards.
 
 Clean-room MIT implementation in pure CP (replaces npm `sparkly` / `asciichart` and Rust `sparklines`).

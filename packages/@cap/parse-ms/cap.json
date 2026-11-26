@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["parse-ms", "to-milliseconds", "time", "duration", "milliseconds", "zero-heap"]
+  "keywords": [
+    "parse-ms",
+    "to-milliseconds",
+    "time",
+    "duration",
+    "milliseconds",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "parse-ms",
+    "repo": "https://github.com/sindresorhus/parse-ms",
+    "license": "MIT"
+  }
 }

@@ -1,5 +1,8 @@
 # @cap/p-limit-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:p-limit` ([https://github.com/sindresorhus/p-limit](https://github.com/sindresorhus/p-limit))（原库名 `p-limit` → CP 包名 `@cap/p-limit-core`）
+
 Zero-allocation, Clean-room MIT implementation of `p-limit` v6 core concurrency limiting semantics for CP, reusing `@cap/p-queue`.
 
 ## Features

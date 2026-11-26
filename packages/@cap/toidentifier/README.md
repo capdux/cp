@@ -1,5 +1,8 @@
 # @cap/toidentifier
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:toidentifier` ([https://github.com/dougwilson/toidentifier](https://github.com/dougwilson/toidentifier))
+
 零堆分配的 CP 原生标识符转换库，Clean-Room MIT 实现对标 npm 顶流包 `toidentifier`（9000万+/周下载，`http-errors` 核心依赖）。
 
 ## 特性

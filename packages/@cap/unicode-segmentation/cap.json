@@ -15,5 +15,11 @@
     "cjk",
     "hangul",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "unicode-segmentation",
+    "repo": "https://github.com/unicode-rs/unicode-segmentation",
+    "license": "MIT"
+  }
 }

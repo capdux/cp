@@ -1142,3 +1142,12 @@
 - `packages/@cap/bytecount/` & `cap/test/testCapBytecount.cp`: crates.io **#190** `bytecount`（6.5 亿+，复用 `@cap/memchr-crate`，6/6 PASS）。
 - `packages/@cap/siphasher/` & `cap/test/testCapSiphasher.cp`: crates.io **#70** `siphasher`（**12.5 亿+**，SipHash-2-4/1-3 官方向量全过，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 128 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 129 & 生态溯源检索大升级 — **612 个包补齐 `cap.json` `"source"` 溯源 + `capdux.org` 原库名检索/展示上线 + `GEMINI.md` Rule #12 固化**)
+- `packages/@cap/twox-hash/` & `cap/test/testCapTwoxHash.cp`: crates.io **#135** `twox-hash` v2（8.5 亿+，XXH32/XXH64 官方向量全过，6/6 PASS）。
+- `packages/@cap/seahash/` & `cap/test/testCapSeahash.cp`: crates.io #220 `seahash` v4（5.5 亿+，6/6 PASS）。
+- `packages/@cap/p-locate/` & `cap/test/testCapPLocate.cp`: npm **Top 15** `p-locate` v7（2.2 亿+/周，复用 `@cap/p-limit-core`，6/6 PASS）。
+- `packages/@cap/p-timeout-core/` & `cap/test/testCapPTimeoutCore.cp`: npm Top 45 `p-timeout` v6（1 亿+/周，6/6 PASS）。
+- `packages/@cap/*/cap.json` & `README.md`: 批量回填 **612 个**官方包的 `"source"` 字段（含 `registry`/`name`/`repo`/`license`）与 **609 个** `README.md` 参考/吸收来源横幅（含改名说明）。
+- `GEMINI.md`: 固化第 12 条（表格汇报、溯源字段、`capdux.org` 原库名检索、吸收前必查 `lib/` & `@cap/` 防重复决策矩阵）。
+- `/data/dev/cap/worker/src/{routes/search.ts,web.ts}`: 升级 `capdux.org` 搜索 API、首页卡片与详情页，支持直接按原库名/别名检索并显式展示 `from npm:<orig>` / `crates.io:<orig>` 与改名提示。

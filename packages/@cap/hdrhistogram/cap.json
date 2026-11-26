@@ -6,8 +6,12 @@
   "bin": {
     "hdrhistogram": {
       "path": "c",
-      "src": ["hdr_histogram.c"],
-      "include": ["."],
+      "src": [
+        "hdr_histogram.c"
+      ],
+      "include": [
+        "."
+      ],
       "opt": "fast",
       "prebuilt": "prebuilt"
     }
@@ -15,5 +19,11 @@
   "sys": {
     "c": {},
     "m": {}
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "hdrhistogram",
+    "repo": "https://github.com/HdrHistogram/HdrHistogram_rust",
+    "license": "MIT"
   }
 }

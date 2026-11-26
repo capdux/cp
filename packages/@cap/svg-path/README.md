@@ -1,5 +1,8 @@
 # @cap/svg-path
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:parse-svg-path` ([https://github.com/jkroso/parse-svg-path](https://github.com/jkroso/parse-svg-path))（原库名 `parse-svg-path` → CP 包名 `@cap/svg-path`）
+
 Zero-allocation SVG 1.1/2.0 `<path d="...">` command parser, 2D bounding-box calculator, and canonical formatter for CP — clean-room MIT parity with npm `parse-svg-path` / `svg-path-parser` and Rust `svgtypes`.
 
 零堆分配的 CP SVG 路径指令词法解析与包围盒计算引擎，完整支持 SVG 全部 20 个命令（`M/m/L/l/H/h/V/v/C/c/S/s/Q/q/T/t/A/a/Z/z`）、紧凑负号（`M10-20`）、无前导零小数（`.5.5`）、科学计数法（`1e-3`）、弧线紧凑标志位（`A25 25 0 1150 25`）、隐式重复命令（`M->L`）与规范化回写（纯 CP 洁净室 MIT 实现）。

@@ -15,5 +15,11 @@
     "unicode",
     "metrics",
     "monitoring"
-  ]
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "sparkly",
+    "repo": "https://github.com/sindresorhus/sparkly",
+    "license": "MIT"
+  }
 }

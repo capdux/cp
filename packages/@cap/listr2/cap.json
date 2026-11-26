@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/picocolors": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "listr2",
+    "repo": "https://github.com/listr2/listr2",
+    "license": "MIT"
   }
 }

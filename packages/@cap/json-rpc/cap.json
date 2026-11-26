@@ -4,5 +4,31 @@
   "description": "Zero-heap JSON-RPC 2.0 request/notification/result/error encoder, envelope validator, batch detector, and standard error codes.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "jsonrpc-core",
+    "repo": "https://github.com/paritytech/jsonrpc",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "jsonrpc-core",
+      "repo": "https://github.com/paritytech/jsonrpc",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "json-rpc-2.0",
+      "repo": "https://github.com/shawninder/json-rpc-2.0",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "jsonrpsee",
+      "repo": "https://github.com/paritytech/jsonrpsee",
+      "license": "MIT"
+    }
+  ]
 }

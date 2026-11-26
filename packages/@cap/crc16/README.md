@@ -1,5 +1,8 @@
 # `@cap/crc16`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:crc16` ([https://github.com/mrhooray/crc-rs](https://github.com/mrhooray/crc-rs))
+
 Zero-heap industrial CRC-16 checksum engine in pure CP supporting CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC/IBM, and USB standards, plus custom polynomial configuration and streaming updates.
 
 零堆分配纯 CP 工业级 CRC-16 校验和引擎，覆盖 CCITT-FALSE、XMODEM、MODBUS、KERMIT、ARC/IBM 与 USB 六大标准，支持自定义多项式与流式分片更新。

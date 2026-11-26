@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/ansi-escapes": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ora",
+    "repo": "https://github.com/sindresorhus/ora",
+    "license": "MIT"
   }
 }

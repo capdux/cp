@@ -1,5 +1,8 @@
 # @cap/phf-hash
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:phf_generator` ([https://github.com/rust-phf/rust-phf](https://github.com/rust-phf/rust-phf))（原库名 `phf_generator` → CP 包名 `@cap/phf-hash`）
+
 Zero-heap-allocation CHD (Compress, Hash, and Displace) perfect hash table builder and O(1) lookup engine in pure CP (inspired by Rust `phf_generator` / `phf_shared`).
 
 ## Features

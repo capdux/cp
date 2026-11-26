@@ -1,5 +1,8 @@
 # `@cap/sqids` — 零分配 YouTube 风格可逆无脏词短 ID 编码器 / Zero-Allocation Sqids Encoder & Decoder
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:sqids` ([https://github.com/sqids/sqids-javascript](https://github.com/sqids/sqids-javascript))
+
 > 独立 Clean-Room 纯 CP 实现，严格遵循 Sqids 官方算法规范，对标 npm `sqids` / `hashids` 与 Rust `sqids` / `harsh` | 许可协议：MIT
 
 ## 安装 / Installation

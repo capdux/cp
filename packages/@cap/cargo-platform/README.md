@@ -1,5 +1,8 @@
 # @cap/cargo-platform
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cargo-platform` ([https://github.com/rust-lang/cargo](https://github.com/rust-lang/cargo))
+
 Zero-heap-allocation LLVM/Rust target triple parser and Cargo `cfg(...)` predicate evaluator in pure CP (inspired by Rust `cargo-platform`).
 
 ## Features

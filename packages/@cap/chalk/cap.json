@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/ansi-styles": "1.0.0",
     "@cap/supports-color": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "chalk",
+    "repo": "https://github.com/chalk/chalk",
+    "license": "MIT"
   }
 }

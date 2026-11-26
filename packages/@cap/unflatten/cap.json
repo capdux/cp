@@ -5,5 +5,19 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["json", "flat", "flatten", "unflatten", "nested", "object", "zero-alloc"]
+  "keywords": [
+    "json",
+    "flat",
+    "flatten",
+    "unflatten",
+    "nested",
+    "object",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "unflatten",
+    "repo": "https://github.com/hughsk/flat",
+    "license": "MIT"
+  }
 }

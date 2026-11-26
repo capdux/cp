@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ulid", "uuid", "id", "crockford", "base32", "sortable", "monotonic", "zero-alloc"]
+  "keywords": [
+    "ulid",
+    "uuid",
+    "id",
+    "crockford",
+    "base32",
+    "sortable",
+    "monotonic",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ulid",
+    "repo": "https://github.com/ulid/javascript",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "ulid",
+      "repo": "https://github.com/ulid/javascript",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "ulidx",
+      "repo": "https://github.com/perry-mitchell/ulidx",
+      "license": "MIT"
+    }
+  ]
 }

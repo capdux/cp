@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["num-integer", "math", "gcd", "lcm", "isqrt", "icbrt", "binomial", "zero-alloc"]
+  "keywords": [
+    "num-integer",
+    "math",
+    "gcd",
+    "lcm",
+    "isqrt",
+    "icbrt",
+    "binomial",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "num-integer",
+    "repo": "https://github.com/rust-num/num-integer",
+    "license": "MIT OR Apache-2.0"
+  }
 }

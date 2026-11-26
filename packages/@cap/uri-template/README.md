@@ -1,5 +1,8 @@
 # @cap/uri-template
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:url-template` ([https://github.com/bramstein/url-template](https://github.com/bramstein/url-template))（原库名 `url-template` → CP 包名 `@cap/uri-template`）
+
 Zero-allocation RFC 6570 URI Template (Levels 1-4) expander, validator, and variable inspector for CP.
 
 ## Features

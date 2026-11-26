@@ -1,5 +1,8 @@
 # @cap/blake2-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:blake2` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `blake2` → CP 包名 `@cap/blake2-crate`）
+
 Zero-allocation RFC 7693 BLAKE2s-256 streaming cryptographic hash & keyed MAC implementation for CP — clean-room MIT parity with Rust `blake2` v0.10 (crates.io #140).
 
 纯 CP 零堆分配 RFC 7693 BLAKE2s-256 流式密码学杂凑与密钥 MAC 实现（支持 0..32 字节可选密钥），无堆分配、跨块延迟压缩。

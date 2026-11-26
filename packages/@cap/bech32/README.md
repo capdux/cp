@@ -1,5 +1,8 @@
 # @cap/bech32
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bech32` ([https://github.com/rust-bitcoin/rust-bech32](https://github.com/rust-bitcoin/rust-bech32))
+
 Zero-allocation BIP-173 Bech32 and BIP-350 Bech32m encoder, decoder, 8-to-5 bit converter, and BCH checksum verifier for CP — clean-room MIT parity with Rust `bech32` and npm `bech32`.
 
 零堆分配的 CP BIP-173 / BIP-350 校验和编解码引擎，支持 Bech32（常量 `1`）与 Bech32m（常量 `0x2bc830a3`）、8-bit ↔ 5-bit 严格位流转换与 6 字符 BCH 校验和防篡改校验，广泛用于 Age 密钥（`age1...`）、Nostr（`npub1...`）、Bitcoin SegWit/Taproot 与 Cosmos 地址（纯 CP 洁净室 MIT 实现）。

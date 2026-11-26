@@ -4,5 +4,11 @@
   "description": "Zero-allocation deterministic retry backoff engine with Exponential, Linear, and AWS Full/Equal/Decorrelated Jitter (Rust backoff / npm exponential-backoff parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "backoff",
+    "repo": "https://github.com/ihrwein/backoff",
+    "license": "MIT"
+  }
 }

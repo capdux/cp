@@ -1,5 +1,8 @@
 # @cap/ansi-strip
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:strip-ansi` ([https://github.com/chalk/strip-ansi](https://github.com/chalk/strip-ansi)) / `crates.io:strip-ansi-escapes` ([https://github.com/luser/strip-ansi-escapes](https://github.com/luser/strip-ansi-escapes)) / `npm:string-length` ([https://github.com/sindresorhus/string-length](https://github.com/sindresorhus/string-length))（原库名 `strip-ansi` → CP 包名 `@cap/ansi-strip`）
+
 Zero-heap ECMA-48 / ANSI terminal escape sequence stripper (CSI, OSC, 2-byte ESC) and visible character counter in pure CP.
 
 ## Features

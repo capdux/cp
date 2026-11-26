@@ -4,5 +4,11 @@
   "description": "Zero-allocation deterministic Kahn topological sort, cycle detection, and parallel DAG level stratification (Rust topological-sort / petgraph / npm toposort parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "topological-sort",
+    "repo": "https://github.com/gifnksm/topological-sort-rs",
+    "license": "MIT"
+  }
 }

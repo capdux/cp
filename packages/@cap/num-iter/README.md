@@ -1,5 +1,8 @@
 # @cap/num-iter
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:num-iter` ([https://github.com/rust-num/num-iter](https://github.com/rust-num/num-iter))
+
 Clean-room MIT, zero-heap stepped numeric range iterators for CP — modeled on crates.io #140 `num-iter` v0.1 (850M+ downloads) and reusing `@cap/num-integer` (`divCeil`, `divFloor`).
 
 ## Features

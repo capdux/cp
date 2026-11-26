@@ -1,5 +1,8 @@
 # @cap/bytes
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:bytes` ([https://github.com/visionmedia/bytes.js](https://github.com/visionmedia/bytes.js)) / `npm:bytes` ([https://github.com/visionmedia/bytes.js](https://github.com/visionmedia/bytes.js))
+
 Zero-heap human-readable byte size parser and formatter for CP.
 Compatible with npm `bytes` / `pretty-bytes` and Rust `bytesize` (supports both IEC binary `KiB/MiB/GiB` and SI decimal `KB/MB/GB`).
 

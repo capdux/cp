@@ -34,5 +34,25 @@
   },
   "sys": {
     "c": {}
-  }
+  },
+  "source": {
+    "registry": "npm",
+    "name": "js-yaml",
+    "repo": "https://github.com/nodeca/js-yaml",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "js-yaml",
+      "repo": "https://github.com/nodeca/js-yaml",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "serde_yaml",
+      "repo": "https://github.com/dtolnay/serde-yaml",
+      "license": "MIT"
+    }
+  ]
 }

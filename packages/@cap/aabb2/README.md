@@ -1,5 +1,8 @@
 # @cap/aabb2
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:parry2d` ([https://github.com/dimforge/parry](https://github.com/dimforge/parry))（原库名 `parry2d` → CP 包名 `@cap/aabb2`）
+
 Zero-heap-allocation 2D Axis-Aligned Bounding Box (`Aabb2`) collision detection, union, intersection, point distance, and 2D ray slab intersection library in pure CP.
 
 ## Features

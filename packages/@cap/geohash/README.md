@@ -1,5 +1,8 @@
 # @cap/geohash
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:geohash` ([https://github.com/georust/geohash](https://github.com/georust/geohash))
+
 Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction neighbor finder for CP — clean-room MIT parity with Rust `geohash` and npm `ngeohash`.
 
 纯 CP 零堆分配 Geohash 经纬度网格编解码、包围盒计算与 8 方向相邻网格查找引擎，适用于 LBS 附近搜索、地理围栏与空间索引。

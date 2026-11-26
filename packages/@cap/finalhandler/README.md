@@ -1,5 +1,8 @@
 # @cap/finalhandler
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:finalhandler` ([https://github.com/pillarjs/finalhandler](https://github.com/pillarjs/finalhandler))
+
 Clean-room MIT, zero-heap HTTP final response & error handler for CP — modeled on npm's `finalhandler` v2 (140M+/week).
 
 ## Dependencies

@@ -1,5 +1,8 @@
 # @cap/bumpalo
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bumpalo` ([https://github.com/fitzgen/bumpalo](https://github.com/fitzgen/bumpalo))
+
 Zero-allocation alignment-aware bump arena allocator (`BumpArena`, `BumpSlice`, `BUMP_CAPACITY`) with strict power-of-two alignment, overflow protection, and `checkpoint`/`rewind` for CP — clean-room MIT parity with Rust `bumpalo` v3 (850M+ downloads).
 
 纯 CP 零堆分配对齐感知线性 Bump Arena 分配器，适用于编译器 AST 临时节点、短生命周期请求缓冲、解析器帧内存与高性能批处理场景。

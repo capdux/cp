@@ -1,5 +1,8 @@
 # `@cap/cron-desc` — 零分配 Cron 表达式自然语言翻译引擎（中/英双语）
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cronstrue` ([https://github.com/bradymholt/cRonstrue](https://github.com/bradymholt/cRonstrue))（原库名 `cronstrue` → CP 包名 `@cap/cron-desc`）
+
 > Zero-allocation Cron expression to human-readable English & Chinese natural language translator for CP (Clean-room MIT implementation modeled after npm `cronstrue` and Rust `cron-descriptor`).
 
 ## 概述 / Overview

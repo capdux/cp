@@ -1,5 +1,8 @@
 # @cap/accept-header
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:accept-header` ([https://github.com/djc/accept-header](https://github.com/djc/accept-header))
+
 Clean-room MIT, zero-heap RFC 7231 HTTP `Accept` header parser and media-type negotiator for CP — modeled on crates.io `accept-header`, reusing `@cap/negotiator` and `@cap/unicase`.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/cexpr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cexpr` ([https://github.com/jethrogb/rust-cexpr](https://github.com/jethrogb/rust-cexpr))
+
 Zero-heap-allocation C constant expression parser and evaluator in pure CP (inspired by Rust `cexpr`).
 
 ## Features

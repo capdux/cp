@@ -1,5 +1,8 @@
 # `@cap/aho-corasick-dfa`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:aho-corasick` ([https://github.com/BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick))（原库名 `aho-corasick` → CP 包名 `@cap/aho-corasick-dfa`）
+
 Zero-allocation multi-pattern Aho-Corasick automaton engine for CP (clean-room MIT, inspired by `aho-corasick` v1).
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/purl`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:packageurl-js` ([https://github.com/package-url/packageurl-js](https://github.com/package-url/packageurl-js)) / `crates.io:packageurl` ([https://github.com/althonos/packageurl.rs](https://github.com/althonos/packageurl.rs))（原库名 `packageurl-js` → CP 包名 `@cap/purl`）
+
 Zero-heap-allocation Package URL (PURL) parser, validator, qualifier lookup, and canonical formatter in pure CP.
 
 ## Features

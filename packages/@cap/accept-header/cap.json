@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/negotiator": "1.0.0",
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "accept-header",
+    "repo": "https://github.com/djc/accept-header",
+    "license": "MIT"
   }
 }

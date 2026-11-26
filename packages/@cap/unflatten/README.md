@@ -1,5 +1,8 @@
 # @cap/unflatten
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:unflatten` ([https://github.com/hughsk/flat](https://github.com/hughsk/flat))
+
 Zero-allocation nested JSON flatten & unflatten library for CP — clean-room MIT parity with npm `flat` / `unflatten`.
 
 纯 CP 零堆分配嵌套 JSON 扁平化与反扁平化库（对标 npm `flat` / `unflatten`），支持自定义分隔符、深度截断（`max_depth`）、数组保留模式（`safe`）、共享前缀树合并与双向无损往返。

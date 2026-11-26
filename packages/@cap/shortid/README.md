@@ -1,5 +1,8 @@
 # @cap/shortid
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:shortid` ([https://github.com/dylang/shortid](https://github.com/dylang/shortid))
+
 零堆分配的 CP 原生 URL 安全短 ID 生成与校验库，Clean-Room MIT 实现对标 npm `shortid`。
 
 ## 特性

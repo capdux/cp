@@ -4,5 +4,11 @@
   "description": "Zero-heap RFC 4180 CSV/TSV record parser and serializer with quoted fields, escaped quotes, embedded newlines, custom delimiters, and spreadsheet formula guard.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "csv-parse",
+    "repo": "https://github.com/adaltas/node-csv",
+    "license": "MIT"
+  }
 }

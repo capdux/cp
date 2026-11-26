@@ -1,5 +1,8 @@
 # `@cap/crc8`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:crc8` ([https://github.com/mrhooray/crc-rs](https://github.com/mrhooray/crc-rs))
+
 Zero-heap-allocation CRC-8 checksum library in pure CP, covering six industry-standard polynomials plus custom configurations.
 
 ## Supported Standards (RevEng `"123456789"` Check Vectors)

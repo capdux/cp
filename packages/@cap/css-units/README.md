@@ -1,5 +1,8 @@
 # @cap/css-units
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:postcss-value-parser` ([https://github.com/TrySound/postcss-value-parser](https://github.com/TrySound/postcss-value-parser))（原库名 `postcss-value-parser` → CP 包名 `@cap/css-units`）
+
 Zero-allocation CSS dimension, length, angle, time, and resolution parser and unit converter for CP — clean-room MIT parity with `postcss-value-parser` (120M/wk) dimension subset, `parse-css-dimension`, and `css-unit-converter`.
 
 纯 CP 零堆分配 CSS 维度/长度/角度/时间/分辨率单位解析与换算引擎，完整支持 CSS 96dpi 绝对长度、视口/字号相对长度、角度、时间与分辨率单位。

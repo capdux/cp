@@ -1,5 +1,8 @@
 # @cap/ansi-escapes
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ansi-escapes` ([https://github.com/sindresorhus/ansi-escapes](https://github.com/sindresorhus/ansi-escapes))
+
 零堆分配的 CP ANSI/VT100 终端光标控制、行/屏擦除与 OSC-8 超链接引擎 — 洁净室 MIT 实现，对标 npm `ansi-escapes`（~3.5 亿/周）。
 
 Zero-allocation ANSI/VT100 terminal cursor control, erasing, OSC-8 hyperlinks, and window title escape sequences for CP — clean-room MIT parity with npm `ansi-escapes` (~350M/wk).

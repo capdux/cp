@@ -10,5 +10,11 @@
     "@cap/mime-types": "1.0.0",
     "@cap/etag-http": "1.0.0",
     "@cap/itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "serve-static",
+    "repo": "https://github.com/expressjs/serve-static",
+    "license": "MIT"
   }
 }

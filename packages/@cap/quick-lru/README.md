@@ -1,5 +1,8 @@
 # @cap/quick-lru
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:quick-lru` ([https://github.com/sindresorhus/quick-lru](https://github.com/sindresorhus/quick-lru))
+
 Clean-room MIT, zero-heap two-generation QuickLRU cache (`QuickLruI64`) for CP — modeled on Sindre Sorhus's `quick-lru`.
 
 ## Dependencies

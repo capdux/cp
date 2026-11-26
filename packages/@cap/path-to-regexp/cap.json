@@ -7,5 +7,25 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/unicase": "1.0.0"
-  }
+  },
+  "source": {
+    "registry": "npm",
+    "name": "path-to-regexp",
+    "repo": "https://github.com/pillarjs/path-to-regexp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "path-to-regexp",
+      "repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "path-to-regexp",
+      "repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT"
+    }
+  ]
 }

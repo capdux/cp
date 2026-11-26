@@ -1,5 +1,8 @@
 # @cap/onetime
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:onetime` ([https://github.com/sindresorhus/onetime](https://github.com/sindresorhus/onetime))
+
 零堆分配的 CP 原生单次执行守卫与调用计数器，Clean-Room MIT 实现对标 npm 顶流包 `onetime`（1.5 亿+/周下载）。
 
 ## 特性

@@ -5,5 +5,38 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["subtle", "constant-time", "zeroize", "crypto", "branchless", "zero-alloc"]
+  "keywords": [
+    "subtle",
+    "constant-time",
+    "zeroize",
+    "crypto",
+    "branchless",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "subtle",
+    "repo": "https://github.com/dalek-cryptography/subtle",
+    "license": "BSD-3-Clause"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "subtle",
+      "repo": "https://github.com/dalek-cryptography/subtle",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "registry": "npm",
+      "name": "tsscmp",
+      "repo": "https://github.com/suryagh/tsscmp",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "safe-compare",
+      "repo": "https://github.com/vadimdemedes/safe-compare",
+      "license": "MIT"
+    }
+  ]
 }

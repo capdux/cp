@@ -1,5 +1,8 @@
 # @cap/polyline
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:polyline` ([https://github.com/georust/polyline](https://github.com/georust/polyline))
+
 Zero-heap Google Encoded Polyline Algorithm Format encoder and decoder for CP.
 Compatible with npm `@mapbox/polyline` and Rust `polyline` (supports both precision 5 and precision 6).
 

@@ -8,5 +8,21 @@
   "dependencies": {
     "@cap/pem-rfc7468": "1.0.0"
   },
-  "keywords": ["tls", "pki", "x509", "dns", "server-name", "pem", "der", "rustls", "zero-alloc"]
+  "keywords": [
+    "tls",
+    "pki",
+    "x509",
+    "dns",
+    "server-name",
+    "pem",
+    "der",
+    "rustls",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rustls-pki-types",
+    "repo": "https://github.com/rustls/pki-types",
+    "license": "MIT"
+  }
 }

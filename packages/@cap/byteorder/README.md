@@ -1,5 +1,8 @@
 # @cap/byteorder
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:untrusted` ([https://github.com/briansmith/untrusted](https://github.com/briansmith/untrusted)) / `crates.io:byteorder` ([https://github.com/BurntSushi/byteorder](https://github.com/BurntSushi/byteorder))（原库名 `untrusted` → CP 包名 `@cap/byteorder`）
+
 Zero-heap big-endian / little-endian binary codecs and bounds-checked forward-only `ByteReader` / `ByteWriter` in pure CP.
 
 Inspired by Rust's `byteorder` (993M+ downloads) and `untrusted` (1.02B+ downloads): eliminates out-of-bounds reads, integer overflow slicing, and partial-parse bugs when parsing network protocols, binary formats, and certificates.

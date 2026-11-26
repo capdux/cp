@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["f16", "bf16", "half", "ieee754", "tensor", "ml", "safetensors", "zero-heap"]
+  "keywords": [
+    "f16",
+    "bf16",
+    "half",
+    "ieee754",
+    "tensor",
+    "ml",
+    "safetensors",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "half",
+    "repo": "https://github.com/VoidStarKat/half-rs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "half",
+      "repo": "https://github.com/VoidStarKat/half-rs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "@petamoriken/float16",
+      "repo": "https://github.com/petamoriken/float16",
+      "license": "MIT"
+    }
+  ]
 }

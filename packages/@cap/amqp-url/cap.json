@@ -5,5 +5,33 @@
   "description": "Zero-allocation AMQP 0-9-1 / RabbitMQ URI parser (amqp/amqps, IPv6, %2F vhost, heartbeat) and password-redacting formatter in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["amqp", "amqps", "rabbitmq", "uri", "url", "messaging", "zero-alloc"]
+  "keywords": [
+    "amqp",
+    "amqps",
+    "rabbitmq",
+    "uri",
+    "url",
+    "messaging",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "amqplib",
+    "repo": "https://github.com/amqp-node/amqplib",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "amqplib",
+      "repo": "https://github.com/amqp-node/amqplib",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "lapin",
+      "repo": "https://github.com/amqp-rs/lapin",
+      "license": "MIT"
+    }
+  ]
 }

@@ -1,5 +1,8 @@
 # @cap/mqtt-packet
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:mqttbytes` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mqttbytes` → CP 包名 `@cap/mqtt-packet`）
+
 Zero-heap OASIS MQTT v3.1.1 binary control packet encoder and streaming decoder in pure CP.
 
 ## Features

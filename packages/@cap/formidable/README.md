@@ -1,5 +1,8 @@
 # @cap/formidable
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:formidable` ([https://github.com/node-formidable/formidable](https://github.com/node-formidable/formidable))
+
 Zero-heap, pure CP `multipart/form-data` form and file upload parser (clean-room MIT implementation inspired by npm `formidable` v3).
 
 ## Features

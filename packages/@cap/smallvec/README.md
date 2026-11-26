@@ -1,5 +1,8 @@
 # @cap/smallvec
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:smallvec` ([https://github.com/servo/rust-smallvec](https://github.com/servo/rust-smallvec))
+
 零堆分配的 CP 原生内联栈向量库，Clean-Room MIT 实现对标 crates.io Top 30 顶流包 `smallvec`（17 亿+ 下载）。
 
 ## 特性

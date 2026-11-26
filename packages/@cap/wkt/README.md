@@ -1,5 +1,8 @@
 # @cap/wkt
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:wkt` ([https://github.com/georust/wkt](https://github.com/georust/wkt))
+
 Clean-room MIT, zero-heap GIS Well-Known Text (WKT) parser, formatter, and bounding-box calculator for CP — modeled on crates.io `wkt` v0.11.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/fast-glob
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fast-glob` ([https://github.com/mrmlnc/fast-glob](https://github.com/mrmlnc/fast-glob))
+
 Zero-heap, pure CP glob pattern set, dynamic pattern detector, and path escaper (clean-room MIT implementation inspired by npm `fast-glob` v3).
 
 ## Features

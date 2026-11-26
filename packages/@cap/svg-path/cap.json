@@ -4,5 +4,11 @@
   "description": "Zero-allocation SVG path `d` attribute parser, bounding box calculator, and canonical formatter for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "parse-svg-path",
+    "repo": "https://github.com/jkroso/parse-svg-path",
+    "license": "MIT"
+  }
 }

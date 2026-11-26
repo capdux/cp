@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["perlin", "noise", "fbm", "procedural", "gradient", "zero-heap"]
+  "keywords": [
+    "perlin",
+    "noise",
+    "fbm",
+    "procedural",
+    "gradient",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "perlin-noise",
+    "repo": "https://github.com/andrewrk/node-perlin-noise",
+    "license": "MIT"
+  }
 }

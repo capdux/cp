@@ -1,5 +1,8 @@
 # @cap/base32-crockford
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:crockford-base32` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `crockford-base32` → CP 包名 `@cap/base32-crockford`）
+
 Zero-allocation Douglas Crockford Base32 encoder and decoder for 64-bit integers (with optional mod-37 check symbol), arbitrary byte streams, and grouped hyphen formatting in CP.
 
 ## Features

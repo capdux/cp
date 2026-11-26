@@ -1,5 +1,8 @@
 # @cap/radix-sort
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:radsort` ([https://github.com/JakubValtar/radsort](https://github.com/JakubValtar/radsort))（原库名 `radsort` → CP 包名 `@cap/radix-sort`）
+
 Zero-allocation O(N) 8-bit LSD radix sort for `u32`, `i32`, `u64`, `i64`, and IEEE-754 `f64` with automatic uniform-byte pass skipping for CP — clean-room MIT parity with Rust `radsort` and `voracious_radix_sort`.
 
 零堆分配的 CP 线性时间 O(N) 无比较 8-bit 256 桶 LSD 基数排序引擎，自动跳过全同字节 pass，支持有符号整数符号位翻转与 IEEE-754 浮点保序双射映射（纯 CP 洁净室 MIT 实现）。

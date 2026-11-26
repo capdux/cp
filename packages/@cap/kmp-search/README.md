@@ -1,5 +1,8 @@
 # @cap/kmp-search
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:kmp` ([https://github.com/magiclen/kmp](https://github.com/magiclen/kmp))（原库名 `kmp` → CP 包名 `@cap/kmp-search`）
+
 Zero-allocation O(N+M) Knuth-Morris-Pratt (KMP) substring search and LPS prefix-function engine for CP.
 
 ## Features

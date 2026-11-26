@@ -1,5 +1,8 @@
 # @cap/tdigest
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tdigest` ([https://github.com/MnO2/t-digest](https://github.com/MnO2/t-digest))
+
 Zero-allocation Merging T-Digest streaming quantile (`P50`/`P95`/`P99`/`P99.9`) and CDF estimator with distributed `merge` for CP — clean-room MIT parity with Ted Dunning's T-Digest algorithm and Rust `tdigest`.
 
 零堆分配的 CP 流式分位数估算引擎（固定质心池 `MAX_CENTROIDS = 128`），在恒定栈内存下提供高精度 P95 / P99 / P99.9 尾部延迟估算、累积分布函数 `cdf` 与跨节点分布式 `merge`（纯 CP 洁净室 MIT 实现）。

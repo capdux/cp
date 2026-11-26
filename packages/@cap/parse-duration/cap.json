@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-heap human-readable duration parser and formatter supporting compound expressions, fractional units, Unicode microseconds, and overflow protection (clean-room port of Rust parse_duration / duration-str)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "parse_duration",
+    "repo": "https://github.com/zeta12ti/parse_duration",
+    "license": "MIT"
+  }
 }

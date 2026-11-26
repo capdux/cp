@@ -1,5 +1,8 @@
 # @cap/pino-log
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:pino` ([https://github.com/pinojs/pino](https://github.com/pinojs/pino))（原库名 `pino` → CP 包名 `@cap/pino-log`）
+
 Clean-room MIT, zero-heap structured NDJSON logger for CP — modeled on npm's `pino` v9.
 
 ## Dependencies

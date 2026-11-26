@@ -1,5 +1,8 @@
 # @cap/picomatch-core
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:picomatch` ([https://github.com/micromatch/picomatch](https://github.com/micromatch/picomatch))（原库名 `picomatch` → CP 包名 `@cap/picomatch-core`）
+
 Zero-allocation, Clean-room MIT implementation of `picomatch` v4 core capabilities for CP, built on top of `@cap/glob-match`.
 
 ## Features

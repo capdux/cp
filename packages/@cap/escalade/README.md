@@ -1,5 +1,8 @@
 # @cap/escalade
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:escalade` ([https://github.com/lukeed/escalade](https://github.com/lukeed/escalade))
+
 零堆分配的 CP 原生父目录向上遍历器，Clean-Room MIT 实现对标 npm 顶流包 `escalade`（1.2 亿+/周下载，`yargs` / `find-up` 核心依赖），跨包零重复复用 `@cap/normalize-path`。
 
 ## 特性

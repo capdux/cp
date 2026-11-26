@@ -5,5 +5,11 @@
   "description": "Check if CLI argv contains a specific flag (clean-room CP implementation of npm has-flag)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "has-flag",
+    "repo": "https://github.com/sindresorhus/has-flag",
+    "license": "MIT"
+  }
 }

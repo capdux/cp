@@ -1,5 +1,8 @@
 # `@cap/anstyle-parse`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:anstyle-parse` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle)) / `crates.io:anstream` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle))
+
 Zero-heap VT100/ANSI escape sequence state-machine parser in pure CP (clean-room counterpart to Rust `anstyle-parse`).
 
 ## Features

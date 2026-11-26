@@ -5,5 +5,18 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["cargo", "platform", "target-triple", "cfg", "cross-compile", "zero-alloc"]
+  "keywords": [
+    "cargo",
+    "platform",
+    "target-triple",
+    "cfg",
+    "cross-compile",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "cargo-platform",
+    "repo": "https://github.com/rust-lang/cargo",
+    "license": "MIT"
+  }
 }

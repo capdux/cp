@@ -1,5 +1,8 @@
 # @cap/rfc6979
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rfc6979` ([https://github.com/RustCrypto/signatures](https://github.com/RustCrypto/signatures))
+
 Pure CP, zero-allocation RFC 6979 deterministic ECDSA nonce generator (HMAC-SHA256 DRBG, parity with RustCrypto `rfc6979`).
 
 Reuses `hmacSha256` from `@cap/cookie-signature`.

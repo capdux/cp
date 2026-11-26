@@ -4,5 +4,11 @@
   "description": "Zero-allocation Google Snappy Raw Block lossless compressor & decompressor with varint32 header, Literal/Copy-1/Copy-2/Copy-4 tags, and overlapping RLE support (Rust snap parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "snap",
+    "repo": "https://github.com/BurntSushi/rust-snappy",
+    "license": "BSD-3-Clause"
+  }
 }

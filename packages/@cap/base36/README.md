@@ -1,5 +1,8 @@
 # @cap/base36
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:base36` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:radix_fmt` ([https://github.com/davimiku/radix_fmt](https://github.com/davimiku/radix_fmt))
+
 Zero-heap Base36 (`0-9a-z` / `0-9A-Z`) and arbitrary radix `2..36` 64-bit unsigned integer encoder and overflow-safe decoder in pure CP.
 
 ## Features

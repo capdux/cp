@@ -4,5 +4,11 @@
   "description": "Zero-allocation multiline string dedent, indent, stripMargin, and newline normalization engine for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "indoc",
+    "repo": "https://github.com/dtolnay/indoc",
+    "license": "MIT"
+  }
 }

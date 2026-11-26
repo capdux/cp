@@ -7,5 +7,25 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/unicase": "1.0.0"
-  }
+  },
+  "source": {
+    "registry": "npm",
+    "name": "tough-cookie",
+    "repo": "https://github.com/salesforce/tough-cookie",
+    "license": "BSD-3-Clause"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "tough-cookie",
+      "repo": "https://github.com/salesforce/tough-cookie",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "registry": "crates.io",
+      "name": "cookie_store",
+      "repo": "https://github.com/pfernie/cookie_store",
+      "license": "MIT"
+    }
+  ]
 }

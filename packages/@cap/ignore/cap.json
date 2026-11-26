@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/minimatch": "1.0.0",
     "@cap/normalize-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ignore",
+    "repo": "https://github.com/kaelzhang/node-ignore",
+    "license": "MIT"
   }
 }

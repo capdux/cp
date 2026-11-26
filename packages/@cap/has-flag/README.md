@@ -1,5 +1,8 @@
 # @cap/has-flag
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:has-flag` ([https://github.com/sindresorhus/has-flag](https://github.com/sindresorhus/has-flag))
+
 零堆分配的 CP 原生 CLI 标志检测库，Clean-Room MIT 实现对标 npm 顶流包 `has-flag`（2.5亿+/周下载）。
 
 ## 特性

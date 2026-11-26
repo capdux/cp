@@ -1,5 +1,8 @@
 # `@cap/server-timing`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:server-timing` ([https://github.com/yosuke-furukawa/server-timing](https://github.com/yosuke-furukawa/server-timing))
+
 Zero-heap-allocation W3C `Server-Timing` HTTP response header parser and formatter in pure CP.
 
 ## Features

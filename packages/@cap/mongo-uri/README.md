@@ -1,5 +1,8 @@
 # @cap/mongo-uri
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mongodb-connection-string-url` ([https://github.com/mongodb-js/devtools-shared](https://github.com/mongodb-js/devtools-shared)) / `crates.io:mongodb` ([https://github.com/mongodb/mongo-rust-driver](https://github.com/mongodb/mongo-rust-driver))（原库名 `mongodb-connection-string-url` → CP 包名 `@cap/mongo-uri`）
+
 Zero-allocation MongoDB connection string (`mongodb://` and `mongodb+srv://`) parser, query option extractor, and password-redacting formatter for CP.
 
 ## Features

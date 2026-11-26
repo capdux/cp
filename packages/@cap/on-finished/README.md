@@ -1,5 +1,8 @@
 # `@cap/on-finished`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:on-finished` ([https://github.com/jshttp/on-finished](https://github.com/jshttp/on-finished))
+
 Zero-heap HTTP request/response stream completion tracker with once-only finish/end/close/error lifecycle dispatch — clean-room CP equivalent of npm `on-finished`.
 
 ## Features

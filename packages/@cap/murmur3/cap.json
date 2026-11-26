@@ -13,5 +13,11 @@
     "sharding",
     "partition",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "murmur3",
+    "repo": "https://github.com/stusmall/murmur3",
+    "license": "MIT"
+  }
 }

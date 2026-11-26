@@ -1,5 +1,8 @@
 # @cap/decimal
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:decimal.js` ([https://github.com/MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js))（原库名 `decimal.js` → CP 包名 `@cap/decimal`）
+
 Zero-allocation 128-bit exact decimal & financial arithmetic engine for CP — clean-room MIT parity with npm `decimal.js` / `bignumber.js` and Rust `rust_decimal`.
 
 ## Install

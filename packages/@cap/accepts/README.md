@@ -1,5 +1,8 @@
 # @cap/accepts
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:accepts` ([https://github.com/jshttp/accepts](https://github.com/jshttp/accepts))
+
 Zero-allocation RFC 9110 HTTP content negotiation engine (`Accept`, `Accept-Encoding`, `Accept-Language`) for CP — clean-room MIT parity with npm `accepts` and `negotiator` (75M+/wk).
 
 纯 CP 零堆分配 RFC 9110 HTTP 内容协商引擎，使用千分位整数质量权重 `0..1000` 消除浮点误差，支持精确特异度排序、BCP 47 语言前缀降级与 `q=0` 显式拒绝。

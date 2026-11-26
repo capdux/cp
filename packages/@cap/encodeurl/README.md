@@ -1,5 +1,8 @@
 # @cap/encodeurl
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:encodeurl` ([https://github.com/pillarjs/encodeurl](https://github.com/pillarjs/encodeurl))
+
 Clean-room MIT, zero-heap idempotent URL encoder for CP — modeled on npm's `encodeurl` v2 (180M+/week).
 
 ## API

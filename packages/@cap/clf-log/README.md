@@ -1,5 +1,8 @@
 # `@cap/clf-log`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:clf-parser` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `clf-parser` → CP 包名 `@cap/clf-log`）
+
 Zero-heap-allocation Apache/Nginx Common Log Format (CLF) and Combined Log Format parser and formatter in pure CP.
 
 ## Features

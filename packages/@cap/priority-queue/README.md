@@ -1,5 +1,8 @@
 # @cap/priority-queue
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:priority-queue` ([https://github.com/garro95/priority-queue](https://github.com/garro95/priority-queue))
+
 Zero-allocation Indexed Binary Min-Heap with O(log N) dynamic `changePriority` and arbitrary `remove` for CP — clean-room MIT parity with Rust `priority-queue` and npm `heap-js`.
 
 纯 CP 零堆分配索引最小堆（支持 `id` 范围 `0..127`），支持 O(log N) 按 ID 动态调权与任意节点删除，适用于 Dijkstra 最短路、A* 寻路、定时器事件调度与限流队列。

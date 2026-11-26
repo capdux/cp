@@ -1,5 +1,8 @@
 # @cap/unicode-bidi
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:unicode-bidi` ([https://github.com/servo/unicode-bidi](https://github.com/servo/unicode-bidi)) / `npm:bidi-js` ([https://github.com/lojjic/bidi-js](https://github.com/lojjic/bidi-js))
+
 Zero-heap-allocation Unicode Bidirectional Algorithm (UAX #9) core library in pure CP (inspired by Rust `unicode-bidi`).
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/json-pointer`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jsonpointer` ([https://github.com/janl/node-jsonpointer](https://github.com/janl/node-jsonpointer))（原库名 `jsonpointer` → CP 包名 `@cap/json-pointer`）
+
 Zero-heap-allocation RFC 6901 JSON Pointer implementation in pure CP.
 
 ## Features

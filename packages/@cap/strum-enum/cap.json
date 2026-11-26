@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "strum",
+    "repo": "https://github.com/Peternator7/strum",
+    "license": "MIT"
   }
 }

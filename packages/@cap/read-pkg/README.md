@@ -1,5 +1,8 @@
 # @cap/read-pkg
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:read-pkg` ([https://github.com/sindresorhus/read-pkg](https://github.com/sindresorhus/read-pkg))
+
 Zero-allocation, Clean-room MIT implementation of `read-pkg` v9 core semantics for CP, reusing `@cap/normalize-package-data`.
 
 ## Features

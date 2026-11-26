@@ -1,5 +1,8 @@
 # @cap/fenwick
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fenwick` ([https://github.com/pwoolcoc/fenwick](https://github.com/pwoolcoc/fenwick))
+
 Zero-allocation Binary Indexed Tree (Fenwick Tree) with O(log N) prefix/range sums, O(N) linear construction, and O(log N) binary-lifting `lowerBound` for CP — clean-room MIT parity with Rust `fenwick`.
 
 纯 CP 零堆分配树状数组（最大容量 256），支持 O(log N) 前缀和/区间和查询、单点增量/赋值更新与 O(log N) 二分提升排名统计，适用于实时指标统计、频率直方图、限流与顺序统计。

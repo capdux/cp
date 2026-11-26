@@ -1,5 +1,8 @@
 # @cap/skiplist
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:skiplist` ([https://github.com/JP-Ellis/rust-skiplist](https://github.com/JP-Ellis/rust-skiplist))
+
 Zero-allocation static-pool deterministic skip list (`MAX_NODES = 128`, `MAX_LEVEL = 8`) for CP — clean-room MIT parity with Rust `skiplist` and `crossbeam-skiplist`.
 
 零堆分配的 CP 确定性静态节点池跳表，内置 xorshift64 确定性层高与 O(1) 空闲节点池复用，提供 O(log N) 有序插入、查询、删除、`first`/`last`、`lowerBound` 与 `rangeCount` 闭区间统计，适用于内存数据库 MemTable、排行榜与有序索引（纯 CP 洁净室 MIT 实现）。

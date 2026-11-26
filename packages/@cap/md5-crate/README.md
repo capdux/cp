@@ -1,5 +1,8 @@
 # @cap/md5-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:md-5` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `md-5` → CP 包名 `@cap/md5-crate`）
+
 Zero-allocation RFC 1321 MD5 cryptographic hash streaming implementation for CP — clean-room MIT parity with Rust `md-5` / `md5` (crates.io #65).
 
 纯 CP 零堆分配 RFC 1321 MD5 流式杂凑实现，支持分块流式更新、重置复用、原始 16 字节输出与 32 字节十六进制输出。

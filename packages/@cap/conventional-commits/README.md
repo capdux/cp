@@ -1,5 +1,8 @@
 # @cap/conventional-commits
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:conventional-commits-parser` ([https://github.com/conventional-changelog/conventional-changelog](https://github.com/conventional-changelog/conventional-changelog))（原库名 `conventional-commits-parser` → CP 包名 `@cap/conventional-commits`）
+
 Zero-allocation Conventional Commits 1.0.0 specification parser, header formatter, and Semver bump recommender for CP — clean-room MIT parity with npm `conventional-commits-parser` and Rust `git-conventional`.
 
 零堆分配的 CP Conventional Commits 1.0.0 规范解析与 Semver 版本号自动推导引擎，支持 `<type>[(<scope>)][!]: <description>`、多行 Body、最多 16 条 `Token: value` / `Token #value` Footer、`BREAKING CHANGE` 识别与批量发布版本号聚合（纯 CP 洁净室 MIT 实现）。

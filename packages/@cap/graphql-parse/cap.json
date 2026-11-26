@@ -5,5 +5,19 @@
   "description": "Zero-heap GraphQL Spec lexer, recursive-descent document parser/validator, and query minifier in pure CP (clean-room MIT counterpart to npm graphql v16 parser).",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["graphql", "parser", "lexer", "ast", "minify", "query", "zero-heap"]
+  "keywords": [
+    "graphql",
+    "parser",
+    "lexer",
+    "ast",
+    "minify",
+    "query",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "graphql",
+    "repo": "https://github.com/graphql/graphql-js",
+    "license": "MIT"
+  }
 }

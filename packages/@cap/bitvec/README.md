@@ -1,5 +1,8 @@
 # @cap/bitvec
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bitvec` ([https://github.com/ferrilab/bitvec](https://github.com/ferrilab/bitvec))
+
 零堆分配的 CP 原生定长位向量库（支持最多 512 位），Clean-Room MIT 实现对标 crates.io Top 210 包 `bitvec`（6 亿+ 下载）。
 
 ## 特性

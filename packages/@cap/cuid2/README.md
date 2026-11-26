@@ -1,5 +1,8 @@
 # @cap/cuid2
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:@paralleldrive/cuid2` ([https://github.com/paralleldrive/cuid2](https://github.com/paralleldrive/cuid2))（原库名 `@paralleldrive/cuid2` → CP 包名 `@cap/cuid2`）
+
 Clean-room MIT, zero-heap collision-resistant CUID2 ID generator & validator for CP — modeled on `@paralleldrive/cuid2`.
 
 ## Dependencies

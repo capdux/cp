@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ms", "duration", "humantime", "time", "parse", "format", "zero-alloc"]
+  "keywords": [
+    "ms",
+    "duration",
+    "humantime",
+    "time",
+    "parse",
+    "format",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ms",
+    "repo": "https://github.com/vercel/ms",
+    "license": "MIT"
+  }
 }

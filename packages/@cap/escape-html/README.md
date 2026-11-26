@@ -1,5 +1,8 @@
 # `@cap/escape-html`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:escape-html` ([https://github.com/component/escape-html](https://github.com/component/escape-html)) / `npm:entities` ([https://github.com/fb55/entities](https://github.com/fb55/entities))
+
 Zero-heap single-pass HTML entity escaper and unescaper in pure CP (clean-room counterpart to npm `escape-html`).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/rot13
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:rot13-cipher` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:rot13` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `rot13-cipher` → CP 包名 `@cap/rot13`）
+
 Zero-heap ROT13, ROT47, arbitrary Caesar shift, and Atbash alphabet substitution utilities in pure CP.
 
 ## Features

@@ -5,5 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["siphash", "siphash24", "siphash13", "hash", "prf", "hashdos", "zero-alloc"]
+  "keywords": [
+    "siphash",
+    "siphash24",
+    "siphash13",
+    "hash",
+    "prf",
+    "hashdos",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "siphash",
+    "repo": "https://github.com/jedisct1/siphash-js",
+    "license": "MIT"
+  }
 }

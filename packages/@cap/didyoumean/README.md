@@ -1,5 +1,8 @@
 # @cap/didyoumean
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:didyoumean` ([https://github.com/dcporter/didyoumean.js](https://github.com/dcporter/didyoumean.js))
+
 Zero-allocation spell-suggestion & edit-distance engine for CP — clean-room MIT parity with npm `didyoumean` / `fastest-levenshtein` and Rust `strsim`.
 
 ## Install

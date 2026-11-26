@@ -1,5 +1,8 @@
 # @cap/sec1
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:sec1` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 Pure CP, zero-allocation SEC1 v2.0 elliptic curve point encoding and RFC 5915 `ECPrivateKey` DER/PEM codec (parity with RustCrypto `sec1`).
 
 Reuses `@cap/const-oid` for curve OIDs, `@cap/pem-rfc7468` for `EC PRIVATE KEY` PEM encoding/decoding, and `@cap/subtle-ct` for secure private key zeroization.

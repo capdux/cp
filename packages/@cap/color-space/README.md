@@ -1,5 +1,8 @@
 # @cap/color-space
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:color-convert` ([https://github.com/Qix-/color-convert](https://github.com/Qix-/color-convert))（原库名 `color-convert` → CP 包名 `@cap/color-space`）
+
 Zero-allocation color space conversion engine (`sRGB` ↔ `Linear RGB` ↔ `HSL` ↔ `HSV` ↔ `OKLab` ↔ `OKLCH`) and perceptual color mixing for CP — clean-room MIT parity with Rust `palette` and npm `color-convert`.
 
 纯 CP 零堆分配专业色彩空间转换与感知色差引擎，零外部依赖内置高精度数学函数与 Björn Ottosson 官方 OKLab 矩阵，适用于 UI 主题生成、图像处理与 CSS Color 4 渲染。

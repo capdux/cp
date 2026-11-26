@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/der-asn1": "1.0.0",
     "@cap/subtle-ct": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "ecdsa",
+    "repo": "https://github.com/RustCrypto/signatures",
+    "license": "MIT"
   }
 }

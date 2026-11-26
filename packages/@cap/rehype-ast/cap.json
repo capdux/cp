@@ -5,8 +5,23 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["rehype", "hast", "html", "ast", "dom", "serializer", "xss", "zero-alloc"],
+  "keywords": [
+    "rehype",
+    "hast",
+    "html",
+    "ast",
+    "dom",
+    "serializer",
+    "xss",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "rehype",
+    "repo": "https://github.com/rehypejs/rehype",
+    "license": "MIT"
   }
 }

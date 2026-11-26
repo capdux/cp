@@ -11,5 +11,21 @@
     "@cap/pem-rfc7468": "1.0.0",
     "@cap/subtle-ct": "1.0.0"
   },
-  "keywords": ["pkcs8", "rfc5958", "rfc8410", "pki", "private-key", "ed25519", "der", "pem", "zero-alloc"]
+  "keywords": [
+    "pkcs8",
+    "rfc5958",
+    "rfc8410",
+    "pki",
+    "private-key",
+    "ed25519",
+    "der",
+    "pem",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "pkcs8",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
+  }
 }

@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["kalman", "kalman1d", "filter", "signal", "sensor", "denoising", "dsp", "zero-alloc"]
+  "keywords": [
+    "kalman",
+    "kalman1d",
+    "filter",
+    "signal",
+    "sensor",
+    "denoising",
+    "dsp",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "kalmanjs",
+    "repo": "https://github.com/wouterbulten/kalmanjs",
+    "license": "MIT"
+  }
 }

@@ -8,5 +8,18 @@
   "dependencies": {
     "@cap/semver-range": "1.0.0"
   },
-  "keywords": ["semver-diff", "semver", "version", "diff", "upgrade", "zero-alloc"]
+  "keywords": [
+    "semver-diff",
+    "semver",
+    "version",
+    "diff",
+    "upgrade",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "semver-diff",
+    "repo": "https://github.com/sindresorhus/semver-diff",
+    "license": "MIT"
+  }
 }

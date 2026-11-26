@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/data-encoding": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "base64url",
+    "repo": "https://github.com/brianloveswords/base64url",
+    "license": "MIT"
   }
 }

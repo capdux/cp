@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/bytemuck-crate": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "zerocopy",
+    "repo": "https://github.com/google/zerocopy",
+    "license": "BSD-2-Clause OR Apache-2.0 OR MIT"
   }
 }

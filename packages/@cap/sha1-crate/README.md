@@ -1,5 +1,8 @@
 # @cap/sha1-crate
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:sha1` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `sha1` → CP 包名 `@cap/sha1-crate`）
+
 Zero-allocation FIPS 180-4 SHA-1 cryptographic hash streaming implementation for CP — clean-room MIT parity with Rust `sha1` v0.10 (crates.io #35).
 
 纯 CP 零堆分配 FIPS 180-4 SHA-1 密码学杂凑流式实现，支持分块流式更新、重置复用、原始 20 字节输出与 40 字节十六进制输出。

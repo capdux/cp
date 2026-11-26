@@ -1,5 +1,8 @@
 # @cap/media-typer
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:media-typer` ([https://github.com/jshttp/media-typer](https://github.com/jshttp/media-typer))
+
 Clean-room MIT, zero-heap RFC 6838 Media Type parser, validator, and formatter for CP — modeled on npm's `media-typer` v1.1.
 
 ## Dependencies

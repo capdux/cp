@@ -5,5 +5,39 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ratelimit", "rate-limit", "http", "ietf", "headers", "backoff", "zero-alloc"]
+  "keywords": [
+    "ratelimit",
+    "rate-limit",
+    "http",
+    "ietf",
+    "headers",
+    "backoff",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "governor",
+    "repo": "https://github.com/boinkor-net/governor",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "governor",
+      "repo": "https://github.com/boinkor-net/governor",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "governor",
+      "repo": "https://github.com/boinkor-net/governor",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "express-rate-limit",
+      "repo": "https://github.com/express-rate-limit/express-rate-limit",
+      "license": "MIT"
+    }
+  ]
 }

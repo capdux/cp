@@ -5,5 +5,11 @@
   "description": "Zero-allocation HTTP request body byte-limit enforcer, Content-Length verifier, streaming chunk accumulator, and RFC 3629 UTF-8 validator for CP (clean-room parity with npm raw-body)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "raw-body",
+    "repo": "https://github.com/stream-utils/raw-body",
+    "license": "MIT"
+  }
 }

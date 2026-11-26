@@ -8,5 +8,21 @@
   "dependencies": {
     "@cap/subtle-ct": "1.0.0"
   },
-  "keywords": ["block-padding", "cipher", "pkcs7", "iso7816", "ansix923", "ctr", "crypto", "constant-time", "zero-alloc"]
+  "keywords": [
+    "block-padding",
+    "cipher",
+    "pkcs7",
+    "iso7816",
+    "ansix923",
+    "ctr",
+    "crypto",
+    "constant-time",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "block-padding",
+    "repo": "https://github.com/RustCrypto/utils",
+    "license": "MIT"
+  }
 }

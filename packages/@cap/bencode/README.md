@@ -1,5 +1,8 @@
 # @cap/bencode
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:bendy` ([https://github.com/P3KI/bendy](https://github.com/P3KI/bendy))（原库名 `bendy` → CP 包名 `@cap/bencode`）
+
 Zero-heap BitTorrent BEP-3 deterministic Bencode streaming encoder, zero-copy decoder, validator, and top-level dictionary lookup in pure CP.
 
 ## Features

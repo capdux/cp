@@ -1,5 +1,8 @@
 # `@cap/base32-rfc`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:hi-base32` ([https://github.com/emn178/hi-base32](https://github.com/emn178/hi-base32))（原库名 `hi-base32` → CP 包名 `@cap/base32-rfc`）
+
 Zero-heap-allocation RFC 4648 Section 6/7 standard Base32 (`A-Z2-7`) and Extended Hex Base32 (`0-9A-V`) encoder and decoder in pure CP.
 
 ## Features

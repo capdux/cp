@@ -1,5 +1,8 @@
 # @cap/serve-static
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:serve-static` ([https://github.com/expressjs/serve-static](https://github.com/expressjs/serve-static))
+
 Clean-room MIT, zero-heap HTTP static file request resolver, dotfile policy evaluator, and `Cache-Control`/ETag/Content-Type builder for CP — modeled on npm's `serve-static` v2.
 
 ## Dependencies

@@ -5,5 +5,11 @@
   "license": "MIT",
   "entry": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "validate-npm-package-name",
+    "repo": "https://github.com/npm/validate-npm-package-name",
+    "license": "ISC"
+  }
 }

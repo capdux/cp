@@ -5,5 +5,22 @@
   "description": "Zero-allocation CRC-8 checksum library (SMBus, Maxim 1-Wire, SAE-J1850, AUTOSAR, CDMA2000, Bluetooth HEC) in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["crc8", "crc", "checksum", "smbus", "maxim", "1-wire", "sae-j1850", "autosar", "bluetooth", "zero-alloc"]
+  "keywords": [
+    "crc8",
+    "crc",
+    "checksum",
+    "smbus",
+    "maxim",
+    "1-wire",
+    "sae-j1850",
+    "autosar",
+    "bluetooth",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "crc8",
+    "repo": "https://github.com/mrhooray/crc-rs",
+    "license": "MIT"
+  }
 }

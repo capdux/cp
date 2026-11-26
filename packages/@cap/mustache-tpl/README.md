@@ -1,5 +1,8 @@
 # @cap/mustache-tpl
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:mustache` ([https://github.com/janl/mustache.js](https://github.com/janl/mustache.js))（原库名 `mustache` → CP 包名 `@cap/mustache-tpl`）
+
 零堆分配的 CP 原生 Mustache v1.4 无逻辑模板引擎，Clean-Room MIT 实现对标 npm 高频模板包 `mustache` v4（6000 万+/周下载）。
 
 跨包零重复复用 `@cap/escape-html`（`escapeHtml`）自动转义 `{{var}}` 插值防止 XSS 注入，全程零堆分配与小缓冲区安全截断。

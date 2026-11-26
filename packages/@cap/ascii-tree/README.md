@@ -1,5 +1,8 @@
 # @cap/ascii-tree
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:archy` ([https://github.com/substack/node-archy](https://github.com/substack/node-archy))（原库名 `archy` → CP 包名 `@cap/ascii-tree`）
+
 Zero-allocation Unicode & ASCII dependency/directory tree renderer for CP — clean-room MIT parity with npm `archy` (35M/wk), `treeify`, and Rust `ptree`.
 
 ## Install

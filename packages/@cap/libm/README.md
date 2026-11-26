@@ -1,5 +1,8 @@
 # @cap/libm
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:libm` ([https://github.com/rust-lang/libm](https://github.com/rust-lang/libm))
+
 Pure CP, zero-allocation IEEE 754 `f64` math library with zero external dependencies (parity with Rust `libm` / C `<math.h>`).
 
 ## Features

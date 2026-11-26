@@ -1,5 +1,8 @@
 # `@cap/traceparent`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:opentelemetry` ([https://github.com/open-telemetry/opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust))（原库名 `opentelemetry` → CP 包名 `@cap/traceparent`）
+
 Zero-heap W3C Trace Context (`traceparent` and `tracestate`) distributed tracing header parser, validator, child span builder, and formatter in pure CP. Strictly enforces lowercase hex, non-zero trace/parent IDs, and version rules per W3C Trace Context Level 1.
 
 零堆分配纯 CP W3C Trace Context（`traceparent` 与 `tracestate`）分布式链路追踪头解析、校验与构造器，对标 OpenTelemetry，适用于微服务网关与 AI Agent 跨节点追踪。

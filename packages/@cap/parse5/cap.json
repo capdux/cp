@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "parse5",
+    "repo": "https://github.com/inikulin/parse5",
+    "license": "MIT"
   }
 }

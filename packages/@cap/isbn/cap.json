@@ -5,5 +5,20 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["isbn", "isbn10", "isbn13", "issn", "ean13", "gtin13", "barcode", "zero-alloc"]
+  "keywords": [
+    "isbn",
+    "isbn10",
+    "isbn13",
+    "issn",
+    "ean13",
+    "gtin13",
+    "barcode",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "isbn",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  }
 }

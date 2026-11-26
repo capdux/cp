@@ -1,5 +1,8 @@
 # `@cap/base62`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:base62` ([https://github.com/fbernier/base62](https://github.com/fbernier/base62))
+
 Zero-heap URL-safe Base62 (`0-9A-Za-z`) encoder and decoder in pure CP, supporting both `u64` (variable & fixed-width lexicographically sortable padded IDs) and arbitrary byte slices with leading-zero preservation.
 
 零堆分配纯 CP URL 安全 Base62（`0-9A-Za-z`）编解码引擎，对标 Rust/npm `base62`，支持 `u64` 短链/雪花 ID 变长与定宽保序编码，以及任意字节切片（严格保留前导零）双向转换。

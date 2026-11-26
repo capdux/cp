@@ -1,5 +1,8 @@
 # @cap/user-agent-hints
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:sfv` ([https://github.com/undef1nd/sfv](https://github.com/undef1nd/sfv)) / `npm:ua-client-hints` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `sfv` → CP 包名 `@cap/user-agent-hints`）
+
 Zero-allocation W3C User-Agent Client Hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`, `Sec-CH-UA-Full-Version-List`) RFC 8941 structured header parser and builder for CP.
 
 ## Features

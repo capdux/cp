@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/mint": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "nalgebra",
+    "repo": "https://github.com/dimforge/nalgebra",
+    "license": "Apache-2.0"
   }
 }

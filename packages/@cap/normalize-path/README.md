@@ -1,5 +1,8 @@
 # `@cap/normalize-path`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:normalize-path` ([https://github.com/jonschlinkert/normalize-path](https://github.com/jonschlinkert/normalize-path))
+
 Zero-heap POSIX/Windows path normalizer in pure CP (clean-room counterpart to npm `normalize-path`).
 
 ## Features

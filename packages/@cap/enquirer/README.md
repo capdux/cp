@@ -1,5 +1,8 @@
 # @cap/enquirer
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:enquirer` ([https://github.com/enquirer/enquirer](https://github.com/enquirer/enquirer))
+
 Zero-heap, pure CP interactive CLI prompt state machines for `ConfirmPrompt`, `SelectPrompt`, and `MultiSelectPrompt` (clean-room MIT implementation inspired by npm `enquirer` v2).
 
 ## Features

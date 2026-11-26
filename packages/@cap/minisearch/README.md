@@ -1,5 +1,8 @@
 # `@cap/minisearch`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:lunr` ([https://github.com/olivernn/lunr.js](https://github.com/olivernn/lunr.js))（原库名 `lunr` → CP 包名 `@cap/minisearch`）
+
 Zero-heap-allocation in-memory inverted index and BM25 full-text search engine in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/humantime
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:humantime` ([https://github.com/tailhook/humantime](https://github.com/tailhook/humantime))
+
 零堆分配的 CP 原生人类可读时长解析/格式化与 RFC 3339 时间戳库，Clean-Room MIT 实现对标 crates.io Top 115 包 `humantime`（9.5 亿+ 下载），跨包复用 `@cap/itoa`。
 
 ## 特性

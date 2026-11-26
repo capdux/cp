@@ -1,5 +1,8 @@
 # @cap/bmh-search
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:boyer-moore-magiclen` ([https://github.com/magiclen/boyer-moore-magiclen](https://github.com/magiclen/boyer-moore-magiclen))（原库名 `boyer-moore-magiclen` → CP 包名 `@cap/bmh-search`）
+
 Zero-heap Boyer-Moore-Horspool sublinear substring search in pure CP.
 
 ## Features

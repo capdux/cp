@@ -1,5 +1,8 @@
 # @cap/p-queue
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:p-queue` ([https://github.com/sindresorhus/p-queue](https://github.com/sindresorhus/p-queue))
+
 Clean-room MIT, zero-heap concurrency-limited priority task queue scheduler for CP — modeled on Sindre Sorhus's `p-queue` v8.
 
 ## API

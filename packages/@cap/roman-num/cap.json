@@ -5,5 +5,32 @@
   "description": "Zero-allocation strict Roman numeral (1..3999) bidirectional parser, validator, and formatter in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["roman", "romans", "numerals", "parser", "formatter", "zero-alloc"]
+  "keywords": [
+    "roman",
+    "romans",
+    "numerals",
+    "parser",
+    "formatter",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "romans",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "romans",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "roman",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ]
 }

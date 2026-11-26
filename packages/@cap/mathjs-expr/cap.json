@@ -5,8 +5,22 @@
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
-  "keywords": ["math", "mathjs", "expression", "parser", "evaluator", "calculator", "zero-alloc"],
+  "keywords": [
+    "math",
+    "mathjs",
+    "expression",
+    "parser",
+    "evaluator",
+    "calculator",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/libm": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "mathjs",
+    "repo": "https://github.com/josdejong/mathjs",
+    "license": "MIT"
   }
 }

@@ -1,5 +1,8 @@
 # `@cap/pkcs1`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:pkcs1` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))
+
 Zero-allocation RFC 8017 Appendix A.1.1 (`RSAPublicKey`) and Appendix A.1.2 (`RSAPrivateKey`) DER/PEM codec in pure CP (RustCrypto `pkcs1` parity).
 
 ## Reused Ecosystem Packages

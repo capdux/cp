@@ -1,5 +1,8 @@
 # @cap/terser-minify
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:terser` ([https://github.com/terser/terser](https://github.com/terser/terser))（原库名 `terser` → CP 包名 `@cap/terser-minify`）
+
 Zero-allocation lexer-safe JS/TS/CSS code minifier for CP — clean-room MIT implementation inspired by npm `terser`.
 
 纯 CP 零堆分配 JS/TS/CSS 词法安全代码压缩器（对标 npm `terser`），单遍状态机保护字符串与模板字面量、保留版权头注释、严防关键字粘连与 `a + +b` / `a - -b` 误合并。

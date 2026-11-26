@@ -5,6 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["fnv", "fnv1a", "fnv1", "hash", "non-cryptographic", "fast-hash"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/fnv-hash"
+  "keywords": [
+    "fnv",
+    "fnv1a",
+    "fnv1",
+    "hash",
+    "non-cryptographic",
+    "fast-hash"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/fnv-hash",
+  "source": {
+    "registry": "npm",
+    "name": "@sindresorhus/fnv1a",
+    "repo": "https://github.com/sindresorhus/fnv1a",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@sindresorhus/fnv1a",
+      "repo": "https://github.com/sindresorhus/fnv1a",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "const-fnv1a-hash",
+      "repo": "https://github.com/jonasbb/const-fnv1a-hash",
+      "license": "MIT"
+    }
+  ]
 }

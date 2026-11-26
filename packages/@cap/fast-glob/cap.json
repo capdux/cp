@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/glob-match": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "fast-glob",
+    "repo": "https://github.com/mrmlnc/fast-glob",
+    "license": "MIT"
   }
 }

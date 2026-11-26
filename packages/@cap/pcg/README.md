@@ -1,5 +1,8 @@
 # @cap/pcg
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rand_pcg` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand))（原库名 `rand_pcg` → CP 包名 `@cap/pcg`）
+
 Zero-heap PCG32 (`PCG-XSH-RR`) pseudorandom number generator with independent streams and O(log N) jump-ahead (`advance`) in pure CP (inspired by Rust `rand_pcg`, 295M+ downloads).
 
 ## Install

@@ -7,5 +7,11 @@
   "license": "MIT",
   "dependencies": {
     "@cap/fill-range": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "braces",
+    "repo": "https://github.com/micromatch/braces",
+    "license": "MIT"
   }
 }

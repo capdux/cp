@@ -5,5 +5,33 @@
   "description": "Zero-allocation Package URL (PURL) parser, validator, qualifier lookup, and canonical serializer (SBOM standard) in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["purl", "packageurl", "sbom", "supply-chain", "spdx", "cyclonedx", "zero-alloc"]
+  "keywords": [
+    "purl",
+    "packageurl",
+    "sbom",
+    "supply-chain",
+    "spdx",
+    "cyclonedx",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "packageurl-js",
+    "repo": "https://github.com/package-url/packageurl-js",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "packageurl-js",
+      "repo": "https://github.com/package-url/packageurl-js",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "packageurl",
+      "repo": "https://github.com/althonos/packageurl.rs",
+      "license": "MIT"
+    }
+  ]
 }

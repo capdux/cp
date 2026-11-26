@@ -5,5 +5,17 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["is-number", "number", "numeric", "validate", "parse"]
+  "keywords": [
+    "is-number",
+    "number",
+    "numeric",
+    "validate",
+    "parse"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "is-number",
+    "repo": "https://github.com/jonschlinkert/is-number",
+    "license": "MIT"
+  }
 }

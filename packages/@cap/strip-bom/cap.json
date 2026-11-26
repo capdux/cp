@@ -4,5 +4,25 @@
   "license": "MIT",
   "description": "Pure CP zero-allocation UTF-8/UTF-16/UTF-32 BOM detection, zero-copy stripping and idempotent prepending (npm strip-bom parity)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "strip-bom",
+    "repo": "https://github.com/sindresorhus/strip-bom",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "strip-bom",
+      "repo": "https://github.com/sindresorhus/strip-bom",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "strip-bom-buf",
+      "repo": "https://github.com/sindresorhus/strip-bom-buf",
+      "license": "MIT"
+    }
+  ]
 }

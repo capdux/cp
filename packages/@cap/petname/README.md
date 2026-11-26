@@ -1,5 +1,8 @@
 # @cap/petname
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:unique-names-generator` ([https://github.com/andreasonny83/unique-names-generator](https://github.com/andreasonny83/unique-names-generator))（原库名 `unique-names-generator` → CP 包名 `@cap/petname`）
+
 Zero-allocation deterministic human-readable name generator for CP — clean-room MIT parity with npm `unique-names-generator` / `human-id` and Rust `petname` / `names`.
 
 ## Install

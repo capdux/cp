@@ -5,5 +5,19 @@
   "description": "Zero-allocation RFC 6901 JSON Pointer validator, escaper, segment navigator, array index parser, and iterator in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["json-pointer", "rfc6901", "json", "json-patch", "escape", "parser", "zero-alloc"]
+  "keywords": [
+    "json-pointer",
+    "rfc6901",
+    "json",
+    "json-patch",
+    "escape",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "jsonpointer",
+    "repo": "https://github.com/janl/node-jsonpointer",
+    "license": "MIT"
+  }
 }

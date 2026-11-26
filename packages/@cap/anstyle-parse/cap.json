@@ -5,5 +5,35 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ansi", "vt100", "anstyle", "csi", "osc", "sgr", "terminal", "parser", "zero-heap"]
+  "keywords": [
+    "ansi",
+    "vt100",
+    "anstyle",
+    "csi",
+    "osc",
+    "sgr",
+    "terminal",
+    "parser",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "anstyle-parse",
+    "repo": "https://github.com/rust-cli/anstyle",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "anstyle-parse",
+      "repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "anstream",
+      "repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT"
+    }
+  ]
 }

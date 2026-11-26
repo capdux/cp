@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/xoshiro256": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_distr",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT OR Apache-2.0"
   }
 }

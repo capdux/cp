@@ -1,5 +1,8 @@
 # @cap/acorn-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:acorn` ([https://github.com/acornjs/acorn](https://github.com/acornjs/acorn))（原库名 `acorn` → CP 包名 `@cap/acorn-parse`）
+
 Zero-allocation ES2024 JavaScript lexer and ES Module import/export scanner for CP — clean-room MIT implementation inspired by npm `acorn` v8.
 
 纯 CP 零堆分配 ES2024 JavaScript 词法分析器与模块导入/导出扫描器（对标 npm `acorn` v8），支持精确 1-based 行列号追踪、括号平衡校验与零拷贝 ESM `import` 说明符提取。

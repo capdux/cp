@@ -1,5 +1,8 @@
 # @cap/rate-header
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:governor` ([https://github.com/boinkor-net/governor](https://github.com/boinkor-net/governor)) / `crates.io:governor` ([https://github.com/boinkor-net/governor](https://github.com/boinkor-net/governor)) / `npm:express-rate-limit` ([https://github.com/express-rate-limit/express-rate-limit](https://github.com/express-rate-limit/express-rate-limit))（原库名 `governor` → CP 包名 `@cap/rate-header`）
+
 Zero-allocation IETF HTTP RateLimit headers (`RateLimit-Policy`, `RateLimit`, `X-RateLimit-*`) parser, formatter, and reset delay calculator for CP.
 
 ## Features

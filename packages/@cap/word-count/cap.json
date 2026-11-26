@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["word-count", "reading-time", "cjk", "utf8", "text", "analytics", "zero-alloc"]
+  "keywords": [
+    "word-count",
+    "reading-time",
+    "cjk",
+    "utf8",
+    "text",
+    "analytics",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "words-count",
+    "repo": "https://github.com/magiclen/words-count",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "words-count",
+      "repo": "https://github.com/magiclen/words-count",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "word-count",
+      "repo": "https://github.com/yuehu/word-count",
+      "license": "MIT"
+    }
+  ]
 }

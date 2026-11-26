@@ -5,6 +5,19 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["indent", "dedent", "strip-indent", "indoc", "multiline", "string"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/indent-strip"
+  "keywords": [
+    "indent",
+    "dedent",
+    "strip-indent",
+    "indoc",
+    "multiline",
+    "string"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/indent-strip",
+  "source": {
+    "registry": "npm",
+    "name": "dedent",
+    "repo": "https://github.com/dmnd/dedent",
+    "license": "MIT"
+  }
 }

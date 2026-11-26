@@ -1,5 +1,8 @@
 # @cap/cron-expr
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:cron` ([https://github.com/zslayton/cron](https://github.com/zslayton/cron))（原库名 `cron` → CP 包名 `@cap/cron-expr`）
+
 Zero-allocation 6-field second-granularity Cron schedule parser & matcher for CP — clean-room MIT parity with crates.io `cron` v0.12.
 
 Composes [`@cap/cron-parser`](../cron-parser) (`CronSchedule`, `parseCron`, `matches`) for the 5 standard calendar fields (minute/hour/day-of-month/month/day-of-week) and presets with zero code duplication, adding the 1st second-granularity bitmask field (`0..59`).

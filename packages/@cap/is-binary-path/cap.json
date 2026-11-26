@@ -8,5 +8,19 @@
   "dependencies": {
     "@cap/binary-extensions": "^1.0.0"
   },
-  "keywords": ["is-binary-path", "binary", "text", "filter", "path", "chokidar", "zero-heap"]
+  "keywords": [
+    "is-binary-path",
+    "binary",
+    "text",
+    "filter",
+    "path",
+    "chokidar",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "is-binary-path",
+    "repo": "https://github.com/sindresorhus/is-binary-path",
+    "license": "MIT"
+  }
 }

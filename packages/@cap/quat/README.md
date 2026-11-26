@@ -1,5 +1,8 @@
 # `@cap/quat`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:quaternion` ([https://github.com/rawify/Quaternion.js](https://github.com/rawify/Quaternion.js))（原库名 `quaternion` → CP 包名 `@cap/quat`）
+
 Zero-heap 3D unit quaternion rotation, SLERP / NLERP interpolation, and Euler angle conversion in pure CP with zero external math dependencies.
 
 ## Features

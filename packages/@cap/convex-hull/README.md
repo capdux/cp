@@ -1,5 +1,8 @@
 # `@cap/convex-hull`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:monotone-chain-convex-hull` ([https://github.com/mikolalysenko/monotone-chain-convex-hull](https://github.com/mikolalysenko/monotone-chain-convex-hull))（原库名 `monotone-chain-convex-hull` → CP 包名 `@cap/convex-hull`）
+
 Zero-heap 2D Andrew's monotone chain convex hull algorithm with area and perimeter calculation in pure CP.
 
 ## Features

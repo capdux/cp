@@ -1,5 +1,8 @@
 # @cap/indexmap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:indexmap` ([https://github.com/indexmap-rs/indexmap](https://github.com/indexmap-rs/indexmap))
+
 Pure CP, zero-allocation insertion-order-preserving hash map (clean-room MIT parity with Rust `indexmap` v2).
 
 ## Dependencies

@@ -1,5 +1,8 @@
 # `@cap/heck-case`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:heck` ([https://github.com/withoutboats/heck](https://github.com/withoutboats/heck))（原库名 `heck` → CP 包名 `@cap/heck-case`）
+
 Zero-allocation Rust `heck` v0.5 compatible case conversion engine for CP (clean-room MIT).
 
 ## Features

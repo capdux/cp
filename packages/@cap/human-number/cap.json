@@ -3,5 +3,25 @@
   "ver": "1.0.0",
   "description": "Zero-allocation human-readable number formatting (grouped thousands, EN/ZH compact suffixes, percentages, strict Roman numerals, and English words) for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "numeral",
+    "repo": "https://github.com/adamwdraper/Numeral-js",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "numeral",
+      "repo": "https://github.com/adamwdraper/Numeral-js",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "filesize",
+      "repo": "https://github.com/avoidwork/filesize.js",
+      "license": "BSD-3-Clause"
+    }
+  ]
 }

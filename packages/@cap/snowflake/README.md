@@ -1,5 +1,8 @@
 # @cap/snowflake
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:@sapphire/snowflake` ([https://github.com/sapphiredev/utilities](https://github.com/sapphiredev/utilities)) / `crates.io:sonyflake` ([https://github.com/sony/sonyflake](https://github.com/sony/sonyflake))（原库名 `@sapphire/snowflake` → CP 包名 `@cap/snowflake`）
+
 Zero-heap 64-bit Twitter / Discord Snowflake distributed unique ID generator, decomposer, clock-rollback guard, and decimal formatter in pure CP.
 
 ## Features

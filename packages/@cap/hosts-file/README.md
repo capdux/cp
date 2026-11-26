@@ -1,5 +1,8 @@
 # @cap/hosts-file
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:hostile` ([https://github.com/feross/hostile](https://github.com/feross/hostile))（原库名 `hostile` → CP 包名 `@cap/hosts-file`）
+
 零堆分配的 POSIX / Windows `/etc/hosts` 文件解析、域名正反向查表与规范化生成引擎 — 洁净室 MIT 实现，对标 npm `hostile` 与 Rust `hostsfile`。
 
 Zero-allocation POSIX / Windows `/etc/hosts` parser, case-insensitive forward/family/reverse lookup, and canonical formatter for CP — clean-room MIT parity with npm `hostile` and Rust `hostsfile`.

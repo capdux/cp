@@ -1,5 +1,8 @@
 # @cap/base85
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:z85` ([https://github.com/murar8/z85](https://github.com/murar8/z85))（原库名 `z85` → CP 包名 `@cap/base85`）
+
 零堆分配的 CP Base85 多标准编解码引擎 — 洁净室 MIT 实现，同时支持 **ZeroMQ Z85（RFC 32）** 与 **Adobe Ascii85（PDF / PostScript）**，相比 Base64 节省约 25% 传输体积。
 
 Zero-allocation Base85 multi-standard encoder/decoder (`Z85` RFC 32 & Adobe `Ascii85`) for CP — clean-room MIT parity with Rust `z85` and `ascii85`.

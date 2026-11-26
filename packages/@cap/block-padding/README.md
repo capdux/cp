@@ -1,5 +1,8 @@
 # `@cap/block-padding`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:block-padding` ([https://github.com/RustCrypto/utils](https://github.com/RustCrypto/utils))
+
 Zero-allocation cryptographic block padding & cipher mode primitives in pure CP (RustCrypto `block-padding` + `cipher` parity). Reuses `@cap/subtle-ct` for constant-time padding-oracle-resistant verification and buffer zeroization.
 
 ## API

@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["escape-html", "html", "escape", "unescape", "entities", "express", "zero-heap"]
+  "keywords": [
+    "escape-html",
+    "html",
+    "escape",
+    "unescape",
+    "entities",
+    "express",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "escape-html",
+    "repo": "https://github.com/component/escape-html",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "escape-html",
+      "repo": "https://github.com/component/escape-html",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "entities",
+      "repo": "https://github.com/fb55/entities",
+      "license": "MIT"
+    }
+  ]
 }

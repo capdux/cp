@@ -1,5 +1,8 @@
 # @cap/snappy-block
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:snap` ([https://github.com/BurntSushi/rust-snappy](https://github.com/BurntSushi/rust-snappy))（原库名 `snap` → CP 包名 `@cap/snappy-block`）
+
 零堆分配的 CP Google Snappy Raw Block 极速无损块压缩与解压引擎 — 洁净室 MIT 实现，对标 Rust `snap` crate，100% 兼容 Parquet / Kafka / LevelDB / RocksDB / gRPC 标准 Snappy 字节流格式。
 
 Zero-allocation Google Snappy Raw Block lossless compressor & decompressor for CP — clean-room MIT parity with Rust `snap`.

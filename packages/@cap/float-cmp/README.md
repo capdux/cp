@@ -1,5 +1,8 @@
 # @cap/float-cmp
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:float-cmp` ([https://github.com/mikedilger/float-cmp](https://github.com/mikedilger/float-cmp))
+
 Clean-room MIT, zero-heap IEEE-754 floating-point approximate equality and ordering library for CP — modeled on crates.io `float-cmp` v0.10 and built directly on `@cap/approx`.
 
 ## Features

@@ -4,5 +4,25 @@
   "license": "MIT",
   "description": "Pure CP zero-allocation Marsaglia Xorshift PRNG family: XorShift128 (rand_xorshift parity), XorShift64Star, and XorShift32",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_xorshift",
+    "repo": "https://github.com/rust-random/rngs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "rand_xorshift",
+      "repo": "https://github.com/rust-random/rngs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "xorshift",
+      "repo": "https://github.com/AndreasMadsen/xorshift",
+      "license": "MIT"
+    }
+  ]
 }

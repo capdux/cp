@@ -1,5 +1,8 @@
 # @cap/roaring-bitmap
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:roaring` ([https://github.com/RoaringBitmap/roaring-rs](https://github.com/RoaringBitmap/roaring-rs))（原库名 `roaring` → CP 包名 `@cap/roaring-bitmap`）
+
 Zero-allocation compressed roaring bitmap (`RoaringBitmap`) covering the full `u32` domain (`0..=u32::MAX`) with high-16-bit sorted chunks, low-16-bit sorted containers, O(1) `min`/`max`, `rank`, `insertRange`, and full set algebra for CP — clean-room MIT parity with Rust `roaring` v0.10 (450M+ downloads).
 
 纯 CP 零堆分配压缩位图集合，适用于搜索引擎倒排索引、用户标签人群圈选、稀疏 `u32` ID 集合运算与分析型数据库位图过滤。

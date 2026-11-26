@@ -1,5 +1,8 @@
 # @cap/color-names
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:color-name` ([https://github.com/colorjs/color-name](https://github.com/colorjs/color-name))（原库名 `color-name` → CP 包名 `@cap/color-names`）
+
 Zero-allocation 148 W3C CSS Color 4 named colors lookup and exact RGB ↔ HSL ↔ HSV ↔ HEX color space conversion engine for CP — clean-room MIT parity with npm `color-name` and `color-convert`.
 
 零堆分配的 CP 颜色名称与色空间转换引擎，完整内置 148 个 W3C CSS Color 4 标准命名颜色（`O(log N)` 二分查找 + 反向查名），提供精确 RGB ↔ HSL ↔ HSV ↔ HEX 互转与 `mixRgb`/`lighten`/`darken` 调色工具（纯 CP 洁净室 MIT 实现）。

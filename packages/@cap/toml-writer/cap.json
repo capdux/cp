@@ -12,5 +12,11 @@
     "config",
     "formatter",
     "zero-alloc"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "toml_writer",
+    "repo": "https://github.com/toml-rs/toml",
+    "license": "MIT"
+  }
 }

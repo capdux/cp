@@ -1,5 +1,8 @@
 # `@cap/num-integer`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:num-integer` ([https://github.com/rust-num/num-integer](https://github.com/rust-num/num-integer))
+
 Zero-allocation integer number theory, overflow-safe GCD/LCM/extended-GCD, mathematical floor/ceil division, exact integer roots, and binomial coefficients for CP (clean-room MIT, inspired by Rust `num-integer` v0.1).
 
 ## API

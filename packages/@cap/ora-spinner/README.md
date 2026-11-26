@@ -1,5 +1,8 @@
 # @cap/ora-spinner
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ora` ([https://github.com/sindresorhus/ora](https://github.com/sindresorhus/ora))（原库名 `ora` → CP 包名 `@cap/ora-spinner`）
+
 Clean-room MIT, zero-heap CLI terminal spinner animation and status line renderer for CP — modeled on npm `ora` v8.
 
 ## Dependencies

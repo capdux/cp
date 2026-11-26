@@ -1,5 +1,8 @@
 # @cap/itoa
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:itoa` ([https://github.com/dtolnay/itoa](https://github.com/dtolnay/itoa))
+
 零堆分配的 CP 原生高速整数转字符串库，Clean-Room MIT 实现对标 crates.io Top 35 顶流包 `itoa`（17 亿+ 下载）。
 
 ## 特性

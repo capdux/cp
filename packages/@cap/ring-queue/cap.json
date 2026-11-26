@@ -5,5 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["ring-queue", "ring-buffer", "queue", "fifo", "circular-buffer", "crossbeam-queue", "zero-heap"]
+  "keywords": [
+    "ring-queue",
+    "ring-buffer",
+    "queue",
+    "fifo",
+    "circular-buffer",
+    "crossbeam-queue",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "crossbeam-queue",
+    "repo": "https://github.com/crossbeam-rs/crossbeam",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "crossbeam-queue",
+      "repo": "https://github.com/crossbeam-rs/crossbeam",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "denque",
+      "repo": "https://github.com/invertase/denque",
+      "license": "MIT"
+    }
+  ]
 }

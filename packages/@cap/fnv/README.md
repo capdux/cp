@@ -1,5 +1,8 @@
 # @cap/fnv
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:rustc-hash` ([https://github.com/rust-lang/rustc-hash](https://github.com/rust-lang/rustc-hash)) / `crates.io:fnv` ([https://github.com/servo/rust-fnv](https://github.com/servo/rust-fnv))（原库名 `rustc-hash` → CP 包名 `@cap/fnv`）
+
 Zero-allocation FNV-1a 32/64-bit and Rust `rustc-hash` FxHash 64-bit streaming non-cryptographic hashers for CP — clean-room MIT parity with Rust `fnv` and `rustc-hash`.
 
 零堆分配的 CP 超高速非加密流式哈希引擎，合一实现标准 FNV-1a 32/64-bit（通过全部官方测试向量）与 Rust 编译器御用 FxHash 64-bit（左旋 5 位 + XOR + 乘黄金比例魔数 `0x517cc1b727220a95`），全程无溢出 64-bit 绕回算术（纯 CP 洁净室 MIT 实现）。

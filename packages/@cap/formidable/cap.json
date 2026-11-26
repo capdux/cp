@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/mediatype": "1.0.0",
     "@cap/content-disposition": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "formidable",
+    "repo": "https://github.com/node-formidable/formidable",
+    "license": "MIT"
   }
 }

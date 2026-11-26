@@ -1,5 +1,8 @@
 # @cap/word-count
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:words-count` ([https://github.com/magiclen/words-count](https://github.com/magiclen/words-count)) / `npm:word-count` ([https://github.com/yuehu/word-count](https://github.com/yuehu/word-count))（原库名 `words-count` → CP 包名 `@cap/word-count`）
+
 Zero-allocation multilingual (Latin + CJK) word/character/line counter and reading-time estimator for CP.
 
 ## Features

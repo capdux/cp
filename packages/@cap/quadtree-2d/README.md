@@ -1,5 +1,8 @@
 # @cap/quadtree-2d
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:quadtree_rs` ([https://github.com/ambuc/quadtree_rs](https://github.com/ambuc/quadtree_rs)) / `npm:d3-quadtree` ([https://github.com/d3/d3-quadtree](https://github.com/d3/d3-quadtree))（原库名 `quadtree_rs` → CP 包名 `@cap/quadtree-2d`）
+
 Zero-allocation pooled 2D QuadTree spatial index for CP with automatic 4-quadrant subdivision, rectangular range queries, and Euclidean radius queries.
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/bloom
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fastbloom` ([https://github.com/tomtomwombat/fastbloom](https://github.com/tomtomwombat/fastbloom))（原库名 `fastbloom` → CP 包名 `@cap/bloom`）
+
 Zero-allocation Kirsch-Mitzenmacher double-hashing Bloom filters (`BloomFilter1024` / `BloomFilter4096`) for CP — clean-room MIT parity with Rust `bloomfilter` / `fastbloom` and npm `bloom-filters`.
 
 纯 CP 零堆分配高性能布隆过滤器，采用 Kirsch-Mitzenmacher 双哈希技术（FNV-1a + 独立种子 SplitMix64），适用于缓存穿透防护、URL 去重、日志/安全黑名单与分布式多节点聚合。

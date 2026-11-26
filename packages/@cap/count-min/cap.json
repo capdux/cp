@@ -4,5 +4,11 @@
   "description": "Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter detector (Rust count-min-sketch / Redis CMS parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "count-min-sketch",
+    "repo": "https://github.com/amansarda/count-min-sketch",
+    "license": "MIT"
+  }
 }

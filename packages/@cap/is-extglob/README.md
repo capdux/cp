@@ -1,5 +1,8 @@
 # @cap/is-extglob
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:is-extglob` ([https://github.com/jonschlinkert/is-extglob](https://github.com/jonschlinkert/is-extglob))
+
 Zero-heap-allocation Bash/Micromatch extended glob (`@(...)`, `!(...)`, `*(...)`, `+(...)`, `?(...)`) detector in pure CP (parity with npm `is-extglob`).
 
 ## Features

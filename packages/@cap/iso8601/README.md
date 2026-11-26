@@ -1,5 +1,8 @@
 # `@cap/iso8601`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:iso8601` ([https://github.com/badboy/iso8601](https://github.com/badboy/iso8601))
+
 Zero-heap ISO-8601 date (calendar/week/ordinal), time, timezone offset, datetime, and duration parser & formatter — clean-room CP equivalent of crates.io `iso8601`.
 
 ## Features

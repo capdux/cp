@@ -1,5 +1,8 @@
 # @cap/human-number
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:numeral` ([https://github.com/adamwdraper/Numeral-js](https://github.com/adamwdraper/Numeral-js)) / `npm:filesize` ([https://github.com/avoidwork/filesize.js](https://github.com/avoidwork/filesize.js))（原库名 `numeral` → CP 包名 `@cap/human-number`）
+
 Zero-allocation human-readable number formatting engine for CP — clean-room MIT parity with npm `numeral` / `millify` / `number-to-words` and Rust `num-format`.
 
 零堆分配的 CP 人类可读数字格式化引擎，支持千分位分组、中英文紧凑缩写（`K/M/B/T`、`万/亿/万亿`）、百分比格式化、严格罗马数字双向转换（`1..3999`）与全范围英文数字拼写（纯 CP 洁净室 MIT 实现）。

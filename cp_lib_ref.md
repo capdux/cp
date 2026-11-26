@@ -952,3 +952,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/ripemd160`** | `packages/@cap/ripemd160` | 对标 crates.io `ripemd` v0.1 — 80 轮双线 RIPEMD-160 160-bit 流式杂凑（7 组官方向量全过） |
 | **`@cap/bytecount`** | `packages/@cap/bytecount` | 对标 crates.io **#190** `bytecount` (**6.5 亿+**, 复用 `@cap/memchr-crate`) — SWAR 高速字节计数、UTF-8 码点与行数统计 |
 | **`@cap/siphasher`** | `packages/@cap/siphasher` | 对标 crates.io **#70** `siphasher` (**12.5 亿+**) — SipHash-2-4 与 SipHash-1-3 密钥 64 位哈希（Aumasson-Bernstein 官方向量全过） |
+| **`@cap/twox-hash`** | `packages/@cap/twox-hash` | 对标 crates.io **#135** `twox-hash` v2 (**8.5 亿+**) — XXHash32/XXHash64 流式高速哈希（Cyan4973 官方向量全过） |
+| **`@cap/seahash`** | `packages/@cap/seahash` | 对标 crates.io #220 `seahash` v4 (**5.5 亿+**) — 4 通道并行 SeaHash 64-bit 哈希与 PCG 扩散函数 |
+| **`@cap/p-locate`** | `packages/@cap/p-locate` | 对标 npm **Top 15** `p-locate` v7 (**2.2 亿+/周**, 复用 `@cap/p-limit-core`) — 有界并发候选定位器与 `preserve_order` 优先级语义 |
+| **`@cap/p-timeout-core`** | `packages/@cap/p-timeout-core` | 对标 npm Top 45 `p-timeout` v6 (**1 亿+/周**) — 零堆截止时间守卫、超时回退与状态机取消 |

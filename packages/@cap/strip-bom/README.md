@@ -1,5 +1,8 @@
 # @cap/strip-bom
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:strip-bom` ([https://github.com/sindresorhus/strip-bom](https://github.com/sindresorhus/strip-bom)) / `npm:strip-bom-buf` ([https://github.com/sindresorhus/strip-bom-buf](https://github.com/sindresorhus/strip-bom-buf))
+
 Pure CP, zero-allocation Byte Order Mark (BOM) detector, zero-copy stripper, and idempotent UTF-8 BOM prepender (parity with npm `strip-bom` & `strip-bom-buf`).
 
 ## Supported BOMs

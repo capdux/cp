@@ -1,5 +1,8 @@
 # @cap/hex-color
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:hex-rgb` ([https://github.com/sindresorhus/hex-rgb](https://github.com/sindresorhus/hex-rgb)) / `npm:colord` ([https://github.com/omgovich/colord](https://github.com/omgovich/colord))（原库名 `hex-rgb` → CP 包名 `@cap/hex-color`）
+
 Zero-allocation CSS hex color (`#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`) parser, formatter, Porter-Duff `source-over` blender, BT.601 luminance detector, and RGB inverter for CP.
 
 ## Features

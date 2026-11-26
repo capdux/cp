@@ -4,5 +4,11 @@
   "description": "Zero-allocation BIP-173 Bech32 and BIP-350 Bech32m encoder, decoder, 8-to-5 bit converter, and BCH checksum verifier for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "bech32",
+    "repo": "https://github.com/rust-bitcoin/rust-bech32",
+    "license": "MIT"
+  }
 }

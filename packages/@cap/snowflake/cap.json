@@ -4,5 +4,25 @@
   "description": "Zero-heap 64-bit Twitter/Discord Snowflake distributed ID generator, decomposer, clock-rollback guard, and decimal formatter.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "@sapphire/snowflake",
+    "repo": "https://github.com/sapphiredev/utilities",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@sapphire/snowflake",
+      "repo": "https://github.com/sapphiredev/utilities",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "sonyflake",
+      "repo": "https://github.com/sony/sonyflake",
+      "license": "MIT"
+    }
+  ]
 }

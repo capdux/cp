@@ -4,5 +4,11 @@
   "description": "Zero-heap 2D grid A* shortest pathfinding engine with 4-way Manhattan & 8-way Octile diagonal search and path reconstruction.",
   "license": "MIT",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "astar",
+    "repo": "https://github.com/evenfurther/pathfinding",
+    "license": "MIT"
+  }
 }

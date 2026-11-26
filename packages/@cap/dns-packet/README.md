@@ -1,5 +1,8 @@
 # @cap/dns-packet
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:dns-packet` ([https://github.com/mafintosh/dns-packet](https://github.com/mafintosh/dns-packet))
+
 Zero-heap RFC 1035 DNS binary packet encoder and decoder in pure CP (npm `dns-packet` parity).
 
 ## Features

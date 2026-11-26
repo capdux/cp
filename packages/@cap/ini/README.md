@@ -1,5 +1,8 @@
 # @cap/ini
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ini` ([https://github.com/npm/ini](https://github.com/npm/ini))
+
 Zero-heap INI / `.gitconfig` / `.npmrc` / `.editorconfig` parser and writer in pure CP (npm `ini` / Rust `rust-ini` parity).
 
 ## Features

@@ -1,5 +1,8 @@
 # @cap/chalk
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:chalk` ([https://github.com/chalk/chalk](https://github.com/chalk/chalk))
+
 Zero-allocation terminal string styling library for CP — clean-room MIT parity with npm `chalk` v5. Composes a 6-package dependency chain (`@cap/ansi-styles` → `@cap/color-convert` → `@cap/color-name` + `@cap/supports-color` → `@cap/has-flag`).
 
 纯 CP 零堆分配终端着色库（对标 npm `chalk` v5），支持 4 级终端色彩能力自动探测（`0` 无色透传 / `1` 16 色 / `2` 256 色 / `3` Truecolor）、`rgb`/`bgRgb`/`hex`/`keyword` 智能降级以及组合样式渲染。

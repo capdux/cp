@@ -5,8 +5,23 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["convert-case", "case", "camelCase", "snake_case", "kebab-case", "cobol", "flatcase", "zero-alloc"],
+  "keywords": [
+    "convert-case",
+    "case",
+    "camelCase",
+    "snake_case",
+    "kebab-case",
+    "cobol",
+    "flatcase",
+    "zero-alloc"
+  ],
   "dependencies": {
     "@cap/heck-case": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "convert_case",
+    "repo": "https://github.com/rutrum/convert-case",
+    "license": "MIT"
   }
 }

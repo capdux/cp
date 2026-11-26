@@ -5,5 +5,52 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["home", "home-dir", "tilde", "untildify", "xdg", "config-dir", "path", "zero-heap"]
+  "keywords": [
+    "home",
+    "home-dir",
+    "tilde",
+    "untildify",
+    "xdg",
+    "config-dir",
+    "path",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "home",
+    "repo": "https://github.com/rust-lang/cargo",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "home",
+      "repo": "https://github.com/rust-lang/cargo",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "untildify",
+      "repo": "https://github.com/sindresorhus/untildify",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "expand-tilde",
+      "repo": "https://github.com/jonschlinkert/expand-tilde",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "os-homedir",
+      "repo": "https://github.com/sindresorhus/os-homedir",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "dirs",
+      "repo": "https://github.com/dirs-dev/dirs-rs",
+      "license": "MIT"
+    }
+  ]
 }

@@ -5,6 +5,33 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["mysql", "mariadb", "tidb", "dsn", "database", "connection-string"],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/mysql-dsn"
+  "keywords": [
+    "mysql",
+    "mariadb",
+    "tidb",
+    "dsn",
+    "database",
+    "connection-string"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/mysql-dsn",
+  "source": {
+    "registry": "npm",
+    "name": "mysql2",
+    "repo": "https://github.com/sidorares/node-mysql2",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "mysql2",
+      "repo": "https://github.com/sidorares/node-mysql2",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "mysql",
+      "repo": "https://github.com/blackbeam/rust-mysql-simple",
+      "license": "MIT"
+    }
+  ]
 }

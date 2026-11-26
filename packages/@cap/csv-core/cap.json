@@ -4,5 +4,11 @@
   "license": "MIT",
   "description": "Zero-allocation streaming RFC 4180 CSV reader/writer state machine (Rust csv-core v0.2 parity)",
   "main": "src/index.cp",
-  "types": "src/index.d.cp"
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "csv-core",
+    "repo": "https://github.com/BurntSushi/rust-csv",
+    "license": "MIT"
+  }
 }

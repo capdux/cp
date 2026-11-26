@@ -1,5 +1,8 @@
 # @cap/forwarded
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:forwarded-header-value` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `forwarded-header-value` → CP 包名 `@cap/forwarded`）
+
 零堆分配的 RFC 7239 `Forwarded` 与 `X-Forwarded-For` 代理链安全解析引擎 — 洁净室 MIT 实现，对标 npm `forwarded` 与 `proxy-addr`。
 
 Zero-allocation RFC 7239 `Forwarded` & `X-Forwarded-For` proxy chain parser with anti-spoofing client IP extraction and private IP detection for CP — clean-room MIT parity with npm `forwarded` and `proxy-addr`.

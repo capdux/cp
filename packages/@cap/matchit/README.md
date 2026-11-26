@@ -1,5 +1,8 @@
 # @cap/matchit
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:matchit` ([https://github.com/ibraheemdev/matchit](https://github.com/ibraheemdev/matchit))
+
 Zero-allocation high-priority URL router for CP — clean-room MIT parity with Rust `matchit` (595M downloads on crates.io, powering `axum`).
 
 纯 CP 零堆分配超高速 URL 路由引擎，严格遵循 **静态字面段 > 命名参数段 (`:id` / `{id}`) > 通配捕获段 (`*rest` / `{*rest}`)** 优先级，零拷贝返回路径参数切片。

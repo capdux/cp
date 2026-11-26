@@ -1,5 +1,8 @@
 # `@cap/ical`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ical-generator` ([https://github.com/sebbo2002/ical-generator](https://github.com/sebbo2002/ical-generator))（原库名 `ical-generator` → CP 包名 `@cap/ical`）
+
 Zero-heap-allocation RFC 5545 iCalendar (`.ics`) generator and parser in pure CP.
 
 ## Features

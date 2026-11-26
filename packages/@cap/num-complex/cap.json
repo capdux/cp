@@ -4,5 +4,11 @@
   "description": "Zero-allocation Complex64 arithmetic, Smith overflow-safe division, polar coordinates, Euler exp, principal sqrt, and formatting (Rust num-complex parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "num-complex",
+    "repo": "https://github.com/rust-num/num-complex",
+    "license": "MIT"
+  }
 }

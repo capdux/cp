@@ -4,5 +4,11 @@
   "description": "Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols (cli-spinners / ora / log-symbols parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "cli-spinners",
+    "repo": "https://github.com/sindresorhus/cli-spinners",
+    "license": "MIT"
+  }
 }

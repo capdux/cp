@@ -1,5 +1,8 @@
 # `@cap/merge-descriptors`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:merge-descriptors` ([https://github.com/component/merge-descriptors](https://github.com/component/merge-descriptors))
+
 Zero-allocation property descriptor table and safe descriptor merge engine for CP. Clean-room MIT implementation inspired by npm `merge-descriptors` v2.
 
 ## Features

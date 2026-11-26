@@ -1,5 +1,8 @@
 # `@cap/cliui`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:cliui` ([https://github.com/yargs/cliui](https://github.com/yargs/cliui))
+
 Zero-heap-allocation multi-column CLI layout engine in pure CP (clean-room MIT implementation inspired by npm `cliui`).
 
 Reuses:

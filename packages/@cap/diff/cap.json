@@ -3,5 +3,25 @@
   "ver": "1.0.0",
   "description": "Zero-allocation Myers O(ND) line & character diff engine with FNV-1a hash pre-filtering, GNU Unified Diff formatting, and lossless patch application for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "diff",
+    "repo": "https://github.com/kpdecker/jsdiff",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "diff",
+      "repo": "https://github.com/kpdecker/jsdiff",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "fast-diff",
+      "repo": "https://github.com/jhchen/fast-diff",
+      "license": "Apache-2.0"
+    }
+  ]
 }

@@ -1,5 +1,8 @@
 # @cap/rehype-ast
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:rehype` ([https://github.com/rehypejs/rehype](https://github.com/rehypejs/rehype))（原库名 `rehype` → CP 包名 `@cap/rehype-ast`）
+
 Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer for CP — clean-room MIT parity with npm `rehype` / `hast`. Composes `@cap/escape-html` with zero duplication.
 
 纯 CP 零堆分配 HTML AST 构建与 HTML5 序列化库（对标 npm `rehype` / `hast`），复用 `@cap/escape-html` 自动转义文本与属性值防止 XSS，支持全部 14 个 HTML5 void 元素与纯文本提取。

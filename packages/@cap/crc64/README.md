@@ -1,5 +1,8 @@
 # @cap/crc64
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:crc64fast` ([https://github.com/srijs/rust-crc64fast](https://github.com/srijs/rust-crc64fast))（原库名 `crc64fast` → CP 包名 `@cap/crc64`）
+
 零堆分配的 CP 64 位循环冗余校验引擎 — 洁净室 MIT 实现，完整支持 **ECMA-182**、**CRC-64/XZ** 与 **CRC-64/GO-ISO** 三大工业标准，采用 256 项查找表加速，广泛用于对象存储（S3/OSS）、Redis RDB、XZ 压缩与 NVMe 数据完整性校验。
 
 Zero-allocation 64-bit CRC checksum engine (ECMA-182, XZ, GO-ISO) for CP — clean-room MIT parity with Rust `crc` and `crc64fast`.

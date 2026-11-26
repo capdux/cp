@@ -9,5 +9,11 @@
     "@cap/chacha20-crate": "1.0.0",
     "@cap/poly1305": "1.0.0",
     "@cap/subtle-ct": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "chacha20poly1305",
+    "repo": "https://github.com/RustCrypto/AEADs",
+    "license": "Apache-2.0 OR MIT"
   }
 }

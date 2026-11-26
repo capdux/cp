@@ -1,5 +1,8 @@
 # @cap/geo-dist
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:geo` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `geo` → CP 包名 `@cap/geo-dist`）
+
 Zero-allocation WGS-84 spherical geometry engine for CP — clean-room MIT parity with Rust `geo` / `haversine` and npm `geolib`.
 
 纯 CP 零堆分配球面地理计算引擎（WGS-84 平均地球半径 `6371008.8m`），零外部依赖内置高精度三角函数，支持 Haversine 大圆距离、初始方位角、目标点推算、球面中点、半径包围盒与射线法多边形内外判定。

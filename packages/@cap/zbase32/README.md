@@ -1,5 +1,8 @@
 # `@cap/zbase32`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:zbase32` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:zbase32` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
+
 Zero-heap-allocation Zooko human-oriented `z-base-32` (`ybndrfg8ejkmcpqxot1uwisza345h769`) encoder, decoder, and validator in pure CP.
 
 ## Features

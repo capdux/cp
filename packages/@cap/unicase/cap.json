@@ -7,5 +7,11 @@
   "types": "src/index.d.cp",
   "dependencies": {
     "@cap/fnv-hash": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "unicase",
+    "repo": "https://github.com/seanmonstar/unicase",
+    "license": "MIT"
   }
 }

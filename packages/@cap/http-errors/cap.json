@@ -7,5 +7,11 @@
   "license": "MIT",
   "dependencies": {
     "@cap/toidentifier": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "http-errors",
+    "repo": "https://github.com/jshttp/http-errors",
+    "license": "MIT"
   }
 }

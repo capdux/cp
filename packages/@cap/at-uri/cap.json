@@ -5,5 +5,34 @@
   "description": "Zero-allocation AT Protocol / Bluesky at:// URI, NSID, and Record Key (rkey) validator, parser, and formatter in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["atproto", "bluesky", "at-uri", "nsid", "rkey", "did", "parser", "zero-alloc"]
+  "keywords": [
+    "atproto",
+    "bluesky",
+    "at-uri",
+    "nsid",
+    "rkey",
+    "did",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "@atproto/syntax",
+    "repo": "https://github.com/bluesky-social/atproto",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@atproto/syntax",
+      "repo": "https://github.com/bluesky-social/atproto",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "atrium-api",
+      "repo": "https://github.com/sugyan/atrium",
+      "license": "MIT"
+    }
+  ]
 }

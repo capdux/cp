@@ -1,5 +1,8 @@
 # @cap/http-types
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:http` ([https://github.com/hyperium/http](https://github.com/hyperium/http))（原库名 `http` → CP 包名 `@cap/http-types`）
+
 Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types for CP — clean-room MIT parity with crates.io `http` v1 and RFC 9110.
 
 Composes [`@cap/unicase`](../unicase) (`eqAscii`) for ASCII case-insensitive header name and HTTP version comparison with zero code duplication.

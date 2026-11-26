@@ -5,5 +5,11 @@
   "license": "MIT",
   "entry": "src/index.cp",
   "types": "src/index.d.cp",
-  "dependencies": {}
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "crc32fast",
+    "repo": "https://github.com/srijs/rust-crc32fast",
+    "license": "MIT OR Apache-2.0"
+  }
 }

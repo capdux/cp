@@ -1,5 +1,8 @@
 # @cap/cors-match
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tower-http` ([https://github.com/tower-rs/tower-http](https://github.com/tower-rs/tower-http))（原库名 `tower-http` → CP 包名 `@cap/cors-match`）
+
 Zero-heap CORS origin matcher, wildcard subdomain check, and preflight method/header validator for CP.
 Compatible with npm `cors` and Rust `tower-http::cors`.
 

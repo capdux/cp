@@ -1,5 +1,8 @@
 # @cap/postcss-parse
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:postcss` ([https://github.com/postcss/postcss](https://github.com/postcss/postcss))（原库名 `postcss` → CP 包名 `@cap/postcss-parse`）
+
 零堆分配的 CP 原生 CSS AST 解析、查询、修改与序列化引擎，Clean-Room MIT 实现对标 npm Top 25 顶流包 `postcss` v8（1.5 亿+/周下载）。
 
 ## 特性

@@ -1,5 +1,8 @@
 # @cap/percent-encoding
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:percent-encoding` ([https://github.com/servo/rust-url](https://github.com/servo/rust-url))
+
 Pure CP, zero-allocation WHATWG URL Standard percent-encoding and decoding library (clean-room MIT parity with Rust `percent-encoding`).
 
 ## Features

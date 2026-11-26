@@ -1,5 +1,8 @@
 # @cap/aabb3
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:parry3d` ([https://github.com/dimforge/parry](https://github.com/dimforge/parry)) / `npm:aabb-3d` ([https://github.com/chrisdickinson/aabb-3d](https://github.com/chrisdickinson/aabb-3d))（原库名 `parry3d` → CP 包名 `@cap/aabb3`）
+
 Zero-allocation 3D Axis-Aligned Bounding Box (AABB) collision detection, union/intersection, surface area/volume, and Kay-Kajiya Slab raycast engine for CP.
 
 ## Features

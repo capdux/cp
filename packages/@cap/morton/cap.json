@@ -4,5 +4,11 @@
   "description": "Zero-allocation 2D/3D Z-Order (Morton) bit-interleaving codec and 2D Hilbert space-filling curve mapper for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "morton-encoding",
+    "repo": "https://github.com/morton-encoding/morton-encoding",
+    "license": "MIT"
+  }
 }

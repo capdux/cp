@@ -14,5 +14,25 @@
     "writer",
     "codec",
     "protocol"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "untrusted",
+    "repo": "https://github.com/briansmith/untrusted",
+    "license": "ISC"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "untrusted",
+      "repo": "https://github.com/briansmith/untrusted",
+      "license": "ISC"
+    },
+    {
+      "registry": "crates.io",
+      "name": "byteorder",
+      "repo": "https://github.com/BurntSushi/byteorder",
+      "license": "MIT"
+    }
   ]
 }

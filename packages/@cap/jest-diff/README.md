@@ -1,5 +1,8 @@
 # @cap/jest-diff
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:jest-diff` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest))
+
 零堆分配的纯 CP Jest 风格统一差异（Unified Diff）对比引擎，Clean-Room MIT 实现对标 npm Top 50 包 `jest-diff`（周下载 9000 万+），跨包复用 `@cap/similar-diff` 的行级 LCS 差分算法与 `@cap/picocolors` 的 ANSI 终端着色能力。
 
 ## 特性

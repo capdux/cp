@@ -1,5 +1,8 @@
 # `@cap/kd-tree`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:kiddo` ([https://github.com/sdd/kiddo](https://github.com/sdd/kiddo))（原库名 `kiddo` → CP 包名 `@cap/kd-tree`）
+
 Zero-heap-allocation static 2D KD-Tree spatial index in pure CP.
 
 ## Features

@@ -1,5 +1,8 @@
 # `@cap/nalgebra`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:nalgebra` ([https://github.com/dimforge/nalgebra](https://github.com/dimforge/nalgebra))
+
 Zero-heap 2D/3D/4D linear algebra library with vector operations, matrix multiplication, determinant, inverse, and 3D affine transforms — clean-room CP equivalent of crates.io `nalgebra`.
 
 Reuses `@cap/mint` as an independent package.

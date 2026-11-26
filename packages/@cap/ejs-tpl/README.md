@@ -1,5 +1,8 @@
 # @cap/ejs-tpl
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:ejs` ([https://github.com/mde/ejs](https://github.com/mde/ejs))（原库名 `ejs` → CP 包名 `@cap/ejs-tpl`）
+
 Clean-room MIT, zero-heap Embedded Template Engine for CP — modeled on npm's `ejs` v3.
 
 ## Dependencies

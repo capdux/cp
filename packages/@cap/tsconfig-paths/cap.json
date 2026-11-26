@@ -4,5 +4,11 @@
   "description": "Zero-allocation TypeScript tsconfig.json baseUrl + paths alias wildcard matcher and path resolver for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "tsconfig-paths",
+    "repo": "https://github.com/dividab/tsconfig-paths",
+    "license": "MIT"
+  }
 }

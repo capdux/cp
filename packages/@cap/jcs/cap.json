@@ -4,5 +4,11 @@
   "description": "Zero-allocation RFC 8785 JSON Canonicalization Scheme (JCS) deterministic serializer & semantic equivalence checker (fast-json-stable-stringify / canonicalize / serde_jcs parity) for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "fast-json-stable-stringify",
+    "repo": "https://github.com/epoberezkin/fast-json-stable-stringify",
+    "license": "MIT"
+  }
 }

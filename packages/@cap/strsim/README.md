@@ -1,5 +1,8 @@
 # @cap/strsim
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:strsim` ([https://github.com/rapidfuzz/strsim-rs](https://github.com/rapidfuzz/strsim-rs))
+
 Clean-room MIT, zero-heap string similarity & edit-distance library for CP — modeled on Rust's `strsim` crate (850M+ downloads).
 
 ## API

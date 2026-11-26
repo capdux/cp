@@ -1,5 +1,8 @@
 # `@cap/webhook-sig`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks)) / `crates.io:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks))（原库名 `standardwebhooks` → CP 包名 `@cap/webhook-sig`）
+
 Zero-heap-allocation Webhook signature parser, replay-window guard, and constant-time verifier in pure CP.
 
 ## Supported Protocols

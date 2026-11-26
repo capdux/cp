@@ -1,5 +1,8 @@
 # @cap/commander
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:commander` ([https://github.com/tj/commander.js](https://github.com/tj/commander.js))
+
 Zero-allocation CLI command framework for CP — clean-room MIT parity with npm `commander` v12. Composes `@cap/yargs-parser` and `@cap/cliui` with zero duplication.
 
 纯 CP 零堆分配命令行框架（对标 npm `commander` v12），复用 `@cap/yargs-parser`（参数解析与短/长标志映射）与 `@cap/cliui`（多列帮助文档排版引擎）。

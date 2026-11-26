@@ -1,5 +1,8 @@
 # `@cap/expr` — 零分配递归下降表达式求值引擎 / Zero-Allocation Expression Evaluation Engine
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:expr-eval` ([https://github.com/silentmatt/expr-eval](https://github.com/silentmatt/expr-eval))（原库名 `expr-eval` → CP 包名 `@cap/expr`）
+
 > 独立 Clean-Room 纯 CP 实现，对标 npm `expr-eval` / `filtrex` / `jexl` 与 Rust `evalexpr` / `meval` | 许可协议：MIT
 
 ## 安装 / Installation

@@ -1,5 +1,8 @@
 # @cap/sqlformat
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:sql-formatter` ([https://github.com/sql-formatter-org/sql-formatter](https://github.com/sql-formatter-org/sql-formatter))（原库名 `sql-formatter` → CP 包名 `@cap/sqlformat`）
+
 零堆分配的 CP SQL 美化格式化、关键词大写规范化与压缩引擎 — 洁净室 MIT 实现，对标 npm `sql-formatter` 与 Rust `sqlformat`。
 
 Zero-allocation SQL pretty-printer, keyword uppercasing normalizer, and minifier for CP — clean-room MIT parity with npm `sql-formatter` and Rust `sqlformat`.

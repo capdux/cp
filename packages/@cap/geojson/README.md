@@ -1,5 +1,8 @@
 # @cap/geojson
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:geojson` ([https://github.com/georust/geojson](https://github.com/georust/geojson))
+
 Clean-room MIT, zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop for CP — modeled on crates.io `geojson` v0.24 and built directly on [`@cap/wkt`](../wkt/README.md).
 
 ## Features

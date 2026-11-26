@@ -1,5 +1,8 @@
 # @cap/pretty-format
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:pretty-format` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest))
+
 零堆分配的纯 CP 结构化值格式化打印库，Clean-Room MIT 实现对标 npm Top 45 包 `pretty-format`（周下载 1 亿+）。
 
 ## 特性

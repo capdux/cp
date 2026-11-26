@@ -3,5 +3,11 @@
   "ver": "1.0.0",
   "description": "Zero-allocation Cron expression to human-readable English & Chinese natural language translator for CP",
   "main": "src/index.cp",
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "cronstrue",
+    "repo": "https://github.com/bradymholt/cRonstrue",
+    "license": "MIT"
+  }
 }

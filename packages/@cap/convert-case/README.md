@@ -1,5 +1,8 @@
 # @cap/convert-case
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:convert_case` ([https://github.com/rutrum/convert-case](https://github.com/rutrum/convert-case))（原库名 `convert_case` → CP 包名 `@cap/convert-case`）
+
 Zero-allocation 14-style string case conversion engine for CP — clean-room MIT parity with crates.io `convert_case` v0.6.
 
 Composes [`@cap/heck-case`](../heck-case) for Unicode-aware word boundary detection and the 8 core styles with zero code duplication, adding `flatcase`, `UPPERFLATCASE`, `lower words`, `UPPER WORDS`, `aLtErNaTiNg cAsE`, and `COBOL-CASE`.

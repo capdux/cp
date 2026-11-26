@@ -14,5 +14,11 @@
     "platform",
     "wasm",
     "cap"
-  ]
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "target-lexicon",
+    "repo": "https://github.com/bytecodealliance/target-lexicon",
+    "license": "Apache-2.0"
+  }
 }

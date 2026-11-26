@@ -5,5 +5,34 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
-  "keywords": ["color", "rgb", "hsl", "hsv", "cmyk", "palette", "graphics", "zero-alloc"]
+  "keywords": [
+    "color",
+    "rgb",
+    "hsl",
+    "hsv",
+    "cmyk",
+    "palette",
+    "graphics",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "palette",
+    "repo": "https://github.com/Ogeon/palette",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "palette",
+      "repo": "https://github.com/Ogeon/palette",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "tinycolor2",
+      "repo": "https://github.com/bgrins/TinyColor",
+      "license": "MIT"
+    }
+  ]
 }

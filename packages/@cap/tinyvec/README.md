@@ -1,5 +1,8 @@
 # @cap/tinyvec
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:tinyvec` ([https://github.com/Lokathor/tinyvec](https://github.com/Lokathor/tinyvec))
+
 Clean-room MIT, 100%-safe zero-heap inline stack vectors (`TinyVecI64`, `TinyVecU32`) for CP — modeled on Rust's `tinyvec` crate.
 
 ## API

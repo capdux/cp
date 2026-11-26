@@ -1,5 +1,8 @@
 # @cap/socks5-frame
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:fast-socks5` ([https://github.com/dizda/fast-socks5](https://github.com/dizda/fast-socks5)) / `npm:socks` ([https://github.com/JoshGlazebrook/socks](https://github.com/JoshGlazebrook/socks))（原库名 `fast-socks5` → CP 包名 `@cap/socks5-frame`）
+
 Zero-allocation RFC 1928 SOCKS5 and RFC 1929 Username/Password subnegotiation frame codec for CP.
 
 ## Features

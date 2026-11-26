@@ -1,5 +1,8 @@
 # @cap/css-color
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:color-parse` ([https://github.com/colorjs/color-parse](https://github.com/colorjs/color-parse)) / `crates.io:csscolorparser` ([https://github.com/mazznoer/csscolorparser-rs](https://github.com/mazznoer/csscolorparser-rs))（原库名 `color-parse` → CP 包名 `@cap/css-color`）
+
 Zero-allocation CSS Color Level 4 functional color parser, formatter, and RGB <-> HSL converter for CP.
 
 ## Features

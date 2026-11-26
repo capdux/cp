@@ -1,5 +1,8 @@
 # `@cap/fresh-http`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:fresh` ([https://github.com/jshttp/fresh](https://github.com/jshttp/fresh))（原库名 `fresh` → CP 包名 `@cap/fresh-http`）
+
 Zero-heap RFC 7232/9110 HTTP conditional request freshness evaluator in pure CP (clean-room MIT counterpart to npm `fresh` v0.5).
 
 ## Features

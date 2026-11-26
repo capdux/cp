@@ -8,5 +8,11 @@
   "dependencies": {
     "@cap/camelcase": "1.0.0",
     "@cap/decamelize": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "change-case",
+    "repo": "https://github.com/blakeembrey/change-case",
+    "license": "MIT"
   }
 }

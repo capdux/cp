@@ -1,5 +1,8 @@
 # @cap/idempotency
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:idempotency-key` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `idempotency-key` → CP 包名 `@cap/idempotency`）
+
 Zero-allocation IETF `Idempotency-Key` HTTP header parser, validator, RFC 8941 formatter, and request fingerprint state evaluator for CP.
 
 ## Features

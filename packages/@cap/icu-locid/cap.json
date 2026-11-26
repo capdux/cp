@@ -8,5 +8,20 @@
   "dependencies": {
     "@cap/tinystr": "1.0.0"
   },
-  "keywords": ["icu", "icu4x", "locale", "bcp47", "uts35", "i18n", "tinystr", "zero-alloc"]
+  "keywords": [
+    "icu",
+    "icu4x",
+    "locale",
+    "bcp47",
+    "uts35",
+    "i18n",
+    "tinystr",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "icu_locid",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "MIT"
+  }
 }

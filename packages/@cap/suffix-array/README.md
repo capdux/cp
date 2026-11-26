@@ -1,5 +1,8 @@
 # @cap/suffix-array
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:suffix` ([https://github.com/BurntSushi/suffix](https://github.com/BurntSushi/suffix))（原库名 `suffix` → CP 包名 `@cap/suffix-array`）
+
 Zero-heap static Suffix Array + Kasai O(N) LCP array in pure CP.
 
 ## Features

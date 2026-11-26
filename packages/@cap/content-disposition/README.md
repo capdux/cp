@@ -1,5 +1,8 @@
 # `@cap/content-disposition`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:content-disposition` ([https://github.com/jshttp/content-disposition](https://github.com/jshttp/content-disposition))
+
 Zero-allocation RFC 6266 / RFC 5987 HTTP `Content-Disposition` response header parser, formatter, `filename*` decoder, and filename sanitizer for CP. Clean-room MIT implementation inspired by npm `content-disposition`.
 
 ## Features

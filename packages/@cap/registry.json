@@ -3326,12 +3326,10 @@
       "source_name": "twox-hash",
       "source_repo": "https://github.com/shepmaster/twox-hash",
       "license": "MIT",
-      "cp_target": "@cap/xxhash",
+      "cp_target": "@cap/twox-hash",
       "kind": "package",
-      "aliases": [
-        "xxhash-rust"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10893,6 +10891,36 @@
       "source_repo": "https://github.com/llogiq/bytecount",
       "license": "Apache-2.0 OR MIT",
       "cp_target": "@cap/bytecount",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "seahash",
+      "source_repo": "https://github.com/ticki/tfs",
+      "license": "MIT",
+      "cp_target": "@cap/seahash",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-locate",
+      "source_repo": "https://github.com/sindresorhus/p-locate",
+      "license": "MIT",
+      "cp_target": "@cap/p-locate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "p-timeout",
+      "source_repo": "https://github.com/sindresorhus/p-timeout",
+      "license": "MIT",
+      "cp_target": "@cap/p-timeout-core",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

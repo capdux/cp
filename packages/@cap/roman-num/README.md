@@ -1,5 +1,8 @@
 # `@cap/roman-num`
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:romans` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:roman` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `romans` → CP 包名 `@cap/roman-num`）
+
 Zero-heap-allocation strict Roman numeral (`1..3999`) bidirectional parser, validator, and formatter in pure CP.
 
 ## Features

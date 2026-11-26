@@ -1,5 +1,8 @@
 # @cap/glob-parent
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:glob-parent` ([https://github.com/gulpjs/glob-parent](https://github.com/gulpjs/glob-parent))
+
 Zero-allocation glob static parent directory extractor, glob detector, and escaper for CP — clean-room MIT parity with npm `glob-parent` + `is-glob` (~170M/wk).
 
 纯 CP 零堆分配 Glob 静态前缀父目录提取、通配检测与安全转义引擎，适用于文件监听、构建工具与目录遍历器。

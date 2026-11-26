@@ -1,5 +1,8 @@
 # @cap/ecdsa-sig
 
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:ecdsa` ([https://github.com/RustCrypto/signatures](https://github.com/RustCrypto/signatures))（原库名 `ecdsa` → CP 包名 `@cap/ecdsa-sig`）
+
 Pure CP, zero-allocation ECDSA signature codec supporting RFC 3279 §2.2.3 ASN.1 DER (`SEQUENCE { r INTEGER, s INTEGER }`) and fixed-width `r || s` for NIST P-256 (64B) and P-384 (96B), with BIP-62 Low-S malleability normalization (parity with RustCrypto `ecdsa` / `signature`).
 
 Reuses `@cap/der-asn1` for strict ASN.1 DER encoding/decoding and `@cap/subtle-ct` for constant-time signature comparison.
