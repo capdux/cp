@@ -1020,3 +1020,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/convert-source-map`** | `packages/@cap/convert-source-map` | 对标 npm **#96** `convert-source-map` (**3.07 亿/周**) — 内联 Base64 `sourceMappingURL` 解析、生成与剥离 |
 | **`@cap/curve25519-dalek`** | `packages/@cap/curve25519-dalek` | 对标 crates.io **#421** `curve25519-dalek` (**3.54 亿+**) — 恒定时间 GF(2^255-19) 有限域与 RFC 7748 X25519 密钥协商 |
 | **`@cap/combine`** | `packages/@cap/combine` | 对标 crates.io **#424** `combine` (**3.54 亿+**) — 零拷贝回溯 `ParseCursor` 流式解析器组合子库 |
+| **`@cap/iconv-lite`** | `packages/@cap/iconv-lite` | 对标 npm **#38** `iconv-lite` (**4.42 亿/周**) — 零堆 UTF-8/UTF-16LE/BE/Latin1/Windows-1252/ASCII 双向字符集编解码 |
+| **`@cap/minipass`** | `packages/@cap/minipass` | 对标 npm **#82** `minipass` (**3.26 亿/周**) — 4KB 零堆环形缓冲同步背压字节流与管道传输 |
+| **`@cap/es-module-lexer`** | `packages/@cap/es-module-lexer` | 对标 npm **#94** `es-module-lexer` (**3.08 亿/周**) — Vite/Rollup 核心 ESM 静态/动态 `import`/`export` 词法扫描器 |
+| **`@cap/estree-walker`** | `packages/@cap/estree-walker` | 对标 npm **#99** `estree-walker` (**3.05 亿/周**, 含 `#108 estraverse`) — 零堆 ESTree AST 非递归 DFS 遍历与节点替换 |
+| **`@cap/cast`** | `packages/@cap/cast` | 对标 crates.io **#443** `cast` (**3.35 亿+**) — 受检基础数值类型转换（防静默溢出/下溢/NaN/Inf） |

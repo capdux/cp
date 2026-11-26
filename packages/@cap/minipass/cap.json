@@ -1,0 +1,14 @@
+{
+  "name": "@cap/minipass",
+  "ver": "1.0.0",
+  "description": "Zero-allocation fixed-capacity ring-buffer byte stream with synchronous backpressure and piping for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "ISC",
+  "source": {
+    "registry": "npm",
+    "name": "minipass",
+    "repo": "https://github.com/isaacs/minipass",
+    "license": "ISC"
+  }
+}

@@ -1258,3 +1258,11 @@
 - `packages/@cap/curve25519-dalek/` & `cap/test/testCapCurve25519Dalek.cp`: crates.io **#421** `curve25519-dalek`（3.54 亿+，RFC 7748 X25519 全向量 6/6 PASS）。
 - `packages/@cap/combine/` & `cap/test/testCapCombine.cp`: crates.io **#424** `combine`（3.54 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步 5 项新映射 + 将 npm **#78 `tr46`（3.41 亿/周）** 归并映射至已有 `@cap/idna-uts46`（零重复）；刷新 `cp_agent_lib_ref.md`；Worker C16 满 6 包光荣轮换。
+
+### 2026-11-27 (Batch 142 — **突破 `@cap` 750 包里程碑！真实 Top 榜 5 大核心包：npm #38/#82/#94/#99 + crates.io #443，30/30 PASS**)
+- `packages/@cap/iconv-lite/` & `cap/test/testCapIconvLite.cp`: npm **#38** `iconv-lite`（4.42 亿/周，6/6 PASS）。
+- `packages/@cap/minipass/` & `cap/test/testCapMinipass.cp`: npm **#82** `minipass`（3.26 亿/周，6/6 PASS）。
+- `packages/@cap/es-module-lexer/` & `cap/test/testCapEsModuleLexer.cp`: npm **#94** `es-module-lexer`（3.08 亿/周，6/6 PASS）。
+- `packages/@cap/estree-walker/` & `cap/test/testCapEstreeWalker.cp`: npm **#99** `estree-walker`（3.05 亿/周，同步归并 `#108 estraverse` 2.92 亿/周，6/6 PASS）。
+- `packages/@cap/cast/` & `cap/test/testCapCast.cp`: crates.io **#443** `cast`（3.35 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射（含 `estraverse` alias）并刷新极简速查手册；Worker N18 满 6 包光荣轮换。

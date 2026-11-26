@@ -11233,6 +11233,58 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "iconv-lite",
+      "source_repo": "https://github.com/ashtuchkin/iconv-lite",
+      "license": "MIT",
+      "cp_target": "@cap/iconv-lite",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "minipass",
+      "source_repo": "https://github.com/isaacs/minipass",
+      "license": "ISC",
+      "cp_target": "@cap/minipass",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "es-module-lexer",
+      "source_repo": "https://github.com/guybedford/es-module-lexer",
+      "license": "MIT",
+      "cp_target": "@cap/es-module-lexer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "estree-walker",
+      "source_repo": "https://github.com/Rich-Harris/estree-walker",
+      "license": "MIT",
+      "cp_target": "@cap/estree-walker",
+      "kind": "package",
+      "aliases": [
+        "estraverse"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cast",
+      "source_repo": "https://github.com/japaric/cast.rs",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/cast",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

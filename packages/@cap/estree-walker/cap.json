@@ -1,0 +1,14 @@
+{
+  "name": "@cap/estree-walker",
+  "ver": "1.0.0",
+  "description": "Zero-allocation index-pooled ESTree AST arena and non-recursive DFS walker with skip, remove, and replace for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "estree-walker",
+    "repo": "https://github.com/Rich-Harris/estree-walker",
+    "license": "MIT"
+  }
+}

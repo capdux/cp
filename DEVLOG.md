@@ -498,3 +498,6 @@
 
 ## 2026-11-27: Batch 141 真实 Top 榜 5 大核心包全 6/6 PASS（官方 `@cap` 达 **745 包**，映射 **955 条**）！
 - 交付 npm **#30 `json-schema-traverse`（4.77 亿/周）**、**#63 `argparse`（3.77 亿/周）**、**#96 `convert-source-map`（3.07 亿/周）** 与 crates.io **#421 `curve25519-dalek`（3.54 亿+，RFC 7748 X25519 全向量通过）**、**#424 `combine`（3.54 亿+）**，同时将 npm **#78 `tr46`（3.41 亿/周）** 无重复映射归并至 `@cap/idna-uts46`；Worker C16 满 6 包（36/36 PASS）光荣轮换。
+
+## 2026-11-27: Batch 142 官方 `@cap` 突破 **750 包**里程碑（映射 **960 条**）！真实 Top 榜 5 大核心包全 6/6 PASS！
+- 交付 npm **#38 `iconv-lite`（4.42 亿/周）**、**#82 `minipass`（3.26 亿/周）**、**#94 `es-module-lexer`（3.08 亿/周）**、**#99 `estree-walker`（3.05 亿/周，含 `#108 estraverse` 归并）** 与 crates.io **#443 `cast`（3.35 亿+）**，全部 30/30 单测 100% PASS；Worker N18 满 6 包（36/36 PASS）光荣轮换。
