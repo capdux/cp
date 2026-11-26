@@ -149,8 +149,8 @@
       "source_name": "governor",
       "source_repo": "https://github.com/boinkor-net/governor",
       "license": "MIT",
-      "cp_target": "cap:rate",
-      "kind": "stdlib",
+      "cp_target": "@cap/rate-header",
+      "kind": "package",
       "aliases": [
         "rate-limiter-flexible"
       ],
@@ -1131,8 +1131,8 @@
       "source_name": "httpdate",
       "source_repo": "https://github.com/pyfisch/httpdate",
       "license": "MIT",
-      "cp_target": "cap:http",
-      "kind": "stdlib",
+      "cp_target": "@cap/http-date",
+      "kind": "package",
       "aliases": [
         "http-date",
         "retry-after"
@@ -3482,7 +3482,7 @@
       "source_name": "governor",
       "source_repo": "https://github.com/boinkor-net/governor",
       "license": "MIT",
-      "cp_target": "@cap/governor",
+      "cp_target": "@cap/rate-header",
       "kind": "package",
       "aliases": [
         "rate-limiter-flexible",
@@ -6064,6 +6064,134 @@
       "kind": "stdlib",
       "aliases": [
         "xmlbuilder"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jsonrpc-core",
+      "source_repo": "https://github.com/paritytech/jsonrpc",
+      "license": "MIT",
+      "cp_target": "@cap/json-rpc",
+      "kind": "package",
+      "aliases": [
+        "jsonrpsee"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tower-http",
+      "source_repo": "https://github.com/tower-rs/tower-http",
+      "license": "MIT",
+      "cp_target": "@cap/cors-match",
+      "kind": "package",
+      "aliases": [
+        "tower-cors"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sfv",
+      "source_repo": "https://github.com/undef1nd/sfv",
+      "license": "MIT",
+      "cp_target": "@cap/user-agent-hints",
+      "kind": "package",
+      "aliases": [
+        "sec-ch-ua"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "read-pkg",
+      "source_repo": "https://github.com/sindresorhus/read-pkg",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": [
+        "read-pkg-up"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "json-rpc-2.0",
+      "source_repo": "https://github.com/shawninder/json-rpc-2.0",
+      "license": "MIT",
+      "cp_target": "@cap/json-rpc",
+      "kind": "package",
+      "aliases": [
+        "jayson"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "express-rate-limit",
+      "source_repo": "https://github.com/express-rate-limit/express-rate-limit",
+      "license": "MIT",
+      "cp_target": "@cap/rate-header",
+      "kind": "package",
+      "aliases": [
+        "rate-limiter-flexible"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "http-date",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/http-date",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ua-client-hints",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/user-agent-hints",
+      "kind": "package",
+      "aliases": [
+        "sec-ch-ua-parser"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jsonrpsee",
+      "source_repo": "https://github.com/paritytech/jsonrpsee",
+      "license": "MIT",
+      "cp_target": "@cap/json-rpc",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tower-service",
+      "source_repo": "https://github.com/tower-rs/tower",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [
+        "tower-layer"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "headers",
+      "source_repo": "https://github.com/hyperium/headers",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [
+        "headers-core"
       ],
       "absorbed_at": "2026-11-26"
     }

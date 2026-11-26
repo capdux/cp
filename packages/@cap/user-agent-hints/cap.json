@@ -1,0 +1,9 @@
+{
+  "name": "@cap/user-agent-hints",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C User-Agent Client Hints (Sec-CH-UA*) RFC 8941 structured header parser and formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["client-hints", "sec-ch-ua", "user-agent", "rfc8941", "http", "zero-alloc"]
+}

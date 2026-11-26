@@ -1,0 +1,10 @@
+{
+  "name": "@cap/cors-match",
+  "version": "1.0.0",
+  "description": "Zero-heap CORS origin matcher, wildcard subdomain check, and preflight method/header validator for CP (compatible with npm cors & Rust tower-http::cors)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["cors", "origin", "preflight", "http", "security", "wildcard"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/cors-match"
+}

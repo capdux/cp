@@ -1,0 +1,8 @@
+{
+  "name": "@cap/json-rpc",
+  "version": "1.0.0",
+  "description": "Zero-heap JSON-RPC 2.0 request/notification/result/error encoder, envelope validator, batch detector, and standard error codes.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

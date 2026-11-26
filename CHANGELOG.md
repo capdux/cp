@@ -488,3 +488,11 @@
 - `packages/@cap/bearer-auth/` & `cap/test/testCapBearerAuth.cp`: RFC 6750 Bearer Token 提取与 JWT 预检（6/6 PASS）。
 - `packages/@cap/server-timing/` & `cap/test/testCapServerTiming.cp`: W3C `Server-Timing` 响应性能头编解码（6/6 PASS）。
 - `packages/@cap/registry.json`: 同步扩充并升级 `qs`/`statuses`/`basic-auth`/`tough-cookie`/`express-bearer-token`/`server-timing`/`date-fns`/`http-auth-basic`/`cookie_store`/`serde_urlencoded` 映射。
+
+## [2026-11-26] - Batch 58 双生态交付 **5 大 API 网关/RPC 核心新包**（`@cap/http-date`, `@cap/json-rpc`, `@cap/cors-match`, `@cap/rate-header`, `@cap/user-agent-hints`），总映射冲至 **495 条**（距 500 映射大关仅 5 条）！
+- `packages/@cap/http-date/` & `cap/test/testCapHttpDate.cp`: RFC 9110 三格式 HTTP-date 解析与 Hinnant 公历互转（6/6 PASS）。
+- `packages/@cap/json-rpc/` & `cap/test/testCapJsonRpc.cp`: JSON-RPC 2.0 协议帧零堆编码与信封校验（6/6 PASS）。
+- `packages/@cap/cors-match/` & `cap/test/testCapCorsMatch.cp`: CORS Origin 通配子域匹配与预检校验（6/6 PASS）。
+- `packages/@cap/rate-header/` & `cap/test/testCapRateHeader.cp`: IETF RateLimit Headers 解析与退避计算（6/6 PASS）。
+- `packages/@cap/user-agent-hints/` & `cap/test/testCapUserAgentHints.cp`: W3C `Sec-CH-UA` Client Hints 解析与 GREASE 过滤（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **495 条**双生态高频映射（**npm=247 / crates.io=248** 1:1 绝对均衡）。

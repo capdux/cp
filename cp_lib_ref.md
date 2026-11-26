@@ -505,3 +505,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/cookie-jar`** | `packages/@cap/cookie-jar` | 对标 npm `tough-cookie` / Rust `cookie_store` — RFC 6265 域/路径防伪造匹配、`Set-Cookie` 解析与 `Cookie` 头组装 |
 | **`@cap/bearer-auth`** | `packages/@cap/bearer-auth` | 对标 npm `express-bearer-token` / Rust `axum-extra` — RFC 6750 Bearer Token 提取、JWT 预检与恒定时间校验 |
 | **`@cap/server-timing`** | `packages/@cap/server-timing` | 对标 npm/Rust `server-timing` — W3C `Server-Timing` 性能追踪响应头零堆解析、格式化与总耗时汇总 |
+| **`@cap/http-date`** | `packages/@cap/http-date` | 对标 Rust `httpdate` / npm `http-date` — RFC 9110 三格式 HTTP-date 零堆解析、Hinnant 公历互转与 29 字节 IMF-fixdate 格式化 |
+| **`@cap/json-rpc`** | `packages/@cap/json-rpc` | 对标 npm `json-rpc-2.0` / Rust `jsonrpc-core` — JSON-RPC 2.0 请求/通知/响应/错误零堆编码与标准错误码 |
+| **`@cap/cors-match`** | `packages/@cap/cors-match` | 对标 npm `cors` / Rust `tower-http::cors` — CORS Origin 精确/通配子域防伪造匹配与预检方法/头部校验 |
+| **`@cap/rate-header`** | `packages/@cap/rate-header` | 对标 npm `express-rate-limit` / Rust `governor` — IETF `RateLimit-Policy` 与结构化限流头零堆解析、格式化与重试延迟计算 |
+| **`@cap/user-agent-hints`** | `packages/@cap/user-agent-hints` | 对标 W3C Client Hints / Rust `sfv` — `Sec-CH-UA` 品牌列表解析、GREASE 过滤与移动/平台提取 |

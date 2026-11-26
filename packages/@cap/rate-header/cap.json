@@ -1,0 +1,9 @@
+{
+  "name": "@cap/rate-header",
+  "ver": "1.0.0",
+  "description": "Zero-allocation IETF HTTP RateLimit headers (RateLimit-Policy / RateLimit / X-RateLimit-*) parser, formatter, and reset delay calculator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ratelimit", "rate-limit", "http", "ietf", "headers", "backoff", "zero-alloc"]
+}

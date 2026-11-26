@@ -237,3 +237,6 @@
 
 ## 2026-11-26: Batch 57 HTTP 核心六件套全 6/6 PASS，线上官方 `.cap` 包冲刺 **314+ 个**！
 - 交付 `@cap/qs-lite`（2.4 亿/周，6/6）、`@cap/statuses`（2.3 亿/周，6/6）、`@cap/basic-auth`（1.3 亿/周，6/6）、`@cap/cookie-jar`（7500 万/周，6/6）、`@cap/bearer-auth`（6/6）、`@cap/server-timing`（6/6），直连 `date-fns`/`http-auth-basic`/`cookie_store`/`serde_urlencoded`！
+
+## 2026-11-26: Batch 58 API 网关/RPC 五件套全 6/6 PASS，总映射冲刺 **495 条（npm=247 / crates.io=248）**、线上官方包突破 **319 个**！
+- 交付 `@cap/http-date`（1.8 亿+ Rust 下载，6/6）、`@cap/json-rpc`（6/6）、`@cap/cors-match`（6/6）、`@cap/rate-header`（6/6）、`@cap/user-agent-hints`（6/6），下一批 Batch 59 将正式跨过 **500+ 双生态映射大关**！

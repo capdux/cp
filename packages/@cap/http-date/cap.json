@@ -1,0 +1,9 @@
+{
+  "name": "@cap/http-date",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 9110 Section 5.6.7 HTTP-date parser (IMF-fixdate, RFC 850, asctime) and formatter with Hinnant calendar math in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["http-date", "httpdate", "rfc9110", "imf-fixdate", "rfc850", "asctime", "timestamp", "zero-alloc"]
+}
