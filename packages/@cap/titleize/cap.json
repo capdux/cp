@@ -1,0 +1,22 @@
+{
+  "name": "@cap/titleize",
+  "ver": "1.0.0",
+  "description": "Zero-allocation string title-case formatter (npm titleize v3 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "titleize",
+    "title-case",
+    "capitalize",
+    "uppercase",
+    "string",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "titleize",
+    "repo": "https://github.com/sindresorhus/titleize",
+    "license": "MIT"
+  }
+}

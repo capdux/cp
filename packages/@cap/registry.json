@@ -10985,6 +10985,48 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "humanize-string",
+      "source_repo": "https://github.com/sindresorhus/humanize-string",
+      "license": "MIT",
+      "cp_target": "@cap/humanize-string",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "titleize",
+      "source_repo": "https://github.com/sindresorhus/titleize",
+      "license": "MIT",
+      "cp_target": "@cap/titleize",
+      "kind": "package",
+      "aliases": [
+        "upper-case-first"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "humansize",
+      "source_repo": "https://github.com/LeopoldArkham/humansize",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/humansize",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "oorandom",
+      "source_repo": "https://sr.ht/~icefox/oorandom/",
+      "license": "MIT",
+      "cp_target": "@cap/oorandom",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

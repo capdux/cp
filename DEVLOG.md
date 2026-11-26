@@ -486,3 +486,6 @@
 
 ## 2026-11-27: Batch 136 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **719 包**，映射 **932 条**）！
 - 交付 npm `humanize-url`、`extract-stack` 与 crates.io `http-content-range`、`path-clean`、`urlencoding`，全部 30/30 单测首轮一遍过 100% PASS。
+
+## 2026-11-27: Batch 137 五大零重复 Top-700 包全 6/6 PASS（官方 `@cap` 达 **724 包**，映射 **936 条**）！
+- 交付 npm **Top 20 `is-fullwidth-code-point`（1.8 亿+/周）**、`humanize-string`（跨包复用 `@cap/decamelize`）、`titleize` 与 crates.io `humansize`、`oorandom`（PCG32 官方向量一致），全部 30/30 单测一遍过 100% PASS；Worker N16 满 6 包（36/36 PASS，7 分钟）轮换换新为 Worker N17。

@@ -996,3 +996,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/http-content-range`** | `packages/@cap/http-content-range` | 对标 crates.io `http-content-range` — RFC 9110 `Content-Range` 解析（含 `*` 与 `Unsatisfied`）及格式化 |
 | **`@cap/path-clean`** | `packages/@cap/path-clean` | 对标 crates.io `path-clean` — Go `filepath.Clean` 语义零堆单遍词法路径清理与拼接 |
 | **`@cap/urlencoding`** | `packages/@cap/urlencoding` | 对标 crates.io `urlencoding` v2 — RFC 3986 百分号编码、严格/容错解码与 `encodedLen` |
+| **`@cap/humanize-string`** | `packages/@cap/humanize-string` | 对标 npm `humanize-string` v3 (**2500 万+/周**, 复用 `@cap/decamelize`) — 驼峰/下划线/短横线转为自然可读句子 |
+| **`@cap/titleize`** | `packages/@cap/titleize` | 对标 npm `titleize` v3 (**1500 万+/周**) — 英文标题单词首字母大写与 `upperCaseFirst` |
+| **`@cap/is-fullwidth-code-point`** | `packages/@cap/is-fullwidth-code-point` | 对标 npm **Top 20** `is-fullwidth-code-point` v5 (**1.8 亿+/周**) — Unicode UAX #11 东亚宽/全角码点与列宽判定 |
+| **`@cap/humansize`** | `packages/@cap/humansize` | 对标 crates.io `humansize` v2 — `DECIMAL`/`BINARY`/`WINDOWS` 多预设零堆人类可读字节格式化 |
+| **`@cap/oorandom`** | `packages/@cap/oorandom` | 对标 crates.io `oorandom` — 零依赖 PCG32 (`Rand32`) 与 `Rand64` 确定性伪随机数生成器 |

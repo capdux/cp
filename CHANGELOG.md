@@ -1219,3 +1219,11 @@
 - `packages/@cap/path-clean/` & `cap/test/testCapPathClean.cp`: crates.io `path-clean`（单遍词法路径清洗，6/6 PASS）。
 - `packages/@cap/urlencoding/` & `cap/test/testCapUrlencoding.cp`: crates.io `urlencoding` v2（RFC 3986 百分号编解码，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册。
+
+### 2026-11-27 (Batch 137 — **新增 5 大零重复 Top-700 包：3 npm + 2 crates.io，30/30 单测 100% PASS**)
+- `packages/@cap/humanize-string/` & `cap/test/testCapHumanizeString.cp`: npm `humanize-string` v3（2500 万+/周，复用 `@cap/decamelize`，6/6 PASS）。
+- `packages/@cap/titleize/` & `cap/test/testCapTitleize.cp`: npm `titleize` v3（1500 万+/周，6/6 PASS）。
+- `packages/@cap/is-fullwidth-code-point/` & `cap/test/testCapIsFullwidthCodePoint.cp`: npm **Top 20** `is-fullwidth-code-point` v5（1.8 亿+/周，6/6 PASS）。
+- `packages/@cap/humansize/` & `cap/test/testCapHumansize.cp`: crates.io `humansize` v2（多预设人类可读字节格式化，6/6 PASS）。
+- `packages/@cap/oorandom/` & `cap/test/testCapOorandom.cp`: crates.io `oorandom`（PCG32/PCG64 确定性 PRNG，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射并刷新极简速查手册；Worker N16 满 6 包光荣轮换为 Worker N17。
