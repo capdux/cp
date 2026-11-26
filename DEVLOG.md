@@ -258,3 +258,6 @@
 
 ## 2026-11-26: Batch 64 亿级包管/数据库/Kafka 六件套全 6/6 PASS，线上官方包冲刺 **357+ 个**、总映射 **551 条（npm=275 / crates.io=276）**！
 - 交付 `@cap/semver-range`（3.5 亿+/周，6/6）、`@cap/npm-spec`（1.4 亿+/周，6/6）、`@cap/mysql-dsn`（6/6）、`@cap/mongo-uri`（6/6）、`@cap/kafka-topic`（6/6）、`@cap/at-uri`（6/6），全线零堆纯 CP 100% PASS！
+
+## 2026-11-26: Batch 65 亿级基础库六件套全 6/6 PASS，线上官方包冲刺 **363+ 个**、总映射 **560+ 条**！
+- 交付 `@cap/glob-match`（3.8 亿+/周，6/6）、`@cap/html-escape`（2.5 亿+/周，6/6）、`@cap/regex-escape`（2.4 亿+/周，6/6）、`@cap/magic-bytes`（7500 万+/周，6/6）、`@cap/sql-escape`（3500 万+/周，6/6）、`@cap/cron-expr`（3000 万+/周，6/6），全线零堆纯 CP 100% PASS！

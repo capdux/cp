@@ -1,0 +1,8 @@
+{
+  "name": "@cap/cron-expr",
+  "version": "1.0.0",
+  "description": "Zero-heap 5-field Unix Cron expression bitmask compiler, standard macro expander, and O(1) schedule matcher.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

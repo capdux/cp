@@ -1,0 +1,10 @@
+{
+  "name": "@cap/html-escape",
+  "version": "1.0.0",
+  "description": "Zero-heap HTML entity escaper and unescaper (named entities + decimal/hex numeric character references) for CP (compatible with npm escape-html, he & Rust html-escape)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["html", "escape", "unescape", "entities", "xss", "he", "sanitize"],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/html-escape"
+}

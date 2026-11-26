@@ -546,3 +546,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/mongo-uri`** | `packages/@cap/mongo-uri` | 对标 npm `mongodb-connection-string-url` / Rust `mongodb` — `mongodb://` & `mongodb+srv://` 副本集连接串解析与脱敏 |
 | **`@cap/kafka-topic`** | `packages/@cap/kafka-topic` | 对标 npm `kafkajs` / Rust `rdkafka` — Kafka Topic 规范校验与精确对齐 Java `Utils.murmur2` 分区路由 |
 | **`@cap/at-uri`** | `packages/@cap/at-uri` | 对标 npm `@atproto/syntax` / Rust `atrium-api` — AT Protocol / Bluesky `at://` URI 与 NSID/rkey 校验 |
+| **`@cap/glob-match`** | `packages/@cap/glob-match` | 对标 npm `minimatch` / `picomatch` / Rust `glob-match` — 防 ReDoS 零堆 Glob (`*`/`**`/`?`/`[...]`) 与 `.gitignore` `!` 否定求值 |
+| **`@cap/html-escape`** | `packages/@cap/html-escape` | 对标 npm `escape-html` / `he` / Rust `html-escape` — 零堆 HTML 实体转义与命名/十进制/十六进制 UTF-8 反转义 |
+| **`@cap/regex-escape`** | `packages/@cap/regex-escape` | 对标 npm `escape-string-regexp` / Rust `regex::escape` — 正则元字符与字符类转义、长度预计算与反转义 |
+| **`@cap/magic-bytes`** | `packages/@cap/magic-bytes` | 对标 npm `file-type` / Rust `infer` — 25 种主流图片/归档/可执行/数据库/音视频二进制文件魔数零拷贝嗅探 |
+| **`@cap/sql-escape`** | `packages/@cap/sql-escape` | 对标 npm `sqlstring` / `pg-format` — ANSI/PG/MySQL SQL 字符串/标识符引号转义、`LIKE` 通配转义与 `?` 占位符统计 |
+| **`@cap/cron-expr`** | `packages/@cap/cron-expr` | 对标 npm `cron-parser` / Rust `cron` — 5 段 Unix Cron 64-bit 紧凑位图编译与 O(1) 时间点匹配（含标准宏） |

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/magic-bytes",
+  "ver": "1.0.0",
+  "description": "Zero-allocation binary file magic bytes signature sniffer (25+ image, archive, document, executable, audio, video, and database formats) for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["magic-bytes", "file-type", "mime", "sniffer", "binary", "infer", "zero-alloc"]
+}

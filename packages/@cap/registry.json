@@ -1144,8 +1144,8 @@
       "source_name": "escape-string-regexp",
       "source_repo": "https://github.com/sindresorhus/escape-string-regexp",
       "license": "MIT",
-      "cp_target": "cap:string",
-      "kind": "stdlib",
+      "cp_target": "@cap/regex-escape",
+      "kind": "package",
       "aliases": [
         "lodash.escaperegexp",
         "escape-regexp"
@@ -1941,8 +1941,8 @@
       "source_name": "minimatch",
       "source_repo": "https://github.com/isaacs/minimatch",
       "license": "ISC",
-      "cp_target": "cap:glob",
-      "kind": "stdlib",
+      "cp_target": "@cap/glob-match",
+      "kind": "package",
       "aliases": [
         "micromatch"
       ],
@@ -2018,8 +2018,8 @@
       "source_name": "picomatch",
       "source_repo": "https://github.com/micromatch/picomatch",
       "license": "MIT",
-      "cp_target": "cap:glob",
-      "kind": "stdlib",
+      "cp_target": "@cap/glob-match",
+      "kind": "package",
       "aliases": [
         "globset"
       ],
@@ -6835,6 +6835,116 @@
       "source_repo": "https://github.com/sugyan/atrium",
       "license": "MIT",
       "cp_target": "@cap/at-uri",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "file-type",
+      "source_repo": "https://github.com/sindresorhus/file-type",
+      "license": "MIT",
+      "cp_target": "@cap/magic-bytes",
+      "kind": "package",
+      "aliases": [
+        "mmmagic"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sqlstring",
+      "source_repo": "https://github.com/mysqljs/sqlstring",
+      "license": "MIT",
+      "cp_target": "@cap/sql-escape",
+      "kind": "package",
+      "aliases": [
+        "pg-format"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "escape-html",
+      "source_repo": "https://github.com/component/escape-html",
+      "license": "MIT",
+      "cp_target": "@cap/html-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "glob-match",
+      "source_repo": "https://github.com/devongovett/glob-match",
+      "license": "MIT",
+      "cp_target": "@cap/glob-match",
+      "kind": "package",
+      "aliases": [
+        "globset"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "html-escape",
+      "source_repo": "https://github.com/magiclen/html-escape",
+      "license": "MIT",
+      "cp_target": "@cap/html-escape",
+      "kind": "package",
+      "aliases": [
+        "askama_escape"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "infer",
+      "source_repo": "https://github.com/bojand/infer",
+      "license": "MIT",
+      "cp_target": "@cap/magic-bytes",
+      "kind": "package",
+      "aliases": [
+        "tree_magic_mini"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cron",
+      "source_repo": "https://github.com/zslayton/cron",
+      "license": "MIT",
+      "cp_target": "@cap/cron-expr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "regex-escape",
+      "source_repo": "https://github.com/rust-lang/regex",
+      "license": "MIT",
+      "cp_target": "@cap/regex-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pg-format",
+      "source_repo": "https://github.com/datalanche/node-pg-format",
+      "license": "MIT",
+      "cp_target": "@cap/sql-escape",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "html-entities",
+      "source_repo": "https://github.com/mdevils/html-entities",
+      "license": "MIT",
+      "cp_target": "@cap/html-escape",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"

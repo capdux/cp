@@ -1,0 +1,21 @@
+# @cap/regex-escape
+
+Zero-heap regular expression literal escaper, character-class escaper, unescaper, and metacharacter detector in pure CP.
+
+## Features
+
+- `isMetaChar(c)` & `needsEscape(input)`: fast-path metacharacter detection
+- `escapedLen(input)`: pre-computes exact escaped byte length
+- `escapeRegex(input, out)`: escapes all regex metacharacters (`\.+*?()|[]{}^$-`) plus `/`
+- `escapeCharClass(input, out)`: escapes `\`, `]`, `-`, `^` inside `[...]`
+- `unescapeRegexLiteral(input, out)`: reverses `\x` literal escapes
+
+## Usage
+
+```cp
+import { escapeRegex } from "@cap/regex-escape";
+
+let buf: [64]u8 = undefined;
+const n = escapeRegex("price: $9.99 (USD)", buf[0..64]);
+// buf[0..n] => "price: \\$9\\.99 \\(USD\\)"
+```

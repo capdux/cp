@@ -1,0 +1,8 @@
+{
+  "name": "@cap/regex-escape",
+  "version": "1.0.0",
+  "description": "Zero-heap regular expression literal escaper, character-class escaper, unescaper, and metacharacter detector.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

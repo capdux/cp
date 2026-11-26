@@ -550,3 +550,12 @@
 - `packages/@cap/kafka-topic/` & `cap/test/testCapKafkaTopic.cp`: Kafka Topic 校验与官方向量对齐 Murmur2 分区路由（6/6 PASS）。
 - `packages/@cap/at-uri/` & `cap/test/testCapAtUri.cp`: AT Protocol `at://` URI 与 NSID 校验（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **551 条**双生态高频映射（**npm=275 / crates.io=276** 绝对 1:1 均衡）。
+
+## [2026-11-26] - Batch 65 亿级通用基础库六件套（`@cap/glob-match`, `@cap/html-escape`, `@cap/regex-escape`, `@cap/magic-bytes`, `@cap/sql-escape`, `@cap/cron-expr`），总映射突破 **560 条**！
+- `packages/@cap/glob-match/` & `cap/test/testCapGlobMatch.cp`: 防 ReDoS Glob 通配符与 `.gitignore` 否定规则引擎（6/6 PASS）。
+- `packages/@cap/html-escape/` & `cap/test/testCapHtmlEscape.cp`: HTML XSS 实体转义与 UTF-8 数字/命名实体反转义（6/6 PASS）。
+- `packages/@cap/regex-escape/` & `cap/test/testCapRegexEscape.cp`: 正则字面量与字符类转义引擎（6/6 PASS）。
+- `packages/@cap/magic-bytes/` & `cap/test/testCapMagicBytes.cp`: 25 种主流二进制文件魔数签名嗅探（6/6 PASS）。
+- `packages/@cap/sql-escape/` & `cap/test/testCapSqlEscape.cp`: ANSI/PG/MySQL 字符串/标识符/LIKE 转义（6/6 PASS）。
+- `packages/@cap/cron-expr/` & `cap/test/testCapCronExpr.cp`: 5 段 Unix Cron 64-bit 位图编译与 O(1) 匹配（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **560+ 条**双生态高频映射（npm / crates.io 1:1 均衡）。
