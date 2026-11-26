@@ -639,3 +639,12 @@
 - `packages/@cap/chacha-rng/` & `cap/test/testCapChachaRng.cp`: RFC 8439 ChaCha8/12/20 块生成与 CSPRNG（6/6 PASS）。
 - `packages/@cap/math-interp/` & `cap/test/testCapMathInterp.cp`: 插值、限幅、重映射、环绕与缓动曲线（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **650 条**双生态高频映射（**npm=325 / crates.io=325 绝对 1:1 对称**）。
+
+### 2026-11-27 (Batch 75 — 660 映射精确 1:1 对称 & 420+ 官方包)
+- `packages/@cap/stats-basic/` & `cap/test/testCapStatsBasic.cp`: Welford 在线统计、Chan 合并、Pearson 相关系数与百分位（6/6 PASS）。
+- `packages/@cap/bloom-filter/` & `cap/test/testCapBloomFilter.cp`: 零堆外部位图双哈希布隆过滤器（6/6 PASS）。
+- `packages/@cap/vec2/` & `cap/test/testCapVec2.cp`: 2D 向量与平面几何库（6/6 PASS）。
+- `packages/@cap/vec3/` & `cap/test/testCapVec3.cp`: 3D 向量与空间几何库（6/6 PASS）。
+- `packages/@cap/fletcher/` & `cap/test/testCapFletcher.cp`: Fletcher-16/32/64 校验和（6/6 PASS）。
+- `packages/@cap/running-avg/` & `cap/test/testCapRunningAvg.cp`: EMA / SMA / WMA 流式移动平均（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **660 条**双生态高频映射（**npm=330 / crates.io=330 绝对 1:1 对称**）。

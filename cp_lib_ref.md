@@ -607,3 +607,10 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/wyhash`** | `packages/@cap/wyhash` | 对标 Rust `wyhash` — Wang Yi wyhash v4 64 位超高速哈希与 WyRng |
 | **`@cap/chacha-rng`** | `packages/@cap/chacha-rng` | 对标 Rust `rand_chacha` (4 亿+) — RFC 8439 ChaCha8/12/20 核心块生成器与 CSPRNG |
 | **`@cap/math-interp`** | `packages/@cap/math-interp` | 对标 npm `lerp` / `eases` / `smoothstep` — 零堆线性插值、区间重映射、角度转换与缓动曲线 |
+
+| **`@cap/stats-basic`** | `packages/@cap/stats-basic` | 对标 npm `simple-statistics` / Rust `statrs` — Welford 在线统计、Chan 并行合并、协方差、Pearson 相关系数与百分位 |
+| **`@cap/bloom-filter`** | `packages/@cap/bloom-filter` | 对标 npm `bloom-filters` / Rust `bloomfilter` — Kirsch-Mitzenmacher 双哈希零堆外部位图布隆过滤器 |
+| **`@cap/vec2`** | `packages/@cap/vec2` | 对标 npm `victor` / Rust `euclid` — 2D 向量、点积/叉积、旋转、反射、投影与归一化 |
+| **`@cap/vec3`** | `packages/@cap/vec3` | 对标 npm `gl-matrix` / Rust `glam` — 3D 空间向量、右手叉积、反射、投影与限长 |
+| **`@cap/fletcher`** | `packages/@cap/fletcher` | 对标 Rust `fletcher` — Fletcher-16/32/64 位置敏感流式校验和 |
+| **`@cap/running-avg`** | `packages/@cap/running-avg` | 对标 npm `moving-averages` — 零堆 EMA / 环形窗口 SMA / 加权 WMA 移动平均 |

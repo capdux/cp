@@ -1,0 +1,9 @@
+{
+  "name": "@cap/running-avg",
+  "version": "1.0.0",
+  "description": "Zero-heap Exponential Moving Average (EMA), Simple Moving Average (SMA), and Weighted Moving Average (WMA) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["ema", "sma", "wma", "moving-average", "streaming", "signal", "finance"]
+}

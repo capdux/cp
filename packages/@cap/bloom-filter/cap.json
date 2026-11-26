@@ -1,0 +1,9 @@
+{
+  "name": "@cap/bloom-filter",
+  "ver": "1.0.0",
+  "desc": "Zero-heap classic Bloom filter in pure CP with Kirsch-Mitzenmacher double hashing",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["bloom-filter", "probabilistic", "set", "hash", "zero-heap"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@cap/stats-basic",
+  "version": "1.0.0",
+  "description": "Zero-heap Welford online statistics, Chan parallel merge, descriptive slice stats, covariance, Pearson correlation, and linear-interpolated percentiles.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

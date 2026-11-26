@@ -1,0 +1,21 @@
+# @cap/stats-basic
+
+Zero-heap Welford online statistics, Chan parallel merge, and descriptive statistics in pure CP (zero external dependencies).
+
+## Features
+
+- `OnlineStats`: numerically stable Welford `push`, Chan parallel `merge`, `variance`, `sampleVariance`, `stddev`, `sampleStddev`, `min_val`, `max_val`
+- Slice stats: `sum`, `mean`, `variance`, `stddev`, `minSlice`, `maxSlice`, `covariance`, `pearsonR`, `percentileSorted`, `medianSorted`
+
+## Usage
+
+```cp
+import { OnlineStats, pearsonR, medianSorted } from "@cap/stats-basic";
+
+let st = OnlineStats.new();
+st.push(2.0);
+st.push(4.0);
+st.push(4.0);
+st.push(4.0);
+const sd = st.stddev();
+```

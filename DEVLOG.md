@@ -288,3 +288,6 @@
 
 ## 2026-11-27: Batch 74 六件套全 6/6 PASS — 达到 **650 条双生态映射（npm=325 / crates.io=325 绝对 1:1 对称）** & 414+ 官方 `.cap` 包！
 - 集中补齐高性能哈希与随机数矩阵：`@cap/siphash-pure`（2 亿+）、`@cap/xoshiro256`（1 亿+）、`@cap/pcg32`（1.5 亿+）、`@cap/wyhash`、`@cap/chacha-rng`（4 亿+，严格通过 RFC 8439 向量），以及数学插值缓动库 `@cap/math-interp`，全线零堆纯 CP 100% PASS。
+
+## 2026-11-27: Batch 75 六件套全 6/6 PASS — 达到 **660 条双生态映射（npm=330 / crates.io=330 绝对 1:1 对称）** & 420+ 官方 `.cap` 包！
+- 交付 `@cap/stats-basic`、`@cap/bloom-filter`、`@cap/vec2`、`@cap/vec3`、`@cap/fletcher`、`@cap/running-avg`，全面覆盖基础统计、概率数据结构、2D/3D 向量几何、校验和与流式移动平均，全线零堆纯 CP 100% PASS。

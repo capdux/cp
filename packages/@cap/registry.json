@@ -7951,6 +7951,133 @@
         "easing"
       ],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "simple-statistics",
+      "source_repo": "https://github.com/simple-statistics/simple-statistics",
+      "license": "MIT",
+      "cp_target": "@cap/stats-basic",
+      "kind": "package",
+      "aliases": [
+        "stats",
+        "welford"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "statrs",
+      "source_repo": "https://github.com/statrs-dev/statrs",
+      "license": "MIT",
+      "cp_target": "@cap/stats-basic",
+      "kind": "package",
+      "aliases": [
+        "average"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bloom-filters",
+      "source_repo": "https://github.com/Callidon/bloom-filters",
+      "license": "MIT",
+      "cp_target": "@cap/bloom-filter",
+      "kind": "package",
+      "aliases": [
+        "bloomfilter"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bloomfilter",
+      "source_repo": "https://github.com/jedisct1/rust-bloom-filter",
+      "license": "MIT",
+      "cp_target": "@cap/bloom-filter",
+      "kind": "package",
+      "aliases": [
+        "fastbloom"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "victor",
+      "source_repo": "https://github.com/maxkueng/victor",
+      "license": "MIT",
+      "cp_target": "@cap/vec2",
+      "kind": "package",
+      "aliases": [
+        "vec2"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "euclid",
+      "source_repo": "https://github.com/servo/euclid",
+      "license": "MIT",
+      "cp_target": "@cap/vec2",
+      "kind": "package",
+      "aliases": [
+        "vec2"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "gl-matrix",
+      "source_repo": "https://github.com/toji/gl-matrix",
+      "license": "MIT",
+      "cp_target": "@cap/vec3",
+      "kind": "package",
+      "aliases": [
+        "vec3",
+        "mat3",
+        "quat"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fletcher",
+      "source_repo": "https://github.com/aaronriekenberg/rust-fletcher",
+      "license": "MIT",
+      "cp_target": "@cap/fletcher",
+      "kind": "package",
+      "aliases": [
+        "fletcher16",
+        "fletcher32"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "moving-averages",
+      "source_repo": "https://github.com/kaelzhang/node-moving-averages",
+      "license": "MIT",
+      "cp_target": "@cap/running-avg",
+      "kind": "package",
+      "aliases": [
+        "ema",
+        "sma",
+        "wma"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "simple_moving_average",
+      "source_repo": "https://github.com/emilec/simple_moving_average",
+      "license": "MIT",
+      "cp_target": "@cap/running-avg",
+      "kind": "package",
+      "aliases": [
+        "ta",
+        "ema"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
