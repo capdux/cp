@@ -1,0 +1,12 @@
+{
+  "name": "@cap/jest-diff",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP Jest-style unified diff engine with ANSI coloring (clean-room MIT implementation of npm jest-diff)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/similar-diff": "1.0.0",
+    "@cap/picocolors": "1.0.0"
+  }
+}

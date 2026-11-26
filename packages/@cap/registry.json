@@ -10544,6 +10544,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jest-diff",
+      "source_repo": "https://github.com/jestjs/jest",
+      "license": "MIT",
+      "cp_target": "@cap/jest-diff",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pretty-format",
+      "source_repo": "https://github.com/jestjs/jest",
+      "license": "MIT",
+      "cp_target": "@cap/pretty-format",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "on-finished",
+      "source_repo": "https://github.com/jshttp/on-finished",
+      "license": "MIT",
+      "cp_target": "@cap/on-finished",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "destroy",
+      "source_repo": "https://github.com/stream-utils/destroy",
+      "license": "MIT",
+      "cp_target": "@cap/destroy",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wkt",
+      "source_repo": "https://github.com/georust/wkt",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/wkt",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

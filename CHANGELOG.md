@@ -1040,3 +1040,11 @@
 - `packages/@cap/mediatype/` & `cap/test/testCapMediatype.cp`: crates.io `mediatype`（双包复用 `@cap/media-typer`+`@cap/unicase`，6/6 PASS）。
 - `packages/@cap/accept-header/` & `cap/test/testCapAcceptHeader.cp`: crates.io `accept-header`（双包复用 `@cap/negotiator`+`@cap/unicase`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增 Batch 116 全部 5 个官方包映射（875 mappings）。
+
+### 2026-11-27 (Batch 117 — **突破 665 官方 `.cap` 包！新增 `on-finished`(1.6 亿+/周)+`destroy`(1.5 亿+/周)+`pretty-format`(1 亿+/周)+`jest-diff`+`wkt`**)
+- `packages/@cap/jest-diff/` & `cap/test/testCapJestDiff.cp`: npm Top 50 `jest-diff`（9000 万+/周，双包复用 `@cap/similar-diff`+`@cap/picocolors`，6/6 PASS）。
+- `packages/@cap/pretty-format/` & `cap/test/testCapPrettyFormat.cp`: npm Top 45 `pretty-format`（1 亿+/周，确定性值美化打印，6/6 PASS）。
+- `packages/@cap/on-finished/` & `cap/test/testCapOnFinished.cp`: npm Top 25 `on-finished`（1.6 亿+/周，流完成状态机，6/6 PASS）。
+- `packages/@cap/destroy/` & `cap/test/testCapDestroy.cp`: npm Top 35 `destroy`（1.5 亿+/周，复用 `@cap/on-finished`，6/6 PASS）。
+- `packages/@cap/wkt/` & `cap/test/testCapWkt.cp`: crates.io `wkt` v0.11（GIS Well-Known Text 解析与格式化，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增 Batch 117 全部 5 个官方包映射（880 mappings）。

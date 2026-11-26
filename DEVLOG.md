@@ -423,3 +423,6 @@
 
 ## 2026-11-27: Batch 116 五大终端/路径/时长/HTTP 协商包全 6/6 PASS — 突破 **660 官方 `.cap` 包里程碑**！
 - 交付 npm `colorette`（1.5 亿+/周）、`npm-run-path`（1.4 亿+/周）与 crates.io `parse_duration`、`mediatype`、`accept-header`，全部 30/30 单测首轮一遍过 100% PASS，总映射达 875 项（npm=438, crates.io=437 精准 1:1 平衡）。
+
+## 2026-11-27: Batch 117 五大测试工具/流生命周期/GIS 包全 6/6 PASS — 官方 `.cap` 包突破 **665+**！
+- 交付 npm `on-finished`（1.6 亿+/周）、`destroy`（1.5 亿+/周，复用 `@cap/on-finished`）、`pretty-format`（1 亿+/周）、`jest-diff`（9000 万+/周，双包复用 `@cap/similar-diff`+`@cap/picocolors`）与 crates.io `wkt`，全部 30/30 单测 100% PASS；Worker C8 满 6 包（36/36 PASS）已光荣轮换换新为 Worker C9；注：Cloudflare D1 免费版当日行写配额已达上限，待 00:00 UTC 重置后统一批量 `seed_official.ts --live` 上线。

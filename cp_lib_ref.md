@@ -886,3 +886,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/parse-duration`** | `packages/@cap/parse-duration` | 对标 crates.io `parse_duration` / `duration-str` — 零堆复合人类可读时长解析（含小数单位与 `µs`）与格式化 |
 | **`@cap/mediatype`** | `packages/@cap/mediatype` | 对标 crates.io `mediatype` (双包复用 `@cap/media-typer`+`@cap/unicase`) — 结构化 MIME 类型/参数表/`+suffix` 判定与规范化输出 |
 | **`@cap/accept-header`** | `packages/@cap/accept-header` | 对标 crates.io `accept-header` (双包复用 `@cap/negotiator`+`@cap/unicase`) — HTTP `Accept` 质量因子排序与最佳媒体类型协商 |
+| **`@cap/jest-diff`** | `packages/@cap/jest-diff` | 对标 npm Top 50 `jest-diff` (9000 万+/周，双包复用 `@cap/similar-diff`+`@cap/picocolors`) — Jest 风格彩色 Unified Diff 与上下文折叠 |
+| **`@cap/pretty-format`** | `packages/@cap/pretty-format` | 对标 npm Top 45 `pretty-format` (1 亿+/周) — 零堆确定性值美化打印器、缩进/`min` 模式与最大深度截断 |
+| **`@cap/on-finished`** | `packages/@cap/on-finished` | 对标 npm Top 25 `on-finished` (**1.6 亿+/周**) — 零堆 HTTP 流完成状态机、16 槽位一次性回调分发与错误码透传 |
+| **`@cap/destroy`** | `packages/@cap/destroy` | 对标 npm Top 35 `destroy` (**1.5 亿+/周**, 复用 `@cap/on-finished`) — 幂等安全流/文件描述符销毁与延迟 `onOpen` 关闭守卫 |
+| **`@cap/wkt`** | `packages/@cap/wkt` | 对标 crates.io `wkt` v0.11 — 零堆 GIS Well-Known Text (`POINT`/`LINESTRING`/`POLYGON`/`MULTIPOINT`) 解析、格式化与外接矩形 |
