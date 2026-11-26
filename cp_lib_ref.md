@@ -314,3 +314,6 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/content-type`** | `packages/@cap/content-type` | 对标 npm `content-type`/`media-typer` — RFC 9110/6838 媒体类型、`+suffix` 与引号参数零堆解析与格式化 |
 | **`@cap/markdown-toc`** | `packages/@cap/markdown-toc` | 对标 npm `github-slugger`/`markdown-toc` — Markdown 标题大纲提取、GitHub 锚点去重与嵌套目录渲染 |
 | **`@cap/short-uuid`** | `packages/@cap/short-uuid` | 对标 npm `short-uuid` — 128-bit UUID 无损双向压缩（Flickr Base58 / Base62 / Cookie Base90） |
+| **`@cap/ascii-tree`** | `packages/@cap/ascii-tree` | 对标 npm `archy`/`treeify` / Rust `ptree` — 零堆 Unicode/Rounded/ASCII 层级目录树渲染引擎 |
+| **`@cap/url-join`** | `packages/@cap/url-join` | 对标 npm `url-join` — 零堆 RFC 3986 协议保护、斜杠折叠、`?query`/`#hash` 智能合并与安全路径拼接 |
+| **`@cap/text-stats`** | `packages/@cap/text-stats` | 对标 npm `reading-time`/`word-count` — 零堆单遍 UTF-8 统计（中英分词、段落、句数、阅读时长与 LLM Token 估算） |

@@ -111,3 +111,6 @@
 
 ## 2026-11-26: Wave 16 三路并行交付 `@cap/content-type` + `@cap/markdown-toc` + `@cap/short-uuid` 并发布至 `capdux.org`
 - 三路并行洁净室交付 `@cap/content-type`（6/6 PASS）、`@cap/markdown-toc`（4/4 PASS）、`@cap/short-uuid`（6/6 PASS），同步 85 条去重映射至 `https://capdux.org`（线上官方 `.cap` 包突破 116）。
+
+## 2026-11-26: Wave 17 三路并行交付 `@cap/ascii-tree` + `@cap/url-join` + `@cap/text-stats` 并发布至 `capdux.org`
+- 三路并行洁净室交付 `@cap/ascii-tree`（4/4 PASS）、`@cap/url-join`（6/6 PASS）、`@cap/text-stats`（6/6 PASS），并新增 4 条内部库去重映射（`@langchain/textsplitters`/`helmet`/`soundex-code`/`macaddress`），总映射达 92 条，同步发布至 `https://capdux.org`（线上官方 `.cap` 包达 118+）。

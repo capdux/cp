@@ -174,3 +174,9 @@
 - `packages/@cap/markdown-toc/` & `cap/test/testCapMarkdownToc.cp`: Markdown 标题大纲提取、GitHub 锚点去重与嵌套 TOC 渲染（对标 npm `github-slugger` [35M/wk] & `markdown-toc`，4/4 PASS）。
 - `packages/@cap/short-uuid/` & `cap/test/testCapShortUuid.cp`: 128-bit UUID 无损双向短 ID 编解码（Flickr Base58 / Base62 / Cookie Base90，对标 npm `short-uuid` [5M/wk]，6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 85 条高频映射（新增 Wave 16 三大包 + `httpdate`/`escape-string-regexp` 标准库映射）并同步发布至 `https://capdux.org`。
+
+## [2026-11-26] - Wave 17 三路并行吸收重量级独立 `@cap/*` 生态引擎（`@cap/ascii-tree`, `@cap/url-join`, `@cap/text-stats`）并发布至 `capdux.org`
+- `packages/@cap/ascii-tree/` & `cap/test/testCapAsciiTree.cp`: 零堆 Unicode/Rounded/ASCII 树形结构渲染器（对标 npm `archy` [35M/wk] & Rust `ptree`，4/4 PASS）。
+- `packages/@cap/url-join/` & `cap/test/testCapUrlJoin.cp`: 零堆 RFC 3986 URL 路径/查询/锚点智能拼接引擎（对标 npm `url-join` [15M/wk]，6/6 PASS）。
+- `packages/@cap/text-stats/` & `cap/test/testCapTextStats.cp`: 零堆单遍 UTF-8 中英文本统计、阅读时长与 LLM Token 估算引擎（对标 npm `reading-time` & `word-count`，6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 92 条高频映射（新增 Wave 17 三大包 + `@langchain/textsplitters`/`helmet`/`soundex-code`/`macaddress` 标准库去重映射）并同步发布至 `https://capdux.org`。

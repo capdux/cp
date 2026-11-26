@@ -854,6 +854,76 @@
       "kind": "stdlib",
       "aliases": ["lodash.escaperegexp", "escape-regexp"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "archy",
+      "source_repo": "https://github.com/substack/node-archy",
+      "license": "MIT",
+      "cp_target": "@cap/ascii-tree",
+      "kind": "package",
+      "aliases": ["treeify", "ptree", "asciitree"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "url-join",
+      "source_repo": "https://github.com/jfromaniello/url-join",
+      "license": "MIT",
+      "cp_target": "@cap/url-join",
+      "kind": "package",
+      "aliases": ["urljoin", "join-url"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "reading-time",
+      "source_repo": "https://github.com/ngryman/reading-time",
+      "license": "MIT",
+      "cp_target": "@cap/text-stats",
+      "kind": "package",
+      "aliases": ["word-count", "text-statistics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "@langchain/textsplitters",
+      "source_repo": "https://github.com/langchain-ai/langchainjs",
+      "license": "MIT",
+      "cp_target": "cap:text",
+      "kind": "stdlib",
+      "aliases": ["text-splitter", "recursive-character-text-splitter"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "helmet",
+      "source_repo": "https://github.com/helmetjs/helmet",
+      "license": "MIT",
+      "cp_target": "cap:security",
+      "kind": "stdlib",
+      "aliases": ["content-security-policy-builder", "csp-header"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "soundex-code",
+      "source_repo": "https://github.com/words/soundex-code",
+      "license": "MIT",
+      "cp_target": "cap:text",
+      "kind": "stdlib",
+      "aliases": ["soundex", "rphonetic"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "macaddress",
+      "source_repo": "https://github.com/scravy/node-macaddress",
+      "license": "MIT",
+      "cp_target": "cap:net",
+      "kind": "stdlib",
+      "aliases": ["macaddr", "eui64"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "name": "@cap/ascii-tree",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Unicode & ASCII dependency/directory tree renderer (archy / treeify / Rust ptree parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT"
+}
