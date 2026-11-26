@@ -1,0 +1,8 @@
+{
+  "name": "@cap/radix-sort",
+  "ver": "1.0.0",
+  "description": "Zero-allocation O(N) 8-bit LSD radix sort for u32, i32, u64, i64, and IEEE-754 f64 with pass skipping for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

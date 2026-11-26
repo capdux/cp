@@ -1,0 +1,8 @@
+{
+  "name": "@cap/aho-corasick",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Aho-Corasick multi-pattern O(N + Z) automaton with LCRS trie, BFS failure links, and dictionary suffix links (Rust aho-corasick parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT"
+}

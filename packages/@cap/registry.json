@@ -3454,6 +3454,106 @@
       "kind": "package",
       "aliases": ["xor-filter", "xor8"],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "memmem",
+      "source_repo": "https://github.com/BurntSushi/memchr",
+      "license": "MIT",
+      "cp_target": "@cap/memmem",
+      "kind": "package",
+      "aliases": ["memchr-memmem", "kmp"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "aho-corasick",
+      "source_repo": "https://github.com/BurntSushi/aho-corasick",
+      "license": "MIT",
+      "cp_target": "@cap/aho-corasick",
+      "kind": "package",
+      "aliases": ["ac-automaton"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "tower",
+      "source_repo": "https://github.com/tower-rs/tower",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": ["tower-service", "tower-layer"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "yoke",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": ["zerofrom"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zerovec",
+      "source_repo": "https://github.com/unicode-org/icu4x",
+      "license": "Unicode-3.0",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "phf",
+      "source_repo": "https://github.com/rust-phf/rust-phf",
+      "license": "MIT",
+      "cp_target": "cap:hash",
+      "kind": "stdlib",
+      "aliases": ["phf_shared"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "weezl",
+      "source_repo": "https://github.com/image-rs/lzw",
+      "license": "MIT",
+      "cp_target": "@cap/lzw",
+      "kind": "package",
+      "aliases": ["lzw"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "radsort",
+      "source_repo": "https://github.com/JakubValtar/radsort",
+      "license": "MIT",
+      "cp_target": "@cap/radix-sort",
+      "kind": "package",
+      "aliases": ["radix-sort", "voracious_radix_sort"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bwt",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/bwt",
+      "kind": "package",
+      "aliases": ["burrows-wheeler", "mtf"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "luhn",
+      "source_repo": "https://github.com/cp-lang/cp",
+      "license": "MIT",
+      "cp_target": "@cap/luhn",
+      "kind": "package",
+      "aliases": ["damm", "verhoeff"],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

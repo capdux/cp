@@ -364,3 +364,12 @@
 - `packages/@cap/crc16/` & `cap/test/testCapCrc16.cp`: CCITT-FALSE/XMODEM/MODBUS/KERMIT/ARC/USB CRC-16（6/6 PASS）。
 - `packages/@cap/xor-filter/` & `cap/test/testCapXorFilter.cp`: ACM JEA'2020 Xor8 静态指纹过滤器（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **345 条**高频映射（含 `crossbeam-deque`/`same-file`/`idna_adapter`/`zmij` 去重直连）。
+
+## [2026-11-26] - Batch 44 单批交付 6 大超十亿级搜索、压缩与校验包（`@cap/memmem`, `@cap/aho-corasick`, `@cap/lzw`, `@cap/radix-sort`, `@cap/bwt`, `@cap/luhn`），总映射突破 **355 条**！
+- `packages/@cap/memmem/` & `cap/test/testCapMemmem.cp`: 对标 Rust `memchr::memmem`（18.26 亿），BMH+KMP 混合子串搜索（6/6 PASS）。
+- `packages/@cap/aho-corasick/` & `cap/test/testCapAhoCorasick.cp`: 对标 Rust `aho-corasick`（14.50 亿），AC 自动机多模式匹配（6/6 PASS）。
+- `packages/@cap/lzw/` & `cap/test/testCapLzw.cp`: GIF/TIFF 标准 LZW 变长码无损压缩与解压（6/6 PASS）。
+- `packages/@cap/radix-sort/` & `cap/test/testCapRadixSort.cp`: O(N) 线性 LSD 基数排序（含 IEEE-754 `f64` 保序）（6/6 PASS）。
+- `packages/@cap/bwt/` & `cap/test/testCapBwt.cp`: Burrows-Wheeler 块排序变换 + Move-To-Front（6/6 PASS）。
+- `packages/@cap/luhn/` & `cap/test/testCapLuhn.cp`: ISO 7812 Luhn + Damm + Verhoeff 三合一校验码（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **355 条**高频映射（含 `tower`/`yoke`/`zerovec`/`phf` 去重直连）。

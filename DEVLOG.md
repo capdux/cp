@@ -195,3 +195,6 @@
 
 ## 2026-11-26: Batch 43 交付纠删码/位流/图最短路/线段树/Xor8 六大硬核引擎（总映射 **345 条**，冲刺 **230+ 官方 `.cap` 包**！）
 - 交付 `@cap/dijkstra`（6/6）、`@cap/reed-solomon`（6/6）、`@cap/bitstream`（6/6）、`@cap/segment-tree`（6/6）、`@cap/crc16`（6/6）、`@cap/xor-filter`（6/6），并去重直连 `crossbeam-deque`（8.06 亿）、`same-file`（7.90 亿）、`idna_adapter`（7.70 亿）、`zmij`（7.56 亿），总映射突破 **345 条**！
+
+## 2026-11-26: Batch 44 交付 18.26 亿级 `@cap/memmem` + 14.50 亿级 `@cap/aho-corasick` 等六大引擎（总映射 **355 条**，冲刺 **240 官方 `.cap` 包**！）
+- 交付 `@cap/memmem`（6/6）、`@cap/aho-corasick`（6/6）、`@cap/lzw`（6/6）、`@cap/radix-sort`（6/6）、`@cap/bwt`（6/6）、`@cap/luhn`（6/6），并去重直连 `tower`（8.85 亿）、`yoke`（8.34 亿）、`zerovec`（8.23 亿）、`phf`（7.63 亿），总映射突破 **355 条**！

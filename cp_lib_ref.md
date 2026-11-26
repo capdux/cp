@@ -423,3 +423,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/segment-tree`** | `packages/@cap/segment-tree` | 对标 Rust `segment-tree` — 零堆 2×N 迭代式线段树，O(log N) 联合查询区间 `sum`/`min`/`max` 与单点更新 |
 | **`@cap/crc16`** | `packages/@cap/crc16` | 对标 Rust `crc16` — CCITT-FALSE / XMODEM / MODBUS / KERMIT / ARC / USB 六大工业 CRC-16 校验和 |
 | **`@cap/xor-filter`** | `packages/@cap/xor-filter` | 对标 Rust `xorf` — ACM JEA'2020 Xor8 静态完美指纹过滤器（3 次查表异或 O(1) 查询，零假阴性） |
+| **`@cap/memmem`** | `packages/@cap/memmem` | 对标 Rust `memchr::memmem`（18.26 亿）— BMH + KMP 混合零退化 O(N+M) 字节子串搜索、`rfind` 与预编译 `Finder` |
+| **`@cap/aho-corasick`** | `packages/@cap/aho-corasick` | 对标 Rust `aho-corasick`（14.50 亿）— 零堆 LCRS Trie + BFS 失败指针多模式串 O(N+Z) 并发匹配引擎 |
+| **`@cap/lzw`** | `packages/@cap/lzw` | 对标 Rust `weezl` — GIF/TIFF/PDF 工业标准 LZW 字典无损压缩/解压（9..12 位变长码与 `KwKwK` 完整兼容） |
+| **`@cap/radix-sort`** | `packages/@cap/radix-sort` | 对标 Rust `radsort` — O(N) 线性无比较 256 桶 LSD 基数排序（支持 `u32`/`i32`/`u64`/`i64`/`f64` IEEE-754 保序） |
+| **`@cap/bwt`** | `packages/@cap/bwt` | 对标 Burrows-Wheeler + MTF — bzip2 核心块排序前置变换、O(N) LF-Mapping 逆变换与 Move-To-Front 编解码 |
+| **`@cap/luhn`** | `packages/@cap/luhn` | 对标 Rust/npm `luhn` — ISO/IEC 7812 Luhn Mod-10 + Damm + Verhoeff 工业级防错位校验码三合一 |

@@ -1,0 +1,9 @@
+{
+  "name": "@cap/luhn",
+  "version": "1.0.0",
+  "description": "Zero-heap ISO/IEC 7812 Luhn Mod-10, Damm, and Verhoeff check digit algorithms in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["luhn", "damm", "verhoeff", "check-digit", "iso-7812", "imei", "validation"]
+}
