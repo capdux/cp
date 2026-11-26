@@ -1094,3 +1094,10 @@
 - `packages/@cap/md5-crate/` & `cap/test/testCapMd5Crate.cp`: crates.io **#65** `md-5`（**13 亿+**，RFC 1321 向量全过，6/6 PASS）。
 - `packages/@cap/pbkdf2-crate/` & `cap/test/testCapPbkdf2Crate.cp`: crates.io **#155** `pbkdf2`（**8 亿+**，复用 `@cap/hmac-crate`，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 122 全部 6 个官方包映射。
+
+### 2026-11-27 (Batch 123 — **🎉 突破 700 官方 `.cap` 包大关！拿下 `chacha20`(10 亿+)+`picomatch`(2.2 亿/周)+`resolve-from`(1.5 亿/周)+`pkg-dir`(1.3 亿/周)**)
+- `packages/@cap/picomatch-core/` & `cap/test/testCapPicomatchCore.cp`: npm **Top 15** `picomatch` v4（**2.2 亿+/周**，复用 `@cap/glob-match`，6/6 PASS）。
+- `packages/@cap/pkg-dir/` & `cap/test/testCapPkgDir.cp`: npm Top 35 `pkg-dir`（1.3 亿+/周，双包复用 `@cap/find-up`+`@cap/npm-run-path`，6/6 PASS）。
+- `packages/@cap/resolve-from/` & `cap/test/testCapResolveFrom.cp`: npm Top 25 `resolve-from`（1.5 亿+/周，双包复用 `@cap/find-up`+`@cap/npm-run-path`，6/6 PASS）。
+- `packages/@cap/chacha20-crate/` & `cap/test/testCapChacha20Crate.cp`: crates.io **#115** `chacha20` v0.9（**10 亿+**，RFC 8439 向量全过，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 123 全部 4 个官方包映射。

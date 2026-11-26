@@ -1,0 +1,12 @@
+{
+  "name": "@cap/resolve-from",
+  "ver": "1.0.0",
+  "description": "Zero-heap Node.js/CP module specifier resolver from a base directory with relative, scoped, and ancestor node_modules/cap_modules probing (npm resolve-from equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/find-up": "1.0.0",
+    "@cap/npm-run-path": "1.0.0"
+  }
+}

@@ -922,3 +922,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/sha1-crate`** | `packages/@cap/sha1-crate` | 对标 crates.io **#35** `sha1` v0.10 (**16.5 亿+**) — FIPS 180-4 零堆流式 `Sha1Hasher` 与一步杂凑 |
 | **`@cap/md5-crate`** | `packages/@cap/md5-crate` | 对标 crates.io **#65** `md-5` / `md5` (**13 亿+**) — RFC 1321 零堆流式 `Md5Hasher` 与一步杂凑 |
 | **`@cap/pbkdf2-crate`** | `packages/@cap/pbkdf2-crate` | 对标 crates.io **#155** `pbkdf2` (**8 亿+**, 复用 `@cap/hmac-crate`) — RFC 2898/6070 PBKDF2-HMAC-SHA256 口令密钥派生 |
+| **`@cap/picomatch-core`** | `packages/@cap/picomatch-core` | 对标 npm **Top 15** `picomatch` v4 (**2.2 亿+/周**, 复用 `@cap/glob-match`) — `scan` 静动态拆解、extglob `@(a|b)`/`!(a|b)` 与 `match_base`/`dot`/`nocase` |
+| **`@cap/pkg-dir`** | `packages/@cap/pkg-dir` | 对标 npm Top 35 `pkg-dir` (**1.3 亿+/周**, 双包复用 `@cap/find-up`+`@cap/npm-run-path`) — 向上定位最近 `package.json`/`cap.json` 包根目录 |
+| **`@cap/resolve-from`** | `packages/@cap/resolve-from` | 对标 npm Top 25 `resolve-from` (**1.5 亿+/周**, 双包复用 `@cap/find-up`+`@cap/npm-run-path`) — 相对/绝对/裸包/`@scope/pkg` 模块解析与扩展名探测 |
+| **`@cap/chacha20-crate`** | `packages/@cap/chacha20-crate` | 对标 crates.io **#115** `chacha20` v0.9 (**10 亿+**) — RFC 8439 ChaCha20 256-bit 流密码、`seek` 与块密钥流 |

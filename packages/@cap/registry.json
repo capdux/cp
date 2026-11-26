@@ -2018,12 +2018,10 @@
       "source_name": "picomatch",
       "source_repo": "https://github.com/micromatch/picomatch",
       "license": "MIT",
-      "cp_target": "@cap/glob-match",
+      "cp_target": "@cap/picomatch-core",
       "kind": "package",
-      "aliases": [
-        "globset"
-      ],
-      "absorbed_at": "2026-11-26"
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -3194,14 +3192,11 @@
       "source_registry": "crates.io",
       "source_name": "chacha20",
       "source_repo": "https://github.com/RustCrypto/stream-ciphers",
-      "license": "MIT",
-      "cp_target": "cap:crypto",
-      "kind": "stdlib",
-      "aliases": [
-        "aes",
-        "hkdf"
-      ],
-      "absorbed_at": "2026-11-26"
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/chacha20-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10781,6 +10776,26 @@
       "source_repo": "https://github.com/RustCrypto/hashes",
       "license": "MIT OR Apache-2.0",
       "cp_target": "@cap/sha1-crate",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "pkg-dir",
+      "source_repo": "https://github.com/sindresorhus/pkg-dir",
+      "license": "MIT",
+      "cp_target": "@cap/pkg-dir",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "resolve-from",
+      "source_repo": "https://github.com/sindresorhus/resolve-from",
+      "license": "MIT",
+      "cp_target": "@cap/resolve-from",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

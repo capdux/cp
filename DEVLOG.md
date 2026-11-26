@@ -441,3 +441,6 @@
 
 ## 2026-11-27: Batch 122 六大密码/查找/校验包全 6/6 PASS — 官方 `.cap` 包直抵 **696+**，总映射突破 **900 里程碑**！
 - 交付 crates.io **#35 `sha1`（16.5 亿+）**、**#65 `md-5`（13 亿+）**、**#155 `pbkdf2`（8 亿+，复用 `@cap/hmac-crate`）** 与 npm **Top 20 `find-up`（1.8 亿+/周）**、**Top 25 `validate-npm-package-name`（1.5 亿+/周）**、`enquirer`，全部 36/36 单测 100% PASS；Worker N10 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N11。
+
+## 2026-11-27: Batch 123 四大核心包全 6/6 PASS — 🎉 正式突破 **700 官方 `.cap` 包大关**！
+- 交付 crates.io **#115 `chacha20`（10 亿+，RFC 8439 全向量通过）** 与 npm **Top 15 `picomatch`（2.2 亿+/周）**、`resolve-from`（1.5 亿+/周）、`pkg-dir`（1.3 亿+/周），全部 24/24 单测 100% PASS，官方包总量突破 700 个，上游映射达 903+ 项！
