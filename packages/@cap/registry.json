@@ -254,14 +254,14 @@
       "source_name": "p-retry",
       "source_repo": "https://github.com/sindresorhus/p-retry",
       "license": "MIT",
-      "cp_target": "@cap/retry",
+      "cp_target": "@cap/retry-backoff",
       "kind": "package",
       "aliases": [
         "async-retry",
         "backoff",
         "backon"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -1468,13 +1468,13 @@
       "source_name": "boxen",
       "source_repo": "https://github.com/sindresorhus/boxen",
       "license": "MIT",
-      "cp_target": "@cap/boxen",
+      "cp_target": "@cap/boxen-ui",
       "kind": "package",
       "aliases": [
         "cli-boxes",
         "box-drawing"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "npm",
@@ -3139,12 +3139,12 @@
       "source_name": "textwrap",
       "source_repo": "https://github.com/mgeisler/textwrap",
       "license": "MIT",
-      "cp_target": "@cap/textwrap",
+      "cp_target": "@cap/textwrap-crate",
       "kind": "package",
       "aliases": [
         "word-wrap"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-27"
     },
     {
       "source_registry": "crates.io",
@@ -10316,6 +10316,26 @@
       "source_repo": "https://github.com/capdux/cp",
       "license": "MIT",
       "cp_target": "@cap/snowflake-id",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ora",
+      "source_repo": "https://github.com/sindresorhus/ora",
+      "license": "MIT",
+      "cp_target": "@cap/ora-spinner",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "serde_qs",
+      "source_repo": "https://github.com/samscott89/serde_qs",
+      "license": "MIT",
+      "cp_target": "@cap/serde-qs",
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"

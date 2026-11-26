@@ -1,0 +1,12 @@
+{
+  "name": "@cap/boxen-ui",
+  "ver": "1.0.0",
+  "description": "Zero-allocation terminal Unicode box layout renderer (npm boxen v8 parity) with ANSI & CJK alignment for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": ["boxen", "box", "border", "terminal", "cli", "unicode", "ansi", "cjk", "zero-alloc"],
+  "dependencies": {
+    "@cap/string-width": "1.0.0"
+  }
+}

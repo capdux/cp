@@ -1,11 +1,10 @@
 // Type definitions for CP
 
-export fn clampLen(n: usize): usize;
-export fn strEq(a: string, b: string): bool;
+export fn ssmMin3(a: usize, b: usize, c: usize): usize;
 export fn hamming(a: string, b: string): usize?;
 export fn levenshtein(a: string, b: string): usize;
-export fn normalizedLevenshtein(a: string, b: string): f64;
 export fn osaDistance(a: string, b: string): usize;
-export fn jaro(a: string, b: string): f64;
-export fn jaroWinkler(a: string, b: string): f64;
-export fn sorensenDice(a: string, b: string): f64;
+export fn normalizedLevenshteinBps(a: string, b: string): u32;
+export fn jaroBps(a: string, b: string): u32;
+export fn jaroWinklerBps(a: string, b: string): u32;
+export fn sorensenDiceBps(a: string, b: string): u32;

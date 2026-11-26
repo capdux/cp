@@ -395,3 +395,6 @@
 
 ## 2026-11-27: Batch 107 七大可观测性/配置/调度与位图包全 6/6 PASS — 官方 `.cap` 包突破 **628+**！
 - 交付 crates.io `toml_edit`（9 亿+）、`roaring`（4.5 亿+）、`snowflake-id` 与 npm `dotenv-expand`、`pino`、`morgan`、`cron-parser`，全部 42/42 单测 100% PASS；Worker C5 满 6 包（36/36 PASS）已按规则轮换换新为 Worker C6（`@cap/textwrap-crate` 8 亿+）。
+
+## 2026-11-27: Batch 108 六大 CLI 渲染/文本算法/重试退避包全 6/6 PASS — 官方 `.cap` 包突破 **624+ LIVE**！
+- 交付 crates.io `strsim`（8.5 亿+）、`textwrap`（8 亿+，复用 `@cap/unicode-width`）、`serde_qs`（复用 `@cap/percent-encoding`）与 npm `ora`（复用 `@cap/ansi-escapes`）、`boxen`（复用 `@cap/string-width`）、`retry-backoff`，全部 36/36 单测 100% PASS；Worker N6 满 6 包（36/36 PASS）已光荣轮换换新为 Worker N7。

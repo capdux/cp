@@ -960,3 +960,12 @@
 - `packages/@cap/morgan-log/` & `cap/test/testCapMorganLog.cp`: npm Top 60 `morgan` v1.10（8000 万+/周，复用 `@cap/itoa`，6/6 PASS）。
 - `packages/@cap/cron-parser/` & `cap/test/testCapCronParser.cp`: npm Top 90 `cron-parser` v4（6000 万+/周，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增与升级 Batch 107 全部 7 个官方包映射。
+
+### 2026-11-27 (Batch 108 — 6 大 CLI 终端渲染/文本算法/重试退避包全 6/6 PASS — `strsim`+`textwrap`+`serde_qs`+`ora`+`boxen`+`retry-backoff`，官方 `.cap` 包突破 **624+ LIVE**！)
+- `packages/@cap/strsim/` & `cap/test/testCapStrsim.cp`: crates.io #140 `strsim`（8.5 亿+，6 种经典字符串相似度/编辑距离算法，6/6 PASS）。
+- `packages/@cap/textwrap-crate/` & `cap/test/testCapTextwrapCrate.cp`: crates.io #150 `textwrap` v0.16（8 亿+，复用 `@cap/unicode-width`，6/6 PASS）。
+- `packages/@cap/serde-qs/` & `cap/test/testCapSerdeQs.cp`: crates.io Top-300 `serde_qs`（3.5 亿+，复用 `@cap/percent-encoding`，6/6 PASS）。
+- `packages/@cap/ora-spinner/` & `cap/test/testCapOraSpinner.cp`: npm Top 65 `ora` v8（7500 万+/周，复用 `@cap/ansi-escapes`，6/6 PASS）。
+- `packages/@cap/boxen-ui/` & `cap/test/testCapBoxenUi.cp`: npm Top 70 `boxen` v8（7000 万+/周，复用 `@cap/string-width`，6/6 PASS）。
+- `packages/@cap/retry-backoff/` & `cap/test/testCapRetryBackoff.cp`: npm `p-retry`/`retry`（6000 万+/周，指数退避与确定性抖动，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增与升级 Batch 108 全部 6 个官方包映射（npm / crates.io 精准 1:1 平衡）。

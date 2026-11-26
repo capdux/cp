@@ -1,0 +1,11 @@
+{
+  "name": "@cap/ora-spinner",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap CLI terminal spinner animation and status line renderer (clean-room port of ora v8)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/ansi-escapes": "1.0.0"
+  }
+}

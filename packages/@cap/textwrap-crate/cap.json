@@ -1,0 +1,12 @@
+{
+  "name": "@cap/textwrap-crate",
+  "ver": "1.0.0",
+  "description": "Zero-allocation word wrapping, indentation, dedentation, and unfilling engine (crates.io textwrap v0.16 parity) composing @cap/unicode-width for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["textwrap", "wrap", "fill", "indent", "dedent", "unfill", "unicode-width", "cli", "zero-alloc"],
+  "dependencies": {
+    "@cap/unicode-width": "1.0.0"
+  }
+}

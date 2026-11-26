@@ -834,3 +834,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/dotenv-expand`** | `packages/@cap/dotenv-expand` | 对标 npm Top 50 `dotenv`+`dotenv-expand` (1 亿+/周) — `.env` 解析与 `${VAR:-default}`/`$VAR`/`\$` 变量展开 |
 | **`@cap/pino-log`** | `packages/@cap/pino-log` | 对标 npm Top 55 `pino` v9 (9000 万+/周，跨包复用 `@cap/itoa`) — 零堆结构化 NDJSON 日志器与安全 JSON 转义 |
 | **`@cap/morgan-log`** | `packages/@cap/morgan-log` | 对标 npm Top 60 `morgan` v1.10 (8000 万+/周，跨包复用 `@cap/itoa`) — Apache Combined/Common/Dev/Tiny HTTP 访问日志格式化 |
+| **`@cap/ora-spinner`** | `packages/@cap/ora-spinner` | 对标 npm Top 65 `ora` v8 (7500 万+/周，跨包复用 `@cap/ansi-escapes`) — 终端旋转动画与成功/失败/警告状态行渲染 |
+| **`@cap/boxen-ui`** | `packages/@cap/boxen-ui` | 对标 npm Top 70 `boxen` v8 (7000 万+/周，跨包复用 `@cap/string-width`) — 5 种 Unicode 边框、对齐与 CJK/ANSI 感知终端盒子排版 |
+| **`@cap/retry-backoff`** | `packages/@cap/retry-backoff` | 对标 npm `p-retry`/`retry` (6000 万+/周) — 指数退避、确定性抖动与耗时预算重试状态机 |
+| **`@cap/textwrap-crate`** | `packages/@cap/textwrap-crate` | 对标 crates.io #150 `textwrap` v0.16 (8 亿+，跨包复用 `@cap/unicode-width`) — 智能词边界折行、`indent`/`dedent`/`unfill` |
+| **`@cap/serde-qs`** | `packages/@cap/serde-qs` | 对标 crates.io Top-300 `serde_qs` (3.5 亿+，跨包复用 `@cap/percent-encoding`) — 嵌套方括号查询串解析与序列化 |
+| **`@cap/strsim`** | `packages/@cap/strsim` | 对标 crates.io #140 `strsim` (8.5 亿+) — Hamming/Levenshtein/OSA Damerau-Levenshtein/Jaro-Winkler/Dice 相似度 |
