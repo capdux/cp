@@ -520,3 +520,6 @@
 
 ## 2026-11-27: Batch 148 四大真实 Top 榜核心包全 6/6 PASS（官方 `@cap` 达 **779 包**，映射 **1,010 条**）！
 - 交付 npm **#306 `saxes`（1.68 亿/周）**、**#314 `doctrine`（1.66 亿/周）** 与 crates.io **#583 `aes-gcm`（2.29 亿+，双包复用 `@cap/aes`+`@cap/ghash-gf128`，NIST SP 800-38D 全向量通过）**、**#601 `oid-registry`（2.21 亿+）**，同步零重复归并 3 个 1.5 亿+/周 npm 包；Worker C18 满 6 包（36/36 PASS）光荣轮换。
+
+## 2026-11-27: Batch 149 六大真实 Top 榜核心包全 6/6 PASS（官方 `@cap` 达 **783 包**，映射 **1,023 条**）！
+- 交付 npm **#327 `cjs-module-lexer`**、**#329 `html-encoding-sniffer`**、**#345 `d3-array`**、**#400 `d3-path`** 与 crates.io **#621 `utf16_iter`**、**#660 `vec_map`**，同步零重复归并 7 个高频包；36/36 单测 100% PASS；Worker N20 满 6 包（36/36 PASS）轮换为 Worker N21。

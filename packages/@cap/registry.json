@@ -11789,6 +11789,140 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cjs-module-lexer",
+      "source_repo": "https://github.com/nodejs/cjs-module-lexer",
+      "license": "MIT",
+      "cp_target": "@cap/cjs-module-lexer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "html-encoding-sniffer",
+      "source_repo": "https://github.com/jsdom/html-encoding-sniffer",
+      "license": "MIT",
+      "cp_target": "@cap/html-encoding-sniffer",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-array",
+      "source_repo": "https://github.com/d3/d3-array",
+      "license": "ISC",
+      "cp_target": "@cap/d3-array",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-path",
+      "source_repo": "https://github.com/d3/d3-path",
+      "license": "ISC",
+      "cp_target": "@cap/d3-path",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "events",
+      "source_repo": "https://github.com/browserify/events",
+      "license": "MIT",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ip-address",
+      "source_repo": "https://github.com/beaugunderson/ip-address",
+      "license": "MIT",
+      "cp_target": "@cap/ipaddr",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "get-east-asian-width",
+      "source_repo": "https://github.com/sindresorhus/get-east-asian-width",
+      "license": "MIT",
+      "cp_target": "@cap/is-fullwidth-code-point",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "sax",
+      "source_repo": "https://github.com/isaacs/sax-js",
+      "license": "ISC",
+      "cp_target": "@cap/saxes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "utf16_iter",
+      "source_repo": "https://github.com/hsivonen/utf16_iter",
+      "license": "Apache-2.0 OR MIT",
+      "cp_target": "@cap/utf16-iter",
+      "kind": "package",
+      "aliases": [
+        "utf16-iter"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "vec_map",
+      "source_repo": "https://github.com/contain-rs/vec-map",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/vec-map",
+      "kind": "package",
+      "aliases": [
+        "vec-map"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "owo-colors",
+      "source_repo": "https://github.com/owo-colors/owo-colors",
+      "license": "MIT",
+      "cp_target": "cap:ansi",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "base64-simd",
+      "source_repo": "https://github.com/Nugine/simd",
+      "license": "MIT",
+      "cp_target": "cap:encoding",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "gif",
+      "source_repo": "https://github.com/image-rs/image-gif",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "cap:gif",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

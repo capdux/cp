@@ -1,0 +1,23 @@
+{
+  "name": "@cap/vec-map",
+  "version": "1.0.0",
+  "description": "Zero-allocation O(1) direct-indexed sparse integer-key map (0..127) with 128-bit presence bitmap in CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "vec-map",
+    "vecmap",
+    "map",
+    "sparse-map",
+    "bitmap",
+    "data-structures",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "vec_map",
+    "repo": "https://github.com/contain-rs/vec-map",
+    "license": "MIT OR Apache-2.0"
+  }
+}

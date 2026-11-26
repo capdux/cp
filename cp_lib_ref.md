@@ -1054,3 +1054,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/doctrine`** | `packages/@cap/doctrine` | 对标 npm **#314** `doctrine` (**1.66 亿/周**) — ESLint JSDoc `@param`/`@returns`/`@type`/`@deprecated` 解析器 |
 | **`@cap/aes-gcm`** | `packages/@cap/aes-gcm` | 对标 crates.io **#583** `aes-gcm` (**2.29 亿+**, 双包复用 `@cap/aes`+`@cap/ghash-gf128`) — NIST SP 800-38D AES-128/256-GCM AEAD |
 | **`@cap/oid-registry`** | `packages/@cap/oid-registry` | 对标 crates.io **#601** `oid-registry` (**2.21 亿+**) — 36 项 X.509/PKCS/TLS/NIST OID 静态表与 DER 编解码 |
+| **`@cap/cjs-module-lexer`** | `packages/@cap/cjs-module-lexer` | 对标 npm **#327** `cjs-module-lexer` (**1.60 亿/周**) — Node.js CommonJS 静态导出与 `require` 重导出词法扫描器 |
+| **`@cap/html-encoding-sniffer`** | `packages/@cap/html-encoding-sniffer` | 对标 npm **#329** `html-encoding-sniffer` (**1.58 亿/周**) — WHATWG §13.2.3.2 BOM/`<meta charset>` 四级编码嗅探 |
+| **`@cap/d3-array`** | `packages/@cap/d3-array` | 对标 npm **#345** `d3-array` (**1.53 亿/周**) — Welford 方差、R-7 分位数、二分查找与直方图分箱 |
+| **`@cap/d3-path`** | `packages/@cap/d3-path` | 对标 npm **#400** `d3-path` (**1.34 亿/周**) — Canvas2D 风格 SVG 路径 `d` 属性序列化构造器 |
+| **`@cap/utf16-iter`** | `packages/@cap/utf16-iter` | 对标 crates.io **#621** `utf16_iter` (**2.08 亿+**) — ICU4X 零堆双向 UTF-16 码点迭代器与代理对解码 |
+| **`@cap/vec-map`** | `packages/@cap/vec-map` | 对标 crates.io **#660** `vec_map` (**1.92 亿+**) — 128-bit 位图 O(1) 小整数键稀疏映射表 |

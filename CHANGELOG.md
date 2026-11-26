@@ -1314,3 +1314,12 @@
 - `packages/@cap/aes-gcm/` & `cap/test/testCapAesGcm.cp`: crates.io **#583** `aes-gcm`（2.29 亿+，双包复用 `@cap/aes`+`@cap/ghash-gf128`，NIST SP 800-38D 6 组官方向量全过，6/6 PASS）。
 - `packages/@cap/oid-registry/` & `cap/test/testCapOidRegistry.cp`: crates.io **#601** `oid-registry`（2.21 亿+，6/6 PASS）。
 - **零重复归并**：`#335 tldts-core` → `@cap/publicsuffix`、`#337 json-parse-even-better-errors` → `@cap/parse-json`、`#341 data-urls` → `@cap/data-uri`；Worker C18 满 6 包光荣轮换。
+
+### 2026-11-27 (Batch 149 — **6 大真实 Top 榜核心包：npm #327/#329/#345/#400 + crates.io #621/#660，36/36 PASS**)
+- `packages/@cap/cjs-module-lexer/` & `cap/test/testCapCjsModuleLexer.cp`: npm **#327** `cjs-module-lexer`（1.60 亿/周，6/6 PASS）。
+- `packages/@cap/html-encoding-sniffer/` & `cap/test/testCapHtmlEncodingSniffer.cp`: npm **#329** `html-encoding-sniffer`（1.58 亿/周，6/6 PASS）。
+- `packages/@cap/d3-array/` & `cap/test/testCapD3Array.cp`: npm **#345** `d3-array`（1.53 亿/周，6/6 PASS）。
+- `packages/@cap/d3-path/` & `cap/test/testCapD3Path.cp`: npm **#400** `d3-path`（1.34 亿/周，6/6 PASS）。
+- `packages/@cap/utf16-iter/` & `cap/test/testCapUtf16Iter.cp`: crates.io **#621** `utf16_iter`（2.08 亿+，6/6 PASS）。
+- `packages/@cap/vec-map/` & `cap/test/testCapVecMap.cp`: crates.io **#660** `vec_map`（1.92 亿+，6/6 PASS）。
+- **零重复归并（7 项高频包）**：`events`→`cap:event`、`ip-address`→`@cap/ipaddr`、`get-east-asian-width`→`@cap/is-fullwidth-code-point`、`sax`→`@cap/saxes`、`owo-colors`→`cap:ansi`、`base64-simd`→`cap:encoding`、`gif`→`cap:gif`；Worker N20 满 6 包光荣轮换为 Worker N21。
