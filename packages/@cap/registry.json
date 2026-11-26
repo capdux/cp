@@ -11285,6 +11285,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "whatwg-mimetype",
+      "source_repo": "https://github.com/jsdom/whatwg-mimetype",
+      "license": "MIT",
+      "cp_target": "@cap/whatwg-mimetype",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "esutils",
+      "source_repo": "https://github.com/estools/esutils",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/esutils",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "base64-js",
+      "source_repo": "https://github.com/beatgammit/base64-js",
+      "license": "MIT",
+      "cp_target": "cap:encoding",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "utf-8",
+      "source_repo": "https://github.com/SimonSapin/rust-utf8",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/utf-8",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ciborium-ll",
+      "source_repo": "https://github.com/enarx/ciborium",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/ciborium-ll",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -1025,3 +1025,7 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/es-module-lexer`** | `packages/@cap/es-module-lexer` | 对标 npm **#94** `es-module-lexer` (**3.08 亿/周**) — Vite/Rollup 核心 ESM 静态/动态 `import`/`export` 词法扫描器 |
 | **`@cap/estree-walker`** | `packages/@cap/estree-walker` | 对标 npm **#99** `estree-walker` (**3.05 亿/周**, 含 `#108 estraverse`) — 零堆 ESTree AST 非递归 DFS 遍历与节点替换 |
 | **`@cap/cast`** | `packages/@cap/cast` | 对标 crates.io **#443** `cast` (**3.35 亿+**) — 受检基础数值类型转换（防静默溢出/下溢/NaN/Inf） |
+| **`@cap/whatwg-mimetype`** | `packages/@cap/whatwg-mimetype` | 对标 npm **#200** `whatwg-mimetype` (**2.15 亿/周**) — WHATWG §4.4 MIME Sniffing 标准解析器、参数表与序列化 |
+| **`@cap/esutils`** | `packages/@cap/esutils` | 对标 npm **#201** `esutils` (**2.15 亿/周**) — ECMAScript 关键字/保留字/标识符/行终止符判定工具集 |
+| **`@cap/utf-8`** | `packages/@cap/utf-8` | 对标 crates.io **#444** `utf-8` (**3.32 亿+**) — 零拷贝增量流式 UTF-8 解码器与 RFC 3629 错误诊断 |
+| **`@cap/ciborium-ll`** | `packages/@cap/ciborium-ll` | 对标 crates.io **#467** `ciborium-ll` (**3.15 亿+**) — RFC 8949 低层流式 CBOR 编解码原语（含不定长与浮点） |

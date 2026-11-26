@@ -501,3 +501,6 @@
 
 ## 2026-11-27: Batch 142 官方 `@cap` 突破 **750 包**里程碑（映射 **960 条**）！真实 Top 榜 5 大核心包全 6/6 PASS！
 - 交付 npm **#38 `iconv-lite`（4.42 亿/周）**、**#82 `minipass`（3.26 亿/周）**、**#94 `es-module-lexer`（3.08 亿/周）**、**#99 `estree-walker`（3.05 亿/周，含 `#108 estraverse` 归并）** 与 crates.io **#443 `cast`（3.35 亿+）**，全部 30/30 单测 100% PASS；Worker N18 满 6 包（36/36 PASS）光荣轮换。
+
+## 2026-11-27: Batch 143 真实 Top 榜 4 大核心包全 6/6 PASS（官方 `@cap` 达 **753 包**，映射 **965 条**）！
+- 交付 npm **#200 `whatwg-mimetype`（2.15 亿/周）**、**#201 `esutils`（2.15 亿/周）** 与 crates.io **#444 `utf-8`（3.32 亿+）**、**#467 `ciborium-ll`（3.15 亿+）**，同时将 npm **#153 `base64-js`（2.40 亿/周）** 无重复映射至内置 `cap:encoding`，24/24 单测首轮一遍过 100% PASS。

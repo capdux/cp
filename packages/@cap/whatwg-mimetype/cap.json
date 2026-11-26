@@ -1,0 +1,14 @@
+{
+  "name": "@cap/whatwg-mimetype",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation WHATWG MIME Sniffing Standard MIMEType parser, parameter map, essence, and serializer (clean-room MIT implementation of npm whatwg-mimetype, #200 / 215M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "whatwg-mimetype",
+    "repo": "https://github.com/jsdom/whatwg-mimetype",
+    "license": "MIT"
+  }
+}

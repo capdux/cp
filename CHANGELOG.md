@@ -1266,3 +1266,10 @@
 - `packages/@cap/estree-walker/` & `cap/test/testCapEstreeWalker.cp`: npm **#99** `estree-walker`（3.05 亿/周，同步归并 `#108 estraverse` 2.92 亿/周，6/6 PASS）。
 - `packages/@cap/cast/` & `cap/test/testCapCast.cp`: crates.io **#443** `cast`（3.35 亿+，6/6 PASS）。
 - `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 5 项新映射（含 `estraverse` alias）并刷新极简速查手册；Worker N18 满 6 包光荣轮换。
+
+### 2026-11-27 (Batch 143 — **真实 Top 榜 4 大核心包：npm #200/#201 + crates.io #444/#467，24/24 PASS**)
+- `packages/@cap/whatwg-mimetype/` & `cap/test/testCapWhatwgMimetype.cp`: npm **#200** `whatwg-mimetype`（2.15 亿/周，6/6 PASS）。
+- `packages/@cap/esutils/` & `cap/test/testCapEsutils.cp`: npm **#201** `esutils`（2.15 亿/周，6/6 PASS）。
+- `packages/@cap/utf-8/` & `cap/test/testCapUtf8.cp`: crates.io **#444** `utf-8`（3.32 亿+，6/6 PASS）。
+- `packages/@cap/ciborium-ll/` & `cap/test/testCapCiboriumLl.cp`: crates.io **#467** `ciborium-ll`（3.15 亿+，6/6 PASS）。
+- `packages/@cap/registry.json`、`cp_lib_ref.md`、`cp_agent_lib_ref.md`: 同步 4 项新映射 + 将 npm **#153 `base64-js`（2.40 亿/周）** 归并至内置 `cap:encoding`，刷新极简速查手册。

@@ -1,0 +1,14 @@
+{
+  "name": "@cap/esutils",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ECMAScript keyword, reserved word, identifier, whitespace, and line terminator utilities (clean-room MIT implementation of npm esutils, #201 / 215M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "esutils",
+    "repo": "https://github.com/estools/esutils",
+    "license": "BSD-2-Clause"
+  }
+}
