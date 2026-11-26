@@ -1048,3 +1048,11 @@
 - `packages/@cap/destroy/` & `cap/test/testCapDestroy.cp`: npm Top 35 `destroy`（1.5 亿+/周，复用 `@cap/on-finished`，6/6 PASS）。
 - `packages/@cap/wkt/` & `cap/test/testCapWkt.cp`: crates.io `wkt` v0.11（GIS Well-Known Text 解析与格式化，6/6 PASS）。
 - `packages/@cap/registry.json`: 同步新增 Batch 117 全部 5 个官方包映射（880 mappings）。
+
+### 2026-11-27 (Batch 118 — **突破 670 官方 `.cap` 包！拿下 17 亿下载线性代数双璧 `nalgebra`(10 亿)+`mint`(7 亿) + `geojson` + `ee-first`(1.6 亿/周) + `send`(1.4 亿/周)**)
+- `packages/@cap/ee-first/` & `cap/test/testCapEeFirst.cp`: npm Top 30 `ee-first` v1（1.6 亿+/周，多事件竞态自动取消，6/6 PASS）。
+- `packages/@cap/send/` & `cap/test/testCapSend.cp`: npm Top 35 `send` v1（1.4 亿+/周，四包复用静态文件流策略引擎，6/6 PASS）。
+- `packages/@cap/geojson/` & `cap/test/testCapGeojson.cp`: crates.io `geojson` v0.24（复用 `@cap/wkt`，RFC 7946 GeoJSON ↔ WKT 互转，6/6 PASS）。
+- `packages/@cap/mint/` & `cap/test/testCapMint.cp`: crates.io #180 `mint`（7 亿+，图形/物理数学互操作标准类型，6/6 PASS）。
+- `packages/@cap/nalgebra/` & `cap/test/testCapNalgebra.cp`: crates.io **#110** `nalgebra`（10 亿+，复用 `@cap/mint`，线性代数与仿射变换，6/6 PASS）。
+- `packages/@cap/registry.json`: 同步新增 Batch 118 全部 5 个官方包映射（885 mappings）。

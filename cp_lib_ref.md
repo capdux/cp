@@ -891,3 +891,8 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/on-finished`** | `packages/@cap/on-finished` | 对标 npm Top 25 `on-finished` (**1.6 亿+/周**) — 零堆 HTTP 流完成状态机、16 槽位一次性回调分发与错误码透传 |
 | **`@cap/destroy`** | `packages/@cap/destroy` | 对标 npm Top 35 `destroy` (**1.5 亿+/周**, 复用 `@cap/on-finished`) — 幂等安全流/文件描述符销毁与延迟 `onOpen` 关闭守卫 |
 | **`@cap/wkt`** | `packages/@cap/wkt` | 对标 crates.io `wkt` v0.11 — 零堆 GIS Well-Known Text (`POINT`/`LINESTRING`/`POLYGON`/`MULTIPOINT`) 解析、格式化与外接矩形 |
+| **`@cap/ee-first`** | `packages/@cap/ee-first` | 对标 npm Top 30 `ee-first` v1 (**1.6 亿+/周**) — 零堆 16 槽位多事件源竞态监听与首个命中自动取消 |
+| **`@cap/send`** | `packages/@cap/send` | 对标 npm Top 35 `send` v1 (**1.4 亿+/周**, 四包复用 `@cap/encodeurl`+`@cap/etag-http`+`@cap/range-parser`+`@cap/mime-types`) — 静态文件流策略、点文件防护、304/206 协商 |
+| **`@cap/geojson`** | `packages/@cap/geojson` | 对标 crates.io `geojson` v0.24 (复用 `@cap/wkt`) — RFC 7946 GeoJSON Geometry/Feature 零堆解析格式化与 WKT 互转 |
+| **`@cap/mint`** | `packages/@cap/mint` | 对标 crates.io #180 `mint` (**7 亿+**) — 零堆数学互操作标准类型 `Point2/3`、`Vector2/3/4`、`Quaternion`、`RowMatrix2/3/4`、`ColumnMatrix4` |
+| **`@cap/nalgebra`** | `packages/@cap/nalgebra` | 对标 crates.io **#110** `nalgebra` (**10 亿+**, 复用 `@cap/mint`) — 2D/3D/4D 线性代数矩阵乘法、行列式、逆矩阵与 3D 仿射变换 |

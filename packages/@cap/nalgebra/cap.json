@@ -1,0 +1,11 @@
+{
+  "name": "@cap/nalgebra",
+  "ver": "1.0.0",
+  "description": "Zero-heap 2D/3D/4D linear algebra: Mat2/Mat3/Mat4 multiply, determinant, inverse, affine transforms & vector ops (crates.io nalgebra equivalent, reuses @cap/mint)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/mint": "1.0.0"
+  }
+}

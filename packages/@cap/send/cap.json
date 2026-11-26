@@ -1,0 +1,14 @@
+{
+  "name": "@cap/send",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP static file transfer planner with traversal protection, dotfiles policy, ETag/304, Range/206, and redirect URL encoding (clean-room MIT implementation of npm send v1)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@cap/encodeurl": "1.0.0",
+    "@cap/etag-http": "1.0.0",
+    "@cap/range-parser": "1.0.0",
+    "@cap/mime-types": "1.0.0"
+  }
+}

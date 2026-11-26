@@ -10594,6 +10594,56 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ee-first",
+      "source_repo": "https://github.com/jonathanong/ee-first",
+      "license": "MIT",
+      "cp_target": "@cap/ee-first",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "send",
+      "source_repo": "https://github.com/pillarjs/send",
+      "license": "MIT",
+      "cp_target": "@cap/send",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "geojson",
+      "source_repo": "https://github.com/georust/geojson",
+      "license": "MIT OR Apache-2.0",
+      "cp_target": "@cap/geojson",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "mint",
+      "source_repo": "https://github.com/kvark/mint",
+      "license": "MIT",
+      "cp_target": "@cap/mint",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "nalgebra",
+      "source_repo": "https://github.com/dimforge/nalgebra",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/nalgebra",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

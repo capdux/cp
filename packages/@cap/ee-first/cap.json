@@ -1,0 +1,9 @@
+{
+  "name": "@cap/ee-first",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP multi-emitter first-event race listener with automatic cleanup (clean-room MIT implementation of npm ee-first v1)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {}
+}
