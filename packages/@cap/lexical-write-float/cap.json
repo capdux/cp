@@ -1,0 +1,14 @@
+{
+  "name": "@cap/lexical-write-float",
+  "ver": "1.0.0",
+  "description": "Zero-allocation pure CP integer and floating-point formatter (rust-lexical lexical-write-float / lexical-write-integer parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "lexical-write-float",
+    "repo": "https://github.com/Alexhuszagh/rust-lexical",
+    "license": "MIT"
+  }
+}

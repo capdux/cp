@@ -1388,3 +1388,7 @@
 ### 2026-11-26 — Batch 161（双平台 Real Top 767–860：+4 `@cap/*` 包，总计 867 `@cap/*`）
 - 新增 `packages/@cap/{smart-buffer,stack-utils,ascii,nohash-hasher}/` 及对应 4 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 1,187）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-26 — Batch 162（双平台 Real Top 766–917：+6 `@cap/*` 包 + 8 条零重复映射，突破 1,201 映射里程碑！）
+- 新增 `packages/@cap/{unicode-linebreak,lexical-write-float,ron,salsa20,stylis,damerau-levenshtein}/` 及对应 6 套 `cap/test/testCap*.cp`（全部 6/6 PASS；`@cap/salsa20` 通过官方 eSTREAM 向量）
+- 更新 `packages/@cap/registry.json`（总映射 **1,201**）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

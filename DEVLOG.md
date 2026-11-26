@@ -567,3 +567,6 @@
 ### 2026-11-26 — Batch 161 开发日志（867 `@cap/*` 包）
 - 三路并行交付 `smart-buffer`（#767）、`stack-utils`（#802）、`ascii`（#844）、`nohash-hasher`（#860），全部 6/6 PASS。
 - 踩坑备忘：`nohash-hasher` 中超过 `i64::MAX` 的 64 位无符号常量（如 `0x9E3779B97F4A7C15`）须拆分为高低 32 位 `((hi as u64) << 32) | (lo as u64)` 避免 Zig 后端字面量负值报错。
+
+### 2026-11-26 — Batch 162 开发日志（873 `@cap/*` 包 + 1,201 映射里程碑）
+- 三路并行交付 `unicode-linebreak`（#834）、`lexical-write-float`（#838）、`ron`（#859）、`salsa20`（#917）、`stylis`（#766）、`damerau-levenshtein`（#888），全部 6/6 PASS，上游映射正式突破 1,200 大关。

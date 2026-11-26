@@ -1182,3 +1182,13 @@ const h = cap.hash.wyhash("hello");
 - `@cap/stack-utils` (`npm:stack-utils` #802, MIT) — V8/Node/CP 堆栈帧解析器（具名帧、裸路径、`file://`、`<anonymous>`/`native`）。
 - `@cap/ascii` (`crates.io:ascii` #844, MIT) — 零堆 7-bit ASCII 校验、分类、大小写转换、修剪与忽略大小写比较库。
 - `@cap/nohash-hasher` (`crates.io:nohash-hasher` #860, Apache-2.0) — 零开销整型恒等哈希器与 Fibonacci/SplitMix64 整数混合器。
+
+### Batch 162 — 双平台 Real Top 766–917（6 packages + 8 zero-duplicate mappings; 873 `@cap/*` + 1,201 mappings!）
+
+- `@cap/unicode-linebreak` (`crates.io:unicode-linebreak` #834, Apache-2.0) — UAX #14 Unicode 断行点检测器（含 CJK 与不间断空格/括号规则）。
+- `@cap/lexical-write-float` (`crates.io:lexical-write-float` #838, MIT) — 零堆 2..36 进制整数与定点数/科学计数法浮点格式化器（覆盖 `lexical-write-integer`）。
+- `@cap/ron` (`crates.io:ron` #859, MIT) — Rusty Object Notation (RON) 词法分析器与顶层结构体字段零分配提取器。
+- `@cap/salsa20` (`crates.io:salsa20` #917, MIT) — 零堆 Salsa20/20 流密码（通过官方 eSTREAM Set 1 Vector 0 向量验证）。
+- `@cap/stylis` (`npm:stylis` #766, MIT) — 零堆 CSS 嵌套选择器展开与样式压缩预处理器。
+- `@cap/damerau-levenshtein` (`npm:damerau-levenshtein` #888, MIT) — 零堆最优字符串对齐（支持相邻换位）编辑距离与相似度计算器。
+- 零重复映射：`roxmltree`→`@cap/saxes`、`image-webp`→`cap:webp`、`fast-safe-stringify`→`@cap/jcs`、`color`→`cap:color`、`mrmime`→`@cap/mime-types`、`fast-equals`→`@cap/fast-deep-equal`、`decimal.js-light`→`@cap/bigdecimal`、`cookie-es`→`@cap/cookie`。

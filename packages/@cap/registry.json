@@ -13643,6 +13643,148 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "unicode-linebreak",
+      "source_repo": "https://github.com/axelf4/unicode-linebreak",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/unicode-linebreak",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "lexical-write-float",
+      "source_repo": "https://github.com/Alexhuszagh/rust-lexical",
+      "license": "MIT",
+      "cp_target": "@cap/lexical-write-float",
+      "kind": "package",
+      "aliases": [
+        "lexical-write-integer"
+      ],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ron",
+      "source_repo": "https://github.com/ron-rs/ron",
+      "license": "MIT",
+      "cp_target": "@cap/ron",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "salsa20",
+      "source_repo": "https://github.com/RustCrypto/stream-ciphers",
+      "license": "MIT",
+      "cp_target": "@cap/salsa20",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "stylis",
+      "source_repo": "https://github.com/thysultan/stylis",
+      "license": "MIT",
+      "cp_target": "@cap/stylis",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "damerau-levenshtein",
+      "source_repo": "https://github.com/tad-lispy/node-damerau-levenshtein",
+      "license": "MIT",
+      "cp_target": "@cap/damerau-levenshtein",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "roxmltree",
+      "source_repo": "https://github.com/RazrFalcon/roxmltree",
+      "license": "MIT",
+      "cp_target": "@cap/saxes",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "image-webp",
+      "source_repo": "https://github.com/image-rs/image-webp",
+      "license": "MIT",
+      "cp_target": "cap:webp",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-safe-stringify",
+      "source_repo": "https://github.com/davidmarkclements/fast-safe-stringify",
+      "license": "MIT",
+      "cp_target": "@cap/jcs",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "color",
+      "source_repo": "https://github.com/Qix-/color",
+      "license": "MIT",
+      "cp_target": "cap:color",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "mrmime",
+      "source_repo": "https://github.com/lukeed/mrmime",
+      "license": "MIT",
+      "cp_target": "@cap/mime-types",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "fast-equals",
+      "source_repo": "https://github.com/planttheidea/fast-equals",
+      "license": "MIT",
+      "cp_target": "@cap/fast-deep-equal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "decimal.js-light",
+      "source_repo": "https://github.com/MikeMcl/decimal.js-light",
+      "license": "MIT",
+      "cp_target": "@cap/bigdecimal",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cookie-es",
+      "source_repo": "https://github.com/unjs/cookie-es",
+      "license": "MIT",
+      "cp_target": "@cap/cookie",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }
