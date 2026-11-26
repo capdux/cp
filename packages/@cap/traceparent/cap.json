@@ -1,0 +1,9 @@
+{
+  "name": "@cap/traceparent",
+  "version": "1.0.0",
+  "description": "Zero-heap W3C Trace Context (traceparent & tracestate) distributed tracing header parser and formatter in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["traceparent", "tracestate", "w3c", "opentelemetry", "tracing", "observability"]
+}

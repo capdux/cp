@@ -441,3 +441,12 @@
 - `packages/@cap/cuid2/` & `cap/test/testCapCuid2.cp`: 零堆 SHA-256 Base36 分布式唯一 ID（6/6 PASS）。
 - `packages/@cap/retry-after/` & `cap/test/testCapRetryAfter.cp`: RFC 9110 `Retry-After` 双格式解析（6/6 PASS）。
 - `packages/@cap/registry.json`: 扩充至 **435 条**高频映射（**npm=209 / crates.io=226** 1:1 均衡，含 `encoding_rs`/`minimal-lexical`/`rustc-demangle` 去重直连）。
+
+## [2026-11-26] - Batch 53 云原生可观测性与 Web 安全专场（6 大全新独立包：`@cap/ndjson`, `@cap/cache-control`, `@cap/csp`, `@cap/logfmt`, `@cap/syslog`, `@cap/traceparent`），总映射突破 **445 条**！
+- `packages/@cap/ndjson/` & `cap/test/testCapNdjson.cp`: NDJSON/JSONL 流式增量行切分与写入（6/6 PASS）。
+- `packages/@cap/cache-control/` & `cap/test/testCapCacheControl.cp`: RFC 9111 `Cache-Control` 解析与 TTL 计算（6/6 PASS）。
+- `packages/@cap/csp/` & `cap/test/testCapCsp.cp`: W3C CSP3 安全策略构建与解析（6/6 PASS）。
+- `packages/@cap/logfmt/` & `cap/test/testCapLogfmt.cp`: 云原生 `logfmt` 键值日志解析与写入（6/6 PASS）。
+- `packages/@cap/syslog/` & `cap/test/testCapSyslog.cp`: RFC 5424 Syslog 报文编解码（6/6 PASS）。
+- `packages/@cap/traceparent/` & `cap/test/testCapTraceparent.cp`: W3C Trace Context `traceparent`/`tracestate`（6/6 PASS）。
+- `packages/@cap/registry.json`: 扩充至 **445 条**高频映射（**npm=216 / crates.io=229** 均衡，含 `tslib`/`open`/`is-plain-object`/`allocator-api2` 去重直连）。

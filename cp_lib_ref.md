@@ -473,3 +473,9 @@ const h = cap.hash.wyhash("hello");
 | **`@cap/properties`** | `packages/@cap/properties` | 对标 npm `properties-reader` / Rust `java-properties` — Java `.properties` 解析（多行续行与 `\uXXXX` 解码） |
 | **`@cap/cuid2`** | `packages/@cap/cuid2` | 对标 npm `@paralleldrive/cuid2` / Rust `cuid2` — 零堆 SHA-256 Base36 抗碰撞分布式唯一 ID 生成与校验 |
 | **`@cap/retry-after`** | `packages/@cap/retry-after` | 对标 Rust `retry-after` — RFC 9110 HTTP `Retry-After` 延迟秒数与 IMF-fixdate 日期双格式解析与等待计算 |
+| **`@cap/ndjson`** | `packages/@cap/ndjson` | 对标 npm `ndjson` / `split2` — 零堆 NDJSON / JSON Lines 跨分片流式增量行切分器与写入器 |
+| **`@cap/cache-control`** | `packages/@cap/cache-control` | 对标 npm `cache-control-parser` / Rust `http-cache-semantics` — RFC 9111 缓存指令解析、序列化与共享/私有 TTL 计算 |
+| **`@cap/csp`** | `packages/@cap/csp` | 对标 npm `helmet` CSP / `content-security-policy-builder` — W3C CSP3 防注入安全策略头构建与解析器 |
+| **`@cap/logfmt`** | `packages/@cap/logfmt` | 对标 npm/Rust `logfmt` — 云原生 `k=v` 结构化键值日志零堆解析（含引号转义/裸标志）与序列化写入器 |
+| **`@cap/syslog`** | `packages/@cap/syslog` | 对标 Rust `syslog` / npm `glossy` — RFC 5424 Syslog 日志 PRI 编解码、结构化数据解析与格式化 |
+| **`@cap/traceparent`** | `packages/@cap/traceparent` | 对标 OpenTelemetry / W3C Trace Context — 严格 55 字节 `traceparent` 解析、子 Span 派生与 `tracestate` 查询 |

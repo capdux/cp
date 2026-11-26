@@ -1,0 +1,8 @@
+{
+  "name": "@cap/ndjson",
+  "version": "1.0.0",
+  "description": "Zero-heap NDJSON / JSON Lines streaming incremental line splitter, scanner, and writer with max-line overflow protection.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp"
+}

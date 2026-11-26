@@ -222,3 +222,6 @@
 
 ## 2026-11-26: Batch 52 双生态单批交付 7 大新包，突破 **280+ 线上官方 `.cap` 包 + 435 条映射**！
 - 单批交付 `@cap/glob-to-regex`（6/6）、`@cap/cron-next`（6/6）、`@cap/csv-line`（6/6）、`@cap/duration-iso`（6/6）、`@cap/properties`（6/6）、`@cap/cuid2`（6/6）、`@cap/retry-after`（6/6），去重直连 `encoding_rs`/`minimal-lexical`/`rustc-demangle`，总映射突破 **435 条**（npm=209 / crates.io=226）！
+
+## 2026-11-26: Batch 53 云原生可观测性与 Web 安全六件套，总映射突破 **445 条**，线上官方包冲刺 **290 个**！
+- 单批交付 `@cap/ndjson`（6/6）、`@cap/cache-control`（6/6）、`@cap/csp`（6/6）、`@cap/logfmt`（6/6）、`@cap/syslog`（6/6）、`@cap/traceparent`（6/6），去重直连 `tslib`/`open`/`is-plain-object`/`allocator-api2`，总映射达 **445 条**（npm=216 / crates.io=229 几乎 1:1 完美均衡）！

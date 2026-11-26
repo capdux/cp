@@ -4354,6 +4354,106 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "tslib",
+      "source_repo": "https://github.com/microsoft/tslib",
+      "license": "0BSD",
+      "cp_target": "cap:core",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "open",
+      "source_repo": "https://github.com/sindresorhus/open",
+      "license": "MIT",
+      "cp_target": "cap:os",
+      "kind": "stdlib",
+      "aliases": ["opn"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "is-plain-object",
+      "source_repo": "https://github.com/jonschlinkert/is-plain-object",
+      "license": "MIT",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ndjson",
+      "source_repo": "https://github.com/ndjson/ndjson.js",
+      "license": "BSD-2-Clause",
+      "cp_target": "@cap/ndjson",
+      "kind": "package",
+      "aliases": ["split2", "jsonl"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "cache-control-parser",
+      "source_repo": "https://github.com/etienne-martin/cache-control-parser",
+      "license": "MIT",
+      "cp_target": "@cap/cache-control",
+      "kind": "package",
+      "aliases": ["http-cache-semantics"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "content-security-policy-builder",
+      "source_repo": "https://github.com/helmetjs/content-security-policy-builder",
+      "license": "MIT",
+      "cp_target": "@cap/csp",
+      "kind": "package",
+      "aliases": ["csp", "helmet-csp"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "logfmt",
+      "source_repo": "https://github.com/csquared/node-logfmt",
+      "license": "MIT",
+      "cp_target": "@cap/logfmt",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "syslog",
+      "source_repo": "https://github.com/Geal/rust-syslog",
+      "license": "MIT",
+      "cp_target": "@cap/syslog",
+      "kind": "package",
+      "aliases": ["glossy", "rfc5424"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "opentelemetry",
+      "source_repo": "https://github.com/open-telemetry/opentelemetry-rust",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/traceparent",
+      "kind": "package",
+      "aliases": ["traceparent", "tracestate", "@opentelemetry/core"],
+      "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "allocator-api2",
+      "source_repo": "https://github.com/zakarumych/allocator-api2",
+      "license": "MIT",
+      "cp_target": "cap:mem",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-26"
     }
   ]
 }

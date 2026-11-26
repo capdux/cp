@@ -1,0 +1,9 @@
+{
+  "name": "@cap/csp",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C Content-Security-Policy 3 header builder and parser for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": ["csp", "content-security-policy", "security", "http", "xss", "helmet", "zero-alloc"]
+}
