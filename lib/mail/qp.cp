@@ -1,20 +1,50 @@
 // Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (RFC 2045 §6.7 Quoted-Printable Codec)
 // Pure-CP zero-allocation RFC 2045 Quoted-Printable encoder (76-col soft wraps) and decoder.
 
-fn hexVal(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    return null;
+type QpVec16 = @Vector(16, u8);
+
+fn makeQpHexValLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 10) : (i += 1) {
+        lut['0' + i] = @as(u8, @intCast(i));
+    }
+    let j: usize = 0;
+    while (j < 6) : (j += 1) {
+        lut['A' + j] = @as(u8, @intCast(10 + j));
+        lut['a' + j] = @as(u8, @intCast(10 + j));
+    }
+    return lut;
 }
 
-fn hexUpper(v: u8): u8 {
-    if (v < 10) return @as(u8, '0') + v;
-    return @as(u8, 'A') + (v - 10);
+fn makeQpSafeLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 33 && i <= 60) || (i >= 62 && i <= 126)) {
+            lut[i] = 1;
+        }
+    }
+    return lut;
 }
 
-fn isSafeQpLiteral(b: u8): bool {
-    return (b >= 33 && b <= 60) || (b >= 62 && b <= 126);
+const QP_HEX_VAL_LUT: [u8; 256] = makeQpHexValLut();
+const QP_SAFE_LUT: [u8; 256] = makeQpSafeLut();
+const QP_HEX_UPPER: []const u8 = "0123456789ABCDEF";
+
+fn qpFindEq(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_eq: QpVec16 = @splat('=' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: QpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_eq)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '=') return i;
+    }
+    return s.len;
 }
 
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {
@@ -27,8 +57,8 @@ fn writeByte(out: []u8, pos: *usize, b: u8): bool {
 fn writeEncodedByte(out: []u8, pos: *usize, b: u8): bool {
     if (pos.* + 3 > out.len) return false;
     out[pos.*] = '=';
-    out[pos.* + 1] = hexUpper((b >> 4) & 0x0F);
-    out[pos.* + 2] = hexUpper(b & 0x0F);
+    out[pos.* + 1] = QP_HEX_UPPER[@as(usize, (b >> 4) & 0x0F)];
+    out[pos.* + 2] = QP_HEX_UPPER[@as(usize, b & 0x0F)];
     pos.* += 3;
     return true;
 }
@@ -39,8 +69,25 @@ export fn encodeQuotedPrintable(input: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let line_len: usize = 0;
     let i: usize = 0;
+    const v_lo: QpVec16 = @splat(33 as u8);
+    const v_hi: QpVec16 = @splat(126 as u8);
+    const v_eq: QpVec16 = @splat('=' as u8);
 
     while (i < input.len) {
+        // 16-lane SIMD fast path for consecutive safe literal bytes (33..=126 excluding '=')
+        while (line_len + 16 <= 75 && i + 16 <= input.len) {
+            const v: QpVec16 = input[i .. i + 16][0..16].*;
+            const ok = (v >= v_lo) & (v <= v_hi) & (v != v_eq);
+            const mask: u16 = @bitCast(ok);
+            if (mask != 0xFFFF) break;
+            if (pos + 16 > out.len) return null;
+            @memcpy(out[pos .. pos + 16], input[i .. i + 16]);
+            pos += 16;
+            line_len += 16;
+            i += 16;
+        }
+        if (i >= input.len) break;
+
         const c = input[i];
         // Handle hard line breaks (\r\n or \n)
         if (c == '\r' && i + 1 < input.len && input[i + 1] == '\n') {
@@ -60,7 +107,7 @@ export fn encodeQuotedPrintable(input: []const u8, out: []u8): ([]const u8)? {
 
         const is_space_or_tab = c == ' ' || c == '\t';
         const is_end_of_line = (i + 1 == input.len) || input[i + 1] == '\r' || input[i + 1] == '\n';
-        const literal_ok = isSafeQpLiteral(c) || (is_space_or_tab && !is_end_of_line);
+        const literal_ok = QP_SAFE_LUT[@as(usize, c)] != 0 || (is_space_or_tab && !is_end_of_line);
 
         const needed: usize = if (literal_ok) 1 else 3;
         // Reserve 1 column for soft break '=' if we are not at the end of a line
@@ -92,31 +139,38 @@ export fn decodeQuotedPrintable(input: []const u8, out: []u8, strict: bool): ([]
     let i: usize = 0;
 
     while (i < input.len) {
-        if (input[i] == '=') {
-            // Soft line break: =\r\n or =\n (with optional trailing spaces/tabs before newline per RFC 2045)
-            let k = i + 1;
-            while (k < input.len && (input[k] == ' ' || input[k] == '\t')) {
-                k += 1;
-            }
-            if (k < input.len && input[k] == '\r' && k + 1 < input.len && input[k + 1] == '\n') {
-                i = k + 2;
-                continue;
-            }
-            if (k < input.len && input[k] == '\n') {
-                i = k + 1;
-                continue;
-            }
-            if (i + 2 < input.len) {
-                const hi = hexVal(input[i + 1]);
-                const lo = hexVal(input[i + 2]);
-                if (hi != null && lo != null) {
-                    if (!writeByte(out, &pos, (hi.? << 4) | lo.?)) return null;
-                    i += 3;
-                    continue;
-                }
-            }
-            if (strict) return null;
+        const next_eq = qpFindEq(input, i);
+        if (next_eq > i) {
+            const n = next_eq - i;
+            if (pos + n > out.len) return null;
+            @memcpy(out[pos .. pos + n], input[i..next_eq]);
+            pos += n;
+            i = next_eq;
+            if (i >= input.len) break;
         }
+        // Soft line break: =\r\n or =\n (with optional trailing spaces/tabs before newline per RFC 2045)
+        let k = i + 1;
+        while (k < input.len && (input[k] == ' ' || input[k] == '\t')) {
+            k += 1;
+        }
+        if (k < input.len && input[k] == '\r' && k + 1 < input.len && input[k + 1] == '\n') {
+            i = k + 2;
+            continue;
+        }
+        if (k < input.len && input[k] == '\n') {
+            i = k + 1;
+            continue;
+        }
+        if (i + 2 < input.len) {
+            const hi = QP_HEX_VAL_LUT[@as(usize, input[i + 1])];
+            const lo = QP_HEX_VAL_LUT[@as(usize, input[i + 2])];
+            if (hi != 0xFF && lo != 0xFF) {
+                if (!writeByte(out, &pos, (hi << 4) | lo)) return null;
+                i += 3;
+                continue;
+            }
+        }
+        if (strict) return null;
         if (!writeByte(out, &pos, input[i])) return null;
         i += 1;
     }

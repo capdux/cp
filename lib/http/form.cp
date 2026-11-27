@@ -1,26 +1,98 @@
 // Source: Absorbed from /data/dev/bun/src/url.zig | Synced: 2026-11-21T16:45:50Z (WHATWG application/x-www-form-urlencoded Parser & Builder)
 // Pure-CP zero-allocation application/x-www-form-urlencoded parser, lookup, percent-codec, and builder.
 
-fn hexVal(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return null;
+type FormVec16 = @Vector(16, u8);
+
+fn makeFormHexValLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 10) : (i += 1) {
+        lut['0' + i] = @as(u8, @intCast(i));
+    }
+    let j: usize = 0;
+    while (j < 6) : (j += 1) {
+        lut['a' + j] = @as(u8, @intCast(10 + j));
+        lut['A' + j] = @as(u8, @intCast(10 + j));
+    }
+    return lut;
 }
 
-fn hexUpper(v: u8): u8 {
-    if (v < 10) return @as(u8, '0') + v;
-    return @as(u8, 'A') + (v - 10);
+fn makeFormSafeLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const b = @as(u8, @intCast(i));
+        const ok = (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9') ||
+            b == '*' || b == '-' || b == '.' || b == '_';
+        lut[i] = if (ok) 1 else 0;
+    }
+    return lut;
 }
 
-fn isFormSafe(b: u8): bool {
-    if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || (b >= '0' && b <= '9')) return true;
-    return b == '*' || b == '-' || b == '.' || b == '_';
+const FORM_HEX_VAL_LUT: [u8; 256] = makeFormHexValLut();
+const FORM_SAFE_LUT: [u8; 256] = makeFormSafeLut();
+const FORM_HEX_UPPER: []const u8 = "0123456789ABCDEF";
+
+fn formFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: FormVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: FormVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
+fn formFindDecodeSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_plus: FormVec16 = @splat('+' as u8);
+    const v_pct: FormVec16 = @splat('%' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: FormVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_plus) | (v == v_pct))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '+' || s[i] == '%') return i;
+    }
+    return s.len;
+}
+
+fn formScanSafeRun(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_a: FormVec16 = @splat('a' as u8);
+    const v_26: FormVec16 = @splat(26 as u8);
+    const v_0: FormVec16 = @splat('0' as u8);
+    const v_10: FormVec16 = @splat(10 as u8);
+    const v_case: FormVec16 = @splat(0x20 as u8);
+    const v_star: FormVec16 = @splat('*' as u8);
+    const v_dash: FormVec16 = @splat('-' as u8);
+    const v_dot: FormVec16 = @splat('.' as u8);
+    const v_under: FormVec16 = @splat('_' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: FormVec16 = s[i .. i + 16][0..16].*;
+        const vl = v | v_case;
+        const m_alpha: u16 = @bitCast((vl -% v_a) < v_26);
+        const m_dig: u16 = @bitCast((v -% v_0) < v_10);
+        const m_sym: u16 = @bitCast((v == v_star) | (v == v_dash) | (v == v_dot) | (v == v_under));
+        if ((m_alpha | m_dig | m_sym) != 0xFFFF) break;
+    }
+    while (i < s.len && FORM_SAFE_LUT[@as(usize, s[i])] != 0) : (i += 1) {}
+    return i;
 }
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: FormVec16 = a[i .. i + 16][0..16].*;
+        const vb: FormVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) return false;
         i += 1;
@@ -33,20 +105,25 @@ export fn encodeFormComponent(raw: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < raw.len) {
+        const safe_end = formScanSafeRun(raw, i);
+        if (safe_end > i) {
+            const n = safe_end - i;
+            if (pos + n > out.len) return null;
+            @memcpy(out[pos .. pos + n], raw[i..safe_end]);
+            pos += n;
+            i = safe_end;
+            if (i >= raw.len) break;
+        }
         const c = raw[i];
         if (c == ' ') {
             if (pos >= out.len) return null;
             out[pos] = '+';
             pos += 1;
-        } else if (isFormSafe(c)) {
-            if (pos >= out.len) return null;
-            out[pos] = c;
-            pos += 1;
         } else {
             if (pos + 3 > out.len) return null;
             out[pos] = '%';
-            out[pos + 1] = hexUpper((c >> 4) & 0x0F);
-            out[pos + 2] = hexUpper(c & 0x0F);
+            out[pos + 1] = FORM_HEX_UPPER[@as(usize, (c >> 4) & 0x0F)];
+            out[pos + 2] = FORM_HEX_UPPER[@as(usize, c & 0x0F)];
             pos += 3;
         }
         i += 1;
@@ -60,6 +137,15 @@ export fn decodeFormComponent(encoded: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < encoded.len) {
+        const next_sp = formFindDecodeSpecial(encoded, i);
+        if (next_sp > i) {
+            const n = next_sp - i;
+            if (pos + n > out.len) return null;
+            @memcpy(out[pos .. pos + n], encoded[i..next_sp]);
+            pos += n;
+            i = next_sp;
+            if (i >= encoded.len) break;
+        }
         const c = encoded[i];
         if (c == '+') {
             if (pos >= out.len) return null;
@@ -67,11 +153,11 @@ export fn decodeFormComponent(encoded: []const u8, out: []u8): ([]const u8)? {
             pos += 1;
             i += 1;
         } else if (c == '%' && i + 2 < encoded.len) {
-            const hi = hexVal(encoded[i + 1]);
-            const lo = hexVal(encoded[i + 2]);
-            if (hi != null && lo != null) {
+            const hi = FORM_HEX_VAL_LUT[@as(usize, encoded[i + 1])];
+            const lo = FORM_HEX_VAL_LUT[@as(usize, encoded[i + 2])];
+            if (hi != 0xFF && lo != 0xFF) {
                 if (pos >= out.len) return null;
-                out[pos] = (hi.? << 4) | lo.?;
+                out[pos] = (hi << 4) | lo;
                 pos += 1;
                 i += 3;
             } else {
@@ -116,9 +202,7 @@ export struct FormIter {
     pub fn next(*_): FormPairRaw? {
         while (_.pos < _.src.len) {
             const start = _.pos;
-            while (_.pos < _.src.len && _.src[_.pos] != '&') {
-                _.pos += 1;
-            }
+            _.pos = formFindByte(_.src, _.pos, '&');
             const end = _.pos;
             if (_.pos < _.src.len && _.src[_.pos] == '&') {
                 _.pos += 1;
@@ -126,19 +210,11 @@ export struct FormIter {
             const seg = _.src[start..end];
             if (seg.len == 0) continue;
 
-            let eq_pos: usize? = null;
-            let k: usize = 0;
-            while (k < seg.len) {
-                if (seg[k] == '=') {
-                    eq_pos = k;
-                    break;
-                }
-                k += 1;
-            }
-            if (ep := eq_pos) {
+            const eq_pos = formFindByte(seg, 0, '=');
+            if (eq_pos < seg.len) {
                 return FormPairRaw {
-                    raw_key: seg[0..ep],
-                    raw_value: seg[ep + 1..],
+                    raw_key: seg[0..eq_pos],
+                    raw_value: seg[eq_pos + 1..],
                 };
             }
             return FormPairRaw {

@@ -1,14 +1,68 @@
 // Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (DNS TXT Key-Value, SPF & DMARC Record Parser)
 
-fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+type DnsTxtVec16 = @Vector(16, u8);
+
+fn makeTxtLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+const TXT_LOWER_LUT: [u8; 256] = makeTxtLowerLut();
+
+fn txtFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: DnsTxtVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: DnsTxtVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
     }
-    return c;
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
+fn txtFindEither2(s: []const u8, start: usize, c1: u8, c2: u8): usize {
+    let i: usize = start;
+    const v1: DnsTxtVec16 = @splat(c1);
+    const v2: DnsTxtVec16 = @splat(c2);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: DnsTxtVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v1) | (v == v2))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == c1 || s[i] == c2) return i;
+    }
+    return s.len;
+}
+
+fn txtFindSpace(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_sp: DnsTxtVec16 = @splat(' ' as u8);
+    const v_tab: DnsTxtVec16 = @splat('\t' as u8);
+    const v_cr: DnsTxtVec16 = @splat('\r' as u8);
+    const v_lf: DnsTxtVec16 = @splat('\n' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: DnsTxtVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_sp) | (v == v_tab) | (v == v_cr) | (v == v_lf))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (isSpace(s[i])) return i;
+    }
+    return s.len;
+}
+
+fn isSpace(c: u8): bool {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -28,6 +82,11 @@ fn eqlBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: DnsTxtVec16 = a[i .. i + 16][0..16].*;
+        const vb: DnsTxtVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -42,8 +101,18 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: DnsTxtVec16 = @splat(65 as u8);
+    const hi_Z: DnsTxtVec16 = @splat(90 as u8);
+    const case_bit: DnsTxtVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: DnsTxtVec16 = a[i .. i + 16][0..16].*;
+        const vb: DnsTxtVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (TXT_LOWER_LUT[@as(usize, a[i])] != TXT_LOWER_LUT[@as(usize, b[i])]) {
             return false;
         }
         i += 1;
@@ -92,9 +161,7 @@ export struct TxtTagIter {
     fn next(*_): TxtTag? {
         while (_.pos < _.src.len) {
             const seg_start = _.pos;
-            while (_.pos < _.src.len && _.src[_.pos] != ';') {
-                _.pos += 1;
-            }
+            _.pos = txtFindByte(_.src, _.pos, ';');
             const seg = trimAscii(_.src[seg_start.._.pos]);
             if (_.pos < _.src.len && _.src[_.pos] == ';') {
                 _.pos += 1;
@@ -103,16 +170,8 @@ export struct TxtTagIter {
                 continue;
             }
 
-            let eq_pos: usize = 0;
-            let found_eq = false;
-            while (eq_pos < seg.len) {
-                if (seg[eq_pos] == '=') {
-                    found_eq = true;
-                    break;
-                }
-                eq_pos += 1;
-            }
-            if (!found_eq) {
+            const eq_pos = txtFindByte(seg, 0, '=');
+            if (eq_pos >= seg.len) {
                 continue;
             }
 
@@ -269,9 +328,7 @@ export struct SpfIter {
                 return null;
             }
             const tok_start = _.pos;
-            while (_.pos < _.src.len && !isSpace(_.src[_.pos])) {
-                _.pos += 1;
-            }
+            _.pos = txtFindSpace(_.src, _.pos);
             const tok = _.src[tok_start.._.pos];
             if (tok.len == 0) {
                 continue;
@@ -298,17 +355,8 @@ export struct SpfIter {
                 continue;
             }
 
-            let sep_pos: usize = 0;
-            let found_sep = false;
-            while (sep_pos < body.len) {
-                if (body[sep_pos] == ':' || body[sep_pos] == '=') {
-                    found_sep = true;
-                    break;
-                }
-                sep_pos += 1;
-            }
-
-            if (found_sep) {
+            const sep_pos = txtFindEither2(body, 0, ':', '=');
+            if (sep_pos < body.len) {
                 if (sep_pos == 0) {
                     continue;
                 }

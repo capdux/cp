@@ -1,36 +1,75 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (RFC 8297 HTTP 103 Early Hints & RFC 8288 Link Codec)
 
+type EhVec16 = @Vector(16, u8);
+
+fn makeEhLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const EH_LOWER_LUT: [u8; 256] = makeEhLowerLut();
+
+fn ehFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: EhVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: EhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
+fn ehFindEither2(s: []const u8, start: usize, c1: u8, c2: u8): usize {
+    let i: usize = start;
+    const v1: EhVec16 = @splat(c1);
+    const v2: EhVec16 = @splat(c2);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: EhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v1) | (v == v2))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == c1 || s[i] == c2) return i;
+    }
+    return s.len;
+}
+
+fn ehFindEither3(s: []const u8, start: usize, c1: u8, c2: u8, c3: u8): usize {
+    let i: usize = start;
+    const v1: EhVec16 = @splat(c1);
+    const v2: EhVec16 = @splat(c2);
+    const v3: EhVec16 = @splat(c3);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: EhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v1) | (v == v2) | (v == v3))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == c1 || s[i] == c2 || s[i] == c3) return i;
+    }
+    return s.len;
+}
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 fn hasLineBreak(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '\r' || s[i] == '\n') {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return ehFindEither2(s, 0, '\r', '\n') < s.len;
 }
 
 fn hasUriForbidden(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '>' || s[i] == '\r' || s[i] == '\n') {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
-
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return ehFindEither3(s, 0, '>', '\r', '\n') < s.len;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -50,8 +89,18 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: EhVec16 = @splat(65 as u8);
+    const hi_Z: EhVec16 = @splat(90 as u8);
+    const case_bit: EhVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: EhVec16 = a[i .. i + 16][0..16].*;
+        const vb: EhVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (EH_LOWER_LUT[@as(usize, a[i])] != EH_LOWER_LUT[@as(usize, b[i])]) {
             return false;
         }
         i += 1;
@@ -71,6 +120,8 @@ fn unquoteParamValue(s: []const u8): ([]const u8)? {
     }
     let i: usize = 1;
     while (i < s.len) {
+        i = ehFindEither2(s, i, '\\', '"');
+        if (i >= s.len) return null;
         const c = s[i];
         if (c == '\\') {
             if (i + 1 >= s.len) {
@@ -79,13 +130,10 @@ fn unquoteParamValue(s: []const u8): ([]const u8)? {
             i += 2;
             continue;
         }
-        if (c == '"') {
-            if (i + 1 != s.len) {
-                return null;
-            }
-            return s[1..i];
+        if (i + 1 != s.len) {
+            return null;
         }
-        i += 1;
+        return s[1..i];
     }
     return null;
 }
@@ -94,10 +142,8 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
     if (out.len - pos.* < s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.* + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
     }
     pos.* += s.len;
     return true;
@@ -151,16 +197,8 @@ fn parseSingleLink(seg: []const u8): EarlyHintLink? {
     if (seg.len < 3 || seg[0] != '<') {
         return null;
     }
-    let close_angle: usize = 1;
-    let found_close = false;
-    while (close_angle < seg.len) {
-        if (seg[close_angle] == '>') {
-            found_close = true;
-            break;
-        }
-        close_angle += 1;
-    }
-    if (!found_close) {
+    const close_angle = ehFindByte(seg, 1, '>');
+    if (close_angle >= seg.len) {
         return null;
     }
 
@@ -191,25 +229,27 @@ fn parseSingleLink(seg: []const u8): EarlyHintLink? {
         }
         const p_start = i;
         let in_quote = false;
-        let escaped = false;
         while (i < seg.len) {
-            const c = seg[i];
             if (in_quote) {
-                if (escaped) {
-                    escaped = false;
-                } else if (c == '\\') {
-                    escaped = true;
-                } else if (c == '"') {
-                    in_quote = false;
-                }
-            } else {
-                if (c == '"') {
-                    in_quote = true;
-                } else if (c == ';') {
+                i = ehFindEither2(seg, i, '\\', '"');
+                if (i >= seg.len) break;
+                if (seg[i] == '\\') {
+                    if (i + 1 < seg.len) {
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
                     break;
                 }
+                in_quote = false;
+                i += 1;
+            } else {
+                i = ehFindEither2(seg, i, '"', ';');
+                if (i >= seg.len) break;
+                if (seg[i] == ';') break;
+                in_quote = true;
+                i += 1;
             }
-            i += 1;
         }
         if (in_quote) {
             return null;
@@ -220,17 +260,8 @@ fn parseSingleLink(seg: []const u8): EarlyHintLink? {
             continue;
         }
 
-        let eq_pos: usize = 0;
-        let has_eq = false;
-        while (eq_pos < param.len) {
-            if (param[eq_pos] == '=') {
-                has_eq = true;
-                break;
-            }
-            eq_pos += 1;
-        }
-
-        if (!has_eq) {
+        const eq_pos = ehFindByte(param, 0, '=');
+        if (eq_pos >= param.len) {
             if (eqlIgnoreCase(param, "nopush")) {
                 nopush = true;
             } else if (eqlIgnoreCase(param, "crossorigin")) {
@@ -291,32 +322,38 @@ export struct EarlyHintIter {
             const seg_start = _.pos;
             let in_angle = false;
             let in_quote = false;
-            let escaped = false;
 
             while (_.pos < _.src.len) {
-                const c = _.src[_.pos];
                 if (in_angle) {
-                    if (c == '>') {
-                        in_angle = false;
-                    }
+                    _.pos = ehFindByte(_.src, _.pos, '>');
+                    if (_.pos >= _.src.len) break;
+                    in_angle = false;
+                    _.pos += 1;
                 } else if (in_quote) {
-                    if (escaped) {
-                        escaped = false;
-                    } else if (c == '\\') {
-                        escaped = true;
-                    } else if (c == '"') {
-                        in_quote = false;
-                    }
-                } else {
-                    if (c == '<') {
-                        in_angle = true;
-                    } else if (c == '"') {
-                        in_quote = true;
-                    } else if (c == ',') {
+                    _.pos = ehFindEither2(_.src, _.pos, '\\', '"');
+                    if (_.pos >= _.src.len) break;
+                    if (_.src[_.pos] == '\\') {
+                        if (_.pos + 1 < _.src.len) {
+                            _.pos += 2;
+                            continue;
+                        }
+                        _.pos += 1;
                         break;
                     }
+                    in_quote = false;
+                    _.pos += 1;
+                } else {
+                    _.pos = ehFindEither3(_.src, _.pos, '<', '"', ',');
+                    if (_.pos >= _.src.len) break;
+                    const c = _.src[_.pos];
+                    if (c == ',') break;
+                    if (c == '<') {
+                        in_angle = true;
+                    } else {
+                        in_quote = true;
+                    }
+                    _.pos += 1;
                 }
-                _.pos += 1;
             }
 
             const seg = trimAscii(_.src[seg_start.._.pos]);

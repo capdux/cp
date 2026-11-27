@@ -1,5 +1,51 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (HTTP Cache Key Normalizer & Builder)
 
+type CkVec16 = @Vector(16, u8);
+
+fn makeCkLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeCkUpperLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'a' && i <= 'z') {
+            lut[i] = @as(u8, @intCast(i - 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const CK_LOWER_LUT: [u8; 256] = makeCkLowerLut();
+const CK_UPPER_LUT: [u8; 256] = makeCkUpperLut();
+
+fn ckFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: CkVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CkVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -10,6 +56,12 @@ fn isCtrlOrSpace(c: u8): bool {
 
 fn hasLineBreak(s: []const u8): bool {
     let i: usize = 0;
+    const v_cr: CkVec16 = @splat('\r' as u8);
+    const v_lf: CkVec16 = @splat('\n' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CkVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_cr) | (v == v_lf))) return true;
+    }
     while (i < s.len) {
         if (s[i] == '\r' || s[i] == '\n') {
             return true;
@@ -21,6 +73,12 @@ fn hasLineBreak(s: []const u8): bool {
 
 fn hasCtrlOrSpace(s: []const u8): bool {
     let i: usize = 0;
+    const v_sp: CkVec16 = @splat(0x20 as u8);
+    const v_del: CkVec16 = @splat(0x7F as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CkVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v <= v_sp) | (v == v_del))) return true;
+    }
     while (i < s.len) {
         if (isCtrlOrSpace(s[i])) {
             return true;
@@ -28,20 +86,6 @@ fn hasCtrlOrSpace(s: []const u8): bool {
         i += 1;
     }
     return false;
-}
-
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn toUpperAscii(c: u8): u8 {
-    if (c >= 'a' && c <= 'z') {
-        return c - 32;
-    }
-    return c;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -61,8 +105,18 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CkVec16 = @splat(65 as u8);
+    const hi_Z: CkVec16 = @splat(90 as u8);
+    const case_bit: CkVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CkVec16 = a[i .. i + 16][0..16].*;
+        const vb: CkVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (CK_LOWER_LUT[@as(usize, a[i])] != CK_LOWER_LUT[@as(usize, b[i])]) {
             return false;
         }
         i += 1;
@@ -74,14 +128,7 @@ fn startsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
     if (s.len < prefix.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (toLowerAscii(s[i]) != toLowerAscii(prefix[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return eqlIgnoreCase(s[0..prefix.len], prefix);
 }
 
 fn endsWithBytes(s: []const u8, suffix: []const u8): bool {
@@ -90,6 +137,11 @@ fn endsWithBytes(s: []const u8, suffix: []const u8): bool {
     }
     const offset = s.len - suffix.len;
     let i: usize = 0;
+    while (i + 16 <= suffix.len) : (i += 16) {
+        const va: CkVec16 = s[offset + i .. offset + i + 16][0..16].*;
+        const vb: CkVec16 = suffix[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < suffix.len) {
         if (s[offset + i] != suffix[i]) {
             return false;
@@ -112,10 +164,8 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
     if (out.len - pos.* < s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.* + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
     }
     pos.* += s.len;
     return true;
@@ -125,12 +175,21 @@ fn writeLower(out: []u8, pos: *usize, s: []const u8): bool {
     if (out.len - pos.* < s.len) {
         return false;
     }
+    const base = pos.*;
     let i: usize = 0;
+    const lo_A: CkVec16 = @splat(65 as u8);
+    const hi_Z: CkVec16 = @splat(90 as u8);
+    const case_bit: CkVec16 = @splat(0x20 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CkVec16 = s[i .. i + 16][0..16].*;
+        const lo = @select(u8, (v >= lo_A) & (v <= hi_Z), v | case_bit, v);
+        out[base + i .. base + i + 16][0..16].* = lo;
+    }
     while (i < s.len) {
-        out[pos.* + i] = toLowerAscii(s[i]);
+        out[base + i] = CK_LOWER_LUT[@as(usize, s[i])];
         i += 1;
     }
-    pos.* += s.len;
+    pos.* = base + s.len;
     return true;
 }
 
@@ -138,12 +197,21 @@ fn writeUpper(out: []u8, pos: *usize, s: []const u8): bool {
     if (out.len - pos.* < s.len) {
         return false;
     }
+    const base = pos.*;
     let i: usize = 0;
+    const lo_a: CkVec16 = @splat(97 as u8);
+    const hi_z: CkVec16 = @splat(122 as u8);
+    const case_mask: CkVec16 = @splat(0xDF as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CkVec16 = s[i .. i + 16][0..16].*;
+        const up = @select(u8, (v >= lo_a) & (v <= hi_z), v & case_mask, v);
+        out[base + i .. base + i + 16][0..16].* = up;
+    }
     while (i < s.len) {
-        out[pos.* + i] = toUpperAscii(s[i]);
+        out[base + i] = CK_UPPER_LUT[@as(usize, s[i])];
         i += 1;
     }
-    pos.* += s.len;
+    pos.* = base + s.len;
     return true;
 }
 
@@ -173,9 +241,7 @@ export fn normalizeQueryWithoutTracking(query: []const u8, out: []u8): ([]const 
     let i: usize = 0;
     while (i < q.len) {
         const seg_start = i;
-        while (i < q.len && q[i] != '&') {
-            i += 1;
-        }
+        i = ckFindByte(q, i, '&');
         const part = q[seg_start..i];
         if (i < q.len && q[i] == '&') {
             i += 1;
@@ -185,10 +251,7 @@ export fn normalizeQueryWithoutTracking(query: []const u8, out: []u8): ([]const 
         }
 
         // 提取参数名（首个 '=' 之前，无 '=' 则整段为 key）
-        let eq_pos: usize = 0;
-        while (eq_pos < part.len && part[eq_pos] != '=') {
-            eq_pos += 1;
-        }
+        const eq_pos = ckFindByte(part, 0, '=');
         const key = part[0..eq_pos];
         if (isTrackingQueryParam(key)) {
             continue;
@@ -291,9 +354,7 @@ export fn buildCacheKey(
             let wrote_any = false;
             while (i < q.len) {
                 const seg_start = i;
-                while (i < q.len && q[i] != '&') {
-                    i += 1;
-                }
+                i = ckFindByte(q, i, '&');
                 const part = q[seg_start..i];
                 if (i < q.len && q[i] == '&') {
                     i += 1;
@@ -302,10 +363,7 @@ export fn buildCacheKey(
                     continue;
                 }
 
-                let eq_pos: usize = 0;
-                while (eq_pos < part.len && part[eq_pos] != '=') {
-                    eq_pos += 1;
-                }
+                const eq_pos = ckFindByte(part, 0, '=');
                 if (isTrackingQueryParam(part[0..eq_pos])) {
                     continue;
                 }
@@ -352,12 +410,8 @@ export fn appendVaryDimension(
     if (name.len == 0 || hasCtrlOrSpace(name)) {
         return false;
     }
-    let ni: usize = 0;
-    while (ni < name.len) {
-        if (name[ni] == ':') {
-            return false;
-        }
-        ni += 1;
+    if (ckFindByte(name, 0, ':') < name.len) {
+        return false;
     }
 
     const val = trimAscii(header_val);
@@ -374,22 +428,15 @@ export fn appendVaryDimension(
     out[cur] = '\n';
     cur += 1;
 
-    let i: usize = 0;
-    while (i < name.len) {
-        out[cur + i] = toLowerAscii(name[i]);
-        i += 1;
-    }
-    cur += name.len;
+    if (!writeLower(out, &cur, name)) return false;
 
     out[cur] = ':';
     cur += 1;
 
-    let j: usize = 0;
-    while (j < val.len) {
-        out[cur + j] = val[j];
-        j += 1;
+    if (val.len > 0) {
+        @memcpy(out[cur .. cur + val.len], val);
+        cur += val.len;
     }
-    cur += val.len;
 
     pos.* = cur;
     return true;

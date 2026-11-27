@@ -1,14 +1,62 @@
 // Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (RFC 1035 DNS Name Validator & Wire Label Codec)
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+type DnsNameVec16 = @Vector(16, u8);
+
+fn makeDnsLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return c;
+    return lut;
 }
 
-fn isAlphaNum(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+fn makeDnsLabelLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        const ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-';
+        lut[i] = if (ok) 1 else 0;
+    }
+    return lut;
+}
+
+const DNS_LOWER_LUT: [u8; 256] = makeDnsLowerLut();
+const DNS_LABEL_LUT: [u8; 256] = makeDnsLabelLut();
+
+fn dnsFindDot(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_dot: DnsNameVec16 = @splat('.' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: DnsNameVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_dot)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '.') return i;
+    }
+    return s.len;
+}
+
+fn copyLowerAscii(dst: []u8, src: []const u8) {
+    let i: usize = 0;
+    const lo_A: DnsNameVec16 = @splat(65 as u8);
+    const hi_Z: DnsNameVec16 = @splat(90 as u8);
+    const case_bit: DnsNameVec16 = @splat(0x20 as u8);
+    while (i + 16 <= src.len) : (i += 16) {
+        const v: DnsNameVec16 = src[i .. i + 16][0..16].*;
+        const lo = @select(u8, (v >= lo_A) & (v <= hi_Z), v | case_bit, v);
+        dst[i .. i + 16][0..16].* = lo;
+    }
+    while (i < src.len) : (i += 1) {
+        dst[i] = DNS_LOWER_LUT[@as(usize, src[i])];
+    }
 }
 
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
@@ -16,8 +64,18 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: DnsNameVec16 = @splat(65 as u8);
+    const hi_Z: DnsNameVec16 = @splat(90 as u8);
+    const case_bit: DnsNameVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: DnsNameVec16 = a[i .. i + 16][0..16].*;
+        const vb: DnsNameVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (DNS_LOWER_LUT[@as(usize, a[i])] != DNS_LOWER_LUT[@as(usize, b[i])]) {
             return false;
         }
         i += 1;
@@ -40,8 +98,23 @@ export fn isValidDnsLabel(label: []const u8): bool {
     if (label[0] == '-' || label[label.len - 1] == '-') {
         return false;
     }
-    for (c of label) {
-        if (!isAlphaNum(c) && c != '-') {
+    let i: usize = 0;
+    const v_a: DnsNameVec16 = @splat('a' as u8);
+    const v_26: DnsNameVec16 = @splat(26 as u8);
+    const v_0: DnsNameVec16 = @splat('0' as u8);
+    const v_10: DnsNameVec16 = @splat(10 as u8);
+    const v_dash: DnsNameVec16 = @splat('-' as u8);
+    const v_case: DnsNameVec16 = @splat(0x20 as u8);
+    while (i + 16 <= label.len) : (i += 16) {
+        const v: DnsNameVec16 = label[i .. i + 16][0..16].*;
+        const vl = v | v_case;
+        const m_alpha: u16 = @bitCast((vl -% v_a) < v_26);
+        const m_dig: u16 = @bitCast((v -% v_0) < v_10);
+        const m_dash: u16 = @bitCast(v == v_dash);
+        if ((m_alpha | m_dig | m_dash) != 0xFFFF) return false;
+    }
+    while (i < label.len) : (i += 1) {
+        if (DNS_LABEL_LUT[@as(usize, label[i])] == 0) {
             return false;
         }
     }
@@ -56,15 +129,13 @@ export fn isValidHostname(host: []const u8): bool {
     }
 
     let start: usize = 0;
-    let i: usize = 0;
-    while (i <= h.len) {
-        if (i == h.len || h[i] == '.') {
-            if (!isValidDnsLabel(h[start..i])) {
-                return false;
-            }
-            start = i + 1;
+    while (true) {
+        const dot = dnsFindDot(h, start);
+        if (!isValidDnsLabel(h[start..dot])) {
+            return false;
         }
-        i += 1;
+        if (dot >= h.len) break;
+        start = dot + 1;
     }
     return true;
 }
@@ -89,19 +160,15 @@ export fn encodeWireName(host: []const u8, out: []u8): ([]const u8)? {
 
     let pos: usize = 0;
     let start: usize = 0;
-    let i: usize = 0;
-    while (i <= h.len) {
-        if (i == h.len || h[i] == '.') {
-            const seg = h[start..i];
-            out[pos] = u8(seg.len);
-            pos += 1;
-            for (c of seg) {
-                out[pos] = toLowerAscii(c);
-                pos += 1;
-            }
-            start = i + 1;
-        }
-        i += 1;
+    while (true) {
+        const dot = dnsFindDot(h, start);
+        const seg = h[start..dot];
+        out[pos] = u8(seg.len);
+        pos += 1;
+        copyLowerAscii(out[pos .. pos + seg.len], seg);
+        pos += seg.len;
+        if (dot >= h.len) break;
+        start = dot + 1;
     }
 
     out[pos] = 0;
@@ -146,10 +213,8 @@ export fn decodeWireName(wire: []const u8, out: []u8): ([]const u8)? {
             out[pos] = '.';
             pos += 1;
         }
-        for (c of seg) {
-            out[pos] = c;
-            pos += 1;
-        }
+        @memcpy(out[pos .. pos + seg_len], seg);
+        pos += seg_len;
         i += 1 + seg_len;
     }
 
@@ -188,10 +253,6 @@ export fn normalizeHostname(host: []const u8, out: []u8): ([]const u8)? {
     if (out.len < h.len) {
         return null;
     }
-    let i: usize = 0;
-    while (i < h.len) {
-        out[i] = toLowerAscii(h[i]);
-        i += 1;
-    }
+    copyLowerAscii(out[0..h.len], h);
     return out[0..h.len];
 }
