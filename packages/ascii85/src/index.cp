@@ -1,9 +1,36 @@
 // packages/@cap/ascii85/src/index.cp
 // Zero-allocation Adobe Ascii85 (PostScript / PDF) encoder and decoder.
-// MIT clean-room pure CP implementation.
+// MIT clean-room pure CP implementation with comptime decode LUT & cap:bin big-endian I/O.
+
+import { readU32BE, writeU32BE } from "cap:bin";
+
+const A85_CODE_Z: u8 = 253;
+const A85_CODE_SPACE: u8 = 254;
+const A85_CODE_INVALID: u8 = 255;
+
+fn buildA85DecLut(): [256]u8 {
+    @setEvalBranchQuota(10000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        if (i >= 33 && i <= 117) {
+            tbl[i] = (i - 33) as u8;
+        } else if (i == 122) {
+            tbl[i] = A85_CODE_Z; // 'z'
+        } else if (i == 32 || i == 9 || i == 13 || i == 10 || i == 12 || i == 11) {
+            tbl[i] = A85_CODE_SPACE; // ASCII whitespace
+        } else {
+            tbl[i] = A85_CODE_INVALID;
+        }
+        i += 1;
+    }
+    return tbl;
+}
+
+const A85_DEC_LUT: [256]u8 = buildA85DecLut();
 
 fn a85IsSpace(c: u8): bool {
-    return c == (' ' as u8) || c == ('\t' as u8) || c == ('\r' as u8) || c == ('\n' as u8) || c == (0x0C as u8) || c == (0x0B as u8);
+    return A85_DEC_LUT[c as usize] == A85_CODE_SPACE;
 }
 
 /// Compute the worst-case encoded length for `byte_len` input bytes (with optional `<~...~>` delimiters).
@@ -40,63 +67,63 @@ pub fn encode(data: []const u8, with_delimiters: bool, out: []u8): usize {
     let i: usize = 0;
     let digits: [5]u8 = undefined;
 
-    while (i < data.len) {
-        const rem = data.len - i;
-        if (rem >= 4) {
-            const val: u32 = ((data[i] as u32) << (24 as u5)) | ((data[i + 1] as u32) << (16 as u5)) | ((data[i + 2] as u32) << (8 as u5)) | (data[i + 3] as u32);
-            if (val == (0 as u32)) {
-                if (pos + 1 > out.len) {
-                    return 0;
-                }
-                out[pos] = 'z' as u8;
-                pos += 1;
-            } else {
-                if (pos + 5 > out.len) {
-                    return 0;
-                }
-                let cur = val;
-                let k: usize = 5;
-                while (k > 0) {
-                    k -= 1;
-                    digits[k] = (33 as u8) + ((cur % (85 as u32)) as u8);
-                    cur = cur / (85 as u32);
-                }
-                let j: usize = 0;
-                while (j < 5) {
-                    out[pos] = digits[j];
-                    pos += 1;
-                    j += 1;
-                }
+    while (i + 4 <= data.len) {
+        const val: u32 = readU32BE(data, i) ?? (0 as u32);
+        if (val == (0 as u32)) {
+            if (pos + 1 > out.len) {
+                return 0;
             }
-            i += 4;
+            out[pos] = 'z' as u8;
+            pos += 1;
         } else {
-            // Final partial block (1..3 bytes): zero-pad on right, emit rem + 1 chars.
-            let val: u32 = (data[i] as u32) << (24 as u5);
-            if (rem >= 2) {
-                val = val | ((data[i + 1] as u32) << (16 as u5));
-            }
-            if (rem == 3) {
-                val = val | ((data[i + 2] as u32) << (8 as u5));
-            }
-
-            const emitCount = rem + 1;
-            if (pos + emitCount > out.len) {
+            if (pos + 5 > out.len) {
                 return 0;
             }
             let cur = val;
-            let k: usize = 5;
-            while (k > 0) {
-                k -= 1;
-                digits[k] = (33 as u8) + ((cur % (85 as u32)) as u8);
-                cur = cur / (85 as u32);
-            }
-            let j: usize = 0;
-            while (j < emitCount) {
-                out[pos] = digits[j];
-                pos += 1;
-                j += 1;
-            }
-            i = data.len;
+            out[pos + 4] = (33 as u8) + ((cur % (85 as u32)) as u8);
+            cur = cur / (85 as u32);
+            out[pos + 3] = (33 as u8) + ((cur % (85 as u32)) as u8);
+            cur = cur / (85 as u32);
+            out[pos + 2] = (33 as u8) + ((cur % (85 as u32)) as u8);
+            cur = cur / (85 as u32);
+            out[pos + 1] = (33 as u8) + ((cur % (85 as u32)) as u8);
+            cur = cur / (85 as u32);
+            out[pos] = (33 as u8) + (cur as u8);
+            pos += 5;
+        }
+        i += 4;
+    }
+
+    if (i < data.len) {
+        const rem = data.len - i;
+        // Final partial block (1..3 bytes): zero-pad on right, emit rem + 1 chars.
+        let val: u32 = (data[i] as u32) << (24 as u5);
+        if (rem >= 2) {
+            val = val | ((data[i + 1] as u32) << (16 as u5));
+        }
+        if (rem == 3) {
+            val = val | ((data[i + 2] as u32) << (8 as u5));
+        }
+
+        const emitCount = rem + 1;
+        if (pos + emitCount > out.len) {
+            return 0;
+        }
+        let cur = val;
+        digits[4] = (33 as u8) + ((cur % (85 as u32)) as u8);
+        cur = cur / (85 as u32);
+        digits[3] = (33 as u8) + ((cur % (85 as u32)) as u8);
+        cur = cur / (85 as u32);
+        digits[2] = (33 as u8) + ((cur % (85 as u32)) as u8);
+        cur = cur / (85 as u32);
+        digits[1] = (33 as u8) + ((cur % (85 as u32)) as u8);
+        cur = cur / (85 as u32);
+        digits[0] = (33 as u8) + (cur as u8);
+        let j: usize = 0;
+        while (j < emitCount) {
+            out[pos] = digits[j];
+            pos += 1;
+            j += 1;
         }
     }
 
@@ -149,51 +176,42 @@ pub fn decode(input: string, out: []u8): i64 {
 
     let i = start;
     while (i < end) {
-        const c = input[i];
+        const code = A85_DEC_LUT[input[i] as usize];
         i += 1;
 
-        if (a85IsSpace(c)) {
+        if (code < (85 as u8)) {
+            acc = acc * (85 as u64) + (code as u64);
+            cnt += 1;
+            if (cnt == 5) {
+                if (acc > maxU32) {
+                    return -1 as i64;
+                }
+                if (!writeU32BE(out, pos, acc as u32)) {
+                    return -1 as i64;
+                }
+                pos += 4;
+                acc = 0 as u64;
+                cnt = 0;
+            }
             continue;
         }
 
-        if (c == ('z' as u8)) {
+        if (code == A85_CODE_SPACE) {
+            continue;
+        }
+
+        if (code == A85_CODE_Z) {
             if (cnt != 0) {
                 return -1 as i64;
             }
-            if (pos + 4 > out.len) {
+            if (!writeU32BE(out, pos, 0 as u32)) {
                 return -1 as i64;
             }
-            out[pos] = 0 as u8;
-            out[pos + 1] = 0 as u8;
-            out[pos + 2] = 0 as u8;
-            out[pos + 3] = 0 as u8;
             pos += 4;
             continue;
         }
 
-        if (c < ('!' as u8) || c > ('u' as u8)) {
-            return -1 as i64;
-        }
-
-        acc = acc * (85 as u64) + ((c - ('!' as u8)) as u64);
-        cnt += 1;
-
-        if (cnt == 5) {
-            if (acc > maxU32) {
-                return -1 as i64;
-            }
-            if (pos + 4 > out.len) {
-                return -1 as i64;
-            }
-            const v = acc as u32;
-            out[pos] = ((v >> (24 as u5)) & (0xFF as u32)) as u8;
-            out[pos + 1] = ((v >> (16 as u5)) & (0xFF as u32)) as u8;
-            out[pos + 2] = ((v >> (8 as u5)) & (0xFF as u32)) as u8;
-            out[pos + 3] = (v & (0xFF as u32)) as u8;
-            pos += 4;
-            acc = 0 as u64;
-            cnt = 0;
-        }
+        return -1 as i64;
     }
 
     if (cnt == 1) {

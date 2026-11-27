@@ -13,18 +13,28 @@ fn crcByteStep(crc_in: u32, b: u8): u32 {
     return c;
 }
 
-fn crcBuildTable(): [256]u32 {
-    @setEvalBranchQuota(20000);
-    let tbl: [256]u32 = undefined;
+fn crcBuildTables(): [4][256]u32 {
+    @setEvalBranchQuota(40000);
+    let tbl: [4][256]u32 = undefined;
     let i: usize = 0;
     while (i < 256) {
-        tbl[i] = crcByteStep(0, i as u8);
+        tbl[0][i] = crcByteStep(0, i as u8);
         i = i + 1;
+    }
+    let t: usize = 1;
+    while (t < 4) {
+        let j: usize = 0;
+        while (j < 256) {
+            const prev = tbl[t - 1][j];
+            tbl[t][j] = (prev >> 8) ^ tbl[0][(prev & 255) as usize];
+            j = j + 1;
+        }
+        t = t + 1;
     }
     return tbl;
 }
 
-const CRC32_LUT: [256]u32 = crcBuildTable();
+const CRC32_LUT: [4][256]u32 = crcBuildTables();
 
 fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32 {
     let sum: u32 = 0;
@@ -97,9 +107,22 @@ pub struct Crc32Hasher {
     pub fn update(*_, buf: []const u8) {
         let c: u32 = _.state ^ 4294967295; // 0xFFFFFFFF
         let i: usize = 0;
+        // Slice-by-4 hot loop: 4 bytes per iteration
+        while (i + 4 <= buf.len) {
+            const w: u32 = (buf[i] as u32)
+                | ((buf[i + 1] as u32) << 8)
+                | ((buf[i + 2] as u32) << 16)
+                | ((buf[i + 3] as u32) << 24);
+            const x: u32 = c ^ w;
+            c = CRC32_LUT[3][(x & 255) as usize]
+                ^ CRC32_LUT[2][((x >> 8) & 255) as usize]
+                ^ CRC32_LUT[1][((x >> 16) & 255) as usize]
+                ^ CRC32_LUT[0][((x >> 24) & 255) as usize];
+            i = i + 4;
+        }
         while (i < buf.len) {
-            let idx: usize = ((c ^ (buf[i] as u32)) & 255) as usize;
-            c = (c >> 8) ^ CRC32_LUT[idx];
+            const idx: usize = ((c ^ (buf[i] as u32)) & 255) as usize;
+            c = (c >> 8) ^ CRC32_LUT[0][idx];
             i = i + 1;
         }
         _.state = c ^ 4294967295;
@@ -109,9 +132,22 @@ pub struct Crc32Hasher {
     pub fn updateStr(*_, s: string) {
         let c: u32 = _.state ^ 4294967295;
         let i: usize = 0;
+        // Slice-by-4 hot loop: 4 bytes per iteration
+        while (i + 4 <= s.len) {
+            const w: u32 = (s[i] as u32)
+                | ((s[i + 1] as u32) << 8)
+                | ((s[i + 2] as u32) << 16)
+                | ((s[i + 3] as u32) << 24);
+            const x: u32 = c ^ w;
+            c = CRC32_LUT[3][(x & 255) as usize]
+                ^ CRC32_LUT[2][((x >> 8) & 255) as usize]
+                ^ CRC32_LUT[1][((x >> 16) & 255) as usize]
+                ^ CRC32_LUT[0][((x >> 24) & 255) as usize];
+            i = i + 4;
+        }
         while (i < s.len) {
-            let idx: usize = ((c ^ (s[i] as u32)) & 255) as usize;
-            c = (c >> 8) ^ CRC32_LUT[idx];
+            const idx: usize = ((c ^ (s[i] as u32)) & 255) as usize;
+            c = (c >> 8) ^ CRC32_LUT[0][idx];
             i = i + 1;
         }
         _.state = c ^ 4294967295;

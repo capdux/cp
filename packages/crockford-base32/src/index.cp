@@ -2,51 +2,88 @@
 // Zero-allocation Douglas Crockford Base32 codec (u64 + mod-37 check + bytes + grouping).
 // MIT clean-room pure CP implementation.
 
+const BC_ALPHA32: string = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const BC_ALPHA37: string = "0123456789ABCDEFGHJKMNPQRSTVWXYZ*~$=U";
+
+fn bcBuildDecode32Lut(): [256]u8 {
+    @setEvalBranchQuota(10000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        tbl[i] = 0xFF as u8;
+        i += 1;
+    }
+    let d: usize = 0;
+    while (d < 10) {
+        tbl[48 + d] = d as u8; // '0'..'9'
+        d += 1;
+    }
+    // 'A'..'H' / 'a'..'h' -> 10..17
+    let k: usize = 0;
+    while (k < 8) {
+        tbl[65 + k] = (10 + k) as u8;
+        tbl[97 + k] = (10 + k) as u8;
+        k += 1;
+    }
+    // 'O'/'o' -> 0, 'I'/'i'/'L'/'l' -> 1
+    tbl[79] = 0 as u8; tbl[111] = 0 as u8;
+    tbl[73] = 1 as u8; tbl[105] = 1 as u8;
+    tbl[76] = 1 as u8; tbl[108] = 1 as u8;
+    // 'J'->18, 'K'->19, 'M'->20, 'N'->21
+    tbl[74] = 18 as u8; tbl[106] = 18 as u8;
+    tbl[75] = 19 as u8; tbl[107] = 19 as u8;
+    tbl[77] = 20 as u8; tbl[109] = 20 as u8;
+    tbl[78] = 21 as u8; tbl[110] = 21 as u8;
+    // 'P'..'T' / 'p'..'t' -> 22..26
+    k = 0;
+    while (k < 5) {
+        tbl[80 + k] = (22 + k) as u8;
+        tbl[112 + k] = (22 + k) as u8;
+        k += 1;
+    }
+    // 'V'..'Z' / 'v'..'z' -> 27..31
+    k = 0;
+    while (k < 5) {
+        tbl[86 + k] = (27 + k) as u8;
+        tbl[118 + k] = (27 + k) as u8;
+        k += 1;
+    }
+    return tbl;
+}
+
+fn bcBuildDecode37Lut(): [256]u8 {
+    @setEvalBranchQuota(10000);
+    let tbl = bcBuildDecode32Lut();
+    tbl[42] = 32 as u8;  // '*'
+    tbl[126] = 33 as u8; // '~'
+    tbl[36] = 34 as u8;  // '$'
+    tbl[61] = 35 as u8;  // '='
+    tbl[85] = 36 as u8;  // 'U'
+    tbl[117] = 36 as u8; // 'u'
+    return tbl;
+}
+
+const BC_DEC32_LUT: [256]u8 = bcBuildDecode32Lut();
+const BC_DEC37_LUT: [256]u8 = bcBuildDecode37Lut();
+
 fn bcEncodeDigit32(v: u8): u8 {
-    const alpha = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-    return alpha[(v & (0x1F as u8)) as usize];
+    return BC_ALPHA32[(v & (0x1F as u8)) as usize];
 }
 
 fn bcEncodeCheck37(v: u8): u8 {
-    const alpha37 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ*~$=U";
-    return alpha37[(v as usize)];
+    return BC_ALPHA37[v as usize];
 }
 
 /// Decode a Crockford Base32 data symbol (0..31), case-insensitive, `I/L -> 1`, `O -> 0`.
-/// Returns `0xFF` on invalid character.
+/// Returns `0xFF` on invalid character (O(1) comptime LUT).
 fn bcDecodeDigit32(c: u8): u8 {
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return c - ('0' as u8);
-    }
-    let u = c;
-    if (u >= ('a' as u8) && u <= ('z' as u8)) {
-        u = u - (32 as u8);
-    }
-    if (u == ('O' as u8)) { return 0 as u8; }
-    if (u == ('I' as u8) || u == ('L' as u8)) { return 1 as u8; }
-    if (u >= ('A' as u8) && u <= ('H' as u8)) { return (10 as u8) + (u - ('A' as u8)); }
-    if (u == ('J' as u8)) { return 18 as u8; }
-    if (u == ('K' as u8)) { return 19 as u8; }
-    if (u == ('M' as u8)) { return 20 as u8; }
-    if (u == ('N' as u8)) { return 21 as u8; }
-    if (u >= ('P' as u8) && u <= ('T' as u8)) { return (22 as u8) + (u - ('P' as u8)); }
-    if (u >= ('V' as u8) && u <= ('Z' as u8)) { return (27 as u8) + (u - ('V' as u8)); }
-    return 0xFF as u8;
+    return BC_DEC32_LUT[c as usize];
 }
 
 /// Decode a Crockford Base32 mod-37 check symbol (0..36).
-/// Returns `0xFF` on invalid character.
+/// Returns `0xFF` on invalid character (O(1) comptime LUT).
 fn bcDecodeCheck37(c: u8): u8 {
-    const d32 = bcDecodeDigit32(c);
-    if (d32 != (0xFF as u8)) {
-        return d32;
-    }
-    if (c == ('*' as u8)) { return 32 as u8; }
-    if (c == ('~' as u8)) { return 33 as u8; }
-    if (c == ('$' as u8)) { return 34 as u8; }
-    if (c == ('=' as u8)) { return 35 as u8; }
-    if (c == ('U' as u8) || c == ('u' as u8)) { return 36 as u8; }
-    return 0xFF as u8;
+    return BC_DEC37_LUT[c as usize];
 }
 
 /// Encode an unsigned 64-bit integer in Crockford Base32 into `out`.

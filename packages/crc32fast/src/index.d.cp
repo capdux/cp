@@ -1,7 +1,7 @@
 // Type definitions for CP
 
 export fn crcByteStep(crc_in: u32, b: u8): u32;
-export fn crcBuildTable(): [256]u32;
+export fn crcBuildTables(): [4][256]u32;
 export fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32;
 export fn crcGf2MatrixSquare(src: [32]u32): [32]u32;
 export fn combineCrc32(crc1: u32, crc2: u32, len2: u64): u32;

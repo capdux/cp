@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+export fn bcBuildDecode32Lut(): [256]u8;
+export fn bcBuildDecode37Lut(): [256]u8;
 export fn bcEncodeDigit32(v: u8): u8;
 export fn bcEncodeCheck37(v: u8): u8;
 export fn bcDecodeDigit32(c: u8): u8;

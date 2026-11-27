@@ -1,15 +1,26 @@
 // @cap/hex-dump — Zero-allocation Canonical `hexdump -C` Binary Formatter & Diff Locator
-// Clean-room MIT implementation in pure CP.
+// Clean-room MIT implementation in pure CP with cap:fmt + 16-lane SIMD block acceleration.
 
-fn hexDigit(nibble: u8, uppercase: bool) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
+import { writeHexByte, writeStr } from "cap:fmt";
+
+type HdVec16 = @Vector(16, u8);
+
+fn buildPrintableLut(): [256]u8 {
+    @setEvalBranchQuota(10000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        if (i >= 32 && i <= 126) {
+            tbl[i] = i as u8;
+        } else {
+            tbl[i] = 46 as u8; // '.'
+        }
+        i += 1;
     }
-    if (uppercase) {
-        return 55 + nibble; // 'A' = 65
-    }
-    return 87 + nibble; // 'a' = 97
+    return tbl;
 }
+
+const HD_PRINTABLE_LUT: [256]u8 = buildPrintableLut();
 
 /// Formats up to 16 bytes of `data` as a canonical `hexdump -C` line:
 /// `00000000  48 65 6c 6c 6f 20 57 6f  72 6c 64 21 0a           |Hello World!.|`
@@ -29,56 +40,58 @@ pub fn formatLine(data: []const u8, base_offset: usize, out: []u8) -> usize {
 
     let w: usize = 0;
 
-    // 8-digit lowercase hex offset
-    let shift: i32 = 28;
-    while (shift >= 0) {
-        const nib = ((base_offset >> (shift as u6)) & 0x0F) as u8;
-        out[w] = hexDigit(nib, false);
-        w += 1;
-        shift -= 4;
-    }
+    // 8-digit lowercase hex offset via 4x writeHexByte
+    w = writeHexByte(((base_offset >> 24) & 0xFF) as u8, false, out, w);
+    w = writeHexByte(((base_offset >> 16) & 0xFF) as u8, false, out, w);
+    w = writeHexByte(((base_offset >> 8) & 0xFF) as u8, false, out, w);
+    w = writeHexByte((base_offset & 0xFF) as u8, false, out, w);
 
     // Two spaces after offset
-    out[w] = 32;
-    out[w + 1] = 32;
-    w += 2;
+    w = writeStr("  ", out, w);
 
-    // First 8 bytes + extra space + second 8 bytes
-    let i: usize = 0;
-    while (i < 16) {
-        if (i == 8) {
+    // Hex byte columns: fast path for full 16-byte line (branchless)
+    if (count == 16) {
+        let i: usize = 0;
+        while (i < 8) {
+            w = writeHexByte(data[i], false, out, w);
             out[w] = 32;
             w += 1;
+            i += 1;
         }
-        if (i < count) {
-            const b = data[i];
-            out[w] = hexDigit((b >> 4) & 0x0F, false);
-            out[w + 1] = hexDigit(b & 0x0F, false);
-            out[w + 2] = 32;
-        } else {
+        out[w] = 32;
+        w += 1;
+        while (i < 16) {
+            w = writeHexByte(data[i], false, out, w);
             out[w] = 32;
-            out[w + 1] = 32;
-            out[w + 2] = 32;
+            w += 1;
+            i += 1;
         }
-        w += 3;
-        i += 1;
+    } else {
+        let i: usize = 0;
+        while (i < 16) {
+            if (i == 8) {
+                out[w] = 32;
+                w += 1;
+            }
+            if (i < count) {
+                w = writeHexByte(data[i], false, out, w);
+                out[w] = 32;
+                w += 1;
+            } else {
+                w = writeStr("   ", out, w);
+            }
+            i += 1;
+        }
     }
 
     // Space + '|' + ASCII preview + '|'
-    out[w] = 32;
-    out[w + 1] = 124; // '|'
-    w += 2;
+    w = writeStr(" |", out, w);
 
-    i = 0;
-    while (i < count) {
-        const b = data[i];
-        if (b >= 32 && b <= 126) {
-            out[w] = b;
-        } else {
-            out[w] = 46; // '.'
-        }
+    let k: usize = 0;
+    while (k < count) {
+        out[w] = HD_PRINTABLE_LUT[data[k] as usize];
         w += 1;
-        i += 1;
+        k += 1;
     }
 
     out[w] = 124; // '|'
@@ -127,17 +140,11 @@ pub fn encodeHexSpaced(data: []const u8, uppercase: bool, out: []u8) -> usize {
     if (needed > out.len) {
         return 0;
     }
-    let w: usize = 0;
-    let i: usize = 0;
+    let w: usize = writeHexByte(data[0], uppercase, out, 0);
+    let i: usize = 1;
     while (i < data.len) {
-        if (i > 0) {
-            out[w] = 32; // ' '
-            w += 1;
-        }
-        const b = data[i];
-        out[w] = hexDigit((b >> 4) & 0x0F, uppercase);
-        out[w + 1] = hexDigit(b & 0x0F, uppercase);
-        w += 2;
+        out[w] = 32; // ' '
+        w = writeHexByte(data[i], uppercase, out, w + 1);
         i += 1;
     }
     return w;
@@ -151,6 +158,15 @@ pub fn firstDiffOffset(a: []const u8, b: []const u8) -> i64 {
         min_len = b.len;
     }
     let i: usize = 0;
+    // 16-lane SIMD fast-path for identical blocks
+    while (i + 16 <= min_len) {
+        const va: HdVec16 = a[i .. i + 16][0..16].*;
+        const vb: HdVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            break;
+        }
+        i += 16;
+    }
     while (i < min_len) {
         if (a[i] != b[i]) {
             return i as i64;

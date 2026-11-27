@@ -107,9 +107,19 @@ fn checkSeqAt(data: string, pos: usize) -> StepResult {
 // Public API
 // ---------------------------------------------------------------------------
 
+type Utf8Vec16 = @Vector(16, u8);
+
 /// Fast-path check returning `true` if every byte in `data` is 7-bit ASCII (`< 0x80`).
 pub fn isAscii(data: string) -> bool {
+    const hi_mask: Utf8Vec16 = @splat(0x80 as u8);
     let i: usize = 0;
+    while (i + 16 <= data.len) {
+        const chunk: Utf8Vec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.Or, chunk & hi_mask) != 0) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < data.len) {
         if (data[i] >= 0x80) {
             return false;
@@ -122,9 +132,22 @@ pub fn isAscii(data: string) -> bool {
 /// Strictly validates `data` per RFC 3629, returning exact `valid_up_to`, `error_len`
 /// (`0` for truncated tail), and `codepoint_count` of the valid prefix.
 pub fn validateUtf8(data: string) -> Utf8CheckResult {
+    const hi_mask: Utf8Vec16 = @splat(0x80 as u8);
     let i: usize = 0;
     let cps: usize = 0;
     while (i < data.len) {
+        // 16-lane hardware SIMD ASCII fast-path
+        while (i + 16 <= data.len) {
+            const chunk: Utf8Vec16 = data[i .. i + 16][0..16].*;
+            if (@reduce(.Or, chunk & hi_mask) != 0) {
+                break;
+            }
+            i += 16;
+            cps += 16;
+        }
+        if (i >= data.len) {
+            break;
+        }
         if (data[i] < 0x80) {
             i += 1;
             cps += 1;
@@ -166,9 +189,28 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
 /// Repairs invalid UTF-8 byte sequences in `data` by replacing each WHATWG maximal invalid
 /// subpart with `U+FFFD` (`0xEF 0xBF 0xBD`), writing valid UTF-8 into `out`.
 pub fn toLossyUtf8(data: string, out: []u8) -> string {
+    const hi_mask: Utf8Vec16 = @splat(0x80 as u8);
     let pos: usize = 0;
     let i: usize = 0;
     while (i < data.len) {
+        // 16-lane SIMD ASCII block copy fast-path
+        while (i + 16 <= data.len && pos + 16 <= out.len) {
+            const chunk: Utf8Vec16 = data[i .. i + 16][0..16].*;
+            if (@reduce(.Or, chunk & hi_mask) != 0) {
+                break;
+            }
+            const arr: [16]u8 = chunk;
+            let j: usize = 0;
+            while (j < 16) {
+                out[pos + j] = arr[j];
+                j += 1;
+            }
+            pos += 16;
+            i += 16;
+        }
+        if (i >= data.len) {
+            break;
+        }
         if (data[i] < 0x80) {
             pos = appendByte(out, pos, data[i]);
             i += 1;
@@ -196,9 +238,22 @@ pub fn toLossyUtf8(data: string, out: []u8) -> string {
 /// Computes the equivalent UTF-16 code-unit length of `data` (for LSP / JS / Windows interop):
 /// BMP codepoints (1..3 UTF-8 bytes) count as 1 unit; supplementary plane (4 UTF-8 bytes) count as 2.
 pub fn utf16Len(data: string) -> usize {
+    const hi_mask: Utf8Vec16 = @splat(0x80 as u8);
     let units: usize = 0;
     let i: usize = 0;
     while (i < data.len) {
+        // 16-lane SIMD ASCII fast-path
+        while (i + 16 <= data.len) {
+            const chunk: Utf8Vec16 = data[i .. i + 16][0..16].*;
+            if (@reduce(.Or, chunk & hi_mask) != 0) {
+                break;
+            }
+            i += 16;
+            units += 16;
+        }
+        if (i >= data.len) {
+            break;
+        }
         if (data[i] < 0x80) {
             units += 1;
             i += 1;
