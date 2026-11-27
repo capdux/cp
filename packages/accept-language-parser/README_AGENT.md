@@ -5,8 +5,6 @@
 
 ## Functions
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn isValidTag(tag: string): bool;`
 - `export fn parseQuality(s: string): i32;`
 - `export fn parseAcceptLanguage(header: string, out: []LangRange): usize;`

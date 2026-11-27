@@ -4,14 +4,12 @@
 > Import: `import { ... } from "cexpr";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(ch: u8): bool;`
 - `export fn skipWs(p: &mut Parser, src: string);`
 - `export fn peek(p: &mut Parser, src: string): u8;`
 - `export fn peek2(p: &mut Parser, src: string): u8;`
 - `export fn absI64(x: i64): u64;`
 - `export fn signedDivI64(a: i64, b: i64): i64;`
 - `export fn signedRemI64(a: i64, b: i64): i64;`
-- `export fn hexDigitVal(ch: u8): i32;`
 - `export fn skipIntSuffix(p: &mut Parser, src: string);`
 - `export fn parseCharLit(p: &mut Parser, src: string): i64;`
 - `export fn parseIntLit(p: &mut Parser, src: string): i64;`
@@ -28,4 +26,4 @@
 - `export fn parseLogAnd(p: &mut Parser, src: string): i64;`
 - `export fn parseLogOr(p: &mut Parser, src: string): i64;`
 - `export fn parseTernary(p: &mut Parser, src: string): i64;`
-- *(+1 more in `src/index.d.cp`)*
+- `export fn evalCExpr(expr: string): EvalResult;`

@@ -13,5 +13,4 @@
 - `export fn isExpired(exp_unix: i64, now_unix: i64, leeway_secs: i64): bool;`
 - `export fn isNotYetValid(nbf_unix: i64, now_unix: i64, leeway_secs: i64): bool;`
 - `export fn isJsonSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
 - `export fn isAlgNone(header_json: string): bool;`

@@ -13,13 +13,11 @@ cap add lunr
 ```
 
 ```cp
-import { isAlphaNum } from "lunr";
+import { fnv1aLower } from "lunr";
 ```
 
 ## 核心导出 API
 
-- `export fn isAlphaNum(b: u8): bool;`
-- `export fn toLower(b: u8): u8;`
 - `export fn fnv1aLower(data: &[]u8, start: usize, end: usize): u64;`
 - `export fn lnApprox(x_in: f64): f64;`
 - `export fn bm25Idf(n_docs: usize, df: u16): f64;`

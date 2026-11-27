@@ -5,7 +5,6 @@
 
 ## Functions
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn b64EncChar(v: u8): u8;`
 - `export fn b64DecVal(c: u8): i32;`
 - `export fn b64Encode(src: &[]u8, dst: []u8): i64;`

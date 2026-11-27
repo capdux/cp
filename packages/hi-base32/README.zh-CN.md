@@ -13,12 +13,11 @@ cap add hi-base32
 ```
 
 ```cp
-import { toUpperAscii } from "hi-base32";
+import { decodeStdChar } from "hi-base32";
 ```
 
 ## 核心导出 API
 
-- `export fn toUpperAscii(b: u8): u8;`
 - `export fn decodeStdChar(b: u8): i32;`
 - `export fn decodeHexChar(b: u8): i32;`
 - `export fn encodedLen(byte_len: usize, pad: bool): usize;`

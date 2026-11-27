@@ -13,13 +13,11 @@ cap add prom-client
 ```
 
 ```cp
-import { isAlpha } from "prom-client";
+import { isValidMetricName } from "prom-client";
 ```
 
 ## 核心导出 API
 
-- `export fn isAlpha(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
 - `export fn isValidMetricName(name: &[]u8): bool;`
 - `export fn isValidLabelName(name: &[]u8): bool;`
 

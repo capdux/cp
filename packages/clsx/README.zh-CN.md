@@ -13,13 +13,11 @@ cap add clsx
 ```
 
 ```cp
-import { isWs } from "clsx";
+import { joinClasses } from "clsx";
 ```
 
 ## 核心导出 API
 
-- `export fn isWs(c: u8): bool;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn joinClasses(classes: &[]&[]u8, dst: []u8): i64;`
 - `export fn joinCondClasses(items: &[]CondClass, dst: []u8): i64;`
 

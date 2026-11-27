@@ -24,10 +24,8 @@ import { fxhMul64 } from "rustc-hash";
 - `export fn fxhRotl32By5(x: u32): u32;`
 - `export fn fxhAddWord64(hash: u64, word: u64): u64;`
 - `export fn fxhAddWord32(hash: u32, word: u32): u32;`
-- `export fn fxhReadU32LeBytes(buf: []u8, off: usize): u32;`
-- `export fn fxhReadU64LeBytes(buf: []u8, off: usize): u64;`
-- `export fn fxhReadU32LeStr(s: string, off: usize): u32;`
-- `export fn fxhReadU64LeStr(s: string, off: usize): u64;`
+- `export fn fxhHashSlice64(hash: u64, data: &[]u8): u64;`
+- `export fn fxhHashSlice32(hash: u32, data: &[]u8): u32;`
 - `export fn fxHash64(data: []u8): u64;`
 - `export fn fxHash64Str(s: string): u64;`
 - `export fn fxHash32(data: []u8): u32;`

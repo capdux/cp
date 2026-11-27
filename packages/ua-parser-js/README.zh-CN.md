@@ -13,7 +13,7 @@ cap add ua-parser-js
 ```
 
 ```cp
-import { toLowerAscii } from "ua-parser-js";
+import { findSubstrCI } from "ua-parser-js";
 ```
 
 ## 核心导出 API
@@ -21,8 +21,6 @@ import { toLowerAscii } from "ua-parser-js";
 - `export enum DeviceKind`
 - `export enum BrowserKind`
 - `export enum OsKind`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn findSubstr(haystack: string, needle: string): usize?;`
 - `export fn findSubstrCI(haystack: string, needle: string): usize?;`
 - `export fn contains(haystack: string, needle: string): bool;`
 - `export fn containsCI(haystack: string, needle: string): bool;`

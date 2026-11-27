@@ -4,8 +4,6 @@
 > Import: `import { ... } from "natural-compare";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isDigit(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn compareRawBytes(a: string, b: string): i8;`
 - `export fn naturalCompareImpl(a: string, b: string, ignore_case: bool): i8;`
 - `export fn naturalCompare(a: string, b: string): i8;`

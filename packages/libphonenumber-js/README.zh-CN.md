@@ -13,20 +13,15 @@ cap add libphonenumber-js
 ```
 
 ```cp
-import { toUpperAscii } from "libphonenumber-js";
+import { findCountryIndexByIso2 } from "libphonenumber-js";
 ```
 
 ## 核心导出 API
 
-- `export fn toUpperAscii(c: u8): u8;`
-- `export fn isDigit(c: u8): bool;`
-- `export fn eqIso2IgnoreCase(a: string, b: string): bool;`
 - `export fn findCountryIndexByIso2(iso2: string): i32;`
 - `export fn findCountryIndexByCode(cc: u16): i32;`
 - `export fn countryCodeDigitLen(cc: u16): usize;`
 - `export fn pushByte(out: []u8, pos: usize, b: u8): usize;`
-- `export fn pushSlice(out: []u8, pos: usize, src: &[]u8): usize;`
-- `export fn pushU16(out: []u8, pos: usize, val: u16): usize;`
 - `export fn pushGroupRange(out: []u8, pos: usize, buf: [16]u8, start: usize, end: usize): usize;`
 - `export fn writeGroupedNational(out: []u8, pos: usize, cc: u16, buf: [16]u8, len: usize, sep: u8): usize;`
 - `export fn validateNationalRules(cc: u16, buf: [16]u8, len: usize): bool;`

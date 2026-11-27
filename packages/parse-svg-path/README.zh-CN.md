@@ -13,13 +13,11 @@ cap add parse-svg-path
 ```
 
 ```cp
-import { isWs } from "parse-svg-path";
+import { skipWs } from "parse-svg-path";
 ```
 
 ## 核心导出 API
 
-- `export fn isWs(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
 - `export fn skipWs(s: string, start: usize): usize;`
 - `export fn skipWsComma(s: string, start: usize): usize;`
 - `export fn expectedArgCount(code: u8): u8?;`
@@ -32,7 +30,6 @@ import { isWs } from "parse-svg-path";
 - `export fn includePoint(acc: BoundsAcc, x: f64, y: f64): BoundsAcc;`
 - `export fn computeBounds(p: ParsedPath): PathBounds;`
 - `export fn appendByte(out: []u8, pos: usize, c: u8): usize;`
-- `export fn appendU64(out: []u8, pos: usize, val: u64): usize;`
 - `export fn appendFloatCompact(out: []u8, start_pos: usize, val: f64): usize;`
 - `export fn formatSvgPath(p: ParsedPath, out: []u8): string;`
 

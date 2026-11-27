@@ -4,7 +4,6 @@
 > Import: `import { ... } from "opentelemetry";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn hexValLower(c: u8): i32;`
 - `export fn parseHexByteLower(hi: u8, lo: u8): i32;`
 - `export fn invalidTraceParent(): TraceParent;`
 - `export fn parseTraceParent(header: &[]u8): TraceParent;`

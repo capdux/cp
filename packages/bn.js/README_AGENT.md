@@ -8,8 +8,6 @@
 - `export fn subWithBorrow64(a: u64, b: u64, borrow_in: u64): Sub64Res;`
 - `export fn mulWide64(a: u64, b: u64): Mul64Res;`
 - `export fn clz64(x: u64): u32;`
-- `export fn hexVal(c: u8): i32;`
-- `export fn hexDigit(v: u8): u8;`
 - `export fn zero(): U256;`
 - `export fn one(): U256;`
 - `export fn fromU64(v: u64): U256;`

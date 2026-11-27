@@ -13,15 +13,13 @@ cap add expr-eval
 ```
 
 ```cp
-import { isSpace } from "expr-eval";
+import { isIdentStart } from "expr-eval";
 ```
 
 ## 核心导出 API
 
 - `export enum ExprError`
 - `export enum TokenKind`
-- `export fn isSpace(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
 - `export fn isIdentStart(c: u8): bool;`
 - `export fn isIdentCont(c: u8): bool;`
 - `export fn isTruthy(v: f64): bool;`

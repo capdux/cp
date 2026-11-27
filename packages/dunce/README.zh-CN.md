@@ -13,13 +13,11 @@ cap add dunce
 ```
 
 ```cp
-import { isAsciiAlpha } from "dunce";
+import { isIllegalWinChar } from "dunce";
 ```
 
 ## 核心导出 API
 
-- `export fn isAsciiAlpha(ch: u8): bool;`
-- `export fn toUpper(ch: u8): u8;`
 - `export fn isIllegalWinChar(ch: u8): bool;`
 - `export fn isWindowsReservedName(component: string): bool;`
 - `export fn hasWindowsVerbatimPrefix(path: string): bool;`

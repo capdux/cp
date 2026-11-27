@@ -13,17 +13,11 @@ cap add stack-utils
 ```
 
 ```cp
-import { stkuIsSpace } from "stack-utils";
+import { stkuInvalid } from "stack-utils";
 ```
 
 ## 核心导出 API
 
-- `export fn stkuIsSpace(ch: u8): bool;`
-- `export fn stkuTrim(s: string): string;`
-- `export fn stkuEq(a: string, b: string): bool;`
-- `export fn stkuIsDigits(s: string): bool;`
-- `export fn stkuParseU32(s: string): u32;`
-- `export fn stkuLastColon(s: string): usize;`
 - `export fn stkuInvalid(): StackFrame;`
 - `export fn stkuParseLoc(fn_name: string, loc: string): StackFrame;`
 - `export fn parseStackLine(line: string): StackFrame;`

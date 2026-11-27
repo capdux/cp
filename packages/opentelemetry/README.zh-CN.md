@@ -13,12 +13,11 @@ cap add opentelemetry
 ```
 
 ```cp
-import { hexValLower } from "opentelemetry";
+import { parseHexByteLower } from "opentelemetry";
 ```
 
 ## 核心导出 API
 
-- `export fn hexValLower(c: u8): i32;`
 - `export fn parseHexByteLower(hi: u8, lo: u8): i32;`
 - `export fn invalidTraceParent(): TraceParent;`
 - `export fn parseTraceParent(header: &[]u8): TraceParent;`

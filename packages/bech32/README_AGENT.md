@@ -7,7 +7,6 @@
 - `export enum Bech32Variant`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn charsetIndex(c: u8): u8?;`
 - `export fn polymodStep(chk: u32, v: u8): u32;`
 - `export fn polymodHrp(hrp: string): u32;`

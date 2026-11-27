@@ -4,9 +4,6 @@
 > Import: `import { ... } from "amazon-s3-uri";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn eqBytes(a: string, b: string): bool;`
-- `export fn startsWith(s: string, prefix: string): bool;`
-- `export fn endsWith(s: string, suffix: string): bool;`
 - `export fn indexOfByte(s: string, ch: u8): i64;`
 - `export fn isValidBucketName(name: string): bool;`
 - `export fn stripQueryAndFrag(s: string): string;`

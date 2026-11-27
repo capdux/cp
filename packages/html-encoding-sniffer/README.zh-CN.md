@@ -19,9 +19,9 @@ import { hesToLower } from "html-encoding-sniffer";
 ## 核心导出 API
 
 - `export fn hesToLower(ch: u8): u8;`
+- `export fn hesEqIgnoreCase(a: string, b: string): bool;`
 - `export fn hesIsAsciiWs(ch: u8): bool;`
 - `export fn hesTrimAsciiWs(s: string): string;`
-- `export fn hesEqIgnoreCase(a: string, b: string): bool;`
 - `export fn hesStartsWithIgnoreCase(bytes: &[]u8, pos: usize, needle: string): bool;`
 - `export fn normalizeEncodingLabel(label: string): string;`
 - `export fn hesMapMetaEncoding(label: string): string;`

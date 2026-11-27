@@ -4,7 +4,6 @@
 > Import: `import { ... } from "methods";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn hmToLower(c: u8): u8;`
 - `export fn hmCmpLower(input: string, lower_target: string): i32;`
 - `export fn findMethodIndex(method: string): i32;`
 - `export fn isHttpMethod(method: string): bool;`

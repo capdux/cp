@@ -4,9 +4,6 @@
 > Import: `import { ... } from "standardwebhooks";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(b: u8): bool;`
-- `export fn isHex(b: u8): bool;`
-- `export fn trimSlice(s: string): string;`
 - `export fn parseNonNegI64(s: string): i64;`
 - `export fn parseStripeHeader(header: string): StripeSig;`
 - `export fn parseGitHubSig256(header: string): string;`

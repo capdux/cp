@@ -4,7 +4,6 @@
 > Import: `import { ... } from "path-key";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn isPathKeyName(key: string): bool;`
 - `export fn findPathKeyIndex(keys: []string, is_windows: bool): i64;`
 - `export fn defaultPathKey(is_windows: bool): string;`

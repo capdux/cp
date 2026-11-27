@@ -4,11 +4,7 @@
 > Import: `import { ... } from "remove-markdown";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(c: u8): bool;`
-- `export fn isAlphaNum(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
 - `export fn isAsciiPunct(c: u8): bool;`
-- `export fn trimLine(s: string): string;`
 - `export fn pushByte(out: []u8, pos: usize, b: u8): usize;`
 - `export fn pushTextByte(out: []u8, pos: usize, b: u8, collapse_ws: bool): usize;`
 - `export fn isRuleLine(trimmed: string): bool;`

@@ -5,8 +5,6 @@
 
 ## Functions
 - `export fn isFormSafe(b: u8): bool;`
-- `export fn upperHex(v: u8): u8;`
-- `export fn hexVal(c: u8): i32;`
 - `export fn encodedSize(input: string, space_as_plus: bool): usize;`
 - `export fn percentEncode(input: string, space_as_plus: bool, out: []u8): usize;`
 - `export fn decodedSize(input: string): usize;`

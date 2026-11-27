@@ -13,14 +13,12 @@ cap add tinytemplate
 ```
 
 ```cp
-import { isSpace } from "tinytemplate";
+import { isValueTruthy } from "tinytemplate";
 ```
 
 ## 核心导出 API
 
 - `export enum BlockKind`
-- `export fn isSpace(c: u8): bool;`
-- `export fn trimSlice(s: &[]u8): &[]u8;`
 - `export fn isValueTruthy(val: &[]u8): bool;`
 - `export fn formatUsize(n: usize, buf: []u8): &[]u8;`
 - `export fn formatI64(n: i64, buf: []u8): &[]u8;`

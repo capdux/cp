@@ -5,6 +5,9 @@
 
 ## Functions
 - `export fn makeU64(hi: u32, lo: u32): u64;`
+- `export fn buildSlice4Table(poly: u64, reflected: bool): [4][256]u64;`
+- `export fn updateReflectedSlice4(crc_in: u64, data: &[]u8, tbl: [4][256]u64): u64;`
+- `export fn updateNormalSlice4(crc_in: u64, data: &[]u8, tbl: [4][256]u64): u64;`
 - `export fn crc64Ecma(data: &[]u8): u64;`
 - `export fn crc64Xz(data: &[]u8): u64;`
 - `export fn crc64Iso(data: &[]u8): u64;`

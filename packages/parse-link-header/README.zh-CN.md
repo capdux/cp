@@ -13,23 +13,17 @@ cap add parse-link-header
 ```
 
 ```cp
-import { toLowerAscii } from "parse-link-header";
+import { relMatches } from "parse-link-header";
 ```
 
 ## 核心导出 API
 
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn isWs(c: u8): bool;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn relMatches(rel_attr: string, target: string): bool;`
 - `export fn skipToNextEntry(s: string, start: usize): usize;`
 - `export fn parseLinkHeader(header: string): LinkHeader;`
 - `export fn appendByte(out: []u8, pos: usize, c: u8): usize;`
-- `export fn appendStr(out: []u8, pos: usize, s: string): usize;`
-- `export fn appendUsize(out: []u8, pos: usize, val: usize): usize;`
 - `export fn appendParam(out: []u8, pos: usize, name: string, val: string): usize;`
 - `export fn formatLinkHeader(entries: []LinkEntry, out: []u8): string;`
-- `export fn containsChar(s: string, target: u8): bool;`
 - `export fn appendPageLink(out: []u8, start_pos: usize, base_url: string, sep: u8, target_page: usize, rel: string, emitted: usize): usize;`
 - `export fn formatPaginationLinks(base_url: string, page: usize, total_pages: usize, out: []u8): string;`
 

@@ -7,10 +7,6 @@
 - `export enum Locale`
 
 ## Functions
-- `export fn toUpperAscii(c: u8): u8;`
-- `export fn isSpace(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn pushByte(out: []u8, pos: usize, b: u8): usize;`
 - `export fn pushStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn pushU8(out: []u8, pos: usize, val: u8): usize;`

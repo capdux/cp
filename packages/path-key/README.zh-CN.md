@@ -13,12 +13,11 @@ cap add path-key
 ```
 
 ```cp
-import { toLowerAscii } from "path-key";
+import { isPathKeyName } from "path-key";
 ```
 
 ## 核心导出 API
 
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn isPathKeyName(key: string): bool;`
 - `export fn findPathKeyIndex(keys: []string, is_windows: bool): i64;`
 - `export fn defaultPathKey(is_windows: bool): string;`

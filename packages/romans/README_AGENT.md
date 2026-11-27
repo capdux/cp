@@ -4,7 +4,6 @@
 > Import: `import { ... } from "romans";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn toUpperAscii(b: u8): u8;`
 - `export fn romanCharVal(b: u8): i32;`
 - `export fn toRoman(num: u16, out: []u8): usize;`
 - `export fn parseRoman(input: string): i32;`

@@ -13,12 +13,11 @@ cap add methods
 ```
 
 ```cp
-import { hmToLower } from "methods";
+import { hmCmpLower } from "methods";
 ```
 
 ## 核心导出 API
 
-- `export fn hmToLower(c: u8): u8;`
 - `export fn hmCmpLower(input: string, lower_target: string): i32;`
 - `export fn findMethodIndex(method: string): i32;`
 - `export fn isHttpMethod(method: string): bool;`

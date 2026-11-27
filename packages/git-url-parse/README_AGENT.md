@@ -8,10 +8,6 @@
 - `export enum GitHostKind`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn isWs(c: u8): bool;`
-- `export fn trimWs(s: string): string;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn startsWithIgnoreCase(s: string, prefix: string): bool;`
 - `export fn indexOfChar(s: string, ch: u8): usize?;`
 - `export fn lastIndexOfChar(s: string, ch: u8): usize?;`

@@ -4,8 +4,6 @@
 > Import: `import { ... } from "natord";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isDigit(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn compareImpl(a: string, b: string, ignore_case: bool): i32;`
 - `export fn compareNatural(a: string, b: string): i32;`
 - `export fn compareNaturalIgnoreCase(a: string, b: string): i32;`

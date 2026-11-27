@@ -13,12 +13,11 @@ cap add zbase32
 ```
 
 ```cp
-import { toLowerAscii } from "zbase32";
+import { decodeChar } from "zbase32";
 ```
 
 ## 核心导出 API
 
-- `export fn toLowerAscii(b: u8): u8;`
 - `export fn decodeChar(b: u8): i32;`
 - `export fn encodedLen(byte_len: usize): usize;`
 - `export fn encode(data: &[]u8, out: []u8): usize;`

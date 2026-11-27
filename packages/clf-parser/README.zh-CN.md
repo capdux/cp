@@ -19,7 +19,7 @@ import { invalidClf } from "clf-parser";
 ## 核心导出 API
 
 - `export fn invalidClf(): ClfRecord;`
-- `export fn isSpace(b: u8): bool;`
+- `export fn isClfSpace(b: u8): bool;`
 - `export fn isLineEnd(b: u8): bool;`
 - `export fn parseClf(line: &[]u8): ClfRecord;`
 - `export fn pushSlice(dst: []u8, pos: usize, src: &[]u8): i64;`

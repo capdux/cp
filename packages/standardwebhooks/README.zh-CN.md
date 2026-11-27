@@ -13,14 +13,11 @@ cap add standardwebhooks
 ```
 
 ```cp
-import { isSpace } from "standardwebhooks";
+import { parseNonNegI64 } from "standardwebhooks";
 ```
 
 ## 核心导出 API
 
-- `export fn isSpace(b: u8): bool;`
-- `export fn isHex(b: u8): bool;`
-- `export fn trimSlice(s: string): string;`
 - `export fn parseNonNegI64(s: string): i64;`
 - `export fn parseStripeHeader(header: string): StripeSig;`
 - `export fn parseGitHubSig256(header: string): string;`

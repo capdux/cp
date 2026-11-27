@@ -4,7 +4,6 @@
 > Import: `import { ... } from "proxy-protocol-js";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn isV1Prefix(data: &[]u8): bool;`
 - `export fn isV2Signature(data: &[]u8): bool;`
 - `export fn parsePortStrict(s: string): i32;`

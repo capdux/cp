@@ -13,17 +13,14 @@ cap add sql-formatter
 ```
 
 ```cp
-import { isSpace } from "sql-formatter";
+import { isSqlIdentStart } from "sql-formatter";
 ```
 
 ## 核心导出 API
 
-- `export fn isSpace(c: u8): bool;`
-- `export fn isAlpha(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
+- `export fn isSqlIdentStart(c: u8): bool;`
 - `export fn isWordCont(c: u8): bool;`
-- `export fn toUpperAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(sql: string, start: usize, end: usize, upper: string): bool;`
+- `export fn sqlEqIgnoreCase(sql: string, start: usize, end: usize, upper: string): bool;`
 - `export fn nextToken(sql: string, start_pos: usize): Token;`
 - `export fn isSqlFunctionKeyword(sql: string, s: usize, e: usize): bool;`
 - `export fn isSqlKeyword(sql: string, s: usize, e: usize): bool;`

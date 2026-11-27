@@ -4,8 +4,7 @@
 > Import: `import { ... } from "express-bearer-token";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
+- `export fn isAuthSpace(b: u8): bool;`
 - `export fn isB64TokenCore(b: u8): bool;`
 - `export fn isValidTokenChars(token: string): bool;`
 - `export fn extractBearer(header: string): string;`

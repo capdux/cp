@@ -4,8 +4,6 @@
 > Import: `import { ... } from "dunce";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isAsciiAlpha(ch: u8): bool;`
-- `export fn toUpper(ch: u8): u8;`
 - `export fn isIllegalWinChar(ch: u8): bool;`
 - `export fn isWindowsReservedName(component: string): bool;`
 - `export fn hasWindowsVerbatimPrefix(path: string): bool;`

@@ -13,12 +13,12 @@ cap add hexdump-nodejs
 ```
 
 ```cp
-import { hexDigit } from "hexdump-nodejs";
+import { buildPrintableLut } from "hexdump-nodejs";
 ```
 
 ## 核心导出 API
 
-- `export fn hexDigit(nibble: u8, uppercase: bool): u8;`
+- `export fn buildPrintableLut(): [256]u8;`
 - `export fn formatLine(data: &[]u8, base_offset: usize, out: []u8): usize;`
 - `export fn formatDump(data: &[]u8, out: []u8): usize;`
 - `export fn encodeHexSpaced(data: &[]u8, uppercase: bool, out: []u8): usize;`

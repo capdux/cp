@@ -13,12 +13,11 @@ cap add romans
 ```
 
 ```cp
-import { toUpperAscii } from "romans";
+import { romanCharVal } from "romans";
 ```
 
 ## 核心导出 API
 
-- `export fn toUpperAscii(b: u8): u8;`
 - `export fn romanCharVal(b: u8): i32;`
 - `export fn toRoman(num: u16, out: []u8): usize;`
 - `export fn parseRoman(input: string): i32;`

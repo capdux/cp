@@ -9,8 +9,6 @@
 - `export enum OsKind`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn findSubstr(haystack: string, needle: string): usize?;`
 - `export fn findSubstrCI(haystack: string, needle: string): usize?;`
 - `export fn contains(haystack: string, needle: string): bool;`
 - `export fn containsCI(haystack: string, needle: string): bool;`

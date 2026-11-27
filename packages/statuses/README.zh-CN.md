@@ -13,13 +13,11 @@ cap add statuses
 ```
 
 ```cp
-import { toLowerAscii } from "statuses";
+import { message } from "statuses";
 ```
 
 ## 核心导出 API
 
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn message(code: u16): string;`
 - `export fn codeFromMessage(msg: string): u16;`
 - `export fn isValid(code: u16): bool;`

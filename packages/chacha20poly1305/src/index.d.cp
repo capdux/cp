@@ -1,8 +1,8 @@
 // Type definitions for CP
 
 import { Poly1305 } from "../../poly1305/src/index.cp";
-import { chachaBlock } from "../../chacha-rng/src/index.cp";
-import { ctEqBytes, zeroizeBytes } from "../../subtle-ct/src/index.cp";
+import { chachaBlock } from "../../rand_chacha/src/index.cp";
+import { ctEqBytes, zeroizeBytes } from "../../subtle/src/index.cp";
 export fn cp20Add32(a: u32, b: u32): u32;
 export fn cp20Rotl32(x: u32, bits: u32): u32;
 export fn cp20ReadU32Le(data: &[]u8, off: usize): u32;

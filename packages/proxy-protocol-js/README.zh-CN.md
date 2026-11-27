@@ -13,12 +13,11 @@ cap add proxy-protocol-js
 ```
 
 ```cp
-import { bytesEq } from "proxy-protocol-js";
+import { isV1Prefix } from "proxy-protocol-js";
 ```
 
 ## 核心导出 API
 
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn isV1Prefix(data: &[]u8): bool;`
 - `export fn isV2Signature(data: &[]u8): bool;`
 - `export fn parsePortStrict(s: string): i32;`

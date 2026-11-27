@@ -4,7 +4,6 @@
 > Import: `import { ... } from "boyer-moore-magiclen";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn compilePattern(needle: &[]u8): BmhPattern;`
 - `export fn findWithCompiled(haystack: &[]u8, needle: &[]u8, compiled: BmhPattern): i64;`
 - `export fn findFirst(haystack: &[]u8, needle: &[]u8): i64;`

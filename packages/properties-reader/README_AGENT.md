@@ -5,8 +5,6 @@
 
 ## Functions
 - `export fn isLineWs(c: u8): bool;`
-- `export fn fromHex(c: u8): i32;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn decodeEscapeInto(src: &[]u8, esc_pos: usize, dst: []u8, dst_pos: usize): EscDecodeResult;`
 - `export fn pushByte(dst: []u8, pos: usize, b: u8): i64;`
 - `export fn pushEscaped(dst: []u8, pos: usize, ch: u8): i64;`

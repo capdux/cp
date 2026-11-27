@@ -13,12 +13,11 @@ cap add anymatch
 ```
 
 ```cp
-import { bytesEq } from "anymatch";
+import { startsWithDirPrefix } from "anymatch";
 ```
 
 ## 核心导出 API
 
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn startsWithDirPrefix(path: &[]u8, prefix: &[]u8): bool;`
 - `export fn globMatchAt(pat: &[]u8, pi_in: usize, txt: &[]u8, ti_in: usize): bool;`
 - `export fn matchPattern(pattern: string, test_path: string): bool;`

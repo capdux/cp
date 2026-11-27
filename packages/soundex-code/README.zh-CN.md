@@ -13,13 +13,11 @@ cap add soundex-code
 ```
 
 ```cp
-import { toUpper } from "soundex-code";
+import { soundexDigit } from "soundex-code";
 ```
 
 ## 核心导出 API
 
-- `export fn toUpper(c: u8): u8;`
-- `export fn isAlpha(c: u8): bool;`
 - `export fn soundexDigit(u: u8): u8;`
 - `export fn soundex(word: string, out: []u8): usize;`
 - `export fn soundsLike(a: string, b: string): bool;`

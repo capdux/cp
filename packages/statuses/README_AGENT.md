@@ -4,8 +4,6 @@
 > Import: `import { ... } from "statuses";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn message(code: u16): string;`
 - `export fn codeFromMessage(msg: string): u16;`
 - `export fn isValid(code: u16): bool;`

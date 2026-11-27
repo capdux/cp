@@ -25,7 +25,6 @@ import { popcountU32 } from "hamming";
 - `export fn weightBytes(data: &[]u8): u64;`
 - `export fn distanceBytes(a: &[]u8, b: &[]u8): i64;`
 - `export fn isTokenByte(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
 - `export fn hashToken64(text: &[]u8, start: usize, end: usize): u64;`
 - `export fn simhash64(text: &[]u8): u64;`
 - `export fn hamming74Encode(nibble: u8): u8;`

@@ -13,12 +13,11 @@ cap add boyer-moore-magiclen
 ```
 
 ```cp
-import { toLowerAscii } from "boyer-moore-magiclen";
+import { compilePattern } from "boyer-moore-magiclen";
 ```
 
 ## 核心导出 API
 
-- `export fn toLowerAscii(c: u8): u8;`
 - `export fn compilePattern(needle: &[]u8): BmhPattern;`
 - `export fn findWithCompiled(haystack: &[]u8, needle: &[]u8, compiled: BmhPattern): i64;`
 - `export fn findFirst(haystack: &[]u8, needle: &[]u8): i64;`

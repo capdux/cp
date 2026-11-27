@@ -8,6 +8,5 @@
 - `export fn isRetryableStatus(code: u8): bool;`
 - `export fn encodeFrame(compressed: bool, payload: &[]u8, out: []u8): usize;`
 - `export fn decodeHeader(data: &[]u8, out: &mut GrpcFrameHeader): i32;`
-- `export fn isSpace(b: u8): bool;`
 - `export fn parseTimeoutMicros(header: string): i64;`
 - `export fn formatTimeoutMillis(ms: u64, out: []u8): usize;`

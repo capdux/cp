@@ -4,7 +4,5 @@
 > Import: `import { ... } from "prom-client";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isAlpha(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
 - `export fn isValidMetricName(name: &[]u8): bool;`
 - `export fn isValidLabelName(name: &[]u8): bool;`
