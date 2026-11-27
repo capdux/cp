@@ -808,3 +808,15 @@ git status --porcelain cpc_dev/src
       - ① **高频底层通用能力**（全生态大量引用）→ 优先纳入已有分类的内部标准库 `lib/<cat>/`（无需单独安装），在 `registry.json` 中指向 `cap:<cat>`；
       - ② **CP 生态已有相同/高度类似包** → **严禁另起 `-crate`/`-core`/`-http` 重复造轮子！** 优先直接复用现有包，或将缺失的高价值特性合并增强到现有包中；
       - ③ **CP 生态尚无对应能力且属独立生态包** → 新增 `@cap/<name>`，并在内部优先 `import` 复用 CP 生态已有的 `lib/*` 或 `@cap/*` 同功能库，避免选择困难。
+
+
+### 6.9 第 9 轮 3 小时效率与 Token 审计固化铁律（2026-11-27 14:30）
+
+1. **管道测试必须开启 `set -eo pipefail`**：严禁将 `cap/bin/cap test <file> | tail -n 5` 直接拼接执行而不设 `pipefail`；否则 `tail` 返回 0 会掩盖测试失败退出码，导致误提交后再返工 1~2 轮。
+2. **全仓体检先定位编译器根因，再决定改源码**：面对大批量（>10 处）相似静态报错（如本轮 904 包 `cpc check` 发现 46 例同类报错），严禁逐包打绕过补丁；先用 10 秒 Python 脚本归类错误码，定位为 `cpc/src/sema/` 6 类假阳性后在 `cpc_dev/` 集中修复 5 个文件，一次性实现 **904/904 (100%)** 生态包与 **2,626/2,626 (100%)** 纯 CP 标准库全绿，节省 ~15 万 Token。
+3. **16-lane SIMD / `comptime` LUT / L0 标准库一遍过避坑**：
+   - `@Vector(16, u8)` 不支持运行时动态下标，归约前必须先 `const a: [16]u8 = acc;` 转数组；
+   - `comptime` 256-entry 建表函数开头须加 `@setEvalBranchQuota(20000);`；
+   - `cap:fmt.writeStr(s, out, pos)` 参数顺序 `s` 在首位；`cap:bin.readU32LE/readU64LE` 返回 `?u32`/`?u64`；
+   - `cap brief <pkg|cap:stdlib>` 已统一覆盖 904 生态包 + 208 内置标准库通道，查库直接调用 `cap brief` 替代整文件读取。
+4. **批量代码改写工具必须限定语法上下文**：`cap fix` 重写旧 `@cap/<pkg>` 导入时必须限定匹配 `from "@cap/` 而非裸 `"@cap/`，彻底杜绝误伤测试字符串字面量与返工。

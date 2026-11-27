@@ -190,3 +190,8 @@
   - 原生支持 `~errinit()`（对应 Zig `errdefer`：仅在 error 返回路径自动触发 `__cp_errdeinit()`，正常路径自动跳过无需手写 `disarm()`；亦支持 `move(guard)` 编译器级撤防）（`task-bun-20261122-raii-errinit-or-move-disarm`）；
   - `pub enum` 中未写 `*_` 的只读实例方法现正确生成只读值接收者 `self: Enum`，`*const Enum` 可直接调用（`task-bun-20261122-enum-readonly-method-mut-self`）。
   - 顶层与容器内 `const` 类型别名右值中的 `(T)?` / `T?` 已正确生成 `?T`（不再误作 `try`）（`task-bun-20261122-const-type-opt-try`）；
+
+- **[2026-11-27 第 9 轮审计与编译器升级]**：
+  - `cpc (release)` 已修复 6 类 Sema 类型推断假阳性（二元运算左侧整数字面量吸收右侧类型、`IfExpr` 分支字面量目标类型传播、`string` 切片推断为 `String`、重赋值不覆盖已声明类型、`@Vector` 拓宽、`??`/浮点内建/`@as`/函数指针/常量数组长度/重赋值定长失效）及 `union(enum)`/tagged `enum` 只读借用视图方法自动生成 `self: *const Self` + `switch (self.*)` 自动提升 `|*arr|` 指针捕获（`task-bun-20261127-enum-slice-by-val`）。
+  - **16-lane SIMD & `comptime` LUT 避坑**：`@Vector(16, u8)` 归约前先 `const a: [16]u8 = acc;`（禁止运行时动态下标）；`comptime` 256-entry 建表需加 `@setEvalBranchQuota(20000);`；`cap:fmt.writeStr(s, out, pos)` 字符串参数在首位；`cap:bin.readU32LE/readU64LE` 返回 `?u32`/`?u64`。
+  - **测试管道铁律**：执行 `cap/bin/cap test ... | tail` 时必须加 `set -eo pipefail`，防止非零退出码被 `tail` 掩盖。
