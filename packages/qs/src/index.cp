@@ -63,11 +63,8 @@ fn isUnreserved(c: u8): bool {
 }
 
 fn needsDecode(s: []const u8, plus_as_space: bool): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        const c = s[i];
-        if (c == '%' || (plus_as_space && c == '+')) return true;
-    }
+    if (findByte(s, '%', 0) != null) return true;
+    if (plus_as_space && findByte(s, '+', 0) != null) return true;
     return false;
 }
 
@@ -97,6 +94,18 @@ pub fn percentDecode(
     let i: usize = 0;
     let pos: usize = 0;
     while (i < input.len) {
+        let next_special = findByte(input, '%', i) ?? input.len;
+        if (plus_as_space) {
+            next_special = findByte(input[0..next_special], '+', i) ?? next_special;
+        }
+        if (next_special > i) {
+            const run_len = next_special - i;
+            if (pos + run_len > out.len) return QsError.BufferTooSmall;
+            @memcpy(out[pos .. pos + run_len], input[i..next_special]);
+            pos += run_len;
+            i = next_special;
+            if (i >= input.len) break;
+        }
         const c = input[i];
         if (c == '%') {
             if (i + 2 >= input.len) return QsError.InvalidPercentEncoding;
@@ -106,14 +115,9 @@ pub fn percentDecode(
             out[pos] = (hi << 4) | lo;
             pos += 1;
             i += 3;
-        } else if (plus_as_space && c == '+') {
-            if (pos >= out.len) return QsError.BufferTooSmall;
-            out[pos] = ' ';
-            pos += 1;
-            i += 1;
         } else {
             if (pos >= out.len) return QsError.BufferTooSmall;
-            out[pos] = c;
+            out[pos] = ' ';
             pos += 1;
             i += 1;
         }
@@ -228,7 +232,7 @@ pub struct QsParsed {
         let pos: usize = 0;
         while (pos < src.len) {
             const start = pos;
-            while (pos < src.len && src[pos] != '&') : (pos += 1) {}
+            pos = findByte(src, '&', start) ?? src.len;
             const part = src[start..pos];
             if (pos < src.len && src[pos] == '&') {
                 pos += 1;
@@ -236,14 +240,7 @@ pub struct QsParsed {
             if (part.len == 0) continue;
 
             // Split part on first '='
-            let eq_idx: usize? = null;
-            let k: usize = 0;
-            while (k < part.len) : (k += 1) {
-                if (part[k] == '=') {
-                    eq_idx = k;
-                    break;
-                }
-            }
+            const eq_idx: usize? = findByte(part, '=', 0);
 
             let raw_key: []const u8 = "";
             let raw_val: []const u8 = "";
@@ -284,7 +281,7 @@ pub struct QsParsed {
                 let item_idx: usize = 0;
                 while (true) {
                     const vstart = vpos;
-                    while (vpos < raw_val.len && raw_val[vpos] != ',') : (vpos += 1) {}
+                    vpos = findByte(raw_val, ',', vstart) ?? raw_val.len;
                     const item_raw = raw_val[vstart..vpos];
 
                     if (_.count >= max_params) return QsError.TooManyParams;
@@ -580,15 +577,9 @@ fn parseKeySegments(
         if (c == '[') {
             pos += 1;
             const seg_start = pos;
-            let found_close = false;
-            while (pos < dec_key.len) : (pos += 1) {
-                if (dec_key[pos] == ']') {
-                    found_close = true;
-                    break;
-                }
-                if (dec_key[pos] == '[') return QsError.InvalidSyntax;
-            }
-            if (!found_close) return QsError.InvalidSyntax;
+            const close_pos = findByte(dec_key, ']', seg_start) ?? return QsError.InvalidSyntax;
+            if (findByte(dec_key[seg_start..close_pos], '[', 0) != null) return QsError.InvalidSyntax;
+            pos = close_pos;
 
             const inner = dec_key[seg_start..pos];
             pos += 1; // skip ']'

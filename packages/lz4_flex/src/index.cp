@@ -9,7 +9,6 @@
 // - Size-prefixed framing helpers `compressWithSize` / `decompressWithSize`.
 
 import { readU16LE, readU32LE, writeU16LE, writeU32LE } from "cap:bin";
-import { writeStr } from "cap:fmt";
 
 const MIN_MATCH: usize = 4;
 const LAST_LITERALS: usize = 5;
@@ -138,7 +137,10 @@ pub fn compressBlock(src: []const u8, dst: []u8) -> i64 {
             if (lit_len > dst.len - out_pos) {
                 return -1;
             }
-            out_pos = writeStr(src[anchor..(anchor + lit_len)], dst, out_pos);
+            if (lit_len > 0) {
+                @memcpy(dst[out_pos..(out_pos + lit_len)], src[anchor..(anchor + lit_len)]);
+                out_pos += lit_len;
+            }
 
             // Emit 2-byte little-endian match offset
             if (!writeU16LE(dst, out_pos, dist as u16)) {
@@ -186,7 +188,10 @@ pub fn compressBlock(src: []const u8, dst: []u8) -> i64 {
     if (last_lit > dst.len - out_pos) {
         return -1;
     }
-    out_pos = writeStr(src[anchor..(anchor + last_lit)], dst, out_pos);
+    if (last_lit > 0) {
+        @memcpy(dst[out_pos..(out_pos + last_lit)], src[anchor..(anchor + last_lit)]);
+        out_pos += last_lit;
+    }
 
     return out_pos as i64;
 }
@@ -225,7 +230,10 @@ pub fn decompressBlock(src: []const u8, dst: []u8) -> i64 {
         if (lit_len > src.len - in_pos || lit_len > dst.len - out_pos) {
             return -1;
         }
-        out_pos = writeStr(src[in_pos..(in_pos + lit_len)], dst, out_pos);
+        if (lit_len > 0) {
+            @memcpy(dst[out_pos..(out_pos + lit_len)], src[in_pos..(in_pos + lit_len)]);
+            out_pos += lit_len;
+        }
         in_pos += lit_len;
 
         // End of block reached right after last literals
@@ -264,12 +272,17 @@ pub fn decompressBlock(src: []const u8, dst: []u8) -> i64 {
             return -1;
         }
 
-        // Byte-by-byte copy handles overlapping RLE matches (offset < match_len) accurately
-        let m: usize = 0;
-        while (m < match_len) {
-            dst[out_pos] = dst[out_pos - offset];
-            out_pos += 1;
-            m += 1;
+        if (offset >= match_len) {
+            @memcpy(dst[out_pos..(out_pos + match_len)], dst[(out_pos - offset)..(out_pos - offset + match_len)]);
+            out_pos += match_len;
+        } else {
+            // Byte-by-byte copy handles overlapping RLE matches (offset < match_len) accurately
+            let m: usize = 0;
+            while (m < match_len) {
+                dst[out_pos] = dst[out_pos - offset];
+                out_pos += 1;
+                m += 1;
+            }
         }
     }
 

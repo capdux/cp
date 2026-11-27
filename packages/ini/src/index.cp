@@ -3,7 +3,7 @@
 
 import { eqIgnoreCase } from "cap:ascii";
 import { bytesEq, findByteInBytes } from "cap:bin";
-import { writeStr, parseI64 } from "cap:fmt";
+import { parseI64 } from "cap:fmt";
 
 pub const MAX_ENTRIES: usize = 128;
 
@@ -66,10 +66,7 @@ pub struct IniDoc {
 
             // Section header: [name]
             if (first == '[' as u8) {
-                let close: usize = s + 1;
-                while (close < e && src[close] != ']' as u8) {
-                    close += 1;
-                }
+                const close: usize = findByteInBytes(src[0..e], ']' as u8, s + 1) ?? e;
                 if (close < e) {
                     let ns: usize = s + 1;
                     let ne: usize = close;
@@ -86,10 +83,7 @@ pub struct IniDoc {
             }
 
             // Key = Value
-            let eq: usize = s;
-            while (eq < e && src[eq] != '=' as u8) {
-                eq += 1;
-            }
+            const eq: usize = findByteInBytes(src[0..e], '=' as u8, s) ?? e;
             if (eq >= e) {
                 continue;
             }
@@ -118,13 +112,18 @@ pub struct IniDoc {
                     v_end -= 1;
                 } else {
                     // Strip inline comment preceded by whitespace in unquoted value
-                    let ci: usize = v_start;
-                    while (ci < v_end) {
-                        if ((src[ci] == ';' as u8 || src[ci] == '#' as u8) && (ci == v_start || isWs(src[ci - 1]))) {
-                            v_end = ci;
+                    let search_from: usize = v_start;
+                    while (search_from < v_end) {
+                        const next_semi: usize = findByteInBytes(src[0..v_end], ';' as u8, search_from) ?? v_end;
+                        const next_hash: usize = findByteInBytes(src[0..next_semi], '#' as u8, search_from) ?? next_semi;
+                        if (next_hash >= v_end) {
                             break;
                         }
-                        ci += 1;
+                        if (next_hash == v_start || isWs(src[next_hash - 1])) {
+                            v_end = next_hash;
+                            break;
+                        }
+                        search_from = next_hash + 1;
                     }
                     while (v_end > v_start && isWs(src[v_end - 1])) {
                         v_end -= 1;
@@ -236,7 +235,10 @@ pub struct IniWriter {
             _.overflow = true;
             return false;
         }
-        _.pos = writeStr(s, _.buf, _.pos);
+        if (s.len > 0) {
+            @memcpy(_.buf[_.pos..(_.pos + s.len)], s);
+            _.pos += s.len;
+        }
         return true;
     }
 
@@ -262,13 +264,8 @@ pub struct IniWriter {
         if (value.len > 0 && (isWs(value[0]) || isWs(value[value.len - 1]))) {
             needs_quote = true;
         }
-        let i: usize = 0;
-        while (i < value.len && !needs_quote) {
-            const c: u8 = value[i];
-            if (c == ';' as u8 || c == '#' as u8) {
-                needs_quote = true;
-            }
-            i += 1;
+        if (!needs_quote && (findByteInBytes(value, ';' as u8, 0) != null || findByteInBytes(value, '#' as u8, 0) != null)) {
+            needs_quote = true;
         }
 
         if (needs_quote) {

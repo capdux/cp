@@ -132,11 +132,7 @@ fn emitLiteral(src: []const u8, start: usize, len: usize, dst: []u8, start_pos: 
     if (len > dst.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < len) {
-        dst[pos + i] = src[start + i];
-        i += 1;
-    }
+    @memcpy(dst[pos..(pos + len)], src[start..(start + len)]);
     pos += len;
     return pos as i64;
 }
@@ -329,10 +325,8 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
             if (lit_len > src.len - in_pos || lit_len > expected_len - out_pos) {
                 return -1;
             }
-            let i: usize = 0;
-            while (i < lit_len) {
-                dst[out_pos + i] = src[in_pos + i];
-                i += 1;
+            if (lit_len > 0) {
+                @memcpy(dst[out_pos..(out_pos + lit_len)], src[in_pos..(in_pos + lit_len)]);
             }
             in_pos += lit_len;
             out_pos += lit_len;
@@ -348,11 +342,16 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
             if (offset == 0 || offset > out_pos || copy_len > expected_len - out_pos) {
                 return -1;
             }
-            let m: usize = 0;
-            while (m < copy_len) {
-                dst[out_pos] = dst[out_pos - offset];
-                out_pos += 1;
-                m += 1;
+            if (offset >= copy_len) {
+                @memcpy(dst[out_pos..(out_pos + copy_len)], dst[(out_pos - offset)..(out_pos - offset + copy_len)]);
+                out_pos += copy_len;
+            } else {
+                let m: usize = 0;
+                while (m < copy_len) {
+                    dst[out_pos] = dst[out_pos - offset];
+                    out_pos += 1;
+                    m += 1;
+                }
             }
         } else if (kind == 2) {
             // Copy with 2-byte offset
@@ -366,11 +365,16 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
             if (offset == 0 || offset > out_pos || copy_len > expected_len - out_pos) {
                 return -1;
             }
-            let m: usize = 0;
-            while (m < copy_len) {
-                dst[out_pos] = dst[out_pos - offset];
-                out_pos += 1;
-                m += 1;
+            if (offset >= copy_len) {
+                @memcpy(dst[out_pos..(out_pos + copy_len)], dst[(out_pos - offset)..(out_pos - offset + copy_len)]);
+                out_pos += copy_len;
+            } else {
+                let m: usize = 0;
+                while (m < copy_len) {
+                    dst[out_pos] = dst[out_pos - offset];
+                    out_pos += 1;
+                    m += 1;
+                }
             }
         } else {
             // Copy with 4-byte offset (kind == 3)
@@ -384,11 +388,16 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
             if (offset == 0 || offset > out_pos || copy_len > expected_len - out_pos) {
                 return -1;
             }
-            let m: usize = 0;
-            while (m < copy_len) {
-                dst[out_pos] = dst[out_pos - offset];
-                out_pos += 1;
-                m += 1;
+            if (offset >= copy_len) {
+                @memcpy(dst[out_pos..(out_pos + copy_len)], dst[(out_pos - offset)..(out_pos - offset + copy_len)]);
+                out_pos += copy_len;
+            } else {
+                let m: usize = 0;
+                while (m < copy_len) {
+                    dst[out_pos] = dst[out_pos - offset];
+                    out_pos += 1;
+                    m += 1;
+                }
             }
         }
     }

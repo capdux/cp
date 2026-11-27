@@ -12,7 +12,7 @@ import {
 } from "../../percent-encoding/src/index.cp";
 import { domainToAscii } from "../../idna/src/index.cp";
 import { toLowerByte, isAlpha, isDigit, isHexDigit } from "cap:ascii";
-import { bytesEq } from "cap:bin";
+import { bytesEq, findByteInBytes } from "cap:bin";
 
 fn wuIsSchemeChar(ch: u8): bool {
     return isAlpha(ch) || isDigit(ch) || ch == 0x2B || ch == 0x2D || ch == 0x2E;
@@ -22,12 +22,10 @@ fn wuAppendBytes(out: []u8, pos: *usize, src: []const u8): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.* + i] = src[i];
-        i = i + 1;
+    if (src.len > 0) {
+        @memcpy(out[pos.*..(pos.* + src.len)], src);
+        pos.* = pos.* + src.len;
     }
-    pos.* = pos.* + src.len;
     return true;
 }
 
@@ -174,9 +172,11 @@ fn wuNormalizePath(raw: []const u8, is_special: bool, out: []u8): usize {
             continue;
         }
         let seg_start = i;
-        while (i < raw.len && raw[i] != 0x2F && !(is_special && raw[i] == 0x5C)) {
-            i = i + 1;
+        let next_sep = findByteInBytes(raw, 0x2F, i) ?? raw.len;
+        if (is_special) {
+            next_sep = findByteInBytes(raw[0..next_sep], 0x5C, i) ?? next_sep;
         }
+        i = next_sep;
         let seg = raw[seg_start..i];
         if (wuIsSingleDotSegment(seg)) {
             if (i == raw.len) {
@@ -414,13 +414,11 @@ pub struct WhatwgUrl {
         if (rest.len >= 2 && rest[0] == 0x2F && rest[1] == 0x2F) {
             url.has_authority = true;
             let after_slashes = rest[2..rest.len];
-            let auth_end: usize = 0;
-            while (auth_end < after_slashes.len) {
-                let ch = after_slashes[auth_end];
-                if (ch == 0x2F || ch == 0x3F || ch == 0x23 || (is_special && ch == 0x5C)) {
-                    break;
-                }
-                auth_end = auth_end + 1;
+            let auth_end: usize = findByteInBytes(after_slashes, 0x2F, 0) ?? after_slashes.len;
+            auth_end = findByteInBytes(after_slashes[0..auth_end], 0x3F, 0) ?? auth_end;
+            auth_end = findByteInBytes(after_slashes[0..auth_end], 0x23, 0) ?? auth_end;
+            if (is_special) {
+                auth_end = findByteInBytes(after_slashes[0..auth_end], 0x5C, 0) ?? auth_end;
             }
             let authority = after_slashes[0..auth_end];
             rest = after_slashes[auth_end..after_slashes.len];
@@ -439,19 +437,12 @@ pub struct WhatwgUrl {
             if (at_pos >= 0) {
                 let ui = authority[0..(at_pos as usize)];
                 host_port = authority[((at_pos as usize) + 1)..authority.len];
-                let u_colon: i64 = -1;
-                let ui_i: usize = 0;
-                while (ui_i < ui.len) {
-                    if (ui[ui_i] == 0x3A) {
-                        u_colon = ui_i as i64;
-                        break;
-                    }
-                    ui_i = ui_i + 1;
-                }
+                let u_colon_opt = findByteInBytes(ui, 0x3A, 0);
                 let uset = userinfoSet();
-                if (u_colon >= 0) {
-                    url.username_len = percentEncode(ui[0..(u_colon as usize)], uset, url.username[0..128]);
-                    url.password_len = percentEncode(ui[((u_colon as usize) + 1)..ui.len], uset, url.password[0..128]);
+                if (u_colon_opt != null) {
+                    let uc = u_colon_opt.?;
+                    url.username_len = percentEncode(ui[0..uc], uset, url.username[0..128]);
+                    url.password_len = percentEncode(ui[(uc + 1)..ui.len], uset, url.password[0..128]);
                 } else {
                     url.username_len = percentEncode(ui, uset, url.username[0..128]);
                 }
@@ -464,19 +455,11 @@ pub struct WhatwgUrl {
                 }
             } else if (host_port[0] == 0x5B) {
                 // IPv6 host literal [...]
-                let close_idx: i64 = -1;
-                let bi: usize = 1;
-                while (bi < host_port.len) {
-                    if (host_port[bi] == 0x5D) {
-                        close_idx = bi as i64;
-                        break;
-                    }
-                    bi = bi + 1;
-                }
-                if (close_idx < 0) {
+                let close_opt = findByteInBytes(host_port, 0x5D, 1);
+                if (close_opt == null) {
                     return WhatwgUrl.invalid();
                 }
-                let cidx = close_idx as usize;
+                let cidx = close_opt.?;
                 let hlen = wuParseIpv6Host(host_port[1..cidx], url.host[0..256]);
                 if (hlen < 0) {
                     return WhatwgUrl.invalid();
@@ -495,19 +478,12 @@ pub struct WhatwgUrl {
                 }
             } else {
                 // Domain or IPv4 host
-                let p_colon: i64 = -1;
-                let hi: usize = 0;
-                while (hi < host_port.len) {
-                    if (host_port[hi] == 0x3A) {
-                        p_colon = hi as i64;
-                        break;
-                    }
-                    hi = hi + 1;
-                }
+                let p_colon_opt = findByteInBytes(host_port, 0x3A, 0);
                 let raw_host = host_port;
-                if (p_colon >= 0) {
-                    raw_host = host_port[0..(p_colon as usize)];
-                    let p = wuParsePortStr(host_port[((p_colon as usize) + 1)..host_port.len]);
+                if (p_colon_opt != null) {
+                    let pc = p_colon_opt.?;
+                    raw_host = host_port[0..pc];
+                    let p = wuParsePortStr(host_port[(pc + 1)..host_port.len]);
                     if (p == -2) {
                         return WhatwgUrl.invalid();
                     }
@@ -553,36 +529,20 @@ pub struct WhatwgUrl {
         }
 
         // 3. Fragment (#...)
-        let hash_pos: i64 = -1;
-        let ri: usize = 0;
-        while (ri < rest.len) {
-            if (rest[ri] == 0x23) {
-                hash_pos = ri as i64;
-                break;
-            }
-            ri = ri + 1;
-        }
+        let hash_opt = findByteInBytes(rest, 0x23, 0);
         let pre_frag = rest;
-        if (hash_pos >= 0) {
-            let hp = hash_pos as usize;
+        if (hash_opt != null) {
+            let hp = hash_opt.?;
             pre_frag = rest[0..hp];
             url.has_fragment = true;
             url.fragment_len = percentEncode(rest[(hp + 1)..rest.len], fragmentSet(), url.fragment[0..256]);
         }
 
         // 4. Query (?...)
-        let q_pos: i64 = -1;
-        let qi: usize = 0;
-        while (qi < pre_frag.len) {
-            if (pre_frag[qi] == 0x3F) {
-                q_pos = qi as i64;
-                break;
-            }
-            qi = qi + 1;
-        }
+        let q_opt = findByteInBytes(pre_frag, 0x3F, 0);
         let raw_path = pre_frag;
-        if (q_pos >= 0) {
-            let qp = q_pos as usize;
+        if (q_opt != null) {
+            let qp = q_opt.?;
             raw_path = pre_frag[0..qp];
             url.has_query = true;
             url.query_len = percentEncode(pre_frag[(qp + 1)..pre_frag.len], querySet(), url.query[0..512]);
@@ -659,18 +619,10 @@ pub struct WhatwgUrl {
             res.has_fragment = false;
             res.fragment_len = 0;
             let q_body = r[1..r.len];
-            let hash_pos: i64 = -1;
-            let i: usize = 0;
-            while (i < q_body.len) {
-                if (q_body[i] == 0x23) {
-                    hash_pos = i as i64;
-                    break;
-                }
-                i = i + 1;
-            }
+            let hash_opt = findByteInBytes(q_body, 0x23, 0);
             res.has_query = true;
-            if (hash_pos >= 0) {
-                let hp = hash_pos as usize;
+            if (hash_opt != null) {
+                let hp = hash_opt.?;
                 res.query_len = percentEncode(q_body[0..hp], querySet(), res.query[0..512]);
                 res.has_fragment = true;
                 res.fragment_len = percentEncode(q_body[(hp + 1)..q_body.len], fragmentSet(), res.fragment[0..256]);
@@ -687,35 +639,19 @@ pub struct WhatwgUrl {
         res.has_fragment = false;
         res.fragment_len = 0;
 
-        let hash_pos: i64 = -1;
-        let hi: usize = 0;
-        while (hi < r.len) {
-            if (r[hi] == 0x23) {
-                hash_pos = hi as i64;
-                break;
-            }
-            hi = hi + 1;
-        }
+        let hash_opt = findByteInBytes(r, 0x23, 0);
         let pre_frag = r;
-        if (hash_pos >= 0) {
-            let hp = hash_pos as usize;
+        if (hash_opt != null) {
+            let hp = hash_opt.?;
             pre_frag = r[0..hp];
             res.has_fragment = true;
             res.fragment_len = percentEncode(r[(hp + 1)..r.len], fragmentSet(), res.fragment[0..256]);
         }
 
-        let q_pos: i64 = -1;
-        let qi: usize = 0;
-        while (qi < pre_frag.len) {
-            if (pre_frag[qi] == 0x3F) {
-                q_pos = qi as i64;
-                break;
-            }
-            qi = qi + 1;
-        }
+        let q_opt = findByteInBytes(pre_frag, 0x3F, 0);
         let rel_path = pre_frag;
-        if (q_pos >= 0) {
-            let qp = q_pos as usize;
+        if (q_opt != null) {
+            let qp = q_opt.?;
             rel_path = pre_frag[0..qp];
             res.has_query = true;
             res.query_len = percentEncode(pre_frag[(qp + 1)..pre_frag.len], querySet(), res.query[0..512]);
@@ -847,47 +783,33 @@ pub struct WhatwgUrl {
 
 fn wuCloneUrl(src: WhatwgUrl): WhatwgUrl {
     let dst = WhatwgUrl.invalid();
-    let i: usize = 0;
-    while (i < src.scheme_len) {
-        dst.scheme[i] = src.scheme[i];
-        i = i + 1;
+    if (src.scheme_len > 0) {
+        @memcpy(dst.scheme[0..src.scheme_len], src.scheme[0..src.scheme_len]);
     }
     dst.scheme_len = src.scheme_len;
-    i = 0;
-    while (i < src.username_len) {
-        dst.username[i] = src.username[i];
-        i = i + 1;
+    if (src.username_len > 0) {
+        @memcpy(dst.username[0..src.username_len], src.username[0..src.username_len]);
     }
     dst.username_len = src.username_len;
-    i = 0;
-    while (i < src.password_len) {
-        dst.password[i] = src.password[i];
-        i = i + 1;
+    if (src.password_len > 0) {
+        @memcpy(dst.password[0..src.password_len], src.password[0..src.password_len]);
     }
     dst.password_len = src.password_len;
-    i = 0;
-    while (i < src.host_len) {
-        dst.host[i] = src.host[i];
-        i = i + 1;
+    if (src.host_len > 0) {
+        @memcpy(dst.host[0..src.host_len], src.host[0..src.host_len]);
     }
     dst.host_len = src.host_len;
     dst.port = src.port;
-    i = 0;
-    while (i < src.path_len) {
-        dst.path[i] = src.path[i];
-        i = i + 1;
+    if (src.path_len > 0) {
+        @memcpy(dst.path[0..src.path_len], src.path[0..src.path_len]);
     }
     dst.path_len = src.path_len;
-    i = 0;
-    while (i < src.query_len) {
-        dst.query[i] = src.query[i];
-        i = i + 1;
+    if (src.query_len > 0) {
+        @memcpy(dst.query[0..src.query_len], src.query[0..src.query_len]);
     }
     dst.query_len = src.query_len;
-    i = 0;
-    while (i < src.fragment_len) {
-        dst.fragment[i] = src.fragment[i];
-        i = i + 1;
+    if (src.fragment_len > 0) {
+        @memcpy(dst.fragment[0..src.fragment_len], src.fragment[0..src.fragment_len]);
     }
     dst.fragment_len = src.fragment_len;
     dst.has_authority = src.has_authority;
