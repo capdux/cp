@@ -2,17 +2,29 @@ pub const CRC32_POLY_REVERSED: u32 = 3988292384; // 0xEDB88320
 
 fn crcByteStep(crc_in: u32, b: u8): u32 {
     let c: u32 = crc_in ^ (b as u32);
-    let bit: usize = 0;
-    while (bit < 8) {
-        if ((c & 1) != 0) {
-            c = (c >> 1) ^ CRC32_POLY_REVERSED;
-        } else {
-            c = c >> 1;
-        }
-        bit = bit + 1;
-    }
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
+    c = (c >> 1) ^ (CRC32_POLY_REVERSED & (0 -% (c & 1)));
     return c;
 }
+
+fn crcBuildTable(): [256]u32 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u32 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        tbl[i] = crcByteStep(0, i as u8);
+        i = i + 1;
+    }
+    return tbl;
+}
+
+const CRC32_LUT: [256]u32 = crcBuildTable();
 
 fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32 {
     let sum: u32 = 0;
@@ -29,7 +41,7 @@ fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32 {
 }
 
 fn crcGf2MatrixSquare(src: [32]u32): [32]u32 {
-    let out: [32]u32 = [0; 32];
+    let out: [32]u32 = undefined;
     let n: usize = 0;
     while (n < 32) {
         out[n] = crcGf2MatrixTimes(src, src[n]);
@@ -40,7 +52,7 @@ fn crcGf2MatrixSquare(src: [32]u32): [32]u32 {
 
 pub fn combineCrc32(crc1: u32, crc2: u32, len2: u64): u32 {
     if (len2 == 0) { return crc1; }
-    let odd: [32]u32 = [0; 32];
+    let odd: [32]u32 = undefined;
     odd[0] = CRC32_POLY_REVERSED;
     let row: u32 = 1;
     let n: usize = 1;
@@ -82,11 +94,12 @@ pub struct Crc32Hasher {
         return Crc32Hasher { state: init_crc, amount: 0 };
     }
 
-    pub fn update(*_, buf: []u8) {
+    pub fn update(*_, buf: []const u8) {
         let c: u32 = _.state ^ 4294967295; // 0xFFFFFFFF
         let i: usize = 0;
         while (i < buf.len) {
-            c = crcByteStep(c, buf[i]);
+            let idx: usize = ((c ^ (buf[i] as u32)) & 255) as usize;
+            c = (c >> 8) ^ CRC32_LUT[idx];
             i = i + 1;
         }
         _.state = c ^ 4294967295;
@@ -97,7 +110,8 @@ pub struct Crc32Hasher {
         let c: u32 = _.state ^ 4294967295;
         let i: usize = 0;
         while (i < s.len) {
-            c = crcByteStep(c, s[i]);
+            let idx: usize = ((c ^ (s[i] as u32)) & 255) as usize;
+            c = (c >> 8) ^ CRC32_LUT[idx];
             i = i + 1;
         }
         _.state = c ^ 4294967295;
@@ -119,7 +133,7 @@ pub struct Crc32Hasher {
     }
 }
 
-pub fn hashBytes(buf: []u8): u32 {
+pub fn hashBytes(buf: []const u8): u32 {
     let h = Crc32Hasher.new();
     h.update(buf);
     return h.finalize();

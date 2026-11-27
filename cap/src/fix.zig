@@ -86,7 +86,7 @@ fn fixSingleFile(
 
     var fixes: usize = 0;
     var i: usize = 0;
-    const needle = "\"@cap/";
+    const needle = "from \"@cap/";
 
     while (i < content.len) {
         if (std.mem.indexOfPos(u8, content, i, needle)) |pos| {
@@ -98,7 +98,7 @@ fn fixSingleFile(
                     if (try resolveLegacyCapPkg(allocator, io, cap_root, sub_name)) |bare| {
                         defer allocator.free(bare);
                         try out_buf.appendSlice(allocator, content[i..pos]);
-                        try out_buf.append(allocator, '"');
+                        try out_buf.appendSlice(allocator, "from \"");
                         try out_buf.appendSlice(allocator, bare);
                         try out_buf.append(allocator, '"');
                         fixes += 1;

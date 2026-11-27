@@ -1420,3 +1420,9 @@
 - 消解并合并 **27 对重复包**（含 `bytes` 与 `semver` 完整双平台超集合并，均 100% PASS），更新 894 个测试与互依赖导入路径，`registry.json` 不保留旧 `@cap/<old>` 别名并新增 `types`/`agent_doc`/`readme`/`readme_zh` 导航字段
 - 更新 `cpc/src/resolver.rs` 支持裸包名与 Rust `_`/`-` 双向等价解析；新增 `cap/src/brief.zig` 与 `cap brief <pkg>` AI-First 速查命令；修复 `cap:bin` 导出 `findByteInBytes` 避免与 `cap:ascii` 冲突
 - 更新 `scripts/gen_agent_lib_ref.py` 与 `cp_agent_lib_ref.md`（压缩至 **38.3KB**，-90.7%），新增 `scripts/gen_pkg_docs.py`。
+
+## [2026-11-27] - Top-2000 生态重组 Phase 1~3 全面收官 + AI-First `cap brief/fix/check` 工具链落地
+- **Phase 1 (L0 硬件 SIMD 基座)**：`lib/ascii/` (`cap:ascii`)、`lib/utf8/` (`cap:utf8`)、`lib/fmt/` (`cap:fmt`)、`lib/bin/` (`cap:bin`) 全面升级为 16-lane 硬件 `@Vector(16, u8)` SIMD 实现；ReleaseFast + `tinybench` 实测 4KB `bytesEq` **14.07x** (161ns)、`isAscii` **14.64x** (126ns)、`findByte` **7.65x** (174ns)、`isValidUtf8` **146ns**。
+- **Phase 2 (裸包名零迁移成本改造)**：将 832 个 npm/crates.io 包迁移至原包名 `packages/<orig>/`（保留 39 原生 C/C++ `@cap/*` 与 33 `@web/*`，共 904 零重复包），合并双平台同名包 `bytes`/`semver` 及 6 处跨包导出（`mediatype`/`negotiator`/`cookie-signature`/`cookie-parser`/`@sindresorhus/fnv1a`/`pbkdf2`），全仓 904 包 **0 broken imports**，`registry.json` 按指令不保留旧 `@cap/<old>` 别名。
+- **Phase 3 (L0 去重与性能优化 5 Waves 全清零)**：Wave 1~5 共重构 **75+ 个高频包**，净消除 **3,500+ 行**重复手写辅助代码，`Uses cap:* stdlib` 从 **0 → 117+**，全生态 `>=2` 重复 helper 包彻底清零；`crc32fast` 升级为 `comptime` 256-entry LUT 查表法 + `undefined` 栈缓冲（6/6 PASS）。
+- **Phase 5 (文档与 AI-First CLI 闭环)**：全量 904/904 包配齐 `src/index.d.cp`、`README.md`（含中英文切换栏）、`README.zh-CN.md`、`README_AGENT.md`；`cap` CLI 新增 `cap brief <pkg>`、`cap fix [--dry-run] <path>`（精准匹配 `from "@cap/<pkg>"`）、`cap check <path>`；修复 `cap/build.zig` `zstd.c` 路径与 `lib/time/uuidV7.cp` 旧 `self` 语法。
