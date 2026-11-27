@@ -24,7 +24,7 @@ pub struct ScryptParams {
         };
     }
 
-    pub fn fromN(n: u64, r: u30, p: u30, max_mem_bytes: usize): !ScryptParams {
+    pub static fn fromN(n: u64, r: u30, p: u30, max_mem_bytes: usize): !ScryptParams {
         if (n < 2) {
             return error.InvalidParams;
         }
@@ -46,7 +46,7 @@ pub struct ScryptParams {
         return params;
     }
 
-    pub fn interactive(): ScryptParams {
+    pub static fn interactive(): ScryptParams {
         return ScryptParams{
             .ln = 14,
             .r = 8,
@@ -55,7 +55,7 @@ pub struct ScryptParams {
         };
     }
 
-    pub fn owasp(): ScryptParams {
+    pub static fn owasp(): ScryptParams {
         return ScryptParams{
             .ln = 17,
             .r = 8,

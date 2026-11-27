@@ -74,7 +74,7 @@ export struct DockerImageRef {
     digest: ([]const u8)?,     // e.g. "sha256:..."
 
     /// Parse an OCI/Docker image reference: `[registry[:port]/]repository[:tag][@digest]`.
-    pub fn parse(raw: []const u8): DockerImageRef? {
+    pub static fn parse(raw: []const u8): DockerImageRef? {
         if (raw.len == 0) return null;
         // Reject whitespace
         let wi: usize = 0;

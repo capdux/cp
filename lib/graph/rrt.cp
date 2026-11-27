@@ -53,7 +53,7 @@ pub struct RrtConfig {
     use_rrt_star: bool,
 
     /// Balanced defaults for standard RRT (`use_rrt_star = false`).
-    fn defaultRrt(): RrtConfig {
+    static fn defaultRrt(): RrtConfig {
         return RrtConfig {
             step_size: 0.5,
             goal_tolerance: 0.5,
@@ -66,7 +66,7 @@ pub struct RrtConfig {
     }
 
     /// Balanced defaults for asymptotically optimal RRT* (`use_rrt_star = true`).
-    fn defaultRrtStar(): RrtConfig {
+    static fn defaultRrtStar(): RrtConfig {
         return RrtConfig {
             step_size: 0.5,
             goal_tolerance: 0.5,

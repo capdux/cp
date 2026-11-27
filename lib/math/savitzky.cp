@@ -24,7 +24,7 @@ pub struct LoessConfig {
     robust_iters: usize,
     degree: usize,
 
-    fn default(): LoessConfig {
+    static fn default(): LoessConfig {
         return {
             bandwidth: 0.3,
             robust_iters: 2,

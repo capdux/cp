@@ -338,7 +338,7 @@ pub struct DiameterWriter {
     failed: bool = false,
 
     /// Initializes the writer and encodes the 20-byte Diameter header with placeholder length.
-    pub fn init(
+    pub static fn init(
         buf: []u8,
         flags: u8,
         command_code: u32,

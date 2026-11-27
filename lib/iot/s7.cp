@@ -294,7 +294,7 @@ pub struct S7AnyItemIter {
     }
 
     /// Initializes an iterator directly from `S7Packet.params` of a Read/Write Var Job.
-    fn initFromParams(params: []const u8): S7AnyItemIter? {
+    static fn initFromParams(params: []const u8): S7AnyItemIter? {
         if (params.len < 2) {
             return null;
         }

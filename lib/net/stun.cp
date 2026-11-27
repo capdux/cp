@@ -204,7 +204,7 @@ pub class StunBuilder {
     attrs_buf: std.ArrayList(u8),
 
     /// Initializes a STUN message builder with the given class, 12-bit method, and 96-bit transaction ID.
-    pub fn init(
+    pub static fn init(
         allocator: std.mem.Allocator,
         msg_class: StunClass,
         method: u16,

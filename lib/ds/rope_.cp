@@ -68,7 +68,7 @@ pub struct RopeText {
     undo_stack: std.ArrayList(UndoOp),
     redo_stack: std.ArrayList(UndoOp),
 
-    pub fn initFromText(alloc: std.mem.Allocator, initial_text: []const u8): !RopeText {
+    pub static fn initFromText(alloc: std.mem.Allocator, initial_text: []const u8): !RopeText {
         const orig = alloc.dupe(u8, initial_text) catch return RopeError.OutOfMemory;
         errdefer alloc.free(orig);
 

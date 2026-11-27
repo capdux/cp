@@ -15,7 +15,7 @@ export struct BackoffConfig {
     jitter: JitterMode;
 
     /// 返回生产推荐默认配置（base=100ms, max=30s, max_attempts=5, full jitter）
-    fn defaultConfig(): BackoffConfig {
+    static fn defaultConfig(): BackoffConfig {
         return BackoffConfig{
             base_delay_ms: 100,
             max_delay_ms: 30_000,
