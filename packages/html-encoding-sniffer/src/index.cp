@@ -8,21 +8,116 @@ pub struct SniffOptions {
     default_encoding: string,
 }
 
+type HesVec16 = @Vector(16, u8);
+type HesBool16 = @Vector(16, bool);
+
+const HES_FLAG_WS: u8 = 1;
+const HES_FLAG_ATTR_STOP: u8 = 2;
+
+fn hesBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        lut[c] = if (c >= 65 && c <= 90) ((c + 32) as u8) else (c as u8);
+        c += 1;
+    }
+    return lut;
+}
+
+fn hesBuildFlagsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[0x09] = HES_FLAG_WS | HES_FLAG_ATTR_STOP;
+    lut[0x0A] = HES_FLAG_WS | HES_FLAG_ATTR_STOP;
+    lut[0x0C] = HES_FLAG_WS | HES_FLAG_ATTR_STOP;
+    lut[0x0D] = HES_FLAG_WS | HES_FLAG_ATTR_STOP;
+    lut[0x20] = HES_FLAG_WS | HES_FLAG_ATTR_STOP;
+    lut['=' as usize] = HES_FLAG_ATTR_STOP;
+    lut['>' as usize] = HES_FLAG_ATTR_STOP;
+    lut['/' as usize] = HES_FLAG_ATTR_STOP;
+    return lut;
+}
+
+const HES_LOWER_LUT: [256]u8 = hesBuildLowerLut();
+const HES_FLAGS_LUT: [256]u8 = hesBuildFlagsLut();
+
 fn hesToLower(ch: u8): u8 {
-    return if (ch >= 'A' && ch <= 'Z') ch + 32 else ch;
+    return HES_LOWER_LUT[ch as usize];
 }
 
 fn hesEqIgnoreCase(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (hesToLower(a[i]) != hesToLower(b[i])) return false;
+    const len = a.len;
+    const v_a: HesVec16 = @splat(65 as u8);
+    const v_z: HesVec16 = @splat(90 as u8);
+    const v_bit: HesVec16 = @splat(32 as u8);
+    const v_false: HesBool16 = @splat(false);
+    while (i + 16 <= len) {
+        const va: HesVec16 = a[i .. i + 16][0..16].*;
+        const vb: HesVec16 = b[i .. i + 16][0..16].*;
+        const la: HesVec16 = @select(u8, @select(bool, va >= v_a, va <= v_z, v_false), va | v_bit, va);
+        const lb: HesVec16 = @select(u8, @select(bool, vb >= v_a, vb <= v_z, v_false), vb | v_bit, vb);
+        if (@reduce(.Or, la != lb)) return false;
+        i += 16;
+    }
+    while (i < len) : (i += 1) {
+        if (HES_LOWER_LUT[a[i] as usize] != HES_LOWER_LUT[b[i] as usize]) return false;
     }
     return true;
 }
 
 fn hesIsAsciiWs(ch: u8): bool {
-    return ch == 0x09 || ch == 0x0A || ch == 0x0C || ch == 0x0D || ch == 0x20;
+    return (HES_FLAGS_LUT[ch as usize] & HES_FLAG_WS) != 0;
+}
+
+fn hesFindByte(buf: []const u8, target: u8, start: usize): usize {
+    let i: usize = start;
+    const len = buf.len;
+    const vt: HesVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: HesVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == target) return i + k;
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (buf[i] == target) return i;
+        i += 1;
+    }
+    return len;
+}
+
+fn hesFindTagSkip(buf: []const u8, start: usize): usize {
+    let i: usize = start;
+    const len = buf.len;
+    const v_gt: HesVec16 = @splat('>' as u8);
+    const v_dq: HesVec16 = @splat('"' as u8);
+    const v_sq: HesVec16 = @splat('\'' as u8);
+    while (i + 16 <= len) {
+        const v: HesVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_gt) || @reduce(.Or, v == v_dq) || @reduce(.Or, v == v_sq)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = buf[i + k];
+                if (c == '>' || c == '"' || c == '\'') return i + k;
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = buf[i];
+        if (c == '>' || c == '"' || c == '\'') return i;
+        i += 1;
+    }
+    return len;
 }
 
 fn hesTrimAsciiWs(s: string): string {
@@ -226,16 +321,19 @@ fn hesPrescanMeta(bytes: []const u8): string {
         const lt = findByteInBytes(head, '<', pos) ?? break;
         pos = lt;
 
-        // Skip HTML comments: <!-- ... -->
+        // Skip HTML comments: <!-- ... --> (SIMD '-' search)
         if (pos + 4 <= limit && head[pos + 1] == '!' && head[pos + 2] == '-' && head[pos + 3] == '-') {
             pos += 4;
             let closed = false;
-            while (pos + 2 < limit) : (pos += 1) {
-                if (head[pos] == '-' && head[pos + 1] == '-' && head[pos + 2] == '>') {
+            while (pos + 2 < limit) {
+                pos = hesFindByte(head, '-', pos);
+                if (pos + 2 >= limit) break;
+                if (head[pos + 1] == '-' && head[pos + 2] == '>') {
                     pos += 3;
                     closed = true;
                     break;
                 }
+                pos += 1;
             }
             if (!closed) break;
             continue;
@@ -260,9 +358,9 @@ fn hesPrescanMeta(bytes: []const u8): string {
                         break;
                     }
 
-                    // Parse attribute name
+                    // Parse attribute name (LUT single-lookup)
                     const n_start = pos;
-                    while (pos < limit && !hesIsAsciiWs(head[pos]) && head[pos] != '=' && head[pos] != '>' && head[pos] != '/') {
+                    while (pos < limit && (HES_FLAGS_LUT[head[pos] as usize] & HES_FLAG_ATTR_STOP) == 0) {
                         pos += 1;
                     }
                     const attr_name = head[n_start..pos];
@@ -321,19 +419,18 @@ fn hesPrescanMeta(bytes: []const u8): string {
             }
         }
 
-        // Skip other tags safely (respecting quoted attributes)
+        // Skip other tags safely (respecting quoted attributes, SIMD accelerated)
         pos += 1;
-        while (pos < limit && head[pos] != '>') {
-            if (head[pos] == '"' || head[pos] == '\'') {
-                const q = head[pos];
-                pos = findByteInBytes(head, q, pos + 1) ?? limit;
-                if (pos < limit) pos += 1;
-                continue;
+        while (pos < limit) {
+            pos = hesFindTagSkip(head, pos);
+            if (pos >= limit) break;
+            if (head[pos] == '>') {
+                pos += 1;
+                break;
             }
-            pos += 1;
-        }
-        if (pos < limit && head[pos] == '>') {
-            pos += 1;
+            const q = head[pos];
+            pos = hesFindByte(head, q, pos + 1);
+            if (pos < limit) pos += 1;
         }
     }
 

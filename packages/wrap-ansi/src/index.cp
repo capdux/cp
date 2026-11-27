@@ -13,6 +13,65 @@ import { charWidth } from "../../unicode-width/src/index.cp";
 
 const MAX_ACTIVE_SGR: usize = 8;
 
+type WaVec16 = @Vector(16, u8);
+type WaBool16 = @Vector(16, bool);
+
+fn waBuildPrintLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0x20;
+    while (c < 0x7F) {
+        lut[c] = 1;
+        c += 1;
+    }
+    return lut;
+}
+
+const WA_PRINT_ASCII_LUT: [256]u8 = waBuildPrintLut();
+
+fn waFindNewline(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_nl: WaVec16 = @splat('\n' as u8);
+    while (i + 16 <= len) {
+        const v: WaVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_nl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == '\n') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != '\n') {
+        i += 1;
+    }
+    return i;
+}
+
+fn waScanPlainAscii(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_lo: WaVec16 = @splat(0x20 as u8);
+    const v_hi: WaVec16 = @splat(0x7E as u8);
+    const v_false: WaBool16 = @splat(false);
+    while (i + 16 <= len) {
+        const v: WaVec16 = s[i .. i + 16][0..16].*;
+        const ok = @select(bool, v >= v_lo, v <= v_hi, v_false);
+        if (!@reduce(.And, ok)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && WA_PRINT_ASCII_LUT[s[i] as usize] != 0) {
+        i += 1;
+    }
+    return i;
+}
+
 struct Utf8Step {
     cp: u32,
     width: usize,
@@ -106,14 +165,13 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
 }
 
 fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (s.len < avail) { s.len } else { avail };
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
 }
 
 struct AnsiStyleState {
@@ -163,6 +221,14 @@ pub fn visibleWidth(s: string) -> usize {
     let w: usize = 0;
     let i: usize = 0;
     while (i < s.len) {
+        const ascii_end = waScanPlainAscii(s, i);
+        if (ascii_end > i) {
+            w += ascii_end - i;
+            i = ascii_end;
+            if (i >= s.len) {
+                break;
+            }
+        }
         const ansi_end = scanAnsiCsi(s, i);
         if (ansi_end > i) {
             i = ansi_end;
@@ -205,9 +271,7 @@ pub fn wrapAnsi(text: string, max_cols: usize, hard_wrap: bool, out: []u8) -> st
 
     while (cur < text.len) {
         const ls = cur;
-        while (cur < text.len && text[cur] != '\n') {
-            cur += 1;
-        }
+        cur = waFindNewline(text, cur);
         let le = cur;
         if (le > ls && text[le - 1] == '\r') {
             le -= 1;

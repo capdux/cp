@@ -20,6 +20,36 @@ import {
     trim,
 } from "cap:ascii";
 
+type AsciiVec16 = @Vector(16, u8);
+type AsciiBool16 = @Vector(16, bool);
+
+const ASCII_FLAG_OCT: u8 = 1;
+const ASCII_FLAG_LOWER: u8 = 2;
+const ASCII_FLAG_UPPER: u8 = 4;
+const ASCII_FLAG_GRAPH: u8 = 8;
+const ASCII_FLAG_PUNCT: u8 = 16;
+
+fn asciiBuildFlagsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c >= 48 && c <= 55) { f |= ASCII_FLAG_OCT; }
+        if (c >= 97 && c <= 122) { f |= ASCII_FLAG_LOWER; }
+        if (c >= 65 && c <= 90) { f |= ASCII_FLAG_UPPER; }
+        if (c >= 33 && c <= 126) { f |= ASCII_FLAG_GRAPH; }
+        if ((c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126)) {
+            f |= ASCII_FLAG_PUNCT;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const ASCII_FLAGS_LUT: [256]u8 = asciiBuildFlagsLut();
+
 pub fn isAsciiAlpha(b: u8): bool {
     return isAlpha(b);
 }
@@ -37,7 +67,7 @@ pub fn isAsciiHexDigit(b: u8): bool {
 }
 
 pub fn isAsciiOctDigit(b: u8): bool {
-    return b >= 48 && b <= 55;
+    return (ASCII_FLAGS_LUT[b as usize] & ASCII_FLAG_OCT) != 0;
 }
 
 pub fn isAsciiWhitespace(b: u8): bool {
@@ -53,24 +83,21 @@ pub fn isAsciiControl(b: u8): bool {
 }
 
 pub fn isAsciiLowercase(b: u8): bool {
-    return b >= 97 && b <= 122;
+    return (ASCII_FLAGS_LUT[b as usize] & ASCII_FLAG_LOWER) != 0;
 }
 
 pub fn isAsciiUppercase(b: u8): bool {
-    return b >= 65 && b <= 90;
+    return (ASCII_FLAGS_LUT[b as usize] & ASCII_FLAG_UPPER) != 0;
 }
 
 /// Graphic ASCII characters: visible printable bytes excluding space (`0x21..=0x7E`).
 pub fn isAsciiGraph(b: u8): bool {
-    return b >= 33 && b <= 126;
+    return (ASCII_FLAGS_LUT[b as usize] & ASCII_FLAG_GRAPH) != 0;
 }
 
 /// ASCII punctuation characters: `! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~`.
 pub fn isAsciiPunctuation(b: u8): bool {
-    return (b >= 33 && b <= 47)
-        || (b >= 58 && b <= 64)
-        || (b >= 91 && b <= 96)
-        || (b >= 123 && b <= 126);
+    return (ASCII_FLAGS_LUT[b as usize] & ASCII_FLAG_PUNCT) != 0;
 }
 
 pub fn toAsciiLowerByte(b: u8): u8 {
@@ -239,18 +266,44 @@ pub fn toAsciiUppercase(s: string, out: []u8): usize {
     return toUpper(s, out);
 }
 
-/// In-place ASCII lowercase conversion on mutable byte slice.
+/// In-place ASCII lowercase conversion on mutable byte slice (16-lane SIMD).
 pub fn makeAsciiLowercase(buf: []u8) {
     let i: usize = 0;
-    while (i < buf.len) : (i += 1) {
+    const len = buf.len;
+    const v_a: AsciiVec16 = @splat(65 as u8);
+    const v_z: AsciiVec16 = @splat(90 as u8);
+    const v_bit: AsciiVec16 = @splat(32 as u8);
+    const v_false: AsciiBool16 = @splat(false);
+    while (i + 16 <= len) {
+        const v: AsciiVec16 = buf[i .. i + 16][0..16].*;
+        const in_range = @select(bool, v >= v_a, v <= v_z, v_false);
+        const res_v: AsciiVec16 = @select(u8, in_range, v | v_bit, v);
+        const arr: [16]u8 = res_v;
+        @memcpy(buf[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < len) : (i += 1) {
         buf[i] = toLowerByte(buf[i]);
     }
 }
 
-/// In-place ASCII uppercase conversion on mutable byte slice.
+/// In-place ASCII uppercase conversion on mutable byte slice (16-lane SIMD).
 pub fn makeAsciiUppercase(buf: []u8) {
     let i: usize = 0;
-    while (i < buf.len) : (i += 1) {
+    const len = buf.len;
+    const v_a: AsciiVec16 = @splat(97 as u8);
+    const v_z: AsciiVec16 = @splat(122 as u8);
+    const v_mask: AsciiVec16 = @splat(0xDF as u8);
+    const v_false: AsciiBool16 = @splat(false);
+    while (i + 16 <= len) {
+        const v: AsciiVec16 = buf[i .. i + 16][0..16].*;
+        const in_range = @select(bool, v >= v_a, v <= v_z, v_false);
+        const res_v: AsciiVec16 = @select(u8, in_range, v & v_mask, v);
+        const arr: [16]u8 = res_v;
+        @memcpy(buf[i .. i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < len) : (i += 1) {
         buf[i] = toUpperByte(buf[i]);
     }
 }

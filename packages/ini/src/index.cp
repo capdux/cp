@@ -16,8 +16,75 @@ pub struct IniEntry {
     pub val_len: usize,
 }
 
+type IniVec16 = @Vector(16, u8);
+
+fn iniBuildWsLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[' ' as usize] = 1;
+    lut['\t' as usize] = 1;
+    return lut;
+}
+
+const INI_WS_LUT: [256]u8 = iniBuildWsLut();
+
 fn isWs(c: u8) -> bool {
-    return c == ' ' as u8 || c == '\t' as u8;
+    return INI_WS_LUT[c as usize] != 0;
+}
+
+fn iniFindByte(buf: []const u8, target: u8, start: usize) -> usize {
+    let i: usize = start;
+    const len: usize = buf.len;
+    const vt: IniVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: IniVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (buf[i] == target) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn iniFindComment(buf: []const u8, start: usize) -> usize {
+    let i: usize = start;
+    const len: usize = buf.len;
+    const v_semi: IniVec16 = @splat(';' as u8);
+    const v_hash: IniVec16 = @splat('#' as u8);
+    while (i + 16 <= len) {
+        const v: IniVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_semi) || @reduce(.Or, v == v_hash)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const b = buf[i + k];
+                if (b == ';' as u8 || b == '#' as u8) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const b = buf[i];
+        if (b == ';' as u8 || b == '#' as u8) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
 }
 
 pub struct IniDoc {
@@ -35,7 +102,7 @@ pub struct IniDoc {
 
         let pos: usize = 0;
         while (pos < src.len) {
-            const line_end: usize = findByteInBytes(src, '\n' as u8, pos) ?? src.len;
+            const line_end: usize = iniFindByte(src, '\n' as u8, pos);
             let raw_end: usize = line_end;
             if (raw_end > pos && src[raw_end - 1] == '\r' as u8) {
                 raw_end -= 1;
@@ -66,7 +133,7 @@ pub struct IniDoc {
 
             // Section header: [name]
             if (first == '[' as u8) {
-                const close: usize = findByteInBytes(src[0..e], ']' as u8, s + 1) ?? e;
+                const close: usize = iniFindByte(src[0..e], ']' as u8, s + 1);
                 if (close < e) {
                     let ns: usize = s + 1;
                     let ne: usize = close;
@@ -83,7 +150,7 @@ pub struct IniDoc {
             }
 
             // Key = Value
-            const eq: usize = findByteInBytes(src[0..e], '=' as u8, s) ?? e;
+            const eq: usize = iniFindByte(src[0..e], '=' as u8, s);
             if (eq >= e) {
                 continue;
             }
@@ -111,19 +178,18 @@ pub struct IniDoc {
                     v_start += 1;
                     v_end -= 1;
                 } else {
-                    // Strip inline comment preceded by whitespace in unquoted value
+                    // Strip inline comment preceded by whitespace in unquoted value (single-pass SIMD)
                     let search_from: usize = v_start;
                     while (search_from < v_end) {
-                        const next_semi: usize = findByteInBytes(src[0..v_end], ';' as u8, search_from) ?? v_end;
-                        const next_hash: usize = findByteInBytes(src[0..next_semi], '#' as u8, search_from) ?? next_semi;
-                        if (next_hash >= v_end) {
+                        const next_cmt: usize = iniFindComment(src[0..v_end], search_from);
+                        if (next_cmt >= v_end) {
                             break;
                         }
-                        if (next_hash == v_start || isWs(src[next_hash - 1])) {
-                            v_end = next_hash;
+                        if (next_cmt == v_start || isWs(src[next_cmt - 1])) {
+                            v_end = next_cmt;
                             break;
                         }
-                        search_from = next_hash + 1;
+                        search_from = next_cmt + 1;
                     }
                     while (v_end > v_start && isWs(src[v_end - 1])) {
                         v_end -= 1;
@@ -264,7 +330,7 @@ pub struct IniWriter {
         if (value.len > 0 && (isWs(value[0]) || isWs(value[value.len - 1]))) {
             needs_quote = true;
         }
-        if (!needs_quote && (findByteInBytes(value, ';' as u8, 0) != null || findByteInBytes(value, '#' as u8, 0) != null)) {
+        if (!needs_quote && iniFindComment(value, 0) < value.len) {
             needs_quote = true;
         }
 

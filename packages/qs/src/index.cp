@@ -58,14 +58,97 @@ pub struct QsEntry {
     val_in_pool: bool = false,
 }
 
+type QsVec16 = @Vector(16, u8);
+
+fn qsBuildUnreservedLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+            || c == '-' || c == '.' || c == '_' || c == '~')
+        {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+fn qsBuildHexValLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = '0';
+    while (c <= '9') {
+        lut[c] = (c - '0') as u8;
+        c += 1;
+    }
+    c = 'A';
+    while (c <= 'F') {
+        lut[c] = (c - 'A' + 10) as u8;
+        c += 1;
+    }
+    c = 'a';
+    while (c <= 'f') {
+        lut[c] = (c - 'a' + 10) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const QS_UNRESERVED_LUT: [256]u8 = qsBuildUnreservedLut();
+const QS_HEX_VAL_LUT: [256]u8 = qsBuildHexValLut();
+const QS_HEX_UPPER: string = "0123456789ABCDEF";
+
 fn isUnreserved(c: u8): bool {
-    return isAlnum(c) || c == '-' || c == '.' || c == '_' || c == '~';
+    return QS_UNRESERVED_LUT[c as usize] != 0;
+}
+
+fn qsFindDecodeSpecial(s: []const u8, start: usize, plus_as_space: bool): usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_pct: QsVec16 = @splat('%' as u8);
+    if (plus_as_space) {
+        const v_plus: QsVec16 = @splat('+' as u8);
+        while (i + 16 <= len) {
+            const v: QsVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_pct) || @reduce(.Or, v == v_plus)) {
+                let k: usize = 0;
+                while (k < 16) {
+                    const b = s[i + k];
+                    if (b == '%' || b == '+') return i + k;
+                    k += 1;
+                }
+            }
+            i += 16;
+        }
+        while (i < len) {
+            const b = s[i];
+            if (b == '%' || b == '+') return i;
+            i += 1;
+        }
+        return len;
+    }
+    while (i + 16 <= len) {
+        const v: QsVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_pct)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == '%') return i + k;
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (s[i] == '%') return i;
+        i += 1;
+    }
+    return len;
 }
 
 fn needsDecode(s: []const u8, plus_as_space: bool): bool {
-    if (findByte(s, '%', 0) != null) return true;
-    if (plus_as_space && findByte(s, '+', 0) != null) return true;
-    return false;
+    return qsFindDecodeSpecial(s, 0, plus_as_space) < s.len;
 }
 
 fn parseDecimalIndex(s: []const u8): usize? {
@@ -94,10 +177,7 @@ pub fn percentDecode(
     let i: usize = 0;
     let pos: usize = 0;
     while (i < input.len) {
-        let next_special = findByte(input, '%', i) ?? input.len;
-        if (plus_as_space) {
-            next_special = findByte(input[0..next_special], '+', i) ?? next_special;
-        }
+        const next_special = qsFindDecodeSpecial(input, i, plus_as_space);
         if (next_special > i) {
             const run_len = next_special - i;
             if (pos + run_len > out.len) return QsError.BufferTooSmall;
@@ -109,8 +189,9 @@ pub fn percentDecode(
         const c = input[i];
         if (c == '%') {
             if (i + 2 >= input.len) return QsError.InvalidPercentEncoding;
-            const hi = hexVal(input[i + 1]) ?? return QsError.InvalidPercentEncoding;
-            const lo = hexVal(input[i + 2]) ?? return QsError.InvalidPercentEncoding;
+            const hi = QS_HEX_VAL_LUT[input[i + 1] as usize];
+            const lo = QS_HEX_VAL_LUT[input[i + 2] as usize];
+            if ((hi | lo) >= 16) return QsError.InvalidPercentEncoding;
             if (pos >= out.len) return QsError.BufferTooSmall;
             out[pos] = (hi << 4) | lo;
             pos += 1;
@@ -135,23 +216,40 @@ pub fn percentEncode(
 ): ([]const u8) ! QsError {
     let i: usize = 0;
     let pos: usize = 0;
-    while (i < input.len) : (i += 1) {
+    const len = input.len;
+    while (i < len) {
+        const run_start = i;
+        while (i + 4 <= len
+            && (QS_UNRESERVED_LUT[input[i] as usize]
+                & QS_UNRESERVED_LUT[input[i + 1] as usize]
+                & QS_UNRESERVED_LUT[input[i + 2] as usize]
+                & QS_UNRESERVED_LUT[input[i + 3] as usize]) != 0)
+        {
+            i += 4;
+        }
+        while (i < len && QS_UNRESERVED_LUT[input[i] as usize] != 0) {
+            i += 1;
+        }
+        if (i > run_start) {
+            const run_len = i - run_start;
+            if (pos + run_len > out.len) return QsError.BufferTooSmall;
+            @memcpy(out[pos .. pos + run_len], input[run_start..i]);
+            pos += run_len;
+            if (i >= len) break;
+        }
         const c = input[i];
-        if (isUnreserved(c)) {
-            if (pos >= out.len) return QsError.BufferTooSmall;
-            out[pos] = c;
-            pos += 1;
-        } else if (space_as_plus && c == ' ') {
+        if (space_as_plus && c == ' ') {
             if (pos >= out.len) return QsError.BufferTooSmall;
             out[pos] = '+';
             pos += 1;
         } else {
             if (pos + 3 > out.len) return QsError.BufferTooSmall;
             out[pos] = '%';
-            out[pos + 1] = hexCharUpper((c >> 4) & 0x0F);
-            out[pos + 2] = hexCharUpper(c & 0x0F);
+            out[pos + 1] = QS_HEX_UPPER[(c >> 4) as usize];
+            out[pos + 2] = QS_HEX_UPPER[(c & 0x0F) as usize];
             pos += 3;
         }
+        i += 1;
     }
     return out[0..pos];
 }

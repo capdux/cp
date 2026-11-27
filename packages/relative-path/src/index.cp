@@ -6,8 +6,101 @@ import { bytesEq } from "cap:bin";
 pub const REL_PATH_CAP: usize = 256;
 const REL_MAX_SEGS: usize = 32;
 
+type RpVec16 = @Vector(16, u8);
+
+fn rpBuildSepLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut['/' as usize] = 1;
+    lut['\\' as usize] = 1;
+    return lut;
+}
+
+const RP_SEP_LUT: [256]u8 = rpBuildSepLut();
+
 fn rpIsSep(b: u8): bool {
-    return b == '/' || b == '\\';
+    return RP_SEP_LUT[b as usize] != 0;
+}
+
+fn rpFindSep(s: string, start: usize): usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_fwd: RpVec16 = @splat('/' as u8);
+    const v_bwd: RpVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: RpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_fwd) || @reduce(.Or, v == v_bwd)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (RP_SEP_LUT[s[i + k] as usize] != 0) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && RP_SEP_LUT[s[i] as usize] == 0) {
+        i += 1;
+    }
+    return i;
+}
+
+fn rpFindSlash(buf: []const u8, start: usize): usize {
+    let i: usize = start;
+    const len = buf.len;
+    const v_sl: RpVec16 = @splat('/' as u8);
+    while (i + 16 <= len) {
+        const v: RpVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == '/') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && buf[i] != '/') {
+        i += 1;
+    }
+    return i;
+}
+
+fn rpRfindByte(buf: []const u8, target: u8): usize? {
+    let i: usize = buf.len;
+    const vt: RpVec16 = @splat(target);
+    while (i >= 16) {
+        const base = i - 16;
+        const v: RpVec16 = buf[base .. base + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 16;
+            while (k > 0) {
+                k -= 1;
+                if (buf[base + k] == target) {
+                    return base + k;
+                }
+            }
+        }
+        i = base;
+    }
+    while (i > 0) {
+        i -= 1;
+        if (buf[i] == target) {
+            return i;
+        }
+    }
+    return null;
+}
+
+fn rpAppendSlice(out_buf: *[256]u8, out_len: *usize, src: []const u8) {
+    if (out_len.* >= REL_PATH_CAP || src.len == 0) { return; }
+    const avail = REL_PATH_CAP - out_len.*;
+    const n = if (src.len < avail) src.len else avail;
+    @memcpy(out_buf.*[out_len.* .. out_len.* + n], src[0..n]);
+    out_len.* = out_len.* + n;
 }
 
 pub struct RelPath {
@@ -25,21 +118,21 @@ pub struct RelPath {
         while (i < s.len && rpIsSep(s[i])) {
             i = i + 1;
         }
-        let prev_sep = false;
         while (i < s.len && out.length < REL_PATH_CAP) {
-            let b = s[i];
-            if (rpIsSep(b)) {
-                if (!prev_sep) {
+            const next_sep = rpFindSep(s, i);
+            if (next_sep > i) {
+                rpAppendSlice(&out.buf, &out.length, s[i..next_sep]);
+                i = next_sep;
+            }
+            if (i < s.len && rpIsSep(s[i])) {
+                while (i < s.len && rpIsSep(s[i])) {
+                    i = i + 1;
+                }
+                if (i < s.len && out.length < REL_PATH_CAP) {
                     out.buf[out.length] = '/';
                     out.length = out.length + 1;
-                    prev_sep = true;
                 }
-            } else {
-                out.buf[out.length] = b;
-                out.length = out.length + 1;
-                prev_sep = false;
             }
-            i = i + 1;
         }
         // Trim trailing '/'
         while (out.length > 0 && out.buf[out.length - 1] == '/') {
@@ -63,10 +156,8 @@ pub struct RelPath {
     pub fn copyTo(dst: []u8): usize {
         let n = _.length;
         if (dst.len < n) { n = dst.len; }
-        let i: usize = 0;
-        while (i < n) {
-            dst[i] = _.buf[i];
-            i = i + 1;
+        if (n > 0) {
+            @memcpy(dst[0..n], _.buf[0..n]);
         }
         return n;
     }
@@ -77,12 +168,13 @@ pub struct RelPath {
         let seg_is_parent: [32]bool = undefined;
         let count: usize = 0;
 
+        const slice = _.buf[0.._.length];
         let i: usize = 0;
         while (i < _.length) {
             while (i < _.length && _.buf[i] == '/') { i = i + 1; }
             if (i >= _.length) { break; }
             let start = i;
-            while (i < _.length && _.buf[i] != '/') { i = i + 1; }
+            i = rpFindSlash(slice, start);
             let slen = i - start;
 
             if (slen == 1 && _.buf[start] == '.') {
@@ -114,12 +206,7 @@ pub struct RelPath {
                 out.buf[out.length] = '/';
                 out.length = out.length + 1;
             }
-            let k: usize = 0;
-            while (k < seg_lens[s] && out.length < REL_PATH_CAP) {
-                out.buf[out.length] = _.buf[seg_starts[s] + k];
-                out.length = out.length + 1;
-                k = k + 1;
-            }
+            rpAppendSlice(&out.buf, &out.length, _.buf[seg_starts[s] .. seg_starts[s] + seg_lens[s]]);
             s = s + 1;
         }
         return out;
@@ -130,31 +217,17 @@ pub struct RelPath {
         if (_.length == 0) { return rhs; }
         if (rhs.length == 0) {
             let copy = RelPath.empty();
-            let i: usize = 0;
-            while (i < _.length) {
-                copy.buf[i] = _.buf[i];
-                i = i + 1;
-            }
+            @memcpy(copy.buf[0.._.length], _.buf[0.._.length]);
             copy.length = _.length;
             return copy;
         }
         let out = RelPath.empty();
-        let i: usize = 0;
-        while (i < _.length && out.length < REL_PATH_CAP) {
-            out.buf[out.length] = _.buf[i];
-            out.length = out.length + 1;
-            i = i + 1;
-        }
+        rpAppendSlice(&out.buf, &out.length, _.buf[0.._.length]);
         if (out.length < REL_PATH_CAP) {
             out.buf[out.length] = '/';
             out.length = out.length + 1;
         }
-        let j: usize = 0;
-        while (j < rhs.length && out.length < REL_PATH_CAP) {
-            out.buf[out.length] = rhs.buf[j];
-            out.length = out.length + 1;
-            j = j + 1;
-        }
+        rpAppendSlice(&out.buf, &out.length, rhs.buf[0..rhs.length]);
         return out;
     }
 
@@ -165,24 +238,10 @@ pub struct RelPath {
 
     pub fn parent(): RelPath? {
         if (_.length == 0) { return null; }
-        let last_sep: usize = 0;
-        let found = false;
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] == '/') {
-                last_sep = i;
-                found = true;
-            }
-            i = i + 1;
-        }
-        if (!found) {
-            return RelPath.empty();
-        }
+        const last_sep = rpRfindByte(_.buf[0.._.length], '/') ?? return RelPath.empty();
         let out = RelPath.empty();
-        let k: usize = 0;
-        while (k < last_sep) {
-            out.buf[k] = _.buf[k];
-            k = k + 1;
+        if (last_sep > 0) {
+            @memcpy(out.buf[0..last_sep], _.buf[0..last_sep]);
         }
         out.length = last_sep;
         return out;
@@ -191,10 +250,8 @@ pub struct RelPath {
     pub fn fileNameInto(dst: []u8): usize? {
         if (_.length == 0) { return null; }
         let start: usize = 0;
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] == '/') { start = i + 1; }
-            i = i + 1;
+        if (sep := rpRfindByte(_.buf[0.._.length], '/')) {
+            start = sep + 1;
         }
         let flen = _.length - start;
         if (flen == 0) { return null; }
@@ -202,10 +259,8 @@ pub struct RelPath {
         if (flen == 1 && _.buf[start] == '.') { return null; }
         let n = flen;
         if (dst.len < n) { n = dst.len; }
-        let k: usize = 0;
-        while (k < n) {
-            dst[k] = _.buf[start + k];
-            k = k + 1;
+        if (n > 0) {
+            @memcpy(dst[0..n], _.buf[start .. start + n]);
         }
         return n;
     }
@@ -213,32 +268,20 @@ pub struct RelPath {
     pub fn extensionInto(dst: []u8): usize? {
         if (_.length == 0) { return null; }
         let start: usize = 0;
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] == '/') { start = i + 1; }
-            i = i + 1;
+        if (sep := rpRfindByte(_.buf[0.._.length], '/')) {
+            start = sep + 1;
         }
         let flen = _.length - start;
         if (flen <= 1) { return null; }
         // Find last '.' strictly after start (ignore leading dot like ".gitignore")
-        let dot_pos: usize = 0;
-        let found = false;
-        let j = start + 1;
-        while (j < _.length) {
-            if (_.buf[j] == '.') {
-                dot_pos = j;
-                found = true;
-            }
-            j = j + 1;
-        }
-        if (!found || dot_pos + 1 >= _.length) { return null; }
+        const rel_dot = rpRfindByte(_.buf[(start + 1).._.length], '.') ?? return null;
+        const dot_pos = start + 1 + rel_dot;
+        if (dot_pos + 1 >= _.length) { return null; }
         let elen = _.length - (dot_pos + 1);
         let n = elen;
         if (dst.len < n) { n = dst.len; }
-        let k: usize = 0;
-        while (k < n) {
-            dst[k] = _.buf[dot_pos + 1 + k];
-            k = k + 1;
+        if (n > 0) {
+            @memcpy(dst[0..n], _.buf[(dot_pos + 1)..(dot_pos + 1 + n)]);
         }
         return n;
     }
@@ -246,33 +289,21 @@ pub struct RelPath {
     pub fn withExtension(ext: string): RelPath {
         if (_.length == 0) { return RelPath.empty(); }
         let start: usize = 0;
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] == '/') { start = i + 1; }
-            i = i + 1;
+        if (sep := rpRfindByte(_.buf[0.._.length], '/')) {
+            start = sep + 1;
         }
         let cut = _.length;
-        let j = start + 1;
-        while (j < _.length) {
-            if (_.buf[j] == '.') { cut = j; }
-            j = j + 1;
+        if (start + 1 < _.length) {
+            if (rel_dot := rpRfindByte(_.buf[(start + 1).._.length], '.')) {
+                cut = start + 1 + rel_dot;
+            }
         }
         let out = RelPath.empty();
-        let k: usize = 0;
-        while (k < cut && out.length < REL_PATH_CAP) {
-            out.buf[out.length] = _.buf[k];
-            out.length = out.length + 1;
-            k = k + 1;
-        }
+        rpAppendSlice(&out.buf, &out.length, _.buf[0..cut]);
         if (ext.len > 0 && out.length < REL_PATH_CAP) {
             out.buf[out.length] = '.';
             out.length = out.length + 1;
-            let m: usize = 0;
-            while (m < ext.len && out.length < REL_PATH_CAP) {
-                out.buf[out.length] = ext[m];
-                out.length = out.length + 1;
-                m = m + 1;
-            }
+            rpAppendSlice(&out.buf, &out.length, ext);
         }
         return out;
     }
@@ -296,12 +327,7 @@ pub struct RelPath {
         if (a.length == b.length) { return RelPath.empty(); }
         if (a.buf[b.length] != '/') { return null; }
         let out = RelPath.empty();
-        let j = b.length + 1;
-        while (j < a.length && out.length < REL_PATH_CAP) {
-            out.buf[out.length] = a.buf[j];
-            out.length = out.length + 1;
-            j = j + 1;
-        }
+        rpAppendSlice(&out.buf, &out.length, a.buf[(b.length + 1)..a.length]);
         return out;
     }
 
@@ -310,22 +336,12 @@ pub struct RelPath {
         let combined = b.join("");
         if (_.length > 0) {
             let out = RelPath.empty();
-            let i: usize = 0;
-            while (i < b.length && out.length < REL_PATH_CAP) {
-                out.buf[out.length] = b.buf[i];
-                out.length = out.length + 1;
-                i = i + 1;
-            }
+            rpAppendSlice(&out.buf, &out.length, b.buf[0..b.length]);
             if (b.length > 0 && out.length < REL_PATH_CAP) {
                 out.buf[out.length] = '/';
                 out.length = out.length + 1;
             }
-            let j: usize = 0;
-            while (j < _.length && out.length < REL_PATH_CAP) {
-                out.buf[out.length] = _.buf[j];
-                out.length = out.length + 1;
-                j = j + 1;
-            }
+            rpAppendSlice(&out.buf, &out.length, _.buf[0.._.length]);
             combined = out;
         }
         return combined.normalize();
@@ -352,7 +368,7 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
         while (i < a.length && a.buf[i] == '/') { i = i + 1; }
         if (i >= a.length) { break; }
         let s = i;
-        while (i < a.length && a.buf[i] != '/') { i = i + 1; }
+        i = rpFindSlash(a.buf[0..a.length], s);
         a_starts[a_cnt] = s;
         a_lens[a_cnt] = i - s;
         a_cnt = a_cnt + 1;
@@ -366,7 +382,7 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
         while (j < b.length && b.buf[j] == '/') { j = j + 1; }
         if (j >= b.length) { break; }
         let s = j;
-        while (j < b.length && b.buf[j] != '/') { j = j + 1; }
+        j = rpFindSlash(b.buf[0..b.length], s);
         b_starts[b_cnt] = s;
         b_lens[b_cnt] = j - s;
         b_cnt = b_cnt + 1;
@@ -405,12 +421,7 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
             out.buf[out.length] = '/';
             out.length = out.length + 1;
         }
-        let k: usize = 0;
-        while (k < b_lens[dn] && out.length < REL_PATH_CAP) {
-            out.buf[out.length] = b.buf[b_starts[dn] + k];
-            out.length = out.length + 1;
-            k = k + 1;
-        }
+        rpAppendSlice(&out.buf, &out.length, b.buf[b_starts[dn] .. b_starts[dn] + b_lens[dn]]);
         dn = dn + 1;
     }
     return out;

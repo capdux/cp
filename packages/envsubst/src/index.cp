@@ -18,12 +18,93 @@ import { writeStr } from "cap:fmt";
 const MAX_ENV_VARS: usize = 64;
 const MAX_EXPAND_DEPTH: u8 = 8;
 
+type EnvVec16 = @Vector(16, u8);
+
+const ENV_CHAR_START: u8 = 1;
+const ENV_CHAR_CONT: u8 = 2;
+
+fn envBuildCharLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95) {
+            lut[c] = ENV_CHAR_START | ENV_CHAR_CONT;
+        } else if (c >= 48 && c <= 57) {
+            lut[c] = ENV_CHAR_CONT;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const ENV_CHAR_LUT: [256]u8 = envBuildCharLut();
+
 fn isVarStart(c: u8) -> bool {
-    return isAlpha(c) || c == '_';
+    return (ENV_CHAR_LUT[c as usize] & ENV_CHAR_START) != 0;
 }
 
 fn isVarCont(c: u8) -> bool {
-    return isVarStart(c) || isDigit(c);
+    return (ENV_CHAR_LUT[c as usize] & ENV_CHAR_CONT) != 0;
+}
+
+fn envFindSpecial(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_dollar: EnvVec16 = @splat('$' as u8);
+    const v_bslash: EnvVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: EnvVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_dollar) || @reduce(.Or, v == v_bslash)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == '$' || c == '\\') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == '$' || c == '\\') {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn envFindBraceChar(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_open: EnvVec16 = @splat('{' as u8);
+    const v_close: EnvVec16 = @splat('}' as u8);
+    const v_bslash: EnvVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: EnvVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_open) || @reduce(.Or, v == v_close) || @reduce(.Or, v == v_bslash)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == '{' || c == '}' || c == '\\') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == '{' || c == '}' || c == '\\') {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
 }
 
 /// Stack-allocated key-value environment variable map (up to 64 entries, zero heap allocation).
@@ -89,6 +170,21 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
     let i: usize = 0;
 
     while (i < tpl.len) {
+        // 16-lane SIMD fast-forward over literal text segments without '$' or '\\'
+        const next_sp = envFindSpecial(tpl, i);
+        if (next_sp > i) {
+            const lit_len = next_sp - i;
+            if (out_pos + lit_len > out.len) {
+                return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
+            }
+            @memcpy(out[out_pos .. out_pos + lit_len], tpl[i..next_sp]);
+            out_pos += lit_len;
+            i = next_sp;
+            if (i >= tpl.len) {
+                break;
+            }
+        }
+
         // Backslash-escaped dollar: \$ -> $
         if (tpl[i] == '\\' && i + 1 < tpl.len && tpl[i + 1] == '$') {
             if (out_pos >= out.len) {
@@ -114,11 +210,15 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
 
             // Braced expansion: ${...}
             if (i + 1 < tpl.len && tpl[i + 1] == '{') {
-                // Find matching closing '}' respecting nested braces
+                // Find matching closing '}' respecting nested braces (SIMD-accelerated)
                 let j = i + 2;
                 let brace_depth: usize = 0;
                 let found_close = false;
                 while (j < tpl.len) {
+                    j = envFindBraceChar(tpl, j);
+                    if (j >= tpl.len) {
+                        break;
+                    }
                     if (tpl[j] == '\\' && j + 1 < tpl.len) {
                         j += 2;
                         continue;
@@ -311,6 +411,10 @@ pub fn expandEnvStr(tpl: string, env: EnvMap, out: []u8) -> string {
 pub fn hasEnvVars(tpl: string) -> bool {
     let i: usize = 0;
     while (i < tpl.len) {
+        i = envFindSpecial(tpl, i);
+        if (i >= tpl.len) {
+            return false;
+        }
         if (tpl[i] == '\\' && i + 1 < tpl.len && tpl[i + 1] == '$') {
             i += 2;
             continue;

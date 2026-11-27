@@ -35,18 +35,21 @@ fn rotr32(x: u32, n: u32) -> u32 {
     return (x >> (n as u5)) | (x << ((32 - n) as u5));
 }
 
+const CS_SHA256_K: [64]u32 = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+type CsVec16 = @Vector(16, u8);
+
 fn sha256K(i: usize) -> u32 {
-    const table: [64]u32 = [
-        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
-    ];
-    return table[i];
+    return CS_SHA256_K[i];
 }
 
 pub struct UnsignResult {
@@ -133,14 +136,27 @@ pub struct Sha256State {
     fn update(*_, data: []const u8) {
         _.total_bytes = _.total_bytes + (data.len as u64);
         let pos: usize = 0;
-        while (pos < data.len) {
-            _.block[_.block_len] = data[pos];
-            _.block_len += 1;
-            pos += 1;
-            if (_.block_len == 64) {
-                _.compress(_.block[0..64]);
-                _.block_len = 0;
+        if (_.block_len > 0) {
+            const need: usize = (64 as usize) - _.block_len;
+            const take: usize = if (data.len < need) { data.len } else { need };
+            if (take > 0) {
+                @memcpy(_.block[_.block_len .. _.block_len + take], data[0..take]);
+                _.block_len += take;
+                pos += take;
+                if (_.block_len == 64) {
+                    _.compress(_.block[0..64]);
+                    _.block_len = 0;
+                }
             }
+        }
+        while (pos + 64 <= data.len) {
+            _.compress(data[pos .. pos + 64]);
+            pos += 64;
+        }
+        if (pos < data.len) {
+            const rem: usize = data.len - pos;
+            @memcpy(_.block[0..rem], data[pos..data.len]);
+            _.block_len = rem;
         }
     }
 
@@ -203,9 +219,21 @@ pub fn ctEqual(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {
         return false;
     }
-    let diff: u8 = 0;
+    let acc: CsVec16 = @splat(0 as u8);
     let i: usize = 0;
-    while (i < a.len) {
+    const len: usize = a.len;
+    while (i + 16 <= len) {
+        const va: CsVec16 = a[i .. i + 16][0..16].*;
+        const vb: CsVec16 = b[i .. i + 16][0..16].*;
+        acc = acc | (va ^ vb);
+        i += 16;
+    }
+    const lanes: [16]u8 = acc;
+    let diff: u8 = lanes[0] | lanes[1] | lanes[2] | lanes[3]
+        | lanes[4] | lanes[5] | lanes[6] | lanes[7]
+        | lanes[8] | lanes[9] | lanes[10] | lanes[11]
+        | lanes[12] | lanes[13] | lanes[14] | lanes[15];
+    while (i < len) {
         diff = diff | (a[i] ^ b[i]);
         i += 1;
     }
@@ -213,32 +241,28 @@ pub fn ctEqual(a: []const u8, b: []const u8) -> bool {
 }
 
 pub fn hmacSha256(key: []const u8, msg: []const u8, out: []u8) {
-    let k_pad: [64]u8 = undefined;
-    let i: usize = 0;
-    while (i < 64) {
-        k_pad[i] = 0;
-        i += 1;
-    }
+    let k_pad: [64]u8 = [0; 64];
 
     if (key.len > 64) {
         let ks: Sha256State = Sha256State.init();
         ks.update(key);
         ks.finish(k_pad[0..32]);
-    } else {
-        i = 0;
-        while (i < key.len) {
-            k_pad[i] = key[i];
-            i += 1;
-        }
+    } else if (key.len > 0) {
+        @memcpy(k_pad[0..key.len], key);
     }
 
     let ipad: [64]u8 = undefined;
     let opad: [64]u8 = undefined;
-    i = 0;
-    while (i < 64) {
-        ipad[i] = k_pad[i] ^ 0x36;
-        opad[i] = k_pad[i] ^ 0x5C;
-        i += 1;
+    const v_i: CsVec16 = @splat(0x36 as u8);
+    const v_o: CsVec16 = @splat(0x5C as u8);
+    let off: usize = 0;
+    while (off < 64) {
+        const vk: CsVec16 = k_pad[off .. off + 16][0..16].*;
+        const vi: [16]u8 = vk ^ v_i;
+        const vo: [16]u8 = vk ^ v_o;
+        @memcpy(ipad[off .. off + 16], vi[0..16]);
+        @memcpy(opad[off .. off + 16], vo[0..16]);
+        off += 16;
     }
 
     let inner_hash: [32]u8 = undefined;
@@ -253,9 +277,10 @@ pub fn hmacSha256(key: []const u8, msg: []const u8, out: []u8) {
     outer_st.finish(out);
 }
 
+const CS_B64_ALPHABET: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 fn b64UrlChar(v: u8) -> u8 {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    return alphabet[v as usize];
+    return CS_B64_ALPHABET[v as usize];
 }
 
 fn encodeBase64Url32(mac: []const u8, dst: []u8) {
@@ -290,12 +315,44 @@ fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
+fn csFindByte(buf: []const u8, target: u8, start: usize) -> usize {
+    let i: usize = start;
+    const len: usize = buf.len;
+    const vt: CsVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: CsVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && buf[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
 fn csBytesEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
+    const len: usize = a.len;
+    while (i + 16 <= len) {
+        const va: CsVec16 = a[i .. i + 16][0..16].*;
+        const vb: CsVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va != vb)) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (a[i] != b[i]) {
             return false;
         }
@@ -312,16 +369,10 @@ pub fn getCookie(header: []const u8, name: []const u8) -> CookieSlice {
 
     let pos: usize = 0;
     while (pos < header.len) {
-        let seg_end: usize = pos;
-        while (seg_end < header.len && header[seg_end] != ';' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = csFindByte(header, ';' as u8, pos);
 
         // Find '=' inside [pos, seg_end)
-        let eq_pos: usize = pos;
-        while (eq_pos < seg_end && header[eq_pos] != '=' as u8) {
-            eq_pos += 1;
-        }
+        const eq_pos: usize = csFindByte(header[0..seg_end], '=' as u8, pos);
 
         if (eq_pos < seg_end) {
             // Trim key
@@ -369,10 +420,8 @@ pub fn sign(val: []const u8, secret: []const u8, dst: []u8) -> usize {
         return 0;
     }
 
-    let i: usize = 0;
-    while (i < val.len) {
-        dst[i] = val[i];
-        i += 1;
+    if (val.len > 0) {
+        @memcpy(dst[0..val.len], val);
     }
     dst[val.len] = '.' as u8;
 
@@ -426,10 +475,8 @@ fn appendBytes(dst: []u8, pos: usize, src: []const u8) -> i64 {
     if (src.len > dst.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(dst[pos .. pos + src.len], src);
     }
     return (pos + src.len) as i64;
 }
