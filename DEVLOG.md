@@ -636,3 +636,6 @@
 - **架构思路**: 避免在 `puppeteer` 与 `playwright` 中重复实现 Chrome DevTools Protocol (CDP) 帧扫描、多 Target 会话与浏览器二进制探测，抽取公共无泄漏底座 `lib/cdp/` (`cap:cdp`)；在其上分别构建 Puppeteer 经典控制流模型与 Playwright `BrowserContext`/`Locator`/`ariaSnapshot` 语义模型。
 - **编译器实战反馈闭环**: 直接使用 `cap from -ts` / `cap from -npm` 对 `_ref/puppeteer/packages/puppeteer-core`（185 文件）与 `_ref/playwright/packages/playwright-core`（323 文件）压测，暴露并集中修复了 `@cap/` 遗留路径、重复注册表路径、`cap.json` 入口格式以及 `constructor`→`E0130` 级联等真实工程问题；复测 `puppeteer-core/src` 解析通过率由 98.9% 升至 100.0%，`E0130` 归零。
 - **全量校验**: `cap test`（`cap:cdp` 11/11、Puppeteer 10/10、Playwright 7/7）、`test_cap_ai_toolchain.py`（51/51）、`check_ecosystem_health.py`（16/16）全部 100% 通过。
+
+## 2026-11-28: 同步 `cp_agent_ref.md` 至面向人类工程师的权威技术白皮书 `cp_ref.md`
+- 依据 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 中两处 `[SYNC_PENDING: 2026-11-25]` 标记与最新工具链演进，采用按章节局部定位方式精修 1.1 万行的 `cp_ref.md`，对齐模块裸包名、透明 `@import`、`cap from/fix/brief` 生态命令，并新增第十八章展开 Top 29 常见语法反模式对比表与综合正例代码。

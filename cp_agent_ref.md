@@ -7,7 +7,7 @@
 
 ---
 
-## 一、 模块系统、工程清单与工具链 (`import` / `cap` / `cpc`) [SYNC_PENDING: 2026-11-25]
+## 一、 模块系统、工程清单与工具链 (`import` / `cap` / `cpc`)
 
 ### 1. 唯一合法导入语法 (`import`)
 ```typescript
@@ -1085,7 +1085,7 @@ switch (msg) {
 
 ---
 
-## 十三、 智能体 Top 29 绝对禁手清单 (Top 29 Antipatterns) [SYNC_PENDING: 2026-11-25]
+## 十三、 智能体 Top 29 绝对禁手清单 (Top 29 Antipatterns)
 
 | 禁手序号 | 错误幻觉写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 根因与规则说明 |
 | :---: | :--- | :--- | :--- |

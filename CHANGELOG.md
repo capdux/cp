@@ -1480,3 +1480,8 @@
 - 新增一等公民 `packages/puppeteer/`（10 模块 + `src/index.d.cp` + 3 文档 + `cap/test/testCapPuppeteer.cp` 10/10 PASS）与 `packages/playwright/`（9 模块 + `src/index.d.cp` + 3 文档 + `cap/test/testCapPlaywright.cp` 7/7 PASS），并在 `packages/registry.json` 注册 `chrome-remote-interface`→`cap:cdp`、`puppeteer`（别名 `puppeteer-core`）及 `playwright`（别名 `playwright-core`, `playwright-chromium`）。
 - 升级 `cpc/src/{main.rs,migrate/registry.rs,migrate/ts.rs}` 并发布 Release：默认落盘裸包名 `packages/<name>`、同步 `packages/registry.json`、过滤 `cap:*` 依赖、自动生成 `src/index.d.cp` 与 3 份 README，修复 `constructor`→`init`、`#privateField`、`Symbol()` 与多行无括号控制流。
 - 扩充 `scripts/test_cap_ai_toolchain.py`（51/51 PASS）并通过 `scripts/check_ecosystem_health.py`（906 包 / 1,265 注册条目 16/16 PASS）。
+
+## [2026-11-28] - 按 `cp_agent_ref.md` 同步更新面向人类工程师的 `cp_ref.md` 技术白皮书
+- 同步更新 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 第二章与第十三章：对齐裸包名规范、`cap.json` 2.0 清单、透明 Zig `@import` 模块引入、`cap from <-ts|-rs|-npm|-crate>`、`cap fix`、`cap brief`、`cpc check --json/--brief`、`packages/registry.json` 去重体系并补充详细示例代码。
+- 新增 `## 十八、常见反模式与语法禁手对照清单（Top 29 Antipatterns）`，将全部 29 条语法禁手展开为“错误写法 vs 正确写法 + 编译器诊断与底层原理解析 + 4 组完整正例代码”。
+- 清除 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 第一章与第十三章的 `[SYNC_PENDING: 2026-11-25]` 标记。

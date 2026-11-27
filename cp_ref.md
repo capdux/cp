@@ -357,12 +357,12 @@ CP对他们来说 = **保留Zig全部能力，叠加Rust安全检查 + TS风格�
 | `cap build --exe`               | -            | （默认行为）输出独立的系统原生可执行程序。                                                                                                                                                                     | **已全面实装** |
 | `cap build --obj`               | -            | 输出底层的 `.o` 机器码对象文件，供外部链接。                                                                                                                                                                   | **已全面实装** |
 | `cap build --lib`               | -            | 输出系统级静态库 `.a`，供 C/C++ 或宿主语言无缝桥接。                                                                                                                                                           | **已全面实装** |
-| `cap build -b` (或 `--beam`)    | ReleaseFast  | **Nest 智能体容器动态库**：编译为导出标准 C-ABI 的纯状态机动态库（`.so`/`.dll`），供 Nest 容器原生动态热加载。                                                                                                 | **已全面实装** |
+| `cap build -n` (或 `--nest` / `-b`) | ReleaseFast | **Nest 智能体容器动态库**：编译为导出标准 C-ABI 的纯状态机动态库（`.so`/`.dll`），供 Nest 容器原生动态热加载（`-b`/`--beam` 为兼容别名）。 | **已全面实装** |
 | `cap clean`                     | -            | **构建缓存清理**：一键安全清理 `.cap/zig/`、`.cap/zig-cache/`、`.cap/obj/` 与输出目录 `bin/`。                                                                                                                 | **已全面实装** |
 | `cap add <pkg>`                 | -            | **项目级依赖安装**：极速拉取并软链接到 `cap_modules/`，自动将依赖与 Semver 写入 `cap.json`。                                                                                                                   | **已全面实装** |
 | `cap add -g <pkg>`              | -            | **全局依赖注入**：将公共高频依赖安装到 `~/.cap/global/cap_modules/`，作为当前系统所有项目的公共兜底池。                                                                                                        | **已全面实装** |
-| `cap test [dir]`                | Debug        | **单元与集成测试**：递归扫描并执行测试用例，结果输出至 `bin/test/`，与业务产物物理隔离。                                                                                                                       | **已全面实装** |
-| `cap init [template]`           | -            | **开箱即用工程脚手架**：快速初始化模板工程（支持 `app` 独立应用、`agent` 智能体服务、`lib` 库模块）。                                                                                                          | **已全面实装** |
+| `cap test [--filter\|-k <pat>] [dir]` | Debug  | **单元与集成测试**：递归扫描并执行测试用例（支持 `--filter`/`-k` 按名过滤与 `cap demangle` 堆栈反解提示），结果输出至 `bin/test/`。                                                                            | **已全面实装** |
+| `cap init [app\|agent\|lib\|web]` | -          | **开箱即用工程脚手架**：快速初始化模板工程（支持 `app`、`agent`、`lib` 及百万 QPS `web` 生产模板）。                                                                                                          | **已全面实装** |
 | `cap remove <pkg>`              | -            | **依赖卸载**：清理指定依赖项及其孤立软链接，同步更新 `cap.json` 清单。                                                                                                                                         | **已全面实装** |
 | `cap update [pkg]`              | -            | **语义化版本升级**：按照 `^`/`~` 规则安全升级依赖包至符合 Semver 规范的最新版本。                                                                                                                              | **已全面实装** |
 | `cap bench <file.cp>`           | ReleaseFast  | **微秒级基准测试**：纳秒级高精度计时度量状态机、闭包与数据吞吐耗时。                                                                                                                                           | **已全面实装** |
@@ -373,7 +373,11 @@ CP对他们来说 = **保留Zig全部能力，叠加Rust安全检查 + TS风格�
 | `cap cache <dir\|ls\|clean>`    | -            | **全局缓存治理**：查看或清理 `~/.cap/cache/` 下的历史归档与预编译缓存。                                                                                                                                        | **已全面实装** |
 | `cap pm ls` / `cap why <pkg>`   | -            | **依赖审计与溯源**：列出 `cap_modules/` 已安装包及 `bin` 产物（支持 `--filter`），追踪某依赖包的引入路径。                                                                                                     | **已全面实装** |
 | `cap fmt [--check] [path]`      | -            | **代码格式化**：原生百毫秒级幂等格式化全部 `.cp` 源代码，支持 `--check`（CI 门禁）与 `--stdout`。                                                                                                              | **已全面实装** |
-| `cap lint [path]`               | -            | **静态分析与安全审计**：基于 `cpc brief` 执行语法、借用冲突与 4 项纯净度门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`）审计。                                                                                     | **已全面实装** |
+| `cap lint [--deadcode] [path]`  | -            | **静态分析与安全审计**：运行语法、借用与 4 项纯净度门禁（`zig{}`/`var`/`tuple.@N`/`anyopaque`）审计；`--dead`/`--deadcode` 扫描未引用导出符号与孤立文件。                                                       | **已全面实装** |
+| `cap from <-ts\|-rs\|-npm\|-crate>` | -         | **跨生态一键迁移**：将 TS/Rust 工程或 npm/crates.io 包迁移为 CP（三层依赖解析 + 自动串联 `cap fix` 重映射；`--verify` 串联 `cpc check --fix` 自愈闭环）。                                                      | **已全面实装** |
+| `cap fix [--dry-run] <path...>` | -            | **全局去重与导入重映射**：基于 `packages/registry.json` 将 `.cp` 导入与 `cap.json` 依赖自动重映射为官方 `cap:*` 标准库或规范裸包名 `packages/<name>`。                                                          | **已全面实装** |
+| `cap brief <pkg\|cap:mod>`      | -            | **包与标准库速查**：秒级输出 `cap:<mod>` 标准库手册（`doc/lib/<mod>.md`）或第三方包 `README_AGENT.md` / `index.d.cp` 精简契约。                                                                               | **已全面实装** |
+| `cap demangle <symbol...>`      | -            | **崩溃堆栈反解**：将 Zig/CP 底层混淆符号还原为可读的 `.cp` 模块、类与方法名。                                                                                                                                   | **已全面实装** |
 
 ---
 
@@ -412,7 +416,7 @@ flowchart TD
   "main": "src/main.cp",
   "opt": "fast",
   "registry": "https://registry.capdux.dev",
-  "workspaces": ["packages/*", "packages/@cap/*"],
+  "workspaces": ["packages/*"],
   "scripts": {
     "start": "cap src/main.cp",
     "build:prod": "cap build -r -f",
@@ -420,12 +424,12 @@ flowchart TD
     "bench": "cap bench"
   },
   "dep": {
-    "@cap/picohttp": "workspace:*",
-    "@cap/yyjson": "^0.10.0",
-    "@cap/usearch": "^2.26.6"
+    "picohttp": "workspace:*",
+    "yyjson": "^0.10.0",
+    "usearch": "^2.26.6"
   },
   "dev": {
-    "@cap/hdrhistogram": "workspace:*"
+    "hdrhistogram": "workspace:*"
   },
   "bin": {
     "picohttp": {
@@ -464,7 +468,8 @@ flowchart TD
 >    - **`dev`**（开发依赖，兼容 `dev_dependencies`/`devDependencies`）：`cap add <pkg> -d` 写入；`cap install --production`（或 `--prod`）自动跳过；
 >    - **`bin`**（静态库依赖，兼容 `bin_dependencies`）：支持多库独立声明、C（`zig cc`）与 C++（`zig c++` + 自动注入 `-lc++`）跨平台编译，默认注入 `-g0 -ffunction-sections -fdata-sections` 产出瘦身 `.a`（体积降 70%~84%）。三态解析：随包 `prebuilt/<os>-<arch>/lib<k>.a`（0ms 命中）→ `~/.cap/cache/native/` → Zig 自动编译缓存；
 >    - **`sys`**（动态/系统库依赖，兼容 `sys_dependencies`）：编译期存在性校验（缺失且非 `optional` 立即报错）+ 自动注入 `-L`/`-l`/`-Wl,-rpath`，运行期 `cap run` 自动注入 `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`；
-> 2. **Workspace 多包协同（对标 pnpm / Bun）**：支持 `workspaces` glob（如 `packages/@cap/*`）、`workspace:*` 零拷贝软链协议与 `--filter <pkg>` 局部重编/审计；
+> 2. **Workspace 多包协同（对标 pnpm / Bun）**：支持 `workspaces` glob（如 `packages/*`，并兼容历史迁移目录 `packages/@cap/*`）、`workspace:*` 零拷贝软链协议与 `--filter <pkg>` 局部重编/审计；
+>    - **包名与去重体系（`packages/registry.json`）**：第三方与生态吸收包统一采用规范裸包名（存放在 `packages/<name>`，导入写作 `import ... from "pkg"`）；早期的 `@cap/<pkg>` 作用域写法已作为历史格式迁移（`native @cap/*` 底层原生包除外），可通过 `cap fix` 自动重映射；全局 `packages/registry.json` 维护了 `npm` / `crates.io` 源包名、别名（`aliases`）到 `cap:*` 标准库或 `packages/<name>` 的去重映射，防止重复造轮子；
 > 3. **AST 级按需链接树摇（On-Demand Link Tree-Shaking）**：`cpc` 仅对实际被代码引用的外部包在生成物顶部输出 `// @cap-used-pkg: <pkg>`，`cap build`/`run`/`test` 仅链接实际使用包的 `bin`/`sys` 产物，未引用的包 **0 字节体积影响**；
 > 4. **`.tar.zst` + `.tgz` 魔数双格式兼容与 `cap publish`**：
 >    - `cap` 静态内嵌 Zstd 与 libdeflate（零外部 `tar`/`zstd`/`gzip` CLI 依赖）；
@@ -482,7 +487,7 @@ cap publish --dry-run
 CAP_TOKEN=npm_xxxx cap publish --access=public --tag=latest
 
 # 示例 3：直接从 npmjs.org 安装 CP 包（自动魔数识别 .tgz + sha512 验签 + 剥离 package/）
-CAP_REGISTRY=https://registry.npmjs.org cap add @cap/picohttp@1.0.0
+CAP_REGISTRY=https://registry.npmjs.org cap add picohttp@1.0.0
 ```
 
 ### 2.5 cap.lock (Lockfile) 机制
@@ -494,26 +499,21 @@ CAP_REGISTRY=https://registry.npmjs.org cap add @cap/picohttp@1.0.0
 - **一致性校验**：`cap build` 在执行编译前，会严格比对 `cap.json` 与 `cap.lock` 中的所有依赖（包含 `dependencies` 与 `dev_dependencies`）。若版本不匹配或依赖缺失，强制报错，需通过 `cap install` 重新同步。
 - **冲突处理**：版本冲突时，通过 `cap update` 人工决策或强制锁定。
 
-#### 2. 关键字段说明：
+#### 2. 关键字段说明（`cap.json` 2.0 极简清单）：
 
-- **`main`**：工程默认入口源文件；
-- **`mode`**：并发引擎模式，支持 `"parallel"`（开启底层 Worker 多物理线程池）或 `"single"`（严格单线程确定性隔离运行）；
-- **`dependencies`**：生产环境依赖，严格遵循 Semver 语义化版本规则（`^` 次版本兼容、`~` 修订版本兼容、精确固定版本）；
-- **`dev_dependencies`**：开发与测试依赖，使用 `cap add -d <pkg>` 自动注入；
-- **`workspaces`**：Monorepo 多包工作区支持，各子包之间自动创建内部软链接引用；
-- **`build`**：构建控制块，定义输出目录、优化等级与目标平台矩阵：
-  - **`opt`**：编译优化模式，直接对接底层 Zig 4 级优化：
-    - `"debug"`：**Debug 模式**，编译速度最快（毫秒级），保留全部调试符号与运行期安全检查。日常 `cap <file>` 与 `cap test` 默认模式；
-    - `"safe"`：**ReleaseSafe 模式**（`cap build` 默认模式），平衡编译速度与执行性能，保留溢出、数组越界安全检查与崩溃调用栈；
-    - `"fast"`：**ReleaseFast 模式**（`cap build -f`），追求极限单核/多核算力，消除一切额外运行时断言，榨干硬件性能；
-    - `"small"`：**ReleaseSmall 模式**（`cap build -s`），极限剔除调试表并压制机器码体积，专用于边缘计算、嵌入式 MCU 与轻量微容器；
-  - **`out_dir`**：产物输出目录，默认 `"bin"`（亦可通过 CLI `-o <dir>` 临时覆盖）；
-  - **`target`**：单目标交叉编译平台（例如 `"x86_64-linux"`）；
-  - **`targets`**：多平台矩阵发布列表（例如 `["x86_64-linux", "aarch64-macos", "x86_64-windows"]`），执行 `cap build -r` 时自动读取；
-  - **`c_flags`**：透传给底层 C 编译器的专属参数（如 `["-O3", "-Wall"]`）；
-  - **`link_libs`**：外部系统链接库数组（如 `["c", "m", "pthread"]`，自动转化为 `-lc -lm -lpthread` 链接）。
-- **`nest`**：Nest 智能体容器专有参数，定义智能体默认信箱容量上限与抢占式 Reductions 时间片阈值。
-- **`runtime`**：mode 为parallel时启动Worker线程与并发协程。
+- **`name` / `ver` / `main` / `license`**：工程名称、语义化版本（兼容读取 `version`）、默认入口源文件与开源协议；
+- **`opt`**：顶层编译优化模式（支持 `"debug"` / `"safe"` / `"fast"` / `"small"`，兼容旧版 `"build": { "opt": ... }`），直接对接底层 Zig 4 级优化：
+  - `"debug"`：**Debug 模式**，编译速度最快（毫秒级），保留全部调试符号与运行期安全检查，日常 `cap <file>` 与 `cap test` 默认模式；
+  - `"safe"`：**ReleaseSafe 模式**（`cap build` 默认模式），平衡编译速度与执行性能，保留溢出、数组越界安全检查与崩溃调用栈；
+  - `"fast"`：**ReleaseFast 模式**（`cap build -f`），追求极限单核/多核算力，消除一切额外运行时断言，榨干硬件性能；
+  - `"small"`：**ReleaseSmall 模式**（`cap build -s`），极限剔除调试表并压制机器码体积，专用于边缘计算、嵌入式 MCU 与轻量微容器；
+- **`dep`**：运行时依赖（兼容读取 `dependencies` / `deps`），严格遵循 Semver 语义化版本规则（`^`、`~`、`workspace:*`、`file:`）；`cap add <pkg>` 默认写入；
+- **`dev`**：开发与测试依赖（兼容读取 `dev_dependencies` / `devDependencies`），使用 `cap add <pkg> -d` 写入；`cap install --production`（或 `--prod`）自动跳过；
+- **`bin`**：原生 C/C++ 静态库依赖（兼容读取 `bin_dependencies`，废除旧版 `native`），支持随包 `prebuilt/`、全局缓存与 Zig 自动编译三态解析；
+- **`sys`**：动态/系统库依赖（兼容读取 `sys_dependencies`），提供编译期存在性校验、`-L`/`-l`/`-Wl,-rpath` 注入与运行期动态库路径保障；
+- **`workspaces`**：Monorepo 多包工作区支持（如 `["packages/*"]`，兼容 `ws`），各子包之间通过 `workspace:*` 自动创建内部软链接引用；
+- **`mode` / `nest` / `runtime`**：并发引擎模式（`"parallel"` / `"single"`）、Nest 智能体容器信箱容量与抢占式 Reductions 阈值、Worker 线程配置；
+- **`build`（向后兼容扩展块）**：仍兼容读取旧版 `out_dir`（默认 `"bin"`）、`target`、`targets`（`cap build -r` 多平台矩阵）、`c_flags` 与 `link_libs`。
 
 #### 3. 构建参数覆盖优先级裁定 (Precedence Hierarchy)
 
@@ -593,6 +593,30 @@ CP 语言原生支持标准的重导出语法，广泛应用于复合标准库�
   - **单文件标准模块**（如 `cap:fs`、`cap:mem`）：直接命中 `lib/fs.cp`、`lib/mem.cp`；
   - **复合目录标准模块**（如 `lib/io/`、`lib/sync/`、`lib/http/`、`lib/router/` 等）：自动识别目录并优先检索 `lib/<module>/index.cp`，零冗余直通加载。
 
+#### 1.3 透明引入 Zig 模块与 `@import` 语法
+
+在渐进式迁移底层 Zig 工程（如 Bun 运行时组件）或直接复用原生 Zig 生态时，CP 提供零胶水层的透明互操作机制：
+
+```typescript
+// 1. ES6 模块语法直接引入未迁移的 .zig 源码模块
+import DirInfo from "../resolver/dir_info.zig";
+import Fs from "../resolver/fs.zig";
+
+// 2. Zig 标准库 `std` 已由编译器默认内置，无需手写 const std = @import("std"); 即可直接调用 std.*！
+// 其他外部 Zig 模块支持 @import 直接导入：
+const bun = @import("bun");
+
+// 3. 前柔后刚两级类型模型：
+//    - 前端 (cpc)：为外部 Zig 符号赋予透明穿透 Type::Any，不因未展开 Zig comptime 宏而中断检查
+//    - 后端 (Zig AOT)：调用 Zig 编译器进行全量强类型检查与单态化
+// 标准工程姿态：深层别名透传与边界类型收束
+pub type LocalFD = bun.FD;
+pub type LocalDirInfo = DirInfo;
+let max_conn: u32 = bun.getMaxConnections() as u32;
+```
+
+- **防腐层命名规范**：以 `_` 开头的文件（如 `_boringssl.zig`、`_usockets.cp`）专用于私有底层 FFI/Zig 绑定；普通 `.cp` 文件则包装为纯 Safe 的面向对象 API 对外导出。
+
 #### 2. 禁止行为
 
 1. 没有 `use`，禁止写 `use xxx;`。
@@ -628,11 +652,12 @@ CP 语言原生支持标准的重导出语法，广泛应用于复合标准库�
 | **跨平台矩阵构建**        | Zig `b.standardTargetOptions` | `cap build -r` 单机一键并发交叉编译 macOS (ARM/Intel)、Linux (x64/ARM)、Windows 全矩阵二进制。   | **已全面实装** |
 | **智能体容器桥接**        | NIF / Node-API                | `cap build -b` 打包为纯 CPS 状态机动态库（`.so`/`.dll`），无死循环主线程，供 Nest 容器原生接管。 | **已全面实装** |
 | **单元与集成测试**        | `bun test` / `cargo test`     | `cap test` 自动递归扫描测试文件，自动编译执行，测试产物隔离至 `bin/test/`。                      | **已全面实装** |
-| **开箱脚手架初始化**      | `bun create` / `cargo init`   | `cap init` 提供 `agent`、`app`、`lib`、`wasm` 官方标准项目模板脚手架。                           | **正在演进**   |
-| **高精度基准测评**        | `bun:bench` / `cargo bench`   | `cap bench` 原生集成纳秒级计时器与 CPS 状态机调度吞吐压测分析器。                                | **正在演进**   |
-| **语义依赖增删与更新**    | `bun add/remove/update`       | `cap remove` 与 `cap update` 针对 `cap.json` 的安全 Semver 版本自动修补与孤立软链接清理。        | **正在演进**   |
-| **代码格式化与 Linter**   | `bun fmt` / `cargo fmt`       | `cap fmt` 与 `cap lint` 针对 CP 语法规范与借用安全生命周期约束进行静态格式化与合规审计。         | **规划实现**   |
-| **去中心化生态 Registry** | `npm publish` / `crates.io`   | `cap publish` 与官方包注册中心联动，支持语义化包分发与数字签名验证。                             | **规划实现**   |
+| **开箱脚手架初始化**      | `bun create` / `cargo init`   | `cap init` 提供 `app`、`agent`、`lib`、`web`（百万 QPS `cap:web` 模板）官方标准项目模板。      | **已全面实装** |
+| **高精度基准测评**        | `bun:bench` / `cargo bench`   | `cap bench` 原生集成纳秒级计时器与 CPS 状态机调度吞吐压测分析器。                                | **已全面实装** |
+| **语义依赖增删与更新**    | `bun add/remove/update`       | `cap remove` 与 `cap update` 针对 `cap.json` 的安全 Semver 版本自动修补与孤立软链接清理。        | **已全面实装** |
+| **代码格式化与 Linter**   | `bun fmt` / `cargo fmt`       | `cap fmt` 与 `cap lint`（含 `--deadcode`）执行幂等格式化、借用安全与 4 项纯净度门禁审计。      | **已全面实装** |
+| **生态打包与直发**        | `npm publish` / `crates.io`   | `cap pack`（`.tar.zst` / `--npm`）与 `cap publish` 直发官方 npm / Verdaccio 并支持签名校验。   | **已全面实装** |
+| **跨生态迁移与去重修复**  | 无直接对标（超越传统工具链）  | `cap from`（`-ts`/`-rs`/`-npm`/`-crate`）+ `cap fix`（`packages/registry.json` 全局去重重映射）+ `cap brief` 速查。 | **已全面实装** |
 | **单文件静态全打包**      | `bun build --compile`         | `cap bundle` 将源码、静态资源与 Nest 状态机完全打包进单一微型 Native 可执行程序。                | **规划实现**   |
 
 ---
@@ -7676,20 +7701,34 @@ timeline
 
 ### 13.1 `cpc` 独立编译器前端
 
-`cpc`（CP Compiler）作为原生静态编译器前端，默认执行编译动作，无需多余的子命令：
+`cpc`（CP Compiler）作为原生静态编译器前端，默认执行编译动作，同时内置面向人类与 AI 智能体的检查、聚合诊断、自动修复与 LSP/MCP 服务能力：
 
 ```bash
-# 1. 默认编译为 Zig 源码（直接指定输出）
+# 1. 默认编译为 Zig 源码（--lib 省略 main 并自动导出 pub；--nest/-n 开启 @is_nest 模式）
 cpc src/url.cp -o src/url.zig
-
-# 2. 编译为 Zig 独立模块/库（省略 main 入口，所有 export 自动赋予 pub）
 cpc src/url.cp -o src/url.zig --lib
+cpc src/agent.cp -o src/agent.zig --nest
 
-# 3. 极速语法与借用安全检查（5ms 静态拦截，不生成中间文件）
+# 2. 极速语法与借用安全检查（--json 输出含 errors/root_errors 与 edits 字节替换范围）
 cpc check src/url.cp
+cpc check --json src/url.cp
 
-# 4. 生成 .d.cp 类型声明契约文件
+# 3. 省 Token 聚合去重摘要模式（按错误码 code 归并，每类仅输出一次 help/suggestion 与 lines 数组）
+cpc check --brief --max 8 src/url.cp
+
+# 4. 多文件联合校验器（自动探测 Zig + 按 code 去重 + --lib 代码生成 + zig ast-check + 4 项纯净度门禁）
+cpc brief -n 8 src/router.cp src/server.cp
+# Zig 探测优先级：--zig > $ZIG_BIN > ./vendor/zig/zig > ../vendor/zig/zig > /data/dev/cp/vendor/zig/zig > zig
+
+# 5. 机械性语法错误一键自动修复（就地修复 E0101..E0104, E0115, E0116, E0118..E0123, E0126, E0131, E0132, E0204 等）
+cpc check --fix src/url.cp
+cpc fix src/url.cp
+
+# 6. 类型契约生成、堆栈反解、LSP 与 MCP 工具链服务
 cpc emit-types src/url.cp -o src/url.d.cp
+cpc demangle _ZN3app4mainE
+cpc lsp
+cpc mcp   # 启动标准 MCP stdio 服务（暴露 cpc_check / cpc_brief / cpc_emit_types / cpc_search_stdlib）
 ```
 
 ### 13.2 原生逃逸舱类型映射与参数引用优化
@@ -7730,6 +7769,34 @@ cpc emit-types src/url.cp -o src/url.d.cp
    针对 `a ?? b`（空值合并）与 `expr ? return null`（短路解包），在 `--lib` 模式下直接发射为标准的 Zig 原生 `(a orelse b)` 与 `((expr) orelse { return null; })`，无需任何辅助函数。
 4. **辅助函数精细按需摇树**：
    将切片索引查找辅助（`indexOf`、`lastIndexOf`、`includes`）与切片迭代解耦，仅在实际存在该方法调用时才按需发射，保证生成的 `.zig` 源码紧凑、纯粹，膨胀率严格受控在 10% 以内，部分模块代码量甚至少于原始手写 Zig。
+
+### 13.5 `cap` 迁移、去重修复与速查工具链（`cap from` / `cap fix` / `cap brief`）
+
+为支撑 TypeScript / Rust / npm / crates.io 存量生态的规模化引入与统一治理，`cap` 在底层集成了三大工程化子命令：
+
+1. **跨生态一键迁移（`cap from`）**：
+   - 支持直接迁移本地目录（`-ts` / `-rs`）或远程包名（`-npm` / `-crate`），按三层依赖解析（`cap:*` 内置标准库 → 规范裸包名 `packages/<name>` → 递归生成可发布子包）完成 AST 级转换；
+   - TS 中的 `Promise.all` / `Promise.race` 自动映射为 CP 原生 `joinAll` / `race`；
+   - 迁移完成后**自动串联 `cap fix`** 对输出目录执行一次全量导入与依赖重映射；传入 `--verify` 时还会自动串联 `cpc check --fix` 完成自愈闭环。
+   ```bash
+   cap from -ts ./legacy-ts-app -o ./cp-app --verify
+   cap from -rs ./rust-crate -o ./cp-crate --no-deps --max-depth 2
+   cap from -npm ms@2.1.3 -o ./packages --verify
+   cap from -crate semver@1.0.0 -o ./packages --verify
+   ```
+2. **全局去重与导入重映射（`cap fix` & `packages/registry.json`）**：
+   - 仓库根目录下的 `packages/registry.json` 维护了从 `npm` / `crates.io` 源包名及常见别名（`aliases`）到 CP 内置 `cap:*` 标准库或规范裸包名 `packages/<name>` 的全局去重映射表，同时兼容清理早期的 `@cap/<pkg>` 作用域导入；
+   - `cap fix` 扫描指定 `.cp` 文件、`cap.json` 或整个目录，将过时或重复的导入路径及依赖声明自动重映射为唯一规范目标（支持 `--dry-run` 预览差异，亦可用 `cap check` 仅校验不改写）。
+   ```bash
+   cap fix --dry-run ./my-app
+   cap fix ./my-app/src/main.cp ./my-app/cap.json
+   ```
+3. **标准库与包契约速查（`cap brief`）**：
+   - 无需翻阅长篇源码，直接输出 `cap:<mod>` 标准库独立手册（`doc/lib/<mod>.md`）或第三方包的类型契约（`README_AGENT.md` / `src/index.d.cp`）：
+   ```bash
+   cap brief cap:http
+   cap brief ms
+   ```
 
 ---
 
@@ -10839,6 +10906,125 @@ flowchart TD
 - **宿主平台与内核探测 (`cap:platform`，新吸收)**：[`docs/platform/platform.md`](file:///data/dev/cp/docs/platform/platform.md)（`KernelVersion`、Linux `uname` 真实内核特性探测与 `/proc/self/exe`）
 - **根按需惰性挂载容器 (`import cap from "cap"`)**：[`docs/core/cap_hub.md`](file:///data/dev/cp/docs/core/cap_hub.md)（零重依赖微核心 `lib/_cap/core.cp` + `cpc` 编译期不动点扫描按需挂载 59 个标准库，未用库 0 负载）
 - **工业级包管理引擎 (`cap:pkg`，直迁 Bun `install/`)**：[`docs/pkg/pkg.md`](file:///data/dev/cp/docs/pkg/pkg.md)（10 协议依赖解析、Packument、JSON/二进制 `CPLK0001` Lockfile、安全 Tarball+SRI 解包、Hoisted/Isolated 链接器、`.bin`、补丁安装与 `PackageManager`）
+
+---
+
+## 十八、常见反模式与语法禁手对照清单（Top 29 Antipatterns）
+
+> **章节定位**：本节将面向 AI 智能体的 29 条核心语法禁手，展开为面向人类工程师的**“错误写法 vs 正确写法 + 编译器诊断/底层原理”**工程对照指南，帮助从 TypeScript、Rust、Zig 或 C/C++ 迁移而来的开发者快速消除跨语言语法幻觉。
+
+### 18.1 变量绑定、参数修饰与借用所有权（#1 – #7, #19, #29）
+
+| 序号 | 常见错误写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 编译器诊断与底层原理解析 |
+| :---: | :--- | :--- | :--- |
+| **#1** | `var x: i32 = 0;` | `let x: i32 = 0;` | CP 彻底废除 `var` 关键字（`E0101`）；可变绑定统一使用 `let`，不可变常量使用 `const`。 |
+| **#2** | `let mut x = 1;` | `let x = 1;` | CP 废除 Rust 风格 `let mut`（`E0102`）；`let` 本身即代表可变绑定，无需冗余 `mut`。 |
+| **#3** | `fn foo(mut x: i32)` / `fn foo(let x: i32)` / `fn foo(*x: i32)` | `fn foo(x: *i32)` | 具名可变参数统一将 `*` 置于类型位 `x: *T`（安全可变借用，非裸指针），严禁在参数名侧写 `mut`/`let`/`*x`。 |
+| **#4** | `fn save(v: move User)` | `fn save(move v: User)` / `fn save(own v: *User)` | 所有权转移修饰符 `move` / `own` 修饰的是形参绑定本身的传递语义，必须置于参数名之前，严禁置于 `:` 之后。 |
+| **#5** | `_ = close(fd);` 或 `let _ = close(fd);` | `* = close(fd);` | `_` 在 CP 中是方法实例接收者保留字（类似隐式 `self`）；显式抛弃表达式返回值必须使用 `* = expr;`。 |
+| **#6** | `if (opt) \|v\|` / `if (let v = opt)` / `for (arr) \|v\|` | `if (v := opt)` / `while (v := opt)` / `for (v of arr)` | 严禁 Zig 竖线捕获 `\|v\|`（`E0118`）与 Rust `if (let v = ...)`（`E0126`）；条件解包统一使用 Walrus `:=`，遍历使用 `for (v of arr)`。 |
+| **#7** | `for (x of vec) { vec.push(1); }` | 先收集索引或待变更项，循环结束后再修改 | **Loop-Borrow Lock**：遍历受检容器期间容器处于只读/迭代借用锁死状态，严禁在循环体内调用 `push`/`pop`/`set`/`delete`/`clear` 修改容器结构。 |
+| **#19** | `const [first, _] = pair;` | `const [first, *] = pair;` | 模式匹配与解构中的通配忽略符是 `*`（`E0120`），`_` 保留给方法实例接收者。 |
+| **#29** | `spawn { local_ptr.* = 1; }` 或 `spawn fn(&buf)` | `spawn { move buf; ... }` 或使用 `Shared<T>` | 触发 **`E0305`**：编译器内置跨协程逃逸分析，物理拦截栈局部借用（`&T`/`*T`/`ref struct`）跨越 `spawn`/`await` 边界，必须 `move` 转移所有权或使用 `Shared<T>`。 |
+
+```typescript
+// ✅ 18.1 典型综合正例：绑定、条件解包、抛弃返回值与安全并发移交
+fn handle_items(items: *Vec<i32>, opt_fd: i32?) {
+    if (fd := opt_fd) {
+        * = process_fd(fd); // 抛弃返回值用 * =，而非 _ =
+    }
+    let snapshot = move items; // 显式转移所有权后方可跨协程传递
+    spawn {
+        for (v of snapshot) {
+            print(`item = ${v}`);
+        }
+    };
+}
+```
+
+### 18.2 函数签名、后缀类型修饰符与类型转换（#8 – #11, #20 – #21, #26）
+
+| 序号 | 常见错误写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 编译器诊断与底层原理解析 |
+| :---: | :--- | :--- | :--- |
+| **#8** | `fn next() ([]const u8)?` 或 `fn close(): void` | `fn next(): ([]const u8)?` / `fn close()` | 有返回值必须在参数列表后写 `: ReturnType`（`E0116`）；无返回值一律省略 `: void`（含 `@c` 外部声明）。 |
+| **#9** | `fn f(): !usize` 或 `fn f(): ?[]const u8` 或 `fn alloc(): []u8?` | `fn f(): usize!` / `fn f(): ([]const u8)?` / `fn alloc(): ([]u8)?` | 废除前缀 `!T` / `?T`（`E0115`），确立“类型主体居首、修饰后缀向右展开”规则；**可选切片必须加括号写 `([]T)?`**（`[]T?` 表示元素可选的切片，触发 `E0132`）。 |
+| **#10** | `let n = "123" as i32;` | `let n = i32.parse("123")?;` | `as` 仅用于数值安全/截断强转与指针转换，禁止对字符串直接 `as` 转数值，必须调用受检 `parse` 方法并处理错误。 |
+| **#11** | `fn fetch(url: string, opts: any)` | `fn fetch(url: string, opts: auto)` | CP 彻底废除动态弱类型 `any`；编译期泛型参数推导统一使用 `auto`。 |
+| **#20** | `let p: *any! = ...;` | `let p: *! = ...;` / `let p: *!? = ...;` | 通用不透明裸指针（等价于 C `void*`）直接省略 `any`，写作 `*!`（非空）与 `*!?`（可空）。 |
+| **#21** | 纯 CP 业务代码中滥用 `[*c]T` | `*T!` / `[*]T!` / `[]T` | `[*c]T` 仅限用于 `@c { ... }` FFI 头文件边界；纯 CP 代码应使用明确语义的切片 `[]T`、单项裸指针 `*T!` 或多项裸指针 `[*]T!`。 |
+| **#26** | 手写 `@ptrCast(@alignCast(p))` 或 `@intCast(x)` | `p as *T!` / `u32(x)`（位模式重解释用 `@bitCast`） | 指针与常规数值强转统一走 `as` 与构造函数式转换 `T(x)`；仅物理位模式重解释保留 `@bitCast`。 |
+
+```typescript
+// ✅ 18.2 典型综合正例：纯后缀类型系统与安全转换
+fn parse_buffer_size(raw: string): ([]u8)?! {
+    if (raw.len == 0) {
+        return null;
+    }
+    let size = usize.parse(raw)?;
+    let buf: []u8 = alloc_bytes(u32(size))?;
+    return buf; // 自动匹配 ([]u8)?!
+}
+```
+
+### 18.3 结构体、类、枚举与方法接收者契约（#14 – #16, #22 – #25）
+
+| 序号 | 常见错误写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 编译器诊断与底层原理解析 |
+| :---: | :--- | :--- | :--- |
+| **#14** | `Point{ .x = 1, .y = 2 }` | `Point{ x: 1, y: 2 }` | 结构体初始化严格使用 TS 风格冒号键值，严禁 Zig 前导点 `.x =`。 |
+| **#15** | `const p = .{ 10, 20 };` / `.{ .x = 1 }` | `const p = [10, 20];` / `{ x: 1 }` | 元组字面量使用方括号 `[...]`，匿名紧凑结构体使用花括号 `{ ... }`；前导点 `.` 仅用于上下文枚举/成员推断。 |
+| **#16** | `items: []*Timer = &.{};` | `items: []*Timer = [];` | 切片字面量统一用方括号 `[]`，严禁 Zig 风格 `&.{}`。 |
+| **#22** | `struct` / `enum` 内部成员写 `pub x: i32;` | 直接写 `x: i32;`，仅静态成员加 `static`（或放入 `static { ... }`） | `struct` 与 `enum` 内部成员**默认全部 `pub`**，严禁加冗余 `pub`；`pub` 仅用于模块顶层导出（与 `class` 对外字段）。 |
+| **#23** | `fn set(self: *Foo)` / `fn init(this)` / `fn get(_)` | 可变写 `fn set(*_)`；只读省略 `fn get()` | 严禁 `self`/`this`/`mut _`（`E0121` / `E0104`）；只读实例方法直接省略接收者，修改字段（含 `init`）必须在首参写 `*_`。 |
+| **#24** | 在 `unsafe {}` 外部执行 `ptr.*` 解引用或裸指针强转 | `unsafe { const p = ptr as *T!; p.* = 1; }` | 所有裸指针（`*T!`）解引用与强转必须置于显式 `unsafe {}` 块内，否则触发 **`E0209`**。 |
+| **#25** | `ptr.*.field = val` | `ptr.field = val` | 结构体指针与可变借用的字段访问自动解引用，严禁冗余 `.*.`；仅基础标量可变借用（如 `*i32`）通过 `p.* = val` 写入。 |
+
+```typescript
+// ✅ 18.3 典型综合正例：struct 默认 pub、*_ 接收者与自动解引用
+pub struct Counter {
+    value: i32 = 0; // 默认 pub，无需写 pub
+
+    fn get(): i32 {
+        return _.value; // 只读方法省略参数位 _，方法体内仍通过 _ 访问实例
+    }
+
+    fn add(*_, delta: i32) {
+        _.value += delta; // 修改字段必须显式声明 *_
+    }
+
+    static {
+        fn zero(): Counter { return Counter{ value: 0 }; }
+    }
+}
+```
+
+### 18.4 底层逃逸舱、元编程、标准容器与错误处理（#12 – #13, #17 – #18, #27 – #28）
+
+| 序号 | 常见错误写法 (WRONG) | CP 唯一合法写法 (CORRECT) | 编译器诊断与底层原理解析 |
+| :---: | :--- | :--- | :--- |
+| **#12** | `@extern struct Bar` / `@c { pub extern fn f(): void; }` | `@c struct Bar` / `@c { fn f(); }` | C-ABI 布局统一使用 `@c struct`；`@c {}` 块内无需重复写 `pub` 或 `extern`，导出整个块时在外部写 `pub @c {}`。 |
+| **#13** | `if (@is_beam)` | `if (@is_nest)` | 运行时容器模式宏已统一升级为 `@is_nest`（对应编译参数 `--nest` / `-n`）。 |
+| **#17** | `__zig__ { ... }` | `zig { ... }` | 内嵌原生 Zig 逃逸舱统一写 `zig { ... }`，严禁旧版下划线前缀 `__zig__`（触发静态纯净度门禁拦截）。 |
+| **#18** | `catch \|_\| { return false; }` | `catch return false;` 或 `catch e => { ... }` | 废除 Zig 管道捕获 `\|_\|`，错误捕获直接写 `catch` 降级表达式或 `catch err =>` 绑定分支。 |
+| **#27** | `@derive(Clone, Json)` 或 `@meta(k = 1)` | `@[Clone, Json]` 与 `@meta(k: 1)` | 编译期派生宏采用属性列表语法 `@[...]`，元数据键值对统一使用冒号 `:` 分隔。 |
+| **#28** | 直接手写或使用 `ArrayList` / `RingBuffer` | `Vec<T>` / `VecDeque<T>` / `HashMap<K, V>` | 标准集合容器统一从 `cap:collections` 导入，遵循 CP 借用与自动 RAII 内存安全契约。 |
+
+```typescript
+// ✅ 18.4 典型综合正例：派生宏、标准容器与 catch 降级
+import { Vec } from "cap:collections";
+
+@[Clone, Json]
+pub struct TaskConfig {
+    name: string;
+    retries: u32 = 3;
+}
+
+fn load_tasks(): Vec<TaskConfig> {
+    let list = Vec<TaskConfig>.new();
+    let cfg = parse_config("./task.json") catch TaskConfig{ name: "default" };
+    list.push(move cfg);
+    return list;
+}
+```
 
 ---
 
