@@ -505,7 +505,10 @@ fn compile_file(
     };
 
     let mut analyzer = Analyzer::new();
-    if !lib && !cap_hub.root_item_indices.is_empty() && cap_hub.root_item_indices.len() < module.body.len() {
+    if !lib
+        && !cap_hub.root_item_indices.is_empty()
+        && cap_hub.root_item_indices.len() < module.body.len()
+    {
         let mut root_items = Vec::with_capacity(cap_hub.root_item_indices.len());
         for (idx, item) in module.body.iter().enumerate() {
             if cap_hub.root_item_indices.contains(&idx) {
@@ -770,7 +773,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                         }
                     };
                     let registry_path = registry.unwrap_or_else(locate_default_registry_path);
-                    let packages_root = out.unwrap_or_else(|| PathBuf::from("packages/@cap"));
+                    let packages_root = out.unwrap_or_else(|| PathBuf::from("packages"));
                     let outcome = run_registry_import(RegistryImportOptions {
                         ecosystem,
                         spec: spec.clone(),
@@ -789,7 +792,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                             );
                         } else {
                             println!(
-                                "[cap from] '{}' is already available in @cap registry -> use: \"{}\" (skipped duplicate conversion)",
+                                "[cap from] '{}' is already available in packages/registry.json -> use: import {{ ... }} from \"{}\"; (skipped duplicate conversion)",
                                 spec, outcome.cp_target
                             );
                         }

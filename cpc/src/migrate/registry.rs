@@ -25,7 +25,7 @@ use super::{run_migrate, MigrateOptions};
 
 pub const DEFAULT_CAPDUX_REGISTRY_URL: &str = "https://registry.capdux.org/v1/registry.json";
 pub const DEFAULT_GITHUB_REGISTRY_URL: &str =
-    "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json";
+    "https://raw.githubusercontent.com/capdux/cp/main/packages/registry.json";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PackageEcosystem {
@@ -58,12 +58,20 @@ pub struct RegistryEntry {
     #[serde(default)]
     pub license: String,
     pub cp_target: String,
-    /// `"stdlib"` for built-in `cap:*` modules, `"package"` for `@cap/*` installable packages.
+    /// `"stdlib"` for built-in `cap:*` modules, `"package"` for installable `packages/*` packages.
     pub kind: String,
     #[serde(default)]
     pub aliases: Vec<String>,
     #[serde(default)]
     pub absorbed_at: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub types: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub agent_doc: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub readme: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub readme_zh: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +80,8 @@ pub struct RegistryIndex {
     pub version: String,
     #[serde(default)]
     pub description: String,
+    #[serde(default = "default_capdux_url", skip_serializing_if = "String::is_empty")]
+    pub capdux_registry_url: String,
     #[serde(default = "default_github_url")]
     pub github_raw_url: String,
     #[serde(default)]
@@ -84,6 +94,10 @@ fn default_version() -> String {
     "1.0.0".to_string()
 }
 
+fn default_capdux_url() -> String {
+    DEFAULT_CAPDUX_REGISTRY_URL.to_string()
+}
+
 fn default_github_url() -> String {
     DEFAULT_GITHUB_REGISTRY_URL.to_string()
 }
@@ -92,7 +106,10 @@ impl Default for RegistryIndex {
     fn default() -> Self {
         Self {
             version: default_version(),
-            description: "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages.".to_string(),
+            description:
+                "Global deduplication & mapping registry for CP stdlib (cap:*) and bare-name / scoped ecosystem packages."
+                    .to_string(),
+            capdux_registry_url: default_capdux_url(),
             github_raw_url: default_github_url(),
             updated_at: String::new(),
             entries: Vec::new(),
@@ -191,10 +208,7 @@ pub fn parse_pkg_spec(spec: &str) -> (String, Option<String>) {
 /// Sanitize an upstream package name (e.g. `@scope/my-pkg` or `serde_qs`) into a clean `@cap/<slug>` name.
 pub fn normalize_cap_pkg_slug(pkg_name: &str) -> String {
     let mut out = String::new();
-    let base = pkg_name
-        .trim()
-        .strip_prefix('@')
-        .unwrap_or(pkg_name.trim());
+    let base = pkg_name.trim().strip_prefix('@').unwrap_or(pkg_name.trim());
     let mut prev_dash = false;
     for ch in base.chars() {
         if ch.is_ascii_alphanumeric() {
@@ -278,7 +292,11 @@ fn curl_get_json(url: &str) -> Result<serde_json::Value, String> {
         .map_err(|e| format!("failed to spawn curl for '{}': {}", url, e))?;
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr);
-        return Err(format!("HTTP fetch failed for '{}': {}", url, stderr.trim()));
+        return Err(format!(
+            "HTTP fetch failed for '{}': {}",
+            url,
+            stderr.trim()
+        ));
     }
     serde_json::from_slice::<serde_json::Value>(&out.stdout)
         .map_err(|e| format!("invalid JSON from '{}': {}", url, e))
@@ -315,9 +333,11 @@ pub fn fetch_npm_metadata(name: &str, version_opt: Option<&str>) -> Result<Fetch
     let license = ver_obj
         .get("license")
         .and_then(|v| {
-            v.as_str()
-                .map(|s| s.to_string())
-                .or_else(|| v.get("type").and_then(|t| t.as_str()).map(|s| s.to_string()))
+            v.as_str().map(|s| s.to_string()).or_else(|| {
+                v.get("type")
+                    .and_then(|t| t.as_str())
+                    .map(|s| s.to_string())
+            })
         })
         .unwrap_or_default();
 
@@ -355,7 +375,10 @@ pub fn fetch_npm_metadata(name: &str, version_opt: Option<&str>) -> Result<Fetch
     })
 }
 
-pub fn fetch_crate_metadata(name: &str, version_opt: Option<&str>) -> Result<FetchedPkgMeta, String> {
+pub fn fetch_crate_metadata(
+    name: &str,
+    version_opt: Option<&str>,
+) -> Result<FetchedPkgMeta, String> {
     let url = format!("https://crates.io/api/v1/crates/{}", name);
     let doc = curl_get_json(&url)?;
 
@@ -450,8 +473,8 @@ pub struct RegistryImportOutcome {
 
 pub fn locate_default_registry_path() -> PathBuf {
     let candidates = [
-        PathBuf::from("packages/@cap/registry.json"),
-        PathBuf::from("/data/dev/cp/packages/@cap/registry.json"),
+        PathBuf::from("packages/registry.json"),
+        PathBuf::from("/data/dev/cp/packages/registry.json"),
     ];
     for c in &candidates {
         if c.exists() {
@@ -517,18 +540,18 @@ fn convert_recursive(
         return Ok(existing.cp_target.clone());
     }
 
-    let slug = normalize_cap_pkg_slug(pkg_name);
-    let cp_target = format!("@cap/{}", slug);
-    let visit_key = format!("{}:{}", ecosystem.as_str(), pkg_name.to_ascii_lowercase());
-    if !visited.insert(visit_key) {
-        return Ok(cp_target);
-    }
-
     // Step 2: Fetch registry metadata & verify license compliance.
     let meta = match ecosystem {
         PackageEcosystem::Npm => fetch_npm_metadata(pkg_name, version_opt)?,
         PackageEcosystem::Crate => fetch_crate_metadata(pkg_name, version_opt)?,
     };
+
+    let cp_target = meta.name.clone();
+    let slug = normalize_cap_pkg_slug(&meta.name);
+    let visit_key = format!("{}:{}", ecosystem.as_str(), pkg_name.to_ascii_lowercase());
+    if !visited.insert(visit_key) {
+        return Ok(cp_target);
+    }
 
     if !is_permissive_license(&meta.license) {
         return Err(format!(
@@ -537,12 +560,14 @@ fn convert_recursive(
         ));
     }
 
-    // Step 3: Recursively convert runtime dependencies as independent @cap/<dep> packages (never merged).
+    // Step 3: Recursively convert runtime dependencies as independent bare-name packages (skipping built-in cap:* stdlib).
     let mut dep_targets: BTreeMap<String, String> = BTreeMap::new();
     if depth < max_depth {
         for dep_name in meta.runtime_deps.keys() {
             if let Some(existing) = index.lookup(dep_name) {
-                dep_targets.insert(existing.cp_target.clone(), "^1.0.0".to_string());
+                if existing.kind != "stdlib" && !existing.cp_target.starts_with("cap:") {
+                    dep_targets.insert(existing.cp_target.clone(), "^1.0.0".to_string());
+                }
             } else {
                 let dep_target = convert_recursive(
                     ecosystem,
@@ -556,7 +581,9 @@ fn convert_recursive(
                     max_depth,
                     verify,
                 )?;
-                dep_targets.insert(dep_target, "^1.0.0".to_string());
+                if !dep_target.starts_with("cap:") {
+                    dep_targets.insert(dep_target, "^1.0.0".to_string());
+                }
             }
         }
     }
@@ -602,7 +629,7 @@ fn convert_recursive(
         return Err(format!("tar extraction failed for '{}'", meta.name));
     }
 
-    let out_dir = packages_root.join(&slug);
+    let out_dir = packages_root.join(&cp_target);
     let _summary = run_migrate(MigrateOptions {
         lang: ecosystem.source_lang(),
         src_dir: extract_dir,
@@ -613,13 +640,17 @@ fn convert_recursive(
         include_tests: false,
     })?;
 
-    // Emit standardized @cap/<slug>/cap.json with independent runtime deps
+    // Ensure src/index.cp, src/index.d.cp & EN/ZH/AGENT docs exist and determine real main entry.
+    let main_rel = emit_package_docs_and_types(&out_dir, &cp_target, &meta);
+
+    // Emit standardized bare-name packages/<name>/cap.json with independent runtime deps
     let mut cap_json = serde_json::json!({
         "name": cp_target,
         "ver": meta.version,
         "description": format!("Absorbed from {} '{}' ({})", ecosystem.as_str(), meta.name, meta.repo_url),
-        "main": "src/index.cp",
-        "license": "MIT",
+        "main": main_rel,
+        "types": "src/index.d.cp",
+        "license": if meta.license.is_empty() { "MIT" } else { meta.license.as_str() },
         "upstream": {
             "registry": ecosystem.as_str(),
             "name": meta.name,
@@ -641,6 +672,7 @@ fn convert_recursive(
 
     let _ = fs::remove_dir_all(&tmp_dir);
 
+    let rel_prefix = format!("packages/{}", cp_target);
     index.upsert(RegistryEntry {
         source_registry: ecosystem.as_str().to_string(),
         source_name: meta.name.clone(),
@@ -649,11 +681,128 @@ fn convert_recursive(
         cp_target: cp_target.clone(),
         kind: "package".to_string(),
         aliases: Vec::new(),
-        absorbed_at: "2026-11-26".to_string(),
+        absorbed_at: "2026-11-28".to_string(),
+        types: format!("{}/src/index.d.cp", rel_prefix),
+        agent_doc: format!("{}/README_AGENT.md", rel_prefix),
+        readme: format!("{}/README.md", rel_prefix),
+        readme_zh: format!("{}/README.zh-CN.md", rel_prefix),
     });
     converted.push(cp_target.clone());
 
     Ok(cp_target)
+}
+
+fn emit_package_docs_and_types(out_dir: &Path, cp_target: &str, meta: &FetchedPkgMeta) -> String {
+    let src_dir = out_dir.join("src");
+    let _ = fs::create_dir_all(&src_dir);
+
+    let src_index = src_dir.join("index.cp");
+    let root_index = out_dir.join("index.cp");
+    let src_lib = src_dir.join("lib.cp");
+    let main_entry_path = if src_index.exists() {
+        src_index.clone()
+    } else if root_index.exists() {
+        // Re-export root index.cp from src/index.cp or point directly to index.cp
+        if let Ok(body) = fs::read_to_string(&root_index) {
+            let _ = fs::write(&src_index, body);
+        }
+        src_index.clone()
+    } else if src_lib.exists() {
+        if let Ok(body) = fs::read_to_string(&src_lib) {
+            let _ = fs::write(&src_index, body);
+        }
+        src_index.clone()
+    } else {
+        let _ = fs::write(
+            &src_index,
+            format!("// Entry module for {}@{}\n", cp_target, meta.version),
+        );
+        src_index.clone()
+    };
+
+    let dcp_path = src_dir.join("index.d.cp");
+    if !dcp_path.exists() {
+        let mut decls = Vec::new();
+        if let Ok(content) = fs::read_to_string(&main_entry_path) {
+            for line in content.lines() {
+                let t = line.trim();
+                if t.starts_with("export fn ") || t.starts_with("pub fn ") {
+                    let sig = t.split('{').next().unwrap_or(t).trim_end();
+                    let norm = if let Some(rest) = sig.strip_prefix("pub fn ") {
+                        format!("export fn {};", rest)
+                    } else {
+                        format!("{};", sig)
+                    };
+                    decls.push(norm);
+                } else if t.starts_with("export struct ")
+                    || t.starts_with("pub struct ")
+                    || t.starts_with("export enum ")
+                    || t.starts_with("pub enum ")
+                    || t.starts_with("export class ")
+                    || t.starts_with("pub class ")
+                {
+                    let head = t.split('{').next().unwrap_or(t).trim_end();
+                    let norm = head
+                        .replace("pub struct ", "export struct ")
+                        .replace("pub enum ", "export enum ")
+                        .replace("pub class ", "export class ");
+                    decls.push(format!("{};", norm));
+                }
+            }
+        }
+        let dcp_body = if decls.is_empty() {
+            format!(
+                "// Auto-generated type declarations for {}@{}\n",
+                cp_target, meta.version
+            )
+        } else {
+            format!(
+                "// Auto-generated type declarations for {}@{}\n{}\n",
+                cp_target,
+                meta.version,
+                decls.join("\n")
+            )
+        };
+        let _ = fs::write(&dcp_path, dcp_body);
+    }
+
+    let readme_en = out_dir.join("README.md");
+    if !readme_en.exists() {
+        let content = format!(
+            "[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)\n\n# {name}\n\n> Absorbed from {reg} `{orig}@{ver}` ({lic}).\n\n- **Type declarations**: [`src/index.d.cp`](./src/index.d.cp)\n- **Import**: `import {{ ... }} from \"{name}\";`\n",
+            name = cp_target,
+            reg = "upstream",
+            orig = meta.name,
+            ver = meta.version,
+            lic = meta.license,
+        );
+        let _ = fs::write(&readme_en, content);
+    }
+
+    let readme_zh = out_dir.join("README.zh-CN.md");
+    if !readme_zh.exists() {
+        let content = format!(
+            "[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)\n\n# {name}\n\n> 吸收自 `{orig}@{ver}`（协议：{lic}）。\n\n- **类型声明**：[`src/index.d.cp`](./src/index.d.cp)\n- **导入方式**：`import {{ ... }} from \"{name}\";`\n",
+            name = cp_target,
+            orig = meta.name,
+            ver = meta.version,
+            lic = meta.license,
+        );
+        let _ = fs::write(&readme_zh, content);
+    }
+
+    let readme_agent = out_dir.join("README_AGENT.md");
+    if !readme_agent.exists() {
+        let content = format!(
+            "# {name}@{ver} (Agent Quickref)\n\n> Import: `import {{ ... }} from \"{name}\";` | Types: `src/index.d.cp` | License: {lic}\n",
+            name = cp_target,
+            ver = meta.version,
+            lic = meta.license,
+        );
+        let _ = fs::write(&readme_agent, content);
+    }
+
+    "src/index.cp".to_string()
 }
 
 #[cfg(test)]
@@ -681,7 +830,10 @@ mod tests {
     fn test_normalize_cap_pkg_slug() {
         assert_eq!(normalize_cap_pkg_slug("lru-cache"), "lru-cache");
         assert_eq!(normalize_cap_pkg_slug("serde_qs"), "serde-qs");
-        assert_eq!(normalize_cap_pkg_slug("@msgpack/msgpack"), "msgpack-msgpack");
+        assert_eq!(
+            normalize_cap_pkg_slug("@msgpack/msgpack"),
+            "msgpack-msgpack"
+        );
     }
 
     #[test]
@@ -706,13 +858,17 @@ mod tests {
             source_name: "lru-cache".to_string(),
             source_repo: "https://github.com/isaacs/node-lru-cache".to_string(),
             license: "MIT".to_string(),
-            cp_target: "@cap/lru".to_string(),
+            cp_target: "lru-cache".to_string(),
             kind: "package".to_string(),
             aliases: vec!["lru".to_string(), "quick-lru".to_string()],
             absorbed_at: "2026-11-26".to_string(),
+            types: String::new(),
+            agent_doc: String::new(),
+            readme: String::new(),
+            readme_zh: String::new(),
         });
-        assert_eq!(idx.lookup("lru-cache").unwrap().cp_target, "@cap/lru");
-        assert_eq!(idx.lookup("quick-lru").unwrap().cp_target, "@cap/lru");
+        assert_eq!(idx.lookup("lru-cache").unwrap().cp_target, "lru-cache");
+        assert_eq!(idx.lookup("quick-lru").unwrap().cp_target, "lru-cache");
         assert!(idx.lookup("nonexistent-pkg").is_none());
 
         // Upsert updates instead of duplicating
@@ -721,10 +877,14 @@ mod tests {
             source_name: "lru-cache".to_string(),
             source_repo: "https://github.com/isaacs/node-lru-cache".to_string(),
             license: "MIT".to_string(),
-            cp_target: "@cap/lru".to_string(),
+            cp_target: "lru-cache".to_string(),
             kind: "package".to_string(),
             aliases: vec!["lru".to_string()],
             absorbed_at: "2026-11-26".to_string(),
+            types: String::new(),
+            agent_doc: String::new(),
+            readme: String::new(),
+            readme_zh: String::new(),
         });
         assert_eq!(idx.entries.len(), 1);
     }

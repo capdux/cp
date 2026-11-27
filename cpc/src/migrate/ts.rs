@@ -1,7 +1,7 @@
 // TypeScript -> CP High-Success-Rate Structural Transpiler (`cap from -ts`)
 // Designed and verified against industrial TS codebases (e.g., `_ref/elysia/src/*.ts`).
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::deps::{rewrite_import_source, DepTier, SourceLang};
 
@@ -3030,6 +3030,8 @@ fn convert_ts_expr(raw: &str, todo_count: &mut usize) -> String {
     s = replace_outside_strings(&s, "!==", "!=");
     s = replace_ident_word(&s, "undefined", "null");
     s = replace_outside_strings(&s, "this.", "_.");
+    s = normalize_ts_private_fields(&s);
+    s = convert_symbol_exprs(&s);
     s = replace_outside_strings(&s, "console.log(", "@print(");
     s = replace_outside_strings(&s, "console.error(", "@print(");
     s = replace_outside_strings(&s, "console.warn(", "@print(");
@@ -3062,6 +3064,252 @@ fn convert_ts_expr(raw: &str, todo_count: &mut usize) -> String {
     s
 }
 
+/// Normalize TS `#privateField` / `#privateMethod` references to `_priv_<name>` outside strings/comments.
+fn normalize_ts_private_fields(s: &str) -> String {
+    if !s.contains('#') {
+        return s.to_string();
+    }
+    let bytes = s.as_bytes();
+    let mut out = String::with_capacity(s.len() + 16);
+    let mut i = 0;
+    let mut in_double = false;
+    let mut in_single = false;
+    let mut in_backtick = false;
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
+            out.push_str(&s[i..]);
+            break;
+        }
+        if in_double {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'"' {
+                in_double = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_single {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'\'' {
+                in_single = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_backtick {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'`' {
+                in_backtick = false;
+            }
+            i += 1;
+            continue;
+        }
+        match b {
+            b'"' => {
+                in_double = true;
+                out.push('"');
+                i += 1;
+                continue;
+            }
+            b'\'' => {
+                in_single = true;
+                out.push('\'');
+                i += 1;
+                continue;
+            }
+            b'`' => {
+                in_backtick = true;
+                out.push('`');
+                i += 1;
+                continue;
+            }
+            b'#' => {
+                let prev_ok = i == 0 || !is_ident_byte(bytes[i - 1]);
+                let next_ok = i + 1 < bytes.len()
+                    && (bytes[i + 1].is_ascii_alphabetic() || bytes[i + 1] == b'_');
+                if prev_ok && next_ok {
+                    out.push_str("_priv_");
+                    i += 1;
+                    continue;
+                }
+            }
+            _ => {}
+        }
+        let ch = s[i..].chars().next().unwrap();
+        out.push(ch);
+        i += ch.len_utf8();
+    }
+    out
+}
+
+/// Convert JS/TS `Symbol(...)` and `Symbol.<prop>` expressions to unique string constants outside strings/comments.
+fn convert_symbol_exprs(s: &str) -> String {
+    if !s.contains("Symbol") {
+        return s.to_string();
+    }
+    let bytes = s.as_bytes();
+    let sym = b"Symbol";
+    let mut out = String::with_capacity(s.len() + 16);
+    let mut i = 0;
+    let mut in_double = false;
+    let mut in_single = false;
+    let mut in_backtick = false;
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if !in_double
+            && !in_single
+            && !in_backtick
+            && b == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
+            out.push_str(&s[i..]);
+            break;
+        }
+        if in_double {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'"' {
+                in_double = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_single {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'\'' {
+                in_single = false;
+            }
+            i += 1;
+            continue;
+        }
+        if in_backtick {
+            out.push(b as char);
+            if b == b'\\' && i + 1 < bytes.len() {
+                i += 1;
+                out.push(bytes[i] as char);
+            } else if b == b'`' {
+                in_backtick = false;
+            }
+            i += 1;
+            continue;
+        }
+        if b == b'"' {
+            in_double = true;
+            out.push('"');
+            i += 1;
+            continue;
+        }
+        if b == b'\'' {
+            in_single = true;
+            out.push('\'');
+            i += 1;
+            continue;
+        }
+        if b == b'`' {
+            in_backtick = true;
+            out.push('`');
+            i += 1;
+            continue;
+        }
+        if i + sym.len() <= bytes.len() && &bytes[i..i + sym.len()] == sym {
+            let prev_ok = i == 0 || (!is_ident_byte(bytes[i - 1]) && bytes[i - 1] != b'.');
+            let after_pos = i + sym.len();
+            let next_ok = after_pos == bytes.len() || !is_ident_byte(bytes[after_pos]);
+            if prev_ok && next_ok {
+                let mut k = after_pos;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k < bytes.len() && bytes[k] == b'(' {
+                    if let Some(rparen) = find_matching_delim(s, k, b'(', b')') {
+                        let inner = s[k + 1..rparen].trim();
+                        if ((inner.starts_with('"') && inner.ends_with('"'))
+                            || (inner.starts_with('\'') && inner.ends_with('\'')))
+                            && inner.len() >= 2
+                        {
+                            let desc = &inner[1..inner.len() - 1];
+                            let safe = desc.replace('"', "\\\"");
+                            out.push_str(&format!("\"__symbol_{}\"", safe));
+                        } else {
+                            out.push_str("\"__symbol\"");
+                        }
+                        i = rparen + 1;
+                        continue;
+                    }
+                } else if after_pos < bytes.len() && bytes[after_pos] == b'.' {
+                    let prop_start = after_pos + 1;
+                    let mut prop_end = prop_start;
+                    while prop_end < bytes.len() && is_ident_byte(bytes[prop_end]) {
+                        prop_end += 1;
+                    }
+                    if prop_end > prop_start {
+                        let prop = &s[prop_start..prop_end];
+                        if prop == "for" && prop_end < bytes.len() && bytes[prop_end] == b'(' {
+                            if let Some(rparen) = find_matching_delim(s, prop_end, b'(', b')') {
+                                let inner = s[prop_end + 1..rparen].trim();
+                                if ((inner.starts_with('"') && inner.ends_with('"'))
+                                    || (inner.starts_with('\'') && inner.ends_with('\'')))
+                                    && inner.len() >= 2
+                                {
+                                    let desc = &inner[1..inner.len() - 1];
+                                    let safe = desc.replace('"', "\\\"");
+                                    out.push_str(&format!("\"__symbol_{}\"", safe));
+                                } else {
+                                    out.push_str("\"__symbol\"");
+                                }
+                                i = rparen + 1;
+                                continue;
+                            }
+                        }
+                        out.push_str(&format!("\"__symbol_{}\"", prop));
+                        i = prop_end;
+                        continue;
+                    }
+                }
+            }
+        }
+        let ch = s[i..].chars().next().unwrap();
+        out.push(ch);
+        i += ch.len_utf8();
+    }
+    out
+}
+
+/// Check if a statement has an unclosed `Symbol(` call on the current line.
+fn has_unclosed_symbol_call(s: &str) -> bool {
+    if let Some(pos) = s.rfind("Symbol(") {
+        let prev_ok = pos == 0 || !is_ident_byte(s.as_bytes()[pos - 1]);
+        if prev_ok {
+            return find_matching_delim(s, pos + "Symbol".len(), b'(', b')').is_none();
+        }
+    }
+    false
+}
+
 /// Detect whether a TS statement uses dynamic metaprogramming that cannot map to CP.
 fn is_dynamic_metaprogramming(trimmed: &str) -> bool {
     trimmed.contains("new Function(")
@@ -3082,6 +3330,7 @@ fn method_body_mutates_self(lines: &[&str], start_line: usize) -> bool {
             started = true;
         }
         // Check for `this.foo =` or `_.foo =` (excluding `==` / `===` / `!=`)
+        // as well as mutating collection method calls like `this.items.push(...)`.
         for prefix in &["this.", "_."] {
             let mut search_from = 0;
             while let Some(pos) = code[search_from..].find(prefix) {
@@ -3091,12 +3340,14 @@ fn method_body_mutates_self(lines: &[&str], start_line: usize) -> bool {
                 let rbytes = rest.as_bytes();
                 while k < rbytes.len()
                     && (is_ident_byte(rbytes[k])
+                        || rbytes[k] == b'#'
                         || rbytes[k] == b'.'
                         || rbytes[k] == b'['
                         || rbytes[k] == b']')
                 {
                     k += 1;
                 }
+                let chain = &rest[..k];
                 let after = rest[k..].trim_start();
                 if (after.starts_with('=') && !after.starts_with("=="))
                     || after.starts_with("+=")
@@ -3111,6 +3362,27 @@ fn method_body_mutates_self(lines: &[&str], start_line: usize) -> bool {
                 {
                     return true;
                 }
+                if after.starts_with('(') {
+                    if let Some(dot_pos) = chain.rfind('.') {
+                        let mut_method = &chain[dot_pos + 1..];
+                        if matches!(
+                            mut_method,
+                            "push"
+                                | "pop"
+                                | "shift"
+                                | "unshift"
+                                | "splice"
+                                | "sort"
+                                | "reverse"
+                                | "set"
+                                | "delete"
+                                | "clear"
+                                | "add"
+                        ) {
+                            return true;
+                        }
+                    }
+                }
                 search_from = abs;
             }
         }
@@ -3120,6 +3392,200 @@ fn method_body_mutates_self(lines: &[&str], start_line: usize) -> bool {
         }
     }
     false
+}
+
+/// Extract `(method_name, is_setter)` from a class member signature if it is an
+/// instance method, getter, or setter (excluding `constructor` and `static` methods).
+fn extract_class_method_sig_info(trimmed: &str) -> Option<(String, bool)> {
+    let mut rest = trimmed;
+    let mut is_static = false;
+    loop {
+        if let Some(r) = rest.strip_prefix("public ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("private ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("protected ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("static ") {
+            is_static = true;
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("async ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("override ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("abstract ") {
+            rest = r.trim();
+        } else if let Some(r) = rest.strip_prefix("readonly ") {
+            rest = r.trim();
+        } else {
+            break;
+        }
+    }
+    if is_static || rest.starts_with("constructor") {
+        return None;
+    }
+    let mut accessor_prefix = "";
+    if let Some(r) = rest.strip_prefix("get ") {
+        if r.contains('(') {
+            accessor_prefix = "get_";
+            rest = r.trim();
+        }
+    } else if let Some(r) = rest.strip_prefix("set ") {
+        if r.contains('(') {
+            accessor_prefix = "set_";
+            rest = r.trim();
+        }
+    }
+    let (priv_prefix, ident_rest) = if let Some(r) = rest.strip_prefix('#') {
+        ("_priv_", r)
+    } else {
+        ("", rest)
+    };
+    let name_end = ident_rest.find(|c: char| !c.is_ascii_alphanumeric() && c != '_')?;
+    let mname = &ident_rest[..name_end];
+    if mname.is_empty()
+        || matches!(
+            mname,
+            "if" | "for" | "while" | "switch" | "catch" | "return" | "const" | "let" | "var"
+        )
+    {
+        return None;
+    }
+    let after_name = ident_rest[name_end..].trim();
+    let after_gen = if after_name.starts_with('<') {
+        let gt = find_matching_delim(after_name, 0, b'<', b'>')?;
+        after_name[gt + 1..].trim()
+    } else {
+        after_name
+    };
+    if !after_gen.starts_with('(') {
+        return None;
+    }
+    let rparen = find_matching_delim(after_gen, 0, b'(', b')')?;
+    after_gen[rparen + 1..].find('{')?;
+    Some((
+        format!("{}{}{}", accessor_prefix, priv_prefix, mname),
+        accessor_prefix == "set_",
+    ))
+}
+
+/// Collect intra-class instance method call graph and compute transitive closure
+/// of methods that mutate `this`/`_` directly or indirectly via `this.otherMethod()`.
+fn collect_class_mutating_methods(lines: &[&str], class_body_start: usize) -> HashSet<String> {
+    let mut mutating: HashSet<String> = HashSet::new();
+    let mut calls: HashMap<String, Vec<String>> = HashMap::new();
+    let total = lines.len();
+    let mut rel_depth = 1i32;
+    let mut k = class_body_start;
+
+    while k < total && rel_depth > 0 {
+        let trimmed = lines[k].trim();
+        if rel_depth == 1 {
+            if trimmed == "}" || trimmed == "};" {
+                rel_depth -= 1;
+                break;
+            }
+            if trimmed.is_empty()
+                || trimmed.starts_with("//")
+                || trimmed.starts_with("/*")
+                || trimmed.starts_with('*')
+            {
+                k += 1;
+                continue;
+            }
+
+            let mut sig = trimmed.to_string();
+            let mut j = k;
+            if sig.contains('(') && !sig.contains('{') && !sig.ends_with(';') {
+                while j + 1 < total && !sig.contains('{') && !sig.ends_with(';') {
+                    j += 1;
+                    sig.push(' ');
+                    sig.push_str(lines[j].trim());
+                }
+            }
+
+            if let Some((mname, is_setter)) = extract_class_method_sig_info(&sig) {
+                if is_setter || method_body_mutates_self(lines, j) {
+                    mutating.insert(mname.clone());
+                }
+                let mut body_depth = 0i32;
+                let mut started = false;
+                let mut m_calls = Vec::new();
+                let mut b_idx = j;
+                while b_idx < total {
+                    let (code, _) = split_inline_comment(lines[b_idx]);
+                    for prefix in &["this.", "_."] {
+                        let mut search_from = 0;
+                        while let Some(pos) = code[search_from..].find(prefix) {
+                            let abs = search_from + pos + prefix.len();
+                            let rest = &code[abs..];
+                            let mut c_end = 0;
+                            let rbytes = rest.as_bytes();
+                            while c_end < rbytes.len()
+                                && (is_ident_byte(rbytes[c_end]) || rbytes[c_end] == b'#')
+                            {
+                                c_end += 1;
+                            }
+                            if c_end > 0 {
+                                let callee = &rest[..c_end];
+                                let mut after = rest[c_end..].trim_start();
+                                if after.starts_with('<') {
+                                    if let Some(gt) = find_matching_delim(after, 0, b'<', b'>') {
+                                        after = after[gt + 1..].trim_start();
+                                    }
+                                }
+                                if after.starts_with('(') {
+                                    let norm_callee = if let Some(stripped) = callee.strip_prefix('#') {
+                                        format!("_priv_{}", stripped)
+                                    } else {
+                                        callee.to_string()
+                                    };
+                                    m_calls.push(norm_callee);
+                                }
+                            }
+                            search_from = abs;
+                        }
+                    }
+                    let (o, c) = count_braces(code);
+                    if o > 0 {
+                        started = true;
+                    }
+                    body_depth += o - c;
+                    b_idx += 1;
+                    if started && body_depth <= 0 {
+                        break;
+                    }
+                }
+                if !m_calls.is_empty() {
+                    calls.entry(mname).or_default().extend(m_calls);
+                }
+                k = b_idx;
+                continue;
+            } else {
+                let (o, c) = count_braces(&sig);
+                rel_depth += o - c;
+                k = j + 1;
+                continue;
+            }
+        } else {
+            let (code, _) = split_inline_comment(lines[k]);
+            let (o, c) = count_braces(code);
+            rel_depth += o - c;
+            k += 1;
+        }
+    }
+
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for (caller, callees) in &calls {
+            if !mutating.contains(caller) && callees.iter().any(|c| mutating.contains(c)) {
+                mutating.insert(caller.clone());
+                changed = true;
+            }
+        }
+    }
+    mutating
 }
 
 /// Parse a top-level or class function/method header line.
@@ -3389,18 +3855,75 @@ fn try_convert_class_member(
             if let Some(rparen) = find_matching_delim(after_ctor, 0, b'(', b')') {
                 let params_raw = &after_ctor[1..rparen];
                 let tail = after_ctor[rparen + 1..].trim();
+                if tail == ";" {
+                    let line = format!("{}// [ts-overload] constructor({});", indent, params_raw);
+                    return Some((line, Vec::new()));
+                }
                 let (params, ctor_fields) = convert_ts_params(params_raw, true, todo_count);
+                let mut field_inits = String::new();
+                for (fname, _) in &ctor_fields {
+                    field_inits.push_str(&format!("{}    self_val.{} = {};\n", indent, fname, fname));
+                }
+                if tail.starts_with('{') && tail.ends_with('}') && tail.len() >= 2 {
+                    let inner = tail[1..tail.len() - 1].trim();
+                    if inner.is_empty() && ctor_fields.is_empty() {
+                        let line = format!(
+                            "{}pub static fn init({}): {} {{ return {}{{}}; }}",
+                            indent,
+                            params.join(", "),
+                            class_name,
+                            class_name
+                        );
+                        return Some((line, ctor_fields));
+                    }
+                    let mut body_parts = Vec::new();
+                    body_parts.push(format!("let self_val: {} = {}{{}};", class_name, class_name));
+                    for (fname, _) in &ctor_fields {
+                        body_parts.push(format!("self_val.{} = {};", fname, fname));
+                    }
+                    if !inner.is_empty() {
+                        let conv_inner = convert_ts_expr(inner, todo_count);
+                        let mut norm_inner = replace_outside_strings(&conv_inner, "_.", "self_val.");
+                        let trimmed_inner = norm_inner.trim();
+                        if !trimmed_inner.is_empty()
+                            && !trimmed_inner.ends_with(';')
+                            && !trimmed_inner.ends_with('}')
+                        {
+                            norm_inner.push(';');
+                        }
+                        if !norm_inner.trim().is_empty() {
+                            body_parts.push(norm_inner);
+                        }
+                    }
+                    body_parts.push("return self_val;".to_string());
+                    let line = format!(
+                        "{}pub static fn init({}): {} {{ {} }}",
+                        indent,
+                        params.join(", "),
+                        class_name,
+                        body_parts.join(" ")
+                    );
+                    return Some((line, ctor_fields));
+                }
                 let tail_str = if tail.is_empty() {
                     "{".to_string()
                 } else {
                     convert_ts_expr(tail, todo_count)
                 };
                 let line = format!(
-                    "{}pub static fn init({}): {} {}",
+                    "{}pub static fn init({}): {} {}\n{}    let self_val: {} = {}{{}};{}",
                     indent,
                     params.join(", "),
                     class_name,
-                    tail_str
+                    tail_str,
+                    indent,
+                    class_name,
+                    class_name,
+                    if field_inits.is_empty() {
+                        String::new()
+                    } else {
+                        format!("\n{}", field_inits.trim_end_matches('\n'))
+                    }
                 );
                 return Some((line, ctor_fields));
             }
@@ -3422,8 +3945,13 @@ fn try_convert_class_member(
     }
 
     // 3. Regular method: `foo[<T>](args)[: Ret] {`
-    let name_end = rest.find(|c: char| !c.is_ascii_alphanumeric() && c != '_')?;
-    let mname = &rest[..name_end];
+    let (priv_prefix, ident_rest) = if let Some(r) = rest.strip_prefix('#') {
+        ("_priv_", r)
+    } else {
+        ("", rest)
+    };
+    let name_end = ident_rest.find(|c: char| !c.is_ascii_alphanumeric() && c != '_')?;
+    let mname = &ident_rest[..name_end];
     if mname.is_empty()
         || matches!(
             mname,
@@ -3432,7 +3960,7 @@ fn try_convert_class_member(
     {
         return None;
     }
-    let after_name = rest[name_end..].trim();
+    let after_name = ident_rest[name_end..].trim();
     let (generics, after_gen) = if after_name.starts_with('<') {
         if let Some(gt) = find_matching_delim(after_name, 0, b'<', b'>') {
             (
@@ -3464,9 +3992,14 @@ fn try_convert_class_member(
         params.insert(0, "*_".to_string());
     }
 
+    let pub_kw = if is_pub && priv_prefix.is_empty() {
+        "pub "
+    } else {
+        ""
+    };
     let static_kw = if is_static { "static " } else { "" };
     let async_kw = if is_async { "async " } else { "" };
-    let full_name = format!("{}{}", accessor_prefix, mname);
+    let full_name = format!("{}{}{}", accessor_prefix, priv_prefix, mname);
     let line = format!(
         "{}{}{}{}fn {}{}({}){} {}",
         indent,
@@ -3574,12 +4107,18 @@ fn convert_field_line(
     };
 
     let is_optional = raw_name.ends_with('?');
-    let fname = raw_name
+    let fname_raw = raw_name
         .trim_end_matches('?')
         .trim_end_matches('!')
         .trim_matches('"')
         .trim_matches('\'')
         .trim();
+    let fname = if let Some(stripped) = fname_raw.strip_prefix('#') {
+        is_pub = false;
+        format!("_priv_{}", stripped)
+    } else {
+        fname_raw.to_string()
+    };
     if fname.is_empty() || !fname.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
         return None;
     }
@@ -3945,6 +4484,164 @@ fn wrap_single_line_control_flow(line: &str) -> String {
     line.to_string()
 }
 
+/// Wrap multi-line braceless control-flow statements (`if (cond)\n stmt;`,
+/// `else if (cond)\n stmt;`, `else\n stmt;`, `for (...)\n stmt;`, `while (...)\n stmt;`)
+/// in `{ ... }` so CP's parser does not treat them as value-position `if` expressions
+/// or emit `E0100: unexpected token 'Else'`.
+fn wrap_multiline_braceless_control_flow(code: &str) -> String {
+    struct PendingClose {
+        indent: String,
+        target_depth: i32,
+        waiting_for_body: bool,
+        is_if_stmt: bool,
+    }
+
+    let lines: Vec<&str> = code.lines().collect();
+    let total = lines.len();
+    let mut out = String::with_capacity(code.len() + 256);
+    let mut pending_closes: Vec<PendingClose> = Vec::new();
+    let mut brace_depth = 0i32;
+    let mut paren_depth = 0i32;
+    let mut bracket_depth = 0i32;
+    let mut paren_opened_ctrl = false;
+
+    let peek_next_code = |start: usize| -> &'static str {
+        let mut idx = start;
+        while idx < total {
+            let (c, _) = split_inline_comment(lines[idx]);
+            let t = c.trim();
+            if !t.is_empty() {
+                return if t.starts_with('{') {
+                    "{"
+                } else if t == "else"
+                    || t.starts_with("else ")
+                    || t.starts_with("else(")
+                    || t.starts_with("else{")
+                {
+                    "else"
+                } else {
+                    "other"
+                };
+            }
+            idx += 1;
+        }
+        ""
+    };
+
+    for i in 0..total {
+        let line = lines[i];
+        let (code_part, comment) = split_inline_comment(line);
+        let trimmed = code_part.trim();
+        let indent = &code_part[..code_part.len() - code_part.trim_start().len()];
+        let is_code_line = !trimmed.is_empty();
+
+        if is_code_line {
+            for pc in pending_closes.iter_mut() {
+                if pc.waiting_for_body {
+                    pc.waiting_for_body = false;
+                }
+            }
+        }
+
+        let prev_paren = paren_depth;
+        let (dp, db) = count_parens_brackets(code_part);
+        paren_depth = (paren_depth + dp).max(0);
+        bracket_depth = (bracket_depth + db).max(0);
+        let (o, c) = count_braces(code_part);
+        brace_depth += o - c;
+
+        if prev_paren == 0 && paren_depth > 0 {
+            paren_opened_ctrl = trimmed.starts_with("if ")
+                || trimmed.starts_with("if(")
+                || trimmed.starts_with("else if ")
+                || trimmed.starts_with("else if(")
+                || trimmed.starts_with("} else if ")
+                || trimmed.starts_with("} else if(")
+                || trimmed.starts_with("while ")
+                || trimmed.starts_with("while(")
+                || trimmed.starts_with("for ")
+                || trimmed.starts_with("for(");
+        }
+
+        let next_kind = peek_next_code(i + 1);
+        let is_single_header_if = (trimmed.starts_with("if ")
+            || trimmed.starts_with("if(")
+            || trimmed.starts_with("else if ")
+            || trimmed.starts_with("else if(")
+            || trimmed.starts_with("} else if ")
+            || trimmed.starts_with("} else if("))
+            && trimmed.ends_with(')')
+            && paren_depth == 0;
+        let is_single_header_loop = (trimmed.starts_with("while ")
+            || trimmed.starts_with("while(")
+            || trimmed.starts_with("for ")
+            || trimmed.starts_with("for("))
+            && trimmed.ends_with(')')
+            && paren_depth == 0;
+        let is_multiline_header_close =
+            prev_paren > 0 && paren_depth == 0 && paren_opened_ctrl && trimmed == ")";
+        let is_bare_else = trimmed == "else" || trimmed == "} else";
+
+        if paren_depth == 0 {
+            paren_opened_ctrl = false;
+        }
+
+        let opens_braceless = (is_single_header_if
+            || is_single_header_loop
+            || is_multiline_header_close
+            || is_bare_else)
+            && !next_kind.is_empty()
+            && next_kind != "{";
+
+        if opens_braceless {
+            let is_if_stmt = is_single_header_if || is_multiline_header_close;
+            if comment.is_empty() {
+                out.push_str(&format!("{} {{\n", code_part.trim_end()));
+            } else {
+                out.push_str(&format!("{} {{ {}\n", code_part.trim_end(), comment));
+            }
+            brace_depth += 1;
+            pending_closes.push(PendingClose {
+                indent: indent.to_string(),
+                target_depth: brace_depth,
+                waiting_for_body: true,
+                is_if_stmt,
+            });
+            continue;
+        }
+
+        out.push_str(line);
+        out.push('\n');
+
+        if is_code_line {
+            while let Some(top) = pending_closes.last() {
+                if !top.waiting_for_body
+                    && brace_depth == top.target_depth
+                    && paren_depth == 0
+                    && bracket_depth == 0
+                {
+                    let popped = pending_closes.pop().unwrap();
+                    out.push_str(&format!("{}}}\n", popped.indent));
+                    brace_depth -= 1;
+                    if popped.is_if_stmt && next_kind == "else" {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    while let Some(popped) = pending_closes.pop() {
+        out.push_str(&format!("{}}}\n", popped.indent));
+    }
+    if !code.ends_with('\n') && out.ends_with('\n') {
+        out.pop();
+    }
+    out
+}
+
 /// Convert JS object literal method shorthand `foo(a, b) {` -> `foo: (a, b) => {`.
 fn try_convert_object_method_shorthand(
     trimmed: &str,
@@ -4200,7 +4897,10 @@ pub fn transpile_ts_to_cp(
     let mut interface_depth: i32 = 0;
     let mut in_class = false;
     let mut class_depth: i32 = 0;
+    let mut in_constructor = false;
+    let mut constructor_depth: i32 = 0;
     let mut current_class_name = String::new();
+    let mut current_class_mutating_methods: HashSet<String> = HashSet::new();
     let mut skip_brace_depth: i32 = 0;
     let mut namespace_depths: Vec<(i32, String)> = Vec::new();
     let mut switch_stack: Vec<SwitchState> = Vec::new();
@@ -4741,6 +5441,7 @@ pub fn transpile_ts_to_cp(
                 class_depth = brace_depth + (o - c);
                 brace_depth += o - c;
                 current_class_name = cname.to_string();
+                current_class_mutating_methods = collect_class_mutating_methods(&lines, j + 1);
                 out.push_str(&format!(
                     "{}{}class {}{}{} {{\n",
                     indent, pub_kw, cname, generics, extends_clause
@@ -4755,11 +5456,38 @@ pub fn transpile_ts_to_cp(
             continue;
         }
 
+        // 10.5 Inside `constructor` (`static fn init`): handle closing `}` and `super(...)`
+        if in_constructor {
+            if (trimmed == "}" || trimmed == "};") && brace_depth == constructor_depth {
+                in_constructor = false;
+                brace_depth -= 1;
+                out.push_str(&format!("{}    return self_val;\n{}}}\n", indent, indent));
+                i += 1;
+                continue;
+            }
+            if trimmed.starts_with("super(") || trimmed.starts_with("super ") {
+                let (mut pd, mut bd) = count_parens_brackets(trimmed);
+                let mut j = i;
+                out.push_str(&format!("{}// [cap-migrate] {}\n", indent, trimmed));
+                while (pd > 0 || bd > 0) && j + 1 < total {
+                    j += 1;
+                    let nt = lines[j].trim();
+                    let (dp, db) = count_parens_brackets(nt);
+                    pd += dp;
+                    bd += db;
+                    out.push_str(&format!("{}// [cap-migrate] {}\n", indent, nt));
+                }
+                i = j + 1;
+                continue;
+            }
+        }
+
         // 11. Direct members of `class C` (fields, constructor, methods, getters/setters)
         if in_class && brace_depth == class_depth {
             if trimmed == "}" || trimmed == "};" {
                 in_class = false;
                 current_class_name.clear();
+                current_class_mutating_methods.clear();
                 brace_depth -= 1;
                 out.push_str(&format!("{}}}\n", indent));
                 i += 1;
@@ -4777,7 +5505,11 @@ pub fn transpile_ts_to_cp(
                 }
             }
 
-            let mutates = method_body_mutates_self(&lines, j);
+            let direct_mutates = method_body_mutates_self(&lines, j);
+            let graph_mutates = extract_class_method_sig_info(&sig).map_or(false, |(mname, is_setter)| {
+                is_setter || current_class_mutating_methods.contains(&mname)
+            });
+            let mutates = direct_mutates || graph_mutates;
             if let Some((converted_member, ctor_fields)) = try_convert_class_member(
                 &sig,
                 indent,
@@ -4798,6 +5530,10 @@ pub fn transpile_ts_to_cp(
                 }
                 let (o, c) = count_braces(&converted_member);
                 brace_depth += o - c;
+                if converted_member.contains("pub static fn init(") && o > c {
+                    in_constructor = true;
+                    constructor_depth = brace_depth;
+                }
                 out.push_str(&converted_member);
                 out.push('\n');
                 i = j + 1;
@@ -4951,7 +5687,10 @@ pub fn transpile_ts_to_cp(
             let mut j = i;
             while j + 1 < total {
                 let nt = lines[j + 1].trim();
-                if nt.starts_with("? ") || nt.starts_with(": ") || joined.trim_end().ends_with('=')
+                if nt.starts_with("? ")
+                    || nt.starts_with(": ")
+                    || joined.trim_end().ends_with('=')
+                    || has_unclosed_symbol_call(&joined)
                 {
                     j += 1;
                     joined.push(' ');
@@ -5151,7 +5890,7 @@ pub fn transpile_ts_to_cp(
         let mut j = i;
         while j + 1 < total {
             let nt = lines[j + 1].trim();
-            if nt.starts_with("? ") || nt.starts_with(": ") {
+            if nt.starts_with("? ") || nt.starts_with(": ") || has_unclosed_symbol_call(&stmt_src) {
                 j += 1;
                 stmt_src.push(' ');
                 stmt_src.push_str(nt);
@@ -5253,6 +5992,13 @@ pub fn transpile_ts_to_cp(
                 }
             }
         }
+        if in_constructor {
+            final_line = replace_outside_strings(&final_line, "_.", "self_val.");
+            let ft = final_line.trim();
+            if ft == "return;" || ft == "return _;" {
+                final_line = format!("{}return self_val;", indent);
+            }
+        }
         let (o, c) = count_braces(&final_line);
         brace_depth += o - c;
         if brace_depth < 0 {
@@ -5270,11 +6016,18 @@ pub fn transpile_ts_to_cp(
         brace_depth -= 1;
     }
 
+    // Wrap multi-line braceless control-flow statements (`if (...) \n stmt;`, `else \n stmt;`)
+    // in `{ ... }` so CP's parser does not treat them as value-position `if` expressions.
+    out = wrap_multiline_braceless_control_flow(&out);
+
     // Lower TS test files (`*.test.ts`, `*.spec.ts`, `bun:test`/`vitest`/`@playwright/test`)
     // into runnable CP `cap:test` syntax before parser self-verification.
     if super::ts_test::is_ts_test_file(rel_path, source) {
         out = super::ts_test::lower_ts_test_to_cap_test(&out);
-        opt_notes.push("降级 TS 测试套件（describe/test/expect/async）为可编译运行的 CP `cap:test` 语法".to_string());
+        opt_notes.push(
+            "降级 TS 测试套件（describe/test/expect/async）为可编译运行的 CP `cap:test` 语法"
+                .to_string(),
+        );
     }
 
     // Self-verify transpiled CP output with `cpc::parser::Parser`.
@@ -6078,6 +6831,120 @@ export async function fetchDashboard(): Promise<void> {
             .cp_code
             .contains("const literal = \"Promise.all([untouched])\";"));
         assert!(res.opt_notes.iter().any(|n| n.contains("joinAll")));
+        assert!(cp_snippet_parses_ok(&res.cp_code));
+    }
+
+    #[test]
+    fn test_class_mut_self_transitive_call_graph() {
+        let ts = r#"
+export class Tracker {
+    count: number = 0;
+    items: string[] = [];
+
+    private bumpLeaf(): void {
+        this.count += 1;
+    }
+
+    private appendItem(item: string): void {
+        this.items.push(item);
+    }
+
+    public stepAndRecord(item: string): void {
+        this.bumpLeaf();
+        this.appendItem(item);
+    }
+
+    public outerCall(item: string): void {
+        this.stepAndRecord(item);
+    }
+
+    public readOnly(): number {
+        return this.count;
+    }
+}
+"#;
+        let dep_map = HashMap::new();
+        let res = transpile_ts_to_cp(ts, "src/tracker.ts", &dep_map);
+        assert!(res.cp_code.contains("fn bumpLeaf(*_)"));
+        assert!(res.cp_code.contains("fn appendItem(*_, item: string)"));
+        assert!(res.cp_code.contains("pub fn stepAndRecord(*_, item: string)"));
+        assert!(res.cp_code.contains("pub fn outerCall(*_, item: string)"));
+        assert!(res.cp_code.contains("pub fn readOnly(): f64"));
+        assert!(cp_snippet_parses_ok(&res.cp_code));
+    }
+
+    #[test]
+    fn test_multiline_braceless_if_else_wrapping() {
+        let ts = r#"
+export function resolveUrl(url: string, useHttp: boolean): string {
+    if (url.startsWith("file://"))
+        return url;
+    else if (useHttp)
+        url = "http://" + url;
+    else
+        url = "https://" + url;
+    if (url.length > 0)
+        if (useHttp)
+            return url;
+        else
+            return "";
+    return url;
+}
+"#;
+        let dep_map = HashMap::new();
+        let res = transpile_ts_to_cp(ts, "src/url.ts", &dep_map);
+        assert!(!res.cp_code.contains("else @as"));
+        assert!(res.cp_code.contains("if (url.startsWith(\"file://\")) {"));
+        assert!(res.cp_code.contains("else if (useHttp) {"));
+        assert!(res.cp_code.contains("else {"));
+        assert!(cp_snippet_parses_ok(&res.cp_code));
+    }
+
+    #[test]
+    fn test_constructor_init_private_fields_and_symbol() {
+        let ts = r#"
+export const MAIN_WORLD = Symbol("mainWorld");
+export const MULTI_SYM = Symbol(
+    "FrameManager.FrameNavigated"
+);
+export const DISPOSE_SYM = Symbol.dispose;
+
+export class Browser {
+    #logger: string;
+    #count = 0;
+
+    constructor(logger: string) {
+        super(logger);
+        this.#logger = logger;
+        this.#count = 1;
+    }
+
+    #helper(): void {
+        this.#count += 1;
+    }
+
+    getLogger(): string {
+        return this.#logger;
+    }
+}
+"#;
+        let dep_map = HashMap::new();
+        let res = transpile_ts_to_cp(ts, "src/browser.ts", &dep_map);
+        assert!(res.cp_code.contains("pub const MAIN_WORLD = \"__symbol_mainWorld\";"));
+        assert!(res.cp_code.contains("pub const MULTI_SYM = \"__symbol_FrameManager.FrameNavigated\";"));
+        assert!(res.cp_code.contains("pub const DISPOSE_SYM = \"__symbol_dispose\";"));
+        assert!(!res.cp_code.contains("Symbol("));
+        assert!(res.cp_code.contains("_priv_logger: string = \"\";"));
+        assert!(res.cp_code.contains("_priv_count: string = 0;"));
+        assert!(res.cp_code.contains("pub static fn init(logger: string): Browser {"));
+        assert!(res.cp_code.contains("let self_val: Browser = Browser{};"));
+        assert!(res.cp_code.contains("// [cap-migrate] super(logger);"));
+        assert!(res.cp_code.contains("self_val._priv_logger = logger;"));
+        assert!(res.cp_code.contains("self_val._priv_count = 1;"));
+        assert!(res.cp_code.contains("return self_val;"));
+        assert!(res.cp_code.contains("fn _priv_helper(*_) {"));
+        assert!(res.cp_code.contains("return _._priv_logger;"));
+        assert!(!res.cp_code.contains('#'));
         assert!(cp_snippet_parses_ok(&res.cp_code));
     }
 }
