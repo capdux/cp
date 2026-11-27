@@ -8,14 +8,60 @@ pub struct GitignoreRule {
     anchored: bool = false,
 }
 
+type Vec16u8 = @Vector(16, u8);
+
 fn eqlBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(va == vb);
+        if (mask != 0xFFFF) { return false; }
+        i += 16;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) { return false; }
         i += 1;
     }
     return true;
+}
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
+}
+
+fn findLastByteSimd(s: []const u8, ch: u8): usize? {
+    let i = s.len;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i >= 16) {
+        i -= 16;
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + (15 - @as(usize, @clz(mask)));
+        }
+    }
+    while (i > 0) {
+        i -= 1;
+        if (s[i] == ch) {
+            return i;
+        }
+    }
+    return null;
 }
 
 fn stripBom(src: []const u8): []const u8 {
@@ -73,15 +119,7 @@ pub fn parseGitignoreLine(raw_line: []const u8): GitignoreRule? {
     }
 
     // 前导或中间包含 '/' 则视为路径锚定
-    let anchored = false;
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '/') {
-            anchored = true;
-            break;
-        }
-        i += 1;
-    }
+    const anchored = findByteSimd(s, 0, '/') < s.len;
     if (s[0] == '/') {
         s = s[1..s.len];
         if (s.len == 0) { return null; }
@@ -197,7 +235,7 @@ fn splitSegments(path: []const u8, out: [][]const u8): usize {
         while (i < path.len && path[i] == '/') { i += 1; }
         if (i >= path.len) { break; }
         const start = i;
-        while (i < path.len && path[i] != '/') { i += 1; }
+        i = findByteSimd(path, i, '/');
         out[count] = path[start..i];
         count += 1;
     }
@@ -271,12 +309,8 @@ fn stripSlashes(p: []const u8): []const u8 {
 }
 
 fn basenameOf(p: []const u8): []const u8 {
-    let i = p.len;
-    while (i > 0) {
-        i -= 1;
-        if (p[i] == '/') {
-            return p[(i + 1)..p.len];
-        }
+    if (ls := findLastByteSimd(p, '/')) {
+        return p[(ls + 1)..p.len];
     }
     return p;
 }
@@ -304,9 +338,7 @@ pub fn isIgnored(gitignore_content: []const u8, rel_path: []const u8, is_dir: bo
 
     while (pos < src.len) {
         const line_start = pos;
-        while (pos < src.len && src[pos] != '\n') {
-            pos += 1;
-        }
+        pos = findByteSimd(src, pos, '\n');
         const line_end = pos;
         if (pos < src.len && src[pos] == '\n') {
             pos += 1;

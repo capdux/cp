@@ -2,6 +2,81 @@
 
 const std = @import("std");
 
+type Vec16u8 = @Vector(16, u8);
+
+// bit 0: JSON whitespace, bit 1: JSON unquoted value stop char
+fn makePasetoJsonLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 3;
+    lut['\t'] = 3;
+    lut['\n'] = 3;
+    lut['\r'] = 3;
+    lut[','] = 2;
+    lut['}'] = 2;
+    return lut;
+}
+
+const PASETO_JSON_LUT: [u8; 256] = makePasetoJsonLut();
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
+}
+
+fn findQuoteOrBackslashSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_q: Vec16u8 = @splat('"');
+    const v_bs: Vec16u8 = @splat('\\');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == v_q) | (v == v_bs));
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != '"' && s[i] != '\\') {
+        i += 1;
+    }
+    return i;
+}
+
+fn findValStopSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_comma: Vec16u8 = @splat(',');
+    const v_rbrace: Vec16u8 = @splat('}');
+    const v_sp: Vec16u8 = @splat(' ');
+    const v_nl: Vec16u8 = @splat('\n');
+    const v_cr: Vec16u8 = @splat('\r');
+    const v_tb: Vec16u8 = @splat('\t');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_comma) | (v == v_rbrace) | (v == v_sp) | (v == v_nl) | (v == v_cr) | (v == v_tb);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && (PASETO_JSON_LUT[@as(usize, s[i])] & 2) == 0) {
+        i += 1;
+    }
+    return i;
+}
+
 pub const PasetoError = error{
     InvalidPrefix,
     InvalidPurpose,
@@ -210,64 +285,78 @@ fn parseTimestampUnix(s: []const u8): i64? {
 fn findJsonField(json: []const u8, key: []const u8): ([]const u8)? {
     let i: usize = 0;
     while (i < json.len) {
-        if (json[i] == '"') {
-            i += 1;
-            const key_start = i;
-            while (i < json.len and json[i] != '"') {
-                if (json[i] == '\\' and i + 1 < json.len) {
+        i = findByteSimd(json, i, '"');
+        if (i >= json.len) {
+            return null;
+        }
+        i += 1;
+        const key_start = i;
+        while (i < json.len) {
+            i = findQuoteOrBackslashSimd(json, i);
+            if (i >= json.len) {
+                return null;
+            }
+            if (json[i] == '\\') {
+                if (i + 1 < json.len) {
                     i += 2;
                 } else {
                     i += 1;
                 }
+            } else {
+                break;
+            }
+        }
+        if (i >= json.len) {
+            return null;
+        }
+        const found_key = json[key_start..i];
+        i += 1; // skip closing quote
+
+        while (i < json.len and (PASETO_JSON_LUT[@as(usize, json[i])] & 1) != 0) {
+            i += 1;
+        }
+        if (i < json.len and json[i] == ':') {
+            i += 1;
+            while (i < json.len and (PASETO_JSON_LUT[@as(usize, json[i])] & 1) != 0) {
+                i += 1;
             }
             if (i >= json.len) {
                 return null;
             }
-            const found_key = json[key_start..i];
-            i += 1; // skip closing quote
-
-            while (i < json.len and (json[i] == ' ' or json[i] == '\t' or json[i] == '\n' or json[i] == '\r')) {
+            if (json[i] == '"') {
                 i += 1;
-            }
-            if (i < json.len and json[i] == ':') {
-                i += 1;
-                while (i < json.len and (json[i] == ' ' or json[i] == '\t' or json[i] == '\n' or json[i] == '\r')) {
-                    i += 1;
-                }
-                if (i >= json.len) {
-                    return null;
-                }
-                if (json[i] == '"') {
-                    i += 1;
-                    const val_start = i;
-                    while (i < json.len and json[i] != '"') {
-                        if (json[i] == '\\' and i + 1 < json.len) {
+                const val_start = i;
+                while (i < json.len) {
+                    i = findQuoteOrBackslashSimd(json, i);
+                    if (i >= json.len) {
+                        return null;
+                    }
+                    if (json[i] == '\\') {
+                        if (i + 1 < json.len) {
                             i += 2;
                         } else {
                             i += 1;
                         }
-                    }
-                    if (i >= json.len) {
-                        return null;
-                    }
-                    const val = json[val_start..i];
-                    i += 1;
-                    if (std.mem.eql(u8, found_key, key)) {
-                        return val;
-                    }
-                } else {
-                    const val_start = i;
-                    while (i < json.len and json[i] != ',' and json[i] != '}' and json[i] != ' ' and json[i] != '\n' and json[i] != '\r' and json[i] != '\t') {
-                        i += 1;
-                    }
-                    const val = json[val_start..i];
-                    if (std.mem.eql(u8, found_key, key)) {
-                        return val;
+                    } else {
+                        break;
                     }
                 }
+                if (i >= json.len) {
+                    return null;
+                }
+                const val = json[val_start..i];
+                i += 1;
+                if (std.mem.eql(u8, found_key, key)) {
+                    return val;
+                }
+            } else {
+                const val_start = i;
+                i = findValStopSimd(json, i);
+                const val = json[val_start..i];
+                if (std.mem.eql(u8, found_key, key)) {
+                    return val;
+                }
             }
-        } else {
-            i += 1;
         }
     }
     return null;

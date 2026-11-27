@@ -1,8 +1,37 @@
 // Source: Absorbed from /data/dev/bun/src/ini.zig | Synced: 2026-11-21T14:46:04Z (EditorConfig Parser & File Property Resolver)
 // Pure-CP zero-allocation .editorconfig parser, section glob matcher, and property resolver.
 
+type Vec16u8 = @Vector(16, u8);
+
+fn makeEcLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeEcWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\r'] = 1;
+    lut['\n'] = 1;
+    return lut;
+}
+
+const EC_LOWER_LUT: [u8; 256] = makeEcLowerLut();
+const EC_WS_LUT: [u8; 256] = makeEcWsLut();
+
 fn isWs(b: u8): bool {
-    return b == ' ' || b == '\t' || b == '\r' || b == '\n';
+    return EC_WS_LUT[@as(usize, b)] != 0;
 }
 
 fn trimWs(s: []const u8): []const u8 {
@@ -14,18 +43,64 @@ fn trimWs(s: []const u8): []const u8 {
 }
 
 fn toLowerAscii(b: u8): u8 {
-    if (b >= 'A' && b <= 'Z') return b + 32;
-    return b;
+    return EC_LOWER_LUT[@as(usize, b)];
 }
 
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const v_A: Vec16u8 = @splat('A');
+    const v_Z: Vec16u8 = @splat('Z');
+    const v_32: Vec16u8 = @splat(32);
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= v_A) & (va <= v_Z), va + v_32, va);
+        const lb = @select(u8, (vb >= v_A) & (vb <= v_Z), vb + v_32, vb);
+        const mask: u16 = @bitCast(la == lb);
+        if (mask != 0xFFFF) return false;
+        i += 16;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
         i += 1;
     }
     return true;
+}
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
+}
+
+fn findLastByteSimd(s: []const u8, ch: u8): usize? {
+    let i = s.len;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i >= 16) {
+        i -= 16;
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + (15 - @as(usize, @clz(mask)));
+        }
+    }
+    while (i > 0) {
+        i -= 1;
+        if (s[i] == ch) return i;
+    }
+    return null;
 }
 
 fn parseU32Strict(s: []const u8): u32? {
@@ -43,22 +118,11 @@ fn parseU32Strict(s: []const u8): u32? {
 }
 
 fn containsSlash(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '/') return true;
-        i += 1;
-    }
-    return false;
+    return findByteSimd(s, 0, '/') < s.len;
 }
 
 fn basenameOf(path: []const u8): []const u8 {
-    let last_slash: usize? = null;
-    let i: usize = 0;
-    while (i < path.len) {
-        if (path[i] == '/') last_slash = i;
-        i += 1;
-    }
-    if (ls := last_slash) return path[ls + 1..];
+    if (ls := findLastByteSimd(path, '/')) return path[ls + 1..];
     return path;
 }
 
@@ -91,23 +155,17 @@ fn matchSimpleGlob(pat: []const u8, text: []const u8): bool {
                 let combined: [256]u8 = [0; 256];
                 if (prefix.len + alt.len + suffix.len <= combined.len) {
                     let w: usize = 0;
-                    let a: usize = 0;
-                    while (a < prefix.len) {
-                        combined[w] = prefix[a];
-                        w += 1;
-                        a += 1;
+                    if (prefix.len > 0) {
+                        @memcpy(combined[w .. w + prefix.len], prefix);
+                        w += prefix.len;
                     }
-                    let b: usize = 0;
-                    while (b < alt.len) {
-                        combined[w] = alt[b];
-                        w += 1;
-                        b += 1;
+                    if (alt.len > 0) {
+                        @memcpy(combined[w .. w + alt.len], alt);
+                        w += alt.len;
                     }
-                    let c: usize = 0;
-                    while (c < suffix.len) {
-                        combined[w] = suffix[c];
-                        w += 1;
-                        c += 1;
+                    if (suffix.len > 0) {
+                        @memcpy(combined[w .. w + suffix.len], suffix);
+                        w += suffix.len;
                     }
                     if (matchSimpleGlob(combined[0..w], text)) return true;
                 }
@@ -251,7 +309,7 @@ export fn resolveEditorConfig(content: []const u8, rel_path: []const u8): Editor
 
     while (pos < content.len) {
         const line_start = pos;
-        while (pos < content.len && content[pos] != '\n') pos += 1;
+        pos = findByteSimd(content, pos, '\n');
         let line_end = pos;
         if (pos < content.len && content[pos] == '\n') pos += 1;
         if (line_end > line_start && content[line_end - 1] == '\r') line_end -= 1;
@@ -266,17 +324,8 @@ export fn resolveEditorConfig(content: []const u8, rel_path: []const u8): Editor
             continue;
         }
 
-        let eq_pos: usize? = null;
-        let k: usize = 0;
-        while (k < line.len) {
-            if (line[k] == '=') {
-                eq_pos = k;
-                break;
-            }
-            k += 1;
-        }
-        if (eq_pos == null) continue;
-        const ep = eq_pos.?;
+        const ep = findByteSimd(line, 0, '=');
+        if (ep >= line.len) continue;
         const key = trimWs(line[0..ep]);
         const val = trimWs(line[ep + 1..]);
 

@@ -4,6 +4,24 @@
 
 pub const DEFAULT_MAX_AGE: u32 = 86400;
 
+type Vec16u8 = @Vector(16, u8);
+
+fn makeAltSvcLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const ALTSVC_LOWER_LUT: [u8; 256] = makeAltSvcLowerLut();
+
 pub struct AltSvcEntry {
     /// Protocol ID (e.g. `"h3"`, `"h3-29"`, `"h2"`).
     protocol: []const u8,
@@ -144,10 +162,7 @@ pub struct AltSvcCache {
         if (idx := empty_idx) {
             _.slots[idx].occupied = true;
             _.slots[idx].origin_host_len = @intCast(origin_host.len);
-            let k: usize = 0;
-            while (k < origin_host.len) : (k += 1) {
-                _.slots[idx].origin_host[k] = origin_host[k];
-            }
+            @memcpy(_.slots[idx].origin_host[0..origin_host.len], origin_host);
             _.slots[idx].origin_port = origin_port;
             _.slots[idx].h3_port = h3.port;
             _.slots[idx].expires_at = exp;
@@ -244,6 +259,15 @@ fn parseSingleEntry(item: []const u8): AltSvcEntry? {
 
 fn findChar(s: []const u8, ch: u8): usize? {
     let i: usize = 0;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
     while (i < s.len) : (i += 1) {
         if (s[i] == ch) return i;
     }
@@ -252,6 +276,15 @@ fn findChar(s: []const u8, ch: u8): usize? {
 
 fn findLastChar(s: []const u8, ch: u8): usize? {
     let i = s.len;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i >= 16) {
+        i -= 16;
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + (15 - @as(usize, @clz(mask)));
+        }
+    }
     while (i > 0) {
         i -= 1;
         if (s[i] == ch) return i;
@@ -292,13 +325,19 @@ fn trimOws(s: []const u8): []const u8 {
 }
 
 fn toLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
+    return ALTSVC_LOWER_LUT[@as(usize, c)];
 }
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(va == vb);
+        if (mask != 0xFFFF) return false;
+        i += 16;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -308,6 +347,18 @@ fn strEq(a: []const u8, b: []const u8): bool {
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const v_A: Vec16u8 = @splat('A');
+    const v_Z: Vec16u8 = @splat('Z');
+    const v_32: Vec16u8 = @splat(32);
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= v_A) & (va <= v_Z), va + v_32, va);
+        const lb = @select(u8, (vb >= v_A) & (vb <= v_Z), vb + v_32, vb);
+        const mask: u16 = @bitCast(la == lb);
+        if (mask != 0xFFFF) return false;
+        i += 16;
+    }
     while (i < a.len) : (i += 1) {
         if (toLower(a[i]) != toLower(b[i])) return false;
     }

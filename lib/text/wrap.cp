@@ -1,6 +1,76 @@
 // Source: Absorbed from /data/dev/bun/src/cli.zig | Synced: 2026-11-21T16:45:27Z (CLI Word-Wrap, Dedent & Truncate Formatter)
 // Pure-CP zero-allocation greedy word-wrapping, common-indent dedent, prefix indent, and ellipsis truncation.
 
+type Vec16u8 = @Vector(16, u8);
+
+// bit 0: horizontal whitespace (' ', '\t', '\r'), bit 1: any whitespace including '\n'
+fn makeWrapWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 3;
+    lut['\t'] = 3;
+    lut['\r'] = 3;
+    lut['\n'] = 2;
+    return lut;
+}
+
+const WRAP_WS_LUT: [u8; 256] = makeWrapWsLut();
+
+fn findNewlineSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_nl: Vec16u8 = @splat('\n');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_nl);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != '\n') {
+        i += 1;
+    }
+    return i;
+}
+
+fn findWordEndSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_sp: Vec16u8 = @splat(' ');
+    const v_tb: Vec16u8 = @splat('\t');
+    const v_cr: Vec16u8 = @splat('\r');
+    const v_nl: Vec16u8 = @splat('\n');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_sp) | (v == v_tb) | (v == v_cr) | (v == v_nl);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && (WRAP_WS_LUT[@as(usize, s[i])] & 2) == 0) {
+        i += 1;
+    }
+    return i;
+}
+
+fn countLeadingSpacesSimd(s: []const u8, limit: usize): usize {
+    let i: usize = 0;
+    const v_sp: Vec16u8 = @splat(' ');
+    while (i + 16 <= limit) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v != v_sp);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < limit && s[i] == ' ') {
+        i += 1;
+    }
+    return i;
+}
+
 fn writeByte(out: []u8, pos: *usize, b: u8): bool {
     if (pos.* >= out.len) return false;
     out[pos.*] = b;
@@ -10,12 +80,10 @@ fn writeByte(out: []u8, pos: *usize, b: u8): bool {
 
 fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
     if (pos.* + s.len > out.len) return false;
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.* + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
+        pos.* += s.len;
     }
-    pos.* += s.len;
     return true;
 }
 
@@ -35,15 +103,13 @@ export fn wrapText(text: []const u8, max_width: usize, out: []u8): ([]const u8)?
             continue;
         }
         // Skip horizontal whitespace between words
-        while (i < text.len && (text[i] == ' ' || text[i] == '\t' || text[i] == '\r')) {
+        while (i < text.len && (WRAP_WS_LUT[@as(usize, text[i])] & 1) != 0) {
             i += 1;
         }
         if (i >= text.len || text[i] == '\n') continue;
 
         const wstart = i;
-        while (i < text.len && text[i] != ' ' && text[i] != '\t' && text[i] != '\r' && text[i] != '\n') {
-            i += 1;
-        }
+        i = findWordEndSimd(text, i);
         const word = text[wstart..i];
 
         if (col == 0) {
@@ -68,7 +134,7 @@ export fn indentNonEmptyLines(text: []const u8, prefix: []const u8, out: []u8): 
     let i: usize = 0;
     while (i < text.len) {
         const line_start = i;
-        while (i < text.len && text[i] != '\n') i += 1;
+        i = findNewlineSimd(text, i);
         const line = text[line_start..i];
         const has_nl = i < text.len && text[i] == '\n';
         if (has_nl) i += 1;
@@ -90,14 +156,11 @@ export fn commonIndent(text: []const u8): usize {
     let i: usize = 0;
     while (i < text.len) {
         const line_start = i;
-        while (i < text.len && text[i] != '\n') i += 1;
+        i = findNewlineSimd(text, i);
         const line = text[line_start..i];
         if (i < text.len && text[i] == '\n') i += 1;
 
-        let spaces: usize = 0;
-        while (spaces < line.len && line[spaces] == ' ') {
-            spaces += 1;
-        }
+        const spaces = countLeadingSpacesSimd(line, line.len);
         // Ignore blank / whitespace-only lines
         if (spaces == line.len || (spaces + 1 == line.len && line[spaces] == '\r')) {
             continue;
@@ -118,16 +181,13 @@ export fn dedentLines(text: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
     while (i < text.len) {
         const line_start = i;
-        while (i < text.len && text[i] != '\n') i += 1;
+        i = findNewlineSimd(text, i);
         const line = text[line_start..i];
         const has_nl = i < text.len && text[i] == '\n';
         if (has_nl) i += 1;
 
         const skip = if (strip < line.len) strip else line.len;
-        let actual_skip: usize = 0;
-        while (actual_skip < skip && line[actual_skip] == ' ') {
-            actual_skip += 1;
-        }
+        const actual_skip = countLeadingSpacesSimd(line, skip);
         if (!writeSlice(out, &pos, line[actual_skip..])) return null;
         if (has_nl) {
             if (!writeByte(out, &pos, '\n')) return null;
@@ -141,19 +201,15 @@ export fn dedentLines(text: []const u8, out: []u8): ([]const u8)? {
 export fn truncateEllipsis(text: []const u8, max_len: usize, ellipsis: []const u8, out: []u8): ([]const u8)? {
     if (text.len <= max_len) {
         if (text.len > out.len) return null;
-        let i: usize = 0;
-        while (i < text.len) {
-            out[i] = text[i];
-            i += 1;
+        if (text.len > 0) {
+            @memcpy(out[0..text.len], text);
         }
         return out[0..text.len];
     }
     if (max_len <= ellipsis.len) {
         if (max_len > out.len) return null;
-        let i: usize = 0;
-        while (i < max_len) {
-            out[i] = ellipsis[i];
-            i += 1;
+        if (max_len > 0) {
+            @memcpy(out[0..max_len], ellipsis[0..max_len]);
         }
         return out[0..max_len];
     }

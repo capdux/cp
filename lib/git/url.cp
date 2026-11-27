@@ -21,8 +21,37 @@ pub enum GitProtocol: u8 {
     }
 }
 
+type Vec16u8 = @Vector(16, u8);
+
+fn makeGitLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeGitWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    return lut;
+}
+
+const GIT_LOWER_LUT: [u8; 256] = makeGitLowerLut();
+const GIT_WS_LUT: [u8; 256] = makeGitWsLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return GIT_WS_LUT[@as(usize, c)] != 0;
 }
 
 fn trimSpace(s: []const u8): []const u8 {
@@ -35,6 +64,14 @@ fn trimSpace(s: []const u8): []const u8 {
 
 fn hasWhitespace(s: []const u8): bool {
     let i: usize = 0;
+    const v_sp: Vec16u8 = @splat(0x20);
+    const v_del: Vec16u8 = @splat(0x7F);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v <= v_sp) | (v == v_del));
+        if (mask != 0) { return true; }
+        i += 16;
+    }
     while (i < s.len) {
         if (s[i] <= 0x20 || s[i] == 0x7F) { return true; }
         i += 1;
@@ -45,15 +82,76 @@ fn hasWhitespace(s: []const u8): bool {
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    const v_A: Vec16u8 = @splat('A');
+    const v_Z: Vec16u8 = @splat('Z');
+    const v_32: Vec16u8 = @splat(32);
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= v_A) & (va <= v_Z), va + v_32, va);
+        const lb = @select(u8, (vb >= v_A) & (vb <= v_Z), vb + v_32, vb);
+        const mask: u16 = @bitCast(la == lb);
+        if (mask != 0xFFFF) { return false; }
+        i += 16;
+    }
     while (i < a.len) {
-        let ca = a[i];
-        let cb = b[i];
-        if (ca >= 'A' && ca <= 'Z') { ca += 32; }
-        if (cb >= 'A' && cb <= 'Z') { cb += 32; }
-        if (ca != cb) { return false; }
+        if (GIT_LOWER_LUT[@as(usize, a[i])] != GIT_LOWER_LUT[@as(usize, b[i])]) { return false; }
         i += 1;
     }
     return true;
+}
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
+}
+
+fn findLastByteSimd(s: []const u8, ch: u8): usize? {
+    let i = s.len;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i >= 16) {
+        i -= 16;
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + (15 - @as(usize, @clz(mask)));
+        }
+    }
+    while (i > 0) {
+        i -= 1;
+        if (s[i] == ch) { return i; }
+    }
+    return null;
+}
+
+fn findQueryOrHashSimd(s: []const u8): usize {
+    let i: usize = 0;
+    const v_q: Vec16u8 = @splat('?');
+    const v_h: Vec16u8 = @splat('#');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == v_q) | (v == v_h));
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != '?' && s[i] != '#') {
+        i += 1;
+    }
+    return i;
 }
 
 fn startsWithIgnoreCaseAscii(s: []const u8, prefix: []const u8): bool {
@@ -83,10 +181,12 @@ fn parsePortU16(s: []const u8): u16? {
 fn findSchemeSep(s: []const u8): usize? {
     let i: usize = 0;
     while (i + 2 < s.len) {
-        if (s[i] == ':' && s[i + 1] == '/' && s[i + 2] == '/') {
-            return i;
+        const pos = findByteSimd(s, i, ':');
+        if (pos + 2 >= s.len) { return null; }
+        if (s[pos + 1] == '/' && s[pos + 2] == '/') {
+            return pos;
         }
-        i += 1;
+        i = pos + 1;
     }
     return null;
 }
@@ -99,39 +199,24 @@ struct HostPort {
 fn parseHostPort(hp: []const u8): HostPort? {
     if (hp.len == 0) { return null; }
     if (hp[0] == '[') {
-        let rb: usize? = null;
-        let i: usize = 1;
-        while (i < hp.len) {
-            if (hp[i] == ']') {
-                rb = i;
-                break;
-            }
-            i += 1;
-        }
-        const close = rb ?? return null;
-        if (close <= 1) { return null; }
-        const h = hp[0..(close + 1)];
-        if (close + 1 == hp.len) {
+        const close_pos = findByteSimd(hp, 1, ']');
+        if (close_pos >= hp.len) { return null; }
+        if (close_pos <= 1) { return null; }
+        const h = hp[0..(close_pos + 1)];
+        if (close_pos + 1 == hp.len) {
             return HostPort{ host: h, port: null };
         }
-        if (hp[close + 1] != ':') { return null; }
-        const p = parsePortU16(hp[(close + 2)..hp.len]) ?? return null;
+        if (hp[close_pos + 1] != ':') { return null; }
+        const p = parsePortU16(hp[(close_pos + 2)..hp.len]) ?? return null;
         return HostPort{ host: h, port: p };
     }
 
-    let colon_idx: usize? = null;
-    let i: usize = 0;
-    while (i < hp.len) {
-        if (hp[i] == ':') {
-            if (colon_idx != null) { return null; }
-            colon_idx = i;
-        }
-        i += 1;
-    }
-    if (ci := colon_idx) {
-        const h = hp[0..ci];
+    const first_colon = findByteSimd(hp, 0, ':');
+    if (first_colon < hp.len) {
+        if (findByteSimd(hp, first_colon + 1, ':') < hp.len) { return null; }
+        const h = hp[0..first_colon];
         if (h.len == 0) { return null; }
-        const p = parsePortU16(hp[(ci + 1)..hp.len]) ?? return null;
+        const p = parsePortU16(hp[(first_colon + 1)..hp.len]) ?? return null;
         return HostPort{ host: h, port: p };
     }
     return HostPort{ host: hp, port: null };
@@ -139,15 +224,7 @@ fn parseHostPort(hp: []const u8): HostPort? {
 
 fn normalizeRepoPath(raw_path: []const u8): []const u8 {
     // 剥离查询串/锚点
-    let end = raw_path.len;
-    let i: usize = 0;
-    while (i < raw_path.len) {
-        if (raw_path[i] == '?' || raw_path[i] == '#') {
-            end = i;
-            break;
-        }
-        i += 1;
-    }
+    let end = findQueryOrHashSimd(raw_path);
     let start: usize = 0;
     while (start < end && raw_path[start] == '/') { start += 1; }
     while (end > start && raw_path[end - 1] == '/') { end -= 1; }
@@ -176,10 +253,17 @@ struct OutWriter {
     }
 
     fn writeStr(*_, s: []const u8) {
-        let i: usize = 0;
-        while (i < s.len) {
-            _.writeByte(s[i]);
-            i += 1;
+        if (s.len == 0) { return; }
+        if (_.pos + s.len <= _.buf.len) {
+            @memcpy(_.buf[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
+        } else {
+            const avail = _.buf.len - _.pos;
+            if (avail > 0) {
+                @memcpy(_.buf[_.pos .. _.buf.len], s[0..avail]);
+                _.pos = _.buf.len;
+            }
+            _.overflow = true;
         }
     }
 
@@ -229,12 +313,7 @@ pub struct GitRemoteUrl {
         const norm = normalizeRepoPath(raw_path);
         if (norm.len == 0) { return null; }
 
-        let last_slash: usize? = null;
-        let i: usize = 0;
-        while (i < norm.len) {
-            if (norm[i] == '/') { last_slash = i; }
-            i += 1;
-        }
+        const last_slash = findLastByteSimd(norm, '/');
 
         let owner: ([]const u8)? = null;
         let repo = norm;

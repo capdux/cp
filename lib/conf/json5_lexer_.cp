@@ -46,37 +46,170 @@ pub struct Json5Token {
     bool_val: bool = false,
 }
 
+type Vec16u8 = @Vector(16, u8);
+
+fn makeJson5HexLut(): [i8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [i8; 256] = [-1; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(i8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(i8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(i8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+// bit 0: space, bit 1: digit, bit 2: ident_start, bit 3: ident_continue
+fn makeJson5ClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let flags: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r' || i == 0x0B || i == 0x0C) {
+            flags |= 1;
+        }
+        if (i >= '0' && i <= '9') {
+            flags |= 2;
+            flags |= 8;
+        }
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i == '_' || i == '$' || i >= 0x80) {
+            flags |= 4;
+            flags |= 8;
+        }
+        lut[i] = flags;
+    }
+    return lut;
+}
+
+const JSON5_HEX_LUT: [i8; 256] = makeJson5HexLut();
+const JSON5_CLASS_LUT: [u8; 256] = makeJson5ClassLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0B || c == 0x0C;
+    return (JSON5_CLASS_LUT[@as(usize, c)] & 1) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (JSON5_CLASS_LUT[@as(usize, c)] & 2) != 0;
 }
 
 fn hexVal(c: u8): i32 {
-    if (c >= '0' && c <= '9') { return @as(i32, c - '0'); }
-    if (c >= 'a' && c <= 'f') { return @as(i32, c - 'a') + 10; }
-    if (c >= 'A' && c <= 'F') { return @as(i32, c - 'A') + 10; }
-    return -1;
+    return @as(i32, JSON5_HEX_LUT[@as(usize, c)]);
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '$' || c >= 0x80;
+    return (JSON5_CLASS_LUT[@as(usize, c)] & 4) != 0;
 }
 
 fn isIdentContinue(c: u8): bool {
-    return isIdentStart(c) || isDigit(c);
+    return (JSON5_CLASS_LUT[@as(usize, c)] & 8) != 0;
 }
 
 fn eqlBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(va == vb);
+        if (mask != 0xFFFF) { return false; }
+        i += 16;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) { return false; }
         i += 1;
     }
     return true;
+}
+
+fn findNewlineOrCrSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_nl: Vec16u8 = @splat('\n');
+    const v_cr: Vec16u8 = @splat('\r');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_nl) | (v == v_cr);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != '\n' && s[i] != '\r') {
+        i += 1;
+    }
+    return i;
+}
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
+}
+
+fn findStringSpecialSimd(s: []const u8, start: usize, quote: u8): usize {
+    let i = start;
+    const v_q: Vec16u8 = @splat(quote);
+    const v_bs: Vec16u8 = @splat('\\');
+    const v_nl: Vec16u8 = @splat('\n');
+    const v_cr: Vec16u8 = @splat('\r');
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_q) | (v == v_bs) | (v == v_nl) | (v == v_cr);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len) {
+        const c = s[i];
+        if (c == quote || c == '\\' || c == '\n' || c == '\r') {
+            return i;
+        }
+        i += 1;
+    }
+    return i;
+}
+
+fn findNormStringSpecialSimd(s: []const u8, start: usize, end_idx: usize): usize {
+    let i = start;
+    const v_q: Vec16u8 = @splat('"');
+    const v_bs: Vec16u8 = @splat('\\');
+    const v_sp: Vec16u8 = @splat(0x20);
+    while (i + 16 <= end_idx) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const hit = (v == v_q) | (v == v_bs) | (v < v_sp);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < end_idx) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c < 0x20) {
+            return i;
+        }
+        i += 1;
+    }
+    return i;
 }
 
 fn pow10(exp: i32): f64 {
@@ -132,22 +265,23 @@ pub struct Json5Lexer {
             if (c == '/' && _.pos + 1 < _.src.len) {
                 const n = _.src[_.pos + 1];
                 if (n == '/') {
-                    _.pos += 2;
-                    while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
-                        _.pos += 1;
-                    }
+                    _.pos = findNewlineOrCrSimd(_.src, _.pos + 2);
                     continue;
                 }
                 if (n == '*') {
                     _.pos += 2;
                     let closed = false;
                     while (_.pos + 1 < _.src.len) {
-                        if (_.src[_.pos] == '*' && _.src[_.pos + 1] == '/') {
-                            _.pos += 2;
+                        const star_pos = findByteSimd(_.src, _.pos, '*');
+                        if (star_pos + 1 >= _.src.len) {
+                            break;
+                        }
+                        if (_.src[star_pos + 1] == '/') {
+                            _.pos = star_pos + 2;
                             closed = true;
                             break;
                         }
-                        _.pos += 1;
+                        _.pos = star_pos + 1;
                     }
                     if (!closed) {
                         _.pos = _.src.len;
@@ -165,6 +299,10 @@ pub struct Json5Lexer {
         const quote = _.src[start];
         _.pos = start + 1;
         while (_.pos < _.src.len) {
+            _.pos = findStringSpecialSimd(_.src, _.pos, quote);
+            if (_.pos >= _.src.len) {
+                break;
+            }
             const c = _.src[_.pos];
             if (c == '\\') {
                 if (_.pos + 1 >= _.src.len) {
@@ -433,10 +571,17 @@ struct OutWriter {
     }
 
     fn writeStr(*_, s: []const u8) {
-        let i: usize = 0;
-        while (i < s.len) {
-            _.writeByte(s[i]);
-            i += 1;
+        if (s.len == 0) { return; }
+        if (_.pos + s.len <= _.buf.len) {
+            @memcpy(_.buf[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
+        } else {
+            const avail = _.buf.len - _.pos;
+            if (avail > 0) {
+                @memcpy(_.buf[_.pos .. _.buf.len], s[0..avail]);
+                _.pos = _.buf.len;
+            }
+            _.overflow = true;
         }
     }
 
@@ -474,6 +619,12 @@ fn writeNormalizedString(w: *OutWriter, raw: []const u8): bool {
     let i: usize = 1;
     const end_idx = raw.len - 1;
     while (i < end_idx) {
+        const next_special = findNormStringSpecialSimd(raw, i, end_idx);
+        if (next_special > i) {
+            w.writeStr(raw[i..next_special]);
+            i = next_special;
+            if (i >= end_idx) { break; }
+        }
         const c = raw[i];
         if (c == '\\') {
             if (i + 1 >= end_idx) { return false; }

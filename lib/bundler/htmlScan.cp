@@ -120,15 +120,42 @@ pub struct HtmlScanResult {
     }
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+type Vec16u8 = @Vector(16, u8);
+
+fn makeHtmlLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return c;
+    return lut;
+}
+
+fn makeHtmlWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    lut[0x0c] = 1;
+    return lut;
+}
+
+const HTML_LOWER_LUT: [u8; 256] = makeHtmlLowerLut();
+const HTML_WS_LUT: [u8; 256] = makeHtmlWsLut();
+
+fn toLowerAscii(c: u8): u8 {
+    return HTML_LOWER_LUT[@as(usize, c)];
 }
 
 fn isHtmlWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c;
+    return HTML_WS_LUT[@as(usize, c)] != 0;
 }
 
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
@@ -136,6 +163,20 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const v_A: Vec16u8 = @splat('A');
+    const v_Z: Vec16u8 = @splat('Z');
+    const v_32: Vec16u8 = @splat(32);
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= v_A) & (va <= v_Z), va + v_32, va);
+        const lb = @select(u8, (vb >= v_A) & (vb <= v_Z), vb + v_32, vb);
+        const mask: u16 = @bitCast(la == lb);
+        if (mask != 0xFFFF) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -157,6 +198,15 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: Vec16u8 = a[i .. i + 16][0..16].*;
+        const vb: Vec16u8 = b[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(va == vb);
+        if (mask != 0xFFFF) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -164,6 +214,23 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         i += 1;
     }
     return true;
+}
+
+fn findByteSimd(s: []const u8, start: usize, ch: u8): usize {
+    let i = start;
+    const v_ch: Vec16u8 = @splat(ch);
+    while (i + 16 <= s.len) {
+        const v: Vec16u8 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == v_ch);
+        if (mask != 0) {
+            return i + @as(usize, @ctz(mask));
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != ch) {
+        i += 1;
+    }
+    return i;
 }
 
 fn trimHtmlWs(s: []const u8): []const u8 {
@@ -408,7 +475,11 @@ fn pushSrcsetAttr(res: *HtmlScanResult, tag: HtmlTagKind, attr: ParsedAttr)! {
 fn skipRawTextUntilCloseTag(html: []const u8, start_pos: usize, tag_name: []const u8): usize {
     let i = start_pos;
     while (i + 2 + tag_name.len < html.len) {
-        if (html[i] == '<' && html[i + 1] == '/') {
+        i = findByteSimd(html, i, '<');
+        if (i + 2 + tag_name.len >= html.len) {
+            break;
+        }
+        if (html[i + 1] == '/') {
             const name_start = i + 2;
             const name_end = name_start + tag_name.len;
             if (asciiEqlIgnoreCase(html[name_start..name_end], tag_name)) {
@@ -432,16 +503,20 @@ pub fn scanHtmlAssets(html: []const u8): HtmlScanResult! {
     let i: usize = 0;
 
     while (i < html.len) {
-        if (html[i] != '<') {
-            i += 1;
-            continue;
+        i = findByteSimd(html, i, '<');
+        if (i >= html.len) {
+            break;
         }
 
         // 跳过 HTML 注释 `<!-- ... -->`
         if (i + 4 <= html.len && bytesEql(html[i..i + 4], "<!--")) {
             i += 4;
             while (i + 3 <= html.len) {
-                if (bytesEql(html[i..i + 3], "-->")) {
+                i = findByteSimd(html, i, '-');
+                if (i + 3 > html.len) {
+                    break;
+                }
+                if (html[i + 1] == '-' && html[i + 2] == '>') {
                     i += 3;
                     break;
                 }
@@ -455,10 +530,7 @@ pub fn scanHtmlAssets(html: []const u8): HtmlScanResult! {
 
         // 跳过 `<!DOCTYPE ...>` / `<?...?>` / 结束标签 `</...>`
         if (i + 1 < html.len && (html[i + 1] == '!' || html[i + 1] == '?' || html[i + 1] == '/')) {
-            i += 2;
-            while (i < html.len && html[i] != '>') {
-                i += 1;
-            }
+            i = findByteSimd(html, i + 2, '>');
             if (i < html.len) {
                 i += 1;
             }
@@ -523,9 +595,7 @@ pub fn scanHtmlAssets(html: []const u8): HtmlScanResult! {
                     const quote = html[p];
                     p += 1;
                     val_start = p;
-                    while (p < html.len && html[p] != quote) {
-                        p += 1;
-                    }
+                    p = findByteSimd(html, p, quote);
                     val_end = p;
                     if (p < html.len && html[p] == quote) {
                         p += 1;
@@ -625,10 +695,8 @@ fn appendChunk(out: []u8, pos: usize, src: []const u8): usize! {
     if (src.len > out.len - pos) {
         return HtmlScannerError.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src);
     }
     return pos + src.len;
 }
