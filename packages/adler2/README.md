@@ -1,107 +1,108 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # adler2
 
-Zero-heap RFC 1950 Adler-32 checksum engine for CP with 16-lane hardware SIMD, streaming updates, O(1) rolling window hash, and O(1) checksum combine (Rust `adler2` parity).
+Zero-heap RFC 1950 Adler-32 checksum engine with streaming updates, rolling window updates (rsync-style), and checksum combining in pure CP.
 
-Processes 16 bytes per iteration using `@Vector(16, u8)` / `@Vector(16, u32)` weighted horizontal reductions with `NMAX = 5552` deferred modulo reduction.
+Aligned with Rust crates.io [`adler2`](https://github.com/oyvindln/adler2) (MIT).
 
-## Provenance & Zero-Cost Migration
-
-| Attribute | Value |
-| --- | --- |
-| Source Platform | **crates.io** |
-| Original Crate | `adler2` (CP `v1.0.0`) |
-| Upstream Repo | `https://github.com/oyvindln/adler2` |
-| License | MIT |
-
-Keep the exact crate name when migrating from Rust to CP:
-
-```rust
-// Rust (crates.io: adler2)
-use adler2::{Adler32, adler32_slice};
-let sum = adler32_slice(b"Wikipedia");
-```
-
-```cp
-// CP (cap: adler2) — 16-lane SIMD + rolling window + combine
-import { Adler32, adler32, combineAdler32 } from "adler2";
-const sum = adler32(&"Wikipedia"); // 0x11E60398
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add adler2
 ```
 
-## Usage
-
-### Basic Usage: One-Shot & Streaming 16-Lane SIMD Checksum
-
 ```cp
-import { Adler32, adler32 } from "adler2";
-
-// One-shot RFC 1950 check vector ("Wikipedia" -> 0x11E60398)
-const data: []const u8 = "Wikipedia";
-const sum = adler32(&data); // 0x11E60398
-
-// Streaming across arbitrary chunks
-let h = Adler32.init();
-const p1: []const u8 = "Wiki";
-const p2: []const u8 = "pedia";
-h.update(&p1);
-h.update(&p2);
-const streamed = h.finalize(); // 0x11E60398
-
-h.reset(); // Reuse the same stack struct without allocation
+import {
+    ADLER32_MOD,
+    ADLER32_NMAX,
+    Adler32,
+    adler32,
+    adler32Slice,
+    adler32Str,
+    combineAdler32,
+    adler32Combine,
+} from "adler2";
 ```
 
-### Advanced Usage: O(1) Rolling Window (rsync / Deduplication) & Parallel Combine
+## Core API
 
-```cp
-import { Adler32, adler32, combineAdler32 } from "adler2";
+### Constants
 
-// 1. O(1) rolling checksum over a 4-byte sliding window ("abcd" -> "bcde")
-let roll = Adler32.init();
-const win0: []const u8 = "abcd";
-roll.update(&win0);
-roll.roll(4, 'a' as u8, 'e' as u8);
-// roll.finalize() == adler32(&"bcde")
-
-// 2. Combine checksums computed independently in parallel
-const chunkA: []const u8 = "hello ";
-const chunkB: []const u8 = "world!";
-const cA = adler32(&chunkA);
-const cB = adler32(&chunkB);
-const merged = combineAdler32(cA, cB, chunkB.len as u64);
-// merged == adler32(&"hello world!")
-
-// 3. Resume from a previously saved u32 checksum
-let resumed = Adler32.fromValue(cA);
-resumed.update(&chunkB);
-// resumed.finalize() == merged
-```
-
-## API Reference
-
-| Symbol | Signature | Description |
+| Symbol | Type | Description |
 | --- | --- | --- |
-| `Adler32.init` | `static fn(): Adler32` | Creates a new hasher initialized to `s1 = 1, s2 = 0` (checksum `1`). |
-| `Adler32.fromValue` | `static fn(checksum: u32): Adler32` | Restores a hasher from an existing Adler-32 value. |
-| `Adler32.update` | `fn(*_, data: &[]u8)` | Feeds a byte slice using 16-lane SIMD with `NMAX = 5552` deferred modulo. |
-| `Adler32.updateByte` | `fn(*_, b: u8)` | Feeds a single byte incrementally. |
-| `Adler32.roll` | `fn(*_, window_len: usize, out_byte: u8, in_byte: u8)` | O(1) sliding-window update removing `out_byte` and appending `in_byte`. |
-| `Adler32.finalize` | `fn(): u32` | Returns `(s2 << 16) \| s1`. |
-| `Adler32.reset` | `fn(*_)` | Resets state back to `s1 = 1, s2 = 0`. |
-| `adler32` | `fn(data: &[]u8): u32` | One-shot RFC 1950 Adler-32 checksum. |
-| `combineAdler32` | `fn(adler1: u32, adler2: u32, len2: u64): u32` | O(1) combines `adler32(A)` and `adler32(B)` into `adler32(A \|\| B)`. |
+| `ADLER32_MOD` | `u32 = 65521` | Largest prime smaller than 65536 (RFC 1950 modulus). |
+| `ADLER32_NMAX` | `usize = 5552` | Maximum bytes processed per deferred modulo chunk without 32-bit overflow. |
 
-## Performance
+### `Adler32` Streaming Class
 
-- **16-lane hardware SIMD**: Uses `@Vector(16, u8)` widened to `@Vector(16, u32)` with weights `[16, 15, ..., 1]`.
-- **Deferred modulo**: Reduces modulo `65521` only once every `5552` bytes (largest `NMAX` avoiding 32-bit overflow).
+| Member | Signature | Description |
+| --- | --- | --- |
+| Fields | `s1: u32, s2: u32` | Internal Adler-32 accumulators (`s1 = 1, s2 = 0` initially). |
+| `Adler32.init` / `new` | `(): Adler32` | Creates a fresh Adler-32 hasher initialized to `1`. |
+| `Adler32.fromValue` / `fromChecksum` | `(value: u32): Adler32` | Restores hasher state from an existing 32-bit Adler-32 checksum. |
+| `update` / `writeSlice` | `(*self, data: []const u8)` | Feeds a read-only byte slice into the checksum. |
+| `writeStr` | `(*self, s: string)` | Feeds a UTF-8 string into the checksum. |
+| `updateByte` / `writeByte` | `(*self, b: u8)` | Feeds a single byte into the checksum. |
+| `roll` | `(*self, window_len: usize, out_byte: u8, in_byte: u8)` | Updates rolling checksum in O(1) as `out_byte` leaves and `in_byte` enters a window of length `window_len`. |
+| `finalize` / `checksum` | `(): u32` | Returns `(s2 << 16) | s1` without mutating state. |
+| `reset` | `(*self)` | Resets state back to `(s1 = 1, s2 = 0)`. |
 
-## License
+### One-Shot & Combine Functions
 
-MIT — Clean-room CP implementation modeled after Rust `adler2`.
+| Function | Signature | Description |
+| --- | --- | --- |
+| `adler32` / `adler32Slice` | `(data: []const u8): u32` | Computes Adler-32 checksum of a byte slice. |
+| `adler32Str` | `(s: string): u32` | Computes Adler-32 checksum of a string. |
+| `combineAdler32` / `adler32Combine` | `(adler1: u32, adler2: u32, len2: u64): u32` | Combines two sequential Adler-32 checksums given the byte length `len2` of the second block. |
+
+## Examples
+
+### 1. One-Shot & Streaming Checksum
+
+```cp
+import { print } from "cap:io";
+import { Adler32, adler32Str } from "adler2";
+
+pub fn main() {
+    let direct = adler32Str("Wikipedia");
+    let h = Adler32.new();
+    h.writeStr("Wiki");
+    h.writeStr("pedia");
+    print("direct={}, stream={}\n", direct, h.checksum()); // both 0x11e60398
+}
+```
+
+### 2. Rolling Window Checksum
+
+```cp
+import { print } from "cap:io";
+import { Adler32 } from "adler2";
+
+pub fn main() {
+    let h = Adler32.new();
+    h.writeStr("abcd");
+    h.roll(4, 97, 101); // slide window from "abcd" to "bcde"
+    print("rolled={}\n", h.checksum());
+}
+```
+
+### 3. Combining Parallel Chunk Checksums
+
+```cp
+import { print } from "cap:io";
+import { adler32Str, combineAdler32 } from "adler2";
+
+pub fn main() {
+    let c1 = adler32Str("hello ");
+    let c2 = adler32Str("world");
+    let combined = combineAdler32(c1, c2, 5);
+    print("combined={}, full={}\n", combined, adler32Str("hello world"));
+}
+```
+
+## Differences from Upstream & Zero-Heap Highlights
+
+- **Zero heap allocation**: `Adler32` is an 8-byte stack struct (`s1: u32, s2: u32`) with deferred modulo batching (`ADLER32_NMAX = 5552`) for high throughput.
+- **Built-in rolling & combine**: Extends standard `adler2` streaming with O(1) sliding-window `roll` (for rsync/content-defined chunking) and `combineAdler32` (for parallel zlib streams).
+- **Non-destructive `checksum` / `finalize`**: Reading the digest does not consume the hasher, allowing incremental checkpoints.

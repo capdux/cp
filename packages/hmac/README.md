@@ -1,104 +1,104 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # hmac
 
-Zero-heap RFC 2104 streaming **HMAC-SHA256** Message Authentication Code with **constant-time tag verification** and lowercase hex output for CP (RustCrypto `hmac` parity).
+Zero-heap RFC 2104 streaming HMAC-SHA256 and HMAC-SHA512 message authentication codes with constant-time verification and lowercase hex encoding (reusing `cookie-signature` SHA-256 primitives).
 
-All key padding (`ipad`/`opad`), inner/outer SHA-256 states, and verification buffers live strictly on the stack with zero heap allocations.
+Aligned with Rust crates.io [`hmac`](https://github.com/RustCrypto/MACs) (MIT OR Apache-2.0).
 
-## Provenance & Zero-Cost Migration
-
-| Attribute | Value |
-| --- | --- |
-| Source Platform | **crates.io** |
-| Original Crate | `hmac` (CP `v1.0.0`) |
-| Upstream Repo | `https://github.com/RustCrypto/MACs` |
-| License | MIT (upstream: MIT OR Apache-2.0) |
-
-Keep the exact crate name when migrating from Rust to CP:
-
-```rust
-// Rust (crates.io: hmac)
-use hmac::{Hmac, Mac};
-let mut mac = Hmac::<Sha256>::new_from_slice(key)?;
-mac.update(msg);
-mac.verify_slice(&expected_tag)?;
-```
-
-```cp
-// CP (cap: hmac) — zero-heap streaming HMAC-SHA256 + constant-time verify
-import { HmacSha256, hmacSha256Hex } from "hmac";
-let mac = HmacSha256.newFromSlice(key);
-mac.update(msg);
-const ok = mac.verifySlice(expected_tag);
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add hmac
 ```
 
-## Usage
-
-### Basic Usage: Streaming HMAC-SHA256 & One-Shot Hex Digest
-
 ```cp
-import { HmacSha256, encodeHex32, hmacSha256Hex } from "hmac";
-
-// 1. One-shot lowercase 64-byte hex MAC (RFC 4231 Test Case 2)
-let hexBuf: [64]u8 = undefined;
-const hexLen = hmacSha256Hex("Jefe", "what do ya want for nothing?", hexBuf[0..64]);
-// hexLen == 64 -> "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
-
-// 2. Streaming multi-chunk MAC into raw 32-byte digest
-let mac = HmacSha256.newFromKey("webhook-secret");
-mac.updateStr("timestamp=1700000000.");
-mac.updateStr("{\"event\":\"paid\"}");
-let tag: [32]u8 = undefined;
-mac.finalize(tag[0..32]);
-
-// Optional: convert raw 32-byte tag to 64-char lowercase hex
-const n = encodeHex32(tag[0..32], hexBuf[0..64]); // 64
+import {
+    HMAC_SHA256_LEN,
+    HMAC_BLOCK_SIZE,
+    HMAC_SHA512_LEN,
+    HMAC_SHA512_BLOCK_SIZE,
+    HmacSha256,
+    HmacSha512,
+    hmacSha256Bytes,
+    hmacSha256Hex,
+    hmacSha512,
+    hmacSha512Hex,
+    ctEqualBytes,
+    encodeHex32,
+    encodeHex64,
+} from "hmac";
 ```
 
-### Security & Edge Cases: Constant-Time Verification & Long Keys (> 64 Bytes)
+## Core API
+
+### Constants & Helpers
+
+| Symbol | Type / Signature | Description |
+| --- | --- | --- |
+| `HMAC_SHA256_LEN` / `HMAC_BLOCK_SIZE` | `usize = 32` / `64` | SHA-256 MAC length and block size in bytes. |
+| `HMAC_SHA512_LEN` / `HMAC_SHA512_BLOCK_SIZE` | `usize = 64` / `128` | SHA-512 MAC length and block size in bytes. |
+| `ctEqualBytes` | `(a: []const u8, b: []const u8): bool` | Constant-time byte-slice comparison resistant to timing side channels. |
+| `encodeHex32` | `(digest: []u8, out64: []u8): usize` | Encodes 32-byte digest into 64 lowercase hex bytes. |
+| `encodeHex64` | `(digest: []const u8, out128: []u8): usize` | Encodes 64-byte digest into 128 lowercase hex bytes. |
+
+### Streaming Classes
+
+| Class | Methods | Description |
+| --- | --- | --- |
+| `HmacSha256` | `newFromSlice(key: []u8)`, `newFromConstSlice(key: []const u8)`, `newFromKey(key: string)`, `update(*self, data: []u8)`, `updateConst(*self, data: []const u8)`, `updateStr(*self, msg: string)`, `finalize(*self, out32: []u8)`, `verifySlice(*self, expected: []u8): bool`, `verifyConstSlice(*self, expected: []const u8): bool` | Streaming RFC 2104 HMAC-SHA256 state with constant-time `verify*`. |
+| `HmacSha512` | `newFromSlice(key: []const u8)`, `newFromKey(key: string)`, `update(*self, data: []const u8)`, `updateStr(*self, msg: string)`, `finalize(*self, out64: []u8)`, `verifySlice(*self, expected: []const u8): bool` | Streaming RFC 2104 HMAC-SHA512 state with constant-time `verifySlice`. |
+
+### One-Shot Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hmacSha256Bytes` | `(key: []const u8, msg: []const u8, out32: []u8)` | Computes raw 32-byte HMAC-SHA256 into `out32`. |
+| `hmacSha256Hex` | `(key: string, msg: string, out64: []u8): usize` | Computes 64-byte lowercase hex HMAC-SHA256 into `out64`; returns `64`. |
+| `hmacSha512` | `(key: []const u8, msg: []const u8, out64: []u8)` | Computes raw 64-byte HMAC-SHA512 into `out64`. |
+| `hmacSha512Hex` | `(key: string, msg: string, out128: []u8): usize` | Computes 128-byte lowercase hex HMAC-SHA512 into `out128`; returns `128`. |
+
+## Examples
+
+### 1. One-Shot HMAC-SHA256 & HMAC-SHA512 Hex
 
 ```cp
+import { print } from "cap:io";
+import { hmacSha256Hex, hmacSha512Hex } from "hmac";
+
+pub fn main() {
+    let hex256: [64]u8 = undefined;
+    let n256 = hmacSha256Hex("secret-key", "hello world", hex256[0..64]);
+    print("HMAC-SHA256: {}\n", hex256[0..n256]);
+
+    let hex512: [128]u8 = undefined;
+    let n512 = hmacSha512Hex("secret-key", "hello world", hex512[0..128]);
+    print("HMAC-SHA512: {}\n", hex512[0..n512]);
+}
+```
+
+### 2. Streaming HMAC-SHA256 & Constant-Time Verification
+
+```cp
+import { print } from "cap:io";
 import { HmacSha256 } from "hmac";
 
-// 1. Constant-time verification (prevents timing side-channel attacks on MAC comparison)
-let verifier = HmacSha256.newFromKey("webhook-secret");
-verifier.updateStr("timestamp=1700000000.{\"event\":\"paid\"}");
-const valid = verifier.verifySlice(expectedTag[0..32]); // uses ctEqual internally
+pub fn main() {
+    let mac = HmacSha256.newFromKey("webhook-secret");
+    mac.updateStr("chunk-1:");
+    mac.updateStr("chunk-2");
+    let tag: [32]u8 = undefined;
+    mac.finalize(tag[0..32]);
 
-// 2. Keys > 64 bytes are automatically pre-hashed with SHA-256 per RFC 2104
-// Use `newFromSlice` for arbitrary binary keys or keys longer than 256 bytes!
-let longKey: [131]u8 = [0xAA; 131];
-let macLong = HmacSha256.newFromSlice(longKey[0..131]);
-macLong.updateStr("Test Using Larger Than Block-Size Key - Hash Key First");
-let digest: [32]u8 = undefined;
-macLong.finalize(digest[0..32]);
+    let verifier = HmacSha256.newFromKey("webhook-secret");
+    verifier.updateStr("chunk-1:chunk-2");
+    let ok = verifier.verifyConstSlice(tag[0..32]);
+    print("verified={}\n", ok);
+}
 ```
 
-## API Reference
+## Differences from Upstream & Zero-Heap Highlights
 
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `HmacSha256.newFromSlice` | `static fn(key: []u8): HmacSha256` | Initializes HMAC-SHA256 from arbitrary-length binary key (pre-hashes if `> 64` bytes). |
-| `HmacSha256.newFromKey` | `static fn(key: string): HmacSha256` | Convenience constructor from string key (up to 256 bytes). |
-| `HmacSha256.update` | `fn(*_, data: []u8)` | Feeds a byte slice into the running MAC. |
-| `HmacSha256.updateStr` | `fn(*_, msg: string)` | Feeds a `string` into the running MAC in 64-byte stack chunks. |
-| `HmacSha256.finalize` | `fn(*_, out32: []u8)` | Finalizes and writes the 32-byte HMAC-SHA256 tag into `out32`. |
-| `HmacSha256.verifySlice` | `fn(*_, expected: []u8): bool` | Finalizes and compares against `expected` in constant time (`ctEqual`). |
-| `encodeHex32` | `fn(digest: []u8, out64: []u8): usize` | Encodes 32-byte digest as 64-byte lowercase hex; returns `64` or `0`. |
-| `hmacSha256Hex` | `fn(key: string, msg: string, out64: []u8): usize` | One-shot string HMAC-SHA256 writing 64 lowercase hex bytes into `out64`. |
-
-## Security Properties
-
-- **Zero heap allocation**: Keys, pads, and digests stay on the stack.
-- **Constant-time verification**: `verifySlice` checks `expected.len == 32` and compares via `ctEqual`.
-
-## License
-
-MIT — Clean-room CP implementation with RustCrypto `hmac` parity.
+- **Zero heap allocation**: All hash states, key pads (`o_key_pad`), and output digests reside on caller stack buffers.
+- **Timing-safe verification**: `verifySlice`, `verifyConstSlice`, and `ctEqualBytes` compare every byte in constant time to prevent timing side-channel leaks.
+- **Concrete SHA-256 & SHA-512 types**: Instead of Rust generic `Hmac<D>` trait bounds, exposes monomorphic `HmacSha256` and `HmacSha512` classes plus one-shot hex helpers.

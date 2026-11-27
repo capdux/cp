@@ -1,62 +1,107 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # damerau-levenshtein
 
-> **Source Attribution**: Clean-room MIT CP port of **npm** [`damerau-levenshtein`](https://github.com/tad-lispy/node-damerau-levenshtein) (`v1.0.8` / `MIT`), CP package `damerau-levenshtein@1.0.8`.
+Zero-heap Damerau-Levenshtein (Optimal String Alignment & True Damerau-Levenshtein) edit distance and similarity ratio engine for CP.
 
-Zero-heap Damerau-Levenshtein (Optimal String Alignment) edit distance and similarity ratio in pure CP.
+Aligned with npm [`damerau-levenshtein`](https://github.com/tad-lispy/node-damerau-levenshtein) `1.0.8` (MIT).
 
-## Why CP `damerau-levenshtein`?
+## Installation & Import
 
-- **Zero Heap Allocation**: Uses 3 rolling stack rows (`row0`, `row1`, `row2` of `[128]usize`) instead of allocating an `O(m × n)` 2D matrix on the heap.
-- **Zero-Overhead Stack Initialization**: All 3 rolling DP rows are initialized with `undefined` and strictly written before read, eliminating 3KB of redundant stack zeroing per call.
-- **Typo-Aware Distance**: Counts insertion, deletion, substitution, and adjacent character transposition (`"ab"` ↔ `"ba"` = 1 step) — ideal for fuzzy CLI command suggestions, spellcheckers, and identifier matching.
-
-## Zero-Cost Migration (JS/TS → CP)
-
-Keep the exact same package name (`damerau-levenshtein`) — no renaming required.
-
-**TypeScript (`package.json` / `index.ts`):**
-```typescript
-import levenshtein from "damerau-levenshtein";
-const res = levenshtein("kitten", "sitting");
-// { steps: 3, relative: 0.4285..., similarity: 0.5714... }
+```bash
+cap add damerau-levenshtein
 ```
 
-**CP (`cap.json` / `main.cp`):**
-```typescript
+```cp
 import {
-    damerauLevenshtein, damerauLevenshteinSteps, DamLevResult
+    DamLevResult,
+    DL_MAX_OSA_LEN,
+    DL_MAX_TRUE_LEN,
+    damerauLevenshtein,
+    damerauLevenshteinSteps,
+    damerauLevenshteinBounded,
+    trueDamerauLevenshtein,
+    similarity,
+    trueSimilarity,
 } from "damerau-levenshtein";
 ```
 
-## Quick Start
+## Core API
 
-### Compute Distance & Similarity Ratio
+### Constants & Types
 
-```typescript
-import { damerauLevenshtein, damerauLevenshteinSteps } from "damerau-levenshtein";
+| Symbol | Type / Fields | Description |
+| --- | --- | --- |
+| `DL_MAX_OSA_LEN` | `usize = 255` | Maximum byte length supported by stack-allocated OSA DP buffers. |
+| `DL_MAX_TRUE_LEN` | `usize = 64` | Maximum byte length supported by stack-allocated true Damerau-Levenshtein DP buffers. |
+| `DamLevResult` | `{ steps: usize, relative: f64, similarity: f64 }` | Edit distance result (`relative = steps / maxLen`, `similarity = 1.0 - relative`). |
 
-export fn demoFuzzyMatch(): bool {
-    // Fast steps-only path (no float math)
-    let steps = damerauLevenshteinSteps("ca", "ac"); // 1 (adjacent transposition)
+### Functions
 
-    // Full result with relative distance & similarity score
-    let res = damerauLevenshtein("commit", "comimt");
-    // res.steps == 1, res.relative == 1.0/6.0, res.similarity == 5.0/6.0
-    return steps == 1 && res.similarity > 0.8;
+| Function | Signature | Description |
+| --- | --- | --- |
+| `damerauLevenshtein` | `(a: string, b: string): DamLevResult` | Compute OSA edit distance, relative distance, and similarity ratio. |
+| `damerauLevenshteinSteps` | `(a: string, b: string): usize` | Compute OSA edit distance in steps for UTF-8 strings. |
+| `damerauLevenshteinStepsBytes` | `(a: []const u8, b: []const u8): usize` | Compute OSA edit distance on raw byte slices. |
+| `osaDistance` | `(a: string, b: string): usize` | Alias for `damerauLevenshteinSteps`. |
+| `osaDistanceBytes` | `(a: []const u8, b: []const u8): usize` | Alias for `damerauLevenshteinStepsBytes`. |
+| `trueDamerauLevenshtein` | `(a: string, b: string): DamLevResult` | Compute unrestricted (true) Damerau-Levenshtein result allowing edits on transposed substrings. |
+| `trueDamerauLevenshteinSteps` | `(a: string, b: string): usize` | Compute unrestricted Damerau-Levenshtein step count for strings. |
+| `trueDamerauLevenshteinBytes` | `(a: []const u8, b: []const u8): usize` | Compute unrestricted Damerau-Levenshtein step count for byte slices. |
+| `damerauLevenshteinBounded` | `(a: string, b: string, maxDistance: usize): usize?` | Banded OSA distance returning `null` early if distance exceeds `maxDistance`. |
+| `damerauLevenshteinBoundedBytes` | `(a: []const u8, b: []const u8, maxDistance: usize): usize?` | Byte-slice variant of bounded OSA distance; returns `null` when exceeding threshold. |
+| `similarity` | `(a: string, b: string): f64` | Normalized OSA similarity in `[0.0, 1.0]`. |
+| `trueSimilarity` | `(a: string, b: string): f64` | Normalized true Damerau-Levenshtein similarity in `[0.0, 1.0]`. |
+
+## Examples
+
+### 1. Basic Edit Distance & Similarity
+
+```cp
+import { print } from "cap:io";
+import { damerauLevenshtein, similarity } from "damerau-levenshtein";
+
+pub fn main() {
+    let res = damerauLevenshtein("kitten", "sitting");
+    print("steps={}, relative={}, similarity={}\n", res.steps, res.relative, res.similarity);
+
+    let score = similarity("abcdef", "abcfed");
+    print("similarity={}\n", score);
 }
 ```
 
-## API Reference
+### 2. Bounded Early-Exit Fuzzy Matching
 
-- **`DamLevResult`**: `{ steps: usize, relative: f64, similarity: f64 }`
-  - `steps`: Optimal String Alignment edit distance
-  - `relative`: `steps / max(a.len, b.len)` (`0.0` when both strings are empty)
-  - `similarity`: `1.0 - relative` (`1.0` for identical strings, `0.0` for completely disjoint strings)
-- **`damerauLevenshteinSteps(a: string, b: string): usize`** — Computes edit distance steps (up to 127 bytes per string).
-- **`damerauLevenshtein(a: string, b: string): DamLevResult`** — Computes `steps`, `relative`, and `similarity`.
+```cp
+import { print } from "cap:io";
+import { damerauLevenshteinBounded } from "damerau-levenshtein";
 
-## License
+pub fn main() {
+    let maybe = damerauLevenshteinBounded("recieve", "receive", 2);
+    if (maybe != null) {
+        print("matched within threshold: {} edits\n", maybe!);
+    } else {
+        print("too far apart\n");
+    }
+}
+```
 
-MIT
+### 3. OSA vs. True Damerau-Levenshtein
+
+```cp
+import { print } from "cap:io";
+import { osaDistance, trueDamerauLevenshteinSteps } from "damerau-levenshtein";
+
+pub fn main() {
+    // "ca" -> "abc": OSA = 3, True Damerau-Levenshtein = 2
+    let osa = osaDistance("ca", "abc");
+    let true_dl = trueDamerauLevenshteinSteps("ca", "abc");
+    print("OSA={}, True={}\n", osa, true_dl);
+}
+```
+
+## Differences from Upstream & Zero-Heap Highlights
+
+- **Zero heap allocation**: All DP tables live on the stack (bounded by `DL_MAX_OSA_LEN = 255` and `DL_MAX_TRUE_LEN = 64`), avoiding GC and allocator overhead.
+- **Both OSA & True algorithms**: Upstream npm `damerau-levenshtein` only provides OSA; CP additionally exposes unrestricted true Damerau-Levenshtein (`trueDamerauLevenshtein*`) and early-exit banded search (`damerauLevenshteinBounded*`).
+- **Read-only borrowing**: All input slices (`[]const u8` / `string`) are borrowed immutably with zero copies.
