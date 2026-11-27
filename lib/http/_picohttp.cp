@@ -108,6 +108,56 @@ pub struct PicoResponse {
     pub bytes_read: usize = 0;
 }
 
+type PicoVec16u8 = @Vector(16, u8);
+
+fn picoSimdFindByte(s: []const u8, start: usize, target: u8): usize? {
+    let i: usize = start;
+    const n = s.len;
+    const v_target: PicoVec16u8 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: PicoVec16u8 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_target);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (s[i] == target) {
+            return i;
+        }
+    }
+    return null;
+}
+
+fn picoSimdFindCrlf(buf: []const u8, start: usize): usize? {
+    let i: usize = start;
+    const n = buf.len;
+    if (n < 2 || start + 1 >= n) {
+        return null;
+    }
+    const v_cr: PicoVec16u8 = @splat(13);
+    while (i + 16 <= n) {
+        const chunk: PicoVec16u8 = buf[i..][0..16].*;
+        let mask: u16 = @bitCast(chunk == v_cr);
+        while (mask != 0) {
+            const lane = @ctz(mask) as usize;
+            const pos = i + lane;
+            if (pos + 1 < n && buf[pos + 1] == 10) {
+                return pos;
+            }
+            mask &= mask - 1;
+        }
+        i += 16;
+    }
+    while (i + 1 < n) : (i += 1) {
+        if (buf[i] == 13 && buf[i + 1] == 10) {
+            return i;
+        }
+    }
+    return null;
+}
+
 fn trimSpaces(s: []const u8): []const u8 {
     let start: usize = 0;
     let end: usize = s.len;
@@ -125,6 +175,30 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: PicoVec16u8 = a[i..][0..16].*;
+        const vb: PicoVec16u8 = b[i..][0..16].*;
+        const m_eq: u16 = @bitCast(va == vb);
+        if (m_eq == 0xFFFF) {
+            i += 16;
+            continue;
+        }
+        let j: usize = 0;
+        while (j < 16) : (j += 1) {
+            let ca = a[i + j];
+            let cb = b[i + j];
+            if (ca >= 65 && ca <= 90) {
+                ca = ca + 32;
+            }
+            if (cb >= 65 && cb <= 90) {
+                cb = cb + 32;
+            }
+            if (ca != cb) {
+                return false;
+            }
+        }
+        i += 16;
+    }
     while (i < a.len) {
         let ca = a[i];
         let cb = b[i];
@@ -149,44 +223,17 @@ pub struct PicoHttpParser {
         if (buf.len < 14) {
             return null;
         }
-        // Find first CRLF
-        let line_end: usize = 0;
-        let found_line = false;
-        while (line_end + 1 < buf.len) {
-            if (buf[line_end] == 13 && buf[line_end + 1] == 10) {
-                found_line = true;
-                break;
-            }
-            line_end += 1;
-        }
-        if (!found_line) {
-            return null;
-        }
+        // Find first CRLF via 16-lane SIMD
+        const line_end = picoSimdFindCrlf(buf, 0) ?? return null;
 
         const req_line = buf[0..line_end];
-        let sp1: usize = 0;
-        let found_sp1 = false;
-        while (sp1 < req_line.len) {
-            if (req_line[sp1] == 32) {
-                found_sp1 = true;
-                break;
-            }
-            sp1 += 1;
-        }
-        if (!found_sp1 || sp1 == 0) {
+        const sp1 = picoSimdFindByte(req_line, 0, 32) ?? return null;
+        if (sp1 == 0) {
             return null;
         }
 
-        let sp2: usize = sp1 + 1;
-        let found_sp2 = false;
-        while (sp2 < req_line.len) {
-            if (req_line[sp2] == 32) {
-                found_sp2 = true;
-                break;
-            }
-            sp2 += 1;
-        }
-        if (!found_sp2 || sp2 == sp1 + 1) {
+        const sp2 = picoSimdFindByte(req_line, sp1 + 1, 32) ?? return null;
+        if (sp2 == sp1 + 1) {
             return null;
         }
 
@@ -216,29 +263,10 @@ pub struct PicoHttpParser {
                     bytes_read: pos + 2,
                 };
             }
-            let h_end = pos;
-            let found_h_end = false;
-            while (h_end + 1 < buf.len) {
-                if (buf[h_end] == 13 && buf[h_end + 1] == 10) {
-                    found_h_end = true;
-                    break;
-                }
-                h_end += 1;
-            }
-            if (!found_h_end) {
-                return null;
-            }
+            const h_end = picoSimdFindCrlf(buf, pos) ?? return null;
             const h_line = buf[pos..h_end];
-            let colon: usize = 0;
-            let found_colon = false;
-            while (colon < h_line.len) {
-                if (h_line[colon] == 58) {
-                    found_colon = true;
-                    break;
-                }
-                colon += 1;
-            }
-            if (!found_colon || colon == 0) {
+            const colon = picoSimdFindByte(h_line, 0, 58) ?? return null;
+            if (colon == 0) {
                 return null;
             }
             if (h_idx < out_headers.len) {
@@ -258,18 +286,7 @@ pub struct PicoHttpParser {
         if (buf.len < 14) {
             return null;
         }
-        let line_end: usize = 0;
-        let found_line = false;
-        while (line_end + 1 < buf.len) {
-            if (buf[line_end] == 13 && buf[line_end + 1] == 10) {
-                found_line = true;
-                break;
-            }
-            line_end += 1;
-        }
-        if (!found_line) {
-            return null;
-        }
+        const line_end = picoSimdFindCrlf(buf, 0) ?? return null;
 
         const status_line = buf[0..line_end];
         if (status_line.len < 12 || status_line[0] != 72 || status_line[1] != 84 || status_line[2] != 84 || status_line[3] != 80 || status_line[4] != 47 || status_line[5] != 49 || status_line[6] != 46) {
@@ -310,29 +327,10 @@ pub struct PicoHttpParser {
                     bytes_read: pos + 2,
                 };
             }
-            let h_end = pos;
-            let found_h_end = false;
-            while (h_end + 1 < buf.len) {
-                if (buf[h_end] == 13 && buf[h_end + 1] == 10) {
-                    found_h_end = true;
-                    break;
-                }
-                h_end += 1;
-            }
-            if (!found_h_end) {
-                return null;
-            }
+            const h_end = picoSimdFindCrlf(buf, pos) ?? return null;
             const h_line = buf[pos..h_end];
-            let colon: usize = 0;
-            let found_colon = false;
-            while (colon < h_line.len) {
-                if (h_line[colon] == 58) {
-                    found_colon = true;
-                    break;
-                }
-                colon += 1;
-            }
-            if (!found_colon || colon == 0) {
+            const colon = picoSimdFindByte(h_line, 0, 58) ?? return null;
+            if (colon == 0) {
                 return null;
             }
             if (h_idx < out_headers.len) {

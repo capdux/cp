@@ -85,20 +85,18 @@ pub fn decodeBasicAuth(header: []const u8, buf: []u8): BasicCredentials? {
 
 /// Encode `username:password` into an HTTP `Basic <base64>` header value in `out`.
 pub fn encodeBasicAuth(username: []const u8, password: []const u8, out: []u8): ([]const u8)? {
-    let raw: [512]u8 = [0; 512];
     if (username.len + 1 + password.len > 512) return null;
+    let raw: [512]u8 = undefined;
     let rlen: usize = 0;
-    let i: usize = 0;
-    while (i < username.len) : (i += 1) {
-        raw[rlen] = username[i];
-        rlen += 1;
+    if (username.len > 0) {
+        @memcpy(raw[0..username.len], username);
+        rlen = username.len;
     }
     raw[rlen] = ':';
     rlen += 1;
-    i = 0;
-    while (i < password.len) : (i += 1) {
-        raw[rlen] = password[i];
-        rlen += 1;
+    if (password.len > 0) {
+        @memcpy(raw[rlen .. rlen + password.len], password);
+        rlen += password.len;
     }
 
     if (out.len < 6) return null;
@@ -186,7 +184,8 @@ fn base64Decode(src: []const u8, out: []u8): ([]const u8)? {
         if (bits >= 8) {
             bits -= 8;
             if (p >= out.len) return null;
-            out[p] = @intCast((acc >> @intCast(bits)) & 0xFF);
+            const sh: u5 = @intCast(bits);
+            out[p] = @intCast((acc >> sh) & 0xFF);
             p += 1;
         }
     }

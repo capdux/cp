@@ -45,8 +45,121 @@ pub struct Json5Token {
     bool_val: bool = false,
 }
 
+type Json5Vec16u8 = @Vector(16, u8);
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0B || c == 0x0C;
+}
+
+fn simdSkipJson5Ws(src: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = src.len;
+    const v_sp: Json5Vec16u8 = @splat(' ');
+    const v_tab: Json5Vec16u8 = @splat('\t');
+    const v_lf: Json5Vec16u8 = @splat('\n');
+    const v_cr: Json5Vec16u8 = @splat('\r');
+    const v_vt: Json5Vec16u8 = @splat(0x0B);
+    const v_ff: Json5Vec16u8 = @splat(0x0C);
+    while (i + 16 <= n) {
+        const chunk: Json5Vec16u8 = src[i..][0..16].*;
+        const m_sp: u16 = @bitCast(chunk == v_sp);
+        const m_tab: u16 = @bitCast(chunk == v_tab);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const m_vt: u16 = @bitCast(chunk == v_vt);
+        const m_ff: u16 = @bitCast(chunk == v_ff);
+        const m_non: u16 = ~(m_sp | m_tab | m_lf | m_cr | m_vt | m_ff);
+        if (m_non != 0) {
+            return i + (@ctz(m_non) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && isSpace(src[i])) : (i += 1) {}
+    return i;
+}
+
+fn simdFindByteJ5(src: []const u8, start: usize, target: u8): usize {
+    let i: usize = start;
+    const n = src.len;
+    const v_t: Json5Vec16u8 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: Json5Vec16u8 = src[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_t);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && src[i] != target) : (i += 1) {}
+    return i;
+}
+
+fn simdFindLineBreakJ5(src: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = src.len;
+    const v_lf: Json5Vec16u8 = @splat('\n');
+    const v_cr: Json5Vec16u8 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: Json5Vec16u8 = src[i..][0..16].*;
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && src[i] != '\n' && src[i] != '\r') : (i += 1) {}
+    return i;
+}
+
+fn simdFindStringSpecialJ5(src: []const u8, start: usize, quote: u8): usize {
+    let i: usize = start;
+    const n = src.len;
+    const v_q: Json5Vec16u8 = @splat(quote);
+    const v_bs: Json5Vec16u8 = @splat('\\');
+    const v_lf: Json5Vec16u8 = @splat('\n');
+    const v_cr: Json5Vec16u8 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: Json5Vec16u8 = src[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_q | m_b | m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = src[i];
+        if (c == quote || c == '\\' || c == '\n' || c == '\r') return i;
+    }
+    return n;
+}
+
+fn simdFindNormSpecialJ5(raw: []const u8, start: usize, end_idx: usize): usize {
+    let i: usize = start;
+    const v_bs: Json5Vec16u8 = @splat('\\');
+    const v_q: Json5Vec16u8 = @splat('"');
+    const v_ctrl: Json5Vec16u8 = @splat(0x20);
+    while (i + 16 <= end_idx) {
+        const chunk: Json5Vec16u8 = raw[i..][0..16].*;
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_c: u16 = @bitCast(chunk < v_ctrl);
+        const mask: u16 = m_b | m_q | m_c;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < end_idx) : (i += 1) {
+        const c = raw[i];
+        if (c == '\\' || c == '"' || c < 0x20) return i;
+    }
+    return end_idx;
 }
 
 fn isDigit(c: u8): bool {
@@ -119,7 +232,7 @@ pub struct Json5Lexer {
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (isSpace(c)) {
-                _.pos += 1;
+                _.pos = simdSkipJson5Ws(_.src, _.pos);
                 continue;
             }
             // UTF-8 NBSP (U+00A0)
@@ -131,22 +244,24 @@ pub struct Json5Lexer {
             if (c == '/' && _.pos + 1 < _.src.len) {
                 const n = _.src[_.pos + 1];
                 if (n == '/') {
-                    _.pos += 2;
-                    while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
-                        _.pos += 1;
-                    }
+                    _.pos = simdFindLineBreakJ5(_.src, _.pos + 2);
                     continue;
                 }
                 if (n == '*') {
                     _.pos += 2;
                     let closed = false;
                     while (_.pos + 1 < _.src.len) {
-                        if (_.src[_.pos] == '*' && _.src[_.pos + 1] == '/') {
-                            _.pos += 2;
+                        const star = simdFindByteJ5(_.src, _.pos, '*');
+                        if (star + 1 >= _.src.len) {
+                            _.pos = _.src.len;
+                            break;
+                        }
+                        if (_.src[star + 1] == '/') {
+                            _.pos = star + 2;
                             closed = true;
                             break;
                         }
-                        _.pos += 1;
+                        _.pos = star + 1;
                     }
                     if (!closed) {
                         _.pos = _.src.len;
@@ -164,6 +279,10 @@ pub struct Json5Lexer {
         const quote = _.src[start];
         _.pos = start + 1;
         while (_.pos < _.src.len) {
+            _.pos = simdFindStringSpecialJ5(_.src, _.pos, quote);
+            if (_.pos >= _.src.len) {
+                break;
+            }
             const c = _.src[_.pos];
             if (c == '\\') {
                 if (_.pos + 1 >= _.src.len) {
@@ -181,16 +300,14 @@ pub struct Json5Lexer {
             if (c == '\n' || c == '\r') {
                 return Json5Token{ kind: .invalid, raw: _.src[start.._.pos], start: start, end: _.pos };
             }
-            if (c == quote) {
-                _.pos += 1;
-                return Json5Token{
-                    kind: Json5TokenKind.string,
-                    raw: _.src[start.._.pos],
-                    start: start,
-                    end: _.pos,
-                };
-            }
+            // c == quote
             _.pos += 1;
+            return Json5Token{
+                kind: Json5TokenKind.string,
+                raw: _.src[start.._.pos],
+                start: start,
+                end: _.pos,
+            };
         }
         return Json5Token{ kind: .invalid, raw: _.src[start.._.pos], start: start, end: _.pos };
     }
@@ -432,10 +549,17 @@ struct OutWriter {
     }
 
     fn writeStr(*_, s: []const u8) {
-        let i: usize = 0;
-        while (i < s.len) {
-            _.writeByte(s[i]);
-            i += 1;
+        if (s.len == 0) return;
+        if (_.pos + s.len <= _.buf.len) {
+            @memcpy(_.buf[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
+        } else {
+            const rem = _.buf.len - _.pos;
+            if (rem > 0) {
+                @memcpy(_.buf[_.pos .. _.buf.len], s[0..rem]);
+                _.pos = _.buf.len;
+            }
+            _.overflow = true;
         }
     }
 
@@ -447,7 +571,7 @@ struct OutWriter {
     }
 
     fn writeU64(*_, val: u64) {
-        let digits: [24]u8 = [0; 24];
+        let digits: [24]u8 = undefined;
         let dlen: usize = 0;
         let tmp = val;
         if (tmp == 0) {
@@ -473,6 +597,14 @@ fn writeNormalizedString(w: *OutWriter, raw: []const u8): bool {
     let i: usize = 1;
     const end_idx = raw.len - 1;
     while (i < end_idx) {
+        const hit = simdFindNormSpecialJ5(raw, i, end_idx);
+        if (hit > i) {
+            w.writeStr(raw[i..hit]);
+            i = hit;
+        }
+        if (i >= end_idx) {
+            break;
+        }
         const c = raw[i];
         if (c == '\\') {
             if (i + 1 >= end_idx) { return false; }

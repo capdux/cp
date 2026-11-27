@@ -6,6 +6,32 @@ const std = @import("std");
 import { CsvOptions, CsvRow, CsvParser } from "./parser.cp";
 import { CsvWriteOptions, CsvWriter } from "./writer.cp";
 
+type CsvTableVec16u8 = @Vector(16, u8);
+
+fn simdFindJsonEscapeByte(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_quote: CsvTableVec16u8 = @splat('"');
+    const v_bs: CsvTableVec16u8 = @splat('\\');
+    const v_ctrl: CsvTableVec16u8 = @splat(0x20);
+    while (i + 16 <= n) {
+        const chunk: CsvTableVec16u8 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_quote);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_c: u16 = @bitCast(chunk < v_ctrl);
+        const mask: u16 = m_q | m_b | m_c;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c < 0x20) return i;
+    }
+    return n;
+}
+
 pub struct CsvTable {
     allocator: std.mem.Allocator = undefined,
     headers: [][]const u8 = [],
@@ -172,32 +198,29 @@ pub struct CsvTable {
     ): ! {
         out.append(allocator, '"')?;
         let i: usize = 0;
-        let flush_start: usize = 0;
-        while (i < s.len) : (i += 1) {
-            const c = s[i];
-            if (c == '"' || c == '\\' || c < 0x20) {
-                if (i > flush_start) {
-                    out.appendSlice(allocator, s[flush_start..i])?;
-                }
-                switch (c) {
-                    '"' => out.appendSlice(allocator, "\\\"")?,
-                    '\\' => out.appendSlice(allocator, "\\\\")?,
-                    0x08 => out.appendSlice(allocator, "\\b")?,
-                    0x0C => out.appendSlice(allocator, "\\f")?,
-                    '\n' => out.appendSlice(allocator, "\\n")?,
-                    '\r' => out.appendSlice(allocator, "\\r")?,
-                    '\t' => out.appendSlice(allocator, "\\t")?,
-                    else => {
-                        const hex_digits = "0123456789abcdef";
-                        let seq: [6]u8 = ['\\', 'u', '0', '0', hex_digits[(c >> 4) & 0xF], hex_digits[c & 0xF]];
-                        out.appendSlice(allocator, seq[0..6])?;
-                    },
-                }
-                flush_start = i + 1;
+        while (i < s.len) {
+            const hit = simdFindJsonEscapeByte(s, i);
+            if (hit > i) {
+                out.appendSlice(allocator, s[i..hit])?;
+                i = hit;
             }
-        }
-        if (i > flush_start) {
-            out.appendSlice(allocator, s[flush_start..i])?;
+            if (i >= s.len) break;
+            const c = s[i];
+            switch (c) {
+                '"' => out.appendSlice(allocator, "\\\"")?,
+                '\\' => out.appendSlice(allocator, "\\\\")?,
+                0x08 => out.appendSlice(allocator, "\\b")?,
+                0x0C => out.appendSlice(allocator, "\\f")?,
+                '\n' => out.appendSlice(allocator, "\\n")?,
+                '\r' => out.appendSlice(allocator, "\\r")?,
+                '\t' => out.appendSlice(allocator, "\\t")?,
+                else => {
+                    const hex_digits = "0123456789abcdef";
+                    let seq: [6]u8 = ['\\', 'u', '0', '0', hex_digits[(c >> 4) & 0xF], hex_digits[c & 0xF]];
+                    out.appendSlice(allocator, seq[0..6])?;
+                },
+            }
+            i += 1;
         }
         out.append(allocator, '"')?;
     }
@@ -206,7 +229,7 @@ pub struct CsvTable {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(allocator);
 
-        let key_buf: [32]u8 = [0; 32];
+        let key_buf: [32]u8 = undefined;
         for (row of _.rows) {
             out.append(allocator, '{')?;
             let c: usize = 0;

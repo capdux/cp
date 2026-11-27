@@ -1,25 +1,68 @@
 // Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-24T04:42:24Z (RFC 4180 CSV / TSV Escaper & Row Builder)
 
-/// 判断字段值在 RFC 4180 CSV/TSV 编码中是否需要双引号包裹
-export fn needsCsvQuotes(field: []const u8, delim: u8): bool {
-    for (c of field) {
+type CsvEscVec16u8 = @Vector(16, u8);
+
+fn simdIndexOfCsvDelim(field: []const u8, delim: u8): usize? {
+    let i: usize = 0;
+    const n = field.len;
+    const v_delim: CsvEscVec16u8 = @splat(delim);
+    const v_quote: CsvEscVec16u8 = @splat('"');
+    const v_cr: CsvEscVec16u8 = @splat('\r');
+    const v_lf: CsvEscVec16u8 = @splat('\n');
+
+    while (i + 16 <= n) {
+        const chunk: CsvEscVec16u8 = field[i..][0..16].*;
+        const m_d: u16 = @bitCast(chunk == v_delim);
+        const m_q: u16 = @bitCast(chunk == v_quote);
+        const m_r: u16 = @bitCast(chunk == v_cr);
+        const m_n: u16 = @bitCast(chunk == v_lf);
+        const mask: u16 = m_d | m_q | m_r | m_n;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+
+    while (i < n) : (i += 1) {
+        const c = field[i];
         if (c == delim || c == '"' || c == '\r' || c == '\n') {
-            return true;
+            return i;
         }
     }
-    return false;
+    return null;
+}
+
+fn simdIndexOfQuote(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_quote: CsvEscVec16u8 = @splat('"');
+    while (i + 16 <= n) {
+        const chunk: CsvEscVec16u8 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_quote);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (s[i] == '"') return i;
+    }
+    return n;
+}
+
+/// 判断字段值在 RFC 4180 CSV/TSV 编码中是否需要双引号包裹
+pub fn needsCsvQuotes(field: []const u8, delim: u8): bool {
+    return simdIndexOfCsvDelim(field, delim) != null;
 }
 
 /// 按 RFC 4180 规则转义单个 CSV/TSV 字段（零堆分配）
-export fn escapeCsvField(field: []const u8, delim: u8, out: []u8): ([]const u8)? {
+pub fn escapeCsvField(field: []const u8, delim: u8, out: []u8): ([]const u8)? {
     if (!needsCsvQuotes(field, delim)) {
         if (out.len < field.len) {
             return null;
         }
-        let i: usize = 0;
-        while (i < field.len) {
-            out[i] = field[i];
-            i += 1;
+        if (field.len > 0) {
+            @memcpy(out[0..field.len], field);
         }
         return out[0..field.len];
     }
@@ -29,16 +72,22 @@ export fn escapeCsvField(field: []const u8, delim: u8, out: []u8): ([]const u8)?
     out[pos] = '"';
     pos += 1;
 
-    for (c of field) {
-        if (c == '"') {
+    let i: usize = 0;
+    while (i < field.len) {
+        const hit = simdIndexOfQuote(field, i);
+        const span = hit - i;
+        if (span > 0) {
+            if (pos + span > out.len) return null;
+            @memcpy(out[pos .. pos + span], field[i..hit]);
+            pos += span;
+            i = hit;
+        }
+        if (i < field.len) {
             if (pos + 2 > out.len) return null;
             out[pos] = '"';
             out[pos + 1] = '"';
             pos += 2;
-        } else {
-            if (pos >= out.len) return null;
-            out[pos] = c;
-            pos += 1;
+            i += 1;
         }
     }
 
@@ -49,7 +98,7 @@ export fn escapeCsvField(field: []const u8, delim: u8, out: []u8): ([]const u8)?
 }
 
 /// 严格反转义单个 CSV/TSV 字段：非引号原样拷贝；引号包裹则还原 `""` -> `"`，未闭合引号或内部孤立 `"` 返回 null
-export fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
+pub fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
     if (raw.len == 0) {
         return out[0..0];
     }
@@ -58,11 +107,7 @@ export fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
         if (out.len < raw.len) {
             return null;
         }
-        let i: usize = 0;
-        while (i < raw.len) {
-            out[i] = raw[i];
-            i += 1;
-        }
+        @memcpy(out[0..raw.len], raw);
         return out[0..raw.len];
     }
 
@@ -75,7 +120,15 @@ export fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
     let pos: usize = 0;
     while (i < inner.len) {
-        if (inner[i] == '"') {
+        const hit = simdIndexOfQuote(inner, i);
+        const span = hit - i;
+        if (span > 0) {
+            if (pos + span > out.len) return null;
+            @memcpy(out[pos .. pos + span], inner[i..hit]);
+            pos += span;
+            i = hit;
+        }
+        if (i < inner.len) {
             // 内部双引号必须成对出现 ""
             if (i + 1 >= inner.len || inner[i + 1] != '"') {
                 return null;
@@ -84,11 +137,6 @@ export fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
             out[pos] = '"';
             pos += 1;
             i += 2;
-        } else {
-            if (pos >= out.len) return null;
-            out[pos] = inner[i];
-            pos += 1;
-            i += 1;
         }
     }
 
@@ -96,7 +144,7 @@ export fn unescapeCsvField(raw: []const u8, out: []u8): ([]const u8)? {
 }
 
 /// 将一行字段按 RFC 4180 编码拼接并附加行尾换行符（`crlf=true` 附加 `\r\n`，否则 `\n`）
-export fn formatCsvRow(fields: []const []const u8, delim: u8, crlf: bool, out: []u8): ([]const u8)? {
+pub fn formatCsvRow(fields: []const []const u8, delim: u8, crlf: bool, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < fields.len) {
@@ -124,7 +172,7 @@ export fn formatCsvRow(fields: []const []const u8, delim: u8, crlf: bool, out: [
 }
 
 /// 检测字段是否存在电子表格公式前缀风险（首字符为 `=`, `+`, `-`, `@`, `\t`, `\r`）
-export fn isFormulaInjectionRisk(field: []const u8): bool {
+pub fn isFormulaInjectionRisk(field: []const u8): bool {
     if (field.len == 0) {
         return false;
     }

@@ -197,7 +197,7 @@ pub struct Ascii85 {
                 out.append(alloc, 'z') catch return Base85Error.OutOfMemory;
             } else {
                 let v = val;
-                let digits: [5]u8 = [0; 5];
+                let digits: [5]u8 = undefined;
                 let d: usize = 5;
                 while (d > 0) {
                     d -= 1;
@@ -219,7 +219,7 @@ pub struct Ascii85 {
                 ((padded[1] as u32) << 16) |
                 ((padded[2] as u32) << 8) |
                 (padded[3] as u32);
-            let digits: [5]u8 = [0; 5];
+            let digits: [5]u8 = undefined;
             let d: usize = 5;
             while (d > 0) {
                 d -= 1;
@@ -267,7 +267,7 @@ pub struct Ascii85 {
         }
 
         let found_suffix = false;
-        let group: [5]u8 = [0; 5];
+        let group: [5]u8 = undefined;
         let count: usize = 0;
 
         while (pos < str.len) {
@@ -405,7 +405,7 @@ pub struct Rfc1924 {
                 ((padded[1] as u32) << 16) |
                 ((padded[2] as u32) << 8) |
                 (padded[3] as u32);
-            let digits: [5]u8 = [0; 5];
+            let digits: [5]u8 = undefined;
             let d: usize = 5;
             while (d > 0) {
                 d -= 1;

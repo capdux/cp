@@ -4,6 +4,48 @@
 
 const std = @import("std");
 
+type CsvParserVec16u8 = @Vector(16, u8);
+
+fn csvSimdFindByte(s: []const u8, start: usize, target: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_target: CsvParserVec16u8 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: CsvParserVec16u8 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_target);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return n;
+}
+
+fn csvSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: CsvParserVec16u8 = @splat(a);
+    const vb: CsvParserVec16u8 = @splat(b);
+    while (i + 16 <= n) {
+        const chunk: CsvParserVec16u8 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == a || c == b) return i;
+    }
+    return n;
+}
+
 pub err CsvParseError {
     UnterminatedQuote,
     FieldCountMismatch,
@@ -172,19 +214,21 @@ pub struct CsvParser {
 
                 let closed = false;
                 while (pos < line.len) {
-                    const ch = line[pos];
-                    if (ch == opts.quote) {
-                        if (pos + 1 < line.len && line[pos + 1] == opts.quote) {
-                            fbuf.append(allocator, opts.quote)?;
-                            pos += 2;
-                        } else {
-                            pos += 1;
-                            closed = true;
-                            break;
-                        }
+                    const q_pos = csvSimdFindByte(line, pos, opts.quote);
+                    if (q_pos > pos) {
+                        fbuf.appendSlice(allocator, line[pos..q_pos])?;
+                        pos = q_pos;
+                    }
+                    if (pos >= line.len) {
+                        break;
+                    }
+                    if (pos + 1 < line.len && line[pos + 1] == opts.quote) {
+                        fbuf.append(allocator, opts.quote)?;
+                        pos += 2;
                     } else {
-                        fbuf.append(allocator, ch)?;
                         pos += 1;
+                        closed = true;
+                        break;
                     }
                 }
 
@@ -198,9 +242,10 @@ pub struct CsvParser {
                 }
 
                 // Append any unexpected trailing chars up to delimiter if malformed
-                while (pos < line.len && line[pos] != opts.delimiter) {
-                    fbuf.append(allocator, line[pos])?;
-                    pos += 1;
+                if (pos < line.len && line[pos] != opts.delimiter) {
+                    const d_pos = csvSimdFindByte(line, pos, opts.delimiter);
+                    fbuf.appendSlice(allocator, line[pos..d_pos])?;
+                    pos = d_pos;
                 }
 
                 let owned: []const u8 = "";
@@ -213,9 +258,7 @@ pub struct CsvParser {
             } else {
                 // Unquoted field
                 const start = pos;
-                while (pos < line.len && line[pos] != opts.delimiter) {
-                    pos += 1;
-                }
+                pos = csvSimdFindByte(line, pos, opts.delimiter);
                 let raw_field = line[start..pos];
                 if (opts.trim_spaces) {
                     raw_field = CsvParser.trimWhitespace(raw_field, opts.delimiter);
@@ -490,8 +533,36 @@ pub struct StreamingCsvReader {
             }
         }
 
-        while (pos < chunk.len) : (pos += 1) {
+        while (pos < chunk.len) {
+            if (_.state == .InUnquoted) {
+                const hit = csvSimdFindAny2(chunk, pos, '\n', _.opts.delimiter);
+                if (hit > pos) {
+                    const span = hit - pos;
+                    if (_.buf.items.len + span > _.opts.max_record_bytes) {
+                        return err.RecordTooLarge;
+                    }
+                    _.buf.appendSlice(_.allocator, chunk[pos..hit])?;
+                    pos = hit;
+                    if (pos >= chunk.len) break;
+                }
+            } else if (_.state == .InQuoted) {
+                const hit = csvSimdFindByte(chunk, pos, _.opts.quote);
+                if (hit > pos) {
+                    const span = hit - pos;
+                    if (_.buf.items.len + span > _.opts.max_record_bytes) {
+                        return err.RecordTooLarge;
+                    }
+                    _.buf.appendSlice(_.allocator, chunk[pos..hit])?;
+                    pos = hit;
+                    if (pos >= chunk.len) break;
+                }
+            } else if (_.state == .InComment) {
+                const hit = csvSimdFindByte(chunk, pos, '\n');
+                pos = hit;
+                if (pos >= chunk.len) break;
+            }
             _.pushByte(chunk[pos], &rows)?;
+            pos += 1;
         }
 
         return rows.toOwnedSlice(_.allocator);

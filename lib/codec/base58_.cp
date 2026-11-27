@@ -61,8 +61,8 @@ fn base58Val(c: u8): u8 {
 }
 
 fn doubleSha256(data: []const u8): [32]u8 {
-    let first: [32]u8 = [0; 32];
-    let second: [32]u8 = [0; 32];
+    let first: [32]u8 = undefined;
+    let second: [32]u8 = undefined;
     sha256Raw(&first, data);
     sha256Raw(&second, first[0..32]);
     return second;
@@ -113,7 +113,7 @@ fn createBech32Checksum(hrp_lower: []const u8, data5: []const u8, encoding: Bech
         chk = bech32PolymodStep(chk, 0);
     }
     const pm = chk ^ (encoding as u32);
-    let out: [6]u8 = [0; 6];
+    let out: [6]u8 = undefined;
     let i: usize = 0;
     while (i < 6) : (i += 1) {
         const shift: u5 = @intCast((5 - i) * 5);
