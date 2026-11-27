@@ -650,7 +650,7 @@ struct HuffTable {
 }
 
 fn buildFixedLitLenTable(): HuffTable ! GzipError {
-    let lens: [288]u8 = [0; 288];
+    let lens: [288]u8 = undefined;
     let i: usize = 0;
     while (i <= 143) { lens[i] = 8; i += 1; }
     while (i <= 255) { lens[i] = 9; i += 1; }
@@ -759,7 +759,7 @@ fn inflateRawCore(src: []const u8, max_output_size: usize): InflateResult ! Gzip
                 const cl_tbl = HuffTable.build(cl_lens[0..19], true)?;
 
                 let total_codes: usize = hlit + hdist;
-                let all_lens: [320]u8 = [0; 320];
+                let all_lens: [320]u8 = undefined;
                 let idx: usize = 0;
                 while (idx < total_codes) {
                     const sym: u16 = cl_tbl.decode(&br)?;

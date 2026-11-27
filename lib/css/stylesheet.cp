@@ -892,7 +892,7 @@ pub struct CssStylesheetParser {
 
     /// Pretty-prints a CSS stylesheet with 2-space indentation and clean line breaks.
     pub static fn formatPretty(css_text: []const u8, out_buf: []u8): []const u8 {
-        let min_tmp: [4096]u8 = [0; 4096];
+        let min_tmp: [4096]u8 = undefined;
         const compact = CssStylesheetParser.minify(css_text, min_tmp[0..4096]);
 
         let pos: usize = 0;
@@ -1011,9 +1011,9 @@ fn expandNestedSelector(parent: []const u8, child_raw: []const u8, out_buf: []u8
 fn flattenBlock(parent_sel: []const u8, body: []const u8, out_buf: []u8, pos_in: usize, depth: usize): usize {
     if (depth >= 8) return pos_in;
     let pos = pos_in;
-    let decl_buf: [2048]u8 = [0; 2048];
+    let decl_buf: [2048]u8 = undefined;
     let decl_pos: usize = 0;
-    let nested_buf: [4096]u8 = [0; 4096];
+    let nested_buf: [4096]u8 = undefined;
     let nested_pos: usize = 0;
 
     let i: usize = 0;
@@ -1065,16 +1065,16 @@ fn flattenBlock(parent_sel: []const u8, body: []const u8, out_buf: []u8, pos_in:
                     const inner_body = std.mem.trim(u8, body[seg_start..i], " \t\r\n");
                     if (cur_prelude.len > 0 && cur_prelude[0] == '@') {
                         // Nested at-rule like @media { ... } inside a style rule
-                        let inner_flat: [2048]u8 = [0; 2048];
+                        let inner_flat: [2048]u8 = undefined;
                         const flat_len = flattenBlock(parent_sel, inner_body, inner_flat[0..2048], 0, depth + 1);
                         nested_pos = appendSlice(nested_buf[0..4096], nested_pos, cur_prelude);
                         nested_pos = appendSlice(nested_buf[0..4096], nested_pos, " { ");
                         nested_pos = appendSlice(nested_buf[0..4096], nested_pos, inner_flat[0..flat_len]);
                         nested_pos = appendSlice(nested_buf[0..4096], nested_pos, " }\n");
                     } else {
-                        let sel_buf: [512]u8 = [0; 512];
+                        let sel_buf: [512]u8 = undefined;
                         const full_sel = expandNestedSelector(parent_sel, cur_prelude, sel_buf[0..512]);
-                        let sub_flat: [2048]u8 = [0; 2048];
+                        let sub_flat: [2048]u8 = undefined;
                         const sub_len = flattenBlock(full_sel, inner_body, sub_flat[0..2048], 0, depth + 1);
                         nested_pos = appendSlice(nested_buf[0..4096], nested_pos, sub_flat[0..sub_len]);
                     }
@@ -1217,7 +1217,7 @@ pub struct CssStylesheet {
 
     pub fn format(out_buf: []u8, minify: bool): []const u8 {
         let pos: usize = 0;
-        let tmp: [512]u8 = [0; 512];
+        let tmp: [512]u8 = undefined;
         let i: usize = 0;
         while (i < _.rule_count) {
             const s = _.rules[i].formatRule(tmp[0..512], minify);

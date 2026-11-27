@@ -603,23 +603,23 @@ pub fn signJwtHmac(
     out[pos] = '.';
     pos += 1;
 
-    let mac_buf: [64]u8 = [0; 64];
+    let mac_buf: [64]u8 = undefined;
     let mac_len: usize = 0;
     switch (alg) {
         .HS256 => {
-            let tag: [32]u8 = [0; 32];
+            let tag: [32]u8 = undefined;
             std.crypto.auth.hmac.sha2.HmacSha256.create(&tag, signing_input, secret);
             @memcpy(mac_buf[0..32], &tag);
             mac_len = 32;
         },
         .HS384 => {
-            let tag: [48]u8 = [0; 48];
+            let tag: [48]u8 = undefined;
             std.crypto.auth.hmac.sha2.HmacSha384.create(&tag, signing_input, secret);
             @memcpy(mac_buf[0..48], &tag);
             mac_len = 48;
         },
         .HS512 => {
-            let tag: [64]u8 = [0; 64];
+            let tag: [64]u8 = undefined;
             std.crypto.auth.hmac.sha2.HmacSha512.create(&tag, signing_input, secret);
             @memcpy(mac_buf[0..64], &tag);
             mac_len = 64;
@@ -652,26 +652,26 @@ pub fn verifyJwtHmac(
         if (!strEq(got_alg, algName(cfg.expected_alg))) {
             return JwtError.AlgorithmMismatch;
         }
-        let sig_raw_buf: [64]u8 = [0; 64];
+        let sig_raw_buf: [64]u8 = undefined;
         const sig_raw = decodeBase64UrlStrict(parts.signature_b64, &sig_raw_buf) orelse return JwtError.InvalidSignature;
 
-        let expected_buf: [64]u8 = [0; 64];
+        let expected_buf: [64]u8 = undefined;
         let expected_len: usize = 0;
         switch (cfg.expected_alg) {
             .HS256 => {
-                let tag: [32]u8 = [0; 32];
+                let tag: [32]u8 = undefined;
                 std.crypto.auth.hmac.sha2.HmacSha256.create(&tag, parts.signing_input, secret);
                 @memcpy(expected_buf[0..32], &tag);
                 expected_len = 32;
             },
             .HS384 => {
-                let tag: [48]u8 = [0; 48];
+                let tag: [48]u8 = undefined;
                 std.crypto.auth.hmac.sha2.HmacSha384.create(&tag, parts.signing_input, secret);
                 @memcpy(expected_buf[0..48], &tag);
                 expected_len = 48;
             },
             .HS512 => {
-                let tag: [64]u8 = [0; 64];
+                let tag: [64]u8 = undefined;
                 std.crypto.auth.hmac.sha2.HmacSha512.create(&tag, parts.signing_input, secret);
                 @memcpy(expected_buf[0..64], &tag);
                 expected_len = 64;

@@ -77,7 +77,7 @@ pub struct DohQueryBuilder {
         domain: []const u8,
         qtype: NSType,
     ): ([]u8)! {
-        let pkt_buf: [512]u8 = [0; 512];
+        let pkt_buf: [512]u8 = undefined;
         const pkt_len = DnsWireCodec.buildQueryPacket(id, domain, qtype, &pkt_buf);
         if (pkt_len == 0) return DohError.InvalidQueryPacket;
         return DohQueryBuilder.buildGetUrl(alloc, endpoint, pkt_buf[0..pkt_len]);

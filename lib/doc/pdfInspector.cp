@@ -1767,7 +1767,7 @@ pub fn collectPdfPages(
     if (!xref.trailer.has_root) return PdfParseError.InvalidObject;
     if (stack_work.len == 0) return PdfParseError.BufferTooSmall;
 
-    let obj_scratch: [16384]u8 = [0; 16384];
+    let obj_scratch: [16384]u8 = undefined;
     const root_body = xref.resolveObjectBody(pdf_bytes, xref.trailer.root, obj_scratch[0..]) ?? return PdfParseError.ObjectNotFound;
     const pages_pos = findDictValuePos(root_body, "/Pages") ?? return PdfParseError.InvalidObject;
     const pages_ref = parseObjRefAt(root_body, pages_pos) ?? return PdfParseError.InvalidObject;
@@ -2108,7 +2108,7 @@ pub fn extractPageText(
     }
 
     if (page.has_contents_array) {
-        let page_scratch: [8192]u8 = [0; 8192];
+        let page_scratch: [8192]u8 = undefined;
         const p_body = xref.resolveObjectBody(pdf_bytes, page.obj_ref, page_scratch[0..]) ?? return PdfParseError.ObjectNotFound;
         const cp = findDictValuePos(p_body, "/Contents") ?? return 0;
         let lex = PdfLexer.init(p_body, cp);

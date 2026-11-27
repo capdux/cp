@@ -261,7 +261,7 @@ fn appendBytes(out: *[]u8, pos: *usize, src: []const u8): bool {
 /// 解析单行裸 Base64 Minisign 公钥（常见于命令行 `-P RW...`）
 pub fn parseMinisignPublicKeyLine(b64: []const u8): MinisignPublicKey? {
     const trimmed = trimLineSpaces(b64);
-    let bin: [42]u8 = [0; 42];
+    let bin: [42]u8 = undefined;
     let bin_slice: []u8 = bin[0..42];
     const decoded_len = b64Decode(trimmed, *bin_slice) ?? return null;
     if (decoded_len != MINISIGN_PUBKEY_BIN_LEN) {
@@ -272,19 +272,11 @@ pub fn parseMinisignPublicKeyLine(b64: []const u8): MinisignPublicKey? {
         return null;
     }
 
-    let key_id: [8]u8 = [0; 8];
-    let k: usize = 0;
-    while (k < 8) {
-        key_id[k] = bin[2 + k];
-        k += 1;
-    }
+    let key_id: [8]u8 = undefined;
+    @memcpy(key_id[0..8], bin[2..10]);
 
-    let pk: [32]u8 = [0; 32];
-    let p: usize = 0;
-    while (p < 32) {
-        pk[p] = bin[10 + p];
-        p += 1;
-    }
+    let pk: [32]u8 = undefined;
+    @memcpy(pk[0..32], bin[10..42]);
 
     return MinisignPublicKey {
         untrusted_comment: b64[0..0],
@@ -320,7 +312,7 @@ pub fn parseMinisignSignature(text: []const u8): MinisignSignature? {
     const untrusted = l1.line[MINISIGN_UNTRUSTED_PREFIX.len..l1.line.len];
 
     const l2 = nextLine(text, l1.next_pos) ?? return null;
-    let bin_sig: [74]u8 = [0; 74];
+    let bin_sig: [74]u8 = undefined;
     let bin_sig_slice: []u8 = bin_sig[0..74];
     const sig_len = b64Decode(trimLineSpaces(l2.line), *bin_sig_slice) ?? return null;
     if (sig_len != MINISIGN_SIG_BIN_LEN) {
@@ -337,19 +329,11 @@ pub fn parseMinisignSignature(text: []const u8): MinisignSignature? {
     }
 
     let alg: [2]u8 = [bin_sig[0], bin_sig[1]];
-    let key_id: [8]u8 = [0; 8];
-    let k: usize = 0;
-    while (k < 8) {
-        key_id[k] = bin_sig[2 + k];
-        k += 1;
-    }
+    let key_id: [8]u8 = undefined;
+    @memcpy(key_id[0..8], bin_sig[2..10]);
 
-    let signature: [64]u8 = [0; 64];
-    let s: usize = 0;
-    while (s < 64) {
-        signature[s] = bin_sig[10 + s];
-        s += 1;
-    }
+    let signature: [64]u8 = undefined;
+    @memcpy(signature[0..64], bin_sig[10..74]);
 
     let global_signature: [64]u8 = [0; 64];
 
@@ -404,19 +388,11 @@ pub fn formatMinisignPublicKey(
     pk: [32]u8,
     out: *[]u8,
 ): usize? {
-    let bin: [42]u8 = [0; 42];
+    let bin: [42]u8 = undefined;
     bin[0] = 'R';
     bin[1] = 'W';
-    let k: usize = 0;
-    while (k < 8) {
-        bin[2 + k] = key_id[k];
-        k += 1;
-    }
-    let p: usize = 0;
-    while (p < 32) {
-        bin[10 + p] = pk[p];
-        p += 1;
-    }
+    @memcpy(bin[2..10], key_id[0..8]);
+    @memcpy(bin[10..42], pk[0..32]);
 
     let pos: usize = 0;
     if (!appendBytes(out, *pos, MINISIGN_UNTRUSTED_PREFIX)) return null;
@@ -437,19 +413,11 @@ pub fn formatMinisignSignature(
     global_sig: [64]u8,
     out: *[]u8,
 ): usize? {
-    let bin: [74]u8 = [0; 74];
+    let bin: [74]u8 = undefined;
     bin[0] = 'E';
     bin[1] = if (is_prehashed) 'D' else 'd';
-    let k: usize = 0;
-    while (k < 8) {
-        bin[2 + k] = key_id[k];
-        k += 1;
-    }
-    let s: usize = 0;
-    while (s < 64) {
-        bin[10 + s] = sig[s];
-        s += 1;
-    }
+    @memcpy(bin[2..10], key_id[0..8]);
+    @memcpy(bin[10..74], sig[0..64]);
 
     let pos: usize = 0;
     if (!appendBytes(out, *pos, MINISIGN_UNTRUSTED_PREFIX)) return null;

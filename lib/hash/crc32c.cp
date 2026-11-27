@@ -23,7 +23,7 @@ fn crc32cByte(crc_in: u32, byte: u8): u32 {
 
 /// Comptime-style 256-entry lookup table generator (or runtime cached in hasher / computed directly).
 fn buildTable(): [256]u32 {
-    let tbl: [256]u32 = [0; 256];
+    let tbl: [256]u32 = undefined;
     let i: usize = 0;
     while (i < 256) : (i += 1) {
         let c: u32 = i as u32;
@@ -98,8 +98,8 @@ fn gf2MatrixSquare(square: *[32]u32, mat: *[32]u32) {
 pub fn crc32cCombine(crc1_in: u32, crc2: u32, len2_in: u64): u32 {
     if (len2_in == 0) return crc1_in;
 
-    let even: [32]u32 = [0; 32];
-    let odd: [32]u32 = [0; 32];
+    let even: [32]u32 = undefined;
+    let odd: [32]u32 = undefined;
 
     odd[0] = CASTAGNOLI_POLY;
     let row: u32 = 1;

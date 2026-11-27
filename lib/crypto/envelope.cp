@@ -202,7 +202,7 @@ fn envDeriveMessageSubkeys(
     let prk: [32]u8 = std.crypto.kdf.hkdf.HkdfSha256.extract(salt, kek[0..]);
 
     // Domain-separated HKDF info: "CPE1-SUBKEYS" (12B) | alg_id (1B) | key_version (4B BE) | nonce (<=32B)
-    let info_buf: [64]u8 = [0; 64];
+    let info_buf: [64]u8 = undefined;
     const domain: []const u8 = "CPE1-SUBKEYS";
     simdProofCopyBytes(info_buf[0..12], domain);
     info_buf[12] = alg_id;
@@ -211,7 +211,7 @@ fn envDeriveMessageSubkeys(
     simdProofCopyBytes(info_buf[17 .. 17 + nonce.len], nonce);
     const info_len: usize = (17 as usize) + nonce.len;
 
-    let okm: [64]u8 = [0; 64];
+    let okm: [64]u8 = undefined;
     std.crypto.kdf.hkdf.HkdfSha256.expand(okm[0..], info_buf[0..info_len], prk);
 
     let out = EnvDerivedSubkeys{};
@@ -231,13 +231,13 @@ fn envXorCtrTransform(
     out_buf: *[]u8,
     out_offset: usize,
 ) {
-    let ctr_in: [ENVELOPE_MAX_NONCE_LEN + 4]u8 = [0; ENVELOPE_MAX_NONCE_LEN + 4];
+    let ctr_in: [ENVELOPE_MAX_NONCE_LEN + 4]u8 = undefined;
     simdProofCopyBytes(ctr_in[0..nonce.len], nonce);
     const ctr_in_len: usize = nonce.len + 4;
 
     let pos: usize = 0;
     let counter: u32 = 0;
-    let keystream: [32]u8 = [0; 32];
+    let keystream: [32]u8 = undefined;
     while (pos < input.len) : (counter += 1) {
         let ctr_slice: []u8 = ctr_in[0..];
         envWriteBeU32(ctr_slice, nonce.len, counter);
@@ -261,7 +261,7 @@ fn envComputeEnvelopeTag(
     ciphertext: []const u8,
 ): [ENVELOPE_TAG_LEN]u8 {
     // Reconstruct canonical 20-byte fixed prefix so header tampering is cryptographically bound.
-    let prefix: [ENVELOPE_FIXED_HEADER_LEN]u8 = [0; ENVELOPE_FIXED_HEADER_LEN];
+    let prefix: [ENVELOPE_FIXED_HEADER_LEN]u8 = undefined;
     prefix[0] = 'C';
     prefix[1] = 'P';
     prefix[2] = 'E';
@@ -282,7 +282,7 @@ fn envComputeEnvelopeTag(
     mac.update(aad);
     mac.update(ciphertext);
 
-    let tag: [ENVELOPE_TAG_LEN]u8 = [0; ENVELOPE_TAG_LEN];
+    let tag: [ENVELOPE_TAG_LEN]u8 = undefined;
     mac.final(&tag);
     return tag;
 }

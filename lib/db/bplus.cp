@@ -258,8 +258,8 @@ pub struct BPlusTree {
             return true;
         }
 
-        let path_nodes: [MAX_TREE_DEPTH]usize = [0; MAX_TREE_DEPTH];
-        let path_pos: [MAX_TREE_DEPTH]usize = [0; MAX_TREE_DEPTH];
+        let path_nodes: [MAX_TREE_DEPTH]usize = undefined;
+        let path_pos: [MAX_TREE_DEPTH]usize = undefined;
         let depth: usize = 0;
 
         let cur = _.root;
@@ -360,8 +360,8 @@ pub struct BPlusTree {
     pub fn remove(*_, key: string): bool {
         if (_.root == NULL_IDX) return false;
 
-        let path_nodes: [MAX_TREE_DEPTH]usize = [0; MAX_TREE_DEPTH];
-        let path_pos: [MAX_TREE_DEPTH]usize = [0; MAX_TREE_DEPTH];
+        let path_nodes: [MAX_TREE_DEPTH]usize = undefined;
+        let path_pos: [MAX_TREE_DEPTH]usize = undefined;
         let depth: usize = 0;
 
         let cur = _.root;

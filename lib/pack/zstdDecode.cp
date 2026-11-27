@@ -467,7 +467,7 @@ struct FseTable {
         const table_mask: usize = table_size - 1;
         const step: usize = (table_size >> 1) + (table_size >> 3) + 3;
 
-        let sym_next: [256]u16 = [0; 256];
+        let sym_next: [256]u16 = undefined;
         let high_thresh: usize = table_size - 1;
         let sym_count: usize = 0;
 
@@ -627,9 +627,8 @@ struct HuffTable {
         }
         const last_weight: u8 = @as(u8, @intCast(highestBitU32(left_over) + 1));
 
-        let all_w: [256]u8 = [0; 256];
-        i = 0;
-        while (i < num_weights) : (i += 1) all_w[i] = weights[i];
+        let all_w: [256]u8 = undefined;
+        @memcpy(all_w[0..num_weights], weights[0..num_weights]);
         all_w[num_weights] = last_weight;
         const total_syms: usize = num_weights + 1;
 
@@ -677,7 +676,7 @@ struct HuffTable {
 fn decodeHuffmanTable(src: []const u8, htbl: *HuffTable, fse_tmp: *FseTable): usize ! ZstdDecodeError {
     if (src.len == 0) return ZstdDecodeError.TruncatedInput;
     const hbyte: usize = @as(usize, src[0]);
-    let weights: [256]u8 = [0; 256];
+    let weights: [256]u8 = undefined;
 
     if (hbyte >= 128) {
         // Direct 4-bit weights
