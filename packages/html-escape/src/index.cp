@@ -1,25 +1,96 @@
 // @cap/html-escape — Zero-heap HTML entity escaper & unescaper
 // Clean-room MIT implementation for CP (compatible with npm escape-html, he & Rust html-escape).
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, and @memcpy.
 
 import { strEq, hexVal, isDigit } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+
+type HeVec16 = @Vector(16, u8);
+
+fn heBuildEscLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut['&' as usize] = 1;
+    lut['<' as usize] = 2;
+    lut['>' as usize] = 3;
+    lut['"' as usize] = 4;
+    lut['\'' as usize] = 5;
+    return lut;
+}
+
+const HE_ESC_LUT: [256]u8 = heBuildEscLut();
+
+fn heFindSpecial(input: string, start: usize): usize {
+    let i: usize = start;
+    const len = input.len;
+    const v_amp: HeVec16 = @splat('&' as u8);
+    const v_lt: HeVec16 = @splat('<' as u8);
+    const v_gt: HeVec16 = @splat('>' as u8);
+    const v_quot: HeVec16 = @splat('"' as u8);
+    const v_apos: HeVec16 = @splat('\'' as u8);
+    while (i + 16 <= len) {
+        const v: HeVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_amp) ||
+            @reduce(.Or, v == v_lt) ||
+            @reduce(.Or, v == v_gt) ||
+            @reduce(.Or, v == v_quot) ||
+            @reduce(.Or, v == v_apos))
+        {
+            let k: usize = 0;
+            while (k < 16) {
+                if (HE_ESC_LUT[input[i + k] as usize] != 0) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (HE_ESC_LUT[input[i] as usize] != 0) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn heFindAmp(input: string, start: usize): usize {
+    let i: usize = start;
+    const len = input.len;
+    const v_amp: HeVec16 = @splat('&' as u8);
+    while (i + 16 <= len) {
+        const v: HeVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_amp)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (input[i + k] == '&') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (input[i] == '&') {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
 
 fn appendStr(dst: []u8, pos: usize, src: string): usize {
     if (pos + src.len > dst.len) { return 0; }
-    return writeStr(src, dst, pos);
+    if (src.len > 0) {
+        @memcpy(dst[pos .. pos + src.len], src[0..src.len]);
+    }
+    return pos + src.len;
 }
 
 /// Fast check whether `input` contains any HTML-unsafe character (`&`, `<`, `>`, `"`, `'`).
 pub fn needsEscape(input: string): bool {
-    let i: usize = 0;
-    while (i < input.len) {
-        let c: u8 = input[i];
-        if (c == '&' || c == '<' || c == '>' || c == '"' || c == '\'') {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return heFindSpecial(input, 0) < input.len;
 }
 
 /// Escape HTML special characters (`&` -> `&amp;`, `<` -> `&lt;`, `>` -> `&gt;`, `"` -> `&quot;`, `'` -> `&#39;`).
@@ -29,26 +100,31 @@ pub fn escapeHtml(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
-        let c: u8 = input[i];
-        if (c == '&') {
+        const next_sp = heFindSpecial(input, i);
+        if (next_sp > i) {
+            const seg_len = next_sp - i;
+            if (pos + seg_len > out.len) { return 0; }
+            @memcpy(out[pos .. pos + seg_len], input[i..next_sp]);
+            pos += seg_len;
+            i = next_sp;
+            if (i >= input.len) { break; }
+        }
+        const kind = HE_ESC_LUT[input[i] as usize];
+        if (kind == 1) {
             pos = appendStr(out, pos, "&amp;");
             if (pos == 0) { return 0; }
-        } else if (c == '<') {
+        } else if (kind == 2) {
             pos = appendStr(out, pos, "&lt;");
             if (pos == 0) { return 0; }
-        } else if (c == '>') {
+        } else if (kind == 3) {
             pos = appendStr(out, pos, "&gt;");
             if (pos == 0) { return 0; }
-        } else if (c == '"') {
+        } else if (kind == 4) {
             pos = appendStr(out, pos, "&quot;");
             if (pos == 0) { return 0; }
-        } else if (c == '\'') {
+        } else {
             pos = appendStr(out, pos, "&#39;");
             if (pos == 0) { return 0; }
-        } else {
-            if (pos >= out.len) { return 0; }
-            out[pos] = c;
-            pos += 1;
         }
         i += 1;
     }
@@ -143,36 +219,44 @@ pub fn unescapeHtml(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
-        if (input[i] == '&') {
-            let semi: usize = i + 1;
-            let limit: usize = i + 12;
-            if (limit > input.len) { limit = input.len; }
-            let found_semi: bool = false;
-            while (semi < limit) {
-                if (input[semi] == ';') {
-                    found_semi = true;
-                    break;
-                }
-                if (input[semi] == '&' || input[semi] == ' ') {
-                    break;
-                }
-                semi += 1;
+        const next_amp = heFindAmp(input, i);
+        if (next_amp > i) {
+            const seg_len = next_amp - i;
+            if (pos + seg_len > out.len) { return 0; }
+            @memcpy(out[pos .. pos + seg_len], input[i..next_amp]);
+            pos += seg_len;
+            i = next_amp;
+            if (i >= input.len) { break; }
+        }
+        // input[i] == '&'
+        let semi: usize = i + 1;
+        let limit: usize = i + 12;
+        if (limit > input.len) { limit = input.len; }
+        let found_semi: bool = false;
+        while (semi < limit) {
+            if (input[semi] == ';') {
+                found_semi = true;
+                break;
             }
-            if (found_semi && semi > i + 1) {
-                let body: string = input[(i + 1)..semi];
-                let cp: u32 = 0;
-                if (body[0] == '#') {
-                    cp = decodeNumericEntity(body);
-                } else {
-                    cp = decodeNamedEntity(body);
-                }
-                if (cp != 0) {
-                    let next_pos: usize = encodeUtf8(cp, out, pos);
-                    if (next_pos == 0) { return 0; }
-                    pos = next_pos;
-                    i = semi + 1;
-                    continue;
-                }
+            if (input[semi] == '&' || input[semi] == ' ') {
+                break;
+            }
+            semi += 1;
+        }
+        if (found_semi && semi > i + 1) {
+            let body: string = input[(i + 1)..semi];
+            let cp: u32 = 0;
+            if (body[0] == '#') {
+                cp = decodeNumericEntity(body);
+            } else {
+                cp = decodeNamedEntity(body);
+            }
+            if (cp != 0) {
+                let next_pos: usize = encodeUtf8(cp, out, pos);
+                if (next_pos == 0) { return 0; }
+                pos = next_pos;
+                i = semi + 1;
+                continue;
             }
         }
         if (pos >= out.len) { return 0; }

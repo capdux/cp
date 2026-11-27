@@ -1,5 +1,65 @@
 // @cap/jsesc — Zero-allocation JavaScript & JSON string escaper
 // Clean-room MIT implementation modeled on npm `jsesc` v3 (Mathias Bynens / Babel).
+// Accelerated with 16-lane @Vector(16, u8) SIMD safe-run scanning, comptime 256-entry LUT, and @memcpy.
+
+type JescVec16 = @Vector(16, u8);
+
+const JESC_HEX_LOWER = "0123456789abcdef";
+const JESC_HEX_UPPER = "0123456789ABCDEF";
+
+fn jescBuildBaseSafeLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0x20;
+    while (c <= 0x7E) {
+        if (c != 92) { // '\\'
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const JESC_BASE_SAFE_LUT: [256]u8 = jescBuildBaseSafeLut();
+
+fn jescFindUnsafe(input: string, start: usize, quote: u8, check_lt: bool, check_dollar: bool): usize {
+    let i: usize = start;
+    const len = input.len;
+    const v_20: JescVec16 = @splat(0x20 as u8);
+    const v_7f: JescVec16 = @splat(0x7F as u8);
+    const v_bs: JescVec16 = @splat('\\' as u8);
+    const v_qt: JescVec16 = @splat(quote);
+    const v_lt: JescVec16 = @splat('<' as u8);
+    const v_dl: JescVec16 = @splat('$' as u8);
+    while (i + 16 <= len) {
+        const v: JescVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v < v_20) ||
+            @reduce(.Or, v >= v_7f) ||
+            @reduce(.Or, v == v_bs) ||
+            @reduce(.Or, v == v_qt) ||
+            (check_lt && @reduce(.Or, v == v_lt)) ||
+            (check_dollar && @reduce(.Or, v == v_dl)))
+        {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = input[i + k];
+                if (JESC_BASE_SAFE_LUT[c as usize] == 0 || c == quote || (check_lt && c == '<') || (check_dollar && c == '$')) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = input[i];
+        if (JESC_BASE_SAFE_LUT[c as usize] == 0 || c == quote || (check_lt && c == '<') || (check_dollar && c == '$')) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
 
 pub struct JsescOptions {
     quote: u8,
@@ -44,10 +104,9 @@ struct JescDecoded {
 }
 
 fn jescHexChar(nibble: u32, lowercase: bool): u8 {
-    const n = u8(nibble & 0xF);
-    if (n < 10) return u8('0') + n;
-    if (lowercase) return u8('a') + (n - 10);
-    return u8('A') + (n - 10);
+    const idx = (nibble & 0xF) as usize;
+    if (lowercase) { return JESC_HEX_LOWER[idx]; }
+    return JESC_HEX_UPPER[idx];
 }
 
 fn jescPush(out: []u8, pos: usize, b: u8): usize {
@@ -83,7 +142,7 @@ fn jescPushUnicode4(out: []u8, pos: usize, val: u32, lowercase: bool): usize {
 fn jescPushEs6CodePoint(out: []u8, pos: usize, cp: u32, lowercase: bool): usize {
     let p = jescPush2(out, pos, '\\', 'u');
     p = jescPush(out, p, '{');
-    let digits: [8]u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+    let digits: [8]u8 = undefined;
     let count: usize = 0;
     let v = cp;
     if (v == 0) {
@@ -201,6 +260,8 @@ pub fn jsescWithOptions(input: string, opts: JsescOptions, out: []u8): usize {
     const do_wrap = opts.wrap || is_json;
     const use_es6 = opts.es6 && !is_json;
     const lower = opts.lowercase_hex;
+    const check_lt = opts.is_script_context;
+    const check_dollar = quote == '`';
 
     let pos: usize = 0;
     if (do_wrap) {
@@ -209,6 +270,21 @@ pub fn jsescWithOptions(input: string, opts: JsescOptions, out: []u8): usize {
 
     let i: usize = 0;
     while (i < input.len) {
+        if (!opts.escape_everything) {
+            const safe_end = jescFindUnsafe(input, i, quote, check_lt, check_dollar);
+            if (safe_end > i) {
+                const seg_len = safe_end - i;
+                if (pos < out.len) {
+                    const avail = out.len - pos;
+                    const n = if (seg_len <= avail) { seg_len } else { avail };
+                    @memcpy(out[pos .. pos + n], input[i .. i + n]);
+                    pos += n;
+                }
+                i = safe_end;
+                if (i >= input.len) { break; }
+            }
+        }
+
         const dec_cp = jescDecodeUtf8(input, i);
         const cp = dec_cp.cp;
         const step = dec_cp.len;

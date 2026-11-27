@@ -1,10 +1,10 @@
 // @cap/bstr — Zero-allocation byte string utilities for CP (Rust `bstr` v1 parity)
 // Clean-room MIT implementation.
 // Reuses `@cap/memchr` (`memchr`, `memrchr`, `memmemFind`, `memmemRfind`) for
-// SWAR-accelerated byte/substring search, line splitting, and single-pass replacement.
+// SIMD-accelerated byte/substring search, plus 16-lane @Vector(16, u8) SIMD ASCII fast-path
+// in `bstrToUtf8Lossy`, comptime 256-entry whitespace LUT, and @memcpy in `bstrReplaceAll`.
 
-import { isSpace, isAscii, startsWith, endsWith, toLower, toUpper, eqIgnoreCase } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { isAscii, startsWith, endsWith, toLower, toUpper, eqIgnoreCase } from "cap:ascii";
 import { isValidUtf8 } from "cap:utf8";
 import {
     memchr,
@@ -12,6 +12,32 @@ import {
     memmemFind,
     memmemRfind
 } from "../../memchr/src/index.cp";
+
+type BsVec16 = @Vector(16, u8);
+
+fn bsBuildSpaceLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[0x20] = 1; // ' '
+    lut[0x09] = 1; // '\t'
+    lut[0x0A] = 1; // '\n'
+    lut[0x0B] = 1; // '\x0B'
+    lut[0x0C] = 1; // '\x0C'
+    lut[0x0D] = 1; // '\r'
+    return lut;
+}
+
+const BS_SPACE_LUT: [256]u8 = bsBuildSpaceLut();
+
+fn bsCopySlice(src: []const u8, out: []u8, pos: usize): usize {
+    if (src.len == 0 || pos >= out.len) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (src.len <= avail) { src.len } else { avail };
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
+}
 
 /// Zero-copy half-open byte range `[start, end)` referencing an input slice.
 pub struct SliceRange {
@@ -191,13 +217,13 @@ pub fn bstrEndsWith(s: []const u8, suffix: []const u8): bool {
 }
 
 // ============================================================================
-// Public API — Zero-Copy Trimming
+// Public API — Zero-Copy Trimming (comptime 256-entry LUT)
 // ============================================================================
 
 /// Strips leading ASCII whitespace (` `, `\t`, `\n`, `\x0B`, `\x0C`, `\r`), returning a `SliceRange`.
 pub fn bstrTrimStart(s: []const u8): SliceRange {
     let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
+    while (start < s.len && BS_SPACE_LUT[s[start] as usize] != 0) {
         start = start + 1;
     }
     return SliceRange { start: start, end: s.len };
@@ -206,7 +232,7 @@ pub fn bstrTrimStart(s: []const u8): SliceRange {
 /// Strips trailing ASCII whitespace (` `, `\t`, `\n`, `\x0B`, `\x0C`, `\r`), returning a `SliceRange`.
 pub fn bstrTrimEnd(s: []const u8): SliceRange {
     let end: usize = s.len;
-    while (end > 0 && isSpace(s[end - 1])) {
+    while (end > 0 && BS_SPACE_LUT[s[end - 1] as usize] != 0) {
         end = end - 1;
     }
     return SliceRange { start: 0, end: end };
@@ -216,10 +242,10 @@ pub fn bstrTrimEnd(s: []const u8): SliceRange {
 pub fn bstrTrim(s: []const u8): SliceRange {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && isSpace(s[start])) {
+    while (start < end && BS_SPACE_LUT[s[start] as usize] != 0) {
         start = start + 1;
     }
-    while (end > start && isSpace(s[end - 1])) {
+    while (end > start && BS_SPACE_LUT[s[end - 1] as usize] != 0) {
         end = end - 1;
     }
     return SliceRange { start: start, end: end };
@@ -275,7 +301,7 @@ pub fn bstrLineAt(s: []const u8, idx: usize): SliceRange {
 }
 
 // ============================================================================
-// Public API — Single-Pass Zero-Heap Replacement
+// Public API — Single-Pass Zero-Heap Replacement (@memcpy bulk copy)
 // ============================================================================
 
 /// Replaces all non-overlapping occurrences of `pattern` in `src` with `replacement`, writing into `out`.
@@ -286,7 +312,7 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
         return 0;
     }
     if (pattern.len == 0) {
-        return writeStr(src, out, 0);
+        return bsCopySlice(src, out, 0);
     }
 
     let written: usize = 0;
@@ -294,15 +320,15 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
     while (pos < src.len && written < out.len) {
         let hit = memmemFind(src[pos..src.len], pattern);
         if (hit < 0) {
-            written = writeStr(src[pos..src.len], out, written);
+            written = bsCopySlice(src[pos..src.len], out, written);
             break;
         }
         let matchStart = pos + (hit as usize);
         if (matchStart > pos) {
-            written = writeStr(src[pos..matchStart], out, written);
+            written = bsCopySlice(src[pos..matchStart], out, written);
         }
         if (replacement.len > 0 && written < out.len) {
-            written = writeStr(replacement, out, written);
+            written = bsCopySlice(replacement, out, written);
         }
         pos = matchStart + pattern.len;
     }
@@ -310,7 +336,7 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
 }
 
 // ============================================================================
-// Public API — Strict UTF-8 Validation & Lossy Conversion
+// Public API — Strict UTF-8 Validation & Lossy Conversion (16-lane SIMD ASCII fast path)
 // ============================================================================
 
 /// Returns `true` if `src` is completely valid UTF-8 (RFC 3629).
@@ -325,17 +351,27 @@ pub fn bstrIsUtf8(src: []const u8): bool {
 pub fn bstrToUtf8Lossy(src: []const u8, out: []u8): usize {
     let i: usize = 0;
     let written: usize = 0;
+    const v_80: BsVec16 = @splat(0x80 as u8);
     while (i < src.len && written < out.len) {
+        // 16-lane SIMD fast-path for contiguous ASCII runs
+        while (i + 16 <= src.len && written + 16 <= out.len) {
+            const v: BsVec16 = src[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v >= v_80)) {
+                break;
+            }
+            @memcpy(out[written .. written + 16], src[i .. i + 16]);
+            i = i + 16;
+            written = written + 16;
+        }
+        if (i >= src.len || written >= out.len) {
+            break;
+        }
         let seqLen = bsUtf8ValidLen(src, i);
         if (seqLen > 0) {
             if (written + seqLen > out.len) {
                 break;
             }
-            let k: usize = 0;
-            while (k < seqLen) {
-                out[written + k] = src[i + k];
-                k = k + 1;
-            }
+            @memcpy(out[written .. written + seqLen], src[i .. i + seqLen]);
             written = written + seqLen;
             i = i + seqLen;
         } else {

@@ -1,14 +1,65 @@
 // @cap/shell-escape — Zero-allocation POSIX sh & Windows CommandLineToArgvW Argument Escaper
 // Clean-room MIT implementation in pure CP.
+// Accelerated with comptime 256-entry LUTs, 16-lane @Vector(16, u8) SIMD scanning, and @memcpy.
 
-fn isSafePosixByte(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }  // A-Z
-    if (b >= 97 && b <= 122) { return true; } // a-z
-    if (b >= 48 && b <= 57) { return true; }  // 0-9
-    // _ @ % + = : , . / -
-    if (b == 95 || b == 64 || b == 37 || b == 43 || b == 61) { return true; }
-    if (b == 58 || b == 44 || b == 46 || b == 47 || b == 45) { return true; }
-    return false;
+type SeVec16 = @Vector(16, u8);
+
+fn seBuildSafePosixLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) ||
+            c == 95 || c == 64 || c == 37 || c == 43 || c == 61 ||
+            c == 58 || c == 44 || c == 46 || c == 47 || c == 45)
+        {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+fn seBuildEnvContLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 95) {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const SE_SAFE_POSIX_LUT: [256]u8 = seBuildSafePosixLut();
+const SE_ENV_CONT_LUT: [256]u8 = seBuildEnvContLut();
+
+fn seFindSingleQuote(arg: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = arg.len;
+    const v_sq: SeVec16 = @splat(39 as u8);
+    while (i + 16 <= len) {
+        const v: SeVec16 = arg[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sq)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (arg[i + k] == 39) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (arg[i] == 39) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
 }
 
 /// Returns true if `arg` is non-empty and contains only safe POSIX shell characters
@@ -19,7 +70,7 @@ pub fn isSafePosixWord(arg: string) -> bool {
     }
     let i: usize = 0;
     while (i < arg.len) {
-        if (!isSafePosixByte(arg[i])) {
+        if (SE_SAFE_POSIX_LUT[arg[i] as usize] == 0) {
             return false;
         }
         i += 1;
@@ -44,24 +95,20 @@ pub fn escapePosix(arg: string, out: []u8) -> usize {
         if (arg.len > out.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < arg.len) {
-            out[i] = arg[i];
-            i += 1;
-        }
+        @memcpy(out[0..arg.len], arg[0..arg.len]);
         return arg.len;
     }
 
-    let needed: usize = 2;
-    let i: usize = 0;
-    while (i < arg.len) {
-        if (arg[i] == 39) {
-            needed += 4; // '\''
-        } else {
-            needed += 1;
-        }
-        i += 1;
+    // Count single quotes with 16-lane SIMD to compute exact output length
+    let sq_count: usize = 0;
+    let scan: usize = 0;
+    while (scan < arg.len) {
+        const next_sq = seFindSingleQuote(arg, scan);
+        if (next_sq >= arg.len) { break; }
+        sq_count += 1;
+        scan = next_sq + 1;
     }
+    const needed: usize = arg.len + 2 + sq_count * 3;
     if (needed > out.len) {
         return 0;
     }
@@ -69,18 +116,21 @@ pub fn escapePosix(arg: string, out: []u8) -> usize {
     let w: usize = 0;
     out[w] = 39;
     w += 1;
-    i = 0;
+    let i: usize = 0;
     while (i < arg.len) {
-        if (arg[i] == 39) {
-            out[w] = 39;     // '\''
-            out[w + 1] = 92; // '\\'
-            out[w + 2] = 39; // '\''
-            out[w + 3] = 39; // '\''
-            w += 4;
-        } else {
-            out[w] = arg[i];
-            w += 1;
+        const next_sq = seFindSingleQuote(arg, i);
+        if (next_sq > i) {
+            const seg_len = next_sq - i;
+            @memcpy(out[w .. w + seg_len], arg[i..next_sq]);
+            w += seg_len;
+            i = next_sq;
+            if (i >= arg.len) { break; }
         }
+        out[w] = 39;     // '\''
+        out[w + 1] = 92; // '\\'
+        out[w + 2] = 39; // '\''
+        out[w + 3] = 39; // '\''
+        w += 4;
         i += 1;
     }
     out[w] = 39;
@@ -93,7 +143,25 @@ fn needsWindowsQuotes(arg: string) -> bool {
         return true;
     }
     let i: usize = 0;
-    while (i < arg.len) {
+    const len = arg.len;
+    const v_sp: SeVec16 = @splat(32 as u8);
+    const v_tb: SeVec16 = @splat(9 as u8);
+    const v_lf: SeVec16 = @splat(10 as u8);
+    const v_cr: SeVec16 = @splat(13 as u8);
+    const v_qt: SeVec16 = @splat(34 as u8);
+    while (i + 16 <= len) {
+        const v: SeVec16 = arg[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sp) ||
+            @reduce(.Or, v == v_tb) ||
+            @reduce(.Or, v == v_lf) ||
+            @reduce(.Or, v == v_cr) ||
+            @reduce(.Or, v == v_qt))
+        {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
         const b = arg[i];
         if (b == 32 || b == 9 || b == 10 || b == 13 || b == 34) {
             return true;
@@ -120,11 +188,7 @@ pub fn escapeWindows(arg: string, out: []u8) -> usize {
         if (arg.len > out.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < arg.len) {
-            out[i] = arg[i];
-            i += 1;
-        }
+        @memcpy(out[0..arg.len], arg[0..arg.len]);
         return arg.len;
     }
 
@@ -220,9 +284,7 @@ pub fn isValidEnvName(name: string) -> bool {
     }
     let i: usize = 1;
     while (i < name.len) {
-        const ch = name[i];
-        const ok = (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122) || (ch >= 48 && ch <= 57) || ch == 95;
-        if (!ok) {
+        if (SE_ENV_CONT_LUT[name[i] as usize] == 0) {
             return false;
         }
         i += 1;
