@@ -1,8 +1,28 @@
 // @cap/http-range-header — Zero-heap RFC 9110 HTTP Range header parser & validator
 // Clean-room pure CP counterpart to crates.io:http-range-header
+// Accelerated with 16-lane @Vector(16, u8) SIMD delimiter/whitespace scanning, comptime 256-entry digit LUT, @memcpy, and undefined stack buffers.
 
-import { eqIgnoreCase, findByte } from "cap:ascii";
-import { parseU64, writeStr, writeU64 } from "cap:fmt";
+import { eqIgnoreCase } from "cap:ascii";
+
+type HrhVec16 = @Vector(16, u8);
+
+fn hrhBuildDigitLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        lut[i] = 0xFF;
+        i += 1;
+    }
+    let d: usize = 0;
+    while (d < 10) {
+        lut[48 + d] = d as u8;
+        d += 1;
+    }
+    return lut;
+}
+
+const HRH_DIGIT_LUT: [256]u8 = hrhBuildDigitLut();
 
 pub enum RangePosition {
     StartAndEnd,
@@ -29,21 +49,109 @@ fn hrhIsSpace(b: u8): bool {
     return b == 0x20 || b == 0x09;
 }
 
+fn hrhSkipSpaces(s: string, start: usize, end: usize): usize {
+    let i = start;
+    const v_sp: HrhVec16 = @splat(0x20 as u8);
+    const v_tb: HrhVec16 = @splat(0x09 as u8);
+    while (i + 16 <= end) {
+        const v: HrhVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v == v_sp) | (v == v_tb))) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < end && hrhIsSpace(s[i])) {
+        i += 1;
+    }
+    return i;
+}
+
+fn hrhFindByte(s: string, start: usize, end: usize, target: u8): usize {
+    let i = start;
+    const v_t: HrhVec16 = @splat(target);
+    while (i + 16 <= end) {
+        const v: HrhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_t)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < end) {
+        if (s[i] == target) {
+            return i;
+        }
+        i += 1;
+    }
+    return end;
+}
+
 fn hrhParseU64(s: string, start: usize, end: usize): u64? {
-    if (start >= end || s[start] == 43) {
+    if (start >= end) {
         return null;
     }
-    return parseU64(s[start..end]);
+    const max_div10: u64 = 1844674407370955161;
+    const max_mod10: u64 = 5;
+    let acc: u64 = 0;
+    let i = start;
+    while (i < end) {
+        const d = HRH_DIGIT_LUT[s[i] as usize];
+        if (d > 9) {
+            return null;
+        }
+        const du = d as u64;
+        if (acc > max_div10 || (acc == max_div10 && du > max_mod10)) {
+            return null;
+        }
+        acc = acc * 10 + du;
+        i += 1;
+    }
+    return acc;
+}
+
+fn hrhWriteSlice(src: string, out: []u8, pos: usize): usize {
+    if (pos >= out.len || src.len == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const copy_len = if (src.len < avail) src.len else avail;
+    @memcpy(out[pos .. pos + copy_len], src[0..copy_len]);
+    return pos + copy_len;
+}
+
+fn hrhWriteU64(val: u64, out: []u8, pos: usize): usize {
+    if (pos >= out.len) {
+        return pos;
+    }
+    let tmp: [24]u8 = undefined;
+    let len: usize = 0;
+    let v = val;
+    if (v == 0) {
+        out[pos] = 48;
+        return pos + 1;
+    }
+    while (v > 0) {
+        tmp[23 - len] = (48 + (v % 10)) as u8;
+        v = v / 10;
+        len += 1;
+    }
+    const avail = out.len - pos;
+    const copy_len = if (len < avail) len else avail;
+    const start_idx = 24 - len;
+    @memcpy(out[pos .. pos + copy_len], tmp[start_idx .. start_idx + copy_len]);
+    return pos + copy_len;
 }
 
 /// Parse an RFC 9110 `Range` header value (`bytes=...`) into `out`.
 /// Returns the number of parsed syntactic ranges, or `0` if the header is malformed.
 pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
-    let start: usize = 0;
+    let start: usize = hrhSkipSpaces(header, 0, header.len);
     let end = header.len;
-    while (start < end && hrhIsSpace(header[start])) {
-        start += 1;
-    }
     while (end > start && hrhIsSpace(header[end - 1])) {
         end -= 1;
     }
@@ -56,15 +164,13 @@ pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
     let expectItem = true;
 
     while (i < end || expectItem) {
-        while (i < end && hrhIsSpace(header[i])) {
-            i += 1;
-        }
+        i = hrhSkipSpaces(header, i, end);
         if (i >= end) {
             // Trailing comma or empty range-set
             return 0;
         }
 
-        const itemEnd = findByte(header[0..end], 0x2C, i) ?? end;
+        const itemEnd = hrhFindByte(header, i, end, 0x2C);
 
         let segStart = i;
         let segEnd = itemEnd;
@@ -76,7 +182,7 @@ pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
         }
 
         // Find '-' inside [segStart, segEnd)
-        const dash = findByte(header[0..segEnd], 0x2D, segStart) ?? segEnd;
+        const dash = hrhFindByte(header, segStart, segEnd, 0x2D);
         if (dash == segEnd) {
             return 0;
         }
@@ -198,19 +304,19 @@ pub fn validateRanges(ranges: []const SyntacticByteRange, total_size: u64, out: 
 /// Format an RFC 9110 `Content-Range` header value: `bytes <start>-<end>/<total>`.
 pub fn formatContentRange(start: u64, end: u64, total: u64, out: []u8): usize {
     let pos: usize = 0;
-    pos = writeStr("bytes ", out, pos);
-    pos = writeU64(start, out, pos);
-    pos = writeStr("-", out, pos);
-    pos = writeU64(end, out, pos);
-    pos = writeStr("/", out, pos);
-    pos = writeU64(total, out, pos);
+    pos = hrhWriteSlice("bytes ", out, pos);
+    pos = hrhWriteU64(start, out, pos);
+    pos = hrhWriteSlice("-", out, pos);
+    pos = hrhWriteU64(end, out, pos);
+    pos = hrhWriteSlice("/", out, pos);
+    pos = hrhWriteU64(total, out, pos);
     return pos;
 }
 
 /// Format an RFC 9110 416 unsatisfiable `Content-Range` header value: `bytes */<total>`.
 pub fn formatUnsatisfiableContentRange(total: u64, out: []u8): usize {
     let pos: usize = 0;
-    pos = writeStr("bytes */", out, pos);
-    pos = writeU64(total, out, pos);
+    pos = hrhWriteSlice("bytes */", out, pos);
+    pos = hrhWriteU64(total, out, pos);
     return pos;
 }

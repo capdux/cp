@@ -1,5 +1,30 @@
 // @cap/cssesc — Zero-allocation CSSOM-compliant CSS identifier/string escaper in pure CP
 // Reference: npm:cssesc (https://github.com/mathiasbynens/cssesc, MIT)
+// Accelerated with 16-lane @Vector(16, u8) safe-run SIMD scanning, comptime 256-entry LUTs, and bulk @memcpy.
+
+type CescVec16 = @Vector(16, u8);
+
+const CESC_HEX_DIGITS: [16]u8 = [
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+];
+
+fn cescBuildIdentSafeLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        if ((i >= 0x30 && i <= 0x39) || (i >= 0x41 && i <= 0x5A) || (i >= 0x61 && i <= 0x7A) || i == 0x2D || i == 0x5F) {
+            lut[i] = 1;
+        } else {
+            lut[i] = 0;
+        }
+        i += 1;
+    }
+    return lut;
+}
+
+const CESC_IDENT_SAFE_LUT: [256]u8 = cescBuildIdentSafeLut();
 
 pub enum CssQuoteStyle {
     Single,
@@ -28,6 +53,16 @@ struct CescWriter {
         _.pos += 1;
     }
 
+    fn writeSlice(*_, s: []const u8) {
+        if (_.overflow || s.len == 0) return;
+        if (_.pos + s.len > _.buf.len) {
+            _.overflow = true;
+            return;
+        }
+        @memcpy(_.buf[_.pos .. _.pos + s.len], s);
+        _.pos += s.len;
+    }
+
     fn writeHexEscape(*_, cp: u32, add_space: bool) {
         _.writeByte('\\');
         let tmp: [8]u8 = undefined;
@@ -37,12 +72,7 @@ struct CescWriter {
             _.writeByte('0');
         } else {
             while (v > 0) {
-                const nib = u8(v & 0xF);
-                if (nib < 10) {
-                    tmp[len] = u8('0') + nib;
-                } else {
-                    tmp[len] = u8('a') + (nib - 10);
-                }
+                tmp[len] = CESC_HEX_DIGITS[(v & 0xF) as usize];
                 len += 1;
                 v >>= 4;
             }
@@ -105,13 +135,6 @@ fn cescDecodeUtf8(s: string, start: usize): CescUtf8Res {
     return CescUtf8Res{ cp: b0 as u32, next: start + 1 };
 }
 
-fn cescIsAsciiAlnumOrDash(cp: u32): bool {
-    if ((cp >= 0x30 && cp <= 0x39) || (cp >= 0x41 && cp <= 0x5A) || (cp >= 0x61 && cp <= 0x7A) || cp == 0x2D || cp == 0x5F) {
-        return true;
-    }
-    return false;
-}
-
 pub fn cssescBuf(input: string, opts: CssEscOptions, out: []u8): usize {
     let w = CescWriter{ buf: out, pos: 0, overflow: false };
 
@@ -124,11 +147,51 @@ pub fn cssescBuf(input: string, opts: CssEscOptions, out: []u8): usize {
         w.writeByte(quote_char);
     }
 
+    const v_sp: CescVec16 = @splat(0x20 as u8);
+    const v_tilde: CescVec16 = @splat(0x7E as u8);
+    const v_bs: CescVec16 = @splat(0x5C as u8);
+    const v_q: CescVec16 = @splat(quote_char);
+    const v_0: CescVec16 = @splat(0x30 as u8);
+    const v_9: CescVec16 = @splat(0x39 as u8);
+    const v_A: CescVec16 = @splat(0x41 as u8);
+    const v_Z: CescVec16 = @splat(0x5A as u8);
+    const v_a: CescVec16 = @splat(0x61 as u8);
+    const v_z: CescVec16 = @splat(0x7A as u8);
+    const v_dash: CescVec16 = @splat(0x2D as u8);
+    const v_und: CescVec16 = @splat(0x5F as u8);
+
     let i: usize = 0;
     let cp_idx: usize = 0;
     let first_is_dash = false;
 
     while (i < input.len) {
+        // 16-lane SIMD fast path for bulk safe ASCII runs
+        if (!opts.escape_everything && i + 16 <= input.len) {
+            if (!opts.is_identifier) {
+                const v: CescVec16 = input[i .. i + 16][0..16].*;
+                const safe = (v >= v_sp) & (v <= v_tilde) & (v != v_bs) & (v != v_q);
+                if (@reduce(.And, safe)) {
+                    w.writeSlice(input[i .. i + 16]);
+                    i += 16;
+                    cp_idx += 16;
+                    continue;
+                }
+            } else if (cp_idx >= 2) {
+                const v: CescVec16 = input[i .. i + 16][0..16].*;
+                const safe = ((v >= v_0) & (v <= v_9))
+                    | ((v >= v_A) & (v <= v_Z))
+                    | ((v >= v_a) & (v <= v_z))
+                    | (v == v_dash)
+                    | (v == v_und);
+                if (@reduce(.And, safe)) {
+                    w.writeSlice(input[i .. i + 16]);
+                    i += 16;
+                    cp_idx += 16;
+                    continue;
+                }
+            }
+        }
+
         const r = cescDecodeUtf8(input, i);
         const cp = r.cp;
         const is_last = r.next >= input.len;
@@ -191,7 +254,7 @@ pub fn cssescBuf(input: string, opts: CssEscOptions, out: []u8): usize {
         }
 
         if (opts.is_identifier) {
-            if (cescIsAsciiAlnumOrDash(cp)) {
+            if (CESC_IDENT_SAFE_LUT[cp as usize] != 0) {
                 w.writeByte(u8(cp));
             } else {
                 w.writeByte('\\');
