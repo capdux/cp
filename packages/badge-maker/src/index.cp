@@ -1,6 +1,8 @@
 // @cap/svg-badge — Zero-heap Shields.io-style SVG status badge generator
 // Clean-room MIT implementation in pure CP (replaces npm `badge-maker` / `gh-badges`).
 
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub enum BadgeStyle {
     Flat,
     FlatSquare,
@@ -73,17 +75,12 @@ pub fn estimateTextWidth(s: string) -> usize {
     return w;
 }
 
-struct BufWriter {
+struct BadgeWriter {
     pub out: []u8,
     pub pos: usize,
 
-    pub fn writeStr(*_, s: string) {
-        let i: usize = 0;
-        while (i < s.len && _.pos < _.out.len) {
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
-        }
+    pub fn putStr(*_, s: string) {
+        _.pos = writeStr(s, _.out, _.pos);
     }
 
     pub fn writeXmlEscaped(*_, s: string) {
@@ -91,15 +88,15 @@ struct BufWriter {
         while (i < s.len) {
             const c: u8 = s[i];
             if (c == '&') {
-                _.writeStr("&amp;");
+                _.putStr("&amp;");
             } else if (c == '<') {
-                _.writeStr("&lt;");
+                _.putStr("&lt;");
             } else if (c == '>') {
-                _.writeStr("&gt;");
+                _.putStr("&gt;");
             } else if (c == '"') {
-                _.writeStr("&quot;");
+                _.putStr("&quot;");
             } else if (c == '\'') {
-                _.writeStr("&#39;");
+                _.putStr("&#39;");
             } else if (_.pos < _.out.len) {
                 _.out[_.pos] = c;
                 _.pos += 1;
@@ -109,26 +106,7 @@ struct BufWriter {
     }
 
     pub fn writeUsize(*_, val: usize) {
-        if (val == 0) {
-            _.writeStr("0");
-            return;
-        }
-        let tmp: [24]u8 = undefined;
-        let n: usize = 0;
-        let v: usize = val;
-        while (v > 0 && n < 24) {
-            const d: u8 = (v % 10) as u8;
-            tmp[n] = ('0' as u8) + d;
-            v = v / 10;
-            n += 1;
-        }
-        while (n > 0) {
-            n -= 1;
-            if (_.pos < _.out.len) {
-                _.out[_.pos] = tmp[n];
-                _.pos += 1;
-            }
-        }
+        _.pos = writeU64(val as u64, _.out, _.pos);
     }
 }
 
@@ -154,88 +132,88 @@ pub fn renderBadge(opts: BadgeOptions, out: []u8) -> string {
         BadgeStyle.Plastic => { rx = "4"; isPlastic = true; },
     }
 
-    let w: BufWriter = BufWriter { out: out, pos: 0 };
+    let w: BadgeWriter = BadgeWriter { out: out, pos: 0 };
 
-    w.writeStr("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
+    w.putStr("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
     w.writeUsize(totalW);
-    w.writeStr("\" height=\"");
+    w.putStr("\" height=\"");
     w.writeUsize(height);
-    w.writeStr("\" role=\"img\" aria-label=\"");
+    w.putStr("\" role=\"img\" aria-label=\"");
     if (hasLabel) {
         w.writeXmlEscaped(opts.label);
-        w.writeStr(": ");
+        w.putStr(": ");
     }
     w.writeXmlEscaped(opts.message);
-    w.writeStr("\"><title>");
+    w.putStr("\"><title>");
     if (hasLabel) {
         w.writeXmlEscaped(opts.label);
-        w.writeStr(": ");
+        w.putStr(": ");
     }
     w.writeXmlEscaped(opts.message);
-    w.writeStr("</title>");
+    w.putStr("</title>");
 
     if (!isSquare) {
         if (isPlastic) {
-            w.writeStr("<linearGradient id=\"s\" x2=\"0\" y2=\"100%\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".1\" stop-color=\"#aaa\" stop-opacity=\".1\"/><stop offset=\".9\" stop-color=\"#000\" stop-opacity=\".3\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".5\"/></linearGradient>");
+            w.putStr("<linearGradient id=\"s\" x2=\"0\" y2=\"100%\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".7\"/><stop offset=\".1\" stop-color=\"#aaa\" stop-opacity=\".1\"/><stop offset=\".9\" stop-color=\"#000\" stop-opacity=\".3\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".5\"/></linearGradient>");
         } else {
-            w.writeStr("<linearGradient id=\"s\" x2=\"0\" y2=\"100%\"><stop offset=\"0\" stop-color=\"#bbb\" stop-opacity=\".1\"/><stop offset=\"1\" stop-opacity=\".1\"/></linearGradient>");
+            w.putStr("<linearGradient id=\"s\" x2=\"0\" y2=\"100%\"><stop offset=\"0\" stop-color=\"#bbb\" stop-opacity=\".1\"/><stop offset=\"1\" stop-opacity=\".1\"/></linearGradient>");
         }
-        w.writeStr("<clipPath id=\"r\"><rect width=\"");
+        w.putStr("<clipPath id=\"r\"><rect width=\"");
         w.writeUsize(totalW);
-        w.writeStr("\" height=\"20\" rx=\"");
-        w.writeStr(rx);
-        w.writeStr("\" fill=\"#fff\"/></clipPath><g clip-path=\"url(#r)\">");
+        w.putStr("\" height=\"20\" rx=\"");
+        w.putStr(rx);
+        w.putStr("\" fill=\"#fff\"/></clipPath><g clip-path=\"url(#r)\">");
     } else {
-        w.writeStr("<g shape-rendering=\"crispEdges\">");
+        w.putStr("<g shape-rendering=\"crispEdges\">");
     }
 
     if (hasLabel) {
-        w.writeStr("<rect width=\"");
+        w.putStr("<rect width=\"");
         w.writeUsize(labelW);
-        w.writeStr("\" height=\"20\" fill=\"");
+        w.putStr("\" height=\"20\" fill=\"");
         w.writeXmlEscaped(labelCol);
-        w.writeStr("\"/>");
+        w.putStr("\"/>");
     }
 
-    w.writeStr("<rect x=\"");
+    w.putStr("<rect x=\"");
     w.writeUsize(labelW);
-    w.writeStr("\" width=\"");
+    w.putStr("\" width=\"");
     w.writeUsize(msgW);
-    w.writeStr("\" height=\"20\" fill=\"");
+    w.putStr("\" height=\"20\" fill=\"");
     w.writeXmlEscaped(msgCol);
-    w.writeStr("\"/>");
+    w.putStr("\"/>");
 
     if (!isSquare) {
-        w.writeStr("<rect width=\"");
+        w.putStr("<rect width=\"");
         w.writeUsize(totalW);
-        w.writeStr("\" height=\"20\" fill=\"url(#s)\"/>");
+        w.putStr("\" height=\"20\" fill=\"url(#s)\"/>");
     }
 
-    w.writeStr("</g><g fill=\"#fff\" text-anchor=\"middle\" font-family=\"Verdana,Geneva,DejaVu Sans,sans-serif\" font-size=\"11\">");
+    w.putStr("</g><g fill=\"#fff\" text-anchor=\"middle\" font-family=\"Verdana,Geneva,DejaVu Sans,sans-serif\" font-size=\"11\">");
 
     if (hasLabel) {
         const lx: usize = labelW / 2;
-        w.writeStr("<text x=\"");
+        w.putStr("<text x=\"");
         w.writeUsize(lx);
-        w.writeStr("\" y=\"15\" fill=\"#010101\" fill-opacity=\".3\">");
+        w.putStr("\" y=\"15\" fill=\"#010101\" fill-opacity=\".3\">");
         w.writeXmlEscaped(opts.label);
-        w.writeStr("</text><text x=\"");
+        w.putStr("</text><text x=\"");
         w.writeUsize(lx);
-        w.writeStr("\" y=\"14\">");
+        w.putStr("\" y=\"14\">");
         w.writeXmlEscaped(opts.label);
-        w.writeStr("</text>");
+        w.putStr("</text>");
     }
 
     const mx: usize = labelW + (msgW / 2);
-    w.writeStr("<text x=\"");
+    w.putStr("<text x=\"");
     w.writeUsize(mx);
-    w.writeStr("\" y=\"15\" fill=\"#010101\" fill-opacity=\".3\">");
+    w.putStr("\" y=\"15\" fill=\"#010101\" fill-opacity=\".3\">");
     w.writeXmlEscaped(opts.message);
-    w.writeStr("</text><text x=\"");
+    w.putStr("</text><text x=\"");
     w.writeUsize(mx);
-    w.writeStr("\" y=\"14\">");
+    w.putStr("\" y=\"14\">");
     w.writeXmlEscaped(opts.message);
-    w.writeStr("</text></g></svg>");
+    w.putStr("</text></g></svg>");
 
     return out[0..w.pos];
 }

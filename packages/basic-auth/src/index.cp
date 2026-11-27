@@ -1,6 +1,10 @@
 // @cap/basic-auth — Zero-heap RFC 7617 HTTP Basic Authentication codec & verifier
 // MIT License (clean-room CP implementation)
 
+import { eqIgnoreCase } from "cap:ascii";
+import { ctEqual, findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 pub struct BasicCredentials {
     pub user_len: usize,
     pub pass_len: usize,
@@ -9,13 +13,6 @@ pub struct BasicCredentials {
 
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
 }
 
 fn b64EncChar(v: u8) -> u8 {
@@ -164,13 +161,8 @@ pub fn decodeHeader(header: string, out_user: []u8, out_pass: []u8) -> BasicCred
     }
 
     // Match "basic" case-insensitively followed by whitespace
-    const scheme = "basic";
-    let k: usize = 0;
-    while (k < 5) {
-        if (toLowerAscii(header[s + k]) != scheme[k]) {
-            return fail;
-        }
-        k += 1;
+    if (!eqIgnoreCase(header[s..(s + 5)], "basic")) {
+        return fail;
     }
     if (!isWs(header[s + 5])) {
         return fail;
@@ -192,13 +184,11 @@ pub fn decodeHeader(header: string, out_user: []u8, out_pass: []u8) -> BasicCred
     const raw_len: usize = raw_len_i as usize;
 
     // Split on FIRST ':' (password may contain ':')
-    let colon: usize = 0;
-    while (colon < raw_len && raw[colon] != ':' as u8) {
-        colon += 1;
-    }
-    if (colon >= raw_len) {
+    const colon_opt = findByteInBytes(raw[0..raw_len], ':' as u8, 0);
+    if (colon_opt == null) {
         return fail;
     }
+    const colon: usize = colon_opt.?;
 
     const u_len: usize = colon;
     const p_len: usize = raw_len - colon - 1;
@@ -206,16 +196,8 @@ pub fn decodeHeader(header: string, out_user: []u8, out_pass: []u8) -> BasicCred
         return fail;
     }
 
-    let i: usize = 0;
-    while (i < u_len) {
-        out_user[i] = raw[i];
-        i += 1;
-    }
-    i = 0;
-    while (i < p_len) {
-        out_pass[i] = raw[colon + 1 + i];
-        i += 1;
-    }
+    * = writeStr(raw[0..u_len], out_user, 0);
+    * = writeStr(raw[(colon + 1)..raw_len], out_pass, 0);
 
     return BasicCredentials {
         user_len: u_len,
@@ -226,12 +208,8 @@ pub fn decodeHeader(header: string, out_user: []u8, out_pass: []u8) -> BasicCred
 
 pub fn encodeHeader(user: string, pass: string, out: []u8) -> usize {
     // RFC 7617: userid MUST NOT contain ':'
-    let i: usize = 0;
-    while (i < user.len) {
-        if (user[i] == ':' as u8) {
-            return 0;
-        }
-        i += 1;
+    if (findByteInBytes(user, ':' as u8, 0) != null) {
+        return 0;
     }
 
     const raw_len: usize = user.len + 1 + pass.len;
@@ -239,17 +217,9 @@ pub fn encodeHeader(user: string, pass: string, out: []u8) -> usize {
         return 0;
     }
     let raw: [512]u8 = undefined;
-    i = 0;
-    while (i < user.len) {
-        raw[i] = user[i];
-        i += 1;
-    }
-    raw[user.len] = ':' as u8;
-    i = 0;
-    while (i < pass.len) {
-        raw[user.len + 1 + i] = pass[i];
-        i += 1;
-    }
+    let rp: usize = writeStr(user, raw[0..512], 0);
+    raw[rp] = ':' as u8;
+    * = writeStr(pass, raw[0..512], rp + 1);
 
     const prefix = "Basic ";
     const b64_len: usize = ((raw_len + 2) / 3) * 4;
@@ -257,11 +227,7 @@ pub fn encodeHeader(user: string, pass: string, out: []u8) -> usize {
         return 0;
     }
 
-    i = 0;
-    while (i < prefix.len) {
-        out[i] = prefix[i];
-        i += 1;
-    }
+    * = writeStr(prefix, out, 0);
     const enc: i64 = b64Encode(raw[0..raw_len], out[prefix.len..out.len]);
     if (enc < 0) {
         return 0;
@@ -270,20 +236,7 @@ pub fn encodeHeader(user: string, pass: string, out: []u8) -> usize {
 }
 
 pub fn constantTimeEq(a: []const u8, b: []const u8) -> bool {
-    let diff: u8 = 0;
-    if (a.len != b.len) {
-        diff = 1;
-    }
-    let n: usize = a.len;
-    if (b.len < n) {
-        n = b.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        diff = diff | (a[i] ^ b[i]);
-        i += 1;
-    }
-    return diff == 0;
+    return ctEqual(a, b);
 }
 
 pub fn verifyHeader(header: string, expected_user: string, expected_pass: string) -> bool {
@@ -302,12 +255,7 @@ fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
     if (s.len > out.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, out, pos) as i64;
 }
 
 pub fn formatChallenge(realm: string, utf8: bool, out: []u8) -> usize {

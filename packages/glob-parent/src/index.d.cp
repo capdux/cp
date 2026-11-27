@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { rfindByte } from "cap:ascii";
 import { findExtglobStart } from "../../is-extglob/src/index.cp";
 export class GlobSplit {
     base: string,
@@ -12,7 +13,6 @@ export fn findMatchingBrace(s: string, openIdx: usize): usize?;
 export fn findFirstGlobPos(s: string): usize?;
 export fn stripLeadingNegation(raw: string): string;
 export fn trimTrailingSlashes(s: string): string;
-export fn lastSlashBefore(s: string, limit: usize): usize?;
 export fn isGlob(pattern: string): bool;
 export fn globParent(pattern: string): string;
 export fn splitGlobBase(pattern: string): GlobSplit;

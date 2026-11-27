@@ -1,15 +1,8 @@
 // @cap/metaphone — Zero-allocation Lawrence Philips Metaphone Phonetic Encoder
 // Clean-room MIT implementation in pure CP.
 
-fn toUpperAlpha(b: u8) -> u8 {
-    if (b >= 97 && b <= 122) {
-        return b - 32;
-    }
-    if (b >= 65 && b <= 90) {
-        return b;
-    }
-    return 0;
-}
+import { isAlpha, toUpperByte } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 
 fn isVowel(b: u8) -> bool {
     return b == 65 || b == 69 || b == 73 || b == 79 || b == 85; // A E I O U
@@ -32,9 +25,8 @@ pub fn metaphone(word: string, max_len: usize, out: []u8) -> usize {
     let n: usize = 0;
     let wi: usize = 0;
     while (wi < word.len && n < 128) {
-        const up = toUpperAlpha(word[wi]);
-        if (up != 0) {
-            clean[n] = up;
+        if (isAlpha(word[wi])) {
+            clean[n] = toUpperByte(word[wi]);
             n += 1;
         }
         wi += 1;
@@ -295,15 +287,5 @@ pub fn soundsLike(a: string, b: string) -> bool {
     let kb: [4]u8 = undefined;
     const la = metaphone(a, 4, ka[0..4]);
     const lb = metaphone(b, 4, kb[0..4]);
-    if (la == 0 || la != lb) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < la) {
-        if (ka[i] != kb[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return la > 0 && bytesEq(ka[0..la], kb[0..lb]);
 }

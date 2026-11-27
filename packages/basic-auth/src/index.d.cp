@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { ctEqual, findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export class BasicCredentials {
     user_len: usize,
     pass_len: usize,
@@ -7,7 +10,6 @@ export class BasicCredentials {
 }
 
 export fn isWs(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
 export fn b64EncChar(v: u8): u8;
 export fn b64DecVal(c: u8): i32;
 export fn b64Encode(src: &[]u8, dst: []u8): i64;

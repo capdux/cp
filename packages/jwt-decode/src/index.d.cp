@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 export class JwtParts {
     header_b64: string,
     payload_b64: string,
@@ -17,5 +19,4 @@ export fn decodePayload(token: string, out: []u8): i64;
 export fn isExpired(exp_unix: i64, now_unix: i64, leeway_secs: i64): bool;
 export fn isNotYetValid(nbf_unix: i64, now_unix: i64, leeway_secs: i64): bool;
 export fn isJsonSpace(b: u8): bool;
-export fn toLowerAscii(b: u8): u8;
 export fn isAlgNone(header_json: string): bool;

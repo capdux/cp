@@ -1,6 +1,10 @@
 // @cap/bencode — BitTorrent BEP-3 deterministic Bencode encoder/decoder/validator
 // MIT License (clean-room CP implementation, zero-heap)
 
+import { isDigit } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
+
 pub const KIND_INVALID: u8 = 0;
 pub const KIND_INT: u8 = 1;
 pub const KIND_BYTES: u8 = 2;
@@ -45,28 +49,12 @@ pub struct BencodeWriter {
         return true;
     }
 
-    fn writeU64Decimal(*_, val: u64) -> bool {
-        let digits: [24]u8 = undefined;
-        let count: usize = 0;
-        let cur: u64 = val;
-        if (cur == 0) {
-            digits[0] = '0' as u8;
-            count = 1;
-        } else {
-            while (cur > 0) {
-                const rem: u8 = (cur % 10) as u8;
-                digits[count] = ('0' as u8) + rem;
-                count += 1;
-                cur = cur / 10;
-            }
+    fn writeSlice(*_, data: []const u8) -> bool {
+        if (_.overflow || data.len > _.buf.len - _.pos) {
+            _.overflow = true;
+            return false;
         }
-        let i: usize = count;
-        while (i > 0) {
-            i -= 1;
-            if (!_.writeByte(digits[i])) {
-                return false;
-            }
-        }
+        _.pos = writeStr(data, _.buf, _.pos);
         return true;
     }
 
@@ -74,40 +62,24 @@ pub struct BencodeWriter {
         if (!_.writeByte('i' as u8)) {
             return false;
         }
-        let mag: u64 = 0;
-        if (v < 0) {
-            if (!_.writeByte('-' as u8)) {
-                return false;
-            }
-            // Overflow-safe magnitude for all negative i64 including i64::MIN
-            mag = ((-(v + 1)) as u64) + 1;
-        } else {
-            mag = v as u64;
-        }
-        if (!_.writeU64Decimal(mag)) {
+        let digits: [24]u8 = undefined;
+        const n: usize = writeI64(v, digits[0..24], 0);
+        if (!_.writeSlice(digits[0..n])) {
             return false;
         }
         return _.writeByte('e' as u8);
     }
 
     pub fn writeBytes(*_, data: []const u8) -> bool {
-        if (!_.writeU64Decimal(data.len as u64)) {
+        let digits: [24]u8 = undefined;
+        const n: usize = writeU64(data.len as u64, digits[0..24], 0);
+        if (!_.writeSlice(digits[0..n])) {
             return false;
         }
         if (!_.writeByte(':' as u8)) {
             return false;
         }
-        if (_.overflow || data.len > _.buf.len - _.pos) {
-            _.overflow = true;
-            return false;
-        }
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[_.pos] = data[i];
-            _.pos += 1;
-            i += 1;
-        }
-        return true;
+        return _.writeSlice(data);
     }
 
     pub fn beginList(*_) -> bool {
@@ -139,7 +111,7 @@ pub fn peekKind(src: []const u8, pos: usize) -> u8 {
     if (c == 'i' as u8) {
         return KIND_INT;
     }
-    if (c >= '0' as u8 && c <= '9' as u8) {
+    if (isDigit(c)) {
         return KIND_BYTES;
     }
     if (c == 'l' as u8) {
@@ -165,7 +137,7 @@ pub fn decodeInt(src: []const u8, pos: usize) -> BencodeIntResult {
         is_neg = true;
         i += 1;
     }
-    if (i >= src.len || src[i] < '0' as u8 || src[i] > '9' as u8) {
+    if (i >= src.len || !isDigit(src[i])) {
         return fail;
     }
     // Reject negative zero (i-0e) and leading zeros (i03e, i00e)
@@ -187,7 +159,7 @@ pub fn decodeInt(src: []const u8, pos: usize) -> BencodeIntResult {
     }
 
     let acc: u64 = 0;
-    while (i < src.len && src[i] >= '0' as u8 && src[i] <= '9' as u8) {
+    while (i < src.len && isDigit(src[i])) {
         const d: u64 = (src[i] - ('0' as u8)) as u64;
         if (acc > (max_mag - d) / 10) {
             return fail;
@@ -219,7 +191,7 @@ pub fn decodeBytes(src: []const u8, pos: usize) -> BencodeBytesResult {
         return fail;
     }
     const first: u8 = src[pos];
-    if (first < '0' as u8 || first > '9' as u8) {
+    if (!isDigit(first)) {
         return fail;
     }
     if (first == '0' as u8) {
@@ -231,7 +203,7 @@ pub fn decodeBytes(src: []const u8, pos: usize) -> BencodeBytesResult {
 
     let i: usize = pos;
     let str_len: usize = 0;
-    while (i < src.len && src[i] >= '0' as u8 && src[i] <= '9' as u8) {
+    while (i < src.len && isDigit(src[i])) {
         const d: usize = (src[i] - ('0' as u8)) as usize;
         if (str_len > (src.len - d) / 10) {
             return fail;
@@ -290,7 +262,7 @@ fn parseValueEnd(src: []const u8, pos: usize, depth: usize) -> i64 {
         }
         return r.next_pos as i64;
     }
-    if (c >= '0' as u8 && c <= '9' as u8) {
+    if (isDigit(c)) {
         const r: BencodeBytesResult = decodeBytes(src, pos);
         if (!r.ok) {
             return -1;
@@ -368,7 +340,7 @@ pub fn dictLookup(src: []const u8, key: []const u8) -> BencodeBytesResult {
             return fail;
         }
         const key_slice: []const u8 = src[k.start..(k.start + k.len)];
-        if (compareBytes(key_slice, key) == 0) {
+        if (bytesEq(key_slice, key)) {
             const end_u: usize = val_end as usize;
             return BencodeBytesResult {
                 start: val_start,

@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isDigit } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
 export class BencodeIntResult {
     value: i64,
     next_pos: usize,
@@ -19,7 +22,7 @@ export class BencodeWriter {
     overflow: bool,
     fn init(buf: []u8): BencodeWriter;
     fn writeByte(_: auto, b: u8): bool;
-    fn writeU64Decimal(_: auto, val: u64): bool;
+    fn writeSlice(_: auto, data: &[]u8): bool;
     fn writeInt(_: auto, v: i64): bool;
     fn writeBytes(_: auto, data: &[]u8): bool;
     fn beginList(_: auto): bool;

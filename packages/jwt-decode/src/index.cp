@@ -1,6 +1,9 @@
 // @cap/jwt-parse — Zero-allocation RFC 7519 JWT Splitter, Base64URL Decoder & Claim Guard
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+
 pub struct JwtParts {
     pub header_b64: string,
     pub payload_b64: string,
@@ -176,47 +179,33 @@ fn isJsonSpace(b: u8) -> bool {
     return b == 32 || b == 9 || b == 10 || b == 13;
 }
 
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 /// Detects unsecured `"alg":"none"` (case-insensitive) in a decoded JWT header JSON object.
 pub fn isAlgNone(header_json: string) -> bool {
     const n = header_json.len;
     let i: usize = 0;
     while (i + 5 < n) {
-        // Look for literal key `"alg"`
-        if (header_json[i] == 34
-            && header_json[i + 1] == 97
-            && header_json[i + 2] == 108
-            && header_json[i + 3] == 103
-            && header_json[i + 4] == 34)
-        {
-            let p = i + 5;
+        const found = indexOfBytes(header_json, "\"alg\"", i);
+        if (found == null) {
+            return false;
+        }
+        const pos = found.?;
+        let p = pos + 5;
+        while (p < n && isJsonSpace(header_json[p])) {
+            p += 1;
+        }
+        if (p < n && header_json[p] == 58) {
+            // ':'
+            p += 1;
             while (p < n && isJsonSpace(header_json[p])) {
                 p += 1;
             }
-            if (p < n && header_json[p] == 58) {
-                // ':'
-                p += 1;
-                while (p < n && isJsonSpace(header_json[p])) {
-                    p += 1;
-                }
-                if (p + 6 <= n && header_json[p] == 34 && header_json[p + 5] == 34) {
-                    if (toLowerAscii(header_json[p + 1]) == 110
-                        && toLowerAscii(header_json[p + 2]) == 111
-                        && toLowerAscii(header_json[p + 3]) == 110
-                        && toLowerAscii(header_json[p + 4]) == 101)
-                    {
-                        return true;
-                    }
+            if (p + 6 <= n && header_json[p] == 34 && header_json[p + 5] == 34) {
+                if (eqIgnoreCase(header_json[(p + 1)..(p + 5)], "none")) {
+                    return true;
                 }
             }
         }
-        i += 1;
+        i = pos + 1;
     }
     return false;
 }

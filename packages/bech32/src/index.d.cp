@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { toLowerByte, toLower } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
 export enum Bech32Variant {
     Bech32 = 0,
     Bech32m = 1
@@ -13,7 +15,6 @@ export class Bech32Decoded {
     fn invalid(): Bech32Decoded;
 }
 
-export fn toLowerAscii(c: u8): u8;
 export fn charsetIndex(c: u8): u8?;
 export fn polymodStep(chk: u32, v: u8): u32;
 export fn polymodHrp(hrp: string): u32;

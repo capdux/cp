@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { writeStr, writeU64 } from "cap:fmt";
 export enum BadgeStyle {
     Flat,
     FlatSquare,
@@ -17,10 +18,10 @@ export class BadgeOptions {
 export fn defaultBadge(label: string, message: string, color: string): BadgeOptions;
 export fn resolveBadgeColor(name: string): string;
 export fn estimateTextWidth(s: string): usize;
-export class BufWriter {
+export class BadgeWriter {
     out: []u8,
     pos: usize,
-    fn writeStr(_: auto, s: string);
+    fn putStr(_: auto, s: string);
     fn writeXmlEscaped(_: auto, s: string);
     fn writeUsize(_: auto, val: usize);
 }

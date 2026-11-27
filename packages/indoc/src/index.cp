@@ -1,6 +1,10 @@
 // @cap/indoc — Zero-allocation multiline string dedent, indent & stripMargin engine for CP
 // Clean-room MIT implementation inspired by Rust `indoc`, npm `dedent`, and Kotlin `trimMargin`.
 
+import { rfindByte } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 fn isHws(c: u8) -> bool {
     return c == ' ' || c == '\t';
 }
@@ -25,21 +29,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendSlice(out: []u8, start_pos: usize, s: string, a: usize, b: usize) -> usize {
-    let pos = start_pos;
-    let i = a;
-    while (i < b && i < s.len && pos < out.len) {
-        out[pos] = s[i];
-        pos += 1;
-        i += 1;
-    }
-    return pos;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    return appendSlice(out, pos, s, 0 as usize, s.len);
-}
-
 /// Strips a single leading blank line (up to and including its `\n`) and/or a single trailing
 /// blank line (the final `\n` plus trailing horizontal whitespace) if present.
 fn stripOuterSingleBlankLines(input: string) -> string {
@@ -47,29 +36,21 @@ fn stripOuterSingleBlankLines(input: string) -> string {
     let end: usize = input.len;
 
     // Check leading blank line
-    let first_nl = start;
-    while (first_nl < end && input[first_nl] != '\n') {
-        first_nl += 1;
-    }
+    const first_nl = findByteInBytes(input, '\n', start) ?? end;
     if (first_nl < end && isLineBlank(input, start, first_nl)) {
         start = first_nl + 1;
     }
 
     // Check trailing blank line after last '\n'
     if (end > start) {
-        let last_nl = end;
-        let found_nl = false;
-        while (last_nl > start) {
-            last_nl -= 1;
-            if (input[last_nl] == '\n') {
-                found_nl = true;
-                break;
-            }
-        }
-        if (found_nl && isLineBlank(input, last_nl + 1, end)) {
-            end = last_nl;
-            if (end > start && input[end - 1] == '\r') {
-                end -= 1;
+        const last_rel = rfindByte(input[start..end], '\n');
+        if (last_rel != null) {
+            const last_nl = start + last_rel.?;
+            if (isLineBlank(input, last_nl + 1, end)) {
+                end = last_nl;
+                if (end > start && input[end - 1] == '\r') {
+                    end -= 1;
+                }
             }
         }
     }
@@ -87,10 +68,7 @@ pub fn trimBlankLines(input: string) -> string {
     let end: usize = input.len;
 
     while (start < end) {
-        let nl = start;
-        while (nl < end && input[nl] != '\n') {
-            nl += 1;
-        }
+        const nl = findByteInBytes(input, '\n', start) ?? end;
         if (isLineBlank(input, start, nl)) {
             start = if (nl < end) nl + 1 else end;
         } else {
@@ -99,18 +77,10 @@ pub fn trimBlankLines(input: string) -> string {
     }
 
     while (end > start) {
-        let prev_nl = end;
-        let found = false;
-        while (prev_nl > start) {
-            prev_nl -= 1;
-            if (input[prev_nl] == '\n') {
-                found = true;
-                break;
-            }
-        }
-        const line_start = if (found) prev_nl + 1 else start;
+        const prev_rel = rfindByte(input[start..end], '\n');
+        const line_start = if (prev_rel != null) start + prev_rel.? + 1 else start;
         if (isLineBlank(input, line_start, end)) {
-            end = if (found) prev_nl else start;
+            end = if (prev_rel != null) start + prev_rel.? else start;
             if (end > start && input[end - 1] == '\r') {
                 end -= 1;
             }
@@ -172,7 +142,7 @@ pub fn dedent(input: string, out: []u8) -> string {
             if (!isLineBlank(core, line_start, line_end)) {
                 const avail = line_end - line_start;
                 const skip = if (common < avail) common else avail;
-                pos = appendSlice(out, pos, core, line_start + skip, line_end);
+                pos = writeStr(core[(line_start + skip)..line_end], out, pos);
             }
             if (i < core.len && core[i] == '\n') {
                 pos = appendByte(out, pos, '\n');
@@ -196,9 +166,9 @@ pub fn indent(input: string, prefix: string, skip_empty: bool, out: []u8) -> str
         if (i == input.len || input[i] == '\n') {
             const blank = isLineBlank(input, line_start, i);
             if (!skip_empty || !blank) {
-                pos = appendStr(out, pos, prefix);
+                pos = writeStr(prefix, out, pos);
             }
-            pos = appendSlice(out, pos, input, line_start, i);
+            pos = writeStr(input[line_start..i], out, pos);
             if (i < input.len && input[i] == '\n') {
                 pos = appendByte(out, pos, '\n');
             }
@@ -234,9 +204,9 @@ pub fn stripMargin(input: string, margin_char: u8, out: []u8) -> string {
                 p += 1;
             }
             if (p < line_end && core[p] == margin_char) {
-                pos = appendSlice(out, pos, core, p + 1, line_end);
+                pos = writeStr(core[(p + 1)..line_end], out, pos);
             } else {
-                pos = appendSlice(out, pos, core, line_start, line_end);
+                pos = writeStr(core[line_start..line_end], out, pos);
             }
             if (i < core.len && core[i] == '\n') {
                 pos = appendByte(out, pos, '\n');

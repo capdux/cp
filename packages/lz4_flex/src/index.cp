@@ -8,6 +8,9 @@
 // - Strict bounds checking on decompression with overlapping RLE match copy (`offset < match_len`).
 // - Size-prefixed framing helpers `compressWithSize` / `decompressWithSize`.
 
+import { readU16LE, readU32LE, writeU16LE, writeU32LE } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 const MIN_MATCH: usize = 4;
 const LAST_LITERALS: usize = 5;
 const MFLIMIT: usize = 12;
@@ -19,26 +22,16 @@ pub fn maxCompressedLen(input_len: usize) -> usize {
     return input_len + (input_len / 255) + 16;
 }
 
-fn readU32LE(buf: []const u8, pos: usize) -> u32 {
-    return (buf[pos] as u32) |
-        ((buf[pos + 1] as u32) << 8) |
-        ((buf[pos + 2] as u32) << 16) |
-        ((buf[pos + 3] as u32) << 24);
-}
-
 /// Overflow-free 4-byte multiplicative hash into `0..4095`.
 fn hash4(buf: []const u8, pos: usize) -> usize {
-    const v: u64 = readU32LE(buf, pos) as u64;
+    const v: u64 = (readU32LE(buf, pos) ?? 0) as u64;
     // max product: 0xFFFFFFFF * 2654435761 < u64::MAX (never overflows)
     const prod: u64 = v * (2654435761 as u64);
     return ((prod >> 20) & (0xFFF as u64)) as usize;
 }
 
 fn match4(buf: []const u8, a: usize, b: usize) -> bool {
-    return buf[a] == buf[b] &&
-        buf[a + 1] == buf[b + 1] &&
-        buf[a + 2] == buf[b + 2] &&
-        buf[a + 3] == buf[b + 3];
+    return (readU32LE(buf, a) ?? 0) == (readU32LE(buf, b) ?? 1);
 }
 
 fn writeExtLen(dst: []u8, pos: usize, extra: usize) -> i64 {
@@ -145,19 +138,12 @@ pub fn compressBlock(src: []const u8, dst: []u8) -> i64 {
             if (lit_len > dst.len - out_pos) {
                 return -1;
             }
-            let k: usize = 0;
-            while (k < lit_len) {
-                dst[out_pos + k] = src[anchor + k];
-                k += 1;
-            }
-            out_pos += lit_len;
+            out_pos = writeStr(src[anchor..(anchor + lit_len)], dst, out_pos);
 
             // Emit 2-byte little-endian match offset
-            if (out_pos + 2 > dst.len) {
+            if (!writeU16LE(dst, out_pos, dist as u16)) {
                 return -1;
             }
-            dst[out_pos] = (dist & 0xFF) as u8;
-            dst[out_pos + 1] = ((dist >> 8) & 0xFF) as u8;
             out_pos += 2;
 
             // Emit extended match length if ml_code >= 15
@@ -200,12 +186,7 @@ pub fn compressBlock(src: []const u8, dst: []u8) -> i64 {
     if (last_lit > dst.len - out_pos) {
         return -1;
     }
-    let k: usize = 0;
-    while (k < last_lit) {
-        dst[out_pos + k] = src[anchor + k];
-        k += 1;
-    }
-    out_pos += last_lit;
+    out_pos = writeStr(src[anchor..(anchor + last_lit)], dst, out_pos);
 
     return out_pos as i64;
 }
@@ -244,13 +225,8 @@ pub fn decompressBlock(src: []const u8, dst: []u8) -> i64 {
         if (lit_len > src.len - in_pos || lit_len > dst.len - out_pos) {
             return -1;
         }
-        let k: usize = 0;
-        while (k < lit_len) {
-            dst[out_pos + k] = src[in_pos + k];
-            k += 1;
-        }
+        out_pos = writeStr(src[in_pos..(in_pos + lit_len)], dst, out_pos);
         in_pos += lit_len;
-        out_pos += lit_len;
 
         // End of block reached right after last literals
         if (in_pos == src.len) {
@@ -258,10 +234,11 @@ pub fn decompressBlock(src: []const u8, dst: []u8) -> i64 {
         }
 
         // Read 2-byte little-endian match offset
-        if (in_pos + 2 > src.len) {
+        const off_opt = readU16LE(src, in_pos);
+        if (off_opt == null) {
             return -1;
         }
-        const offset: usize = (src[in_pos] as usize) | ((src[in_pos + 1] as usize) << 8);
+        const offset: usize = off_opt.? as usize;
         in_pos += 2;
         if (offset == 0 || offset > out_pos) {
             return -1;
@@ -302,14 +279,9 @@ pub fn decompressBlock(src: []const u8, dst: []u8) -> i64 {
 /// Compresses `src` with a 4-byte little-endian uncompressed size prefix into `dst`.
 /// Returns total bytes written, or `-1` on insufficient `dst`.
 pub fn compressWithSize(src: []const u8, dst: []u8) -> i64 {
-    if (dst.len < 4) {
+    if (!writeU32LE(dst, 0, src.len as u32)) {
         return -1;
     }
-    const orig_len: u32 = src.len as u32;
-    dst[0] = (orig_len & 0xFF) as u8;
-    dst[1] = ((orig_len >> 8) & 0xFF) as u8;
-    dst[2] = ((orig_len >> 16) & 0xFF) as u8;
-    dst[3] = ((orig_len >> 24) & 0xFF) as u8;
 
     const comp_len = compressBlock(src, dst[4..dst.len]);
     if (comp_len < 0) {
@@ -321,10 +293,11 @@ pub fn compressWithSize(src: []const u8, dst: []u8) -> i64 {
 /// Decompresses a size-prefixed LZ4 block into `dst` and strictly verifies the decoded size matches the header.
 /// Returns decoded byte count, or `-1` on mismatch, malformed input, or insufficient `dst`.
 pub fn decompressWithSize(src: []const u8, dst: []u8) -> i64 {
-    if (src.len < 4) {
+    const exp_opt = readU32LE(src, 0);
+    if (exp_opt == null) {
         return -1;
     }
-    const expected_len: usize = readU32LE(src, 0) as usize;
+    const expected_len: usize = exp_opt.? as usize;
     if (expected_len > dst.len) {
         return -1;
     }

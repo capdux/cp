@@ -1,6 +1,9 @@
 // @cap/bech32 — Zero-allocation BIP-173 Bech32 & BIP-350 Bech32m codec for CP
 // Clean-room MIT implementation inspired by Rust `bech32` and npm `bech32`.
 
+import { toLowerByte, toLower } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+
 pub const BECH32_CHARSET: string = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 const BECH32_CONST: u32 = 1;
 const BECH32M_CONST: u32 = 0x2bc830a3;
@@ -30,23 +33,12 @@ pub struct Bech32Decoded {
 // Internal BCH Polymod & Character Helpers
 // ---------------------------------------------------------------------------
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
 fn charsetIndex(c: u8) -> u8? {
-    const lc = toLowerAscii(c);
-    let i: usize = 0;
-    while (i < 32) {
-        if (BECH32_CHARSET[i] == lc) {
-            return i as u8;
-        }
-        i += 1;
+    const idx = findByteInBytes(BECH32_CHARSET, toLowerByte(c), 0);
+    if (idx == null) {
+        return null;
     }
-    return null;
+    return idx.? as u8;
 }
 
 fn polymodStep(chk: u32, v: u8) -> u32 {
@@ -64,14 +56,14 @@ fn polymodHrp(hrp: string) -> u32 {
     let chk: u32 = 1;
     let i: usize = 0;
     while (i < hrp.len) {
-        const c = toLowerAscii(hrp[i]);
+        const c = toLowerByte(hrp[i]);
         chk = polymodStep(chk, c >> 5);
         i += 1;
     }
     chk = polymodStep(chk, 0);
     i = 0;
     while (i < hrp.len) {
-        const c = toLowerAscii(hrp[i]);
+        const c = toLowerByte(hrp[i]);
         chk = polymodStep(chk, c & 31);
         i += 1;
     }
@@ -192,18 +184,12 @@ pub fn encodeBech32(hrp: string, payload_bytes: string, variant: Bech32Variant, 
         return null;
     }
 
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < hrp.len) {
-        out[pos] = toLowerAscii(hrp[i]);
-        pos += 1;
-        i += 1;
-    }
+    let pos: usize = toLower(hrp, out);
     out[pos] = '1';
     pos += 1;
 
     let chk = polymodHrp(hrp);
-    i = 0;
+    let i: usize = 0;
     while (i < wlen) {
         const w = words[i];
         chk = polymodStep(chk, w);
@@ -306,18 +292,14 @@ pub fn decodeBech32(encoded: string, hrp_out: []u8, data_out: []u8) -> Bech32Dec
         return Bech32Decoded.invalid();
     }
 
-    let i: usize = 0;
-    while (i < sep) {
-        hrp_out[i] = toLowerAscii(encoded[i]);
-        i += 1;
-    }
+    * = toLower(encoded[0..sep], hrp_out);
 
     const data_chars = (encoded.len - sep - 1) - 6;
     if (data_chars > 256) {
         return Bech32Decoded.invalid();
     }
     let words: [256]u8 = undefined;
-    i = 0;
+    let i: usize = 0;
     while (i < data_chars) {
         words[i] = charsetIndex(encoded[sep + 1 + i]).?;
         i += 1;

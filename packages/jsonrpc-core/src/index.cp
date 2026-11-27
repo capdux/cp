@@ -1,6 +1,10 @@
 // @cap/json-rpc — Zero-heap JSON-RPC 2.0 protocol encoder & envelope validator
 // MIT License (clean-room CP implementation)
 
+import { hexCharLower } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr, writeI64 } from "cap:fmt";
+
 pub const ERR_PARSE: i32 = -32700;
 pub const ERR_INVALID_REQUEST: i32 = -32600;
 pub const ERR_METHOD_NOT_FOUND: i32 = -32601;
@@ -37,13 +41,6 @@ fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8 || c == '\n' as u8 || c == '\r' as u8;
 }
 
-fn hexLower(nib: u8) -> u8 {
-    if (nib < 10) {
-        return ('0' as u8) + nib;
-    }
-    return ('a' as u8) + (nib - 10);
-}
-
 fn appendByte(out: []u8, pos: usize, b: u8) -> i64 {
     if (pos >= out.len) {
         return -1;
@@ -56,51 +53,13 @@ fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
     if (s.len > out.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, out, pos) as i64;
 }
 
 fn appendI32(out: []u8, pos: usize, v: i32) -> i64 {
-    let p: i64 = pos as i64;
-    let mag: u64 = 0;
-    if (v < 0) {
-        p = appendByte(out, p as usize, '-' as u8);
-        if (p < 0) {
-            return -1;
-        }
-        const v64: i64 = v as i64;
-        mag = (-v64) as u64;
-    } else {
-        mag = v as u64;
-    }
-
     let digits: [16]u8 = undefined;
-    let count: usize = 0;
-    if (mag == 0) {
-        digits[0] = '0' as u8;
-        count = 1;
-    } else {
-        let cur: u64 = mag;
-        while (cur > 0) {
-            digits[count] = ('0' as u8) + ((cur % 10) as u8);
-            count += 1;
-            cur = cur / 10;
-        }
-    }
-
-    let k: usize = count;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p as usize, digits[k]);
-        if (p < 0) {
-            return -1;
-        }
-    }
-    return p;
+    const n: usize = writeI64(v as i64, digits[0..16], 0);
+    return appendSlice(out, pos, digits[0..n]);
 }
 
 fn appendJsonString(out: []u8, pos: usize, s: string) -> i64 {
@@ -126,11 +85,11 @@ fn appendJsonString(out: []u8, pos: usize, s: string) -> i64 {
             if (p < 0) {
                 return -1;
             }
-            p = appendByte(out, p as usize, hexLower((c >> 4) & 0x0F));
+            p = appendByte(out, p as usize, hexCharLower((c >> 4) & 0x0F));
             if (p < 0) {
                 return -1;
             }
-            p = appendByte(out, p as usize, hexLower(c & 0x0F));
+            p = appendByte(out, p as usize, hexCharLower(c & 0x0F));
         } else {
             p = appendByte(out, p as usize, c);
         }
@@ -262,20 +221,6 @@ pub fn encodeError(
         return 0;
     }
     return p as usize;
-}
-
-fn bytesEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub fn isBatch(json: string) -> bool {

@@ -1,10 +1,11 @@
 // Type definitions for CP
 
+import { rfindByte } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export fn isHws(c: u8): bool;
 export fn isLineBlank(s: string, start: usize, end: usize): bool;
 export fn appendByte(out: []u8, pos: usize, c: u8): usize;
-export fn appendSlice(out: []u8, start_pos: usize, s: string, a: usize, b: usize): usize;
-export fn appendStr(out: []u8, pos: usize, s: string): usize;
 export fn stripOuterSingleBlankLines(input: string): string;
 export fn trimBlankLines(input: string): string;
 export fn minCommonIndent(input: string): usize;

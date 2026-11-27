@@ -1,6 +1,7 @@
 // @cap/glob-parent — Zero-allocation glob parent extractor, glob detector & escaper for CP
 // Clean-room MIT implementation inspired by npm `glob-parent`, reusing `@cap/is-extglob`.
 
+import { rfindByte } from "cap:ascii";
 import { findExtglobStart } from "../../is-extglob/src/index.cp";
 
 pub struct GlobSplit {
@@ -116,17 +117,6 @@ fn trimTrailingSlashes(s: string) -> string {
     return s[0..end];
 }
 
-fn lastSlashBefore(s: string, limit: usize) -> usize? {
-    let idx = limit;
-    while (idx > 0) {
-        idx -= 1;
-        if (s[idx] == '/') {
-            return idx;
-        }
-    }
-    return null;
-}
-
 pub fn isGlob(pattern: string) -> bool {
     if (pattern.len == 0) {
         return false;
@@ -145,7 +135,7 @@ pub fn globParent(pattern: string) -> string {
 
     const firstGlob = findFirstGlobPos(clean);
     if (firstGlob == null) {
-        const slashOpt = lastSlashBefore(clean, clean.len);
+        const slashOpt = rfindByte(clean, '/');
         if (slashOpt == null) {
             return ".";
         }
@@ -157,7 +147,7 @@ pub fn globParent(pattern: string) -> string {
     }
 
     const gPos = firstGlob ?? (0 as usize);
-    const slashOpt = lastSlashBefore(clean, gPos);
+    const slashOpt = rfindByte(clean[0..gPos], '/');
     if (slashOpt == null) {
         return ".";
     }
@@ -180,7 +170,7 @@ pub fn splitGlobBase(pattern: string) -> GlobSplit {
     const firstGlob = findFirstGlobPos(clean);
     if (firstGlob == null) {
         const trimmed = trimTrailingSlashes(clean);
-        const slashOpt = lastSlashBefore(trimmed, trimmed.len);
+        const slashOpt = rfindByte(trimmed, '/');
         if (slashOpt == null) {
             return GlobSplit{ base: ".", glob: trimmed, is_glob: false };
         }
@@ -191,7 +181,7 @@ pub fn splitGlobBase(pattern: string) -> GlobSplit {
     }
 
     const gPos = firstGlob ?? (0 as usize);
-    const slashOpt = lastSlashBefore(clean, gPos);
+    const slashOpt = rfindByte(clean[0..gPos], '/');
     if (slashOpt == null) {
         return GlobSplit{ base: ".", glob: clean, is_glob: true };
     }

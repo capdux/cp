@@ -1,6 +1,8 @@
 // @cap/hamming — Zero-allocation Hamming Distance, Popcount, 64-bit SimHash & Hamming(7,4) ECC
 // Clean-room MIT implementation in pure CP.
 
+import { isAlnum, toLowerByte } from "cap:ascii";
+
 pub struct Hamming74Decoded {
     pub data: u8,
     pub corrected: bool,
@@ -59,26 +61,7 @@ pub fn distanceBytes(a: []const u8, b: []const u8) -> i64 {
 }
 
 fn isTokenByte(b: u8) -> bool {
-    if (b >= 48 && b <= 57) {
-        return true; // '0'..'9'
-    }
-    if (b >= 65 && b <= 90) {
-        return true; // 'A'..'Z'
-    }
-    if (b >= 97 && b <= 122) {
-        return true; // 'a'..'z'
-    }
-    if (b >= 128) {
-        return true; // UTF-8 multibyte
-    }
-    return false;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
+    return isAlnum(b) || b >= 128;
 }
 
 fn hashToken64(text: []const u8, start: usize, end: usize) -> u64 {
@@ -90,7 +73,7 @@ fn hashToken64(text: []const u8, start: usize, end: usize) -> u64 {
     let h: u64 = fnv_offset;
     let i = start;
     while (i < end) {
-        h ^= toLowerAscii(text[i]) as u64;
+        h ^= toLowerByte(text[i]) as u64;
         h = h *% fnv_prime;
         i += 1;
     }
