@@ -26,7 +26,7 @@ pub const CoseAlgorithm = enum(i32) {
     HS256 = 5,
     RS256 = -257,
 
-    pub fn fromInt(val: i64) CoseError!CoseAlgorithm {
+    pub static fn fromInt(val: i64): CoseError!CoseAlgorithm {
         return switch (val) {
             -7 => .ES256,
             -8 => .EdDSA,
@@ -36,8 +36,8 @@ pub const CoseAlgorithm = enum(i32) {
         };
     }
 
-    pub fn toInt(self: CoseAlgorithm) i32 {
-        return @intFromEnum(self);
+    pub fn toInt(): i32 {
+        return @intFromEnum(_);
     }
 };
 
@@ -47,7 +47,7 @@ pub const CoseKeyType = enum(i32) {
     RSA = 3,
     Symmetric = 4,
 
-    pub fn fromInt(val: i64) CoseError!CoseKeyType {
+    pub static fn fromInt(val: i64): CoseError!CoseKeyType {
         return switch (val) {
             1 => .OKP,
             2 => .EC2,
@@ -57,8 +57,8 @@ pub const CoseKeyType = enum(i32) {
         };
     }
 
-    pub fn toInt(self: CoseKeyType) i32 {
-        return @intFromEnum(self);
+    pub fn toInt(): i32 {
+        return @intFromEnum(_);
     }
 };
 
@@ -71,7 +71,7 @@ pub const CoseCurve = enum(i32) {
     Ed25519 = 6,
     Ed448 = 7,
 
-    pub fn fromInt(val: i64) CoseError!CoseCurve {
+    pub static fn fromInt(val: i64): CoseError!CoseCurve {
         return switch (val) {
             1 => .P256,
             2 => .P384,
@@ -84,24 +84,24 @@ pub const CoseCurve = enum(i32) {
         };
     }
 
-    pub fn toInt(self: CoseCurve) i32 {
-        return @intFromEnum(self);
+    pub fn toInt(): i32 {
+        return @intFromEnum(_);
     }
 };
 
 pub const CoseHeader = struct {
-    alg: ?i32 = null,
-    kid: ?[]const u8 = null,
-    content_type: ?[]const u8 = null,
+    alg: i32? = null,
+    kid: ([]const u8)? = null,
+    content_type: ([]const u8)? = null,
 
-    pub fn deinit(self: *CoseHeader, alloc: std.mem.Allocator) void {
-        if (self.kid) |k| {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (k := _.kid) {
             alloc.free(k);
-            self.kid = null;
+            _.kid = null;
         }
-        if (self.content_type) |ct| {
+        if (ct := _.content_type) {
             alloc.free(ct);
-            self.content_type = null;
+            _.content_type = null;
         }
     }
 };

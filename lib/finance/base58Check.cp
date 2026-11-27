@@ -111,8 +111,8 @@ pub const CheckDecoded = struct {
     version: u8,
     payload: []u8,
 
-    pub fn deinit(self: CheckDecoded, alloc: std.mem.Allocator) {
-        alloc.free(self.payload);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.payload);
     }
 };
 

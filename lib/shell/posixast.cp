@@ -22,9 +22,9 @@ pub const Redirect = struct {
     kind: RedirectKind,
     target: []const u8,
 
-    pub fn deinit(self: *Redirect, alloc: Allocator) void {
-        if (self.target.len > 0) {
-            alloc.free(self.target);
+    pub fn deinit(*_, alloc: Allocator) {
+        if (_.target.len > 0) {
+            alloc.free(_.target);
         }
     }
 };
@@ -33,12 +33,12 @@ pub const Assignment = struct {
     name: []const u8,
     value: []const u8,
 
-    pub fn deinit(self: *Assignment, alloc: Allocator) void {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        if (self.value.len > 0) {
-            alloc.free(self.value);
+        if (_.value.len > 0) {
+            alloc.free(_.value);
         }
     }
 };
@@ -48,26 +48,26 @@ pub const SimpleCommand = struct {
     argv: [][]const u8,
     redirects: []Redirect,
 
-    pub fn deinit(self: *SimpleCommand, alloc: Allocator) void {
-        for (*a of self.assignments) {
+    pub fn deinit(*_, alloc: Allocator) {
+        for (*a of _.assignments) {
             a.deinit(alloc);
         }
-        if (self.assignments.len > 0) {
-            alloc.free(self.assignments);
+        if (_.assignments.len > 0) {
+            alloc.free(_.assignments);
         }
-        for (arg of self.argv) {
+        for (arg of _.argv) {
             if (arg.len > 0) {
                 alloc.free(arg);
             }
         }
-        if (self.argv.len > 0) {
-            alloc.free(self.argv);
+        if (_.argv.len > 0) {
+            alloc.free(_.argv);
         }
-        for (*r of self.redirects) {
+        for (*r of _.redirects) {
             r.deinit(alloc);
         }
-        if (self.redirects.len > 0) {
-            alloc.free(self.redirects);
+        if (_.redirects.len > 0) {
+            alloc.free(_.redirects);
         }
     }
 };
@@ -76,12 +76,12 @@ pub const Pipeline = struct {
     commands: []SimpleCommand,
     background: bool,
 
-    pub fn deinit(self: *Pipeline, alloc: Allocator) void {
-        for (*cmd of self.commands) {
+    pub fn deinit(*_, alloc: Allocator) {
+        for (*cmd of _.commands) {
             cmd.deinit(alloc);
         }
-        if (self.commands.len > 0) {
-            alloc.free(self.commands);
+        if (_.commands.len > 0) {
+            alloc.free(_.commands);
         }
     }
 };
@@ -96,20 +96,20 @@ pub const ListItem = struct {
     pipeline: Pipeline,
     op: ListOp?,
 
-    pub fn deinit(self: *ListItem, alloc: Allocator) void {
-        self.pipeline.deinit(alloc);
+    pub fn deinit(*_, alloc: Allocator) {
+        _.pipeline.deinit(alloc);
     }
 };
 
 pub const ShellScript = struct {
     items: []ListItem,
 
-    pub fn deinit(self: *ShellScript, alloc: Allocator) void {
-        for (*item of self.items) {
+    pub fn deinit(*_, alloc: Allocator) {
+        for (*item of _.items) {
             item.deinit(alloc);
         }
-        if (self.items.len > 0) {
-            alloc.free(self.items);
+        if (_.items.len > 0) {
+            alloc.free(_.items);
         }
     }
 };

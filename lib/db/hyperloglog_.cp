@@ -32,7 +32,7 @@ pub const HyperLogLog = struct {
     m: usize,
     registers: []u8,
 
-    pub fn init(alloc: std.mem.Allocator, precision: u6): !HyperLogLog {
+    pub static fn init(alloc: std.mem.Allocator, precision: u6): !HyperLogLog {
         if (precision < 4 or precision > 18) {
             return HllError.InvalidPrecision;
         }
@@ -47,51 +47,51 @@ pub const HyperLogLog = struct {
         };
     }
 
-    pub fn deinit(self: *HyperLogLog, alloc: std.mem.Allocator) {
-        alloc.free(self.registers);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        alloc.free(_.registers);
     }
 
-    pub fn addBytes(self: *HyperLogLog, data: []const u8) {
+    pub fn addBytes(*_, data: []const u8) {
         const h = hash64(data);
-        const shift: u6 = @intCast(64 - @as(u7, self.precision));
+        const shift: u6 = @intCast(64 - @as(u7, _.precision));
         const idx: usize = @intCast(h >> shift);
-        const w = h << self.precision;
-        const max_rem: u8 = @intCast(64 - @as(u7, self.precision) + 1);
+        const w = h << _.precision;
+        const max_rem: u8 = @intCast(64 - @as(u7, _.precision) + 1);
         const lz: u8 = @intCast(@clz(w));
         const rho: u8 = if (w == 0) max_rem else @min(lz + 1, max_rem);
-        if (rho > self.registers[idx]) {
-            self.registers[idx] = rho;
+        if (rho > _.registers[idx]) {
+            _.registers[idx] = rho;
         }
     }
 
-    pub fn addU64(self: *HyperLogLog, val: u64) {
+    pub fn addU64(*_, val: u64) {
         let buf: [8]u8 = undefined;
         std.mem.writeInt(u64, &buf, val, .little);
-        self.addBytes(&buf);
+        _.addBytes(&buf);
     }
 
-    pub fn merge(self: *HyperLogLog, other: HyperLogLog): HllError!void {
-        if (self.precision != other.precision) {
+    pub fn merge(*_, other: HyperLogLog): HllError!void {
+        if (_.precision != other.precision) {
             return HllError.PrecisionMismatch;
         }
         let i: usize = 0;
-        while (i < self.m) : (i += 1) {
-            if (other.registers[i] > self.registers[i]) {
-                self.registers[i] = other.registers[i];
+        while (i < _.m) : (i += 1) {
+            if (other.registers[i] > _.registers[i]) {
+                _.registers[i] = other.registers[i];
             }
         }
     }
 
-    pub fn count(self: HyperLogLog): u64 {
+    pub fn count(): u64 {
         let sum: f64 = 0.0;
         let zeros: usize = 0;
-        for (reg of self.registers) {
+        for (reg of _.registers) {
             if (reg == 0) { zeros += 1; }
             const r_f: f64 = @floatFromInt(reg);
             sum += std.math.pow(f64, 2.0, -r_f);
         }
-        const mf: f64 = @floatFromInt(self.m);
-        let raw_est = alphaM(self.m) * mf * mf / sum;
+        const mf: f64 = @floatFromInt(_.m);
+        let raw_est = alphaM(_.m) * mf * mf / sum;
 
         // Small range correction (LinearCounting)
         if (raw_est <= 2.5 * mf and zeros > 0) {
@@ -102,18 +102,18 @@ pub const HyperLogLog = struct {
         return @intFromFloat(@round(raw_est));
     }
 
-    pub fn clear(self: *HyperLogLog) {
-        @memset(self.registers, 0);
+    pub fn clear(*_) {
+        @memset(_.registers, 0);
     }
 
-    pub fn serialize(self: HyperLogLog, alloc: std.mem.Allocator): ![]u8 {
-        let out = try alloc.alloc(u8, 1 + self.m);
-        out[0] = @intCast(self.precision);
-        @memcpy(out[1..], self.registers);
+    pub fn serialize(alloc: std.mem.Allocator): ![]u8 {
+        let out = try alloc.alloc(u8, 1 + _.m);
+        out[0] = @intCast(_.precision);
+        @memcpy(out[1..], _.registers);
         return out;
     }
 
-    pub fn deserialize(alloc: std.mem.Allocator, data: []const u8): !HyperLogLog {
+    pub static fn deserialize(alloc: std.mem.Allocator, data: []const u8): !HyperLogLog {
         if (data.len < 17) { return HllError.InvalidSerializedData; }
         const p_raw = data[0];
         if (p_raw < 4 or p_raw > 18) { return HllError.InvalidPrecision; }

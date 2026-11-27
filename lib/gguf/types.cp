@@ -45,7 +45,7 @@ pub const GgufValueType = enum(u32) {
     I64 = 11,
     F64 = 12,
 
-    pub fn fromU32(raw: u32): GgufError!GgufValueType {
+    pub static fn fromU32(raw: u32): GgufError!GgufValueType {
         return switch (raw) {
             0 => .U8,
             1 => .I8,
@@ -87,7 +87,7 @@ pub const GgmlType = enum(u32) {
     F64 = 28,
     BF16 = 30,
 
-    pub fn fromU32(raw: u32): GgufError!GgmlType {
+    pub static fn fromU32(raw: u32): GgufError!GgmlType {
         return switch (raw) {
             0 => .F32,
             1 => .F16,
@@ -113,16 +113,16 @@ pub const GgmlType = enum(u32) {
         };
     }
 
-    pub fn blockSize(self: GgmlType): u64 {
-        return switch (self) {
+    pub fn blockSize(): u64 {
+        return switch (_) {
             .F32, .F16, .I8, .I16, .I32, .I64, .F64, .BF16 => 1,
             .Q4_0, .Q4_1, .Q5_0, .Q5_1, .Q8_0, .Q8_1 => 32,
             .Q2_K, .Q3_K, .Q4_K, .Q5_K, .Q6_K, .Q8_K => 256,
         };
     }
 
-    pub fn typeSize(self: GgmlType): u64 {
-        return switch (self) {
+    pub fn typeSize(): u64 {
+        return switch (_) {
             .F32 => 4,
             .F16, .BF16, .I16 => 2,
             .I8 => 1,
@@ -143,9 +143,9 @@ pub const GgmlType = enum(u32) {
         };
     }
 
-    pub fn byteSize(self: GgmlType, n_elements: u64): GgufError!u64 {
-        const bs = self.blockSize();
-        const ts = self.typeSize();
+    pub fn byteSize(n_elements: u64): GgufError!u64 {
+        const bs = _.blockSize();
+        const ts = _.typeSize();
         if (n_elements == 0) {
             return 0;
         }
@@ -174,8 +174,8 @@ pub const GgufValue = union(enum) {
     i64_val: i64,
     f64_val: f64,
 
-    pub fn valueType(self: *const GgufValue): GgufValueType {
-        return switch (self.*) {
+    pub fn valueType(): GgufValueType {
+        return switch (_) {
             .u8_val => .U8,
             .i8_val => .I8,
             .u16_val => .U16,
@@ -192,8 +192,8 @@ pub const GgufValue = union(enum) {
         };
     }
 
-    pub fn deinit(*self: GgufValue, alloc: Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: Allocator) {
+        switch (_.*) {
             .string_val => |s| alloc.free(s),
             .array_val => |arr| {
                 for (*item of arr.items) {
@@ -205,8 +205,8 @@ pub const GgufValue = union(enum) {
         }
     }
 
-    pub fn clone(self: *const GgufValue, alloc: Allocator): GgufError!GgufValue {
-        return switch (self.*) {
+    pub fn clone(alloc: Allocator): GgufError!GgufValue {
+        return switch (_) {
             .u8_val => |v| GgufValue{ .u8_val = v },
             .i8_val => |v| GgufValue{ .i8_val = v },
             .u16_val => |v| GgufValue{ .u16_val = v },
@@ -259,21 +259,21 @@ pub const GgufTensorInfo = struct {
     ggml_type: GgmlType,
     offset: u64,
 
-    pub fn numElements(self: *const GgufTensorInfo): GgufError!u64 {
-        if (self.n_dims == 0) {
+    pub fn numElements(): GgufError!u64 {
+        if (_.n_dims == 0) {
             return 0;
         }
         let total: u64 = 1;
         let i: u32 = 0;
-        while (i < self.n_dims) : (i += 1) {
-            total = std.math.mul(u64, total, self.dims[i]) catch return GgufError.TensorOutOfBounds;
+        while (i < _.n_dims) : (i += 1) {
+            total = std.math.mul(u64, total, _.dims[i]) catch return GgufError.TensorOutOfBounds;
         }
         return total;
     }
 
-    pub fn byteSize(self: *const GgufTensorInfo): GgufError!u64 {
-        const elems = try self.numElements();
-        return self.ggml_type.byteSize(elems);
+    pub fn byteSize(): GgufError!u64 {
+        const elems = try _.numElements();
+        return _.ggml_type.byteSize(elems);
     }
 };
 
@@ -285,87 +285,87 @@ pub const GgufFile = struct {
     data_offset: u64,
     data: []const u8,
 
-    pub fn deinit(*self: GgufFile, alloc: Allocator) {
-        for (*kv of self.kvs) {
+    pub fn deinit(*_, alloc: Allocator) {
+        for (*kv of _.kvs) {
             alloc.free(kv.key);
             kv.value.deinit(alloc);
         }
-        alloc.free(self.kvs);
+        alloc.free(_.kvs);
 
-        for (t of self.tensors) {
+        for (t of _.tensors) {
             alloc.free(t.name);
         }
-        alloc.free(self.tensors);
+        alloc.free(_.tensors);
     }
 
-    pub fn getKv(self: *const GgufFile, key: []const u8): ?*const GgufValue {
+    pub fn getKv(key: []const u8): (*const GgufValue)? {
         let i: usize = 0;
-        while (i < self.kvs.len) : (i += 1) {
-            if (std.mem.eql(u8, self.kvs[i].key, key)) {
-                return &self.kvs[i].value;
+        while (i < _.kvs.len) : (i += 1) {
+            if (std.mem.eql(u8, _.kvs[i].key, key)) {
+                return &_.kvs[i].value;
             }
         }
         return null;
     }
 
-    pub fn getString(self: *const GgufFile, key: []const u8): ?[]const u8 {
-        const v = self.getKv(key) orelse return null;
+    pub fn getString(key: []const u8): ([]const u8)? {
+        const v = _.getKv(key) orelse return null;
         return switch (v.*) {
             .string_val => |s| s,
             else => null,
         };
     }
 
-    pub fn getU32(self: *const GgufFile, key: []const u8): ?u32 {
-        const v = self.getKv(key) orelse return null;
+    pub fn getU32(key: []const u8): u32? {
+        const v = _.getKv(key) orelse return null;
         return switch (v.*) {
             .u32_val => |n| n,
             else => null,
         };
     }
 
-    pub fn getU64(self: *const GgufFile, key: []const u8): ?u64 {
-        const v = self.getKv(key) orelse return null;
+    pub fn getU64(key: []const u8): u64? {
+        const v = _.getKv(key) orelse return null;
         return switch (v.*) {
             .u64_val => |n| n,
             else => null,
         };
     }
 
-    pub fn getF32(self: *const GgufFile, key: []const u8): ?f32 {
-        const v = self.getKv(key) orelse return null;
+    pub fn getF32(key: []const u8): f32? {
+        const v = _.getKv(key) orelse return null;
         return switch (v.*) {
             .f32_val => |n| n,
             else => null,
         };
     }
 
-    pub fn getBool(self: *const GgufFile, key: []const u8): ?bool {
-        const v = self.getKv(key) orelse return null;
+    pub fn getBool(key: []const u8): bool? {
+        const v = _.getKv(key) orelse return null;
         return switch (v.*) {
             .bool_val => |b| b,
             else => null,
         };
     }
 
-    pub fn getTensor(self: *const GgufFile, name: []const u8): ?*const GgufTensorInfo {
+    pub fn getTensor(name: []const u8): (*const GgufTensorInfo)? {
         let i: usize = 0;
-        while (i < self.tensors.len) : (i += 1) {
-            if (std.mem.eql(u8, self.tensors[i].name, name)) {
-                return &self.tensors[i];
+        while (i < _.tensors.len) : (i += 1) {
+            if (std.mem.eql(u8, _.tensors[i].name, name)) {
+                return &_.tensors[i];
             }
         }
         return null;
     }
 
-    pub fn tensorData(self: *const GgufFile, tensor: *const GgufTensorInfo): GgufError![]const u8 {
+    pub fn tensorData(tensor: *const GgufTensorInfo): GgufError![]const u8 {
         const size = try tensor.byteSize();
-        const start = std.math.add(u64, self.data_offset, tensor.offset) catch return GgufError.TensorOutOfBounds;
+        const start = std.math.add(u64, _.data_offset, tensor.offset) catch return GgufError.TensorOutOfBounds;
         const end = std.math.add(u64, start, size) catch return GgufError.TensorOutOfBounds;
-        if (end > self.data.len) {
+        if (end > _.data.len) {
             return GgufError.TensorOutOfBounds;
         }
-        return self.data[@intCast(start)..@intCast(end)];
+        return _.data[@intCast(start)..@intCast(end)];
     }
 };
 

@@ -29,8 +29,8 @@ pub const JmesValue = union(enum) {
     Array: []JmesValue,
     Object: []JmesEntry,
 
-    pub fn deinit(self: *JmesValue, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        switch (_.*) {
             .Null, .Bool, .Int, .Float => {},
             .String => |s| {
                 alloc.free(s);
@@ -51,11 +51,11 @@ pub const JmesValue = union(enum) {
                 alloc.free(entries);
             },
         }
-        self.* = .Null;
+        _.* = .Null;
     }
 
-    pub fn clone(self: JmesValue, alloc: std.mem.Allocator): JmesError!JmesValue {
-        switch (self) {
+    pub fn clone(alloc: std.mem.Allocator): JmesError!JmesValue {
+        switch (_) {
             .Null => return .Null,
             .Bool => |b| return JmesValue{ .Bool = b },
             .Int => |v| return JmesValue{ .Int = v },
@@ -108,16 +108,16 @@ pub const JmesValue = union(enum) {
         }
     }
 
-    pub fn asNumber(self: JmesValue): f64? {
-        switch (self) {
+    pub fn asNumber(): f64? {
+        switch (_) {
             .Int => |v| return @as(f64, @floatFromInt(v)),
             .Float => |v| return v,
             else => return null,
         }
     }
 
-    pub fn equals(self: JmesValue, other: JmesValue): bool {
-        switch (self) {
+    pub fn equals(other: JmesValue): bool {
+        switch (_) {
             .Null => return other == .Null,
             .Bool => |b| {
                 switch (other) {
@@ -174,8 +174,8 @@ pub const JmesValue = union(enum) {
         }
     }
 
-    pub fn isTruthy(self: JmesValue): bool {
-        switch (self) {
+    pub fn isTruthy(): bool {
+        switch (_) {
             .Null => return false,
             .Bool => |b| return b,
             .Int, .Float => return true,
@@ -185,8 +185,8 @@ pub const JmesValue = union(enum) {
         }
     }
 
-    pub fn typeName(self: JmesValue): []const u8 {
-        switch (self) {
+    pub fn typeName(): []const u8 {
+        switch (_) {
             .Null => return "null",
             .Bool => return "boolean",
             .Int, .Float => return "number",
@@ -196,8 +196,8 @@ pub const JmesValue = union(enum) {
         }
     }
 
-    pub fn getField(self: JmesValue, key: []const u8): JmesValue? {
-        switch (self) {
+    pub fn getField(key: []const u8): JmesValue? {
+        switch (_) {
             .Object => |entries| {
                 for (entry of entries) {
                     if (std.mem.eql(u8, entry.key, key)) {
@@ -216,141 +216,141 @@ const JsonParser = struct {
     pos: usize,
     alloc: std.mem.Allocator,
 
-    fn skipWs(self: *JsonParser) {
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+    fn skipWs(*_) {
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {
-                self.pos += 1;
+                _.pos += 1;
             } else {
                 break;
             }
         }
     }
 
-    fn parseValue(self: *JsonParser, depth: usize): JmesError!JmesValue {
+    fn parseValue(*_, depth: usize): JmesError!JmesValue {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.skipWs();
-        if (self.pos >= self.input.len) return JmesError.InvalidJson;
-        const c = self.input[self.pos];
+        _.skipWs();
+        if (_.pos >= _.input.len) return JmesError.InvalidJson;
+        const c = _.input[_.pos];
         if (c == 'n') {
-            if (self.pos + 4 <= self.input.len and std.mem.eql(u8, self.input[self.pos .. self.pos + 4], "null")) {
-                self.pos += 4;
+            if (_.pos + 4 <= _.input.len and std.mem.eql(u8, _.input[_.pos .. _.pos + 4], "null")) {
+                _.pos += 4;
                 return .Null;
             }
             return JmesError.InvalidJson;
         }
         if (c == 't') {
-            if (self.pos + 4 <= self.input.len and std.mem.eql(u8, self.input[self.pos .. self.pos + 4], "true")) {
-                self.pos += 4;
+            if (_.pos + 4 <= _.input.len and std.mem.eql(u8, _.input[_.pos .. _.pos + 4], "true")) {
+                _.pos += 4;
                 return JmesValue{ .Bool = true };
             }
             return JmesError.InvalidJson;
         }
         if (c == 'f') {
-            if (self.pos + 5 <= self.input.len and std.mem.eql(u8, self.input[self.pos .. self.pos + 5], "false")) {
-                self.pos += 5;
+            if (_.pos + 5 <= _.input.len and std.mem.eql(u8, _.input[_.pos .. _.pos + 5], "false")) {
+                _.pos += 5;
                 return JmesValue{ .Bool = false };
             }
             return JmesError.InvalidJson;
         }
         if (c == '"') {
-            const s = self.parseString()?;
+            const s = _.parseString()?;
             return JmesValue{ .String = s };
         }
         if (c == '[') {
-            return self.parseArray(depth + 1);
+            return _.parseArray(depth + 1);
         }
         if (c == '{') {
-            return self.parseObject(depth + 1);
+            return _.parseObject(depth + 1);
         }
         if (c == '-' or (c >= '0' and c <= '9')) {
-            return self.parseNumber();
+            return _.parseNumber();
         }
         return JmesError.InvalidJson;
     }
 
-    fn parseString(self: *JsonParser): JmesError![]u8 {
-        if (self.pos >= self.input.len or self.input[self.pos] != '"') return JmesError.InvalidJson;
-        self.pos += 1;
+    fn parseString(*_): JmesError![]u8 {
+        if (_.pos >= _.input.len or _.input[_.pos] != '"') return JmesError.InvalidJson;
+        _.pos += 1;
         let out = std.ArrayList(u8).empty;
-        errdefer out.deinit(self.alloc);
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+        errdefer out.deinit(_.alloc);
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == '"') {
-                self.pos += 1;
-                return out.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+                _.pos += 1;
+                return out.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
             }
             if (c == '\\') {
-                self.pos += 1;
-                if (self.pos >= self.input.len) return JmesError.InvalidJson;
-                const esc = self.input[self.pos];
-                self.pos += 1;
+                _.pos += 1;
+                if (_.pos >= _.input.len) return JmesError.InvalidJson;
+                const esc = _.input[_.pos];
+                _.pos += 1;
                 switch (esc) {
-                    '"' => out.append(self.alloc, '"') catch return JmesError.OutOfMemory,
-                    '\\' => out.append(self.alloc, '\\') catch return JmesError.OutOfMemory,
-                    '/' => out.append(self.alloc, '/') catch return JmesError.OutOfMemory,
-                    'b' => out.append(self.alloc, 0x08) catch return JmesError.OutOfMemory,
-                    'f' => out.append(self.alloc, 0x0C) catch return JmesError.OutOfMemory,
-                    'n' => out.append(self.alloc, '\n') catch return JmesError.OutOfMemory,
-                    'r' => out.append(self.alloc, '\r') catch return JmesError.OutOfMemory,
-                    't' => out.append(self.alloc, '\t') catch return JmesError.OutOfMemory,
+                    '"' => out.append(_.alloc, '"') catch return JmesError.OutOfMemory,
+                    '\\' => out.append(_.alloc, '\\') catch return JmesError.OutOfMemory,
+                    '/' => out.append(_.alloc, '/') catch return JmesError.OutOfMemory,
+                    'b' => out.append(_.alloc, 0x08) catch return JmesError.OutOfMemory,
+                    'f' => out.append(_.alloc, 0x0C) catch return JmesError.OutOfMemory,
+                    'n' => out.append(_.alloc, '\n') catch return JmesError.OutOfMemory,
+                    'r' => out.append(_.alloc, '\r') catch return JmesError.OutOfMemory,
+                    't' => out.append(_.alloc, '\t') catch return JmesError.OutOfMemory,
                     'u' => {
-                        if (self.pos + 4 > self.input.len) return JmesError.InvalidJson;
-                        const hex = self.input[self.pos .. self.pos + 4];
-                        self.pos += 4;
+                        if (_.pos + 4 > _.input.len) return JmesError.InvalidJson;
+                        const hex = _.input[_.pos .. _.pos + 4];
+                        _.pos += 4;
                         const cp = std.fmt.parseInt(u21, hex, 16) catch return JmesError.InvalidJson;
                         let buf: [4]u8 = undefined;
                         const n = std.unicode.utf8Encode(cp, &buf) catch return JmesError.InvalidJson;
-                        out.appendSlice(self.alloc, buf[0..n]) catch return JmesError.OutOfMemory;
+                        out.appendSlice(_.alloc, buf[0..n]) catch return JmesError.OutOfMemory;
                     },
                     else => return JmesError.InvalidJson,
                 }
             } else {
-                out.append(self.alloc, c) catch return JmesError.OutOfMemory;
-                self.pos += 1;
+                out.append(_.alloc, c) catch return JmesError.OutOfMemory;
+                _.pos += 1;
             }
         }
         return JmesError.InvalidJson;
     }
 
-    fn parseNumber(self: *JsonParser): JmesError!JmesValue {
-        const start = self.pos;
+    fn parseNumber(*_): JmesError!JmesValue {
+        const start = _.pos;
         let is_float = false;
-        if (self.input[self.pos] == '-') self.pos += 1;
-        if (self.pos >= self.input.len) return JmesError.InvalidJson;
-        if (self.input[self.pos] == '0') {
-            self.pos += 1;
-        } else if (self.input[self.pos] >= '1' and self.input[self.pos] <= '9') {
-            while (self.pos < self.input.len and self.input[self.pos] >= '0' and self.input[self.pos] <= '9') {
-                self.pos += 1;
+        if (_.input[_.pos] == '-') _.pos += 1;
+        if (_.pos >= _.input.len) return JmesError.InvalidJson;
+        if (_.input[_.pos] == '0') {
+            _.pos += 1;
+        } else if (_.input[_.pos] >= '1' and _.input[_.pos] <= '9') {
+            while (_.pos < _.input.len and _.input[_.pos] >= '0' and _.input[_.pos] <= '9') {
+                _.pos += 1;
             }
         } else {
             return JmesError.InvalidJson;
         }
-        if (self.pos < self.input.len and self.input[self.pos] == '.') {
+        if (_.pos < _.input.len and _.input[_.pos] == '.') {
             is_float = true;
-            self.pos += 1;
-            if (self.pos >= self.input.len or self.input[self.pos] < '0' or self.input[self.pos] > '9') {
+            _.pos += 1;
+            if (_.pos >= _.input.len or _.input[_.pos] < '0' or _.input[_.pos] > '9') {
                 return JmesError.InvalidJson;
             }
-            while (self.pos < self.input.len and self.input[self.pos] >= '0' and self.input[self.pos] <= '9') {
-                self.pos += 1;
+            while (_.pos < _.input.len and _.input[_.pos] >= '0' and _.input[_.pos] <= '9') {
+                _.pos += 1;
             }
         }
-        if (self.pos < self.input.len and (self.input[self.pos] == 'e' or self.input[self.pos] == 'E')) {
+        if (_.pos < _.input.len and (_.input[_.pos] == 'e' or _.input[_.pos] == 'E')) {
             is_float = true;
-            self.pos += 1;
-            if (self.pos < self.input.len and (self.input[self.pos] == '+' or self.input[self.pos] == '-')) {
-                self.pos += 1;
+            _.pos += 1;
+            if (_.pos < _.input.len and (_.input[_.pos] == '+' or _.input[_.pos] == '-')) {
+                _.pos += 1;
             }
-            if (self.pos >= self.input.len or self.input[self.pos] < '0' or self.input[self.pos] > '9') {
+            if (_.pos >= _.input.len or _.input[_.pos] < '0' or _.input[_.pos] > '9') {
                 return JmesError.InvalidJson;
             }
-            while (self.pos < self.input.len and self.input[self.pos] >= '0' and self.input[self.pos] <= '9') {
-                self.pos += 1;
+            while (_.pos < _.input.len and _.input[_.pos] >= '0' and _.input[_.pos] <= '9') {
+                _.pos += 1;
             }
         }
-        const slice = self.input[start..self.pos];
+        const slice = _.input[start.._.pos];
         if (is_float) {
             const f = std.fmt.parseFloat(f64, slice) catch return JmesError.InvalidJson;
             return JmesValue{ .Float = f };
@@ -363,84 +363,84 @@ const JsonParser = struct {
         }
     }
 
-    fn parseArray(self: *JsonParser, depth: usize): JmesError!JmesValue {
+    fn parseArray(*_, depth: usize): JmesError!JmesValue {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '['
-        self.skipWs();
+        _.pos += 1; // '['
+        _.skipWs();
         let items = std.ArrayList(JmesValue).empty;
         errdefer {
             for (*it of items.items) {
-                it.deinit(self.alloc);
+                it.deinit(_.alloc);
             }
-            items.deinit(self.alloc);
+            items.deinit(_.alloc);
         }
-        if (self.pos < self.input.len and self.input[self.pos] == ']') {
-            self.pos += 1;
-            const slice = items.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+        if (_.pos < _.input.len and _.input[_.pos] == ']') {
+            _.pos += 1;
+            const slice = items.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
             return JmesValue{ .Array = slice };
         }
         while (true) {
-            const v = self.parseValue(depth)?;
-            items.append(self.alloc, v) catch |ce| {
+            const v = _.parseValue(depth)?;
+            items.append(_.alloc, v) catch |ce| {
                 let mv = v;
-                mv.deinit(self.alloc);
+                mv.deinit(_.alloc);
                 * = ce;
                 return JmesError.OutOfMemory;
             };
-            self.skipWs();
-            if (self.pos >= self.input.len) return JmesError.InvalidJson;
-            if (self.input[self.pos] == ']') {
-                self.pos += 1;
+            _.skipWs();
+            if (_.pos >= _.input.len) return JmesError.InvalidJson;
+            if (_.input[_.pos] == ']') {
+                _.pos += 1;
                 break;
             }
-            if (self.input[self.pos] != ',') return JmesError.InvalidJson;
-            self.pos += 1;
+            if (_.input[_.pos] != ',') return JmesError.InvalidJson;
+            _.pos += 1;
         }
-        const slice = items.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+        const slice = items.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
         return JmesValue{ .Array = slice };
     }
 
-    fn parseObject(self: *JsonParser, depth: usize): JmesError!JmesValue {
+    fn parseObject(*_, depth: usize): JmesError!JmesValue {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '{'
-        self.skipWs();
+        _.pos += 1; // '{'
+        _.skipWs();
         let entries = std.ArrayList(JmesEntry).empty;
         errdefer {
             for (*e of entries.items) {
-                self.alloc.free(e.key);
-                e.value.deinit(self.alloc);
+                _.alloc.free(e.key);
+                e.value.deinit(_.alloc);
             }
-            entries.deinit(self.alloc);
+            entries.deinit(_.alloc);
         }
-        if (self.pos < self.input.len and self.input[self.pos] == '}') {
-            self.pos += 1;
-            const slice = entries.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+        if (_.pos < _.input.len and _.input[_.pos] == '}') {
+            _.pos += 1;
+            const slice = entries.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
             return JmesValue{ .Object = slice };
         }
         while (true) {
-            self.skipWs();
-            const key = self.parseString()?;
-            errdefer self.alloc.free(key);
-            self.skipWs();
-            if (self.pos >= self.input.len or self.input[self.pos] != ':') return JmesError.InvalidJson;
-            self.pos += 1;
-            const val = self.parseValue(depth)?;
-            entries.append(self.alloc, JmesEntry{ .key = key, .value = val }) catch |ce| {
+            _.skipWs();
+            const key = _.parseString()?;
+            errdefer _.alloc.free(key);
+            _.skipWs();
+            if (_.pos >= _.input.len or _.input[_.pos] != ':') return JmesError.InvalidJson;
+            _.pos += 1;
+            const val = _.parseValue(depth)?;
+            entries.append(_.alloc, JmesEntry{ .key = key, .value = val }) catch |ce| {
                 let mv = val;
-                mv.deinit(self.alloc);
+                mv.deinit(_.alloc);
                 * = ce;
                 return JmesError.OutOfMemory;
             };
-            self.skipWs();
-            if (self.pos >= self.input.len) return JmesError.InvalidJson;
-            if (self.input[self.pos] == '}') {
-                self.pos += 1;
+            _.skipWs();
+            if (_.pos >= _.input.len) return JmesError.InvalidJson;
+            if (_.input[_.pos] == '}') {
+                _.pos += 1;
                 break;
             }
-            if (self.input[self.pos] != ',') return JmesError.InvalidJson;
-            self.pos += 1;
+            if (_.input[_.pos] != ',') return JmesError.InvalidJson;
+            _.pos += 1;
         }
-        const slice = entries.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+        const slice = entries.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
         return JmesValue{ .Object = slice };
     }
 };

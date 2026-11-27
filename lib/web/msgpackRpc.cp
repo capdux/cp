@@ -31,8 +31,8 @@ pub const RpcValue = union(enum) {
     array_val: []RpcValue,
     map_val: []RpcMapEntry,
 
-    pub fn deinit(self: *const RpcValue, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(alloc: std.mem.Allocator) {
+        switch (_) {
             .nil, .bool_val, .int_val, .uint_val, .float_val => {},
             .str_val, .bin_val => |s| alloc.free(s),
             .array_val => |arr| {
@@ -51,9 +51,9 @@ pub const RpcValue = union(enum) {
         }
     }
 
-    pub fn equals(self: RpcValue, other: RpcValue): bool {
-        if (@intFromEnum(self) != @intFromEnum(other)) { return false; }
-        switch (self) {
+    pub fn equals(other: RpcValue): bool {
+        if (@intFromEnum(_) != @intFromEnum(other)) { return false; }
+        switch (_) {
             .nil => return true,
             .bool_val => |v| return v == other.bool_val,
             .int_val => |v| return v == other.int_val,
@@ -63,15 +63,17 @@ pub const RpcValue = union(enum) {
             .bin_val => |v| return std.mem.eql(u8, v, other.bin_val),
             .array_val => |arr| {
                 if (arr.len != other.array_val.len) { return false; }
-                for (item, i of arr) {
-                    if (!item.equals(other.array_val[i])) { return false; }
+                let i: usize = 0;
+                while (i < arr.len) : (i += 1) {
+                    if (!arr[i].equals(other.array_val[i])) { return false; }
                 }
                 return true;
             },
             .map_val => |entries| {
                 if (entries.len != other.map_val.len) { return false; }
-                for (e, i of entries) {
-                    if (!e.key.equals(other.map_val[i].key) or !e.value.equals(other.map_val[i].value)) {
+                let i: usize = 0;
+                while (i < entries.len) : (i += 1) {
+                    if (!entries[i].key.equals(other.map_val[i].key) or !entries[i].value.equals(other.map_val[i].value)) {
                         return false;
                     }
                 }
@@ -103,8 +105,8 @@ pub const RpcMessage = union(enum) {
     response: RpcResponse,
     notification: RpcNotification,
 
-    pub fn deinit(self: *const RpcMessage, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(alloc: std.mem.Allocator) {
+        switch (_) {
             .request => |r| {
                 alloc.free(r.method);
                 for (p of r.params) { p.deinit(alloc); }
@@ -268,22 +270,22 @@ const Reader = struct {
     data: []const u8,
     pos: usize = 0,
 
-    fn readByte(self: *Reader): RpcError!u8 {
-        if (self.pos >= self.data.len) { return RpcError.Incomplete; }
-        const b = self.data[self.pos];
-        self.pos += 1;
+    fn readByte(*_): RpcError!u8 {
+        if (_.pos >= _.data.len) { return RpcError.Incomplete; }
+        const b = _.data[_.pos];
+        _.pos += 1;
         return b;
     }
 
-    fn readSlice(self: *Reader, n: usize): RpcError![]const u8 {
-        if (self.pos + n > self.data.len) { return RpcError.Incomplete; }
-        const s = self.data[self.pos .. self.pos + n];
-        self.pos += n;
+    fn readSlice(*_, n: usize): RpcError![]const u8 {
+        if (_.pos + n > _.data.len) { return RpcError.Incomplete; }
+        const s = _.data[_.pos .. _.pos + n];
+        _.pos += n;
         return s;
     }
 
-    fn readInt(self: *Reader, comptime T: type): RpcError!T {
-        const s = try self.readSlice(@sizeOf(T));
+    fn readInt(*_, comptime T: type): RpcError!T {
+        const s = try _.readSlice(@sizeOf(T));
         return std.mem.readInt(T, s[0..@sizeOf(T)], .big);
     }
 };
@@ -515,7 +517,7 @@ pub const RpcStreamDecoder = struct {
     buf: std.ArrayList(u8),
     max_msg_bytes: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_msg_bytes: usize): RpcStreamDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_msg_bytes: usize): RpcStreamDecoder {
         return RpcStreamDecoder{
             .alloc = alloc,
             .buf = .empty,
@@ -523,29 +525,29 @@ pub const RpcStreamDecoder = struct {
         };
     }
 
-    pub fn deinit(self: *RpcStreamDecoder) {
-        self.buf.deinit(self.alloc);
+    pub fn deinit(*_) {
+        _.buf.deinit(_.alloc);
     }
 
-    pub fn feed(self: *RpcStreamDecoder, chunk: []const u8): RpcError!void {
-        if (self.buf.items.len + chunk.len > self.max_msg_bytes) {
+    pub fn feed(*_, chunk: []const u8): RpcError!void {
+        if (_.buf.items.len + chunk.len > _.max_msg_bytes) {
             return RpcError.MessageTooLarge;
         }
-        try self.buf.appendSlice(self.alloc, chunk);
+        try _.buf.appendSlice(_.alloc, chunk);
     }
 
-    pub fn next(self: *RpcStreamDecoder): RpcError!(RpcMessage?) {
-        if (self.buf.items.len == 0) { return null; }
-        const decoded = decodeRpcMessage(self.alloc, self.buf.items) catch |e| {
+    pub fn next(*_): RpcError!(RpcMessage?) {
+        if (_.buf.items.len == 0) { return null; }
+        const decoded = decodeRpcMessage(_.alloc, _.buf.items) catch |e| {
             if (e == RpcError.Incomplete) { return null; }
             return e;
         };
         const consumed = decoded.bytes_consumed;
-        const remaining = self.buf.items.len - consumed;
+        const remaining = _.buf.items.len - consumed;
         if (remaining > 0) {
-            std.mem.copyForwards(u8, self.buf.items[0..remaining], self.buf.items[consumed..]);
+            std.mem.copyForwards(u8, _.buf.items[0..remaining], _.buf.items[consumed..]);
         }
-        self.buf.items.len = remaining;
+        _.buf.items.len = remaining;
         return decoded.message;
     }
 };

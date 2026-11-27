@@ -29,76 +29,76 @@ const Cursor = struct {
     buf: []const u8,
     pos: usize,
 
-    fn remaining(self: *const Cursor): usize {
-        return self.buf.len - self.pos;
+    fn remaining(): usize {
+        return _.buf.len - _.pos;
     }
 
-    fn readBytes(*self: Cursor, len: usize): GgufError![]const u8 {
-        if (len > self.remaining()) {
+    fn readBytes(*_, len: usize): GgufError![]const u8 {
+        if (len > _.remaining()) {
             return GgufError.UnexpectedEof;
         }
-        const slice = self.buf[self.pos .. self.pos + len];
-        self.pos += len;
+        const slice = _.buf[_.pos .. _.pos + len];
+        _.pos += len;
         return slice;
     }
 
-    fn readU8(*self: Cursor): GgufError!u8 {
-        const b = try self.readBytes(1);
+    fn readU8(*_): GgufError!u8 {
+        const b = try _.readBytes(1);
         return b[0];
     }
 
-    fn readI8(*self: Cursor): GgufError!i8 {
-        const b = try self.readU8();
+    fn readI8(*_): GgufError!i8 {
+        const b = try _.readU8();
         return @bitCast(b);
     }
 
-    fn readU16(*self: Cursor): GgufError!u16 {
-        const b = try self.readBytes(2);
+    fn readU16(*_): GgufError!u16 {
+        const b = try _.readBytes(2);
         return std.mem.readInt(u16, b[0..2], .little);
     }
 
-    fn readI16(*self: Cursor): GgufError!i16 {
-        const b = try self.readBytes(2);
+    fn readI16(*_): GgufError!i16 {
+        const b = try _.readBytes(2);
         return std.mem.readInt(i16, b[0..2], .little);
     }
 
-    fn readU32(*self: Cursor): GgufError!u32 {
-        const b = try self.readBytes(4);
+    fn readU32(*_): GgufError!u32 {
+        const b = try _.readBytes(4);
         return std.mem.readInt(u32, b[0..4], .little);
     }
 
-    fn readI32(*self: Cursor): GgufError!i32 {
-        const b = try self.readBytes(4);
+    fn readI32(*_): GgufError!i32 {
+        const b = try _.readBytes(4);
         return std.mem.readInt(i32, b[0..4], .little);
     }
 
-    fn readU64(*self: Cursor): GgufError!u64 {
-        const b = try self.readBytes(8);
+    fn readU64(*_): GgufError!u64 {
+        const b = try _.readBytes(8);
         return std.mem.readInt(u64, b[0..8], .little);
     }
 
-    fn readI64(*self: Cursor): GgufError!i64 {
-        const b = try self.readBytes(8);
+    fn readI64(*_): GgufError!i64 {
+        const b = try _.readBytes(8);
         return std.mem.readInt(i64, b[0..8], .little);
     }
 
-    fn readF32(*self: Cursor): GgufError!f32 {
-        const raw = try self.readU32();
+    fn readF32(*_): GgufError!f32 {
+        const raw = try _.readU32();
         return @bitCast(raw);
     }
 
-    fn readF64(*self: Cursor): GgufError!f64 {
-        const raw = try self.readU64();
+    fn readF64(*_): GgufError!f64 {
+        const raw = try _.readU64();
         return @bitCast(raw);
     }
 
-    fn readString(*self: Cursor, alloc: Allocator): GgufError![]const u8 {
-        const len_u64 = try self.readU64();
+    fn readString(*_, alloc: Allocator): GgufError![]const u8 {
+        const len_u64 = try _.readU64();
         if (len_u64 > GGUF_MAX_STRING_LEN) {
             return GgufError.InvalidString;
         }
         const len: usize = @intCast(len_u64);
-        const raw = try self.readBytes(len);
+        const raw = try _.readBytes(len);
         return alloc.dupe(u8, raw) catch GgufError.OutOfMemory;
     }
 };

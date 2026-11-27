@@ -19,7 +19,7 @@ pub const OnnxDataType = enum(i32) {
     UINT64 = 13,
     BFLOAT16 = 16,
 
-    pub fn fromI32(val: i32): OnnxDataType {
+    pub static fn fromI32(val: i32): OnnxDataType {
         return switch (val) {
             1 => .FLOAT,
             2 => .UINT8,
@@ -39,8 +39,8 @@ pub const OnnxDataType = enum(i32) {
         };
     }
 
-    pub fn elementSizeBytes(self: OnnxDataType): usize {
-        return switch (self) {
+    pub fn elementSizeBytes(): usize {
+        return switch (_) {
             .FLOAT, .INT32, .UINT32 => 4,
             .DOUBLE, .INT64, .UINT64 => 8,
             .FLOAT16, .BFLOAT16, .INT16, .UINT16 => 2,
@@ -61,11 +61,11 @@ pub const OnnxValueInfo = struct {
     dims: []const OnnxDim = &.{},
     doc_string: []const u8 = "",
 
-    pub fn deinit(self: *OnnxValueInfo, alloc: std.mem.Allocator) {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        for (d of self.dims) {
+        for (d of _.dims) {
             switch (d) {
                 .dim_param => |s| {
                     if (s.len > 0) {
@@ -75,11 +75,11 @@ pub const OnnxValueInfo = struct {
                 .dim_value => {},
             }
         }
-        if (self.dims.len > 0) {
-            alloc.free(self.dims);
+        if (_.dims.len > 0) {
+            alloc.free(_.dims);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
     }
 };
@@ -109,8 +109,8 @@ pub const OnnxAttribute = struct {
     value: OnnxAttrValue = .{ .none = {} },
     doc_string: []const u8 = "",
 
-    pub fn attrType(self: *const OnnxAttribute): OnnxAttrType {
-        return switch (self.value) {
+    pub fn attrType(): OnnxAttrType {
+        return switch (_.value) {
             .none => .UNDEFINED,
             .float_val => .FLOAT,
             .int_val => .INT,
@@ -121,14 +121,14 @@ pub const OnnxAttribute = struct {
         };
     }
 
-    pub fn deinit(self: *OnnxAttribute, alloc: std.mem.Allocator) {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
-        switch (self.value) {
+        switch (_.value) {
             .none, .float_val, .int_val => {},
             .string_val => |s| {
                 if (s.len > 0) {
@@ -168,41 +168,41 @@ pub const OnnxNode = struct {
     attributes: []const OnnxAttribute = &.{},
     doc_string: []const u8 = "",
 
-    pub fn deinit(self: *OnnxNode, alloc: std.mem.Allocator) {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        if (self.op_type.len > 0) {
-            alloc.free(self.op_type);
+        if (_.op_type.len > 0) {
+            alloc.free(_.op_type);
         }
-        if (self.domain.len > 0) {
-            alloc.free(self.domain);
+        if (_.domain.len > 0) {
+            alloc.free(_.domain);
         }
-        for (inp of self.inputs) {
+        for (inp of _.inputs) {
             if (inp.len > 0) {
                 alloc.free(inp);
             }
         }
-        if (self.inputs.len > 0) {
-            alloc.free(self.inputs);
+        if (_.inputs.len > 0) {
+            alloc.free(_.inputs);
         }
-        for (out of self.outputs) {
+        for (out of _.outputs) {
             if (out.len > 0) {
                 alloc.free(out);
             }
         }
-        if (self.outputs.len > 0) {
-            alloc.free(self.outputs);
+        if (_.outputs.len > 0) {
+            alloc.free(_.outputs);
         }
-        for (attr of self.attributes) {
+        for (attr of _.attributes) {
             let a = attr;
             a.deinit(alloc);
         }
-        if (self.attributes.len > 0) {
-            alloc.free(self.attributes);
+        if (_.attributes.len > 0) {
+            alloc.free(_.attributes);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
     }
 };
@@ -217,25 +217,25 @@ pub const OnnxTensor = struct {
     int64_data: []const i64 = &.{},
     doc_string: []const u8 = "",
 
-    pub fn elementCount(self: *const OnnxTensor): usize {
-        if (self.dims.len == 0) {
-            if (self.float_data.len > 0) {
-                return self.float_data.len;
+    pub fn elementCount(): usize {
+        if (_.dims.len == 0) {
+            if (_.float_data.len > 0) {
+                return _.float_data.len;
             }
-            if (self.int32_data.len > 0) {
-                return self.int32_data.len;
+            if (_.int32_data.len > 0) {
+                return _.int32_data.len;
             }
-            if (self.int64_data.len > 0) {
-                return self.int64_data.len;
+            if (_.int64_data.len > 0) {
+                return _.int64_data.len;
             }
-            const elem_sz = self.data_type.elementSizeBytes();
-            if (elem_sz > 0 and self.raw_data.len > 0) {
-                return self.raw_data.len / elem_sz;
+            const elem_sz = _.data_type.elementSizeBytes();
+            if (elem_sz > 0 and _.raw_data.len > 0) {
+                return _.raw_data.len / elem_sz;
             }
             return 0;
         }
         let total: usize = 1;
-        for (d of self.dims) {
+        for (d of _.dims) {
             if (d <= 0) {
                 return 0;
             }
@@ -244,99 +244,99 @@ pub const OnnxTensor = struct {
         return total;
     }
 
-    pub fn extractFloats(self: *const OnnxTensor, alloc: std.mem.Allocator): ![]f32 {
-        if (self.data_type != .FLOAT) {
+    pub fn extractFloats(alloc: std.mem.Allocator): ![]f32 {
+        if (_.data_type != .FLOAT) {
             return OnnxError.InvalidDataType;
         }
-        if (self.float_data.len > 0) {
-            const out = try alloc.alloc(f32, self.float_data.len);
-            @memcpy(out, self.float_data);
+        if (_.float_data.len > 0) {
+            const out = try alloc.alloc(f32, _.float_data.len);
+            @memcpy(out, _.float_data);
             return out;
         }
-        if (self.raw_data.len % 4 != 0) {
+        if (_.raw_data.len % 4 != 0) {
             return OnnxError.LengthOutOfBounds;
         }
-        const count = self.raw_data.len / 4;
+        const count = _.raw_data.len / 4;
         let out = try alloc.alloc(f32, count);
         let i: usize = 0;
         while (i < count) {
             const off = i * 4;
-            const bits = std.mem.readInt(u32, self.raw_data[off .. off + 4][0..4], .little);
+            const bits = std.mem.readInt(u32, _.raw_data[off .. off + 4][0..4], .little);
             out[i] = @bitCast(bits);
             i += 1;
         }
         return out;
     }
 
-    pub fn extractInt64s(self: *const OnnxTensor, alloc: std.mem.Allocator): ![]i64 {
-        if (self.data_type != .INT64) {
+    pub fn extractInt64s(alloc: std.mem.Allocator): ![]i64 {
+        if (_.data_type != .INT64) {
             return OnnxError.InvalidDataType;
         }
-        if (self.int64_data.len > 0) {
-            const out = try alloc.alloc(i64, self.int64_data.len);
-            @memcpy(out, self.int64_data);
+        if (_.int64_data.len > 0) {
+            const out = try alloc.alloc(i64, _.int64_data.len);
+            @memcpy(out, _.int64_data);
             return out;
         }
-        if (self.raw_data.len % 8 != 0) {
+        if (_.raw_data.len % 8 != 0) {
             return OnnxError.LengthOutOfBounds;
         }
-        const count = self.raw_data.len / 8;
+        const count = _.raw_data.len / 8;
         let out = try alloc.alloc(i64, count);
         let i: usize = 0;
         while (i < count) {
             const off = i * 8;
-            const bits = std.mem.readInt(u64, self.raw_data[off .. off + 8][0..8], .little);
+            const bits = std.mem.readInt(u64, _.raw_data[off .. off + 8][0..8], .little);
             out[i] = @bitCast(bits);
             i += 1;
         }
         return out;
     }
 
-    pub fn extractInt32s(self: *const OnnxTensor, alloc: std.mem.Allocator): ![]i32 {
-        if (self.data_type != .INT32) {
+    pub fn extractInt32s(alloc: std.mem.Allocator): ![]i32 {
+        if (_.data_type != .INT32) {
             return OnnxError.InvalidDataType;
         }
-        if (self.int32_data.len > 0) {
-            const out = try alloc.alloc(i32, self.int32_data.len);
-            @memcpy(out, self.int32_data);
+        if (_.int32_data.len > 0) {
+            const out = try alloc.alloc(i32, _.int32_data.len);
+            @memcpy(out, _.int32_data);
             return out;
         }
-        if (self.raw_data.len % 4 != 0) {
+        if (_.raw_data.len % 4 != 0) {
             return OnnxError.LengthOutOfBounds;
         }
-        const count = self.raw_data.len / 4;
+        const count = _.raw_data.len / 4;
         let out = try alloc.alloc(i32, count);
         let i: usize = 0;
         while (i < count) {
             const off = i * 4;
-            const bits = std.mem.readInt(u32, self.raw_data[off .. off + 4][0..4], .little);
+            const bits = std.mem.readInt(u32, _.raw_data[off .. off + 4][0..4], .little);
             out[i] = @bitCast(bits);
             i += 1;
         }
         return out;
     }
 
-    pub fn deinit(self: *OnnxTensor, alloc: std.mem.Allocator) {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        if (self.dims.len > 0) {
-            alloc.free(self.dims);
+        if (_.dims.len > 0) {
+            alloc.free(_.dims);
         }
-        if (self.raw_data.len > 0) {
-            alloc.free(self.raw_data);
+        if (_.raw_data.len > 0) {
+            alloc.free(_.raw_data);
         }
-        if (self.float_data.len > 0) {
-            alloc.free(self.float_data);
+        if (_.float_data.len > 0) {
+            alloc.free(_.float_data);
         }
-        if (self.int32_data.len > 0) {
-            alloc.free(self.int32_data);
+        if (_.int32_data.len > 0) {
+            alloc.free(_.int32_data);
         }
-        if (self.int64_data.len > 0) {
-            alloc.free(self.int64_data);
+        if (_.int64_data.len > 0) {
+            alloc.free(_.int64_data);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
     }
 };
@@ -345,9 +345,9 @@ pub const OnnxOpsetImport = struct {
     domain: []const u8 = "",
     version: i64 = 0,
 
-    pub fn deinit(self: *OnnxOpsetImport, alloc: std.mem.Allocator) {
-        if (self.domain.len > 0) {
-            alloc.free(self.domain);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.domain.len > 0) {
+            alloc.free(_.domain);
         }
     }
 };
@@ -360,51 +360,51 @@ pub const OnnxGraph = struct {
     initializers: []const OnnxTensor = &.{},
     doc_string: []const u8 = "",
 
-    pub fn findInitializer(self: *const OnnxGraph, name: []const u8): ?*const OnnxTensor {
+    pub fn findInitializer(name: []const u8): (*const OnnxTensor)? {
         let i: usize = 0;
-        while (i < self.initializers.len) {
-            if (std.mem.eql(u8, self.initializers[i].name, name)) {
-                return &self.initializers[i];
+        while (i < _.initializers.len) {
+            if (std.mem.eql(u8, _.initializers[i].name, name)) {
+                return &_.initializers[i];
             }
             i += 1;
         }
         return null;
     }
 
-    pub fn deinit(self: *OnnxGraph, alloc: std.mem.Allocator) {
-        if (self.name.len > 0) {
-            alloc.free(self.name);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (_.name.len > 0) {
+            alloc.free(_.name);
         }
-        for (n of self.nodes) {
+        for (n of _.nodes) {
             let item = n;
             item.deinit(alloc);
         }
-        if (self.nodes.len > 0) {
-            alloc.free(self.nodes);
+        if (_.nodes.len > 0) {
+            alloc.free(_.nodes);
         }
-        for (vi of self.inputs) {
+        for (vi of _.inputs) {
             let item = vi;
             item.deinit(alloc);
         }
-        if (self.inputs.len > 0) {
-            alloc.free(self.inputs);
+        if (_.inputs.len > 0) {
+            alloc.free(_.inputs);
         }
-        for (vo of self.outputs) {
+        for (vo of _.outputs) {
             let item = vo;
             item.deinit(alloc);
         }
-        if (self.outputs.len > 0) {
-            alloc.free(self.outputs);
+        if (_.outputs.len > 0) {
+            alloc.free(_.outputs);
         }
-        for (t of self.initializers) {
+        for (t of _.initializers) {
             let item = t;
             item.deinit(alloc);
         }
-        if (self.initializers.len > 0) {
-            alloc.free(self.initializers);
+        if (_.initializers.len > 0) {
+            alloc.free(_.initializers);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
     }
 };
@@ -417,36 +417,36 @@ pub const OnnxModel = struct {
     domain: []const u8 = "",
     model_version: i64 = 0,
     doc_string: []const u8 = "",
-    graph: ?OnnxGraph = null,
+    graph: OnnxGraph? = null,
 
-    pub fn findInitializer(self: *const OnnxModel, name: []const u8): ?*const OnnxTensor {
-        if (self.graph) |*g| {
+    pub fn findInitializer(name: []const u8): (*const OnnxTensor)? {
+        if (g := _.graph) {
             return g.findInitializer(name);
         }
         return null;
     }
 
-    pub fn deinit(self: *OnnxModel, alloc: std.mem.Allocator) {
-        for (op of self.opset_import) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        for (op of _.opset_import) {
             let item = op;
             item.deinit(alloc);
         }
-        if (self.opset_import.len > 0) {
-            alloc.free(self.opset_import);
+        if (_.opset_import.len > 0) {
+            alloc.free(_.opset_import);
         }
-        if (self.producer_name.len > 0) {
-            alloc.free(self.producer_name);
+        if (_.producer_name.len > 0) {
+            alloc.free(_.producer_name);
         }
-        if (self.producer_version.len > 0) {
-            alloc.free(self.producer_version);
+        if (_.producer_version.len > 0) {
+            alloc.free(_.producer_version);
         }
-        if (self.domain.len > 0) {
-            alloc.free(self.domain);
+        if (_.domain.len > 0) {
+            alloc.free(_.domain);
         }
-        if (self.doc_string.len > 0) {
-            alloc.free(self.doc_string);
+        if (_.doc_string.len > 0) {
+            alloc.free(_.doc_string);
         }
-        if (self.graph) |*g| {
+        if (*g := _.graph) {
             g.deinit(alloc);
         }
     }

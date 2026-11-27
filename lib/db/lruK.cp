@@ -35,7 +35,7 @@ pub fn LruKCache(comptime K: type, comptime V: type): type {
         hit_count: u64,
         miss_count: u64,
 
-        pub fn init(
+        pub static fn init(
             alloc: std.mem.Allocator,
             capacity: usize,
             history_capacity: usize,
@@ -66,16 +66,16 @@ pub fn LruKCache(comptime K: type, comptime V: type): type {
             };
         }
 
-        pub fn deinit(self: *Self) {
-            self.map.deinit();
-            self.nodes.deinit(self.alloc);
-            self.free_list.deinit(self.alloc);
+        pub fn deinit(*_) {
+            _.map.deinit();
+            _.nodes.deinit(_.alloc);
+            _.free_list.deinit(_.alloc);
         }
 
-        fn allocNode(self: *Self, key: K, value: V, in_cache: bool) -> !usize {
-            if (self.free_list.items.len > 0) {
-                const idx = self.free_list.pop().?;
-                self.nodes.items[idx] = Node{
+        fn allocNode(*_, key: K, value: V, in_cache: bool) -> !usize {
+            if (_.free_list.items.len > 0) {
+                const idx = _.free_list.pop().?;
+                _.nodes.items[idx] = Node{
                     key: key,
                     value: value,
                     access_count: 1,
@@ -85,8 +85,8 @@ pub fn LruKCache(comptime K: type, comptime V: type): type {
                 };
                 return idx;
             }
-            const idx = self.nodes.items.len;
-            try self.nodes.append(self.alloc, Node{
+            const idx = _.nodes.items.len;
+            try _.nodes.append(_.alloc, Node{
                 key: key,
                 value: value,
                 access_count: 1,
@@ -97,220 +97,220 @@ pub fn LruKCache(comptime K: type, comptime V: type): type {
             return idx;
         }
 
-        fn releaseNode(self: *Self, idx: usize) {
-            self.free_list.append(self.alloc, idx) catch {};
+        fn releaseNode(*_, idx: usize) {
+            _.free_list.append(_.alloc, idx) catch {};
         }
 
-        fn attachCacheHead(self: *Self, idx: usize) {
-            self.nodes.items[idx].prev = null;
-            self.nodes.items[idx].next = self.cache_head;
-            if (old_head := self.cache_head) {
-                self.nodes.items[old_head].prev = idx;
+        fn attachCacheHead(*_, idx: usize) {
+            _.nodes.items[idx].prev = null;
+            _.nodes.items[idx].next = _.cache_head;
+            if (old_head := _.cache_head) {
+                _.nodes.items[old_head].prev = idx;
             } else {
-                self.cache_tail = idx;
+                _.cache_tail = idx;
             }
-            self.cache_head = idx;
-            self.cache_len += 1;
+            _.cache_head = idx;
+            _.cache_len += 1;
         }
 
-        fn detachCache(self: *Self, idx: usize) {
-            const p = self.nodes.items[idx].prev;
-            const n = self.nodes.items[idx].next;
+        fn detachCache(*_, idx: usize) {
+            const p = _.nodes.items[idx].prev;
+            const n = _.nodes.items[idx].next;
             if (prev_idx := p) {
-                self.nodes.items[prev_idx].next = n;
+                _.nodes.items[prev_idx].next = n;
             } else {
-                self.cache_head = n;
+                _.cache_head = n;
             }
             if (next_idx := n) {
-                self.nodes.items[next_idx].prev = p;
+                _.nodes.items[next_idx].prev = p;
             } else {
-                self.cache_tail = p;
+                _.cache_tail = p;
             }
-            self.nodes.items[idx].prev = null;
-            self.nodes.items[idx].next = null;
-            self.cache_len -= 1;
+            _.nodes.items[idx].prev = null;
+            _.nodes.items[idx].next = null;
+            _.cache_len -= 1;
         }
 
-        fn moveToCacheHead(self: *Self, idx: usize) {
-            if (head_idx := self.cache_head) {
+        fn moveToCacheHead(*_, idx: usize) {
+            if (head_idx := _.cache_head) {
                 if (head_idx == idx) {
                     return;
                 }
             }
-            self.detachCache(idx);
-            self.attachCacheHead(idx);
+            _.detachCache(idx);
+            _.attachCacheHead(idx);
         }
 
-        fn evictCacheTail(self: *Self) {
-            if (tail_idx := self.cache_tail) {
-                const key = self.nodes.items[tail_idx].key;
-                self.detachCache(tail_idx);
-                * = self.map.remove(key);
-                self.releaseNode(tail_idx);
+        fn evictCacheTail(*_) {
+            if (tail_idx := _.cache_tail) {
+                const key = _.nodes.items[tail_idx].key;
+                _.detachCache(tail_idx);
+                * = _.map.remove(key);
+                _.releaseNode(tail_idx);
             }
         }
 
-        fn attachHistoryHead(self: *Self, idx: usize) {
-            self.nodes.items[idx].prev = null;
-            self.nodes.items[idx].next = self.history_head;
-            if (old_head := self.history_head) {
-                self.nodes.items[old_head].prev = idx;
+        fn attachHistoryHead(*_, idx: usize) {
+            _.nodes.items[idx].prev = null;
+            _.nodes.items[idx].next = _.history_head;
+            if (old_head := _.history_head) {
+                _.nodes.items[old_head].prev = idx;
             } else {
-                self.history_tail = idx;
+                _.history_tail = idx;
             }
-            self.history_head = idx;
-            self.history_len += 1;
+            _.history_head = idx;
+            _.history_len += 1;
         }
 
-        fn detachHistory(self: *Self, idx: usize) {
-            const p = self.nodes.items[idx].prev;
-            const n = self.nodes.items[idx].next;
+        fn detachHistory(*_, idx: usize) {
+            const p = _.nodes.items[idx].prev;
+            const n = _.nodes.items[idx].next;
             if (prev_idx := p) {
-                self.nodes.items[prev_idx].next = n;
+                _.nodes.items[prev_idx].next = n;
             } else {
-                self.history_head = n;
+                _.history_head = n;
             }
             if (next_idx := n) {
-                self.nodes.items[next_idx].prev = p;
+                _.nodes.items[next_idx].prev = p;
             } else {
-                self.history_tail = p;
+                _.history_tail = p;
             }
-            self.nodes.items[idx].prev = null;
-            self.nodes.items[idx].next = null;
-            self.history_len -= 1;
+            _.nodes.items[idx].prev = null;
+            _.nodes.items[idx].next = null;
+            _.history_len -= 1;
         }
 
-        fn moveToHistoryHead(self: *Self, idx: usize) {
-            if (head_idx := self.history_head) {
+        fn moveToHistoryHead(*_, idx: usize) {
+            if (head_idx := _.history_head) {
                 if (head_idx == idx) {
                     return;
                 }
             }
-            self.detachHistory(idx);
-            self.attachHistoryHead(idx);
+            _.detachHistory(idx);
+            _.attachHistoryHead(idx);
         }
 
-        fn evictHistoryTail(self: *Self) {
-            if (tail_idx := self.history_tail) {
-                const key = self.nodes.items[tail_idx].key;
-                self.detachHistory(tail_idx);
-                * = self.map.remove(key);
-                self.releaseNode(tail_idx);
+        fn evictHistoryTail(*_) {
+            if (tail_idx := _.history_tail) {
+                const key = _.nodes.items[tail_idx].key;
+                _.detachHistory(tail_idx);
+                * = _.map.remove(key);
+                _.releaseNode(tail_idx);
             }
         }
 
-        fn promoteFromHistory(self: *Self, idx: usize) {
-            self.detachHistory(idx);
-            if (self.cache_len >= self.capacity) {
-                self.evictCacheTail();
+        fn promoteFromHistory(*_, idx: usize) {
+            _.detachHistory(idx);
+            if (_.cache_len >= _.capacity) {
+                _.evictCacheTail();
             }
-            self.nodes.items[idx].in_cache = true;
-            self.attachCacheHead(idx);
+            _.nodes.items[idx].in_cache = true;
+            _.attachCacheHead(idx);
         }
 
-        pub fn put(self: *Self, key: K, value: V) -> !void {
-            if (existing_idx := self.map.get(key)) {
-                self.nodes.items[existing_idx].value = value;
-                self.nodes.items[existing_idx].access_count += 1;
-                if (self.nodes.items[existing_idx].in_cache) {
-                    self.moveToCacheHead(existing_idx);
+        pub fn put(*_, key: K, value: V) -> !void {
+            if (existing_idx := _.map.get(key)) {
+                _.nodes.items[existing_idx].value = value;
+                _.nodes.items[existing_idx].access_count += 1;
+                if (_.nodes.items[existing_idx].in_cache) {
+                    _.moveToCacheHead(existing_idx);
                 } else {
-                    if (self.nodes.items[existing_idx].access_count >= self.k_threshold) {
-                        self.promoteFromHistory(existing_idx);
+                    if (_.nodes.items[existing_idx].access_count >= _.k_threshold) {
+                        _.promoteFromHistory(existing_idx);
                     } else {
-                        self.moveToHistoryHead(existing_idx);
+                        _.moveToHistoryHead(existing_idx);
                     }
                 }
                 return;
             }
 
-            if (self.k_threshold == 1) {
-                if (self.cache_len >= self.capacity) {
-                    self.evictCacheTail();
+            if (_.k_threshold == 1) {
+                if (_.cache_len >= _.capacity) {
+                    _.evictCacheTail();
                 }
-                const idx = try self.allocNode(key, value, true);
-                try self.map.put(key, idx);
-                self.attachCacheHead(idx);
+                const idx = try _.allocNode(key, value, true);
+                try _.map.put(key, idx);
+                _.attachCacheHead(idx);
                 return;
             }
 
-            if (self.history_len >= self.history_capacity) {
-                self.evictHistoryTail();
+            if (_.history_len >= _.history_capacity) {
+                _.evictHistoryTail();
             }
-            const idx = try self.allocNode(key, value, false);
-            try self.map.put(key, idx);
-            self.attachHistoryHead(idx);
+            const idx = try _.allocNode(key, value, false);
+            try _.map.put(key, idx);
+            _.attachHistoryHead(idx);
         }
 
-        pub fn get(self: *Self, key: K) -> V? {
-            if (idx := self.map.get(key)) {
-                self.hit_count = self.hit_count +% 1;
-                self.nodes.items[idx].access_count += 1;
-                if (self.nodes.items[idx].in_cache) {
-                    self.moveToCacheHead(idx);
+        pub fn get(*_, key: K) -> V? {
+            if (idx := _.map.get(key)) {
+                _.hit_count = _.hit_count +% 1;
+                _.nodes.items[idx].access_count += 1;
+                if (_.nodes.items[idx].in_cache) {
+                    _.moveToCacheHead(idx);
                 } else {
-                    if (self.nodes.items[idx].access_count >= self.k_threshold) {
-                        self.promoteFromHistory(idx);
+                    if (_.nodes.items[idx].access_count >= _.k_threshold) {
+                        _.promoteFromHistory(idx);
                     } else {
-                        self.moveToHistoryHead(idx);
+                        _.moveToHistoryHead(idx);
                     }
                 }
-                return self.nodes.items[idx].value;
+                return _.nodes.items[idx].value;
             }
-            self.miss_count = self.miss_count +% 1;
+            _.miss_count = _.miss_count +% 1;
             return null;
         }
 
-        pub fn peek(self, key: K) -> V? {
-            if (idx := self.map.get(key)) {
-                return self.nodes.items[idx].value;
+        pub fn peek(key: K) -> V? {
+            if (idx := _.map.get(key)) {
+                return _.nodes.items[idx].value;
             }
             return null;
         }
 
-        pub fn remove(self: *Self, key: K) -> V? {
-            if (idx := self.map.get(key)) {
-                const val = self.nodes.items[idx].value;
-                if (self.nodes.items[idx].in_cache) {
-                    self.detachCache(idx);
+        pub fn remove(*_, key: K) -> V? {
+            if (idx := _.map.get(key)) {
+                const val = _.nodes.items[idx].value;
+                if (_.nodes.items[idx].in_cache) {
+                    _.detachCache(idx);
                 } else {
-                    self.detachHistory(idx);
+                    _.detachHistory(idx);
                 }
-                * = self.map.remove(key);
-                self.releaseNode(idx);
+                * = _.map.remove(key);
+                _.releaseNode(idx);
                 return val;
             }
             return null;
         }
 
-        pub fn clear(self: *Self) {
-            self.map.clearRetainingCapacity();
-            self.nodes.clearRetainingCapacity();
-            self.free_list.clearRetainingCapacity();
-            self.cache_head = null;
-            self.cache_tail = null;
-            self.history_head = null;
-            self.history_tail = null;
-            self.cache_len = 0;
-            self.history_len = 0;
-            self.hit_count = 0;
-            self.miss_count = 0;
+        pub fn clear(*_) {
+            _.map.clearRetainingCapacity();
+            _.nodes.clearRetainingCapacity();
+            _.free_list.clearRetainingCapacity();
+            _.cache_head = null;
+            _.cache_tail = null;
+            _.history_head = null;
+            _.history_tail = null;
+            _.cache_len = 0;
+            _.history_len = 0;
+            _.hit_count = 0;
+            _.miss_count = 0;
         }
 
-        pub fn len(self) -> usize {
-            return self.cache_len;
+        pub fn len() -> usize {
+            return _.cache_len;
         }
 
-        pub fn historyLen(self) -> usize {
-            return self.history_len;
+        pub fn historyLen() -> usize {
+            return _.history_len;
         }
 
-        pub fn hits(self) -> u64 {
-            return self.hit_count;
+        pub fn hits() -> u64 {
+            return _.hit_count;
         }
 
-        pub fn misses(self) -> u64 {
-            return self.miss_count;
+        pub fn misses() -> u64 {
+            return _.miss_count;
         }
     };
 }

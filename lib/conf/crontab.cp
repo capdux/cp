@@ -17,13 +17,13 @@ pub const DateTime = struct {
     hour: u8, // 0..23
     minute: u8, // 0..59
 
-    pub fn isLeapYear(year: i32): bool {
+    pub static fn isLeapYear(year: i32): bool {
         if (@mod(year, 400) == 0) { return true; }
         if (@mod(year, 100) == 0) { return false; }
         return @mod(year, 4) == 0;
     }
 
-    pub fn daysInMonth(year: i32, month: u8): u8 {
+    pub static fn daysInMonth(year: i32, month: u8): u8 {
         switch (month) {
             1, 3, 5, 7, 8, 10, 12 => return 31,
             4, 6, 9, 11 => return 30,
@@ -33,22 +33,22 @@ pub const DateTime = struct {
     }
 
     /// Tomohiko Sakamoto's algorithm: 0 = Sunday .. 6 = Saturday
-    pub fn weekday(self: DateTime): u8 {
+    pub fn weekday(): u8 {
         const t: [12]i32 = [ 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 ];
-        let y: i32 = self.year;
-        if (self.month < 3) { y -= 1; }
-        const m_idx: usize = @intCast(self.month - 1);
-        const w = @mod(y + @divFloor(y, 4) - @divFloor(y, 100) + @divFloor(y, 400) + t[m_idx] + @as(i32, self.day), 7);
+        let y: i32 = _.year;
+        if (_.month < 3) { y -= 1; }
+        const m_idx: usize = @intCast(_.month - 1);
+        const w = @mod(y + @divFloor(y, 4) - @divFloor(y, 100) + @divFloor(y, 400) + t[m_idx] + @as(i32, _.day), 7);
         return @intCast(w);
     }
 
-    pub fn addOneMinute(self: DateTime): DateTime {
+    pub fn addOneMinute(): DateTime {
         let dt = DateTime{
-            .year = self.year,
-            .month = self.month,
-            .day = self.day,
-            .hour = self.hour,
-            .minute = self.minute,
+            .year = _.year,
+            .month = _.month,
+            .day = _.day,
+            .hour = _.hour,
+            .minute = _.minute,
         };
         dt.minute += 1;
         if (dt.minute < 60) { return dt; }
@@ -67,7 +67,7 @@ pub const DateTime = struct {
         return dt;
     }
 
-    pub fn fromUnixSeconds(unix_sec: i64): DateTime {
+    pub static fn fromUnixSeconds(unix_sec: i64): DateTime {
         const total_days = @divFloor(unix_sec, 86400);
         const rem_sec: i64 = @mod(unix_sec, 86400);
         const hour: u8 = @intCast(@divFloor(rem_sec, 3600));
@@ -190,7 +190,7 @@ pub const CronExpr = struct {
     dom_wildcard: bool,
     dow_wildcard: bool,
 
-    pub fn parse(expr: []const u8): CronError!CronExpr {
+    pub static fn parse(expr: []const u8): CronError!CronExpr {
         const trimmed = std.mem.trim(u8, expr, " \t\r\n");
         if (std.mem.eql(u8, trimmed, "@yearly") or std.mem.eql(u8, trimmed, "@annually")) {
             return CronExpr.parse("0 0 1 1 *");
@@ -224,41 +224,41 @@ pub const CronExpr = struct {
         };
     }
 
-    pub fn matches(self: CronExpr, dt: DateTime): bool {
+    pub fn matches(dt: DateTime): bool {
         const min_bit: u6 = @intCast(dt.minute);
         const hr_bit: u6 = @intCast(dt.hour);
         const dom_bit: u6 = @intCast(dt.day);
         const mon_bit: u6 = @intCast(dt.month);
         const dow_bit: u6 = @intCast(dt.weekday());
 
-        if ((self.minutes & (@as(u64, 1) << min_bit)) == 0) { return false; }
-        if ((self.hours & (@as(u64, 1) << hr_bit)) == 0) { return false; }
-        if ((self.months & (@as(u64, 1) << mon_bit)) == 0) { return false; }
+        if ((_.minutes & (@as(u64, 1) << min_bit)) == 0) { return false; }
+        if ((_.hours & (@as(u64, 1) << hr_bit)) == 0) { return false; }
+        if ((_.months & (@as(u64, 1) << mon_bit)) == 0) { return false; }
 
-        const dom_ok = (self.days_of_month & (@as(u64, 1) << dom_bit)) != 0;
-        const dow_ok = (self.days_of_week & (@as(u64, 1) << dow_bit)) != 0;
+        const dom_ok = (_.days_of_month & (@as(u64, 1) << dom_bit)) != 0;
+        const dow_ok = (_.days_of_week & (@as(u64, 1) << dow_bit)) != 0;
 
         // Standard POSIX cron semantics: if both DOM and DOW are restricted, match either (OR)
-        if (!self.dom_wildcard and !self.dow_wildcard) {
+        if (!_.dom_wildcard and !_.dow_wildcard) {
             return dom_ok or dow_ok;
         }
         return dom_ok and dow_ok;
     }
 
-    /// Find the next trigger strictly after `from` (up to 4 years lookahead)
-    pub fn nextAfter(self: CronExpr, from: DateTime): OptDateTime {
+    /// Find the next trigger strictly after `start_dt` (up to 4 years lookahead)
+    pub fn nextAfter(start_dt: DateTime): DateTime? {
         let cur: DateTime = DateTime{
-            .year = from.year,
-            .month = from.month,
-            .day = from.day,
-            .hour = from.hour,
-            .minute = from.minute,
+            .year = start_dt.year,
+            .month = start_dt.month,
+            .day = start_dt.day,
+            .hour = start_dt.hour,
+            .minute = start_dt.minute,
         };
         cur = cur.addOneMinute();
         const max_steps: usize = 366 * 4 * 24 * 60;
         let step: usize = 0;
         while (step < max_steps) : (step += 1) {
-            if (self.matches(cur)) { return cur; }
+            if (_.matches(cur)) { return cur; }
             cur = cur.addOneMinute();
         }
         return null;

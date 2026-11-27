@@ -12,11 +12,11 @@ pub const CoseSign1 = struct {
     payload: []const u8,
     signature: []const u8,
 
-    pub fn deinit(self: *CoseSign1, alloc: std.mem.Allocator) void {
-        alloc.free(self.protected_bytes);
-        self.unprotected.deinit(alloc);
-        alloc.free(self.payload);
-        alloc.free(self.signature);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        alloc.free(_.protected_bytes);
+        _.unprotected.deinit(alloc);
+        alloc.free(_.payload);
+        alloc.free(_.signature);
     }
 };
 

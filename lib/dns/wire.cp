@@ -79,24 +79,24 @@ pub const DnsHeader = struct {
     ns_count: u16 = 0,
     ar_count: u16 = 0,
 
-    pub fn encode(self: DnsHeader): [12]u8 {
+    pub fn encode(): [12]u8 {
         let out: [12]u8 = undefined;
-        std.mem.writeInt(u16, out[0..2], self.id, .big);
+        std.mem.writeInt(u16, out[0..2], _.id, .big);
         let flags: u16 = 0;
-        if (self.qr) { flags |= 0x8000; }
-        flags |= (@as(u16, self.opcode) << 11);
-        if (self.aa) { flags |= 0x0400; }
-        if (self.tc) { flags |= 0x0200; }
-        if (self.rd) { flags |= 0x0100; }
-        if (self.ra) { flags |= 0x0080; }
-        if (self.ad) { flags |= 0x0020; }
-        if (self.cd) { flags |= 0x0010; }
-        flags |= @as(u16, self.rcode);
+        if (_.qr) { flags |= 0x8000; }
+        flags |= (@as(u16, _.opcode) << 11);
+        if (_.aa) { flags |= 0x0400; }
+        if (_.tc) { flags |= 0x0200; }
+        if (_.rd) { flags |= 0x0100; }
+        if (_.ra) { flags |= 0x0080; }
+        if (_.ad) { flags |= 0x0020; }
+        if (_.cd) { flags |= 0x0010; }
+        flags |= @as(u16, _.rcode);
         std.mem.writeInt(u16, out[2..4], flags, .big);
-        std.mem.writeInt(u16, out[4..6], self.qd_count, .big);
-        std.mem.writeInt(u16, out[6..8], self.an_count, .big);
-        std.mem.writeInt(u16, out[8..10], self.ns_count, .big);
-        std.mem.writeInt(u16, out[10..12], self.ar_count, .big);
+        std.mem.writeInt(u16, out[4..6], _.qd_count, .big);
+        std.mem.writeInt(u16, out[6..8], _.an_count, .big);
+        std.mem.writeInt(u16, out[8..10], _.ns_count, .big);
+        std.mem.writeInt(u16, out[10..12], _.ar_count, .big);
         return out;
     }
 
@@ -129,8 +129,8 @@ pub const DnsQuestion = struct {
     qtype: u16,
     qclass: u16 = 1,
 
-    pub fn deinit(self: *const DnsQuestion, alloc: std.mem.Allocator) {
-        alloc.free(self.name);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.name);
     }
 };
 
@@ -184,13 +184,13 @@ pub const DnsRdata = union(enum) {
     opt: []const u8,
     raw: []const u8,
 
-    pub fn deinit(self: *const DnsRdata, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(alloc: std.mem.Allocator) {
+        switch (_) {
             .a, .aaaa => {},
             .cname, .ns, .ptr => |s| alloc.free(s),
             .mx => |m| alloc.free(m.exchange),
             .txt => |items| {
-                for (items) |item| {
+                for (item of items) {
                     alloc.free(item);
                 }
                 alloc.free(items);
@@ -216,9 +216,9 @@ pub const DnsResourceRecord = struct {
     ttl: u32 = 0,
     rdata: DnsRdata,
 
-    pub fn deinit(self: *const DnsResourceRecord, alloc: std.mem.Allocator) {
-        alloc.free(self.name);
-        self.rdata.deinit(alloc);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.name);
+        _.rdata.deinit(alloc);
     }
 };
 
@@ -229,23 +229,23 @@ pub const DnsPacket = struct {
     authorities: []DnsResourceRecord,
     additionals: []DnsResourceRecord,
 
-    pub fn deinit(self: *DnsPacket, alloc: std.mem.Allocator) {
-        for (q of self.questions) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        for (q of _.questions) {
             q.deinit(alloc);
         }
-        alloc.free(self.questions);
-        for (r of self.answers) {
+        alloc.free(_.questions);
+        for (r of _.answers) {
             r.deinit(alloc);
         }
-        alloc.free(self.answers);
-        for (r of self.authorities) {
+        alloc.free(_.answers);
+        for (r of _.authorities) {
             r.deinit(alloc);
         }
-        alloc.free(self.authorities);
-        for (r of self.additionals) {
+        alloc.free(_.authorities);
+        for (r of _.additionals) {
             r.deinit(alloc);
         }
-        alloc.free(self.additionals);
+        alloc.free(_.additionals);
     }
 };
 

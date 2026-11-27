@@ -18,7 +18,7 @@ pub fn SpscQueue(comptime T: type, comptime CAP: usize): type {
         head: std.atomic.Value(usize) align(64),
         tail: std.atomic.Value(usize) align(64),
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{
                 .buffer = undefined,
                 .head = std.atomic.Value(usize).init(0),
@@ -26,40 +26,40 @@ pub fn SpscQueue(comptime T: type, comptime CAP: usize): type {
             };
         }
 
-        pub fn tryPush(self: *Self, item: T): bool {
-            const t = self.tail.load(.monotonic);
-            const h = self.head.load(.acquire);
+        pub fn tryPush(*_, item: T): bool {
+            const t = _.tail.load(.monotonic);
+            const h = _.head.load(.acquire);
             if ((t -% h) >= CAP) {
                 return false;
             }
-            self.buffer[t & MASK] = item;
-            self.tail.store(t +% 1, .release);
+            _.buffer[t & MASK] = item;
+            _.tail.store(t +% 1, .release);
             return true;
         }
 
-        pub fn tryPop(self: *Self): T? {
-            const h = self.head.load(.monotonic);
-            const t = self.tail.load(.acquire);
+        pub fn tryPop(*_): T? {
+            const h = _.head.load(.monotonic);
+            const t = _.tail.load(.acquire);
             if (h == t) {
                 return null;
             }
-            const item = self.buffer[h & MASK];
-            self.head.store(h +% 1, .release);
+            const item = _.buffer[h & MASK];
+            _.head.store(h +% 1, .release);
             return item;
         }
 
-        pub fn len(self: *const Self): usize {
-            const t = self.tail.load(.acquire);
-            const h = self.head.load(.acquire);
+        pub fn len(): usize {
+            const t = _.tail.load(.acquire);
+            const h = _.head.load(.acquire);
             return t -% h;
         }
 
-        pub fn isEmpty(self: *const Self): bool {
-            return self.len() == 0;
+        pub fn isEmpty(): bool {
+            return _.len() == 0;
         }
 
-        pub fn isFull(self: *const Self): bool {
-            return self.len() >= CAP;
+        pub fn isFull(): bool {
+            return _.len() >= CAP;
         }
 
         pub fn capacity(_: *const Self): usize {

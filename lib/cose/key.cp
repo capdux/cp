@@ -5,34 +5,34 @@ import { CborWriter, CborReader } from "./cbor.cp";
 
 pub const CoseKey = struct {
     kty: CoseKeyType,
-    alg: ?i32 = null,
-    kid: ?[]const u8 = null,
-    crv: ?CoseCurve = null,
-    x: ?[]const u8 = null,
-    y: ?[]const u8 = null,
-    d: ?[]const u8 = null,
-    k: ?[]const u8 = null,
+    alg: i32? = null,
+    kid: ([]const u8)? = null,
+    crv: CoseCurve? = null,
+    x: ([]const u8)? = null,
+    y: ([]const u8)? = null,
+    d: ([]const u8)? = null,
+    k: ([]const u8)? = null,
 
-    pub fn deinit(self: *CoseKey, alloc: std.mem.Allocator) void {
-        if (self.kid) |v| {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        if (v := _.kid) {
             alloc.free(v);
-            self.kid = null;
+            _.kid = null;
         }
-        if (self.x) |v| {
+        if (v := _.x) {
             alloc.free(v);
-            self.x = null;
+            _.x = null;
         }
-        if (self.y) |v| {
+        if (v := _.y) {
             alloc.free(v);
-            self.y = null;
+            _.y = null;
         }
-        if (self.d) |v| {
+        if (v := _.d) {
             alloc.free(v);
-            self.d = null;
+            _.d = null;
         }
-        if (self.k) |v| {
+        if (v := _.k) {
             alloc.free(v);
-            self.k = null;
+            _.k = null;
         }
     }
 };

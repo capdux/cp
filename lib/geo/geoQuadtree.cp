@@ -12,15 +12,15 @@ pub const Rect = struct {
     half_w: f64,
     half_h: f64,
 
-    pub fn contains(self: Rect, x: f64, y: f64): bool {
-        return x >= self.cx - self.half_w and x <= self.cx + self.half_w and
-            y >= self.cy - self.half_h and y <= self.cy + self.half_h;
+    pub fn contains(x: f64, y: f64): bool {
+        return x >= _.cx - _.half_w and x <= _.cx + _.half_w and
+            y >= _.cy - _.half_h and y <= _.cy + _.half_h;
     }
 
-    pub fn intersects(self: Rect, other: Rect): bool {
-        const dx = @abs(self.cx - other.cx);
-        const dy = @abs(self.cy - other.cy);
-        return dx <= (self.half_w + other.half_w) and dy <= (self.half_h + other.half_h);
+    pub fn intersects(other: Rect): bool {
+        const dx = @abs(_.cx - other.cx);
+        const dy = @abs(_.cy - other.cy);
+        return dx <= (_.half_w + other.half_w) and dy <= (_.half_h + other.half_h);
     }
 };
 
@@ -54,7 +54,7 @@ pub fn QuadTree(comptime V: type): type {
         const Self = @This();
         pub const Item = Entry;
 
-        fn createNode(alloc: std.mem.Allocator, bounds: Rect): !*Node {
+        static fn createNode(alloc: std.mem.Allocator, bounds: Rect): !*Node {
             let n = try alloc.create(Node);
             n.* = Node{
                 .bounds = bounds,
@@ -68,7 +68,7 @@ pub fn QuadTree(comptime V: type): type {
             return n;
         }
 
-        fn destroyNode(alloc: std.mem.Allocator, node: *Node) {
+        static fn destroyNode(alloc: std.mem.Allocator, node: *Node) {
             if (c := node.nw) { destroyNode(alloc, c); }
             if (c := node.ne) { destroyNode(alloc, c); }
             if (c := node.sw) { destroyNode(alloc, c); }
@@ -77,7 +77,7 @@ pub fn QuadTree(comptime V: type): type {
             alloc.destroy(node);
         }
 
-        pub fn init(alloc: std.mem.Allocator, bounds: Rect, capacity: usize): !Self {
+        pub static fn init(alloc: std.mem.Allocator, bounds: Rect, capacity: usize): !Self {
             if (capacity == 0) { return QuadError.InvalidCapacity; }
             if (bounds.half_w <= 0.0 or bounds.half_h <= 0.0) { return QuadError.InvalidBounds; }
             const root = try createNode(alloc, bounds);
@@ -89,16 +89,16 @@ pub fn QuadTree(comptime V: type): type {
             };
         }
 
-        pub fn deinit(self: *Self) {
-            destroyNode(self.alloc, self.root);
-            self.total_count = 0;
+        pub fn deinit(*_) {
+            destroyNode(_.alloc, _.root);
+            _.total_count = 0;
         }
 
-        pub fn len(self: Self): usize {
-            return self.total_count;
+        pub fn len(): usize {
+            return _.total_count;
         }
 
-        fn subdivide(alloc: std.mem.Allocator, node: *Node): !void {
+        static fn subdivide(alloc: std.mem.Allocator, node: *Node): !void {
             const hw = node.bounds.half_w * 0.5;
             const hh = node.bounds.half_h * 0.5;
             const cx = node.bounds.cx;
@@ -111,7 +111,7 @@ pub fn QuadTree(comptime V: type): type {
             node.divided = true;
         }
 
-        fn insertInto(alloc: std.mem.Allocator, cap_limit: usize, node: *Node, item: Entry, depth: usize): !bool {
+        static fn insertInto(alloc: std.mem.Allocator, cap_limit: usize, node: *Node, item: Entry, depth: usize): !bool {
             if (!node.bounds.contains(item.x, item.y)) { return false; }
 
             if (!node.divided and (node.points.items.len < cap_limit or depth >= 24)) {
@@ -136,13 +136,13 @@ pub fn QuadTree(comptime V: type): type {
             return false;
         }
 
-        pub fn insert(self: *Self, x: f64, y: f64, value: V): !bool {
-            const ok = try insertInto(self.alloc, self.capacity, self.root, Entry{ .x = x, .y = y, .value = value }, 0);
-            if (ok) { self.total_count += 1; }
+        pub fn insert(*_, x: f64, y: f64, value: V): !bool {
+            const ok = try insertInto(_.alloc, _.capacity, _.root, Entry{ .x = x, .y = y, .value = value }, 0);
+            if (ok) { _.total_count += 1; }
             return ok;
         }
 
-        fn queryRectNode(node: *Node, range: Rect, alloc: std.mem.Allocator, out: *std.ArrayList(Entry)): !void {
+        static fn queryRectNode(node: *Node, range: Rect, alloc: std.mem.Allocator, out: *std.ArrayList(Entry)): !void {
             if (!node.bounds.intersects(range)) { return; }
             for (pt of node.points.items) {
                 if (range.contains(pt.x, pt.y)) {
@@ -157,16 +157,16 @@ pub fn QuadTree(comptime V: type): type {
             }
         }
 
-        pub fn queryRect(self: Self, alloc: std.mem.Allocator, range: Rect): ![]Entry {
+        pub fn queryRect(alloc: std.mem.Allocator, range: Rect): ![]Entry {
             let out = std.ArrayList(Entry).empty;
             errdefer out.deinit(alloc);
-            try queryRectNode(self.root, range, alloc, &out);
+            try queryRectNode(_.root, range, alloc, &out);
             return out.toOwnedSlice(alloc);
         }
 
-        pub fn queryRadius(self: Self, alloc: std.mem.Allocator, cx: f64, cy: f64, radius: f64): ![]Entry {
+        pub fn queryRadius(alloc: std.mem.Allocator, cx: f64, cy: f64, radius: f64): ![]Entry {
             const bbox = Rect{ .cx = cx, .cy = cy, .half_w = radius, .half_h = radius };
-            const candidates = try self.queryRect(alloc, bbox);
+            const candidates = try _.queryRect(alloc, bbox);
             defer alloc.free(candidates);
 
             let out = std.ArrayList(Entry).empty;

@@ -26,7 +26,7 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
         size: usize,
         prng: std.Random.DefaultPrng,
 
-        fn emptyForward() -> [MAX_LEVEL](*Node)? {
+        static fn emptyForward() -> [MAX_LEVEL](*Node)? {
             let arr: [MAX_LEVEL](*Node)? = undefined;
             let i: usize = 0;
             while (i < MAX_LEVEL) {
@@ -36,7 +36,7 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return arr;
         }
 
-        pub fn init(alloc: std.mem.Allocator) -> Self {
+        pub static fn init(alloc: std.mem.Allocator) -> Self {
             return Self{
                 .alloc = alloc,
                 .head_forward = emptyForward(),
@@ -46,31 +46,31 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             };
         }
 
-        pub fn deinit(*self) {
-            let iter_opt = self.head_forward[0];
+        pub fn deinit(*_) {
+            let iter_opt = _.head_forward[0];
             while (node_ptr := iter_opt) {
                 const next_ptr = node_ptr.forward[0];
-                self.alloc.destroy(node_ptr);
+                _.alloc.destroy(node_ptr);
                 iter_opt = next_ptr;
             }
-            self.head_forward = emptyForward();
-            self.level = 1;
-            self.size = 0;
+            _.head_forward = emptyForward();
+            _.level = 1;
+            _.size = 0;
         }
 
-        pub fn clear(*self) {
-            self.deinit();
+        pub fn clear(*_) {
+            _.deinit();
         }
 
-        pub fn len(self) -> usize {
-            return self.size;
+        pub fn len() -> usize {
+            return _.size;
         }
 
-        pub fn isEmpty(self) -> bool {
-            return self.size == 0;
+        pub fn isEmpty() -> bool {
+            return _.size == 0;
         }
 
-        fn compareKeys(a: K, b: K) -> std.math.Order {
+        static fn compareKeys(a: K, b: K) -> std.math.Order {
             switch (@typeInfo(K)) {
                 .pointer => |ptr| {
                     if (ptr.size == .slice and ptr.child == u8) {
@@ -85,29 +85,29 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             }
         }
 
-        fn randomLevel(*self) -> usize {
+        fn randomLevel(*_) -> usize {
             let lvl: usize = 1;
-            let rand = self.prng.random();
+            let rand = _.prng.random();
             while (lvl < MAX_LEVEL and (rand.int(u8) & 3) == 0) {
                 lvl += 1;
             }
             return lvl;
         }
 
-        fn nextAt(self, curr: (*Node)?, lvl_idx: usize) -> (*Node)? {
+        fn nextAt(curr: (*Node)?, lvl_idx: usize) -> (*Node)? {
             if (c := curr) {
                 return c.forward[lvl_idx];
             }
-            return self.head_forward[lvl_idx];
+            return _.head_forward[lvl_idx];
         }
 
-        fn findPredecessor(self, key: K) -> (*Node)? {
+        fn findPredecessor(key: K) -> (*Node)? {
             let curr: (*Node)? = null;
-            let lvl_idx = self.level;
+            let lvl_idx = _.level;
             while (lvl_idx > 0) {
                 lvl_idx -= 1;
                 while (true) {
-                    const next_opt = self.nextAt(curr, lvl_idx);
+                    const next_opt = _.nextAt(curr, lvl_idx);
                     if (nxt := next_opt) {
                         if (compareKeys(nxt.key, key) == .lt) {
                             curr = nxt;
@@ -120,14 +120,14 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return curr;
         }
 
-        pub fn insert(*self, key: K, val: V) -> !V? {
+        pub fn insert(*_, key: K, val: V) -> !V? {
             let update: [MAX_LEVEL](*Node)? = emptyForward();
             let curr: (*Node)? = null;
-            let lvl_idx = self.level;
+            let lvl_idx = _.level;
             while (lvl_idx > 0) {
                 lvl_idx -= 1;
                 while (true) {
-                    const next_opt = self.nextAt(curr, lvl_idx);
+                    const next_opt = _.nextAt(curr, lvl_idx);
                     if (nxt := next_opt) {
                         if (compareKeys(nxt.key, key) == .lt) {
                             curr = nxt;
@@ -139,7 +139,7 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
                 update[lvl_idx] = curr;
             }
 
-            const candidate_opt = self.nextAt(curr, 0);
+            const candidate_opt = _.nextAt(curr, 0);
             if (cand := candidate_opt) {
                 if (compareKeys(cand.key, key) == .eq) {
                     const old_val = cand.value;
@@ -148,17 +148,17 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
                 }
             }
 
-            const new_lvl = self.randomLevel();
-            if (new_lvl > self.level) {
-                let i = self.level;
+            const new_lvl = _.randomLevel();
+            if (new_lvl > _.level) {
+                let i = _.level;
                 while (i < new_lvl) {
                     update[i] = null;
                     i += 1;
                 }
-                self.level = new_lvl;
+                _.level = new_lvl;
             }
 
-            let new_node = try self.alloc.create(Node);
+            let new_node = try _.alloc.create(Node);
             new_node.* = Node{
                 .key = key,
                 .value = val,
@@ -172,23 +172,23 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
                     new_node.forward[j] = prev_node.forward[j];
                     prev_node.forward[j] = new_node;
                 } else {
-                    new_node.forward[j] = self.head_forward[j];
-                    self.head_forward[j] = new_node;
+                    new_node.forward[j] = _.head_forward[j];
+                    _.head_forward[j] = new_node;
                 }
                 j += 1;
             }
 
-            self.size += 1;
+            _.size += 1;
             return null;
         }
 
-        pub fn upsert(*self, key: K, val: V) -> !V? {
-            return self.insert(key, val);
+        pub fn upsert(*_, key: K, val: V) -> !V? {
+            return _.insert(key, val);
         }
 
-        pub fn get(self, key: K) -> V? {
-            const curr = self.findPredecessor(key);
-            const candidate_opt = self.nextAt(curr, 0);
+        pub fn get(key: K) -> V? {
+            const curr = _.findPredecessor(key);
+            const candidate_opt = _.nextAt(curr, 0);
             if (cand := candidate_opt) {
                 if (compareKeys(cand.key, key) == .eq) {
                     return cand.value;
@@ -197,18 +197,18 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return null;
         }
 
-        pub fn contains(self, key: K) -> bool {
-            return self.get(key) != null;
+        pub fn contains(key: K) -> bool {
+            return _.get(key) != null;
         }
 
-        pub fn remove(*self, key: K) -> V? {
+        pub fn remove(*_, key: K) -> V? {
             let update: [MAX_LEVEL](*Node)? = emptyForward();
             let curr: (*Node)? = null;
-            let lvl_idx = self.level;
+            let lvl_idx = _.level;
             while (lvl_idx > 0) {
                 lvl_idx -= 1;
                 while (true) {
-                    const next_opt = self.nextAt(curr, lvl_idx);
+                    const next_opt = _.nextAt(curr, lvl_idx);
                     if (nxt := next_opt) {
                         if (compareKeys(nxt.key, key) == .lt) {
                             curr = nxt;
@@ -220,39 +220,39 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
                 update[lvl_idx] = curr;
             }
 
-            const candidate_opt = self.nextAt(curr, 0);
+            const candidate_opt = _.nextAt(curr, 0);
             if (cand := candidate_opt) {
                 if (compareKeys(cand.key, key) == .eq) {
                     const removed_val = cand.value;
                     let i: usize = 0;
-                    while (i < self.level) {
+                    while (i < _.level) {
                         if (prev_node := update[i]) {
                             if (prev_node.forward[i] == cand) {
                                 prev_node.forward[i] = cand.forward[i];
                             }
                         } else {
-                            if (self.head_forward[i] == cand) {
-                                self.head_forward[i] = cand.forward[i];
+                            if (_.head_forward[i] == cand) {
+                                _.head_forward[i] = cand.forward[i];
                             }
                         }
                         i += 1;
                     }
 
-                    while (self.level > 1 and self.head_forward[self.level - 1] == null) {
-                        self.level -= 1;
+                    while (_.level > 1 and _.head_forward[_.level - 1] == null) {
+                        _.level -= 1;
                     }
 
-                    self.alloc.destroy(cand);
-                    self.size -= 1;
+                    _.alloc.destroy(cand);
+                    _.size -= 1;
                     return removed_val;
                 }
             }
             return null;
         }
 
-        pub fn lowerBound(self, key: K) -> Entry? {
-            const curr = self.findPredecessor(key);
-            const candidate_opt = self.nextAt(curr, 0);
+        pub fn lowerBound(key: K) -> Entry? {
+            const curr = _.findPredecessor(key);
+            const candidate_opt = _.nextAt(curr, 0);
             if (cand := candidate_opt) {
                 return Entry{
                     .key = cand.key,
@@ -262,13 +262,13 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return null;
         }
 
-        pub fn ceiling(self, key: K) -> Entry? {
-            return self.lowerBound(key);
+        pub fn ceiling(key: K) -> Entry? {
+            return _.lowerBound(key);
         }
 
-        pub fn floor(self, key: K) -> Entry? {
-            const curr = self.findPredecessor(key);
-            const candidate_opt = self.nextAt(curr, 0);
+        pub fn floor(key: K) -> Entry? {
+            const curr = _.findPredecessor(key);
+            const candidate_opt = _.nextAt(curr, 0);
             if (cand := candidate_opt) {
                 if (compareKeys(cand.key, key) == .eq) {
                     return Entry{
@@ -286,7 +286,7 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return null;
         }
 
-        pub fn rangeQuery(self, alloc: std.mem.Allocator, start_key: K, end_key: K) -> ![]Entry {
+        pub fn rangeQuery(alloc: std.mem.Allocator, start_key: K, end_key: K) -> ![]Entry {
             let out = std.ArrayList(Entry).empty;
             errdefer out.deinit(alloc);
 
@@ -294,8 +294,8 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
                 return try out.toOwnedSlice(alloc);
             }
 
-            const curr = self.findPredecessor(start_key);
-            let iter_opt = self.nextAt(curr, 0);
+            const curr = _.findPredecessor(start_key);
+            let iter_opt = _.nextAt(curr, 0);
             while (node_ptr := iter_opt) {
                 if (compareKeys(node_ptr.key, end_key) == .gt) {
                     break;
@@ -309,11 +309,11 @@ pub fn SkipList(comptime K: type, comptime V: type) -> type {
             return try out.toOwnedSlice(alloc);
         }
 
-        pub fn items(self, alloc: std.mem.Allocator) -> ![]Entry {
+        pub fn items(alloc: std.mem.Allocator) -> ![]Entry {
             let out = std.ArrayList(Entry).empty;
             errdefer out.deinit(alloc);
 
-            let iter_opt = self.head_forward[0];
+            let iter_opt = _.head_forward[0];
             while (node_ptr := iter_opt) {
                 try out.append(alloc, Entry{
                     .key = node_ptr.key,

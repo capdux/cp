@@ -13,27 +13,27 @@ pub const RoaringError = error{
 pub const ArrayContainer = struct {
     data: std.ArrayList(u16),
 
-    pub fn init() ArrayContainer {
+    pub static fn init(): ArrayContainer {
         return .{ .data = std.ArrayList(u16).empty };
     }
 
-    pub fn deinit(&self, alloc: std.mem.Allocator) {
-        self.data.deinit(alloc);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        _.data.deinit(alloc);
     }
 
-    pub fn clone(self, alloc: std.mem.Allocator) !ArrayContainer {
+    pub fn clone(alloc: std.mem.Allocator): !ArrayContainer {
         let out = ArrayContainer.init();
         errdefer out.deinit(alloc);
-        try out.data.appendSlice(alloc, self.data.items);
+        try out.data.appendSlice(alloc, _.data.items);
         return out;
     }
 
-    fn lowerBound(self, val: u16) usize {
+    fn lowerBound(val: u16): usize {
         let lo: usize = 0;
-        let hi: usize = self.data.items.len;
+        let hi: usize = _.data.items.len;
         while (lo < hi) {
             const mid: usize = lo + (hi - lo) / 2;
-            if (self.data.items[mid] < val) {
+            if (_.data.items[mid] < val) {
                 lo = mid + 1;
             } else {
                 hi = mid;
@@ -42,12 +42,12 @@ pub const ArrayContainer = struct {
         return lo;
     }
 
-    fn upperBound(self, val: u16) usize {
+    fn upperBound(val: u16): usize {
         let lo: usize = 0;
-        let hi: usize = self.data.items.len;
+        let hi: usize = _.data.items.len;
         while (lo < hi) {
             const mid: usize = lo + (hi - lo) / 2;
-            if (self.data.items[mid] <= val) {
+            if (_.data.items[mid] <= val) {
                 lo = mid + 1;
             } else {
                 hi = mid;
@@ -56,51 +56,51 @@ pub const ArrayContainer = struct {
         return lo;
     }
 
-    pub fn contains(self, val: u16) bool {
-        const idx = self.lowerBound(val);
-        return idx < self.data.items.len and self.data.items[idx] == val;
+    pub fn contains(val: u16): bool {
+        const idx = _.lowerBound(val);
+        return idx < _.data.items.len and _.data.items[idx] == val;
     }
 
-    pub fn add(&self, alloc: std.mem.Allocator, val: u16) !bool {
-        const idx = self.lowerBound(val);
-        if (idx < self.data.items.len and self.data.items[idx] == val) {
+    pub fn add(*_, alloc: std.mem.Allocator, val: u16): !bool {
+        const idx = _.lowerBound(val);
+        if (idx < _.data.items.len and _.data.items[idx] == val) {
             return false;
         }
-        try self.data.insert(alloc, idx, val);
+        try _.data.insert(alloc, idx, val);
         return true;
     }
 
-    pub fn remove(&self, val: u16) bool {
-        const idx = self.lowerBound(val);
-        if (idx >= self.data.items.len or self.data.items[idx] != val) {
+    pub fn remove(*_, val: u16): bool {
+        const idx = _.lowerBound(val);
+        if (idx >= _.data.items.len or _.data.items[idx] != val) {
             return false;
         }
-        * = self.data.orderedRemove(idx);
+        * = _.data.orderedRemove(idx);
         return true;
     }
 
-    pub fn cardinality(self) u32 {
-        return @intCast(self.data.items.len);
+    pub fn cardinality(): u32 {
+        return @intCast(_.data.items.len);
     }
 
-    pub fn rank(self, val: u16) u32 {
-        return @intCast(self.upperBound(val));
+    pub fn rank(val: u16): u32 {
+        return @intCast(_.upperBound(val));
     }
 
-    pub fn minimum(self) u16? {
-        if (self.data.items.len == 0) return null;
-        return self.data.items[0];
+    pub fn minimum(): u16? {
+        if (_.data.items.len == 0) return null;
+        return _.data.items[0];
     }
 
-    pub fn maximum(self) u16? {
-        if (self.data.items.len == 0) return null;
-        return self.data.items[self.data.items.len - 1];
+    pub fn maximum(): u16? {
+        if (_.data.items.len == 0) return null;
+        return _.data.items[_.data.items.len - 1];
     }
 
-    pub fn toBitset(self, alloc: std.mem.Allocator) !BitsetContainer {
+    pub fn toBitset(alloc: std.mem.Allocator): !BitsetContainer {
         let bs = try BitsetContainer.init(alloc);
         errdefer bs.deinit(alloc);
-        for (v of self.data.items) {
+        for (v of _.data.items) {
             * = bs.add(v);
         }
         return bs;
@@ -111,7 +111,7 @@ pub const BitsetContainer = struct {
     words: *[BITSET_WORDS]u64,
     card: u32,
 
-    pub fn init(alloc: std.mem.Allocator) !BitsetContainer {
+    pub static fn init(alloc: std.mem.Allocator): !BitsetContainer {
         const words = try alloc.create([BITSET_WORDS]u64);
         let i: usize = 0;
         while (i < BITSET_WORDS) {
@@ -121,85 +121,85 @@ pub const BitsetContainer = struct {
         return .{ .words = words, .card = 0 };
     }
 
-    pub fn deinit(&self, alloc: std.mem.Allocator) {
-        alloc.destroy(self.words);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        alloc.destroy(_.words);
     }
 
-    pub fn clone(self, alloc: std.mem.Allocator) !BitsetContainer {
+    pub fn clone(alloc: std.mem.Allocator): !BitsetContainer {
         const words = try alloc.create([BITSET_WORDS]u64);
         let i: usize = 0;
         while (i < BITSET_WORDS) {
-            words[i] = self.words[i];
+            words[i] = _.words[i];
             i += 1;
         }
-        return .{ .words = words, .card = self.card };
+        return .{ .words = words, .card = _.card };
     }
 
-    pub fn recomputeCardinality(&self) {
+    pub fn recomputeCardinality(*_) {
         let total: u32 = 0;
         let i: usize = 0;
         while (i < BITSET_WORDS) {
-            const pc: u32 = @intCast(@popCount(self.words[i]));
+            const pc: u32 = @intCast(@popCount(_.words[i]));
             total += pc;
             i += 1;
         }
-        self.card = total;
+        _.card = total;
     }
 
-    pub fn contains(self, val: u16) bool {
+    pub fn contains(val: u16): bool {
         const word_idx: usize = @intCast(val >> 6);
         const bit_idx: u6 = @intCast(val & 63);
         const mask: u64 = @as(u64, 1) << bit_idx;
-        return (self.words[word_idx] & mask) != 0;
+        return (_.words[word_idx] & mask) != 0;
     }
 
-    pub fn add(&self, val: u16) bool {
+    pub fn add(*_, val: u16): bool {
         const word_idx: usize = @intCast(val >> 6);
         const bit_idx: u6 = @intCast(val & 63);
         const mask: u64 = @as(u64, 1) << bit_idx;
-        if ((self.words[word_idx] & mask) != 0) {
+        if ((_.words[word_idx] & mask) != 0) {
             return false;
         }
-        self.words[word_idx] |= mask;
-        self.card += 1;
+        _.words[word_idx] |= mask;
+        _.card += 1;
         return true;
     }
 
-    pub fn remove(&self, val: u16) bool {
+    pub fn remove(*_, val: u16): bool {
         const word_idx: usize = @intCast(val >> 6);
         const bit_idx: u6 = @intCast(val & 63);
         const mask: u64 = @as(u64, 1) << bit_idx;
-        if ((self.words[word_idx] & mask) == 0) {
+        if ((_.words[word_idx] & mask) == 0) {
             return false;
         }
-        self.words[word_idx] &= ~mask;
-        self.card -= 1;
+        _.words[word_idx] &= ~mask;
+        _.card -= 1;
         return true;
     }
 
-    pub fn cardinality(self) u32 {
-        return self.card;
+    pub fn cardinality(): u32 {
+        return _.card;
     }
 
-    pub fn rank(self, val: u16) u32 {
+    pub fn rank(val: u16): u32 {
         const word_idx: usize = @intCast(val >> 6);
         const bit_idx: u6 = @intCast(val & 63);
         let total: u32 = 0;
         let i: usize = 0;
         while (i < word_idx) {
-            const pc: u32 = @intCast(@popCount(self.words[i]));
+            const pc: u32 = @intCast(@popCount(_.words[i]));
             total += pc;
             i += 1;
         }
         const mask: u64 = if (bit_idx == 63) ~@as(u64, 0) else (@as(u64, 2) << bit_idx) - 1;
-        const last_pc: u32 = @intCast(@popCount(self.words[word_idx] & mask));
+        const last_pc: u32 = @intCast(@popCount(_.words[word_idx] & mask));
         return total + last_pc;
     }
 
-    pub fn minimum(self) u16? {
+    pub fn minimum(): u16? {
         let i: usize = 0;
         while (i < BITSET_WORDS) {
-            const w = self.words[i];
+            const w = _.words[i];
             if (w != 0) {
                 const tz: usize = @intCast(@ctz(w));
                 return @intCast(i * 64 + tz);
@@ -209,11 +209,11 @@ pub const BitsetContainer = struct {
         return null;
     }
 
-    pub fn maximum(self) u16? {
+    pub fn maximum(): u16? {
         let i: usize = BITSET_WORDS;
         while (i > 0) {
             i -= 1;
-            const w = self.words[i];
+            const w = _.words[i];
             if (w != 0) {
                 const lz: usize = @intCast(@clz(w));
                 const bit: usize = 63 - lz;
@@ -223,13 +223,13 @@ pub const BitsetContainer = struct {
         return null;
     }
 
-    pub fn toArray(self, alloc: std.mem.Allocator) !ArrayContainer {
+    pub fn toArray(alloc: std.mem.Allocator): !ArrayContainer {
         let arr = ArrayContainer.init();
         errdefer arr.deinit(alloc);
-        try arr.data.ensureTotalCapacity(alloc, self.card);
+        try arr.data.ensureTotalCapacity(alloc, _.card);
         let i: usize = 0;
         while (i < BITSET_WORDS) {
-            let w = self.words[i];
+            let w = _.words[i];
             while (w != 0) {
                 const tz: usize = @intCast(@ctz(w));
                 const v: u16 = @intCast(i * 64 + tz);
@@ -246,50 +246,50 @@ pub const Container = union(enum) {
     array: ArrayContainer,
     bitset: BitsetContainer,
 
-    pub fn deinit(&self, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        switch (_.*) {
             .array => |*arr| arr.deinit(alloc),
             .bitset => |*bs| bs.deinit(alloc),
         }
     }
 
-    pub fn clone(self, alloc: std.mem.Allocator) !Container {
-        switch (self) {
+    pub fn clone(alloc: std.mem.Allocator): !Container {
+        switch (_) {
             .array => |arr| return .{ .array = try arr.clone(alloc) },
             .bitset => |bs| return .{ .bitset = try bs.clone(alloc) },
         }
     }
 
-    pub fn cardinality(self) u32 {
-        switch (self) {
+    pub fn cardinality(): u32 {
+        switch (_) {
             .array => |arr| return arr.cardinality(),
             .bitset => |bs| return bs.cardinality(),
         }
     }
 
-    pub fn contains(self, val: u16) bool {
-        switch (self) {
+    pub fn contains(val: u16): bool {
+        switch (_) {
             .array => |arr| return arr.contains(val),
             .bitset => |bs| return bs.contains(val),
         }
     }
 
-    pub fn rank(self, val: u16) u32 {
-        switch (self) {
+    pub fn rank(val: u16): u32 {
+        switch (_) {
             .array => |arr| return arr.rank(val),
             .bitset => |bs| return bs.rank(val),
         }
     }
 
-    pub fn minimum(self) u16? {
-        switch (self) {
+    pub fn minimum(): u16? {
+        switch (_) {
             .array => |arr| return arr.minimum(),
             .bitset => |bs| return bs.minimum(),
         }
     }
 
-    pub fn maximum(self) u16? {
-        switch (self) {
+    pub fn maximum(): u16? {
+        switch (_) {
             .array => |arr| return arr.maximum(),
             .bitset => |bs| return bs.maximum(),
         }
@@ -301,7 +301,7 @@ pub const Bucket = struct {
     container: Container,
 };
 
-fn unionContainers(alloc: std.mem.Allocator, a: Container, b: Container) !Container {
+fn unionContainers(alloc: std.mem.Allocator, a: Container, b: Container): !Container {
     switch (a) {
         .array => |arr_a| {
             switch (b) {
@@ -378,7 +378,7 @@ fn unionContainers(alloc: std.mem.Allocator, a: Container, b: Container) !Contai
     }
 }
 
-fn intersectContainers(alloc: std.mem.Allocator, a: Container, b: Container) !Container {
+fn intersectContainers(alloc: std.mem.Allocator, a: Container, b: Container): !Container {
     switch (a) {
         .array => |arr_a| {
             switch (b) {
@@ -453,7 +453,7 @@ fn intersectContainers(alloc: std.mem.Allocator, a: Container, b: Container) !Co
     }
 }
 
-fn differenceContainers(alloc: std.mem.Allocator, a: Container, b: Container) !Container {
+fn differenceContainers(alloc: std.mem.Allocator, a: Container, b: Container): !Container {
     switch (a) {
         .array => |arr_a| {
             switch (b) {
@@ -543,26 +543,26 @@ pub const RoaringBitmap = struct {
     alloc: std.mem.Allocator,
     buckets: std.ArrayList(Bucket),
 
-    pub fn init(alloc: std.mem.Allocator) RoaringBitmap {
+    pub static fn init(alloc: std.mem.Allocator): RoaringBitmap {
         return .{
             .alloc = alloc,
             .buckets = std.ArrayList(Bucket).empty,
         };
     }
 
-    pub fn deinit(&self) {
-        for (&b of self.buckets.items) {
-            b.container.deinit(self.alloc);
+    pub fn deinit(*_) {
+        for (*b of _.buckets.items) {
+            b.container.deinit(_.alloc);
         }
-        self.buckets.deinit(self.alloc);
+        _.buckets.deinit(_.alloc);
     }
 
-    fn findBucket(self, key: u16) usize? {
+    fn findBucket(key: u16): usize? {
         let lo: usize = 0;
-        let hi: usize = self.buckets.items.len;
+        let hi: usize = _.buckets.items.len;
         while (lo < hi) {
             const mid: usize = lo + (hi - lo) / 2;
-            const k = self.buckets.items[mid].key;
+            const k = _.buckets.items[mid].key;
             if (k == key) {
                 return mid;
             } else if (k < key) {
@@ -574,12 +574,12 @@ pub const RoaringBitmap = struct {
         return null;
     }
 
-    fn lowerBoundBucket(self, key: u16) usize {
+    fn lowerBoundBucket(key: u16): usize {
         let lo: usize = 0;
-        let hi: usize = self.buckets.items.len;
+        let hi: usize = _.buckets.items.len;
         while (lo < hi) {
             const mid: usize = lo + (hi - lo) / 2;
-            if (self.buckets.items[mid].key < key) {
+            if (_.buckets.items[mid].key < key) {
                 lo = mid + 1;
             } else {
                 hi = mid;
@@ -588,18 +588,18 @@ pub const RoaringBitmap = struct {
         return lo;
     }
 
-    pub fn add(&self, val: u32) !bool {
+    pub fn add(*_, val: u32): !bool {
         const key: u16 = @intCast(val >> 16);
         const low: u16 = @intCast(val & 0xFFFF);
-        const idx = self.lowerBoundBucket(key);
-        if (idx < self.buckets.items.len and self.buckets.items[idx].key == key) {
-            switch (self.buckets.items[idx].container) {
+        const idx = _.lowerBoundBucket(key);
+        if (idx < _.buckets.items.len and _.buckets.items[idx].key == key) {
+            switch (_.buckets.items[idx].container) {
                 .array => |*arr| {
-                    const inserted = try arr.add(self.alloc, low);
+                    const inserted = try arr.add(_.alloc, low);
                     if (inserted and arr.data.items.len > ARRAY_MAX_SIZE) {
-                        const bs = try arr.toBitset(self.alloc);
-                        arr.deinit(self.alloc);
-                        self.buckets.items[idx].container = .{ .bitset = bs };
+                        const bs = try arr.toBitset(_.alloc);
+                        arr.deinit(_.alloc);
+                        _.buckets.items[idx].container = .{ .bitset = bs };
                     }
                     return inserted;
                 },
@@ -609,22 +609,22 @@ pub const RoaringBitmap = struct {
             }
         }
         let arr = ArrayContainer.init();
-        errdefer arr.deinit(self.alloc);
-        * = try arr.add(self.alloc, low);
-        try self.buckets.insert(self.alloc, idx, .{
+        errdefer arr.deinit(_.alloc);
+        * = try arr.add(_.alloc, low);
+        try _.buckets.insert(_.alloc, idx, .{
             .key = key,
             .container = .{ .array = arr },
         });
         return true;
     }
 
-    pub fn remove(&self, val: u32) !bool {
+    pub fn remove(*_, val: u32): !bool {
         const key: u16 = @intCast(val >> 16);
         const low: u16 = @intCast(val & 0xFFFF);
-        if (idx := self.findBucket(key)) {
+        if (idx := _.findBucket(key)) {
             let should_remove_bucket = false;
             let removed = false;
-            switch (self.buckets.items[idx].container) {
+            switch (_.buckets.items[idx].container) {
                 .array => |*arr| {
                     removed = arr.remove(low);
                     if (removed and arr.data.items.len == 0) {
@@ -637,44 +637,44 @@ pub const RoaringBitmap = struct {
                         if (bs.card == 0) {
                             should_remove_bucket = true;
                         } else if (bs.card <= ARRAY_MAX_SIZE) {
-                            const arr = try bs.toArray(self.alloc);
-                            bs.deinit(self.alloc);
-                            self.buckets.items[idx].container = .{ .array = arr };
+                            const arr = try bs.toArray(_.alloc);
+                            bs.deinit(_.alloc);
+                            _.buckets.items[idx].container = .{ .array = arr };
                         }
                     }
                 },
             }
             if (should_remove_bucket) {
-                let removed_bucket = self.buckets.orderedRemove(idx);
-                removed_bucket.container.deinit(self.alloc);
+                let removed_bucket = _.buckets.orderedRemove(idx);
+                removed_bucket.container.deinit(_.alloc);
             }
             return removed;
         }
         return false;
     }
 
-    pub fn contains(self, val: u32) bool {
+    pub fn contains(val: u32): bool {
         const key: u16 = @intCast(val >> 16);
         const low: u16 = @intCast(val & 0xFFFF);
-        if (idx := self.findBucket(key)) {
-            return self.buckets.items[idx].container.contains(low);
+        if (idx := _.findBucket(key)) {
+            return _.buckets.items[idx].container.contains(low);
         }
         return false;
     }
 
-    pub fn cardinality(self) u64 {
+    pub fn cardinality(): u64 {
         let total: u64 = 0;
-        for (b of self.buckets.items) {
+        for (b of _.buckets.items) {
             total += @as(u64, b.container.cardinality());
         }
         return total;
     }
 
-    pub fn rank(self, val: u32) u64 {
+    pub fn rank(val: u32): u64 {
         const key: u16 = @intCast(val >> 16);
         const low: u16 = @intCast(val & 0xFFFF);
         let total: u64 = 0;
-        for (b of self.buckets.items) {
+        for (b of _.buckets.items) {
             if (b.key < key) {
                 total += @as(u64, b.container.cardinality());
             } else if (b.key == key) {
@@ -687,30 +687,30 @@ pub const RoaringBitmap = struct {
         return total;
     }
 
-    pub fn minimum(self) u32? {
-        if (self.buckets.items.len == 0) return null;
-        const b = self.buckets.items[0];
+    pub fn minimum(): u32? {
+        if (_.buckets.items.len == 0) return null;
+        const b = _.buckets.items[0];
         if (low := b.container.minimum()) {
             return (@as(u32, b.key) << 16) | @as(u32, low);
         }
         return null;
     }
 
-    pub fn maximum(self) u32? {
-        if (self.buckets.items.len == 0) return null;
-        const b = self.buckets.items[self.buckets.items.len - 1];
+    pub fn maximum(): u32? {
+        if (_.buckets.items.len == 0) return null;
+        const b = _.buckets.items[_.buckets.items.len - 1];
         if (low := b.container.maximum()) {
             return (@as(u32, b.key) << 16) | @as(u32, low);
         }
         return null;
     }
 
-    pub fn toArray(self, alloc: std.mem.Allocator) ![]u32 {
+    pub fn toArray(alloc: std.mem.Allocator): ![]u32 {
         let out = std.ArrayList(u32).empty;
         errdefer out.deinit(alloc);
-        const total = self.cardinality();
+        const total = _.cardinality();
         try out.ensureTotalCapacity(alloc, @intCast(total));
-        for (b of self.buckets.items) {
+        for (b of _.buckets.items) {
             const hi_shift: u32 = @as(u32, b.key) << 16;
             switch (b.container) {
                 .array => |arr| {
@@ -736,33 +736,33 @@ pub const RoaringBitmap = struct {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn runOptimize(&self) !bool {
+    pub fn runOptimize(*_): !bool {
         let changed = false;
         let i: usize = 0;
-        while (i < self.buckets.items.len) {
-            const card = self.buckets.items[i].container.cardinality();
+        while (i < _.buckets.items.len) {
+            const card = _.buckets.items[i].container.cardinality();
             if (card == 0) {
-                let removed = self.buckets.orderedRemove(i);
-                removed.container.deinit(self.alloc);
+                let removed = _.buckets.orderedRemove(i);
+                removed.container.deinit(_.alloc);
                 changed = true;
                 continue;
             }
-            switch (self.buckets.items[i].container) {
+            switch (_.buckets.items[i].container) {
                 .array => |*arr| {
                     if (arr.data.items.len > ARRAY_MAX_SIZE) {
-                        const bs = try arr.toBitset(self.alloc);
-                        arr.deinit(self.alloc);
-                        self.buckets.items[i].container = .{ .bitset = bs };
+                        const bs = try arr.toBitset(_.alloc);
+                        arr.deinit(_.alloc);
+                        _.buckets.items[i].container = .{ .bitset = bs };
                         changed = true;
                     } else {
-                        arr.data.shrinkAndFree(self.alloc, arr.data.items.len);
+                        arr.data.shrinkAndFree(_.alloc, arr.data.items.len);
                     }
                 },
                 .bitset => |*bs| {
                     if (bs.card <= ARRAY_MAX_SIZE) {
-                        const arr = try bs.toArray(self.alloc);
-                        bs.deinit(self.alloc);
-                        self.buckets.items[i].container = .{ .array = arr };
+                        const arr = try bs.toArray(_.alloc);
+                        bs.deinit(_.alloc);
+                        _.buckets.items[i].container = .{ .array = arr };
                         changed = true;
                     }
                 },
@@ -772,7 +772,7 @@ pub const RoaringBitmap = struct {
         return changed;
     }
 
-    pub fn unionWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap) !RoaringBitmap {
+    pub static fn unionWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap): !RoaringBitmap {
         let res = RoaringBitmap.init(alloc);
         errdefer res.deinit();
         let ia: usize = 0;
@@ -810,7 +810,7 @@ pub const RoaringBitmap = struct {
         return res;
     }
 
-    pub fn intersectWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap) !RoaringBitmap {
+    pub static fn intersectWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap): !RoaringBitmap {
         let res = RoaringBitmap.init(alloc);
         errdefer res.deinit();
         let ia: usize = 0;
@@ -838,7 +838,7 @@ pub const RoaringBitmap = struct {
         return res;
     }
 
-    pub fn differenceWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap) !RoaringBitmap {
+    pub static fn differenceWith(alloc: std.mem.Allocator, a: RoaringBitmap, b: RoaringBitmap): !RoaringBitmap {
         let res = RoaringBitmap.init(alloc);
         errdefer res.deinit();
         let ia: usize = 0;
@@ -873,15 +873,15 @@ pub const RoaringBitmap = struct {
         return res;
     }
 
-    pub fn toOwnedSlice(self, alloc: std.mem.Allocator) ![]u8 {
+    pub fn toOwnedSlice(alloc: std.mem.Allocator): ![]u8 {
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
         try out.appendSlice(alloc, &SERIAL_MAGIC);
         let count_buf: [4]u8 = undefined;
-        std.mem.writeInt(u32, &count_buf, @intCast(self.buckets.items.len), .little);
+        std.mem.writeInt(u32, &count_buf, @intCast(_.buckets.items.len), .little);
         try out.appendSlice(alloc, &count_buf);
 
-        for (b of self.buckets.items) {
+        for (b of _.buckets.items) {
             let key_buf: [2]u8 = undefined;
             std.mem.writeInt(u16, &key_buf, b.key, .little);
             try out.appendSlice(alloc, &key_buf);
@@ -915,7 +915,7 @@ pub const RoaringBitmap = struct {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn fromSlice(alloc: std.mem.Allocator, data: []const u8) !RoaringBitmap {
+    pub static fn fromSlice(alloc: std.mem.Allocator, data: []const u8): !RoaringBitmap {
         if (data.len < 8) return RoaringError.InvalidFormat;
         if (!std.mem.eql(u8, data[0..4], &SERIAL_MAGIC)) return RoaringError.InvalidFormat;
         const num_buckets = std.mem.readInt(u32, data[4..8], .little);

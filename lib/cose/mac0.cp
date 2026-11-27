@@ -12,11 +12,11 @@ pub const CoseMac0 = struct {
     payload: []const u8,
     tag: []const u8,
 
-    pub fn deinit(self: *CoseMac0, alloc: std.mem.Allocator) void {
-        alloc.free(self.protected_bytes);
-        self.unprotected.deinit(alloc);
-        alloc.free(self.payload);
-        alloc.free(self.tag);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        alloc.free(_.protected_bytes);
+        _.unprotected.deinit(alloc);
+        alloc.free(_.payload);
+        alloc.free(_.tag);
     }
 };
 

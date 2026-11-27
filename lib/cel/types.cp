@@ -31,8 +31,8 @@ pub const CelValue = union(enum) {
     list_val: []CelValue,
     map_val: []CelMapEntry,
 
-    pub fn typeName(self: *const CelValue): []const u8 {
-        return switch (self.*) {
+    pub fn typeName(): []const u8 {
+        return switch (_) {
             .null_val => "null_type",
             .bool_val => "bool",
             .int_val => "int",
@@ -44,8 +44,8 @@ pub const CelValue = union(enum) {
         };
     }
 
-    pub fn deinit(*self: CelValue, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        switch (_.*) {
             .null_val, .bool_val, .int_val, .uint_val, .double_val => {},
             .string_val => |s| {
                 alloc.free(s);
@@ -68,11 +68,11 @@ pub const CelValue = union(enum) {
                 alloc.free(entries);
             },
         }
-        self.* = .null_val;
+        _.* = .null_val;
     }
 
-    pub fn clone(self: *const CelValue, alloc: std.mem.Allocator): CelError!CelValue {
-        return switch (self.*) {
+    pub fn clone(alloc: std.mem.Allocator): CelError!CelValue {
+        return switch (_) {
             .null_val => .null_val,
             .bool_val => |b| CelValue{ .bool_val = b },
             .int_val => |i| CelValue{ .int_val = i },
@@ -83,7 +83,7 @@ pub const CelValue = union(enum) {
                 break :blk CelValue{ .string_val = dup };
             },
             .list_val => |items| blk: {
-                var out = std.ArrayList(CelValue).empty;
+                let out = std.ArrayList(CelValue).empty;
                 errdefer {
                     for (*it of out.items) {
                         it.deinit(alloc);
@@ -98,7 +98,7 @@ pub const CelValue = union(enum) {
                 break :blk CelValue{ .list_val = slice };
             },
             .map_val => |entries| blk: {
-                var out = std.ArrayList(CelMapEntry).empty;
+                let out = std.ArrayList(CelMapEntry).empty;
                 errdefer {
                     for (*e of out.items) {
                         alloc.free(e.key);
@@ -118,8 +118,8 @@ pub const CelValue = union(enum) {
         };
     }
 
-    pub fn equals(self: *const CelValue, other: *const CelValue): bool {
-        switch (self.*) {
+    pub fn equals(other: *const CelValue): bool {
+        switch (_) {
             .null_val => return other.* == .null_val,
             .bool_val => |a| {
                 return switch (other.*) {
@@ -163,7 +163,7 @@ pub const CelValue = union(enum) {
                         if (a.len != b.len) {
                             break :blk false;
                         }
-                        var i: usize = 0;
+                        let i: usize = 0;
                         while (i < a.len) {
                             if (!a[i].equals(&b[i])) {
                                 break :blk false;
@@ -182,7 +182,7 @@ pub const CelValue = union(enum) {
                             break :blk false;
                         }
                         for (ea of a) {
-                            var found = false;
+                            let found = false;
                             for (eb of b) {
                                 if (std.mem.eql(u8, ea.key, eb.key)) {
                                     if (!ea.value.equals(&eb.value)) {
@@ -204,8 +204,8 @@ pub const CelValue = union(enum) {
         }
     }
 
-    pub fn mapGet(self: *const CelValue, key: []const u8): (*const CelValue)? {
-        switch (self.*) {
+    pub fn mapGet(key: []const u8): (*const CelValue)? {
+        switch (_) {
             .map_val => |entries| {
                 let i: usize = 0;
                 while (i < entries.len) {
@@ -249,13 +249,13 @@ pub fn celNull(): CelValue {
 pub struct CelEnv {
     bindings: std.ArrayList(CelMapEntry),
 
-    pub fn init(): CelEnv {
+    pub static fn init(): CelEnv {
         return CelEnv{
             .bindings = std.ArrayList(CelMapEntry).empty,
         };
     }
 
-    pub fn deinit(*_: *CelEnv, alloc: std.mem.Allocator)  {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
         for (*entry of _.bindings.items) {
             alloc.free(entry.key);
             entry.value.deinit(alloc);
@@ -263,7 +263,7 @@ pub struct CelEnv {
         _.bindings.deinit(alloc);
     }
 
-    pub fn bind(*_: *CelEnv, alloc: std.mem.Allocator, name: []const u8, val: CelValue): CelError!void {
+    pub fn bind(*_, alloc: std.mem.Allocator, name: []const u8, val: CelValue): CelError!void {
         const cloned = try val.clone(alloc);
         errdefer {
             let tmp = cloned;
@@ -272,7 +272,7 @@ pub struct CelEnv {
         try _.bindOwned(alloc, name, cloned);
     }
 
-    pub fn bindOwned(*_: *CelEnv, alloc: std.mem.Allocator, name: []const u8, val: CelValue): CelError!void {
+    pub fn bindOwned(*_, alloc: std.mem.Allocator, name: []const u8, val: CelValue): CelError!void {
         for (*entry of _.bindings.items) {
             if (std.mem.eql(u8, entry.key, name)) {
                 entry.value.deinit(alloc);
@@ -288,11 +288,12 @@ pub struct CelEnv {
         }) catch return error.OutOfMemory;
     }
 
-    pub fn get(_: *const CelEnv, name: []const u8): (*const CelValue)? {
+    pub fn get(name: []const u8): (*const CelValue)? {
+        const items = _.bindings.items;
         let i: usize = 0;
-        while (i < _.bindings.items.len) {
-            if (std.mem.eql(u8, _.bindings.items[i].key, name)) {
-                return &_.bindings.items[i].value;
+        while (i < items.len) {
+            if (std.mem.eql(u8, items[i].key, name)) {
+                return &items[i].value;
             }
             i += 1;
         }

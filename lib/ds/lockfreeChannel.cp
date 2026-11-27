@@ -26,7 +26,7 @@ pub fn BoundedChannel(comptime T: type): type {
         closed: bool,
         mutex: std.atomic.Mutex,
 
-        pub fn init(alloc: std.mem.Allocator, cap: usize): ChannelError!@This() {
+        pub static fn init(alloc: std.mem.Allocator, cap: usize): ChannelError!@This() {
             if (cap == 0) {
                 return Err(ChannelError.InvalidCapacity);
             }
@@ -43,98 +43,98 @@ pub fn BoundedChannel(comptime T: type): type {
             };
         }
 
-        pub fn deinit(self: *@This()) {
-            self.alloc.free(self.buffer);
+        pub fn deinit(*_) {
+            _.alloc.free(_.buffer);
         }
 
-        pub fn send(self: *@This(), item: T): ChannelError!void {
+        pub fn send(*_, item: T): ChannelError!void {
             while (true) {
-                lockMutex(&self.mutex);
-                if (self.closed) {
-                    self.mutex.unlock();
+                lockMutex(&_.mutex);
+                if (_.closed) {
+                    _.mutex.unlock();
                     return Err(ChannelError.ChannelClosed);
                 }
-                if (self.count < self.cap) {
-                    self.buffer[self.tail] = item;
-                    self.tail = (self.tail + 1) % self.cap;
-                    self.count += 1;
-                    self.mutex.unlock();
+                if (_.count < _.cap) {
+                    _.buffer[_.tail] = item;
+                    _.tail = (_.tail + 1) % _.cap;
+                    _.count += 1;
+                    _.mutex.unlock();
                     return;
                 }
-                self.mutex.unlock();
+                _.mutex.unlock();
                 std.Thread.yield() catch {};
             }
         }
 
-        pub fn trySend(self: *@This(), item: T): ChannelError!void {
-            lockMutex(&self.mutex);
-            defer self.mutex.unlock();
+        pub fn trySend(*_, item: T): ChannelError!void {
+            lockMutex(&_.mutex);
+            defer _.mutex.unlock();
 
-            if (self.closed) {
+            if (_.closed) {
                 return Err(ChannelError.ChannelClosed);
             }
-            if (self.count == self.cap) {
+            if (_.count == _.cap) {
                 return Err(ChannelError.QueueFull);
             }
 
-            self.buffer[self.tail] = item;
-            self.tail = (self.tail + 1) % self.cap;
-            self.count += 1;
+            _.buffer[_.tail] = item;
+            _.tail = (_.tail + 1) % _.cap;
+            _.count += 1;
         }
 
-        pub fn recv(self: *@This()): T? {
+        pub fn recv(*_): T? {
             while (true) {
-                lockMutex(&self.mutex);
-                if (self.count > 0) {
-                    const item = self.buffer[self.head];
-                    self.head = (self.head + 1) % self.cap;
-                    self.count -= 1;
-                    self.mutex.unlock();
+                lockMutex(&_.mutex);
+                if (_.count > 0) {
+                    const item = _.buffer[_.head];
+                    _.head = (_.head + 1) % _.cap;
+                    _.count -= 1;
+                    _.mutex.unlock();
                     return item;
                 }
-                if (self.closed) {
-                    self.mutex.unlock();
+                if (_.closed) {
+                    _.mutex.unlock();
                     return null;
                 }
-                self.mutex.unlock();
+                _.mutex.unlock();
                 std.Thread.yield() catch {};
             }
         }
 
-        pub fn tryRecv(self: *@This()): T? {
-            lockMutex(&self.mutex);
-            defer self.mutex.unlock();
+        pub fn tryRecv(*_): T? {
+            lockMutex(&_.mutex);
+            defer _.mutex.unlock();
 
-            if (self.count == 0) {
+            if (_.count == 0) {
                 return null;
             }
 
-            const item = self.buffer[self.head];
-            self.head = (self.head + 1) % self.cap;
-            self.count -= 1;
+            const item = _.buffer[_.head];
+            _.head = (_.head + 1) % _.cap;
+            _.count -= 1;
             return item;
         }
 
-        pub fn close(self: *@This()) {
-            lockMutex(&self.mutex);
-            defer self.mutex.unlock();
-            self.closed = true;
+        pub fn close(*_) {
+            lockMutex(&_.mutex);
+            defer _.mutex.unlock();
+            _.closed = true;
         }
 
-        pub fn len(self: *@This()): usize {
-            lockMutex(&self.mutex);
-            defer self.mutex.unlock();
-            return self.count;
+        pub fn len(*_): usize {
+            lockMutex(&_.mutex);
+            defer _.mutex.unlock();
+            return _.count;
         }
 
-        pub fn isClosed(self: *@This()): bool {
-            lockMutex(&self.mutex);
-            defer self.mutex.unlock();
-            return self.closed;
+        pub fn isClosed(*_): bool {
+            lockMutex(&_.mutex);
+            defer _.mutex.unlock();
+            return _.closed;
         }
 
-        pub fn capacity(self: *const @This()): usize {
-            return self.cap;
+        pub fn capacity(): usize {
+            return _.cap;
         }
     };
 }

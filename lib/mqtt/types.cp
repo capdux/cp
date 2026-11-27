@@ -22,7 +22,7 @@ pub const MqttVersion = enum(u8) {
     v3_1_1 = 4,
     v5_0 = 5,
 
-    pub fn fromU8(val: u8) MqttError!MqttVersion {
+    pub static fn fromU8(val: u8): MqttError!MqttVersion {
         if (val == 4) {
             return MqttVersion.v3_1_1;
         }
@@ -38,7 +38,7 @@ pub const QoS = enum(u8) {
     at_least_once = 1,
     exactly_once = 2,
 
-    pub fn fromU8(val: u8) MqttError!QoS {
+    pub static fn fromU8(val: u8): MqttError!QoS {
         if (val == 0) {
             return QoS.at_most_once;
         }
@@ -69,7 +69,7 @@ pub const PacketType = enum(u8) {
     disconnect = 14,
     auth = 15,
 
-    pub fn fromU8(val: u8) MqttError!PacketType {
+    pub static fn fromU8(val: u8): MqttError!PacketType {
         return switch (val) {
             1 => PacketType.connect,
             2 => PacketType.connack,
@@ -166,8 +166,8 @@ pub const MqttPacket = union(enum) {
     pingresp: void,
     disconnect: DisconnectPacket,
 
-    pub fn deinit(self: MqttPacket, alloc: std.mem.Allocator) void {
-        switch (self) {
+    pub fn deinit(alloc: std.mem.Allocator) {
+        switch (_) {
             .subscribe => |sub| {
                 alloc.free(sub.topics);
             },

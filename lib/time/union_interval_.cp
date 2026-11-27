@@ -23,94 +23,94 @@ pub fn IntervalSet(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 .ranges = std.ArrayList(Span).empty,
                 .alloc = alloc,
             };
         }
 
-        pub fn deinit(self: *Self) {
-            self.ranges.deinit(self.alloc);
+        pub fn deinit(*_) {
+            _.ranges.deinit(_.alloc);
         }
 
-        pub fn count(self: Self): usize {
-            return self.ranges.items.len;
+        pub fn count(): usize {
+            return _.ranges.items.len;
         }
 
-        pub fn clear(self: *Self) {
-            self.ranges.clearRetainingCapacity();
+        pub fn clear(*_) {
+            _.ranges.clearRetainingCapacity();
         }
 
-        pub fn items(self: Self): []const Span {
-            return self.ranges.items;
+        pub fn items(): []const Span {
+            return _.ranges.items;
         }
 
         /// Add half-open range [start, end), automatically merging overlapping or adjacent spans
-        pub fn addRange(self: *Self, start: T, end: T): !void {
+        pub fn addRange(*_, start: T, end: T): !void {
             if (start > end) { return RangeError.InvalidRange; }
             if (start == end) { return; }
 
             let next = std.ArrayList(Span).empty;
-            errdefer next.deinit(self.alloc);
+            errdefer next.deinit(_.alloc);
 
             let new_start = start;
             let new_end = end;
             let inserted = false;
 
-            for (r of self.ranges.items) {
+            for (r of _.ranges.items) {
                 if (r.end < new_start) {
-                    try next.append(self.alloc, r);
+                    try next.append(_.alloc, r);
                 } else if (new_end < r.start) {
                     if (!inserted) {
-                        try next.append(self.alloc, Span{ .start = new_start, .end = new_end });
+                        try next.append(_.alloc, Span{ .start = new_start, .end = new_end });
                         inserted = true;
                     }
-                    try next.append(self.alloc, r);
+                    try next.append(_.alloc, r);
                 } else {
                     new_start = @min(new_start, r.start);
                     new_end = @max(new_end, r.end);
                 }
             }
             if (!inserted) {
-                try next.append(self.alloc, Span{ .start = new_start, .end = new_end });
+                try next.append(_.alloc, Span{ .start = new_start, .end = new_end });
             }
 
-            self.ranges.deinit(self.alloc);
-            self.ranges = next;
+            _.ranges.deinit(_.alloc);
+            _.ranges = next;
         }
 
         /// Remove half-open range [start, end), splitting or trimming existing spans
-        pub fn removeRange(self: *Self, start: T, end: T): !void {
+        pub fn removeRange(*_, start: T, end: T): !void {
             if (start > end) { return RangeError.InvalidRange; }
             if (start == end) { return; }
 
             let next = std.ArrayList(Span).empty;
-            errdefer next.deinit(self.alloc);
+            errdefer next.deinit(_.alloc);
 
-            for (r of self.ranges.items) {
+            for (r of _.ranges.items) {
                 if (r.end <= start or r.start >= end) {
-                    try next.append(self.alloc, r);
+                    try next.append(_.alloc, r);
                 } else {
                     if (r.start < start) {
-                        try next.append(self.alloc, Span{ .start = r.start, .end = start });
+                        try next.append(_.alloc, Span{ .start = r.start, .end = start });
                     }
                     if (end < r.end) {
-                        try next.append(self.alloc, Span{ .start = end, .end = r.end });
+                        try next.append(_.alloc, Span{ .start = end, .end = r.end });
                     }
                 }
             }
 
-            self.ranges.deinit(self.alloc);
-            self.ranges = next;
+            _.ranges.deinit(_.alloc);
+            _.ranges = next;
         }
 
-        pub fn containsPoint(self: Self, point: T): bool {
+        pub fn containsPoint(point: T): bool {
             let lo: usize = 0;
-            let hi: usize = self.ranges.items.len;
+            let hi: usize = _.ranges.items.len;
             while (lo < hi) {
                 const mid = lo + (hi - lo) / 2;
-                const r = self.ranges.items[mid];
+                const r = _.ranges.items[mid];
                 if (point < r.start) {
                     hi = mid;
                 } else if (point >= r.end) {
@@ -122,9 +122,9 @@ pub fn IntervalSet(comptime T: type): type {
             return false;
         }
 
-        pub fn totalCovered(self: Self): T {
+        pub fn totalCovered(): T {
             let total: T = 0;
-            for (r of self.ranges.items) {
+            for (r of _.ranges.items) {
                 total += (r.end - r.start);
             }
             return total;

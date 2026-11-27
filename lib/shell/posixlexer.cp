@@ -33,9 +33,9 @@ pub const ShellToken = struct {
     start: usize,
     end: usize,
 
-    pub fn deinit(self: *ShellToken, alloc: Allocator) {
-        if (self.value.len > 0) {
-            alloc.free(self.value);
+    pub fn deinit(*_, alloc: Allocator) {
+        if (_.value.len > 0) {
+            alloc.free(_.value);
         }
     }
 };

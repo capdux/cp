@@ -101,8 +101,8 @@ pub const CelExpr = union(enum) {
     has_field: CelHasFieldExpr,
     macro_call: CelMacroExpr,
 
-    pub fn deinit(*self: CelExpr, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        switch (_.*) {
             .null_lit, .bool_lit, .int_lit, .uint_lit, .double_lit => {},
             .string_lit => |s| alloc.free(s),
             .ident => |s| alloc.free(s),
@@ -159,7 +159,7 @@ pub const CelExpr = union(enum) {
                 mc.body.deinit(alloc);
             },
         }
-        alloc.destroy(self);
+        alloc.destroy(_);
     }
 };
 

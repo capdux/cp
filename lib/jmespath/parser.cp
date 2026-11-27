@@ -60,8 +60,8 @@ pub const JmesNode = union(enum) {
     Compare: CompareNode,
     FunctionCall: FunctionCallNode,
 
-    pub fn deinit(self: *JmesNode, alloc: std.mem.Allocator) {
-        switch (self.*) {
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        switch (_.*) {
             .Current, .Index, .Slice, .ListWildcard, .ObjectWildcard => {},
             .Field => |s| alloc.free(s),
             .RawString => |s| alloc.free(s),
@@ -103,7 +103,7 @@ pub const JmesNode = union(enum) {
                 alloc.destroy(c.right);
             },
             .Flatten => |opt| {
-                if (opt) |inner| {
+                if (inner := opt) {
                     inner.deinit(alloc);
                     alloc.destroy(inner);
                 }
@@ -146,9 +146,9 @@ pub const JmesNode = union(enum) {
 pub const JmesExpr = struct {
     root: *JmesNode,
 
-    pub fn deinit(self: *JmesExpr, alloc: std.mem.Allocator) {
-        self.root.deinit(alloc);
-        alloc.destroy(self.root);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        _.root.deinit(alloc);
+        alloc.destroy(_.root);
     }
 };
 
@@ -157,148 +157,148 @@ const ExprParser = struct {
     pos: usize,
     alloc: std.mem.Allocator,
 
-    fn allocNode(self: *ExprParser, node: JmesNode): JmesError!*JmesNode {
-        let ptr = self.alloc.create(JmesNode) catch return JmesError.OutOfMemory;
+    fn allocNode(*_, node: JmesNode): JmesError!*JmesNode {
+        let ptr = _.alloc.create(JmesNode) catch return JmesError.OutOfMemory;
         ptr.* = node;
         return ptr;
     }
 
-    fn destroyNode(self: *ExprParser, node: *JmesNode) {
-        node.deinit(self.alloc);
-        self.alloc.destroy(node);
+    fn destroyNode(*_, node: *JmesNode) {
+        node.deinit(_.alloc);
+        _.alloc.destroy(node);
     }
 
-    fn skipWs(self: *ExprParser) {
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+    fn skipWs(*_) {
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == ' ' or c == '\t' or c == '\n' or c == '\r') {
-                self.pos += 1;
+                _.pos += 1;
             } else {
                 break;
             }
         }
     }
 
-    fn peek(self: *ExprParser): u8? {
-        self.skipWs();
-        if (self.pos >= self.input.len) return null;
-        return self.input[self.pos];
+    fn peek(*_): u8? {
+        _.skipWs();
+        if (_.pos >= _.input.len) return null;
+        return _.input[_.pos];
     }
 
-    fn isIdentStart(c: u8): bool {
+    static fn isIdentStart(c: u8): bool {
         return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or c == '_';
     }
 
-    fn isIdentChar(c: u8): bool {
+    static fn isIdentChar(c: u8): bool {
         return isIdentStart(c) or (c >= '0' and c <= '9');
     }
 
-    fn parseUnquotedIdent(self: *ExprParser): JmesError![]u8 {
-        const start = self.pos;
-        if (self.pos >= self.input.len or !isIdentStart(self.input[self.pos])) {
+    fn parseUnquotedIdent(*_): JmesError![]u8 {
+        const start = _.pos;
+        if (_.pos >= _.input.len or !isIdentStart(_.input[_.pos])) {
             return JmesError.UnexpectedToken;
         }
-        while (self.pos < self.input.len and isIdentChar(self.input[self.pos])) {
-            self.pos += 1;
+        while (_.pos < _.input.len and isIdentChar(_.input[_.pos])) {
+            _.pos += 1;
         }
-        return self.alloc.dupe(u8, self.input[start..self.pos]) catch return JmesError.OutOfMemory;
+        return _.alloc.dupe(u8, _.input[start.._.pos]) catch return JmesError.OutOfMemory;
     }
 
-    fn parseQuotedIdent(self: *ExprParser): JmesError![]u8 {
-        if (self.pos >= self.input.len or self.input[self.pos] != '"') return JmesError.InvalidSyntax;
-        self.pos += 1;
+    fn parseQuotedIdent(*_): JmesError![]u8 {
+        if (_.pos >= _.input.len or _.input[_.pos] != '"') return JmesError.InvalidSyntax;
+        _.pos += 1;
         let out = std.ArrayList(u8).empty;
-        errdefer out.deinit(self.alloc);
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+        errdefer out.deinit(_.alloc);
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == '"') {
-                self.pos += 1;
-                return out.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+                _.pos += 1;
+                return out.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
             }
             if (c == '\\') {
-                self.pos += 1;
-                if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-                const esc = self.input[self.pos];
-                self.pos += 1;
+                _.pos += 1;
+                if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+                const esc = _.input[_.pos];
+                _.pos += 1;
                 switch (esc) {
-                    '"' => out.append(self.alloc, '"') catch return JmesError.OutOfMemory,
-                    '\\' => out.append(self.alloc, '\\') catch return JmesError.OutOfMemory,
-                    'n' => out.append(self.alloc, '\n') catch return JmesError.OutOfMemory,
-                    'r' => out.append(self.alloc, '\r') catch return JmesError.OutOfMemory,
-                    't' => out.append(self.alloc, '\t') catch return JmesError.OutOfMemory,
-                    else => out.append(self.alloc, esc) catch return JmesError.OutOfMemory,
+                    '"' => out.append(_.alloc, '"') catch return JmesError.OutOfMemory,
+                    '\\' => out.append(_.alloc, '\\') catch return JmesError.OutOfMemory,
+                    'n' => out.append(_.alloc, '\n') catch return JmesError.OutOfMemory,
+                    'r' => out.append(_.alloc, '\r') catch return JmesError.OutOfMemory,
+                    't' => out.append(_.alloc, '\t') catch return JmesError.OutOfMemory,
+                    else => out.append(_.alloc, esc) catch return JmesError.OutOfMemory,
                 }
             } else {
-                out.append(self.alloc, c) catch return JmesError.OutOfMemory;
-                self.pos += 1;
+                out.append(_.alloc, c) catch return JmesError.OutOfMemory;
+                _.pos += 1;
             }
         }
         return JmesError.InvalidSyntax;
     }
 
-    fn parseRawString(self: *ExprParser): JmesError![]u8 {
-        if (self.pos >= self.input.len or self.input[self.pos] != '\'') return JmesError.InvalidSyntax;
-        self.pos += 1;
+    fn parseRawString(*_): JmesError![]u8 {
+        if (_.pos >= _.input.len or _.input[_.pos] != '\'') return JmesError.InvalidSyntax;
+        _.pos += 1;
         let out = std.ArrayList(u8).empty;
-        errdefer out.deinit(self.alloc);
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+        errdefer out.deinit(_.alloc);
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == '\'') {
-                self.pos += 1;
-                return out.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
+                _.pos += 1;
+                return out.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
             }
-            if (c == '\\' and self.pos + 1 < self.input.len and (self.input[self.pos + 1] == '\'' or self.input[self.pos + 1] == '\\')) {
-                self.pos += 1;
-                out.append(self.alloc, self.input[self.pos]) catch return JmesError.OutOfMemory;
-                self.pos += 1;
+            if (c == '\\' and _.pos + 1 < _.input.len and (_.input[_.pos + 1] == '\'' or _.input[_.pos + 1] == '\\')) {
+                _.pos += 1;
+                out.append(_.alloc, _.input[_.pos]) catch return JmesError.OutOfMemory;
+                _.pos += 1;
             } else {
-                out.append(self.alloc, c) catch return JmesError.OutOfMemory;
-                self.pos += 1;
+                out.append(_.alloc, c) catch return JmesError.OutOfMemory;
+                _.pos += 1;
             }
         }
         return JmesError.InvalidSyntax;
     }
 
-    fn parseLiteral(self: *ExprParser): JmesError!JmesValue {
-        if (self.pos >= self.input.len or self.input[self.pos] != '`') return JmesError.InvalidSyntax;
-        self.pos += 1;
+    fn parseLiteral(*_): JmesError!JmesValue {
+        if (_.pos >= _.input.len or _.input[_.pos] != '`') return JmesError.InvalidSyntax;
+        _.pos += 1;
         let raw = std.ArrayList(u8).empty;
-        defer raw.deinit(self.alloc);
-        while (self.pos < self.input.len) {
-            const c = self.input[self.pos];
+        defer raw.deinit(_.alloc);
+        while (_.pos < _.input.len) {
+            const c = _.input[_.pos];
             if (c == '`') {
-                self.pos += 1;
-                return parseJson(self.alloc, raw.items) catch return JmesError.InvalidSyntax;
+                _.pos += 1;
+                return parseJson(_.alloc, raw.items) catch return JmesError.InvalidSyntax;
             }
-            if (c == '\\' and self.pos + 1 < self.input.len and self.input[self.pos + 1] == '`') {
-                self.pos += 1;
-                raw.append(self.alloc, '`') catch return JmesError.OutOfMemory;
-                self.pos += 1;
+            if (c == '\\' and _.pos + 1 < _.input.len and _.input[_.pos + 1] == '`') {
+                _.pos += 1;
+                raw.append(_.alloc, '`') catch return JmesError.OutOfMemory;
+                _.pos += 1;
             } else {
-                raw.append(self.alloc, c) catch return JmesError.OutOfMemory;
-                self.pos += 1;
+                raw.append(_.alloc, c) catch return JmesError.OutOfMemory;
+                _.pos += 1;
             }
         }
         return JmesError.InvalidSyntax;
     }
 
-    fn parseExpr(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseExpr(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        return self.parsePipe(depth);
+        return _.parsePipe(depth);
     }
 
-    fn parsePipe(self: *ExprParser, depth: usize): JmesError!*JmesNode {
-        let left = self.parseOr(depth)?;
-        errdefer self.destroyNode(left);
+    fn parsePipe(*_, depth: usize): JmesError!*JmesNode {
+        let left = _.parseOr(depth)?;
+        errdefer _.destroyNode(left);
         while (true) {
-            self.skipWs();
-            if (self.pos < self.input.len and self.input[self.pos] == '|' and
-                (self.pos + 1 >= self.input.len or self.input[self.pos + 1] != '|'))
+            _.skipWs();
+            if (_.pos < _.input.len and _.input[_.pos] == '|' and
+                (_.pos + 1 >= _.input.len or _.input[_.pos + 1] != '|'))
             {
-                self.pos += 1;
-                const right = self.parseOr(depth)?;
-                left = self.allocNode(JmesNode{ .Pipe = BinaryNode{ .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+                _.pos += 1;
+                const right = _.parseOr(depth)?;
+                left = _.allocNode(JmesNode{ .Pipe = BinaryNode{ .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
             } else {
@@ -308,16 +308,16 @@ const ExprParser = struct {
         return left;
     }
 
-    fn parseOr(self: *ExprParser, depth: usize): JmesError!*JmesNode {
-        let left = self.parseAnd(depth)?;
-        errdefer self.destroyNode(left);
+    fn parseOr(*_, depth: usize): JmesError!*JmesNode {
+        let left = _.parseAnd(depth)?;
+        errdefer _.destroyNode(left);
         while (true) {
-            self.skipWs();
-            if (self.pos + 1 < self.input.len and self.input[self.pos] == '|' and self.input[self.pos + 1] == '|') {
-                self.pos += 2;
-                const right = self.parseAnd(depth)?;
-                left = self.allocNode(JmesNode{ .Or = BinaryNode{ .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+            _.skipWs();
+            if (_.pos + 1 < _.input.len and _.input[_.pos] == '|' and _.input[_.pos + 1] == '|') {
+                _.pos += 2;
+                const right = _.parseAnd(depth)?;
+                left = _.allocNode(JmesNode{ .Or = BinaryNode{ .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
             } else {
@@ -327,16 +327,16 @@ const ExprParser = struct {
         return left;
     }
 
-    fn parseAnd(self: *ExprParser, depth: usize): JmesError!*JmesNode {
-        let left = self.parseCompare(depth)?;
-        errdefer self.destroyNode(left);
+    fn parseAnd(*_, depth: usize): JmesError!*JmesNode {
+        let left = _.parseCompare(depth)?;
+        errdefer _.destroyNode(left);
         while (true) {
-            self.skipWs();
-            if (self.pos + 1 < self.input.len and self.input[self.pos] == '&' and self.input[self.pos + 1] == '&') {
-                self.pos += 2;
-                const right = self.parseCompare(depth)?;
-                left = self.allocNode(JmesNode{ .And = BinaryNode{ .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+            _.skipWs();
+            if (_.pos + 1 < _.input.len and _.input[_.pos] == '&' and _.input[_.pos + 1] == '&') {
+                _.pos += 2;
+                const right = _.parseCompare(depth)?;
+                left = _.allocNode(JmesNode{ .And = BinaryNode{ .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
             } else {
@@ -346,12 +346,12 @@ const ExprParser = struct {
         return left;
     }
 
-    fn parseCompare(self: *ExprParser, depth: usize): JmesError!*JmesNode {
-        let left = self.parseUnary(depth)?;
-        errdefer self.destroyNode(left);
-        self.skipWs();
-        if (self.pos + 1 < self.input.len) {
-            const two = self.input[self.pos .. self.pos + 2];
+    fn parseCompare(*_, depth: usize): JmesError!*JmesNode {
+        let left = _.parseUnary(depth)?;
+        errdefer _.destroyNode(left);
+        _.skipWs();
+        if (_.pos + 1 < _.input.len) {
+            const two = _.input[_.pos .. _.pos + 2];
             let op_opt: CompareOp? = null;
             let adv: usize = 0;
             if (std.mem.eql(u8, two, "==")) {
@@ -366,34 +366,34 @@ const ExprParser = struct {
             } else if (std.mem.eql(u8, two, ">=")) {
                 op_opt = .Ge;
                 adv = 2;
-            } else if (self.input[self.pos] == '<') {
+            } else if (_.input[_.pos] == '<') {
                 op_opt = .Lt;
                 adv = 1;
-            } else if (self.input[self.pos] == '>') {
+            } else if (_.input[_.pos] == '>') {
                 op_opt = .Gt;
                 adv = 1;
             }
-            if (op_opt) |op| {
-                self.pos += adv;
-                const right = self.parseUnary(depth)?;
-                left = self.allocNode(JmesNode{ .Compare = CompareNode{ .op = op, .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+            if (op := op_opt) {
+                _.pos += adv;
+                const right = _.parseUnary(depth)?;
+                left = _.allocNode(JmesNode{ .Compare = CompareNode{ .op = op, .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
             }
-        } else if (self.pos < self.input.len) {
-            if (self.input[self.pos] == '<') {
-                self.pos += 1;
-                const right = self.parseUnary(depth)?;
-                left = self.allocNode(JmesNode{ .Compare = CompareNode{ .op = .Lt, .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+        } else if (_.pos < _.input.len) {
+            if (_.input[_.pos] == '<') {
+                _.pos += 1;
+                const right = _.parseUnary(depth)?;
+                left = _.allocNode(JmesNode{ .Compare = CompareNode{ .op = .Lt, .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
-            } else if (self.input[self.pos] == '>') {
-                self.pos += 1;
-                const right = self.parseUnary(depth)?;
-                left = self.allocNode(JmesNode{ .Compare = CompareNode{ .op = .Gt, .left = left, .right = right } }) catch |ce| {
-                    self.destroyNode(right);
+            } else if (_.input[_.pos] == '>') {
+                _.pos += 1;
+                const right = _.parseUnary(depth)?;
+                left = _.allocNode(JmesNode{ .Compare = CompareNode{ .op = .Gt, .left = left, .right = right } }) catch |ce| {
+                    _.destroyNode(right);
                     return ce;
                 };
             }
@@ -401,40 +401,40 @@ const ExprParser = struct {
         return left;
     }
 
-    fn parseUnary(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseUnary(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.skipWs();
-        if (self.pos < self.input.len and self.input[self.pos] == '!' and
-            (self.pos + 1 >= self.input.len or self.input[self.pos + 1] != '='))
+        _.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == '!' and
+            (_.pos + 1 >= _.input.len or _.input[_.pos + 1] != '='))
         {
-            self.pos += 1;
-            const inner = self.parseUnary(depth + 1)?;
-            return self.allocNode(JmesNode{ .Not = inner }) catch |ce| {
-                self.destroyNode(inner);
+            _.pos += 1;
+            const inner = _.parseUnary(depth + 1)?;
+            return _.allocNode(JmesNode{ .Not = inner }) catch |ce| {
+                _.destroyNode(inner);
                 return ce;
             };
         }
-        return self.parsePostfix(depth);
+        return _.parsePostfix(depth);
     }
 
-    fn parsePostfix(self: *ExprParser, depth: usize): JmesError!*JmesNode {
-        let left = self.parsePrimary(depth)?;
-        errdefer self.destroyNode(left);
+    fn parsePostfix(*_, depth: usize): JmesError!*JmesNode {
+        let left = _.parsePrimary(depth)?;
+        errdefer _.destroyNode(left);
         while (true) {
-            self.skipWs();
-            if (self.pos >= self.input.len) break;
-            const c = self.input[self.pos];
+            _.skipWs();
+            if (_.pos >= _.input.len) break;
+            const c = _.input[_.pos];
             if (c == '.') {
-                self.pos += 1;
-                const rhs = self.parseAfterDot(depth + 1)?;
-                left = self.allocNode(JmesNode{ .SubExpr = BinaryNode{ .left = left, .right = rhs } }) catch |ce| {
-                    self.destroyNode(rhs);
+                _.pos += 1;
+                const rhs = _.parseAfterDot(depth + 1)?;
+                left = _.allocNode(JmesNode{ .SubExpr = BinaryNode{ .left = left, .right = rhs } }) catch |ce| {
+                    _.destroyNode(rhs);
                     return ce;
                 };
             } else if (c == '[') {
-                const rhs = self.parseBracketPostfix(depth + 1)?;
-                left = self.allocNode(JmesNode{ .IndexExpr = BinaryNode{ .left = left, .right = rhs } }) catch |ce| {
-                    self.destroyNode(rhs);
+                const rhs = _.parseBracketPostfix(depth + 1)?;
+                left = _.allocNode(JmesNode{ .IndexExpr = BinaryNode{ .left = left, .right = rhs } }) catch |ce| {
+                    _.destroyNode(rhs);
                     return ce;
                 };
             } else {
@@ -444,336 +444,336 @@ const ExprParser = struct {
         return left;
     }
 
-    fn parseAfterDot(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseAfterDot(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.skipWs();
-        if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-        const c = self.input[self.pos];
+        _.skipWs();
+        if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+        const c = _.input[_.pos];
         if (c == '*') {
-            self.pos += 1;
-            return self.allocNode(.ObjectWildcard);
+            _.pos += 1;
+            return _.allocNode(.ObjectWildcard);
         }
         if (c == '"') {
-            const name = self.parseQuotedIdent()?;
-            return self.allocNode(JmesNode{ .Field = name }) catch |ce| {
-                self.alloc.free(name);
+            const name = _.parseQuotedIdent()?;
+            return _.allocNode(JmesNode{ .Field = name }) catch |ce| {
+                _.alloc.free(name);
                 return ce;
             };
         }
         if (c == '[') {
-            return self.parseMultiSelectList(depth);
+            return _.parseMultiSelectList(depth);
         }
         if (c == '{') {
-            return self.parseMultiSelectHash(depth);
+            return _.parseMultiSelectHash(depth);
         }
         if (isIdentStart(c)) {
-            const name = self.parseUnquotedIdent()?;
-            self.skipWs();
-            if (self.pos < self.input.len and self.input[self.pos] == '(') {
-                return self.parseFunctionCall(name, depth);
+            const name = _.parseUnquotedIdent()?;
+            _.skipWs();
+            if (_.pos < _.input.len and _.input[_.pos] == '(') {
+                return _.parseFunctionCall(name, depth);
             }
-            return self.allocNode(JmesNode{ .Field = name }) catch |ce| {
-                self.alloc.free(name);
+            return _.allocNode(JmesNode{ .Field = name }) catch |ce| {
+                _.alloc.free(name);
                 return ce;
             };
         }
         return JmesError.UnexpectedToken;
     }
 
-    fn parsePrimary(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parsePrimary(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.skipWs();
-        if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-        const c = self.input[self.pos];
+        _.skipWs();
+        if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+        const c = _.input[_.pos];
         if (c == '@') {
-            self.pos += 1;
-            return self.allocNode(.Current);
+            _.pos += 1;
+            return _.allocNode(.Current);
         }
         if (c == '*') {
-            self.pos += 1;
-            return self.allocNode(.ObjectWildcard);
+            _.pos += 1;
+            return _.allocNode(.ObjectWildcard);
         }
         if (c == '"') {
-            const name = self.parseQuotedIdent()?;
-            return self.allocNode(JmesNode{ .Field = name }) catch |ce| {
-                self.alloc.free(name);
+            const name = _.parseQuotedIdent()?;
+            return _.allocNode(JmesNode{ .Field = name }) catch |ce| {
+                _.alloc.free(name);
                 return ce;
             };
         }
         if (c == '\'') {
-            const s = self.parseRawString()?;
-            return self.allocNode(JmesNode{ .RawString = s }) catch |ce| {
-                self.alloc.free(s);
+            const s = _.parseRawString()?;
+            return _.allocNode(JmesNode{ .RawString = s }) catch |ce| {
+                _.alloc.free(s);
                 return ce;
             };
         }
         if (c == '`') {
-            let lit = self.parseLiteral()?;
-            return self.allocNode(JmesNode{ .Literal = lit }) catch |ce| {
-                lit.deinit(self.alloc);
+            let lit = _.parseLiteral()?;
+            return _.allocNode(JmesNode{ .Literal = lit }) catch |ce| {
+                lit.deinit(_.alloc);
                 return ce;
             };
         }
         if (c == '(') {
-            self.pos += 1;
-            const inner = self.parseExpr(depth + 1)?;
-            errdefer self.destroyNode(inner);
-            self.skipWs();
-            if (self.pos >= self.input.len or self.input[self.pos] != ')') {
+            _.pos += 1;
+            const inner = _.parseExpr(depth + 1)?;
+            errdefer _.destroyNode(inner);
+            _.skipWs();
+            if (_.pos >= _.input.len or _.input[_.pos] != ')') {
                 return JmesError.InvalidSyntax;
             }
-            self.pos += 1;
+            _.pos += 1;
             return inner;
         }
         if (c == '[') {
-            return self.parseBracketPrimary(depth + 1);
+            return _.parseBracketPrimary(depth + 1);
         }
         if (c == '{') {
-            return self.parseMultiSelectHash(depth + 1);
+            return _.parseMultiSelectHash(depth + 1);
         }
         if (isIdentStart(c)) {
-            const name = self.parseUnquotedIdent()?;
-            self.skipWs();
-            if (self.pos < self.input.len and self.input[self.pos] == '(') {
-                return self.parseFunctionCall(name, depth + 1);
+            const name = _.parseUnquotedIdent()?;
+            _.skipWs();
+            if (_.pos < _.input.len and _.input[_.pos] == '(') {
+                return _.parseFunctionCall(name, depth + 1);
             }
-            return self.allocNode(JmesNode{ .Field = name }) catch |ce| {
-                self.alloc.free(name);
+            return _.allocNode(JmesNode{ .Field = name }) catch |ce| {
+                _.alloc.free(name);
                 return ce;
             };
         }
         return JmesError.UnexpectedToken;
     }
 
-    fn parseFunctionCall(self: *ExprParser, name: []u8, depth: usize): JmesError!*JmesNode {
-        errdefer self.alloc.free(name);
+    fn parseFunctionCall(*_, name: []u8, depth: usize): JmesError!*JmesNode {
+        errdefer _.alloc.free(name);
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '('
+        _.pos += 1; // '('
         let args = std.ArrayList(*JmesNode).empty;
         errdefer {
             for (a of args.items) {
-                self.destroyNode(a);
+                _.destroyNode(a);
             }
-            args.deinit(self.alloc);
+            args.deinit(_.alloc);
         }
-        self.skipWs();
-        if (self.pos < self.input.len and self.input[self.pos] == ')') {
-            self.pos += 1;
+        _.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == ')') {
+            _.pos += 1;
         } else {
             while (true) {
-                const arg = self.parseExpr(depth + 1)?;
-                args.append(self.alloc, arg) catch |ce| {
-                    self.destroyNode(arg);
+                const arg = _.parseExpr(depth + 1)?;
+                args.append(_.alloc, arg) catch |ce| {
+                    _.destroyNode(arg);
                     * = ce;
                     return JmesError.OutOfMemory;
                 };
-                self.skipWs();
-                if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-                if (self.input[self.pos] == ')') {
-                    self.pos += 1;
+                _.skipWs();
+                if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+                if (_.input[_.pos] == ')') {
+                    _.pos += 1;
                     break;
                 }
-                if (self.input[self.pos] != ',') return JmesError.InvalidSyntax;
-                self.pos += 1;
+                if (_.input[_.pos] != ',') return JmesError.InvalidSyntax;
+                _.pos += 1;
             }
         }
-        const slice = args.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
-        return self.allocNode(JmesNode{
+        const slice = args.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
+        return _.allocNode(JmesNode{
             .FunctionCall = FunctionCallNode{
                 .name = name,
                 .args = slice,
             },
         }) catch |ce| {
             for (a of slice) {
-                self.destroyNode(a);
+                _.destroyNode(a);
             }
-            self.alloc.free(slice);
+            _.alloc.free(slice);
             return ce;
         };
     }
 
-    fn parseOptionalInt(self: *ExprParser): JmesError!i64? {
-        self.skipWs();
-        if (self.pos >= self.input.len) return null;
-        const start = self.pos;
-        if (self.input[self.pos] == '-') {
-            self.pos += 1;
+    fn parseOptionalInt(*_): JmesError!i64? {
+        _.skipWs();
+        if (_.pos >= _.input.len) return null;
+        const start = _.pos;
+        if (_.input[_.pos] == '-') {
+            _.pos += 1;
         }
-        if (self.pos >= self.input.len or self.input[self.pos] < '0' or self.input[self.pos] > '9') {
-            self.pos = start;
+        if (_.pos >= _.input.len or _.input[_.pos] < '0' or _.input[_.pos] > '9') {
+            _.pos = start;
             return null;
         }
-        while (self.pos < self.input.len and self.input[self.pos] >= '0' and self.input[self.pos] <= '9') {
-            self.pos += 1;
+        while (_.pos < _.input.len and _.input[_.pos] >= '0' and _.input[_.pos] <= '9') {
+            _.pos += 1;
         }
-        const v = std.fmt.parseInt(i64, self.input[start..self.pos], 10) catch return JmesError.InvalidSyntax;
+        const v = std.fmt.parseInt(i64, _.input[start.._.pos], 10) catch return JmesError.InvalidSyntax;
         return v;
     }
 
-    fn parseBracketPostfix(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseBracketPostfix(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '['
-        self.skipWs();
-        if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
+        _.pos += 1; // '['
+        _.skipWs();
+        if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
 
-        if (self.input[self.pos] == ']') {
-            self.pos += 1;
-            return self.allocNode(JmesNode{ .Flatten = null });
+        if (_.input[_.pos] == ']') {
+            _.pos += 1;
+            return _.allocNode(JmesNode{ .Flatten = null });
         }
-        if (self.input[self.pos] == '*') {
-            self.pos += 1;
-            self.skipWs();
-            if (self.pos >= self.input.len or self.input[self.pos] != ']') return JmesError.InvalidSyntax;
-            self.pos += 1;
-            return self.allocNode(.ListWildcard);
+        if (_.input[_.pos] == '*') {
+            _.pos += 1;
+            _.skipWs();
+            if (_.pos >= _.input.len or _.input[_.pos] != ']') return JmesError.InvalidSyntax;
+            _.pos += 1;
+            return _.allocNode(.ListWildcard);
         }
-        if (self.input[self.pos] == '?') {
-            self.pos += 1;
-            const cond = self.parseExpr(depth + 1)?;
-            errdefer self.destroyNode(cond);
-            self.skipWs();
-            if (self.pos >= self.input.len or self.input[self.pos] != ']') return JmesError.InvalidSyntax;
-            self.pos += 1;
-            return self.allocNode(JmesNode{ .Filter = cond }) catch |ce| {
-                self.destroyNode(cond);
+        if (_.input[_.pos] == '?') {
+            _.pos += 1;
+            const cond = _.parseExpr(depth + 1)?;
+            errdefer _.destroyNode(cond);
+            _.skipWs();
+            if (_.pos >= _.input.len or _.input[_.pos] != ']') return JmesError.InvalidSyntax;
+            _.pos += 1;
+            return _.allocNode(JmesNode{ .Filter = cond }) catch |ce| {
+                _.destroyNode(cond);
                 return ce;
             };
         }
 
         // Index or slice
-        const first = self.parseOptionalInt()?;
-        self.skipWs();
-        if (self.pos < self.input.len and self.input[self.pos] == ']') {
-            self.pos += 1;
-            if (first) |idx| {
-                return self.allocNode(JmesNode{ .Index = idx });
+        const first = _.parseOptionalInt()?;
+        _.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == ']') {
+            _.pos += 1;
+            if (idx := first) {
+                return _.allocNode(JmesNode{ .Index = idx });
             }
             return JmesError.InvalidSyntax;
         }
-        if (self.pos < self.input.len and self.input[self.pos] == ':') {
-            self.pos += 1;
-            const stop = self.parseOptionalInt()?;
-            self.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == ':') {
+            _.pos += 1;
+            const stop = _.parseOptionalInt()?;
+            _.skipWs();
             let step: i64? = null;
-            if (self.pos < self.input.len and self.input[self.pos] == ':') {
-                self.pos += 1;
-                step = self.parseOptionalInt()?;
-                self.skipWs();
+            if (_.pos < _.input.len and _.input[_.pos] == ':') {
+                _.pos += 1;
+                step = _.parseOptionalInt()?;
+                _.skipWs();
             }
-            if (self.pos >= self.input.len or self.input[self.pos] != ']') return JmesError.InvalidSyntax;
-            self.pos += 1;
-            if (step) |st| {
+            if (_.pos >= _.input.len or _.input[_.pos] != ']') return JmesError.InvalidSyntax;
+            _.pos += 1;
+            if (st := step) {
                 if (st == 0) return JmesError.InvalidSliceStep;
             }
-            return self.allocNode(JmesNode{ .Slice = SliceSpec{ .start = first, .stop = stop, .step = step } });
+            return _.allocNode(JmesNode{ .Slice = SliceSpec{ .start = first, .stop = stop, .step = step } });
         }
         return JmesError.InvalidSyntax;
     }
 
-    fn parseBracketPrimary(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseBracketPrimary(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        const saved = self.pos;
+        const saved = _.pos;
         // Peek for [], [*], [?...], [int], [start:stop:step]
-        self.pos += 1; // '['
-        self.skipWs();
-        if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-        const c = self.input[self.pos];
+        _.pos += 1; // '['
+        _.skipWs();
+        if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+        const c = _.input[_.pos];
         if (c == ']' or c == '*' or c == '?' or c == ':' or c == '-' or (c >= '0' and c <= '9')) {
-            self.pos = saved;
-            return self.parseBracketPostfix(depth);
+            _.pos = saved;
+            return _.parseBracketPostfix(depth);
         }
-        self.pos = saved;
-        return self.parseMultiSelectList(depth);
+        _.pos = saved;
+        return _.parseMultiSelectList(depth);
     }
 
-    fn parseMultiSelectList(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseMultiSelectList(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '['
+        _.pos += 1; // '['
         let items = std.ArrayList(*JmesNode).empty;
         errdefer {
             for (it of items.items) {
-                self.destroyNode(it);
+                _.destroyNode(it);
             }
-            items.deinit(self.alloc);
+            items.deinit(_.alloc);
         }
-        self.skipWs();
-        if (self.pos < self.input.len and self.input[self.pos] == ']') {
+        _.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == ']') {
             return JmesError.InvalidSyntax;
         }
         while (true) {
-            const expr = self.parseExpr(depth + 1)?;
-            items.append(self.alloc, expr) catch |ce| {
-                self.destroyNode(expr);
+            const expr = _.parseExpr(depth + 1)?;
+            items.append(_.alloc, expr) catch |ce| {
+                _.destroyNode(expr);
                 * = ce;
                 return JmesError.OutOfMemory;
             };
-            self.skipWs();
-            if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-            if (self.input[self.pos] == ']') {
-                self.pos += 1;
+            _.skipWs();
+            if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+            if (_.input[_.pos] == ']') {
+                _.pos += 1;
                 break;
             }
-            if (self.input[self.pos] != ',') return JmesError.InvalidSyntax;
-            self.pos += 1;
+            if (_.input[_.pos] != ',') return JmesError.InvalidSyntax;
+            _.pos += 1;
         }
-        const slice = items.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
-        return self.allocNode(JmesNode{ .MultiSelectList = slice }) catch |ce| {
+        const slice = items.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
+        return _.allocNode(JmesNode{ .MultiSelectList = slice }) catch |ce| {
             for (it of slice) {
-                self.destroyNode(it);
+                _.destroyNode(it);
             }
-            self.alloc.free(slice);
+            _.alloc.free(slice);
             return ce;
         };
     }
 
-    fn parseMultiSelectHash(self: *ExprParser, depth: usize): JmesError!*JmesNode {
+    fn parseMultiSelectHash(*_, depth: usize): JmesError!*JmesNode {
         if (depth > MAX_DEPTH) return JmesError.MaxDepthExceeded;
-        self.pos += 1; // '{'
+        _.pos += 1; // '{'
         let entries = std.ArrayList(MultiSelectEntry).empty;
         errdefer {
             for (e of entries.items) {
-                self.alloc.free(e.key);
-                self.destroyNode(e.expr);
+                _.alloc.free(e.key);
+                _.destroyNode(e.expr);
             }
-            entries.deinit(self.alloc);
+            entries.deinit(_.alloc);
         }
-        self.skipWs();
-        if (self.pos < self.input.len and self.input[self.pos] == '}') {
+        _.skipWs();
+        if (_.pos < _.input.len and _.input[_.pos] == '}') {
             return JmesError.InvalidSyntax;
         }
         while (true) {
-            self.skipWs();
-            if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-            const key = if (self.input[self.pos] == '"')
-                self.parseQuotedIdent()?
+            _.skipWs();
+            if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+            const key = if (_.input[_.pos] == '"')
+                _.parseQuotedIdent()?
             else
-                self.parseUnquotedIdent()?;
-            errdefer self.alloc.free(key);
-            self.skipWs();
-            if (self.pos >= self.input.len or self.input[self.pos] != ':') return JmesError.InvalidSyntax;
-            self.pos += 1;
-            const val_expr = self.parseExpr(depth + 1)?;
-            entries.append(self.alloc, MultiSelectEntry{ .key = key, .expr = val_expr }) catch |ce| {
-                self.destroyNode(val_expr);
+                _.parseUnquotedIdent()?;
+            errdefer _.alloc.free(key);
+            _.skipWs();
+            if (_.pos >= _.input.len or _.input[_.pos] != ':') return JmesError.InvalidSyntax;
+            _.pos += 1;
+            const val_expr = _.parseExpr(depth + 1)?;
+            entries.append(_.alloc, MultiSelectEntry{ .key = key, .expr = val_expr }) catch |ce| {
+                _.destroyNode(val_expr);
                 * = ce;
                 return JmesError.OutOfMemory;
             };
-            self.skipWs();
-            if (self.pos >= self.input.len) return JmesError.InvalidSyntax;
-            if (self.input[self.pos] == '}') {
-                self.pos += 1;
+            _.skipWs();
+            if (_.pos >= _.input.len) return JmesError.InvalidSyntax;
+            if (_.input[_.pos] == '}') {
+                _.pos += 1;
                 break;
             }
-            if (self.input[self.pos] != ',') return JmesError.InvalidSyntax;
-            self.pos += 1;
+            if (_.input[_.pos] != ',') return JmesError.InvalidSyntax;
+            _.pos += 1;
         }
-        const slice = entries.toOwnedSlice(self.alloc) catch return JmesError.OutOfMemory;
-        return self.allocNode(JmesNode{ .MultiSelectHash = slice }) catch |ce| {
+        const slice = entries.toOwnedSlice(_.alloc) catch return JmesError.OutOfMemory;
+        return _.allocNode(JmesNode{ .MultiSelectHash = slice }) catch |ce| {
             for (e of slice) {
-                self.alloc.free(e.key);
-                self.destroyNode(e.expr);
+                _.alloc.free(e.key);
+                _.destroyNode(e.expr);
             }
-            self.alloc.free(slice);
+            _.alloc.free(slice);
             return ce;
         };
     }

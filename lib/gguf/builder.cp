@@ -66,7 +66,7 @@ pub const GgufBuilder = struct {
     kvs: std.ArrayList(GgufKv),
     tensors: std.ArrayList(BuilderTensor),
 
-    pub fn init(alloc: Allocator): GgufBuilder {
+    pub static fn init(alloc: Allocator): GgufBuilder {
         return GgufBuilder{
             .alloc = alloc,
             .alignment = GGUF_DEFAULT_ALIGNMENT,
@@ -75,88 +75,88 @@ pub const GgufBuilder = struct {
         };
     }
 
-    pub fn deinit(*self: GgufBuilder) {
-        for (*kv of self.kvs.items) {
-            self.alloc.free(kv.key);
-            kv.value.deinit(self.alloc);
+    pub fn deinit(*_) {
+        for (*kv of _.kvs.items) {
+            _.alloc.free(kv.key);
+            kv.value.deinit(_.alloc);
         }
-        self.kvs.deinit(self.alloc);
+        _.kvs.deinit(_.alloc);
 
-        for (t of self.tensors.items) {
-            self.alloc.free(t.name);
-            self.alloc.free(t.data);
+        for (t of _.tensors.items) {
+            _.alloc.free(t.name);
+            _.alloc.free(t.data);
         }
-        self.tensors.deinit(self.alloc);
+        _.tensors.deinit(_.alloc);
     }
 
-    pub fn setAlignment(*self: GgufBuilder, alignment: u64): GgufError!void {
+    pub fn setAlignment(*_, alignment: u64): GgufError!void {
         if (!isPowerOfTwo(alignment)) {
             return GgufError.InvalidAlignment;
         }
-        self.alignment = alignment;
-        for (*kv of self.kvs.items) {
+        _.alignment = alignment;
+        for (*kv of _.kvs.items) {
             if (std.mem.eql(u8, kv.key, "general.alignment")) {
-                kv.value.deinit(self.alloc);
+                kv.value.deinit(_.alloc);
                 kv.value = GgufValue{ .u32_val = @intCast(alignment) };
                 return;
             }
         }
-        try self.addU32("general.alignment", @intCast(alignment));
+        try _.addU32("general.alignment", @intCast(alignment));
     }
 
-    pub fn addKv(*self: GgufBuilder, key: []const u8, val: GgufValue): GgufError!void {
-        const key_dup = self.alloc.dupe(u8, key) catch return GgufError.OutOfMemory;
-        errdefer self.alloc.free(key_dup);
+    pub fn addKv(*_, key: []const u8, val: GgufValue): GgufError!void {
+        const key_dup = _.alloc.dupe(u8, key) catch return GgufError.OutOfMemory;
+        errdefer _.alloc.free(key_dup);
 
-        let val_dup = try val.clone(self.alloc);
-        errdefer val_dup.deinit(self.alloc);
+        let val_dup = try val.clone(_.alloc);
+        errdefer val_dup.deinit(_.alloc);
 
-        self.kvs.append(self.alloc, GgufKv{
+        _.kvs.append(_.alloc, GgufKv{
             .key = key_dup,
             .value = val_dup,
         }) catch return GgufError.OutOfMemory;
     }
 
-    pub fn addU32(*self: GgufBuilder, key: []const u8, val: u32): GgufError!void {
-        try self.addKv(key, GgufValue{ .u32_val = val });
+    pub fn addU32(*_, key: []const u8, val: u32): GgufError!void {
+        try _.addKv(key, GgufValue{ .u32_val = val });
     }
 
-    pub fn addI32(*self: GgufBuilder, key: []const u8, val: i32): GgufError!void {
-        try self.addKv(key, GgufValue{ .i32_val = val });
+    pub fn addI32(*_, key: []const u8, val: i32): GgufError!void {
+        try _.addKv(key, GgufValue{ .i32_val = val });
     }
 
-    pub fn addU64(*self: GgufBuilder, key: []const u8, val: u64): GgufError!void {
-        try self.addKv(key, GgufValue{ .u64_val = val });
+    pub fn addU64(*_, key: []const u8, val: u64): GgufError!void {
+        try _.addKv(key, GgufValue{ .u64_val = val });
     }
 
-    pub fn addF32(*self: GgufBuilder, key: []const u8, val: f32): GgufError!void {
-        try self.addKv(key, GgufValue{ .f32_val = val });
+    pub fn addF32(*_, key: []const u8, val: f32): GgufError!void {
+        try _.addKv(key, GgufValue{ .f32_val = val });
     }
 
-    pub fn addBool(*self: GgufBuilder, key: []const u8, val: bool): GgufError!void {
-        try self.addKv(key, GgufValue{ .bool_val = val });
+    pub fn addBool(*_, key: []const u8, val: bool): GgufError!void {
+        try _.addKv(key, GgufValue{ .bool_val = val });
     }
 
-    pub fn addString(*self: GgufBuilder, key: []const u8, val: []const u8): GgufError!void {
-        try self.addKv(key, GgufValue{ .string_val = val });
+    pub fn addString(*_, key: []const u8, val: []const u8): GgufError!void {
+        try _.addKv(key, GgufValue{ .string_val = val });
     }
 
-    pub fn addStringArray(*self: GgufBuilder, key: []const u8, items: []const []const u8): GgufError!void {
-        const key_dup = self.alloc.dupe(u8, key) catch return GgufError.OutOfMemory;
-        errdefer self.alloc.free(key_dup);
+    pub fn addStringArray(*_, key: []const u8, items: []const []const u8): GgufError!void {
+        const key_dup = _.alloc.dupe(u8, key) catch return GgufError.OutOfMemory;
+        errdefer _.alloc.free(key_dup);
 
-        let arr_items = self.alloc.alloc(GgufValue, items.len) catch return GgufError.OutOfMemory;
+        let arr_items = _.alloc.alloc(GgufValue, items.len) catch return GgufError.OutOfMemory;
         let init_count: usize = 0;
         errdefer {
             let i: usize = 0;
             while (i < init_count) : (i += 1) {
-                arr_items[i].deinit(self.alloc);
+                arr_items[i].deinit(_.alloc);
             }
-            self.alloc.free(arr_items);
+            _.alloc.free(arr_items);
         }
 
         for (s of items) {
-            const s_dup = self.alloc.dupe(u8, s) catch return GgufError.OutOfMemory;
+            const s_dup = _.alloc.dupe(u8, s) catch return GgufError.OutOfMemory;
             arr_items[init_count] = GgufValue{ .string_val = s_dup };
             init_count += 1;
         }
@@ -167,18 +167,18 @@ pub const GgufBuilder = struct {
                 .items = arr_items,
             },
         };
-        self.kvs.append(self.alloc, GgufKv{
+        _.kvs.append(_.alloc, GgufKv{
             .key = key_dup,
             .value = val,
         }) catch {
             let v = val;
-            v.deinit(self.alloc);
+            v.deinit(_.alloc);
             return GgufError.OutOfMemory;
         };
     }
 
     pub fn addTensor(
-        *self: GgufBuilder,
+        *_,
         name: []const u8,
         dims: []const u64,
         ggml_type: GgmlType,
@@ -199,13 +199,13 @@ pub const GgufBuilder = struct {
             return GgufError.TensorOutOfBounds;
         }
 
-        const name_dup = self.alloc.dupe(u8, name) catch return GgufError.OutOfMemory;
-        errdefer self.alloc.free(name_dup);
+        const name_dup = _.alloc.dupe(u8, name) catch return GgufError.OutOfMemory;
+        errdefer _.alloc.free(name_dup);
 
-        const data_dup = self.alloc.dupe(u8, data) catch return GgufError.OutOfMemory;
-        errdefer self.alloc.free(data_dup);
+        const data_dup = _.alloc.dupe(u8, data) catch return GgufError.OutOfMemory;
+        errdefer _.alloc.free(data_dup);
 
-        self.tensors.append(self.alloc, BuilderTensor{
+        _.tensors.append(_.alloc, BuilderTensor{
             .name = name_dup,
             .n_dims = @intCast(dims.len),
             .dims = dims_arr,
@@ -214,18 +214,18 @@ pub const GgufBuilder = struct {
         }) catch return GgufError.OutOfMemory;
     }
 
-    pub fn build(self: *const GgufBuilder, alloc: Allocator): GgufError![]u8 {
+    pub fn build(alloc: Allocator): GgufError![]u8 {
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
 
         // Header: magic, version, tensor_count, kv_count
         try appendInt(u32, &out, alloc, GGUF_MAGIC);
         try appendInt(u32, &out, alloc, GGUF_VERSION_3);
-        try appendInt(u64, &out, alloc, @as(u64, self.tensors.items.len));
-        try appendInt(u64, &out, alloc, @as(u64, self.kvs.items.len));
+        try appendInt(u64, &out, alloc, @as(u64, _.tensors.items.len));
+        try appendInt(u64, &out, alloc, @as(u64, _.kvs.items.len));
 
         // KVs
-        for (kv of self.kvs.items) {
+        for (kv of _.kvs.items) {
             try appendString(&out, alloc, kv.key);
             try appendInt(u32, &out, alloc, @intFromEnum(kv.value.valueType()));
             try appendValue(&out, alloc, &kv.value);
@@ -233,7 +233,7 @@ pub const GgufBuilder = struct {
 
         // Tensor infos with aligned relative offsets
         let rel_offset: u64 = 0;
-        for (t of self.tensors.items) {
+        for (t of _.tensors.items) {
             try appendString(&out, alloc, t.name);
             try appendInt(u32, &out, alloc, t.n_dims);
             let d: u32 = 0;
@@ -243,20 +243,20 @@ pub const GgufBuilder = struct {
             try appendInt(u32, &out, alloc, @intFromEnum(t.ggml_type));
             try appendInt(u64, &out, alloc, rel_offset);
 
-            const padded_size = try alignUp(@as(u64, t.data.len), self.alignment);
+            const padded_size = try alignUp(@as(u64, t.data.len), _.alignment);
             rel_offset = std.math.add(u64, rel_offset, padded_size) catch return GgufError.TensorOutOfBounds;
         }
 
         // Pad header to alignment before tensor data section
-        const data_start = try alignUp(@as(u64, out.items.len), self.alignment);
+        const data_start = try alignUp(@as(u64, out.items.len), _.alignment);
         while (out.items.len < data_start) {
             out.append(alloc, 0) catch return GgufError.OutOfMemory;
         }
 
         // Tensor data payloads with alignment padding
-        for (t of self.tensors.items) {
+        for (t of _.tensors.items) {
             out.appendSlice(alloc, t.data) catch return GgufError.OutOfMemory;
-            const padded_size = try alignUp(@as(u64, t.data.len), self.alignment);
+            const padded_size = try alignUp(@as(u64, t.data.len), _.alignment);
             let pad = padded_size - @as(u64, t.data.len);
             while (pad > 0) : (pad -= 1) {
                 out.append(alloc, 0) catch return GgufError.OutOfMemory;
