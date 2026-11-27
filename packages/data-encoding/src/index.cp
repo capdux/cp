@@ -1,6 +1,76 @@
 // @cap/data-encoding — Zero-allocation strict RFC 4648 Base16/Hex, Base32, Base64/Base64URL codec for CP
 // Clean-room MIT implementation inspired by Rust `data-encoding` v2 (800M+ downloads).
 // Enforces canonical RFC 4648 §3.5 non-zero trailing-bit rejection and precise error position reporting.
+// Accelerated with comptime 256-entry decode LUTs, 16-lane @Vector(16, u8) SIMD hex encoder, and @memset padding.
+
+type DencVec16 = @Vector(16, u8);
+
+fn dencBuildHexValLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF as u8; 256];
+    let i: usize = 0;
+    while (i < (10 as usize)) {
+        lut[(48 as usize) + i] = i as u8;
+        i += 1;
+    }
+    let j: usize = 0;
+    while (j < (6 as usize)) {
+        lut[(65 as usize) + j] = (10 + j) as u8;
+        lut[(97 as usize) + j] = (10 + j) as u8;
+        j += 1;
+    }
+    return lut;
+}
+
+fn dencBuildB32ValLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF as u8; 256];
+    let i: usize = 0;
+    while (i < (26 as usize)) {
+        lut[(65 as usize) + i] = i as u8;
+        i += 1;
+    }
+    let j: usize = 0;
+    while (j < (6 as usize)) {
+        lut[(50 as usize) + j] = (26 + j) as u8;
+        j += 1;
+    }
+    return lut;
+}
+
+fn dencBuildB64ValLut(url_safe: bool) -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF as u8; 256];
+    let i: usize = 0;
+    while (i < (26 as usize)) {
+        lut[(65 as usize) + i] = i as u8;
+        lut[(97 as usize) + i] = (26 + i) as u8;
+        i += 1;
+    }
+    let j: usize = 0;
+    while (j < (10 as usize)) {
+        lut[(48 as usize) + j] = (52 + j) as u8;
+        j += 1;
+    }
+    if (url_safe) {
+        lut[45] = 62 as u8;
+        lut[95] = 63 as u8;
+    } else {
+        lut[43] = 62 as u8;
+        lut[47] = 63 as u8;
+    }
+    return lut;
+}
+
+const DENC_HEX_VAL_LUT: [256]u8 = dencBuildHexValLut();
+const DENC_B32_VAL_LUT: [256]u8 = dencBuildB32ValLut();
+const DENC_B64_STD_VAL_LUT: [256]u8 = dencBuildB64ValLut(false);
+const DENC_B64_URL_VAL_LUT: [256]u8 = dencBuildB64ValLut(true);
+const DENC_HEX_LOWER_LUT: string = "0123456789abcdef";
+const DENC_HEX_UPPER_LUT: string = "0123456789ABCDEF";
+const DENC_B32_ENC_LUT: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+const DENC_B64_STD_ENC_LUT: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const DENC_B64_URL_ENC_LUT: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
 pub struct DecodeResult {
     pub ok: bool,
@@ -25,93 +95,36 @@ pub struct DecodeResult {
 }
 
 fn dencHexDigit(v: u8, upper: bool) -> u8 {
-    if (v < (10 as u8)) {
-        return (48 as u8) + v;
-    }
     if (upper) {
-        return (65 as u8) + (v - (10 as u8));
+        return DENC_HEX_UPPER_LUT[v as usize];
     }
-    return (97 as u8) + (v - (10 as u8));
+    return DENC_HEX_LOWER_LUT[v as usize];
 }
 
 fn dencHexVal(c: u8) -> u8 {
-    if (c >= (48 as u8) && c <= (57 as u8)) {
-        return c - (48 as u8);
-    }
-    if (c >= (65 as u8) && c <= (70 as u8)) {
-        return (c - (65 as u8)) + (10 as u8);
-    }
-    if (c >= (97 as u8) && c <= (102 as u8)) {
-        return (c - (97 as u8)) + (10 as u8);
-    }
-    return 0xFF as u8;
+    return DENC_HEX_VAL_LUT[c as usize];
 }
 
 fn dencB32Char(v: u8) -> u8 {
-    if (v < (26 as u8)) {
-        return (65 as u8) + v;
-    }
-    return (50 as u8) + (v - (26 as u8));
+    return DENC_B32_ENC_LUT[v as usize];
 }
 
 fn dencB32Val(c: u8) -> u8 {
-    if (c >= (65 as u8) && c <= (90 as u8)) {
-        return c - (65 as u8);
-    }
-    if (c >= (50 as u8) && c <= (55 as u8)) {
-        return (c - (50 as u8)) + (26 as u8);
-    }
-    return 0xFF as u8;
+    return DENC_B32_VAL_LUT[c as usize];
 }
 
 fn dencB64Char(v: u8, url_safe: bool) -> u8 {
-    if (v < (26 as u8)) {
-        return (65 as u8) + v;
-    }
-    if (v < (52 as u8)) {
-        return (97 as u8) + (v - (26 as u8));
-    }
-    if (v < (62 as u8)) {
-        return (48 as u8) + (v - (52 as u8));
-    }
-    if (v == (62 as u8)) {
-        if (url_safe) {
-            return 45 as u8; // '-'
-        }
-        return 43 as u8; // '+'
-    }
     if (url_safe) {
-        return 95 as u8; // '_'
+        return DENC_B64_URL_ENC_LUT[v as usize];
     }
-    return 47 as u8; // '/'
+    return DENC_B64_STD_ENC_LUT[v as usize];
 }
 
 fn dencB64Val(c: u8, url_safe: bool) -> u8 {
-    if (c >= (65 as u8) && c <= (90 as u8)) {
-        return c - (65 as u8);
-    }
-    if (c >= (97 as u8) && c <= (122 as u8)) {
-        return (c - (97 as u8)) + (26 as u8);
-    }
-    if (c >= (48 as u8) && c <= (57 as u8)) {
-        return (c - (48 as u8)) + (52 as u8);
-    }
     if (url_safe) {
-        if (c == (45 as u8)) {
-            return 62 as u8;
-        }
-        if (c == (95 as u8)) {
-            return 63 as u8;
-        }
-        return 0xFF as u8;
+        return DENC_B64_URL_VAL_LUT[c as usize];
     }
-    if (c == (43 as u8)) {
-        return 62 as u8;
-    }
-    if (c == (47 as u8)) {
-        return 63 as u8;
-    }
-    return 0xFF as u8;
+    return DENC_B64_STD_VAL_LUT[c as usize];
 }
 
 fn dencHexEncodeImpl(src: []const u8, upper: bool, out: []u8) -> usize {
@@ -120,6 +133,26 @@ fn dencHexEncodeImpl(src: []const u8, upper: bool, out: []u8) -> usize {
         return 0 as usize;
     }
     let i: usize = 0;
+    const v16: DencVec16 = @splat(16 as u8);
+    const v0f: DencVec16 = @splat(0x0F as u8);
+    const v10: DencVec16 = @splat(10 as u8);
+    const v48: DencVec16 = @splat(48 as u8);
+    const v_alpha: DencVec16 = @splat(if (upper) (55 as u8) else (87 as u8));
+    while (i + (16 as usize) <= src.len) {
+        const v: DencVec16 = src[i .. i + (16 as usize)][0..16].*;
+        const hi_n: DencVec16 = v / v16;
+        const lo_n: DencVec16 = v & v0f;
+        const hi_c: [16]u8 = @select(u8, hi_n < v10, hi_n + v48, hi_n + v_alpha);
+        const lo_c: [16]u8 = @select(u8, lo_n < v10, lo_n + v48, lo_n + v_alpha);
+        const o = i * (2 as usize);
+        let k: usize = 0;
+        while (k < (16 as usize)) {
+            out[o + k * (2 as usize)] = hi_c[k];
+            out[o + k * (2 as usize) + (1 as usize)] = lo_c[k];
+            k += 1;
+        }
+        i += 16;
+    }
     while (i < src.len) {
         let b = src[i];
         out[i * (2 as usize)] = dencHexDigit(b / (16 as u8), upper);
@@ -246,12 +279,8 @@ pub fn base32Encode(src: []const u8, pad: bool, out: []u8) -> usize {
         out[out_i + (1 as usize)] = dencB32Char(((b0 & (7 as u32)) * (4 as u32)) as u8);
         out_i += 2;
         if (pad) {
-            let p: usize = 0;
-            while (p < (6 as usize)) {
-                out[out_i] = 61 as u8; // '='
-                out_i += 1;
-                p += 1;
-            }
+            @memset(out[out_i .. out_i + (6 as usize)], 61 as u8);
+            out_i += 6;
         }
     } else if (rem == (2 as usize)) {
         let b0 = src[in_i] as u32;
@@ -262,12 +291,8 @@ pub fn base32Encode(src: []const u8, pad: bool, out: []u8) -> usize {
         out[out_i + (3 as usize)] = dencB32Char(((b1 & (1 as u32)) * (16 as u32)) as u8);
         out_i += 4;
         if (pad) {
-            let p: usize = 0;
-            while (p < (4 as usize)) {
-                out[out_i] = 61 as u8;
-                out_i += 1;
-                p += 1;
-            }
+            @memset(out[out_i .. out_i + (4 as usize)], 61 as u8);
+            out_i += 4;
         }
     } else if (rem == (3 as usize)) {
         let b0 = src[in_i] as u32;
@@ -280,12 +305,8 @@ pub fn base32Encode(src: []const u8, pad: bool, out: []u8) -> usize {
         out[out_i + (4 as usize)] = dencB32Char(((b2 & (15 as u32)) * (2 as u32)) as u8);
         out_i += 5;
         if (pad) {
-            let p: usize = 0;
-            while (p < (3 as usize)) {
-                out[out_i] = 61 as u8;
-                out_i += 1;
-                p += 1;
-            }
+            @memset(out[out_i .. out_i + (3 as usize)], 61 as u8);
+            out_i += 3;
         }
     } else if (rem == (4 as usize)) {
         let b0 = src[in_i] as u32;

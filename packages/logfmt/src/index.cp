@@ -1,9 +1,53 @@
 // @cap/logfmt — Zero-allocation logfmt Structured Key=Value Log Parser & Writer
 // Clean-room MIT implementation in pure CP.
+// Accelerated with 16-lane @Vector(16, u8) SIMD quote/escape scanning, comptime 256-entry LUT, and @memcpy.
 
 import { isSpace } from "cap:ascii";
 import { bytesEq } from "cap:bin";
 import { writeI64 } from "cap:fmt";
+
+type LfVec16 = @Vector(16, u8);
+
+fn lfBuildCharLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    // bit0: whitespace, bit1: key terminator (space/'='/'"'), bit2: needsQuote (<=32/'='/'"'/'\')
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let flags: u8 = 0;
+        if (c == 32 || c == 9 || c == 10 || c == 13 || c == 11 || c == 12) {
+            flags |= 3;
+        }
+        if (c == 61 || c == 34) {
+            flags |= 2;
+        }
+        if (c <= 32 || c == 61 || c == 34 || c == 92) {
+            flags |= 4;
+        }
+        lut[c] = flags;
+        c += 1;
+    }
+    return lut;
+}
+
+const LF_CHAR_LUT: [256]u8 = lfBuildCharLut();
+
+fn lfScanQuotedPlain(line: []const u8, start: usize) -> usize {
+    let i: usize = start;
+    const v_qt: LfVec16 = @splat(34 as u8);
+    const v_bs: LfVec16 = @splat(92 as u8);
+    while (i + 16 <= line.len) {
+        const v: LfVec16 = line[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_qt) | (v == v_bs))) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < line.len && line[i] != 34 && line[i] != 92) {
+        i += 1;
+    }
+    return i;
+}
 
 pub const MAX_FIELDS: usize = 64;
 const KEY_BUF_CAP: usize = 512;
@@ -40,7 +84,7 @@ pub struct LogfmtRecord {
         const n = line.len;
 
         while (i < n && count < MAX_FIELDS) {
-            while (i < n && isSpace(line[i])) {
+            while (i < n && (LF_CHAR_LUT[line[i] as usize] & 1) != 0) {
                 i += 1;
             }
             if (i >= n) {
@@ -49,7 +93,7 @@ pub struct LogfmtRecord {
 
             // Read key until '=', whitespace, or '"'
             const k_start_in_line = i;
-            while (i < n && !isSpace(line[i]) && line[i] != 61 && line[i] != 34) {
+            while (i < n && (LF_CHAR_LUT[line[i] as usize] & 2) == 0) {
                 i += 1;
             }
             const k_end_in_line = i;
@@ -65,12 +109,8 @@ pub struct LogfmtRecord {
                 break;
             }
             const k_slot = key_used;
-            let kc: usize = 0;
-            while (kc < k_len) {
-                key_buf[key_used] = line[k_start_in_line + kc];
-                key_used += 1;
-                kc += 1;
-            }
+            @memcpy(key_buf[key_used .. key_used + k_len], line[k_start_in_line .. k_end_in_line]);
+            key_used += k_len;
 
             const v_slot = val_used;
             let v_len: usize = 0;
@@ -78,11 +118,26 @@ pub struct LogfmtRecord {
             if (i < n && line[i] == 61) {
                 // '=' present
                 i += 1;
-                if (i < n && !isSpace(line[i])) {
+                if (i < n && (LF_CHAR_LUT[line[i] as usize] & 1) == 0) {
                     if (line[i] == 34) {
-                        // Quoted string value
+                        // Quoted string value (16-lane SIMD plain-run + @memcpy fast-path)
                         i += 1;
                         while (i < n && line[i] != 34) {
+                            const plain_end = lfScanQuotedPlain(line, i);
+                            if (plain_end > i) {
+                                const run = plain_end - i;
+                                const avail = VAL_BUF_CAP - val_used;
+                                const copy_n = if (run <= avail) run else avail;
+                                if (copy_n > 0) {
+                                    @memcpy(val_buf[val_used .. val_used + copy_n], line[i .. i + copy_n]);
+                                    val_used += copy_n;
+                                    v_len += copy_n;
+                                }
+                                i = plain_end;
+                                if (i >= n || line[i] == 34) {
+                                    break;
+                                }
+                            }
                             let ch = line[i];
                             if (ch == 92 && i + 1 < n) {
                                 const esc = line[i + 1];
@@ -110,26 +165,25 @@ pub struct LogfmtRecord {
                         }
                     } else {
                         // Unquoted value
-                        while (i < n && !isSpace(line[i])) {
-                            if (val_used < VAL_BUF_CAP) {
-                                val_buf[val_used] = line[i];
-                                val_used += 1;
-                                v_len += 1;
-                            }
+                        const v_start_in_line = i;
+                        while (i < n && (LF_CHAR_LUT[line[i] as usize] & 1) == 0) {
                             i += 1;
+                        }
+                        const run = i - v_start_in_line;
+                        const avail = VAL_BUF_CAP - val_used;
+                        const copy_n = if (run <= avail) run else avail;
+                        if (copy_n > 0) {
+                            @memcpy(val_buf[val_used .. val_used + copy_n], line[v_start_in_line .. v_start_in_line + copy_n]);
+                            val_used += copy_n;
+                            v_len += copy_n;
                         }
                     }
                 }
             } else {
                 // Bare flag key -> default value "true"
-                const tstr = "true";
                 if (val_used + 4 <= VAL_BUF_CAP) {
-                    let tc: usize = 0;
-                    while (tc < 4) {
-                        val_buf[val_used] = tstr[tc];
-                        val_used += 1;
-                        tc += 1;
-                    }
+                    @memcpy(val_buf[val_used .. val_used + 4], "true"[0..4]);
+                    val_used += 4;
                     v_len = 4;
                 }
             }
@@ -190,9 +244,19 @@ fn needsQuotes(val: []const u8) -> bool {
         return true;
     }
     let i: usize = 0;
+    const v_32: LfVec16 = @splat(32 as u8);
+    const v_eq: LfVec16 = @splat(61 as u8);
+    const v_qt: LfVec16 = @splat(34 as u8);
+    const v_bs: LfVec16 = @splat(92 as u8);
+    while (i + 16 <= val.len) {
+        const v: LfVec16 = val[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v <= v_32) | (v == v_eq) | (v == v_qt) | (v == v_bs))) {
+            return true;
+        }
+        i += 16;
+    }
     while (i < val.len) {
-        const b = val[i];
-        if (b <= 32 || b == 61 || b == 34 || b == 92) {
+        if ((LF_CHAR_LUT[val[i] as usize] & 4) != 0) {
             return true;
         }
         i += 1;
@@ -235,12 +299,8 @@ pub struct LogfmtWriter {
             _.pos = saved_pos;
             return false;
         }
-        let k: usize = 0;
-        while (k < key.len) {
-            _.buf[p] = key[k];
-            p += 1;
-            k += 1;
-        }
+        @memcpy(_.buf[p .. p + key.len], key[0..key.len]);
+        p += key.len;
         _.buf[p] = 61; // '='
         p += 1;
 
@@ -309,11 +369,9 @@ pub struct LogfmtWriter {
                 _.pos = saved_pos;
                 return false;
             }
-            let i: usize = 0;
-            while (i < val.len) {
-                _.buf[p] = val[i];
-                p += 1;
-                i += 1;
+            if (val.len > 0) {
+                @memcpy(_.buf[p .. p + val.len], val[0..val.len]);
+                p += val.len;
             }
         }
 

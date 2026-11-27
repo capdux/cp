@@ -1,8 +1,39 @@
 // @cap/fast-uri — Zero-allocation RFC 3986 URI parser, serializer, resolver & comparator
 // Clean-room implementation modeled on npm `fast-uri` (Fastify / AJV).
+// Accelerated with 16-lane @Vector(16, u8) SIMD validation/lowercasing/percent-scan,
+// comptime 256-entry scheme/IPv6/case/hex LUTs, and @memcpy bulk copies.
 
 import { isAlpha, isDigit, isHexDigit, toLowerByte, toUpperByte, eqIgnoreCase, startsWith, findByte, strEq } from "cap:ascii";
 import { writeStr, writeU64 } from "cap:fmt";
+
+type FuriVec16 = @Vector(16, u8);
+
+fn furiBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    // bit0: scheme char, bit1: ipv6/ipvf inner char, bit2: hex digit
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) : (c += 1) {
+        const b: u8 = c as u8;
+        let flags: u8 = 0;
+        const is_alpha = (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z');
+        const is_dig = b >= '0' && b <= '9';
+        const is_hex = is_dig || (b >= 'A' && b <= 'F') || (b >= 'a' && b <= 'f');
+        if (is_alpha || is_dig || b == '+' || b == '-' || b == '.') {
+            flags |= 1;
+        }
+        if (is_hex || b == ':' || b == '.' || b == 'v' || b == 'V' || b == '_' || b == '-' || b == '~') {
+            flags |= 2;
+        }
+        if (is_hex) {
+            flags |= 4;
+        }
+        lut[c] = flags;
+    }
+    return lut;
+}
+
+const FURI_CHAR_LUT: [256]u8 = furiBuildCharLut();
 
 pub struct UriComponents {
     valid: bool,
@@ -48,7 +79,7 @@ pub struct UriComponents {
 }
 
 fn furiIsSchemeChar(b: u8): bool {
-    return isAlpha(b) || isDigit(b) || b == '+' || b == '-' || b == '.';
+    return (FURI_CHAR_LUT[b as usize] & 1) != 0;
 }
 
 fn furiPush(out: []u8, pos: usize, b: u8): usize {
@@ -66,6 +97,17 @@ fn furiPushSlice(out: []u8, pos: usize, s: string): usize {
 fn furiPushLower(out: []u8, pos: usize, s: string): usize {
     let p = pos;
     let i: usize = 0;
+    const v_A: FuriVec16 = @splat('A' as u8);
+    const v_Z: FuriVec16 = @splat('Z' as u8);
+    const v_32: FuriVec16 = @splat(32 as u8);
+    while (i + 16 <= s.len && p + 16 <= out.len) {
+        const v: FuriVec16 = s[i .. i + 16][0..16].*;
+        const is_up = (v >= v_A) & (v <= v_Z);
+        const low: [16]u8 = @select(u8, is_up, v + v_32, v);
+        @memcpy(out[p .. p + 16], low[0..16]);
+        p += 16;
+        i += 16;
+    }
     while (i < s.len) : (i += 1) {
         p = furiPush(out, p, toLowerByte(s[i]));
     }
@@ -75,14 +117,28 @@ fn furiPushLower(out: []u8, pos: usize, s: string): usize {
 fn furiPushPercentUpper(out: []u8, pos: usize, s: string): usize {
     let p = pos;
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] == '%' && i + 2 < s.len && isHexDigit(s[i + 1]) && isHexDigit(s[i + 2])) {
+    const v_pct: FuriVec16 = @splat('%' as u8);
+    while (i < s.len) {
+        while (i + 16 <= s.len && p + 16 <= out.len) {
+            const v: FuriVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_pct)) {
+                break;
+            }
+            @memcpy(out[p .. p + 16], s[i .. i + 16]);
+            p += 16;
+            i += 16;
+        }
+        if (i >= s.len) {
+            break;
+        }
+        if (s[i] == '%' && i + 2 < s.len && (FURI_CHAR_LUT[s[i + 1] as usize] & 4) != 0 && (FURI_CHAR_LUT[s[i + 2] as usize] & 4) != 0) {
             p = furiPush(out, p, '%');
             p = furiPush(out, p, toUpperByte(s[i + 1]));
             p = furiPush(out, p, toUpperByte(s[i + 2]));
-            i += 2;
+            i += 3;
         } else {
             p = furiPush(out, p, s[i]);
+            i += 1;
         }
     }
     return p;
@@ -108,9 +164,7 @@ fn furiValidateIpv6Inner(s: string): bool {
     if (s.len == 0) return false;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        const b = s[i];
-        const ok = isHexDigit(b) || b == ':' || b == '.' || b == 'v' || b == 'V' || b == '_' || b == '-' || b == '~';
-        if (!ok) return false;
+        if ((FURI_CHAR_LUT[s[i] as usize] & 2) == 0) return false;
     }
     return true;
 }
@@ -131,8 +185,17 @@ fn furiParsePortStr(s: string): i32 {
 
 /// Parse an RFC 3986 URI or relative reference without heap allocation.
 pub fn parseUri(input: string): UriComponents {
-    // Reject ASCII control characters & whitespace
+    // Reject ASCII control characters & whitespace (16-lane SIMD fast-path)
     let idx: usize = 0;
+    const v_20: FuriVec16 = @splat(0x20 as u8);
+    const v_7f: FuriVec16 = @splat(0x7F as u8);
+    while (idx + 16 <= input.len) {
+        const v: FuriVec16 = input[idx .. idx + 16][0..16].*;
+        if (@reduce(.Or, (v <= v_20) | (v == v_7f))) {
+            return UriComponents.invalid();
+        }
+        idx += 16;
+    }
     while (idx < input.len) : (idx += 1) {
         const b = input[idx];
         if (b <= 0x20 || b == 0x7F) {
@@ -318,9 +381,8 @@ fn furiRemoveDotSegments(input: string, out: []u8): usize {
     let w_start: usize = 0;
     let w_end: usize = input.len;
     if (w_end > 4096) w_end = 4096;
-    let ci: usize = 0;
-    while (ci < w_end) : (ci += 1) {
-        work[ci] = input[ci];
+    if (w_end > 0) {
+        @memcpy(work[0..w_end], input[0..w_end]);
     }
 
     let out_len: usize = 0;
@@ -370,9 +432,11 @@ fn furiRemoveDotSegments(input: string, out: []u8): usize {
             seg_end = 1;
         }
         while (seg_end < cur.len && cur[seg_end] != '/') : (seg_end += 1) {}
-        let k: usize = 0;
-        while (k < seg_end) : (k += 1) {
-            out_len = furiPush(out, out_len, cur[k]);
+        if (seg_end > 0 && out_len < out.len) {
+            const avail = out.len - out_len;
+            const n = if (seg_end <= avail) seg_end else avail;
+            @memcpy(out[out_len .. out_len + n], cur[0..n]);
+            out_len += n;
         }
         w_start += seg_end;
     }

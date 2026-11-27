@@ -1,22 +1,89 @@
 // @cap/normpath — Zero-heap cross-platform lexical path normalization
 // Clean-room pure CP counterpart to crates.io:normpath
+// Accelerated with 16-lane @Vector(16, u8) SIMD separator scanning, comptime 256-entry LUTs, and @memcpy.
+
+type NpVec16 = @Vector(16, u8);
 
 const NP_MAX_SEGS: usize = 256;
 const NP_WIN_TMP_CAP: usize = 4096;
 
+fn npBuildUpperLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 0x61 && c <= 0x7A) {
+            lut[c] = (c - 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+fn npBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    // bit0: ASCII alpha, bit1: Windows sep ('/' or '\')
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A)) {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    lut[0x2F] = 2;
+    lut[0x5C] = 2;
+    return lut;
+}
+
+const NP_UPPER_LUT: [256]u8 = npBuildUpperLut();
+const NP_CHAR_LUT: [256]u8 = npBuildCharLut();
+
 fn npIsAsciiAlpha(b: u8): bool {
-    return (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A);
+    return (NP_CHAR_LUT[b as usize] & 1) != 0;
 }
 
 fn npToUpper(b: u8): u8 {
-    if (b >= 0x61 && b <= 0x7A) {
-        return b - 32;
-    }
-    return b;
+    return NP_UPPER_LUT[b as usize];
 }
 
 fn npIsWinSep(b: u8): bool {
-    return b == 0x2F || b == 0x5C;
+    return (NP_CHAR_LUT[b as usize] & 2) != 0;
+}
+
+fn npFindSlash(s: string, start: usize): usize {
+    let i: usize = start;
+    const v_sl: NpVec16 = @splat(0x2F as u8);
+    while (i + 16 <= s.len) {
+        const v: NpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < s.len && s[i] != 0x2F) {
+        i += 1;
+    }
+    return i;
+}
+
+fn npFindWinSep(s: string, start: usize): usize {
+    let i: usize = start;
+    const v_sl: NpVec16 = @splat(0x2F as u8);
+    const v_bs: NpVec16 = @splat(0x5C as u8);
+    while (i + 16 <= s.len) {
+        const v: NpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_sl) | (v == v_bs))) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < s.len && !npIsWinSep(s[i])) {
+        i += 1;
+    }
+    return i;
 }
 
 fn npWriteByte(out: []u8, pos: usize, b: u8): usize {
@@ -28,14 +95,13 @@ fn npWriteByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn npWriteSlice(out: []u8, pos: usize, src: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < src.len && p < out.len) {
-        out[p] = src[i];
-        p += 1;
-        i += 1;
+    if (src.len == 0 || pos >= out.len) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (src.len <= avail) src.len else avail;
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
 }
 
 fn npSegEqDot(src: string, start: usize, len: usize): bool {
@@ -70,9 +136,7 @@ fn npNormalizePosixTwo(p1: string, p2: string, hasP2: bool, out: []u8): usize {
                 break;
             }
             const start = i;
-            while (i < cur.len && cur[i] != 0x2F) {
-                i += 1;
-            }
+            i = npFindSlash(cur, i);
             const len = i - start;
             if (npSegEqDot(cur, start, len)) {
                 continue;
@@ -285,9 +349,7 @@ pub fn normalizeWindows(path: string, out: []u8): usize {
             break;
         }
         const start = idx;
-        while (idx < path.len && !npIsWinSep(path[idx])) {
-            idx += 1;
-        }
+        idx = npFindWinSep(path, idx);
         const len = idx - start;
         if (npSegEqDot(path, start, len)) {
             continue;
@@ -401,9 +463,7 @@ pub fn hasParentTraversal(path: string): bool {
             break;
         }
         const start = i;
-        while (i < path.len && !npIsWinSep(path[i])) {
-            i += 1;
-        }
+        i = npFindWinSep(path, i);
         if (npSegEqDotDot(path, start, i - start)) {
             return true;
         }
@@ -426,9 +486,7 @@ pub fn escapesRoot(path: string): bool {
             break;
         }
         const start = i;
-        while (i < path.len && path[i] != 0x2F) {
-            i += 1;
-        }
+        i = npFindSlash(path, i);
         const len = i - start;
         if (npSegEqDot(path, start, len)) {
             continue;
@@ -466,9 +524,7 @@ pub fn isNormalized(path: string): bool {
             return false;
         }
         const start = i;
-        while (i < path.len && path[i] != 0x2F) {
-            i += 1;
-        }
+        i = npFindSlash(path, i);
         const len = i - start;
         if (npSegEqDot(path, start, len)) {
             return false;

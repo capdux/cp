@@ -1,9 +1,67 @@
 // @cap/base64ct — Pure CP zero-allocation constant-time Base64 codec
 // Parity with RustCrypto `base64ct` (table-free branchless bitwise arithmetic, strict RFC 4648 canonical decoding).
+// Accelerated with 16-lane @Vector(16, u8) constant-time SIMD encode/decode and @memset zeroization.
+
+type B64ctVec16 = @Vector(16, u8);
 
 pub struct DecodeResult {
     pub len: usize,
     pub ok: bool,
+}
+
+// Constant-time branchless 16-lane SIMD 6-bit -> ASCII mapping (zero lookup tables, zero underflow)
+fn b64ctEncode16Vec(v: B64ctVec16, url_safe: bool): B64ctVec16 {
+    const c26: B64ctVec16 = @splat(26 as u8);
+    const c52: B64ctVec16 = @splat(52 as u8);
+    const c62: B64ctVec16 = @splat(62 as u8);
+    const c63: B64ctVec16 = @splat(63 as u8);
+    const v65: B64ctVec16 = @splat(65 as u8);
+    const v71: B64ctVec16 = @splat(71 as u8);
+    const v4: B64ctVec16 = @splat(4 as u8);
+    const ch62: B64ctVec16 = @splat(if (url_safe) (45 as u8) else (43 as u8));
+    const ch63: B64ctVec16 = @splat(if (url_safe) (95 as u8) else (47 as u8));
+
+    let res: B64ctVec16 = @select(u8, v < c26, v + v65, v + v71);
+    const v_hi: B64ctVec16 = @select(u8, v >= c52, v, c52);
+    res = @select(u8, v >= c52, v_hi - v4, res);
+    res = @select(u8, v == c62, ch62, res);
+    res = @select(u8, v == c63, ch63, res);
+    return res;
+}
+
+// Constant-time branchless 16-lane SIMD ASCII -> 6-bit mapping (bit 0x80 set on invalid lane)
+fn b64ctDecode16Vec(v: B64ctVec16, url_safe: bool): B64ctVec16 {
+    const v65: B64ctVec16 = @splat(65 as u8);
+    const v90: B64ctVec16 = @splat(90 as u8);
+    const v97: B64ctVec16 = @splat(97 as u8);
+    const v122: B64ctVec16 = @splat(122 as u8);
+    const v48: B64ctVec16 = @splat(48 as u8);
+    const v57: B64ctVec16 = @splat(57 as u8);
+    const v71: B64ctVec16 = @splat(71 as u8);
+    const v4: B64ctVec16 = @splat(4 as u8);
+    const v62: B64ctVec16 = @splat(62 as u8);
+    const v63: B64ctVec16 = @splat(63 as u8);
+    const v_err: B64ctVec16 = @splat(0x80 as u8);
+    const ch62: B64ctVec16 = @splat(if (url_safe) (45 as u8) else (43 as u8));
+    const ch63: B64ctVec16 = @splat(if (url_safe) (95 as u8) else (47 as u8));
+
+    const m_upper = (v >= v65) & (v <= v90);
+    const m_lower = (v >= v97) & (v <= v122);
+    const m_digit = (v >= v48) & (v <= v57);
+    const m_62 = v == ch62;
+    const m_63 = v == ch63;
+
+    const v_up: B64ctVec16 = @select(u8, m_upper, v, v65) - v65;
+    const v_lo: B64ctVec16 = @select(u8, m_lower, v, v97) - v71;
+    const v_dg: B64ctVec16 = @select(u8, m_digit, v, v48) + v4;
+
+    let res: B64ctVec16 = v_err;
+    res = @select(u8, m_upper, v_up, res);
+    res = @select(u8, m_lower, v_lo, res);
+    res = @select(u8, m_digit, v_dg, res);
+    res = @select(u8, m_62, v62, res);
+    res = @select(u8, m_63, v63, res);
+    return res;
 }
 
 fn b64ctInRange(c: u32, lo: u32, hi: u32): u32 {
@@ -104,6 +162,27 @@ fn b64ctEncodeCore(src: []u8, out: []u8, url_safe: bool, padded: bool): usize {
 
     let i: usize = 0;
     let o: usize = 0;
+    while (i + 12 <= src.len) {
+        let idx16: [16]u8 = undefined;
+        let k: usize = 0;
+        while (k < 4) {
+            const si = i + k * 3;
+            const di = k * 4;
+            const b0 = src[si];
+            const b1 = src[si + 1];
+            const b2 = src[si + 2];
+            idx16[di] = b0 >> 2;
+            idx16[di + 1] = ((b0 & 0x03) << 4) | (b1 >> 4);
+            idx16[di + 2] = ((b1 & 0x0F) << 2) | (b2 >> 6);
+            idx16[di + 3] = b2 & 0x3F;
+            k = k + 1;
+        }
+        const v_in: B64ctVec16 = idx16;
+        const enc_arr: [16]u8 = b64ctEncode16Vec(v_in, url_safe);
+        @memcpy(out[o .. o + 16], enc_arr[0..16]);
+        i = i + 12;
+        o = o + 16;
+    }
     while (i + 3 <= src.len) {
         let b0 = src[i];
         let b1 = src[i + 1];
@@ -187,10 +266,9 @@ pub fn encodeUrlUnpadded(src: []u8, out: []u8): usize {
 }
 
 fn b64ctZeroOut(out: []u8, n: usize) {
-    let i: usize = 0;
-    while (i < n && i < out.len) {
-        out[i] = 0;
-        i = i + 1;
+    const lim: usize = if (n < out.len) n else out.len;
+    if (lim > 0) {
+        @memset(out[0..lim], 0 as u8);
     }
 }
 
@@ -221,6 +299,31 @@ pub fn decodeStd(src: string, out: []u8): DecodeResult {
     let si: usize = 0;
     let oi: usize = 0;
     let b: usize = 0;
+    const v_err: B64ctVec16 = @splat(0x80 as u8);
+    while (b + 4 <= full_blocks) {
+        const chunk: B64ctVec16 = src[si .. si + 16][0..16].*;
+        const dec_v: B64ctVec16 = b64ctDecode16Vec(chunk, false);
+        const dec_a: [16]u8 = dec_v;
+        if (@reduce(.Or, dec_v >= v_err)) {
+            err = err | 0x80;
+        }
+        let k: usize = 0;
+        while (k < 4) {
+            const d = k * 4;
+            const o = oi + k * 3;
+            const v0: u32 = (dec_a[d] & 0x3F) as u32;
+            const v1: u32 = (dec_a[d + 1] & 0x3F) as u32;
+            const v2: u32 = (dec_a[d + 2] & 0x3F) as u32;
+            const v3: u32 = (dec_a[d + 3] & 0x3F) as u32;
+            out[o] = ((v0 << 2) | (v1 >> 4)) as u8;
+            out[o + 1] = (((v1 & 0x0F) << 4) | (v2 >> 2)) as u8;
+            out[o + 2] = (((v2 & 0x03) << 6) | v3) as u8;
+            k = k + 1;
+        }
+        si = si + 16;
+        oi = oi + 12;
+        b = b + 4;
+    }
     while (b < full_blocks) {
         let v0 = b64ctDecode6Std(src[si]);
         let v1 = b64ctDecode6Std(src[si + 1]);
@@ -295,6 +398,31 @@ pub fn decodeUrlUnpadded(src: string, out: []u8): DecodeResult {
     let si: usize = 0;
     let oi: usize = 0;
     let b: usize = 0;
+    const v_err: B64ctVec16 = @splat(0x80 as u8);
+    while (b + 4 <= full_blocks) {
+        const chunk: B64ctVec16 = src[si .. si + 16][0..16].*;
+        const dec_v: B64ctVec16 = b64ctDecode16Vec(chunk, true);
+        const dec_a: [16]u8 = dec_v;
+        if (@reduce(.Or, dec_v >= v_err)) {
+            err = err | 0x80;
+        }
+        let k: usize = 0;
+        while (k < 4) {
+            const d = k * 4;
+            const o = oi + k * 3;
+            const v0: u32 = (dec_a[d] & 0x3F) as u32;
+            const v1: u32 = (dec_a[d + 1] & 0x3F) as u32;
+            const v2: u32 = (dec_a[d + 2] & 0x3F) as u32;
+            const v3: u32 = (dec_a[d + 3] & 0x3F) as u32;
+            out[o] = ((v0 << 2) | (v1 >> 4)) as u8;
+            out[o + 1] = (((v1 & 0x0F) << 4) | (v2 >> 2)) as u8;
+            out[o + 2] = (((v2 & 0x03) << 6) | v3) as u8;
+            k = k + 1;
+        }
+        si = si + 16;
+        oi = oi + 12;
+        b = b + 4;
+    }
     while (b < full_blocks) {
         let v0 = b64ctDecode6Url(src[si]);
         let v1 = b64ctDecode6Url(src[si + 1]);

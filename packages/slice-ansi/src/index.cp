@@ -2,6 +2,7 @@
 // Clean-room MIT implementation in pure CP.
 // Reuses @cap/anstyle-parse for VT100/ANSI tokenization & SGR parameter parsing,
 // and @cap/unicode-width for East Asian / CJK / Emoji display column width calculation.
+// Accelerated with 16-lane @Vector(16, u8) SIMD printable-ASCII fast-path, @memcpy, and = undefined.
 
 import {
     TOKEN_TEXT,
@@ -12,6 +13,25 @@ import {
     parseCsiParams,
 } from "../../anstyle-parse/src/index.cp";
 import { charWidth, strWidth } from "../../unicode-width/src/index.cp";
+
+type SaVec16 = @Vector(16, u8);
+
+fn saScanPrintableAscii(s: string, start: usize, end_pos: usize): usize {
+    let i: usize = start;
+    const v_20: SaVec16 = @splat(0x20 as u8);
+    const v_7e: SaVec16 = @splat(0x7E as u8);
+    while (i + 16 <= end_pos) {
+        const v: SaVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v < v_20) | (v > v_7e))) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < end_pos && s[i] >= (0x20 as u8) && s[i] <= (0x7E as u8)) {
+        i += 1;
+    }
+    return i;
+}
 
 const SA_ESC: u8 = 27;
 const SA_COLOR_NONE: u8 = 0;
@@ -212,18 +232,17 @@ fn saWriteByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn saWriteBytes(out: []u8, pos: usize, src: string): usize {
-    let w: usize = pos;
-    let i: usize = 0;
-    while (i < src.len && w < out.len) {
-        out[w] = src[i];
-        w += 1;
-        i += 1;
+    if (src.len == 0 || pos >= out.len) {
+        return pos;
     }
-    return w;
+    const avail: usize = out.len - pos;
+    const n: usize = if (src.len <= avail) src.len else avail;
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
 }
 
 fn saWriteU16(out: []u8, pos: usize, val: u16): usize {
-    let digits: [5]u8 = [0, 0, 0, 0, 0];
+    let digits: [5]u8 = undefined;
     let n: usize = 0;
     let v: u16 = val;
     if (v == 0) {
@@ -341,7 +360,12 @@ pub fn ansiVisibleWidth(input: string): usize {
             const tok: AnsiToken = toks[i];
             if (tok.kind == TOKEN_TEXT) {
                 const seg_start: usize = offset + tok.start;
-                total += strWidth(input[seg_start..seg_start + tok.len]);
+                const seg_end: usize = seg_start + tok.len;
+                const ascii_end: usize = saScanPrintableAscii(input, seg_start, seg_end);
+                total += ascii_end - seg_start;
+                if (ascii_end < seg_end) {
+                    total += strWidth(input[ascii_end..seg_end]);
+                }
             }
             i += 1;
         }
@@ -390,6 +414,41 @@ pub fn sliceAnsi(input: string, begin: usize, end: usize, out: []u8): usize {
             } else if (tok.kind == TOKEN_TEXT) {
                 let p: usize = abs_start;
                 while (p < abs_end) {
+                    // 16-lane SIMD printable ASCII fast-path (every byte has display width == 1)
+                    if (input[p] >= (0x20 as u8) && input[p] <= (0x7E as u8)) {
+                        const ascii_end: usize = saScanPrintableAscii(input, p, abs_end);
+                        let run_p: usize = p;
+                        if (col < begin) {
+                            const skip_need: usize = begin - col;
+                            const avail_run: usize = ascii_end - run_p;
+                            const skip: usize = if (skip_need < avail_run) skip_need else avail_run;
+                            col += skip;
+                            run_p += skip;
+                        }
+                        if (run_p < ascii_end && col < end) {
+                            const take_need: usize = end - col;
+                            const avail_run: usize = ascii_end - run_p;
+                            const take: usize = if (take_need < avail_run) take_need else avail_run;
+                            if (!entered) {
+                                entered = true;
+                                w = saEmitActiveStyle(out, w, style);
+                            }
+                            w = saWriteBytes(out, w, input[run_p .. run_p + take]);
+                            col += take;
+                            run_p += take;
+                            if (col >= end) {
+                                done = true;
+                                break;
+                            }
+                        }
+                        p = run_p;
+                        if (p < ascii_end && col >= end) {
+                            done = true;
+                            break;
+                        }
+                        continue;
+                    }
+
                     const ch: SaUtf8Char = saDecodeUtf8(input, p);
                     const cw: usize = charWidth(ch.cp);
 

@@ -1,6 +1,39 @@
 // packages/@cap/glob-match/src/index.cp
 // Zero-allocation, anti-backtracking path glob and brace alternation matching engine.
 // Clean-room MIT pure CP implementation inspired by glob-match v0.2.
+// Accelerated with 16-lane @Vector(16, u8) SIMD slash/brace/meta scanning, comptime 256-entry LUT, and @memcpy.
+
+type GbmVec16 = @Vector(16, u8);
+
+fn gbmBuildMetaLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    // bit0: glob meta (* ? [ {), bit1: brace scan stop (\ [ {)
+    let lut: [256]u8 = [0; 256];
+    lut['*' as usize] = 1;
+    lut['?' as usize] = 1;
+    lut['[' as usize] = 3;
+    lut['{' as usize] = 3;
+    lut['\\' as usize] = 2;
+    return lut;
+}
+
+const GBM_META_LUT: [256]u8 = gbmBuildMetaLut();
+
+fn gbmFindSlash(path: string, start: usize): usize {
+    let i: usize = start;
+    const v_sl: GbmVec16 = @splat('/' as u8);
+    while (i + 16 <= path.len) {
+        const v: GbmVec16 = path[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < path.len && path[i] != ('/' as u8)) {
+        i += 1;
+    }
+    return i;
+}
 
 /// Byte range `[start, end)` captured by a `*`, `**`, or `?` wildcard in `globMatchCaptures`.
 pub struct GlobSpan {
@@ -242,11 +275,8 @@ fn gbmMatchCore(
         // Backtrack to multi-segment `**` if possible.
         if (has_dstar && dstar_si < path.len) {
             if (dstar_require_slash) {
-                // Advance to right after the next `/`.
-                let slash_pos: usize = dstar_si;
-                while (slash_pos < path.len && path[slash_pos] != ('/' as u8)) {
-                    slash_pos += 1;
-                }
+                // Advance to right after the next '/' (16-lane SIMD fast-path).
+                const slash_pos: usize = gbmFindSlash(path, dstar_si);
                 if (slash_pos < path.len) {
                     dstar_si = slash_pos + 1;
                     pi = dstar_pi;
@@ -300,8 +330,25 @@ fn gbmMatchCore(
 /// Writes `open_out.*` and `close_out.*` and returns true if found.
 fn gbmFindBracePair(pattern: string, open_out: *usize, close_out: *usize): bool {
     let i: usize = 0;
+    const v_bs: GbmVec16 = @splat('\\' as u8);
+    const v_lb: GbmVec16 = @splat('[' as u8);
+    const v_lc: GbmVec16 = @splat('{' as u8);
     while (i < pattern.len) {
+        while (i + 16 <= pattern.len) {
+            const v: GbmVec16 = pattern[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == v_bs) | (v == v_lb) | (v == v_lc))) {
+                break;
+            }
+            i += 16;
+        }
+        if (i >= pattern.len) {
+            break;
+        }
         const c: u8 = pattern[i];
+        if ((GBM_META_LUT[c as usize] & 2) == 0) {
+            i += 1;
+            continue;
+        }
         if (c == ('\\' as u8) && i + 1 < pattern.len) {
             i += 2;
             continue;
@@ -356,14 +403,14 @@ fn gbmFindBracePair(pattern: string, open_out: *usize, close_out: *usize): bool 
 
 /// Copy slice `src[s..e]` into `dst` starting at `pos`, returning new position.
 fn gbmCopySlice(dst: []u8, pos: usize, src: string, s: usize, e: usize): usize {
-    let p: usize = pos;
-    let i: usize = s;
-    while (i < e && p < dst.len) {
-        dst[p] = src[i];
-        p += 1;
-        i += 1;
+    if (e <= s || pos >= dst.len) {
+        return pos;
     }
-    return p;
+    const len: usize = e - s;
+    const avail: usize = dst.len - pos;
+    const n: usize = if (len <= avail) len else avail;
+    @memcpy(dst[pos .. pos + n], src[s .. s + n]);
+    return pos + n;
 }
 
 /// Recursive single-level brace alternation driver with strict depth & step budgets.
@@ -479,13 +526,28 @@ pub fn globMatchCaptures(pattern: string, path: string, out_caps: []GlobSpan): u
 /// Returns true if `pattern` contains no unescaped glob wildcard metacharacters (`*`, `?`, `[`, `{`).
 pub fn isStaticGlob(pattern: string): bool {
     let i: usize = 0;
+    const v_star: GbmVec16 = @splat('*' as u8);
+    const v_q: GbmVec16 = @splat('?' as u8);
+    const v_lb: GbmVec16 = @splat('[' as u8);
+    const v_lc: GbmVec16 = @splat('{' as u8);
+    const v_bs: GbmVec16 = @splat('\\' as u8);
     while (i < pattern.len) {
+        while (i + 16 <= pattern.len) {
+            const v: GbmVec16 = pattern[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == v_star) | (v == v_q) | (v == v_lb) | (v == v_lc) | (v == v_bs))) {
+                break;
+            }
+            i += 16;
+        }
+        if (i >= pattern.len) {
+            break;
+        }
         const c: u8 = pattern[i];
         if (c == ('\\' as u8) && i + 1 < pattern.len) {
             i += 2;
             continue;
         }
-        if (c == ('*' as u8) || c == ('?' as u8) || c == ('[' as u8) || c == ('{' as u8)) {
+        if ((GBM_META_LUT[c as usize] & 1) != 0) {
             return false;
         }
         i += 1;

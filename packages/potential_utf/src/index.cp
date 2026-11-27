@@ -1,5 +1,54 @@
 // @cap/potential-utf — Zero-allocation potentially-ill-formed UTF-8/UTF-16/CodePoint wrappers
 // Parity with ICU4X crates.io:potential_utf (Unicode-3.0)
+// Accelerated with 16-lane @Vector(16, u8) SIMD ASCII fast-path, comptime 256-entry lead-byte LUT, and @memcpy.
+
+type PutfVec16 = @Vector(16, u8);
+
+fn putfBuildLeadLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    // 0=invalid, 1=ASCII, 2=C2..DF, 3=E0, 4=E1..EC/EE..EF, 5=ED, 6=F0, 7=F1..F3, 8=F4
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 0x80) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 0xC2;
+    while (c <= 0xDF) {
+        lut[c] = 2;
+        c += 1;
+    }
+    lut[0xE0] = 3;
+    c = 0xE1;
+    while (c <= 0xEC) {
+        lut[c] = 4;
+        c += 1;
+    }
+    lut[0xED] = 5;
+    lut[0xEE] = 4;
+    lut[0xEF] = 4;
+    lut[0xF0] = 6;
+    lut[0xF1] = 7;
+    lut[0xF2] = 7;
+    lut[0xF3] = 7;
+    lut[0xF4] = 8;
+    return lut;
+}
+
+const PUTF_LEAD_LUT: [256]u8 = putfBuildLeadLut();
+
+fn putfSkipAscii(bytes: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_80: PutfVec16 = @splat(0x80 as u8);
+    while (i + 16 <= bytes.len) {
+        const v: PutfVec16 = bytes[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v >= v_80)) {
+            break;
+        }
+        i += 16;
+    }
+    return i;
+}
 
 fn putfIsCont(b: u8): bool {
     return (b & (0xC0 as u8)) == (0x80 as u8);
@@ -11,17 +60,17 @@ fn putfValidSeqLen(bytes: []const u8, pos: usize): usize {
     if (pos >= bytes.len) {
         return 0;
     }
-    const b0 = bytes[pos];
-    if (b0 <= (0x7F as u8)) {
+    const cls = PUTF_LEAD_LUT[bytes[pos] as usize];
+    if (cls == 1) {
         return 1;
     }
-    if (b0 >= (0xC2 as u8) && b0 <= (0xDF as u8)) {
+    if (cls == 2) {
         if (pos + 1 < bytes.len && putfIsCont(bytes[pos + 1])) {
             return 2;
         }
         return 0;
     }
-    if (b0 == (0xE0 as u8)) {
+    if (cls == 3) {
         if (pos + 2 < bytes.len) {
             const b1 = bytes[pos + 1];
             const b2 = bytes[pos + 2];
@@ -31,13 +80,13 @@ fn putfValidSeqLen(bytes: []const u8, pos: usize): usize {
         }
         return 0;
     }
-    if ((b0 >= (0xE1 as u8) && b0 <= (0xEC as u8)) || (b0 >= (0xEE as u8) && b0 <= (0xEF as u8))) {
+    if (cls == 4) {
         if (pos + 2 < bytes.len && putfIsCont(bytes[pos + 1]) && putfIsCont(bytes[pos + 2])) {
             return 3;
         }
         return 0;
     }
-    if (b0 == (0xED as u8)) {
+    if (cls == 5) {
         if (pos + 2 < bytes.len) {
             const b1 = bytes[pos + 1];
             const b2 = bytes[pos + 2];
@@ -47,7 +96,7 @@ fn putfValidSeqLen(bytes: []const u8, pos: usize): usize {
         }
         return 0;
     }
-    if (b0 == (0xF0 as u8)) {
+    if (cls == 6) {
         if (pos + 3 < bytes.len) {
             const b1 = bytes[pos + 1];
             const b2 = bytes[pos + 2];
@@ -58,13 +107,13 @@ fn putfValidSeqLen(bytes: []const u8, pos: usize): usize {
         }
         return 0;
     }
-    if (b0 >= (0xF1 as u8) && b0 <= (0xF3 as u8)) {
+    if (cls == 7) {
         if (pos + 3 < bytes.len && putfIsCont(bytes[pos + 1]) && putfIsCont(bytes[pos + 2]) && putfIsCont(bytes[pos + 3])) {
             return 4;
         }
         return 0;
     }
-    if (b0 == (0xF4 as u8)) {
+    if (cls == 8) {
         if (pos + 3 < bytes.len) {
             const b1 = bytes[pos + 1];
             const b2 = bytes[pos + 2];
@@ -217,6 +266,10 @@ pub struct PotentialUtf8 {
     fn isValidUtf8(): bool {
         let pos: usize = 0;
         while (pos < _.bytes.len) {
+            pos = putfSkipAscii(_.bytes, pos);
+            if (pos >= _.bytes.len) {
+                break;
+            }
             const seqLen = putfValidSeqLen(_.bytes, pos);
             if (seqLen == 0) {
                 return false;
@@ -230,6 +283,10 @@ pub struct PotentialUtf8 {
     fn toValidPrefix(): []const u8 {
         let pos: usize = 0;
         while (pos < _.bytes.len) {
+            pos = putfSkipAscii(_.bytes, pos);
+            if (pos >= _.bytes.len) {
+                break;
+            }
             const seqLen = putfValidSeqLen(_.bytes, pos);
             if (seqLen == 0) {
                 break;
@@ -244,17 +301,26 @@ pub struct PotentialUtf8 {
     fn decodeLossy(out: []u8): usize {
         let pos: usize = 0;
         let w: usize = 0;
+        const v_80: PutfVec16 = @splat(0x80 as u8);
         while (pos < _.bytes.len) {
+            while (pos + 16 <= _.bytes.len && w + 16 <= out.len) {
+                const v: PutfVec16 = _.bytes[pos .. pos + 16][0..16].*;
+                if (@reduce(.Or, v >= v_80)) {
+                    break;
+                }
+                @memcpy(out[w .. w + 16], _.bytes[pos .. pos + 16]);
+                pos += 16;
+                w += 16;
+            }
+            if (pos >= _.bytes.len) {
+                break;
+            }
             const seqLen = putfValidSeqLen(_.bytes, pos);
             if (seqLen > 0) {
                 if (w + seqLen > out.len) {
                     break;
                 }
-                let k: usize = 0;
-                while (k < seqLen) {
-                    out[w + k] = _.bytes[pos + k];
-                    k += 1;
-                }
+                @memcpy(out[w .. w + seqLen], _.bytes[pos .. pos + seqLen]);
                 w += seqLen;
                 pos += seqLen;
             } else {
