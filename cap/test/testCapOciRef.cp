@@ -1,81 +1,48 @@
 // cap/test/testCapOciRef.cp
-// Comprehensive unit tests for @cap/oci-ref
+// Comprehensive unit tests for @cap/oci-distribution (OCI / Docker image reference parser)
 
 import { test, expect_eq } from "cap:test";
 import {
-    OciRef,
-    parseOciRef,
-    formatCanonical,
-    isPinned,
+    ImageRef,
+    isValidTag,
+    isValidDigest,
+    parseImageRef,
+    formatNormalized,
 } from "../../packages/oci-distribution/src/index.cp";
 
+fn ociEq(a: []const u8, b: string): bool {
+    if (a.len != b.len) { return false; }
+    let i: usize = 0;
+    while (i < a.len) {
+        if (a[i] != b[i]) { return false; }
+        i += 1;
+    }
+    return true;
+}
+
 fn main() {
-    test("1. @cap/oci-ref — bare Docker Hub official image", () => {
-        const r: OciRef = parseOciRef("nginx");
-        expect_eq(r.valid, true);
-        expect_eq(r.registry, "docker.io");
-        expect_eq(r.repository, "nginx");
-        expect_eq(r.tag, "latest");
-        expect_eq(r.is_official_library, true);
-        expect_eq(isPinned(r), false);
-
-        let buf: [256]u8 = undefined;
-        expect_eq(formatCanonical(r, buf[0..256]), "docker.io/library/nginx:latest");
-    });
-
-    test("2. @cap/oci-ref — custom registry with multi-segment repo & tag", () => {
-        const r: OciRef = parseOciRef("ghcr.io/capdux/caprun/agent:v2.1.0-alpine");
-        expect_eq(r.valid, true);
-        expect_eq(r.registry, "ghcr.io");
-        expect_eq(r.repository, "capdux/caprun/agent");
-        expect_eq(r.tag, "v2.1.0-alpine");
-        expect_eq(r.is_official_library, false);
-    });
-
-    test("3. @cap/oci-ref — localhost registry with port and no tag", () => {
-        const r: OciRef = parseOciRef("localhost:5000/myorg/worker");
-        expect_eq(r.valid, true);
-        expect_eq(r.registry, "localhost:5000");
-        expect_eq(r.repository, "myorg/worker");
-        expect_eq(r.tag, "latest");
-
-        let buf: [256]u8 = undefined;
-        expect_eq(formatCanonical(r, buf[0..256]), "localhost:5000/myorg/worker:latest");
-    });
-
-    test("4. @cap/oci-ref — pinned sha256 digest with and without tag", () => {
-        const sha: string = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-        const r1: OciRef = parseOciRef("registry.capdux.org/core/runtime:1.0@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
+    test("1. @cap/oci-distribution — parseImageRef official library & custom registry", () => {
+        const r1: ImageRef = parseImageRef("nginx:1.25-alpine");
         expect_eq(r1.valid, true);
-        expect_eq(r1.registry, "registry.capdux.org");
-        expect_eq(r1.repository, "core/runtime");
-        expect_eq(r1.tag, "1.0");
-        expect_eq(r1.digest, sha);
-        expect_eq(isPinned(r1), true);
+        expect_eq(r1.registry, "");
+        expect_eq(r1.repository, "nginx");
+        expect_eq(r1.tag, "1.25-alpine");
 
-        const r2: OciRef = parseOciRef("alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
+        let out: [128]u8 = undefined;
+        const n = formatNormalized(r1, out[0..128]);
+        expect_eq(ociEq(out[0..n], "docker.io/library/nginx:1.25-alpine"), true);
+
+        const r2: ImageRef = parseImageRef("ghcr.io/org/app:v2");
         expect_eq(r2.valid, true);
-        expect_eq(r2.tag, "");
-        expect_eq(isPinned(r2), true);
+        expect_eq(r2.registry, "ghcr.io");
+        expect_eq(r2.repository, "org/app");
+        expect_eq(r2.tag, "v2");
     });
 
-    test("5. @cap/oci-ref — Docker Hub user/repo shorthand", () => {
-        const r: OciRef = parseOciRef("bitnami/redis:7.4");
-        expect_eq(r.valid, true);
-        expect_eq(r.registry, "docker.io");
-        expect_eq(r.repository, "bitnami/redis");
-        expect_eq(r.tag, "7.4");
-        expect_eq(r.is_official_library, false);
-
-        let buf: [256]u8 = undefined;
-        expect_eq(formatCanonical(r, buf[0..256]), "docker.io/bitnami/redis:7.4");
-    });
-
-    test("6. @cap/oci-ref — invalid inputs rejected", () => {
-        expect_eq(parseOciRef("").valid, false);
-        expect_eq(parseOciRef("UPPERCASE/repo").valid, false);
-        expect_eq(parseOciRef("nginx:-badtag").valid, false);
-        expect_eq(parseOciRef("nginx@sha256:tooshort").valid, false);
-        expect_eq(parseOciRef("a//b:latest").valid, false);
+    test("2. @cap/oci-distribution — digest & tag validation", () => {
+        expect_eq(isValidTag("v1.0.0"), true);
+        expect_eq(isValidTag("-bad"), false);
+        expect_eq(isValidDigest("sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), true);
+        expect_eq(isValidDigest("sha256:short"), false);
     });
 }

@@ -23,7 +23,7 @@ fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     return true;
 }
 
-fn strEq(a: string, b: string): bool {
+fn tStrEq(a: string, b: string): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -77,7 +77,7 @@ fn main() {
         };
         let p_allow = planSendFile("/.well-known/security.txt", 32 as u64, 5000 as u64, "", "", allow_opts, etag_buf[0..64]);
         expect_eq(p_allow.status, 200 as u16);
-        expect_eq(strEq(p_allow.content_type, "text/plain"), true);
+        expect_eq(tStrEq(p_allow.content_type, "text/plain"), true);
     });
 
     test("3. @cap/send — derives MIME type and returns 200 full response", () => {
@@ -90,11 +90,11 @@ fn main() {
         expect_eq(p1.content_length, 2048 as u64);
         expect_eq(p1.range_start, 0 as u64);
         expect_eq(p1.range_end, 2047 as u64);
-        expect_eq(strEq(p1.content_type, "application/javascript") || strEq(p1.content_type, "text/javascript"), true);
+        expect_eq(tStrEq(p1.content_type, "application/javascript") || tStrEq(p1.content_type, "text/javascript"), true);
 
         let p2 = planSendFile("/data/blob.unknownext", 16 as u64, 100 as u64, "", "", opts, etag_buf[0..64]);
         expect_eq(p2.status, 200 as u16);
-        expect_eq(strEq(p2.content_type, "application/octet-stream"), true);
+        expect_eq(tStrEq(p2.content_type, "application/octet-stream"), true);
     });
 
     test("4. @cap/send — generates ETag and negotiates 304 Not Modified via If-None-Match", () => {

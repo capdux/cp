@@ -23,7 +23,7 @@ import {
     decodeEcPrivateKeyPem,
 } from "../../packages/sec1/src/index.cp";
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn tBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -75,8 +75,8 @@ fn main() {
         let ry: [32]u8 = undefined;
         expect_eq(p_odd.point.xBytes(rx[0..32]), 32 as usize);
         expect_eq(p_odd.point.yBytes(ry[0..32]), 32 as usize);
-        expect_eq(bytesEq(rx[0..32], x[0..32]), true);
-        expect_eq(bytesEq(ry[0..32], y_odd[0..32]), true);
+        expect_eq(tBytesEq(rx[0..32], x[0..32]), true);
+        expect_eq(tBytesEq(ry[0..32], y_odd[0..32]), true);
 
         // Compress odd Y -> tag 0x03, len 33
         const c_odd: PointResult = p_odd.point.compress();
@@ -85,7 +85,7 @@ fn main() {
         expect_eq(c_odd.point.len, 33 as usize);
         expect_eq(c_odd.point.isCompressed(), true);
         expect_eq(c_odd.point.xBytes(rx[0..32]), 32 as usize);
-        expect_eq(bytesEq(rx[0..32], x[0..32]), true);
+        expect_eq(tBytesEq(rx[0..32], x[0..32]), true);
         expect_eq(c_odd.point.yBytes(ry[0..32]), 0 as usize);
 
         // Compress even Y -> tag 0x02, len 33
@@ -180,7 +180,7 @@ fn main() {
         const dec_res = decodeEcPrivateKeyDer(der[0..(dlen as usize)]);
         expect_eq(dec_res.ok, true);
         expect_eq(dec_res.key.priv_len, 32 as usize);
-        expect_eq(bytesEq(dec_res.key.priv_key[0..32], priv32[0..32]), true);
+        expect_eq(tBytesEq(dec_res.key.priv_key[0..32], priv32[0..32]), true);
         expect_eq(dec_res.key.has_curve, true);
         expect_eq(dec_res.key.curve_oid.eq(curve_oid), true);
         expect_eq(dec_res.key.has_pub_key, true);
@@ -221,7 +221,7 @@ fn main() {
         let dec_res = decodeEcPrivateKeyPem(pem_buf[0..(plen as usize)]);
         expect_eq(dec_res.ok, true);
         expect_eq(dec_res.key.priv_len, 32 as usize);
-        expect_eq(bytesEq(dec_res.key.priv_key[0..32], priv32[0..32]), true);
+        expect_eq(tBytesEq(dec_res.key.priv_key[0..32], priv32[0..32]), true);
         expect_eq(dec_res.key.curve_oid.eq(curve_oid), true);
         expect_eq(dec_res.key.pub_key.eq(pub_pt), true);
 

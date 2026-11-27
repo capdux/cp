@@ -17,7 +17,7 @@ import {
     isSelfSigned,
 } from "../../packages/x509-cert/src/index.cp";
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn tBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -97,7 +97,7 @@ fn main() {
         expect_eq(dec_res.cert.spki.key_len, 32 as usize);
         expect_eq(dec_res.cert.spki.key_bytes[0], 0xd7 as u8);
         expect_eq(dec_res.cert.signature_len, 64 as usize);
-        expect_eq(bytesEq(dec_res.cert.signature[0..64], cert.signature[0..64]), true);
+        expect_eq(tBytesEq(dec_res.cert.signature[0..64], cert.signature[0..64]), true);
         expect_eq(isSelfSigned(dec_res.cert), true);
     });
 

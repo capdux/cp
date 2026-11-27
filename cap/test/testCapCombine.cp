@@ -18,7 +18,7 @@ import {
     separatedList,
 } from "../../packages/combine/src/index.cp";
 
-fn strEq(a: string, b: string): bool {
+fn tStrEq(a: string, b: string): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -46,13 +46,13 @@ fn main() {
         expect_eq(c.advance().?, '\n' as u8);
         expect_eq(c.line, 2 as usize);
         expect_eq(c.col, 1 as usize);
-        expect_eq(strEq(c.remaining(), "cd"), true);
+        expect_eq(tStrEq(c.remaining(), "cd"), true);
 
         c.restore(mark);
         expect_eq(c.pos, 0 as usize);
         expect_eq(c.line, 1 as usize);
         expect_eq(c.col, 1 as usize);
-        expect_eq(strEq(c.remaining(), "ab\ncd"), true);
+        expect_eq(tStrEq(c.remaining(), "ab\ncd"), true);
     });
 
     test("2. @cap/combine — tag, charByte, takeWhile, takeWhile1 & skipSpaces", () => {
@@ -64,13 +64,13 @@ fn main() {
 
         const identOpt = takeWhile1(*c, CharPred.Ident);
         expect_eq(identOpt != null, true);
-        expect_eq(strEq(identOpt.?, "count_1"), true);
+        expect_eq(tStrEq(identOpt.?, "count_1"), true);
 
         * = skipSpaces(*c);
         expect_eq(charByte(*c, '=' as u8), true);
         * = skipSpaces(*c);
         const numStr = takeWhile(*c, CharPred.Digit);
-        expect_eq(strEq(numStr, "42"), true);
+        expect_eq(tStrEq(numStr, "42"), true);
         expect_eq(charByte(*c, ';' as u8), true);
         expect_eq(c.isEof(), true);
     });
@@ -80,7 +80,7 @@ fn main() {
         const uMax = parseU64(*c1);
         expect_eq(uMax != null, true);
         expect_eq(uMax.?, ((0xFFFFFFFF as u64) << 32) | (0xFFFFFFFF as u64));
-        expect_eq(strEq(c1.remaining(), " rest"), true);
+        expect_eq(tStrEq(c1.remaining(), " rest"), true);
 
         // Overflow u64 (> 2^64 - 1) restores cursor and returns null
         let cOver = ParseCursor.new("18446744073709551616");
@@ -97,8 +97,8 @@ fn main() {
         let c = ParseCursor.new("\"hello \\\"cp\\\" world\" tail");
         const sOpt = parseQuotedString(*c);
         expect_eq(sOpt != null, true);
-        expect_eq(strEq(sOpt.?, "hello \\\"cp\\\" world"), true);
-        expect_eq(strEq(c.remaining(), " tail"), true);
+        expect_eq(tStrEq(sOpt.?, "hello \\\"cp\\\" world"), true);
+        expect_eq(tStrEq(c.remaining(), " tail"), true);
 
         let bad = ParseCursor.new("\"unterminated");
         expect_eq(parseQuotedString(*bad) == null, true);
@@ -109,17 +109,17 @@ fn main() {
         let c = ParseCursor.new("key:value; [a, b, c]");
         const kOpt = takeUntil(*c, ":");
         expect_eq(kOpt != null, true);
-        expect_eq(strEq(kOpt.?, "key"), true);
+        expect_eq(tStrEq(kOpt.?, "key"), true);
         expect_eq(tag(*c, ":"), true);
 
         const vOpt = takeUntil(*c, ";");
-        expect_eq(strEq(vOpt.?, "value"), true);
+        expect_eq(tStrEq(vOpt.?, "value"), true);
         expect_eq(tag(*c, ";"), true);
         * = skipSpaces(*c);
 
         const innerOpt = delimited(*c, "[", "]");
         expect_eq(innerOpt != null, true);
-        expect_eq(strEq(innerOpt.?, "a, b, c"), true);
+        expect_eq(tStrEq(innerOpt.?, "a, b, c"), true);
         expect_eq(c.isEof(), true);
 
         // Missing closing delimiter restores cursor
@@ -133,10 +133,10 @@ fn main() {
         let items: [8]string = undefined;
         const n = separatedList(*c, ",", items[0..8]);
         expect_eq(n, 4 as usize);
-        expect_eq(strEq(items[0], "alpha"), true);
-        expect_eq(strEq(items[1], "beta"), true);
-        expect_eq(strEq(items[2], "gamma"), true);
-        expect_eq(strEq(items[3], "delta"), true);
+        expect_eq(tStrEq(items[0], "alpha"), true);
+        expect_eq(tStrEq(items[1], "beta"), true);
+        expect_eq(tStrEq(items[2], "gamma"), true);
+        expect_eq(tStrEq(items[3], "delta"), true);
         expect_eq(c.isEof(), true);
     });
 }

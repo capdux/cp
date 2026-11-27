@@ -23,7 +23,7 @@ import {
     fingerprintSpki,
 } from "../../packages/spki/src/index.cp";
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn tBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -60,8 +60,8 @@ fn main() {
             0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
             0x03, 0x21, 0x00
         ];
-        expect_eq(bytesEq(der[0..12], expected_prefix[0..12]), true);
-        expect_eq(bytesEq(der[12..44], pub32[0..32]), true);
+        expect_eq(tBytesEq(der[0..12], expected_prefix[0..12]), true);
+        expect_eq(tBytesEq(der[12..44], pub32[0..32]), true);
 
         const dec_res = decodeSpkiDer(der[0..44]);
         expect_eq(dec_res.ok, true);
@@ -69,7 +69,7 @@ fn main() {
         expect_eq(dec_res.spki.algorithm.has_params, false);
         expect_eq(dec_res.spki.key_len, 32 as usize);
         expect_eq(dec_res.spki.unused_bits, 0 as u8);
-        expect_eq(bytesEq(dec_res.spki.key_bytes[0..32], pub32[0..32]), true);
+        expect_eq(tBytesEq(dec_res.spki.key_bytes[0..32], pub32[0..32]), true);
 
         // Deterministic fingerprint non-zero & stable
         const fp1 = fingerprintSpki(der[0..44]);
@@ -105,8 +105,8 @@ fn main() {
             0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07,
             0x03, 0x42, 0x00
         ];
-        expect_eq(bytesEq(der[0..26], expected_hdr[0..26]), true);
-        expect_eq(bytesEq(der[26..91], p256_pub[0..65]), true);
+        expect_eq(tBytesEq(der[0..26], expected_hdr[0..26]), true);
+        expect_eq(tBytesEq(der[26..91], p256_pub[0..65]), true);
 
         const dec_res = decodeSpkiDer(der[0..91]);
         expect_eq(dec_res.ok, true);
@@ -116,7 +116,7 @@ fn main() {
         expect_eq(dec_res.spki.algorithm.param_is_null, false);
         expect_eq(dec_res.spki.algorithm.param_oid.eq(ObjectIdentifier.fromStr(OID_PRIME256V1).oid), true);
         expect_eq(dec_res.spki.key_len, 65 as usize);
-        expect_eq(bytesEq(dec_res.spki.key_bytes[0..65], p256_pub[0..65]), true);
+        expect_eq(tBytesEq(dec_res.spki.key_bytes[0..65], p256_pub[0..65]), true);
     });
 
     test("3. @cap/spki — RSA AlgorithmIdentifier with NULL parameter encode & decode", () => {
@@ -133,7 +133,7 @@ fn main() {
             0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01,
             0x05, 0x00
         ];
-        expect_eq(bytesEq(der[0..15], expected[0..15]), true);
+        expect_eq(tBytesEq(der[0..15], expected[0..15]), true);
 
         const dec_res = decodeAlgorithmId(der[0..15]);
         expect_eq(dec_res.ok, true);

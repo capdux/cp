@@ -43,7 +43,7 @@ export fn hmacSha256(key: &[]u8, msg: &[]u8, out: []u8);
 export fn b64UrlChar(v: u8): u8;
 export fn encodeBase64Url32(mac: &[]u8, dst: []u8);
 export fn isWs(c: u8): bool;
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
+export fn csBytesEq(a: &[]u8, b: &[]u8): bool;
 export fn getCookie(header: &[]u8, name: &[]u8): CookieSlice;
 export fn sign(val: &[]u8, secret: &[]u8, dst: []u8): usize;
 export fn unsign(signed_val: &[]u8, secret: &[]u8): UnsignResult;

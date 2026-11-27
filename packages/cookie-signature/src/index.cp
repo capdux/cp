@@ -254,7 +254,7 @@ pub fn hmacSha256(key: []const u8, msg: []const u8, out: []u8) {
 }
 
 fn b64UrlChar(v: u8) -> u8 {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     return alphabet[v as usize];
 }
 

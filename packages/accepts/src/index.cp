@@ -6,7 +6,7 @@ import {
     bestMediaType,
     bestLanguage,
     parseAcceptList,
-} from "../../negotiator/src/index.cp";
+} from "../../negotiator/src/core.cp";
 
 fn acceptsIsSpace(c: u8) -> bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';

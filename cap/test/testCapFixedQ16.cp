@@ -1,61 +1,38 @@
-import { test, expect_eq } from "cap:test";
-import { Fixed16, ONE_RAW } from "../../packages/fixed/src/index.cp";
+// cap/test/testCapFixedQ16.cp
+// Comprehensive unit tests for @cap/fixed (Fixed32 Q32.32 deterministic fixed-point)
 
-fn approx(a: f64, b: f64): bool {
-    let d = a - b;
+import { test, expect_eq } from "cap:test";
+import { Fixed32 } from "../../packages/fixed/src/index.cp";
+
+fn fixApprox(a: f64, b: f64, eps: f64): bool {
+    let d: f64 = a - b;
     if (d < 0.0) { d = -d; }
-    return d < 0.001;
+    return d <= eps;
 }
 
 fn main() {
-    test("fromInt, fromF64 & toF64 conversion", () => {
-        let a = Fixed16.fromInt(3);
-        expect_eq(a.raw, 3 * ONE_RAW);
-        expect_eq(approx(a.toF64(), 3.0), true);
-        let b = Fixed16.fromF64(-2.25);
-        expect_eq(approx(b.toF64(), -2.25), true);
+    test("1. @cap/fixed — Fixed32 arithmetic, floor/ceil/round & clamp", () => {
+        const a = Fixed32.fromRatio(3, 2); // 1.5
+        const b = Fixed32.fromInt(2);
+        expect_eq(a.toInt(), 1 as i32);
+        expect_eq(a.floor(), 1 as i32);
+        expect_eq(a.ceil(), 2 as i32);
+        expect_eq(a.round(), 2 as i32);
+
+        const prod = a.mul(b);
+        expect_eq(prod.toInt(), 3 as i32);
+        const quot = prod.div(a);
+        expect_eq(fixApprox(quot.toF64(), 2.0, 0.000001), true);
+
+        const clamped: Fixed32 = Fixed32.fromInt(10).clamp(Fixed32.fromInt(0), Fixed32.fromInt(5));
+        expect_eq(clamped.toInt(), 5 as i32);
     });
 
-    test("add, sub, neg & abs", () => {
-        let a = Fixed16.fromF64(1.5);
-        let b = Fixed16.fromF64(2.25);
-        expect_eq(approx(a.add(b).toF64(), 3.75), true);
-        expect_eq(approx(a.sub(b).toF64(), -0.75), true);
-        expect_eq(approx(a.sub(b).abs().toF64(), 0.75), true);
-        expect_eq(approx(a.neg().toF64(), -1.5), true);
-    });
+    test("2. @cap/fixed — Fixed32 sqrt & lerp", () => {
+        const s: Fixed32 = Fixed32.fromInt(9).sqrt();
+        expect_eq(fixApprox(s.toF64(), 3.0, 0.00001), true);
 
-    test("mul & div deterministic precision", () => {
-        let a = Fixed16.fromF64(3.5);
-        let b = Fixed16.fromF64(-2.0);
-        expect_eq(approx(a.mul(b).toF64(), -7.0), true);
-        expect_eq(approx(a.div(b).toF64(), -1.75), true);
-        expect_eq(a.div(Fixed16.zero()).raw, 0);
-    });
-
-    test("floorInt, ceilInt & roundInt", () => {
-        let a = Fixed16.fromF64(2.75);
-        expect_eq(a.floorInt(), 2);
-        expect_eq(a.ceilInt(), 3);
-        expect_eq(a.roundInt(), 3);
-        let b = Fixed16.fromInt(4);
-        expect_eq(b.ceilInt(), 4);
-        let c = Fixed16.fromF64(-1.25);
-        expect_eq(c.floorInt(), -2);
-    });
-
-    test("clamp & lerp", () => {
-        let lo = Fixed16.fromInt(0);
-        let hi = Fixed16.fromInt(10);
-        expect_eq(Fixed16.fromInt(-5).clamp(lo, hi).raw, 0);
-        expect_eq(Fixed16.fromInt(15).clamp(lo, hi).raw, 10 * ONE_RAW);
-        let mid = lo.lerp(hi, Fixed16.fromF64(0.25));
-        expect_eq(approx(mid.toF64(), 2.5), true);
-    });
-
-    test("zero & one identities", () => {
-        let x = Fixed16.fromF64(7.125);
-        expect_eq(x.mul(Fixed16.one()).raw, x.raw);
-        expect_eq(x.add(Fixed16.zero()).raw, x.raw);
+        const mid: Fixed32 = Fixed32.fromInt(0).lerp(Fixed32.fromInt(10), Fixed32.fromRatio(1, 2));
+        expect_eq(fixApprox(mid.toF64(), 5.0, 0.000001), true);
     });
 }

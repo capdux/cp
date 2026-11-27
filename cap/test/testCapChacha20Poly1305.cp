@@ -20,7 +20,7 @@ import {
     xchacha20Poly1305Decrypt,
 } from "../../packages/chacha20poly1305/src/index.cp";
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
+fn tBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
@@ -95,12 +95,12 @@ fn main() {
             0x7e, 0x90, 0x2e, 0xcb, 0xd0, 0x60, 0x06, 0x91
         ];
 
-        expect_eq(bytesEq(ct[0..114], expected_ct[0..114]), true);
-        expect_eq(bytesEq(tag[0..16], expected_tag[0..16]), true);
+        expect_eq(tBytesEq(ct[0..114], expected_ct[0..114]), true);
+        expect_eq(tBytesEq(tag[0..16], expected_tag[0..16]), true);
 
         let dec_buf: [114]u8 = undefined;
         expect_eq(aeadDecrypt(key[0..32], nonce[0..12], aad[0..12], ct[0..114], tag[0..16], dec_buf[0..114]), true);
-        expect_eq(bytesEq(dec_buf[0..114], pt[0..114]), true);
+        expect_eq(tBytesEq(dec_buf[0..114], pt[0..114]), true);
     });
 
     test("2. @cap/chacha20-poly1305 — Tampered ciphertext, AAD, or tag rejected & plaintext zeroized", () => {
@@ -156,7 +156,7 @@ fn main() {
 
         // Untampered decrypt succeeds
         expect_eq(aeadDecrypt(key[0..32], nonce[0..12], aad[0..8], ct[0..24], tag[0..16], out[0..24]), true);
-        expect_eq(bytesEq(out[0..24], pt[0..24]), true);
+        expect_eq(tBytesEq(out[0..24], pt[0..24]), true);
     });
 
     test("3. @cap/chacha20-poly1305 — Empty plaintext and empty AAD combinations", () => {
@@ -175,7 +175,7 @@ fn main() {
         // Case B: non-empty AAD + empty plaintext
         let tag_b: [16]u8 = undefined;
         expect_eq(aeadEncrypt(key[0..32], nonce[0..12], aad[0..5], empty[0..0], empty[0..0], tag_b[0..16]), true);
-        expect_eq(bytesEq(tag_a[0..16], tag_b[0..16]), false);
+        expect_eq(tBytesEq(tag_a[0..16], tag_b[0..16]), false);
         expect_eq(aeadDecrypt(key[0..32], nonce[0..12], aad[0..5], empty[0..0], tag_b[0..16], empty[0..0]), true);
 
         // Case C: empty AAD + non-empty plaintext
@@ -184,7 +184,7 @@ fn main() {
         let tag_c: [16]u8 = undefined;
         expect_eq(aeadEncrypt(key[0..32], nonce[0..12], empty[0..0], pt[0..7], ct_c[0..7], tag_c[0..16]), true);
         expect_eq(aeadDecrypt(key[0..32], nonce[0..12], empty[0..0], ct_c[0..7], tag_c[0..16], dec_c[0..7]), true);
-        expect_eq(bytesEq(dec_c[0..7], pt[0..7]), true);
+        expect_eq(tBytesEq(dec_c[0..7], pt[0..7]), true);
     });
 
     test("4. @cap/chacha20-poly1305 — ChaCha20 block, stream XOR & Poly1305 keygen primitives", () => {
@@ -203,7 +203,7 @@ fn main() {
         let otk: [32]u8 = undefined;
         expect_eq(chacha20Block(key[0..32], 0 as u32, nonce[0..12], blk[0..64]), true);
         expect_eq(poly1305KeyGen(key[0..32], nonce[0..12], otk[0..32]), true);
-        expect_eq(bytesEq(blk[0..32], otk[0..32]), true);
+        expect_eq(tBytesEq(blk[0..32], otk[0..32]), true);
 
         let expected_otk: [32]u8 = [
             0x8a, 0xd5, 0xa0, 0x8b, 0x90, 0x5f, 0x81, 0xcc,
@@ -211,7 +211,7 @@ fn main() {
             0xa8, 0x33, 0xb6, 0x37, 0xe3, 0xfd, 0x0d, 0xa5,
             0x08, 0xdb, 0xb8, 0xe2, 0xfd, 0xd1, 0xa6, 0x46
         ];
-        expect_eq(bytesEq(otk[0..32], expected_otk[0..32]), true);
+        expect_eq(tBytesEq(otk[0..32], expected_otk[0..32]), true);
 
         // Multi-block ChaCha20 XOR involution (130 bytes > 2 blocks)
         let msg: [130]u8 = undefined;
@@ -223,9 +223,9 @@ fn main() {
         let enc: [130]u8 = undefined;
         let dec_buf: [130]u8 = undefined;
         expect_eq(chacha20Xor(key[0..32], 1 as u32, nonce[0..12], msg[0..130], enc[0..130]), true);
-        expect_eq(bytesEq(msg[0..130], enc[0..130]), false);
+        expect_eq(tBytesEq(msg[0..130], enc[0..130]), false);
         expect_eq(chacha20Xor(key[0..32], 1 as u32, nonce[0..12], enc[0..130], dec_buf[0..130]), true);
-        expect_eq(bytesEq(msg[0..130], dec_buf[0..130]), true);
+        expect_eq(tBytesEq(msg[0..130], dec_buf[0..130]), true);
     });
 
     test("5. @cap/chacha20-poly1305 — HChaCha20 official vector & XChaCha20-Poly1305 round-trip", () => {
@@ -249,7 +249,7 @@ fn main() {
             0xa0, 0xf9, 0xe4, 0xd5, 0x8a, 0x74, 0xa8, 0x53,
             0xc1, 0x2e, 0xc4, 0x13, 0x26, 0xd3, 0xec, 0xdc
         ];
-        expect_eq(bytesEq(subkey[0..32], expected_subkey[0..32]), true);
+        expect_eq(tBytesEq(subkey[0..32], expected_subkey[0..32]), true);
 
         // XChaCha20-Poly1305 192-bit nonce AEAD round-trip + tamper rejection
         let key: [32]u8 = undefined;
@@ -272,9 +272,9 @@ fn main() {
         let tag: [16]u8 = undefined;
         let dec_buf: [32]u8 = undefined;
         expect_eq(xchacha20Poly1305Encrypt(key[0..32], nonce24[0..24], aad[0..12], pt[0..32], ct[0..32], tag[0..16]), true);
-        expect_eq(bytesEq(ct[0..32], pt[0..32]), false);
+        expect_eq(tBytesEq(ct[0..32], pt[0..32]), false);
         expect_eq(xchacha20Poly1305Decrypt(key[0..32], nonce24[0..24], aad[0..12], ct[0..32], tag[0..16], dec_buf[0..32]), true);
-        expect_eq(bytesEq(dec_buf[0..32], pt[0..32]), true);
+        expect_eq(tBytesEq(dec_buf[0..32], pt[0..32]), true);
 
         // Tamper tag -> must fail and zeroize dec_buf
         tag[0] = tag[0] ^ 0xFF;

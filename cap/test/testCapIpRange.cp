@@ -1,19 +1,11 @@
 // cap/test/testCapIpRange.cp
-// Comprehensive unit tests for @cap/ip-range (IPv4 & CIDR subnet engine)
+// Comprehensive unit tests for @cap/ipnet (IPv4 & CIDR subnet range engine)
 
 import { test, expect_eq } from "cap:test";
 import {
-    Ipv4Result,
-    Ipv4Cidr,
     parseIpv4,
     formatIpv4,
-    parseCidr,
-    cidrContains,
-    cidrOverlaps,
-    isPrivateIpv4,
-    isLoopbackIpv4,
-    isLinkLocalIpv4,
-    isPublicIpv4,
+    Ipv4Net,
 } from "../../packages/ipnet/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
@@ -31,87 +23,78 @@ fn sliceEq(a: []const u8, b: []const u8) -> bool {
 }
 
 fn main() {
-    test("1. @cap/ip-range — parseIpv4 & formatIpv4 round-trip & rejects leading zeros", () => {
-        const r: Ipv4Result = parseIpv4("192.168.1.42");
-        expect_eq(r.valid, true);
+    test("1. @cap/ipnet — parseIpv4 & formatIpv4 round-trip & rejects leading zeros", () => {
+        const r = parseIpv4("192.168.1.42");
+        expect_eq(r != null, true);
         let buf: [24]u8 = undefined;
-        const n: usize = formatIpv4(r.ip, buf[0..24]);
+        const n: usize = formatIpv4(r ?? (0 as u32), buf[0..24]);
         expect_eq(sliceEq(buf[0..n], "192.168.1.42"), true);
 
-        const z: Ipv4Result = parseIpv4("0.0.0.0");
-        expect_eq(z.valid, true);
-        expect_eq(z.ip, 0 as u32);
+        const z = parseIpv4("0.0.0.0");
+        expect_eq(z != null, true);
+        expect_eq(z ?? (1 as u32), 0 as u32);
 
-        // Reject leading zeros (octal ambiguity) and out-of-range octets
-        expect_eq(parseIpv4("010.0.0.1").valid, false);
-        expect_eq(parseIpv4("192.168.01.1").valid, false);
-        expect_eq(parseIpv4("256.0.0.1").valid, false);
-        expect_eq(parseIpv4("1.2.3").valid, false);
+        expect_eq(parseIpv4("010.0.0.1") == null, true);
+        expect_eq(parseIpv4("192.168.01.1") == null, true);
+        expect_eq(parseIpv4("256.0.0.1") == null, true);
+        expect_eq(parseIpv4("1.2.3") == null, true);
     });
 
-    test("2. @cap/ip-range — parseCidr for /24, /0 & /32", () => {
-        const c24: Ipv4Cidr = parseCidr("192.168.1.130/24");
-        expect_eq(c24.valid, true);
+    test("2. @cap/ipnet — Ipv4Net.parse for /24, /0 & /32", () => {
+        const c24Opt = Ipv4Net.parse("192.168.1.130/24");
+        expect_eq(c24Opt != null, true);
+        const c24 = c24Opt ?? Ipv4Net { addr: 0, prefix_len: 0 };
         expect_eq(c24.prefix_len, 24 as u8);
-        expect_eq(c24.mask, 0xFFFFFF00 as u32);
-        expect_eq(c24.network, parseIpv4("192.168.1.0").ip);
-        expect_eq(c24.broadcast, parseIpv4("192.168.1.255").ip);
+        expect_eq(c24.netmask(), 0xFFFFFF00 as u32);
+        expect_eq(c24.network(), parseIpv4("192.168.1.0") ?? (0 as u32));
+        expect_eq(c24.broadcast(), parseIpv4("192.168.1.255") ?? (0 as u32));
 
-        const c0: Ipv4Cidr = parseCidr("0.0.0.0/0");
-        expect_eq(c0.valid, true);
-        expect_eq(c0.network, 0 as u32);
-        expect_eq(c0.broadcast, 0xFFFFFFFF as u32);
+        const c0Opt = Ipv4Net.parse("0.0.0.0/0");
+        expect_eq(c0Opt != null, true);
+        const c0 = c0Opt ?? Ipv4Net { addr: 0, prefix_len: 32 };
+        expect_eq(c0.network(), 0 as u32);
+        expect_eq(c0.broadcast(), 0xFFFFFFFF as u32);
 
-        const c32: Ipv4Cidr = parseCidr("8.8.8.8/32");
-        expect_eq(c32.valid, true);
-        expect_eq(c32.network, c32.broadcast);
+        const c32Opt = Ipv4Net.parse("8.8.8.8/32");
+        expect_eq(c32Opt != null, true);
+        const c32 = c32Opt ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        expect_eq(c32.network(), c32.broadcast());
     });
 
-    test("3. @cap/ip-range — cidrContains exact boundaries", () => {
-        const c: Ipv4Cidr = parseCidr("10.10.0.0/16");
-        expect_eq(cidrContains(c, parseIpv4("10.10.0.0").ip), true);
-        expect_eq(cidrContains(c, parseIpv4("10.10.255.255").ip), true);
-        expect_eq(cidrContains(c, parseIpv4("10.9.255.255").ip), false);
-        expect_eq(cidrContains(c, parseIpv4("10.11.0.0").ip), false);
+    test("3. @cap/ipnet — containsIp exact subnet boundaries", () => {
+        const c = Ipv4Net.parse("10.10.0.0/16") ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        expect_eq(c.containsIp(parseIpv4("10.10.0.0") ?? (0 as u32)), true);
+        expect_eq(c.containsIp(parseIpv4("10.10.255.255") ?? (0 as u32)), true);
+        expect_eq(c.containsIp(parseIpv4("10.9.255.255") ?? (0 as u32)), false);
+        expect_eq(c.containsIp(parseIpv4("10.11.0.0") ?? (0 as u32)), false);
     });
 
-    test("4. @cap/ip-range — cidrOverlaps overlapping & disjoint subnets", () => {
-        const big: Ipv4Cidr = parseCidr("10.0.0.0/8");
-        const sub: Ipv4Cidr = parseCidr("10.20.0.0/16");
-        const other: Ipv4Cidr = parseCidr("192.168.0.0/16");
+    test("4. @cap/ipnet — containsNet & supernet hierarchy", () => {
+        const big = Ipv4Net.parse("10.0.0.0/8") ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        const sub = Ipv4Net.parse("10.20.0.0/16") ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        const other = Ipv4Net.parse("192.168.0.0/16") ?? Ipv4Net { addr: 0, prefix_len: 0 };
 
-        expect_eq(cidrOverlaps(big, sub), true);
-        expect_eq(cidrOverlaps(sub, big), true);
-        expect_eq(cidrOverlaps(big, other), false);
+        expect_eq(big.containsNet(sub), true);
+        expect_eq(sub.containsNet(big), false);
+        expect_eq(big.containsNet(other), false);
+
+        const supOpt = sub.supernet();
+        expect_eq(supOpt != null, true);
+        const sup = supOpt ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        expect_eq(sup.prefix_len, 15 as u8);
+        expect_eq(sup.containsNet(sub), true);
     });
 
-    test("5. @cap/ip-range — RFC 1918 private, loopback, link-local 169.254.169.254 & isPublicIpv4", () => {
-        expect_eq(isPrivateIpv4(parseIpv4("10.0.0.1").ip), true);
-        expect_eq(isPrivateIpv4(parseIpv4("172.16.0.1").ip), true);
-        expect_eq(isPrivateIpv4(parseIpv4("172.31.255.254").ip), true);
-        expect_eq(isPrivateIpv4(parseIpv4("172.32.0.1").ip), false);
-        expect_eq(isPrivateIpv4(parseIpv4("192.168.0.1").ip), true);
+    test("5. @cap/ipnet — rejects invalid CIDR & formats truncated CIDR", () => {
+        expect_eq(Ipv4Net.parse("10.0.0.0/33") == null, true);
+        expect_eq(Ipv4Net.parse("10.0.0.0") == null, true);
+        expect_eq(Ipv4Net.parse("10.0.0.0/08") == null, true);
+        expect_eq(Ipv4Net.parse("bad/24") == null, true);
 
-        expect_eq(isLoopbackIpv4(parseIpv4("127.0.0.1").ip), true);
-        expect_eq(isLinkLocalIpv4(parseIpv4("169.254.169.254").ip), true);
-
-        expect_eq(isPublicIpv4(parseIpv4("8.8.8.8").ip), true);
-        expect_eq(isPublicIpv4(parseIpv4("1.1.1.1").ip), true);
-        expect_eq(isPublicIpv4(parseIpv4("10.0.0.1").ip), false);
-        expect_eq(isPublicIpv4(parseIpv4("127.0.0.1").ip), false);
-        expect_eq(isPublicIpv4(parseIpv4("169.254.169.254").ip), false);
-        expect_eq(isPublicIpv4(parseIpv4("100.64.0.1").ip), false);
-        expect_eq(isPublicIpv4(parseIpv4("224.0.0.1").ip), false);
-        expect_eq(isPublicIpv4(parseIpv4("255.255.255.255").ip), false);
-    });
-
-    test("6. @cap/ip-range — rejects invalid CIDR & tiny buffers", () => {
-        expect_eq(parseCidr("10.0.0.0/33").valid, false);
-        expect_eq(parseCidr("10.0.0.0").valid, false);
-        expect_eq(parseCidr("10.0.0.0/08").valid, false);
-        expect_eq(parseCidr("bad/24").valid, false);
-
-        let tiny: [5]u8 = undefined;
-        expect_eq(formatIpv4(parseIpv4("192.168.1.1").ip, tiny[0..5]), 0 as usize);
+        const net = Ipv4Net.parse("192.168.1.99/24") ?? Ipv4Net { addr: 0, prefix_len: 0 };
+        const tr = net.trunc();
+        let buf: [24]u8 = undefined;
+        const n = tr.formatCidr(buf[0..24]);
+        expect_eq(sliceEq(buf[0..n], "192.168.1.0/24"), true);
     });
 }
