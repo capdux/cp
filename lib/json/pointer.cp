@@ -4,6 +4,35 @@
 const std = @import("std");
 import { JsonValue, JsonField, JsonTag } from "./value";
 
+type JptrVec16 = @Vector(16, u8);
+
+fn jptrFindEscape(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_tilde: JptrVec16 = @splat('~' as u8);
+    const v_slash: JptrVec16 = @splat('/' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: JptrVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_tilde) | (v == v_slash))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '~' || s[i] == '/') return i;
+    }
+    return s.len;
+}
+
+fn jptrFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: JptrVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: JptrVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
 pub err JsonPatchError {
     InvalidPointer,
     PathNotFound,
@@ -21,14 +50,22 @@ pub struct JsonPointer {
     pub static fn escapeToken(allocator: std.mem.Allocator, token: []const u8): ([]u8)! {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(allocator);
-        for (c of token) {
-            if (c == '~') {
+        let i: usize = 0;
+        while (i < token.len) {
+            const next = jptrFindEscape(token, i);
+            if (next > i) {
+                out.appendSlice(allocator, token[i..next])?;
+                i = next;
+                if (i >= token.len) break;
+            }
+            if (token[i] == '~') {
                 out.appendSlice(allocator, "~0")?;
-            } else if (c == '/') {
+            } else if (token[i] == '/') {
                 out.appendSlice(allocator, "~1")?;
             } else {
-                out.append(allocator, c)?;
+                out.append(allocator, token[i])?;
             }
+            i += 1;
         }
         return out.toOwnedSlice(allocator);
     }
@@ -39,22 +76,22 @@ pub struct JsonPointer {
         errdefer out.deinit(allocator);
         let i: usize = 0;
         while (i < escaped.len) {
-            const c = escaped[i];
-            if (c == '~') {
-                if (i + 1 >= escaped.len) return err.InvalidPointer;
-                const nxt = escaped[i + 1];
-                if (nxt == '0') {
-                    out.append(allocator, '~')?;
-                } else if (nxt == '1') {
-                    out.append(allocator, '/')?;
-                } else {
-                    return err.InvalidPointer;
-                }
-                i += 2;
-            } else {
-                out.append(allocator, c)?;
-                i += 1;
+            const next = jptrFindByte(escaped, i, '~');
+            if (next > i) {
+                out.appendSlice(allocator, escaped[i..next])?;
+                i = next;
+                if (i >= escaped.len) break;
             }
+            if (i + 1 >= escaped.len) return err.InvalidPointer;
+            const nxt = escaped[i + 1];
+            if (nxt == '0') {
+                out.append(allocator, '~')?;
+            } else if (nxt == '1') {
+                out.append(allocator, '/')?;
+            } else {
+                return err.InvalidPointer;
+            }
+            i += 2;
         }
         return out.toOwnedSlice(allocator);
     }
@@ -89,10 +126,7 @@ pub struct JsonPointer {
         }
         let pos: usize = 1;
         while (true) {
-            let next_slash = pos;
-            while (next_slash < ptr.len && ptr[next_slash] != '/') {
-                next_slash += 1;
-            }
+            const next_slash = jptrFindByte(ptr, pos, '/');
             const raw_tok = ptr[pos..next_slash];
             const decoded = JsonPointer.unescapeToken(allocator, raw_tok)?;
             tokens.append(allocator, decoded)?;

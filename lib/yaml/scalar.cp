@@ -28,9 +28,46 @@ pub struct YamlScalar {
     str_v: []const u8 = "",
 }
 
+type YamlScVec16 = @Vector(16, u8);
+
+fn makeYamlScHexLut(): [i8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [i8; 256] = [-1; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(i8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(i8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(i8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+fn makeYamlScFirstLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    const chars = " \t\n\r-?:,[]{}#&*!|>'\"%@`";
+    let i: usize = 0;
+    while (i < chars.len) : (i += 1) {
+        lut[@as(usize, chars[i])] = 1;
+    }
+    return lut;
+}
+
+const YAML_SC_HEX_LUT: [i8; 256] = makeYamlScHexLut();
+const YAML_SC_FIRST_LUT: [u8; 256] = makeYamlScFirstLut();
+
 fn eqlBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: YamlScVec16 = a[i .. i + 16][0..16].*;
+        const vb: YamlScVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) { return false; }
         i += 1;
@@ -47,10 +84,7 @@ fn isOctDigit(c: u8): bool {
 }
 
 fn hexVal(c: u8): i32 {
-    if (c >= '0' && c <= '9') { return @as(i32, c - '0'); }
-    if (c >= 'a' && c <= 'f') { return @as(i32, c - 'a') + 10; }
-    if (c >= 'A' && c <= 'F') { return @as(i32, c - 'A') + 10; }
-    return -1;
+    return @as(i32, YAML_SC_HEX_LUT[@as(usize, c)]);
 }
 
 fn trimHorizSpace(s: []const u8): []const u8 {
@@ -258,10 +292,17 @@ struct OutWriter {
     }
 
     fn writeStr(*_, s: []const u8) {
-        let i: usize = 0;
-        while (i < s.len) {
-            _.writeByte(s[i]);
-            i += 1;
+        if (s.len == 0) return;
+        if (_.pos + s.len <= _.buf.len) {
+            @memcpy(_.buf[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
+        } else {
+            const avail = _.buf.len - _.pos;
+            if (avail > 0) {
+                @memcpy(_.buf[_.pos .. _.pos + avail], s[0..avail]);
+                _.pos += avail;
+            }
+            _.overflow = true;
         }
     }
 
@@ -284,7 +325,18 @@ pub fn unescapeDoubleQuoted(raw: []const u8, out: []u8): ([]const u8)? {
 
     let w = OutWriter{ buf: out };
     let i: usize = 0;
+    const v_bs: YamlScVec16 = @splat('\\' as u8);
     while (i < body.len) {
+        const run_start = i;
+        while (i + 16 <= body.len) {
+            const v: YamlScVec16 = body[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_bs)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            w.writeStr(body[run_start..i]);
+            if (i >= body.len) break;
+        }
         const c = body[i];
         if (c == '\\') {
             if (i + 1 >= body.len) { return null; }
@@ -336,7 +388,18 @@ pub fn unescapeSingleQuoted(raw: []const u8, out: []u8): ([]const u8)? {
 
     let w = OutWriter{ buf: out };
     let i: usize = 0;
+    const v_sq: YamlScVec16 = @splat('\'' as u8);
     while (i < body.len) {
+        const run_start = i;
+        while (i + 16 <= body.len) {
+            const v: YamlScVec16 = body[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_sq)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            w.writeStr(body[run_start..i]);
+            if (i >= body.len) break;
+        }
         if (body[i] == '\'') {
             if (i + 1 < body.len && body[i + 1] == '\'') {
                 w.writeByte('\'');
@@ -361,24 +424,33 @@ pub fn needsQuoting(s: []const u8): bool {
 
     const first = s[0];
     const last = s[s.len - 1];
-    if (first == ' ' || first == '\t' || first == '\n' || first == '\r' ||
+    if (YAML_SC_FIRST_LUT[@as(usize, first)] != 0 ||
         last == ' ' || last == '\t' || last == '\n' || last == '\r' || last == ':')
-    {
-        return true;
-    }
-
-    // YAML 块/流语法前缀指示符
-    if (first == '-' || first == '?' || first == ':' || first == ',' ||
-        first == '[' || first == ']' || first == '{' || first == '}' ||
-        first == '#' || first == '&' || first == '*' || first == '!' ||
-        first == '|' || first == '>' || first == '\'' || first == '"' ||
-        first == '%' || first == '@' || first == '`')
     {
         return true;
     }
 
     // 控制字符、映射分隔符 ": " 与注释前缀 " #" / "\t#"
     let i: usize = 0;
+    const v_sp: YamlScVec16 = @splat(0x20 as u8);
+    const v_del: YamlScVec16 = @splat(0x7F as u8);
+    const v_cl: YamlScVec16 = @splat(':' as u8);
+    const v_hs: YamlScVec16 = @splat('#' as u8);
+    while (i + 16 <= s.len) {
+        const v: YamlScVec16 = s[i .. i + 16][0..16].*;
+        const hit = (v < v_sp) | (v == v_del) | (v == v_cl) | (v == v_hs);
+        if (!@reduce(.Or, hit)) {
+            i += 16;
+            continue;
+        }
+        const chunk_end = i + 16;
+        while (i < chunk_end) : (i += 1) {
+            const c = s[i];
+            if (c < 0x20 || c == 0x7F) return true;
+            if (c == ':' && i + 1 < s.len && (s[i + 1] == ' ' || s[i + 1] == '\t')) return true;
+            if (c == '#' && i > 0 && (s[i - 1] == ' ' || s[i - 1] == '\t')) return true;
+        }
+    }
     while (i < s.len) {
         const c = s[i];
         if (c < 0x20 || c == 0x7F) {
@@ -408,7 +480,22 @@ pub fn formatSafeScalar(s: []const u8, out: []u8): ([]const u8)? {
     const hex = "0123456789abcdef";
     w.writeByte('"');
     let i: usize = 0;
+    const v_sp: YamlScVec16 = @splat(0x20 as u8);
+    const v_del: YamlScVec16 = @splat(0x7F as u8);
+    const v_qt: YamlScVec16 = @splat('"' as u8);
+    const v_bs: YamlScVec16 = @splat('\\' as u8);
     while (i < s.len) {
+        const run_start = i;
+        while (i + 16 <= s.len) {
+            const v: YamlScVec16 = s[i .. i + 16][0..16].*;
+            const hit = (v < v_sp) | (v == v_del) | (v == v_qt) | (v == v_bs);
+            if (@reduce(.Or, hit)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            w.writeStr(s[run_start..i]);
+            if (i >= s.len) break;
+        }
         const c = s[i];
         switch (c) {
             '"' => w.writeStr("\\\""),

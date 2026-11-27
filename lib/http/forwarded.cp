@@ -8,6 +8,51 @@ pub struct ForwardedHop {
     proto: []const u8 = "",
 }
 
+type FwdVec16 = @Vector(16, u8);
+
+fn makeFwdLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const FWD_LOWER_LUT: [u8; 256] = makeFwdLowerLut();
+
+fn fwdFindByte(s: []const u8, start: usize, ch: u8): usize {
+    let i: usize = start;
+    const v_ch: FwdVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: FwdVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_ch)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == ch) return i;
+    }
+    return s.len;
+}
+
+fn fwdFindEither2(s: []const u8, start: usize, c1: u8, c2: u8): usize {
+    let i: usize = start;
+    const v1: FwdVec16 = @splat(c1);
+    const v2: FwdVec16 = @splat(c2);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: FwdVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v1) | (v == v2))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == c1 || s[i] == c2) return i;
+    }
+    return s.len;
+}
+
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
@@ -23,12 +68,18 @@ fn trimOws(s: []const u8): []const u8 {
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    const lo_A: FwdVec16 = @splat(65 as u8);
+    const hi_Z: FwdVec16 = @splat(90 as u8);
+    const case_bit: FwdVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: FwdVec16 = a[i .. i + 16][0..16].*;
+        const vb: FwdVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        let ca = a[i];
-        let cb = b[i];
-        if (ca >= 'A' && ca <= 'Z') { ca += 32; }
-        if (cb >= 'A' && cb <= 'Z') { cb += 32; }
-        if (ca != cb) { return false; }
+        if (FWD_LOWER_LUT[@as(usize, a[i])] != FWD_LOWER_LUT[@as(usize, b[i])]) { return false; }
         i += 1;
     }
     return true;
@@ -58,8 +109,10 @@ pub struct ForwardedIterator {
             const hop_start = _.pos;
             let in_quote = false;
             while (_.pos < _.header.len) {
-                const c = _.header[_.pos];
                 if (in_quote) {
+                    _.pos = fwdFindEither2(_.header, _.pos, '\\', '"');
+                    if (_.pos >= _.header.len) break;
+                    const c = _.header[_.pos];
                     if (c == '\\' && _.pos + 1 < _.header.len) {
                         _.pos += 2;
                         continue;
@@ -69,6 +122,9 @@ pub struct ForwardedIterator {
                     }
                     _.pos += 1;
                 } else {
+                    _.pos = fwdFindEither2(_.header, _.pos, '"', ',');
+                    if (_.pos >= _.header.len) break;
+                    const c = _.header[_.pos];
                     if (c == '"') {
                         in_quote = true;
                         _.pos += 1;
@@ -98,8 +154,10 @@ pub struct ForwardedIterator {
                 const seg_start = p;
                 let seg_quote = false;
                 while (p < hop_str.len) {
-                    const c = hop_str[p];
                     if (seg_quote) {
+                        p = fwdFindEither2(hop_str, p, '\\', '"');
+                        if (p >= hop_str.len) break;
+                        const c = hop_str[p];
                         if (c == '\\' && p + 1 < hop_str.len) {
                             p += 2;
                             continue;
@@ -109,6 +167,9 @@ pub struct ForwardedIterator {
                         }
                         p += 1;
                     } else {
+                        p = fwdFindEither2(hop_str, p, '"', ';');
+                        if (p >= hop_str.len) break;
+                        const c = hop_str[p];
                         if (c == '"') {
                             seg_quote = true;
                             p += 1;
@@ -127,15 +188,8 @@ pub struct ForwardedIterator {
                 const seg = trimOws(hop_str[seg_start..seg_end]);
                 if (seg.len == 0) { continue; }
 
-                let eq_idx: usize? = null;
-                let k: usize = 0;
-                while (k < seg.len) {
-                    if (seg[k] == '=') {
-                        eq_idx = k;
-                        break;
-                    }
-                    k += 1;
-                }
+                const eq_pos = fwdFindByte(seg, 0, '=');
+                const eq_idx: usize? = if (eq_pos < seg.len) eq_pos else null;
 
                 if (eq := eq_idx) {
                     const key = trimOws(seg[0..eq]);
@@ -182,9 +236,7 @@ pub fn extractClientIpFromXff(xff_header: []const u8, trusted_proxies: usize): (
 
     while (pos < xff_header.len && count < 64) {
         const start = pos;
-        while (pos < xff_header.len && xff_header[pos] != ',') {
-            pos += 1;
-        }
+        pos = fwdFindByte(xff_header, pos, ',');
         const entry = trimOws(xff_header[start..pos]);
         if (pos < xff_header.len && xff_header[pos] == ',') {
             pos += 1;
@@ -212,12 +264,9 @@ pub fn stripPortFromForwardedFor(val: []const u8): []const u8 {
 
     // 带方括号 IPv6: [2001:db8::1]:4711 或 [2001:db8::1]
     if (s[0] == '[') {
-        let i: usize = 1;
-        while (i < s.len) {
-            if (s[i] == ']') {
-                return s[1..i];
-            }
-            i += 1;
+        const rb = fwdFindByte(s, 1, ']');
+        if (rb < s.len) {
+            return s[1..rb];
         }
         return s;
     }
@@ -227,11 +276,11 @@ pub fn stripPortFromForwardedFor(val: []const u8): []const u8 {
     let last_colon: usize = 0;
     let i: usize = 0;
     while (i < s.len) {
-        if (s[i] == ':') {
-            colon_count += 1;
-            last_colon = i;
-        }
-        i += 1;
+        const next_c = fwdFindByte(s, i, ':');
+        if (next_c >= s.len) break;
+        colon_count += 1;
+        last_colon = next_c;
+        i = next_c + 1;
     }
 
     if (colon_count == 1 && last_colon + 1 < s.len) {

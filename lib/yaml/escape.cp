@@ -1,6 +1,38 @@
 // Source: Absorbed from /data/dev/bun/src/yaml/yaml.zig | Synced: 2026-11-21T15:32:48Z (YAML 1.2 Scalar Quoting & Escaper)
 
+type YamlEscVec16 = @Vector(16, u8);
+
 const HEX_LOWER: []const u8 = "0123456789abcdef";
+
+fn makeYamlHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+fn makeYamlFirstIndLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    const chars = "?&*!|>'\"%@`,-[]{}#:";
+    let i: usize = 0;
+    while (i < chars.len) : (i += 1) {
+        lut[usize(chars[i])] = 1;
+    }
+    return lut;
+}
+
+const YAML_HEX_LUT: [u8; 256] = makeYamlHexLut();
+const YAML_FIRST_IND_LUT: [u8; 256] = makeYamlFirstIndLut();
 
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -18,6 +50,18 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: YamlEscVec16 = @splat(65 as u8);
+    const hi_Z: YamlEscVec16 = @splat(90 as u8);
+    const case_bit: YamlEscVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: YamlEscVec16 = a[i .. i + 16][0..16].*;
+        const vb: YamlEscVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -28,10 +72,9 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 fn hexNibble(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return null;
+    const v = YAML_HEX_LUT[usize(c)];
+    if (v == 0xFF) return null;
+    return v;
 }
 
 fn isYamlKeyword(s: []const u8): bool {
@@ -106,10 +149,7 @@ fn looksLikeYamlNumber(s: []const u8): bool {
 }
 
 fn isFirstIndicator(c: u8): bool {
-    return c == '?' || c == '&' || c == '*' || c == '!' || c == '|'
-        || c == '>' || c == '\'' || c == '"' || c == '%' || c == '@'
-        || c == '`' || c == ',' || c == '-' || c == '[' || c == ']'
-        || c == '{' || c == '}' || c == '#' || c == ':';
+    return YAML_FIRST_IND_LUT[usize(c)] != 0;
 }
 
 /// 判断字符串作为 YAML 1.2 标量输出时是否必须加引号
@@ -128,6 +168,32 @@ export fn needsYamlQuotes(s: []const u8): bool {
     }
 
     let i: usize = 0;
+    const v_sp: YamlEscVec16 = @splat(0x20 as u8);
+    const v_del: YamlEscVec16 = @splat(0x7F as u8);
+    const v_lb: YamlEscVec16 = @splat('[' as u8);
+    const v_rb: YamlEscVec16 = @splat(']' as u8);
+    const v_lc: YamlEscVec16 = @splat('{' as u8);
+    const v_rc: YamlEscVec16 = @splat('}' as u8);
+    const v_cm: YamlEscVec16 = @splat(',' as u8);
+    const v_cl: YamlEscVec16 = @splat(':' as u8);
+    const v_hs: YamlEscVec16 = @splat('#' as u8);
+    while (i + 16 <= s.len) {
+        const v: YamlEscVec16 = s[i .. i + 16][0..16].*;
+        const hit = (v < v_sp) | (v == v_del) | (v == v_lb) | (v == v_rb) |
+            (v == v_lc) | (v == v_rc) | (v == v_cm) | (v == v_cl) | (v == v_hs);
+        if (!@reduce(.Or, hit)) {
+            i += 16;
+            continue;
+        }
+        const chunk_end = i + 16;
+        while (i < chunk_end) : (i += 1) {
+            const c = s[i];
+            if (c < 0x20 || c == 0x7F) return true;
+            if (c == '[' || c == ']' || c == '{' || c == '}' || c == ',') return true;
+            if (c == ':' && (i + 1 == s.len || isSpace(s[i + 1]))) return true;
+            if (c == '#' && i > 0 && isSpace(s[i - 1])) return true;
+        }
+    }
     while (i < s.len) {
         const c = s[i];
         if (c < 0x20 || c == 0x7F) {
@@ -160,11 +226,9 @@ struct YamlWriter {
 
     fn writeSlice(*_, s: []const u8): bool {
         if (_.pos + s.len > _.out.len) return false;
-        let i: usize = 0;
-        while (i < s.len) {
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(_.out[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
         }
         return true;
     }
@@ -206,7 +270,23 @@ export fn quoteYamlSingle(s: []const u8, out: []u8): ([]const u8)? {
     let w = YamlWriter{ out: out, pos: 0 };
     if (!w.writeByte('\'')) return null;
 
-    for (c of s) {
+    let i: usize = 0;
+    const v_sp: YamlEscVec16 = @splat(0x20 as u8);
+    const v_del: YamlEscVec16 = @splat(0x7F as u8);
+    const v_sq: YamlEscVec16 = @splat('\'' as u8);
+    while (i < s.len) {
+        const run_start = i;
+        while (i + 16 <= s.len) {
+            const v: YamlEscVec16 = s[i .. i + 16][0..16].*;
+            const hit = (v < v_sp) | (v == v_del) | (v == v_sq);
+            if (@reduce(.Or, hit)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            if (!w.writeSlice(s[run_start..i])) return null;
+            if (i >= s.len) break;
+        }
+        const c = s[i];
         if (c < 0x20 || c == 0x7F) {
             return null;
         }
@@ -215,6 +295,7 @@ export fn quoteYamlSingle(s: []const u8, out: []u8): ([]const u8)? {
         } else {
             if (!w.writeByte(c)) return null;
         }
+        i += 1;
     }
 
     if (!w.writeByte('\'')) return null;
@@ -226,7 +307,24 @@ export fn quoteYamlDouble(s: []const u8, out: []u8): ([]const u8)? {
     let w = YamlWriter{ out: out, pos: 0 };
     if (!w.writeByte('"')) return null;
 
-    for (c of s) {
+    let i: usize = 0;
+    const v_sp: YamlEscVec16 = @splat(0x20 as u8);
+    const v_del: YamlEscVec16 = @splat(0x7F as u8);
+    const v_qt: YamlEscVec16 = @splat('"' as u8);
+    const v_bs: YamlEscVec16 = @splat('\\' as u8);
+    while (i < s.len) {
+        const run_start = i;
+        while (i + 16 <= s.len) {
+            const v: YamlEscVec16 = s[i .. i + 16][0..16].*;
+            const hit = (v < v_sp) | (v == v_del) | (v == v_qt) | (v == v_bs);
+            if (@reduce(.Or, hit)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            if (!w.writeSlice(s[run_start..i])) return null;
+            if (i >= s.len) break;
+        }
+        const c = s[i];
         if (c == '"') {
             if (!w.writeSlice("\\\"")) return null;
         } else if (c == '\\') {
@@ -256,6 +354,7 @@ export fn quoteYamlDouble(s: []const u8, out: []u8): ([]const u8)? {
         } else {
             if (!w.writeByte(c)) return null;
         }
+        i += 1;
     }
 
     if (!w.writeByte('"')) return null;
@@ -266,10 +365,8 @@ export fn quoteYamlDouble(s: []const u8, out: []u8): ([]const u8)? {
 export fn formatYamlScalar(s: []const u8, out: []u8): ([]const u8)? {
     if (!needsYamlQuotes(s)) {
         if (out.len < s.len) return null;
-        let i: usize = 0;
-        while (i < s.len) {
-            out[i] = s[i];
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(out[0..s.len], s);
         }
         return out[0..s.len];
     }
@@ -294,8 +391,19 @@ export fn unescapeYamlDouble(escaped: []const u8, out: []u8): ([]const u8)? {
 
     let w = YamlWriter{ out: out, pos: 0 };
     let i: usize = 0;
+    const v_bs: YamlEscVec16 = @splat('\\' as u8);
 
     while (i < src.len) {
+        const run_start = i;
+        while (i + 16 <= src.len) {
+            const v: YamlEscVec16 = src[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_bs)) break;
+            i += 16;
+        }
+        if (i > run_start) {
+            if (!w.writeSlice(src[run_start..i])) return null;
+            if (i >= src.len) break;
+        }
         if (src[i] != '\\') {
             if (!w.writeByte(src[i])) return null;
             i += 1;

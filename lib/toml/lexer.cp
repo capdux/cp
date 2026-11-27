@@ -37,34 +37,81 @@ pub struct TomlToken {
     bool_val: bool = false,
 }
 
+type TomlLexVec16 = @Vector(16, u8);
+
+const TOML_FLAG_DIGIT: u8 = 1;
+const TOML_FLAG_HEX: u8 = 2;
+const TOML_FLAG_OCT: u8 = 4;
+const TOML_FLAG_BIN: u8 = 8;
+const TOML_FLAG_BARE: u8 = 16;
+const TOML_FLAG_DT: u8 = 32;
+
+fn makeTomlCharFlags(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i >= '0' && i <= '9') {
+            f |= TOML_FLAG_DIGIT | TOML_FLAG_HEX | TOML_FLAG_BARE | TOML_FLAG_DT;
+            if (i <= '7') f |= TOML_FLAG_OCT;
+            if (i <= '1') f |= TOML_FLAG_BIN;
+        }
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) {
+            f |= TOML_FLAG_HEX;
+        }
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i == '-') {
+            f |= TOML_FLAG_BARE;
+        }
+        if (i == '-' || i == ':' || i == '.' || i == 'T' || i == 't' || i == 'Z' || i == 'z' || i == '+') {
+            f |= TOML_FLAG_DT;
+        }
+        lut[i] = f;
+    }
+    return lut;
+}
+
+fn makeTomlLexHexLut(): [i8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [i8; 256] = [-1; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(i8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(i8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(i8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+const TOML_CHAR_FLAGS: [u8; 256] = makeTomlCharFlags();
+const TOML_LEX_HEX_LUT: [i8; 256] = makeTomlLexHexLut();
+
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_DIGIT) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_HEX) != 0;
 }
 
 fn isOctDigit(c: u8): bool {
-    return c >= '0' && c <= '7';
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_OCT) != 0;
 }
 
 fn isBinDigit(c: u8): bool {
-    return c == '0' || c == '1';
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_BIN) != 0;
 }
 
 fn isBareKeyChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z')
-        || (c >= 'A' && c <= 'Z')
-        || isDigit(c)
-        || c == '_'
-        || c == '-';
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_BARE) != 0;
 }
 
 fn hexVal(c: u8): i64 {
-    if (c >= '0' && c <= '9') { return (c - '0') as i64; }
-    if (c >= 'a' && c <= 'f') { return (c - 'a' + 10) as i64; }
-    return (c - 'A' + 10) as i64;
+    return @as(i64, TOML_LEX_HEX_LUT[@as(usize, c)]);
 }
 
 fn parseRadixInt(digits: []const u8, base: i64): i64? {
@@ -110,7 +157,7 @@ fn isIsoTimePrefix(s: []const u8): bool {
 }
 
 fn isDatetimeContChar(c: u8): bool {
-    return isDigit(c) || c == '-' || c == ':' || c == '.' || c == 'T' || c == 't' || c == 'Z' || c == 'z' || c == '+';
+    return (TOML_CHAR_FLAGS[@as(usize, c)] & TOML_FLAG_DT) != 0;
 }
 
 /// 纯 CP、零外部依赖、零堆分配 TOML v1.0 词法扫描器
@@ -142,11 +189,30 @@ pub struct TomlLexer {
     }
 
     fn skipSpacesAndComments(*_) {
+        const v_sp: TomlLexVec16 = @splat(' ' as u8);
+        const v_tb: TomlLexVec16 = @splat('\t' as u8);
+        const v_lf: TomlLexVec16 = @splat('\n' as u8);
+        const v_cr: TomlLexVec16 = @splat('\r' as u8);
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (c == ' ' || c == '\t') {
-                * = _.advance();
+                while (_.pos + 16 <= _.src.len) {
+                    const v: TomlLexVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    if (!@reduce(.And, (v == v_sp) | (v == v_tb))) break;
+                    _.pos += 16;
+                    _.col += 16;
+                }
+                while (_.pos < _.src.len && (_.src[_.pos] == ' ' || _.src[_.pos] == '\t')) {
+                    * = _.advance();
+                }
             } else if (c == '#') {
+                * = _.advance();
+                while (_.pos + 16 <= _.src.len) {
+                    const v: TomlLexVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    if (@reduce(.Or, (v == v_lf) | (v == v_cr))) break;
+                    _.pos += 16;
+                    _.col += 16;
+                }
                 while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
                     * = _.advance();
                 }
@@ -197,7 +263,21 @@ pub struct TomlLexer {
         // Single-line `"..."`
         * = _.advance();
         let escaped = false;
+        const v_lf: TomlLexVec16 = @splat('\n' as u8);
+        const v_cr: TomlLexVec16 = @splat('\r' as u8);
+        const v_bs: TomlLexVec16 = @splat('\\' as u8);
+        const v_qt: TomlLexVec16 = @splat('"' as u8);
         while (_.pos < _.src.len) {
+            if (!escaped) {
+                while (_.pos + 16 <= _.src.len) {
+                    const v: TomlLexVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    const stop = (v == v_lf) | (v == v_cr) | (v == v_bs) | (v == v_qt);
+                    if (@reduce(.Or, stop)) break;
+                    _.pos += 16;
+                    _.col += 16;
+                }
+                if (_.pos >= _.src.len) break;
+            }
             const c = _.src[_.pos];
             if (c == '\n' || c == '\r') {
                 return _.makeTok(.invalid, start, _.pos, line, col);
@@ -238,6 +318,16 @@ pub struct TomlLexer {
 
         // Single-line `'...'`
         * = _.advance();
+        const v_lf: TomlLexVec16 = @splat('\n' as u8);
+        const v_cr: TomlLexVec16 = @splat('\r' as u8);
+        const v_sq: TomlLexVec16 = @splat('\'' as u8);
+        while (_.pos + 16 <= _.src.len) {
+            const v: TomlLexVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+            const stop = (v == v_lf) | (v == v_cr) | (v == v_sq);
+            if (@reduce(.Or, stop)) break;
+            _.pos += 16;
+            _.col += 16;
+        }
         while (_.pos < _.src.len) {
             const c = _.src[_.pos];
             if (c == '\n' || c == '\r') {

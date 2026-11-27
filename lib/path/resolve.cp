@@ -5,6 +5,70 @@
 
 const std = @import("std");
 
+type PathVec16 = @Vector(16, u8);
+
+fn makePathLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' and i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const PATH_LOWER_LUT: [u8; 256] = makePathLowerLut();
+
+fn findNextPosixSep(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_sl: PathVec16 = @splat('/' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: PathVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '/') return i;
+    }
+    return s.len;
+}
+
+fn findNextWinSep(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_sl: PathVec16 = @splat('/' as u8);
+    const v_bs: PathVec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: PathVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_sl) | (v == v_bs))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '/' or s[i] == '\\') return i;
+    }
+    return s.len;
+}
+
+fn eqlIgnoreCaseSimd(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    const lo_A: PathVec16 = @splat(65 as u8);
+    const hi_Z: PathVec16 = @splat(90 as u8);
+    const case_bit: PathVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: PathVec16 = a[i .. i + 16][0..16].*;
+        const vb: PathVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
+    while (i < a.len) : (i += 1) {
+        if (PATH_LOWER_LUT[@as(usize, a[i])] != PATH_LOWER_LUT[@as(usize, b[i])]) return false;
+    }
+    return true;
+}
+
 pub const WindowsVolumeInfo = struct {
     len: usize = 0,
     unc_slash: usize = 0,
@@ -27,24 +91,11 @@ pub fn isSeparatorPosix(c: u8): bool {
 }
 
 fn findUncServerShareEnd(path: []const u8, start_pos: usize): WindowsVolumeInfo {
-    let i: usize = start_pos;
-    let third_slash: usize = 0;
-    while (i < path.len) {
-        if (isSeparatorWindows(path[i])) {
-            third_slash = i;
-            break;
-        }
-        i += 1;
-    }
+    const sep1 = findNextWinSep(path, start_pos);
+    const third_slash: usize = if (sep1 < path.len) sep1 else 0;
     if (third_slash > start_pos and third_slash + 1 < path.len) {
-        let j = third_slash + 1;
-        while (j < path.len) {
-            if (isSeparatorWindows(path[j])) {
-                return WindowsVolumeInfo{ len: j, unc_slash: third_slash };
-            }
-            j += 1;
-        }
-        return WindowsVolumeInfo{ len: path.len, unc_slash: third_slash };
+        const sep2 = findNextWinSep(path, third_slash + 1);
+        return WindowsVolumeInfo{ len: sep2, unc_slash: third_slash };
     }
     return WindowsVolumeInfo{ len: 0, unc_slash: 0 };
 }
@@ -115,9 +166,7 @@ pub fn normalizePosix(filepath: []const u8, buf: []u8): []const u8 {
             cursor += 1;
         }
         let start = cursor;
-        while (cursor < filepath.len and filepath[cursor] != '/') {
-            cursor += 1;
-        }
+        cursor = findNextPosixSep(filepath, cursor);
         let seg = filepath[start .. cursor];
         if (seg.len == 0 or std.mem.eql(u8, seg, ".")) {
             continue;
@@ -191,9 +240,7 @@ pub fn normalizeWindows(filepath: []const u8, buf: []u8): []const u8 {
             cursor += 1;
         }
         let start = cursor;
-        while (cursor < rest.len and !isSeparatorWindows(rest[cursor])) {
-            cursor += 1;
-        }
+        cursor = findNextWinSep(rest, cursor);
         let seg = rest[start .. cursor];
         if (seg.len == 0 or std.mem.eql(u8, seg, ".")) {
             continue;
@@ -498,7 +545,7 @@ pub fn relativePosix(from_path: []const u8, to_path: []const u8, buf: []u8): []c
         while (cursor < n_from.len) {
             while (cursor < n_from.len and n_from[cursor] == '/') cursor += 1;
             let start = cursor;
-            while (cursor < n_from.len and n_from[cursor] != '/') cursor += 1;
+            cursor = findNextPosixSep(n_from, cursor);
             if (cursor > start and from_count < 256) {
                 from_segs[from_count] = n_from[start .. cursor];
                 from_count += 1;
@@ -513,7 +560,7 @@ pub fn relativePosix(from_path: []const u8, to_path: []const u8, buf: []u8): []c
         while (cursor < n_to.len) {
             while (cursor < n_to.len and n_to[cursor] == '/') cursor += 1;
             let start = cursor;
-            while (cursor < n_to.len and n_to[cursor] != '/') cursor += 1;
+            cursor = findNextPosixSep(n_to, cursor);
             if (cursor > start and to_count < 256) {
                 to_segs[to_count] = n_to[start .. cursor];
                 to_count += 1;
@@ -608,7 +655,7 @@ pub fn relativeWindows(from_path: []const u8, to_path: []const u8, buf: []u8): [
         while (cursor < n_from.len) {
             while (cursor < n_from.len and isSeparatorWindows(n_from[cursor])) cursor += 1;
             let start = cursor;
-            while (cursor < n_from.len and !isSeparatorWindows(n_from[cursor])) cursor += 1;
+            cursor = findNextWinSep(n_from, cursor);
             if (cursor > start and from_count < 256) {
                 from_segs[from_count] = n_from[start .. cursor];
                 from_count += 1;
@@ -623,7 +670,7 @@ pub fn relativeWindows(from_path: []const u8, to_path: []const u8, buf: []u8): [
         while (cursor < n_to.len) {
             while (cursor < n_to.len and isSeparatorWindows(n_to[cursor])) cursor += 1;
             let start = cursor;
-            while (cursor < n_to.len and !isSeparatorWindows(n_to[cursor])) cursor += 1;
+            cursor = findNextWinSep(n_to, cursor);
             if (cursor > start and to_count < 256) {
                 to_segs[to_count] = n_to[start .. cursor];
                 to_count += 1;
@@ -633,7 +680,7 @@ pub fn relativeWindows(from_path: []const u8, to_path: []const u8, buf: []u8): [
 
     let common: usize = 0;
     while (common < from_count and common < to_count) {
-        if (!std.ascii.eqlIgnoreCase(from_segs[common], to_segs[common])) {
+        if (!eqlIgnoreCaseSimd(from_segs[common], to_segs[common])) {
             break;
         }
         common += 1;

@@ -6,6 +6,64 @@
 const std = @import("std");
 import { Utf8 } from "cap:string";
 
+type HtmlVec16 = @Vector(16, u8);
+
+fn makeHtmlHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+const HTML_HEX_LUT: [u8; 256] = makeHtmlHexLut();
+
+fn htmlFindNextSpecial(input: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_amp: HtmlVec16 = @splat('&' as u8);
+    const v_lt: HtmlVec16 = @splat('<' as u8);
+    const v_gt: HtmlVec16 = @splat('>' as u8);
+    const v_quot: HtmlVec16 = @splat('"' as u8);
+    const v_apos: HtmlVec16 = @splat('\'' as u8);
+    while (i + 16 <= input.len) : (i += 16) {
+        const v: HtmlVec16 = input[i .. i + 16][0..16].*;
+        const hit = (v == v_amp) | (v == v_lt) | (v == v_gt) | (v == v_quot) | (v == v_apos);
+        if (@reduce(.Or, hit)) {
+            break;
+        }
+    }
+    while (i < input.len) : (i += 1) {
+        const c = input[i];
+        if (c == '&' || c == '<' || c == '>' || c == '"' || c == '\'') {
+            return i;
+        }
+    }
+    return input.len;
+}
+
+fn htmlFindNextAmp(input: []const u8, start: usize): usize {
+    let i: usize = start;
+    const v_amp: HtmlVec16 = @splat('&' as u8);
+    while (i + 16 <= input.len) : (i += 16) {
+        const v: HtmlVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_amp)) {
+            break;
+        }
+    }
+    while (i < input.len) : (i += 1) {
+        if (input[i] == '&') return i;
+    }
+    return input.len;
+}
+
 pub struct NamedEntityEntry {
     name: []const u8,
     utf8: []const u8,
@@ -107,25 +165,15 @@ const EXTRA_ENTITIES: [12]NamedEntityEntry = [
 pub struct HtmlEscape {
     /// Returns `true` if `input` contains any HTML-special character (`&`, `<`, `>`, `"`, `'`).
     pub static fn needsEscape(input: []const u8): bool {
-        let i: usize = 0;
-        while (i < input.len) {
-            const c = input[i];
-            if (c == '&' || c == '<' || c == '>' || c == '"' || c == '\'') {
-                return true;
-            }
-            i += 1;
-        }
-        return false;
+        return htmlFindNextSpecial(input, 0) < input.len;
     }
 
     pub static fn appendSlice(out: []u8, pos: usize, s: []const u8): usize {
         if (pos + s.len > out.len) {
             return pos;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            out[pos + i] = s[i];
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(out[pos .. pos + s.len], s);
         }
         return pos + s.len;
     }
@@ -184,6 +232,16 @@ pub struct HtmlEscape {
         let i: usize = 0;
         let pos: usize = 0;
         while (i < input.len && pos < out_buf.len) {
+            const next_sp = htmlFindNextSpecial(input, i);
+            if (next_sp > i) {
+                const avail = out_buf.len - pos;
+                const run_len = next_sp - i;
+                const copy_len = if (run_len < avail) run_len else avail;
+                @memcpy(out_buf[pos .. pos + copy_len], input[i .. i + copy_len]);
+                pos += copy_len;
+                i += copy_len;
+                if (i >= input.len || pos >= out_buf.len) break;
+            }
             const c = input[i];
             if (c == '&') {
                 pos = HtmlEscape.appendSlice(out_buf, pos, "&amp;");
@@ -208,15 +266,23 @@ pub struct HtmlEscape {
     pub static fn escapeAlloc(allocator: std.mem.Allocator, input: []const u8): ([]u8)! {
         let out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(allocator);
-        for (c of input) {
-            switch (c) {
+        let i: usize = 0;
+        while (i < input.len) {
+            const next_sp = htmlFindNextSpecial(input, i);
+            if (next_sp > i) {
+                out.appendSlice(allocator, input[i..next_sp])?;
+                i = next_sp;
+                if (i >= input.len) break;
+            }
+            switch (input[i]) {
                 '&' => out.appendSlice(allocator, "&amp;")?,
                 '<' => out.appendSlice(allocator, "&lt;")?,
                 '>' => out.appendSlice(allocator, "&gt;")?,
                 '"' => out.appendSlice(allocator, "&quot;")?,
                 '\'' => out.appendSlice(allocator, "&#39;")?,
-                else => out.append(allocator, c)?,
+                else => out.append(allocator, input[i])?,
             }
+            i += 1;
         }
         return out.toOwnedSlice(allocator);
     }
@@ -228,18 +294,9 @@ pub struct HtmlEscape {
             if (body.len == 1) return null;
             let i: usize = 1;
             while (i < body.len) : (i += 1) {
-                const c = body[i];
-                let d: u64 = 0;
-                if (c >= '0' && c <= '9') {
-                    d = (c - '0') as u64;
-                } else if (c >= 'a' && c <= 'f') {
-                    d = (c - 'a' + 10) as u64;
-                } else if (c >= 'A' && c <= 'F') {
-                    d = (c - 'A' + 10) as u64;
-                } else {
-                    return null;
-                }
-                cp = (cp << 4) | d;
+                const hv = HTML_HEX_LUT[@as(usize, body[i])];
+                if (hv == 0xFF) return null;
+                cp = (cp << 4) | @as(u64, hv);
                 if (cp > 0x10FFFF) cp = 0xFFFD;
             }
         } else {
@@ -262,6 +319,16 @@ pub struct HtmlEscape {
         let i: usize = 0;
         let pos: usize = 0;
         while (i < input.len && pos < out_buf.len) {
+            const next_amp = htmlFindNextAmp(input, i);
+            if (next_amp > i) {
+                const avail = out_buf.len - pos;
+                const run_len = next_amp - i;
+                const copy_len = if (run_len < avail) run_len else avail;
+                @memcpy(out_buf[pos .. pos + copy_len], input[i .. i + copy_len]);
+                pos += copy_len;
+                i += copy_len;
+                if (i >= input.len || pos >= out_buf.len) break;
+            }
             if (input[i] == '&') {
                 // Find closing ';' within reasonable entity length (<= 16 bytes)
                 let semi: usize = i + 1;
@@ -307,6 +374,12 @@ pub struct HtmlEscape {
         errdefer out.deinit(allocator);
         let i: usize = 0;
         while (i < input.len) {
+            const next_amp = htmlFindNextAmp(input, i);
+            if (next_amp > i) {
+                out.appendSlice(allocator, input[i..next_amp])?;
+                i = next_amp;
+                if (i >= input.len) break;
+            }
             if (input[i] == '&') {
                 let semi: usize = i + 1;
                 let found_semi = false;
