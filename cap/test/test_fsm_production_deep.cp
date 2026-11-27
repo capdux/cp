@@ -29,7 +29,7 @@ fn onExitCreated(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, 
     * = event;
     * = to_state;
     if (p := ctx) {
-        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        let trace: *ActionTrace = unsafe { @ptrCast(@alignCast(p)) };
         trace.push("exit:created");
     }
 }
@@ -39,7 +39,7 @@ fn onEnterPaid(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to
     * = event;
     * = to_state;
     if (p := ctx) {
-        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        let trace: *ActionTrace = unsafe { @ptrCast(@alignCast(p)) };
         trace.push("enter:paid");
     }
 }
@@ -49,7 +49,7 @@ fn onTransitionGlobal(ctx: (*anyopaque)?, from_state: []const u8, event: []const
     * = event;
     * = to_state;
     if (p := ctx) {
-        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        let trace: *ActionTrace = unsafe { @ptrCast(@alignCast(p)) };
         trace.push("transition");
     }
 }
@@ -59,7 +59,7 @@ fn onExitPaid(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8, to_
     * = event;
     * = to_state;
     if (p := ctx) {
-        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        let trace: *ActionTrace = unsafe { @ptrCast(@alignCast(p)) };
         trace.push("exit:paid");
     }
 }
@@ -69,7 +69,7 @@ fn onEnterShipped(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8,
     * = event;
     * = to_state;
     if (p := ctx) {
-        let trace: *ActionTrace = @ptrCast(@alignCast(p));
+        let trace: *ActionTrace = unsafe { @ptrCast(@alignCast(p)) };
         trace.push("enter:shipped");
     }
 }
@@ -84,7 +84,7 @@ fn guardMinPayment(ctx: (*anyopaque)?, from_state: []const u8, event: []const u8
     * = event;
     * = to_state;
     if (p := ctx) {
-        const pc: *const PaymentCtx = @ptrCast(@alignCast(p));
+        const pc: *const PaymentCtx = unsafe { @ptrCast(@alignCast(p)) };
         return pc.amount_cents >= pc.min_cents;
     }
     return false;

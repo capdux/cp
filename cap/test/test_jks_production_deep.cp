@@ -26,7 +26,7 @@ struct JksBuilder {
     buf: [512]u8,
     len: usize,
 
-    fn init(): JksBuilder {
+    static fn init(): JksBuilder {
         return JksBuilder{
             buf: [0; 512],
             len: 0,

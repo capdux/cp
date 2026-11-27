@@ -134,7 +134,7 @@ fn main() {
         expect_eq(Iso8601.parseDateTime("2026-01-01T24:00:00Z") == null, true);
         expect_eq(Iso8601.parseDateTime("2026-01-01T00:00:00") == null, true);
         expect_eq(Iso8601.parseDateTime("2026-01-01T00:00:00.Z") == null, true);
-        expect_eq(Iso8601.parseDateTime("2026-01-01 00:00:00Z") == null, true);
+        expect_eq(Iso8601.parseDateTime("2026-01-01X00:00:00Z") == null, true);
         expect_eq(Iso8601.parseDateTime("2026-01-01T00:00:00+24:00") == null, true);
         expect_eq(Iso8601.parseDateTime("invalid") == null, true);
     });

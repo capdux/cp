@@ -37,3 +37,10 @@ export {
     GqlPrintMode,
     GqlPrinter,
 } from "./printer.cp";
+
+export {
+    validateDocument,
+    computeQueryDepth,
+    computeQueryComplexity,
+    formatDocument,
+} from "./validator.cp";

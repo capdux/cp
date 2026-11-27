@@ -2,18 +2,14 @@
 const std = @import("std");
 import {
     GqlError,
-    GqlValue,
-    GqlTypeRef,
-    GqlArgument,
-    GqlDirective,
     GqlSelection,
-    GqlOperation,
-    GqlFragment,
+    GqlFragmentDef,
     GqlDocument,
 } from "./types.cp";
+import { GqlPrinter } from "./printer.cp";
 
-fn findFragment(doc: *const GqlDocument, name: []const u8): (*const GqlFragment)? {
-    for (*frag of doc.fragments) {
+fn findFragmentDef(doc: GqlDocument, name: []const u8): GqlFragmentDef? {
+    for (frag of doc.fragments) {
         if (std.mem.eql(u8, frag.name, name)) {
             return frag;
         }
@@ -22,118 +18,114 @@ fn findFragment(doc: *const GqlDocument, name: []const u8): (*const GqlFragment)
 }
 
 fn validateSelectionSet(
-    doc: *const GqlDocument,
+    doc: GqlDocument,
     sels: []const GqlSelection,
     visiting: *std.ArrayList([]const u8),
     alloc: std.mem.Allocator,
-): GqlError!void {
-    for (*sel of sels) {
-        switch (sel.*) {
-            .Field => |*f| {
-                try validateSelectionSet(doc, f.selection_set, visiting, alloc);
+): void ! GqlError {
+    for (sel of sels) {
+        switch (sel) {
+            .Field f => {
+                validateSelectionSet(doc, f.selections, visiting, alloc)?;
             },
-            .InlineFragment => |*inf| {
-                try validateSelectionSet(doc, inf.selection_set, visiting, alloc);
+            .InlineFragment inf => {
+                validateSelectionSet(doc, inf.selections, visiting, alloc)?;
             },
-            .FragmentSpread => |*fs| {
-                const frag = findFragment(doc, fs.name) orelse return error.UnknownFragment;
+            .FragmentSpread fs => {
+                const frag = findFragmentDef(doc, fs.name) orelse return GqlError.UnknownFragment;
                 for (v of visiting.items) {
                     if (std.mem.eql(u8, v, fs.name)) {
-                        return error.CyclicFragment;
+                        return GqlError.CyclicFragment;
                     }
                 }
-                try visiting.append(alloc, fs.name);
+                visiting.append(alloc, fs.name) catch return GqlError.OutOfMemory;
                 defer * = visiting.pop();
-                try validateSelectionSet(doc, frag.selection_set, visiting, alloc);
+                validateSelectionSet(doc, frag.selections, visiting, alloc)?;
             },
         }
     }
 }
 
-pub fn validateDocument(alloc: std.mem.Allocator, doc: *const GqlDocument): GqlError!void {
-    // Check duplicate operation names
+/// Validates a parsed `GqlDocument` for duplicate operation/fragment names,
+/// unknown fragment spreads, and cyclic fragment references.
+pub fn validateDocument(alloc: std.mem.Allocator, doc: GqlDocument): void ! GqlError {
     let i: usize = 0;
-    while (i < doc.operations.len) {
+    while (i < doc.operations.len) : (i += 1) {
         if (na := doc.operations[i].name) {
             let j: usize = i + 1;
-            while (j < doc.operations.len) {
+            while (j < doc.operations.len) : (j += 1) {
                 if (nb := doc.operations[j].name) {
                     if (std.mem.eql(u8, na, nb)) {
-                        return error.DuplicateOperation;
+                        return GqlError.DuplicateOperation;
                     }
                 }
-                j += 1;
             }
         }
-        i += 1;
     }
 
-    // Check duplicate fragment names
     let fi: usize = 0;
-    while (fi < doc.fragments.len) {
+    while (fi < doc.fragments.len) : (fi += 1) {
         let fj: usize = fi + 1;
-        while (fj < doc.fragments.len) {
+        while (fj < doc.fragments.len) : (fj += 1) {
             if (std.mem.eql(u8, doc.fragments[fi].name, doc.fragments[fj].name)) {
-                return error.DuplicateFragment;
+                return GqlError.DuplicateFragment;
             }
-            fj += 1;
         }
-        fi += 1;
     }
 
-    let visiting = std.ArrayList(string).empty;
+    let visiting: std.ArrayList([]const u8) = .empty;
     defer visiting.deinit(alloc);
 
-    for (*op of doc.operations) {
-        try validateSelectionSet(doc, op.selection_set, &visiting, alloc);
+    for (op of doc.operations) {
+        validateSelectionSet(doc, op.selections, &visiting, alloc)?;
     }
 
-    for (*frag of doc.fragments) {
-        try visiting.append(alloc, frag.name);
+    for (frag of doc.fragments) {
+        visiting.append(alloc, frag.name) catch return GqlError.OutOfMemory;
         defer * = visiting.pop();
-        try validateSelectionSet(doc, frag.selection_set, &visiting, alloc);
+        validateSelectionSet(doc, frag.selections, &visiting, alloc)?;
     }
 }
 
 fn calcSelectionSetDepth(
-    doc: *const GqlDocument,
+    doc: GqlDocument,
     sels: []const GqlSelection,
     visiting: *std.ArrayList([]const u8),
     alloc: std.mem.Allocator,
     max_depth: usize,
     cur_depth: usize,
-): GqlError!usize {
-    if (max_depth > 0 and cur_depth > max_depth) {
-        return error.MaxDepthExceeded;
+): usize ! GqlError {
+    if (max_depth > 0 && cur_depth > max_depth) {
+        return GqlError.MaxDepthExceeded;
     }
     let max_sub: usize = 0;
-    for (*sel of sels) {
-        switch (sel.*) {
-            .Field => |*f| {
+    for (sel of sels) {
+        switch (sel) {
+            .Field f => {
                 let sub: usize = 0;
-                if (f.selection_set.len > 0) {
-                    sub = try calcSelectionSetDepth(doc, f.selection_set, visiting, alloc, max_depth, cur_depth + 1);
+                if (f.selections.len > 0) {
+                    sub = calcSelectionSetDepth(doc, f.selections, visiting, alloc, max_depth, cur_depth + 1)?;
                 }
-                const field_depth = 1 + sub;
-                if (max_depth > 0 and cur_depth + field_depth > max_depth) {
-                    return error.MaxDepthExceeded;
+                const field_depth = (1 as usize) + sub;
+                if (max_depth > 0 && cur_depth + field_depth > max_depth) {
+                    return GqlError.MaxDepthExceeded;
                 }
                 if (field_depth > max_sub) max_sub = field_depth;
             },
-            .InlineFragment => |*inf| {
-                const sub = try calcSelectionSetDepth(doc, inf.selection_set, visiting, alloc, max_depth, cur_depth);
+            .InlineFragment inf => {
+                const sub = calcSelectionSetDepth(doc, inf.selections, visiting, alloc, max_depth, cur_depth)?;
                 if (sub > max_sub) max_sub = sub;
             },
-            .FragmentSpread => |*fs| {
-                const frag = findFragment(doc, fs.name) orelse return error.UnknownFragment;
+            .FragmentSpread fs => {
+                const frag = findFragmentDef(doc, fs.name) orelse return GqlError.UnknownFragment;
                 for (v of visiting.items) {
                     if (std.mem.eql(u8, v, fs.name)) {
-                        return error.CyclicFragment;
+                        return GqlError.CyclicFragment;
                     }
                 }
-                try visiting.append(alloc, fs.name);
+                visiting.append(alloc, fs.name) catch return GqlError.OutOfMemory;
                 defer * = visiting.pop();
-                const sub = try calcSelectionSetDepth(doc, frag.selection_set, visiting, alloc, max_depth, cur_depth);
+                const sub = calcSelectionSetDepth(doc, frag.selections, visiting, alloc, max_depth, cur_depth)?;
                 if (sub > max_sub) max_sub = sub;
             },
         }
@@ -141,278 +133,79 @@ fn calcSelectionSetDepth(
     return max_sub;
 }
 
-pub fn computeQueryDepth(alloc: std.mem.Allocator, doc: *const GqlDocument, max_depth: usize): GqlError!usize {
-    let visiting = std.ArrayList(string).empty;
+/// Computes the maximum selection depth across all operations in `doc`,
+/// enforcing `max_depth` when non-zero.
+pub fn computeQueryDepth(alloc: std.mem.Allocator, doc: GqlDocument, max_depth: usize): usize ! GqlError {
+    let visiting: std.ArrayList([]const u8) = .empty;
     defer visiting.deinit(alloc);
 
     let best: usize = 0;
-    for (*op of doc.operations) {
-        const d = try calcSelectionSetDepth(doc, op.selection_set, &visiting, alloc, max_depth, 0);
+    for (op of doc.operations) {
+        const d = calcSelectionSetDepth(doc, op.selections, &visiting, alloc, max_depth, 0)?;
         if (d > best) best = d;
     }
     return best;
 }
 
 fn calcSelectionSetComplexity(
-    doc: *const GqlDocument,
+    doc: GqlDocument,
     sels: []const GqlSelection,
     visiting: *std.ArrayList([]const u8),
     alloc: std.mem.Allocator,
     max_complexity: usize,
     acc: *usize,
-): GqlError!usize {
+): usize ! GqlError {
     let cost: usize = 0;
-    for (*sel of sels) {
-        switch (sel.*) {
-            .Field => |*f| {
+    for (sel of sels) {
+        switch (sel) {
+            .Field f => {
                 let child_cost: usize = 0;
-                if (f.selection_set.len > 0) {
-                    child_cost = try calcSelectionSetComplexity(doc, f.selection_set, visiting, alloc, max_complexity, acc);
+                if (f.selections.len > 0) {
+                    child_cost = calcSelectionSetComplexity(doc, f.selections, visiting, alloc, max_complexity, acc)?;
                 }
-                const node_cost = 1 + child_cost;
-                cost += node_cost;
+                cost += (1 as usize) + child_cost;
                 acc.* += 1;
-                if (max_complexity > 0 and acc.* > max_complexity) {
-                    return error.MaxComplexityExceeded;
+                if (max_complexity > 0 && acc.* > max_complexity) {
+                    return GqlError.MaxComplexityExceeded;
                 }
             },
-            .InlineFragment => |*inf| {
-                cost += try calcSelectionSetComplexity(doc, inf.selection_set, visiting, alloc, max_complexity, acc);
+            .InlineFragment inf => {
+                cost += calcSelectionSetComplexity(doc, inf.selections, visiting, alloc, max_complexity, acc)?;
             },
-            .FragmentSpread => |*fs| {
-                const frag = findFragment(doc, fs.name) orelse return error.UnknownFragment;
+            .FragmentSpread fs => {
+                const frag = findFragmentDef(doc, fs.name) orelse return GqlError.UnknownFragment;
                 for (v of visiting.items) {
                     if (std.mem.eql(u8, v, fs.name)) {
-                        return error.CyclicFragment;
+                        return GqlError.CyclicFragment;
                     }
                 }
-                try visiting.append(alloc, fs.name);
+                visiting.append(alloc, fs.name) catch return GqlError.OutOfMemory;
                 defer * = visiting.pop();
-                cost += try calcSelectionSetComplexity(doc, frag.selection_set, visiting, alloc, max_complexity, acc);
+                cost += calcSelectionSetComplexity(doc, frag.selections, visiting, alloc, max_complexity, acc)?;
             },
         }
     }
     return cost;
 }
 
-pub fn computeQueryComplexity(alloc: std.mem.Allocator, doc: *const GqlDocument, max_complexity: usize): GqlError!usize {
-    let visiting = std.ArrayList(string).empty;
+/// Computes total field complexity across all operations in `doc`,
+/// enforcing `max_complexity` when non-zero.
+pub fn computeQueryComplexity(alloc: std.mem.Allocator, doc: GqlDocument, max_complexity: usize): usize ! GqlError {
+    let visiting: std.ArrayList([]const u8) = .empty;
     defer visiting.deinit(alloc);
 
     let total: usize = 0;
     let acc: usize = 0;
-    for (*op of doc.operations) {
-        total += try calcSelectionSetComplexity(doc, op.selection_set, &visiting, alloc, max_complexity, &acc);
+    for (op of doc.operations) {
+        total += calcSelectionSetComplexity(doc, op.selections, &visiting, alloc, max_complexity, &acc)?;
     }
-    if (max_complexity > 0 and total > max_complexity) {
-        return error.MaxComplexityExceeded;
+    if (max_complexity > 0 && total > max_complexity) {
+        return GqlError.MaxComplexityExceeded;
     }
     return total;
 }
 
-fn writeIndent(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, indent: usize): GqlError!void {
-    let i: usize = 0;
-    while (i < indent * 2) {
-        try buf.append(alloc, ' ');
-        i += 1;
-    }
-}
-
-fn writeEscapedString(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, s: []const u8): GqlError!void {
-    try buf.append(alloc, '"');
-    for (c of s) {
-        switch (c) {
-            '"' => try buf.appendSlice(alloc, "\\\""),
-            '\\' => try buf.appendSlice(alloc, "\\\\"),
-            '\n' => try buf.appendSlice(alloc, "\\n"),
-            '\r' => try buf.appendSlice(alloc, "\\r"),
-            '\t' => try buf.appendSlice(alloc, "\\t"),
-            else => try buf.append(alloc, c),
-        }
-    }
-    try buf.append(alloc, '"');
-}
-
-fn formatValue(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, val: GqlValue): GqlError!void {
-    switch (val) {
-        .Variable => |v| {
-            try buf.append(alloc, '$');
-            try buf.appendSlice(alloc, v);
-        },
-        .Int => |n| {
-            let tmp: [32]u8 = undefined;
-            const s = std.fmt.bufPrint(&tmp, "{d}", .{n}) catch return error.OutOfMemory;
-            try buf.appendSlice(alloc, s);
-        },
-        .Float => |f| {
-            let tmp: [64]u8 = undefined;
-            const s = std.fmt.bufPrint(&tmp, "{d}", .{f}) catch return error.OutOfMemory;
-            try buf.appendSlice(alloc, s);
-        },
-        .String => |s| try writeEscapedString(buf, alloc, s),
-        .Boolean => |b| try buf.appendSlice(alloc, if (b) "true" else "false"),
-        .Null => try buf.appendSlice(alloc, "null"),
-        .Enum => |e| try buf.appendSlice(alloc, e),
-        .List => |items| {
-            try buf.append(alloc, '[');
-            let i: usize = 0;
-            while (i < items.len) {
-                if (i > 0) try buf.appendSlice(alloc, ", ");
-                try formatValue(buf, alloc, items[i]);
-                i += 1;
-            }
-            try buf.append(alloc, ']');
-        },
-        .Object => |fields| {
-            try buf.append(alloc, '{');
-            let i: usize = 0;
-            while (i < fields.len) {
-                if (i > 0) try buf.appendSlice(alloc, ", ");
-                try buf.appendSlice(alloc, fields[i].name);
-                try buf.appendSlice(alloc, ": ");
-                try formatValue(buf, alloc, fields[i].value);
-                i += 1;
-            }
-            try buf.append(alloc, '}');
-        },
-    }
-}
-
-fn formatTypeRef(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, tref: GqlTypeRef): GqlError!void {
-    switch (tref) {
-        .Named => |n| try buf.appendSlice(alloc, n),
-        .List => |inner| {
-            try buf.append(alloc, '[');
-            try formatTypeRef(buf, alloc, inner.*);
-            try buf.append(alloc, ']');
-        },
-        .NonNull => |inner| {
-            try formatTypeRef(buf, alloc, inner.*);
-            try buf.append(alloc, '!');
-        },
-    }
-}
-
-fn formatArguments(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, args: []const GqlArgument): GqlError!void {
-    if (args.len == 0) return;
-    try buf.append(alloc, '(');
-    let i: usize = 0;
-    while (i < args.len) {
-        if (i > 0) try buf.appendSlice(alloc, ", ");
-        try buf.appendSlice(alloc, args[i].name);
-        try buf.appendSlice(alloc, ": ");
-        try formatValue(buf, alloc, args[i].value);
-        i += 1;
-    }
-    try buf.append(alloc, ')');
-}
-
-fn formatDirectives(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, dirs: []const GqlDirective): GqlError!void {
-    for (d of dirs) {
-        try buf.appendSlice(alloc, " @");
-        try buf.appendSlice(alloc, d.name);
-        try formatArguments(buf, alloc, d.arguments);
-    }
-}
-
-fn formatSelectionSet(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, sels: []const GqlSelection, indent: usize): GqlError!void {
-    try buf.appendSlice(alloc, "{\n");
-    for (sel of sels) {
-        try writeIndent(buf, alloc, indent + 1);
-        switch (sel) {
-            .Field => |f| {
-                if (a := f.alias) {
-                    try buf.appendSlice(alloc, a);
-                    try buf.appendSlice(alloc, ": ");
-                }
-                try buf.appendSlice(alloc, f.name);
-                try formatArguments(buf, alloc, f.arguments);
-                try formatDirectives(buf, alloc, f.directives);
-                if (f.selection_set.len > 0) {
-                    try buf.append(alloc, ' ');
-                    try formatSelectionSet(buf, alloc, f.selection_set, indent + 1);
-                } else {
-                    try buf.append(alloc, '\n');
-                }
-            },
-            .FragmentSpread => |fs| {
-                try buf.appendSlice(alloc, "...");
-                try buf.appendSlice(alloc, fs.name);
-                try formatDirectives(buf, alloc, fs.directives);
-                try buf.append(alloc, '\n');
-            },
-            .InlineFragment => |inf| {
-                try buf.appendSlice(alloc, "...");
-                if (tc := inf.type_condition) {
-                    try buf.appendSlice(alloc, " on ");
-                    try buf.appendSlice(alloc, tc);
-                }
-                try formatDirectives(buf, alloc, inf.directives);
-                try buf.append(alloc, ' ');
-                try formatSelectionSet(buf, alloc, inf.selection_set, indent + 1);
-            },
-        }
-    }
-    try writeIndent(buf, alloc, indent);
-    try buf.appendSlice(alloc, "}\n");
-}
-
-pub fn formatDocument(alloc: std.mem.Allocator, doc: *const GqlDocument): GqlError![]u8 {
-    let buf = std.ArrayList(u8).empty;
-    errdefer buf.deinit(alloc);
-
-    let first = true;
-    for (op of doc.operations) {
-        if (!first) try buf.append(alloc, '\n');
-        first = false;
-
-        const is_shorthand = (op.op_type == .Query and op.name == null and op.variable_defs.len == 0 and op.directives.len == 0);
-        if (!is_shorthand) {
-            switch (op.op_type) {
-                .Query => try buf.appendSlice(alloc, "query"),
-                .Mutation => try buf.appendSlice(alloc, "mutation"),
-                .Subscription => try buf.appendSlice(alloc, "subscription"),
-            }
-            if (n := op.name) {
-                try buf.append(alloc, ' ');
-                try buf.appendSlice(alloc, n);
-            }
-            if (op.variable_defs.len > 0) {
-                try buf.append(alloc, '(');
-                let vi: usize = 0;
-                while (vi < op.variable_defs.len) {
-                    if (vi > 0) try buf.appendSlice(alloc, ", ");
-                    const vd = op.variable_defs[vi];
-                    try buf.append(alloc, '$');
-                    try buf.appendSlice(alloc, vd.name);
-                    try buf.appendSlice(alloc, ": ");
-                    try formatTypeRef(&buf, alloc, vd.type_ref);
-                    if (dv := vd.default_value) {
-                        try buf.appendSlice(alloc, " = ");
-                        try formatValue(&buf, alloc, dv);
-                    }
-                    vi += 1;
-                }
-                try buf.append(alloc, ')');
-            }
-            try formatDirectives(&buf, alloc, op.directives);
-            try buf.append(alloc, ' ');
-        }
-        try formatSelectionSet(&buf, alloc, op.selection_set, 0);
-    }
-
-    for (frag of doc.fragments) {
-        if (!first) try buf.append(alloc, '\n');
-        first = false;
-
-        try buf.appendSlice(alloc, "fragment ");
-        try buf.appendSlice(alloc, frag.name);
-        try buf.appendSlice(alloc, " on ");
-        try buf.appendSlice(alloc, frag.type_condition);
-        try formatDirectives(&buf, alloc, frag.directives);
-        try buf.append(alloc, ' ');
-        try formatSelectionSet(&buf, alloc, frag.selection_set, 0);
-    }
-
-    return buf.toOwnedSlice(alloc);
+/// Formats a `GqlDocument` into canonical pretty-printed GraphQL source text.
+pub fn formatDocument(alloc: std.mem.Allocator, doc: GqlDocument): ([]u8) ! GqlError {
+    return GqlPrinter.printPretty(alloc, doc);
 }
