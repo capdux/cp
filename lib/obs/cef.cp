@@ -60,14 +60,42 @@ pub struct CefExtPair {
 }
 
 // ---------------------------------------------------------------------------
-// Internal ASCII, Escaping & Boundary Helpers
+// Internal ASCII, Escaping & Boundary Helpers (16-lane SIMD + Comptime LUTs)
 // ---------------------------------------------------------------------------
 
-fn toLowerAscii(ch: u8): u8 {
-    if (ch >= 'A' && ch <= 'Z') {
-        return ch + 32;
+type CefVec16 = @Vector(16, u8);
+
+fn makeCefLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return ch;
+    return lut;
+}
+
+fn makeCefKeyLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || (i >= '0' && i <= '9') || i == '_' || i == '.' || i == '-') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const CEF_LOWER_LUT: [u8; 256] = makeCefLowerLut();
+const CEF_KEY_LUT: [u8; 256] = makeCefKeyLut();
+
+fn toLowerAscii(ch: u8): u8 {
+    return CEF_LOWER_LUT[usize(ch)];
 }
 
 fn bytesEqual(a: []const u8, b: []const u8): bool {
@@ -75,6 +103,11 @@ fn bytesEqual(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CefVec16 = a[i .. i + 16][0..16].*;
+        const vb: CefVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -89,6 +122,18 @@ fn bytesEqualIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CefVec16 = @splat(65 as u8);
+    const hi_Z: CefVec16 = @splat(90 as u8);
+    const case_bit: CefVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CefVec16 = a[i .. i + 16][0..16].*;
+        const vb: CefVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -96,6 +141,52 @@ fn bytesEqualIgnoreCase(a: []const u8, b: []const u8): bool {
         i += 1;
     }
     return true;
+}
+
+fn cefFindByteSimd(s: []const u8, start: usize, target: u8): usize {
+    let i = start;
+    const t_v: CefVec16 = @splat(target);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CefVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return s.len;
+}
+
+fn cefFindPipeOrBsSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const p_v: CefVec16 = @splat('|' as u8);
+    const bs_v: CefVec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CefVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == p_v) | (v == bs_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '|' || s[i] == '\\') return i;
+    }
+    return s.len;
+}
+
+fn cefFindExtBreakSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const bs_v: CefVec16 = @splat('\\' as u8);
+    const sp_v: CefVec16 = @splat(' ' as u8);
+    const tb_v: CefVec16 = @splat('\t' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CefVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == bs_v) | (v == sp_v) | (v == tb_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '\\' || c == ' ' || c == '\t') return i;
+    }
+    return s.len;
 }
 
 fn stripLineEnding(s: []const u8): []const u8 {
@@ -135,10 +226,7 @@ fn parseSmallU8(s: []const u8): u8? {
 }
 
 fn isCefKeyChar(ch: u8): bool {
-    return (ch >= 'a' && ch <= 'z') ||
-        (ch >= 'A' && ch <= 'Z') ||
-        (ch >= '0' && ch <= '9') ||
-        ch == '_' || ch == '.' || ch == '-';
+    return CEF_KEY_LUT[usize(ch)] != 0;
 }
 
 /// Locates the byte offset of `"CEF:"` either at index 0 or immediately after whitespace.
@@ -148,7 +236,9 @@ fn findCefStart(line: []const u8): usize? {
     }
     let i: usize = 0;
     while (i + 4 <= line.len) {
-        if (line[i] == 'C' && line[i + 1] == 'E' && line[i + 2] == 'F' && line[i + 3] == ':') {
+        i = cefFindByteSimd(line, i, 'C');
+        if (i + 4 > line.len) break;
+        if (line[i + 1] == 'E' && line[i + 2] == 'F' && line[i + 3] == ':') {
             if (i == 0 || line[i - 1] == ' ' || line[i - 1] == '\t') {
                 return i;
             }
@@ -162,8 +252,9 @@ fn findCefStart(line: []const u8): usize? {
 fn findUnescapedPipe(s: []const u8, start: usize): usize? {
     let i = start;
     while (i < s.len) {
-        const ch = s[i];
-        if (ch == '\\') {
+        i = cefFindPipeOrBsSimd(s, i);
+        if (i >= s.len) break;
+        if (s[i] == '\\') {
             if (i + 1 < s.len) {
                 i += 2;
             } else {
@@ -171,10 +262,7 @@ fn findUnescapedPipe(s: []const u8, start: usize): usize? {
             }
             continue;
         }
-        if (ch == '|') {
-            return i;
-        }
-        i += 1;
+        return i;
     }
     return null;
 }
@@ -282,6 +370,8 @@ pub struct CefExtIter {
         let scan = val_start;
 
         while (scan < _.ext.len) {
+            scan = cefFindExtBreakSimd(_.ext, scan);
+            if (scan >= _.ext.len) break;
             const ch = _.ext[scan];
             if (ch == '\\') {
                 if (scan + 1 < _.ext.len) {
@@ -291,28 +381,24 @@ pub struct CefExtIter {
                 }
                 continue;
             }
-            if (ch == ' ' || ch == '\t') {
-                const ws_pos = scan;
-                let cand = scan + 1;
-                while (cand < _.ext.len && (_.ext[cand] == ' ' || _.ext[cand] == '\t')) {
-                    cand += 1;
-                }
-                // Check whether `cand` starts `<valid_key>=`
-                let k = cand;
-                while (k < _.ext.len && isCefKeyChar(_.ext[k])) {
-                    k += 1;
-                }
-                if (k > cand && k < _.ext.len && _.ext[k] == '=') {
-                    _.pos = cand;
-                    return CefExtPair {
-                        key: key,
-                        raw_value: _.ext[val_start..ws_pos],
-                    };
-                }
-                scan = cand;
-                continue;
+            const ws_pos = scan;
+            let cand = scan + 1;
+            while (cand < _.ext.len && (_.ext[cand] == ' ' || _.ext[cand] == '\t')) {
+                cand += 1;
             }
-            scan += 1;
+            // Check whether `cand` starts `<valid_key>=`
+            let k = cand;
+            while (k < _.ext.len && isCefKeyChar(_.ext[k])) {
+                k += 1;
+            }
+            if (k > cand && k < _.ext.len && _.ext[k] == '=') {
+                _.pos = cand;
+                return CefExtPair {
+                    key: key,
+                    raw_value: _.ext[val_start..ws_pos],
+                };
+            }
+            scan = cand;
         }
 
         _.pos = _.ext.len;
@@ -344,10 +430,19 @@ pub fn unescapeCefHeader(raw: []const u8, out: []u8): usize? {
     let i: usize = 0;
     let w: usize = 0;
     while (i < raw.len) {
+        const next_bs = cefFindByteSimd(raw, i, '\\');
+        const plain = next_bs - i;
+        if (plain > 0) {
+            if (w + plain > out.len) return null;
+            @memcpy(out[w .. w + plain], raw[i..next_bs]);
+            w += plain;
+            i = next_bs;
+        }
+        if (i >= raw.len) break;
         if (w >= out.len) {
             return null;
         }
-        if (raw[i] == '\\' && i + 1 < raw.len) {
+        if (i + 1 < raw.len) {
             const nxt = raw[i + 1];
             if (nxt == '|' || nxt == '\\') {
                 out[w] = nxt;
@@ -369,10 +464,19 @@ pub fn unescapeCefExtValue(raw: []const u8, out: []u8): usize? {
     let i: usize = 0;
     let w: usize = 0;
     while (i < raw.len) {
+        const next_bs = cefFindByteSimd(raw, i, '\\');
+        const plain = next_bs - i;
+        if (plain > 0) {
+            if (w + plain > out.len) return null;
+            @memcpy(out[w .. w + plain], raw[i..next_bs]);
+            w += plain;
+            i = next_bs;
+        }
+        if (i >= raw.len) break;
         if (w >= out.len) {
             return null;
         }
-        if (raw[i] == '\\' && i + 1 < raw.len) {
+        if (i + 1 < raw.len) {
             const nxt = raw[i + 1];
             if (nxt == '=' || nxt == '\\') {
                 out[w] = nxt;
@@ -404,10 +508,8 @@ fn writeRaw(out: []u8, pos: usize, s: []const u8): usize? {
     if (pos + s.len > out.len) {
         return null;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos .. pos + s.len], s);
     }
     return pos + s.len;
 }
@@ -416,21 +518,21 @@ fn writeEscapedHeaderField(out: []u8, pos: usize, s: []const u8): usize? {
     let w = pos;
     let i: usize = 0;
     while (i < s.len) {
-        const ch = s[i];
-        if (ch == '|' || ch == '\\') {
-            if (w + 2 > out.len) {
-                return null;
-            }
-            out[w] = '\\';
-            out[w + 1] = ch;
-            w += 2;
-        } else {
-            if (w + 1 > out.len) {
-                return null;
-            }
-            out[w] = ch;
-            w += 1;
+        const hit = cefFindPipeOrBsSimd(s, i);
+        const plain = hit - i;
+        if (plain > 0) {
+            if (w + plain > out.len) return null;
+            @memcpy(out[w .. w + plain], s[i..hit]);
+            w += plain;
+            i = hit;
         }
+        if (i >= s.len) break;
+        if (w + 2 > out.len) {
+            return null;
+        }
+        out[w] = '\\';
+        out[w + 1] = s[i];
+        w += 2;
         i += 1;
     }
     return w;

@@ -5,11 +5,49 @@ pub const POP3S_TCP_PORT: u16 = 995;
 pub const POP3_MAX_CMD_LEN: usize = 255;
 pub const POP3_MAX_LINE_LEN: usize = 512;
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+type Pop3Vec16 = @Vector(16, u8);
+
+const POP3_VERB: u8 = 1;
+const POP3_RESPCODE: u8 = 2;
+const POP3_UID: u8 = 4;
+
+fn makePop3LowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return c;
+    return lut;
+}
+
+fn makePop3CharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || (i >= '0' && i <= '9') || i == '-') {
+            lut[i] |= POP3_VERB;
+        }
+        if (i >= 0x21 && i <= 0x7E) {
+            lut[i] |= POP3_UID;
+            if (i != '[' && i != ']') {
+                lut[i] |= POP3_RESPCODE;
+            }
+        }
+    }
+    return lut;
+}
+
+const POP3_LOWER_LUT: [u8; 256] = makePop3LowerLut();
+const POP3_CHAR_LUT: [u8; 256] = makePop3CharLut();
+
+fn toLowerAscii(c: u8): u8 {
+    return POP3_LOWER_LUT[usize(c)];
 }
 
 fn asciiEqIgnoreCase(a: []const u8, b: []const u8): bool {
@@ -17,6 +55,18 @@ fn asciiEqIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: Pop3Vec16 = @splat(65 as u8);
+    const hi_Z: Pop3Vec16 = @splat(90 as u8);
+    const case_bit: Pop3Vec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: Pop3Vec16 = a[i .. i + 16][0..16].*;
+        const vb: Pop3Vec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -38,6 +88,15 @@ fn stripLineEnding(line: []const u8): []const u8 {
 
 fn hasCrLfOrNul(s: []const u8): bool {
     let i: usize = 0;
+    const cr_v: Pop3Vec16 = @splat('\r' as u8);
+    const lf_v: Pop3Vec16 = @splat('\n' as u8);
+    const nul_v: Pop3Vec16 = @splat(0 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Pop3Vec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == cr_v) | (v == lf_v) | (v == nul_v))) {
+            return true;
+        }
+    }
     while (i < s.len) {
         const c = s[i];
         if (c == '\r' || c == '\n' || c == 0) {
@@ -48,25 +107,45 @@ fn hasCrLfOrNul(s: []const u8): bool {
     return false;
 }
 
-fn isValidVerbChar(c: u8): bool {
-    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') {
-        return true;
+fn pop3FindByteSimd(s: []const u8, start: usize, target: u8): usize {
+    let i = start;
+    const t_v: Pop3Vec16 = @splat(target);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Pop3Vec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
     }
-    return false;
+    while (i < s.len) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return s.len;
+}
+
+fn pop3FindCrOrLfSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const cr_v: Pop3Vec16 = @splat('\r' as u8);
+    const lf_v: Pop3Vec16 = @splat('\n' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Pop3Vec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == cr_v) | (v == lf_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '\r' || s[i] == '\n') return i;
+    }
+    return s.len;
+}
+
+fn isValidVerbChar(c: u8): bool {
+    return (POP3_CHAR_LUT[usize(c)] & POP3_VERB) != 0;
 }
 
 fn isValidRespCodeChar(c: u8): bool {
-    if (c < 0x21 || c > 0x7E) {
-        return false;
-    }
-    if (c == '[' || c == ']') {
-        return false;
-    }
-    return true;
+    return (POP3_CHAR_LUT[usize(c)] & POP3_RESPCODE) != 0;
 }
 
 fn isValidUidChar(c: u8): bool {
-    return c >= 0x21 && c <= 0x7E;
+    return (POP3_CHAR_LUT[usize(c)] & POP3_UID) != 0;
 }
 
 struct ParsedU64 {
@@ -314,6 +393,14 @@ pub fn parsePop3UidlLine(line: []const u8): Pop3UidlItem? {
         return null;
     }
     let i: usize = 0;
+    const lo_u: Pop3Vec16 = @splat(0x21 as u8);
+    const hi_u: Pop3Vec16 = @splat(0x7E as u8);
+    while (i + 16 <= uid.len) : (i += 16) {
+        const v: Pop3Vec16 = uid[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v < lo_u) | (v > hi_u))) {
+            return null;
+        }
+    }
     while (i < uid.len) {
         if (!isValidUidChar(uid[i])) {
             return null;
@@ -450,12 +537,14 @@ pub struct Pop3MultiLineIter {
             return null;
         }
 
-        // Find next CRLF
+        // Find next CRLF via 16-lane SIMD '\r' jump
         let i = _.offset;
         let crlf_pos: usize = 0;
         let found = false;
         while (i + 1 < _.data.len) {
-            if (_.data[i] == '\r' && _.data[i + 1] == '\n') {
+            i = pop3FindByteSimd(_.data, i, '\r');
+            if (i + 1 >= _.data.len) break;
+            if (_.data[i + 1] == '\n') {
                 crlf_pos = i;
                 found = true;
                 break;
@@ -517,31 +606,19 @@ pub fn encodePop3Command(verb: []const u8, arg1: []const u8, arg2: []const u8, o
     }
 
     let pos: usize = 0;
-    let i: usize = 0;
-    while (i < verb.len) {
-        out[pos] = verb[i];
-        pos += 1;
-        i += 1;
-    }
+    @memcpy(out[pos .. pos + verb.len], verb);
+    pos += verb.len;
     if (arg1.len > 0) {
         out[pos] = ' ';
         pos += 1;
-        let j: usize = 0;
-        while (j < arg1.len) {
-            out[pos] = arg1[j];
-            pos += 1;
-            j += 1;
-        }
+        @memcpy(out[pos .. pos + arg1.len], arg1);
+        pos += arg1.len;
     }
     if (arg2.len > 0) {
         out[pos] = ' ';
         pos += 1;
-        let k: usize = 0;
-        while (k < arg2.len) {
-            out[pos] = arg2[k];
-            pos += 1;
-            k += 1;
-        }
+        @memcpy(out[pos .. pos + arg2.len], arg2);
+        pos += arg2.len;
     }
     out[pos] = '\r';
     out[pos + 1] = '\n';
@@ -567,8 +644,7 @@ pub fn pop3DotStuff(src: []const u8, out: []u8): usize? {
     let i: usize = 0;
     let at_line_start = true;
     while (i < src.len) {
-        const c = src[i];
-        if (at_line_start && c == '.') {
+        if (at_line_start && src[i] == '.') {
             if (pos >= out.len) {
                 return null;
             }
@@ -576,6 +652,20 @@ pub fn pop3DotStuff(src: []const u8, out: []u8): usize? {
             pos += 1;
         }
 
+        const brk = pop3FindCrOrLfSimd(src, i);
+        const plain = brk - i;
+        if (plain > 0) {
+            if (pos + plain > out.len) {
+                return null;
+            }
+            @memcpy(out[pos .. pos + plain], src[i..brk]);
+            pos += plain;
+            i = brk;
+            at_line_start = false;
+            if (i >= src.len) break;
+        }
+
+        const c = src[i];
         if (c == '\r' && i + 1 < src.len && src[i + 1] == '\n') {
             if (pos + 2 > out.len) {
                 return null;

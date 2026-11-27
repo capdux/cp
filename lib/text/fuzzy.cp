@@ -5,6 +5,57 @@
 const std = @import("std");
 import { TextErr } from "./chunker.cp";
 
+type FuzzyVec16 = @Vector(16, u8);
+
+fn makeFuzzyLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeFuzzySepLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('_')] = 1;
+    lut[usize('-')] = 1;
+    lut[usize('/')] = 1;
+    lut[usize('\\')] = 1;
+    lut[usize('.')] = 1;
+    lut[usize(':')] = 1;
+    return lut;
+}
+
+const FUZZY_LOWER_LUT: [u8; 256] = makeFuzzyLowerLut();
+const FUZZY_SEP_LUT: [u8; 256] = makeFuzzySepLut();
+
+fn findByteIgnoreCaseSimd(haystack: string, start: usize, target_lower: u8): usize? {
+    let i = start;
+    const lo_A: FuzzyVec16 = @splat(65 as u8);
+    const hi_Z: FuzzyVec16 = @splat(90 as u8);
+    const case_bit: FuzzyVec16 = @splat(0x20 as u8);
+    const t_v: FuzzyVec16 = @splat(target_lower);
+    while (i + 16 <= haystack.len) : (i += 16) {
+        const v: FuzzyVec16 = haystack[i .. i + 16][0..16].*;
+        const is_up = (v >= lo_A) & (v <= hi_Z);
+        const lv = @select(u8, is_up, v | case_bit, v);
+        const mask: u16 = @bitCast(lv == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < haystack.len) : (i += 1) {
+        if (FUZZY_LOWER_LUT[usize(haystack[i])] == target_lower) return i;
+    }
+    return null;
+}
+
 /// A ranked fuzzy match result returned by `fuzzyTopK`.
 pub struct FuzzyMatch {
     index: usize = 0;
@@ -50,7 +101,16 @@ fn decodeCodepointsAlloc(alloc: std.mem.Allocator, s: string): ([]u32)! {
 fn countCodepoints(s: string): usize {
     let pos: usize = 0;
     let n: usize = 0;
+    const hi_bit: FuzzyVec16 = @splat(0x80 as u8);
     while (pos < s.len) {
+        if (pos + 16 <= s.len) {
+            const v: FuzzyVec16 = s[pos .. pos + 16][0..16].*;
+            if (@reduce(.Or, v & hi_bit) == 0) {
+                pos += 16;
+                n += 16;
+                continue;
+            }
+        }
         * = decodeUtf8Next(s, *pos);
         n += 1;
     }
@@ -253,12 +313,11 @@ pub fn jaroWinkler(a: string, b: string): f64 {
 }
 
 fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
+    return FUZZY_LOWER_LUT[usize(c)];
 }
 
 fn isSeparatorChar(c: u8): bool {
-    return c == ' ' || c == '_' || c == '-' || c == '/' || c == '\\' || c == '.' || c == ':';
+    return FUZZY_SEP_LUT[usize(c)] != 0;
 }
 
 fn charMatchBonus(cand: string, j: usize, q_byte: u8): i32 {
@@ -289,22 +348,22 @@ fn fuzzyScoreGreedy(query: string, candidate: string): i32? {
     let prev_match: usize = 0;
     let has_prev = false;
 
-    while (qi < query.len && cj < candidate.len) : (cj += 1) {
-        if (toLowerAscii(query[qi]) == toLowerAscii(candidate[cj])) {
-            score += charMatchBonus(candidate, cj, query[qi]);
-            if (has_prev) {
-                if (cj == prev_match + 1) {
-                    score += 15;
-                } else {
-                    score -= ((cj - prev_match - 1) as i32);
-                }
+    while (qi < query.len && cj < candidate.len) {
+        const hit = findByteIgnoreCaseSimd(candidate, cj, toLowerAscii(query[qi])) ?? return null;
+        score += charMatchBonus(candidate, hit, query[qi]);
+        if (has_prev) {
+            if (hit == prev_match + 1) {
+                score += 15;
             } else {
-                score -= (cj as i32);
+                score -= ((hit - prev_match - 1) as i32);
             }
-            prev_match = cj;
-            has_prev = true;
-            qi += 1;
+        } else {
+            score -= (hit as i32);
         }
+        prev_match = hit;
+        has_prev = true;
+        qi += 1;
+        cj = hit + 1;
     }
 
     if (qi < query.len) return null;
@@ -323,15 +382,14 @@ pub fn fuzzyScore(query: string, candidate: string): i32? {
         return fuzzyScoreGreedy(query, candidate);
     }
 
-    // Fast subsequence pre-check so non-matches return in O(n)
+    // Fast 16-lane SIMD subsequence pre-check so non-matches return in O(n/16)
     let q_chk: usize = 0;
     let c_chk: usize = 0;
-    while (q_chk < query.len && c_chk < candidate.len) : (c_chk += 1) {
-        if (toLowerAscii(query[q_chk]) == toLowerAscii(candidate[c_chk])) {
-            q_chk += 1;
-        }
+    while (q_chk < query.len) {
+        const hit = findByteIgnoreCaseSimd(candidate, c_chk, toLowerAscii(query[q_chk])) ?? return null;
+        q_chk += 1;
+        c_chk = hit + 1;
     }
-    if (q_chk < query.len) return null;
 
     let prev_row: [FUZZY_DP_MAX_LEN]i32 = [FUZZY_NEG_INF; FUZZY_DP_MAX_LEN];
     let curr_row: [FUZZY_DP_MAX_LEN]i32 = [FUZZY_NEG_INF; FUZZY_DP_MAX_LEN];
@@ -383,10 +441,7 @@ pub fn fuzzyScore(query: string, candidate: string): i32? {
             }
         }
 
-        j = 0;
-        while (j < n) : (j += 1) {
-            prev_row[j] = curr_row[j];
-        }
+        @memcpy(prev_row[0..n], curr_row[0..n]);
     }
 
     let best_final = FUZZY_NEG_INF;
@@ -455,9 +510,8 @@ pub fn fuzzyTopK(
     sortFuzzyMatchesDesc(matches.items);
     const out_len = if (matches.items.len < top_k) matches.items.len else top_k;
     let out = alloc.alloc(FuzzyMatch, out_len) catch return TextErr.OutOfMemory;
-    let k: usize = 0;
-    while (k < out_len) : (k += 1) {
-        out[k] = matches.items[k];
+    if (out_len > 0) {
+        @memcpy(out[0..out_len], matches.items[0..out_len]);
     }
     return out;
 }

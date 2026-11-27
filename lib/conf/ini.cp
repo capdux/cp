@@ -9,6 +9,51 @@
 
 const std = @import("std");
 
+type IniVec16 = @Vector(16, u8);
+
+fn makeIniEscLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize('n')] = '\n';
+    lut[usize('r')] = '\r';
+    lut[usize('t')] = '\t';
+    lut[usize('\\')] = '\\';
+    lut[usize('"')] = '"';
+    lut[usize('\'')] = '\'';
+    return lut;
+}
+
+const INI_ESC_LUT: [u8; 256] = makeIniEscLut();
+
+fn findByteSimd(s: []const u8, start: usize, target: u8): usize? {
+    let i = start;
+    const t_v: IniVec16 = @splat(target);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IniVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return null;
+}
+
+fn findEitherByteSimd(s: []const u8, start: usize, a: u8, b: u8): usize? {
+    let i = start;
+    const a_v: IniVec16 = @splat(a);
+    const b_v: IniVec16 = @splat(b);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IniVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == a_v) | (v == b_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == a || s[i] == b) return i;
+    }
+    return null;
+}
+
 pub struct Property {
     pub section: []const u8 = "";
     pub key: []const u8 = "";
@@ -213,15 +258,7 @@ pub struct Ini {
             }
 
             // Key-value pair (delimiters = or :)
-            let delim_idx: usize? = null;
-            let i: usize = 0;
-            while (i < line.len) {
-                if (line[i] == '=' || line[i] == ':') {
-                    delim_idx = i;
-                    break;
-                }
-                i += 1;
-            }
+            const delim_idx = findEitherByteSimd(line, 0, '=', ':');
 
             if (delim_idx == null) {
                 continue;
@@ -243,10 +280,8 @@ pub struct Ini {
     static fn getEnv(name: []const u8): ([]const u8)? {
         let name_z = std.heap.page_allocator.allocSentinel(u8, name.len, 0) catch return null;
         defer std.heap.page_allocator.free(name_z);
-        let i: usize = 0;
-        while (i < name.len) {
-            name_z[i] = name[i];
-            i += 1;
+        if (name.len > 0) {
+            @memcpy(name_z[0..name.len], name);
         }
         if (p := std.c.getenv(name_z.ptr)) {
             return std.mem.span(p);
@@ -255,82 +290,106 @@ pub struct Ini {
     }
 
     static fn expandEnv(raw: []const u8): []const u8 {
-        if (std.mem.indexOfScalar(u8, raw, '$') == null) {
-            return raw;
-        }
+        const first_dollar = findByteSimd(raw, 0, '$') ?? return raw;
         let buf = std.heap.page_allocator.alloc(u8, raw.len * 2 + 64) catch unreachable;
         let out_idx: usize = 0;
-        let i: usize = 0;
+        if (first_dollar > 0) {
+            @memcpy(buf[0..first_dollar], raw[0..first_dollar]);
+            out_idx = first_dollar;
+        }
+        let i: usize = first_dollar;
         while (i < raw.len) {
-            if (raw[i] == '$' && i + 1 < raw.len) {
-                if (raw[i + 1] == '{') {
-                    if (close_idx := std.mem.indexOfScalar(u8, raw[i + 2 ..], '}')) {
-                        const var_name = raw[i + 2 .. i + 2 + close_idx];
-                        if (val := Ini.getEnv(var_name)) {
-                            let k: usize = 0;
-                            while (k < val.len) {
-                                buf[out_idx] = val[k];
-                                out_idx += 1;
-                                k += 1;
-                            }
+            if (raw[i] == '$' && i + 1 < raw.len && raw[i + 1] == '{') {
+                if (close_pos := findByteSimd(raw, i + 2, '}')) {
+                    const var_name = raw[i + 2 .. close_pos];
+                    if (val := Ini.getEnv(var_name)) {
+                        if (val.len > 0) {
+                            @memcpy(buf[out_idx .. out_idx + val.len], val);
+                            out_idx += val.len;
                         }
-                        i = i + 2 + close_idx + 1;
-                        continue;
                     }
+                    i = close_pos + 1;
+                    if (next_d := findByteSimd(raw, i, '$')) {
+                        const chunk = next_d - i;
+                        if (chunk > 0) {
+                            @memcpy(buf[out_idx .. out_idx + chunk], raw[i..next_d]);
+                            out_idx += chunk;
+                        }
+                        i = next_d;
+                    } else {
+                        const rem = raw.len - i;
+                        if (rem > 0) {
+                            @memcpy(buf[out_idx .. out_idx + rem], raw[i..]);
+                            out_idx += rem;
+                        }
+                        break;
+                    }
+                    continue;
                 }
             }
             buf[out_idx] = raw[i];
             out_idx += 1;
             i += 1;
+            if (next_d := findByteSimd(raw, i, '$')) {
+                const chunk = next_d - i;
+                if (chunk > 0) {
+                    @memcpy(buf[out_idx .. out_idx + chunk], raw[i..next_d]);
+                    out_idx += chunk;
+                }
+                i = next_d;
+            } else {
+                const rem = raw.len - i;
+                if (rem > 0) {
+                    @memcpy(buf[out_idx .. out_idx + rem], raw[i..]);
+                    out_idx += rem;
+                }
+                break;
+            }
         }
         return buf[0..out_idx];
     }
 
     static fn unescapeStr(s: []const u8): []const u8 {
-        if (std.mem.indexOfScalar(u8, s, '\\') == null) {
-            return s;
-        }
+        const first_bs = findByteSimd(s, 0, '\\') ?? return s;
         let buf = std.heap.page_allocator.alloc(u8, s.len) catch unreachable;
         let out_idx: usize = 0;
-        let i: usize = 0;
+        if (first_bs > 0) {
+            @memcpy(buf[0..first_bs], s[0..first_bs]);
+            out_idx = first_bs;
+        }
+        let i: usize = first_bs;
         while (i < s.len) {
             if (s[i] == '\\' && i + 1 < s.len) {
-                const next_ch = s[i + 1];
-                if (next_ch == 'n') {
-                    buf[out_idx] = '\n';
+                const mapped = INI_ESC_LUT[usize(s[i + 1])];
+                if (mapped != 0) {
+                    buf[out_idx] = mapped;
                     out_idx += 1;
                     i += 2;
-                    continue;
-                } else if (next_ch == 'r') {
-                    buf[out_idx] = '\r';
+                } else {
+                    buf[out_idx] = s[i];
                     out_idx += 1;
-                    i += 2;
-                    continue;
-                } else if (next_ch == 't') {
-                    buf[out_idx] = '\t';
-                    out_idx += 1;
-                    i += 2;
-                    continue;
-                } else if (next_ch == '\\') {
-                    buf[out_idx] = '\\';
-                    out_idx += 1;
-                    i += 2;
-                    continue;
-                } else if (next_ch == '"') {
-                    buf[out_idx] = '"';
-                    out_idx += 1;
-                    i += 2;
-                    continue;
-                } else if (next_ch == '\'') {
-                    buf[out_idx] = '\'';
-                    out_idx += 1;
-                    i += 2;
-                    continue;
+                    i += 1;
                 }
+            } else {
+                buf[out_idx] = s[i];
+                out_idx += 1;
+                i += 1;
             }
-            buf[out_idx] = s[i];
-            out_idx += 1;
-            i += 1;
+            if (next_bs := findByteSimd(s, i, '\\')) {
+                const chunk = next_bs - i;
+                if (chunk > 0) {
+                    @memcpy(buf[out_idx .. out_idx + chunk], s[i..next_bs]);
+                    out_idx += chunk;
+                }
+                i = next_bs;
+            } else {
+                const rem = s.len - i;
+                if (rem > 0) {
+                    @memcpy(buf[out_idx .. out_idx + rem], s[i..]);
+                    out_idx += rem;
+                }
+                break;
+            }
         }
         return buf[0..out_idx];
     }
@@ -351,15 +410,19 @@ pub struct Ini {
             return raw[1 .. raw.len - 1];
         }
 
-        // Strip inline comments ; or # preceded by space/tab
+        // Strip inline comments ; or # preceded by space/tab (16-lane SIMD scan)
         let end = raw.len;
-        let i: usize = 0;
-        while (i < raw.len) {
-            if ((raw[i] == ';' || raw[i] == '#') && i > 0 && (raw[i - 1] == ' ' || raw[i - 1] == '\t')) {
-                end = i - 1;
+        let scan: usize = 0;
+        while (scan < raw.len) {
+            if (hit := findEitherByteSimd(raw, scan, ';', '#')) {
+                if (hit > 0 && (raw[hit - 1] == ' ' || raw[hit - 1] == '\t')) {
+                    end = hit - 1;
+                    break;
+                }
+                scan = hit + 1;
+            } else {
                 break;
             }
-            i += 1;
         }
 
         const trimmed = std.mem.trim(u8, raw[0..end], " \t\r");
@@ -398,13 +461,11 @@ pub struct Ini {
             if (_.props[i].section.len == 0) {
                 const k = _.props[i].key;
                 const v = _.props[i].value;
-                let idx: usize = 0;
-                while (idx < k.len) { buf[len] = k[idx]; len += 1; idx += 1; }
+                if (k.len > 0) { @memcpy(buf[len .. len + k.len], k); len += k.len; }
                 buf[len] = ' '; len += 1;
                 buf[len] = '='; len += 1;
                 buf[len] = ' '; len += 1;
-                idx = 0;
-                while (idx < v.len) { buf[len] = v[idx]; len += 1; idx += 1; }
+                if (v.len > 0) { @memcpy(buf[len .. len + v.len], v); len += v.len; }
                 buf[len] = '\n'; len += 1;
             }
             i += 1;
@@ -441,8 +502,7 @@ pub struct Ini {
                 buf[len] = '\n'; len += 1;
             }
             buf[len] = '['; len += 1;
-            let idx: usize = 0;
-            while (idx < sec_name.len) { buf[len] = sec_name[idx]; len += 1; idx += 1; }
+            if (sec_name.len > 0) { @memcpy(buf[len .. len + sec_name.len], sec_name); len += sec_name.len; }
             buf[len] = ']'; len += 1;
             buf[len] = '\n'; len += 1;
 
@@ -451,13 +511,11 @@ pub struct Ini {
                 if (std.mem.eql(u8, _.props[i].section, sec_name)) {
                     const k = _.props[i].key;
                     const v = _.props[i].value;
-                    idx = 0;
-                    while (idx < k.len) { buf[len] = k[idx]; len += 1; idx += 1; }
+                    if (k.len > 0) { @memcpy(buf[len .. len + k.len], k); len += k.len; }
                     buf[len] = ' '; len += 1;
                     buf[len] = '='; len += 1;
                     buf[len] = ' '; len += 1;
-                    idx = 0;
-                    while (idx < v.len) { buf[len] = v[idx]; len += 1; idx += 1; }
+                    if (v.len > 0) { @memcpy(buf[len .. len + v.len], v); len += v.len; }
                     buf[len] = '\n'; len += 1;
                 }
                 i += 1;

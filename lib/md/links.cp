@@ -8,6 +8,83 @@ import { countBackticks, emitText, findCodeSpanEnd, findHtmlTag } from "./inline
 import { lookupRefDef } from "./refDefs.cp";
 import { Md4cParserState, MdRefDef, SpanDetail } from "./types.cp";
 
+type MdLinkVec16 = @Vector(16, u8);
+
+const MDL_SCHEME: u8 = 1;
+const MDL_EMAIL_LOCAL: u8 = 2;
+const MDL_DOMAIN: u8 = 4;
+
+fn makeMdLinkCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || (i >= '0' && i <= '9')) {
+            lut[i] |= MDL_SCHEME | MDL_EMAIL_LOCAL | MDL_DOMAIN;
+        }
+    }
+    lut[usize('+')] |= MDL_SCHEME | MDL_EMAIL_LOCAL;
+    lut[usize('-')] |= MDL_SCHEME | MDL_EMAIL_LOCAL | MDL_DOMAIN;
+    lut[usize('.')] |= MDL_SCHEME | MDL_EMAIL_LOCAL | MDL_DOMAIN;
+    lut[usize('_')] |= MDL_EMAIL_LOCAL;
+    return lut;
+}
+
+const MD_LINK_CHAR_LUT: [u8; 256] = makeMdLinkCharLut();
+
+fn mdFindBracketSpecialSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const bs_v: MdLinkVec16 = @splat('\\' as u8);
+    const bt_v: MdLinkVec16 = @splat('`' as u8);
+    const lt_v: MdLinkVec16 = @splat('<' as u8);
+    const lb_v: MdLinkVec16 = @splat('[' as u8);
+    const rb_v: MdLinkVec16 = @splat(']' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: MdLinkVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == bs_v) | (v == bt_v) | (v == lt_v) | (v == lb_v) | (v == rb_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '\\' || c == '`' || c == '<' || c == '[' || c == ']') return i;
+    }
+    return s.len;
+}
+
+fn mdFindWikiSpecialSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const lf_v: MdLinkVec16 = @splat('\n' as u8);
+    const cr_v: MdLinkVec16 = @splat('\r' as u8);
+    const lb_v: MdLinkVec16 = @splat('[' as u8);
+    const rb_v: MdLinkVec16 = @splat(']' as u8);
+    const pp_v: MdLinkVec16 = @splat('|' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: MdLinkVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == lf_v) | (v == cr_v) | (v == lb_v) | (v == rb_v) | (v == pp_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '\n' || c == '\r' || c == '[' || c == ']' || c == '|') return i;
+    }
+    return s.len;
+}
+
+fn mdFindCloseOrBsSimd(s: []const u8, start: usize, close_ch: u8): usize {
+    let i = start;
+    const cl_v: MdLinkVec16 = @splat(close_ch);
+    const bs_v: MdLinkVec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: MdLinkVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == cl_v) | (v == bs_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == close_ch || s[i] == '\\') return i;
+    }
+    return s.len;
+}
+
 pub struct BracketLinkResult {
     is_link: bool = false,
     label_end: usize = 0,
@@ -38,9 +115,7 @@ pub fn findAutolink(p: *const Md4cParserState, content: []const u8, start: usize
 
     if (isAlpha(content[pos])) {
         let scheme_end = pos;
-        while (scheme_end < content.len && (isAlphaNum(content[scheme_end]) ||
-            content[scheme_end] == '+' || content[scheme_end] == '-' || content[scheme_end] == '.'))
-        {
+        while (scheme_end < content.len && (MD_LINK_CHAR_LUT[usize(content[scheme_end])] & MDL_SCHEME) != 0) {
             scheme_end += 1;
         }
         const scheme_len = scheme_end - pos;
@@ -55,10 +130,7 @@ pub fn findAutolink(p: *const Md4cParserState, content: []const u8, start: usize
         }
 
         let email_pos = pos;
-        while (email_pos < content.len && (isAlphaNum(content[email_pos]) ||
-            content[email_pos] == '.' || content[email_pos] == '-' ||
-            content[email_pos] == '_' || content[email_pos] == '+'))
-        {
+        while (email_pos < content.len && (MD_LINK_CHAR_LUT[usize(content[email_pos])] & MDL_EMAIL_LOCAL) != 0) {
             email_pos += 1;
         }
         if (email_pos < content.len && content[email_pos] == '@' && email_pos > pos) {
@@ -67,9 +139,7 @@ pub fn findAutolink(p: *const Md4cParserState, content: []const u8, start: usize
             let label_len: u32 = 0;
             let dot_count: u32 = 0;
             let valid_domain = true;
-            while (email_pos < content.len && (isAlphaNum(content[email_pos]) ||
-                content[email_pos] == '.' || content[email_pos] == '-'))
-            {
+            while (email_pos < content.len && (MD_LINK_CHAR_LUT[usize(content[email_pos])] & MDL_DOMAIN) != 0) {
                 if (content[email_pos] == '.') {
                     if (label_len == 0) {
                         valid_domain = false;
@@ -108,6 +178,8 @@ pub fn tryMatchBracketLink(p: *Md4cParserState, content: []const u8, start: usiz
     let pos = start + 1;
     let depth: u32 = 1;
     while (pos < content.len && depth > 0) {
+        pos = mdFindBracketSpecialSimd(content, pos);
+        if (pos >= content.len) break;
         if (content[pos] == '\\' && pos + 1 < content.len) {
             pos += 2;
             continue;
@@ -182,6 +254,8 @@ pub fn tryMatchBracketLink(p: *Md4cParserState, content: []const u8, start: usiz
             const close_ch: u8 = if (content[cur] == '(') ')' else content[cur];
             cur += 1;
             while (cur < content.len && content[cur] != close_ch) {
+                cur = mdFindCloseOrBsSimd(content, cur, close_ch);
+                if (cur >= content.len || content[cur] == close_ch) break;
                 if (content[cur] == '\\' && cur + 1 < content.len) {
                     cur += 2;
                 } else {
@@ -225,6 +299,8 @@ pub fn tryMatchBracketLink(p: *Md4cParserState, content: []const u8, start: usiz
 pub fn labelContainsLink(p: *Md4cParserState, label: []const u8): bool {
     let pos: usize = 0;
     while (pos < label.len) {
+        pos = mdFindBracketSpecialSimd(label, pos);
+        if (pos >= label.len) break;
         if (label[pos] == '\\' && pos + 1 < label.len) {
             pos += 2;
             continue;
@@ -285,6 +361,8 @@ pub fn processWikiLink(p: *Md4cParserState, content: []const u8, start: usize): 
     let bracket_depth: u32 = 0;
 
     while (pos < content.len) {
+        pos = mdFindWikiSpecialSimd(content, pos);
+        if (pos >= content.len) break;
         if (content[pos] == '\n' || content[pos] == '\r') return null;
         if (content[pos] == '[') {
             bracket_depth += 1;
@@ -327,6 +405,8 @@ pub fn processLink(p: *Md4cParserState, content: []const u8, start: usize, base_
     let has_inner_bracket = false;
 
     while (pos < content.len && bracket_depth > 0) {
+        pos = mdFindBracketSpecialSimd(content, pos);
+        if (pos >= content.len) break;
         if (content[pos] == '\\' && pos + 1 < content.len) {
             pos += 2;
             continue;
@@ -413,6 +493,8 @@ pub fn processLink(p: *Md4cParserState, content: []const u8, start: usize, base_
             pos += 1;
             const title_start = pos;
             while (pos < content.len && content[pos] != close_char) {
+                pos = mdFindCloseOrBsSimd(content, pos, close_char);
+                if (pos >= content.len || content[pos] == close_char) break;
                 if (content[pos] == '\\' && pos + 1 < content.len) {
                     pos += 2;
                 } else {

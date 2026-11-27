@@ -6,6 +6,92 @@
 const std = @import("std");
 import { JsonValue, JsonField, JsonTag } from "../json/value";
 
+type Json5Vec16 = @Vector(16, u8);
+
+const J5_WS: u8 = 1;
+const J5_ID_START: u8 = 2;
+const J5_ID_CONT: u8 = 4;
+const J5_HEX: u8 = 8;
+const J5_NUM: u8 = 16;
+
+fn makeJson5CharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] |= J5_WS;
+    lut[usize('\t')] |= J5_WS;
+    lut[usize('\r')] |= J5_WS;
+    lut[usize('\n')] |= J5_WS;
+    lut[0x0B] |= J5_WS;
+    lut[0x0C] |= J5_WS;
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i == '$') {
+            lut[i] |= J5_ID_START | J5_ID_CONT;
+        }
+        if (i >= '0' && i <= '9') {
+            lut[i] |= J5_ID_CONT | J5_HEX | J5_NUM;
+        }
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) {
+            lut[i] |= J5_HEX;
+        }
+    }
+    lut[usize('.')] |= J5_NUM;
+    lut[usize('e')] |= J5_NUM;
+    lut[usize('E')] |= J5_NUM;
+    lut[usize('+')] |= J5_NUM;
+    lut[usize('-')] |= J5_NUM;
+    return lut;
+}
+
+const JSON5_CHAR_LUT: [u8; 256] = makeJson5CharLut();
+
+fn j5FindByteSimd(s: []const u8, start: usize, target: u8): usize {
+    let i = start;
+    const t_v: Json5Vec16 = @splat(target);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Json5Vec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return s.len;
+}
+
+fn j5FindQuoteOrBsSimd(s: []const u8, start: usize, quote: u8): usize {
+    let i = start;
+    const q_v: Json5Vec16 = @splat(quote);
+    const bs_v: Json5Vec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Json5Vec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == q_v) | (v == bs_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == quote || s[i] == '\\') return i;
+    }
+    return s.len;
+}
+
+fn j5FindStripSpecialSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const dq_v: Json5Vec16 = @splat('"' as u8);
+    const sq_v: Json5Vec16 = @splat('\'' as u8);
+    const sl_v: Json5Vec16 = @splat('/' as u8);
+    const cm_v: Json5Vec16 = @splat(',' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: Json5Vec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((v == dq_v) | (v == sq_v) | (v == sl_v) | (v == cm_v));
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\'' || c == '/' || c == ',') return i;
+    }
+    return s.len;
+}
+
 export error Json5Error {
     UnexpectedEof,
     UnexpectedCharacter,
@@ -54,18 +140,32 @@ pub struct JSON5Parser {
     }
 
     fn skipWhitespaceAndComments(*_): !void {
+        const sp_v: Json5Vec16 = @splat(' ' as u8);
+        const tb_v: Json5Vec16 = @splat('\t' as u8);
+        const cr_v: Json5Vec16 = @splat('\r' as u8);
+        const lf_v: Json5Vec16 = @splat('\n' as u8);
+        const vt_v: Json5Vec16 = @splat(0x0B as u8);
+        const ff_v: Json5Vec16 = @splat(0x0C as u8);
         while (pos < src.len) {
-            const c = src[pos];
-            if (c == ' ' or c == '\t' or c == '\r' or c == '\n' or c == 0x0B or c == 0x0C) {
-                pos += 1;
-                continue;
+            while (pos + 16 <= src.len) {
+                const v: Json5Vec16 = src[pos .. pos + 16][0..16].*;
+                const is_ws = (v == sp_v) | (v == tb_v) | (v == cr_v) | (v == lf_v) | (v == vt_v) | (v == ff_v);
+                if (@reduce(.And, is_ws)) {
+                    pos += 16;
+                } else {
+                    const non_ws_mask: u16 = ~@as(u16, @bitCast(is_ws));
+                    pos += (@ctz(non_ws_mask) as usize);
+                    break;
+                }
             }
+            while (pos < src.len && (JSON5_CHAR_LUT[usize(src[pos])] & J5_WS) != 0) {
+                pos += 1;
+            }
+            if (pos >= src.len) break;
+            const c = src[pos];
             // Single-line comment //
             if (c == '/' and pos + 1 < src.len and src[pos + 1] == '/') {
-                pos += 2;
-                while (pos < src.len and src[pos] != '\n') {
-                    pos += 1;
-                }
+                pos = j5FindByteSimd(src, pos + 2, '\n');
                 continue;
             }
             // Multi-line comment /* ... */
@@ -73,12 +173,17 @@ pub struct JSON5Parser {
                 pos += 2;
                 let closed = false;
                 while (pos + 1 < src.len) {
-                    if (src[pos] == '*' and src[pos + 1] == '/') {
-                        pos += 2;
+                    const star = j5FindByteSimd(src, pos, '*');
+                    if (star + 1 >= src.len) {
+                        pos = src.len;
+                        break;
+                    }
+                    if (src[star + 1] == '/') {
+                        pos = star + 2;
                         closed = true;
                         break;
                     }
-                    pos += 1;
+                    pos = star + 1;
                 }
                 if (!closed) {
                     return error.UnterminatedComment;
@@ -90,11 +195,11 @@ pub struct JSON5Parser {
     }
 
     fn isIdStart(c: u8): bool {
-        return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or c == '_' or c == '$';
+        return (JSON5_CHAR_LUT[usize(c)] & J5_ID_START) != 0;
     }
 
     fn isIdContinue(c: u8): bool {
-        return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or (c >= '0' and c <= '9') or c == '_' or c == '$';
+        return (JSON5_CHAR_LUT[usize(c)] & J5_ID_CONT) != 0;
     }
 
     fn parseIdentifier(*_): []const u8 {
@@ -130,22 +235,32 @@ pub struct JSON5Parser {
         const start = pos;
         let has_escape = false;
         while (pos < src.len) {
+            pos = j5FindQuoteOrBsSimd(src, pos, quote);
+            if (pos >= src.len) break;
             const b = src[pos];
             if (b == '\\') {
                 has_escape = true;
                 pos += 2;
-            } else if (b == quote) {
+            } else {
                 const s = src[start..pos];
                 pos += 1; // skip closing quote
                 if (!has_escape) {
                     return s;
                 }
-                // Decode escape sequences
+                // Decode escape sequences with SIMD backslash jump + @memcpy
                 let buf = try allocator.alloc(u8, s.len);
                 let out_idx: usize = 0;
                 let i: usize = 0;
                 while (i < s.len) {
-                    if (s[i] == '\\' and i + 1 < s.len) {
+                    const next_bs = j5FindByteSimd(s, i, '\\');
+                    const plain_len = next_bs - i;
+                    if (plain_len > 0) {
+                        @memcpy(buf[out_idx .. out_idx + plain_len], s[i..next_bs]);
+                        out_idx += plain_len;
+                        i = next_bs;
+                    }
+                    if (i >= s.len) break;
+                    if (i + 1 < s.len) {
                         const esc = s[i + 1];
                         if (esc == 'n') { buf[out_idx] = '\n'; out_idx += 1; i += 2; }
                         else if (esc == 'r') { buf[out_idx] = '\r'; out_idx += 1; i += 2; }
@@ -168,8 +283,6 @@ pub struct JSON5Parser {
                     }
                 }
                 return buf[0..out_idx];
-            } else {
-                pos += 1;
             }
         }
         return error.UnterminatedString;
@@ -186,13 +299,8 @@ pub struct JSON5Parser {
         // Hexadecimal support: 0x... / 0X...
         if (pos + 2 <= src.len and src[pos] == '0' and (src[pos + 1] == 'x' or src[pos + 1] == 'X')) {
             pos += 2;
-            while (pos < src.len) {
-                const c = src[pos];
-                if ((c >= '0' and c <= '9') or (c >= 'a' and c <= 'f') or (c >= 'A' and c <= 'F')) {
-                    pos += 1;
-                } else {
-                    break;
-                }
+            while (pos < src.len && (JSON5_CHAR_LUT[usize(src[pos])] & J5_HEX) != 0) {
+                pos += 1;
             }
             const hex_slice = src[start..pos];
             let clean_hex = hex_slice;
@@ -212,13 +320,8 @@ pub struct JSON5Parser {
         }
 
         // Decimal / floating point
-        while (pos < src.len) {
-            const c = src[pos];
-            if ((c >= '0' and c <= '9') or c == '.' or c == 'e' or c == 'E' or c == '+' or c == '-') {
-                pos += 1;
-            } else {
-                break;
-            }
+        while (pos < src.len && (JSON5_CHAR_LUT[usize(src[pos])] & J5_NUM) != 0) {
+            pos += 1;
         }
         const num_str = src[start..pos];
         let parse_slice = num_str;
@@ -378,9 +481,18 @@ pub struct JSON5 {
         let quote_char: u8 = 0;
 
         while (i < src.len and out_len < out_buf.len) {
-            const c = src[i];
-
             if (in_string) {
+                const hit = j5FindQuoteOrBsSimd(src, i, quote_char);
+                const plain = hit - i;
+                if (plain > 0) {
+                    const avail = out_buf.len - out_len;
+                    const take = if (plain < avail) plain else avail;
+                    @memcpy(out_buf[out_len .. out_len + take], src[i .. i + take]);
+                    out_len += take;
+                    i += take;
+                    if (out_len >= out_buf.len or i >= src.len) break;
+                }
+                const c = src[i];
                 if (c == '\\' and i + 1 < src.len) {
                     out_buf[out_len] = c;
                     out_len += 1;
@@ -405,6 +517,18 @@ pub struct JSON5 {
                 continue;
             }
 
+            const hit = j5FindStripSpecialSimd(src, i);
+            const plain = hit - i;
+            if (plain > 0) {
+                const avail = out_buf.len - out_len;
+                const take = if (plain < avail) plain else avail;
+                @memcpy(out_buf[out_len .. out_len + take], src[i .. i + take]);
+                out_len += take;
+                i += take;
+                if (out_len >= out_buf.len or i >= src.len) break;
+            }
+
+            const c = src[i];
             if (c == '"' or c == '\'') {
                 in_string = true;
                 quote_char = c;
@@ -416,21 +540,24 @@ pub struct JSON5 {
 
             // Single-line comment //
             if (c == '/' and i + 1 < src.len and src[i + 1] == '/') {
-                i += 2;
-                while (i < src.len and src[i] != '\n') {
-                    i += 1;
-                }
+                i = j5FindByteSimd(src, i + 2, '\n');
                 continue;
             }
 
             // Multi-line comment /* ... */
             if (c == '/' and i + 1 < src.len and src[i + 1] == '*') {
                 i += 2;
-                while (i + 1 < src.len and !(src[i] == '*' and src[i + 1] == '/')) {
-                    i += 1;
-                }
-                if (i + 1 < src.len) {
-                    i += 2;
+                while (i + 1 < src.len) {
+                    const star = j5FindByteSimd(src, i, '*');
+                    if (star + 1 >= src.len) {
+                        i = src.len;
+                        break;
+                    }
+                    if (src[star + 1] == '/') {
+                        i = star + 2;
+                        break;
+                    }
+                    i = star + 1;
                 }
                 continue;
             }

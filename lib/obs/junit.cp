@@ -53,19 +53,57 @@ pub struct JunitSummary {
 }
 
 // ---------------------------------------------------------------------------
-// 内部零拷贝 XML 扫描、属性提取与数值解析辅助函数
+// 内部零拷贝 XML 扫描、属性提取与数值解析辅助函数 (16-lane SIMD + Comptime LUT)
 // ---------------------------------------------------------------------------
 
+type JunitVec16 = @Vector(16, u8);
+
+const JUNIT_WS: u8 = 1;
+const JUNIT_DIGIT: u8 = 2;
+const JUNIT_TAG_BOUND: u8 = 4;
+
+fn makeJunitCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] |= JUNIT_WS | JUNIT_TAG_BOUND;
+    lut[usize('\t')] |= JUNIT_WS | JUNIT_TAG_BOUND;
+    lut[usize('\r')] |= JUNIT_WS | JUNIT_TAG_BOUND;
+    lut[usize('\n')] |= JUNIT_WS | JUNIT_TAG_BOUND;
+    lut[usize('>')] |= JUNIT_TAG_BOUND;
+    lut[usize('/')] |= JUNIT_TAG_BOUND;
+    let i: usize = '0';
+    while (i <= '9') : (i += 1) {
+        lut[i] |= JUNIT_DIGIT;
+    }
+    return lut;
+}
+
+const JUNIT_CHAR_LUT: [u8; 256] = makeJunitCharLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (JUNIT_CHAR_LUT[usize(c)] & JUNIT_WS) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (JUNIT_CHAR_LUT[usize(c)] & JUNIT_DIGIT) != 0;
 }
 
 fn isTagBoundary(c: u8): bool {
-    return isWs(c) || c == '>' || c == '/';
+    return (JUNIT_CHAR_LUT[usize(c)] & JUNIT_TAG_BOUND) != 0;
+}
+
+fn junitFindByteSimd(data: []const u8, start: usize, target: u8): usize {
+    let i = start;
+    const t_v: JunitVec16 = @splat(target);
+    while (i + 16 <= data.len) : (i += 16) {
+        const v: JunitVec16 = data[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(v == t_v);
+        if (mask != 0) return i + (@ctz(mask) as usize);
+    }
+    while (i < data.len) : (i += 1) {
+        if (data[i] == target) return i;
+    }
+    return data.len;
 }
 
 fn trimWs(s: []const u8): []const u8 {
@@ -85,6 +123,11 @@ fn eqlBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: JunitVec16 = a[i .. i + 16][0..16].*;
+        const vb: JunitVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -99,6 +142,11 @@ fn startsWithAt(haystack: []const u8, pos: usize, needle: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= needle.len) : (i += 16) {
+        const va: JunitVec16 = haystack[pos + i .. pos + i + 16][0..16].*;
+        const vb: JunitVec16 = needle[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < needle.len) {
         if (haystack[pos + i] != needle[i]) {
             return false;
@@ -124,7 +172,10 @@ fn findSubstrFrom(haystack: []const u8, start: usize, needle: []const u8): usize
     }
     let i = start;
     const limit = haystack.len - needle.len;
+    const first = needle[0];
     while (i <= limit) {
+        i = junitFindByteSimd(haystack, i, first);
+        if (i > limit) return null;
         if (startsWithAt(haystack, i, needle)) {
             return i;
         }
@@ -154,10 +205,7 @@ fn skipXmlSpecial(data: []const u8, p: usize): usize? {
         return data.len;
     }
     if (startsWithAt(data, p, "<!")) {
-        let i = p + 2;
-        while (i < data.len && data[i] != '>') {
-            i += 1;
-        }
+        const i = junitFindByteSimd(data, p + 2, '>');
         return if (i < data.len) (i + 1) else data.len;
     }
     return null;
@@ -167,20 +215,33 @@ fn skipXmlSpecial(data: []const u8, p: usize): usize? {
 fn findOpenTagClose(data: []const u8, start: usize): usize? {
     let i = start;
     let quote: u8 = 0;
+    const dq_v: JunitVec16 = @splat('"' as u8);
+    const sq_v: JunitVec16 = @splat('\'' as u8);
+    const gt_v: JunitVec16 = @splat('>' as u8);
     while (i < data.len) {
-        const c = data[i];
         if (quote != 0) {
-            if (c == quote) {
-                quote = 0;
-            }
+            i = junitFindByteSimd(data, i, quote);
+            if (i >= data.len) return null;
+            quote = 0;
+            i += 1;
         } else {
+            while (i + 16 <= data.len) : (i += 16) {
+                const v: JunitVec16 = data[i .. i + 16][0..16].*;
+                const mask: u16 = @bitCast((v == dq_v) | (v == sq_v) | (v == gt_v));
+                if (mask != 0) {
+                    i += (@ctz(mask) as usize);
+                    break;
+                }
+            }
+            if (i >= data.len) return null;
+            const c = data[i];
             if (c == '"' || c == '\'') {
                 quote = c;
             } else if (c == '>') {
                 return i;
             }
+            i += 1;
         }
-        i += 1;
     }
     return null;
 }
@@ -230,10 +291,8 @@ fn findMatchingClose(data: []const u8, body_start: usize, tag: []const u8): Clos
     let pos = body_start;
     let depth: u32 = 1;
     while (pos < data.len) {
-        if (data[pos] != '<') {
-            pos += 1;
-            continue;
-        }
+        pos = junitFindByteSimd(data, pos, '<');
+        if (pos >= data.len) break;
         if (next_p := skipXmlSpecial(data, pos)) {
             pos = next_p;
             continue;
@@ -300,9 +359,7 @@ fn getXmlAttr(attrs: []const u8, name: []const u8): ([]const u8)? {
         }
         i += 1;
         const val_start = i;
-        while (i < attrs.len && attrs[i] != q) {
-            i += 1;
-        }
+        i = junitFindByteSimd(attrs, i, q);
         if (i >= attrs.len) {
             return null;
         }
@@ -427,10 +484,8 @@ fn parseF64OrZero(raw: []const u8): f64 {
 fn inspectCaseBody(body: []const u8, out_case: *JunitCase) {
     let pos: usize = 0;
     while (pos < body.len) {
-        if (body[pos] != '<') {
-            pos += 1;
-            continue;
-        }
+        pos = junitFindByteSimd(body, pos, '<');
+        if (pos >= body.len) break;
         if (next_p := skipXmlSpecial(body, pos)) {
             pos = next_p;
             continue;
@@ -516,10 +571,8 @@ pub struct JunitSuiteIter {
             return null;
         }
         while (_.pos < _.data.len) {
-            if (_.data[_.pos] != '<') {
-                _.pos += 1;
-                continue;
-            }
+            _.pos = junitFindByteSimd(_.data, _.pos, '<');
+            if (_.pos >= _.data.len) break;
             if (next_p := skipXmlSpecial(_.data, _.pos)) {
                 _.pos = next_p;
                 continue;
@@ -588,10 +641,8 @@ pub struct JunitCaseIter {
             return null;
         }
         while (_.pos < _.data.len) {
-            if (_.data[_.pos] != '<') {
-                _.pos += 1;
-                continue;
-            }
+            _.pos = junitFindByteSimd(_.data, _.pos, '<');
+            if (_.pos >= _.data.len) break;
             if (next_p := skipXmlSpecial(_.data, _.pos)) {
                 _.pos = next_p;
                 continue;

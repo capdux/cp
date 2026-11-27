@@ -6,29 +6,97 @@ pub const SOUNDEX_LEN: usize = 4;
 /// Maximum internal cleaned letter buffer length for zero-alloc phonetic transforms.
 pub const MAX_PHONETIC_WORD_LEN: usize = 256;
 
+type SoundexVec16 = @Vector(16, u8);
+
+fn makeUpperAlphaLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 0x41 && i <= 0x5A) {
+            lut[i] = @as(u8, @intCast(i));
+        } else if (i >= 0x61 && i <= 0x7A) {
+            lut[i] = @as(u8, @intCast(i - 32));
+        }
+    }
+    return lut;
+}
+
+fn makeSoundexDigitLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[0x42] = 0x31; lut[0x46] = 0x31; lut[0x50] = 0x31; lut[0x56] = 0x31;
+    lut[0x43] = 0x32; lut[0x47] = 0x32; lut[0x4A] = 0x32; lut[0x4B] = 0x32;
+    lut[0x51] = 0x32; lut[0x53] = 0x32; lut[0x58] = 0x32; lut[0x5A] = 0x32;
+    lut[0x44] = 0x33; lut[0x54] = 0x33;
+    lut[0x4C] = 0x34;
+    lut[0x4D] = 0x35; lut[0x4E] = 0x35;
+    lut[0x52] = 0x36;
+    return lut;
+}
+
+fn makeVowelLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[0x41] = 3; // A
+    lut[0x45] = 3; // E
+    lut[0x49] = 3; // I
+    lut[0x4F] = 3; // O
+    lut[0x55] = 3; // U
+    lut[0x59] = 2; // Y
+    return lut;
+}
+
+const UPPER_ALPHA_LUT: [u8; 256] = makeUpperAlphaLut();
+const SOUNDEX_DIGIT_LUT: [u8; 256] = makeSoundexDigitLut();
+const VOWEL_LUT: [u8; 256] = makeVowelLut();
+
 fn toUpperAscii(ch: u8): u8? {
-    if (ch >= 0x41 && ch <= 0x5A) {
-        return ch;
-    }
-    if (ch >= 0x61 && ch <= 0x7A) {
-        return ch - 32;
-    }
-    return null;
+    const up = UPPER_ALPHA_LUT[usize(ch)];
+    if (up == 0) return null;
+    return up;
 }
 
 fn isVowelAEIOU(ch: u8): bool {
-    return ch == 0x41 || ch == 0x45 || ch == 0x49 || ch == 0x4F || ch == 0x55;
+    return (VOWEL_LUT[usize(ch)] & 1) != 0;
 }
 
 fn isVowelAEIOUY(ch: u8): bool {
-    return isVowelAEIOU(ch) || ch == 0x59;
+    return (VOWEL_LUT[usize(ch)] & 2) != 0;
 }
 
 fn cleanUpperLetters(word: []const u8, buf: []u8): usize {
     let n: usize = 0;
     let i: usize = 0;
+    const lo_A: SoundexVec16 = @splat(0x41 as u8);
+    const hi_Z: SoundexVec16 = @splat(0x5A as u8);
+    const lo_a: SoundexVec16 = @splat(0x61 as u8);
+    const hi_z: SoundexVec16 = @splat(0x7A as u8);
+    const upper_mask: SoundexVec16 = @splat(0xDF as u8);
+    while (i + 16 <= word.len && n + 16 <= buf.len) {
+        const v: SoundexVec16 = word[i .. i + 16][0..16].*;
+        const is_up = (v >= lo_A) & (v <= hi_Z);
+        const is_lo = (v >= lo_a) & (v <= hi_z);
+        if (@reduce(.And, is_up | is_lo)) {
+            const up_vec: SoundexVec16 = v & upper_mask;
+            const arr: [16]u8 = up_vec;
+            @memcpy(buf[n .. n + 16], arr[0..16]);
+            n += 16;
+            i += 16;
+        } else {
+            const end = i + 16;
+            while (i < end && n < buf.len) : (i += 1) {
+                const up = UPPER_ALPHA_LUT[usize(word[i])];
+                if (up != 0) {
+                    buf[n] = up;
+                    n += 1;
+                }
+            }
+        }
+    }
     while (i < word.len && n < buf.len) {
-        if (up := toUpperAscii(word[i])) {
+        const up = UPPER_ALPHA_LUT[usize(word[i])];
+        if (up != 0) {
             buf[n] = up;
             n += 1;
         }
@@ -38,15 +106,7 @@ fn cleanUpperLetters(word: []const u8, buf: []u8): usize {
 }
 
 fn soundexDigit(up: u8): u8 {
-    switch (up) {
-        0x42, 0x46, 0x50, 0x56 => return 0x31,                         // B, F, P, V -> '1'
-        0x43, 0x47, 0x4A, 0x4B, 0x51, 0x53, 0x58, 0x5A => return 0x32, // C, G, J, K, Q, S, X, Z -> '2'
-        0x44, 0x54 => return 0x33,                                     // D, T -> '3'
-        0x4C => return 0x34,                                           // L -> '4'
-        0x4D, 0x4E => return 0x35,                                     // M, N -> '5'
-        0x52 => return 0x36,                                           // R -> '6'
-        else => return 0,
-    }
+    return SOUNDEX_DIGIT_LUT[usize(up)];
 }
 
 /// Computes the NARA / Knuth American Soundex 4-byte code for `word`.
@@ -416,10 +476,8 @@ pub fn nysiis(word: []const u8, out: []u8): usize? {
     if (out.len < klen) {
         return null;
     }
-    let j: usize = 0;
-    while (j < klen) {
-        out[j] = key[j];
-        j += 1;
+    if (klen > 0) {
+        @memcpy(out[0..klen], key[0..klen]);
     }
     return klen;
 }
@@ -499,11 +557,32 @@ pub fn colognePhonetic(word: []const u8, out: []u8): usize? {
         i += 1;
     }
 
-    // Step 2: Strip all '0' except at index 0.
+    // Step 2: Strip all '0' except at index 0 (16-lane SIMD fast-path when chunk has no '0').
     let out_len: usize = 0;
     i = 0;
+    if (tlen > 0) {
+        out_len = pushByte(out, out_len, tmp[0]) ?? return null;
+        i = 1;
+    }
+    const zero_v: SoundexVec16 = @splat(0x30 as u8);
+    while (i + 16 <= tlen) {
+        const v: SoundexVec16 = tmp[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == zero_v)) {
+            if (out_len + 16 > out.len) return null;
+            @memcpy(out[out_len .. out_len + 16], tmp[i .. i + 16]);
+            out_len += 16;
+            i += 16;
+        } else {
+            const end = i + 16;
+            while (i < end) : (i += 1) {
+                if (tmp[i] != 0x30) {
+                    out_len = pushByte(out, out_len, tmp[i]) ?? return null;
+                }
+            }
+        }
+    }
     while (i < tlen) {
-        if (i == 0 || tmp[i] != 0x30) {
+        if (tmp[i] != 0x30) {
             out_len = pushByte(out, out_len, tmp[i]) ?? return null;
         }
         i += 1;
