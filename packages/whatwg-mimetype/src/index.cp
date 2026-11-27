@@ -1,6 +1,9 @@
 // @cap/whatwg-mimetype — Zero-allocation WHATWG MIME Sniffing Standard MIMEType parser in pure CP
 // Clean-room MIT implementation of npm `whatwg-mimetype` (#200, 215M/wk).
 
+import { isAlnum, eqIgnoreCase, toLower } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const WMIME_MAX_PARAMS: usize = 8;
 
 pub struct MimeParam {
@@ -13,7 +16,7 @@ fn wmimeIsHttpWs(b: u8): bool {
 }
 
 fn wmimeIsTokenChar(b: u8): bool {
-    if ((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122)) {
+    if (isAlnum(b)) {
         return true;
     }
     return b == 33 || b == 35 || b == 36 || b == 37 || b == 38 || b == 39
@@ -21,58 +24,18 @@ fn wmimeIsTokenChar(b: u8): bool {
         || b == 96 || b == 124 || b == 126;
 }
 
-fn wmimeToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn wmimeEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (wmimeToLower(a[i]) != wmimeToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn wmimeEndsWithIgnoreCase(s: string, suffix: string): bool {
     if (suffix.len > s.len) {
         return false;
     }
-    return wmimeEqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
-}
-
-fn wmimePush(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
 }
 
 fn wmimePushLower(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = wmimeToLower(s[i]);
-        p += 1;
-        i += 1;
+    if (pos >= out.len) {
+        return pos;
     }
-    return p;
-}
-
-fn wmimeEmptyParam(): MimeParam {
-    return MimeParam { name: "", value: "" };
+    return pos + toLower(s, out[pos..out.len]);
 }
 
 /// Parsed WHATWG MIME Type with zero-heap inline parameter table.
@@ -90,7 +53,7 @@ pub struct MimeType {
     pub fn getParam(name: string): string? {
         let i: usize = 0;
         while (i < _.param_count) {
-            if (wmimeEqIgnoreCase(_.params[i].name, name)) {
+            if (eqIgnoreCase(_.params[i].name, name)) {
                 return _.params[i].value;
             }
             i += 1;
@@ -104,21 +67,21 @@ pub struct MimeType {
             return 0;
         }
         let p = wmimePushLower(out, 0, _.main_type);
-        p = wmimePush(out, p, "/");
+        p = writeStr("/", out, p);
         return wmimePushLower(out, p, _.subtype);
     }
 
     /// WHATWG MIME Sniffing §4.6 HTML MIME type (`text/html`).
     pub fn isHTML(): bool {
-        return _.valid && wmimeEqIgnoreCase(_.main_type, "text") && wmimeEqIgnoreCase(_.subtype, "html");
+        return _.valid && eqIgnoreCase(_.main_type, "text") && eqIgnoreCase(_.subtype, "html");
     }
 
     /// WHATWG MIME Sniffing §4.6 XML MIME type (`text/xml`, `application/xml`, or `*/*+xml`).
     pub fn isXML(): bool {
         if (!_.valid) { return false; }
         if (wmimeEndsWithIgnoreCase(_.subtype, "+xml")) { return true; }
-        if (wmimeEqIgnoreCase(_.subtype, "xml")) {
-            return wmimeEqIgnoreCase(_.main_type, "text") || wmimeEqIgnoreCase(_.main_type, "application");
+        if (eqIgnoreCase(_.subtype, "xml")) {
+            return eqIgnoreCase(_.main_type, "text") || eqIgnoreCase(_.main_type, "application");
         }
         return false;
     }
@@ -126,21 +89,21 @@ pub struct MimeType {
     /// WHATWG MIME Sniffing §4.6 JavaScript MIME type.
     pub fn isJavaScript(): bool {
         if (!_.valid) { return false; }
-        if (wmimeEqIgnoreCase(_.main_type, "text")) {
-            return wmimeEqIgnoreCase(_.subtype, "javascript")
-                || wmimeEqIgnoreCase(_.subtype, "ecmascript")
-                || wmimeEqIgnoreCase(_.subtype, "javascript1.0")
-                || wmimeEqIgnoreCase(_.subtype, "javascript1.5")
-                || wmimeEqIgnoreCase(_.subtype, "jscript")
-                || wmimeEqIgnoreCase(_.subtype, "livescript")
-                || wmimeEqIgnoreCase(_.subtype, "x-ecmascript")
-                || wmimeEqIgnoreCase(_.subtype, "x-javascript");
+        if (eqIgnoreCase(_.main_type, "text")) {
+            return eqIgnoreCase(_.subtype, "javascript")
+                || eqIgnoreCase(_.subtype, "ecmascript")
+                || eqIgnoreCase(_.subtype, "javascript1.0")
+                || eqIgnoreCase(_.subtype, "javascript1.5")
+                || eqIgnoreCase(_.subtype, "jscript")
+                || eqIgnoreCase(_.subtype, "livescript")
+                || eqIgnoreCase(_.subtype, "x-ecmascript")
+                || eqIgnoreCase(_.subtype, "x-javascript");
         }
-        if (wmimeEqIgnoreCase(_.main_type, "application")) {
-            return wmimeEqIgnoreCase(_.subtype, "ecmascript")
-                || wmimeEqIgnoreCase(_.subtype, "javascript")
-                || wmimeEqIgnoreCase(_.subtype, "x-ecmascript")
-                || wmimeEqIgnoreCase(_.subtype, "x-javascript");
+        if (eqIgnoreCase(_.main_type, "application")) {
+            return eqIgnoreCase(_.subtype, "ecmascript")
+                || eqIgnoreCase(_.subtype, "javascript")
+                || eqIgnoreCase(_.subtype, "x-ecmascript")
+                || eqIgnoreCase(_.subtype, "x-javascript");
         }
         return false;
     }
@@ -149,8 +112,8 @@ pub struct MimeType {
     pub fn isJSON(): bool {
         if (!_.valid) { return false; }
         if (wmimeEndsWithIgnoreCase(_.subtype, "+json")) { return true; }
-        if (wmimeEqIgnoreCase(_.subtype, "json")) {
-            return wmimeEqIgnoreCase(_.main_type, "application") || wmimeEqIgnoreCase(_.main_type, "text");
+        if (eqIgnoreCase(_.subtype, "json")) {
+            return eqIgnoreCase(_.main_type, "application") || eqIgnoreCase(_.main_type, "text");
         }
         return false;
     }
@@ -163,9 +126,9 @@ pub struct MimeType {
         let p = _.essence(out);
         let i: usize = 0;
         while (i < _.param_count) {
-            p = wmimePush(out, p, ";");
+            p = writeStr(";", out, p);
             p = wmimePushLower(out, p, _.params[i].name);
-            p = wmimePush(out, p, "=");
+            p = writeStr("=", out, p);
             const val = _.params[i].value;
             let needs_quote = val.len == 0;
             let k: usize = 0;
@@ -177,11 +140,11 @@ pub struct MimeType {
                 k += 1;
             }
             if (needs_quote) {
-                p = wmimePush(out, p, "\"");
+                p = writeStr("\"", out, p);
                 let q: usize = 0;
                 while (q < val.len && p < out.len) {
                     if (val[q] == 34 || val[q] == 92) {
-                        p = wmimePush(out, p, "\\");
+                        p = writeStr("\\", out, p);
                     }
                     if (p < out.len) {
                         out[p] = val[q];
@@ -189,9 +152,9 @@ pub struct MimeType {
                     }
                     q += 1;
                 }
-                p = wmimePush(out, p, "\"");
+                p = writeStr("\"", out, p);
             } else {
-                p = wmimePush(out, p, val);
+                p = writeStr(val, out, p);
             }
             i += 1;
         }
@@ -201,7 +164,7 @@ pub struct MimeType {
 
 /// Parses a MIME type string per WHATWG MIME Sniffing Standard §4.4.
 pub fn parseMimeType(input: string): MimeType {
-    const empty_params: [8]MimeParam = [wmimeEmptyParam(); 8];
+    const empty_params: [8]MimeParam = undefined;
     let invalid = MimeType { valid: false, main_type: "", subtype: "", params: empty_params, param_count: 0 };
 
     let a: usize = 0;

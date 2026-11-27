@@ -2,6 +2,9 @@
 // Zero-allocation RFC 5870 geo: URI parser, validator & serializer.
 // MIT clean-room pure CP implementation.
 
+import { eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 /// Parsed RFC 5870 `geo:` URI components.
 pub struct GeoUri {
     pub lat: f64,
@@ -12,27 +15,6 @@ pub struct GeoUri {
     pub uncertainty: f64,
     pub crs: string,
     pub valid: bool,
-}
-
-fn guToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn guEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (guToLower(a[i]) != guToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Parse an RFC 5870 decimal number (`["-"] 1*DIGIT ["." 1*DIGIT]`).
@@ -96,37 +78,14 @@ fn guWriteRaw(out: []u8, pos: *usize, src: []const u8): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.*] = src[i];
-        pos.* += 1;
-        i += 1;
-    }
+    pos.* = writeStr(src, out, pos.*);
     return true;
 }
 
 fn guWriteU64(out: []u8, pos: *usize, val: u64): bool {
-    if (val == (0 as u64)) {
-        return guWriteRaw(out, pos, "0");
-    }
-    let rev: [24]u8 = undefined;
-    let n: usize = 0;
-    let cur = val;
-    while (cur > (0 as u64)) {
-        rev[n] = ('0' as u8) + ((cur % (10 as u64)) as u8);
-        n += 1;
-        cur = cur / (10 as u64);
-    }
-    if (pos.* + n > out.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[pos.*] = rev[n - 1 - i];
-        pos.* += 1;
-        i += 1;
-    }
-    return true;
+    let tmp: [24]u8 = undefined;
+    const n = writeU64(val, tmp[0..24], 0);
+    return guWriteRaw(out, pos, tmp[0..n]);
 }
 
 /// Format a finite `f64` with up to 6 fractional digits (trimming trailing zeros).
@@ -210,22 +169,14 @@ pub fn parseGeoUri(uri: string): GeoUri {
         valid: false,
     };
 
-    if (uri.len < 7 || !guEqIgnoreCase(uri[0..4], "geo:")) {
+    if (uri.len < 7 || !eqIgnoreCase(uri[0..4], "geo:")) {
         return res;
     }
 
     const body = uri[4..uri.len];
 
     // Split coordinates from optional ';params'.
-    let semi = body.len;
-    let si: usize = 0;
-    while (si < body.len) {
-        if (body[si] == (';' as u8)) {
-            semi = si;
-            break;
-        }
-        si += 1;
-    }
+    const semi = findByte(body, ';' as u8, 0) ?? body.len;
 
     const coords = body[0..semi];
     if (coords.len == 0) {
@@ -286,10 +237,7 @@ pub fn parseGeoUri(uri: string): GeoUri {
     let pos = semi;
     while (pos < body.len) {
         pos += 1; // skip ';'
-        let nextSemi = pos;
-        while (nextSemi < body.len && body[nextSemi] != (';' as u8)) {
-            nextSemi += 1;
-        }
+        const nextSemi = findByte(body, ';' as u8, pos) ?? body.len;
         const seg = body[pos..nextSemi];
         pos = nextSemi;
 
@@ -297,10 +245,7 @@ pub fn parseGeoUri(uri: string): GeoUri {
             return res;
         }
 
-        let eq: usize = 0;
-        while (eq < seg.len && seg[eq] != ('=' as u8)) {
-            eq += 1;
-        }
+        const eq = findByte(seg, '=' as u8, 0) ?? seg.len;
         if (eq == 0 || eq + 1 >= seg.len) {
             return res;
         }
@@ -308,9 +253,9 @@ pub fn parseGeoUri(uri: string): GeoUri {
         const key = seg[0..eq];
         const val = seg[(eq + 1)..seg.len];
 
-        if (guEqIgnoreCase(key, "crs")) {
+        if (eqIgnoreCase(key, "crs")) {
             res.crs = val;
-        } else if (guEqIgnoreCase(key, "u")) {
+        } else if (eqIgnoreCase(key, "u")) {
             let uVal: f64 = 0.0;
             if (!guParseF64(val, &uVal) || uVal < (0.0 as f64)) {
                 return res;

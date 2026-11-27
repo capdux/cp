@@ -3,6 +3,9 @@
 // Supports fixed-capacity translation catalogs, singular/plural lookup (`t` / `tn`),
 // locale switching, and zero-heap `%s` / `%d` / `%%` printf formatting.
 
+import { strEq } from "cap:ascii";
+import { writeStr, writeI64 } from "cap:fmt";
+
 pub const Y18_MAX_ENTRIES: usize = 64;
 
 pub struct Y18nEntry {
@@ -12,66 +15,12 @@ pub struct Y18nEntry {
     pub has_plural: bool,
 }
 
-fn y18StrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn y18WriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos < out.len) {
         out[pos] = b;
         return pos + 1;
     }
     return pos;
-}
-
-fn y18WriteBytes(out: []u8, pos: usize, s: string): usize {
-    let w: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w += 1;
-        i += 1;
-    }
-    return w;
-}
-
-fn y18WriteI64(out: []u8, pos: usize, val: i64): usize {
-    let w: usize = pos;
-    if (val == 0) {
-        return y18WriteByte(out, w, 48); // '0'
-    }
-    let mag: u64 = 0;
-    if (val < 0) {
-        w = y18WriteByte(out, w, 45); // '-'
-        // Safe negation for all i64 values including i64::MIN
-        const negated: i64 = -(val + 1);
-        mag = (negated as u64) + 1;
-    } else {
-        mag = val as u64;
-    }
-
-    let digits: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let n: usize = 0;
-    while (mag > 0 && n < 24) {
-        digits[n] = (48 + (mag % 10)) as u8;
-        mag = mag / 10;
-        n += 1;
-    }
-    while (n > 0) {
-        n -= 1;
-        w = y18WriteByte(out, w, digits[n]);
-    }
-    return w;
 }
 
 /// Standalone zero-allocation printf-style formatter supporting `%s`, `%d`, and `%%`.
@@ -97,22 +46,22 @@ pub fn formatPrintf(tmpl: string, count: i64, has_count: bool, args: []const str
             }
             if (next == 115) { // "%s"
                 if (arg_idx < args.len) {
-                    w = y18WriteBytes(out, w, args[arg_idx]);
+                    w = writeStr(args[arg_idx], out, w);
                     arg_idx += 1;
                 } else {
-                    w = y18WriteBytes(out, w, "%s");
+                    w = writeStr("%s", out, w);
                 }
                 i += 2;
                 continue;
             }
             if (next == 100) { // "%d"
                 if (has_count) {
-                    w = y18WriteI64(out, w, count);
+                    w = writeI64(count, out, w);
                 } else if (arg_idx < args.len) {
-                    w = y18WriteBytes(out, w, args[arg_idx]);
+                    w = writeStr(args[arg_idx], out, w);
                     arg_idx += 1;
                 } else {
-                    w = y18WriteBytes(out, w, "%d");
+                    w = writeStr("%d", out, w);
                 }
                 i += 2;
                 continue;
@@ -153,7 +102,7 @@ pub struct Y18nCatalog {
     pub fn findIndex(key: string): i64 {
         let i: usize = 0;
         while (i < _.count) {
-            if (y18StrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 return i as i64;
             }
             i += 1;

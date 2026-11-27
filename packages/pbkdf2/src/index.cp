@@ -16,7 +16,7 @@ struct Pbkdf2Pads {
     outer_base: Sha256State,
 }
 
-fn pbkdf2InitPads(password: []u8): Pbkdf2Pads {
+fn pbkdf2InitPads(password: []const u8): Pbkdf2Pads {
     let key_blk: [64]u8 = undefined;
     let i: usize = 0;
     while (i < 64) {
@@ -61,7 +61,7 @@ fn pbkdf2InitPads(password: []u8): Pbkdf2Pads {
     };
 }
 
-fn pbkdf2HmacSaltBlock(pads: Pbkdf2Pads, salt: []u8, block_idx: u32, out32: []u8) {
+fn pbkdf2HmacSaltBlock(pads: Pbkdf2Pads, salt: []const u8, block_idx: u32, out32: []u8) {
     let idx_be: [4]u8 = [
         ((block_idx >> 24) & 0xFF) as u8,
         ((block_idx >> 16) & 0xFF) as u8,
@@ -95,8 +95,8 @@ fn pbkdf2Hmac32(pads: Pbkdf2Pads, msg32: []u8, out32: []u8) {
 
 // RFC 2898 Section 5.2: PBKDF2-HMAC-SHA256
 pub fn pbkdf2HmacSha256(
-    password: []u8,
-    salt: []u8,
+    password: []const u8,
+    salt: []const u8,
     iterations: u32,
     out_dk: []u8
 ): bool {
@@ -156,10 +156,10 @@ pub fn pbkdf2HmacSha256(
 
 // Derive key and compare in constant time using `ctEqual`
 pub fn pbkdf2Verify(
-    password: []u8,
-    salt: []u8,
+    password: []const u8,
+    salt: []const u8,
     iterations: u32,
-    expected_dk: []u8
+    expected_dk: []const u8
 ): bool {
     if (iterations == 0 || expected_dk.len == 0) {
         return false;
@@ -215,7 +215,18 @@ pub fn pbkdf2Verify(
     return diff == 0;
 }
 
+/// Convenience string wrapper for `pbkdf2HmacSha256`.
+pub fn pbkdf2HmacSha256Str(
+    password: string,
+    salt: string,
+    iterations: u32,
+    out_dk: []u8
+): bool {
+    return pbkdf2HmacSha256(password, salt, iterations, out_dk);
+}
+
 export {
     pbkdf2HmacSha256,
+    pbkdf2HmacSha256Str,
     pbkdf2Verify
 };

@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, startsWith, trim } from "cap:ascii";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 export class EjsEntry {
     key: string,
@@ -19,11 +20,7 @@ export class EjsContext {
     fn size(): usize;
 }
 
-export fn ejsStrEq(a: string, b: string): bool;
-export fn ejsStartsWith(s: string, prefix: string): bool;
-export fn ejsIsSpace(b: u8): bool;
-export fn ejsTrim(s: string): string;
-export fn ejsPushSlice(out: []u8, pos: usize, s: string): usize;
+export fn ejsWriteStr(s: string, out: []u8, pos: usize): usize;
 export fn ejsLookupStr(ctx: EjsContext, key: string): string;
 export fn ejsLookupBool(ctx: EjsContext, key: string): bool;
 export fn ejsLookupCount(ctx: EjsContext, key: string): usize;

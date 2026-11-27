@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isAlnum, eqIgnoreCase, toLower } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class MimeParam {
     name: string,
     value: string,
@@ -7,12 +9,8 @@ export class MimeParam {
 
 export fn wmimeIsHttpWs(b: u8): bool;
 export fn wmimeIsTokenChar(b: u8): bool;
-export fn wmimeToLower(b: u8): u8;
-export fn wmimeEqIgnoreCase(a: string, b: string): bool;
 export fn wmimeEndsWithIgnoreCase(s: string, suffix: string): bool;
-export fn wmimePush(out: []u8, pos: usize, s: string): usize;
 export fn wmimePushLower(out: []u8, pos: usize, s: string): usize;
-export fn wmimeEmptyParam(): MimeParam;
 export class MimeType {
     valid: bool,
     main_type: string,

@@ -1,6 +1,9 @@
-// packages/@cap/media-type/src/index.cp
+// packages/mediatype/src/index.cp
 // Zero-allocation RFC 9110 / RFC 6838 HTTP Media Type (MIME) parser & matcher.
-// MIT clean-room pure CP implementation.
+// MIT clean-room pure CP implementation (unified npm media-type + crates.io mediatype).
+
+import { trim, toLowerByte, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 /// Zero-copy parsed HTTP Media Type components.
 /// Example: `application/vnd.api+json; charset=utf-8`
@@ -307,6 +310,143 @@ pub fn isTextLike(mt: MediaType): bool {
     return false;
 }
 
+pub const MAX_MT_PARAMS: usize = 8;
+
+pub struct MediaParam {
+    pub name: string,
+    pub value: string,
+}
+
+/// Struct-oriented parsed Media Type compatible with `crates.io:mediatype`.
+pub struct ParsedMediaType {
+    pub valid: bool,
+    pub top_level: string,
+    pub sub_level: string,
+    pub suffix: string,
+    pub params: [8]MediaParam,
+    pub param_count: usize,
+
+    pub static fn invalid(): ParsedMediaType {
+        let blank = MediaParam { name: "", value: "" };
+        let arr: [8]MediaParam = [blank; 8];
+        return ParsedMediaType {
+            valid: false,
+            top_level: "",
+            sub_level: "",
+            suffix: "",
+            params: arr,
+            param_count: 0,
+        };
+    }
+
+    pub static fn parse(raw: string): ParsedMediaType {
+        let mt = MediaType { top: "", subtype: "", suffix: "", params: "" };
+        if (!parseMediaType(raw, &mt)) {
+            return ParsedMediaType.invalid();
+        }
+        let res = ParsedMediaType.invalid();
+        res.valid = true;
+        res.top_level = mt.top;
+        res.sub_level = mt.subtype;
+        res.suffix = mt.suffix;
+
+        let pstr = mt.params;
+        let pos: usize = 0;
+        while (pos < pstr.len) {
+            if (pstr[pos] == 59) { pos = pos + 1; }
+            let seg_start = pos;
+            let in_quotes = false;
+            while (pos < pstr.len) {
+                let c = pstr[pos];
+                if (c == 34) { in_quotes = !in_quotes; }
+                else if (c == 59 && !in_quotes) { break; }
+                pos = pos + 1;
+            }
+            let seg = trim(pstr[seg_start..pos]);
+            if (seg.len == 0) { continue; }
+            let eq: usize = 0;
+            let found = false;
+            while (eq < seg.len) {
+                if (seg[eq] == 61) { found = true; break; }
+                eq = eq + 1;
+            }
+            if (!found || eq == 0) { return ParsedMediaType.invalid(); }
+            let k = trim(seg[0..eq]);
+            let v = trim(seg[(eq + 1)..seg.len]);
+            if (v.len >= 2 && v[0] == 34 && v[v.len - 1] == 34) {
+                v = v[1..(v.len - 1)];
+            }
+            if (res.param_count < MAX_MT_PARAMS) {
+                res.params[res.param_count] = MediaParam { name: k, value: v };
+                res.param_count = res.param_count + 1;
+            }
+        }
+        return res;
+    }
+
+    pub fn getParam(key: string): string? {
+        let i: usize = 0;
+        while (i < _.param_count) {
+            if (eqIgnoreCase(_.params[i].name, key)) {
+                return _.params[i].value;
+            }
+            i = i + 1;
+        }
+        return null;
+    }
+
+    pub fn hasSuffix(suf: string): bool {
+        if (_.suffix.len == 0) { return false; }
+        return eqIgnoreCase(_.suffix, suf);
+    }
+
+    pub fn formatEssence(out: []u8): usize {
+        let mt = MediaType { top: _.top_level, subtype: _.sub_level, suffix: _.suffix, params: "" };
+        return formatMediaType(mt, out);
+    }
+
+    pub fn formatFull(out: []u8): usize {
+        let p = _.formatEssence(out);
+        let i: usize = 0;
+        while (i < _.param_count && p < out.len) {
+            p = writeStr(out, p, "; ");
+            let k = _.params[i].name;
+            let ki: usize = 0;
+            while (ki < k.len && p < out.len) {
+                out[p] = toLowerByte(k[ki]);
+                p = p + 1;
+                ki = ki + 1;
+            }
+            p = writeStr(out, p, "=");
+            p = writeStr(out, p, _.params[i].value);
+            i = i + 1;
+        }
+        return p;
+    }
+
+    pub fn isJson(): bool {
+        if (eqIgnoreCase(_.top_level, "application") && eqIgnoreCase(_.sub_level, "json")) {
+            return true;
+        }
+        return _.hasSuffix("json");
+    }
+
+    pub fn isText(): bool {
+        return eqIgnoreCase(_.top_level, "text");
+    }
+}
+
+pub fn essenceEq(a: string, b: string): bool {
+    let pa = ParsedMediaType.parse(a);
+    let pb = ParsedMediaType.parse(b);
+    if (!pa.valid || !pb.valid) { return false; }
+    let ba: [128]u8 = undefined;
+    let bb: [128]u8 = undefined;
+    let na = pa.formatEssence(ba[0..128]);
+    let nb = pb.formatEssence(bb[0..128]);
+    return eqIgnoreCase(ba[0..na] as string, bb[0..nb] as string);
+}
+
 export {
     MediaType,
     isValidToken,
@@ -315,4 +455,8 @@ export {
     formatMediaType,
     isJsonLike,
     isTextLike,
+    MAX_MT_PARAMS,
+    MediaParam,
+    ParsedMediaType,
+    essenceEq,
 };

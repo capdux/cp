@@ -2,6 +2,9 @@
 // Zero-allocation CSS Color Level 4 functional color parser, formatter & RGB <-> HSL engine.
 // MIT clean-room pure CP implementation.
 
+import { isSpace, trim, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 /// Parsed RGBA color (`r, g, b` in `0..255`, `a` in `0.0..1.0`).
 pub struct CssRgba {
     pub r: u8,
@@ -18,43 +21,6 @@ pub struct CssHsla {
     pub l: f64,
     pub a: f64,
     pub valid: bool,
-}
-
-fn ccToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn ccIsSpace(c: u8): bool {
-    return c == (' ' as u8) || c == ('\t' as u8) || c == ('\r' as u8) || c == ('\n' as u8);
-}
-
-fn ccTrim(s: []const u8): []const u8 {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && ccIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && ccIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn ccEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (ccToLower(a[i]) != ccToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn ccAbsF64(x: f64): f64 {
@@ -181,7 +147,7 @@ pub fn rgbToHsl(r: u8, g: u8, b: u8, a: f64): CssHsla {
 
 /// Parse a numeric token with optional `%` or `deg` suffix.
 fn ccParseNum(raw: []const u8, out_val: *f64, is_pct: *bool, allow_deg: bool): bool {
-    let s = ccTrim(raw);
+    let s = trim(raw);
     if (s.len == 0) {
         return false;
     }
@@ -190,7 +156,7 @@ fn ccParseNum(raw: []const u8, out_val: *f64, is_pct: *bool, allow_deg: bool): b
     if (s[s.len - 1] == ('%' as u8)) {
         is_pct.* = true;
         s = s[0..(s.len - 1)];
-    } else if (allow_deg && s.len > 3 && ccEqIgnoreCase(s[(s.len - 3)..s.len], "deg")) {
+    } else if (allow_deg && s.len > 3 && eqIgnoreCase(s[(s.len - 3)..s.len], "deg")) {
         s = s[0..(s.len - 3)];
     }
     if (s.len == 0) {
@@ -252,7 +218,7 @@ fn ccParseNum(raw: []const u8, out_val: *f64, is_pct: *bool, allow_deg: bool): b
 /// and CSS Color 4 space/slash syntax (`a b c [/ alpha]`).
 /// Writes 3 or 4 token slices into `out_toks[0..4]` and returns count (or 0 on syntax error).
 fn ccSplitArgs(body: []const u8, out_toks: [][]const u8): usize {
-    const t = ccTrim(body);
+    const t = trim(body);
     if (t.len == 0) {
         return 0;
     }
@@ -282,11 +248,8 @@ fn ccSplitArgs(body: []const u8, out_toks: [][]const u8): usize {
         let count: usize = 0;
         let pos: usize = 0;
         while (pos <= t.len) {
-            let end = pos;
-            while (end < t.len && t[end] != (',' as u8)) {
-                end += 1;
-            }
-            const seg = ccTrim(t[pos..end]);
+            const end = findByte(t, ',' as u8, pos) ?? t.len;
+            const seg = trim(t[pos..end]);
             if (seg.len == 0 || count >= 4) {
                 return 0;
             }
@@ -308,8 +271,8 @@ fn ccSplitArgs(body: []const u8, out_toks: [][]const u8): usize {
     let mainPart = t;
     let alphaPart: []const u8 = "";
     if (hasSlash) {
-        mainPart = ccTrim(t[0..slashIdx]);
-        alphaPart = ccTrim(t[(slashIdx + 1)..t.len]);
+        mainPart = trim(t[0..slashIdx]);
+        alphaPart = trim(t[(slashIdx + 1)..t.len]);
         if (alphaPart.len == 0) {
             return 0;
         }
@@ -318,14 +281,14 @@ fn ccSplitArgs(body: []const u8, out_toks: [][]const u8): usize {
     let count: usize = 0;
     let pos: usize = 0;
     while (pos < mainPart.len) {
-        while (pos < mainPart.len && ccIsSpace(mainPart[pos])) {
+        while (pos < mainPart.len && isSpace(mainPart[pos])) {
             pos += 1;
         }
         if (pos >= mainPart.len) {
             break;
         }
         const start = pos;
-        while (pos < mainPart.len && !ccIsSpace(mainPart[pos])) {
+        while (pos < mainPart.len && !isSpace(mainPart[pos])) {
             pos += 1;
         }
         if (count >= 3) {
@@ -356,22 +319,19 @@ pub fn parseCssColor(input: string): CssRgba {
         valid: false,
     };
 
-    const s = ccTrim(input);
+    const s = trim(input);
     if (s.len < 6 || s[s.len - 1] != (')' as u8)) {
         return invalid;
     }
 
-    let lparen: usize = 0;
-    while (lparen < s.len && s[lparen] != ('(' as u8)) {
-        lparen += 1;
-    }
+    const lparen = findByte(s, '(' as u8, 0) ?? s.len;
     if (lparen == 0 || lparen + 1 >= s.len - 1) {
         return invalid;
     }
 
     const fnName = s[0..lparen];
-    const isRgb = ccEqIgnoreCase(fnName, "rgb") || ccEqIgnoreCase(fnName, "rgba");
-    const isHsl = ccEqIgnoreCase(fnName, "hsl") || ccEqIgnoreCase(fnName, "hsla");
+    const isRgb = eqIgnoreCase(fnName, "rgb") || eqIgnoreCase(fnName, "rgba");
+    const isHsl = eqIgnoreCase(fnName, "hsl") || eqIgnoreCase(fnName, "hsla");
     if (!isRgb && !isHsl) {
         return invalid;
     }
@@ -431,37 +391,14 @@ fn ccWriteRaw(out: []u8, pos: *usize, src: []const u8): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.*] = src[i];
-        pos.* += 1;
-        i += 1;
-    }
+    pos.* = writeStr(src, out, pos.*);
     return true;
 }
 
 fn ccWriteU8(out: []u8, pos: *usize, val: u8): bool {
-    if (val == (0 as u8)) {
-        return ccWriteRaw(out, pos, "0");
-    }
-    let rev: [4]u8 = undefined;
-    let n: usize = 0;
-    let cur: u32 = val as u32;
-    while (cur > (0 as u32)) {
-        rev[n] = ('0' as u8) + ((cur % (10 as u32)) as u8);
-        n += 1;
-        cur = cur / (10 as u32);
-    }
-    if (pos.* + n > out.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[pos.*] = rev[n - 1 - i];
-        pos.* += 1;
-        i += 1;
-    }
-    return true;
+    let tmp: [4]u8 = undefined;
+    const n = writeU64(val as u64, tmp[0..4], 0);
+    return ccWriteRaw(out, pos, tmp[0..n]);
 }
 
 fn ccWriteAlpha(out: []u8, pos: *usize, a: f64): bool {

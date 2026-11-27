@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `acorn` v8.
 // Tracks exact 1-based line/column positions with zero heap allocations.
 
+import { strEq, isSpace, isDigit, isHexDigit, isAlpha } from "cap:ascii";
+
 pub const TOK_EOF: u8 = 0;
 pub const TOK_IDENT: u8 = 1;
 pub const TOK_KEYWORD: u8 = 2;
@@ -31,32 +33,6 @@ pub struct JsModuleSummary {
     pub unmatched_bracket_pos: usize,
 }
 
-fn acnStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn acnIsSpace(ch: u8): bool {
-    return ch == 32 || ch == 9 || ch == 10 || ch == 13 || ch == 11 || ch == 12;
-}
-
-fn acnIsDigit(ch: u8): bool {
-    return ch >= 48 && ch <= 57;
-}
-
-fn acnIsHexDigit(ch: u8): bool {
-    return (ch >= 48 && ch <= 57) || (ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102);
-}
-
 fn acnIsBinDigit(ch: u8): bool {
     return ch == 48 || ch == 49;
 }
@@ -66,46 +42,45 @@ fn acnIsOctDigit(ch: u8): bool {
 }
 
 fn acnIsIdentStart(ch: u8): bool {
-    return (ch >= 65 && ch <= 90)
-        || (ch >= 97 && ch <= 122)
+    return isAlpha(ch)
         || ch == 95  // '_'
         || ch == 36  // '$'
         || ch >= 0x80;
 }
 
 fn acnIsIdentPart(ch: u8): bool {
-    return acnIsIdentStart(ch) || acnIsDigit(ch);
+    return acnIsIdentStart(ch) || isDigit(ch);
 }
 
 fn acnIsKeyword(s: string): bool {
-    if (acnStrEq(s, "import") || acnStrEq(s, "export") || acnStrEq(s, "from")) {
+    if (strEq(s, "import") || strEq(s, "export") || strEq(s, "from")) {
         return true;
     }
-    if (acnStrEq(s, "function") || acnStrEq(s, "const") || acnStrEq(s, "let") || acnStrEq(s, "var")) {
+    if (strEq(s, "function") || strEq(s, "const") || strEq(s, "let") || strEq(s, "var")) {
         return true;
     }
-    if (acnStrEq(s, "class") || acnStrEq(s, "async") || acnStrEq(s, "await") || acnStrEq(s, "return")) {
+    if (strEq(s, "class") || strEq(s, "async") || strEq(s, "await") || strEq(s, "return")) {
         return true;
     }
-    if (acnStrEq(s, "if") || acnStrEq(s, "else") || acnStrEq(s, "for") || acnStrEq(s, "while")) {
+    if (strEq(s, "if") || strEq(s, "else") || strEq(s, "for") || strEq(s, "while")) {
         return true;
     }
-    if (acnStrEq(s, "try") || acnStrEq(s, "catch") || acnStrEq(s, "throw") || acnStrEq(s, "new")) {
+    if (strEq(s, "try") || strEq(s, "catch") || strEq(s, "throw") || strEq(s, "new")) {
         return true;
     }
-    if (acnStrEq(s, "default") || acnStrEq(s, "as") || acnStrEq(s, "of") || acnStrEq(s, "in")) {
+    if (strEq(s, "default") || strEq(s, "as") || strEq(s, "of") || strEq(s, "in")) {
         return true;
     }
-    if (acnStrEq(s, "switch") || acnStrEq(s, "case") || acnStrEq(s, "break") || acnStrEq(s, "continue")) {
+    if (strEq(s, "switch") || strEq(s, "case") || strEq(s, "break") || strEq(s, "continue")) {
         return true;
     }
-    if (acnStrEq(s, "finally") || acnStrEq(s, "typeof") || acnStrEq(s, "void") || acnStrEq(s, "delete")) {
+    if (strEq(s, "finally") || strEq(s, "typeof") || strEq(s, "void") || strEq(s, "delete")) {
         return true;
     }
-    if (acnStrEq(s, "yield") || acnStrEq(s, "this") || acnStrEq(s, "super") || acnStrEq(s, "extends")) {
+    if (strEq(s, "yield") || strEq(s, "this") || strEq(s, "super") || strEq(s, "extends")) {
         return true;
     }
-    if (acnStrEq(s, "static") || acnStrEq(s, "true") || acnStrEq(s, "false") || acnStrEq(s, "null")) {
+    if (strEq(s, "static") || strEq(s, "true") || strEq(s, "false") || strEq(s, "null")) {
         return true;
     }
     return false;
@@ -191,7 +166,7 @@ pub struct JsLexer {
     }
 
     fn skipWhitespace(*_) {
-        while (_.pos < _.src.len && acnIsSpace(_.src[_.pos])) {
+        while (_.pos < _.src.len && isSpace(_.src[_.pos])) {
             _.advance();
         }
     }
@@ -322,13 +297,13 @@ pub struct JsLexer {
         }
 
         // 5. Numeric literal (decimal, hex, binary, octal, float, scientific, BigInt)
-        if (acnIsDigit(ch) || (ch == 46 && _.pos + 1 < _.src.len && acnIsDigit(_.src[_.pos + 1]))) {
+        if (isDigit(ch) || (ch == 46 && _.pos + 1 < _.src.len && isDigit(_.src[_.pos + 1]))) {
             if (ch == 48 && _.pos + 1 < _.src.len) {
                 const next_c = _.src[_.pos + 1];
                 if (next_c == 120 || next_c == 88) { // 0x / 0X
                     _.advance();
                     _.advance();
-                    while (_.pos < _.src.len && (acnIsHexDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
+                    while (_.pos < _.src.len && (isHexDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
                         _.advance();
                     }
                     if (_.pos < _.src.len && _.src[_.pos] == 110) { // 'n'
@@ -360,12 +335,12 @@ pub struct JsLexer {
                 }
             }
 
-            while (_.pos < _.src.len && (acnIsDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
+            while (_.pos < _.src.len && (isDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
                 _.advance();
             }
             if (_.pos < _.src.len && _.src[_.pos] == 46) { // '.'
                 _.advance();
-                while (_.pos < _.src.len && (acnIsDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
+                while (_.pos < _.src.len && (isDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
                     _.advance();
                 }
             }
@@ -374,7 +349,7 @@ pub struct JsLexer {
                 if (_.pos < _.src.len && (_.src[_.pos] == 43 || _.src[_.pos] == 45)) { // '+' / '-'
                     _.advance();
                 }
-                while (_.pos < _.src.len && (acnIsDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
+                while (_.pos < _.src.len && (isDigit(_.src[_.pos]) || _.src[_.pos] == 95)) {
                     _.advance();
                 }
             }
@@ -463,13 +438,13 @@ pub fn analyzeJsModule(src: string): JsModuleSummary {
 
         if (tok.kind == TOK_KEYWORD) {
             const word = src[tok.start..tok.end];
-            if (acnStrEq(word, "import")) {
+            if (strEq(word, "import")) {
                 import_count = import_count + 1;
-            } else if (acnStrEq(word, "export")) {
+            } else if (strEq(word, "export")) {
                 export_count = export_count + 1;
-            } else if (acnStrEq(word, "function")) {
+            } else if (strEq(word, "function")) {
                 function_count = function_count + 1;
-            } else if (acnStrEq(word, "class")) {
+            } else if (strEq(word, "class")) {
                 class_count = class_count + 1;
             }
         } else if (tok.kind == TOK_PUNCT && tok.end == tok.start + 1) {
@@ -532,7 +507,7 @@ pub fn extractImportSpecifiers(src: string, out_specs: []string): usize {
         }
 
         if (state == 0) {
-            if (tok.kind == TOK_KEYWORD && acnStrEq(src[tok.start..tok.end], "import")) {
+            if (tok.kind == TOK_KEYWORD && strEq(src[tok.start..tok.end], "import")) {
                 state = 1;
             }
             continue;
@@ -553,7 +528,7 @@ pub fn extractImportSpecifiers(src: string, out_specs: []string): usize {
         }
 
         if (state == 2) {
-            if (tok.kind == TOK_KEYWORD && acnStrEq(src[tok.start..tok.end], "from")) {
+            if (tok.kind == TOK_KEYWORD && strEq(src[tok.start..tok.end], "from")) {
                 state = 3;
             } else if (tok.kind == TOK_PUNCT && tok.end == tok.start + 1 && src[tok.start] == 59) {
                 state = 0;

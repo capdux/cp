@@ -1,5 +1,7 @@
 // @cap/dom-accessibility-name — Zero-heap W3C Accessible Name & Description (clean-room CP)
 
+import { isSpace, eqIgnoreCase } from "cap:ascii";
+
 pub struct A11yNodeInput {
     tag: string,
     aria_label: string,
@@ -11,28 +13,8 @@ pub struct A11yNodeInput {
     aria_hidden: bool,
 }
 
-fn a11yIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0B || c == 0x0C;
-}
-
-fn a11yToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn a11yEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a11yToLower(a[i]) != a11yToLower(b[i])) return false;
-    }
-    return true;
-}
-
 fn a11yUsesAlt(tag: string): bool {
-    return a11yEqIgnoreCase(tag, "img") || a11yEqIgnoreCase(tag, "area");
+    return eqIgnoreCase(tag, "img") || eqIgnoreCase(tag, "area");
 }
 
 pub fn collapseWhitespace(input: string, out: []u8): usize {
@@ -42,7 +24,7 @@ pub fn collapseWhitespace(input: string, out: []u8): usize {
     let i: usize = 0;
     while (i < input.len) : (i += 1) {
         const c = input[i];
-        if (a11yIsSpace(c)) {
+        if (isSpace(c)) {
             if (started) {
                 in_space = true;
             }

@@ -79,7 +79,7 @@ def main():
         src = cj.get("source") or (cj.get("sources")[0] if isinstance(cj.get("sources"), list) and cj.get("sources") else {})
         orig = (src.get("package") or src.get("name") or "").strip()
         base_dir = pdir.name
-        if orig and orig.lower() != base_dir.lower():
+        if orig and orig.lower() != base_dir.lower() and orig.lower() != full_name.lower():
             renamed_legacy.append((full_name, orig))
 
         if (pdir / "src/index.d.cp").is_file():

@@ -2,6 +2,8 @@
 // Clean-room MIT implementation modeled on crates.io `geojson` v0.24,
 // reusing `@cap/wkt` types, parser, formatter, and bounding-box calculator.
 
+import { isDigit, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 import {
     WKT_POINT,
     WKT_LINESTRING,
@@ -78,10 +80,6 @@ fn gjIsSpace(c: u8): bool {
     return c == 32 || c == 9 || c == 10 || c == 13;
 }
 
-fn gjIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
 fn gjSkipWs(s: string, pos: *usize) {
     let i: usize = pos.*;
     while (i < s.len && gjIsSpace(s[i])) {
@@ -97,31 +95,10 @@ fn gjConsumeChar(s: string, pos: *usize, ch: u8): bool {
     return true;
 }
 
-fn gjStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn gjWriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos >= out.len) { return pos; }
     out[pos] = b;
     return pos + 1;
-}
-
-fn gjWriteStr(out: []u8, pos: usize, s: string): usize {
-    let i: usize = 0;
-    let p: usize = pos;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
 }
 
 fn gjWriteJsonEscaped(out: []u8, pos: usize, s: string): usize {
@@ -133,11 +110,11 @@ fn gjWriteJsonEscaped(out: []u8, pos: usize, s: string): usize {
             p = gjWriteByte(out, p, 92);
             p = gjWriteByte(out, p, c);
         } else if (c == 10) {
-            p = gjWriteStr(out, p, "\\n");
+            p = writeStr("\\n", out, p);
         } else if (c == 13) {
-            p = gjWriteStr(out, p, "\\r");
+            p = writeStr("\\r", out, p);
         } else if (c == 9) {
-            p = gjWriteStr(out, p, "\\t");
+            p = writeStr("\\t", out, p);
         } else {
             p = gjWriteByte(out, p, c);
         }
@@ -147,47 +124,23 @@ fn gjWriteJsonEscaped(out: []u8, pos: usize, s: string): usize {
     return p;
 }
 
-fn gjWriteU64(out: []u8, pos: usize, val: u64): usize {
-    let tmp: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let n: usize = 0;
-    let v: u64 = val;
-    if (v == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            tmp[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n = n + 1;
-        }
-    }
-    let p: usize = pos;
-    let i: usize = n;
-    while (i > 0 && p < out.len) {
-        i = i - 1;
-        out[p] = tmp[i];
-        p = p + 1;
-    }
-    return p;
-}
-
 fn gjWriteF64(out: []u8, pos: usize, val: f64): usize {
     let p: usize = pos;
     let v: f64 = val;
     if (v == 0.0) {
-        return gjWriteStr(out, p, "0");
+        return writeStr("0", out, p);
     }
     if (v < 0.0) {
-        p = gjWriteStr(out, p, "-");
+        p = writeStr("-", out, p);
         v = -v;
     }
     let scaled: u64 = ((v * 1000000.0) + 0.5) as u64;
     let ipart: u64 = scaled / 1000000;
     let fpart: u64 = scaled % 1000000;
-    p = gjWriteU64(out, p, ipart);
+    p = writeU64(ipart, out, p);
     if (fpart > 0) {
-        p = gjWriteStr(out, p, ".");
-        let fbuf: [6]u8 = [48, 48, 48, 48, 48, 48];
+        p = writeStr(".", out, p);
+        let fbuf: [6]u8 = undefined;
         let rem: u64 = fpart;
         let idx: usize = 6;
         while (idx > 0) {
@@ -199,12 +152,7 @@ fn gjWriteF64(out: []u8, pos: usize, val: f64): usize {
         while (trim_len > 0 && fbuf[trim_len - 1] == 48) {
             trim_len = trim_len - 1;
         }
-        let k: usize = 0;
-        while (k < trim_len && p < out.len) {
-            out[p] = fbuf[k];
-            p = p + 1;
-            k = k + 1;
-        }
+        p = writeStr(fbuf[0..trim_len], out, p);
     }
     return p;
 }
@@ -228,10 +176,10 @@ fn gjParseNumber(s: string, pos: *usize, out: *f64): bool {
         neg = true;
         i = i + 1;
     }
-    if (i >= s.len || !gjIsDigit(s[i])) { return false; }
+    if (i >= s.len || !isDigit(s[i])) { return false; }
 
     let val: f64 = 0.0;
-    while (i < s.len && gjIsDigit(s[i])) {
+    while (i < s.len && isDigit(s[i])) {
         val = val * 10.0 + ((s[i] - 48) as f64);
         i = i + 1;
     }
@@ -240,7 +188,7 @@ fn gjParseNumber(s: string, pos: *usize, out: *f64): bool {
         i = i + 1;
         let scale: f64 = 0.1;
         let has_frac: bool = false;
-        while (i < s.len && gjIsDigit(s[i])) {
+        while (i < s.len && isDigit(s[i])) {
             has_frac = true;
             val = val + ((s[i] - 48) as f64) * scale;
             scale = scale * 0.1;
@@ -260,7 +208,7 @@ fn gjParseNumber(s: string, pos: *usize, out: *f64): bool {
         }
         let exp_val: u32 = 0;
         let has_exp: bool = false;
-        while (i < s.len && gjIsDigit(s[i])) {
+        while (i < s.len && isDigit(s[i])) {
             has_exp = true;
             if (exp_val < 300) {
                 exp_val = exp_val * 10 + ((s[i] - 48) as u32);
@@ -354,17 +302,17 @@ fn gjSkipValue(s: string, pos: *usize, depth: u32): bool {
         return gjConsumeChar(s, pos, 125);
     }
     if (c == 116) {
-        if (pos.* + 4 > s.len || !gjStrEq(s[pos.*..pos.* + 4], "true")) { return false; }
+        if (pos.* + 4 > s.len || !strEq(s[pos.*..pos.* + 4], "true")) { return false; }
         pos.* = pos.* + 4;
         return true;
     }
     if (c == 102) {
-        if (pos.* + 5 > s.len || !gjStrEq(s[pos.*..pos.* + 5], "false")) { return false; }
+        if (pos.* + 5 > s.len || !strEq(s[pos.*..pos.* + 5], "false")) { return false; }
         pos.* = pos.* + 5;
         return true;
     }
     if (c == 110) {
-        if (pos.* + 4 > s.len || !gjStrEq(s[pos.*..pos.* + 4], "null")) { return false; }
+        if (pos.* + 4 > s.len || !strEq(s[pos.*..pos.* + 4], "null")) { return false; }
         pos.* = pos.* + 4;
         return true;
     }
@@ -419,33 +367,33 @@ pub fn formatGeoJsonGeometry(g: WktGeometry, out: []u8): usize {
     let p: usize = 0;
 
     if (g.kind == WKT_POINT) {
-        p = gjWriteStr(out, p, "{\"type\":\"Point\",\"coordinates\":");
+        p = writeStr("{\"type\":\"Point\",\"coordinates\":", out, p);
         p = gjWriteCoord(out, p, g.coords[0]);
         p = gjWriteByte(out, p, 125);
         return p;
     }
 
     if (g.kind == WKT_LINESTRING) {
-        p = gjWriteStr(out, p, "{\"type\":\"LineString\",\"coordinates\":[");
+        p = writeStr("{\"type\":\"LineString\",\"coordinates\":[", out, p);
         let i: usize = 0;
         while (i < g.coord_count) {
             if (i > 0) { p = gjWriteByte(out, p, 44); }
             p = gjWriteCoord(out, p, g.coords[i]);
             i = i + 1;
         }
-        p = gjWriteStr(out, p, "]}");
+        p = writeStr("]}", out, p);
         return p;
     }
 
     if (g.kind == WKT_POLYGON) {
-        p = gjWriteStr(out, p, "{\"type\":\"Polygon\",\"coordinates\":[[");
+        p = writeStr("{\"type\":\"Polygon\",\"coordinates\":[[", out, p);
         let i: usize = 0;
         while (i < g.coord_count) {
             if (i > 0) { p = gjWriteByte(out, p, 44); }
             p = gjWriteCoord(out, p, g.coords[i]);
             i = i + 1;
         }
-        p = gjWriteStr(out, p, "]]}");
+        p = writeStr("]]}", out, p);
         return p;
     }
 
@@ -455,13 +403,13 @@ pub fn formatGeoJsonGeometry(g: WktGeometry, out: []u8): usize {
 /// Formats `f` into RFC 7946 GeoJSON Feature text in `out`, returning bytes written.
 pub fn formatGeoJsonFeature(f: GeoJsonFeature, out: []u8): usize {
     let p: usize = 0;
-    p = gjWriteStr(out, p, "{\"type\":\"Feature\"");
+    p = writeStr("{\"type\":\"Feature\"", out, p);
     if (f.id.len > 0) {
-        p = gjWriteStr(out, p, ",\"id\":");
+        p = writeStr(",\"id\":", out, p);
         p = gjWriteJsonEscaped(out, p, f.id);
     }
     if (f.has_bbox && f.bbox.valid) {
-        p = gjWriteStr(out, p, ",\"bbox\":[");
+        p = writeStr(",\"bbox\":[", out, p);
         p = gjWriteF64(out, p, f.bbox.min_x);
         p = gjWriteByte(out, p, 44);
         p = gjWriteF64(out, p, f.bbox.min_y);
@@ -471,18 +419,18 @@ pub fn formatGeoJsonFeature(f: GeoJsonFeature, out: []u8): usize {
         p = gjWriteF64(out, p, f.bbox.max_y);
         p = gjWriteByte(out, p, 93);
     }
-    p = gjWriteStr(out, p, ",\"geometry\":");
+    p = writeStr(",\"geometry\":", out, p);
     if (f.geom.is_empty || f.geom.coord_count == 0) {
-        p = gjWriteStr(out, p, "null");
+        p = writeStr("null", out, p);
     } else {
         let written: usize = formatGeoJsonGeometry(f.geom, out[p..out.len]);
         if (written == 0) {
-            p = gjWriteStr(out, p, "null");
+            p = writeStr("null", out, p);
         } else {
             p = p + written;
         }
     }
-    p = gjWriteStr(out, p, ",\"properties\":{}}");
+    p = writeStr(",\"properties\":{}}", out, p);
     return p;
 }
 
@@ -508,17 +456,17 @@ pub fn parseGeoJsonGeometry(json: string): WktGeometry? {
         if (!gjConsumeChar(json, &pos, 58)) { return null; }
         gjSkipWs(json, &pos);
 
-        if (gjStrEq(key, "type")) {
+        if (strEq(key, "type")) {
             let vs: usize = 0;
             let ve: usize = 0;
             if (!gjParseStringSlice(json, &pos, &vs, &ve)) { return null; }
             let tname: string = json[vs..ve];
-            if (gjStrEq(tname, "Point")) { kind = WKT_POINT; }
-            else if (gjStrEq(tname, "LineString")) { kind = WKT_LINESTRING; }
-            else if (gjStrEq(tname, "Polygon")) { kind = WKT_POLYGON; }
+            if (strEq(tname, "Point")) { kind = WKT_POINT; }
+            else if (strEq(tname, "LineString")) { kind = WKT_LINESTRING; }
+            else if (strEq(tname, "Polygon")) { kind = WKT_POLYGON; }
             else { return null; }
             has_type = true;
-        } else if (gjStrEq(key, "coordinates")) {
+        } else if (strEq(key, "coordinates")) {
             coords_pos = pos;
             if (!gjSkipValue(json, &pos, 0)) { return null; }
             has_coords = true;

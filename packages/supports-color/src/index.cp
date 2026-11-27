@@ -2,6 +2,7 @@
 // Clean-room MIT implementation inspired by npm `supports-color` v9.
 // Reuses @cap/has-flag for CLI flag parsing (`--no-color`, `--color=16m`, `--color=256`, etc.).
 
+import { eqIgnoreCase } from "cap:ascii";
 import { hasFlag } from "../../has-flag/src/index.cp";
 
 pub const COLOR_LEVEL_NONE: u8 = 0;
@@ -59,27 +60,6 @@ pub struct TerminalEnv {
     }
 }
 
-fn scToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn scEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (scToLower(a[i]) != scToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn scContainsIgnoreCase(haystack: string, needle: string): bool {
     if (needle.len == 0) {
         return true;
@@ -90,16 +70,7 @@ fn scContainsIgnoreCase(haystack: string, needle: string): bool {
     const max_start: usize = haystack.len - needle.len;
     let i: usize = 0;
     while (i <= max_start) {
-        let matched: bool = true;
-        let j: usize = 0;
-        while (j < needle.len) {
-            if (scToLower(haystack[i + j]) != scToLower(needle[j])) {
-                matched = false;
-                break;
-            }
-            j += 1;
-        }
-        if (matched) {
+        if (eqIgnoreCase(haystack[i .. i + needle.len], needle)) {
             return true;
         }
         i += 1;
@@ -157,16 +128,16 @@ fn scParseForceColor(val: string): i8 {
     if (val.len == 0) {
         return -1;
     }
-    if (scEqIgnoreCase(val, "0") || scEqIgnoreCase(val, "false")) {
+    if (eqIgnoreCase(val, "0") || eqIgnoreCase(val, "false")) {
         return 0;
     }
-    if (scEqIgnoreCase(val, "1") || scEqIgnoreCase(val, "true")) {
+    if (eqIgnoreCase(val, "1") || eqIgnoreCase(val, "true")) {
         return 1;
     }
-    if (scEqIgnoreCase(val, "2")) {
+    if (eqIgnoreCase(val, "2")) {
         return 2;
     }
-    if (scEqIgnoreCase(val, "3")) {
+    if (eqIgnoreCase(val, "3")) {
         return 3;
     }
     return 1;
@@ -198,12 +169,12 @@ pub fn detectColorLevel(env: TerminalEnv, argv: []const string): u8 {
     }
 
     // 5. Dumb terminal disables color
-    if (scEqIgnoreCase(env.term, "dumb")) {
+    if (eqIgnoreCase(env.term, "dumb")) {
         return COLOR_LEVEL_NONE;
     }
 
     // 6. COLORTERM=truecolor / 24bit -> 16M
-    if (scEqIgnoreCase(env.colorterm, "truecolor") || scEqIgnoreCase(env.colorterm, "24bit")) {
+    if (eqIgnoreCase(env.colorterm, "truecolor") || eqIgnoreCase(env.colorterm, "24bit")) {
         return COLOR_LEVEL_16M;
     }
 
@@ -233,10 +204,10 @@ pub fn detectColorLevel(env: TerminalEnv, argv: []const string): u8 {
         }
     }
 
-    if (scEqIgnoreCase(env.term_program, "iTerm.app")) {
+    if (eqIgnoreCase(env.term_program, "iTerm.app")) {
         return COLOR_LEVEL_16M;
     }
-    if (scEqIgnoreCase(env.term_program, "Apple_Terminal")) {
+    if (eqIgnoreCase(env.term_program, "Apple_Terminal")) {
         return COLOR_LEVEL_256;
     }
 

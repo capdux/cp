@@ -3,6 +3,7 @@
 // Reuses:
 //   - `escapeHtml` from `@cap/escape-html` for XSS-safe text & attribute escaping.
 
+import { isDigit, isAlnum, toLowerByte, findByte } from "cap:ascii";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 
 pub struct MarkedOptions {
@@ -31,12 +32,11 @@ fn mkdWriteByte(out: []u8, pos: *usize, b: u8) {
 }
 
 fn mkdWriteStr(out: []u8, pos: *usize, s: string) {
-    let i: usize = 0;
-    while (i < s.len && pos.* < out.len) {
-        out[pos.*] = s[i];
-        pos.* = pos.* + 1;
-        i = i + 1;
-    }
+    if (pos.* >= out.len || s.len == 0) { return; }
+    const avail = out.len - pos.*;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos.* .. pos.* + n], s[0..n]);
+    pos.* = pos.* + n;
 }
 
 fn mkdWriteEscaped(out: []u8, pos: *usize, s: string) {
@@ -63,43 +63,8 @@ fn mkdWriteEscapedByte(out: []u8, pos: *usize, b: u8) {
     }
 }
 
-fn mkdWriteUsize(out: []u8, pos: *usize, val: usize) {
-    if (val == 0) {
-        mkdWriteByte(out, pos, 48);
-        return;
-    }
-    let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let v: u64 = val as u64;
-    while (v > 0 && n < 24) {
-        const digit: u8 = ((v % 10) + 48) as u8;
-        tmp[n] = digit;
-        n = n + 1;
-        v = v / 10;
-    }
-    while (n > 0) {
-        n = n - 1;
-        mkdWriteByte(out, pos, tmp[n]);
-    }
-}
-
 fn mkdIsSpace(c: u8): bool {
     return c == 32 || c == 9;
-}
-
-fn mkdIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn mkdIsAlphaNum(c: u8): bool {
-    return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-}
-
-fn mkdToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) {
-        return c + 32;
-    }
-    return c;
 }
 
 fn mkdIsPunctEscape(c: u8): bool {
@@ -127,7 +92,7 @@ fn mkdStartsWithIgnoreCaseClean(url: string, prefix: string): bool {
         if (ui >= url.len) {
             return false;
         }
-        if (mkdToLower(url[ui]) != mkdToLower(prefix[pi])) {
+        if (toLowerByte(url[ui]) != toLowerByte(prefix[pi])) {
             return false;
         }
         ui = ui + 1;
@@ -154,11 +119,7 @@ fn mkdIsSafeUrl(url: string): bool {
 // ============================================================================
 
 fn mkdFindLineEnd(s: string, start: usize): usize {
-    let i: usize = start;
-    while (i < s.len && s[i] != 10) {
-        i = i + 1;
-    }
-    return i;
+    return findByte(s, 10, start) ?? s.len;
 }
 
 fn mkdTrimCr(s: string, start: usize, end: usize): usize {
@@ -360,7 +321,7 @@ fn mkdMatchOrderedItem(s: string, line_start: usize, line_end: usize, num_out: *
     let i: usize = mkdSkipIndent(s, line_start, line_end, 3);
     let digits: usize = 0;
     let num: usize = 0;
-    while (i < line_end && mkdIsDigit(s[i]) && digits < 9) {
+    while (i < line_end && isDigit(s[i]) && digits < 9) {
         num = num * 10 + ((s[i] - 48) as usize);
         digits = digits + 1;
         i = i + 1;
@@ -500,7 +461,7 @@ fn mkdFindClosingSingle(s: string, start: usize, ch: u8): i64 {
             }
             if (i > start && !mkdIsSpace(s[i - 1])) {
                 // For `_`, require non-alnum right after closing `_`
-                if (ch == 95 && i + 1 < s.len && mkdIsAlphaNum(s[i + 1])) {
+                if (ch == 95 && i + 1 < s.len && isAlnum(s[i + 1])) {
                     i = i + 1;
                     continue;
                 }
@@ -768,7 +729,7 @@ fn mkdParseInlineRec(src: string, opts: MarkedOptions, out: []u8, pos: *usize, d
 
         // 8. Bold `**...**` or `__...__`
         if ((ch == 42 || ch == 95) && i + 1 < src.len && src[i + 1] == ch) {
-            const left_ok: bool = if (ch == 95) { i == 0 || !mkdIsAlphaNum(src[i - 1]) } else { true };
+            const left_ok: bool = if (ch == 95) { i == 0 || !isAlnum(src[i - 1]) } else { true };
             if (left_ok && i + 2 < src.len && !mkdIsSpace(src[i + 2])) {
                 const close_idx: i64 = mkdFindClosingDouble(src, i + 2, ch);
                 if (close_idx > 0) {
@@ -784,7 +745,7 @@ fn mkdParseInlineRec(src: string, opts: MarkedOptions, out: []u8, pos: *usize, d
 
         // 9. Italic `*...*` or `_..._`
         if (ch == 42 || ch == 95) {
-            const left_ok: bool = if (ch == 95) { i == 0 || !mkdIsAlphaNum(src[i - 1]) } else { true };
+            const left_ok: bool = if (ch == 95) { i == 0 || !isAlnum(src[i - 1]) } else { true };
             if (left_ok && i + 1 < src.len && !mkdIsSpace(src[i + 1])) {
                 const close_idx: i64 = mkdFindClosingSingle(src, i + 1, ch);
                 if (close_idx > 0) {
@@ -976,7 +937,9 @@ fn mkdParseBlocksRec(md: string, opts: MarkedOptions, out: []u8, pos: *usize, de
         if (ol_item > 0) {
             if (ord_start_num != 1) {
                 mkdWriteStr(out, pos, "<ol start=\"");
-                mkdWriteUsize(out, pos, ord_start_num);
+                let nbuf: [24]u8 = undefined;
+                const nslice = std.fmt.bufPrint(nbuf[0..24], "{d}", .{ord_start_num}) catch "";
+                mkdWriteStr(out, pos, nslice);
                 mkdWriteStr(out, pos, "\">\n");
             } else {
                 mkdWriteStr(out, pos, "<ol>\n");
@@ -1131,7 +1094,7 @@ fn mkdStripInlineRec(src: string, out: []u8, pos: *usize, depth: usize) {
             }
         }
         if (ch == 42 || ch == 95) {
-            const left_ok: bool = if (ch == 95) { i == 0 || !mkdIsAlphaNum(src[i - 1]) } else { true };
+            const left_ok: bool = if (ch == 95) { i == 0 || !isAlnum(src[i - 1]) } else { true };
             if (left_ok && i + 1 < src.len && !mkdIsSpace(src[i + 1])) {
                 const close_idx: i64 = mkdFindClosingSingle(src, i + 1, ch);
                 if (close_idx > 0) {

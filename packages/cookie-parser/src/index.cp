@@ -1,4 +1,5 @@
-import { getCookieHeaderValue, cjTrim } from "../../tough-cookie/src/index.cp";
+import { trim, strEq } from "cap:ascii";
+import { getCookieHeaderValue } from "../../tough-cookie/src/index.cp";
 import { sign, unsign } from "../../cookie-signature/src/index.cp";
 
 pub const MAX_PARSED_COOKIES: usize = 32;
@@ -6,20 +7,6 @@ pub const MAX_PARSED_COOKIES: usize = 32;
 pub struct CookieEntry {
     pub name: string,
     pub value: string,
-}
-
-fn cprStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn cprStartsWith2(s: string, c0: u8, c1: u8): bool {
@@ -108,7 +95,7 @@ pub struct ParsedCookies {
     pub fn get(name: string): string? {
         let i: usize = 0;
         while (i < _.cookie_count) {
-            if (cprStrEq(_.cookies[i].name, name)) {
+            if (strEq(_.cookies[i].name, name)) {
                 return _.cookies[i].value;
             }
             i = i + 1;
@@ -119,7 +106,7 @@ pub struct ParsedCookies {
     pub fn getSigned(name: string): string? {
         let i: usize = 0;
         while (i < _.signed_count) {
-            if (cprStrEq(_.signed_cookies[i].name, name)) {
+            if (strEq(_.signed_cookies[i].name, name)) {
                 return _.signed_cookies[i].value;
             }
             i = i + 1;
@@ -140,7 +127,7 @@ fn cprParseInto(header: string, secrets: [4]string, secret_count: usize): Parsed
         while (i < header.len && header[i] != 59) { // ';'
             i = i + 1;
         }
-        let seg = cjTrim(header[start..i]);
+        let seg = trim(header[start..i]);
         if (i < header.len && header[i] == 59) {
             i = i + 1;
         }
@@ -159,8 +146,8 @@ fn cprParseInto(header: string, secrets: [4]string, secret_count: usize): Parsed
         if (!found_eq || eq_pos == 0) {
             continue;
         }
-        let k = cjTrim(seg[0..eq_pos]);
-        let v = cjTrim(seg[(eq_pos + 1)..seg.len]);
+        let k = trim(seg[0..eq_pos]);
+        let v = trim(seg[(eq_pos + 1)..seg.len]);
         if (v.len >= 2 && v[0] == 34 && v[v.len - 1] == 34) { // strip optional quotes
             v = v[1..(v.len - 1)];
         }

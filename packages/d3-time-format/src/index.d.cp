@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class D3tfDateTime {
     year: u64,
     month: u64,
@@ -21,10 +23,8 @@ export fn d3tfMonthShort(m: u64): string;
 export fn d3tfMonthFull(m: u64): string;
 export fn d3tfWeekdayShort(w: u64): string;
 export fn d3tfWeekdayFull(w: u64): string;
-export fn d3tfWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn d3tfWritePadded(out: []u8, pos: usize, val: u64, width: usize): usize;
 export fn utcFormat(spec: string, unix_ms: i64, out: []u8): usize;
-export fn d3tfToLower(ch: u8): u8;
 export fn d3tfMatchWordCI(input: string, pos: usize, word: string): bool;
 export class D3tfUintParse {
     ok: bool,

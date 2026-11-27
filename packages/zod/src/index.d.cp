@@ -1,16 +1,10 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, isAlpha, isHexDigit, strEq, trim } from "cap:ascii";
 import { kindOf, KIND_INVALID, KIND_NULL, KIND_UNDEFINED, KIND_BOOLEAN, KIND_NUMBER, KIND_STRING, KIND_ARRAY, KIND_OBJECT, KIND_DATE } from "../../kind-of/src/index.cp";
-import { WhatwgUrl } from "../../whatwg-url/src/index.cp";
-export fn zdIsSpace(c: u8): bool;
-export fn zdIsDigit(c: u8): bool;
-export fn zdIsAlpha(c: u8): bool;
-export fn zdIsHex(c: u8): bool;
+import { WhatwgUrl } from "../../url/src/index.cp";
 export fn zdIsEmailLocalChar(c: u8): bool;
 export fn zdIsDomainLabelChar(c: u8): bool;
-export fn zdStrEq(a: string, b: string): bool;
-export fn zdSliceEqStr(a: &[]u8, b: string): bool;
-export fn zdTrimBounds(s: string, out_start: &mut usize, out_end: &mut usize);
 export fn zdParseNumber(raw: string, out_val: &mut f64, out_is_int: &mut bool): bool;
 export fn zdDecodeJsonString(raw: string, out: []u8, out_total_len: &mut usize): bool;
 export fn zdCountJsonArrayItems(raw: string, out_count: &mut usize): bool;

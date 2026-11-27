@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 import { WKT_POINT, WKT_LINESTRING, WKT_POLYGON, WKT_MAX_COORDS, Coord2D, WktGeometry, WktBbox, parseWkt, formatWkt, bboxWkt } from "../../wkt/src/index.cp";
 export class GeoJsonGeometry {
     kind: u8,
@@ -20,14 +22,10 @@ export class GeoJsonFeature {
 export fn gjZeroCoord(): Coord2D;
 export fn gjEmptyGeom(kind: u8): WktGeometry;
 export fn gjIsSpace(c: u8): bool;
-export fn gjIsDigit(c: u8): bool;
 export fn gjSkipWs(s: string, pos: &mut usize);
 export fn gjConsumeChar(s: string, pos: &mut usize, ch: u8): bool;
-export fn gjStrEq(a: string, b: string): bool;
 export fn gjWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn gjWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn gjWriteJsonEscaped(out: []u8, pos: usize, s: string): usize;
-export fn gjWriteU64(out: []u8, pos: usize, val: u64): usize;
 export fn gjWriteF64(out: []u8, pos: usize, val: f64): usize;
 export fn gjWriteCoord(out: []u8, pos: usize, c: Coord2D): usize;
 export fn gjParseNumber(s: string, pos: &mut usize, out: &mut f64): bool;

@@ -1,4 +1,5 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     MarkedOptions,
     defaultMarkedOptions,
@@ -7,20 +8,6 @@ import {
     parseInlineMarkdown,
     stripMarkdown,
 } from "../../packages/marked/src/index.cp";
-
-fn strEq(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/marked-md — ATX headings, horizontal rules, paragraphs & hard breaks", () => {

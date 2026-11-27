@@ -1,6 +1,9 @@
 // @cap/bytesize — Zero-heap integer byte size constants, parser & formatter
 // Clean-room pure CP counterpart to crates.io:bytesize
 
+import { isSpace, isDigit, toLowerByte, trim } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub const B: u64 = 1;
 
 // SI (decimal, base 1000)
@@ -19,21 +22,6 @@ pub const PIB: u64 = 1125899906842624;
 
 const BSZ_MAX_U64: u64 = ((0xFFFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
 
-fn bszIsSpace(b: u8): bool {
-    return b == 0x20 || b == 0x09 || b == 0x0A || b == 0x0D;
-}
-
-fn bszIsDigit(b: u8): bool {
-    return b >= 0x30 && b <= 0x39;
-}
-
-fn bszToLower(b: u8): u8 {
-    if (b >= 0x41 && b <= 0x5A) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn bszWriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos < out.len) {
         out[pos] = b;
@@ -42,43 +30,12 @@ fn bszWriteByte(out: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn bszWriteSlice(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn bszWriteU64(out: []u8, pos: usize, val: u64): usize {
-    if (val == 0) {
-        return bszWriteByte(out, pos, 0x30);
-    }
-    let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let v = val;
-    while (v > 0) {
-        tmp[n] = (0x30 as u8) + ((v % 10) as u8);
-        v = v / 10;
-        n += 1;
-    }
-    let p = pos;
-    while (n > 0) {
-        n -= 1;
-        p = bszWriteByte(out, p, tmp[n]);
-    }
-    return p;
-}
-
 fn bszUnitMultiplier(s: string): u64? {
     if (s.len == 0) {
         return B;
     }
     if (s.len == 1) {
-        const c0 = bszToLower(s[0]);
+        const c0 = toLowerByte(s[0]);
         if (c0 == 0x62) return B;   // b
         if (c0 == 0x6B) return KB;  // k
         if (c0 == 0x6D) return MB;  // m
@@ -88,8 +45,8 @@ fn bszUnitMultiplier(s: string): u64? {
         return null;
     }
     if (s.len == 2) {
-        const c0 = bszToLower(s[0]);
-        const c1 = bszToLower(s[1]);
+        const c0 = toLowerByte(s[0]);
+        const c1 = toLowerByte(s[1]);
         if (c1 == 0x62) { // *b
             if (c0 == 0x6B) return KB;
             if (c0 == 0x6D) return MB;
@@ -109,9 +66,9 @@ fn bszUnitMultiplier(s: string): u64? {
         return null;
     }
     if (s.len == 3) {
-        const c0 = bszToLower(s[0]);
-        const c1 = bszToLower(s[1]);
-        const c2 = bszToLower(s[2]);
+        const c0 = toLowerByte(s[0]);
+        const c1 = toLowerByte(s[1]);
+        const c2 = toLowerByte(s[2]);
         if (c1 == 0x69 && c2 == 0x62) { // *ib
             if (c0 == 0x6B) return KIB;
             if (c0 == 0x6D) return MIB;
@@ -129,11 +86,11 @@ fn bszFormatScaled(bytes: u64, unit: u64, suffix: string, out: []u8): usize {
     const whole = (tenths128 / (10 as u128)) as u64;
     const frac = (tenths128 % (10 as u128)) as u8;
     let pos: usize = 0;
-    pos = bszWriteU64(out, pos, whole);
+    pos = writeU64(whole, out, pos);
     pos = bszWriteByte(out, pos, 0x2E);
     pos = bszWriteByte(out, pos, (0x30 as u8) + frac);
     pos = bszWriteByte(out, pos, 0x20);
-    pos = bszWriteSlice(out, pos, suffix);
+    pos = writeStr(suffix, out, pos);
     return pos;
 }
 
@@ -141,8 +98,8 @@ fn bszFormatScaled(bytes: u64, unit: u64, suffix: string, out: []u8): usize {
 pub fn formatSi(bytes: u64, out: []u8): usize {
     if (bytes < KB) {
         let pos: usize = 0;
-        pos = bszWriteU64(out, pos, bytes);
-        pos = bszWriteSlice(out, pos, " B");
+        pos = writeU64(bytes, out, pos);
+        pos = writeStr(" B", out, pos);
         return pos;
     }
     if (bytes < MB) {
@@ -164,8 +121,8 @@ pub fn formatSi(bytes: u64, out: []u8): usize {
 pub fn formatIec(bytes: u64, out: []u8): usize {
     if (bytes < KIB) {
         let pos: usize = 0;
-        pos = bszWriteU64(out, pos, bytes);
-        pos = bszWriteSlice(out, pos, " B");
+        pos = writeU64(bytes, out, pos);
+        pos = writeStr(" B", out, pos);
         return pos;
     }
     if (bytes < MIB) {
@@ -186,26 +143,20 @@ pub fn formatIec(bytes: u64, out: []u8): usize {
 /// Parse a human-readable byte size string (e.g. `"1.5 GiB"`, `"500MB"`, `"2.5 kb"`, `"1024"`).
 /// Returns `null` on invalid syntax, unknown unit, or u64 overflow.
 pub fn parseByteSize(input: string): u64? {
-    let start: usize = 0;
-    let end = input.len;
-    while (start < end && bszIsSpace(input[start])) {
-        start += 1;
-    }
-    while (end > start && bszIsSpace(input[end - 1])) {
-        end -= 1;
-    }
-    if (start >= end) {
+    const s = trim(input);
+    if (s.len == 0) {
         return null;
     }
 
-    let i = start;
-    if (!bszIsDigit(input[i])) {
+    let i: usize = 0;
+    const end = s.len;
+    if (!isDigit(s[i])) {
         return null;
     }
 
     let whole: u64 = 0;
-    while (i < end && bszIsDigit(input[i])) {
-        const d = (input[i] - 0x30) as u64;
+    while (i < end && isDigit(s[i])) {
+        const d = (s[i] - 0x30) as u64;
         if (whole > (BSZ_MAX_U64 - d) / 10) {
             return null;
         }
@@ -215,15 +166,15 @@ pub fn parseByteSize(input: string): u64? {
 
     let fracNum: u64 = 0;
     let fracScale: u64 = 1;
-    if (i < end && input[i] == 0x2E) {
+    if (i < end && s[i] == 0x2E) {
         i += 1;
-        if (i >= end || !bszIsDigit(input[i])) {
+        if (i >= end || !isDigit(s[i])) {
             return null;
         }
         let fracDigits: usize = 0;
-        while (i < end && bszIsDigit(input[i])) {
+        while (i < end && isDigit(s[i])) {
             if (fracDigits < 9) {
-                const d = (input[i] - 0x30) as u64;
+                const d = (s[i] - 0x30) as u64;
                 fracNum = fracNum * 10 + d;
                 fracScale = fracScale * 10;
                 fracDigits += 1;
@@ -232,11 +183,11 @@ pub fn parseByteSize(input: string): u64? {
         }
     }
 
-    while (i < end && bszIsSpace(input[i])) {
+    while (i < end && isSpace(s[i])) {
         i += 1;
     }
 
-    const unitOpt = bszUnitMultiplier(input[i..end]);
+    const unitOpt = bszUnitMultiplier(s[i..end]);
     let unit: u64 = 1;
     if (u := unitOpt) {
         unit = u;

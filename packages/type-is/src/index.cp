@@ -1,35 +1,19 @@
 // @cap/type-is — Zero-heap HTTP Content-Type matcher modeled on npm `type-is` v1.6.
 // Clean-room MIT implementation; reuses `@cap/mime-types` and `@cap/unicase`.
 
+import { trim, findByte } from "cap:ascii";
 import { lookup, parseMimeType } from "../../mime-types/src/index.cp";
 import { eqAscii, endsWithIgnoreCase } from "../../unicase/src/index.cp";
-
-fn tisTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && (s[start] == 32 || s[start] == 9)) { start = start + 1; }
-    let end: usize = s.len;
-    while (end > start && (s[end - 1] == 32 || s[end - 1] == 9)) { end = end - 1; }
-    return s[start..end];
-}
-
-fn tisFindByte(s: string, target: u8): usize {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) { return i; }
-        i = i + 1;
-    }
-    return s.len;
-}
 
 /// Normalizes a shorthand type pattern (e.g., `"json"` -> `"application/json"`,
 /// `"urlencoded"` -> `"application/x-www-form-urlencoded"`, `"multipart"` -> `"multipart/*"`).
 pub fn normalizeTypePattern(pattern: string): string {
-    let t = tisTrim(pattern);
+    let t = trim(pattern);
     if (t.len == 0) { return ""; }
     if (eqAscii(t, "urlencoded")) { return "application/x-www-form-urlencoded"; }
     if (eqAscii(t, "multipart")) { return "multipart/*"; }
     if (t[0] == 43) { return t; } // "+json", "+xml" structured suffix
-    if (tisFindByte(t, 47) < t.len) { return t; } // already "type/subtype"
+    if (findByte(t, 47, 0) != null) { return t; } // already "type/subtype"
     return lookup(t) ?? t;
 }
 
@@ -48,10 +32,11 @@ pub fn typeMatches(content_type: string, pattern: string): bool {
         return endsWithIgnoreCase(parsed.subtype, norm) || eqAscii(parsed.subtype, norm[1..norm.len]);
     }
 
-    let slash = tisFindByte(norm, 47);
-    if (slash >= norm.len) {
+    let slash_opt = findByte(norm, 47, 0);
+    if (slash_opt == null) {
         return eqAscii(parsed.essence, norm);
     }
+    let slash = slash_opt.?;
     let pat_type = norm[0..slash];
     let pat_sub = norm[slash + 1..norm.len];
 
@@ -76,9 +61,8 @@ pub fn typeMatches(content_type: string, pattern: string): bool {
 pub fn typeIs(content_type: string, candidates_csv: string): string? {
     let pos: usize = 0;
     while (pos <= candidates_csv.len) {
-        let sep = pos;
-        while (sep < candidates_csv.len && candidates_csv[sep] != 44) { sep = sep + 1; }
-        let pat = tisTrim(candidates_csv[pos..sep]);
+        let sep = findByte(candidates_csv, 44, pos) ?? candidates_csv.len;
+        let pat = trim(candidates_csv[pos..sep]);
         if (pat.len > 0 && typeMatches(content_type, pat)) {
             return pat;
         }
@@ -90,8 +74,8 @@ pub fn typeIs(content_type: string, candidates_csv: string): string? {
 
 /// Checks if a request has a body based on `transfer_encoding` or `content_length` headers.
 pub fn hasBody(transfer_encoding: string, content_length: string): bool {
-    if (tisTrim(transfer_encoding).len > 0) { return true; }
-    let cl = tisTrim(content_length);
+    if (trim(transfer_encoding).len > 0) { return true; }
+    let cl = trim(content_length);
     if (cl.len == 0) { return false; }
     // Any non-zero digit implies non-empty body
     let i: usize = 0;

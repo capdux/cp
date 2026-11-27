@@ -22,7 +22,7 @@ fn mulWrap32(a: u32, b: u32): u32 {
 
 /// Wrapping 64-bit multiply by FNV64_PRIME (0x100000001b3) without 128-bit overflow panics:
 /// h * (2^40 + 2^8 + 0xb3) = (h << 40) + (h << 8) + h * 0xb3 (all mod 2^64).
-fn mulFnv64Prime(h: u64): u64 {
+pub fn mulFnv64Prime(h: u64): u64 {
     let lo: u64 = h & 0xffffffff;
     let hi: u64 = (h >> 32) & 0xffffffff;
 

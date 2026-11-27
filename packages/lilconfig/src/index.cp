@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `lilconfig` v3.
 // Reuses `@cap/cosmiconfig` for upward SearchPlanner, candidate path building, and loader detection.
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import {
     LOADER_UNKNOWN,
     LOADER_JSON,
@@ -17,51 +19,11 @@ import {
 pub const LIL_DEFAULT_PLACE_COUNT: usize = 6;
 pub const LIL_MAX_CUSTOM_LOADERS: usize = 8;
 
-fn lilToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn lilEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (lilToLower(a[i]) != lilToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn lilEndsWithIgnoreCase(s: string, suffix: string): bool {
     if (suffix.len > s.len) {
         return false;
     }
-    let offset = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (lilToLower(s[offset + i]) != lilToLower(suffix[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn lilWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
 }
 
 fn lilBasename(filepath: string): string {
@@ -121,39 +83,39 @@ pub fn formatLilSearchPlace(module_name: string, idx: usize, out: []u8): usize {
         return 0;
     }
     if (idx == 0) {
-        return lilWriteStr(out, 0, "package.json");
+        return writeStr("package.json", out, 0);
     }
     if (module_name.len == 0) {
         return 0;
     }
     let pos: usize = 0;
     if (idx == 1) {
-        pos = lilWriteStr(out, pos, ".");
-        pos = lilWriteStr(out, pos, module_name);
-        pos = lilWriteStr(out, pos, "rc");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc", out, pos);
         return pos;
     }
     if (idx == 2) {
-        pos = lilWriteStr(out, pos, ".");
-        pos = lilWriteStr(out, pos, module_name);
-        pos = lilWriteStr(out, pos, "rc.json");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.json", out, pos);
         return pos;
     }
     if (idx == 3) {
-        pos = lilWriteStr(out, pos, ".");
-        pos = lilWriteStr(out, pos, module_name);
-        pos = lilWriteStr(out, pos, "rc.js");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.js", out, pos);
         return pos;
     }
     if (idx == 4) {
-        pos = lilWriteStr(out, pos, ".");
-        pos = lilWriteStr(out, pos, module_name);
-        pos = lilWriteStr(out, pos, "rc.cjs");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.cjs", out, pos);
         return pos;
     }
     // idx == 5
-    pos = lilWriteStr(out, pos, module_name);
-    pos = lilWriteStr(out, pos, ".config.js");
+    pos = writeStr(module_name, out, pos);
+    pos = writeStr(".config.js", out, pos);
     return pos;
 }
 
@@ -208,7 +170,7 @@ pub struct LilExplorer {
         }
         let i: usize = 0;
         while (i < _.custom_count) {
-            if (lilEqIgnoreCase(_.custom_loaders[i].ext, ext)) {
+            if (eqIgnoreCase(_.custom_loaders[i].ext, ext)) {
                 _.custom_loaders[i].loader_id = loader_id;
                 return true;
             }
@@ -233,7 +195,7 @@ pub struct LilExplorer {
         let i: usize = 0;
         while (i < _.custom_count) {
             let ext = _.custom_loaders[i].ext;
-            if (no_ext && lilEqIgnoreCase(ext, "noExt")) {
+            if (no_ext && eqIgnoreCase(ext, "noExt")) {
                 return _.custom_loaders[i].loader_id;
             }
             if (!no_ext && lilEndsWithIgnoreCase(base, ext)) {
@@ -259,7 +221,7 @@ pub struct LilExplorer {
 
     /// Builds the candidate path for `(dir, place_idx)` into `out` using `@cap/cosmiconfig`'s `buildCandidatePath`.
     pub fn candidatePath(dir: string, place_idx: usize, out: []u8): usize {
-        let pbuf: [64]u8 = [0 as u8; 64];
+        let pbuf: [64]u8 = undefined;
         let plen = formatLilSearchPlace(_.opts.module_name, place_idx, pbuf[0..64]);
         if (plen == 0) {
             return 0;

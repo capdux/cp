@@ -1,21 +1,9 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     utcFormat,
     utcParse,
 } from "../../packages/d3-time-format/src/index.cp";
-
-fn strEq(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/d3-time-format — ISO-8601 UTC format & parse round-trip", () => {

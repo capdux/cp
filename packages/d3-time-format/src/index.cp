@@ -1,6 +1,9 @@
 // @cap/d3-time-format — Zero-heap UTC strftime / strptime formatter & parser
 // Clean-room ISC implementation inspired by npm:d3-time-format (d3/d3-time-format).
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const D3TF_EPOCH_SHIFT_MS: i64 = 62167219200000; // 719528 * 86400000 (0000-01-01 to 1970-01-01)
 const D3TF_MS_PER_DAY: u64 = 86400000;
 const D3TF_DAYS_TO_1970_MAR: u64 = 719468;
@@ -147,16 +150,6 @@ fn d3tfWeekdayFull(w: u64): string {
     return "Saturday";
 }
 
-fn d3tfWriteStr(out: []u8, pos: usize, s: string): usize {
-    let o = pos;
-    let i: usize = 0;
-    while (i < s.len && o < out.len) : (i += 1) {
-        out[o] = s[i];
-        o += 1;
-    }
-    return o;
-}
-
 fn d3tfWritePadded(out: []u8, pos: usize, val: u64, width: usize): usize {
     let tmp: [8]u8 = undefined;
     let v = val;
@@ -166,13 +159,7 @@ fn d3tfWritePadded(out: []u8, pos: usize, val: u64, width: usize): usize {
         tmp[i] = u8('0' + (v % 10));
         v /= 10;
     }
-    let o = pos;
-    let j: usize = 0;
-    while (j < width && o < out.len) : (j += 1) {
-        out[o] = tmp[j];
-        o += 1;
-    }
-    return o;
+    return writeStr(tmp[0..width], out, pos);
 }
 
 /// Format UTC timestamp `unix_ms` using strftime-style `spec` into `out`.
@@ -204,19 +191,19 @@ pub fn utcFormat(spec: string, unix_ms: i64, out: []u8): usize {
             } else if (code == 'L') {
                 o = d3tfWritePadded(out, o, dt.ms, 3);
             } else if (code == 'b') {
-                o = d3tfWriteStr(out, o, d3tfMonthShort(dt.month));
+                o = writeStr(d3tfMonthShort(dt.month), out, o);
             } else if (code == 'B') {
-                o = d3tfWriteStr(out, o, d3tfMonthFull(dt.month));
+                o = writeStr(d3tfMonthFull(dt.month), out, o);
             } else if (code == 'a') {
-                o = d3tfWriteStr(out, o, d3tfWeekdayShort(dt.weekday));
+                o = writeStr(d3tfWeekdayShort(dt.weekday), out, o);
             } else if (code == 'A') {
-                o = d3tfWriteStr(out, o, d3tfWeekdayFull(dt.weekday));
+                o = writeStr(d3tfWeekdayFull(dt.weekday), out, o);
             } else if (code == 'j') {
                 o = d3tfWritePadded(out, o, dt.yearday, 3);
             } else if (code == 'w') {
                 o = d3tfWritePadded(out, o, dt.weekday, 1);
             } else if (code == 'Z') {
-                o = d3tfWriteStr(out, o, "+0000");
+                o = writeStr("+0000", out, o);
             } else if (code == '%') {
                 out[o] = '%';
                 o += 1;
@@ -238,24 +225,11 @@ pub fn utcFormat(spec: string, unix_ms: i64, out: []u8): usize {
     return o;
 }
 
-fn d3tfToLower(ch: u8): u8 {
-    if (ch >= 'A' && ch <= 'Z') {
-        return ch + 32;
-    }
-    return ch;
-}
-
 fn d3tfMatchWordCI(input: string, pos: usize, word: string): bool {
     if (pos + word.len > input.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < word.len) : (i += 1) {
-        if (d3tfToLower(input[pos + i]) != d3tfToLower(word[i])) {
-            return false;
-        }
-    }
-    return true;
+    return eqIgnoreCase(input[pos..(pos + word.len)], word);
 }
 
 struct D3tfUintParse {

@@ -2,6 +2,7 @@
 // Comprehensive unit tests for @cap/http-range-header
 
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     RangePosition,
     SyntacticByteRange,
@@ -11,20 +12,6 @@ import {
     formatContentRange,
     formatUnsatisfiableContentRange,
 } from "../../packages/http-range-header/src/index.cp";
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/http-range-header — Parse single closed, open-ended & suffix ranges", () => {

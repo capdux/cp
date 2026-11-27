@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
+import { writeStr, writeI64 } from "cap:fmt";
 export class Y18nEntry {
     key: string,
     singular: string,
@@ -7,10 +9,7 @@ export class Y18nEntry {
     has_plural: bool,
 }
 
-export fn y18StrEq(a: string, b: string): bool;
 export fn y18WriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn y18WriteBytes(out: []u8, pos: usize, s: string): usize;
-export fn y18WriteI64(out: []u8, pos: usize, val: i64): usize;
 export fn formatPrintf(tmpl: string, count: i64, has_count: bool, args: &[]string, out: []u8): usize;
 export class Y18nCatalog {
     locale: string,

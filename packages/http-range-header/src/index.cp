@@ -1,6 +1,9 @@
 // @cap/http-range-header — Zero-heap RFC 9110 HTTP Range header parser & validator
 // Clean-room pure CP counterpart to crates.io:http-range-header
 
+import { eqIgnoreCase, findByte } from "cap:ascii";
+import { parseU64, writeStr, writeU64 } from "cap:fmt";
+
 pub enum RangePosition {
     StartAndEnd,
     StartOnly,
@@ -22,92 +25,15 @@ pub struct ValidatedByteRange {
     }
 }
 
-const HRH_MAX_U64: u64 = ((0xFFFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
-
 fn hrhIsSpace(b: u8): bool {
     return b == 0x20 || b == 0x09;
 }
 
-fn hrhIsDigit(b: u8): bool {
-    return b >= 0x30 && b <= 0x39;
-}
-
-fn hrhToLower(b: u8): u8 {
-    if (b >= 0x41 && b <= 0x5A) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn hrhHasBytesPrefix(s: string, start: usize, end: usize): bool {
-    if (end - start < 6) {
-        return false;
-    }
-    return hrhToLower(s[start]) == 0x62 &&
-        hrhToLower(s[start + 1]) == 0x79 &&
-        hrhToLower(s[start + 2]) == 0x74 &&
-        hrhToLower(s[start + 3]) == 0x65 &&
-        hrhToLower(s[start + 4]) == 0x73 &&
-        s[start + 5] == 0x3D;
-}
-
 fn hrhParseU64(s: string, start: usize, end: usize): u64? {
-    if (start >= end) {
+    if (start >= end || s[start] == 43) {
         return null;
     }
-    let val: u64 = 0;
-    let i = start;
-    while (i < end) {
-        if (!hrhIsDigit(s[i])) {
-            return null;
-        }
-        const d = (s[i] - 0x30) as u64;
-        if (val > (HRH_MAX_U64 - d) / 10) {
-            return null;
-        }
-        val = val * 10 + d;
-        i += 1;
-    }
-    return val;
-}
-
-fn hrhWriteByte(out: []u8, pos: usize, b: u8): usize {
-    if (pos < out.len) {
-        out[pos] = b;
-        return pos + 1;
-    }
-    return pos;
-}
-
-fn hrhWriteSlice(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn hrhWriteU64(out: []u8, pos: usize, val: u64): usize {
-    if (val == 0) {
-        return hrhWriteByte(out, pos, 0x30);
-    }
-    let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let v = val;
-    while (v > 0) {
-        tmp[n] = (0x30 as u8) + ((v % 10) as u8);
-        v = v / 10;
-        n += 1;
-    }
-    let p = pos;
-    while (n > 0) {
-        n -= 1;
-        p = hrhWriteByte(out, p, tmp[n]);
-    }
-    return p;
+    return parseU64(s[start..end]);
 }
 
 /// Parse an RFC 9110 `Range` header value (`bytes=...`) into `out`.
@@ -121,7 +47,7 @@ pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
     while (end > start && hrhIsSpace(header[end - 1])) {
         end -= 1;
     }
-    if (!hrhHasBytesPrefix(header, start, end)) {
+    if (end - start < 6 || !eqIgnoreCase(header[start..(start + 6)], "bytes=")) {
         return 0;
     }
 
@@ -138,10 +64,7 @@ pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
             return 0;
         }
 
-        let itemEnd = i;
-        while (itemEnd < end && header[itemEnd] != 0x2C) {
-            itemEnd += 1;
-        }
+        const itemEnd = findByte(header[0..end], 0x2C, i) ?? end;
 
         let segStart = i;
         let segEnd = itemEnd;
@@ -153,15 +76,7 @@ pub fn parseRangeHeader(header: string, out: []SyntacticByteRange): usize {
         }
 
         // Find '-' inside [segStart, segEnd)
-        let dash: usize = segEnd;
-        let k = segStart;
-        while (k < segEnd) {
-            if (header[k] == 0x2D) {
-                dash = k;
-                break;
-            }
-            k += 1;
-        }
+        const dash = findByte(header[0..segEnd], 0x2D, segStart) ?? segEnd;
         if (dash == segEnd) {
             return 0;
         }
@@ -283,19 +198,19 @@ pub fn validateRanges(ranges: []const SyntacticByteRange, total_size: u64, out: 
 /// Format an RFC 9110 `Content-Range` header value: `bytes <start>-<end>/<total>`.
 pub fn formatContentRange(start: u64, end: u64, total: u64, out: []u8): usize {
     let pos: usize = 0;
-    pos = hrhWriteSlice(out, pos, "bytes ");
-    pos = hrhWriteU64(out, pos, start);
-    pos = hrhWriteByte(out, pos, 0x2D);
-    pos = hrhWriteU64(out, pos, end);
-    pos = hrhWriteByte(out, pos, 0x2F);
-    pos = hrhWriteU64(out, pos, total);
+    pos = writeStr("bytes ", out, pos);
+    pos = writeU64(start, out, pos);
+    pos = writeStr("-", out, pos);
+    pos = writeU64(end, out, pos);
+    pos = writeStr("/", out, pos);
+    pos = writeU64(total, out, pos);
     return pos;
 }
 
 /// Format an RFC 9110 416 unsatisfiable `Content-Range` header value: `bytes */<total>`.
 pub fn formatUnsatisfiableContentRange(total: u64, out: []u8): usize {
     let pos: usize = 0;
-    pos = hrhWriteSlice(out, pos, "bytes */");
-    pos = hrhWriteU64(out, pos, total);
+    pos = writeStr("bytes */", out, pos);
+    pos = writeU64(total, out, pos);
     return pos;
 }

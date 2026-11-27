@@ -1,13 +1,10 @@
 // Type definitions for CP
 
-export fn cosmiToLower(b: u8): u8;
-export fn cosmiStrEq(a: string, b: string): bool;
-export fn cosmiEqIgnoreCase(a: string, b: string): bool;
+import { strEq, eqIgnoreCase, rfindByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn cosmiEndsWithIgnoreCase(s: string, suffix: string): bool;
-export fn cosmiWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn cosmiBasename(filepath: string): string;
 export fn cosmiTrimTrailingSlash(dir: string): string;
-export fn cosmiLastSlash(s: string): usize;
 export class ExplorerOptions {
     module_name: string,
     stop_dir: string,

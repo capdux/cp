@@ -3,6 +3,7 @@
 // `<%# comment %>`, `<% if key %>...<% else %>...<% end %>`, `<% repeat key %>...<% end %>`,
 // `<% unless key %>...<% end %>`, `<%%` literal escape, and whitespace slurping `<%_ ... _%>` / `-%>`.
 
+import { strEq, startsWith, trim } from "cap:ascii";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 
 pub const EJS_MAX_ENTRIES: usize = 32;
@@ -36,7 +37,7 @@ pub struct EjsContext {
     pub fn setStr(*_, key: string, val: string): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (ejsStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 _.entries[i].str_val = val;
                 _.entries[i].bool_val = val.len > 0;
                 _.entries[i].is_count = false;
@@ -59,7 +60,7 @@ pub struct EjsContext {
     pub fn setBool(*_, key: string, val: bool): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (ejsStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 _.entries[i].bool_val = val;
                 _.entries[i].str_val = if (val) { "true" } else { "false" };
                 _.entries[i].is_count = false;
@@ -82,7 +83,7 @@ pub struct EjsContext {
     pub fn setRepeatCount(*_, key: string, n: usize): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (ejsStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 _.entries[i].count_val = n;
                 _.entries[i].bool_val = n > 0;
                 _.entries[i].is_count = true;
@@ -107,57 +108,18 @@ pub struct EjsContext {
     }
 }
 
-fn ejsStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn ejsStartsWith(s: string, prefix: string): bool {
-    if (prefix.len > s.len) { return false; }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn ejsIsSpace(b: u8): bool {
-    return b == 32 || b == 9 || b == 10 || b == 13;
-}
-
-fn ejsTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && ejsIsSpace(s[start])) {
-        start = start + 1;
-    }
-    let end: usize = s.len;
-    while (end > start && ejsIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
-}
-
-fn ejsPushSlice(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
+fn ejsWriteStr(s: string, out: []u8, pos: usize): usize {
+    if (pos >= out.len || s.len == 0) { return pos; }
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
 }
 
 fn ejsLookupStr(ctx: EjsContext, key: string): string {
     let i: usize = 0;
     while (i < ctx.count) {
-        if (ejsStrEq(ctx.entries[i].key, key)) {
+        if (strEq(ctx.entries[i].key, key)) {
             return ctx.entries[i].str_val;
         }
         i = i + 1;
@@ -168,7 +130,7 @@ fn ejsLookupStr(ctx: EjsContext, key: string): string {
 fn ejsLookupBool(ctx: EjsContext, key: string): bool {
     let i: usize = 0;
     while (i < ctx.count) {
-        if (ejsStrEq(ctx.entries[i].key, key)) {
+        if (strEq(ctx.entries[i].key, key)) {
             return ctx.entries[i].bool_val;
         }
         i = i + 1;
@@ -179,7 +141,7 @@ fn ejsLookupBool(ctx: EjsContext, key: string): bool {
 fn ejsLookupCount(ctx: EjsContext, key: string): usize {
     let i: usize = 0;
     while (i < ctx.count) {
-        if (ejsStrEq(ctx.entries[i].key, key)) {
+        if (strEq(ctx.entries[i].key, key)) {
             if (ctx.entries[i].is_count) { return ctx.entries[i].count_val; }
             return if (ctx.entries[i].bool_val) { 1 } else { 0 };
         }
@@ -234,14 +196,14 @@ fn ejsFindBlockBounds(tpl: string, body_start: usize, out_pos: []usize): bool {
         if (inner_end > inner_start && (tpl[inner_end - 1] == 45 || tpl[inner_end - 1] == 95)) {
             inner_end = inner_end - 1;
         }
-        let inner = ejsTrim(tpl[inner_start..inner_end]);
-        if (ejsStartsWith(inner, "if ") || ejsStartsWith(inner, "unless ") || ejsStartsWith(inner, "repeat ")) {
+        let inner = trim(tpl[inner_start..inner_end]);
+        if (startsWith(inner, "if ") || startsWith(inner, "unless ") || startsWith(inner, "repeat ")) {
             depth = depth + 1;
-        } else if (ejsStrEq(inner, "else")) {
+        } else if (strEq(inner, "else")) {
             if (depth == 1 && out_pos[0] == tpl.len) {
                 out_pos[0] = open;
             }
-        } else if (ejsStrEq(inner, "end")) {
+        } else if (strEq(inner, "end")) {
             depth = depth - 1;
             if (depth == 0) {
                 out_pos[1] = open;
@@ -261,7 +223,7 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
     while (pos < tpl.len) {
         let open = ejsFindTagOpen(tpl, pos);
         if (open >= tpl.len) {
-            p = ejsPushSlice(out, p, tpl[pos..tpl.len]);
+            p = ejsWriteStr(tpl[pos..tpl.len], out, p);
             break;
         }
         // Check `<%_`: slurp trailing horizontal whitespace before tag
@@ -273,18 +235,18 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
             }
         }
         if (text_end > pos) {
-            p = ejsPushSlice(out, p, tpl[pos..text_end]);
+            p = ejsWriteStr(tpl[pos..text_end], out, p);
         }
         // Literal `<%%` -> `<%`
         if (open + 2 < tpl.len && tpl[open + 2] == 37) {
-            p = ejsPushSlice(out, p, "<%");
+            p = ejsWriteStr("<%", out, p);
             pos = open + 3;
             continue;
         }
         let close = ejsFindTagClose(tpl, open + 2);
         if (close >= tpl.len) {
             // Unclosed tag: emit literally
-            p = ejsPushSlice(out, p, tpl[open..tpl.len]);
+            p = ejsWriteStr(tpl[open..tpl.len], out, p);
             break;
         }
         let tag_start = open + 2;
@@ -312,7 +274,7 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
         if (tag_start < tag_end) {
             let lead = tpl[tag_start];
             if (lead == 61) { // "<%=" HTML-escaped output
-                let key = ejsTrim(tpl[tag_start + 1..tag_end]);
+                let key = trim(tpl[tag_start + 1..tag_end]);
                 let val = ejsLookupStr(ctx, key);
                 if (p < out.len) {
                     let written = escapeHtml(val, out[p..out.len]);
@@ -322,9 +284,9 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
                 continue;
             }
             if (lead == 45) { // "<%-" raw unescaped output
-                let key = ejsTrim(tpl[tag_start + 1..tag_end]);
+                let key = trim(tpl[tag_start + 1..tag_end]);
                 let val = ejsLookupStr(ctx, key);
-                p = ejsPushSlice(out, p, val);
+                p = ejsWriteStr(val, out, p);
                 pos = next_pos;
                 continue;
             }
@@ -337,9 +299,9 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
             }
         }
 
-        let cmd = ejsTrim(tpl[tag_start..tag_end]);
-        if (ejsStartsWith(cmd, "if ") || ejsStartsWith(cmd, "unless ") || ejsStartsWith(cmd, "repeat ")) {
-            let bounds: [3]usize = [0, 0, 0];
+        let cmd = trim(tpl[tag_start..tag_end]);
+        if (startsWith(cmd, "if ") || startsWith(cmd, "unless ") || startsWith(cmd, "repeat ")) {
+            let bounds: [3]usize = undefined;
             if (ejsFindBlockBounds(tpl, next_pos, bounds[0..3])) {
                 let else_open = bounds[0];
                 let end_open = bounds[1];
@@ -353,22 +315,22 @@ fn ejsRenderSlice(tpl: string, ctx: EjsContext, out: []u8, start_out: usize, dep
                         false_body = tpl[else_close + 2..end_open];
                     }
                 }
-                if (ejsStartsWith(cmd, "if ")) {
-                    let key = ejsTrim(cmd[3..cmd.len]);
+                if (startsWith(cmd, "if ")) {
+                    let key = trim(cmd[3..cmd.len]);
                     if (ejsLookupBool(ctx, key)) {
                         p = ejsRenderSlice(true_body, ctx, out, p, depth + 1);
                     } else if (false_body.len > 0) {
                         p = ejsRenderSlice(false_body, ctx, out, p, depth + 1);
                     }
-                } else if (ejsStartsWith(cmd, "unless ")) {
-                    let key = ejsTrim(cmd[7..cmd.len]);
+                } else if (startsWith(cmd, "unless ")) {
+                    let key = trim(cmd[7..cmd.len]);
                     if (!ejsLookupBool(ctx, key)) {
                         p = ejsRenderSlice(true_body, ctx, out, p, depth + 1);
                     } else if (false_body.len > 0) {
                         p = ejsRenderSlice(false_body, ctx, out, p, depth + 1);
                     }
                 } else {
-                    let key = ejsTrim(cmd[7..cmd.len]);
+                    let key = trim(cmd[7..cmd.len]);
                     let times = ejsLookupCount(ctx, key);
                     let r: usize = 0;
                     while (r < times) {

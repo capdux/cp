@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isSpace, eqIgnoreCase } from "cap:ascii";
 export class A11yNodeInput {
     tag: string,
     aria_label: string,
@@ -11,9 +12,6 @@ export class A11yNodeInput {
     aria_hidden: bool,
 }
 
-export fn a11yIsSpace(c: u8): bool;
-export fn a11yToLower(c: u8): u8;
-export fn a11yEqIgnoreCase(a: string, b: string): bool;
 export fn a11yUsesAlt(tag: string): bool;
 export fn collapseWhitespace(input: string, out: []u8): usize;
 export fn computeAccessibleName(node: A11yNodeInput, out: []u8): usize;

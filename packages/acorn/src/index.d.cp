@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, isSpace, isDigit, isHexDigit, isAlpha } from "cap:ascii";
 export class JsToken {
     kind: u8,
     start: usize,
@@ -18,10 +19,6 @@ export class JsModuleSummary {
     unmatched_bracket_pos: usize,
 }
 
-export fn acnStrEq(a: string, b: string): bool;
-export fn acnIsSpace(ch: u8): bool;
-export fn acnIsDigit(ch: u8): bool;
-export fn acnIsHexDigit(ch: u8): bool;
 export fn acnIsBinDigit(ch: u8): bool;
 export fn acnIsOctDigit(ch: u8): bool;
 export fn acnIsIdentStart(ch: u8): bool;

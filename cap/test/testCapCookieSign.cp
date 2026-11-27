@@ -7,6 +7,7 @@ import {
     SAME_SITE_LAX,
     CookieSlice,
     CookieOptions,
+    UnsignResult,
     getCookie,
     sign,
     unsign,
@@ -49,24 +50,24 @@ fn main() {
 
     test("2. @cap/cookie-sign — sign & unsign round-trip", () => {
         let buf: [128]u8 = undefined;
-        const n: i64 = sign("user_42", "super-secret-key", buf[0..128]);
+        const n: usize = sign("user_42", "super-secret-key", buf[0..128]);
         // "user_42" (7) + "." (1) + 43 = 51 bytes
-        expect_eq(n, 51 as i64);
+        expect_eq(n, 51 as usize);
 
-        const verified: CookieSlice = unsign(buf[0..(n as usize)], "super-secret-key");
-        expect_eq(verified.found, true);
-        expect_eq(sliceEq(buf[verified.start..(verified.start + verified.len)], "user_42"), true);
+        const verified: UnsignResult = unsign(buf[0..n], "super-secret-key");
+        expect_eq(verified.ok, true);
+        expect_eq(sliceEq(buf[0..verified.val_len], "user_42"), true);
     });
 
     test("3. @cap/cookie-sign — rejects single-char value or signature modification", () => {
         let buf: [128]u8 = undefined;
-        const n: i64 = sign("session_token", "secret-1", buf[0..128]);
+        const n: usize = sign("session_token", "secret-1", buf[0..128]);
         expect_eq(n > 0, true);
-        const total: usize = n as usize;
+        const total: usize = n;
 
         // Flip 1 character in payload
         buf[0] = 'X' as u8;
-        expect_eq(unsign(buf[0..total], "secret-1").found, false);
+        expect_eq(unsign(buf[0..total], "secret-1").ok, false);
 
         // Restore payload, flip 1 character in signature
         buf[0] = 's' as u8;
@@ -76,28 +77,28 @@ fn main() {
         } else {
             buf[total - 1] = 'A' as u8;
         }
-        expect_eq(unsign(buf[0..total], "secret-1").found, false);
+        expect_eq(unsign(buf[0..total], "secret-1").ok, false);
     });
 
     test("4. @cap/cookie-sign — rejects wrong secret & missing dot separator", () => {
         let buf: [128]u8 = undefined;
-        const n: i64 = sign("payload", "key-A", buf[0..128]);
+        const n: usize = sign("payload", "key-A", buf[0..128]);
         expect_eq(n > 0, true);
 
-        expect_eq(unsign(buf[0..(n as usize)], "key-B").found, false);
-        expect_eq(unsign("nosignaturehere", "key-A").found, false);
-        expect_eq(unsign("short.sig", "key-A").found, false);
+        expect_eq(unsign(buf[0..n], "key-B").ok, false);
+        expect_eq(unsign("nosignaturehere", "key-A").ok, false);
+        expect_eq(unsign("short.sig", "key-A").ok, false);
     });
 
     test("5. @cap/cookie-sign — value containing multiple dots splits at the last dot", () => {
         const val = "v1.user.alice@example.com";
         let buf: [128]u8 = undefined;
-        const n: i64 = sign(val, "dot-secret", buf[0..128]);
-        expect_eq(n, (val.len + 1 + 43) as i64);
+        const n: usize = sign(val, "dot-secret", buf[0..128]);
+        expect_eq(n, val.len + 1 + 43);
 
-        const res: CookieSlice = unsign(buf[0..(n as usize)], "dot-secret");
-        expect_eq(res.found, true);
-        expect_eq(sliceEq(buf[res.start..(res.start + res.len)], val), true);
+        const res: UnsignResult = unsign(buf[0..n], "dot-secret");
+        expect_eq(res.ok, true);
+        expect_eq(sliceEq(buf[0..res.val_len], val), true);
     });
 
     test("6. @cap/cookie-sign — formatSetCookie full attributes & tiny buffer rejection", () => {
@@ -132,9 +133,9 @@ fn main() {
         const n2: i64 = formatSetCookie("pref", "1", opts2, dst[0..160]);
         expect_eq(sliceEq(dst[0..(n2 as usize)], "pref=1; Path=/app; SameSite=Lax"), true);
 
-        // Buffer overflow returns -1
+        // Buffer overflow returns -1 / 0
         let tiny: [10]u8 = undefined;
         expect_eq(formatSetCookie("sid", "tok123", opts, tiny[0..10]), -1 as i64);
-        expect_eq(sign("user_42", "secret", tiny[0..10]), -1 as i64);
+        expect_eq(sign("user_42", "secret", tiny[0..10]), 0 as usize);
     });
 }

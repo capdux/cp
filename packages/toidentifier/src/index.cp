@@ -2,30 +2,10 @@
 // Clean-room MIT CP implementation of npm `toidentifier` (90M+/wk, dependency of `http-errors`)
 // Zero-heap, single-pass ASCII word tokenizer.
 
-fn tidIsAlpha(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-}
-
-fn tidIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
+import { isAlpha, isAlnum, isSpace, toUpperByte, toLowerByte } from "cap:ascii";
 
 fn tidIsIdentChar(c: u8): bool {
-    return tidIsAlpha(c) || tidIsDigit(c) || c == 95;
-}
-
-fn tidIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn tidToUpper(c: u8): u8 {
-    if (c >= 97 && c <= 122) { return c - 32; }
-    return c;
-}
-
-fn tidToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
+    return isAlnum(c) || c == 95;
 }
 
 /// Converts a phrase such as `"Bad Request"` or `"I'm a teapot"` into a
@@ -38,10 +18,10 @@ pub fn toIdentifier(input: string, out: []u8): usize {
     let at_word_start = true;
     while (i < input.len) {
         let c = input[i];
-        if (tidIsSpace(c)) {
+        if (isSpace(c)) {
             at_word_start = true;
         } else {
-            let ch = if (at_word_start) { tidToUpper(c) } else { c };
+            let ch = if (at_word_start) { toUpperByte(c) } else { c };
             at_word_start = false;
             if (tidIsIdentChar(ch)) {
                 if (pos < out.len) {
@@ -60,7 +40,7 @@ pub fn toIdentifier(input: string, out: []u8): usize {
 pub fn toCamelIdentifier(input: string, out: []u8): usize {
     let n = toIdentifier(input, out);
     if (n > 0) {
-        out[0] = tidToLower(out[0]);
+        out[0] = toLowerByte(out[0]);
     }
     return n;
 }
@@ -72,7 +52,7 @@ pub fn toConstIdentifier(input: string, out: []u8): usize {
     let need_sep = false;
     while (i < input.len) {
         let c = input[i];
-        if (tidIsSpace(c) || c == 45) {
+        if (isSpace(c) || c == 45) {
             if (pos > 0) { need_sep = true; }
         } else if (tidIsIdentChar(c)) {
             if (need_sep) {
@@ -80,7 +60,7 @@ pub fn toConstIdentifier(input: string, out: []u8): usize {
                 pos = pos + 1;
                 need_sep = false;
             }
-            if (pos < out.len) { out[pos] = tidToUpper(c); }
+            if (pos < out.len) { out[pos] = toUpperByte(c); }
             pos = pos + 1;
         }
         i = i + 1;
@@ -92,7 +72,7 @@ pub fn toConstIdentifier(input: string, out: []u8): usize {
 /// Returns true if `s` is a valid non-empty ASCII identifier (`^[A-Za-z_][A-Za-z0-9_]*$`).
 pub fn isValidIdentifier(s: string): bool {
     if (s.len == 0) { return false; }
-    if (!(tidIsAlpha(s[0]) || s[0] == 95)) { return false; }
+    if (!(isAlpha(s[0]) || s[0] == 95)) { return false; }
     let i: usize = 1;
     while (i < s.len) {
         if (!tidIsIdentChar(s[i])) { return false; }

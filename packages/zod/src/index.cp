@@ -4,6 +4,7 @@
 //   - `kindOf`, `KIND_*` from `@cap/kind-of`
 //   - `WhatwgUrl` (`WhatwgUrl.parse`) from `@cap/whatwg-url`
 
+import { isSpace, isDigit, isAlpha, isHexDigit, strEq, trim } from "cap:ascii";
 import {
     kindOf,
     KIND_INVALID,
@@ -46,90 +47,32 @@ pub const Z_ERR_INVALID_ENUM: i32 = 11;
 pub const Z_MAX_RULES: usize = 24;
 pub const Z_MAX_ISSUES: usize = 16;
 
-fn zdIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn zdIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn zdIsAlpha(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-}
-
-fn zdIsHex(c: u8): bool {
-    return zdIsDigit(c) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102);
-}
-
 fn zdIsEmailLocalChar(c: u8): bool {
-    if (zdIsAlpha(c) || zdIsDigit(c)) {
+    if (isAlpha(c) || isDigit(c)) {
         return true;
     }
     return c == 46 || c == 95 || c == 45 || c == 43 || c == 37;
 }
 
 fn zdIsDomainLabelChar(c: u8): bool {
-    return zdIsAlpha(c) || zdIsDigit(c) || c == 45;
-}
-
-fn zdStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn zdSliceEqStr(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn zdTrimBounds(s: string, out_start: *usize, out_end: *usize) {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && zdIsSpace(s[a])) {
-        a = a + 1;
-    }
-    while (b > a && zdIsSpace(s[b - 1])) {
-        b = b - 1;
-    }
-    out_start.* = a;
-    out_end.* = b;
+    return isAlpha(c) || isDigit(c) || c == 45;
 }
 
 /// Parses a finite ASCII decimal/scientific float into `out_val`.
 /// Also sets `out_is_int.*` to true if the value represents an exact integer.
 fn zdParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
-    let a: usize = 0;
-    let b: usize = 0;
-    zdTrimBounds(raw, &a, &b);
-    if (a >= b) {
+    const s = trim(raw);
+    if (s.len == 0) {
         return false;
     }
 
-    let i = a;
+    const b = s.len;
+    let i: usize = 0;
     let neg = false;
-    if (raw[i] == 45) {
+    if (s[i] == 45) {
         neg = true;
         i = i + 1;
-    } else if (raw[i] == 43) {
+    } else if (s[i] == 43) {
         i = i + 1;
     }
     if (i >= b) {
@@ -138,21 +81,21 @@ fn zdParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
 
     let val: f64 = 0.0;
     let has_digits = false;
-    while (i < b && zdIsDigit(raw[i])) {
+    while (i < b && isDigit(s[i])) {
         has_digits = true;
-        val = val * 10.0 + ((raw[i] - 48) as f64);
+        val = val * 10.0 + ((s[i] - 48) as f64);
         i = i + 1;
     }
 
     let has_nonzero_frac = false;
-    if (i < b && raw[i] == 46) {
+    if (i < b && s[i] == 46) {
         i = i + 1;
         let scale: f64 = 0.1;
         let frac_digits = false;
-        while (i < b && zdIsDigit(raw[i])) {
+        while (i < b && isDigit(s[i])) {
             has_digits = true;
             frac_digits = true;
-            const d = raw[i] - 48;
+            const d = s[i] - 48;
             if (d != 0) {
                 has_nonzero_frac = true;
             }
@@ -172,20 +115,20 @@ fn zdParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
     let has_exp = false;
     let exp_neg = false;
     let exp_val: i32 = 0;
-    if (i < b && (raw[i] == 101 || raw[i] == 69)) {
+    if (i < b && (s[i] == 101 || s[i] == 69)) {
         has_exp = true;
         i = i + 1;
-        if (i < b && raw[i] == 45) {
+        if (i < b && s[i] == 45) {
             exp_neg = true;
             i = i + 1;
-        } else if (i < b && raw[i] == 43) {
+        } else if (i < b && s[i] == 43) {
             i = i + 1;
         }
         let exp_digits = false;
-        while (i < b && zdIsDigit(raw[i])) {
+        while (i < b && isDigit(s[i])) {
             exp_digits = true;
             if (exp_val < 308) {
-                exp_val = exp_val * 10 + ((raw[i] - 48) as i32);
+                exp_val = exp_val * 10 + ((s[i] - 48) as i32);
             }
             i = i + 1;
         }
@@ -285,15 +228,13 @@ fn zdDecodeJsonString(raw: string, out: []u8, out_total_len: *usize): bool {
 
 /// Counts top-level elements in a JSON array `[ ... ]`.
 fn zdCountJsonArrayItems(raw: string, out_count: *usize): bool {
-    let a: usize = 0;
-    let b: usize = 0;
-    zdTrimBounds(raw, &a, &b);
-    if (b - a < 2 || raw[a] != 91 || raw[b - 1] != 93) {
+    const s = trim(raw);
+    if (s.len < 2 || s[0] != 91 || s[s.len - 1] != 93) {
         return false;
     }
-    let i = a + 1;
-    const end = b - 1;
-    while (i < end && zdIsSpace(raw[i])) {
+    let i: usize = 1;
+    const end = s.len - 1;
+    while (i < end && isSpace(s[i])) {
         i = i + 1;
     }
     if (i == end) {
@@ -305,7 +246,7 @@ fn zdCountJsonArrayItems(raw: string, out_count: *usize): bool {
     let depth: i32 = 0;
     let in_str = false;
     while (i < end) {
-        const c = raw[i];
+        const c = s[i];
         if (in_str) {
             if (c == 92) {
                 i = i + 2;
@@ -342,7 +283,7 @@ fn zdCountJsonArrayItems(raw: string, out_count: *usize): bool {
 pub fn zString(raw: string, min_len: usize, max_len: usize): bool {
     let slen = raw.len;
     if (raw.len >= 2 && raw[0] == 34 && raw[raw.len - 1] == 34) {
-        let tmp: [8]u8 = [0; 8];
+        let tmp: [8]u8 = undefined;
         let decoded_len: usize = 0;
         if (!zdDecodeJsonString(raw, tmp[0..8], &decoded_len)) {
             return false;
@@ -377,7 +318,7 @@ pub fn zEmail(s: string): bool {
         if (s[i] == 64) {
             at_pos = i;
             at_count = at_count + 1;
-        } else if (zdIsSpace(s[i])) {
+        } else if (isSpace(s[i])) {
             return false;
         }
         i = i + 1;
@@ -437,7 +378,7 @@ pub fn zEmail(s: string): bool {
     // TLD must be alphabetic
     i = last_label_start;
     while (i < s.len) {
-        if (!zdIsAlpha(s[i])) {
+        if (!isAlpha(s[i])) {
             return false;
         }
         i = i + 1;
@@ -466,7 +407,7 @@ pub fn zUuid(s: string): bool {
                 return false;
             }
         } else {
-            if (!zdIsHex(s[i])) {
+            if (!isHexDigit(s[i])) {
                 return false;
             }
         }
@@ -486,7 +427,7 @@ pub fn zEnum(s: string, csv: string): bool {
         while (i < csv.len && csv[i] != 44) {
             i = i + 1;
         }
-        if (zdStrEq(s, csv[start..i])) {
+        if (strEq(s, csv[start..i])) {
             return true;
         }
         if (i >= csv.len) {
@@ -604,7 +545,7 @@ pub struct ZIssue {
 
     pub static fn empty(): ZIssue {
         return ZIssue {
-            field: [0; 48],
+            field: undefined,
             field_len: 0,
             code: 0,
         };
@@ -621,16 +562,10 @@ pub struct ZParseResult {
     pub issues: [16]ZIssue,
 
     pub static fn empty(): ZParseResult {
-        let issues: [16]ZIssue = undefined;
-        let i: usize = 0;
-        while (i < 16) {
-            issues[i] = ZIssue.empty();
-            i = i + 1;
-        }
         return ZParseResult {
             ok: true,
             issue_count: 0,
-            issues: issues,
+            issues: undefined,
         };
     }
 
@@ -655,7 +590,7 @@ pub struct ZParseResult {
     pub fn hasIssue(field_name: string, code: i32): bool {
         let i: usize = 0;
         while (i < _.issue_count) {
-            if (_.issues[i].code == code && zdSliceEqStr(_.issues[i].field[0.._.issues[i].field_len], field_name)) {
+            if (_.issues[i].code == code && strEq(_.issues[i].field[0.._.issues[i].field_len], field_name)) {
                 return true;
             }
             i = i + 1;
@@ -678,7 +613,7 @@ fn zdValidateFieldValue(rule: ZFieldRule, raw_val: string, res: *ZParseResult) {
             res.addIssue(rule.name, Z_ERR_INVALID_TYPE);
             return;
         }
-        let decoded: [256]u8 = [0; 256];
+        let decoded: [256]u8 = undefined;
         let decoded_len: usize = 0;
         if (!zdDecodeJsonString(raw_val, decoded[0..256], &decoded_len)) {
             res.addIssue(rule.name, Z_ERR_INVALID_JSON);
@@ -825,7 +760,7 @@ fn zdScanJsonValue(json: string, pos: usize, end: usize, out_end: *usize): bool 
 
     // Primitive literal (number / bool / null)
     let i = pos;
-    while (i < end && !zdIsSpace(json[i]) && json[i] != 44 && json[i] != 125 && json[i] != 93) {
+    while (i < end && !isSpace(json[i]) && json[i] != 44 && json[i] != 125 && json[i] != 93) {
         i = i + 1;
     }
     if (i == pos) {
@@ -840,14 +775,8 @@ pub struct ZObjectSchema {
     pub rule_count: usize,
 
     pub static fn new(): ZObjectSchema {
-        let rules: [24]ZFieldRule = undefined;
-        let i: usize = 0;
-        while (i < Z_MAX_RULES) {
-            rules[i] = ZFieldRule.empty();
-            i = i + 1;
-        }
         return ZObjectSchema {
-            rules: rules,
+            rules: undefined,
             rule_count: 0,
         };
     }
@@ -865,16 +794,14 @@ pub struct ZObjectSchema {
     /// collecting all validation issues without short-circuiting.
     pub fn safeParseJson(json: string): ZParseResult {
         let res = ZParseResult.empty();
-        let start: usize = 0;
-        let end: usize = 0;
-        zdTrimBounds(json, &start, &end);
+        const trimmed = trim(json);
 
-        if (start >= end) {
+        if (trimmed.len == 0) {
             res.addIssue("$", Z_ERR_INVALID_JSON);
             return res;
         }
 
-        const root_kind = kindOf(json[start..end]);
+        const root_kind = kindOf(trimmed);
         if (root_kind == KIND_INVALID) {
             res.addIssue("$", Z_ERR_INVALID_JSON);
             return res;
@@ -885,31 +812,31 @@ pub struct ZObjectSchema {
         }
 
         let seen: [24]bool = [false; 24];
-        let i = start + 1;
-        const limit = end - 1;
-        while (i < limit && zdIsSpace(json[i])) {
+        let i: usize = 1;
+        const limit = trimmed.len - 1;
+        while (i < limit && isSpace(trimmed[i])) {
             i = i + 1;
         }
 
         if (i < limit) {
             while (true) {
-                while (i < limit && zdIsSpace(json[i])) {
+                while (i < limit && isSpace(trimmed[i])) {
                     i = i + 1;
                 }
-                if (i >= limit || json[i] != 34) {
+                if (i >= limit || trimmed[i] != 34) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
                 }
 
                 // Scan key string
                 let key_end: usize = 0;
-                if (!zdScanJsonValue(json, i, limit, &key_end)) {
+                if (!zdScanJsonValue(trimmed, i, limit, &key_end)) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
                 }
-                let key_buf: [64]u8 = [0; 64];
+                let key_buf: [64]u8 = undefined;
                 let key_len: usize = 0;
-                if (!zdDecodeJsonString(json[i..key_end], key_buf[0..64], &key_len)) {
+                if (!zdDecodeJsonString(trimmed[i..key_end], key_buf[0..64], &key_len)) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
                 }
@@ -917,25 +844,25 @@ pub struct ZObjectSchema {
                 i = key_end;
 
                 // Expect ':'
-                while (i < limit && zdIsSpace(json[i])) {
+                while (i < limit && isSpace(trimmed[i])) {
                     i = i + 1;
                 }
-                if (i >= limit || json[i] != 58) {
+                if (i >= limit || trimmed[i] != 58) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
                 }
                 i = i + 1;
 
                 // Scan value
-                while (i < limit && zdIsSpace(json[i])) {
+                while (i < limit && isSpace(trimmed[i])) {
                     i = i + 1;
                 }
                 let val_end: usize = 0;
-                if (!zdScanJsonValue(json, i, limit, &val_end)) {
+                if (!zdScanJsonValue(trimmed, i, limit, &val_end)) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
                 }
-                const raw_val = json[i..val_end];
+                const raw_val = trimmed[i..val_end];
                 if (kindOf(raw_val) == KIND_INVALID) {
                     res.addIssue("$", Z_ERR_INVALID_JSON);
                     return res;
@@ -944,7 +871,7 @@ pub struct ZObjectSchema {
                 // Match against schema rules
                 let r: usize = 0;
                 while (r < _.rule_count) {
-                    if (zdSliceEqStr(key_buf[0..key_slice_len], _.rules[r].name)) {
+                    if (strEq(key_buf[0..key_slice_len], _.rules[r].name)) {
                         seen[r] = true;
                         zdValidateFieldValue(_.rules[r], raw_val, &res);
                     }
@@ -952,15 +879,15 @@ pub struct ZObjectSchema {
                 }
 
                 i = val_end;
-                while (i < limit && zdIsSpace(json[i])) {
+                while (i < limit && isSpace(trimmed[i])) {
                     i = i + 1;
                 }
                 if (i >= limit) {
                     break;
                 }
-                if (json[i] == 44) {
+                if (trimmed[i] == 44) {
                     i = i + 1;
-                    while (i < limit && zdIsSpace(json[i])) {
+                    while (i < limit && isSpace(trimmed[i])) {
                         i = i + 1;
                     }
                     if (i >= limit) {

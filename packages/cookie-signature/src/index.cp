@@ -49,11 +49,16 @@ fn sha256K(i: usize) -> u32 {
     return table[i];
 }
 
-struct Sha256State {
-    h: [8]u32,
-    block: [64]u8,
-    block_len: usize,
-    total_bytes: u64,
+pub struct UnsignResult {
+    pub ok: bool,
+    pub val_len: usize,
+}
+
+pub struct Sha256State {
+    pub h: [8]u32,
+    pub block: [64]u8,
+    pub block_len: usize,
+    pub total_bytes: u64,
 
     static fn init() -> Sha256State {
         let s = Sha256State {
@@ -176,7 +181,38 @@ struct Sha256State {
     }
 }
 
-fn hmacSha256(key: []const u8, msg: []const u8, out: []u8) {
+pub fn sha256Init() -> Sha256State {
+    return Sha256State.init();
+}
+
+pub fn sha256Update(st: *Sha256State, data: []const u8) {
+    st.update(data);
+}
+
+pub fn sha256Final(st: *Sha256State, out32: []u8) {
+    st.finish(out32);
+}
+
+pub fn sha256(data: []const u8, out32: []u8) {
+    let st: Sha256State = Sha256State.init();
+    st.update(data);
+    st.finish(out32);
+}
+
+pub fn ctEqual(a: []const u8, b: []const u8) -> bool {
+    if (a.len != b.len) {
+        return false;
+    }
+    let diff: u8 = 0;
+    let i: usize = 0;
+    while (i < a.len) {
+        diff = diff | (a[i] ^ b[i]);
+        i += 1;
+    }
+    return diff == 0;
+}
+
+pub fn hmacSha256(key: []const u8, msg: []const u8, out: []u8) {
     let k_pad: [64]u8 = undefined;
     let i: usize = 0;
     while (i < 64) {
@@ -254,7 +290,7 @@ fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
+fn csBytesEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {
         return false;
     }
@@ -298,7 +334,7 @@ pub fn getCookie(header: []const u8, name: []const u8) -> CookieSlice {
                 k_end -= 1;
             }
 
-            if (bytesEq(header[k_start..k_end], name)) {
+            if (csBytesEq(header[k_start..k_end], name)) {
                 let v_start: usize = eq_pos + 1;
                 let v_end: usize = seg_end;
                 while (v_start < v_end && isWs(header[v_start])) {
@@ -327,10 +363,10 @@ pub fn getCookie(header: []const u8, name: []const u8) -> CookieSlice {
     return miss;
 }
 
-pub fn sign(val: []const u8, secret: []const u8, dst: []u8) -> i64 {
+pub fn sign(val: []const u8, secret: []const u8, dst: []u8) -> usize {
     const total: usize = val.len + 1 + SIG_B64_LEN;
     if (total > dst.len) {
-        return -1;
+        return 0;
     }
 
     let i: usize = 0;
@@ -343,11 +379,11 @@ pub fn sign(val: []const u8, secret: []const u8, dst: []u8) -> i64 {
     let mac: [32]u8 = undefined;
     hmacSha256(secret, val, mac[0..32]);
     encodeBase64Url32(mac[0..32], dst[(val.len + 1)..total]);
-    return total as i64;
+    return total;
 }
 
-pub fn unsign(signed_val: []const u8, secret: []const u8) -> CookieSlice {
-    const miss = CookieSlice { start: 0, len: 0, found: false };
+pub fn unsign(signed_val: []const u8, secret: []const u8) -> UnsignResult {
+    const miss = UnsignResult { ok: false, val_len: 0 };
     if (signed_val.len < 1 + SIG_B64_LEN) {
         return miss;
     }
@@ -379,18 +415,11 @@ pub fn unsign(signed_val: []const u8, secret: []const u8) -> CookieSlice {
     hmacSha256(secret, val_part, mac[0..32]);
     encodeBase64Url32(mac[0..32], expected[0..43]);
 
-    // Constant-time comparison across all 43 bytes
-    let diff: u8 = 0;
-    let k: usize = 0;
-    while (k < SIG_B64_LEN) {
-        diff = diff | (signed_val[sig_start + k] ^ expected[k]);
-        k += 1;
-    }
-    if (diff != 0) {
+    if (!ctEqual(signed_val[sig_start..signed_val.len], expected[0..SIG_B64_LEN])) {
         return miss;
     }
 
-    return CookieSlice { start: 0, len: dot_pos, found: true };
+    return UnsignResult { ok: true, val_len: dot_pos };
 }
 
 fn appendBytes(dst: []u8, pos: usize, src: []const u8) -> i64 {

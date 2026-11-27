@@ -1,6 +1,9 @@
 // @cap/cosmiconfig — Pure CP zero-allocation config file discovery planner & loader detector.
 // Clean-room MIT implementation inspired by npm `cosmiconfig` v9.
 
+import { strEq, eqIgnoreCase, rfindByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const LOADER_UNKNOWN: u8 = 0;
 pub const LOADER_JSON: u8 = 1;
 pub const LOADER_YAML: u8 = 2;
@@ -9,65 +12,11 @@ pub const LOADER_PKG_JSON: u8 = 4;
 
 pub const DEFAULT_SEARCH_PLACE_COUNT: usize = 8;
 
-fn cosmiToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn cosmiStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn cosmiEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (cosmiToLower(a[i]) != cosmiToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn cosmiEndsWithIgnoreCase(s: string, suffix: string): bool {
     if (suffix.len > s.len) {
         return false;
     }
-    let offset = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (cosmiToLower(s[offset + i]) != cosmiToLower(suffix[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn cosmiWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
 }
 
 fn cosmiBasename(filepath: string): string {
@@ -88,17 +37,6 @@ fn cosmiTrimTrailingSlash(dir: string): string {
         end = end - 1;
     }
     return dir[0..end];
-}
-
-fn cosmiLastSlash(s: string): usize {
-    let i = s.len;
-    while (i > 0) {
-        i = i - 1;
-        if (s[i] == 47) {
-            return i;
-        }
-    }
-    return s.len;
 }
 
 /// Configuration explorer options (inspired by `cosmiconfig` v9).
@@ -129,7 +67,7 @@ pub fn detectLoader(filepath: string): u8 {
     if (base.len == 0) {
         return LOADER_UNKNOWN;
     }
-    if (cosmiEqIgnoreCase(base, "package.json")) {
+    if (eqIgnoreCase(base, "package.json")) {
         return LOADER_PKG_JSON;
     }
     if (cosmiEndsWithIgnoreCase(base, ".json")) {
@@ -175,50 +113,50 @@ pub fn formatSearchPlace(module_name: string, place_idx: usize, out: []u8): usiz
         return 0;
     }
     if (place_idx == 0) {
-        return cosmiWriteStr(out, 0, "package.json");
+        return writeStr("package.json", out, 0);
     }
     if (module_name.len == 0) {
         return 0;
     }
     let pos: usize = 0;
     if (place_idx == 1) {
-        pos = cosmiWriteStr(out, pos, ".");
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, "rc");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc", out, pos);
         return pos;
     }
     if (place_idx == 2) {
-        pos = cosmiWriteStr(out, pos, ".");
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, "rc.json");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.json", out, pos);
         return pos;
     }
     if (place_idx == 3) {
-        pos = cosmiWriteStr(out, pos, ".");
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, "rc.yaml");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.yaml", out, pos);
         return pos;
     }
     if (place_idx == 4) {
-        pos = cosmiWriteStr(out, pos, ".");
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, "rc.yml");
+        pos = writeStr(".", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc.yml", out, pos);
         return pos;
     }
     if (place_idx == 5) {
-        pos = cosmiWriteStr(out, pos, ".config/");
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, "rc");
+        pos = writeStr(".config/", out, pos);
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr("rc", out, pos);
         return pos;
     }
     if (place_idx == 6) {
-        pos = cosmiWriteStr(out, pos, module_name);
-        pos = cosmiWriteStr(out, pos, ".config.js");
+        pos = writeStr(module_name, out, pos);
+        pos = writeStr(".config.js", out, pos);
         return pos;
     }
     // place_idx == 7
-    pos = cosmiWriteStr(out, pos, module_name);
-    pos = cosmiWriteStr(out, pos, ".config.cjs");
+    pos = writeStr(module_name, out, pos);
+    pos = writeStr(".config.cjs", out, pos);
     return pos;
 }
 
@@ -226,18 +164,18 @@ pub fn formatSearchPlace(module_name: string, place_idx: usize, out: []u8): usiz
 /// Returns bytes written.
 pub fn buildCandidatePath(dir: string, place: string, out: []u8): usize {
     if (dir.len == 0) {
-        return cosmiWriteStr(out, 0, place);
+        return writeStr(place, out, 0);
     }
     let clean_dir = cosmiTrimTrailingSlash(dir);
-    let pos: usize = cosmiWriteStr(out, 0, clean_dir);
+    let pos: usize = writeStr(clean_dir, out, 0);
     if (place.len == 0) {
         return pos;
     }
     if (clean_dir.len == 1 && clean_dir[0] == 47) {
-        return cosmiWriteStr(out, pos, place);
+        return writeStr(place, out, pos);
     }
-    pos = cosmiWriteStr(out, pos, "/");
-    return cosmiWriteStr(out, pos, place);
+    pos = writeStr("/", out, pos);
+    return writeStr(place, out, pos);
 }
 
 /// Zero-heap upward directory search planner respecting `stop_dir`.
@@ -265,7 +203,7 @@ pub struct SearchPlanner {
             return null;
         }
         let dir = _.start_dir[0.._.current_end];
-        if (_.stop_dir.len > 0 && cosmiStrEq(dir, _.stop_dir)) {
+        if (_.stop_dir.len > 0 && strEq(dir, _.stop_dir)) {
             _.done = true;
             return dir;
         }
@@ -273,13 +211,14 @@ pub struct SearchPlanner {
             _.done = true;
             return dir;
         }
-        let slash = cosmiLastSlash(dir);
-        if (slash >= dir.len) {
-            _.done = true;
-        } else if (slash == 0) {
-            _.current_end = 1;
+        if (slash := rfindByte(dir, 47)) {
+            if (slash == 0) {
+                _.current_end = 1;
+            } else {
+                _.current_end = slash;
+            }
         } else {
-            _.current_end = slash;
+            _.done = true;
         }
         return dir;
     }
@@ -294,19 +233,20 @@ pub struct SearchPlanner {
         while (true) {
             let dir = _.start_dir[0..cur_end];
             count = count + 1;
-            if (_.stop_dir.len > 0 && cosmiStrEq(dir, _.stop_dir)) {
+            if (_.stop_dir.len > 0 && strEq(dir, _.stop_dir)) {
                 break;
             }
             if (cur_end == 1 && _.start_dir[0] == 47) {
                 break;
             }
-            let slash = cosmiLastSlash(dir);
-            if (slash >= dir.len) {
-                break;
-            } else if (slash == 0) {
-                cur_end = 1;
+            if (slash := rfindByte(dir, 47)) {
+                if (slash == 0) {
+                    cur_end = 1;
+                } else {
+                    cur_end = slash;
+                }
             } else {
-                cur_end = slash;
+                break;
             }
         }
         return count;

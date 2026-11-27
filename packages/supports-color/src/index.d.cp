@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
 import { hasFlag } from "../../has-flag/src/index.cp";
 export class ColorSupport {
     level: u8,
@@ -23,8 +24,6 @@ export class TerminalEnv {
     fn tty(): TerminalEnv;
 }
 
-export fn scToLower(b: u8): u8;
-export fn scEqIgnoreCase(a: string, b: string): bool;
 export fn scContainsIgnoreCase(haystack: string, needle: string): bool;
 export fn translateLevel(level: u8): ColorSupport;
 export fn scDetectCliOverride(argv: &[]string): i8;

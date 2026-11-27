@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isDigit, isAlnum, toLowerByte, findByte } from "cap:ascii";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 export class MarkedOptions {
     gfm: bool,
@@ -12,11 +13,7 @@ export fn mkdWriteByte(out: []u8, pos: &mut usize, b: u8);
 export fn mkdWriteStr(out: []u8, pos: &mut usize, s: string);
 export fn mkdWriteEscaped(out: []u8, pos: &mut usize, s: string);
 export fn mkdWriteEscapedByte(out: []u8, pos: &mut usize, b: u8);
-export fn mkdWriteUsize(out: []u8, pos: &mut usize, val: usize);
 export fn mkdIsSpace(c: u8): bool;
-export fn mkdIsDigit(c: u8): bool;
-export fn mkdIsAlphaNum(c: u8): bool;
-export fn mkdToLower(c: u8): u8;
 export fn mkdIsPunctEscape(c: u8): bool;
 export fn mkdStartsWithIgnoreCaseClean(url: string, prefix: string): bool;
 export fn mkdIsSafeUrl(url: string): bool;

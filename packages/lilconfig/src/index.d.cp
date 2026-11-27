@@ -1,10 +1,9 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { LOADER_UNKNOWN, LOADER_JSON, LOADER_YAML, LOADER_JS, LOADER_PKG_JSON, SearchPlanner, CosmiConfigResult, detectLoader, buildCandidatePath } from "../../cosmiconfig/src/index.cp";
-export fn lilToLower(b: u8): u8;
-export fn lilEqIgnoreCase(a: string, b: string): bool;
 export fn lilEndsWithIgnoreCase(s: string, suffix: string): bool;
-export fn lilWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn lilBasename(filepath: string): string;
 export fn lilIsNoExt(filepath: string): bool;
 export class LilconfigOptions {
