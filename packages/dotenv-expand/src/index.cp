@@ -1,8 +1,16 @@
 // @cap/dotenv-expand — Zero-heap `.env` file parser & POSIX variable expansion engine.
 // Clean-room MIT port of npm `dotenv` + `dotenv-expand` (100M+/week).
 
-import { isAlnum, strEq, trim, startsWith, findByte } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { isAlnum, strEq, trim, startsWith } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+
+fn deWriteStr(s: string, out: []u8, pos: usize): usize {
+    if (pos >= out.len || s.len == 0) { return pos; }
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
+}
 
 pub const DE_MAX_VARS: usize = 32;
 
@@ -62,7 +70,7 @@ pub fn parseDotenv(src: string): EnvMap {
     let env = EnvMap.new();
     let pos: usize = 0;
     while (pos < src.len) {
-        let line_end = findByte(src, 10, pos) ?? src.len;
+        let line_end = findByteInBytes(src, 10, pos) ?? src.len;
         let line = trim(src[pos..line_end]);
         pos = if (line_end < src.len) { line_end + 1 } else { src.len };
 
@@ -71,7 +79,7 @@ pub fn parseDotenv(src: string): EnvMap {
         if (startsWith(work, "export ")) {
             work = trim(work[7..work.len]);
         }
-        let eq_opt = findByte(work, 61, 0);
+        let eq_opt = findByteInBytes(work, 61, 0);
         if (eq_opt == null) { continue; }
         let eq = eq_opt.?;
         if (eq == 0) { continue; }
@@ -85,7 +93,7 @@ pub fn parseDotenv(src: string): EnvMap {
             val = raw_val[1..raw_val.len - 1];
         } else {
             // Strip inline `#` comment for unquoted values
-            let hash = findByte(raw_val, 35, 0) ?? raw_val.len;
+            let hash = findByteInBytes(raw_val, 35, 0) ?? raw_val.len;
             val = trim(raw_val[0..hash]);
         }
         env.set(key, val);
@@ -98,17 +106,32 @@ pub fn parseDotenv(src: string): EnvMap {
 pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
     let p: usize = 0;
     let i: usize = 0;
-    while (i < template.len) {
+    let next_dl = findByteInBytes(template, 36, 0) ?? template.len;
+    let next_bs = findByteInBytes(template, 92, 0) ?? template.len;
+    while (i < template.len && p < out.len) {
+        if (next_dl < i) {
+            next_dl = findByteInBytes(template, 36, i) ?? template.len;
+        }
+        if (next_bs < i) {
+            next_bs = findByteInBytes(template, 92, i) ?? template.len;
+        }
+        const next_special = if (next_dl < next_bs) next_dl else next_bs;
+        if (next_special > i) {
+            p = deWriteStr(template[i..next_special], out, p);
+            i = next_special;
+            if (i >= template.len || p >= out.len) { break; }
+        }
         if (template[i] == 92 && i + 1 < template.len && template[i + 1] == 36) {
             // Escaped "\$" -> literal "$"
-            if (p < out.len) { out[p] = 36; p = p + 1; }
+            out[p] = 36;
+            p = p + 1;
             i = i + 2;
             continue;
         }
         if (template[i] == 36 && i + 1 < template.len) {
             if (template[i + 1] == 123) {
                 // Braced: ${VAR}, ${VAR:-default}, ${VAR-default}
-                let close = findByte(template, 125, i + 2) ?? template.len;
+                let close = findByteInBytes(template, 125, i + 2) ?? template.len;
                 if (close < template.len) {
                     let inner = template[i + 2..close];
                     // Check for ":-" or "-"
@@ -134,12 +157,12 @@ pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
                     if (found != null) {
                         let fv = found ?? "";
                         if (colon_dash && fv.len == 0) {
-                            p = writeStr(def_val, out, p);
+                            p = deWriteStr(def_val, out, p);
                         } else {
-                            p = writeStr(fv, out, p);
+                            p = deWriteStr(fv, out, p);
                         }
                     } else if (has_default) {
-                        p = writeStr(def_val, out, p);
+                        p = deWriteStr(def_val, out, p);
                     }
                     i = close + 1;
                     continue;
@@ -151,13 +174,14 @@ pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
                 let var_name = template[i + 1..end];
                 let found = env.get(var_name);
                 if (found != null) {
-                    p = writeStr(found ?? "", out, p);
+                    p = deWriteStr(found ?? "", out, p);
                 }
                 i = end;
                 continue;
             }
         }
-        if (p < out.len) { out[p] = template[i]; p = p + 1; }
+        out[p] = template[i];
+        p = p + 1;
         i = i + 1;
     }
     return p;

@@ -1,29 +1,42 @@
 // @cap/percent-encoding — Pure CP zero-allocation WHATWG URL Standard percent-encoding
 // Clean-room MIT implementation with full parity to Rust `percent-encoding` & WHATWG URL Standard.
 
+import { findByteInBytes } from "cap:bin";
+
+const PE_HEX_UPPER: string = "0123456789ABCDEF";
+
+fn peBuildHexLut(): [256]u8 {
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48) as u8;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 70) {
+        lut[c] = (c - 55) as u8;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 102) {
+        lut[c] = (c - 87) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const PE_HEX_LUT: [256]u8 = peBuildHexLut();
+
 fn peBitMask(byte: u8): u32 {
     return (1 as u32) << ((byte & 31) as u5);
 }
 
 fn peHexUpper(nib: u8): u8 {
-    let n = nib & 0x0F;
-    if (n < 10) {
-        return 48 + n;
-    }
-    return 55 + n;
+    return PE_HEX_UPPER[(nib & 0x0F) as usize];
 }
 
 fn peHexVal(ch: u8): u8 {
-    if (ch >= 48 && ch <= 57) {
-        return ch - 48;
-    }
-    if (ch >= 65 && ch <= 70) {
-        return ch - 55;
-    }
-    if (ch >= 97 && ch <= 102) {
-        return ch - 87;
-    }
-    return 255;
+    return PE_HEX_LUT[ch as usize];
 }
 
 /// 128-bit ASCII bitmap for O(1) percent-encode membership lookup.
@@ -71,8 +84,7 @@ pub struct AsciiSet {
     }
 }
 
-/// WHATWG C0 control percent-encode set: 0x00..=0x1F, 0x7F, and all non-ASCII (>= 0x80).
-pub fn controlsSet(): AsciiSet {
+fn peBuildControlsSet(): AsciiSet {
     let b: [4]u32 = [
         0xFFFFFFFF as u32,
         0 as u32,
@@ -82,9 +94,8 @@ pub fn controlsSet(): AsciiSet {
     return AsciiSet { bits: b };
 }
 
-/// WHATWG fragment percent-encode set: controls + ' ', '"', '<', '>', '`'.
-pub fn fragmentSet(): AsciiSet {
-    let s = controlsSet();
+fn peBuildFragmentSet(): AsciiSet {
+    let s = peBuildControlsSet();
     s.add(0x20); // ' '
     s.add(0x22); // '"'
     s.add(0x3C); // '<'
@@ -93,9 +104,8 @@ pub fn fragmentSet(): AsciiSet {
     return s;
 }
 
-/// WHATWG query percent-encode set: controls + ' ', '"', '#', '<', '>'.
-pub fn querySet(): AsciiSet {
-    let s = controlsSet();
+fn peBuildQuerySet(): AsciiSet {
+    let s = peBuildControlsSet();
     s.add(0x20); // ' '
     s.add(0x22); // '"'
     s.add(0x23); // '#'
@@ -104,9 +114,8 @@ pub fn querySet(): AsciiSet {
     return s;
 }
 
-/// WHATWG path percent-encode set: fragment + '#', '?', '{', '}'.
-pub fn pathSet(): AsciiSet {
-    let s = fragmentSet();
+fn peBuildPathSet(): AsciiSet {
+    let s = peBuildFragmentSet();
     s.add(0x23); // '#'
     s.add(0x3F); // '?'
     s.add(0x7B); // '{'
@@ -114,9 +123,8 @@ pub fn pathSet(): AsciiSet {
     return s;
 }
 
-/// WHATWG userinfo percent-encode set: path + '/', ':', ';', '=', '@', '[', '\', ']', '^', '|'.
-pub fn userinfoSet(): AsciiSet {
-    let s = pathSet();
+fn peBuildUserinfoSet(): AsciiSet {
+    let s = peBuildPathSet();
     s.add(0x2F); // '/'
     s.add(0x3A); // ':'
     s.add(0x3B); // ';'
@@ -130,9 +138,8 @@ pub fn userinfoSet(): AsciiSet {
     return s;
 }
 
-/// WHATWG component percent-encode set: userinfo + '$', '%', '&', '+', ','.
-pub fn componentSet(): AsciiSet {
-    let s = userinfoSet();
+fn peBuildComponentSet(): AsciiSet {
+    let s = peBuildUserinfoSet();
     s.add(0x24); // '$'
     s.add(0x25); // '%'
     s.add(0x26); // '&'
@@ -141,8 +148,7 @@ pub fn componentSet(): AsciiSet {
     return s;
 }
 
-/// Non-alphanumeric percent-encode set: encodes all bytes except ASCII A-Z, a-z, 0-9.
-pub fn nonAlphanumericSet(): AsciiSet {
+fn peBuildNonAlphanumericSet(): AsciiSet {
     let b: [4]u32 = [
         0xFFFFFFFF as u32,
         0xFFFFFFFF as u32,
@@ -168,6 +174,49 @@ pub fn nonAlphanumericSet(): AsciiSet {
     return s;
 }
 
+const PE_CONTROLS_SET: AsciiSet = peBuildControlsSet();
+const PE_FRAGMENT_SET: AsciiSet = peBuildFragmentSet();
+const PE_QUERY_SET: AsciiSet = peBuildQuerySet();
+const PE_PATH_SET: AsciiSet = peBuildPathSet();
+const PE_USERINFO_SET: AsciiSet = peBuildUserinfoSet();
+const PE_COMPONENT_SET: AsciiSet = peBuildComponentSet();
+const PE_NON_ALNUM_SET: AsciiSet = peBuildNonAlphanumericSet();
+
+/// WHATWG C0 control percent-encode set: 0x00..=0x1F, 0x7F, and all non-ASCII (>= 0x80).
+pub fn controlsSet(): AsciiSet {
+    return PE_CONTROLS_SET;
+}
+
+/// WHATWG fragment percent-encode set: controls + ' ', '"', '<', '>', '`'.
+pub fn fragmentSet(): AsciiSet {
+    return PE_FRAGMENT_SET;
+}
+
+/// WHATWG query percent-encode set: controls + ' ', '"', '#', '<', '>'.
+pub fn querySet(): AsciiSet {
+    return PE_QUERY_SET;
+}
+
+/// WHATWG path percent-encode set: fragment + '#', '?', '{', '}'.
+pub fn pathSet(): AsciiSet {
+    return PE_PATH_SET;
+}
+
+/// WHATWG userinfo percent-encode set: path + '/', ':', ';', '=', '@', '[', '\', ']', '^', '|'.
+pub fn userinfoSet(): AsciiSet {
+    return PE_USERINFO_SET;
+}
+
+/// WHATWG component percent-encode set: userinfo + '$', '%', '&', '+', ','.
+pub fn componentSet(): AsciiSet {
+    return PE_COMPONENT_SET;
+}
+
+/// Non-alphanumeric percent-encode set: encodes all bytes except ASCII A-Z, a-z, 0-9.
+pub fn nonAlphanumericSet(): AsciiSet {
+    return PE_NON_ALNUM_SET;
+}
+
 /// Computes the exact encoded byte length for `input` under `set`.
 pub fn percentEncodeLen(input: []const u8, set: AsciiSet): usize {
     let total: usize = 0;
@@ -189,23 +238,29 @@ pub fn percentEncodeLen(input: []const u8, set: AsciiSet): usize {
 pub fn percentEncode(input: []const u8, set: AsciiSet, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < input.len) {
-        let b = input[i];
-        if (set.shouldPercentEncode(b)) {
-            if (pos + 3 > out.len) {
-                break;
-            }
-            out[pos] = 0x25; // '%'
-            out[pos + 1] = peHexUpper(b >> 4);
-            out[pos + 2] = peHexUpper(b & 0x0F);
-            pos = pos + 3;
-        } else {
-            if (pos >= out.len) {
-                break;
-            }
-            out[pos] = b;
-            pos = pos + 1;
+    while (i < input.len && pos < out.len) {
+        const seg_start = i;
+        while (i < input.len && !set.shouldPercentEncode(input[i])) {
+            i = i + 1;
         }
+        if (i > seg_start) {
+            const seg_len = i - seg_start;
+            const avail = out.len - pos;
+            const n = if (seg_len < avail) seg_len else avail;
+            @memcpy(out[pos .. pos + n], input[seg_start .. seg_start + n]);
+            pos = pos + n;
+            if (n < seg_len || i >= input.len) {
+                break;
+            }
+        }
+        if (pos + 3 > out.len) {
+            break;
+        }
+        const b = input[i];
+        out[pos] = 0x25; // '%'
+        out[pos + 1] = peHexUpper(b >> 4);
+        out[pos + 2] = peHexUpper(b & 0x0F);
+        pos = pos + 3;
         i = i + 1;
     }
     return pos;
@@ -217,14 +272,22 @@ pub fn percentEncode(input: []const u8, set: AsciiSet, out: []u8): usize {
 pub fn percentDecode(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < input.len) {
-        if (pos >= out.len) {
-            break;
+    while (i < input.len && pos < out.len) {
+        const next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
+        if (next_pct > i) {
+            const seg_len = next_pct - i;
+            const avail = out.len - pos;
+            const n = if (seg_len < avail) seg_len else avail;
+            @memcpy(out[pos .. pos + n], input[i .. i + n]);
+            pos = pos + n;
+            i = next_pct;
+            if (n < seg_len || i >= input.len || pos >= out.len) {
+                break;
+            }
         }
-        let b = input[i];
-        if (b == 0x25 && i + 2 < input.len) {
-            let hi = peHexVal(input[i + 1]);
-            let lo = peHexVal(input[i + 2]);
+        if (i + 2 < input.len) {
+            const hi = PE_HEX_LUT[input[i + 1] as usize];
+            const lo = PE_HEX_LUT[input[i + 2] as usize];
             if (hi != 255 && lo != 255) {
                 out[pos] = ((hi << 4) | lo) as u8;
                 pos = pos + 1;
@@ -232,7 +295,7 @@ pub fn percentDecode(input: string, out: []u8): usize {
                 continue;
             }
         }
-        out[pos] = b;
+        out[pos] = 0x25;
         pos = pos + 1;
         i = i + 1;
     }
@@ -246,30 +309,33 @@ pub fn percentDecodeStrict(input: string, out: []u8): i64 {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
-        let b = input[i];
-        if (b == 0x25) {
-            if (i + 2 >= input.len) {
+        const next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
+        if (next_pct > i) {
+            const seg_len = next_pct - i;
+            if (pos + seg_len > out.len) {
                 return -1;
             }
-            let hi = peHexVal(input[i + 1]);
-            let lo = peHexVal(input[i + 2]);
-            if (hi == 255 || lo == 255) {
-                return -1;
+            @memcpy(out[pos .. pos + seg_len], input[i .. next_pct]);
+            pos = pos + seg_len;
+            i = next_pct;
+            if (i >= input.len) {
+                break;
             }
-            if (pos >= out.len) {
-                return -1;
-            }
-            out[pos] = ((hi << 4) | lo) as u8;
-            pos = pos + 1;
-            i = i + 3;
-        } else {
-            if (pos >= out.len) {
-                return -1;
-            }
-            out[pos] = b;
-            pos = pos + 1;
-            i = i + 1;
         }
+        if (i + 2 >= input.len) {
+            return -1;
+        }
+        const hi = PE_HEX_LUT[input[i + 1] as usize];
+        const lo = PE_HEX_LUT[input[i + 2] as usize];
+        if (hi == 255 || lo == 255) {
+            return -1;
+        }
+        if (pos >= out.len) {
+            return -1;
+        }
+        out[pos] = ((hi << 4) | lo) as u8;
+        pos = pos + 1;
+        i = i + 3;
     }
     return pos as i64;
 }
@@ -279,20 +345,37 @@ pub fn percentDecodeStrict(input: string, out: []u8): i64 {
 pub fn percentDecodePlus(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < input.len) {
-        if (pos >= out.len) {
-            break;
+    let next_pct = findByteInBytes(input, 0x25, 0) ?? input.len;
+    let next_plus = findByteInBytes(input, 0x2B, 0) ?? input.len;
+    while (i < input.len && pos < out.len) {
+        if (next_pct < i) {
+            next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
         }
-        let b = input[i];
+        if (next_plus < i) {
+            next_plus = findByteInBytes(input, 0x2B, i) ?? input.len;
+        }
+        const next_sp = if (next_pct < next_plus) next_pct else next_plus;
+        if (next_sp > i) {
+            const seg_len = next_sp - i;
+            const avail = out.len - pos;
+            const n = if (seg_len < avail) seg_len else avail;
+            @memcpy(out[pos .. pos + n], input[i .. i + n]);
+            pos = pos + n;
+            i = next_sp;
+            if (n < seg_len || i >= input.len || pos >= out.len) {
+                break;
+            }
+        }
+        const b = input[i];
         if (b == 0x2B) { // '+'
             out[pos] = 0x20; // ' '
             pos = pos + 1;
             i = i + 1;
             continue;
         }
-        if (b == 0x25 && i + 2 < input.len) {
-            let hi = peHexVal(input[i + 1]);
-            let lo = peHexVal(input[i + 2]);
+        if (i + 2 < input.len) {
+            const hi = PE_HEX_LUT[input[i + 1] as usize];
+            const lo = PE_HEX_LUT[input[i + 2] as usize];
             if (hi != 255 && lo != 255) {
                 out[pos] = ((hi << 4) | lo) as u8;
                 pos = pos + 1;

@@ -2,8 +2,16 @@
 // Clean-room MIT implementation; reuses `@cap/unicase` for case-insensitive attributes & domain matching.
 
 import { eqAscii, endsWithIgnoreCase } from "../../unicase/src/index.cp";
-import { trim, strEq, startsWith } from "cap:ascii";
-import { writeStr, writeI64, parseI64 } from "cap:fmt";
+import { trim, strEq, startsWith, findByte } from "cap:ascii";
+import { writeI64, parseI64 } from "cap:fmt";
+
+fn cjWriteStr(s: string, out: []u8, pos: usize): usize {
+    if (pos >= out.len || s.len == 0) { return pos; }
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
+}
 
 pub const SAMESITE_NONE_UNSET: u8 = 0;
 pub const SAMESITE_LAX: u8 = 1;
@@ -40,14 +48,10 @@ pub fn parseSetCookie(header: string): Cookie {
     let pos: usize = 0;
     let part_idx: usize = 0;
     while (pos <= header.len) {
-        let sep = pos;
-        while (sep < header.len && header[sep] != 59) { // ';'
-            sep = sep + 1;
-        }
+        let sep = findByte(header, 59, pos) ?? header.len; // ';'
         let seg = trim(header[pos..sep]);
         if (seg.len > 0) {
-            let eq: usize = 0;
-            while (eq < seg.len && seg[eq] != 61) { eq = eq + 1; }
+            let eq = findByte(seg, 61, 0) ?? seg.len; // '='
             if (part_idx == 0) {
                 if (eq < seg.len) {
                     c.name = trim(seg[0..eq]);
@@ -95,33 +99,33 @@ pub fn parseSetCookie(header: string): Cookie {
 /// Serializes a `Cookie` into a `Set-Cookie` header string in `out`, returning bytes written.
 pub fn serializeSetCookie(c: Cookie, out: []u8): usize {
     let p: usize = 0;
-    p = writeStr(c.name, out, p);
-    p = writeStr("=", out, p);
-    p = writeStr(c.value, out, p);
+    p = cjWriteStr(c.name, out, p);
+    p = cjWriteStr("=", out, p);
+    p = cjWriteStr(c.value, out, p);
     if (c.domain.len > 0) {
-        p = writeStr("; Domain=", out, p);
-        p = writeStr(c.domain, out, p);
+        p = cjWriteStr("; Domain=", out, p);
+        p = cjWriteStr(c.domain, out, p);
     }
     if (c.path.len > 0) {
-        p = writeStr("; Path=", out, p);
-        p = writeStr(c.path, out, p);
+        p = cjWriteStr("; Path=", out, p);
+        p = cjWriteStr(c.path, out, p);
     }
     if (c.has_max_age) {
-        p = writeStr("; Max-Age=", out, p);
+        p = cjWriteStr("; Max-Age=", out, p);
         p = writeI64(c.max_age, out, p);
     }
     if (c.secure) {
-        p = writeStr("; Secure", out, p);
+        p = cjWriteStr("; Secure", out, p);
     }
     if (c.http_only) {
-        p = writeStr("; HttpOnly", out, p);
+        p = cjWriteStr("; HttpOnly", out, p);
     }
     if (c.same_site == SAMESITE_STRICT) {
-        p = writeStr("; SameSite=Strict", out, p);
+        p = cjWriteStr("; SameSite=Strict", out, p);
     } else if (c.same_site == SAMESITE_LAX) {
-        p = writeStr("; SameSite=Lax", out, p);
+        p = cjWriteStr("; SameSite=Lax", out, p);
     } else if (c.same_site == SAMESITE_NONE) {
-        p = writeStr("; SameSite=None", out, p);
+        p = cjWriteStr("; SameSite=None", out, p);
     }
     return p;
 }
@@ -130,11 +134,9 @@ pub fn serializeSetCookie(c: Cookie, out: []u8): usize {
 pub fn getCookieHeaderValue(header: string, name: string): string? {
     let pos: usize = 0;
     while (pos <= header.len) {
-        let sep = pos;
-        while (sep < header.len && header[sep] != 59) { sep = sep + 1; }
+        let sep = findByte(header, 59, pos) ?? header.len;
         let seg = trim(header[pos..sep]);
-        let eq: usize = 0;
-        while (eq < seg.len && seg[eq] != 61) { eq = eq + 1; }
+        let eq = findByte(seg, 61, 0) ?? seg.len;
         if (eq < seg.len) {
             let k = trim(seg[0..eq]);
             if (strEq(k, name)) {
@@ -234,11 +236,11 @@ pub struct CookieJar {
             let c = _.items[i];
             if ((!c.secure || is_https) && domainMatches(host, c.domain) && pathMatches(req_path, c.path)) {
                 if (!first) {
-                    p = writeStr("; ", out, p);
+                    p = cjWriteStr("; ", out, p);
                 }
-                p = writeStr(c.name, out, p);
-                p = writeStr("=", out, p);
-                p = writeStr(c.value, out, p);
+                p = cjWriteStr(c.name, out, p);
+                p = cjWriteStr("=", out, p);
+                p = cjWriteStr(c.value, out, p);
                 first = false;
             }
             i = i + 1;

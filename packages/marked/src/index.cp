@@ -3,8 +3,28 @@
 // Reuses:
 //   - `escapeHtml` from `@cap/escape-html` for XSS-safe text & attribute escaping.
 
-import { isDigit, isAlnum, toLowerByte, findByte } from "cap:ascii";
-import { escapeHtml } from "../../escape-html/src/index.cp";
+import { isDigit, isAlnum, toLowerByte } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+
+type MkdVec16 = @Vector(16, u8);
+
+fn mkdBuildPunctEscapeLut(): [256]u8 {
+    let lut: [256]u8 = [0; 256];
+    lut[92] = 1; lut[96] = 1; lut[42] = 1; lut[95] = 1; lut[123] = 1; lut[125] = 1;
+    lut[91] = 1; lut[93] = 1; lut[40] = 1; lut[41] = 1; lut[35] = 1; lut[43] = 1;
+    lut[45] = 1; lut[46] = 1; lut[33] = 1; lut[126] = 1; lut[62] = 1; lut[124] = 1;
+    return lut;
+}
+
+fn mkdBuildInlineSpecialLut(): [256]u8 {
+    let lut: [256]u8 = [0; 256];
+    lut[92] = 1; lut[96] = 1; lut[42] = 1; lut[95] = 1; lut[126] = 1;
+    lut[33] = 1; lut[91] = 1; lut[10] = 1; lut[32] = 1;
+    return lut;
+}
+
+const MKD_PUNCT_ESCAPE_LUT: [256]u8 = mkdBuildPunctEscapeLut();
+const MKD_INLINE_SPECIAL_LUT: [256]u8 = mkdBuildInlineSpecialLut();
 
 pub struct MarkedOptions {
     pub gfm: bool,
@@ -39,12 +59,53 @@ fn mkdWriteStr(out: []u8, pos: *usize, s: string) {
     pos.* = pos.* + n;
 }
 
+fn mkdFindHtmlSpecial(s: string, start: usize): usize {
+    let i: usize = start;
+    const v_amp: MkdVec16 = @splat(38 as u8);
+    const v_lt: MkdVec16 = @splat(60 as u8);
+    const v_gt: MkdVec16 = @splat(62 as u8);
+    const v_quot: MkdVec16 = @splat(34 as u8);
+    const v_apos: MkdVec16 = @splat(39 as u8);
+    while (i + 16 <= s.len) {
+        const v: MkdVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_amp) || @reduce(.Or, v == v_lt) || @reduce(.Or, v == v_gt) ||
+            @reduce(.Or, v == v_quot) || @reduce(.Or, v == v_apos)) {
+            let j: usize = 0;
+            while (j < 16) {
+                const b = s[i + j];
+                if (b == 38 || b == 60 || b == 62 || b == 34 || b == 39) {
+                    return i + j;
+                }
+                j = j + 1;
+            }
+        }
+        i = i + 16;
+    }
+    while (i < s.len) {
+        const b = s[i];
+        if (b == 38 || b == 60 || b == 62 || b == 34 || b == 39) {
+            return i;
+        }
+        i = i + 1;
+    }
+    return s.len;
+}
+
 fn mkdWriteEscaped(out: []u8, pos: *usize, s: string) {
     if (s.len == 0 || pos.* >= out.len) {
         return;
     }
-    const written: usize = escapeHtml(s, out[pos.*..out.len]);
-    pos.* = pos.* + written;
+    let i: usize = 0;
+    while (i < s.len && pos.* < out.len) {
+        const next_sp = mkdFindHtmlSpecial(s, i);
+        if (next_sp > i) {
+            mkdWriteStr(out, pos, s[i..next_sp]);
+            i = next_sp;
+            if (i >= s.len || pos.* >= out.len) { break; }
+        }
+        mkdWriteEscapedByte(out, pos, s[i]);
+        i = i + 1;
+    }
 }
 
 fn mkdWriteEscapedByte(out: []u8, pos: *usize, b: u8) {
@@ -68,9 +129,7 @@ fn mkdIsSpace(c: u8): bool {
 }
 
 fn mkdIsPunctEscape(c: u8): bool {
-    return c == 92 || c == 96 || c == 42 || c == 95 || c == 123 || c == 125 ||
-        c == 91 || c == 93 || c == 40 || c == 41 || c == 35 || c == 43 ||
-        c == 45 || c == 46 || c == 33 || c == 126 || c == 62 || c == 124;
+    return MKD_PUNCT_ESCAPE_LUT[c as usize] != 0;
 }
 
 // ============================================================================
@@ -119,7 +178,7 @@ fn mkdIsSafeUrl(url: string): bool {
 // ============================================================================
 
 fn mkdFindLineEnd(s: string, start: usize): usize {
-    return findByte(s, 10, start) ?? s.len;
+    return findByteInBytes(s, 10, start) ?? s.len;
 }
 
 fn mkdTrimCr(s: string, start: usize, end: usize): usize {
@@ -245,12 +304,8 @@ fn mkdMatchFenceOpen(
     }
     // Backtick fence info string cannot contain backticks
     if (ch == 96) {
-        let k: usize = i;
-        while (k < line_end) {
-            if (s[k] == 96) {
-                return 0;
-            }
-            k = k + 1;
+        if (findByteInBytes(s[i..line_end], 96, 0) != null) {
+            return 0;
         }
     }
     while (i < line_end && mkdIsSpace(s[i])) {
@@ -391,18 +446,20 @@ fn mkdFindClosingDouble(s: string, start: usize, ch: u8): i64 {
             }
             let close_found: bool = false;
             while (i < s.len) {
-                if (s[i] == 96) {
-                    let cl: usize = 0;
-                    while (i < s.len && s[i] == 96) {
-                        cl = cl + 1;
-                        i = i + 1;
-                    }
-                    if (cl == tick_len) {
-                        close_found = true;
-                        break;
-                    }
-                } else {
+                const tick_pos = findByteInBytes(s, 96, i) ?? s.len;
+                if (tick_pos >= s.len) {
+                    i = s.len;
+                    break;
+                }
+                i = tick_pos;
+                let cl: usize = 0;
+                while (i < s.len && s[i] == 96) {
+                    cl = cl + 1;
                     i = i + 1;
+                }
+                if (cl == tick_len) {
+                    close_found = true;
+                    break;
                 }
             }
             if (!close_found) {
@@ -438,17 +495,19 @@ fn mkdFindClosingSingle(s: string, start: usize, ch: u8): i64 {
                 i = i + 1;
             }
             while (i < s.len) {
-                if (s[i] == 96) {
-                    let cl: usize = 0;
-                    while (i < s.len && s[i] == 96) {
-                        cl = cl + 1;
-                        i = i + 1;
-                    }
-                    if (cl == tick_len) {
-                        break;
-                    }
-                } else {
+                const tick_pos = findByteInBytes(s, 96, i) ?? s.len;
+                if (tick_pos >= s.len) {
+                    i = s.len;
+                    break;
+                }
+                i = tick_pos;
+                let cl: usize = 0;
+                while (i < s.len && s[i] == 96) {
+                    cl = cl + 1;
                     i = i + 1;
+                }
+                if (cl == tick_len) {
+                    break;
                 }
             }
             continue;
@@ -557,8 +616,7 @@ fn mkdMatchLinkOrImage(
 }
 
 fn mkdIsInlineSpecial(c: u8): bool {
-    return c == 92 || c == 96 || c == 42 || c == 95 || c == 126 ||
-        c == 33 || c == 91 || c == 10 || c == 32;
+    return MKD_INLINE_SPECIAL_LUT[c as usize] != 0;
 }
 
 fn mkdParseInlineRec(src: string, opts: MarkedOptions, out: []u8, pos: *usize, depth: usize) {
@@ -622,20 +680,21 @@ fn mkdParseInlineRec(src: string, opts: MarkedOptions, out: []u8, pos: *usize, d
             let found: bool = false;
             let close_start: usize = 0;
             while (j < src.len) {
-                if (src[j] == 96) {
-                    let cl: usize = 0;
-                    while (j + cl < src.len && src[j + cl] == 96) {
-                        cl = cl + 1;
-                    }
-                    if (cl == tick_len) {
-                        found = true;
-                        close_start = j;
-                        break;
-                    }
-                    j = j + cl;
-                } else {
-                    j = j + 1;
+                const tick_pos = findByteInBytes(src, 96, j) ?? src.len;
+                if (tick_pos >= src.len) {
+                    break;
                 }
+                j = tick_pos;
+                let cl: usize = 0;
+                while (j + cl < src.len && src[j + cl] == 96) {
+                    cl = cl + 1;
+                }
+                if (cl == tick_len) {
+                    found = true;
+                    close_start = j;
+                    break;
+                }
+                j = j + cl;
             }
             if (found) {
                 let cs: usize = i + tick_len;
@@ -787,10 +846,12 @@ fn mkdStripBlockquoteLines(md: string, start: usize, end: usize, dst: []u8): usi
                 p = p + 1;
             }
         }
-        while (p < clean_end && w < dst.len) {
-            dst[w] = md[p];
-            w = w + 1;
-            p = p + 1;
+        if (p < clean_end && w < dst.len) {
+            const avail = dst.len - w;
+            const rem = clean_end - p;
+            const n = if (rem < avail) rem else avail;
+            @memcpy(dst[w .. w + n], md[p .. p + n]);
+            w = w + n;
         }
         if (le < end && w < dst.len) {
             dst[w] = 10;
@@ -1039,20 +1100,21 @@ fn mkdStripInlineRec(src: string, out: []u8, pos: *usize, depth: usize) {
             let found: bool = false;
             let close_start: usize = 0;
             while (j < src.len) {
-                if (src[j] == 96) {
-                    let cl: usize = 0;
-                    while (j + cl < src.len && src[j + cl] == 96) {
-                        cl = cl + 1;
-                        j = j + 1;
-                    }
-                    if (cl == tick_len) {
-                        found = true;
-                        close_start = j - cl;
-                        break;
-                    }
-                } else {
-                    j = j + 1;
+                const tick_pos = findByteInBytes(src, 96, j) ?? src.len;
+                if (tick_pos >= src.len) {
+                    break;
                 }
+                j = tick_pos;
+                let cl: usize = 0;
+                while (j + cl < src.len && src[j + cl] == 96) {
+                    cl = cl + 1;
+                }
+                if (cl == tick_len) {
+                    found = true;
+                    close_start = j;
+                    break;
+                }
+                j = j + cl;
             }
             if (found) {
                 mkdWriteStr(out, pos, src[(i + tick_len)..close_start]);
@@ -1105,8 +1167,12 @@ fn mkdStripInlineRec(src: string, out: []u8, pos: *usize, depth: usize) {
                 }
             }
         }
-        mkdWriteByte(out, pos, ch);
+        const text_start: usize = i;
         i = i + 1;
+        while (i < src.len && !mkdIsInlineSpecial(src[i])) {
+            i = i + 1;
+        }
+        mkdWriteStr(out, pos, src[text_start..i]);
     }
 }
 

@@ -3,8 +3,9 @@
 // Supports [table] / [a.b] headers, dotted keys (a.b = 1), # comments, basic & literal strings,
 // underscore-separated & negative integers, booleans, in-place editing, and canonical formatting.
 
-import { strEq, trim, findByte, rfindByte } from "cap:ascii";
-import { writeStr, writeI64 } from "cap:fmt";
+import { strEq, trim, rfindByte } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+import { writeI64 } from "cap:fmt";
 
 pub const TOML_STR: u8 = 1;
 pub const TOML_INT: u8 = 2;
@@ -12,7 +13,7 @@ pub const TOML_BOOL: u8 = 3;
 pub const TOML_MAX_ENTRIES: usize = 64;
 
 fn tmeStripComment(s: string) -> string {
-    if (idx := findByte(s, 35 as u8, 0)) {
+    if (idx := findByteInBytes(s, 35 as u8, 0)) {
         return trim(s[0..idx]);
     }
     return trim(s);
@@ -72,32 +73,53 @@ fn tmeWriteByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
+fn tmeWriteStr(out: []u8, pos: usize, s: string) -> usize {
+    if (pos >= out.len || s.len == (0 as usize)) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
+}
+
 fn tmeWriteQuotedStr(out: []u8, start_pos: usize, s: string) -> usize {
     let pos = tmeWriteByte(out, start_pos, 34 as u8); // '"'
     let i: usize = 0;
+    let next_q = findByteInBytes(s, 34 as u8, 0) ?? s.len;
+    let next_bs = findByteInBytes(s, 92 as u8, 0) ?? s.len;
     while (i < s.len) {
-        let c = s[i];
-        if (c == (34 as u8) || c == (92 as u8)) {
-            pos = tmeWriteByte(out, pos, 92 as u8);
+        if (next_q < i) {
+            next_q = findByteInBytes(s, 34 as u8, i) ?? s.len;
         }
-        pos = tmeWriteByte(out, pos, c);
+        if (next_bs < i) {
+            next_bs = findByteInBytes(s, 92 as u8, i) ?? s.len;
+        }
+        const next_sp = if (next_q < next_bs) next_q else next_bs;
+        if (next_sp > i) {
+            pos = tmeWriteStr(out, pos, s[i..next_sp]);
+            i = next_sp;
+            if (i >= s.len) { break; }
+        }
+        pos = tmeWriteByte(out, pos, 92 as u8);
+        pos = tmeWriteByte(out, pos, s[i]);
         i += 1;
     }
     return tmeWriteByte(out, pos, 34 as u8);
 }
 
 fn tmeWriteEntry(out: []u8, start_pos: usize, e: TomlEntry) -> usize {
-    let pos = writeStr(e.key, out, start_pos);
-    pos = writeStr(" = ", out, pos);
+    let pos = tmeWriteStr(out, start_pos, e.key);
+    pos = tmeWriteStr(out, pos, " = ");
     if (e.kind == TOML_STR) {
         pos = tmeWriteQuotedStr(out, pos, e.str_val);
     } else if (e.kind == TOML_INT) {
         pos = writeI64(e.int_val, out, pos);
     } else if (e.kind == TOML_BOOL) {
         if (e.bool_val) {
-            pos = writeStr("true", out, pos);
+            pos = tmeWriteStr(out, pos, "true");
         } else {
-            pos = writeStr("false", out, pos);
+            pos = tmeWriteStr(out, pos, "false");
         }
     }
     return tmeWriteByte(out, pos, 10 as u8); // '\n'
@@ -286,14 +308,9 @@ pub struct TomlDoc {
         let pos: usize = 0;
 
         while (pos < src.len) {
-            let line_start = pos;
-            while (pos < src.len && src[pos] != (10 as u8)) {
-                pos += 1;
-            }
-            let line_end = pos;
-            if (pos < src.len && src[pos] == (10 as u8)) {
-                pos += 1;
-            }
+            const line_start = pos;
+            const line_end = findByteInBytes(src, 10 as u8, pos) ?? src.len;
+            pos = if (line_end < src.len) { line_end + (1 as usize) } else { src.len };
 
             let line = trim(src[line_start..line_end]);
             if (line.len == (0 as usize) || line[0] == (35 as u8)) {
@@ -302,7 +319,7 @@ pub struct TomlDoc {
 
             // Section header: [table] or [a.b]
             if (line[0] == (91 as u8)) { // '['
-                let close_opt = findByte(line, 93 as u8, 0); // ']'
+                let close_opt = findByteInBytes(line, 93 as u8, 0); // ']'
                 if (close_opt != null) {
                     let close_idx = close_opt ?? (0 as usize);
                     if (close_idx > (1 as usize)) {
@@ -313,7 +330,7 @@ pub struct TomlDoc {
             }
 
             // Key = Value
-            let eq_opt = findByte(line, 61 as u8, 0); // '='
+            let eq_opt = findByteInBytes(line, 61 as u8, 0); // '='
             if (eq_opt == null) {
                 continue;
             }
@@ -343,30 +360,23 @@ pub struct TomlDoc {
                 let end_q: usize = 1;
                 let found = false;
                 while (end_q < raw_val.len) {
-                    if (raw_val[end_q] == (92 as u8) && end_q + (1 as usize) < raw_val.len) {
-                        end_q += 2;
+                    const q_idx = findByteInBytes(raw_val, 34 as u8, end_q) ?? raw_val.len;
+                    const bs_idx = findByteInBytes(raw_val, 92 as u8, end_q) ?? raw_val.len;
+                    if (bs_idx < q_idx && bs_idx + (1 as usize) < raw_val.len) {
+                        end_q = bs_idx + (2 as usize);
                         continue;
                     }
-                    if (raw_val[end_q] == (34 as u8)) {
+                    if (q_idx < raw_val.len) {
+                        end_q = q_idx;
                         found = true;
-                        break;
                     }
-                    end_q += 1;
+                    break;
                 }
                 if (found) {
                     * = doc.setStr(entry_section, entry_key, raw_val[(1 as usize)..end_q]);
                 }
             } else if (raw_val[0] == (39 as u8)) { // '\''
-                let end_q: usize = 1;
-                let found = false;
-                while (end_q < raw_val.len) {
-                    if (raw_val[end_q] == (39 as u8)) {
-                        found = true;
-                        break;
-                    }
-                    end_q += 1;
-                }
-                if (found) {
+                if (end_q := findByteInBytes(raw_val, 39 as u8, 1 as usize)) {
                     * = doc.setStr(entry_section, entry_key, raw_val[(1 as usize)..end_q]);
                 }
             } else {
@@ -414,8 +424,8 @@ pub struct TomlDoc {
                     pos = tmeWriteByte(out, pos, 10 as u8);
                 }
                 pos = tmeWriteByte(out, pos, 91 as u8); // '['
-                pos = writeStr(sec, out, pos);
-                pos = writeStr("]\n", out, pos);
+                pos = tmeWriteStr(out, pos, sec);
+                pos = tmeWriteStr(out, pos, "]\n");
 
                 let k = s;
                 while (k < _.count) {

@@ -1,14 +1,59 @@
 // @cap/toml-writer — Zero-heap TOML 1.0 Serializer & Formatter
 // Clean-room MIT implementation in pure CP (inspired by Rust `toml_writer` [321M downloads]).
 
+import { findByteInBytes } from "cap:bin";
+
+type TwVec16 = @Vector(16, u8);
+
+fn twBuildBareKeyLut() -> [256]u8 {
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        const b: u8 = c as u8;
+        if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') ||
+            (b >= '0' && b <= '9') || b == '_' || b == '-') {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const TW_BARE_KEY_LUT: [256]u8 = twBuildBareKeyLut();
+
+fn twFindCtrlByte(s: string, start: usize, limit: usize) -> usize {
+    let i: usize = start;
+    const v_20: TwVec16 = @splat(0x20 as u8);
+    const v_7f: TwVec16 = @splat(0x7F as u8);
+    while (i + 16 <= limit) {
+        const v: TwVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v < v_20) || @reduce(.Or, v == v_7f)) {
+            let j: usize = 0;
+            while (j < 16) {
+                const c = s[i + j];
+                if (c < 0x20 || c == 0x7F) {
+                    return i + j;
+                }
+                j += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < limit) {
+        const c = s[i];
+        if (c < 0x20 || c == 0x7F) {
+            return i;
+        }
+        i += 1;
+    }
+    return limit;
+}
+
 pub fn isBareKey(k: string) -> bool {
     if (k.len == 0) { return false; }
     let i: usize = 0;
     while (i < k.len) {
-        const c: u8 = k[i];
-        const ok: bool = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-            (c >= '0' && c <= '9') || c == '_' || c == '-';
-        if (!ok) { return false; }
+        if (TW_BARE_KEY_LUT[k[i] as usize] == 0) { return false; }
         i += 1;
     }
     return true;
@@ -37,22 +82,39 @@ pub struct TomlWriter {
     }
 
     pub fn putRaw(*_, s: string) {
-        let i: usize = 0;
-        while (i < s.len) {
-            if (_.pos >= _.out.len) {
-                _.overflow = true;
-                return;
-            }
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
+        if (s.len == 0) { return; }
+        if (_.pos >= _.out.len) {
+            _.overflow = true;
+            return;
         }
+        const avail = _.out.len - _.pos;
+        const n = if (s.len <= avail) { s.len } else { avail };
+        if (n < s.len) {
+            _.overflow = true;
+        }
+        @memcpy(_.out[_.pos .. _.pos + n], s[0..n]);
+        _.pos += n;
     }
 
     pub fn writeQuotedString(*_, s: string) {
         _.putByte('"');
         let i: usize = 0;
+        let next_q = findByteInBytes(s, '"', 0) ?? s.len;
+        let next_bs = findByteInBytes(s, '\\', 0) ?? s.len;
         while (i < s.len) {
+            if (next_q < i) {
+                next_q = findByteInBytes(s, '"', i) ?? s.len;
+            }
+            if (next_bs < i) {
+                next_bs = findByteInBytes(s, '\\', i) ?? s.len;
+            }
+            const limit = if (next_q < next_bs) { next_q } else { next_bs };
+            const seg_end = twFindCtrlByte(s, i, limit);
+            if (seg_end > i) {
+                _.putRaw(s[i..seg_end]);
+                i = seg_end;
+                if (i >= s.len) { break; }
+            }
             const c: u8 = s[i];
             if (c == '"') {
                 _.putRaw("\\\"");
@@ -68,13 +130,11 @@ pub struct TomlWriter {
                 _.putRaw("\\b");
             } else if (c == 0x0C) {
                 _.putRaw("\\f");
-            } else if (c < 0x20 || c == 0x7F) {
+            } else {
                 const hex: string = "0123456789ABCDEF";
                 _.putRaw("\\u00");
                 _.putByte(hex[((c >> 4) & 0x0F) as usize]);
                 _.putByte(hex[(c & 0x0F) as usize]);
-            } else {
-                _.putByte(c);
             }
             i += 1;
         }
