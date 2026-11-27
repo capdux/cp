@@ -2,19 +2,28 @@ import { test, expect_eq } from "cap:test";
 import { strEq } from "cap:ascii";
 import {
     isWindowsReservedName,
+    isSafeLegacyComponent,
     hasWindowsVerbatimPrefix,
+    hasWindowsVerbatimUncPrefix,
     canStripVerbatimPrefix,
+    canSimplifyUncPath,
+    simplifiedSlice,
+    simplifiedLen,
     simplified,
+    simplifiedUnc,
+    simplifiedWithUnc,
 } from "../../packages/dunce/src/index.cp";
 
 fn main() {
-    test("1. @cap/dunce — Normal verbatim drive path strips '\\\\?\\' safely", () => {
+    test("1. dunce — Normal verbatim drive path strips '\\\\?\\' safely", () => {
         const p: string = "\\\\?\\C:\\Users\\alice\\file.txt";
         expect_eq(hasWindowsVerbatimPrefix(p), true);
         expect_eq(canStripVerbatimPrefix(p), true);
+        expect_eq(strEq(simplifiedSlice(p), "C:\\Users\\alice\\file.txt"), true);
 
         let buf: [128]u8 = undefined;
         const n = simplified(p, &buf);
+        expect_eq(n, simplifiedLen(p));
         expect_eq(strEq(buf[0..n], "C:\\Users\\alice\\file.txt"), true);
 
         // Drive root \\?\C:\ simplifies to C:\
@@ -23,7 +32,7 @@ fn main() {
         expect_eq(strEq(buf[0..nr], "C:\\"), true);
     });
 
-    test("2. @cap/dunce — Reserved device names (CON.txt, NUL, COM1, lpt9) refuse stripping", () => {
+    test("2. dunce — Reserved device names (CON.txt, NUL, COM1, lpt9) refuse stripping", () => {
         expect_eq(isWindowsReservedName("CON"), true);
         expect_eq(isWindowsReservedName("con.txt"), true);
         expect_eq(isWindowsReservedName("nul.log"), true);
@@ -42,7 +51,7 @@ fn main() {
         expect_eq(strEq(buf[0..n1], p1), true);
     });
 
-    test("3. @cap/dunce — Trailing dot or space on components refuses stripping", () => {
+    test("3. dunce — Trailing dot or space on components refuses stripping", () => {
         const p_dot: string = "\\\\?\\C:\\foo.\\bar";
         const p_spc: string = "\\\\?\\C:\\foo \\bar";
         expect_eq(canStripVerbatimPrefix(p_dot), false);
@@ -53,7 +62,7 @@ fn main() {
         expect_eq(strEq(buf[0..n], p_dot), true);
     });
 
-    test("4. @cap/dunce — Overlong path (> 259 bytes after stripping) refuses stripping", () => {
+    test("4. dunce — Overlong path (> 259 bytes after stripping) refuses stripping", () => {
         let long_path: [270]u8 = undefined;
         long_path[0] = 92; // '\'
         long_path[1] = 92; // '\'
@@ -73,7 +82,7 @@ fn main() {
         expect_eq(canStripVerbatimPrefix(long_path[0..264]), false);
     });
 
-    test("5. @cap/dunce — UNC network path, relative '..' & illegal chars refuse stripping", () => {
+    test("5. dunce — UNC network path, relative '..' & illegal chars refuse drive stripping", () => {
         const unc: string = "\\\\?\\UNC\\server\\share\\file.txt";
         const rel: string = "\\\\?\\C:\\a\\..\\b";
         const fwd: string = "\\\\?\\C:\\a/b";
@@ -88,7 +97,7 @@ fn main() {
         expect_eq(strEq(buf[0..n], unc), true);
     });
 
-    test("6. @cap/dunce — Non-verbatim paths pass through unchanged & empty/buffer safety", () => {
+    test("6. dunce — Non-verbatim paths pass through unchanged & empty/buffer safety", () => {
         const normal: string = "/usr/local/bin/cap";
         expect_eq(hasWindowsVerbatimPrefix(normal), false);
         expect_eq(canStripVerbatimPrefix(normal), false);
@@ -97,8 +106,44 @@ fn main() {
         const n = simplified(normal, &buf);
         expect_eq(strEq(buf[0..n], normal), true);
 
-        expect_eq(simplified("", &buf), 0);
+        expect_eq(simplified("", &buf), 0 as usize);
         const empty_out: []u8 = buf[0..0];
-        expect_eq(simplified("\\\\?\\C:\\a", empty_out), 0);
+        expect_eq(simplified("\\\\?\\C:\\a", empty_out), 0 as usize);
+    });
+
+    test("7. dunce — UNC verbatim path simplification (\\\\?\\UNC\\server\\share -> \\\\server\\share)", () => {
+        const unc: string = "\\\\?\\UNC\\filesrv\\public\\report.pdf";
+        expect_eq(hasWindowsVerbatimUncPrefix(unc), true);
+        expect_eq(canSimplifyUncPath(unc), true);
+
+        let buf: [128]u8 = undefined;
+        const n1 = simplifiedUnc(unc, &buf);
+        expect_eq(strEq(buf[0..n1], "\\\\filesrv\\public\\report.pdf"), true);
+
+        // simplifiedWithUnc handles both drive and UNC paths
+        const n2 = simplifiedWithUnc(unc, &buf);
+        expect_eq(strEq(buf[0..n2], "\\\\filesrv\\public\\report.pdf"), true);
+
+        const drv: string = "\\\\?\\D:\\work\\main.cp";
+        const n3 = simplifiedWithUnc(drv, &buf);
+        expect_eq(strEq(buf[0..n3], "D:\\work\\main.cp"), true);
+    });
+
+    test("8. dunce — Unsafe UNC paths & isSafeLegacyComponent validation", () => {
+        // Missing share or reserved component refuses UNC simplification
+        expect_eq(canSimplifyUncPath("\\\\?\\UNC\\onlyserver"), false);
+        expect_eq(canSimplifyUncPath("\\\\?\\UNC\\srv\\share\\CON.txt"), false);
+        expect_eq(canSimplifyUncPath("\\\\?\\UNC\\srv\\share\\bad.\\file"), false);
+        expect_eq(canSimplifyUncPath("\\\\?\\UNC\\srv\\share\\..\\x"), false);
+
+        let buf: [128]u8 = undefined;
+        const unsafe_unc: string = "\\\\?\\UNC\\srv\\share\\NUL";
+        const n = simplifiedUnc(unsafe_unc, &buf);
+        expect_eq(strEq(buf[0..n], unsafe_unc), true);
+
+        expect_eq(isSafeLegacyComponent("normal.txt"), true);
+        expect_eq(isSafeLegacyComponent(".."), false);
+        expect_eq(isSafeLegacyComponent("AUX.log"), false);
+        expect_eq(isSafeLegacyComponent("trail "), false);
     });
 }

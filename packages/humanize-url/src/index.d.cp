@@ -1,9 +1,13 @@
 // Type definitions for CP
 
-export fn hurlIsSpace(c: u8): bool;
-export fn hurlTrim(s: string): string;
-export fn hurlToLowerAscii(c: u8): u8;
-export fn hurlStartsWithLower(s: string, lower_prefix: string): bool;
-export fn hurlHasDot(s: string): bool;
+import { isAlpha, isAlnum, toLowerByte, trim, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
+export fn isProtocolRelative(url: string): bool;
+export fn extractScheme(url: string): string;
+export fn stripProtocol(url: string): string;
+export fn stripWww(host_and_rest: string): string;
+export fn stripTrailingSlash(url: string): string;
 export fn humanizeUrlSlice(url: string): string;
+export fn humanizedLen(url: string): usize;
 export fn humanizeUrl(url: string, out: []u8): usize;
