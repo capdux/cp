@@ -1,5 +1,103 @@
 // @cap/fletcher — Zero-heap Fletcher-16, Fletcher-32, and Fletcher-64 streaming & one-shot checksums
 // Clean-room MIT implementation in pure CP (modeled on crates.io `fletcher`).
+// Accelerated with 16-lane @Vector(16, u8) / @Vector(16, u32) Fletcher-16 SIMD,
+// 4-lane @Vector(4, u32) Fletcher-32 SIMD, and deferred modulo reduction.
+
+type FlVec16U8 = @Vector(16, u8);
+type FlVec16U32 = @Vector(16, u32);
+type FlVec4U32 = @Vector(4, u32);
+
+const FL16_WEIGHTS: [16]u32 = [16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+const FL32_WEIGHTS: [4]u32 = [4, 3, 2, 1];
+
+fn fl16UpdateSlice(sum1_ptr: *u32, sum2_ptr: *u32, data: []const u8) {
+    let s1 = sum1_ptr.*;
+    let s2 = sum2_ptr.*;
+    let i: usize = 0;
+    const n = data.len;
+    const vw: FlVec16U32 = FL16_WEIGHTS;
+
+    // 16-byte SIMD block accumulation with deferred mod-255 reduction
+    while (i + 16 <= n) {
+        const vb: FlVec16U8 = data[i .. i + 16][0..16].*;
+        const ba: [16]u8 = vb;
+        let ua: [16]u32 = undefined;
+        ua[0] = ba[0] as u32;
+        ua[1] = ba[1] as u32;
+        ua[2] = ba[2] as u32;
+        ua[3] = ba[3] as u32;
+        ua[4] = ba[4] as u32;
+        ua[5] = ba[5] as u32;
+        ua[6] = ba[6] as u32;
+        ua[7] = ba[7] as u32;
+        ua[8] = ba[8] as u32;
+        ua[9] = ba[9] as u32;
+        ua[10] = ba[10] as u32;
+        ua[11] = ba[11] as u32;
+        ua[12] = ba[12] as u32;
+        ua[13] = ba[13] as u32;
+        ua[14] = ba[14] as u32;
+        ua[15] = ba[15] as u32;
+        const vu: FlVec16U32 = ua;
+        const sum_b: u32 = @reduce(.Add, vu);
+        const weighted: u32 = @reduce(.Add, vu * vw);
+        s2 = (s2 + s1 * (16 as u32) + weighted) % (255 as u32);
+        s1 = (s1 + sum_b) % (255 as u32);
+        i += 16;
+    }
+
+    while (i < n) {
+        s1 += data[i] as u32;
+        s2 += s1;
+        i += 1;
+    }
+    sum1_ptr.* = s1 % (255 as u32);
+    sum2_ptr.* = s2 % (255 as u32);
+}
+
+fn fl32UpdateBytesCore(sum1_ptr: *u32, sum2_ptr: *u32, pending_ptr: *u8, has_pending_ptr: *bool, data: []const u8) {
+    let i: usize = 0;
+    const n = data.len;
+    if (n == 0) { return; }
+    let s1 = sum1_ptr.*;
+    let s2 = sum2_ptr.*;
+    if (has_pending_ptr.*) {
+        const word: u32 = (pending_ptr.* as u32) | ((data[0] as u32) << 8);
+        s1 = (s1 + word) % (65535 as u32);
+        s2 = (s2 + s1) % (65535 as u32);
+        has_pending_ptr.* = false;
+        i = 1;
+    }
+
+    // 4-word (8-byte) SIMD block accumulation with deferred mod-65535 reduction
+    const vw: FlVec4U32 = FL32_WEIGHTS;
+    while (i + 8 <= n) {
+        let wa: [4]u32 = undefined;
+        wa[0] = (data[i] as u32) | ((data[i + 1] as u32) << 8);
+        wa[1] = (data[i + 2] as u32) | ((data[i + 3] as u32) << 8);
+        wa[2] = (data[i + 4] as u32) | ((data[i + 5] as u32) << 8);
+        wa[3] = (data[i + 6] as u32) | ((data[i + 7] as u32) << 8);
+        const vw_cur: FlVec4U32 = wa;
+        const sum_w: u32 = @reduce(.Add, vw_cur);
+        const weighted: u32 = @reduce(.Add, vw_cur * vw);
+        s2 = (s2 + s1 * (4 as u32) + weighted) % (65535 as u32);
+        s1 = (s1 + sum_w) % (65535 as u32);
+        i += 8;
+    }
+
+    while (i + 1 < n) {
+        const word: u32 = (data[i] as u32) | ((data[i + 1] as u32) << 8);
+        s1 = (s1 + word) % (65535 as u32);
+        s2 = (s2 + s1) % (65535 as u32);
+        i += 2;
+    }
+    if (i < n) {
+        pending_ptr.* = data[i];
+        has_pending_ptr.* = true;
+    }
+    sum1_ptr.* = s1;
+    sum2_ptr.* = s2;
+}
 
 pub struct Fletcher16 {
     pub sum1: u32,
@@ -18,23 +116,11 @@ pub struct Fletcher16 {
     }
 
     pub fn update(*_, data: string) {
-        let i: usize = 0;
-        let n = data.len;
-        while (i < n) {
-            _.sum1 = (_.sum1 + (data[i] as u32)) % 255;
-            _.sum2 = (_.sum2 + _.sum1) % 255;
-            i = i + 1;
-        }
+        fl16UpdateSlice(&_.sum1, &_.sum2, data);
     }
 
     pub fn updateBytes(*_, data: []const u8) {
-        let i: usize = 0;
-        let n = data.len;
-        while (i < n) {
-            _.sum1 = (_.sum1 + (data[i] as u32)) % 255;
-            _.sum2 = (_.sum2 + _.sum1) % 255;
-            i = i + 1;
-        }
+        fl16UpdateSlice(&_.sum1, &_.sum2, data);
     }
 
     pub fn digest(): u16 {
@@ -71,58 +157,36 @@ pub struct Fletcher32 {
     }
 
     pub fn updateWords(*_, words: []const u16) {
+        let s1 = _.sum1;
+        let s2 = _.sum2;
         let i: usize = 0;
+        const vw: FlVec4U32 = FL32_WEIGHTS;
+        while (i + 4 <= words.len) {
+            let wa: [4]u32 = undefined;
+            wa[0] = words[i] as u32;
+            wa[1] = words[i + 1] as u32;
+            wa[2] = words[i + 2] as u32;
+            wa[3] = words[i + 3] as u32;
+            const vw_cur: FlVec4U32 = wa;
+            s2 = (s2 + s1 * (4 as u32) + @reduce(.Add, vw_cur * vw)) % (65535 as u32);
+            s1 = (s1 + @reduce(.Add, vw_cur)) % (65535 as u32);
+            i += 4;
+        }
         while (i < words.len) {
-            _.sum1 = (_.sum1 + (words[i] as u32)) % 65535;
-            _.sum2 = (_.sum2 + _.sum1) % 65535;
+            s1 = (s1 + (words[i] as u32)) % 65535;
+            s2 = (s2 + s1) % 65535;
             i = i + 1;
         }
+        _.sum1 = s1;
+        _.sum2 = s2;
     }
 
     pub fn updateBytes(*_, data: []const u8) {
-        let i: usize = 0;
-        let n = data.len;
-        if (n == 0) { return; }
-        if (_.has_pending) {
-            let word: u32 = (_.pending as u32) | ((data[0] as u32) << 8);
-            _.sum1 = (_.sum1 + word) % 65535;
-            _.sum2 = (_.sum2 + _.sum1) % 65535;
-            _.has_pending = false;
-            i = 1;
-        }
-        while (i + 1 < n) {
-            let word: u32 = (data[i] as u32) | ((data[i + 1] as u32) << 8);
-            _.sum1 = (_.sum1 + word) % 65535;
-            _.sum2 = (_.sum2 + _.sum1) % 65535;
-            i = i + 2;
-        }
-        if (i < n) {
-            _.pending = data[i];
-            _.has_pending = true;
-        }
+        fl32UpdateBytesCore(&_.sum1, &_.sum2, &_.pending, &_.has_pending, data);
     }
 
     pub fn update(*_, data: string) {
-        let i: usize = 0;
-        let n = data.len;
-        if (n == 0) { return; }
-        if (_.has_pending) {
-            let word: u32 = (_.pending as u32) | ((data[0] as u32) << 8);
-            _.sum1 = (_.sum1 + word) % 65535;
-            _.sum2 = (_.sum2 + _.sum1) % 65535;
-            _.has_pending = false;
-            i = 1;
-        }
-        while (i + 1 < n) {
-            let word: u32 = (data[i] as u32) | ((data[i + 1] as u32) << 8);
-            _.sum1 = (_.sum1 + word) % 65535;
-            _.sum2 = (_.sum2 + _.sum1) % 65535;
-            i = i + 2;
-        }
-        if (i < n) {
-            _.pending = data[i];
-            _.has_pending = true;
-        }
+        fl32UpdateBytesCore(&_.sum1, &_.sum2, &_.pending, &_.has_pending, data);
     }
 
     pub fn digest(): u32 {

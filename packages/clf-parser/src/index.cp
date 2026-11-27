@@ -1,8 +1,83 @@
 // @cap/clf-log — Zero-allocation Apache/Nginx CLF & Combined Access Log Parser and Formatter
 // Clean-room MIT implementation in pure CP.
+// Accelerated with 16-lane @Vector(16, u8) SIMD token/quote/bracket scanning, comptime 256-entry LUT, and @memcpy.
 
-import { isDigit } from "cap:ascii";
-import { writeStr, writeU64 } from "cap:fmt";
+import { writeU64 } from "cap:fmt";
+
+type ClfVec16 = @Vector(16, u8);
+
+fn clfBuildDigitLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        tbl[i] = if (i >= 48 && i <= 57) { (i - 48) as u8 } else { 0xFF as u8 };
+        i += 1;
+    }
+    return tbl;
+}
+
+const CLF_DIGIT_LUT: [256]u8 = clfBuildDigitLut();
+
+fn clfSkipNonSpaceSimd(s: []const u8, start: usize, end: usize) -> usize {
+    let i = start;
+    const v_sp: ClfVec16 = @splat(32 as u8);
+    const v_tb: ClfVec16 = @splat(9 as u8);
+    while (i + 16 <= end) {
+        const v: ClfVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sp) || @reduce(.Or, v == v_tb)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < end && s[i] != 32 && s[i] != 9) {
+        i += 1;
+    }
+    return i;
+}
+
+fn clfFindByteSimd(s: []const u8, start: usize, end: usize, target: u8) -> usize {
+    let i = start;
+    const vt: ClfVec16 = @splat(target);
+    while (i + 16 <= end) {
+        const v: ClfVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < end && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn clfScanQuotedEndSimd(s: []const u8, start: usize, end: usize) -> usize {
+    let i = start;
+    const v_qt: ClfVec16 = @splat(34 as u8);
+    const v_bs: ClfVec16 = @splat(92 as u8);
+    while (i < end) {
+        while (i + 16 <= end) {
+            const v: ClfVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_qt) || @reduce(.Or, v == v_bs)) {
+                break;
+            }
+            i += 16;
+        }
+        while (i < end) {
+            const c = s[i];
+            if (c == 34) {
+                return i;
+            }
+            if (c == 92 && i + 1 < end) {
+                i += 2;
+                break;
+            }
+            i += 1;
+        }
+    }
+    return end;
+}
 
 pub struct ClfRecord {
     pub host_start: usize,
@@ -79,9 +154,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
 
     // 1. host
     const host_start = pos;
-    while (pos < n && !isClfSpace(line[pos])) {
-        pos += 1;
-    }
+    pos = clfSkipNonSpaceSimd(line, pos, n);
     if (pos == host_start) {
         return invalidClf();
     }
@@ -93,9 +166,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         pos += 1;
     }
     const ident_start = pos;
-    while (pos < n && !isClfSpace(line[pos])) {
-        pos += 1;
-    }
+    pos = clfSkipNonSpaceSimd(line, pos, n);
     if (pos == ident_start) {
         return invalidClf();
     }
@@ -105,9 +176,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         pos += 1;
     }
     const user_start = pos;
-    while (pos < n && !isClfSpace(line[pos])) {
-        pos += 1;
-    }
+    pos = clfSkipNonSpaceSimd(line, pos, n);
     if (pos == user_start) {
         return invalidClf();
     }
@@ -124,9 +193,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     }
     pos += 1;
     const time_start = pos;
-    while (pos < n && line[pos] != 93) {
-        pos += 1;
-    }
+    pos = clfFindByteSimd(line, pos, n, 93 as u8);
     if (pos >= n || line[pos] != 93) {
         // ']'
         return invalidClf();
@@ -145,13 +212,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     }
     pos += 1;
     const req_start = pos;
-    while (pos < n && line[pos] != 34) {
-        if (line[pos] == 92 && pos + 1 < n) {
-            pos += 2;
-        } else {
-            pos += 1;
-        }
-    }
+    pos = clfScanQuotedEndSimd(line, pos, n);
     if (pos >= n || line[pos] != 34) {
         return invalidClf();
     }
@@ -164,9 +225,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         rp += 1;
     }
     const m_start = rp;
-    while (rp < req_end && !isClfSpace(line[rp])) {
-        rp += 1;
-    }
+    rp = clfSkipNonSpaceSimd(line, rp, req_end);
     if (rp == m_start) {
         return invalidClf();
     }
@@ -177,9 +236,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         rp += 1;
     }
     const p_start = rp;
-    while (rp < req_end && !isClfSpace(line[rp])) {
-        rp += 1;
-    }
+    rp = clfSkipNonSpaceSimd(line, rp, req_end);
     if (rp == p_start) {
         return invalidClf();
     }
@@ -190,9 +247,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         rp += 1;
     }
     const pr_start = rp;
-    while (rp < req_end && !isClfSpace(line[rp])) {
-        rp += 1;
-    }
+    rp = clfSkipNonSpaceSimd(line, rp, req_end);
     if (rp == pr_start) {
         return invalidClf();
     }
@@ -206,11 +261,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     const st_start = pos;
     let st_val: u32 = 0;
     while (pos < n && !isClfSpace(line[pos])) {
-        const ch = line[pos];
-        if (!isDigit(ch)) {
+        const d = CLF_DIGIT_LUT[line[pos] as usize];
+        if (d == (0xFF as u8)) {
             return invalidClf();
         }
-        st_val = st_val * 10 + ((ch - 48) as u32);
+        st_val = st_val * 10 + (d as u32);
         if (st_val > 999) {
             return invalidClf();
         }
@@ -235,11 +290,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         const b_start = pos;
         let b_val: i64 = 0;
         while (pos < n && !isClfSpace(line[pos])) {
-            const ch = line[pos];
-            if (!isDigit(ch)) {
+            const d = CLF_DIGIT_LUT[line[pos] as usize];
+            if (d == (0xFF as u8)) {
                 return invalidClf();
             }
-            b_val = b_val * 10 + ((ch - 48) as i64);
+            b_val = b_val * 10 + (d as i64);
             pos += 1;
         }
         if (pos == b_start) {
@@ -258,13 +313,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         }
         pos += 1;
         const ref_start = pos;
-        while (pos < n && line[pos] != 34) {
-            if (line[pos] == 92 && pos + 1 < n) {
-                pos += 2;
-            } else {
-                pos += 1;
-            }
-        }
+        pos = clfScanQuotedEndSimd(line, pos, n);
         if (pos >= n || line[pos] != 34) {
             return invalidClf();
         }
@@ -280,13 +329,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         }
         pos += 1;
         const ua_start = pos;
-        while (pos < n && line[pos] != 34) {
-            if (line[pos] == 92 && pos + 1 < n) {
-                pos += 2;
-            } else {
-                pos += 1;
-            }
-        }
+        pos = clfScanQuotedEndSimd(line, pos, n);
         if (pos >= n || line[pos] != 34) {
             return invalidClf();
         }
@@ -303,7 +346,10 @@ fn pushSlice(dst: []u8, pos: usize, src: []const u8) -> i64 {
     if (src.len > dst.len - pos) {
         return -1;
     }
-    return writeStr(src, dst, pos) as i64;
+    if (src.len > 0) {
+        @memcpy(dst[pos .. pos + src.len], src[0..src.len]);
+    }
+    return (pos + src.len) as i64;
 }
 
 fn pushU64(dst: []u8, pos: usize, val: u64) -> i64 {

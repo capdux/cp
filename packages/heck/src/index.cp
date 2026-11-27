@@ -1,8 +1,9 @@
 // packages/@cap/heck-case/src/index.cp
 // Zero-allocation Rust `heck` v0.5 compatible case conversion engine for CP.
 // Clean-room MIT implementation.
+// Accelerated with comptime 256-entry ASCII class/case LUTs and 16-lane @Vector(16, u8) SIMD case folding.
 
-import { isDigit, toLowerByte, toUpperByte } from "cap:ascii";
+type HckVec16 = @Vector(16, u8);
 
 // ---------------------------------------------------------------------------
 // Private UTF-8 & Case Helpers (prefixed with hck)
@@ -22,6 +23,51 @@ const HCK_STYLE_LOWER: u8 = 0;
 const HCK_STYLE_UPPER: u8 = 1;
 const HCK_STYLE_CAPITALIZE: u8 = 2;
 const HCK_STYLE_LOWER_CAMEL: u8 = 3;
+
+fn hckBuildAsciiClsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        let cls = HCK_CLS_SEP;
+        if (i >= 0x41 && i <= 0x5A) {
+            cls = HCK_CLS_UPPER;
+        } else if (i >= 0x61 && i <= 0x7A) {
+            cls = HCK_CLS_LOWER;
+        } else if (i >= 0x30 && i <= 0x39) {
+            cls = HCK_CLS_DIGIT;
+        }
+        tbl[i] = cls;
+        i += 1;
+    }
+    return tbl;
+}
+
+fn hckBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        tbl[i] = if (i >= 0x41 && i <= 0x5A) { (i + 32) as u8 } else { i as u8 };
+        i += 1;
+    }
+    return tbl;
+}
+
+fn hckBuildUpperLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        tbl[i] = if (i >= 0x61 && i <= 0x7A) { (i - 32) as u8 } else { i as u8 };
+        i += 1;
+    }
+    return tbl;
+}
+
+const HCK_ASCII_CLS_LUT: [256]u8 = hckBuildAsciiClsLut();
+const HCK_LOWER_LUT: [256]u8 = hckBuildLowerLut();
+const HCK_UPPER_LUT: [256]u8 = hckBuildUpperLut();
 
 fn hckDecodeUtf8(src: string, offset: usize): HckRune {
     if (offset >= src.len) {
@@ -75,11 +121,7 @@ fn hckDecodeUtf8(src: string, offset: usize): HckRune {
 
 fn hckClassify(cp: u32): u8 {
     if (cp < 0x80) {
-        const b = cp as u8;
-        if (b >= 0x41 && b <= 0x5A) { return HCK_CLS_UPPER; }
-        if (b >= 0x61 && b <= 0x7A) { return HCK_CLS_LOWER; }
-        if (isDigit(b)) { return HCK_CLS_DIGIT; }
-        return HCK_CLS_SEP;
+        return HCK_ASCII_CLS_LUT[cp as usize];
     }
     // Latin-1 Supplement uppercase/lowercase letters
     if ((cp >= 0x00C0 && cp <= 0x00D6) || (cp >= 0x00D8 && cp <= 0x00DE)) { return HCK_CLS_UPPER; }
@@ -99,7 +141,7 @@ fn hckClassify(cp: u32): u8 {
 }
 
 fn hckToLowerCp(cp: u32): u32 {
-    if (cp < 0x80) { return toLowerByte(cp as u8) as u32; }
+    if (cp < 0x80) { return HCK_LOWER_LUT[cp as usize] as u32; }
     if ((cp >= 0x00C0 && cp <= 0x00D6) || (cp >= 0x00D8 && cp <= 0x00DE)) { return cp + 32; }
     if (cp >= 0x0391 && cp <= 0x03AB) { return cp + 32; }
     if (cp >= 0x0410 && cp <= 0x042F) { return cp + 32; }
@@ -107,7 +149,7 @@ fn hckToLowerCp(cp: u32): u32 {
 }
 
 fn hckToUpperCp(cp: u32): u32 {
-    if (cp < 0x80) { return toUpperByte(cp as u8) as u32; }
+    if (cp < 0x80) { return HCK_UPPER_LUT[cp as usize] as u32; }
     if ((cp >= 0x00E0 && cp <= 0x00F6) || (cp >= 0x00F8 && cp <= 0x00FE)) { return cp - 32; }
     if (cp >= 0x03B1 && cp <= 0x03CB) { return cp - 32; }
     if (cp >= 0x0430 && cp <= 0x044F) { return cp - 32; }
@@ -153,30 +195,67 @@ fn hckEmitWord(src: string, start: usize, end: usize, out: []u8, wpos: usize, wo
 
     let cur: usize = start;
     let is_first_char: bool = true;
+    const upper_all = style == HCK_STYLE_UPPER;
+    const cap_first = style == HCK_STYLE_CAPITALIZE || (style == HCK_STYLE_LOWER_CAMEL && word_idx > 0);
+
+    // 16-lane SIMD ASCII case-folding fast path
+    const v_A: HckVec16 = @splat(65 as u8);
+    const v_Z: HckVec16 = @splat(90 as u8);
+    const v_a: HckVec16 = @splat(97 as u8);
+    const v_z: HckVec16 = @splat(122 as u8);
+    const v_32: HckVec16 = @splat(32 as u8);
+    const v_0: HckVec16 = @splat(0 as u8);
+    const v_1: HckVec16 = @splat(1 as u8);
+
+    while (cur + 16 <= end && w + 16 <= out.len) {
+        const v: HckVec16 = src[cur .. cur + 16][0..16].*;
+        if (@reduce(.Max, v) >= (128 as u8)) {
+            break;
+        }
+        let folded: HckVec16 = v;
+        if (upper_all) {
+            const is_lo = (@select(u8, v >= v_a, v_1, v_0) & @select(u8, v <= v_z, v_1, v_0)) == v_1;
+            folded = v - @select(u8, is_lo, v_32, v_0);
+        } else {
+            const is_up = (@select(u8, v >= v_A, v_1, v_0) & @select(u8, v <= v_Z, v_1, v_0)) == v_1;
+            folded = v + @select(u8, is_up, v_32, v_0);
+        }
+        const arr: [16]u8 = folded;
+        @memcpy(out[w .. w + 16], arr[0..16]);
+        if (is_first_char && cap_first) {
+            out[w] = HCK_UPPER_LUT[src[cur] as usize];
+        }
+        is_first_char = false;
+        w += 16;
+        cur += 16;
+    }
+
     while (cur < end) {
+        const b0 = src[cur];
+        if (b0 < (0x80 as u8)) {
+            if (w >= out.len) {
+                return w;
+            }
+            if (upper_all || (is_first_char && cap_first)) {
+                out[w] = HCK_UPPER_LUT[b0 as usize];
+            } else {
+                out[w] = HCK_LOWER_LUT[b0 as usize];
+            }
+            w += 1;
+            is_first_char = false;
+            cur += 1;
+            continue;
+        }
+
         const r = hckDecodeUtf8(src, cur);
         if (r.len == 0) {
             break;
         }
         let mapped: u32 = r.cp;
-        if (style == HCK_STYLE_LOWER) {
-            mapped = hckToLowerCp(r.cp);
-        } else if (style == HCK_STYLE_UPPER) {
+        if (upper_all || (is_first_char && cap_first)) {
             mapped = hckToUpperCp(r.cp);
-        } else if (style == HCK_STYLE_CAPITALIZE) {
-            if (is_first_char) {
-                mapped = hckToUpperCp(r.cp);
-            } else {
-                mapped = hckToLowerCp(r.cp);
-            }
-        } else if (style == HCK_STYLE_LOWER_CAMEL) {
-            if (word_idx == 0) {
-                mapped = hckToLowerCp(r.cp);
-            } else if (is_first_char) {
-                mapped = hckToUpperCp(r.cp);
-            } else {
-                mapped = hckToLowerCp(r.cp);
-            }
+        } else {
+            mapped = hckToLowerCp(r.cp);
         }
 
         const written: usize = hckEncodeUtf8(mapped, out, w);

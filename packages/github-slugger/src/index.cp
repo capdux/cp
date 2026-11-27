@@ -1,11 +1,52 @@
 // @cap/markdown-toc — Zero-allocation Markdown heading extractor, GitHub anchor slugger & TOC generator
 // Clean-room MIT implementation inspired by npm `github-slugger` (35M/wk) and `markdown-toc`.
+// Accelerated with comptime 256-entry slug LUT, 16-lane @Vector(16, u8) SIMD newline/slug scanning, and @memcpy.
 
-import { toLowerByte, isAlnum, strEq } from "cap:ascii";
+import { strEq } from "cap:ascii";
 import { writeStr, writeU64 } from "cap:fmt";
+
+type GsVec16 = @Vector(16, u8);
 
 const MAX_HEADINGS: usize = 128;
 const MAX_SLUG_POOL: usize = 4096;
+
+fn gsBuildSlugLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let tbl: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        let out: u8 = 0 as u8;
+        if (i == 32 || i == 9) {
+            out = '-' as u8;
+        } else if (i >= 65 && i <= 90) {
+            out = (i + 32) as u8;
+        } else if ((i >= 97 && i <= 122) || (i >= 48 && i <= 57) || i == 45 || i == 95 || i >= 128) {
+            out = i as u8;
+        }
+        tbl[i] = out;
+        i += 1;
+    }
+    return tbl;
+}
+
+const GS_SLUG_LUT: [256]u8 = gsBuildSlugLut();
+
+fn gsFindNewlineSimd(s: string, start: usize) -> usize {
+    let i = start;
+    const len = s.len;
+    const v_nl: GsVec16 = @splat(10 as u8);
+    while (i + 16 <= len) {
+        const v: GsVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_nl)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != '\n') {
+        i += 1;
+    }
+    return i;
+}
 
 pub struct Heading {
     pub level: u8,       // 1..6
@@ -74,17 +115,57 @@ pub fn githubSlug(heading: string, out: []u8) -> string {
     // GitHub heading anchor algorithm: lowercase ASCII, keep alnum/non-ASCII UTF-8/'-'/'_', spaces -> '-'
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < heading.len && pos < out.len) {
-        const c = heading[i];
-        if (c == ' ' || c == '\t') {
-            pos = appendByte(out, pos, '-');
-        } else if (isAlnum(c) || c == '-' || c == '_') {
-            pos = appendByte(out, pos, toLowerByte(c));
-        } else if (c >= 128) {
-            // Preserve UTF-8 non-ASCII characters (e.g. CJK headings)
-            pos = appendByte(out, pos, c);
+
+    // 16-lane SIMD fast path for pure ASCII alnum/space/'-'/'_' chunks
+    const v_A: GsVec16 = @splat(65 as u8);
+    const v_Z: GsVec16 = @splat(90 as u8);
+    const v_a: GsVec16 = @splat(97 as u8);
+    const v_z: GsVec16 = @splat(122 as u8);
+    const v_0: GsVec16 = @splat(48 as u8);
+    const v_9: GsVec16 = @splat(57 as u8);
+    const v_sp: GsVec16 = @splat(32 as u8);
+    const v_dash: GsVec16 = @splat(45 as u8);
+    const v_under: GsVec16 = @splat(95 as u8);
+    const v_32: GsVec16 = @splat(32 as u8);
+    const v_one: GsVec16 = @splat(1 as u8);
+    const v_zero: GsVec16 = @splat(0 as u8);
+
+    while (i + 16 <= heading.len && pos + 16 <= out.len) {
+        const v: GsVec16 = heading[i .. i + 16][0..16].*;
+        const is_up = @select(u8, v >= v_A, v_one, v_zero) & @select(u8, v <= v_Z, v_one, v_zero);
+        const is_lo = @select(u8, v >= v_a, v_one, v_zero) & @select(u8, v <= v_z, v_one, v_zero);
+        const is_dg = @select(u8, v >= v_0, v_one, v_zero) & @select(u8, v <= v_9, v_one, v_zero);
+        const is_sp = @select(u8, v == v_sp, v_one, v_zero);
+        const is_ok = is_up | is_lo | is_dg | is_sp
+            | @select(u8, v == v_dash, v_one, v_zero)
+            | @select(u8, v == v_under, v_one, v_zero);
+        if (@reduce(.Min, is_ok) == (0 as u8)) {
+            // Contains punctuation, tab, or UTF-8 -> fall back to O(1) LUT for this chunk
+            const blk_end = i + 16;
+            while (i < blk_end && pos < out.len) {
+                const mapped = GS_SLUG_LUT[heading[i] as usize];
+                if (mapped != (0 as u8)) {
+                    out[pos] = mapped;
+                    pos += 1;
+                }
+                i += 1;
+            }
+            continue;
         }
-        // Strip punctuation like '.', ':', '(', ')', '/', '`', '*', '?'
+        const lowered = v + @select(u8, is_up == v_one, v_32, v_zero);
+        const slugged = @select(u8, is_sp == v_one, v_dash, lowered);
+        const arr: [16]u8 = slugged;
+        @memcpy(out[pos .. pos + 16], arr[0..16]);
+        pos += 16;
+        i += 16;
+    }
+
+    while (i < heading.len && pos < out.len) {
+        const mapped = GS_SLUG_LUT[heading[i] as usize];
+        if (mapped != (0 as u8)) {
+            out[pos] = mapped;
+            pos += 1;
+        }
         i += 1;
     }
     return out[0..pos];
@@ -150,9 +231,7 @@ pub fn extractToc(markdown: string) -> TocResult {
 
     while (i < markdown.len) {
         const line_start = i;
-        while (i < markdown.len && markdown[i] != '\n') {
-            i += 1;
-        }
+        i = gsFindNewlineSimd(markdown, i);
         const line_end = i;
         if (i < markdown.len && markdown[i] == '\n') {
             i += 1;
@@ -207,11 +286,9 @@ pub fn extractToc(markdown: string) -> TocResult {
             break;
         }
         const st = res.slug_pool_len;
-        let k: usize = 0;
-        while (k < final_slug.len) {
-            res.slug_pool[res.slug_pool_len] = final_slug[k];
-            res.slug_pool_len += 1;
-            k += 1;
+        if (final_slug.len > 0) {
+            @memcpy(res.slug_pool[st .. st + final_slug.len], final_slug[0..final_slug.len]);
+            res.slug_pool_len += final_slug.len;
         }
         res.headings[res.count] = Heading{
             level: hashes as u8,

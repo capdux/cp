@@ -1,5 +1,8 @@
 // @cap/path-parse — Zero-allocation POSIX & Win32 path.parse() in pure CP
 // Clean-room MIT implementation of npm `path-parse` (#238, 196M/wk).
+// Accelerated with 16-lane @Vector(16, u8) SIMD reverse separator & dot scanning.
+
+type PprVec16 = @Vector(16, u8);
 
 pub struct ParsedPath {
     pub root: string,
@@ -17,6 +20,47 @@ fn pprIsAlpha(b: u8): bool {
     return (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
 }
 
+fn pprRfindByteSimd(s: string, lo: usize, hi: usize, target: u8): usize {
+    let i = hi;
+    const vt: PprVec16 = @splat(target);
+    while (i >= lo + 16) {
+        const blk = i - 16;
+        const v: PprVec16 = s[blk .. blk + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i = blk;
+    }
+    while (i > lo) {
+        i -= 1;
+        if (s[i] == target) {
+            return i;
+        }
+    }
+    return hi;
+}
+
+fn pprRfindWinSepSimd(s: string, lo: usize, hi: usize): usize {
+    let i = hi;
+    const v_fwd: PprVec16 = @splat(47 as u8);
+    const v_bwd: PprVec16 = @splat(92 as u8);
+    while (i >= lo + 16) {
+        const blk = i - 16;
+        const v: PprVec16 = s[blk .. blk + 16][0..16].*;
+        if (@reduce(.Or, v == v_fwd) || @reduce(.Or, v == v_bwd)) {
+            break;
+        }
+        i = blk;
+    }
+    while (i > lo) {
+        i -= 1;
+        if (pprIsWinSep(s[i])) {
+            return i;
+        }
+    }
+    return hi;
+}
+
 struct PprNameExt {
     name: string,
     ext: string,
@@ -27,20 +71,8 @@ fn pprSplitBaseExt(base: string): PprNameExt {
         return PprNameExt { name: "", ext: "" };
     }
     // Find last '.' after index 0 (dotfiles like ".gitignore" have empty ext)
-    let dot: usize = 0;
-    let found = false;
-    let i: usize = base.len;
-    while (i > 0) {
-        i -= 1;
-        if (base[i] == 46) {
-            if (i > 0) {
-                dot = i;
-                found = true;
-            }
-            break;
-        }
-    }
-    if (!found) {
+    const dot = pprRfindByteSimd(base, 0, base.len, 46 as u8);
+    if (dot == base.len || dot == 0) {
         return PprNameExt { name: base, ext: "" };
     }
     // Special case: ".." has name="..", ext=""
@@ -70,16 +102,8 @@ pub fn parsePosix(path: string): ParsedPath {
         return ParsedPath { root: "/", dir: "/", base: "", ext: "", name: "" };
     }
 
-    // Find last '/' before `end`
-    let last_slash: usize = end;
-    let i = end;
-    while (i > 0) {
-        i -= 1;
-        if (path[i] == 47) {
-            last_slash = i;
-            break;
-        }
-    }
+    // Find last '/' before `end` via 16-lane SIMD
+    const last_slash = pprRfindByteSimd(path, 0, end, 47 as u8);
 
     let dir = "";
     let base = "";
@@ -132,15 +156,7 @@ pub fn parseWin32(path: string): ParsedPath {
         return ParsedPath { root: root, dir: root, base: "", ext: "", name: "" };
     }
 
-    let last_sep: usize = end;
-    let i = end;
-    while (i > root_end) {
-        i -= 1;
-        if (pprIsWinSep(path[i])) {
-            last_sep = i;
-            break;
-        }
-    }
+    const last_sep = pprRfindWinSepSimd(path, root_end, end);
 
     let dir = "";
     let base = "";

@@ -1,5 +1,6 @@
 // @cap/rle — Zero-allocation PackBits RLE & Delta/Delta-of-Delta time-series encoding for CP
 // Clean-room MIT implementation of Apple/TIFF PackBits and Prometheus/Gorilla Delta-of-Delta codecs.
+// Accelerated with 16-lane @Vector(16, u8) SIMD run-length scanning/fill, 4-lane @Vector(4, i64) delta SIMD, and @memcpy.
 //
 // Features:
 // - PackBits RLE (`encodePackBits`, `decodePackBits`): control byte 0..127 = literal run (n+1 bytes),
@@ -7,6 +8,9 @@
 // - Delta & Delta-of-Delta integer time-series codecs (`encodeDeltaI64`, `decodeDeltaI64`,
 //   `encodeDeltaOfDeltaI64`, `decodeDeltaOfDeltaI64`).
 // - Zero heap allocation.
+
+type RleVec16 = @Vector(16, u8);
+type RleI64x4 = @Vector(4, i64);
 
 // ============================================================================
 // 1. Apple / TIFF PackBits RLE
@@ -23,6 +27,14 @@ pub fn encodePackBits(input: string, out: []u8) -> string? {
         if (i + 1 < input.len && input[i] == input[i + 1]) {
             const val = input[i];
             let run_len: usize = 2;
+            const v_val: RleVec16 = @splat(val);
+            while (i + run_len + 16 <= input.len && run_len + 16 <= 128) {
+                const v: RleVec16 = input[i + run_len .. i + run_len + 16][0..16].*;
+                if (!@reduce(.And, v == v_val)) {
+                    break;
+                }
+                run_len += 16;
+            }
             while (i + run_len < input.len && run_len < 128 && input[i + run_len] == val) {
                 run_len += 1;
             }
@@ -49,11 +61,7 @@ pub fn encodePackBits(input: string, out: []u8) -> string? {
             }
             out[out_pos] = (lit_len - 1) as u8;
             out_pos += 1;
-            let k: usize = 0;
-            while (k < lit_len) {
-                out[out_pos + k] = input[lit_start + k];
-                k += 1;
-            }
+            @memcpy(out[out_pos .. out_pos + lit_len], input[lit_start .. lit_start + lit_len]);
             out_pos += lit_len;
             i += lit_len;
         }
@@ -82,11 +90,7 @@ pub fn decodePackBits(encoded: string, out: []u8) -> string? {
             if (count > encoded.len - i || count > out.len - out_pos) {
                 return null;
             }
-            let k: usize = 0;
-            while (k < count) {
-                out[out_pos + k] = encoded[i + k];
-                k += 1;
-            }
+            @memcpy(out[out_pos .. out_pos + count], encoded[i .. i + count]);
             i += count;
             out_pos += count;
         } else {
@@ -101,6 +105,14 @@ pub fn decodePackBits(encoded: string, out: []u8) -> string? {
             const val = encoded[i];
             i += 1;
             let k: usize = 0;
+            if (count >= 16) {
+                const v_fill: RleVec16 = @splat(val);
+                const fill_arr: [16]u8 = v_fill;
+                while (k + 16 <= count) {
+                    @memcpy(out[out_pos + k .. out_pos + k + 16], fill_arr[0..16]);
+                    k += 16;
+                }
+            }
             while (k < count) {
                 out[out_pos + k] = val;
                 k += 1;
@@ -125,6 +137,16 @@ pub fn encodeDeltaI64(values: []const i64, out: []i64) -> usize {
     }
     out[0] = values[0];
     let i: usize = 1;
+    while (i + 4 <= n) {
+        const v_cur: RleI64x4 = values[i .. i + 4][0..4].*;
+        const v_prev: RleI64x4 = values[i - 1 .. i + 3][0..4].*;
+        const diff: [4]i64 = v_cur - v_prev;
+        out[i] = diff[0];
+        out[i + 1] = diff[1];
+        out[i + 2] = diff[2];
+        out[i + 3] = diff[3];
+        i += 4;
+    }
     while (i < n) {
         out[i] = values[i] - values[i - 1];
         i += 1;
