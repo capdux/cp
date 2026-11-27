@@ -2,26 +2,10 @@
 // Inspired by Rust `form_urlencoded` & `percent-encoding`
 // MIT License
 
+import { isAlnum, hexCharUpper, hexVal } from "cap:ascii";
+
 fn isFormSafe(b: u8): bool {
-    if (b >= 65 && b <= 90) { return true; }  // A-Z
-    if (b >= 97 && b <= 122) { return true; } // a-z
-    if (b >= 48 && b <= 57) { return true; }  // 0-9
-    // '-', '.', '_', '*'
-    return b == 45 || b == 46 || b == 95 || b == 42;
-}
-
-fn upperHex(v: u8): u8 {
-    if (v < 10) {
-        return v + 48;
-    }
-    return (v - 10) + 65;
-}
-
-fn hexVal(c: u8): i32 {
-    if (c >= 48 && c <= 57) { return (c - 48) as i32; }
-    if (c >= 65 && c <= 70) { return (c - 65 + 10) as i32; }
-    if (c >= 97 && c <= 102) { return (c - 97 + 10) as i32; }
-    return -1;
+    return isAlnum(b) || b == 45 || b == 46 || b == 95 || b == 42;
 }
 
 fn encodedSize(input: string, space_as_plus: bool): usize {
@@ -59,8 +43,8 @@ pub fn percentEncode(input: string, space_as_plus: bool, out: []u8): usize {
             pos = pos + 1;
         } else {
             out[pos] = 37; // '%'
-            out[pos + 1] = upperHex((b >> 4) & 15);
-            out[pos + 2] = upperHex(b & 15);
+            out[pos + 1] = hexCharUpper((b >> 4) & 15);
+            out[pos + 2] = hexCharUpper(b & 15);
             pos = pos + 3;
         }
         i = i + 1;
@@ -73,9 +57,9 @@ fn decodedSize(input: string): usize {
     let i: usize = 0;
     while (i < input.len) {
         if (input[i] == 37 && i + 2 < input.len) {
-            let h1: i32 = hexVal(input[i + 1]);
-            let h2: i32 = hexVal(input[i + 2]);
-            if (h1 >= 0 && h2 >= 0) {
+            const h1 = hexVal(input[i + 1]);
+            const h2 = hexVal(input[i + 2]);
+            if (h1 != null && h2 != null) {
                 need = need + 1;
                 i = i + 3;
                 continue;
@@ -104,10 +88,10 @@ pub fn percentDecode(input: string, plus_as_space: bool, out: []u8): usize {
             pos = pos + 1;
             i = i + 1;
         } else if (b == 37 && i + 2 < input.len) {
-            let h1: i32 = hexVal(input[i + 1]);
-            let h2: i32 = hexVal(input[i + 2]);
-            if (h1 >= 0 && h2 >= 0) {
-                out[pos] = (((h1 as u8) << 4) | (h2 as u8));
+            const h1 = hexVal(input[i + 1]);
+            const h2 = hexVal(input[i + 2]);
+            if (h1 != null && h2 != null) {
+                out[pos] = ((h1.? << 4) | h2.?);
                 pos = pos + 1;
                 i = i + 3;
             } else {
@@ -225,10 +209,10 @@ fn decodedMatches(raw: string, plus_as_space: bool, target: string): bool {
         if (plus_as_space && ch == 43) {
             ch = 32;
         } else if (ch == 37 && i + 2 < raw.len) {
-            let h1: i32 = hexVal(raw[i + 1]);
-            let h2: i32 = hexVal(raw[i + 2]);
-            if (h1 >= 0 && h2 >= 0) {
-                ch = ((h1 as u8) << 4) | (h2 as u8);
+            const h1 = hexVal(raw[i + 1]);
+            const h2 = hexVal(raw[i + 2]);
+            if (h1 != null && h2 != null) {
+                ch = (h1.? << 4) | h2.?;
                 step = 3;
             }
         }

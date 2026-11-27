@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, isAlpha, toUpperByte, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class Token {
     kind: u8,
     start: usize,
@@ -13,12 +15,9 @@ export class SqlFormatOptions {
     fn defaults(): SqlFormatOptions;
 }
 
-export fn isSpace(c: u8): bool;
-export fn isAlpha(c: u8): bool;
-export fn isDigit(c: u8): bool;
+export fn isSqlIdentStart(c: u8): bool;
 export fn isWordCont(c: u8): bool;
-export fn toUpperAscii(c: u8): u8;
-export fn eqIgnoreCase(sql: string, start: usize, end: usize, upper: string): bool;
+export fn sqlEqIgnoreCase(sql: string, start: usize, end: usize, upper: string): bool;
 export fn nextToken(sql: string, start_pos: usize): Token;
 export fn isSqlFunctionKeyword(sql: string, s: usize, e: usize): bool;
 export fn isSqlKeyword(sql: string, s: usize, e: usize): bool;

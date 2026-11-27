@@ -1,9 +1,8 @@
 // Type definitions for CP
 
-export fn toLowerAscii(c: u8): u8;
+import { eqIgnoreCase, findByte } from "cap:ascii";
 export fn isSpaceOrTab(c: u8): bool;
 export fn trimSpaces(s: &[]u8): &[]u8;
-export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;
 export fn startsWithIgnoreCase(haystack: &[]u8, prefix: &[]u8): bool;
 export fn stripBom(src: &[]u8): &[]u8;
 export fn cleanLine(raw: &[]u8): &[]u8;

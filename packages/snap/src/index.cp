@@ -9,6 +9,8 @@
 // - Strict decompression validation: rejects offset == 0, out-of-bounds offset, truncated streams,
 //   and header/payload length mismatches.
 
+import { bytesEq, readU16LE, readU32LE, writeU16LE, writeU32LE } from "cap:bin";
+
 const HASH_SIZE: usize = 4096;
 const MAX_OFFSET: usize = 65535;
 
@@ -72,24 +74,14 @@ pub fn uncompressedLen(src: []const u8) -> i64 {
     return r.value as i64;
 }
 
-fn readU32LE(buf: []const u8, pos: usize) -> u32 {
-    return (buf[pos] as u32) |
-        ((buf[pos + 1] as u32) << 8) |
-        ((buf[pos + 2] as u32) << 16) |
-        ((buf[pos + 3] as u32) << 24);
-}
-
 fn hash4(buf: []const u8, pos: usize) -> usize {
-    const v: u64 = readU32LE(buf, pos) as u64;
+    const v: u64 = readU32LE(buf, pos).? as u64;
     const prod: u64 = v * (506832829 as u64);
     return ((prod >> 20) & (0xFFF as u64)) as usize;
 }
 
 fn match4(buf: []const u8, a: usize, b: usize) -> bool {
-    return buf[a] == buf[b] &&
-        buf[a + 1] == buf[b + 1] &&
-        buf[a + 2] == buf[b + 2] &&
-        buf[a + 3] == buf[b + 3];
+    return bytesEq(buf[a..(a + 4)], buf[b..(b + 4)]);
 }
 
 fn emitLiteral(src: []const u8, start: usize, len: usize, dst: []u8, start_pos: usize) -> i64 {
@@ -117,8 +109,7 @@ fn emitLiteral(src: []const u8, start: usize, len: usize, dst: []u8, start_pos: 
             return -1;
         }
         dst[pos] = (61 as u8) << 2;
-        dst[pos + 1] = (n & 0xFF) as u8;
-        dst[pos + 2] = ((n >> 8) & 0xFF) as u8;
+        * = writeU16LE(dst, pos + 1, n as u16);
         pos += 3;
     } else if (n <= 0xFFFFFF) {
         if (pos + 4 > dst.len) {
@@ -134,10 +125,7 @@ fn emitLiteral(src: []const u8, start: usize, len: usize, dst: []u8, start_pos: 
             return -1;
         }
         dst[pos] = (63 as u8) << 2;
-        dst[pos + 1] = (n & 0xFF) as u8;
-        dst[pos + 2] = ((n >> 8) & 0xFF) as u8;
-        dst[pos + 3] = ((n >> 16) & 0xFF) as u8;
-        dst[pos + 4] = ((n >> 24) & 0xFF) as u8;
+        * = writeU32LE(dst, pos + 1, n as u32);
         pos += 5;
     }
 
@@ -372,7 +360,7 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
                 return -1;
             }
             const copy_len: usize = ((tag >> 2) as usize) + 1;
-            const offset: usize = (src[in_pos] as usize) | ((src[in_pos + 1] as usize) << 8);
+            const offset: usize = readU16LE(src, in_pos).? as usize;
             in_pos += 2;
 
             if (offset == 0 || offset > out_pos || copy_len > expected_len - out_pos) {
@@ -390,7 +378,7 @@ pub fn decompress(src: []const u8, dst: []u8) -> i64 {
                 return -1;
             }
             const copy_len: usize = ((tag >> 2) as usize) + 1;
-            const offset: usize = readU32LE(src, in_pos) as usize;
+            const offset: usize = readU32LE(src, in_pos).? as usize;
             in_pos += 4;
 
             if (offset == 0 || offset > out_pos || copy_len > expected_len - out_pos) {

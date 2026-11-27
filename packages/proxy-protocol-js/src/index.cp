@@ -1,6 +1,9 @@
 // @cap/proxy-proto — Zero-heap HAProxy PROXY Protocol v1 & v2 codec
 // MIT License (clean-room CP implementation)
 
+import { bytesEq, readU16BE, writeU16BE } from "cap:bin";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub const PP_OK: i32 = 0;
 pub const PP_INCOMPLETE: i32 = 1;
 pub const PP_INVALID: i32 = -1;
@@ -46,20 +49,6 @@ pub struct ProxyV2Header {
     pub consumed: usize,
 }
 
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 pub fn isV1Prefix(data: []const u8) -> bool {
     if (data.len < 6) {
         return false;
@@ -71,14 +60,7 @@ pub fn isV2Signature(data: []const u8) -> bool {
     if (data.len < 12) {
         return false;
     }
-    let i: usize = 0;
-    while (i < 12) {
-        if (data[i] != V2_SIG[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return bytesEq(data[0..12], V2_SIG[0..12]);
 }
 
 fn parsePortStrict(s: string) -> i32 {
@@ -238,39 +220,13 @@ fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
     if (s.len > out.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, out, pos) as i64;
 }
 
 fn appendU16(out: []u8, pos: usize, v: u16) -> i64 {
-    let digits: [6]u8 = undefined;
-    let count: usize = 0;
-    if (v == 0) {
-        digits[0] = '0' as u8;
-        count = 1;
-    } else {
-        let cur: u16 = v;
-        while (cur > 0) {
-            digits[count] = ('0' as u8) + ((cur % 10) as u8);
-            count += 1;
-            cur = cur / 10;
-        }
-    }
-    if (count > out.len - pos) {
-        return -1;
-    }
-    let p: usize = pos;
-    let k: usize = count;
-    while (k > 0) {
-        k -= 1;
-        out[p] = digits[k];
-        p += 1;
-    }
-    return p as i64;
+    let tmp: [8]u8 = undefined;
+    const n = writeU64(v as u64, tmp[0..8], 0);
+    return appendSlice(out, pos, tmp[0..n]);
 }
 
 pub fn encodeV1(
@@ -376,7 +332,7 @@ pub fn parseV2(data: []const u8, out: *ProxyV2Header) -> i32 {
         return PP_INVALID;
     }
 
-    const payload_len: u16 = (((data[14] as u16) << 8) | (data[15] as u16));
+    const payload_len: u16 = readU16BE(data, 14).?;
     const total: usize = V2_HEADER_LEN + (payload_len as usize);
     if (data.len < total) {
         return PP_INCOMPLETE;
@@ -399,8 +355,8 @@ pub fn parseV2(data: []const u8, out: *ProxyV2Header) -> i32 {
         dst_ipv4[1] = data[21];
         dst_ipv4[2] = data[22];
         dst_ipv4[3] = data[23];
-        src_port = (((data[24] as u16) << 8) | (data[25] as u16));
-        dst_port = (((data[26] as u16) << 8) | (data[27] as u16));
+        src_port = readU16BE(data, 24).?;
+        dst_port = readU16BE(data, 26).?;
     }
 
     out.* = ProxyV2Header {
@@ -444,9 +400,7 @@ pub fn encodeV2Ipv4(
     out[21] = dst_ip[1];
     out[22] = dst_ip[2];
     out[23] = dst_ip[3];
-    out[24] = ((src_port >> 8) & 0xFF) as u8;
-    out[25] = (src_port & 0xFF) as u8;
-    out[26] = ((dst_port >> 8) & 0xFF) as u8;
-    out[27] = (dst_port & 0xFF) as u8;
+    * = writeU16BE(out, 24, src_port);
+    * = writeU16BE(out, 26, dst_port);
     return 28;
 }

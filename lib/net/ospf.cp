@@ -342,7 +342,7 @@ pub struct OspfLsuIter {
             _.pos = _.data.len;
             return null;
         }
-        const hdr = hdr_opt ?? unreachable;
+        const hdr = hdr_opt.?;
         const lsa_len: usize = hdr.length as usize;
         if (lsa_len < OSPF_LSA_HEADER_SIZE || _.data.len - _.pos < lsa_len) {
             _.had_error = true;

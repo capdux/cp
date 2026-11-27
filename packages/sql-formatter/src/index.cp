@@ -9,6 +9,9 @@
 // - Clause-aware line breaks, indentation, parenthesis depth tracking, and multi-statement separation.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
+import { isSpace, isDigit, isAlpha, toUpperByte, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const TOK_EOF: u8 = 0;
 const TOK_WORD: u8 = 1;
 const TOK_NUMBER: u8 = 2;
@@ -43,42 +46,16 @@ pub struct SqlFormatOptions {
     }
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
+fn isSqlIdentStart(c: u8) -> bool {
+    return isAlpha(c) || c == '_';
 }
 
 fn isWordCont(c: u8) -> bool {
-    return isAlpha(c) || isDigit(c) || c == '$';
+    return isSqlIdentStart(c) || isDigit(c) || c == '$';
 }
 
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' && c <= 'z') {
-        return c - 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(sql: string, start: usize, end: usize, upper: string) -> bool {
-    const len = end - start;
-    if (len != upper.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < len) {
-        if (toUpperAscii(sql[start + i]) != upper[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+fn sqlEqIgnoreCase(sql: string, start: usize, end: usize, upper: string) -> bool {
+    return eqIgnoreCase(sql[start..end], upper);
 }
 
 fn nextToken(sql: string, start_pos: usize) -> Token {
@@ -158,7 +135,7 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
     }
 
     // Word (keyword or identifier)
-    if (isAlpha(c)) {
+    if (isSqlIdentStart(c)) {
         const s = i;
         i += 1;
         while (i < sql.len && isWordCont(sql[i])) {
@@ -216,88 +193,88 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
 }
 
 fn isSqlFunctionKeyword(sql: string, s: usize, e: usize) -> bool {
-    return eqIgnoreCase(sql, s, e, "COUNT") ||
-        eqIgnoreCase(sql, s, e, "SUM") ||
-        eqIgnoreCase(sql, s, e, "AVG") ||
-        eqIgnoreCase(sql, s, e, "MIN") ||
-        eqIgnoreCase(sql, s, e, "MAX") ||
-        eqIgnoreCase(sql, s, e, "COALESCE") ||
-        eqIgnoreCase(sql, s, e, "CAST") ||
-        eqIgnoreCase(sql, s, e, "NULLIF") ||
-        eqIgnoreCase(sql, s, e, "LOWER") ||
-        eqIgnoreCase(sql, s, e, "UPPER") ||
-        eqIgnoreCase(sql, s, e, "LENGTH") ||
-        eqIgnoreCase(sql, s, e, "CONCAT");
+    return sqlEqIgnoreCase(sql, s, e, "COUNT") ||
+        sqlEqIgnoreCase(sql, s, e, "SUM") ||
+        sqlEqIgnoreCase(sql, s, e, "AVG") ||
+        sqlEqIgnoreCase(sql, s, e, "MIN") ||
+        sqlEqIgnoreCase(sql, s, e, "MAX") ||
+        sqlEqIgnoreCase(sql, s, e, "COALESCE") ||
+        sqlEqIgnoreCase(sql, s, e, "CAST") ||
+        sqlEqIgnoreCase(sql, s, e, "NULLIF") ||
+        sqlEqIgnoreCase(sql, s, e, "LOWER") ||
+        sqlEqIgnoreCase(sql, s, e, "UPPER") ||
+        sqlEqIgnoreCase(sql, s, e, "LENGTH") ||
+        sqlEqIgnoreCase(sql, s, e, "CONCAT");
 }
 
 fn isSqlKeyword(sql: string, s: usize, e: usize) -> bool {
     if (isSqlFunctionKeyword(sql, s, e)) {
         return true;
     }
-    return eqIgnoreCase(sql, s, e, "SELECT") ||
-        eqIgnoreCase(sql, s, e, "FROM") ||
-        eqIgnoreCase(sql, s, e, "WHERE") ||
-        eqIgnoreCase(sql, s, e, "AND") ||
-        eqIgnoreCase(sql, s, e, "OR") ||
-        eqIgnoreCase(sql, s, e, "INNER") ||
-        eqIgnoreCase(sql, s, e, "LEFT") ||
-        eqIgnoreCase(sql, s, e, "RIGHT") ||
-        eqIgnoreCase(sql, s, e, "FULL") ||
-        eqIgnoreCase(sql, s, e, "OUTER") ||
-        eqIgnoreCase(sql, s, e, "CROSS") ||
-        eqIgnoreCase(sql, s, e, "JOIN") ||
-        eqIgnoreCase(sql, s, e, "GROUP") ||
-        eqIgnoreCase(sql, s, e, "ORDER") ||
-        eqIgnoreCase(sql, s, e, "BY") ||
-        eqIgnoreCase(sql, s, e, "HAVING") ||
-        eqIgnoreCase(sql, s, e, "LIMIT") ||
-        eqIgnoreCase(sql, s, e, "OFFSET") ||
-        eqIgnoreCase(sql, s, e, "INSERT") ||
-        eqIgnoreCase(sql, s, e, "INTO") ||
-        eqIgnoreCase(sql, s, e, "VALUES") ||
-        eqIgnoreCase(sql, s, e, "UPDATE") ||
-        eqIgnoreCase(sql, s, e, "SET") ||
-        eqIgnoreCase(sql, s, e, "DELETE") ||
-        eqIgnoreCase(sql, s, e, "CREATE") ||
-        eqIgnoreCase(sql, s, e, "TABLE") ||
-        eqIgnoreCase(sql, s, e, "DROP") ||
-        eqIgnoreCase(sql, s, e, "ALTER") ||
-        eqIgnoreCase(sql, s, e, "INDEX") ||
-        eqIgnoreCase(sql, s, e, "VIEW") ||
-        eqIgnoreCase(sql, s, e, "AS") ||
-        eqIgnoreCase(sql, s, e, "ON") ||
-        eqIgnoreCase(sql, s, e, "IN") ||
-        eqIgnoreCase(sql, s, e, "NOT") ||
-        eqIgnoreCase(sql, s, e, "NULL") ||
-        eqIgnoreCase(sql, s, e, "IS") ||
-        eqIgnoreCase(sql, s, e, "DISTINCT") ||
-        eqIgnoreCase(sql, s, e, "UNION") ||
-        eqIgnoreCase(sql, s, e, "ALL") ||
-        eqIgnoreCase(sql, s, e, "CASE") ||
-        eqIgnoreCase(sql, s, e, "WHEN") ||
-        eqIgnoreCase(sql, s, e, "THEN") ||
-        eqIgnoreCase(sql, s, e, "ELSE") ||
-        eqIgnoreCase(sql, s, e, "END") ||
-        eqIgnoreCase(sql, s, e, "ASC") ||
-        eqIgnoreCase(sql, s, e, "DESC") ||
-        eqIgnoreCase(sql, s, e, "BETWEEN") ||
-        eqIgnoreCase(sql, s, e, "LIKE") ||
-        eqIgnoreCase(sql, s, e, "ILIKE") ||
-        eqIgnoreCase(sql, s, e, "EXISTS") ||
-        eqIgnoreCase(sql, s, e, "PRIMARY") ||
-        eqIgnoreCase(sql, s, e, "KEY") ||
-        eqIgnoreCase(sql, s, e, "FOREIGN") ||
-        eqIgnoreCase(sql, s, e, "REFERENCES") ||
-        eqIgnoreCase(sql, s, e, "DEFAULT") ||
-        eqIgnoreCase(sql, s, e, "UNIQUE") ||
-        eqIgnoreCase(sql, s, e, "CHECK") ||
-        eqIgnoreCase(sql, s, e, "CONSTRAINT") ||
-        eqIgnoreCase(sql, s, e, "IF") ||
-        eqIgnoreCase(sql, s, e, "RETURNING") ||
-        eqIgnoreCase(sql, s, e, "WITH") ||
-        eqIgnoreCase(sql, s, e, "USING") ||
-        eqIgnoreCase(sql, s, e, "TRUE") ||
-        eqIgnoreCase(sql, s, e, "FALSE");
+    return sqlEqIgnoreCase(sql, s, e, "SELECT") ||
+        sqlEqIgnoreCase(sql, s, e, "FROM") ||
+        sqlEqIgnoreCase(sql, s, e, "WHERE") ||
+        sqlEqIgnoreCase(sql, s, e, "AND") ||
+        sqlEqIgnoreCase(sql, s, e, "OR") ||
+        sqlEqIgnoreCase(sql, s, e, "INNER") ||
+        sqlEqIgnoreCase(sql, s, e, "LEFT") ||
+        sqlEqIgnoreCase(sql, s, e, "RIGHT") ||
+        sqlEqIgnoreCase(sql, s, e, "FULL") ||
+        sqlEqIgnoreCase(sql, s, e, "OUTER") ||
+        sqlEqIgnoreCase(sql, s, e, "CROSS") ||
+        sqlEqIgnoreCase(sql, s, e, "JOIN") ||
+        sqlEqIgnoreCase(sql, s, e, "GROUP") ||
+        sqlEqIgnoreCase(sql, s, e, "ORDER") ||
+        sqlEqIgnoreCase(sql, s, e, "BY") ||
+        sqlEqIgnoreCase(sql, s, e, "HAVING") ||
+        sqlEqIgnoreCase(sql, s, e, "LIMIT") ||
+        sqlEqIgnoreCase(sql, s, e, "OFFSET") ||
+        sqlEqIgnoreCase(sql, s, e, "INSERT") ||
+        sqlEqIgnoreCase(sql, s, e, "INTO") ||
+        sqlEqIgnoreCase(sql, s, e, "VALUES") ||
+        sqlEqIgnoreCase(sql, s, e, "UPDATE") ||
+        sqlEqIgnoreCase(sql, s, e, "SET") ||
+        sqlEqIgnoreCase(sql, s, e, "DELETE") ||
+        sqlEqIgnoreCase(sql, s, e, "CREATE") ||
+        sqlEqIgnoreCase(sql, s, e, "TABLE") ||
+        sqlEqIgnoreCase(sql, s, e, "DROP") ||
+        sqlEqIgnoreCase(sql, s, e, "ALTER") ||
+        sqlEqIgnoreCase(sql, s, e, "INDEX") ||
+        sqlEqIgnoreCase(sql, s, e, "VIEW") ||
+        sqlEqIgnoreCase(sql, s, e, "AS") ||
+        sqlEqIgnoreCase(sql, s, e, "ON") ||
+        sqlEqIgnoreCase(sql, s, e, "IN") ||
+        sqlEqIgnoreCase(sql, s, e, "NOT") ||
+        sqlEqIgnoreCase(sql, s, e, "NULL") ||
+        sqlEqIgnoreCase(sql, s, e, "IS") ||
+        sqlEqIgnoreCase(sql, s, e, "DISTINCT") ||
+        sqlEqIgnoreCase(sql, s, e, "UNION") ||
+        sqlEqIgnoreCase(sql, s, e, "ALL") ||
+        sqlEqIgnoreCase(sql, s, e, "CASE") ||
+        sqlEqIgnoreCase(sql, s, e, "WHEN") ||
+        sqlEqIgnoreCase(sql, s, e, "THEN") ||
+        sqlEqIgnoreCase(sql, s, e, "ELSE") ||
+        sqlEqIgnoreCase(sql, s, e, "END") ||
+        sqlEqIgnoreCase(sql, s, e, "ASC") ||
+        sqlEqIgnoreCase(sql, s, e, "DESC") ||
+        sqlEqIgnoreCase(sql, s, e, "BETWEEN") ||
+        sqlEqIgnoreCase(sql, s, e, "LIKE") ||
+        sqlEqIgnoreCase(sql, s, e, "ILIKE") ||
+        sqlEqIgnoreCase(sql, s, e, "EXISTS") ||
+        sqlEqIgnoreCase(sql, s, e, "PRIMARY") ||
+        sqlEqIgnoreCase(sql, s, e, "KEY") ||
+        sqlEqIgnoreCase(sql, s, e, "FOREIGN") ||
+        sqlEqIgnoreCase(sql, s, e, "REFERENCES") ||
+        sqlEqIgnoreCase(sql, s, e, "DEFAULT") ||
+        sqlEqIgnoreCase(sql, s, e, "UNIQUE") ||
+        sqlEqIgnoreCase(sql, s, e, "CHECK") ||
+        sqlEqIgnoreCase(sql, s, e, "CONSTRAINT") ||
+        sqlEqIgnoreCase(sql, s, e, "IF") ||
+        sqlEqIgnoreCase(sql, s, e, "RETURNING") ||
+        sqlEqIgnoreCase(sql, s, e, "WITH") ||
+        sqlEqIgnoreCase(sql, s, e, "USING") ||
+        sqlEqIgnoreCase(sql, s, e, "TRUE") ||
+        sqlEqIgnoreCase(sql, s, e, "FALSE");
 }
 
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
@@ -309,14 +286,13 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
 }
 
 fn pushSlice(out: []u8, pos: usize, src: string, start: usize, end: usize, upper: bool) -> usize {
+    if (!upper) {
+        return writeStr(src[start..end], out, pos);
+    }
     let p = pos;
     let i = start;
     while (i < end && p < out.len) {
-        if (upper) {
-            out[p] = toUpperAscii(src[i]);
-        } else {
-            out[p] = src[i];
-        }
+        out[p] = toUpperByte(src[i]);
         p += 1;
         i += 1;
     }
@@ -342,24 +318,24 @@ fn pushNewlineIndent(out: []u8, pos: usize, level: usize, indent_width: u8) -> u
 }
 
 fn isJoinLeadWord(sql: string, s: usize, e: usize) -> bool {
-    return eqIgnoreCase(sql, s, e, "INNER") ||
-        eqIgnoreCase(sql, s, e, "LEFT") ||
-        eqIgnoreCase(sql, s, e, "RIGHT") ||
-        eqIgnoreCase(sql, s, e, "FULL") ||
-        eqIgnoreCase(sql, s, e, "CROSS");
+    return sqlEqIgnoreCase(sql, s, e, "INNER") ||
+        sqlEqIgnoreCase(sql, s, e, "LEFT") ||
+        sqlEqIgnoreCase(sql, s, e, "RIGHT") ||
+        sqlEqIgnoreCase(sql, s, e, "FULL") ||
+        sqlEqIgnoreCase(sql, s, e, "CROSS");
 }
 
 fn isTopClauseWord(sql: string, s: usize, e: usize) -> bool {
-    return eqIgnoreCase(sql, s, e, "FROM") ||
-        eqIgnoreCase(sql, s, e, "WHERE") ||
-        eqIgnoreCase(sql, s, e, "JOIN") ||
-        eqIgnoreCase(sql, s, e, "HAVING") ||
-        eqIgnoreCase(sql, s, e, "LIMIT") ||
-        eqIgnoreCase(sql, s, e, "OFFSET") ||
-        eqIgnoreCase(sql, s, e, "SET") ||
-        eqIgnoreCase(sql, s, e, "VALUES") ||
-        eqIgnoreCase(sql, s, e, "UNION") ||
-        eqIgnoreCase(sql, s, e, "RETURNING");
+    return sqlEqIgnoreCase(sql, s, e, "FROM") ||
+        sqlEqIgnoreCase(sql, s, e, "WHERE") ||
+        sqlEqIgnoreCase(sql, s, e, "JOIN") ||
+        sqlEqIgnoreCase(sql, s, e, "HAVING") ||
+        sqlEqIgnoreCase(sql, s, e, "LIMIT") ||
+        sqlEqIgnoreCase(sql, s, e, "OFFSET") ||
+        sqlEqIgnoreCase(sql, s, e, "SET") ||
+        sqlEqIgnoreCase(sql, s, e, "VALUES") ||
+        sqlEqIgnoreCase(sql, s, e, "UNION") ||
+        sqlEqIgnoreCase(sql, s, e, "RETURNING");
 }
 
 /// Formats SQL using `SqlFormatOptions.defaults()` into caller-provided `out`.
@@ -447,7 +423,7 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
         // Handle SQL keywords & multi-word clauses
         if (tok.kind == TOK_WORD && prev_kind != TOK_DOT) {
             // SELECT [DISTINCT] -> newline + indent for projection list
-            if (eqIgnoreCase(sql, tok.start, tok.end, "SELECT")) {
+            if (sqlEqIgnoreCase(sql, tok.start, tok.end, "SELECT")) {
                 if (stmt_started && !at_line_start) {
                     out_pos = pushNewlineIndent(out, out_pos, paren_depth, opts.indent_width);
                 } else if (at_line_start && paren_depth > 0) {
@@ -458,7 +434,7 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
 
                 // Keep DISTINCT on the same line as SELECT
                 const peek = nextToken(sql, cursor);
-                if (peek.kind == TOK_WORD && eqIgnoreCase(sql, peek.start, peek.end, "DISTINCT")) {
+                if (peek.kind == TOK_WORD && sqlEqIgnoreCase(sql, peek.start, peek.end, "DISTINCT")) {
                     cursor = peek.end;
                     out_pos = pushByte(out, out_pos, ' ');
                     out_pos = pushSlice(out, out_pos, sql, peek.start, peek.end, opts.uppercase_keywords);
@@ -474,9 +450,9 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
             }
 
             // DELETE FROM stays on one line
-            if (eqIgnoreCase(sql, tok.start, tok.end, "DELETE")) {
+            if (sqlEqIgnoreCase(sql, tok.start, tok.end, "DELETE")) {
                 const peek = nextToken(sql, cursor);
-                if (peek.kind == TOK_WORD && eqIgnoreCase(sql, peek.start, peek.end, "FROM")) {
+                if (peek.kind == TOK_WORD && sqlEqIgnoreCase(sql, peek.start, peek.end, "FROM")) {
                     cursor = peek.end;
                     list_indent_active = false;
                     in_between = false;
@@ -499,9 +475,9 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
             }
 
             // GROUP BY / ORDER BY
-            if (eqIgnoreCase(sql, tok.start, tok.end, "GROUP") || eqIgnoreCase(sql, tok.start, tok.end, "ORDER")) {
+            if (sqlEqIgnoreCase(sql, tok.start, tok.end, "GROUP") || sqlEqIgnoreCase(sql, tok.start, tok.end, "ORDER")) {
                 const peek = nextToken(sql, cursor);
-                if (peek.kind == TOK_WORD && eqIgnoreCase(sql, peek.start, peek.end, "BY")) {
+                if (peek.kind == TOK_WORD && sqlEqIgnoreCase(sql, peek.start, peek.end, "BY")) {
                     cursor = peek.end;
                     list_indent_active = false;
                     in_between = false;
@@ -524,7 +500,7 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
             // INNER/LEFT/RIGHT/FULL/CROSS [OUTER] JOIN
             if (isJoinLeadWord(sql, tok.start, tok.end)) {
                 const p1 = nextToken(sql, cursor);
-                if (p1.kind == TOK_WORD && eqIgnoreCase(sql, p1.start, p1.end, "JOIN")) {
+                if (p1.kind == TOK_WORD && sqlEqIgnoreCase(sql, p1.start, p1.end, "JOIN")) {
                     cursor = p1.end;
                     list_indent_active = false;
                     in_between = false;
@@ -542,9 +518,9 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
                     prev_was_non_func_kw = true;
                     continue;
                 }
-                if (p1.kind == TOK_WORD && eqIgnoreCase(sql, p1.start, p1.end, "OUTER")) {
+                if (p1.kind == TOK_WORD && sqlEqIgnoreCase(sql, p1.start, p1.end, "OUTER")) {
                     const p2 = nextToken(sql, p1.end);
-                    if (p2.kind == TOK_WORD && eqIgnoreCase(sql, p2.start, p2.end, "JOIN")) {
+                    if (p2.kind == TOK_WORD && sqlEqIgnoreCase(sql, p2.start, p2.end, "JOIN")) {
                         cursor = p2.end;
                         list_indent_active = false;
                         in_between = false;
@@ -569,7 +545,7 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
 
             // Top-level clauses: FROM, WHERE, JOIN, HAVING, LIMIT, OFFSET, SET, VALUES, UNION, RETURNING
             if (isTopClauseWord(sql, tok.start, tok.end)) {
-                const is_set = eqIgnoreCase(sql, tok.start, tok.end, "SET");
+                const is_set = sqlEqIgnoreCase(sql, tok.start, tok.end, "SET");
                 list_indent_active = is_set;
                 if (is_set) {
                     list_paren_depth = paren_depth;
@@ -584,9 +560,9 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
                 out_pos = pushSlice(out, out_pos, sql, tok.start, tok.end, opts.uppercase_keywords);
 
                 // UNION ALL stays on one line
-                if (eqIgnoreCase(sql, tok.start, tok.end, "UNION")) {
+                if (sqlEqIgnoreCase(sql, tok.start, tok.end, "UNION")) {
                     const peek = nextToken(sql, cursor);
-                    if (peek.kind == TOK_WORD && eqIgnoreCase(sql, peek.start, peek.end, "ALL")) {
+                    if (peek.kind == TOK_WORD && sqlEqIgnoreCase(sql, peek.start, peek.end, "ALL")) {
                         cursor = peek.end;
                         out_pos = pushByte(out, out_pos, ' ');
                         out_pos = pushSlice(out, out_pos, sql, peek.start, peek.end, opts.uppercase_keywords);
@@ -601,8 +577,8 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
             }
 
             // Indented logical operators: AND / OR
-            if (eqIgnoreCase(sql, tok.start, tok.end, "AND") || eqIgnoreCase(sql, tok.start, tok.end, "OR")) {
-                if (in_between && eqIgnoreCase(sql, tok.start, tok.end, "AND")) {
+            if (sqlEqIgnoreCase(sql, tok.start, tok.end, "AND") || sqlEqIgnoreCase(sql, tok.start, tok.end, "OR")) {
+                if (in_between && sqlEqIgnoreCase(sql, tok.start, tok.end, "AND")) {
                     in_between = false;
                     if (!at_line_start) {
                         out_pos = pushByte(out, out_pos, ' ');
@@ -623,7 +599,7 @@ pub fn formatSqlWith(sql: string, opts: SqlFormatOptions, out: []u8) -> string {
                 continue;
             }
 
-            if (eqIgnoreCase(sql, tok.start, tok.end, "BETWEEN")) {
+            if (sqlEqIgnoreCase(sql, tok.start, tok.end, "BETWEEN")) {
                 in_between = true;
             }
         }

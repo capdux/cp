@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { bytesEq, readU16BE, writeU16BE } from "cap:bin";
+import { writeStr, writeU64 } from "cap:fmt";
 export class ProxyV1Header {
     proto: u8,
     src_ip: string,
@@ -21,7 +23,6 @@ export class ProxyV2Header {
     consumed: usize,
 }
 
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
 export fn isV1Prefix(data: &[]u8): bool;
 export fn isV2Signature(data: &[]u8): bool;
 export fn parsePortStrict(s: string): i32;

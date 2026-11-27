@@ -2,12 +2,7 @@
 // Zero-allocation RFC 9309 robots.txt parser and URL compliance engine.
 // MIT clean-room pure CP implementation.
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
+import { eqIgnoreCase, findByte } from "cap:ascii";
 
 fn isSpaceOrTab(c: u8): bool {
     return c == (' ' as u8) || c == ('\t' as u8);
@@ -25,32 +20,11 @@ fn trimSpaces(s: []const u8): []const u8 {
     return s[start..end];
 }
 
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn startsWithIgnoreCase(haystack: []const u8, prefix: []const u8): bool {
     if (prefix.len == 0 || haystack.len < prefix.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (toLowerAscii(haystack[i]) != toLowerAscii(prefix[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return eqIgnoreCase(haystack[0..prefix.len], prefix);
 }
 
 /// Strip UTF-8 BOM if present at the start of robots.txt.
@@ -67,25 +41,16 @@ fn cleanLine(raw: []const u8): []const u8 {
     if (end > 0 && raw[end - 1] == ('\r' as u8)) {
         end -= 1;
     }
-    let i: usize = 0;
-    while (i < end) {
-        if (raw[i] == ('#' as u8)) {
-            end = i;
-            break;
-        }
-        i += 1;
+    if (hash := findByte(raw[0..end], '#' as u8, 0)) {
+        end = hash;
     }
     return trimSpaces(raw[0..end]);
 }
 
 /// Find the index of the first ':' in a cleaned line, or line.len if absent.
 fn findColon(line: []const u8): usize {
-    let i: usize = 0;
-    while (i < line.len) {
-        if (line[i] == (':' as u8)) {
-            return i;
-        }
-        i += 1;
+    if (idx := findByte(line, ':' as u8, 0)) {
+        return idx;
     }
     return line.len;
 }

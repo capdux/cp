@@ -597,7 +597,7 @@ pub struct NixAttrIter {
                 _.done = true;
                 return null;
             }
-            const first = first_opt ?? unreachable;
+            const first = first_opt.?;
 
             if (first.kind == NixTokenKind.semicolon) {
                 continue;
@@ -647,7 +647,7 @@ pub struct NixAttrIter {
                         _.done = true;
                         return null;
                     }
-                    const seg = seg_opt ?? unreachable;
+                    const seg = seg_opt.?;
                     if (seg.kind != NixTokenKind.ident && seg.kind != NixTokenKind.string) {
                         _.done = true;
                         return null;

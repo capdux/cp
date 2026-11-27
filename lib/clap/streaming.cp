@@ -60,7 +60,7 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type): type {
                 .normal => return _.normal()?,
                 .chaining state => return _.chaining(state)?,
                 .rest_are_positional => {
-                    const param = _.positionalParam() ?? unreachable;
+                    const param = _.positionalParam().?;
                     if (value := _.iter.next()) {
                         return ArgType{ param: param, value: value };
                     }

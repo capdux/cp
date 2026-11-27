@@ -1,117 +1,39 @@
 // @cap/byteorder — Zero-heap Endian Codecs & Bounds-Checked Untrusted Binary Reader/Writer
 // Clean-room MIT implementation in pure CP (inspired by Rust `byteorder` [993M] + `untrusted` [1.02B]).
 
+import {
+    readU16BE,
+    readU16LE,
+    readU32BE,
+    readU32LE,
+    readU64BE,
+    readU64LE,
+    writeU16BE,
+    writeU16LE,
+    writeU32BE,
+    writeU32LE,
+    writeU64BE,
+    writeU64LE,
+} from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 // ============================================================================
 // Stateless Big-Endian / Little-Endian Slice Codecs
 // ============================================================================
 
-pub fn readU16Be(buf: string, off: usize) -> u16? {
-    if (off + 2 > buf.len) { return null; }
-    return ((buf[off] as u16) << 8) | (buf[off + 1] as u16);
-}
+pub fn readU16Be(buf: string, off: usize) -> u16? { return readU16BE(buf, off); }
+pub fn readU16Le(buf: string, off: usize) -> u16? { return readU16LE(buf, off); }
+pub fn readU32Be(buf: string, off: usize) -> u32? { return readU32BE(buf, off); }
+pub fn readU32Le(buf: string, off: usize) -> u32? { return readU32LE(buf, off); }
+pub fn readU64Be(buf: string, off: usize) -> u64? { return readU64BE(buf, off); }
+pub fn readU64Le(buf: string, off: usize) -> u64? { return readU64LE(buf, off); }
 
-pub fn readU16Le(buf: string, off: usize) -> u16? {
-    if (off + 2 > buf.len) { return null; }
-    return (buf[off] as u16) | ((buf[off + 1] as u16) << 8);
-}
-
-pub fn readU32Be(buf: string, off: usize) -> u32? {
-    if (off + 4 > buf.len) { return null; }
-    return ((buf[off] as u32) << 24) |
-        ((buf[off + 1] as u32) << 16) |
-        ((buf[off + 2] as u32) << 8) |
-        (buf[off + 3] as u32);
-}
-
-pub fn readU32Le(buf: string, off: usize) -> u32? {
-    if (off + 4 > buf.len) { return null; }
-    return (buf[off] as u32) |
-        ((buf[off + 1] as u32) << 8) |
-        ((buf[off + 2] as u32) << 16) |
-        ((buf[off + 3] as u32) << 24);
-}
-
-pub fn readU64Be(buf: string, off: usize) -> u64? {
-    if (off + 8 > buf.len) { return null; }
-    return ((buf[off] as u64) << 56) |
-        ((buf[off + 1] as u64) << 48) |
-        ((buf[off + 2] as u64) << 40) |
-        ((buf[off + 3] as u64) << 32) |
-        ((buf[off + 4] as u64) << 24) |
-        ((buf[off + 5] as u64) << 16) |
-        ((buf[off + 6] as u64) << 8) |
-        (buf[off + 7] as u64);
-}
-
-pub fn readU64Le(buf: string, off: usize) -> u64? {
-    if (off + 8 > buf.len) { return null; }
-    return (buf[off] as u64) |
-        ((buf[off + 1] as u64) << 8) |
-        ((buf[off + 2] as u64) << 16) |
-        ((buf[off + 3] as u64) << 24) |
-        ((buf[off + 4] as u64) << 32) |
-        ((buf[off + 5] as u64) << 40) |
-        ((buf[off + 6] as u64) << 48) |
-        ((buf[off + 7] as u64) << 56);
-}
-
-pub fn writeU16Be(out: []u8, off: usize, v: u16) -> bool {
-    if (off + 2 > out.len) { return false; }
-    out[off] = ((v >> 8) & 0xFF) as u8;
-    out[off + 1] = (v & 0xFF) as u8;
-    return true;
-}
-
-pub fn writeU16Le(out: []u8, off: usize, v: u16) -> bool {
-    if (off + 2 > out.len) { return false; }
-    out[off] = (v & 0xFF) as u8;
-    out[off + 1] = ((v >> 8) & 0xFF) as u8;
-    return true;
-}
-
-pub fn writeU32Be(out: []u8, off: usize, v: u32) -> bool {
-    if (off + 4 > out.len) { return false; }
-    out[off] = ((v >> 24) & 0xFF) as u8;
-    out[off + 1] = ((v >> 16) & 0xFF) as u8;
-    out[off + 2] = ((v >> 8) & 0xFF) as u8;
-    out[off + 3] = (v & 0xFF) as u8;
-    return true;
-}
-
-pub fn writeU32Le(out: []u8, off: usize, v: u32) -> bool {
-    if (off + 4 > out.len) { return false; }
-    out[off] = (v & 0xFF) as u8;
-    out[off + 1] = ((v >> 8) & 0xFF) as u8;
-    out[off + 2] = ((v >> 16) & 0xFF) as u8;
-    out[off + 3] = ((v >> 24) & 0xFF) as u8;
-    return true;
-}
-
-pub fn writeU64Be(out: []u8, off: usize, v: u64) -> bool {
-    if (off + 8 > out.len) { return false; }
-    out[off] = ((v >> 56) & 0xFF) as u8;
-    out[off + 1] = ((v >> 48) & 0xFF) as u8;
-    out[off + 2] = ((v >> 40) & 0xFF) as u8;
-    out[off + 3] = ((v >> 32) & 0xFF) as u8;
-    out[off + 4] = ((v >> 24) & 0xFF) as u8;
-    out[off + 5] = ((v >> 16) & 0xFF) as u8;
-    out[off + 6] = ((v >> 8) & 0xFF) as u8;
-    out[off + 7] = (v & 0xFF) as u8;
-    return true;
-}
-
-pub fn writeU64Le(out: []u8, off: usize, v: u64) -> bool {
-    if (off + 8 > out.len) { return false; }
-    out[off] = (v & 0xFF) as u8;
-    out[off + 1] = ((v >> 8) & 0xFF) as u8;
-    out[off + 2] = ((v >> 16) & 0xFF) as u8;
-    out[off + 3] = ((v >> 24) & 0xFF) as u8;
-    out[off + 4] = ((v >> 32) & 0xFF) as u8;
-    out[off + 5] = ((v >> 40) & 0xFF) as u8;
-    out[off + 6] = ((v >> 48) & 0xFF) as u8;
-    out[off + 7] = ((v >> 56) & 0xFF) as u8;
-    return true;
-}
+pub fn writeU16Be(out: []u8, off: usize, v: u16) -> bool { return writeU16BE(out, off, v); }
+pub fn writeU16Le(out: []u8, off: usize, v: u16) -> bool { return writeU16LE(out, off, v); }
+pub fn writeU32Be(out: []u8, off: usize, v: u32) -> bool { return writeU32BE(out, off, v); }
+pub fn writeU32Le(out: []u8, off: usize, v: u32) -> bool { return writeU32LE(out, off, v); }
+pub fn writeU64Be(out: []u8, off: usize, v: u64) -> bool { return writeU64BE(out, off, v); }
+pub fn writeU64Le(out: []u8, off: usize, v: u64) -> bool { return writeU64LE(out, off, v); }
 
 // ============================================================================
 // Bounds-Checked Forward-Only Untrusted ByteReader (Rust `untrusted` model)
@@ -146,65 +68,33 @@ pub struct ByteReader {
     }
 
     pub fn readU16Be(*_) -> u16? {
-        if (_.pos + 2 > _.data.len) { return null; }
-        const v: u16 = ((_.data[_.pos] as u16) << 8) | (_.data[_.pos + 1] as u16);
-        _.pos += 2;
-        return v;
+        if (v := readU16BE(_.data, _.pos)) { _.pos += 2; return v; }
+        return null;
     }
 
     pub fn readU16Le(*_) -> u16? {
-        if (_.pos + 2 > _.data.len) { return null; }
-        const v: u16 = (_.data[_.pos] as u16) | ((_.data[_.pos + 1] as u16) << 8);
-        _.pos += 2;
-        return v;
+        if (v := readU16LE(_.data, _.pos)) { _.pos += 2; return v; }
+        return null;
     }
 
     pub fn readU32Be(*_) -> u32? {
-        if (_.pos + 4 > _.data.len) { return null; }
-        const v: u32 = ((_.data[_.pos] as u32) << 24) |
-            ((_.data[_.pos + 1] as u32) << 16) |
-            ((_.data[_.pos + 2] as u32) << 8) |
-            (_.data[_.pos + 3] as u32);
-        _.pos += 4;
-        return v;
+        if (v := readU32BE(_.data, _.pos)) { _.pos += 4; return v; }
+        return null;
     }
 
     pub fn readU32Le(*_) -> u32? {
-        if (_.pos + 4 > _.data.len) { return null; }
-        const v: u32 = (_.data[_.pos] as u32) |
-            ((_.data[_.pos + 1] as u32) << 8) |
-            ((_.data[_.pos + 2] as u32) << 16) |
-            ((_.data[_.pos + 3] as u32) << 24);
-        _.pos += 4;
-        return v;
+        if (v := readU32LE(_.data, _.pos)) { _.pos += 4; return v; }
+        return null;
     }
 
     pub fn readU64Be(*_) -> u64? {
-        if (_.pos + 8 > _.data.len) { return null; }
-        const v: u64 = ((_.data[_.pos] as u64) << 56) |
-            ((_.data[_.pos + 1] as u64) << 48) |
-            ((_.data[_.pos + 2] as u64) << 40) |
-            ((_.data[_.pos + 3] as u64) << 32) |
-            ((_.data[_.pos + 4] as u64) << 24) |
-            ((_.data[_.pos + 5] as u64) << 16) |
-            ((_.data[_.pos + 6] as u64) << 8) |
-            (_.data[_.pos + 7] as u64);
-        _.pos += 8;
-        return v;
+        if (v := readU64BE(_.data, _.pos)) { _.pos += 8; return v; }
+        return null;
     }
 
     pub fn readU64Le(*_) -> u64? {
-        if (_.pos + 8 > _.data.len) { return null; }
-        const v: u64 = (_.data[_.pos] as u64) |
-            ((_.data[_.pos + 1] as u64) << 8) |
-            ((_.data[_.pos + 2] as u64) << 16) |
-            ((_.data[_.pos + 3] as u64) << 24) |
-            ((_.data[_.pos + 4] as u64) << 32) |
-            ((_.data[_.pos + 5] as u64) << 40) |
-            ((_.data[_.pos + 6] as u64) << 48) |
-            ((_.data[_.pos + 7] as u64) << 56);
-        _.pos += 8;
-        return v;
+        if (v := readU64LE(_.data, _.pos)) { _.pos += 8; return v; }
+        return null;
     }
 
     pub fn readBytes(*_, n: usize) -> string? {
@@ -255,77 +145,44 @@ pub struct ByteWriter {
     }
 
     pub fn writeU16Be(*_, v: u16) -> bool {
-        if (_.pos + 2 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = ((v >> 8) & 0xFF) as u8;
-        _.out[_.pos + 1] = (v & 0xFF) as u8;
+        if (!writeU16BE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 2;
         return true;
     }
 
     pub fn writeU16Le(*_, v: u16) -> bool {
-        if (_.pos + 2 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = (v & 0xFF) as u8;
-        _.out[_.pos + 1] = ((v >> 8) & 0xFF) as u8;
+        if (!writeU16LE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 2;
         return true;
     }
 
     pub fn writeU32Be(*_, v: u32) -> bool {
-        if (_.pos + 4 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = ((v >> 24) & 0xFF) as u8;
-        _.out[_.pos + 1] = ((v >> 16) & 0xFF) as u8;
-        _.out[_.pos + 2] = ((v >> 8) & 0xFF) as u8;
-        _.out[_.pos + 3] = (v & 0xFF) as u8;
+        if (!writeU32BE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 4;
         return true;
     }
 
     pub fn writeU32Le(*_, v: u32) -> bool {
-        if (_.pos + 4 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = (v & 0xFF) as u8;
-        _.out[_.pos + 1] = ((v >> 8) & 0xFF) as u8;
-        _.out[_.pos + 2] = ((v >> 16) & 0xFF) as u8;
-        _.out[_.pos + 3] = ((v >> 24) & 0xFF) as u8;
+        if (!writeU32LE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 4;
         return true;
     }
 
     pub fn writeU64Be(*_, v: u64) -> bool {
-        if (_.pos + 8 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = ((v >> 56) & 0xFF) as u8;
-        _.out[_.pos + 1] = ((v >> 48) & 0xFF) as u8;
-        _.out[_.pos + 2] = ((v >> 40) & 0xFF) as u8;
-        _.out[_.pos + 3] = ((v >> 32) & 0xFF) as u8;
-        _.out[_.pos + 4] = ((v >> 24) & 0xFF) as u8;
-        _.out[_.pos + 5] = ((v >> 16) & 0xFF) as u8;
-        _.out[_.pos + 6] = ((v >> 8) & 0xFF) as u8;
-        _.out[_.pos + 7] = (v & 0xFF) as u8;
+        if (!writeU64BE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 8;
         return true;
     }
 
     pub fn writeU64Le(*_, v: u64) -> bool {
-        if (_.pos + 8 > _.out.len) { _.overflow = true; return false; }
-        _.out[_.pos] = (v & 0xFF) as u8;
-        _.out[_.pos + 1] = ((v >> 8) & 0xFF) as u8;
-        _.out[_.pos + 2] = ((v >> 16) & 0xFF) as u8;
-        _.out[_.pos + 3] = ((v >> 24) & 0xFF) as u8;
-        _.out[_.pos + 4] = ((v >> 32) & 0xFF) as u8;
-        _.out[_.pos + 5] = ((v >> 40) & 0xFF) as u8;
-        _.out[_.pos + 6] = ((v >> 48) & 0xFF) as u8;
-        _.out[_.pos + 7] = ((v >> 56) & 0xFF) as u8;
+        if (!writeU64LE(_.out, _.pos, v)) { _.overflow = true; return false; }
         _.pos += 8;
         return true;
     }
 
     pub fn writeBytes(*_, s: string) -> bool {
         if (s.len > _.out.len - _.pos) { _.overflow = true; return false; }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
-        }
+        _.pos = writeStr(s, _.out, _.pos);
         return true;
     }
 }

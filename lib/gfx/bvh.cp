@@ -309,7 +309,7 @@ pub struct BvhJointIter {
                 _.done = true;
                 return null;
             }
-            const tok = tok_opt ?? unreachable;
+            const tok = tok_opt.?;
             _.pos = tok.next_pos;
 
             if (eqlBytes(tok.text, "}")) {

@@ -246,7 +246,7 @@ pub struct Woff2TableIter {
             _.remaining = 0;
             return null;
         }
-        const orig_res = orig_opt ?? unreachable;
+        const orig_res = orig_opt.?;
         _.pos += orig_res.bytes_read;
 
         const is_glyf_or_loca = tagEql(tag, "glyf") || tagEql(tag, "loca");
@@ -272,7 +272,7 @@ pub struct Woff2TableIter {
                 _.remaining = 0;
                 return null;
             }
-            const tr_res = tr_opt ?? unreachable;
+            const tr_res = tr_opt.?;
             _.pos += tr_res.bytes_read;
             transform_length = tr_res.value;
         }

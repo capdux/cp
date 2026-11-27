@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { readU16BE, readU16LE, readU32BE, readU32LE, readU64BE, readU64LE, writeU16BE, writeU16LE, writeU32BE, writeU32LE, writeU64BE, writeU64LE } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export fn readU16Be(buf: string, off: usize): u16?;
 export fn readU16Le(buf: string, off: usize): u16?;
 export fn readU32Be(buf: string, off: usize): u32?;

@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `numeral`, `millify`, `number-to-words`,
 // and Rust `num-format`.
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     if (pos < out.len) {
         out[pos] = c;
@@ -10,44 +13,12 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 fn absU64(n: i64) -> u64 {
     if (n >= 0) {
         return n as u64;
     }
     // Avoid overflow for i64::MIN (-9223372036854775808)
     return ((0 - (n + 1)) as u64) + 1;
-}
-
-fn appendU64(out: []u8, pos: usize, val: u64) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as u64 + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,16 +80,16 @@ fn writeCompactScaled(
         pos = appendByte(out, pos, '-');
     }
     if (next_threshold > 0 && whole >= next_threshold) {
-        pos = appendU64(out, pos, whole / next_threshold);
-        pos = appendStr(out, pos, next_suffix);
+        pos = writeU64(whole / next_threshold, out, pos);
+        pos = writeStr(next_suffix, out, pos);
         return out[0..pos];
     }
-    pos = appendU64(out, pos, whole);
+    pos = writeU64(whole, out, pos);
     if (tenths > 0) {
         pos = appendByte(out, pos, '.');
         pos = appendByte(out, pos, ('0' as u64 + tenths) as u8);
     }
-    pos = appendStr(out, pos, suffix);
+    pos = writeStr(suffix, out, pos);
     return out[0..pos];
 }
 
@@ -131,7 +102,7 @@ pub fn formatCompactEn(n: i64, out: []u8) -> string {
         if (neg) {
             pos = appendByte(out, pos, '-');
         }
-        pos = appendU64(out, pos, abs);
+        pos = writeU64(abs, out, pos);
         return out[0..pos];
     }
     if (abs < 1000000) {
@@ -155,7 +126,7 @@ pub fn formatCompactZh(n: i64, out: []u8) -> string {
         if (neg) {
             pos = appendByte(out, pos, '-');
         }
-        pos = appendU64(out, pos, abs);
+        pos = writeU64(abs, out, pos);
         return out[0..pos];
     }
     if (abs < 100000000) {
@@ -198,7 +169,7 @@ pub fn formatPercent(ratio: f64, decimals: u8, out: []u8) -> string {
 
     const int_part = scaled / scale;
     const frac_part = scaled % scale;
-    pos = appendU64(out, pos, int_part);
+    pos = writeU64(int_part, out, pos);
 
     if (d > 0) {
         pos = appendByte(out, pos, '.');
@@ -238,7 +209,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 1000;
     }
     if (rem >= 900) {
-        pos = appendStr(out, pos, "CM");
+        pos = writeStr("CM", out, pos);
         rem -= 900;
     }
     if (rem >= 500) {
@@ -246,7 +217,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 500;
     }
     if (rem >= 400) {
-        pos = appendStr(out, pos, "CD");
+        pos = writeStr("CD", out, pos);
         rem -= 400;
     }
     while (rem >= 100) {
@@ -254,7 +225,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 100;
     }
     if (rem >= 90) {
-        pos = appendStr(out, pos, "XC");
+        pos = writeStr("XC", out, pos);
         rem -= 90;
     }
     if (rem >= 50) {
@@ -262,7 +233,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 50;
     }
     if (rem >= 40) {
-        pos = appendStr(out, pos, "XL");
+        pos = writeStr("XL", out, pos);
         rem -= 40;
     }
     while (rem >= 10) {
@@ -270,7 +241,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 10;
     }
     if (rem >= 9) {
-        pos = appendStr(out, pos, "IX");
+        pos = writeStr("IX", out, pos);
         rem -= 9;
     }
     if (rem >= 5) {
@@ -278,7 +249,7 @@ pub fn toRoman(n: u16, out: []u8) -> string {
         rem -= 5;
     }
     if (rem >= 4) {
-        pos = appendStr(out, pos, "IV");
+        pos = writeStr("IV", out, pos);
         rem -= 4;
     }
     while (rem >= 1) {
@@ -299,13 +270,6 @@ fn romanCharVal(c: u8) -> u16 {
         'M', 'm' => return 1000,
         else => return 0,
     }
-}
-
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' && c <= 'z') {
-        return c - 32;
-    }
-    return c;
 }
 
 /// Strictly parses a canonical Roman numeral (`1..=3999`, case-insensitive).
@@ -343,15 +307,8 @@ pub fn fromRoman(s: string) -> u16? {
     const val = total as u16;
     let canon_buf: [16]u8 = undefined;
     const canon = toRoman(val, canon_buf[0..16]);
-    if (canon.len != s.len) {
+    if (!eqIgnoreCase(s, canon)) {
         return null;
-    }
-    let k: usize = 0;
-    while (k < s.len) {
-        if (toUpperAscii(s[k]) != canon[k]) {
-            return null;
-        }
-        k += 1;
     }
     return val;
 }
@@ -404,21 +361,21 @@ fn appendUnder1000(v: u64, out: []u8, start_pos: usize) -> usize {
     const hundreds = v / 100;
     const rem = v % 100;
     if (hundreds > 0) {
-        pos = appendStr(out, pos, onesWord(hundreds));
-        pos = appendStr(out, pos, " hundred");
+        pos = writeStr(onesWord(hundreds), out, pos);
+        pos = writeStr(" hundred", out, pos);
         if (rem > 0) {
             pos = appendByte(out, pos, ' ');
         }
     }
     if (rem >= 20) {
-        pos = appendStr(out, pos, tensWord(rem / 10));
+        pos = writeStr(tensWord(rem / 10), out, pos);
         const unit = rem % 10;
         if (unit > 0) {
             pos = appendByte(out, pos, '-');
-            pos = appendStr(out, pos, onesWord(unit));
+            pos = writeStr(onesWord(unit), out, pos);
         }
     } else if (rem > 0) {
-        pos = appendStr(out, pos, onesWord(rem));
+        pos = writeStr(onesWord(rem), out, pos);
     }
     return pos;
 }
@@ -434,7 +391,7 @@ fn appendScaleGroup(chunk: u64, label: string, out: []u8, start_pos: usize, has_
     pos = appendUnder1000(chunk, out, pos);
     if (label.len > 0) {
         pos = appendByte(out, pos, ' ');
-        pos = appendStr(out, pos, label);
+        pos = writeStr(label, out, pos);
     }
     return pos;
 }
@@ -443,13 +400,13 @@ fn appendScaleGroup(chunk: u64, label: string, out: []u8, start_pos: usize, has_
 /// `1234` -> `"one thousand two hundred thirty-four"`). Supports the full `i64` range.
 pub fn toEnglishWords(n: i64, out: []u8) -> string {
     if (n == 0) {
-        const len = appendStr(out, 0 as usize, "zero");
+        const len = writeStr("zero", out, 0 as usize);
         return out[0..len];
     }
 
     let pos: usize = 0;
     if (n < 0) {
-        pos = appendStr(out, pos, "minus ");
+        pos = writeStr("minus ", out, pos);
     }
 
     let rem = absU64(n);

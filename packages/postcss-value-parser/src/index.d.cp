@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isDigit, isAlpha, eqIgnoreCase, trim } from "cap:ascii";
 export enum CssUnitKind {
     Px,
     Cm,
@@ -45,11 +46,6 @@ export class CssContext {
 }
 
 export fn invalidDim(): CssDimension;
-export fn isSpace(c: u8): bool;
-export fn isDigit(c: u8): bool;
-export fn isAlpha(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn strEqIgnoreCase(a: string, b: string): bool;
 export fn parseUnit(u: string): CssUnitKind;
 export fn isValidUnitToken(u: string): bool;
 export fn parseCssDimension(raw: string): CssDimension;

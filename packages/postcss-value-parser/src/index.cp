@@ -1,6 +1,8 @@
 // @cap/css-units — Zero-allocation CSS dimension/length/angle/time/resolution parser & converter for CP
 // Clean-room MIT implementation inspired by `postcss-value-parser` (120M/wk), `parse-css-dimension`, and `css-unit-converter`.
 
+import { isDigit, isAlpha, eqIgnoreCase, trim } from "cap:ascii";
+
 const PI: f64 = 3.14159265358979323846;
 
 pub enum CssUnitKind {
@@ -64,65 +66,32 @@ fn invalidDim() -> CssDimension {
     };
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn strEqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn parseUnit(u: string) -> CssUnitKind {
     if (u.len == 0) { return CssUnitKind.Unitless; }
     if (u.len == 1 && u[0] == '%') { return CssUnitKind.Percent; }
-    if (strEqIgnoreCase(u, "px")) { return CssUnitKind.Px; }
-    if (strEqIgnoreCase(u, "cm")) { return CssUnitKind.Cm; }
-    if (strEqIgnoreCase(u, "mm")) { return CssUnitKind.Mm; }
-    if (strEqIgnoreCase(u, "in")) { return CssUnitKind.In; }
-    if (strEqIgnoreCase(u, "pt")) { return CssUnitKind.Pt; }
-    if (strEqIgnoreCase(u, "pc")) { return CssUnitKind.Pc; }
-    if (strEqIgnoreCase(u, "q")) { return CssUnitKind.Q; }
-    if (strEqIgnoreCase(u, "rem")) { return CssUnitKind.Rem; }
-    if (strEqIgnoreCase(u, "em")) { return CssUnitKind.Em; }
-    if (strEqIgnoreCase(u, "vh")) { return CssUnitKind.Vh; }
-    if (strEqIgnoreCase(u, "vw")) { return CssUnitKind.Vw; }
-    if (strEqIgnoreCase(u, "vmin")) { return CssUnitKind.Vmin; }
-    if (strEqIgnoreCase(u, "vmax")) { return CssUnitKind.Vmax; }
-    if (strEqIgnoreCase(u, "ch")) { return CssUnitKind.Ch; }
-    if (strEqIgnoreCase(u, "deg")) { return CssUnitKind.Deg; }
-    if (strEqIgnoreCase(u, "rad")) { return CssUnitKind.Rad; }
-    if (strEqIgnoreCase(u, "grad")) { return CssUnitKind.Grad; }
-    if (strEqIgnoreCase(u, "turn")) { return CssUnitKind.Turn; }
-    if (strEqIgnoreCase(u, "ms")) { return CssUnitKind.Ms; }
-    if (strEqIgnoreCase(u, "s")) { return CssUnitKind.S; }
-    if (strEqIgnoreCase(u, "dpi")) { return CssUnitKind.Dpi; }
-    if (strEqIgnoreCase(u, "dpcm")) { return CssUnitKind.Dpcm; }
-    if (strEqIgnoreCase(u, "dppx")) { return CssUnitKind.Dppx; }
+    if (eqIgnoreCase(u, "px")) { return CssUnitKind.Px; }
+    if (eqIgnoreCase(u, "cm")) { return CssUnitKind.Cm; }
+    if (eqIgnoreCase(u, "mm")) { return CssUnitKind.Mm; }
+    if (eqIgnoreCase(u, "in")) { return CssUnitKind.In; }
+    if (eqIgnoreCase(u, "pt")) { return CssUnitKind.Pt; }
+    if (eqIgnoreCase(u, "pc")) { return CssUnitKind.Pc; }
+    if (eqIgnoreCase(u, "q")) { return CssUnitKind.Q; }
+    if (eqIgnoreCase(u, "rem")) { return CssUnitKind.Rem; }
+    if (eqIgnoreCase(u, "em")) { return CssUnitKind.Em; }
+    if (eqIgnoreCase(u, "vh")) { return CssUnitKind.Vh; }
+    if (eqIgnoreCase(u, "vw")) { return CssUnitKind.Vw; }
+    if (eqIgnoreCase(u, "vmin")) { return CssUnitKind.Vmin; }
+    if (eqIgnoreCase(u, "vmax")) { return CssUnitKind.Vmax; }
+    if (eqIgnoreCase(u, "ch")) { return CssUnitKind.Ch; }
+    if (eqIgnoreCase(u, "deg")) { return CssUnitKind.Deg; }
+    if (eqIgnoreCase(u, "rad")) { return CssUnitKind.Rad; }
+    if (eqIgnoreCase(u, "grad")) { return CssUnitKind.Grad; }
+    if (eqIgnoreCase(u, "turn")) { return CssUnitKind.Turn; }
+    if (eqIgnoreCase(u, "ms")) { return CssUnitKind.Ms; }
+    if (eqIgnoreCase(u, "s")) { return CssUnitKind.S; }
+    if (eqIgnoreCase(u, "dpi")) { return CssUnitKind.Dpi; }
+    if (eqIgnoreCase(u, "dpcm")) { return CssUnitKind.Dpcm; }
+    if (eqIgnoreCase(u, "dppx")) { return CssUnitKind.Dppx; }
     return CssUnitKind.Unknown;
 }
 
@@ -145,19 +114,10 @@ fn isValidUnitToken(u: string) -> bool {
 }
 
 pub fn parseCssDimension(raw: string) -> CssDimension {
-    let start: usize = 0;
-    while (start < raw.len && isSpace(raw[start])) {
-        start += 1;
-    }
-    let end: usize = raw.len;
-    while (end > start && isSpace(raw[end - 1])) {
-        end -= 1;
-    }
-    if (start >= end) {
+    const s = trim(raw);
+    if (s.len == 0) {
         return invalidDim();
     }
-
-    const s = raw[start..end];
     let i: usize = 0;
     let sign: f64 = 1.0;
     if (s[i] == '+') {

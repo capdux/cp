@@ -1,6 +1,9 @@
 // @cap/properties — Zero-heap Java / Spring Boot / i18n .properties parser & formatter
 // MIT License (clean-room CP implementation)
 
+import { hexVal } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 pub const MAX_PROPS: usize = 128;
 pub const VAL_BUF_CAP: usize = 2048;
 
@@ -13,33 +16,6 @@ pub struct PropEntry {
 
 fn isLineWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8 || c == 0x0C;
-}
-
-fn fromHex(c: u8) -> i32 {
-    if (c >= '0' as u8 && c <= '9' as u8) {
-        return (c - ('0' as u8)) as i32;
-    }
-    if (c >= 'a' as u8 && c <= 'f' as u8) {
-        return (c - ('a' as u8) + 10) as i32;
-    }
-    if (c >= 'A' as u8 && c <= 'F' as u8) {
-        return (c - ('A' as u8) + 10) as i32;
-    }
-    return -1;
-}
-
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 struct EscDecodeResult {
@@ -70,12 +46,12 @@ fn decodeEscapeInto(src: []const u8, esc_pos: usize, dst: []u8, dst_pos: usize) 
 
     // \uXXXX Unicode escape -> UTF-8
     if (c == 'u' as u8 && i + 4 < src.len) {
-        const h0: i32 = fromHex(src[i + 1]);
-        const h1: i32 = fromHex(src[i + 2]);
-        const h2: i32 = fromHex(src[i + 3]);
-        const h3: i32 = fromHex(src[i + 4]);
-        if (h0 >= 0 && h1 >= 0 && h2 >= 0 && h3 >= 0) {
-            const cp: u32 = ((h0 as u32) << 12) | ((h1 as u32) << 8) | ((h2 as u32) << 4) | (h3 as u32);
+        const h0 = hexVal(src[i + 1]);
+        const h1 = hexVal(src[i + 2]);
+        const h2 = hexVal(src[i + 3]);
+        const h3 = hexVal(src[i + 4]);
+        if (h0 != null && h1 != null && h2 != null && h3 != null) {
+            const cp: u32 = ((h0.? as u32) << 12) | ((h1.? as u32) << 8) | ((h2.? as u32) << 4) | (h3.? as u32);
             let w: usize = 0;
             if (cp <= 0x7F) {
                 if (dst_pos < dst.len) {

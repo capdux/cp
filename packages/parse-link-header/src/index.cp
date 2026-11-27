@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `parse-link-header`, `http-link-header`,
 // and Rust `parse_link_header`.
 
+import { isSpace, eqIgnoreCase, findByte, trim } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub const MAX_LINK_ENTRIES: usize = 32;
 
 pub struct LinkEntry {
@@ -22,31 +25,6 @@ pub struct LinkEntry {
     }
 }
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// Checks if a whitespace-delimited `rel` attribute (e.g. `"next prefetch"`) contains `target`
 /// (case-insensitive per RFC 8288).
 fn relMatches(rel_attr: string, target: string) -> bool {
@@ -55,11 +33,11 @@ fn relMatches(rel_attr: string, target: string) -> bool {
     }
     let i: usize = 0;
     while (i < rel_attr.len) {
-        while (i < rel_attr.len && isWs(rel_attr[i])) {
+        while (i < rel_attr.len && isSpace(rel_attr[i])) {
             i += 1;
         }
         const start = i;
-        while (i < rel_attr.len && !isWs(rel_attr[i])) {
+        while (i < rel_attr.len && !isSpace(rel_attr[i])) {
             i += 1;
         }
         if (i > start && eqIgnoreCase(rel_attr[start..i], target)) {
@@ -182,7 +160,7 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
 
     while (i < header.len && res.count < MAX_LINK_ENTRIES) {
         // Skip leading whitespace and stray commas
-        while (i < header.len && (isWs(header[i]) || header[i] == ',')) {
+        while (i < header.len && (isSpace(header[i]) || header[i] == ',')) {
             i += 1;
         }
         if (i >= header.len) {
@@ -196,29 +174,21 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
         }
         i += 1;
         const raw_url_start = i;
-        while (i < header.len && header[i] != '>') {
-            i += 1;
-        }
-        if (i >= header.len) {
+        if (gt_pos := findByte(header, '>', i)) {
+            i = gt_pos;
+        } else {
             // Unterminated '<'
             break;
         }
-        let url_start = raw_url_start;
-        let url_end = i;
-        while (url_start < url_end && isWs(header[url_start])) {
-            url_start += 1;
-        }
-        while (url_end > url_start && isWs(header[url_end - 1])) {
-            url_end -= 1;
-        }
+        const trimmed_url = trim(header[raw_url_start..i]);
         i += 1; // consume '>'
 
         let entry = LinkEntry.empty();
-        entry.url = header[url_start..url_end];
+        entry.url = trimmed_url;
 
         // Parse '; key=val' parameters until ',' or end of header
         while (i < header.len) {
-            while (i < header.len && isWs(header[i])) {
+            while (i < header.len && isSpace(header[i])) {
                 i += 1;
             }
             if (i >= header.len) {
@@ -234,22 +204,22 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
                 break;
             }
             i += 1; // consume ';'
-            while (i < header.len && isWs(header[i])) {
+            while (i < header.len && isSpace(header[i])) {
                 i += 1;
             }
             const key_start = i;
-            while (i < header.len && header[i] != '=' && header[i] != ';' && header[i] != ',' && !isWs(header[i])) {
+            while (i < header.len && header[i] != '=' && header[i] != ';' && header[i] != ',' && !isSpace(header[i])) {
                 i += 1;
             }
             const key = header[key_start..i];
-            while (i < header.len && isWs(header[i])) {
+            while (i < header.len && isSpace(header[i])) {
                 i += 1;
             }
 
             let val: string = "";
             if (i < header.len && header[i] == '=') {
                 i += 1; // consume '='
-                while (i < header.len && isWs(header[i])) {
+                while (i < header.len && isSpace(header[i])) {
                     i += 1;
                 }
                 if (i < header.len && header[i] == '"') {
@@ -268,7 +238,7 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
                     }
                 } else {
                     const val_start = i;
-                    while (i < header.len && header[i] != ';' && header[i] != ',' && !isWs(header[i])) {
+                    while (i < header.len && header[i] != ';' && header[i] != ',' && !isSpace(header[i])) {
                         i += 1;
                     }
                     val = header[val_start..i];
@@ -312,46 +282,14 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendUsize(out: []u8, pos: usize, val: usize) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as usize + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
-}
-
 fn appendParam(out: []u8, pos: usize, name: string, val: string) -> usize {
     if (val.len == 0) {
         return pos;
     }
-    let p = appendStr(out, pos, "; ");
-    p = appendStr(out, p, name);
-    p = appendStr(out, p, "=\"");
-    p = appendStr(out, p, val);
+    let p = writeStr("; ", out, pos);
+    p = writeStr(name, out, p);
+    p = writeStr("=\"", out, p);
+    p = writeStr(val, out, p);
     p = appendByte(out, p, '"');
     return p;
 }
@@ -365,10 +303,10 @@ pub fn formatLinkHeader(entries: []LinkEntry, out: []u8) -> string {
         const e = entries[i];
         if (e.url.len > 0) {
             if (emitted > 0) {
-                pos = appendStr(out, pos, ", ");
+                pos = writeStr(", ", out, pos);
             }
             pos = appendByte(out, pos, '<');
-            pos = appendStr(out, pos, e.url);
+            pos = writeStr(e.url, out, pos);
             pos = appendByte(out, pos, '>');
             pos = appendParam(out, pos, "rel", e.rel);
             pos = appendParam(out, pos, "title", e.title);
@@ -379,17 +317,6 @@ pub fn formatLinkHeader(entries: []LinkEntry, out: []u8) -> string {
         i += 1;
     }
     return out[0..pos];
-}
-
-fn containsChar(s: string, target: u8) -> bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
 }
 
 fn appendPageLink(
@@ -403,17 +330,17 @@ fn appendPageLink(
 ) -> usize {
     let pos = start_pos;
     if (emitted > 0) {
-        pos = appendStr(out, pos, ", ");
+        pos = writeStr(", ", out, pos);
     }
     pos = appendByte(out, pos, '<');
-    pos = appendStr(out, pos, base_url);
+    pos = writeStr(base_url, out, pos);
     if (sep != 0) {
         pos = appendByte(out, pos, sep);
     }
-    pos = appendStr(out, pos, "page=");
-    pos = appendUsize(out, pos, target_page);
-    pos = appendStr(out, pos, ">; rel=\"");
-    pos = appendStr(out, pos, rel);
+    pos = writeStr("page=", out, pos);
+    pos = writeU64(target_page as u64, out, pos);
+    pos = writeStr(">; rel=\"", out, pos);
+    pos = writeStr(rel, out, pos);
     pos = appendByte(out, pos, '"');
     return pos;
 }
@@ -431,7 +358,7 @@ pub fn formatPaginationLinks(base_url: string, page: usize, total_pages: usize, 
     }
 
     let sep: u8 = '?';
-    if (containsChar(base_url, '?')) {
+    if (findByte(base_url, '?', 0) != null) {
         const last = base_url[base_url.len - 1];
         if (last == '?' || last == '&') {
             sep = 0;

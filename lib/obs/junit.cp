@@ -535,7 +535,7 @@ pub struct JunitSuiteIter {
                 _.malformed = true;
                 return null;
             }
-            const gt = gt_opt ?? unreachable;
+            const gt = gt_opt.?;
             const self_closing = gt > tag_start && _.data[gt - 1] == '/';
             const attr_end = if (self_closing) (gt - 1) else gt;
             const attrs = _.data[tag_start + 10..attr_end];
@@ -607,7 +607,7 @@ pub struct JunitCaseIter {
                 _.malformed = true;
                 return null;
             }
-            const gt = gt_opt ?? unreachable;
+            const gt = gt_opt.?;
             const self_closing = gt > tag_start && _.data[gt - 1] == '/';
             const attr_end = if (self_closing) (gt - 1) else gt;
             const attrs = _.data[tag_start + 9..attr_end];

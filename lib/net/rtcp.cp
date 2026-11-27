@@ -97,7 +97,7 @@ pub struct RtcpCompoundIter {
             _.pos = _.data.len;
             return null;
         }
-        const pkt = pkt_opt ?? unreachable;
+        const pkt = pkt_opt.?;
         _.pos += pkt.total_bytes;
         return pkt;
     }

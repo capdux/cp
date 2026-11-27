@@ -364,7 +364,7 @@ pub struct SnmpVarBindIter {
             _.pos = _.data.len;
             return null;
         }
-        const seq = seq_opt ?? unreachable;
+        const seq = seq_opt.?;
         if (seq.tag != TAG_SEQUENCE) {
             _.had_error = true;
             _.pos = _.data.len;
@@ -378,7 +378,7 @@ pub struct SnmpVarBindIter {
             _.pos = _.data.len;
             return null;
         }
-        const oid_tlv = oid_opt ?? unreachable;
+        const oid_tlv = oid_opt.?;
         if (oid_tlv.tag != (SnmpValueTag.oid as u8) || oid_tlv.value.len == 0) {
             _.had_error = true;
             _.pos = _.data.len;
@@ -392,7 +392,7 @@ pub struct SnmpVarBindIter {
             _.pos = _.data.len;
             return null;
         }
-        const val_tlv = val_opt ?? unreachable;
+        const val_tlv = val_opt.?;
         // 严禁单条 VarBind 内存在未解析尾随字节
         if (val_tlv.next_pos != seq.value.len) {
             _.had_error = true;

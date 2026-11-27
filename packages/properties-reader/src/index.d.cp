@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { hexVal } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 export class PropEntry {
     key_start: usize,
     key_len: usize,
@@ -8,8 +10,6 @@ export class PropEntry {
 }
 
 export fn isLineWs(c: u8): bool;
-export fn fromHex(c: u8): i32;
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
 export class EscDecodeResult {
     next_pos: usize,
     written: usize,
