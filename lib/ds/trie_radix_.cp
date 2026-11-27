@@ -33,7 +33,7 @@ export struct RadixTree<V> {
     root: *Node,
     count: usize,
 
-    fn createNode(alloc: std.mem.Allocator, edge: []const u8) -> !*Node {
+    static fn createNode(alloc: std.mem.Allocator, edge: []const u8) -> !*Node {
         const copied_edge = try alloc.dupe(u8, edge);
         errdefer alloc.free(copied_edge);
         const init_val = Node{
@@ -46,7 +46,7 @@ export struct RadixTree<V> {
         return node;
     }
 
-    fn destroySubtree(alloc: std.mem.Allocator, node: *Node) {
+    static fn destroySubtree(alloc: std.mem.Allocator, node: *Node) {
         for (child of node.children.items) {
             destroySubtree(alloc, child);
         }
@@ -57,7 +57,7 @@ export struct RadixTree<V> {
         alloc.destroy(node);
     }
 
-    fn findChildIndex(node: *Node, first_byte: u8) -> usize? {
+    static fn findChildIndex(node: *Node, first_byte: u8) -> usize? {
         let i: usize = 0;
         while (i < node.children.items.len) {
             const child = node.children.items[i];
@@ -69,7 +69,7 @@ export struct RadixTree<V> {
         return null;
     }
 
-    fn collectKeys(
+    static fn collectKeys(
         alloc: std.mem.Allocator,
         node: *Node,
         buf: *std.ArrayList(u8),

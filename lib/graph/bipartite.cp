@@ -44,7 +44,7 @@ pub struct BipartiteGraph {
     }
 
     /// Constructs a validated `BipartiteGraph`, returning `null` if CSR invariants fail.
-    fn init(
+    static fn init(
         num_left: usize,
         num_right: usize,
         row_ptr: []const usize,

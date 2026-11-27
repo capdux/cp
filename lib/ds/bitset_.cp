@@ -35,7 +35,7 @@ pub struct BitSet {
     }
 
     /// Initialize a BitSet pre-allocated for at least `bit_capacity` bits.
-    pub fn initWithCapacity(alloc: std.mem.Allocator, bit_capacity: usize): BitSet ! BitSetError {
+    pub static fn initWithCapacity(alloc: std.mem.Allocator, bit_capacity: usize): BitSet ! BitSetError {
         if (bit_capacity == 0) {
             return BitSet.init(alloc);
         }
@@ -390,7 +390,7 @@ pub struct BitSet {
     }
 
     /// Deserialize from compact hex string produced by `toHex`.
-    pub fn fromHex(alloc: std.mem.Allocator, hex_str: string): BitSet ! BitSetError {
+    pub static fn fromHex(alloc: std.mem.Allocator, hex_str: string): BitSet ! BitSetError {
         if ((hex_str.len & 1) != 0) return BitSetError.InvalidHex;
         if (hex_str.len == 0) return BitSet.init(alloc);
 

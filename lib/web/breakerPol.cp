@@ -29,7 +29,7 @@ pub struct BackoffPolicy {
     jitter: JitterMode = .Full,
 
     /// Validates and constructs a `BackoffPolicy`.
-    pub fn init(
+    pub static fn init(
         base_delay_ms: i64,
         max_delay_ms: i64,
         multiplier: f64,

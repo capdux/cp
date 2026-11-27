@@ -26,7 +26,7 @@ pub const CoseAlgorithm = enum(i32) {
     HS256 = 5,
     RS256 = -257,
 
-    pub static fn fromInt(val: i64): CoseError!CoseAlgorithm {
+    pub static fn fromInt(val: i64): !CoseAlgorithm {
         return switch (val) {
             -7 => .ES256,
             -8 => .EdDSA,
@@ -47,7 +47,7 @@ pub const CoseKeyType = enum(i32) {
     RSA = 3,
     Symmetric = 4,
 
-    pub static fn fromInt(val: i64): CoseError!CoseKeyType {
+    pub static fn fromInt(val: i64): !CoseKeyType {
         return switch (val) {
             1 => .OKP,
             2 => .EC2,
@@ -71,7 +71,7 @@ pub const CoseCurve = enum(i32) {
     Ed25519 = 6,
     Ed448 = 7,
 
-    pub static fn fromInt(val: i64): CoseError!CoseCurve {
+    pub static fn fromInt(val: i64): !CoseCurve {
         return switch (val) {
             1 => .P256,
             2 => .P384,

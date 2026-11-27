@@ -384,7 +384,7 @@ pub struct Xor8Filter {
     fingerprints: []u8,
 
     /// Build an Xor8Filter from a slice of byte keys. Duplicate keys are automatically deduplicated.
-    pub fn build(allocator: std.mem.Allocator, keys: []const []const u8): Xor8Filter ! XorFilterError {
+    pub static fn build(allocator: std.mem.Allocator, keys: []const []const u8): Xor8Filter ! XorFilterError {
         if (keys.len == 0) {
             return Xor8Filter{
                 alloc: allocator,
@@ -475,7 +475,7 @@ pub struct Xor8Filter {
     }
 
     /// Deserialize an Xor8Filter from a binary buffer, validating magic, version, and exact byte length.
-    pub fn deserialize(allocator: std.mem.Allocator, data: []const u8): Xor8Filter ! XorFilterError {
+    pub static fn deserialize(allocator: std.mem.Allocator, data: []const u8): Xor8Filter ! XorFilterError {
         const hdr = parseHeader(data, XOR8_MAGIC, 1) catch |e| return e;
         if (hdr.array_length == 0) {
             return Xor8Filter{
@@ -533,7 +533,7 @@ pub struct Xor16Filter {
     fingerprints: []u16,
 
     /// Build an Xor16Filter from a slice of byte keys. Duplicate keys are automatically deduplicated.
-    pub fn build(allocator: std.mem.Allocator, keys: []const []const u8): Xor16Filter ! XorFilterError {
+    pub static fn build(allocator: std.mem.Allocator, keys: []const []const u8): Xor16Filter ! XorFilterError {
         if (keys.len == 0) {
             return Xor16Filter{
                 alloc: allocator,
@@ -629,7 +629,7 @@ pub struct Xor16Filter {
     }
 
     /// Deserialize an Xor16Filter from a binary buffer, validating magic, version, and exact byte length.
-    pub fn deserialize(allocator: std.mem.Allocator, data: []const u8): Xor16Filter ! XorFilterError {
+    pub static fn deserialize(allocator: std.mem.Allocator, data: []const u8): Xor16Filter ! XorFilterError {
         const hdr = parseHeader(data, XOR16_MAGIC, 2) catch |e| return e;
         if (hdr.array_length == 0) {
             return Xor16Filter{

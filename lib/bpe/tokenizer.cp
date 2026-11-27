@@ -12,7 +12,7 @@ pub struct BpeTokenizer {
         };
     }
 
-    pub fn fromVocab(vocab: BpeVocab): BpeTokenizer {
+    pub static fn fromVocab(vocab: BpeVocab): BpeTokenizer {
         return BpeTokenizer{
             .vocab = vocab,
         };
@@ -22,14 +22,14 @@ pub struct BpeTokenizer {
         _.vocab.deinit();
     }
 
-    pub fn loadTiktoken(alloc: std.mem.Allocator, content: []const u8): !BpeTokenizer {
+    pub static fn loadTiktoken(alloc: std.mem.Allocator, content: []const u8): !BpeTokenizer {
         const vocab = try loadTiktokenText(alloc, content);
         return BpeTokenizer{
             .vocab = vocab,
         };
     }
 
-    pub fn trainFromCorpus(alloc: std.mem.Allocator, text: []const u8, target_vocab_size: usize): !BpeTokenizer {
+    pub static fn trainFromCorpus(alloc: std.mem.Allocator, text: []const u8, target_vocab_size: usize): !BpeTokenizer {
         if (target_vocab_size < 256) {
             return BpeError.InvalidTargetVocabSize;
         }
