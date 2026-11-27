@@ -1,14 +1,9 @@
 // @cap/didyoumean — Zero-allocation spell-suggestion & edit-distance engine for CP
 // Clean-room MIT implementation inspired by npm `didyoumean`, `fastest-levenshtein`, and Rust `strsim`.
 
-const MAX_STR_LEN: usize = 128;
+import { toLowerByte } from "cap:ascii";
 
-fn toLower(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
+const MAX_STR_LEN: usize = 128;
 
 fn min3(a: usize, b: usize, c: usize) -> usize {
     let m = if (a < b) { a } else { b };
@@ -77,11 +72,11 @@ pub fn damerauLevenshtein(a: string, b: string, ignore_case: bool) -> usize {
     let i: usize = 1;
     while (i <= la) {
         curr[0] = i;
-        const ca = if (ignore_case) { toLower(a[i - 1]) } else { a[i - 1] };
+        const ca = if (ignore_case) { toLowerByte(a[i - 1]) } else { a[i - 1] };
         let pa: u8 = 0;
         if (i > 1) {
             if (ignore_case) {
-                pa = toLower(a[i - 2]);
+                pa = toLowerByte(a[i - 2]);
             } else {
                 pa = a[i - 2];
             }
@@ -89,11 +84,11 @@ pub fn damerauLevenshtein(a: string, b: string, ignore_case: bool) -> usize {
 
         let k: usize = 1;
         while (k <= lb) {
-            const cb = if (ignore_case) { toLower(b[k - 1]) } else { b[k - 1] };
+            const cb = if (ignore_case) { toLowerByte(b[k - 1]) } else { b[k - 1] };
             const cost: usize = if (ca == cb) { 0 as usize } else { 1 as usize };
             let best = min3(prev1[k] + 1, curr[k - 1] + 1, prev1[k - 1] + cost);
             if (i > 1 && k > 1) {
-                const pb = if (ignore_case) { toLower(b[k - 2]) } else { b[k - 2] };
+                const pb = if (ignore_case) { toLowerByte(b[k - 2]) } else { b[k - 2] };
                 if (ca == pb && pa == cb) {
                     const trans = prev2[k - 2] + 1;
                     if (trans < best) {

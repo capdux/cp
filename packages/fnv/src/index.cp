@@ -1,6 +1,8 @@
 // @cap/fnv — Zero-allocation FNV-1a 32/64-bit & FxHash 64-bit streaming hashers for CP
 // Clean-room MIT implementation inspired by Rust `fnv` and `rustc-hash`.
 
+import { readU16LE, readU32LE, readU64LE } from "cap:bin";
+
 pub const FNV32_OFFSET_BASIS: u32 = 0x811c9dc5;
 pub const FNV32_PRIME: u32 = 0x01000193;
 
@@ -128,30 +130,17 @@ pub struct FxHasher {
         let i: usize = 0;
         // Absorb 8-byte little-endian words
         while (i + 8 <= data.len) {
-            const w: u64 = (data[i] as u64)
-                | ((data[i + 1] as u64) << 8)
-                | ((data[i + 2] as u64) << 16)
-                | ((data[i + 3] as u64) << 24)
-                | ((data[i + 4] as u64) << 32)
-                | ((data[i + 5] as u64) << 40)
-                | ((data[i + 6] as u64) << 48)
-                | ((data[i + 7] as u64) << 56);
-            _.writeU64(w);
+            _.writeU64(readU64LE(data, i) ?? 0);
             i += 8;
         }
         // Absorb remaining 4-byte chunk
         if (i + 4 <= data.len) {
-            const w4: u64 = (data[i] as u64)
-                | ((data[i + 1] as u64) << 8)
-                | ((data[i + 2] as u64) << 16)
-                | ((data[i + 3] as u64) << 24);
-            _.writeU64(w4);
+            _.writeU64((readU32LE(data, i) ?? 0) as u64);
             i += 4;
         }
         // Absorb remaining 2-byte chunk
         if (i + 2 <= data.len) {
-            const w2: u64 = (data[i] as u64) | ((data[i + 1] as u64) << 8);
-            _.writeU64(w2);
+            _.writeU64((readU16LE(data, i) ?? 0) as u64);
             i += 2;
         }
         // Absorb final byte

@@ -1,18 +1,10 @@
 // @cap/dunce — Zero-heap safe Windows verbatim UNC (`\\?\`) path simplifier in pure CP
 // MIT License — Clean-room implementation inspired by Rust `dunce`
 
+import { isAlpha, eqIgnoreCase, findByte, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_LEGACY_PATH: usize = 259;
-
-fn isAsciiAlpha(ch: u8): bool {
-    return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
-}
-
-fn toUpper(ch: u8): u8 {
-    if (ch >= 97 && ch <= 122) {
-        return ch - 32;
-    }
-    return ch;
-}
 
 fn isIllegalWinChar(ch: u8): bool {
     if (ch < 0x20) {
@@ -29,46 +21,30 @@ pub fn isWindowsReservedName(component: string): bool {
         return false;
     }
     // Extract stem before first '.'
-    let stem_len: usize = 0;
-    while (stem_len < component.len && component[stem_len] != 46) {
-        stem_len += 1;
-    }
+    let stem_len: usize = findByte(component, 46, 0) ?? component.len;
     // Trim trailing spaces on stem (Windows treats "CON " as CON)
     while (stem_len > 0 && component[stem_len - 1] == 32) {
         stem_len -= 1;
     }
+    const stem: string = component[0..stem_len];
 
     if (stem_len == 3) {
-        const c0: u8 = toUpper(component[0]);
-        const c1: u8 = toUpper(component[1]);
-        const c2: u8 = toUpper(component[2]);
-        if (c0 == 67 && c1 == 79 && c2 == 78) { return true; } // CON
-        if (c0 == 80 && c1 == 82 && c2 == 78) { return true; } // PRN
-        if (c0 == 65 && c1 == 85 && c2 == 88) { return true; } // AUX
-        if (c0 == 78 && c1 == 85 && c2 == 76) { return true; } // NUL
-        return false;
+        return eqIgnoreCase(stem, "CON")
+            || eqIgnoreCase(stem, "PRN")
+            || eqIgnoreCase(stem, "AUX")
+            || eqIgnoreCase(stem, "NUL");
     }
 
-    if (stem_len == 4) {
-        const c0: u8 = toUpper(component[0]);
-        const c1: u8 = toUpper(component[1]);
-        const c2: u8 = toUpper(component[2]);
-        const c3: u8 = component[3];
-        if (c3 >= 49 && c3 <= 57) { // '1'..'9'
-            if (c0 == 67 && c1 == 79 && c2 == 77) { return true; } // COM1..COM9
-            if (c0 == 76 && c1 == 80 && c2 == 84) { return true; } // LPT1..LPT9
-        }
+    if (stem_len == 4 && stem[3] >= 49 && stem[3] <= 57) { // '1'..'9'
+        const p3: string = stem[0..3];
+        return eqIgnoreCase(p3, "COM") || eqIgnoreCase(p3, "LPT");
     }
     return false;
 }
 
 /// Return true if `path` begins with the Windows verbatim prefix `\\?\`.
 pub fn hasWindowsVerbatimPrefix(path: string): bool {
-    return path.len >= 4 &&
-        path[0] == 92 &&
-        path[1] == 92 &&
-        path[2] == 63 &&
-        path[3] == 92;
+    return startsWith(path, "\\\\?\\");
 }
 
 /// Return true iff stripping the `\\?\` prefix from `path` is completely safe on Windows:
@@ -84,7 +60,7 @@ pub fn canStripVerbatimPrefix(path: string): bool {
         return false;
     }
     // Must be \\?\X:\
-    if (!isAsciiAlpha(path[4]) || path[5] != 58 || path[6] != 92) {
+    if (!isAlpha(path[4]) || path[5] != 58 || path[6] != 92) {
         return false;
     }
     // Stripped path length must fit within legacy MAX_PATH (259)
@@ -142,10 +118,5 @@ pub fn simplified(path: string, out: []u8): usize {
         return 0;
     }
     const src: string = if (canStripVerbatimPrefix(path)) path[4..path.len] else path;
-    let w: usize = 0;
-    while (w < src.len && w < out.len) {
-        out[w] = src[w];
-        w += 1;
-    }
-    return w;
+    return writeStr(src, out, 0);
 }

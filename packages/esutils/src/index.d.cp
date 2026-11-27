@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-export fn esuStrEq(a: string, b: string): bool;
+import { bytesEq } from "cap:bin";
 export fn isDecimalDigit(cp: u32): bool;
 export fn isHexDigit(cp: u32): bool;
 export fn isOctalDigit(cp: u32): bool;

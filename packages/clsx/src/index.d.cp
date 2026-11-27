@@ -1,12 +1,13 @@
 // Type definitions for CP
 
+import { isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export class CondClass {
     name: &[]u8,
     enabled: bool,
 }
 
-export fn isWs(c: u8): bool;
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
 export class ClassBuilder {
     buf: []u8,
     pos: usize,

@@ -1,7 +1,7 @@
 // Type definitions for CP
 
-export fn isAsciiAlpha(ch: u8): bool;
-export fn toUpper(ch: u8): u8;
+import { isAlpha, eqIgnoreCase, findByte, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn isIllegalWinChar(ch: u8): bool;
 export fn isWindowsReservedName(component: string): bool;
 export fn hasWindowsVerbatimPrefix(path: string): bool;

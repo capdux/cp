@@ -1,18 +1,13 @@
 // @cap/base32-rfc — Zero-allocation RFC 4648 §6/§7 Standard Base32 & Base32hex Codec
 // Clean-room MIT implementation in pure CP.
 
+import { toUpperByte } from "cap:ascii";
+
 const STD_ALPHABET: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const HEX_ALPHABET: string = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 
-fn toUpperAscii(b: u8) -> u8 {
-    if (b >= 97 && b <= 122) {
-        return b - 32;
-    }
-    return b;
-}
-
 fn decodeStdChar(b: u8) -> i32 {
-    const u = toUpperAscii(b);
+    const u = toUpperByte(b);
     if (u >= 65 && u <= 90) {
         return (u - 65) as i32; // A-Z -> 0..25
     }
@@ -23,7 +18,7 @@ fn decodeStdChar(b: u8) -> i32 {
 }
 
 fn decodeHexChar(b: u8) -> i32 {
-    const u = toUpperAscii(b);
+    const u = toUpperByte(b);
     if (u >= 48 && u <= 57) {
         return (u - 48) as i32; // 0-9 -> 0..9
     }

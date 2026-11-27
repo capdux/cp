@@ -1,19 +1,7 @@
 // @cap/esutils — Zero-allocation ECMAScript code/keyword/identifier utilities in pure CP
 // Clean-room MIT implementation of npm `esutils` (#201, 215M/wk).
 
-fn esuStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
+import { bytesEq } from "cap:bin";
 
 /// Returns `true` if `cp` is an ECMAScript decimal digit (`0`-`9`).
 pub fn isDecimalDigit(cp: u32): bool {
@@ -77,21 +65,21 @@ pub fn isIdentifierPartES6(cp: u32): bool {
 /// Returns `true` if `id` is a strict-mode ES6 keyword.
 pub fn isKeywordES6(id: string, strict: bool): bool {
     if (strict) {
-        if (esuStrEq(id, "let") || esuStrEq(id, "static") || esuStrEq(id, "yield")
-            || esuStrEq(id, "implements") || esuStrEq(id, "interface") || esuStrEq(id, "package")
-            || esuStrEq(id, "private") || esuStrEq(id, "protected") || esuStrEq(id, "public")) {
+        if (bytesEq(id, "let") || bytesEq(id, "static") || bytesEq(id, "yield")
+            || bytesEq(id, "implements") || bytesEq(id, "interface") || bytesEq(id, "package")
+            || bytesEq(id, "private") || bytesEq(id, "protected") || bytesEq(id, "public")) {
             return true;
         }
     }
-    if (esuStrEq(id, "if") || esuStrEq(id, "in") || esuStrEq(id, "do") || esuStrEq(id, "var")
-        || esuStrEq(id, "for") || esuStrEq(id, "new") || esuStrEq(id, "try") || esuStrEq(id, "this")
-        || esuStrEq(id, "else") || esuStrEq(id, "case") || esuStrEq(id, "void") || esuStrEq(id, "with")
-        || esuStrEq(id, "enum") || esuStrEq(id, "while") || esuStrEq(id, "break") || esuStrEq(id, "catch")
-        || esuStrEq(id, "throw") || esuStrEq(id, "const") || esuStrEq(id, "class") || esuStrEq(id, "super")
-        || esuStrEq(id, "return") || esuStrEq(id, "typeof") || esuStrEq(id, "delete") || esuStrEq(id, "switch")
-        || esuStrEq(id, "export") || esuStrEq(id, "import") || esuStrEq(id, "default") || esuStrEq(id, "finally")
-        || esuStrEq(id, "extends") || esuStrEq(id, "function") || esuStrEq(id, "continue") || esuStrEq(id, "debugger")
-        || esuStrEq(id, "instanceof") || esuStrEq(id, "await")) {
+    if (bytesEq(id, "if") || bytesEq(id, "in") || bytesEq(id, "do") || bytesEq(id, "var")
+        || bytesEq(id, "for") || bytesEq(id, "new") || bytesEq(id, "try") || bytesEq(id, "this")
+        || bytesEq(id, "else") || bytesEq(id, "case") || bytesEq(id, "void") || bytesEq(id, "with")
+        || bytesEq(id, "enum") || bytesEq(id, "while") || bytesEq(id, "break") || bytesEq(id, "catch")
+        || bytesEq(id, "throw") || bytesEq(id, "const") || bytesEq(id, "class") || bytesEq(id, "super")
+        || bytesEq(id, "return") || bytesEq(id, "typeof") || bytesEq(id, "delete") || bytesEq(id, "switch")
+        || bytesEq(id, "export") || bytesEq(id, "import") || bytesEq(id, "default") || bytesEq(id, "finally")
+        || bytesEq(id, "extends") || bytesEq(id, "function") || bytesEq(id, "continue") || bytesEq(id, "debugger")
+        || bytesEq(id, "instanceof") || bytesEq(id, "await")) {
         return true;
     }
     return false;
@@ -99,7 +87,7 @@ pub fn isKeywordES6(id: string, strict: bool): bool {
 
 /// Returns `true` if `id` is a reserved word in ES6 (keywords + `null`, `true`, `false`).
 pub fn isReservedWordES6(id: string, strict: bool): bool {
-    if (esuStrEq(id, "null") || esuStrEq(id, "true") || esuStrEq(id, "false")) {
+    if (bytesEq(id, "null") || bytesEq(id, "true") || bytesEq(id, "false")) {
         return true;
     }
     return isKeywordES6(id, strict);
@@ -107,7 +95,7 @@ pub fn isReservedWordES6(id: string, strict: bool): bool {
 
 /// Returns `true` if `id` is a restricted word in strict mode (`eval` or `arguments`).
 pub fn isRestrictedWord(id: string): bool {
-    return esuStrEq(id, "eval") || esuStrEq(id, "arguments");
+    return bytesEq(id, "eval") || bytesEq(id, "arguments");
 }
 
 /// Returns `true` if `id` is a valid ES6 IdentifierName (allows keywords, e.g. property names).

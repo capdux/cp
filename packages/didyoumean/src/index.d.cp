@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-export fn toLower(c: u8): u8;
+import { toLowerByte } from "cap:ascii";
 export fn min3(a: usize, b: usize, c: usize): usize;
 export fn levenshtein(a: string, b: string): usize;
 export fn damerauLevenshtein(a: string, b: string, ignore_case: bool): usize;

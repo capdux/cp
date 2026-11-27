@@ -1,24 +1,11 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     isWindowsReservedName,
     hasWindowsVerbatimPrefix,
     canStripVerbatimPrefix,
     simplified,
 } from "../../packages/dunce/src/index.cp";
-
-fn strEq(buf: []const u8, expected: string): bool {
-    if (buf.len != expected.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < buf.len) {
-        if (buf[i] != expected[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/dunce — Normal verbatim drive path strips '\\\\?\\' safely", () => {

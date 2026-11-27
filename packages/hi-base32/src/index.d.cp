@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-export fn toUpperAscii(b: u8): u8;
+import { toUpperByte } from "cap:ascii";
 export fn decodeStdChar(b: u8): i32;
 export fn decodeHexChar(b: u8): i32;
 export fn encodedLen(byte_len: usize, pad: bool): usize;

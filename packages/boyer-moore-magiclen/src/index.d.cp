@@ -1,11 +1,11 @@
 // Type definitions for CP
 
+import { toLowerByte } from "cap:ascii";
 export class BmhPattern {
     shift: [256]usize,
     pat_len: usize,
 }
 
-export fn toLowerAscii(c: u8): u8;
 export fn compilePattern(needle: &[]u8): BmhPattern;
 export fn findWithCompiled(haystack: &[]u8, needle: &[]u8, compiled: BmhPattern): i64;
 export fn findFirst(haystack: &[]u8, needle: &[]u8): i64;

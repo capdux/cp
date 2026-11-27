@@ -1,19 +1,11 @@
 // @cap/home-dir — Zero-heap cross-platform home directory & tilde path utilities in pure CP
 // MIT License — Clean-room implementation inspired by Rust `home` & npm `untildify`/`tildify`
 
+import { startsWithBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 fn isSlash(ch: u8): bool {
     return ch == 47 || ch == 92; // '/' or '\\'
-}
-
-fn copySlice(out: []u8, pos: usize, src: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < src.len && p < out.len) {
-        out[p] = src[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
 }
 
 fn writeByte(out: []u8, pos: usize, b: u8): usize {
@@ -30,20 +22,6 @@ fn trimTrailingSlashes(s: string): usize {
         end -= 1;
     }
     return end;
-}
-
-fn bytesPrefixEq(path: string, prefix: string): bool {
-    if (path.len < prefix.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (path[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Resolve the user's home directory from environment variables into `out`:
@@ -65,17 +43,17 @@ pub fn resolveHomeDir(
         if (home_env.len == 0) {
             return 0;
         }
-        return copySlice(out, 0, home_env);
+        return writeStr(home_env, out, 0);
     }
     if (home_env.len > 0) {
-        return copySlice(out, 0, home_env);
+        return writeStr(home_env, out, 0);
     }
     if (userprofile_env.len > 0) {
-        return copySlice(out, 0, userprofile_env);
+        return writeStr(userprofile_env, out, 0);
     }
     if (homedrive_env.len > 0 && homepath_env.len > 0) {
-        let p: usize = copySlice(out, 0, homedrive_env);
-        p = copySlice(out, p, homepath_env);
+        let p: usize = writeStr(homedrive_env, out, 0);
+        p = writeStr(homepath_env, out, p);
         return p;
     }
     return 0;
@@ -89,14 +67,14 @@ pub fn expandTilde(path: string, home_dir: string, out: []u8): usize {
     }
     const is_tilde_self: bool = path[0] == 126 && (path.len == 1 || isSlash(path[1]));
     if (!is_tilde_self || home_dir.len == 0) {
-        return copySlice(out, 0, path);
+        return writeStr(path, out, 0);
     }
     if (path.len == 1) {
-        return copySlice(out, 0, home_dir);
+        return writeStr(home_dir, out, 0);
     }
     const h_len: usize = trimTrailingSlashes(home_dir);
-    let p: usize = copySlice(out, 0, home_dir[0..h_len]);
-    p = copySlice(out, p, path[1..path.len]);
+    let p: usize = writeStr(home_dir[0..h_len], out, 0);
+    p = writeStr(path[1..path.len], out, p);
     return p;
 }
 
@@ -107,21 +85,21 @@ pub fn contractTilde(path: string, home_dir: string, out: []u8): usize {
         return 0;
     }
     if (home_dir.len == 0) {
-        return copySlice(out, 0, path);
+        return writeStr(path, out, 0);
     }
     const h_len: usize = trimTrailingSlashes(home_dir);
     const home_clean: string = home_dir[0..h_len];
-    if (bytesPrefixEq(path, home_clean)) {
+    if (startsWithBytes(path, home_clean)) {
         if (path.len == h_len) {
             return writeByte(out, 0, 126); // '~'
         }
         if (isSlash(path[h_len])) {
             let p: usize = writeByte(out, 0, 126); // '~'
-            p = copySlice(out, p, path[h_len..path.len]);
+            p = writeStr(path[h_len..path.len], out, p);
             return p;
         }
     }
-    return copySlice(out, 0, path);
+    return writeStr(path, out, 0);
 }
 
 /// Build an application config directory path following XDG Base Directory semantics:
@@ -144,15 +122,15 @@ pub fn joinConfigDir(
 
     if (xdg_config_home.len > 0) {
         const x_len: usize = trimTrailingSlashes(xdg_config_home);
-        p = copySlice(out, p, xdg_config_home[0..x_len]);
+        p = writeStr(xdg_config_home[0..x_len], out, p);
     } else if (home_dir.len > 0) {
         const h_len: usize = trimTrailingSlashes(home_dir);
-        p = copySlice(out, p, home_dir[0..h_len]);
+        p = writeStr(home_dir[0..h_len], out, p);
         p = writeByte(out, p, sep);
         if (is_windows) {
-            p = copySlice(out, p, "AppData\\Roaming");
+            p = writeStr("AppData\\Roaming", out, p);
         } else {
-            p = copySlice(out, p, ".config");
+            p = writeStr(".config", out, p);
         }
     } else {
         return 0;
@@ -165,7 +143,7 @@ pub fn joinConfigDir(
         }
         if (a_start < app_name.len) {
             p = writeByte(out, p, sep);
-            p = copySlice(out, p, app_name[a_start..app_name.len]);
+            p = writeStr(app_name[a_start..app_name.len], out, p);
         }
     }
     return p;

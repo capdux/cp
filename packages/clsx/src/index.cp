@@ -1,27 +1,13 @@
 // @cap/clsx — Zero-heap conditional CSS class name builder & deduplicator
 // MIT License (clean-room CP implementation)
 
+import { isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 pub struct CondClass {
     pub name: []const u8,
     pub enabled: bool,
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' as u8 || c == '\t' as u8 || c == '\n' as u8 || c == '\r' as u8;
-}
-
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub struct ClassBuilder {
@@ -78,12 +64,7 @@ pub struct ClassBuilder {
             _.buf[_.pos] = ' ' as u8;
             _.pos += 1;
         }
-        let k: usize = 0;
-        while (k < tok.len) {
-            _.buf[_.pos] = tok[k];
-            _.pos += 1;
-            k += 1;
-        }
+        _.pos = writeStr(tok, _.buf, _.pos);
         return true;
     }
 
@@ -93,11 +74,11 @@ pub struct ClassBuilder {
         }
         let i: usize = 0;
         while (i < cls.len) {
-            while (i < cls.len && isWs(cls[i])) {
+            while (i < cls.len && isSpace(cls[i])) {
                 i += 1;
             }
             const start: usize = i;
-            while (i < cls.len && !isWs(cls[i])) {
+            while (i < cls.len && !isSpace(cls[i])) {
                 i += 1;
             }
             if (i > start) {
@@ -122,11 +103,11 @@ pub struct ClassBuilder {
         }
         let i: usize = 0;
         while (i < cls.len) {
-            while (i < cls.len && isWs(cls[i])) {
+            while (i < cls.len && isSpace(cls[i])) {
                 i += 1;
             }
             const start: usize = i;
-            while (i < cls.len && !isWs(cls[i])) {
+            while (i < cls.len && !isSpace(cls[i])) {
                 i += 1;
             }
             if (i > start) {

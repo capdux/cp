@@ -1,6 +1,8 @@
 // @cap/binary-extensions — Zero-heap O(log n) binary file extension & category lookup in pure CP
 // MIT License — Clean-room implementation inspired by npm `binary-extensions` & `is-binary-path`
 
+import { toLowerByte, rfindByte } from "cap:ascii";
+
 pub const CAT_NONE: u8 = 0;
 pub const CAT_IMAGE: u8 = 1;
 pub const CAT_AUDIO: u8 = 2;
@@ -46,19 +48,12 @@ const EXT_CATS: [127]u8 = [
     5, 5, 7, 7, 4, 4, 4,
 ];
 
-fn toLower(ch: u8): u8 {
-    if (ch >= 65 && ch <= 90) {
-        return ch + 32;
-    }
-    return ch;
-}
-
 /// Compare lowercase `a` (case-folded on the fly) against already-lowercase `b`.
 fn cmpLowerToAscii(a: string, b: string): i32 {
     const min_len: usize = if (a.len < b.len) a.len else b.len;
     let i: usize = 0;
     while (i < min_len) {
-        const ca: u8 = toLower(a[i]);
+        const ca: u8 = toLowerByte(a[i]);
         const cb: u8 = b[i];
         if (ca < cb) {
             return -1;
@@ -133,18 +128,12 @@ pub fn isBinaryPath(path: string): bool {
     const base: string = path[base_start..path.len];
 
     // Find last '.' inside basename; index 0 is a dotfile (e.g. ".gitignore"), not an extension
-    let dot_idx: usize = 0;
-    let found_dot: bool = false;
-    let j: usize = base.len;
-    while (j > 0) {
-        j -= 1;
-        if (base[j] == 46) {
-            dot_idx = j;
-            found_dot = true;
-            break;
-        }
+    const dot_opt = rfindByte(base, 46);
+    if (dot_opt == null) {
+        return false;
     }
-    if (!found_dot || dot_idx == 0 || dot_idx + 1 >= base.len) {
+    const dot_idx: usize = dot_opt.?;
+    if (dot_idx == 0 || dot_idx + 1 >= base.len) {
         return false;
     }
     return isBinaryExtension(base[dot_idx + 1 .. base.len]);

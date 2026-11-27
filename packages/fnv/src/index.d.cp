@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU16LE, readU32LE, readU64LE } from "cap:bin";
 export fn mulWrap32(a: u32, b: u32): u32;
 export fn mulWrap64(a: u64, b: u64): u64;
 export fn rotl64By5(x: u64): u64;

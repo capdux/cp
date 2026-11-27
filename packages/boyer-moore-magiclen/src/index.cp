@@ -1,16 +1,11 @@
 // @cap/bmh-search — Zero-heap Boyer-Moore-Horspool sublinear substring search
 // MIT License (clean-room CP implementation)
 
+import { toLowerByte } from "cap:ascii";
+
 pub struct BmhPattern {
     pub shift: [256]usize,
     pub pat_len: usize,
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
 }
 
 pub fn compilePattern(needle: []const u8) -> BmhPattern {
@@ -162,7 +157,7 @@ pub fn findIgnoreCaseAscii(haystack: string, needle: string) -> i64 {
     if (m > 1) {
         i = 0;
         while (i < last) {
-            const lc: u8 = toLowerAscii(needle[i]);
+            const lc: u8 = toLowerByte(needle[i]);
             shift[lc as usize] = last - i;
             if (lc >= 'a' as u8 && lc <= 'z' as u8) {
                 shift[(lc - 32) as usize] = last - i;
@@ -177,7 +172,7 @@ pub fn findIgnoreCaseAscii(haystack: string, needle: string) -> i64 {
         let matched: bool = true;
         while (j > 0) {
             j -= 1;
-            if (toLowerAscii(haystack[pos + j]) != toLowerAscii(needle[j])) {
+            if (toLowerByte(haystack[pos + j]) != toLowerByte(needle[j])) {
                 matched = false;
                 break;
             }

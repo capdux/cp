@@ -1,33 +1,13 @@
 // @cap/anymatch — Zero-heap file path & glob matcher in pure CP
 // MIT License — Composes @cap/normalize-path and @cap/is-glob directly
 
+import { bytesEq, startsWithBytes } from "cap:bin";
 import { normalizePathDefault } from "../../normalize-path/src/index.cp";
 import { isGlobDefault } from "../../is-glob/src/index.cp";
 
-fn bytesEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn startsWithDirPrefix(path: []const u8, prefix: []const u8): bool {
-    if (prefix.len == 0 || path.len <= prefix.len) {
+    if (prefix.len == 0 || path.len <= prefix.len || !startsWithBytes(path, prefix)) {
         return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (path[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
     }
     if (prefix.len == 1 && prefix[0] == 47) {
         return true;
