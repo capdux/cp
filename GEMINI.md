@@ -720,6 +720,10 @@ git status --porcelain cpc_dev/src
     - **真实下载量实时榜单驱动**：使用 `scripts/fetch_real_top700.py` 拉取 `crates.io/api/v1/crates?sort=downloads` 与 `wooorm/npm-high-impact` + `api.npmjs.org` 实时榜单落盘 `temp/real_top700_*.json`，所有派发严格按差集真实下载量降序执行，杜绝凭记忆估算下载量或吸收低下载长尾包浪费算力；
     - **单行 `python3 -c '...'` 零反斜杠转义铁律**：禁止在单行 Python f-string 内写 `\"` 转义（Python 3.12 必报 `SyntaxError` 浪费整轮重试），统一改用 `"%s" % (d["k"],)` 格式化；
     - **CP 1-Pass Codegen 新增 3 条一遍过避坑**：① 结构体方法避免命名为 `.toString(...)`（会被 `cpc` sema 固定推断返回 `string`，写入缓冲返回长度统一命名 `.writeTo(out): usize`）；② 科学计数法字面量必须带小数点（写 `1.0e12` 而非 `1e12`）；③ 浮点无穷/NaN 严禁写编译期 `1.0 / 0.0`，统一使用 `std.math.inf(f64)` / `std.math.nan(f64)`。
+12. **串行 `cap test` 防 Zig 缓存锁争用 + L0 基座零冲突命名 + `cap brief` 90% 省 Token（2026-11-27 3 小时审计固化 Iteration 8）**：
+    - **禁止主智能体并发启动多个后台 `cap test`**：实测并发运行多路 `zig build-exe` 争用 `.cap/zig-cache` 锁会使单测从 **650ms 劣化至 160,000ms（慢 240 倍）**；主智能体统一采用单命令串行链式 `cap test a.cp | tail -n 8 && cap test b.cp | tail -n 8` 保持 650ms 级极速；
+    - **L0 标准库跨通道导出命名零冲突铁律**：新增/修改 `cap:*` 内置通道（如 `cap:ascii`、`cap:bin`、`cap:fmt`、`cap:utf8`）严禁导出同名顶层符号（如 `cap:ascii.findByte` vs `cap:bin.findByteInBytes`），防止多通道混用时因模块展平触发 Zig `duplicate struct member name`；
+    - **生态包文档极简与 `cap brief <pkg>` 查库铁律**：`cp_agent_lib_ref.md` 采用紧凑逗号列表替代逐项反引号，体积压至 **38.3KB**（-90.7%）；全生态 904 包均已配备仅含公开 API 的 `README_AGENT.md` 与 `src/index.d.cp`，AI 查包优先运行 `cap brief <pkg>`，杜绝全量读源码浪费 Token。
 
 ---
 
