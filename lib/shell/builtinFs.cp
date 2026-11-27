@@ -653,9 +653,11 @@ pub fn runBuiltinTouch(argv: []const []const u8, stderr: *StringJoiner): i32 {
                 f.close();
             }
         } else {
-            let pbuf: [1024]u8 = [0; 1024];
+            let pbuf: [1024]u8 = undefined;
             if (path.len < pbuf.len) {
-                @memcpy(pbuf[0..path.len], path);
+                if (path.len > 0) {
+                    @memcpy(pbuf[0..path.len], path);
+                }
                 pbuf[path.len] = 0;
                 const c_path: [*:0]const u8 = pbuf[0..path.len :0].ptr;
                 zig {

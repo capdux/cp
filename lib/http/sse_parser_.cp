@@ -49,7 +49,7 @@ pub struct SseParser {
     src: []const u8,
     pos: usize = 0,
     last_event_id: []const u8 = "",
-    data_buf: [4096]u8 = [0; 4096],
+    data_buf: [4096]u8 = undefined,
 
     /// 初始化解析器，自动剥离可选 UTF-8 BOM
     static fn init(src: []const u8): SseParser {
@@ -147,11 +147,11 @@ pub struct SseParser {
 
             if (eqlBytes(field, "data")) {
                 has_data = true;
-                let j: usize = 0;
-                while (j < val.len && data_len < 4096) {
-                    _.data_buf[data_len] = val[j];
-                    data_len += 1;
-                    j += 1;
+                const avail = 4096 - data_len;
+                const copy_n = if (val.len < avail) val.len else avail;
+                if (copy_n > 0) {
+                    @memcpy(_.data_buf[data_len .. data_len + copy_n], val[0..copy_n]);
+                    data_len += copy_n;
                 }
                 if (data_len < 4096) {
                     _.data_buf[data_len] = '\n';

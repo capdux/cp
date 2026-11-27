@@ -339,7 +339,7 @@ pub struct SrvRecord {
     priority: u16 = 0;
     weight: u16 = 0;
     port: u16 = 0;
-    target_buf: [256]u8 = [0; 256];
+    target_buf: [256]u8 = undefined;
     target_len: usize = 0;
 
     pub static fn init(priority: u16, weight: u16, port: u16, target_name: []const u8): SrvRecord {
@@ -509,9 +509,9 @@ pub struct SrvSelector {
 
 /// RFC 1035 Section 3.3.13 SOA (Start of Authority) Resource Record
 pub struct SoaRecord {
-    mname_buf: [256]u8 = [0; 256];
+    mname_buf: [256]u8 = undefined;
     mname_len: usize = 0;
-    rname_buf: [256]u8 = [0; 256];
+    rname_buf: [256]u8 = undefined;
     rname_len: usize = 0;
     serial: u32 = 0;
     refresh: u32 = 0;
@@ -624,7 +624,7 @@ pub struct CaaRecord {
     flags: u8 = 0;
     tag_buf: [16]u8 = [0; 16];
     tag_len: usize = 0;
-    value_buf: [512]u8 = [0; 512];
+    value_buf: [512]u8 = undefined;
     value_len: usize = 0;
 
     pub static fn init(flags: u8, tag_str: []const u8, val_str: []const u8): CaaRecord {

@@ -118,7 +118,7 @@ struct PngBitReader {
 /// 规范 Huffman 解码表（按位长排序，支持 RFC 1951 1..15 bit 编码）
 struct PngHuffTable {
     counts: [16]u16 = [0; 16],
-    symbols: [320]u16 = [0; 320],
+    symbols: [320]u16 = undefined,
     max_bits: u8 = 0,
 
     static fn build(lengths: []const u8): PngHuffTable ! PngZlibError {
@@ -187,7 +187,7 @@ struct PngHuffTable {
 }
 
 fn buildFixedLitLen(): PngHuffTable ! PngZlibError {
-    let lens: [288]u8 = [0; 288];
+    let lens: [288]u8 = undefined;
     let i: usize = 0;
     while (i <= 143) : (i += 1) lens[i] = 8;
     while (i <= 255) : (i += 1) lens[i] = 9;
@@ -299,7 +299,7 @@ pub fn pngZlibDecompress(
             let cl_tbl = PngHuffTable.build(cl_lens[0..19]) catch |e| return e;
 
             let total_codes = (hlit + hdist) as usize;
-            let all_lens: [320]u8 = [0; 320];
+            let all_lens: [320]u8 = undefined;
             let idx: usize = 0;
             while (idx < total_codes) {
                 let sym = cl_tbl.decode(&reader) catch |e| return e;

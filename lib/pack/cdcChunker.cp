@@ -92,7 +92,7 @@ pub struct FastCdcChunker {
     mask_s: u64 = 0,
     mask_l: u64 = 0,
     cursor: usize = 0,
-    gear: [256]u64 = [0; 256],
+    gear: [256]u64 = undefined,
 
     /// Initializes a `FastCdcChunker` from `cfg`. Returns `null` if `cfg` is invalid.
     static fn init(cfg: FastCdcConfig): FastCdcChunker? {
@@ -108,7 +108,7 @@ pub struct FastCdcChunker {
             mask_s: makeHighBitMask(s_bits),
             mask_l: makeHighBitMask(l_bits),
             cursor: 0,
-            gear: [0; 256],
+            gear: undefined,
         };
 
         // Deterministic 256-entry Gear random lookup table (SplitMix64 seeded with FastCDC tag)

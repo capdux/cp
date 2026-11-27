@@ -403,7 +403,7 @@ pub struct ShellSession {
 }
 
 fn runCommandSubstitution(cmd_src: []const u8, session: *ShellSession, out: *StringJoiner) {
-    let saved_cwd_buf: [1024]u8 = [0; 1024];
+    let saved_cwd_buf: [1024]u8 = undefined;
     const saved_cwd = getcwd(&saved_cwd_buf) catch "/";
     let sub_sess = session.cloneForSubshell();
     defer {
@@ -1273,7 +1273,7 @@ pub struct Executor {
                 const node = pool.subshell_nodes.items[cmd.compound_id];
                 if (sptr := pool.getScript(node.script_id)) {
                     if (node.isolated) {
-                        let saved_cwd_buf: [1024]u8 = [0; 1024];
+                        let saved_cwd_buf: [1024]u8 = undefined;
                         const saved_cwd = getcwd(&saved_cwd_buf) catch "/";
                         let sub_sess = session.cloneForSubshell();
                         defer {

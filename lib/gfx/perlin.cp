@@ -62,20 +62,16 @@ pub struct PerlinNoise {
 
     /// Initializes with Ken Perlin's classic 2002 reference permutation table.
     static fn classic(): PerlinNoise {
-        let p: [512]u8 = [0; 512];
-        let i: usize = 0;
-        while (i < 256) {
-            p[i] = CLASSIC_PERM_256[i];
-            p[i + 256] = CLASSIC_PERM_256[i];
-            i += 1;
-        }
+        let p: [512]u8 = undefined;
+        @memcpy(p[0..256], CLASSIC_PERM_256[0..256]);
+        @memcpy(p[256..512], CLASSIC_PERM_256[0..256]);
         return PerlinNoise { perm: p };
     }
 
     /// Deterministically initializes a permutation table from a 64-bit `seed`
     /// using overflow-free xorshift64 + Fisher-Yates shuffle.
     static fn fromSeed(seed: u64): PerlinNoise {
-        let p: [512]u8 = [0; 512];
+        let p: [512]u8 = undefined;
         let i: usize = 0;
         while (i < 256) {
             p[i] = i as u8;
@@ -101,11 +97,7 @@ pub struct PerlinNoise {
             idx -= 1;
         }
 
-        i = 0;
-        while (i < 256) {
-            p[i + 256] = p[i];
-            i += 1;
-        }
+        @memcpy(p[256..512], p[0..256]);
         return PerlinNoise { perm: p };
     }
 

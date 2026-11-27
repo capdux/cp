@@ -155,7 +155,7 @@ pub struct SandboxRule {
     rule_id_buf: [48]u8 = [0; 48];
     rule_id_len: usize = 0;
     capability: CapabilityKind = CapabilityKind.fs_read;
-    scope_buf: [128]u8 = [0; 128];
+    scope_buf: [128]u8 = undefined;
     scope_len: usize = 0;
     risk_tier: RiskTier = RiskTier.low;
     action: PolicyAction = PolicyAction.deny;
@@ -234,7 +234,7 @@ pub struct SandboxAuditStats {
 pub struct ToolSandboxPolicy {
     rules: [32]SandboxRule = [SandboxRule{}; 32];
     rule_count: usize = 0;
-    allowed_root_buf: [128]u8 = [0; 128];
+    allowed_root_buf: [128]u8 = undefined;
     allowed_root_len: usize = 0;
     audit: SandboxAuditStats = SandboxAuditStats{};
 
@@ -243,7 +243,7 @@ pub struct ToolSandboxPolicy {
         return ToolSandboxPolicy{
             rules: [SandboxRule{}; 32],
             rule_count: 0,
-            allowed_root_buf: [0; 128],
+            allowed_root_buf: undefined,
             allowed_root_len: 0,
             audit: SandboxAuditStats{},
         };
@@ -256,7 +256,7 @@ pub struct ToolSandboxPolicy {
         if (root_path.len == 0 || root_path.len > 128) {
             return false;
         }
-        let norm_buf: [256]u8 = [0; 256];
+        let norm_buf: [256]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = ToolSandboxPolicy.normalize_path_raw(root_path, norm_s) ?? return false;
         if (norm_len == 0 || norm_len > 128) {
@@ -321,9 +321,8 @@ pub struct ToolSandboxPolicy {
             if (seg.len > out_norm.len - out_len) {
                 return null;
             }
-            let s: usize = 0;
-            while (s < seg.len) : (s += 1) {
-                out_norm[out_len + s] = seg[s];
+            if (seg.len > 0) {
+                @memcpy(out_norm[out_len .. out_len + seg.len], seg);
             }
             out_len += seg.len;
         }
@@ -425,7 +424,7 @@ pub struct ToolSandboxPolicy {
     fn evaluate(*_, req: SandboxRequest): SandboxPolicyDecision {
         _.audit.total_checks += 1;
 
-        let norm_buf: [256]u8 = [0; 256];
+        let norm_buf: [256]u8 = undefined;
         let effective_target: []const u8 = req.target;
 
         // 1. Hard path boundary & traversal check for filesystem capabilities

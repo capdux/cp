@@ -157,7 +157,7 @@ pub struct UnitIter {
 /// 同名键后者覆盖前者，空赋值 `Key=` 清空先前值；结果写入 `val_buf`
 pub fn getUnitValue(content: []const u8, section: []const u8, key: []const u8, val_buf: []u8): ([]const u8)? {
     let it = UnitIter.init(content);
-    let scratch: [1024]u8 = [0; 1024];
+    let scratch: [1024]u8 = undefined;
     let found = false;
     let saved_len: usize = 0;
 
@@ -170,11 +170,7 @@ pub fn getUnitValue(content: []const u8, section: []const u8, key: []const u8, v
                 if (entry.value.len > val_buf.len) {
                     return null;
                 }
-                let k: usize = 0;
-                while (k < entry.value.len) {
-                    val_buf[k] = entry.value[k];
-                    k += 1;
-                }
+                @memcpy(val_buf[0..entry.value.len], entry.value);
                 saved_len = entry.value.len;
                 found = true;
             }

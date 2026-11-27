@@ -182,7 +182,7 @@ pub struct ShellEnv {
         }
         // Fallback to OS process environment
         if (key.len < 256) {
-            let key_buf: [256]u8 = [0; 256];
+            let key_buf: [256]u8 = undefined;
             @memcpy(key_buf[0..key.len], key);
             key_buf[key.len] = 0;
             let result: ([]const u8)? = null;
@@ -363,7 +363,7 @@ pub struct AliasMap {
 }
 
 pub struct DirStack {
-    cwd_buf: [1024]u8 = [0; 1024],
+    cwd_buf: [1024]u8 = undefined,
     cwd_len: usize = 0,
     stack: [MAX_DIR_STACK][512]u8 = undefined,
     stack_lens: [MAX_DIR_STACK]usize = [0; MAX_DIR_STACK],
@@ -371,7 +371,7 @@ pub struct DirStack {
 
     pub static fn init(): DirStack {
         let ds = DirStack{
-            cwd_buf: [0; 1024],
+            cwd_buf: undefined,
             cwd_len: 0,
             stack: undefined,
             stack_lens: [0; MAX_DIR_STACK],
@@ -429,7 +429,7 @@ pub struct DirStack {
             return false;
         }
 
-        let prev_buf: [1024]u8 = [0; 1024];
+        let prev_buf: [1024]u8 = undefined;
         const prev_len = _.cwd_len;
         if (prev_len > 0) {
             @memcpy(prev_buf[0..prev_len], _.cwd_buf[0..prev_len]);
@@ -447,15 +447,19 @@ pub struct DirStack {
         if (_.stack_len >= MAX_DIR_STACK || _.cwd_len >= 512) {
             return false;
         }
-        let prev_buf: [512]u8 = [0; 512];
+        let prev_buf: [512]u8 = undefined;
         const prev_len = _.cwd_len;
-        @memcpy(prev_buf[0..prev_len], _.cwd_buf[0..prev_len]);
+        if (prev_len > 0) {
+            @memcpy(prev_buf[0..prev_len], _.cwd_buf[0..prev_len]);
+        }
 
         if (!_.chdirTo(target, env)) {
             return false;
         }
 
-        @memcpy(_.stack[_.stack_len][0..prev_len], prev_buf[0..prev_len]);
+        if (prev_len > 0) {
+            @memcpy(_.stack[_.stack_len][0..prev_len], prev_buf[0..prev_len]);
+        }
         _.stack_lens[_.stack_len] = prev_len;
         _.stack_len += 1;
         return true;
