@@ -4,6 +4,32 @@
 
 import { fnv64OffsetBasis, fnv1a64Update } from "../../@sindresorhus/fnv1a/src/index.cp";
 
+type UcVec16 = @Vector(16, u8);
+
+fn ucBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let i: usize = 0;
+    while (i < 256) {
+        if (i >= 65 && i <= 90) {
+            lut[i] = (i + 32) as u8;
+        } else {
+            lut[i] = i as u8;
+        }
+        i += 1;
+    }
+    return lut;
+}
+
+const UC_LOWER_LUT: [256]u8 = ucBuildLowerLut();
+
+fn ucFoldVec16(v: UcVec16): UcVec16 {
+    const v_A: UcVec16 = @splat(65 as u8);
+    const v_26: UcVec16 = @splat(26 as u8);
+    const v_32: UcVec16 = @splat(32 as u8);
+    return @select(u8, (v -% v_A) < v_26, v +% v_32, v);
+}
+
 // Decode one UTF-8 codepoint starting at `pos`; writes byte length into `step_out[0]`.
 fn ucDecodeUtf8(s: string, pos: usize, step_out: []usize): u32 {
     if (pos >= s.len) {
@@ -75,10 +101,7 @@ fn ucEncodeUtf8(cp: u32, out: []u8, pos: usize): usize {
 
 /// ASCII lowercase fold for a single byte.
 pub fn foldAsciiByte(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
+    return UC_LOWER_LUT[b as usize];
 }
 
 /// Full Unicode simple/multi-codepoint case folding (returns 1..2 folded codepoints in `folded_out`).
@@ -189,7 +212,18 @@ pub fn caseFold(src: string, out: []u8): usize {
     let w: usize = 0;
     let step: [1]usize = [0];
     let folded: [2]u32 = [0, 0];
+    const v_ascii: UcVec16 = @splat(0x80 as u8);
     while (pos < src.len) {
+        if (pos + 16 <= src.len && w + 16 <= out.len) {
+            const v: UcVec16 = src[pos .. pos + 16][0..16].*;
+            if (@reduce(.And, v < v_ascii)) {
+                const fv: [16]u8 = ucFoldVec16(v);
+                @memcpy(out[w .. w + 16], fv[0..16]);
+                pos += 16;
+                w += 16;
+                continue;
+            }
+        }
         let cp = ucDecodeUtf8(src, pos, step[0..1]);
         if (step[0] == 0) { break; }
         pos = pos + step[0];
@@ -207,8 +241,16 @@ pub fn caseFold(src: string, out: []u8): usize {
 pub fn eqAscii(a: string, b: string): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: UcVec16 = a[i .. i + 16][0..16].*;
+        const vb: UcVec16 = b[i .. i + 16][0..16].*;
+        if (!@reduce(.And, ucFoldVec16(va) == ucFoldVec16(vb))) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
-        if (foldAsciiByte(a[i]) != foldAsciiByte(b[i])) {
+        if (UC_LOWER_LUT[a[i] as usize] != UC_LOWER_LUT[b[i] as usize]) {
             return false;
         }
         i = i + 1;
@@ -220,9 +262,17 @@ pub fn eqAscii(a: string, b: string): bool {
 pub fn cmpAscii(a: string, b: string): i32 {
     let min_len = if (a.len < b.len) { a.len } else { b.len };
     let i: usize = 0;
+    while (i + 16 <= min_len) {
+        const va: UcVec16 = a[i .. i + 16][0..16].*;
+        const vb: UcVec16 = b[i .. i + 16][0..16].*;
+        if (!@reduce(.And, ucFoldVec16(va) == ucFoldVec16(vb))) {
+            break;
+        }
+        i += 16;
+    }
     while (i < min_len) {
-        let ca = foldAsciiByte(a[i]);
-        let cb = foldAsciiByte(b[i]);
+        let ca = UC_LOWER_LUT[a[i] as usize];
+        let cb = UC_LOWER_LUT[b[i] as usize];
         if (ca < cb) { return -1; }
         if (ca > cb) { return 1; }
         i = i + 1;
@@ -285,8 +335,15 @@ pub fn hashAscii(s: string): u64 {
     let pos: usize = 0;
     while (pos < s.len) {
         let n: usize = 0;
+        while (n + 16 <= 256 && pos + 16 <= s.len) {
+            const v: UcVec16 = s[pos .. pos + 16][0..16].*;
+            const fv: [16]u8 = ucFoldVec16(v);
+            @memcpy(buf[n .. n + 16], fv[0..16]);
+            n += 16;
+            pos += 16;
+        }
         while (n < 256 && pos < s.len) {
-            buf[n] = foldAsciiByte(s[pos]);
+            buf[n] = UC_LOWER_LUT[s[pos] as usize];
             n = n + 1;
             pos = pos + 1;
         }
@@ -339,10 +396,19 @@ pub fn endsWithIgnoreCase(haystack: string, suffix: string): bool {
 pub fn containsIgnoreCase(haystack: string, needle: string): bool {
     if (needle.len == 0) { return true; }
     if (needle.len > haystack.len) { return false; }
-    let limit = haystack.len - needle.len;
+    const limit = haystack.len - needle.len;
+    const first_lo = UC_LOWER_LUT[needle[0] as usize];
+    const v_first: UcVec16 = @splat(first_lo);
     let i: usize = 0;
     while (i <= limit) {
-        if (eqAscii(haystack[i..i + needle.len], needle)) {
+        if (i + 16 <= limit + 1) {
+            const v: UcVec16 = haystack[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, ucFoldVec16(v) == v_first)) {
+                i += 16;
+                continue;
+            }
+        }
+        if (UC_LOWER_LUT[haystack[i] as usize] == first_lo && eqAscii(haystack[i..i + needle.len], needle)) {
             return true;
         }
         i = i + 1;

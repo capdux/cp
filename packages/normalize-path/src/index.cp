@@ -1,6 +1,8 @@
 // @cap/normalize-path — Zero-heap POSIX/Windows path normalizer in pure CP
 // MIT License — Clean-room implementation matching npm normalize-path semantics
 
+type NpVec16 = @Vector(16, u8);
+
 fn npIsSlash(ch: u8): bool {
     return ch == 47 || ch == 92; // '/' or '\\'
 }
@@ -9,10 +11,64 @@ fn npIsAsciiAlpha(ch: u8): bool {
     return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
 }
 
+fn npFindSlash(s: string, start: usize): usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_sl: NpVec16 = @splat(47 as u8);
+    const v_bs: NpVec16 = @splat(92 as u8);
+    while (i + 16 <= len) {
+        const v: NpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl) || @reduce(.Or, v == v_bs)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (npIsSlash(s[i + k])) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (npIsSlash(s[i])) { return i; }
+        i += 1;
+    }
+    return len;
+}
+
+fn npFindFwdSlash(s: string, start: usize): usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_sl: NpVec16 = @splat(47 as u8);
+    while (i + 16 <= len) {
+        const v: NpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == 47) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (s[i] == 47) { return i; }
+        i += 1;
+    }
+    return len;
+}
+
 /// Return true if `path` contains any Windows backslash (`\`).
 pub fn hasBackslash(path: string): bool {
     let i: usize = 0;
-    while (i < path.len) {
+    const len = path.len;
+    const v_bs: NpVec16 = @splat(92 as u8);
+    while (i + 16 <= len) {
+        const v: NpVec16 = path[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_bs)) {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (path[i] == 92) {
             return true;
         }
@@ -72,16 +128,25 @@ pub fn normalizePath(path: string, strip_trailing: bool, out: []u8): usize {
                 w += 1;
                 prev_slash = true;
             }
+            i += 1;
         } else {
-            if (w >= out.len) {
+            const next_sl = npFindSlash(path, i);
+            const seg_len = next_sl - i;
+            const avail = out.len - w;
+            if (avail == 0) {
                 truncated = true;
                 break;
             }
-            out[w] = ch;
-            w += 1;
+            const n = if (seg_len < avail) seg_len else avail;
+            @memcpy(out[w .. w + n], path[i .. i + n]);
+            w += n;
+            i += n;
             prev_slash = false;
+            if (n < seg_len) {
+                truncated = true;
+                break;
+            }
         }
-        i += 1;
     }
 
     if (!truncated && strip_trailing && w > 1 && out[w - 1] == 47) {
@@ -125,13 +190,22 @@ pub fn isWindowsDrivePath(path: string): bool {
 
 /// Convert all Windows backslashes `\` to POSIX `/` without collapsing slashes or stripping trailing slashes.
 pub fn toPosixPath(path: string, out: []u8): usize {
+    const n = if (path.len < out.len) path.len else out.len;
     let w: usize = 0;
-    while (w < path.len && w < out.len) {
+    const v_bs: NpVec16 = @splat(92 as u8);
+    const v_sl: NpVec16 = @splat(47 as u8);
+    while (w + 16 <= n) {
+        const v: NpVec16 = path[w .. w + 16][0..16].*;
+        const conv: [16]u8 = @select(u8, v == v_bs, v_sl, v);
+        @memcpy(out[w .. w + 16], conv[0..16]);
+        w += 16;
+    }
+    while (w < n) {
         const ch = path[w];
         out[w] = if (ch == 92) 47 else ch;
         w += 1;
     }
-    return w;
+    return n;
 }
 
 /// Zero-copy strip of trailing `/` or `\` characters while preserving root `/`, UNC `//`, and drive root `C:/`.
@@ -195,9 +269,7 @@ pub fn normalizePathWith(path: string, opts: NormalizePathOptions, out: []u8): u
             continue;
         }
         const seg_s = i;
-        while (i < norm.len && norm[i] != 47) {
-            i += 1;
-        }
+        i = npFindFwdSlash(norm, i);
         const seg_l = i - seg_s;
         if (seg_l == 1 && norm[seg_s] == 46) {
             // "." -> skip
@@ -227,11 +299,10 @@ pub fn normalizePathWith(path: string, opts: NormalizePathOptions, out: []u8): u
     }
 
     let w: usize = 0;
-    let pi: usize = 0;
-    while (pi < prefix_len && w < out.len) {
-        out[w] = norm[pi];
-        w += 1;
-        pi += 1;
+    const pcopy = if (prefix_len < out.len) prefix_len else out.len;
+    if (pcopy > 0) {
+        @memcpy(out[0..pcopy], norm[0..pcopy]);
+        w = pcopy;
     }
 
     if (seg_count == 0 && !is_abs) {
@@ -250,11 +321,11 @@ pub fn normalizePathWith(path: string, opts: NormalizePathOptions, out: []u8): u
         }
         const ss = seg_starts[si];
         const sl = seg_lens[si];
-        let k: usize = 0;
-        while (k < sl && w < out.len) {
-            out[w] = norm[ss + k];
-            w += 1;
-            k += 1;
+        const avail = out.len - w;
+        const n = if (sl < avail) sl else avail;
+        if (n > 0) {
+            @memcpy(out[w .. w + n], norm[ss .. ss + n]);
+            w += n;
         }
         si += 1;
     }

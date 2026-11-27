@@ -1,11 +1,12 @@
 // @cap/percent-encoding — Pure CP zero-allocation WHATWG URL Standard percent-encoding
 // Clean-room MIT implementation with full parity to Rust `percent-encoding` & WHATWG URL Standard.
 
-import { findByteInBytes } from "cap:bin";
+type PeVec16 = @Vector(16, u8);
 
 const PE_HEX_UPPER: string = "0123456789ABCDEF";
 
 fn peBuildHexLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
     let lut: [256]u8 = [255; 256];
     let c: usize = 48;
     while (c <= 57) {
@@ -26,6 +27,93 @@ fn peBuildHexLut(): [256]u8 {
 }
 
 const PE_HEX_LUT: [256]u8 = peBuildHexLut();
+
+fn peFindByte(s: string, target: u8, start: usize): usize {
+    let i: usize = start;
+    const len = s.len;
+    const vt: PeVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: PeVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (s[i] == target) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn peFindPctOrPlus(s: string, start: usize): usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_pct: PeVec16 = @splat(0x25 as u8);
+    const v_plus: PeVec16 = @splat(0x2B as u8);
+    while (i + 16 <= len) {
+        const v: PeVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_pct) || @reduce(.Or, v == v_plus)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const b = s[i + k];
+                if (b == 0x25 || b == 0x2B) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const b = s[i];
+        if (b == 0x25 || b == 0x2B) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn peAllowsAllAlnum(set: AsciiSet): bool {
+    return (set.bits[1] & (0x03FF0000 as u32)) == 0
+        && (set.bits[2] & (0x07FFFFFE as u32)) == 0
+        && (set.bits[3] & (0x07FFFFFE as u32)) == 0;
+}
+
+fn peSkipSafeAlnumSimd(input: []const u8, start: usize): usize {
+    let i: usize = start;
+    const len = input.len;
+    const v_0: PeVec16 = @splat(48 as u8);
+    const v_9: PeVec16 = @splat(57 as u8);
+    const v_A: PeVec16 = @splat(65 as u8);
+    const v_Z: PeVec16 = @splat(90 as u8);
+    const v_a: PeVec16 = @splat(97 as u8);
+    const v_z: PeVec16 = @splat(122 as u8);
+    const v_one: PeVec16 = @splat(1 as u8);
+    const v_zero: PeVec16 = @splat(0 as u8);
+    while (i + 16 <= len) {
+        const v: PeVec16 = input[i .. i + 16][0..16].*;
+        const is_dig = @select(u8, v >= v_0, @select(u8, v <= v_9, v_one, v_zero), v_zero);
+        const is_up = @select(u8, v >= v_A, @select(u8, v <= v_Z, v_one, v_zero), v_zero);
+        const is_lo = @select(u8, v >= v_a, @select(u8, v <= v_z, v_one, v_zero), v_zero);
+        const ok = is_dig | is_up | is_lo;
+        if (@reduce(.And, ok != v_zero)) {
+            i += 16;
+        } else {
+            break;
+        }
+    }
+    return i;
+}
 
 fn peBitMask(byte: u8): u32 {
     return (1 as u32) << ((byte & 31) as u5);
@@ -221,7 +309,18 @@ pub fn nonAlphanumericSet(): AsciiSet {
 pub fn percentEncodeLen(input: []const u8, set: AsciiSet): usize {
     let total: usize = 0;
     let i: usize = 0;
+    const fast_alnum = peAllowsAllAlnum(set);
     while (i < input.len) {
+        if (fast_alnum && i + 16 <= input.len) {
+            const next_i = peSkipSafeAlnumSimd(input, i);
+            if (next_i > i) {
+                total = total + (next_i - i);
+                i = next_i;
+                if (i >= input.len) {
+                    break;
+                }
+            }
+        }
         if (set.shouldPercentEncode(input[i])) {
             total = total + 3;
         } else {
@@ -238,9 +337,22 @@ pub fn percentEncodeLen(input: []const u8, set: AsciiSet): usize {
 pub fn percentEncode(input: []const u8, set: AsciiSet, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
+    const fast_alnum = peAllowsAllAlnum(set);
     while (i < input.len && pos < out.len) {
         const seg_start = i;
-        while (i < input.len && !set.shouldPercentEncode(input[i])) {
+        while (i < input.len) {
+            if (fast_alnum && i + 16 <= input.len) {
+                const next_i = peSkipSafeAlnumSimd(input, i);
+                if (next_i > i) {
+                    i = next_i;
+                    if (i >= input.len) {
+                        break;
+                    }
+                }
+            }
+            if (set.shouldPercentEncode(input[i])) {
+                break;
+            }
             i = i + 1;
         }
         if (i > seg_start) {
@@ -273,7 +385,7 @@ pub fn percentDecode(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len && pos < out.len) {
-        const next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
+        const next_pct = peFindByte(input, 0x25, i);
         if (next_pct > i) {
             const seg_len = next_pct - i;
             const avail = out.len - pos;
@@ -309,7 +421,7 @@ pub fn percentDecodeStrict(input: string, out: []u8): i64 {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < input.len) {
-        const next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
+        const next_pct = peFindByte(input, 0x25, i);
         if (next_pct > i) {
             const seg_len = next_pct - i;
             if (pos + seg_len > out.len) {
@@ -345,16 +457,8 @@ pub fn percentDecodeStrict(input: string, out: []u8): i64 {
 pub fn percentDecodePlus(input: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    let next_pct = findByteInBytes(input, 0x25, 0) ?? input.len;
-    let next_plus = findByteInBytes(input, 0x2B, 0) ?? input.len;
     while (i < input.len && pos < out.len) {
-        if (next_pct < i) {
-            next_pct = findByteInBytes(input, 0x25, i) ?? input.len;
-        }
-        if (next_plus < i) {
-            next_plus = findByteInBytes(input, 0x2B, i) ?? input.len;
-        }
-        const next_sp = if (next_pct < next_plus) next_pct else next_plus;
+        const next_sp = peFindPctOrPlus(input, i);
         if (next_sp > i) {
             const seg_len = next_sp - i;
             const avail = out.len - pos;

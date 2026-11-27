@@ -4,7 +4,38 @@
 // Clean-room MIT implementation (RustCrypto pem-rfc7468 parity).
 
 import { encodeStd, decodeStd } from "../../base64ct/src/index.cp";
-import { bytesEq, findByteInBytes, indexOfBytes } from "cap:bin";
+import { bytesEq, indexOfBytes } from "cap:bin";
+
+type PemVec16 = @Vector(16, u8);
+
+fn pemBuildLabelLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0x21;
+    while (c <= 0x2C) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 0x2E;
+    while (c <= 0x7E) {
+        lut[c] = 1;
+        c += 1;
+    }
+    return lut;
+}
+
+fn pemBuildWsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[9] = 1;  // '\t'
+    lut[10] = 1; // '\n'
+    lut[13] = 1; // '\r'
+    lut[32] = 1; // ' '
+    return lut;
+}
+
+const PEM_LABEL_LUT: [256]u8 = pemBuildLabelLut();
+const PEM_WS_LUT: [256]u8 = pemBuildWsLut();
 
 pub const PEM_LINE_WIDTH: usize = 64;
 pub const PEM_OK: i64 = 0;
@@ -47,9 +78,7 @@ pub struct PemSlice {
 }
 
 fn pemIsLabelChar(ch: u8): bool {
-    // RFC 7468 §2: labelchar = %x21-2C / %x2E-7E (printable ASCII excluding SP 0x20 and '-' 0x2D)
-    return (ch >= (0x21 as u8) && ch <= (0x2C as u8))
-        || (ch >= (0x2E as u8) && ch <= (0x7E as u8));
+    return PEM_LABEL_LUT[ch as usize] != 0;
 }
 
 fn pemIsLabelValidBytes(s: string, start: usize, len: usize): bool {
@@ -93,10 +122,8 @@ fn pemStartsWithAt(s: string, pos: usize, prefix: string): bool {
 }
 
 fn pemWriteBytes(out: []u8, pos: usize, src: string): usize {
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i = i + 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src);
     }
     return pos + src.len;
 }
@@ -112,14 +139,32 @@ fn pemWriteNewline(out: []u8, pos: usize, crlf: bool): usize {
 }
 
 fn pemAdvanceLineEnd(s: string, pos: usize): usize {
-    let lf: usize = s.len;
-    if (idx := findByteInBytes(s, '\n' as u8, pos)) {
-        lf = idx;
+    let i: usize = pos;
+    const len = s.len;
+    const v_lf: PemVec16 = @splat(0x0A as u8);
+    const v_cr: PemVec16 = @splat(0x0D as u8);
+    while (i + 16 <= len) {
+        const v: PemVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_lf) || @reduce(.Or, v == v_cr)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const ch = s[i + k];
+                if (ch == 0x0A || ch == 0x0D) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
     }
-    if (cr := findByteInBytes(s[pos..lf], '\r' as u8, 0)) {
-        return pos + cr;
+    while (i < len) {
+        const ch = s[i];
+        if (ch == 0x0A || ch == 0x0D) {
+            return i;
+        }
+        i += 1;
     }
-    return lf;
+    return len;
 }
 
 fn pemSkipLineEnding(s: string, pos: usize): usize {
@@ -147,6 +192,18 @@ fn pemFindDashes(s: string, start: usize, line_end: usize): i64 {
 
 fn pemOnlySpacesTabs(s: string, start: usize, end: usize): bool {
     let p = start;
+    const v_sp: PemVec16 = @splat(32 as u8);
+    const v_tab: PemVec16 = @splat(9 as u8);
+    const v_one: PemVec16 = @splat(1 as u8);
+    const v_zero: PemVec16 = @splat(0 as u8);
+    while (p + 16 <= end) {
+        const v: PemVec16 = s[p .. p + 16][0..16].*;
+        const ok = @select(u8, v == v_sp, v_one, @select(u8, v == v_tab, v_one, v_zero));
+        if (!@reduce(.And, ok != v_zero)) {
+            return false;
+        }
+        p += 16;
+    }
     while (p < end) {
         const ch = s[p];
         if (ch != (' ' as u8) && ch != ('\t' as u8)) {
@@ -211,11 +268,7 @@ pub fn encodePem(label: string, der: []const u8, line_ending_crlf: bool, out: []
         if (take > (48 as usize)) {
             take = 48;
         }
-        let k: usize = 0;
-        while (k < take) {
-            chunk[k] = der[di + k];
-            k = k + 1;
-        }
+        @memcpy(chunk[0..take], der[di .. di + take]);
         const b64_chunk_len = ((take + 2) / 3) * 4;
         const written = encodeStd(chunk[0..take], out[pos..pos + b64_chunk_len]);
         if (written != b64_chunk_len) {
@@ -373,10 +426,8 @@ pub fn decodeLabel(input: string, label_out: []u8): i64 {
         if (label_out.len < l_len) {
             return PEM_ERR_BUFFER_TOO_SMALL;
         }
-        let i: usize = 0;
-        while (i < l_len) {
-            label_out[i] = input[l_start + i];
-            i = i + 1;
+        if (l_len > 0) {
+            @memcpy(label_out[0..l_len], input[l_start .. l_start + l_len]);
         }
         return l_len as i64;
     }
@@ -396,10 +447,8 @@ pub fn decodePem(input: string, label_out: []u8, label_len_out: *usize, der_out:
     if (label_out.len < loc.label_len) {
         return PEM_ERR_BUFFER_TOO_SMALL;
     }
-    let li: usize = 0;
-    while (li < loc.label_len) {
-        label_out[li] = input[loc.label_start + li];
-        li = li + 1;
+    if (loc.label_len > 0) {
+        @memcpy(label_out[0..loc.label_len], input[loc.label_start .. loc.label_start + loc.label_len]);
     }
     label_len_out.* = loc.label_len;
 
@@ -410,11 +459,34 @@ pub fn decodePem(input: string, label_out: []u8, label_len_out: *usize, der_out:
     let seen_pad = false;
     let pad_count: usize = 0;
 
+    const v_sp: PemVec16 = @splat(32 as u8);
+    const v_eq: PemVec16 = @splat(61 as u8);
+
     let i: usize = loc.body_start;
     const body_end = loc.body_start + loc.body_len;
     while (i < body_end) {
+        if (!seen_pad && b64_len + 16 <= 64 && i + 16 <= body_end) {
+            const v: PemVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.And, v > v_sp) && !@reduce(.Or, v == v_eq)) {
+                @memcpy(b64_buf[b64_len .. b64_len + 16], input[i .. i + 16]);
+                b64_len += 16;
+                i += 16;
+                if (b64_len == (64 as usize)) {
+                    if (der_pos + 48 > der_out.len) {
+                        return PEM_ERR_BUFFER_TOO_SMALL;
+                    }
+                    const res = decodeStd(b64_buf[0..64], der_out[der_pos..der_out.len]);
+                    if (!res.ok) {
+                        return PEM_ERR_INVALID_BASE64;
+                    }
+                    der_pos = der_pos + res.len;
+                    b64_len = 0;
+                }
+                continue;
+            }
+        }
         const ch = input[i];
-        if (ch == ('\r' as u8) || ch == ('\n' as u8) || ch == (' ' as u8) || ch == ('\t' as u8)) {
+        if (PEM_WS_LUT[ch as usize] != 0) {
             i = i + 1;
             continue;
         }

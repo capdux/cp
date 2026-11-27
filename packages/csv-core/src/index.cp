@@ -3,8 +3,6 @@
 // Supports arbitrary input chunking, output-buffer resumption, quoted fields with
 // embedded delimiters/newlines, doubled-quote escaping (""), CRLF/LF, and custom delimiters.
 
-import { findByteInBytes, countByte } from "cap:bin";
-
 pub const CSV_READ_INPUT_EMPTY: i32 = 0;
 pub const CSV_READ_OUTPUT_FULL: i32 = 1;
 pub const CSV_READ_FIELD: i32 = 2;
@@ -33,12 +31,109 @@ pub struct CsvReadResult {
 // Private helpers (`csvc` prefix to avoid module-flattening symbol collisions)
 // ============================================================================
 
+type CsvcVec16 = @Vector(16, u8);
+
+fn csvcFindFieldEnd(buf: []const u8, delim: u8): usize {
+    let i: usize = 0;
+    const len = buf.len;
+    const v_del: CsvcVec16 = @splat(delim);
+    const v_lf: CsvcVec16 = @splat(0x0A as u8);
+    const v_cr: CsvcVec16 = @splat(0x0D as u8);
+    while (i + 16 <= len) {
+        const v: CsvcVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_del) || @reduce(.Or, v == v_lf) || @reduce(.Or, v == v_cr)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const b = buf[i + k];
+                if (b == delim || b == 0x0A || b == 0x0D) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const b = buf[i];
+        if (b == delim || b == 0x0A || b == 0x0D) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn csvcFindQuote(buf: []const u8, quote: u8, start: usize): usize {
+    let i: usize = start;
+    const len = buf.len;
+    const v_q: CsvcVec16 = @splat(quote);
+    while (i + 16 <= len) {
+        const v: CsvcVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == quote) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (buf[i] == quote) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn csvcCountLf(buf: []const u8): u64 {
+    let i: usize = 0;
+    let total: u64 = 0;
+    const len = buf.len;
+    const v_lf: CsvcVec16 = @splat(0x0A as u8);
+    while (i + 16 <= len) {
+        const v: CsvcVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_lf)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == 0x0A) {
+                    total += 1;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (buf[i] == 0x0A) {
+            total += 1;
+        }
+        i += 1;
+    }
+    return total;
+}
+
 fn csvcNeedsQuote(field: []const u8, delim: u8, quote: u8, always_quote: bool): bool {
     if (always_quote) {
         return true;
     }
     let i: usize = 0;
-    while (i < field.len) {
+    const len = field.len;
+    const v_del: CsvcVec16 = @splat(delim);
+    const v_q: CsvcVec16 = @splat(quote);
+    const v_lf: CsvcVec16 = @splat(0x0A as u8);
+    const v_cr: CsvcVec16 = @splat(0x0D as u8);
+    while (i + 16 <= len) {
+        const v: CsvcVec16 = field[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_del) || @reduce(.Or, v == v_q) || @reduce(.Or, v == v_lf) || @reduce(.Or, v == v_cr)) {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
         let b = field[i];
         if (b == delim || b == quote || b == 0x0A || b == 0x0D) {
             return true;
@@ -235,9 +330,13 @@ pub struct CsvReader {
                 if (out_pos >= out.len) {
                     return CsvReadResult { status: CSV_READ_OUTPUT_FULL, bytes_read: in_pos, bytes_written: out_pos };
                 }
-                out[out_pos] = b;
-                out_pos = out_pos + 1;
-                in_pos = in_pos + 1;
+                let avail_in = input.len - in_pos;
+                let avail_out = out.len - out_pos;
+                let max_copy = if (avail_in < avail_out) { avail_in } else { avail_out };
+                let chunk_len = csvcFindFieldEnd(input[in_pos..(in_pos + max_copy)], _.delimiter);
+                @memcpy(out[out_pos..(out_pos + chunk_len)], input[in_pos..(in_pos + chunk_len)]);
+                out_pos = out_pos + chunk_len;
+                in_pos = in_pos + chunk_len;
                 continue;
             }
 
@@ -262,10 +361,9 @@ pub struct CsvReader {
                 let avail_out = out.len - out_pos;
                 let max_copy = if (avail_in < avail_out) { avail_in } else { avail_out };
                 let window = input[in_pos..(in_pos + max_copy)];
-                let q_opt = findByteInBytes(window, _.quote, 0);
-                let chunk_len = q_opt ?? max_copy;
+                let chunk_len = csvcFindQuote(window, _.quote, 0);
                 let chunk = input[in_pos..(in_pos + chunk_len)];
-                _.line_num = _.line_num + (countByte(chunk, 0x0A) as u64);
+                _.line_num = _.line_num + csvcCountLf(chunk);
                 @memcpy(out[out_pos..(out_pos + chunk_len)], chunk);
                 out_pos = out_pos + chunk_len;
                 in_pos = in_pos + chunk_len;
@@ -357,18 +455,24 @@ pub struct CsvWriter {
             }
             let i: usize = 0;
             while (i < field.len && w < out.len) {
-                let b = field[i];
-                if (b == _.quote) {
-                    if (w + 2 > out.len) {
+                const next_q = csvcFindQuote(field, _.quote, i);
+                if (next_q > i) {
+                    const seg_len = next_q - i;
+                    const avail = out.len - w;
+                    const n = if (seg_len < avail) { seg_len } else { avail };
+                    @memcpy(out[w..(w + n)], field[i..(i + n)]);
+                    w = w + n;
+                    i = i + n;
+                    if (n < seg_len || i >= field.len) {
                         break;
                     }
-                    out[w] = _.quote;
-                    out[w + 1] = _.quote;
-                    w = w + 2;
-                } else {
-                    out[w] = b;
-                    w = w + 1;
                 }
+                if (w + 2 > out.len) {
+                    break;
+                }
+                out[w] = _.quote;
+                out[w + 1] = _.quote;
+                w = w + 2;
                 i = i + 1;
             }
             if (w < out.len) {

@@ -4,12 +4,14 @@
 
 import { readU32BE, writeU32BE } from "cap:bin";
 
+type A85Vec16 = @Vector(16, u8);
+
 const A85_CODE_Z: u8 = 253;
 const A85_CODE_SPACE: u8 = 254;
 const A85_CODE_INVALID: u8 = 255;
 
 fn buildA85DecLut(): [256]u8 {
-    @setEvalBranchQuota(10000);
+    @setEvalBranchQuota(20000);
     let tbl: [256]u8 = undefined;
     let i: usize = 0;
     while (i < 256) {
@@ -66,8 +68,41 @@ pub fn encode(data: []const u8, with_delimiters: bool, out: []u8): usize {
 
     let i: usize = 0;
     let digits: [5]u8 = undefined;
+    const v_zero: A85Vec16 = @splat(0 as u8);
+
+    while (i + 16 <= data.len) {
+        const v: A85Vec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.And, v == v_zero)) {
+            if (pos + 4 > out.len) {
+                return 0;
+            }
+            out[pos] = 'z' as u8;
+            out[pos + 1] = 'z' as u8;
+            out[pos + 2] = 'z' as u8;
+            out[pos + 3] = 'z' as u8;
+            pos += 4;
+            i += 16;
+            continue;
+        }
+        break;
+    }
 
     while (i + 4 <= data.len) {
+        if (i + 16 <= data.len) {
+            const v: A85Vec16 = data[i .. i + 16][0..16].*;
+            if (@reduce(.And, v == v_zero)) {
+                if (pos + 4 > out.len) {
+                    return 0;
+                }
+                out[pos] = 'z' as u8;
+                out[pos + 1] = 'z' as u8;
+                out[pos + 2] = 'z' as u8;
+                out[pos + 3] = 'z' as u8;
+                pos += 4;
+                i += 16;
+                continue;
+            }
+        }
         const val: u32 = readU32BE(data, i) ?? (0 as u32);
         if (val == (0 as u32)) {
             if (pos + 1 > out.len) {
@@ -175,7 +210,30 @@ pub fn decode(input: string, out: []u8): i64 {
     let cnt: usize = 0;
 
     let i = start;
+    const v_lo: A85Vec16 = @splat(33 as u8);
+    const v_hi: A85Vec16 = @splat(117 as u8);
     while (i < end) {
+        if (cnt == 0 && i + 16 <= end) {
+            const v: A85Vec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.And, v >= v_lo) && @reduce(.And, v <= v_hi)) {
+                const d: [16]u8 = v - v_lo;
+                const a0: u64 = ((((d[0] as u64) * 85 + (d[1] as u64)) * 85 + (d[2] as u64)) * 85 + (d[3] as u64)) * 85 + (d[4] as u64);
+                const a1: u64 = ((((d[5] as u64) * 85 + (d[6] as u64)) * 85 + (d[7] as u64)) * 85 + (d[8] as u64)) * 85 + (d[9] as u64);
+                const a2: u64 = ((((d[10] as u64) * 85 + (d[11] as u64)) * 85 + (d[12] as u64)) * 85 + (d[13] as u64)) * 85 + (d[14] as u64);
+                if (a0 > maxU32 || a1 > maxU32 || a2 > maxU32) {
+                    return -1 as i64;
+                }
+                if (pos + 12 > out.len) {
+                    return -1 as i64;
+                }
+                * = writeU32BE(out, pos, a0 as u32);
+                * = writeU32BE(out, pos + 4, a1 as u32);
+                * = writeU32BE(out, pos + 8, a2 as u32);
+                pos += 12;
+                i += 15;
+                continue;
+            }
+        }
         const code = A85_DEC_LUT[input[i] as usize];
         i += 1;
 

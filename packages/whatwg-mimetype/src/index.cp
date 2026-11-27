@@ -1,8 +1,10 @@
 // @cap/whatwg-mimetype — Zero-allocation WHATWG MIME Sniffing Standard MIMEType parser in pure CP
 // Clean-room MIT implementation of npm `whatwg-mimetype` (#200, 215M/wk).
 
-import { isAlnum, eqIgnoreCase, toLower } from "cap:ascii";
+import { eqIgnoreCase, toLower } from "cap:ascii";
 import { writeStr } from "cap:fmt";
+
+type WmimeVec16 = @Vector(16, u8);
 
 pub const WMIME_MAX_PARAMS: usize = 8;
 
@@ -11,17 +13,85 @@ pub struct MimeParam {
     pub value: string,
 }
 
+fn wmimeBuildWsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[0x09] = 1;
+    lut[0x0A] = 1;
+    lut[0x0D] = 1;
+    lut[0x20] = 1;
+    return lut;
+}
+
+fn wmimeBuildTokenLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 48;
+    while (c <= 57) { lut[c] = 1; c += 1; }
+    c = 65;
+    while (c <= 90) { lut[c] = 1; c += 1; }
+    c = 97;
+    while (c <= 122) { lut[c] = 1; c += 1; }
+    lut[33] = 1; lut[35] = 1; lut[36] = 1; lut[37] = 1; lut[38] = 1; lut[39] = 1;
+    lut[42] = 1; lut[43] = 1; lut[45] = 1; lut[46] = 1; lut[94] = 1; lut[95] = 1;
+    lut[96] = 1; lut[124] = 1; lut[126] = 1;
+    return lut;
+}
+
+const WMIME_WS_LUT: [256]u8 = wmimeBuildWsLut();
+const WMIME_TOKEN_LUT: [256]u8 = wmimeBuildTokenLut();
+
 fn wmimeIsHttpWs(b: u8): bool {
-    return b == 0x09 || b == 0x0A || b == 0x0D || b == 0x20;
+    return WMIME_WS_LUT[b as usize] != 0;
 }
 
 fn wmimeIsTokenChar(b: u8): bool {
-    if (isAlnum(b)) {
-        return true;
+    return WMIME_TOKEN_LUT[b as usize] != 0;
+}
+
+fn wmimeFindByte(s: string, target: u8, start: usize, end: usize): usize {
+    let i: usize = start;
+    const vt: WmimeVec16 = @splat(target);
+    while (i + 16 <= end) {
+        const v: WmimeVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
     }
-    return b == 33 || b == 35 || b == 36 || b == 37 || b == 38 || b == 39
-        || b == 42 || b == 43 || b == 45 || b == 46 || b == 94 || b == 95
-        || b == 96 || b == 124 || b == 126;
+    while (i < end) {
+        if (s[i] == target) { return i; }
+        i += 1;
+    }
+    return end;
+}
+
+fn wmimeFindByte2(s: string, t1: u8, t2: u8, start: usize, end: usize): usize {
+    let i: usize = start;
+    const v1: WmimeVec16 = @splat(t1);
+    const v2: WmimeVec16 = @splat(t2);
+    while (i + 16 <= end) {
+        const v: WmimeVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v1) || @reduce(.Or, v == v2)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const ch = s[i + k];
+                if (ch == t1 || ch == t2) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < end) {
+        const ch = s[i];
+        if (ch == t1 || ch == t2) { return i; }
+        i += 1;
+    }
+    return end;
 }
 
 fn wmimeEndsWithIgnoreCase(s: string, suffix: string): bool {
@@ -143,9 +213,19 @@ pub struct MimeType {
                 p = writeStr("\"", out, p);
                 let q: usize = 0;
                 while (q < val.len && p < out.len) {
-                    if (val[q] == 34 || val[q] == 92) {
-                        p = writeStr("\\", out, p);
+                    const next_esc = wmimeFindByte2(val, 34, 92, q, val.len);
+                    if (next_esc > q) {
+                        const seg_len = next_esc - q;
+                        const avail = out.len - p;
+                        const n = if (seg_len < avail) seg_len else avail;
+                        @memcpy(out[p .. p + n], val[q .. q + n]);
+                        p += n;
+                        q += n;
+                        if (n < seg_len || q >= val.len) {
+                            break;
+                        }
                     }
+                    p = writeStr("\\", out, p);
                     if (p < out.len) {
                         out[p] = val[q];
                         p += 1;
@@ -185,9 +265,7 @@ pub fn parseMimeType(input: string): MimeType {
 
     // 2. Parse subtype up to ';'
     const sub_start = pos;
-    while (pos < b && input[pos] != 59) {
-        pos += 1;
-    }
+    pos = wmimeFindByte(input, 59, pos, b);
     let sub_end = pos;
     while (sub_end > sub_start && wmimeIsHttpWs(input[sub_end - 1])) { sub_end -= 1; }
     if (sub_end == sub_start) { return invalid; }
@@ -211,9 +289,7 @@ pub fn parseMimeType(input: string): MimeType {
         pos += 1; // skip ';'
         while (pos < b && wmimeIsHttpWs(input[pos])) { pos += 1; }
         const name_start = pos;
-        while (pos < b && input[pos] != 59 && input[pos] != 61) {
-            pos += 1;
-        }
+        pos = wmimeFindByte2(input, 59, 61, pos, b);
         const name_end = pos;
         if (pos >= b || input[pos] == 59) {
             continue;
@@ -228,6 +304,10 @@ pub fn parseMimeType(input: string): MimeType {
             pos += 1;
             val_start = pos;
             while (pos < b) {
+                pos = wmimeFindByte2(input, 34, 92, pos, b);
+                if (pos >= b) {
+                    break;
+                }
                 if (input[pos] == 92 && pos + 1 < b) {
                     pos += 2;
                     continue;
@@ -240,10 +320,10 @@ pub fn parseMimeType(input: string): MimeType {
                 pos += 1;
             }
             if (val_end < val_start) { val_end = pos; }
-            while (pos < b && input[pos] != 59) { pos += 1; }
+            pos = wmimeFindByte(input, 59, pos, b);
         } else {
             val_start = pos;
-            while (pos < b && input[pos] != 59) { pos += 1; }
+            pos = wmimeFindByte(input, 59, pos, b);
             val_end = pos;
             while (val_end > val_start && wmimeIsHttpWs(input[val_end - 1])) { val_end -= 1; }
         }

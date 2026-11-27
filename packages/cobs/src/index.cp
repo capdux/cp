@@ -1,7 +1,34 @@
 // @cap/cobs — Zero-allocation Consistent Overhead Byte Stuffing (COBS) codec for CP
 // Clean-room MIT implementation inspired by Rust `cobs` and Cheshire & Baker (1999).
 
+type CobsVec16 = @Vector(16, u8);
+
 pub const COBS_DECODER_CAP: usize = 512;
+
+fn cobsFindZero(buf: []const u8, start: usize, limit: usize): usize {
+    let i: usize = start;
+    const v_zero: CobsVec16 = @splat(0 as u8);
+    while (i + 16 <= limit) {
+        const v: CobsVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_zero)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (buf[i + k] == 0) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < limit) {
+        if (buf[i] == 0) {
+            return i;
+        }
+        i += 1;
+    }
+    return limit;
+}
 
 // ---------------------------------------------------------------------------
 // 1. Core COBS Encoding & Decoding
@@ -26,49 +53,37 @@ pub fn encode(src: []const u8, dst: []u8) -> usize {
         return 1;
     }
 
-    let code_idx: usize = 0;
-    let write_idx: usize = 1;
-    let code: u8 = 1;
+    let write_idx: usize = 0;
     let i: usize = 0;
 
     while (i < src.len) {
-        const b = src[i];
-        if (b == 0) {
-            if (code_idx >= dst.len) {
-                return 0;
-            }
-            dst[code_idx] = code;
-            code_idx = write_idx;
-            write_idx += 1;
-            code = 1;
-        } else {
-            if (write_idx >= dst.len) {
-                return 0;
-            }
-            dst[write_idx] = b;
-            write_idx += 1;
-            code += 1;
-            if (code == 0xFF) {
-                if (code_idx >= dst.len) {
+        const rem = src.len - i;
+        const max_run = if (rem < 254) rem else 254;
+        const zero_pos = cobsFindZero(src, i, i + max_run);
+        const run_len = zero_pos - i;
+        if (write_idx + 1 + run_len > dst.len) {
+            return 0;
+        }
+        dst[write_idx] = (run_len + 1) as u8;
+        write_idx += 1;
+        if (run_len > 0) {
+            @memcpy(dst[write_idx .. write_idx + run_len], src[i .. i + run_len]);
+            write_idx += run_len;
+        }
+        i = zero_pos;
+        if (i < src.len && src[i] == 0 && run_len < 254) {
+            // Consumed a zero byte; if it was the last byte of src, emit trailing 0x01 code
+            i += 1;
+            if (i == src.len) {
+                if (write_idx >= dst.len) {
                     return 0;
                 }
-                dst[code_idx] = 0xFF;
-                if (i + 1 < src.len) {
-                    code_idx = write_idx;
-                    write_idx += 1;
-                    code = 1;
-                } else {
-                    return write_idx;
-                }
+                dst[write_idx] = 0x01;
+                write_idx += 1;
             }
         }
-        i += 1;
     }
 
-    if (code_idx >= dst.len) {
-        return 0;
-    }
-    dst[code_idx] = code;
     return write_idx;
 }
 
@@ -90,6 +105,13 @@ pub fn encode_with_sentinel(src: []const u8, dst: []u8, sentinel: u8) -> usize {
         return n;
     }
     let i: usize = 0;
+    const v_sent: CobsVec16 = @splat(sentinel);
+    while (i + 16 <= n) {
+        const v: CobsVec16 = dst[i .. i + 16][0..16].*;
+        const x: [16]u8 = v ^ v_sent;
+        @memcpy(dst[i .. i + 16], x[0..16]);
+        i += 16;
+    }
     while (i < n) {
         dst[i] = dst[i] ^ sentinel;
         i += 1;
@@ -105,6 +127,8 @@ pub fn decode_with_sentinel(src: []const u8, dst: []u8, sentinel: u8) -> i64 {
     }
     let read_idx: usize = 0;
     let write_idx: usize = 0;
+    const v_zero: CobsVec16 = @splat(0 as u8);
+    const v_sent: CobsVec16 = @splat(sentinel);
 
     while (read_idx < src.len) {
         const code = src[read_idx] ^ sentinel;
@@ -119,16 +143,39 @@ pub fn decode_with_sentinel(src: []const u8, dst: []u8, sentinel: u8) -> i64 {
         if (write_idx + block_len > dst.len) {
             return -1;
         }
-        let k: usize = 0;
-        while (k < block_len) {
-            const b = src[read_idx] ^ sentinel;
-            if (b == 0) {
+        if (sentinel == 0) {
+            if (cobsFindZero(src, read_idx, read_idx + block_len) < read_idx + block_len) {
                 return -1;
             }
-            dst[write_idx] = b;
-            read_idx += 1;
-            write_idx += 1;
-            k += 1;
+            if (block_len > 0) {
+                @memcpy(dst[write_idx .. write_idx + block_len], src[read_idx .. read_idx + block_len]);
+                read_idx += block_len;
+                write_idx += block_len;
+            }
+        } else {
+            let k: usize = 0;
+            while (k + 16 <= block_len) {
+                const v: CobsVec16 = src[read_idx .. read_idx + 16][0..16].*;
+                const dec_vec: CobsVec16 = v ^ v_sent;
+                if (@reduce(.Or, dec_vec == v_zero)) {
+                    return -1;
+                }
+                const arr: [16]u8 = dec_vec;
+                @memcpy(dst[write_idx .. write_idx + 16], arr[0..16]);
+                read_idx += 16;
+                write_idx += 16;
+                k += 16;
+            }
+            while (k < block_len) {
+                const b = src[read_idx] ^ sentinel;
+                if (b == 0) {
+                    return -1;
+                }
+                dst[write_idx] = b;
+                read_idx += 1;
+                write_idx += 1;
+                k += 1;
+            }
         }
         if (code < 0xFF && read_idx < src.len) {
             if (write_idx >= dst.len) {
@@ -163,10 +210,7 @@ pub fn encode_framed(src: []const u8, dst: []u8) -> usize {
 /// Decodes a framed COBS buffer stopping at the first `0x00` delimiter.
 /// Returns decoded byte count, or `-1` on malformed frame or small `dst`.
 pub fn decode_framed(src: []const u8, dst: []u8) -> i64 {
-    let end: usize = 0;
-    while (end < src.len && src[end] != 0x00) {
-        end += 1;
-    }
+    const end = cobsFindZero(src, 0, src.len);
     return decode(src[0..end], dst);
 }
 
