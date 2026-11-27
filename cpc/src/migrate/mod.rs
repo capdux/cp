@@ -7,6 +7,7 @@ pub mod deps;
 pub mod registry;
 pub mod rs;
 pub mod ts;
+pub mod ts_test;
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -30,6 +31,7 @@ pub struct MigrateOptions {
     pub recursive_deps: bool,
     pub max_depth: usize,
     pub verify: bool,
+    pub include_tests: bool,
 }
 
 fn sanitize_pkg_dir_name(name: &str) -> String {
@@ -39,21 +41,34 @@ fn sanitize_pkg_dir_name(name: &str) -> String {
         .replace(' ', "_")
 }
 
-fn is_source_file(lang: SourceLang, path: &Path) -> bool {
+fn is_source_file(lang: SourceLang, path: &Path, include_tests: bool) -> bool {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     let fname = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
     match lang {
         SourceLang::Ts => {
-            (ext == "ts" || ext == "tsx" || ext == "mts" || ext == "js" || ext == "mjs")
-                && !fname.ends_with(".d.ts")
-                && !fname.ends_with(".test.ts")
-                && !fname.ends_with(".spec.ts")
+            let valid_ext =
+                ext == "ts" || ext == "tsx" || ext == "mts" || ext == "js" || ext == "mjs";
+            if !valid_ext || fname.ends_with(".d.ts") {
+                return false;
+            }
+            if !include_tests
+                && (fname.ends_with(".test.ts")
+                    || fname.ends_with(".spec.ts")
+                    || fname.ends_with(".test.tsx")
+                    || fname.ends_with(".spec.tsx"))
+            {
+                return false;
+            }
+            true
         }
         SourceLang::Rs => ext == "rs" && fname != "build.rs",
     }
 }
 
-fn should_skip_dir(name: &str) -> bool {
+fn should_skip_dir(name: &str, include_tests: bool) -> bool {
+    if !include_tests && matches!(name, "test" | "tests" | "__tests__") {
+        return true;
+    }
     matches!(
         name,
         "node_modules"
@@ -62,8 +77,6 @@ fn should_skip_dir(name: &str) -> bool {
             | ".cap"
             | "dist"
             | "build"
-            | "test"
-            | "tests"
             | "benches"
             | "examples"
             | "docs"
@@ -71,7 +84,13 @@ fn should_skip_dir(name: &str) -> bool {
     )
 }
 
-fn collect_source_files(lang: SourceLang, root: &Path, cur: &Path, acc: &mut Vec<PathBuf>) {
+fn collect_source_files(
+    lang: SourceLang,
+    root: &Path,
+    cur: &Path,
+    include_tests: bool,
+    acc: &mut Vec<PathBuf>,
+) {
     let entries = match fs::read_dir(cur) {
         Ok(e) => e,
         Err(_) => return,
@@ -81,11 +100,11 @@ fn collect_source_files(lang: SourceLang, root: &Path, cur: &Path, acc: &mut Vec
     for p in paths {
         if p.is_dir() {
             let dname = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            if should_skip_dir(dname) {
+            if should_skip_dir(dname, include_tests) {
                 continue;
             }
-            collect_source_files(lang, root, &p, acc);
-        } else if is_source_file(lang, &p) {
+            collect_source_files(lang, root, &p, include_tests, acc);
+        } else if is_source_file(lang, &p, include_tests) {
             if let Ok(rel) = p.strip_prefix(root) {
                 acc.push(rel.to_path_buf());
             }
@@ -233,16 +252,48 @@ fn migrate_project_recursive(
     depth: usize,
     max_depth: usize,
     verify: bool,
+    include_tests: bool,
     visited: &mut HashSet<String>,
 ) -> Result<ProjectMigrateSummary, String> {
     if !src_dir.exists() {
         return Err(format!(
-            "Source directory does not exist: {}",
+            "Source path does not exist: {}",
             src_dir.display()
         ));
     }
-    fs::create_dir_all(out_dir)
-        .map_err(|e| format!("Failed to create output dir {}: {}", out_dir.display(), e))?;
+
+    let is_single_file = src_dir.is_file();
+    let explicit_out_file = is_single_file
+        && out_dir
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e == "cp")
+            .unwrap_or(false);
+    let effective_out_dir: PathBuf = if explicit_out_file {
+        out_dir
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or_else(|| Path::new("."))
+            .to_path_buf()
+    } else {
+        out_dir.to_path_buf()
+    };
+    let manifest_dir: &Path = if is_single_file {
+        src_dir
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or_else(|| Path::new("."))
+    } else {
+        src_dir
+    };
+
+    fs::create_dir_all(&effective_out_dir).map_err(|e| {
+        format!(
+            "Failed to create output dir {}: {}",
+            effective_out_dir.display(),
+            e
+        )
+    })?;
 
     // 1. Parse manifest & build 3-tier dependency map
     let mut dep_mappings: Vec<DepMapping> = Vec::new();
@@ -251,13 +302,13 @@ fn migrate_project_recursive(
 
     let (project_name, project_version) = match lang {
         SourceLang::Ts => {
-            let (name, ver, raw_deps) = parse_package_json_deps(src_dir);
+            let (name, ver, raw_deps) = parse_package_json_deps(manifest_dir);
             for (dname, dver, is_dev) in raw_deps {
                 let tier = if let Some(t) = resolve_builtin_or_official(lang, &dname) {
                     t
                 } else if !is_dev && recursive_deps && depth < max_depth {
                     if let Some(local_dep_src) =
-                        locate_local_dep_source(lang, src_dir, &dname, None)
+                        locate_local_dep_source(lang, manifest_dir, &dname, None)
                     {
                         let safe_name = sanitize_pkg_dir_name(&dname);
                         let dep_out = root_cap_modules_dir.join(&safe_name);
@@ -272,6 +323,7 @@ fn migrate_project_recursive(
                                 depth + 1,
                                 max_depth,
                                 verify,
+                                false,
                                 visited,
                             ) {
                                 Ok(sub) => {
@@ -321,13 +373,13 @@ fn migrate_project_recursive(
             (name, ver)
         }
         SourceLang::Rs => {
-            let (name, ver, raw_deps) = parse_cargo_toml_deps(src_dir);
+            let (name, ver, raw_deps) = parse_cargo_toml_deps(manifest_dir);
             for (dname, dver, is_dev, explicit_path) in raw_deps {
                 let tier = if let Some(t) = resolve_builtin_or_official(lang, &dname) {
                     t
                 } else if !is_dev && recursive_deps && depth < max_depth {
                     if let Some(local_dep_src) =
-                        locate_local_dep_source(lang, src_dir, &dname, explicit_path.as_deref())
+                        locate_local_dep_source(lang, manifest_dir, &dname, explicit_path.as_deref())
                     {
                         let safe_name = sanitize_pkg_dir_name(&dname);
                         let dep_out = root_cap_modules_dir.join(&safe_name);
@@ -342,6 +394,7 @@ fn migrate_project_recursive(
                                 depth + 1,
                                 max_depth,
                                 verify,
+                                false,
                                 visited,
                             ) {
                                 Ok(sub) => {
@@ -392,26 +445,27 @@ fn migrate_project_recursive(
     };
 
     // 2. Collect and transpile all source files preserving directory layout
-    let mut rel_files = Vec::new();
-    let scan_root = if src_dir.join("src").is_dir() {
-        src_dir.join("src")
-    } else {
-        src_dir.to_path_buf()
-    };
-    collect_source_files(lang, src_dir, &scan_root, &mut rel_files);
-
     let mut file_reports = Vec::new();
-    for rel in rel_files {
-        let abs_src = src_dir.join(&rel);
-        let source = match fs::read_to_string(&abs_src) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
+    if is_single_file {
+        let source = fs::read_to_string(src_dir)
+            .map_err(|e| format!("Failed to read {}: {}", src_dir.display(), e))?;
         let orig_lines = source.lines().count();
-        let rel_str = rel.to_string_lossy().replace('\\', "/");
+        let file_name = src_dir
+            .file_name()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("index.ts"));
+        let rel_str = file_name.to_string_lossy().replace('\\', "/");
 
-        let mut cp_rel = rel.clone();
-        cp_rel.set_extension("cp");
+        let cp_rel = if explicit_out_file {
+            out_dir
+                .file_name()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("output.cp"))
+        } else {
+            let mut p = file_name.clone();
+            p.set_extension("cp");
+            p
+        };
         let cp_rel_str = cp_rel.to_string_lossy().replace('\\', "/");
 
         let (cp_code, todo_count, opt_notes) = match lang {
@@ -428,7 +482,7 @@ fn migrate_project_recursive(
         let cp_lines = cp_code.lines().count();
         let (parse_ok, parse_err) = check_cp_parse(&cp_code);
 
-        let abs_out = out_dir.join(&cp_rel);
+        let abs_out = effective_out_dir.join(&cp_rel);
         if let Some(parent) = abs_out.parent() {
             let _ = fs::create_dir_all(parent);
         }
@@ -445,10 +499,64 @@ fn migrate_project_recursive(
             todo_count,
             opt_notes,
         });
+    } else {
+        let mut rel_files = Vec::new();
+        let scan_root = if src_dir.join("src").is_dir() && !include_tests {
+            src_dir.join("src")
+        } else {
+            src_dir.to_path_buf()
+        };
+        collect_source_files(lang, src_dir, &scan_root, include_tests, &mut rel_files);
+
+        for rel in rel_files {
+            let abs_src = src_dir.join(&rel);
+            let source = match fs::read_to_string(&abs_src) {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            let orig_lines = source.lines().count();
+            let rel_str = rel.to_string_lossy().replace('\\', "/");
+
+            let mut cp_rel = rel.clone();
+            cp_rel.set_extension("cp");
+            let cp_rel_str = cp_rel.to_string_lossy().replace('\\', "/");
+
+            let (cp_code, todo_count, opt_notes) = match lang {
+                SourceLang::Ts => {
+                    let res = transpile_ts_to_cp(&source, &rel_str, &dep_lookup);
+                    (res.cp_code, res.todo_count, res.opt_notes)
+                }
+                SourceLang::Rs => {
+                    let res = transpile_rs_to_cp(&source, &rel_str, &dep_lookup);
+                    (res.cp_code, res.todo_count, res.opt_notes)
+                }
+            };
+
+            let cp_lines = cp_code.lines().count();
+            let (parse_ok, parse_err) = check_cp_parse(&cp_code);
+
+            let abs_out = effective_out_dir.join(&cp_rel);
+            if let Some(parent) = abs_out.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            fs::write(&abs_out, &cp_code)
+                .map_err(|e| format!("Failed to write {}: {}", abs_out.display(), e))?;
+
+            file_reports.push(FileReport {
+                orig_rel_path: rel_str,
+                cp_rel_path: cp_rel_str,
+                orig_lines,
+                cp_lines,
+                parse_ok,
+                parse_err,
+                todo_count,
+                opt_notes,
+            });
+        }
     }
 
     let verify_summary = if verify {
-        Some(verify_migrated_files(out_dir, &mut file_reports)?)
+        Some(verify_migrated_files(&effective_out_dir, &mut file_reports)?)
     } else {
         None
     };
@@ -458,7 +566,7 @@ fn migrate_project_recursive(
         version: project_version,
         lang,
         src_dir: src_dir.display().to_string(),
-        out_dir: out_dir.display().to_string(),
+        out_dir: effective_out_dir.display().to_string(),
         deps: dep_mappings,
         files: file_reports,
         converted_dep_pkgs,
@@ -467,18 +575,33 @@ fn migrate_project_recursive(
 
     // 3. Emit standalone `cap.json` and `migrate.md`
     let cap_json = generate_cap_json(&summary);
-    fs::write(out_dir.join("cap.json"), cap_json)
+    fs::write(effective_out_dir.join("cap.json"), cap_json)
         .map_err(|e| format!("Failed to write cap.json: {}", e))?;
 
     let migrate_md = generate_migrate_md(&summary);
-    fs::write(out_dir.join("migrate.md"), migrate_md)
+    fs::write(effective_out_dir.join("migrate.md"), migrate_md)
         .map_err(|e| format!("Failed to write migrate.md: {}", e))?;
 
     Ok(summary)
 }
 
 pub fn run_migrate(opts: MigrateOptions) -> Result<ProjectMigrateSummary, String> {
-    let cap_modules_dir = opts.out_dir.join("cap_modules");
+    let cap_modules_dir = if opts.src_dir.is_file()
+        && opts
+            .out_dir
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e == "cp")
+            .unwrap_or(false)
+    {
+        opts.out_dir
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or_else(|| Path::new("."))
+            .join("cap_modules")
+    } else {
+        opts.out_dir.join("cap_modules")
+    };
     let mut visited = HashSet::new();
     migrate_project_recursive(
         opts.lang,
@@ -489,6 +612,7 @@ pub fn run_migrate(opts: MigrateOptions) -> Result<ProjectMigrateSummary, String
         0,
         opts.max_depth,
         opts.verify,
+        opts.include_tests,
         &mut visited,
     )
 }
@@ -605,6 +729,7 @@ mod tests {
             recursive_deps: false,
             max_depth: 1,
             verify: true,
+            include_tests: false,
         })
         .expect("run_migrate with verify should succeed");
 

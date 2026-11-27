@@ -610,6 +610,7 @@ fn convert_recursive(
         recursive_deps: false,
         max_depth: 0,
         verify,
+        include_tests: false,
     })?;
 
     // Emit standardized @cap/<slug>/cap.json with independent runtime deps

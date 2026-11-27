@@ -847,7 +847,9 @@ pub fn resolve_builtin_or_official(lang: SourceLang, orig_name: &str) -> Option<
             "node:child_process" | "child_process" => {
                 Some(("cap:process", "CP 内置子进程管理标准库（cap:process）"))
             }
-            "node:test" | "bun:test" => Some(("cap:test", "CP 内置单元测试框架（cap:test）")),
+            "node:test" | "bun:test" | "vitest" | "@playwright/test" => {
+                Some(("cap:test", "CP 内置单元测试框架（cap:test）"))
+            }
             _ => None,
         },
         SourceLang::Rs => {

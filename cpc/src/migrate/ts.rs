@@ -154,7 +154,7 @@ fn split_inline_comment(line: &str) -> (&str, &str) {
 }
 
 /// Count `{` and `}` outside of strings and `//` comments.
-fn count_braces(s: &str) -> (i32, i32) {
+pub(super) fn count_braces(s: &str) -> (i32, i32) {
     let (code, _) = split_inline_comment(s);
     let bytes = code.as_bytes();
     let mut opens = 0i32;
@@ -5268,6 +5268,13 @@ pub fn transpile_ts_to_cp(
     while brace_depth > 0 {
         out.push_str("} // [cap-migrate] auto-closed brace\n");
         brace_depth -= 1;
+    }
+
+    // Lower TS test files (`*.test.ts`, `*.spec.ts`, `bun:test`/`vitest`/`@playwright/test`)
+    // into runnable CP `cap:test` syntax before parser self-verification.
+    if super::ts_test::is_ts_test_file(rel_path, source) {
+        out = super::ts_test::lower_ts_test_to_cap_test(&out);
+        opt_notes.push("降级 TS 测试套件（describe/test/expect/async）为可编译运行的 CP `cap:test` 语法".to_string());
     }
 
     // Self-verify transpiled CP output with `cpc::parser::Parser`.

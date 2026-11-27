@@ -186,6 +186,9 @@ enum Commands {
         /// Run cpc syntax/semantic verification + mechanical auto-fix loop on emitted .cp files
         #[arg(long)]
         verify: bool,
+        /// Include test files (*.test.ts, *.spec.ts, *.test.tsx, *.spec.tsx, __tests__/, test/, tests/)
+        #[arg(long)]
+        include_tests: bool,
     },
     /// Run Language Server Protocol daemon
     Lsp,
@@ -750,6 +753,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                 no_deps,
                 max_depth,
                 verify,
+                include_tests,
             } => {
                 if npm.is_some() || crate_pkg.is_some() {
                     use cpc::migrate::registry::{
@@ -827,6 +831,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                         recursive_deps: !no_deps,
                         max_depth,
                         verify,
+                        include_tests,
                     })
                     .map_err(|e| anyhow::anyhow!("{}", e))?;
                     let total = summary.files.len();
@@ -840,7 +845,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     println!(
                         "[cap from] Migrated '{}' -> {} | files={} (cpc parse ok: {}/{}, {:.1}%) | deps={} (recursive pkgs: {}) | TODOs={}",
                         summary.project_name,
-                        out_dir.display(),
+                        summary.out_dir,
                         total,
                         parse_ok,
                         total,
@@ -854,7 +859,7 @@ fn run(cli: Cli) -> anyhow::Result<()> {
                     }
                     println!(
                         "[cap from] Report written to: {}/migrate.md",
-                        out_dir.display()
+                        summary.out_dir
                     );
                 }
             }
