@@ -30,9 +30,15 @@ pub struct ExportStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ImportSpecifier {
+    pub imported: Ident,
+    pub local: Ident,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ImportStmt {
     pub span: Span,
-    pub specifiers: Vec<Ident>,
+    pub specifiers: Vec<ImportSpecifier>,
     #[serde(default)]
     pub default_specifier: Option<Ident>,
     pub source: String,

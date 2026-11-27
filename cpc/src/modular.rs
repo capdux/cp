@@ -936,7 +936,7 @@ pub fn compile_modular(opts: &ModularOptions) -> anyhow::Result<()> {
                                 .or_insert_with(|| Some(HashSet::new()));
                             if let Some(set) = entry_wanted {
                                 for sp in &imp.specifiers {
-                                    set.insert(sp.sym.clone());
+                                    set.insert(sp.imported.sym.clone());
                                 }
                             }
                         }

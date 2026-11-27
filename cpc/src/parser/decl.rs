@@ -729,7 +729,22 @@ impl<'a> Parser<'a> {
         if self.peek() == Some(&Token::LBrace) {
             self.bump()?;
             while self.peek() != Some(&Token::RBrace) && self.peek().is_some() {
-                specifiers.push(self.parse_ident()?);
+                if self.peek() == Some(&Token::TypeKw)
+                    && !matches!(
+                        self.peek_next(),
+                        Some(Token::As) | Some(Token::Comma) | Some(Token::RBrace) | None
+                    )
+                {
+                    self.bump()?;
+                }
+                let imported = self.parse_ident()?;
+                let local = if self.peek() == Some(&Token::As) {
+                    self.bump()?;
+                    self.parse_ident()?
+                } else {
+                    imported.clone()
+                };
+                specifiers.push(ImportSpecifier { imported, local });
                 if self.peek() == Some(&Token::Comma) {
                     self.bump()?;
                 }

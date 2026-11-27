@@ -365,8 +365,25 @@ impl Codegen {
                     }
                     _ => {
                         let r_code = self.generate_expr(right);
-                        if self.is_lib_mode || r_code.trim_start().starts_with("@panic(") {
-                            format!("(({}) orelse ({}))", l_code, r_code)
+                        let r_trimmed = r_code.trim();
+                        let is_rhs_noreturn = r_trimmed == "unreachable"
+                            || r_trimmed.starts_with("@panic(")
+                            || r_trimmed.starts_with("@compileError(");
+                        if self.is_lib_mode {
+                            if r_trimmed == "unreachable" {
+                                format!("(({}) orelse unreachable)", l_code)
+                            } else {
+                                format!("(({}) orelse ({}))", l_code, r_code)
+                            }
+                        } else if is_rhs_noreturn {
+                            let id = self.lambda_counter;
+                            self.lambda_counter += 1;
+                            format!(
+                                "(blk_nc_{id}: {{ const __nc_l_{id} = ({l}); if (comptime @typeInfo(@TypeOf(__nc_l_{id})) == .optional) {{ break :blk_nc_{id} (__nc_l_{id} orelse {r}); }} else if (comptime @typeInfo(@TypeOf(__nc_l_{id})) == .null) {{ {r}; }} else {{ break :blk_nc_{id} __nc_l_{id}; }} }})",
+                                id = id,
+                                l = l_code,
+                                r = r_trimmed,
+                            )
                         } else {
                             let id = self.lambda_counter;
                             self.lambda_counter += 1;
@@ -948,8 +965,10 @@ impl Codegen {
                     }
                 } else if fields_slice.is_empty() {
                     let is_enum = self.enum_defs.contains_key(&ei.enum_name.sym);
-                    let is_enum_method =
-                        self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
+                    let is_enum_method = self
+                        .enum_defs
+                        .get(&ei.enum_name.sym)
+                        .map_or(false, |en| {
                             en.methods
                                 .iter()
                                 .any(|m| m.ident.sym == ei.variant_name.sym)

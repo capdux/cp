@@ -940,7 +940,7 @@ impl Codegen {
                     || imp
                         .specifiers
                         .iter()
-                        .any(|id| id.sym == "string" || id.sym == "@\"string\"")
+                        .any(|sp| sp.local.sym == "string" || sp.local.sym == "@\"string\"")
             }
             _ => false,
         });
@@ -971,7 +971,7 @@ impl Codegen {
                         || imp
                             .specifiers
                             .iter()
-                            .any(|id| id.sym == name || id.sym == escaped)
+                            .any(|sp| sp.local.sym == name || sp.local.sym == escaped)
                 }
                 ModuleItem::Stmt(Stmt::Expr(Expr::Zig(z))) => {
                     z.code.contains(&zig_eq) || z.code.contains(&zig_col)
@@ -1309,12 +1309,16 @@ impl Codegen {
                                 }
                             }
                             for s in &imp.specifiers {
-                                if !self.globals.insert(s.sym.clone()) {
+                                if !self.globals.insert(s.local.sym.clone()) {
                                     continue;
                                 }
-                                self.value_classes.insert(s.sym.clone());
-                                let esc = Self::escape_zig_ident(&s.sym);
-                                self.writeln(&format!("pub const {0} = {1}.{0};", esc, hub_expr));
+                                self.value_classes.insert(s.local.sym.clone());
+                                let esc_local = Self::escape_zig_ident(&s.local.sym);
+                                let esc_imported = Self::escape_zig_ident(&s.imported.sym);
+                                self.writeln(&format!(
+                                    "pub const {} = {}.{};",
+                                    esc_local, hub_expr, esc_imported
+                                ));
                             }
                             continue;
                         }
@@ -1348,19 +1352,32 @@ impl Codegen {
                         }
                     }
                     for s in &imp.specifiers {
-                        if s.sym == "std" && zig_source == "std" {
+                        if s.local.sym == "std" && zig_source == "std" {
                             continue;
                         }
-                        if !self.globals.insert(s.sym.clone()) {
+                        if !self.globals.insert(s.local.sym.clone()) {
                             continue;
                         }
-                        if !self.class_defs.contains_key(&s.sym)
-                            && !self.ref_classes.contains(&s.sym)
+                        self.modular_imported_symbols.insert(s.local.sym.clone());
+                        if s.local.sym != s.imported.sym {
+                            if let Some(cd) = self.class_defs.get(&s.imported.sym).cloned() {
+                                self.class_defs.insert(s.local.sym.clone(), cd);
+                            }
+                            if self.ref_classes.contains(&s.imported.sym) {
+                                self.ref_classes.insert(s.local.sym.clone());
+                            }
+                        }
+                        if !self.class_defs.contains_key(&s.local.sym)
+                            && !self.ref_classes.contains(&s.local.sym)
                         {
-                            self.value_classes.insert(s.sym.clone());
+                            self.value_classes.insert(s.local.sym.clone());
                         }
-                        let esc = Self::escape_zig_ident(&s.sym);
-                        self.writeln(&format!("pub const {0} = {1}.{0};", esc, mod_var));
+                        let esc_local = Self::escape_zig_ident(&s.local.sym);
+                        let esc_imported = Self::escape_zig_ident(&s.imported.sym);
+                        self.writeln(&format!(
+                            "pub const {} = {}.{};",
+                            esc_local, mod_var, esc_imported
+                        ));
                     }
                 }
             }
@@ -1957,13 +1974,15 @@ impl Codegen {
                         ));
                     }
                     for s in &imp.specifiers {
-                        if !self.globals.insert(s.sym.clone()) {
+                        if !self.globals.insert(s.local.sym.clone()) {
                             continue;
                         }
-                        self.value_classes.insert(s.sym.clone());
+                        self.value_classes.insert(s.local.sym.clone());
+                        let esc_local = Self::escape_zig_ident(&s.local.sym);
+                        let esc_imported = Self::escape_zig_ident(&s.imported.sym);
                         self.writeln(&format!(
-                            "const {0} = __cap_hub.{0};",
-                            Self::escape_zig_ident(&s.sym)
+                            "const {} = __cap_hub.{};",
+                            esc_local, esc_imported
                         ));
                     }
                     continue;
@@ -1986,17 +2005,18 @@ impl Codegen {
                     ));
                 }
                 for s in &imp.specifiers {
-                    if !self.globals.insert(s.sym.clone()) {
+                    if !self.globals.insert(s.local.sym.clone()) {
                         continue;
                     }
-                    self.value_classes.insert(s.sym.clone());
-                    if s.sym == "std" && zig_source == "std" {
+                    self.value_classes.insert(s.local.sym.clone());
+                    if s.local.sym == "std" && zig_source == "std" {
                         continue;
                     }
+                    let esc_local = Self::escape_zig_ident(&s.local.sym);
+                    let esc_imported = Self::escape_zig_ident(&s.imported.sym);
                     self.writeln(&format!(
-                        "const {0} = @import(\"{1}\").{0};",
-                        Self::escape_zig_ident(&s.sym),
-                        zig_source
+                        "const {} = @import(\"{}\").{};",
+                        esc_local, zig_source, esc_imported
                     ));
                 }
             }

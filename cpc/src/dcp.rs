@@ -31,7 +31,12 @@ impl DcpEmitter {
     fn emit_import(&mut self, imp: &ImportStmt) {
         self.output.push_str("import { ");
         for (i, spec) in imp.specifiers.iter().enumerate() {
-            self.output.push_str(&spec.sym);
+            if spec.imported.sym != spec.local.sym {
+                self.output
+                    .push_str(&format!("{} as {}", spec.imported.sym, spec.local.sym));
+            } else {
+                self.output.push_str(&spec.local.sym);
+            }
             if i < imp.specifiers.len() - 1 {
                 self.output.push_str(", ");
             }

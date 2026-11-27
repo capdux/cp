@@ -54,20 +54,21 @@ impl ModuleFeatures {
                 ModuleItem::Stmt(s) => f.scan_stmt(s),
                 ModuleItem::Import(imp) => {
                     if imp.source == "cap:sync"
-                        || imp
-                            .specifiers
-                            .iter()
-                            .any(|s| s.sym == "Mutex" || s.sym == "RwLock" || s.sym == "Atomic")
+                        || imp.specifiers.iter().any(|s| {
+                            s.imported.sym == "Mutex"
+                                || s.imported.sym == "RwLock"
+                                || s.imported.sym == "Atomic"
+                        })
                     {
                         f.needs_sync = true;
                     }
                     if imp.source == "cap:json"
                         || imp.source.contains("json")
                         || imp.specifiers.iter().any(|s| {
-                            s.sym == "JSON"
-                                || s.sym == "JsonValue"
-                                || s.sym == "JsonParser"
-                                || s.sym == "JsonTag"
+                            s.imported.sym == "JSON"
+                                || s.imported.sym == "JsonValue"
+                                || s.imported.sym == "JsonParser"
+                                || s.imported.sym == "JsonTag"
                         })
                     {
                         f.has_imported_json = true;
@@ -75,12 +76,12 @@ impl ModuleFeatures {
                     if imp.source == "cap:ptr"
                         || imp.source.contains("ptr")
                         || imp.specifiers.iter().any(|s| {
-                            s.sym == "Shared"
-                                || s.sym == "AtomicShared"
-                                || s.sym == "Cow"
-                                || s.sym == "CowSlice"
-                                || s.sym == "Owned"
-                                || s.sym == "TaggedPointer"
+                            s.imported.sym == "Shared"
+                                || s.imported.sym == "AtomicShared"
+                                || s.imported.sym == "Cow"
+                                || s.imported.sym == "CowSlice"
+                                || s.imported.sym == "Owned"
+                                || s.imported.sym == "TaggedPointer"
                         })
                     {
                         f.has_imported_ptr = true;
@@ -178,7 +179,7 @@ impl ModuleFeatures {
                     || imp
                         .specifiers
                         .iter()
-                        .any(|id| id.sym == name || id.sym == escaped)
+                        .any(|sp| sp.local.sym == name || sp.local.sym == escaped)
             }
             ModuleItem::Export(exp) => exp.specifiers.iter().any(|sp| {
                 (exp.source.is_some() || sp.exported.sym != sp.local.sym)

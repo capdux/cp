@@ -41,7 +41,7 @@ pub fn is_import_used(imp: &ImportStmt, referenced: &HashSet<String>) -> bool {
         }
     }
     for sp in &imp.specifiers {
-        if referenced.contains(&sp.sym) {
+        if referenced.contains(&sp.local.sym) {
             return true;
         }
     }
@@ -131,8 +131,8 @@ pub fn extract_cap_hub_aliases(module: &Module) -> (bool, Vec<String>, Vec<Strin
                     }
                 }
                 for sp in &imp.specifiers {
-                    if !named_specs.contains(&sp.sym) {
-                        named_specs.push(sp.sym.clone());
+                    if !named_specs.contains(&sp.imported.sym) {
+                        named_specs.push(sp.imported.sym.clone());
                     }
                 }
             }

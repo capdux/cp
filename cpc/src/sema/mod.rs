@@ -1254,14 +1254,14 @@ impl Analyzer {
                         }
                     }
                     for spec in &imp.specifiers {
-                        if !self.scopes[0].contains_key(&spec.sym) {
+                        if !self.scopes[0].contains_key(&spec.local.sym) {
                             let _ = self.define(
-                                spec.sym.clone(),
+                                spec.local.sym.clone(),
                                 SymbolKind::Var {
                                     ty: Type::Any,
                                     kind: VarDeclKind::Const,
                                 },
-                                spec.span,
+                                spec.local.span,
                             );
                         }
                     }
