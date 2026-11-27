@@ -82,8 +82,8 @@ pub struct PrefixRadixStats {
 /// Zero-heap-allocation SGLang RadixAttention prefix KV-cache compressed radix tree.
 pub struct PrefixRadixCache {
     nodes: [PRC_MAX_NODES]PrefixRadixNode = [PrefixRadixNode{}; PRC_MAX_NODES];
-    token_pool: [PRC_MAX_POOL_SLOTS]u32 = [0; PRC_MAX_POOL_SLOTS];
-    kv_page_pool: [PRC_MAX_POOL_SLOTS]u32 = [0; PRC_MAX_POOL_SLOTS];
+    token_pool: [PRC_MAX_POOL_SLOTS]u32 = undefined;
+    kv_page_pool: [PRC_MAX_POOL_SLOTS]u32 = undefined;
     pool_used: usize = 0;
     active_node_count: usize = 1;
     cached_token_count: usize = 0;
@@ -95,8 +95,8 @@ pub struct PrefixRadixCache {
     static fn init(): PrefixRadixCache {
         let cache = PrefixRadixCache{
             nodes: [PrefixRadixNode{}; PRC_MAX_NODES],
-            token_pool: [0; PRC_MAX_POOL_SLOTS],
-            kv_page_pool: [0; PRC_MAX_POOL_SLOTS],
+            token_pool: undefined,
+            kv_page_pool: undefined,
             pool_used: 0,
             active_node_count: 1,
             cached_token_count: 0,
@@ -207,8 +207,8 @@ pub struct PrefixRadixCache {
 
     /// Zero-heap in-place compaction of `token_pool` and `kv_page_pool` reclaiming gaps from evicted leaves.
     fn compactPools(*_) {
-        let new_tokens: [PRC_MAX_POOL_SLOTS]u32 = [0; PRC_MAX_POOL_SLOTS];
-        let new_pages: [PRC_MAX_POOL_SLOTS]u32 = [0; PRC_MAX_POOL_SLOTS];
+        let new_tokens: [PRC_MAX_POOL_SLOTS]u32 = undefined;
+        let new_pages: [PRC_MAX_POOL_SLOTS]u32 = undefined;
         let cursor: usize = 0;
 
         let i: usize = 1;
@@ -216,19 +216,17 @@ pub struct PrefixRadixCache {
             if (!_.nodes[i].active || _.nodes[i].token_len == 0) continue;
             const old_off: usize = _.nodes[i].token_offset as usize;
             const len: usize = _.nodes[i].token_len as usize;
-            let k: usize = 0;
-            while (k < len) : (k += 1) {
-                new_tokens[cursor + k] = _.token_pool[old_off + k];
-                new_pages[cursor + k] = _.kv_page_pool[old_off + k];
+            if (len > 0) {
+                @memcpy(new_tokens[cursor..cursor + len], _.token_pool[old_off..old_off + len]);
+                @memcpy(new_pages[cursor..cursor + len], _.kv_page_pool[old_off..old_off + len]);
             }
             _.nodes[i].token_offset = cursor as u32;
             cursor += len;
         }
 
-        let j: usize = 0;
-        while (j < cursor) : (j += 1) {
-            _.token_pool[j] = new_tokens[j];
-            _.kv_page_pool[j] = new_pages[j];
+        if (cursor > 0) {
+            @memcpy(_.token_pool[0..cursor], new_tokens[0..cursor]);
+            @memcpy(_.kv_page_pool[0..cursor], new_pages[0..cursor]);
         }
         _.pool_used = cursor;
     }
@@ -241,11 +239,8 @@ pub struct PrefixRadixCache {
             if (_.pool_used + need > PRC_MAX_POOL_SLOTS) return null;
         }
         const offset: usize = _.pool_used;
-        let i: usize = 0;
-        while (i < need) : (i += 1) {
-            _.token_pool[offset + i] = tokens[i];
-            _.kv_page_pool[offset + i] = kv_pages[i];
-        }
+        @memcpy(_.token_pool[offset..offset + need], tokens);
+        @memcpy(_.kv_page_pool[offset..offset + need], kv_pages);
         _.pool_used += need;
         return offset as u32;
     }

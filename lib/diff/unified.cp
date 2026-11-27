@@ -69,13 +69,23 @@ fn splitLines(text: []const u8, out: [][]const u8): usize {
 /// 基于 LCS 动态规划计算行级最小编辑脚本（零堆分配，单侧最多 64 行）
 /// 写入 `out_ops` 并返回实际写入的 `DiffLine` 数量
 pub fn diffLines(old_text: []const u8, new_text: []const u8, out_ops: []DiffLine): usize {
-    let old_lines: [64][]const u8 = [""; 64];
-    let new_lines: [64][]const u8 = [""; 64];
+    let old_lines: [64][]const u8 = undefined;
+    let new_lines: [64][]const u8 = undefined;
     const n = splitLines(old_text, old_lines[0..]);
     const m = splitLines(new_text, new_lines[0..]);
 
-    // 65 x 65 扁平 LCS DP 表（栈分配，零堆分配）
-    let dp: [4225]u16 = [0; 4225];
+    // 65 x 65 扁平 LCS DP 表（栈分配，零堆分配；仅初始化有效边界行/列）
+    let dp: [4225]u16 = undefined;
+    let col: usize = 0;
+    while (col <= m) {
+        dp[n * 65 + col] = 0;
+        col += 1;
+    }
+    let row: usize = 0;
+    while (row < n) {
+        dp[row * 65 + m] = 0;
+        row += 1;
+    }
     let i: usize = n;
     while (i > 0) {
         i -= 1;
@@ -161,10 +171,17 @@ struct OutWriter {
     }
 
     fn writeStr(*_, s: []const u8) {
-        let i: usize = 0;
-        while (i < s.len) {
-            _.writeByte(s[i]);
-            i += 1;
+        if (s.len == 0) return;
+        if (s.len <= _.buf.len - _.pos) {
+            @memcpy(_.buf[_.pos.._.pos + s.len], s);
+            _.pos += s.len;
+        } else {
+            const avail = _.buf.len - _.pos;
+            if (avail > 0) {
+                @memcpy(_.buf[_.pos.._.buf.len], s[0..avail]);
+                _.pos = _.buf.len;
+            }
+            _.overflow = true;
         }
     }
 

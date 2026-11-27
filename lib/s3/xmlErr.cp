@@ -165,19 +165,19 @@ pub fn isS3ErrorRetryable(code: []const u8, http_status: u16): bool {
 /// 解析后的 S3 服务端 XML 错误记录（零动态堆分配）
 pub struct S3XmlErrorRecord {
     http_status: u16 = 0,
-    code_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    code_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     code_len: usize = 0,
-    message_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    message_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     message_len: usize = 0,
-    resource_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    resource_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     resource_len: usize = 0,
-    request_id_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    request_id_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     request_id_len: usize = 0,
-    host_id_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    host_id_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     host_id_len: usize = 0,
-    bucket_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    bucket_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     bucket_len: usize = 0,
-    key_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = [0; S3_XML_ERR_MAX_FIELD_LEN],
+    key_buf: [S3_XML_ERR_MAX_FIELD_LEN]u8 = undefined,
     key_len: usize = 0,
 
     fn code(): []const u8 {
@@ -249,10 +249,8 @@ fn decodeXmlContentInto(raw: []const u8, dst: *[S3_XML_ERR_MAX_FIELD_LEN]u8): us
     {
         slice = slice[9..slice.len - 3];
         if (slice.len > S3_XML_ERR_MAX_FIELD_LEN) return err.FieldTooLong;
-        let i: usize = 0;
-        while (i < slice.len) {
-            dst[i] = slice[i];
-            i += 1;
+        if (slice.len > 0) {
+            @memcpy(dst[0..slice.len], slice);
         }
         return slice.len;
     }
@@ -323,10 +321,8 @@ fn copyLiteralInto(src: []const u8, dst: *[S3_XML_ERR_MAX_FIELD_LEN]u8): usize {
     if (n > S3_XML_ERR_MAX_FIELD_LEN) {
         n = S3_XML_ERR_MAX_FIELD_LEN;
     }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[i];
-        i += 1;
+    if (n > 0) {
+        @memcpy(dst[0..n], src[0..n]);
     }
     return n;
 }
@@ -395,10 +391,8 @@ pub fn parseS3XmlError(xml_input: []const u8, http_status: u16): S3XmlErrorRecor
 
 fn appendRaw(out: []u8, pos: *usize, data: []const u8): ! {
     if (pos.* + data.len > out.len) return err.BufferTooSmall;
-    let i: usize = 0;
-    while (i < data.len) {
-        out[pos.* + i] = data[i];
-        i += 1;
+    if (data.len > 0) {
+        @memcpy(out[pos.*..pos.* + data.len], data);
     }
     pos.* += data.len;
 }

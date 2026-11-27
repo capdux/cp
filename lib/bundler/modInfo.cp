@@ -171,19 +171,19 @@ pub struct TranspiledModuleInfo {
 
     static fn init(is_typescript: bool): TranspiledModuleInfo {
         return TranspiledModuleInfo{
-            strings_buf: [0; MODULE_INFO_STRING_BUF_CAP],
+            strings_buf: undefined,
             strings_buf_len: 0,
-            string_offsets: [0; MODULE_INFO_MAX_STRINGS],
-            string_lens: [0; MODULE_INFO_MAX_STRINGS],
+            string_offsets: undefined,
+            string_lens: undefined,
             string_count: 0,
-            requested_keys: [0; MODULE_INFO_MAX_REQUESTED],
-            requested_values: [0; MODULE_INFO_MAX_REQUESTED],
+            requested_keys: undefined,
+            requested_values: undefined,
             requested_count: 0,
-            buffer: [0; MODULE_INFO_MAX_BUFFER_IDS],
+            buffer: undefined,
             buffer_len: 0,
-            record_kinds: [.DeclaredVariable; MODULE_INFO_MAX_RECORDS],
+            record_kinds: undefined,
             record_count: 0,
-            exported_names: [0; MODULE_INFO_MAX_RECORDS],
+            exported_names: undefined,
             exported_count: 0,
             flags: ModuleInfoFlags{
                 contains_import_meta: false,
@@ -213,10 +213,8 @@ pub struct TranspiledModuleInfo {
         }
         const id = _.string_count;
         const off = _.strings_buf_len;
-        let k: usize = 0;
-        while (k < value.len) {
-            _.strings_buf[off + k] = value[k];
-            k += 1;
+        if (value.len > 0) {
+            @memcpy(_.strings_buf[off..off + value.len], value);
         }
         _.string_offsets[id] = @intCast(off);
         _.string_lens[id] = @intCast(value.len);
@@ -366,11 +364,11 @@ pub struct TranspiledModuleInfo {
         }
 
         // Pass 1: collect local_name -> (module_id, import_id, record_idx, is_namespace)
-        let local_ids: [MODULE_INFO_MAX_RECORDS]u32 = [0; MODULE_INFO_MAX_RECORDS];
-        let mod_ids: [MODULE_INFO_MAX_RECORDS]u32 = [0; MODULE_INFO_MAX_RECORDS];
-        let imp_ids: [MODULE_INFO_MAX_RECORDS]u32 = [0; MODULE_INFO_MAX_RECORDS];
-        let rec_indices: [MODULE_INFO_MAX_RECORDS]usize = [0; MODULE_INFO_MAX_RECORDS];
-        let is_ns: [MODULE_INFO_MAX_RECORDS]bool = [false; MODULE_INFO_MAX_RECORDS];
+        let local_ids: [MODULE_INFO_MAX_RECORDS]u32 = undefined;
+        let mod_ids: [MODULE_INFO_MAX_RECORDS]u32 = undefined;
+        let imp_ids: [MODULE_INFO_MAX_RECORDS]u32 = undefined;
+        let rec_indices: [MODULE_INFO_MAX_RECORDS]usize = undefined;
+        let is_ns: [MODULE_INFO_MAX_RECORDS]bool = undefined;
         let map_len: usize = 0;
 
         let buf_i: usize = 0;
@@ -489,10 +487,8 @@ pub struct TranspiledModuleInfo {
             i += 1;
         }
         if (_.strings_buf_len > out.len - pos) return err.BufferTooSmall;
-        i = 0;
-        while (i < _.strings_buf_len) {
-            out[pos + i] = _.strings_buf[i];
-            i += 1;
+        if (_.strings_buf_len > 0) {
+            @memcpy(out[pos..pos + _.strings_buf_len], _.strings_buf[0.._.strings_buf_len]);
         }
         pos += _.strings_buf_len;
         return pos;
@@ -587,10 +583,8 @@ pub struct TranspiledModuleInfo {
         if (total_str_bytes > MODULE_INFO_STRING_BUF_CAP || total_str_bytes > src.len - pos) {
             return err.CorruptBinary;
         }
-        i = 0;
-        while (i < total_str_bytes) {
-            info.strings_buf[i] = src[pos + i];
-            i += 1;
+        if (total_str_bytes > 0) {
+            @memcpy(info.strings_buf[0..total_str_bytes], src[pos..pos + total_str_bytes]);
         }
         info.string_count = str_count;
         info.strings_buf_len = total_str_bytes;

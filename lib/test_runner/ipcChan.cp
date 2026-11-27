@@ -55,10 +55,8 @@ fn readLeU32(s: []const u8): u32 {
 }
 
 fn copyBytes(dst: []u8, src: []const u8) {
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(dst[0..src.len], src);
     }
 }
 
@@ -98,11 +96,11 @@ pub struct IpcChannel {
             attached: attached,
             done: false,
             close_reason: .Open,
-            rx_buf: [0; IPC_CHANNEL_BUF_CAP],
+            rx_buf: undefined,
             rx_len: 0,
-            tx_buf: [0; IPC_CHANNEL_BUF_CAP],
+            tx_buf: undefined,
             tx_len: 0,
-            inflight_buf: [0; IPC_CHANNEL_BUF_CAP],
+            inflight_buf: undefined,
             inflight_len: 0,
             frames_decoded: 0,
             unknown_frames_skipped: 0,

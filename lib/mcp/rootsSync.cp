@@ -54,9 +54,9 @@ pub enum McpPathAccessStatus {
 /// Inline workspace root entry stored in `McpRootsRegistry`.
 pub struct McpRootEntry {
     active: bool = false;
-    path_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+    path_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
     path_len: usize = 0;
-    name_buf: [MCP_ROOTS_NAME_MAX_LEN]u8 = [0; MCP_ROOTS_NAME_MAX_LEN];
+    name_buf: [MCP_ROOTS_NAME_MAX_LEN]u8 = undefined;
     name_len: usize = 0;
     policy: McpRootPolicy = McpRootPolicy.read_only;
 
@@ -81,7 +81,7 @@ pub struct McpPathAuthDecision {
     has_match: bool = false;
     matched_policy: McpRootPolicy = McpRootPolicy.read_only;
     normalized_len: usize = 0;
-    normalized_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+    normalized_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
 
     pub fn normalizedSlice(): []const u8 {
         return normalized_buf[0..normalized_len];
@@ -180,10 +180,9 @@ pub fn normalizeAbsolutePath(raw_path: []const u8, out_buf: *[]u8): usize? {
         if (out_len + 1 + seg_len > out_buf.len) return null;
         out_buf[out_len] = 0x2F;
         out_len += 1;
-        let k: usize = 0;
-        while (k < seg_len) : (k += 1) {
-            out_buf[out_len] = raw_path[seg_start + k];
-            out_len += 1;
+        if (seg_len > 0) {
+            @memcpy(out_buf[out_len..out_len + seg_len], raw_path[seg_start..seg_start + seg_len]);
+            out_len += seg_len;
         }
     }
 
@@ -216,14 +215,8 @@ pub fn formatFileRootUri(norm_path: []const u8, out_uri: *[]u8): usize? {
     const total: usize = prefix.len + norm_path.len;
     if (total > out_uri.len) return null;
 
-    let i: usize = 0;
-    while (i < prefix.len) : (i += 1) {
-        out_uri[i] = prefix[i];
-    }
-    let j: usize = 0;
-    while (j < norm_path.len) : (j += 1) {
-        out_uri[prefix.len + j] = norm_path[j];
-    }
+    @memcpy(out_uri[0..prefix.len], prefix);
+    @memcpy(out_uri[prefix.len..total], norm_path);
     return total;
 }
 
@@ -248,9 +241,8 @@ pub fn isPathWithinRoot(norm_root: []const u8, norm_path: []const u8): bool {
 
 fn appendRaw(out: *[]u8, pos: *usize, s: []const u8): bool {
     if (pos.* + s.len > out.len) return false;
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        out[pos.* + i] = s[i];
+    if (s.len > 0) {
+        @memcpy(out[pos.*..pos.* + s.len], s);
     }
     pos.* = pos.* + s.len;
     return true;
@@ -375,7 +367,7 @@ pub struct McpRootsRegistry {
             return McpRootOpStatus.name_too_long;
         }
 
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = parseFileRootUri(uri, *norm_s) ?? return McpRootOpStatus.invalid_uri;
         const norm_path = norm_buf[0..norm_len];
@@ -412,7 +404,7 @@ pub struct McpRootsRegistry {
             return McpRootOpStatus.name_too_long;
         }
 
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = parseFileRootUri(uri, *norm_s) ?? return McpRootOpStatus.invalid_uri;
         const norm_path = norm_buf[0..norm_len];
@@ -454,7 +446,7 @@ pub struct McpRootsRegistry {
 
     /// Removes an existing workspace root identified by `file://` URI or absolute path.
     pub fn removeRoot(*_, uri_or_path: []const u8): McpRootOpStatus {
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = normalizeUriOrPath(uri_or_path, *norm_s) ?? return McpRootOpStatus.invalid_uri;
         const slot = findByNormalizedPath(norm_buf[0..norm_len]) ?? return McpRootOpStatus.not_found;
@@ -467,7 +459,7 @@ pub struct McpRootsRegistry {
 
     /// Updates the access policy of an existing workspace root. Increments `revision` if changed.
     pub fn setPolicy(*_, uri_or_path: []const u8, policy: McpRootPolicy): McpRootOpStatus {
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = normalizeUriOrPath(uri_or_path, *norm_s) ?? return McpRootOpStatus.invalid_uri;
         const slot = findByNormalizedPath(norm_buf[0..norm_len]) ?? return McpRootOpStatus.not_found;
@@ -494,7 +486,7 @@ pub struct McpRootsRegistry {
 
     /// Looks up the slot index of an active root by `file://` URI or absolute path.
     pub fn findRoot(uri_or_path: []const u8): usize? {
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = normalizeUriOrPath(uri_or_path, *norm_s) ?? return null;
         return findByNormalizedPath(norm_buf[0..norm_len]);
@@ -584,7 +576,7 @@ pub struct McpRootsRegistry {
     /// Rejects relative paths, NUL/control bytes, paths outside root boundaries, and writes to
     /// `read_only` roots.
     pub fn authorizePath(*_, raw_path: []const u8, need_write: bool): McpPathAuthDecision {
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         if (norm_len := normalizeAbsolutePath(raw_path, *norm_s)) {
             return evaluateNormalizedPath(norm_buf[0..norm_len], need_write);
@@ -599,7 +591,7 @@ pub struct McpRootsRegistry {
 
     /// Parses a `file://` URI and authorizes read/write access against the longest matching root.
     pub fn authorizeUri(*_, raw_uri: []const u8, need_write: bool): McpPathAuthDecision {
-        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = [0; MCP_ROOTS_PATH_MAX_LEN];
+        let norm_buf: [MCP_ROOTS_PATH_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         if (norm_len := parseFileRootUri(raw_uri, *norm_s)) {
             return evaluateNormalizedPath(norm_buf[0..norm_len], need_write);
@@ -623,7 +615,7 @@ pub struct McpRootsRegistry {
         if (!appendRaw(out_buf, *pos, ",\"result\":{\"roots\":[")) return null;
 
         let written: usize = 0;
-        let uri_buf: [MCP_ROOTS_URI_MAX_LEN]u8 = [0; MCP_ROOTS_URI_MAX_LEN];
+        let uri_buf: [MCP_ROOTS_URI_MAX_LEN]u8 = undefined;
         let uri_s: []u8 = uri_buf[0..];
 
         let i: usize = 0;

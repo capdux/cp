@@ -142,7 +142,7 @@ fn makeEntryView(idx: u16, node: SkipListNode): SkipListEntryView {
 /// Zero-heap deterministic Arena SkipList ordered KV engine for LSM MemTables.
 pub struct ArenaSkipList {
     nodes: [SKIPLIST_MAX_NODES]SkipListNode = [SkipListNode{}; SKIPLIST_MAX_NODES];
-    arena: [SKIPLIST_ARENA_BYTES]u8 = [0; SKIPLIST_ARENA_BYTES];
+    arena: [SKIPLIST_ARENA_BYTES]u8 = undefined;
     head_next: [SKIPLIST_MAX_LEVEL]u16 = [SKIPLIST_NO_NODE; SKIPLIST_MAX_LEVEL];
     node_count: usize = 0;
     live_keys: usize = 0;
@@ -234,10 +234,8 @@ pub struct ArenaSkipList {
 
     fn allocArenaBytes(*_, data: []const u8): u16 {
         const off: usize = _.arena_used;
-        let i: usize = 0;
-        while (i < data.len) {
-            _.arena[off + i] = data[i];
-            i += 1;
+        if (data.len > 0) {
+            @memcpy(_.arena[off..off + data.len], data);
         }
         _.arena_used = off + data.len;
         return @as(u16, @intCast(off));
@@ -287,10 +285,8 @@ pub struct ArenaSkipList {
                 // Atomic space check: reuse value slot in-place if it fits, else verify arena headroom.
                 if (value.len <= @as(usize, _.nodes[cu].val_cap)) {
                     const base: usize = @as(usize, _.nodes[cu].val_off);
-                    let i: usize = 0;
-                    while (i < value.len) {
-                        _.arena[base + i] = value[i];
-                        i += 1;
+                    if (value.len > 0) {
+                        @memcpy(_.arena[base..base + value.len], value);
                     }
                     _.nodes[cu].val_len = @as(u16, @intCast(value.len));
                 } else {

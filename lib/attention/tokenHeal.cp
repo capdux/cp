@@ -121,10 +121,10 @@ pub struct TokenHealConfig {
 
 /// Zero-heap-allocation compact vocabulary byte pool mapping `token_id -> []const u8`.
 pub struct HealVocabTable {
-    bytes_pool: [HEAL_MAX_BYTE_POOL]u8 = [0; HEAL_MAX_BYTE_POOL];
+    bytes_pool: [HEAL_MAX_BYTE_POOL]u8 = undefined;
     pool_used: usize = 0;
-    offsets: [HEAL_MAX_VOCAB_TOKENS]u32 = [0; HEAL_MAX_VOCAB_TOKENS];
-    lengths: [HEAL_MAX_VOCAB_TOKENS]u16 = [0; HEAL_MAX_VOCAB_TOKENS];
+    offsets: [HEAL_MAX_VOCAB_TOKENS]u32 = undefined;
+    lengths: [HEAL_MAX_VOCAB_TOKENS]u16 = undefined;
     present: [HEAL_MAX_VOCAB_TOKENS]bool = [false; HEAL_MAX_VOCAB_TOKENS];
     vocab_size: usize = 0;
 
@@ -152,9 +152,8 @@ pub struct HealVocabTable {
         if (_.pool_used + token_bytes.len > HEAL_MAX_BYTE_POOL) return false;
 
         const off: usize = _.pool_used;
-        let i: usize = 0;
-        while (i < token_bytes.len) : (i += 1) {
-            _.bytes_pool[off + i] = token_bytes[i];
+        if (token_bytes.len > 0) {
+            @memcpy(_.bytes_pool[off..off + token_bytes.len], token_bytes);
         }
         _.pool_used += token_bytes.len;
         _.offsets[idx] = off as u32;
@@ -344,7 +343,7 @@ pub struct TokenHealPlan {
     /// Number of trailing tokens removed from the prompt (`prompt_tokens.len - trimmed_prompt_len`).
     backtrack_count: usize = 0;
     /// Concatenated raw byte prefix of the backtracked boundary tokens.
-    heal_prefix: [HEAL_MAX_PREFIX_BYTES]u8 = [0; HEAL_MAX_PREFIX_BYTES];
+    heal_prefix: [HEAL_MAX_PREFIX_BYTES]u8 = undefined;
     /// Valid byte length inside `heal_prefix`.
     heal_prefix_len: usize = 0;
     /// Number of matching candidate tokens in `vocab` for `heal_prefix`.
@@ -382,7 +381,7 @@ pub fn planTokenHealingWithConfig(
         no_heal_needed: true,
         trimmed_prompt_len: prompt_tokens.len,
         backtrack_count: 0,
-        heal_prefix: [0; HEAL_MAX_PREFIX_BYTES],
+        heal_prefix: undefined,
         heal_prefix_len: 0,
         candidate_count: 0,
         strict_extension_count: 0,
@@ -399,7 +398,7 @@ pub fn planTokenHealingWithConfig(
     let k: usize = 1;
     while (k <= max_k) : (k += 1) {
         const start_idx: usize = prompt_tokens.len - k;
-        let cand_buf: [HEAL_MAX_PREFIX_BYTES]u8 = [0; HEAL_MAX_PREFIX_BYTES];
+        let cand_buf: [HEAL_MAX_PREFIX_BYTES]u8 = undefined;
         let cand_len: usize = 0;
         let valid_seq: bool = true;
 
@@ -410,10 +409,7 @@ pub fn planTokenHealingWithConfig(
                     valid_seq = false;
                     break;
                 }
-                let j: usize = 0;
-                while (j < tb.len) : (j += 1) {
-                    cand_buf[cand_len + j] = tb[j];
-                }
+                @memcpy(cand_buf[cand_len..cand_len + tb.len], tb);
                 cand_len += tb.len;
             } else {
                 valid_seq = false;
@@ -448,10 +444,7 @@ pub fn planTokenHealingWithConfig(
             best.heal_prefix_len = cand_len;
             best.candidate_count = cand_cnt;
             best.strict_extension_count = ext_cnt;
-            let c: usize = 0;
-            while (c < cand_len) : (c += 1) {
-                best.heal_prefix[c] = cand_buf[c];
-            }
+            @memcpy(best.heal_prefix[0..cand_len], cand_buf[0..cand_len]);
         }
     }
 

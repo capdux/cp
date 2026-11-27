@@ -126,7 +126,7 @@ pub struct FlightEvent {
     event_kind: u16 = 0;
     severity: u8 = 0;
     payload_len: u16 = 0;
-    payload: [FLIGHT_LOG_MAX_PAYLOAD]u8 = [0; FLIGHT_LOG_MAX_PAYLOAD];
+    payload: [FLIGHT_LOG_MAX_PAYLOAD]u8 = undefined;
 
     /// Returns a zero-copy slice of the valid payload bytes.
     fn payloadSlice(): []const u8 {
@@ -165,7 +165,7 @@ pub struct FlightLogStats {
 
 /// Zero-heap-allocation black-box binary flight recorder ring buffer.
 pub struct FlightRecorder {
-    buf: [FLIGHT_LOG_RING_BYTES]u8 = [0; FLIGHT_LOG_RING_BYTES];
+    buf: [FLIGHT_LOG_RING_BYTES]u8 = undefined;
     read_pos: usize = 0;
     write_pos: usize = 0;
     used_bytes: usize = 0;
@@ -183,16 +183,24 @@ pub struct FlightRecorder {
     }
 
     fn ringReadBytes(start_pos: usize, dst: *[]u8) {
-        let i: usize = 0;
-        while (i < dst.len) : (i += 1) {
-            dst[i] = _.buf[(start_pos + i) & RING_MASK];
+        if (dst.len == 0) return;
+        const start: usize = start_pos & RING_MASK;
+        const avail: usize = FLIGHT_LOG_RING_BYTES - start;
+        const first: usize = if (dst.len < avail) dst.len else avail;
+        @memcpy(dst[0..first], _.buf[start..start + first]);
+        if (first < dst.len) {
+            @memcpy(dst[first..dst.len], _.buf[0..dst.len - first]);
         }
     }
 
     fn ringWriteBytes(*_, src: []const u8) {
-        let i: usize = 0;
-        while (i < src.len) : (i += 1) {
-            _.buf[(_.write_pos + i) & RING_MASK] = src[i];
+        if (src.len == 0) return;
+        const start: usize = _.write_pos & RING_MASK;
+        const avail: usize = FLIGHT_LOG_RING_BYTES - start;
+        const first: usize = if (src.len < avail) src.len else avail;
+        @memcpy(_.buf[start..start + first], src[0..first]);
+        if (first < src.len) {
+            @memcpy(_.buf[0..src.len - first], src[first..src.len]);
         }
         _.write_pos = (_.write_pos + src.len) & RING_MASK;
     }
@@ -344,7 +352,7 @@ pub struct FlightRecorder {
                         event_kind: kind,
                         severity: sev,
                         payload_len: plen as u16,
-                        payload: [0; FLIGHT_LOG_MAX_PAYLOAD],
+                        payload: undefined,
                     };
                     if (plen > 0 && plen <= FLIGHT_LOG_MAX_PAYLOAD) {
                         let p_s: []u8 = ev.payload[0..plen];
@@ -495,11 +503,10 @@ pub fn parseBinaryDump(dump: []const u8, out_events: *[]FlightEvent): usize? {
             event_kind: kind,
             severity: sev,
             payload_len: plen as u16,
-            payload: [0; FLIGHT_LOG_MAX_PAYLOAD],
+            payload: undefined,
         };
-        let j: usize = 0;
-        while (j < plen) : (j += 1) {
-            ev.payload[j] = dump[off + FLIGHT_LOG_RECORD_HEADER_SIZE + j];
+        if (plen > 0) {
+            @memcpy(ev.payload[0..plen], dump[off + FLIGHT_LOG_RECORD_HEADER_SIZE .. off + FLIGHT_LOG_RECORD_HEADER_SIZE + plen]);
         }
         out_events[written] = ev;
         written += 1;

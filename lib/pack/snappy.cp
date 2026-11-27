@@ -396,7 +396,7 @@ pub fn compressInto(input: []const u8, dst: *[]u8): usize ! SnappyError {
     let out_pos: usize = writeVarint(dst, 0, input.len);
     if (input.len == 0) return out_pos;
 
-    let table_arr: [HASH_TABLE_SIZE]u16 = [0; HASH_TABLE_SIZE];
+    let table_arr: [HASH_TABLE_SIZE]u16 = undefined;
     let table_s: []u16 = table_arr[0..];
     let offset: usize = 0;
     while (offset < input.len) {
