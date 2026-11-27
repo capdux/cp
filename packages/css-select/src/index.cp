@@ -3,53 +3,27 @@
 // Clean-room MIT CP implementation modeled on `css-select` + `css-what`.
 // Reuses `eqAscii` from `@cap/unicase` for case-insensitive HTML tag/attribute matching.
 
+import { isSpace, isAlpha, isDigit, strEq, trim } from "cap:ascii";
 import { eqAscii } from "../../unicase/src/index.cp";
-
-fn csssIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 12 || c == 13;
-}
 
 fn csssIsCombinator(c: u8): bool {
     return c == 62 || c == 43 || c == 126; // '>', '+', '~'
 }
 
 fn csssIsIdentStart(c: u8): bool {
-    return (c >= 65 && c <= 90)
-        || (c >= 97 && c <= 122)
+    return isAlpha(c)
         || c == 95
         || c == 45
         || c >= 128;
 }
 
 fn csssIsIdentChar(c: u8): bool {
-    return csssIsIdentStart(c) || (c >= 48 && c <= 57);
-}
-
-fn csssStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
+    return csssIsIdentStart(c) || isDigit(c);
 }
 
 fn csssEqMaybeCi(a: string, b: string, ci: bool): bool {
     if (ci) { return eqAscii(a, b); }
-    return csssStrEq(a, b);
-}
-
-fn csssTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && csssIsSpace(s[start])) {
-        start = start + 1;
-    }
-    let end: usize = s.len;
-    while (end > start && csssIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
+    return strEq(a, b);
 }
 
 fn csssSkipIdent(s: string, pos: usize): usize {
@@ -117,11 +91,11 @@ fn csssHasToken(list: string, target: string, ci: bool): bool {
     if (target.len == 0) { return false; }
     let i: usize = 0;
     while (i < list.len) {
-        while (i < list.len && csssIsSpace(list[i])) {
+        while (i < list.len && isSpace(list[i])) {
             i = i + 1;
         }
         let start = i;
-        while (i < list.len && !csssIsSpace(list[i])) {
+        while (i < list.len && !isSpace(list[i])) {
             i = i + 1;
         }
         if (i > start) {
@@ -190,7 +164,7 @@ fn csssComputeSingleSpecificity(s: string, depth: u32): Specificity {
 
     while (i < s.len) {
         let c = s[i];
-        if (csssIsSpace(c) || csssIsCombinator(c) || c == 124) {
+        if (isSpace(c) || csssIsCombinator(c) || c == 124) {
             i = i + 1;
             continue;
         }
@@ -317,7 +291,7 @@ fn csssComputeListSpecificity(selector: string, depth: u32): Specificity {
             } else if (c == 41 && paren_depth > 0) {
                 paren_depth = paren_depth - 1;
             } else if (c == 44 && bracket_depth == 0 && paren_depth == 0) {
-                let part = csssTrim(selector[start..i]);
+                let part = trim(selector[start..i]);
                 if (part.len > 0) {
                     let sp = csssComputeSingleSpecificity(part, depth);
                     if (!has_any || sp.cmp(best) > 0) {
@@ -331,7 +305,7 @@ fn csssComputeListSpecificity(selector: string, depth: u32): Specificity {
         i = i + 1;
     }
 
-    let tail = csssTrim(selector[start..selector.len]);
+    let tail = trim(selector[start..selector.len]);
     if (tail.len > 0) {
         let sp = csssComputeSingleSpecificity(tail, depth);
         if (!has_any || sp.cmp(best) > 0) {
@@ -372,7 +346,7 @@ pub struct CssElement {
 }
 
 fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
-    let s = csssTrim(raw_inner);
+    let s = trim(raw_inner);
     if (s.len == 0) { return false; }
 
     let i: usize = 0;
@@ -386,7 +360,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
         return false;
     }
 
-    while (i < s.len && csssIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i = i + 1;
     }
     // Presence-only selector: [attr]
@@ -412,7 +386,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
         return false;
     }
 
-    while (i < s.len && csssIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i = i + 1;
     }
     if (i >= s.len) { return false; }
@@ -436,7 +410,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
         i = i + 1;
     } else {
         val_start = i;
-        while (i < s.len && !csssIsSpace(s[i])) {
+        while (i < s.len && !isSpace(s[i])) {
             i = i + 1;
         }
         val_end = i;
@@ -444,7 +418,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
     let val = s[val_start..val_end];
 
     // Optional ASCII case-sensitivity flag ('i'/'I' or 's'/'S')
-    while (i < s.len && csssIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i = i + 1;
     }
     let ci = false;
@@ -458,7 +432,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
         } else {
             return false;
         }
-        while (i < s.len && csssIsSpace(s[i])) {
+        while (i < s.len && isSpace(s[i])) {
             i = i + 1;
         }
         if (i < s.len) { return false; }
@@ -496,7 +470,7 @@ fn csssMatchAttr(raw_inner: string, el: CssElement): bool {
 
 /// Matches a single compound selector (e.g. `div#app.card.active[data-role^="adm"]`) against `el`.
 pub fn matchesCompoundSelector(selector: string, el: CssElement): bool {
-    let sel = csssTrim(selector);
+    let sel = trim(selector);
     if (sel.len == 0) { return false; }
 
     let i: usize = 0;
@@ -522,7 +496,7 @@ pub fn matchesCompoundSelector(selector: string, el: CssElement): bool {
             let start = i;
             i = csssSkipIdent(sel, i);
             if (i == start) { return false; }
-            if (!csssStrEq(sel[start..i], el.id)) { return false; }
+            if (!strEq(sel[start..i], el.id)) { return false; }
             matched_any = true;
         } else if (c == 46) {
             // '.class'
@@ -624,7 +598,7 @@ pub fn countSelectorParts(selector: string): usize {
             continue;
         }
 
-        if (csssIsSpace(c) || csssIsCombinator(c)) {
+        if (isSpace(c) || csssIsCombinator(c)) {
             in_part = false;
         } else {
             if (!in_part) {

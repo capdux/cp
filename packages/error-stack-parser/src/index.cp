@@ -7,6 +7,10 @@
 // - Runtime internal frame detection (`node:internal/`, `internal/`, `node:`, `<anonymous>`, `native`).
 // - Clean stack formatter (`cleanStack`, `formatFrame`) writing directly into caller-provided `out: []u8`.
 
+import { trim, strEq, startsWith, findByte, rfindByte } from "cap:ascii";
+import { writeStr, writeU64, parseU32 } from "cap:fmt";
+import { indexOfBytes } from "cap:bin";
+
 const MAX_FRAMES: usize = 32;
 
 pub struct StackFrame {
@@ -51,107 +55,6 @@ pub struct ParsedStack {
     }
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn trim(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn startsWith(s: string, prefix: string) -> bool {
-    if (s.len < prefix.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn parseU32Strict(s: string) -> u32? {
-    if (s.len == 0 || s.len > 10) {
-        return null;
-    }
-    let v: u64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        if (!isDigit(s[i])) {
-            return null;
-        }
-        v = v * 10 + ((s[i] - '0') as u64);
-        if (v > 4294967295) {
-            return null;
-        }
-        i += 1;
-    }
-    return v as u32;
-}
-
-fn containsChar(s: string, ch: u8) -> bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ch) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
-
-fn findSubstring(hay: string, needle: string) -> usize {
-    if (needle.len == 0 || needle.len > hay.len) {
-        return hay.len;
-    }
-    let i: usize = 0;
-    while (i + needle.len <= hay.len) {
-        let j: usize = 0;
-        let ok = true;
-        while (j < needle.len) {
-            if (hay[i + j] != needle[j]) {
-                ok = false;
-                break;
-            }
-            j += 1;
-        }
-        if (ok) {
-            return i;
-        }
-        i += 1;
-    }
-    return hay.len;
-}
-
 fn isInternalLocation(file: string, is_native: bool) -> bool {
     if (is_native) {
         return true;
@@ -179,32 +82,13 @@ fn parseLocation(raw_loc: string) -> LocationInfo {
     }
 
     // Find rightmost ':'
-    let c1: usize = loc.len;
-    let i: usize = loc.len;
-    while (i > 0) {
-        i -= 1;
-        if (loc[i] == ':') {
-            c1 = i;
-            break;
-        }
-    }
-
-    if (c1 < loc.len) {
-        const n1_opt = parseU32Strict(loc[(c1 + 1)..loc.len]);
+    if (c1 := rfindByte(loc, ':')) {
+        const n1_opt = parseU32(loc[(c1 + 1)..loc.len]);
         if (n1_opt != null) {
             const n1 = n1_opt.?;
             // Check for a second ':' before c1 (file:line:column)
-            let c2: usize = c1;
-            let j: usize = c1;
-            while (j > 0) {
-                j -= 1;
-                if (loc[j] == ':') {
-                    c2 = j;
-                    break;
-                }
-            }
-            if (c2 < c1) {
-                const n2_opt = parseU32Strict(loc[(c2 + 1)..c1]);
+            if (c2 := rfindByte(loc[0..c1], ':')) {
+                const n2_opt = parseU32(loc[(c2 + 1)..c1]);
                 if (n2_opt != null) {
                     return LocationInfo{
                         file: loc[0..c2],
@@ -291,7 +175,7 @@ pub fn parseFrameLine(raw_line: string) -> StackFrame? {
     }
 
     // 2. Zig / Rust / CP address frame: `0x1234 in handleRequest (src/server.zig:120)`
-    const in_idx = findSubstring(s, " in ");
+    const in_idx = indexOfBytes(s, " in ", 0) ?? s.len;
     if (in_idx < s.len && s[s.len - 1] == ')') {
         let open_p: usize = s.len;
         let k: usize = s.len - 1;
@@ -320,37 +204,30 @@ pub fn parseFrameLine(raw_line: string) -> StackFrame? {
     }
 
     // 3. SpiderMonkey / Firefox / Safari format: `myFunc@https://example.com/app.js:42:13`
-    let at_idx: usize = s.len;
-    let ai: usize = 0;
-    while (ai < s.len) {
-        if (s[ai] == '@') {
-            at_idx = ai;
-            break;
-        }
-        ai += 1;
-    }
-    if (at_idx < s.len && at_idx + 1 < s.len) {
-        const func_part = trim(s[0..at_idx]);
-        const loc_part = trim(s[(at_idx + 1)..s.len]);
-        // Avoid matching email addresses in error messages (require line > 0 or [native code])
-        const loc = parseLocation(loc_part);
-        if (loc.is_native || loc.line > 0) {
-            const fname = if (func_part.len > 0) { func_part } else { "<anonymous>" };
-            return StackFrame{
-                func_name: fname,
-                file: loc.file,
-                line: loc.line,
-                column: loc.column,
-                is_native: loc.is_native,
-                is_internal: isInternalLocation(loc.file, loc.is_native),
-            };
+    if (at_idx := findByte(s, '@', 0)) {
+        if (at_idx + 1 < s.len) {
+            const func_part = trim(s[0..at_idx]);
+            const loc_part = trim(s[(at_idx + 1)..s.len]);
+            // Avoid matching email addresses in error messages (require line > 0 or [native code])
+            const loc = parseLocation(loc_part);
+            if (loc.is_native || loc.line > 0) {
+                const fname = if (func_part.len > 0) { func_part } else { "<anonymous>" };
+                return StackFrame{
+                    func_name: fname,
+                    file: loc.file,
+                    line: loc.line,
+                    column: loc.column,
+                    is_native: loc.is_native,
+                    is_internal: isInternalLocation(loc.file, loc.is_native),
+                };
+            }
         }
     }
 
     // 4. Bare Rust / Zig / CP location line: `src/main.cp:88:12` or `src/server.zig:120`
-    if (!containsChar(s, ' ')) {
+    if (findByte(s, ' ', 0) == null) {
         const loc = parseLocation(s);
-        if (loc.line > 0 && loc.file.len > 0 && (containsChar(loc.file, '.') || containsChar(loc.file, '/'))) {
+        if (loc.line > 0 && loc.file.len > 0 && (findByte(loc.file, '.', 0) != null || findByte(loc.file, '/', 0) != null)) {
             return StackFrame{
                 func_name: "<anonymous>",
                 file: loc.file,
@@ -409,57 +286,25 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
-fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn pushU32(out: []u8, pos: usize, val: u32) -> usize {
-    let digits: [10]u8 = undefined;
-    let count: usize = 0;
-    let v = val;
-    if (v == 0) {
-        return pushByte(out, pos, '0');
-    }
-    while (v > 0 && count < 10) {
-        digits[count] = (48 as u8) + ((v % 10) as u8);
-        count += 1;
-        v = v / 10;
-    }
-    let p = pos;
-    let k = count;
-    while (k > 0) {
-        k -= 1;
-        p = pushByte(out, p, digits[k]);
-    }
-    return p;
-}
-
 fn formatFrameAt(f: StackFrame, out: []u8, start_pos: usize) -> usize {
-    let pos = pushStr(out, start_pos, "    at ");
+    let pos = writeStr("    at ", out, start_pos);
     const has_named_func = f.func_name.len > 0 && !strEq(f.func_name, "<anonymous>") && !strEq(f.func_name, "<native>");
 
     if (has_named_func) {
-        pos = pushStr(out, pos, f.func_name);
-        pos = pushStr(out, pos, " (");
+        pos = writeStr(f.func_name, out, pos);
+        pos = writeStr(" (", out, pos);
     }
 
     if (f.is_native) {
-        pos = pushStr(out, pos, "native");
+        pos = writeStr("native", out, pos);
     } else {
-        pos = pushStr(out, pos, f.file);
+        pos = writeStr(f.file, out, pos);
         if (f.line > 0) {
             pos = pushByte(out, pos, ':');
-            pos = pushU32(out, pos, f.line);
+            pos = writeU64(f.line as u64, out, pos);
             if (f.column > 0) {
                 pos = pushByte(out, pos, ':');
-                pos = pushU32(out, pos, f.column);
+                pos = writeU64(f.column as u64, out, pos);
             }
         }
     }
@@ -482,7 +327,7 @@ pub fn cleanStack(raw: string, out: []u8) -> string {
     let pos: usize = 0;
 
     if (parsed.message.len > 0) {
-        pos = pushStr(out, pos, parsed.message);
+        pos = writeStr(parsed.message, out, pos);
     }
 
     let i: usize = 0;

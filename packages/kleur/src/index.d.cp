@@ -1,9 +1,8 @@
 // Type definitions for CP
 
+import { strEq, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { StylePair, RESET, BOLD, DIM, ITALIC, UNDERLINE, INVERSE, HIDDEN, STRIKETHROUGH, FG_BLACK, FG_RED, FG_GREEN, FG_YELLOW, FG_BLUE, FG_MAGENTA, FG_CYAN, FG_WHITE, FG_GRAY, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE } from "../../ansi-styles/src/index.cp";
-export fn klrStrEq(a: string, b: string): bool;
-export fn klrWriteStr(out: []u8, pos: usize, s: string): usize;
-export fn klrMatchAt(haystack: string, offset: usize, needle: string): bool;
 export class KleurChain {
     enabled: bool,
     stack: [8]StylePair,

@@ -1,6 +1,10 @@
 // @cap/logfmt — Zero-allocation logfmt Structured Key=Value Log Parser & Writer
 // Clean-room MIT implementation in pure CP.
 
+import { isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeI64 } from "cap:fmt";
+
 pub const MAX_FIELDS: usize = 64;
 const KEY_BUF_CAP: usize = 512;
 const VAL_BUF_CAP: usize = 1024;
@@ -10,24 +14,6 @@ pub struct LogfmtField {
     pub key_len: usize,
     pub val_start: usize,
     pub val_len: usize,
-}
-
-fn isSpace(b: u8) -> bool {
-    return b == 32 || b == 9 || b == 10 || b == 13;
-}
-
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub struct LogfmtRecord {
@@ -339,43 +325,7 @@ pub struct LogfmtWriter {
     /// Writes a signed 64-bit integer field `key=val`.
     pub fn writeInt(*_, key: []const u8, val: i64) -> bool {
         let num_buf: [24]u8 = undefined;
-        let nlen: usize = 0;
-        let mag: u64 = 0;
-        let neg = false;
-
-        if (val < 0) {
-            neg = true;
-            // Safe magnitude conversion without signed overflow
-            const bits: u64 = @bitCast(val);
-            mag = (0 as u64) -% bits;
-        } else {
-            mag = val as u64;
-        }
-
-        let rev: [20]u8 = undefined;
-        let rlen: usize = 0;
-        if (mag == 0) {
-            rev[0] = 48;
-            rlen = 1;
-        } else {
-            while (mag > 0) {
-                rev[rlen] = (48 + (mag % 10)) as u8;
-                mag = mag / 10;
-                rlen += 1;
-            }
-        }
-
-        if (neg) {
-            num_buf[nlen] = 45; // '-'
-            nlen += 1;
-        }
-        let k: usize = 0;
-        while (k < rlen) {
-            num_buf[nlen] = rev[rlen - 1 - k];
-            nlen += 1;
-            k += 1;
-        }
-
+        const nlen = writeI64(val, num_buf[0..24], 0);
         return _.writeStr(key, num_buf[0..nlen]);
     }
 

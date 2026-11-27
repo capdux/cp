@@ -1,23 +1,12 @@
 // Type definitions for CP
 
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, writeI64, parseI64 } from "cap:fmt";
 import { ARG_BOOL, ARG_INT, ARG_STRING, ParsedItem, ParsedEntry, ParsedArgs, parseArgs } from "../../yargs-parser/src/index.cp";
 import { Column, CliUi, formatTwoCol } from "../../cliui/src/index.cp";
-export fn cmdStrEq(a: string, b: string): bool;
-export fn cmdCopyBuf(dst: []u8, src: string): usize;
-export fn cmdAppendBytes(dst: []u8, pos: usize, s: string): usize;
 export fn cmdAppendByte(dst: []u8, pos: usize, b: u8): usize;
-export fn cmdIsSpace(ch: u8): bool;
 export fn cmdIsFlagSep(ch: u8): bool;
-export fn cmdIsDigit(ch: u8): bool;
 export fn cmdTrim(s: string): string;
-export fn cmdHasChar(s: string, target: u8): bool;
-export class CmdIntParse {
-    ok: bool,
-    val: i64,
-}
-
-export fn cmdParseInt(s: string): CmdIntParse;
-export fn cmdFormatInt(val_in: i64, out: []u8): usize;
 export fn cmdEmptyItem(): ParsedItem;
 export fn cmdMakeItem(s: string): ParsedItem;
 export fn cmdInsertEntry(parsed: &mut ParsedArgs, name: string, kind: u8, bool_val: bool, int_val: i64, str_val: string);

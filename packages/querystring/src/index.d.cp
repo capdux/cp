@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, findByte } from "cap:ascii";
 import { componentSet, percentEncode, percentDecodePlus } from "../../percent-encoding/src/index.cp";
 export class QueryEntry {
     key: string,
@@ -7,7 +8,6 @@ export class QueryEntry {
 }
 
 export fn qstFindByte(s: string, start: usize, end: usize, target: u8): usize;
-export fn qstStrEq(a: string, b: string): bool;
 export fn qstNeedsDecode(s: string): bool;
 export fn qstHasSlashBefore(s: string, end: usize): bool;
 export fn escapeQuery(raw: string, out: []u8): usize;

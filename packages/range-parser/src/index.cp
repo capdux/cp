@@ -1,6 +1,9 @@
 // @cap/range-parser — Zero-heap RFC 7233 HTTP `Range` header parser & interval combiner.
 // Clean-room MIT port of npm `range-parser` v1.2 (170M+/week).
 
+import { trim } from "cap:ascii";
+import { parseU64 } from "cap:fmt";
+
 pub const RANGE_OK: i32 = 0;
 pub const RANGE_UNSATISFIABLE: i32 = -1;
 pub const RANGE_MALFORMED: i32 = -2;
@@ -18,34 +21,6 @@ pub struct RangeResult {
     pub count: usize,
 }
 
-fn rpIsWs(b: u8): bool {
-    return b == 32 || b == 9;
-}
-
-fn rpTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && rpIsWs(s[start])) { start = start + 1; }
-    let end: usize = s.len;
-    while (end > start && rpIsWs(s[end - 1])) { end = end - 1; }
-    return s[start..end];
-}
-
-fn rpParseU64(s: string, ok_out: []bool): u64 {
-    if (s.len == 0) { ok_out[0] = false; return 0; }
-    let acc: u64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        let b = s[i];
-        if (b < 48 || b > 57) { ok_out[0] = false; return 0; }
-        let d: u64 = (b - 48) as u64;
-        if (acc > 1844674407370955161) { ok_out[0] = false; return 0; }
-        acc = acc * 10 + d;
-        i = i + 1;
-    }
-    ok_out[0] = true;
-    return acc;
-}
-
 /// Parses an RFC 7233 `Range` header (`"bytes=0-499, -100, 900-"`) against `size` bytes.
 /// If `combine` is true, sorts and merges overlapping or adjacent intervals.
 pub fn parseRange(size: u64, header: string, combine: bool): RangeResult {
@@ -60,7 +35,7 @@ pub fn parseRange(size: u64, header: string, combine: bool): RangeResult {
         return RangeResult { status: RANGE_MALFORMED, unit: "", ranges: arr, count: 0 };
     }
 
-    let unit = rpTrim(header[0..eq]);
+    let unit = trim(header[0..eq]);
     if (unit.len == 0) {
         return RangeResult { status: RANGE_MALFORMED, unit: "", ranges: arr, count: 0 };
     }
@@ -71,30 +46,29 @@ pub fn parseRange(size: u64, header: string, combine: bool): RangeResult {
     while (pos <= list.len) {
         let sep = pos;
         while (sep < list.len && list[sep] != 44) { sep = sep + 1; }
-        let spec = rpTrim(list[pos..sep]);
+        let spec = trim(list[pos..sep]);
         let dash: usize = 0;
         while (dash < spec.len && spec[dash] != 45) { dash = dash + 1; }
         if (dash >= spec.len) {
             return RangeResult { status: RANGE_MALFORMED, unit: unit, ranges: arr, count: 0 };
         }
-        let left = rpTrim(spec[0..dash]);
-        let right = rpTrim(spec[dash + 1..spec.len]);
+        let left = trim(spec[0..dash]);
+        let right = trim(spec[dash + 1..spec.len]);
         if (left.len == 0 && right.len == 0) {
             return RangeResult { status: RANGE_MALFORMED, unit: unit, ranges: arr, count: 0 };
         }
 
-        let ok_l: [1]bool = [false];
-        let ok_r: [1]bool = [false];
         let start_val: u64 = 0;
         let end_val: u64 = 0;
         let valid_interval = true;
 
         if (left.len == 0) {
             // Suffix range: "-N" -> last N bytes
-            let suffix = rpParseU64(right, ok_r[0..1]);
-            if (!ok_r[0]) {
+            let suffix_opt = parseU64(right);
+            if (suffix_opt == null) {
                 return RangeResult { status: RANGE_MALFORMED, unit: unit, ranges: arr, count: 0 };
             }
+            let suffix = suffix_opt.?;
             if (suffix == 0 || size == 0) {
                 valid_interval = false;
             } else {
@@ -103,10 +77,11 @@ pub fn parseRange(size: u64, header: string, combine: bool): RangeResult {
             }
         } else if (right.len == 0) {
             // Open-ended range: "N-" -> from N to EOF
-            let s = rpParseU64(left, ok_l[0..1]);
-            if (!ok_l[0]) {
+            let s_opt = parseU64(left);
+            if (s_opt == null) {
                 return RangeResult { status: RANGE_MALFORMED, unit: unit, ranges: arr, count: 0 };
             }
+            let s = s_opt.?;
             if (size == 0 || s >= size) {
                 valid_interval = false;
             } else {
@@ -115,11 +90,13 @@ pub fn parseRange(size: u64, header: string, combine: bool): RangeResult {
             }
         } else {
             // Explicit "start-end"
-            let s = rpParseU64(left, ok_l[0..1]);
-            let e = rpParseU64(right, ok_r[0..1]);
-            if (!ok_l[0] || !ok_r[0]) {
+            let s_opt = parseU64(left);
+            let e_opt = parseU64(right);
+            if (s_opt == null || e_opt == null) {
                 return RangeResult { status: RANGE_MALFORMED, unit: unit, ranges: arr, count: 0 };
             }
+            let s = s_opt.?;
+            let e = e_opt.?;
             if (size == 0 || s > e || s >= size) {
                 valid_interval = false;
             } else {

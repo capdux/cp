@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeI64 } from "cap:fmt";
 export class LogfmtField {
     key_start: usize,
     key_len: usize,
@@ -7,8 +10,6 @@ export class LogfmtField {
     val_len: usize,
 }
 
-export fn isSpace(b: u8): bool;
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
 export class LogfmtRecord {
     key_buf: [512]u8,
     key_used: usize,

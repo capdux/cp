@@ -2,6 +2,8 @@
 // Clean-room MIT implementation modeled on crates.io `multipart` / `multer`,
 // reusing `@cap/mediatype` for boundary extraction and `@cap/unicase` for case-insensitive headers.
 
+import { trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { eqAscii } from "../../unicase/src/index.cp";
 
@@ -16,18 +18,6 @@ pub struct MultipartPart {
 
 fn mpartIsSpace(c: u8): bool {
     return c == 32 || c == 9;
-}
-
-fn mpartTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && mpartIsSpace(s[start])) {
-        start = start + 1;
-    }
-    let end: usize = s.len;
-    while (end > start && mpartIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
 }
 
 fn mpartMatchAt(haystack: string, pos: usize, needle: string): bool {
@@ -126,7 +116,7 @@ fn mpartParseDisposition(val: string, part: *MultipartPart) {
             }
             pos = pos + 1;
         }
-        let seg: string = mpartTrim(val[seg_start..pos]);
+        let seg: string = trim(val[seg_start..pos]);
         if (seg.len == 0) { continue; }
         let eq_pos: usize = 0;
         let found_eq: bool = false;
@@ -138,8 +128,8 @@ fn mpartParseDisposition(val: string, part: *MultipartPart) {
             eq_pos = eq_pos + 1;
         }
         if (!found_eq || eq_pos == 0) { continue; }
-        let pk: string = mpartTrim(seg[0..eq_pos]);
-        let pv: string = mpartTrim(seg[(eq_pos + 1)..seg.len]);
+        let pk: string = trim(seg[0..eq_pos]);
+        let pv: string = trim(seg[(eq_pos + 1)..seg.len]);
         if (pv.len >= 2 && pv[0] == 34 && pv[pv.len - 1] == 34) {
             pv = pv[1..(pv.len - 1)];
         }
@@ -150,17 +140,6 @@ fn mpartParseDisposition(val: string, part: *MultipartPart) {
             part.*.is_file = true;
         }
     }
-}
-
-fn mpartWriteStr(out: []u8, pos: usize, s: string): usize {
-    let i: usize = 0;
-    let p: usize = pos;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
 }
 
 /// Extracts the `boundary` parameter from a `multipart/*` Content-Type header using `@cap/mediatype`.
@@ -179,8 +158,8 @@ pub fn extractBoundary(content_type: string): string? {
 /// Formats `multipart/form-data; boundary=<boundary>` into `out`, returning bytes written.
 pub fn formatContentTypeHeader(boundary: string, out: []u8): usize {
     if (boundary.len == 0) { return 0; }
-    let p: usize = mpartWriteStr(out, 0, "multipart/form-data; boundary=");
-    p = mpartWriteStr(out, p, boundary);
+    let p: usize = writeStr("multipart/form-data; boundary=", out, 0);
+    p = writeStr(boundary, out, p);
     return p;
 }
 
@@ -273,8 +252,8 @@ pub struct MultipartReader {
                     colon = colon + 1;
                 }
                 if (has_colon) {
-                    let hname: string = mpartTrim(line[0..colon]);
-                    let hval: string = mpartTrim(line[(colon + 1)..line.len]);
+                    let hname: string = trim(line[0..colon]);
+                    let hval: string = trim(line[(colon + 1)..line.len]);
                     if (eqAscii(hname, "Content-Disposition")) {
                         mpartParseDisposition(hval, &part);
                     } else if (eqAscii(hname, "Content-Type")) {
@@ -324,38 +303,38 @@ pub struct MultipartWriter {
 
     /// Appends a form text field part at `pos` in `out`, returning the updated byte offset.
     pub fn writeField(name: string, value: string, out: []u8, pos: usize): usize {
-        let p: usize = mpartWriteStr(out, pos, "--");
-        p = mpartWriteStr(out, p, _.boundary);
-        p = mpartWriteStr(out, p, "\r\nContent-Disposition: form-data; name=\"");
-        p = mpartWriteStr(out, p, name);
-        p = mpartWriteStr(out, p, "\"\r\n\r\n");
-        p = mpartWriteStr(out, p, value);
-        p = mpartWriteStr(out, p, "\r\n");
+        let p: usize = writeStr("--", out, pos);
+        p = writeStr(_.boundary, out, p);
+        p = writeStr("\r\nContent-Disposition: form-data; name=\"", out, p);
+        p = writeStr(name, out, p);
+        p = writeStr("\"\r\n\r\n", out, p);
+        p = writeStr(value, out, p);
+        p = writeStr("\r\n", out, p);
         return p;
     }
 
     /// Appends a file upload part at `pos` in `out`, returning the updated byte offset.
     pub fn writeFile(name: string, filename: string, content_type: string, data: string, out: []u8, pos: usize): usize {
         let ctype: string = if (content_type.len > 0) { content_type } else { "application/octet-stream" };
-        let p: usize = mpartWriteStr(out, pos, "--");
-        p = mpartWriteStr(out, p, _.boundary);
-        p = mpartWriteStr(out, p, "\r\nContent-Disposition: form-data; name=\"");
-        p = mpartWriteStr(out, p, name);
-        p = mpartWriteStr(out, p, "\"; filename=\"");
-        p = mpartWriteStr(out, p, filename);
-        p = mpartWriteStr(out, p, "\"\r\nContent-Type: ");
-        p = mpartWriteStr(out, p, ctype);
-        p = mpartWriteStr(out, p, "\r\n\r\n");
-        p = mpartWriteStr(out, p, data);
-        p = mpartWriteStr(out, p, "\r\n");
+        let p: usize = writeStr("--", out, pos);
+        p = writeStr(_.boundary, out, p);
+        p = writeStr("\r\nContent-Disposition: form-data; name=\"", out, p);
+        p = writeStr(name, out, p);
+        p = writeStr("\"; filename=\"", out, p);
+        p = writeStr(filename, out, p);
+        p = writeStr("\"\r\nContent-Type: ", out, p);
+        p = writeStr(ctype, out, p);
+        p = writeStr("\r\n\r\n", out, p);
+        p = writeStr(data, out, p);
+        p = writeStr("\r\n", out, p);
         return p;
     }
 
     /// Appends the closing `--<boundary>--\r\n` delimiter at `pos`, returning the final length.
     pub fn finish(out: []u8, pos: usize): usize {
-        let p: usize = mpartWriteStr(out, pos, "--");
-        p = mpartWriteStr(out, p, _.boundary);
-        p = mpartWriteStr(out, p, "--\r\n");
+        let p: usize = writeStr("--", out, pos);
+        p = writeStr(_.boundary, out, p);
+        p = writeStr("--\r\n", out, p);
         return p;
     }
 }

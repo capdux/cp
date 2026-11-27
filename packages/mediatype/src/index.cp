@@ -409,7 +409,7 @@ pub struct ParsedMediaType {
         let p = _.formatEssence(out);
         let i: usize = 0;
         while (i < _.param_count && p < out.len) {
-            p = writeStr(out, p, "; ");
+            p = writeStr("; ", out, p);
             let k = _.params[i].name;
             let ki: usize = 0;
             while (ki < k.len && p < out.len) {
@@ -417,8 +417,8 @@ pub struct ParsedMediaType {
                 p = p + 1;
                 ki = ki + 1;
             }
-            p = writeStr(out, p, "=");
-            p = writeStr(out, p, _.params[i].value);
+            p = writeStr("=", out, p);
+            p = writeStr(_.params[i].value, out, p);
             i = i + 1;
         }
         return p;

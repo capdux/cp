@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `picocolors` v1.
 // Reuses ANSI SGR StylePair definitions from `@cap/ansi-styles` with zero duplication.
 
+import { strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import {
     StylePair,
     RESET,
@@ -33,31 +35,6 @@ import {
 
 pub const PICO_BUF_CAP: usize = 1024;
 
-fn picoStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn picoWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
-
 fn picoMatchAt(haystack: string, offset: usize, needle: string): bool {
     if (needle.len == 0 || offset + needle.len > haystack.len) {
         return false;
@@ -85,16 +62,16 @@ fn picoFormatPair(
         return 0;
     }
     if (!enabled) {
-        return picoWriteStr(out, 0, text);
+        return writeStr(text, out, 0);
     }
 
     let p: usize = 0;
-    p = picoWriteStr(out, p, pair.open);
+    p = writeStr(pair.open, out, p);
 
     let i: usize = 0;
     while (i < text.len && p < out.len) {
         if (pair.close.len > 0 && picoMatchAt(text, i, pair.close)) {
-            p = picoWriteStr(out, p, replace_with);
+            p = writeStr(replace_with, out, p);
             i = i + pair.close.len;
         } else {
             out[p] = text[i];
@@ -103,7 +80,7 @@ fn picoFormatPair(
         }
     }
 
-    p = picoWriteStr(out, p, pair.close);
+    p = writeStr(pair.close, out, p);
     return p;
 }
 
@@ -113,7 +90,7 @@ fn picoFormatPair(
 /// - Otherwise falls back to `is_tty`.
 pub fn detectColorSupport(no_color: string, force_color: string, is_tty: bool): bool {
     if (force_color.len > 0) {
-        if (picoStrEq(force_color, "0")) {
+        if (strEq(force_color, "0")) {
             return false;
         }
         return true;
@@ -293,7 +270,7 @@ pub struct PicoBuf {
     }
 
     pub fn pushPlain(*_, text: string): usize {
-        let next_pos = picoWriteStr(_.buf[0..PICO_BUF_CAP], _.len, text);
+        let next_pos = writeStr(text, _.buf[0..PICO_BUF_CAP], _.len);
         let added = next_pos - _.len;
         _.len = next_pos;
         return added;

@@ -1,5 +1,7 @@
 // @cap/levn — Zero-heap Light Value Notation (levn) scalar, list, and object parser.
 
+import { trim, strEq } from "cap:ascii";
+
 pub enum LevnKind {
     Null,
     Bool,
@@ -20,32 +22,6 @@ pub struct LevnValue {
 pub struct LevnPair {
     key: string,
     value: LevnValue,
-}
-
-fn lvnIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn lvnTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && lvnIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && lvnIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn lvnStrEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
 }
 
 fn lvnMakeInvalid(): LevnValue {
@@ -160,12 +136,12 @@ fn lvnTryParseNumber(s: string): LevnValue {
 }
 
 pub fn parseLevnScalar(input: string): LevnValue {
-    const s = lvnTrim(input);
+    const s = trim(input);
     if (s.len == 0) {
         return lvnMakeInvalid();
     }
 
-    if (lvnStrEq(s, "null")) {
+    if (strEq(s, "null")) {
         return LevnValue{
             kind: LevnKind.Null,
             bool_val: false,
@@ -175,7 +151,7 @@ pub fn parseLevnScalar(input: string): LevnValue {
         };
     }
 
-    if (lvnStrEq(s, "true")) {
+    if (strEq(s, "true")) {
         return LevnValue{
             kind: LevnKind.Bool,
             bool_val: true,
@@ -185,7 +161,7 @@ pub fn parseLevnScalar(input: string): LevnValue {
         };
     }
 
-    if (lvnStrEq(s, "false")) {
+    if (strEq(s, "false")) {
         return LevnValue{
             kind: LevnKind.Bool,
             bool_val: false,
@@ -265,7 +241,7 @@ fn lvnFindTopLevelChar(s: string, start: usize, target: u8): usize {
 }
 
 fn lvnUnquoteKey(s: string): string {
-    const t = lvnTrim(s);
+    const t = trim(s);
     if (t.len >= 2 && ((t[0] == '"' && t[t.len - 1] == '"') || (t[0] == '\'' && t[t.len - 1] == '\''))) {
         return t[1..t.len - 1];
     }
@@ -273,9 +249,9 @@ fn lvnUnquoteKey(s: string): string {
 }
 
 pub fn parseLevnList(input: string, out: []LevnValue): usize {
-    let s = lvnTrim(input);
+    let s = trim(input);
     if (s.len >= 2 && s[0] == '[' && s[s.len - 1] == ']') {
-        s = lvnTrim(s[1..s.len - 1]);
+        s = trim(s[1..s.len - 1]);
     }
     if (s.len == 0) return 0;
 
@@ -283,7 +259,7 @@ pub fn parseLevnList(input: string, out: []LevnValue): usize {
     let start: usize = 0;
     while (start <= s.len && count < out.len) {
         const comma = lvnFindTopLevelChar(s, start, ',');
-        const item = lvnTrim(s[start..comma]);
+        const item = trim(s[start..comma]);
         if (item.len > 0) {
             out[count] = parseLevnScalar(item);
             count += 1;
@@ -295,9 +271,9 @@ pub fn parseLevnList(input: string, out: []LevnValue): usize {
 }
 
 pub fn parseLevnObject(input: string, out: []LevnPair): usize {
-    let s = lvnTrim(input);
+    let s = trim(input);
     if (s.len >= 2 && s[0] == '{' && s[s.len - 1] == '}') {
-        s = lvnTrim(s[1..s.len - 1]);
+        s = trim(s[1..s.len - 1]);
     }
     if (s.len == 0) return 0;
 
@@ -305,7 +281,7 @@ pub fn parseLevnObject(input: string, out: []LevnPair): usize {
     let start: usize = 0;
     while (start <= s.len && count < out.len) {
         const comma = lvnFindTopLevelChar(s, start, ',');
-        const entry = lvnTrim(s[start..comma]);
+        const entry = trim(s[start..comma]);
         if (entry.len > 0) {
             const colon = lvnFindTopLevelChar(entry, 0, ':');
             if (colon < entry.len) {

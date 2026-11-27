@@ -1,6 +1,9 @@
 // @cap/dotenv-expand — Zero-heap `.env` file parser & POSIX variable expansion engine.
 // Clean-room MIT port of npm `dotenv` + `dotenv-expand` (100M+/week).
 
+import { isAlnum, strEq, trim, startsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const DE_MAX_VARS: usize = 32;
 
 pub struct EnvEntry {
@@ -13,11 +16,7 @@ pub struct EnvMap {
     pub count: usize,
 
     pub static fn new(): EnvMap {
-        let empty = EnvEntry { key: "", value: "" };
-        let arr: [32]EnvEntry = undefined;
-        let i: usize = 0;
-        while (i < DE_MAX_VARS) { arr[i] = empty; i = i + 1; }
-        return EnvMap { entries: arr, count: 0 };
+        return EnvMap { entries: undefined, count: 0 };
     }
 
     pub fn len(): usize { return _.count; }
@@ -25,7 +24,7 @@ pub struct EnvMap {
     pub fn set(*_, key: string, val: string): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (deStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 _.entries[i].value = val;
                 return true;
             }
@@ -40,7 +39,7 @@ pub struct EnvMap {
     pub fn get(key: string): string? {
         let i: usize = 0;
         while (i < _.count) {
-            if (deStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].key, key)) {
                 return _.entries[i].value;
             }
             i = i + 1;
@@ -53,41 +52,8 @@ pub struct EnvMap {
     }
 }
 
-fn deStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn deIsWs(b: u8): bool {
-    return b == 32 || b == 9 || b == 13;
-}
-
 fn deIsVarChar(b: u8): bool {
-    return (b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57) || b == 95;
-}
-
-fn deTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && deIsWs(s[start])) { start = start + 1; }
-    let end: usize = s.len;
-    while (end > start && deIsWs(s[end - 1])) { end = end - 1; }
-    return s[start..end];
-}
-
-fn dePush(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
+    return isAlnum(b) || b == 95;
 }
 
 /// Parses a `.env` document (supporting `export KEY=VAL`, `#` comments, single/double quotes,
@@ -96,22 +62,22 @@ pub fn parseDotenv(src: string): EnvMap {
     let env = EnvMap.new();
     let pos: usize = 0;
     while (pos < src.len) {
-        let line_end = pos;
-        while (line_end < src.len && src[line_end] != 10) { line_end = line_end + 1; }
-        let line = deTrim(src[pos..line_end]);
+        let line_end = findByte(src, 10, pos) ?? src.len;
+        let line = trim(src[pos..line_end]);
         pos = if (line_end < src.len) { line_end + 1 } else { src.len };
 
         if (line.len == 0 || line[0] == 35) { continue; } // empty or '#' comment
         let work = line;
-        if (work.len > 7 && deStrEq(work[0..7], "export ")) {
-            work = deTrim(work[7..work.len]);
+        if (startsWith(work, "export ")) {
+            work = trim(work[7..work.len]);
         }
-        let eq: usize = 0;
-        while (eq < work.len && work[eq] != 61) { eq = eq + 1; }
-        if (eq == 0 || eq >= work.len) { continue; }
+        let eq_opt = findByte(work, 61, 0);
+        if (eq_opt == null) { continue; }
+        let eq = eq_opt.?;
+        if (eq == 0) { continue; }
 
-        let key = deTrim(work[0..eq]);
-        let raw_val = deTrim(work[eq + 1..work.len]);
+        let key = trim(work[0..eq]);
+        let raw_val = trim(work[eq + 1..work.len]);
         if (key.len == 0) { continue; }
 
         let val = raw_val;
@@ -119,9 +85,8 @@ pub fn parseDotenv(src: string): EnvMap {
             val = raw_val[1..raw_val.len - 1];
         } else {
             // Strip inline `#` comment for unquoted values
-            let hash: usize = 0;
-            while (hash < raw_val.len && raw_val[hash] != 35) { hash = hash + 1; }
-            val = deTrim(raw_val[0..hash]);
+            let hash = findByte(raw_val, 35, 0) ?? raw_val.len;
+            val = trim(raw_val[0..hash]);
         }
         env.set(key, val);
     }
@@ -143,8 +108,7 @@ pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
         if (template[i] == 36 && i + 1 < template.len) {
             if (template[i + 1] == 123) {
                 // Braced: ${VAR}, ${VAR:-default}, ${VAR-default}
-                let close = i + 2;
-                while (close < template.len && template[close] != 125) { close = close + 1; }
+                let close = findByte(template, 125, i + 2) ?? template.len;
                 if (close < template.len) {
                     let inner = template[i + 2..close];
                     // Check for ":-" or "-"
@@ -170,12 +134,12 @@ pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
                     if (found != null) {
                         let fv = found ?? "";
                         if (colon_dash && fv.len == 0) {
-                            p = dePush(out, p, def_val);
+                            p = writeStr(def_val, out, p);
                         } else {
-                            p = dePush(out, p, fv);
+                            p = writeStr(fv, out, p);
                         }
                     } else if (has_default) {
-                        p = dePush(out, p, def_val);
+                        p = writeStr(def_val, out, p);
                     }
                     i = close + 1;
                     continue;
@@ -187,7 +151,7 @@ pub fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize {
                 let var_name = template[i + 1..end];
                 let found = env.get(var_name);
                 if (found != null) {
-                    p = dePush(out, p, found ?? "");
+                    p = writeStr(found ?? "", out, p);
                 }
                 i = end;
                 continue;

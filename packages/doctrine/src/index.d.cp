@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, trim, findByte } from "cap:ascii";
 export class JsDocTag {
     title: string,
     type_expr: string,
@@ -8,11 +9,7 @@ export class JsDocTag {
     optional: bool,
 }
 
-export fn docEmptyTag(): JsDocTag;
-export fn docIsWs(ch: u8): bool;
 export fn docIsSpace(ch: u8): bool;
-export fn docStrEq(a: string, b: string): bool;
-export fn docTrim(s: string): string;
 export fn docStripLinePrefix(line: string): string;
 export fn docTagHasName(title: string): bool;
 export fn docParseTagLine(line: string): JsDocTag;

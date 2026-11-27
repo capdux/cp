@@ -1,7 +1,7 @@
 // Type definitions for CP
 
-export fn writeStr(out: []u8, pos: usize, s: string): usize;
-export fn matchAt(input: string, pos: usize, pat: string): bool;
+import { startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn needsHtmlEscape(input: string): bool;
 export fn escapedHtmlLen(input: string): usize;
 export fn escapeHtml(input: string, out: []u8): usize;

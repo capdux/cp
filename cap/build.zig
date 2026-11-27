@@ -10,9 +10,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
-    root_mod.addIncludePath(b.path("../packages/@cap/zstd/c"));
+    root_mod.addIncludePath(b.path("../packages/zstd/c"));
     root_mod.addCSourceFile(.{
-        .file = b.path("../packages/@cap/zstd/c/zstd.c"),
+        .file = b.path("../packages/zstd/c/zstd.c"),
         .flags = &.{ "-O2", "-DZSTD_MULTITHREAD=0" },
     });
     // Statically link libdeflate (MIT) for zero-CLI RFC 1952 gzip (.tgz) compression & decompression

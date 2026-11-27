@@ -1,6 +1,9 @@
 // @cap/markdown-toc — Zero-allocation Markdown heading extractor, GitHub anchor slugger & TOC generator
 // Clean-room MIT implementation inspired by npm `github-slugger` (35M/wk) and `markdown-toc`.
 
+import { toLowerByte, isAlnum, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 const MAX_HEADINGS: usize = 128;
 const MAX_SLUG_POOL: usize = 4096;
 
@@ -59,72 +62,12 @@ pub struct TocResult {
     }
 }
 
-fn toLower(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     if (pos < out.len) {
         out[pos] = c;
         return pos + 1;
     }
     return pos;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendUsize(out: []u8, pos: usize, v: usize) -> usize {
-    let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let x = v;
-    if (x == 0) {
-        tmp[0] = '0';
-        n = 1;
-    } else {
-        while (x > 0 && n < 24) {
-            tmp[n] = ((x % 10) as u8) + '0';
-            x = x / 10;
-            n += 1;
-        }
-    }
-    let p = pos;
-    let k = n;
-    while (k > 0 && p < out.len) {
-        k -= 1;
-        out[p] = tmp[k];
-        p += 1;
-    }
-    return p;
 }
 
 pub fn githubSlug(heading: string, out: []u8) -> string {
@@ -135,8 +78,8 @@ pub fn githubSlug(heading: string, out: []u8) -> string {
         const c = heading[i];
         if (c == ' ' || c == '\t') {
             pos = appendByte(out, pos, '-');
-        } else if (isAlphaNum(c) || c == '-' || c == '_') {
-            pos = appendByte(out, pos, toLower(c));
+        } else if (isAlnum(c) || c == '-' || c == '_') {
+            pos = appendByte(out, pos, toLowerByte(c));
         } else if (c >= 128) {
             // Preserve UTF-8 non-ASCII characters (e.g. CJK headings)
             pos = appendByte(out, pos, c);
@@ -248,9 +191,9 @@ pub fn extractToc(markdown: string) -> TocResult {
             let suffix: usize = 1;
             while (suffix < 1000) {
                 let cp: usize = 0;
-                cp = appendStr(cand_buf[0..280], cp, base);
+                cp = writeStr(base, cand_buf[0..280], cp);
                 cp = appendByte(cand_buf[0..280], cp, '-');
-                cp = appendUsize(cand_buf[0..280], cp, suffix);
+                cp = writeU64(suffix as u64, cand_buf[0..280], cp);
                 const cand = cand_buf[0..cp];
                 if (!slugExists(&res, cand)) {
                     final_slug = cand;
@@ -296,14 +239,14 @@ pub fn renderTocMarkdown(toc: TocResult, min_level: u8, max_level: u8, out: []u8
             first = false;
             let ind: u8 = min_level;
             while (ind < lvl) {
-                pos = appendStr(out, pos, "  ");
+                pos = writeStr("  ", out, pos);
                 ind += 1;
             }
-            pos = appendStr(out, pos, "- [");
-            pos = appendStr(out, pos, toc.textAt(i));
-            pos = appendStr(out, pos, "](#");
-            pos = appendStr(out, pos, toc.slugAt(i));
-            pos = appendStr(out, pos, ")");
+            pos = writeStr("- [", out, pos);
+            pos = writeStr(toc.textAt(i), out, pos);
+            pos = writeStr("](#", out, pos);
+            pos = writeStr(toc.slugAt(i), out, pos);
+            pos = writeStr(")", out, pos);
         }
         i += 1;
     }

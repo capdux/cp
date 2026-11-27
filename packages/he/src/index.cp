@@ -11,10 +11,9 @@
 //   * Safely preserves unknown entities and stray '&' verbatim.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
-struct Utf8Step {
-    cp: u32,
-    width: usize,
-}
+import { strEq, hexVal, hexCharUpper, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+import { decodeCodepoint, encodeCodepointLossy } from "cap:utf8";
 
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     if (pos < out.len) {
@@ -24,91 +23,16 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
-fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 fn writeUtf8(out: []u8, pos: usize, raw_cp: u32) -> usize {
-    let cp = raw_cp;
-    if (cp == 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
-        cp = 0xFFFD;
-    }
-
-    if (cp <= 0x7F) {
-        return pushByte(out, pos, cp as u8);
-    }
-    if (cp <= 0x7FF) {
-        if (pos + 2 > out.len) {
-            return pos;
-        }
-        out[pos] = (0xC0 | (cp >> 6)) as u8;
-        out[pos + 1] = (0x80 | (cp & 0x3F)) as u8;
-        return pos + 2;
-    }
-    if (cp <= 0xFFFF) {
-        if (pos + 3 > out.len) {
-            return pos;
-        }
-        out[pos] = (0xE0 | (cp >> 12)) as u8;
-        out[pos + 1] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
-        out[pos + 2] = (0x80 | (cp & 0x3F)) as u8;
-        return pos + 3;
-    }
-    if (pos + 4 > out.len) {
+    if (pos >= out.len) {
         return pos;
     }
-    out[pos] = (0xF0 | (cp >> 18)) as u8;
-    out[pos + 1] = (0x80 | ((cp >> 12) & 0x3F)) as u8;
-    out[pos + 2] = (0x80 | ((cp >> 6) & 0x3F)) as u8;
-    out[pos + 3] = (0x80 | (cp & 0x3F)) as u8;
-    return pos + 4;
-}
-
-fn decodeUtf8At(s: string, i: usize) -> Utf8Step {
-    const b0 = s[i];
-    if (b0 < 0x80) {
-        return Utf8Step{ cp: b0 as u32, width: 1 };
-    }
-    if ((b0 & 0xE0) == 0xC0 && i + 1 < s.len) {
-        const b1 = s[i + 1];
-        if ((b1 & 0xC0) == 0x80) {
-            const cp = (((b0 & 0x1F) as u32) << 6) | ((b1 & 0x3F) as u32);
-            if (cp >= 0x80) {
-                return Utf8Step{ cp: cp, width: 2 };
-            }
-        }
-    } else if ((b0 & 0xF0) == 0xE0 && i + 2 < s.len) {
-        const b1 = s[i + 1];
-        const b2 = s[i + 2];
-        if ((b1 & 0xC0) == 0x80 && (b2 & 0xC0) == 0x80) {
-            const cp = (((b0 & 0x0F) as u32) << 12) | (((b1 & 0x3F) as u32) << 6) | ((b2 & 0x3F) as u32);
-            if (cp >= 0x800 && !(cp >= 0xD800 && cp <= 0xDFFF)) {
-                return Utf8Step{ cp: cp, width: 3 };
-            }
-        }
-    } else if ((b0 & 0xF8) == 0xF0 && i + 3 < s.len) {
-        const b1 = s[i + 1];
-        const b2 = s[i + 2];
-        const b3 = s[i + 3];
-        if ((b1 & 0xC0) == 0x80 && (b2 & 0xC0) == 0x80 && (b3 & 0xC0) == 0x80) {
-            const cp = (((b0 & 0x07) as u32) << 18) | (((b1 & 0x3F) as u32) << 12) | (((b2 & 0x3F) as u32) << 6) | ((b3 & 0x3F) as u32);
-            if (cp >= 0x10000 && cp <= 0x10FFFF) {
-                return Utf8Step{ cp: cp, width: 4 };
-            }
-        }
-    }
-    return Utf8Step{ cp: 0xFFFD, width: 1 };
+    const cp = if (raw_cp == 0) 0xFFFD else raw_cp;
+    return pos + encodeCodepointLossy(cp, out[pos..out.len]);
 }
 
 fn pushHexEntity(out: []u8, pos: usize, cp: u32) -> usize {
-    let p = pushStr(out, pos, "&#x");
+    let p = writeStr("&#x", out, pos);
     let digits: [8]u8 = undefined;
     let count: usize = 0;
     let v = cp;
@@ -117,12 +41,7 @@ fn pushHexEntity(out: []u8, pos: usize, cp: u32) -> usize {
         count = 1;
     } else {
         while (v > 0 && count < 8) {
-            const nib = (v & 0xF) as u8;
-            if (nib < 10) {
-                digits[count] = (48 as u8) + nib;
-            } else {
-                digits[count] = (65 as u8) + (nib - 10);
-            }
+            digits[count] = hexCharUpper((v & 0xF) as u8);
             count += 1;
             v = v >> 4;
         }
@@ -134,20 +53,6 @@ fn pushHexEntity(out: []u8, pos: usize, cp: u32) -> usize {
     }
     p = pushByte(out, p, ';');
     return p;
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Returns `true` if `s` contains any of `&`, `<`, `>`, `"`, or `'`.
@@ -170,15 +75,15 @@ pub fn escapeHtml(input: string, out: []u8) -> string {
     while (i < input.len) {
         const c = input[i];
         if (c == '&') {
-            pos = pushStr(out, pos, "&amp;");
+            pos = writeStr("&amp;", out, pos);
         } else if (c == '<') {
-            pos = pushStr(out, pos, "&lt;");
+            pos = writeStr("&lt;", out, pos);
         } else if (c == '>') {
-            pos = pushStr(out, pos, "&gt;");
+            pos = writeStr("&gt;", out, pos);
         } else if (c == '"') {
-            pos = pushStr(out, pos, "&quot;");
+            pos = writeStr("&quot;", out, pos);
         } else if (c == '\'') {
-            pos = pushStr(out, pos, "&#39;");
+            pos = writeStr("&#39;", out, pos);
         } else {
             pos = pushByte(out, pos, c);
         }
@@ -194,27 +99,27 @@ pub fn encodeNonAscii(input: string, out: []u8) -> string {
     while (i < input.len) {
         const c = input[i];
         if (c == '&') {
-            pos = pushStr(out, pos, "&amp;");
+            pos = writeStr("&amp;", out, pos);
             i += 1;
         } else if (c == '<') {
-            pos = pushStr(out, pos, "&lt;");
+            pos = writeStr("&lt;", out, pos);
             i += 1;
         } else if (c == '>') {
-            pos = pushStr(out, pos, "&gt;");
+            pos = writeStr("&gt;", out, pos);
             i += 1;
         } else if (c == '"') {
-            pos = pushStr(out, pos, "&quot;");
+            pos = writeStr("&quot;", out, pos);
             i += 1;
         } else if (c == '\'') {
-            pos = pushStr(out, pos, "&#39;");
+            pos = writeStr("&#39;", out, pos);
             i += 1;
         } else if (c < 0x80) {
             pos = pushByte(out, pos, c);
             i += 1;
         } else {
-            const step = decodeUtf8At(input, i);
-            pos = pushHexEntity(out, pos, step.cp);
-            i += step.width;
+            const step = decodeCodepoint(input, i);
+            pos = pushHexEntity(out, pos, step.codepoint);
+            i += if (step.len > 0) step.len else 1;
         }
     }
     return out[0..pos];
@@ -301,19 +206,6 @@ fn lookupNamedEntity(name: string) -> u32 {
     return 0;
 }
 
-fn hexDigit(c: u8) -> i8 {
-    if (c >= '0' && c <= '9') {
-        return (c - '0') as i8;
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (c - 'a' + 10) as i8;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return (c - 'A' + 10) as i8;
-    }
-    return -1;
-}
-
 /// Decodes HTML5 named entities and decimal/hexadecimal numeric character references into UTF-8.
 /// Unknown entities and stray `&` characters are preserved verbatim.
 pub fn decodeHtmlEntities(input: string, out: []u8) -> string {
@@ -349,15 +241,15 @@ pub fn decodeHtmlEntities(input: string, out: []u8) -> string {
                         let overflow = false;
                         let k: usize = 2;
                         while (k < body.len) {
-                            const d = hexDigit(body[k]);
-                            if (d < 0) {
+                            if (d := hexVal(body[k])) {
+                                if (cp > 0x10FFFF) {
+                                    overflow = true;
+                                } else {
+                                    cp = (cp * 16) + (d as u32);
+                                }
+                            } else {
                                 valid = false;
                                 break;
-                            }
-                            if (cp > 0x10FFFF) {
-                                overflow = true;
-                            } else {
-                                cp = (cp * 16) + (d as u32);
                             }
                             k += 1;
                         }
@@ -373,7 +265,7 @@ pub fn decodeHtmlEntities(input: string, out: []u8) -> string {
                         let k: usize = 1;
                         while (k < body.len) {
                             const c = body[k];
-                            if (c < '0' || c > '9') {
+                            if (!isDigit(c)) {
                                 valid = false;
                                 break;
                             }

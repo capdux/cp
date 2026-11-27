@@ -1,4 +1,5 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     GQL_TOK_EOF,
     GQL_TOK_DOLLAR,
@@ -21,20 +22,6 @@ import {
     parseGraphql,
     minifyGraphql,
 } from "../../packages/graphql/src/index.cp";
-
-fn strEq(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/graphql-parse — GqlLexer tokens, comments, commas, numbers, strings & line/col", () => {

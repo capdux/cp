@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { toLowerByte, trim, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export enum ChangeKind {
     Added,
     Changed,
@@ -30,10 +32,6 @@ export class ParsedChangelog {
     fn releaseAt(i: usize): ReleaseInfo;
 }
 
-export fn isSpace(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn trim(s: string): string;
-export fn eqIgnoreCase(a: string, b: string): bool;
 export fn containsIgnoreCase(hay: string, needle_lower: string): bool;
 export fn isRefLinkDef(trimmed: string): bool;
 export fn classifySection(heading: string): ChangeKind;
@@ -42,5 +40,4 @@ export fn isTopLevelBullet(line: string): bool;
 export fn parseChangelog(md: string): ParsedChangelog;
 export fn findRelease(log: ParsedChangelog, version: string): ReleaseInfo?;
 export fn latestRelease(log: ParsedChangelog): ReleaseInfo?;
-export fn pushStr(out: []u8, pos: usize, s: string): usize;
 export fn formatReleaseHeader(version: string, date: string, yanked: bool, out: []u8): string;

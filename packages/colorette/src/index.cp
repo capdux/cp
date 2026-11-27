@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `colorette` v2.
 // Reuses ANSI SGR StylePair constants from `@cap/ansi-styles` with zero duplication.
 
+import { strEq, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import {
     StylePair,
     RESET,
@@ -48,45 +50,6 @@ const CLR_BG_MAGENTA_BRIGHT: StylePair = StylePair { open: "\x1b[105m", close: B
 const CLR_BG_CYAN_BRIGHT: StylePair = StylePair { open: "\x1b[106m", close: BG_CLOSE };
 const CLR_BG_WHITE_BRIGHT: StylePair = StylePair { open: "\x1b[107m", close: BG_CLOSE };
 
-fn clrStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn clrWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
-
-fn clrMatchAt(haystack: string, offset: usize, needle: string): bool {
-    if (needle.len == 0 || offset + needle.len > haystack.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < needle.len) {
-        if (haystack[offset + i] != needle[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 // Formats `text` with `pair`, replacing embedded `pair.close` sequences with `replace_with`
 // to restore outer styles when nested. Passes `text` through verbatim when `use_color == false`.
 fn clrFormatPair(
@@ -100,16 +63,16 @@ fn clrFormatPair(
         return 0;
     }
     if (!use_color) {
-        return clrWriteStr(out, 0, text);
+        return writeStr(text, out, 0);
     }
 
     let p: usize = 0;
-    p = clrWriteStr(out, p, pair.open);
+    p = writeStr(pair.open, out, p);
 
     let i: usize = 0;
     while (i < text.len && p < out.len) {
-        if (pair.close.len > 0 && clrMatchAt(text, i, pair.close)) {
-            p = clrWriteStr(out, p, replace_with);
+        if (pair.close.len > 0 && startsWith(text[i..text.len], pair.close)) {
+            p = writeStr(replace_with, out, p);
             i = i + pair.close.len;
         } else {
             out[p] = text[i];
@@ -118,7 +81,7 @@ fn clrFormatPair(
         }
     }
 
-    p = clrWriteStr(out, p, pair.close);
+    p = writeStr(pair.close, out, p);
     return p;
 }
 
@@ -132,12 +95,12 @@ pub fn isColorSupported(no_color: string, force_color: string, term: string, is_
         return false;
     }
     if (force_color.len > 0) {
-        if (clrStrEq(force_color, "0")) {
+        if (strEq(force_color, "0")) {
             return false;
         }
         return true;
     }
-    if (clrStrEq(term, "dumb")) {
+    if (strEq(term, "dumb")) {
         return false;
     }
     return is_tty;

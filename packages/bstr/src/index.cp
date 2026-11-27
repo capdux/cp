@@ -3,6 +3,9 @@
 // Reuses `@cap/memchr` (`memchr`, `memrchr`, `memmemFind`, `memmemRfind`) for
 // SWAR-accelerated byte/substring search, line splitting, and single-pass replacement.
 
+import { isSpace, isAscii, startsWith, endsWith, toLower, toUpper, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+import { isValidUtf8 } from "cap:utf8";
 import {
     memchr,
     memrchr,
@@ -30,35 +33,6 @@ pub struct SliceRange {
 // ============================================================================
 // Private helpers (`bs` prefix to avoid module-flattening symbol collisions)
 // ============================================================================
-
-fn bsIsAsciiWhitespace(b: u8): bool {
-    return b == 0x20 || b == 0x09 || b == 0x0A || b == 0x0B || b == 0x0C || b == 0x0D;
-}
-
-fn bsBytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn bsCopyBytes(dst: []u8, pos: usize, src: []const u8): usize {
-    let cur = pos;
-    let i: usize = 0;
-    while (i < src.len && cur < dst.len) {
-        dst[cur] = src[i];
-        cur = cur + 1;
-        i = i + 1;
-    }
-    return cur;
-}
 
 fn bsIsContByte(b: u8): bool {
     return (b & 0xC0) == 0x80;
@@ -175,22 +149,8 @@ fn bsUtf8InvalidSkip(src: []const u8, i: usize): usize {
     return 1;
 }
 
-fn bsToLowerByte(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn bsToUpperByte(b: u8): u8 {
-    if (b >= 97 && b <= 122) {
-        return b - 32;
-    }
-    return b;
-}
-
 // ============================================================================
-// Public API — Search & Matching (delegating to @cap/memchr)
+// Public API — Search & Matching (delegating to @cap/memchr & cap:bin)
 // ============================================================================
 
 /// Finds the first occurrence of `needle` in `haystack` via `@cap/memchr::memmemFind`.
@@ -222,25 +182,12 @@ pub fn bstrContains(haystack: []const u8, needle: []const u8): bool {
 
 /// Returns `true` if `s` starts with `prefix`.
 pub fn bstrStartsWith(s: []const u8, prefix: []const u8): bool {
-    if (prefix.len > s.len) {
-        return false;
-    }
-    if (prefix.len == 0) {
-        return true;
-    }
-    return bsBytesEqual(s[0..prefix.len], prefix);
+    return startsWith(s, prefix);
 }
 
 /// Returns `true` if `s` ends with `suffix`.
 pub fn bstrEndsWith(s: []const u8, suffix: []const u8): bool {
-    if (suffix.len > s.len) {
-        return false;
-    }
-    if (suffix.len == 0) {
-        return true;
-    }
-    let start = s.len - suffix.len;
-    return bsBytesEqual(s[start..s.len], suffix);
+    return endsWith(s, suffix);
 }
 
 // ============================================================================
@@ -250,7 +197,7 @@ pub fn bstrEndsWith(s: []const u8, suffix: []const u8): bool {
 /// Strips leading ASCII whitespace (` `, `\t`, `\n`, `\x0B`, `\x0C`, `\r`), returning a `SliceRange`.
 pub fn bstrTrimStart(s: []const u8): SliceRange {
     let start: usize = 0;
-    while (start < s.len && bsIsAsciiWhitespace(s[start])) {
+    while (start < s.len && isSpace(s[start])) {
         start = start + 1;
     }
     return SliceRange { start: start, end: s.len };
@@ -259,7 +206,7 @@ pub fn bstrTrimStart(s: []const u8): SliceRange {
 /// Strips trailing ASCII whitespace (` `, `\t`, `\n`, `\x0B`, `\x0C`, `\r`), returning a `SliceRange`.
 pub fn bstrTrimEnd(s: []const u8): SliceRange {
     let end: usize = s.len;
-    while (end > 0 && bsIsAsciiWhitespace(s[end - 1])) {
+    while (end > 0 && isSpace(s[end - 1])) {
         end = end - 1;
     }
     return SliceRange { start: 0, end: end };
@@ -269,10 +216,10 @@ pub fn bstrTrimEnd(s: []const u8): SliceRange {
 pub fn bstrTrim(s: []const u8): SliceRange {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && bsIsAsciiWhitespace(s[start])) {
+    while (start < end && isSpace(s[start])) {
         start = start + 1;
     }
-    while (end > start && bsIsAsciiWhitespace(s[end - 1])) {
+    while (end > start && isSpace(s[end - 1])) {
         end = end - 1;
     }
     return SliceRange { start: start, end: end };
@@ -339,7 +286,7 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
         return 0;
     }
     if (pattern.len == 0) {
-        return bsCopyBytes(out, 0, src);
+        return writeStr(src, out, 0);
     }
 
     let written: usize = 0;
@@ -347,15 +294,15 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
     while (pos < src.len && written < out.len) {
         let hit = memmemFind(src[pos..src.len], pattern);
         if (hit < 0) {
-            written = bsCopyBytes(out, written, src[pos..src.len]);
+            written = writeStr(src[pos..src.len], out, written);
             break;
         }
         let matchStart = pos + (hit as usize);
         if (matchStart > pos) {
-            written = bsCopyBytes(out, written, src[pos..matchStart]);
+            written = writeStr(src[pos..matchStart], out, written);
         }
         if (replacement.len > 0 && written < out.len) {
-            written = bsCopyBytes(out, written, replacement);
+            written = writeStr(replacement, out, written);
         }
         pos = matchStart + pattern.len;
     }
@@ -368,15 +315,7 @@ pub fn bstrReplaceAll(src: []const u8, pattern: []const u8, replacement: []const
 
 /// Returns `true` if `src` is completely valid UTF-8 (RFC 3629).
 pub fn bstrIsUtf8(src: []const u8): bool {
-    let i: usize = 0;
-    while (i < src.len) {
-        let seqLen = bsUtf8ValidLen(src, i);
-        if (seqLen == 0) {
-            return false;
-        }
-        i = i + seqLen;
-    }
-    return true;
+    return isValidUtf8(src);
 }
 
 /// Converts arbitrary bytes `src` into valid UTF-8 in `out`, replacing every invalid byte sequence
@@ -419,59 +358,24 @@ pub fn bstrToUtf8Lossy(src: []const u8, out: []u8): usize {
 
 /// Returns `true` if every byte in `s` is 7-bit ASCII (`<= 0x7F`).
 pub fn bstrIsAscii(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] > 0x7F) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return isAscii(s);
 }
 
 /// Copies `src` to `out`, converting ASCII uppercase `'A'..'Z'` to lowercase `'a'..'z'`.
 /// Non-ASCII bytes are preserved verbatim. Returns bytes written to `out`.
 pub fn bstrToLowerAscii(src: []const u8, out: []u8): usize {
-    let n = src.len;
-    if (out.len < n) {
-        n = out.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[i] = bsToLowerByte(src[i]);
-        i = i + 1;
-    }
-    return n;
+    return toLower(src, out);
 }
 
 /// Copies `src` to `out`, converting ASCII lowercase `'a'..'z'` to uppercase `'A'..'Z'`.
 /// Non-ASCII bytes are preserved verbatim. Returns bytes written to `out`.
 pub fn bstrToUpperAscii(src: []const u8, out: []u8): usize {
-    let n = src.len;
-    if (out.len < n) {
-        n = out.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[i] = bsToUpperByte(src[i]);
-        i = i + 1;
-    }
-    return n;
+    return toUpper(src, out);
 }
 
 /// Returns `true` if `a` and `b` are equal ignoring ASCII case.
 pub fn bstrEqIgnoreAsciiCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (bsToLowerByte(a[i]) != bsToLowerByte(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return eqIgnoreCase(a, b);
 }
 
 export {

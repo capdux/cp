@@ -1,6 +1,8 @@
 // @cap/doctrine — Zero-allocation JSDoc comment parser
 // Clean-room Apache-2.0 implementation inspired by ESLint npm:doctrine
 
+import { strEq, trim, findByte } from "cap:ascii";
+
 pub const DOC_MAX_TAGS: usize = 16;
 
 pub struct JsDocTag {
@@ -11,43 +13,8 @@ pub struct JsDocTag {
     optional: bool,
 }
 
-fn docEmptyTag(): JsDocTag {
-    return JsDocTag{
-        title: "",
-        type_expr: "",
-        name: "",
-        description: "",
-        optional: false,
-    };
-}
-
-fn docIsWs(ch: u8): bool {
-    return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
-}
-
 fn docIsSpace(ch: u8): bool {
     return ch == ' ' || ch == '\t';
-}
-
-fn docStrEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
-
-fn docTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && docIsWs(s[start])) {
-        start += 1;
-    }
-    let end = s.len;
-    while (end > start && docIsWs(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
 }
 
 fn docStripLinePrefix(line: string): string {
@@ -72,13 +39,13 @@ fn docStripLinePrefix(line: string): string {
 }
 
 fn docTagHasName(title: string): bool {
-    if (docStrEq(title, "param")) return true;
-    if (docStrEq(title, "arg")) return true;
-    if (docStrEq(title, "argument")) return true;
-    if (docStrEq(title, "property")) return true;
-    if (docStrEq(title, "prop")) return true;
-    if (docStrEq(title, "template")) return true;
-    if (docStrEq(title, "typedef")) return true;
+    if (strEq(title, "param")) return true;
+    if (strEq(title, "arg")) return true;
+    if (strEq(title, "argument")) return true;
+    if (strEq(title, "property")) return true;
+    if (strEq(title, "prop")) return true;
+    if (strEq(title, "template")) return true;
+    if (strEq(title, "typedef")) return true;
     return false;
 }
 
@@ -111,7 +78,7 @@ fn docParseTagLine(line: string): JsDocTag {
             }
             pos += 1;
         }
-        type_expr = docTrim(line[type_start..pos]);
+        type_expr = trim(line[type_start..pos]);
         if (type_expr.len > 0 && type_expr[type_expr.len - 1] == '=') {
             optional = true;
         }
@@ -132,17 +99,10 @@ fn docParseTagLine(line: string): JsDocTag {
             while (pos < line.len && line[pos] != ']') {
                 pos += 1;
             }
-            const raw_bracket = docTrim(line[n_start..pos]);
+            const raw_bracket = trim(line[n_start..pos]);
             // Strip optional "=default" inside [name=default]
-            let eq_idx = raw_bracket.len;
-            let k: usize = 0;
-            while (k < raw_bracket.len) : (k += 1) {
-                if (raw_bracket[k] == '=') {
-                    eq_idx = k;
-                    break;
-                }
-            }
-            name = docTrim(raw_bracket[0..eq_idx]);
+            const eq_idx = findByte(raw_bracket, '=', 0) ?? raw_bracket.len;
+            name = trim(raw_bracket[0..eq_idx]);
             if (pos < line.len && line[pos] == ']') {
                 pos += 1;
             }
@@ -168,7 +128,7 @@ fn docParseTagLine(line: string): JsDocTag {
         }
     }
 
-    const desc = docTrim(line[pos..line.len]);
+    const desc = trim(line[pos..line.len]);
     return JsDocTag{
         title: title,
         type_expr: type_expr,
@@ -195,7 +155,7 @@ pub struct JsDocComment {
     fn findTag(title: string): JsDocTag? {
         let i: usize = 0;
         while (i < _.tag_count) : (i += 1) {
-            if (docStrEq(_.tags[i].title, title)) {
+            if (strEq(_.tags[i].title, title)) {
                 return _.tags[i];
             }
         }
@@ -205,7 +165,7 @@ pub struct JsDocComment {
     fn isDeprecated(): bool {
         let i: usize = 0;
         while (i < _.tag_count) : (i += 1) {
-            if (docStrEq(_.tags[i].title, "deprecated")) {
+            if (strEq(_.tags[i].title, "deprecated")) {
                 return true;
             }
         }
@@ -215,12 +175,8 @@ pub struct JsDocComment {
 
 pub fn parseJsDoc(comment: string): JsDocComment {
     let tags: [16]JsDocTag = undefined;
-    let t_i: usize = 0;
-    while (t_i < DOC_MAX_TAGS) : (t_i += 1) {
-        tags[t_i] = docEmptyTag();
-    }
 
-    let body = docTrim(comment);
+    let body = trim(comment);
     if (body.len >= 3 && body[0] == '/' && body[1] == '*' && body[2] == '*') {
         body = body[3..body.len];
     } else if (body.len >= 2 && body[0] == '/' && body[1] == '*') {

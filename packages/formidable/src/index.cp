@@ -3,6 +3,7 @@
 // Reuses `@cap/mediatype` for Content-Type/boundary parsing and `@cap/content-disposition`
 // for Content-Disposition header parsing.
 
+import { isAlnum, strEq, eqIgnoreCase, startsWith, findByte } from "cap:ascii";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { ContentDisposition, parseContentDisposition } from "../../content-disposition/src/index.cp";
 
@@ -17,55 +18,18 @@ pub const ERR_MAX_FILES_EXCEEDED: u8 = 4;
 pub const ERR_MAX_FILE_SIZE_EXCEEDED: u8 = 5;
 pub const ERR_EMPTY_FILE_NOT_ALLOWED: u8 = 6;
 
-fn frmToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn frmIsOws(b: u8): bool {
     return b == 32 || b == 9;
 }
 
 fn frmIsTokenChar(b: u8): bool {
-    if (b >= 48 && b <= 57) { return true; }
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
+    if (isAlnum(b)) { return true; }
     if (b == 33 || b == 35 || b == 36 || b == 37 || b == 38 ||
         b == 39 || b == 42 || b == 43 || b == 45 || b == 46 ||
         b == 94 || b == 95 || b == 96 || b == 124 || b == 126) {
         return true;
     }
     return false;
-}
-
-fn frmStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn frmEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (frmToLower(a[i]) != frmToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn frmTrimOws(s: string): string {
@@ -86,20 +50,6 @@ fn frmSkipOws(s: string, start: usize): usize {
         i = i + 1;
     }
     return i;
-}
-
-fn frmMatchesAt(hay: string, pos: usize, needle: string): bool {
-    if (pos + needle.len > hay.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < needle.len) {
-        if (hay[pos + i] != needle[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn frmIsBoundaryTerminator(body: string, after_pos: usize): bool {
@@ -123,7 +73,7 @@ fn frmFindFirstBoundary(body: string, boundary: string): usize {
     while (i + 2 + boundary.len <= body.len) {
         let at_line_start = (i == 0) || (body[i - 1] == 10);
         if (at_line_start && body[i] == 45 && body[i + 1] == 45) {
-            if (frmMatchesAt(body, i + 2, boundary)) {
+            if (startsWith(body[(i + 2)..body.len], boundary)) {
                 if (frmIsBoundaryTerminator(body, i + 2 + boundary.len)) {
                     return i;
                 }
@@ -143,7 +93,7 @@ fn frmFindNextBoundary(body: string, start: usize, boundary: string): usize {
         if (body[i] == 13 && i + 1 < body.len && body[i + 1] == 10) {
             let dash = i + 2;
             if (dash + 2 + boundary.len <= body.len && body[dash] == 45 && body[dash + 1] == 45) {
-                if (frmMatchesAt(body, dash + 2, boundary)) {
+                if (startsWith(body[(dash + 2)..body.len], boundary)) {
                     if (frmIsBoundaryTerminator(body, dash + 2 + boundary.len)) {
                         return i;
                     }
@@ -152,7 +102,7 @@ fn frmFindNextBoundary(body: string, start: usize, boundary: string): usize {
         } else if (body[i] == 10) {
             let dash = i + 1;
             if (dash + 2 + boundary.len <= body.len && body[dash] == 45 && body[dash + 1] == 45) {
-                if (frmMatchesAt(body, dash + 2, boundary)) {
+                if (startsWith(body[(dash + 2)..body.len], boundary)) {
                     if (frmIsBoundaryTerminator(body, dash + 2 + boundary.len)) {
                         return i;
                     }
@@ -216,7 +166,7 @@ fn frmExtractDispositionName(header: string): string {
             }
             val = header[val_start..i];
         }
-        if (frmEqIgnoreCase(key, "name")) {
+        if (eqIgnoreCase(key, "name")) {
             return val;
         }
         i = frmSkipOws(header, i);
@@ -271,7 +221,7 @@ fn frmHasFilenameParam(header: string): bool {
                 i = i + 1;
             }
         }
-        if (frmEqIgnoreCase(key, "filename") || frmEqIgnoreCase(key, "filename*")) {
+        if (eqIgnoreCase(key, "filename") || eqIgnoreCase(key, "filename*")) {
             return true;
         }
         i = frmSkipOws(header, i);
@@ -321,20 +271,10 @@ pub struct ParsedForm {
     pub err_code: u8,
 
     pub static fn empty(): ParsedForm {
-        let blank_field = FormField { name: "", value: "" };
-        let field_arr: [16]FormField = [blank_field; 16];
-        let blank_file = FormFile {
-            field_name: "",
-            original_filename: "",
-            mime_type: "",
-            body_start: 0,
-            body_len: 0
-        };
-        let file_arr: [16]FormFile = [blank_file; 16];
         return ParsedForm {
-            fields: field_arr,
+            fields: undefined,
             field_count: 0,
-            files: file_arr,
+            files: undefined,
             file_count: 0,
             valid: true,
             err_code: FORM_OK
@@ -352,7 +292,7 @@ pub struct ParsedForm {
     pub fn getField(name: string): string? {
         let i: usize = 0;
         while (i < _.field_count) {
-            if (frmStrEq(_.fields[i].name, name)) {
+            if (strEq(_.fields[i].name, name)) {
                 return _.fields[i].value;
             }
             i = i + 1;
@@ -364,7 +304,7 @@ pub struct ParsedForm {
     pub fn getFile(field_name: string): FormFile? {
         let i: usize = 0;
         while (i < _.file_count) {
-            if (frmStrEq(_.files[i].field_name, field_name)) {
+            if (strEq(_.files[i].field_name, field_name)) {
                 return _.files[i];
             }
             i = i + 1;
@@ -381,7 +321,7 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
     if (!mt.valid) {
         return ParsedForm.fail(ERR_INVALID_CONTENT_TYPE);
     }
-    if (!frmEqIgnoreCase(mt.top_level, "multipart") || !frmEqIgnoreCase(mt.sub_level, "form-data")) {
+    if (!eqIgnoreCase(mt.top_level, "multipart") || !eqIgnoreCase(mt.sub_level, "form-data")) {
         return ParsedForm.fail(ERR_INVALID_CONTENT_TYPE);
     }
     let boundary_opt = mt.getParam("boundary");
@@ -473,25 +413,18 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
             }
 
             // Split header line on ':'.
-            let colon: usize = 0;
-            let has_colon = false;
-            while (colon < line.len) {
-                if (line[colon] == 58) { // ':'
-                    has_colon = true;
-                    break;
-                }
-                colon = colon + 1;
-            }
-            if (!has_colon || colon == 0) {
+            let colon_opt = findByte(line, 58, 0);
+            if (colon_opt == null || colon_opt.? == 0) {
                 return ParsedForm.fail(ERR_MALFORMED_MULTIPART);
             }
+            let colon = colon_opt.?;
 
             let hname = frmTrimOws(line[0..colon]);
             let hval = frmTrimOws(line[(colon + 1)..line.len]);
 
-            if (frmEqIgnoreCase(hname, "content-disposition")) {
+            if (eqIgnoreCase(hname, "content-disposition")) {
                 let cd: ContentDisposition = parseContentDisposition(hval);
-                if (!cd.valid || !frmEqIgnoreCase(cd.disp_type, "form-data")) {
+                if (!cd.valid || !eqIgnoreCase(cd.disp_type, "form-data")) {
                     return ParsedForm.fail(ERR_MALFORMED_MULTIPART);
                 }
                 has_cd = true;
@@ -506,7 +439,7 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
                         orig_filename = "";
                     }
                 }
-            } else if (frmEqIgnoreCase(hname, "content-type")) {
+            } else if (eqIgnoreCase(hname, "content-type")) {
                 part_mime = hval;
             }
         }

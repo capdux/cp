@@ -2,6 +2,7 @@
 // Clean-room MIT parity with Node.js `querystring` & npm `query-string` v9.
 // Composes `@cap/percent-encoding` for RFC/WHATWG URL encoding & form decoding.
 
+import { strEq, findByte } from "cap:ascii";
 import {
     componentSet,
     percentEncode,
@@ -15,28 +16,11 @@ pub struct QueryEntry {
 }
 
 fn qstFindByte(s: string, start: usize, end: usize, target: u8): usize {
-    let i = start;
-    while (i < end) {
-        if (s[i] == target) {
-            return i;
-        }
-        i = i + 1;
+    let idx = findByte(s[0..end], target, start);
+    if (idx != null) {
+        return idx.?;
     }
     return end;
-}
-
-fn qstStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn qstNeedsDecode(s: string): bool {
@@ -207,10 +191,10 @@ pub fn pickQueryParam(url_or_query: string, target_key: string, out: []u8): usiz
             const raw_key = if (eq_pos < next_sep) url_or_query[pos..eq_pos] else url_or_query[pos..next_sep];
             const raw_val = if (eq_pos < next_sep) url_or_query[(eq_pos + 1)..next_sep] else "";
 
-            let matched = qstStrEq(raw_key, target_key);
+            let matched = strEq(raw_key, target_key);
             if (!matched && qstNeedsDecode(raw_key)) {
                 const klen = percentDecodePlus(raw_key, key_buf[0..256]);
-                matched = qstStrEq(key_buf[0..klen], target_key);
+                matched = strEq(key_buf[0..klen], target_key);
             }
 
             if (matched) {

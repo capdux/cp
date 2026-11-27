@@ -9,6 +9,9 @@
 // - Zero heap allocation: all `ReleaseInfo` strings slice directly into the input markdown.
 // - Provides `parseChangelog`, `findRelease`, `latestRelease`, `classifySection`, and `formatReleaseHeader`.
 
+import { toLowerByte, trim, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_RELEASES: usize = 32;
 
 pub enum ChangeKind: u8 {
@@ -64,43 +67,6 @@ pub struct ParsedChangelog {
     }
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn trim(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn containsIgnoreCase(hay: string, needle_lower: string) -> bool {
     if (needle_lower.len == 0 || needle_lower.len > hay.len) {
         return false;
@@ -110,7 +76,7 @@ fn containsIgnoreCase(hay: string, needle_lower: string) -> bool {
         let j: usize = 0;
         let ok = true;
         while (j < needle_lower.len) {
-            if (toLowerAscii(hay[i + j]) != needle_lower[j]) {
+            if (toLowerByte(hay[i + j]) != needle_lower[j]) {
                 ok = false;
                 break;
             }
@@ -232,9 +198,7 @@ pub fn parseChangelog(md: string) -> ParsedChangelog {
     let cursor: usize = 0;
     while (cursor < md.len) {
         const ls = cursor;
-        while (cursor < md.len && md[cursor] != '\n') {
-            cursor += 1;
-        }
+        cursor = findByte(md, '\n', cursor) ?? md.len;
         let le = cursor;
         if (le > ls && md[le - 1] == '\r') {
             le -= 1;
@@ -325,31 +289,20 @@ pub fn latestRelease(log: ParsedChangelog) -> ReleaseInfo? {
     return null;
 }
 
-fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 /// Formats a standard Keep a Changelog release heading into `out`
 /// (e.g. `## [1.2.0] - 2026-11-26`, `## [Unreleased]`, or `## [1.1.0] - 2026-10-01 [YANKED]`).
 pub fn formatReleaseHeader(version: string, date: string, yanked: bool, out: []u8) -> string {
     let pos: usize = 0;
-    pos = pushStr(out, pos, "## [");
-    pos = pushStr(out, pos, version);
-    pos = pushStr(out, pos, "]");
+    pos = writeStr("## [", out, pos);
+    pos = writeStr(version, out, pos);
+    pos = writeStr("]", out, pos);
     if (!eqIgnoreCase(version, "unreleased")) {
         if (date.len > 0) {
-            pos = pushStr(out, pos, " - ");
-            pos = pushStr(out, pos, date);
+            pos = writeStr(" - ", out, pos);
+            pos = writeStr(date, out, pos);
         }
         if (yanked) {
-            pos = pushStr(out, pos, " [YANKED]");
+            pos = writeStr(" [YANKED]", out, pos);
         }
     }
     return out[0..pos];

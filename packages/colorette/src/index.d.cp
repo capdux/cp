@@ -1,9 +1,8 @@
 // Type definitions for CP
 
+import { strEq, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { StylePair, RESET, BOLD, DIM, ITALIC, UNDERLINE, INVERSE, HIDDEN, STRIKETHROUGH, FG_BLACK, FG_RED, FG_GREEN, FG_YELLOW, FG_BLUE, FG_MAGENTA, FG_CYAN, FG_WHITE, FG_GRAY, FG_RED_BRIGHT, FG_GREEN_BRIGHT, FG_YELLOW_BRIGHT, FG_BLUE_BRIGHT, FG_MAGENTA_BRIGHT, FG_CYAN_BRIGHT, FG_WHITE_BRIGHT, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE, BG_GRAY, BG_CLOSE } from "../../ansi-styles/src/index.cp";
-export fn clrStrEq(a: string, b: string): bool;
-export fn clrWriteStr(out: []u8, pos: usize, s: string): usize;
-export fn clrMatchAt(haystack: string, offset: usize, needle: string): bool;
 export fn clrFormatPair(use_color: bool, pair: StylePair, replace_with: string, text: string, out: []u8): usize;
 export fn isColorSupported(no_color: string, force_color: string, term: string, is_tty: bool): bool;
 export class ColoretteOptions {

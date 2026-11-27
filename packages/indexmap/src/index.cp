@@ -2,6 +2,7 @@
 // Clean-room MIT implementation (Rust `indexmap` v2 parity).
 // Dense insertion-order array + open-addressing hash index table powered by @cap/fnv-hash.
 
+import { strEq } from "cap:ascii";
 import { fnv1a64 } from "../../@sindresorhus/fnv1a/src/index.cp";
 
 const IM_EMPTY: i32 = -1;
@@ -30,20 +31,6 @@ fn imHashU64(key: u64): usize {
 fn imHashStr(key: string): usize {
     let h = fnv1a64(key);
     return (h & 63) as usize;
-}
-
-fn imStrEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 pub struct IndexMapEntry {
@@ -371,7 +358,7 @@ pub struct IndexMapStr {
             if (b >= 0) {
                 let idx = b as usize;
                 let klen = _.entries[idx].key_len;
-                if (imStrEq(_.entries[idx].key_buf[0..klen], key)) {
+                if (strEq(_.entries[idx].key_buf[0..klen], key)) {
                     return idx as i64;
                 }
             }
@@ -434,7 +421,7 @@ pub struct IndexMapStr {
             } else {
                 let idx = b as usize;
                 let klen = _.entries[idx].key_len;
-                if (imStrEq(_.entries[idx].key_buf[0..klen], key)) {
+                if (strEq(_.entries[idx].key_buf[0..klen], key)) {
                     let old = _.entries[idx].val;
                     _.entries[idx].val = val;
                     return InsertResult { ok: true, replaced: true, old_val: old, index: idx };
@@ -450,12 +437,8 @@ pub struct IndexMapStr {
 
         let target: usize = if (first_tomb >= 0) { first_tomb as usize } else { empty_slot as usize };
         let new_idx = _.used;
-        let kbuf: [64]u8 = [0; 64];
-        let ki: usize = 0;
-        while (ki < key.len) {
-            kbuf[ki] = key[ki];
-            ki = ki + 1;
-        }
+        let kbuf: [64]u8 = undefined;
+        @memcpy(kbuf[0..key.len], key);
         _.entries[new_idx] = IndexMapStrEntry { key_buf: kbuf, key_len: key.len, val: val };
         _.buckets[target] = new_idx as i32;
         _.used = new_idx + 1;
@@ -476,7 +459,7 @@ pub struct IndexMapStr {
             if (b >= 0) {
                 let idx = b as usize;
                 let klen = _.entries[idx].key_len;
-                if (imStrEq(_.entries[idx].key_buf[0..klen], key)) {
+                if (strEq(_.entries[idx].key_buf[0..klen], key)) {
                     found_bucket = slot as i64;
                     e_idx = idx;
                     break;

@@ -1,12 +1,10 @@
 // Type definitions for CP
 
-import { formatU64 } from "../../itoa/src/index.cp";
-export fn mrgStrEq(a: string, b: string): bool;
+import { strEq, isAlnum, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 export fn mrgIsTokenChar(c: u8): bool;
 export fn mrgWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn mrgWriteSlice(out: []u8, pos: usize, s: string): usize;
 export fn mrgWriteOrDash(out: []u8, pos: usize, s: string): usize;
-export fn mrgWriteU64(out: []u8, pos: usize, val: u64): usize;
 export fn mrgWriteResponseTime(out: []u8, pos: usize, us: u64): usize;
 export class HttpLogEvent {
     remote_addr: string,

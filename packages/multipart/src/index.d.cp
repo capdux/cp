@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { eqAscii } from "../../unicase/src/index.cp";
 export class MultipartPart {
@@ -11,14 +13,12 @@ export class MultipartPart {
 }
 
 export fn mpartIsSpace(c: u8): bool;
-export fn mpartTrim(s: string): string;
 export fn mpartMatchAt(haystack: string, pos: usize, needle: string): bool;
 export fn mpartIsBoundaryAt(body: string, pos: usize, boundary: string): bool;
 export fn mpartFindFirstBoundary(body: string, boundary: string): usize;
 export fn mpartFindNextBoundary(body: string, start: usize, boundary: string, data_end_out: &mut usize, next_bnd_out: &mut usize): bool;
 export fn mpartSkipLineEnd(body: string, pos: &mut usize): bool;
 export fn mpartParseDisposition(val: string, part: &mut MultipartPart);
-export fn mpartWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn extractBoundary(content_type: string): string?;
 export fn formatContentTypeHeader(boundary: string, out: []u8): usize;
 export class MultipartReader {

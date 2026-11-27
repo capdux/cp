@@ -222,6 +222,9 @@ pub fn pbkdf2HmacSha256Str(
     iterations: u32,
     out_dk: []u8
 ): bool {
+    if (out_dk.len == 0) {
+        return false;
+    }
     return pbkdf2HmacSha256(password, salt, iterations, out_dk);
 }
 

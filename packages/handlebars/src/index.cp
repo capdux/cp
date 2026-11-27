@@ -2,6 +2,9 @@
 // Clean-room MIT implementation with parity to npm `handlebars` v4.
 // Composes `@cap/escape-html` for XSS-safe `{{var}}` HTML escaping with zero duplication.
 
+import { strEq, isSpace, trim, startsWith, toLowerByte, toUpperByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+import { indexOfBytes } from "cap:bin";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 
 const HBS_KIND_STR: u8 = 0;
@@ -52,7 +55,7 @@ pub struct HbsContext {
     pub fn setStr(*_, k: string, v: string) {
         let i: usize = 0;
         while (i < _.len) {
-            if (hbsStrEq(_.entries[i].key, k)) {
+            if (strEq(_.entries[i].key, k)) {
                 _.entries[i].kind = HBS_KIND_STR;
                 _.entries[i].str_val = v;
                 return;
@@ -75,7 +78,7 @@ pub struct HbsContext {
     pub fn setBool(*_, k: string, v: bool) {
         let i: usize = 0;
         while (i < _.len) {
-            if (hbsStrEq(_.entries[i].key, k)) {
+            if (strEq(_.entries[i].key, k)) {
                 _.entries[i].kind = HBS_KIND_BOOL;
                 _.entries[i].bool_val = v;
                 return;
@@ -98,7 +101,7 @@ pub struct HbsContext {
     pub fn setCount(*_, k: string, n: usize) {
         let i: usize = 0;
         while (i < _.len) {
-            if (hbsStrEq(_.entries[i].key, k)) {
+            if (strEq(_.entries[i].key, k)) {
                 _.entries[i].kind = HBS_KIND_COUNT;
                 _.entries[i].count_val = n;
                 return;
@@ -132,76 +135,6 @@ struct HbsBlockSpan {
     close_end: usize,
 }
 
-fn hbsStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn hbsIsSpace(ch: u8): bool {
-    return ch == 32 || ch == 9 || ch == 10 || ch == 13;
-}
-
-fn hbsTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && hbsIsSpace(s[start])) {
-        start = start + 1;
-    }
-    while (end > start && hbsIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
-}
-
-fn hbsMatchAt(s: string, pos: usize, end: usize, pat: string): bool {
-    if (pos + pat.len > end) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < pat.len) {
-        if (s[pos + i] != pat[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn hbsFindSubstr(s: string, start: usize, end: usize, pat: string): usize {
-    if (pat.len == 0 || start + pat.len > end) {
-        return end;
-    }
-    let i = start;
-    const limit = end - pat.len;
-    while (i <= limit) {
-        if (hbsMatchAt(s, i, end, pat)) {
-            return i;
-        }
-        i = i + 1;
-    }
-    return end;
-}
-
-fn hbsWriteRaw(out: []u8, pos: usize, s: string): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w = w + 1;
-        i = i + 1;
-    }
-    return w;
-}
-
 fn hbsWriteText(out: []u8, pos: usize, s: string, escape: bool): usize {
     if (s.len == 0 || pos >= out.len) {
         return pos;
@@ -209,33 +142,7 @@ fn hbsWriteText(out: []u8, pos: usize, s: string, escape: bool): usize {
     if (escape) {
         return pos + escapeHtml(s, out[pos..]);
     }
-    return hbsWriteRaw(out, pos, s);
-}
-
-fn hbsWriteUsize(out: []u8, pos: usize, val: usize): usize {
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    let n = val;
-    if (n == 0) {
-        if (pos < out.len) {
-            out[pos] = 48 as u8;
-            return pos + 1;
-        }
-        return pos;
-    }
-    while (n > 0 && len < 24) {
-        digits[len] = (48 + (n % 10)) as u8;
-        n = n / 10;
-        len = len + 1;
-    }
-    let w = pos;
-    let i = len;
-    while (i > 0 && w < out.len) {
-        i = i - 1;
-        out[w] = digits[i];
-        w = w + 1;
-    }
-    return w;
+    return writeStr(s, out, pos);
 }
 
 fn hbsWriteTransformed(out: []u8, pos: usize, s: string, to_upper: bool, escape: bool): usize {
@@ -248,13 +155,8 @@ fn hbsWriteTransformed(out: []u8, pos: usize, s: string, to_upper: bool, escape:
     while (offset < s.len && w < out.len) {
         let n: usize = 0;
         while (n < 256 && offset < s.len) {
-            let ch = s[offset];
-            if (to_upper && ch >= 97 && ch <= 122) {
-                ch = ch - 32;
-            } else if (!to_upper && ch >= 65 && ch <= 90) {
-                ch = ch + 32;
-            }
-            chunk[n] = ch;
+            const ch = s[offset];
+            chunk[n] = if (to_upper) toUpperByte(ch) else toLowerByte(ch);
             n = n + 1;
             offset = offset + 1;
         }
@@ -266,7 +168,7 @@ fn hbsWriteTransformed(out: []u8, pos: usize, s: string, to_upper: bool, escape:
 fn hbsFindEntry(ctx: HbsContext, key: string): usize {
     let i: usize = 0;
     while (i < ctx.len) {
-        if (hbsStrEq(ctx.entries[i].key, key)) {
+        if (strEq(ctx.entries[i].key, key)) {
             return i;
         }
         i = i + 1;
@@ -314,9 +216,9 @@ fn hbsWriteEntry(ctx: HbsContext, idx: usize, escape: bool, out: []u8, pos: usiz
     }
     if (e.kind == HBS_KIND_BOOL) {
         const lit = if (e.bool_val) "true" else "false";
-        return hbsWriteRaw(out, pos, lit);
+        return writeStr(lit, out, pos);
     }
-    return hbsWriteUsize(out, pos, e.count_val);
+    return writeU64(e.count_val as u64, out, pos);
 }
 
 fn hbsStripQuotes(s: string): string {
@@ -333,7 +235,7 @@ fn hbsStripQuotes(s: string): string {
 fn hbsFindSpace(s: string, start: usize): usize {
     let i = start;
     while (i < s.len) {
-        if (hbsIsSpace(s[i])) {
+        if (isSpace(s[i])) {
             return i;
         }
         i = i + 1;
@@ -342,7 +244,7 @@ fn hbsFindSpace(s: string, start: usize): usize {
 }
 
 fn hbsEvalInline(expr_raw: string, ctx: HbsContext, escape: bool, out: []u8, pos: usize): usize {
-    const expr = hbsTrim(expr_raw);
+    const expr = trim(expr_raw);
     if (expr.len == 0) {
         return pos;
     }
@@ -350,9 +252,9 @@ fn hbsEvalInline(expr_raw: string, ctx: HbsContext, escape: bool, out: []u8, pos
     const sp1 = hbsFindSpace(expr, 0);
     if (sp1 < expr.len) {
         const helper = expr[0..sp1];
-        const rest = hbsTrim(expr[sp1..expr.len]);
+        const rest = trim(expr[sp1..expr.len]);
 
-        if (hbsStrEq(helper, "upper")) {
+        if (strEq(helper, "upper")) {
             const idx = hbsFindEntry(ctx, rest);
             if (idx < HBS_MAX_ENTRIES && ctx.entries[idx].kind == HBS_KIND_STR) {
                 return hbsWriteTransformed(out, pos, ctx.entries[idx].str_val, true, escape);
@@ -360,7 +262,7 @@ fn hbsEvalInline(expr_raw: string, ctx: HbsContext, escape: bool, out: []u8, pos
             return hbsWriteEntry(ctx, idx, escape, out, pos);
         }
 
-        if (hbsStrEq(helper, "lower")) {
+        if (strEq(helper, "lower")) {
             const idx = hbsFindEntry(ctx, rest);
             if (idx < HBS_MAX_ENTRIES && ctx.entries[idx].kind == HBS_KIND_STR) {
                 return hbsWriteTransformed(out, pos, ctx.entries[idx].str_val, false, escape);
@@ -368,10 +270,10 @@ fn hbsEvalInline(expr_raw: string, ctx: HbsContext, escape: bool, out: []u8, pos
             return hbsWriteEntry(ctx, idx, escape, out, pos);
         }
 
-        if (hbsStrEq(helper, "default")) {
+        if (strEq(helper, "default")) {
             const sp2 = hbsFindSpace(rest, 0);
             const key = rest[0..sp2];
-            const fallback = if (sp2 < rest.len) hbsStripQuotes(hbsTrim(rest[sp2..rest.len])) else "";
+            const fallback = if (sp2 < rest.len) hbsStripQuotes(trim(rest[sp2..rest.len])) else "";
             const idx = hbsFindEntry(ctx, key);
             if (idx < HBS_MAX_ENTRIES) {
                 const e = ctx.entries[idx];
@@ -399,31 +301,31 @@ fn hbsFindBlockBounds(tpl: string, body_start: usize, end: usize, block_tag: str
 
     let i = body_start;
     while (i < end) {
-        const open = hbsFindSubstr(tpl, i, end, "{{");
+        const open = indexOfBytes(tpl[0..end], "{{", i) ?? end;
         if (open >= end) {
             break;
         }
 
         // Skip block comment {{!-- ... --}}
-        if (hbsMatchAt(tpl, open, end, "{{!--")) {
-            const c_end = hbsFindSubstr(tpl, open + 5, end, "--}}");
+        if (startsWith(tpl[open..end], "{{!--")) {
+            const c_end = indexOfBytes(tpl[0..end], "--}}", open + 5) ?? end;
             i = if (c_end < end) c_end + 4 else end;
             continue;
         }
 
         // Skip triple-stash {{{ ... }}}
-        if (hbsMatchAt(tpl, open, end, "{{{")) {
-            const t_end = hbsFindSubstr(tpl, open + 3, end, "}}}");
+        if (startsWith(tpl[open..end], "{{{")) {
+            const t_end = indexOfBytes(tpl[0..end], "}}}", open + 3) ?? end;
             i = if (t_end < end) t_end + 3 else end;
             continue;
         }
 
-        const close = hbsFindSubstr(tpl, open + 2, end, "}}");
+        const close = indexOfBytes(tpl[0..end], "}}", open + 2) ?? end;
         if (close >= end) {
             break;
         }
 
-        const inner = hbsTrim(tpl[(open + 2)..close]);
+        const inner = trim(tpl[(open + 2)..close]);
         if (inner.len > 0 && inner[0] == (0x21 as u8)) { // '!' comment
             i = close + 2;
             continue;
@@ -436,9 +338,9 @@ fn hbsFindBlockBounds(tpl: string, body_start: usize, end: usize, block_tag: str
         }
 
         if (inner.len > 0 && inner[0] == (0x2F as u8)) { // '/' close block
-            const close_tag = hbsTrim(inner[1..inner.len]);
+            const close_tag = trim(inner[1..inner.len]);
             if (nest == 0) {
-                if (hbsStrEq(close_tag, block_tag)) {
+                if (strEq(close_tag, block_tag)) {
                     return HbsBlockSpan {
                         found: true,
                         has_else: has_else,
@@ -456,7 +358,7 @@ fn hbsFindBlockBounds(tpl: string, body_start: usize, end: usize, block_tag: str
             continue;
         }
 
-        if (nest == 0 && !has_else && hbsStrEq(inner, "else")) {
+        if (nest == 0 && !has_else && strEq(inner, "else")) {
             has_else = true;
             else_start = open;
             else_end = close + 2;
@@ -491,28 +393,28 @@ fn hbsRenderRange(
     let w = pos;
     let i = start;
     while (i < end && w < out.len) {
-        const open = hbsFindSubstr(tpl, i, end, "{{");
+        const open = indexOfBytes(tpl[0..end], "{{", i) ?? end;
         if (open >= end) {
-            w = hbsWriteRaw(out, w, tpl[i..end]);
+            w = writeStr(tpl[i..end], out, w);
             break;
         }
 
         if (open > i) {
-            w = hbsWriteRaw(out, w, tpl[i..open]);
+            w = writeStr(tpl[i..open], out, w);
         }
 
         // 1. Block comment {{!-- ... --}}
-        if (hbsMatchAt(tpl, open, end, "{{!--")) {
-            const c_end = hbsFindSubstr(tpl, open + 5, end, "--}}");
+        if (startsWith(tpl[open..end], "{{!--")) {
+            const c_end = indexOfBytes(tpl[0..end], "--}}", open + 5) ?? end;
             i = if (c_end < end) c_end + 4 else end;
             continue;
         }
 
         // 2. Unescaped triple-stash {{{ ... }}}
-        if (hbsMatchAt(tpl, open, end, "{{{")) {
-            const t_end = hbsFindSubstr(tpl, open + 3, end, "}}}");
+        if (startsWith(tpl[open..end], "{{{")) {
+            const t_end = indexOfBytes(tpl[0..end], "}}}", open + 3) ?? end;
             if (t_end >= end) {
-                w = hbsWriteRaw(out, w, tpl[open..end]);
+                w = writeStr(tpl[open..end], out, w);
                 break;
             }
             w = hbsEvalInline(tpl[(open + 3)..t_end], ctx, false, out, w);
@@ -520,13 +422,13 @@ fn hbsRenderRange(
             continue;
         }
 
-        const close = hbsFindSubstr(tpl, open + 2, end, "}}");
+        const close = indexOfBytes(tpl[0..end], "}}", open + 2) ?? end;
         if (close >= end) {
-            w = hbsWriteRaw(out, w, tpl[open..end]);
+            w = writeStr(tpl[open..end], out, w);
             break;
         }
 
-        const inner = hbsTrim(tpl[(open + 2)..close]);
+        const inner = trim(tpl[(open + 2)..close]);
         if (inner.len == 0) {
             i = close + 2;
             continue;
@@ -540,10 +442,10 @@ fn hbsRenderRange(
 
         // 4. Block helpers: {{#if key}}, {{#unless key}}, {{#repeat key}}
         if (inner[0] == (0x23 as u8)) { // '#'
-            const header = hbsTrim(inner[1..inner.len]);
+            const header = trim(inner[1..inner.len]);
             const sp = hbsFindSpace(header, 0);
             const tag = header[0..sp];
-            const arg = if (sp < header.len) hbsTrim(header[sp..header.len]) else "";
+            const arg = if (sp < header.len) trim(header[sp..header.len]) else "";
 
             const body_start = close + 2;
             const span = hbsFindBlockBounds(tpl, body_start, end, tag);
@@ -552,21 +454,21 @@ fn hbsRenderRange(
                 continue;
             }
 
-            if (hbsStrEq(tag, "if")) {
+            if (strEq(tag, "if")) {
                 if (hbsIsTruthy(ctx, arg)) {
                     const branch_end = if (span.has_else) span.else_start else span.close_start;
                     w = hbsRenderRange(tpl, body_start, branch_end, ctx, out, w, depth + 1);
                 } else if (span.has_else) {
                     w = hbsRenderRange(tpl, span.else_end, span.close_start, ctx, out, w, depth + 1);
                 }
-            } else if (hbsStrEq(tag, "unless")) {
+            } else if (strEq(tag, "unless")) {
                 if (!hbsIsTruthy(ctx, arg)) {
                     const branch_end = if (span.has_else) span.else_start else span.close_start;
                     w = hbsRenderRange(tpl, body_start, branch_end, ctx, out, w, depth + 1);
                 } else if (span.has_else) {
                     w = hbsRenderRange(tpl, span.else_end, span.close_start, ctx, out, w, depth + 1);
                 }
-            } else if (hbsStrEq(tag, "repeat")) {
+            } else if (strEq(tag, "repeat")) {
                 const count = hbsGetCount(ctx, arg);
                 if (count > 0) {
                     const branch_end = if (span.has_else) span.else_start else span.close_start;

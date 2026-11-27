@@ -1,16 +1,8 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     parseJsDoc,
 } from "../../packages/doctrine/src/index.cp";
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/doctrine — Top description & @param with required/optional names", () => {

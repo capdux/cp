@@ -1,6 +1,9 @@
 // @cap/balanced-match — Zero-allocation nested balanced delimiter matcher in pure CP
 // Clean-room MIT implementation inspired by npm `balanced-match` v3.
 
+import { strEq } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+
 pub struct BalancedResult {
     found: bool,
     start: usize,
@@ -11,41 +14,6 @@ pub struct BalancedResult {
 }
 
 const BM_STACK_CAP: usize = 64;
-
-fn bmIndexOf(haystack: string, needle: string, start_at: usize): usize? {
-    if (needle.len == 0 || start_at > haystack.len || needle.len > haystack.len - start_at) {
-        return null;
-    }
-    const limit: usize = haystack.len - needle.len;
-    let i: usize = start_at;
-    while (i <= limit) : (i += 1) {
-        let j: usize = 0;
-        let ok: bool = true;
-        while (j < needle.len) : (j += 1) {
-            if (haystack[i + j] != needle[j]) {
-                ok = false;
-                break;
-            }
-        }
-        if (ok) {
-            return i;
-        }
-    }
-    return null;
-}
-
-fn bmStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-    }
-    return true;
-}
 
 fn bmMakeRange(s: usize, e: usize): [usize, usize] {
     let pair: [usize, usize] = undefined;
@@ -72,20 +40,20 @@ pub fn balancedRange(a: string, b: string, input: string): [usize, usize]? {
     if (a.len == 0 || b.len == 0) {
         return null;
     }
-    let ai_opt: usize? = bmIndexOf(input, a, 0);
+    let ai_opt: usize? = indexOfBytes(input, a, 0);
     if (ai_opt == null) {
         return null;
     }
     let ai: usize = ai_opt.?;
 
-    let bi_opt: usize? = bmIndexOf(input, b, ai + a.len);
+    let bi_opt: usize? = indexOfBytes(input, b, ai + a.len);
     if (bi_opt == null) {
         return null;
     }
     let bi: usize = bi_opt.?;
 
     // Identical open and close delimiters (e.g. `"` and `"`)
-    if (bmStrEq(a, b)) {
+    if (strEq(a, b)) {
         return bmMakeRange(ai, bi);
     }
 
@@ -104,7 +72,7 @@ pub fn balancedRange(a: string, b: string, input: string): [usize, usize]? {
                 begs[begs_len] = i;
                 begs_len += 1;
             }
-            if (next_a := bmIndexOf(input, a, i + a.len)) {
+            if (next_a := indexOfBytes(input, a, i + a.len)) {
                 ai = next_a;
                 has_ai = true;
             } else {
@@ -122,7 +90,7 @@ pub fn balancedRange(a: string, b: string, input: string): [usize, usize]? {
                     has_fallback = true;
                 }
             }
-            if (next_b := bmIndexOf(input, b, i + b.len)) {
+            if (next_b := indexOfBytes(input, b, i + b.len)) {
                 bi = next_b;
                 has_bi = true;
             } else {
@@ -132,7 +100,7 @@ pub fn balancedRange(a: string, b: string, input: string): [usize, usize]? {
                 if (!has_ai) {
                     break;
                 }
-                if (next_b2 := bmIndexOf(input, b, ai + a.len)) {
+                if (next_b2 := indexOfBytes(input, b, ai + a.len)) {
                     bi = next_b2;
                     has_bi = true;
                 } else {

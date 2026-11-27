@@ -337,6 +337,8 @@ pub fn main(init: std.process.Init) !void {
         try handleDemangle(allocator, args[2..]);
     } else if (std.mem.eql(u8, cmd, "brief")) {
         try @import("brief.zig").handleBrief(allocator, global_io, cap_root, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "fix")) {
+        try @import("fix.zig").handleFix(allocator, global_io, cap_root, args[2..]);
     } else if (std.mem.eql(u8, cmd, "sniff")) {
         try sniffHardware();
     } else if (std.mem.eql(u8, cmd, "version") or std.mem.eql(u8, cmd, "--version") or std.mem.eql(u8, cmd, "-V")) {

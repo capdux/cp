@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, isHexDigit, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class GqlToken {
     kind: u8,
     start: usize,
@@ -19,14 +21,10 @@ export class GqlParseResult {
     primary_op_name: string,
 }
 
-export fn gqlIsDigit(c: u8): bool;
-export fn gqlIsHex(c: u8): bool;
 export fn gqlIsNameStart(c: u8): bool;
 export fn gqlIsNameContinue(c: u8): bool;
-export fn gqlStrEq(a: string, b: string): bool;
 export fn gqlIsWordTok(kind: u8): bool;
 export fn gqlWriteByte(out: []u8, pos: &mut usize, b: u8);
-export fn gqlWriteStr(out: []u8, pos: &mut usize, s: string);
 export class GqlLexer {
     src: string,
     pos: usize,

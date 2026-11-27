@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { trim, strEq } from "cap:ascii";
 export enum LevnKind {
     Null,
     Bool,
@@ -22,9 +23,6 @@ export class LevnPair {
     value: LevnValue,
 }
 
-export fn lvnIsSpace(c: u8): bool;
-export fn lvnTrim(s: string): string;
-export fn lvnStrEq(a: string, b: string): bool;
 export fn lvnMakeInvalid(): LevnValue;
 export fn lvnTryParseNumber(s: string): LevnValue;
 export fn parseLevnScalar(input: string): LevnValue;

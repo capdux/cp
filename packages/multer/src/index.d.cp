@@ -1,10 +1,8 @@
 // Type definitions for CP
 
+import { strEq, eqIgnoreCase } from "cap:ascii";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { lookup } from "../../mime-types/src/index.cp";
-export fn mltToLower(b: u8): u8;
-export fn mltStrEq(a: string, b: string): bool;
-export fn mltEqIgnoreCase(a: string, b: string): bool;
 export class MulterLimits {
     file_size: u64,
     files: usize,

@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { trim } from "cap:ascii";
+import { parseU64 } from "cap:fmt";
 export class ByteRange {
     start: u64,
     end: u64,
@@ -12,8 +14,5 @@ export class RangeResult {
     count: usize,
 }
 
-export fn rpIsWs(b: u8): bool;
-export fn rpTrim(s: string): string;
-export fn rpParseU64(s: string, ok_out: []bool): u64;
 export fn parseRange(size: u64, header: string, combine: bool): RangeResult;
 export fn rangeByteLength(r: ByteRange): u64;

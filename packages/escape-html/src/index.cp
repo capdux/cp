@@ -1,30 +1,8 @@
 // @cap/escape-html — Zero-heap single-pass HTML entity escaper & unescaper in pure CP
 // MIT License — Clean-room implementation inspired by npm `escape-html`
 
-fn writeStr(out: []u8, pos: usize, s: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn matchAt(input: string, pos: usize, pat: string): bool {
-    if (pos + pat.len > input.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < pat.len) {
-        if (input[pos + i] != pat[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
+import { startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 /// Return true if `input` contains any of `&`, `<`, `>`, `"`, or `'`.
 pub fn needsHtmlEscape(input: string): bool {
@@ -73,15 +51,15 @@ pub fn escapeHtml(input: string, out: []u8): usize {
     while (i < input.len && w < out.len) {
         const ch: u8 = input[i];
         if (ch == 38) { // '&'
-            w = writeStr(out, w, "&amp;");
+            w = writeStr("&amp;", out, w);
         } else if (ch == 60) { // '<'
-            w = writeStr(out, w, "&lt;");
+            w = writeStr("&lt;", out, w);
         } else if (ch == 62) { // '>'
-            w = writeStr(out, w, "&gt;");
+            w = writeStr("&gt;", out, w);
         } else if (ch == 34) { // '"'
-            w = writeStr(out, w, "&quot;");
+            w = writeStr("&quot;", out, w);
         } else if (ch == 39) { // '\''
-            w = writeStr(out, w, "&#39;");
+            w = writeStr("&#39;", out, w);
         } else {
             out[w] = ch;
             w += 1;
@@ -102,43 +80,44 @@ pub fn unescapeHtml(input: string, out: []u8): usize {
     let i: usize = 0;
     while (i < input.len && w < out.len) {
         if (input[i] == 38) { // '&'
-            if (matchAt(input, i, "&amp;")) {
+            const rest = input[i..input.len];
+            if (startsWith(rest, "&amp;")) {
                 out[w] = 38;
                 w += 1;
                 i += 5;
                 continue;
             }
-            if (matchAt(input, i, "&lt;")) {
+            if (startsWith(rest, "&lt;")) {
                 out[w] = 60;
                 w += 1;
                 i += 4;
                 continue;
             }
-            if (matchAt(input, i, "&gt;")) {
+            if (startsWith(rest, "&gt;")) {
                 out[w] = 62;
                 w += 1;
                 i += 4;
                 continue;
             }
-            if (matchAt(input, i, "&quot;")) {
+            if (startsWith(rest, "&quot;")) {
                 out[w] = 34;
                 w += 1;
                 i += 6;
                 continue;
             }
-            if (matchAt(input, i, "&#39;")) {
+            if (startsWith(rest, "&#39;")) {
                 out[w] = 39;
                 w += 1;
                 i += 5;
                 continue;
             }
-            if (matchAt(input, i, "&#x27;") || matchAt(input, i, "&#X27;")) {
+            if (startsWith(rest, "&#x27;") || startsWith(rest, "&#X27;")) {
                 out[w] = 39;
                 w += 1;
                 i += 6;
                 continue;
             }
-            if (matchAt(input, i, "&apos;")) {
+            if (startsWith(rest, "&apos;")) {
                 out[w] = 39;
                 w += 1;
                 i += 6;

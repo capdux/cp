@@ -2,6 +2,7 @@
 // Clean-room MIT implementation inspired by npm `multer` v2.
 // Reuses `@cap/mediatype` for Content-Type/boundary parsing and `@cap/mime-types` for MIME lookup.
 
+import { strEq, eqIgnoreCase } from "cap:ascii";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { lookup } from "../../mime-types/src/index.cp";
 
@@ -15,41 +16,6 @@ pub const ERR_LIMIT_FIELD_COUNT: u8 = 3;
 pub const ERR_LIMIT_FIELD_VALUE: u8 = 4;
 pub const ERR_UNEXPECTED_FILE: u8 = 5;
 pub const ERR_INVALID_CONTENT_TYPE: u8 = 6;
-
-fn mltToLower(b: u8): u8 {
-    if (b >= ('A' as u8) && b <= ('Z' as u8)) {
-        return b + (32 as u8);
-    }
-    return b;
-}
-
-fn mltStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn mltEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (mltToLower(a[i]) != mltToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 /// Resource limits enforced on multipart uploads.
 pub struct MulterLimits {
@@ -83,8 +49,8 @@ pub fn extractMultipartBoundary(content_type: string): string? {
     if (!parsed.valid) {
         return null;
     }
-    if (!mltEqIgnoreCase(parsed.top_level, "multipart")
-        || !mltEqIgnoreCase(parsed.sub_level, "form-data"))
+    if (!eqIgnoreCase(parsed.top_level, "multipart")
+        || !eqIgnoreCase(parsed.sub_level, "form-data"))
     {
         return null;
     }
@@ -142,7 +108,7 @@ pub struct MulterValidator {
         }
         let i: usize = 0;
         while (i < _.allowed_count) {
-            if (mltStrEq(_.allowed_fields[i], field_name)) {
+            if (strEq(_.allowed_fields[i], field_name)) {
                 return true;
             }
             i = i + 1;

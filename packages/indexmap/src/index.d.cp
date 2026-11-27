@@ -1,9 +1,9 @@
 // Type definitions for CP
 
-import { fnv1a64 } from "../../fnv-hash/src/index.cp";
+import { strEq } from "cap:ascii";
+import { fnv1a64 } from "../../@sindresorhus/fnv1a/src/index.cp";
 export fn imHashU64(key: u64): usize;
 export fn imHashStr(key: string): usize;
-export fn imStrEq(a: &[]u8, b: &[]u8): bool;
 export class IndexMapEntry {
     key: u64,
     val: i64,

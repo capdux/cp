@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { strEq, isSpace, trim, startsWith, toLowerByte, toUpperByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+import { indexOfBytes } from "cap:bin";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 export class HbsEntry {
     key: string,
@@ -28,14 +31,7 @@ export class HbsBlockSpan {
     close_end: usize,
 }
 
-export fn hbsStrEq(a: string, b: string): bool;
-export fn hbsIsSpace(ch: u8): bool;
-export fn hbsTrim(s: string): string;
-export fn hbsMatchAt(s: string, pos: usize, end: usize, pat: string): bool;
-export fn hbsFindSubstr(s: string, start: usize, end: usize, pat: string): usize;
-export fn hbsWriteRaw(out: []u8, pos: usize, s: string): usize;
 export fn hbsWriteText(out: []u8, pos: usize, s: string, escape: bool): usize;
-export fn hbsWriteUsize(out: []u8, pos: usize, val: usize): usize;
 export fn hbsWriteTransformed(out: []u8, pos: usize, s: string, to_upper: bool, escape: bool): usize;
 export fn hbsFindEntry(ctx: HbsContext, key: string): usize;
 export fn hbsIsTruthy(ctx: HbsContext, key: string): bool;

@@ -3,6 +3,8 @@
 // Composes `@cap/yargs-parser` (argument parsing) and `@cap/cliui` (multi-column help layout)
 // with zero duplication.
 
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, writeI64, parseI64 } from "cap:fmt";
 import {
     ARG_BOOL,
     ARG_INT,
@@ -23,44 +25,6 @@ const CMD_MAX_SUBCOMMANDS: usize = 16;
 const CMD_MAX_ARGUMENTS: usize = 8;
 const CMD_MAX_POSITIONALS: usize = 16;
 
-fn cmdStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn cmdCopyBuf(dst: []u8, src: string): usize {
-    let n = src.len;
-    if (n > dst.len) {
-        n = dst.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[i];
-        i = i + 1;
-    }
-    return n;
-}
-
-fn cmdAppendBytes(dst: []u8, pos: usize, s: string): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < s.len && w < dst.len) {
-        dst[w] = s[i];
-        w = w + 1;
-        i = i + 1;
-    }
-    return w;
-}
-
 fn cmdAppendByte(dst: []u8, pos: usize, b: u8): usize {
     if (pos < dst.len) {
         dst[pos] = b;
@@ -69,108 +33,20 @@ fn cmdAppendByte(dst: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn cmdIsSpace(ch: u8): bool {
-    return ch == 32 || ch == 9 || ch == 10 || ch == 13;
-}
-
 fn cmdIsFlagSep(ch: u8): bool {
     return ch == 32 || ch == 9 || ch == 44 || ch == 124; // ' ', '\t', ',', '|'
-}
-
-fn cmdIsDigit(ch: u8): bool {
-    return ch >= 48 && ch <= 57;
 }
 
 fn cmdTrim(s: string): string {
     let start: usize = 0;
     let end: usize = s.len;
-    while (start < end && cmdIsSpace(s[start])) {
-        start = start + 1;
+    while (start < end && (s[start] == 32 || s[start] == 9 || s[start] == 10 || s[start] == 13)) {
+        start += 1;
     }
-    while (end > start && cmdIsSpace(s[end - 1])) {
-        end = end - 1;
+    while (end > start && (s[end - 1] == 32 || s[end - 1] == 9 || s[end - 1] == 10 || s[end - 1] == 13)) {
+        end -= 1;
     }
     return s[start..end];
-}
-
-fn cmdHasChar(s: string, target: u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) {
-            return true;
-        }
-        i = i + 1;
-    }
-    return false;
-}
-
-struct CmdIntParse {
-    ok: bool,
-    val: i64,
-}
-
-fn cmdParseInt(s: string): CmdIntParse {
-    if (s.len == 0) {
-        return CmdIntParse { ok: false, val: 0 };
-    }
-    let i: usize = 0;
-    let neg = false;
-    if (s[0] == 45) {
-        neg = true;
-        i = 1;
-    } else if (s[0] == 43) {
-        i = 1;
-    }
-    if (i >= s.len || (s.len - i) > 18) {
-        return CmdIntParse { ok: false, val: 0 };
-    }
-    let acc: i64 = 0;
-    while (i < s.len) {
-        if (!cmdIsDigit(s[i])) {
-            return CmdIntParse { ok: false, val: 0 };
-        }
-        acc = (acc * 10) + ((s[i] - 48) as i64);
-        i = i + 1;
-    }
-    if (neg) {
-        return CmdIntParse { ok: true, val: -acc };
-    }
-    return CmdIntParse { ok: true, val: acc };
-}
-
-fn cmdFormatInt(val_in: i64, out: []u8): usize {
-    let tmp: [32]u8 = undefined;
-    let neg = false;
-    let mag: u64 = 0;
-    if (val_in < 0) {
-        neg = true;
-        mag = (-val_in) as u64;
-    } else {
-        mag = val_in as u64;
-    }
-    let n: usize = 0;
-    if (mag == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (mag > 0 && n < 30) {
-            tmp[n] = ((mag % 10) as u8) + 48;
-            mag = mag / 10;
-            n = n + 1;
-        }
-    }
-    let pos: usize = 0;
-    if (neg && pos < out.len) {
-        out[pos] = 45;
-        pos = pos + 1;
-    }
-    let k = n;
-    while (k > 0 && pos < out.len) {
-        k = k - 1;
-        out[pos] = tmp[k];
-        pos = pos + 1;
-    }
-    return pos;
 }
 
 fn cmdEmptyItem(): ParsedItem {
@@ -181,7 +57,7 @@ fn cmdEmptyItem(): ParsedItem {
 
 fn cmdMakeItem(s: string): ParsedItem {
     let item = cmdEmptyItem();
-    item.len = cmdCopyBuf(item.data[0..128], s);
+    item.len = writeStr(s, item.data[0..128], 0);
     return item;
 }
 
@@ -206,10 +82,10 @@ fn cmdInsertEntry(
     kebab_key[0] = 0;
     sbuf[0] = 0;
 
-    const klen = cmdCopyBuf(key[0..64], name);
+    const klen = writeStr(name, key[0..64], 0);
     let slen: usize = 0;
     if (kind == ARG_STRING) {
-        slen = cmdCopyBuf(sbuf[0..128], str_val);
+        slen = writeStr(str_val, sbuf[0..128], 0);
     }
 
     const entry = ParsedEntry {
@@ -237,17 +113,16 @@ fn cmdInsertEntry(
 }
 
 fn cmdSetDefaultEntry(parsed: *ParsedArgs, name: string, default_str: string) {
-    if (cmdStrEq(default_str, "true")) {
+    if (bytesEq(default_str, "true")) {
         cmdInsertEntry(parsed, name, ARG_BOOL, true, 1, "");
         return;
     }
-    if (cmdStrEq(default_str, "false")) {
+    if (bytesEq(default_str, "false")) {
         cmdInsertEntry(parsed, name, ARG_BOOL, false, 0, "");
         return;
     }
-    const iv = cmdParseInt(default_str);
-    if (iv.ok) {
-        cmdInsertEntry(parsed, name, ARG_INT, iv.val != 0, iv.val, "");
+    if (iv := parseI64(default_str)) {
+        cmdInsertEntry(parsed, name, ARG_INT, iv != 0, iv, "");
         return;
     }
     cmdInsertEntry(parsed, name, ARG_STRING, true, 0, default_str);
@@ -279,7 +154,7 @@ pub fn parseOptionFlags(flags: string): FlagSpec {
 
     let s = cmdTrim(flags);
     // Unwrap outer optional brackets such as "[-f, --file [path]]"
-    if (s.len >= 3 && s[0] == 91 && s[s.len - 1] == 93 && cmdHasChar(s, 45)) {
+    if (s.len >= 3 && s[0] == 91 && s[s.len - 1] == 93 && findByteInBytes(s, 45, 0) != null) {
         s = cmdTrim(s[1..(s.len - 1)]);
     }
 
@@ -462,7 +337,7 @@ pub struct CommandParseResult {
         if (_.subcommand_len == 0) {
             return 0;
         }
-        return cmdCopyBuf(out, _.subcommand[0.._.subcommand_len]);
+        return writeStr(_.subcommand[0.._.subcommand_len], out, 0);
     }
 
     /// Copy validation error message into `out`. Returns bytes written.
@@ -470,7 +345,7 @@ pub struct CommandParseResult {
         if (_.error_len == 0) {
             return 0;
         }
-        return cmdCopyBuf(out, _.error_msg[0.._.error_len]);
+        return writeStr(_.error_msg[0.._.error_len], out, 0);
     }
 
     /// Return `true` if option `name` is present (including defaults).
@@ -504,7 +379,7 @@ pub struct CommandParseResult {
             return 0;
         }
         const item = _.positionals[idx];
-        return cmdCopyBuf(out, item.data[0..item.len]);
+        return writeStr(item.data[0..item.len], out, 0);
     }
 }
 
@@ -676,7 +551,7 @@ pub struct Command {
                         res.args.entries[long_idx as usize].str_len = 0;
                     } else if (e.kind == ARG_INT) {
                         let ibuf: [32]u8 = undefined;
-                        const ilen = cmdFormatInt(e.int_val, ibuf[0..32]);
+                        const ilen = writeI64(e.int_val, ibuf[0..32], 0);
                         reclaimed_count = cmdPushPos(reclaimed[0..CMD_MAX_POSITIONALS], reclaimed_count, ibuf[0..ilen]);
                         res.args.entries[long_idx as usize].kind = ARG_BOOL;
                         res.args.entries[long_idx as usize].bool_val = true;
@@ -692,7 +567,7 @@ pub struct Command {
                         res.args.entries[short_idx as usize].str_len = 0;
                     } else if (e.kind == ARG_INT) {
                         let ibuf: [32]u8 = undefined;
-                        const ilen = cmdFormatInt(e.int_val, ibuf[0..32]);
+                        const ilen = writeI64(e.int_val, ibuf[0..32], 0);
                         reclaimed_count = cmdPushPos(reclaimed[0..CMD_MAX_POSITIONALS], reclaimed_count, ibuf[0..ilen]);
                         res.args.entries[short_idx as usize].kind = ARG_BOOL;
                         res.args.entries[short_idx as usize].bool_val = true;
@@ -722,9 +597,9 @@ pub struct Command {
                     if (res.ok) {
                         res.ok = false;
                         let ep: usize = 0;
-                        ep = cmdAppendBytes(res.error_msg[0..192], ep, "error: required option '");
-                        ep = cmdAppendBytes(res.error_msg[0..192], ep, opt.flags);
-                        ep = cmdAppendBytes(res.error_msg[0..192], ep, "' not specified");
+                        ep = writeStr("error: required option '", res.error_msg[0..192], ep);
+                        ep = writeStr(opt.flags, res.error_msg[0..192], ep);
+                        ep = writeStr("' not specified", res.error_msg[0..192], ep);
                         res.error_len = ep;
                     }
                 } else if (spec.negate && canonical.len > 0) {
@@ -762,8 +637,8 @@ pub struct Command {
             const first_str = first.data[0..first.len];
             let si: usize = 0;
             while (si < _.subcommand_count) {
-                if (cmdStrEq(_.subcommands[si].name, first_str)) {
-                    res.subcommand_len = cmdCopyBuf(res.subcommand[0..64], first_str);
+                if (bytesEq(_.subcommands[si].name, first_str)) {
+                    res.subcommand_len = writeStr(first_str, res.subcommand[0..64], 0);
                     start_pos = 1;
                     break;
                 }
@@ -786,8 +661,8 @@ pub struct Command {
                 if (arg_def.required && ai >= res.pos_count) {
                     res.ok = false;
                     let ep: usize = 0;
-                    ep = cmdAppendBytes(res.error_msg[0..192], ep, "error: missing required argument '");
-                    ep = cmdAppendBytes(res.error_msg[0..192], ep, arg_def.name);
+                    ep = writeStr("error: missing required argument '", res.error_msg[0..192], ep);
+                    ep = writeStr(arg_def.name, res.error_msg[0..192], ep);
                     ep = cmdAppendByte(res.error_msg[0..192], ep, 39); // '\''
                     res.error_len = ep;
                     break;
@@ -807,17 +682,17 @@ pub struct Command {
         // 1. Usage line
         let usage_buf: [256]u8 = undefined;
         let up: usize = 0;
-        up = cmdAppendBytes(usage_buf[0..256], up, "Usage: ");
-        up = cmdAppendBytes(usage_buf[0..256], up, _.name);
-        up = cmdAppendBytes(usage_buf[0..256], up, " [options]");
+        up = writeStr("Usage: ", usage_buf[0..256], up);
+        up = writeStr(_.name, usage_buf[0..256], up);
+        up = writeStr(" [options]", usage_buf[0..256], up);
         let ai: usize = 0;
         while (ai < _.argument_count) {
             up = cmdAppendByte(usage_buf[0..256], up, 32);
-            up = cmdAppendBytes(usage_buf[0..256], up, _.arguments[ai].spec);
+            up = writeStr(_.arguments[ai].spec, usage_buf[0..256], up);
             ai = ai + 1;
         }
         if (_.subcommand_count > 0) {
-            up = cmdAppendBytes(usage_buf[0..256], up, " [command]");
+            up = writeStr(" [command]", usage_buf[0..256], up);
         }
         let ucol: [1]Column = [Column.plain(usage_buf[0..up])];
         ui.div(&ucol);
@@ -859,8 +734,8 @@ pub struct Command {
                 const a = _.arguments[k];
                 let lbuf: [128]u8 = undefined;
                 let lp: usize = 0;
-                lp = cmdAppendBytes(lbuf[0..128], lp, "  ");
-                lp = cmdAppendBytes(lbuf[0..128], lp, a.spec);
+                lp = writeStr("  ", lbuf[0..128], lp);
+                lp = writeStr(a.spec, lbuf[0..128], lp);
                 let cols: [2]Column = [
                     Column.sized(lbuf[0..lp], left_w),
                     Column.plain(a.desc),
@@ -889,16 +764,16 @@ pub struct Command {
             const opt = _.options[j];
             let lbuf: [128]u8 = undefined;
             let lp: usize = 0;
-            lp = cmdAppendBytes(lbuf[0..128], lp, "  ");
-            lp = cmdAppendBytes(lbuf[0..128], lp, opt.flags);
+            lp = writeStr("  ", lbuf[0..128], lp);
+            lp = writeStr(opt.flags, lbuf[0..128], lp);
 
             let rbuf: [256]u8 = undefined;
             let rp: usize = 0;
-            rp = cmdAppendBytes(rbuf[0..256], rp, opt.desc);
+            rp = writeStr(opt.desc, rbuf[0..256], rp);
             if (opt.has_default) {
-                rp = cmdAppendBytes(rbuf[0..256], rp, " (default: \"");
-                rp = cmdAppendBytes(rbuf[0..256], rp, opt.default_str);
-                rp = cmdAppendBytes(rbuf[0..256], rp, "\")");
+                rp = writeStr(" (default: \"", rbuf[0..256], rp);
+                rp = writeStr(opt.default_str, rbuf[0..256], rp);
+                rp = writeStr("\")", rbuf[0..256], rp);
             }
 
             let cols: [2]Column = [
@@ -927,8 +802,8 @@ pub struct Command {
                 const sc = _.subcommands[si];
                 let lbuf: [128]u8 = undefined;
                 let lp: usize = 0;
-                lp = cmdAppendBytes(lbuf[0..128], lp, "  ");
-                lp = cmdAppendBytes(lbuf[0..128], lp, sc.name);
+                lp = writeStr("  ", lbuf[0..128], lp);
+                lp = writeStr(sc.name, lbuf[0..128], lp);
 
                 // Reuse formatTwoCol helper for clean two-column alignment check / formatting
                 let row_buf: [512]u8 = undefined;

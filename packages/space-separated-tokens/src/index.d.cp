@@ -1,8 +1,7 @@
 // Type definitions for CP
 
-export fn sstIsSpace(b: u8): bool;
-export fn sstTrim(s: string): string;
-export fn sstStrEq(a: string, b: string): bool;
+import { isSpace, trim, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn parseSpaceTokens(input: string, out: []string): usize;
 export fn hasSpaceToken(input: string, target: string): bool;
 export fn stringifySpaceTokens(tokens: &[]string, out: []u8): usize;

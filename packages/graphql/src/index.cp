@@ -1,6 +1,9 @@
 // @cap/graphql-parse — Zero-heap GraphQL Spec lexer, document parser & query minifier in pure CP
 // Clean-room MIT implementation inspired by npm `graphql` v16.
 
+import { isDigit, isHexDigit, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 // Token Kinds
 pub const GQL_TOK_EOF: u8 = 0;
 pub const GQL_TOK_BANG: u8 = 1;         // !
@@ -53,34 +56,12 @@ pub struct GqlParseResult {
 // Private helpers (all prefixed with `gql` to avoid module flattening clashes)
 // ============================================================================
 
-fn gqlIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn gqlIsHex(c: u8): bool {
-    return (c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102);
-}
-
 fn gqlIsNameStart(c: u8): bool {
     return c == 95 || (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
 }
 
 fn gqlIsNameContinue(c: u8): bool {
-    return gqlIsNameStart(c) || gqlIsDigit(c);
-}
-
-fn gqlStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return gqlIsNameStart(c) || isDigit(c);
 }
 
 fn gqlIsWordTok(kind: u8): bool {
@@ -91,15 +72,6 @@ fn gqlWriteByte(out: []u8, pos: *usize, b: u8) {
     if (pos.* < out.len) {
         out[pos.*] = b;
         pos.* = pos.* + 1;
-    }
-}
-
-fn gqlWriteStr(out: []u8, pos: *usize, s: string) {
-    let i: usize = 0;
-    while (i < s.len && pos.* < out.len) {
-        out[pos.*] = s[i];
-        pos.* = pos.* + 1;
-        i = i + 1;
     }
 }
 
@@ -228,23 +200,23 @@ pub struct GqlLexer {
         }
 
         // Int or Float
-        if (ch == 45 || gqlIsDigit(ch)) {
+        if (ch == 45 || isDigit(ch)) {
             let is_float: bool = false;
             if (ch == 45) {
                 _.pos = _.pos + 1;
                 _.col = _.col + 1;
-                if (_.pos >= _.src.len || !gqlIsDigit(_.src[_.pos])) {
+                if (_.pos >= _.src.len || !isDigit(_.src[_.pos])) {
                     return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                 }
             }
             if (_.src[_.pos] == 48) {
                 _.pos = _.pos + 1;
                 _.col = _.col + 1;
-                if (_.pos < _.src.len && gqlIsDigit(_.src[_.pos])) {
+                if (_.pos < _.src.len && isDigit(_.src[_.pos])) {
                     return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                 }
             } else {
-                while (_.pos < _.src.len && gqlIsDigit(_.src[_.pos])) {
+                while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
                     _.pos = _.pos + 1;
                     _.col = _.col + 1;
                 }
@@ -254,10 +226,10 @@ pub struct GqlLexer {
                 is_float = true;
                 _.pos = _.pos + 1;
                 _.col = _.col + 1;
-                if (_.pos >= _.src.len || !gqlIsDigit(_.src[_.pos])) {
+                if (_.pos >= _.src.len || !isDigit(_.src[_.pos])) {
                     return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                 }
-                while (_.pos < _.src.len && gqlIsDigit(_.src[_.pos])) {
+                while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
                     _.pos = _.pos + 1;
                     _.col = _.col + 1;
                 }
@@ -271,10 +243,10 @@ pub struct GqlLexer {
                     _.pos = _.pos + 1;
                     _.col = _.col + 1;
                 }
-                if (_.pos >= _.src.len || !gqlIsDigit(_.src[_.pos])) {
+                if (_.pos >= _.src.len || !isDigit(_.src[_.pos])) {
                     return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                 }
-                while (_.pos < _.src.len && gqlIsDigit(_.src[_.pos])) {
+                while (_.pos < _.src.len && isDigit(_.src[_.pos])) {
                     _.pos = _.pos + 1;
                     _.col = _.col + 1;
                 }
@@ -353,8 +325,8 @@ pub struct GqlLexer {
                         if (_.pos + 4 >= _.src.len) {
                             return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                         }
-                        if (!gqlIsHex(_.src[_.pos + 1]) || !gqlIsHex(_.src[_.pos + 2]) ||
-                            !gqlIsHex(_.src[_.pos + 3]) || !gqlIsHex(_.src[_.pos + 4])) {
+                        if (!isHexDigit(_.src[_.pos + 1]) || !isHexDigit(_.src[_.pos + 2]) ||
+                            !isHexDigit(_.src[_.pos + 3]) || !isHexDigit(_.src[_.pos + 4])) {
                             return GqlToken { kind: GQL_TOK_ERROR, start: start, end: _.pos, line: start_line, col: start_col };
                         }
                         _.pos = _.pos + 5;
@@ -581,7 +553,7 @@ fn gqlParseSelectionSet(st: *GqlParserState, depth: usize) {
             if (!st.ok) {
                 return;
             }
-            if (st.cur.kind == GQL_TOK_NAME && gqlStrEq(gqlCurText(st), "on")) {
+            if (st.cur.kind == GQL_TOK_NAME && strEq(gqlCurText(st), "on")) {
                 // Inline fragment with type condition: `... on TypeName Directives? SelectionSet`
                 gqlAdvance(st);
                 if (!gqlExpect(st, GQL_TOK_NAME)) {
@@ -640,11 +612,11 @@ fn gqlParseDefinition(st: *GqlParserState) {
     }
     if (st.cur.kind == GQL_TOK_NAME) {
         const kw: string = gqlCurText(st);
-        if (gqlStrEq(kw, "query") || gqlStrEq(kw, "mutation") || gqlStrEq(kw, "subscription")) {
+        if (strEq(kw, "query") || strEq(kw, "mutation") || strEq(kw, "subscription")) {
             let op_type: u8 = GQL_OP_QUERY;
-            if (gqlStrEq(kw, "mutation")) {
+            if (strEq(kw, "mutation")) {
                 op_type = GQL_OP_MUTATION;
-            } else if (gqlStrEq(kw, "subscription")) {
+            } else if (strEq(kw, "subscription")) {
                 op_type = GQL_OP_SUBSCRIPTION;
             }
             gqlAdvance(st);
@@ -663,14 +635,14 @@ fn gqlParseDefinition(st: *GqlParserState) {
             gqlParseSelectionSet(st, 1);
             return;
         }
-        if (gqlStrEq(kw, "fragment")) {
+        if (strEq(kw, "fragment")) {
             gqlAdvance(st);
-            if (!st.ok || st.cur.kind != GQL_TOK_NAME || gqlStrEq(gqlCurText(st), "on")) {
+            if (!st.ok || st.cur.kind != GQL_TOK_NAME || strEq(gqlCurText(st), "on")) {
                 gqlFail(st);
                 return;
             }
             gqlAdvance(st);
-            if (!st.ok || st.cur.kind != GQL_TOK_NAME || !gqlStrEq(gqlCurText(st), "on")) {
+            if (!st.ok || st.cur.kind != GQL_TOK_NAME || !strEq(gqlCurText(st), "on")) {
                 gqlFail(st);
                 return;
             }
@@ -753,7 +725,7 @@ pub fn minifyGraphql(src: string, out: []u8): usize {
         if (gqlIsWordTok(prev_kind) && (gqlIsWordTok(tok.kind) || tok.kind == GQL_TOK_SPREAD)) {
             gqlWriteByte(out, &pos, 32);
         }
-        gqlWriteStr(out, &pos, src[tok.start..tok.end]);
+        pos = writeStr(src[tok.start..tok.end], out, pos);
         prev_kind = tok.kind;
     }
     return pos;

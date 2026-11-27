@@ -1,13 +1,11 @@
 // Type definitions for CP
 
+import { isSpace, isAlpha, isDigit, strEq, trim } from "cap:ascii";
 import { eqAscii } from "../../unicase/src/index.cp";
-export fn csssIsSpace(c: u8): bool;
 export fn csssIsCombinator(c: u8): bool;
 export fn csssIsIdentStart(c: u8): bool;
 export fn csssIsIdentChar(c: u8): bool;
-export fn csssStrEq(a: string, b: string): bool;
 export fn csssEqMaybeCi(a: string, b: string, ci: bool): bool;
-export fn csssTrim(s: string): string;
 export fn csssSkipIdent(s: string, pos: usize): usize;
 export fn csssFindBracketEnd(s: string, pos: usize): usize;
 export fn csssSkipParen(s: string, pos: usize): usize;

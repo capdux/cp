@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isSpace, isAscii, startsWith, endsWith, toLower, toUpper, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+import { isValidUtf8 } from "cap:utf8";
 import { memchr, memrchr, memmemFind, memmemRfind } from "../../memchr/src/index.cp";
 export class SliceRange {
     start: usize,
@@ -8,14 +11,9 @@ export class SliceRange {
     fn isEmpty(): bool;
 }
 
-export fn bsIsAsciiWhitespace(b: u8): bool;
-export fn bsBytesEqual(a: &[]u8, b: &[]u8): bool;
-export fn bsCopyBytes(dst: []u8, pos: usize, src: &[]u8): usize;
 export fn bsIsContByte(b: u8): bool;
 export fn bsUtf8ValidLen(src: &[]u8, i: usize): usize;
 export fn bsUtf8InvalidSkip(src: &[]u8, i: usize): usize;
-export fn bsToLowerByte(b: u8): u8;
-export fn bsToUpperByte(b: u8): u8;
 export fn bstrFind(haystack: &[]u8, needle: &[]u8): i64;
 export fn bstrRfind(haystack: &[]u8, needle: &[]u8): i64;
 export fn bstrFindByte(haystack: &[]u8, b: u8): i64;

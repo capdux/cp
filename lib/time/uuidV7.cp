@@ -27,23 +27,23 @@ pub const Uuid = struct {
         return Uuid{ .bytes = raw };
     }
 
-    pub fn version(self: Uuid): u4 {
-        return @intCast((self.bytes[6] >> 4) & 0x0F);
+    pub fn version(): u4 {
+        return @intCast((_.bytes[6] >> 4) & 0x0F);
     }
 
-    pub fn variantRfc9562(self: Uuid): bool {
-        return (self.bytes[8] & 0xC0) == 0x80;
+    pub fn variantRfc9562(): bool {
+        return (_.bytes[8] & 0xC0) == 0x80;
     }
 
-    pub fn equals(self: Uuid, other: Uuid): bool {
-        return std.mem.eql(u8, &self.bytes, &other.bytes);
+    pub fn equals(other: Uuid): bool {
+        return std.mem.eql(u8, &_.bytes, &other.bytes);
     }
 
-    pub fn compare(self: Uuid, other: Uuid): i8 {
+    pub fn compare(other: Uuid): i8 {
         let i: usize = 0;
         while (i < 16) : (i += 1) {
-            if (self.bytes[i] < other.bytes[i]) { return -1; }
-            if (self.bytes[i] > other.bytes[i]) { return 1; }
+            if (_.bytes[i] < other.bytes[i]) { return -1; }
+            if (_.bytes[i] > other.bytes[i]) { return 1; }
         }
         return 0;
     }
@@ -83,14 +83,14 @@ pub const Uuid = struct {
         return Uuid.v7At(ms);
     }
 
-    pub fn timestampMsV7(self: Uuid): u64 {
+    pub fn timestampMsV7(): u64 {
         let ts: u64 = 0;
-        ts |= @as(u64, self.bytes[0]) << 40;
-        ts |= @as(u64, self.bytes[1]) << 32;
-        ts |= @as(u64, self.bytes[2]) << 24;
-        ts |= @as(u64, self.bytes[3]) << 16;
-        ts |= @as(u64, self.bytes[4]) << 8;
-        ts |= @as(u64, self.bytes[5]);
+        ts |= @as(u64, _.bytes[0]) << 40;
+        ts |= @as(u64, _.bytes[1]) << 32;
+        ts |= @as(u64, _.bytes[2]) << 24;
+        ts |= @as(u64, _.bytes[3]) << 16;
+        ts |= @as(u64, _.bytes[4]) << 8;
+        ts |= @as(u64, _.bytes[5]);
         return ts;
     }
 
@@ -107,7 +107,7 @@ pub const Uuid = struct {
         return Uuid{ .bytes = b };
     }
 
-    pub fn format(self: Uuid): [36]u8 {
+    pub fn format(): [36]u8 {
         const hex_chars = "0123456789abcdef";
         let out: [36]u8 = undefined;
         let out_pos: usize = 0;
@@ -117,8 +117,8 @@ pub const Uuid = struct {
                 out[out_pos] = '-';
                 out_pos += 1;
             }
-            const hi: usize = @intCast((self.bytes[i] >> 4) & 0x0F);
-            const lo: usize = @intCast(self.bytes[i] & 0x0F);
+            const hi: usize = @intCast((_.bytes[i] >> 4) & 0x0F);
+            const lo: usize = @intCast(_.bytes[i] & 0x0F);
             out[out_pos] = hex_chars[hi];
             out[out_pos + 1] = hex_chars[lo];
             out_pos += 2;

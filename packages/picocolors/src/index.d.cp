@@ -1,8 +1,8 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { StylePair, RESET, BOLD, DIM, ITALIC, UNDERLINE, INVERSE, HIDDEN, STRIKETHROUGH, FG_BLACK, FG_RED, FG_GREEN, FG_YELLOW, FG_BLUE, FG_MAGENTA, FG_CYAN, FG_WHITE, FG_GRAY, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE } from "../../ansi-styles/src/index.cp";
-export fn picoStrEq(a: string, b: string): bool;
-export fn picoWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn picoMatchAt(haystack: string, offset: usize, needle: string): bool;
 export fn picoFormatPair(enabled: bool, pair: StylePair, replace_with: string, text: string, out: []u8): usize;
 export fn detectColorSupport(no_color: string, force_color: string, is_tty: bool): bool;

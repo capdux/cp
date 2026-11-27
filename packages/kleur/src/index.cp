@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `kleur` v4.
 // Reuses ANSI SGR StylePair constants from `@cap/ansi-styles` with zero duplication.
 
+import { strEq, startsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import {
     StylePair,
     RESET,
@@ -32,45 +34,6 @@ import {
 } from "../../ansi-styles/src/index.cp";
 
 pub const KLEUR_MAX_DEPTH: usize = 8;
-
-fn klrStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn klrWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
-
-fn klrMatchAt(haystack: string, offset: usize, needle: string): bool {
-    if (needle.len == 0 || offset + needle.len > haystack.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < needle.len) {
-        if (haystack[offset + i] != needle[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 /// Zero-heap composable chainable ANSI style builder (up to 8 stacked styles).
 /// Supports fluent immutable chaining: `KleurChain.new(true).bold().red().bgYellow().format(...)`.
@@ -151,7 +114,7 @@ pub struct KleurChain {
             return 0;
         }
         if (!_.enabled || _.depth == 0) {
-            return klrWriteStr(out, 0, text);
+            return writeStr(text, out, 0);
         }
 
         let p: usize = 0;
@@ -159,19 +122,20 @@ pub struct KleurChain {
         // 1. Emit open codes in forward stack order
         let k: usize = 0;
         while (k < _.depth && p < out.len) {
-            p = klrWriteStr(out, p, _.stack[k].open);
+            p = writeStr(_.stack[k].open, out, p);
             k = k + 1;
         }
 
         // 2. Emit text with nested close/reset recovery
         let i: usize = 0;
         while (i < text.len && p < out.len) {
+            const rest = text[i..text.len];
             // Check for embedded full reset `\x1b[0m`
-            if (klrMatchAt(text, i, RESET.close)) {
-                p = klrWriteStr(out, p, RESET.close);
+            if (RESET.close.len > 0 && startsWith(rest, RESET.close)) {
+                p = writeStr(RESET.close, out, p);
                 let r: usize = 0;
                 while (r < _.depth && p < out.len) {
-                    p = klrWriteStr(out, p, _.stack[r].open);
+                    p = writeStr(_.stack[r].open, out, p);
                     r = r + 1;
                 }
                 i = i + RESET.close.len;
@@ -183,7 +147,7 @@ pub struct KleurChain {
             let s: usize = _.depth;
             while (s > 0) {
                 s = s - 1;
-                if (klrMatchAt(text, i, _.stack[s].close)) {
+                if (_.stack[s].close.len > 0 && startsWith(rest, _.stack[s].close)) {
                     matched_idx = s as i64;
                     break;
                 }
@@ -191,10 +155,10 @@ pub struct KleurChain {
 
             if (matched_idx >= 0) {
                 let layer = _.stack[matched_idx as usize];
-                if (klrStrEq(layer.close, "\x1b[22m")) {
-                    p = klrWriteStr(out, p, layer.close);
+                if (strEq(layer.close, "\x1b[22m")) {
+                    p = writeStr(layer.close, out, p);
                 }
-                p = klrWriteStr(out, p, layer.open);
+                p = writeStr(layer.open, out, p);
                 i = i + layer.close.len;
             } else {
                 out[p] = text[i];
@@ -207,7 +171,7 @@ pub struct KleurChain {
         let c: usize = _.depth;
         while (c > 0 && p < out.len) {
             c = c - 1;
-            p = klrWriteStr(out, p, _.stack[c].close);
+            p = writeStr(_.stack[c].close, out, p);
         }
 
         return p;
