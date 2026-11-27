@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { hexCharLower } from "cap:ascii";
+import { writeU64 } from "cap:fmt";
 export enum TracePhase {
     Begin,
     End,
@@ -20,7 +22,6 @@ export class TraceEvent {
 }
 
 export fn phaseCode(ph: TracePhase): u8;
-export fn ctevHexDigit(n: u8): u8;
 export fn ctevWriteByte(out: []u8, pos: i64, b: u8): i64;
 export fn ctevWriteStr(out: []u8, pos: i64, s: string): i64;
 export fn ctevWriteJsonStr(out: []u8, pos: i64, s: string): i64;

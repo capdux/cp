@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU16LE, readU32LE, readU64LE, writeU16LE, writeU32LE, writeU64LE } from "cap:bin";
 export fn i32ToBits(v: i32): u32;
 export fn bitsToI32(u: u32): i32;
 export fn i64ToBits(v: i64): u64;

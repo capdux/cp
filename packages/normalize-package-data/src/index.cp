@@ -4,6 +4,8 @@
 
 import { PackageNameValidation, validatePackageName } from "../../validate-npm-package-name/src/index.cp";
 import { LicenseValidation, validateLicense } from "../../validate-npm-package-license/src/index.cp";
+import { isSpace, trim, startsWith, endsWith } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 /// Raw package metadata fields to normalize and validate.
 pub struct PackageMetadata {
@@ -24,72 +26,13 @@ pub struct NormalizedPackageResult {
     pub warning_count: usize,
 }
 
-fn npdIsSpace(ch: u8): bool {
-    return ch == (' ' as u8)
-        || ch == ('\t' as u8)
-        || ch == ('\r' as u8)
-        || ch == ('\n' as u8);
-}
-
-fn npdTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && npdIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && npdIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn npdStartsWith(s: string, prefix: string): bool {
-    if (s.len < prefix.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn npdEndsWith(s: string, suffix: string): bool {
-    if (s.len < suffix.len) {
-        return false;
-    }
-    let offset: usize = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (s[offset + i] != suffix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn npdPush(out: []u8, pos: usize, s: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 fn npdIsOwnerRepoShorthand(s: string): bool {
     let slash_count: usize = 0;
     let slash_pos: usize = 0;
     let i: usize = 0;
     while (i < s.len) {
         let ch: u8 = s[i];
-        if (npdIsSpace(ch) || ch == (':' as u8)) {
+        if (isSpace(ch) || ch == (':' as u8)) {
             return false;
         }
         if (ch == ('/' as u8)) {
@@ -102,11 +45,10 @@ fn npdIsOwnerRepoShorthand(s: string): bool {
 }
 
 fn npdWriteHostedUrl(base_url: string, slug: string, out: []u8): usize {
-    let p: usize = 0;
-    p = npdPush(out, p, base_url);
-    p = npdPush(out, p, slug);
-    if (!npdEndsWith(slug, ".git")) {
-        p = npdPush(out, p, ".git");
+    let p: usize = writeStr(base_url, out, 0);
+    p = writeStr(slug, out, p);
+    if (!endsWith(slug, ".git")) {
+        p = writeStr(".git", out, p);
     }
     return p;
 }
@@ -114,22 +56,22 @@ fn npdWriteHostedUrl(base_url: string, slug: string, out: []u8): usize {
 /// Expand repository shorthands (`owner/repo`, `github:owner/repo`, `gitlab:owner/repo`, `bitbucket:owner/repo`)
 /// into canonical HTTPS Git URLs. Existing `http://` or `https://` URLs are copied as-is.
 pub fn expandRepoShorthand(repo: string, out: []u8): usize {
-    let s: string = npdTrim(repo);
+    let s: string = trim(repo);
     if (s.len == 0) {
         return 0;
     }
 
-    if (npdStartsWith(s, "https://") || npdStartsWith(s, "http://")) {
-        return npdPush(out, 0, s);
+    if (startsWith(s, "https://") || startsWith(s, "http://")) {
+        return writeStr(s, out, 0);
     }
 
-    if (npdStartsWith(s, "github:")) {
+    if (startsWith(s, "github:")) {
         return npdWriteHostedUrl("https://github.com/", s[7..s.len], out);
     }
-    if (npdStartsWith(s, "gitlab:")) {
+    if (startsWith(s, "gitlab:")) {
         return npdWriteHostedUrl("https://gitlab.com/", s[7..s.len], out);
     }
-    if (npdStartsWith(s, "bitbucket:")) {
+    if (startsWith(s, "bitbucket:")) {
         return npdWriteHostedUrl("https://bitbucket.org/", s[10..s.len], out);
     }
 
@@ -137,14 +79,14 @@ pub fn expandRepoShorthand(repo: string, out: []u8): usize {
         return npdWriteHostedUrl("https://github.com/", s, out);
     }
 
-    return npdPush(out, 0, s);
+    return writeStr(s, out, 0);
 }
 
 /// Normalize a package entry path by stripping leading `./`, leading `/`, and trailing `/`.
 pub fn normalizeEntryPath(entry: string): string {
-    let s: string = npdTrim(entry);
+    let s: string = trim(entry);
     while (s.len > 0) {
-        if (s.len >= 2 && s[0] == ('.' as u8) && s[1] == ('/' as u8)) {
+        if (startsWith(s, "./")) {
             s = s[2..s.len];
             continue;
         }
@@ -163,16 +105,16 @@ pub fn normalizeEntryPath(entry: string): string {
 
 /// Clean a version string by trimming whitespace and leading `v`/`V`/`=` prefixes.
 pub fn cleanVersionString(ver: string): string {
-    let s: string = npdTrim(ver);
+    let s: string = trim(ver);
     while (s.len > 0) {
         let ch: u8 = s[0];
-        if (ch == ('v' as u8) || ch == ('V' as u8) || ch == ('=' as u8) || npdIsSpace(ch)) {
+        if (ch == ('v' as u8) || ch == ('V' as u8) || ch == ('=' as u8) || isSpace(ch)) {
             s = s[1..s.len];
             continue;
         }
         break;
     }
-    return npdTrim(s);
+    return trim(s);
 }
 
 /// Validate and normalize package metadata using `@cap/validate-npm-package-name` and `@cap/validate-npm-package-license`.
@@ -205,7 +147,7 @@ pub fn normalizePackageData(meta: PackageMetadata): NormalizedPackageResult {
         warnings += 1;
     }
 
-    if (!meta.private_pkg && npdTrim(meta.repository).len == 0) {
+    if (!meta.private_pkg && trim(meta.repository).len == 0) {
         warnings += 1;
     }
 

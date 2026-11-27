@@ -1,6 +1,8 @@
 // @cap/rustc-hash — Zero-heap pure-CP fast non-cryptographic FxHash (64-bit & 32-bit)
 // Clean-room MIT implementation of Rust compiler's FxHasher.
 
+import { readU16LE, readU32LE, readU64LE } from "cap:bin";
+
 pub const FX_SEED_64: u64 = ((0x517cc1b7 as u64) << 32) | (0x27220a95 as u64);
 pub const FX_SEED_32: u32 = 2654435769; // 0x9e3779b9
 
@@ -36,30 +38,44 @@ fn fxhAddWord32(hash: u32, word: u32): u32 {
     return fxhMul32(fxhRotl32By5(hash) ^ word, FX_SEED_32);
 }
 
-fn fxhReadU32LeBytes(buf: []u8, off: usize): u32 {
-    return (buf[off] as u32)
-        | ((buf[off + 1] as u32) << 8)
-        | ((buf[off + 2] as u32) << 16)
-        | ((buf[off + 3] as u32) << 24);
+fn fxhHashSlice64(hash: u64, data: []const u8): u64 {
+    let h: u64 = hash;
+    let off: usize = 0;
+    let len: usize = data.len;
+    while (off + 8 <= len) {
+        h = fxhAddWord64(h, readU64LE(data, off) ?? 0);
+        off = off + 8;
+    }
+    if (off + 4 <= len) {
+        h = fxhAddWord64(h, (readU32LE(data, off) ?? 0) as u64);
+        off = off + 4;
+    }
+    if (off + 2 <= len) {
+        h = fxhAddWord64(h, (readU16LE(data, off) ?? 0) as u64);
+        off = off + 2;
+    }
+    if (off < len) {
+        h = fxhAddWord64(h, data[off] as u64);
+    }
+    return h;
 }
 
-fn fxhReadU64LeBytes(buf: []u8, off: usize): u64 {
-    let lo: u32 = fxhReadU32LeBytes(buf, off);
-    let hi: u32 = fxhReadU32LeBytes(buf, off + 4);
-    return ((hi as u64) << 32) | (lo as u64);
-}
-
-fn fxhReadU32LeStr(s: string, off: usize): u32 {
-    return (s[off] as u32)
-        | ((s[off + 1] as u32) << 8)
-        | ((s[off + 2] as u32) << 16)
-        | ((s[off + 3] as u32) << 24);
-}
-
-fn fxhReadU64LeStr(s: string, off: usize): u64 {
-    let lo: u32 = fxhReadU32LeStr(s, off);
-    let hi: u32 = fxhReadU32LeStr(s, off + 4);
-    return ((hi as u64) << 32) | (lo as u64);
+fn fxhHashSlice32(hash: u32, data: []const u8): u32 {
+    let h: u32 = hash;
+    let off: usize = 0;
+    let len: usize = data.len;
+    while (off + 4 <= len) {
+        h = fxhAddWord32(h, readU32LE(data, off) ?? 0);
+        off = off + 4;
+    }
+    if (off + 2 <= len) {
+        h = fxhAddWord32(h, (readU16LE(data, off) ?? 0) as u32);
+        off = off + 2;
+    }
+    if (off < len) {
+        h = fxhAddWord32(h, data[off] as u32);
+    }
+    return h;
 }
 
 pub struct FxHasher64 {
@@ -86,45 +102,11 @@ pub struct FxHasher64 {
     }
 
     pub fn writeBytes(*_, data: []u8) {
-        let off: usize = 0;
-        let len: usize = data.len;
-        while (off + 8 <= len) {
-            _.hash = fxhAddWord64(_.hash, fxhReadU64LeBytes(data, off));
-            off = off + 8;
-        }
-        if (off + 4 <= len) {
-            _.hash = fxhAddWord64(_.hash, fxhReadU32LeBytes(data, off) as u64);
-            off = off + 4;
-        }
-        if (off + 2 <= len) {
-            let v16: u64 = (data[off] as u64) | ((data[off + 1] as u64) << 8);
-            _.hash = fxhAddWord64(_.hash, v16);
-            off = off + 2;
-        }
-        if (off < len) {
-            _.hash = fxhAddWord64(_.hash, data[off] as u64);
-        }
+        _.hash = fxhHashSlice64(_.hash, data);
     }
 
     pub fn writeStr(*_, s: string) {
-        let off: usize = 0;
-        let len: usize = s.len;
-        while (off + 8 <= len) {
-            _.hash = fxhAddWord64(_.hash, fxhReadU64LeStr(s, off));
-            off = off + 8;
-        }
-        if (off + 4 <= len) {
-            _.hash = fxhAddWord64(_.hash, fxhReadU32LeStr(s, off) as u64);
-            off = off + 4;
-        }
-        if (off + 2 <= len) {
-            let v16: u64 = (s[off] as u64) | ((s[off + 1] as u64) << 8);
-            _.hash = fxhAddWord64(_.hash, v16);
-            off = off + 2;
-        }
-        if (off < len) {
-            _.hash = fxhAddWord64(_.hash, s[off] as u64);
-        }
+        _.hash = fxhHashSlice64(_.hash, s);
     }
 
     pub fn finish(): u64 {
@@ -152,37 +134,11 @@ pub struct FxHasher32 {
     }
 
     pub fn writeBytes(*_, data: []u8) {
-        let off: usize = 0;
-        let len: usize = data.len;
-        while (off + 4 <= len) {
-            _.hash = fxhAddWord32(_.hash, fxhReadU32LeBytes(data, off));
-            off = off + 4;
-        }
-        if (off + 2 <= len) {
-            let v16: u32 = (data[off] as u32) | ((data[off + 1] as u32) << 8);
-            _.hash = fxhAddWord32(_.hash, v16);
-            off = off + 2;
-        }
-        if (off < len) {
-            _.hash = fxhAddWord32(_.hash, data[off] as u32);
-        }
+        _.hash = fxhHashSlice32(_.hash, data);
     }
 
     pub fn writeStr(*_, s: string) {
-        let off: usize = 0;
-        let len: usize = s.len;
-        while (off + 4 <= len) {
-            _.hash = fxhAddWord32(_.hash, fxhReadU32LeStr(s, off));
-            off = off + 4;
-        }
-        if (off + 2 <= len) {
-            let v16: u32 = (s[off] as u32) | ((s[off + 1] as u32) << 8);
-            _.hash = fxhAddWord32(_.hash, v16);
-            off = off + 2;
-        }
-        if (off < len) {
-            _.hash = fxhAddWord32(_.hash, s[off] as u32);
-        }
+        _.hash = fxhHashSlice32(_.hash, s);
     }
 
     pub fn finish(): u32 {

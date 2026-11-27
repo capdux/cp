@@ -1,6 +1,8 @@
 // Type definitions for CP
 
 import { prependHttp, hasScheme, isProtocolRelative } from "../../prepend-http/src/index.cp";
+import { trim, strEq, eqIgnoreCase, findByte, rfindByte, toLower } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class NormalizeUrlOptions {
     default_https: bool,
     strip_www: bool,
@@ -16,15 +18,7 @@ export class NurlSegment {
 }
 
 export fn defaultNormalizeUrlOptions(): NormalizeUrlOptions;
-export fn nurlIsSpace(c: u8): bool;
-export fn nurlTrim(s: string): string;
-export fn nurlToLowerAscii(c: u8): u8;
-export fn nurlEqStr(a: string, b: string): bool;
-export fn nurlEqLower(a: string, lower_b: string): bool;
-export fn nurlStartsWithLower(s: string, lower_prefix: string): bool;
-export fn nurlHasDot(s: string): bool;
 export fn nurlWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn nurlWriteSlice(out: []u8, pos: usize, s: string): usize;
 export fn nurlWriteLower(out: []u8, pos: usize, s: string): usize;
 export fn nurlFindSchemeSep(s: string): usize;
 export fn nurlIsDefaultPort(scheme: string, port: string): bool;

@@ -1,14 +1,24 @@
 // @cap/html-encoding-sniffer — Zero-allocation WHATWG HTML §13.2.3.2 encoding sniffer
 // Clean-room MIT implementation inspired by jsdom html-encoding-sniffer
 
+import { findByteInBytes } from "cap:bin";
+
 pub struct SniffOptions {
     transport_layer_encoding: string,
     default_encoding: string,
 }
 
 fn hesToLower(ch: u8): u8 {
-    if (ch >= 'A' && ch <= 'Z') return ch + 32;
-    return ch;
+    return if (ch >= 'A' && ch <= 'Z') ch + 32 else ch;
+}
+
+fn hesEqIgnoreCase(a: string, b: string): bool {
+    if (a.len != b.len) return false;
+    let i: usize = 0;
+    while (i < a.len) : (i += 1) {
+        if (hesToLower(a[i]) != hesToLower(b[i])) return false;
+    }
+    return true;
 }
 
 fn hesIsAsciiWs(ch: u8): bool {
@@ -27,22 +37,9 @@ fn hesTrimAsciiWs(s: string): string {
     return s[start..end];
 }
 
-fn hesEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (hesToLower(a[i]) != hesToLower(b[i])) return false;
-    }
-    return true;
-}
-
 fn hesStartsWithIgnoreCase(bytes: []const u8, pos: usize, needle: string): bool {
     if (pos + needle.len > bytes.len) return false;
-    let i: usize = 0;
-    while (i < needle.len) : (i += 1) {
-        if (hesToLower(bytes[pos + i]) != hesToLower(needle[i])) return false;
-    }
-    return true;
+    return hesEqIgnoreCase(bytes[pos..pos + needle.len], needle);
 }
 
 pub fn normalizeEncodingLabel(label: string): string {
@@ -205,12 +202,8 @@ fn hesExtractCharsetFromContent(content: string): string {
             if (content[p] == '"' || content[p] == '\'') {
                 const q = content[p];
                 p += 1;
-                const start = p;
-                while (p < content.len && content[p] != q) {
-                    p += 1;
-                }
-                if (p < content.len && content[p] == q) {
-                    return content[start..p];
+                if (end_q := findByteInBytes(content, q, p)) {
+                    return content[p..end_q];
                 }
                 return "";
             }
@@ -226,20 +219,19 @@ fn hesExtractCharsetFromContent(content: string): string {
 
 fn hesPrescanMeta(bytes: []const u8): string {
     const limit = if (bytes.len > 1024) 1024 else bytes.len;
+    const head = bytes[0..limit];
     let pos: usize = 0;
 
     while (pos < limit) {
-        if (bytes[pos] != '<') {
-            pos += 1;
-            continue;
-        }
+        const lt = findByteInBytes(head, '<', pos) ?? break;
+        pos = lt;
 
         // Skip HTML comments: <!-- ... -->
-        if (pos + 4 <= limit && bytes[pos + 1] == '!' && bytes[pos + 2] == '-' && bytes[pos + 3] == '-') {
+        if (pos + 4 <= limit && head[pos + 1] == '!' && head[pos + 2] == '-' && head[pos + 3] == '-') {
             pos += 4;
             let closed = false;
             while (pos + 2 < limit) : (pos += 1) {
-                if (bytes[pos] == '-' && bytes[pos + 1] == '-' && bytes[pos + 2] == '>') {
+                if (head[pos] == '-' && head[pos + 1] == '-' && head[pos + 2] == '>') {
                     pos += 3;
                     closed = true;
                     break;
@@ -250,8 +242,8 @@ fn hesPrescanMeta(bytes: []const u8): string {
         }
 
         // Check <meta followed by ASCII whitespace or '/'
-        if (pos + 6 <= limit && hesStartsWithIgnoreCase(bytes, pos, "<meta")) {
-            const after = bytes[pos + 5];
+        if (pos + 6 <= limit && hesStartsWithIgnoreCase(head, pos, "<meta")) {
+            const after = head[pos + 5];
             if (hesIsAsciiWs(after) || after == '/') {
                 pos += 5;
                 let charset_val: string = "";
@@ -259,50 +251,48 @@ fn hesPrescanMeta(bytes: []const u8): string {
                 let content_val: string = "";
 
                 while (pos < limit) {
-                    while (pos < limit && (hesIsAsciiWs(bytes[pos]) || bytes[pos] == '/')) {
+                    while (pos < limit && (hesIsAsciiWs(head[pos]) || head[pos] == '/')) {
                         pos += 1;
                     }
                     if (pos >= limit) break;
-                    if (bytes[pos] == '>') {
+                    if (head[pos] == '>') {
                         pos += 1;
                         break;
                     }
 
                     // Parse attribute name
                     const n_start = pos;
-                    while (pos < limit && !hesIsAsciiWs(bytes[pos]) && bytes[pos] != '=' && bytes[pos] != '>' && bytes[pos] != '/') {
+                    while (pos < limit && !hesIsAsciiWs(head[pos]) && head[pos] != '=' && head[pos] != '>' && head[pos] != '/') {
                         pos += 1;
                     }
-                    const attr_name = bytes[n_start..pos];
+                    const attr_name = head[n_start..pos];
 
-                    while (pos < limit && hesIsAsciiWs(bytes[pos])) {
+                    while (pos < limit && hesIsAsciiWs(head[pos])) {
                         pos += 1;
                     }
 
                     let attr_val: string = "";
-                    if (pos < limit && bytes[pos] == '=') {
+                    if (pos < limit && head[pos] == '=') {
                         pos += 1;
-                        while (pos < limit && hesIsAsciiWs(bytes[pos])) {
+                        while (pos < limit && hesIsAsciiWs(head[pos])) {
                             pos += 1;
                         }
                         if (pos < limit) {
-                            if (bytes[pos] == '"' || bytes[pos] == '\'') {
-                                const q = bytes[pos];
+                            if (head[pos] == '"' || head[pos] == '\'') {
+                                const q = head[pos];
                                 pos += 1;
                                 const v_start = pos;
-                                while (pos < limit && bytes[pos] != q) {
-                                    pos += 1;
-                                }
-                                attr_val = bytes[v_start..pos];
-                                if (pos < limit && bytes[pos] == q) {
+                                pos = findByteInBytes(head, q, pos) ?? limit;
+                                attr_val = head[v_start..pos];
+                                if (pos < limit && head[pos] == q) {
                                     pos += 1;
                                 }
                             } else {
                                 const v_start = pos;
-                                while (pos < limit && !hesIsAsciiWs(bytes[pos]) && bytes[pos] != '>') {
+                                while (pos < limit && !hesIsAsciiWs(head[pos]) && head[pos] != '>') {
                                     pos += 1;
                                 }
-                                attr_val = bytes[v_start..pos];
+                                attr_val = head[v_start..pos];
                             }
                         }
                     }
@@ -333,19 +323,16 @@ fn hesPrescanMeta(bytes: []const u8): string {
 
         // Skip other tags safely (respecting quoted attributes)
         pos += 1;
-        while (pos < limit && bytes[pos] != '>') {
-            if (bytes[pos] == '"' || bytes[pos] == '\'') {
-                const q = bytes[pos];
-                pos += 1;
-                while (pos < limit && bytes[pos] != q) {
-                    pos += 1;
-                }
+        while (pos < limit && head[pos] != '>') {
+            if (head[pos] == '"' || head[pos] == '\'') {
+                const q = head[pos];
+                pos = findByteInBytes(head, q, pos + 1) ?? limit;
                 if (pos < limit) pos += 1;
                 continue;
             }
             pos += 1;
         }
-        if (pos < limit && bytes[pos] == '>') {
+        if (pos < limit && head[pos] == '>') {
             pos += 1;
         }
     }

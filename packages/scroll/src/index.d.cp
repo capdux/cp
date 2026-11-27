@@ -1,16 +1,11 @@
 // Type definitions for CP
 
+import { readU16LE, readU16BE, readU32LE, readU32BE, readU64LE, readU64BE, writeU16LE, writeU16BE, writeU32LE, writeU32BE, writeU64LE, writeU64BE, findByteInBytes } from "cap:bin";
 export enum Endian {
     Little,
     Big
 }
 
-export fn scrlReadU16(buf: &[]u8, off: usize, endian: Endian): u16;
-export fn scrlReadU32(buf: &[]u8, off: usize, endian: Endian): u32;
-export fn scrlReadU64(buf: &[]u8, off: usize, endian: Endian): u64;
-export fn scrlWriteU16(buf: []u8, off: usize, v: u16, endian: Endian);
-export fn scrlWriteU32(buf: []u8, off: usize, v: u32, endian: Endian);
-export fn scrlWriteU64(buf: []u8, off: usize, v: u64, endian: Endian);
 export class PreadCursor {
     buf: &[]u8,
     offset: usize,

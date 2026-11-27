@@ -1,14 +1,31 @@
 // @cap/smart-buffer — Zero-heap cursor-based binary buffer
 // Clean-room CP implementation inspired by npm:smart-buffer (JoshGlazebrook/smart-buffer)
 
+import {
+    readU16BE,
+    readU16LE,
+    readU32BE,
+    readU32LE,
+    writeU16BE,
+    writeU16LE,
+    writeU32BE,
+    writeU32LE,
+} from "cap:bin";
+
 const SBUF_CAP: usize = 1024;
 
 fn sbufMin(a: usize, b: usize): usize {
-    if (a < b) {
-        return a;
-    }
-    return b;
+    return if (a < b) a else b;
 }
+
+fn sbufW16BE(dst: []u8, off: usize, v: u16): bool { return writeU16BE(dst, off, v); }
+fn sbufW16LE(dst: []u8, off: usize, v: u16): bool { return writeU16LE(dst, off, v); }
+fn sbufW32BE(dst: []u8, off: usize, v: u32): bool { return writeU32BE(dst, off, v); }
+fn sbufW32LE(dst: []u8, off: usize, v: u32): bool { return writeU32LE(dst, off, v); }
+fn sbufR16BE(src: []const u8, off: usize): u16? { return readU16BE(src, off); }
+fn sbufR16LE(src: []const u8, off: usize): u16? { return readU16LE(src, off); }
+fn sbufR32BE(src: []const u8, off: usize): u32? { return readU32BE(src, off); }
+fn sbufR32LE(src: []const u8, off: usize): u32? { return readU32LE(src, off); }
 
 pub struct SmartBuffer {
     buf: [1024]u8,
@@ -17,7 +34,7 @@ pub struct SmartBuffer {
 
     static fn new(): SmartBuffer {
         return SmartBuffer{
-            buf: [0; 1024],
+            buf: undefined,
             read_offset: 0,
             write_offset: 0,
         };
@@ -26,9 +43,8 @@ pub struct SmartBuffer {
     static fn fromSlice(src: []const u8): SmartBuffer {
         let sb = SmartBuffer.new();
         const n = sbufMin(src.len, SBUF_CAP);
-        let i: usize = 0;
-        while (i < n) : (i += 1) {
-            sb.buf[i] = src[i];
+        if (n > 0) {
+            @memcpy(sb.buf[0..n], src[0..n]);
         }
         sb.write_offset = n;
         return sb;
@@ -42,49 +58,27 @@ pub struct SmartBuffer {
     }
 
     fn writeU16BE(*_, v: u16) {
-        if (_.write_offset + 2 <= SBUF_CAP) {
-            _.buf[_.write_offset] = u8((v >> 8) & 0xFF);
-            _.buf[_.write_offset + 1] = u8(v & 0xFF);
-            _.write_offset += 2;
-        }
+        if (sbufW16BE(_.buf[0..SBUF_CAP], _.write_offset, v)) { _.write_offset += 2; }
     }
 
     fn writeU16LE(*_, v: u16) {
-        if (_.write_offset + 2 <= SBUF_CAP) {
-            _.buf[_.write_offset] = u8(v & 0xFF);
-            _.buf[_.write_offset + 1] = u8((v >> 8) & 0xFF);
-            _.write_offset += 2;
-        }
+        if (sbufW16LE(_.buf[0..SBUF_CAP], _.write_offset, v)) { _.write_offset += 2; }
     }
 
     fn writeU32BE(*_, v: u32) {
-        if (_.write_offset + 4 <= SBUF_CAP) {
-            _.buf[_.write_offset] = u8((v >> 24) & 0xFF);
-            _.buf[_.write_offset + 1] = u8((v >> 16) & 0xFF);
-            _.buf[_.write_offset + 2] = u8((v >> 8) & 0xFF);
-            _.buf[_.write_offset + 3] = u8(v & 0xFF);
-            _.write_offset += 4;
-        }
+        if (sbufW32BE(_.buf[0..SBUF_CAP], _.write_offset, v)) { _.write_offset += 4; }
     }
 
     fn writeU32LE(*_, v: u32) {
-        if (_.write_offset + 4 <= SBUF_CAP) {
-            _.buf[_.write_offset] = u8(v & 0xFF);
-            _.buf[_.write_offset + 1] = u8((v >> 8) & 0xFF);
-            _.buf[_.write_offset + 2] = u8((v >> 16) & 0xFF);
-            _.buf[_.write_offset + 3] = u8((v >> 24) & 0xFF);
-            _.write_offset += 4;
-        }
+        if (sbufW32LE(_.buf[0..SBUF_CAP], _.write_offset, v)) { _.write_offset += 4; }
     }
 
     fn writeString(*_, s: string) {
-        const avail = SBUF_CAP - _.write_offset;
-        const n = sbufMin(s.len, avail);
-        let i: usize = 0;
-        while (i < n) : (i += 1) {
-            _.buf[_.write_offset + i] = s[i];
+        const n = sbufMin(s.len, SBUF_CAP - _.write_offset);
+        if (n > 0) {
+            @memcpy(_.buf[_.write_offset .. _.write_offset + n], s[0..n]);
+            _.write_offset += n;
         }
-        _.write_offset += n;
     }
 
     fn writeStringNT(*_, s: string) {
@@ -102,46 +96,22 @@ pub struct SmartBuffer {
     }
 
     fn readU16BE(*_): u16 {
-        if (_.read_offset + 2 <= _.write_offset) {
-            const b0 = u16(_.buf[_.read_offset]);
-            const b1 = u16(_.buf[_.read_offset + 1]);
-            _.read_offset += 2;
-            return (b0 << 8) | b1;
-        }
+        if (v := sbufR16BE(_.buf[0.._.write_offset], _.read_offset)) { _.read_offset += 2; return v; }
         return 0;
     }
 
     fn readU16LE(*_): u16 {
-        if (_.read_offset + 2 <= _.write_offset) {
-            const b0 = u16(_.buf[_.read_offset]);
-            const b1 = u16(_.buf[_.read_offset + 1]);
-            _.read_offset += 2;
-            return b0 | (b1 << 8);
-        }
+        if (v := sbufR16LE(_.buf[0.._.write_offset], _.read_offset)) { _.read_offset += 2; return v; }
         return 0;
     }
 
     fn readU32BE(*_): u32 {
-        if (_.read_offset + 4 <= _.write_offset) {
-            const b0 = u32(_.buf[_.read_offset]);
-            const b1 = u32(_.buf[_.read_offset + 1]);
-            const b2 = u32(_.buf[_.read_offset + 2]);
-            const b3 = u32(_.buf[_.read_offset + 3]);
-            _.read_offset += 4;
-            return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
-        }
+        if (v := sbufR32BE(_.buf[0.._.write_offset], _.read_offset)) { _.read_offset += 4; return v; }
         return 0;
     }
 
     fn readU32LE(*_): u32 {
-        if (_.read_offset + 4 <= _.write_offset) {
-            const b0 = u32(_.buf[_.read_offset]);
-            const b1 = u32(_.buf[_.read_offset + 1]);
-            const b2 = u32(_.buf[_.read_offset + 2]);
-            const b3 = u32(_.buf[_.read_offset + 3]);
-            _.read_offset += 4;
-            return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
-        }
+        if (v := sbufR32LE(_.buf[0.._.write_offset], _.read_offset)) { _.read_offset += 4; return v; }
         return 0;
     }
 
@@ -154,10 +124,7 @@ pub struct SmartBuffer {
     }
 
     fn remaining(): usize {
-        if (_.write_offset > _.read_offset) {
-            return _.write_offset - _.read_offset;
-        }
-        return 0;
+        return if (_.write_offset > _.read_offset) _.write_offset - _.read_offset else 0;
     }
 
     fn len(): usize {
