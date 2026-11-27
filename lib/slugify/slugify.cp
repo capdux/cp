@@ -13,29 +13,53 @@ pub struct SlugOptions {
     expand_symbols: bool = false,
 }
 
-fn isAlphaLower(b: u8): bool {
-    return b >= 'a' && b <= 'z';
+type SlugVec16 = @Vector(16, u8);
+
+fn makeSlugLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
 }
 
-fn isAlphaUpper(b: u8): bool {
-    return b >= 'A' && b <= 'Z';
+fn makeSlugClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    // bit 0: isAlnumLower ([a-z0-9])
+    // bit 1: isAlnumAny ([A-Za-z0-9])
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let flags: u8 = 0;
+        if ((i >= 'a' && i <= 'z') || (i >= '0' && i <= '9')) {
+            flags |= 3;
+        } else if (i >= 'A' && i <= 'Z') {
+            flags |= 2;
+        }
+        lut[i] = flags;
+    }
+    return lut;
 }
 
-fn isDigit(b: u8): bool {
-    return b >= '0' && b <= '9';
-}
+const SLUG_LOWER_LUT: [u8; 256] = makeSlugLowerLut();
+const SLUG_CLASS_LUT: [u8; 256] = makeSlugClassLut();
 
 fn isAlnumLower(b: u8): bool {
-    return isAlphaLower(b) || isDigit(b);
+    return (SLUG_CLASS_LUT[usize(b)] & 1) != 0;
 }
 
 fn isAlnumAny(b: u8): bool {
-    return isAlphaLower(b) || isAlphaUpper(b) || isDigit(b);
+    return (SLUG_CLASS_LUT[usize(b)] & 2) != 0;
 }
 
 fn toLowerAscii(b: u8): u8 {
-    if (b >= 'A' && b <= 'Z') return b + 32;
-    return b;
+    return SLUG_LOWER_LUT[usize(b)];
 }
 
 struct DecodedChar {
@@ -172,7 +196,17 @@ pub fn deunicodeChar(cp: u32): []const u8 {
 pub fn deunicode(input: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
+    const hi_mask: SlugVec16 = @splat(0x80 as u8);
     while (i < input.len) {
+        if (i + 16 <= input.len && pos + 16 <= out.len) {
+            const v: SlugVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v & hi_mask) == 0) {
+                @memcpy(out[pos .. pos + 16], input[i .. i + 16]);
+                pos += 16;
+                i += 16;
+                continue;
+            }
+        }
         const b = input[i];
         if (b < 0x80) {
             if (pos >= out.len) return null;
@@ -184,12 +218,8 @@ pub fn deunicode(input: []const u8, out: []u8): ([]const u8)? {
             const mapped = deunicodeChar(decoded.cp);
             if (mapped.len > 0) {
                 if (pos + mapped.len > out.len) return null;
-                let k: usize = 0;
-                while (k < mapped.len) {
-                    out[pos] = mapped[k];
-                    pos += 1;
-                    k += 1;
-                }
+                @memcpy(out[pos .. pos + mapped.len], mapped);
+                pos += mapped.len;
             }
             i += decoded.len;
         }
@@ -236,7 +266,36 @@ pub fn slugifyWithOptions(input: []const u8, opts: SlugOptions, out: []u8): ([]c
 
     // When max_len > 0 we render into `out` up to its capacity, then word-boundary trim.
     let i: usize = 0;
+    const v_a: SlugVec16 = @splat(97 as u8);
+    const v_z: SlugVec16 = @splat(122 as u8);
+    const v_A: SlugVec16 = @splat(65 as u8);
+    const v_Z: SlugVec16 = @splat(90 as u8);
+    const v_0: SlugVec16 = @splat(48 as u8);
+    const v_9: SlugVec16 = @splat(57 as u8);
+    const v_case: SlugVec16 = @splat(0x20 as u8);
+    const v_zero: SlugVec16 = @splat(0 as u8);
+    const v_one: SlugVec16 = @splat(1 as u8);
+
     while (i < input.len) {
+        if (!pending_sep && i + 16 <= input.len && pos + 16 <= out.len) {
+            const v: SlugVec16 = input[i .. i + 16][0..16].*;
+            const is_lo = (v >= v_a) & (v <= v_z);
+            const is_up = (v >= v_A) & (v <= v_Z);
+            const is_dg = (v >= v_0) & (v <= v_9);
+            const is_alnum = is_lo | is_up | is_dg;
+            const bad = @select(u8, is_alnum, v_zero, v_one);
+            if (@reduce(.Or, bad) == 0) {
+                if (opts.lowercase) {
+                    const lowered: [16]u8 = @select(u8, is_up, v | v_case, v);
+                    @memcpy(out[pos .. pos + 16], lowered[0..16]);
+                } else {
+                    @memcpy(out[pos .. pos + 16], input[i .. i + 16]);
+                }
+                pos += 16;
+                i += 16;
+                continue;
+            }
+        }
         const b = input[i];
         if (b < 0x80) {
             if (opts.expand_symbols) {
@@ -348,7 +407,21 @@ pub fn isValidSlugWithSep(s: []const u8, sep: u8): bool {
     if (s[0] == sep || s[s.len - 1] == sep) return false;
     let prev_sep = false;
     let i: usize = 0;
+    const v_a: SlugVec16 = @splat(97 as u8);
+    const v_z: SlugVec16 = @splat(122 as u8);
+    const v_0: SlugVec16 = @splat(48 as u8);
+    const v_9: SlugVec16 = @splat(57 as u8);
+    const v_zero: SlugVec16 = @splat(0 as u8);
+    const v_one: SlugVec16 = @splat(1 as u8);
     while (i < s.len) {
+        if (!prev_sep && i + 16 <= s.len) {
+            const v: SlugVec16 = s[i .. i + 16][0..16].*;
+            const ok = ((v >= v_a) & (v <= v_z)) | ((v >= v_0) & (v <= v_9));
+            if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) == 0) {
+                i += 16;
+                continue;
+            }
+        }
         const c = s[i];
         if (c == sep) {
             if (prev_sep) return false;

@@ -2,8 +2,40 @@
 
 const U64_MAX: u64 = 0xFFFF_FFFF_FFFF_FFFF;
 
+type StVec16 = @Vector(16, u8);
+
+fn makeStSpaceLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\r')] = 1;
+    lut[usize('\n')] = 1;
+    return lut;
+}
+
+fn makeStTokenLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= '0' && i <= '9') || (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z')) {
+            lut[i] = 1;
+        }
+    }
+    const extra = "!#$%&'*+-.^_`|~";
+    let k: usize = 0;
+    while (k < extra.len) : (k += 1) {
+        lut[usize(extra[k])] = 1;
+    }
+    return lut;
+}
+
+const ST_SPACE_LUT: [u8; 256] = makeStSpaceLut();
+const ST_TOKEN_LUT: [u8; 256] = makeStTokenLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return ST_SPACE_LUT[usize(c)] != 0;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -30,6 +62,13 @@ fn strEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: StVec16 = a[i .. i + 16][0..16].*;
+        const vb: StVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -44,6 +83,18 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: StVec16 = @splat(65 as u8);
+    const hi_Z: StVec16 = @splat(90 as u8);
+    const case_bit: StVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: StVec16 = a[i .. i + 16][0..16].*;
+        const vb: StVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -54,28 +105,54 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 fn isTokenChar(c: u8): bool {
-    if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-        return true;
-    }
-    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
-        || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
-        || c == '^' || c == '_' || c == '`' || c == '|' || c == '~';
+    return ST_TOKEN_LUT[usize(c)] != 0;
 }
 
 fn isValidToken(s: []const u8): bool {
     if (s.len == 0) {
         return false;
     }
-    for (c of s) {
-        if (!isTokenChar(c)) {
+    let i: usize = 0;
+    const v_a: StVec16 = @splat(97 as u8);
+    const v_z: StVec16 = @splat(122 as u8);
+    const v_A: StVec16 = @splat(65 as u8);
+    const v_Z: StVec16 = @splat(90 as u8);
+    const v_0: StVec16 = @splat(48 as u8);
+    const v_9: StVec16 = @splat(57 as u8);
+    const v_dash: StVec16 = @splat(45 as u8);
+    const v_us: StVec16 = @splat(95 as u8);
+    const v_dot: StVec16 = @splat(46 as u8);
+    const v_zero: StVec16 = @splat(0 as u8);
+    const v_one: StVec16 = @splat(1 as u8);
+    while (i < s.len) {
+        if (i + 16 <= s.len) {
+            const v: StVec16 = s[i .. i + 16][0..16].*;
+            const ok = ((v >= v_a) & (v <= v_z)) | ((v >= v_A) & (v <= v_Z)) | ((v >= v_0) & (v <= v_9)) | (v == v_dash) | (v == v_us) | (v == v_dot);
+            if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) == 0) {
+                i += 16;
+                continue;
+            }
+        }
+        if (!isTokenChar(s[i])) {
             return false;
         }
+        i += 1;
     }
     return true;
 }
 
 fn findByte(s: []const u8, needle: u8): usize? {
     let i: usize = 0;
+    const v_n: StVec16 = @splat(needle);
+    const v_zero: StVec16 = @splat(0 as u8);
+    const v_one: StVec16 = @splat(1 as u8);
+    while (i + 16 <= s.len) {
+        const v: StVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, v == v_n, v_one, v_zero)) != 0) {
+            break;
+        }
+        i += 16;
+    }
     while (i < s.len) {
         if (s[i] == needle) {
             return i;
@@ -163,7 +240,18 @@ export struct ServerTimingIter {
             const item_start = _.pos;
             let in_quote = false;
             let escaped = false;
+            const v_dq: StVec16 = @splat(34 as u8);
+            const v_comma: StVec16 = @splat(44 as u8);
+            const v_zero: StVec16 = @splat(0 as u8);
+            const v_one: StVec16 = @splat(1 as u8);
             while (_.pos < _.src.len) {
+                if (!in_quote && _.pos + 16 <= _.src.len) {
+                    const v: StVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    if (@reduce(.Or, @select(u8, (v == v_dq) | (v == v_comma), v_one, v_zero)) == 0) {
+                        _.pos += 16;
+                        continue;
+                    }
+                }
                 const c = _.src[_.pos];
                 if (in_quote) {
                     if (escaped) {
@@ -191,10 +279,7 @@ export struct ServerTimingIter {
             }
 
             // 2. 按顶层分号拆分 metric-name 与参数列表
-            let p: usize = 0;
-            while (p < item_raw.len && item_raw[p] != ';') {
-                p += 1;
-            }
+            let p: usize = findByte(item_raw, ';') ?? item_raw.len;
             const name = trimAscii(item_raw[0..p]);
             if (!isValidToken(name)) {
                 continue;
@@ -206,11 +291,19 @@ export struct ServerTimingIter {
             if (p < item_raw.len && item_raw[p] == ';') {
                 p += 1;
             }
+            const v_semi: StVec16 = @splat(59 as u8);
             while (p < item_raw.len) {
                 const seg_start = p;
                 let q_in = false;
                 let q_esc = false;
                 while (p < item_raw.len) {
+                    if (!q_in && p + 16 <= item_raw.len) {
+                        const v: StVec16 = item_raw[p .. p + 16][0..16].*;
+                        if (@reduce(.Or, @select(u8, (v == v_dq) | (v == v_semi), v_one, v_zero)) == 0) {
+                            p += 16;
+                            continue;
+                        }
+                    }
                     const ch = item_raw[p];
                     if (q_in) {
                         if (q_esc) {
@@ -299,11 +392,9 @@ struct AppendWriter {
         if (_.pos + s.len > _.out.len) {
             return false;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(_.out[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
         }
         return true;
     }

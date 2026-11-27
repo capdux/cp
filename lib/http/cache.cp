@@ -24,6 +24,55 @@ pub struct CacheHeader {
     value: []const u8;
 }
 
+type HcVec16 = @Vector(16, u8);
+
+fn makeHcTokenLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= '0' && i <= '9') || (i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z')) {
+            lut[i] = 1;
+        }
+    }
+    const extra = "!#$%&'*+-.^_`|~";
+    let k: usize = 0;
+    while (k < extra.len) : (k += 1) {
+        lut[usize(extra[k])] = 1;
+    }
+    return lut;
+}
+
+fn makeHcEtagLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i == 0x21 || (i >= 0x23 && i <= 0x7E) || i >= 0x80) {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+fn makeHcLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const HC_TOKEN_LUT: [u8; 256] = makeHcTokenLut();
+const HC_ETAG_LUT: [u8; 256] = makeHcEtagLut();
+const HC_LOWER_LUT: [u8; 256] = makeHcLowerLut();
+
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
@@ -41,13 +90,22 @@ fn trimOws(s: []const u8): []const u8 {
 }
 
 fn toLowerChar(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
+    return HC_LOWER_LUT[usize(c)];
 }
 
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: HcVec16 = @splat(65 as u8);
+    const hi_Z: HcVec16 = @splat(90 as u8);
+    const case_bit: HcVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: HcVec16 = a[i .. i + 16][0..16].*;
+        const vb: HcVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLowerChar(a[i]) != toLowerChar(b[i])) return false;
     }
@@ -55,30 +113,40 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 fn isTokenChar(c: u8): bool {
-    if (c >= '0' && c <= '9') return true;
-    if (c >= 'A' && c <= 'Z') return true;
-    if (c >= 'a' && c <= 'z') return true;
-    return switch (c) {
-        '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~' => true,
-        else => false,
-    };
+    return HC_TOKEN_LUT[usize(c)] != 0;
 }
 
 fn isValidToken(s: []const u8): bool {
     if (s.len == 0) return false;
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const v_a: HcVec16 = @splat(97 as u8);
+    const v_z: HcVec16 = @splat(122 as u8);
+    const v_A: HcVec16 = @splat(65 as u8);
+    const v_Z: HcVec16 = @splat(90 as u8);
+    const v_0: HcVec16 = @splat(48 as u8);
+    const v_9: HcVec16 = @splat(57 as u8);
+    const v_dash: HcVec16 = @splat(45 as u8);
+    const v_us: HcVec16 = @splat(95 as u8);
+    const v_zero: HcVec16 = @splat(0 as u8);
+    const v_one: HcVec16 = @splat(1 as u8);
+    while (i < s.len) {
+        if (i + 16 <= s.len) {
+            const v: HcVec16 = s[i .. i + 16][0..16].*;
+            const ok = ((v >= v_a) & (v <= v_z)) | ((v >= v_A) & (v <= v_Z)) | ((v >= v_0) & (v <= v_9)) | (v == v_dash) | (v == v_us);
+            if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) == 0) {
+                i += 16;
+                continue;
+            }
+        }
         if (!isTokenChar(s[i])) return false;
+        i += 1;
     }
     return true;
 }
 
 fn isValidEtagChar(c: u8): bool {
     // RFC 9110 Section 8.8.3: etagc = %x21 / %x23-7E / obs-text (%x80-FF)
-    if (c == 0x21) return true;
-    if (c >= 0x23 && c <= 0x7E) return true;
-    if (c >= 0x80) return true;
-    return false;
+    return HC_ETAG_LUT[usize(c)] != 0;
 }
 
 fn parseU64Strict(s: []const u8): u64 ! HttpCacheError {
@@ -324,6 +392,17 @@ pub struct EntityTag {
 
         const inner = rest[1..(rest.len - 1)];
         let i: usize = 0;
+        const v_21: HcVec16 = @splat(0x21 as u8);
+        const v_23: HcVec16 = @splat(0x23 as u8);
+        const v_7e: HcVec16 = @splat(0x7E as u8);
+        const v_80: HcVec16 = @splat(0x80 as u8);
+        const v_zero: HcVec16 = @splat(0 as u8);
+        const v_one: HcVec16 = @splat(1 as u8);
+        while (i + 16 <= inner.len) : (i += 16) {
+            const v: HcVec16 = inner[i .. i + 16][0..16].*;
+            const ok = (v == v_21) | ((v >= v_23) & (v <= v_7e)) | (v >= v_80);
+            if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) != 0) return HttpCacheError.InvalidETag;
+        }
         while (i < inner.len) : (i += 1) {
             if (!isValidEtagChar(inner[i])) return HttpCacheError.InvalidETag;
         }
@@ -515,6 +594,14 @@ pub static class HttpCacheEvaluator {
                     if (!dup) {
                         let lower_name = alloc.alloc(u8, part.len) catch return HttpCacheError.OutOfMemory;
                         let k: usize = 0;
+                        const lo_A: HcVec16 = @splat(65 as u8);
+                        const hi_Z: HcVec16 = @splat(90 as u8);
+                        const case_bit: HcVec16 = @splat(0x20 as u8);
+                        while (k + 16 <= part.len) : (k += 16) {
+                            const v: HcVec16 = part[k .. k + 16][0..16].*;
+                            const lowered: [16]u8 = @select(u8, (v >= lo_A) & (v <= hi_Z), v | case_bit, v);
+                            @memcpy(lower_name[k .. k + 16], lowered[0..16]);
+                        }
                         while (k < part.len) : (k += 1) {
                             lower_name[k] = toLowerChar(part[k]);
                         }

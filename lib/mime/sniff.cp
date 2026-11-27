@@ -1,8 +1,41 @@
 // Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (WHATWG MIME Sniffing)
 
+type MimeVec16 = @Vector(16, u8);
+
+fn makeMimeSpaceLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\n')] = 1;
+    lut[usize('\r')] = 1;
+    lut[0x0C] = 1;
+    return lut;
+}
+
+fn makeMimeBinaryLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i <= 0x08 || i == 0x0B || (i >= 0x0E && i <= 0x1A) || (i >= 0x1C && i <= 0x1F) || i == 0x7F) {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const MIME_SPACE_LUT: [u8; 256] = makeMimeSpaceLut();
+const MIME_BINARY_LUT: [u8; 256] = makeMimeBinaryLut();
+
 fn eqlBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MimeVec16 = a[i .. i + 16][0..16].*;
+        const vb: MimeVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) { return false; }
+    }
     while (i < a.len) {
         if (a[i] != b[i]) { return false; }
         i += 1;
@@ -18,6 +51,18 @@ fn startsWith(buf: []const u8, prefix: []const u8): bool {
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    const lo_A: MimeVec16 = @splat(65 as u8);
+    const hi_Z: MimeVec16 = @splat(90 as u8);
+    const case_bit: MimeVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MimeVec16 = a[i .. i + 16][0..16].*;
+        const vb: MimeVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) { return false; }
+    }
     while (i < a.len) {
         let ca = a[i];
         let cb = b[i];
@@ -35,7 +80,7 @@ fn startsWithIgnoreCaseAscii(buf: []const u8, prefix: []const u8): bool {
 }
 
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0C;
+    return MIME_SPACE_LUT[usize(c)] != 0;
 }
 
 fn isTagTerm(c: u8): bool {
@@ -46,6 +91,19 @@ fn stripBomAndLeadSpace(buf: []const u8): []const u8 {
     let i: usize = 0;
     if (buf.len >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF) {
         i = 3;
+    }
+    const v_sp: MimeVec16 = @splat(32 as u8);
+    const v_tab: MimeVec16 = @splat(9 as u8);
+    const v_nl: MimeVec16 = @splat(10 as u8);
+    const v_cr: MimeVec16 = @splat(13 as u8);
+    const v_ff: MimeVec16 = @splat(12 as u8);
+    const v_zero: MimeVec16 = @splat(0 as u8);
+    const v_one: MimeVec16 = @splat(1 as u8);
+    while (i + 16 <= buf.len) {
+        const v: MimeVec16 = buf[i .. i + 16][0..16].*;
+        const is_ws = (v == v_sp) | (v == v_tab) | (v == v_nl) | (v == v_cr) | (v == v_ff);
+        if (@reduce(.Or, @select(u8, is_ws, v_zero, v_one)) != 0) { break; }
+        i += 16;
     }
     while (i < buf.len && isSpace(buf[i])) {
         i += 1;
@@ -63,12 +121,7 @@ fn trimEndSpace(buf: []const u8): []const u8 {
 
 /// 遵循 WHATWG MIME Sniffing §3 判断字节是否为二进制数据字节
 pub fn isBinaryDataByte(b: u8): bool {
-    if (b <= 0x08) { return true; }
-    if (b == 0x0B) { return true; }
-    if (b >= 0x0E && b <= 0x1A) { return true; }
-    if (b >= 0x1C && b <= 0x1F) { return true; }
-    if (b == 0x7F) { return true; }
-    return false;
+    return MIME_BINARY_LUT[usize(b)] != 0;
 }
 
 /// 检查前 512 字节是否为合法文本数据（支持 UTF-8/UTF-16 BOM，拒绝二进制控制字节与非法 UTF-8 序列）
@@ -89,8 +142,23 @@ pub fn isTextData(buf: []const u8): bool {
     const limit = if (buf.len < 512) buf.len else 512;
     const truncated_window = (buf.len > 512);
     let i = start;
+    const v_lo: MimeVec16 = @splat(0x20 as u8);
+    const v_hi: MimeVec16 = @splat(0x7E as u8);
+    const v_tab: MimeVec16 = @splat(0x09 as u8);
+    const v_nl: MimeVec16 = @splat(0x0A as u8);
+    const v_cr: MimeVec16 = @splat(0x0D as u8);
+    const v_zero: MimeVec16 = @splat(0 as u8);
+    const v_one: MimeVec16 = @splat(1 as u8);
 
     while (i < limit) {
+        if (i + 16 <= limit) {
+            const v: MimeVec16 = buf[i .. i + 16][0..16].*;
+            const safe = ((v >= v_lo) & (v <= v_hi)) | (v == v_tab) | (v == v_nl) | (v == v_cr);
+            if (@reduce(.Or, @select(u8, safe, v_zero, v_one)) == 0) {
+                i += 16;
+                continue;
+            }
+        }
         const b0 = buf[i];
         if (b0 < 0x80) {
             if (isBinaryDataByte(b0)) {
@@ -155,7 +223,17 @@ pub fn sniffImageMime(buf: []const u8): ([]const u8)? {
     let s = stripBomAndLeadSpace(buf);
     if (startsWithIgnoreCaseAscii(s, "<?xml")) {
         let i: usize = 5;
+        const v_q: MimeVec16 = @splat(63 as u8);
+        const v_zero: MimeVec16 = @splat(0 as u8);
+        const v_one: MimeVec16 = @splat(1 as u8);
         while (i + 1 < s.len) {
+            if (i + 17 <= s.len) {
+                const v: MimeVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, @select(u8, v == v_q, v_one, v_zero)) == 0) {
+                    i += 16;
+                    continue;
+                }
+            }
             if (s[i] == '?' && s[i + 1] == '>') {
                 s = stripBomAndLeadSpace(s[(i + 2)..s.len]);
                 break;

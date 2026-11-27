@@ -2,6 +2,78 @@
 // Pure-CP zero-allocation RFC 2397 Data URL parser, percent-encoder/decoder,
 // base64 payload decoder/encoder, and shortest Data URL encoder.
 
+type DataUrlVec16 = @Vector(16, u8);
+
+fn makeDataUrlB64Lut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i - 'A'));
+        } else if (i >= 'a' && i <= 'z') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 26));
+        } else if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0' + 52));
+        } else if (i == '+') {
+            lut[i] = 62;
+        } else if (i == '/') {
+            lut[i] = 63;
+        }
+    }
+    return lut;
+}
+
+fn makeDataUrlHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+fn makeDataUrlEscLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i < 0x20 || i >= 0x7F || i == ' ' || i == '%' || i == '#' || i == '"' || i == '<' || i == '>' || i == '?' || i == '`') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const DATAURL_B64_LUT: [u8; 256] = makeDataUrlB64Lut();
+const DATAURL_HEX_LUT: [u8; 256] = makeDataUrlHexLut();
+const DATAURL_ESC_LUT: [u8; 256] = makeDataUrlEscLut();
+
+fn findByteSimd(buf: []const u8, start: usize, needle: u8): usize? {
+    let i = start;
+    const v_needle: DataUrlVec16 = @splat(needle);
+    const v_zero: DataUrlVec16 = @splat(0 as u8);
+    const v_one: DataUrlVec16 = @splat(1 as u8);
+    while (i + 16 <= buf.len) {
+        const v: DataUrlVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, v == v_needle, v_one, v_zero)) != 0) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < buf.len) : (i += 1) {
+        if (buf[i] == needle) return i;
+    }
+    return null;
+}
+
 pub struct DataUrl {
     /// Raw MIME type & parameters (excluding `;base64`). Empty implies `text/plain;charset=US-ASCII`.
     mime_type: []const u8,
@@ -13,15 +85,7 @@ pub struct DataUrl {
     /// Parse a `data:[<mediatype>][;base64],<data>` URL. Returns null if invalid.
     pub static fn parse(url: []const u8): DataUrl? {
         if (url.len < 5 || !startsWithIgnoreCase(url, "data:")) return null;
-        let comma: usize? = null;
-        let i: usize = 5;
-        while (i < url.len) : (i += 1) {
-            if (url[i] == ',') {
-                comma = i;
-                break;
-            }
-        }
-        const c_idx = comma ?? return null;
+        const c_idx = findByteSimd(url, 5, ',') ?? return null;
         let meta = url[5..c_idx];
         let is_b64 = false;
         if (meta.len >= 7 && eqIgnoreCase(meta[meta.len - 7 ..], ";base64")) {
@@ -48,15 +112,7 @@ pub struct DataUrl {
             return percentDecode(_.data, out);
         }
         // First percent-decode into a temporary stack buffer if small, or decode directly when no '%'
-        let has_pct = false;
-        let i: usize = 0;
-        while (i < _.data.len) : (i += 1) {
-            if (_.data[i] == '%') {
-                has_pct = true;
-                break;
-            }
-        }
-        if (!has_pct) {
+        if (findByteSimd(_.data, 0, '%') == null) {
             return base64Decode(_.data, out);
         }
         let tmp: [4096]u8 = undefined;
@@ -69,7 +125,19 @@ pub struct DataUrl {
 pub fn percentDecode(input: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
     let p: usize = 0;
+    const v_pct: DataUrlVec16 = @splat(37 as u8);
+    const v_zero: DataUrlVec16 = @splat(0 as u8);
+    const v_one: DataUrlVec16 = @splat(1 as u8);
     while (i < input.len) {
+        if (i + 16 <= input.len && p + 16 <= out.len) {
+            const v: DataUrlVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, @select(u8, v == v_pct, v_one, v_zero)) == 0) {
+                @memcpy(out[p .. p + 16], input[i .. i + 16]);
+                p += 16;
+                i += 16;
+                continue;
+            }
+        }
         if (input[i] == '%' && i + 2 < input.len) {
             const hi = hexVal(input[i + 1]);
             const lo = hexVal(input[i + 2]);
@@ -112,7 +180,28 @@ pub fn encodePercentDataUrl(mime_type: []const u8, text: []const u8, out: []u8):
     p = appendStr(out, p, ",");
 
     let i: usize = 0;
-    while (i < text.len) : (i += 1) {
+    const v_lo: DataUrlVec16 = @splat(0x21 as u8);
+    const v_hi: DataUrlVec16 = @splat(0x7E as u8);
+    const v_pct: DataUrlVec16 = @splat(37 as u8);
+    const v_hash: DataUrlVec16 = @splat(35 as u8);
+    const v_dq: DataUrlVec16 = @splat(34 as u8);
+    const v_lt: DataUrlVec16 = @splat(60 as u8);
+    const v_gt: DataUrlVec16 = @splat(62 as u8);
+    const v_qm: DataUrlVec16 = @splat(63 as u8);
+    const v_bt: DataUrlVec16 = @splat(96 as u8);
+    const v_zero: DataUrlVec16 = @splat(0 as u8);
+    const v_one: DataUrlVec16 = @splat(1 as u8);
+    while (i < text.len) {
+        if (i + 16 <= text.len) {
+            const v: DataUrlVec16 = text[i .. i + 16][0..16].*;
+            const needs = (v < v_lo) | (v > v_hi) | (v == v_pct) | (v == v_hash) | (v == v_dq) | (v == v_lt) | (v == v_gt) | (v == v_qm) | (v == v_bt);
+            if (@reduce(.Or, @select(u8, needs, v_one, v_zero)) == 0) {
+                @memcpy(out[p .. p + 16], text[i .. i + 16]);
+                p += 16;
+                i += 16;
+                continue;
+            }
+        }
         const c = text[i];
         if (needsDataUrlEscape(c)) {
             out[p] = '%';
@@ -123,6 +212,7 @@ pub fn encodePercentDataUrl(mime_type: []const u8, text: []const u8, out: []u8):
             out[p] = c;
             p += 1;
         }
+        i += 1;
     }
     return out[0..p];
 }
@@ -143,6 +233,23 @@ pub fn encodeShortestDataUrl(mime_type: []const u8, payload: []const u8, out: []
 fn countPercentDataUrlLen(mime_type: []const u8, text: []const u8): usize {
     let n: usize = mime_type.len + 6;
     let i: usize = 0;
+    const v_lo: DataUrlVec16 = @splat(0x21 as u8);
+    const v_hi: DataUrlVec16 = @splat(0x7E as u8);
+    const v_pct: DataUrlVec16 = @splat(37 as u8);
+    const v_hash: DataUrlVec16 = @splat(35 as u8);
+    const v_dq: DataUrlVec16 = @splat(34 as u8);
+    const v_lt: DataUrlVec16 = @splat(60 as u8);
+    const v_gt: DataUrlVec16 = @splat(62 as u8);
+    const v_qm: DataUrlVec16 = @splat(63 as u8);
+    const v_bt: DataUrlVec16 = @splat(96 as u8);
+    const v_zero: DataUrlVec16 = @splat(0 as u8);
+    const v_one: DataUrlVec16 = @splat(1 as u8);
+    while (i + 16 <= text.len) : (i += 16) {
+        const v: DataUrlVec16 = text[i .. i + 16][0..16].*;
+        const needs = (v < v_lo) | (v > v_hi) | (v == v_pct) | (v == v_hash) | (v == v_dq) | (v == v_lt) | (v == v_gt) | (v == v_qm) | (v == v_bt);
+        const extra: usize = @as(usize, @reduce(.Add, @select(u8, needs, v_one, v_zero)));
+        n += 16 + extra * 2;
+    }
     while (i < text.len) : (i += 1) {
         n += if (needsDataUrlEscape(text[i])) @as(usize, 3) else @as(usize, 1);
     }
@@ -150,8 +257,7 @@ fn countPercentDataUrlLen(mime_type: []const u8, text: []const u8): usize {
 }
 
 fn needsDataUrlEscape(c: u8): bool {
-    if (c < 0x20 || c >= 0x7F) return true;
-    return c == ' ' || c == '%' || c == '#' || c == '"' || c == '<' || c == '>' || c == '?' || c == '`';
+    return DATAURL_ESC_LUT[usize(c)] != 0;
 }
 
 pub fn base64Encode(src: []const u8, out: []u8): ([]const u8)? {
@@ -221,19 +327,15 @@ pub fn base64Decode(src: []const u8, out: []u8): ([]const u8)? {
 }
 
 fn b64Val(c: u8): u8? {
-    if (c >= 'A' && c <= 'Z') return c - 'A';
-    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-    if (c >= '0' && c <= '9') return c - '0' + 52;
-    if (c == '+') return 62;
-    if (c == '/') return 63;
-    return null;
+    const v = DATAURL_B64_LUT[usize(c)];
+    if (v == 0xFF) return null;
+    return v;
 }
 
 fn hexVal(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return null;
+    const v = DATAURL_HEX_LUT[usize(c)];
+    if (v == 0xFF) return null;
+    return v;
 }
 
 fn hexUpper(n: u8): u8 {
@@ -248,6 +350,16 @@ fn toLower(c: u8): u8 {
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: DataUrlVec16 = @splat(65 as u8);
+    const hi_Z: DataUrlVec16 = @splat(90 as u8);
+    const case_bit: DataUrlVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: DataUrlVec16 = a[i .. i + 16][0..16].*;
+        const vb: DataUrlVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLower(a[i]) != toLower(b[i])) return false;
     }
@@ -260,11 +372,11 @@ fn startsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
 }
 
 fn appendStr(out: []u8, pos: usize, s: []const u8): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
+    if (pos >= out.len) return pos;
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    if (n > 0) {
+        @memcpy(out[pos .. pos + n], s[0..n]);
     }
-    return p;
+    return pos + n;
 }

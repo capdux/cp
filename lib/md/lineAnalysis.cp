@@ -6,6 +6,54 @@ const std = @import("std");
 import { isBlank, isNewline, isAlpha, isAlphaNum, isDigit, asciiCaseEql } from "./helpers.cp";
 import { Align, Container, Md4cParserState, TABLE_MAXCOLCOUNT } from "./types.cp";
 
+type MdLineVec16 = @Vector(16, u8);
+
+fn makeMdLineClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    // bit 0: blank (' ' | '\t')
+    // bit 1: newline ('\r' | '\n')
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\r')] = 2;
+    lut[usize('\n')] = 2;
+    return lut;
+}
+
+const MD_LINE_CLASS_LUT: [u8; 256] = makeMdLineClassLut();
+
+fn skipRepeatByteSimd(buf: []const u8, start: u32, size: u32, target: u8): u32 {
+    let pos: usize = start as usize;
+    const lim: usize = size as usize;
+    const v_t: MdLineVec16 = @splat(target);
+    const v_zero: MdLineVec16 = @splat(0 as u8);
+    const v_one: MdLineVec16 = @splat(1 as u8);
+    while (pos + 16 <= lim) {
+        const v: MdLineVec16 = buf[pos .. pos + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, v == v_t, v_zero, v_one)) != 0) break;
+        pos += 16;
+    }
+    while (pos < lim && buf[pos] == target) pos += 1;
+    return @as(u32, @intCast(pos));
+}
+
+fn skipBlanksSimd(buf: []const u8, start: u32, size: u32): u32 {
+    let pos: usize = start as usize;
+    const lim: usize = size as usize;
+    const v_sp: MdLineVec16 = @splat(32 as u8);
+    const v_tab: MdLineVec16 = @splat(9 as u8);
+    const v_zero: MdLineVec16 = @splat(0 as u8);
+    const v_one: MdLineVec16 = @splat(1 as u8);
+    while (pos + 16 <= lim) {
+        const v: MdLineVec16 = buf[pos .. pos + 16][0..16].*;
+        const ok = (v == v_sp) | (v == v_tab);
+        if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) != 0) break;
+        pos += 16;
+    }
+    while (pos < lim && (MD_LINE_CLASS_LUT[usize(buf[pos])] & 1) != 0) pos += 1;
+    return @as(u32, @intCast(pos));
+}
+
 pub struct SetextResult {
     is_setext: bool = false,
     level: u32 = 0,
@@ -37,9 +85,8 @@ pub fn isSetextUnderline(p: *const Md4cParserState, off: u32): SetextResult {
     const c = p.text[off];
     if (c != '=' && c != '-') return SetextResult{};
 
-    let pos = off;
-    while (pos < p.size && p.text[pos] == c) pos += 1;
-    while (pos < p.size && isBlank(p.text[pos])) pos += 1;
+    let pos = skipRepeatByteSimd(p.text, off, p.size, c);
+    pos = skipBlanksSimd(p.text, pos, p.size);
 
     if (pos >= p.size || isNewline(p.text[pos])) {
         const level: u32 = if (c == '=') 1 else 2;
@@ -52,9 +99,23 @@ pub fn isHrLine(p: *const Md4cParserState, off: u32): bool {
     const c = p.text[off];
     if (c != '-' && c != '_' && c != '*') return false;
 
-    let pos = off;
+    let pos: usize = off as usize;
+    const lim: usize = p.size as usize;
     let count: u32 = 0;
-    while (pos < p.size && !isNewline(p.text[pos])) {
+    const v_c: MdLineVec16 = @splat(c);
+    const v_sp: MdLineVec16 = @splat(32 as u8);
+    const v_tab: MdLineVec16 = @splat(9 as u8);
+    const v_zero: MdLineVec16 = @splat(0 as u8);
+    const v_one: MdLineVec16 = @splat(1 as u8);
+    while (pos + 16 <= lim) {
+        const v: MdLineVec16 = p.text[pos .. pos + 16][0..16].*;
+        const is_c = (v == v_c);
+        const ok = is_c | (v == v_sp) | (v == v_tab);
+        if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) != 0) break;
+        count += @as(u32, @reduce(.Add, @select(u8, is_c, v_one, v_zero)));
+        pos += 16;
+    }
+    while (pos < lim && !isNewline(p.text[pos])) {
         if (p.text[pos] == c) {
             count += 1;
         } else if (!isBlank(p.text[pos])) {
@@ -87,19 +148,26 @@ pub fn isAtxHeaderLine(p: *const Md4cParserState, off: u32): AtxHeaderResult {
 pub fn isOpeningCodeFence(p: *const Md4cParserState, off: u32): CodeFenceResult {
     if (off >= p.size) return CodeFenceResult{};
     const fence_char = p.text[off];
-    let pos = off;
-    let count: u32 = 0;
-
-    while (pos < p.size && p.text[pos] == fence_char) {
-        count += 1;
-        pos += 1;
-    }
+    const pos = skipRepeatByteSimd(p.text, off, p.size, fence_char);
+    const count: u32 = pos - off;
 
     if (count < 3) return CodeFenceResult{};
 
     if (fence_char == '`') {
-        let check = pos;
-        while (check < p.size && !isNewline(p.text[check])) {
+        let check: usize = pos as usize;
+        const lim: usize = p.size as usize;
+        const v_bt: MdLineVec16 = @splat(96 as u8);
+        const v_nl: MdLineVec16 = @splat(10 as u8);
+        const v_cr: MdLineVec16 = @splat(13 as u8);
+        const v_zero: MdLineVec16 = @splat(0 as u8);
+        const v_one: MdLineVec16 = @splat(1 as u8);
+        while (check + 16 <= lim) {
+            const v: MdLineVec16 = p.text[check .. check + 16][0..16].*;
+            const stop = (v == v_bt) | (v == v_nl) | (v == v_cr);
+            if (@reduce(.Or, @select(u8, stop, v_one, v_zero)) != 0) break;
+            check += 16;
+        }
+        while (check < lim && !isNewline(p.text[check])) {
             if (p.text[check] == '`') return CodeFenceResult{};
             check += 1;
         }
@@ -113,15 +181,11 @@ pub fn isClosingCodeFence(p: *const Md4cParserState, off: u32, fence_data: u32):
     const fence_char: u8 = @intCast(fence_data & 0xFF);
     const fence_count = fence_data >> 8;
 
-    let pos = off;
-    let count: u32 = 0;
-    while (pos < p.size && p.text[pos] == fence_char) {
-        count += 1;
-        pos += 1;
-    }
+    let pos = skipRepeatByteSimd(p.text, off, p.size, fence_char);
+    const count: u32 = pos - off;
 
     if (count < fence_count) return false;
-    while (pos < p.size && isBlank(p.text[pos])) pos += 1;
+    pos = skipBlanksSimd(p.text, pos, p.size);
     return pos >= p.size || isNewline(p.text[pos]);
 }
 
@@ -374,7 +438,22 @@ pub fn countTableRowColumns(p: *const Md4cParserState, beg: u32, end: u32): u32 
     if (pos < row.len && row[pos] == '|') pos += 1;
 
     let in_cell = false;
+    const v_pipe: MdLineVec16 = @splat(124 as u8);
+    const v_bs: MdLineVec16 = @splat(92 as u8);
+    const v_nl: MdLineVec16 = @splat(10 as u8);
+    const v_cr: MdLineVec16 = @splat(13 as u8);
+    const v_zero: MdLineVec16 = @splat(0 as u8);
+    const v_one: MdLineVec16 = @splat(1 as u8);
     while (pos < row.len) {
+        if (pos + 16 <= row.len) {
+            const v: MdLineVec16 = row[pos .. pos + 16][0..16].*;
+            const stop = (v == v_pipe) | (v == v_bs) | (v == v_nl) | (v == v_cr);
+            if (@reduce(.Or, @select(u8, stop, v_one, v_zero)) == 0) {
+                in_cell = true;
+                pos += 16;
+                continue;
+            }
+        }
         if (row[pos] == '|') {
             col_count += 1;
             in_cell = false;

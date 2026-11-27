@@ -41,16 +41,42 @@ pub struct SrcsetCandidate {
     descriptor: []const u8 = "",
 }
 
+type HtmlVec16 = @Vector(16, u8);
+
+fn makeHtmlCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    // bit 0: isSpace
+    // bit 1: isTagNameChar
+    // bit 2: isAttrNameChar
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const sp = (i == ' ' || i == '\t' || i == '\n' || i == '\r' || i == 0x0C);
+        let flags: u8 = 0;
+        if (sp) flags |= 1;
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || (i >= '0' && i <= '9') || i == '-' || i == ':') {
+            flags |= 2;
+        }
+        if (!sp && i != '=' && i != '>' && i != '/' && i != '"' && i != '\'' && i != '<') {
+            flags |= 4;
+        }
+        lut[i] = flags;
+    }
+    return lut;
+}
+
+const HTML_CHAR_LUT: [u8; 256] = makeHtmlCharLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0C;
+    return (HTML_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isTagNameChar(c: u8): bool {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == ':';
+    return (HTML_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isAttrNameChar(c: u8): bool {
-    return !isSpace(c) && c != '=' && c != '>' && c != '/' && c != '"' && c != '\'' && c != '<';
+    return (HTML_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn trimSpaces(s: []const u8): []const u8 {
@@ -64,6 +90,16 @@ fn trimSpaces(s: []const u8): []const u8 {
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    const lo_A: HtmlVec16 = @splat(65 as u8);
+    const hi_Z: HtmlVec16 = @splat(90 as u8);
+    const case_bit: HtmlVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: HtmlVec16 = a[i .. i + 16][0..16].*;
+        const vb: HtmlVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) { return false; }
+    }
     while (i < a.len) {
         let ca = a[i];
         let cb = b[i];
@@ -73,6 +109,20 @@ fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
         i += 1;
     }
     return true;
+}
+
+fn skipUntilByteSimd(buf: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_n: HtmlVec16 = @splat(needle);
+    const v_zero: HtmlVec16 = @splat(0 as u8);
+    const v_one: HtmlVec16 = @splat(1 as u8);
+    while (i + 16 <= buf.len) {
+        const v: HtmlVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, v == v_n, v_one, v_zero)) != 0) { break; }
+        i += 16;
+    }
+    while (i < buf.len && buf[i] != needle) { i += 1; }
+    return i;
 }
 
 fn startsWithIgnoreCaseAscii(s: []const u8, prefix: []const u8): bool {
@@ -160,7 +210,17 @@ struct ParsedAttr {
 
 fn findClosingRawTag(html: []const u8, start: usize, tag_name: []const u8): usize {
     let i = start;
+    const v_lt: HtmlVec16 = @splat(60 as u8);
+    const v_zero: HtmlVec16 = @splat(0 as u8);
+    const v_one: HtmlVec16 = @splat(1 as u8);
     while (i + 2 + tag_name.len < html.len) {
+        if (i + 16 + 2 + tag_name.len <= html.len) {
+            const v: HtmlVec16 = html[i .. i + 16][0..16].*;
+            if (@reduce(.Or, @select(u8, v == v_lt, v_one, v_zero)) == 0) {
+                i += 16;
+                continue;
+            }
+        }
         if (html[i] == '<' && html[i + 1] == '/') {
             const name_start = i + 2;
             const name_end = name_start + tag_name.len;
@@ -201,7 +261,7 @@ pub struct HtmlAssetScanner {
 
         while (i < html.len && count < out.len) {
             if (html[i] != '<') {
-                i += 1;
+                i = skipUntilByteSimd(html, i, '<');
                 continue;
             }
 
@@ -211,7 +271,17 @@ pub struct HtmlAssetScanner {
             {
                 i += 4;
                 let closed = false;
+                const v_dash: HtmlVec16 = @splat(45 as u8);
+                const v_zero: HtmlVec16 = @splat(0 as u8);
+                const v_one: HtmlVec16 = @splat(1 as u8);
                 while (i + 2 < html.len) {
+                    if (i + 18 <= html.len) {
+                        const v: HtmlVec16 = html[i .. i + 16][0..16].*;
+                        if (@reduce(.Or, @select(u8, v == v_dash, v_one, v_zero)) == 0) {
+                            i += 16;
+                            continue;
+                        }
+                    }
                     if (html[i] == '-' && html[i + 1] == '-' && html[i + 2] == '>') {
                         i += 3;
                         closed = true;
@@ -227,8 +297,7 @@ pub struct HtmlAssetScanner {
 
             // 2. <!DOCTYPE ...> / <?...?> / </closing>
             if (i + 1 < html.len && (html[i + 1] == '!' || html[i + 1] == '?' || html[i + 1] == '/')) {
-                i += 2;
-                while (i < html.len && html[i] != '>') { i += 1; }
+                i = skipUntilByteSimd(html, i + 2, '>');
                 if (i < html.len) { i += 1; }
                 continue;
             }
@@ -284,7 +353,7 @@ pub struct HtmlAssetScanner {
                         const quote = html[i];
                         i += 1;
                         val_start = i;
-                        while (i < html.len && html[i] != quote) { i += 1; }
+                        i = skipUntilByteSimd(html, i, quote);
                         val_end = i;
                         if (i < html.len && html[i] == quote) { i += 1; }
                     } else {

@@ -5,6 +5,58 @@
 
 import { Simd } from "cap:simd";
 
+type MdVec16 = @Vector(16, u8);
+
+fn makeMdCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    // bit 0: isBlank (' ' | '\t')
+    // bit 1: isNewline ('\n' | '\r')
+    // bit 2: isAlpha ([A-Za-z])
+    // bit 3: isAlphaNum ([A-Za-z0-9])
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i == ' ' || i == '\t') f |= 1;
+        if (i == '\n' || i == '\r') f |= 2;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z')) f |= 12;
+        if (i >= '0' && i <= '9') f |= 8;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const MD_CHAR_LUT: [u8; 256] = makeMdCharLut();
+
+fn skipRepeatSimd(text: []const u8, start: usize, target: u8): usize {
+    let pos = start;
+    const v_t: MdVec16 = @splat(target);
+    const v_zero: MdVec16 = @splat(0 as u8);
+    const v_one: MdVec16 = @splat(1 as u8);
+    while (pos + 16 <= text.len) {
+        const v: MdVec16 = text[pos .. pos + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, v == v_t, v_zero, v_one)) != 0) break;
+        pos += 16;
+    }
+    while (pos < text.len && text[pos] == target) : (pos += 1) {}
+    return pos;
+}
+
+fn skipBlanksSimd(text: []const u8, start: usize): usize {
+    let pos = start;
+    const v_sp: MdVec16 = @splat(32 as u8);
+    const v_tab: MdVec16 = @splat(9 as u8);
+    const v_zero: MdVec16 = @splat(0 as u8);
+    const v_one: MdVec16 = @splat(1 as u8);
+    while (pos + 16 <= text.len) {
+        const v: MdVec16 = text[pos .. pos + 16][0..16].*;
+        if (@reduce(.Or, @select(u8, (v == v_sp) | (v == v_tab), v_zero, v_one)) != 0) break;
+        pos += 16;
+    }
+    while (pos < text.len && isBlank(text[pos])) : (pos += 1) {}
+    return pos;
+}
+
 /// SIMD-accelerated line-end finder returning byte offset of '\n' or '\r', or `text.len` if none.
 fn mdFindLineEnd(text: []const u8, off: usize): usize {
     if (off >= text.len) return text.len;
@@ -61,9 +113,8 @@ pub fn isSetextUnderline(text: []const u8, off: usize): SetextResult {
     const c = text[off];
     if (c != '=' && c != '-') return SetextResult{ is_setext: false, level: 0 };
 
-    let pos = off;
-    while (pos < text.len && text[pos] == c) : (pos += 1) {}
-    while (pos < text.len && isBlank(text[pos])) : (pos += 1) {}
+    let pos = skipRepeatSimd(text, off, c);
+    pos = skipBlanksSimd(text, pos);
 
     if (pos >= text.len || isNewline(text[pos])) {
         const level: u8 = if (c == '=') 1 else 2;
@@ -80,6 +131,19 @@ pub fn isHrLine(text: []const u8, off: usize): bool {
 
     let pos = off;
     let count: u32 = 0;
+    const v_c: MdVec16 = @splat(c);
+    const v_sp: MdVec16 = @splat(32 as u8);
+    const v_tab: MdVec16 = @splat(9 as u8);
+    const v_zero: MdVec16 = @splat(0 as u8);
+    const v_one: MdVec16 = @splat(1 as u8);
+    while (pos + 16 <= text.len) {
+        const v: MdVec16 = text[pos .. pos + 16][0..16].*;
+        const is_c = (v == v_c);
+        const ok = is_c | (v == v_sp) | (v == v_tab);
+        if (@reduce(.Or, @select(u8, ok, v_zero, v_one)) != 0) break;
+        count += @as(u32, @reduce(.Add, @select(u8, is_c, v_one, v_zero)));
+        pos += 16;
+    }
     while (pos < text.len && !isNewline(text[pos])) : (pos += 1) {
         if (text[pos] == c) {
             count += 1;
@@ -145,17 +209,27 @@ pub fn isOpeningCodeFence(text: []const u8, off: usize): CodeFenceResult {
         return CodeFenceResult{ is_fence: false, fence_char: 0, fence_count: 0, info: "" };
     }
 
-    let pos = off;
-    let count: u32 = 0;
-    while (pos < text.len && text[pos] == fence_char) : (pos += 1) {
-        count += 1;
-    }
+    const pos = skipRepeatSimd(text, off, fence_char);
+    const count: u32 = @as(u32, @intCast(pos - off));
     if (count < 3) {
         return CodeFenceResult{ is_fence: false, fence_char: 0, fence_count: 0, info: "" };
     }
 
     const info_raw_start = pos;
     let line_end = pos;
+    if (fence_char == '`') {
+        const v_bt: MdVec16 = @splat(96 as u8);
+        const v_nl: MdVec16 = @splat(10 as u8);
+        const v_cr: MdVec16 = @splat(13 as u8);
+        const v_zero: MdVec16 = @splat(0 as u8);
+        const v_one: MdVec16 = @splat(1 as u8);
+        while (line_end + 16 <= text.len) {
+            const v: MdVec16 = text[line_end .. line_end + 16][0..16].*;
+            const stop = (v == v_bt) | (v == v_nl) | (v == v_cr);
+            if (@reduce(.Or, @select(u8, stop, v_one, v_zero)) != 0) break;
+            line_end += 16;
+        }
+    }
     while (line_end < text.len && !isNewline(text[line_end])) : (line_end += 1) {
         if (fence_char == '`' && text[line_end] == '`') {
             return CodeFenceResult{ is_fence: false, fence_char: 0, fence_count: 0, info: "" };
@@ -177,13 +251,10 @@ pub fn isOpeningCodeFence(text: []const u8, off: usize): CodeFenceResult {
 
 /// Check if line starting at `off` closes an open fenced code block.
 pub fn isClosingCodeFence(text: []const u8, off: usize, fence_char: u8, min_count: u32): bool {
-    let pos = off;
-    let count: u32 = 0;
-    while (pos < text.len && text[pos] == fence_char) : (pos += 1) {
-        count += 1;
-    }
+    let pos = skipRepeatSimd(text, off, fence_char);
+    const count: u32 = @as(u32, @intCast(pos - off));
     if (count < min_count) return false;
-    while (pos < text.len && isBlank(text[pos])) : (pos += 1) {}
+    pos = skipBlanksSimd(text, pos);
     return pos >= text.len || isNewline(text[pos]);
 }
 
@@ -439,19 +510,19 @@ pub fn isTableUnderline(text: []const u8, off: usize): TableUnderlineResult {
 // ---------- Helpers ----------
 
 fn isBlank(c: u8): bool {
-    return c == ' ' || c == '\t';
+    return (MD_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isNewline(c: u8): bool {
-    return c == '\n' || c == '\r';
+    return (MD_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    return (MD_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isAlphaNum(c: u8): bool {
-    return isAlpha(c) || (c >= '0' && c <= '9');
+    return (MD_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn toLower(c: u8): u8 {
@@ -462,6 +533,11 @@ fn toLower(c: u8): u8 {
 fn mdLineStrEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MdVec16 = a[i .. i + 16][0..16].*;
+        const vb: MdVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -471,6 +547,16 @@ fn mdLineStrEq(a: []const u8, b: []const u8): bool {
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: MdVec16 = @splat(65 as u8);
+    const hi_Z: MdVec16 = @splat(90 as u8);
+    const case_bit: MdVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MdVec16 = a[i .. i + 16][0..16].*;
+        const vb: MdVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLower(a[i]) != toLower(b[i])) return false;
     }

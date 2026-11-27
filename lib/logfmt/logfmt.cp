@@ -3,13 +3,45 @@
 
 import std from "std";
 
+type LogfmtVec16 = @Vector(16, u8);
+
+fn makeLogfmtClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    // bit 0: isWs (' ', '\t', '\r', '\n')
+    // bit 1: isValidKeyChar (> 0x20 && != '=' && != '"' && != 0x7F)
+    // bit 2: needsQuote (<= 0x20 || == '"' || == '=' || == '\\' || == 0x7F)
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let flags: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') {
+            flags |= 1;
+        }
+        if (i > 0x20 && i != '=' && i != '"' && i != 0x7F) {
+            flags |= 2;
+        }
+        if (i <= 0x20 || i == '"' || i == '=' || i == '\\' || i == 0x7F) {
+            flags |= 4;
+        }
+        lut[i] = flags;
+    }
+    return lut;
+}
+
+const LOGFMT_CLASS_LUT: [u8; 256] = makeLogfmtClassLut();
+
 fn isWs(b: u8): bool {
-    return b == ' ' || b == '\t' || b == '\r' || b == '\n';
+    return (LOGFMT_CLASS_LUT[usize(b)] & 1) != 0;
 }
 
 fn strEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: LogfmtVec16 = a[i .. i + 16][0..16].*;
+        const vb: LogfmtVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) return false;
         i += 1;
@@ -18,7 +50,27 @@ fn strEq(a: []const u8, b: []const u8): bool {
 }
 
 fn isValidKeyChar(b: u8): bool {
-    return b > 0x20 && b != '=' && b != '"' && b != 0x7F;
+    return (LOGFMT_CLASS_LUT[usize(b)] & 2) != 0;
+}
+
+fn isValidKeySlice(key: []const u8): bool {
+    if (key.len == 0) return false;
+    let i: usize = 0;
+    const v_sp: LogfmtVec16 = @splat(0x20 as u8);
+    const v_eq: LogfmtVec16 = @splat(61 as u8);
+    const v_dq: LogfmtVec16 = @splat(34 as u8);
+    const v_del: LogfmtVec16 = @splat(0x7F as u8);
+    const v_zero: LogfmtVec16 = @splat(0 as u8);
+    const v_one: LogfmtVec16 = @splat(1 as u8);
+    while (i + 16 <= key.len) : (i += 16) {
+        const v: LogfmtVec16 = key[i .. i + 16][0..16].*;
+        const bad = (v <= v_sp) | (v == v_eq) | (v == v_dq) | (v == v_del);
+        if (@reduce(.Or, @select(u8, bad, v_one, v_zero)) != 0) return false;
+    }
+    while (i < key.len) : (i += 1) {
+        if (!isValidKeyChar(key[i])) return false;
+    }
+    return true;
 }
 
 pub struct LogfmtField {
@@ -31,16 +83,26 @@ pub struct LogfmtField {
     pub fn decodeValue(out: []u8): ([]const u8)? {
         if (!_.is_quoted) {
             if (_.raw_value.len > out.len) return null;
-            let i: usize = 0;
-            while (i < _.raw_value.len) {
-                out[i] = _.raw_value[i];
-                i += 1;
+            if (_.raw_value.len > 0) {
+                @memcpy(out[0.._.raw_value.len], _.raw_value);
             }
             return out[0.._.raw_value.len];
         }
         let i: usize = 0;
         let w: usize = 0;
+        const v_bs: LogfmtVec16 = @splat(92 as u8);
+        const v_zero: LogfmtVec16 = @splat(0 as u8);
+        const v_one: LogfmtVec16 = @splat(1 as u8);
         while (i < _.raw_value.len) {
+            if (i + 16 <= _.raw_value.len && w + 16 <= out.len) {
+                const v: LogfmtVec16 = _.raw_value[i .. i + 16][0..16].*;
+                if (@reduce(.Or, @select(u8, v == v_bs, v_one, v_zero)) == 0) {
+                    @memcpy(out[w .. w + 16], _.raw_value[i .. i + 16]);
+                    w += 16;
+                    i += 16;
+                    continue;
+                }
+            }
             const c = _.raw_value[i];
             if (c == '\\' && i + 1 < _.raw_value.len) {
                 const nxt = _.raw_value[i + 1];
@@ -148,7 +210,18 @@ pub struct LogfmtIter {
             _.pos += 1; // skip opening quote
             const vstart = _.pos;
             let closed = false;
+            const v_dq: LogfmtVec16 = @splat(34 as u8);
+            const v_bs: LogfmtVec16 = @splat(92 as u8);
+            const v_zero: LogfmtVec16 = @splat(0 as u8);
+            const v_one: LogfmtVec16 = @splat(1 as u8);
             while (_.pos < _.src.len) {
+                if (_.pos + 16 <= _.src.len) {
+                    const v: LogfmtVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    if (@reduce(.Or, @select(u8, (v == v_dq) | (v == v_bs), v_one, v_zero)) == 0) {
+                        _.pos += 16;
+                        continue;
+                    }
+                }
                 const c = _.src[_.pos];
                 if (c == '\\') {
                     if (_.pos + 1 >= _.src.len) {
@@ -179,6 +252,17 @@ pub struct LogfmtIter {
         }
 
         const vstart = _.pos;
+        const v_sp: LogfmtVec16 = @splat(0x20 as u8);
+        const v_dq2: LogfmtVec16 = @splat(34 as u8);
+        const v_eq2: LogfmtVec16 = @splat(61 as u8);
+        const v_zero2: LogfmtVec16 = @splat(0 as u8);
+        const v_one2: LogfmtVec16 = @splat(1 as u8);
+        while (_.pos + 16 <= _.src.len) {
+            const v: LogfmtVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+            const stop = (v <= v_sp) | (v == v_dq2) | (v == v_eq2);
+            if (@reduce(.Or, @select(u8, stop, v_one2, v_zero2)) != 0) break;
+            _.pos += 16;
+        }
         while (_.pos < _.src.len && !isWs(_.src[_.pos])) {
             if (_.src[_.pos] == '"' || _.src[_.pos] == '=') {
                 _.had_error = true;
@@ -246,9 +330,20 @@ pub fn countLogfmtFields(line: []const u8): usize {
 fn valueNeedsQuotes(val: []const u8): bool {
     if (val.len == 0) return true;
     let i: usize = 0;
+    const v_sp: LogfmtVec16 = @splat(0x20 as u8);
+    const v_dq: LogfmtVec16 = @splat(34 as u8);
+    const v_eq: LogfmtVec16 = @splat(61 as u8);
+    const v_bs: LogfmtVec16 = @splat(92 as u8);
+    const v_del: LogfmtVec16 = @splat(0x7F as u8);
+    const v_zero: LogfmtVec16 = @splat(0 as u8);
+    const v_one: LogfmtVec16 = @splat(1 as u8);
+    while (i + 16 <= val.len) : (i += 16) {
+        const v: LogfmtVec16 = val[i .. i + 16][0..16].*;
+        const bad = (v <= v_sp) | (v == v_dq) | (v == v_eq) | (v == v_bs) | (v == v_del);
+        if (@reduce(.Or, @select(u8, bad, v_one, v_zero)) != 0) return true;
+    }
     while (i < val.len) {
-        const c = val[i];
-        if (c <= 0x20 || c == '"' || c == '=' || c == '\\' || c == 0x7F) return true;
+        if ((LOGFMT_CLASS_LUT[usize(val[i])] & 4) != 0) return true;
         i += 1;
     }
     return false;
@@ -259,12 +354,7 @@ fn valueNeedsQuotes(val: []const u8): bool {
 /// Atomic on buffer overflow: restores `pos` to its original value if `false` is returned.
 pub fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8): bool {
     const saved_pos = pos.*;
-    if (key.len == 0) return false;
-    let ki: usize = 0;
-    while (ki < key.len) {
-        if (!isValidKeyChar(key[ki])) return false;
-        ki += 1;
-    }
+    if (!isValidKeySlice(key)) return false;
     if (pos.* > 0) {
         if (pos.* >= out.len) {
             pos.* = saved_pos;
@@ -277,11 +367,7 @@ pub fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8
         pos.* = saved_pos;
         return false;
     }
-    let i: usize = 0;
-    while (i < key.len) {
-        out[pos.* + i] = key[i];
-        i += 1;
-    }
+    @memcpy(out[pos.* .. pos.* + key.len], key);
     pos.* += key.len;
     out[pos.*] = '=';
     pos.* += 1;
@@ -291,10 +377,8 @@ pub fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8
             pos.* = saved_pos;
             return false;
         }
-        let vi: usize = 0;
-        while (vi < val.len) {
-            out[pos.* + vi] = val[vi];
-            vi += 1;
+        if (val.len > 0) {
+            @memcpy(out[pos.* .. pos.* + val.len], val);
         }
         pos.* += val.len;
         return true;
@@ -308,7 +392,24 @@ pub fn appendLogfmtPair(out: []u8, pos: *usize, key: []const u8, val: []const u8
     pos.* += 1;
 
     let vi: usize = 0;
+    const v_dq: LogfmtVec16 = @splat(34 as u8);
+    const v_bs: LogfmtVec16 = @splat(92 as u8);
+    const v_nl: LogfmtVec16 = @splat(10 as u8);
+    const v_cr: LogfmtVec16 = @splat(13 as u8);
+    const v_tab: LogfmtVec16 = @splat(9 as u8);
+    const v_zero: LogfmtVec16 = @splat(0 as u8);
+    const v_one: LogfmtVec16 = @splat(1 as u8);
     while (vi < val.len) {
+        if (vi + 16 <= val.len && pos.* + 16 <= out.len) {
+            const v: LogfmtVec16 = val[vi .. vi + 16][0..16].*;
+            const esc = (v == v_dq) | (v == v_bs) | (v == v_nl) | (v == v_cr) | (v == v_tab);
+            if (@reduce(.Or, @select(u8, esc, v_one, v_zero)) == 0) {
+                @memcpy(out[pos.* .. pos.* + 16], val[vi .. vi + 16]);
+                pos.* += 16;
+                vi += 16;
+                continue;
+            }
+        }
         const c = val[vi];
         if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t') {
             if (pos.* + 2 > out.len) {
@@ -391,12 +492,7 @@ pub struct LogfmtEncoder {
 
     pub fn kvFlag(*_, key: []const u8): bool {
         const saved = _.pos;
-        if (key.len == 0) return false;
-        let ki: usize = 0;
-        while (ki < key.len) {
-            if (!isValidKeyChar(key[ki])) return false;
-            ki += 1;
-        }
+        if (!isValidKeySlice(key)) return false;
         if (_.pos > 0) {
             if (_.pos >= _.buf.len) {
                 _.pos = saved;
@@ -409,11 +505,7 @@ pub struct LogfmtEncoder {
             _.pos = saved;
             return false;
         }
-        let i: usize = 0;
-        while (i < key.len) {
-            _.buf[_.pos + i] = key[i];
-            i += 1;
-        }
+        @memcpy(_.buf[_.pos .. _.pos + key.len], key);
         _.pos += key.len;
         return true;
     }
