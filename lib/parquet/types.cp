@@ -101,7 +101,7 @@ pub struct ColumnData {
     bool_vals: []const bool,
     byte_array_vals: []const []const u8,
 
-    pub fn fromInt32(name: []const u8, vals: []const i32): ColumnData {
+    pub static fn fromInt32(name: []const u8, vals: []const i32): ColumnData {
         return ColumnData{
             .name = name,
             .col_type = .INT32,
@@ -113,7 +113,7 @@ pub struct ColumnData {
         };
     }
 
-    pub fn fromInt64(name: []const u8, vals: []const i64): ColumnData {
+    pub static fn fromInt64(name: []const u8, vals: []const i64): ColumnData {
         return ColumnData{
             .name = name,
             .col_type = .INT64,
@@ -125,7 +125,7 @@ pub struct ColumnData {
         };
     }
 
-    pub fn fromDouble(name: []const u8, vals: []const f64): ColumnData {
+    pub static fn fromDouble(name: []const u8, vals: []const f64): ColumnData {
         return ColumnData{
             .name = name,
             .col_type = .DOUBLE,
@@ -137,7 +137,7 @@ pub struct ColumnData {
         };
     }
 
-    pub fn fromBool(name: []const u8, vals: []const bool): ColumnData {
+    pub static fn fromBool(name: []const u8, vals: []const bool): ColumnData {
         return ColumnData{
             .name = name,
             .col_type = .BOOLEAN,
@@ -149,7 +149,7 @@ pub struct ColumnData {
         };
     }
 
-    pub fn fromByteArray(name: []const u8, vals: []const []const u8): ColumnData {
+    pub static fn fromByteArray(name: []const u8, vals: []const []const u8): ColumnData {
         return ColumnData{
             .name = name,
             .col_type = .BYTE_ARRAY,

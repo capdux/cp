@@ -89,7 +89,7 @@ pub enum TaskState {
         };
     }
 
-    pub fn fromString(s: []const u8): TaskState? {
+    pub static fn fromString(s: []const u8): TaskState? {
         if (std.mem.eql(u8, s, "submitted")) {
             return .Submitted;
         }
@@ -143,7 +143,7 @@ pub enum MessageRole {
         };
     }
 
-    pub fn fromString(s: []const u8): MessageRole? {
+    pub static fn fromString(s: []const u8): MessageRole? {
         if (std.mem.eql(u8, s, "user")) {
             return .User;
         }
@@ -167,7 +167,7 @@ pub enum PartKind {
         };
     }
 
-    pub fn fromString(s: []const u8): PartKind? {
+    pub static fn fromString(s: []const u8): PartKind? {
         if (std.mem.eql(u8, s, "text")) {
             return .Text;
         }
@@ -188,15 +188,15 @@ pub struct Part {
     uri: []const u8 = "",
     data_json: []const u8 = "",
 
-    pub fn textPart(t: []const u8): Part {
+    pub static fn textPart(t: []const u8): Part {
         return .{ .kind = .Text, .text = t };
     }
 
-    pub fn dataPart(json_payload: []const u8): Part {
+    pub static fn dataPart(json_payload: []const u8): Part {
         return .{ .kind = .DataJson, .mime_type = "application/json", .data_json = json_payload };
     }
 
-    pub fn filePart(file_uri: []const u8, mime: []const u8): Part {
+    pub static fn filePart(file_uri: []const u8, mime: []const u8): Part {
         return .{ .kind = .FileUri, .uri = file_uri, .mime_type = mime };
     }
 }

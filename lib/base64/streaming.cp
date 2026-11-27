@@ -196,7 +196,7 @@ pub struct StreamingBase64Decoder {
     }
 
     /// Creates a new streaming decoder that ignores ASCII whitespace (` `, `\r`, `\n`, `\t`).
-    pub fn initIgnoreWhitespace(variant: Base64Variant): StreamingBase64Decoder {
+    pub static fn initIgnoreWhitespace(variant: Base64Variant): StreamingBase64Decoder {
         return StreamingBase64Decoder {
             variant: variant,
             ignore_whitespace: true,

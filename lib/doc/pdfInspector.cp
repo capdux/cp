@@ -96,7 +96,8 @@ fn parseLiteralStringSlice(bytes: []const u8, open_idx: usize): ([]const u8)? {
         i += rel;
         const c = bytes[i];
         if (c == '\\') {
-            i += if (i + 1 < bytes.len) 2 else 1;
+            const step: usize = if (i + 1 < bytes.len) 2 else 1;
+            i += step;
             continue;
         }
         if (c == '(') {
@@ -414,7 +415,8 @@ pub struct PdfLexer {
                     pos += rel;
                     const ch = bytes[pos];
                     if (ch == '\\') {
-                        pos += if (pos + 1 < bytes.len) 2 else 1;
+                        const step: usize = if (pos + 1 < bytes.len) 2 else 1;
+                        pos += step;
                         continue;
                     }
                     if (ch == '(') {

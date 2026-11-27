@@ -66,7 +66,7 @@ export enum S3Acl {
     log_delivery_write,
 
     /// 解析标准 S3 ACL 字符串
-    fn parse(s: []const u8): S3Acl? {
+    static fn parse(s: []const u8): S3Acl? {
         if (strEql(s, "private")) return S3Acl.private_acl;
         if (strEql(s, "public-read")) return S3Acl.public_read;
         if (strEql(s, "public-read-write")) return S3Acl.public_read_write;
@@ -108,7 +108,7 @@ export enum S3StorageClass {
     SNOW,
 
     /// 解析标准 S3 StorageClass 字符串
-    fn parse(s: []const u8): S3StorageClass? {
+    static fn parse(s: []const u8): S3StorageClass? {
         if (strEql(s, "STANDARD")) return S3StorageClass.STANDARD;
         if (strEql(s, "STANDARD_IA")) return S3StorageClass.STANDARD_IA;
         if (strEql(s, "INTELLIGENT_TIERING")) return S3StorageClass.INTELLIGENT_TIERING;
@@ -226,7 +226,7 @@ export struct S3Uri {
     region: ([]const u8)?;
 
     /// 解析 s3://、Virtual-Hosted-Style 与 Path-Style S3 URI
-    fn parse(input: []const u8): S3Uri? {
+    static fn parse(input: []const u8): S3Uri? {
         if (input.len == 0) {
             return null;
         }

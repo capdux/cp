@@ -131,7 +131,7 @@ export struct CaaRecord {
     }
 
     /// 解析 RFC 8659 文本格式 CAA 记录（如 `0 issue "letsencrypt.org"`、`128 issuewild ";"`）
-    fn parseText(rdata: []const u8): CaaRecord? {
+    static fn parseText(rdata: []const u8): CaaRecord? {
         let pos: usize = 0;
         while (pos < rdata.len && isSpace(rdata[pos])) {
             pos += 1;
@@ -226,7 +226,7 @@ export struct CaaRecord {
     }
 
     /// 解析 RFC 8659 §4.1 线缆二进制格式 `[flags:1][tag_len:1][tag:tag_len][value:rest]`
-    fn parseWire(rdata: []const u8): CaaRecord? {
+    static fn parseWire(rdata: []const u8): CaaRecord? {
         if (rdata.len < 2) {
             return null;
         }

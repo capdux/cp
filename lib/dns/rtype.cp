@@ -337,7 +337,7 @@ export struct SrvRecord {
     port: u16;
     target: []const u8;
 
-    fn parseText(rdata: []const u8): SrvRecord? {
+    static fn parseText(rdata: []const u8): SrvRecord? {
         let pos: usize = 0;
         const prio_s = nextToken(rdata, &pos) ?? return null;
         const weight_s = nextToken(rdata, &pos) ?? return null;
@@ -371,7 +371,7 @@ export struct MxRecord {
     preference: u16;
     exchange: []const u8;
 
-    fn parseText(rdata: []const u8): MxRecord? {
+    static fn parseText(rdata: []const u8): MxRecord? {
         let pos: usize = 0;
         const pref_s = nextToken(rdata, &pos) ?? return null;
         const exchange = nextToken(rdata, &pos) ?? return null;

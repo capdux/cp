@@ -386,7 +386,7 @@ export struct JwtHeader {
     typ: ([]const u8)?,
     kid: ([]const u8)?,
 
-    pub fn parseJson(header_json: []const u8): JwtHeader {
+    pub static fn parseJson(header_json: []const u8): JwtHeader {
         return JwtHeader {
             alg: extractStringClaim(header_json, "alg"),
             typ: extractStringClaim(header_json, "typ"),
@@ -426,7 +426,7 @@ export struct JwtClaims {
     nbf: i64?,
     iat: i64?,
 
-    pub fn parseJson(payload_json: []const u8): JwtClaims {
+    pub static fn parseJson(payload_json: []const u8): JwtClaims {
         return JwtClaims {
             iss: extractStringClaim(payload_json, "iss"),
             sub: extractStringClaim(payload_json, "sub"),

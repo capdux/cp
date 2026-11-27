@@ -125,7 +125,7 @@ export struct SrvRecord {
     }
 
     /// 解析文本格式 SRV RDATA（`"<priority> <weight> <port> <target>"`）
-    fn parseText(rdata: []const u8): SrvRecord? {
+    static fn parseText(rdata: []const u8): SrvRecord? {
         let pos: usize = 0;
         const prio_s = nextToken(rdata, &pos) ?? return null;
         const weight_s = nextToken(rdata, &pos) ?? return null;
@@ -152,7 +152,7 @@ export struct SrvRecord {
     }
 
     /// 解析二进制线缆格式 SRV 前 6 字节大端头（`priority`, `weight`, `port`）与剩余目标域名切片
-    fn parseWireHeader(rdata: []const u8): SrvWireHeader? {
+    static fn parseWireHeader(rdata: []const u8): SrvWireHeader? {
         if (rdata.len < 6) {
             return null;
         }
@@ -172,7 +172,7 @@ export struct SrvServiceName {
     domain: []const u8;
 
     /// 解析 `_http._tcp.example.com.` 等 RFC 2782 SRV 查询名（`service` 与 `proto` 去除前导 `_`）
-    fn parse(qname: []const u8): SrvServiceName? {
+    static fn parse(qname: []const u8): SrvServiceName? {
         const s = trimAscii(qname);
         if (s.len < 5 || s[0] != '_') {
             return null;

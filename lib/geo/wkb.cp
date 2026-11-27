@@ -39,19 +39,19 @@ pub struct WkbPoint {
     has_z: bool,
     has_m: bool,
 
-    fn xy(x: f64, y: f64): WkbPoint {
+    static fn xy(x: f64, y: f64): WkbPoint {
         return WkbPoint{ .x = x, .y = y, .z = 0.0, .m = 0.0, .has_z = false, .has_m = false };
     }
 
-    fn xyz(x: f64, y: f64, z: f64): WkbPoint {
+    static fn xyz(x: f64, y: f64, z: f64): WkbPoint {
         return WkbPoint{ .x = x, .y = y, .z = z, .m = 0.0, .has_z = true, .has_m = false };
     }
 
-    fn xym(x: f64, y: f64, m: f64): WkbPoint {
+    static fn xym(x: f64, y: f64, m: f64): WkbPoint {
         return WkbPoint{ .x = x, .y = y, .z = 0.0, .m = m, .has_z = false, .has_m = true };
     }
 
-    fn xyzm(x: f64, y: f64, z: f64, m: f64): WkbPoint {
+    static fn xyzm(x: f64, y: f64, z: f64, m: f64): WkbPoint {
         return WkbPoint{ .x = x, .y = y, .z = z, .m = m, .has_z = true, .has_m = true };
     }
 }
@@ -374,7 +374,7 @@ pub struct WkbChildIter {
 }
 
 pub struct WkbReader {
-    fn readPoint(data: []const u8): WkbPoint? {
+    static fn readPoint(data: []const u8): WkbPoint? {
         const hdr = parseWkbHeader(data) ?? return null;
         if (hdr.geom_type != WkbGeomType.point) {
             return null;
@@ -386,7 +386,7 @@ pub struct WkbReader {
         return readPointAt(data, hdr.body_offset, hdr.little_endian, hdr.has_z, hdr.has_m);
     }
 
-    fn linePoints(data: []const u8): WkbPointIter? {
+    static fn linePoints(data: []const u8): WkbPointIter? {
         const hdr = parseWkbHeader(data) ?? return null;
         if (hdr.geom_type != WkbGeomType.linestring) {
             return null;
@@ -412,11 +412,11 @@ pub struct WkbReader {
         };
     }
 
-    fn polygonRings(data: []const u8): WkbRingIter? {
+    static fn polygonRings(data: []const u8): WkbRingIter? {
         return WkbRingIter.init(data);
     }
 
-    fn children(data: []const u8): WkbChildIter? {
+    static fn children(data: []const u8): WkbChildIter? {
         return WkbChildIter.init(data);
     }
 }
@@ -434,11 +434,11 @@ pub struct WkbWriter {
         };
     }
 
-    fn initNdr(buf: []u8): WkbWriter {
+    static fn initNdr(buf: []u8): WkbWriter {
         return WkbWriter.init(buf, true);
     }
 
-    fn initXdr(buf: []u8): WkbWriter {
+    static fn initXdr(buf: []u8): WkbWriter {
         return WkbWriter.init(buf, false);
     }
 

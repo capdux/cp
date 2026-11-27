@@ -168,7 +168,7 @@ export struct DmarcRecord {
     ruf: ([]const u8)?;
 
     /// 解析 DMARC 记录（严格校验首标签为 `v=DMARC1` 且包含必选 `p=`）
-    fn parse(record: []const u8): DmarcRecord? {
+    static fn parse(record: []const u8): DmarcRecord? {
         let it = TxtTagIter.init(record);
         const first = it.next() ?? return null;
         if (!eqlIgnoreCase(first.key, "v") || !eqlBytes(first.value, "DMARC1")) {

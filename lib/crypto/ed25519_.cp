@@ -84,11 +84,11 @@ export fn fromHex(hex: []const u8, out: []u8): Ed25519Error![]u8 {
 export struct PublicKey {
     bytes: [32]u8,
 
-    pub fn fromBytes(raw: [32]u8): PublicKey {
+    pub static fn fromBytes(raw: [32]u8): PublicKey {
         return PublicKey{ .bytes = raw };
     }
 
-    pub fn fromSlice(slice: []const u8): Ed25519Error!PublicKey {
+    pub static fn fromSlice(slice: []const u8): Ed25519Error!PublicKey {
         if (slice.len != PUBLIC_KEY_LEN) {
             return Ed25519Error.InvalidLength;
         }
@@ -97,7 +97,7 @@ export struct PublicKey {
         return PublicKey{ .bytes = buf };
     }
 
-    pub fn fromHex(hex: []const u8): Ed25519Error!PublicKey {
+    pub static fn fromHex(hex: []const u8): Ed25519Error!PublicKey {
         if (hex.len != PUBLIC_KEY_LEN * 2) {
             return Ed25519Error.InvalidLength;
         }
@@ -122,11 +122,11 @@ export struct PublicKey {
 export struct SecretKey {
     bytes: [64]u8,
 
-    pub fn fromBytes(raw: [64]u8): SecretKey {
+    pub static fn fromBytes(raw: [64]u8): SecretKey {
         return SecretKey{ .bytes = raw };
     }
 
-    pub fn fromSlice(slice: []const u8): Ed25519Error!SecretKey {
+    pub static fn fromSlice(slice: []const u8): Ed25519Error!SecretKey {
         if (slice.len != SECRET_KEY_LEN) {
             return Ed25519Error.InvalidLength;
         }
@@ -135,7 +135,7 @@ export struct SecretKey {
         return SecretKey{ .bytes = buf };
     }
 
-    pub fn fromHex(hex: []const u8): Ed25519Error!SecretKey {
+    pub static fn fromHex(hex: []const u8): Ed25519Error!SecretKey {
         if (hex.len != SECRET_KEY_LEN * 2) {
             return Ed25519Error.InvalidLength;
         }
@@ -164,11 +164,11 @@ export struct SecretKey {
 export struct Signature {
     bytes: [64]u8,
 
-    pub fn fromBytes(raw: [64]u8): Signature {
+    pub static fn fromBytes(raw: [64]u8): Signature {
         return Signature{ .bytes = raw };
     }
 
-    pub fn fromSlice(slice: []const u8): Ed25519Error!Signature {
+    pub static fn fromSlice(slice: []const u8): Ed25519Error!Signature {
         if (slice.len != SIGNATURE_LEN) {
             return Ed25519Error.InvalidLength;
         }
@@ -177,7 +177,7 @@ export struct Signature {
         return Signature{ .bytes = buf };
     }
 
-    pub fn fromHex(hex: []const u8): Ed25519Error!Signature {
+    pub static fn fromHex(hex: []const u8): Ed25519Error!Signature {
         if (hex.len != SIGNATURE_LEN * 2) {
             return Ed25519Error.InvalidLength;
         }
@@ -203,7 +203,7 @@ export struct KeyPair {
     public_key: PublicKey,
     secret_key: SecretKey,
 
-    pub fn generate(): Ed25519Error!KeyPair {
+    pub static fn generate(): Ed25519Error!KeyPair {
         let threaded = std.Io.Threaded.init(std.heap.page_allocator, .{});
         defer threaded.deinit();
         let seed_buf: [32]u8 = undefined;
@@ -221,7 +221,7 @@ export struct KeyPair {
         };
     }
 
-    pub fn fromSecretKey(sk: SecretKey): KeyPair {
+    pub static fn fromSecretKey(sk: SecretKey): KeyPair {
         return KeyPair{
             .public_key = sk.publicKey(),
             .secret_key = sk,
