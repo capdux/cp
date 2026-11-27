@@ -842,5 +842,12 @@ git status --porcelain cpc_dev/src
 3. **沉淀毫秒级全仓门禁脚本替代人工零散排查**：日常体检与提交前直接运行 `python3 scripts/check_ecosystem_health.py`（300ms 覆盖 16 项元数据/文档/注册表门禁）与 `python3 scripts/test_cap_ai_toolchain.py`（41 断言覆盖 `cap fix`/`cap brief`/`cap check`），用 1 条命令替代 10+ 轮分散检查。
 4. **服务重启后的工作区半成品实行“独立核验波”制度**：切号重启后若 `git status` 存在上一轮未测完的改动，绝不盲目合入或混入新提交，而是单独派发只读 `git diff` 安全审阅 + 串行 `cap test -m` 验证波，确认 100% 绿灯后再单独成 commit 推送。
 
+### 6.13 第 13 轮 3 小时效率与 Token 审计固化铁律（2026-11-28 02:41）
+
+1. **密码/哈希/位集类热路径优先宽通道向量化与 `comptime` 表**：对 `crc32fast`/`crc32c`/`crc64fast` 统一采用 `comptime [8][256]` Slice-by-8（`@setEvalBranchQuota(80000)`），对 `chacha20`/`twox-hash`/`siphasher`/`fixedbitset` 采用 `@Vector(4, u32)`/`@Vector(4, u64)`/`@Vector(2, u64)` 宽通道向量与 `u128` 硬件乘法，单次改写即可获得数倍至数十倍真实吞吐跃升（实测 `ctEqual` 44.7 GB/s、`hex` 校验 20.8 GB/s、`cobs` 3.3 GB/s、`base64ct` 1.6 GB/s）。
+2. **429 配额切换重启后自动收尾半成品**：重启后在派发新波次 Prompt 首条固定加入 `git status --short <target_dir>/`，由对应目录的子智能体先审阅并收尾上轮遗留半成品，避免丢失有效改动或反复重置。
+3. **里程碑节点必配 LLVM ReleaseFast 实测压测**：每完成一大批生态包或内置标准库 SIMD 升级后，单独派发只读基准子智能体用 `zig build-exe -OReleaseFast -fllvm` + `std.mem.doNotOptimizeAway` 实测真实吞吐并追加进 `bench/ECOSYSTEM_PERF_REPORT.md`，用量化证据闭环验收。
+
+
 
 

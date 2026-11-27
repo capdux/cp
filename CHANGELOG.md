@@ -1466,3 +1466,11 @@
   - Phase 4D/4E/4F（24 个高频包：`html-escape`, `encodeurl`, `escape-string-regexp`, `jsesc`, `bstr`, `strip-json-comments`, `shell-escape`, `content-type`, `utf-8`, `punycode`, `slugify`, `etag`, `pathe`, `quoted-printable`, `escape-html`, `querystring`, `hex`, `bs58`, `urlencoding`, `zbase32`, `xml-name-validator`, `ndjson`, `cookie-parser`, `set-cookie-parser`）全面升级 16-lane `@Vector(16, u8)` SIMD + `comptime` LUT + `@memcpy` + `= undefined`（100% PASS）；
   - Phase 4-Stdlib Batch 1（10 个 `lib/` 核心模块）消除 **151 KB/call** 栈清零并新增 9 处 `@memcpy`（10/10 `-m` 深测 PASS）；
   - 第 11 轮 3h 效率审计固化进 [GEMINI.md](file:///data/dev/cp/GEMINI.md) §6.11。
+
+## [2026-11-28] - Phase 4G~4W 183 生态包 SIMD/LUT + Phase 4-Stdlib 70 模块消栈 746KiB & 100 模块 16-lane SIMD 双里程碑 + ReleaseFast 实测
+- **生态包 SIMD/LUT 深度提速（Phase 4G~4W，累计 183 核心包 100% PASS）**：涵盖 `base64ct`/`base16ct`（16-lane 常量时间无查表 SIMD）、`crc32fast`/`crc32c`/`crc64fast`（Slice-by-8）、`chacha20`（4-lane `@Vector(4, u32)` 10 双轮）、`aes`/`aes-gcm`（GF(2^8) `comptime` LUT + 16-lane GCTR）、`twox-hash`/`siphasher`/`fixedbitset`/`ahash`/`md-5`/`ripemd`/`pbkdf2`/`poly1305`/`ws`/`csv-core`/`cobs`/`bech32`/`jsonpointer`/`cookie-signature`/`picomatch`/`es-module-lexer`/`parse-json`/`sql-formatter` 等。
+- **内置标准库 `lib/` 双轨提速（Phase 4-Stdlib Batch 1~19）**：
+  - Batch 1~7（70 核心模块）累计消除 **~746 KiB/call** 无意义栈/结构体清零，全仓 `[0; >=4096]` 归零；
+  - Batch 8~19 正式达成 **100 个核心内置标准库模块 16-lane SIMD + `comptime` 256-entry LUT + `@memcpy` 升级里程碑**，全量 `cap test -m` 深测 100% PASS。
+- **LLVM ReleaseFast 实测基准追加（[bench/ECOSYSTEM_PERF_REPORT.md](file:///data/dev/cp/bench/ECOSYSTEM_PERF_REPORT.md)）**：`cookie-signature.ctEqual` **44.72 GB/s**、`hex.isValidHex` **20.79 GB/s**、`jsonpointer.countSegments` **9.78 GB/s (69.29M ops/s)**、`html-escape` **7.96 GB/s**、`cobs` **3.32 GB/s**、`base64ct` **1.61 GB/s**。
+- **第 12~13 轮 3 小时效率审计**：固化至 [GEMINI.md](file:///data/dev/cp/GEMINI.md) §6.12~§6.13。
