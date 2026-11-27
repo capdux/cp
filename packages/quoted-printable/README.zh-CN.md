@@ -13,13 +13,11 @@ cap add quoted-printable
 ```
 
 ```cp
-import { hexUpper } from "quoted-printable";
+import { isDirectPrintable } from "quoted-printable";
 ```
 
 ## 核心导出 API
 
-- `export fn hexUpper(nibble: u8): u8;`
-- `export fn hexVal(b: u8): i32;`
 - `export fn isDirectPrintable(b: u8): bool;`
 - `export fn encode(data: &[]u8, out: []u8): usize;`
 - `export fn decode(input: string, out: []u8): i64;`

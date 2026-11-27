@@ -13,13 +13,13 @@ cap add crc16
 ```
 
 ```cp
-import { reflectU8 } from "crc16";
+import { reflectU16 } from "crc16";
 ```
 
 ## 核心导出 API
 
-- `export fn reflectU8(v: u8): u8;`
 - `export fn reflectU16(v: u16): u16;`
+- `export fn crc16BuildTable(poly: u16, ref_in: bool): [256]u16;`
 - `export fn crc16CcittFalse(data: &[]u8): u16;`
 - `export fn crc16Xmodem(data: &[]u8): u16;`
 - `export fn crc16Modbus(data: &[]u8): u16;`

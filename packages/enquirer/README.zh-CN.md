@@ -13,16 +13,8 @@ cap add enquirer
 ```
 
 ```cp
-import { enqToLower } from "enquirer";
+import { example } from "enquirer";
 ```
-
-## 核心导出 API
-
-- `export fn enqToLower(b: u8): u8;`
-- `export fn enqIsSpace(b: u8): bool;`
-- `export fn enqTrim(s: string): string;`
-- `export fn enqEqIgnoreCase(a: string, b: string): bool;`
-- `export fn enqWriteStr(out: []u8, pos: usize, s: string): usize;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

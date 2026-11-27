@@ -24,6 +24,7 @@ import { isValidToken } from "mediatype";
 - `export fn formatMediaType(mt: MediaType, out: []u8): usize;`
 - `export fn isJsonLike(mt: MediaType): bool;`
 - `export fn isTextLike(mt: MediaType): bool;`
+- `export fn essenceEq(a: string, b: string): bool;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

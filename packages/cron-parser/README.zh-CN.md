@@ -13,17 +13,12 @@ cap add cron-parser
 ```
 
 ```cp
-import { crnIsSpace } from "cron-parser";
+import { crnParseUint } from "cron-parser";
 ```
 
 ## 核心导出 API
 
-- `export fn crnIsSpace(c: u8): bool;`
-- `export fn crnToLower(c: u8): u8;`
-- `export fn crnEqIgnoreCase(a: string, b: string): bool;`
-- `export fn crnTrim(s: string): string;`
 - `export fn crnParseUint(s: string): i32;`
-- `export fn crnFindByte(s: string, target: u8): usize;`
 - `export fn crnDaysInMonth(month: u8): u8;`
 - `export fn crnParseField(field: string, min_val: i32, max_val: i32, is_dow: bool, ok_out: []bool): u64;`
 - `export fn parseCron(expr: string): CronSchedule;`

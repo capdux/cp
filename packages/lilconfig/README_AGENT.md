@@ -5,10 +5,7 @@
 > Deps: `cosmiconfig`
 
 ## Functions
-- `export fn lilToLower(b: u8): u8;`
-- `export fn lilEqIgnoreCase(a: string, b: string): bool;`
 - `export fn lilEndsWithIgnoreCase(s: string, suffix: string): bool;`
-- `export fn lilWriteStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn lilBasename(filepath: string): string;`
 - `export fn lilIsNoExt(filepath: string): bool;`
 - `export fn formatLilSearchPlace(module_name: string, idx: usize, out: []u8): usize;`

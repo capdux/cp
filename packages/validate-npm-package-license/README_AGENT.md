@@ -5,8 +5,6 @@
 > Deps: `spdx-expression-parse`
 
 ## Functions
-- `export fn vnlStrEq(a: string, b: string): bool;`
-- `export fn vnlStartsWith(s: string, prefix: string): bool;`
 - `export fn vnlContainsWhitespace(s: string): bool;`
 - `export fn vnlIsLegacyLicense(license: string): bool;`
 - `export fn validateLicense(license: string): LicenseValidation;`

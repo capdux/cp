@@ -5,5 +5,6 @@
 > Deps: `cookie-signature`
 
 ## Functions
-- `export fn pbkdf2HmacSha256(password: []u8, salt: []u8, iterations: u32, out_dk: []u8): bool;`
-- `export fn pbkdf2Verify(password: []u8, salt: []u8, iterations: u32, expected_dk: []u8): bool;`
+- `export fn pbkdf2HmacSha256(password: &[]u8, salt: &[]u8, iterations: u32, out_dk: []u8): bool;`
+- `export fn pbkdf2Verify(password: &[]u8, salt: &[]u8, iterations: u32, expected_dk: &[]u8): bool;`
+- `export fn pbkdf2HmacSha256Str(password: string, salt: string, iterations: u32, out_dk: []u8): bool;`

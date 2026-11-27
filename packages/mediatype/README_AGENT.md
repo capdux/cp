@@ -10,3 +10,4 @@
 - `export fn formatMediaType(mt: MediaType, out: []u8): usize;`
 - `export fn isJsonLike(mt: MediaType): bool;`
 - `export fn isTextLike(mt: MediaType): bool;`
+- `export fn essenceEq(a: string, b: string): bool;`

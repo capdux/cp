@@ -18,8 +18,9 @@ import { pbkdf2HmacSha256 } from "pbkdf2";
 
 ## 核心导出 API
 
-- `export fn pbkdf2HmacSha256(password: []u8, salt: []u8, iterations: u32, out_dk: []u8): bool;`
-- `export fn pbkdf2Verify(password: []u8, salt: []u8, iterations: u32, expected_dk: []u8): bool;`
+- `export fn pbkdf2HmacSha256(password: &[]u8, salt: &[]u8, iterations: u32, out_dk: []u8): bool;`
+- `export fn pbkdf2Verify(password: &[]u8, salt: &[]u8, iterations: u32, expected_dk: &[]u8): bool;`
+- `export fn pbkdf2HmacSha256Str(password: string, salt: string, iterations: u32, out_dk: []u8): bool;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

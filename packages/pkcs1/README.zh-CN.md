@@ -13,12 +13,11 @@ cap add pkcs1
 ```
 
 ```cp
-import { pk1StrEqBytes } from "pkcs1";
+import { pk1WriteBigUint } from "pkcs1";
 ```
 
 ## 核心导出 API
 
-- `export fn pk1StrEqBytes(s: string, b: &[]u8): bool;`
 - `export fn pk1WriteBigUint(w: &mut DerWriter, raw: &[]u8): bool;`
 - `export fn pk1ReadBigUint(r: &mut DerReader, dst: []u8, len_out: &mut usize): i64;`
 - `export fn modulusBitLen(pub_key: RsaPublicKey): usize;`

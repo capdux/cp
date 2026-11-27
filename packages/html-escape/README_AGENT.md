@@ -4,7 +4,6 @@
 > Import: `import { ... } from "html-escape";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn eqBytes(a: string, b: string): bool;`
 - `export fn appendStr(dst: []u8, pos: usize, src: string): usize;`
 - `export fn needsEscape(input: string): bool;`
 - `export fn escapeHtml(input: string, out: []u8): usize;`

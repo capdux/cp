@@ -13,16 +13,13 @@ cap add phonenumber
 ```
 
 ```cp
-import { isDigit } from "phonenumber";
+import { isVisualSep } from "phonenumber";
 ```
 
 ## 核心导出 API
 
-- `export fn isDigit(c: u8): bool;`
 - `export fn isVisualSep(c: u8): bool;`
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn isValidE164(number: string): bool;`
 - `export fn normalizeE164(input: string, out: []u8): usize;`
 - `export fn parseTelUri(uri: string): TelUri;`

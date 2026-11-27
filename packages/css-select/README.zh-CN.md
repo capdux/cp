@@ -13,18 +13,15 @@ cap add css-select
 ```
 
 ```cp
-import { csssIsSpace } from "css-select";
+import { csssIsCombinator } from "css-select";
 ```
 
 ## 核心导出 API
 
-- `export fn csssIsSpace(c: u8): bool;`
 - `export fn csssIsCombinator(c: u8): bool;`
 - `export fn csssIsIdentStart(c: u8): bool;`
 - `export fn csssIsIdentChar(c: u8): bool;`
-- `export fn csssStrEq(a: string, b: string): bool;`
 - `export fn csssEqMaybeCi(a: string, b: string, ci: bool): bool;`
-- `export fn csssTrim(s: string): string;`
 - `export fn csssSkipIdent(s: string, pos: usize): usize;`
 - `export fn csssFindBracketEnd(s: string, pos: usize): usize;`
 - `export fn csssSkipParen(s: string, pos: usize): usize;`

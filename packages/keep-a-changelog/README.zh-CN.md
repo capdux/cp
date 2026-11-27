@@ -13,16 +13,12 @@ cap add keep-a-changelog
 ```
 
 ```cp
-import { isSpace } from "keep-a-changelog";
+import { containsIgnoreCase } from "keep-a-changelog";
 ```
 
 ## 核心导出 API
 
 - `export enum ChangeKind`
-- `export fn isSpace(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn trim(s: string): string;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn containsIgnoreCase(hay: string, needle_lower: string): bool;`
 - `export fn isRefLinkDef(trimmed: string): bool;`
 - `export fn classifySection(heading: string): ChangeKind;`
@@ -31,7 +27,6 @@ import { isSpace } from "keep-a-changelog";
 - `export fn parseChangelog(md: string): ParsedChangelog;`
 - `export fn findRelease(log: ParsedChangelog, version: string): ReleaseInfo?;`
 - `export fn latestRelease(log: ParsedChangelog): ReleaseInfo?;`
-- `export fn pushStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn formatReleaseHeader(version: string, date: string, yanked: bool, out: []u8): string;`
 
 <!-- cap-source-attribution -->

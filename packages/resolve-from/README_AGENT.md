@@ -5,8 +5,6 @@
 > Deps: `find-up`, `npm-run-path`
 
 ## Functions
-- `export fn rfStrEq(a: string, b: string): bool;`
-- `export fn rfPush(out: []u8, pos: usize, s: string): usize;`
 - `export fn rfExists(path: string, files: []string): bool;`
 - `export fn isRelativeSpecifier(spec: string): bool;`
 - `export fn isScopedSpecifier(spec: string): bool;`

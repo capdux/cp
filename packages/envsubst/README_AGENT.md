@@ -7,7 +7,6 @@
 - `export enum ExpandError`
 
 ## Functions
-- `export fn strEq(a: string, b: string): bool;`
 - `export fn isVarStart(c: u8): bool;`
 - `export fn isVarCont(c: u8): bool;`
 - `export fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8): ExpandResult;`

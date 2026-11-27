@@ -13,16 +13,11 @@ cap add server-timing
 ```
 
 ```cp
-import { isSpace } from "server-timing";
+import { parseFloatSimple } from "server-timing";
 ```
 
 ## 核心导出 API
 
-- `export fn isSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
-- `export fn strEq(a: string, b: string): bool;`
-- `export fn eqIgnoreCase(a: string, lower_b: string): bool;`
-- `export fn trimSlice(s: string): string;`
 - `export fn parseFloatSimple(s: string): ParsedFloat;`
 - `export fn parseSingleMetric(seg: string, out: &mut TimingMetric): bool;`
 - `export fn parseHeader(header: string, out: []TimingMetric): usize;`

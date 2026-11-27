@@ -13,14 +13,11 @@ cap add bytes
 ```
 
 ```cp
-import { bytToLower } from "bytes";
+import { bytUnitMultiplier } from "bytes";
 ```
 
 ## 核心导出 API
 
-- `export fn bytToLower(c: u8): u8;`
-- `export fn bytIsSpace(c: u8): bool;`
-- `export fn bytIsDigit(c: u8): bool;`
 - `export fn bytUnitMultiplier(unit: string, binary_default: bool): u64;`
 - `export fn bytU64Len(val: u64): usize;`
 - `export fn parseBytes(input: string, binary_default: bool): i64;`

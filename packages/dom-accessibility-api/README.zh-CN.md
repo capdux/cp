@@ -13,14 +13,11 @@ cap add dom-accessibility-api
 ```
 
 ```cp
-import { a11yIsSpace } from "dom-accessibility-api";
+import { a11yUsesAlt } from "dom-accessibility-api";
 ```
 
 ## 核心导出 API
 
-- `export fn a11yIsSpace(c: u8): bool;`
-- `export fn a11yToLower(c: u8): u8;`
-- `export fn a11yEqIgnoreCase(a: string, b: string): bool;`
 - `export fn a11yUsesAlt(tag: string): bool;`
 - `export fn collapseWhitespace(input: string, out: []u8): usize;`
 - `export fn computeAccessibleName(node: A11yNodeInput, out: []u8): usize;`

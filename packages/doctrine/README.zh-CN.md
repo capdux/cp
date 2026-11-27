@@ -13,16 +13,12 @@ cap add doctrine
 ```
 
 ```cp
-import { docEmptyTag } from "doctrine";
+import { docIsSpace } from "doctrine";
 ```
 
 ## 核心导出 API
 
-- `export fn docEmptyTag(): JsDocTag;`
-- `export fn docIsWs(ch: u8): bool;`
 - `export fn docIsSpace(ch: u8): bool;`
-- `export fn docStrEq(a: string, b: string): bool;`
-- `export fn docTrim(s: string): string;`
 - `export fn docStripLinePrefix(line: string): string;`
 - `export fn docTagHasName(title: string): bool;`
 - `export fn docParseTagLine(line: string): JsDocTag;`

@@ -13,12 +13,11 @@ cap add stomp
 ```
 
 ```cp
-import { strEq } from "stomp";
+import { escapeHeader } from "stomp";
 ```
 
 ## 核心导出 API
 
-- `export fn strEq(a: string, b: string): bool;`
 - `export fn escapeHeader(input: string, out: []u8): usize;`
 - `export fn unescapeHeader(input: string, out: []u8): usize;`
 - `export fn encodeFrame(command: string, headers: &[]StompHeader, body: string, out: []u8): usize;`

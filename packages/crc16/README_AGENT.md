@@ -4,8 +4,8 @@
 > Import: `import { ... } from "crc16";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn reflectU8(v: u8): u8;`
 - `export fn reflectU16(v: u16): u16;`
+- `export fn crc16BuildTable(poly: u16, ref_in: bool): [256]u16;`
 - `export fn crc16CcittFalse(data: &[]u8): u16;`
 - `export fn crc16Xmodem(data: &[]u8): u16;`
 - `export fn crc16Modbus(data: &[]u8): u16;`

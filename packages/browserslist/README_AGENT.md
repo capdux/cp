@@ -7,11 +7,6 @@
 - `export enum BrowserOp`
 
 ## Functions
-- `export fn blqIsSpace(c: u8): bool;`
-- `export fn blqIsDigit(c: u8): bool;`
-- `export fn blqToLower(c: u8): u8;`
-- `export fn blqTrim(s: string): string;`
-- `export fn blqEqIgnoreCase(a: string, b: string): bool;`
 - `export fn blqStartsWithWord(s: string, word: string): bool;`
 - `export fn blqParseU32(s: string): u32;`
 - `export fn blqIsDeadBrowser(browser: string): bool;`

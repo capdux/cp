@@ -13,13 +13,11 @@ cap add logfmt
 ```
 
 ```cp
-import { isSpace } from "logfmt";
+import { needsQuotes } from "logfmt";
 ```
 
 ## 核心导出 API
 
-- `export fn isSpace(b: u8): bool;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn needsQuotes(val: &[]u8): bool;`
 
 <!-- cap-source-attribution -->

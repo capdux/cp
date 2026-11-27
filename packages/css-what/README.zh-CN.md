@@ -13,14 +13,13 @@ cap add css-what
 ```
 
 ```cp
-import { cwhIsSpace } from "css-what";
+import { cwhIsIdentStart } from "css-what";
 ```
 
 ## 核心导出 API
 
 - `export enum CssTokenKind`
 - `export enum AttrAction`
-- `export fn cwhIsSpace(c: u8): bool;`
 - `export fn cwhIsIdentStart(c: u8): bool;`
 - `export fn cwhIsIdentChar(c: u8): bool;`
 - `export fn cwhSkipSpace(s: string, start: usize): usize;`

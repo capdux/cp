@@ -13,16 +13,12 @@ cap add dotenv-expand
 ```
 
 ```cp
-import { deStrEq } from "dotenv-expand";
+import { deIsVarChar } from "dotenv-expand";
 ```
 
 ## 核心导出 API
 
-- `export fn deStrEq(a: string, b: string): bool;`
-- `export fn deIsWs(b: u8): bool;`
 - `export fn deIsVarChar(b: u8): bool;`
-- `export fn deTrim(s: string): string;`
-- `export fn dePush(out: []u8, pos: usize, s: string): usize;`
 - `export fn parseDotenv(src: string): EnvMap;`
 - `export fn expandEnvValue(template: string, env: EnvMap, out: []u8): usize;`
 

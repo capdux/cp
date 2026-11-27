@@ -13,12 +13,11 @@ cap add hmac
 ```
 
 ```cp
-import { hmcHexDigit } from "hmac";
+import { encodeHex32 } from "hmac";
 ```
 
 ## 核心导出 API
 
-- `export fn hmcHexDigit(n: u8): u8;`
 - `export fn encodeHex32(digest: []u8, out64: []u8): usize;`
 - `export fn hmacSha256Hex(key: string, msg: string, out64: []u8): usize;`
 

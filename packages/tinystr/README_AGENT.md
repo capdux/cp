@@ -4,20 +4,13 @@
 > Import: `import { ... } from "tinystr";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn tsToLowerByte(b: u8): u8;`
-- `export fn tsToUpperByte(b: u8): u8;`
-- `export fn tsIsAlpha(b: u8): bool;`
-- `export fn tsIsDigit(b: u8): bool;`
-- `export fn tsIsAlnum(b: u8): bool;`
 - `export fn tsIsLower(b: u8): bool;`
 - `export fn tsIsUpper(b: u8): bool;`
 - `export fn tsValidateBytes(src: &[]u8, max_len: usize): i64;`
 - `export fn tsValidatePacked(buf: &[]u8): i64;`
 - `export fn tsSliceLen(buf: &[]u8): usize;`
 - `export fn tsCopyOut(src: &[]u8, n: usize, out: []u8): usize;`
-- `export fn tsSliceEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn tsSliceCmp(a: &[]u8, b: &[]u8): i32;`
-- `export fn tsSliceEqIgnoreCase(a: &[]u8, b: &[]u8): bool;`
 - `export fn tsAllAlpha(buf: &[]u8, n: usize): bool;`
 - `export fn tsAllAlnum(buf: &[]u8, n: usize): bool;`
 - `export fn tsAllDigit(buf: &[]u8, n: usize): bool;`

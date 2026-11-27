@@ -13,14 +13,12 @@ cap add cssparser
 ```
 
 ```cp
-import { csspIsWs } from "cssparser";
+import { csspIsIdentStart } from "cssparser";
 ```
 
 ## 核心导出 API
 
 - `export enum CssTokKind`
-- `export fn csspIsWs(c: u8): bool;`
-- `export fn csspIsDigit(c: u8): bool;`
 - `export fn csspIsIdentStart(c: u8): bool;`
 - `export fn csspIsIdentChar(c: u8): bool;`
 - `export fn csspStartsIdent(s: string, pos: usize): bool;`

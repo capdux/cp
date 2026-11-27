@@ -13,16 +13,13 @@ cap add dom-serializer
 ```
 
 ```cp
-import { dsrlToLowerByte } from "dom-serializer";
+import { dsrlWriteByte } from "dom-serializer";
 ```
 
 ## 核心导出 API
 
 - `export enum DomNodeKind`
-- `export fn dsrlToLowerByte(c: u8): u8;`
-- `export fn dsrlEqIgnoreCase(a: string, b: string): bool;`
 - `export fn dsrlWriteByte(out: []u8, pos: usize, b: u8): usize;`
-- `export fn dsrlWriteStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn dsrlWriteAttrValue(out: []u8, pos: usize, val: string): usize;`
 - `export fn isVoidElement(tag: string): bool;`
 - `export fn serializeText(text: string, out: []u8): usize;`

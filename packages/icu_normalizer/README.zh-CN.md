@@ -13,16 +13,14 @@ cap add icu_normalizer
 ```
 
 ```cp
-import { inormIsPureAscii } from "icu_normalizer";
+import { inormDecodeUtf8 } from "icu_normalizer";
 ```
 
 ## 核心导出 API
 
-- `export fn inormIsPureAscii(s: string): bool;`
 - `export fn inormDecodeUtf8(s: string, pos: usize): InormUtf8Dec;`
 - `export fn inormUtf8Len(cp: u32): usize;`
 - `export fn inormEncodeUtf8(cp: u32, out: []u8, pos: usize): usize;`
-- `export fn inormBytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn canonicalCombiningClass(cp: u32): u8;`
 - `export fn hangulDecompose(cp: u32, out: []u32): usize;`
 - `export fn hangulCompose(l: u32, v: u32, t: u32): u32;`

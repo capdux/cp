@@ -5,8 +5,6 @@
 > Deps: `mime-types`, `unicase`
 
 ## Functions
-- `export fn tisTrim(s: string): string;`
-- `export fn tisFindByte(s: string, target: u8): usize;`
 - `export fn normalizeTypePattern(pattern: string): string;`
 - `export fn typeMatches(content_type: string, pattern: string): bool;`
 - `export fn typeIs(content_type: string, candidates_csv: string): string?;`

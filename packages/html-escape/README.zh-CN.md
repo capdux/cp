@@ -13,12 +13,11 @@ cap add html-escape
 ```
 
 ```cp
-import { eqBytes } from "html-escape";
+import { appendStr } from "html-escape";
 ```
 
 ## 核心导出 API
 
-- `export fn eqBytes(a: string, b: string): bool;`
 - `export fn appendStr(dst: []u8, pos: usize, src: string): usize;`
 - `export fn needsEscape(input: string): bool;`
 - `export fn escapeHtml(input: string, out: []u8): usize;`

@@ -13,13 +13,11 @@ cap add validate-npm-package-license
 ```
 
 ```cp
-import { vnlStrEq } from "validate-npm-package-license";
+import { vnlContainsWhitespace } from "validate-npm-package-license";
 ```
 
 ## 核心导出 API
 
-- `export fn vnlStrEq(a: string, b: string): bool;`
-- `export fn vnlStartsWith(s: string, prefix: string): bool;`
 - `export fn vnlContainsWhitespace(s: string): bool;`
 - `export fn vnlIsLegacyLicense(license: string): bool;`
 - `export fn validateLicense(license: string): LicenseValidation;`

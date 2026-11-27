@@ -10,11 +10,7 @@
 - `export fn mkdWriteStr(out: []u8, pos: &mut usize, s: string);`
 - `export fn mkdWriteEscaped(out: []u8, pos: &mut usize, s: string);`
 - `export fn mkdWriteEscapedByte(out: []u8, pos: &mut usize, b: u8);`
-- `export fn mkdWriteUsize(out: []u8, pos: &mut usize, val: usize);`
 - `export fn mkdIsSpace(c: u8): bool;`
-- `export fn mkdIsDigit(c: u8): bool;`
-- `export fn mkdIsAlphaNum(c: u8): bool;`
-- `export fn mkdToLower(c: u8): u8;`
 - `export fn mkdIsPunctEscape(c: u8): bool;`
 - `export fn mkdStartsWithIgnoreCaseClean(url: string, prefix: string): bool;`
 - `export fn mkdIsSafeUrl(url: string): bool;`
@@ -29,4 +25,8 @@
 - `export fn mkdIsBlockquoteLine(s: string, line_start: usize, line_end: usize): bool;`
 - `export fn mkdMatchUnorderedItem(s: string, line_start: usize, line_end: usize): usize;`
 - `export fn mkdMatchOrderedItem(s: string, line_start: usize, line_end: usize, num_out: &mut usize): usize;`
-- *(+13 more in `src/index.d.cp`)*
+- `export fn mkdStartsNewBlock(s: string, line_start: usize, line_end: usize): bool;`
+- `export fn mkdFindClosingDouble(s: string, start: usize, ch: u8): i64;`
+- `export fn mkdFindClosingSingle(s: string, start: usize, ch: u8): i64;`
+- `export fn mkdMatchLinkOrImage(s: string, open_bracket: usize, label_start: &mut usize, label_end: &mut usize, url_start: &mut usize, url_end: &mut usize): usize;`
+- *(+9 more in `src/index.d.cp`)*

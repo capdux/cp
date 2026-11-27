@@ -19,9 +19,6 @@ import { isWs } from "ini";
 ## 核心导出 API
 
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
-- `export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

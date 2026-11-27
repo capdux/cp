@@ -5,11 +5,7 @@
 > Deps: `escape-html`
 
 ## Functions
-- `export fn ejsStrEq(a: string, b: string): bool;`
-- `export fn ejsStartsWith(s: string, prefix: string): bool;`
-- `export fn ejsIsSpace(b: u8): bool;`
-- `export fn ejsTrim(s: string): string;`
-- `export fn ejsPushSlice(out: []u8, pos: usize, s: string): usize;`
+- `export fn ejsWriteStr(s: string, out: []u8, pos: usize): usize;`
 - `export fn ejsLookupStr(ctx: EjsContext, key: string): string;`
 - `export fn ejsLookupBool(ctx: EjsContext, key: string): bool;`
 - `export fn ejsLookupCount(ctx: EjsContext, key: string): usize;`

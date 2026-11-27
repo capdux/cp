@@ -8,7 +8,6 @@
 - `export enum AttrAction`
 
 ## Functions
-- `export fn cwhIsSpace(c: u8): bool;`
 - `export fn cwhIsIdentStart(c: u8): bool;`
 - `export fn cwhIsIdentChar(c: u8): bool;`
 - `export fn cwhSkipSpace(s: string, start: usize): usize;`

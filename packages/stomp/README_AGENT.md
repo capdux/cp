@@ -4,7 +4,6 @@
 > Import: `import { ... } from "stomp";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn strEq(a: string, b: string): bool;`
 - `export fn escapeHeader(input: string, out: []u8): usize;`
 - `export fn unescapeHeader(input: string, out: []u8): usize;`
 - `export fn encodeFrame(command: string, headers: &[]StompHeader, body: string, out: []u8): usize;`

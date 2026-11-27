@@ -19,14 +19,10 @@ import { invalidPurl } from "packageurl-js";
 ## 核心导出 API
 
 - `export fn invalidPurl(): Purl;`
-- `export fn isSpace(b: u8): bool;`
-- `export fn isAlpha(b: u8): bool;`
-- `export fn isDigit(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
+- `export fn purlIsSpace(b: u8): bool;`
 - `export fn isValidType(pkg_type: string): bool;`
 - `export fn trimSlashes(s: string): string;`
 - `export fn parsePurl(input: string): Purl;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn getQualifier(purl: Purl, key: string): string;`
 - `export fn pushSlice(dst: []u8, pos: usize, src: string): i64;`
 - `export fn pushLowerSlice(dst: []u8, pos: usize, src: string): i64;`

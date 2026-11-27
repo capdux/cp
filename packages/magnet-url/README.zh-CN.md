@@ -13,13 +13,11 @@ cap add magnet-url
 ```
 
 ```cp
-import { toLower } from "magnet-url";
+import { startsWithIgnoreCase } from "magnet-url";
 ```
 
 ## 核心导出 API
 
-- `export fn toLower(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn startsWithIgnoreCase(s: string, prefix: string): bool;`
 - `export fn isHexStr(s: string): bool;`
 - `export fn isBase32Str(s: string): bool;`

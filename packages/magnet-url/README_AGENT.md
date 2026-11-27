@@ -4,8 +4,6 @@
 > Import: `import { ... } from "magnet-url";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn toLower(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn startsWithIgnoreCase(s: string, prefix: string): bool;`
 - `export fn isHexStr(s: string): bool;`
 - `export fn isBase32Str(s: string): bool;`

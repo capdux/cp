@@ -13,14 +13,12 @@ cap add hex
 ```
 
 ```cp
-import { parseNibble } from "hex";
+import { appendByte } from "hex";
 ```
 
 ## 核心导出 API
 
-- `export fn parseNibble(c: u8): u8?;`
 - `export fn appendByte(out: []u8, pos: usize, c: u8): usize;`
-- `export fn appendStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn encodeHex(input: string, out: []u8): string;`
 - `export fn encodeHexUpper(input: string, out: []u8): string;`
 - `export fn isValidHex(s: string): bool;`

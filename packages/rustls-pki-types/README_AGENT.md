@@ -5,12 +5,8 @@
 > Deps: `pem-rfc7468`
 
 ## Functions
-- `export fn pkiToLowerAscii(ch: u8): u8;`
-- `export fn pkiIsAsciiDigit(ch: u8): bool;`
-- `export fn pkiIsAsciiAlpha(ch: u8): bool;`
 - `export fn pkiIsDnsChar(ch: u8): bool;`
-- `export fn pkiHexVal(ch: u8): i32;`
-- `export fn pkiBytesEqStr(buf: &[]u8, expected: string): bool;`
+- `export fn pkiEqIgnoreCase(a: string, b: string): bool;`
 - `export fn pkiClassifyPemLabel(label: &[]u8): u8;`
 - `export fn pkiParseIpv4Slice(s: string, start: usize, end: usize, out: &mut [4]u8): bool;`
 - `export fn pkiParseIpv6Slice(input: string, out: &mut [16]u8): bool;`

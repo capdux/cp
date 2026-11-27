@@ -4,14 +4,10 @@
 > Import: `import { ... } from "graphql";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn gqlIsDigit(c: u8): bool;`
-- `export fn gqlIsHex(c: u8): bool;`
 - `export fn gqlIsNameStart(c: u8): bool;`
 - `export fn gqlIsNameContinue(c: u8): bool;`
-- `export fn gqlStrEq(a: string, b: string): bool;`
 - `export fn gqlIsWordTok(kind: u8): bool;`
 - `export fn gqlWriteByte(out: []u8, pos: &mut usize, b: u8);`
-- `export fn gqlWriteStr(out: []u8, pos: &mut usize, s: string);`
 - `export fn gqlAdvance(st: &mut GqlParserState);`
 - `export fn gqlFail(st: &mut GqlParserState);`
 - `export fn gqlCurText(st: &mut GqlParserState): string;`

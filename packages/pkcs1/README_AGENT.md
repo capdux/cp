@@ -5,7 +5,6 @@
 > Deps: `der`, `pem-rfc7468`, `subtle`
 
 ## Functions
-- `export fn pk1StrEqBytes(s: string, b: &[]u8): bool;`
 - `export fn pk1WriteBigUint(w: &mut DerWriter, raw: &[]u8): bool;`
 - `export fn pk1ReadBigUint(r: &mut DerReader, dst: []u8, len_out: &mut usize): i64;`
 - `export fn modulusBitLen(pub_key: RsaPublicKey): usize;`

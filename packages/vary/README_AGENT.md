@@ -5,8 +5,6 @@
 
 ## Functions
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;`
 - `export fn isTchar(c: u8): bool;`
 - `export fn isValidFieldName(field: &[]u8): bool;`
 - `export fn isWildcard(tok: &[]u8): bool;`

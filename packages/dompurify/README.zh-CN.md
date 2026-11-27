@@ -19,13 +19,9 @@ import { defaultSanitizeOptions } from "dompurify";
 ## 核心导出 API
 
 - `export fn defaultSanitizeOptions(): SanitizeHtmlOptions;`
-- `export fn dmpToLower(c: u8): u8;`
-- `export fn dmpIsSpace(c: u8): bool;`
 - `export fn dmpIsNameChar(c: u8): bool;`
-- `export fn dmpEqCI(a: string, b: string): bool;`
 - `export fn dmpHasPrefixCI(s: string, prefix: string): bool;`
 - `export fn dmpWriteByte(out: []u8, pos: usize, b: u8): usize;`
-- `export fn dmpWriteStr(out: []u8, pos: usize, s: string, lowercase: bool): usize;`
 - `export fn dmpIsBlockedContentTag(tag: string): bool;`
 - `export fn dmpIsBlockedVoidTag(tag: string): bool;`
 - `export fn dmpIsAllowedTag(tag: string, opts: SanitizeHtmlOptions): bool;`

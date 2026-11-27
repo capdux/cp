@@ -4,11 +4,6 @@
 > Import: `import { ... } from "server-timing";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
-- `export fn strEq(a: string, b: string): bool;`
-- `export fn eqIgnoreCase(a: string, lower_b: string): bool;`
-- `export fn trimSlice(s: string): string;`
 - `export fn parseFloatSimple(s: string): ParsedFloat;`
 - `export fn parseSingleMetric(seg: string, out: &mut TimingMetric): bool;`
 - `export fn parseHeader(header: string, out: []TimingMetric): usize;`

@@ -4,10 +4,8 @@
 > Import: `import { ... } from "http-digest-client";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
+- `export fn digIsSpace(b: u8): bool;`
 - `export fn trimSlice(s: string): string;`
-- `export fn eqIgnoreCase(a: string, lower_b: string): bool;`
 - `export fn stripDigestPrefix(header: string): string;`
 - `export fn unquoteVal(v: string): string;`
 - `export fn parseChallenge(header: string): DigestChallenge;`

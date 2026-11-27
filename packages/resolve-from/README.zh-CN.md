@@ -13,13 +13,11 @@ cap add resolve-from
 ```
 
 ```cp
-import { rfStrEq } from "resolve-from";
+import { rfExists } from "resolve-from";
 ```
 
 ## 核心导出 API
 
-- `export fn rfStrEq(a: string, b: string): bool;`
-- `export fn rfPush(out: []u8, pos: usize, s: string): usize;`
 - `export fn rfExists(path: string, files: []string): bool;`
 - `export fn isRelativeSpecifier(spec: string): bool;`
 - `export fn isScopedSpecifier(spec: string): bool;`

@@ -13,15 +13,13 @@ cap add http-digest-client
 ```
 
 ```cp
-import { isSpace } from "http-digest-client";
+import { digIsSpace } from "http-digest-client";
 ```
 
 ## 核心导出 API
 
-- `export fn isSpace(b: u8): bool;`
-- `export fn toLowerAscii(b: u8): u8;`
+- `export fn digIsSpace(b: u8): bool;`
 - `export fn trimSlice(s: string): string;`
-- `export fn eqIgnoreCase(a: string, lower_b: string): bool;`
 - `export fn stripDigestPrefix(header: string): string;`
 - `export fn unquoteVal(v: string): string;`
 - `export fn parseChallenge(header: string): DigestChallenge;`

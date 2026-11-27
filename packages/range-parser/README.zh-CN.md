@@ -13,14 +13,11 @@ cap add range-parser
 ```
 
 ```cp
-import { rpIsWs } from "range-parser";
+import { parseRange } from "range-parser";
 ```
 
 ## 核心导出 API
 
-- `export fn rpIsWs(b: u8): bool;`
-- `export fn rpTrim(s: string): string;`
-- `export fn rpParseU64(s: string, ok_out: []bool): u64;`
 - `export fn parseRange(size: u64, header: string, combine: bool): RangeResult;`
 - `export fn rangeByteLength(r: ByteRange): u64;`
 

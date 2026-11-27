@@ -19,10 +19,11 @@ import { crcByteStep } from "crc32fast";
 ## 核心导出 API
 
 - `export fn crcByteStep(crc_in: u32, b: u8): u32;`
+- `export fn crcBuildTable(): [256]u32;`
 - `export fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32;`
 - `export fn crcGf2MatrixSquare(src: [32]u32): [32]u32;`
 - `export fn combineCrc32(crc1: u32, crc2: u32, len2: u64): u32;`
-- `export fn hashBytes(buf: []u8): u32;`
+- `export fn hashBytes(buf: &[]u8): u32;`
 - `export fn hashStr(s: string): u32;`
 
 <!-- cap-source-attribution -->

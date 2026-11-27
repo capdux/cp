@@ -20,11 +20,9 @@ import { invalidTriple } from "cargo-platform";
 
 - `export fn invalidTriple(): TargetTriple;`
 - `export fn parseTargetTriple(triple: string): TargetTriple;`
-- `export fn isWs(c: u8): bool;`
 - `export fn isIdentStart(c: u8): bool;`
 - `export fn isIdentCont(c: u8): bool;`
 - `export fn skipWs(p: &mut CfgParser, src: string);`
-- `export fn strEq(a: string, b: string): bool;`
 - `export fn u32MatchesDecimal(n: u32, s: string): bool;`
 - `export fn evalKeyValue(key: string, val: string, target: TargetEnv): bool;`
 - `export fn evalFlag(flag: string, target: TargetEnv): bool;`

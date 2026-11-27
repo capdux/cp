@@ -13,12 +13,11 @@ cap add cookie-parser
 ```
 
 ```cp
-import { cprStrEq } from "cookie-parser";
+import { cprStartsWith2 } from "cookie-parser";
 ```
 
 ## 核心导出 API
 
-- `export fn cprStrEq(a: string, b: string): bool;`
 - `export fn cprStartsWith2(s: string, c0: u8, c1: u8): bool;`
 - `export fn isSignedCookie(val: string): bool;`
 - `export fn isJsonCookie(val: string): bool;`

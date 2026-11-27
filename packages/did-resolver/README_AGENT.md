@@ -4,8 +4,6 @@
 > Import: `import { ... } from "did-resolver";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn bytesEq(a: string, b: string): bool;`
-- `export fn isHex(c: u8): bool;`
 - `export fn isValidMethod(method: string): bool;`
 - `export fn isValidMethodId(id: string): bool;`
 - `export fn parseDid(input: string): DidUrl;`

@@ -26,9 +26,6 @@ import { rmdAdd } from "ripemd";
 - `export fn rmdFunc(round: usize, x: u32, y: u32, z: u32): u32;`
 - `export fn rmdKl(round: usize): u32;`
 - `export fn rmdKr(round: usize): u32;`
-- `export fn rmdReadU32Le(buf: []u8, off: usize): u32;`
-- `export fn rmdWriteU32Le(v: u32, out: []u8, off: usize);`
-- `export fn rmdHexNibble(v: u8): u8;`
 - `export fn rmdCompress(state: [5]u32, block: []u8): [5]u32;`
 - `export fn ripemd160Bytes(data: []u8, out20: []u8);`
 - `export fn ripemd160Hex(s: string, out40: []u8): usize;`

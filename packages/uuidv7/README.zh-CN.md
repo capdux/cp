@@ -22,8 +22,6 @@ import { fromParts } from "uuidv7";
 - `export fn timestampMs(u: UuidV7): u64;`
 - `export fn version(u: UuidV7): u8;`
 - `export fn isRfcVariant(u: UuidV7): bool;`
-- `export fn hexLower(nibble: u8): u8;`
-- `export fn hexVal(b: u8): i32;`
 - `export fn formatHyphenated(u: UuidV7, out: []u8): usize;`
 - `export fn parse(s: string, out: &mut UuidV7): bool;`
 - `export fn isValidUuidV7(s: string): bool;`

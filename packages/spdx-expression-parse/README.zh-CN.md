@@ -20,9 +20,6 @@ import { spdxpEmptyNode } from "spdx-expression-parse";
 
 - `export fn spdxpEmptyNode(): SpdxAstNode;`
 - `export fn spdxpEmptyAst(): SpdxAst;`
-- `export fn spdxpStrEq(a: string, b: string): bool;`
-- `export fn spdxpStartsWith(s: string, prefix: string): bool;`
-- `export fn spdxpIsSpace(ch: u8): bool;`
 - `export fn spdxpIsIdChar(ch: u8): bool;`
 - `export fn spdxpIsKeyword(tok: string): bool;`
 - `export fn spdxpIsAllIdChars(s: string): bool;`

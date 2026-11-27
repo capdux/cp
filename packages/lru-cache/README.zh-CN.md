@@ -19,7 +19,6 @@ import { fnv1a64 } from "lru-cache";
 ## 核心导出 API
 
 - `export fn fnv1a64(data: &[]u8): u64;`
-- `export fn bytesEqual(a: &[]u8, b: &[]u8): bool;`
 - `export fn copyBytes(dst: []u8, src: &[]u8);`
 
 <!-- cap-source-attribution -->

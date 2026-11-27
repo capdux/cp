@@ -5,7 +5,6 @@
 > Deps: `icu_normalizer`, `punycode`
 
 ## Functions
-- `export fn idnaToLowerAscii(ch: u8): u8;`
 - `export fn idnaIsLdhLower(ch: u8): bool;`
 - `export fn idnaIsLdhAnyCase(ch: u8): bool;`
 - `export fn isPunycodeLabel(label: string): bool;`

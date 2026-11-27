@@ -19,9 +19,6 @@ import { isWs } from "busboy";
 ## 核心导出 API
 
 - `export fn isWs(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
-- `export fn bytesEq(a: string, b: string): bool;`
 - `export fn isBchar(c: u8): bool;`
 - `export fn isValidBoundary(boundary: string): bool;`
 - `export fn extractBoundary(content_type: string): string;`

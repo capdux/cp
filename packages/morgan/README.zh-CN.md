@@ -13,17 +13,14 @@ cap add morgan
 ```
 
 ```cp
-import { mrgStrEq } from "morgan";
+import { mrgIsTokenChar } from "morgan";
 ```
 
 ## 核心导出 API
 
-- `export fn mrgStrEq(a: string, b: string): bool;`
 - `export fn mrgIsTokenChar(c: u8): bool;`
 - `export fn mrgWriteByte(out: []u8, pos: usize, b: u8): usize;`
-- `export fn mrgWriteSlice(out: []u8, pos: usize, s: string): usize;`
 - `export fn mrgWriteOrDash(out: []u8, pos: usize, s: string): usize;`
-- `export fn mrgWriteU64(out: []u8, pos: usize, val: u64): usize;`
 - `export fn mrgWriteResponseTime(out: []u8, pos: usize, us: u64): usize;`
 - `export fn formatMorganLog(format_str: string, ev: HttpLogEvent, out: []u8): usize;`
 - `export fn formatPreset(preset: string, ev: HttpLogEvent, out: []u8): usize;`

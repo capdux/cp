@@ -10,7 +10,6 @@
 - `export fn pk8DerLenSize(n: usize): usize;`
 - `export fn pk8WriteDerLen(out: []u8, pos: usize, n: usize): usize;`
 - `export fn pk8ReadDerLen(der: &[]u8, pos: usize): Pk8LenDecode;`
-- `export fn pk8StrEqBytes(s: string, b: &[]u8): bool;`
 - `export fn encodePkcs8Der(info: PrivateKeyInfo, out: []u8): i64;`
 - `export fn decodePkcs8Der(der: &[]u8): Pkcs8DecodeResult;`
 - `export fn encodePkcs8Pem(info: PrivateKeyInfo, crlf: bool, out: []u8): i64;`

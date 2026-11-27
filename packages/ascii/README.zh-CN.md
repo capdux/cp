@@ -13,13 +13,11 @@ cap add ascii
 ```
 
 ```cp
-import { isAscii } from "ascii";
+import { isAsciiAlpha } from "ascii";
 ```
 
 ## 核心导出 API
 
-- `export fn isAscii(s: &[]u8): bool;`
-- `export fn firstNonAscii(s: &[]u8): usize?;`
 - `export fn isAsciiAlpha(b: u8): bool;`
 - `export fn isAsciiDigit(b: u8): bool;`
 - `export fn isAsciiAlphanumeric(b: u8): bool;`

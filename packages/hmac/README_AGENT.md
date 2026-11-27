@@ -5,6 +5,5 @@
 > Deps: `cookie-signature`
 
 ## Functions
-- `export fn hmcHexDigit(n: u8): u8;`
 - `export fn encodeHex32(digest: []u8, out64: []u8): usize;`
 - `export fn hmacSha256Hex(key: string, msg: string, out64: []u8): usize;`

@@ -4,6 +4,4 @@
 > Import: `import { ... } from "logfmt";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isSpace(b: u8): bool;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
 - `export fn needsQuotes(val: &[]u8): bool;`

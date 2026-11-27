@@ -13,13 +13,11 @@ cap add type-is
 ```
 
 ```cp
-import { tisTrim } from "type-is";
+import { normalizeTypePattern } from "type-is";
 ```
 
 ## 核心导出 API
 
-- `export fn tisTrim(s: string): string;`
-- `export fn tisFindByte(s: string, target: u8): usize;`
 - `export fn normalizeTypePattern(pattern: string): string;`
 - `export fn typeMatches(content_type: string, pattern: string): bool;`
 - `export fn typeIs(content_type: string, candidates_csv: string): string?;`

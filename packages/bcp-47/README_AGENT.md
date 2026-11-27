@@ -4,14 +4,6 @@
 > Import: `import { ... } from "bcp-47";` | Full types: `src/index.d.cp`
 
 ## Functions
-- `export fn isWs(c: u8): bool;`
-- `export fn isAlpha(c: u8): bool;`
-- `export fn isDigit(c: u8): bool;`
-- `export fn isAlphaNum(c: u8): bool;`
-- `export fn toLowerAscii(c: u8): u8;`
-- `export fn toUpperAscii(c: u8): u8;`
-- `export fn trimWs(s: string): string;`
-- `export fn eqIgnoreCase(a: string, b: string): bool;`
 - `export fn eqSubtagNormalized(a: string, b: string): bool;`
 - `export fn isAllAlpha(s: string): bool;`
 - `export fn isAllDigit(s: string): bool;`

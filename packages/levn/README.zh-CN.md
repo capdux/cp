@@ -13,15 +13,12 @@ cap add levn
 ```
 
 ```cp
-import { lvnIsSpace } from "levn";
+import { lvnMakeInvalid } from "levn";
 ```
 
 ## 核心导出 API
 
 - `export enum LevnKind`
-- `export fn lvnIsSpace(c: u8): bool;`
-- `export fn lvnTrim(s: string): string;`
-- `export fn lvnStrEq(a: string, b: string): bool;`
 - `export fn lvnMakeInvalid(): LevnValue;`
 - `export fn lvnTryParseNumber(s: string): LevnValue;`
 - `export fn parseLevnScalar(input: string): LevnValue;`
