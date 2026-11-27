@@ -61,7 +61,7 @@ pub struct LouvainConfig {
     max_passes: usize,
 
     /// Standard Newman-Girvan Louvain defaults (`resolution = 1.0`, `min_gain = 1e-9`, `max_passes = 50`).
-    fn default(): LouvainConfig {
+    pub static fn default(): LouvainConfig {
         return LouvainConfig {
             resolution: 1.0,
             min_gain: 1.0e-9,

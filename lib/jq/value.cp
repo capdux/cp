@@ -138,7 +138,7 @@ pub struct JqValue {
         };
     }
 
-    fn tagRank(tag: JqTag): u8 {
+    static fn tagRank(tag: JqTag): u8 {
         return switch (tag) {
             .Null => 0,
             .Bool => 1,

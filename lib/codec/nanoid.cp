@@ -317,7 +317,7 @@ pub struct UuidV7 {
     }
 
     /// Parses a 36-byte canonical UUID v7 string and validates version=7 and variant=2.
-    pub fn parse(str: []const u8): UuidV7 ! IdError {
+    pub static fn parse(str: []const u8): UuidV7 ! IdError {
         if (str.len != 36) {
             return IdError.InvalidUuid;
         }

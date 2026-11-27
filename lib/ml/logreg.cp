@@ -46,7 +46,7 @@ pub struct LogRegConfig {
     max_iter: usize,
     tol: f64,
 
-    fn default(): LogRegConfig {
+    pub static fn default(): LogRegConfig {
         return {
             learning_rate: 0.5,
             l2_reg: 1.0e-4,
