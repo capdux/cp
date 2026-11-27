@@ -1,6 +1,8 @@
 // @cap/uuid-v7 — Zero-allocation RFC 9562 UUIDv7 Engine
 // Clean-room MIT implementation in pure CP.
 
+import { hexCharLower, hexVal } from "cap:ascii";
+
 pub struct UuidV7 {
     pub bytes: [16]u8,
 }
@@ -50,20 +52,6 @@ pub fn isRfcVariant(u: UuidV7) -> bool {
     return (u.bytes[8] & 0xC0) == 0x80;
 }
 
-fn hexLower(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
-    }
-    return 87 + nibble; // 'a' = 97 = 87 + 10
-}
-
-fn hexVal(b: u8) -> i32 {
-    if (b >= 48 && b <= 57) { return (b - 48) as i32; }
-    if (b >= 65 && b <= 70) { return (b - 55) as i32; }
-    if (b >= 97 && b <= 102) { return (b - 87) as i32; }
-    return -1;
-}
-
 /// Formats `u` as a strict 36-byte lowercase hyphenated UUID (`xxxxxxxx-xxxx-7xxx-yxxx-xxxxxxxxxxxx`).
 /// Returns `36`, or `0` if `out.len < 36`.
 pub fn formatHyphenated(u: UuidV7, out: []u8) -> usize {
@@ -78,8 +66,8 @@ pub fn formatHyphenated(u: UuidV7, out: []u8) -> usize {
             w += 1;
         }
         const byte = u.bytes[i];
-        out[w] = hexLower((byte >> 4) & 0x0F);
-        out[w + 1] = hexLower(byte & 0x0F);
+        out[w] = hexCharLower((byte >> 4) & 0x0F);
+        out[w + 1] = hexCharLower(byte & 0x0F);
         w += 2;
         i += 1;
     }
@@ -108,10 +96,10 @@ pub fn parse(s: string, out: *UuidV7) -> bool {
         }
         const hi = hexVal(s[pos]);
         const lo = hexVal(s[pos + 1]);
-        if (hi < 0 || lo < 0) {
+        if (hi == null || lo == null) {
             return false;
         }
-        tmp[bi] = ((hi << 4) | lo) as u8;
+        tmp[bi] = (hi.? << 4) | lo.?;
         pos += 2;
         bi += 1;
     }
@@ -131,7 +119,7 @@ pub fn parse(s: string, out: *UuidV7) -> bool {
 
 /// Returns true if `s` is a valid RFC 9562 UUIDv7 string (hyphenated or compact 32-hex).
 pub fn isValidUuidV7(s: string) -> bool {
-    let dummy = UuidV7 { bytes: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+    let dummy: UuidV7 = undefined;
     return parse(s, &dummy);
 }
 

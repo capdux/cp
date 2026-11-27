@@ -1,19 +1,7 @@
 // @cap/quoted-printable — Zero-allocation RFC 2045 §6.7 MIME Quoted-Printable Codec
 // Clean-room MIT implementation in pure CP.
 
-fn hexUpper(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
-    }
-    return 55 + nibble; // 'A' = 65
-}
-
-fn hexVal(b: u8) -> i32 {
-    if (b >= 48 && b <= 57) { return (b - 48) as i32; }
-    if (b >= 65 && b <= 70) { return (b - 55) as i32; }
-    if (b >= 97 && b <= 102) { return (b - 87) as i32; }
-    return -1;
-}
+import { hexCharUpper, hexVal } from "cap:ascii";
 
 fn isDirectPrintable(b: u8) -> bool {
     return (b >= 33 && b <= 60) || (b >= 62 && b <= 126);
@@ -91,8 +79,8 @@ pub fn encode(data: []const u8, out: []u8) -> usize {
         if (needs_esc) {
             if (w + 3 > out.len) { return 0; }
             out[w] = 61; // '='
-            out[w + 1] = hexUpper((b >> 4) & 0x0F);
-            out[w + 2] = hexUpper(b & 0x0F);
+            out[w + 1] = hexCharUpper((b >> 4) & 0x0F);
+            out[w + 2] = hexCharUpper(b & 0x0F);
             w += 3;
             col += 3;
         } else {
@@ -134,11 +122,11 @@ pub fn decode(input: string, out: []u8) -> i64 {
             if (i + 2 < n) {
                 const hi = hexVal(input[i + 1]);
                 const lo = hexVal(input[i + 2]);
-                if (hi >= 0 && lo >= 0) {
+                if (hi != null && lo != null) {
                     if (w >= out.len) {
                         return -1;
                     }
-                    out[w] = ((hi << 4) | lo) as u8;
+                    out[w] = (hi.? << 4) | lo.?;
                     w += 1;
                     i += 3;
                     continue;

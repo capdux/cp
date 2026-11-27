@@ -1,6 +1,7 @@
 // Type definitions for CP
 
-export fn strEq(a: string, b: string): bool;
+import { strEq, isAlpha, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn isVarStart(c: u8): bool;
 export fn isVarCont(c: u8): bool;
 export class EnvMap {

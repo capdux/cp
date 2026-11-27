@@ -2,6 +2,9 @@
 // Inspired by Rust `cargo-platform`
 // MIT License
 
+import { strEq, isSpace, isAlpha, isDigit } from "cap:ascii";
+import { parseU64 } from "cap:fmt";
+
 pub struct TargetTriple {
     pub arch_start: usize,
     pub arch_len: usize,
@@ -48,8 +51,8 @@ pub fn parseTargetTriple(triple: string): TargetTriple {
     if (triple.len == 0) {
         return invalidTriple();
     }
-    let starts: [4]usize = [0; 4];
-    let lens: [4]usize = [0; 4];
+    let starts: [4]usize = undefined;
+    let lens: [4]usize = undefined;
     let seg_count: usize = 0;
 
     let pos: usize = 0;
@@ -87,8 +90,8 @@ pub fn parseTargetTriple(triple: string): TargetTriple {
         vendor_len: lens[1],
         os_start: starts[2],
         os_len: lens[2],
-        env_start: starts[3],
-        env_len: lens[3],
+        env_start: if (seg_count == 4) starts[3] else 0,
+        env_len: if (seg_count == 4) lens[3] else 0,
         has_env: seg_count == 4,
         valid: true,
     };
@@ -100,56 +103,26 @@ struct CfgParser {
     depth: usize,
 }
 
-fn isWs(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
 fn isIdentStart(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95;
+    return isAlpha(c) || c == 95;
 }
 
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || (c >= 48 && c <= 57);
+    return isIdentStart(c) || isDigit(c);
 }
 
 fn skipWs(p: *CfgParser, src: string) {
-    while (p.*.pos < src.len && isWs(src[p.*.pos])) {
+    while (p.*.pos < src.len && isSpace(src[p.*.pos])) {
         p.*.pos = p.*.pos + 1;
     }
 }
 
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn u32MatchesDecimal(n: u32, s: string): bool {
-    if (s.len == 0) {
+    if (s.len == 0 || s[0] == 43) {
         return false;
     }
-    let acc: u64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        let c: u8 = s[i];
-        if (c < 48 || c > 57) {
-            return false;
-        }
-        acc = acc * 10 + ((c - 48) as u64);
-        if (acc > 0xFFFFFFFF) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return acc == (n as u64);
+    const v = parseU64(s);
+    return v != null && v.? == (n as u64);
 }
 
 fn evalKeyValue(key: string, val: string, target: TargetEnv): bool {

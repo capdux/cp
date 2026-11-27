@@ -1,23 +1,11 @@
 // @cap/matchit — Zero-allocation high-priority URL router for CP
 // Clean-room MIT implementation inspired by Rust `matchit` (595M downloads, used by axum).
 
+import { strEq } from "cap:ascii";
+
 const MAX_ROUTES: usize = 64;
 const MAX_PARAMS: usize = 8;
 const MAX_SEGS: usize = 16;
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
 
 pub struct RouteParam {
     pub key: string,

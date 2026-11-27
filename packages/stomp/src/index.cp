@@ -1,6 +1,9 @@
 // @cap/stomp — Zero-allocation STOMP 1.2 Frame Encoder & Decoder
 // Clean-room MIT implementation in pure CP.
 
+import { strEq, findByte } from "cap:ascii";
+import { writeStr, parseU64 } from "cap:fmt";
+
 pub const STOMP_OK: i32 = 0;
 pub const STOMP_INCOMPLETE: i32 = 1;
 pub const STOMP_INVALID: i32 = -1;
@@ -33,20 +36,6 @@ pub struct StompFrame {
             consumed: 0,
         };
     }
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Escapes a STOMP 1.2 header key or value:
@@ -147,33 +136,17 @@ pub fn encodeFrame(command: string, headers: []const StompHeader, body: string, 
         return 0;
     }
 
-    let w: usize = 0;
-    let i: usize = 0;
-    while (i < command.len) {
-        out[w] = command[i];
-        w += 1;
-        i += 1;
-    }
+    let w: usize = writeStr(command, out, 0);
     out[w] = 10; // '\n'
     w += 1;
 
     hi = 0;
     while (hi < headers.len) {
         const h = headers[hi];
-        let ki: usize = 0;
-        while (ki < h.key.len) {
-            out[w] = h.key[ki];
-            w += 1;
-            ki += 1;
-        }
+        w = writeStr(h.key, out, w);
         out[w] = 58; // ':'
         w += 1;
-        let vi: usize = 0;
-        while (vi < h.value.len) {
-            out[w] = h.value[vi];
-            w += 1;
-            vi += 1;
-        }
+        w = writeStr(h.value, out, w);
         out[w] = 10; // '\n'
         w += 1;
         hi += 1;
@@ -182,12 +155,7 @@ pub fn encodeFrame(command: string, headers: []const StompHeader, body: string, 
     out[w] = 10; // blank line separating headers and body
     w += 1;
 
-    let bi: usize = 0;
-    while (bi < body.len) {
-        out[w] = body[bi];
-        w += 1;
-        bi += 1;
-    }
+    w = writeStr(body, out, w);
     out[w] = 0; // NUL frame terminator
     w += 1;
 
@@ -195,23 +163,14 @@ pub fn encodeFrame(command: string, headers: []const StompHeader, body: string, 
 }
 
 fn parseContentLength(val: string) -> i64 {
-    if (val.len == 0) {
+    if (val.len == 0 || val[0] == 43) {
         return -1;
     }
-    let acc: u64 = 0;
-    let i: usize = 0;
-    while (i < val.len) {
-        const ch = val[i];
-        if (ch < 48 || ch > 57) {
-            return -1;
-        }
-        acc = acc * 10 + ((ch - 48) as u64);
-        if (acc > 1073741824) {
-            return -1;
-        }
-        i += 1;
+    const parsed = parseU64(val);
+    if (parsed == null || parsed.? > 1073741824) {
+        return -1;
     }
-    return acc as i64;
+    return parsed.? as i64;
 }
 
 /// Zero-copy STOMP 1.2 frame decoder.
@@ -237,12 +196,11 @@ pub fn decodeFrame(data: string, out_frame: *StompFrame) -> i32 {
 
     // Parse command line
     const cmd_start = pos;
-    while (pos < n && data[pos] != 10) {
-        pos += 1;
-    }
-    if (pos >= n) {
+    const cmd_nl = findByte(data, 10, pos);
+    if (cmd_nl == null) {
         return STOMP_INCOMPLETE;
     }
+    pos = cmd_nl.?;
     let cmd_end = pos;
     if (cmd_end > cmd_start && data[cmd_end - 1] == 13) {
         cmd_end -= 1;
@@ -266,12 +224,11 @@ pub fn decodeFrame(data: string, out_frame: *StompFrame) -> i32 {
             return STOMP_INCOMPLETE;
         }
         const line_start = pos;
-        while (pos < n && data[pos] != 10) {
-            pos += 1;
-        }
-        if (pos >= n) {
+        const line_nl = findByte(data, 10, pos);
+        if (line_nl == null) {
             return STOMP_INCOMPLETE;
         }
+        pos = line_nl.?;
         let line_end = pos;
         if (line_end > line_start && data[line_end - 1] == 13) {
             line_end -= 1;
@@ -284,13 +241,11 @@ pub fn decodeFrame(data: string, out_frame: *StompFrame) -> i32 {
         }
 
         // Find first ':'
-        let colon = line_start;
-        while (colon < line_end && data[colon] != 58) {
-            colon += 1;
-        }
-        if (colon >= line_end || colon == line_start) {
+        const colon_opt = findByte(data[line_start..line_end], 58, 0);
+        if (colon_opt == null || colon_opt.? == 0) {
             return STOMP_INVALID;
         }
+        const colon = line_start + colon_opt.?;
 
         const key = data[line_start..colon];
         const val = data[colon + 1..line_end];
@@ -325,12 +280,11 @@ pub fn decodeFrame(data: string, out_frame: *StompFrame) -> i32 {
         out_frame.consumed = pos + content_len + 1;
     } else {
         const body_start = pos;
-        while (pos < n && data[pos] != 0) {
-            pos += 1;
-        }
-        if (pos >= n) {
+        const nul_opt = findByte(data, 0, pos);
+        if (nul_opt == null) {
             return STOMP_INCOMPLETE;
         }
+        pos = nul_opt.?;
         out_frame.body = data[body_start..pos];
         out_frame.consumed = pos + 1;
     }

@@ -12,29 +12,18 @@
 // - $$ and \$               : literal '$' escape
 // - Nested defaults supported up to depth 8 with zero heap allocation.
 
+import { strEq, isAlpha, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_ENV_VARS: usize = 64;
 const MAX_EXPAND_DEPTH: u8 = 8;
 
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn isVarStart(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return isAlpha(c) || c == '_';
 }
 
 fn isVarCont(c: u8) -> bool {
-    return isVarStart(c) || (c >= '0' && c <= '9');
+    return isVarStart(c) || isDigit(c);
 }
 
 /// Stack-allocated key-value environment variable map (up to 64 entries, zero heap allocation).
@@ -169,12 +158,7 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                         if (out_pos + val.len > out.len) {
                             return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                         }
-                        let k: usize = 0;
-                        while (k < val.len) {
-                            out[out_pos + k] = val[k];
-                            k += 1;
-                        }
-                        out_pos += val.len;
+                        out_pos = writeStr(val, out, out_pos);
                     }
                     i = close_idx + 1;
                     continue;
@@ -209,24 +193,14 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                                 if (out_pos + arg.len > out.len) {
                                     return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                                 }
-                                let k: usize = 0;
-                                while (k < arg.len) {
-                                    out[out_pos + k] = arg[k];
-                                    k += 1;
-                                }
-                                out_pos += arg.len;
+                                out_pos = writeStr(arg, out, out_pos);
                             }
                         } else {
                             const val = val_opt.?;
                             if (out_pos + val.len > out.len) {
                                 return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                             }
-                            let k: usize = 0;
-                            while (k < val.len) {
-                                out[out_pos + k] = val[k];
-                                k += 1;
-                            }
-                            out_pos += val.len;
+                            out_pos = writeStr(val, out, out_pos);
                         }
                         i = close_idx + 1;
                         continue;
@@ -249,12 +223,7 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                                 if (out_pos + arg.len > out.len) {
                                     return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                                 }
-                                let k: usize = 0;
-                                while (k < arg.len) {
-                                    out[out_pos + k] = arg[k];
-                                    k += 1;
-                                }
-                                out_pos += arg.len;
+                                out_pos = writeStr(arg, out, out_pos);
                             }
                         }
                         i = close_idx + 1;
@@ -279,12 +248,7 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                         if (out_pos + val.len > out.len) {
                             return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                         }
-                        let k: usize = 0;
-                        while (k < val.len) {
-                            out[out_pos + k] = val[k];
-                            k += 1;
-                        }
-                        out_pos += val.len;
+                        out_pos = writeStr(val, out, out_pos);
                         i = close_idx + 1;
                         continue;
                     }
@@ -295,12 +259,7 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                 if (out_pos + raw_len > out.len) {
                     return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                 }
-                let k: usize = 0;
-                while (k < raw_len) {
-                    out[out_pos + k] = tpl[i + k];
-                    k += 1;
-                }
-                out_pos += raw_len;
+                out_pos = writeStr(tpl[i..(close_idx + 1)], out, out_pos);
                 i = close_idx + 1;
                 continue;
             }
@@ -318,12 +277,7 @@ fn expandImpl(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8) 
                     if (out_pos + val.len > out.len) {
                         return ExpandResult{ ok: false, err: ExpandError.BufferOverflow, len: out_pos, missing_var: "" };
                     }
-                    let k: usize = 0;
-                    while (k < val.len) {
-                        out[out_pos + k] = val[k];
-                        k += 1;
-                    }
-                    out_pos += val.len;
+                    out_pos = writeStr(val, out, out_pos);
                 }
                 i = end;
                 continue;

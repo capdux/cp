@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export enum SpinnerKind {
     Dots,
     Dots2,
@@ -22,9 +24,6 @@ export enum SymbolKind {
     Info
 }
 
-export fn strEq(a: string, b: string): bool;
-export fn appendStr(out: []u8, pos: usize, s: string): usize;
-export fn appendByte(out: []u8, pos: usize, c: u8): usize;
 export fn intervalMs(kind: SpinnerKind): u32;
 export fn frameCount(kind: SpinnerKind): usize;
 export fn frameAt(kind: SpinnerKind, tick: usize): string;

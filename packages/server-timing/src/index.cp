@@ -1,6 +1,9 @@
 // @cap/server-timing — Zero-allocation W3C Server-Timing Header Parser & Formatter
 // Clean-room MIT implementation in pure CP.
 
+import { isAlpha, isDigit, strEq, eqIgnoreCase, trim, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct TimingMetric {
     pub name: string,
     pub has_dur: bool,
@@ -13,59 +16,8 @@ struct ParsedFloat {
     ok: bool,
 }
 
-fn isSpace(b: u8) -> bool {
-    return b == 32 || b == 9;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn eqIgnoreCase(a: string, lower_b: string) -> bool {
-    if (a.len != lower_b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != lower_b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn trimSlice(s: string) -> string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && isSpace(s[a])) {
-        a += 1;
-    }
-    while (b > a && isSpace(s[b - 1])) {
-        b -= 1;
-    }
-    return s[a..b];
-}
-
 fn parseFloatSimple(s: string) -> ParsedFloat {
-    const t = trimSlice(s);
+    const t = trim(s);
     if (t.len == 0) {
         return ParsedFloat { val: 0.0, ok: false };
     }
@@ -117,11 +69,9 @@ fn parseSingleMetric(seg: string, out: *TimingMetric) -> bool {
     let pos: usize = 0;
 
     // Extract metric name up to first unquoted ';'
-    let name_end: usize = 0;
-    while (name_end < n && seg[name_end] != 59) {
-        name_end += 1;
-    }
-    const name = trimSlice(seg[0..name_end]);
+    const semi_opt = findByte(seg, 59, 0);
+    const name_end = semi_opt ?? n;
+    const name = trim(seg[0..name_end]);
     if (name.len == 0) {
         return false;
     }
@@ -156,21 +106,19 @@ fn parseSingleMetric(seg: string, out: *TimingMetric) -> bool {
             pos += 1;
         }
 
-        const param = trimSlice(seg[p_start..p_end]);
+        const param = trim(seg[p_start..p_end]);
         if (param.len == 0) {
             continue;
         }
 
         // Find '='
-        let eq_pos: usize = 0;
-        while (eq_pos < param.len && param[eq_pos] != 61) {
-            eq_pos += 1;
-        }
-        if (eq_pos >= param.len) {
+        const eq_opt = findByte(param, 61, 0);
+        if (eq_opt == null) {
             continue;
         }
-        const pname = trimSlice(param[0..eq_pos]);
-        const pval = trimSlice(param[eq_pos + 1..param.len]);
+        const eq_pos = eq_opt.?;
+        const pname: string = trim(param[0..eq_pos]);
+        const pval: string = trim(param[eq_pos + 1..param.len]);
 
         if (eqIgnoreCase(pname, "dur")) {
             const pf = parseFloatSimple(pval);
@@ -310,10 +258,7 @@ pub fn totalDurationMs(header: string) -> f64 {
 }
 
 fn isTokenChar(b: u8) -> bool {
-    if (b >= 48 && b <= 57) { return true; }
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
-    return b == 45 || b == 95 || b == 46; // '-', '_', '.'
+    return isDigit(b) || isAlpha(b) || b == 45 || b == 95 || b == 46; // '-', '_', '.'
 }
 
 fn descNeedsQuotes(s: string) -> bool {
@@ -331,37 +276,13 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushU64(dst: []u8, pos: usize, val: u64) -> i64 {
-    let rev: [20]u8 = undefined;
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        rev[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            rev[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n += 1;
-        }
-    }
-    if (pos + n > dst.len) {
-        return -1;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        dst[pos + i] = rev[n - 1 - i];
-        i += 1;
-    }
-    return (pos + n) as i64;
+    let tmp: [24]u8 = undefined;
+    const n = writeU64(val, &tmp, 0);
+    return pushSlice(dst, pos, tmp[0..n]);
 }
 
 fn pushDurMs(dst: []u8, pos: usize, dur_ms: f64) -> i64 {

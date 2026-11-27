@@ -1,18 +1,17 @@
 // @cap/json-repair — Zero-allocation malformed & LLM-generated JSON repair engine for CP
 // Clean-room MIT implementation inspired by npm `jsonrepair`, `dirty-json`, and Rust `llm_json`.
 
+import { strEq, isSpace, isAlpha, isDigit, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_STACK: usize = 64;
 
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
-
 fn isIdentStart(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$';
+    return isAlpha(c) || c == '_' || c == '$';
 }
 
 fn isIdentChar(c: u8) -> bool {
-    return isIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+    return isIdentStart(c) || isDigit(c) || c == '-';
 }
 
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
@@ -23,66 +22,30 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn stripMarkdownFence(raw: string) -> string {
     // Trim leading whitespace and optional ```json ... ``` wrapper common in LLM outputs
-    let start: usize = 0;
-    let end = raw.len;
-    while (start < end && isWs(raw[start])) {
-        start += 1;
-    }
-    while (end > start && isWs(raw[end - 1])) {
-        end -= 1;
-    }
-    if (end - start >= 3 && raw[start] == '`' && raw[start + 1] == '`' && raw[start + 2] == '`') {
-        start += 3;
-        while (start < end && raw[start] != '\n') {
+    let t = trim(raw);
+    if (t.len >= 3 && t[0] == '`' && t[1] == '`' && t[2] == '`') {
+        let start: usize = 3;
+        let end = t.len;
+        while (start < end && t[start] != '\n') {
             start += 1;
         }
-        if (start < end && raw[start] == '\n') {
+        if (start < end && t[start] == '\n') {
             start += 1;
         }
-        if (end - start >= 3 && raw[end - 3] == '`' && raw[end - 2] == '`' && raw[end - 1] == '`') {
+        if (end - start >= 3 && t[end - 3] == '`' && t[end - 2] == '`' && t[end - 1] == '`') {
             end -= 3;
         }
+        return trim(t[start..end]);
     }
-    while (start < end && isWs(raw[start])) {
-        start += 1;
-    }
-    while (end > start && isWs(raw[end - 1])) {
-        end -= 1;
-    }
-    return raw[start..end];
+    return t;
 }
 
 fn skipWsAndComments(s: string, start: usize) -> usize {
     let i = start;
     while (i < s.len) {
-        if (isWs(s[i])) {
+        if (isSpace(s[i])) {
             i += 1;
             continue;
         }
@@ -140,7 +103,7 @@ pub fn repairJson(raw: string, out: []u8) -> string {
         // Closing containers
         if (c == '}' || c == ']') {
             // Strip any trailing comma right before closing bracket
-            while (pos > 0 && isWs(out[pos - 1])) {
+            while (pos > 0 && isSpace(out[pos - 1])) {
                 pos -= 1;
             }
             if (pos > 0 && out[pos - 1] == ',') {
@@ -191,13 +154,13 @@ pub fn repairJson(raw: string, out: []u8) -> string {
                     break;
                 }
                 if (quote == '\'' && sc == '"') {
-                    pos = appendStr(out, pos, "\\\"");
+                    pos = writeStr("\\\"", out, pos);
                 } else if (sc == '\n') {
-                    pos = appendStr(out, pos, "\\n");
+                    pos = writeStr("\\n", out, pos);
                 } else if (sc == '\r') {
-                    pos = appendStr(out, pos, "\\r");
+                    pos = writeStr("\\r", out, pos);
                 } else if (sc == '\t') {
-                    pos = appendStr(out, pos, "\\t");
+                    pos = writeStr("\\t", out, pos);
                 } else {
                     pos = appendByte(out, pos, sc);
                 }
@@ -218,25 +181,25 @@ pub fn repairJson(raw: string, out: []u8) -> string {
             if (after < s.len && s[after] == ':') {
                 // Unquoted object key -> quote it
                 pos = appendByte(out, pos, '"');
-                pos = appendStr(out, pos, word);
+                pos = writeStr(word, out, pos);
                 pos = appendByte(out, pos, '"');
             } else if (strEq(word, "true") || strEq(word, "True") || strEq(word, "TRUE")) {
-                pos = appendStr(out, pos, "true");
+                pos = writeStr("true", out, pos);
             } else if (strEq(word, "false") || strEq(word, "False") || strEq(word, "FALSE")) {
-                pos = appendStr(out, pos, "false");
+                pos = writeStr("false", out, pos);
             } else if (strEq(word, "null") || strEq(word, "None") || strEq(word, "NULL") || strEq(word, "undefined")) {
-                pos = appendStr(out, pos, "null");
+                pos = writeStr("null", out, pos);
             } else {
                 // Unknown bare word in value position -> quote as string
                 pos = appendByte(out, pos, '"');
-                pos = appendStr(out, pos, word);
+                pos = writeStr(word, out, pos);
                 pos = appendByte(out, pos, '"');
             }
             continue;
         }
 
         // Numbers (including negative, floats, scientific)
-        if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+        if (isDigit(c) || c == '-' || c == '+') {
             if (c == '+') {
                 i += 1; // JSON forbids leading '+'
             } else {
@@ -245,7 +208,7 @@ pub fn repairJson(raw: string, out: []u8) -> string {
             }
             while (i < s.len) {
                 const nc = s[i];
-                const ok = (nc >= '0' && nc <= '9') || nc == '.' || nc == 'e' || nc == 'E' || nc == '+' || nc == '-';
+                const ok = isDigit(nc) || nc == '.' || nc == 'e' || nc == 'E' || nc == '+' || nc == '-';
                 if (!ok) {
                     break;
                 }
@@ -260,7 +223,7 @@ pub fn repairJson(raw: string, out: []u8) -> string {
     }
 
     // Strip any dangling trailing comma before auto-closing truncated containers
-    while (pos > 0 && isWs(out[pos - 1])) {
+    while (pos > 0 && isSpace(out[pos - 1])) {
         pos -= 1;
     }
     if (pos > 0 && out[pos - 1] == ',') {

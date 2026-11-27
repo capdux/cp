@@ -1,6 +1,9 @@
 // @cap/cli-spinners — Zero-allocation terminal spinner frame presets & status symbols for CP
 // Clean-room MIT implementation inspired by npm `cli-spinners` (35M/wk), `ora` (35M/wk), and `log-symbols` (45M/wk).
 
+import { strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub enum SpinnerKind {
     Dots,
     Dots2,
@@ -21,39 +24,6 @@ pub enum SymbolKind {
     Error,
     Warning,
     Info,
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
-    if (pos < out.len) {
-        out[pos] = c;
-        return pos + 1;
-    }
-    return pos;
 }
 
 pub fn intervalMs(kind: SpinnerKind) -> u32 {
@@ -247,20 +217,20 @@ pub fn logSymbol(kind: SymbolKind, ascii_only: bool) -> string {
 
 pub fn renderSpinnerLine(kind: SpinnerKind, tick: usize, text: string, out: []u8) -> string {
     let pos: usize = 0;
-    pos = appendStr(out, pos, frameAt(kind, tick));
+    pos = writeStr(frameAt(kind, tick), out, pos);
     if (text.len > 0) {
-        pos = appendByte(out, pos, ' ');
-        pos = appendStr(out, pos, text);
+        pos = writeStr(" ", out, pos);
+        pos = writeStr(text, out, pos);
     }
     return out[0..pos];
 }
 
 pub fn renderStatusLine(sym: SymbolKind, ascii_only: bool, text: string, out: []u8) -> string {
     let pos: usize = 0;
-    pos = appendStr(out, pos, logSymbol(sym, ascii_only));
+    pos = writeStr(logSymbol(sym, ascii_only), out, pos);
     if (text.len > 0) {
-        pos = appendByte(out, pos, ' ');
-        pos = appendStr(out, pos, text);
+        pos = writeStr(" ", out, pos);
+        pos = writeStr(text, out, pos);
     }
     return out[0..pos];
 }

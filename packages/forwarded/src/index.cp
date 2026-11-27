@@ -9,6 +9,8 @@
 // - Private/internal IPv4 & IPv6 detection (`10/8`, `172.16/12`, `192.168/16`, `127/8`, `::1`, `fc00::/7`, `fe80::/10`).
 // - Zero heap allocation (all returned strings slice into caller inputs).
 
+import { isDigit, trim, eqIgnoreCase, hexVal, findByte } from "cap:ascii";
+
 const MAX_HOPS: usize = 32;
 
 pub struct ForwardedHop {
@@ -81,53 +83,12 @@ pub struct ForwardedChain {
     }
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn trim(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
 fn unquote(raw: string) -> string {
     let s = trim(raw);
     if (s.len >= 2 && s[0] == '"' && s[s.len - 1] == '"') {
         s = trim(s[1..(s.len - 1)]);
     }
     return s;
-}
-
-fn eqIgnoreCase(a: string, lower_lit: string) -> bool {
-    if (a.len != lower_lit.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != lower_lit[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Strips quotes, IPv6 brackets `[...]`, and optional `:port` from a node identifier.
@@ -139,12 +100,9 @@ fn stripAddr(raw: string) -> string {
 
     // Bracketed IPv6: "[2001:db8::1]:4711" or "[::1]"
     if (s[0] == '[') {
-        let i: usize = 1;
-        while (i < s.len) {
-            if (s[i] == ']') {
-                return s[1..i];
-            }
-            i += 1;
+        const rb = findByte(s, ']', 1);
+        if (rb != null) {
+            return s[1..rb.?];
         }
         return s;
     }
@@ -199,17 +157,9 @@ fn parseForwardedElement(elem: string) -> ForwardedHop {
         }
         if (at_end || (!in_quotes && elem[i] == ';')) {
             const pair = trim(elem[seg_start..i]);
-            // Find '='
-            let eq_idx: usize = 0;
-            let found_eq = false;
-            while (eq_idx < pair.len) {
-                if (pair[eq_idx] == '=') {
-                    found_eq = true;
-                    break;
-                }
-                eq_idx += 1;
-            }
-            if (found_eq) {
+            const eq_opt = findByte(pair, '=', 0);
+            if (eq_opt != null) {
+                const eq_idx = eq_opt.?;
                 const key = trim(pair[0..eq_idx]);
                 const val = trim(pair[(eq_idx + 1)..pair.len]);
                 if (eqIgnoreCase(key, "for")) {
@@ -303,19 +253,6 @@ pub fn extractClientIp(xff: string, remote_addr: string, trusted_hops: usize) ->
     return chain.ipAtTrustDepth(trusted_hops);
 }
 
-fn hexVal(c: u8) -> i8 {
-    if (c >= '0' && c <= '9') {
-        return (c - '0') as i8;
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (c - 'a' + 10) as i8;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return (c - 'A' + 10) as i8;
-    }
-    return -1;
-}
-
 fn isPrivateIpv4(s: string) -> bool {
     let octets: [4]u16 = [0, 0, 0, 0];
     let idx: usize = 0;
@@ -383,21 +320,11 @@ pub fn isPrivateIp(ip: string) -> bool {
     }
 
     // Check if IPv6 (contains ':')
-    let has_colon = false;
-    let first_colon: usize = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ':') {
-            has_colon = true;
-            first_colon = i;
-            break;
-        }
-        i += 1;
-    }
-
-    if (!has_colon) {
+    const colon_opt = findByte(s, ':', 0);
+    if (colon_opt == null) {
         return isPrivateIpv4(s);
     }
+    const first_colon = colon_opt.?;
 
     // Loopback ::1
     if (s.len == 3 && s[0] == ':' && s[1] == ':' && s[2] == '1') {
@@ -414,11 +341,11 @@ pub fn isPrivateIp(ip: string) -> bool {
         let h0: u16 = 0;
         let k: usize = 0;
         while (k < first_colon) {
-            const v = hexVal(s[k]);
-            if (v < 0) {
+            const v_opt = hexVal(s[k]);
+            if (v_opt == null) {
                 return false;
             }
-            h0 = (h0 * 16) + (v as u16);
+            h0 = (h0 * 16) + (v_opt.? as u16);
             k += 1;
         }
         // fc00::/7 => 0xfc00 .. 0xfdff

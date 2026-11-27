@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq, findByte } from "cap:ascii";
+import { writeStr, parseU64 } from "cap:fmt";
 export class StompHeader {
     key: string,
     value: string,
@@ -14,7 +16,6 @@ export class StompFrame {
     fn empty(): StompFrame;
 }
 
-export fn strEq(a: string, b: string): bool;
 export fn escapeHeader(input: string, out: []u8): usize;
 export fn unescapeHeader(input: string, out: []u8): usize;
 export fn encodeFrame(command: string, headers: &[]StompHeader, body: string, out: []u8): usize;

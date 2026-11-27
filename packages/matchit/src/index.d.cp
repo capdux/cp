@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-export fn strEq(a: string, b: string): bool;
+import { strEq } from "cap:ascii";
 export class RouteParam {
     key: string,
     value: string,
