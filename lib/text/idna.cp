@@ -489,7 +489,7 @@ pub fn isValidDomain(domain: []const u8): bool {
     if (domain.len == 0 || domain.len > 1024) {
         return false;
     }
-    let stack_buf: [4096]u8 = [0; 4096];
+    let stack_buf: [4096]u8 = undefined;
     let fba = std.heap.FixedBufferAllocator.init(&stack_buf);
     const alloc = fba.allocator();
     const res = toAscii(alloc, domain) catch return false;

@@ -345,7 +345,7 @@ pub fn splitSecretDeterministic(
     }
 
     const req_entropy: usize = secret.len * ((threshold as usize) - 1);
-    let ent_buf: [SHAMIR_MAX_SECRET_LEN * 31]u8 = [0; SHAMIR_MAX_SECRET_LEN * 31];
+    let ent_buf: [SHAMIR_MAX_SECRET_LEN * 31]u8 = undefined;
     defer std.crypto.secureZero(u8, ent_buf[0..]);
 
     let state: u64 = if (rng_seed == 0) SHAMIR_SM64_INC else rng_seed;
@@ -433,7 +433,7 @@ pub fn combineShamirShares(
     }
 
     // Precompute Lagrange basis coefficients lambda_i(0) = prod_{j != i} (x_j / (x_i ^ x_j))
-    let lambdas: [SHAMIR_MAX_SHARES]u8 = [0; SHAMIR_MAX_SHARES];
+    let lambdas: [SHAMIR_MAX_SHARES]u8 = undefined;
     defer std.crypto.secureZero(u8, lambdas[0..]);
 
     let li: usize = 0;
@@ -452,7 +452,7 @@ pub fn combineShamirShares(
     // Interpolate secret bytes using 16-lane SIMD GF(256) vector XOR accumulation
     let acc_buf: [SHAMIR_MAX_SECRET_LEN]u8 = [0; SHAMIR_MAX_SECRET_LEN];
     defer std.crypto.secureZero(u8, acc_buf[0..]);
-    let term_buf: [SHAMIR_MAX_SECRET_LEN]u8 = [0; SHAMIR_MAX_SECRET_LEN];
+    let term_buf: [SHAMIR_MAX_SECRET_LEN]u8 = undefined;
     defer std.crypto.secureZero(u8, term_buf[0..]);
 
     let si: usize = 0;

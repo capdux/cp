@@ -191,7 +191,7 @@ fn rotl30(x: u32): u32 {
 }
 
 fn sha1ProcessBlock(state: *[5]u32, block: *const [64]u8) {
-    let w: [80]u32 = [0; 80];
+    let w: [80]u32 = undefined;
     let i: usize = 0;
     while (i < 16) : (i += 1) {
         const b = i * 4;
@@ -244,13 +244,10 @@ fn sha1ProcessBlock(state: *[5]u32, block: *const [64]u8) {
 
 pub fn sha1Digest(data: string): [20]u8 {
     let state: [5]u32 = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
-    let block: [64]u8 = [0; 64];
+    let block: [64]u8 = undefined;
     let offset: usize = 0;
     while (offset + 64 <= data.len) : (offset += 64) {
-        let j: usize = 0;
-        while (j < 64) : (j += 1) {
-            block[j] = data[offset + j];
-        }
+        @memcpy(block[0..64], data[offset .. offset + 64]);
         sha1ProcessBlock(*state, *block);
     }
 
@@ -318,17 +315,11 @@ pub fn base64Encode20(src: [20]u8): [28]u8 {
 
 /// Compute RFC 6455 `Sec-WebSocket-Accept` (28 bytes) from `Sec-WebSocket-Key`.
 pub fn computeWebSocketAccept(client_key: string): [28]u8 {
-    let combined: [128]u8 = [0; 128];
+    let combined: [128]u8 = undefined;
     let klen = client_key.len;
     if (klen > 92) klen = 92;
-    let i: usize = 0;
-    while (i < klen) : (i += 1) {
-        combined[i] = client_key[i];
-    }
-    let j: usize = 0;
-    while (j < WS_GUID.len) : (j += 1) {
-        combined[klen + j] = WS_GUID[j];
-    }
+    @memcpy(combined[0..klen], client_key[0..klen]);
+    @memcpy(combined[klen .. klen + WS_GUID.len], WS_GUID);
     const digest = sha1Digest(combined[0 .. klen + WS_GUID.len]);
     return base64Encode20(digest);
 }

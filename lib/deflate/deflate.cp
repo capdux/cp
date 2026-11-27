@@ -275,7 +275,7 @@ const CL_ORDER: [19]usize = [
 ];
 
 fn buildFixedLitTree(): HuffTree ! DeflateError {
-    let lens: [288]u8 = [0; 288];
+    let lens: [288]u8 = undefined;
     let i: usize = 0;
     while (i <= 143) : (i += 1) {
         lens[i] = 8;
@@ -403,7 +403,7 @@ fn decompressDeflateStream(
             const cl_tree = HuffTree.build(cl_lens[0..19])?;
 
             const total_codes = hlit + hdist;
-            let all_lens: [320]u8 = [0; 320];
+            let all_lens: [320]u8 = undefined;
             let idx: usize = 0;
             while (idx < total_codes) {
                 const sym = cl_tree.decode(&br)?;

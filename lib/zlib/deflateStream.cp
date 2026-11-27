@@ -177,7 +177,7 @@ const CL_ORDER: [19]usize = [
 ];
 
 fn buildFixedLitTree(): HuffTree ! ZlibError {
-    let lengths: [288]u8 = [0; 288];
+    let lengths: [288]u8 = undefined;
     let i: usize = 0;
     while (i <= 143) { lengths[i] = 8; i += 1; }
     while (i <= 255) { lengths[i] = 9; i += 1; }
@@ -298,7 +298,7 @@ pub fn decompressDeflatePrefix(
             }
             const cl_tree = HuffTree.build(cl_lengths[0..]) ?;
 
-            let total_lengths: [320]u8 = [0; 320];
+            let total_lengths: [320]u8 = undefined;
             const total_needed = hlit + hdist;
             let idx: usize = 0;
             while (idx < total_needed) {

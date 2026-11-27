@@ -47,7 +47,7 @@ fn slAppendF64(out_buf: []u8, pos: usize, val: f64, for_json: bool): usize {
         }
         return slAppendBytes(out_buf, pos, if (val < 0.0) "-Inf" else "Inf");
     }
-    let tmp: [64]u8 = [0; 64];
+    let tmp: [64]u8 = undefined;
     const s = std.fmt.bufPrint(tmp[0..64], "{d}", .{val}) catch "0";
     return slAppendBytes(out_buf, pos, s);
 }
@@ -668,7 +668,7 @@ pub struct StructuredLogger {
             return false;
         }
         const rec = _.buildRecord(level, msg, fields);
-        let line_buf: [2048]u8 = [0; 2048];
+        let line_buf: [2048]u8 = undefined;
         const line = LogFormatter.format(rec, _.format, line_buf[0..2048], _.redact_keys[0.._.redact_count]);
 
         if (cb := _.sink_fn) {

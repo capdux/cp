@@ -335,14 +335,10 @@ pub fn slugify(input: []const u8, out: []u8): ([]const u8)? {
 /// Generate a hyphenated URL slug capped to `max_len` bytes, trimming at a `-` word boundary when possible.
 pub fn slugifyBounded(input: []const u8, max_len: usize, out: []u8): ([]const u8)? {
     if (max_len == 0) return out[0..0];
-    let tmp: [1024]u8 = [0; 1024];
+    let tmp: [1024]u8 = undefined;
     const full = slugifyWithOptions(input, SlugOptions{ max_len: max_len }, tmp[0..]) ?? return null;
     if (full.len > out.len) return null;
-    let i: usize = 0;
-    while (i < full.len) {
-        out[i] = full[i];
-        i += 1;
-    }
+    @memcpy(out[0..full.len], full);
     return out[0..full.len];
 }
 

@@ -30,8 +30,8 @@ pub fn isParentOrEqual(parent_in: []const u8, child_in: []const u8): ParentRelat
 
 /// Return true if `child` is strictly inside or equal to `parent` (after POSIX normalization).
 pub fn isPathInside(parent: []const u8, child: []const u8): bool {
-    let p_buf: [512]u8 = [0; 512];
-    let c_buf: [512]u8 = [0; 512];
+    let p_buf: [512]u8 = undefined;
+    let c_buf: [512]u8 = undefined;
     const p_norm = normalizePosix(parent, p_buf[0..]) ?? return false;
     const c_norm = normalizePosix(child, c_buf[0..]) ?? return false;
     const rel = isParentOrEqual(p_norm, c_norm);
@@ -140,11 +140,8 @@ pub fn normalizePosix(input: []const u8, out: []u8): ([]const u8)? {
         }
         const s = segs[i];
         if (p + s.len > out.len) return null;
-        let k: usize = 0;
-        while (k < s.len) : (k += 1) {
-            out[p] = s[k];
-            p += 1;
-        }
+        @memcpy(out[p .. p + s.len], s);
+        p += s.len;
     }
 
     if (p == 0) {
@@ -163,28 +160,18 @@ pub fn joinNormalized(base: []const u8, rel: []const u8, out: []u8): ([]const u8
     if (base.len == 0) {
         return normalizePosix(rel, out);
     }
-    let tmp: [1024]u8 = [0; 1024];
+    let tmp: [1024]u8 = undefined;
     if (base.len + 1 + rel.len > 1024) return null;
-    let p: usize = 0;
-    let i: usize = 0;
-    while (i < base.len) : (i += 1) {
-        tmp[p] = base[i];
-        p += 1;
-    }
-    tmp[p] = '/';
-    p += 1;
-    i = 0;
-    while (i < rel.len) : (i += 1) {
-        tmp[p] = rel[i];
-        p += 1;
-    }
-    return normalizePosix(tmp[0..p], out);
+    @memcpy(tmp[0..base.len], base);
+    tmp[base.len] = '/';
+    @memcpy(tmp[base.len + 1 .. base.len + 1 + rel.len], rel);
+    return normalizePosix(tmp[0 .. base.len + 1 + rel.len], out);
 }
 
 /// Compute POSIX relative path from `from_in` to `to_in`, writing into `out`.
 pub fn relativePosix(from_in: []const u8, to_in: []const u8, out: []u8): ([]const u8)? {
-    let f_buf: [512]u8 = [0; 512];
-    let t_buf: [512]u8 = [0; 512];
+    let f_buf: [512]u8 = undefined;
+    let t_buf: [512]u8 = undefined;
     const from_norm = normalizePosix(from_in, f_buf[0..]) ?? return null;
     const to_norm = normalizePosix(to_in, t_buf[0..]) ?? return null;
 

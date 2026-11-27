@@ -709,8 +709,8 @@ fn parseXrefStreamAt(
     if (entry_width == 0) return PdfParseError.InvalidXRef;
 
     // Parse `/Index [...]` (defaults to `[0 size_val]`)
-    let idx_starts: [64]u32 = [0; 64];
-    let idx_counts: [64]u32 = [0; 64];
+    let idx_starts: [64]u32 = undefined;
+    let idx_counts: [64]u32 = undefined;
     let num_sections: usize = 0;
 
     if (ip := findDictValuePos(dict, "/Index")) {
@@ -734,7 +734,7 @@ fn parseXrefStreamAt(
     }
 
     // Decode XRef stream (automatically handles /FlateDecode + /DecodeParms PNG/TIFF predictor!)
-    let stm_buf: [65536]u8 = [0; 65536];
+    let stm_buf: [65536]u8 = undefined;
     const dec_len: usize = decodePdfStream(sv, stm_buf[0..]) catch return PdfParseError.InvalidXRef;
     const dec_data = stm_buf[0..dec_len];
 
@@ -852,7 +852,7 @@ pub fn locateObjectBodyFromObjStm(
     let flex = PdfLexer.init(dict, fp);
     const first_off: usize = @as(usize, parseU32Tok(dict, flex.nextToken()) ?? return PdfParseError.InvalidObject);
 
-    let stm_scratch: [65536]u8 = [0; 65536];
+    let stm_scratch: [65536]u8 = undefined;
     const dec_len: usize = decodePdfStream(sv, stm_scratch[0..])?;
     if (first_off > dec_len) return PdfParseError.InvalidObject;
 
@@ -894,10 +894,7 @@ pub fn locateObjectBodyFromObjStm(
     while (target_start < target_end && isPdfWhitespace(stm_scratch[target_start])) : (target_start += 1) {}
     const slice_len: usize = target_end - target_start;
     if (slice_len > out_buf.len) return PdfParseError.BufferTooSmall;
-    let k: usize = 0;
-    while (k < slice_len) : (k += 1) {
-        out_buf[k] = stm_scratch[target_start + k];
-    }
+    @memcpy(out_buf[0..slice_len], stm_scratch[target_start .. target_start + slice_len]);
     return slice_len;
 }
 
@@ -1251,12 +1248,9 @@ pub fn decodePdfStringToUtf8(raw_token: []const u8, out_buf: []u8): usize ! PdfP
     let raw_len: usize = decodeRawPdfStringBytes(raw_token, out_buf)?;
     // Detect UTF-16BE BOM (0xFE 0xFF) and transcode in place via temporary conversion
     if (raw_len >= 2 && out_buf[0] == 0xFE && out_buf[1] == 0xFF) {
-        let tmp: [512]u8 = [0; 512];
+        let tmp: [512]u8 = undefined;
         const copy_n: usize = if (raw_len <= tmp.len) raw_len else tmp.len;
-        let ci: usize = 0;
-        while (ci < copy_n) : (ci += 1) {
-            tmp[ci] = out_buf[ci];
-        }
+        @memcpy(tmp[0..copy_n], out_buf[0..copy_n]);
         let out_pos: usize = 0;
         let i: usize = 2;
         while (i + 1 < copy_n) {
@@ -1671,7 +1665,7 @@ pub fn extractPdfMetadata(
     };
     if (!xref.trailer.has_info) return meta;
 
-    let info_scratch: [8192]u8 = [0; 8192];
+    let info_scratch: [8192]u8 = undefined;
     const info_body = xref.resolveObjectBody(pdf_bytes, xref.trailer.info, info_scratch[0..]) ?? return meta;
     let pos: usize = 0;
     meta.title = decodeDictStringField(info_body, "/Title", out_arena, *pos)?;

@@ -152,7 +152,7 @@ export struct FormIter {
 
 /// Lookup the first value whose decoded key matches `target_key` and write its decoded value into `out`.
 export fn getFormParam(body: []const u8, target_key: []const u8, out: []u8): ([]const u8)? {
-    let key_buf: [256]u8 = [0; 256];
+    let key_buf: [256]u8 = undefined;
     let it = FormIter.init(body);
     while (pair := it.next()) {
         if (dk := pair.decodeKey(key_buf[0..])) {
