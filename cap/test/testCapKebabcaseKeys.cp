@@ -5,8 +5,12 @@ import { test, expect_eq } from "cap:test";
 import { MapObjResult } from "../../packages/map-obj/src/index.cp";
 import { DecamelizeKeysResult } from "../../packages/decamelize-keys/src/index.cp";
 import {
+    kebabcaseString,
+    isKebabCase,
     kebabcaseKeys,
     kebabcaseKeysAll,
+    kebabcaseEntries,
+    kebabcaseKeysDeep,
     kebabcaseKeyInto,
     kebabcasePathInto,
     kebabcaseKeysBatch,
@@ -109,5 +113,49 @@ fn main() {
         expect_eq(results[1].len(), 2 as usize);
         expect_eq(results[1].get("max-retries") ?? "", "3");
         expect_eq(results[1].get("keepMe") ?? "", "yes");
+    });
+
+    test("7. @cap/kebabcase-keys — kebabcaseString acronyms, underscores & leading/trailing hyphen cleanup", () => {
+        let buf: [64]u8 = undefined;
+        let n1 = kebabcaseString("HTMLParser", buf[0..64]);
+        expect_eq(buf[0..n1] as string, "html-parser");
+
+        let n2 = kebabcaseString("XMLHttpRequest", buf[0..64]);
+        expect_eq(buf[0..n2] as string, "xml-http-request");
+
+        let n3 = kebabcaseString("--foo__Bar  baz--", buf[0..64]);
+        expect_eq(buf[0..n3] as string, "foo-bar-baz");
+
+        let n4 = kebabcaseString("getURL2", buf[0..64]);
+        expect_eq(buf[0..n4] as string, "get-url2");
+
+        expect_eq(isKebabCase("html-parser"), true);
+        expect_eq(isKebabCase("HTMLParser"), false);
+        expect_eq(isKebabCase("-leading"), false);
+        expect_eq(isKebabCase("double--dash"), false);
+    });
+
+    test("8. @cap/kebabcase-keys — kebabcaseEntries direct slice conversion with exclude", () => {
+        const keys: [4]string = ["HTMLParser", "__raw_key__", "keepExact", "maxRetryCount"];
+        const vals: [4]string = ["v1", "v2", "v3", "v4"];
+        const excl: [1]string = ["keepExact"];
+        let out = kebabcaseEntries(keys[0..4], vals[0..4], excl[0..1]);
+        expect_eq(out.len(), 4 as usize);
+        expect_eq(out.get("html-parser") ?? "", "v1");
+        expect_eq(out.get("raw-key") ?? "", "v2");
+        expect_eq(out.get("keepExact") ?? "", "v3");
+        expect_eq(out.get("max-retry-count") ?? "", "v4");
+    });
+
+    test("9. @cap/kebabcase-keys — kebabcaseKeysDeep with stop_paths & nested dot keys", () => {
+        let src = MapObjResult.empty();
+        * = src.push("userProfile.HTMLTitle", "Hello");
+        * = src.push("meta.rawPayload", "keep");
+        const excl: [0]string = undefined;
+        const stop: [1]string = ["meta.rawPayload"];
+        let out = kebabcaseKeysDeep(src, excl[0..0], stop[0..1]);
+        expect_eq(out.len(), 2 as usize);
+        expect_eq(out.get("user-profile.html-title") ?? "", "Hello");
+        expect_eq(out.get("meta.rawPayload") ?? "", "keep");
     });
 }

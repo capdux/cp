@@ -1,7 +1,9 @@
 import { test, expect_eq } from "cap:test";
 import {
     encodeBase64Url, decodeBase64Url, encodedBase64UrlLen,
-    fromStandardBase64, toStandardBase64, isValidBase64Url
+    fromStandardBase64, toStandardBase64, isValidBase64Url,
+    encode, decode, encodePadded, encodedLen, encodedPaddedLen, decodedLen,
+    fromBase64, toBase64, padString, unpadString, validate, validatePadded,
 } from "../../packages/base64url/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
@@ -63,5 +65,59 @@ fn main() {
         expect_eq(encodeBase64Url("", out[0..16]), 0);
         let r = decodeBase64Url("@@@", out[0..16]);
         expect_eq(r.ok, false);
+    });
+
+    test("7. @cap/base64-url — Upstream encode/decode/fromBase64/toBase64/validate aliases", () => {
+        let enc: [32]u8 = undefined;
+        let dec_buf: [32]u8 = undefined;
+        let n = encode("hello world?", enc[0..32]);
+        expect_eq(n, encodedLen(12));
+        expect_eq(validate(enc[0..n]), true);
+        let r = decode(enc[0..n], dec_buf[0..32]);
+        expect_eq(r.ok, true);
+        expect_eq(eqBuf(dec_buf[0..r.len], r.len, "hello world?"), true);
+
+        let conv1: [32]u8 = undefined;
+        let c1 = fromBase64("PDw/Pz8+Pg==", conv1[0..32]);
+        expect_eq(eqBuf(conv1[0..c1], c1, "PDw_Pz8-Pg"), true);
+
+        let conv2: [32]u8 = undefined;
+        let c2 = toBase64("PDw_Pz8-Pg", conv2[0..32]);
+        expect_eq(eqBuf(conv2[0..c2], c2, "PDw/Pz8+Pg=="), true);
+    });
+
+    test("8. @cap/base64-url — padString & unpadString preserve URL-safe alphabet", () => {
+        let out: [16]u8 = undefined;
+        let n1 = padString("ab-c_d", out[0..16]);
+        expect_eq(eqBuf(out[0..n1], n1, "ab-c_d=="), true);
+        expect_eq(unpadString(out[0..n1]), "ab-c_d");
+
+        let n2 = padString("abc", out[0..16]);
+        expect_eq(eqBuf(out[0..n2], n2, "abc="), true);
+
+        let n3 = padString("abcd", out[0..16]);
+        expect_eq(eqBuf(out[0..n3], n3, "abcd"), true);
+
+        // Illegal len % 4 == 1 rejected
+        expect_eq(padString("a", out[0..16]), 0 as usize);
+    });
+
+    test("9. @cap/base64-url — encodePadded, encodedPaddedLen, decodedLen & validatePadded", () => {
+        let out: [16]u8 = undefined;
+        let n = encodePadded("f", out[0..16]);
+        expect_eq(n, encodedPaddedLen(1));
+        expect_eq(eqBuf(out[0..n], n, "Zg=="), true);
+        expect_eq(validatePadded("Zg=="), true);
+        expect_eq(validatePadded("Zg"), true);
+        expect_eq(validatePadded("Z==="), false);
+        expect_eq(validatePadded("Zg="), false);
+
+        expect_eq(decodedLen("") ?? 999, 0 as usize);
+        expect_eq(decodedLen("Zg") ?? 999, 1 as usize);
+        expect_eq(decodedLen("Zg==") ?? 999, 1 as usize);
+        expect_eq(decodedLen("Zm8=") ?? 999, 2 as usize);
+        expect_eq(decodedLen("Zm9v") ?? 999, 3 as usize);
+        expect_eq(decodedLen("a") == null, true);
+        expect_eq(decodedLen("Z===") == null, true);
     });
 }

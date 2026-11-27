@@ -1,9 +1,20 @@
 import { test, expect_eq } from "cap:test";
 import {
     ParsedMs,
+    MS_PER_SECOND,
+    MS_PER_MINUTE,
+    MS_PER_HOUR,
+    MS_PER_DAY,
     parseMs,
     parseMsF64,
+    parseMsF64Checked,
+    fromNanoseconds,
+    fromMicroseconds,
+    fromSeconds,
     toMilliseconds,
+    toMillisecondsF64,
+    toNanoseconds,
+    formatParsedMs,
 } from "../../packages/parse-ms/src/index.cp";
 
 fn main() {
@@ -88,5 +99,57 @@ fn main() {
         expect_eq(p.seconds, 42);
         expect_eq(p.milliseconds, 7);
         expect_eq(toMilliseconds(p), hundred_years_ms);
+    });
+
+    test("7. @cap/parse-ms — ParsedMs helpers, constants & sub-ms round-trip", () => {
+        expect_eq(MS_PER_SECOND, 1000 as u64);
+        expect_eq(MS_PER_MINUTE, 60000 as u64);
+        expect_eq(MS_PER_HOUR, 3600000 as u64);
+        expect_eq(MS_PER_DAY, 86400000 as u64);
+
+        const z = ParsedMs.zero();
+        expect_eq(z.isZero(), true);
+        expect_eq(z.isNegative(), false);
+        expect_eq(z.equals(parseMs(0)), true);
+
+        const neg = parseMs(-42);
+        expect_eq(neg.isNegative(), true);
+        expect_eq(neg.isZero(), false);
+
+        const f = parseMsF64(1.25);
+        expect_eq(toMillisecondsF64(f), 1.25);
+    });
+
+    test("8. @cap/parse-ms — fromNanoseconds / fromMicroseconds / fromSeconds / toNanoseconds", () => {
+        const p1 = fromNanoseconds(1_234_567);
+        expect_eq(p1.milliseconds, 1);
+        expect_eq(p1.microseconds, 234);
+        expect_eq(p1.nanoseconds, 567);
+        expect_eq(toNanoseconds(p1), 1_234_567);
+
+        const p2 = fromMicroseconds(-2500);
+        expect_eq(p2.milliseconds, -2);
+        expect_eq(p2.microseconds, -500);
+
+        const p3 = fromSeconds(90);
+        expect_eq(p3.minutes, 1);
+        expect_eq(p3.seconds, 30);
+    });
+
+    test("9. @cap/parse-ms — parseMsF64Checked NaN/Inf guard & formatParsedMs", () => {
+        let z0: f64 = 0.0;
+        let nan_val: f64 = z0 / z0;
+        expect_eq(parseMsF64Checked(nan_val) == null, true);
+        expect_eq(parseMsF64(nan_val).isZero(), true);
+
+        let buf: [64]u8 = undefined;
+        let n1 = formatParsedMs(parseMs(1337000001), buf[0..64]);
+        expect_eq(buf[0..n1] as string, "15d 11h 23m 20s 1ms");
+
+        let n2 = formatParsedMs(parseMs(0), buf[0..64]);
+        expect_eq(buf[0..n2] as string, "0ms");
+
+        let n3 = formatParsedMs(parseMs(-1500), buf[0..64]);
+        expect_eq(buf[0..n3] as string, "-1s 500ms");
     });
 }

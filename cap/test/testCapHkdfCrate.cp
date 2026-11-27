@@ -1,5 +1,29 @@
 import { test, expect_eq } from "cap:test";
-import { HkdfSha256, hkdfSha256 } from "../../packages/hkdf/src/index.cp";
+import {
+    HkdfSha256,
+    HkdfSha384,
+    HkdfSha512,
+    HkdfHashAlg,
+    HKDF_SHA256_HASH_LEN,
+    HKDF_SHA384_HASH_LEN,
+    HKDF_SHA512_HASH_LEN,
+    hkdfSha256,
+    hkdfSha384,
+    hkdfSha512,
+    hkdfExtract,
+    hkdfExpand,
+    hkdfDerive,
+} from "../../packages/hkdf/src/index.cp";
+
+fn hkBytesEq(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) { return false; }
+    let i: usize = 0;
+    while (i < a.len) {
+        if (a[i] != b[i]) { return false; }
+        i = i + 1;
+    }
+    return true;
+}
 
 fn hkHexByte(hi: u8): u8 {
     if (hi < 10) { return 48 + hi; }
@@ -82,5 +106,73 @@ fn main() {
         * = hk.expand(ikm[0..4], k80[0..80]);
         expect_eq(k32[0], k80[0]);
         expect_eq(k32[31], k80[31]);
+    });
+
+    test("7. @cap/hkdf-crate — expandMultiInfo matches single concatenated info", () => {
+        let ikm: [8]u8 = [1, 2, 3, 4, 5, 6, 7, 8];
+        let salt: [4]u8 = [10, 20, 30, 40];
+        let hk = HkdfSha256.extract(salt[0..4], ikm[0..8]);
+        let full_info: [9]u8 = ['a', 'b', 'c', '-', 'd', 'e', 'f', 'g', 'h'];
+        let parts: [3]string = ["abc", "-", "defgh"];
+        let out1: [48]u8 = undefined;
+        let out2: [48]u8 = undefined;
+        expect_eq(hk.expand(full_info[0..9], out1[0..48]), true);
+        expect_eq(hk.expandMultiInfo(parts[0..3], out2[0..48]), true);
+        expect_eq(hkBytesEq(out1[0..48], out2[0..48]), true);
+        expect_eq(hk.verifyPrk(hk.prk[0..32]), true);
+    });
+
+    test("8. @cap/hkdf-crate — TLS 1.3 expandLabel & boundary checks", () => {
+        let ikm: [16]u8 = [0xaa; 16];
+        let salt: [16]u8 = [0xbb; 16];
+        let hk = HkdfSha256.extract(salt[0..16], ikm[0..16]);
+        let key1: [32]u8 = undefined;
+        let key2: [32]u8 = undefined;
+        expect_eq(hk.expandLabel("key", "ctx", key1[0..32]), true);
+        expect_eq(hk.expandLabel("iv", "ctx", key2[0..32]), true);
+        expect_eq(hkBytesEq(key1[0..32], key2[0..32]), false);
+    });
+
+    test("9. @cap/hkdf-crate — HkdfSha384 & HkdfSha512 extract/expand/derive", () => {
+        let ikm = "input-keying-material";
+        let salt = "salt-bytes";
+        let info = "app-context";
+        let okm384_a: [64]u8 = undefined;
+        let okm384_b: [64]u8 = undefined;
+        let h384 = HkdfSha384.extract(salt, ikm);
+        expect_eq(h384.expand(info, okm384_a[0..64]), true);
+        expect_eq(hkdfSha384(salt, ikm, info, okm384_b[0..64]), true);
+        expect_eq(hkBytesEq(okm384_a[0..64], okm384_b[0..64]), true);
+        expect_eq(HkdfSha384.fromPrk(h384.prk[0..47]) == null, true);
+        expect_eq(HkdfSha384.fromPrk(h384.prk[0..48]) != null, true);
+
+        let okm512_a: [64]u8 = undefined;
+        let okm512_b: [64]u8 = undefined;
+        let h512 = HkdfSha512.extract(salt, ikm);
+        expect_eq(h512.expand(info, okm512_a[0..64]), true);
+        expect_eq(hkdfSha512(salt, ikm, info, okm512_b[0..64]), true);
+        expect_eq(hkBytesEq(okm512_a[0..64], okm512_b[0..64]), true);
+        expect_eq(HkdfSha512.fromPrk(h512.prk[0..63]) == null, true);
+    });
+
+    test("10. @cap/hkdf-crate — Unified HkdfHashAlg extract/expand/derive & overflow guards", () => {
+        expect_eq(HkdfHashAlg.Sha256.hashLen(), HKDF_SHA256_HASH_LEN);
+        expect_eq(HkdfHashAlg.Sha384.hashLen(), HKDF_SHA384_HASH_LEN);
+        expect_eq(HkdfHashAlg.Sha512.hashLen(), HKDF_SHA512_HASH_LEN);
+
+        let prk: [64]u8 = undefined;
+        expect_eq(hkdfExtract(HkdfHashAlg.Sha256, "s", "k", prk[0..16]), 0 as usize);
+        expect_eq(hkdfExtract(HkdfHashAlg.Sha256, "s", "k", prk[0..64]), 32 as usize);
+        expect_eq(hkdfExtract(HkdfHashAlg.Sha384, "s", "k", prk[0..64]), 48 as usize);
+        expect_eq(hkdfExtract(HkdfHashAlg.Sha512, "s", "k", prk[0..64]), 64 as usize);
+
+        let out1: [42]u8 = undefined;
+        let out2: [42]u8 = undefined;
+        expect_eq(hkdfExpand(HkdfHashAlg.Sha512, prk[0..64], "i", out1[0..42]), true);
+        expect_eq(hkdfDerive(HkdfHashAlg.Sha512, "s", "k", "i", out2[0..42]), true);
+        expect_eq(hkBytesEq(out1[0..42], out2[0..42]), true);
+
+        // Short PRK rejected
+        expect_eq(hkdfExpand(HkdfHashAlg.Sha512, prk[0..32], "i", out1[0..42]), false);
     });
 }

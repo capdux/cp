@@ -1,5 +1,18 @@
 import { test, expect_eq } from "cap:test";
-import { toRoman, parseRoman, isValidRoman } from "../../packages/romans/src/index.cp";
+import {
+    MIN_ROMAN,
+    MAX_ROMAN,
+    MAX_ROMAN_LEN,
+    romanCharValue,
+    romanLen,
+    toRoman,
+    toRomanLower,
+    romanize,
+    romanizeChecked,
+    parseRoman,
+    deromanize,
+    isValidRoman,
+} from "../../packages/romans/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {
@@ -75,5 +88,43 @@ fn main() {
         // 3 = "III" fits exactly in 3 bytes
         expect_eq(toRoman(3, tiny[0..3]), 3 as usize);
         expect_eq(testEq(tiny[0..3], "III"), true);
+    });
+
+    test("7. @cap/roman-num — Upstream romanize, romanizeChecked & deromanize API", () => {
+        expect_eq(MIN_ROMAN, 1 as u16);
+        expect_eq(MAX_ROMAN, 3999 as u16);
+        expect_eq(MAX_ROMAN_LEN, 15 as usize);
+
+        let buf: [16]u8 = undefined;
+        let n1 = romanize(1994, buf[0..16]);
+        expect_eq(testEq(buf[0..n1], "MCMXCIV"), true);
+        expect_eq(romanize(0, buf[0..16]), 0 as usize);
+        expect_eq(romanize(-5, buf[0..16]), 0 as usize);
+        expect_eq(romanize(4000, buf[0..16]), 0 as usize);
+
+        expect_eq(romanizeChecked(4000, buf[0..16]) == null, true);
+        expect_eq(romanizeChecked(42, buf[0..16]) ?? 0, 4 as usize);
+
+        expect_eq(deromanize("XLII") ?? -1, 42 as i32);
+        expect_eq(deromanize("xlii") ?? -1, 42 as i32);
+        expect_eq(deromanize("IIII") == null, true);
+        expect_eq(deromanize("VV") == null, true);
+        expect_eq(deromanize("IC") == null, true);
+        expect_eq(deromanize("") == null, true);
+    });
+
+    test("8. @cap/roman-num — romanLen, toRomanLower & romanCharValue", () => {
+        expect_eq(romanLen(0), 0 as usize);
+        expect_eq(romanLen(3888), 15 as usize);
+        expect_eq(romanLen(1994), 7 as usize);
+        expect_eq(romanLen(4000), 0 as usize);
+
+        let buf: [16]u8 = undefined;
+        let n = toRomanLower(1994, buf[0..16]);
+        expect_eq(testEq(buf[0..n], "mcmxciv"), true);
+
+        expect_eq(romanCharValue('m'), 1000 as i32);
+        expect_eq(romanCharValue('D'), 500 as i32);
+        expect_eq(romanCharValue('Z'), -1 as i32);
     });
 }

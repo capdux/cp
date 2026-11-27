@@ -1,5 +1,13 @@
 import { test, expect_eq } from "cap:test";
-import { encodeUrl, isEncodedUrl } from "../../packages/encodeurl/src/index.cp";
+import {
+    needsUrlEncode,
+    encodedUrlLen,
+    encodeUrl,
+    encodeUrlChecked,
+    encodeUrlNormalized,
+    decodeUrl,
+    isEncodedUrl,
+} from "../../packages/encodeurl/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }
@@ -52,5 +60,42 @@ fn main() {
         let out: [128]u8 = undefined;
         let n = encodeUrl("/path\r\nX-Injected: 1", out[0..128]);
         expect_eq(eqBuf(out[0..n], n, "/path%0D%0AX-Injected:%201"), true);
+    });
+
+    test("7. @cap/encodeurl — encodedUrlLen & encodeUrlChecked buffer guard", () => {
+        let raw = "/a b/café";
+        let expected = "/a%20b/caf%C3%A9";
+        expect_eq(encodedUrlLen(raw), expected.len);
+
+        let small: [8]u8 = undefined;
+        expect_eq(encodeUrlChecked(raw, small[0..8]) == null, true);
+
+        let full: [32]u8 = undefined;
+        let res = encodeUrlChecked(raw, full[0..32]);
+        expect_eq(res != null, true);
+        let n = res ?? 0;
+        expect_eq(eqBuf(full[0..n], n, expected), true);
+    });
+
+    test("8. @cap/encodeurl — encodeUrlNormalized uppercases existing %xx hex & IPv6 brackets preserved", () => {
+        let out: [128]u8 = undefined;
+        let n1 = encodeUrlNormalized("http://[::1]:8080/a%2f%3a b", out[0..128]);
+        expect_eq(eqBuf(out[0..n1], n1, "http://[::1]:8080/a%2F%3A%20b"), true);
+        expect_eq(needsUrlEncode('['), false);
+        expect_eq(needsUrlEncode(']'), false);
+        expect_eq(needsUrlEncode('{'), true);
+        expect_eq(needsUrlEncode(0x7f), true);
+    });
+
+    test("9. @cap/encodeurl — decodeUrl round-trip & malformed percent preservation", () => {
+        let enc: [128]u8 = undefined;
+        let dec_buf: [128]u8 = undefined;
+        let orig = "/café/hello world?x=<1>";
+        let en = encodeUrl(orig, enc[0..128]);
+        let dn = decodeUrl(enc[0..en], dec_buf[0..128]);
+        expect_eq(eqBuf(dec_buf[0..dn], dn, orig), true);
+
+        let dn2 = decodeUrl("100%25%ZZ%", dec_buf[0..128]);
+        expect_eq(eqBuf(dec_buf[0..dn2], dn2, "100%%ZZ%"), true);
     });
 }

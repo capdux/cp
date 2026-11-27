@@ -1,7 +1,12 @@
 import { test, expect_eq } from "cap:test";
 import {
+    DEFAULT_SOUNDEX_LEN,
+    soundexCharCode,
     soundex,
+    soundexCode,
+    soundexPadded,
     soundsLike,
+    soundsLikeWithLength,
     soundexDifference,
 } from "../../packages/soundex-code/src/index.cp";
 
@@ -68,5 +73,46 @@ fn main() {
 
         let tiny: [3]u8 = undefined;
         expect_eq(soundex("Robert", tiny[0..]), 0);
+    });
+
+    test("7. @cap/soundex — soundexCode custom maxLength (npm soundex-code semantics)", () => {
+        expect_eq(DEFAULT_SOUNDEX_LEN, 4 as usize);
+        let buf: [16]u8 = undefined;
+
+        // Default maxLength=0 falls back to 4
+        let n0 = soundexCode("Robert", 0, buf[0..16]);
+        expect_eq(n0, 4 as usize);
+        expect_eq(eqStr(buf[0..n0], "R163"), true);
+
+        // Long word with maxLength=6 produces up to 6 chars
+        let n1 = soundexCode("Washington", 6, buf[0..16]);
+        expect_eq(eqStr(buf[0..n1], "W25235"), true);
+
+        // Short word with maxLength=6 still pads to min 4
+        let n2 = soundexCode("a", 6, buf[0..16]);
+        expect_eq(eqStr(buf[0..n2], "A000"), true);
+
+        // maxLength=2 truncates to 2 chars
+        let n3 = soundexCode("Ashcraft", 2, buf[0..16]);
+        expect_eq(eqStr(buf[0..n3], "A2"), true);
+    });
+
+    test("8. @cap/soundex — soundexPadded, soundsLikeWithLength & soundexCharCode", () => {
+        let buf: [8]u8 = undefined;
+        let n = soundexPadded("Robert", 6, buf[0..8]);
+        expect_eq(n, 6 as usize);
+        expect_eq(eqStr(buf[0..n], "R16300"), true);
+
+        expect_eq(soundsLikeWithLength("Robert", "Rupert", 4), true);
+        expect_eq(soundsLikeWithLength("Washington", "Wasington", 6), true);
+        expect_eq(soundexCharCode('b'), '1');
+        expect_eq(soundexCharCode('H'), 'H');
+        expect_eq(soundexCharCode('a'), '0');
+    });
+
+    test("9. @cap/soundex — leading non-alpha & mixed punctuation filtering", () => {
+        let buf: [8]u8 = undefined;
+        let n = soundexCode("  --123 O'Connor!", 4, buf[0..8]);
+        expect_eq(eqStr(buf[0..n], "O256"), true);
     });
 }
