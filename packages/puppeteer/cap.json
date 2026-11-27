@@ -1,0 +1,31 @@
+{
+  "name": "puppeteer",
+  "ver": "25.19.0",
+  "version": "25.19.0",
+  "description": "High-level browser automation API for CP over the Chrome DevTools Protocol (cap:cdp)",
+  "license": "Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "puppeteer",
+    "cdp",
+    "browser",
+    "automation",
+    "headless",
+    "chrome",
+    "testing"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/puppeteer",
+  "source": {
+    "registry": "npm",
+    "name": "puppeteer-core",
+    "repo": "https://github.com/puppeteer/puppeteer",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

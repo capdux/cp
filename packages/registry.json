@@ -2,8 +2,8 @@
   "version": "1.0.0",
   "description": "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages absorbed from npm and crates.io.",
   "capdux_registry_url": "https://registry.capdux.org/v1/registry.json",
-  "github_raw_url": "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json",
-  "updated_at": "2026-11-27",
+  "github_raw_url": "https://raw.githubusercontent.com/capdux/cp/main/packages/registry.json",
+  "updated_at": "2026-11-28",
   "entries": [
     {
       "source_registry": "npm",
@@ -18790,6 +18790,36 @@
       "agent_doc": "packages/scroll/README_AGENT.md",
       "readme": "packages/scroll/README.md",
       "readme_zh": "packages/scroll/README.zh-CN.md"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chrome-remote-interface",
+      "source_repo": "https://github.com/cyrus-and/chrome-remote-interface",
+      "license": "MIT",
+      "cp_target": "cap:cdp",
+      "kind": "stdlib",
+      "aliases": [
+        "cdp",
+        "devtools-protocol"
+      ],
+      "absorbed_at": "2026-11-28",
+      "doc": "doc/lib/cdp.md"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "puppeteer",
+      "source_repo": "https://github.com/puppeteer/puppeteer",
+      "license": "Apache-2.0",
+      "cp_target": "puppeteer",
+      "kind": "package",
+      "aliases": [
+        "puppeteer-core"
+      ],
+      "absorbed_at": "2026-11-28",
+      "types": "packages/puppeteer/src/index.d.cp",
+      "agent_doc": "packages/puppeteer/README_AGENT.md",
+      "readme": "packages/puppeteer/README.md",
+      "readme_zh": "packages/puppeteer/README.zh-CN.md"
     }
   ]
 }
