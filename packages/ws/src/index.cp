@@ -1,5 +1,8 @@
 // @cap/ws-frame — Zero-heap RFC 6455 WebSocket binary frame codec
 // Clean-room MIT implementation for CP (compatible with npm ws & Rust tungstenite).
+// Accelerated with 16-lane @Vector(16, u8) SIMD 4-byte XOR masking/unmasking and @memcpy.
+
+type WsVec16 = @Vector(16, u8);
 
 pub const OP_CONTINUATION: u8 = 0x0;
 pub const OP_TEXT: u8 = 0x1;
@@ -47,6 +50,21 @@ pub fn isValidOpcode(opcode: u8): bool {
 /// Apply RFC 6455 4-byte XOR masking key in-place (symmetric for masking and unmasking).
 pub fn applyMask(payload: []u8, mask_key: [4]u8) {
     let i: usize = 0;
+    if (payload.len >= 16) {
+        const mk16: [16]u8 = [
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+        ];
+        const vmask: WsVec16 = mk16;
+        while (i + 16 <= payload.len) {
+            const vp: WsVec16 = payload[i .. i + 16][0..16].*;
+            const out_arr: [16]u8 = vp ^ vmask;
+            @memcpy(payload[i .. i + 16], out_arr[0..16]);
+            i += 16;
+        }
+    }
     while (i < payload.len) {
         payload[i] = payload[i] ^ mask_key[i & 3];
         i += 1;
@@ -214,13 +232,30 @@ pub fn encodeFrame(
     if (hlen == 0 || hlen + payload.len > out.len) {
         return 0;
     }
-    let i: usize = 0;
-    while (i < payload.len) {
-        let b: u8 = payload[i];
-        if (masked) {
-            b = b ^ mask_key[i & 3];
+    if (!masked) {
+        if (payload.len > 0) {
+            @memcpy(out[hlen .. hlen + payload.len], payload);
         }
-        out[hlen + i] = b;
+        return hlen + payload.len;
+    }
+    let i: usize = 0;
+    if (payload.len >= 16) {
+        const mk16: [16]u8 = [
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+            mask_key[0], mask_key[1], mask_key[2], mask_key[3],
+        ];
+        const vmask: WsVec16 = mk16;
+        while (i + 16 <= payload.len) {
+            const vp: WsVec16 = payload[i .. i + 16][0..16].*;
+            const out_arr: [16]u8 = vp ^ vmask;
+            @memcpy(out[hlen + i .. hlen + i + 16], out_arr[0..16]);
+            i += 16;
+        }
+    }
+    while (i < payload.len) {
+        out[hlen + i] = payload[i] ^ mask_key[i & 3];
         i += 1;
     }
     return hlen + payload.len;
@@ -234,10 +269,8 @@ pub fn encodeClosePayload(code: u16, reason: string, out: []u8): usize {
     }
     out[0] = ((code >> 8) & 0xff) as u8;
     out[1] = (code & 0xff) as u8;
-    let i: usize = 0;
-    while (i < reason.len) {
-        out[(2 as usize) + i] = reason[i];
-        i += 1;
+    if (reason.len > 0) {
+        @memcpy(out[2 .. (2 as usize) + reason.len], reason);
     }
     return total;
 }

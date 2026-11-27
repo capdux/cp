@@ -1,9 +1,28 @@
 // @cap/basic-auth — Zero-heap RFC 7617 HTTP Basic Authentication codec & verifier
 // MIT License (clean-room CP implementation)
+// Accelerated with comptime 256-entry Base64 decode LUT, 16-lane @Vector(16, u8) SIMD
+// challenge quote/backslash scanning, and @memcpy bulk copies.
 
 import { eqIgnoreCase } from "cap:ascii";
 import { ctEqual, findByteInBytes } from "cap:bin";
 import { writeStr } from "cap:fmt";
+
+type BaVec16 = @Vector(16, u8);
+
+const BA_B64_ALPHA: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+fn baBuildB64DecLut() -> [256]i8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]i8 = [-1; 256];
+    let i: usize = 0;
+    while (i < 64) {
+        lut[BA_B64_ALPHA[i] as usize] = i as i8;
+        i += 1;
+    }
+    return lut;
+}
+
+const BA_B64_DEC_LUT: [256]i8 = baBuildB64DecLut();
 
 pub struct BasicCredentials {
     pub user_len: usize,
@@ -16,27 +35,11 @@ fn isWs(c: u8) -> bool {
 }
 
 fn b64EncChar(v: u8) -> u8 {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    return alphabet[v as usize];
+    return BA_B64_ALPHA[v as usize];
 }
 
 fn b64DecVal(c: u8) -> i32 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return (c - ('A' as u8)) as i32;
-    }
-    if (c >= 'a' as u8 && c <= 'z' as u8) {
-        return (c - ('a' as u8) + 26) as i32;
-    }
-    if (c >= '0' as u8 && c <= '9' as u8) {
-        return (c - ('0' as u8) + 52) as i32;
-    }
-    if (c == '+' as u8) {
-        return 62;
-    }
-    if (c == '/' as u8) {
-        return 63;
-    }
-    return -1;
+    return BA_B64_DEC_LUT[c as usize] as i32;
 }
 
 fn b64Encode(src: []const u8, dst: []u8) -> i64 {
@@ -263,7 +266,43 @@ pub fn formatChallenge(realm: string, utf8: bool, out: []u8) -> usize {
     if (p < 0) {
         return 0;
     }
+    const v_quote: BaVec16 = @splat('"' as u8);
+    const v_slash: BaVec16 = @splat('\\' as u8);
     let i: usize = 0;
+    while (i + 16 <= realm.len) {
+        const v: BaVec16 = realm[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == v_quote) && !@reduce(.Or, v == v_slash)) {
+            const cur: usize = p as usize;
+            if (16 > out.len - cur) {
+                return 0;
+            }
+            @memcpy(out[cur .. cur + 16], realm[i .. i + 16]);
+            p = (cur + 16) as i64;
+            i += 16;
+            continue;
+        }
+        const chunk_end: usize = i + 16;
+        while (i < chunk_end) {
+            const c: u8 = realm[i];
+            if (c == '"' as u8 || c == '\\' as u8) {
+                const cur: usize = p as usize;
+                if (2 > out.len - cur) {
+                    return 0;
+                }
+                out[cur] = '\\' as u8;
+                out[cur + 1] = c;
+                p = (cur + 2) as i64;
+            } else {
+                const cur: usize = p as usize;
+                if (cur >= out.len) {
+                    return 0;
+                }
+                out[cur] = c;
+                p = (cur + 1) as i64;
+            }
+            i += 1;
+        }
+    }
     while (i < realm.len) {
         const c: u8 = realm[i];
         if (c == '"' as u8 || c == '\\' as u8) {

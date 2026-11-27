@@ -1,5 +1,9 @@
 // @cap/aes — Zero-allocation pure CP FIPS-197 AES-128 / AES-192 / AES-256 block cipher
 // Parity with RustCrypto crates.io:aes (MIT OR Apache-2.0)
+// Accelerated with comptime 256-entry GF(2^8) multiplication LUTs, 16-lane @Vector(16, u8)
+// SIMD AddRoundKey, @memcpy key copy, and zero-copy round-key slicing.
+
+type AesVec16 = @Vector(16, u8);
 
 const AES_SBOX: [256]u8 = @as([256]u8, [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -66,6 +70,23 @@ fn aesMul(a_in: u8, b_in: u8): u8 {
     }
     return p;
 }
+
+fn aesBuildMulLut(factor: u8): [256]u8 {
+    @setEvalBranchQuota(100000);
+    let lut: [256]u8 = [0; 256];
+    let i: usize = 0;
+    while (i < 256) {
+        lut[i] = aesMul(i as u8, factor);
+        i += 1;
+    }
+    return lut;
+}
+
+const AES_XTIME_LUT: [256]u8 = aesBuildMulLut(0x02 as u8);
+const AES_MUL9_LUT: [256]u8 = aesBuildMulLut(0x09 as u8);
+const AES_MUL11_LUT: [256]u8 = aesBuildMulLut(0x0b as u8);
+const AES_MUL13_LUT: [256]u8 = aesBuildMulLut(0x0d as u8);
+const AES_MUL14_LUT: [256]u8 = aesBuildMulLut(0x0e as u8);
 
 fn aesSubBytes(state: []u8) {
     let i: usize = 0;
@@ -136,10 +157,10 @@ fn aesMixColumns(s: []u8) {
         const a2 = s[idx + 2];
         const a3 = s[idx + 3];
         const t = a0 ^ a1 ^ a2 ^ a3;
-        s[idx] = a0 ^ t ^ aesXtime(a0 ^ a1);
-        s[idx + 1] = a1 ^ t ^ aesXtime(a1 ^ a2);
-        s[idx + 2] = a2 ^ t ^ aesXtime(a2 ^ a3);
-        s[idx + 3] = a3 ^ t ^ aesXtime(a3 ^ a0);
+        s[idx] = a0 ^ t ^ AES_XTIME_LUT[(a0 ^ a1) as usize];
+        s[idx + 1] = a1 ^ t ^ AES_XTIME_LUT[(a1 ^ a2) as usize];
+        s[idx + 2] = a2 ^ t ^ AES_XTIME_LUT[(a2 ^ a3) as usize];
+        s[idx + 3] = a3 ^ t ^ AES_XTIME_LUT[(a3 ^ a0) as usize];
         c += 1;
     }
 }
@@ -148,34 +169,29 @@ fn aesInvMixColumns(s: []u8) {
     let c: usize = 0;
     while (c < 4) {
         const idx = c * 4;
-        const a0 = s[idx];
-        const a1 = s[idx + 1];
-        const a2 = s[idx + 2];
-        const a3 = s[idx + 3];
-        s[idx] = aesMul(a0, 0x0e as u8) ^ aesMul(a1, 0x0b as u8) ^ aesMul(a2, 0x0d as u8) ^ aesMul(a3, 0x09 as u8);
-        s[idx + 1] = aesMul(a0, 0x09 as u8) ^ aesMul(a1, 0x0e as u8) ^ aesMul(a2, 0x0b as u8) ^ aesMul(a3, 0x0d as u8);
-        s[idx + 2] = aesMul(a0, 0x0d as u8) ^ aesMul(a1, 0x09 as u8) ^ aesMul(a2, 0x0e as u8) ^ aesMul(a3, 0x0b as u8);
-        s[idx + 3] = aesMul(a0, 0x0b as u8) ^ aesMul(a1, 0x0d as u8) ^ aesMul(a2, 0x09 as u8) ^ aesMul(a3, 0x0e as u8);
+        const a0 = s[idx] as usize;
+        const a1 = s[idx + 1] as usize;
+        const a2 = s[idx + 2] as usize;
+        const a3 = s[idx + 3] as usize;
+        s[idx] = AES_MUL14_LUT[a0] ^ AES_MUL11_LUT[a1] ^ AES_MUL13_LUT[a2] ^ AES_MUL9_LUT[a3];
+        s[idx + 1] = AES_MUL9_LUT[a0] ^ AES_MUL14_LUT[a1] ^ AES_MUL11_LUT[a2] ^ AES_MUL13_LUT[a3];
+        s[idx + 2] = AES_MUL13_LUT[a0] ^ AES_MUL9_LUT[a1] ^ AES_MUL14_LUT[a2] ^ AES_MUL11_LUT[a3];
+        s[idx + 3] = AES_MUL11_LUT[a0] ^ AES_MUL13_LUT[a1] ^ AES_MUL9_LUT[a2] ^ AES_MUL14_LUT[a3];
         c += 1;
     }
 }
 
 fn aesAddRoundKey(s: []u8, rk: []const u8, round: usize) {
     const off = round * 16;
-    let i: usize = 0;
-    while (i < 16) {
-        s[i] = s[i] ^ rk[off + i];
-        i += 1;
-    }
+    const sv: AesVec16 = s[0..16][0..16].*;
+    const rv: AesVec16 = rk[off .. off + 16][0..16].*;
+    const out: [16]u8 = sv ^ rv;
+    @memcpy(s[0..16], out[0..16]);
 }
 
 fn aesExpandKey(key: []const u8, nk: usize, nr: usize, rk: []u8) {
     const totalWords = 4 * (nr + 1);
-    let i: usize = 0;
-    while (i < nk * 4) {
-        rk[i] = key[i];
-        i += 1;
-    }
+    @memcpy(rk[0 .. nk * 4], key[0 .. nk * 4]);
     let w: usize = nk;
     while (w < totalWords) {
         const prev = (w - 1) * 4;
@@ -251,15 +267,11 @@ pub struct Aes128 {
     }
 
     fn encryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [176]u8 = _.rk;
-        const out: [16]u8 = aesEncryptCore(block, localRk[0..176], 10);
-        return out;
+        return aesEncryptCore(block, _.rk[0..176], 10);
     }
 
     fn decryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [176]u8 = _.rk;
-        const out: [16]u8 = aesDecryptCore(block, localRk[0..176], 10);
-        return out;
+        return aesDecryptCore(block, _.rk[0..176], 10);
     }
 }
 
@@ -275,15 +287,11 @@ pub struct Aes192 {
     }
 
     fn encryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [208]u8 = _.rk;
-        const out: [16]u8 = aesEncryptCore(block, localRk[0..208], 12);
-        return out;
+        return aesEncryptCore(block, _.rk[0..208], 12);
     }
 
     fn decryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [208]u8 = _.rk;
-        const out: [16]u8 = aesDecryptCore(block, localRk[0..208], 12);
-        return out;
+        return aesDecryptCore(block, _.rk[0..208], 12);
     }
 }
 
@@ -299,14 +307,10 @@ pub struct Aes256 {
     }
 
     fn encryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [240]u8 = _.rk;
-        const out: [16]u8 = aesEncryptCore(block, localRk[0..240], 14);
-        return out;
+        return aesEncryptCore(block, _.rk[0..240], 14);
     }
 
     fn decryptBlock(block: [16]u8): [16]u8 {
-        let localRk: [240]u8 = _.rk;
-        const out: [16]u8 = aesDecryptCore(block, localRk[0..240], 14);
-        return out;
+        return aesDecryptCore(block, _.rk[0..240], 14);
     }
 }

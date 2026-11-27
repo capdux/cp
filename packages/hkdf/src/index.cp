@@ -1,8 +1,32 @@
 // @cap/hkdf — Zero-heap RFC 5869 HKDF (Extract / Expand / Derive) supporting SHA-256, SHA-384 & SHA-512.
 // Clean-room MIT implementation in pure CP, reusing `cap:crypto`, `cap:bin`, and `@cap/hmac`.
+// Accelerated with precomputed HMAC inner-pad state reuse across expand blocks and 16-lane
+// @Vector(16, u8) SIMD constant-time PRK verification.
 
 import { HmacSha256, HMAC_SHA256_LEN } from "../../hmac/src/index.cp";
 import { ctEqual } from "../../cookie-signature/src/index.cp";
+
+type HkdfVec16 = @Vector(16, u8);
+
+fn hkdfCtEq16x(a: []const u8, b: []const u8): bool {
+    if (a.len != b.len) { return false; }
+    let acc: HkdfVec16 = @splat(0 as u8);
+    let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: HkdfVec16 = a[i .. i + 16][0..16].*;
+        const vb: HkdfVec16 = b[i .. i + 16][0..16].*;
+        acc = acc | (va ^ vb);
+        i += 16;
+    }
+    const arr: [16]u8 = acc;
+    let diff: u8 = 0;
+    let k: usize = 0;
+    while (k < 16) {
+        diff = diff | arr[k];
+        k += 1;
+    }
+    return diff == 0;
+}
 
 pub const HKDF_HASH_LEN: usize = 32;
 pub const HKDF_MAX_OKM_LEN: usize = 255 * 32; // 8160 bytes per RFC 5869 (SHA-256)
@@ -62,8 +86,9 @@ pub struct HkdfSha256 {
         let out_pos: usize = 0;
         let ctr: usize = 1;
         let prk_local: [32]u8 = _.prk;
+        const base_mac = HmacSha256.newFromSlice(prk_local[0..32]);
         while (ctr <= n_blocks) {
-            let mac = HmacSha256.newFromSlice(prk_local[0..32]);
+            let mac = base_mac;
             if (ctr > 1) {
                 mac.update(prev_t[0..32]);
             }
@@ -94,8 +119,9 @@ pub struct HkdfSha256 {
         let out_pos: usize = 0;
         let ctr: usize = 1;
         let prk_local: [32]u8 = _.prk;
+        const base_mac = HmacSha256.newFromSlice(prk_local[0..32]);
         while (ctr <= n_blocks) {
-            let mac = HmacSha256.newFromSlice(prk_local[0..32]);
+            let mac = base_mac;
             if (ctr > 1) {
                 mac.update(prev_t[0..32]);
             }
@@ -145,7 +171,7 @@ pub struct HkdfSha256 {
     /// Constant-time comparison of internal PRK against `expected`.
     pub fn verifyPrk(expected: []const u8): bool {
         if (expected.len != HKDF_SHA256_HASH_LEN) { return false; }
-        return ctEqual(_.prk[0..32], expected);
+        return hkdfCtEq16x(_.prk[0..32], expected);
     }
 }
 
@@ -208,7 +234,7 @@ pub struct HkdfSha384 {
 
     pub fn verifyPrk(expected: []const u8): bool {
         if (expected.len != HKDF_SHA384_HASH_LEN) { return false; }
-        return ctEqual(_.prk[0..48], expected);
+        return hkdfCtEq16x(_.prk[0..48], expected);
     }
 }
 
@@ -237,7 +263,7 @@ pub struct HkdfSha512 {
 
     pub fn verifyPrk(expected: []const u8): bool {
         if (expected.len != HKDF_SHA512_HASH_LEN) { return false; }
-        return ctEqual(_.prk[0..64], expected);
+        return hkdfCtEq16x(_.prk[0..64], expected);
     }
 }
 

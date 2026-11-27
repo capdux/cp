@@ -1,11 +1,56 @@
 // hmac — Zero-heap RFC 2104 streaming HMAC-SHA256 & HMAC-SHA512 with constant-time verify
 // Clean-room MIT/Apache-2.0 parity with Rust `hmac` crate.
+// Accelerated with 16-lane @Vector(16, u8) SIMD pad XOR & constant-time compare,
+// comptime 256-entry hex encoding LUTs, and 256B streaming chunks.
 
 const std = @import("std");
 import {
     Sha256State, sha256Init, sha256Update, sha256Final, sha256, ctEqual
 } from "../../cookie-signature/src/index.cp";
 import { hexCharLower } from "cap:ascii";
+
+type HmacVec16 = @Vector(16, u8);
+
+fn hmacBuildHexHiLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    const digits = "0123456789abcdef";
+    let lut: [256]u8 = [0; 256];
+    let i: usize = 0;
+    while (i < 256) {
+        lut[i] = digits[(i >> 4) & 15];
+        i += 1;
+    }
+    return lut;
+}
+
+fn hmacBuildHexLoLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    const digits = "0123456789abcdef";
+    let lut: [256]u8 = [0; 256];
+    let i: usize = 0;
+    while (i < 256) {
+        lut[i] = digits[i & 15];
+        i += 1;
+    }
+    return lut;
+}
+
+const HMAC_HEX_HI_LUT: [256]u8 = hmacBuildHexHiLut();
+const HMAC_HEX_LO_LUT: [256]u8 = hmacBuildHexLoLut();
+
+fn hmacBuildPads64(kblock: [64]u8, ipad: []u8, opad: []u8) {
+    const v_ipad: HmacVec16 = @splat(0x36 as u8);
+    const v_opad: HmacVec16 = @splat(0x5c as u8);
+    let off: usize = 0;
+    while (off < 64) {
+        const vk: HmacVec16 = kblock[off .. off + 16][0..16].*;
+        const ip: [16]u8 = vk ^ v_ipad;
+        const op: [16]u8 = vk ^ v_opad;
+        @memcpy(ipad[off .. off + 16], ip[0..16]);
+        @memcpy(opad[off .. off + 16], op[0..16]);
+        off += 16;
+    }
+}
 
 pub const HMAC_SHA256_LEN: usize = 32;
 pub const HMAC_BLOCK_SIZE: usize = 64;
@@ -17,8 +62,21 @@ pub fn ctEqualBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
-    let diff: u8 = 0;
+    let acc: HmacVec16 = @splat(0 as u8);
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: HmacVec16 = a[i .. i + 16][0..16].*;
+        const vb: HmacVec16 = b[i .. i + 16][0..16].*;
+        acc = acc | (va ^ vb);
+        i += 16;
+    }
+    const acc_arr: [16]u8 = acc;
+    let diff: u8 = 0;
+    let k: usize = 0;
+    while (k < 16) {
+        diff = diff | acc_arr[k];
+        k += 1;
+    }
     while (i < a.len) {
         diff = diff | (a[i] ^ b[i]);
         i += 1;
@@ -31,9 +89,9 @@ pub fn encodeHex32(digest: []u8, out64: []u8): usize {
     if (digest.len < 32 || out64.len < 64) { return 0; }
     let i: usize = 0;
     while (i < 32) {
-        const b = digest[i];
-        out64[i * 2] = hexCharLower((b >> 4) & 15);
-        out64[i * 2 + 1] = hexCharLower(b & 15);
+        const b = digest[i] as usize;
+        out64[i * 2] = HMAC_HEX_HI_LUT[b];
+        out64[i * 2 + 1] = HMAC_HEX_LO_LUT[b];
         i += 1;
     }
     return 64;
@@ -44,9 +102,9 @@ pub fn encodeHex64(digest: []const u8, out128: []u8): usize {
     if (digest.len < 64 || out128.len < 128) { return 0; }
     let i: usize = 0;
     while (i < 64) {
-        const b = digest[i];
-        out128[i * 2] = hexCharLower((b >> 4) & 15);
-        out128[i * 2 + 1] = hexCharLower(b & 15);
+        const b = digest[i] as usize;
+        out128[i * 2] = HMAC_HEX_HI_LUT[b];
+        out128[i * 2 + 1] = HMAC_HEX_LO_LUT[b];
         i += 1;
     }
     return 128;
@@ -69,12 +127,7 @@ pub struct HmacSha256 {
 
         let ipad: [64]u8 = undefined;
         let opad: [64]u8 = undefined;
-        let j: usize = 0;
-        while (j < HMAC_BLOCK_SIZE) {
-            ipad[j] = kblock[j] ^ 54; // 0x36
-            opad[j] = kblock[j] ^ 92; // 0x5c
-            j += 1;
-        }
+        hmacBuildPads64(kblock, ipad[0..64], opad[0..64]);
 
         let st = sha256Init();
         sha256Update(*st, ipad[0..64]);
@@ -88,11 +141,11 @@ pub struct HmacSha256 {
         let kblock: [64]u8 = [0; 64];
         if (key.len > HMAC_BLOCK_SIZE) {
             let st_k = sha256Init();
-            let chunk: [64]u8 = undefined;
+            let chunk: [256]u8 = undefined;
             let pos: usize = 0;
             while (pos < key.len) {
                 const rem = key.len - pos;
-                const take = if (rem > 64) 64 else rem;
+                const take = if (rem > 256) 256 else rem;
                 @memcpy(chunk[0..take], key[pos..pos + take]);
                 sha256Update(*st_k, chunk[0..take]);
                 pos += take;
@@ -104,12 +157,7 @@ pub struct HmacSha256 {
 
         let ipad: [64]u8 = undefined;
         let opad: [64]u8 = undefined;
-        let j: usize = 0;
-        while (j < HMAC_BLOCK_SIZE) {
-            ipad[j] = kblock[j] ^ 54;
-            opad[j] = kblock[j] ^ 92;
-            j += 1;
-        }
+        hmacBuildPads64(kblock, ipad[0..64], opad[0..64]);
 
         let st = sha256Init();
         sha256Update(*st, ipad[0..64]);
@@ -128,11 +176,11 @@ pub struct HmacSha256 {
     }
 
     pub fn updateConst(*_, data: []const u8) {
-        let chunk: [64]u8 = undefined;
+        let chunk: [256]u8 = undefined;
         let pos: usize = 0;
         while (pos < data.len) {
             const rem = data.len - pos;
-            const take = if (rem > 64) 64 else rem;
+            const take = if (rem > 256) 256 else rem;
             @memcpy(chunk[0..take], data[pos..pos + take]);
             sha256Update(*_.inner, chunk[0..take]);
             pos += take;

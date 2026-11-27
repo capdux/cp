@@ -1,6 +1,24 @@
 // packages/@cap/block-buffer/src/index.cp
 // Zero-allocation fixed-size cryptographic block streaming buffers & padding primitives.
 // MIT clean-room pure CP implementation (RustCrypto `block-buffer` parity).
+// Accelerated with @memcpy bulk block transfers, 16-lane @Vector(16, u8) SIMD padding fill,
+// and undefined uninitialized internal buffers.
+
+type BbVec16 = @Vector(16, u8);
+
+fn bbFillBytes(dst: []u8, val: u8) {
+    let i: usize = 0;
+    const v: BbVec16 = @splat(val);
+    const chunk: [16]u8 = v;
+    while (i + 16 <= dst.len) {
+        @memcpy(dst[i .. i + 16], chunk[0..16]);
+        i += 16;
+    }
+    while (i < dst.len) {
+        dst[i] = val;
+        i += 1;
+    }
+}
 
 fn bbWriteBe64(out: []u8, offset: usize, val: u64) {
     out[offset + 0] = ((val >> (56 as u6)) & (0xFF as u64)) as u8;
@@ -32,11 +50,6 @@ pub struct BlockBuffer64 {
 
     pub static fn new(): BlockBuffer64 {
         let b: [64]u8 = undefined;
-        let i: usize = 0;
-        while (i < 64) {
-            b[i] = 0 as u8;
-            i += 1;
-        }
         return BlockBuffer64{
             buf: b,
             pos: 0,
@@ -74,11 +87,7 @@ pub struct BlockBuffer64 {
             if (take > need) {
                 take = need;
             }
-            let i: usize = 0;
-            while (i < take) {
-                _.buf[_.pos + i] = data[i];
-                i += 1;
-            }
+            @memcpy(_.buf[_.pos .. _.pos + take], data[0..take]);
             _.pos += take;
             inPos += take;
             _.total_bytes += take as u64;
@@ -86,28 +95,26 @@ pub struct BlockBuffer64 {
             if (_.pos == 64) {
                 if (emitted < maxBlocks) {
                     const dstOff = emitted * 64;
-                    let ci: usize = 0;
-                    while (ci < 64) {
-                        out_blocks[dstOff + ci] = _.buf[ci];
-                        ci += 1;
-                    }
+                    @memcpy(out_blocks[dstOff .. dstOff + 64], _.buf[0..64]);
                     emitted += 1;
                 }
                 _.pos = 0;
             }
         }
 
-        // 2. Direct-copy full 64-byte blocks straight from `data` to `out_blocks`.
-        while (inPos + 64 <= data.len && emitted < maxBlocks) {
-            const dstOff = emitted * 64;
-            let ci: usize = 0;
-            while (ci < 64) {
-                out_blocks[dstOff + ci] = data[inPos + ci];
-                ci += 1;
+        // 2. Direct-copy full 64-byte blocks straight from `data` to `out_blocks` in one @memcpy.
+        if (emitted < maxBlocks && inPos + 64 <= data.len) {
+            const availBlocks = (data.len - inPos) / 64;
+            const freeBlocks = maxBlocks - emitted;
+            const bulkBlocks = if (availBlocks < freeBlocks) { availBlocks } else { freeBlocks };
+            if (bulkBlocks > 0) {
+                const copyBytes = bulkBlocks * 64;
+                const dstOff = emitted * 64;
+                @memcpy(out_blocks[dstOff .. dstOff + copyBytes], data[inPos .. inPos + copyBytes]);
+                emitted += bulkBlocks;
+                inPos += copyBytes;
+                _.total_bytes += copyBytes as u64;
             }
-            emitted += 1;
-            inPos += 64;
-            _.total_bytes += 64 as u64;
         }
 
         // 3. Buffer remaining tail bytes (< 64).
@@ -117,13 +124,11 @@ pub struct BlockBuffer64 {
             if (rem > space) {
                 rem = space;
             }
-            let i: usize = 0;
-            while (i < rem) {
-                _.buf[_.pos + i] = data[inPos + i];
-                i += 1;
+            if (rem > 0) {
+                @memcpy(_.buf[_.pos .. _.pos + rem], data[inPos .. inPos + rem]);
+                _.pos += rem;
+                _.total_bytes += rem as u64;
             }
-            _.pos += rem;
-            _.total_bytes += rem as u64;
         }
 
         return emitted;
@@ -143,16 +148,12 @@ pub struct BlockBuffer64 {
         }
 
         const totalOut = blocksNeeded * 64;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_blocks[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_blocks[0.._.pos], _.buf[0.._.pos]);
         }
         out_blocks[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < totalOut - 8) {
-            out_blocks[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < totalOut - 8) {
+            bbFillBytes(out_blocks[_.pos + 1 .. totalOut - 8], 0 as u8);
         }
         bbWriteBe64(out_blocks, totalOut - 8, bitLen);
         _.reset();
@@ -172,16 +173,12 @@ pub struct BlockBuffer64 {
         }
 
         const totalOut = blocksNeeded * 64;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_blocks[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_blocks[0.._.pos], _.buf[0.._.pos]);
         }
         out_blocks[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < totalOut - 8) {
-            out_blocks[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < totalOut - 8) {
+            bbFillBytes(out_blocks[_.pos + 1 .. totalOut - 8], 0 as u8);
         }
         bbWriteLe64(out_blocks, totalOut - 8, bitLen);
         _.reset();
@@ -194,16 +191,10 @@ pub struct BlockBuffer64 {
             return false;
         }
         const padByte = ((64 as usize) - _.pos) as u8;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
-        let pi = _.pos;
-        while (pi < 64) {
-            out_block[pi] = padByte;
-            pi += 1;
-        }
+        bbFillBytes(out_block[_.pos..64], padByte);
         _.reset();
         return true;
     }
@@ -213,16 +204,12 @@ pub struct BlockBuffer64 {
         if (out_block.len < 64) {
             return false;
         }
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
         out_block[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < 64) {
-            out_block[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < 64) {
+            bbFillBytes(out_block[_.pos + 1 .. 64], 0 as u8);
         }
         _.reset();
         return true;
@@ -233,15 +220,11 @@ pub struct BlockBuffer64 {
         if (out_block.len < 64) {
             return false;
         }
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
-        let zi = _.pos;
-        while (zi < 64) {
-            out_block[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos < 64) {
+            bbFillBytes(out_block[_.pos..64], 0 as u8);
         }
         _.reset();
         return true;
@@ -256,11 +239,6 @@ pub struct BlockBuffer128 {
 
     pub static fn new(): BlockBuffer128 {
         let b: [128]u8 = undefined;
-        let i: usize = 0;
-        while (i < 128) {
-            b[i] = 0 as u8;
-            i += 1;
-        }
         return BlockBuffer128{
             buf: b,
             pos: 0,
@@ -297,11 +275,7 @@ pub struct BlockBuffer128 {
             if (take > need) {
                 take = need;
             }
-            let i: usize = 0;
-            while (i < take) {
-                _.buf[_.pos + i] = data[i];
-                i += 1;
-            }
+            @memcpy(_.buf[_.pos .. _.pos + take], data[0..take]);
             _.pos += take;
             inPos += take;
             _.total_bytes += take as u64;
@@ -309,27 +283,25 @@ pub struct BlockBuffer128 {
             if (_.pos == 128) {
                 if (emitted < maxBlocks) {
                     const dstOff = emitted * 128;
-                    let ci: usize = 0;
-                    while (ci < 128) {
-                        out_blocks[dstOff + ci] = _.buf[ci];
-                        ci += 1;
-                    }
+                    @memcpy(out_blocks[dstOff .. dstOff + 128], _.buf[0..128]);
                     emitted += 1;
                 }
                 _.pos = 0;
             }
         }
 
-        while (inPos + 128 <= data.len && emitted < maxBlocks) {
-            const dstOff = emitted * 128;
-            let ci: usize = 0;
-            while (ci < 128) {
-                out_blocks[dstOff + ci] = data[inPos + ci];
-                ci += 1;
+        if (emitted < maxBlocks && inPos + 128 <= data.len) {
+            const availBlocks = (data.len - inPos) / 128;
+            const freeBlocks = maxBlocks - emitted;
+            const bulkBlocks = if (availBlocks < freeBlocks) { availBlocks } else { freeBlocks };
+            if (bulkBlocks > 0) {
+                const copyBytes = bulkBlocks * 128;
+                const dstOff = emitted * 128;
+                @memcpy(out_blocks[dstOff .. dstOff + copyBytes], data[inPos .. inPos + copyBytes]);
+                emitted += bulkBlocks;
+                inPos += copyBytes;
+                _.total_bytes += copyBytes as u64;
             }
-            emitted += 1;
-            inPos += 128;
-            _.total_bytes += 128 as u64;
         }
 
         if (inPos < data.len) {
@@ -338,13 +310,11 @@ pub struct BlockBuffer128 {
             if (rem > space) {
                 rem = space;
             }
-            let i: usize = 0;
-            while (i < rem) {
-                _.buf[_.pos + i] = data[inPos + i];
-                i += 1;
+            if (rem > 0) {
+                @memcpy(_.buf[_.pos .. _.pos + rem], data[inPos .. inPos + rem]);
+                _.pos += rem;
+                _.total_bytes += rem as u64;
             }
-            _.pos += rem;
-            _.total_bytes += rem as u64;
         }
 
         return emitted;
@@ -363,16 +333,12 @@ pub struct BlockBuffer128 {
         }
 
         const totalOut = blocksNeeded * 128;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_blocks[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_blocks[0.._.pos], _.buf[0.._.pos]);
         }
         out_blocks[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < totalOut - 16) {
-            out_blocks[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < totalOut - 16) {
+            bbFillBytes(out_blocks[_.pos + 1 .. totalOut - 16], 0 as u8);
         }
         bbWriteBe64(out_blocks, totalOut - 16, bitLenHi);
         bbWriteBe64(out_blocks, totalOut - 8, bitLenLo);
@@ -393,16 +359,12 @@ pub struct BlockBuffer128 {
         }
 
         const totalOut = blocksNeeded * 128;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_blocks[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_blocks[0.._.pos], _.buf[0.._.pos]);
         }
         out_blocks[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < totalOut - 16) {
-            out_blocks[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < totalOut - 16) {
+            bbFillBytes(out_blocks[_.pos + 1 .. totalOut - 16], 0 as u8);
         }
         bbWriteLe64(out_blocks, totalOut - 16, bitLenLo);
         bbWriteLe64(out_blocks, totalOut - 8, bitLenHi);
@@ -415,16 +377,10 @@ pub struct BlockBuffer128 {
             return false;
         }
         const padByte = ((128 as usize) - _.pos) as u8;
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
-        let pi = _.pos;
-        while (pi < 128) {
-            out_block[pi] = padByte;
-            pi += 1;
-        }
+        bbFillBytes(out_block[_.pos..128], padByte);
         _.reset();
         return true;
     }
@@ -433,16 +389,12 @@ pub struct BlockBuffer128 {
         if (out_block.len < 128) {
             return false;
         }
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
         out_block[_.pos] = 0x80 as u8;
-        let zi = _.pos + 1;
-        while (zi < 128) {
-            out_block[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos + 1 < 128) {
+            bbFillBytes(out_block[_.pos + 1 .. 128], 0 as u8);
         }
         _.reset();
         return true;
@@ -452,15 +404,11 @@ pub struct BlockBuffer128 {
         if (out_block.len < 128) {
             return false;
         }
-        let i: usize = 0;
-        while (i < _.pos) {
-            out_block[i] = _.buf[i];
-            i += 1;
+        if (_.pos > 0) {
+            @memcpy(out_block[0.._.pos], _.buf[0.._.pos]);
         }
-        let zi = _.pos;
-        while (zi < 128) {
-            out_block[zi] = 0 as u8;
-            zi += 1;
+        if (_.pos < 128) {
+            bbFillBytes(out_block[_.pos..128], 0 as u8);
         }
         _.reset();
         return true;

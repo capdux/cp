@@ -7,13 +7,27 @@
 
 import { Choice, ctEqU8, ctLtU64, zeroizeBytes } from "../../subtle/src/index.cp";
 
+type BpVec16 = @Vector(16, u8);
+
 pub const BP_ERR: i64 = -1;
 
 fn bpCopyBytes(dst: []u8, src: []const u8) {
+    if (src.len > 0) {
+        @memcpy(dst[0..src.len], src);
+    }
+}
+
+fn bpFillBytes(dst: []u8, val: u8) {
     let i: usize = 0;
-    while (i < src.len) {
-        dst[i] = src[i];
-        i = i + 1;
+    const v: BpVec16 = @splat(val);
+    const chunk: [16]u8 = v;
+    while (i + 16 <= dst.len) {
+        @memcpy(dst[i .. i + 16], chunk[0..16]);
+        i += 16;
+    }
+    while (i < dst.len) {
+        dst[i] = val;
+        i += 1;
     }
 }
 
@@ -30,12 +44,7 @@ pub fn pkcs7Pad(input: []const u8, block_size: usize, out: []u8): i64 {
         return BP_ERR;
     }
     bpCopyBytes(out[0..input.len], input);
-    const pad_byte = pad_len as u8;
-    let i: usize = 0;
-    while (i < pad_len) {
-        out[input.len + i] = pad_byte;
-        i = i + 1;
-    }
+    bpFillBytes(out[input.len..total], pad_len as u8);
     return total as i64;
 }
 
@@ -84,10 +93,8 @@ pub fn iso7816Pad(input: []const u8, block_size: usize, out: []u8): i64 {
     }
     bpCopyBytes(out[0..input.len], input);
     out[input.len] = 0x80 as u8;
-    let i: usize = 1;
-    while (i < pad_len) {
-        out[input.len + i] = 0x00 as u8;
-        i = i + 1;
+    if (pad_len > 1) {
+        bpFillBytes(out[input.len + 1 .. total], 0x00 as u8);
     }
     return total as i64;
 }
@@ -125,10 +132,8 @@ pub fn ansiX923Pad(input: []const u8, block_size: usize, out: []u8): i64 {
         return BP_ERR;
     }
     bpCopyBytes(out[0..input.len], input);
-    let i: usize = 0;
-    while (i + 1 < pad_len) {
-        out[input.len + i] = 0x00 as u8;
-        i = i + 1;
+    if (pad_len > 1) {
+        bpFillBytes(out[input.len .. total - 1], 0x00 as u8);
     }
     out[total - 1] = pad_len as u8;
     return total as i64;
@@ -184,10 +189,8 @@ pub fn zeroPad(input: []const u8, block_size: usize, out: []u8): i64 {
         return BP_ERR;
     }
     bpCopyBytes(out[0..input.len], input);
-    let i: usize = 0;
-    while (i < pad_len) {
-        out[input.len + i] = 0x00 as u8;
-        i = i + 1;
+    if (pad_len > 0) {
+        bpFillBytes(out[input.len..total], 0x00 as u8);
     }
     return total as i64;
 }
@@ -199,6 +202,14 @@ pub fn zeroUnpad(padded: []const u8, block_size: usize): i64 {
         return BP_ERR;
     }
     let end = padded.len;
+    const v_zero: BpVec16 = @splat(0 as u8);
+    while (end >= 16) {
+        const v: BpVec16 = padded[end - 16 .. end][0..16].*;
+        if (@reduce(.Or, v != v_zero)) {
+            break;
+        }
+        end -= 16;
+    }
     while (end > 0 && padded[end - 1] == (0x00 as u8)) {
         end = end - 1;
     }
@@ -244,6 +255,13 @@ pub fn xorBlock(dst: []u8, a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: BpVec16 = a[i .. i + 16][0..16].*;
+        const vb: BpVec16 = b[i .. i + 16][0..16].*;
+        const out_arr: [16]u8 = va ^ vb;
+        @memcpy(dst[i .. i + 16], out_arr[0..16]);
+        i += 16;
+    }
     while (i < a.len) {
         dst[i] = a[i] ^ b[i];
         i = i + 1;
