@@ -1,74 +1,106 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/sqlformat
-
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:sql-formatter` ([https://github.com/sql-formatter-org/sql-formatter](https://github.com/sql-formatter-org/sql-formatter))（原库名 `sql-formatter` → CP 包名 `@cap/sqlformat`）
-
-零堆分配的 CP SQL 美化格式化、关键词大写规范化与压缩引擎 — 洁净室 MIT 实现，对标 npm `sql-formatter` 与 Rust `sqlformat`。
+# sql-formatter
 
 Zero-allocation SQL pretty-printer, keyword uppercasing normalizer, and minifier for CP — clean-room MIT parity with npm `sql-formatter` and Rust `sqlformat`.
 
-## 特性 / Features
+Lexer-aware formatting protects single-quoted strings (`'...'` with `''` / `\'` escapes), quoted identifiers (`"..."`, `` `...` ``), line comments (`-- ...`), and block comments (`/* ... */`) while laying out clauses (`SELECT`, `FROM`, `LEFT/INNER/RIGHT JOIN`, `WHERE`, `GROUP BY`, `ORDER BY`, `HAVING`, `LIMIT`, `INSERT INTO`, `VALUES`, `UPDATE`, `SET`, `DELETE FROM`, `UNION ALL`) directly into caller-provided stack buffers.
 
-- **词法安全保护 / Lexer-aware protection**：严格保护单引号字符串 `'...'`（含 `''` / `\'` 转义）、双引号/反引号标识符 `"..."` / `` `...` ``、行注释 `-- ...` 与块注释 `/* ... */` 不被错误改写。
-- **关键词规范化与子句排版 / Keyword uppercasing & clause layout**：支持 `SELECT`、`FROM`、`WHERE`、`LEFT/INNER/RIGHT JOIN`、`GROUP BY`、`ORDER BY`、`HAVING`、`LIMIT`、`INSERT INTO`、`VALUES`、`UPDATE`、`SET`、`DELETE FROM`、`UNION ALL` 等子句自动换行与缩进。
-- **零堆分配 / Zero heap allocation**：直接写入调用方提供的 `out: []u8` 缓冲区，同时提供 `minifySql` 一键压缩空白与注释。
+## Provenance & Zero-Cost Migration
 
-## 安装 / Install
+| Attribute | Value |
+| --- | --- |
+| Source Platform | **npm** |
+| Original Package | `sql-formatter` (CP `v1.0.0`) |
+| Upstream Repo | `https://github.com/sql-formatter-org/sql-formatter` |
+| License | MIT |
 
-```bash
-cap add @cap/sqlformat
+Keep the exact package name when migrating from TypeScript/Node.js to CP:
+
+```ts
+// TypeScript / Node.js (npm: sql-formatter)
+import { format } from "sql-formatter";
+const pretty = format("select id, name from users where active = 1");
 ```
-
-## API 参考 / API Reference
-
-| 符号 / Symbol | 签名 / Signature | 说明 / Description |
-| --- | --- | --- |
-| `SqlFormatOptions` | `{ indent_width: u8, uppercase_keywords: bool, lines_between_queries: u8 }` | 格式化配置，内置 `SqlFormatOptions.defaults()` |
-| `formatSql` | `(sql: string, out: []u8) -> string` | 使用默认选项格式化 SQL |
-| `formatSqlWith` | `(sql: string, opts: SqlFormatOptions, out: []u8) -> string` | 使用自定义选项格式化 SQL |
-| `minifySql` | `(sql: string, out: []u8) -> string` | 压缩多余空白与注释为紧凑单行 SQL，保留字符串原样 |
-
-## 格式化效果对比 / Before & After
-
-输入 / Input:
-
-```sql
-select u.id, u.name, count(o.id) as cnt from users u left join orders o on u.id = o.user_id where u.active = 1 and o.total >= 100 group by u.id, u.name order by cnt desc limit 10;
-```
-
-输出 / Output (`formatSql`):
-
-```sql
-SELECT
-  u.id,
-  u.name,
-  COUNT(o.id) AS cnt
-FROM users u
-LEFT JOIN orders o ON u.id = o.user_id
-WHERE u.active = 1
-  AND o.total >= 100
-GROUP BY u.id, u.name
-ORDER BY cnt DESC
-LIMIT 10;
-```
-
-## 使用示例 / Usage
 
 ```cp
-import { formatSql, formatSqlWith, minifySql, SqlFormatOptions } from "@cap/sqlformat";
+// CP (cap: sql-formatter) — zero-allocation stack-buffered SQL formatter
+import { formatSql } from "sql-formatter";
 
 let buf: [2048]u8 = undefined;
-const pretty = formatSql("select id, name from users where active = 1 and role = 'admin'", buf[0..2048]);
-
-let opts = SqlFormatOptions.defaults();
-opts.indent_width = 4;
-const pretty4 = formatSqlWith("select a, b from t", opts, buf[0..2048]);
-
-const compact = minifySql("-- comment\nSELECT  id,  name  FROM  users  WHERE  name = 'a  b';", buf[0..2048]);
+const pretty = formatSql("select id, name from users where active = 1", buf[0..2048]);
 ```
+
+## Installation
+
+```bash
+cap add sql-formatter
+```
+
+## Usage
+
+### Basic Usage: Pretty-Print & Minify SQL
+
+```cp
+import { formatSql, minifySql } from "sql-formatter";
+
+fn demoSql() {
+    let b1: [2048]u8 = undefined;
+    let b2: [2048]u8 = undefined;
+
+    const raw = "select u.id, u.name, count(o.id) as cnt from users u left join orders o on u.id = o.user_id where u.active = 1 and o.total >= 100 group by u.id, u.name order by cnt desc limit 10;";
+    const pretty = formatSql(raw, b1[0..2048]);
+
+    // Strip comments and collapse whitespace while preserving string literals verbatim
+    const compact = minifySql("-- audit query\nSELECT  id,  name  FROM  users  WHERE  note = 'a  b';", b2[0..2048]);
+    // => "SELECT id, name FROM users WHERE note = 'a  b';"
+    _ = pretty;
+    _ = compact;
+}
+```
+
+### Edge Cases: Custom Options, String/Comment Safety & Multi-Query Spacing
+
+```cp
+import { SqlFormatOptions, formatSqlWith } from "sql-formatter";
+
+fn demoCustom() {
+    let buf: [2048]u8 = undefined;
+
+    let opts = SqlFormatOptions.defaults();
+    opts.indent_width = 4;
+    opts.uppercase_keywords = false;   // keep original keyword casing
+    opts.lines_between_queries = 2;    // blank lines between semicolon-separated statements
+
+    // Keywords inside string literals ('select from') are never uppercased or broken
+    const sql = "select 'select from' as txt from logs; delete from temp where id = 1;";
+    const out = formatSqlWith(sql, opts, buf[0..2048]);
+
+    // Small output buffer truncates safely without panic or memory corruption
+    let tiny: [16]u8 = undefined;
+    const trunc = formatSqlWith(sql, opts, tiny[0..16]);
+    _ = out;
+    _ = trunc;
+}
+```
+
+## API Reference
+
+| Symbol | Signature | Description |
+| --- | --- | --- |
+| `SqlFormatOptions` | `class { indent_width: u8, uppercase_keywords: bool, lines_between_queries: u8 }` | Formatting configuration with `SqlFormatOptions.defaults()` (`indent_width = 2`, `uppercase_keywords = true`, `lines_between_queries = 1`). |
+| `formatSql` | `fn(sql: string, out: []u8): string` | Formats `sql` using default options into `out`. |
+| `formatSqlWith` | `fn(sql: string, opts: SqlFormatOptions, out: []u8): string` | Formats `sql` using custom `SqlFormatOptions` into `out`. |
+| `minifySql` | `fn(sql: string, out: []u8): string` | Strips SQL comments and collapses whitespace into a compact single line while preserving string literals. |
+| `nextToken` | `fn(sql: string, start_pos: usize): Token` | Low-level zero-copy SQL lexer returning `{ kind: u8, start: usize, end: usize }`. |
+
+## Performance & Safety Highlights
+
+- **16-lane SIMD Acceleration**: Uses `cap:ascii` (`isSpace`, `isDigit`, `isAlpha`, `toUpperByte`, `eqIgnoreCase`) and `cap:fmt` (`writeStr`) for fast single-pass lexing and uppercasing.
+- **Zero Heap Allocation**: Operates in a single pass with zero AST heap allocations, writing directly into caller-provided `out: []u8`.
+- **Zero-Clear Caller Buffers (`undefined`)**: Callers can pass stack buffers initialized with `undefined`; every byte write is bounds-checked against `out.len`.
+- **Lexer-Aware Safety**: String literals, quoted identifiers, and comments are never corrupted by keyword uppercasing or whitespace normalization.
 
 ## License
 
-MIT
+MIT — Clean-room CP implementation inspired by npm `sql-formatter`.

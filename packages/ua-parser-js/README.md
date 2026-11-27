@@ -1,56 +1,115 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# `@cap/useragent` — Zero-Allocation User-Agent Parser & Bot Classifier
+# ua-parser-js
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:ua-parser-js` ([https://github.com/faisalman/ua-parser-js](https://github.com/faisalman/ua-parser-js))（原库名 `ua-parser-js` → CP 包名 `@cap/useragent`）
+Zero-allocation User-Agent parser with Browser/OS/Device/Engine detection, Search & AI Bot classification (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Bytespider`, `DeepSeekBot`, etc.), and CLI runtime identification for CP — clean-room MIT parity with npm `ua-parser-js`.
 
-> Clean-room pure-CP User-Agent parser modeled after npm `ua-parser-js`, `bowser`, and Rust `woothee` | MIT License
->
-> 零堆分配纯 CP User-Agent 解析器与爬虫/AI 爬虫识别引擎，对标 npm `ua-parser-js` / `bowser` 与 Rust `woothee`（MIT 协议）。
+Disambiguates modern browsers accurately (Edge `Edg/`, Opera `OPR/`, Samsung Internet, Firefox, Chrome, Safari, CLI clients `curl`/`Bun`/`Cap`), detects desktop/mobile/tablet/bot/CLI devices across Windows/macOS/iOS/Android/Linux/HarmonyOS/ChromeOS, and returns a stack-allocated `UserAgent` struct with zero heap allocations.
 
-## Installation / 安装
+## Provenance & Zero-Cost Migration
 
-```bash
-cap add @cap/useragent
+| Attribute | Value |
+| --- | --- |
+| Source Platform | **npm** |
+| Original Package | `ua-parser-js` (CP `v1.0.0`) |
+| Upstream Repo | `https://github.com/faisalman/ua-parser-js` |
+| License | MIT |
+
+Keep the exact package name when migrating from TypeScript/Node.js to CP:
+
+```ts
+// TypeScript / Node.js (npm: ua-parser-js)
+import { UAParser } from "ua-parser-js";
+const result = UAParser(req.headers["user-agent"]);
 ```
 
-## Features / 核心特性
+```cp
+// CP (cap: ua-parser-js) — zero-allocation stack UserAgent & AI bot guard
+import { parseUserAgent, isAiBot } from "ua-parser-js";
 
-- **Zero Heap Allocations / 零堆分配**: Stack-allocated `UserAgent` struct with zero-copy slices into static literals or the input UA string
-- **Accurate Browser Disambiguation / 精准浏览器识别**: Distinguishes `Edge` (`Edg/`), `Opera` (`OPR/`), `Samsung Internet`, `Firefox`, `Chrome`, `Safari` (excluding Chrome/CriOS), CLI runtimes (`curl`, `Bun`, `Cap`), and Bots
-- **OS & Device Classification / 系统与设备分类**: `Windows`, `macOS`, `iOS`, `Android`, `Linux`, `HarmonyOS` / `OpenHarmony`, `ChromeOS`; `Desktop`, `Mobile`, `Tablet`, `Bot`, `Cli`, `Unknown`
-- **Dedicated AI Crawler Detection / AI 爬虫识别**: Built-in `isAiBot()` detects `GPTBot`, `ChatGPT-User`, `OAI-SearchBot`, `ClaudeBot`, `PerplexityBot`, `Bytespider`, `Google-Extended`, `CCBot`, `Meta-ExternalAgent`, `DeepSeekBot`, etc.
+const ua = parseUserAgent(ua_header);
+const block_ai = isAiBot(ua_header);
+```
 
-## Exported API / 导出 API
+## Installation
 
-| Symbol / Signature | Description / 说明 |
-| :--- | :--- |
-| `DeviceKind` | `Desktop` / `Mobile` / `Tablet` / `Bot` / `Cli` / `Unknown` |
-| `BrowserKind` | `Chrome` / `Edge` / `Firefox` / `Safari` / `Opera` / `Samsung` / `Curl` / `Bun` / `Cap` / `Bot` / `Unknown` |
-| `OsKind` | `Windows` / `MacOS` / `IOS` / `Android` / `Linux` / `HarmonyOS` / `ChromeOS` / `Unknown` |
-| `UserAgent` | Struct with `browser`, `browser_name`, `browser_version`, `os`, `os_name`, `os_version`, `device`, `engine_name`, `is_bot`, `is_mobile`, `is_ai_bot`, `bot_name` |
-| `parseUserAgent(ua: string): UserAgent` | Full zero-allocation UA parse |
-| `isBot(ua: string): bool` | Fast bot / crawler check |
-| `isAiBot(ua: string): bool` | Fast AI crawler check (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Bytespider`, `Google-Extended`, `CCBot`, ...) |
-| `isMobile(ua: string): bool` | Fast mobile phone check |
+```bash
+cap add ua-parser-js
+```
 
-## Usage Example / 使用示例
+## Usage
+
+### Basic Usage: Browser, OS, Device & Engine Classification
 
 ```cp
-import { parseUserAgent, isAiBot, BrowserKind, OsKind, DeviceKind } from "@cap/useragent";
+import {
+    parseUserAgent,
+    BrowserKind,
+    OsKind,
+    DeviceKind,
+} from "ua-parser-js";
 
 fn inspectRequest(ua_header: string) {
     const info = parseUserAgent(ua_header);
-    if (info.is_ai_bot) {
-        // Block or rate-limit AI crawlers (e.g. GPTBot, ClaudeBot)
-    }
+
     if (info.browser == BrowserKind.Edge && info.os == OsKind.Windows) {
-        // Desktop Edge on Windows
+        // Desktop Microsoft Edge on Windows
+        // info.browser_version, info.os_version, info.engine_name ("Blink")
     }
     if (info.device == DeviceKind.Mobile) {
         // Serve mobile layout
     }
-    * = isAiBot(ua_header);
+    _ = info;
 }
 ```
+
+### Edge Cases: AI Crawler Filtering, CLI Runtimes & Empty UA Strings
+
+```cp
+import { parseUserAgent, isBot, isAiBot, isMobile, BrowserKind, DeviceKind } from "ua-parser-js";
+
+fn demoGuards() {
+    // 1. Fast AI crawler detection (GPTBot, ClaudeBot, PerplexityBot, Bytespider, CCBot, DeepSeekBot...)
+    const ai_ua = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2";
+    const ai = isAiBot(ai_ua); // true
+    const bot = isBot(ai_ua);  // true
+
+    // 2. CLI runtime detection (curl, Bun, Cap)
+    const cli = parseUserAgent("curl/8.7.1");
+    // cli.browser == BrowserKind.Curl, cli.device == DeviceKind.Cli
+
+    // 3. Empty or unknown User-Agent degrades safely to Unknown
+    const empty = parseUserAgent("");
+    // empty.browser == BrowserKind.Unknown, empty.device == DeviceKind.Unknown
+    const mob = isMobile(""); // false
+    _ = ai;
+    _ = bot;
+    _ = cli;
+    _ = empty;
+    _ = mob;
+}
+```
+
+## API Reference
+
+| Symbol | Signature | Description |
+| --- | --- | --- |
+| `DeviceKind` | `enum { Desktop, Mobile, Tablet, Bot, Cli, Unknown }` | Device category. |
+| `BrowserKind` | `enum { Chrome, Edge, Firefox, Safari, Opera, Samsung, Curl, Bun, Cap, Bot, Unknown }` | Browser / runtime category. |
+| `OsKind` | `enum { Windows, MacOS, IOS, Android, Linux, HarmonyOS, ChromeOS, Unknown }` | Operating system category. |
+| `UserAgent` | `class { browser, browser_name, browser_version, os, os_name, os_version, device, engine_name, is_bot, is_mobile, is_ai_bot, bot_name }` | Full stack-allocated parse result with zero-copy version slices. |
+| `parseUserAgent` | `fn(ua: string): UserAgent` | Performs full zero-allocation User-Agent parsing. |
+| `isBot` | `fn(ua: string): bool` | Fast check for search engines, AI crawlers, and generic bots. |
+| `isAiBot` | `fn(ua: string): bool` | Fast check specifically for AI training/retrieval crawlers. |
+| `isMobile` | `fn(ua: string): bool` | Fast check for mobile handset User-Agents. |
+| `matchAiBot` / `matchAnyBot` | `fn(ua: string): BotMatch` | Low-level bot matcher returning `{ matched, is_ai, name, version }`. |
+
+## Performance & Safety Highlights
+
+- **16-lane SIMD Acceleration**: Uses `cap:ascii` (`eqIgnoreCase`, `isDigit`) and `cap:bin` (`indexOfBytes`) for high-throughput substring and case-insensitive scanning without regex backtracking.
+- **Zero Heap Allocation & Zero-Copy**: `UserAgent` is returned by value on the stack; version/name strings slice either static literals or `ua` directly.
+- **ReDoS-Immune**: Pure linear substring scanning with zero regular expressions — safe for untrusted HTTP `User-Agent` headers at edge gateways.
+
+## License
+
+MIT — Clean-room CP implementation inspired by npm `ua-parser-js`.

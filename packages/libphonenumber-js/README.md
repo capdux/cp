@@ -1,58 +1,63 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# `@cap/phone` — 零分配国际电话号码解析、校验与格式化引擎
+# libphonenumber-js
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:libphonenumber-js` ([https://github.com/catamphetamine/libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js))（原库名 `libphonenumber-js` → CP 包名 `@cap/phone`）
+Zero-allocation international phone number parser, validator, and formatter (E.164, International, National, RFC 3966) for CP — clean-room MIT parity with npm `libphonenumber-js`.
 
-> Zero-allocation international phone number parser, validator, and formatter for CP (Clean-room MIT implementation modeled after npm `libphonenumber-js` and Rust `phonenumber`).
+Embeds metadata for 45 major countries/regions (North America, APAC, Europe, Middle East/Africa, LATAM), strips visual separators and national trunk `0` prefixes automatically, validates ITU-T E.164 length and country-specific numbering rules, and formats directly into caller stack buffers.
 
-## 概述 / Overview
+## Provenance & Zero-Cost Migration
 
-`@cap/phone` 提供纯 CP、零外部依赖、零堆分配的国际电话号码解析、校验与格式化能力：
+| Attribute | Value |
+| --- | --- |
+| Source Platform | **npm** |
+| Original Package | `libphonenumber-js` (CP `v1.0.0`) |
+| Upstream Repo | `https://github.com/catamphetamine/libphonenumber-js` |
+| License | MIT |
 
-- **45 个主流国家/地区区号与长度元数据表**：覆盖北美（US/CA）、亚太（CN/AU/NZ/JP/KR/SG/HK/TW/MO/MY/TH/VN/ID/PH/IN）、欧洲（GB/DE/FR/IT/ES/NL/CH/SE/IE/PL/PT/BE/AT/NO/DK/FI/GR/RU/TR）、中东与非洲（AE/SA/IL/ZA）、拉美（BR/MX/AR/CL/CO）。
-- **宽容解析与规范化**：支持 `+` 国际前缀、`00` 国际冠码、`tel:` URI 前缀，自动清理空格、括号、短横线、点号等视觉分隔符；支持默认国家补全及国内干线前导 `0` 剥离（如澳大利亚 `0412 345 678`、英国 `07700 900123`、日本 `090-1234-5678`）。
-- **4 种标准格式化输出（零堆分配）**：直接写入调用方栈缓冲 `out: []u8`，支持 `formatE164`、`formatInternational`、`formatNational`、`formatRfc3966`。
-- **严格合法性校验**：结合 ITU-T E.164 长度上限（≤ 15 位）、各国家/地区合理号码长度范围及主流国家号段规则进行校验。
+Keep the exact package name when migrating from TypeScript/Node.js to CP:
 
-## 安装 / Installation
-
-```bash
-cap add @cap/phone
+```ts
+// TypeScript / Node.js (npm: libphonenumber-js)
+import { parsePhoneNumber } from "libphonenumber-js";
+const phone = parsePhoneNumber("0412 345 678", "AU");
+const e164 = phone.format("E.164"); // "+61412345678"
 ```
 
-## 导出 API / API Reference
+```cp
+// CP (cap: libphonenumber-js) — zero-allocation stack PhoneNumber & formatters
+import { parsePhoneNumber } from "libphonenumber-js";
 
-| 符号 / 签名 | 说明 |
-| :--- | :--- |
-| `PhoneNumber` | 栈分配解析结果结构体（`national_buf: [16]u8`、`national_len: u8`、`country_code: u16`、`iso2: string`、`is_valid: bool`、`is_possible: bool`） |
-| `PhoneNumber.invalid(): PhoneNumber` | 构造空无效号码对象 |
-| `phone.formatE164(out: []u8): string` | 格式化为 E.164 标准串（如 `"+61412345678"`） |
-| `phone.formatInternational(out: []u8): string` | 格式化为可读国际格式（如 `"+61 412 345 678"`） |
-| `phone.formatNational(out: []u8): string` | 格式化为国内本地格式（如 `"0412 345 678"`、`"(415) 555-2671"`） |
-| `phone.formatRfc3966(out: []u8): string` | 格式化为 RFC 3966 URI（如 `"tel:+61-412-345-678"`） |
-| `parsePhoneNumber(raw: string, default_iso2: string): PhoneNumber` | 解析国际或国内电话号码 |
-| `isValidPhone(raw: string, default_iso2: string): bool` | 快捷判断电话号码是否合法 |
-| `countryCodeFromIso2(iso2: string): u16` | 根据 ISO-3166 alpha-2 查询国际区号（大小写不敏感，未知返回 `0`） |
-| `iso2FromCountryCode(cc: u16): string` | 根据国际区号反查主 ISO-3166 国家码（未知返回 `""`） |
-| `supportedCountryCount(): usize` | 返回内置支持的国家/地区总数（`45`） |
+const phone = parsePhoneNumber("0412 345 678", "AU");
+let buf: [32]u8 = undefined;
+const e164 = phone.formatE164(buf[0..32]); // "+61412345678"
+```
 
-## 使用示例 / Usage Examples
+## Installation
 
-### 示例 1：解析并输出 4 种标准格式
+```bash
+cap add libphonenumber-js
+```
+
+## Usage
+
+### Basic Usage: Parse & Format All 4 Standard Representations
 
 ```cp
-import { parsePhoneNumber } from "@cap/phone";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 fn demoFormat() {
     const phone = parsePhoneNumber("0412 345 678", "AU");
     if (phone.is_valid) {
-        let buf: [32]u8 = [0; 32];
-        const e164 = phone.formatE164(buf[0..32]);          // "+61412345678"
-        const intl = phone.formatInternational(buf[0..32]); // "+61 412 345 678"
-        const nat  = phone.formatNational(buf[0..32]);      // "0412 345 678"
-        const uri  = phone.formatRfc3966(buf[0..32]);       // "tel:+61-412-345-678"
+        let b1: [32]u8 = undefined;
+        let b2: [32]u8 = undefined;
+        let b3: [32]u8 = undefined;
+        let b4: [32]u8 = undefined;
+
+        const e164 = phone.formatE164(b1[0..32]);          // "+61412345678"
+        const intl = phone.formatInternational(b2[0..32]); // "+61 412 345 678"
+        const nat  = phone.formatNational(b3[0..32]);      // "0412 345 678"
+        const uri  = phone.formatRfc3966(b4[0..32]);       // "tel:+61-412-345-678"
         _ = e164;
         _ = intl;
         _ = nat;
@@ -61,7 +66,7 @@ fn demoFormat() {
 }
 ```
 
-### 示例 2：国际号码与 `00` 冠码解析、区号双向映射
+### Edge Cases: `00` / `tel:` Prefixes, Country Lookups & Invalid Numbers
 
 ```cp
 import {
@@ -69,20 +74,50 @@ import {
     isValidPhone,
     countryCodeFromIso2,
     iso2FromCountryCode,
-} from "@cap/phone";
+    supportedCountryCount,
+} from "libphonenumber-js";
 
-fn demoLookup() {
+fn demoEdgeCases() {
+    // 1. International "00" prefix & "tel:" URI without default_iso2
     const cn = parsePhoneNumber("0086 138-0013-8000", "");
-    const ok = isValidPhone("+1 (415) 555-2671", "");
-    const cc = countryCodeFromIso2("hk");  // 852
-    const iso = iso2FromCountryCode(81);   // "JP"
+    const us_ok = isValidPhone("+1 (415) 555-2671", ""); // true
+
+    // 2. Case-insensitive ISO2 <-> Calling Code lookup
+    const hk_cc = countryCodeFromIso2("hk");  // 852
+    const jp_iso = iso2FromCountryCode(81);   // "JP"
+    const total = supportedCountryCount();    // 45
+
+    // 3. Invalid input returns PhoneNumber with is_valid == false; formatters return ""
+    const bad = parsePhoneNumber("123", "US");
+    let buf: [32]u8 = undefined;
+    const empty = bad.formatE164(buf[0..32]); // ""
     _ = cn;
-    _ = ok;
-    _ = cc;
-    _ = iso;
+    _ = us_ok;
+    _ = hk_cc;
+    _ = jp_iso;
+    _ = total;
+    _ = empty;
 }
 ```
 
-## 许可协议 / License
+## API Reference
 
-MIT
+| Symbol | Signature | Description |
+| --- | --- | --- |
+| `PhoneNumber` | `class { national_buf: [16]u8, national_len: u8, country_code: u16, iso2: string, is_valid: bool, is_possible: bool }` | Stack-allocated parsed number with `formatE164`, `formatInternational`, `formatNational`, `formatRfc3966`, and `PhoneNumber.invalid()`. |
+| `parsePhoneNumber` | `fn(raw: string, default_iso2: string): PhoneNumber` | Parses international (`+`/`00`/`tel:`) or national phone numbers. |
+| `isValidPhone` | `fn(raw: string, default_iso2: string): bool` | Quick validation helper returning `parsePhoneNumber(raw, default_iso2).is_valid`. |
+| `countryCodeFromIso2` | `fn(iso2: string): u16` | Maps ISO-3166 alpha-2 (case-insensitive) to calling code (`0` if unknown). |
+| `iso2FromCountryCode` | `fn(cc: u16): string` | Maps calling code to primary ISO-3166 alpha-2 (`""` if unknown). |
+| `supportedCountryCount` | `fn(): usize` | Returns the number of built-in country entries (`45`). |
+
+## Performance & Safety Highlights
+
+- **16-lane SIMD Acceleration**: Uses `cap:ascii` (`isDigit`, `eqIgnoreCase`, `trim`) and `cap:fmt` (`writeStr`, `writeU64`) for fast digit extraction and formatting.
+- **Zero Heap Allocation**: Fixed stack buffers (`[16]u8` national digits, `[24]u8` scratch arrays) and static 45-country metadata table.
+- **Zero-Clear Stack Buffers (`undefined`)**: Scratch digit buffers use `undefined` initialization, eliminating unnecessary zero-fills.
+- **Strict E.164 & Buffer Safety**: Enforces ITU-T E.164 15-digit maximum and bounds-checks every write to caller `out: []u8`.
+
+## License
+
+MIT — Clean-room CP implementation inspired by npm `libphonenumber-js`.

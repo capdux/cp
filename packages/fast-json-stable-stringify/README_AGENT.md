@@ -1,23 +1,43 @@
-# fast-json-stable-stringify@1.0.0 (Agent Quickref)
+# fast-json-stable-stringify@1.0.0 — AI Agent Quick Ref
 
-> Zero-allocation RFC 8785 JSON Canonicalization Scheme (JCS) deterministic serializer & semantic equivalence checker (fast-json-stable-stringify / canonicalize / serde_jcs parity) for CP | License: MIT
-> Import: `import { ... } from "fast-json-stable-stringify";` | Full types: `src/index.d.cp`
+> Zero-alloc RFC 8785 JSON Canonicalization Scheme (JCS) serializer & equivalence checker | Source: `npm:fast-json-stable-stringify` | License: MIT
+> Import: `import { JcsResult, canonicalizeJson, areJsonEquivalent } from "fast-json-stable-stringify";` | Types: `src/index.d.cp`
 
-## Functions
-- `export fn isJsonSpace(c: u8): bool;`
-- `export fn skipWs(s: string, start: usize): usize;`
-- `export fn parseHex4(s: string, pos: usize): i32;`
-- `export fn pushByteChecked(out: []u8, pos: usize, b: u8): usize?;`
-- `export fn pushSliceChecked(out: []u8, pos: usize, s: string): usize?;`
-- `export fn writeUtf8Checked(out: []u8, pos: usize, cp: u32): usize?;`
-- `export fn emitEscapedCodepoint(out: []u8, pos: usize, cp: u32): usize?;`
-- `export fn skipString(input: string, pos: usize): SkipRes;`
-- `export fn skipNumber(input: string, pos: usize): SkipRes;`
-- `export fn skipValue(input: string, start: usize, depth: u8): SkipRes;`
-- `export fn nextKeyUtf16Unit(input: string, pos: usize, end: usize, pending_low: u16): KeyStep;`
-- `export fn compareJsonKeys(input: string, s1: usize, e1: usize, s2: usize, e2: usize): i8;`
-- `export fn emitCanonicalString(input: string, pos: usize, out: []u8, out_pos: usize): StepRes;`
-- `export fn emitCanonicalNumber(input: string, pos: usize, out: []u8, out_pos: usize): StepRes;`
-- `export fn emitCanonicalValue(input: string, start: usize, out: []u8, out_pos: usize, depth: u8): StepRes;`
-- `export fn canonicalizeJson(input: string, out: []u8): JcsResult;`
-- `export fn areJsonEquivalent(a: string, b: string): bool;`
+## Core Types
+
+```cp
+export class JcsResult {
+    ok: bool,
+    len: usize,
+    output: string,
+    fn fail(out: []u8): JcsResult;
+}
+```
+
+## Core Functions
+
+- `canonicalizeJson(input: string, out: []u8): JcsResult` — Canonicalize JSON per RFC 8785 (UTF-16 key order, `-0` -> `0`, stripped whitespace) into `out`.
+- `areJsonEquivalent(a: string, b: string): bool` — Compare semantic equivalence of two JSON strings (internal 4096B stack buffers).
+- `compareJsonKeys(input: string, s1: usize, e1: usize, s2: usize, e2: usize): i8` — Low-level UTF-16 code-unit comparator (`-1`, `0`, `1`).
+- `emitCanonicalValue(input: string, start: usize, out: []u8, out_pos: usize, depth: u8): StepRes`
+
+## Minimal Usage
+
+```cp
+import { canonicalizeJson, areJsonEquivalent } from "fast-json-stable-stringify";
+
+let buf: [1024]u8 = undefined;
+const res = canonicalizeJson("{\"b\":2,\"a\":1}", buf[0..1024]);
+if (res.ok) {
+    // res.output == "{\"a\":1,\"b\":2}"
+}
+const eq = areJsonEquivalent("{\"b\":2,\"a\":1}", "{ \"a\": 1, \"b\": 2 }"); // true
+```
+
+## Pitfalls & Rules
+
+1. **Always check `res.ok`**: Returns `ok == false` on invalid JSON (trailing commas, leading zeros, trailing data), buffer overflow, or exceeded limits.
+2. **Hard stack limits**: Max nesting depth is `16`; max keys per JSON object is `64`. Exceeding either yields `ok == false`.
+3. **`areJsonEquivalent` size cap**: Uses internal `[4096]u8` buffers; inputs whose canonical form exceeds 4096B return `false`. For larger payloads, call `canonicalizeJson` on both with larger buffers and compare via `cap:bin` `bytesEq`.
+4. **Slice lifetime**: `res.output` borrows `out[0..res.len]`; do not mutate `out` while holding `res.output`.
+5. **Array order preserved**: Only object keys are sorted (UTF-16 code-unit order); JSON array element order is never altered.
