@@ -1,6 +1,10 @@
 // @cap/grpc-frame — Zero-allocation gRPC over HTTP/2 Framing, Status Codes & Timeout Utilities
 // Clean-room MIT implementation in pure CP.
 
+import { trim } from "cap:ascii";
+import { readU32BE, writeU32BE } from "cap:bin";
+import { parseU64, writeStr, writeU64 } from "cap:fmt";
+
 // Canonical gRPC status codes (0..16)
 pub const STATUS_OK: u8 = 0;
 pub const STATUS_CANCELLED: u8 = 1;
@@ -68,23 +72,9 @@ pub fn encodeFrame(compressed: bool, payload: []const u8, out: []u8) -> usize {
     if (total > out.len) {
         return 0;
     }
-    const plen = payload.len as u32;
-    if (compressed) {
-        out[0] = 1;
-    } else {
-        out[0] = 0;
-    }
-    out[1] = ((plen >> 24) & 0xFF) as u8;
-    out[2] = ((plen >> 16) & 0xFF) as u8;
-    out[3] = ((plen >> 8) & 0xFF) as u8;
-    out[4] = (plen & 0xFF) as u8;
-
-    let i: usize = 0;
-    while (i < payload.len) {
-        out[5 + i] = payload[i];
-        i += 1;
-    }
-    return total;
+    out[0] = if (compressed) 1 else 0;
+    * = writeU32BE(out, 1, payload.len as u32);
+    return writeStr(payload, out, 5);
 }
 
 /// Decodes a 5-byte gRPC Length-Prefixed Message header into `out`.
@@ -98,10 +88,7 @@ pub fn decodeHeader(data: []const u8, out: *GrpcFrameHeader) -> i32 {
     if (flag != 0 && flag != 1) {
         return GRPC_INVALID;
     }
-    const len_be: u32 = ((data[1] as u32) << 24)
-        | ((data[2] as u32) << 16)
-        | ((data[3] as u32) << 8)
-        | (data[4] as u32);
+    const len_be: u32 = readU32BE(data, 1) ?? 0;
     const total: usize = (len_be as usize) + 5;
 
     out.compressed = (flag == 1);
@@ -114,36 +101,21 @@ pub fn decodeHeader(data: []const u8, out: *GrpcFrameHeader) -> i32 {
     return GRPC_OK;
 }
 
-fn isSpace(b: u8) -> bool {
-    return b == 32 || b == 9;
-}
-
 /// Parses a `grpc-timeout` header (1..8 ASCII digits + unit `H`/`M`/`S`/`m`/`u`/`n`)
 /// into microseconds. Returns `-1` on invalid syntax or unit.
 pub fn parseTimeoutMicros(header: string) -> i64 {
-    let a: usize = 0;
-    let b: usize = header.len;
-    while (a < b && isSpace(header[a])) {
-        a += 1;
-    }
-    while (b > a && isSpace(header[b - 1])) {
-        b -= 1;
-    }
-    const slen = b - a;
-    if (slen < 2 || slen > 9) {
+    const trimmed = trim(header);
+    const slen = trimmed.len;
+    if (slen < 2 || slen > 9 || trimmed[0] == '+') {
         return -1;
     }
 
-    const unit = header[b - 1];
+    const unit = trimmed[slen - 1];
     let val: u64 = 0;
-    let i = a;
-    while (i < b - 1) {
-        const ch = header[i];
-        if (ch < 48 || ch > 57) {
-            return -1;
-        }
-        val = val * 10 + ((ch - 48) as u64);
-        i += 1;
+    if (parsed := parseU64(trimmed[0..(slen - 1)])) {
+        val = parsed;
+    } else {
+        return -1;
     }
 
     if (unit == 72) {
@@ -191,28 +163,12 @@ pub fn formatTimeoutMillis(ms: u64, out: []u8) -> usize {
         unit = 72; // 'H'
     }
 
-    let rev: [10]u8 = undefined;
-    let n: usize = 0;
-    if (val == 0) {
-        rev[0] = 48;
-        n = 1;
-    } else {
-        let v = val;
-        while (v > 0 && n < 10) {
-            rev[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n += 1;
-        }
-    }
-
+    let tmp: [16]u8 = undefined;
+    const n = writeU64(val, tmp[0..16], 0);
     if (n + 1 > out.len) {
         return 0;
     }
-    let i: usize = 0;
-    while (i < n) {
-        out[i] = rev[n - 1 - i];
-        i += 1;
-    }
-    out[n] = unit;
-    return n + 1;
+    const w = writeStr(tmp[0..n], out, 0);
+    out[w] = unit;
+    return w + 1;
 }

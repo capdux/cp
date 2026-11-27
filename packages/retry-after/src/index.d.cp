@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { trim } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { parseU64, writeStr, writeU64 } from "cap:fmt";
 export class RetryAfter {
     kind: u8,
     delay_seconds: u64,
@@ -7,9 +10,7 @@ export class RetryAfter {
     valid: bool,
 }
 
-export fn trimSpaces(s: &[]u8): &[]u8;
 export fn parseUint(s: &[]u8): i64;
-export fn eq3(s: &[]u8, a: u8, b: u8, c: u8): bool;
 export fn parseMonth(s: &[]u8): i32;
 export fn isLeapYear(y: i64): bool;
 export fn daysInMonth(y: i64, m: i32): i32;

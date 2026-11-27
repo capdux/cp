@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { hexVal } from "cap:ascii";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeHexByte } from "cap:fmt";
 export class TraceParent {
     version: u8,
     trace_id: [16]u8,
@@ -10,7 +13,6 @@ export class TraceParent {
     fn format(dst: []u8): i64;
 }
 
-export fn hexValLower(c: u8): i32;
 export fn parseHexByteLower(hi: u8, lo: u8): i32;
 export fn invalidTraceParent(): TraceParent;
 export fn parseTraceParent(header: &[]u8): TraceParent;

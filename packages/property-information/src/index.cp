@@ -1,6 +1,8 @@
 // @cap/property-information — Zero-allocation HTML/SVG attribute <-> DOM property mapping
 // Clean-room CP implementation inspired by property-information (MIT).
 
+import { eqIgnoreCase } from "cap:ascii";
+
 pub struct PropInfo {
     property: string,
     attribute: string,
@@ -9,35 +11,6 @@ pub struct PropInfo {
     is_comma_separated: bool,
     is_numeric: bool,
     found: bool,
-}
-
-fn pinfToLowerByte(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn pinfEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (pinfToLowerByte(a[i]) != pinfToLowerByte(b[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn pinfHasPrefixIgnoreCase(s: string, prefix: string): bool {
-    if (s.len < prefix.len) return false;
-    let i: usize = 0;
-    while (i < prefix.len) : (i += 1) {
-        if (pinfToLowerByte(s[i]) != pinfToLowerByte(prefix[i])) {
-            return false;
-        }
-    }
-    return true;
 }
 
 fn pinfMake(
@@ -72,8 +45,8 @@ fn pinfNotFound(name: string): PropInfo {
 }
 
 fn pinfMatchPair(name: string, prop: string, attr: string): bool {
-    if (pinfEqIgnoreCase(name, attr)) return true;
-    if (pinfEqIgnoreCase(name, prop)) return true;
+    if (eqIgnoreCase(name, attr)) return true;
+    if (eqIgnoreCase(name, prop)) return true;
     return false;
 }
 
@@ -116,71 +89,71 @@ pub fn findHtmlProp(name: string): PropInfo {
     if (pinfMatchPair(name, "preserveAspectRatio", "preserveAspectRatio")) return pinfMake("preserveAspectRatio", "preserveAspectRatio", false, false, false, false);
 
     // Boolean HTML attributes
-    if (pinfEqIgnoreCase(name, "disabled")) return pinfMake("disabled", "disabled", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "checked")) return pinfMake("checked", "checked", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "selected")) return pinfMake("selected", "selected", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "multiple")) return pinfMake("multiple", "multiple", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "hidden")) return pinfMake("hidden", "hidden", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "required")) return pinfMake("required", "required", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "controls")) return pinfMake("controls", "controls", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "loop")) return pinfMake("loop", "loop", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "muted")) return pinfMake("muted", "muted", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "defer")) return pinfMake("defer", "defer", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "async")) return pinfMake("async", "async", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "open")) return pinfMake("open", "open", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "reversed")) return pinfMake("reversed", "reversed", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "inert")) return pinfMake("inert", "inert", true, false, false, false);
-    if (pinfEqIgnoreCase(name, "default")) return pinfMake("default", "default", true, false, false, false);
+    if (eqIgnoreCase(name, "disabled")) return pinfMake("disabled", "disabled", true, false, false, false);
+    if (eqIgnoreCase(name, "checked")) return pinfMake("checked", "checked", true, false, false, false);
+    if (eqIgnoreCase(name, "selected")) return pinfMake("selected", "selected", true, false, false, false);
+    if (eqIgnoreCase(name, "multiple")) return pinfMake("multiple", "multiple", true, false, false, false);
+    if (eqIgnoreCase(name, "hidden")) return pinfMake("hidden", "hidden", true, false, false, false);
+    if (eqIgnoreCase(name, "required")) return pinfMake("required", "required", true, false, false, false);
+    if (eqIgnoreCase(name, "controls")) return pinfMake("controls", "controls", true, false, false, false);
+    if (eqIgnoreCase(name, "loop")) return pinfMake("loop", "loop", true, false, false, false);
+    if (eqIgnoreCase(name, "muted")) return pinfMake("muted", "muted", true, false, false, false);
+    if (eqIgnoreCase(name, "defer")) return pinfMake("defer", "defer", true, false, false, false);
+    if (eqIgnoreCase(name, "async")) return pinfMake("async", "async", true, false, false, false);
+    if (eqIgnoreCase(name, "open")) return pinfMake("open", "open", true, false, false, false);
+    if (eqIgnoreCase(name, "reversed")) return pinfMake("reversed", "reversed", true, false, false, false);
+    if (eqIgnoreCase(name, "inert")) return pinfMake("inert", "inert", true, false, false, false);
+    if (eqIgnoreCase(name, "default")) return pinfMake("default", "default", true, false, false, false);
 
     // Comma-separated HTML attributes
-    if (pinfEqIgnoreCase(name, "accept")) return pinfMake("accept", "accept", false, false, true, false);
-    if (pinfEqIgnoreCase(name, "coords")) return pinfMake("coords", "coords", false, false, true, false);
+    if (eqIgnoreCase(name, "accept")) return pinfMake("accept", "accept", false, false, true, false);
+    if (eqIgnoreCase(name, "coords")) return pinfMake("coords", "coords", false, false, true, false);
 
     // Space-separated HTML attributes
-    if (pinfEqIgnoreCase(name, "rel")) return pinfMake("rel", "rel", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "sandbox")) return pinfMake("sandbox", "sandbox", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "headers")) return pinfMake("headers", "headers", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "ping")) return pinfMake("ping", "ping", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "itemProp") || pinfEqIgnoreCase(name, "itemprop")) return pinfMake("itemProp", "itemprop", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "itemRef") || pinfEqIgnoreCase(name, "itemref")) return pinfMake("itemRef", "itemref", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "itemType") || pinfEqIgnoreCase(name, "itemtype")) return pinfMake("itemType", "itemtype", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "sizes")) return pinfMake("sizes", "sizes", false, true, false, false);
-    if (pinfEqIgnoreCase(name, "blocking")) return pinfMake("blocking", "blocking", false, true, false, false);
+    if (eqIgnoreCase(name, "rel")) return pinfMake("rel", "rel", false, true, false, false);
+    if (eqIgnoreCase(name, "sandbox")) return pinfMake("sandbox", "sandbox", false, true, false, false);
+    if (eqIgnoreCase(name, "headers")) return pinfMake("headers", "headers", false, true, false, false);
+    if (eqIgnoreCase(name, "ping")) return pinfMake("ping", "ping", false, true, false, false);
+    if (eqIgnoreCase(name, "itemProp") || eqIgnoreCase(name, "itemprop")) return pinfMake("itemProp", "itemprop", false, true, false, false);
+    if (eqIgnoreCase(name, "itemRef") || eqIgnoreCase(name, "itemref")) return pinfMake("itemRef", "itemref", false, true, false, false);
+    if (eqIgnoreCase(name, "itemType") || eqIgnoreCase(name, "itemtype")) return pinfMake("itemType", "itemtype", false, true, false, false);
+    if (eqIgnoreCase(name, "sizes")) return pinfMake("sizes", "sizes", false, true, false, false);
+    if (eqIgnoreCase(name, "blocking")) return pinfMake("blocking", "blocking", false, true, false, false);
 
     // Numeric HTML attributes
-    if (pinfEqIgnoreCase(name, "rows")) return pinfMake("rows", "rows", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "cols")) return pinfMake("cols", "cols", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "size")) return pinfMake("size", "size", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "span")) return pinfMake("span", "span", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "start")) return pinfMake("start", "start", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "width")) return pinfMake("width", "width", false, false, false, true);
-    if (pinfEqIgnoreCase(name, "height")) return pinfMake("height", "height", false, false, false, true);
+    if (eqIgnoreCase(name, "rows")) return pinfMake("rows", "rows", false, false, false, true);
+    if (eqIgnoreCase(name, "cols")) return pinfMake("cols", "cols", false, false, false, true);
+    if (eqIgnoreCase(name, "size")) return pinfMake("size", "size", false, false, false, true);
+    if (eqIgnoreCase(name, "span")) return pinfMake("span", "span", false, false, false, true);
+    if (eqIgnoreCase(name, "start")) return pinfMake("start", "start", false, false, false, true);
+    if (eqIgnoreCase(name, "width")) return pinfMake("width", "width", false, false, false, true);
+    if (eqIgnoreCase(name, "height")) return pinfMake("height", "height", false, false, false, true);
 
     // Common standard attributes
-    if (pinfEqIgnoreCase(name, "id")) return pinfMake("id", "id", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "href")) return pinfMake("href", "href", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "src")) return pinfMake("src", "src", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "alt")) return pinfMake("alt", "alt", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "title")) return pinfMake("title", "title", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "style")) return pinfMake("style", "style", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "type")) return pinfMake("type", "type", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "name")) return pinfMake("name", "name", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "value")) return pinfMake("value", "value", false, false, false, false);
-    if (pinfEqIgnoreCase(name, "role")) return pinfMake("role", "role", false, true, false, false);
+    if (eqIgnoreCase(name, "id")) return pinfMake("id", "id", false, false, false, false);
+    if (eqIgnoreCase(name, "href")) return pinfMake("href", "href", false, false, false, false);
+    if (eqIgnoreCase(name, "src")) return pinfMake("src", "src", false, false, false, false);
+    if (eqIgnoreCase(name, "alt")) return pinfMake("alt", "alt", false, false, false, false);
+    if (eqIgnoreCase(name, "title")) return pinfMake("title", "title", false, false, false, false);
+    if (eqIgnoreCase(name, "style")) return pinfMake("style", "style", false, false, false, false);
+    if (eqIgnoreCase(name, "type")) return pinfMake("type", "type", false, false, false, false);
+    if (eqIgnoreCase(name, "name")) return pinfMake("name", "name", false, false, false, false);
+    if (eqIgnoreCase(name, "value")) return pinfMake("value", "value", false, false, false, false);
+    if (eqIgnoreCase(name, "role")) return pinfMake("role", "role", false, true, false, false);
 
     // ARIA attributes (aria-*)
-    if (pinfHasPrefixIgnoreCase(name, "aria-") && name.len > 5) {
-        const is_space: bool = pinfEqIgnoreCase(name, "aria-labelledby") ||
-            pinfEqIgnoreCase(name, "aria-describedby") ||
-            pinfEqIgnoreCase(name, "aria-controls") ||
-            pinfEqIgnoreCase(name, "aria-owns") ||
-            pinfEqIgnoreCase(name, "aria-flowto") ||
-            pinfEqIgnoreCase(name, "aria-relevant");
+    if (name.len > 5 && eqIgnoreCase(name[0..5], "aria-")) {
+        const is_space: bool = eqIgnoreCase(name, "aria-labelledby") ||
+            eqIgnoreCase(name, "aria-describedby") ||
+            eqIgnoreCase(name, "aria-controls") ||
+            eqIgnoreCase(name, "aria-owns") ||
+            eqIgnoreCase(name, "aria-flowto") ||
+            eqIgnoreCase(name, "aria-relevant");
         return pinfMake(name, name, false, is_space, false, false);
     }
 
     // Custom data attributes (data-*)
-    if (pinfHasPrefixIgnoreCase(name, "data-") && name.len > 5) {
+    if (name.len > 5 && eqIgnoreCase(name[0..5], "data-")) {
         return pinfMake(name, name, false, false, false, false);
     }
 

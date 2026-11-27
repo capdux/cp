@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
 export class PropInfo {
     property: string,
     attribute: string,
@@ -10,9 +11,6 @@ export class PropInfo {
     found: bool,
 }
 
-export fn pinfToLowerByte(c: u8): u8;
-export fn pinfEqIgnoreCase(a: string, b: string): bool;
-export fn pinfHasPrefixIgnoreCase(s: string, prefix: string): bool;
 export fn pinfMake(property: string, attribute: string, is_boolean: bool, is_space_separated: bool, is_comma_separated: bool, is_numeric: bool): PropInfo;
 export fn pinfNotFound(name: string): PropInfo;
 export fn pinfMatchPair(name: string, prop: string, attr: string): bool;

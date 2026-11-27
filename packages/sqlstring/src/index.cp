@@ -1,25 +1,18 @@
 // @cap/sql-escape — Zero-allocation ANSI SQL / PostgreSQL / MySQL Escaping & Identifier Guard
 // Clean-room MIT implementation in pure CP.
 
+import { isAlpha, isAlnum } from "cap:ascii";
+import { countByte, findByteInBytes } from "cap:bin";
+
 fn escapeQuoted(input: string, quote: u8, allow_empty: bool, out: []u8) -> usize {
     if (!allow_empty && input.len == 0) {
         return 0;
     }
-    let needed: usize = 2;
-    let i: usize = 0;
-    while (i < input.len) {
-        const ch = input[i];
-        if (ch == 0) {
-            // Reject embedded NUL bytes
-            return 0;
-        }
-        if (ch == quote) {
-            needed += 2;
-        } else {
-            needed += 1;
-        }
-        i += 1;
+    if (findByteInBytes(input, 0, 0) != null) {
+        // Reject embedded NUL bytes
+        return 0;
     }
+    const needed: usize = input.len + countByte(input, quote) + 2;
     if (needed > out.len) {
         return 0;
     }
@@ -27,7 +20,7 @@ fn escapeQuoted(input: string, quote: u8, allow_empty: bool, out: []u8) -> usize
     let w: usize = 0;
     out[w] = quote;
     w += 1;
-    i = 0;
+    let i: usize = 0;
     while (i < input.len) {
         const ch = input[i];
         if (ch == quote) {
@@ -101,25 +94,15 @@ pub fn escapeLike(pattern: string, escape_char: u8, out: []u8) -> usize {
     return w;
 }
 
-fn isAlphaOrUnder(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
-    return b == 95;
-}
-
-fn isIdentRest(b: u8) -> bool {
-    if (isAlphaOrUnder(b)) { return true; }
-    return b >= 48 && b <= 57;
-}
-
 /// Validates a safe unquoted SQL identifier (`[A-Za-z_][A-Za-z0-9_]*`, length 1..63).
 pub fn isSafeUnquotedIdent(ident: string) -> bool {
-    if (ident.len == 0 || ident.len > 63 || !isAlphaOrUnder(ident[0])) {
+    if (ident.len == 0 || ident.len > 63 || !(isAlpha(ident[0]) || ident[0] == '_')) {
         return false;
     }
     let i: usize = 1;
     while (i < ident.len) {
-        if (!isIdentRest(ident[i])) {
+        const ch = ident[i];
+        if (!(isAlnum(ch) || ch == '_')) {
             return false;
         }
         i += 1;

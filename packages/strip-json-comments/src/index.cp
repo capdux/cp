@@ -1,13 +1,12 @@
 // @cap/strip-json-comments — Zero-allocation JSONC comment & trailing-comma stripper for CP
 // Clean-room MIT implementation inspired by npm `strip-json-comments` (150M+/wk).
 
+import { isSpace } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+
 pub struct StripOptions {
     pub preserve_whitespace: bool,
     pub strip_trailing_commas: bool,
-}
-
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 // Look ahead past whitespace and comments after a comma to check if next token is '}' or ']'.
@@ -20,10 +19,7 @@ fn isTrailingComma(src: []const u8, commaIdx: usize) -> bool {
             continue;
         }
         if (c == '/' && i + (1 as usize) < src.len && src[i + (1 as usize)] == '/') {
-            i += 2;
-            while (i < src.len && src[i] != '\n') {
-                i += 1;
-            }
+            i = findByteInBytes(src, '\n', i + 2) ?? src.len;
             continue;
         }
         if (c == '/' && i + (1 as usize) < src.len && src[i + (1 as usize)] == '*') {

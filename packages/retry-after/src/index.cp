@@ -1,6 +1,10 @@
 // @cap/retry-after — Zero-heap RFC 9110 HTTP Retry-After Header Parser & Formatter
 // Clean-room MIT implementation in pure CP (supports delay-seconds & IMF-fixdate HTTP-date).
 
+import { trim } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { parseU64, writeStr, writeU64 } from "cap:fmt";
+
 pub const KIND_INVALID: u8 = 0;
 pub const KIND_DELAY_SECONDS: u8 = 1;
 pub const KIND_HTTP_DATE: u8 = 2;
@@ -12,52 +16,29 @@ pub struct RetryAfter {
     valid: bool,
 }
 
-fn trimSpaces(s: []const u8): []const u8 {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && (s[start] == ' ' || s[start] == '\t')) {
-        start += 1;
-    }
-    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t')) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
 fn parseUint(s: []const u8): i64 {
-    if (s.len == 0 || s.len > 15) {
+    if (s.len == 0 || s.len > 15 || s[0] == '+') {
         return -1;
     }
-    let acc: u64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        let c: u8 = s[i];
-        if (c < '0' || c > '9') {
-            return -1;
-        }
-        acc = acc * 10 + ((c - '0') as u64);
-        i += 1;
+    if (v := parseU64(s)) {
+        return v as i64;
     }
-    return acc as i64;
-}
-
-fn eq3(s: []const u8, a: u8, b: u8, c: u8): bool {
-    return s.len == 3 && s[0] == a && s[1] == b && s[2] == c;
+    return -1;
 }
 
 fn parseMonth(s: []const u8): i32 {
-    if (eq3(s, 'J', 'a', 'n')) { return 1; }
-    if (eq3(s, 'F', 'e', 'b')) { return 2; }
-    if (eq3(s, 'M', 'a', 'r')) { return 3; }
-    if (eq3(s, 'A', 'p', 'r')) { return 4; }
-    if (eq3(s, 'M', 'a', 'y')) { return 5; }
-    if (eq3(s, 'J', 'u', 'n')) { return 6; }
-    if (eq3(s, 'J', 'u', 'l')) { return 7; }
-    if (eq3(s, 'A', 'u', 'g')) { return 8; }
-    if (eq3(s, 'S', 'e', 'p')) { return 9; }
-    if (eq3(s, 'O', 'c', 't')) { return 10; }
-    if (eq3(s, 'N', 'o', 'v')) { return 11; }
-    if (eq3(s, 'D', 'e', 'c')) { return 12; }
+    if (bytesEq(s, "Jan")) { return 1; }
+    if (bytesEq(s, "Feb")) { return 2; }
+    if (bytesEq(s, "Mar")) { return 3; }
+    if (bytesEq(s, "Apr")) { return 4; }
+    if (bytesEq(s, "May")) { return 5; }
+    if (bytesEq(s, "Jun")) { return 6; }
+    if (bytesEq(s, "Jul")) { return 7; }
+    if (bytesEq(s, "Aug")) { return 8; }
+    if (bytesEq(s, "Sep")) { return 9; }
+    if (bytesEq(s, "Oct")) { return 10; }
+    if (bytesEq(s, "Nov")) { return 11; }
+    if (bytesEq(s, "Dec")) { return 12; }
     return -1;
 }
 
@@ -103,7 +84,7 @@ pub fn parseHttpDate(s: []const u8): i64 {
     if (s[3] != ',' || s[4] != ' ' || s[7] != ' ' || s[11] != ' ' || s[16] != ' ' || s[19] != ':' || s[22] != ':' || s[25] != ' ') {
         return -1;
     }
-    if (!eq3(s[26..29], 'G', 'M', 'T')) {
+    if (!bytesEq(s[26..29], "GMT")) {
         return -1;
     }
     let day: i64 = parseUint(s[5..7]);
@@ -123,7 +104,7 @@ pub fn parseHttpDate(s: []const u8): i64 {
 }
 
 pub fn parseRetryAfter(header: []const u8): RetryAfter {
-    let s: []const u8 = trimSpaces(header);
+    let s: []const u8 = trim(header);
     if (s.len == 0) {
         return RetryAfter { kind: KIND_INVALID, delay_seconds: 0, epoch_seconds: 0, valid: false };
     }
@@ -164,25 +145,9 @@ pub fn waitSeconds(ra: RetryAfter, now_epoch_sec: i64): i64 {
 
 pub fn formatDelaySeconds(seconds: u64, dst: []u8): i64 {
     let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let v: u64 = seconds;
-    if (v == 0) {
-        tmp[0] = '0';
-        n = 1;
-    } else {
-        while (v > 0) {
-            tmp[n] = ('0' as u8) + ((v % 10) as u8);
-            n += 1;
-            v = v / 10;
-        }
-    }
+    const n = writeU64(seconds, tmp[0..24], 0);
     if (dst.len < n) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = tmp[n - 1 - i];
-        i += 1;
-    }
-    return n as i64;
+    return writeStr(tmp[0..n], dst, 0) as i64;
 }

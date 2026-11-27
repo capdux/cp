@@ -1,15 +1,11 @@
 // @cap/roman-num — Zero-allocation Strict Roman Numeral (1..3999) Parser & Formatter
 // Clean-room MIT implementation in pure CP.
 
-fn toUpperAscii(b: u8) -> u8 {
-    if (b >= 97 && b <= 122) {
-        return b - 32;
-    }
-    return b;
-}
+import { eqIgnoreCase, toUpperByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 fn romanCharVal(b: u8) -> i32 {
-    const u = toUpperAscii(b);
+    const u = toUpperByte(b);
     if (u == 73) { return 1; }    // I
     if (u == 86) { return 5; }    // V
     if (u == 88) { return 10; }   // X
@@ -38,12 +34,7 @@ pub fn toRoman(num: u16, out: []u8) -> usize {
             if (w + sym.len > out.len) {
                 return 0;
             }
-            let k: usize = 0;
-            while (k < sym.len) {
-                out[w] = sym[k];
-                w += 1;
-                k += 1;
-            }
+            w = writeStr(sym, out, w);
             rem -= vals[i];
         }
         i += 1;
@@ -90,15 +81,8 @@ pub fn parseRoman(input: string) -> i32 {
     // Canonical round-trip check enforces strict Roman numeral grammar
     let canon: [16]u8 = undefined;
     const clen = toRoman(total as u16, canon[0..16]);
-    if (clen != n) {
+    if (!eqIgnoreCase(input, canon[0..clen])) {
         return -1;
-    }
-    let k: usize = 0;
-    while (k < n) {
-        if (toUpperAscii(input[k]) != canon[k]) {
-            return -1;
-        }
-        k += 1;
     }
 
     return total;

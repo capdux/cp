@@ -1,11 +1,13 @@
 // @cap/traceparent — Zero-heap W3C Trace Context (traceparent & tracestate)
 // Clean-room MIT implementation in pure CP (strict W3C Trace Context Level 1 compliance).
 
+import { hexVal } from "cap:ascii";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeHexByte } from "cap:fmt";
+
 pub const TRACEPARENT_LEN: usize = 55;
 pub const FLAG_SAMPLED: u8 = 0x01;
 pub const FLAG_RANDOM: u8 = 0x02;
-
-const HEX_LOWER: []const u8 = "0123456789abcdef";
 
 pub struct TraceParent {
     version: u8,
@@ -22,48 +24,36 @@ pub struct TraceParent {
         if (!_.valid || dst.len < TRACEPARENT_LEN) {
             return -1;
         }
-        dst[0] = HEX_LOWER[(_.version >> 4) as usize];
-        dst[1] = HEX_LOWER[(_.version & 0x0F) as usize];
-        dst[2] = '-';
+        let pos: usize = writeHexByte(_.version, false, dst, 0);
+        dst[pos] = '-';
+        pos += 1;
         let i: usize = 0;
-        while (i < 16) {
-            let b: u8 = _.trace_id[i];
-            dst[3 + i * 2] = HEX_LOWER[(b >> 4) as usize];
-            dst[3 + i * 2 + 1] = HEX_LOWER[(b & 0x0F) as usize];
-            i += 1;
+        while (i < 16) : (i += 1) {
+            pos = writeHexByte(_.trace_id[i], false, dst, pos);
         }
-        dst[35] = '-';
+        dst[pos] = '-';
+        pos += 1;
         let j: usize = 0;
-        while (j < 8) {
-            let b: u8 = _.parent_id[j];
-            dst[36 + j * 2] = HEX_LOWER[(b >> 4) as usize];
-            dst[36 + j * 2 + 1] = HEX_LOWER[(b & 0x0F) as usize];
-            j += 1;
+        while (j < 8) : (j += 1) {
+            pos = writeHexByte(_.parent_id[j], false, dst, pos);
         }
-        dst[52] = '-';
-        dst[53] = HEX_LOWER[(_.trace_flags >> 4) as usize];
-        dst[54] = HEX_LOWER[(_.trace_flags & 0x0F) as usize];
-        return TRACEPARENT_LEN as i64;
+        dst[pos] = '-';
+        pos += 1;
+        pos = writeHexByte(_.trace_flags, false, dst, pos);
+        return pos as i64;
     }
-}
-
-fn hexValLower(c: u8): i32 {
-    if (c >= '0' && c <= '9') {
-        return (c - '0') as i32;
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (c - 'a' + 10) as i32;
-    }
-    return -1;
 }
 
 fn parseHexByteLower(hi: u8, lo: u8): i32 {
-    let h: i32 = hexValLower(hi);
-    let l: i32 = hexValLower(lo);
-    if (h < 0 || l < 0) {
+    if ((hi >= 'A' && hi <= 'F') || (lo >= 'A' && lo <= 'F')) {
         return -1;
     }
-    return (h << 4) | l;
+    if (h := hexVal(hi)) {
+        if (l := hexVal(lo)) {
+            return ((h as i32) << 4) | (l as i32);
+        }
+    }
+    return -1;
 }
 
 fn invalidTraceParent(): TraceParent {
@@ -179,27 +169,14 @@ pub fn getTraceState(header: []const u8, vendor_key: []const u8): []const u8 {
     }
     let pos: usize = 0;
     while (pos < header.len) {
-        let end: usize = pos;
-        while (end < header.len && header[end] != ',') {
-            end += 1;
-        }
+        const end: usize = findByteInBytes(header, ',', pos) ?? header.len;
         let s: usize = pos;
         let e: usize = end;
         while (s < e && (header[s] == ' ' || header[s] == '\t')) { s += 1; }
         while (e > s && (header[e - 1] == ' ' || header[e - 1] == '\t')) { e -= 1; }
-        let eq: usize = s;
-        while (eq < e && header[eq] != '=') { eq += 1; }
-        if (eq < e && (eq - s) == vendor_key.len) {
-            let is_match: bool = true;
-            let k: usize = 0;
-            while (k < vendor_key.len) {
-                if (header[s + k] != vendor_key[k]) {
-                    is_match = false;
-                    break;
-                }
-                k += 1;
-            }
-            if (is_match) {
+        if (rel_eq := findByteInBytes(header[s..e], '=', 0)) {
+            const eq = s + rel_eq;
+            if (bytesEq(header[s..eq], vendor_key)) {
                 return header[eq + 1 .. e];
             }
         }
