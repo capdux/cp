@@ -56,7 +56,7 @@ pub fn endsWithBytes(haystack: []const u8, suffix: []const u8): bool {
 }
 
 /// Finds the first occurrence of `needle` in `haystack` starting at `start_pos` using 16-byte SWAR/SIMD chunking.
-pub fn findByte(haystack: []const u8, needle: u8, start_pos: usize): usize? {
+pub fn findByteInBytes(haystack: []const u8, needle: u8, start_pos: usize): usize? {
     let i = start_pos;
     // 16-byte unrolled scan
     while (i + 16 <= haystack.len) {
@@ -122,7 +122,7 @@ pub fn indexOfBytes(haystack: []const u8, needle: []const u8, start_pos: usize):
     let pos = start_pos;
     const limit = haystack.len - needle.len;
     while (pos <= limit) {
-        const hit = findByte(haystack[0..(limit + 1)], first, pos);
+        const hit = findByteInBytes(haystack[0..(limit + 1)], first, pos);
         if (hit == null) {
             return null;
         }
@@ -228,7 +228,7 @@ export {
     ctEqual,
     startsWithBytes,
     endsWithBytes,
-    findByte,
+    findByteInBytes,
     countByte,
     indexOfBytes,
     readU16BE,

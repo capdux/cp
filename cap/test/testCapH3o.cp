@@ -4,7 +4,7 @@ import {
     H3Cell,
     parseH3Hex,
     avgHexAreaKm2
-} from "../../packages/@cap/h3o/src/index.cp";
+} from "../../packages/h3o/src/index.cp";
 
 fn h3TestBufEq(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

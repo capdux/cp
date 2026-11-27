@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     BlockBuffer64,
     BlockBuffer128,
-} from "../../packages/@cap/block-buffer/src/index.cp";
+} from "../../packages/block-buffer/src/index.cp";
 
 fn main() {
     test("1. @cap/block-buffer — Multi-feed 64-byte block chunking & total_bytes tracking", () => {

@@ -1,0 +1,23 @@
+{
+  "name": "rand_distr",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap probability distribution samplers (Uniform, Normal Box-Muller, Exponential, Bernoulli, WeightedIndex) built on @cap/xoshiro256 (clean-room port of Rust rand_distr)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "rand_xoshiro": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_distr",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

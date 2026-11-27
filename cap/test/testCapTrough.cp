@@ -9,7 +9,7 @@ import {
     stageHalt,
     TroughPipeline,
     dispatchTag,
-} from "../../packages/@cap/trough/src/index.cp";
+} from "../../packages/trough/src/index.cp";
 
 fn addTen(v: i64): StageOutcome {
     return stageOk(v + 10);

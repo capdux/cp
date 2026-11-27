@@ -11,7 +11,7 @@ import {
     bisectRight,
     cumsumF64,
     binCounts,
-} from "../../packages/@cap/d3-array/src/index.cp";
+} from "../../packages/d3-array/src/index.cp";
 
 fn main() {
     test("1. @cap/d3-array — sum, mean, and extent ignore NaN", () => {

@@ -7,7 +7,7 @@ import {
     analyze,
     countWords,
     estimateReadingSeconds,
-} from "../../packages/@cap/word-count/src/index.cp";
+} from "../../packages/words-count/src/index.cp";
 
 fn main() {
     test("1. @cap/word-count — English with punctuation & contractions", () => {

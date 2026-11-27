@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Rand32, Rand64 } from "../../packages/@cap/oorandom/src/index.cp";
+import { Rand32, Rand64 } from "../../packages/oorandom/src/index.cp";
 
 fn main() {
     test("Rand32 PCG32 standard reference vector (seed=42, inc=54)", () => {

@@ -1,0 +1,29 @@
+{
+  "name": "iso8601-duration",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ISO 8601 duration parser, canonical formatter, and millisecond converter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "iso8601",
+    "duration",
+    "time",
+    "parser",
+    "formatter",
+    "openapi",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "iso8601-duration",
+    "repo": "https://github.com/tolu/ISO8601-duration",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

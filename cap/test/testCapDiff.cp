@@ -22,7 +22,7 @@ import {
     diffChars,
     formatUnifiedDiff,
     applyLineDiff,
-} from "../../packages/@cap/diff/src/index.cp";
+} from "../../packages/diff/src/index.cp";
 
 fn expectDiffLinesError(old_text: []const u8, new_text: []const u8, expected: DiffError): bool {
     * = diffLines(old_text, new_text) catch |e| {

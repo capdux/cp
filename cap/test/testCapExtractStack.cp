@@ -6,7 +6,7 @@ import {
     extractStack,
     extractStackLines,
     extractErrorHeader,
-} from "../../packages/@cap/extract-stack/src/index.cp";
+} from "../../packages/extract-stack/src/index.cp";
 
 fn main() {
     test("1. @cap/extract-stack — extracts stack frames from standard single-line Error.stack", () => {

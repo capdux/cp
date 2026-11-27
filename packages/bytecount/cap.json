@@ -1,0 +1,23 @@
+{
+  "name": "bytecount",
+  "ver": "1.0.0",
+  "description": "Zero-heap fast byte frequency counting, SWAR 4-byte parallel counter, and UTF-8 char/line counters (crates.io bytecount equivalent, reuses @cap/memchr)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "memchr": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "bytecount",
+    "repo": "https://github.com/llogiq/bytecount",
+    "license": "Apache-2.0 OR MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -14,7 +14,7 @@ import {
     integerRule,
     arrayRule,
     objectRule,
-} from "../../packages/@cap/json-schema/src/index.cp";
+} from "../../packages/ajv/src/index.cp";
 
 fn main() {
     test("1. @cap/json-schema — detectJsonType (Integer vs Number, String, Bool, Null, Array, Object)", () => {

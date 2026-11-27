@@ -1,0 +1,21 @@
+{
+  "name": "nth-check",
+  "version": "2.1.1",
+  "description": "Zero-allocation CSS :nth-child(An+B) microsyntax parser and index matcher",
+  "entry": "src/index.cp",
+  "license": "BSD-2-Clause",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "nth-check",
+    "version": "2.1.1",
+    "license": "BSD-2-Clause",
+    "repository": "https://github.com/fb55/nth-check"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

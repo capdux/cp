@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { SlabI64, SLAB_CAP } from "../../packages/@cap/slab-alloc/src/index.cp";
+import { SlabI64, SLAB_CAP } from "../../packages/slab/src/index.cp";
 
 fn main() {
     test("1. @cap/slab-alloc — insert, get, set & contains", () => {

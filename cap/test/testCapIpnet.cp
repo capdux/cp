@@ -3,7 +3,7 @@ import {
     parseIpv4,
     formatIpv4,
     Ipv4Net
-} from "../../packages/@cap/ipnet/src/index.cp";
+} from "../../packages/ipnet/src/index.cp";
 
 fn bytesEqStr(buf: []u8, len: usize, expected: string): bool {
     if (len != expected.len) {

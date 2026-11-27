@@ -1,0 +1,33 @@
+{
+  "name": "indicatif",
+  "ver": "1.0.0",
+  "desc": "Zero-heap terminal progress bar, throughput, and ETA renderer composing @cap/pretty-bytes and @cap/pretty-ms in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "pretty-bytes": "^1.0.0",
+    "pretty-ms": "^1.0.0"
+  },
+  "keywords": [
+    "indicatif",
+    "progress",
+    "progress-bar",
+    "eta",
+    "terminal",
+    "cli",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "indicatif",
+    "repo": "https://github.com/console-rs/indicatif",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

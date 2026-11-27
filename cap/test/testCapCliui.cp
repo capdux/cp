@@ -8,7 +8,7 @@ import {
     Column,
     CliUi,
     formatTwoCol,
-} from "../../packages/@cap/cliui/src/index.cp";
+} from "../../packages/cliui/src/index.cp";
 
 fn cuTestEq(actual: []const u8, expected: []const u8): bool {
     if (actual.len != expected.len) {

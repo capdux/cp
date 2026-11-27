@@ -4,7 +4,7 @@ import {
     defaultCliWidth,
     parseColumnsEnv,
     resolveCliWidth,
-} from "../../packages/@cap/cli-width/src/index.cp";
+} from "../../packages/cli-width/src/index.cp";
 
 fn main() {
     test("1. @cap/cli-width — defaultCliWidth() and parseColumnsEnv() valid inputs", () => {

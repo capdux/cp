@@ -3,7 +3,7 @@ import {
     extractExtension,
     isBinaryExtension,
     isBinaryPath,
-} from "../../packages/@cap/is-binary-path/src/index.cp";
+} from "../../packages/is-binary-path/src/index.cp";
 
 fn main() {
     test("1. @cap/is-binary-path — detects image, audio, and video paths", () => {

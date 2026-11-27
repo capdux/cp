@@ -1,0 +1,32 @@
+{
+  "name": "p-all",
+  "ver": "1.0.0",
+  "description": "Zero-allocation bounded-concurrency batch task planner (npm p-all v5 parity) powered by @cap/p-limit in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "p-all",
+    "promise",
+    "concurrency",
+    "batch",
+    "scheduler",
+    "stop-on-error",
+    "zero-alloc"
+  ],
+  "dep": {
+    "@cap/p-limit": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "p-all",
+    "repo": "https://github.com/sindresorhus/p-all",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

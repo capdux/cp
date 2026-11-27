@@ -1,0 +1,23 @@
+{
+  "name": "parseurl",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety checker for CP (clean-room parity with Express parseurl)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "querystring": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "parseurl",
+    "repo": "https://github.com/pillarjs/parseurl",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

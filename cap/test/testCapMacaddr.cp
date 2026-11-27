@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MacAddr6,
     MacAddr8
-} from "../../packages/@cap/macaddr/src/index.cp";
+} from "../../packages/macaddr/src/index.cp";
 
 fn macBufEqStr(buf: []u8, len: usize, expected: string): bool {
     if (len != expected.len) {

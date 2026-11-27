@@ -6,7 +6,7 @@ import {
     decodeI64,
     encodeZigzagVarint,
     decodeZigzagVarint,
-} from "../../packages/@cap/zigzag/src/index.cp";
+} from "../../packages/zigzag/src/index.cp";
 
 fn main() {
     test("1. @cap/zigzag — Official Protobuf ZigZag 32-bit mapping table", () => {

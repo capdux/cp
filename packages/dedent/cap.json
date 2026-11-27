@@ -1,0 +1,29 @@
+{
+  "name": "dedent",
+  "version": "1.0.0",
+  "description": "Zero-heap common leading indentation detector and dedent engine for multiline strings (compatible with npm strip-indent, dedent & Rust indoc)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "indent",
+    "dedent",
+    "strip-indent",
+    "indoc",
+    "multiline",
+    "string"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/indent-strip",
+  "source": {
+    "registry": "npm",
+    "name": "dedent",
+    "repo": "https://github.com/dmnd/dedent",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

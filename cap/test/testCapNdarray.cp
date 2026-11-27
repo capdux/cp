@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Array2D, addArrays, matmul, dotProduct } from "../../packages/@cap/ndarray/src/index.cp";
+import { Array2D, addArrays, matmul, dotProduct } from "../../packages/ndarray/src/index.cp";
 
 fn main() {
     test("1. @cap/ndarray — zeros, filled, eye & get/set bounds", () => {

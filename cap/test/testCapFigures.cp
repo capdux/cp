@@ -1,11 +1,11 @@
 import { test, expect_eq } from "cap:test";
-import { EnvInfo } from "../../packages/@cap/is-unicode-supported/src/index.cp";
+import { EnvInfo } from "../../packages/is-unicode-supported/src/index.cp";
 import {
     FigureKind,
     figureFor,
     figureForEnv,
     replaceSymbols,
-} from "../../packages/@cap/figures/src/index.cp";
+} from "../../packages/figures/src/index.cp";
 
 fn main() {
     test("1. @cap/figures — figureFor Unicode symbols", () => {

@@ -8,7 +8,7 @@ import {
     ARG_STRING,
     ParsedArgs,
     parseArgs,
-} from "../../packages/@cap/yargs-parser/src/index.cp";
+} from "../../packages/yargs-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/yargs-parser — long options (--key=val, --key val, --flag, --no-flag)", () => {

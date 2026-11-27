@@ -1,0 +1,33 @@
+{
+  "name": "slice-ansi",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ANSI-preserving terminal column slicer and truncator with CJK double-width support in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "ansi",
+    "slice-ansi",
+    "terminal",
+    "sgr",
+    "cjk",
+    "truncate",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "anstyle-parse": "1.0.0",
+    "unicode-width": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "slice-ansi",
+    "repo": "https://github.com/chalk/slice-ansi",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

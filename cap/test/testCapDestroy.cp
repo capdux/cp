@@ -3,8 +3,8 @@ import {
     DESTROY_ACTION_NONE, DESTROY_ACTION_DESTROYED,
     DESTROY_ACTION_DEFERRED_CLOSE, DESTROY_ACTION_ALREADY_DESTROYED,
     DestroyableStream, destroyStream, destroyWithError
-} from "../../packages/@cap/destroy/src/index.cp";
-import { REASON_ERROR, ListenerSlot } from "../../packages/@cap/on-finished/src/index.cp";
+} from "../../packages/destroy/src/index.cp";
+import { REASON_ERROR, ListenerSlot } from "../../packages/on-finished/src/index.cp";
 
 fn main() {
     test("1. @cap/destroy — generic stream destroy marks lifecycle closed idempotently", () => {

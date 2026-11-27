@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Decimal } from "../../packages/@cap/decimal-fixed/src/index.cp";
+import { Decimal } from "../../packages/rust_decimal/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

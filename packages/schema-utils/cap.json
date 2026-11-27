@@ -1,0 +1,21 @@
+{
+  "name": "schema-utils",
+  "version": "4.3.0",
+  "description": "Zero-heap configuration option schema validator in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "schema-utils",
+    "version": "4.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/webpack/schema-utils"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -9,7 +9,7 @@ import {
     translateLevel,
     detectColorLevel,
     detectColorSupport,
-} from "../../packages/@cap/supports-color/src/index.cp";
+} from "../../packages/supports-color/src/index.cp";
 
 fn main() {
     test("1. @cap/supports-color — CLI flags highest priority & -- terminator", () => {

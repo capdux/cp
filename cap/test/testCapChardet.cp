@@ -3,7 +3,7 @@ import {
     DetectedCharset,
     detect,
     detectName,
-} from "../../packages/@cap/chardet/src/index.cp";
+} from "../../packages/chardet/src/index.cp";
 
 fn main() {
     test("1. @cap/chardet — detects UTF-8, UTF-16LE/BE, and UTF-32 BOMs", () => {

@@ -12,7 +12,7 @@ import {
     mmFilter,
     mmNot,
     mmContains,
-} from "../../packages/@cap/micromatch/src/index.cp";
+} from "../../packages/micromatch/src/index.cp";
 
 fn main() {
     test("1. @cap/micromatch — mmFilter & mmNot batch filtering with ! negation", () => {

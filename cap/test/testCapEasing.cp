@@ -29,7 +29,7 @@ import {
     bounceOut,
     bounceInOut,
     cubicBezier,
-} from "../../packages/@cap/easing/src/index.cp";
+} from "../../packages/ezing/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff: f64 = a - b;

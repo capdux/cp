@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parsePosix,
     parseWin32,
-} from "../../packages/@cap/path-parse/src/index.cp";
+} from "../../packages/path-parse/src/index.cp";
 
 fn main() {
     test("1. @cap/path-parse — POSIX absolute file path", () => {

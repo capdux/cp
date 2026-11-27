@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { OnceGuard, OnceRegistry, ONCE_OK, ONCE_ALREADY_CALLED } from "../../packages/@cap/onetime/src/index.cp";
+import { OnceGuard, OnceRegistry, ONCE_OK, ONCE_ALREADY_CALLED } from "../../packages/onetime/src/index.cp";
 
 fn main() {
     test("1. @cap/onetime — Executes once and caches first value", () => {

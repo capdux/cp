@@ -7,7 +7,7 @@ import {
     extractExt,
     getExtForMime,
     getCharsetForMime,
-} from "../../packages/@cap/mime-guess/src/index.cp";
+} from "../../packages/mime_guess/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

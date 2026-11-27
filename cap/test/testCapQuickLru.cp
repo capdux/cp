@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { QuickLruI64 } from "../../packages/@cap/quick-lru/src/index.cp";
+import { QuickLruI64 } from "../../packages/quick-lru/src/index.cp";
 
 fn main() {
     test("1. @cap/quick-lru — set, get, has & peek basics", () => {

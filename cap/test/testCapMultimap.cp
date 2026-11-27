@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/multimap (Rust multimap parity)
 
 import { test, expect_eq } from "cap:test";
-import { MultiMapStr } from "../../packages/@cap/multimap/src/index.cp";
+import { MultiMapStr } from "../../packages/multimap/src/index.cp";
 
 fn main() {
     test("1. @cap/multimap — multi-value insert, getFirst, getLast & getNth", () => {

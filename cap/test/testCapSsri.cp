@@ -12,7 +12,7 @@ import {
     matchesIntegrity,
     formatHash,
     formatIntegrity,
-} from "../../packages/@cap/ssri/src/index.cp";
+} from "../../packages/ssri/src/index.cp";
 
 fn main() {
     test("1. @cap/ssri — Single & multi-algorithm parsing with ?options", () => {

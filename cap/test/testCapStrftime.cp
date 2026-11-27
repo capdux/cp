@@ -9,7 +9,7 @@ import {
     strftime,
     formatUnix,
     formatIso8601Utc,
-} from "../../packages/@cap/strftime/src/index.cp";
+} from "../../packages/strftime/src/index.cp";
 
 fn main() {
     test("1. @cap/strftime — Unix epoch and ISO-8601 UTC", () => {

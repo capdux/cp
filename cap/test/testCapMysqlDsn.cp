@@ -5,7 +5,7 @@ import {
     parseUri,
     parseGoDsn,
     formatUri,
-} from "../../packages/@cap/mysql-dsn/src/index.cp";
+} from "../../packages/mysql2/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

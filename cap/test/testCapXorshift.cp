@@ -6,7 +6,7 @@ import {
     XorShift128,
     XorShift64Star,
     XorShift32
-} from "../../packages/@cap/xorshift/src/index.cp";
+} from "../../packages/rand_xorshift/src/index.cp";
 
 fn main() {
     test("1. @cap/xorshift — XorShift128 determinism & official seed=[1,0,...,0] state transition", () => {

@@ -6,7 +6,7 @@ import {
     prependHttp,
     hasScheme,
     isProtocolRelative,
-} from "../../packages/@cap/prepend-http/src/index.cp";
+} from "../../packages/prepend-http/src/index.cp";
 
 fn main() {
     test("1. @cap/prepend-http — prepends https:// and http:// to bare domains and host:port", () => {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { SmartBuffer } from "../../packages/@cap/smart-buffer/src/index.cp";
+import { SmartBuffer } from "../../packages/smart-buffer/src/index.cp";
 
 fn main() {
     test("1. @cap/smart-buffer — write and read u8/u16BE/u16LE", () => {

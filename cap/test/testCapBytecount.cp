@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     count, countFast, numChars, countLines, countAsciiWhitespace, countInRange
-} from "../../packages/@cap/bytecount/src/index.cp";
+} from "../../packages/bytecount/src/index.cp";
 
 fn main() {
     test("1. @cap/bytecount — count and countFast agree across aligned & unaligned slices", () => {

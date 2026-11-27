@@ -1,0 +1,40 @@
+{
+  "name": "@jridgewell/sourcemap-codec",
+  "version": "1.0.0",
+  "description": "Zero-heap Source Map v3 Base64 VLQ (Variable-Length Quantity) signed integer sequence encoder and decoder.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "@jridgewell/sourcemap-codec",
+    "repo": "https://github.com/jridgewell/sourcemap-codec",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@jridgewell/sourcemap-codec",
+      "repo": "https://github.com/jridgewell/sourcemap-codec",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "vlq",
+      "repo": "https://github.com/fitzgen/vlq",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "vlq",
+      "repo": "https://github.com/Rich-Harris/vlq",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

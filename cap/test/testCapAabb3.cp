@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     Aabb3,
-} from "../../packages/@cap/aabb3/src/index.cp";
+} from "../../packages/parry3d/src/index.cp";
 
 fn near(a: f64, b: f64): bool {
     let d: f64 = a - b;

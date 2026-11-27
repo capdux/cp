@@ -7,7 +7,7 @@ import {
     crc64Ecma,
     crc64Xz,
     crc64Iso,
-} from "../../packages/@cap/crc64/src/index.cp";
+} from "../../packages/crc64fast/src/index.cp";
 
 fn u64From(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) << 32) | (lo as u64);

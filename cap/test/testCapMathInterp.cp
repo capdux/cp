@@ -4,7 +4,7 @@ import {
     remap, remapClamped, smoothstep, smootherstep, step,
     wrap, pingPong, degToRad, radToDeg,
     easeInQuad, easeOutQuad, easeInOutQuad, easeInCubic, easeOutCubic, easeInOutCubic
-} from "../../packages/@cap/math-interp/src/index.cp";
+} from "../../packages/lerp/src/index.cp";
 
 fn main() {
     test("lerp & inverseLerp", () => {

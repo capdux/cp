@@ -6,7 +6,7 @@ import {
     filenamify,
     filenamifyWithOptions,
     isReservedFilename,
-} from "../../packages/@cap/filenamify/src/index.cp";
+} from "../../packages/filenamify/src/index.cp";
 
 fn main() {
     test("1. @cap/filenamify — replaces illegal path/Windows characters & control bytes", () => {

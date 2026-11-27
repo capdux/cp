@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Hc128Rng } from "../../packages/@cap/rand-hc/src/index.cp";
+import { Hc128Rng } from "../../packages/rand_hc/src/index.cp";
 
 fn main() {
     test("1. @cap/rand-hc — all-zero seed determinism & known eSTREAM HC-128 first words", () => {

@@ -18,7 +18,7 @@ import {
     xchacha20HChaCha20,
     xchacha20Poly1305Encrypt,
     xchacha20Poly1305Decrypt,
-} from "../../packages/@cap/chacha20-poly1305/src/index.cp";
+} from "../../packages/chacha20poly1305/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

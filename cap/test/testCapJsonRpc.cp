@@ -15,7 +15,7 @@ import {
     encodeError,
     isValidEnvelope,
     isBatch,
-} from "../../packages/@cap/json-rpc/src/index.cp";
+} from "../../packages/jsonrpc-core/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

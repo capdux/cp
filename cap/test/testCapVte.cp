@@ -3,7 +3,7 @@ import {
     VteActionKind,
     VteEvent,
     VteParser,
-} from "../../packages/@cap/vte/src/index.cp";
+} from "../../packages/vte/src/index.cp";
 
 fn main() {
     test("1. @cap/vte — Printable characters and C0 control characters (\\r, \\n, \\t)", () => {

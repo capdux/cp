@@ -8,7 +8,7 @@ import {
     decompressBlock,
     compressWithSize,
     decompressWithSize,
-} from "../../packages/@cap/lz4-block/src/index.cp";
+} from "../../packages/lz4_flex/src/index.cp";
 
 fn main() {
     test("1. @cap/lz4-block — empty input & short inputs (< 12 bytes)", () => {

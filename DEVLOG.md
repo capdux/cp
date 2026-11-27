@@ -585,3 +585,7 @@
 ### 2026-11-27 — 生态整理 Phase 1 开发日志（L0 基座就绪）
 - 三路并行完成 `cap:ascii`/`cap:utf8`/`cap:fmt`/`cap:bin` 四大 L0 零堆标准库基座（全部 6/6 PASS），为 Phase 3 消灭 400+ 次重复手写辅助函数铺平道路。
 - 编写 `scripts/audit_ecosystem.py` 并跑出 Phase 0 基线：930 包中 `Uses cap:* stdlib = 0`、`Renamed vs source = 339`、`missing_dcp = 46`、`zh-CN = 0`、`AGENT = 0`；并提前发现 31 对同名重复包冲突，将在 Phase 2 彻底消解。
+
+### 2026-11-27 — 生态整理 Phase 2 开发日志（去 `@cap/` 化圆满落地）
+- 执行 `scripts/migrate_bare_packages.py --apply`，832 包平滑迁至原包名目录，27 对重复包彻底清零，894 文件导入路径同步更新，端到端回归 `testStdBin`/`testCapBytes`(9/9)/`testCapSemverMerged`(6/6)/`testCapChardet`/`testCapSalsa20` 与 `cap brief semver` 全部一次通过。
+- 修复 `cap:bin` 与 `cap:ascii` 的 `findByte` 同名冲突（改为 `findByteInBytes`），确保生态包可自由混用全部 L0 基座。

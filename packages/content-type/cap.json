@@ -1,0 +1,23 @@
+{
+  "name": "content-type",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7231 HTTP Content-Type header parser and formatter with quoted-string unescaping (clean-room port of content-type)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "content-type",
+    "repo": "https://github.com/jshttp/content-type",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

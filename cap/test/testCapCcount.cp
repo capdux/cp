@@ -4,7 +4,7 @@ import {
     ccount,
     longestStreakByte,
     longestStreak,
-} from "../../packages/@cap/ccount/src/index.cp";
+} from "../../packages/ccount/src/index.cp";
 
 fn main() {
     test("1. @cap/ccount — counts single-byte occurrences", () => {

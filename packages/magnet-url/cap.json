@@ -1,0 +1,29 @@
+{
+  "name": "magnet-url",
+  "version": "1.0.0",
+  "description": "Zero-heap BitTorrent Magnet URI (BEP-9 / BEP-53 btih & btmh) parser, tracker extractor, and builder for CP (compatible with npm magnet-uri & Rust magnet-url)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "magnet",
+    "bittorrent",
+    "torrent",
+    "btih",
+    "p2p",
+    "uri"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/magnet-uri",
+  "source": {
+    "registry": "crates.io",
+    "name": "magnet-url",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

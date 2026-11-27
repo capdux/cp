@@ -12,7 +12,7 @@ import {
     similarityRatio,
     formatUnifiedDiff,
     hasChanges,
-} from "../../packages/@cap/similar-diff/src/index.cp";
+} from "../../packages/similar/src/index.cp";
 
 fn bufEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     PLocateOptions,
     PLocatePlanner,
-} from "../../packages/@cap/p-locate/src/index.cp";
+} from "../../packages/p-locate/src/index.cp";
 
 fn main() {
     test("1. @cap/p-locate — rejects zero concurrency and respects defaults", () => {

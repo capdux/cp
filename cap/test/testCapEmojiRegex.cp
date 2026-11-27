@@ -6,7 +6,7 @@ import {
     countEmojis,
     containsEmoji,
     stripEmojis,
-} from "../../packages/@cap/emoji-regex/src/index.cp";
+} from "../../packages/emoji-regex/src/index.cp";
 
 fn main() {
     test("1. @cap/emoji-regex — isEmojiCodePoint covers core Unicode blocks", () => {

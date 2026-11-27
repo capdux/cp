@@ -5,7 +5,7 @@ import {
     isDynamicPattern,
     escapePath,
     convertPathToPattern
-} from "../../packages/@cap/fast-glob/src/index.cp";
+} from "../../packages/fast-glob/src/index.cp";
 
 fn main() {
     test("fast-glob: isDynamicPattern detects wildcards, braces, classes, and negation", () => {

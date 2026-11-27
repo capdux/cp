@@ -1,0 +1,20 @@
+{
+  "name": "git-url-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Git repository URL parser and normalizer (SCP SSH, HTTPS, SSH+port, hosted shorthands, GitLab nested groups) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "git-url-parse",
+    "repo": "https://github.com/tjtelan/git-url-parse-rs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

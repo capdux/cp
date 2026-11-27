@@ -1,0 +1,20 @@
+{
+  "name": "bigdecimal",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap exact base-10 financial arithmetic library with 18-digit precision, rounding, parsing, and formatting (clean-room port of Rust bigdecimal)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "bigdecimal",
+    "repo": "https://github.com/akubera/bigdecimal-rs",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

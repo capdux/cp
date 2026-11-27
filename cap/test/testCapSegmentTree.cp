@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     SegmentTree,
-} from "../../packages/@cap/segment-tree/src/index.cp";
+} from "../../packages/segment-tree/src/index.cp";
 
 fn main() {
     test("1. @cap/segment-tree — Empty tree & invalid range guards", () => {

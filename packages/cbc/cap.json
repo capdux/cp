@@ -1,0 +1,20 @@
+{
+  "name": "cbc",
+  "ver": "1.0.0",
+  "description": "Zero-allocation pure CP AES-128-CBC and AES-256-CBC block cipher mode with PKCS#7 padding (RustCrypto cbc parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "cbc",
+    "repo": "https://github.com/RustCrypto/block-modes",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

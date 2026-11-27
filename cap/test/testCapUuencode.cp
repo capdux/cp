@@ -7,7 +7,7 @@ import {
     decodeLine,
     encode,
     decode,
-} from "../../packages/@cap/uuencode/src/index.cp";
+} from "../../packages/uuencode/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

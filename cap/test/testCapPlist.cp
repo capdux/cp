@@ -4,7 +4,7 @@ import {
     PlistValue,
     plistGetDictValue,
     plistWriteDictEntry,
-} from "../../packages/@cap/plist/src/index.cp";
+} from "../../packages/plist/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

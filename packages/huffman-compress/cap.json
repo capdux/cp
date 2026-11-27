@@ -1,0 +1,20 @@
+{
+  "name": "huffman-compress",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 1951 Canonical Huffman prefix encoder & decoder with 256-symbol alphabet, 16-bit length limiting, and MSB-first bitstream framing (Rust huffman-compress parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "huffman-compress",
+    "repo": "https://github.com/sozu-proxy/huffman-compress",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

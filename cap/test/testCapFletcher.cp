@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     Fletcher16, fletcher16, fletcher16Bytes,
     fletcher32, fletcher32Bytes, fletcher64
-} from "../../packages/@cap/fletcher/src/index.cp";
+} from "../../packages/fletcher/src/index.cp";
 
 fn main() {
     test("fletcher16 standard Wikipedia vectors", () => {

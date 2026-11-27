@@ -7,7 +7,7 @@ import {
     constantTimeEq,
     verifyBearer,
     formatChallenge,
-} from "../../packages/@cap/bearer-auth/src/index.cp";
+} from "../../packages/express-bearer-token/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

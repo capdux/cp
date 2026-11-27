@@ -4,7 +4,7 @@ import {
     ERR_INVALID_SCOPE, ERR_NON_URL_SAFE, ERR_BLACKLISTED,
     WARN_UPPERCASE, WARN_SPECIAL_CHARS, WARN_CORE_MODULE,
     validatePackageName, isValidNewPackageName
-} from "../../packages/@cap/validate-npm-package-name/src/index.cp";
+} from "../../packages/validate-npm-package-name/src/index.cp";
 
 fn main() {
     test("1. @cap/validate-npm-package-name — accepts valid unscoped and scoped package names", () => {

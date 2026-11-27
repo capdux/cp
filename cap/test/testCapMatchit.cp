@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     Router,
-} from "../../packages/@cap/matchit/src/index.cp";
+} from "../../packages/matchit/src/index.cp";
 
 fn main() {
     test("1. @cap/matchit — Static route takes priority over param & catch-all regardless of insert order", () => {

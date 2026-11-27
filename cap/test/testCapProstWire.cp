@@ -20,8 +20,8 @@ import {
     encodeBytesField,
     decodeBytesField,
     skipField,
-} from "../../packages/@cap/prost-wire/src/index.cp";
-import { U64Decode } from "../../packages/@cap/varint/src/index.cp";
+} from "../../packages/google-protobuf/src/index.cp";
+import { U64Decode } from "../../packages/unsigned-varint/src/index.cp";
 
 fn sliceEq(buf: []const u8, start: usize, len: usize, expected: string): bool {
     if (len != expected.len || start + len > buf.len) {

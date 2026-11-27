@@ -11,7 +11,7 @@ import {
     encodeUpcA,
     encodeCode128B,
     encodeCode39,
-} from "../../packages/@cap/barcode/src/index.cp";
+} from "../../packages/jsbarcode/src/index.cp";
 
 fn containsSub(hay: string, needle: string) -> bool {
     if (needle.len > hay.len) {

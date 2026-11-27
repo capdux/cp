@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parseEmail,
     isValidEmail,
-} from "../../packages/@cap/email-address/src/index.cp";
+} from "../../packages/email_address/src/index.cp";
 
 fn main() {
     test("1. @cap/email-address — parses standard email with subaddressing", () => {

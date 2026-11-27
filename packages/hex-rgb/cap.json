@@ -1,0 +1,44 @@
+{
+  "name": "hex-rgb",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS hex color (#RGB, #RGBA, #RRGGBB, #RRGGBBAA) parser, formatter, Porter-Duff source-over blender, luminance, and RGB inverter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "color",
+    "hex",
+    "rgba",
+    "css",
+    "blend",
+    "porter-duff",
+    "luminance",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "hex-rgb",
+    "repo": "https://github.com/sindresorhus/hex-rgb",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "hex-rgb",
+      "repo": "https://github.com/sindresorhus/hex-rgb",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "colord",
+      "repo": "https://github.com/omgovich/colord",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

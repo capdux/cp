@@ -3,7 +3,7 @@ import {
     LicenseValidation,
     validateLicense,
     isValidNewLicense,
-} from "../../packages/@cap/validate-npm-package-license/src/index.cp";
+} from "../../packages/validate-npm-package-license/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

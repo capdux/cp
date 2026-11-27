@@ -9,7 +9,7 @@ import {
     Keccak256,
     sha3_256Hex,
     keccak256Hex,
-} from "../../packages/@cap/tiny-keccak/src/index.cp";
+} from "../../packages/tiny-keccak/src/index.cp";
 
 fn kckTestHexMatches(actual: []u8, expected: string): bool {
     if (actual.len != expected.len) {

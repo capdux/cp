@@ -1,0 +1,20 @@
+{
+  "name": "md-5",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 1321 MD5 cryptographic hash streaming implementation (Rust md-5/md5 crate parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "md-5",
+    "repo": "https://github.com/RustCrypto/hashes",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

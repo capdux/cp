@@ -1,0 +1,24 @@
+{
+  "name": "cors",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Fetch/W3C CORS origin evaluator and preflight/actual response header builder (clean-room port of npm cors)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0",
+    "wildmatch": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "cors",
+    "repo": "https://github.com/expressjs/cors",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

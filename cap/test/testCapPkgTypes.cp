@@ -5,7 +5,7 @@ import {
     parsePkgManifest,
     isValidPkgName,
     splitPkgScope,
-} from "../../packages/@cap/pkg-types/src/index.cp";
+} from "../../packages/pkg-types/src/index.cp";
 
 fn main() {
     test("1. @cap/pkg-types — parsePkgManifest extracts top-level package.json fields", () => {

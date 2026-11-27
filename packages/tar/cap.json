@@ -1,0 +1,21 @@
+{
+  "name": "tar",
+  "ver": "1.0.0",
+  "description": "Zero-heap POSIX USTAR 512-byte tar archive header codec and streaming cursor (crates.io tar equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "tar",
+    "repo": "https://github.com/alexcrichton/tar-rs",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

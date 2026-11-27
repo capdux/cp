@@ -8,7 +8,7 @@ import {
     maskCrc32c,
     unmaskCrc32c,
     Crc32cHasher
-} from "../../packages/@cap/crc32c/src/index.cp";
+} from "../../packages/crc32c/src/index.cp";
 
 fn main() {
     test("1. @cap/crc32c — RFC 3720 standard check vector 123456789 and empty input", () => {

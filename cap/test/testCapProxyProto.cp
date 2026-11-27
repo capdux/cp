@@ -19,7 +19,7 @@ import {
     encodeV1,
     parseV2,
     encodeV2Ipv4,
-} from "../../packages/@cap/proxy-proto/src/index.cp";
+} from "../../packages/proxy-protocol-js/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

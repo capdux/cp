@@ -10,7 +10,7 @@ import {
     isIdentStart,
     isValidIdent,
     scanIdentLen,
-} from "../../packages/@cap/unicode-ident/src/index.cp";
+} from "../../packages/unicode-ident/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-ident — ASCII fast path (XID_Start, XID_Continue, IdentStart)", () => {

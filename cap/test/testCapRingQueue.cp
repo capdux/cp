@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { RingQueueU64, ByteRing } from "../../packages/@cap/ring-queue/src/index.cp";
+import { RingQueueU64, ByteRing } from "../../packages/crossbeam-queue/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

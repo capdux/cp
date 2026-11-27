@@ -1,0 +1,21 @@
+{
+  "name": "space-separated-tokens",
+  "version": "2.0.2",
+  "description": "Zero-allocation HTML/SVG space-separated and comma-separated token list parser and serializer",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "space-separated-tokens",
+    "version": "2.0.2",
+    "license": "MIT",
+    "repository": "https://github.com/wooorm/space-separated-tokens"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

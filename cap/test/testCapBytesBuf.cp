@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { BytesReader, BytesMut, BYTES_MUT_CAP } from "../../packages/@cap/bytes-buf/src/index.cp";
+import { BytesReader, BytesMut, BYTES_MUT_CAP } from "../../packages/bytes/src/index.cp";
 
 fn main() {
     test("1. @cap/bytes-buf — Big-endian put/get round-trip for u8/u16/u32/u64", () => {

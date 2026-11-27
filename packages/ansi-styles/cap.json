@@ -1,0 +1,23 @@
+{
+  "name": "ansi-styles",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "ANSI escape codes for styling strings in the terminal (clean-room CP implementation of npm ansi-styles)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "color-convert": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ansi-styles",
+    "repo": "https://github.com/chalk/ansi-styles",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

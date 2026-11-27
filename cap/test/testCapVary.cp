@@ -7,7 +7,7 @@ import {
     hasField,
     append,
     appendMany,
-} from "../../packages/@cap/vary/src/index.cp";
+} from "../../packages/vary/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

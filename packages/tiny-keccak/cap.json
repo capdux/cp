@@ -1,0 +1,20 @@
+{
+  "name": "tiny-keccak",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Keccak-f[1600] sponge with SHA3-256 (FIPS 202) and Keccak-256 (Ethereum) (Rust tiny-keccak parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "tiny-keccak",
+    "repo": "https://github.com/debris/tiny-keccak",
+    "license": "CC0-1.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

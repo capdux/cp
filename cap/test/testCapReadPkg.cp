@@ -4,7 +4,7 @@ import {
     parsePackageJson,
     extractJsonStringField,
     extractJsonBoolField,
-} from "../../packages/@cap/read-pkg/src/index.cp";
+} from "../../packages/read-pkg/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

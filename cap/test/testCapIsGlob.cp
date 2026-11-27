@@ -3,7 +3,7 @@ import {
     isGlob,
     isGlobDefault,
     hasUnescapedWildcard,
-} from "../../packages/@cap/is-glob/src/index.cp";
+} from "../../packages/is-glob/src/index.cp";
 
 fn main() {
     test("1. @cap/is-glob — wildcards *, **, ? & leading negation !", () => {

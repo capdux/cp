@@ -1,0 +1,21 @@
+{
+  "name": "express-rate-limit",
+  "version": "7.5.0",
+  "description": "Zero-heap fixed-window HTTP rate limiter with IETF draft-7 RateLimit header formatting",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "express-rate-limit",
+    "version": "7.5.0",
+    "license": "MIT",
+    "repository": "https://github.com/express-rate-limit/express-rate-limit"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

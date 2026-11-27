@@ -4,7 +4,7 @@ import {
     formatCacheControl, formatStaticEtag, formatStaticContentType,
     DOTFILE_IGNORE, DOTFILE_DENY, DOTFILE_ALLOW,
     STATIC_ACTION_SERVE, STATIC_ACTION_FORBIDDEN, STATIC_ACTION_NOT_FOUND, STATIC_ACTION_METHOD_NOT_ALLOWED
-} from "../../packages/@cap/serve-static/src/index.cp";
+} from "../../packages/serve-static/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

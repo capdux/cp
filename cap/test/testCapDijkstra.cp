@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     WeightedGraph,
-} from "../../packages/@cap/dijkstra/src/index.cp";
+} from "../../packages/pathfinding/src/index.cp";
 
 fn main() {
     test("1. @cap/dijkstra — Classic directed weighted graph & path reconstruction", () => {

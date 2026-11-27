@@ -15,7 +15,7 @@ import {
     encodeVarint,
     decodeVarint,
     parseLongHeader
-} from "../../packages/@cap/quinn-varint/src/index.cp";
+} from "../../packages/quinn-proto/src/index.cp";
 
 fn bytesEq(a: []u8, b: []u8): bool {
     if (a.len != b.len) {

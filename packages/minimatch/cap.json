@@ -1,0 +1,24 @@
+{
+  "name": "minimatch",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Minimal matching utility converting glob expressions (clean-room CP implementation of npm minimatch)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "micromatch": "1.0.0",
+    "picomatch": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "minimatch",
+    "repo": "https://github.com/isaacs/minimatch",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

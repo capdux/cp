@@ -3,7 +3,7 @@ import {
     parseLanguageTag,
     formatCanonicalTag,
     matchesLanguageRange,
-} from "../../packages/@cap/language-tags/src/index.cp";
+} from "../../packages/language-tags/src/index.cp";
 
 fn main() {
     test("1. @cap/language-tags — parses basic language and region tags", () => {

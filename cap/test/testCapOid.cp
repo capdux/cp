@@ -9,7 +9,7 @@ import {
     encodeOidDer,
     decodeOidDer,
     oidName,
-} from "../../packages/@cap/oid/src/index.cp";
+} from "../../packages/const-oid/src/index.cp";
 
 fn main() {
     test("1. @cap/oid — parseOid, formatOid & oidEquals round-trip", () => {

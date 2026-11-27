@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     RIPEMD160_DIGEST_LEN, RIPEMD160_BLOCK_LEN,
     Ripemd160, ripemd160Bytes, ripemd160Hex
-} from "../../packages/@cap/ripemd160/src/index.cp";
+} from "../../packages/ripemd/src/index.cp";
 
 fn main() {
     test("1. @cap/ripemd160 — official vector: empty string", () => {

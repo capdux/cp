@@ -3,7 +3,7 @@ import {
     parseDebugId,
     formatBreakpad,
     formatCanonical,
-} from "../../packages/@cap/debugid/src/index.cp";
+} from "../../packages/debugid/src/index.cp";
 
 fn main() {
     test("1. @cap/debugid — parses Breakpad debug ID and formats canonical", () => {

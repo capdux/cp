@@ -1,0 +1,44 @@
+{
+  "name": "gl-mat3",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 3x3 row-major matrix and 2D affine transform library with built-in pure-CP sin/cos for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "mat3",
+    "matrix",
+    "affine",
+    "transform",
+    "2d",
+    "linear-algebra",
+    "graphics",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "gl-mat3",
+    "repo": "https://github.com/stackgl/gl-mat3",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "gl-mat3",
+      "repo": "https://github.com/stackgl/gl-mat3",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "cgmath",
+      "repo": "https://github.com/rustgd/cgmath",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

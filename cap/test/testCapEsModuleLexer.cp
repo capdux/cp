@@ -8,7 +8,7 @@ import {
     ExportSpecifier,
     parseEsm,
     isFacade,
-} from "../../packages/@cap/es-module-lexer/src/index.cp";
+} from "../../packages/es-module-lexer/src/index.cp";
 
 fn main() {
     test("1. @cap/es-module-lexer — static imports & side-effect imports", () => {

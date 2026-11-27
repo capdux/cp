@@ -3,7 +3,7 @@ import {
     ExportRule,
     matchSubpathPattern,
     resolveExportTarget,
-} from "../../packages/@cap/resolve-pkg-maps/src/index.cp";
+} from "../../packages/resolve-pkg-maps/src/index.cp";
 
 fn main() {
     test("1. @cap/resolve-pkg-maps — matchSubpathPattern supports exact and wildcard patterns", () => {

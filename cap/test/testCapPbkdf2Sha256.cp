@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     pbkdf2HmacSha256,
     pbkdf2Verify
-} from "../../packages/@cap/pbkdf2-sha256/src/index.cp";
+} from "../../packages/pbkdf2/src/index.cp";
 
 fn bytesEq(a: []u8, b: []u8): bool {
     if (a.len != b.len) {

@@ -1,0 +1,20 @@
+{
+  "name": "password-hash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation pure CP PHC string format parser, serializer, and constant-time comparator (RustCrypto password-hash parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "password-hash",
+    "repo": "https://github.com/RustCrypto/password-hashes",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

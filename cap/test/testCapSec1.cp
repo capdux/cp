@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/sec1 (SEC1 v2.0 & RFC 5915)
 
 import { test, expect_eq } from "cap:test";
-import { OID_PRIME256V1, ObjectIdentifier } from "../../packages/@cap/const-oid/src/index.cp";
+import { OID_PRIME256V1, ObjectIdentifier } from "../../packages/const-oid/src/index.cp";
 import {
     SEC1_IDENTITY,
     SEC1_COMPRESSED_EVEN,
@@ -21,7 +21,7 @@ import {
     decodeEcPrivateKeyDer,
     encodeEcPrivateKeyPem,
     decodeEcPrivateKeyPem,
-} from "../../packages/@cap/sec1/src/index.cp";
+} from "../../packages/sec1/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

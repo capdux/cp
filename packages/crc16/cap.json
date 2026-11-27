@@ -1,0 +1,29 @@
+{
+  "name": "crc16",
+  "version": "1.0.0",
+  "description": "Zero-heap industrial CRC-16 checksums (CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC/IBM, USB) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "crc16",
+    "modbus",
+    "xmodem",
+    "ccitt",
+    "kermit",
+    "checksum",
+    "iot"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "crc16",
+    "repo": "https://github.com/mrhooray/crc-rs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

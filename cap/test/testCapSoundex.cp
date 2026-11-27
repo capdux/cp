@@ -3,7 +3,7 @@ import {
     soundex,
     soundsLike,
     soundexDifference,
-} from "../../packages/@cap/soundex/src/index.cp";
+} from "../../packages/soundex-code/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

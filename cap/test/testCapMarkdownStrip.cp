@@ -8,7 +8,7 @@ import {
     stripMarkdownWith,
     stripToSingleLine,
     excerpt,
-} from "../../packages/@cap/markdown-strip/src/index.cp";
+} from "../../packages/remove-markdown/src/index.cp";
 
 fn main() {
     test("1. @cap/markdown-strip — ATX headings, Setext underlines & horizontal rules", () => {

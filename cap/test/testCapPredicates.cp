@@ -3,7 +3,7 @@ import {
     IntPredicate,
     StrPredicate,
     FloatPredicate,
-} from "../../packages/@cap/predicates/src/index.cp";
+} from "../../packages/predicates/src/index.cp";
 
 fn main() {
     test("1. @cap/predicates — IntPredicate basic comparisons & Always/Never", () => {

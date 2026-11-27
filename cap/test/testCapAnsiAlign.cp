@@ -8,7 +8,7 @@ import {
     alignCenter,
     alignRight,
     alignLeft,
-} from "../../packages/@cap/ansi-align/src/index.cp";
+} from "../../packages/ansi-align/src/index.cp";
 
 fn main() {
     test("1. @cap/ansi-align — alignCenter & alignRight on plain ASCII multiline text", () => {

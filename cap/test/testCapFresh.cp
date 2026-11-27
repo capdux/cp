@@ -7,7 +7,7 @@ import {
     etagStrongMatch,
     parseHttpDate,
     isFresh,
-} from "../../packages/@cap/fresh/src/index.cp";
+} from "../../packages/fresh/src/index.cp";
 
 fn main() {
     test("1. @cap/fresh — Unconditional requests & Cache-Control: no-cache invalidation", () => {

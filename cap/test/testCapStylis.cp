@@ -3,7 +3,7 @@ import {
     minifyCss,
     expandNestedSelector,
     compileNestedCss,
-} from "../../packages/@cap/stylis/src/index.cp";
+} from "../../packages/stylis/src/index.cp";
 
 fn main() {
     test("1. @cap/stylis — minifyCss strips block and line comments and collapses whitespace", () => {

@@ -18,7 +18,7 @@ import {
     isWordByte,
     extractLiteralPrefix,
     validateRegexSyntax
-} from "../../packages/@cap/regex-syntax/src/index.cp";
+} from "../../packages/regex-syntax/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

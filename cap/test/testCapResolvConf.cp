@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     defaultResolvConfig,
     parseResolvConf,
-} from "../../packages/@cap/resolv-conf/src/index.cp";
+} from "../../packages/resolv-conf/src/index.cp";
 
 fn main() {
     test("1. @cap/resolv-conf — parses nameservers, search domains, and options", () => {

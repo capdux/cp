@@ -4,7 +4,7 @@ import {
     FormatErrorOptions,
     defaultFormatErrorOptions,
     formatValidationIssues,
-} from "../../packages/@cap/zod-validation-error/src/index.cp";
+} from "../../packages/zod-validation-error/src/index.cp";
 
 fn main() {
     test("1. @cap/zod-validation-error — formats multiple issues with default options", () => {

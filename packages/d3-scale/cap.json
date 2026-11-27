@@ -1,0 +1,32 @@
+{
+  "name": "d3-scale",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-allocation D3 quantitative scales (LinearScale, PowScale, SqrtScale, LogScale, QuantizeScale) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "d3",
+    "d3-scale",
+    "scale",
+    "linear",
+    "log",
+    "pow",
+    "sqrt",
+    "quantize",
+    "visualization",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "d3-scale",
+    "repo": "https://github.com/d3/d3-scale",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

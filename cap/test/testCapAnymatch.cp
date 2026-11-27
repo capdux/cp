@@ -4,7 +4,7 @@ import {
     anymatch,
     anymatchIndex,
     countGlobPatterns,
-} from "../../packages/@cap/anymatch/src/index.cp";
+} from "../../packages/anymatch/src/index.cp";
 
 fn main() {
     test("1. @cap/anymatch — Exact path, directory prefix & Windows backslash matching", () => {

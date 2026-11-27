@@ -1,0 +1,29 @@
+{
+  "name": "@opentelemetry/core",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation W3C Baggage (OpenTelemetry) HTTP header parser, percent-codec, and serializer in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "opentelemetry",
+    "otel",
+    "baggage",
+    "w3c",
+    "tracing",
+    "distributed-tracing",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "@opentelemetry/core",
+    "repo": "https://github.com/open-telemetry/opentelemetry-js",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

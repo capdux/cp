@@ -15,7 +15,7 @@ import {
     overlaps,
     mergeCidrs,
     excludeCidr,
-} from "../../packages/@cap/cidr-tools/src/index.cp";
+} from "../../packages/cidr-tools/src/index.cp";
 
 fn main() {
     test("1. @cap/cidr-tools — parseIpv4, parseCidr4, formatCidr4 & invalid rejection", () => {

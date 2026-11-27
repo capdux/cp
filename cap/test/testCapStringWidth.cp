@@ -9,7 +9,7 @@ import {
     maxLineWidth,
     padEndVisible,
     padStartVisible,
-} from "../../packages/@cap/string-width/src/index.cp";
+} from "../../packages/string-width/src/index.cp";
 
 fn main() {
     test("1. @cap/string-width — pure ASCII and CJK (Chinese/Japanese/Korean) double-width columns", () => {

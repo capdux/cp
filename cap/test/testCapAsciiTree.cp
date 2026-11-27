@@ -7,7 +7,7 @@ import {
     TreeBuilder,
     renderTree,
     renderTreeWith,
-} from "../../packages/@cap/ascii-tree/src/index.cp";
+} from "../../packages/archy/src/index.cp";
 
 fn main() {
     test("1. @cap/ascii-tree — Unicode tree rendering with nested children", () => {

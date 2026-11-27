@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     Y18nCatalog,
     formatPrintf,
-} from "../../packages/@cap/y18n/src/index.cp";
+} from "../../packages/y18n/src/index.cp";
 
 fn y18TestEq(actual: []const u8, expected: string): bool {
     if (actual.len != expected.len) {

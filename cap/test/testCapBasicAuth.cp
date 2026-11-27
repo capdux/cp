@@ -9,7 +9,7 @@ import {
     constantTimeEq,
     verifyHeader,
     formatChallenge,
-} from "../../packages/@cap/basic-auth/src/index.cp";
+} from "../../packages/basic-auth/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

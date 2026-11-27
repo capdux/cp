@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     RetryPolicy, BackoffState, computeBackoffMs, applyJitterMs
-} from "../../packages/@cap/retry-backoff/src/index.cp";
+} from "../../packages/p-retry/src/index.cp";
 
 fn main() {
     test("1. @cap/retry-backoff — Default exponential backoff sequence (100, 200, 400, 800, 1600)", () => {

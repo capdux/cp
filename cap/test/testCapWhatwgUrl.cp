@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     WhatwgUrl,
     defaultPortForScheme
-} from "../../packages/@cap/whatwg-url/src/index.cp";
+} from "../../packages/url/src/index.cp";
 
 fn wuTestSliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

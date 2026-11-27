@@ -3,7 +3,7 @@ import {
     MinimatchOptions, minimatch, minimatchWithOptions,
     isCommentPattern, isNegatedPattern, minimatchList,
     minimatchFilterAll, minimatchRejectAll
-} from "../../packages/@cap/minimatch/src/index.cp";
+} from "../../packages/minimatch/src/index.cp";
 
 fn main() {
     test("1. @cap/minimatch — Basic globs, globstar and brace ranges", () => {

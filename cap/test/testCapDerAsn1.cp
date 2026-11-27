@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/der-asn1
 
 import { test, expect_eq } from "cap:test";
-import { ObjectIdentifier, OID_SHA256_WITH_RSA } from "../../packages/@cap/const-oid/src/index.cp";
+import { ObjectIdentifier, OID_SHA256_WITH_RSA } from "../../packages/const-oid/src/index.cp";
 import {
     TAG_BOOLEAN,
     TAG_INTEGER,
@@ -13,7 +13,7 @@ import {
     TAG_SEQUENCE,
     DerReader,
     DerWriter,
-} from "../../packages/@cap/der-asn1/src/index.cp";
+} from "../../packages/der/src/index.cp";
 
 fn derTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

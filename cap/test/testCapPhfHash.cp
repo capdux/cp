@@ -7,7 +7,7 @@ import {
     buildPhf,
     buildPhfWithSeed,
     lookupIndex,
-} from "../../packages/@cap/phf-hash/src/index.cp";
+} from "../../packages/phf_generator/src/index.cp";
 
 fn main() {
     test("1. @cap/phf-hash — 12 HTTP methods & keywords build & O(1) exact lookup", () => {

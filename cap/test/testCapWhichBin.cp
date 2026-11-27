@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     WhichIterator, isExplicitPath, countPathDirs, pathDirAt, hasPathExt
-} from "../../packages/@cap/which-bin/src/index.cp";
+} from "../../packages/which/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

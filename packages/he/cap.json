@@ -1,0 +1,19 @@
+{
+  "name": "he",
+  "ver": "1.0.0",
+  "description": "Zero-allocation HTML5 named entity & numeric character reference UTF-8 encoder/decoder and XSS escaper (he / escape-html / html-entities / Rust html-escape parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "he",
+    "repo": "https://github.com/mathiasbynens/he",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

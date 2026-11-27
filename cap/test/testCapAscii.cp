@@ -12,7 +12,7 @@ import {
     toAsciiLower,
     toAsciiUpper,
     trimAscii,
-} from "../../packages/@cap/ascii/src/index.cp";
+} from "../../packages/ascii/src/index.cp";
 
 fn main() {
     test("1. @cap/ascii — validates 7-bit ASCII and locates non-ASCII bytes", () => {

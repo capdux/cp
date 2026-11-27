@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     HbsContext,
     renderHandlebars,
-} from "../../packages/@cap/handlebars-tpl/src/index.cp";
+} from "../../packages/handlebars/src/index.cp";
 
 fn main() {
     test("1. @cap/handlebars-tpl — {{var}} HTML escaping vs {{{var}}} raw output", () => {

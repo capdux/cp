@@ -10,7 +10,7 @@ import {
     parseQueryString,
     stringifyQueryString,
     pickQueryParam,
-} from "../../packages/@cap/querystring/src/index.cp";
+} from "../../packages/querystring/src/index.cp";
 
 fn main() {
     test("1. @cap/querystring — escapeQuery & unescapeQuery via @cap/percent-encoding", () => {

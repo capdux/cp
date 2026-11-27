@@ -1,0 +1,32 @@
+{
+  "name": "handlebars",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Handlebars template engine (npm handlebars v4 parity) composing @cap/escape-html for XSS-safe rendering in CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "handlebars",
+    "template",
+    "mustache",
+    "html",
+    "xss",
+    "render",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "handlebars",
+    "repo": "https://github.com/handlebars-lang/handlebars.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

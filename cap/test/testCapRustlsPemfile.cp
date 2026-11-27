@@ -16,7 +16,7 @@ import {
     classifyPemLabel,
     isPrivateKeyKind,
     readFirstPrivateKey,
-} from "../../packages/@cap/rustls-pemfile/src/index.cp";
+} from "../../packages/rustls-pemfile/src/index.cp";
 
 fn rpfTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

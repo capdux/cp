@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     RoaringBitmap,
-} from "../../packages/@cap/roaring/src/index.cp";
+} from "../../packages/roaring/src/index.cp";
 
 fn main() {
     test("1. @cap/roaring — Empty bitmap invariants & min/max sentinel", () => {

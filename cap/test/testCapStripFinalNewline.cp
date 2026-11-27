@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     stripFinalNewline, stripAllTrailingNewlines,
     hasFinalNewline, hasFinalCrlf, ensureFinalNewline
-} from "../../packages/@cap/strip-final-newline/src/index.cp";
+} from "../../packages/strip-final-newline/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

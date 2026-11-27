@@ -1,0 +1,45 @@
+{
+  "name": "bytes",
+  "version": "1.0.0",
+  "description": "Unified zero-heap byte size parser/formatter (IEC KiB/MiB/GiB & SI KB/MB/GB) and zero-copy byte buffer cursors (BytesReader/BytesMut) for CP (superset of npm bytes & crates.io bytes)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bytes",
+    "bytesize",
+    "pretty-bytes",
+    "buffer",
+    "buf",
+    "endian",
+    "iec",
+    "si"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bytes",
+  "source": {
+    "registry": "npm",
+    "name": "bytes",
+    "repo": "https://github.com/visionmedia/bytes.js",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bytes",
+      "repo": "https://github.com/visionmedia/bytes.js",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "bytes",
+      "repo": "https://github.com/tokio-rs/bytes",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

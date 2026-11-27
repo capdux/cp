@@ -17,7 +17,7 @@ import {
     truncateDisplay,
     padCell,
     Table,
-} from "../../packages/@cap/table/src/index.cp";
+} from "../../packages/cli-table3/src/index.cp";
 
 fn main() {
     test("1. @cap/table — displayWidth (ASCII, ANSI CSI, UTF-8 & CJK)", () => {

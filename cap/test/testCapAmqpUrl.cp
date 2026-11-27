@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { AmqpConfig, parseAmqpUrl, formatAmqpUrl } from "../../packages/@cap/amqp-url/src/index.cp";
+import { AmqpConfig, parseAmqpUrl, formatAmqpUrl } from "../../packages/amqplib/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

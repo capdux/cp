@@ -12,7 +12,7 @@ import {
     tryParseI64,
     tryDivI64,
     tryChain,
-} from "../../packages/@cap/p-try/src/index.cp";
+} from "../../packages/p-try/src/index.cp";
 
 fn main() {
     test("1. @cap/p-try — tryOkInt, tryOkStr, tryErr & TryOutcome predicates", () => {

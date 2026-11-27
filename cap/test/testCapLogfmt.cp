@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { LogfmtRecord, LogfmtWriter } from "../../packages/@cap/logfmt/src/index.cp";
+import { LogfmtRecord, LogfmtWriter } from "../../packages/logfmt/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

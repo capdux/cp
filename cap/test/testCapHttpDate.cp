@@ -6,7 +6,7 @@ import {
     formatImfFixdate,
     formatUnixHttpDate,
     parseUnixSeconds,
-} from "../../packages/@cap/http-date/src/index.cp";
+} from "../../packages/httpdate/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

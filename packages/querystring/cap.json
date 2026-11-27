@@ -1,0 +1,32 @@
+{
+  "name": "querystring",
+  "ver": "1.0.0",
+  "description": "Zero-allocation URL query string parser, stringifier & parameter extractor (Node.js querystring & npm query-string v9 parity) composing @cap/percent-encoding for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "querystring",
+    "query-string",
+    "url",
+    "parse",
+    "stringify",
+    "http",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "percent-encoding": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "querystring",
+    "repo": "https://github.com/sindresorhus/query-string",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

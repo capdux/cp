@@ -1,0 +1,44 @@
+{
+  "name": "rand_chacha",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8439 ChaCha8 / ChaCha12 / ChaCha20 block function and CSPRNG for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "chacha20",
+    "chacha8",
+    "csprng",
+    "rng",
+    "rfc8439",
+    "crypto",
+    "random",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_chacha",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "rand_chacha",
+      "repo": "https://github.com/rust-random/rand",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "ppv-lite86",
+      "repo": "https://github.com/cryptocorrosion/cryptocorrosion",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

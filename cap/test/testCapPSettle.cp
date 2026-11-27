@@ -4,7 +4,7 @@ import {
     SettleStatus,
     SettledEntry,
     PSettlePlanner,
-} from "../../packages/@cap/p-settle/src/index.cp";
+} from "../../packages/p-settle/src/index.cp";
 
 fn main() {
     test("1. @cap/p-settle — Invalid concurrency=0 returns null and empty planner isAllSettled", () => {

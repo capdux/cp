@@ -19,7 +19,7 @@ import {
     decodeRsaPrivateKeyDer,
     encodeRsaPrivateKeyPem,
     decodeRsaPrivateKeyPem,
-} from "../../packages/@cap/pkcs1/src/index.cp";
+} from "../../packages/pkcs1/src/index.cp";
 
 fn pk1TestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

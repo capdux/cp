@@ -1,0 +1,41 @@
+{
+  "name": "bloom-filters",
+  "ver": "1.0.0",
+  "desc": "Zero-heap classic Bloom filter in pure CP with Kirsch-Mitzenmacher double hashing",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bloom-filter",
+    "probabilistic",
+    "set",
+    "hash",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bloom-filters",
+    "repo": "https://github.com/Callidon/bloom-filters",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bloom-filters",
+      "repo": "https://github.com/Callidon/bloom-filters",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "bloomfilter",
+      "repo": "https://github.com/jedisct1/rust-bloom-filter",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

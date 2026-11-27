@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { cleanPath, cleanJoin, isClean } from "../../packages/@cap/path-clean/src/index.cp";
+import { cleanPath, cleanJoin, isClean } from "../../packages/path-clean/src/index.cp";
 
 fn main() {
     test("empty, root, and single dot normalization", () => {

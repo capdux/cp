@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/decimal
 
 import { test, expect_eq } from "cap:test";
-import { Decimal, RoundingMode } from "../../packages/@cap/decimal/src/index.cp";
+import { Decimal, RoundingMode } from "../../packages/decimal.js/src/index.cp";
 
 fn mustParse(s: string) -> Decimal {
     return Decimal.parse(s) ?? Decimal.zero();

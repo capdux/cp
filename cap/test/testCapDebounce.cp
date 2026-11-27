@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Debouncer, Throttler } from "../../packages/@cap/debounce/src/index.cp";
+import { Debouncer, Throttler } from "../../packages/lodash.debounce/src/index.cp";
 
 fn main() {
     test("1. @cap/debounce — Standard trailing debounce coalesces burst into 1 execution", () => {

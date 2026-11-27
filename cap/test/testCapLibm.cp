@@ -8,7 +8,7 @@ import {
     sqrt, cbrt, hypot, exp, ln, log2, log10, pow,
     sin, cos, tan, asin, acos, atan, atan2,
     sinh, cosh, tanh
-} from "../../packages/@cap/libm/src/index.cp";
+} from "../../packages/libm/src/index.cp";
 
 fn approx(a: f64, b: f64, eps: f64): bool {
     return fabs(a - b) <= eps;

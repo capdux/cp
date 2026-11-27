@@ -6,7 +6,7 @@ import {
     decompressFromBase64,
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
-} from "../../packages/@cap/lz-string/src/index.cp";
+} from "../../packages/lz-string/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

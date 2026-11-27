@@ -6,7 +6,7 @@ import {
     SlotKey,
     SlotMapI64,
     SecondaryMapI64,
-} from "../../packages/@cap/slotmap/src/index.cp";
+} from "../../packages/slotmap/src/index.cp";
 
 fn main() {
     test("1. @cap/slotmap — insert, get, set, remove & basic queries", () => {

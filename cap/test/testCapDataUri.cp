@@ -9,7 +9,7 @@ import {
     encodeDataUriBase64,
     encodeDataUriText,
     isDataUri,
-} from "../../packages/@cap/data-uri/src/index.cp";
+} from "../../packages/data-uri-to-buffer/src/index.cp";
 
 fn main() {
     test("1. @cap/data-uri — Minimal data:,Hello defaults & isDataUri", () => {

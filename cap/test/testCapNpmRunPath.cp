@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     RunPathOptions, buildRunPath, dirnameOf, countAncestorDirs, pathKey
-} from "../../packages/@cap/npm-run-path/src/index.cp";
+} from "../../packages/npm-run-path/src/index.cp";
 
 fn main() {
     test("1. @cap/npm-run-path — POSIX ancestor walk prepends node_modules/.bin", () => {

@@ -8,7 +8,7 @@ import {
     Sha1Hasher,
     sha1Bytes,
     sha1Hex,
-} from "../../packages/@cap/sha1-crate/src/index.cp";
+} from "../../packages/sha1/src/index.cp";
 
 fn testHexMatches(actual: []u8, expected: string): bool {
     if (actual.len != expected.len) {

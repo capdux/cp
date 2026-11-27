@@ -5,7 +5,7 @@ import {
     matchPath,
     compilePath,
     countRouteParams,
-} from "../../packages/@cap/path-to-regexp/src/index.cp";
+} from "../../packages/path-to-regexp/src/index.cp";
 
 fn main() {
     test("1. @cap/path-to-regexp — Static segments, case sensitivity & trailing slash tolerance", () => {

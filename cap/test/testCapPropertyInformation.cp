@@ -7,7 +7,7 @@ import {
     isCommaSeparatedAttr,
     attrToDomProp,
     domPropToAttr,
-} from "../../packages/@cap/property-information/src/index.cp";
+} from "../../packages/property-information/src/index.cp";
 
 fn main() {
     test("1. @cap/property-information — bidirectional HTML/DOM name mapping (case-insensitive)", () => {

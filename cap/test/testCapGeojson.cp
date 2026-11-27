@@ -8,7 +8,7 @@ import {
     WktBbox,
     parseWkt,
     bboxWkt
-} from "../../packages/@cap/wkt/src/index.cp";
+} from "../../packages/wkt/src/index.cp";
 import {
     GeoJsonGeometry,
     GeoJsonFeature,
@@ -18,7 +18,7 @@ import {
     parseGeoJsonGeometry,
     wktToGeoJson,
     geoJsonToWkt
-} from "../../packages/@cap/geojson/src/index.cp";
+} from "../../packages/geojson/src/index.cp";
 
 fn gjTestBufEq(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

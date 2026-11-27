@@ -3,7 +3,7 @@ import {
     Ascii, UniCase, eqAscii, cmpAscii, hashAscii,
     eqUnicode, cmpUnicode, hashUnicode, caseFold,
     startsWithIgnoreCase, endsWithIgnoreCase, containsIgnoreCase
-} from "../../packages/@cap/unicase/src/index.cp";
+} from "../../packages/unicase/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

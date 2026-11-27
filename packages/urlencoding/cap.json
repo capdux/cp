@@ -1,0 +1,28 @@
+{
+  "name": "urlencoding",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 3986 percent-encoding and decoding in pure CP (modeled after Rust urlencoding v2)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "url",
+    "urlencoding",
+    "percent-encoding",
+    "rfc3986",
+    "encode",
+    "decode"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "urlencoding",
+    "repo": "https://github.com/kornelski/rust_urlencoding",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "unflatten",
+  "ver": "1.0.0",
+  "description": "Zero-allocation nested JSON flatten & unflatten library (npm flat/unflatten parity) with custom delimiter, max_depth, safe array mode, and round-trip reconstruction for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "json",
+    "flat",
+    "flatten",
+    "unflatten",
+    "nested",
+    "object",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "unflatten",
+    "repo": "https://github.com/hughsk/flat",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

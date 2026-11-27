@@ -3,7 +3,7 @@ import {
     FormatSpec,
     parseFormatSpec,
     formatNumber,
-} from "../../packages/@cap/d3-format/src/index.cp";
+} from "../../packages/d3-format/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

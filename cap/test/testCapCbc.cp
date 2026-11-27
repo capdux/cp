@@ -11,7 +11,7 @@ import {
     aes256CbcDecryptBlocks,
     aes256CbcEncryptPkcs7,
     aes256CbcDecryptPkcs7,
-} from "../../packages/@cap/cbc/src/index.cp";
+} from "../../packages/cbc/src/index.cp";
 
 fn cbcTestSlicesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

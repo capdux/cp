@@ -1,0 +1,20 @@
+{
+  "name": "simple-statistics",
+  "version": "1.0.0",
+  "description": "Zero-heap Welford online statistics, Chan parallel merge, descriptive slice stats, covariance, Pearson correlation, and linear-interpolated percentiles.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "simple-statistics",
+    "repo": "https://github.com/simple-statistics/simple-statistics",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

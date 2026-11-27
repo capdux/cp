@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     expandBraces,
     fillRange,
-} from "../../packages/@cap/braces/src/index.cp";
+} from "../../packages/braces/src/index.cp";
 
 fn main() {
     test("1. @cap/braces — Comma set expansion & empty alternatives", () => {

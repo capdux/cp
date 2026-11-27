@@ -1,0 +1,23 @@
+{
+  "name": "parse5",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap WHATWG HTML5 streaming tokenizer, attribute extractor, and text stripper (clean-room port of npm parse5)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "parse5",
+    "repo": "https://github.com/inikulin/parse5",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

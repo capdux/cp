@@ -7,7 +7,7 @@ import {
     formatSql,
     formatSqlWith,
     minifySql,
-} from "../../packages/@cap/sqlformat/src/index.cp";
+} from "../../packages/sql-formatter/src/index.cp";
 
 fn containsSub(hay: string, needle: string) -> bool {
     if (needle.len > hay.len) {

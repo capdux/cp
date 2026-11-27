@@ -7,7 +7,7 @@ import {
     QuadItem,
     QuadNode,
     QuadTree,
-} from "../../packages/@cap/quadtree-2d/src/index.cp";
+} from "../../packages/quadtree_rs/src/index.cp";
 
 fn containsId(ids: []const u32, target: u32): bool {
     let i: usize = 0;

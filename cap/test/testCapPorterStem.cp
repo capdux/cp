@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { stem, measure, sameStem } from "../../packages/@cap/porter-stem/src/index.cp";
+import { stem, measure, sameStem } from "../../packages/stemmer/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

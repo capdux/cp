@@ -18,7 +18,7 @@ import {
     parseByteSize,
     formatSi,
     formatIec,
-} from "../../packages/@cap/bytesize/src/index.cp";
+} from "../../packages/bytesize/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

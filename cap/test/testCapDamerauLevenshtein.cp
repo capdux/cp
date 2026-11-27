@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     damerauLevenshteinSteps,
     damerauLevenshtein,
-} from "../../packages/@cap/damerau-levenshtein/src/index.cp";
+} from "../../packages/damerau-levenshtein/src/index.cp";
 
 fn approx(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

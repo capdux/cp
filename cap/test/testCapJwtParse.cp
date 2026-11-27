@@ -7,7 +7,7 @@ import {
     isExpired,
     isNotYetValid,
     isAlgNone,
-} from "../../packages/@cap/jwt-parse/src/index.cp";
+} from "../../packages/jwt-decode/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -12,7 +12,7 @@ import {
     extname,
     isAbsolute,
     relative,
-} from "../../packages/@cap/pathe/src/index.cp";
+} from "../../packages/pathe/src/index.cp";
 
 fn main() {
     test("1. @cap/pathe — normalize POSIX, Windows backslashes, drive letters, and protocols", () => {

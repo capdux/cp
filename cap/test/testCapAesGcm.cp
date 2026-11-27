@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Aes128Gcm, Aes256Gcm } from "../../packages/@cap/aes-gcm/src/index.cp";
+import { Aes128Gcm, Aes256Gcm } from "../../packages/aes-gcm/src/index.cp";
 
 fn hexNib(c: u8): u8 {
     if (c >= '0' && c <= '9') { return c - '0'; }

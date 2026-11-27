@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     parseRange, rangeByteLength, RANGE_OK, RANGE_UNSATISFIABLE, RANGE_MALFORMED
-} from "../../packages/@cap/range-parser/src/index.cp";
+} from "../../packages/range-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/range-parser — Standard explicit, open-ended & suffix ranges", () => {

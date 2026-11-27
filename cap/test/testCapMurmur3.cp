@@ -6,7 +6,7 @@ import {
     Hash128,
     murmur3_32,
     murmur3_128,
-} from "../../packages/@cap/murmur3/src/index.cp";
+} from "../../packages/murmur3/src/index.cp";
 
 fn main() {
     test("1. @cap/murmur3 — official MurmurHash3 32-bit reference vectors", () => {

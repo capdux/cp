@@ -3,7 +3,7 @@ import {
     isPcenChar,
     isReservedCustomElementName,
     isPotentialCustomElementName,
-} from "../../packages/@cap/is-potential-custom-element-name/src/index.cp";
+} from "../../packages/is-potential-custom-element-name/src/index.cp";
 
 fn main() {
     test("1. @cap/is-potential-custom-element-name — accepts standard valid custom element names", () => {

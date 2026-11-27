@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { RelPath, normalizeRelPath, joinRelPath, relativeTo } from "@cap/relative-path";
+import { RelPath, normalizeRelPath, joinRelPath, relativeTo } from "relative-path";
 
 fn main() {
     test("1. @cap/relative-path — fromStr converts backslashes, strips leading/trailing slashes", () => {

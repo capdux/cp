@@ -1,0 +1,29 @@
+{
+  "name": "ngeohash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Geohash Base32 spatial coordinate encoder, decoder, and bounding box library for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "geohash",
+    "geo",
+    "spatial",
+    "base32",
+    "coordinates",
+    "bounds",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ngeohash",
+    "repo": "https://github.com/sunng87/node-geohash",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

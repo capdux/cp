@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     isMappedToNothing, isNonAsciiSpace, isSaslProhibited,
     saslprep, nameprepAscii
-} from "../../packages/@cap/stringprep/src/index.cp";
+} from "../../packages/stringprep/src/index.cp";
 
 fn eqBuf(buf: []u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -1,0 +1,23 @@
+{
+  "name": "css-select",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap CSS selector parser, W3C Selectors Level 4 specificity calculator, and compound/list element matcher (clean-room port of css-select + css-what)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "css-select",
+    "repo": "https://github.com/fb55/css-select",
+    "license": "BSD-2-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

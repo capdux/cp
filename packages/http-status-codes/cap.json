@@ -1,0 +1,19 @@
+{
+  "name": "http-status-codes",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9110, WebDAV, and Cloudflare HTTP status code constants, bidirectional phrase lookup, and semantic predicates for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "http-status-codes",
+    "repo": "https://github.com/prettymuchbryce/http-status-codes",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

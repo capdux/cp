@@ -4,7 +4,7 @@ import {
     jaroWinkler,
     jaroWinklerWithScale,
     bestMatchIndex,
-} from "../../packages/@cap/jaro-winkler/src/index.cp";
+} from "../../packages/jaro-winkler/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

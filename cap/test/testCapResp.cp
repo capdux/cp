@@ -18,7 +18,7 @@ import {
     encodeBulkString,
     encodeInteger,
     encodeNull,
-} from "../../packages/@cap/resp/src/index.cp";
+} from "../../packages/resp/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

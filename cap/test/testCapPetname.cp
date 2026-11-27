@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/petname
 
 import { test, expect_eq } from "cap:test";
-import { Petname, petnameFromSeed, subdomainFromSeed } from "../../packages/@cap/petname/src/index.cp";
+import { Petname, petnameFromSeed, subdomainFromSeed } from "../../packages/unique-names-generator/src/index.cp";
 
 fn countChar(s: string, ch: u8) -> usize {
     let n: usize = 0;

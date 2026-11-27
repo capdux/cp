@@ -1,0 +1,31 @@
+{
+  "name": "p-locate",
+  "ver": "1.0.0",
+  "description": "Zero-allocation bounded-concurrency ordered/unordered locator planner (npm p-locate v7 equivalent) for CP, reusing @cap/p-limit.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "p-limit": "1.0.0"
+  },
+  "keywords": [
+    "p-locate",
+    "locate",
+    "concurrency",
+    "promise",
+    "planner",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "p-locate",
+    "repo": "https://github.com/sindresorhus/p-locate",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

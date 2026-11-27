@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { EjsContext, renderEjs } from "../../packages/@cap/ejs-tpl/src/index.cp";
+import { EjsContext, renderEjs } from "../../packages/ejs/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

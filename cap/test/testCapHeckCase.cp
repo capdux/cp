@@ -11,7 +11,7 @@ import {
     toShoutyKebabCase,
     toTitleCase,
     toTrainCase,
-} from "../../packages/@cap/heck-case/src/index.cp";
+} from "../../packages/heck/src/index.cp";
 
 fn bufEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

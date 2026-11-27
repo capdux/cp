@@ -7,7 +7,7 @@ import {
     parseOciRef,
     formatCanonical,
     isPinned,
-} from "../../packages/@cap/oci-ref/src/index.cp";
+} from "../../packages/oci-distribution/src/index.cp";
 
 fn main() {
     test("1. @cap/oci-ref — bare Docker Hub official image", () => {

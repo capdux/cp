@@ -8,7 +8,7 @@ import {
     percentile,
     median,
     iqr,
-} from "../../packages/@cap/online-stats/src/index.cp";
+} from "../../packages/average/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     const diff = if (a > b) { a - b } else { b - a };

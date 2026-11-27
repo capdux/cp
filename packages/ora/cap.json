@@ -1,0 +1,23 @@
+{
+  "name": "ora",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap CLI terminal spinner animation and status line renderer (clean-room port of ora v8)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "ansi-escapes": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ora",
+    "repo": "https://github.com/sindresorhus/ora",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

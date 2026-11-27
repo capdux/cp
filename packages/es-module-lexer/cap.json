@@ -1,0 +1,20 @@
+{
+  "name": "es-module-lexer",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ES module static/dynamic import and export lexer for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "es-module-lexer",
+    "repo": "https://github.com/guybedford/es-module-lexer",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

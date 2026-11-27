@@ -1,0 +1,31 @@
+{
+  "name": "ansi-regex",
+  "version": "1.0.0",
+  "description": "Zero-heap ANSI escape sequence matcher & locator reusing @cap/anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "anstyle-parse": "^1.0.0"
+  },
+  "keywords": [
+    "ansi-regex",
+    "ansi",
+    "escape",
+    "vt100",
+    "terminal",
+    "strip-ansi"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ansi-regex",
+    "repo": "https://github.com/chalk/ansi-regex",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

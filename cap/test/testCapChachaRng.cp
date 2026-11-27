@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     chachaBlock,
     ChaCha20Rng,
-} from "../../packages/@cap/chacha-rng/src/index.cp";
+} from "../../packages/rand_chacha/src/index.cp";
 
 fn main() {
     test("1. @cap/chacha-rng — RFC 8439 Section 2.3.2 official 20-round test vector", () => {

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     BloomFilter1024,
     BloomFilter4096,
-} from "../../packages/@cap/bloom/src/index.cp";
+} from "../../packages/fastbloom/src/index.cp";
 
 fn main() {
     test("1. @cap/bloom — Basic string insert, zero false negatives & clear", () => {

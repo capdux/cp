@@ -6,7 +6,7 @@ import {
     toPositive,
     partitionForKey,
     parseTopicPartition,
-} from "../../packages/@cap/kafka-topic/src/index.cp";
+} from "../../packages/kafkajs/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

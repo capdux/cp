@@ -7,7 +7,7 @@ import {
     writeIntRadix,
     writeFloatFixed,
     writeFloatSci,
-} from "../../packages/@cap/lexical-write-float/src/index.cp";
+} from "../../packages/lexical-write-float/src/index.cp";
 
 fn lexwTestEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

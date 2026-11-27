@@ -9,7 +9,7 @@ import {
     validateExpression,
     isPermissiveOnly,
     satisfies,
-} from "../../packages/@cap/spdx/src/index.cp";
+} from "../../packages/spdx/src/index.cp";
 
 fn main() {
     test("1. @cap/spdx — lookupLicense metadata & OSI approval across categories", () => {

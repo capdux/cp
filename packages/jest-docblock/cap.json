@@ -1,0 +1,21 @@
+{
+  "name": "jest-docblock",
+  "version": "29.7.0",
+  "description": "Zero-heap top-of-file docblock pragma extractor, parser, and formatter",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "jest-docblock",
+    "version": "29.7.0",
+    "license": "MIT",
+    "repository": "https://github.com/jestjs/jest"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

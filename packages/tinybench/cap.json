@@ -1,0 +1,21 @@
+{
+  "name": "tinybench",
+  "version": "3.2.0",
+  "description": "Zero-heap micro-benchmark statistics engine (mean, ops/sec, min/max, p50/p75/p95/p99, stddev, RME)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "tinybench",
+    "version": "3.2.0",
+    "license": "MIT",
+    "repository": "https://github.com/tinylibs/tinybench"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

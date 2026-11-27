@@ -1414,3 +1414,9 @@
 - 新增内置标准库通道 `cap:bin`（`lib/bin/index.cp` + `doc/lib/bin.md` + `cap/test/testStdBin.cp`, 6/6 PASS）
 - 新增生态自动化体检与门禁脚本 `scripts/audit_ecosystem.py`
 - 更新 `cp_lib_ref.md` 与 `cp_agent_lib_ref.md`（内置标准库增至 **208 通道**）。
+
+### 2026-11-27 — 生态整理 Phase 2（去 `@cap/` 域裸包名迁移 + 双平台重名超集合并 + `cap brief`）
+- 迁移 **832 个** npm/crates.io 吸收包至原包名目录 `packages/<orig>/`（含 8 个 `@scope/pkg`），保留 39 个原生 C/C++ 包在 `packages/@cap/`、33 个 Web 插件在 `packages/@web/`，总计 **904 个零重复包**
+- 消解并合并 **27 对重复包**（含 `bytes` 与 `semver` 完整双平台超集合并，均 100% PASS），更新 894 个测试与互依赖导入路径，`registry.json` 不保留旧 `@cap/<old>` 别名并新增 `types`/`agent_doc`/`readme`/`readme_zh` 导航字段
+- 更新 `cpc/src/resolver.rs` 支持裸包名与 Rust `_`/`-` 双向等价解析；新增 `cap/src/brief.zig` 与 `cap brief <pkg>` AI-First 速查命令；修复 `cap:bin` 导出 `findByteInBytes` 避免与 `cap:ascii` 冲突
+- 更新 `scripts/gen_agent_lib_ref.py` 与 `cp_agent_lib_ref.md`（压缩至 **38.3KB**，-90.7%），新增 `scripts/gen_pkg_docs.py`。

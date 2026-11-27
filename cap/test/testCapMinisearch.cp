@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { SearchHit, MiniSearch } from "../../packages/@cap/minisearch/src/index.cp";
+import { SearchHit, MiniSearch } from "../../packages/lunr/src/index.cp";
 
 fn main() {
     test("1. @cap/minisearch — Empty index queries return 0", () => {

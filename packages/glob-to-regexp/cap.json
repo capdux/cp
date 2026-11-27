@@ -1,0 +1,29 @@
+{
+  "name": "glob-to-regexp",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation POSIX/glob wildcard to ECMAScript/PCRE regular expression converter with extended & globstar modes in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "glob",
+    "glob-to-regexp",
+    "regex",
+    "regexp",
+    "globstar",
+    "wildcard",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "glob-to-regexp",
+    "repo": "https://github.com/fitzgen/glob-to-regexp",
+    "license": "BSD-2-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     typeIs, typeMatches, normalizeTypePattern, hasBody
-} from "../../packages/@cap/type-is/src/index.cp";
+} from "../../packages/type-is/src/index.cp";
 
 fn main() {
     test("1. @cap/type-is — Exact & shorthand extension matching via @cap/mime-types", () => {

@@ -1,0 +1,23 @@
+{
+  "name": "@paralleldrive/cuid2",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap collision-resistant, URL-safe, lowercase CUID2 ID generator and validator (clean-room port of npm @paralleldrive/cuid2)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@sindresorhus/fnv1a": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "@paralleldrive/cuid2",
+    "repo": "https://github.com/paralleldrive/cuid2",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

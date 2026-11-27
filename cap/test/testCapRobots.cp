@@ -6,7 +6,7 @@ import {
     isAllowed,
     crawlDelay,
     firstSitemap,
-} from "../../packages/@cap/robots/src/index.cp";
+} from "../../packages/robots-parser/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

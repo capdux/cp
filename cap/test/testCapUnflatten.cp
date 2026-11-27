@@ -8,7 +8,7 @@ import {
     flattenJson,
     flattenToJson,
     unflattenJson,
-} from "../../packages/@cap/unflatten/src/index.cp";
+} from "../../packages/unflatten/src/index.cp";
 
 fn main() {
     test("1. @cap/unflatten — nested object flattenJson & flattenToJson", () => {

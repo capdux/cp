@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { IcalEvent, IcalWriter, parseFirstEvent, unescapeText } from "../../packages/@cap/ical/src/index.cp";
+import { IcalEvent, IcalWriter, parseFirstEvent, unescapeText } from "../../packages/ical-generator/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

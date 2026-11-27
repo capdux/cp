@@ -9,7 +9,7 @@ import {
     stripMargin,
     normalizeNewlines,
     trimBlankLines,
-} from "../../packages/@cap/indoc/src/index.cp";
+} from "../../packages/indoc/src/index.cp";
 
 fn main() {
     test("1. @cap/indoc — Standard multiline dedent with outer blank lines & nested indent", () => {

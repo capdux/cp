@@ -10,7 +10,7 @@ import {
     LOCALE_ERR_INVALID_SUBTAG,
     LOCALE_ERR_DUPLICATE_VARIANT,
     LanguageIdentifier,
-} from "../../packages/@cap/icu-locid/src/index.cp";
+} from "../../packages/icu_locid/src/index.cp";
 
 fn locTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

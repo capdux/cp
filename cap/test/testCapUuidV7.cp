@@ -9,7 +9,7 @@ import {
     parse,
     isValidUuidV7,
     compare,
-} from "../../packages/@cap/uuid-v7/src/index.cp";
+} from "../../packages/uuidv7/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -1,0 +1,21 @@
+{
+  "name": "has-flag",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Check if CLI argv contains a specific flag (clean-room CP implementation of npm has-flag)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "has-flag",
+    "repo": "https://github.com/sindresorhus/has-flag",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

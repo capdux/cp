@@ -4,7 +4,7 @@ import {
     isValidRkey,
     parseAtUri,
     formatAtUri,
-} from "../../packages/@cap/at-uri/src/index.cp";
+} from "../../packages/@atproto/syntax/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

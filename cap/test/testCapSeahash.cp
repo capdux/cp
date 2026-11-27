@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     seahashDiffuse, SeaHasher, seahashBytes, seahashSeeded
-} from "../../packages/@cap/seahash/src/index.cp";
+} from "../../packages/seahash/src/index.cp";
 
 fn main() {
     test("1. @cap/seahash — seahashDiffuse bijective avalanche properties", () => {

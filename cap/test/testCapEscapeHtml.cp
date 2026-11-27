@@ -4,7 +4,7 @@ import {
     escapedHtmlLen,
     needsHtmlEscape,
     unescapeHtml,
-} from "../../packages/@cap/escape-html/src/index.cp";
+} from "../../packages/escape-html/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

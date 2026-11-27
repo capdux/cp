@@ -8,7 +8,7 @@ import {
     isMatchWithOptions,
     isMatchAny,
     scanBase,
-} from "../../packages/@cap/picomatch/src/index.cp";
+} from "../../packages/picomatch/src/index.cp";
 
 fn main() {
     test("1. @cap/picomatch — basic *, ?, multi-segment & Windows backslash normalization", () => {

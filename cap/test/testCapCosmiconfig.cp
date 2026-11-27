@@ -12,7 +12,7 @@ import {
     detectLoader,
     formatSearchPlace,
     buildCandidatePath
-} from "../../packages/@cap/cosmiconfig/src/index.cp";
+} from "../../packages/cosmiconfig/src/index.cp";
 
 fn main() {
     test("cosmiconfig: detectLoader classifies package.json, json, yaml, js, and rc files", () => {

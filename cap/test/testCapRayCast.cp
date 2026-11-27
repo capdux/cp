@@ -8,7 +8,7 @@ import {
     raySphere,
     rayTriangle,
     raySegment2D,
-} from "../../packages/@cap/ray-cast/src/index.cp";
+} from "../../packages/parry3d/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

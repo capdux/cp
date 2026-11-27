@@ -8,7 +8,7 @@ import {
     formatContentDisposition,
     decodeFilenameStar,
     sanitizeFilename
-} from "../../packages/@cap/content-disposition/src/index.cp";
+} from "../../packages/content-disposition/src/index.cp";
 
 fn main() {
     test("1. parseContentDisposition — attachment with filename and filename*", () => {

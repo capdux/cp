@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/ini (npm ini / rust-ini parity)
 
 import { test, expect_eq } from "cap:test";
-import { IniDoc, IniWriter } from "../../packages/@cap/ini/src/index.cp";
+import { IniDoc, IniWriter } from "../../packages/ini/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

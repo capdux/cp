@@ -6,7 +6,7 @@ import {
     BUMP_CAPACITY,
     BumpSlice,
     BumpArena,
-} from "../../packages/@cap/bumpalo/src/index.cp";
+} from "../../packages/bumpalo/src/index.cp";
 
 fn main() {
     test("1. @cap/bumpalo — initial state, allocBytes, readByte & writeByte", () => {

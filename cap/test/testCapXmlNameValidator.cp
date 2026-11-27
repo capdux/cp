@@ -6,7 +6,7 @@ import {
     isValidXmlName,
     isValidNCName,
     isValidQName,
-} from "../../packages/@cap/xml-name-validator/src/index.cp";
+} from "../../packages/xml-name-validator/src/index.cp";
 
 fn main() {
     test("1. @cap/xml-name-validator — isXmlChar boundaries (XML 1.0 §2.2)", () => {

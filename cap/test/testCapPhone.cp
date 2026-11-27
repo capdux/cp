@@ -9,7 +9,7 @@ import {
     countryCodeFromIso2,
     iso2FromCountryCode,
     supportedCountryCount,
-} from "../../packages/@cap/phone/src/index.cp";
+} from "../../packages/libphonenumber-js/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

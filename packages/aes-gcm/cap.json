@@ -1,0 +1,24 @@
+{
+  "name": "aes-gcm",
+  "ver": "1.0.0",
+  "description": "Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM AEAD authenticated encryption composing @cap/aes and @cap/ghash-gf128 (RustCrypto aes-gcm parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "Apache-2.0 OR MIT",
+  "dep": {
+    "@cap/aes": "1.0.0",
+    "@cap/ghash-gf128": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "aes-gcm",
+    "repo": "https://github.com/RustCrypto/AEADs",
+    "license": "Apache-2.0 OR MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

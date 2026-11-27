@@ -3,7 +3,7 @@ import {
     Point2, Point3, Vector2, Vector3, Vector4,
     Quaternion, EulerAngles, RowMatrix2, RowMatrix3, RowMatrix4, ColumnMatrix4,
     point3ToVector3, vector3ToPoint3
-} from "../../packages/@cap/mint/src/index.cp";
+} from "../../packages/mint/src/index.cp";
 
 fn main() {
     test("1. @cap/mint — Point2/Point3 conversions & array views", () => {

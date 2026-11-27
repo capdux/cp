@@ -3,7 +3,7 @@ import {
     SubmitResult,
     CompleteResult,
     PLimit,
-} from "../../packages/@cap/p-limit/src/index.cp";
+} from "../../packages/p-limit/src/index.cp";
 
 fn main() {
     test("1. @cap/p-limit — Strict concurrency cap and FIFO queueing", () => {

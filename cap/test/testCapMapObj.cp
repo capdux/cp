@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MAP_OBJ_MAX_ENTRIES, MapObjResult,
     swapKeysAndValues, pickKeys, omitKeys, filterEmptyValues, mergeObjects
-} from "../../packages/@cap/map-obj/src/index.cp";
+} from "../../packages/map-obj/src/index.cp";
 
 fn main() {
     test("1. @cap/map-obj — MapObjResult push & get basics", () => {

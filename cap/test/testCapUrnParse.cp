@@ -5,7 +5,7 @@ import {
     parseUrn,
     urnEquivalent,
     formatUrn,
-} from "../../packages/@cap/urn-parse/src/index.cp";
+} from "../../packages/urn-lib/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

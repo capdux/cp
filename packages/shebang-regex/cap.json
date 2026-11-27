@@ -1,0 +1,28 @@
+{
+  "name": "shebang-regex",
+  "version": "1.0.0",
+  "description": "Zero-allocation shebang (#!) line matcher and stripper for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "shebang",
+    "shebang-regex",
+    "hashbang",
+    "cli",
+    "spawn",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "shebang-regex",
+    "repo": "https://github.com/sindresorhus/shebang-regex",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

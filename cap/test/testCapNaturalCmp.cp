@@ -7,7 +7,7 @@ import {
     compareNaturalIgnoreCase,
     isSortedNatural,
     sortNatural,
-} from "../../packages/@cap/natural-cmp/src/index.cp";
+} from "../../packages/natord/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

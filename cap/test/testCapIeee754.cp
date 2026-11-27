@@ -10,7 +10,7 @@ import {
     writeF64Be,
     readIeee754,
     writeIeee754,
-} from "../../packages/@cap/ieee754/src/index.cp";
+} from "../../packages/ieee754/src/index.cp";
 
 fn main() {
     test("1. @cap/ieee754 — f32 little-endian exact bit representation (42.0 = 0x42280000)", () => {

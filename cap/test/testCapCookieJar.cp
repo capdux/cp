@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     CookieJar, parseSetCookie, serializeSetCookie, getCookieHeaderValue,
     domainMatches, pathMatches, SAMESITE_STRICT, SAMESITE_LAX
-} from "../../packages/@cap/cookie-jar/src/index.cp";
+} from "../../packages/tough-cookie/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

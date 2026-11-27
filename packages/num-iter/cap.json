@@ -1,0 +1,23 @@
+{
+  "name": "num-iter",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap stepped numeric range iterators for signed and unsigned 64-bit integers with overflow-safe inclusive/exclusive bounds (clean-room port of Rust num-iter)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "num-integer": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "num-iter",
+    "repo": "https://github.com/rust-num/num-iter",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

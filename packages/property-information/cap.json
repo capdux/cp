@@ -1,0 +1,21 @@
+{
+  "name": "property-information",
+  "version": "6.5.0",
+  "description": "Zero-allocation HTML/SVG attribute and DOM property name mapping table",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "property-information",
+    "version": "6.5.0",
+    "license": "MIT",
+    "repository": "https://github.com/wooorm/property-information"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

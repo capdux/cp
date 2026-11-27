@@ -16,7 +16,7 @@ import {
     ctrIncLe128,
     xorBlock,
     wipeBlock,
-} from "../../packages/@cap/block-padding/src/index.cp";
+} from "../../packages/block-padding/src/index.cp";
 
 fn bpTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -6,7 +6,7 @@ import {
     formatContentType,
     isValidMediaType,
     unescapeQuotedString,
-} from "../../packages/@cap/content-type/src/index.cp";
+} from "../../packages/content-type/src/index.cp";
 
 fn main() {
     test("1. @cap/content-type — isValidMediaType validation", () => {

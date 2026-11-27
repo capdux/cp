@@ -6,7 +6,7 @@ import {
     encodeBytes,
     decodeBytes,
     isValidBase62,
-} from "../../packages/@cap/base62/src/index.cp";
+} from "../../packages/base62/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

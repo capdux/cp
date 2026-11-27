@@ -1,0 +1,29 @@
+{
+  "name": "mime-types",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap MIME type, file extension, charset, Content-Type, and compressibility resolver in pure CP (clean-room MIT counterpart to npm mime-types v2.1).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "mime",
+    "mime-types",
+    "content-type",
+    "charset",
+    "http",
+    "compressible",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "mime-types",
+    "repo": "https://github.com/jshttp/mime-types",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

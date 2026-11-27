@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     redent,
     redentWithIndent,
-} from "../../packages/@cap/redent/src/index.cp";
+} from "../../packages/redent/src/index.cp";
 
 fn main() {
     test("1. @cap/redent — strips common indent when count is 0", () => {

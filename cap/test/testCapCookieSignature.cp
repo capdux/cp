@@ -6,7 +6,7 @@ import {
     ctEqual,
     sign,
     unsign,
-} from "../../packages/@cap/cookie-signature/src/index.cp";
+} from "../../packages/cookie-signature/src/index.cp";
 
 fn bytesEqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

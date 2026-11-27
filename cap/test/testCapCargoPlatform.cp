@@ -5,7 +5,7 @@ import {
     CfgEvalResult,
     parseTargetTriple,
     evalCfgExpr,
-} from "../../packages/@cap/cargo-platform/src/index.cp";
+} from "../../packages/cargo-platform/src/index.cp";
 
 fn sliceEq(src: string, start: usize, len: usize, expected: string): bool {
     if (len != expected.len || start + len > src.len) {

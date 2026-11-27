@@ -7,7 +7,7 @@ import {
     uncompressedLen,
     compress,
     decompress,
-} from "../../packages/@cap/snappy-block/src/index.cp";
+} from "../../packages/snap/src/index.cp";
 
 fn main() {
     test("1. @cap/snappy-block — empty input & short input round-trip", () => {

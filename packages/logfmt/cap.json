@@ -1,0 +1,30 @@
+{
+  "name": "logfmt",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation logfmt structured key=value log parser and writer (Heroku/Grafana Loki/Kubernetes) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "logfmt",
+    "logging",
+    "structured-logs",
+    "loki",
+    "heroku",
+    "parser",
+    "writer",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "logfmt",
+    "repo": "https://github.com/csquared/node-logfmt",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

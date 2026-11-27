@@ -17,7 +17,7 @@ import {
     decodePem,
     decodeLabel,
     locatePem,
-} from "../../packages/@cap/pem-rfc7468/src/index.cp";
+} from "../../packages/pem-rfc7468/src/index.cp";
 
 fn pemEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

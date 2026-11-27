@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { hasFlag, findFlagIndex, getFlagValue, isFlagEnabled } from "../../packages/@cap/has-flag/src/index.cp";
+import { hasFlag, findFlagIndex, getFlagValue, isFlagEnabled } from "../../packages/has-flag/src/index.cp";
 
 fn main() {
     test("1. @cap/has-flag — Long and short flags with auto-prefix", () => {

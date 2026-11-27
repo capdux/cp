@@ -18,7 +18,7 @@ import {
     tokenize,
     highlightAnsi,
     highlightHtml,
-} from "../../packages/@cap/syntax-highlight/src/index.cp";
+} from "../../packages/highlight.js/src/index.cp";
 
 fn containsSlice(hay: []const u8, needle: string) -> bool {
     if (needle.len == (0 as usize)) { return true; }

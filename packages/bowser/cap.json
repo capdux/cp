@@ -1,0 +1,28 @@
+{
+  "name": "bowser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation User-Agent parser for browser, OS, engine, and platform detection (npm bowser parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "bowser",
+    "user-agent",
+    "browser",
+    "os",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bowser",
+    "repo": "https://github.com/bowser-js/bowser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

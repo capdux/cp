@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     SseParser,
-} from "../../packages/@cap/sse-parse/src/index.cp";
+} from "../../packages/eventsource-parser/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

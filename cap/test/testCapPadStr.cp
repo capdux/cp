@@ -5,7 +5,7 @@ import {
     padEnd,
     padCenter,
     repeatStr,
-} from "../../packages/@cap/pad-str/src/index.cp";
+} from "../../packages/pad/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

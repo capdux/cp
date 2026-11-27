@@ -3,7 +3,7 @@ import {
     toRegexRange,
     matchNumericRange,
     countDigits,
-} from "../../packages/@cap/to-regex-range/src/index.cp";
+} from "../../packages/to-regex-range/src/index.cp";
 
 fn eqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

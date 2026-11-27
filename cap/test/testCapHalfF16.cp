@@ -6,7 +6,7 @@ import {
     bitsToF32,
     f32SliceToF16,
     f16SliceToF32,
-} from "../../packages/@cap/half-f16/src/index.cp";
+} from "../../packages/half/src/index.cp";
 
 fn absF32(x: f32): f32 {
     return if (x < 0.0) -x else x;

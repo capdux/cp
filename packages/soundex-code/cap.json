@@ -1,0 +1,43 @@
+{
+  "name": "soundex-code",
+  "version": "1.0.0",
+  "description": "Zero-heap American Soundex phonetic algorithm encoder and phonetic match engine for CP (compatible with npm soundex-code & Rust rphonetic)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "soundex",
+    "phonetic",
+    "fuzzy",
+    "search",
+    "nlp",
+    "name-matching"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/soundex",
+  "source": {
+    "registry": "npm",
+    "name": "soundex-code",
+    "repo": "https://github.com/words/soundex-code",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "soundex-code",
+      "repo": "https://github.com/words/soundex-code",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "rphonetic",
+      "repo": "https://github.com/dalboris/rphonetic",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

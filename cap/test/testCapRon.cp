@@ -3,7 +3,7 @@ import {
     RonTokenKind,
     RonLexer,
     ronGetField,
-} from "../../packages/@cap/ron/src/index.cp";
+} from "../../packages/ron/src/index.cp";
 
 fn main() {
     test("1. @cap/ron — lexes struct punctuation, identifiers, booleans, ints, floats, and strings", () => {

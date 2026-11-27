@@ -1,0 +1,19 @@
+{
+  "name": "tinytemplate",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Mustache/Handlebars-compatible template engine with default HTML XSS escaping, chained pipeline filters, nested conditionals, list iteration, and depth guards for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "tinytemplate",
+    "repo": "https://github.com/bheisler/TinyTemplate",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

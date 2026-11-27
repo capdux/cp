@@ -4,7 +4,7 @@ import {
     sliceAnsi,
     sliceAnsiFrom,
     truncateAnsi,
-} from "../../packages/@cap/slice-ansi/src/index.cp";
+} from "../../packages/slice-ansi/src/index.cp";
 
 fn saTestEq(actual: []const u8, expected: []const u8): bool {
     if (actual.len != expected.len) {

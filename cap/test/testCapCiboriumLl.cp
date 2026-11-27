@@ -4,7 +4,7 @@ import {
     CborHeader,
     CborDecoder,
     CborEncoder,
-} from "../../packages/@cap/ciborium-ll/src/index.cp";
+} from "../../packages/ciborium-ll/src/index.cp";
 
 fn main() {
     test("1. @cap/ciborium-ll — positive & negative integers (0..u64, -1..-1000000)", () => {

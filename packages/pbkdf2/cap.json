@@ -1,0 +1,23 @@
+{
+  "name": "pbkdf2",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 2898 / RFC 8018 PBKDF2-HMAC-SHA256 password-based key derivation and constant-time verification",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "cookie-signature": "^1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "pbkdf2",
+    "repo": "https://github.com/RustCrypto/password-hashes",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

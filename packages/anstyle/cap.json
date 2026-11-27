@@ -1,0 +1,52 @@
+{
+  "name": "anstyle",
+  "ver": "1.0.0",
+  "desc": "Zero-heap ANSI terminal styling model (16-color, 256-color, truecolor RGB, SGR effects) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "anstyle-parse": "^1.0.0"
+  },
+  "keywords": [
+    "ansi",
+    "anstyle",
+    "color",
+    "terminal",
+    "sgr",
+    "rgb",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "anstyle",
+    "repo": "https://github.com/rust-cli/anstyle",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "anstyle",
+      "repo": "https://github.com/rust-cli/anstyle",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "console",
+      "repo": "https://github.com/console-rs/console",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "colored",
+      "repo": "https://github.com/colored-rs/colored",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

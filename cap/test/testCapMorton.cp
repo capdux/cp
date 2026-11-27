@@ -11,7 +11,7 @@ import {
     decode3D,
     hilbert2DEncode,
     hilbert2DDecode,
-} from "../../packages/@cap/morton/src/index.cp";
+} from "../../packages/morton-encoding/src/index.cp";
 
 fn absDiffU32(a: u32, b: u32) -> u32 {
     return if (a > b) a - b else b - a;

@@ -1,0 +1,44 @@
+{
+  "name": "totp-rs",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Google Authenticator otpauth:// TOTP/HOTP Key URI parser, Base32 secret validator, and builder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "totp",
+    "hotp",
+    "otpauth",
+    "2fa",
+    "mfa",
+    "base32",
+    "authenticator",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "totp-rs",
+    "repo": "https://github.com/constantoine/totp-rs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "totp-rs",
+      "repo": "https://github.com/constantoine/totp-rs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "otpauth",
+      "repo": "https://github.com/hectorm/otpauth",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

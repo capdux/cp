@@ -1,0 +1,28 @@
+{
+  "name": "parse-ms",
+  "ver": "1.0.0",
+  "desc": "Zero-heap millisecond breakdown (days/hours/minutes/seconds/ms/us/ns) and reconstruction in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "parse-ms",
+    "to-milliseconds",
+    "time",
+    "duration",
+    "milliseconds",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "parse-ms",
+    "repo": "https://github.com/sindresorhus/parse-ms",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

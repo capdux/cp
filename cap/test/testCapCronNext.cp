@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     CronSchedule,
-} from "../../packages/@cap/cron-next/src/index.cp";
+} from "../../packages/cron/src/index.cp";
 
 fn main() {
     test("1. @cap/cron-next — Every minute (* * * * *) aligns to next whole minute", () => {

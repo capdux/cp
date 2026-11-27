@@ -18,9 +18,10 @@ from datetime import date
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIB_REF = os.path.join(ROOT, "cp_lib_ref.md")
 OUT_PATH = os.path.join(ROOT, "cp_agent_lib_ref.md")
-REG_PATH = os.path.join(ROOT, "packages/@cap/registry.json")
-CAP_DIR = os.path.join(ROOT, "packages/@cap")
-WEB_DIR = os.path.join(ROOT, "packages/@web")
+PKG_ROOT = os.path.join(ROOT, "packages")
+REG_PATH = os.path.join(PKG_ROOT, "registry.json") if os.path.isfile(os.path.join(PKG_ROOT, "registry.json")) else os.path.join(PKG_ROOT, "@cap/registry.json")
+CAP_DIR = os.path.join(PKG_ROOT, "@cap")
+WEB_DIR = os.path.join(PKG_ROOT, "@web")
 
 
 def clean_md(text: str) -> str:
@@ -209,25 +210,36 @@ def main():
     with open(REG_PATH, "r", encoding="utf-8") as f:
         reg = json.load(f)
 
-    # Map @cap/<pkg> -> (source_registry, source_name)
+    # Discover all bare packages (`packages/<name>`), scoped npm packages (`packages/@org/<name>`),
+    # and native `@cap/*` packages (`packages/@cap/<name>`), excluding `@web/*`.
     pkg_sources = {}
-    for d in sorted(os.listdir(CAP_DIR)):
-        cj = os.path.join(CAP_DIR, d, "cap.json")
-        if not os.path.isfile(cj):
+    for entry in sorted(os.listdir(PKG_ROOT)):
+        full = os.path.join(PKG_ROOT, entry)
+        if not os.path.isdir(full) or entry == "@web":
             continue
-        with open(cj, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        src = data.get("source", {})
-        pkg_sources[d] = (src.get("registry", ""), src.get("name", ""))
+        if entry.startswith("@"):
+            for sub in sorted(os.listdir(full)):
+                cj = os.path.join(full, sub, "cap.json")
+                if not os.path.isfile(cj):
+                    continue
+                with open(cj, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                src = data.get("source") or (data.get("sources")[0] if isinstance(data.get("sources"), list) and data.get("sources") else {})
+                key = f"{entry}/{sub}" if entry != "@cap" else f"@cap/{sub}"
+                pkg_sources[key] = (src.get("ecosystem") or src.get("registry") or "", src.get("package") or src.get("name") or "")
+        else:
+            cj = os.path.join(full, "cap.json")
+            if not os.path.isfile(cj):
+                continue
+            with open(cj, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            src = data.get("source") or (data.get("sources")[0] if isinstance(data.get("sources"), list) and data.get("sources") else {})
+            pkg_sources[entry] = (src.get("ecosystem") or src.get("registry") or "", src.get("package") or src.get("name") or "")
 
     grouped = defaultdict(list)
     for pkg, (sreg, sname) in sorted(pkg_sources.items()):
         cat = classify_pkg(pkg, sreg)
-        # Only annotate original name if renamed (different from pkg dir)
-        if sname and sname.lower() != pkg.lower():
-            grouped[cat].append(f"{pkg}(←{sname})")
-        else:
-            grouped[cat].append(pkg)
+        grouped[cat].append(pkg)
 
     npm_cnt = sum(1 for e in reg["entries"] if e.get("source_registry") == "npm")
     cr_cnt = sum(1 for e in reg["entries"] if e.get("source_registry") == "crates.io")

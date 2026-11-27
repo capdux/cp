@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     packageDirectoryInList, capPackageDirectoryInList, packageDirectoryBounded
-} from "../../packages/@cap/pkg-dir/src/index.cp";
+} from "../../packages/pkg-dir/src/index.cp";
 
 fn main() {
     test("1. @cap/pkg-dir — finds nearest ancestor package.json directory", () => {

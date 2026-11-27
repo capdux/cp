@@ -3,7 +3,7 @@ import {
     ShebangCmd,
     shebangCommand,
     parseShebangCmd,
-} from "../../packages/@cap/shebang-command/src/index.cp";
+} from "../../packages/shebang-command/src/index.cp";
 
 fn eqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

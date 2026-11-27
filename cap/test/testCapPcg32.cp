@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/pcg32 (PCG-XSH-RR 32-bit PRNG)
 
 import { test, expect_eq } from "cap:test";
-import { Pcg32 } from "../../packages/@cap/pcg32/src/index.cp";
+import { Pcg32 } from "../../packages/pcg-random/src/index.cp";
 
 fn main() {
     test("1. @cap/pcg32 — deterministic reproducible sequence from same seed & stream", () => {

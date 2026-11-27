@@ -1,0 +1,20 @@
+{
+  "name": "keep-a-changelog",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Keep a Changelog 1.1.0 parser, release lookup, section counter, and header formatter (keep-a-changelog / changelog-parser / Rust parse-changelog parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "keep-a-changelog",
+    "repo": "https://github.com/oscarotero/keep-a-changelog",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

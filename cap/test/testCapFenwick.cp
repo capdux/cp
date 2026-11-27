@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     FenwickTree,
-} from "../../packages/@cap/fenwick/src/index.cp";
+} from "../../packages/fenwick/src/index.cp";
 
 fn main() {
     test("1. @cap/fenwick — Empty tree & out-of-bounds guards", () => {

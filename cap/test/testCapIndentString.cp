@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { indentString, indentStringWith } from "../../packages/@cap/indent-string/src/index.cp";
+import { indentString, indentStringWith } from "../../packages/indent-string/src/index.cp";
 
 fn eqBuf(buf: []u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -25,7 +25,7 @@ import {
     rgbToKeyword,
     rgbToGray,
     grayToRgb,
-} from "../../packages/@cap/color-convert/src/index.cp";
+} from "../../packages/color-convert/src/index.cp";
 
 fn ccTestNear(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

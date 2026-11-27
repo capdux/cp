@@ -1,0 +1,20 @@
+{
+  "name": "slab",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pre-allocated O(1) slab allocator with intrusive free-list (clean-room port of Rust slab)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "slab",
+    "repo": "https://github.com/tokio-rs/slab",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

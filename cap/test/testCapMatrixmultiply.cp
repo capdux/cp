@@ -3,7 +3,7 @@ import {
     sgemm,
     dgemm,
     matmulF64,
-} from "../../packages/@cap/matrixmultiply/src/index.cp";
+} from "../../packages/matrixmultiply/src/index.cp";
 
 fn main() {
     test("1. @cap/matrixmultiply — dgemm row-major 2x3 * 3x2", () => {

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     LiteMapStr,
     LiteMapU64,
-} from "../../packages/@cap/litemap/src/index.cp";
+} from "../../packages/litemap/src/index.cp";
 
 fn main() {
     test("1. @cap/litemap — unordered insertions stay strictly sorted lexicographically", () => {

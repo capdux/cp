@@ -4,7 +4,7 @@ import {
     lineColToOffset,
     getLine,
     countLines,
-} from "../../packages/@cap/line-col/src/index.cp";
+} from "../../packages/line-column/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

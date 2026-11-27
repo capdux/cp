@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { IgnoreMatcher } from "../../packages/@cap/ignore/src/index.cp";
+import { IgnoreMatcher } from "../../packages/ignore/src/index.cp";
 
 fn main() {
     test("1. @cap/ignore — Basic wildcards, comments, and blank lines", () => {

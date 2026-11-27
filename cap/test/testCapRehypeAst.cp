@@ -10,7 +10,7 @@ import {
     HAST_DOCTYPE,
     HastTree,
     isVoidElement,
-} from "../../packages/@cap/rehype-ast/src/index.cp";
+} from "../../packages/rehype/src/index.cp";
 
 fn main() {
     test("1. @cap/rehype-ast — full HTML5 document construction & serialization", () => {

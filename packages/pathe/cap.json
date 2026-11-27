@@ -1,0 +1,20 @@
+{
+  "name": "pathe",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation universal POSIX-normalized path utilities preserving Windows drive letters and URL protocols (clean-room MIT implementation of npm pathe, #219 / 207M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "pathe",
+    "repo": "https://github.com/unjs/pathe",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

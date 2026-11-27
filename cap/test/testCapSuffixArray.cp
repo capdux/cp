@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/suffix-array (Rust suffix crate parity)
 
 import { test, expect_eq } from "cap:test";
-import { SuffixArray, LrsResult, MAX_TEXT } from "../../packages/@cap/suffix-array/src/index.cp";
+import { SuffixArray, LrsResult, MAX_TEXT } from "../../packages/suffix/src/index.cp";
 
 fn main() {
     test("1. @cap/suffix-array — classic 'banana' exact SA and LCP arrays", () => {

@@ -10,7 +10,7 @@ import {
     parseWkt,
     formatWkt,
     bboxWkt
-} from "../../packages/@cap/wkt/src/index.cp";
+} from "../../packages/wkt/src/index.cp";
 
 fn wktBufEq(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

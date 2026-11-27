@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { BiMap, MAX_PAIRS } from "../../packages/@cap/bimap/src/index.cp";
+import { BiMap, MAX_PAIRS } from "../../packages/bimap/src/index.cp";
 
 fn main() {
     test("empty bimap state and lookups", () => {

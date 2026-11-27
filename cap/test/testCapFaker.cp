@@ -6,7 +6,7 @@
 
 const std = @import("std");
 import { test, expect_eq } from "cap:test";
-import { Faker, isValidLuhn } from "../../packages/@cap/faker/src/index.cp";
+import { Faker, isValidLuhn } from "../../packages/@faker-js/faker/src/index.cp";
 
 fn isHexLower(c: u8): bool {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { THIN_VEC_CAP, ThinVecI64 } from "../../packages/@cap/thin-vec/src/index.cp";
+import { THIN_VEC_CAP, ThinVecI64 } from "../../packages/thin-vec/src/index.cp";
 
 fn main() {
     test("1. @cap/thin-vec — push, pop, first, last & isEmpty", () => {

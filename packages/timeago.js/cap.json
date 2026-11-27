@@ -1,0 +1,19 @@
+{
+  "name": "timeago.js",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic relative time formatter (EN/ZH, Long/Short/Compact) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "timeago.js",
+    "repo": "https://github.com/hustcc/timeago.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

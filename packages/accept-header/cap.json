@@ -1,0 +1,24 @@
+{
+  "name": "accept-header",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7231 HTTP Accept header parser and media-type negotiator with quality-factor & specificity ranking (clean-room port of Rust accept-header)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "negotiator": "1.0.0",
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "accept-header",
+    "repo": "https://github.com/djc/accept-header",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

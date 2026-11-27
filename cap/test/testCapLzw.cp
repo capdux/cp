@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/lzw (GIF89a LSB-first LZW / Rust weezl parity)
 
 import { test, expect_eq } from "cap:test";
-import { encode, decode } from "../../packages/@cap/lzw/src/index.cp";
+import { encode, decode } from "../../packages/weezl/src/index.cp";
 
 fn main() {
     test("1. @cap/lzw — empty input & single byte round-trip", () => {

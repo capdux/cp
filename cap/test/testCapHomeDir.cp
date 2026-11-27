@@ -4,7 +4,7 @@ import {
     expandTilde,
     contractTilde,
     joinConfigDir,
-} from "../../packages/@cap/home-dir/src/index.cp";
+} from "../../packages/home/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

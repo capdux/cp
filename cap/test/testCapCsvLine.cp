@@ -9,7 +9,7 @@ import {
     formatField,
     formatFieldSafe,
     formatRecord,
-} from "../../packages/@cap/csv-line/src/index.cp";
+} from "../../packages/csv-parse/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

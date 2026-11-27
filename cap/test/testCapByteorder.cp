@@ -14,7 +14,7 @@ import {
     writeU64Le,
     ByteReader,
     ByteWriter,
-} from "../../packages/@cap/byteorder/src/index.cp";
+} from "../../packages/untrusted/src/index.cp";
 
 fn main() {
     test("1. @cap/byteorder — stateless u16/u32/u64 BE & LE round-trip", () => {

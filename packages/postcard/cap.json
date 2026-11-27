@@ -1,0 +1,21 @@
+{
+  "name": "postcard",
+  "version": "1.1.3",
+  "description": "Zero-heap compact binary wire protocol codecs (Varint, ZigZag, and COBS framing)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "postcard",
+    "version": "1.1.3",
+    "license": "MIT",
+    "repository": "https://github.com/jamesmunns/postcard"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "crc32fast",
+  "ver": "1.0.0",
+  "description": "Zero-heap IEEE 802.3 CRC-32 streaming Hasher with GF(2) combine, reset, and one-shot hash (crates.io crc32fast equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "crc32fast",
+    "repo": "https://github.com/srijs/rust-crc32fast",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

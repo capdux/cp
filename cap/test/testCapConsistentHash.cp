@@ -6,7 +6,7 @@ import {
     RingPoint,
     ReplicaList,
     HashRing,
-} from "../../packages/@cap/consistent-hash/src/index.cp";
+} from "../../packages/hashring/src/index.cp";
 
 fn strEq(a: string, b: string) -> bool {
     if (a.len != b.len) return false;

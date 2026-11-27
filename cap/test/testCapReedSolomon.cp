@@ -7,7 +7,7 @@ import {
     gfPow,
     gfInv,
     RsCodec,
-} from "../../packages/@cap/reed-solomon/src/index.cp";
+} from "../../packages/reed-solomon-erasure/src/index.cp";
 
 fn main() {
     test("1. @cap/reed-solomon — GF(2^8) field axioms & inverse identity across all 255 non-zero elements", () => {

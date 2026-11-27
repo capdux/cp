@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     GlyphPalette,
     TermTreeArena,
-} from "../../packages/@cap/termtree/src/index.cp";
+} from "../../packages/termtree/src/index.cp";
 
 fn strEqSlice(a: []const u8, b: string): bool {
     if (a.len != b.len) {

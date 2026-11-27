@@ -7,7 +7,7 @@ import {
     encodeSigned,
     decodeSigned,
     unsignedEncodedLen,
-} from "../../packages/@cap/leb128/src/index.cp";
+} from "../../packages/leb128/src/index.cp";
 
 fn main() {
     test("1. @cap/leb128 — DWARF/WASM reference ULEB128 (624485 -> 0xE5 0x8E 0x26)", () => {

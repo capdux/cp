@@ -17,7 +17,7 @@ import {
     transformPoint,
     transformDir,
     approxEq,
-} from "../../packages/@cap/mat4/src/index.cp";
+} from "../../packages/gl-mat4/src/index.cp";
 
 fn main() {
     test("1. @cap/mat4 — identity & translation + scale composition", () => {

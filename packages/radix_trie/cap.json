@@ -1,0 +1,20 @@
+{
+  "name": "radix_trie",
+  "ver": "1.0.0",
+  "description": "Zero-allocation LCRS static-pool byte prefix tree (Trie) with exact lookup, deletion, prefix count, and longest prefix match (LPM) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "radix_trie",
+    "repo": "https://github.com/michaelsproul/rust_radix_trie",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

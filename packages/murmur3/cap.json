@@ -1,0 +1,29 @@
+{
+  "name": "murmur3",
+  "version": "1.0.0",
+  "description": "Zero-heap MurmurHash3 (32-bit x86 & 128-bit x64) deterministic non-cryptographic hash functions for sharding, Kafka/Cassandra/ClickHouse partitioning",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "murmur3",
+    "murmurhash",
+    "murmurhash3",
+    "hash",
+    "sharding",
+    "partition",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "murmur3",
+    "repo": "https://github.com/stusmall/murmur3",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "ccount",
+  "version": "2.0.1",
+  "description": "Zero-allocation character/substring occurrence counter and longest consecutive streak finder",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "ccount",
+    "version": "2.0.1",
+    "license": "MIT",
+    "repository": "https://github.com/wooorm/ccount"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

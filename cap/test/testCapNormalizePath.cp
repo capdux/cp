@@ -4,7 +4,7 @@ import {
     normalizePathDefault,
     hasBackslash,
     isUncPath,
-} from "../../packages/@cap/normalize-path/src/index.cp";
+} from "../../packages/normalize-path/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

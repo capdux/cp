@@ -3,7 +3,7 @@ import {
     RateLimitHit,
     RateLimiter,
     formatRateLimitHeader,
-} from "../../packages/@cap/express-rate-limit/src/index.cp";
+} from "../../packages/express-rate-limit/src/index.cp";
 
 fn main() {
     test("1. @cap/express-rate-limit — allows requests up to max_requests and blocks excess", () => {

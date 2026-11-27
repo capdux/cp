@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     defaultPortForProtocol,
     requiresPort,
-} from "../../packages/@cap/requires-port/src/index.cp";
+} from "../../packages/requires-port/src/index.cp";
 
 fn main() {
     test("1. @cap/requires-port — returns false for standard default HTTP/HTTPS/WS/WSS ports", () => {

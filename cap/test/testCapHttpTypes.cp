@@ -25,7 +25,7 @@ import {
     httpVersionAsStr,
     isValidHeaderName,
     headerNameEq,
-} from "../../packages/@cap/http-types/src/index.cp";
+} from "../../packages/http/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

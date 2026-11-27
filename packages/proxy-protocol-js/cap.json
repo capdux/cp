@@ -1,0 +1,34 @@
+{
+  "name": "proxy-protocol-js",
+  "version": "1.0.0",
+  "description": "Zero-heap HAProxy PROXY Protocol v1 (ASCII) and v2 (binary) parser and encoder for L4 client IP preservation.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "proxy-protocol-js",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "proxy-protocol-js",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "ppp",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

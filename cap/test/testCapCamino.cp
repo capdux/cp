@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Utf8PathBuf } from "../../packages/@cap/camino/src/index.cp";
+import { Utf8PathBuf } from "../../packages/camino/src/index.cp";
 
 fn eqBytes(buf: []u8, n: usize, expected: string): bool {
     if (n != expected.len) {

@@ -7,7 +7,7 @@ import {
     ArrayString256,
     ArrayVecI64,
     ArrayVecU64,
-} from "../../packages/@cap/arrayvec/src/index.cp";
+} from "../../packages/arrayvec/src/index.cp";
 
 fn main() {
     test("1. @cap/arrayvec — ArrayString64 building, popByte, truncate & clear", () => {

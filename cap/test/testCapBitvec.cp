@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { BitVec512, BITVEC_MAX_BITS } from "../../packages/@cap/bitvec/src/index.cp";
+import { BitVec512, BITVEC_MAX_BITS } from "../../packages/bitvec/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

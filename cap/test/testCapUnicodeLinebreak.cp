@@ -7,7 +7,7 @@ import {
     LineBreak,
     findLineBreaks,
     countLineBreaks,
-} from "../../packages/@cap/unicode-linebreak/src/index.cp";
+} from "../../packages/unicode-linebreak/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-linebreak — Mandatory breaks on LF and CRLF without splitting CRLF", () => {

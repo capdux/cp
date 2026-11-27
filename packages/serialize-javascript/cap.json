@@ -1,0 +1,21 @@
+{
+  "name": "serialize-javascript",
+  "version": "6.0.2",
+  "description": "Zero-heap XSS-safe JSON/JavaScript literal serializer escaping HTML script breakouts and line separators",
+  "entry": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "serialize-javascript",
+    "version": "6.0.2",
+    "license": "BSD-3-Clause",
+    "repository": "https://github.com/yahoo/serialize-javascript"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "semver",
+  "version": "1.0.0",
+  "description": "Unified zero-heap SemVer 2.0.0 parser, comparator, npm range evaluator, and Rust Cargo VersionReq matcher for CP (superset of npm semver & crates.io semver)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "semver",
+    "version",
+    "range",
+    "cargo",
+    "node-semver",
+    "versionreq"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/semver",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "semver",
+    "repo": "https://github.com/npm/node-semver",
+    "license": "ISC"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "semver",
+      "repo": "https://github.com/npm/node-semver",
+      "license": "ISC"
+    },
+    {
+      "registry": "crates.io",
+      "name": "semver",
+      "repo": "https://github.com/dtolnay/semver",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     HTTP_METHOD_COUNT, findMethodIndex, isHttpMethod, toLowerMethod, toUpperMethod,
     methodAt, isSafeMethod, isIdempotentMethod, isCacheableMethod, mayHaveRequestBody
-} from "../../packages/@cap/methods/src/index.cp";
+} from "../../packages/methods/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

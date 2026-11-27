@@ -1,0 +1,37 @@
+{
+  "name": "path-to-regexp",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Express/Router URL path template matching, parameter extraction, and reverse route compilation (clean-room port of path-to-regexp v8)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "path-to-regexp",
+    "repo": "https://github.com/pillarjs/path-to-regexp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "path-to-regexp",
+      "repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "path-to-regexp",
+      "repo": "https://github.com/pillarjs/path-to-regexp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

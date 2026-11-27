@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { MAX_BLOCK, bwtForward, bwtInverse, mtfEncode, mtfDecode } from "../../packages/@cap/bwt/src/index.cp";
+import { MAX_BLOCK, bwtForward, bwtInverse, mtfEncode, mtfDecode } from "../../packages/bwt/src/index.cp";
 
 fn main() {
     test("1. @cap/bwt — Classic BANANA -> NNBAAA with primary_index = 3", () => {

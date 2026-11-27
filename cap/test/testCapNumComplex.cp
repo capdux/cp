@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     Complex64,
     formatComplex,
-} from "../../packages/@cap/num-complex/src/index.cp";
+} from "../../packages/num-complex/src/index.cp";
 
 fn approxF64(a: f64, b: f64, eps: f64) -> bool {
     const d = if (a > b) { a - b } else { b - a };

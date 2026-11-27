@@ -1,0 +1,31 @@
+{
+  "name": "ctr",
+  "version": "1.0.0",
+  "description": "Zero-allocation NIST SP 800-38A AES-CTR stream cipher modes (Ctr128BE / Ctr128LE) with O(1) seek in pure CP",
+  "license": "MIT OR Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dep": {
+    "@cap/aes": "1.0.0"
+  },
+  "keywords": [
+    "ctr",
+    "aes",
+    "aes-ctr",
+    "stream-cipher",
+    "crypto",
+    "nist-sp-800-38a"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "ctr",
+    "repo": "https://github.com/RustCrypto/block-modes",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

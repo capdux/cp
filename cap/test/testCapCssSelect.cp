@@ -6,7 +6,7 @@ import {
     matchesCompoundSelector,
     matchesSelectorList,
     countSelectorParts,
-} from "../../packages/@cap/css-select/src/index.cp";
+} from "../../packages/css-select/src/index.cp";
 
 fn main() {
     test("1. @cap/css-select — W3C Selectors Level 4 specificity calculation", () => {

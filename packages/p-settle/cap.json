@@ -1,0 +1,31 @@
+{
+  "name": "p-settle",
+  "ver": "1.0.0",
+  "description": "Zero-allocation bounded-concurrency Promise.allSettled task planner (npm p-settle v5 parity) powered by @cap/p-limit in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "p-settle",
+    "all-settled",
+    "promise",
+    "concurrency",
+    "scheduler",
+    "zero-alloc"
+  ],
+  "dep": {
+    "@cap/p-limit": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "p-settle",
+    "repo": "https://github.com/sindresorhus/p-settle",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

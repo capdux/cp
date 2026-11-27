@@ -5,14 +5,14 @@ import {
     LOADER_YAML,
     LOADER_JS,
     LOADER_PKG_JSON
-} from "../../packages/@cap/cosmiconfig/src/index.cp";
+} from "../../packages/cosmiconfig/src/index.cp";
 import {
     LIL_DEFAULT_PLACE_COUNT,
     LilconfigOptions,
     LilExplorer,
     formatLilSearchPlace,
     isSupportedByDefault
-} from "../../packages/@cap/lilconfig/src/index.cp";
+} from "../../packages/lilconfig/src/index.cp";
 
 fn main() {
     test("lilconfig: formatLilSearchPlace produces 6 compact places without YAML", () => {

@@ -10,7 +10,7 @@ import {
     GlobSetOptions,
     GlobSet,
     GlobOverride
-} from "../../packages/@cap/globset/src/index.cp";
+} from "../../packages/globset/src/index.cp";
 
 fn main() {
     test("1. @cap/globset — Multi-pattern GlobSet matches() returns all hit indices", () => {

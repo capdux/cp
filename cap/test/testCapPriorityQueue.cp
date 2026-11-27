@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     IndexedMinHeap,
-} from "../../packages/@cap/priority-queue/src/index.cp";
+} from "../../packages/priority-queue/src/index.cp";
 
 fn main() {
     test("1. @cap/priority-queue — Empty heap & out-of-bounds guards", () => {

@@ -1,0 +1,43 @@
+{
+  "name": "moving-averages",
+  "version": "1.0.0",
+  "description": "Zero-heap Exponential Moving Average (EMA), Simple Moving Average (SMA), and Weighted Moving Average (WMA) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "ema",
+    "sma",
+    "wma",
+    "moving-average",
+    "streaming",
+    "signal",
+    "finance"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "moving-averages",
+    "repo": "https://github.com/kaelzhang/node-moving-averages",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "moving-averages",
+      "repo": "https://github.com/kaelzhang/node-moving-averages",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "simple_moving_average",
+      "repo": "https://github.com/emilec/simple_moving_average",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

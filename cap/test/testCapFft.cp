@@ -10,7 +10,7 @@ import {
     magnitude,
     applyHannWindow,
     applyHammingWindow,
-} from "../../packages/@cap/fft/src/index.cp";
+} from "../../packages/rustfft/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

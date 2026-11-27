@@ -1,0 +1,24 @@
+{
+  "name": "change-case",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap full-featured case conversion library covering all 12 change-case v5 styles (camel, pascal, snake, kebab, constant, dot, path, train, capital, sentence, no, swap).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "ident_case": "1.0.0",
+    "decamelize": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "change-case",
+    "repo": "https://github.com/blakeembrey/change-case",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

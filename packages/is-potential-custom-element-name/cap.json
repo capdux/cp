@@ -1,0 +1,20 @@
+{
+  "name": "is-potential-custom-element-name",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation WHATWG HTML Custom Elements PotentialCustomElementName validator (clean-room MIT implementation of npm is-potential-custom-element-name, #407 / 132M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "is-potential-custom-element-name",
+    "repo": "https://github.com/mathiasbynens/is-potential-custom-element-name",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

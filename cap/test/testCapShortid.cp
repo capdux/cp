@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     ShortIdGenerator, isValidShortId, SHORTID_MIN_LEN, SHORTID_MAX_LEN
-} from "../../packages/@cap/shortid/src/index.cp";
+} from "../../packages/shortid/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

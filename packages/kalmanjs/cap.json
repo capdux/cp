@@ -1,0 +1,30 @@
+{
+  "name": "kalmanjs",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 1D scalar Kalman filter for sensor denoising, smoothing, and linear state prediction in CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "kalman",
+    "kalman1d",
+    "filter",
+    "signal",
+    "sensor",
+    "denoising",
+    "dsp",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "kalmanjs",
+    "repo": "https://github.com/wouterbulten/kalmanjs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

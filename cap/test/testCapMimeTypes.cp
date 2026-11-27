@@ -7,7 +7,7 @@ import {
     contentType,
     isCompressible,
     parseMimeType,
-} from "../../packages/@cap/mime-types/src/index.cp";
+} from "../../packages/mime-types/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

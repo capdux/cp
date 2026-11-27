@@ -13,7 +13,7 @@ import {
     RetryPolicy,
     RetryState,
     RetryBudget,
-} from "../../packages/@cap/retry/src/index.cp";
+} from "../../packages/async-retry/src/index.cp";
 
 fn main() {
     test("1. @cap/retry — Exponential, Linear, Fixed & Fibonacci Curves (No Jitter)", () => {

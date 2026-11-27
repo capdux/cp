@@ -4,7 +4,7 @@ import {
     hasShebang,
     matchShebang,
     stripShebang,
-} from "../../packages/@cap/shebang-regex/src/index.cp";
+} from "../../packages/shebang-regex/src/index.cp";
 
 fn sliceEq(src: string, start: usize, len: usize, expected: string): bool {
     if (len != expected.len || start + len > src.len) {

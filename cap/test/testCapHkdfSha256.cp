@@ -8,7 +8,7 @@ import {
     hkdfExtract,
     hkdfExpand,
     hkdfDerive
-} from "../../packages/@cap/hkdf-sha256/src/index.cp";
+} from "../../packages/futoin-hkdf/src/index.cp";
 
 fn bytesEq(a: []u8, b: []u8): bool {
     if (a.len != b.len) {

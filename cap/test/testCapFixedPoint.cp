@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/fixed-point (Q32.32 deterministic fixed-point)
 
 import { test, expect_eq } from "cap:test";
-import { Fixed32 } from "../../packages/@cap/fixed-point/src/index.cp";
+import { Fixed32 } from "../../packages/fixed/src/index.cp";
 
 fn approxF64(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

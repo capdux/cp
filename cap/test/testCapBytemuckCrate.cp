@@ -4,7 +4,7 @@ import {
     checkCastLayout, writeU16Le, readU16Le, writeU32Le, readU32Le,
     writeU32Be, readU32Be, writeU64Le, readU64Le,
     castU32SliceToBytesLe, castBytesToU32SliceLe, swapBytesU32
-} from "../../packages/@cap/bytemuck-crate/src/index.cp";
+} from "../../packages/bytemuck/src/index.cp";
 
 fn main() {
     test("1. @cap/bytemuck-crate — checkCastLayout validates size multiple & alignment", () => {

@@ -7,7 +7,7 @@ import {
     inspectInt,
     inspectBytes,
     inspectStringArray,
-} from "../../packages/@cap/object-inspect/src/index.cp";
+} from "../../packages/object-inspect/src/index.cp";
 
 fn main() {
     test("1. @cap/object-inspect — quotes and escapes control characters in strings", () => {

@@ -10,7 +10,7 @@ import {
     StatsdMetric,
     formatMetric,
     parseMetric,
-} from "../../packages/@cap/statsd/src/index.cp";
+} from "../../packages/hot-shots/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

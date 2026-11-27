@@ -1,0 +1,24 @@
+{
+  "name": "zip",
+  "ver": "1.0.0",
+  "description": "Zero-heap PKZIP Stored archive writer, local header & EOCD parser, and CRC-32 verifier (crates.io zip equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "crc32fast": "1.0.0",
+    "bytemuck": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "zip",
+    "repo": "https://github.com/zip-rs/zip2",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -13,7 +13,7 @@ import {
     nextId,
     formatId,
     parseId,
-} from "../../packages/@cap/snowflake/src/index.cp";
+} from "../../packages/@sapphire/snowflake/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

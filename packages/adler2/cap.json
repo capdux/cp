@@ -1,0 +1,28 @@
+{
+  "name": "adler2",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 1950 Adler-32 checksum with streaming, rolling window update, and combine in pure CP (modeled after Rust adler2)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "adler32",
+    "adler2",
+    "checksum",
+    "zlib",
+    "rolling-hash",
+    "rsync"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "adler2",
+    "repo": "https://github.com/oyvindln/adler2",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

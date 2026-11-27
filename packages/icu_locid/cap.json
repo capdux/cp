@@ -1,0 +1,33 @@
+{
+  "name": "icu_locid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer reusing @cap/tinystr (ICU4X icu_locid parity) in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "tinystr": "1.0.0"
+  },
+  "keywords": [
+    "icu",
+    "icu4x",
+    "locale",
+    "bcp47",
+    "uts35",
+    "i18n",
+    "tinystr",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "icu_locid",
+    "repo": "https://github.com/unicode-org/icu4x",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

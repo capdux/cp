@@ -1,0 +1,21 @@
+{
+  "name": "is-binary-path",
+  "version": "3.0.0",
+  "description": "Zero-allocation check if a file path has a known binary file extension (covers binary-extensions)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "is-binary-path",
+    "version": "3.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/sindresorhus/is-binary-path"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

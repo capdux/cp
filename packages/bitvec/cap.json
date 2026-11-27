@@ -1,0 +1,21 @@
+{
+  "name": "bitvec",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap arbitrary-length bit vector with popcount, find-first-one, bitwise ops and shifts (clean-room CP implementation of crates.io bitvec)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "bitvec",
+    "repo": "https://github.com/ferrilab/bitvec",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

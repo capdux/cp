@@ -1,0 +1,37 @@
+{
+  "name": "zstd",
+  "ver": "1.0.0",
+  "main": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "bin": {
+    "zstd": {
+      "path": "c",
+      "src": [
+        "zstd.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-DZSTD_DISABLE_ASM"
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "zstd",
+    "repo": "https://github.com/gyscos/zstd-rs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

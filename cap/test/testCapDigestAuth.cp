@@ -7,7 +7,7 @@ import {
     supportsQop,
     formatAuthorization,
     formatChallenge,
-} from "../../packages/@cap/digest-auth/src/index.cp";
+} from "../../packages/http-digest-client/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

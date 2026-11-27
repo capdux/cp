@@ -8,7 +8,7 @@ import {
     withTrailingSlash,
     cleanDoubleSlashes,
     joinUrl,
-} from "../../packages/@cap/ufo/src/index.cp";
+} from "../../packages/ufo/src/index.cp";
 
 fn main() {
     test("1. @cap/ufo — hasProtocol detects valid URL schemes", () => {

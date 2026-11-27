@@ -1,0 +1,20 @@
+{
+  "name": "postcss-value-parser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS dimension, length, angle, time, and resolution parser and unit converter for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "postcss-value-parser",
+    "repo": "https://github.com/TrySound/postcss-value-parser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

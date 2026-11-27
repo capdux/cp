@@ -15,7 +15,7 @@ import {
     i32FromF64,
     u8FromF64,
     checkF64ToI32,
-} from "../../packages/@cap/cast/src/index.cp";
+} from "../../packages/cast/src/index.cp";
 
 fn main() {
     test("1. @cap/cast — u8 and u16 checked bounds", () => {

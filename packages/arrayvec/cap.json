@@ -1,0 +1,20 @@
+{
+  "name": "arrayvec",
+  "ver": "1.0.0",
+  "description": "Zero-allocation stack-backed fixed-capacity containers: ArrayString64, ArrayString256, ArrayVecI64, ArrayVecU64 with O(1) swapRemove and truncating push (Rust arrayvec parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "arrayvec",
+    "repo": "https://github.com/bluss/arrayvec",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

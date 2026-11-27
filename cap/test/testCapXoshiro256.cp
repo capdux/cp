@@ -6,7 +6,7 @@ import {
     nextRange,
     jump,
     shuffleU32,
-} from "../../packages/@cap/xoshiro256/src/index.cp";
+} from "../../packages/rand_xoshiro/src/index.cp";
 
 fn main() {
     test("1. @cap/xoshiro256 — Deterministic reproducibility for identical seeds", () => {

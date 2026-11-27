@@ -3,7 +3,7 @@ import {
     toCesu8,
     fromCesu8,
     isValidCesu8AsciiOrBmp,
-} from "../../packages/@cap/cesu8/src/index.cp";
+} from "../../packages/cesu8/src/index.cp";
 
 fn main() {
     test("1. @cap/cesu8 — encodes and decodes U+10400 (Deseret) 4-byte UTF-8 <-> 6-byte CESU-8", () => {

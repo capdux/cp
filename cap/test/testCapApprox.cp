@@ -3,7 +3,7 @@ import {
     F64_EPSILON, F32_EPSILON,
     absDiffEqF64, absDiffEqF32, relativeEqF64, relativeEqF32,
     ulpsDistanceF64, ulpsEqF64, ulpsDistanceF32, ulpsEqF32
-} from "../../packages/@cap/approx/src/index.cp";
+} from "../../packages/approx/src/index.cp";
 
 fn main() {
     test("1. @cap/approx — absDiffEqF64 handles 0.1 + 0.2 ~= 0.3 & rejects NaN", () => {

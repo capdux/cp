@@ -1,0 +1,20 @@
+{
+  "name": "phonenumber",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 3966 tel: URI parser, E.164 international phone number normalizer/validator, and URI formatter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "phonenumber",
+    "repo": "https://github.com/whisperfish/rust-phonenumber",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

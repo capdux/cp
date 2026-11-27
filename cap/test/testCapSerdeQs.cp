@@ -6,7 +6,7 @@ import {
     parseQs,
     getQsValueDecoded,
     serializeQs,
-} from "../../packages/@cap/serde-qs/src/index.cp";
+} from "../../packages/serde_qs/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

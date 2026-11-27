@@ -5,7 +5,7 @@ import {
     getTraceState,
     TRACEPARENT_LEN,
     FLAG_SAMPLED,
-} from "../../packages/@cap/traceparent/src/index.cp";
+} from "../../packages/opentelemetry/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { RssChannel, RssItem, RssWriter, extractTagValue, countItems } from "../../packages/@cap/rss/src/index.cp";
+import { RssChannel, RssItem, RssWriter, extractTagValue, countItems } from "../../packages/rss/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

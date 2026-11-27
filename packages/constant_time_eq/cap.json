@@ -1,0 +1,20 @@
+{
+  "name": "constant_time_eq",
+  "ver": "1.0.0",
+  "description": "Zero-allocation constant-time cryptographic comparison, branchless selection/swap, and secure memory zeroization primitives (Rust subtle + zeroize parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "constant_time_eq",
+    "repo": "https://github.com/cesarb/constant_time_eq",
+    "license": "CC0-1.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

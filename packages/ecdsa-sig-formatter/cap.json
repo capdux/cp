@@ -1,0 +1,31 @@
+{
+  "name": "ecdsa-sig-formatter",
+  "version": "1.0.0",
+  "description": "Zero-allocation ASN.1 DER <-> JOSE IEEE P1363 (r || s) ECDSA signature converter for ES256, ES384, and ES512 in pure CP",
+  "license": "Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "ecdsa",
+    "der",
+    "jose",
+    "jws",
+    "jwt",
+    "es256",
+    "es384",
+    "es512",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "ecdsa-sig-formatter",
+    "repo": "https://github.com/Brightspace/node-ecdsa-sig-formatter",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

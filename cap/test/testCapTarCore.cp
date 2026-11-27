@@ -3,7 +3,7 @@ import {
     TAR_BLOCK_SIZE, TYPE_FILE, TYPE_SYMLINK, TYPE_DIR,
     TarHeader, TarEntrySpan, TarArchiveCursor,
     encodeTarHeader, parseTarHeader, isZeroBlock, tarPaddedSize
-} from "../../packages/@cap/tar-core/src/index.cp";
+} from "../../packages/tar/src/index.cp";
 
 fn main() {
     test("1. @cap/tar-core — encodeTarHeader & parseTarHeader round-trip USTAR file", () => {

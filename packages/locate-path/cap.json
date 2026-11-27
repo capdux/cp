@@ -1,0 +1,32 @@
+{
+  "name": "locate-path",
+  "ver": "1.0.0",
+  "description": "Zero-allocation path locator over candidate lists with entry-type, symlink, and ordering controls for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "find-up": "1.0.0"
+  },
+  "keywords": [
+    "locate-path",
+    "path",
+    "fs",
+    "locate",
+    "find",
+    "symlink",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "locate-path",
+    "repo": "https://github.com/sindresorhus/locate-path",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

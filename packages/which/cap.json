@@ -1,0 +1,23 @@
+{
+  "name": "which",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap PATH executable candidate resolver for POSIX and Windows (clean-room CP implementation of npm which)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "normalize-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "which",
+    "repo": "https://github.com/npm/node-which",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

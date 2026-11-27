@@ -1,0 +1,20 @@
+{
+  "name": "pathfinding",
+  "ver": "1.0.0",
+  "description": "Zero-allocation weighted shortest-path engine with Dijkstra, Bellman-Ford negative-cycle detection, and path reconstruction (Rust pathfinding / petgraph parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "pathfinding",
+    "repo": "https://github.com/evenfurther/pathfinding",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

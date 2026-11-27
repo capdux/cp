@@ -1,0 +1,44 @@
+{
+  "name": "mri",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation POSIX/GNU CLI argument parser (--flag, --key=val, --key val, -abc short clusters, -- terminator, stdin '-') in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cli",
+    "args",
+    "argv",
+    "minimist",
+    "mri",
+    "flags",
+    "posix",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "mri",
+    "repo": "https://github.com/lukeed/mri",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "mri",
+      "repo": "https://github.com/lukeed/mri",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "lexopt",
+      "repo": "https://github.com/blyxxyz/lexopt",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

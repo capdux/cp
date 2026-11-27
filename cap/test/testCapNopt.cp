@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { NoptFlag, NoptShorthand, NoptResult, parseNopt } from "../../packages/@cap/nopt/src/index.cp";
+import { NoptFlag, NoptShorthand, NoptResult, parseNopt } from "../../packages/nopt/src/index.cp";
 
 fn main() {
     test("1. @cap/nopt — Long options (--key=val, --key val, --flag, --no-flag)", () => {

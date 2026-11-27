@@ -20,7 +20,7 @@ import {
     powInt,
     sqrt,
     approxEq,
-} from "../../packages/@cap/complex-num/src/index.cp";
+} from "../../packages/complex.js/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

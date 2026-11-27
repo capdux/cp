@@ -10,7 +10,7 @@ import {
     setBitsU32,
     getBitSlice,
     setBitSlice,
-} from "../../packages/@cap/bit-field/src/index.cp";
+} from "../../packages/bit_field/src/index.cp";
 
 fn main() {
     test("1. @cap/bit-field — getBitU64 & setBitU64 single bit operations", () => {

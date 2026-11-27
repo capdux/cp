@@ -1,0 +1,20 @@
+{
+  "name": "memmem",
+  "ver": "1.0.0",
+  "description": "Zero-allocation byte-substring search engine with precompiled BMH + KMP Finder, rfind, and non-overlapping count (Rust memchr::memmem parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "memmem",
+    "repo": "https://github.com/BurntSushi/memchr",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

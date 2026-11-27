@@ -4,7 +4,7 @@ import {
     ParsedLiteral,
     parseLiteral,
     unescapeString,
-} from "../../packages/@cap/litrs/src/index.cp";
+} from "../../packages/litrs/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) {

@@ -11,7 +11,7 @@ import {
     indent,
     dedent,
     truncate,
-} from "../../packages/@cap/textwrap/src/index.cp";
+} from "../../packages/textwrap/src/index.cp";
 
 fn main() {
     test("1. @cap/textwrap — English word-boundary wrapping & explicit newlines", () => {

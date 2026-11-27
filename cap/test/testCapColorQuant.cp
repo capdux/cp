@@ -8,7 +8,7 @@ import {
     buildUniformPalette,
     quantizeHistogram,
     mapPixelsToPalette,
-} from "../../packages/@cap/color-quant/src/index.cp";
+} from "../../packages/color_quant/src/index.cp";
 
 fn main() {
     test("1. @cap/color-quant — buildUniformPalette produces 256 colors (6x6x6 cube + 40 grays)", () => {

@@ -8,7 +8,7 @@ import {
     OID_PRIME256V1,
     OID_ED25519,
     ObjectIdentifier,
-} from "../../packages/@cap/const-oid/src/index.cp";
+} from "../../packages/const-oid/src/index.cp";
 import {
     SPKI_ERR_INVALID_PEM_LABEL,
     SPKI_ERR_NON_ZERO_UNUSED_BITS,
@@ -21,7 +21,7 @@ import {
     encodeSpkiPem,
     decodeSpkiPem,
     fingerprintSpki,
-} from "../../packages/@cap/spki/src/index.cp";
+} from "../../packages/spki/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -4,7 +4,7 @@ import {
     PrettyWriter,
     formatStringLiteral,
     formatPrimitiveInt
-} from "../../packages/@cap/pretty-format/src/index.cp";
+} from "../../packages/pretty-format/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

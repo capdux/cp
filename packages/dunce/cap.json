@@ -1,0 +1,29 @@
+{
+  "name": "dunce",
+  "ver": "1.0.0",
+  "desc": "Zero-heap safe Windows verbatim UNC (\\\\?\\) path simplifier in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "dunce",
+    "windows",
+    "unc",
+    "verbatim",
+    "path",
+    "reserved-names",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "dunce",
+    "repo": "https://gitlab.com/kornelski/dunce",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

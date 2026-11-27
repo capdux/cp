@@ -1,12 +1,12 @@
 import { test, expect_eq } from "cap:test";
-import { hashBytes } from "../../packages/@cap/crc32fast/src/index.cp";
-import { readU32Le } from "../../packages/@cap/bytemuck-crate/src/index.cp";
+import { hashBytes } from "../../packages/crc32fast/src/index.cp";
+import { readU32Le } from "../../packages/bytemuck/src/index.cp";
 import {
     ZIP_LOCAL_SIG, ZIP_CD_SIG, ZIP_EOCD_SIG,
     ZIP_METHOD_STORED, ZIP_METHOD_DEFLATE,
     ZipLocalHeader, ZipEocd,
     writeStoredZipSingle, parseLocalHeader, findAndParseEocd, verifyStoredEntry
-} from "../../packages/@cap/zip-core/src/index.cp";
+} from "../../packages/zip/src/index.cp";
 
 fn main() {
     test("1. @cap/zip-core — writeStoredZipSingle & parseLocalHeader round-trip", () => {

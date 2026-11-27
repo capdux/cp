@@ -10,7 +10,7 @@ import {
     GOPT_ERR_OPTION_MISSING,
     GOPT_ERR_OPTION_DUPLICATED,
     GOPT_ERR_UNEXPECTED_ARGUMENT,
-} from "../../packages/@cap/getopts/src/index.cp";
+} from "../../packages/getopts/src/index.cp";
 
 fn main() {
     test("1. @cap/getopts — clustered short flags (-abc) & optPresent/optCount", () => {

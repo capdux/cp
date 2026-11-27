@@ -4,7 +4,7 @@ import {
     JpSegment,
     parseJsonPath,
     formatJsonPath,
-} from "../../packages/@cap/jsonpath-rust/src/index.cp";
+} from "../../packages/jsonpath-rust/src/index.cp";
 
 fn makeEmptySeg(): JpSegment {
     return JpSegment{

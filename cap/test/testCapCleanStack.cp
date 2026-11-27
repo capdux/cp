@@ -4,7 +4,7 @@ import {
     isInternalStackFrame,
     cleanStack,
     cleanStackWithOptions,
-} from "../../packages/@cap/clean-stack/src/index.cp";
+} from "../../packages/clean-stack/src/index.cp";
 
 fn main() {
     test("1. @cap/clean-stack — filters node:internal and internal frames", () => {

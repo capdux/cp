@@ -13,7 +13,7 @@ import {
     isRetry,
     isClientError,
     isServerError,
-} from "../../packages/@cap/statuses/src/index.cp";
+} from "../../packages/statuses/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

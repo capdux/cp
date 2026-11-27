@@ -1,0 +1,21 @@
+{
+  "name": "test-exclude",
+  "version": "7.0.1",
+  "description": "Zero-heap test and coverage file path glob filter engine",
+  "entry": "src/index.cp",
+  "license": "ISC",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "test-exclude",
+    "version": "7.0.1",
+    "license": "ISC",
+    "repository": "https://github.com/istanbuljs/test-exclude"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

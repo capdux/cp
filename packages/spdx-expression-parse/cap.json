@@ -1,0 +1,31 @@
+{
+  "name": "spdx-expression-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SPDX license expression recursive-descent AST parser and evaluator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "spdx": "1.0.0"
+  },
+  "keywords": [
+    "spdx",
+    "spdx-expression-parse",
+    "license",
+    "ast",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "spdx-expression-parse",
+    "repo": "https://github.com/jslicense/spdx-expression-parse.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

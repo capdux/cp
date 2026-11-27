@@ -9,7 +9,7 @@ import {
     formatArn,
     matchResourcePattern,
     resourceType,
-} from "../../packages/@cap/arn-parse/src/index.cp";
+} from "../../packages/@aws-sdk/util-arn-parser/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     Crc32Hasher, combineCrc32, hashBytes, hashStr
-} from "../../packages/@cap/crc32fast/src/index.cp";
+} from "../../packages/crc32fast/src/index.cp";
 
 fn main() {
     test("1. @cap/crc32fast — standard check vector '123456789' == 0xCBF43926", () => {

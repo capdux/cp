@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MPASS_CAP,
     MinipassStream,
-} from "../../packages/@cap/minipass/src/index.cp";
+} from "../../packages/minipass/src/index.cp";
 
 fn main() {
     test("1. @cap/minipass — write, read, bufferedBytes & freeSpace", () => {

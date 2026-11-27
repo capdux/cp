@@ -1,0 +1,21 @@
+{
+  "name": "stylis",
+  "version": "4.3.6",
+  "description": "Zero-heap CSS minifier and nested selector preprocessor in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "stylis",
+    "version": "4.3.6",
+    "license": "MIT",
+    "repository": "https://github.com/thysultan/stylis"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

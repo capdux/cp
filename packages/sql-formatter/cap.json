@@ -1,0 +1,19 @@
+{
+  "name": "sql-formatter",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SQL pretty-printer, keyword uppercasing normalizer, and minifier (sql-formatter / Rust sqlformat parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "sql-formatter",
+    "repo": "https://github.com/sql-formatter-org/sql-formatter",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

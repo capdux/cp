@@ -1,0 +1,28 @@
+{
+  "name": "h2",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 7541 HTTP/2 HPACK static table (61 entries), N-bit prefixed integer codec, and indexed header encoder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "http2",
+    "hpack",
+    "rfc7541",
+    "headers",
+    "compression",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "h2",
+    "repo": "https://github.com/hyperium/h2",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -11,7 +11,7 @@ import {
     sign,
     unsign,
     formatSetCookie,
-} from "../../packages/@cap/cookie-sign/src/index.cp";
+} from "../../packages/cookie-signature/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

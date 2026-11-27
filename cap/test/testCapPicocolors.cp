@@ -8,7 +8,7 @@ import {
     ColorConfig,
     PicoFormatter,
     PicoBuf
-} from "../../packages/@cap/picocolors/src/index.cp";
+} from "../../packages/picocolors/src/index.cp";
 
 fn main() {
     test("1. detectColorSupport & ColorConfig — NO_COLOR, FORCE_COLOR & TTY precedence", () => {

@@ -1,0 +1,20 @@
+{
+  "name": "js-tokens",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation tiny JavaScript/TypeScript lexer tokenizer (clean-room MIT implementation of npm js-tokens, #61 / 381M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "js-tokens",
+    "repo": "https://github.com/lydell/js-tokens",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,10 +1,10 @@
 import { test, expect_eq } from "cap:test";
-import { Vector2, Vector3, RowMatrix2, RowMatrix3, RowMatrix4 } from "../../packages/@cap/mint/src/index.cp";
+import { Vector2, Vector3, RowMatrix2, RowMatrix3, RowMatrix4 } from "../../packages/mint/src/index.cp";
 import {
     vec2Norm, vec3Norm, vec3Normalize, vec3Lerp, vec3Distance,
     mat2Mul, mat2Inverse, mat3Det, mat3Mul, mat3Inverse,
     mat4Mul, mat4Translation, mat4Scaling, mat4TransformPoint
-} from "../../packages/@cap/nalgebra/src/index.cp";
+} from "../../packages/nalgebra/src/index.cp";
 
 fn naClose(a: f64, b: f64): bool {
     let d = if (a > b) { a - b } else { b - a };

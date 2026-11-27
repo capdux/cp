@@ -4,7 +4,7 @@ import {
     Aabb2,
     fromCenterSize,
     fromPoints,
-} from "../../packages/@cap/aabb2/src/index.cp";
+} from "../../packages/parry2d/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

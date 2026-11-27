@@ -1,0 +1,33 @@
+{
+  "name": "lru-cache",
+  "ver": "1.0.0",
+  "description": "Zero-allocation O(1) LRU cache with intrusive doubly-linked list, open-addressing FNV-1a hash index, TTL expiration, and byte-weight eviction for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "lru-cache",
+    "repo": "https://github.com/isaacs/node-lru-cache",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "lru-cache",
+      "repo": "https://github.com/isaacs/node-lru-cache",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "lru-cache",
+      "repo": "https://github.com/isaacs/node-lru-cache",
+      "license": "ISC"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

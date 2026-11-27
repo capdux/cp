@@ -6,7 +6,7 @@ import {
     diceCoefficient,
     diceCaseSensitive,
     bestMatchIndex,
-} from "../../packages/@cap/dice-coeff/src/index.cp";
+} from "../../packages/string-similarity/src/index.cp";
 
 fn nearF64(a: f64, b: f64): bool {
     let d: f64 = a - b;

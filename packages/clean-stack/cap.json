@@ -1,0 +1,20 @@
+{
+  "name": "clean-stack",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation stack trace cleaner removing internal runtime frames and normalizing base paths (clean-room MIT implementation of npm clean-stack v5)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "clean-stack",
+    "repo": "https://github.com/sindresorhus/clean-stack",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

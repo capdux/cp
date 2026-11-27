@@ -1,0 +1,28 @@
+{
+  "name": "enumflags2",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 64-bit type-safe enum bitflags set with valid-mask protection for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "enumflags2",
+    "bitflags",
+    "bitset",
+    "flags",
+    "mask",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "enumflags2",
+    "repo": "https://github.com/meithecatte/enumflags2",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

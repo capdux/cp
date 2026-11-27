@@ -10,7 +10,7 @@ import {
     hasForwardSlash,
     trimTrailingSlashes,
     joinSlash,
-} from "../../packages/@cap/path-slash/src/index.cp";
+} from "../../packages/path-slash/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

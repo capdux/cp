@@ -4,7 +4,7 @@ import {
     hasWindowsVerbatimPrefix,
     canStripVerbatimPrefix,
     simplified,
-} from "../../packages/@cap/dunce/src/index.cp";
+} from "../../packages/dunce/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

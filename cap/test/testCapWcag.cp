@@ -15,7 +15,7 @@ import {
     gradeContrast,
     bestTextColor,
     suggestAccessibleHex,
-} from "../../packages/@cap/wcag/src/index.cp";
+} from "../../packages/wcag-contrast/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     const diff = if (a > b) { a - b } else { b - a };

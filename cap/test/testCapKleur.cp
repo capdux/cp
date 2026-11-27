@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     KLEUR_MAX_DEPTH,
     KleurChain
-} from "../../packages/@cap/kleur/src/index.cp";
+} from "../../packages/kleur/src/index.cp";
 
 fn main() {
     test("1. KleurChain — single foreground, background & modifier formatting", () => {

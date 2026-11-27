@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     BitSet256,
     BitSet1024,
-} from "../../packages/@cap/bitset/src/index.cp";
+} from "../../packages/fixedbitset/src/index.cp";
 
 fn main() {
     test("1. @cap/bitset — BitSet256 insert, remove, toggle, contains & bounds safety", () => {

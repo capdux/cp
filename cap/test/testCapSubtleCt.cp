@@ -14,7 +14,7 @@ import {
     ctSelectBytes,
     ctCondSwapU64,
     zeroizeBytes,
-} from "../../packages/@cap/subtle-ct/src/index.cp";
+} from "../../packages/subtle/src/index.cp";
 
 fn main() {
     test("1. @cap/subtle-ct — Choice boolean algebra (fromU8, not, and, or, xor)", () => {

@@ -1,0 +1,28 @@
+{
+  "name": "plotters-svg",
+  "version": "1.0.0",
+  "description": "Zero-heap pure CP SVG vector graphics drawing backend (plotters-svg parity)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "plotters",
+    "svg",
+    "graphics",
+    "vector",
+    "chart",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "plotters-svg",
+    "repo": "https://github.com/plotters-rs/plotters",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

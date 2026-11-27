@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { PlatformType, ParsedUA, parseUserAgent } from "../../packages/@cap/bowser/src/index.cp";
+import { PlatformType, ParsedUA, parseUserAgent } from "../../packages/bowser/src/index.cp";
 
 fn main() {
     test("1. @cap/bowser — Chrome and Edge on Windows Desktop (Blink)", () => {

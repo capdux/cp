@@ -5,7 +5,7 @@ import {
     countCodepoints,
     truncateChars,
     truncateWithEllipsis,
-} from "../../packages/@cap/trunc-utf8/src/index.cp";
+} from "../../packages/cli-truncate/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

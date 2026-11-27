@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     Cuid2Generator, isCuid2, isCuid2WithBounds, CUID2_DEFAULT_LEN
-} from "../../packages/@cap/cuid2/src/index.cp";
+} from "../../packages/@paralleldrive/cuid2/src/index.cp";
 
 fn eqBuf(a: []const u8, b: []const u8, len: usize): bool {
     let i: usize = 0;

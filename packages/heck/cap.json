@@ -1,0 +1,31 @@
+{
+  "name": "heck",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Rust heck-compatible case conversion engine (PascalCase, camelCase, snake_case, SHOUTY_SNAKE_CASE, kebab-case, SHOUTY-KEBAB-CASE, Title Case, Train-Case) for CP (clean-room MIT).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "heck",
+    "case-conversion",
+    "camel-case",
+    "snake-case",
+    "kebab-case",
+    "pascal-case",
+    "title-case",
+    "train-case",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "heck",
+    "repo": "https://github.com/withoutboats/heck",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

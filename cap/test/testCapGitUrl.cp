@@ -10,7 +10,7 @@ import {
     toHttpsUrl,
     toSshUrl,
     toBrowseUrl,
-} from "../../packages/@cap/git-url/src/index.cp";
+} from "../../packages/git-url-parse/src/index.cp";
 
 fn main() {
     test("1. @cap/git-url — SCP SSH & nested GitLab groups", () => {

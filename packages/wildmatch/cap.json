@@ -1,0 +1,23 @@
+{
+  "name": "wildmatch",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap linear-time wildcard (*, ?, custom wildcards & case-insensitive) pattern matcher (clean-room port of Rust wildmatch)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "wildmatch",
+    "repo": "https://github.com/becheran/wildmatch",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

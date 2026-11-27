@@ -1,0 +1,29 @@
+{
+  "name": "helmet",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap HTTP security response headers policy generator (CSP, HSTS, COOP, CORP, X-Frame-Options, Referrer-Policy) with CRLF-injection defense in pure CP (clean-room MIT counterpart to npm helmet v8).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "helmet",
+    "security",
+    "headers",
+    "csp",
+    "hsts",
+    "http",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "helmet",
+    "repo": "https://github.com/helmetjs/helmet",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

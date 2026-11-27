@@ -1,0 +1,29 @@
+{
+  "name": "tower-http",
+  "version": "1.0.0",
+  "description": "Zero-heap CORS origin matcher, wildcard subdomain check, and preflight method/header validator for CP (compatible with npm cors & Rust tower-http::cors)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cors",
+    "origin",
+    "preflight",
+    "http",
+    "security",
+    "wildcard"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/cors-match",
+  "source": {
+    "registry": "crates.io",
+    "name": "tower-http",
+    "repo": "https://github.com/tower-rs/tower-http",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -8,7 +8,7 @@ import {
     withQuery,
     withTrailingSlash,
     withoutTrailingSlash,
-} from "../../packages/@cap/url-join/src/index.cp";
+} from "../../packages/url-join/src/index.cp";
 
 fn main() {
     test("1. @cap/url-join — HTTP/HTTPS/WS/file:/// and protocol-relative joining", () => {

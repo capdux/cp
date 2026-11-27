@@ -20,7 +20,7 @@ import {
     toAlternatingCase,
     toLowerWords,
     toUpperWords,
-} from "../../packages/@cap/convert-case/src/index.cp";
+} from "../../packages/convert_case/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

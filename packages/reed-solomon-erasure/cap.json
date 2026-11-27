@@ -1,0 +1,20 @@
+{
+  "name": "reed-solomon-erasure",
+  "ver": "1.0.0",
+  "description": "Zero-allocation GF(2^8) Cauchy Reed-Solomon erasure coding and FEC reconstruction engine for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "reed-solomon-erasure",
+    "repo": "https://github.com/darrenldl/reed-solomon-erasure",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

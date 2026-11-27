@@ -4,7 +4,7 @@ import {
     tildeWithHome,
     envExpand,
     fullExpand,
-} from "../../packages/@cap/shellexpand/src/index.cp";
+} from "../../packages/shellexpand/src/index.cp";
 
 fn main() {
     test("1. @cap/shellexpand — tildeWithHome expands ~ and ~/subpath", () => {

@@ -11,7 +11,7 @@ import {
     encodeU32Hex,
     encodeU64Hex,
     hexDump,
-} from "../../packages/@cap/hex/src/index.cp";
+} from "../../packages/hex/src/index.cp";
 
 fn main() {
     test("1. @cap/hex — Lowercase & uppercase encoding and round-trip decode", () => {

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     formatU64, formatI64, formatU32, formatI32, formatUsize,
     formatHexU64, formatRadixU64
-} from "../../packages/@cap/itoa/src/index.cp";
+} from "../../packages/itoa/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

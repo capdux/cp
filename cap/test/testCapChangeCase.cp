@@ -12,7 +12,7 @@ import {
     sentenceCase,
     noCase,
     swapCase,
-} from "../../packages/@cap/change-case/src/index.cp";
+} from "../../packages/change-case/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

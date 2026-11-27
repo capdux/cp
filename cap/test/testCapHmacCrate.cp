@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     HmacSha256, hmacSha256Hex, encodeHex32
-} from "../../packages/@cap/hmac-crate/src/index.cp";
+} from "../../packages/hmac/src/index.cp";
 
 fn main() {
     test("1. @cap/hmac-crate — RFC 4231 Test Case 2 (key='Jefe', data='what do ya want for nothing?')", () => {

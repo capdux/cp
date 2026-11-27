@@ -1,0 +1,24 @@
+{
+  "name": "multer",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP multipart/form-data boundary extractor and upload policy validator (clean-room MIT implementation of npm multer v2)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "mediatype": "1.0.0",
+    "mime-types": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "multer",
+    "repo": "https://github.com/expressjs/multer",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

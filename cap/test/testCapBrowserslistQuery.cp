@@ -4,7 +4,7 @@ import {
     BrowserClause,
     parseBrowserClause,
     matchBrowserVersion,
-} from "../../packages/@cap/browserslist-query/src/index.cp";
+} from "../../packages/browserslist/src/index.cp";
 
 fn main() {
     test("1. @cap/browserslist-query — parses and matches Chrome >= 120", () => {

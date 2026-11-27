@@ -7,7 +7,7 @@ import {
     SendPlan,
     planSendFile,
     formatRedirectUrl
-} from "../../packages/@cap/send/src/index.cp";
+} from "../../packages/send/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

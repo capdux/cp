@@ -1,0 +1,20 @@
+{
+  "name": "ident_case",
+  "version": "1.0.0",
+  "description": "Zero-heap case conversion engine supporting camelCase, PascalCase, snake_case, kebab-case, and SCREAMING_SNAKE_CASE with smart acronym splitting.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "ident_case",
+    "repo": "https://github.com/TedDriggs/ident_case",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

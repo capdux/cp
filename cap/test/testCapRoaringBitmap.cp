@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     RoaringBitmap,
-} from "../../packages/@cap/roaring-bitmap/src/index.cp";
+} from "../../packages/roaring/src/index.cp";
 
 fn main() {
     test("1. @cap/roaring-bitmap — cross high-16-bit u32 insert, contains & remove", () => {

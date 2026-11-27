@@ -3,7 +3,7 @@ import {
     kindOf, kindName, kindOfName, isPrimitive, isPlainObject,
     KIND_NULL, KIND_UNDEFINED, KIND_BOOLEAN, KIND_NUMBER, KIND_STRING,
     KIND_ARRAY, KIND_OBJECT, KIND_REGEXP, KIND_DATE, KIND_BIGINT, KIND_FUNCTION, KIND_INVALID
-} from "../../packages/@cap/kind-of/src/index.cp";
+} from "../../packages/kind-of/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

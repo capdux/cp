@@ -7,7 +7,7 @@ import {
     MinifyStats,
     minifyJs,
     minifyCss,
-} from "../../packages/@cap/terser-minify/src/index.cp";
+} from "../../packages/terser/src/index.cp";
 
 fn main() {
     test("1. @cap/terser-minify — JS whitespace collapse while preserving keyword & identifier spacing", () => {

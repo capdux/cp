@@ -6,7 +6,7 @@ import {
     bytesPerSec,
     renderBar,
     renderLine,
-} from "../../packages/@cap/indicatif/src/index.cp";
+} from "../../packages/indicatif/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

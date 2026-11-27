@@ -1,0 +1,20 @@
+{
+  "name": "cache-control-parser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9111 HTTP Cache-Control parser, formatter, and shared/private TTL calculator (cache-control-parser / http-cache-semantics parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "cache-control-parser",
+    "repo": "https://github.com/etienne-martin/cache-control-parser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

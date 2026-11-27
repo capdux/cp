@@ -6,7 +6,7 @@ import {
     Aes128,
     Aes192,
     Aes256,
-} from "../../packages/@cap/aes/src/index.cp";
+} from "../../packages/aes/src/index.cp";
 
 fn blocksEq(a: [16]u8, b: [16]u8): bool {
     let i: usize = 0;

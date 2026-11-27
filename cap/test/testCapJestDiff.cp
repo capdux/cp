@@ -5,7 +5,7 @@ import {
     DiffSummary,
     diffStats,
     diffLinesUnified
-} from "../../packages/@cap/jest-diff/src/index.cp";
+} from "../../packages/jest-diff/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

@@ -8,7 +8,7 @@ import {
     getByPath,
     hasPath,
     formatFlatJsonObject,
-} from "../../packages/@cap/jsonflat/src/index.cp";
+} from "../../packages/flat/src/index.cp";
 
 fn main() {
     test("1. @cap/jsonflat — Nested objects & arrays flattening", () => {

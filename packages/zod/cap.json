@@ -1,0 +1,24 @@
+{
+  "name": "zod",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap type-safe schema validation framework for CP (clean-room MIT implementation of npm zod v3).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "kind-of": "1.0.0",
+    "url": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "zod",
+    "repo": "https://github.com/colinhacks/zod",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

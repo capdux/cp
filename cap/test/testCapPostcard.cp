@@ -8,7 +8,7 @@ import {
     decodeVarintI64,
     cobsEncode,
     cobsDecode,
-} from "../../packages/@cap/postcard/src/index.cp";
+} from "../../packages/postcard/src/index.cp";
 
 fn main() {
     test("1. @cap/postcard — unsigned varint u64 round-trip and boundaries", () => {

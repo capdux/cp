@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { wrapText } from "../../packages/@cap/wordwrap/src/index.cp";
+import { wrapText } from "../../packages/wordwrap/src/index.cp";
 
 fn main() {
     test("1. @cap/wordwrap — wraps words cleanly at column boundary", () => {

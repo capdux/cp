@@ -1,0 +1,23 @@
+{
+  "name": "indexmap",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation insertion-order-preserving hash map (Rust indexmap v2 parity, reuses @cap/fnv-hash)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@sindresorhus/fnv1a": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "indexmap",
+    "repo": "https://github.com/indexmap-rs/indexmap",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

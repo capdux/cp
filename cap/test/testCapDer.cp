@@ -17,7 +17,7 @@ import {
     encodeDerU64,
     encodeDerOctetString,
     encodeDerSequence,
-} from "../../packages/@cap/der/src/index.cp";
+} from "../../packages/der/src/index.cp";
 
 fn main() {
     test("1. @cap/der — short-form & long-form (>= 128 bytes) TLV encode/decode", () => {

@@ -10,7 +10,7 @@ import {
     detectNewlineGraceful,
     normalizeToLf,
     normalizeToCrlf,
-} from "../../packages/@cap/detect-newline/src/index.cp";
+} from "../../packages/detect-newline/src/index.cp";
 
 fn eqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

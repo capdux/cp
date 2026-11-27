@@ -1,0 +1,19 @@
+{
+  "name": "qs",
+  "ver": "1.0.0",
+  "description": "Zero-allocation query string parser and serializer with nested brackets, dot notation, arrays, strict null handling, and DoS limits for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "qs",
+    "repo": "https://github.com/ljharb/qs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

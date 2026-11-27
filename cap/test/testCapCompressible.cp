@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     stripContentTypeParams,
     isCompressible,
-} from "../../packages/@cap/compressible/src/index.cp";
+} from "../../packages/compressible/src/index.cp";
 
 fn main() {
     test("1. @cap/compressible — stripContentTypeParams removes parameters and trims", () => {

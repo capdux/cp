@@ -1,0 +1,23 @@
+{
+  "name": "humantime",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap human-readable duration parser/formatter and RFC 3339 timestamp codec (clean-room CP implementation of crates.io humantime)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "humantime",
+    "repo": "https://github.com/tailhook/humantime",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

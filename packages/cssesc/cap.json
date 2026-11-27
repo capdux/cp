@@ -1,0 +1,29 @@
+{
+  "name": "cssesc",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation CSSOM-compliant CSS identifier and string escaper in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "css",
+    "cssom",
+    "escape",
+    "cssesc",
+    "identifier",
+    "string",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "cssesc",
+    "repo": "https://github.com/mathiasbynens/cssesc",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

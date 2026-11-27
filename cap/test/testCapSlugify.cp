@@ -7,7 +7,7 @@ import {
     slugifyWithSep,
     slugifyTruncate,
     isValidSlug,
-} from "../../packages/@cap/slugify/src/index.cp";
+} from "../../packages/slugify/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -12,7 +12,7 @@ import {
     formatStructuredRateLimit,
     isExhausted,
     computeResetDelaySecs,
-} from "../../packages/@cap/rate-header/src/index.cp";
+} from "../../packages/governor/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     IndexMapU64,
     IndexMapStr
-} from "../../packages/@cap/indexmap/src/index.cp";
+} from "../../packages/indexmap/src/index.cp";
 
 fn imTestSliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

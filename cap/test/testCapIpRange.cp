@@ -14,7 +14,7 @@ import {
     isLoopbackIpv4,
     isLinkLocalIpv4,
     isPublicIpv4,
-} from "../../packages/@cap/ip-range/src/index.cp";
+} from "../../packages/ipnet/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -8,7 +8,7 @@ import {
     similarity,
     didYouMean,
     didYouMeanWith,
-} from "../../packages/@cap/didyoumean/src/index.cp";
+} from "../../packages/didyoumean/src/index.cp";
 
 fn main() {
     test("1. @cap/didyoumean — Levenshtein & Damerau-Levenshtein transposition", () => {

@@ -1,0 +1,21 @@
+{
+  "name": "jsonpath-rust",
+  "version": "0.7.1",
+  "description": "Zero-heap RFC 9535 JSONPath expression parser and canonical serializer in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "jsonpath-rust",
+    "version": "0.7.1",
+    "license": "MIT",
+    "repository": "https://github.com/besok/jsonpath-rust"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

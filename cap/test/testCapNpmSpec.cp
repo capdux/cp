@@ -7,7 +7,7 @@ import {
     isValidPackageName,
     parsePackageSpec,
     formatPackageSpec,
-} from "../../packages/@cap/npm-spec/src/index.cp";
+} from "../../packages/npm-package-arg/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

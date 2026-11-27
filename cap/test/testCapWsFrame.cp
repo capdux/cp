@@ -15,7 +15,7 @@ import {
     applyMask,
     encodeClosePayload,
     isValidCloseCode,
-} from "../../packages/@cap/ws-frame/src/index.cp";
+} from "../../packages/ws/src/index.cp";
 
 fn main() {
     test("1. @cap/ws-frame — unmasked short text frame roundtrip", () => {

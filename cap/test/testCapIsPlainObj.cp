@@ -14,7 +14,7 @@ import {
     isPlainJsonObject,
     isPlainObjectKey,
     hasDangerousProtoKey,
-} from "../../packages/@cap/is-plain-obj/src/index.cp";
+} from "../../packages/is-plain-obj/src/index.cp";
 
 fn main() {
     test("1. @cap/is-plain-obj — ValueMeta plain & null-prototype objects accepted", () => {

@@ -4,7 +4,7 @@ import {
     DynValue,
     typeCheck,
     isValidTypeExpr,
-} from "../../packages/@cap/type-check/src/index.cp";
+} from "../../packages/type-check/src/index.cp";
 
 fn main() {
     test("1. @cap/type-check — primitive types and wildcard *", () => {

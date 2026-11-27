@@ -3,7 +3,7 @@ import {
     SourceEdit,
     ReplaceSource,
     concatSources,
-} from "../../packages/@cap/webpack-sources/src/index.cp";
+} from "../../packages/webpack-sources/src/index.cp";
 
 fn main() {
     test("1. @cap/webpack-sources — ReplaceSource with no edits renders original", () => {

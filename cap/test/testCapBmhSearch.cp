@@ -10,7 +10,7 @@ import {
     findLast,
     countNonOverlapping,
     findIgnoreCaseAscii,
-} from "../../packages/@cap/bmh-search/src/index.cp";
+} from "../../packages/boyer-moore-magiclen/src/index.cp";
 
 fn main() {
     test("1. @cap/bmh-search — compilePattern reused across multiple haystacks", () => {

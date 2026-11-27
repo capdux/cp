@@ -5,7 +5,7 @@ import {
     sqrtScale,
     logScale,
     quantizeScale,
-} from "../../packages/@cap/d3-scale/src/index.cp";
+} from "../../packages/d3-scale/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

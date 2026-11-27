@@ -8,7 +8,7 @@ import {
     lookupColorHex,
     reverseLookupColor,
     isNamedColor,
-} from "../../packages/@cap/color-name/src/index.cp";
+} from "../../packages/color-name/src/index.cp";
 
 fn cnTestEq(a: string, b: string): bool {
     if (a.len != b.len) {

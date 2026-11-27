@@ -20,7 +20,7 @@ import {
     inverse,
     frobeniusNormSq,
     approxEq,
-} from "../../packages/@cap/mat2/src/index.cp";
+} from "../../packages/glam/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

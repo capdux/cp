@@ -5,7 +5,7 @@ import {
     trimNewlinesEnd,
     countLeadingNewlines,
     countTrailingNewlines,
-} from "../../packages/@cap/trim-newlines/src/index.cp";
+} from "../../packages/trim-newlines/src/index.cp";
 
 fn main() {
     test("1. @cap/trim-newlines — trims leading and trailing LF/CRLF", () => {

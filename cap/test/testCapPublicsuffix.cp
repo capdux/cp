@@ -6,7 +6,7 @@ import {
     suffix,
     registrableDomain,
     isPublicSuffix
-} from "../../packages/@cap/publicsuffix/src/index.cp";
+} from "../../packages/publicsuffix/src/index.cp";
 
 fn main() {
     test("1. @cap/publicsuffix — single-level TLD eTLD and registrable domain", () => {

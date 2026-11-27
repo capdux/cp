@@ -7,7 +7,7 @@ import {
     rangeStepInclusive,
     rangeStepU64,
     collectRangeStep
-} from "../../packages/@cap/num-iter/src/index.cp";
+} from "../../packages/num-iter/src/index.cp";
 
 fn main() {
     test("1. @cap/num-iter — RangeStep positive step & collectRangeStep", () => {

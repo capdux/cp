@@ -7,7 +7,7 @@ import {
     AHasher,
     hashBytes,
     hashU64,
-} from "../../packages/@cap/ahash/src/index.cp";
+} from "../../packages/ahash/src/index.cp";
 
 fn popcount64(x_in: u64) -> usize {
     let x = x_in;

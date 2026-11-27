@@ -4,7 +4,7 @@ import {
     collapseWhitespace,
     computeAccessibleName,
     computeAccessibleDescription,
-} from "../../packages/@cap/dom-accessibility-name/src/index.cp";
+} from "../../packages/dom-accessibility-api/src/index.cp";
 
 fn main() {
     test("1. @cap/dom-accessibility-name — collapseWhitespace trims and collapses runs", () => {

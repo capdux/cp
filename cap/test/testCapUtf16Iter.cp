@@ -5,7 +5,7 @@ import {
     Utf16Latin1,
     countUtf16Chars,
     utf16ToUtf8,
-} from "../../packages/@cap/utf16-iter/src/index.cp";
+} from "../../packages/utf16_iter/src/index.cp";
 
 fn main() {
     test("1. @cap/utf16-iter — forward iteration over ASCII, BMP & surrogate pairs", () => {

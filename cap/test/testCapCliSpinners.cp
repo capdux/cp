@@ -13,7 +13,7 @@ import {
     logSymbol,
     renderSpinnerLine,
     renderStatusLine,
-} from "../../packages/@cap/cli-spinners/src/index.cp";
+} from "../../packages/cli-spinners/src/index.cp";
 
 fn main() {
     test("1. @cap/cli-spinners — Dots, Dots2, Line, AsciiDots frame cycling & wrap-around", () => {

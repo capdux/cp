@@ -11,7 +11,7 @@ import {
     decode,
     isValidKsuid,
     compare,
-} from "../../packages/@cap/ksuid/src/index.cp";
+} from "../../packages/ksuid/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

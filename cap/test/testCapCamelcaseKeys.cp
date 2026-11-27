@@ -3,7 +3,7 @@ import {
     convertJsonKeysToCamel,
     convertJsonKeysToSnake,
     convertJsonKeysToPascal,
-} from "../../packages/@cap/camelcase-keys/src/index.cp";
+} from "../../packages/camelcase-keys/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

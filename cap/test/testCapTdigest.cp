@@ -6,7 +6,7 @@ import {
     MAX_CENTROIDS,
     Centroid,
     TDigest,
-} from "../../packages/@cap/tdigest/src/index.cp";
+} from "../../packages/tdigest/src/index.cp";
 
 fn absDiff(a: f64, b: f64) -> f64 {
     return if (a > b) a - b else b - a;

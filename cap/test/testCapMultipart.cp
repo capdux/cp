@@ -5,7 +5,7 @@ import {
     MultipartWriter,
     extractBoundary,
     formatContentTypeHeader
-} from "../../packages/@cap/multipart/src/index.cp";
+} from "../../packages/multipart/src/index.cp";
 
 fn mpTestStrEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

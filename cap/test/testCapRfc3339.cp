@@ -1,11 +1,11 @@
 import { test, expect_eq } from "cap:test";
 import {
     IsoDate, IsoTime, IsoDateTime
-} from "../../packages/@cap/iso8601/src/index.cp";
+} from "../../packages/iso8601/src/index.cp";
 import {
     Rfc3339Timestamp, isValidRfc3339, parseRfc3339,
     daysFromCivil, civilFromDays, fromUnixSeconds, formatRfc3339Utc
-} from "../../packages/@cap/rfc3339/src/index.cp";
+} from "../../packages/rfc3339/src/index.cp";
 
 fn main() {
     test("1. @cap/rfc3339 — Unix epoch 1970-01-01T00:00:00Z parses to 0", () => {

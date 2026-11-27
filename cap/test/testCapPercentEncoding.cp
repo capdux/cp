@@ -16,7 +16,7 @@ import {
     percentDecode,
     percentDecodeStrict,
     percentDecodePlus
-} from "../../packages/@cap/percent-encoding/src/index.cp";
+} from "../../packages/percent-encoding/src/index.cp";
 
 fn peTestSliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

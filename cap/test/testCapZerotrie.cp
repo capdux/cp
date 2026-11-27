@@ -3,7 +3,7 @@ import {
     TrieNode,
     PrefixMatch,
     ZeroTrie,
-} from "../../packages/@cap/zerotrie/src/index.cp";
+} from "../../packages/zerotrie/src/index.cp";
 
 fn main() {
     test("1. @cap/zerotrie — multi-key insert & exact lookup", () => {

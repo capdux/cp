@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { encode, encodeBinary, decode, decodeLossy, encodedLen, isUnreserved } from "../../packages/@cap/urlencoding/src/index.cp";
+import { encode, encodeBinary, decode, decodeLossy, encodedLen, isUnreserved } from "../../packages/urlencoding/src/index.cp";
 
 fn main() {
     test("isUnreserved matches RFC 3986 unreserved set", () => {

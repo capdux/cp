@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { P_ALL_CAP, PAllPlanner } from "../../packages/@cap/p-all/src/index.cp";
+import { P_ALL_CAP, PAllPlanner } from "../../packages/p-all/src/index.cp";
 
 fn main() {
     test("1. @cap/p-all — Invalid concurrency=0 returns null and empty planner isDone", () => {

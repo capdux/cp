@@ -10,7 +10,7 @@ import {
     sliceGraphemes,
     WordIter,
     countUnicodeWords,
-} from "../../packages/@cap/unicode-segmentation/src/index.cp";
+} from "../../packages/unicode-segmentation/src/index.cp";
 
 fn sliceEq(a: string, b: string): bool {
     if (a.len != b.len) {

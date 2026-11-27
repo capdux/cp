@@ -3,7 +3,7 @@ import {
     ProxyEnv,
     shouldBypassProxy,
     getProxyForUrl,
-} from "../../packages/@cap/proxy-from-env/src/index.cp";
+} from "../../packages/proxy-from-env/src/index.cp";
 
 fn main() {
     test("1. @cap/proxy-from-env — selects http_proxy vs https_proxy by scheme", () => {

@@ -7,7 +7,7 @@ import {
     fxHash64,
     fxHash64Str,
     fxHash32
-} from "../../packages/@cap/rustc-hash/src/index.cp";
+} from "../../packages/rustc-hash/src/index.cp";
 
 fn main() {
     test("1. @cap/rustc-hash — exact FX_SEED_64 & FX_SEED_32 constants and single-word formula", () => {

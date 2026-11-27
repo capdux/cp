@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     sipHash24, sipHash13, sipHash24Key16, sipHash24Str
-} from "../../packages/@cap/siphasher/src/index.cp";
+} from "../../packages/siphasher/src/index.cp";
 
 fn makeU64(hi: u32, lo: u32): u64 {
     return ((hi as u64) << 32) | (lo as u64);

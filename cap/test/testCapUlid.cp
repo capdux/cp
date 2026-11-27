@@ -11,7 +11,7 @@ import {
     isValidUlid,
     increment,
     compare,
-} from "../../packages/@cap/ulid/src/index.cp";
+} from "../../packages/ulid/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

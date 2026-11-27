@@ -4,7 +4,7 @@ import {
     SmolStr,
     smolStartsWith,
     smolEndsWith
-} from "../../packages/@cap/smol-str/src/index.cp";
+} from "../../packages/smol_str/src/index.cp";
 
 fn main() {
     test("1. @cap/smol-str — empty and 24-byte inline boundary SSO", () => {

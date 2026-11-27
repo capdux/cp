@@ -6,7 +6,7 @@ import {
     VCardData,
     formatVCard,
     parseVCard,
-} from "../../packages/@cap/vcard/src/index.cp";
+} from "../../packages/vcard/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

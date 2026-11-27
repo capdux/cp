@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     CspBuilder,
     CspPolicy,
-} from "../../packages/@cap/csp/src/index.cp";
+} from "../../packages/content-security-policy-builder/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

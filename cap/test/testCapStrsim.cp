@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     hamming, levenshtein, osaDistance, normalizedLevenshteinBps,
     jaroBps, jaroWinklerBps, sorensenDiceBps
-} from "../../packages/@cap/strsim/src/index.cp";
+} from "../../packages/strsim/src/index.cp";
 
 fn main() {
     test("1. @cap/strsim — hamming equal & unequal length handling", () => {

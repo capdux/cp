@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     HmacDrbg256,
     generateK
-} from "../../packages/@cap/rfc6979/src/index.cp";
+} from "../../packages/rfc6979/src/index.cp";
 
 fn bytesEq32(a: []u8, b: []u8): bool {
     let i: usize = 0;

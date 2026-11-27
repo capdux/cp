@@ -7,7 +7,7 @@ import {
     ClassBuilder,
     joinClasses,
     joinCondClasses,
-} from "../../packages/@cap/clsx/src/index.cp";
+} from "../../packages/clsx/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

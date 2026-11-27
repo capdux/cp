@@ -8,7 +8,7 @@ import {
     Poly1305,
     poly1305Mac,
     poly1305Verify
-} from "../../packages/@cap/poly1305/src/index.cp";
+} from "../../packages/poly1305/src/index.cp";
 
 fn bytesEq(a: []u8, b: []u8): bool {
     if (a.len != b.len) {

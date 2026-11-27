@@ -50,7 +50,7 @@ import {
     isEmptyBody,
     isRetryable,
     isCacheableByDefault,
-} from "../../packages/@cap/http-status/src/index.cp";
+} from "../../packages/http-status-codes/src/index.cp";
 
 fn main() {
     test("1. @cap/http-status — 1xx..5xx & Cloudflare reasonPhrase lookup", () => {

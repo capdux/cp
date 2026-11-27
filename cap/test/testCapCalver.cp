@@ -10,7 +10,7 @@ import {
     compareCalver,
     bumpCalver,
     formatCalver,
-} from "../../packages/@cap/calver/src/index.cp";
+} from "../../packages/calver/src/index.cp";
 
 fn main() {
     test("1. @cap/calver — Parsing 4-digit, 2-digit, day-level & pre-release modifiers", () => {

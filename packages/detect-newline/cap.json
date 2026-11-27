@@ -1,0 +1,29 @@
+{
+  "name": "detect-newline",
+  "version": "1.0.0",
+  "description": "Zero-allocation dominant newline detector and cross-platform LF/CRLF normalizer for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "newline",
+    "detect-newline",
+    "eol",
+    "crlf",
+    "lf",
+    "normalize",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "detect-newline",
+    "repo": "https://github.com/sindresorhus/detect-newline",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

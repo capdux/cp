@@ -7,7 +7,7 @@ import {
     parseMs,
     prettyMs,
     prettyMsWith,
-} from "../../packages/@cap/pretty-ms/src/index.cp";
+} from "../../packages/pretty-ms/src/index.cp";
 
 fn main() {
     test("1. @cap/pretty-ms — parseMs exact positive & negative decomposition", () => {

@@ -1,0 +1,20 @@
+{
+  "name": "const-oid",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation ITU-T X.690 ASN.1 Object Identifier (OID) parser, encoder, and comparator (parity with RustCrypto const-oid)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "const-oid",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

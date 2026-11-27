@@ -15,7 +15,7 @@ import {
     decodeHeader,
     parseTimeoutMicros,
     formatTimeoutMillis,
-} from "../../packages/@cap/grpc-frame/src/index.cp";
+} from "../../packages/tonic/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

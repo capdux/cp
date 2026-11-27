@@ -1,0 +1,44 @@
+{
+  "name": "parry3d",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 3D Axis-Aligned Bounding Box (AABB) collision detection, union/intersection, surface area/volume, and Kay-Kajiya slab raycast library for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "aabb",
+    "aabb3",
+    "3d",
+    "collision",
+    "raycast",
+    "bvh",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "parry3d",
+    "repo": "https://github.com/dimforge/parry",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "parry3d",
+      "repo": "https://github.com/dimforge/parry",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "aabb-3d",
+      "repo": "https://github.com/chrisdickinson/aabb-3d",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -16,7 +16,7 @@ import {
     TemplateContext,
     render,
     escapeHtml,
-} from "../../packages/@cap/template/src/index.cp";
+} from "../../packages/tinytemplate/src/index.cp";
 
 fn expectRenderError(
     tpl: []const u8,

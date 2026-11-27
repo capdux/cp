@@ -1,0 +1,43 @@
+{
+  "name": "http-digest-client",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 7616 / RFC 2617 HTTP Digest Authentication challenge & authorization parser and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "digest-auth",
+    "http",
+    "rfc7616",
+    "rfc2617",
+    "auth",
+    "www-authenticate",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "http-digest-client",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "http-digest-client",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "digest_auth",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

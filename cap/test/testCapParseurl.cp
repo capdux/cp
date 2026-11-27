@@ -9,7 +9,7 @@ import {
     isSafeRequestPath,
     getRequestQueryParam,
     decodeQueryValue
-} from "../../packages/@cap/parseurl/src/index.cp";
+} from "../../packages/parseurl/src/index.cp";
 
 fn main() {
     test("1. parseRequestUrl — full origin-form URL with query and hash", () => {

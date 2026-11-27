@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MAX_LISTENERS, REASON_END, REASON_FINISH, REASON_CLOSE, REASON_ERROR,
     ListenerSlot, StreamLifecycle, isFinished
-} from "../../packages/@cap/on-finished/src/index.cp";
+} from "../../packages/on-finished/src/index.cp";
 
 fn main() {
     test("1. @cap/on-finished — initial state is not finished", () => {

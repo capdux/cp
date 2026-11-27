@@ -10,7 +10,7 @@ import {
     isRestrictedWord,
     isIdentifierNameES6,
     isIdentifierES6,
-} from "../../packages/@cap/esutils/src/index.cp";
+} from "../../packages/esutils/src/index.cp";
 
 fn main() {
     test("1. @cap/esutils — digit helpers (decimal, hex, octal)", () => {

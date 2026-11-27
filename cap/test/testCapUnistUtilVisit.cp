@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     UNIST_NONE,
     newUnistTree,
-} from "../../packages/@cap/unist-util-visit/src/index.cp";
+} from "../../packages/unist-util-visit/src/index.cp";
 
 fn main() {
     test("1. @cap/unist-util-visit — builds tree and visits all nodes in pre-order DFS", () => {

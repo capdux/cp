@@ -1,0 +1,20 @@
+{
+  "name": "p-retry",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap exponential backoff & retry policy state machine with min/max caps, jitter, and elapsed deadline (clean-room port of npm retry / p-retry)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "p-retry",
+    "repo": "https://github.com/sindresorhus/p-retry",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

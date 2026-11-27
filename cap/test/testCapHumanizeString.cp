@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     humanizeString,
-} from "../../packages/@cap/humanize-string/src/index.cp";
+} from "../../packages/humanize-string/src/index.cp";
 
 fn main() {
     test("1. @cap/humanize-string — converts camelCase and PascalCase via @cap/decamelize", () => {

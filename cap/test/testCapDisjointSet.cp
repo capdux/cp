@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { DisjointSet, MAX_ELEMENTS } from "../../packages/@cap/disjoint-set/src/index.cp";
+import { DisjointSet, MAX_ELEMENTS } from "../../packages/disjoint-sets/src/index.cp";
 
 fn main() {
     test("init and component counts", () => {

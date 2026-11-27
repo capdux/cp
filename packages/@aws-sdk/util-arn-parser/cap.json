@@ -1,0 +1,34 @@
+{
+  "name": "@aws-sdk/util-arn-parser",
+  "version": "1.0.0",
+  "description": "Zero-heap AWS ARN (Amazon Resource Name) parser, formatter, partition validator, resource type extractor, and IAM wildcard matcher.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "@aws-sdk/util-arn-parser",
+    "repo": "https://github.com/aws/aws-sdk-js-v3",
+    "license": "Apache-2.0"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@aws-sdk/util-arn-parser",
+      "repo": "https://github.com/aws/aws-sdk-js-v3",
+      "license": "Apache-2.0"
+    },
+    {
+      "registry": "crates.io",
+      "name": "aws-arn",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

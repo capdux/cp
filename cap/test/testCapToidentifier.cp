@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { toIdentifier, toCamelIdentifier, toConstIdentifier, isValidIdentifier } from "../../packages/@cap/toidentifier/src/index.cp";
+import { toIdentifier, toCamelIdentifier, toConstIdentifier, isValidIdentifier } from "../../packages/toidentifier/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -4,7 +4,7 @@ import {
     formatDump,
     encodeHexSpaced,
     firstDiffOffset,
-} from "../../packages/@cap/hex-dump/src/index.cp";
+} from "../../packages/hexdump-nodejs/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

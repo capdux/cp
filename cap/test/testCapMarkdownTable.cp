@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     TableAlign,
     renderMarkdownTable,
-} from "../../packages/@cap/markdown-table/src/index.cp";
+} from "../../packages/markdown-table/src/index.cp";
 
 fn main() {
     test("1. @cap/markdown-table — basic 2x2 table with None alignment", () => {

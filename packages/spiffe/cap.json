@@ -1,0 +1,30 @@
+{
+  "name": "spiffe",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CNCF SPIFFE ID (spiffe://<trust-domain>/<path>) parser, strict security validator, and formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "spiffe",
+    "spire",
+    "istio",
+    "envoy",
+    "zero-trust",
+    "mtls",
+    "security",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "spiffe",
+    "repo": "https://github.com/maxlambrecht/rust-spiffe",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

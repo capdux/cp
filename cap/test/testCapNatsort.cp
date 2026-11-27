@@ -12,7 +12,7 @@ import {
     sortNaturalDesc,
     sortNaturalIgnoreCase,
     isSortedNatural,
-} from "../../packages/@cap/natsort/src/index.cp";
+} from "../../packages/natural-compare/src/index.cp";
 
 fn main() {
     test("1. @cap/natsort — filenames (file1/file2/file10/file20)", () => {

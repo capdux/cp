@@ -4,7 +4,7 @@ import {
     ContentRange,
     parseContentRange,
     formatContentRangeHeader,
-} from "../../packages/@cap/http-content-range/src/index.cp";
+} from "../../packages/http-content-range/src/index.cp";
 
 fn main() {
     test("1. @cap/http-content-range — parses standard bytes start-end/size", () => {

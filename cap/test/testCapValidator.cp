@@ -30,7 +30,7 @@ import {
     isPort,
     inRangeI64,
     isMultipleOf,
-} from "../../packages/@cap/validator/src/index.cp";
+} from "../../packages/validator/src/index.cp";
 
 fn main() {
     test("1. @cap/validator — Email & URL validation", () => {

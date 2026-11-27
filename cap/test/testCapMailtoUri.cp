@@ -4,7 +4,7 @@ import {
     countRecipients,
     formatMailto,
     isBasicEmail,
-} from "../../packages/@cap/mailto-uri/src/index.cp";
+} from "../../packages/mailto-link/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -4,7 +4,7 @@ import {
     abbrev,
     shortestAbbrev,
     resolveAbbrev,
-} from "../../packages/@cap/abbrev/src/index.cp";
+} from "../../packages/abbrev/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

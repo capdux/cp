@@ -12,7 +12,7 @@ import {
     semverDiffKind,
     semverDiff,
     isBreakingUpgrade,
-} from "../../packages/@cap/semver-diff/src/index.cp";
+} from "../../packages/semver-diff/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

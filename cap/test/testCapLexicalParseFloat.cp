@@ -7,7 +7,7 @@ import {
     ParseIntResult,
     parseFloat,
     parseIntRadix,
-} from "../../packages/@cap/lexical-parse-float/src/index.cp";
+} from "../../packages/lexical-parse-float/src/index.cp";
 
 fn lexpApproxEq(a: f64, b: f64, eps: f64): bool {
     const diff: f64 = if (a >= b) (a - b) else (b - a);

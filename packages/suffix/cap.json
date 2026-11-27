@@ -1,0 +1,20 @@
+{
+  "name": "suffix",
+  "version": "1.0.0",
+  "description": "Zero-heap static Suffix Array + Kasai O(N) LCP array with O(M log N) binary search, occurrence counting, and longest repeated substring detection.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "suffix",
+    "repo": "https://github.com/BurntSushi/suffix",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -5,7 +5,7 @@ import {
     nohashU32,
     fibBucketIndex,
     mixU64,
-} from "../../packages/@cap/nohash-hasher/src/index.cp";
+} from "../../packages/nohash-hasher/src/index.cp";
 
 fn main() {
     test("1. @cap/nohash-hasher — IntHasher returns exact u64 and u32 identity values", () => {

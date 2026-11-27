@@ -10,7 +10,7 @@ import {
     parseSubtitles,
     shiftCues,
     formatSubtitles,
-} from "../../packages/@cap/subtitle/src/index.cp";
+} from "../../packages/subtitle/src/index.cp";
 
 fn main() {
     test("1. @cap/subtitle — SRT & WebVTT timestamp parsing", () => {

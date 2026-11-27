@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { YoctoQueueU64, YoctoQueueI64, YOCTO_QUEUE_CAP } from "../../packages/@cap/yocto-queue/src/index.cp";
+import { YoctoQueueU64, YoctoQueueI64, YOCTO_QUEUE_CAP } from "../../packages/yocto-queue/src/index.cp";
 
 fn main() {
     test("1. @cap/yocto-queue — Basic FIFO enqueue/dequeue/peek", () => {

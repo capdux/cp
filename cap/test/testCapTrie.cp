@@ -7,7 +7,7 @@ import {
     TrieNode,
     LongestMatch,
     Trie,
-} from "../../packages/@cap/trie/src/index.cp";
+} from "../../packages/radix_trie/src/index.cp";
 
 fn main() {
     test("1. @cap/trie — Empty trie & empty key handling", () => {

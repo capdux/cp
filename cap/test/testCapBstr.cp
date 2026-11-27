@@ -23,7 +23,7 @@ import {
     bstrToLowerAscii,
     bstrToUpperAscii,
     bstrEqIgnoreAsciiCase
-} from "../../packages/@cap/bstr/src/index.cp";
+} from "../../packages/bstr/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

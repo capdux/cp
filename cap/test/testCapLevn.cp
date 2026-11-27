@@ -6,7 +6,7 @@ import {
     parseLevnScalar,
     parseLevnList,
     parseLevnObject,
-} from "../../packages/@cap/levn/src/index.cp";
+} from "../../packages/levn/src/index.cp";
 
 fn main() {
     test("1. @cap/levn — parses null and boolean scalars", () => {

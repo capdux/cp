@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { PidController } from "../../packages/@cap/pid/src/index.cp";
+import { PidController } from "../../packages/pid/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

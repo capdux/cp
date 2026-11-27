@@ -1,0 +1,20 @@
+{
+  "name": "sharded-slab",
+  "ver": "1.0.0",
+  "description": "Zero-allocation O(1) generational slab allocator and ABA-safe handle pool (Rust slab + generational-arena parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "sharded-slab",
+    "repo": "https://github.com/hawkw/sharded-slab",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

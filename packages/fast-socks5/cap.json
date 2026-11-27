@@ -1,0 +1,43 @@
+{
+  "name": "fast-socks5",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 1928 SOCKS5 and RFC 1929 username/password authentication frame encoder and decoder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "socks5",
+    "rfc1928",
+    "rfc1929",
+    "proxy",
+    "network",
+    "frame",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "fast-socks5",
+    "repo": "https://github.com/dizda/fast-socks5",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "fast-socks5",
+      "repo": "https://github.com/dizda/fast-socks5",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "socks",
+      "repo": "https://github.com/JoshGlazebrook/socks",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

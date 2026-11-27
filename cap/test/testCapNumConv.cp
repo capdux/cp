@@ -5,7 +5,7 @@ import {
     tryU64ToU8, tryU64ToU16, tryU64ToU32,
     tryI64ToI8, tryI64ToI16, tryI64ToI32, tryI64ToU8, tryI64ToU32,
     saturatingI64ToU8, saturatingI64ToI8, saturatingI64ToI16, saturatingU64ToU32
-} from "../../packages/@cap/num-conv/src/index.cp";
+} from "../../packages/num-conv/src/index.cp";
 
 fn main() {
     test("lossless extend conversions", () => {

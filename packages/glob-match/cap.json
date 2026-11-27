@@ -1,0 +1,29 @@
+{
+  "name": "glob-match",
+  "ver": "1.0.0",
+  "description": "Zero-allocation, anti-backtracking path glob and brace alternation matching engine for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "glob",
+    "glob-match",
+    "wildcard",
+    "pattern",
+    "path",
+    "brace-expansion",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "glob-match",
+    "repo": "https://github.com/devongovett/glob-match",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

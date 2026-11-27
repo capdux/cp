@@ -1,0 +1,34 @@
+{
+  "name": "lodash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation dot-path parser and deep JSON path reader (dot-prop / lodash.get / dlv parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "lodash",
+    "repo": "https://github.com/lodash/lodash",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "lodash",
+      "repo": "https://github.com/lodash/lodash",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "dot-prop",
+      "repo": "https://github.com/sindresorhus/dot-prop",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

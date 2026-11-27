@@ -9,7 +9,7 @@ import {
     networkName,
     formatCardNumber,
     maskCardPci,
-} from "../../packages/@cap/card-bin/src/index.cp";
+} from "../../packages/credit-card-type/src/index.cp";
 
 fn main() {
     test("1. @cap/card-bin — Visa, Mastercard (51-55 & 2221-2720), Amex detection", () => {

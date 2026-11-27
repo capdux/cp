@@ -4,7 +4,7 @@ import {
     defaultCssEscOptions,
     cssescBuf,
     cssesc,
-} from "../../packages/@cap/cssesc/src/index.cp";
+} from "../../packages/cssesc/src/index.cp";
 
 fn main() {
     test("1. @cap/cssesc — Identifier escaping: leading digits, -digit & lone dash", () => {

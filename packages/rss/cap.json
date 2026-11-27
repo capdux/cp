@@ -1,0 +1,30 @@
+{
+  "name": "rss",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RSS 2.0 XML feed generator and CDATA-aware tag extractor in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "rss",
+    "rss2",
+    "feed",
+    "xml",
+    "syndication",
+    "podcast",
+    "cdata",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rss",
+    "repo": "https://github.com/rust-syndication/rss",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

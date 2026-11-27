@@ -1,0 +1,28 @@
+{
+  "name": "p-timeout",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deadline tracker and timeout state machine guard (npm p-timeout v6 equivalent) for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "p-timeout",
+    "timeout",
+    "deadline",
+    "guard",
+    "state-machine",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "p-timeout",
+    "repo": "https://github.com/sindresorhus/p-timeout",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

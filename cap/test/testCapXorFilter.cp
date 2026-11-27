@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/xor-filter (Graf & Lemire Xor8 / Rust xorf parity)
 
 import { test, expect_eq } from "cap:test";
-import { Xor8Filter } from "../../packages/@cap/xor-filter/src/index.cp";
+import { Xor8Filter } from "../../packages/xorf/src/index.cp";
 
 fn main() {
     test("1. @cap/xor-filter — empty set & single-key filter", () => {

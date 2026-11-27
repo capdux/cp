@@ -8,7 +8,7 @@ import {
     expandEnv,
     expandEnvStr,
     hasEnvVars,
-} from "../../packages/@cap/envsubst/src/index.cp";
+} from "../../packages/envsubst/src/index.cp";
 
 fn main() {
     test("1. @cap/envsubst — basic $VAR and ${VAR} substitution & EnvMap operations", () => {

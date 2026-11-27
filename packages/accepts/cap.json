@@ -1,0 +1,23 @@
+{
+  "name": "accepts",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9110 HTTP content negotiation engine for Accept, Accept-Encoding, and Accept-Language headers, composing @cap/negotiator for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "negotiator": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "accepts",
+    "repo": "https://github.com/jshttp/accepts",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

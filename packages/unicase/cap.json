@@ -1,0 +1,23 @@
+{
+  "name": "unicase",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Unicode & ASCII case-insensitive comparison, ordering, matching, and hashing (clean-room port of Rust unicase)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@sindresorhus/fnv1a": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "unicase",
+    "repo": "https://github.com/seanmonstar/unicase",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

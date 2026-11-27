@@ -9,7 +9,7 @@ import {
     parseSvgPath,
     computeBounds,
     formatSvgPath,
-} from "../../packages/@cap/svg-path/src/index.cp";
+} from "../../packages/parse-svg-path/src/index.cp";
 
 fn approxEq(a: f64, b: f64) -> bool {
     const diff = if (a > b) a - b else b - a;

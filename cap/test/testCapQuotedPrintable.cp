@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { encode, decode } from "../../packages/@cap/quoted-printable/src/index.cp";
+import { encode, decode } from "../../packages/quoted-printable/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

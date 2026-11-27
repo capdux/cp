@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     ByteCursor, ByteWriterCursor, isAlignedSlice
-} from "../../packages/@cap/zerocopy-crate/src/index.cp";
+} from "../../packages/zerocopy/src/index.cp";
 
 fn main() {
     test("1. @cap/zerocopy-crate — ByteWriterCursor + ByteCursor multi-field roundtrip", () => {

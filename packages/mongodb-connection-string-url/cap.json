@@ -1,0 +1,43 @@
+{
+  "name": "mongodb-connection-string-url",
+  "ver": "1.0.0",
+  "description": "Zero-allocation MongoDB connection string (mongodb:// & mongodb+srv://) parser, option extractor, and password-redacting formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "mongodb",
+    "mongo-uri",
+    "connection-string",
+    "srv",
+    "replica-set",
+    "database",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "mongodb-connection-string-url",
+    "repo": "https://github.com/mongodb-js/devtools-shared",
+    "license": "Apache-2.0"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "mongodb-connection-string-url",
+      "repo": "https://github.com/mongodb-js/devtools-shared",
+      "license": "Apache-2.0"
+    },
+    {
+      "registry": "crates.io",
+      "name": "mongodb",
+      "repo": "https://github.com/mongodb/mongo-rust-driver",
+      "license": "Apache-2.0"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "highlight.js",
+  "ver": "1.0.0",
+  "description": "Zero-allocation multi-language lexer and syntax highlighter for Code, JSON, and SQL with ANSI and XSS-safe HTML output (highlight.js / prismjs parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "highlight.js",
+    "repo": "https://github.com/highlightjs/highlight.js",
+    "license": "BSD-3-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

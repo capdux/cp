@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     PinoLogger, levelLabel,
     PINO_TRACE, PINO_DEBUG, PINO_INFO, PINO_WARN, PINO_ERROR, PINO_FATAL, PINO_SILENT
-} from "../../packages/@cap/pino-log/src/index.cp";
+} from "../../packages/pino/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

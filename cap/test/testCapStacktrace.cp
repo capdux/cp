@@ -7,7 +7,7 @@ import {
     parseStack,
     formatFrame,
     cleanStack,
-} from "../../packages/@cap/stacktrace/src/index.cp";
+} from "../../packages/error-stack-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/stacktrace — V8/Node/Chrome/Bun stack frame variants", () => {

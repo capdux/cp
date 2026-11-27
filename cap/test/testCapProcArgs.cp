@@ -9,7 +9,7 @@ import {
     hasFlag,
     getOption,
     countPositionals,
-} from "../../packages/@cap/proc-args/src/index.cp";
+} from "../../packages/mri/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

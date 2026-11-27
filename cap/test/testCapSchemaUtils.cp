@@ -12,7 +12,7 @@ import {
     validateStringField,
     validateIntField,
     validateEnumField,
-} from "../../packages/@cap/schema-utils/src/index.cp";
+} from "../../packages/schema-utils/src/index.cp";
 
 fn main() {
     test("1. @cap/schema-utils — validateStringField checks required vs optional missing", () => {

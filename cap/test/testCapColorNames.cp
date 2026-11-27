@@ -18,7 +18,7 @@ import {
     mixRgb,
     lighten,
     darken,
-} from "../../packages/@cap/color-names/src/index.cp";
+} from "../../packages/color-name/src/index.cp";
 
 fn main() {
     test("1. @cap/color-names — 148 W3C CSS Color 4 named colors & case-insensitive lookup", () => {

@@ -1,0 +1,20 @@
+{
+  "name": "flatted",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-allocation circular-reference-safe flattened JSON serializer and parser with fixed 64-slot arena graph (clean-room implementation of npm flatted, #208 / 210M wk)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "flatted",
+    "repo": "https://github.com/WebReflection/flatted",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

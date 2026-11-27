@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     CssTokKind,
     CssLexer,
-} from "../../packages/@cap/cssparser/src/index.cp";
+} from "../../packages/cssparser/src/index.cp";
 
 fn main() {
     test("1. @cap/cssparser — tokenizes @media rule and block delimiters", () => {

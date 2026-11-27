@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MustacheContext,
     renderMustache,
-} from "../../packages/@cap/mustache-tpl/src/index.cp";
+} from "../../packages/mustache/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

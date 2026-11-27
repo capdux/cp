@@ -9,7 +9,7 @@ import {
     diffStats,
     lcsSimilarity,
     longestCommonSubstring,
-} from "../../packages/@cap/lcs-diff/src/index.cp";
+} from "../../packages/diff-sequences/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff: f64 = a - b;

@@ -1,0 +1,24 @@
+{
+  "name": "url",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation WHATWG URL Standard parser, normalizer, and relative URL resolver (Rust url v2 parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "percent-encoding": "1.0.0",
+    "idna": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "url",
+    "repo": "https://github.com/servo/rust-url",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -3,7 +3,7 @@ import {
     escapeUnsafeJson,
     serializeString,
     hasUnsafeScriptChars,
-} from "../../packages/@cap/serialize-javascript/src/index.cp";
+} from "../../packages/serialize-javascript/src/index.cp";
 
 fn main() {
     test("1. @cap/serialize-javascript — escapes closing script tag breakout", () => {

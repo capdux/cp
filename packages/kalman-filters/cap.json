@@ -1,0 +1,20 @@
+{
+  "name": "kalman-filters",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 1D scalar and 2D constant-velocity Kalman filters with Joseph-form covariance update (Rust kalman-filters / kfilter parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "kalman-filters",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

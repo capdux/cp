@@ -1,0 +1,24 @@
+{
+  "name": "kebabcase-keys",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap object key converter to kebab-case with exclude list, batch conversion, and nested dot-path support, composing @cap/decamelize-keys and @cap/map-obj (clean-room port of npm kebabcase-keys)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "decamelize-keys": "1.0.0",
+    "map-obj": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "kebabcase-keys",
+    "repo": "https://github.com/sindresorhus/kebabcase-keys",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

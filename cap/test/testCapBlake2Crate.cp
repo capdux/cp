@@ -8,7 +8,7 @@ import {
     Blake2s256,
     blake2s256Bytes,
     blake2s256Hex,
-} from "../../packages/@cap/blake2-crate/src/index.cp";
+} from "../../packages/blake2/src/index.cp";
 
 fn bl2sTestHexMatches(actual: []u8, expected: string): bool {
     if (actual.len != expected.len) {

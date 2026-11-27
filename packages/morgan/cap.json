@@ -1,0 +1,23 @@
+{
+  "name": "morgan",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap HTTP access log template formatter supporting Morgan tiny/dev/short/common/combined presets and custom tokens (clean-room port of morgan v1.10)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "morgan",
+    "repo": "https://github.com/expressjs/morgan",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

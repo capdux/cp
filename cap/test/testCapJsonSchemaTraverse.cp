@@ -8,7 +8,7 @@ import {
     traverseJsonSchema,
     countSchemaNodes,
     findSubschemaByPointer,
-} from "../../packages/@cap/json-schema-traverse/src/index.cp";
+} from "../../packages/json-schema-traverse/src/index.cp";
 
 fn main() {
     test("1. @cap/json-schema-traverse — root and nested properties traversal", () => {

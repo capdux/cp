@@ -7,7 +7,7 @@ import {
     analyzeText,
     analyzeTextWithWpm,
     formatReadingTime,
-} from "../../packages/@cap/text-stats/src/index.cp";
+} from "../../packages/reading-time/src/index.cp";
 
 fn main() {
     test("1. @cap/text-stats — Pure English prose (words, sentences, decimals, hyphens)", () => {

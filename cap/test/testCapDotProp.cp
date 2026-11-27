@@ -8,7 +8,7 @@ import {
     getJsonString,
     hasJsonPath,
     escapePathSegment,
-} from "../../packages/@cap/dot-prop/src/index.cp";
+} from "../../packages/lodash/src/index.cp";
 
 fn main() {
     test("1. @cap/dot-prop — parseDotPath with dots, brackets & escaped keys", () => {

@@ -1,0 +1,20 @@
+{
+  "name": "color_quant",
+  "ver": "1.0.0",
+  "description": "Zero-allocation pure CP 256-color palette quantizer and nearest-color mapper (image-rs color_quant parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "color_quant",
+    "repo": "https://github.com/image-rs/color_quant",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

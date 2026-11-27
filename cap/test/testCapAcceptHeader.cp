@@ -3,7 +3,7 @@ import {
     AcceptEntry,
     AcceptHeader,
     negotiateMediaType
-} from "../../packages/@cap/accept-header/src/index.cp";
+} from "../../packages/accept-header/src/index.cp";
 
 fn main() {
     test("1. @cap/accept-header — parse sorts by quality descending & specificity descending", () => {

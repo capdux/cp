@@ -1,0 +1,20 @@
+{
+  "name": "toml_edit",
+  "ver": "1.0.0",
+  "description": "Zero-allocation TOML v1.0 document parser, typed query/mutation engine, and canonical formatter (Rust toml_edit v0.22 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "toml_edit",
+    "repo": "https://github.com/toml-rs/toml",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

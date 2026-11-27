@@ -1,0 +1,44 @@
+{
+  "name": "haversine",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WGS-84 spherical Haversine great-circle distance, initial bearing, midpoint, and destination point calculator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "haversine",
+    "geo",
+    "gps",
+    "distance",
+    "bearing",
+    "wgs84",
+    "coordinates",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "haversine",
+    "repo": "https://github.com/njj/haversine",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "haversine",
+      "repo": "https://github.com/njj/haversine",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "haversine",
+      "repo": "https://github.com/gavinuhma/haversine",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

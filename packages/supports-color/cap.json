@@ -1,0 +1,33 @@
+{
+  "name": "supports-color",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation terminal color capability detection (supports-color v9 parity) powered by @cap/has-flag in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "supports-color",
+    "color",
+    "terminal",
+    "tty",
+    "ansi",
+    "truecolor",
+    "256color",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "has-flag": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "supports-color",
+    "repo": "https://github.com/chalk/supports-color",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

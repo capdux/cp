@@ -4,7 +4,7 @@ import {
     ctEqual,
     startsWithBytes,
     endsWithBytes,
-    findByte,
+    findByteInBytes,
     countByte,
     indexOfBytes,
     readU16BE,
@@ -33,8 +33,8 @@ fn main() {
 
     test("2. cap:bin — findByte and countByte across 16-byte unrolled chunks", () => {
         const long_s = "0123456789abcdef0123456789abcdefXend";
-        expect_eq(findByte(long_s, 88, 0) ?? 0, 32 as usize); // 'X'
-        expect_eq(findByte(long_s, 90, 0) == null, true);      // 'Z'
+        expect_eq(findByteInBytes(long_s, 88, 0) ?? 0, 32 as usize); // 'X'
+        expect_eq(findByteInBytes(long_s, 90, 0) == null, true);      // 'Z'
         expect_eq(countByte("a,b,c,d,e,f,g,h,i", 44), 8 as usize);
     });
 

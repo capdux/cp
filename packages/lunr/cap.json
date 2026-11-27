@@ -1,0 +1,30 @@
+{
+  "name": "lunr",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation in-memory inverted index and BM25 full-text search engine with prefix matching in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "minisearch",
+    "lunr",
+    "bm25",
+    "full-text",
+    "inverted-index",
+    "search",
+    "autocomplete",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "lunr",
+    "repo": "https://github.com/olivernn/lunr.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -6,7 +6,7 @@ import {
     visibleWidth,
     wrapAnsi,
     sliceAnsi,
-} from "../../packages/@cap/wrap-ansi/src/index.cp";
+} from "../../packages/wrap-ansi/src/index.cp";
 
 fn main() {
     test("1. @cap/wrap-ansi — visibleWidth with ANSI CSI & CJK double-width", () => {

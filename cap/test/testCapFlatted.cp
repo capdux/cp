@@ -7,7 +7,7 @@ import {
     FlatArena,
     stringifyFlatted,
     parseFlatted,
-} from "../../packages/@cap/flatted/src/index.cp";
+} from "../../packages/flatted/src/index.cp";
 
 fn main() {
     test("1. @cap/flatted — self-referencing circular object stringify & parse", () => {

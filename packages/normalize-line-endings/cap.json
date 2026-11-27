@@ -1,0 +1,21 @@
+{
+  "name": "normalize-line-endings",
+  "version": "0.3.0",
+  "description": "Zero-heap line ending detector and normalizer (CRLF/CR <-> LF)",
+  "entry": "src/index.cp",
+  "license": "Apache-2.0",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "normalize-line-endings",
+    "version": "0.3.0",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/derekdreery/normalize-line-endings"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

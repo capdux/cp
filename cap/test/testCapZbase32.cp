@@ -4,7 +4,7 @@ import {
     decode,
     encodedLen,
     isValidZBase32,
-} from "../../packages/@cap/zbase32/src/index.cp";
+} from "../../packages/zbase32/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

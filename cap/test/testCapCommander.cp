@@ -7,7 +7,7 @@ import {
     Command,
     CommandParseResult,
     parseOptionFlags,
-} from "../../packages/@cap/commander/src/index.cp";
+} from "../../packages/commander/src/index.cp";
 
 fn containsSubstr(haystack: string, needle: string): bool {
     if (needle.len == 0) {

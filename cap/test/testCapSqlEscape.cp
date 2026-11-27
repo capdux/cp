@@ -6,7 +6,7 @@ import {
     escapeLike,
     isSafeUnquotedIdent,
     countPlaceholders,
-} from "../../packages/@cap/sql-escape/src/index.cp";
+} from "../../packages/sqlstring/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

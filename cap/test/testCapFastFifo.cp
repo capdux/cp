@@ -3,7 +3,7 @@ import {
     FIFO_CAP,
     newFifoI64,
     newFifoStr,
-} from "../../packages/@cap/fast-fifo/src/index.cp";
+} from "../../packages/fast-fifo/src/index.cp";
 
 fn main() {
     test("1. @cap/fast-fifo — preserves FIFO order on push, peek, and shift", () => {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { MAX_POINTS, KdPoint2D, KdTree2D } from "../../packages/@cap/kd-tree/src/index.cp";
+import { MAX_POINTS, KdPoint2D, KdTree2D } from "../../packages/kiddo/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

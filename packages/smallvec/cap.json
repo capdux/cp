@@ -1,0 +1,21 @@
+{
+  "name": "smallvec",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap inline stack vector with push/pop/insert/remove/swapRemove/dedup (clean-room CP implementation of crates.io smallvec)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "smallvec",
+    "repo": "https://github.com/servo/rust-smallvec",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

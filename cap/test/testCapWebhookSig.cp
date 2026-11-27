@@ -7,7 +7,7 @@ import {
     constantTimeEq,
     verifyStripeExpected,
     formatStripeSignedPayload,
-} from "../../packages/@cap/webhook-sig/src/index.cp";
+} from "../../packages/standardwebhooks/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

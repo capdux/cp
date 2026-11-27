@@ -1,0 +1,24 @@
+{
+  "name": "globset",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation multi-glob set matcher and override engine (Rust globset v0.4 parity) composing @cap/picomatch and @cap/normalize-path",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "picomatch": "1.0.0",
+    "normalize-path": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "globset",
+    "repo": "https://github.com/BurntSushi/ripgrep",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

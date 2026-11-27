@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     isPathInside,
     isPathInsideOrEqual,
-} from "../../packages/@cap/is-path-inside/src/index.cp";
+} from "../../packages/is-path-inside/src/index.cp";
 
 fn main() {
     test("1. @cap/is-path-inside — detects nested child paths", () => {

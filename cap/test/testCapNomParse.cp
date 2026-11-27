@@ -32,7 +32,7 @@ import {
     parseU64,
     parseI64,
     parseHexU64,
-} from "../../packages/@cap/nom-parse/src/index.cp";
+} from "../../packages/nom/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

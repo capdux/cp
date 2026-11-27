@@ -8,7 +8,7 @@ import {
     encodingExists,
     decodeToUtf8,
     encodeFromUtf8,
-} from "../../packages/@cap/iconv-lite/src/index.cp";
+} from "../../packages/iconv-lite/src/index.cp";
 
 fn main() {
     test("1. @cap/iconv-lite — parseCharset normalization & encodingExists", () => {

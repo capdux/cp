@@ -10,7 +10,7 @@ import {
     sortF64,
     isSortedI64,
     isSortedU64,
-} from "../../packages/@cap/radix-sort/src/index.cp";
+} from "../../packages/radsort/src/index.cp";
 
 fn main() {
     test("1. @cap/radix-sort — Empty, single-element & undersized scratch rejection", () => {

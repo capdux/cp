@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     HOST_GITHUB, HOST_GITLAB, HOST_BITBUCKET, fromUrl
-} from "../../packages/@cap/hosted-git-info/src/index.cp";
+} from "../../packages/hosted-git-info/src/index.cp";
 
 fn main() {
     test("1. @cap/hosted-git-info — parses GitHub shorthand and formats HTTPS/SSH/browse/bugs", () => {

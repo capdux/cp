@@ -5,7 +5,7 @@ import {
     Colorette,
     createColors,
     createColorsWithOptions
-} from "../../packages/@cap/colorette/src/index.cp";
+} from "../../packages/colorette/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

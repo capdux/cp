@@ -4,7 +4,7 @@ import {
     formatOptionRow,
     generateHelp,
     findOptionSpec,
-} from "../../packages/@cap/optionator/src/index.cp";
+} from "../../packages/optionator/src/index.cp";
 
 fn main() {
     test("1. @cap/optionator — formatOptionRow aligns short, long, type, description, and default", () => {

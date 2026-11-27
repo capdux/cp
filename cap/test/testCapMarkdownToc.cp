@@ -6,7 +6,7 @@ import {
     githubSlug,
     extractToc,
     renderTocMarkdown,
-} from "../../packages/@cap/markdown-toc/src/index.cp";
+} from "../../packages/github-slugger/src/index.cp";
 
 fn main() {
     test("1. @cap/markdown-toc — GitHub anchor slug generation (ASCII & CJK)", () => {

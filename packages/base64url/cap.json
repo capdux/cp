@@ -1,0 +1,23 @@
+{
+  "name": "base64url",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 4648 Section 5 Base64URL (no-padding) encoder, decoder, and standard Base64 converter (clean-room port of npm base64url)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "data-encoding": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "base64url",
+    "repo": "https://github.com/brianloveswords/base64url",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

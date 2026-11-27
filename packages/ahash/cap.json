@@ -1,0 +1,20 @@
+{
+  "name": "ahash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation randomized high-speed non-cryptographic hasher with 4-key RandomState, folded multiply, and rotation rounds (Rust ahash parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "ahash",
+    "repo": "https://github.com/tkaitchuck/aHash",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

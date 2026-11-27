@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parseVersion, compareVersions, isPrerelease, matchesVersionReq,
     isCaretCompatible, formatVersion, bumpMajor, bumpMinor, bumpPatch
-} from "../../packages/@cap/semver-crate/src/index.cp";
+} from "../../packages/semver/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

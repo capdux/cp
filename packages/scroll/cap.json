@@ -1,0 +1,44 @@
+{
+  "name": "scroll",
+  "version": "1.0.0",
+  "description": "Zero-allocation endian-aware offset-advancing binary reader/writer cursors (PreadCursor & PwriteCursor) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "scroll",
+    "endian",
+    "endian-type",
+    "binary",
+    "cursor",
+    "pread",
+    "pwrite",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "scroll",
+    "repo": "https://github.com/m4b/scroll",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "scroll",
+      "repo": "https://github.com/m4b/scroll",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "endian-type",
+      "repo": "https://github.com/dpc/endian-type",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

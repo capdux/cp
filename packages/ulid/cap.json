@@ -1,0 +1,50 @@
+{
+  "name": "ulid",
+  "ver": "1.0.0",
+  "description": "Zero-allocation ULID (48-bit Unix ms timestamp + 80-bit entropy, Crockford Base32) encoder, decoder, validator, and monotonic incrementer for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "ulid",
+    "uuid",
+    "id",
+    "crockford",
+    "base32",
+    "sortable",
+    "monotonic",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "ulid",
+    "repo": "https://github.com/dylanhart/ulid-rs",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "ulid",
+      "repo": "https://github.com/dylanhart/ulid-rs",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "ulid",
+      "repo": "https://github.com/ulid/javascript",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "ulidx",
+      "repo": "https://github.com/perry-mitchell/ulidx",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

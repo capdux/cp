@@ -1,0 +1,29 @@
+{
+  "name": "normalize-path",
+  "ver": "1.0.0",
+  "desc": "Zero-heap POSIX/Windows path normalizer (backslash conversion, slash collapsing, UNC & drive root preservation) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "normalize-path",
+    "path",
+    "posix",
+    "windows",
+    "unc",
+    "slash",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "normalize-path",
+    "repo": "https://github.com/jonschlinkert/normalize-path",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -6,7 +6,7 @@ import {
     minIndent,
     stripIndent,
     stripIndentBy,
-} from "../../packages/@cap/strip-indent/src/index.cp";
+} from "../../packages/strip-indent/src/index.cp";
 
 fn main() {
     test("1. @cap/strip-indent — minIndent ignores empty and whitespace-only lines", () => {

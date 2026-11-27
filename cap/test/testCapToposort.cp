@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/toposort (Kahn + cycle detection + DAG levels)
 
 import { test, expect_eq } from "cap:test";
-import { TopoGraph } from "../../packages/@cap/toposort/src/index.cp";
+import { TopoGraph } from "../../packages/topological-sort/src/index.cp";
 
 fn main() {
     test("1. @cap/toposort — empty graph & single node", () => {

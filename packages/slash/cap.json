@@ -1,0 +1,29 @@
+{
+  "name": "slash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Windows backslash <-> POSIX forward-slash path normalizer preserving extended-length (\\\\?\\) paths for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "slash",
+    "path",
+    "windows",
+    "posix",
+    "backslash",
+    "normalize",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "slash",
+    "repo": "https://github.com/sindresorhus/slash",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

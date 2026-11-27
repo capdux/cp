@@ -8,7 +8,7 @@ import {
     CHACHA20_BLOCK_LEN,
     chacha20Block,
     ChaCha20Cipher,
-} from "../../packages/@cap/chacha20-crate/src/index.cp";
+} from "../../packages/chacha20/src/index.cp";
 
 fn cc20TestHexNibble(ch: u8): u8 {
     if (ch >= ('0' as u8) && ch <= ('9' as u8)) {

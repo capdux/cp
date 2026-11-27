@@ -15,7 +15,7 @@ import {
     isImage,
     isArchive,
     isExecutable,
-} from "../../packages/@cap/magic-bytes/src/index.cp";
+} from "../../packages/file-type/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

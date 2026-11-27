@@ -1,0 +1,44 @@
+{
+  "name": "httpdate",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 9110 Section 5.6.7 HTTP-date parser (IMF-fixdate, RFC 850, asctime) and formatter with Hinnant calendar math in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "http-date",
+    "httpdate",
+    "rfc9110",
+    "imf-fixdate",
+    "rfc850",
+    "asctime",
+    "timestamp",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "httpdate",
+    "repo": "https://github.com/pyfisch/httpdate",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "httpdate",
+      "repo": "https://github.com/pyfisch/httpdate",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "http-date",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -4,7 +4,7 @@ import {
     Aes128Ctr128Le,
     Aes256Ctr128Be,
     Aes256Ctr128Le,
-} from "../../packages/@cap/ctr/src/index.cp";
+} from "../../packages/ctr/src/index.cp";
 
 fn main() {
     test("1. @cap/ctr — NIST SP 800-38A F.5.1 AES-128-CTR official 64-byte vector", () => {

@@ -17,7 +17,7 @@ import {
     decodeZigzagVarint,
     encodeQuicVarint,
     decodeQuicVarint,
-} from "../../packages/@cap/varint/src/index.cp";
+} from "../../packages/unsigned-varint/src/index.cp";
 
 fn main() {
     test("1. @cap/varint — ULEB128 encoding, decoding & 64-bit bounds", () => {

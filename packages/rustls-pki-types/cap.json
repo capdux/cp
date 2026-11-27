@@ -1,0 +1,34 @@
+{
+  "name": "rustls-pki-types",
+  "ver": "1.0.0",
+  "description": "Zero-allocation TLS/PKI core types (DnsName, ServerName, UnixTime, PEM object detection & DER decoding via @cap/pem-rfc7468) in pure CP (rustls-pki-types v1 parity).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "pem-rfc7468": "1.0.0"
+  },
+  "keywords": [
+    "tls",
+    "pki",
+    "x509",
+    "dns",
+    "server-name",
+    "pem",
+    "der",
+    "rustls",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rustls-pki-types",
+    "repo": "https://github.com/rustls/pki-types",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

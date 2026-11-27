@@ -7,7 +7,7 @@ import {
     parseBcp47,
     canonicalizeBcp47,
     matchLocale,
-} from "../../packages/@cap/bcp47/src/index.cp";
+} from "../../packages/bcp-47/src/index.cp";
 
 fn main() {
     test("1. @cap/bcp47 — Standard language, script & region tags (ISO-3166 & UN M.49)", () => {

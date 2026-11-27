@@ -19,7 +19,7 @@ import {
     AjvSchema,
     validateFormat,
     validateWithSchema,
-} from "../../packages/@cap/ajv-schema/src/index.cp";
+} from "../../packages/ajv/src/index.cp";
 
 fn main() {
     test("1. @cap/ajv-schema — Object schema (required/properties/type/min/max/minLength)", () => {

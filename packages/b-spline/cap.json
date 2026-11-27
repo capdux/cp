@@ -1,0 +1,43 @@
+{
+  "name": "b-spline",
+  "ver": "1.0.0",
+  "desc": "Zero-heap cubic Hermite, Catmull-Rom, and uniform cubic B-Spline curve interpolation in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bspline",
+    "catmull-rom",
+    "hermite",
+    "spline",
+    "interpolation",
+    "curve",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "b-spline",
+    "repo": "https://github.com/thibauts/b-spline",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "b-spline",
+      "repo": "https://github.com/thibauts/b-spline",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "bspline",
+      "repo": "https://github.com/Twinklebear/bspline",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -19,7 +19,7 @@ import {
     floorInt,
     ceilInt,
     isInteger,
-} from "../../packages/@cap/rational/src/index.cp";
+} from "../../packages/fraction.js/src/index.cp";
 
 fn main() {
     test("1. @cap/rational — Auto-reduction & negative denominator normalization", () => {

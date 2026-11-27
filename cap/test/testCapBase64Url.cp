@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     encodeBase64Url, decodeBase64Url, encodedBase64UrlLen,
     fromStandardBase64, toStandardBase64, isValidBase64Url
-} from "../../packages/@cap/base64-url/src/index.cp";
+} from "../../packages/base64url/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

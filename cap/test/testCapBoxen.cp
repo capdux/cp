@@ -10,7 +10,7 @@ import {
     renderBox,
     box,
     titledBox,
-} from "../../packages/@cap/boxen/src/index.cp";
+} from "../../packages/boxen/src/index.cp";
 
 fn allLinesEqualDisplayWidth(rendered: string) -> bool {
     let first_w: usize = 0;

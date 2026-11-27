@@ -1,0 +1,28 @@
+{
+  "name": "cexpr",
+  "version": "1.0.0",
+  "description": "Zero-allocation C constant expression parser and evaluator (full C operator precedence, hex/bin/oct/char literals) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cexpr",
+    "c-parser",
+    "expression",
+    "evaluator",
+    "preprocessor",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "cexpr",
+    "repo": "https://github.com/jethrogb/rust-cexpr",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

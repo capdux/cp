@@ -10,7 +10,7 @@ import {
     isAscii,
     toLossyUtf8,
     utf16Len,
-} from "../../packages/@cap/utf8-valid/src/index.cp";
+} from "../../packages/utf8parse/src/index.cp";
 
 fn main() {
     test("1. @cap/utf8-valid — Valid 1/2/3/4-byte UTF-8 & ASCII fast-path", () => {

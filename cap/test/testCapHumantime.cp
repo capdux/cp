@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parseDuration, formatDuration, formatRfc3339Seconds,
     NS_PER_SEC, NS_PER_MS, NS_PER_MIN, NS_PER_HOUR, NS_PER_DAY
-} from "../../packages/@cap/humantime/src/index.cp";
+} from "../../packages/humantime/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

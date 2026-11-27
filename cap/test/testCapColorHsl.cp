@@ -18,7 +18,7 @@ import {
     lighten,
     darken,
     mixRgb,
-} from "../../packages/@cap/color-hsl/src/index.cp";
+} from "../../packages/palette/src/index.cp";
 
 fn near(a: f64, b: f64): bool {
     let d: f64 = a - b;

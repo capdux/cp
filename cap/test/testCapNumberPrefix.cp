@@ -4,7 +4,7 @@ import {
     decimalPrefix,
     binaryPrefix,
     formatPrefixed,
-} from "../../packages/@cap/number-prefix/src/index.cp";
+} from "../../packages/number_prefix/src/index.cp";
 
 fn approx(a: f64, b: f64, eps: f64): bool {
     const d = a - b;

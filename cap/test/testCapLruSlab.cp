@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { NONE_IDX, SlabEntry, LruSlab } from "../../packages/@cap/lru-slab/src/index.cp";
+import { NONE_IDX, SlabEntry, LruSlab } from "../../packages/lru-slab/src/index.cp";
 
 fn emptyEntry(): SlabEntry {
     return SlabEntry { occupied: false, key: 0, val: 0, prev: NONE_IDX, next: NONE_IDX };

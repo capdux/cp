@@ -1,0 +1,20 @@
+{
+  "name": "foldhash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 64x64->128-bit folded-multiply non-cryptographic hasher with Fast and Quality modes (Rust foldhash parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "foldhash",
+    "repo": "https://github.com/orlp/foldhash",
+    "license": "Zlib"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

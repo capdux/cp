@@ -3,7 +3,7 @@ import {
     PkgFileEntry,
     ReadPkgUpResult,
     readPackageUpInEntries,
-} from "../../packages/@cap/read-pkg-up/src/index.cp";
+} from "../../packages/read-pkg-up/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

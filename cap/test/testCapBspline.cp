@@ -8,7 +8,7 @@ import {
     uniformCubicBSpline1D,
     uniformCubicBSpline2D,
     evalCatmullRomChain,
-} from "../../packages/@cap/bspline/src/index.cp";
+} from "../../packages/b-spline/src/index.cp";
 
 const EPS: f64 = 0.000000001;
 

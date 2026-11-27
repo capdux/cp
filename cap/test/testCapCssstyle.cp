@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { CSS_STYLE_CAP, CssProp, CssStyleDecl } from "../../packages/@cap/cssstyle/src/index.cp";
+import { CSS_STYLE_CAP, CssProp, CssStyleDecl } from "../../packages/cssstyle/src/index.cp";
 
 fn main() {
     test("1. @cap/cssstyle — Parse basic inline declarations and query values/priorities", () => {

@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     CacheControl,
-} from "../../packages/@cap/cache-control/src/index.cp";
+} from "../../packages/cache-control-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/cache-control — Classic CDN header parsing & shared vs private TTL", () => {

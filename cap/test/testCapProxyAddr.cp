@@ -15,7 +15,7 @@ import {
     isTrustedBuiltin,
     parseXffAddresses,
     resolveClientIp
-} from "../../packages/@cap/proxy-addr/src/index.cp";
+} from "../../packages/proxy-addr/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

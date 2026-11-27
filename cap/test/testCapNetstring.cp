@@ -6,7 +6,7 @@ import {
     NS_OK,
     NS_INCOMPLETE,
     NS_INVALID,
-} from "../../packages/@cap/netstring/src/index.cp";
+} from "../../packages/netstring/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

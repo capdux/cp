@@ -10,7 +10,7 @@ import {
     matchesPattern,
     resolvePath,
     resolveAllCandidates,
-} from "../../packages/@cap/tsconfig-paths/src/index.cp";
+} from "../../packages/tsconfig-paths/src/index.cp";
 
 fn main() {
     test("1. @cap/tsconfig-paths — Exact match takes precedence over wildcard '*'", () => {

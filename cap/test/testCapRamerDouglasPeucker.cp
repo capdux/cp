@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Pt2, pointToSegmentDistSq, simplifyPolyline } from "../../packages/@cap/ramer-douglas-peucker/src/index.cp";
+import { Pt2, pointToSegmentDistSq, simplifyPolyline } from "../../packages/simplify-js/src/index.cp";
 
 fn approx(a: f64, b: f64): bool {
     let d = a - b;

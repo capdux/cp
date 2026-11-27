@@ -1,0 +1,28 @@
+{
+  "name": "cargo-platform",
+  "version": "1.0.0",
+  "description": "Zero-allocation LLVM/Rust target triple parser and Cargo cfg(...) expression evaluator for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cargo",
+    "platform",
+    "target-triple",
+    "cfg",
+    "cross-compile",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "cargo-platform",
+    "repo": "https://github.com/rust-lang/cargo",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

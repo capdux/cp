@@ -7,7 +7,7 @@ import {
     parseXForwardedFor,
     extractClientIp,
     isPrivateIp,
-} from "../../packages/@cap/forwarded/src/index.cp";
+} from "../../packages/forwarded/src/index.cp";
 
 fn main() {
     test("1. @cap/forwarded — RFC 7239 single & multi-hop parsing", () => {

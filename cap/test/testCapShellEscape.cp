@@ -5,7 +5,7 @@ import {
     escapeWindows,
     joinPosixCommand,
     isValidEnvName,
-} from "../../packages/@cap/shell-escape/src/index.cp";
+} from "../../packages/shell-escape/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

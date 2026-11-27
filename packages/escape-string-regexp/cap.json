@@ -1,0 +1,21 @@
+{
+  "name": "escape-string-regexp",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Escape RegExp special characters in a string (clean-room CP implementation of npm escape-string-regexp)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "escape-string-regexp",
+    "repo": "https://github.com/sindresorhus/escape-string-regexp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

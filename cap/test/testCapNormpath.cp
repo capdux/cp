@@ -12,7 +12,7 @@ import {
     isNormalized,
     isVerbatimWindows,
     stripVerbatimPrefix,
-} from "../../packages/@cap/normpath/src/index.cp";
+} from "../../packages/normpath/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

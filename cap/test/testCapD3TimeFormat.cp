@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     utcFormat,
     utcParse,
-} from "../../packages/@cap/d3-time-format/src/index.cp";
+} from "../../packages/d3-time-format/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

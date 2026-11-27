@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     SvgColor,
     SvgCanvas,
-} from "../../packages/@cap/plotters-svg/src/index.cp";
+} from "../../packages/plotters-svg/src/index.cp";
 
 fn containsSubstr(haystack: string, needle: string): bool {
     if (needle.len == 0) return true;

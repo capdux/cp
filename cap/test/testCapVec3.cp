@@ -19,7 +19,7 @@ import {
     maxVec,
     clampLength,
     approxEq,
-} from "../../packages/@cap/vec3/src/index.cp";
+} from "../../packages/gl-matrix/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

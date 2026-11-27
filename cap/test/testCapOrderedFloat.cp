@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     OrderedF64, NotNanF64, cmpOrderedF64, eqOrderedF64, hashOrderedF64,
     isNanF64, isInfiniteF64, isFiniteF64, sortOrderedF64
-} from "../../packages/@cap/ordered-float/src/index.cp";
+} from "../../packages/ordered-float/src/index.cp";
 
 fn main() {
     test("1. @cap/ordered-float — Total order: -Inf < -1.0 < 0.0 < 1.0 < +Inf < NaN", () => {

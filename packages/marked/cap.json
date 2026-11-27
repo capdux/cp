@@ -1,0 +1,32 @@
+{
+  "name": "marked",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via @cap/escape-html (clean-room MIT counterpart to npm marked v14).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "markdown",
+    "marked",
+    "commonmark",
+    "gfm",
+    "html",
+    "compiler",
+    "zero-heap"
+  ],
+  "dependencies": {
+    "escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "marked",
+    "repo": "https://github.com/markedjs/marked",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

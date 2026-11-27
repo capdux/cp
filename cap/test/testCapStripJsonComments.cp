@@ -7,7 +7,7 @@ import {
     stripComments,
     stripJsonc,
     stripCompact,
-} from "../../packages/@cap/strip-json-comments/src/index.cp";
+} from "../../packages/strip-json-comments/src/index.cp";
 
 fn main() {
     test("1. @cap/strip-json-comments — Single-line // & multi-line /* */ comments", () => {

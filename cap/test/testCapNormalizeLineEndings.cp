@@ -4,7 +4,7 @@ import {
     detectLineEnding,
     normalizeToLf,
     normalizeToCrlf,
-} from "../../packages/@cap/normalize-line-endings/src/index.cp";
+} from "../../packages/normalize-line-endings/src/index.cp";
 
 fn main() {
     test("1. @cap/normalize-line-endings — detects LF, CRLF, CR, None, and Mixed", () => {

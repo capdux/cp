@@ -15,7 +15,7 @@ import {
     decodeBytes,
     validate,
     dictLookup,
-} from "../../packages/@cap/bencode/src/index.cp";
+} from "../../packages/bendy/src/index.cp";
 
 fn main() {
     test("1. @cap/bencode — signed/zero/negative integers & strict rejection of i-0e/i01e/ie", () => {

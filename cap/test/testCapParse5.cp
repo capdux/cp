@@ -3,7 +3,7 @@ import {
     HtmlTokenizer, HtmlAttr, parseAttributes, extractTextContent, isVoidElement,
     HTML_TOK_DOCTYPE, HTML_TOK_START_TAG, HTML_TOK_END_TAG, HTML_TOK_SELF_CLOSING,
     HTML_TOK_COMMENT, HTML_TOK_TEXT, HTML_TOK_EOF
-} from "../../packages/@cap/parse5/src/index.cp";
+} from "../../packages/parse5/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

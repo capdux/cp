@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     salsa20Block,
     salsa20Apply,
-} from "../../packages/@cap/salsa20/src/index.cp";
+} from "../../packages/salsa20/src/index.cp";
 
 fn main() {
     test("1. @cap/salsa20 — matches official eSTREAM Set 1 Vector 0 (1-bit key, zero nonce)", () => {

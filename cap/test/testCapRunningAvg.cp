@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Ema, Sma, smaSlice, wmaSlice } from "../../packages/@cap/running-avg/src/index.cp";
+import { Ema, Sma, smaSlice, wmaSlice } from "../../packages/moving-averages/src/index.cp";
 
 fn approx(a: f64, b: f64): bool {
     let d = a - b;

@@ -8,7 +8,7 @@ import {
     parseSpdxExpression,
     isValidSpdxExpression,
     satisfiesSpdx,
-} from "../../packages/@cap/spdx-expression-parse/src/index.cp";
+} from "../../packages/spdx-expression-parse/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

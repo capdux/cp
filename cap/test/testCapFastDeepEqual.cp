@@ -10,7 +10,7 @@ import {
     kindOfJson,
     isPlainObjectJson,
     jsonDeepEqual,
-} from "../../packages/@cap/fast-deep-equal/src/index.cp";
+} from "../../packages/fast-deep-equal/src/index.cp";
 
 fn main() {
     test("1. @cap/fast-deep-equal — Primitives: null, bool & numeric equivalence (1.0==1, 1e2==100, -0==0)", () => {

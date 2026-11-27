@@ -4,7 +4,7 @@ import {
     toIsoDuration,
     toPostgresString,
     totalSecondsApprox,
-} from "../../packages/@cap/postgres-interval/src/index.cp";
+} from "../../packages/postgres-interval/src/index.cp";
 
 fn main() {
     test("1. @cap/postgres-interval — Full PostgreSQL interval with fractional seconds", () => {

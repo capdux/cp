@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { F64_EPSILON, F32_EPSILON } from "../../packages/@cap/approx/src/index.cp";
+import { F64_EPSILON, F32_EPSILON } from "../../packages/approx/src/index.cp";
 import {
     F64Margin,
     F32Margin,
@@ -7,7 +7,7 @@ import {
     approxEqF32,
     approxEqRatioF64,
     approxOrdF64
-} from "../../packages/@cap/float-cmp/src/index.cp";
+} from "../../packages/float-cmp/src/index.cp";
 
 fn main() {
     test("1. @cap/float-cmp — F64Margin & F32Margin builders", () => {

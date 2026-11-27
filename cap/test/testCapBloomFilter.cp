@@ -4,7 +4,7 @@ import {
     popcount,
     fillRatio,
     optimalNumHashes,
-} from "../../packages/@cap/bloom-filter/src/index.cp";
+} from "../../packages/bloom-filters/src/index.cp";
 
 fn formatKey(prefix: u8, n: usize, out: []u8): []u8 {
     out[0] = prefix;

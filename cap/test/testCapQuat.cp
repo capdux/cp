@@ -20,7 +20,7 @@ import {
     slerp,
     rotatePoint,
     approxEq,
-} from "../../packages/@cap/quat/src/index.cp";
+} from "../../packages/quaternion/src/index.cp";
 
 const EPS: f64 = 0.000000001;
 

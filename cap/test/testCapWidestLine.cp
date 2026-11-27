@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/widest-line (6 test suites)
 
 import { test, expect_eq } from "cap:test";
-import { StringWidthOptions } from "../../packages/@cap/string-width/src/index.cp";
+import { StringWidthOptions } from "../../packages/string-width/src/index.cp";
 import {
     widestLine,
     widestLineWithOptions,
@@ -10,7 +10,7 @@ import {
     lineWidthsWithOptions,
     widestLineWithTab,
     countLines,
-} from "../../packages/@cap/widest-line/src/index.cp";
+} from "../../packages/widest-line/src/index.cp";
 
 fn main() {
     test("1. @cap/widest-line — empty string, single line, \\n and \\r\\n line endings", () => {

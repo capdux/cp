@@ -1,0 +1,24 @@
+{
+  "name": "chalk",
+  "ver": "1.0.0",
+  "description": "Zero-allocation terminal string styling library (npm chalk v5 parity) with automatic color level detection & Truecolor/256/16/plain downsampling for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "ansi-styles": "1.0.0",
+    "supports-color": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "chalk",
+    "repo": "https://github.com/chalk/chalk",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

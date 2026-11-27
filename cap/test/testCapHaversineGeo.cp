@@ -11,7 +11,7 @@ import {
     midpoint,
     destinationPoint,
     isValidCoord,
-} from "../../packages/@cap/haversine-geo/src/index.cp";
+} from "../../packages/haversine/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

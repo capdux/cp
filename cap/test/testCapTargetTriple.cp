@@ -10,7 +10,7 @@ import {
     parseTargetTriple,
     exeSuffix,
     dylibSuffix,
-} from "../../packages/@cap/target-triple/src/index.cp";
+} from "../../packages/target-lexicon/src/index.cp";
 
 fn main() {
     test("1. @cap/target-triple — 4-part Linux & Windows triples", () => {

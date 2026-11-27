@@ -1,0 +1,19 @@
+{
+  "name": "archy",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Unicode & ASCII dependency/directory tree renderer (archy / treeify / Rust ptree parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "archy",
+    "repo": "https://github.com/substack/node-archy",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

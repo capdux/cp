@@ -1,0 +1,44 @@
+{
+  "name": "untrusted",
+  "version": "1.0.1",
+  "description": "Zero-heap big-endian/little-endian binary codecs & bounds-checked untrusted ByteReader/ByteWriter (inspired by Rust byteorder + untrusted)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "byteorder",
+    "untrusted",
+    "endian",
+    "binary",
+    "reader",
+    "writer",
+    "codec",
+    "protocol"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "untrusted",
+    "repo": "https://github.com/briansmith/untrusted",
+    "license": "ISC"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "untrusted",
+      "repo": "https://github.com/briansmith/untrusted",
+      "license": "ISC"
+    },
+    {
+      "registry": "crates.io",
+      "name": "byteorder",
+      "repo": "https://github.com/BurntSushi/byteorder",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

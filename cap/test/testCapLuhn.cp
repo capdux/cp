@@ -6,7 +6,7 @@ import {
     dammCheckDigit,
     verhoeffValidate,
     verhoeffCheckDigit,
-} from "../../packages/@cap/luhn/src/index.cp";
+} from "../../packages/luhn/src/index.cp";
 
 fn main() {
     test("ISO/IEC 7812 Luhn validation and check digit", () => {

@@ -1,0 +1,30 @@
+{
+  "name": "filenamify",
+  "ver": "1.0.0",
+  "description": "Zero-allocation cross-platform safe filename sanitizer (npm filenamify v6 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "filenamify",
+    "filename",
+    "sanitize",
+    "path",
+    "windows",
+    "reserved",
+    "cross-platform",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "filenamify",
+    "repo": "https://github.com/sindresorhus/filenamify",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

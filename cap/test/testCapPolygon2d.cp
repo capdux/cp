@@ -9,7 +9,7 @@ import {
     centroid,
     containsPoint,
     isConvex,
-} from "../../packages/@cap/polygon2d/src/index.cp";
+} from "../../packages/point-in-polygon/src/index.cp";
 
 const EPS: f64 = 0.000001;
 

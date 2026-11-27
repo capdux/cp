@@ -1,0 +1,34 @@
+{
+  "name": "cli-truncate",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ANSI-aware CLI string truncator (end/start/middle, CJK double-width, space boundary preference) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cli-truncate",
+    "truncate",
+    "cli",
+    "terminal",
+    "ansi",
+    "ellipsis",
+    "cjk",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "string-width": "1.0.0",
+    "slice-ansi": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "cli-truncate",
+    "repo": "https://github.com/sindresorhus/cli-truncate",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

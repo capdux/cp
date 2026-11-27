@@ -4,7 +4,7 @@ import {
     FilterDirective,
     EnvFilter,
     parseLogLevel,
-} from "../../packages/@cap/env-filter/src/index.cp";
+} from "../../packages/env_filter/src/index.cp";
 
 fn main() {
     test("1. @cap/env-filter — parseLogLevel case-insensitive & invalid", () => {

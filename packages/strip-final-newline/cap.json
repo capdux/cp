@@ -1,0 +1,28 @@
+{
+  "name": "strip-final-newline",
+  "version": "1.0.0",
+  "description": "Zero-copy final LF/CRLF newline stripper and normalizer matching npm strip-final-newline (250M+/wk) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "strip-final-newline",
+    "newline",
+    "lf",
+    "crlf",
+    "execa",
+    "string"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "strip-final-newline",
+    "repo": "https://github.com/sindresorhus/strip-final-newline",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

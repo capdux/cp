@@ -1,0 +1,26 @@
+{
+  "name": "send",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP static file transfer planner with traversal protection, dotfiles policy, ETag/304, Range/206, and redirect URL encoding (clean-room MIT implementation of npm send v1)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "encodeurl": "1.0.0",
+    "etag": "1.0.0",
+    "range-parser": "1.0.0",
+    "mime-types": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "send",
+    "repo": "https://github.com/pillarjs/send",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

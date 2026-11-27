@@ -10,7 +10,7 @@ import {
     formatTimeagoEn,
     formatTimeagoZh,
     formatCompact,
-} from "../../packages/@cap/timeago/src/index.cp";
+} from "../../packages/timeago.js/src/index.cp";
 
 fn main() {
     test("1. @cap/timeago — English Long past (just now, singular & plural)", () => {

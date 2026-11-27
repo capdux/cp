@@ -3,7 +3,7 @@ import {
     PgDateKind,
     parsePgDate,
     toUnixMs,
-} from "../../packages/@cap/postgres-date/src/index.cp";
+} from "../../packages/postgres-date/src/index.cp";
 
 fn main() {
     test("1. @cap/postgres-date — parses UTC epoch and converts to Unix ms = 0", () => {

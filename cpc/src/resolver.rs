@@ -392,6 +392,14 @@ pub fn resolve_file_or_dir(base: &Path) -> Option<PathBuf> {
                 }
             }
         }
+
+        // 3b. Fallback to src/index.cp or src/index.d.cp
+        for check in &["src/index.cp", "src/index.d.cp"] {
+            let p = base.join(check);
+            if p.exists() {
+                return Some(p);
+            }
+        }
     }
 
     // 4. Check <base>.cp (prefer source .cp over .d.cp stub)
@@ -579,10 +587,13 @@ pub fn resolve_source_path(
             }
         }
     } else {
+        let candidates = external_package_candidates(&search_source);
+        let is_scoped = search_source.starts_with('@');
+
         let mut current_dir = path.parent().unwrap();
         loop {
-            let dep_path = current_dir.join("cap_modules").join(&search_source);
-            if let Some(p) = resolve_file_or_dir(&dep_path) {
+            let dep_root = current_dir.join("cap_modules");
+            if let Some(p) = resolve_external_in_root(&dep_root, &candidates, is_scoped) {
                 resolved_path = Some(p);
                 break;
             }
@@ -597,21 +608,18 @@ pub fn resolve_source_path(
             let home = std::env::var("HOME")
                 .or_else(|_| std::env::var("USERPROFILE"))
                 .unwrap_or_else(|_| String::from("~"));
-            let global_path = PathBuf::from(&home)
-                .join(".cap/global/cap_modules")
-                .join(&search_source);
-            resolved_path = resolve_file_or_dir(&global_path);
+            let global_root = PathBuf::from(&home).join(".cap/global/cap_modules");
+            resolved_path = resolve_external_in_root(&global_root, &candidates, is_scoped);
         }
 
         if resolved_path.is_none() {
             for inc in include_paths {
-                let p = inc.join(&search_source);
-                if let Some(res) = resolve_file_or_dir(&p) {
+                if let Some(res) = resolve_external_in_root(inc, &candidates, is_scoped) {
                     resolved_path = Some(res);
                     break;
                 }
-                let p_mod = inc.join("cap_modules").join(&search_source);
-                if let Some(res) = resolve_file_or_dir(&p_mod) {
+                let inc_mod = inc.join("cap_modules");
+                if let Some(res) = resolve_external_in_root(&inc_mod, &candidates, is_scoped) {
                     resolved_path = Some(res);
                     break;
                 }
@@ -619,14 +627,109 @@ pub fn resolve_source_path(
         }
 
         if resolved_path.is_none() {
-            let default_pkg = PathBuf::from("/data/dev/cp/packages").join(&search_source);
-            if let Some(res) = resolve_file_or_dir(&default_pkg) {
-                resolved_path = Some(res);
+            let mut pkg_dir = path.parent().unwrap();
+            loop {
+                let pkg_root = pkg_dir.join("packages");
+                if let Some(p) = resolve_external_in_root(&pkg_root, &candidates, is_scoped) {
+                    resolved_path = Some(p);
+                    break;
+                }
+                if let Some(parent) = pkg_dir.parent() {
+                    pkg_dir = parent;
+                } else {
+                    break;
+                }
             }
+        }
+
+        if resolved_path.is_none() {
+            let default_pkg_root = PathBuf::from("/data/dev/cp/packages");
+            resolved_path = resolve_external_in_root(&default_pkg_root, &candidates, is_scoped);
         }
     }
 
     resolved_path
+}
+
+/// Generate package name candidates supporting bidirectional `_` <-> `-` normalization
+/// (Cargo-compatible crate/package equivalence) for both bare (`email_address`, `semver`)
+/// and scoped (`@cap/email_address`) package specifiers, preserving any `/subpath`.
+fn external_package_candidates(source: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let push_unique = |list: &mut Vec<String>, s: String| {
+        if !list.iter().any(|x| x == &s) {
+            list.push(s);
+        }
+    };
+
+    push_unique(&mut out, source.to_string());
+
+    if let Some(rest_after_at) = source.strip_prefix('@') {
+        if let Some(slash1) = rest_after_at.find('/') {
+            let scope = &source[..1 + slash1];
+            let after_scope = &rest_after_at[slash1 + 1..];
+            let (pkg, tail) = match after_scope.find('/') {
+                Some(idx) => (&after_scope[..idx], &after_scope[idx..]),
+                None => (after_scope, ""),
+            };
+            if pkg.contains('_') {
+                push_unique(
+                    &mut out,
+                    format!("{}/{}{}", scope, pkg.replace('_', "-"), tail),
+                );
+            }
+            if pkg.contains('-') {
+                push_unique(
+                    &mut out,
+                    format!("{}/{}{}", scope, pkg.replace('-', "_"), tail),
+                );
+            }
+        }
+    } else {
+        let (pkg, tail) = match source.find('/') {
+            Some(idx) => (&source[..idx], &source[idx..]),
+            None => (source, ""),
+        };
+        if pkg.contains('_') {
+            push_unique(&mut out, format!("{}{}", pkg.replace('_', "-"), tail));
+        }
+        if pkg.contains('-') {
+            push_unique(&mut out, format!("{}{}", pkg.replace('-', "_"), tail));
+        }
+    }
+
+    out
+}
+
+fn resolve_external_in_root(
+    root: &Path,
+    candidates: &[String],
+    is_scoped: bool,
+) -> Option<PathBuf> {
+    if !root.is_dir() {
+        return None;
+    }
+    for cand in candidates {
+        let p = root.join(cand);
+        if let Some(res) = resolve_file_or_dir(&p) {
+            return Some(res);
+        }
+    }
+    if !is_scoped {
+        for scope in &["@cap", "@web"] {
+            let scope_dir = root.join(scope);
+            if !scope_dir.is_dir() {
+                continue;
+            }
+            for cand in candidates {
+                let p = scope_dir.join(cand);
+                if let Some(res) = resolve_file_or_dir(&p) {
+                    return Some(res);
+                }
+            }
+        }
+    }
+    None
 }
 
 pub fn resolve_dependencies(

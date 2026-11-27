@@ -1,0 +1,30 @@
+{
+  "name": "clf-parser",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Apache/Nginx Common Log Format (CLF) and Combined Log Format parser and formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "clf",
+    "apache",
+    "nginx",
+    "access-log",
+    "combined-log",
+    "morgan",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "clf-parser",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

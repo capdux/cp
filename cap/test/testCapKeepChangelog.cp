@@ -9,7 +9,7 @@ import {
     findRelease,
     latestRelease,
     formatReleaseHeader,
-} from "../../packages/@cap/keep-changelog/src/index.cp";
+} from "../../packages/keep-a-changelog/src/index.cp";
 
 const SAMPLE_MD = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n## [Unreleased]\n\n### Added\n- Streaming parser support\n\n## [1.2.0] - 2026-11-26\n\n### Added\n- Zero-allocation `@cap/jcs` package\n* `@cap/boxen` CLI border renderer\n\n### Changed\n- Improved error diagnostics\n\n### Fixed\n- Fixed edge case in header parsing\n- Fixed UTF-8 boundary check\n\n### Security\n- Hardened input length limits\n\n## [1.1.0] - 2026-10-01 [YANKED]\n\n### Fixed\n- Initial release bugfix\n\n[Unreleased]: https://github.com/example/repo/compare/v1.2.0...HEAD\n[1.2.0]: https://github.com/example/repo/compare/v1.1.0...v1.2.0\n";
 

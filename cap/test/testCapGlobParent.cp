@@ -7,7 +7,7 @@ import {
     globParent,
     splitGlobBase,
     escapeGlob,
-} from "../../packages/@cap/glob-parent/src/index.cp";
+} from "../../packages/glob-parent/src/index.cp";
 
 fn main() {
     test("1. @cap/glob-parent — isGlob standard wildcards, char classes & braces", () => {

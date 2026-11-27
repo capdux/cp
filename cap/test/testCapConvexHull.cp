@@ -6,7 +6,7 @@ import {
     convexHull,
     hullArea,
     hullPerimeter,
-} from "../../packages/@cap/convex-hull/src/index.cp";
+} from "../../packages/monotone-chain-convex-hull/src/index.cp";
 
 const EPS: f64 = 0.000001;
 

@@ -1,0 +1,21 @@
+{
+  "name": "yocto-queue",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Tiny O(1) FIFO queue data structure (clean-room zero-heap CP implementation of npm yocto-queue)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "yocto-queue",
+    "repo": "https://github.com/sindresorhus/yocto-queue",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

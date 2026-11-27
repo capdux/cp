@@ -3,7 +3,7 @@ import {
     MIT_MAX_LISTENERS,
     Emitter,
     mitt,
-} from "../../packages/@cap/mitt/src/index.cp";
+} from "../../packages/mitt/src/index.cp";
 
 fn main() {
     test("1. @cap/mitt — Basic on/emit registration order and dispatch log", () => {

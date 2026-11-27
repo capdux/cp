@@ -1,0 +1,21 @@
+{
+  "name": "prettier",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap JSON and CSS pretty-printer formatter (clean-room CP implementation inspired by npm prettier)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "prettier",
+    "repo": "https://github.com/prettier/prettier",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

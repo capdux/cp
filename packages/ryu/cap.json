@@ -1,0 +1,23 @@
+{
+  "name": "ryu",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses @cap/itoa)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "ryu",
+    "repo": "https://github.com/dtolnay/ryu",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

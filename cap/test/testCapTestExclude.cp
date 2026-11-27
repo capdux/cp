@@ -3,7 +3,7 @@ import {
     ExcludeConfig,
     matchSimpleGlob,
     shouldInstrument,
-} from "../../packages/@cap/test-exclude/src/index.cp";
+} from "../../packages/test-exclude/src/index.cp";
 
 fn main() {
     test("1. @cap/test-exclude — matchSimpleGlob handles *, ?, and literal paths", () => {

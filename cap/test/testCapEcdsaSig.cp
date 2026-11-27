@@ -10,7 +10,7 @@ import {
     ECDSA_ERR_NEGATIVE_INT,
     ECDSA_ERR_TRAILING_DATA,
     EcdsaSignature,
-} from "../../packages/@cap/ecdsa-sig/src/index.cp";
+} from "../../packages/ecdsa/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

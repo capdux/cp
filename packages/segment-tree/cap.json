@@ -1,0 +1,20 @@
+{
+  "name": "segment-tree",
+  "ver": "1.0.0",
+  "description": "Zero-allocation iterative 2*N Segment Tree with O(log N) rangeSum, rangeMin, rangeMax, and point updates (Rust segment-tree parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "segment-tree",
+    "repo": "https://github.com/Darksonn/segment-tree",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

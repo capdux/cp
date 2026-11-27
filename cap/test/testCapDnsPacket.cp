@@ -14,7 +14,7 @@ import {
     encodeName,
     decodeName,
     encodeQuery,
-} from "../../packages/@cap/dns-packet/src/index.cp";
+} from "../../packages/dns-packet/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

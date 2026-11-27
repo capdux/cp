@@ -6,7 +6,7 @@ import {
     CubicSplit,
     splitCubic,
     cubicBezierEasing,
-} from "../../packages/@cap/bezier-curve/src/index.cp";
+} from "../../packages/bezier-easing/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

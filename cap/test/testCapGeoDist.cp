@@ -10,7 +10,7 @@ import {
     midpoint,
     boundingBox,
     pointInPolygon,
-} from "../../packages/@cap/geo-dist/src/index.cp";
+} from "../../packages/geo/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

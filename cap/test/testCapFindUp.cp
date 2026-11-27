@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     FindUpOptions, FindUpWalker, joinDirAndName,
     findUpInList, findUpMultipleInList
-} from "../../packages/@cap/find-up/src/index.cp";
+} from "../../packages/find-up/src/index.cp";
 
 fn main() {
     test("1. @cap/find-up — FindUpWalker traverses from cwd up to root", () => {

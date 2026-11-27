@@ -1,0 +1,30 @@
+{
+  "name": "similar",
+  "ver": "1.0.0",
+  "description": "Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT, inspired by Rust similar v2).",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "diff",
+    "similar",
+    "lcs",
+    "unified-diff",
+    "patch",
+    "text-diff",
+    "similarity",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "similar",
+    "repo": "https://github.com/mitsuhiko/similar",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

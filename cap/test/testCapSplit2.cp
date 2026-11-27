@@ -3,7 +3,7 @@ import {
     SPLIT2_BUF_CAP,
     LineSplitter,
     splitLines,
-} from "../../packages/@cap/split2/src/index.cp";
+} from "../../packages/split2/src/index.cp";
 
 fn main() {
     test("1. @cap/split2 — basic LF & CRLF chunk splitting", () => {

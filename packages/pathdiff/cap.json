@@ -1,0 +1,21 @@
+{
+  "name": "pathdiff",
+  "ver": "1.0.0",
+  "description": "Zero-heap relative path difference calculator computing path relative to a base directory (crates.io pathdiff equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "pathdiff",
+    "repo": "https://github.com/Manishearth/pathdiff",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

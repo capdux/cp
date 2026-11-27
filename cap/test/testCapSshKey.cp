@@ -11,7 +11,7 @@ import {
     formatPublicKey,
     countAuthorizedKeys,
     isModernAlgorithm,
-} from "../../packages/@cap/ssh-key/src/index.cp";
+} from "../../packages/ssh-key/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

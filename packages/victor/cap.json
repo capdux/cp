@@ -1,0 +1,44 @@
+{
+  "name": "victor",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 2D vector math and planar geometry library with built-in pure-CP sqrt/sin/cos for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "vec2",
+    "vector",
+    "math",
+    "2d",
+    "geometry",
+    "graphics",
+    "game",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "victor",
+    "repo": "https://github.com/maxkueng/victor",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "victor",
+      "repo": "https://github.com/maxkueng/victor",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "euclid",
+      "repo": "https://github.com/servo/euclid",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

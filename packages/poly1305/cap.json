@@ -1,0 +1,23 @@
+{
+  "name": "poly1305",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 8439 Poly1305 one-time authenticator (Donna 26-bit limbs + constant-time verification via @cap/subtle-ct)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "subtle": "^1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "poly1305",
+    "repo": "https://github.com/RustCrypto/universal-hashes",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

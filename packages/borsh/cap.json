@@ -1,0 +1,29 @@
+{
+  "name": "borsh",
+  "version": "1.0.0",
+  "description": "Zero-allocation canonical little-endian Borsh binary serializer and deserializer for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "borsh",
+    "binary",
+    "serialization",
+    "little-endian",
+    "solana",
+    "near",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "borsh",
+    "repo": "https://github.com/near/borsh-rs",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     FASTQ_CAP,
     FastQueue,
-} from "../../packages/@cap/fastq/src/index.cp";
+} from "../../packages/fastq/src/index.cp";
 
 fn main() {
     test("1. @cap/fastq — FIFO push and concurrency cap enforcement", () => {

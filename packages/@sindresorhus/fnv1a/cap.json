@@ -1,0 +1,43 @@
+{
+  "name": "@sindresorhus/fnv1a",
+  "version": "1.0.0",
+  "description": "Zero-heap FNV-1 and FNV-1a 32-bit and 64-bit streaming non-cryptographic hash functions for CP (compatible with Rust fnv & npm @sindresorhus/fnv1a)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "fnv",
+    "fnv1a",
+    "fnv1",
+    "hash",
+    "non-cryptographic",
+    "fast-hash"
+  ],
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/fnv-hash",
+  "source": {
+    "registry": "npm",
+    "name": "@sindresorhus/fnv1a",
+    "repo": "https://github.com/sindresorhus/fnv1a",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "@sindresorhus/fnv1a",
+      "repo": "https://github.com/sindresorhus/fnv1a",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "const-fnv1a-hash",
+      "repo": "https://github.com/jonasbb/const-fnv1a-hash",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

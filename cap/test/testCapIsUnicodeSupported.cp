@@ -9,7 +9,7 @@ import {
     isUnicodeSupportedTermProgram,
     isUnicodeSupportedPlatform,
     selectFallback,
-} from "../../packages/@cap/is-unicode-supported/src/index.cp";
+} from "../../packages/is-unicode-supported/src/index.cp";
 
 fn main() {
     test("1. @cap/is-unicode-supported — POSIX platforms & Linux kernel console", () => {

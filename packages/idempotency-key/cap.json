@@ -1,0 +1,29 @@
+{
+  "name": "idempotency-key",
+  "ver": "1.0.0",
+  "description": "Zero-allocation IETF Idempotency-Key HTTP header parser, validator, RFC 8941 formatter, and request fingerprint state evaluator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "idempotency",
+    "idempotency-key",
+    "http",
+    "ietf",
+    "stripe",
+    "payments",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "idempotency-key",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

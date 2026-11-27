@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { EvalResult, evalCExpr } from "../../packages/@cap/cexpr/src/index.cp";
+import { EvalResult, evalCExpr } from "../../packages/cexpr/src/index.cp";
 
 fn main() {
     test("1. @cap/cexpr — arithmetic & parenthesis precedence", () => {

@@ -18,7 +18,7 @@ import {
     OP_LOCAL_GET,
     OP_I32_ADD,
     OP_END,
-} from "../../packages/@cap/wasm-encoder/src/index.cp";
+} from "../../packages/wasm-encoder/src/index.cp";
 
 fn main() {
     test("1. @cap/wasm-encoder — unsigned LEB128 encoding", () => {

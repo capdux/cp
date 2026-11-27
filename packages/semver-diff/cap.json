@@ -1,0 +1,31 @@
+{
+  "name": "semver-diff",
+  "ver": "1.0.0",
+  "description": "Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing @cap/semver-range.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "semver": "1.0.0"
+  },
+  "keywords": [
+    "semver-diff",
+    "semver",
+    "version",
+    "diff",
+    "upgrade",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "semver-diff",
+    "repo": "https://github.com/sindresorhus/semver-diff",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

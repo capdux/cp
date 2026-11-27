@@ -5,7 +5,7 @@ import {
     fromSource,
     toComment,
     removeComments,
-} from "../../packages/@cap/convert-source-map/src/index.cp";
+} from "../../packages/convert-source-map/src/index.cp";
 
 fn main() {
     test("1. @cap/convert-source-map — toComment and fromSource roundtrip JS line comment", () => {

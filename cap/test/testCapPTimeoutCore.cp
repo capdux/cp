@@ -7,7 +7,7 @@ import {
     PT_CANCELED,
     TimeoutOptions,
     TimeoutGuard,
-} from "../../packages/@cap/p-timeout-core/src/index.cp";
+} from "../../packages/p-timeout/src/index.cp";
 
 fn main() {
     test("1. @cap/p-timeout-core — computes deadline, remainingMs, expiry, and saturates on overflow", () => {

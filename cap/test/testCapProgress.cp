@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     newProgressBar,
     renderProgress,
-} from "../../packages/@cap/progress/src/index.cp";
+} from "../../packages/progress/src/index.cp";
 
 fn main() {
     test("1. @cap/progress — renders 0%, 50%, and 100% bars accurately", () => {

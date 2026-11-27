@@ -1,0 +1,29 @@
+{
+  "name": "gl-matrix",
+  "version": "1.0.0",
+  "description": "Zero-allocation 3D vector and spatial geometry library for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "vec3",
+    "vector",
+    "3d",
+    "math",
+    "geometry",
+    "linear-algebra",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "gl-matrix",
+    "repo": "https://github.com/toji/gl-matrix",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

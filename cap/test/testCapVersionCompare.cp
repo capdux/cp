@@ -9,7 +9,7 @@ import {
     isEqual,
     isGreater,
     satisfies,
-} from "../../packages/@cap/version-compare/src/index.cp";
+} from "../../packages/version-compare/src/index.cp";
 
 fn main() {
     test("1. @cap/version-compare — Basic numeric & multi-segment comparison", () => {

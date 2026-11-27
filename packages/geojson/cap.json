@@ -1,0 +1,23 @@
+{
+  "name": "geojson",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop built on @cap/wkt (clean-room port of Rust geojson)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "wkt": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "geojson",
+    "repo": "https://github.com/georust/geojson",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

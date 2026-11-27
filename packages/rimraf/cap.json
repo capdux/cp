@@ -1,0 +1,32 @@
+{
+  "name": "rimraf",
+  "ver": "1.0.0",
+  "description": "Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing @cap/fast-glob.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "fast-glob": "1.0.0"
+  },
+  "keywords": [
+    "rimraf",
+    "rm",
+    "delete",
+    "bottom-up",
+    "preserve-root",
+    "glob",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "rimraf",
+    "repo": "https://github.com/isaacs/rimraf",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

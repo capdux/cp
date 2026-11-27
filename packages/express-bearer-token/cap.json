@@ -1,0 +1,30 @@
+{
+  "name": "express-bearer-token",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 6750 HTTP Bearer token extractor, JWT structure precheck, constant-time verifier, and WWW-Authenticate challenge formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bearer",
+    "auth",
+    "rfc6750",
+    "jwt",
+    "http",
+    "www-authenticate",
+    "constant-time",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "express-bearer-token",
+    "repo": "https://github.com/tkellen/js-express-bearer-token",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

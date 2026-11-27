@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     isBareKey,
     TomlWriter,
-} from "../../packages/@cap/toml-writer/src/index.cp";
+} from "../../packages/toml_writer/src/index.cp";
 
 fn main() {
     test("1. @cap/toml-writer — bare key validation", () => {

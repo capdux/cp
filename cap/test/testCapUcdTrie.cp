@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/ucd-trie
 
 import { test, expect_eq } from "cap:test";
-import { UcdTrie } from "../../packages/@cap/ucd-trie/src/index.cp";
+import { UcdTrie } from "../../packages/ucd-trie/src/index.cp";
 
 fn main() {
     test("1. @cap/ucd-trie — Single codepoint insertion & O(1) contains", () => {

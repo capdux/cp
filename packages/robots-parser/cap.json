@@ -1,0 +1,29 @@
+{
+  "name": "robots-parser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 9309 robots.txt parser and URL allow/disallow evaluator for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "robots",
+    "robots.txt",
+    "rfc9309",
+    "crawler",
+    "seo",
+    "sitemap",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "robots-parser",
+    "repo": "https://github.com/samclarke/robots-parser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

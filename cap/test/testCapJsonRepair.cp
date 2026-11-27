@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/json-repair
 
 import { test, expect_eq } from "cap:test";
-import { repairJson } from "../../packages/@cap/json-repair/src/index.cp";
+import { repairJson } from "../../packages/jsonrepair/src/index.cp";
 
 fn main() {
     test("1. @cap/json-repair — Markdown fences, unquoted keys & single quotes", () => {

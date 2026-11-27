@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { wymum, wyhash, wyhashBytes, WyRng } from "../../packages/@cap/wyhash/src/index.cp";
+import { wymum, wyhash, wyhashBytes, WyRng } from "../../packages/wyhash/src/index.cp";
 
 fn popcount64(x: u64) -> u32 {
     let v = x;

@@ -4,7 +4,7 @@ import {
     ConfirmPrompt,
     SelectPrompt,
     MultiSelectPrompt
-} from "../../packages/@cap/enquirer/src/index.cp";
+} from "../../packages/enquirer/src/index.cp";
 
 fn main() {
     test("enquirer: ConfirmPrompt parses yes/no/true/false/1/0 and empty fallback", () => {

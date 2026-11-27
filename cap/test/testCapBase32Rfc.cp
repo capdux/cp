@@ -5,7 +5,7 @@ import {
     encodeHex,
     decodeHex,
     encodedLen,
-} from "../../packages/@cap/base32-rfc/src/index.cp";
+} from "../../packages/hi-base32/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

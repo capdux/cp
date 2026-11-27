@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     SHA256_DIGEST_LEN, SHA224_DIGEST_LEN,
     Sha256, Sha224, sha256Hex, sha224Hex
-} from "../../packages/@cap/sha2-crate/src/index.cp";
+} from "../../packages/sha2/src/index.cp";
 
 fn main() {
     test("1. @cap/sha2-crate — SHA-256 FIPS 180-4 vectors for '' and 'abc'", () => {

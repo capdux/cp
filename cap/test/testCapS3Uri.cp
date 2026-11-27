@@ -7,7 +7,7 @@ import {
     isValidBucketName,
     parseS3Uri,
     formatS3Uri,
-} from "../../packages/@cap/s3-uri/src/index.cp";
+} from "../../packages/amazon-s3-uri/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

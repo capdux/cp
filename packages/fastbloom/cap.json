@@ -1,0 +1,20 @@
+{
+  "name": "fastbloom",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Kirsch-Mitzenmacher double-hashing Bloom filters BloomFilter1024/BloomFilter4096 (Rust fastbloom / bloomfilter parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "fastbloom",
+    "repo": "https://github.com/tomtomwombat/fastbloom",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

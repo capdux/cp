@@ -6,7 +6,7 @@ import {
     formatMetric,
     formatHeader,
     totalDurationMs,
-} from "../../packages/@cap/server-timing/src/index.cp";
+} from "../../packages/server-timing/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

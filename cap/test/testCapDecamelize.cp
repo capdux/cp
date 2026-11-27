@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { decamelize, decamelizeWithOptions, toSnakeCase, toKebabCase } from "../../packages/@cap/decamelize/src/index.cp";
+import { decamelize, decamelizeWithOptions, toSnakeCase, toKebabCase } from "../../packages/decamelize/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

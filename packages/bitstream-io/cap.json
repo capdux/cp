@@ -1,0 +1,20 @@
+{
+  "name": "bitstream-io",
+  "ver": "1.0.0",
+  "description": "Zero-allocation MSB-first & LSB-first BitReader and BitWriter supporting 0..64-bit reads/writes, peek, byte alignment, and H.264/HEVC Exp-Golomb coding (Rust bitstream-io parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "bitstream-io",
+    "repo": "https://github.com/tuffy/bitstream-io",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

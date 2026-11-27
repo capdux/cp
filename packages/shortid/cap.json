@@ -1,0 +1,21 @@
+{
+  "name": "shortid",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "URL-friendly non-sequential short unique ID generator and validator (clean-room CP implementation of npm shortid)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "shortid",
+    "repo": "https://github.com/dylang/shortid",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

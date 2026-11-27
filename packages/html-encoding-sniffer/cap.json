@@ -1,0 +1,29 @@
+{
+  "name": "html-encoding-sniffer",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WHATWG HTML 13.2.3.2 byte stream encoding sniffer and label normalizer (npm html-encoding-sniffer parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "html-encoding-sniffer",
+    "whatwg",
+    "html",
+    "encoding",
+    "charset",
+    "bom",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "html-encoding-sniffer",
+    "repo": "https://github.com/jsdom/html-encoding-sniffer",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

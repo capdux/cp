@@ -25,7 +25,7 @@ import {
     rotate,
     clampLength,
     approxEq,
-} from "../../packages/@cap/vec2/src/index.cp";
+} from "../../packages/victor/src/index.cp";
 
 fn nearF64(a: f64, b: f64): bool {
     let d: f64 = a - b;

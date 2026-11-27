@@ -1,0 +1,29 @@
+{
+  "name": "emoji-regex",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Unicode RGI Emoji UTF-8 scanner and extractor (npm emoji-regex parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "emoji-regex",
+    "emoji",
+    "unicode",
+    "utf8",
+    "zwj",
+    "rgi",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "emoji-regex",
+    "repo": "https://github.com/mathiasbynens/emoji-regex",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -18,7 +18,7 @@ import {
     transformPoint,
     transformDir,
     approxEq,
-} from "../../packages/@cap/mat3/src/index.cp";
+} from "../../packages/gl-mat3/src/index.cp";
 
 fn nearF64(a: f64, b: f64): bool {
     let d: f64 = a - b;

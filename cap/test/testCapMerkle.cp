@@ -10,7 +10,7 @@ import {
     hashLeaf,
     hashNode,
     verifyProof,
-} from "../../packages/@cap/merkle/src/index.cp";
+} from "../../packages/rs_merkle/src/index.cp";
 
 fn main() {
     test("1. @cap/merkle — Built-in FIPS 180-4 SHA-256 & hex encoding vectors", () => {

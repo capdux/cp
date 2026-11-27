@@ -9,7 +9,7 @@ import {
     OptionSpec,
     YargsApp,
     YargsResult,
-} from "../../packages/@cap/yargs/src/index.cp";
+} from "../../packages/yargs/src/index.cp";
 
 fn containsSubstr(haystack: string, needle: string): bool {
     if (needle.len == 0) {

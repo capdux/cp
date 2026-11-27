@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { FixedBitSet } from "../../packages/@cap/fixedbitset/src/index.cp";
+import { FixedBitSet } from "../../packages/fixedbitset/src/index.cp";
 
 fn main() {
     test("1. @cap/fixedbitset — insert, contains, remove & toggle", () => {

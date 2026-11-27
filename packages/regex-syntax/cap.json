@@ -1,0 +1,20 @@
+{
+  "name": "regex-syntax",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation regular expression syntax validator, metacharacter escaper, and literal prefix extractor (Rust regex-syntax v0.8 parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "regex-syntax",
+    "repo": "https://github.com/rust-lang/regex",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

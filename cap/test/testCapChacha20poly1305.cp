@@ -7,7 +7,7 @@ import {
     AEAD_NONCE_LEN,
     AEAD_TAG_LEN,
     ChaCha20Poly1305,
-} from "../../packages/@cap/chacha20poly1305/src/index.cp";
+} from "../../packages/chacha20poly1305/src/index.cp";
 
 fn aeadTestHexNibble(ch: u8): u8 {
     if (ch >= ('0' as u8) && ch <= ('9' as u8)) {

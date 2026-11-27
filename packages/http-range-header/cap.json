@@ -1,0 +1,29 @@
+{
+  "name": "http-range-header",
+  "ver": "1.0.0",
+  "desc": "Zero-heap RFC 9110 HTTP Range header parser, range validator, and Content-Range formatter in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "http-range-header",
+    "http",
+    "range",
+    "content-range",
+    "rfc9110",
+    "bytes",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "http-range-header",
+    "repo": "https://github.com/MarcusGrass/http-range-header",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

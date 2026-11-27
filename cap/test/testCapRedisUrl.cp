@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parseRedisUrl,
     formatRedisUrl,
-} from "../../packages/@cap/redis-url/src/index.cp";
+} from "../../packages/redis/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

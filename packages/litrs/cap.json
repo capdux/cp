@@ -1,0 +1,20 @@
+{
+  "name": "litrs",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Rust literal lexer, validator, and string unescaper (Rust litrs parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT OR Apache-2.0",
+  "source": {
+    "registry": "crates.io",
+    "name": "litrs",
+    "repo": "https://github.com/LukasKalbertodt/litrs",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

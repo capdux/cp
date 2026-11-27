@@ -4,7 +4,7 @@ import {
     extractDocblock,
     parseDocblock,
     printDocblock,
-} from "../../packages/@cap/jest-docblock/src/index.cp";
+} from "../../packages/jest-docblock/src/index.cp";
 
 fn main() {
     test("1. @cap/jest-docblock — extractDocblock finds top-of-file docblock", () => {

@@ -10,7 +10,7 @@ import {
     parseSct,
     parseSctList,
     encodeSct,
-} from "../../packages/@cap/sct/src/index.cp";
+} from "../../packages/sct/src/index.cp";
 
 fn makeTestSct(ts: u64, extLen: usize, hashAlg: HashAlgorithm, sigAlg: SignatureAlgorithm): SignedCertificateTimestamp {
     let logId: [32]u8 = undefined;

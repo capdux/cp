@@ -1,0 +1,30 @@
+{
+  "name": "winnow",
+  "ver": "1.0.0",
+  "description": "Zero-allocation byte-level zero-copy parser combinators (winnow / nom parity) with rollback-on-failure cursor semantics for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "nom",
+    "winnow",
+    "parser",
+    "combinator",
+    "zero-copy",
+    "bytes",
+    "cursor",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "winnow",
+    "repo": "https://github.com/winnow-rs/winnow",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

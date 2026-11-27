@@ -1,0 +1,34 @@
+{
+  "name": "utf8parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 3629 strict UTF-8 validator, WHATWG lossy repair (U+FFFD), ASCII fast-path, and UTF-16 code-unit length calculator for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "utf8parse",
+    "repo": "https://github.com/alacritty/vte",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "utf8parse",
+      "repo": "https://github.com/alacritty/vte",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "utf8_iter",
+      "repo": "https://github.com/hsivonen/utf8_iter",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

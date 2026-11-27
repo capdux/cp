@@ -7,7 +7,7 @@ import {
     clampScalar,
     x25519,
     x25519Basepoint,
-} from "../../packages/@cap/curve25519-dalek/src/index.cp";
+} from "../../packages/curve25519-dalek/src/index.cp";
 
 fn hexVal(ch: u8): u8 {
     if (ch >= ('0' as u8) && ch <= ('9' as u8)) {

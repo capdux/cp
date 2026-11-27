@@ -9,7 +9,7 @@ import {
     parse,
     isValidSslMode,
     formatUri,
-} from "../../packages/@cap/pg-dsn/src/index.cp";
+} from "../../packages/pg-connection-string/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

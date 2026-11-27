@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     fromRadixU64, fromRadix10U64, fromRadix16U64,
     fromRadixI64, fromRadix10I64, atoiU64, atoiI64
-} from "../../packages/@cap/atoi/src/index.cp";
+} from "../../packages/atoi/src/index.cp";
 
 fn main() {
     test("fromRadix10U64 parses prefix and stops at non-digit", () => {

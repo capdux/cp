@@ -14,7 +14,7 @@ import {
     Sqids,
     SqidsOptions,
     SqidsError,
-} from "../../packages/@cap/sqids/src/index.cp";
+} from "../../packages/sqids/src/index.cp";
 
 fn main() {
     test("1. @cap/sqids — Single & Multi-Number Lossless Round-Trip", () => {

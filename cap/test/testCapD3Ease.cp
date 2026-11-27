@@ -31,7 +31,7 @@ import {
     easeElasticOut,
     easeElasticInOut,
     easeElasticOutParams,
-} from "../../packages/@cap/d3-ease/src/index.cp";
+} from "../../packages/d3-ease/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = a - b;

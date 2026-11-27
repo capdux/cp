@@ -1,0 +1,21 @@
+{
+  "name": "d3-time-format",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-heap UTC strftime/strptime date formatter and parser for CP (clean-room ISC implementation of npm d3-time-format).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "d3-time-format",
+    "repo": "https://github.com/d3/d3-time-format",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -7,7 +7,7 @@ import {
     envCacheDir,
     envLogDir,
     envTempDir,
-} from "../../packages/@cap/env-paths/src/index.cp";
+} from "../../packages/env-paths/src/index.cp";
 
 fn main() {
     test("1. @cap/env-paths — Linux default XDG fallback paths", () => {

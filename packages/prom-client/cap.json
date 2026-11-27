@@ -1,0 +1,20 @@
+{
+  "name": "prom-client",
+  "version": "1.0.0",
+  "description": "Zero-heap Prometheus / OpenMetrics text exposition format serializer with strict metric/label validation and escaping.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "prom-client",
+    "repo": "https://github.com/siimon/prom-client",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

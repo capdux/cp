@@ -2,11 +2,11 @@
 // Comprehensive unit tests for @cap/decamelize-keys
 
 import { test, expect_eq } from "cap:test";
-import { MapObjResult } from "../../packages/@cap/map-obj/src/index.cp";
+import { MapObjResult } from "../../packages/map-obj/src/index.cp";
 import {
     DecamelizeKeysResult,
     decamelizeKeys,
-} from "../../packages/@cap/decamelize-keys/src/index.cp";
+} from "../../packages/decamelize-keys/src/index.cp";
 
 fn main() {
     test("1. @cap/decamelize-keys — underscore separator converts camelCase & PascalCase keys", () => {

@@ -9,7 +9,7 @@ import {
     hashStringFnv64,
     hashFieldsFnv64,
     hashFieldsHex,
-} from "../../packages/@cap/object-hash/src/index.cp";
+} from "../../packages/object-hash/src/index.cp";
 
 fn main() {
     test("1. @cap/object-hash — Standard FNV-1a 64-bit vectors for string and bytes", () => {

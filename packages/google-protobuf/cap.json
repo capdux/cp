@@ -1,0 +1,52 @@
+{
+  "name": "google-protobuf",
+  "version": "1.0.0",
+  "description": "Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing @cap/varint (ULEB128 + ZigZag) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "unsigned-varint": "^1.0.0"
+  },
+  "keywords": [
+    "protobuf",
+    "prost",
+    "wire",
+    "varint",
+    "zigzag",
+    "serialization",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "google-protobuf",
+    "repo": "https://github.com/protocolbuffers/protobuf-javascript",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "google-protobuf",
+      "repo": "https://github.com/protocolbuffers/protobuf-javascript",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "prost",
+      "repo": "https://github.com/tokio-rs/prost",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "pbf",
+      "repo": "https://github.com/mapbox/pbf",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     BincodeEncoder,
     BincodeDecoder,
-} from "../../packages/@cap/bincode/src/index.cp";
+} from "../../packages/bincode/src/index.cp";
 
 fn main() {
     test("1. @cap/bincode — varint boundary thresholds (0, 250, 251, 65535, 65536, u64::MAX)", () => {

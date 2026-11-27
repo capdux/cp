@@ -16,7 +16,7 @@ import {
     oklchToOklab,
     oklabDistance,
     mixOklab,
-} from "../../packages/@cap/color-space/src/index.cp";
+} from "../../packages/color-convert/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff: f64 = a - b;

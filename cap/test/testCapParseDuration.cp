@@ -3,7 +3,7 @@ import {
     ParsedDuration,
     parseDuration,
     formatDuration
-} from "../../packages/@cap/parse-duration/src/index.cp";
+} from "../../packages/parse_duration/src/index.cp";
 
 fn strEqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -27,7 +27,7 @@ import {
     decodePemDer,
     pemKindLabel,
     isPrivateKeyKind,
-} from "../../packages/@cap/rustls-pki-types/src/index.cp";
+} from "../../packages/rustls-pki-types/src/index.cp";
 
 fn pkiTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

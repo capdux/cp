@@ -9,7 +9,7 @@ import {
     encodeBase36,
     decodeBase36,
     isValidBase36,
-} from "../../packages/@cap/base36/src/index.cp";
+} from "../../packages/base36/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

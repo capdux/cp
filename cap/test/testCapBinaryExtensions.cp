@@ -12,7 +12,7 @@ import {
     isBinaryExtension,
     isBinaryPath,
     extensionCategory,
-} from "../../packages/@cap/binary-extensions/src/index.cp";
+} from "../../packages/binary-extensions/src/index.cp";
 
 fn main() {
     test("1. @cap/binary-extensions — Covers images, media, archives, fonts, execs, docs & AI models", () => {

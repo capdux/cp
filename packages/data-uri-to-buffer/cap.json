@@ -1,0 +1,19 @@
+{
+  "name": "data-uri-to-buffer",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 2397 Data URI parser, Base64/percent decoder, and encoder for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "data-uri-to-buffer",
+    "repo": "https://github.com/TooTallNate/proxy-agents",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

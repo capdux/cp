@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     titleize,
     upperCaseFirst,
-} from "../../packages/@cap/titleize/src/index.cp";
+} from "../../packages/titleize/src/index.cp";
 
 fn main() {
     test("1. @cap/titleize — capitalizes words separated by spaces", () => {

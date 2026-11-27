@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     QualitySpec, parseQValue, parseWeightedList,
     negotiateEncoding, negotiateLanguage, negotiateCharset
-} from "../../packages/@cap/negotiator/src/index.cp";
+} from "../../packages/negotiator/src/index.cp";
 
 fn main() {
     test("1. @cap/negotiator — parseQValue parses RFC 7231 quality weights", () => {

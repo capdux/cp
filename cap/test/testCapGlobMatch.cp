@@ -5,7 +5,7 @@ import {
     globMatchAny,
     globMatchCaptures,
     isStaticGlob,
-} from "../../packages/@cap/glob-match/src/index.cp";
+} from "../../packages/glob-match/src/index.cp";
 
 fn testEqStr(a: string, b: string): bool {
     if (a.len != b.len) {

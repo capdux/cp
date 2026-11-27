@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { GridMap, GridPos } from "../../packages/@cap/astar/src/index.cp";
+import { GridMap, GridPos } from "../../packages/astar/src/index.cp";
 
 fn main() {
     test("open grid straight and L-shaped optimal cost", () => {

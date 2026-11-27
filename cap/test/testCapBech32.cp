@@ -10,7 +10,7 @@ import {
     encodeBech32,
     decodeBech32,
     verifyBech32,
-} from "../../packages/@cap/bech32/src/index.cp";
+} from "../../packages/bech32/src/index.cp";
 
 fn main() {
     test("1. @cap/bech32 — BIP-173 Bech32 official test vectors (encode, decode, uppercase)", () => {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { isNumber, isIntegerStr, isFiniteF64 } from "../../packages/@cap/is-number/src/index.cp";
+import { isNumber, isIntegerStr, isFiniteF64 } from "../../packages/is-number/src/index.cp";
 
 fn main() {
     test("integers, signs & whitespace trimming", () => {

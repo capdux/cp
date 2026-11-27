@@ -1,0 +1,28 @@
+{
+  "name": "nopt",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CLI option parser with shorthands, --no-flag negation, and -- terminator (npm nopt parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "ISC",
+  "keywords": [
+    "nopt",
+    "cli",
+    "argv",
+    "options",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "nopt",
+    "repo": "https://github.com/npm/nopt",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

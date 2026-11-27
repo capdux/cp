@@ -3,7 +3,7 @@ import {
     BOLD, ITALIC, FG_RED, BG_BLUE, FG_CYAN_BRIGHT,
     wrapStyle, formatAnsi256, formatAnsi16m, formatRgbToAnsi16,
     formatRgbToAnsi256, formatHexToAnsi16m, formatKeywordToAnsi16m
-} from "../../packages/@cap/ansi-styles/src/index.cp";
+} from "../../packages/ansi-styles/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -1,0 +1,29 @@
+{
+  "name": "postgres-interval",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation PostgreSQL INTERVAL parser and ISO-8601 / PostgreSQL bidirectional formatter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "postgres",
+    "postgresql",
+    "interval",
+    "iso8601",
+    "duration",
+    "sql",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "postgres-interval",
+    "repo": "https://github.com/bendrucker/postgres-interval",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

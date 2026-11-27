@@ -1,0 +1,28 @@
+{
+  "name": "monotone-chain-convex-hull",
+  "ver": "1.0.0",
+  "desc": "Zero-heap 2D Andrew's monotone chain convex hull, area, and perimeter in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "convex-hull",
+    "monotone-chain",
+    "geometry",
+    "2d",
+    "polygon",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "monotone-chain-convex-hull",
+    "repo": "https://github.com/mikolalysenko/monotone-chain-convex-hull",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -6,7 +6,7 @@ import {
     linePath,
     stepLinePath,
     arcPath,
-} from "../../packages/@cap/d3-shape/src/index.cp";
+} from "../../packages/d3-shape/src/index.cp";
 
 fn main() {
     test("1. @cap/d3-shape — computePie divides full circle proportionally", () => {

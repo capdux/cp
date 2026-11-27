@@ -16,7 +16,7 @@ import {
     readU32Le,
     readU64Be,
     readU64Le,
-} from "../../packages/@cap/rend/src/index.cp";
+} from "../../packages/rend/src/index.cp";
 
 fn main() {
     test("1. @cap/rend — U16Be & U16Le exact wire byte layout & round-trip", () => {

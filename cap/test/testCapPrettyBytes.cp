@@ -6,7 +6,7 @@ import {
     PrettyBytesOpts,
     prettyBytes,
     prettyBytesWith
-} from "../../packages/@cap/pretty-bytes/src/index.cp";
+} from "../../packages/pretty-bytes/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

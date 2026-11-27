@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/pcg
 
 import { test, expect_eq } from "cap:test";
-import { Pcg32 } from "../../packages/@cap/pcg/src/index.cp";
+import { Pcg32 } from "../../packages/rand_pcg/src/index.cp";
 
 fn main() {
     test("1. @cap/pcg — official PCG32 reference vector (seed=42, stream=54)", () => {

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     normalizeErrorStatus, statusReason, formatErrorHtml,
     formatCannotMessage, buildFinalHttpResponse
-} from "../../packages/@cap/finalhandler/src/index.cp";
+} from "../../packages/finalhandler/src/index.cp";
 
 fn containsStr(haystack: []const u8, len: usize, needle: string): bool {
     if (needle.len == 0) { return true; }

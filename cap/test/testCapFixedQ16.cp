@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Fixed16, ONE_RAW } from "../../packages/@cap/fixed-q16/src/index.cp";
+import { Fixed16, ONE_RAW } from "../../packages/fixed/src/index.cp";
 
 fn approx(a: f64, b: f64): bool {
     let d = a - b;

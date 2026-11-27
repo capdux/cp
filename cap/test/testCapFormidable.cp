@@ -12,7 +12,7 @@ import {
     ERR_MAX_FILE_SIZE_EXCEEDED,
     ERR_EMPTY_FILE_NOT_ALLOWED,
     parseMultipartForm
-} from "../../packages/@cap/formidable/src/index.cp";
+} from "../../packages/formidable/src/index.cp";
 
 fn main() {
     test("formidable: parses mixed fields and file uploads with zero-copy offsets", () => {

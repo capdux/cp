@@ -5,7 +5,7 @@ import {
     matches,
     nextMinuteOffset,
     isValidCron,
-} from "../../packages/@cap/cron-parser/src/index.cp";
+} from "../../packages/cron-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/cron-parser — Wildcards, steps, ranges & comma lists", () => {

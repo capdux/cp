@@ -10,7 +10,7 @@ import {
     nearestNeighbor,
     rangeQueryRect,
     radiusQuery
-} from "../../packages/@cap/kdtree-2d/src/index.cp";
+} from "../../packages/kdbush/src/index.cp";
 
 fn absF64(v: f64): f64 {
     if (v < 0.0) {

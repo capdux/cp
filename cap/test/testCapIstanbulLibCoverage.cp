@@ -5,7 +5,7 @@ import {
     LineHit,
     formatLcovRecord,
     parseLcovSummary,
-} from "../../packages/@cap/istanbul-lib-coverage/src/index.cp";
+} from "../../packages/istanbul-lib-coverage/src/index.cp";
 
 fn main() {
     test("1. @cap/istanbul-lib-coverage — CoverageMetric pct and empty 100%", () => {

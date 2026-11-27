@@ -1,0 +1,44 @@
+{
+  "name": "color-parse",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS Color Level 4 functional color parser (rgb/rgba/hsl/hsla with comma and space/slash syntax), formatter, and RGB <-> HSL converter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "css",
+    "color",
+    "rgb",
+    "rgba",
+    "hsl",
+    "hsla",
+    "css-color-4",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "color-parse",
+    "repo": "https://github.com/colorjs/color-parse",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "color-parse",
+      "repo": "https://github.com/colorjs/color-parse",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "csscolorparser",
+      "repo": "https://github.com/mazznoer/csscolorparser-rs",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

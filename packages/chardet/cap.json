@@ -1,0 +1,21 @@
+{
+  "name": "chardet",
+  "version": "2.1.0",
+  "description": "Zero-allocation character encoding detector (BOM, UTF-8, UTF-16/32, ASCII, Shift-JIS, GBK, Windows-1252, ISO-8859-1)",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "chardet",
+    "version": "2.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/runk/node-chardet"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

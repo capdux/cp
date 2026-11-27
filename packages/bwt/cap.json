@@ -1,0 +1,29 @@
+{
+  "name": "bwt",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation Burrows-Wheeler Transform (BWT) and Move-To-Front (MTF) reversible compression preprocessing in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bwt",
+    "burrows-wheeler",
+    "mtf",
+    "move-to-front",
+    "bzip2",
+    "compression",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "bwt",
+    "repo": "https://github.com/cp-lang/cp",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

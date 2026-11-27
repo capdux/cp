@@ -1,0 +1,20 @@
+{
+  "name": "h3o",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Uber H3 64-bit hexagonal hierarchical spatial index cell parser, constructor, hierarchy traversal, and area table (clean-room port of Rust h3o)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "h3o",
+    "repo": "https://github.com/HydroniumLabs/h3o",
+    "license": "BSD-3-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

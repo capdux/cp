@@ -1,0 +1,30 @@
+{
+  "name": "terser",
+  "ver": "1.0.0",
+  "description": "Zero-allocation lexer-safe JS/TS/CSS code minifier (npm terser parity) preserving strings, templates, legal comments, keyword spacing, and unary operator separation for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "terser",
+    "minify",
+    "minifier",
+    "js",
+    "ts",
+    "css",
+    "compressor",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "terser",
+    "repo": "https://github.com/terser/terser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

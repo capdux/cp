@@ -1,0 +1,30 @@
+{
+  "name": "bvh",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation static 3D AABB Bounding Volume Hierarchy (BVH) with overlap queries and slab raycasting in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bvh",
+    "aabb",
+    "raycast",
+    "3d",
+    "collision",
+    "spatial",
+    "graphics",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "bvh",
+    "repo": "https://github.com/svenstaro/bvh",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

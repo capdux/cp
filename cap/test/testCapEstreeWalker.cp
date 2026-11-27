@@ -8,7 +8,7 @@ import {
     WalkPhase,
     EstreeArena,
     EstreeWalker,
-} from "../../packages/@cap/estree-walker/src/index.cp";
+} from "../../packages/estree-walker/src/index.cp";
 
 fn main() {
     test("1. @cap/estree-walker — DFS Enter/Leave ordering and depths", () => {

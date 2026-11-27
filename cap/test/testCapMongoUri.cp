@@ -6,7 +6,7 @@ import {
     parseMongoUri,
     getQueryOption,
     formatMongoUri,
-} from "../../packages/@cap/mongo-uri/src/index.cp";
+} from "../../packages/mongodb-connection-string-url/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

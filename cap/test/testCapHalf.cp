@@ -9,7 +9,7 @@ import {
     f16BitsToF32Bits,
     f32BitsToBf16Bits,
     bf16BitsToF32Bits,
-} from "../../packages/@cap/half/src/index.cp";
+} from "../../packages/half/src/index.cp";
 
 fn main() {
     test("1. @cap/half — f16 exact canonical values (0, -0, 1, -2, 65504)", () => {

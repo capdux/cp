@@ -3,7 +3,7 @@ import {
     yn,
     ynLenient,
     ynDefault,
-} from "../../packages/@cap/yn/src/index.cp";
+} from "../../packages/yn/src/index.cp";
 
 fn main() {
     test("1. @cap/yn — recognizes standard truthy values case-insensitively", () => {

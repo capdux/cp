@@ -5,7 +5,7 @@ import {
     phaseCode,
     formatTraceEvent,
     formatTraceArray,
-} from "../../packages/@cap/chrome-trace-event/src/index.cp";
+} from "../../packages/chrome-trace-event/src/index.cp";
 
 fn main() {
     test("1. @cap/chrome-trace-event — phaseCode maps all TracePhase variants", () => {

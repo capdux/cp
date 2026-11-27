@@ -1,0 +1,20 @@
+{
+  "name": "p-map",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap bounded-concurrency batch planner, chunk partitioner, and token-bucket rate limiter (clean-room port of npm p-map / p-all)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "p-map",
+    "repo": "https://github.com/sindresorhus/p-map",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

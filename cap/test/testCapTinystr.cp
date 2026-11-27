@@ -10,7 +10,7 @@ import {
     TinyAsciiStr4,
     TinyAsciiStr8,
     TinyAsciiStr16,
-} from "../../packages/@cap/tinystr/src/index.cp";
+} from "../../packages/tinystr/src/index.cp";
 
 fn tsTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

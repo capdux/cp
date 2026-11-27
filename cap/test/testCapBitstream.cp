@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/bitstream (Rust bitstream-io parity)
 
 import { test, expect_eq } from "cap:test";
-import { BitReader, BitWriter } from "../../packages/@cap/bitstream/src/index.cp";
+import { BitReader, BitWriter } from "../../packages/bitstream-io/src/index.cp";
 
 fn main() {
     test("1. @cap/bitstream — MSB-first unaligned cross-byte read/write round-trip", () => {

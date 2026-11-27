@@ -2,14 +2,14 @@
 // Comprehensive unit tests for @cap/rustls-webpki (RFC 6125 & RFC 5280 WebPKI verifier)
 
 import { test, expect_eq } from "cap:test";
-import { OID_ED25519, ObjectIdentifier } from "../../packages/@cap/const-oid/src/index.cp";
-import { AlgorithmIdentifier, SubjectPublicKeyInfo } from "../../packages/@cap/spki/src/index.cp";
+import { OID_ED25519, ObjectIdentifier } from "../../packages/const-oid/src/index.cp";
+import { AlgorithmIdentifier, SubjectPublicKeyInfo } from "../../packages/spki/src/index.cp";
 import {
     X509Validity,
     X509Name,
     X509Certificate,
     encodeX509Der,
-} from "../../packages/@cap/x509-cert/src/index.cp";
+} from "../../packages/x509-cert/src/index.cp";
 import {
     WPKI_OK,
     WPKI_ERR_NOT_YET_VALID,
@@ -26,7 +26,7 @@ import {
     verifyChainLink,
     verifyTrustAnchor,
     verifyEndEntityChain,
-} from "../../packages/@cap/rustls-webpki/src/index.cp";
+} from "../../packages/rustls-webpki/src/index.cp";
 
 fn makeTestCert(issuer: X509Name, subject: X509Name, validity: X509Validity): X509Certificate {
     let cert = X509Certificate.empty();

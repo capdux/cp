@@ -2,8 +2,8 @@
 // Comprehensive unit tests for @cap/x509-cert (RFC 5280 X.509 v1/v3 DER & PEM)
 
 import { test, expect_eq } from "cap:test";
-import { OID_ED25519, ObjectIdentifier } from "../../packages/@cap/const-oid/src/index.cp";
-import { AlgorithmIdentifier, SubjectPublicKeyInfo } from "../../packages/@cap/spki/src/index.cp";
+import { OID_ED25519, ObjectIdentifier } from "../../packages/const-oid/src/index.cp";
+import { AlgorithmIdentifier, SubjectPublicKeyInfo } from "../../packages/spki/src/index.cp";
 import {
     X509_ERR_INVALID_VERSION,
     X509_ERR_INVALID_PEM_LABEL,
@@ -15,7 +15,7 @@ import {
     encodeX509Pem,
     decodeX509Pem,
     isSelfSigned,
-} from "../../packages/@cap/x509-cert/src/index.cp";
+} from "../../packages/x509-cert/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

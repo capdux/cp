@@ -8,7 +8,7 @@ import {
     findAll,
     countMatches,
     contains,
-} from "../../packages/@cap/kmp-search/src/index.cp";
+} from "../../packages/kmp/src/index.cp";
 
 fn main() {
     test("1. @cap/kmp-search — computeLps classic vector 'ABABCABAB' -> [0,0,1,2,0,1,2,3,4]", () => {

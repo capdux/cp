@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     DecoderEncoding,
     StringDecoder,
-} from "../../packages/@cap/string-decoder/src/index.cp";
+} from "../../packages/string_decoder/src/index.cp";
 
 fn main() {
     test("1. @cap/string-decoder — reassembles 3-byte UTF-8 Euro sign split across 3 chunks", () => {

@@ -1,0 +1,34 @@
+{
+  "name": "accept-language-parser",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 9110 / BCP-47 Accept-Language quality weight parser and language negotiation engine.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "accept-language-parser",
+    "repo": "https://github.com/opentable/accept-language-parser",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "accept-language-parser",
+      "repo": "https://github.com/opentable/accept-language-parser",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "accept-language",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "picomatch",
+  "ver": "1.0.0",
+  "description": "Zero-allocation glob matcher & static base scanner (npm picomatch v4 parity) with globstar, char classes, brace expansion, dotfile protection, and negation for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "normalize-path": "1.0.0",
+    "is-extglob": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "picomatch",
+    "repo": "https://github.com/micromatch/picomatch",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

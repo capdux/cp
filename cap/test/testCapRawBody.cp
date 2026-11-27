@@ -13,7 +13,7 @@ import {
     RawBodyReader,
     parseByteLimit,
     isValidUtf8
-} from "../../packages/@cap/raw-body/src/index.cp";
+} from "../../packages/raw-body/src/index.cp";
 
 fn main() {
     test("1. RawBodyReader — streaming multi-chunk accumulation & exact Content-Length match", () => {

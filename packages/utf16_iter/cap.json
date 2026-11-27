@@ -1,0 +1,29 @@
+{
+  "name": "utf16_iter",
+  "version": "1.0.0",
+  "description": "Zero-allocation bidirectional UTF-16 code point iterator, Latin-1 to UTF-16 expander, and UTF-16 to UTF-8 transcoder in CP",
+  "license": "Apache-2.0 OR MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "utf16",
+    "unicode",
+    "iterator",
+    "latin1",
+    "utf8",
+    "icu4x",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "utf16_iter",
+    "repo": "https://github.com/hsivonen/utf16_iter",
+    "license": "Apache-2.0 OR MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

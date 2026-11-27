@@ -1,0 +1,21 @@
+{
+  "name": "d3-format",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-heap D3/Python-style number format specifier parser and formatter for CP (clean-room ISC implementation of npm d3-format).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "d3-format",
+    "repo": "https://github.com/d3/d3-format",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

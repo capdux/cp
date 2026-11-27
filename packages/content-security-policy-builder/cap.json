@@ -1,0 +1,29 @@
+{
+  "name": "content-security-policy-builder",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C Content-Security-Policy 3 header builder and parser for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "csp",
+    "content-security-policy",
+    "security",
+    "http",
+    "xss",
+    "helmet",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "content-security-policy-builder",
+    "repo": "https://github.com/helmetjs/content-security-policy-builder",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

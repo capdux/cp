@@ -11,7 +11,7 @@ import {
     recommendedBump,
     highestBump,
     formatCommitHeader,
-} from "../../packages/@cap/conventional-commits/src/index.cp";
+} from "../../packages/conventional-commits-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/conventional-commits — Basic header, scope & exclamation breaking", () => {

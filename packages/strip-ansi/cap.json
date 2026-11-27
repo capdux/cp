@@ -1,0 +1,43 @@
+{
+  "name": "strip-ansi",
+  "version": "1.0.0",
+  "description": "Zero-heap ECMA-48 / ANSI terminal escape sequence stripper (CSI, OSC, 2-byte ESC) and visible character counter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "anstyle-parse": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "strip-ansi",
+    "repo": "https://github.com/chalk/strip-ansi",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "strip-ansi",
+      "repo": "https://github.com/chalk/strip-ansi",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "strip-ansi-escapes",
+      "repo": "https://github.com/luser/strip-ansi-escapes",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "string-length",
+      "repo": "https://github.com/sindresorhus/string-length",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

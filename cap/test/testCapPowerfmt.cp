@@ -9,7 +9,7 @@ import {
     formatDecPadded,
     formatHex,
     formatWithCommas,
-} from "../../packages/@cap/powerfmt/src/index.cp";
+} from "../../packages/powerfmt/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { parseClf, formatClf } from "../../packages/@cap/clf-log/src/index.cp";
+import { parseClf, formatClf } from "../../packages/clf-parser/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

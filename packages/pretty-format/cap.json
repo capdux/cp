@@ -1,0 +1,21 @@
+{
+  "name": "pretty-format",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP structured value pretty-printer with indentation, compact mode, and max-depth protection (clean-room MIT implementation of npm pretty-format)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "pretty-format",
+    "repo": "https://github.com/jestjs/jest",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

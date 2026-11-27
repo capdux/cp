@@ -1,0 +1,23 @@
+{
+  "name": "pretty-ms",
+  "ver": "1.0.0",
+  "description": "Zero-allocation millisecond decomposer and human-readable duration formatter composing @cap/parse-ms for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "dependencies": {
+    "parse-ms": "^1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "pretty-ms",
+    "repo": "https://github.com/sindresorhus/pretty-ms",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

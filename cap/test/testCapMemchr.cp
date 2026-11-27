@@ -13,7 +13,7 @@ import {
     memchrFindAll,
     memmemFind,
     memmemRfind
-} from "../../packages/@cap/memchr/src/index.cp";
+} from "../../packages/memchr/src/index.cp";
 
 fn main() {
     test("1. @cap/memchr — SWAR memchr across 8-byte aligned/unaligned, first/last & 0x00/0x80/0xFF", () => {

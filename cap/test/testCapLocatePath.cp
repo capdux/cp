@@ -8,7 +8,7 @@ import {
     isAbsolutePath,
     locatePathInEntries,
     locateAllPathsInEntries,
-} from "../../packages/@cap/locate-path/src/index.cp";
+} from "../../packages/locate-path/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) {

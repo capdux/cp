@@ -17,7 +17,7 @@ import {
     isLtrOnly,
     computeVisualRuns,
     mirrorAsciiBracket,
-} from "../../packages/@cap/unicode-bidi/src/index.cp";
+} from "../../packages/unicode-bidi/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-bidi — bidiClass Latin, Hebrew, Arabic, digits & whitespace", () => {

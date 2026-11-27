@@ -9,7 +9,7 @@ import {
     encodeBase58With,
     decodeBase58With,
     isValidBase58,
-} from "../../packages/@cap/bs58/src/index.cp";
+} from "../../packages/bs58/src/index.cp";
 
 fn main() {
     test("1. @cap/bs58 — Bitcoin official standard test vectors", () => {

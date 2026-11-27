@@ -1,0 +1,28 @@
+{
+  "name": "object-hash",
+  "ver": "1.0.0",
+  "description": "Zero-allocation deterministic order-independent structured object hasher using FNV-1a 64-bit (npm object-hash parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "object-hash",
+    "hash",
+    "fnv1a",
+    "deterministic",
+    "canonical",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "object-hash",
+    "repo": "https://github.com/puleos/object-hash",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -8,7 +8,7 @@ import {
     serializeUri,
     resolveUri,
     equalUri,
-} from "../../packages/@cap/fast-uri/src/index.cp";
+} from "../../packages/fast-uri/src/index.cp";
 
 fn main() {
     test("1. @cap/fast-uri — parse full HTTP URI with userinfo, port, query, fragment", () => {

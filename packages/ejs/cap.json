@@ -1,0 +1,23 @@
+{
+  "name": "ejs",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap EJS template engine supporting <%= escaped %>, <%- raw %>, <%# comments %>, <% if/else %>, and <% repeat %> tags (clean-room port of npm ejs)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "ejs",
+    "repo": "https://github.com/mde/ejs",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

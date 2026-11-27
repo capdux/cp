@@ -7,7 +7,7 @@ import {
     parseJsonPointer,
     unescapePointerToken,
     patchOpName,
-} from "../../packages/@cap/immer-patches/src/index.cp";
+} from "../../packages/immer/src/index.cp";
 
 fn main() {
     test("1. @cap/immer-patches — patchOpName returns RFC 6902 op strings", () => {

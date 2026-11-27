@@ -8,7 +8,7 @@ import {
     intProp,
     arrayProp,
     toJsonSchema,
-} from "../../packages/@cap/zod-to-json-schema/src/index.cp";
+} from "../../packages/zod-to-json-schema/src/index.cp";
 
 fn main() {
     test("1. @cap/zod-to-json-schema — emits Draft-07 object schema with required fields", () => {

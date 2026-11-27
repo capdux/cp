@@ -1,0 +1,20 @@
+{
+  "name": "chacha20",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8439 ChaCha20 stream cipher (Rust chacha20 crate parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "chacha20",
+    "repo": "https://github.com/RustCrypto/stream-ciphers",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "d3-ease",
+  "ver": "1.0.0",
+  "license": "ISC",
+  "description": "Zero-allocation D3 easing functions (linear, quad, cubic, poly, sin, exp, circle, bounce, back, elastic) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "d3",
+    "d3-ease",
+    "easing",
+    "animation",
+    "interpolation",
+    "tween",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "d3-ease",
+    "repo": "https://github.com/d3/d3-ease",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

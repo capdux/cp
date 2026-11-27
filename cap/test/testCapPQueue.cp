@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { TaskQueue, QueueTask, PQ_MAX_TASKS } from "../../packages/@cap/p-queue/src/index.cp";
+import { TaskQueue, QueueTask, PQ_MAX_TASKS } from "../../packages/p-queue/src/index.cp";
 
 fn main() {
     test("1. @cap/p-queue — Priority ordering with FIFO tie-breaking", () => {

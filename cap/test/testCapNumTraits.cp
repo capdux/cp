@@ -9,7 +9,7 @@ import {
     isPowerOfTwoU64, nextPowerOfTwoU64,
     countOnesU64, leadingZerosU64, trailingZerosU64,
     rotateLeftU64, rotateRightU64
-} from "../../packages/@cap/num-traits/src/index.cp";
+} from "../../packages/num-traits/src/index.cp";
 
 fn main() {
     test("1. @cap/num-traits — checked i64 add/sub/mul & boundary overflow", () => {

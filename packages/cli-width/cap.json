@@ -1,0 +1,28 @@
+{
+  "name": "cli-width",
+  "ver": "1.0.0",
+  "description": "Zero-allocation terminal column width resolver with TTY, COLUMNS env, default, and min/max clamping (npm cli-width parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "ISC",
+  "keywords": [
+    "cli-width",
+    "cli",
+    "tty",
+    "columns",
+    "terminal",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "cli-width",
+    "repo": "https://github.com/knownasilya/cli-width",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

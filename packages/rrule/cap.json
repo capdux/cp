@@ -1,0 +1,32 @@
+{
+  "name": "rrule",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 5545 iCalendar RRULE parser, validator & formatter (npm rrule v2 parity) composing @cap/unicase for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "rrule",
+    "icalendar",
+    "rfc5545",
+    "recurrence",
+    "calendar",
+    "schedule",
+    "zero-alloc"
+  ],
+  "dependencies": {
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "rrule",
+    "repo": "https://github.com/jkbrzt/rrule",
+    "license": "BSD-3-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

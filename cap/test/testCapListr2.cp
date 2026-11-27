@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     TASK_PENDING, TASK_RUNNING, TASK_COMPLETED, TASK_SKIPPED, TASK_FAILED,
     ListrOptions, ListrRunner
-} from "../../packages/@cap/listr2/src/index.cp";
+} from "../../packages/listr2/src/index.cp";
 
 fn main() {
     test("1. @cap/listr2 — addTask, startTask & completeTask lifecycle", () => {

@@ -7,7 +7,7 @@ import {
     FREQ_DAILY,
     FREQ_WEEKLY,
     isValidPriorityTenths,
-} from "../../packages/@cap/sitemap/src/index.cp";
+} from "../../packages/sitemap/src/index.cp";
 
 fn containsSubstr(haystack: []const u8, needle: []const u8): bool {
     if (needle.len == 0) {

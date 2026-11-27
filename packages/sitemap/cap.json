@@ -1,0 +1,28 @@
+{
+  "name": "sitemap",
+  "version": "1.0.0",
+  "description": "Zero-heap Sitemaps.org 0.9 XML sitemap & sitemapindex generator and validator in pure CP (modeled after npm sitemap)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "sitemap",
+    "xml",
+    "seo",
+    "robots",
+    "web",
+    "zero-heap"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "sitemap",
+    "repo": "https://github.com/ekalinin/sitemap.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

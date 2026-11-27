@@ -1,0 +1,23 @@
+{
+  "name": "mustache",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap Mustache v1.4 logic-less template engine for CP with XSS-safe HTML escaping via @cap/escape-html (clean-room MIT implementation of npm mustache v4).",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "escape-html": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "mustache",
+    "repo": "https://github.com/janl/mustache.js",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Ratio64 } from "../../packages/@cap/num-rational/src/index.cp";
+import { Ratio64 } from "../../packages/num-rational/src/index.cp";
 
 fn main() {
     test("1. @cap/num-rational — Canonical reduction, sign normalization & zero-denom rejection", () => {

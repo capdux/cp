@@ -1,0 +1,25 @@
+{
+  "name": "flate2",
+  "ver": "1.0.0",
+  "description": "Zero-heap RFC 1952 Gzip & RFC 1950 Zlib stored-deflate framing codec with strict CRC-32/ISIZE/Adler-32 verification (crates.io flate2 equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "crc32fast": "1.0.0",
+    "adler2": "1.0.0",
+    "bytemuck": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "flate2",
+    "repo": "https://github.com/rust-lang/flate2-rs",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { SvgPath } from "../../packages/@cap/d3-path/src/index.cp";
+import { SvgPath } from "../../packages/d3-path/src/index.cp";
 
 fn main() {
     test("1. @cap/d3-path — moveTo, lineTo, and closePath build triangle", () => {

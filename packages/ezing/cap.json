@@ -1,0 +1,20 @@
+{
+  "name": "ezing",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Robert Penner animation easing functions and CSS cubic-bezier solver (Rust ezing / keyframe / npm eases parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "ezing",
+    "repo": "https://github.com/NyxCode/ezing",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

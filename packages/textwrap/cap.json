@@ -1,0 +1,25 @@
+{
+  "name": "textwrap",
+  "ver": "1.0.0",
+  "description": "Zero-allocation text wrapping, ANSI-aware display width, CJK wide-char breaking, indent/dedent, and truncation engine for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "dependencies": {
+    "unicode-width": "^1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "textwrap",
+    "repo": "https://github.com/chalk/wrap-ansi",
+    "license": "MIT",
+    "ecosystem": "crates.io",
+    "package": "textwrap",
+    "repository": "https://github.com/mgeisler/textwrap"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

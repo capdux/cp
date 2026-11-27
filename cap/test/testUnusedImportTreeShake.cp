@@ -6,7 +6,7 @@
 //           and does NOT pull in any `ZSTD_` symbols.
 
 import { phr_parse_request } from "@cap/picohttp";
-import { Compressor } from "@cap/zstd";
+import { Compressor } from "zstd";
 
 pub fn checkPicoSymbolRef(): bool {
     const fn_ptr = phr_parse_request;

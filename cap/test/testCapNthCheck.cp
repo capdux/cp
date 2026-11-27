@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { parseNth, nthCheck } from "../../packages/@cap/nth-check/src/index.cp";
+import { parseNth, nthCheck } from "../../packages/nth-check/src/index.cp";
 
 fn main() {
     test("1. @cap/nth-check — parses even and odd keywords", () => {

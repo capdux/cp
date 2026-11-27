@@ -1,0 +1,23 @@
+{
+  "name": "path-exists",
+  "ver": "1.0.0",
+  "description": "Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses @cap/locate-path)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "locate-path": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "path-exists",
+    "repo": "https://github.com/sindresorhus/path-exists",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

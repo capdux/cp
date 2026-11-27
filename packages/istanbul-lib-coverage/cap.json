@@ -1,0 +1,21 @@
+{
+  "name": "istanbul-lib-coverage",
+  "version": "3.2.2",
+  "description": "Zero-heap code coverage metrics, summary aggregation, and LCOV codec",
+  "entry": "src/index.cp",
+  "license": "BSD-3-Clause",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "istanbul-lib-coverage",
+    "version": "3.2.2",
+    "license": "BSD-3-Clause",
+    "repository": "https://github.com/istanbuljs/istanbuljs"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

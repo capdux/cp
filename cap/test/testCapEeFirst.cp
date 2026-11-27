@@ -3,7 +3,7 @@ import {
     FIRST_MAX_WATCHERS,
     FirstResult,
     FirstRace
-} from "../../packages/@cap/ee-first/src/index.cp";
+} from "../../packages/ee-first/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

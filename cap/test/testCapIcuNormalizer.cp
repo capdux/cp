@@ -17,7 +17,7 @@ import {
     isNfc,
     isNfd,
     eqNfc,
-} from "../../packages/@cap/icu-normalizer/src/index.cp";
+} from "../../packages/icu_normalizer/src/index.cp";
 
 fn inormTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

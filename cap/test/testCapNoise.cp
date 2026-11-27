@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { PerlinNoise } from "../../packages/@cap/noise/src/index.cp";
+import { PerlinNoise } from "../../packages/noise/src/index.cp";
 
 fn absF64(x: f64): f64 {
     if (x < 0.0) {

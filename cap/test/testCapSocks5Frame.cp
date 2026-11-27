@@ -22,7 +22,7 @@ import {
     encodeConnectIpv4,
     decodeRequest,
     encodeReplyIpv4,
-} from "../../packages/@cap/socks5-frame/src/index.cp";
+} from "../../packages/fast-socks5/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     AcMatch,
     AhoCorasick,
-} from "../../packages/@cap/aho-corasick/src/index.cp";
+} from "../../packages/aho-corasick/src/index.cp";
 
 fn main() {
     test("1. @cap/aho-corasick — Classic paper vector {he, she, his, hers} on 'ushers'", () => {

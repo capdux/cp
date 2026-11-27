@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { parseMs, formatMs, MS_DAY, MS_HOUR, MS_MINUTE, MS_SECOND } from "../../packages/@cap/ms/src/index.cp";
+import { parseMs, formatMs, MS_DAY, MS_HOUR, MS_MINUTE, MS_SECOND } from "../../packages/ms/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

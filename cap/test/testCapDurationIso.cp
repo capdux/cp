@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { IsoDuration, parseIsoDuration, formatIsoDuration, toApproxMillis } from "../../packages/@cap/duration-iso/src/index.cp";
+import { IsoDuration, parseIsoDuration, formatIsoDuration, toApproxMillis } from "../../packages/iso8601-duration/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

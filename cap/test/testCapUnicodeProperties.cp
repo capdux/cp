@@ -10,7 +10,7 @@ import {
     isEmojiPresentation,
     isDefaultIgnorable,
     isValidIdentifier,
-} from "../../packages/@cap/unicode-properties/src/index.cp";
+} from "../../packages/unicode-properties/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-properties — isXidStart multilingual scripts & exclusions", () => {

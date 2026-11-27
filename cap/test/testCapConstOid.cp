@@ -12,7 +12,7 @@ import {
     OID_COMMON_NAME,
     OID_SHA256,
     ObjectIdentifier,
-} from "../../packages/@cap/const-oid/src/index.cp";
+} from "../../packages/const-oid/src/index.cp";
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

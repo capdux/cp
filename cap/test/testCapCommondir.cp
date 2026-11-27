@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     commonDirTwo,
     commonDir,
-} from "../../packages/@cap/commondir/src/index.cp";
+} from "../../packages/commondir/src/index.cp";
 
 fn main() {
     test("1. @cap/commondir — finds deepest common parent of sibling files", () => {

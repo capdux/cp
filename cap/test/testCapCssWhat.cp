@@ -3,7 +3,7 @@ import {
     CssSelectorToken,
     parseCssSelector,
     stringifyCssSelector,
-} from "../../packages/@cap/css-what/src/index.cp";
+} from "../../packages/css-what/src/index.cp";
 
 fn main() {
     test("1. @cap/css-what — Complex compound & combinator selector parsing", () => {

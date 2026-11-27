@@ -1,0 +1,29 @@
+{
+  "name": "magic-string",
+  "ver": "1.0.0",
+  "description": "Zero-allocation original-offset source string editor (npm magic-string parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "magic-string",
+    "string",
+    "source-transform",
+    "editor",
+    "bundler",
+    "rollup",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "magic-string",
+    "repo": "https://github.com/Rich-Harris/magic-string",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

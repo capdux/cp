@@ -1,0 +1,26 @@
+{
+  "name": "serve-static",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap HTTP static file request resolver, dotfile policy evaluator, Cache-Control builder, and MIME/ETag helper (clean-room port of npm serve-static)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "parseurl": "1.0.0",
+    "mime-types": "1.0.0",
+    "etag": "1.0.0",
+    "itoa": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "serve-static",
+    "repo": "https://github.com/expressjs/serve-static",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

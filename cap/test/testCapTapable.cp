@@ -8,7 +8,7 @@ import {
     SyncBailHook,
     SyncWaterfallHook,
     SyncLoopHook,
-} from "../../packages/@cap/tapable/src/index.cp";
+} from "../../packages/tapable/src/index.cp";
 
 let g_sync_trace: [8]u32 = [0, 0, 0, 0, 0, 0, 0, 0];
 let g_sync_len: usize = 0;

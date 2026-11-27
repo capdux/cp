@@ -1,0 +1,45 @@
+{
+  "name": "istextorbinary",
+  "ver": "1.0.0",
+  "description": "Zero-allocation WHATWG MIME Sniffing Standard binary/text detector and HTML/XML/JSON/SVG content sniffer for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "mime",
+    "sniff",
+    "whatwg",
+    "binary",
+    "text",
+    "html",
+    "json",
+    "svg",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "istextorbinary",
+    "repo": "https://github.com/bevry/istextorbinary",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "istextorbinary",
+      "repo": "https://github.com/bevry/istextorbinary",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "content_inspector",
+      "repo": "https://github.com/sharkdp/content_inspector",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

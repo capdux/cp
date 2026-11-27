@@ -7,7 +7,7 @@ import {
     countPairs,
     getDecoded,
     stringify,
-} from "../../packages/@cap/qs-lite/src/index.cp";
+} from "../../packages/qs/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

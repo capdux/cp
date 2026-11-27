@@ -11,7 +11,7 @@ import {
     isFiniteF64,
     isNanF64,
     isInfF64
-} from "../../packages/@cap/ryu-float/src/index.cp";
+} from "../../packages/ryu/src/index.cp";
 
 fn ryuTestSliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

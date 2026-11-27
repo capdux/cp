@@ -8,7 +8,7 @@ import {
     lookupIpByFamily,
     reverseLookup,
     formatHosts,
-} from "../../packages/@cap/hosts-file/src/index.cp";
+} from "../../packages/hostile/src/index.cp";
 
 const SAMPLE_HOSTS = "# System hosts file\n\n127.0.0.1\tlocalhost local.capdux.com api.local # loopback aliases\r\n::1             localhost ip6-localhost\nfe80::1%lo0     link-local.dev\n10.0.0.42       db.internal   # primary database\n";
 

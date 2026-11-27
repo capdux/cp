@@ -3,7 +3,7 @@ import {
     XmlEventKind,
     XmlEvent,
     SaxesParser,
-} from "../../packages/@cap/saxes/src/index.cp";
+} from "../../packages/saxes/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

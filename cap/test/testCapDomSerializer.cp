@@ -9,7 +9,7 @@ import {
     serializeElement,
     serializeComment,
     serializeCdata,
-} from "../../packages/@cap/dom-serializer/src/index.cp";
+} from "../../packages/dom-serializer/src/index.cp";
 
 fn main() {
     test("1. @cap/dom-serializer — identifies HTML void elements case-insensitively", () => {

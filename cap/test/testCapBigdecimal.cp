@@ -3,7 +3,7 @@ import {
     BigDecimal,
     parseDecimal,
     formatDecimal
-} from "../../packages/@cap/bigdecimal/src/index.cp";
+} from "../../packages/bigdecimal/src/index.cp";
 
 fn bdecTestBufEq(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -4,7 +4,7 @@ import {
     paramBytes,
     derToJose,
     joseToDer,
-} from "../../packages/@cap/ecdsa-sig-formatter/src/index.cp";
+} from "../../packages/ecdsa-sig-formatter/src/index.cp";
 
 fn main() {
     test("1. @cap/ecdsa-sig-formatter — paramBytes for ES256 / ES384 / ES512", () => {

@@ -9,7 +9,7 @@ import {
     parsePemBundle,
     extractBase64,
     encodePem,
-} from "../../packages/@cap/pem/src/index.cp";
+} from "../../packages/pem/src/index.cp";
 
 fn main() {
     test("1. @cap/pem — parse single PEM block", () => {

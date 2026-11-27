@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     parseProxyUrl,
     buildConnectRequest,
-} from "../../packages/@cap/https-proxy-agent/src/index.cp";
+} from "../../packages/https-proxy-agent/src/index.cp";
 
 fn main() {
     test("1. @cap/https-proxy-agent — parses HTTP proxy URL with credentials and port", () => {

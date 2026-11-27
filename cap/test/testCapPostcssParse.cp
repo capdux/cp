@@ -5,7 +5,7 @@ import {
     PC_AT_RULE,
     PC_COMMENT,
     PostCssSheet,
-} from "../../packages/@cap/postcss-parse/src/index.cp";
+} from "../../packages/postcss/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

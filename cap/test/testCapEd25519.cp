@@ -7,7 +7,7 @@ import {
     Ed25519Signature,
     Ed25519PublicKey,
     Ed25519SecretKey,
-} from "../../packages/@cap/ed25519/src/index.cp";
+} from "../../packages/ed25519/src/index.cp";
 
 fn main() {
     test("1. @cap/ed25519 — constants & signature fromComponents / rBytes / sBytes / toBytes", () => {

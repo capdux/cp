@@ -17,7 +17,7 @@ import {
     decodeSeverity,
     parseRfc5424,
     formatRfc5424,
-} from "../../packages/@cap/syslog/src/index.cp";
+} from "../../packages/syslog/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

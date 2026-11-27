@@ -1,0 +1,34 @@
+{
+  "name": "diff-sequences",
+  "version": "1.0.0",
+  "description": "Zero-heap Longest Common Subsequence (LCS) length, diff insert/delete stats, LCS similarity, and Longest Common Substring locator.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "diff-sequences",
+    "repo": "https://github.com/jestjs/jest",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "diff-sequences",
+      "repo": "https://github.com/jestjs/jest",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "lcs-diff",
+      "repo": "https://github.com/bokuweb/lcs-diff",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -2,12 +2,12 @@
 // Comprehensive unit tests for @cap/snakecase-keys
 
 import { test, expect_eq } from "cap:test";
-import { MapObjResult } from "../../packages/@cap/map-obj/src/index.cp";
+import { MapObjResult } from "../../packages/map-obj/src/index.cp";
 import {
     SnakecaseKeysResult,
     snakecaseKeys,
     snakecaseKeyInto,
-} from "../../packages/@cap/snakecase-keys/src/index.cp";
+} from "../../packages/snakecase-keys/src/index.cp";
 
 fn main() {
     test("1. @cap/snakecase-keys — snakecaseKeyInto single-key conversion", () => {

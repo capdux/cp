@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { PidController } from "../../packages/@cap/pid-ctrl/src/index.cp";
+import { PidController } from "../../packages/node-pid-controller/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d = a - b;

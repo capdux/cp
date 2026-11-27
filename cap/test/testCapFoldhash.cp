@@ -8,7 +8,7 @@ import {
     hashBytesFast,
     hashBytesQuality,
     hashU64,
-} from "../../packages/@cap/foldhash/src/index.cp";
+} from "../../packages/foldhash/src/index.cp";
 
 fn popcount64(x_in: u64) -> usize {
     let x = x_in;

@@ -8,7 +8,7 @@ import {
     isValidMethodId,
     parseDid,
     formatDid,
-} from "../../packages/@cap/did-parse/src/index.cp";
+} from "../../packages/did-resolver/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

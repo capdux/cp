@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     isAscii, basicIsValidUtf8, validateUtf8Compat, countCodepoints
-} from "../../packages/@cap/simdutf8/src/index.cp";
+} from "../../packages/simdutf8/src/index.cp";
 
 fn main() {
     test("1. @cap/simdutf8 — ASCII fast-path & valid multi-byte UTF-8", () => {

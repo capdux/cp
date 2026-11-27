@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { SmallVecU64, SmallVecU8, SMALLVEC_U64_CAP } from "../../packages/@cap/smallvec/src/index.cp";
+import { SmallVecU64, SmallVecU8, SMALLVEC_U64_CAP } from "../../packages/smallvec/src/index.cp";
 
 fn main() {
     test("1. @cap/smallvec — push, pop, get, set and capacity", () => {

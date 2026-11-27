@@ -7,7 +7,7 @@ import {
     simhash64,
     hamming74Encode,
     hamming74Decode,
-} from "../../packages/@cap/hamming/src/index.cp";
+} from "../../packages/hamming/src/index.cp";
 
 fn main() {
     test("1. @cap/hamming — popcountU64 & hammingU64 boundary values", () => {

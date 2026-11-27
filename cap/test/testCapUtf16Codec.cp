@@ -13,7 +13,7 @@ import {
     utf8ToUtf16LeBytes,
     utf16LeBytesToUtf8,
     countUtf16Units,
-} from "../../packages/@cap/utf16-codec/src/index.cp";
+} from "../../packages/utf16/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

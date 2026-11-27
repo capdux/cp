@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { BaseUnit, FormatSizeOptions, DECIMAL, BINARY, WINDOWS, formatSize, formatDecimal, formatBinary } from "../../packages/@cap/humansize/src/index.cp";
+import { BaseUnit, FormatSizeOptions, DECIMAL, BINARY, WINDOWS, formatSize, formatDecimal, formatBinary } from "../../packages/humansize/src/index.cp";
 
 fn main() {
     test("formatDecimal handles bytes, kB, MB, GB, TB", () => {

@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     Kalman1D,
-} from "../../packages/@cap/kalman1d/src/index.cp";
+} from "../../packages/kalmanjs/src/index.cp";
 
 fn near(a: f64, b: f64, eps: f64): bool {
     let d: f64 = a - b;

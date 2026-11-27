@@ -1,0 +1,20 @@
+{
+  "name": "hyperloglog",
+  "ver": "1.0.0",
+  "description": "Zero-allocation 256-byte HyperLogLog cardinality estimator with LinearCounting small-range correction and distributed merge (Rust hyperloglog / Redis PFADD/PFCOUNT/PFMERGE parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "hyperloglog",
+    "repo": "https://github.com/jedisct1/rust-hyperloglog",
+    "license": "ISC"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

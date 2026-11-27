@@ -5,7 +5,7 @@ import {
     formatHstsHeader,
     formatCspHeader,
     isSafeHeaderValue,
-} from "../../packages/@cap/helmet-headers/src/index.cp";
+} from "../../packages/helmet/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

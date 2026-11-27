@@ -1,0 +1,30 @@
+{
+  "name": "rand_pcg",
+  "version": "1.0.0",
+  "description": "Zero-heap PCG32 (XSH-RR) pseudorandom number generator with independent streams and O(log N) jump-ahead (inspired by Rust rand_pcg)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "pcg",
+    "pcg32",
+    "rand_pcg",
+    "prng",
+    "random",
+    "simulation",
+    "monte-carlo",
+    "deterministic"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rand_pcg",
+    "repo": "https://github.com/rust-random/rand",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

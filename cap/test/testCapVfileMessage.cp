@@ -7,7 +7,7 @@ import {
     createMessage,
     stringifyPosition,
     formatMessage,
-} from "../../packages/@cap/vfile-message/src/index.cp";
+} from "../../packages/vfile-message/src/index.cp";
 
 fn main() {
     test("1. @cap/vfile-message — formats point and range positions", () => {

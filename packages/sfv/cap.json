@@ -1,0 +1,42 @@
+{
+  "name": "sfv",
+  "ver": "1.0.0",
+  "description": "Zero-allocation W3C User-Agent Client Hints (Sec-CH-UA*) RFC 8941 structured header parser and formatter for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "client-hints",
+    "sec-ch-ua",
+    "user-agent",
+    "rfc8941",
+    "http",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "sfv",
+    "repo": "https://github.com/undef1nd/sfv",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "sfv",
+      "repo": "https://github.com/undef1nd/sfv",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "ua-client-hints",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

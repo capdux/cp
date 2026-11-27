@@ -1,0 +1,47 @@
+{
+  "name": "pem",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 7468 PEM armor multi-block parser, validator, and 64-column wrapped encoder for certificates and keys",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "pem",
+    "rfc7468",
+    "x509",
+    "certificate",
+    "tls",
+    "crypto",
+    "key",
+    "ssh"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "pem",
+    "repo": "https://github.com/rustls/pemfile",
+    "license": "MIT",
+    "ecosystem": "crates.io",
+    "package": "pem",
+    "repository": "https://github.com/jcreekmore/pem-rs"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "rustls-pemfile",
+      "repo": "https://github.com/rustls/pemfile",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "pem-rfc7468",
+      "repo": "https://github.com/RustCrypto/formats",
+      "license": "Apache-2.0"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

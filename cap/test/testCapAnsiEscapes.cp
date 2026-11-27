@@ -25,7 +25,7 @@ import {
     hyperlink,
     setWindowTitle,
     beep,
-} from "../../packages/@cap/ansi-escapes/src/index.cp";
+} from "../../packages/ansi-escapes/src/index.cp";
 
 fn main() {
     test("1. @cap/ansi-escapes — absolute cursor positioning (cursorTo & cursorToXY)", () => {

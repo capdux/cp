@@ -6,7 +6,7 @@ import {
     parseSelector,
     matchesSelector,
     queryAll,
-} from "../../packages/@cap/esquery/src/index.cp";
+} from "../../packages/esquery/src/index.cp";
 
 fn makeSampleAst(): [7]AstNodeInfo {
     let nodes: [7]AstNodeInfo = [

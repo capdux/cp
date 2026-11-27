@@ -1,0 +1,44 @@
+{
+  "name": "sqlstring",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation ANSI SQL / PostgreSQL / MySQL string literal, identifier, and LIKE pattern escaper with placeholder counter in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "sql",
+    "sqlstring",
+    "escape",
+    "postgres",
+    "mysql",
+    "ansi-sql",
+    "like",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "sqlstring",
+    "repo": "https://github.com/mysqljs/sqlstring",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "sqlstring",
+      "repo": "https://github.com/mysqljs/sqlstring",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "pg-format",
+      "repo": "https://github.com/datalanche/node-pg-format",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

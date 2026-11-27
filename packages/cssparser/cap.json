@@ -1,0 +1,21 @@
+{
+  "name": "cssparser",
+  "version": "0.34.0",
+  "description": "Zero-heap CSS Syntax Level 3 tokenizer and lexer in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "cssparser",
+    "version": "0.34.0",
+    "license": "MIT",
+    "repository": "https://github.com/servo/rust-cssparser"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

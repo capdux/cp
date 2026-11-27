@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     StackFrame,
     parseStackLine,
-} from "../../packages/@cap/stack-utils/src/index.cp";
+} from "../../packages/stack-utils/src/index.cp";
 
 fn main() {
     test("1. @cap/stack-utils — parses named function frame with file:line:col", () => {

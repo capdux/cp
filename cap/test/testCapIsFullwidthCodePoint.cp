@@ -3,7 +3,7 @@ import {
     isFullwidthCodePoint,
     codePointWidth,
     countFullwidthChars,
-} from "../../packages/@cap/is-fullwidth-code-point/src/index.cp";
+} from "../../packages/is-fullwidth-code-point/src/index.cp";
 
 fn main() {
     test("1. @cap/is-fullwidth-code-point — ASCII and Latin are narrow", () => {

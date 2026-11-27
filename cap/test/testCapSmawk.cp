@@ -3,7 +3,7 @@ import {
     rowMinima,
     isTotallyMonotone,
     mongeRowMinima,
-} from "../../packages/@cap/smawk/src/index.cp";
+} from "../../packages/smawk/src/index.cp";
 
 fn main() {
     test("1. @cap/smawk — rowMinima finds leftmost minimum column per row", () => {

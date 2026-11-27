@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Adler32, adler32, combineAdler32 } from "../../packages/@cap/adler32/src/index.cp";
+import { Adler32, adler32, combineAdler32 } from "../../packages/adler2/src/index.cp";
 
 fn main() {
     test("official RFC 1950 Wikipedia and standard vectors", () => {

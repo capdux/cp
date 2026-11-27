@@ -3,7 +3,7 @@ import {
     Endian,
     PreadCursor,
     PwriteCursor,
-} from "../../packages/@cap/scroll/src/index.cp";
+} from "../../packages/scroll/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

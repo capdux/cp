@@ -1,0 +1,34 @@
+{
+  "name": "base64ct",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation constant-time (table-free) Base64 encoder and strict canonical decoder (RustCrypto base64ct parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "base64ct",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "base64ct",
+      "repo": "https://github.com/RustCrypto/formats",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "base64-arraybuffer",
+      "repo": "https://github.com/niklasvh/base64-arraybuffer",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

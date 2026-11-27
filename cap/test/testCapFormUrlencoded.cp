@@ -6,7 +6,7 @@ import {
     percentDecode,
     parseFormPairs,
     getParamDecoded,
-} from "../../packages/@cap/form-urlencoded/src/index.cp";
+} from "../../packages/querystringify/src/index.cp";
 
 fn eqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

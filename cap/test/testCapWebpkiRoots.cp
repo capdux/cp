@@ -2,9 +2,9 @@
 // Comprehensive unit tests for @cap/webpki-roots
 
 import { test, expect_eq } from "cap:test";
-import { OID_ED25519, ObjectIdentifier } from "../../packages/@cap/const-oid/src/index.cp";
-import { AlgorithmIdentifier, SubjectPublicKeyInfo, fingerprintSpki } from "../../packages/@cap/spki/src/index.cp";
-import { X509Certificate, X509Name, X509Validity } from "../../packages/@cap/x509-cert/src/index.cp";
+import { OID_ED25519, ObjectIdentifier } from "../../packages/const-oid/src/index.cp";
+import { AlgorithmIdentifier, SubjectPublicKeyInfo, fingerprintSpki } from "../../packages/spki/src/index.cp";
+import { X509Certificate, X509Name, X509Validity } from "../../packages/x509-cert/src/index.cp";
 import {
     KEY_ALG_RSA,
     KEY_ALG_P256,
@@ -17,7 +17,7 @@ import {
     mozillaRootAt,
     lookupMozillaRootByCn,
     certSpkiFingerprint,
-} from "../../packages/@cap/webpki-roots/src/index.cp";
+} from "../../packages/webpki-roots/src/index.cp";
 
 fn wrTestStrEq(a: string, b: string): bool {
     if (a.len != b.len) {

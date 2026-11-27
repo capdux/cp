@@ -1,0 +1,20 @@
+{
+  "name": "multimap",
+  "ver": "1.0.0",
+  "description": "Zero-allocation insertion-ordered one-to-many string multimap (capacity 128) for HTTP headers, URL query params, tag indexes, and event routing (Rust multimap parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "multimap",
+    "repo": "https://github.com/havarnov/multimap",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

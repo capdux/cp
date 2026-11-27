@@ -12,7 +12,7 @@ import {
     isbn10To13,
     isbn13To10,
     computeIsbn13CheckDigit,
-} from "../../packages/@cap/isbn/src/index.cp";
+} from "../../packages/isbn/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

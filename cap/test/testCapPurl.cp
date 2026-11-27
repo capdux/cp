@@ -5,7 +5,7 @@ import {
     isValidType,
     getQualifier,
     formatPurl,
-} from "../../packages/@cap/purl/src/index.cp";
+} from "../../packages/packageurl-js/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

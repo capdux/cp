@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     Xoroshiro128Plus,
     uniformIntDistribution,
-} from "../../packages/@cap/pure-rand/src/index.cp";
+} from "../../packages/pure-rand/src/index.cp";
 
 fn main() {
     test("1. @cap/pure-rand — pure immutability yields identical output from same state", () => {

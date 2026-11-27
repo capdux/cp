@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { XxHash32, XxHash64 } from "../../packages/@cap/twox-hash/src/index.cp";
+import { XxHash32, XxHash64 } from "../../packages/twox-hash/src/index.cp";
 
 fn main() {
     test("1. @cap/twox-hash — XXH32 official Cyan4973 vectors (empty & 'abc')", () => {

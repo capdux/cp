@@ -8,7 +8,7 @@ import {
     strWidth,
     strWidthCjk,
     truncateToWidth,
-} from "../../packages/@cap/unicode-width/src/index.cp";
+} from "../../packages/unicode-width/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

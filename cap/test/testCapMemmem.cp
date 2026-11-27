@@ -8,7 +8,7 @@ import {
     rfind,
     contains,
     count,
-} from "../../packages/@cap/memmem/src/index.cp";
+} from "../../packages/memmem/src/index.cp";
 
 fn main() {
     test("1. @cap/memmem — Empty, single-byte, exact match & oversized needle boundaries", () => {

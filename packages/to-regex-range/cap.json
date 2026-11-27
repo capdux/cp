@@ -1,0 +1,29 @@
+{
+  "name": "to-regex-range",
+  "version": "1.0.0",
+  "description": "Zero-allocation numeric range to compact regex pattern compiler and numeric range matcher for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "regex",
+    "range",
+    "to-regex-range",
+    "glob",
+    "braces",
+    "pattern",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "to-regex-range",
+    "repo": "https://github.com/micromatch/to-regex-range",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

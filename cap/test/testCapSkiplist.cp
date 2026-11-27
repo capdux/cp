@@ -6,7 +6,7 @@ import {
     MAX_NODES,
     SkipEntry,
     SkipList,
-} from "../../packages/@cap/skiplist/src/index.cp";
+} from "../../packages/skiplist/src/index.cp";
 
 fn main() {
     test("1. @cap/skiplist — Empty skip list boundaries", () => {

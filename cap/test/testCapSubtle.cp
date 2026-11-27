@@ -18,7 +18,7 @@ import {
     ctCopyIf,
     zeroizeBytes,
     isAllZero,
-} from "../../packages/@cap/subtle/src/index.cp";
+} from "../../packages/constant_time_eq/src/index.cp";
 
 fn main() {
     test("1. @cap/subtle — Choice boolean algebra & normalization", () => {

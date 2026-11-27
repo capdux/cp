@@ -8,7 +8,7 @@ import {
     similarity,
     withinDistance,
     closestIndex,
-} from "../../packages/@cap/levenshtein/src/index.cp";
+} from "../../packages/fastest-levenshtein/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff: f64 = a - b;

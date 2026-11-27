@@ -8,7 +8,7 @@ import {
     HttpLogEvent,
     formatMorganLog,
     formatPreset,
-} from "../../packages/@cap/morgan-log/src/index.cp";
+} from "../../packages/morgan/src/index.cp";
 
 fn main() {
     test("1. @cap/morgan-log — tiny & dev presets with microsecond response time", () => {

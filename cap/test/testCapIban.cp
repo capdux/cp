@@ -9,7 +9,7 @@ import {
     mod97,
     isValid,
     computeCheckDigits,
-} from "../../packages/@cap/iban/src/index.cp";
+} from "../../packages/iban_validate/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

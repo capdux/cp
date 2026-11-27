@@ -12,7 +12,7 @@ import {
     redactText,
     containsSensitive,
     redactJsonFields,
-} from "../../packages/@cap/redact/src/index.cp";
+} from "../../packages/fast-redact/src/index.cp";
 
 fn main() {
     test("1. @cap/redact — Single-value PII maskers (email, phone, card, secret, IP)", () => {

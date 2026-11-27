@@ -3,7 +3,7 @@ import {
     SniffOptions,
     sniffHtmlEncoding,
     normalizeEncodingLabel,
-} from "../../packages/@cap/html-encoding-sniffer/src/index.cp";
+} from "../../packages/html-encoding-sniffer/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

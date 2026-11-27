@@ -1,0 +1,21 @@
+{
+  "name": "resolve-pkg-maps",
+  "version": "1.0.0",
+  "description": "Zero-heap package.json exports subpath wildcard and condition resolver",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "resolve-pkg-maps",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/privatenumber/resolve-pkg-maps"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

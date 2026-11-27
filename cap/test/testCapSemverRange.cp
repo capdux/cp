@@ -9,7 +9,7 @@ import {
     incMinor,
     incPatch,
     formatSemver,
-} from "../../packages/@cap/semver-range/src/index.cp";
+} from "../../packages/semver/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

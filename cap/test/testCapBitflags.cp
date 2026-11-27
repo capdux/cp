@@ -19,7 +19,7 @@ import {
     countBits,
     lowestBitIndex,
     formatHex,
-} from "../../packages/@cap/bitflags/src/index.cp";
+} from "../../packages/bitflags/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

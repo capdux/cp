@@ -1,0 +1,24 @@
+{
+  "name": "cookie-parser",
+  "ver": "1.0.0",
+  "description": "Zero-heap HTTP Cookie header parser with HMAC-SHA256 signed cookie verification (s:), key rotation, and JSON cookie (j:) extraction (npm cookie-parser equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "tough-cookie": "1.0.0",
+    "cookie-signature": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "cookie-parser",
+    "repo": "https://github.com/expressjs/cookie-parser",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

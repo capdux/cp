@@ -1,0 +1,23 @@
+{
+  "name": "chokidar",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP file watcher state machine, snapshot differ, debounce engine, and glob ignore filter (clean-room MIT implementation of npm chokidar v4 core)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "fast-glob": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "chokidar",
+    "repo": "https://github.com/paulmillr/chokidar",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

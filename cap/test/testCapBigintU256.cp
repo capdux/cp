@@ -8,7 +8,7 @@ import {
     fromU128,
     maxVal,
     fromHex,
-} from "../../packages/@cap/bigint-u256/src/index.cp";
+} from "../../packages/bn.js/src/index.cp";
 
 fn sliceEqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

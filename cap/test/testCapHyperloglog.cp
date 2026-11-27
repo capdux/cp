@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/hyperloglog (HyperLogLog / Redis PF* parity)
 
 import { test, expect_eq } from "cap:test";
-import { HyperLogLog256 } from "../../packages/@cap/hyperloglog/src/index.cp";
+import { HyperLogLog256 } from "../../packages/hyperloglog/src/index.cp";
 
 fn main() {
     test("1. @cap/hyperloglog — empty sketch returns 0 & metadata checks", () => {

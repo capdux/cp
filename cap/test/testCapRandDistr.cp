@@ -1,12 +1,12 @@
 import { test, expect_eq } from "cap:test";
-import { Xoshiro256, seedFromU64 } from "../../packages/@cap/xoshiro256/src/index.cp";
+import { Xoshiro256, seedFromU64 } from "../../packages/rand_xoshiro/src/index.cp";
 import {
     UniformRange,
     NormalDistr,
     ExpDistr,
     BernoulliDistr,
     WeightedIndex
-} from "../../packages/@cap/rand-distr/src/index.cp";
+} from "../../packages/rand_distr/src/index.cp";
 
 fn main() {
     test("1. @cap/rand-distr — UniformRange bounds & empirical mean", () => {

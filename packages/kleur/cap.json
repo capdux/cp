@@ -1,0 +1,23 @@
+{
+  "name": "kleur",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation composable chainable ANSI terminal style builder with nested close/reset recovery for CP (clean-room parity with npm kleur v4)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "ansi-styles": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "kleur",
+    "repo": "https://github.com/lukeed/kleur",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

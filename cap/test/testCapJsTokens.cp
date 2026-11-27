@@ -5,7 +5,7 @@ import {
     nextJsToken,
     tokenizeJs,
     countJsTokens,
-} from "../../packages/@cap/js-tokens/src/index.cp";
+} from "../../packages/js-tokens/src/index.cp";
 
 fn main() {
     test("1. @cap/js-tokens — tokenizes const arrow declaration with operators", () => {

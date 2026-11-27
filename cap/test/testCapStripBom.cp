@@ -15,7 +15,7 @@ import {
     stripUtf8Bom,
     stripAnyBomOffset,
     prependUtf8Bom
-} from "../../packages/@cap/strip-bom/src/index.cp";
+} from "../../packages/strip-bom/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

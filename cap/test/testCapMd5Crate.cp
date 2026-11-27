@@ -8,7 +8,7 @@ import {
     Md5Hasher,
     md5Bytes,
     md5Hex,
-} from "../../packages/@cap/md5-crate/src/index.cp";
+} from "../../packages/md-5/src/index.cp";
 
 fn md5TestHexMatches(actual: []u8, expected: string): bool {
     if (actual.len != expected.len) {

@@ -11,7 +11,7 @@ import {
     truncateGraphemes,
     nextWord,
     wordCount,
-} from "../../packages/@cap/unicode-seg/src/index.cp";
+} from "../../packages/unicode-segmentation/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-seg — ASCII & CRLF grapheme boundaries", () => {

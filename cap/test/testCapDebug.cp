@@ -9,7 +9,7 @@ import {
     selectColor,
     formatDiffMs,
     formatDebugLine,
-} from "../../packages/@cap/debug/src/index.cp";
+} from "../../packages/debug/src/index.cp";
 
 fn main() {
     test("1. @cap/debug — Wildcard '*' all-match & empty pattern disabled", () => {

@@ -10,7 +10,7 @@ import {
     appendSegment,
     parentPointer,
     PointerIter,
-} from "../../packages/@cap/json-pointer/src/index.cp";
+} from "../../packages/jsonpointer/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

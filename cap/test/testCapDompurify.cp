@@ -4,7 +4,7 @@ import {
     defaultSanitizeOptions,
     sanitizeHtml,
     isSafeHtml,
-} from "../../packages/@cap/dompurify/src/index.cp";
+} from "../../packages/dompurify/src/index.cp";
 
 fn main() {
     test("1. @cap/dompurify — Preserves safe HTML tags and attributes", () => {

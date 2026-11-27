@@ -16,7 +16,7 @@ import {
     parseQuotedString,
     delimited,
     separatedList,
-} from "../../packages/@cap/combine/src/index.cp";
+} from "../../packages/combine/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

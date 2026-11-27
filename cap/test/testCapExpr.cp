@@ -17,7 +17,7 @@ import {
     evalExpr,
     evalExprWith,
     evalBool,
-} from "../../packages/@cap/expr/src/index.cp";
+} from "../../packages/expr-eval/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     return @abs(a - b) <= eps;

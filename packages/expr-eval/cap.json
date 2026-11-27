@@ -1,0 +1,19 @@
+{
+  "name": "expr-eval",
+  "ver": "1.0.0",
+  "description": "Zero-allocation recursive-descent expression evaluation engine with variables, ternary/logical/math operators, built-in functions, and recursion depth guard for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "expr-eval",
+    "repo": "https://github.com/silentmatt/expr-eval",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

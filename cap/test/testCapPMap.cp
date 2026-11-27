@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     BatchSlice, ConcurrencyPool, batchCount, batchRange, workerPartition
-} from "../../packages/@cap/p-map/src/index.cp";
+} from "../../packages/p-map/src/index.cp";
 
 fn main() {
     test("1. @cap/p-map — batchCount & batchRange pagination", () => {

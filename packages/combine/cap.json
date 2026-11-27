@@ -1,0 +1,20 @@
+{
+  "name": "combine",
+  "ver": "1.0.0",
+  "description": "Zero-copy streaming parser combinators with line/column cursor tracking and backtracking (Rust combine v4 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "combine",
+    "repo": "https://github.com/Marwes/combine",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

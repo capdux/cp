@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { BitFlags64 } from "../../packages/@cap/enumflags2/src/index.cp";
+import { BitFlags64 } from "../../packages/enumflags2/src/index.cp";
 
 const FLAG_A: u64 = 1;       // bit 0
 const FLAG_B: u64 = 1 << 1;  // bit 1

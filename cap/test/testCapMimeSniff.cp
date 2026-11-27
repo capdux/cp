@@ -14,7 +14,7 @@ import {
     sniffContentType,
     contentTypeToMime,
     sniffMime,
-} from "../../packages/@cap/mime-sniff/src/index.cp";
+} from "../../packages/istextorbinary/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

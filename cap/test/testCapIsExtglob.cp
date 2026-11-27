@@ -3,7 +3,7 @@ import {
     isExtglob,
     findExtglobStart,
     countExtglobs,
-} from "../../packages/@cap/is-extglob/src/index.cp";
+} from "../../packages/is-extglob/src/index.cp";
 
 fn main() {
     test("1. @cap/is-extglob — all five prefixes @(..), !(..), *(..), +(..), ?(..)", () => {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { FormatOptions, formatJson, formatCss } from "../../packages/@cap/prettier-fmt/src/index.cp";
+import { FormatOptions, formatJson, formatCss } from "../../packages/prettier/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

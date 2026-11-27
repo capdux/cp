@@ -1,0 +1,30 @@
+{
+  "name": "rend",
+  "version": "1.0.0",
+  "description": "Zero-allocation endian-aware primitive types (U16/U32/I32/U64/I64 Be/Le) and bounds-checked slice readers for zero-copy binary protocols in CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "rend",
+    "endian",
+    "big-endian",
+    "little-endian",
+    "binary",
+    "rkyv",
+    "zero-copy",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "rend",
+    "repo": "https://github.com/rkyv/rend",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

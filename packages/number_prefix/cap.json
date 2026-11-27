@@ -1,0 +1,21 @@
+{
+  "name": "number_prefix",
+  "version": "0.4.0",
+  "description": "Zero-heap SI decimal (k/M/G/T/P/E) and IEC binary (Ki/Mi/Gi/Ti/Pi/Ei) numeric prefix formatter",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "number_prefix",
+    "version": "0.4.0",
+    "license": "MIT",
+    "repository": "https://github.com/ogham/rust-number-prefix"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

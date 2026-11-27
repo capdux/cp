@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     ModuleDetails,
     parseModulePath,
-} from "../../packages/@cap/module-details-from-path/src/index.cp";
+} from "../../packages/module-details-from-path/src/index.cp";
 
 fn main() {
     test("1. @cap/module-details-from-path — parses standard node_modules POSIX path", () => {

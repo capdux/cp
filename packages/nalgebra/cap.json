@@ -1,0 +1,23 @@
+{
+  "name": "nalgebra",
+  "ver": "1.0.0",
+  "description": "Zero-heap 2D/3D/4D linear algebra: Mat2/Mat3/Mat4 multiply, determinant, inverse, affine transforms & vector ops (crates.io nalgebra equivalent, reuses @cap/mint)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "mint": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "nalgebra",
+    "repo": "https://github.com/dimforge/nalgebra",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

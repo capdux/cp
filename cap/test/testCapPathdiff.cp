@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { diffPaths } from "../../packages/@cap/pathdiff/src/index.cp";
+import { diffPaths } from "../../packages/pathdiff/src/index.cp";
 
 fn main() {
     test("1. @cap/pathdiff — sibling & nested descendant paths", () => {

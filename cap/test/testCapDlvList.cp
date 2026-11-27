@@ -3,7 +3,7 @@ import {
     DLV_NONE,
     DLV_CAP,
     DlvListI64,
-} from "../../packages/@cap/dlv-list/src/index.cp";
+} from "../../packages/dlv-list/src/index.cp";
 
 fn main() {
     test("1. @cap/dlv-list — empty list state and pop/front/back return null", () => {

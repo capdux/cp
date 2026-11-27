@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { MagicString } from "../../packages/@cap/magic-string/src/index.cp";
+import { MagicString } from "../../packages/magic-string/src/index.cp";
 
 fn main() {
     test("1. @cap/magic-string — Classic Rollup overwrite + prepend + append", () => {

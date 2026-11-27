@@ -1,0 +1,21 @@
+{
+  "name": "ascii",
+  "version": "1.1.0",
+  "description": "Zero-heap ASCII validation, case conversion, case-insensitive comparison, and byte classification",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "ascii",
+    "version": "1.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/tomprogrammer/rust-ascii"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

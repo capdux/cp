@@ -14,7 +14,7 @@ import {
     JsLexer,
     analyzeJsModule,
     extractImportSpecifiers,
-} from "../../packages/@cap/acorn-parse/src/index.cp";
+} from "../../packages/acorn/src/index.cp";
 
 fn main() {
     test("1. @cap/acorn-parse — JsLexer keywords, identifiers, strings, comments & line/col tracking", () => {

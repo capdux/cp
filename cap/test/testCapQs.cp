@@ -14,7 +14,7 @@ import {
     QsBuilder,
     percentDecode,
     percentEncode,
-} from "../../packages/@cap/qs/src/index.cp";
+} from "../../packages/qs/src/index.cp";
 
 fn expectParseError(input: []const u8, opts: QsParseOptions, expected: QsError): bool {
     * = QsParsed.parse(input, opts) catch |e| {

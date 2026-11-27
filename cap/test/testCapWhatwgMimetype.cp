@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     parseMimeType,
-} from "../../packages/@cap/whatwg-mimetype/src/index.cp";
+} from "../../packages/whatwg-mimetype/src/index.cp";
 
 fn main() {
     test("1. @cap/whatwg-mimetype — parses essence and charset parameter", () => {

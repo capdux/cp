@@ -5,7 +5,7 @@ import {
     severityLabel,
     locateOffset,
     renderDiagnostic,
-} from "../../packages/@cap/codespan-reporting/src/index.cp";
+} from "../../packages/codespan-reporting/src/index.cp";
 
 fn main() {
     test("1. @cap/codespan-reporting — locateOffset resolves line, column, and line slice", () => {

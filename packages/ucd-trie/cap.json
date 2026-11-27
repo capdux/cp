@@ -1,0 +1,20 @@
+{
+  "name": "ucd-trie",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation compressed two-level bitmap Trie for O(1) Unicode codepoint membership queries (ucd-trie parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "ucd-trie",
+    "repo": "https://github.com/BurntSushi/ucd-generate",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

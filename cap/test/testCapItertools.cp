@@ -18,7 +18,7 @@ import {
     nthCartesianPair,
     chunkCount,
     windowCount
-} from "../../packages/@cap/itertools/src/index.cp";
+} from "../../packages/itertools/src/index.cp";
 
 fn itTestBytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

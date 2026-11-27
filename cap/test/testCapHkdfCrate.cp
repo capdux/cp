@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { HkdfSha256, hkdfSha256 } from "../../packages/@cap/hkdf-crate/src/index.cp";
+import { HkdfSha256, hkdfSha256 } from "../../packages/hkdf/src/index.cp";
 
 fn hkHexByte(hi: u8): u8 {
     if (hi < 10) { return 48 + hi; }

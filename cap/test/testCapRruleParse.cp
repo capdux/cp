@@ -16,7 +16,7 @@ import {
     formatRRule,
     matchesWeekday,
     isValidRRule,
-} from "../../packages/@cap/rrule-parse/src/index.cp";
+} from "../../packages/rrule/src/index.cp";
 
 fn main() {
     test("1. @cap/rrule-parse — parse full RFC 5545 RRULE with RRULE: prefix & case-insensitivity", () => {

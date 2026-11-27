@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     SnowflakeGenerator, encodeSnowflake, decodeSnowflake,
     formatSnowflake, parseSnowflake, TWITTER_EPOCH_MS, DISCORD_EPOCH_MS, SF_MAX_SEQUENCE
-} from "../../packages/@cap/snowflake-id/src/index.cp";
+} from "../../packages/snowflake/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

@@ -3,7 +3,7 @@ import {
     StrNumOptions,
     StrNumResult,
     parseStrNum,
-} from "../../packages/@cap/strnum/src/index.cp";
+} from "../../packages/strnum/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = if (a > b) a - b else b - a;

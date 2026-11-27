@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     escapeStringRegexp, unescapeStringRegexp, escapedRegexpLen, hasRegexpMeta
-} from "../../packages/@cap/escape-string-regexp/src/index.cp";
+} from "../../packages/escape-string-regexp/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

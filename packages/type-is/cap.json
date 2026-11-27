@@ -1,0 +1,24 @@
+{
+  "name": "type-is",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap HTTP Content-Type matcher supporting shorthands, wildcards (text/*), and structured suffixes (+json) (clean-room port of npm type-is)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "mime-types": "1.0.0",
+    "unicase": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "type-is",
+    "repo": "https://github.com/jshttp/type-is",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

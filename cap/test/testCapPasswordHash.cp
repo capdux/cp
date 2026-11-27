@@ -9,7 +9,7 @@ import {
     formatPhc,
     getPhcParam,
     ctEqual,
-} from "../../packages/@cap/password-hash/src/index.cp";
+} from "../../packages/password-hash/src/index.cp";
 
 fn main() {
     test("1. @cap/password-hash — Parse full Argon2id PHC string and query params", () => {

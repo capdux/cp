@@ -4,7 +4,7 @@ import {
     GzipHeader,
     parseGzipHeader, encodeGzipStored, decodeGzipStored,
     encodeZlibStored, decodeZlibStored
-} from "../../packages/@cap/flate2-core/src/index.cp";
+} from "../../packages/flate2/src/index.cp";
 
 fn main() {
     test("1. @cap/flate2-core — Gzip stored encode/decode round-trip & header metadata", () => {

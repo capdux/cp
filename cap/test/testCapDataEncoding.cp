@@ -13,7 +13,7 @@ import {
     base64Encode,
     base64Decode,
     base64EncodeLen,
-} from "../../packages/@cap/data-encoding/src/index.cp";
+} from "../../packages/data-encoding/src/index.cp";
 
 fn bytesEqStr(buf: []const u8, n: usize, expected: string) -> bool {
     if (n != expected.len) {

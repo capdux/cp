@@ -7,7 +7,7 @@ import {
     decodeZ85,
     encodeAscii85,
     decodeAscii85,
-} from "../../packages/@cap/base85/src/index.cp";
+} from "../../packages/z85/src/index.cp";
 
 fn main() {
     test("1. @cap/base85 — Z85 RFC 32 official test vector (HelloWorld)", () => {

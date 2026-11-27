@@ -6,7 +6,7 @@ import {
     parseMarkdownWithOptions,
     parseInlineMarkdown,
     stripMarkdown,
-} from "../../packages/@cap/marked-md/src/index.cp";
+} from "../../packages/marked/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

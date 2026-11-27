@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     S2_MAX_LEVEL, LatLng, S2CellId, haversineMeters
-} from "../../packages/@cap/s2/src/index.cp";
+} from "../../packages/s2/src/index.cp";
 
 fn main() {
     test("1. @cap/s2 — S2CellId.fromFace creates valid level-0 face cells", () => {

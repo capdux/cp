@@ -10,7 +10,7 @@ import {
     toDegrees,
     toMilliseconds,
     unitCategory,
-} from "../../packages/@cap/css-units/src/index.cp";
+} from "../../packages/postcss-value-parser/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     const diff = if (a > b) { a - b } else { b - a };

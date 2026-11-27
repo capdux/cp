@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     parseJsDoc,
-} from "../../packages/@cap/doctrine/src/index.cp";
+} from "../../packages/doctrine/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

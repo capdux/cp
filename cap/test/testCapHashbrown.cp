@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { HashMapU64, HashSetU64, HASHBROWN_MAX_LOAD } from "../../packages/@cap/hashbrown/src/index.cp";
+import { HashMapU64, HashSetU64, HASHBROWN_MAX_LOAD } from "../../packages/hashbrown/src/index.cp";
 
 fn main() {
     test("1. @cap/hashbrown — Basic insert, get, containsKey, and replace", () => {

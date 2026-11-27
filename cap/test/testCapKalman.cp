@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     Kalman1D,
     Kalman2D,
-} from "../../packages/@cap/kalman/src/index.cp";
+} from "../../packages/kalman-filters/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

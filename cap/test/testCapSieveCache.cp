@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     MAX_CAP,
     SieveCache,
-} from "../../packages/@cap/sieve-cache/src/index.cp";
+} from "../../packages/sieve-cache/src/index.cp";
 
 fn main() {
     test("1. @cap/sieve-cache — Basic put, get, peek, contains & stats", () => {

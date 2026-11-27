@@ -3,7 +3,7 @@ import {
     BytesSpan,
     BorshWriter,
     BorshReader,
-} from "../../packages/@cap/borsh/src/index.cp";
+} from "../../packages/borsh/src/index.cp";
 
 fn sliceEq(buf: []const u8, start: usize, len: usize, expected: string): bool {
     if (len != expected.len || start + len > buf.len) {

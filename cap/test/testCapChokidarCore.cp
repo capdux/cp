@@ -8,7 +8,7 @@ import {
     EVT_UNLINK_DIR,
     ChokidarOptions,
     FileWatcherCore
-} from "../../packages/@cap/chokidar-core/src/index.cp";
+} from "../../packages/chokidar/src/index.cp";
 
 fn main() {
     test("chokidar-core: emits ADD, CHANGE, UNLINK and ADD_DIR, UNLINK_DIR in FIFO order", () => {

@@ -18,7 +18,7 @@ import {
     isBot,
     isAiBot,
     isMobile,
-} from "../../packages/@cap/useragent/src/index.cp";
+} from "../../packages/ua-parser-js/src/index.cp";
 
 fn main() {
     test("1. @cap/useragent — Desktop Browsers (Chrome, Edge, Opera, Firefox, Safari)", () => {

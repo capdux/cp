@@ -9,7 +9,7 @@ import {
     isValidIdent,
     scanIdentLen,
     isAsciiIdent,
-} from "../../packages/@cap/unicode-xid/src/index.cp";
+} from "../../packages/unicode-xid/src/index.cp";
 
 fn main() {
     test("1. @cap/unicode-xid — ASCII XID_Start / XID_Continue / IdentStart fast paths", () => {

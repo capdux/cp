@@ -10,7 +10,7 @@ import {
     estimateTextWidth,
     renderBadge,
     makeBadge,
-} from "../../packages/@cap/svg-badge/src/index.cp";
+} from "../../packages/badge-maker/src/index.cp";
 
 fn contains(haystack: string, needle: string) -> bool {
     if (needle.len == 0) { return true; }

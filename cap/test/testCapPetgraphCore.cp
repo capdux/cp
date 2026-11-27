@@ -7,7 +7,7 @@ import {
     PG_MAX_EDGES,
     PG_INF,
     DiGraph,
-} from "../../packages/@cap/petgraph-core/src/index.cp";
+} from "../../packages/petgraph/src/index.cp";
 
 fn main() {
     test("1. @cap/petgraph-core — graph construction, degrees, BFS & iterative DFS", () => {

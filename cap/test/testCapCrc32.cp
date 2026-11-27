@@ -9,7 +9,7 @@ import {
     crc32c,
     adler32,
     combineCrc32Ieee,
-} from "../../packages/@cap/crc32/src/index.cp";
+} from "../../packages/simd-adler32/src/index.cp";
 
 fn main() {
     test("1. @cap/crc32 — IEEE 802.3 CRC-32 official test vectors", () => {

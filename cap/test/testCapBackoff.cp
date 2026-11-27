@@ -8,7 +8,7 @@ import {
     BackoffState,
     expDelayMs,
     linearDelayMs,
-} from "../../packages/@cap/backoff/src/index.cp";
+} from "../../packages/backoff/src/index.cp";
 
 fn main() {
     test("1. @cap/backoff — Exact exponential doubling, capping & max_retries exhaustion (JitterKind.None)", () => {

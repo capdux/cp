@@ -5,7 +5,7 @@ import {
     decodeUtf8Chunk,
     isValidUtf8,
     LossyUtf8Decoder,
-} from "../../packages/@cap/utf-8/src/index.cp";
+} from "../../packages/utf-8/src/index.cp";
 
 fn main() {
     test("1. @cap/utf-8 — valid ASCII & multi-byte UTF-8 (2/3/4-byte)", () => {

@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/range-set (Rust rangemap / npm merge-ranges parity)
 
 import { test, expect_eq } from "cap:test";
-import { RangeSet } from "../../packages/@cap/range-set/src/index.cp";
+import { RangeSet } from "../../packages/rangemap/src/index.cp";
 
 fn main() {
     test("1. @cap/range-set — empty set & empty/invalid interval handling", () => {

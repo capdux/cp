@@ -13,7 +13,7 @@ import {
     CsvWriter,
     countCsvRecords,
     countCsvFieldsInLine
-} from "../../packages/@cap/csv-core/src/index.cp";
+} from "../../packages/csv-core/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

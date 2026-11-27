@@ -1,0 +1,42 @@
+{
+  "name": "shlex",
+  "ver": "1.0.0",
+  "description": "Zero-allocation POSIX shell quoting, command-line lexical splitting & injection guard (shell-quote / Rust shlex parity) for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "shlex",
+    "repo": "https://github.com/ljharb/shell-quote",
+    "license": "MIT",
+    "ecosystem": "crates.io",
+    "package": "shlex",
+    "repository": "https://github.com/comex/rust-shlex"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "shell-quote",
+      "repo": "https://github.com/ljharb/shell-quote",
+      "license": "MIT"
+    },
+    {
+      "registry": "npm",
+      "name": "shell-quote",
+      "repo": "https://github.com/inspect-js/node-shell-quote",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "shlex",
+      "repo": "https://github.com/comex/rust-shlex",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

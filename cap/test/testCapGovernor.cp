@@ -6,7 +6,7 @@ import {
     RateDecision,
     GcraLimiter,
     TokenBucket,
-} from "../../packages/@cap/governor/src/index.cp";
+} from "../../packages/governor/src/index.cp";
 
 fn main() {
     test("1. @cap/governor — GCRA burst allowance, exhaustion & exact retry_after_ms", () => {

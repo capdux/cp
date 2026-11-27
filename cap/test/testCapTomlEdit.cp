@@ -8,7 +8,7 @@ import {
     TOML_BOOL,
     TomlEntry,
     TomlDoc,
-} from "../../packages/@cap/toml-edit/src/index.cp";
+} from "../../packages/toml_edit/src/index.cp";
 
 fn strEq(a: string, b: string) -> bool {
     if (a.len != b.len) {

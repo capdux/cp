@@ -1,0 +1,21 @@
+{
+  "name": "optionator",
+  "version": "0.9.4",
+  "description": "Zero-heap CLI option specification and auto-aligned --help documentation generator in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "optionator",
+    "version": "0.9.4",
+    "license": "MIT",
+    "repository": "https://github.com/gkz/optionator"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -12,7 +12,7 @@ import {
     domainToUnicode,
     isValidIdnaAscii,
     isPunycodeLabel,
-} from "../../packages/@cap/idna-uts46/src/index.cp";
+} from "../../packages/idna/src/index.cp";
 
 fn idnaTestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

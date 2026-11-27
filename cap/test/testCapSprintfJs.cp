@@ -3,7 +3,7 @@ import {
     FmtArgKind,
     FmtArg,
     sprintf,
-} from "../../packages/@cap/sprintf-js/src/index.cp";
+} from "../../packages/sprintf-js/src/index.cp";
 
 fn main() {
     test("1. @cap/sprintf-js — basic %s, %d, %i, %c, %% formatting", () => {

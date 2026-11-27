@@ -1,0 +1,19 @@
+{
+  "name": "pluralize",
+  "ver": "1.0.0",
+  "description": "Zero-allocation English pluralization, singularization, irregular/uncountable dictionary, count formatting & ordinal engine for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "pluralize",
+    "repo": "https://github.com/plurals/pluralize",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

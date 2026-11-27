@@ -1,0 +1,34 @@
+{
+  "name": "quinn-proto",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 9000 QUIC variable-length integer codec and Long Header parser (quinn-proto parity)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "quinn-proto",
+    "repo": "https://github.com/quinn-rs/quinn",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "crates.io",
+      "name": "quinn-proto",
+      "repo": "https://github.com/quinn-rs/quinn",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "quinn",
+      "repo": "https://github.com/quinn-rs/quinn",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

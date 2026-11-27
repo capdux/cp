@@ -6,7 +6,7 @@ import {
     SlabKey,
     SlabI64,
     SlabU64,
-} from "../../packages/@cap/slab/src/index.cp";
+} from "../../packages/sharded-slab/src/index.cp";
 
 fn main() {
     test("1. @cap/slab — O(1) insert, get, set, contains & count on SlabI64", () => {

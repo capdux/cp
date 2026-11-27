@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { toRoman, parseRoman, isValidRoman } from "../../packages/@cap/roman-num/src/index.cp";
+import { toRoman, parseRoman, isValidRoman } from "../../packages/romans/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     VECMAP_CAP,
     VecMapI64,
-} from "../../packages/@cap/vec-map/src/index.cp";
+} from "../../packages/vec_map/src/index.cp";
 
 fn main() {
     test("1. @cap/vec-map — empty state, insert & O(1) lookup across lo/hi bitmaps", () => {

@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     OMM_CAP,
     OrderedMultiMap,
-} from "../../packages/@cap/ordered-multimap/src/index.cp";
+} from "../../packages/ordered-multimap/src/index.cp";
 
 fn main() {
     test("1. @cap/ordered-multimap — empty map state", () => {

@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     RegexMatch,
     RegexLite
-} from "../../packages/@cap/regex-lite/src/index.cp";
+} from "../../packages/regex-lite/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

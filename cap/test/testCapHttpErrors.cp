@@ -25,7 +25,7 @@ import {
     isServerError,
     isRetryable,
     toProblemJson,
-} from "../../packages/@cap/http-errors/src/index.cp";
+} from "../../packages/http-errors/src/index.cp";
 
 fn main() {
     test("1. @cap/http-errors — 4xx constructors default expose=true & metadata", () => {

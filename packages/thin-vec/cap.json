@@ -1,0 +1,21 @@
+{
+  "name": "thin-vec",
+  "ver": "1.0.0",
+  "description": "Zero-heap compact ThinVec<i64> with push/pop/insert/remove/swapRemove/dedup/truncate and packed metadata header (crates.io thin-vec equivalent)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "crates.io",
+    "name": "thin-vec",
+    "repo": "https://github.com/gankra/thin-vec",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

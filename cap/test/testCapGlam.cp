@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/glam (Rust glam parity)
 
 import { test, expect_eq } from "cap:test";
-import { Vec3, Quat, Mat4 } from "../../packages/@cap/glam/src/index.cp";
+import { Vec3, Quat, Mat4 } from "../../packages/glam/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff: f64 = a - b;

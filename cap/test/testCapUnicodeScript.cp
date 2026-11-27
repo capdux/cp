@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Script, scriptOf, scriptName, isLatin, isHan, isCjkScript, dominantScript } from "../../packages/@cap/unicode-script/src/index.cp";
+import { Script, scriptOf, scriptName, isLatin, isHan, isCjkScript, dominantScript } from "../../packages/unicode-script/src/index.cp";
 
 fn main() {
     test("scriptOf classifies ASCII, Latin, Greek, and Cyrillic", () => {

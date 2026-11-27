@@ -1,0 +1,20 @@
+{
+  "name": "termtree",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CLI tree structure renderer with Unicode/ASCII glyph palettes and fixed-capacity arena (Rust termtree parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "crates.io",
+    "name": "termtree",
+    "repo": "https://github.com/rust-cli/termtree",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

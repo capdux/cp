@@ -1,0 +1,21 @@
+{
+  "name": "immer",
+  "version": "10.1.1",
+  "description": "Zero-heap structured state patches (Immer / RFC 6902) and RFC 6901 JSON Pointer codec with inverse patch generation in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "immer",
+    "version": "10.1.1",
+    "license": "MIT",
+    "repository": "https://github.com/immerjs/immer"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

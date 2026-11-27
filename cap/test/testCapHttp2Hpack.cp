@@ -9,7 +9,7 @@ import {
     encodePrefixedInt,
     decodePrefixedInt,
     encodeIndexedHeader,
-} from "../../packages/@cap/http2-hpack/src/index.cp";
+} from "../../packages/h2/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

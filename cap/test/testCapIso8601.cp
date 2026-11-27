@@ -3,7 +3,7 @@ import {
     IsoDate, IsoTime, IsoDateTime, IsoDuration,
     isLeapYear, daysInMonth, parseDate, parseTime,
     parseDateTime, parseDuration, formatDateTime
-} from "../../packages/@cap/iso8601/src/index.cp";
+} from "../../packages/iso8601/src/index.cp";
 
 fn main() {
     test("1. @cap/iso8601 — calendar dates (extended & basic) + leap year validation", () => {

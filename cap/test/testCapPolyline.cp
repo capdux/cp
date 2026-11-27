@@ -7,7 +7,7 @@ import {
     decodePoints,
     countPoints,
     isValid,
-} from "../../packages/@cap/polyline/src/index.cp";
+} from "../../packages/polyline/src/index.cp";
 
 fn absF64(x: f64): f64 {
     if (x < 0.0) {

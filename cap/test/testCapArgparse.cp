@@ -10,7 +10,7 @@ import {
     ARGP_ERR_UNKNOWN_FLAG,
     ARGP_ERR_MISSING_VALUE,
     ARGP_ERR_MISSING_REQUIRED,
-} from "../../packages/@cap/argparse/src/index.cp";
+} from "../../packages/argparse/src/index.cp";
 
 fn main() {
     test("1. @cap/argparse — long options (--output=file and --output file) & defaults", () => {

@@ -9,7 +9,7 @@ import {
     JSON_VAL_NULL,
     validateJsonWithDiag,
     formatJsonError,
-} from "../../packages/@cap/parse-json/src/index.cp";
+} from "../../packages/parse-json/src/index.cp";
 
 fn containsSubstr(haystack: string, needle: string): bool {
     if (needle.len == 0) return true;

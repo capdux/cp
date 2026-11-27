@@ -3,7 +3,7 @@ import {
     needsEscape,
     escapeHtml,
     unescapeHtml,
-} from "../../packages/@cap/html-escape/src/index.cp";
+} from "../../packages/html-escape/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

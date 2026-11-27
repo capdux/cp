@@ -1,0 +1,31 @@
+{
+  "name": "depd",
+  "version": "1.0.0",
+  "description": "Zero-heap deprecation notice formatter and deduplicated warning tracker matching npm depd (150M+/wk) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@sindresorhus/fnv1a": "^1.0.0"
+  },
+  "keywords": [
+    "depd",
+    "deprecate",
+    "deprecation",
+    "warning",
+    "express",
+    "cli"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "depd",
+    "repo": "https://github.com/dougwilson/nodejs-depd",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

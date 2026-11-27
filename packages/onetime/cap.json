@@ -1,0 +1,21 @@
+{
+  "name": "onetime",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Ensure an initialization or action runs only once with call-count tracking (clean-room CP implementation of npm onetime)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {},
+  "source": {
+    "registry": "npm",
+    "name": "onetime",
+    "repo": "https://github.com/sindresorhus/onetime",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

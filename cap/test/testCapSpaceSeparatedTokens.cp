@@ -5,7 +5,7 @@ import {
     stringifySpaceTokens,
     parseCommaTokens,
     stringifyCommaTokens,
-} from "../../packages/@cap/space-separated-tokens/src/index.cp";
+} from "../../packages/space-separated-tokens/src/index.cp";
 
 fn main() {
     test("1. @cap/space-separated-tokens — parses whitespace-delimited tokens", () => {

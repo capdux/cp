@@ -10,7 +10,7 @@ import {
     stripAnsiToBuf,
     hasAnsi,
     visibleByteLen,
-} from "../../packages/@cap/anstyle-parse/src/index.cp";
+} from "../../packages/anstyle-parse/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
     if (buf.len != expected.len) {

@@ -7,7 +7,7 @@ import {
     negotiateEncoding,
     negotiateLanguage,
     negotiateMediaType,
-} from "../../packages/@cap/accepts/src/index.cp";
+} from "../../packages/accepts/src/index.cp";
 
 fn main() {
     test("1. @cap/accepts — parseQValue boundaries & invalid rejection", () => {

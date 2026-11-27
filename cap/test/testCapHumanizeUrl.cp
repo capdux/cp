@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     humanizeUrl,
     humanizeUrlSlice,
-} from "../../packages/@cap/humanize-url/src/index.cp";
+} from "../../packages/humanize-url/src/index.cp";
 
 fn main() {
     test("1. @cap/humanize-url — strips http://, https://, // and trailing slash", () => {

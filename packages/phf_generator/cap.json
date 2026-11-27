@@ -1,0 +1,28 @@
+{
+  "name": "phf_generator",
+  "version": "1.0.0",
+  "description": "Zero-allocation CHD Displace-Hash-Compress perfect hash table builder and O(1) lookup for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "phf",
+    "perfect-hash",
+    "chd",
+    "hash",
+    "lookup",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "phf_generator",
+    "repo": "https://github.com/rust-phf/rust-phf",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

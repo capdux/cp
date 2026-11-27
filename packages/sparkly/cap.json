@@ -1,0 +1,31 @@
+{
+  "name": "sparkly",
+  "version": "1.0.0",
+  "description": "Zero-heap Unicode sparkline (▁▂▃▄▅▆▇█), horizontal bar chart, and summary statistics renderer for CLI & monitoring",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "sparkline",
+    "sparkly",
+    "asciichart",
+    "chart",
+    "cli",
+    "terminal",
+    "unicode",
+    "metrics",
+    "monitoring"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "sparkly",
+    "repo": "https://github.com/sindresorhus/sparkly",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

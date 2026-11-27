@@ -1,9 +1,9 @@
 import { test, expect_eq } from "cap:test";
-import { ENTRY_FILE, ENTRY_DIR, FsEntry } from "../../packages/@cap/locate-path/src/index.cp";
+import { ENTRY_FILE, ENTRY_DIR, FsEntry } from "../../packages/locate-path/src/index.cp";
 import {
     pathExistsInEntries, fileExistsInEntries, dirExistsInEntries,
     realPathExistsInEntries, countExistingPaths
-} from "../../packages/@cap/path-exists/src/index.cp";
+} from "../../packages/path-exists/src/index.cp";
 
 fn main() {
     test("1. @cap/path-exists — pathExistsInEntries matches relative & absolute entries", () => {

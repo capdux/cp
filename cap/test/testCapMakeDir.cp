@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     MAKEDIR_DEFAULT_MODE, MakeDirOptions, isValidDirPath, planMakeDir, applyUmask
-} from "../../packages/@cap/make-dir/src/index.cp";
+} from "../../packages/make-dir/src/index.cp";
 
 fn main() {
     test("1. @cap/make-dir — plans all missing nested ancestor directories in order", () => {

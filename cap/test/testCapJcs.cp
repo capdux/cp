@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     canonicalizeJson,
     areJsonEquivalent,
-} from "../../packages/@cap/jcs/src/index.cp";
+} from "../../packages/fast-json-stable-stringify/src/index.cp";
 
 fn main() {
     test("1. @cap/jcs — deterministic object key sorting & whitespace stripping", () => {

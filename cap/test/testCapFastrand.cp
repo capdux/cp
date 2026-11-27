@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/fastrand
 
 import { test, expect_eq } from "cap:test";
-import { Rng } from "../../packages/@cap/fastrand/src/index.cp";
+import { Rng } from "../../packages/fastrand/src/index.cp";
 
 fn isAlphaNum(c: u8) -> bool {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');

@@ -1,0 +1,23 @@
+{
+  "name": "enquirer",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap pure CP interactive CLI prompt state machines for Confirm, Select, and MultiSelect (clean-room MIT implementation of npm enquirer v2)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "picocolors": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "enquirer",
+    "repo": "https://github.com/enquirer/enquirer",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

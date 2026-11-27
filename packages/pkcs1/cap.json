@@ -1,0 +1,35 @@
+{
+  "name": "pkcs1",
+  "ver": "1.0.0",
+  "description": "Zero-allocation RFC 8017 PKCS#1 RSAPublicKey and RSAPrivateKey DER/PEM codec reusing @cap/der-asn1, @cap/pem-rfc7468, and @cap/subtle-ct in pure CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "der": "1.0.0",
+    "pem-rfc7468": "1.0.0",
+    "subtle": "1.0.0"
+  },
+  "keywords": [
+    "pkcs1",
+    "rsa",
+    "rfc8017",
+    "pki",
+    "der",
+    "pem",
+    "crypto",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "pkcs1",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

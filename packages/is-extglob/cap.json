@@ -1,0 +1,28 @@
+{
+  "name": "is-extglob",
+  "version": "1.0.0",
+  "description": "Zero-allocation Bash/Micromatch extglob pattern detector (@(...), !(...), *(...), +(...), ?(...)) for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "extglob",
+    "is-extglob",
+    "glob",
+    "micromatch",
+    "pattern",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "is-extglob",
+    "repo": "https://github.com/jonschlinkert/is-extglob",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

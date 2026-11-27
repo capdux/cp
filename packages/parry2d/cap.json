@@ -1,0 +1,30 @@
+{
+  "name": "parry2d",
+  "version": "1.0.0",
+  "description": "Zero-allocation 2D axis-aligned bounding box (AABB) collision detection, union, intersection, and ray slab intersection for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "aabb",
+    "aabb2",
+    "2d",
+    "collision",
+    "geometry",
+    "raycast",
+    "slab",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "parry2d",
+    "repo": "https://github.com/dimforge/parry",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

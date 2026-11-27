@@ -3,7 +3,7 @@ import {
     parseSetCookie,
     splitCookiesCount,
     splitCookiesGet,
-} from "../../packages/@cap/set-cookie-parser/src/index.cp";
+} from "../../packages/set-cookie-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/set-cookie-parser — parses full cookie with all RFC 6265 attributes", () => {

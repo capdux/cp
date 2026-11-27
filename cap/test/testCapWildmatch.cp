@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     WildMatch, wildmatch, wildmatchIgnoreCase, wildmatchCustom, hasWildcards
-} from "../../packages/@cap/wildmatch/src/index.cp";
+} from "../../packages/wildmatch/src/index.cp";
 
 fn main() {
     test("1. @cap/wildmatch — Exact literals and empty strings", () => {

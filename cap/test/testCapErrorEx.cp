@@ -4,7 +4,7 @@ import {
     StructuredError,
     formatStructuredError,
     formatErrorTemplate,
-} from "../../packages/@cap/error-ex/src/index.cp";
+} from "../../packages/error-ex/src/index.cp";
 
 fn main() {
     test("1. @cap/error-ex — formats basic StructuredError with name, code, and message", () => {

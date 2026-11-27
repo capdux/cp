@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { newBufferList } from "../../packages/@cap/bl/src/index.cp";
+import { newBufferList } from "../../packages/bl/src/index.cp";
 
 fn main() {
     test("1. @cap/bl — appends multiple chunks and indexes seamlessly across boundaries", () => {

@@ -1,0 +1,28 @@
+{
+  "name": "oorandom",
+  "version": "1.0.0",
+  "description": "Zero-heap deterministic PCG32 (XSH RR 64/32) and dual-stream PCG64 PRNG in pure CP (modeled after Rust oorandom)",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "random",
+    "prng",
+    "pcg",
+    "pcg32",
+    "oorandom",
+    "deterministic"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "oorandom",
+    "repo": "https://sr.ht/~icefox/oorandom/",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

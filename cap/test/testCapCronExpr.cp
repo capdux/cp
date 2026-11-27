@@ -5,7 +5,7 @@ import {
     matches6,
     nextSecInMinute,
     isValidCron6,
-} from "../../packages/@cap/cron-expr/src/index.cp";
+} from "../../packages/cron/src/index.cp";
 
 fn main() {
     test("1. @cap/cron-expr — 6-field second step expression (*/15 * * * * *)", () => {

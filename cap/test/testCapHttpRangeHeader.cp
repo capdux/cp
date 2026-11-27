@@ -10,7 +10,7 @@ import {
     validateRanges,
     formatContentRange,
     formatUnsatisfiableContentRange,
-} from "../../packages/@cap/http-range-header/src/index.cp";
+} from "../../packages/http-range-header/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) {

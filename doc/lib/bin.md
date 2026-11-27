@@ -4,5 +4,5 @@
 
 ## 核心导出
 
-- 比较与查找：`bytesEq`、`ctEqual`、`startsWithBytes`、`endsWithBytes`、`findByte`、`countByte`、`indexOfBytes`
+- 比较与查找：`bytesEq`、`ctEqual`、`startsWithBytes`、`endsWithBytes`、`findByteInBytes`、`countByte`、`indexOfBytes`
 - 字节序读写：`readU16BE/LE`、`readU32BE/LE`、`readU64BE/LE`、`writeU16BE/LE`、`writeU32BE/LE`、`writeU64BE/LE`

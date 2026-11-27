@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     isSafeUri,
     sanitizeUri,
-} from "../../packages/@cap/sanitize-uri/src/index.cp";
+} from "../../packages/micromark-util-sanitize-uri/src/index.cp";
 
 fn main() {
     test("1. @cap/sanitize-uri — allows safe http/https/mailto/tel and relative URIs", () => {

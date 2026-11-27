@@ -3,7 +3,7 @@ import {
     Block128,
     Ghash,
     gf128Mul,
-} from "../../packages/@cap/ghash-gf128/src/index.cp";
+} from "../../packages/universal-hash/src/index.cp";
 
 fn bytesEq16(a: []const u8, b: []const u8): bool {
     if (a.len < 16 || b.len < 16) {

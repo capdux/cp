@@ -7,7 +7,7 @@ import {
     siphash13,
     siphash24Key16,
     siphash13Key16,
-} from "../../packages/@cap/siphash-pure/src/index.cp";
+} from "../../packages/siphash/src/index.cp";
 
 fn u64FromHalves(hi: u32, lo: u32): u64 {
     return ((hi as u64) << (32 as u6)) | (lo as u64);

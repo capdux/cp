@@ -15,7 +15,7 @@ import {
     poissonPmf,
     binomialCoeff,
     linearRegression
-} from "../../packages/@cap/statrs/src/index.cp";
+} from "../../packages/statrs/src/index.cp";
 
 fn statTestNear(a: f64, b: f64, tol: f64): bool {
     let diff: f64 = if (a > b) { a - b } else { b - a };

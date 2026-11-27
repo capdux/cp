@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { Cookie } from "../../packages/@cap/cookie-jar/src/index.cp";
+import { Cookie } from "../../packages/tough-cookie/src/index.cp";
 import {
     CookieBuilder,
     EncodedCookieMeta,
@@ -10,7 +10,7 @@ import {
     COOKIE_SAMESITE_STRICT,
     COOKIE_SAMESITE_NONE,
     COOKIE_SAMESITE_UNSET,
-} from "../../packages/@cap/cookie-crate/src/index.cp";
+} from "../../packages/cookie/src/index.cp";
 
 fn testEqBytes(a: []const u8, b: string): bool {
     if (a.len != b.len) {

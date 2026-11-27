@@ -11,7 +11,7 @@ import {
     encode_framed,
     decode_framed,
     CobsDecoder,
-} from "../../packages/@cap/cobs/src/index.cp";
+} from "../../packages/cobs/src/index.cp";
 
 fn main() {
     test("1. @cap/cobs — Empty & all-zero inputs + max_encoded_len", () => {

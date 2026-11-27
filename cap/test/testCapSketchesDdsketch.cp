@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     DDSK_BUCKETS,
     DDSketch,
-} from "../../packages/@cap/sketches-ddsketch/src/index.cp";
+} from "../../packages/sketches-ddsketch/src/index.cp";
 
 fn absDiff(a: f64, b: f64): f64 {
     if (a >= b) {

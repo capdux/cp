@@ -3,7 +3,7 @@ import {
     FEC_CAPACITY,
     FileCacheEntry,
     FileEntryCache,
-} from "../../packages/@cap/file-entry-cache/src/index.cp";
+} from "../../packages/file-entry-cache/src/index.cp";
 
 fn main() {
     test("1. @cap/file-entry-cache — set and get round-trip with metadata", () => {

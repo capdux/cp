@@ -5,7 +5,7 @@ import {
     CompoundRule,
     cvaCompose,
     cvaComposeWithCompounds,
-} from "../../packages/@cap/class-variance-authority/src/index.cp";
+} from "../../packages/class-variance-authority/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

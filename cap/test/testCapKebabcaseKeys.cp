@@ -2,15 +2,15 @@
 // Comprehensive unit tests for @cap/kebabcase-keys
 
 import { test, expect_eq } from "cap:test";
-import { MapObjResult } from "../../packages/@cap/map-obj/src/index.cp";
-import { DecamelizeKeysResult } from "../../packages/@cap/decamelize-keys/src/index.cp";
+import { MapObjResult } from "../../packages/map-obj/src/index.cp";
+import { DecamelizeKeysResult } from "../../packages/decamelize-keys/src/index.cp";
 import {
     kebabcaseKeys,
     kebabcaseKeysAll,
     kebabcaseKeyInto,
     kebabcasePathInto,
     kebabcaseKeysBatch,
-} from "../../packages/@cap/kebabcase-keys/src/index.cp";
+} from "../../packages/kebabcase-keys/src/index.cp";
 
 fn main() {
     test("1. @cap/kebabcase-keys — kebabcaseKeys converts camelCase & PascalCase keys", () => {

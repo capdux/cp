@@ -7,7 +7,7 @@ import {
     defaultNormalizeUrlOptions,
     normalizeUrl,
     normalizeUrlWithOptions,
-} from "../../packages/@cap/normalize-url/src/index.cp";
+} from "../../packages/normalize-url/src/index.cp";
 
 fn main() {
     test("1. @cap/normalize-url — prepends default protocol, lowercases scheme/host, strips www", () => {

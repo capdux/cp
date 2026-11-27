@@ -19,7 +19,7 @@ import {
     timeMonthOffset,
     timeYearFloor,
     timeYearOffset,
-} from "../../packages/@cap/d3-time/src/index.cp";
+} from "../../packages/d3-time/src/index.cp";
 
 fn main() {
     test("1. @cap/d3-time — Second floor, ceil, offset & count (pos and neg)", () => {

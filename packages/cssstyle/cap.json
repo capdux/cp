@@ -1,0 +1,28 @@
+{
+  "name": "cssstyle",
+  "ver": "1.0.0",
+  "description": "Zero-allocation CSS inline style declaration parser, query, mutator, and serializer (npm cssstyle parity) in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "cssstyle",
+    "css",
+    "style",
+    "cssom",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "cssstyle",
+    "repo": "https://github.com/jsdom/cssstyle",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

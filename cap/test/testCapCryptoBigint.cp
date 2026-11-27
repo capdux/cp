@@ -6,7 +6,7 @@ import {
     U256,
     addMod,
     subMod,
-} from "../../packages/@cap/crypto-bigint/src/index.cp";
+} from "../../packages/crypto-bigint/src/index.cp";
 
 fn main() {
     test("1. @cap/crypto-bigint — ZERO/ONE constants, fromU64, BE/LE bytes & hex roundtrip", () => {

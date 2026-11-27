@@ -29,7 +29,7 @@ import {
     zUrl,
     zUuid,
     zEnum,
-} from "../../packages/@cap/zod-schema/src/index.cp";
+} from "../../packages/zod/src/index.cp";
 
 fn main() {
     test("1. @cap/zod-schema — Standalone validators (string/number/email/url/uuid/enum)", () => {

@@ -15,7 +15,7 @@ import {
     SparkResult,
     SeriesStats,
     SparkOptions,
-} from "../../packages/@cap/sparkline/src/index.cp";
+} from "../../packages/sparkly/src/index.cp";
 
 fn main() {
     test("1. @cap/sparkline — full 8-level unicode ramp", () => {

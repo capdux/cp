@@ -1,0 +1,28 @@
+{
+  "name": "lru-slab",
+  "version": "1.0.0",
+  "description": "Zero-heap pre-allocated O(1) intrusive LRU slab cache matching crates.io #415 lru-slab (358M+ downloads) in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "lru",
+    "slab",
+    "cache",
+    "o1",
+    "zero-heap",
+    "intrusive"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "lru-slab",
+    "repo": "https://github.com/rustls/lru-slab",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

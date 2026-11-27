@@ -7,7 +7,7 @@ import {
     SipHasher13,
     siphash24,
     siphash13,
-} from "../../packages/@cap/siphash/src/index.cp";
+} from "../../packages/siphasher/src/index.cp";
 
 fn u64Pair(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) << 32) | (lo as u64);

@@ -1,0 +1,28 @@
+{
+  "name": "ciborium-ll",
+  "version": "1.0.0",
+  "description": "Zero-heap RFC 8949 low-level streaming CBOR encoder and decoder primitives in pure CP",
+  "license": "Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "cbor",
+    "ciborium",
+    "rfc8949",
+    "serialization",
+    "streaming",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "ciborium-ll",
+    "repo": "https://github.com/enarx/ciborium",
+    "license": "Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

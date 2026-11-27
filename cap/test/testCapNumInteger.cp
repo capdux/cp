@@ -14,7 +14,7 @@ import {
     isOdd,
     nextMultipleOfU64,
     prevMultipleOfU64,
-} from "../../packages/@cap/num-integer/src/index.cp";
+} from "../../packages/num-integer/src/index.cp";
 
 fn main() {
     test("1. @cap/num-integer — gcdU64 & overflow-safe lcmU64", () => {

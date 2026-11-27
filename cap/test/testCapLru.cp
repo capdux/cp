@@ -12,7 +12,7 @@ import {
     LruConfig,
     LruStats,
     LruCache,
-} from "../../packages/@cap/lru/src/index.cp";
+} from "../../packages/lru-cache/src/index.cp";
 
 fn eqStr(a: []const u8, b: []const u8): bool {
     return std.mem.eql(u8, a, b);

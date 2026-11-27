@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { PreKind, parsePep440, comparePep440, matchesSpecifier } from "../../packages/@cap/pep440-rs/src/index.cp";
+import { PreKind, parsePep440, comparePep440, matchesSpecifier } from "../../packages/pep440_rs/src/index.cp";
 
 fn main() {
     test("parsePep440 parses epoch, release, pre, post, dev, and local segments", () => {

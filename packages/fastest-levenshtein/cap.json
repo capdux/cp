@@ -1,0 +1,34 @@
+{
+  "name": "fastest-levenshtein",
+  "version": "1.0.0",
+  "description": "Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition distance, normalized similarity, and closest-match lookup.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "fastest-levenshtein",
+    "repo": "https://github.com/ka-weihe/fastest-levenshtein",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "fastest-levenshtein",
+      "repo": "https://github.com/ka-weihe/fastest-levenshtein",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "levenshtein",
+      "repo": "https://github.com/wooorm/levenshtein-rs",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -6,7 +6,7 @@ import {
     noise3D,
     fbm2D,
     ridge2D,
-} from "../../packages/@cap/perlin-noise/src/index.cp";
+} from "../../packages/perlin-noise/src/index.cp";
 
 const EPS: f64 = 0.000001;
 

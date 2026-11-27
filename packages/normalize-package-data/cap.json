@@ -1,0 +1,32 @@
+{
+  "name": "normalize-package-data",
+  "ver": "1.0.0",
+  "description": "Zero-allocation package metadata normalizer and validator for CP, reusing @cap/validate-npm-package-name and @cap/validate-npm-package-license.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "validate-npm-package-name": "1.0.0",
+    "validate-npm-package-license": "1.0.0"
+  },
+  "keywords": [
+    "normalize-package-data",
+    "package",
+    "metadata",
+    "npm",
+    "cap",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "normalize-package-data",
+    "repo": "https://github.com/npm/normalize-package-data",
+    "license": "BSD-2-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

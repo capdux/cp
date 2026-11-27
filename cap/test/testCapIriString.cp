@@ -4,7 +4,7 @@ import {
     parseIri,
     removeDotSegments,
     resolveReference,
-} from "../../packages/@cap/iri-string/src/index.cp";
+} from "../../packages/iri-string/src/index.cp";
 
 fn eqStr(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { pbkdf2HmacSha256, pbkdf2HmacSha256Str } from "../../packages/@cap/pbkdf2-crate/src/index.cp";
+import { pbkdf2HmacSha256, pbkdf2HmacSha256Str } from "../../packages/pbkdf2/src/index.cp";
 
 fn pbkHexNibble(n: u8): u8 {
     if (n < 10) { return 48 + n; }

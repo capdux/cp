@@ -7,7 +7,7 @@ import {
     isExtendedLengthPath,
     toBackslash,
     countSeparators,
-} from "../../packages/@cap/slash/src/index.cp";
+} from "../../packages/slash/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

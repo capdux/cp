@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     zeroizeBytes, zeroizeU32, zeroizeU64, isAllZeroBytes,
     ZeroizingKey32, ZeroizingBuf64
-} from "../../packages/@cap/zeroize/src/index.cp";
+} from "../../packages/zeroize/src/index.cp";
 
 fn main() {
     test("1. @cap/zeroize — zeroizeBytes clears secret byte buffer completely", () => {

@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { ParsedMediaType, essenceEq } from "../../packages/@cap/mediatype/src/index.cp";
+import { ParsedMediaType, essenceEq } from "../../packages/mediatype/src/index.cp";
 
 fn main() {
     test("1. @cap/mediatype — parses type/subtype+suffix and parameters", () => {

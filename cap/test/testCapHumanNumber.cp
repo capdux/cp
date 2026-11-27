@@ -10,7 +10,7 @@ import {
     toRoman,
     fromRoman,
     toEnglishWords,
-} from "../../packages/@cap/human-number/src/index.cp";
+} from "../../packages/numeral/src/index.cp";
 
 fn main() {
     test("1. @cap/human-number — formatGrouped (positive, negative, zero, custom sep)", () => {

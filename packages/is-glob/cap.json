@@ -1,0 +1,31 @@
+{
+  "name": "is-glob",
+  "version": "1.0.0",
+  "description": "Zero-allocation glob pattern detector reusing @cap/is-extglob for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "is-extglob": "^1.0.0"
+  },
+  "keywords": [
+    "glob",
+    "is-glob",
+    "extglob",
+    "micromatch",
+    "pattern",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "is-glob",
+    "repo": "https://github.com/micromatch/is-glob",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

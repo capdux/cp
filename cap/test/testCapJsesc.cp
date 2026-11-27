@@ -6,7 +6,7 @@ import {
     JsescOptions,
     jsesc,
     jsescWithOptions,
-} from "../../packages/@cap/jsesc/src/index.cp";
+} from "../../packages/jsesc/src/index.cp";
 
 fn main() {
     test("1. @cap/jsesc — default single-quote & control character escaping", () => {

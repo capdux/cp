@@ -1,0 +1,21 @@
+{
+  "name": "dlv-list",
+  "version": "0.5.2",
+  "description": "Zero-heap Vec-backed doubly linked list with stable u32 handles and O(1) slot reuse",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "dlv-list",
+    "version": "0.5.2",
+    "license": "MIT",
+    "repository": "https://github.com/sgodwinson/dlv-list"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

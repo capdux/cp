@@ -5,7 +5,7 @@ import { test, expect_eq } from "cap:test";
 import {
     TOTAL_SLOTS,
     CuckooFilter,
-} from "../../packages/@cap/cuckoo-filter/src/index.cp";
+} from "../../packages/cuckoofilter/src/index.cp";
 
 fn formatKey(prefix: u8, id: usize, buf: []u8) -> string {
     buf[0] = prefix;

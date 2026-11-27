@@ -1,0 +1,23 @@
+{
+  "name": "hashbrown",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap SwissTable-style control-byte hash map and hash set (clean-room CP implementation of crates.io #1 hashbrown)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "@sindresorhus/fnv1a": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "hashbrown",
+    "repo": "https://github.com/rust-lang/hashbrown",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

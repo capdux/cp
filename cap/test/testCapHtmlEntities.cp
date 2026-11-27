@@ -7,7 +7,7 @@ import {
     encodeNonAscii,
     decodeHtmlEntities,
     needsHtmlEscape,
-} from "../../packages/@cap/html-entities/src/index.cp";
+} from "../../packages/he/src/index.cp";
 
 fn main() {
     test("1. @cap/html-entities — XSS 5-character escape & needsHtmlEscape", () => {

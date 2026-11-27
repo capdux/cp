@@ -11,7 +11,7 @@ import {
     fnv1a32,
     fnv1a64,
     fxHash64,
-} from "../../packages/@cap/fnv/src/index.cp";
+} from "../../packages/fnv/src/index.cp";
 
 fn u64Pair(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) << 32) | (lo as u64);

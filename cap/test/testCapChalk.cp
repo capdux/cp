@@ -11,7 +11,7 @@ import {
     FG_RED,
     FG_CYAN,
     Chalk,
-} from "../../packages/@cap/chalk/src/index.cp";
+} from "../../packages/chalk/src/index.cp";
 
 fn main() {
     test("1. @cap/chalk — level=0 plain text passthrough with zero ANSI escapes", () => {

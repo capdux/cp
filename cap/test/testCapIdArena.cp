@@ -4,7 +4,7 @@ import {
     ArenaId,
     IdArenaI64,
     IdArenaU64,
-} from "../../packages/@cap/id-arena/src/index.cp";
+} from "../../packages/id-arena/src/index.cp";
 
 fn main() {
     test("1. @cap/id-arena — IdArenaI64 alloc, get, set & metadata", () => {

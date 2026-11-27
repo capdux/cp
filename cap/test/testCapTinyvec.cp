@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { TinyVecI64, TinyVecU32, TV_CAP } from "../../packages/@cap/tinyvec/src/index.cp";
+import { TinyVecI64, TinyVecU32, TV_CAP } from "../../packages/tinyvec/src/index.cp";
 
 fn main() {
     test("1. @cap/tinyvec — push, pop, first, last & capacity bounds", () => {

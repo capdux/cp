@@ -9,7 +9,7 @@ import {
     fnv1a64Update,
     fnv164,
     formatHex64,
-} from "../../packages/@cap/fnv-hash/src/index.cp";
+} from "../../packages/@sindresorhus/fnv1a/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

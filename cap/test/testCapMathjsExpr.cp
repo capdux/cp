@@ -13,7 +13,7 @@ import {
     EvalResult,
     evalExpr,
     evalExprWithScope,
-} from "../../packages/@cap/mathjs-expr/src/index.cp";
+} from "../../packages/mathjs/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64): bool {
     const diff = a - b;

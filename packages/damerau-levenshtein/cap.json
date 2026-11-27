@@ -1,0 +1,21 @@
+{
+  "name": "damerau-levenshtein",
+  "version": "1.0.8",
+  "description": "Zero-heap Damerau-Levenshtein (Optimal String Alignment) edit distance and similarity ratio",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "damerau-levenshtein",
+    "version": "1.0.8",
+    "license": "MIT",
+    "repository": "https://github.com/tad-lispy/node-damerau-levenshtein"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

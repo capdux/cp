@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     NIBBLE_MAX_BYTES,
     NibbleVec,
-} from "../../packages/@cap/nibble-vec/src/index.cp";
+} from "../../packages/nibble_vec/src/index.cp";
 
 fn main() {
     test("1. @cap/nibble-vec — new vector is empty and push/get/len work", () => {

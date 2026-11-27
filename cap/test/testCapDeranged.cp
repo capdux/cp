@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { RangedI64 } from "../../packages/@cap/deranged/src/index.cp";
+import { RangedI64 } from "../../packages/deranged/src/index.cp";
 
 fn main() {
     test("new valid & out-of-bounds rejection", () => {

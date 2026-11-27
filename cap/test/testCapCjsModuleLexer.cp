@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     parseCjs,
-} from "../../packages/@cap/cjs-module-lexer/src/index.cp";
+} from "../../packages/cjs-module-lexer/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

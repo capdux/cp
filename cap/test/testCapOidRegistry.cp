@@ -6,7 +6,7 @@ import {
     oidEntryCount,
     encodeOidDer,
     decodeOidDer,
-} from "../../packages/@cap/oid-registry/src/index.cp";
+} from "../../packages/oid-registry/src/index.cp";
 
 fn eqStr(a: []const u8, b: string): bool {
     if (a.len != b.len) { return false; }

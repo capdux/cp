@@ -1,0 +1,20 @@
+{
+  "name": "dotenv-expand",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap .env parser and POSIX variable expansion engine (${VAR}, ${VAR:-default}, $VAR, escaped \\$) (clean-room port of npm dotenv + dotenv-expand)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "npm",
+    "name": "dotenv-expand",
+    "repo": "https://github.com/motdotla/dotenv-expand",
+    "license": "BSD-2-Clause"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

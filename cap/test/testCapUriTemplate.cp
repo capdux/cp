@@ -9,7 +9,7 @@ import {
     expand,
     pctEncode,
     extractVarName,
-} from "../../packages/@cap/uri-template/src/index.cp";
+} from "../../packages/url-template/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

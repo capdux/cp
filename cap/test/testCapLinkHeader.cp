@@ -8,7 +8,7 @@ import {
     parseLinkHeader,
     formatLinkHeader,
     formatPaginationLinks,
-} from "../../packages/@cap/link-header/src/index.cp";
+} from "../../packages/parse-link-header/src/index.cp";
 
 fn main() {
     test("1. @cap/link-header — GitHub-style next/prev/first/last pagination parsing", () => {

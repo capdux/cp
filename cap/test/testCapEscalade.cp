@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { AncestorWalker, joinCandidate } from "../../packages/@cap/escalade/src/index.cp";
+import { AncestorWalker, joinCandidate } from "../../packages/escalade/src/index.cp";
 
 fn eqBytes(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

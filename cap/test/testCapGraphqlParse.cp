@@ -20,7 +20,7 @@ import {
     GqlLexer,
     parseGraphql,
     minifyGraphql,
-} from "../../packages/@cap/graphql-parse/src/index.cp";
+} from "../../packages/graphql/src/index.cp";
 
 fn strEq(a: []const u8, b: string): bool {
     if (a.len != b.len) {

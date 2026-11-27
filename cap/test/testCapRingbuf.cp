@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { RingBufU8, RingBufI64, RB_U8_CAP, RB_I64_CAP } from "../../packages/@cap/ringbuf/src/index.cp";
+import { RingBufU8, RingBufI64, RB_U8_CAP, RB_I64_CAP } from "../../packages/ringbuf/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

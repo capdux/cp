@@ -1,0 +1,49 @@
+{
+  "name": "bezier-easing",
+  "version": "1.0.0",
+  "description": "Zero-allocation quadratic/cubic Bezier curves, de Casteljau splitting, arc length, and CSS cubic-bezier easing for CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bezier",
+    "curve",
+    "cubic-bezier",
+    "easing",
+    "de-casteljau",
+    "geometry",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "bezier-easing",
+    "repo": "https://github.com/gre/bezier-easing",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "bezier-easing",
+      "repo": "https://github.com/gre/bezier-easing",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "kurbo",
+      "repo": "https://github.com/linebender/kurbo",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "lyon_geom",
+      "repo": "https://github.com/nical/lyon",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

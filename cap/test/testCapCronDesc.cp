@@ -8,7 +8,7 @@ import {
     isValidCron,
     describeCron,
     describeCronWith,
-} from "../../packages/@cap/cron-desc/src/index.cp";
+} from "../../packages/cronstrue/src/index.cp";
 
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;

@@ -6,7 +6,7 @@ import {
     PotentialUtf8,
     PotentialUtf16,
     PotentialCodePoint,
-} from "../../packages/@cap/potential-utf/src/index.cp";
+} from "../../packages/potential_utf/src/index.cp";
 
 fn main() {
     test("1. @cap/potential-utf — PotentialUtf8 valid ASCII & multi-byte UTF-8", () => {

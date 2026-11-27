@@ -1,0 +1,30 @@
+{
+  "name": "strftime",
+  "version": "1.0.0",
+  "description": "Zero-heap POSIX strftime & ISO-8601 date/time formatter for Unix timestamps and broken-down calendar dates",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "strftime",
+    "dateformat",
+    "datetime",
+    "format",
+    "iso8601",
+    "rfc3339",
+    "calendar",
+    "timestamp"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "strftime",
+    "repo": "https://github.com/samsonjs/strftime",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

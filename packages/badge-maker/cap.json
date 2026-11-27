@@ -1,0 +1,30 @@
+{
+  "name": "badge-maker",
+  "version": "1.0.0",
+  "description": "Zero-heap Shields.io-style SVG status badge generator (flat, flat-square, plastic) with XML escaping and named colors",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "badge",
+    "svg",
+    "shields",
+    "badge-maker",
+    "gh-badges",
+    "status",
+    "ci",
+    "readme"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "badge-maker",
+    "repo": "https://github.com/badges/shields",
+    "license": "CC0-1.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

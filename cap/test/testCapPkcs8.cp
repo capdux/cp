@@ -7,7 +7,7 @@ import {
     OID_EC_PUBLIC_KEY,
     OID_PRIME256V1,
     ObjectIdentifier,
-} from "../../packages/@cap/const-oid/src/index.cp";
+} from "../../packages/const-oid/src/index.cp";
 import {
     PK8_VERSION_V1,
     PK8_VERSION_V2,
@@ -20,7 +20,7 @@ import {
     decodePkcs8Der,
     encodePkcs8Pem,
     decodePkcs8Pem,
-} from "../../packages/@cap/pkcs8/src/index.cp";
+} from "../../packages/pkcs8/src/index.cp";
 
 fn pk8TestEqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {

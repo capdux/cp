@@ -7,7 +7,7 @@ import {
     crc16Kermit,
     crc16Arc,
     crc16Usb,
-} from "../../packages/@cap/crc16/src/index.cp";
+} from "../../packages/crc16/src/index.cp";
 
 fn main() {
     test("CCITT-FALSE and XMODEM standard 123456789 vectors", () => {

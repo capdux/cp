@@ -1,0 +1,24 @@
+{
+  "name": "snakecase-keys",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-heap object key converter to snake_case with exclude list and fixed key buffer pool, composing @cap/map-obj and @cap/heck-case (clean-room port of npm snakecase-keys)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "map-obj": "1.0.0",
+    "heck": "1.0.0"
+  },
+  "source": {
+    "registry": "npm",
+    "name": "snakecase-keys",
+    "repo": "https://github.com/bendrucker/snakecase-keys",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

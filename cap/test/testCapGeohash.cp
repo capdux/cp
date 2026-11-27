@@ -8,7 +8,7 @@ import {
     decode,
     neighbor,
     isValid,
-} from "../../packages/@cap/geohash/src/index.cp";
+} from "../../packages/geohash/src/index.cp";
 
 fn approxEq(a: f64, b: f64, eps: f64) -> bool {
     let diff = a - b;

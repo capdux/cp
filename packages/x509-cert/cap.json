@@ -1,0 +1,26 @@
+{
+  "name": "x509-cert",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Pure CP zero-allocation RFC 5280 X.509 v1/v2/v3 certificate DER & PEM codec (reuses @cap/der-asn1, @cap/const-oid, @cap/spki, and @cap/pem-rfc7468)",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "der": "1.0.0",
+    "const-oid": "1.0.0",
+    "spki": "1.0.0",
+    "pem-rfc7468": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "x509-cert",
+    "repo": "https://github.com/RustCrypto/formats",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "humanize-url",
+  "ver": "1.0.0",
+  "description": "Zero-allocation URL humanizer stripping protocol, www., and trailing slash (npm humanize-url v3 parity) for CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "license": "MIT",
+  "keywords": [
+    "humanize-url",
+    "url",
+    "humanize",
+    "format",
+    "display",
+    "zero-alloc",
+    "zero-copy"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "humanize-url",
+    "repo": "https://github.com/sindresorhus/humanize-url",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

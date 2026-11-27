@@ -12,7 +12,7 @@ import {
     expandUuid,
     shortenUuidWith,
     expandUuidWith,
-} from "../../packages/@cap/short-uuid/src/index.cp";
+} from "../../packages/short-uuid/src/index.cp";
 
 fn main() {
     test("1. @cap/short-uuid — Standard UUID v4 lossless shorten/expand & fixed 22-char length", () => {

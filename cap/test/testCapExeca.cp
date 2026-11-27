@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     ExecaOptions, ExecaResult, escapePosixArg, formatCommand,
     stripFinalNewline, resolveExecPath
-} from "../../packages/@cap/execa/src/index.cp";
+} from "../../packages/execa/src/index.cp";
 
 fn main() {
     test("1. @cap/execa — escapePosixArg leaves safe tokens unquoted and escapes spaces/quotes", () => {

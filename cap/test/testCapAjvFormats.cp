@@ -14,7 +14,7 @@ import {
     isUri,
     isJsonPointer,
     validateFormat,
-} from "../../packages/@cap/ajv-formats/src/index.cp";
+} from "../../packages/ajv-formats/src/index.cp";
 
 fn main() {
     test("1. @cap/ajv-formats — isDate RFC 3339 & leap year validation", () => {

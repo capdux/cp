@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { YALLIST_CAP, YallistU64 } from "../../packages/@cap/yallist/src/index.cp";
+import { YALLIST_CAP, YallistU64 } from "../../packages/yallist/src/index.cp";
 
 fn main() {
     test("1. @cap/yallist — Empty list state and push/pop/unshift/shift", () => {

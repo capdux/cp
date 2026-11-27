@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { stringWidth } from "../../packages/@cap/string-width/src/index.cp";
+import { stringWidth } from "../../packages/string-width/src/index.cp";
 import {
     TruncatePosition,
     TruncateOptions,
@@ -7,7 +7,7 @@ import {
     cliTruncateEndInto,
     cliTruncateStartInto,
     cliTruncateMiddleInto,
-} from "../../packages/@cap/cli-truncate/src/index.cp";
+} from "../../packages/cli-truncate/src/index.cp";
 
 fn ctTestEq(actual: []const u8, expected: []const u8): bool {
     if (actual.len != expected.len) {

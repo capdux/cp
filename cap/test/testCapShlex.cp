@@ -9,7 +9,7 @@ import {
     quoteArg,
     joinArgs,
     splitShell,
-} from "../../packages/@cap/shlex/src/index.cp";
+} from "../../packages/shlex/src/index.cp";
 
 fn main() {
     test("1. @cap/shlex — needsQuote, quoteArg & injection neutralization", () => {

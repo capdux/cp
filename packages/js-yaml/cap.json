@@ -1,0 +1,64 @@
+{
+  "name": "js-yaml",
+  "ver": "0.2.5",
+  "description": "YAML 1.1 parser and emitter (libyaml 0.2.5) native C binding for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "bin": {
+    "yaml": {
+      "path": "c",
+      "src": [
+        "api.c",
+        "dumper.c",
+        "emitter.c",
+        "loader.c",
+        "parser.c",
+        "reader.c",
+        "scanner.c",
+        "writer.c",
+        "yaml_ffi.c"
+      ],
+      "include": [
+        "."
+      ],
+      "flag": [
+        "-O3",
+        "-DYAML_VERSION_MAJOR=0",
+        "-DYAML_VERSION_MINOR=2",
+        "-DYAML_VERSION_PATCH=5",
+        "-DYAML_VERSION_STRING=\"0.2.5\""
+      ],
+      "opt": "fast",
+      "prebuilt": "prebuilt"
+    }
+  },
+  "sys": {
+    "c": {}
+  },
+  "source": {
+    "registry": "npm",
+    "name": "js-yaml",
+    "repo": "https://github.com/nodeca/js-yaml",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "js-yaml",
+      "repo": "https://github.com/nodeca/js-yaml",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "serde_yaml",
+      "repo": "https://github.com/dtolnay/serde-yaml",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

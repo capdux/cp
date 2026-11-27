@@ -4,7 +4,7 @@ import {
     parseMs,
     parseMsF64,
     toMilliseconds,
-} from "../../packages/@cap/parse-ms/src/index.cp";
+} from "../../packages/parse-ms/src/index.cp";
 
 fn main() {
     test("1. @cap/parse-ms — Classic vector parseMs(1337000001)", () => {

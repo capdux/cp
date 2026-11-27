@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     AnsiSpan, testAnsi, findFirstAnsi, findAllAnsi, countAnsiSequences, stripAllAnsi
-} from "../../packages/@cap/ansi-regex/src/index.cp";
+} from "../../packages/ansi-regex/src/index.cp";
 
 fn eqBytes(buf: []u8, len: usize, expected: string): bool {
     if (len != expected.len) { return false; }

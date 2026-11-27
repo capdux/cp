@@ -2,7 +2,7 @@
 // Comprehensive unit tests for @cap/huffman (RFC 1951 Canonical Huffman)
 
 import { test, expect_eq } from "cap:test";
-import { HuffmanCodec } from "../../packages/@cap/huffman/src/index.cp";
+import { HuffmanCodec } from "../../packages/huffman-compress/src/index.cp";
 
 fn buildFreqs(data: string, out_freqs: []u32) {
     let i: usize = 0;

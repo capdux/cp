@@ -1,0 +1,29 @@
+{
+  "name": "string-similarity",
+  "ver": "1.0.0",
+  "description": "Zero-allocation Sorensen-Dice bigram string similarity coefficient and best-match finder for CP.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "dice-coefficient",
+    "sorensen-dice",
+    "string-similarity",
+    "fuzzy",
+    "bigram",
+    "nlp",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "string-similarity",
+    "repo": "https://github.com/aceakash/string-similarity",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "cli-table3",
+  "ver": "1.0.0",
+  "description": "Zero-dependency CLI table renderer with 5 border styles (Unicode/Rounded/Ascii/Markdown/Compact), ANSI escape & CJK wide-char width calculation, truncation, and column alignment for CP",
+  "main": "src/index.cp",
+  "license": "MIT",
+  "source": {
+    "registry": "npm",
+    "name": "cli-table3",
+    "repo": "https://github.com/cli-table/cli-table3",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

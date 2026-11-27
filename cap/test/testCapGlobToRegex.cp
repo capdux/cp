@@ -1,5 +1,5 @@
 import { test, expect_eq } from "cap:test";
-import { GlobOptions, globToRegex, globToRegexDefault } from "../../packages/@cap/glob-to-regex/src/index.cp";
+import { GlobOptions, globToRegex, globToRegexDefault } from "../../packages/glob-to-regexp/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

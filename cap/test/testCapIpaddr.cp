@@ -15,7 +15,7 @@ import {
     isValidIpv4,
     isValidIpv6,
     ipKind,
-} from "../../packages/@cap/ipaddr/src/index.cp";
+} from "../../packages/ipaddr.js/src/index.cp";
 
 fn main() {
     test("1. @cap/ipaddr — IPv4 parse, toU32, toStr & all range() classifications", () => {

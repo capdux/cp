@@ -1,0 +1,23 @@
+{
+  "name": "sha2",
+  "ver": "1.0.0",
+  "description": "Zero-heap FIPS 180-4 SHA-256 & SHA-224 streaming hashers with hex output (crates.io sha2 equivalent, reuses @cap/cookie-signature)",
+  "license": "MIT",
+  "entry": "src/index.cp",
+  "types": "src/index.d.cp",
+  "dependencies": {
+    "cookie-signature": "1.0.0"
+  },
+  "source": {
+    "registry": "crates.io",
+    "name": "sha2",
+    "repo": "https://github.com/RustCrypto/hashes",
+    "license": "MIT OR Apache-2.0"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

@@ -4,7 +4,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     CountMinSketch,
-} from "../../packages/@cap/count-min/src/index.cp";
+} from "../../packages/count-min-sketch/src/index.cp";
 
 fn main() {
     test("1. @cap/count-min — Dimensions, single-key exact counting & clear", () => {

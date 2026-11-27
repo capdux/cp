@@ -8,7 +8,7 @@ import {
     DescriptorTable,
     mergeDescriptors,
     countEnumerable
-} from "../../packages/@cap/merge-descriptors/src/index.cp";
+} from "../../packages/merge-descriptors/src/index.cp";
 
 fn main() {
     test("1. DescriptorTable — define, get, has & len basics", () => {

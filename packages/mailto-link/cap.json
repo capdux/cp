@@ -1,0 +1,43 @@
+{
+  "name": "mailto-link",
+  "ver": "1.0.0",
+  "license": "MIT",
+  "description": "Zero-allocation RFC 6068 mailto: URI parser, recipient counter, email checker, and percent-encoding builder in pure CP",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "mailto",
+    "rfc6068",
+    "email",
+    "uri",
+    "url",
+    "parser",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "npm",
+    "name": "mailto-link",
+    "repo": "https://github.com/sindresorhus/mailto-link",
+    "license": "MIT"
+  },
+  "sources": [
+    {
+      "registry": "npm",
+      "name": "mailto-link",
+      "repo": "https://github.com/sindresorhus/mailto-link",
+      "license": "MIT"
+    },
+    {
+      "registry": "crates.io",
+      "name": "mailto",
+      "repo": "https://github.com/cp-lang/cp",
+      "license": "MIT"
+    }
+  ],
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

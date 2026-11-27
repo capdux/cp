@@ -5,7 +5,7 @@ import {
     decodeNumericEntity,
     decodeEntities,
     encodeEntities,
-} from "../../packages/@cap/character-entities/src/index.cp";
+} from "../../packages/character-entities/src/index.cp";
 
 fn main() {
     test("1. @cap/character-entities — decodes standard HTML5 named entities", () => {

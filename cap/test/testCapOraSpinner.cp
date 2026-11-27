@@ -6,13 +6,13 @@ import {
     SPINNER_BOUNCE,
     SPINNER_ARROW,
     Spinner,
-} from "../../packages/@cap/ora-spinner/src/index.cp";
+} from "../../packages/ora/src/index.cp";
 import {
     cursorHide,
     cursorShow,
     eraseLine,
     cursorLeft,
-} from "../../packages/@cap/ansi-escapes/src/index.cp";
+} from "../../packages/ansi-escapes/src/index.cp";
 
 fn main() {
     test("1. @cap/ora-spinner — Frame counts across all 5 built-in spinner styles", () => {

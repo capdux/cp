@@ -2,7 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     PathSpan, isPathKeyName, findPathKeyIndex,
     defaultPathKey, pathDelimiter, splitPathEntries
-} from "../../packages/@cap/path-key/src/index.cp";
+} from "../../packages/path-key/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
     if (a.len != b.len) { return false; }

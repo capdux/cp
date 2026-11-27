@@ -3,7 +3,7 @@ import {
     isSignedCookie, isJsonCookie, stripJsonCookiePrefix,
     signCookieValue, signedCookie, signedCookieWithSecrets,
     lookupRawCookie, parseCookieHeader, parseCookieHeaderWithSecrets
-} from "../../packages/@cap/cookie-parser/src/index.cp";
+} from "../../packages/cookie-parser/src/index.cp";
 
 fn main() {
     test("1. @cap/cookie-parser — unsigned cookie header parsing & lookupRawCookie", () => {

@@ -9,7 +9,7 @@ import {
     decodeDeltaI64,
     encodeDeltaOfDeltaI64,
     decodeDeltaOfDeltaI64,
-} from "../../packages/@cap/rle/src/index.cp";
+} from "../../packages/rle-decode-fast/src/index.cp";
 
 fn main() {
     test("1. @cap/rle — PackBits high-repetition compression ratio & exact decode", () => {

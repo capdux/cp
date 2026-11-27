@@ -7,7 +7,7 @@ import {
     crc8Autosar,
     crc8Cdma2000,
     crc8Bluetooth,
-} from "../../packages/@cap/crc8/src/index.cp";
+} from "../../packages/crc8/src/index.cp";
 
 fn main() {
     test("1. @cap/crc8 — RevEng '123456789' vectors for SMBus, Maxim & SAE-J1850", () => {

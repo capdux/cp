@@ -13,7 +13,7 @@ import {
     safeJoin,
     relativePath,
     withExtension,
-} from "../../packages/@cap/utf8-path/src/index.cp";
+} from "../../packages/camino/src/index.cp";
 
 fn main() {
     test("1. @cap/utf8-path — isAbsolute, fileName, fileStem & extension (including dotfiles)", () => {

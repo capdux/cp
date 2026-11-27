@@ -7,7 +7,7 @@ import {
     parseMailbox,
     parseAddressList,
     formatMailbox,
-} from "../../packages/@cap/mail-addr/src/index.cp";
+} from "../../packages/addressparser/src/index.cp";
 
 fn main() {
     test("1. @cap/mail-addr — Plain email address & whitespace/comment stripping", () => {

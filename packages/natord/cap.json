@@ -1,0 +1,20 @@
+{
+  "name": "natord",
+  "version": "1.0.0",
+  "description": "Zero-heap arbitrary-precision human natural sort comparator, case-insensitive comparator, and in-place sorter.",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "source": {
+    "registry": "crates.io",
+    "name": "natord",
+    "repo": "https://github.com/lifthrasiir/rust-natord",
+    "license": "MIT"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}

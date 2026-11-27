@@ -8,7 +8,7 @@ import {
     normalizeE164,
     isValidE164,
     formatTelUri,
-} from "../../packages/@cap/tel-uri/src/index.cp";
+} from "../../packages/phonenumber/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

@@ -6,7 +6,7 @@ import {
     isMethodAllowed,
     areHeadersAllowed,
     isSimpleMethod,
-} from "../../packages/@cap/cors-match/src/index.cp";
+} from "../../packages/tower-http/src/index.cp";
 
 fn main() {
     test("1. @cap/cors-match — origin syntax validation", () => {

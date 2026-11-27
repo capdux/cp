@@ -1,7 +1,7 @@
 import { test, expect_eq } from "cap:test";
 import {
     isRelativeSpecifier, isScopedSpecifier, resolveFrom
-} from "../../packages/@cap/resolve-from/src/index.cp";
+} from "../../packages/resolve-from/src/index.cp";
 
 fn main() {
     test("1. @cap/resolve-from — resolves relative ./ and ../ modules with extension probing", () => {

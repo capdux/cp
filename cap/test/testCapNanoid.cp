@@ -10,7 +10,7 @@ import {
     customAlphabetFromBytes,
     nanoidSeeded,
     isValidNanoId,
-} from "../../packages/@cap/nanoid/src/index.cp";
+} from "../../packages/nanoid/src/index.cp";
 
 fn main() {
     test("1. @cap/nanoid — constants & deterministic nanoidFromBytes (& 63 mapping)", () => {

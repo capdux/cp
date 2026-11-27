@@ -7,7 +7,7 @@ import {
     KIND_DELAY_SECONDS,
     KIND_HTTP_DATE,
     KIND_INVALID,
-} from "../../packages/@cap/retry-after/src/index.cp";
+} from "../../packages/retry-after/src/index.cp";
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }

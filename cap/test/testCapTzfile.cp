@@ -3,7 +3,7 @@ import {
     TZIF_HEADER_LEN, TzifHeader, PosixTz, TzTransition,
     isTzifMagic, parseTzifHeader, parsePosixTz,
     lookupTransitionOffset, utcToLocalSeconds
-} from "../../packages/@cap/tzfile/src/index.cp";
+} from "../../packages/tzfile/src/index.cp";
 
 fn main() {
     test("1. @cap/tzfile — parses valid TZif v2 binary header", () => {

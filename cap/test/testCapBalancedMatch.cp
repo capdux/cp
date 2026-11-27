@@ -4,7 +4,7 @@ import {
     balanced,
     balancedRange,
     balancedAll,
-} from "../../packages/@cap/balanced-match/src/index.cp";
+} from "../../packages/balanced-match/src/index.cp";
 
 fn main() {
     test("1. @cap/balanced-match — Nested braces match outermost balanced pair", () => {

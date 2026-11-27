@@ -6,7 +6,7 @@ import {
     countMembers,
     formatBaggage,
     isValidKey,
-} from "../../packages/@cap/otel-baggage/src/index.cp";
+} from "../../packages/@opentelemetry/core/src/index.cp";
 
 fn testEq(a: []const u8, b: []const u8) -> bool {
     if (a.len != b.len) {

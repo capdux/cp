@@ -1,0 +1,21 @@
+{
+  "name": "wordwrap",
+  "version": "1.0.0",
+  "description": "Zero-heap column-width text word wrapper with indentation, soft/hard modes, and newline preservation in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "wordwrap",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/substack/node-wordwrap"
+  },
+  "docs": {
+    "types": "src/index.d.cp",
+    "agent": "README_AGENT.md",
+    "readme": "README.md",
+    "readme_zh": "README.zh-CN.md"
+  }
+}
