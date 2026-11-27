@@ -1,6 +1,9 @@
 // @cap/proxy-from-env — Zero-allocation HTTP_PROXY/HTTPS_PROXY/NO_PROXY resolver in pure CP
 // Clean-room MIT implementation of npm `proxy-from-env` (#303, 169M/wk).
 
+import { eqIgnoreCase, trim } from "cap:ascii";
+import { parseU16 } from "cap:fmt";
+
 pub struct ProxyEnv {
     pub http_proxy: string,
     pub https_proxy: string,
@@ -17,51 +20,15 @@ pub struct ProxyEnv {
     }
 }
 
-fn pfeToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) { return b + 32; }
-    return b;
-}
-
-fn pfeEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (pfeToLower(a[i]) != pfeToLower(b[i])) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
 fn pfeEndsWithIgnoreCase(s: string, suffix: string): bool {
     if (suffix.len > s.len) { return false; }
-    return pfeEqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
-}
-
-fn pfeTrim(s: string): string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && (s[a] == 32 || s[a] == 9)) { a += 1; }
-    while (b > a && (s[b - 1] == 32 || s[b - 1] == 9)) { b -= 1; }
-    return s[a..b];
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
 }
 
 struct PfeParsedUrl {
     scheme: string,
     host: string,
     port: u16,
-}
-
-fn pfeParseU16(s: string): u16 {
-    let acc: u32 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        const b = s[i];
-        if (b < 48 || b > 57) { return 0; }
-        acc = acc * 10 + ((b - 48) as u32);
-        if (acc > 65535) { return 0; }
-        i += 1;
-    }
-    return acc as u16;
 }
 
 fn pfeParseUrl(url: string): PfeParsedUrl {
@@ -102,7 +69,7 @@ fn pfeParseUrl(url: string): PfeParsedUrl {
         if (close < hostport.len) {
             host = hostport[1..close];
             if (close + 1 < hostport.len && hostport[close + 1] == 58) {
-                port = pfeParseU16(hostport[(close + 2)..hostport.len]);
+                port = parseU16(hostport[(close + 2)..hostport.len]) ?? 0;
             }
         }
     } else {
@@ -114,14 +81,14 @@ fn pfeParseUrl(url: string): PfeParsedUrl {
         }
         if (colon < hostport.len) {
             host = hostport[0..colon];
-            port = pfeParseU16(hostport[(colon + 1)..hostport.len]);
+            port = parseU16(hostport[(colon + 1)..hostport.len]) ?? 0;
         }
     }
 
     if (port == 0) {
-        if (pfeEqIgnoreCase(scheme, "https") || pfeEqIgnoreCase(scheme, "wss")) {
+        if (eqIgnoreCase(scheme, "https") || eqIgnoreCase(scheme, "wss")) {
             port = 443;
-        } else if (pfeEqIgnoreCase(scheme, "http") || pfeEqIgnoreCase(scheme, "ws")) {
+        } else if (eqIgnoreCase(scheme, "http") || eqIgnoreCase(scheme, "ws")) {
             port = 80;
         }
     }
@@ -139,7 +106,7 @@ pub fn shouldBypassProxy(host: string, port: u16, no_proxy: string): bool {
         while (i < no_proxy.len && no_proxy[i] != 44 && no_proxy[i] != 32) {
             i += 1;
         }
-        const entry = pfeTrim(no_proxy[start..i]);
+        const entry = trim(no_proxy[start..i]);
         while (i < no_proxy.len && (no_proxy[i] == 44 || no_proxy[i] == 32)) {
             i += 1;
         }
@@ -167,12 +134,12 @@ pub fn shouldBypassProxy(host: string, port: u16, no_proxy: string): bool {
             if (rb < entry.len) {
                 rule_host = entry[1..rb];
                 if (rb + 1 < entry.len && entry[rb + 1] == 58) {
-                    rule_port = pfeParseU16(entry[(rb + 2)..entry.len]);
+                    rule_port = parseU16(entry[(rb + 2)..entry.len]) ?? 0;
                 }
             }
         } else if (colon_count == 1) {
             rule_host = entry[0..last_colon];
-            rule_port = pfeParseU16(entry[(last_colon + 1)..entry.len]);
+            rule_port = parseU16(entry[(last_colon + 1)..entry.len]) ?? 0;
         }
         if (rule_port != 0 && rule_port != port) {
             continue;
@@ -190,11 +157,11 @@ pub fn shouldBypassProxy(host: string, port: u16, no_proxy: string): bool {
         if (suffix_only) {
             // ".example.com" matches "sub.example.com" and "example.com"
             if (pfeEndsWithIgnoreCase(host, rule_host)
-                || pfeEqIgnoreCase(host, rule_host[1..rule_host.len])) {
+                || eqIgnoreCase(host, rule_host[1..rule_host.len])) {
                 return true;
             }
         } else {
-            if (pfeEqIgnoreCase(host, rule_host)) {
+            if (eqIgnoreCase(host, rule_host)) {
                 return true;
             }
             // Also match subdomain boundary "<anything>.<rule_host>"
@@ -217,12 +184,12 @@ pub fn getProxyForUrl(target_url: string, env: ProxyEnv): string {
     if (shouldBypassProxy(u.host, u.port, env.no_proxy)) {
         return "";
     }
-    if (pfeEqIgnoreCase(u.scheme, "https") || pfeEqIgnoreCase(u.scheme, "wss")) {
+    if (eqIgnoreCase(u.scheme, "https") || eqIgnoreCase(u.scheme, "wss")) {
         if (env.https_proxy.len > 0) { return env.https_proxy; }
         if (env.all_proxy.len > 0) { return env.all_proxy; }
         return "";
     }
-    if (pfeEqIgnoreCase(u.scheme, "http") || pfeEqIgnoreCase(u.scheme, "ws")) {
+    if (eqIgnoreCase(u.scheme, "http") || eqIgnoreCase(u.scheme, "ws")) {
         if (env.http_proxy.len > 0) { return env.http_proxy; }
         if (env.all_proxy.len > 0) { return env.all_proxy; }
         return "";

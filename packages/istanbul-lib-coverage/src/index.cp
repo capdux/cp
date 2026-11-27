@@ -1,5 +1,8 @@
 // @cap/istanbul-lib-coverage — Zero-heap code coverage metrics, summary merging, and LCOV codec.
 
+import { isDigit, trim, startsWith, strEq, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct CoverageMetric {
     total: u32,
     covered: u32,
@@ -52,17 +55,6 @@ pub struct LineHit {
     hits: u32,
 }
 
-fn icovWriteStr(out: []u8, pos: usize, s: string): usize {
-    let cur = pos;
-    let i: usize = 0;
-    while (i < s.len && cur < out.len) {
-        out[cur] = s[i];
-        cur += 1;
-        i += 1;
-    }
-    return cur;
-}
-
 fn icovWriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos < out.len) {
         out[pos] = b;
@@ -71,94 +63,30 @@ fn icovWriteByte(out: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn icovWriteU32(out: []u8, pos: usize, val: u32): usize {
-    if (val == 0) {
-        return icovWriteByte(out, pos, '0');
-    }
-    let digits: [16]u8 = undefined;
-    let n: usize = 0;
-    let v = val;
-    while (v > 0 && n < 16) {
-        const rem: u8 = u8(v % 10);
-        digits[n] = u8(48) + rem;
-        v = v / 10;
-        n += 1;
-    }
-    let cur = pos;
-    while (n > 0) {
-        n -= 1;
-        cur = icovWriteByte(out, cur, digits[n]);
-    }
-    return cur;
-}
-
-fn icovTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r')) {
-        start += 1;
-    }
-    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r')) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn icovHasPrefix(s: string, prefix: string): bool {
-    if (s.len < prefix.len) return false;
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn icovStrEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
 fn icovParseU32(s: string): u32 {
     let acc: u32 = 0;
     let i: usize = 0;
-    while (i < s.len) {
-        const c = s[i];
-        if (c < '0' || c > '9') break;
-        acc = acc * 10 + u32(c - '0');
+    while (i < s.len && isDigit(s[i])) {
+        acc = acc * 10 + u32(s[i] - '0');
         i += 1;
     }
     return acc;
 }
 
-fn icovIndexOfByte(s: string, target: u8): usize {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) return i;
-        i += 1;
-    }
-    return s.len;
-}
-
 pub fn formatLcovRecord(file_path: string, hits: []const LineHit, out: []u8): usize {
     let pos: usize = 0;
-    pos = icovWriteStr(out, pos, "SF:");
-    pos = icovWriteStr(out, pos, file_path);
+    pos = writeStr("SF:", out, pos);
+    pos = writeStr(file_path, out, pos);
     pos = icovWriteByte(out, pos, '\n');
 
     let covered: u32 = 0;
     let i: usize = 0;
     while (i < hits.len) {
         const h = hits[i];
-        pos = icovWriteStr(out, pos, "DA:");
-        pos = icovWriteU32(out, pos, h.line);
+        pos = writeStr("DA:", out, pos);
+        pos = writeU64(u64(h.line), out, pos);
         pos = icovWriteByte(out, pos, ',');
-        pos = icovWriteU32(out, pos, h.hits);
+        pos = writeU64(u64(h.hits), out, pos);
         pos = icovWriteByte(out, pos, '\n');
         if (h.hits > 0) {
             covered += 1;
@@ -167,15 +95,15 @@ pub fn formatLcovRecord(file_path: string, hits: []const LineHit, out: []u8): us
     }
 
     const total: u32 = u32(hits.len);
-    pos = icovWriteStr(out, pos, "LF:");
-    pos = icovWriteU32(out, pos, total);
+    pos = writeStr("LF:", out, pos);
+    pos = writeU64(u64(total), out, pos);
     pos = icovWriteByte(out, pos, '\n');
 
-    pos = icovWriteStr(out, pos, "LH:");
-    pos = icovWriteU32(out, pos, covered);
+    pos = writeStr("LH:", out, pos);
+    pos = writeU64(u64(covered), out, pos);
     pos = icovWriteByte(out, pos, '\n');
 
-    pos = icovWriteStr(out, pos, "end_of_record\n");
+    pos = writeStr("end_of_record\n", out, pos);
     return pos;
 }
 
@@ -198,14 +126,14 @@ pub fn parseLcovSummary(lcov_text: string): CoverageMetric {
             i += 1;
         }
         const raw_line = lcov_text[line_start..i];
-        const line = icovTrim(raw_line);
+        const line = trim(raw_line);
         i += 1;
 
         if (line.len == 0) {
             continue;
         }
 
-        if (icovStrEq(line, "end_of_record")) {
+        if (strEq(line, "end_of_record")) {
             if (has_rec) {
                 if (has_lf) {
                     total += rec_lf;
@@ -225,10 +153,9 @@ pub fn parseLcovSummary(lcov_text: string): CoverageMetric {
             has_lf = false;
             has_lh = false;
             has_rec = false;
-        } else if (icovHasPrefix(line, "DA:")) {
+        } else if (startsWith(line, "DA:")) {
             const body = line[3..line.len];
-            const comma = icovIndexOfByte(body, ',');
-            if (comma < body.len) {
+            if (comma := findByte(body, ',', 0)) {
                 const hits_str = body[comma + 1..body.len];
                 const hit_count = icovParseU32(hits_str);
                 rec_da_total += 1;
@@ -237,13 +164,13 @@ pub fn parseLcovSummary(lcov_text: string): CoverageMetric {
                 }
                 has_rec = true;
             }
-        } else if (icovHasPrefix(line, "LF:")) {
-            const body = icovTrim(line[3..line.len]);
+        } else if (startsWith(line, "LF:")) {
+            const body = trim(line[3..line.len]);
             rec_lf = icovParseU32(body);
             has_lf = true;
             has_rec = true;
-        } else if (icovHasPrefix(line, "LH:")) {
-            const body = icovTrim(line[3..line.len]);
+        } else if (startsWith(line, "LH:")) {
+            const body = trim(line[3..line.len]);
             rec_lh = icovParseU32(body);
             has_lh = true;
             has_rec = true;

@@ -1,6 +1,8 @@
 // @cap/env-filter — Zero-allocation RUST_LOG-style hierarchical module filter
 // Clean-room parity with crates.io:env_filter (MIT OR Apache-2.0)
 
+import { trim, eqIgnoreCase, strEq, startsWith, findByte } from "cap:ascii";
+
 pub enum LogLevel: u8 {
     Off = 0,
     Error = 1,
@@ -26,73 +28,24 @@ fn efltLevelRank(lvl: LogLevel): u8 {
     }
 }
 
-fn efltIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn efltTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && efltIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && efltIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn efltToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn efltEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (efltToLower(a[i]) != efltToLower(b[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn efltStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
 pub fn parseLogLevel(s: string): LogLevel? {
-    const trimmed = efltTrim(s);
-    if (efltEqIgnoreCase(trimmed, "off")) {
+    const trimmed = trim(s);
+    if (eqIgnoreCase(trimmed, "off")) {
         return LogLevel.Off;
     }
-    if (efltEqIgnoreCase(trimmed, "error")) {
+    if (eqIgnoreCase(trimmed, "error")) {
         return LogLevel.Error;
     }
-    if (efltEqIgnoreCase(trimmed, "warn")) {
+    if (eqIgnoreCase(trimmed, "warn")) {
         return LogLevel.Warn;
     }
-    if (efltEqIgnoreCase(trimmed, "info")) {
+    if (eqIgnoreCase(trimmed, "info")) {
         return LogLevel.Info;
     }
-    if (efltEqIgnoreCase(trimmed, "debug")) {
+    if (eqIgnoreCase(trimmed, "debug")) {
         return LogLevel.Debug;
     }
-    if (efltEqIgnoreCase(trimmed, "trace")) {
+    if (eqIgnoreCase(trimmed, "trace")) {
         return LogLevel.Trace;
     }
     return null;
@@ -102,14 +55,8 @@ fn efltMatchesTarget(target: string, directive_target: string): bool {
     if (directive_target.len == 0) {
         return true;
     }
-    if (target.len < directive_target.len) {
+    if (!startsWith(target, directive_target)) {
         return false;
-    }
-    let i: usize = 0;
-    while (i < directive_target.len) : (i += 1) {
-        if (target[i] != directive_target[i]) {
-            return false;
-        }
     }
     if (target.len == directive_target.len) {
         return true;
@@ -120,16 +67,6 @@ fn efltMatchesTarget(target: string, directive_target: string): bool {
         }
     }
     return false;
-}
-
-fn efltFindByte(s: string, needle: u8): usize? {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] == needle) {
-            return i;
-        }
-    }
-    return null;
 }
 
 pub struct EnvFilter {
@@ -164,7 +101,7 @@ pub struct EnvFilter {
     fn addDirective(*_, target: string, level: LogLevel): bool {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (efltStrEq(_.directives[i].target, target)) {
+            if (strEq(_.directives[i].target, target)) {
                 _.directives[i].level = level;
                 return true;
             }
@@ -189,11 +126,11 @@ pub struct EnvFilter {
             while (end < spec.len && spec[end] != ',') {
                 end += 1;
             }
-            const part = efltTrim(spec[pos..end]);
+            const part = trim(spec[pos..end]);
             if (part.len > 0) {
-                if (eq_idx := efltFindByte(part, '=')) {
-                    const lhs = efltTrim(part[0..eq_idx]);
-                    const rhs = efltTrim(part[(eq_idx + 1)..part.len]);
+                if (eq_idx := findByte(part, '=', 0)) {
+                    const lhs = trim(part[0..eq_idx]);
+                    const rhs = trim(part[(eq_idx + 1)..part.len]);
                     if (lvl := parseLogLevel(rhs)) {
                         * = f.addDirective(lhs, lvl);
                     }

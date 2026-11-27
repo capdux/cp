@@ -1,4 +1,5 @@
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     MULTER_OK,
     ERR_LIMIT_FILE_SIZE,
@@ -11,20 +12,6 @@ import {
     extractMultipartBoundary,
     MulterValidator
 } from "../../packages/multer/src/index.cp";
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/multer — extractMultipartBoundary parses valid multipart/form-data headers", () => {

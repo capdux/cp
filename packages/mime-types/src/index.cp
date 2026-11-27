@@ -1,6 +1,9 @@
 // @cap/mime-types — Zero-heap MIME type / extension / charset / Content-Type resolver in pure CP
 // Clean-room MIT implementation inspired by npm `mime-types` v2.1.
 
+import { isAlnum, eqIgnoreCase, trim, findByte, rfindByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct MimeParts {
     pub valid: bool,
     pub essence: string,
@@ -13,76 +16,19 @@ pub struct MimeParts {
 // Private helpers (all prefixed with `mtyp` to avoid module flattening clashes)
 // ============================================================================
 
-fn mtypToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn mtypIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
 fn mtypIsTokenChar(c: u8): bool {
-    if ((c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)) {
+    if (isAlnum(c)) {
         return true;
     }
     return c == 33 || c == 35 || c == 36 || c == 38 || c == 43 || c == 45 ||
         c == 46 || c == 94 || c == 95 || c == 96 || c == 124 || c == 126;
 }
 
-fn mtypEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (mtypToLower(a[i]) != mtypToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn mtypEndsWithIgnoreCase(s: string, suffix: string): bool {
     if (s.len < suffix.len) {
         return false;
     }
-    const offset: usize = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (mtypToLower(s[offset + i]) != mtypToLower(suffix[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn mtypContainsSlash(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == 47) {
-            return true;
-        }
-        i = i + 1;
-    }
-    return false;
-}
-
-fn mtypTrimBounds(s: string, out_start: *usize, out_end: *usize) {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && mtypIsSpace(s[a])) {
-        a = a + 1;
-    }
-    while (b > a && mtypIsSpace(s[b - 1])) {
-        b = b - 1;
-    }
-    out_start.* = a;
-    out_end.* = b;
+    return eqIgnoreCase(s[(s.len - suffix.len)..s.len], suffix);
 }
 
 fn mtypIsValidToken(s: string): bool {
@@ -99,23 +45,11 @@ fn mtypIsValidToken(s: string): bool {
     return true;
 }
 
-fn mtypWriteStr(out: []u8, pos: *usize, s: string) {
-    let i: usize = 0;
-    while (i < s.len && pos.* < out.len) {
-        out[pos.*] = s[i];
-        pos.* = pos.* + 1;
-        i = i + 1;
-    }
-}
-
 fn mtypExtractExt(path_or_ext: string): string? {
-    let ts: usize = 0;
-    let te: usize = 0;
-    mtypTrimBounds(path_or_ext, &ts, &te);
-    if (ts >= te) {
+    const s: string = trim(path_or_ext);
+    if (s.len == 0) {
         return null;
     }
-    const s: string = path_or_ext[ts..te];
 
     // Find last path separator ('/' or '\\')
     let base_start: usize = 0;
@@ -134,25 +68,16 @@ fn mtypExtractExt(path_or_ext: string): string? {
     const base: string = s[base_start..s.len];
 
     // Find last '.' in basename
-    let last_dot: i64 = -1;
-    let j: usize = 0;
-    while (j < base.len) {
-        if (base[j] == 46) {
-            last_dot = j as i64;
-        }
-        j = j + 1;
-    }
-    if (last_dot < 0) {
-        if (has_sep) {
+    if (dot_idx := rfindByte(base, 46)) {
+        if (dot_idx + 1 >= base.len) {
             return null;
         }
-        return base;
+        return base[(dot_idx + 1)..base.len];
     }
-    const dot_idx: usize = last_dot as usize;
-    if (dot_idx + 1 >= base.len) {
+    if (has_sep) {
         return null;
     }
-    return base[(dot_idx + 1)..base.len];
+    return base;
 }
 
 // ============================================================================
@@ -161,330 +86,330 @@ fn mtypExtractExt(path_or_ext: string): string? {
 
 fn mtypLookupExt(ext: string): string? {
     // Web & Markup
-    if (mtypEqIgnoreCase(ext, "html") || mtypEqIgnoreCase(ext, "htm") || mtypEqIgnoreCase(ext, "shtml")) {
+    if (eqIgnoreCase(ext, "html") || eqIgnoreCase(ext, "htm") || eqIgnoreCase(ext, "shtml")) {
         return "text/html";
     }
-    if (mtypEqIgnoreCase(ext, "css")) {
+    if (eqIgnoreCase(ext, "css")) {
         return "text/css";
     }
-    if (mtypEqIgnoreCase(ext, "js") || mtypEqIgnoreCase(ext, "mjs") || mtypEqIgnoreCase(ext, "cjs")) {
+    if (eqIgnoreCase(ext, "js") || eqIgnoreCase(ext, "mjs") || eqIgnoreCase(ext, "cjs")) {
         return "text/javascript";
     }
-    if (mtypEqIgnoreCase(ext, "ts") || mtypEqIgnoreCase(ext, "mts") || mtypEqIgnoreCase(ext, "cts")) {
+    if (eqIgnoreCase(ext, "ts") || eqIgnoreCase(ext, "mts") || eqIgnoreCase(ext, "cts")) {
         return "text/typescript";
     }
-    if (mtypEqIgnoreCase(ext, "jsx")) {
+    if (eqIgnoreCase(ext, "jsx")) {
         return "text/jsx";
     }
-    if (mtypEqIgnoreCase(ext, "tsx")) {
+    if (eqIgnoreCase(ext, "tsx")) {
         return "text/tsx";
     }
-    if (mtypEqIgnoreCase(ext, "json") || mtypEqIgnoreCase(ext, "map")) {
+    if (eqIgnoreCase(ext, "json") || eqIgnoreCase(ext, "map")) {
         return "application/json";
     }
-    if (mtypEqIgnoreCase(ext, "jsonld")) {
+    if (eqIgnoreCase(ext, "jsonld")) {
         return "application/ld+json";
     }
-    if (mtypEqIgnoreCase(ext, "webmanifest")) {
+    if (eqIgnoreCase(ext, "webmanifest")) {
         return "application/manifest+json";
     }
-    if (mtypEqIgnoreCase(ext, "xml")) {
+    if (eqIgnoreCase(ext, "xml")) {
         return "application/xml";
     }
-    if (mtypEqIgnoreCase(ext, "xhtml")) {
+    if (eqIgnoreCase(ext, "xhtml")) {
         return "application/xhtml+xml";
     }
-    if (mtypEqIgnoreCase(ext, "rss")) {
+    if (eqIgnoreCase(ext, "rss")) {
         return "application/rss+xml";
     }
-    if (mtypEqIgnoreCase(ext, "atom")) {
+    if (eqIgnoreCase(ext, "atom")) {
         return "application/atom+xml";
     }
-    if (mtypEqIgnoreCase(ext, "txt") || mtypEqIgnoreCase(ext, "text") || mtypEqIgnoreCase(ext, "log")) {
+    if (eqIgnoreCase(ext, "txt") || eqIgnoreCase(ext, "text") || eqIgnoreCase(ext, "log")) {
         return "text/plain";
     }
-    if (mtypEqIgnoreCase(ext, "md") || mtypEqIgnoreCase(ext, "markdown")) {
+    if (eqIgnoreCase(ext, "md") || eqIgnoreCase(ext, "markdown")) {
         return "text/markdown";
     }
-    if (mtypEqIgnoreCase(ext, "csv")) {
+    if (eqIgnoreCase(ext, "csv")) {
         return "text/csv";
     }
-    if (mtypEqIgnoreCase(ext, "tsv")) {
+    if (eqIgnoreCase(ext, "tsv")) {
         return "text/tab-separated-values";
     }
-    if (mtypEqIgnoreCase(ext, "ics")) {
+    if (eqIgnoreCase(ext, "ics")) {
         return "text/calendar";
     }
-    if (mtypEqIgnoreCase(ext, "vcf")) {
+    if (eqIgnoreCase(ext, "vcf")) {
         return "text/vcard";
     }
-    if (mtypEqIgnoreCase(ext, "vtt")) {
+    if (eqIgnoreCase(ext, "vtt")) {
         return "text/vtt";
     }
 
     // Images
-    if (mtypEqIgnoreCase(ext, "svg") || mtypEqIgnoreCase(ext, "svgz")) {
+    if (eqIgnoreCase(ext, "svg") || eqIgnoreCase(ext, "svgz")) {
         return "image/svg+xml";
     }
-    if (mtypEqIgnoreCase(ext, "png")) {
+    if (eqIgnoreCase(ext, "png")) {
         return "image/png";
     }
-    if (mtypEqIgnoreCase(ext, "jpg") || mtypEqIgnoreCase(ext, "jpeg") || mtypEqIgnoreCase(ext, "jpe")) {
+    if (eqIgnoreCase(ext, "jpg") || eqIgnoreCase(ext, "jpeg") || eqIgnoreCase(ext, "jpe")) {
         return "image/jpeg";
     }
-    if (mtypEqIgnoreCase(ext, "gif")) {
+    if (eqIgnoreCase(ext, "gif")) {
         return "image/gif";
     }
-    if (mtypEqIgnoreCase(ext, "webp")) {
+    if (eqIgnoreCase(ext, "webp")) {
         return "image/webp";
     }
-    if (mtypEqIgnoreCase(ext, "avif")) {
+    if (eqIgnoreCase(ext, "avif")) {
         return "image/avif";
     }
-    if (mtypEqIgnoreCase(ext, "ico")) {
+    if (eqIgnoreCase(ext, "ico")) {
         return "image/x-icon";
     }
-    if (mtypEqIgnoreCase(ext, "bmp")) {
+    if (eqIgnoreCase(ext, "bmp")) {
         return "image/bmp";
     }
-    if (mtypEqIgnoreCase(ext, "tiff") || mtypEqIgnoreCase(ext, "tif")) {
+    if (eqIgnoreCase(ext, "tiff") || eqIgnoreCase(ext, "tif")) {
         return "image/tiff";
     }
-    if (mtypEqIgnoreCase(ext, "heic")) {
+    if (eqIgnoreCase(ext, "heic")) {
         return "image/heic";
     }
-    if (mtypEqIgnoreCase(ext, "heif")) {
+    if (eqIgnoreCase(ext, "heif")) {
         return "image/heif";
     }
-    if (mtypEqIgnoreCase(ext, "psd")) {
+    if (eqIgnoreCase(ext, "psd")) {
         return "image/vnd.adobe.photoshop";
     }
 
     // Documents & Office
-    if (mtypEqIgnoreCase(ext, "pdf")) {
+    if (eqIgnoreCase(ext, "pdf")) {
         return "application/pdf";
     }
-    if (mtypEqIgnoreCase(ext, "rtf")) {
+    if (eqIgnoreCase(ext, "rtf")) {
         return "application/rtf";
     }
-    if (mtypEqIgnoreCase(ext, "doc")) {
+    if (eqIgnoreCase(ext, "doc")) {
         return "application/msword";
     }
-    if (mtypEqIgnoreCase(ext, "docx")) {
+    if (eqIgnoreCase(ext, "docx")) {
         return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     }
-    if (mtypEqIgnoreCase(ext, "xls")) {
+    if (eqIgnoreCase(ext, "xls")) {
         return "application/vnd.ms-excel";
     }
-    if (mtypEqIgnoreCase(ext, "xlsx")) {
+    if (eqIgnoreCase(ext, "xlsx")) {
         return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     }
-    if (mtypEqIgnoreCase(ext, "ppt")) {
+    if (eqIgnoreCase(ext, "ppt")) {
         return "application/vnd.ms-powerpoint";
     }
-    if (mtypEqIgnoreCase(ext, "pptx")) {
+    if (eqIgnoreCase(ext, "pptx")) {
         return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
     }
-    if (mtypEqIgnoreCase(ext, "odt")) {
+    if (eqIgnoreCase(ext, "odt")) {
         return "application/vnd.oasis.opendocument.text";
     }
-    if (mtypEqIgnoreCase(ext, "ods")) {
+    if (eqIgnoreCase(ext, "ods")) {
         return "application/vnd.oasis.opendocument.spreadsheet";
     }
-    if (mtypEqIgnoreCase(ext, "odp")) {
+    if (eqIgnoreCase(ext, "odp")) {
         return "application/vnd.oasis.opendocument.presentation";
     }
-    if (mtypEqIgnoreCase(ext, "epub")) {
+    if (eqIgnoreCase(ext, "epub")) {
         return "application/epub+zip";
     }
 
     // Archives & Binaries
-    if (mtypEqIgnoreCase(ext, "zip")) {
+    if (eqIgnoreCase(ext, "zip")) {
         return "application/zip";
     }
-    if (mtypEqIgnoreCase(ext, "gz") || mtypEqIgnoreCase(ext, "gzip") || mtypEqIgnoreCase(ext, "tgz")) {
+    if (eqIgnoreCase(ext, "gz") || eqIgnoreCase(ext, "gzip") || eqIgnoreCase(ext, "tgz")) {
         return "application/gzip";
     }
-    if (mtypEqIgnoreCase(ext, "tar")) {
+    if (eqIgnoreCase(ext, "tar")) {
         return "application/x-tar";
     }
-    if (mtypEqIgnoreCase(ext, "br")) {
+    if (eqIgnoreCase(ext, "br")) {
         return "application/x-brotli";
     }
-    if (mtypEqIgnoreCase(ext, "zstd") || mtypEqIgnoreCase(ext, "zst")) {
+    if (eqIgnoreCase(ext, "zstd") || eqIgnoreCase(ext, "zst")) {
         return "application/zstd";
     }
-    if (mtypEqIgnoreCase(ext, "7z")) {
+    if (eqIgnoreCase(ext, "7z")) {
         return "application/x-7z-compressed";
     }
-    if (mtypEqIgnoreCase(ext, "rar")) {
+    if (eqIgnoreCase(ext, "rar")) {
         return "application/vnd.rar";
     }
-    if (mtypEqIgnoreCase(ext, "bz2")) {
+    if (eqIgnoreCase(ext, "bz2")) {
         return "application/x-bzip2";
     }
-    if (mtypEqIgnoreCase(ext, "xz")) {
+    if (eqIgnoreCase(ext, "xz")) {
         return "application/x-xz";
     }
-    if (mtypEqIgnoreCase(ext, "wasm")) {
+    if (eqIgnoreCase(ext, "wasm")) {
         return "application/wasm";
     }
-    if (mtypEqIgnoreCase(ext, "bin") || mtypEqIgnoreCase(ext, "dll") || mtypEqIgnoreCase(ext, "so")) {
+    if (eqIgnoreCase(ext, "bin") || eqIgnoreCase(ext, "dll") || eqIgnoreCase(ext, "so")) {
         return "application/octet-stream";
     }
-    if (mtypEqIgnoreCase(ext, "exe")) {
+    if (eqIgnoreCase(ext, "exe")) {
         return "application/x-msdownload";
     }
-    if (mtypEqIgnoreCase(ext, "dmg")) {
+    if (eqIgnoreCase(ext, "dmg")) {
         return "application/x-apple-diskimage";
     }
-    if (mtypEqIgnoreCase(ext, "iso")) {
+    if (eqIgnoreCase(ext, "iso")) {
         return "application/x-iso9660-image";
     }
-    if (mtypEqIgnoreCase(ext, "deb")) {
+    if (eqIgnoreCase(ext, "deb")) {
         return "application/x-debian-package";
     }
-    if (mtypEqIgnoreCase(ext, "rpm")) {
+    if (eqIgnoreCase(ext, "rpm")) {
         return "application/x-redhat-package-manager";
     }
-    if (mtypEqIgnoreCase(ext, "apk")) {
+    if (eqIgnoreCase(ext, "apk")) {
         return "application/vnd.android.package-archive";
     }
-    if (mtypEqIgnoreCase(ext, "jar")) {
+    if (eqIgnoreCase(ext, "jar")) {
         return "application/java-archive";
     }
 
     // Audio
-    if (mtypEqIgnoreCase(ext, "mp3")) {
+    if (eqIgnoreCase(ext, "mp3")) {
         return "audio/mpeg";
     }
-    if (mtypEqIgnoreCase(ext, "wav")) {
+    if (eqIgnoreCase(ext, "wav")) {
         return "audio/wav";
     }
-    if (mtypEqIgnoreCase(ext, "ogg") || mtypEqIgnoreCase(ext, "oga")) {
+    if (eqIgnoreCase(ext, "ogg") || eqIgnoreCase(ext, "oga")) {
         return "audio/ogg";
     }
-    if (mtypEqIgnoreCase(ext, "opus")) {
+    if (eqIgnoreCase(ext, "opus")) {
         return "audio/opus";
     }
-    if (mtypEqIgnoreCase(ext, "flac")) {
+    if (eqIgnoreCase(ext, "flac")) {
         return "audio/flac";
     }
-    if (mtypEqIgnoreCase(ext, "aac")) {
+    if (eqIgnoreCase(ext, "aac")) {
         return "audio/aac";
     }
-    if (mtypEqIgnoreCase(ext, "m4a")) {
+    if (eqIgnoreCase(ext, "m4a")) {
         return "audio/mp4";
     }
-    if (mtypEqIgnoreCase(ext, "weba")) {
+    if (eqIgnoreCase(ext, "weba")) {
         return "audio/webm";
     }
-    if (mtypEqIgnoreCase(ext, "mid") || mtypEqIgnoreCase(ext, "midi")) {
+    if (eqIgnoreCase(ext, "mid") || eqIgnoreCase(ext, "midi")) {
         return "audio/midi";
     }
 
     // Video
-    if (mtypEqIgnoreCase(ext, "mp4") || mtypEqIgnoreCase(ext, "m4v")) {
+    if (eqIgnoreCase(ext, "mp4") || eqIgnoreCase(ext, "m4v")) {
         return "video/mp4";
     }
-    if (mtypEqIgnoreCase(ext, "webm")) {
+    if (eqIgnoreCase(ext, "webm")) {
         return "video/webm";
     }
-    if (mtypEqIgnoreCase(ext, "mov")) {
+    if (eqIgnoreCase(ext, "mov")) {
         return "video/quicktime";
     }
-    if (mtypEqIgnoreCase(ext, "avi")) {
+    if (eqIgnoreCase(ext, "avi")) {
         return "video/x-msvideo";
     }
-    if (mtypEqIgnoreCase(ext, "mkv")) {
+    if (eqIgnoreCase(ext, "mkv")) {
         return "video/x-matroska";
     }
-    if (mtypEqIgnoreCase(ext, "wmv")) {
+    if (eqIgnoreCase(ext, "wmv")) {
         return "video/x-ms-wmv";
     }
-    if (mtypEqIgnoreCase(ext, "flv")) {
+    if (eqIgnoreCase(ext, "flv")) {
         return "video/x-flv";
     }
-    if (mtypEqIgnoreCase(ext, "ogv")) {
+    if (eqIgnoreCase(ext, "ogv")) {
         return "video/ogg";
     }
-    if (mtypEqIgnoreCase(ext, "m3u8")) {
+    if (eqIgnoreCase(ext, "m3u8")) {
         return "application/vnd.apple.mpegurl";
     }
 
     // Fonts
-    if (mtypEqIgnoreCase(ext, "woff")) {
+    if (eqIgnoreCase(ext, "woff")) {
         return "font/woff";
     }
-    if (mtypEqIgnoreCase(ext, "woff2")) {
+    if (eqIgnoreCase(ext, "woff2")) {
         return "font/woff2";
     }
-    if (mtypEqIgnoreCase(ext, "ttf")) {
+    if (eqIgnoreCase(ext, "ttf")) {
         return "font/ttf";
     }
-    if (mtypEqIgnoreCase(ext, "otf")) {
+    if (eqIgnoreCase(ext, "otf")) {
         return "font/otf";
     }
-    if (mtypEqIgnoreCase(ext, "eot")) {
+    if (eqIgnoreCase(ext, "eot")) {
         return "application/vnd.ms-fontobject";
     }
 
     // Config, Source Code & Data
-    if (mtypEqIgnoreCase(ext, "yaml") || mtypEqIgnoreCase(ext, "yml")) {
+    if (eqIgnoreCase(ext, "yaml") || eqIgnoreCase(ext, "yml")) {
         return "text/yaml";
     }
-    if (mtypEqIgnoreCase(ext, "toml")) {
+    if (eqIgnoreCase(ext, "toml")) {
         return "application/toml";
     }
-    if (mtypEqIgnoreCase(ext, "ini") || mtypEqIgnoreCase(ext, "conf") || mtypEqIgnoreCase(ext, "env")) {
+    if (eqIgnoreCase(ext, "ini") || eqIgnoreCase(ext, "conf") || eqIgnoreCase(ext, "env")) {
         return "text/plain";
     }
-    if (mtypEqIgnoreCase(ext, "sh") || mtypEqIgnoreCase(ext, "bash")) {
+    if (eqIgnoreCase(ext, "sh") || eqIgnoreCase(ext, "bash")) {
         return "application/x-sh";
     }
-    if (mtypEqIgnoreCase(ext, "py")) {
+    if (eqIgnoreCase(ext, "py")) {
         return "text/x-python";
     }
-    if (mtypEqIgnoreCase(ext, "rs")) {
+    if (eqIgnoreCase(ext, "rs")) {
         return "text/x-rust";
     }
-    if (mtypEqIgnoreCase(ext, "cp")) {
+    if (eqIgnoreCase(ext, "cp")) {
         return "text/x-cp";
     }
-    if (mtypEqIgnoreCase(ext, "zig")) {
+    if (eqIgnoreCase(ext, "zig")) {
         return "text/x-zig";
     }
-    if (mtypEqIgnoreCase(ext, "c") || mtypEqIgnoreCase(ext, "h")) {
+    if (eqIgnoreCase(ext, "c") || eqIgnoreCase(ext, "h")) {
         return "text/x-c";
     }
-    if (mtypEqIgnoreCase(ext, "cpp") || mtypEqIgnoreCase(ext, "cc") || mtypEqIgnoreCase(ext, "hpp")) {
+    if (eqIgnoreCase(ext, "cpp") || eqIgnoreCase(ext, "cc") || eqIgnoreCase(ext, "hpp")) {
         return "text/x-c++";
     }
-    if (mtypEqIgnoreCase(ext, "go")) {
+    if (eqIgnoreCase(ext, "go")) {
         return "text/x-go";
     }
-    if (mtypEqIgnoreCase(ext, "java")) {
+    if (eqIgnoreCase(ext, "java")) {
         return "text/x-java-source";
     }
-    if (mtypEqIgnoreCase(ext, "rb")) {
+    if (eqIgnoreCase(ext, "rb")) {
         return "text/x-ruby";
     }
-    if (mtypEqIgnoreCase(ext, "php")) {
+    if (eqIgnoreCase(ext, "php")) {
         return "application/x-httpd-php";
     }
-    if (mtypEqIgnoreCase(ext, "sql")) {
+    if (eqIgnoreCase(ext, "sql")) {
         return "application/sql";
     }
-    if (mtypEqIgnoreCase(ext, "graphql") || mtypEqIgnoreCase(ext, "gql")) {
+    if (eqIgnoreCase(ext, "graphql") || eqIgnoreCase(ext, "gql")) {
         return "application/graphql";
     }
-    if (mtypEqIgnoreCase(ext, "proto")) {
+    if (eqIgnoreCase(ext, "proto")) {
         return "text/x-protobuf";
     }
-    if (mtypEqIgnoreCase(ext, "pem") || mtypEqIgnoreCase(ext, "crt") || mtypEqIgnoreCase(ext, "cer")) {
+    if (eqIgnoreCase(ext, "pem") || eqIgnoreCase(ext, "crt") || eqIgnoreCase(ext, "cer")) {
         return "application/x-x509-ca-cert";
     }
-    if (mtypEqIgnoreCase(ext, "der")) {
+    if (eqIgnoreCase(ext, "der")) {
         return "application/x-x509-ca-cert";
     }
 
@@ -493,122 +418,122 @@ fn mtypLookupExt(ext: string): string? {
 
 fn mtypExtensionForEssence(essence: string): string? {
     // Web & Markup
-    if (mtypEqIgnoreCase(essence, "text/html")) { return "html"; }
-    if (mtypEqIgnoreCase(essence, "text/css")) { return "css"; }
-    if (mtypEqIgnoreCase(essence, "text/javascript") || mtypEqIgnoreCase(essence, "application/javascript") || mtypEqIgnoreCase(essence, "application/ecmascript")) { return "js"; }
-    if (mtypEqIgnoreCase(essence, "text/typescript") || mtypEqIgnoreCase(essence, "application/typescript")) { return "ts"; }
-    if (mtypEqIgnoreCase(essence, "text/jsx")) { return "jsx"; }
-    if (mtypEqIgnoreCase(essence, "text/tsx")) { return "tsx"; }
-    if (mtypEqIgnoreCase(essence, "application/json")) { return "json"; }
-    if (mtypEqIgnoreCase(essence, "application/ld+json")) { return "jsonld"; }
-    if (mtypEqIgnoreCase(essence, "application/manifest+json")) { return "webmanifest"; }
-    if (mtypEqIgnoreCase(essence, "application/xml") || mtypEqIgnoreCase(essence, "text/xml")) { return "xml"; }
-    if (mtypEqIgnoreCase(essence, "application/xhtml+xml")) { return "xhtml"; }
-    if (mtypEqIgnoreCase(essence, "application/rss+xml")) { return "rss"; }
-    if (mtypEqIgnoreCase(essence, "application/atom+xml")) { return "atom"; }
-    if (mtypEqIgnoreCase(essence, "text/plain")) { return "txt"; }
-    if (mtypEqIgnoreCase(essence, "text/markdown")) { return "md"; }
-    if (mtypEqIgnoreCase(essence, "text/csv")) { return "csv"; }
-    if (mtypEqIgnoreCase(essence, "text/tab-separated-values")) { return "tsv"; }
-    if (mtypEqIgnoreCase(essence, "text/calendar")) { return "ics"; }
-    if (mtypEqIgnoreCase(essence, "text/vcard")) { return "vcf"; }
-    if (mtypEqIgnoreCase(essence, "text/vtt")) { return "vtt"; }
+    if (eqIgnoreCase(essence, "text/html")) { return "html"; }
+    if (eqIgnoreCase(essence, "text/css")) { return "css"; }
+    if (eqIgnoreCase(essence, "text/javascript") || eqIgnoreCase(essence, "application/javascript") || eqIgnoreCase(essence, "application/ecmascript")) { return "js"; }
+    if (eqIgnoreCase(essence, "text/typescript") || eqIgnoreCase(essence, "application/typescript")) { return "ts"; }
+    if (eqIgnoreCase(essence, "text/jsx")) { return "jsx"; }
+    if (eqIgnoreCase(essence, "text/tsx")) { return "tsx"; }
+    if (eqIgnoreCase(essence, "application/json")) { return "json"; }
+    if (eqIgnoreCase(essence, "application/ld+json")) { return "jsonld"; }
+    if (eqIgnoreCase(essence, "application/manifest+json")) { return "webmanifest"; }
+    if (eqIgnoreCase(essence, "application/xml") || eqIgnoreCase(essence, "text/xml")) { return "xml"; }
+    if (eqIgnoreCase(essence, "application/xhtml+xml")) { return "xhtml"; }
+    if (eqIgnoreCase(essence, "application/rss+xml")) { return "rss"; }
+    if (eqIgnoreCase(essence, "application/atom+xml")) { return "atom"; }
+    if (eqIgnoreCase(essence, "text/plain")) { return "txt"; }
+    if (eqIgnoreCase(essence, "text/markdown")) { return "md"; }
+    if (eqIgnoreCase(essence, "text/csv")) { return "csv"; }
+    if (eqIgnoreCase(essence, "text/tab-separated-values")) { return "tsv"; }
+    if (eqIgnoreCase(essence, "text/calendar")) { return "ics"; }
+    if (eqIgnoreCase(essence, "text/vcard")) { return "vcf"; }
+    if (eqIgnoreCase(essence, "text/vtt")) { return "vtt"; }
 
     // Images
-    if (mtypEqIgnoreCase(essence, "image/svg+xml")) { return "svg"; }
-    if (mtypEqIgnoreCase(essence, "image/png")) { return "png"; }
-    if (mtypEqIgnoreCase(essence, "image/jpeg")) { return "jpeg"; }
-    if (mtypEqIgnoreCase(essence, "image/gif")) { return "gif"; }
-    if (mtypEqIgnoreCase(essence, "image/webp")) { return "webp"; }
-    if (mtypEqIgnoreCase(essence, "image/avif")) { return "avif"; }
-    if (mtypEqIgnoreCase(essence, "image/x-icon") || mtypEqIgnoreCase(essence, "image/vnd.microsoft.icon")) { return "ico"; }
-    if (mtypEqIgnoreCase(essence, "image/bmp")) { return "bmp"; }
-    if (mtypEqIgnoreCase(essence, "image/tiff")) { return "tiff"; }
-    if (mtypEqIgnoreCase(essence, "image/heic")) { return "heic"; }
-    if (mtypEqIgnoreCase(essence, "image/heif")) { return "heif"; }
-    if (mtypEqIgnoreCase(essence, "image/vnd.adobe.photoshop")) { return "psd"; }
+    if (eqIgnoreCase(essence, "image/svg+xml")) { return "svg"; }
+    if (eqIgnoreCase(essence, "image/png")) { return "png"; }
+    if (eqIgnoreCase(essence, "image/jpeg")) { return "jpeg"; }
+    if (eqIgnoreCase(essence, "image/gif")) { return "gif"; }
+    if (eqIgnoreCase(essence, "image/webp")) { return "webp"; }
+    if (eqIgnoreCase(essence, "image/avif")) { return "avif"; }
+    if (eqIgnoreCase(essence, "image/x-icon") || eqIgnoreCase(essence, "image/vnd.microsoft.icon")) { return "ico"; }
+    if (eqIgnoreCase(essence, "image/bmp")) { return "bmp"; }
+    if (eqIgnoreCase(essence, "image/tiff")) { return "tiff"; }
+    if (eqIgnoreCase(essence, "image/heic")) { return "heic"; }
+    if (eqIgnoreCase(essence, "image/heif")) { return "heif"; }
+    if (eqIgnoreCase(essence, "image/vnd.adobe.photoshop")) { return "psd"; }
 
     // Documents & Office
-    if (mtypEqIgnoreCase(essence, "application/pdf")) { return "pdf"; }
-    if (mtypEqIgnoreCase(essence, "application/rtf")) { return "rtf"; }
-    if (mtypEqIgnoreCase(essence, "application/msword")) { return "doc"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) { return "docx"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.ms-excel")) { return "xls"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) { return "xlsx"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.ms-powerpoint")) { return "ppt"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.presentationml.presentation")) { return "pptx"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.oasis.opendocument.text")) { return "odt"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.oasis.opendocument.spreadsheet")) { return "ods"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.oasis.opendocument.presentation")) { return "odp"; }
-    if (mtypEqIgnoreCase(essence, "application/epub+zip")) { return "epub"; }
+    if (eqIgnoreCase(essence, "application/pdf")) { return "pdf"; }
+    if (eqIgnoreCase(essence, "application/rtf")) { return "rtf"; }
+    if (eqIgnoreCase(essence, "application/msword")) { return "doc"; }
+    if (eqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) { return "docx"; }
+    if (eqIgnoreCase(essence, "application/vnd.ms-excel")) { return "xls"; }
+    if (eqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) { return "xlsx"; }
+    if (eqIgnoreCase(essence, "application/vnd.ms-powerpoint")) { return "ppt"; }
+    if (eqIgnoreCase(essence, "application/vnd.openxmlformats-officedocument.presentationml.presentation")) { return "pptx"; }
+    if (eqIgnoreCase(essence, "application/vnd.oasis.opendocument.text")) { return "odt"; }
+    if (eqIgnoreCase(essence, "application/vnd.oasis.opendocument.spreadsheet")) { return "ods"; }
+    if (eqIgnoreCase(essence, "application/vnd.oasis.opendocument.presentation")) { return "odp"; }
+    if (eqIgnoreCase(essence, "application/epub+zip")) { return "epub"; }
 
     // Archives & Binaries
-    if (mtypEqIgnoreCase(essence, "application/zip")) { return "zip"; }
-    if (mtypEqIgnoreCase(essence, "application/gzip")) { return "gz"; }
-    if (mtypEqIgnoreCase(essence, "application/x-tar")) { return "tar"; }
-    if (mtypEqIgnoreCase(essence, "application/x-brotli")) { return "br"; }
-    if (mtypEqIgnoreCase(essence, "application/zstd")) { return "zstd"; }
-    if (mtypEqIgnoreCase(essence, "application/x-7z-compressed")) { return "7z"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.rar")) { return "rar"; }
-    if (mtypEqIgnoreCase(essence, "application/x-bzip2")) { return "bz2"; }
-    if (mtypEqIgnoreCase(essence, "application/x-xz")) { return "xz"; }
-    if (mtypEqIgnoreCase(essence, "application/wasm")) { return "wasm"; }
-    if (mtypEqIgnoreCase(essence, "application/octet-stream")) { return "bin"; }
-    if (mtypEqIgnoreCase(essence, "application/x-msdownload")) { return "exe"; }
-    if (mtypEqIgnoreCase(essence, "application/x-apple-diskimage")) { return "dmg"; }
-    if (mtypEqIgnoreCase(essence, "application/x-iso9660-image")) { return "iso"; }
-    if (mtypEqIgnoreCase(essence, "application/x-debian-package")) { return "deb"; }
-    if (mtypEqIgnoreCase(essence, "application/x-redhat-package-manager")) { return "rpm"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.android.package-archive")) { return "apk"; }
-    if (mtypEqIgnoreCase(essence, "application/java-archive")) { return "jar"; }
+    if (eqIgnoreCase(essence, "application/zip")) { return "zip"; }
+    if (eqIgnoreCase(essence, "application/gzip")) { return "gz"; }
+    if (eqIgnoreCase(essence, "application/x-tar")) { return "tar"; }
+    if (eqIgnoreCase(essence, "application/x-brotli")) { return "br"; }
+    if (eqIgnoreCase(essence, "application/zstd")) { return "zstd"; }
+    if (eqIgnoreCase(essence, "application/x-7z-compressed")) { return "7z"; }
+    if (eqIgnoreCase(essence, "application/vnd.rar")) { return "rar"; }
+    if (eqIgnoreCase(essence, "application/x-bzip2")) { return "bz2"; }
+    if (eqIgnoreCase(essence, "application/x-xz")) { return "xz"; }
+    if (eqIgnoreCase(essence, "application/wasm")) { return "wasm"; }
+    if (eqIgnoreCase(essence, "application/octet-stream")) { return "bin"; }
+    if (eqIgnoreCase(essence, "application/x-msdownload")) { return "exe"; }
+    if (eqIgnoreCase(essence, "application/x-apple-diskimage")) { return "dmg"; }
+    if (eqIgnoreCase(essence, "application/x-iso9660-image")) { return "iso"; }
+    if (eqIgnoreCase(essence, "application/x-debian-package")) { return "deb"; }
+    if (eqIgnoreCase(essence, "application/x-redhat-package-manager")) { return "rpm"; }
+    if (eqIgnoreCase(essence, "application/vnd.android.package-archive")) { return "apk"; }
+    if (eqIgnoreCase(essence, "application/java-archive")) { return "jar"; }
 
     // Audio
-    if (mtypEqIgnoreCase(essence, "audio/mpeg")) { return "mp3"; }
-    if (mtypEqIgnoreCase(essence, "audio/wav")) { return "wav"; }
-    if (mtypEqIgnoreCase(essence, "audio/ogg")) { return "ogg"; }
-    if (mtypEqIgnoreCase(essence, "audio/opus")) { return "opus"; }
-    if (mtypEqIgnoreCase(essence, "audio/flac")) { return "flac"; }
-    if (mtypEqIgnoreCase(essence, "audio/aac")) { return "aac"; }
-    if (mtypEqIgnoreCase(essence, "audio/mp4")) { return "m4a"; }
-    if (mtypEqIgnoreCase(essence, "audio/webm")) { return "weba"; }
-    if (mtypEqIgnoreCase(essence, "audio/midi")) { return "midi"; }
+    if (eqIgnoreCase(essence, "audio/mpeg")) { return "mp3"; }
+    if (eqIgnoreCase(essence, "audio/wav")) { return "wav"; }
+    if (eqIgnoreCase(essence, "audio/ogg")) { return "ogg"; }
+    if (eqIgnoreCase(essence, "audio/opus")) { return "opus"; }
+    if (eqIgnoreCase(essence, "audio/flac")) { return "flac"; }
+    if (eqIgnoreCase(essence, "audio/aac")) { return "aac"; }
+    if (eqIgnoreCase(essence, "audio/mp4")) { return "m4a"; }
+    if (eqIgnoreCase(essence, "audio/webm")) { return "weba"; }
+    if (eqIgnoreCase(essence, "audio/midi")) { return "midi"; }
 
     // Video
-    if (mtypEqIgnoreCase(essence, "video/mp4")) { return "mp4"; }
-    if (mtypEqIgnoreCase(essence, "video/webm")) { return "webm"; }
-    if (mtypEqIgnoreCase(essence, "video/quicktime")) { return "mov"; }
-    if (mtypEqIgnoreCase(essence, "video/x-msvideo")) { return "avi"; }
-    if (mtypEqIgnoreCase(essence, "video/x-matroska")) { return "mkv"; }
-    if (mtypEqIgnoreCase(essence, "video/x-ms-wmv")) { return "wmv"; }
-    if (mtypEqIgnoreCase(essence, "video/x-flv")) { return "flv"; }
-    if (mtypEqIgnoreCase(essence, "video/ogg")) { return "ogv"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.apple.mpegurl")) { return "m3u8"; }
+    if (eqIgnoreCase(essence, "video/mp4")) { return "mp4"; }
+    if (eqIgnoreCase(essence, "video/webm")) { return "webm"; }
+    if (eqIgnoreCase(essence, "video/quicktime")) { return "mov"; }
+    if (eqIgnoreCase(essence, "video/x-msvideo")) { return "avi"; }
+    if (eqIgnoreCase(essence, "video/x-matroska")) { return "mkv"; }
+    if (eqIgnoreCase(essence, "video/x-ms-wmv")) { return "wmv"; }
+    if (eqIgnoreCase(essence, "video/x-flv")) { return "flv"; }
+    if (eqIgnoreCase(essence, "video/ogg")) { return "ogv"; }
+    if (eqIgnoreCase(essence, "application/vnd.apple.mpegurl")) { return "m3u8"; }
 
     // Fonts
-    if (mtypEqIgnoreCase(essence, "font/woff")) { return "woff"; }
-    if (mtypEqIgnoreCase(essence, "font/woff2")) { return "woff2"; }
-    if (mtypEqIgnoreCase(essence, "font/ttf")) { return "ttf"; }
-    if (mtypEqIgnoreCase(essence, "font/otf")) { return "otf"; }
-    if (mtypEqIgnoreCase(essence, "application/vnd.ms-fontobject")) { return "eot"; }
+    if (eqIgnoreCase(essence, "font/woff")) { return "woff"; }
+    if (eqIgnoreCase(essence, "font/woff2")) { return "woff2"; }
+    if (eqIgnoreCase(essence, "font/ttf")) { return "ttf"; }
+    if (eqIgnoreCase(essence, "font/otf")) { return "otf"; }
+    if (eqIgnoreCase(essence, "application/vnd.ms-fontobject")) { return "eot"; }
 
     // Config & Code
-    if (mtypEqIgnoreCase(essence, "text/yaml") || mtypEqIgnoreCase(essence, "application/yaml") || mtypEqIgnoreCase(essence, "application/x-yaml")) { return "yaml"; }
-    if (mtypEqIgnoreCase(essence, "application/toml")) { return "toml"; }
-    if (mtypEqIgnoreCase(essence, "application/x-sh")) { return "sh"; }
-    if (mtypEqIgnoreCase(essence, "text/x-python")) { return "py"; }
-    if (mtypEqIgnoreCase(essence, "text/x-rust")) { return "rs"; }
-    if (mtypEqIgnoreCase(essence, "text/x-cp")) { return "cp"; }
-    if (mtypEqIgnoreCase(essence, "text/x-zig")) { return "zig"; }
-    if (mtypEqIgnoreCase(essence, "text/x-c")) { return "c"; }
-    if (mtypEqIgnoreCase(essence, "text/x-c++")) { return "cpp"; }
-    if (mtypEqIgnoreCase(essence, "text/x-go")) { return "go"; }
-    if (mtypEqIgnoreCase(essence, "text/x-java-source")) { return "java"; }
-    if (mtypEqIgnoreCase(essence, "text/x-ruby")) { return "rb"; }
-    if (mtypEqIgnoreCase(essence, "application/x-httpd-php")) { return "php"; }
-    if (mtypEqIgnoreCase(essence, "application/sql")) { return "sql"; }
-    if (mtypEqIgnoreCase(essence, "application/graphql")) { return "graphql"; }
-    if (mtypEqIgnoreCase(essence, "text/x-protobuf")) { return "proto"; }
-    if (mtypEqIgnoreCase(essence, "application/x-x509-ca-cert")) { return "pem"; }
+    if (eqIgnoreCase(essence, "text/yaml") || eqIgnoreCase(essence, "application/yaml") || eqIgnoreCase(essence, "application/x-yaml")) { return "yaml"; }
+    if (eqIgnoreCase(essence, "application/toml")) { return "toml"; }
+    if (eqIgnoreCase(essence, "application/x-sh")) { return "sh"; }
+    if (eqIgnoreCase(essence, "text/x-python")) { return "py"; }
+    if (eqIgnoreCase(essence, "text/x-rust")) { return "rs"; }
+    if (eqIgnoreCase(essence, "text/x-cp")) { return "cp"; }
+    if (eqIgnoreCase(essence, "text/x-zig")) { return "zig"; }
+    if (eqIgnoreCase(essence, "text/x-c")) { return "c"; }
+    if (eqIgnoreCase(essence, "text/x-c++")) { return "cpp"; }
+    if (eqIgnoreCase(essence, "text/x-go")) { return "go"; }
+    if (eqIgnoreCase(essence, "text/x-java-source")) { return "java"; }
+    if (eqIgnoreCase(essence, "text/x-ruby")) { return "rb"; }
+    if (eqIgnoreCase(essence, "application/x-httpd-php")) { return "php"; }
+    if (eqIgnoreCase(essence, "application/sql")) { return "sql"; }
+    if (eqIgnoreCase(essence, "application/graphql")) { return "graphql"; }
+    if (eqIgnoreCase(essence, "text/x-protobuf")) { return "proto"; }
+    if (eqIgnoreCase(essence, "application/x-x509-ca-cert")) { return "pem"; }
 
     return null;
 }
@@ -628,26 +553,17 @@ pub fn parseMimeType(raw: string): MimeParts {
         subtype: "",
         charset_val: "",
     };
-    let ts: usize = 0;
-    let te: usize = 0;
-    mtypTrimBounds(raw, &ts, &te);
-    if (ts >= te) {
+    const s: string = trim(raw);
+    if (s.len == 0) {
         return empty;
     }
-    const s: string = raw[ts..te];
 
     // Split at first ';' to separate essence from parameters
-    let semi: usize = 0;
-    while (semi < s.len && s[semi] != 59) {
-        semi = semi + 1;
-    }
-    let es_s: usize = 0;
-    let es_e: usize = 0;
-    mtypTrimBounds(s[0..semi], &es_s, &es_e);
-    if (es_s >= es_e) {
+    const semi: usize = findByte(s, 59, 0) ?? s.len;
+    const essence: string = trim(s[0..semi]);
+    if (essence.len == 0) {
         return empty;
     }
-    const essence: string = s[es_s..es_e];
 
     // Find single '/' separating type and subtype
     let slash: i64 = -1;
@@ -681,37 +597,19 @@ pub fn parseMimeType(raw: string): MimeParts {
         if (s[p] == 59) {
             p = p + 1;
         }
-        let next_semi: usize = p;
-        while (next_semi < s.len && s[next_semi] != 59) {
-            next_semi = next_semi + 1;
-        }
+        const next_semi: usize = findByte(s, 59, p) ?? s.len;
         const seg: string = s[p..next_semi];
-        // Find '='
-        let eq: i64 = -1;
-        let k: usize = 0;
-        while (k < seg.len) {
-            if (seg[k] == 61) {
-                eq = k as i64;
-                break;
-            }
-            k = k + 1;
-        }
-        if (eq > 0) {
-            const eq_idx: usize = eq as usize;
-            let ks: usize = 0;
-            let ke: usize = 0;
-            mtypTrimBounds(seg[0..eq_idx], &ks, &ke);
-            const key: string = seg[ks..ke];
-            if (mtypEqIgnoreCase(key, "charset")) {
-                let vs: usize = 0;
-                let ve: usize = 0;
-                mtypTrimBounds(seg[(eq_idx + 1)..seg.len], &vs, &ve);
-                const raw_val: string = seg[(eq_idx + 1 + vs)..(eq_idx + 1 + ve)];
-                if (raw_val.len >= 2 && ((raw_val[0] == 34 && raw_val[raw_val.len - 1] == 34) ||
-                    (raw_val[0] == 39 && raw_val[raw_val.len - 1] == 39))) {
-                    charset_val = raw_val[1..(raw_val.len - 1)];
-                } else {
-                    charset_val = raw_val;
+        if (eq_idx := findByte(seg, 61, 0)) {
+            if (eq_idx > 0) {
+                const key: string = trim(seg[0..eq_idx]);
+                if (eqIgnoreCase(key, "charset")) {
+                    const raw_val: string = trim(seg[(eq_idx + 1)..seg.len]);
+                    if (raw_val.len >= 2 && ((raw_val[0] == 34 && raw_val[raw_val.len - 1] == 34) ||
+                        (raw_val[0] == 39 && raw_val[raw_val.len - 1] == 39))) {
+                        charset_val = raw_val[1..(raw_val.len - 1)];
+                    } else {
+                        charset_val = raw_val;
+                    }
                 }
             }
         }
@@ -756,21 +654,21 @@ pub fn charset(mime_type: string): string? {
     if (!parts.valid) {
         return null;
     }
-    if (mtypEqIgnoreCase(parts.type_part, "text")) {
+    if (eqIgnoreCase(parts.type_part, "text")) {
         return "UTF-8";
     }
-    if (mtypEqIgnoreCase(parts.essence, "application/json") ||
-        mtypEqIgnoreCase(parts.essence, "application/javascript") ||
-        mtypEqIgnoreCase(parts.essence, "application/ecmascript") ||
-        mtypEqIgnoreCase(parts.essence, "application/xml") ||
-        mtypEqIgnoreCase(parts.essence, "application/xhtml+xml") ||
-        mtypEqIgnoreCase(parts.essence, "application/graphql") ||
-        mtypEqIgnoreCase(parts.essence, "application/sql") ||
-        mtypEqIgnoreCase(parts.essence, "application/toml") ||
-        mtypEqIgnoreCase(parts.essence, "application/yaml") ||
-        mtypEqIgnoreCase(parts.essence, "application/x-yaml") ||
-        mtypEqIgnoreCase(parts.essence, "application/x-www-form-urlencoded") ||
-        mtypEqIgnoreCase(parts.essence, "image/svg+xml")) {
+    if (eqIgnoreCase(parts.essence, "application/json") ||
+        eqIgnoreCase(parts.essence, "application/javascript") ||
+        eqIgnoreCase(parts.essence, "application/ecmascript") ||
+        eqIgnoreCase(parts.essence, "application/xml") ||
+        eqIgnoreCase(parts.essence, "application/xhtml+xml") ||
+        eqIgnoreCase(parts.essence, "application/graphql") ||
+        eqIgnoreCase(parts.essence, "application/sql") ||
+        eqIgnoreCase(parts.essence, "application/toml") ||
+        eqIgnoreCase(parts.essence, "application/yaml") ||
+        eqIgnoreCase(parts.essence, "application/x-yaml") ||
+        eqIgnoreCase(parts.essence, "application/x-www-form-urlencoded") ||
+        eqIgnoreCase(parts.essence, "image/svg+xml")) {
         return "UTF-8";
     }
     if (mtypEndsWithIgnoreCase(parts.subtype, "+json") ||
@@ -781,16 +679,16 @@ pub fn charset(mime_type: string): string? {
 }
 
 fn mtypIsTopLevelType(t: string): bool {
-    return mtypEqIgnoreCase(t, "text") ||
-        mtypEqIgnoreCase(t, "image") ||
-        mtypEqIgnoreCase(t, "audio") ||
-        mtypEqIgnoreCase(t, "video") ||
-        mtypEqIgnoreCase(t, "font") ||
-        mtypEqIgnoreCase(t, "application") ||
-        mtypEqIgnoreCase(t, "multipart") ||
-        mtypEqIgnoreCase(t, "message") ||
-        mtypEqIgnoreCase(t, "model") ||
-        mtypEqIgnoreCase(t, "example") ||
+    return eqIgnoreCase(t, "text") ||
+        eqIgnoreCase(t, "image") ||
+        eqIgnoreCase(t, "audio") ||
+        eqIgnoreCase(t, "video") ||
+        eqIgnoreCase(t, "font") ||
+        eqIgnoreCase(t, "application") ||
+        eqIgnoreCase(t, "multipart") ||
+        eqIgnoreCase(t, "message") ||
+        eqIgnoreCase(t, "model") ||
+        eqIgnoreCase(t, "example") ||
         (t.len >= 2 && (t[0] == 120 || t[0] == 88) && t[1] == 45);
 }
 
@@ -802,13 +700,10 @@ pub fn contentType(type_or_ext: string, out: []u8): usize {
     if (type_or_ext.len == 0 || out.len == 0) {
         return 0;
     }
-    let ts: usize = 0;
-    let te: usize = 0;
-    mtypTrimBounds(type_or_ext, &ts, &te);
-    if (ts >= te) {
+    const trimmed: string = trim(type_or_ext);
+    if (trimmed.len == 0) {
         return 0;
     }
-    const trimmed: string = type_or_ext[ts..te];
 
     let base_mime: string = "";
     let has_charset: bool = false;
@@ -825,12 +720,11 @@ pub fn contentType(type_or_ext: string, out: []u8): usize {
         base_mime = looked ?? "";
     }
 
-    let pos: usize = 0;
-    mtypWriteStr(out, &pos, base_mime);
+    let pos: usize = writeStr(base_mime, out, 0);
     if (!has_charset) {
         const cs = charset(base_mime);
         if (cs != null) {
-            mtypWriteStr(out, &pos, "; charset=utf-8");
+            pos = writeStr("; charset=utf-8", out, pos);
         }
     }
     return pos;
@@ -843,7 +737,7 @@ pub fn isCompressible(mime_type: string): bool {
     if (!parts.valid) {
         return false;
     }
-    if (mtypEqIgnoreCase(parts.type_part, "text")) {
+    if (eqIgnoreCase(parts.type_part, "text")) {
         return true;
     }
     if (mtypEndsWithIgnoreCase(parts.subtype, "+json") ||
@@ -851,27 +745,27 @@ pub fn isCompressible(mime_type: string): bool {
         mtypEndsWithIgnoreCase(parts.subtype, "+text")) {
         return true;
     }
-    if (mtypEqIgnoreCase(parts.essence, "application/json") ||
-        mtypEqIgnoreCase(parts.essence, "application/javascript") ||
-        mtypEqIgnoreCase(parts.essence, "application/ecmascript") ||
-        mtypEqIgnoreCase(parts.essence, "application/xml") ||
-        mtypEqIgnoreCase(parts.essence, "application/wasm") ||
-        mtypEqIgnoreCase(parts.essence, "application/graphql") ||
-        mtypEqIgnoreCase(parts.essence, "application/sql") ||
-        mtypEqIgnoreCase(parts.essence, "application/toml") ||
-        mtypEqIgnoreCase(parts.essence, "application/yaml") ||
-        mtypEqIgnoreCase(parts.essence, "application/x-yaml") ||
-        mtypEqIgnoreCase(parts.essence, "application/rtf") ||
-        mtypEqIgnoreCase(parts.essence, "application/x-sh") ||
-        mtypEqIgnoreCase(parts.essence, "application/x-www-form-urlencoded") ||
-        mtypEqIgnoreCase(parts.essence, "application/vnd.apple.mpegurl") ||
-        mtypEqIgnoreCase(parts.essence, "application/vnd.ms-fontobject") ||
-        mtypEqIgnoreCase(parts.essence, "image/svg+xml") ||
-        mtypEqIgnoreCase(parts.essence, "image/bmp") ||
-        mtypEqIgnoreCase(parts.essence, "image/x-icon") ||
-        mtypEqIgnoreCase(parts.essence, "image/vnd.microsoft.icon") ||
-        mtypEqIgnoreCase(parts.essence, "font/ttf") ||
-        mtypEqIgnoreCase(parts.essence, "font/otf")) {
+    if (eqIgnoreCase(parts.essence, "application/json") ||
+        eqIgnoreCase(parts.essence, "application/javascript") ||
+        eqIgnoreCase(parts.essence, "application/ecmascript") ||
+        eqIgnoreCase(parts.essence, "application/xml") ||
+        eqIgnoreCase(parts.essence, "application/wasm") ||
+        eqIgnoreCase(parts.essence, "application/graphql") ||
+        eqIgnoreCase(parts.essence, "application/sql") ||
+        eqIgnoreCase(parts.essence, "application/toml") ||
+        eqIgnoreCase(parts.essence, "application/yaml") ||
+        eqIgnoreCase(parts.essence, "application/x-yaml") ||
+        eqIgnoreCase(parts.essence, "application/rtf") ||
+        eqIgnoreCase(parts.essence, "application/x-sh") ||
+        eqIgnoreCase(parts.essence, "application/x-www-form-urlencoded") ||
+        eqIgnoreCase(parts.essence, "application/vnd.apple.mpegurl") ||
+        eqIgnoreCase(parts.essence, "application/vnd.ms-fontobject") ||
+        eqIgnoreCase(parts.essence, "image/svg+xml") ||
+        eqIgnoreCase(parts.essence, "image/bmp") ||
+        eqIgnoreCase(parts.essence, "image/x-icon") ||
+        eqIgnoreCase(parts.essence, "image/vnd.microsoft.icon") ||
+        eqIgnoreCase(parts.essence, "font/ttf") ||
+        eqIgnoreCase(parts.essence, "font/otf")) {
         return true;
     }
     return false;

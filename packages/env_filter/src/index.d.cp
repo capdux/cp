@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { trim, eqIgnoreCase, strEq, startsWith, findByte } from "cap:ascii";
 export enum LogLevel {
     Off = 0,
     Error = 1,
@@ -15,14 +16,8 @@ export class FilterDirective {
 }
 
 export fn efltLevelRank(lvl: LogLevel): u8;
-export fn efltIsSpace(c: u8): bool;
-export fn efltTrim(s: string): string;
-export fn efltToLower(c: u8): u8;
-export fn efltEqIgnoreCase(a: string, b: string): bool;
-export fn efltStrEq(a: string, b: string): bool;
 export fn parseLogLevel(s: string): LogLevel?;
 export fn efltMatchesTarget(target: string, directive_target: string): bool;
-export fn efltFindByte(s: string, needle: u8): usize?;
 export class EnvFilter {
     directives: [32]FilterDirective,
     count: usize,

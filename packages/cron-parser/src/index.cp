@@ -1,58 +1,16 @@
 // @cap/cron-parser — Zero-heap 5-field standard Cron expression parser & time matcher.
 // Clean-room MIT CP implementation modeled on npm `cron-parser` v4.
 
-fn crnIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
+import { isSpace, eqIgnoreCase, trim, findByte } from "cap:ascii";
+import { parseU16 } from "cap:fmt";
 
-fn crnToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
-}
-
-fn crnEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (crnToLower(a[i]) != crnToLower(b[i])) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn crnTrim(s: string): string {
-    let start: usize = 0;
-    while (start < s.len && crnIsSpace(s[start])) {
-        start = start + 1;
-    }
-    let end: usize = s.len;
-    while (end > start && crnIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
-}
-
-// Parses a non-empty ASCII unsigned integer; returns -1 on invalid input or overflow.
+// Parses a non-empty ASCII unsigned integer (max 4 digits, no '+'); returns -1 on invalid input.
 fn crnParseUint(s: string): i32 {
-    if (s.len == 0 || s.len > 4) { return -1; }
-    let val: i32 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        let c = s[i];
-        if (c < 48 || c > 57) { return -1; }
-        val = val * 10 + ((c - 48) as i32);
-        i = i + 1;
+    if (s.len == 0 || s.len > 4 || s[0] == 43) { return -1; }
+    if (v := parseU16(s)) {
+        return v as i32;
     }
-    return val;
-}
-
-fn crnFindByte(s: string, target: u8): usize {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) { return i; }
-        i = i + 1;
-    }
-    return s.len;
+    return -1;
 }
 
 fn crnDaysInMonth(month: u8): u8 {
@@ -83,15 +41,14 @@ fn crnParseField(
             if (item.len == 0) { return 0; }
 
             // Check optional '/step'
-            let slash = crnFindByte(item, 47); // '/'
             let base = item;
             let step: i32 = 1;
             let has_step = false;
-            if (slash < item.len) {
+            if (slash := findByte(item, 47, 0)) { // '/'
                 base = item[0..slash];
                 let step_str = item[slash + 1..item.len];
                 // Reject duplicate '/'
-                if (crnFindByte(step_str, 47) < step_str.len) { return 0; }
+                if (findByte(step_str, 47, 0) != null) { return 0; }
                 step = crnParseUint(step_str);
                 if (step <= 0) { return 0; }
                 has_step = true;
@@ -105,11 +62,10 @@ fn crnParseField(
                 lo = min_val;
                 hi = max_val;
             } else {
-                let dash = crnFindByte(base, 45); // '-'
-                if (dash < base.len) {
+                if (dash := findByte(base, 45, 0)) { // '-'
                     let a_str = base[0..dash];
                     let b_str = base[dash + 1..base.len];
-                    if (crnFindByte(b_str, 45) < b_str.len) { return 0; }
+                    if (findByte(b_str, 45, 0) != null) { return 0; }
                     let a = crnParseUint(a_str);
                     let b = crnParseUint(b_str);
                     if (a < min_val || a > allow_max || b < min_val || b > allow_max || a > b) {
@@ -168,20 +124,20 @@ pub struct CronSchedule {
 
 /// Parses a 5-field Cron expression (or `@yearly`/`@annually`/`@monthly`/`@weekly`/`@daily`/`@midnight`/`@hourly`).
 pub fn parseCron(expr: string): CronSchedule {
-    let trimmed = crnTrim(expr);
+    let trimmed = trim(expr);
     if (trimmed.len == 0) { return CronSchedule.invalid(); }
 
     let resolved = trimmed;
     if (trimmed[0] == 64) { // '@' preset alias
-        if (crnEqIgnoreCase(trimmed, "@yearly") || crnEqIgnoreCase(trimmed, "@annually")) {
+        if (eqIgnoreCase(trimmed, "@yearly") || eqIgnoreCase(trimmed, "@annually")) {
             resolved = "0 0 1 1 *";
-        } else if (crnEqIgnoreCase(trimmed, "@monthly")) {
+        } else if (eqIgnoreCase(trimmed, "@monthly")) {
             resolved = "0 0 1 * *";
-        } else if (crnEqIgnoreCase(trimmed, "@weekly")) {
+        } else if (eqIgnoreCase(trimmed, "@weekly")) {
             resolved = "0 0 * * 0";
-        } else if (crnEqIgnoreCase(trimmed, "@daily") || crnEqIgnoreCase(trimmed, "@midnight")) {
+        } else if (eqIgnoreCase(trimmed, "@daily") || eqIgnoreCase(trimmed, "@midnight")) {
             resolved = "0 0 * * *";
-        } else if (crnEqIgnoreCase(trimmed, "@hourly")) {
+        } else if (eqIgnoreCase(trimmed, "@hourly")) {
             resolved = "0 * * * *";
         } else {
             return CronSchedule.invalid();
@@ -193,12 +149,12 @@ pub fn parseCron(expr: string): CronSchedule {
     let fcount: usize = 0;
     let i: usize = 0;
     while (i < resolved.len) {
-        while (i < resolved.len && crnIsSpace(resolved[i])) {
+        while (i < resolved.len && isSpace(resolved[i])) {
             i = i + 1;
         }
         if (i >= resolved.len) { break; }
         let start = i;
-        while (i < resolved.len && !crnIsSpace(resolved[i])) {
+        while (i < resolved.len && !isSpace(resolved[i])) {
             i = i + 1;
         }
         if (fcount >= 5) {

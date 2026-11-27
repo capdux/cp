@@ -1,6 +1,9 @@
 // @cap/wkt — Zero-heap GIS Well-Known Text (WKT) parser, formatter & bounding box.
 // Clean-room MIT implementation modeled on crates.io `wkt` v0.11.
 
+import { isSpace, isAlpha, isDigit, toLowerByte, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub const WKT_POINT: u8 = 1;
 pub const WKT_LINESTRING: u8 = 2;
 pub const WKT_POLYGON: u8 = 3;
@@ -52,48 +55,21 @@ fn wktEmptyGeom(kind: u8): WktGeometry {
     };
 }
 
-fn wktIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn wktIsAlpha(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-}
-
-fn wktIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn wktToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
-}
-
 fn wktSkipWs(s: string, pos: *usize) {
     let i: usize = pos.*;
-    while (i < s.len && wktIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i = i + 1;
     }
     pos.* = i;
-}
-
-fn wktWordEq(buf: []const u8, len: usize, lit: string): bool {
-    if (len != lit.len) { return false; }
-    let i: usize = 0;
-    while (i < len) {
-        if (buf[i] != lit[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn wktReadWord(s: string, pos: *usize, out: []u8): usize {
     wktSkipWs(s, pos);
     let i: usize = pos.*;
     let n: usize = 0;
-    while (i < s.len && wktIsAlpha(s[i])) {
+    while (i < s.len && isAlpha(s[i])) {
         if (n >= out.len) { return 0; }
-        out[n] = wktToLower(s[i]);
+        out[n] = toLowerByte(s[i]);
         n = n + 1;
         i = i + 1;
     }
@@ -116,7 +92,7 @@ fn wktParseNumber(s: string, pos: *usize, out: *f64): bool {
 
     let val: f64 = 0.0;
     let has_digits: bool = false;
-    while (i < s.len && wktIsDigit(s[i])) {
+    while (i < s.len && isDigit(s[i])) {
         has_digits = true;
         val = val * 10.0 + ((s[i] - 48) as f64);
         i = i + 1;
@@ -126,7 +102,7 @@ fn wktParseNumber(s: string, pos: *usize, out: *f64): bool {
         i = i + 1;
         let scale: f64 = 0.1;
         let has_frac: bool = false;
-        while (i < s.len && wktIsDigit(s[i])) {
+        while (i < s.len && isDigit(s[i])) {
             has_frac = true;
             has_digits = true;
             val = val + ((s[i] - 48) as f64) * scale;
@@ -150,7 +126,7 @@ fn wktParseNumber(s: string, pos: *usize, out: *f64): bool {
         }
         let exp_val: u32 = 0;
         let has_exp: bool = false;
-        while (i < s.len && wktIsDigit(s[i])) {
+        while (i < s.len && isDigit(s[i])) {
             has_exp = true;
             if (exp_val < 300) {
                 exp_val = exp_val * 10 + ((s[i] - 48) as u32);
@@ -189,58 +165,23 @@ fn wktConsumeChar(s: string, pos: *usize, ch: u8): bool {
     return true;
 }
 
-fn wktWriteStr(out: []u8, pos: usize, s: string): usize {
-    let i: usize = 0;
-    let p: usize = pos;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
-
-fn wktWriteU64(out: []u8, pos: usize, val: u64): usize {
-    let tmp: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let n: usize = 0;
-    let v: u64 = val;
-    if (v == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            tmp[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n = n + 1;
-        }
-    }
-    let p: usize = pos;
-    let i: usize = n;
-    while (i > 0 && p < out.len) {
-        i = i - 1;
-        out[p] = tmp[i];
-        p = p + 1;
-    }
-    return p;
-}
-
 fn wktWriteF64(out: []u8, pos: usize, val: f64): usize {
     let p: usize = pos;
     let v: f64 = val;
     if (v == 0.0) {
-        return wktWriteStr(out, p, "0");
+        return writeStr("0", out, p);
     }
     if (v < 0.0) {
-        p = wktWriteStr(out, p, "-");
+        p = writeStr("-", out, p);
         v = -v;
     }
     let scaled: u64 = ((v * 1000000.0) + 0.5) as u64;
     let ipart: u64 = scaled / 1000000;
     let fpart: u64 = scaled % 1000000;
-    p = wktWriteU64(out, p, ipart);
+    p = writeU64(ipart, out, p);
     if (fpart > 0) {
-        p = wktWriteStr(out, p, ".");
-        let fbuf: [6]u8 = [48, 48, 48, 48, 48, 48];
+        p = writeStr(".", out, p);
+        let fbuf: [6]u8 = undefined;
         let rem: u64 = fpart;
         let idx: usize = 6;
         while (idx > 0) {
@@ -252,19 +193,14 @@ fn wktWriteF64(out: []u8, pos: usize, val: f64): usize {
         while (trim_len > 0 && fbuf[trim_len - 1] == 48) {
             trim_len = trim_len - 1;
         }
-        let k: usize = 0;
-        while (k < trim_len && p < out.len) {
-            out[p] = fbuf[k];
-            p = p + 1;
-            k = k + 1;
-        }
+        p = writeStr(fbuf[0..trim_len], out, p);
     }
     return p;
 }
 
 fn wktWriteCoord(out: []u8, pos: usize, c: Coord2D): usize {
     let p: usize = wktWriteF64(out, pos, c.x);
-    p = wktWriteStr(out, p, " ");
+    p = writeStr(" ", out, p);
     p = wktWriteF64(out, p, c.y);
     return p;
 }
@@ -273,25 +209,25 @@ fn wktWriteCoord(out: []u8, pos: usize, c: Coord2D): usize {
 /// returning `null` on unknown geometry types, malformed brackets, empty coordinate lists, or trailing garbage.
 pub fn parseWkt(input: string): WktGeometry? {
     let pos: usize = 0;
-    let wbuf: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let wbuf: [16]u8 = undefined;
     let wlen: usize = wktReadWord(input, &pos, wbuf[0..16]);
     if (wlen == 0) { return null; }
 
     let kind: u8 = 0;
-    if (wktWordEq(wbuf[0..16], wlen, "point")) { kind = WKT_POINT; }
-    else if (wktWordEq(wbuf[0..16], wlen, "linestring")) { kind = WKT_LINESTRING; }
-    else if (wktWordEq(wbuf[0..16], wlen, "polygon")) { kind = WKT_POLYGON; }
-    else if (wktWordEq(wbuf[0..16], wlen, "multipoint")) { kind = WKT_MULTIPOINT; }
+    if (strEq(wbuf[0..wlen], "point")) { kind = WKT_POINT; }
+    else if (strEq(wbuf[0..wlen], "linestring")) { kind = WKT_LINESTRING; }
+    else if (strEq(wbuf[0..wlen], "polygon")) { kind = WKT_POLYGON; }
+    else if (strEq(wbuf[0..wlen], "multipoint")) { kind = WKT_MULTIPOINT; }
     else { return null; }
 
     wktSkipWs(input, &pos);
     if (pos >= input.len) { return null; }
 
     // Check for EMPTY
-    if (wktIsAlpha(input[pos])) {
-        let ebuf: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    if (isAlpha(input[pos])) {
+        let ebuf: [16]u8 = undefined;
         let elen: usize = wktReadWord(input, &pos, ebuf[0..16]);
-        if (!wktWordEq(ebuf[0..16], elen, "empty")) { return null; }
+        if (!strEq(ebuf[0..elen], "empty")) { return null; }
         wktSkipWs(input, &pos);
         if (pos != input.len) { return null; }
         return wktEmptyGeom(kind);
@@ -382,58 +318,58 @@ pub fn parseWkt(input: string): WktGeometry? {
 /// Formats `g` into standard WKT text in `out`, returning the number of bytes written.
 pub fn formatWkt(g: WktGeometry, out: []u8): usize {
     let p: usize = 0;
-    if (g.kind == WKT_POINT) { p = wktWriteStr(out, p, "POINT"); }
-    else if (g.kind == WKT_LINESTRING) { p = wktWriteStr(out, p, "LINESTRING"); }
-    else if (g.kind == WKT_POLYGON) { p = wktWriteStr(out, p, "POLYGON"); }
-    else if (g.kind == WKT_MULTIPOINT) { p = wktWriteStr(out, p, "MULTIPOINT"); }
+    if (g.kind == WKT_POINT) { p = writeStr("POINT", out, p); }
+    else if (g.kind == WKT_LINESTRING) { p = writeStr("LINESTRING", out, p); }
+    else if (g.kind == WKT_POLYGON) { p = writeStr("POLYGON", out, p); }
+    else if (g.kind == WKT_MULTIPOINT) { p = writeStr("MULTIPOINT", out, p); }
     else { return 0; }
 
     if (g.is_empty || g.coord_count == 0) {
-        return wktWriteStr(out, p, " EMPTY");
+        return writeStr(" EMPTY", out, p);
     }
 
     if (g.kind == WKT_POINT) {
-        p = wktWriteStr(out, p, " (");
+        p = writeStr(" (", out, p);
         p = wktWriteCoord(out, p, g.coords[0]);
-        p = wktWriteStr(out, p, ")");
+        p = writeStr(")", out, p);
         return p;
     }
 
     if (g.kind == WKT_LINESTRING) {
-        p = wktWriteStr(out, p, " (");
+        p = writeStr(" (", out, p);
         let i: usize = 0;
         while (i < g.coord_count) {
-            if (i > 0) { p = wktWriteStr(out, p, ", "); }
+            if (i > 0) { p = writeStr(", ", out, p); }
             p = wktWriteCoord(out, p, g.coords[i]);
             i = i + 1;
         }
-        p = wktWriteStr(out, p, ")");
+        p = writeStr(")", out, p);
         return p;
     }
 
     if (g.kind == WKT_POLYGON) {
-        p = wktWriteStr(out, p, " ((");
+        p = writeStr(" ((", out, p);
         let i: usize = 0;
         while (i < g.coord_count) {
-            if (i > 0) { p = wktWriteStr(out, p, ", "); }
+            if (i > 0) { p = writeStr(", ", out, p); }
             p = wktWriteCoord(out, p, g.coords[i]);
             i = i + 1;
         }
-        p = wktWriteStr(out, p, "))");
+        p = writeStr("))", out, p);
         return p;
     }
 
     // WKT_MULTIPOINT
-    p = wktWriteStr(out, p, " (");
+    p = writeStr(" (", out, p);
     let i: usize = 0;
     while (i < g.coord_count) {
-        if (i > 0) { p = wktWriteStr(out, p, ", "); }
-        p = wktWriteStr(out, p, "(");
+        if (i > 0) { p = writeStr(", ", out, p); }
+        p = writeStr("(", out, p);
         p = wktWriteCoord(out, p, g.coords[i]);
-        p = wktWriteStr(out, p, ")");
+        p = writeStr(")", out, p);
         i = i + 1;
     }
-    p = wktWriteStr(out, p, ")");
+    p = writeStr(")", out, p);
     return p;
 }
 

@@ -1,34 +1,11 @@
 // @cap/sanitize-uri — Zero-allocation safe URI sanitizer & percent-encoder in pure CP
 // Clean-room MIT implementation of npm `micromark-util-sanitize-uri` (#563, 101M/wk).
 
-fn surToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn surEqLower(a: string, target: string): bool {
-    if (a.len != target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (surToLower(a[i]) != target[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn surIsHex(b: u8): bool {
-    return (b >= 48 && b <= 57) || (b >= 65 && b <= 70) || (b >= 97 && b <= 102);
-}
+import { toLowerByte, strEq, isHexDigit, isAlnum, hexCharUpper } from "cap:ascii";
 
 fn surIsSafeUriByte(b: u8): bool {
     // Unreserved + RFC 3986 reserved characters allowed in URLs
-    if ((b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57)) {
+    if (isAlnum(b)) {
         return true;
     }
     if (b == 45 || b == 46 || b == 95 || b == 126) { return true; } // - . _ ~
@@ -37,13 +14,6 @@ fn surIsSafeUriByte(b: u8): bool {
         return true; // ! $ & ' ( ) * + , ; =
     }
     return false;
-}
-
-fn surHexDigit(n: u8): u8 {
-    if (n < 10) {
-        return 48 + n;
-    }
-    return 55 + n; // 'A'..'F'
 }
 
 /// Returns `true` if `uri` uses a safe protocol (relative URI, `http`, `https`, `mailto`, `tel`, `irc`, `ircs`, `xmpp`, `ftp`).
@@ -78,7 +48,7 @@ pub fn isSafeUri(uri: string): bool {
     }
 
     // Extract scheme ignoring embedded ASCII control chars / whitespace (obfuscation defense)
-    let scheme_buf: [32]u8 = [0; 32];
+    let scheme_buf: [32]u8 = undefined;
     let slen: usize = 0;
     let k: usize = 0;
     while (k < colon) {
@@ -87,16 +57,16 @@ pub fn isSafeUri(uri: string): bool {
             if (slen >= 32) {
                 return false;
             }
-            scheme_buf[slen] = surToLower(b);
+            scheme_buf[slen] = toLowerByte(b);
             slen += 1;
         }
         k += 1;
     }
     const scheme = scheme_buf[0..slen] as string;
-    if (surEqLower(scheme, "http") || surEqLower(scheme, "https") ||
-        surEqLower(scheme, "mailto") || surEqLower(scheme, "tel") ||
-        surEqLower(scheme, "irc") || surEqLower(scheme, "ircs") ||
-        surEqLower(scheme, "xmpp") || surEqLower(scheme, "ftp")) {
+    if (strEq(scheme, "http") || strEq(scheme, "https") ||
+        strEq(scheme, "mailto") || strEq(scheme, "tel") ||
+        strEq(scheme, "irc") || strEq(scheme, "ircs") ||
+        strEq(scheme, "xmpp") || strEq(scheme, "ftp")) {
         return true;
     }
     return false;
@@ -121,7 +91,7 @@ pub fn sanitizeUri(uri: string, out: []u8): usize {
     let i: usize = 0;
     while (i < s.len) {
         const b = s[i];
-        if (b == 37 && i + 2 < s.len && surIsHex(s[i + 1]) && surIsHex(s[i + 2])) {
+        if (b == 37 && i + 2 < s.len && isHexDigit(s[i + 1]) && isHexDigit(s[i + 2])) {
             // Preserve existing valid %XX sequence
             if (p + 2 < out.len) {
                 out[p] = 37;
@@ -140,8 +110,8 @@ pub fn sanitizeUri(uri: string, out: []u8): usize {
         } else {
             if (p + 2 < out.len) {
                 out[p] = 37; // '%'
-                out[p + 1] = surHexDigit((b >> 4) & 0x0F);
-                out[p + 2] = surHexDigit(b & 0x0F);
+                out[p + 1] = hexCharUpper((b >> 4) & 0x0F);
+                out[p + 2] = hexCharUpper(b & 0x0F);
                 p += 3;
             }
         }

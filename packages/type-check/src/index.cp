@@ -1,6 +1,8 @@
 // @cap/type-check — Zero-allocation runtime type expression parser & checker in pure CP
 // Clean-room MIT implementation of npm `type-check` (#241, 195M/wk, ESLint core dep).
 
+import { trim, strEq, startsWith } from "cap:ascii";
+
 pub enum DynValueKind {
     Undefined,
     Null,
@@ -28,46 +30,23 @@ pub struct DynValue {
     }
 }
 
-fn tckTrim(s: string): string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && (s[a] == 32 || s[a] == 9 || s[a] == 10 || s[a] == 13)) { a += 1; }
-    while (b > a && (s[b - 1] == 32 || s[b - 1] == 9 || s[b - 1] == 10 || s[b - 1] == 13)) { b -= 1; }
-    return s[a..b];
-}
-
-fn tckStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
-fn tckStartsWith(s: string, prefix: string): bool {
-    if (prefix.len > s.len) { return false; }
-    return tckStrEq(s[0..prefix.len], prefix);
-}
-
 fn tckMatchAtom(atom: string, val: DynValue): bool {
-    const t = tckTrim(atom);
+    const t = trim(atom);
     if (t.len == 0) { return false; }
-    if (tckStrEq(t, "*")) { return true; }
-    if (tckStrEq(t, "Undefined")) { return val.kind == .Undefined; }
-    if (tckStrEq(t, "Null")) { return val.kind == .Null; }
-    if (tckStrEq(t, "Boolean")) { return val.kind == .Boolean; }
-    if (tckStrEq(t, "Number")) { return val.kind == .Number || val.kind == .Int || val.kind == .Float; }
-    if (tckStrEq(t, "Int")) { return val.kind == .Int; }
-    if (tckStrEq(t, "Float")) { return val.kind == .Float || val.kind == .Number; }
-    if (tckStrEq(t, "String")) { return val.kind == .String; }
-    if (tckStrEq(t, "Array")) { return val.kind == .Array; }
-    if (tckStrEq(t, "Object")) { return val.kind == .Object; }
-    if (tckStrEq(t, "Function")) { return val.kind == .Function; }
+    if (strEq(t, "*")) { return true; }
+    if (strEq(t, "Undefined")) { return val.kind == .Undefined; }
+    if (strEq(t, "Null")) { return val.kind == .Null; }
+    if (strEq(t, "Boolean")) { return val.kind == .Boolean; }
+    if (strEq(t, "Number")) { return val.kind == .Number || val.kind == .Int || val.kind == .Float; }
+    if (strEq(t, "Int")) { return val.kind == .Int; }
+    if (strEq(t, "Float")) { return val.kind == .Float || val.kind == .Number; }
+    if (strEq(t, "String")) { return val.kind == .String; }
+    if (strEq(t, "Array")) { return val.kind == .Array; }
+    if (strEq(t, "Object")) { return val.kind == .Object; }
+    if (strEq(t, "Function")) { return val.kind == .Function; }
 
     // Maybe T => Undefined | Null | T
-    if (tckStartsWith(t, "Maybe ")) {
+    if (startsWith(t, "Maybe ")) {
         if (val.kind == .Undefined || val.kind == .Null) {
             return true;
         }
@@ -82,7 +61,7 @@ fn tckMatchAtom(atom: string, val: DynValue): bool {
         if (val.array_len == 0) {
             return true; // Empty array satisfies any [T]
         }
-        const inner = tckTrim(t[1..(t.len - 1)]);
+        const inner = trim(t[1..(t.len - 1)]);
         return typeCheck(inner, DynValue.of(val.elem_kind));
     }
 
@@ -101,7 +80,7 @@ fn tckMatchAtom(atom: string, val: DynValue): bool {
 
 /// Validates `val` against a `type-check` type expression (supporting `|`, `Maybe T`, `[T]`, `*`, `(T)`).
 pub fn typeCheck(type_expr: string, val: DynValue): bool {
-    const s = tckTrim(type_expr);
+    const s = trim(type_expr);
     if (s.len == 0) {
         return false;
     }
@@ -133,7 +112,7 @@ pub fn typeCheck(type_expr: string, val: DynValue): bool {
 
 /// Validates syntactic well-formedness (balanced delimiters & non-empty union branches) of a type expression.
 pub fn isValidTypeExpr(type_expr: string): bool {
-    const s = tckTrim(type_expr);
+    const s = trim(type_expr);
     if (s.len == 0) { return false; }
     let paren: i32 = 0;
     let bracket: i32 = 0;

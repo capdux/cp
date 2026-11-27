@@ -2,57 +2,11 @@
 // Clean-room MIT implementation inspired by npm `enquirer` v2.
 // Reuses `@cap/picocolors` (`PicoFormatter`) for ANSI prompt symbol and selection highlighting.
 
+import { trim, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { PicoFormatter } from "../../picocolors/src/index.cp";
 
 pub const ENQ_MAX_CHOICES: usize = 16;
-
-fn enqToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn enqIsSpace(b: u8): bool {
-    return b == 32 || b == 9 || b == 13 || b == 10;
-}
-
-fn enqTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && enqIsSpace(s[start])) {
-        start = start + 1;
-    }
-    while (end > start && enqIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
-}
-
-fn enqEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (enqToLower(a[i]) != enqToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn enqWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
 
 /// Interactive yes/no confirmation prompt state machine.
 pub struct ConfirmPrompt {
@@ -72,20 +26,20 @@ pub struct ConfirmPrompt {
     /// - `n`, `no`, `false`, `0` (case-insensitive) -> `false`
     /// - Otherwise -> `null`
     pub fn parseAnswer(input: string): bool? {
-        let trimmed = enqTrim(input);
+        let trimmed = trim(input);
         if (trimmed.len == 0) {
             return _.initial;
         }
-        if (enqEqIgnoreCase(trimmed, "y") ||
-            enqEqIgnoreCase(trimmed, "yes") ||
-            enqEqIgnoreCase(trimmed, "true") ||
-            enqEqIgnoreCase(trimmed, "1")) {
+        if (eqIgnoreCase(trimmed, "y") ||
+            eqIgnoreCase(trimmed, "yes") ||
+            eqIgnoreCase(trimmed, "true") ||
+            eqIgnoreCase(trimmed, "1")) {
             return true;
         }
-        if (enqEqIgnoreCase(trimmed, "n") ||
-            enqEqIgnoreCase(trimmed, "no") ||
-            enqEqIgnoreCase(trimmed, "false") ||
-            enqEqIgnoreCase(trimmed, "0")) {
+        if (eqIgnoreCase(trimmed, "n") ||
+            eqIgnoreCase(trimmed, "no") ||
+            eqIgnoreCase(trimmed, "false") ||
+            eqIgnoreCase(trimmed, "0")) {
             return false;
         }
         return null;
@@ -96,9 +50,9 @@ pub struct ConfirmPrompt {
         let fmt = PicoFormatter.new(use_color);
         let pos: usize = 0;
         pos = pos + fmt.cyan("?", out[pos..out.len]);
-        pos = enqWriteStr(out, pos, " ");
+        pos = writeStr(" ", out, pos);
         pos = pos + fmt.bold(_.message, out[pos..out.len]);
-        pos = enqWriteStr(out, pos, " ");
+        pos = writeStr(" ", out, pos);
         let hint = "(y/N)";
         if (_.initial) {
             hint = "(Y/n)";
@@ -202,9 +156,9 @@ pub struct SelectPrompt {
         } else {
             pos = pos + fmt.cyan("?", out[pos..out.len]);
         }
-        pos = enqWriteStr(out, pos, " ");
+        pos = writeStr(" ", out, pos);
         pos = pos + fmt.bold(_.message, out[pos..out.len]);
-        pos = enqWriteStr(out, pos, "\n");
+        pos = writeStr("\n", out, pos);
 
         let i: usize = 0;
         while (i < _.choice_count) {
@@ -213,13 +167,13 @@ pub struct SelectPrompt {
                 pos = pos + fmt.cyan("> ", out[pos..out.len]);
                 pos = pos + fmt.cyan(item.label, out[pos..out.len]);
             } else if (!item.enabled) {
-                pos = enqWriteStr(out, pos, "  ");
+                pos = writeStr("  ", out, pos);
                 pos = pos + fmt.dim(item.label, out[pos..out.len]);
             } else {
-                pos = enqWriteStr(out, pos, "  ");
-                pos = enqWriteStr(out, pos, item.label);
+                pos = writeStr("  ", out, pos);
+                pos = writeStr(item.label, out, pos);
             }
-            pos = enqWriteStr(out, pos, "\n");
+            pos = writeStr("\n", out, pos);
             i = i + 1;
         }
         return pos;
@@ -290,9 +244,9 @@ pub struct MultiSelectPrompt {
         let fmt = PicoFormatter.new(use_color);
         let pos: usize = 0;
         pos = pos + fmt.cyan("?", out[pos..out.len]);
-        pos = enqWriteStr(out, pos, " ");
+        pos = writeStr(" ", out, pos);
         pos = pos + fmt.bold(_.message, out[pos..out.len]);
-        pos = enqWriteStr(out, pos, "\n");
+        pos = writeStr("\n", out, pos);
 
         let i: usize = 0;
         while (i < _.choice_count) {
@@ -301,8 +255,8 @@ pub struct MultiSelectPrompt {
             } else {
                 pos = pos + fmt.dim("[ ] ", out[pos..out.len]);
             }
-            pos = enqWriteStr(out, pos, _.choices[i]);
-            pos = enqWriteStr(out, pos, "\n");
+            pos = writeStr(_.choices[i], out, pos);
+            pos = writeStr("\n", out, pos);
             i = i + 1;
         }
         return pos;

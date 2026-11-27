@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { parseU16, writeStr, writeU64 } from "cap:fmt";
 export class RedisConfig {
     tls: bool,
     is_unix: bool,
@@ -12,12 +14,9 @@ export class RedisConfig {
     valid: bool,
 }
 
-export fn ruToLower(c: u8): u8;
-export fn ruEqIgnoreCase(a: &[]u8, b: &[]u8): bool;
-export fn ruStartsWithIgnoreCase(s: &[]u8, prefix: &[]u8): bool;
-export fn ruContainsByte(s: &[]u8, target: u8): bool;
-export fn ruParseU16(s: &[]u8, out: &mut u16): bool;
-export fn ruWrite(out: []u8, pos: &mut usize, src: &[]u8): bool;
+export fn ruStartsWithIgnoreCase(s: string, prefix: string): bool;
+export fn ruParseStrictU16(s: string): u16?;
+export fn ruWrite(out: []u8, pos: &mut usize, src: string): bool;
 export fn ruWriteU16(out: []u8, pos: &mut usize, val: u16): bool;
 export fn parseRedisUrl(url: string): RedisConfig;
 export fn formatRedisUrl(cfg: RedisConfig, redact_password: bool, out: []u8): usize;

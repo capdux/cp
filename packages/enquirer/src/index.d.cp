@@ -1,11 +1,8 @@
 // Type definitions for CP
 
+import { trim, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { PicoFormatter } from "../../picocolors/src/index.cp";
-export fn enqToLower(b: u8): u8;
-export fn enqIsSpace(b: u8): bool;
-export fn enqTrim(s: string): string;
-export fn enqEqIgnoreCase(a: string, b: string): bool;
-export fn enqWriteStr(out: []u8, pos: usize, s: string): usize;
 export class ConfirmPrompt {
     message: string,
     initial: bool,

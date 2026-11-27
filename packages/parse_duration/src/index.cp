@@ -1,6 +1,9 @@
 // @cap/parse-duration — Zero-heap human-readable duration parser & formatter.
 // Clean-room MIT implementation modeled on crates.io `parse_duration` / `duration-str`.
 
+import { isSpace, isDigit, isAlpha, toLowerByte, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 const PDUR_U64_MAX: u64 = ((0xFFFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
 const PDUR_NANOS_PER_SEC: u64 = 1000000000;
 const PDUR_SECS_PER_MIN: u64 = 60;
@@ -20,99 +23,37 @@ fn pdurCheckedMulU64(a: u64, b: u64): u64? {
     return a * b;
 }
 
-fn pdurIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn pdurIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn pdurIsAlpha(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-}
-
-fn pdurToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
-}
-
-fn pdurBufEq(buf: []const u8, len: usize, lit: string): bool {
-    if (len != lit.len) { return false; }
-    let i: usize = 0;
-    while (i < len) {
-        if (buf[i] != lit[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
 // Returns unit kind:
 // 0 = invalid, 1 = ns, 2 = us, 3 = ms, 4 = s, 5 = m, 6 = h, 7 = d, 8 = w, 9 = y
-fn pdurMatchUnit(buf: []const u8, len: usize): u32 {
-    if (pdurBufEq(buf, len, "ns") || pdurBufEq(buf, len, "nsec") || pdurBufEq(buf, len, "nanosecond") || pdurBufEq(buf, len, "nanoseconds")) {
+fn pdurMatchUnit(u: string): u32 {
+    if (strEq(u, "ns") || strEq(u, "nsec") || strEq(u, "nanosecond") || strEq(u, "nanoseconds")) {
         return 1;
     }
-    if (pdurBufEq(buf, len, "us") || pdurBufEq(buf, len, "usec") || pdurBufEq(buf, len, "microsecond") || pdurBufEq(buf, len, "microseconds")) {
+    if (strEq(u, "us") || strEq(u, "usec") || strEq(u, "microsecond") || strEq(u, "microseconds")) {
         return 2;
     }
-    if (pdurBufEq(buf, len, "ms") || pdurBufEq(buf, len, "msec") || pdurBufEq(buf, len, "millisecond") || pdurBufEq(buf, len, "milliseconds")) {
+    if (strEq(u, "ms") || strEq(u, "msec") || strEq(u, "millisecond") || strEq(u, "milliseconds")) {
         return 3;
     }
-    if (pdurBufEq(buf, len, "s") || pdurBufEq(buf, len, "sec") || pdurBufEq(buf, len, "second") || pdurBufEq(buf, len, "seconds")) {
+    if (strEq(u, "s") || strEq(u, "sec") || strEq(u, "second") || strEq(u, "seconds")) {
         return 4;
     }
-    if (pdurBufEq(buf, len, "m") || pdurBufEq(buf, len, "min") || pdurBufEq(buf, len, "minute") || pdurBufEq(buf, len, "minutes")) {
+    if (strEq(u, "m") || strEq(u, "min") || strEq(u, "minute") || strEq(u, "minutes")) {
         return 5;
     }
-    if (pdurBufEq(buf, len, "h") || pdurBufEq(buf, len, "hr") || pdurBufEq(buf, len, "hour") || pdurBufEq(buf, len, "hours")) {
+    if (strEq(u, "h") || strEq(u, "hr") || strEq(u, "hour") || strEq(u, "hours")) {
         return 6;
     }
-    if (pdurBufEq(buf, len, "d") || pdurBufEq(buf, len, "day") || pdurBufEq(buf, len, "days")) {
+    if (strEq(u, "d") || strEq(u, "day") || strEq(u, "days")) {
         return 7;
     }
-    if (pdurBufEq(buf, len, "w") || pdurBufEq(buf, len, "wk") || pdurBufEq(buf, len, "week") || pdurBufEq(buf, len, "weeks")) {
+    if (strEq(u, "w") || strEq(u, "wk") || strEq(u, "week") || strEq(u, "weeks")) {
         return 8;
     }
-    if (pdurBufEq(buf, len, "y") || pdurBufEq(buf, len, "yr") || pdurBufEq(buf, len, "year") || pdurBufEq(buf, len, "years")) {
+    if (strEq(u, "y") || strEq(u, "yr") || strEq(u, "year") || strEq(u, "years")) {
         return 9;
     }
     return 0;
-}
-
-fn pdurWriteBytes(out: []u8, pos: usize, s: string): usize {
-    let i: usize = 0;
-    let p: usize = pos;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
-
-fn pdurWriteU64(out: []u8, pos: usize, val: u64): usize {
-    let tmp: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let n: usize = 0;
-    let v: u64 = val;
-    if (v == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            tmp[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n = n + 1;
-        }
-    }
-    let p: usize = pos;
-    let i: usize = n;
-    while (i > 0 && p < out.len) {
-        i = i - 1;
-        out[p] = tmp[i];
-        p = p + 1;
-    }
-    return p;
 }
 
 fn pdurAppendPart(out: []u8, pos: usize, val: u64, suffix: string): usize {
@@ -122,8 +63,8 @@ fn pdurAppendPart(out: []u8, pos: usize, val: u64, suffix: string): usize {
         out[p] = 32;
         p = p + 1;
     }
-    p = pdurWriteU64(out, p, val);
-    p = pdurWriteBytes(out, p, suffix);
+    p = writeU64(val, out, p);
+    p = writeStr(suffix, out, p);
     return p;
 }
 
@@ -160,7 +101,7 @@ pub struct ParsedDuration {
 pub fn parseDuration(input: string): ParsedDuration? {
     let len: usize = input.len;
     let i: usize = 0;
-    while (i < len && pdurIsSpace(input[i])) {
+    while (i < len && isSpace(input[i])) {
         i = i + 1;
     }
     if (i >= len) { return null; }
@@ -172,14 +113,14 @@ pub fn parseDuration(input: string): ParsedDuration? {
     while (i < len) {
         if (parts > 0) {
             let had_sep: bool = false;
-            while (i < len && pdurIsSpace(input[i])) {
+            while (i < len && isSpace(input[i])) {
                 i = i + 1;
             }
             if (i >= len) { break; }
             if (input[i] == 44 || input[i] == 43) {
                 had_sep = true;
                 i = i + 1;
-                while (i < len && pdurIsSpace(input[i])) {
+                while (i < len && isSpace(input[i])) {
                     i = i + 1;
                 }
             }
@@ -195,7 +136,7 @@ pub fn parseDuration(input: string): ParsedDuration? {
         let frac_scale: u64 = 1;
         let has_digits: bool = false;
 
-        while (i < len && pdurIsDigit(input[i])) {
+        while (i < len && isDigit(input[i])) {
             has_digits = true;
             let digit: u64 = (input[i] - 48) as u64;
             let m = pdurCheckedMulU64(int_part, 10);
@@ -209,7 +150,7 @@ pub fn parseDuration(input: string): ParsedDuration? {
         if (i < len && input[i] == 46) {
             i = i + 1;
             let has_frac_digits: bool = false;
-            while (i < len && pdurIsDigit(input[i])) {
+            while (i < len && isDigit(input[i])) {
                 has_frac_digits = true;
                 has_digits = true;
                 if (frac_scale < PDUR_NANOS_PER_SEC) {
@@ -224,28 +165,28 @@ pub fn parseDuration(input: string): ParsedDuration? {
         if (!has_digits) { return null; }
 
         // Optional whitespace between number and unit
-        while (i < len && pdurIsSpace(input[i])) {
+        while (i < len && isSpace(input[i])) {
             i = i + 1;
         }
         if (i >= len) { return null; }
 
         // Parse unit (supports UTF-8 'µs' [0xC2 0xB5 's'] and 'μs' [0xCE 0xBC 's'])
         let unit_kind: u32 = 0;
-        if (i + 2 < len && ((input[i] == 0xC2 && input[i + 1] == 0xB5) || (input[i] == 0xCE && input[i + 1] == 0xBC)) && pdurToLower(input[i + 2]) == 115) {
+        if (i + 2 < len && ((input[i] == 0xC2 && input[i + 1] == 0xB5) || (input[i] == 0xCE && input[i + 1] == 0xBC)) && toLowerByte(input[i + 2]) == 115) {
             unit_kind = 2;
             i = i + 3;
-            if (i < len && pdurIsAlpha(input[i])) { return null; }
+            if (i < len && isAlpha(input[i])) { return null; }
         } else {
-            let ubuf: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            let ubuf: [16]u8 = undefined;
             let ulen: usize = 0;
-            while (i < len && pdurIsAlpha(input[i])) {
+            while (i < len && isAlpha(input[i])) {
                 if (ulen >= 16) { return null; }
-                ubuf[ulen] = pdurToLower(input[i]);
+                ubuf[ulen] = toLowerByte(input[i]);
                 ulen = ulen + 1;
                 i = i + 1;
             }
             if (ulen == 0) { return null; }
-            unit_kind = pdurMatchUnit(ubuf[0..16], ulen);
+            unit_kind = pdurMatchUnit(ubuf[0..ulen]);
         }
 
         if (unit_kind == 0) { return null; }
@@ -315,7 +256,7 @@ pub fn parseDuration(input: string): ParsedDuration? {
 /// Returns the number of bytes written.
 pub fn formatDuration(d: ParsedDuration, out: []u8): usize {
     if (d.isZero()) {
-        return pdurWriteBytes(out, 0, "0s");
+        return writeStr("0s", out, 0);
     }
     let rem_s: u64 = d.secs;
     let years: u64 = rem_s / PDUR_SECS_PER_YEAR;

@@ -3,72 +3,19 @@
 // Supports [table] / [a.b] headers, dotted keys (a.b = 1), # comments, basic & literal strings,
 // underscore-separated & negative integers, booleans, in-place editing, and canonical formatting.
 
+import { strEq, trim, findByte, rfindByte } from "cap:ascii";
+import { writeStr, writeI64 } from "cap:fmt";
+
 pub const TOML_STR: u8 = 1;
 pub const TOML_INT: u8 = 2;
 pub const TOML_BOOL: u8 = 3;
 pub const TOML_MAX_ENTRIES: usize = 64;
 
-fn tmeStrEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn tmeIsSpace(c: u8) -> bool {
-    return c == (32 as u8) || c == (9 as u8) || c == (13 as u8);
-}
-
-fn tmeTrim(s: string) -> string {
-    let start: usize = 0;
-    while (start < s.len && tmeIsSpace(s[start])) {
-        start += 1;
-    }
-    let end = s.len;
-    while (end > start && tmeIsSpace(s[end - (1 as usize)])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
 fn tmeStripComment(s: string) -> string {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == (35 as u8)) { // '#'
-            return tmeTrim(s[0..i]);
-        }
-        i += 1;
+    if (idx := findByte(s, 35 as u8, 0)) {
+        return trim(s[0..idx]);
     }
-    return tmeTrim(s);
-}
-
-fn tmeFindChar(s: string, ch: u8) -> usize? {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ch) {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
-}
-
-fn tmeFindLastChar(s: string, ch: u8) -> usize? {
-    let i = s.len;
-    while (i > (0 as usize)) {
-        i -= 1;
-        if (s[i] == ch) {
-            return i;
-        }
-    }
-    return null;
+    return trim(s);
 }
 
 fn tmeParseInt(raw: string) -> i64? {
@@ -125,16 +72,6 @@ fn tmeWriteByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
-fn tmeWriteStr(out: []u8, start_pos: usize, s: string) -> usize {
-    let pos = start_pos;
-    let i: usize = 0;
-    while (i < s.len) {
-        pos = tmeWriteByte(out, pos, s[i]);
-        i += 1;
-    }
-    return pos;
-}
-
 fn tmeWriteQuotedStr(out: []u8, start_pos: usize, s: string) -> usize {
     let pos = tmeWriteByte(out, start_pos, 34 as u8); // '"'
     let i: usize = 0;
@@ -149,46 +86,18 @@ fn tmeWriteQuotedStr(out: []u8, start_pos: usize, s: string) -> usize {
     return tmeWriteByte(out, pos, 34 as u8);
 }
 
-fn tmeWriteInt(out: []u8, start_pos: usize, val: i64) -> usize {
-    let pos = start_pos;
-    if (val == (0 as i64)) {
-        return tmeWriteByte(out, pos, 48 as u8);
-    }
-    let uval: u64 = 0;
-    if (val < (0 as i64)) {
-        pos = tmeWriteByte(out, pos, 45 as u8); // '-'
-        uval = ((0 as i64) - val) as u64;
-    } else {
-        uval = val as u64;
-    }
-    let digits: [24]u8 = undefined;
-    let dlen: usize = 0;
-    while (uval > (0 as u64)) {
-        let rem = (uval % (10 as u64)) as u8;
-        digits[dlen] = (48 as u8) + rem;
-        dlen += 1;
-        uval = uval / (10 as u64);
-    }
-    let k = dlen;
-    while (k > (0 as usize)) {
-        k -= 1;
-        pos = tmeWriteByte(out, pos, digits[k]);
-    }
-    return pos;
-}
-
 fn tmeWriteEntry(out: []u8, start_pos: usize, e: TomlEntry) -> usize {
-    let pos = tmeWriteStr(out, start_pos, e.key);
-    pos = tmeWriteStr(out, pos, " = ");
+    let pos = writeStr(e.key, out, start_pos);
+    pos = writeStr(" = ", out, pos);
     if (e.kind == TOML_STR) {
         pos = tmeWriteQuotedStr(out, pos, e.str_val);
     } else if (e.kind == TOML_INT) {
-        pos = tmeWriteInt(out, pos, e.int_val);
+        pos = writeI64(e.int_val, out, pos);
     } else if (e.kind == TOML_BOOL) {
         if (e.bool_val) {
-            pos = tmeWriteStr(out, pos, "true");
+            pos = writeStr("true", out, pos);
         } else {
-            pos = tmeWriteStr(out, pos, "false");
+            pos = writeStr("false", out, pos);
         }
     }
     return tmeWriteByte(out, pos, 10 as u8); // '\n'
@@ -240,7 +149,7 @@ pub struct TomlDoc {
     pub fn hasKey(section: string, key: string) -> bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 return true;
             }
             i += 1;
@@ -251,7 +160,7 @@ pub struct TomlDoc {
     pub fn getStr(section: string, key: string) -> string? {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 if (_.entries[i].kind == TOML_STR) {
                     return _.entries[i].str_val;
                 }
@@ -265,7 +174,7 @@ pub struct TomlDoc {
     pub fn getInt(section: string, key: string) -> i64? {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 if (_.entries[i].kind == TOML_INT) {
                     return _.entries[i].int_val;
                 }
@@ -279,7 +188,7 @@ pub struct TomlDoc {
     pub fn getBool(section: string, key: string) -> bool? {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 if (_.entries[i].kind == TOML_BOOL) {
                     return _.entries[i].bool_val;
                 }
@@ -293,7 +202,7 @@ pub struct TomlDoc {
     pub fn setStr(*_, section: string, key: string, val: string) -> bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 _.entries[i].kind = TOML_STR;
                 _.entries[i].str_val = val;
                 _.entries[i].int_val = 0 as i64;
@@ -320,7 +229,7 @@ pub struct TomlDoc {
     pub fn setInt(*_, section: string, key: string, val: i64) -> bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 _.entries[i].kind = TOML_INT;
                 _.entries[i].str_val = "";
                 _.entries[i].int_val = val;
@@ -347,7 +256,7 @@ pub struct TomlDoc {
     pub fn setBool(*_, section: string, key: string, val: bool) -> bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (tmeStrEq(_.entries[i].section, section) && tmeStrEq(_.entries[i].key, key)) {
+            if (strEq(_.entries[i].section, section) && strEq(_.entries[i].key, key)) {
                 _.entries[i].kind = TOML_BOOL;
                 _.entries[i].str_val = "";
                 _.entries[i].int_val = 0 as i64;
@@ -386,31 +295,31 @@ pub struct TomlDoc {
                 pos += 1;
             }
 
-            let line = tmeTrim(src[line_start..line_end]);
+            let line = trim(src[line_start..line_end]);
             if (line.len == (0 as usize) || line[0] == (35 as u8)) {
                 continue;
             }
 
             // Section header: [table] or [a.b]
             if (line[0] == (91 as u8)) { // '['
-                let close_opt = tmeFindChar(line, 93 as u8); // ']'
+                let close_opt = findByte(line, 93 as u8, 0); // ']'
                 if (close_opt != null) {
                     let close_idx = close_opt ?? (0 as usize);
                     if (close_idx > (1 as usize)) {
-                        cur_section = tmeTrim(line[(1 as usize)..close_idx]);
+                        cur_section = trim(line[(1 as usize)..close_idx]);
                     }
                 }
                 continue;
             }
 
             // Key = Value
-            let eq_opt = tmeFindChar(line, 61 as u8); // '='
+            let eq_opt = findByte(line, 61 as u8, 0); // '='
             if (eq_opt == null) {
                 continue;
             }
             let eq_idx = eq_opt ?? (0 as usize);
-            let raw_key = tmeTrim(line[0..eq_idx]);
-            let raw_val = tmeTrim(line[(eq_idx + (1 as usize))..line.len]);
+            let raw_key = trim(line[0..eq_idx]);
+            let raw_val = trim(line[(eq_idx + (1 as usize))..line.len]);
             if (raw_key.len == (0 as usize) || raw_val.len == (0 as usize)) {
                 continue;
             }
@@ -419,12 +328,12 @@ pub struct TomlDoc {
             let entry_section = cur_section;
             let entry_key = raw_key;
             if (cur_section.len == (0 as usize)) {
-                let dot_opt = tmeFindLastChar(raw_key, 46 as u8); // '.'
+                let dot_opt = rfindByte(raw_key, 46 as u8); // '.'
                 if (dot_opt != null) {
                     let dot_idx = dot_opt ?? (0 as usize);
                     if (dot_idx > (0 as usize) && dot_idx + (1 as usize) < raw_key.len) {
-                        entry_section = tmeTrim(raw_key[0..dot_idx]);
-                        entry_key = tmeTrim(raw_key[(dot_idx + (1 as usize))..raw_key.len]);
+                        entry_section = trim(raw_key[0..dot_idx]);
+                        entry_key = trim(raw_key[(dot_idx + (1 as usize))..raw_key.len]);
                     }
                 }
             }
@@ -462,9 +371,9 @@ pub struct TomlDoc {
                 }
             } else {
                 let clean = tmeStripComment(raw_val);
-                if (tmeStrEq(clean, "true")) {
+                if (strEq(clean, "true")) {
                     * = doc.setBool(entry_section, entry_key, true);
-                } else if (tmeStrEq(clean, "false")) {
+                } else if (strEq(clean, "false")) {
                     * = doc.setBool(entry_section, entry_key, false);
                 } else {
                     let num_opt = tmeParseInt(clean);
@@ -505,12 +414,12 @@ pub struct TomlDoc {
                     pos = tmeWriteByte(out, pos, 10 as u8);
                 }
                 pos = tmeWriteByte(out, pos, 91 as u8); // '['
-                pos = tmeWriteStr(out, pos, sec);
-                pos = tmeWriteStr(out, pos, "]\n");
+                pos = writeStr(sec, out, pos);
+                pos = writeStr("]\n", out, pos);
 
                 let k = s;
                 while (k < _.count) {
-                    if (!emitted[k] && tmeStrEq(_.entries[k].section, sec)) {
+                    if (!emitted[k] && strEq(_.entries[k].section, sec)) {
                         pos = tmeWriteEntry(out, pos, _.entries[k]);
                         emitted[k] = true;
                     }

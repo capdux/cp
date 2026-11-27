@@ -2,6 +2,9 @@
 // Zero-allocation Redis / Valkey connection URL parser & redacting formatter.
 // MIT clean-room pure CP implementation.
 
+import { eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { parseU16, writeStr, writeU64 } from "cap:fmt";
+
 /// Zero-copy parsed Redis / Valkey connection configuration.
 /// Defaults: `port = 6379`, `db = 0`.
 pub struct RedisConfig {
@@ -16,101 +19,32 @@ pub struct RedisConfig {
     pub valid: bool,
 }
 
-fn ruToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn ruEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (ruToLower(a[i]) != ruToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn ruStartsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
+fn ruStartsWithIgnoreCase(s: string, prefix: string): bool {
     if (s.len < prefix.len) {
         return false;
     }
-    return ruEqIgnoreCase(s[0..prefix.len], prefix);
+    return eqIgnoreCase(s[0..prefix.len], prefix);
 }
 
-fn ruContainsByte(s: []const u8, target: u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) {
-            return true;
-        }
-        i += 1;
+fn ruParseStrictU16(s: string): u16? {
+    if (s.len == 0 || s[0] == ('+' as u8)) {
+        return null;
     }
-    return false;
+    return parseU16(s);
 }
 
-fn ruParseU16(s: []const u8, out: *u16): bool {
-    if (s.len == 0 || s.len > 5) {
-        return false;
-    }
-    let acc: u32 = 0 as u32;
-    let i: usize = 0;
-    while (i < s.len) {
-        const c = s[i];
-        if (c < ('0' as u8) || c > ('9' as u8)) {
-            return false;
-        }
-        acc = acc * (10 as u32) + ((c - ('0' as u8)) as u32);
-        if (acc > (65535 as u32)) {
-            return false;
-        }
-        i += 1;
-    }
-    out.* = acc as u16;
-    return true;
-}
-
-fn ruWrite(out: []u8, pos: *usize, src: []const u8): bool {
+fn ruWrite(out: []u8, pos: *usize, src: string): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.*] = src[i];
-        pos.* += 1;
-        i += 1;
-    }
+    pos.* = writeStr(src, out, pos.*);
     return true;
 }
 
 fn ruWriteU16(out: []u8, pos: *usize, val: u16): bool {
-    if (val == (0 as u16)) {
-        return ruWrite(out, pos, "0");
-    }
-    let rev: [8]u8 = undefined;
-    let n: usize = 0;
-    let cur: u32 = val as u32;
-    while (cur > (0 as u32)) {
-        rev[n] = ('0' as u8) + ((cur % (10 as u32)) as u8);
-        n += 1;
-        cur = cur / (10 as u32);
-    }
-    if (pos.* + n > out.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[pos.*] = rev[n - 1 - i];
-        pos.* += 1;
-        i += 1;
-    }
-    return true;
+    let tmp: [8]u8 = undefined;
+    const n = writeU64(val as u64, tmp[0..8], 0);
+    return ruWrite(out, pos, tmp[0..n]);
 }
 
 /// Parse a Redis / Valkey connection URL:
@@ -231,39 +165,22 @@ pub fn parseRedisUrl(url: string): RedisConfig {
         if (slash < mainPart.len) {
             const dbStr = mainPart[(slash + 1)..mainPart.len];
             if (dbStr.len > 0) {
-                let dbVal: u16 = 0 as u16;
-                if (!ruParseU16(dbStr, &dbVal)) {
+                const dbOpt = ruParseStrictU16(dbStr);
+                if (dbOpt == null) {
                     return res;
                 }
-                res.db = dbVal;
+                res.db = dbOpt ?? (0 as u16);
             }
         }
 
         // Split optional userinfo'@'hostport using the last '@'.
-        let hasAt = false;
-        let lastAt: usize = 0;
-        let ai: usize = 0;
-        while (ai < authority.len) {
-            if (authority[ai] == ('@' as u8)) {
-                hasAt = true;
-                lastAt = ai;
-            }
-            ai += 1;
-        }
-
+        const lastAtOpt = rfindByte(authority, '@' as u8);
         let hostport = authority;
-        if (hasAt) {
+        if (lastAtOpt != null) {
+            const lastAt = lastAtOpt ?? (0 as usize);
             const uinfo = authority[0..lastAt];
             hostport = authority[(lastAt + 1)..authority.len];
-            let colon = uinfo.len;
-            let ci: usize = 0;
-            while (ci < uinfo.len) {
-                if (uinfo[ci] == (':' as u8)) {
-                    colon = ci;
-                    break;
-                }
-                ci += 1;
-            }
+            const colon = findByte(uinfo, ':' as u8, 0) ?? uinfo.len;
             if (colon < uinfo.len) {
                 res.username = uinfo[0..colon];
                 res.password = uinfo[(colon + 1)..uinfo.len];
@@ -278,10 +195,7 @@ pub fn parseRedisUrl(url: string): RedisConfig {
 
         // Parse IPv6 [host]:port or host[:port].
         if (hostport[0] == ('[' as u8)) {
-            let rbr: usize = 1;
-            while (rbr < hostport.len && hostport[rbr] != (']' as u8)) {
-                rbr += 1;
-            }
+            const rbr = findByte(hostport, ']' as u8, 1) ?? hostport.len;
             if (rbr >= hostport.len || rbr == 1) {
                 return res;
             }
@@ -291,33 +205,25 @@ pub fn parseRedisUrl(url: string): RedisConfig {
                     return res;
                 }
                 const pStr = hostport[(rbr + 2)..hostport.len];
-                let pVal: u16 = 0 as u16;
-                if (!ruParseU16(pStr, &pVal) || pVal == (0 as u16)) {
+                const pOpt = ruParseStrictU16(pStr);
+                if (pOpt == null || (pOpt ?? (0 as u16)) == (0 as u16)) {
                     return res;
                 }
-                res.port = pVal;
+                res.port = pOpt ?? (0 as u16);
             }
         } else {
-            let colon = hostport.len;
-            let ci: usize = 0;
-            while (ci < hostport.len) {
-                if (hostport[ci] == (':' as u8)) {
-                    colon = ci;
-                    break;
-                }
-                ci += 1;
-            }
+            const colon = findByte(hostport, ':' as u8, 0) ?? hostport.len;
             if (colon < hostport.len) {
                 if (colon == 0) {
                     return res;
                 }
                 res.host = hostport[0..colon];
                 const pStr = hostport[(colon + 1)..hostport.len];
-                let pVal: u16 = 0 as u16;
-                if (!ruParseU16(pStr, &pVal) || pVal == (0 as u16)) {
+                const pOpt = ruParseStrictU16(pStr);
+                if (pOpt == null || (pOpt ?? (0 as u16)) == (0 as u16)) {
                     return res;
                 }
-                res.port = pVal;
+                res.port = pOpt ?? (0 as u16);
             } else {
                 res.host = hostport;
             }
@@ -328,10 +234,7 @@ pub fn parseRedisUrl(url: string): RedisConfig {
     if (queryPart.len > 0) {
         let qpos: usize = 0;
         while (qpos < queryPart.len) {
-            let amp = qpos;
-            while (amp < queryPart.len && queryPart[amp] != ('&' as u8)) {
-                amp += 1;
-            }
+            const amp = findByte(queryPart, '&' as u8, qpos) ?? queryPart.len;
             const pair = queryPart[qpos..amp];
             if (amp < queryPart.len) {
                 qpos = amp + 1;
@@ -339,19 +242,16 @@ pub fn parseRedisUrl(url: string): RedisConfig {
                 qpos = queryPart.len;
             }
 
-            let eq: usize = 0;
-            while (eq < pair.len && pair[eq] != ('=' as u8)) {
-                eq += 1;
-            }
+            const eq = findByte(pair, '=' as u8, 0) ?? pair.len;
             if (eq < pair.len) {
                 const k = pair[0..eq];
                 const v = pair[(eq + 1)..pair.len];
-                if (ruEqIgnoreCase(k, "db")) {
-                    let dbOverride: u16 = 0 as u16;
-                    if (!ruParseU16(v, &dbOverride)) {
+                if (eqIgnoreCase(k, "db")) {
+                    const dbOpt = ruParseStrictU16(v);
+                    if (dbOpt == null) {
                         return res;
                     }
-                    res.db = dbOverride;
+                    res.db = dbOpt ?? (0 as u16);
                 }
             }
         }
@@ -451,7 +351,7 @@ pub fn formatRedisUrl(cfg: RedisConfig, redact_password: bool, out: []u8): usize
         }
     }
 
-    const isV6 = ruContainsByte(cfg.host, ':' as u8);
+    const isV6 = findByte(cfg.host, ':' as u8, 0) != null;
     if (isV6) {
         if (!ruWrite(out, &pos, "[")) {
             return 0;

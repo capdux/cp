@@ -1,6 +1,9 @@
 // @cap/proxy-addr — Pure CP zero-allocation reverse-proxy client IP resolver
 // Parity with npm `proxy-addr` (Express req.ip / req.ips trusted proxy chain resolution).
 
+import { isSpace, isDigit, hexVal, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const TRUST_NONE: u8 = 0;
 pub const TRUST_LOOPBACK: u8 = 1;
 pub const TRUST_LINKLOCAL: u8 = 2;
@@ -26,35 +29,13 @@ struct PaIpv6Info {
     first_word: u16,
 }
 
-fn paIsSpace(c: u8): bool {
-    return c == (' ' as u8) || c == ('\t' as u8) || c == ('\r' as u8) || c == ('\n' as u8);
-}
-
-fn paToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn paHexVal(c: u8): i32 {
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return (c - ('0' as u8)) as i32;
-    }
-    let lc = paToLower(c);
-    if (lc >= ('a' as u8) && lc <= ('f' as u8)) {
-        return ((lc - ('a' as u8)) as i32) + 10;
-    }
-    return -1;
-}
-
 fn paTrimBounds(s: string): IpSpan {
     let start: usize = 0;
-    while (start < s.len && paIsSpace(s[start])) {
+    while (start < s.len && isSpace(s[start])) {
         start = start + 1;
     }
     let end: usize = s.len;
-    while (end > start && paIsSpace(s[end - 1])) {
+    while (end > start && isSpace(s[end - 1])) {
         end = end - 1;
     }
     return IpSpan { start: start, len: end - start };
@@ -62,14 +43,8 @@ fn paTrimBounds(s: string): IpSpan {
 
 fn paStripV4Mapped(s: string): string {
     // Strip case-insensitive "::ffff:" prefix if present
-    if (s.len > 7 && s[0] == (':' as u8) && s[1] == (':' as u8) && s[6] == (':' as u8)) {
-        if (paToLower(s[2]) == ('f' as u8)
-            && paToLower(s[3]) == ('f' as u8)
-            && paToLower(s[4]) == ('f' as u8)
-            && paToLower(s[5]) == ('f' as u8))
-        {
-            return s[7..s.len];
-        }
+    if (s.len > 7 && eqIgnoreCase(s[0..7], "::ffff:")) {
+        return s[7..s.len];
     }
     return s;
 }
@@ -79,7 +54,7 @@ fn paParseIpv4(s: string): PaIpv4 {
     if (s.len < 7 || s.len > 15) {
         return fail;
     }
-    let octs: [4]u8 = [0, 0, 0, 0];
+    let octs: [4]u8 = undefined;
     let oct_idx: usize = 0;
     let i: usize = 0;
 
@@ -89,7 +64,7 @@ fn paParseIpv4(s: string): PaIpv4 {
         }
         let val: u32 = 0;
         let digits: usize = 0;
-        while (i < s.len && s[i] >= ('0' as u8) && s[i] <= ('9' as u8)) {
+        while (i < s.len && isDigit(s[i])) {
             val = val * 10 + ((s[i] - ('0' as u8)) as u32);
             digits = digits + 1;
             if (digits > 3 || val > 255) {
@@ -122,15 +97,7 @@ fn paParseIpv6Info(s: string): PaIpv6Info {
         return fail;
     }
     // Strip optional zone id (%eth0)
-    let end: usize = s.len;
-    let zi: usize = 0;
-    while (zi < s.len) {
-        if (s[zi] == ('%' as u8)) {
-            end = zi;
-            break;
-        }
-        zi = zi + 1;
-    }
+    const end: usize = findByte(s, '%' as u8, 0) ?? s.len;
     if (end < 2) {
         return fail;
     }
@@ -169,11 +136,11 @@ fn paParseIpv6Info(s: string): PaIpv6Info {
         let word: u32 = 0;
         let hex_len: usize = 0;
         while (i < end && s[i] != (':' as u8)) {
-            let hv = paHexVal(s[i]);
-            if (hv < 0) {
+            const hv = hexVal(s[i]);
+            if (hv == null) {
                 return fail;
             }
-            word = (word << 4) | (hv as u32);
+            word = (word << 4) | ((hv ?? 0) as u32);
             hex_len = hex_len + 1;
             if (hex_len > 4) {
                 return fail;
@@ -336,12 +303,7 @@ fn paCopyToOut(src: string, out: []u8): usize {
     if (src.len == 0 || out.len < src.len) {
         return 0;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[i] = src[i];
-        i = i + 1;
-    }
-    return src.len;
+    return writeStr(src, out, 0);
 }
 
 pub fn resolveClientIp(

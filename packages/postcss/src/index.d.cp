@@ -1,13 +1,11 @@
 // Type definitions for CP
 
-export fn pcIsSpace(c: u8): bool;
-export fn pcToLower(c: u8): u8;
-export fn pcStrEq(a: &[]u8, b: string): bool;
-export fn pcStrEqIgnoreCase(a: &[]u8, b: string): bool;
-export fn pcCopyTrimmed(src: &[]u8, dst: []u8): usize;
-export fn pcAppendSlice(out: []u8, pos: &mut usize, src: &[]u8);
+import { isSpace, strEq, eqIgnoreCase, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+export fn pcCopyTrimmed(src: string, dst: []u8): usize;
+export fn pcAppendSlice(out: []u8, pos: &mut usize, src: string);
 export fn pcAppendByte(out: []u8, pos: &mut usize, b: u8);
-export fn pcIsDeclAtRule(name: &[]u8): bool;
+export fn pcIsDeclAtRule(name: string): bool;
 export class PostCssDecl {
     kind: u8,
     parent_node: i32,

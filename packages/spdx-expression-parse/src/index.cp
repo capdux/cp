@@ -3,6 +3,7 @@
 // Clean-room MIT pure CP implementation reusing `@cap/spdx`.
 
 import { lookupLicense } from "../../spdx/src/index.cp";
+import { strEq, startsWith, isSpace, isAlnum } from "cap:ascii";
 
 pub const SPDX_NODE_LICENSE: u8 = 1;
 pub const SPDX_NODE_AND: u8 = 2;
@@ -63,56 +64,12 @@ fn spdxpEmptyAst(): SpdxAst {
     };
 }
 
-fn spdxpStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn spdxpStartsWith(s: string, prefix: string): bool {
-    if (s.len < prefix.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn spdxpIsSpace(ch: u8): bool {
-    return ch == (' ' as u8)
-        || ch == ('\t' as u8)
-        || ch == ('\r' as u8)
-        || ch == ('\n' as u8);
-}
-
 fn spdxpIsIdChar(ch: u8): bool {
-    if (ch >= ('a' as u8) && ch <= ('z' as u8)) {
-        return true;
-    }
-    if (ch >= ('A' as u8) && ch <= ('Z' as u8)) {
-        return true;
-    }
-    if (ch >= ('0' as u8) && ch <= ('9' as u8)) {
-        return true;
-    }
-    return ch == ('-' as u8) || ch == ('.' as u8);
+    return isAlnum(ch) || ch == ('-' as u8) || ch == ('.' as u8);
 }
 
 fn spdxpIsKeyword(tok: string): bool {
-    return spdxpStrEq(tok, "AND") || spdxpStrEq(tok, "OR") || spdxpStrEq(tok, "WITH");
+    return strEq(tok, "AND") || strEq(tok, "OR") || strEq(tok, "WITH");
 }
 
 fn spdxpIsAllIdChars(s: string): bool {
@@ -130,10 +87,10 @@ fn spdxpIsAllIdChars(s: string): bool {
 }
 
 fn spdxpIsValidLicenseRef(id: string): bool {
-    if (spdxpStartsWith(id, "LicenseRef-")) {
+    if (startsWith(id, "LicenseRef-")) {
         return spdxpIsAllIdChars(id[11..id.len]);
     }
-    if (spdxpStartsWith(id, "DocumentRef-")) {
+    if (startsWith(id, "DocumentRef-")) {
         let colon: usize = 12;
         while (colon < id.len && id[colon] != (':' as u8)) {
             colon += 1;
@@ -146,7 +103,7 @@ fn spdxpIsValidLicenseRef(id: string): bool {
         if (!spdxpIsAllIdChars(doc_id)) {
             return false;
         }
-        if (!spdxpStartsWith(rest, "LicenseRef-")) {
+        if (!startsWith(rest, "LicenseRef-")) {
             return false;
         }
         return spdxpIsAllIdChars(rest[11..rest.len]);
@@ -172,7 +129,7 @@ fn spdxpIsValidExceptionId(exc: string): bool {
 }
 
 fn spdxpSkipSpaces(st: *SpdxpState) {
-    while (st.*.pos < st.*.src.len && spdxpIsSpace(st.*.src[st.*.pos])) {
+    while (st.*.pos < st.*.src.len && isSpace(st.*.src[st.*.pos])) {
         st.*.pos = st.*.pos + 1;
     }
 }
@@ -191,15 +148,8 @@ fn spdxpAllocNode(st: *SpdxpState, node: SpdxAstNode): i32 {
 fn spdxpConsumeKeyword(st: *SpdxpState, kw: string): bool {
     spdxpSkipSpaces(st);
     let pos: usize = st.*.pos;
-    if (pos + kw.len > st.*.src.len) {
+    if (!startsWith(st.*.src[pos..st.*.src.len], kw)) {
         return false;
-    }
-    let i: usize = 0;
-    while (i < kw.len) {
-        if (st.*.src[pos + i] != kw[i]) {
-            return false;
-        }
-        i += 1;
     }
     let after: usize = pos + kw.len;
     if (after < st.*.src.len) {
@@ -403,25 +353,25 @@ fn spdxpMatchLicenseNode(node: SpdxAstNode, allowed: string): bool {
     if (node.exception.len > 0) {
         // Match `<license>[+] WITH <exception>`.
         let pos: usize = 0;
-        if (!spdxpStartsWith(allowed, node.license)) {
+        if (!startsWith(allowed, node.license)) {
             return false;
         }
         pos = node.license.len;
         if (node.plus && pos < allowed.len && allowed[pos] == ('+' as u8)) {
             pos += 1;
         }
-        if (!spdxpStartsWith(allowed[pos..allowed.len], " WITH ")) {
+        if (!startsWith(allowed[pos..allowed.len], " WITH ")) {
             return false;
         }
         pos += 6;
-        return spdxpStrEq(allowed[pos..allowed.len], node.exception);
+        return strEq(allowed[pos..allowed.len], node.exception);
     }
 
-    if (spdxpStrEq(node.license, allowed)) {
+    if (strEq(node.license, allowed)) {
         return true;
     }
     if (node.plus && allowed.len == node.license.len + 1 && allowed[allowed.len - 1] == ('+' as u8)) {
-        return spdxpStartsWith(allowed, node.license);
+        return startsWith(allowed, node.license);
     }
     return false;
 }

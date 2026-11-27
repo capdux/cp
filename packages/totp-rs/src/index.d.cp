@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, isAlnum, hexCharUpper, findByte } from "cap:ascii";
+import { parseU64, writeStr, writeU64 } from "cap:fmt";
 export class OtpAuthUri {
     kind: u8,
     label: string,
@@ -12,13 +14,10 @@ export class OtpAuthUri {
     valid: bool,
 }
 
-export fn otpToLower(c: u8): u8;
-export fn otpEqIgnoreCase(a: &[]u8, b: &[]u8): bool;
 export fn otpIsUnreserved(c: u8): bool;
-export fn otpHexUpper(n: u8): u8;
-export fn otpParseU64(s: &[]u8, out: &mut u64): bool;
-export fn otpWriteRaw(out: []u8, pos: &mut usize, src: &[]u8): bool;
-export fn otpWritePctEncoded(out: []u8, pos: &mut usize, src: &[]u8, allow_label_chars: bool): bool;
+export fn otpParseStrictU64(s: string): u64?;
+export fn otpWriteRaw(out: []u8, pos: &mut usize, src: string): bool;
+export fn otpWritePctEncoded(out: []u8, pos: &mut usize, src: string, allow_label_chars: bool): bool;
 export fn otpWriteU64(out: []u8, pos: &mut usize, val: u64): bool;
 export fn isValidBase32Secret(secret: string): bool;
 export fn parseOtpAuthUri(uri: string): OtpAuthUri;

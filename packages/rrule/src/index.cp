@@ -3,6 +3,8 @@
 // Composes `@cap/unicase` (`eqAscii`) for case-insensitive RFC 5545 key & enum matching.
 
 import { eqAscii } from "../../unicase/src/index.cp";
+import { trim, isDigit, findByte } from "cap:ascii";
+import { parseU32, BufWriter } from "cap:fmt";
 
 pub const FREQ_YEARLY: u8 = 0;
 pub const FREQ_MONTHLY: u8 = 1;
@@ -47,55 +49,11 @@ fn rrlInvalid(): RRule {
     };
 }
 
-fn rrlIsSpace(ch: u8): bool {
-    return ch == 32 || ch == 9 || ch == 10 || ch == 13;
-}
-
-fn rrlTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && rrlIsSpace(s[start])) {
-        start = start + 1;
-    }
-    while (end > start && rrlIsSpace(s[end - 1])) {
-        end = end - 1;
-    }
-    return s[start..end];
-}
-
-fn rrlFindByte(s: string, start: usize, end: usize, target: u8): usize {
-    let i = start;
-    while (i < end) {
-        if (s[i] == target) {
-            return i;
-        }
-        i = i + 1;
-    }
-    return end;
-}
-
-fn rrlIsDigit(ch: u8): bool {
-    return ch >= 48 && ch <= 57;
-}
-
 fn rrlParsePosU32(s: string): u32 {
-    if (s.len == 0 || s.len > 10) {
+    if (s.len == 0 || s[0] == 43) {
         return 0;
     }
-    let val: u64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        const ch = s[i];
-        if (!rrlIsDigit(ch)) {
-            return 0;
-        }
-        val = val * 10 + ((ch - 48) as u64);
-        if (val > 4294967295) {
-            return 0;
-        }
-        i = i + 1;
-    }
-    return val as u32;
+    return parseU32(s) ?? 0;
 }
 
 fn rrlParseFreq(v: string): u8 {
@@ -134,7 +92,7 @@ fn rrlParseByDayItem(item: string): u8 {
             }
         }
         while (i < item.len - 2) {
-            if (!rrlIsDigit(item[i])) {
+            if (!isDigit(item[i])) {
                 return 0;
             }
             i = i + 1;
@@ -144,7 +102,7 @@ fn rrlParseByDayItem(item: string): u8 {
 }
 
 fn rrlParse2Digits(s: string, pos: usize): u32 {
-    if (pos + 2 > s.len || !rrlIsDigit(s[pos]) || !rrlIsDigit(s[pos + 1])) {
+    if (pos + 2 > s.len || !isDigit(s[pos]) || !isDigit(s[pos + 1])) {
         return 999;
     }
     return ((s[pos] - 48) as u32) * 10 + ((s[pos + 1] - 48) as u32);
@@ -158,7 +116,7 @@ fn rrlIsValidUntil(v: string): bool {
     // Check YYYY
     let i: usize = 0;
     while (i < 4) {
-        if (!rrlIsDigit(v[i])) {
+        if (!isDigit(v[i])) {
             return false;
         }
         i = i + 1;
@@ -190,13 +148,13 @@ fn rrlIsValidUntil(v: string): bool {
 /// Parse an RFC 5545 RRULE string (with optional `RRULE:` prefix).
 /// Strictly rejects missing `FREQ`, simultaneous `COUNT` and `UNTIL`, duplicate `FREQ`, or invalid values.
 pub fn parseRRule(input: string): RRule {
-    let s = rrlTrim(input);
+    let s = trim(input);
     if (s.len == 0) {
         return rrlInvalid();
     }
 
     if (s.len >= 6 && eqAscii(s[0..6], "RRULE:")) {
-        s = rrlTrim(s[6..s.len]);
+        s = trim(s[6..s.len]);
         if (s.len == 0) {
             return rrlInvalid();
         }
@@ -214,18 +172,18 @@ pub fn parseRRule(input: string): RRule {
 
     let pos: usize = 0;
     while (pos < s.len) {
-        const semi = rrlFindByte(s, pos, s.len, 59 as u8); // ';'
-        const part = rrlTrim(s[pos..semi]);
+        const semi = findByte(s, 59 as u8, pos) ?? s.len; // ';'
+        const part = trim(s[pos..semi]);
         if (part.len == 0) {
             return rrlInvalid();
         }
 
-        const eq = rrlFindByte(part, 0, part.len, 61 as u8); // '='
+        const eq = findByte(part, 61 as u8, 0) ?? part.len; // '='
         if (eq == 0 || eq >= part.len - 1) {
             return rrlInvalid();
         }
-        const key = rrlTrim(part[0..eq]);
-        const val = rrlTrim(part[(eq + 1)..part.len]);
+        const key = trim(part[0..eq]);
+        const val = trim(part[(eq + 1)..part.len]);
         if (key.len == 0 || val.len == 0) {
             return rrlInvalid();
         }
@@ -261,8 +219,8 @@ pub fn parseRRule(input: string): RRule {
         } else if (eqAscii(key, "BYDAY")) {
             let dpos: usize = 0;
             while (dpos <= val.len) {
-                const comma = rrlFindByte(val, dpos, val.len, 44 as u8); // ','
-                const item = rrlTrim(val[dpos..comma]);
+                const comma = findByte(val, 44 as u8, dpos) ?? val.len; // ','
+                const item = trim(val[dpos..comma]);
                 const mask = rrlParseByDayItem(item);
                 if (mask == 0) {
                     return rrlInvalid();
@@ -276,8 +234,8 @@ pub fn parseRRule(input: string): RRule {
         } else if (eqAscii(key, "BYMONTH")) {
             let mpos: usize = 0;
             while (mpos <= val.len) {
-                const comma = rrlFindByte(val, mpos, val.len, 44 as u8); // ','
-                const item = rrlTrim(val[mpos..comma]);
+                const comma = findByte(val, 44 as u8, mpos) ?? val.len; // ','
+                const item = trim(val[mpos..comma]);
                 const m = rrlParsePosU32(item);
                 if (m < 1 || m > 12) {
                     return rrlInvalid();
@@ -325,47 +283,6 @@ pub fn parseRRule(input: string): RRule {
     };
 }
 
-fn rrlWriteByte(out: []u8, pos: usize, ch: u8): usize {
-    if (pos < out.len) {
-        out[pos] = ch;
-        return pos + 1;
-    }
-    return pos;
-}
-
-fn rrlWriteStr(out: []u8, pos: usize, s: string): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w = w + 1;
-        i = i + 1;
-    }
-    return w;
-}
-
-fn rrlWriteU32(out: []u8, pos: usize, val: u32): usize {
-    let digits: [12]u8 = undefined;
-    let len: usize = 0;
-    let n = val;
-    if (n == 0) {
-        return rrlWriteByte(out, pos, 48 as u8);
-    }
-    while (n > 0 && len < 12) {
-        digits[len] = (48 + (n % 10)) as u8;
-        n = n / 10;
-        len = len + 1;
-    }
-    let w = pos;
-    let i = len;
-    while (i > 0 && w < out.len) {
-        i = i - 1;
-        out[w] = digits[i];
-        w = w + 1;
-    }
-    return w;
-}
-
 fn rrlFreqName(freq: u8): string {
     if (freq == FREQ_YEARLY) { return "YEARLY"; }
     if (freq == FREQ_MONTHLY) { return "MONTHLY"; }
@@ -395,35 +312,36 @@ pub fn formatRRule(r: RRule, out: []u8): usize {
         return 0;
     }
 
-    let pos = rrlWriteStr(out, 0, "FREQ=");
-    pos = rrlWriteStr(out, pos, rrlFreqName(r.freq));
+    let w = BufWriter.new(out);
+    w.writeStr("FREQ=");
+    w.writeStr(rrlFreqName(r.freq));
 
     if (r.interval > 1) {
-        pos = rrlWriteStr(out, pos, ";INTERVAL=");
-        pos = rrlWriteU32(out, pos, r.interval);
+        w.writeStr(";INTERVAL=");
+        w.writeU64(r.interval as u64);
     }
 
     if (r.has_count) {
-        pos = rrlWriteStr(out, pos, ";COUNT=");
-        pos = rrlWriteU32(out, pos, r.count);
+        w.writeStr(";COUNT=");
+        w.writeU64(r.count as u64);
     }
 
     if (r.until.len > 0) {
-        pos = rrlWriteStr(out, pos, ";UNTIL=");
-        pos = rrlWriteStr(out, pos, r.until);
+        w.writeStr(";UNTIL=");
+        w.writeStr(r.until);
     }
 
     if (r.byday_mask != 0) {
-        pos = rrlWriteStr(out, pos, ";BYDAY=");
+        w.writeStr(";BYDAY=");
         let first = true;
         let bit: u8 = 0;
         while (bit < 7) {
             const mask: u8 = (1 as u8) << (bit as u3);
             if ((r.byday_mask & mask) != 0) {
                 if (!first) {
-                    pos = rrlWriteByte(out, pos, 44 as u8); // ','
+                    w.writeByte(44 as u8); // ','
                 }
-                pos = rrlWriteStr(out, pos, rrlDayName(mask));
+                w.writeStr(rrlDayName(mask));
                 first = false;
             }
             bit = bit + 1;
@@ -431,16 +349,16 @@ pub fn formatRRule(r: RRule, out: []u8): usize {
     }
 
     if (r.bymonth_mask != 0) {
-        pos = rrlWriteStr(out, pos, ";BYMONTH=");
+        w.writeStr(";BYMONTH=");
         let first = true;
         let m: u32 = 1;
         while (m <= 12) {
             const mask: u16 = (1 as u16) << ((m - 1) as u4);
             if ((r.bymonth_mask & mask) != 0) {
                 if (!first) {
-                    pos = rrlWriteByte(out, pos, 44 as u8); // ','
+                    w.writeByte(44 as u8); // ','
                 }
-                pos = rrlWriteU32(out, pos, m);
+                w.writeU64(m as u64);
                 first = false;
             }
             m = m + 1;
@@ -448,11 +366,11 @@ pub fn formatRRule(r: RRule, out: []u8): usize {
     }
 
     if (r.wkst != 0 && r.wkst != DAY_MO) {
-        pos = rrlWriteStr(out, pos, ";WKST=");
-        pos = rrlWriteStr(out, pos, rrlDayName(r.wkst));
+        w.writeStr(";WKST=");
+        w.writeStr(rrlDayName(r.wkst));
     }
 
-    return pos;
+    return w.written();
 }
 
 /// Check whether `dow` (`0=Sun..6=Sat`) matches the rule's `BYDAY` constraint.

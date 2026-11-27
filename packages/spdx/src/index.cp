@@ -1,6 +1,8 @@
 // @cap/spdx — Zero-allocation SPDX 2.3 license expression parser, validator & compatibility evaluator for CP
 // Clean-room MIT implementation inspired by npm `spdx-expression-parse` (55M/wk), `spdx-satisfies` (30M/wk), and Rust `spdx` (40M).
 
+import { strEq, startsWith, isSpace } from "cap:ascii";
+
 const MAX_LICENSES: usize = 32;
 const MAX_DEPTH: usize = 32;
 
@@ -32,38 +34,6 @@ pub struct SpdxResult {
         }
         return _.licenses[idx];
     }
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn startsWith(s: string, prefix: string) -> bool {
-    if (s.len < prefix.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 fn isIdChar(c: u8) -> bool {

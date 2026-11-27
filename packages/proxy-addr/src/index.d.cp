@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, hexVal, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class IpSpan {
     start: usize,
     len: usize,
@@ -19,9 +21,6 @@ export class PaIpv6Info {
     first_word: u16,
 }
 
-export fn paIsSpace(c: u8): bool;
-export fn paToLower(c: u8): u8;
-export fn paHexVal(c: u8): i32;
 export fn paTrimBounds(s: string): IpSpan;
 export fn paStripV4Mapped(s: string): string;
 export fn paParseIpv4(s: string): PaIpv4;

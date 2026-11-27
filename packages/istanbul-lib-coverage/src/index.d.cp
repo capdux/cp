@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, trim, startsWith, strEq, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 export class CoverageMetric {
     total: u32,
     covered: u32,
@@ -22,13 +24,7 @@ export class LineHit {
     hits: u32,
 }
 
-export fn icovWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn icovWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn icovWriteU32(out: []u8, pos: usize, val: u32): usize;
-export fn icovTrim(s: string): string;
-export fn icovHasPrefix(s: string, prefix: string): bool;
-export fn icovStrEq(a: string, b: string): bool;
 export fn icovParseU32(s: string): u32;
-export fn icovIndexOfByte(s: string, target: u8): usize;
 export fn formatLcovRecord(file_path: string, hits: &[]LineHit, out: []u8): usize;
 export fn parseLcovSummary(lcov_text: string): CoverageMetric;

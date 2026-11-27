@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { trim, strEq, startsWith } from "cap:ascii";
 export enum DynValueKind {
     Undefined,
     Null,
@@ -21,9 +22,6 @@ export class DynValue {
     fn arrayOf(elem_kind: DynValueKind, len: usize): DynValue;
 }
 
-export fn tckTrim(s: string): string;
-export fn tckStrEq(a: string, b: string): bool;
-export fn tckStartsWith(s: string, prefix: string): bool;
 export fn tckMatchAtom(atom: string, val: DynValue): bool;
 export fn typeCheck(type_expr: string, val: DynValue): bool;
 export fn isValidTypeExpr(type_expr: string): bool;

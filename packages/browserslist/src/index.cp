@@ -1,6 +1,8 @@
 // @cap/browserslist-query — Zero-heap Browserslist query clause parser & matcher
 // Clean-room CP implementation inspired by browserslist (MIT).
 
+import { isSpace, isDigit, trim, eqIgnoreCase, findByte } from "cap:ascii";
+
 pub enum BrowserOp {
     Ge,
     Gt,
@@ -23,61 +25,27 @@ pub struct BrowserClause {
     count: u32,
 }
 
-fn blqIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn blqIsDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
-fn blqToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
-}
-
-fn blqTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && blqIsSpace(s[start])) : (start += 1) {}
-    while (end > start && blqIsSpace(s[end - 1])) : (end -= 1) {}
-    return s[start..end];
-}
-
-fn blqEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (blqToLower(a[i]) != blqToLower(b[i])) return false;
-    }
-    return true;
-}
-
 fn blqStartsWithWord(s: string, word: string): bool {
     if (s.len <= word.len) return false;
-    let i: usize = 0;
-    while (i < word.len) : (i += 1) {
-        if (blqToLower(s[i]) != blqToLower(word[i])) return false;
-    }
-    return blqIsSpace(s[word.len]);
+    return eqIgnoreCase(s[0..word.len], word) && isSpace(s[word.len]);
 }
 
 fn blqParseU32(s: string): u32 {
     let val: u32 = 0;
     let i: usize = 0;
-    while (i < s.len && blqIsDigit(s[i])) : (i += 1) {
+    while (i < s.len && isDigit(s[i])) : (i += 1) {
         val = val * 10 + u32(s[i] - '0');
     }
     return val;
 }
 
 fn blqIsDeadBrowser(browser: string): bool {
-    if (blqEqIgnoreCase(browser, "ie")) return true;
-    if (blqEqIgnoreCase(browser, "ie_mob")) return true;
-    if (blqEqIgnoreCase(browser, "bb")) return true;
-    if (blqEqIgnoreCase(browser, "op_mini")) return true;
-    if (blqEqIgnoreCase(browser, "baidu")) return true;
-    if (blqEqIgnoreCase(browser, "kaios")) return true;
+    if (eqIgnoreCase(browser, "ie")) return true;
+    if (eqIgnoreCase(browser, "ie_mob")) return true;
+    if (eqIgnoreCase(browser, "bb")) return true;
+    if (eqIgnoreCase(browser, "op_mini")) return true;
+    if (eqIgnoreCase(browser, "baidu")) return true;
+    if (eqIgnoreCase(browser, "kaios")) return true;
     return false;
 }
 
@@ -100,56 +68,56 @@ pub fn parseBrowserClause(clause: string): BrowserClause {
         count: 0,
     };
 
-    let s: string = blqTrim(clause);
+    let s: string = trim(clause);
     if (s.len == 0) return res;
 
     if (blqStartsWithWord(s, "and")) {
         res.is_and = true;
-        s = blqTrim(s[3..s.len]);
+        s = trim(s[3..s.len]);
     }
 
     if (blqStartsWithWord(s, "not")) {
         res.negated = true;
-        s = blqTrim(s[3..s.len]);
+        s = trim(s[3..s.len]);
     }
 
-    if (blqEqIgnoreCase(s, "defaults")) {
+    if (eqIgnoreCase(s, "defaults")) {
         res.op = BrowserOp.Defaults;
         return res;
     }
 
-    if (blqEqIgnoreCase(s, "dead")) {
+    if (eqIgnoreCase(s, "dead")) {
         res.op = BrowserOp.Dead;
         return res;
     }
 
     // "last N [browser] version(s)"
     if (blqStartsWithWord(s, "last")) {
-        let rest: string = blqTrim(s[4..s.len]);
+        let rest: string = trim(s[4..s.len]);
         let num_end: usize = 0;
-        while (num_end < rest.len && blqIsDigit(rest[num_end])) : (num_end += 1) {}
+        while (num_end < rest.len && isDigit(rest[num_end])) : (num_end += 1) {}
         if (num_end == 0) return res;
         res.count = blqParseU32(rest[0..num_end]);
-        rest = blqTrim(rest[num_end..rest.len]);
+        rest = trim(rest[num_end..rest.len]);
 
         // Strip trailing "versions" or "version"
         let last_space: usize = rest.len;
         let idx: usize = rest.len;
         while (idx > 0) {
             idx -= 1;
-            if (blqIsSpace(rest[idx])) {
+            if (isSpace(rest[idx])) {
                 last_space = idx;
                 break;
             }
         }
         if (last_space < rest.len) {
             const tail: string = rest[(last_space + 1)..rest.len];
-            if (blqEqIgnoreCase(tail, "versions") || blqEqIgnoreCase(tail, "version")) {
-                res.browser = blqTrim(rest[0..last_space]);
+            if (eqIgnoreCase(tail, "versions") || eqIgnoreCase(tail, "version")) {
+                res.browser = trim(rest[0..last_space]);
                 res.op = BrowserOp.LastN;
                 return res;
             }
-        } else if (blqEqIgnoreCase(rest, "versions") || blqEqIgnoreCase(rest, "version")) {
+        } else if (eqIgnoreCase(rest, "versions") || eqIgnoreCase(rest, "version")) {
             res.browser = "";
             res.op = BrowserOp.LastN;
             return res;
@@ -195,18 +163,11 @@ pub fn parseBrowserClause(clause: string): BrowserClause {
 
     if (op_len == 0) return res;
 
-    res.browser = blqTrim(s[0..op_start]);
+    res.browser = trim(s[0..op_start]);
     res.op = op_kind;
 
-    const ver_str: string = blqTrim(s[(op_start + op_len)..s.len]);
-    let dot_idx: usize = ver_str.len;
-    i = 0;
-    while (i < ver_str.len) : (i += 1) {
-        if (ver_str[i] == '.') {
-            dot_idx = i;
-            break;
-        }
-    }
+    const ver_str: string = trim(s[(op_start + op_len)..s.len]);
+    const dot_idx: usize = findByte(ver_str, '.', 0) ?? ver_str.len;
 
     res.version_major = blqParseU32(ver_str[0..dot_idx]);
     if (dot_idx + 1 < ver_str.len) {
@@ -229,12 +190,12 @@ pub fn matchBrowserVersion(
     } else if (clause.op == BrowserOp.Dead) {
         raw_match = blqIsDeadBrowser(browser);
     } else if (clause.op == BrowserOp.LastN) {
-        const name_ok: bool = clause.browser.len == 0 || blqEqIgnoreCase(clause.browser, browser);
+        const name_ok: bool = clause.browser.len == 0 || eqIgnoreCase(clause.browser, browser);
         raw_match = name_ok && clause.count > 0 && major <= latest_major && major + clause.count > latest_major;
     } else if (clause.op == BrowserOp.Unknown) {
         raw_match = false;
     } else {
-        if (blqEqIgnoreCase(clause.browser, browser)) {
+        if (eqIgnoreCase(clause.browser, browser)) {
             const cmp: i32 = blqCmpVersion(major, minor, clause.version_major, clause.version_minor);
             if (clause.op == BrowserOp.Ge) {
                 raw_match = cmp >= 0;

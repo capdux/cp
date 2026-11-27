@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, startsWith, isSpace } from "cap:ascii";
 export enum LicenseCategory {
     Permissive,
     WeakCopyleft,
@@ -24,9 +25,6 @@ export class SpdxResult {
     fn getLicense(idx: usize): string?;
 }
 
-export fn strEq(a: string, b: string): bool;
-export fn startsWith(s: string, prefix: string): bool;
-export fn isSpace(c: u8): bool;
 export fn isIdChar(c: u8): bool;
 export fn isPermissiveCategory(cat: LicenseCategory): bool;
 export fn lookupBaseLicense(id: string): LicenseInfo?;

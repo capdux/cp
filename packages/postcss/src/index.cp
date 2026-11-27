@@ -1,6 +1,9 @@
 // @cap/postcss-parse — Zero-heap CSS AST parser, query/mutation engine & serializer (postcss v8 parity)
 // Clean-room MIT CP implementation of npm `postcss` (150M+/wk).
 
+import { isSpace, strEq, eqIgnoreCase, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 // Node kinds
 pub const PC_RULE: u8 = 1;
 pub const PC_DECL: u8 = 2;
@@ -12,70 +15,12 @@ pub const PC_MAX_NODES: usize = 32;
 pub const PC_MAX_DECLS: usize = 64;
 pub const PC_MAX_COMMENTS: usize = 16;
 
-fn pcIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13 || c == 12;
+fn pcCopyTrimmed(src: string, dst: []u8): usize {
+    return writeStr(trim(src), dst, 0);
 }
 
-fn pcToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn pcStrEq(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn pcStrEqIgnoreCase(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (pcToLower(a[i]) != pcToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn pcCopyTrimmed(src: []const u8, dst: []u8): usize {
-    let a: usize = 0;
-    let b: usize = src.len;
-    while (a < b && pcIsSpace(src[a])) {
-        a = a + 1;
-    }
-    while (b > a && pcIsSpace(src[b - 1])) {
-        b = b - 1;
-    }
-    const n = if (b - a < dst.len) { b - a } else { dst.len };
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[a + i];
-        i = i + 1;
-    }
-    return n;
-}
-
-fn pcAppendSlice(out: []u8, pos: *usize, src: []const u8) {
-    let i: usize = 0;
-    while (i < src.len && pos.* < out.len) {
-        out[pos.*] = src[i];
-        pos.* = pos.* + 1;
-        i = i + 1;
-    }
+fn pcAppendSlice(out: []u8, pos: *usize, src: string) {
+    pos.* = writeStr(src, out, pos.*);
 }
 
 fn pcAppendByte(out: []u8, pos: *usize, b: u8) {
@@ -85,8 +30,8 @@ fn pcAppendByte(out: []u8, pos: *usize, b: u8) {
     }
 }
 
-fn pcIsDeclAtRule(name: []const u8): bool {
-    return pcStrEqIgnoreCase(name, "font-face") || pcStrEqIgnoreCase(name, "page");
+fn pcIsDeclAtRule(name: string): bool {
+    return eqIgnoreCase(name, "font-face") || eqIgnoreCase(name, "page");
 }
 
 pub struct PostCssDecl {
@@ -181,7 +126,7 @@ fn pcAddComment(sheet: *PostCssSheet, raw_text: []const u8) {
 /// Returns `false` if an unterminated comment is encountered.
 fn pcSkipWsAndComments(css: string, pos: *usize, end: usize, sheet: *PostCssSheet): bool {
     while (pos.* < end) {
-        if (pcIsSpace(css[pos.*])) {
+        if (isSpace(css[pos.*])) {
             pos.* = pos.* + 1;
             continue;
         }
@@ -232,7 +177,7 @@ fn pcScanString(css: string, pos: *usize, end: usize, sheet: *PostCssSheet): boo
 
 /// Strips inline comments from `css[start..end]` into `dst`, preserving quoted strings.
 fn pcExtractCleanText(css: string, start: usize, end: usize, dst: []u8, sheet: *PostCssSheet): usize {
-    let tmp: [256]u8 = [0; 256];
+    let tmp: [256]u8 = undefined;
     let tlen: usize = 0;
     let i = start;
     while (i < end) {
@@ -281,7 +226,7 @@ fn pcExtractCleanText(css: string, start: usize, end: usize, dst: []u8, sheet: *
 /// Checks and strips trailing `!important` (case-insensitive) from `buf[0..len]`.
 fn pcStripImportant(buf: []u8, len: *usize): bool {
     let n = len.*;
-    while (n > 0 && pcIsSpace(buf[n - 1])) {
+    while (n > 0 && isSpace(buf[n - 1])) {
         n = n - 1;
     }
     if (n < 10) {
@@ -289,12 +234,12 @@ fn pcStripImportant(buf: []u8, len: *usize): bool {
         return false;
     }
     // Check trailing "important" (9 chars)
-    if (!pcStrEqIgnoreCase(buf[n - 9..n], "important")) {
+    if (!eqIgnoreCase(buf[n - 9..n], "important")) {
         len.* = n;
         return false;
     }
     let k = n - 9;
-    while (k > 0 && pcIsSpace(buf[k - 1])) {
+    while (k > 0 && isSpace(buf[k - 1])) {
         k = k - 1;
     }
     if (k == 0 || buf[k - 1] != 33) { // '!'
@@ -302,7 +247,7 @@ fn pcStripImportant(buf: []u8, len: *usize): bool {
         return false;
     }
     k = k - 1;
-    while (k > 0 && pcIsSpace(buf[k - 1])) {
+    while (k > 0 && isSpace(buf[k - 1])) {
         k = k - 1;
     }
     len.* = k;
@@ -476,7 +421,7 @@ fn pcParseBlockList(css: string, start: usize, end: usize, parent_node: i32, dep
         if (css[pos] == 64) { // '@' At-Rule
             pos = pos + 1;
             const name_start = pos;
-            while (pos < end && !pcIsSpace(css[pos]) && css[pos] != 59 && css[pos] != 123 && css[pos] != 40) {
+            while (pos < end && !isSpace(css[pos]) && css[pos] != 59 && css[pos] != 123 && css[pos] != 40) {
                 pos = pos + 1;
             }
             const name_end = pos;
@@ -793,8 +738,8 @@ pub struct PostCssSheet {
             if (p >= 0) {
                 const ni = p as usize;
                 if (_.nodes[ni].kind == PC_RULE
-                    && pcStrEq(_.nodes[ni].name[0.._.nodes[ni].name_len], selector)
-                    && pcStrEqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
+                    && strEq(_.nodes[ni].name[0.._.nodes[ni].name_len], selector)
+                    && eqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
                     found_idx = d as i64;
                 }
             }
@@ -804,13 +749,7 @@ pub struct PostCssSheet {
             return -1;
         }
         const di = found_idx as usize;
-        const n = if (_.decls[di].value_len < out.len) { _.decls[di].value_len } else { out.len };
-        let i: usize = 0;
-        while (i < n) {
-            out[i] = _.decls[di].value[i];
-            i = i + 1;
-        }
-        return n as i64;
+        return writeStr(_.decls[di].value[0.._.decls[di].value_len], out, 0) as i64;
     }
 
     /// Returns whether the matching declaration `(selector, prop)` has `!important`.
@@ -822,8 +761,8 @@ pub struct PostCssSheet {
             if (p >= 0) {
                 const ni = p as usize;
                 if (_.nodes[ni].kind == PC_RULE
-                    && pcStrEq(_.nodes[ni].name[0.._.nodes[ni].name_len], selector)
-                    && pcStrEqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
+                    && strEq(_.nodes[ni].name[0.._.nodes[ni].name_len], selector)
+                    && eqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
                     imp = _.decls[d].important;
                 }
             }
@@ -838,7 +777,7 @@ pub struct PostCssSheet {
         let target_rule: i32 = -1;
         let n: usize = 0;
         while (n < _.node_len) {
-            if (_.nodes[n].kind == PC_RULE && pcStrEq(_.nodes[n].name[0.._.nodes[n].name_len], selector)) {
+            if (_.nodes[n].kind == PC_RULE && strEq(_.nodes[n].name[0.._.nodes[n].name_len], selector)) {
                 target_rule = n as i32;
             }
             n = n + 1;
@@ -848,7 +787,7 @@ pub struct PostCssSheet {
             let d: usize = 0;
             while (d < _.decl_len) {
                 if (_.decls[d].parent_node == target_rule
-                    && pcStrEqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
+                    && eqIgnoreCase(_.decls[d].prop[0.._.decls[d].prop_len], prop)) {
                     _.decls[d].value_len = pcCopyTrimmed(val, _.decls[d].value[0..128]);
                     _.decls[d].important = important;
                     return true;
