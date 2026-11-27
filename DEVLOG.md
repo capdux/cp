@@ -616,3 +616,8 @@
 - **成果**：通过零冲突分片双路并行（Waves 9~16），将全生态 904 包剩余所有可复用 `cap:ascii`/`cap:bin`/`cap:fmt` 的裸包彻底清零，`Uses cap:* stdlib` 达 **284**。
 - **内置标准库提质**：通过 `temp/batch_fix_static_init.py` 受控批处理 + `cpc check` 严审，一次升级 197 个 `lib/` 文件的 `static fn init`，结合逐模块 `-m` 抽测修复，实现 38 大核心内置标准库模块 `-m` 深测全绿。
 - **下阶段推导**：自动转入 **Phase 4B（全生态大栈清零 `[0; N>=32] -> undefined` + SIMD 深化）**，由 Worker AE（Batch 5，Top 10）与 Worker AF（Batch 6，12 包）双路零冲突推进。
+
+## 2026-11-27: 854/854 (100.0%) 全仓生态回归大满贯 + ReleaseFast 性能实测 + 16 短包 API 补全
+- **性能实测**：在 LLVM ReleaseFast 下实测 8 个 Phase 4C 核心包，`utf8parse` 达 **17.8 GB/s**、`lz4_flex` 解压 **3.1 GB/s**、`crc32fast` **1.1 GB/s**、`semver` **6.39M ops/s**、`qs` **5.87M ops/s**，验证了 16-lane SIMD / Slice-by-4 LUT / `@memcpy` 的真实加速收益。
+- **全仓大考**：854 套 `testCap*.cp` 首轮 819/854 (95.90%) 通过，剩余 35 项精准归类为旧别名路径越界(18)、测试内重名冲突(9)、API/断言(5)与并发偶发超时(3)，由 Worker AP 一次性全部清零达成 **854/854 (100.0%) PASS**。
+- **持续推进**：启动 Worker AQ & Worker AR 双路并行精修 Top 24 明星包的中英双语与 Agent 极简文档。

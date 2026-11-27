@@ -1446,3 +1446,9 @@
 ## [2026-11-27] - 全生态 904 包 L0 标准库去重 Waves 9~16 100% 全面清零 + 38 大内置标准库 `-m` 深测全绿
 - **生态去重 Waves 9~16 (+78 包)**：完成 `n-z` 半区与 `a-m` 半区全部剩余单-helper 裸包重构（净删减 **-1,685 LOC**，**100% PASS**），全仓 `Uses cap:* stdlib` 跃升至 **284**，904 包 L0 去重阶段圆满收官。
 - **内置标准库 `lib/` 大规模 `-m` 绿灯**：批量升级 **197 个标准库文件**的 `static fn init`，并补齐 `lib/net`/`lib/agent`/`lib/ds`/`lib/graph`/`lib/sys`/`lib/db`/`lib/web`/`lib/cli`/`lib/http`/`lib/path` 等模块静态工厂方法，38 大核心内置标准库 `-m` 深测全部 PASS。
+
+## [2026-11-27] - Phase 4B/4C 性能全面突破 + 16 短包 API 补全 + 全仓 854/854 (100.0%) 生态回归大满贯
+- **Phase 4B (Batch 5~8, 42 包)**：全面清零全仓 `[0; N>=32]` 无意义栈清零（累计消除 **~91 KB+/call**，`undefined=396`），258/258 PASS。
+- **Phase 4C (Batch 9~12, 23 核心包)**：升级 `crc32fast`/`crc64fast` Slice-by-4 LUT、`utf8parse`/`marked`/`toml_writer`/`hexdump-nodejs` 16-lane `@Vector(16, u8)` SIMD、`lz4_flex`/`snap`/`url`/`qs`/`ini`/`picomatch`/`semver`/`bytes`/`diff` 等 16-lane SIMD & `@memcpy`；产出实测基准报告 [ECOSYSTEM_PERF_REPORT.md](file:///data/dev/cp/bench/ECOSYSTEM_PERF_REPORT.md)（`utf8parse` **17.8 GB/s**、`lz4_flex` **3.1 GB/s**、`crc32fast` **1.1 GB/s**）。
+- **“做全不做薄”API 补全 (Batch 1~2, 16 包)**：补齐 `type-is`/`dom-accessibility-api`/`zod-validation-error`/`miniz_oxide`/`p-map`/`bit_field`/`deranged`/`bytemuck`/`hdrhistogram`/`p-queue`/`zerocopy`/`immer`/`schema-utils`/`jest-docblock`/`finalhandler`/`media-typer` 完整源包接口（+6,635 LOC，124/124 PASS），刷新全部 904 包文档。
+- **全仓 854/854 (100.0%) 生态回归大满贯**：运行全部 854 套 `cap/test/testCap*.cp` 并清零全部 35 项失败（含修复 `cookie-signature` 标准 Base64 `+/ ` 与抽离 `negotiator/src/core.cp` 消除与 `accepts` 扁平重名冲突）。
