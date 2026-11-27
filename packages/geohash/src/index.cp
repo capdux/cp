@@ -1,8 +1,24 @@
 // @cap/geohash — Zero-allocation Base32 Geohash encoder, bounding-box decoder & 8-way neighbor finder for CP
 // Clean-room MIT implementation inspired by Rust `geohash` and npm `ngeohash`.
+// Accelerated with comptime 256-entry Base32 decode LUT, 16-lane @Vector(16, u8) SIMD range guard, and bit-shifts.
+
+type GhVec16 = @Vector(16, u8);
 
 const BASE32_ALPHABET: string = "0123456789bcdefghjkmnpqrstuvwxyz";
 const MAX_PRECISION: usize = 12;
+
+fn ghBuildDecodeLut() -> [256]i16 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]i16 = [-1 as i16; 256];
+    let i: usize = 0;
+    while (i < 32) {
+        lut[BASE32_ALPHABET[i] as usize] = i as i16;
+        i += 1;
+    }
+    return lut;
+}
+
+const GH_DECODE_LUT: [256]i16 = ghBuildDecodeLut();
 
 pub struct GeoPoint {
     pub lat: f64,
@@ -28,23 +44,25 @@ fn invalidBBox() -> GeoBBox {
 }
 
 fn base32Index(c: u8) -> i16 {
-    let i: usize = 0;
-    while (i < 32) {
-        if (BASE32_ALPHABET[i] == c) {
-            return i as i16;
-        }
-        i += 1;
-    }
-    return -1 as i16;
+    return GH_DECODE_LUT[c as usize];
 }
 
 pub fn isValid(hash: []const u8) -> bool {
     if (hash.len == 0 || hash.len > MAX_PRECISION) {
         return false;
     }
+    // Load up to 12 bytes into a 16-lane SIMD vector padded with '0' for 1-instruction ASCII range rejection
+    let padded: [16]u8 = ['0' as u8; 16];
+    @memcpy(padded[0..hash.len], hash);
+    const v: GhVec16 = padded;
+    const v_lo: GhVec16 = @splat('0' as u8);
+    const v_hi: GhVec16 = @splat('z' as u8);
+    if (@reduce(.Or, v < v_lo) || @reduce(.Or, v > v_hi)) {
+        return false;
+    }
     let i: usize = 0;
     while (i < hash.len) {
-        if (base32Index(hash[i]) < (0 as i16)) {
+        if (GH_DECODE_LUT[hash[i] as usize] < (0 as i16)) {
             return false;
         }
         i += 1;
@@ -74,19 +92,19 @@ pub fn encode(lat: f64, lon: f64, precision: usize, dst: []u8) -> usize {
         if (isLon) {
             const mid = (minLon + maxLon) * 0.5;
             if (lon >= mid) {
-                chIdx = (chIdx * (2 as usize)) + (1 as usize);
+                chIdx = (chIdx << 1) | (1 as usize);
                 minLon = mid;
             } else {
-                chIdx = chIdx * (2 as usize);
+                chIdx = chIdx << 1;
                 maxLon = mid;
             }
         } else {
             const mid = (minLat + maxLat) * 0.5;
             if (lat >= mid) {
-                chIdx = (chIdx * (2 as usize)) + (1 as usize);
+                chIdx = (chIdx << 1) | (1 as usize);
                 minLat = mid;
             } else {
-                chIdx = chIdx * (2 as usize);
+                chIdx = chIdx << 1;
                 maxLat = mid;
             }
         }
@@ -115,7 +133,7 @@ pub fn decodeBBox(hash: []const u8) -> GeoBBox {
 
     let i: usize = 0;
     while (i < hash.len) {
-        const idx = base32Index(hash[i]);
+        const idx = GH_DECODE_LUT[hash[i] as usize];
         if (idx < (0 as i16)) {
             return invalidBBox();
         }
@@ -139,7 +157,7 @@ pub fn decodeBBox(hash: []const u8) -> GeoBBox {
                 }
             }
             isLon = !isLon;
-            mask = mask / (2 as u8);
+            mask = mask >> 1;
         }
         i += 1;
     }

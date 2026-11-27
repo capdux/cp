@@ -1,5 +1,8 @@
 // @cap/base16ct — Pure CP zero-allocation constant-time Base16 / Hex codec
 // Parity with RustCrypto `base16ct` (table-free branchless arithmetic masks, zero lookup tables).
+// Accelerated with 16-lane @Vector(16, u8) constant-time SIMD encode/decode/zeroing and @memcpy.
+
+type B16Vec16 = @Vector(16, u8);
 
 pub struct HexDecodeResult {
     pub len: usize,
@@ -46,10 +49,16 @@ fn b16DecodeNibble(ch: u8, allow_lower: bool, allow_upper: bool): u32 {
 }
 
 fn b16ZeroOut(out: []u8, n: usize) {
+    const limit = if (n < out.len) n else out.len;
+    const z_arr: [16]u8 = [0; 16];
     let i: usize = 0;
-    while (i < n && i < out.len) {
+    while (i + 16 <= limit) {
+        @memcpy(out[i .. i + 16], z_arr[0..16]);
+        i += 16;
+    }
+    while (i < limit) {
         out[i] = 0;
-        i = i + 1;
+        i += 1;
     }
 }
 
@@ -57,7 +66,7 @@ pub fn encodedLen(n: usize): usize {
     return n * 2;
 }
 
-pub fn encodeLower(src: []u8, out: []u8): usize {
+fn b16EncodeSimd(src: []u8, out: []u8, alpha_offset: u8): usize {
     let need = encodedLen(src.len);
     if (need == 0) {
         return 0;
@@ -65,36 +74,60 @@ pub fn encodeLower(src: []u8, out: []u8): usize {
     if (out.len < need) {
         return 0;
     }
+    const v_48: B16Vec16 = @splat(48 as u8);
+    const v_10: B16Vec16 = @splat(10 as u8);
+    const v_off: B16Vec16 = @splat(alpha_offset);
+    const v_zero: B16Vec16 = @splat(0 as u8);
+
     let i: usize = 0;
     let o: usize = 0;
+    while (i + 8 <= src.len) {
+        let nibs: [16]u8 = undefined;
+        nibs[0] = src[i] >> 4;
+        nibs[1] = src[i] & 0x0F;
+        nibs[2] = src[i + 1] >> 4;
+        nibs[3] = src[i + 1] & 0x0F;
+        nibs[4] = src[i + 2] >> 4;
+        nibs[5] = src[i + 2] & 0x0F;
+        nibs[6] = src[i + 3] >> 4;
+        nibs[7] = src[i + 3] & 0x0F;
+        nibs[8] = src[i + 4] >> 4;
+        nibs[9] = src[i + 4] & 0x0F;
+        nibs[10] = src[i + 5] >> 4;
+        nibs[11] = src[i + 5] & 0x0F;
+        nibs[12] = src[i + 6] >> 4;
+        nibs[13] = src[i + 6] & 0x0F;
+        nibs[14] = src[i + 7] >> 4;
+        nibs[15] = src[i + 7] & 0x0F;
+
+        const vn: B16Vec16 = nibs;
+        const ascii_v: B16Vec16 = vn + v_48 + @select(u8, vn >= v_10, v_off, v_zero);
+        const arr: [16]u8 = ascii_v;
+        @memcpy(out[o .. o + 16], arr[0..16]);
+        i += 8;
+        o += 16;
+    }
     while (i < src.len) {
         let b = src[i];
-        out[o] = b16EncodeNibbleLower(b >> 4);
-        out[o + 1] = b16EncodeNibbleLower(b & 0x0F);
-        i = i + 1;
-        o = o + 2;
+        if (alpha_offset == 39) {
+            out[o] = b16EncodeNibbleLower(b >> 4);
+            out[o + 1] = b16EncodeNibbleLower(b & 0x0F);
+        } else {
+            out[o] = b16EncodeNibbleUpper(b >> 4);
+            out[o + 1] = b16EncodeNibbleUpper(b & 0x0F);
+        }
+        i += 1;
+        o += 2;
     }
     return o;
 }
 
+pub fn encodeLower(src: []u8, out: []u8): usize {
+    return b16EncodeSimd(src, out, 39);
+}
+
 pub fn encodeUpper(src: []u8, out: []u8): usize {
-    let need = encodedLen(src.len);
-    if (need == 0) {
-        return 0;
-    }
-    if (out.len < need) {
-        return 0;
-    }
-    let i: usize = 0;
-    let o: usize = 0;
-    while (i < src.len) {
-        let b = src[i];
-        out[o] = b16EncodeNibbleUpper(b >> 4);
-        out[o + 1] = b16EncodeNibbleUpper(b & 0x0F);
-        i = i + 1;
-        o = o + 2;
-    }
-    return o;
+    return b16EncodeSimd(src, out, 7);
 }
 
 fn b16DecodeCore(hex: string, out: []u8, allow_lower: bool, allow_upper: bool): HexDecodeResult {
@@ -110,16 +143,61 @@ fn b16DecodeCore(hex: string, out: []u8, allow_lower: bool, allow_upper: bool): 
         return HexDecodeResult { len: 0, ok: false };
     }
 
+    const v_zero: B16Vec16 = @splat(0 as u8);
+    const v_one: B16Vec16 = @splat(1 as u8);
+    const v_48: B16Vec16 = @splat(48 as u8);
+    const v_57: B16Vec16 = @splat(57 as u8);
+    const v_97: B16Vec16 = @splat(97 as u8);
+    const v_102: B16Vec16 = @splat(102 as u8);
+    const v_87: B16Vec16 = @splat(87 as u8);
+    const v_65: B16Vec16 = @splat(65 as u8);
+    const v_70: B16Vec16 = @splat(70 as u8);
+    const v_55: B16Vec16 = @splat(55 as u8);
+
+    let err_vec: B16Vec16 = v_zero;
     let err: u32 = 0;
     let i: usize = 0;
     let oi: usize = 0;
+
+    while (i + 16 <= hex.len) {
+        const v: B16Vec16 = hex[i .. i + 16][0..16].*;
+        const m_dig: B16Vec16 = @select(u8, v >= v_48, v_one, v_zero) & @select(u8, v <= v_57, v_one, v_zero);
+        let m_low: B16Vec16 = v_zero;
+        if (allow_lower) {
+            m_low = @select(u8, v >= v_97, v_one, v_zero) & @select(u8, v <= v_102, v_one, v_zero);
+        }
+        let m_upp: B16Vec16 = v_zero;
+        if (allow_upper) {
+            m_upp = @select(u8, v >= v_65, v_one, v_zero) & @select(u8, v <= v_70, v_one, v_zero);
+        }
+        const valid: B16Vec16 = m_dig | m_low | m_upp;
+        err_vec = err_vec | (valid ^ v_one);
+
+        const nib_v: B16Vec16 = ((v -% v_48) * m_dig) | ((v -% v_87) * m_low) | ((v -% v_55) * m_upp);
+        const vals: [16]u8 = nib_v;
+        out[oi] = (vals[0] << 4) | vals[1];
+        out[oi + 1] = (vals[2] << 4) | vals[3];
+        out[oi + 2] = (vals[4] << 4) | vals[5];
+        out[oi + 3] = (vals[6] << 4) | vals[7];
+        out[oi + 4] = (vals[8] << 4) | vals[9];
+        out[oi + 5] = (vals[10] << 4) | vals[11];
+        out[oi + 6] = (vals[12] << 4) | vals[13];
+        out[oi + 7] = (vals[14] << 4) | vals[15];
+        i += 16;
+        oi += 8;
+    }
+
+    if (@reduce(.Or, err_vec != v_zero)) {
+        err = err | 0x80;
+    }
+
     while (i < hex.len) {
         let hi = b16DecodeNibble(hex[i], allow_lower, allow_upper);
         let lo = b16DecodeNibble(hex[i + 1], allow_lower, allow_upper);
         err = err | hi | lo;
         out[oi] = (((hi & 0x0F) << 4) | (lo & 0x0F)) as u8;
-        i = i + 2;
-        oi = oi + 1;
+        i += 2;
+        oi += 1;
     }
 
     if ((err & 0x80) != 0) {

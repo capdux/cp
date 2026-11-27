@@ -1,5 +1,9 @@
 // @cap/utf16-codec — Zero-heap UTF-8 <-> UTF-16 / UTF-16LE codec & BOM detector
 // MIT License (clean-room CP implementation)
+// Accelerated with 16-lane @Vector(16, u8) / @Vector(8, u16) SIMD ASCII fast-paths and @memcpy.
+
+type U16Vec16 = @Vector(16, u8);
+type U16Vec8 = @Vector(8, u16);
 
 pub const BOM_NONE: u8 = 0;
 pub const BOM_UTF16_LE: u8 = 1;
@@ -125,9 +129,24 @@ fn encodeUtf8Scalar(cp: u32, out: []u8, pos: usize) -> i64 {
 }
 
 pub fn countUtf16Units(utf8: string) -> i64 {
+    const v_hi: U16Vec16 = @splat(0x80 as u8);
+    const v_zero: U16Vec16 = @splat(0 as u8);
     let pos: usize = 0;
     let units: usize = 0;
     while (pos < utf8.len) {
+        if (pos + 16 <= utf8.len) {
+            const v: U16Vec16 = utf8[pos .. pos + 16][0..16].*;
+            if (!@reduce(.Or, (v & v_hi) != v_zero)) {
+                units += 16;
+                pos += 16;
+                continue;
+            }
+        }
+        if (utf8[pos] < 0x80) {
+            units += 1;
+            pos += 1;
+            continue;
+        }
         let cp: u32 = 0;
         const nxt: i64 = decodeUtf8Next(utf8, pos, &cp);
         if (nxt < 0) {
@@ -144,9 +163,36 @@ pub fn countUtf16Units(utf8: string) -> i64 {
 }
 
 pub fn utf8ToUtf16(utf8: string, out: []u16) -> i64 {
+    const v_hi: U16Vec16 = @splat(0x80 as u8);
+    const v_zero: U16Vec16 = @splat(0 as u8);
     let pos: usize = 0;
     let out_pos: usize = 0;
     while (pos < utf8.len) {
+        if (pos + 16 <= utf8.len && out_pos + 16 <= out.len) {
+            const v: U16Vec16 = utf8[pos .. pos + 16][0..16].*;
+            if (!@reduce(.Or, (v & v_hi) != v_zero)) {
+                const a: [16]u8 = v;
+                out[out_pos + 0] = a[0] as u16;
+                out[out_pos + 1] = a[1] as u16;
+                out[out_pos + 2] = a[2] as u16;
+                out[out_pos + 3] = a[3] as u16;
+                out[out_pos + 4] = a[4] as u16;
+                out[out_pos + 5] = a[5] as u16;
+                out[out_pos + 6] = a[6] as u16;
+                out[out_pos + 7] = a[7] as u16;
+                out[out_pos + 8] = a[8] as u16;
+                out[out_pos + 9] = a[9] as u16;
+                out[out_pos + 10] = a[10] as u16;
+                out[out_pos + 11] = a[11] as u16;
+                out[out_pos + 12] = a[12] as u16;
+                out[out_pos + 13] = a[13] as u16;
+                out[out_pos + 14] = a[14] as u16;
+                out[out_pos + 15] = a[15] as u16;
+                pos += 16;
+                out_pos += 16;
+                continue;
+            }
+        }
         let cp: u32 = 0;
         const nxt: i64 = decodeUtf8Next(utf8, pos, &cp);
         if (nxt < 0) {
@@ -173,9 +219,28 @@ pub fn utf8ToUtf16(utf8: string, out: []u16) -> i64 {
 }
 
 pub fn utf16ToUtf8(utf16: []const u16, out: []u8) -> i64 {
+    const v_mask: U16Vec8 = @splat(0xFF80 as u16);
+    const v_zero: U16Vec8 = @splat(0 as u16);
     let i: usize = 0;
     let out_pos: usize = 0;
     while (i < utf16.len) {
+        if (i + 8 <= utf16.len && out_pos + 8 <= out.len) {
+            const v: U16Vec8 = utf16[i .. i + 8][0..8].*;
+            if (!@reduce(.Or, (v & v_mask) != v_zero)) {
+                const a: [8]u16 = v;
+                out[out_pos + 0] = a[0] as u8;
+                out[out_pos + 1] = a[1] as u8;
+                out[out_pos + 2] = a[2] as u8;
+                out[out_pos + 3] = a[3] as u8;
+                out[out_pos + 4] = a[4] as u8;
+                out[out_pos + 5] = a[5] as u8;
+                out[out_pos + 6] = a[6] as u8;
+                out[out_pos + 7] = a[7] as u8;
+                i += 8;
+                out_pos += 8;
+                continue;
+            }
+        }
         const unit: u16 = utf16[i];
         let cp: u32 = 0;
         if (unit >= 0xD800 && unit <= 0xDBFF) {
@@ -207,9 +272,38 @@ pub fn utf16ToUtf8(utf16: []const u16, out: []u8) -> i64 {
 }
 
 pub fn utf8ToUtf16LeBytes(utf8: string, out: []u8) -> i64 {
+    const v_hi: U16Vec16 = @splat(0x80 as u8);
+    const v_zero: U16Vec16 = @splat(0 as u8);
     let pos: usize = 0;
     let out_pos: usize = 0;
     while (pos < utf8.len) {
+        if (pos + 16 <= utf8.len && out_pos + 32 <= out.len) {
+            const v: U16Vec16 = utf8[pos .. pos + 16][0..16].*;
+            if (!@reduce(.Or, (v & v_hi) != v_zero)) {
+                const a: [16]u8 = v;
+                let tmp: [32]u8 = undefined;
+                tmp[0] = a[0]; tmp[1] = 0;
+                tmp[2] = a[1]; tmp[3] = 0;
+                tmp[4] = a[2]; tmp[5] = 0;
+                tmp[6] = a[3]; tmp[7] = 0;
+                tmp[8] = a[4]; tmp[9] = 0;
+                tmp[10] = a[5]; tmp[11] = 0;
+                tmp[12] = a[6]; tmp[13] = 0;
+                tmp[14] = a[7]; tmp[15] = 0;
+                tmp[16] = a[8]; tmp[17] = 0;
+                tmp[18] = a[9]; tmp[19] = 0;
+                tmp[20] = a[10]; tmp[21] = 0;
+                tmp[22] = a[11]; tmp[23] = 0;
+                tmp[24] = a[12]; tmp[25] = 0;
+                tmp[26] = a[13]; tmp[27] = 0;
+                tmp[28] = a[14]; tmp[29] = 0;
+                tmp[30] = a[15]; tmp[31] = 0;
+                @memcpy(out[out_pos .. out_pos + 32], tmp[0..32]);
+                pos += 16;
+                out_pos += 32;
+                continue;
+            }
+        }
         let cp: u32 = 0;
         const nxt: i64 = decodeUtf8Next(utf8, pos, &cp);
         if (nxt < 0) {
@@ -244,9 +338,32 @@ pub fn utf16LeBytesToUtf8(bytes: []const u8, out: []u8) -> i64 {
     if ((bytes.len % 2) != 0) {
         return -1;
     }
+    // Mask checking: even bytes < 0x80 (bit 0x80 clear) and odd bytes == 0x00
+    const v_ascii_mask: U16Vec16 = [
+        0x80, 0xFF, 0x80, 0xFF, 0x80, 0xFF, 0x80, 0xFF,
+        0x80, 0xFF, 0x80, 0xFF, 0x80, 0xFF, 0x80, 0xFF,
+    ];
+    const v_zero: U16Vec16 = @splat(0 as u8);
     let i: usize = 0;
     let out_pos: usize = 0;
     while (i < bytes.len) {
+        if (i + 16 <= bytes.len && out_pos + 8 <= out.len) {
+            const v: U16Vec16 = bytes[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, (v & v_ascii_mask) != v_zero)) {
+                const a: [16]u8 = v;
+                out[out_pos + 0] = a[0];
+                out[out_pos + 1] = a[2];
+                out[out_pos + 2] = a[4];
+                out[out_pos + 3] = a[6];
+                out[out_pos + 4] = a[8];
+                out[out_pos + 5] = a[10];
+                out[out_pos + 6] = a[12];
+                out[out_pos + 7] = a[14];
+                i += 16;
+                out_pos += 8;
+                continue;
+            }
+        }
         const unit: u16 = (bytes[i] as u16) | ((bytes[i + 1] as u16) << 8);
         let cp: u32 = 0;
         if (unit >= 0xD800 && unit <= 0xDBFF) {

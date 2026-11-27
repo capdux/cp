@@ -1,37 +1,64 @@
 // packages/@cap/ulid/src/index.cp
 // Zero-allocation ULID (48-bit Unix ms + 80-bit entropy, Crockford Base32) engine.
 // MIT clean-room pure CP implementation.
+// Accelerated with comptime 256-entry Crockford Base32 LUT, 16-lane @Vector(16, u8) SIMD compare, and @memcpy.
+
+type UlidVec16 = @Vector(16, u8);
 
 /// 128-bit big-endian ULID: `bytes[0..6]` = 48-bit Unix ms timestamp, `bytes[6..16]` = 80-bit entropy.
 pub struct Ulid {
     pub bytes: [16]u8,
 }
 
+const ULID_ALPHABET: string = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+fn ulBuildDecodeLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF as u8; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= ('0' as usize) && c <= ('9' as usize)) {
+            lut[c] = (c - ('0' as usize)) as u8;
+        } else {
+            let u = c;
+            if (u >= ('a' as usize) && u <= ('z' as usize)) {
+                u = u - 32;
+            }
+            if (u == ('O' as usize)) {
+                lut[c] = 0 as u8;
+            } else if (u == ('I' as usize) || u == ('L' as usize)) {
+                lut[c] = 1 as u8;
+            } else if (u >= ('A' as usize) && u <= ('H' as usize)) {
+                lut[c] = (10 + (u - ('A' as usize))) as u8;
+            } else if (u == ('J' as usize)) {
+                lut[c] = 18 as u8;
+            } else if (u == ('K' as usize)) {
+                lut[c] = 19 as u8;
+            } else if (u == ('M' as usize)) {
+                lut[c] = 20 as u8;
+            } else if (u == ('N' as usize)) {
+                lut[c] = 21 as u8;
+            } else if (u >= ('P' as usize) && u <= ('T' as usize)) {
+                lut[c] = (22 + (u - ('P' as usize))) as u8;
+            } else if (u >= ('V' as usize) && u <= ('Z' as usize)) {
+                lut[c] = (27 + (u - ('V' as usize))) as u8;
+            }
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const ULID_DECODE_LUT: [256]u8 = ulBuildDecodeLut();
+
 fn ulEncodeChar(v: u8): u8 {
-    const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-    return alphabet[(v & (0x1F as u8)) as usize];
+    return ULID_ALPHABET[(v & (0x1F as u8)) as usize];
 }
 
 /// Decode a Crockford Base32 character (case-insensitive, `I`/`L` -> `1`, `O` -> `0`).
 /// Returns `0..31` on success, or `0xFF` on invalid character (e.g. `U`, punctuation).
 fn ulDecodeChar(c: u8): u8 {
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return c - ('0' as u8);
-    }
-    let u = c;
-    if (u >= ('a' as u8) && u <= ('z' as u8)) {
-        u = u - (32 as u8);
-    }
-    if (u == ('O' as u8)) { return 0 as u8; }
-    if (u == ('I' as u8) || u == ('L' as u8)) { return 1 as u8; }
-    if (u >= ('A' as u8) && u <= ('H' as u8)) { return (10 as u8) + (u - ('A' as u8)); }
-    if (u == ('J' as u8)) { return 18 as u8; }
-    if (u == ('K' as u8)) { return 19 as u8; }
-    if (u == ('M' as u8)) { return 20 as u8; }
-    if (u == ('N' as u8)) { return 21 as u8; }
-    if (u >= ('P' as u8) && u <= ('T' as u8)) { return (22 as u8) + (u - ('P' as u8)); }
-    if (u >= ('V' as u8) && u <= ('Z' as u8)) { return (27 as u8) + (u - ('V' as u8)); }
-    return 0xFF as u8;
+    return ULID_DECODE_LUT[c as usize];
 }
 
 /// Construct a `Ulid` from a 48-bit Unix millisecond timestamp and 10 bytes (80 bits) of entropy.
@@ -43,12 +70,7 @@ pub fn fromParts(timestamp_ms: u64, rand_bytes: [10]u8): Ulid {
     b[3] = ((timestamp_ms >> (16 as u6)) & (0xFF as u64)) as u8;
     b[4] = ((timestamp_ms >> (8 as u6)) & (0xFF as u64)) as u8;
     b[5] = (timestamp_ms & (0xFF as u64)) as u8;
-
-    let i: usize = 0;
-    while (i < 10) {
-        b[6 + i] = rand_bytes[i];
-        i += 1;
-    }
+    @memcpy(b[6..16], rand_bytes[0..10]);
     return Ulid{ bytes: b };
 }
 
@@ -153,25 +175,28 @@ pub fn decode(s: string, out: *Ulid): bool {
 
 /// Validate whether `s` is a legal 26-character ULID string.
 pub fn isValidUlid(s: string): bool {
-    let dummyBytes: [16]u8 = undefined;
-    let i: usize = 0;
-    while (i < 16) {
-        dummyBytes[i] = 0 as u8;
+    if (s.len != 26) {
+        return false;
+    }
+    const d0 = ULID_DECODE_LUT[s[0] as usize];
+    if (d0 > (7 as u8)) {
+        return false;
+    }
+    let i: usize = 1;
+    while (i < 26) {
+        if (ULID_DECODE_LUT[s[i] as usize] == (0xFF as u8)) {
+            return false;
+        }
         i += 1;
     }
-    let tmp = Ulid{ bytes: dummyBytes };
-    return decode(s, &tmp);
+    return true;
 }
 
 /// Monotonically increment the 80-bit random portion of `u` within the same millisecond.
 /// Returns `false` if all 80 entropy bits are `0xFF` (overflow).
 pub fn increment(u: Ulid, out: *Ulid): bool {
     let next: [16]u8 = undefined;
-    let ci: usize = 0;
-    while (ci < 16) {
-        next[ci] = u.bytes[ci];
-        ci += 1;
-    }
+    @memcpy(next[0..16], u.bytes[0..16]);
 
     let idx: usize = 16;
     while (idx > 6) {
@@ -188,6 +213,11 @@ pub fn increment(u: Ulid, out: *Ulid): bool {
 
 /// Unsigned 16-byte lexicographical comparison between two ULIDs (`-1`, `0`, `1`).
 pub fn compare(a: Ulid, b: Ulid): i32 {
+    const va: UlidVec16 = a.bytes;
+    const vb: UlidVec16 = b.bytes;
+    if (@reduce(.And, va == vb)) {
+        return 0 as i32;
+    }
     let i: usize = 0;
     while (i < 16) {
         if (a.bytes[i] < b.bytes[i]) {
