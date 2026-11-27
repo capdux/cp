@@ -702,6 +702,13 @@ pub fn handleCheck(
             defer walker.deinit();
             while (try walker.next(io)) |entry| {
                 if (entry.kind != .file) continue;
+                if (std.mem.startsWith(u8, entry.path, ".cap/") or
+                    std.mem.startsWith(u8, entry.path, ".git/") or
+                    std.mem.indexOf(u8, entry.path, "/.cap/") != null or
+                    std.mem.indexOf(u8, entry.path, "/.git/") != null)
+                {
+                    continue;
+                }
                 if (!std.mem.endsWith(u8, entry.path, ".cp")) continue;
                 if (std.mem.endsWith(u8, entry.path, ".d.cp")) continue;
                 const full = if (std.mem.eql(u8, target, "."))

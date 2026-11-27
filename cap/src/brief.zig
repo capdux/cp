@@ -131,7 +131,9 @@ fn writeFirstNLines(io: std.Io, out: std.Io.File, text: []const u8, max_lines: u
         }
     }
     if (truncated) {
-        out.writeStreamingAll(io, "... (truncated to first 40 lines)\n") catch {};
+        var msg_buf: [64]u8 = undefined;
+        const msg = std.fmt.bufPrint(&msg_buf, "... (truncated to first {d} lines)\n", .{max_lines}) catch "... (truncated)\n";
+        out.writeStreamingAll(io, msg) catch {};
     }
 }
 
