@@ -1,121 +1,102 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # oorandom
 
-零堆分配的确定性 PCG32（`Rand32`）与双流 PCG64（`Rand64`）伪随机数生成器，支持有符号/无符号区间采样、浮点生成、字节填充、状态快照恢复与 O(log N) 快速前跳。参考 Rust `oorandom` 设计。
+纯 CP 实现的零堆极简确定性伪随机数库，提供 `Rand32`（PCG32 XSH-RR 64/32）与双流 `Rand64`，支持状态快照回放、无偏区间采样与 $O(\log N)$ 快进。
 
-## 源包溯源与零成本迁移
+- **源包对齐**：参考 Rust [`oorandom`](https://sr.ht/~icefox/oorandom/)（`crates.io`，`MIT`）。
+- **包版本**：`1.0.0`
 
-| 项目 | 说明 |
-| :--- | :--- |
-| **源平台** | crates.io |
-| **上游原包** | `oorandom` (`~icefox/oorandom`) |
-| **CP 包名** | `oorandom` (`v1.0.0`) |
-| **许可证** | MIT |
-
-CP 生态保持原包名 `oorandom` 不变，无需 `@cap/*` 前缀或改名：
-
-```rust
-// Rust (crates.io: oorandom)
-use oorandom::Rand32;
-let mut rng = Rand32::new(42);
-let roll = rng.rand_range(1..7);
-```
-
-```typescript
-// CP（保持原包名 "oorandom"）
-import { Rand32 } from "oorandom";
-let mut rng = Rand32.new(42);
-let roll = rng.randRange(1, 7);
-```
-
-## 安装
+## 安装与导入
 
 ```bash
 cap add oorandom
 ```
 
-## 快速上手与实战示例
+在 `cap.json` 中声明依赖：
 
-### 1. `Rand32` — 32 位确定性 PRNG
+```json
+{
+  "dependencies": {
+    "oorandom": "^1.0.0"
+  }
+}
+```
+
+```typescript
+import { Rand32, Rand64, oorStep, oorOutput, oorAdvanceState } from "oorandom";
+```
+
+## 核心 API 参考
+
+### `class Rand32`（PCG32 XSH-RR 64/32）
+
+字段：`st: u64`、`inc: u64`。
+
+| 方法 | 签名 | 说明 |
+| :--- | :--- | :--- |
+| `new` | `Rand32.new(seed: u64): Rand32` | 使用默认流增量初始化 |
+| `newInc` | `Rand32.newInc(seed: u64, inc: u64): Rand32` | 指定种子与流增量 `inc` 初始化 |
+| `fromState` | `Rand32.fromState(st: u64, inc: u64): Rand32` | 从快照 `(st, inc)` 精确恢复生成器状态 |
+| `randU32` / `randI32` | `randU32(*_): u32` / `randI32(*_): i32` | 生成 32 位无符号 / 有符号均匀随机整数 |
+| `randFloat` | `randFloat(*_): f32` | 生成 `[0.0, 1.0)` 均匀分布 `f32` |
+| `randBool` | `randBool(*_): bool` | 生成均匀随机布尔值 |
+| `randRange` / `randRangeI32` | `randRange(*_, start: u32, end: u32): u32` / `randRangeI32(*_, start: i32, end: i32): i32` | 无偏半开区间 `[start, end)` 随机整数 |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | 向调用方缓冲区 `dst` 填充随机字节 |
+| `advance` | `advance(*_, delta: u64)` | $O(\log N)$ 快进 `delta` 步 |
+| `state` / `statePair` | `state(): u64` / `statePair(): [2]u64` | 获取状态快照 `st` 或 `[st, inc]` |
+
+### `class Rand64`（双流 PCG64）
+
+字段：`lo: Rand32`、`hi: Rand32`。
+
+| 方法 | 签名 | 说明 |
+| :--- | :--- | :--- |
+| `new` | `Rand64.new(seed: u64): Rand64` | 使用单个 `u64` 种子初始化 64 位生成器 |
+| `newInc` | `Rand64.newInc(seed_lo: u64, seed_hi: u64, inc_lo: u64, inc_hi: u64): Rand64` | 指定双流种子与增量初始化 |
+| `randU64` / `randI64` | `randU64(*_): u64` / `randI64(*_): i64` | 生成 64 位无符号 / 有符号均匀随机整数 |
+| `randFloat` | `randFloat(*_): f64` | 生成 `[0.0, 1.0)` 均匀分布 `f64` |
+| `randBool` | `randBool(*_): bool` | 生成均匀随机布尔值 |
+| `randRange` / `randRangeI64` | `randRange(*_, start: u64, end: u64): u64` / `randRangeI64(*_, start: i64, end: i64): i64` | 无偏半开 64 位区间 `[start, end)` |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | 填充随机字节至 `dst` |
+| `advance` | `advance(*_, delta: u64)` | 双流同步 $O(\log N)$ 快进 `delta` 步 |
+| `state` | `state(): [2]u64` | 获取双流状态快照 `[lo.st, hi.st]` |
+
+### 底层函数
+
+`oorStep(st: u64, inc: u64): u64`、`oorOutput(oldstate: u64): u32`、`oorAdvanceState(st_in: u64, inc: u64, delta_in: u64): u64`。
+
+## 使用示例
+
+### 1. 游戏确定性掷骰与状态回放
 
 ```typescript
 import { Rand32 } from "oorandom";
 
-fn demoRand32(): void {
-    let mut rng = Rand32.new(42);
-    let mut with_stream = Rand32.newInc(42, 7);
+fn rollAndReplay(): bool {
+    let mut rng = Rand32.new(12345);
+    let snap = rng.statePair();
+    let d20 = rng.randRange(1, 21);
 
-    let u = rng.randU32();
-    let i = rng.randI32();
-    let f = rng.randFloat();              // f32，区间 [0.0, 1.0)
-    let b = rng.randBool();
-    let dice = rng.randRange(1, 7);       // u32，半开区间 [1, 7)
-    let temp = rng.randRangeI32(-10, 11); // i32，半开区间 [-10, 11)
-
-    let mut buf: [16]u8 = undefined;
-    rng.fillBytes(buf[0..16]);
-
-    // 状态快照与精确恢复
-    let pair = rng.statePair();           // [st, inc]
-    let mut restored = Rand32.fromState(pair[0], pair[1]);
-
-    // O(log N) 快速前跳
-    with_stream.advance(5000);
+    let mut replay = Rand32.fromState(snap[0], snap[1]);
+    return replay.randRange(1, 21) == d20;
 }
 ```
 
-### 2. `Rand64` — 双流 64 位 PRNG
+### 2. 64 位有符号区间采样与字节填充
 
 ```typescript
 import { Rand64 } from "oorandom";
 
-fn demoRand64(): void {
-    let mut rng = Rand64.new(123456789);
-    let mut custom = Rand64.newInc(1, 2, 3, 4);
-
-    let u = rng.randU64();
-    let i = rng.randI64();
-    let f = rng.randFloat();              // f64，区间 [0.0, 1.0)
-    let b = rng.randBool();
-    let slot = rng.randRange(100, 200);   // u64，[100, 200)
-    let delta = rng.randRangeI64(-50, 50);
-
-    let mut buf: [32]u8 = undefined;
-    rng.fillBytes(buf[0..32]);
-
-    rng.advance(100000);
-    let st = rng.state(); // [lo.st, hi.st]
+fn sampleWorld(seed: u64, out: []u8): i64 {
+    let mut rng = Rand64.new(seed);
+    rng.fillBytes(out);
+    return rng.randRangeI64(-1000, 1000);
 }
 ```
 
-### 3. 底层 PCG 状态原语
+## 与源包差异与 CP 安全亮点
 
-```typescript
-import { oorStep, oorOutput, oorAdvanceState } from "oorandom";
-
-fn manualStep(): u32 {
-    let st0: u64 = 12345;
-    let inc: u64 = 1442695040888963407;
-    let st1 = oorStep(st0, inc);
-    let st100 = oorAdvanceState(st0, inc, 100);
-    return oorOutput(st100);
-}
-```
-
-## API 速览
-
-### `Rand32`
-- `Rand32.new(seed)` / `Rand32.newInc(seed, inc)` / `Rand32.fromState(st, inc)`
-- `randU32(): u32`、`randI32(): i32`、`randFloat(): f32`、`randBool(): bool`
-- `randRange(start: u32, end: u32): u32`、`randRangeI32(start: i32, end: i32): i32`
-- `fillBytes(dst: []u8)`、`advance(delta: u64)`、`state(): u64`、`statePair(): [2]u64`
-
-### `Rand64`
-- `Rand64.new(seed)` / `Rand64.newInc(seed_lo, seed_hi, inc_lo, inc_hi)`
-- `randU64(): u64`、`randI64(): i64`、`randFloat(): f64`、`randBool(): bool`
-- `randRange(start: u64, end: u64): u64`、`randRangeI64(start: i64, end: i64): i64`
-- `fillBytes(dst: []u8)`、`advance(delta: u64)`、`state(): [2]u64`
-
-### 底层原语
-- `oorStep(st, inc): u64`、`oorOutput(oldstate): u32`、`oorAdvanceState(st_in, inc, delta_in): u64`
+- **零依赖极简设计**：延续 `oorandom` 小巧自包含理念，无复杂 trait 依赖、无堆分配。
+- **内置回放与快进**：原生提供 `fromState`、`statePair`、`fillBytes` 与 `advance`，方便帧同步与并行仿真。
+- **非密码学用途**：仅用于仿真、程序化生成与游戏逻辑，不可用于安全密钥生成。

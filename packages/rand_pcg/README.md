@@ -1,131 +1,103 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # rand_pcg
 
-Zero-heap PCG32 (XSH-RR) and PCG64Mcg (128-bit MCG) pseudorandom number generators with independent streams, unbiased bounded sampling, byte filling, and O(log N) jump-ahead (`advance`). Inspired by Rust `rand_pcg`.
+Zero-heap deterministic `Pcg32` (PCG-XSH-RR 64/32) and `Pcg64Mcg` (128-bit MCG PCG-XSL-RR) pseudorandom number generators with independent streams and $O(\log N)$ jump-ahead in pure CP.
 
-## Provenance & Zero-Friction Migration
+- **Upstream Alignment**: Inspired by Rust [`rand_pcg`](https://github.com/rust-random/rand) (`crates.io`, `MIT`).
+- **Package Version**: `1.0.0`
 
-| Field | Value |
-| :--- | :--- |
-| **Source Registry** | crates.io |
-| **Upstream Package** | `rand_pcg` (`rust-random/rand`) |
-| **CP Package** | `rand_pcg` (`v1.0.0`) |
-| **License** | MIT |
-
-Keep the exact package name in CP — no `@cap/*` prefix or renaming required:
-
-```rust
-// Rust (crates.io: rand_pcg)
-use rand_pcg::{Pcg32, Pcg64Mcg};
-use rand_core::{RngCore, SeedableRng};
-let mut rng = Pcg32::seed_from_u64(42);
-let v = rng.next_u32();
-```
-
-```typescript
-// CP (same package name: "rand_pcg")
-import { Pcg32, Pcg64Mcg } from "rand_pcg";
-let mut rng = Pcg32.seedFromU64(42);
-let v = rng.nextU32();
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add rand_pcg
 ```
 
-## Quick Start & Practical Examples
+In `cap.json`:
 
-### 1. `Pcg32` — Independent Streams, Bounded Integers, Floats & Jump-Ahead
+```json
+{
+  "dependencies": {
+    "rand_pcg": "^1.0.0"
+  }
+}
+```
+
+```typescript
+import { Pcg32, Pcg64Mcg, U128Pair, splitmix64Next } from "rand_pcg";
+```
+
+## Core API Reference
+
+### `class Pcg32` (PCG-XSH-RR 64/32)
+
+Fields: `state: u64`, `inc: u64`.
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `init` | `Pcg32.init(seed: u64, stream_id: u64): Pcg32` | Standard PCG32 seeding with initial state + stream selector |
+| `new` | `Pcg32.new(state: u64, stream: u64): Pcg32` | Rust `Pcg32::new(state, stream)` compatible constructor |
+| `seedFromU64` | `Pcg32.seedFromU64(seed: u64): Pcg32` | Seed via `SplitMix64` expansion |
+| `nextU32` / `nextU64` | `nextU32(*_): u32` / `nextU64(*_): u64` | Generate next uniform 32-bit or 64-bit unsigned integer |
+| `nextBoundedU32` | `nextBoundedU32(*_, bound: u32): u32` | Unbiased rejection-sampled integer in `[0, bound)` |
+| `nextF32` / `nextF64` | `nextF32(*_): f32` / `nextF64(*_): f64` | Uniform float in `[0.0, 1.0)` |
+| `nextBool` | `nextBool(*_): bool` | Uniform random boolean |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | Fill caller-owned byte buffer `dst` with random bytes |
+| `advance` | `advance(*_, delta_in: u64)` | Jump state forward by `delta_in` steps in $O(\log N)$ time |
+
+### `class Pcg64Mcg` (128-bit MCG PCG-XSL-RR)
+
+Fields: `state_hi: u64`, `state_lo: u64`.
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `new` | `Pcg64Mcg.new(state_hi: u64, state_lo: u64): Pcg64Mcg` | Construct from 128-bit seed pair (forces odd state) |
+| `seedFromU64` | `Pcg64Mcg.seedFromU64(seed: u64): Pcg64Mcg` | Seed 128-bit state via `SplitMix64` |
+| `nextU64` / `nextU32` | `nextU64(*_): u64` / `nextU32(*_): u32` | Generate next 64-bit / 32-bit unsigned integer |
+| `nextF64` | `nextF64(*_): f64` | Uniform `f64` in `[0.0, 1.0)` |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | Fill `dst` with random bytes |
+| `advance` | `advance(*_, delta_in: u64)` | Jump 128-bit MCG state forward by `delta_in` steps in $O(\log N)$ |
+
+### Low-Level Arithmetic Helpers
+
+Also exported: `U128Pair`, `wrapAdd64`, `wrapMul64`, `mul64Full`, `wrapMul128`, `rotr32`, `rotr64`, `splitmix64Next`.
+
+## Examples
+
+### 1. Deterministic Simulation with Independent Streams & Jump-Ahead
 
 ```typescript
 import { Pcg32 } from "rand_pcg";
 
-fn runPcg32(): void {
-    // 3 ways to construct Pcg32:
-    let mut r1 = Pcg32.seedFromU64(42);       // SplitMix64-expanded seed
-    let mut r2 = Pcg32.init(12345, 1);        // (seed, stream_id)
-    let mut r3 = Pcg32.new(0x1234, 0x5678);   // (raw state, raw stream)
-
-    let u32_val = r1.nextU32();
-    let u64_val = r1.nextU64();
-    let die_roll = r1.nextBoundedU32(6);      // unbiased [0, 6)
-    let f32_val = r1.nextF32();               // [0.0, 1.0)
-    let f64_val = r1.nextF64();               // [0.0, 1.0)
-    let coin = r1.nextBool();
-
-    let mut bytes: [16]u8 = undefined;
-    r1.fillBytes(bytes[0..16]);
-
-    // O(log N) jump-ahead for parallel Monte Carlo workers
-    r2.advance(1000000);
+fn monteCarlo(seed: u64): f64 {
+    let mut rng = Pcg32.new(seed, 0xa02bdbf7bb3c0a7);
+    let mut hits: u64 = 0;
+    let total: u64 = 1000;
+    let mut i: u64 = 0;
+    while (i < total) {
+        let x = rng.nextF64();
+        let y = rng.nextF64();
+        if (x * x + y * y <= 1.0) { hits += 1; }
+        i += 1;
+    }
+    return 4.0 * (hits as f64) / (total as f64);
 }
 ```
 
-### 2. `Pcg64Mcg` — 128-Bit State High-Throughput 64-Bit Generator
+### 2. High-Throughput 64-Bit Randomness with `Pcg64Mcg`
 
 ```typescript
 import { Pcg64Mcg } from "rand_pcg";
 
-fn runPcg64Mcg(): void {
-    let mut rng = Pcg64Mcg.seedFromU64(2026);
-    let mut manual = Pcg64Mcg.new(0, 1);
-
-    let x = rng.nextU64();
-    let y = rng.nextU32();
-    let p = rng.nextF64(); // [0.0, 1.0)
-
-    let mut buf: [32]u8 = undefined;
-    rng.fillBytes(buf[0..32]);
-
-    // O(log N) jump-ahead in 128-bit MCG state space
-    rng.advance(10000);
+fn fillNonce(seed: u64, out: []u8) {
+    let mut rng = Pcg64Mcg.seedFromU64(seed);
+    rng.advance(1024);
+    rng.fillBytes(out);
 }
 ```
 
-### 3. Low-Level Bit & Arithmetic Utilities
+## Differences from Upstream & CP Highlights
 
-```typescript
-import {
-    wrapAdd64,
-    wrapMul64,
-    mul64Full,
-    wrapMul128,
-    rotr32,
-    rotr64,
-    splitmix64Next,
-} from "rand_pcg";
-
-fn lowLevelHelpers(): void {
-    let mixed = splitmix64Next(42);
-    let prod = mul64Full(0x100000000, 0x100000000); // U128Pair { hi, lo }
-    let p128 = wrapMul128(prod.hi, prod.lo, 0, 3);
-    let r = rotr32(0x12345678, 8);
-    let r64 = rotr64(mixed, 13);
-    let s = wrapAdd64(wrapMul64(mixed, 6364136223846793005), 1);
-}
-```
-
-## API Reference
-
-### `Pcg32`
-- `Pcg32.init(seed: u64, stream_id: u64): Pcg32`
-- `Pcg32.new(state: u64, stream: u64): Pcg32`
-- `Pcg32.seedFromU64(seed: u64): Pcg32`
-- `nextU32(): u32`, `nextU64(): u64`, `nextBoundedU32(bound: u32): u32`
-- `nextF32(): f32`, `nextF64(): f64`, `nextBool(): bool`
-- `fillBytes(dst: []u8)`, `advance(delta_in: u64)`
-
-### `Pcg64Mcg`
-- `Pcg64Mcg.new(state_hi: u64, state_lo: u64): Pcg64Mcg`
-- `Pcg64Mcg.seedFromU64(seed: u64): Pcg64Mcg`
-- `nextU64(): u64`, `nextU32(): u32`, `nextF64(): f64`
-- `fillBytes(dst: []u8)`, `advance(delta_in: u64)`
-
-### Low-Level Helpers
-- `U128Pair { hi: u64, lo: u64 }`
-- `wrapAdd64(a: u64, b: u64): u64`, `wrapMul64(a: u64, b: u64): u64`
-- `mul64Full(a: u64, b: u64): U128Pair`, `wrapMul128(a_hi: u64, a_lo: u64, b_hi: u64, b_lo: u64): U128Pair`
-- `rotr32(x: u32, r: u32): u32`, `rotr64(x: u64, r: u32): u64`, `splitmix64Next(x_in: u64): u64`
+- **Zero-Heap Stack State**: `Pcg32` occupies 16 bytes (`state`, `inc`) and `Pcg64Mcg` occupies 16 bytes (`state_hi`, `state_lo`) with zero dependencies.
+- **$O(\log N)$ Parallel Substreams**: Both `Pcg32.advance` and `Pcg64Mcg.advance` let parallel CP actors partition one deterministic sequence without overlap.
+- **Not Cryptographic**: Like upstream `rand_pcg`, these PRNGs are designed for simulations, games, and randomized algorithms—not cryptographic keys or tokens.

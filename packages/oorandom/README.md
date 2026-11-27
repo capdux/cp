@@ -1,122 +1,102 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # oorandom
 
-Zero-heap deterministic PCG32 (`Rand32`) and dual-stream PCG64 (`Rand64`) PRNG with signed/unsigned range sampling, float generation, byte filling, state snapshotting, and O(log N) jump-ahead. Modeled after Rust `oorandom`.
+Zero-heap deterministic `Rand32` (PCG32 XSH-RR 64/32) and dual-stream `Rand64` PRNG in pure CP with state snapshotting, unbiased ranges, and $O(\log N)$ advance.
 
-## Provenance & Zero-Friction Migration
+- **Upstream Alignment**: Modeled after Rust [`oorandom`](https://sr.ht/~icefox/oorandom/) (`crates.io`, `MIT`).
+- **Package Version**: `1.0.0`
 
-| Field | Value |
-| :--- | :--- |
-| **Source Registry** | crates.io |
-| **Upstream Package** | `oorandom` (`~icefox/oorandom`) |
-| **CP Package** | `oorandom` (`v1.0.0`) |
-| **License** | MIT |
-
-Keep the exact package name in CP — no `@cap/*` prefix or renaming required:
-
-```rust
-// Rust (crates.io: oorandom)
-use oorandom::Rand32;
-let mut rng = Rand32::new(42);
-let roll = rng.rand_range(1..7);
-```
-
-```typescript
-// CP (same package name: "oorandom")
-import { Rand32 } from "oorandom";
-let mut rng = Rand32.new(42);
-let roll = rng.randRange(1, 7);
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add oorandom
 ```
 
-## Quick Start & Practical Examples
+In `cap.json`:
 
-### 1. `Rand32` — 32-Bit Deterministic PRNG
+```json
+{
+  "dependencies": {
+    "oorandom": "^1.0.0"
+  }
+}
+```
+
+```typescript
+import { Rand32, Rand64, oorStep, oorOutput, oorAdvanceState } from "oorandom";
+```
+
+## Core API Reference
+
+### `class Rand32` (PCG32 XSH-RR 64/32)
+
+Fields: `st: u64`, `inc: u64`.
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `new` | `Rand32.new(seed: u64): Rand32` | Create with default increment stream |
+| `newInc` | `Rand32.newInc(seed: u64, inc: u64): Rand32` | Create with explicit stream increment `inc` |
+| `fromState` | `Rand32.fromState(st: u64, inc: u64): Rand32` | Restore generator directly from saved `(st, inc)` pair |
+| `randU32` / `randI32` | `randU32(*_): u32` / `randI32(*_): i32` | Generate uniform 32-bit unsigned / signed integer |
+| `randFloat` | `randFloat(*_): f32` | Generate uniform `f32` in `[0.0, 1.0)` |
+| `randBool` | `randBool(*_): bool` | Generate uniform random boolean |
+| `randRange` / `randRangeI32` | `randRange(*_, start: u32, end: u32): u32` / `randRangeI32(*_, start: i32, end: i32): i32` | Unbiased half-open range `[start, end)` |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | Fill caller-owned byte buffer `dst` |
+| `advance` | `advance(*_, delta: u64)` | Jump forward `delta` steps in $O(\log N)$ |
+| `state` / `statePair` | `state(): u64` / `statePair(): [2]u64` | Snapshot internal `st` or `[st, inc]` for deterministic replay |
+
+### `class Rand64` (Dual-Stream PCG64)
+
+Fields: `lo: Rand32`, `hi: Rand32`.
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `new` | `Rand64.new(seed: u64): Rand64` | Create 64-bit generator from single `u64` seed |
+| `newInc` | `Rand64.newInc(seed_lo: u64, seed_hi: u64, inc_lo: u64, inc_hi: u64): Rand64` | Create from explicit dual seeds and stream increments |
+| `randU64` / `randI64` | `randU64(*_): u64` / `randI64(*_): i64` | Generate uniform 64-bit unsigned / signed integer |
+| `randFloat` | `randFloat(*_): f64` | Generate uniform `f64` in `[0.0, 1.0)` |
+| `randBool` | `randBool(*_): bool` | Generate uniform random boolean |
+| `randRange` / `randRangeI64` | `randRange(*_, start: u64, end: u64): u64` / `randRangeI64(*_, start: i64, end: i64): i64` | Unbiased half-open 64-bit range `[start, end)` |
+| `fillBytes` | `fillBytes(*_, dst: []u8)` | Fill caller-owned byte buffer `dst` |
+| `advance` | `advance(*_, delta: u64)` | Jump both streams forward `delta` steps in $O(\log N)$ |
+| `state` | `state(): [2]u64` | Snapshot `[lo.st, hi.st]` |
+
+### Low-Level Functions
+
+`oorStep(st: u64, inc: u64): u64`, `oorOutput(oldstate: u64): u32`, `oorAdvanceState(st_in: u64, inc: u64, delta_in: u64): u64`.
+
+## Examples
+
+### 1. Deterministic Gameplay Dice & State Snapshotting
 
 ```typescript
 import { Rand32 } from "oorandom";
 
-fn demoRand32(): void {
-    let mut rng = Rand32.new(42);
-    let mut with_stream = Rand32.newInc(42, 7);
+fn rollAndReplay(): bool {
+    let mut rng = Rand32.new(12345);
+    let snap = rng.statePair();
+    let d20 = rng.randRange(1, 21);
 
-    let u = rng.randU32();
-    let i = rng.randI32();
-    let f = rng.randFloat();             // f32 in [0.0, 1.0)
-    let b = rng.randBool();
-    let dice = rng.randRange(1, 7);      // u32 in [1, 7)
-    let temp = rng.randRangeI32(-10, 11); // i32 in [-10, 11)
-
-    let mut buf: [16]u8 = undefined;
-    rng.fillBytes(buf[0..16]);
-
-    // Save & restore exact generator state
-    let pair = rng.statePair();          // [st, inc]
-    let mut restored = Rand32.fromState(pair[0], pair[1]);
-
-    // O(log N) jump-ahead
-    with_stream.advance(5000);
+    let mut replay = Rand32.fromState(snap[0], snap[1]);
+    return replay.randRange(1, 21) == d20;
 }
 ```
 
-### 2. `Rand64` — Dual-Stream 64-Bit PRNG
+### 2. 64-Bit Range Sampling & Byte Filling
 
 ```typescript
 import { Rand64 } from "oorandom";
 
-fn demoRand64(): void {
-    let mut rng = Rand64.new(123456789);
-    let mut custom = Rand64.newInc(1, 2, 3, 4);
-
-    let u = rng.randU64();
-    let i = rng.randI64();
-    let f = rng.randFloat();              // f64 in [0.0, 1.0)
-    let b = rng.randBool();
-    let slot = rng.randRange(100, 200);   // u64 in [100, 200)
-    let delta = rng.randRangeI64(-50, 50);
-
-    let mut buf: [32]u8 = undefined;
-    rng.fillBytes(buf[0..32]);
-
-    rng.advance(100000);
-    let st = rng.state(); // [lo.st, hi.st]
+fn sampleWorld(seed: u64, out: []u8): i64 {
+    let mut rng = Rand64.new(seed);
+    rng.fillBytes(out);
+    return rng.randRangeI64(-1000, 1000);
 }
 ```
 
-### 3. Low-Level PCG Primitives
+## Differences from Upstream & CP Highlights
 
-```typescript
-import { oorStep, oorOutput, oorAdvanceState } from "oorandom";
-
-fn manualStep(): u32 {
-    let st0: u64 = 12345;
-    let inc: u64 = 1442695040888963407;
-    let st1 = oorStep(st0, inc);
-    let st100 = oorAdvanceState(st0, inc, 100);
-    return oorOutput(st100);
-}
-```
-
-## API Reference
-
-### `Rand32`
-- `Rand32.new(seed: u64): Rand32`, `Rand32.newInc(seed: u64, inc: u64): Rand32`, `Rand32.fromState(st: u64, inc: u64): Rand32`
-- `randU32(): u32`, `randI32(): i32`, `randFloat(): f32`, `randBool(): bool`
-- `randRange(start: u32, end: u32): u32`, `randRangeI32(start: i32, end: i32): i32`
-- `fillBytes(dst: []u8)`, `advance(delta: u64)`
-- `state(): u64`, `statePair(): [2]u64`
-
-### `Rand64`
-- `Rand64.new(seed: u64): Rand64`, `Rand64.newInc(seed_lo: u64, seed_hi: u64, inc_lo: u64, inc_hi: u64): Rand64`
-- `randU64(): u64`, `randI64(): i64`, `randFloat(): f64`, `randBool(): bool`
-- `randRange(start: u64, end: u64): u64`, `randRangeI64(start: i64, end: i64): i64`
-- `fillBytes(dst: []u8)`, `advance(delta: u64)`, `state(): [2]u64`
-
-### Primitives
-- `oorStep(st: u64, inc: u64): u64`, `oorOutput(oldstate: u64): u32`, `oorAdvanceState(st_in: u64, inc: u64, delta_in: u64): u64`
+- **Zero-Dependency Minimalism**: Preserves `oorandom`'s tiny, self-contained philosophy—just `Rand32` and `Rand64` with no trait hierarchy or heap allocation.
+- **Built-in State Snapshotting & Jump-Ahead**: Exposes `fromState`, `statePair`, `fillBytes`, and `advance` for deterministic game replays and parallel simulations.
+- **Not Cryptographic**: Designed for simulations, procedural generation, and games—not security-sensitive randomness.

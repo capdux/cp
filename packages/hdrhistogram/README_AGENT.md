@@ -1,29 +1,70 @@
-# hdrhistogram@1.0.0 (Agent Quickref)
+# hdrhistogram — AI Agent Quick Ref
 
-> CP package hdrhistogram | License: BSD-2-Clause
-> Import: `import { ... } from "hdrhistogram";` | Full types: `src/index.d.cp`
+High Dynamic Range (HDR) Histogram backed by C `hdr_histogram.c` with RAII `Histogram` wrapper and explicit `!T` error unions.
 
-## Functions
-- `export fn hdr_init(lowest_discernible_value: i64, highest_trackable_value: i64, significant_figures: i32, result: **hdr_histogram!?!): i32;`
-- `export fn hdr_close(h: *hdr_histogram!);`
-- `export fn hdr_reset(h: *hdr_histogram!);`
-- `export fn hdr_get_memory_size(h: *hdr_histogram!): usize;`
-- `export fn hdr_record_value(h: *hdr_histogram!, value: i64): bool;`
-- `export fn hdr_record_values(h: *hdr_histogram!, value: i64, count: i64): bool;`
-- `export fn hdr_record_corrected_value(h: *hdr_histogram!, value: i64, expected_interval: i64): bool;`
-- `export fn hdr_record_corrected_values(h: *hdr_histogram!, value: i64, count: i64, expected_interval: i64): bool;`
-- `export fn hdr_add(h: *hdr_histogram!, from: *&hdr_histogram!): i64;`
-- `export fn hdr_add_while_correcting_for_coordinated_omission(h: *hdr_histogram!, from: *hdr_histogram!, expected_interval: i64): i64;`
-- `export fn hdr_min(h: *&hdr_histogram!): i64;`
-- `export fn hdr_max(h: *&hdr_histogram!): i64;`
-- `export fn hdr_mean(h: *&hdr_histogram!): f64;`
-- `export fn hdr_stddev(h: *&hdr_histogram!): f64;`
-- `export fn hdr_value_at_percentile(h: *&hdr_histogram!, percentile: f64): i64;`
-- `export fn hdr_count_at_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_values_are_equivalent(h: *&hdr_histogram!, a: i64, b: i64): bool;`
-- `export fn hdr_lowest_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_median_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_next_non_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_size_of_equivalent_value_range(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdrClampF64(v: f64, lo: f64, hi: f64): f64;`
-- `export fn hdrTotalCount(h: *&hdr_histogram!): i64;`
+## Import
+```typescript
+import { Histogram, HdrError } from "hdrhistogram";
+```
+
+## API Signatures
+```typescript
+export error HdrError { InitFailed, InvalidHandle, ValueOutOfRange }
+
+export class Histogram {
+    handle: *hdr_histogram!?, lowest_trackable: i64, highest_trackable: i64, sigfigs: i32,
+    fn init(*_, lowest: i64, highest: i64, sigfigs: i32): !void;
+    fn open(*_, lowest: i64, highest: i64, sigfigs: i32): !void;
+    fn record(value: i64): !void;
+    fn recordCount(value: i64, count: i64): !void;
+    fn recordN(value: i64, count: i64): !void;
+    fn recordCorrected(value: i64, expected_interval: i64): !void;
+    fn recordCorrecting(value: i64, expected_interval: i64): !void;
+    fn recordCorrectingN(value: i64, count: i64, expected_interval: i64): !void;
+    fn saturatingRecord(value: i64): !void;
+    fn reset(): !void;
+    fn memorySize(): !usize;
+    fn min(): !i64;
+    fn max(): !i64;
+    fn mean(): !f64;
+    fn stddev(): !f64;
+    fn stdev(): !f64;
+    fn percentile(p: f64): !i64;          // p in 0.0..=100.0
+    fn valueAtPercentile(p: f64): !i64;   // p in 0.0..=100.0
+    fn valueAtQuantile(q: f64): !i64;     // q in 0.0..=1.0
+    fn len(): !u64;
+    fn isEmpty(): !bool;
+    fn percentileBelow(value: i64): !f64;
+    fn quantileBelow(value: i64): !f64;
+    fn add(other: Histogram): !i64;
+    fn addCorrecting(other: Histogram, expected_interval: i64): !i64;
+    fn countAt(value: i64): !i64;
+    fn equivalent(a: i64, b: i64): !bool;
+    fn lowestEquivalent(value: i64): !i64;
+    fn medianEquivalent(value: i64): !i64;
+    fn nextNonEquivalent(value: i64): !i64;
+    fn sizeOfEquivalentRange(value: i64): !i64;
+    fn __cp_deinit(_: &mut Histogram);
+}
+// Raw C FFI also exported: hdr_init, hdr_close, hdr_record_value, hdr_value_at_percentile, hdrTotalCount, hdrClampF64, ...
+```
+
+## Minimal Example
+```typescript
+import { Histogram } from "hdrhistogram";
+
+fn run(): !i64 {
+    let mut h = Histogram { handle: null, lowest_trackable: 0, highest_trackable: 0, sigfigs: 0 };
+    h.open(1, 1_000_000, 3)?;
+    h.record(100)?;
+    h.recordN(500, 3)?;
+    return h.valueAtPercentile(99.0)?;
+}
+```
+
+## Pitfalls & Rules
+- `Histogram` must be declared `let mut` before calling `init` or `open`; `open` safely closes any prior handle before re-initializing.
+- Always call `init`/`open` first; calling methods with `handle == null` returns `HdrError.InvalidHandle`.
+- `sigfigs` must be in `1..=5` and `lowest >= 1`, `highest >= 2 * lowest`; otherwise `HdrError.InitFailed`.
+- Use `saturatingRecord` instead of `record` if inputs may exceed `[lowest_trackable, highest_trackable]`.
+- Do NOT call `hdr_close` manually on `Histogram.handle` — `__cp_deinit` frees it automatically.

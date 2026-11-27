@@ -1,128 +1,112 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # p-queue
 
-Zero-heap priority task queue with bounded concurrency, pause/resume control, dynamic priority updates, batch draining, and active/pending/idle state tracking in pure CP.
+Zero-heap priority task queue with concurrency limiting, pause/resume control, batch draining, and active/pending tracking in pure CP.
 
-## Source & Zero-Cost Migration
+- **Upstream Alignment**: Clean-room port of npm [`p-queue`](https://github.com/sindresorhus/p-queue) (`MIT`).
+- **Package Version**: `1.0.0`
 
-| Field | Value |
-| --- | --- |
-| **Upstream Registry** | [npmjs.com/package/p-queue](https://www.npmjs.com/package/p-queue) |
-| **Upstream Package** | `p-queue` (v1.0.0 in CP) |
-| **Upstream Repository** | https://github.com/sindresorhus/p-queue |
-| **License** | MIT |
-
-Keep the exact package name when migrating from TypeScript/npm to CP:
-
-```ts
-// TypeScript (npm)
-import PQueue from "p-queue";
-const queue = new PQueue({ concurrency: 2 });
-```
-
-```cp
-// CP — same package name, zero-heap fixed-capacity scheduler
-import { TaskQueue, QueueOptions, QueueTask } from "p-queue";
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add p-queue
 ```
 
-## Quick Start & Practical Examples
+In `cap.json`:
 
-### 1. Enqueue with Priorities, Dispatch & Complete
+```json
+{
+  "dependencies": {
+    "p-queue": "^1.0.0"
+  }
+}
+```
 
-```cp
+```typescript
+import { TaskQueue, QueueOptions, QueueTask, PQ_MAX_TASKS } from "p-queue";
+```
+
+## Core API Reference
+
+### Constants & Types
+
+| Symbol | Definition | Description |
+| :--- | :--- | :--- |
+| `PQ_MAX_TASKS` | `const PQ_MAX_TASKS: usize = 64` | Fixed inline ring/array capacity per `TaskQueue` |
+| `QueueTask` | `class { id: u64, priority: i32, seq: u64 }` | Queued task entry (higher `priority` first; FIFO by `seq` on tie) |
+| `QueueOptions` | `class { concurrency: usize, auto_start: bool, interval_cap: usize, interval_ms: u64 }` | Queue configuration; call `QueueOptions.default()` for defaults |
+
+### `class TaskQueue`
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `new` | `TaskQueue.new(max_concurrency: usize): TaskQueue` | Create an active queue with the given concurrency limit |
+| `withOptions` | `TaskQueue.withOptions(opts: QueueOptions): TaskQueue` | Create a queue from `QueueOptions` (`auto_start: false` starts paused) |
+| `enqueue` / `add` | `enqueue(*_, id: u64, priority: i32): bool` | Enqueue task `id` with `priority`; returns `false` if full (`PQ_MAX_TASKS`) |
+| `addBatch` | `addBatch(*_, ids: &[]u64, priority: i32): usize` | Enqueue multiple task IDs at `priority`; returns number enqueued |
+| `dispatchNext` | `dispatchNext(*_): QueueTask?` | Pop highest-priority task and increment `active` if allowed, else `null` |
+| `drainBatch` | `drainBatch(*_, out: []QueueTask): usize` | Dispatch up to `out.len` tasks respecting concurrency & pause state |
+| `markCompleted` | `markCompleted(*_): bool` | Decrement `active` and increment `completed_total`; `false` if `active == 0` |
+| `peek` | `peek(): QueueTask?` | Inspect next highest-priority task without removing it |
+| `remove` | `remove(*_, id: u64): bool` | Remove queued task by `id` |
+| `setPriority` | `setPriority(*_, id: u64, new_priority: i32): bool` | Update priority of an already queued task |
+| `pause` / `start` | `pause(*_)` / `start(*_)` | Pause or resume dispatching |
+| `setConcurrency` | `setConcurrency(*_, max_concurrency: usize)` | Update maximum concurrency limit |
+| `clear` / `resetStats` | `clear(*_)` / `resetStats(*_)` | Clear all pending tasks / reset `completed_total` counter |
+| `size` / `activeCount` / `pending` | `size(): usize` / `activeCount(): usize` / `pending(): usize` | Pending queued count / active running count |
+| `concurrency` / `completedCount` | `concurrency(): usize` / `completedCount(): u64` | Current concurrency limit / total completed count |
+| `isPaused` / `isIdle` / `canDispatch` | `isPaused(): bool` / `isIdle(): bool` / `canDispatch(): bool` | Queue state predicates |
+| `onEmpty` / `onIdle` / `onSizeLessThan` | `onEmpty(): bool` / `onIdle(): bool` / `onSizeLessThan(limit: usize): bool` | Synchronous readiness checks (`size == 0`, `size == 0 && active == 0`, `size < limit`) |
+| `sizeByPriority` / `sizeByExactPriority` | `sizeByPriority(min_priority: i32): usize` / `sizeByExactPriority(priority: i32): usize` | Count queued tasks with `priority >= min_priority` or exact `priority` |
+
+## Examples
+
+### 1. Priority Dispatch & Concurrency Limiting
+
+```typescript
+import { TaskQueue } from "p-queue";
+
+fn runScheduler(): u64 {
+    let mut q = TaskQueue.new(2);
+    q.add(101, 1);
+    q.add(102, 10);
+    q.add(103, 5);
+
+    if (first := q.dispatchNext()) {
+        // first.id == 102 (highest priority)
+        q.markCompleted();
+    }
+    return q.completedCount();
+}
+```
+
+### 2. Paused Startup, Batch Enqueue & Batch Drain
+
+```typescript
 import { TaskQueue, QueueOptions, QueueTask } from "p-queue";
 
-fn demoQueue() {
-    // Configure via QueueOptions or TaskQueue.new(max_concurrency)
-    mut opts = QueueOptions.default();
-    opts.concurrency = 2;
-    opts.auto_start = true;
-    mut q = TaskQueue.withOptions(opts);
+fn batchDispatch(): usize {
+    let mut opts = QueueOptions.default();
+    opts.concurrency = 4;
+    opts.auto_start = false;
 
-    // Higher priority numbers dispatch first; ties break in FIFO order (seq)
-    let _ = q.add(101, 1);        // low priority
-    let _ = q.add(102, 10);       // high priority
-    let _ = q.enqueue(103, 5);    // alias for add
+    let mut q = TaskQueue.withOptions(opts);
+    let ids = [10 as u64, 20 as u64, 30 as u64];
+    q.addBatch(&ids, 5);
 
-    // Batch enqueue with shared priority
-    let batch_ids: [3]u64 = [201, 202, 203];
-    let added = q.addBatch(&batch_ids, 2);
+    // Paused: nothing dispatches yet
+    let mut batch: [4]QueueTask = undefined;
+    let n0 = q.drainBatch(&mut batch); // 0
 
-    // Inspect highest-priority task without removing it
-    if (q.peek()) |top| {
-        // top.id == 102, top.priority == 10
-    }
-
-    // Dispatch up to concurrency limit (2)
-    if (q.dispatchNext()) |t1| {
-        // t1.id == 102, q.activeCount() == 1 (alias: q.pending())
-    }
-    if (q.dispatchNext()) |t2| {
-        // t2.id == 103, q.activeCount() == 2
-    }
-    // q.canDispatch() == false while active == max_concurrency
-
-    // Complete tasks to free concurrency slots
-    let _ = q.markCompleted();
-    let _ = q.markCompleted();
-    let done_total = q.completedCount(); // 2
-}
-```
-
-### 2. Dynamic Priority, Removal, Pause/Resume & Batch Drain
-
-```cp
-import { TaskQueue, QueueTask } from "p-queue";
-
-fn demoControls() {
-    mut q = TaskQueue.new(4);
-    let _ = q.add(1, 0);
-    let _ = q.add(2, 0);
-    let _ = q.add(3, 5);
-
-    // Promote task 1 and cancel task 2
-    let _ = q.setPriority(1, 20);
-    let _ = q.remove(2);
-
-    // Filter counts by priority
-    let high_cnt = q.sizeByPriority(10);      // 1 (priority >= 10)
-    let exact_cnt = q.sizeByExactPriority(5); // 1
-
-    // Pause prevents dispatching until start() is called
-    q.pause();
-    let paused = q.isPaused();   // true
-    let none = q.dispatchNext(); // null while paused
     q.start();
-
-    // Drain up to available concurrency slots in one call
-    mut out: [4]QueueTask = [QueueTask { id: 0, priority: 0, seq: 0 }; 4];
-    let n = q.drainBatch(&mut out); // Dispatches task 1, then task 3
-
-    // Readiness predicates matching npm p-queue semantics
-    let empty = q.onEmpty();
-    let idle = q.onIdle(); // Alias: q.isIdle()
-    let under_limit = q.onSizeLessThan(10);
-
-    q.setConcurrency(8);
-    q.clear();
-    q.resetStats();
+    let n1 = q.drainBatch(&mut batch); // 3
+    return n0 + n1;
 }
 ```
 
-## Performance & Safety Highlights
+## Differences from Upstream & CP Highlights
 
-- **Zero Heap Allocations**: `TaskQueue` uses an inline `[64]QueueTask` stack buffer — no dynamic allocations, predictable cache locality, and deterministic O(N) bounded latency.
-- **Stable FIFO Tie-Breaking**: Every enqueued task receives a monotonically increasing `seq: u64`, guaranteeing FIFO ordering among equal-priority tasks.
-- **Bounded Concurrency Guard**: `dispatchNext` and `drainBatch` enforce `active < max_concurrency` and `!paused`, preventing over-subscription.
-- **No-Panic Capacity Handling**: `add` / `enqueue` return `false` when the 64-slot queue is full; `addBatch` returns the exact number of tasks inserted.
-
-## API Reference
-
-See [`src/index.d.cp`](src/index.d.cp) for complete type signatures, or [`README_AGENT.md`](README_AGENT.md) for the compact AI-agent reference.
+- **Zero-Heap Inline Storage**: Stores up to `PQ_MAX_TASKS` (64) tasks inline on the stack (`items: [64]QueueTask`) with zero heap allocation.
+- **Deterministic Scheduler Model**: Instead of JavaScript `Promise` closures, tasks are identified by `u64` IDs, making `TaskQueue` directly composable with CP actors, worker pools, and state machines.
+- **Explicit State Predicates**: `onEmpty()`, `onIdle()`, and `onSizeLessThan(limit)` return `bool` immediately so callers can integrate them into custom polling or actor loops without hidden allocations.

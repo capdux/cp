@@ -1,120 +1,96 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # moving-averages
 
-Zero-heap moving averages in pure CP: both **batch series APIs** (`ma`, `sma`, `dma`, `ema`, `smma`, `wma`, `cma` — full npm `moving-averages` parity) and **streaming O(1) stateful estimators** (`Ema`, `Sma`, `Cma`, `Wma`).
+Zero-heap streaming and batch moving averages (`MA`/`SMA`, `EMA`, `DMA`, `SMMA`, `WMA`, `CMA`) in pure CP.
 
-## Provenance & Zero-Friction Migration
+- **Upstream Alignment**: Combines npm [`moving-averages`](https://github.com/kaelzhang/node-moving-averages) (`MIT`) batch series functions with Rust [`simple_moving_average`](https://github.com/emilec/simple_moving_average) (`crates.io`, `MIT`) streaming calculators.
+- **Package Version**: `1.0.0`
 
-| Field | Value |
-| :--- | :--- |
-| **Source Registry** | npm (+ crates.io `simple_moving_average`) |
-| **Upstream Package** | `moving-averages` (`kaelzhang/node-moving-averages`) |
-| **CP Package** | `moving-averages` (`v1.0.0`) |
-| **License** | MIT |
-
-Keep the exact package name in CP — no `@cap/*` prefix or renaming required:
-
-```typescript
-// TypeScript / Node.js (npm: moving-averages)
-import { ma, dma, ema, smma, wma } from "moving-averages";
-const out = ema([1, 2, 3, 4, 5], 3);
-```
-
-```typescript
-// CP (same package name: "moving-averages")
-import { ma, dma, ema, smma, wma } from "moving-averages";
-let data: [5]f64 = [1.0, 2.0, 3.0, 4.0, 5.0];
-let mut out: [5]f64 = undefined;
-let n = ema(data[0..5], 3, out[0..5]);
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add moving-averages
 ```
 
-## Quick Start & Practical Examples
+In `cap.json`:
 
-### 1. Batch Series APIs (Full npm `moving-averages` Parity)
-
-```typescript
-import { ma, sma, dma, ema, smma, wma, cma, smaSlice, wmaSlice } from "moving-averages";
-
-fn computeSeries(): void {
-    let prices: [6]f64 = [10.0, 12.0, 11.0, 14.0, 15.0, 16.0];
-    let mut out: [6]f64 = undefined;
-
-    // Simple Moving Average (`sma` is an alias for `ma`)
-    let n1 = ma(prices[0..6], 3, out[0..6]);
-    let n2 = sma(prices[0..6], 3, out[0..6]);
-
-    // Dynamic Moving Average with custom alpha (0 < alpha <= 1)
-    let n3 = dma(prices[0..6], 0.5, out[0..6]);
-
-    // Exponential Moving Average (alpha = 2 / (size + 1))
-    let n4 = ema(prices[0..6], 3, out[0..6]);
-
-    // Smoothed Moving Average (Wilder's SMMA, alpha = 1 / size)
-    let n5 = smma(prices[0..6], 3, out[0..6]);
-
-    // Linearly Weighted Moving Average & Cumulative Moving Average
-    let n6 = wma(prices[0..6], 3, out[0..6]);
-    let n7 = cma(prices[0..6], out[0..6]);
-
-    // Single-window slice summaries
-    let s_avg = smaSlice(prices[0..6]);
-    let w_avg = wmaSlice(prices[0..6]);
+```json
+{
+  "dependencies": {
+    "moving-averages": "^1.0.0"
+  }
 }
 ```
 
-### 2. Zero-Heap Streaming Estimators (`Ema`, `Sma`, `Wma`, `Cma`)
+```typescript
+import {
+    Ema, Sma, Cma, Wma,
+    ma, sma, dma, ema, smma, wma, cma,
+    smaSlice, wmaSlice, maNan
+} from "moving-averages";
+```
+
+## Core API Reference
+
+### Streaming Calculators (Zero-Heap)
+
+| Class | Methods | Description |
+| :--- | :--- | :--- |
+| `Ema` | `Ema.new(alpha: f64)`, `Ema.fromPeriod(period: u32)`, `update(*_, sample: f64): f64`, `reset(*_)` | Exponential Moving Average (`alpha = 2 / (period + 1)`) |
+| `Sma` | `Sma.new()`, `update(*_, window: []f64, sample: f64): f64`, `average(): f64`, `reset(*_)` | O(1) sliding Simple Moving Average backed by caller ring buffer `window` |
+| `Cma` | `Cma.new()`, `update(*_, sample: f64): f64`, `average(): f64`, `reset(*_)` | Cumulative Moving Average over all samples seen so far |
+| `Wma` | `Wma.new()`, `update(*_, window: []f64, sample: f64): f64`, `reset(*_)` | Linearly Weighted Moving Average backed by caller ring buffer `window` |
+
+### Batch Series & Slice Functions
+
+| Function | Signature | Description |
+| :--- | :--- | :--- |
+| `ma` / `sma` | `ma(data: &[]f64, size: usize, out: []f64): usize` | Simple moving average series (leading `size - 1` slots filled with `maNan()`) |
+| `dma` | `dma(data: &[]f64, alpha: f64, out: []f64): usize` | Dynamic moving average series with smoothing factor `alpha` |
+| `ema` | `ema(data: &[]f64, size: usize, out: []f64): usize` | Exponential moving average series (`alpha = 2 / (size + 1)`) |
+| `smma` | `smma(data: &[]f64, size: usize, out: []f64): usize` | Smoothed (Wilder's) moving average series (`alpha = 1 / size`) |
+| `wma` | `wma(data: &[]f64, size: usize, out: []f64): usize` | Linearly weighted moving average series |
+| `cma` | `cma(data: &[]f64, out: []f64): usize` | Cumulative moving average series |
+| `smaSlice` / `wmaSlice` | `smaSlice(xs: []f64): f64` / `wmaSlice(xs: []f64): f64` | One-shot scalar SMA / WMA over a slice |
+| `maNan` | `maNan(): f64` | Returns quiet IEEE-754 `NaN` used for warm-up positions |
+
+## Examples
+
+### 1. Streaming `Sma` and `Ema` Over Live Telemetry
 
 ```typescript
-import { Ema, Sma, Wma, Cma } from "moving-averages";
+import { Sma, Ema } from "moving-averages";
 
-fn streamingMetrics(): void {
-    // Exponential Moving Average (by alpha or period)
-    let mut ema_est = Ema.fromPeriod(5); // or Ema.new(0.2)
-    let e1 = ema_est.update(100.0);
-    let e2 = ema_est.update(105.0);
-    ema_est.reset();
+fn trackLatency(): f64 {
+    let mut win: [4]f64 = [0.0, 0.0, 0.0, 0.0];
+    let mut sma_calc = Sma.new();
+    let mut ema_calc = Ema.fromPeriod(5);
 
-    // Ring-buffered Simple Moving Average (caller owns the stack window)
-    let mut sma_buf: [4]f64 = [0.0, 0.0, 0.0, 0.0];
-    let mut sma_est = Sma.new();
-    let s1 = sma_est.update(sma_buf[0..4], 10.0);
-    let s2 = sma_est.update(sma_buf[0..4], 20.0);
-    let cur = sma_est.average();
-
-    // Ring-buffered Weighted Moving Average
-    let mut wma_buf: [4]f64 = [0.0, 0.0, 0.0, 0.0];
-    let mut wma_est = Wma.new();
-    let w1 = wma_est.update(wma_buf[0..4], 10.0);
-    let w2 = wma_est.update(wma_buf[0..4], 20.0);
-
-    // Cumulative Moving Average
-    let mut cma_est = Cma.new();
-    let c1 = cma_est.update(10.0);
-    let c2 = cma_est.update(20.0); // 15.0
-    let c_avg = cma_est.average();
+    let samples = [10.0, 20.0, 30.0, 40.0, 50.0];
+    let mut last_ema: f64 = 0.0;
+    for (s in samples) {
+        let _ = sma_calc.update(&mut win, s);
+        last_ema = ema_calc.update(s);
+    }
+    return sma_calc.average() + last_ema;
 }
 ```
 
-## API Reference
+### 2. Batch `ema` & `wma` Series Computation
 
-### Batch Series Functions
-- `ma(data: &[]f64, size: usize, out: []f64): usize` / `sma(data: &[]f64, size: usize, out: []f64): usize`
-- `dma(data: &[]f64, alpha: f64, out: []f64): usize`
-- `ema(data: &[]f64, size: usize, out: []f64): usize`
-- `smma(data: &[]f64, size: usize, out: []f64): usize`
-- `wma(data: &[]f64, size: usize, out: []f64): usize`
-- `cma(data: &[]f64, out: []f64): usize`
-- `smaSlice(xs: []f64): f64`, `wmaSlice(xs: []f64): f64`, `maNan(): f64`
+```typescript
+import { ema, wma } from "moving-averages";
 
-### Streaming Classes
-- `Ema`: `Ema.new(alpha: f64)`, `Ema.fromPeriod(period: u32)`, `update(sample: f64): f64`, `reset()`
-- `Sma`: `Sma.new()`, `update(window: []f64, sample: f64): f64`, `average(): f64`, `reset()`
-- `Wma`: `Wma.new()`, `update(window: []f64, sample: f64): f64`, `reset()`
-- `Cma`: `Cma.new()`, `update(sample: f64): f64`, `average(): f64`, `reset()`
+fn computeIndicators(prices: &[]f64, ema_out: []f64, wma_out: []f64): usize {
+    let n1 = ema(prices, 3, ema_out);
+    let n2 = wma(prices, 3, wma_out);
+    return if (n1 < n2) { n1 } else { n2 };
+}
+```
+
+## Differences from Upstream & CP Highlights
+
+- **Caller-Owned Ring Buffers**: Streaming `Sma` and `Wma` take a caller-provided `window: []f64` slice of any period length, eliminating dynamic heap allocations.
+- **Zero-Allocation Batch API**: `ma`, `sma`, `dma`, `ema`, `smma`, `wma`, and `cma` read `&[]f64` and write results directly into `out: []f64`, returning the number of elements written.
+- **Unified Streaming + Batch Ergonomics**: Bridges both npm `moving-averages` batch semantics (`NaN` warm-up prefix via `maNan()`) and Rust `simple_moving_average` online updates.
