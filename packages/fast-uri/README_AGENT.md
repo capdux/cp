@@ -1,23 +1,51 @@
-# fast-uri@1.0.0 (Agent Quickref)
+# fast-uri — AI Agent Quick Ref
 
-> Zero-allocation RFC 3986 URI parser, serializer, relative resolver, and equivalence comparator (clean-room implementation of npm fast-uri, #171 / 229M wk) | License: BSD-3-Clause
-> Import: `import { ... } from "fast-uri";` | Full types: `src/index.d.cp`
+- **Package**: `fast-uri` (`1.0.0`) | **Source**: npm `fast-uri` v3 (RFC 3986 URI parser/resolver/comparator)
+- **Import**: `import { UriComponents, parseUri, serializeUri, resolveUri, equalUri } from "fast-uri";`
+- **Allocation**: Zero-heap; `parseUri` slices `input` in-place, `serializeUri`/`resolveUri` write into caller `[]u8`.
 
-## Functions
-- `export fn furiIsSchemeChar(b: u8): bool;`
-- `export fn furiPush(out: []u8, pos: usize, b: u8): usize;`
-- `export fn furiPushSlice(out: []u8, pos: usize, s: string): usize;`
-- `export fn furiPushLower(out: []u8, pos: usize, s: string): usize;`
-- `export fn furiPushPercentUpper(out: []u8, pos: usize, s: string): usize;`
-- `export fn furiPushPort(out: []u8, pos: usize, port: i32): usize;`
-- `export fn furiDefaultPort(scheme: string): i32;`
-- `export fn furiHasColon(s: string): bool;`
-- `export fn furiValidateIpv6Inner(s: string): bool;`
-- `export fn furiParsePortStr(s: string): i32;`
-- `export fn parseUri(input: string): UriComponents;`
-- `export fn serializeUri(c: UriComponents, out: []u8): usize;`
-- `export fn furiPopSegment(out: []u8, out_len: usize): usize;`
-- `export fn furiRemoveDotSegments(input: string, out: []u8): usize;`
-- `export fn resolveUri(base: string, rel: string, out: []u8): usize;`
-- `export fn furiNormalizeForCompare(input: string, out: []u8): usize;`
-- `export fn equalUri(a: string, b: string): bool;`
+## Core Signatures
+
+```typescript
+export class UriComponents {
+    valid: bool,
+    scheme: string,
+    userinfo: string,
+    host: string,
+    port: i32,         // -1 if no port present
+    path: string,
+    query: string,
+    has_query: bool,
+    fragment: string,
+    has_fragment: bool,
+    fn invalid(): UriComponents;
+    fn empty(): UriComponents;
+}
+
+export fn parseUri(input: string): UriComponents;
+export fn serializeUri(c: UriComponents, out: []u8): usize;
+export fn resolveUri(base: string, rel: string, out: []u8): usize;
+export fn equalUri(a: string, b: string): bool;
+export fn furiRemoveDotSegments(input: string, out: []u8): usize;
+export fn furiDefaultPort(scheme: string): i32;
+```
+
+## Minimal Pattern
+
+```typescript
+import { parseUri, resolveUri, equalUri } from "fast-uri";
+
+const c = parseUri("https://example.com:8443/v1/items?a=1#top");
+if (c.valid) {
+    let out: [256]u8 = undefined;
+    const n = resolveUri("https://example.com/v1/items", "../health", out[0..]);
+    const eq = equalUri("HTTPS://EXAMPLE.COM:443/v1", "https://example.com/v1");
+}
+```
+
+## Pitfalls
+
+1. **Always check `c.valid`**: Invalid IPv6 brackets, bad ports (`> 65535`), or malformed schemes return `UriComponents.invalid()` with `valid == false`.
+2. **Absent port is `-1`**: Check `c.port >= 0` before using `port`.
+3. **Empty query vs absent query**: Check `c.has_query` / `c.has_fragment` to distinguish `?` / `#` from absent components.
+4. **Slice lifetime**: Strings inside `UriComponents` borrow directly from `input`; do not outlive `input`.

@@ -1,59 +1,95 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
 # handlebars
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:handlebars` ([https://github.com/handlebars-lang/handlebars.js](https://github.com/handlebars-lang/handlebars.js))（原库名 `handlebars` → CP 包名 `handlebars`）
+Pure CP, zero-allocation **Handlebars** template engine composing `escape-html` for default XSS-safe HTML escaping, inline helpers (`upper`, `lower`, `default`), comments, and nested `{{#if}}` / `{{#unless}}` / `{{#repeat}}` blocks with recursion depth guards.
 
-Zero-allocation Handlebars template engine for CP — clean-room MIT parity with npm `handlebars` v4. Composes `escape-html` for XSS-safe `{{var}}` escaping with zero duplication.
+## Provenance & Zero-Cost Migration
 
-纯 CP 零堆分配 Handlebars 模板引擎（对标 npm `handlebars` v4），跨包复用 `escape-html` 实现 `{{var}}` 自动 HTML 转义防 XSS。
+| Field | Value |
+| :--- | :--- |
+| **Source Registry** | [npm](https://www.npmjs.com/package/handlebars) |
+| **Upstream Package** | `handlebars` (v4 parity) |
+| **Upstream Repo** | https://github.com/handlebars-lang/handlebars.js |
+| **CP Package** | `handlebars` (`1.0.0`) |
+| **License** | MIT |
 
-## Install / 安装
+Keep the exact same package name in CP — no renaming required:
+
+```typescript
+// TypeScript (npm)
+import Handlebars from "handlebars";
+
+// CP (cap)
+import { HbsContext, renderHandlebars } from "handlebars";
+```
+
+## Installation
 
 ```bash
 cap add handlebars
 ```
 
-## Dependencies / 跨包复用
+## Key Features & Security Highlights
 
-- `escape-html`: 零堆分配单遍 HTML 实体转义（`&`, `<`, `>`, `"`, `'`）
+- **XSS-Safe by Default**: `{{var}}` automatically HTML-escapes `&`, `<`, `>`, `"`, `'` via `escape-html`; use triple staches `{{{raw}}}` only when intentionally emitting trusted HTML.
+- **Zero Heap Allocation**: `HbsContext` stores up to 32 typed bindings (`string`, `bool`, `usize`) on the stack, and `renderHandlebars` writes directly into a caller-owned `[]u8` buffer.
+- **Built-in Inline Helpers**: Supports `{{upper key}}`, `{{lower key}}`, and `{{default key "fallback"}}`, plus Handlebars comments `{{! ... }}`.
+- **Nested Blocks with Depth Guard**: Supports `{{#if key}}...{{else}}...{{/if}}`, `{{#unless key}}...{{else}}...{{/unless}}`, and `{{#repeat count_key}}...{{/repeat}}` with a built-in recursion limit (16 levels) to prevent stack exhaustion.
 
-## Supported Syntax / 支持语法
+## Quick Start
 
-| Feature | Syntax | Description |
-| --- | --- | --- |
-| Escaped interpolation | `{{ key }}` | HTML-escaped variable output via `escape-html` |
-| Raw interpolation | `{{{ key }}}` | Unescaped raw variable output |
-| Comments | `{{! note }}`, `{{!-- block --}}` | Stripped from rendered output |
-| Conditional blocks | `{{#if key}}...{{else}}...{{/if}}` | Truthy branch (non-empty string, `true`, count `> 0`) |
-| Inverse blocks | `{{#unless key}}...{{else}}...{{/unless}}` | Falsy branch |
-| Repeat blocks | `{{#repeat key}}...{{/repeat}}` | Repeats body `N` times for `setCount` bindings (supports nesting) |
-| Inline helpers | `{{upper key}}`, `{{lower key}}`, `{{default key fallback}}` | Built-in zero-alloc string transform & fallback helpers |
-
-## API
-
-- `HbsContext` (fixed 32-entry stack pool):
-  - `HbsContext.new(): HbsContext`
-  - `setStr(*_, k: string, v: string)`
-  - `setBool(*_, k: string, v: bool)`
-  - `setCount(*_, k: string, n: usize)`
-  - `size(): usize`
-- `renderHandlebars(tpl: string, ctx: HbsContext, out: []u8): usize`
-
-## Usage / 使用示例
-
-```cp
+```typescript
 import { HbsContext, renderHandlebars } from "handlebars";
 
-let ctx = HbsContext.new();
-ctx.setStr("name", "<b>CP</b>");
-ctx.setBool("vip", true);
+fn main(): void {
+    let ctx = HbsContext.new();
+    ctx.setStr("user", "<script>alert(1)</script>");
+    ctx.setStr("role", "admin");
+    ctx.setBool("active", true);
+    ctx.setCount("stars", 3);
 
-let out: [256]u8 = undefined;
-const n = renderHandlebars(
-    "Hello {{name}}! {{#if vip}}Welcome {{upper name}}{{/if}}",
-    ctx,
-    out[0..256]
-);
+    const tpl =
+        "<h1>Hello {{user}} ({{upper role}})</h1>" +
+        "{{#if active}}<span>Status: {{default status \"online\"}}</span>{{else}}<span>offline</span>{{/if}}" +
+        "{{#repeat stars}}*{{/repeat}}";
+
+    let out: [512]u8 = undefined;
+    const len = renderHandlebars(tpl, ctx, out[0..]);
+    const html = out[0..len];
+    _ = html;
+}
 ```
+
+### Raw Unescaped Output & `{{#unless}}`
+
+```typescript
+import { HbsContext, renderHandlebars } from "handlebars";
+
+fn renderBanner(is_muted: bool): void {
+    let ctx = HbsContext.new();
+    ctx.setStr("badge", "<b>PRO</b>");
+    ctx.setBool("muted", is_muted);
+
+    let out: [256]u8 = undefined;
+    const n = renderHandlebars("{{#unless muted}}{{{badge}}}{{/unless}}", ctx, out[0..]);
+    _ = out[0..n];
+}
+```
+
+## API Overview
+
+| Symbol | Signature | Description |
+| :--- | :--- | :--- |
+| `HbsContext.new` | `() -> HbsContext` | Create an empty stack-allocated context (capacity: 32 entries) |
+| `HbsContext.setStr` | `(k: string, v: string)` | Bind or update a string variable |
+| `HbsContext.setBool` | `(k: string, v: bool)` | Bind or update a boolean variable |
+| `HbsContext.setCount` | `(k: string, n: usize)` | Bind or update an unsigned count variable (for `{{#repeat}}` & output) |
+| `HbsContext.size` | `() -> usize` | Return number of bound entries |
+| `renderHandlebars` | `(tpl: string, ctx: HbsContext, out: []u8) -> usize` | Render Handlebars template into `out`, returning bytes written |
+| `hbsFindBlockBounds` | `(tpl, body_start, end, block_tag) -> HbsBlockSpan` | Locate matching `{{else}}` and `{{/tag}}` bounds |
+| `hbsEvalInline` | `(expr_raw, ctx, escape, out, pos) -> usize` | Evaluate a single inline expression or helper |
+
+## License
+
+MIT

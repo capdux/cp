@@ -1,13 +1,100 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
 # zstd
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:zstd` ([https://github.com/gyscos/zstd-rs](https://github.com/gyscos/zstd-rs))
+High-performance **Zstandard (Zstd)** native compression and decompression for CP, backed by Facebook's official C `libzstd` with RAII-managed `Compressor` / `Decompressor` classes and both zero-allocation (`*Into`) and allocator-backed (`*Alloc`) APIs.
 
-Official CP native package wrapping **Zstandard (`libzstd`)** single-file amalgamation.
+## Provenance & Zero-Cost Migration
 
-- **License**: BSD-3-Clause (Upstream: `facebook/zstd`)
-- **Prebuilt Binaries**: `prebuilt/linux-x86_64/libzstd.a`, `prebuilt/linux-aarch64/libzstd.a`
-- **Source Fallback**: `c/zstd.c` + `c/zstd.h` (auto-compiled via `zig cc` on other targets)
-- **RAII API**: `Compressor` (`ZSTD_CCtx`) and `Decompressor` (`ZSTD_DCtx`) with deterministic `~init()` cleanup.
+| Field | Value |
+| :--- | :--- |
+| **Source Registry** | [crates.io](https://crates.io/crates/zstd) |
+| **Upstream Package** | `zstd` (v0.13 parity, backed by official `libzstd`) |
+| **Upstream Repo** | https://github.com/gyscos/zstd-rs |
+| **CP Package** | `zstd` (`1.0.0`) |
+| **License** | BSD-3-Clause / MIT |
+
+Keep the exact same package name in CP — no renaming required:
+
+```rust
+// Rust (crates.io)
+use zstd::bulk::{Compressor, Decompressor};
+```
+
+```typescript
+// CP (cap)
+import { Compressor, Decompressor, compressBound, versionNumber, ZstdError } from "zstd";
+```
+
+## Installation
+
+```bash
+cap add zstd
+```
+
+## Key Features & Performance Highlights
+
+- **Native `libzstd` Speed**: Ships prebuilt native C `zstd` bindings compiled with `-O3` (`opt: "fast"`).
+- **RAII Context Lifecycle**: `Compressor` and `Decompressor` implement `__cp_deinit`, automatically freeing `ZSTD_CCtx` / `ZSTD_DCtx` when going out of scope — zero context leaks.
+- **Zero-Allocation Hot Path**: Reuse a single `Compressor` / `Decompressor` across thousands of frames with `compressInto` and `decompressInto` writing straight into caller buffers.
+- **Dynamic Buffer Convenience**: Use `compressAlloc` / `decompressAlloc` when frame sizes are unknown at compile time.
+
+## Quick Start
+
+### Zero-Allocation Compress & Decompress (`compressInto` / `decompressInto`)
+
+```typescript
+import { Compressor, Decompressor, compressBound } from "zstd";
+
+fn roundtripZeroAlloc(input: &[]u8): !void {
+    let comp: Compressor = undefined;
+    try comp.init(3); // compression level 3 (default balanced)
+
+    let compressed: [4096]u8 = undefined;
+    const comp_len = try comp.compressInto(input, compressed[0..]);
+
+    let decomp: Decompressor = undefined;
+    try decomp.init();
+
+    let restored: [4096]u8 = undefined;
+    const dec_len = try decomp.decompressInto(compressed[0..comp_len], restored[0..]);
+    _ = dec_len;
+}
+```
+
+### Allocator-Backed Compress & Decompress (`compressAlloc` / `decompressAlloc`)
+
+```typescript
+import { Compressor, Decompressor } from "zstd";
+import * as std from "std";
+
+fn roundtripAlloc(allocator: std.mem.Allocator, input: &[]u8): ![]u8 {
+    let comp: Compressor = undefined;
+    try comp.init(6);
+    const compressed = try comp.compressAlloc(allocator, input);
+    defer allocator.free(compressed);
+
+    let decomp: Decompressor = undefined;
+    try decomp.init();
+    return try decomp.decompressAlloc(allocator, compressed);
+}
+```
+
+## API Overview
+
+| Symbol | Signature | Description |
+| :--- | :--- | :--- |
+| `versionNumber` | `() -> u32` | Runtime `libzstd` version number (e.g. `10506`) |
+| `compressBound` | `(src_size: usize) -> usize` | Worst-case compressed output size in bytes |
+| `Compressor.init` | `(level: i32) -> !void` | Allocate `ZSTD_CCtx` and set compression level (1..22) |
+| `Compressor.compressInto` | `(src: &[]u8, dst: []u8) -> !usize` | Compress into caller buffer, returning written bytes |
+| `Compressor.compressAlloc` | `(allocator: std.mem.Allocator, src: &[]u8) -> ![]u8` | Compress into a newly allocated buffer |
+| `Decompressor.init` | `() -> !void` | Allocate `ZSTD_DCtx` |
+| `Decompressor.decompressInto` | `(src: &[]u8, dst: []u8) -> !usize` | Decompress into caller buffer, returning written bytes |
+| `Decompressor.decompressAlloc` | `(allocator: std.mem.Allocator, src: &[]u8) -> ![]u8` | Decompress using frame content size into allocated buffer |
+| `ZstdError` | `AllocContextFailed \| InvalidContext \| CompressFailed \| DecompressFailed \| UnknownContentSize \| OutOfMemory` | Typed error union |
+| `ZSTD_*` | Raw C FFI bindings | Direct access to `ZSTD_createCCtx`, `ZSTD_compressCCtx`, `ZSTD_getFrameContentSize`, etc. |
+
+## License
+
+BSD-3-Clause / MIT
