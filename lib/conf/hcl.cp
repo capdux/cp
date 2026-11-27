@@ -34,20 +34,67 @@ pub struct HclBlockHeader {
     body: []const u8 = "",
 }
 
+type HclVec16 = @Vector(16, u8);
+
+fn makeHclCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        const is_alpha = (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z');
+        const is_digit = (i >= '0' && i <= '9');
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') f |= 1;
+        if (is_digit) f |= 2;
+        if (is_alpha || i == '_') f |= 4;
+        if (is_alpha || is_digit || i == '_' || i == '-') f |= 8;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const HCL_CHAR_LUT: [u8; 256] = makeHclCharLut();
+
+fn hclSimdFindLf(s: []const u8, start: usize): usize {
+    let i = start;
+    const vlf: HclVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: HclVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vlf)) break;
+    }
+    while (i < s.len && s[i] != '\n') : (i += 1) {}
+    return i;
+}
+
+fn hclSimdSkipStrSafe(s: []const u8, start: usize): usize {
+    let i = start;
+    const vbs: HclVec16 = @splat(92 as u8);
+    const vqt: HclVec16 = @splat(34 as u8);
+    const vdl: HclVec16 = @splat(36 as u8);
+    const vpct: HclVec16 = @splat(37 as u8);
+    const vlf: HclVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: HclVec16 = s[i .. i + 16][0..16].*;
+        const hit = (v == vbs) | (v == vqt) | (v == vdl) | (v == vpct) | (v == vlf);
+        if (@reduce(.Or, hit)) break;
+    }
+    return i;
+}
+
 fn isAsciiSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (HCL_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isAsciiDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (HCL_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (HCL_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || isAsciiDigit(c) || c == '-';
+    return (HCL_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
@@ -55,6 +102,11 @@ fn eqBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: HclVec16 = a[i .. i + 16][0..16].*;
+        const vb: HclVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -110,19 +162,13 @@ pub struct HclIter {
                 continue;
             }
             if (c == '#') {
-                _.pos += 1;
-                while (_.pos < _.src.len && _.src[_.pos] != '\n') {
-                    _.pos += 1;
-                }
+                _.pos = hclSimdFindLf(_.src, _.pos + 1);
                 continue;
             }
             if (c == '/' && _.pos + 1 < _.src.len) {
                 const n = _.src[_.pos + 1];
                 if (n == '/') {
-                    _.pos += 2;
-                    while (_.pos < _.src.len && _.src[_.pos] != '\n') {
-                        _.pos += 1;
-                    }
+                    _.pos = hclSimdFindLf(_.src, _.pos + 2);
                     continue;
                 }
                 if (n == '*') {
@@ -152,6 +198,8 @@ pub struct HclIter {
     fn scanString(*_, start: usize): HclToken {
         let p = start + 1;
         while (p < _.src.len) {
+            p = hclSimdSkipStrSafe(_.src, p);
+            if (p >= _.src.len) break;
             const c = _.src[p];
             if (c == '\\') {
                 if (p + 1 >= _.src.len) {
@@ -237,10 +285,7 @@ pub struct HclIter {
         // 逐行扫描直到匹配结束 marker
         while (p <= _.src.len) {
             const line_start = p;
-            let line_end = p;
-            while (line_end < _.src.len && _.src[line_end] != '\n') {
-                line_end += 1;
-            }
+            const line_end = hclSimdFindLf(_.src, p);
             let content_end = line_end;
             if (content_end > line_start && _.src[content_end - 1] == '\r') {
                 content_end -= 1;

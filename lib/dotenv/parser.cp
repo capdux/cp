@@ -4,6 +4,62 @@
 
 import std from "std";
 
+type EnvVec16 = @Vector(16, u8);
+
+fn makeEnvCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let flags: u8 = 0;
+        const is_alpha = (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z');
+        const is_digit = (i >= '0' && i <= '9');
+        if (is_alpha || is_digit || i == '_' || i == '-' || i == '.') {
+            flags |= 1; // key char
+        }
+        if (is_alpha || i == '_') {
+            flags |= 2; // ident start
+        }
+        if (is_alpha || is_digit || i == '_') {
+            flags |= 4; // ident char
+        }
+        if (i == ' ' || i == '\t' || i == 0x0B || i == 0x0C) {
+            flags |= 8; // whitespace
+        }
+        lut[i] = flags;
+    }
+    return lut;
+}
+
+const ENV_CHAR_LUT: [u8; 256] = makeEnvCharLut();
+
+fn envSimdFindByte(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const vn: EnvVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: EnvVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vn)) {
+            break;
+        }
+    }
+    while (i < s.len && s[i] != needle) : (i += 1) {}
+    return i;
+}
+
+fn envSimdFindAny2(s: []const u8, start: usize, b1: u8, b2: u8): usize {
+    let i = start;
+    const v1: EnvVec16 = @splat(b1);
+    const v2: EnvVec16 = @splat(b2);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: EnvVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v1) | (v == v2))) {
+            break;
+        }
+    }
+    while (i < s.len && s[i] != b1 && s[i] != b2) : (i += 1) {}
+    return i;
+}
+
 pub const MAX_ENV_ENTRIES: usize = 256;
 pub const ENV_BUFFER_CAPACITY: usize = 32768;
 
@@ -213,10 +269,8 @@ pub struct EnvMap {
         }
         let start = _.buf_len;
         let end = start + s.len;
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buffer[start + i] = s[i];
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(_.buffer[start..end], s);
         }
         _.buf_len = end;
         return _.buffer[start..end];
@@ -226,6 +280,16 @@ pub struct EnvMap {
         let start = _.buf_len;
         let i: usize = 0;
         while (i < raw.len && _.buf_len < ENV_BUFFER_CAPACITY) {
+            const next_cr = envSimdFindByte(raw, i, 13 as u8);
+            if (next_cr > i) {
+                const avail = ENV_BUFFER_CAPACITY - _.buf_len;
+                const chunk = next_cr - i;
+                const copy_len = if (chunk < avail) chunk else avail;
+                @memcpy(_.buffer[_.buf_len .. _.buf_len + copy_len], raw[i .. i + copy_len]);
+                _.buf_len += copy_len;
+                i += copy_len;
+                if (_.buf_len >= ENV_BUFFER_CAPACITY || i >= raw.len) break;
+            }
             if (raw[i] == '\r') {
                 if (i + 1 < raw.len && raw[i + 1] == '\n') {
                     _.buffer[_.buf_len] = '\n';
@@ -253,6 +317,16 @@ pub struct EnvMap {
         let start = _.buf_len;
         let i: usize = 0;
         while (i < raw.len && _.buf_len < ENV_BUFFER_CAPACITY) {
+            const next_sp = envSimdFindAny2(raw, i, 13 as u8, 92 as u8);
+            if (next_sp > i) {
+                const avail = ENV_BUFFER_CAPACITY - _.buf_len;
+                const chunk = next_sp - i;
+                const copy_len = if (chunk < avail) chunk else avail;
+                @memcpy(_.buffer[_.buf_len .. _.buf_len + copy_len], raw[i .. i + copy_len]);
+                _.buf_len += copy_len;
+                i += copy_len;
+                if (_.buf_len >= ENV_BUFFER_CAPACITY || i >= raw.len) break;
+            }
             if (raw[i] == '\r') {
                 if (i + 1 < raw.len && raw[i + 1] == '\n') {
                     _.buffer[_.buf_len] = '\n';
@@ -316,24 +390,19 @@ pub struct EnvMap {
 }
 
 pub fn isKeyChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9') ||
-        c == '_' || c == '-' || c == '.';
+    return (ENV_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 pub fn isIdentStartChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        c == '_';
+    return (ENV_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 pub fn isIdentChar(c: u8): bool {
-    return isIdentStartChar(c) || (c >= '0' && c <= '9');
+    return (ENV_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 pub fn isWhitespace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == 0x0B || c == 0x0C;
+    return (ENV_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 pub struct ParsedValue {
@@ -441,16 +510,15 @@ pub struct EnvParser {
     }
 
     fn skipToNextLine(*_) {
-        while (_.pos < _.src.len) {
-            let c = _.src[_.pos];
+        const hit = envSimdFindAny2(_.src, _.pos, 10 as u8, 13 as u8);
+        if (hit >= _.src.len) {
+            _.pos = _.src.len;
+            return;
+        }
+        const c = _.src[hit];
+        _.pos = hit + 1;
+        if (c == '\r' && _.pos < _.src.len && _.src[_.pos] == '\n') {
             _.pos += 1;
-            if (c == '\n') break;
-            if (c == '\r') {
-                if (_.pos < _.src.len && _.src[_.pos] == '\n') {
-                    _.pos += 1;
-                }
-                break;
-            }
         }
     }
 
@@ -529,6 +597,13 @@ pub struct EnvParser {
         let end = start;
 
         while (_.pos < _.src.len) {
+            const hit = envSimdFindAny2(_.src, _.pos, 34 as u8, 92 as u8);
+            if (hit >= _.src.len) {
+                _.pos = _.src.len;
+                end = _.pos;
+                break;
+            }
+            _.pos = hit;
             let c = _.src[_.pos];
             if (c == '\\') {
                 if (_.pos + 1 < _.src.len) {
@@ -555,9 +630,7 @@ pub struct EnvParser {
     fn parseSingleQuoted(*_): []const u8 {
         _.pos += 1; // consume opening '
         let start = _.pos;
-        while (_.pos < _.src.len && _.src[_.pos] != '\'') {
-            _.pos += 1;
-        }
+        _.pos = envSimdFindByte(_.src, _.pos, 39 as u8);
         let end = _.pos;
         if (_.pos < _.src.len && _.src[_.pos] == '\'') {
             _.pos += 1; // consume closing '
@@ -568,9 +641,7 @@ pub struct EnvParser {
     fn parseBacktickQuoted(*_): []const u8 {
         _.pos += 1; // consume opening `
         let start = _.pos;
-        while (_.pos < _.src.len && _.src[_.pos] != '`') {
-            _.pos += 1;
-        }
+        _.pos = envSimdFindByte(_.src, _.pos, 96 as u8);
         let end = _.pos;
         if (_.pos < _.src.len && _.src[_.pos] == '`') {
             _.pos += 1; // consume closing `

@@ -164,8 +164,23 @@ pub struct VCardContact {
 }
 
 // ============================================================================
-// Internal String & Escaping Helpers
+// Internal String & Escaping Helpers (16-lane SIMD + 256-entry LUT)
 // ============================================================================
+
+type VCardVec16 = @Vector(16, u8);
+
+fn makeVcEscLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize('\\')] = 1;
+    lut[usize(';')] = 1;
+    lut[usize(',')] = 1;
+    lut[usize('\n')] = 1;
+    lut[usize('\r')] = 1;
+    return lut;
+}
+
+const VC_ESC_LUT: [u8; 256] = makeVcEscLut();
 
 fn vcIsSpace(c: u8): bool {
     return c == ' ' || c == '\t';
@@ -186,6 +201,18 @@ fn vcTrimSpaces(s: string): string {
 fn vcAsciiEqlIgnoreCase(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: VCardVec16 = @splat(65 as u8);
+    const hi_Z: VCardVec16 = @splat(90 as u8);
+    const case_bit: VCardVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: VCardVec16 = a[i .. i + 16][0..16].*;
+        const vb: VCardVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         let ca = a[i];
         let cb = b[i];
@@ -204,6 +231,12 @@ fn vcDupSlice(alloc: std.mem.Allocator, s: string): string ! VCardError {
 fn vcHasCrLfOrControl(s: string): bool {
     if (simdCalHasControlByte(s)) return true;
     let i: usize = 0;
+    const vcr: VCardVec16 = @splat(13 as u8);
+    const vlf: VCardVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: VCardVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == vcr) | (v == vlf))) return true;
+    }
     while (i < s.len) : (i += 1) {
         if (s[i] == '\r' || s[i] == '\n') return true;
     }
@@ -257,8 +290,19 @@ fn vcUnescapeText(alloc: std.mem.Allocator, text: string): string ! VCardError {
     errdefer out.deinit(alloc);
 
     let i: usize = 0;
+    const vbs: VCardVec16 = @splat(92 as u8);
     while (i < text.len) {
-        if (text[i] == '\\' && i + 1 < text.len) {
+        const run_start = i;
+        while (i + 16 <= text.len) : (i += 16) {
+            const v: VCardVec16 = text[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == vbs)) break;
+        }
+        while (i < text.len && text[i] != '\\') : (i += 1) {}
+        if (i > run_start) {
+            out.appendSlice(alloc, text[run_start..i]) catch return VCardError.OutOfMemory;
+        }
+        if (i >= text.len) break;
+        if (i + 1 < text.len) {
             let next = text[i + 1];
             switch (next) {
                 'n' | 'N' => {
@@ -292,7 +336,25 @@ fn vcUnescapeText(alloc: std.mem.Allocator, text: string): string ! VCardError {
 }
 
 fn vcAppendEscapedText(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, text: string): void ! VCardError {
-    for (c of text) {
+    let i: usize = 0;
+    const vbs: VCardVec16 = @splat(92 as u8);
+    const vsemi: VCardVec16 = @splat(59 as u8);
+    const vcom: VCardVec16 = @splat(44 as u8);
+    const vlf: VCardVec16 = @splat(10 as u8);
+    const vcr: VCardVec16 = @splat(13 as u8);
+    while (i < text.len) {
+        const run_start = i;
+        while (i + 16 <= text.len) : (i += 16) {
+            const v: VCardVec16 = text[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == vbs) | (v == vsemi) | (v == vcom) | (v == vlf) | (v == vcr))) break;
+        }
+        while (i < text.len && VC_ESC_LUT[usize(text[i])] == 0) : (i += 1) {}
+        if (i > run_start) {
+            buf.appendSlice(alloc, text[run_start..i]) catch return VCardError.OutOfMemory;
+        }
+        if (i >= text.len) break;
+        const c = text[i];
+        i += 1;
         switch (c) {
             '\\' => buf.appendSlice(alloc, "\\\\") catch return VCardError.OutOfMemory,
             ';' => buf.appendSlice(alloc, "\\;") catch return VCardError.OutOfMemory,

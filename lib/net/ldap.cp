@@ -121,14 +121,52 @@ pub enum LdapFilter {
     }
 }
 
+type LdapVec16 = @Vector(16, u8);
+
+fn makeLdapHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+fn makeLdapCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        const is_alpha = (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z');
+        const is_digit = (i >= '0' && i <= '9');
+        if (is_alpha) f |= 1;
+        if (is_digit) f |= 2;
+        if (is_alpha || is_digit || i == '-' || i == '.' || i == ';') f |= 4;
+        if (i == ',' || i == '+' || i == '"' || i == '\\' || i == '<' || i == '>' || i == ';' || i == '#' || i == '=' || i == ' ') f |= 8;
+        if (i == '"' || i == '<' || i == '>' || i == ';' || i == '+' || i == '\n' || i == '\r' || i == 0) f |= 16;
+        if (i == '\\' || i == '*' || i == '(' || i == ')' || i == 0) f |= 32;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const LDAP_HEX_LUT: [u8; 256] = makeLdapHexLut();
+const LDAP_CHAR_LUT: [u8; 256] = makeLdapCharLut();
+
 fn isHexDigit(c: u8): bool {
-    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return LDAP_HEX_LUT[usize(c)] != 0xFF;
 }
 
 fn hexVal(c: u8): u8 {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    return c - 'A' + 10;
+    return LDAP_HEX_LUT[usize(c)];
 }
 
 fn toLowerAscii(c: u8): u8 {
@@ -139,6 +177,18 @@ fn toLowerAscii(c: u8): u8 {
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: LdapVec16 = @splat(65 as u8);
+    const hi_Z: LdapVec16 = @splat(90 as u8);
+    const case_bit: LdapVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: LdapVec16 = a[i .. i + 16][0..16].*;
+        const vb: LdapVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
     }
@@ -146,21 +196,20 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 fn isAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    return (LDAP_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (LDAP_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isValidAttrName(attr: []const u8): bool {
     if (attr.len == 0) return false;
     const first = attr[0];
-    if (!isAlpha(first) && !isDigit(first)) return false;
+    if ((LDAP_CHAR_LUT[usize(first)] & 3) == 0) return false;
     let i: usize = 0;
     while (i < attr.len) : (i += 1) {
-        const c = attr[i];
-        if (!isAlpha(c) && !isDigit(c) && c != '-' && c != '.' && c != ';') {
+        if ((LDAP_CHAR_LUT[usize(attr[i])] & 4) == 0) {
             return false;
         }
     }
@@ -172,27 +221,36 @@ fn decodeFilterSegment(allocator: std.mem.Allocator, raw: []const u8): ([]u8)! {
     errdefer buf.deinit(allocator);
 
     let i: usize = 0;
+    const vlp: LdapVec16 = @splat(40 as u8);
+    const vrp: LdapVec16 = @splat(41 as u8);
+    const vbs: LdapVec16 = @splat(92 as u8);
     while (i < raw.len) {
+        const run_start = i;
+        while (i + 16 <= raw.len) : (i += 16) {
+            const v: LdapVec16 = raw[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == vlp) | (v == vrp) | (v == vbs))) break;
+        }
+        while (i < raw.len && raw[i] != '(' && raw[i] != ')' && raw[i] != '\\') : (i += 1) {}
+        if (i > run_start) {
+            buf.appendSlice(allocator, raw[run_start..i]) catch return LdapError.OutOfMemory;
+        }
+        if (i >= raw.len) break;
         const c = raw[i];
         if (c == '(' || c == ')') {
             return LdapError.UnbalancedParens;
         }
-        if (c == '\\') {
-            if (i + 2 >= raw.len) {
-                return LdapError.InvalidEscape;
-            }
-            const h1 = raw[i + 1];
-            const h2 = raw[i + 2];
-            if (!isHexDigit(h1) || !isHexDigit(h2)) {
-                return LdapError.InvalidEscape;
-            }
-            const byte_val: u8 = (hexVal(h1) << 4) | hexVal(h2);
-            buf.append(allocator, byte_val) catch return LdapError.OutOfMemory;
-            i += 3;
-        } else {
-            buf.append(allocator, c) catch return LdapError.OutOfMemory;
-            i += 1;
+        // c == '\\'
+        if (i + 2 >= raw.len) {
+            return LdapError.InvalidEscape;
         }
+        const h1 = LDAP_HEX_LUT[usize(raw[i + 1])];
+        const h2 = LDAP_HEX_LUT[usize(raw[i + 2])];
+        if (h1 == 0xFF || h2 == 0xFF) {
+            return LdapError.InvalidEscape;
+        }
+        const byte_val: u8 = (h1 << 4) | h2;
+        buf.append(allocator, byte_val) catch return LdapError.OutOfMemory;
+        i += 3;
     }
 
     return buf.toOwnedSlice(allocator) catch return LdapError.OutOfMemory;
@@ -500,7 +558,25 @@ struct FilterFormatter {
     }
 
     fn appendEscaped(*_, allocator: std.mem.Allocator, raw: []const u8): ! {
-        for (c of raw) {
+        let i: usize = 0;
+        const vbs: LdapVec16 = @splat(92 as u8);
+        const vst: LdapVec16 = @splat(42 as u8);
+        const vlp: LdapVec16 = @splat(40 as u8);
+        const vrp: LdapVec16 = @splat(41 as u8);
+        const vnul: LdapVec16 = @splat(0 as u8);
+        while (i < raw.len) {
+            const run_start = i;
+            while (i + 16 <= raw.len) : (i += 16) {
+                const v: LdapVec16 = raw[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == vbs) | (v == vst) | (v == vlp) | (v == vrp) | (v == vnul))) break;
+            }
+            while (i < raw.len && (LDAP_CHAR_LUT[usize(raw[i])] & 32) == 0) : (i += 1) {}
+            if (i > run_start) {
+                _.buf.appendSlice(allocator, raw[run_start..i]) catch return LdapError.OutOfMemory;
+            }
+            if (i >= raw.len) break;
+            const c = raw[i];
+            i += 1;
             if (c == '\\') {
                 _.buf.appendSlice(allocator, "\\5c") catch return LdapError.OutOfMemory;
             } else if (c == '*') {
@@ -509,10 +585,8 @@ struct FilterFormatter {
                 _.buf.appendSlice(allocator, "\\28") catch return LdapError.OutOfMemory;
             } else if (c == ')') {
                 _.buf.appendSlice(allocator, "\\29") catch return LdapError.OutOfMemory;
-            } else if (c == 0) {
-                _.buf.appendSlice(allocator, "\\00") catch return LdapError.OutOfMemory;
             } else {
-                _.buf.append(allocator, c) catch return LdapError.OutOfMemory;
+                _.buf.appendSlice(allocator, "\\00") catch return LdapError.OutOfMemory;
             }
         }
     }
@@ -762,11 +836,11 @@ pub fn matchesEntry(filter: LdapFilter, entry_attrs: []const LdapAttr): bool {
 }
 
 fn isDnSpecialEscapable(c: u8): bool {
-    return c == ',' || c == '+' || c == '"' || c == '\\' || c == '<' || c == '>' || c == ';' || c == '#' || c == '=' || c == ' ';
+    return (LDAP_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn isDnForbiddenUnescaped(c: u8): bool {
-    return c == '"' || c == '<' || c == '>' || c == ';' || c == '+' || c == '\n' || c == '\r' || c == 0;
+    return (LDAP_CHAR_LUT[usize(c)] & 16) != 0;
 }
 
 pub fn parseDn(allocator: std.mem.Allocator, dn: []const u8): ([]DnComponent)! {

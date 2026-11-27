@@ -24,15 +24,45 @@ pub const ERR_NOSUCHCHANNEL: u16 = 403;
 pub const ERR_NICKNAMEINUSE: u16 = 433;
 
 // ---------------------------------------------------------------------------
-// Internal Byte Helpers
+// Internal Byte Helpers (16-lane SIMD + 256-entry LUT)
 // ---------------------------------------------------------------------------
 
+type IrcVec16 = @Vector(16, u8);
+
+fn makeIrcCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z')) f |= 1;
+        if (i >= '0' && i <= '9') f |= 2;
+        if (i == ' ' || i == ';' || i == '=' || i == '\r' || i == '\n') f |= 4;
+        if (i == ';' || i == ' ' || i == '\\' || i == '\r' || i == '\n') f |= 8;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const IRC_CHAR_LUT: [u8; 256] = makeIrcCharLut();
+
+fn ircSimdFindByte(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const vn: IrcVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IrcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vn)) break;
+    }
+    while (i < s.len && s[i] != needle) : (i += 1) {}
+    return i;
+}
+
 fn isAsciiAlpha(b: u8): bool {
-    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z');
+    return (IRC_CHAR_LUT[usize(b)] & 1) != 0;
 }
 
 fn isAsciiDigit(b: u8): bool {
-    return b >= '0' && b <= '9';
+    return (IRC_CHAR_LUT[usize(b)] & 2) != 0;
 }
 
 fn bytesEq(a: []const u8, b: []const u8): bool {
@@ -40,6 +70,11 @@ fn bytesEq(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: IrcVec16 = a[i .. i + 16][0..16].*;
+        const vb: IrcVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -68,6 +103,12 @@ fn isValidCommand(cmd: []const u8): bool {
 
 fn containsCrLf(s: []const u8): bool {
     let i: usize = 0;
+    const vcr: IrcVec16 = @splat(13 as u8);
+    const vlf: IrcVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IrcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == vcr) | (v == vlf))) return true;
+    }
     while (i < s.len) {
         if (s[i] == '\r' || s[i] == '\n') {
             return true;
@@ -79,6 +120,13 @@ fn containsCrLf(s: []const u8): bool {
 
 fn containsSpaceOrCrLf(s: []const u8): bool {
     let i: usize = 0;
+    const vsp: IrcVec16 = @splat(32 as u8);
+    const vcr: IrcVec16 = @splat(13 as u8);
+    const vlf: IrcVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IrcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == vsp) | (v == vcr) | (v == vlf))) return true;
+    }
     while (i < s.len) {
         const b = s[i];
         if (b == ' ' || b == '\r' || b == '\n') {
@@ -94,9 +142,19 @@ fn isValidTagKey(key: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const vsp: IrcVec16 = @splat(32 as u8);
+    const vsemi: IrcVec16 = @splat(59 as u8);
+    const veq: IrcVec16 = @splat(61 as u8);
+    const vcr: IrcVec16 = @splat(13 as u8);
+    const vlf: IrcVec16 = @splat(10 as u8);
+    while (i + 16 <= key.len) : (i += 16) {
+        const v: IrcVec16 = key[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == vsp) | (v == vsemi) | (v == veq) | (v == vcr) | (v == vlf))) {
+            return false;
+        }
+    }
     while (i < key.len) {
-        const b = key[i];
-        if (b == ' ' || b == ';' || b == '=' || b == '\r' || b == '\n') {
+        if ((IRC_CHAR_LUT[usize(key[i])] & 4) != 0) {
             return false;
         }
         i += 1;
@@ -190,40 +248,42 @@ pub fn unescapeTagValue(raw: []const u8, out: []u8): usize? {
     let i: usize = 0;
     let w: usize = 0;
     while (i < raw.len) {
-        const b = raw[i];
-        if (b == '\\') {
-            i += 1;
-            if (i >= raw.len) {
-                // Lone trailing backslash is discarded per IRCv3 specification.
-                break;
-            }
-            const esc = raw[i];
-            let decoded: u8 = esc;
-            if (esc == ':') {
-                decoded = ';';
-            } else if (esc == 's') {
-                decoded = ' ';
-            } else if (esc == '\\') {
-                decoded = '\\';
-            } else if (esc == 'r') {
-                decoded = '\r';
-            } else if (esc == 'n') {
-                decoded = '\n';
-            }
-            if (w >= out.len) {
+        const next_bs = ircSimdFindByte(raw, i, 92 as u8);
+        if (next_bs > i) {
+            const chunk = next_bs - i;
+            if (w + chunk > out.len) {
                 return null;
             }
-            out[w] = decoded;
-            w += 1;
-            i += 1;
-        } else {
-            if (w >= out.len) {
-                return null;
-            }
-            out[w] = b;
-            w += 1;
-            i += 1;
+            @memcpy(out[w .. w + chunk], raw[i..next_bs]);
+            w += chunk;
+            i = next_bs;
+            if (i >= raw.len) break;
         }
+        // raw[i] == '\\'
+        i += 1;
+        if (i >= raw.len) {
+            // Lone trailing backslash is discarded per IRCv3 specification.
+            break;
+        }
+        const esc = raw[i];
+        let decoded: u8 = esc;
+        if (esc == ':') {
+            decoded = ';';
+        } else if (esc == 's') {
+            decoded = ' ';
+        } else if (esc == '\\') {
+            decoded = '\\';
+        } else if (esc == 'r') {
+            decoded = '\r';
+        } else if (esc == 'n') {
+            decoded = '\n';
+        }
+        if (w >= out.len) {
+            return null;
+        }
+        out[w] = decoded;
+        w += 1;
+        i += 1;
     }
     return w;
 }
@@ -234,32 +294,44 @@ pub fn unescapeTagValue(raw: []const u8, out: []u8): usize? {
 pub fn escapeTagValue(raw: []const u8, out: []u8): usize? {
     let i: usize = 0;
     let w: usize = 0;
+    const vsemi: IrcVec16 = @splat(59 as u8);
+    const vsp: IrcVec16 = @splat(32 as u8);
+    const vbs: IrcVec16 = @splat(92 as u8);
+    const vcr: IrcVec16 = @splat(13 as u8);
+    const vlf: IrcVec16 = @splat(10 as u8);
     while (i < raw.len) {
-        const b = raw[i];
-        if (b == ';' || b == ' ' || b == '\\' || b == '\r' || b == '\n') {
-            if (w + 2 > out.len) {
-                return null;
-            }
-            out[w] = '\\';
-            if (b == ';') {
-                out[w + 1] = ':';
-            } else if (b == ' ') {
-                out[w + 1] = 's';
-            } else if (b == '\\') {
-                out[w + 1] = '\\';
-            } else if (b == '\r') {
-                out[w + 1] = 'r';
-            } else {
-                out[w + 1] = 'n';
-            }
-            w += 2;
-        } else {
-            if (w >= out.len) {
-                return null;
-            }
-            out[w] = b;
-            w += 1;
+        const run_start = i;
+        while (i + 16 <= raw.len) : (i += 16) {
+            const v: IrcVec16 = raw[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == vsemi) | (v == vsp) | (v == vbs) | (v == vcr) | (v == vlf))) break;
         }
+        while (i < raw.len && (IRC_CHAR_LUT[usize(raw[i])] & 8) == 0) : (i += 1) {}
+        if (i > run_start) {
+            const chunk = i - run_start;
+            if (w + chunk > out.len) {
+                return null;
+            }
+            @memcpy(out[w .. w + chunk], raw[run_start..i]);
+            w += chunk;
+        }
+        if (i >= raw.len) break;
+        const b = raw[i];
+        if (w + 2 > out.len) {
+            return null;
+        }
+        out[w] = '\\';
+        if (b == ';') {
+            out[w + 1] = ':';
+        } else if (b == ' ') {
+            out[w + 1] = 's';
+        } else if (b == '\\') {
+            out[w + 1] = '\\';
+        } else if (b == '\r') {
+            out[w + 1] = 'r';
+        } else {
+            out[w + 1] = 'n';
+        }
+        w += 2;
         i += 1;
     }
     return w;
@@ -606,10 +678,8 @@ pub struct IrcWriter {
             _.failed = true;
             return false;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buf[_.pos + i] = s[i];
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(_.buf[_.pos .. _.pos + s.len], s);
         }
         _.pos += s.len;
         return true;

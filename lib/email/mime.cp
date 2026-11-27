@@ -10,11 +10,30 @@ const QP_MAX_LINE: usize = 76;
 const B64_WRAP_COLS: usize = 76;
 const RFC2047_CHUNK_MAX_BYTES: usize = 45;
 
+type MimeVec16 = @Vector(16, u8);
+
+fn makeMimeHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        }
+    }
+    return lut;
+}
+
+const MIME_HEX_LUT: [u8; 256] = makeMimeHexLut();
+
 fn hexDigitVal(ch: u8): u8? {
-    if (ch >= '0' && ch <= '9') return ch - '0';
-    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
-    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
-    return null;
+    const v = MIME_HEX_LUT[usize(ch)];
+    if (v == 0xFF) return null;
+    return v;
 }
 
 fn isAsciiPrintableNonEq(ch: u8): bool {
@@ -23,6 +42,15 @@ fn isAsciiPrintableNonEq(ch: u8): bool {
 
 fn hasNonAsciiOrCtl(s: string): bool {
     let i: usize = 0;
+    const vhi: MimeVec16 = @splat(0x80 as u8);
+    const vctl: MimeVec16 = @splat(0x20 as u8);
+    const vtab: MimeVec16 = @splat(9 as u8);
+    const vdel: MimeVec16 = @splat(0x7F as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: MimeVec16 = s[i .. i + 16][0..16].*;
+        const bad = (v >= vhi) | ((v < vctl) & (v != vtab)) | (v == vdel);
+        if (@reduce(.Or, bad)) return true;
+    }
     while (i < s.len) : (i += 1) {
         const ch = s[i];
         if (ch >= 0x80 || ch < 0x20 && ch != '\t' || ch == 0x7F) {
@@ -104,10 +132,28 @@ fn decodeBase64CleanAlloc(alloc: std.mem.Allocator, raw: []const u8): ([]u8) ! E
     defer clean.deinit(alloc);
 
     let i: usize = 0;
-    while (i < raw.len) : (i += 1) {
-        const ch = raw[i];
-        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') continue;
-        clean.append(alloc, ch) catch return EmailError.OutOfMemory;
+    const vsp: MimeVec16 = @splat(32 as u8);
+    const vtab: MimeVec16 = @splat(9 as u8);
+    const vcr: MimeVec16 = @splat(13 as u8);
+    const vlf: MimeVec16 = @splat(10 as u8);
+    while (i < raw.len) {
+        const run_start = i;
+        while (i + 16 <= raw.len) : (i += 16) {
+            const v: MimeVec16 = raw[i .. i + 16][0..16].*;
+            const ws = (v == vsp) | (v == vtab) | (v == vcr) | (v == vlf);
+            if (@reduce(.Or, ws)) break;
+        }
+        while (i < raw.len) : (i += 1) {
+            const ch = raw[i];
+            if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') break;
+        }
+        if (i > run_start) {
+            clean.appendSlice(alloc, raw[run_start..i]) catch return EmailError.OutOfMemory;
+        }
+        while (i < raw.len) : (i += 1) {
+            const ch = raw[i];
+            if (ch != ' ' && ch != '\t' && ch != '\r' && ch != '\n') break;
+        }
     }
 
     if (clean.items.len == 0) {
@@ -300,36 +346,42 @@ pub static struct QuotedPrintable {
         errdefer out.deinit(alloc);
 
         let i: usize = 0;
+        const veq: MimeVec16 = @splat(61 as u8);
         while (i < input.len) {
-            const ch = input[i];
-            if (ch == '=') {
-                // Soft line break (with optional transport padding spaces/tabs before CRLF or LF)
-                let j = i + 1;
-                while (j < input.len && (input[j] == ' ' || input[j] == '\t')) : (j += 1) {}
-                if (j + 1 < input.len && input[j] == '\r' && input[j + 1] == '\n') {
-                    i = j + 2;
-                    continue;
-                }
-                if (j < input.len && input[j] == '\n') {
-                    i = j + 1;
-                    continue;
-                }
-
-                if (i + 2 >= input.len) {
-                    return EmailError.InvalidMime;
-                }
-                const hi_opt = hexDigitVal(input[i + 1]);
-                if (hi_opt == null) return EmailError.InvalidMime;
-                const hi = hi_opt.?;
-                const lo_opt = hexDigitVal(input[i + 2]);
-                if (lo_opt == null) return EmailError.InvalidMime;
-                const lo = lo_opt.?;
-                out.append(alloc, (hi << 4) | lo) catch return EmailError.OutOfMemory;
-                i += 3;
-            } else {
-                out.append(alloc, ch) catch return EmailError.OutOfMemory;
-                i += 1;
+            const run_start = i;
+            while (i + 16 <= input.len) : (i += 16) {
+                const v: MimeVec16 = input[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == veq)) break;
             }
+            while (i < input.len && input[i] != '=') : (i += 1) {}
+            if (i > run_start) {
+                out.appendSlice(alloc, input[run_start..i]) catch return EmailError.OutOfMemory;
+            }
+            if (i >= input.len) break;
+            // input[i] == '='
+            // Soft line break (with optional transport padding spaces/tabs before CRLF or LF)
+            let j = i + 1;
+            while (j < input.len && (input[j] == ' ' || input[j] == '\t')) : (j += 1) {}
+            if (j + 1 < input.len && input[j] == '\r' && input[j + 1] == '\n') {
+                i = j + 2;
+                continue;
+            }
+            if (j < input.len && input[j] == '\n') {
+                i = j + 1;
+                continue;
+            }
+
+            if (i + 2 >= input.len) {
+                return EmailError.InvalidMime;
+            }
+            const hi_opt = hexDigitVal(input[i + 1]);
+            if (hi_opt == null) return EmailError.InvalidMime;
+            const hi = hi_opt.?;
+            const lo_opt = hexDigitVal(input[i + 2]);
+            if (lo_opt == null) return EmailError.InvalidMime;
+            const lo = lo_opt.?;
+            out.append(alloc, (hi << 4) | lo) catch return EmailError.OutOfMemory;
+            i += 3;
         }
 
         return out.toOwnedSlice(alloc) catch return EmailError.OutOfMemory;
@@ -556,12 +608,22 @@ pub struct EmailBuilder {
 
     static fn appendQuotedParamValue(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, s: string): void ! EmailError {
         let i: usize = 0;
-        while (i < s.len) : (i += 1) {
-            const ch = s[i];
-            if (ch == '"' || ch == '\\') {
-                buf.append(alloc, '\\') catch return EmailError.OutOfMemory;
+        const vqt: MimeVec16 = @splat(34 as u8);
+        const vbs: MimeVec16 = @splat(92 as u8);
+        while (i < s.len) {
+            const run_start = i;
+            while (i + 16 <= s.len) : (i += 16) {
+                const v: MimeVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == vqt) | (v == vbs))) break;
             }
-            buf.append(alloc, ch) catch return EmailError.OutOfMemory;
+            while (i < s.len && s[i] != '"' && s[i] != '\\') : (i += 1) {}
+            if (i > run_start) {
+                buf.appendSlice(alloc, s[run_start..i]) catch return EmailError.OutOfMemory;
+            }
+            if (i >= s.len) break;
+            buf.append(alloc, '\\') catch return EmailError.OutOfMemory;
+            buf.append(alloc, s[i]) catch return EmailError.OutOfMemory;
+            i += 1;
         }
     }
 
@@ -665,13 +727,21 @@ struct HeaderBodySep {
 
 fn findHeaderBodySeparator(raw: []const u8): HeaderBodySep? {
     let i: usize = 0;
-    while (i < raw.len) : (i += 1) {
-        if (i + 3 < raw.len && raw[i] == '\r' && raw[i + 1] == '\n' && raw[i + 2] == '\r' && raw[i + 3] == '\n') {
-            return HeaderBodySep{ header_end: i, body_start: i + 4 };
+    const vlf: MimeVec16 = @splat(10 as u8);
+    while (i < raw.len) {
+        while (i + 16 <= raw.len) : (i += 16) {
+            const v: MimeVec16 = raw[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == vlf)) break;
         }
-        if (i + 1 < raw.len && raw[i] == '\n' && raw[i + 1] == '\n') {
+        while (i < raw.len && raw[i] != '\n') : (i += 1) {}
+        if (i >= raw.len) break;
+        if (i > 0 && raw[i - 1] == '\r' && i + 2 < raw.len && raw[i + 1] == '\r' && raw[i + 2] == '\n') {
+            return HeaderBodySep{ header_end: i - 1, body_start: i + 3 };
+        }
+        if (i + 1 < raw.len && raw[i + 1] == '\n') {
             return HeaderBodySep{ header_end: i, body_start: i + 2 };
         }
+        i += 1;
     }
     return null;
 }

@@ -24,29 +24,67 @@ pub struct HjsonToken {
 
 const MAX_HJSON_DEPTH: usize = 64;
 
+type HjsonVec16 = @Vector(16, u8);
+
+fn makeHjsonCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i >= '0' && i <= '9') f |= 1;
+        if ((i >= '0' && i <= '9') || (i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) f |= 2;
+        if (i == ' ' || i == '\t') f |= 4;
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r') f |= 8;
+        if (i == '{' || i == '}' || i == '[' || i == ']' || i == ',' || i == ':') f |= 16;
+        if (i < 0x20 || i == '"' || i == '\\') f |= 32;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const HJSON_CHAR_LUT: [u8; 256] = makeHjsonCharLut();
+
+fn hjsonSimdFindEol(s: []const u8, start: usize): usize {
+    let i = start;
+    const vlf: HjsonVec16 = @splat(10 as u8);
+    const vcr: HjsonVec16 = @splat(13 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: HjsonVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == vlf) | (v == vcr))) break;
+    }
+    while (i < s.len && s[i] != '\n' && s[i] != '\r') : (i += 1) {}
+    return i;
+}
+
 fn isAsciiDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (HJSON_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (HJSON_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isHorizSpace(c: u8): bool {
-    return c == ' ' || c == '\t';
+    return (HJSON_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isWhitespace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (HJSON_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn isPunctuator(c: u8): bool {
-    return c == '{' || c == '}' || c == '[' || c == ']' || c == ',' || c == ':';
+    return (HJSON_CHAR_LUT[usize(c)] & 16) != 0;
 }
 
 fn bytesEql(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: HjsonVec16 = a[i .. i + 16][0..16].*;
+        const vb: HjsonVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -66,9 +104,8 @@ struct OutBuf {
 
     fn pushSlice(*_, s: []const u8): bool {
         if (_.len + s.len > _.buf.len) return false;
-        let i: usize = 0;
-        while (i < s.len) : (i += 1) {
-            _.buf[_.len + i] = s[i];
+        if (s.len > 0) {
+            @memcpy(_.buf[_.len .. _.len + s.len], s);
         }
         _.len += s.len;
         return true;
@@ -98,8 +135,22 @@ struct OutBuf {
     fn pushJsonStringRaw(*_, s: []const u8): bool {
         if (!_.push('"')) return false;
         let i: usize = 0;
-        while (i < s.len) : (i += 1) {
+        const vctl: HjsonVec16 = @splat(0x20 as u8);
+        const vqt: HjsonVec16 = @splat(34 as u8);
+        const vbs: HjsonVec16 = @splat(92 as u8);
+        while (i < s.len) {
+            const run_start = i;
+            while (i + 16 <= s.len) : (i += 16) {
+                const v: HjsonVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v < vctl) | (v == vqt) | (v == vbs))) break;
+            }
+            while (i < s.len && (HJSON_CHAR_LUT[usize(s[i])] & 32) == 0) : (i += 1) {}
+            if (i > run_start) {
+                if (!_.pushSlice(s[run_start..i])) return false;
+            }
+            if (i >= s.len) break;
             if (!_.pushJsonEscapedChar(s[i])) return false;
+            i += 1;
         }
         return _.push('"');
     }
@@ -190,18 +241,12 @@ struct Parser {
                 continue;
             }
             if (c == '#') {
-                _.pos += 1;
-                while (_.pos < s.len && s[_.pos] != '\n' && s[_.pos] != '\r') {
-                    _.pos += 1;
-                }
+                _.pos = hjsonSimdFindEol(s, _.pos + 1);
                 continue;
             }
             if (c == '/' && _.pos + 1 < s.len) {
                 if (s[_.pos + 1] == '/') {
-                    _.pos += 2;
-                    while (_.pos < s.len && s[_.pos] != '\n' && s[_.pos] != '\r') {
-                        _.pos += 1;
-                    }
+                    _.pos = hjsonSimdFindEol(s, _.pos + 2);
                     continue;
                 }
                 if (s[_.pos + 1] == '*') {
@@ -427,10 +472,7 @@ struct Parser {
         }
 
         // Otherwise: Hjson quoteless string runs to end of line (trimming trailing whitespace)
-        let end = start;
-        while (end < s.len && s[end] != '\n' && s[end] != '\r') {
-            end += 1;
-        }
+        const end = hjsonSimdFindEol(s, start);
         _.pos = end;
         let trimmed = end;
         while (trimmed > start && isHorizSpace(s[trimmed - 1])) {

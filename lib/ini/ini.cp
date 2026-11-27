@@ -3,6 +3,61 @@
 
 const std = @import("std");
 
+type IniVec16 = @Vector(16, u8);
+
+fn makeIniQuoteLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize('\n')] = 1;
+    lut[usize('\r')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('#')] = 1;
+    lut[usize(';')] = 1;
+    lut[usize('"')] = 1;
+    return lut;
+}
+
+fn makeIniJsonEscLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 0x20) : (i += 1) {
+        lut[i] = 1;
+    }
+    lut[usize('"')] = 1;
+    lut[usize('\\')] = 1;
+    return lut;
+}
+
+const INI_QUOTE_LUT: [u8; 256] = makeIniQuoteLut();
+const INI_JSON_ESC_LUT: [u8; 256] = makeIniJsonEscLut();
+
+fn iniSimdFindLf(s: []const u8, start: usize): usize {
+    let i = start;
+    const vlf: IniVec16 = @splat(10 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IniVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vlf)) break;
+    }
+    while (i < s.len && s[i] != '\n') : (i += 1) {}
+    return i;
+}
+
+fn iniSimdFindKvDelim(s: []const u8): usize? {
+    let i: usize = 0;
+    const veq: IniVec16 = @splat(61 as u8);
+    const vcol: IniVec16 = @splat(58 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: IniVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == veq) | (v == vcol))) break;
+    }
+    while (i < s.len) : (i += 1) {
+        const ch = s[i];
+        if (ch == '=' || ch == ':') return i;
+    }
+    return null;
+}
+
 pub err IniError {
     UnterminatedSection,
     UnterminatedQuote,
@@ -71,6 +126,18 @@ fn trimSpaces(s: []const u8): []const u8 {
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: IniVec16 = @splat(65 as u8);
+    const hi_Z: IniVec16 = @splat(90 as u8);
+    const case_bit: IniVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: IniVec16 = a[i .. i + 16][0..16].*;
+        const vb: IniVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         let ca = a[i];
         let cb = b[i];
@@ -106,8 +173,20 @@ fn isCommentStart(c: u8, opts: IniOptions): bool {
 fn needsQuoting(val: []const u8): bool {
     if (val.len == 0) return false;
     if (isSpace(val[0]) || isSpace(val[val.len - 1])) return true;
-    for (c of val) {
-        if (c == '\n' || c == '\r' || c == '\t' || c == '#' || c == ';' || c == '"') {
+    let i: usize = 0;
+    const vlf: IniVec16 = @splat(10 as u8);
+    const vcr: IniVec16 = @splat(13 as u8);
+    const vtab: IniVec16 = @splat(9 as u8);
+    const vhash: IniVec16 = @splat(35 as u8);
+    const vsemi: IniVec16 = @splat(59 as u8);
+    const vqt: IniVec16 = @splat(34 as u8);
+    while (i + 16 <= val.len) : (i += 16) {
+        const v: IniVec16 = val[i .. i + 16][0..16].*;
+        const hit = (v == vlf) | (v == vcr) | (v == vtab) | (v == vhash) | (v == vsemi) | (v == vqt);
+        if (@reduce(.Or, hit)) return true;
+    }
+    while (i < val.len) : (i += 1) {
+        if (INI_QUOTE_LUT[usize(val[i])] != 0) {
             return true;
         }
     }
@@ -116,7 +195,23 @@ fn needsQuoting(val: []const u8): bool {
 
 fn appendJsonEscaped(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, s: []const u8): ! {
     buf.append(alloc, '"') catch return IniError.OutOfMemory;
-    for (c of s) {
+    let i: usize = 0;
+    const vctl: IniVec16 = @splat(0x20 as u8);
+    const vqt: IniVec16 = @splat(34 as u8);
+    const vbs: IniVec16 = @splat(92 as u8);
+    while (i < s.len) {
+        const run_start = i;
+        while (i + 16 <= s.len) : (i += 16) {
+            const v: IniVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v < vctl) | (v == vqt) | (v == vbs))) break;
+        }
+        while (i < s.len && INI_JSON_ESC_LUT[usize(s[i])] == 0) : (i += 1) {}
+        if (i > run_start) {
+            buf.appendSlice(alloc, s[run_start..i]) catch return IniError.OutOfMemory;
+        }
+        if (i >= s.len) break;
+        const c = s[i];
+        i += 1;
         switch (c) {
             '"' => buf.appendSlice(alloc, "\\\"") catch return IniError.OutOfMemory,
             '\\' => buf.appendSlice(alloc, "\\\\") catch return IniError.OutOfMemory,
@@ -126,13 +221,9 @@ fn appendJsonEscaped(buf: *std.ArrayList(u8), alloc: std.mem.Allocator, s: []con
             0x08 => buf.appendSlice(alloc, "\\b") catch return IniError.OutOfMemory,
             0x0C => buf.appendSlice(alloc, "\\f") catch return IniError.OutOfMemory,
             else => {
-                if (c < 0x20) {
-                    const hex = "0123456789abcdef";
-                    let esc: [6]u8 = ['\\', 'u', '0', '0', hex[(c >> 4) & 0x0F], hex[c & 0x0F]];
-                    buf.appendSlice(alloc, esc[0..6]) catch return IniError.OutOfMemory;
-                } else {
-                    buf.append(alloc, c) catch return IniError.OutOfMemory;
-                }
+                const hex = "0123456789abcdef";
+                let esc: [6]u8 = ['\\', 'u', '0', '0', hex[(c >> 4) & 0x0F], hex[c & 0x0F]];
+                buf.appendSlice(alloc, esc[0..6]) catch return IniError.OutOfMemory;
             },
         }
     }
@@ -205,9 +296,7 @@ pub struct IniDoc {
 
         while (pos < src.len) {
             let line_start: usize = pos;
-            while (pos < src.len && src[pos] != '\n') {
-                pos += 1;
-            }
+            pos = iniSimdFindLf(src, pos);
             let line_end: usize = pos;
             if (line_end > line_start && src[line_end - 1] == '\r') {
                 line_end -= 1;
@@ -291,15 +380,7 @@ pub struct IniDoc {
             }
 
             // 4. Key-Value line (with optional trailing `\` continuations)
-            let delim_pos: usize? = null;
-            let k_idx: usize = 0;
-            while (k_idx < first_line.len) : (k_idx += 1) {
-                let ch = first_line[k_idx];
-                if (ch == '=' || ch == ':') {
-                    delim_pos = k_idx;
-                    break;
-                }
-            }
+            let delim_pos: usize? = iniSimdFindKvDelim(first_line);
 
             let dpos = delim_pos ?? return IniError.MissingEquals;
             let key_slice = trimSpaces(first_line[0..dpos]);
@@ -325,9 +406,7 @@ pub struct IniDoc {
 
                 while (has_cont && pos < src.len) {
                     let next_start: usize = pos;
-                    while (pos < src.len && src[pos] != '\n') {
-                        pos += 1;
-                    }
+                    pos = iniSimdFindLf(src, pos);
                     let next_end: usize = pos;
                     if (next_end > next_start && src[next_end - 1] == '\r') {
                         next_end -= 1;
