@@ -835,4 +835,12 @@ git status --porcelain cpc_dev/src
 3. **子智能体文档精修批处理“一读一检”零返工模板**：每批 12 包（36 份 EN/ZH/AGENT 文档）在派发 Prompt 中强制要求「首轮单条命令批量读取全部 12 包 `src/index.d.cp` + `cap.json`，完工前单条脚本校验 36 文件存在性、0 `@cap/` 残留、三栏导航完整、`README_AGENT.md` 严格 40~80 行」，连续 3 批（Batch 8~10，108 份文档）实现 100% 一次验收通过、零返工。
 4. **升级 `cpc` 后必清 `.cap/test-mod` 缓存**：执行 `bash scripts/sync_cpc.sh release` 升级编译器后，跑 `cap test -m` 前先清理 `.cap/test-mod`，防止残留旧转译 `.zig` 导致假报错或掩盖真实回归。
 
+### 6.12 第 12 轮 3 小时效率与 Token 审计固化铁律（2026-11-27 20:26）
+
+1. **双路并行优先按物理顶层目录隔离（`lib/` vs `packages/`）**：性能优化或质量专项中，一路专攻 `lib/`、一路专攻 `packages/`，实现 100% 物理目录零冲突、0 回滚重做，连续 10+ 波次全部一次验收推送。
+2. **中长尾规模化文档采用“头部人工精修 + 尾部 AST 签名脚本富化”双轨法**：Top 200 明星包人工级精修，其余 ~700 中长尾包用 `scripts/enrich_tail_docs.py` 从 `src/index.d.cp` 提取真实导出签名一次性富化（同时脚本强制保护已人工精修包），避免数百轮子智能体对话消耗海量 Token。
+3. **沉淀毫秒级全仓门禁脚本替代人工零散排查**：日常体检与提交前直接运行 `python3 scripts/check_ecosystem_health.py`（300ms 覆盖 16 项元数据/文档/注册表门禁）与 `python3 scripts/test_cap_ai_toolchain.py`（41 断言覆盖 `cap fix`/`cap brief`/`cap check`），用 1 条命令替代 10+ 轮分散检查。
+4. **服务重启后的工作区半成品实行“独立核验波”制度**：切号重启后若 `git status` 存在上一轮未测完的改动，绝不盲目合入或混入新提交，而是单独派发只读 `git diff` 安全审阅 + 串行 `cap test -m` 验证波，确认 100% 绿灯后再单独成 commit 推送。
+
+
 
