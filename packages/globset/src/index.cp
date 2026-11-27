@@ -104,8 +104,8 @@ pub struct GlobSet {
     pub static fn withOptions(opts: GlobSetOptions): GlobSet {
         return GlobSet {
             patterns: [""; 32],
-            base_buf: [[0; 64]; 32],
-            base_lens: [0; 32],
+            base_buf: undefined,
+            base_lens: undefined,
             count: 0,
             opts: opts
         };
@@ -207,7 +207,7 @@ pub struct GlobSet {
         if (_.count == 0) {
             return 0;
         }
-        let hits: [32]usize = [0; 32];
+        let hits: [32]usize = undefined;
         return _.matches(path, hits[0..32]);
     }
 }
@@ -231,7 +231,7 @@ pub struct GlobOverride {
     pub static fn withOptions(opts: GlobSetOptions): GlobOverride {
         return GlobOverride {
             set: GlobSet.withOptions(opts),
-            negated: [false; 32],
+            negated: undefined,
             has_whitelist: false
         };
     }
@@ -277,7 +277,7 @@ pub struct GlobOverride {
     /// Evaluates override rules against `path`:
     /// Returns `OVERRIDE_WHITELIST`, `OVERRIDE_IGNORE`, or `OVERRIDE_NONE`.
     pub fn matched(path: string): i32 {
-        let hits: [32]usize = [0; 32];
+        let hits: [32]usize = undefined;
         let n = _.set.matches(path, hits[0..32]);
         if (n == 0) {
             return OVERRIDE_NONE;

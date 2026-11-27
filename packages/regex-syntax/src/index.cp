@@ -531,10 +531,13 @@ pub fn extractLiteralPrefix(pattern: string, out: []u8): usize {
 /// minimum match length, and static literal prefix length.
 pub fn validateRegexSyntax(pattern: string): RegexSyntaxInfo {
     let len = pattern.len;
-    let cur_branch_min: [65]usize = [0; 65];
-    let group_alt_min: [65]usize = [0; 65];
-    let group_has_alt: [65]bool = [false; 65];
-    let group_start_pos: [65]usize = [0; 65];
+    let cur_branch_min: [65]usize = undefined;
+    let group_alt_min: [65]usize = undefined;
+    let group_has_alt: [65]bool = undefined;
+    let group_start_pos: [65]usize = undefined;
+    cur_branch_min[0] = 0;
+    group_alt_min[0] = 0;
+    group_has_alt[0] = false;
 
     let depth: usize = 0;
     let capture_count: usize = 0;

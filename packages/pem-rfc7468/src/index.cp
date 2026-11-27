@@ -4,6 +4,7 @@
 // Clean-room MIT implementation (RustCrypto pem-rfc7468 parity).
 
 import { encodeStd, decodeStd } from "../../base64ct/src/index.cp";
+import { bytesEq, findByteInBytes, indexOfBytes } from "cap:bin";
 
 pub const PEM_LINE_WIDTH: usize = 64;
 pub const PEM_OK: i64 = 0;
@@ -22,7 +23,7 @@ pub struct PemLabel {
 
     pub static fn empty(): PemLabel {
         return PemLabel {
-            buf: [0; 64],
+            buf: undefined,
             len: 0,
         };
     }
@@ -88,14 +89,7 @@ fn pemStartsWithAt(s: string, pos: usize, prefix: string): bool {
     if (pos + prefix.len > s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[pos + i] != prefix[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return bytesEq(s[pos..pos + prefix.len], prefix);
 }
 
 fn pemWriteBytes(out: []u8, pos: usize, src: string): usize {
@@ -118,11 +112,14 @@ fn pemWriteNewline(out: []u8, pos: usize, crlf: bool): usize {
 }
 
 fn pemAdvanceLineEnd(s: string, pos: usize): usize {
-    let p = pos;
-    while (p < s.len && s[p] != ('\n' as u8) && s[p] != ('\r' as u8)) {
-        p = p + 1;
+    let lf: usize = s.len;
+    if (idx := findByteInBytes(s, '\n' as u8, pos)) {
+        lf = idx;
     }
-    return p;
+    if (cr := findByteInBytes(s[pos..lf], '\r' as u8, 0)) {
+        return pos + cr;
+    }
+    return lf;
 }
 
 fn pemSkipLineEnding(s: string, pos: usize): usize {
@@ -139,16 +136,11 @@ fn pemSkipLineEnding(s: string, pos: usize): usize {
 }
 
 fn pemFindDashes(s: string, start: usize, line_end: usize): i64 {
-    let p = start;
-    while (p + 5 <= line_end) {
-        if (s[p] == ('-' as u8)
-            && s[p + 1] == ('-' as u8)
-            && s[p + 2] == ('-' as u8)
-            && s[p + 3] == ('-' as u8)
-            && s[p + 4] == ('-' as u8)) {
-            return p as i64;
-        }
-        p = p + 1;
+    if (start + 5 > line_end) {
+        return -1;
+    }
+    if (idx := indexOfBytes(s[start..line_end], "-----", 0)) {
+        return (start + idx) as i64;
     }
     return -1;
 }
@@ -169,14 +161,7 @@ fn pemSliceEq(s: string, a_start: usize, a_len: usize, b_start: usize, b_len: us
     if (a_len != b_len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < a_len) {
-        if (s[a_start + i] != s[b_start + i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return bytesEq(s[a_start..a_start + a_len], s[b_start..b_start + b_len]);
 }
 
 /// Computes the exact byte length of a PEM-encoded document for a given
@@ -219,7 +204,7 @@ pub fn encodePem(label: string, der: []const u8, line_ending_crlf: bool, out: []
     pos = pemWriteNewline(out, pos, line_ending_crlf);
 
     // Encode 48 DER bytes per line -> exactly 64 Base64 characters per line via @cap/base64ct
-    let chunk: [48]u8 = [0; 48];
+    let chunk: [48]u8 = undefined;
     let di: usize = 0;
     while (di < der.len) {
         let take: usize = der.len - di;
@@ -259,41 +244,45 @@ pub fn locatePem(input: string): PemSlice {
     let body_start: usize = 0;
 
     while (pos < input.len) {
-        const line_start = pos;
-        const line_end = pemAdvanceLineEnd(input, line_start);
-        const next_line = pemSkipLineEnding(input, line_end);
-
-        if (pemStartsWithAt(input, line_start, "-----BEGIN ")) {
-            const l_start = line_start + 11;
-            const dash_pos = pemFindDashes(input, l_start, line_end);
-            if (dash_pos < 0) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_INVALID_HEADER,
-                };
-            }
-            const d_idx = dash_pos as usize;
-            const l_len = d_idx - l_start;
-            if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_INVALID_HEADER,
-                };
-            }
-            if (!pemIsLabelValidBytes(input, l_start, l_len)) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_INVALID_LABEL,
-                };
-            }
-            found_begin = true;
-            label_start = l_start;
-            label_len = l_len;
-            body_start = next_line;
-            pos = next_line;
+        const found = indexOfBytes(input, "-----BEGIN ", pos) ?? input.len;
+        if (found >= input.len) {
             break;
         }
+        if (found > 0 && input[found - 1] != ('\n' as u8) && input[found - 1] != ('\r' as u8)) {
+            pos = found + 1;
+            continue;
+        }
+        const line_start = found;
+        const line_end = pemAdvanceLineEnd(input, line_start);
+        const next_line = pemSkipLineEnding(input, line_end);
+        const l_start = line_start + 11;
+        const dash_pos = pemFindDashes(input, l_start, line_end);
+        if (dash_pos < 0) {
+            return PemSlice {
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_INVALID_HEADER,
+            };
+        }
+        const d_idx = dash_pos as usize;
+        const l_len = d_idx - l_start;
+        if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
+            return PemSlice {
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_INVALID_HEADER,
+            };
+        }
+        if (!pemIsLabelValidBytes(input, l_start, l_len)) {
+            return PemSlice {
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_INVALID_LABEL,
+            };
+        }
+        found_begin = true;
+        label_start = l_start;
+        label_len = l_len;
+        body_start = next_line;
         pos = next_line;
+        break;
     }
 
     if (!found_begin) {
@@ -304,43 +293,47 @@ pub fn locatePem(input: string): PemSlice {
     }
 
     while (pos < input.len) {
-        const line_start = pos;
+        const found = indexOfBytes(input, "-----END ", pos) ?? input.len;
+        if (found >= input.len) {
+            break;
+        }
+        if (found > 0 && input[found - 1] != ('\n' as u8) && input[found - 1] != ('\r' as u8)) {
+            pos = found + 1;
+            continue;
+        }
+        const line_start = found;
         const line_end = pemAdvanceLineEnd(input, line_start);
         const next_line = pemSkipLineEnding(input, line_end);
-
-        if (pemStartsWithAt(input, line_start, "-----END ")) {
-            const e_start = line_start + 9;
-            const dash_pos = pemFindDashes(input, e_start, line_end);
-            if (dash_pos < 0) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_INVALID_FOOTER,
-                };
-            }
-            const d_idx = dash_pos as usize;
-            const e_len = d_idx - e_start;
-            if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_INVALID_FOOTER,
-                };
-            }
-            if (!pemSliceEq(input, label_start, label_len, e_start, e_len)) {
-                return PemSlice {
-                    label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
-                    err: PEM_ERR_LABEL_MISMATCH,
-                };
-            }
+        const e_start = line_start + 9;
+        const dash_pos = pemFindDashes(input, e_start, line_end);
+        if (dash_pos < 0) {
             return PemSlice {
-                label_start: label_start,
-                label_len: label_len,
-                body_start: body_start,
-                body_len: line_start - body_start,
-                end_pos: next_line,
-                err: PEM_OK,
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_INVALID_FOOTER,
             };
         }
-        pos = next_line;
+        const d_idx = dash_pos as usize;
+        const e_len = d_idx - e_start;
+        if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
+            return PemSlice {
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_INVALID_FOOTER,
+            };
+        }
+        if (!pemSliceEq(input, label_start, label_len, e_start, e_len)) {
+            return PemSlice {
+                label_start: 0, label_len: 0, body_start: 0, body_len: 0, end_pos: 0,
+                err: PEM_ERR_LABEL_MISMATCH,
+            };
+        }
+        return PemSlice {
+            label_start: label_start,
+            label_len: label_len,
+            body_start: body_start,
+            body_len: line_start - body_start,
+            end_pos: next_line,
+            err: PEM_OK,
+        };
     }
 
     return PemSlice {
@@ -354,35 +347,38 @@ pub fn locatePem(input: string): PemSlice {
 pub fn decodeLabel(input: string, label_out: []u8): i64 {
     let pos: usize = 0;
     while (pos < input.len) {
-        const line_start = pos;
-        const line_end = pemAdvanceLineEnd(input, line_start);
-        const next_line = pemSkipLineEnding(input, line_end);
-
-        if (pemStartsWithAt(input, line_start, "-----BEGIN ")) {
-            const l_start = line_start + 11;
-            const dash_pos = pemFindDashes(input, l_start, line_end);
-            if (dash_pos < 0) {
-                return PEM_ERR_INVALID_HEADER;
-            }
-            const d_idx = dash_pos as usize;
-            const l_len = d_idx - l_start;
-            if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
-                return PEM_ERR_INVALID_HEADER;
-            }
-            if (!pemIsLabelValidBytes(input, l_start, l_len)) {
-                return PEM_ERR_INVALID_LABEL;
-            }
-            if (label_out.len < l_len) {
-                return PEM_ERR_BUFFER_TOO_SMALL;
-            }
-            let i: usize = 0;
-            while (i < l_len) {
-                label_out[i] = input[l_start + i];
-                i = i + 1;
-            }
-            return l_len as i64;
+        const found = indexOfBytes(input, "-----BEGIN ", pos) ?? input.len;
+        if (found >= input.len) {
+            break;
         }
-        pos = next_line;
+        if (found > 0 && input[found - 1] != ('\n' as u8) && input[found - 1] != ('\r' as u8)) {
+            pos = found + 1;
+            continue;
+        }
+        const line_start = found;
+        const line_end = pemAdvanceLineEnd(input, line_start);
+        const l_start = line_start + 11;
+        const dash_pos = pemFindDashes(input, l_start, line_end);
+        if (dash_pos < 0) {
+            return PEM_ERR_INVALID_HEADER;
+        }
+        const d_idx = dash_pos as usize;
+        const l_len = d_idx - l_start;
+        if (!pemOnlySpacesTabs(input, d_idx + 5, line_end)) {
+            return PEM_ERR_INVALID_HEADER;
+        }
+        if (!pemIsLabelValidBytes(input, l_start, l_len)) {
+            return PEM_ERR_INVALID_LABEL;
+        }
+        if (label_out.len < l_len) {
+            return PEM_ERR_BUFFER_TOO_SMALL;
+        }
+        let i: usize = 0;
+        while (i < l_len) {
+            label_out[i] = input[l_start + i];
+            i = i + 1;
+        }
+        return l_len as i64;
     }
     return PEM_ERR_MISSING_BEGIN;
 }
@@ -408,7 +404,7 @@ pub fn decodePem(input: string, label_out: []u8, label_len_out: *usize, der_out:
     label_len_out.* = loc.label_len;
 
     // Stream Base64 body in 64-byte chunks into @cap/base64ct decodeStd (zero heap allocation)
-    let b64_buf: [64]u8 = [0; 64];
+    let b64_buf: [64]u8 = undefined;
     let b64_len: usize = 0;
     let der_pos: usize = 0;
     let seen_pad = false;

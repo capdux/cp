@@ -610,9 +610,9 @@ pub struct AjvError {
 
     pub static fn empty(): AjvError {
         return AjvError {
-            instance_path: [0; 64],
+            instance_path: undefined,
             instance_path_len: 0,
-            keyword: [0; 32],
+            keyword: undefined,
             keyword_len: 0,
             code: 0,
         };

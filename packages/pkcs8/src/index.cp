@@ -55,12 +55,12 @@ struct Pk8LenDecode {
 }
 
 fn pk8ZeroPrivBuf(): [160]u8 {
-    let b: [160]u8 = [0; 160];
+    let b: [160]u8 = undefined;
     return b;
 }
 
 fn pk8ZeroPubBuf(): [64]u8 {
-    let b: [64]u8 = [0; 64];
+    let b: [64]u8 = undefined;
     return b;
 }
 

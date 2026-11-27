@@ -312,7 +312,7 @@ pub struct DnsName {
 
     pub static fn invalid(): DnsName {
         return DnsName {
-            buf: [0; 253],
+            buf: undefined,
             len: 0,
             valid: false,
         };
@@ -460,8 +460,8 @@ pub struct ServerName {
         return ServerName {
             kind: SERVER_NAME_INVALID,
             dns: DnsName.invalid(),
-            ipv4: [0; 4],
-            ipv6: [0; 16],
+            ipv4: undefined,
+            ipv6: undefined,
         };
     }
 
@@ -472,8 +472,8 @@ pub struct ServerName {
         return ServerName {
             kind: SERVER_NAME_DNS,
             dns: dns,
-            ipv4: [0; 4],
-            ipv6: [0; 16],
+            ipv4: undefined,
+            ipv6: undefined,
         };
     }
 
@@ -482,7 +482,7 @@ pub struct ServerName {
             kind: SERVER_NAME_IPV4,
             dns: DnsName.invalid(),
             ipv4: octets,
-            ipv6: [0; 16],
+            ipv6: undefined,
         };
     }
 
@@ -490,7 +490,7 @@ pub struct ServerName {
         return ServerName {
             kind: SERVER_NAME_IPV6,
             dns: DnsName.invalid(),
-            ipv4: [0; 4],
+            ipv4: undefined,
             ipv6: octets,
         };
     }

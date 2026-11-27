@@ -633,9 +633,9 @@ pub struct RegexLite {
     pub static fn compile(pattern: string): RegexLite {
         let info = validateRegexSyntax(pattern);
         let empty = RegexLite {
-            insts: [rlEmptyInst(); 128],
+            insts: undefined,
             inst_len: 0,
-            classes: [rlEmptyClass(); 16],
+            classes: undefined,
             class_len: 0,
             prefix: undefined,
             prefix_len: 0,
@@ -648,9 +648,9 @@ pub struct RegexLite {
         }
 
         let ctx = RlCompileCtx {
-            insts: [rlEmptyInst(); 128],
+            insts: undefined,
             inst_len: 0,
-            classes: [rlEmptyClass(); 16],
+            classes: undefined,
             class_len: 0,
             ok: true
         };

@@ -27,7 +27,7 @@ pub struct VecMapI64 {
 
     static fn new(): VecMapI64 {
         return VecMapI64{
-            slots: [0; 128],
+            slots: undefined,
             bits_lo: 0,
             bits_hi: 0,
             count: 0,

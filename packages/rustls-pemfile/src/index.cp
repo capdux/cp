@@ -11,6 +11,7 @@ import {
     decodeLabel,
     isValidLabel,
 } from "../../pem-rfc7468/src/index.cp";
+import { bytesEq } from "cap:bin";
 
 pub const PEM_ITEM_NONE: u8 = 0;
 pub const PEM_ITEM_X509_CERT: u8 = 1;
@@ -23,17 +24,7 @@ pub const PEM_ITEM_CSR: u8 = 7;
 pub const PEM_ITEM_UNKNOWN: u8 = 8;
 
 fn rpfStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return bytesEq(a, b);
 }
 
 /// Returns true if `kind` represents a supported private key item
@@ -143,7 +134,7 @@ pub struct PemBundleReader {
         if (_.offset >= _.input.len) {
             return PEM_ITEM_NONE;
         }
-        let label_buf: [64]u8 = [0; 64];
+        let label_buf: [64]u8 = undefined;
         const n = decodeLabel(_.input[_.offset.._.input.len], label_buf[0..64]);
         if (n <= 0) {
             return PEM_ITEM_NONE;
@@ -170,7 +161,7 @@ pub struct PemBundleReader {
         }
 
         const block = rest[0..loc.end_pos];
-        let label_buf: [64]u8 = [0; 64];
+        let label_buf: [64]u8 = undefined;
         let label_len: usize = 0;
         const dec_len = decodePem(block, label_buf[0..64], &label_len, der_out);
         _.offset = _.offset + loc.end_pos;
@@ -229,7 +220,7 @@ pub struct PemBundleReader {
 /// Returns `eof = true, ok = true` if no private key is present, or `ok = false` on malformed PEM.
 pub fn readFirstPrivateKey(input: string, der_out: []u8): PemItem {
     let pos: usize = 0;
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     while (pos < input.len) {
         const rest = input[pos..input.len];
         const loc = locatePem(rest);

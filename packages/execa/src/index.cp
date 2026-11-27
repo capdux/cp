@@ -123,7 +123,7 @@ pub fn escapePosixArg(arg: string, out: []u8): usize {
 
 pub fn formatCommand(file: string, args: []string, out: []u8): usize {
     let p: usize = 0;
-    let tmp: [256]u8 = [0; 256];
+    let tmp: [256]u8 = undefined;
     let fn_len = escapePosixArg(file, tmp[0..256]);
     p = exaPush(out, p, tmp[0..fn_len] as string);
     let i: usize = 0;
