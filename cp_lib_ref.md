@@ -1212,3 +1212,18 @@ const h = cap.hash.wyhash("hello");
 - `@cap/wordwrap` (`npm:wordwrap` #850, MIT) — 零堆软/硬列宽文本自动换行器。
 - `@cap/jest-docblock` (`npm:jest-docblock` #880, MIT) — `/** @pragma val */` 注释块提取、解析与打印器。
 - 补齐 crates.io Top 700 与 Top 900–1000 共 28 条零重复标准库/已有生态映射（`matchers`/`fancy-regex`/`fs_extra`/`instant`/`quanta`/`criterion`/`ed25519-dalek`/`rsa`/`p256`/`plotters`/`ureq`/`zlib-rs`/`fdeflate`/`image`/`num-bigint-dig`/`terminal_size`/`encode_unicode`/`predicates-tree`/`wasm-streams`/`term`/`x25519-dalek`/`jpeg-decoder`/`selectors` 等）。
+
+### Batch 165 — 双平台 Real Top 900–1000 冲刺（9 packages + 9 zero-duplicate mappings; 895 `@cap/*` + 1,260 mappings!）
+
+- `@cap/bit-field` (`crates.io:bit_field` #954, MIT) — 零堆 u64/u32/字节切片位域读写工具库。
+- `@cap/nibble-vec` (`crates.io:nibble_vec` #962, MIT) — 零堆 4-bit 半字节向量与公共前缀计算。
+- `@cap/postcard` (`crates.io:postcard` #986, MIT) — 零堆 LEB128 Varint + ZigZag + COBS 二进制线协议编解码器。
+- `@cap/vte` (`crates.io:vte` #998, Apache-2.0) — Paul Williams ANSI/VT100 终端转义序列状态机解析器。
+- `@cap/chrome-trace-event` (`npm:chrome-trace-event` #904, MIT) — Chrome DevTools / Perfetto Trace Event JSON 序列化器。
+- `@cap/compressible` (`npm:compressible` #943, MIT) — HTTP `Content-Type` 可压缩性零分配判定器。
+- `@cap/serialize-javascript` (`npm:serialize-javascript` #956, BSD-3-Clause) — 防 `<script>` 注入与行分隔符转义的安全 JS/JSON 序列化器。
+- `@cap/commondir` (`npm:commondir` #976, MIT) — 路径列表最深公共父目录零分配计算器。
+- `@cap/yn` (`npm:yn` #978, MIT) — 大小写无关 `yes`/`no` 布尔字符串解析器（含宽容拼写模式）。
+- 零重复映射：`bare-fs`/`walker`/`totalist`→`cap:fs`、`bare-path`→`@cap/pathe`、`ts-dedent`→`@cap/redent`、`serialize-error`/`make-error`/`makeerror`→`@cap/error-ex`、`teeny-request`→`cap:http`、`node-forge`→`cap:crypto`、`rc`→`@cap/ini`、`lowercase-keys`→`@cap/ascii`、`d3-dispatch`→`cap:event`。
+- `@cap/plist` (`crates.io:plist` #957, MIT) — Apple XML Property List (`.plist`) 键值解析与生成库。
+- `@cap/scroll` (`crates.io:scroll` #948, MIT) — 字节序感知（Little/Big Endian）偏移量推进二进制读写器（覆盖 `endian-type` #928）。

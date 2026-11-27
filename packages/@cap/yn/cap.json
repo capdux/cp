@@ -1,0 +1,15 @@
+{
+  "name": "@cap/yn",
+  "version": "5.0.0",
+  "description": "Zero-allocation parser for yes/no boolean strings (y/yes/true/1/on/n/no/false/0/off) with lenient mode",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "yn",
+    "version": "5.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/sindresorhus/yn"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@cap/vte",
+  "version": "1.0.0",
+  "description": "Zero-allocation ANSI/VT100 terminal escape sequence state machine parser (Paul Williams model) in pure CP",
+  "license": "Apache-2.0",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "vte",
+    "ansi",
+    "vt100",
+    "terminal",
+    "csi",
+    "osc",
+    "escape-sequences",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "vte",
+    "repo": "https://github.com/alacritty/vte",
+    "license": "Apache-2.0"
+  }
+}

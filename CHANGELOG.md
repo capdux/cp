@@ -1401,3 +1401,8 @@
 - 新增 `packages/@cap/{cssparser,smawk,email-address,wordwrap,jest-docblock}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 补齐 crates.io Top 700 剩余 16 条（覆盖 21 个 crate）及 Top 900–1000 共 12 条零重复标准库/已有生态映射
 - 更新 `packages/@cap/registry.json`（总映射 **1,242**）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-27 — Batch 165（双平台 Real Top 900–1000：+9 `@cap/*` 包 + 9 条零重复映射，总计 895 `@cap/*`）
+- 新增 `packages/@cap/{bit-field,nibble-vec,postcard,vte,chrome-trace-event,compressible,serialize-javascript,commondir,yn}/` 及对应 9 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 更新 `packages/@cap/registry.json`（总映射 **1,260**）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+- 补增 Batch 165 Top 1000 收官包：`@cap/plist`（#957）、`@cap/scroll`（#948，覆盖 `endian-type` #928）及对应 2 套 `cap/test/testCap*.cp`（6/6 PASS），本批次共 +11 包，总计 **897 `@cap/*` 官方包**、**1,262 条上游映射**；按指令停止吸收，全部子智能体已安全收回，进入整理待命状态。

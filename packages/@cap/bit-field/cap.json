@@ -1,0 +1,22 @@
+{
+  "name": "@cap/bit-field",
+  "version": "1.0.0",
+  "description": "Zero-allocation bit and bit-range manipulation utilities for u64, u32, and byte slices in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "bit-field",
+    "bitfield",
+    "bits",
+    "bitwise",
+    "binary",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "bit_field",
+    "repo": "https://github.com/phil-opp/rust-bit_field",
+    "license": "MIT"
+  }
+}

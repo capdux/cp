@@ -578,3 +578,6 @@
 ### 2026-11-27 — Batch 164 开发日志（crates.io Top 700 全盘复核与收口）
 - 对 `temp/real_top700_crates.json` 全部 700 个真实下载量排行包做了逐类自动化复核，补齐最后 21 个可零重复映射至现有标准库/生态包的条目，crates.io Top 700 显式映射覆盖 395/700（其余 305 个 100% 为 OS/FFI、Rust 过程宏、Rust 语言特有 Trait 或大型运行时/SDK）。
 - 同步收录 `cssparser`/`smawk`/`email-address`/`wordwrap`/`jest-docblock` 5 个新包，总计 886 个 `@cap/*` 官方包、1,242 条上游映射。
+
+### 2026-11-27 — Batch 165 开发日志（895 `@cap/*` 包，冲刺双平台 Top 1000 收官）
+- 按用户指令“吸收到 Top 1000 后停止吸收、等待整理”，完成 9 个 Top 900–1000 纯 CP 包与 9 条零重复映射；已收回 Worker N32，待 Worker N33 完成最后 2 个包（`plist` #957、`scroll` #948）后即提交收官批次并全面停止吸收。

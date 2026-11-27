@@ -14211,6 +14211,218 @@
       "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "bit_field",
+      "source_repo": "https://github.com/phil-opp/rust-bit_field",
+      "license": "MIT",
+      "cp_target": "@cap/bit-field",
+      "kind": "package",
+      "aliases": [
+        "bit-field"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "nibble_vec",
+      "source_repo": "https://github.com/michaelsproul/rust_nibble_vec",
+      "license": "MIT",
+      "cp_target": "@cap/nibble-vec",
+      "kind": "package",
+      "aliases": [
+        "nibble-vec"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "postcard",
+      "source_repo": "https://github.com/jamesmunns/postcard",
+      "license": "MIT",
+      "cp_target": "@cap/postcard",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "vte",
+      "source_repo": "https://github.com/alacritty/vte",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/vte",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "chrome-trace-event",
+      "source_repo": "https://github.com/samccone/chrome-trace-event",
+      "license": "MIT",
+      "cp_target": "@cap/chrome-trace-event",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "compressible",
+      "source_repo": "https://github.com/jshttp/compressible",
+      "license": "MIT",
+      "cp_target": "@cap/compressible",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "serialize-javascript",
+      "source_repo": "https://github.com/yahoo/serialize-javascript",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/serialize-javascript",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "commondir",
+      "source_repo": "https://github.com/substack/node-commondir",
+      "license": "MIT",
+      "cp_target": "@cap/commondir",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "yn",
+      "source_repo": "https://github.com/sindresorhus/yn",
+      "license": "MIT",
+      "cp_target": "@cap/yn",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bare-fs",
+      "source_repo": "https://github.com/holepunchto/bare-fs",
+      "license": "Apache-2.0",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [
+        "walker",
+        "totalist"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "bare-path",
+      "source_repo": "https://github.com/holepunchto/bare-path",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/pathe",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ts-dedent",
+      "source_repo": "https://github.com/tamino-martinius/node-ts-dedent",
+      "license": "MIT",
+      "cp_target": "@cap/redent",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "serialize-error",
+      "source_repo": "https://github.com/sindresorhus/serialize-error",
+      "license": "MIT",
+      "cp_target": "@cap/error-ex",
+      "kind": "package",
+      "aliases": [
+        "make-error",
+        "makeerror"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "teeny-request",
+      "source_repo": "https://github.com/googleapis/teeny-request",
+      "license": "Apache-2.0",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "node-forge",
+      "source_repo": "https://github.com/digitalbazaar/forge",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "rc",
+      "source_repo": "https://github.com/dominictarr/rc",
+      "license": "MIT",
+      "cp_target": "@cap/ini",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "lowercase-keys",
+      "source_repo": "https://github.com/sindresorhus/lowercase-keys",
+      "license": "MIT",
+      "cp_target": "@cap/ascii",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "d3-dispatch",
+      "source_repo": "https://github.com/d3/d3-dispatch",
+      "license": "ISC",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "plist",
+      "source_repo": "https://github.com/ebarnard/rust-plist",
+      "license": "MIT",
+      "cp_target": "@cap/plist",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "scroll",
+      "source_repo": "https://github.com/m4b/scroll",
+      "license": "MIT",
+      "cp_target": "@cap/scroll",
+      "kind": "package",
+      "aliases": [
+        "endian-type"
+      ],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@cap/plist",
+  "version": "1.0.0",
+  "description": "Zero-allocation Apple XML Property List (.plist) dictionary parser and serializer in pure CP",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "types": "src/index.d.cp",
+  "keywords": [
+    "plist",
+    "apple",
+    "xml",
+    "property-list",
+    "macos",
+    "ios",
+    "zero-alloc"
+  ],
+  "source": {
+    "registry": "crates.io",
+    "name": "plist",
+    "repo": "https://github.com/ebarnard/rust-plist",
+    "license": "MIT"
+  }
+}
