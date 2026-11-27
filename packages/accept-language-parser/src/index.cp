@@ -1,7 +1,89 @@
 // @cap/accept-lang — Zero-heap RFC 9110 / BCP-47 Accept-Language parser & negotiator
 // MIT License (clean-room CP implementation)
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning and comptime 256-entry tag-char LUT.
 
-import { isAlnum, isDigit, eqIgnoreCase, findByte } from "cap:ascii";
+import { isDigit, eqIgnoreCase } from "cap:ascii";
+
+type AlVec16 = @Vector(16, u8);
+
+fn alBuildTagCharLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = 1;
+        c += 1;
+    }
+    lut['-' as usize] = 1;
+    lut['_' as usize] = 1;
+    return lut;
+}
+
+const AL_TAG_CHAR_LUT: [256]u8 = alBuildTagCharLut();
+
+fn alFindByte(s: string, needle: u8, start: usize, end: usize) -> usize {
+    let i: usize = start;
+    const v_n: AlVec16 = @splat(needle);
+    while (i + 16 <= end) {
+        const v: AlVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_n)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == needle) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < end) {
+        if (s[i] == needle) {
+            return i;
+        }
+        i += 1;
+    }
+    return end;
+}
+
+fn alFindSep(tag: string) -> usize {
+    let i: usize = 0;
+    const len = tag.len;
+    const v_dash: AlVec16 = @splat('-' as u8);
+    const v_under: AlVec16 = @splat('_' as u8);
+    while (i + 16 <= len) {
+        const v: AlVec16 = tag[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_dash) || @reduce(.Or, v == v_under)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = tag[i + k];
+                if (c == '-' as u8 || c == '_' as u8) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = tag[i];
+        if (c == '-' as u8 || c == '_' as u8) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
 
 pub struct LangRange {
     pub tag: string,
@@ -23,8 +105,7 @@ fn isValidTag(tag: string) -> bool {
     }
     let i: usize = 0;
     while (i < tag.len) {
-        const c: u8 = tag[i];
-        if (!isAlnum(c) && c != '-' as u8 && c != '_' as u8) {
+        if (AL_TAG_CHAR_LUT[tag[i] as usize] == 0) {
             return false;
         }
         i += 1;
@@ -94,11 +175,10 @@ pub fn parseAcceptLanguage(header: string, out: []LangRange) -> usize {
     let pos: usize = 0;
 
     while (pos < header.len && count < out.len) {
-        const seg_end: usize = findByte(header, ',' as u8, pos) ?? header.len;
+        const seg_end: usize = alFindByte(header, ',' as u8, pos, header.len);
 
         // Split tag from optional ";q=..." parameters
-        const semiOpt = findByte(header[pos..seg_end], ';' as u8, 0);
-        const semi: usize = if (semiOpt != null) { pos + (semiOpt ?? 0) } else { seg_end };
+        const semi: usize = alFindByte(header, ';' as u8, pos, seg_end);
 
         let t_s: usize = pos;
         let t_e: usize = semi;
@@ -117,14 +197,8 @@ pub fn parseAcceptLanguage(header: string, out: []LangRange) -> usize {
         let p_pos: usize = semi;
         while (valid_entry && p_pos < seg_end) {
             p_pos += 1; // skip ';'
-            let p_end: usize = p_pos;
-            while (p_end < seg_end && header[p_end] != ';' as u8) {
-                p_end += 1;
-            }
-            let eq: usize = p_pos;
-            while (eq < p_end && header[eq] != '=' as u8) {
-                eq += 1;
-            }
+            const p_end: usize = alFindByte(header, ';' as u8, p_pos, seg_end);
+            const eq: usize = alFindByte(header, '=' as u8, p_pos, p_end);
             if (eq < p_end) {
                 let k_s: usize = p_pos;
                 let k_e: usize = eq;
@@ -148,10 +222,7 @@ pub fn parseAcceptLanguage(header: string, out: []LangRange) -> usize {
 
         if (valid_entry) {
             // Split primary & region subtags
-            let first_sep: usize = 0;
-            while (first_sep < tag.len && tag[first_sep] != '-' as u8 && tag[first_sep] != '_' as u8) {
-                first_sep += 1;
-            }
+            const first_sep: usize = alFindSep(tag);
             const primary: string = tag[0..first_sep];
             let region: string = "";
             if (first_sep < tag.len) {

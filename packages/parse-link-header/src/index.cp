@@ -1,9 +1,127 @@
 // @cap/link-header — Zero-allocation RFC 8288 HTTP Link header parser & builder
 // Clean-room MIT implementation inspired by npm `parse-link-header`, `http-link-header`,
 // and Rust `parse_link_header`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUTs, and @memcpy.
 
-import { isSpace, eqIgnoreCase, findByte, trim } from "cap:ascii";
-import { writeStr, writeU64 } from "cap:fmt";
+import { eqIgnoreCase, findByte, trim } from "cap:ascii";
+import { writeU64 } from "cap:fmt";
+
+type LhVec16 = @Vector(16, u8);
+
+fn lhBuildSpaceLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[0x20] = 1;
+    lut[0x09] = 1;
+    lut[0x0A] = 1;
+    lut[0x0B] = 1;
+    lut[0x0C] = 1;
+    lut[0x0D] = 1;
+    return lut;
+}
+
+fn lhBuildKeyStopLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[0x20] = 1;
+    lut[0x09] = 1;
+    lut[0x0A] = 1;
+    lut[0x0B] = 1;
+    lut[0x0C] = 1;
+    lut[0x0D] = 1;
+    lut['=' as usize] = 1;
+    lut[';' as usize] = 1;
+    lut[',' as usize] = 1;
+    return lut;
+}
+
+const LH_SPACE_LUT: [256]u8 = lhBuildSpaceLut();
+const LH_KEY_STOP_LUT: [256]u8 = lhBuildKeyStopLut();
+
+fn lhSkipSpace(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_sp: LhVec16 = @splat(0x20 as u8);
+    while (i + 16 <= len) {
+        const v: LhVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.And, v == v_sp)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && LH_SPACE_LUT[s[i] as usize] != 0) {
+        i += 1;
+    }
+    return i;
+}
+
+fn lhFindQuoteOrBackslash(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_q: LhVec16 = @splat('"' as u8);
+    const v_bs: LhVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: LhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q) || @reduce(.Or, v == v_bs)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == '"' || c == '\\') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == '"' || c == '\\') {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn lhFindQuoteOrComma(s: string, start: usize) -> usize {
+    let i: usize = start;
+    const len = s.len;
+    const v_q: LhVec16 = @splat('"' as u8);
+    const v_c: LhVec16 = @splat(',' as u8);
+    while (i + 16 <= len) {
+        const v: LhVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q) || @reduce(.Or, v == v_c)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == '"' || c == ',') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == '"' || c == ',') {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
+
+fn lhWriteStr(src: string, out: []u8, pos: usize) -> usize {
+    if (pos >= out.len || src.len == 0) {
+        return pos;
+    }
+    const rem: usize = out.len - pos;
+    const n: usize = if (src.len < rem) src.len else rem;
+    @memcpy(out[pos .. pos + n], src[0 .. n]);
+    return pos + n;
+}
 
 pub const MAX_LINK_ENTRIES: usize = 32;
 
@@ -33,11 +151,9 @@ fn relMatches(rel_attr: string, target: string) -> bool {
     }
     let i: usize = 0;
     while (i < rel_attr.len) {
-        while (i < rel_attr.len && isSpace(rel_attr[i])) {
-            i += 1;
-        }
+        i = lhSkipSpace(rel_attr, i);
         const start = i;
-        while (i < rel_attr.len && !isSpace(rel_attr[i])) {
+        while (i < rel_attr.len && LH_SPACE_LUT[rel_attr[i] as usize] == 0) {
             i += 1;
         }
         if (i > start && eqIgnoreCase(rel_attr[start..i], target)) {
@@ -127,27 +243,31 @@ fn skipToNextEntry(s: string, start: usize) -> usize {
     let i = start;
     let in_quotes = false;
     while (i < s.len) {
-        const c = s[i];
         if (in_quotes) {
-            if (c == '\\' && i + 1 < s.len) {
+            i = lhFindQuoteOrBackslash(s, i);
+            if (i >= s.len) {
+                return s.len;
+            }
+            if (s[i] == '\\' && i + 1 < s.len) {
                 i += 2;
                 continue;
             }
-            if (c == '"') {
+            if (s[i] == '"') {
                 in_quotes = false;
             }
             i += 1;
             continue;
         }
-        if (c == '"') {
+        i = lhFindQuoteOrComma(s, i);
+        if (i >= s.len) {
+            return s.len;
+        }
+        if (s[i] == '"') {
             in_quotes = true;
             i += 1;
             continue;
         }
-        if (c == ',') {
-            return i + 1;
-        }
-        i += 1;
+        return i + 1;
     }
     return i;
 }
@@ -160,7 +280,7 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
 
     while (i < header.len && res.count < MAX_LINK_ENTRIES) {
         // Skip leading whitespace and stray commas
-        while (i < header.len && (isSpace(header[i]) || header[i] == ',')) {
+        while (i < header.len && (LH_SPACE_LUT[header[i] as usize] != 0 || header[i] == ',')) {
             i += 1;
         }
         if (i >= header.len) {
@@ -188,9 +308,7 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
 
         // Parse '; key=val' parameters until ',' or end of header
         while (i < header.len) {
-            while (i < header.len && isSpace(header[i])) {
-                i += 1;
-            }
+            i = lhSkipSpace(header, i);
             if (i >= header.len) {
                 break;
             }
@@ -204,28 +322,29 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
                 break;
             }
             i += 1; // consume ';'
-            while (i < header.len && isSpace(header[i])) {
-                i += 1;
-            }
+            i = lhSkipSpace(header, i);
             const key_start = i;
-            while (i < header.len && header[i] != '=' && header[i] != ';' && header[i] != ',' && !isSpace(header[i])) {
+            while (i < header.len && LH_KEY_STOP_LUT[header[i] as usize] == 0) {
                 i += 1;
             }
             const key = header[key_start..i];
-            while (i < header.len && isSpace(header[i])) {
-                i += 1;
-            }
+            i = lhSkipSpace(header, i);
 
             let val: string = "";
             if (i < header.len && header[i] == '=') {
                 i += 1; // consume '='
-                while (i < header.len && isSpace(header[i])) {
-                    i += 1;
-                }
+                i = lhSkipSpace(header, i);
                 if (i < header.len && header[i] == '"') {
                     i += 1; // consume opening '"'
                     const val_start = i;
-                    while (i < header.len && header[i] != '"') {
+                    while (i < header.len) {
+                        i = lhFindQuoteOrBackslash(header, i);
+                        if (i >= header.len) {
+                            break;
+                        }
+                        if (header[i] == '"') {
+                            break;
+                        }
                         if (header[i] == '\\' && i + 1 < header.len) {
                             i += 2;
                             continue;
@@ -238,7 +357,7 @@ pub fn parseLinkHeader(header: string) -> LinkHeader {
                     }
                 } else {
                     const val_start = i;
-                    while (i < header.len && header[i] != ';' && header[i] != ',' && !isSpace(header[i])) {
+                    while (i < header.len && header[i] != ';' && header[i] != ',' && LH_SPACE_LUT[header[i] as usize] == 0) {
                         i += 1;
                     }
                     val = header[val_start..i];
@@ -286,10 +405,10 @@ fn appendParam(out: []u8, pos: usize, name: string, val: string) -> usize {
     if (val.len == 0) {
         return pos;
     }
-    let p = writeStr("; ", out, pos);
-    p = writeStr(name, out, p);
-    p = writeStr("=\"", out, p);
-    p = writeStr(val, out, p);
+    let p = lhWriteStr("; ", out, pos);
+    p = lhWriteStr(name, out, p);
+    p = lhWriteStr("=\"", out, p);
+    p = lhWriteStr(val, out, p);
     p = appendByte(out, p, '"');
     return p;
 }
@@ -303,10 +422,10 @@ pub fn formatLinkHeader(entries: []LinkEntry, out: []u8) -> string {
         const e = entries[i];
         if (e.url.len > 0) {
             if (emitted > 0) {
-                pos = writeStr(", ", out, pos);
+                pos = lhWriteStr(", ", out, pos);
             }
             pos = appendByte(out, pos, '<');
-            pos = writeStr(e.url, out, pos);
+            pos = lhWriteStr(e.url, out, pos);
             pos = appendByte(out, pos, '>');
             pos = appendParam(out, pos, "rel", e.rel);
             pos = appendParam(out, pos, "title", e.title);
@@ -330,17 +449,17 @@ fn appendPageLink(
 ) -> usize {
     let pos = start_pos;
     if (emitted > 0) {
-        pos = writeStr(", ", out, pos);
+        pos = lhWriteStr(", ", out, pos);
     }
     pos = appendByte(out, pos, '<');
-    pos = writeStr(base_url, out, pos);
+    pos = lhWriteStr(base_url, out, pos);
     if (sep != 0) {
         pos = appendByte(out, pos, sep);
     }
-    pos = writeStr("page=", out, pos);
+    pos = lhWriteStr("page=", out, pos);
     pos = writeU64(target_page as u64, out, pos);
-    pos = writeStr(">; rel=\"", out, pos);
-    pos = writeStr(rel, out, pos);
+    pos = lhWriteStr(">; rel=\"", out, pos);
+    pos = lhWriteStr(rel, out, pos);
     pos = appendByte(out, pos, '"');
     return pos;
 }

@@ -1,4 +1,48 @@
 // @cap/jsonpath-rust — Zero-heap RFC 9535 JSONPath parser & serializer
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry char-class LUT,
+// @memcpy bulk copy, and = undefined stack digit buffer.
+
+type JprVec16 = @Vector(16, u8);
+
+const JPR_FLAG_WS: u8 = 1;
+const JPR_FLAG_DIGIT: u8 = 2;
+const JPR_FLAG_IDENT_START: u8 = 4;
+const JPR_FLAG_IDENT_CONT: u8 = 8;
+
+fn jprBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[32] = JPR_FLAG_WS;
+    lut[9] = JPR_FLAG_WS;
+    lut[10] = JPR_FLAG_WS;
+    lut[13] = JPR_FLAG_WS;
+
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = JPR_FLAG_DIGIT | JPR_FLAG_IDENT_CONT;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = JPR_FLAG_IDENT_START | JPR_FLAG_IDENT_CONT;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = JPR_FLAG_IDENT_START | JPR_FLAG_IDENT_CONT;
+        c += 1;
+    }
+    lut[95] = JPR_FLAG_IDENT_START | JPR_FLAG_IDENT_CONT; // '_'
+    lut[45] = JPR_FLAG_IDENT_CONT; // '-'
+    c = 128;
+    while (c < 256) {
+        lut[c] = JPR_FLAG_IDENT_START | JPR_FLAG_IDENT_CONT;
+        c += 1;
+    }
+    return lut;
+}
+
+const JPR_CHAR_LUT: [256]u8 = jprBuildCharLut();
 
 pub enum JpSegKind {
     Root,
@@ -21,19 +65,68 @@ pub struct JpSegment {
 }
 
 fn jprIsWs(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
+    return (JPR_CHAR_LUT[c as usize] & JPR_FLAG_WS) != 0;
 }
 
 fn jprIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
+    return (JPR_CHAR_LUT[c as usize] & JPR_FLAG_DIGIT) != 0;
 }
 
 fn jprIsIdentStart(c: u8): bool {
-    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95 || c >= 128;
+    return (JPR_CHAR_LUT[c as usize] & JPR_FLAG_IDENT_START) != 0;
 }
 
 fn jprIsIdentCont(c: u8): bool {
-    return jprIsIdentStart(c) || jprIsDigit(c) || c == 45;
+    return (JPR_CHAR_LUT[c as usize] & JPR_FLAG_IDENT_CONT) != 0;
+}
+
+fn jprFindQuoteOrBackslash(s: string, start: usize, q: u8): usize {
+    let i: usize = start;
+    const n: usize = s.len;
+    const v_q: JprVec16 = @splat(q);
+    const v_bs: JprVec16 = @splat(92 as u8);
+    while (i + 16 <= n) {
+        const v: JprVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q) || @reduce(.Or, v == v_bs)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == q || c == 92) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < n) {
+        const c = s[i];
+        if (c == q || c == 92) {
+            return i;
+        }
+        i += 1;
+    }
+    return n;
+}
+
+fn jprScanQuotedEnd(expr: string, start: usize, q: u8): usize {
+    let i: usize = start;
+    const n: usize = expr.len;
+    while (i < n) {
+        i = jprFindQuoteOrBackslash(expr, i, q);
+        if (i >= n) {
+            return n;
+        }
+        if (expr[i] == q) {
+            return i;
+        }
+        if (expr[i] == 92 && i + 1 < n) {
+            i += 2;
+            continue;
+        }
+        i += 1;
+    }
+    return n;
 }
 
 fn jprIsSimpleIdent(s: string): bool {
@@ -134,13 +227,7 @@ pub fn parseJsonPath(expr: string, out: []JpSegment): i64 {
                     const q: u8 = expr[i];
                     i += 1;
                     const ks: usize = i;
-                    while (i < n && expr[i] != q) {
-                        if (expr[i] == 92 && i + 1 < n) {
-                            i += 2;
-                            continue;
-                        }
-                        i += 1;
-                    }
+                    i = jprScanQuotedEnd(expr, i, q);
                     if (i >= n) {
                         return -1;
                     }
@@ -220,13 +307,7 @@ pub fn parseJsonPath(expr: string, out: []JpSegment): i64 {
                 const q: u8 = expr[i];
                 i += 1;
                 const ks: usize = i;
-                while (i < n && expr[i] != q) {
-                    if (expr[i] == 92 && i + 1 < n) {
-                        i += 2;
-                        continue;
-                    }
-                    i += 1;
-                }
+                i = jprScanQuotedEnd(expr, i, q);
                 if (i >= n) {
                     return -1;
                 }
@@ -310,13 +391,13 @@ fn jprPushByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn jprPushSlice(out: []u8, pos: usize, s: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    const rem: usize = out.len - pos;
+    const n: usize = if (s.len < rem) s.len else rem;
+    @memcpy(out[pos .. pos + n], s[0 .. n]);
+    return pos + n;
 }
 
 fn jprPushI64(out: []u8, pos: usize, val: i64): usize {
@@ -331,7 +412,7 @@ fn jprPushI64(out: []u8, pos: usize, val: i64): usize {
     } else {
         uv = val as u64;
     }
-    let digits: [24]u8 = [0; 24];
+    let digits: [24]u8 = undefined;
     let dlen: usize = 0;
     while (uv > 0 && dlen < 24) {
         const rem: u64 = uv % 10;

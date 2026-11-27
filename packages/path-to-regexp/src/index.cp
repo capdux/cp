@@ -2,15 +2,27 @@
 // parameter extraction, and reverse route compilation engine.
 // Clean-room MIT CP implementation modeled on npm `path-to-regexp` v8.
 // Reuses `eqAscii` from `@cap/unicase` for optional case-insensitive route matching.
+// Accelerated with 16-lane @Vector(16, u8) SIMD equality/slash scanning and @memcpy bulk copy.
 
 import { eqAscii } from "../../unicase/src/index.cp";
+
+type PtrVec16 = @Vector(16, u8);
 
 fn ptrStrEq(a: string, b: string): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
-    while (i < a.len) {
+    const len = a.len;
+    while (i + 16 <= len) {
+        const va: PtrVec16 = a[i .. i + 16][0..16].*;
+        const vb: PtrVec16 = b[i .. i + 16][0..16].*;
+        if (!@reduce(.And, va == vb)) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (a[i] != b[i]) { return false; }
-        i = i + 1;
+        i += 1;
     }
     return true;
 }
@@ -20,32 +32,64 @@ fn ptrSegEq(a: string, b: string, case_sensitive: bool): bool {
     return eqAscii(a, b);
 }
 
-// Strips trailing '/' characters (except keeps empty when root "/").
+// Strips leading and trailing '/' characters (except keeps empty when root "/").
 fn ptrTrimSlashes(s: string): string {
     let start: usize = 0;
+    const v_sl: PtrVec16 = @splat(47 as u8);
+    while (start + 16 <= s.len) {
+        const v: PtrVec16 = s[start .. start + 16][0..16].*;
+        if (!@reduce(.And, v == v_sl)) {
+            break;
+        }
+        start += 16;
+    }
     while (start < s.len && s[start] == 47) {
-        start = start + 1;
+        start += 1;
     }
     let end: usize = s.len;
     while (end > start && s[end - 1] == 47) {
-        end = end - 1;
+        end -= 1;
     }
     return s[start..end];
 }
 
 // Finds the end index of the next '/' delimited segment starting at `pos`.
 fn ptrFindSegEnd(s: string, pos: usize): usize {
-    let i = pos;
-    while (i < s.len && s[i] != 47) {
-        i = i + 1;
+    let i: usize = pos;
+    const len = s.len;
+    const v_sl: PtrVec16 = @splat(47 as u8);
+    while (i + 16 <= len) {
+        const v: PtrVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == 47) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != 47) {
+        i += 1;
     }
     return i;
 }
 
 fn ptrSkipSlashes(s: string, pos: usize): usize {
-    let i = pos;
-    while (i < s.len && s[i] == 47) {
-        i = i + 1;
+    let i: usize = pos;
+    const len = s.len;
+    const v_sl: PtrVec16 = @splat(47 as u8);
+    while (i + 16 <= len) {
+        const v: PtrVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.And, v == v_sl)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] == 47) {
+        i += 1;
     }
     return i;
 }
@@ -59,14 +103,13 @@ fn ptrWriteByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn ptrWriteSlice(out: []u8, pos: usize, s: string): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w = w + 1;
-        i = i + 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return w;
+    const rem: usize = out.len - pos;
+    const n: usize = if (s.len < rem) s.len else rem;
+    @memcpy(out[pos .. pos + n], s[0 .. n]);
+    return pos + n;
 }
 
 fn ptrFindParam(params: []const RouteParam, name: string): string? {
@@ -75,7 +118,7 @@ fn ptrFindParam(params: []const RouteParam, name: string): string? {
         if (ptrStrEq(params[i].name, name)) {
             return params[i].value;
         }
-        i = i + 1;
+        i += 1;
     }
     return null;
 }
@@ -118,7 +161,7 @@ pub struct RouteMatch {
             if (ptrStrEq(_.params[i].name, name)) {
                 return _.params[i].value;
             }
-            i = i + 1;
+            i += 1;
         }
         return null;
     }
@@ -136,8 +179,8 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
         return res;
     }
 
-    let pat = ptrTrimSlashes(pattern);
-    let pth = ptrTrimSlashes(path);
+    const pat = ptrTrimSlashes(pattern);
+    const pth = ptrTrimSlashes(path);
 
     let pi: usize = 0;
     let si: usize = 0;
@@ -145,14 +188,14 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
     while (pi < pat.len) {
         pi = ptrSkipSlashes(pat, pi);
         if (pi >= pat.len) { break; }
-        let p_end = ptrFindSegEnd(pat, pi);
-        let p_seg = pat[pi..p_end];
+        const p_end = ptrFindSegEnd(pat, pi);
+        const p_seg = pat[pi..p_end];
         pi = p_end;
 
         // Wildcard segment: *name or *name? or *
         if (p_seg[0] == 42) {
-            let is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
-            let w_name = if (is_opt) {
+            const is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
+            const w_name = if (is_opt) {
                 p_seg[1..p_seg.len - 1]
             } else if (p_seg.len > 1) {
                 p_seg[1..p_seg.len]
@@ -168,11 +211,11 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
                 return RouteMatch.noMatch();
             }
 
-            let rest = pth[si..pth.len];
+            const rest = pth[si..pth.len];
             si = pth.len;
             if (res.param_count < 16) {
                 res.params[res.param_count] = RouteParam { name: w_name, value: rest };
-                res.param_count = res.param_count + 1;
+                res.param_count += 1;
             }
             // Wildcard consumes the remainder of the path
             continue;
@@ -180,8 +223,8 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
 
         // Named parameter segment: :name or :name?
         if (p_seg[0] == 58) {
-            let is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
-            let k_name = if (is_opt) {
+            const is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
+            const k_name = if (is_opt) {
                 p_seg[1..p_seg.len - 1]
             } else if (p_seg.len > 1) {
                 p_seg[1..p_seg.len]
@@ -199,13 +242,13 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
                 }
                 return RouteMatch.noMatch();
             }
-            let s_end = ptrFindSegEnd(pth, si);
-            let s_seg = pth[si..s_end];
+            const s_end = ptrFindSegEnd(pth, si);
+            const s_seg = pth[si..s_end];
             si = s_end;
 
             if (res.param_count < 16) {
                 res.params[res.param_count] = RouteParam { name: k_name, value: s_seg };
-                res.param_count = res.param_count + 1;
+                res.param_count += 1;
             }
             continue;
         }
@@ -215,8 +258,8 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
         if (si >= pth.len) {
             return RouteMatch.noMatch();
         }
-        let s_end = ptrFindSegEnd(pth, si);
-        let s_seg = pth[si..s_end];
+        const s_end = ptrFindSegEnd(pth, si);
+        const s_seg = pth[si..s_end];
         si = s_end;
 
         if (!ptrSegEq(p_seg, s_seg, case_sensitive)) {
@@ -237,8 +280,8 @@ pub fn matchPath(pattern: string, path: string, case_sensitive: bool): RouteMatc
 /// slots from `params` into `out`. Returns bytes written, or `0` if a required parameter is missing.
 pub fn compilePath(pattern: string, params: []const RouteParam, out: []u8): usize {
     if (pattern.len == 0) { return 0; }
-    let has_leading_slash = pattern[0] == 47;
-    let pat = ptrTrimSlashes(pattern);
+    const has_leading_slash = pattern[0] == 47;
+    const pat = ptrTrimSlashes(pattern);
 
     if (pat.len == 0) {
         if (has_leading_slash) {
@@ -254,31 +297,31 @@ pub fn compilePath(pattern: string, params: []const RouteParam, out: []u8): usiz
     while (pi < pat.len) {
         pi = ptrSkipSlashes(pat, pi);
         if (pi >= pat.len) { break; }
-        let p_end = ptrFindSegEnd(pat, pi);
-        let p_seg = pat[pi..p_end];
+        const p_end = ptrFindSegEnd(pat, pi);
+        const p_seg = pat[pi..p_end];
         pi = p_end;
 
         if (p_seg[0] == 42) {
             // Wildcard *name or *name?
-            let is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
-            let w_name = if (is_opt) {
+            const is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
+            const w_name = if (is_opt) {
                 p_seg[1..p_seg.len - 1]
             } else if (p_seg.len > 1) {
                 p_seg[1..p_seg.len]
             } else {
                 "*"
             };
-            let val_opt = ptrFindParam(params, w_name);
+            const val_opt = ptrFindParam(params, w_name);
             if (val_opt == null) {
                 if (is_opt) { continue; }
                 return 0;
             }
-            let val = val_opt ?? "";
+            const val = val_opt ?? "";
             if (val.len == 0) {
                 if (is_opt) { continue; }
                 return 0;
             }
-            let clean_val = ptrTrimSlashes(val);
+            const clean_val = ptrTrimSlashes(val);
             if (!first || has_leading_slash) {
                 w = ptrWriteByte(out, w, 47);
             }
@@ -289,8 +332,8 @@ pub fn compilePath(pattern: string, params: []const RouteParam, out: []u8): usiz
 
         if (p_seg[0] == 58) {
             // Named param :name or :name?
-            let is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
-            let k_name = if (is_opt) {
+            const is_opt = p_seg.len > 2 && p_seg[p_seg.len - 1] == 63;
+            const k_name = if (is_opt) {
                 p_seg[1..p_seg.len - 1]
             } else if (p_seg.len > 1) {
                 p_seg[1..p_seg.len]
@@ -299,12 +342,12 @@ pub fn compilePath(pattern: string, params: []const RouteParam, out: []u8): usiz
             };
             if (k_name.len == 0) { return 0; }
 
-            let val_opt = ptrFindParam(params, k_name);
+            const val_opt = ptrFindParam(params, k_name);
             if (val_opt == null) {
                 if (is_opt) { continue; }
                 return 0;
             }
-            let val = val_opt ?? "";
+            const val = val_opt ?? "";
             if (val.len == 0) {
                 if (is_opt) { continue; }
                 return 0;
@@ -333,21 +376,21 @@ pub fn compilePath(pattern: string, params: []const RouteParam, out: []u8): usiz
 
 /// Counts the number of dynamic parameter slots (`:name`, `:name?`, `*wildcard`) in `pattern`.
 pub fn countRouteParams(pattern: string): usize {
-    let pat = ptrTrimSlashes(pattern);
+    const pat = ptrTrimSlashes(pattern);
     let count: usize = 0;
     let pi: usize = 0;
 
     while (pi < pat.len) {
         pi = ptrSkipSlashes(pat, pi);
         if (pi >= pat.len) { break; }
-        let p_end = ptrFindSegEnd(pat, pi);
-        let p_seg = pat[pi..p_end];
+        const p_end = ptrFindSegEnd(pat, pi);
+        const p_seg = pat[pi..p_end];
         pi = p_end;
 
         if (p_seg[0] == 58 && p_seg.len > 1) {
-            count = count + 1;
+            count += 1;
         } else if (p_seg[0] == 42) {
-            count = count + 1;
+            count += 1;
         }
     }
 
