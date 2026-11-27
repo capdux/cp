@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isSpace, trim, toUpper, toLower, findByte } from "cap:ascii";
+import { bytesEq, indexOfBytes } from "cap:bin";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
 export error TemplateError { BufferTooSmall, UnclosedTag, UnclosedBlock, MismatchedBlock, DepthExceeded, ContextFull, UnknownFilter }
 
 export class VarEntry {
@@ -37,8 +40,6 @@ export class BlockFrame {
     each_len: usize,
 }
 
-export fn isSpace(c: u8): bool;
-export fn trimSlice(s: &[]u8): &[]u8;
 export fn isValueTruthy(val: &[]u8): bool;
 export fn formatUsize(n: usize, buf: []u8): &[]u8;
 export fn formatI64(n: i64, buf: []u8): &[]u8;

@@ -6,16 +6,7 @@
 // - Strict total ordering: compares normalized (natural) order first, then raw bytes as deterministic tie-breaker.
 // - Zero heap allocation: pure CP in-place sorting (insertion sort for small slices, heapsort for larger slices).
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
+import { isDigit, toLowerByte } from "cap:ascii";
 
 fn compareRawBytes(a: string, b: string) -> i8 {
     const min_len = if (a.len < b.len) { a.len } else { b.len };
@@ -94,8 +85,8 @@ fn naturalCompareImpl(a: string, b: string, ignore_case: bool) -> i8 {
             ia = end_a;
             ib = end_b;
         } else {
-            const na = if (ignore_case) { toLowerAscii(ca) } else { ca };
-            const nb = if (ignore_case) { toLowerAscii(cb) } else { cb };
+            const na = if (ignore_case) { toLowerByte(ca) } else { ca };
+            const nb = if (ignore_case) { toLowerByte(cb) } else { cb };
             if (na < nb) {
                 return -1;
             }

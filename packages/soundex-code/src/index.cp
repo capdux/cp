@@ -1,15 +1,7 @@
 // @cap/soundex — Zero-heap American Soundex phonetic algorithm
 // Clean-room MIT implementation for CP (compatible with npm soundex-code & Rust rphonetic).
 
-fn toUpper(c: u8): u8 {
-    if (c >= 'a' && c <= 'z') { return c - 32; }
-    return c;
-}
-
-fn isAlpha(c: u8): bool {
-    let u: u8 = toUpper(c);
-    return u >= 'A' && u <= 'Z';
-}
+import { isAlpha, toUpperByte, strEq } from "cap:ascii";
 
 /// Map an uppercase ASCII letter to its American Soundex digit ('1'..'6'),
 /// 'H'/'W' -> 'H' (transparent separator), vowels/Y -> '0'.
@@ -37,7 +29,7 @@ pub fn soundex(word: string, out: []u8): usize {
     }
     if (i >= word.len) { return 0; }
 
-    let first: u8 = toUpper(word[i]);
+    let first: u8 = toUpperByte(word[i]);
     out[0] = first;
     let prev_code: u8 = soundexDigit(first);
     let pos: usize = 1;
@@ -46,7 +38,7 @@ pub fn soundex(word: string, out: []u8): usize {
     while (i < word.len && pos < 4) {
         let ch: u8 = word[i];
         if (isAlpha(ch)) {
-            let u: u8 = toUpper(ch);
+            let u: u8 = toUpperByte(ch);
             let code: u8 = soundexDigit(u);
             if (code == 'H') {
                 // H and W do not reset prev_code (adjacent rule passes through H/W)
@@ -77,7 +69,7 @@ pub fn soundsLike(a: string, b: string): bool {
     let cb: [4]u8 = undefined;
     if (soundex(a, ca[0..]) != 4) { return false; }
     if (soundex(b, cb[0..]) != 4) { return false; }
-    return ca[0] == cb[0] && ca[1] == cb[1] && ca[2] == cb[2] && ca[3] == cb[3];
+    return strEq(ca[0..], cb[0..]);
 }
 
 /// Compute phonetic similarity score 0..4 (number of matching positions in the 4-char Soundex code).

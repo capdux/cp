@@ -1437,3 +1437,8 @@
 
 ## [2026-11-27] - 紧急热修 `task-bun-20261127-zero-arg-call`：修复大写命名空间/枚举方法零参调用丢失 `()` 的 Codegen 缺陷
 - `cpc/src/codegen/expr/error_flow.rs`: 在 `Expr::EnumInit` 的 `fields_slice.is_empty()` 分支中，当 `(!is_enum || is_enum_method) && ei.tuple_args.is_some()` 时输出 `Obj.Method()`（保留空参数调用括号），彻底修复 `BoringSSL.ERR_clear_error()` 被误生成为 `_ = BoringSSL.ERR_clear_error;` 的问题，已发布 release `cpc` 并同步 `cpc_dev`。
+
+## [2026-11-27] - 单-helper 生态去重 Wave 7~8 (+20 包) + 内置标准库 6 处 barrel 冲突与 13 处 `?? unreachable` 全清零 + 第 10 轮 3h 效率审计
+- **生态去重 Wave 7 (`a-m` 10 包, -595 LOC) & Wave 8 (`n-z` 10 包, -456 LOC)**：共 20 个裸包接入 16-lane SIMD `cap:ascii`/`cap:bin`/`cap:fmt` 并同步 `src/index.d.cp`，20/20 PASS，`Uses cap:* stdlib` 正式突破 **209**。
+- **内置标准库 `lib/` 清障**：修复全部 6 处 `lib/{shell,binfmt,bundler,crypto,css,media}/index.cp` 导出符号冲突（6 → 0）、清零全仓 13 处 Zig 0.16 不兼容的 `?? unreachable`（改为 `.?`），并修复 `lib/codec/nanoid.cp`、`lib/conf/nix.cp`、`lib/gfx/woff2.cp`、`lib/net/{wgNoise,wgReplay}.cp` 静态方法/借用声明；`test_gf256`、`test_macho`、`test_woff2`、`test_crypto`、`test_ogg` 等 `-m` 深测全部 PASS。
+- **第 10 轮 3h 效率审计固化 (`GEMINI.md` §6.10)**：固化 `cap test -m` 模块隔离测试铁律、`[a-m]*`/`[n-z]*` 零冲突分片、1 秒静态扫描先行与 `pub static fn` 工厂方法规范。

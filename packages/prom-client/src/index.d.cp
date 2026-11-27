@@ -1,12 +1,12 @@
 // Type definitions for CP
 
+import { isAlpha, isAlnum } from "cap:ascii";
+import { writeStr, writeI64 } from "cap:fmt";
 export class Label {
     key: &[]u8,
     val: &[]u8,
 }
 
-export fn isAlpha(c: u8): bool;
-export fn isDigit(c: u8): bool;
 export fn isValidMetricName(name: &[]u8): bool;
 export fn isValidLabelName(name: &[]u8): bool;
 export class PromWriter {
@@ -16,7 +16,7 @@ export class PromWriter {
     fn init(buf: []u8): PromWriter;
     fn writeByte(_: auto, b: u8): bool;
     fn writeSlice(_: auto, s: &[]u8): bool;
-    fn writeI64(_: auto, v: i64): bool;
+    fn writeInt(_: auto, v: i64): bool;
     fn writeEscapedHelp(_: auto, help: &[]u8): bool;
     fn writeEscapedLabelVal(_: auto, val: &[]u8): bool;
     fn writeHelp(_: auto, name: &[]u8, help: &[]u8): bool;

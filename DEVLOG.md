@@ -606,3 +606,8 @@
 ## 2026-11-27: 紧急热修 `bun_agy` 工单 `task-bun-20261127-zero-arg-call`（零参大写方法调用保留 `()`）
 - 对比测试 `BoringSSL.bar()` / `BoringSSL.ERR_clear_error(1)` / `BoringSSL.ERR_clear_error()` 10 秒锁定根因：Parser 将双大写标识符+`()` 解析为 `Expr::EnumInit { tuple_args: Some([]) }`，而 `error_flow.rs:952` 对 `!is_enum` 未检查 `ei.tuple_args.is_some()` 直接输出 `Obj.Prop`。
 - 在 `cpc/src/codegen/expr/error_flow.rs` 补充 `(!is_enum || is_enum_method) && ei.tuple_args.is_some()` 分支输出 `Obj.Prop()`，同步 `cpc_dev`，通过全部单测与 Zig 0.17 实测并发布 release `cpc` 结单通知 `bun_agy`。
+
+## 2026-11-27: 标准库 Barrel 冲突全清零 + Wave 7~8 双路交付 + 第 10 轮 3h 效率审计
+- **根因定位**：通过对比默认 flatten 模式与 `cap test -m`（modular 模块隔离模式），确认多子文件标准库（如 `lib/mime`、`lib/crypto`）在 `-m` 模式下天然隔离私有 helper，仅需消除 `lib/*/index.cp` 中真正的 6 处重复导出符号冲突；借助 1 秒 Python 正则扫描精准定位并一次性清零（6 → 0）。
+- **连锁收益**：在验证 `-m` 深测过程中顺带发现并全仓清零了 13 处 Zig 0.16 报错的 `?? unreachable`（`lib/binfmt/jks.cp` 及 8 个标准库文件），以及 `nanoid.cp`/`nix.cp`/`woff2.cp`/`wgNoise.cp`/`wgReplay.cp` 的 `static fn` 工厂方法标记。
+- **并行推进**：按 `packages/[a-m]*` 与 `packages/[n-z]*` 零冲突分片完成 Wave 7 & Wave 8（20 包，-1,051 LOC，20/20 PASS，`Uses cap:* stdlib` 突破 **209**），随即轮换派生 Worker W（Wave 9）与 Worker X（Wave 10）继续冲刺。

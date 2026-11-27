@@ -1,6 +1,8 @@
 // @cap/shebang-command — Zero-allocation shebang executable extractor (reuses @cap/shebang-regex)
 // MIT License
 
+import { isSpace, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { ShebangMatch, matchShebang } from "../../shebang-regex/src/index.cp";
 
 pub struct ShebangCmd {
@@ -15,10 +17,6 @@ struct Parts {
     bin_len: usize,
     arg_start: usize,
     arg_len: usize,
-}
-
-fn isSpace(ch: u8): bool {
-    return ch == 32 || ch == 9;
 }
 
 fn skipSpaces(s: string, pos: usize, end: usize): usize {
@@ -57,10 +55,6 @@ fn basenameStart(s: string, start: usize, end: usize): usize {
     return base;
 }
 
-fn sliceIsEnv(s: string, start: usize, len: usize): bool {
-    return len == 3 && s[start] == 101 && s[start + 1] == 110 && s[start + 2] == 118;
-}
-
 fn locateParts(input: string): Parts {
     let m: ShebangMatch = matchShebang(input);
     if (!m.matched || m.cmd_len == 0) {
@@ -77,7 +71,7 @@ fn locateParts(input: string): Parts {
     let b1_start: usize = basenameStart(input, t1_start, t1_end);
     let b1_len: usize = t1_end - b1_start;
 
-    if (sliceIsEnv(input, b1_start, b1_len)) {
+    if (strEq(input[b1_start..(b1_start + b1_len)], "env")) {
         // Handle `#!/usr/bin/env [-S] <cmd> [args...]`
         let cur: usize = skipSpaces(input, t1_end, line_end);
         while (cur < line_end) {
@@ -124,12 +118,7 @@ pub fn shebangCommand(input: string, out_cmd: []u8): usize {
     if (!p.ok || p.bin_len == 0 || out_cmd.len < p.bin_len) {
         return 0;
     }
-    let i: usize = 0;
-    while (i < p.bin_len) {
-        out_cmd[i] = input[p.bin_start + i];
-        i = i + 1;
-    }
-    return p.bin_len;
+    return writeStr(input[p.bin_start..(p.bin_start + p.bin_len)], out_cmd, 0);
 }
 
 pub fn parseShebangCmd(input: string, out_bin: []u8, out_arg: []u8): ShebangCmd {
@@ -137,19 +126,10 @@ pub fn parseShebangCmd(input: string, out_bin: []u8, out_arg: []u8): ShebangCmd 
     if (!p.ok || p.bin_len == 0 || out_bin.len < p.bin_len) {
         return ShebangCmd { ok: false, bin_len: 0, arg_len: 0 };
     }
-    let i: usize = 0;
-    while (i < p.bin_len) {
-        out_bin[i] = input[p.bin_start + i];
-        i = i + 1;
-    }
+    * = writeStr(input[p.bin_start..(p.bin_start + p.bin_len)], out_bin, 0);
     let copied_arg: usize = 0;
     if (p.arg_len > 0 && out_arg.len >= p.arg_len) {
-        let j: usize = 0;
-        while (j < p.arg_len) {
-            out_arg[j] = input[p.arg_start + j];
-            j = j + 1;
-        }
-        copied_arg = p.arg_len;
+        copied_arg = writeStr(input[p.arg_start..(p.arg_start + p.arg_len)], out_arg, 0);
     }
     return ShebangCmd {
         ok: true,

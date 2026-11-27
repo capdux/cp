@@ -1,16 +1,7 @@
 // @cap/natural-cmp — Zero-heap arbitrary-precision human natural sort comparator & sorter
 // MIT License (clean-room CP implementation)
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' as u8 && c <= '9' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
+import { isDigit, toLowerByte } from "cap:ascii";
 
 fn compareImpl(a: string, b: string, ignore_case: bool) -> i32 {
     let ia: usize = 0;
@@ -77,8 +68,8 @@ fn compareImpl(a: string, b: string, ignore_case: bool) -> i32 {
         let ca: u8 = a[ia];
         let cb: u8 = b[ib];
         if (ignore_case) {
-            ca = toLowerAscii(ca);
-            cb = toLowerAscii(cb);
+            ca = toLowerByte(ca);
+            cb = toLowerByte(cb);
         }
         if (ca < cb) {
             return -1;

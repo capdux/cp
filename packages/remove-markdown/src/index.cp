@@ -11,6 +11,8 @@
 // - Provides `stripMarkdown`, `stripMarkdownWith`, `stripToSingleLine`, and UTF-8 safe `excerpt`.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
+import { isSpace, isAlpha, isAlnum, isDigit, trim, findByte } from "cap:ascii";
+
 pub struct StripOptions {
     pub keep_img_alt: bool,
     pub keep_code_block_text: bool,
@@ -27,32 +29,8 @@ pub struct StripOptions {
     }
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
 fn isAsciiPunct(c: u8) -> bool {
     return (c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126);
-}
-
-fn trimLine(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r')) {
-        start += 1;
-    }
-    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r')) {
-        end -= 1;
-    }
-    return s[start..end];
 }
 
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
@@ -171,7 +149,7 @@ fn isClosingFence(line: string, fence_char: u8, min_len: usize) -> bool {
 /// Strips block-level prefixes: blockquotes (`>`), ATX headings (`#..######`),
 /// unordered lists (`- ` / `* ` / `+ `), ordered lists (`1. ` / `2) `), and task checkboxes (`[x] ` / `[ ] `).
 fn stripBlockPrefixes(raw_line: string) -> string {
-    let s = trimLine(raw_line);
+    let s = trim(raw_line);
 
     // Strip nested blockquote prefixes `>`
     while (s.len > 0 && s[0] == '>') {
@@ -179,7 +157,7 @@ fn stripBlockPrefixes(raw_line: string) -> string {
         if (s.len > 0 && s[0] == ' ') {
             s = s[1..s.len];
         }
-        s = trimLine(s);
+        s = trim(s);
     }
 
     // Strip ATX heading prefix `#`..`######` followed by space or end
@@ -189,14 +167,14 @@ fn stripBlockPrefixes(raw_line: string) -> string {
             h += 1;
         }
         if (h == s.len || s[h] == ' ' || s[h] == '\t') {
-            s = trimLine(s[h..s.len]);
+            s = trim(s[h..s.len]);
             // Strip optional closing ` ###`
             let end = s.len;
             while (end > 0 && s[end - 1] == '#') {
                 end -= 1;
             }
             if (end < s.len && (end == 0 || s[end - 1] == ' ' || s[end - 1] == '\t')) {
-                s = trimLine(s[0..end]);
+                s = trim(s[0..end]);
             }
             return s;
         }
@@ -204,11 +182,11 @@ fn stripBlockPrefixes(raw_line: string) -> string {
 
     // Strip unordered list marker: `- `, `* `, `+ `
     if (s.len >= 2 && (s[0] == '-' || s[0] == '*' || s[0] == '+') && (s[1] == ' ' || s[1] == '\t')) {
-        s = trimLine(s[2..s.len]);
+        s = trim(s[2..s.len]);
         // Strip task list checkbox: `[x] `, `[X] `, `[ ] `
         if (s.len >= 3 && s[0] == '[' && (s[1] == ' ' || s[1] == 'x' || s[1] == 'X') && s[2] == ']') {
             if (s.len == 3 || s[3] == ' ' || s[3] == '\t') {
-                s = trimLine(s[3..s.len]);
+                s = trim(s[3..s.len]);
             }
         }
         return s;
@@ -221,10 +199,10 @@ fn stripBlockPrefixes(raw_line: string) -> string {
             d += 1;
         }
         if (d + 1 < s.len && (s[d] == '.' || s[d] == ')') && (s[d + 1] == ' ' || s[d + 1] == '\t')) {
-            s = trimLine(s[(d + 2)..s.len]);
+            s = trim(s[(d + 2)..s.len]);
             if (s.len >= 3 && s[0] == '[' && (s[1] == ' ' || s[1] == 'x' || s[1] == 'X') && s[2] == ']') {
                 if (s.len == 3 || s[3] == ' ' || s[3] == '\t') {
-                    s = trimLine(s[3..s.len]);
+                    s = trim(s[3..s.len]);
                 }
             }
             return s;
@@ -375,12 +353,9 @@ fn stripInline(s: string, opts: StripOptions, out: []u8, start_pos: usize, depth
         // Inline HTML tags: <tag ...>, </tag>, <!-- ... -->
         if (opts.strip_html && c == '<' && i + 1 < s.len) {
             const n = s[i + 1];
-            const is_tag_start = (n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') || n == '/' || n == '!';
+            const is_tag_start = isAlpha(n) || n == '/' || n == '!';
             if (is_tag_start) {
-                let gt = i + 2;
-                while (gt < s.len && s[gt] != '>') {
-                    gt += 1;
-                }
+                const gt = findByte(s, '>', i + 2) ?? s.len;
                 if (gt < s.len) {
                     i = gt + 1;
                     continue;
@@ -406,8 +381,8 @@ fn stripInline(s: string, opts: StripOptions, out: []u8, start_pos: usize, depth
 
         // Single '_' emphasis only at word boundary (preserve `snake_case`)
         if (c == '_') {
-            const prev_alnum = (i > 0 && isAlphaNum(s[i - 1]));
-            const next_alnum = (i + 1 < s.len && isAlphaNum(s[i + 1]));
+            const prev_alnum = (i > 0 && isAlnum(s[i - 1]));
+            const next_alnum = (i + 1 < s.len && isAlnum(s[i + 1]));
             if (!(prev_alnum && next_alnum)) {
                 i += 1;
                 continue;
@@ -441,9 +416,7 @@ pub fn stripMarkdownWith(md: string, opts: StripOptions, out: []u8) -> string {
             break;
         }
         const line_start = cursor;
-        while (cursor < md.len && md[cursor] != '\n') {
-            cursor += 1;
-        }
+        cursor = findByte(md, '\n', cursor) ?? md.len;
         let line_end = cursor;
         if (line_end > line_start && md[line_end - 1] == '\r') {
             line_end -= 1;
@@ -463,7 +436,7 @@ pub fn stripMarkdownWith(md: string, opts: StripOptions, out: []u8) -> string {
             if (!opts.keep_code_block_text) {
                 continue;
             }
-            const trimmed_code = trimLine(line);
+            const trimmed_code = trim(line);
             if (trimmed_code.len == 0) {
                 if (has_emitted_line) {
                     pending_blank = true;
@@ -498,7 +471,7 @@ pub fn stripMarkdownWith(md: string, opts: StripOptions, out: []u8) -> string {
             continue;
         }
 
-        const trimmed = trimLine(line);
+        const trimmed = trim(line);
         if (trimmed.len == 0) {
             if (has_emitted_line) {
                 pending_blank = true;

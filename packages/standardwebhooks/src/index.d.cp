@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, isHexDigit, trim, startsWith, strEq, findByte } from "cap:ascii";
+import { ctEqual } from "cap:bin";
+import { parseI64, writeStr, writeU64 } from "cap:fmt";
 export class StripeSig {
     timestamp: i64,
     v1_sigs: [4]string,
@@ -7,9 +10,6 @@ export class StripeSig {
     valid: bool,
 }
 
-export fn isSpace(b: u8): bool;
-export fn isHex(b: u8): bool;
-export fn trimSlice(s: string): string;
 export fn parseNonNegI64(s: string): i64;
 export fn parseStripeHeader(header: string): StripeSig;
 export fn parseGitHubSig256(header: string): string;

@@ -8,7 +8,9 @@
 // - List iteration (`{{#each list}}...{{else}}...{{/each}}`) with `this`, `@index`, `@first`, `@last`
 // - Zero heap allocations, `undefined` stack buffers, single-pass scanner, `MAX_BLOCK_DEPTH = 16` guard
 
-const std = @import("std");
+import { isSpace, trim, toUpper, toLower, findByte } from "cap:ascii";
+import { bytesEq, indexOfBytes } from "cap:bin";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
 
 pub const MAX_BLOCK_DEPTH: usize = 16;
 pub const MAX_VARS: usize = 64;
@@ -62,78 +64,24 @@ struct BlockFrame {
     each_len: usize = 0,
 }
 
-fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimSlice(s: []const u8): []const u8 {
-    let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) : (start += 1) {}
-    let end: usize = s.len;
-    while (end > start && isSpace(s[end - 1])) : (end -= 1) {}
-    return s[start..end];
-}
-
 fn isValueTruthy(val: []const u8): bool {
     if (val.len == 0) return false;
-    if (std.mem.eql(u8, val, "false")) return false;
-    if (std.mem.eql(u8, val, "0")) return false;
+    if (bytesEq(val, "false")) return false;
+    if (bytesEq(val, "0")) return false;
     return true;
 }
 
 fn formatUsize(n: usize, buf: []u8): []const u8 {
-    if (n == 0) {
-        buf[0] = '0';
-        return buf[0..1];
-    }
-    let tmp: [32]u8 = undefined;
-    let len: usize = 0;
-    let v = n;
-    while (v > 0) {
-        tmp[len] = ('0' as u8) + ((v % 10) as u8);
-        len += 1;
-        v /= 10;
-    }
-    let i: usize = 0;
-    while (i < len) : (i += 1) {
-        buf[i] = tmp[len - 1 - i];
-    }
-    return buf[0..len];
+    return buf[0..writeU64(n as u64, buf, 0)];
 }
 
 fn formatI64(n: i64, buf: []u8): []const u8 {
-    if (n == 0) {
-        buf[0] = '0';
-        return buf[0..1];
-    }
-    let tmp: [32]u8 = undefined;
-    let len: usize = 0;
-    let negative = n < 0;
-    let mag: u64 = if (negative) @as(u64, 0) -% @as(u64, @bitCast(n)) else @as(u64, @intCast(n));
-    while (mag > 0) {
-        tmp[len] = ('0' as u8) + ((mag % 10) as u8);
-        len += 1;
-        mag /= 10;
-    }
-    let pos: usize = 0;
-    if (negative) {
-        buf[0] = '-';
-        pos = 1;
-    }
-    let i: usize = 0;
-    while (i < len) : (i += 1) {
-        buf[pos + i] = tmp[len - 1 - i];
-    }
-    return buf[0..(pos + len)];
+    return buf[0..writeI64(n, buf, 0)];
 }
 
 fn appendBytes(out: []u8, pos: *usize, data: []const u8): void ! TemplateError {
     if (data.len > out.len - pos.*) return TemplateError.BufferTooSmall;
-    let i: usize = 0;
-    while (i < data.len) : (i += 1) {
-        out[pos.* + i] = data[i];
-    }
-    pos.* += data.len;
+    pos.* = writeStr(data, out, pos.*);
 }
 
 fn appendEscapedHtml(out: []u8, pos: *usize, input: []const u8): void ! TemplateError {
@@ -204,7 +152,7 @@ pub struct TemplateContext {
     pub fn set(*_, key: []const u8, val: []const u8): void ! TemplateError {
         let i: usize = 0;
         while (i < _.var_count) : (i += 1) {
-            if (std.mem.eql(u8, _.vars[i].key, key)) {
+            if (bytesEq(_.vars[i].key, key)) {
                 _.vars[i].val = val;
                 _.vars[i].in_pool = false;
                 _.vars[i].pool_off = 0;
@@ -237,14 +185,11 @@ pub struct TemplateContext {
             return TemplateError.ContextFull;
         }
         const off = _.int_pool_len;
-        let k: usize = 0;
-        while (k < formatted.len) : (k += 1) {
-            _.int_pool[off + k] = formatted[k];
-        }
+        * = writeStr(formatted, _.int_pool[0..], off);
 
         let i: usize = 0;
         while (i < _.var_count) : (i += 1) {
-            if (std.mem.eql(u8, _.vars[i].key, key)) {
+            if (bytesEq(_.vars[i].key, key)) {
                 _.int_pool_len += formatted.len;
                 _.vars[i].val = "";
                 _.vars[i].in_pool = true;
@@ -269,7 +214,7 @@ pub struct TemplateContext {
     pub fn get(key: []const u8): ([]const u8)? {
         let i: usize = 0;
         while (i < _.var_count) : (i += 1) {
-            if (std.mem.eql(u8, _.vars[i].key, key)) {
+            if (bytesEq(_.vars[i].key, key)) {
                 if (_.vars[i].in_pool) {
                     const start = _.vars[i].pool_off as usize;
                     const end = start + (_.vars[i].pool_len as usize);
@@ -297,7 +242,7 @@ pub struct TemplateContext {
         let found_idx: usize? = null;
         let i: usize = 0;
         while (i < _.list_count) : (i += 1) {
-            if (std.mem.eql(u8, _.lists[i].key, list_key)) {
+            if (bytesEq(_.lists[i].key, list_key)) {
                 found_idx = i;
                 break;
             }
@@ -326,7 +271,7 @@ pub struct TemplateContext {
     pub fn listLen(list_key: []const u8): usize {
         let i: usize = 0;
         while (i < _.list_count) : (i += 1) {
-            if (std.mem.eql(u8, _.lists[i].key, list_key)) {
+            if (bytesEq(_.lists[i].key, list_key)) {
                 return _.lists[i].count;
             }
         }
@@ -338,7 +283,7 @@ pub struct TemplateContext {
         let list_idx: usize? = null;
         let i: usize = 0;
         while (i < _.list_count) : (i += 1) {
-            if (std.mem.eql(u8, _.lists[i].key, list_key)) {
+            if (bytesEq(_.lists[i].key, list_key)) {
                 list_idx = i;
                 break;
             }
@@ -388,16 +333,16 @@ fn resolveValue(
     const each_idx = findActiveEach(stack, depth);
     if (each_idx != null) {
         const frame = stack.*[each_idx.?];
-        if (std.mem.eql(u8, key, "this") || std.mem.eql(u8, key, ".")) {
+        if (bytesEq(key, "this") || bytesEq(key, ".")) {
             return ctx.listItem(frame.each_list_key, frame.each_index) ?? "";
         }
-        if (std.mem.eql(u8, key, "@index")) {
+        if (bytesEq(key, "@index")) {
             return formatUsize(frame.each_index, index_buf);
         }
-        if (std.mem.eql(u8, key, "@first")) {
+        if (bytesEq(key, "@first")) {
             return if (frame.each_index == 0) "true" else "false";
         }
-        if (std.mem.eql(u8, key, "@last")) {
+        if (bytesEq(key, "@last")) {
             return if (frame.each_index + 1 == frame.each_len) "true" else "false";
         }
     }
@@ -413,17 +358,17 @@ fn resolveCondition(
     const each_idx = findActiveEach(stack, depth);
     if (each_idx != null) {
         const frame = stack.*[each_idx.?];
-        if (std.mem.eql(u8, key, "this") || std.mem.eql(u8, key, ".")) {
+        if (bytesEq(key, "this") || bytesEq(key, ".")) {
             const v = ctx.listItem(frame.each_list_key, frame.each_index) ?? "";
             return isValueTruthy(v);
         }
-        if (std.mem.eql(u8, key, "@index")) {
+        if (bytesEq(key, "@index")) {
             return frame.each_index != 0;
         }
-        if (std.mem.eql(u8, key, "@first")) {
+        if (bytesEq(key, "@first")) {
             return frame.each_index == 0;
         }
-        if (std.mem.eql(u8, key, "@last")) {
+        if (bytesEq(key, "@last")) {
             return frame.each_index + 1 == frame.each_len;
         }
     }
@@ -435,28 +380,20 @@ fn applyFilter(
     input: []const u8,
     dst: []u8,
 ): ([]const u8) ! TemplateError {
-    if (std.mem.eql(u8, filter_name, "trim")) {
-        return trimSlice(input);
+    if (bytesEq(filter_name, "trim")) {
+        return trim(input);
     }
-    if (std.mem.eql(u8, filter_name, "upper")) {
+    if (bytesEq(filter_name, "upper")) {
         if (input.len > dst.len) return TemplateError.BufferTooSmall;
-        let i: usize = 0;
-        while (i < input.len) : (i += 1) {
-            const c = input[i];
-            dst[i] = if (c >= 'a' && c <= 'z') c - 32 else c;
-        }
-        return dst[0..input.len];
+        const n = toUpper(input, dst);
+        return dst[0..n];
     }
-    if (std.mem.eql(u8, filter_name, "lower")) {
+    if (bytesEq(filter_name, "lower")) {
         if (input.len > dst.len) return TemplateError.BufferTooSmall;
-        let i: usize = 0;
-        while (i < input.len) : (i += 1) {
-            const c = input[i];
-            dst[i] = if (c >= 'A' && c <= 'Z') c + 32 else c;
-        }
-        return dst[0..input.len];
+        const n = toLower(input, dst);
+        return dst[0..n];
     }
-    if (std.mem.eql(u8, filter_name, "len")) {
+    if (bytesEq(filter_name, "len")) {
         return formatUsize(input.len, dst);
     }
     return TemplateError.UnknownFilter;
@@ -472,16 +409,9 @@ fn evalExpressionAndEmit(
     out_pos: *usize,
 ): void ! TemplateError {
     // Split expression by '|' into key and optional chained filters
-    let pipe_pos: usize? = null;
-    let i: usize = 0;
-    while (i < expr.len) : (i += 1) {
-        if (expr[i] == '|') {
-            pipe_pos = i;
-            break;
-        }
-    }
+    const pipe_pos = findByte(expr, '|', 0);
 
-    const key = if (pipe_pos != null) trimSlice(expr[0..pipe_pos.?]) else expr;
+    const key = if (pipe_pos != null) trim(expr[0..pipe_pos.?]) else expr;
     let index_buf: [32]u8 = undefined;
     let current = resolveValue(key, ctx, stack, depth, index_buf[0..]);
 
@@ -491,15 +421,8 @@ fn evalExpressionAndEmit(
         let use_a = true;
         let cursor = pipe_pos.? + 1;
         while (cursor <= expr.len) {
-            let next_pipe = expr.len;
-            let k = cursor;
-            while (k < expr.len) : (k += 1) {
-                if (expr[k] == '|') {
-                    next_pipe = k;
-                    break;
-                }
-            }
-            const fname = trimSlice(expr[cursor..next_pipe]);
+            const next_pipe = findByte(expr, '|', cursor) ?? expr.len;
+            const fname = trim(expr[cursor..next_pipe]);
             if (fname.len == 0) return TemplateError.UnknownFilter;
             const dst: []u8 = if (use_a) buf_a[0..] else buf_b[0..];
             current = applyFilter(fname, current, dst)?;
@@ -517,16 +440,7 @@ fn evalExpressionAndEmit(
 }
 
 fn findSubstring(haystack: []const u8, start: usize, needle: []const u8): usize? {
-    if (needle.len == 0) return start;
-    if (start + needle.len > haystack.len) return null;
-    let i = start;
-    const limit = haystack.len - needle.len;
-    while (i <= limit) : (i += 1) {
-        if (std.mem.eql(u8, haystack[i..(i + needle.len)], needle)) {
-            return i;
-        }
-    }
-    return null;
+    return indexOfBytes(haystack, needle, start);
 }
 
 fn isBranchActive(stack: *const [16]BlockFrame, depth: usize): bool {
@@ -565,7 +479,7 @@ pub fn render(
             const close_opt = findSubstring(tpl, open + 3, "}}}");
             if (close_opt == null) return TemplateError.UnclosedTag;
             const close = close_opt.?;
-            const expr = trimSlice(tpl[(open + 3)..close]);
+            const expr = trim(tpl[(open + 3)..close]);
             if (isBranchActive(&stack, depth) && expr.len > 0) {
                 evalExpressionAndEmit(expr, true, ctx, &stack, depth, out, &out_pos)?;
             }
@@ -591,7 +505,7 @@ pub fn render(
         const close_opt = findSubstring(tpl, open + 2, "}}");
         if (close_opt == null) return TemplateError.UnclosedTag;
         const close = close_opt.?;
-        const tag = trimSlice(tpl[(open + 2)..close]);
+        const tag = trim(tpl[(open + 2)..close]);
         const next_pos = close + 2;
 
         if (tag.len == 0) {
@@ -605,8 +519,8 @@ pub fn render(
             const parent_active = isBranchActive(&stack, depth);
             const rest = tag[1..tag.len];
 
-            if (rest.len >= 3 && std.mem.eql(u8, rest[0..2], "if") && isSpace(rest[2])) {
-                const key = trimSlice(rest[3..rest.len]);
+            if (rest.len >= 3 && bytesEq(rest[0..2], "if") && isSpace(rest[2])) {
+                const key = trim(rest[3..rest.len]);
                 const cond = if (parent_active) resolveCondition(key, ctx, &stack, depth) else false;
                 stack[depth] = BlockFrame{
                     kind: BlockKind.If,
@@ -623,8 +537,8 @@ pub fn render(
                 continue;
             }
 
-            if (rest.len >= 7 && std.mem.eql(u8, rest[0..6], "unless") && isSpace(rest[6])) {
-                const key = trimSlice(rest[7..rest.len]);
+            if (rest.len >= 7 && bytesEq(rest[0..6], "unless") && isSpace(rest[6])) {
+                const key = trim(rest[7..rest.len]);
                 const cond = if (parent_active) resolveCondition(key, ctx, &stack, depth) else true;
                 stack[depth] = BlockFrame{
                     kind: BlockKind.Unless,
@@ -641,8 +555,8 @@ pub fn render(
                 continue;
             }
 
-            if (rest.len >= 5 && std.mem.eql(u8, rest[0..4], "each") && isSpace(rest[4])) {
-                const list_key = trimSlice(rest[5..rest.len]);
+            if (rest.len >= 5 && bytesEq(rest[0..4], "each") && isSpace(rest[4])) {
+                const list_key = trim(rest[5..rest.len]);
                 const list_len = if (parent_active) ctx.listLen(list_key) else 0;
                 stack[depth] = BlockFrame{
                     kind: BlockKind.Each,
@@ -665,13 +579,13 @@ pub fn render(
         // 3b. Block closing: {{/if}}, {{/unless}}, {{/each}}
         if (tag[0] == '/') {
             if (depth == 0) return TemplateError.MismatchedBlock;
-            const end_name = trimSlice(tag[1..tag.len]);
+            const end_name = trim(tag[1..tag.len]);
             let expected_kind = BlockKind.If;
-            if (std.mem.eql(u8, end_name, "if")) {
+            if (bytesEq(end_name, "if")) {
                 expected_kind = BlockKind.If;
-            } else if (std.mem.eql(u8, end_name, "unless")) {
+            } else if (bytesEq(end_name, "unless")) {
                 expected_kind = BlockKind.Unless;
-            } else if (std.mem.eql(u8, end_name, "each")) {
+            } else if (bytesEq(end_name, "each")) {
                 expected_kind = BlockKind.Each;
             } else {
                 return TemplateError.MismatchedBlock;
@@ -691,7 +605,7 @@ pub fn render(
         }
 
         // 3c. Else branch: {{else}}
-        if (std.mem.eql(u8, tag, "else")) {
+        if (bytesEq(tag, "else")) {
             if (depth == 0) return TemplateError.MismatchedBlock;
             if (stack[depth - 1].has_else) return TemplateError.MismatchedBlock;
 

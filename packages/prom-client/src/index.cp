@@ -1,6 +1,9 @@
 // @cap/prom-text — Zero-heap Prometheus / OpenMetrics text exposition serializer
 // MIT License (clean-room CP implementation)
 
+import { isAlpha, isAlnum } from "cap:ascii";
+import { writeStr, writeI64 } from "cap:fmt";
+
 pub const METRIC_COUNTER: u8 = 0;
 pub const METRIC_GAUGE: u8 = 1;
 pub const METRIC_HISTOGRAM: u8 = 2;
@@ -9,14 +12,6 @@ pub const METRIC_SUMMARY: u8 = 3;
 pub struct Label {
     pub key: []const u8,
     pub val: []const u8,
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' as u8 && c <= 'z' as u8) || (c >= 'A' as u8 && c <= 'Z' as u8);
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' as u8 && c <= '9' as u8;
 }
 
 pub fn isValidMetricName(name: []const u8) -> bool {
@@ -30,7 +25,7 @@ pub fn isValidMetricName(name: []const u8) -> bool {
     let i: usize = 1;
     while (i < name.len) {
         const c: u8 = name[i];
-        if (!isAlpha(c) && !isDigit(c) && c != '_' as u8 && c != ':' as u8) {
+        if (!isAlnum(c) && c != '_' as u8 && c != ':' as u8) {
             return false;
         }
         i += 1;
@@ -49,7 +44,7 @@ pub fn isValidLabelName(name: []const u8) -> bool {
     let i: usize = 1;
     while (i < name.len) {
         const c: u8 = name[i];
-        if (!isAlpha(c) && !isDigit(c) && c != '_' as u8) {
+        if (!isAlnum(c) && c != '_' as u8) {
             return false;
         }
         i += 1;
@@ -85,46 +80,14 @@ pub struct PromWriter {
             _.overflow = true;
             return false;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buf[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
-        }
+        _.pos = writeStr(s, _.buf, _.pos);
         return true;
     }
 
-    fn writeI64(*_, v: i64) -> bool {
-        let mag: u64 = 0;
-        if (v < 0) {
-            if (!_.writeByte('-' as u8)) {
-                return false;
-            }
-            mag = ((-(v + 1)) as u64) + 1;
-        } else {
-            mag = v as u64;
-        }
-        let digits: [24]u8 = undefined;
-        let count: usize = 0;
-        if (mag == 0) {
-            digits[0] = '0' as u8;
-            count = 1;
-        } else {
-            let cur: u64 = mag;
-            while (cur > 0) {
-                digits[count] = ('0' as u8) + ((cur % 10) as u8);
-                count += 1;
-                cur = cur / 10;
-            }
-        }
-        let k: usize = count;
-        while (k > 0) {
-            k -= 1;
-            if (!_.writeByte(digits[k])) {
-                return false;
-            }
-        }
-        return true;
+    fn writeInt(*_, v: i64) -> bool {
+        let tmp: [24]u8 = undefined;
+        const n = writeI64(v, tmp[0..], 0);
+        return _.writeSlice(tmp[0..n]);
     }
 
     fn writeEscapedHelp(*_, help: []const u8) -> bool {
@@ -255,7 +218,7 @@ pub struct PromWriter {
 
     pub fn writeSampleInt(*_, name: []const u8, labels: []const Label, value: i64) -> bool {
         const saved: usize = _.pos;
-        if (!_.writeSamplePrefix(name, labels) || !_.writeI64(value) || !_.writeByte('\n' as u8)) {
+        if (!_.writeSamplePrefix(name, labels) || !_.writeInt(value) || !_.writeByte('\n' as u8)) {
             _.pos = saved;
             return false;
         }
@@ -270,8 +233,8 @@ pub struct PromWriter {
         ts_ms: i64,
     ) -> bool {
         const saved: usize = _.pos;
-        if (!_.writeSamplePrefix(name, labels) || !_.writeI64(value) || !_.writeByte(' ' as u8)
-            || !_.writeI64(ts_ms) || !_.writeByte('\n' as u8)) {
+        if (!_.writeSamplePrefix(name, labels) || !_.writeInt(value) || !_.writeByte(' ' as u8)
+            || !_.writeInt(ts_ms) || !_.writeByte('\n' as u8)) {
             _.pos = saved;
             return false;
         }
