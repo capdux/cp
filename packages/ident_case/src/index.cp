@@ -1,34 +1,14 @@
 // @cap/camelcase — Zero-heap programming case converter (camel, Pascal, snake, kebab, SCREAMING_SNAKE)
 // MIT License (clean-room CP implementation)
 
+import { isDigit, isAlnum, toLowerByte, toUpperByte } from "cap:ascii";
+
 fn isUpper(c: u8) -> bool {
     return c >= 'A' as u8 && c <= 'Z' as u8;
 }
 
 fn isLower(c: u8) -> bool {
     return c >= 'a' as u8 && c <= 'z' as u8;
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' as u8 && c <= '9' as u8;
-}
-
-fn isAlnum(c: u8) -> bool {
-    return isUpper(c) || isLower(c) || isDigit(c);
-}
-
-fn toLower(c: u8) -> u8 {
-    if (isUpper(c)) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn toUpper(c: u8) -> u8 {
-    if (isLower(c)) {
-        return c - 32;
-    }
-    return c;
 }
 
 fn nextWord(input: string, pos: usize, out_start: *usize, out_end: *usize) -> bool {
@@ -98,11 +78,11 @@ fn convertJoined(
         while (k < wlen) {
             const c: u8 = input[ws + k];
             if (upper_all) {
-                out[out_pos] = toUpper(c);
+                out[out_pos] = toUpperByte(c);
             } else if (k == 0 && ((word_idx == 0 && cap_first_word) || (word_idx > 0 && cap_rest_words))) {
-                out[out_pos] = toUpper(c);
+                out[out_pos] = toUpperByte(c);
             } else {
-                out[out_pos] = toLower(c);
+                out[out_pos] = toLowerByte(c);
             }
             out_pos += 1;
             k += 1;

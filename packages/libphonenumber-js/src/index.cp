@@ -8,6 +8,9 @@
 //   default country completion, and national trunk leading-zero stripping (AU/GB/JP/KR/DE/FR/CN/etc.)
 // - 4 output formats: E.164, International, National, RFC 3966 (`tel:`)
 
+import { isDigit, eqIgnoreCase, trim } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 const MAX_E164_DIGITS: usize = 15;
 const MAX_NATIONAL_LEN: usize = 16;
 
@@ -75,26 +78,11 @@ const COUNTRIES: [45]CountryMeta = [
     CountryMeta{ iso2: "CO", country_code: 57, min_len: 10, max_len: 10, strip_leading_zero: false, trunk_prefix: 0 },
 ];
 
-fn toUpperAscii(c: u8): u8 {
-    if (c >= 'a' && c <= 'z') return c - 32;
-    return c;
-}
-
-fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
-fn eqIso2IgnoreCase(a: string, b: string): bool {
-    if (a.len != 2 || b.len != 2) return false;
-    return toUpperAscii(a[0]) == toUpperAscii(b[0]) &&
-        toUpperAscii(a[1]) == toUpperAscii(b[1]);
-}
-
 fn findCountryIndexByIso2(iso2: string): i32 {
     if (iso2.len != 2) return -1;
     let i: usize = 0;
     while (i < COUNTRY_COUNT) : (i += 1) {
-        if (eqIso2IgnoreCase(COUNTRIES[i].iso2, iso2)) {
+        if (eqIgnoreCase(COUNTRIES[i].iso2, iso2)) {
             return i as i32;
         }
     }
@@ -125,38 +113,6 @@ fn pushByte(out: []u8, pos: usize, b: u8): usize {
         return pos + 1;
     }
     return pos;
-}
-
-fn pushSlice(out: []u8, pos: usize, src: []const u8): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < src.len && p < out.len) : (i += 1) {
-        out[p] = src[i];
-        p += 1;
-    }
-    return p;
-}
-
-fn pushU16(out: []u8, pos: usize, val: u16): usize {
-    let tmp: [5]u8 = [0, 0, 0, 0, 0];
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        return pushByte(out, pos, '0');
-    }
-    while (v > 0 && n < 5) {
-        const rem = (v % 10) as u8;
-        tmp[n] = (48 as u8) + rem;
-        n += 1;
-        v = v / 10;
-    }
-    let p = pos;
-    let i = n;
-    while (i > 0) {
-        i -= 1;
-        p = pushByte(out, p, tmp[i]);
-    }
-    return p;
 }
 
 fn pushGroupRange(out: []u8, pos: usize, buf: [16]u8, start: usize, end: usize): usize {
@@ -377,7 +333,7 @@ pub struct PhoneNumber {
         }
         let pos: usize = 0;
         pos = pushByte(out, pos, '+');
-        pos = pushU16(out, pos, this.country_code);
+        pos = writeU64(this.country_code as u64, out, pos);
         pos = pushGroupRange(out, pos, this.national_buf, 0, this.national_len as usize);
         return out[0..pos];
     }
@@ -389,7 +345,7 @@ pub struct PhoneNumber {
         }
         let pos: usize = 0;
         pos = pushByte(out, pos, '+');
-        pos = pushU16(out, pos, this.country_code);
+        pos = writeU64(this.country_code as u64, out, pos);
         pos = pushByte(out, pos, ' ');
         pos = writeGroupedNational(out, pos, this.country_code, this.national_buf, this.national_len as usize, ' ');
         return out[0..pos];
@@ -407,7 +363,7 @@ pub struct PhoneNumber {
         if (this.country_code == 1 && len == 10) {
             pos = pushByte(out, pos, '(');
             pos = pushGroupRange(out, pos, this.national_buf, 0, 3);
-            pos = pushSlice(out, pos, ") ");
+            pos = writeStr(") ", out, pos);
             pos = pushGroupRange(out, pos, this.national_buf, 3, 6);
             pos = pushByte(out, pos, '-');
             pos = pushGroupRange(out, pos, this.national_buf, 6, 10);
@@ -454,8 +410,8 @@ pub struct PhoneNumber {
             return "";
         }
         let pos: usize = 0;
-        pos = pushSlice(out, pos, "tel:+");
-        pos = pushU16(out, pos, this.country_code);
+        pos = writeStr("tel:+", out, pos);
+        pos = writeU64(this.country_code as u64, out, pos);
         pos = pushByte(out, pos, '-');
         pos = writeGroupedNational(out, pos, this.country_code, this.national_buf, this.national_len as usize, '-');
         return out[0..pos];
@@ -522,41 +478,29 @@ fn matchCallingCodePrefix(digits: [24]u8, n: usize): CcMatch {
 /// Supports `+`, `00` international prefix, `tel:` URI prefix, spaces/hyphens/parentheses/dots,
 /// default country completion via `default_iso2`, and domestic leading-zero stripping.
 pub fn parsePhoneNumber(raw: string, default_iso2: string): PhoneNumber {
-    if (raw.len == 0) return PhoneNumber.invalid();
+    const trimmed = trim(raw);
+    if (trimmed.len == 0) return PhoneNumber.invalid();
 
-    // Trim leading/trailing ASCII whitespace
     let start: usize = 0;
-    let end: usize = raw.len;
-    while (start < end && (raw[start] == ' ' || raw[start] == '\t' || raw[start] == '\r' || raw[start] == '\n')) {
-        start += 1;
-    }
-    while (end > start && (raw[end - 1] == ' ' || raw[end - 1] == '\t' || raw[end - 1] == '\r' || raw[end - 1] == '\n')) {
-        end -= 1;
-    }
-    if (start >= end) return PhoneNumber.invalid();
+    const end: usize = trimmed.len;
 
     // Optional RFC 3966 `tel:` prefix (case-insensitive)
-    if (end - start >= 4 &&
-        toUpperAscii(raw[start]) == 'T' &&
-        toUpperAscii(raw[start + 1]) == 'E' &&
-        toUpperAscii(raw[start + 2]) == 'L' &&
-        raw[start + 3] == ':')
-    {
-        start += 4;
-        while (start < end && raw[start] == ' ') {
+    if (end >= 4 && eqIgnoreCase(trimmed[0..4], "tel:")) {
+        start = 4;
+        while (start < end && trimmed[start] == ' ') {
             start += 1;
         }
     }
     if (start >= end) return PhoneNumber.invalid();
 
     let has_plus = false;
-    let digits: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let digits: [24]u8 = undefined;
     let dlen: usize = 0;
     let paren_depth: i32 = 0;
 
     let i = start;
     while (i < end) : (i += 1) {
-        const c = raw[i];
+        const c = trimmed[i];
         if (c == '+') {
             if (has_plus || dlen > 0) return PhoneNumber.invalid();
             has_plus = true;
@@ -594,7 +538,7 @@ pub fn parsePhoneNumber(raw: string, default_iso2: string): PhoneNumber {
 
     if (is_intl) {
         // Copy shifted digits for calling code matching
-        let shifted: [24]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let shifted: [24]u8 = undefined;
         const rem_len = dlen - digit_offset;
         if (rem_len < 4) return PhoneNumber.invalid();
         let k: usize = 0;

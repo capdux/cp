@@ -1,6 +1,7 @@
 // Type definitions for CP
 
-import { toUpperCamelCase, toLowerCamelCase, toSnakeCase, toShoutySnakeCase, toKebabCase, toShoutyKebabCase, toTitleCase, toTrainCase } from "../../heck-case/src/index.cp";
+import { isAlpha, toLowerByte, toUpperByte } from "cap:ascii";
+import { toUpperCamelCase, toLowerCamelCase, toSnakeCase, toShoutySnakeCase, toKebabCase, toShoutyKebabCase, toTitleCase, toTrainCase } from "../../heck/src/index.cp";
 export fn ccvReplaceUnderscoreWithSpace(out: []u8, len: usize);
 export fn ccvStripUnderscores(out: []u8, len: usize): usize;
 export fn toFlatCase(src: string, out: []u8): usize;

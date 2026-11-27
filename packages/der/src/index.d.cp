@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { writeStr } from "cap:fmt";
 import { ObjectIdentifier, OidParseResult } from "../../const-oid/src/index.cp";
 export fn derEmptySlice(): &[]u8;
 export fn derMinBytesUsize(v: usize): usize;

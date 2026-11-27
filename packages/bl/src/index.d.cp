@@ -1,5 +1,10 @@
 // Type definitions for CP
 
+import { indexOfBytes, readU16BE, readU16LE, readU32BE, readU32LE } from "cap:bin";
+export fn blReadU16BE(src: &[]u8): u16?;
+export fn blReadU16LE(src: &[]u8): u16?;
+export fn blReadU32BE(src: &[]u8): u32?;
+export fn blReadU32LE(src: &[]u8): u32?;
 export class BufferList {
     chunks: [64]&[]u8,
     chunk_count: usize,

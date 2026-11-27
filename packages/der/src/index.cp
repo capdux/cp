@@ -3,6 +3,7 @@
 // Reuses @cap/const-oid for canonical OID TLV (Tag 0x06) encoding and decoding.
 // Clean-room MIT implementation (RustCrypto `der` parity).
 
+import { writeStr } from "cap:fmt";
 import { ObjectIdentifier, OidParseResult } from "../../const-oid/src/index.cp";
 
 // Standard ITU-T X.690 DER universal tags
@@ -408,12 +409,7 @@ pub struct DerWriter {
             return false;
         }
         _.pos = _.pos + lw;
-        let i: usize = 0;
-        while (i < value.len) {
-            _.buf[_.pos + i] = value[i];
-            i = i + 1;
-        }
-        _.pos = _.pos + value.len;
+        _.pos = writeStr(value, _.buf, _.pos);
         return true;
     }
 
@@ -433,7 +429,7 @@ pub struct DerWriter {
             let z: [1]u8 = [0 as u8];
             return _.writeTlv(TAG_INTEGER, z[0..1]);
         }
-        let tmp: [9]u8 = [0; 9];
+        let tmp: [9]u8 = undefined;
         let n: usize = 0;
         let x = val;
         while (x > (0 as u64)) {
@@ -442,7 +438,7 @@ pub struct DerWriter {
             n = n + 1;
         }
         // Reverse into big-endian, prepending 0x00 if MSB has bit 7 set
-        let out: [9]u8 = [0; 9];
+        let out: [9]u8 = undefined;
         let start: usize = 0;
         if ((tmp[n - 1] & (0x80 as u8)) != 0) {
             out[0] = 0 as u8;
@@ -491,12 +487,7 @@ pub struct DerWriter {
         _.pos = _.pos + lw;
         _.buf[_.pos] = unused_bits;
         _.pos = _.pos + 1;
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[_.pos + i] = data[i];
-            i = i + 1;
-        }
-        _.pos = _.pos + data.len;
+        _.pos = writeStr(data, _.buf, _.pos);
         return true;
     }
 

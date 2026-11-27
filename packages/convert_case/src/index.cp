@@ -3,6 +3,7 @@
 // Clean-room MIT parity with crates.io `convert_case` v0.6.
 // Composes `@cap/heck-case` for word boundary detection & 8 core styles with zero duplication.
 
+import { isAlpha, toLowerByte, toUpperByte } from "cap:ascii";
 import {
     toUpperCamelCase,
     toLowerCamelCase,
@@ -87,15 +88,8 @@ pub fn toAlternatingCase(src: string, out: []u8): usize {
     let i: usize = 0;
     while (i < n) {
         const b = out[i];
-        if (b >= (0x61 as u8) && b <= (0x7A as u8)) { // 'a'..'z'
-            if ((letter_idx & 1) == 1) {
-                out[i] = b - (32 as u8);
-            }
-            letter_idx += 1;
-        } else if (b >= (0x41 as u8) && b <= (0x5A as u8)) { // 'A'..'Z'
-            if ((letter_idx & 1) == 0) {
-                out[i] = b + (32 as u8);
-            }
+        if (isAlpha(b)) {
+            out[i] = if ((letter_idx & 1) == 1) toUpperByte(b) else toLowerByte(b);
             letter_idx += 1;
         }
         i += 1;

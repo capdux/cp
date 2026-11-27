@@ -567,7 +567,7 @@ pub struct BvhFrameIter {
     max_frames: u32,
     malformed: bool,
 
-    pub fn init(data: []const u8, header: BvhHeader): BvhFrameIter {
+    pub static fn init(data: []const u8, header: BvhHeader): BvhFrameIter {
         return BvhFrameIter {
             data: data,
             pos: header.frames_offset,

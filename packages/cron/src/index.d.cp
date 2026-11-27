@@ -1,12 +1,11 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, trim } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 export fn bit64(idx: u32): u64;
 export fn bit32(idx: u32): u32;
 export fn bit16(idx: u32): u16;
 export fn bit8(idx: u32): u8;
-export fn isSpace(c: u8): bool;
-export fn trimSlice(s: &[]u8): &[]u8;
-export fn eqBytes(a: &[]u8, b: string): bool;
 export fn parseUint(s: &[]u8): i32;
 export class FieldResult {
     mask: u64,

@@ -1,7 +1,14 @@
 // @cap/bl — Zero-heap segmented BufferList in pure CP
 // Clean-room MIT implementation of npm `bl` (#450, 123M/wk).
 
+import { indexOfBytes, readU16BE, readU16LE, readU32BE, readU32LE } from "cap:bin";
+
 pub const BL_MAX_CHUNKS: usize = 64;
+
+fn blReadU16BE(src: []const u8): u16? { return readU16BE(src, 0); }
+fn blReadU16LE(src: []const u8): u16? { return readU16LE(src, 0); }
+fn blReadU32BE(src: []const u8): u32? { return readU32BE(src, 0); }
+fn blReadU32LE(src: []const u8): u32? { return readU32LE(src, 0); }
 
 pub struct BufferList {
     pub chunks: [64][]const u8,
@@ -116,42 +123,37 @@ pub struct BufferList {
 
     /// Reads an unsigned 16-bit big-endian integer at `offset`.
     pub fn readU16BE(offset: usize): u16? {
-        if (offset + 2 > _.total_len) { return null; }
-        const b0 = (_.get(offset) ?? 0) as u16;
-        const b1 = (_.get(offset + 1) ?? 0) as u16;
-        return (b0 << 8) | b1;
+        let tmp: [2]u8 = undefined;
+        if (_.copyRange(offset, offset + 2, tmp[0..2]) < 2) { return null; }
+        return blReadU16BE(tmp[0..2]);
     }
 
     /// Reads an unsigned 16-bit little-endian integer at `offset`.
     pub fn readU16LE(offset: usize): u16? {
-        if (offset + 2 > _.total_len) { return null; }
-        const b0 = (_.get(offset) ?? 0) as u16;
-        const b1 = (_.get(offset + 1) ?? 0) as u16;
-        return b0 | (b1 << 8);
+        let tmp: [2]u8 = undefined;
+        if (_.copyRange(offset, offset + 2, tmp[0..2]) < 2) { return null; }
+        return blReadU16LE(tmp[0..2]);
     }
 
     /// Reads an unsigned 32-bit big-endian integer at `offset`.
     pub fn readU32BE(offset: usize): u32? {
-        if (offset + 4 > _.total_len) { return null; }
-        const b0 = (_.get(offset) ?? 0) as u32;
-        const b1 = (_.get(offset + 1) ?? 0) as u32;
-        const b2 = (_.get(offset + 2) ?? 0) as u32;
-        const b3 = (_.get(offset + 3) ?? 0) as u32;
-        return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
+        let tmp: [4]u8 = undefined;
+        if (_.copyRange(offset, offset + 4, tmp[0..4]) < 4) { return null; }
+        return blReadU32BE(tmp[0..4]);
     }
 
     /// Reads an unsigned 32-bit little-endian integer at `offset`.
     pub fn readU32LE(offset: usize): u32? {
-        if (offset + 4 > _.total_len) { return null; }
-        const b0 = (_.get(offset) ?? 0) as u32;
-        const b1 = (_.get(offset + 1) ?? 0) as u32;
-        const b2 = (_.get(offset + 2) ?? 0) as u32;
-        const b3 = (_.get(offset + 3) ?? 0) as u32;
-        return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+        let tmp: [4]u8 = undefined;
+        if (_.copyRange(offset, offset + 4, tmp[0..4]) < 4) { return null; }
+        return blReadU32LE(tmp[0..4]);
     }
 
     /// Finds the first logical index >= `from_offset` where `needle` appears across chunk boundaries.
     pub fn indexOf(needle: []const u8, from_offset: usize): usize? {
+        if (_.chunk_count == 1) {
+            return indexOfBytes(_.chunks[0], needle, from_offset);
+        }
         if (needle.len == 0) {
             if (from_offset <= _.total_len) { return from_offset; }
             return null;
@@ -182,9 +184,8 @@ pub struct BufferList {
 
 /// Creates an empty `BufferList`.
 pub fn newBufferList(): BufferList {
-    const empty: []const u8 = "";
     return BufferList {
-        chunks: [empty; 64],
+        chunks: undefined,
         chunk_count: 0,
         total_len: 0,
     };

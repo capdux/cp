@@ -2,6 +2,7 @@
 // Comprehensive unit tests for @cap/phone
 
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
     PhoneNumber,
     parsePhoneNumber,
@@ -10,15 +11,6 @@ import {
     iso2FromCountryCode,
     supportedCountryCount,
 } from "../../packages/libphonenumber-js/src/index.cp";
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
 
 fn main() {
     test("1. @cap/phone — International parsing (CN/US/AU/GB/JP/SG/HK)", () => {

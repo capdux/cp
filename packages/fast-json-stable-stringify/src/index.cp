@@ -9,6 +9,10 @@
 // - `canonicalizeJson(input, out) -> JcsResult` & `areJsonEquivalent(a, b) -> bool`.
 // - Zero heap allocation with bounded recursion depth (max 16) and up to 64 keys per object.
 
+import { isDigit, hexVal, hexCharLower, startsWith } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 const MAX_DEPTH: u8 = 16;
 const MAX_OBJECT_KEYS: usize = 64;
 
@@ -52,29 +56,12 @@ fn isJsonSpace(c: u8) -> bool {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
 fn skipWs(s: string, start: usize) -> usize {
     let i = start;
     while (i < s.len && isJsonSpace(s[i])) {
         i += 1;
     }
     return i;
-}
-
-fn hexVal(c: u8) -> i8 {
-    if (c >= '0' && c <= '9') {
-        return (c - '0') as i8;
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (c - 'a' + 10) as i8;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return (c - 'A' + 10) as i8;
-    }
-    return -1;
 }
 
 fn parseHex4(s: string, pos: usize) -> i32 {
@@ -85,17 +72,10 @@ fn parseHex4(s: string, pos: usize) -> i32 {
     const h1 = hexVal(s[pos + 1]);
     const h2 = hexVal(s[pos + 2]);
     const h3 = hexVal(s[pos + 3]);
-    if (h0 < 0 || h1 < 0 || h2 < 0 || h3 < 0) {
+    if (h0 == null || h1 == null || h2 == null || h3 == null) {
         return -1;
     }
-    return ((h0 as i32) << 12) | ((h1 as i32) << 8) | ((h2 as i32) << 4) | (h3 as i32);
-}
-
-fn nibbleHexLower(n: u8) -> u8 {
-    if (n < 10) {
-        return (48 as u8) + n;
-    }
-    return (97 as u8) + (n - 10);
+    return ((h0.? as i32) << 12) | ((h1.? as i32) << 8) | ((h2.? as i32) << 4) | (h3.? as i32);
 }
 
 fn pushByteChecked(out: []u8, pos: usize, b: u8) -> usize? {
@@ -110,12 +90,7 @@ fn pushSliceChecked(out: []u8, pos: usize, s: string) -> usize? {
     if (pos + s.len > out.len) {
         return null;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return pos + s.len;
+    return writeStr(s, out, pos);
 }
 
 fn writeUtf8Checked(out: []u8, pos: usize, cp: u32) -> usize? {
@@ -179,8 +154,8 @@ fn emitEscapedCodepoint(out: []u8, pos: usize, cp: u32) -> usize? {
         out[pos + 1] = 'u';
         out[pos + 2] = '0';
         out[pos + 3] = '0';
-        out[pos + 4] = nibbleHexLower(((cp >> 4) & 0xF) as u8);
-        out[pos + 5] = nibbleHexLower((cp & 0xF) as u8);
+        out[pos + 4] = hexCharLower(((cp >> 4) & 0xF) as u8);
+        out[pos + 5] = hexCharLower((cp & 0xF) as u8);
         return pos + 6;
     }
     return writeUtf8Checked(out, pos, cp);
@@ -273,20 +248,6 @@ fn skipNumber(input: string, pos: usize) -> SkipRes {
     return SkipRes{ ok: true, next_in: i };
 }
 
-fn matchLiteral(input: string, pos: usize, lit: string) -> bool {
-    if (pos + lit.len > input.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < lit.len) {
-        if (input[pos + i] != lit[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// Validates and skips any JSON value starting at `pos`.
 fn skipValue(input: string, start: usize, depth: u8) -> SkipRes {
     if (depth > MAX_DEPTH) {
@@ -304,13 +265,13 @@ fn skipValue(input: string, start: usize, depth: u8) -> SkipRes {
     if (c == '-' || isDigit(c)) {
         return skipNumber(input, pos);
     }
-    if (c == 't' && matchLiteral(input, pos, "true")) {
+    if (c == 't' && startsWith(input[pos..input.len], "true")) {
         return SkipRes{ ok: true, next_in: pos + 4 };
     }
-    if (c == 'f' && matchLiteral(input, pos, "false")) {
+    if (c == 'f' && startsWith(input[pos..input.len], "false")) {
         return SkipRes{ ok: true, next_in: pos + 5 };
     }
-    if (c == 'n' && matchLiteral(input, pos, "null")) {
+    if (c == 'n' && startsWith(input[pos..input.len], "null")) {
         return SkipRes{ ok: true, next_in: pos + 4 };
     }
     if (c == '[') {
@@ -621,17 +582,17 @@ fn emitCanonicalValue(input: string, start: usize, out: []u8, out_pos: usize, de
     if (c == '-' || isDigit(c)) {
         return emitCanonicalNumber(input, pos, out, out_pos);
     }
-    if (c == 't' && matchLiteral(input, pos, "true")) {
+    if (c == 't' && startsWith(input[pos..input.len], "true")) {
         const np = pushSliceChecked(out, out_pos, "true");
         if (np == null) { return StepRes{ ok: false, next_in: pos, next_out: out_pos }; }
         return StepRes{ ok: true, next_in: pos + 4, next_out: np.? };
     }
-    if (c == 'f' && matchLiteral(input, pos, "false")) {
+    if (c == 'f' && startsWith(input[pos..input.len], "false")) {
         const np = pushSliceChecked(out, out_pos, "false");
         if (np == null) { return StepRes{ ok: false, next_in: pos, next_out: out_pos }; }
         return StepRes{ ok: true, next_in: pos + 5, next_out: np.? };
     }
-    if (c == 'n' && matchLiteral(input, pos, "null")) {
+    if (c == 'n' && startsWith(input[pos..input.len], "null")) {
         const np = pushSliceChecked(out, out_pos, "null");
         if (np == null) { return StepRes{ ok: false, next_in: pos, next_out: out_pos }; }
         return StepRes{ ok: true, next_in: pos + 4, next_out: np.? };
@@ -807,15 +768,5 @@ pub fn areJsonEquivalent(a: string, b: string) -> bool {
     if (!rb.ok) {
         return false;
     }
-    if (ra.len != rb.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < ra.len) {
-        if (buf_a[i] != buf_b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return bytesEq(buf_a[0..ra.len], buf_b[0..rb.len]);
 }

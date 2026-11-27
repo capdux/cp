@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, isAlpha, isAlnum, strEq } from "cap:ascii";
 export enum ExprError {
     None = 0,
     SyntaxError = 1,
@@ -70,8 +71,6 @@ export class Token {
     num: f64,
 }
 
-export fn isSpace(c: u8): bool;
-export fn isDigit(c: u8): bool;
 export fn isIdentStart(c: u8): bool;
 export fn isIdentCont(c: u8): bool;
 export fn isTruthy(v: f64): bool;

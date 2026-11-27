@@ -1,6 +1,9 @@
 // @cap/cron-next — Zero-allocation 5-field POSIX Cron bitmask parser & next UTC trigger calculator for CP
 // Clean-room MIT implementation inspired by npm `cron-parser` (25M+/wk) and Rust `cron`.
 
+import { isSpace, isDigit, trim } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 fn bit64(idx: u32) -> u64 {
     let v: u64 = 1;
     let i: u32 = 0;
@@ -23,36 +26,6 @@ fn bit8(idx: u32) -> u8 {
     return bit64(idx) as u8;
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimSlice(s: []const u8) -> []const u8 {
-    let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
-        start += 1;
-    }
-    let end: usize = s.len;
-    while (end > start && isSpace(s[end - (1 as usize)])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn eqBytes(a: []const u8, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn parseUint(s: []const u8) -> i32 {
     if (s.len == (0 as usize) || s.len > (4 as usize)) {
         return -1 as i32;
@@ -61,7 +34,7 @@ fn parseUint(s: []const u8) -> i32 {
     let i: usize = 0;
     while (i < s.len) {
         const c = s[i];
-        if (c < '0' || c > '9') {
+        if (!isDigit(c)) {
             return -1 as i32;
         }
         val = (val * (10 as u32)) + ((c - '0') as u32);
@@ -293,16 +266,16 @@ pub struct CronSchedule {
     pub valid: bool,
 
     pub static fn parse(expr_in: []const u8) -> CronSchedule {
-        let expr = trimSlice(expr_in);
-        if (eqBytes(expr, "@hourly")) {
+        let expr = trim(expr_in);
+        if (bytesEq(expr, "@hourly")) {
             expr = "0 * * * *";
-        } else if (eqBytes(expr, "@daily") || eqBytes(expr, "@midnight")) {
+        } else if (bytesEq(expr, "@daily") || bytesEq(expr, "@midnight")) {
             expr = "0 0 * * *";
-        } else if (eqBytes(expr, "@weekly")) {
+        } else if (bytesEq(expr, "@weekly")) {
             expr = "0 0 * * 0";
-        } else if (eqBytes(expr, "@monthly")) {
+        } else if (bytesEq(expr, "@monthly")) {
             expr = "0 0 1 * *";
-        } else if (eqBytes(expr, "@yearly") || eqBytes(expr, "@annually")) {
+        } else if (bytesEq(expr, "@yearly") || bytesEq(expr, "@annually")) {
             expr = "0 0 1 1 *";
         }
 

@@ -9,6 +9,9 @@
 // - Bilingual output (`Locale.En` / `Locale.Zh`) & 24h / 12h clock formatting
 // - 100% zero heap allocations: writes directly into caller-provided `out: []u8`
 
+import { isSpace, isDigit, eqIgnoreCase, trim } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 /// Output natural language locale.
 pub enum Locale: u8 {
     En = 0,
@@ -100,28 +103,6 @@ const DAYS_ABBR: [7]string = [
     "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT",
 ];
 
-fn toUpperAscii(c: u8): u8 {
-    if (c >= 'a' && c <= 'z') return c - 32;
-    return c;
-}
-
-fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
-fn eqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (toUpperAscii(a[i]) != toUpperAscii(b[i])) return false;
-    }
-    return true;
-}
-
 fn pushByte(out: []u8, pos: usize, b: u8): usize {
     if (pos < out.len) {
         out[pos] = b;
@@ -131,29 +112,11 @@ fn pushByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn pushStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
-    }
-    return p;
+    return writeStr(s, out, pos);
 }
 
 fn pushU8(out: []u8, pos: usize, val: u8): usize {
-    let p = pos;
-    if (val >= 100) {
-        p = pushByte(out, p, (48 as u8) + (val / 100));
-        p = pushByte(out, p, (48 as u8) + ((val / 10) % 10));
-        p = pushByte(out, p, (48 as u8) + (val % 10));
-        return p;
-    }
-    if (val >= 10) {
-        p = pushByte(out, p, (48 as u8) + (val / 10));
-        p = pushByte(out, p, (48 as u8) + (val % 10));
-        return p;
-    }
-    return pushByte(out, p, (48 as u8) + val);
+    return writeU64(val as u64, out, pos);
 }
 
 fn pushU8Pad2(out: []u8, pos: usize, val: u8): usize {
@@ -427,19 +390,8 @@ fn expandMacro(trimmed: string): string {
 
 fn parseCron(raw: string): ParsedCron {
     let invalid = ParsedCron{ valid: false };
-    if (raw.len == 0) return invalid;
-
-    let start: usize = 0;
-    let end: usize = raw.len;
-    while (start < end && isSpace(raw[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(raw[end - 1])) {
-        end -= 1;
-    }
-    if (start >= end) return invalid;
-
-    let expr = raw[start..end];
+    let expr = trim(raw);
+    if (expr.len == 0) return invalid;
     if (expr[0] == '@') {
         const expanded = expandMacro(expr);
         if (expanded.len == 0) return invalid;
@@ -447,8 +399,8 @@ fn parseCron(raw: string): ParsedCron {
     }
 
     // Split into exactly 5 whitespace-delimited tokens
-    let tok_starts: [5]usize = [0, 0, 0, 0, 0];
-    let tok_ends: [5]usize = [0, 0, 0, 0, 0];
+    let tok_starts: [5]usize = undefined;
+    let tok_ends: [5]usize = undefined;
     let tok_count: usize = 0;
     let i: usize = 0;
     while (i < expr.len) {

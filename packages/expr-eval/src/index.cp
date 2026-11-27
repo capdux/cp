@@ -2,6 +2,7 @@
 // Clean-room pure-CP implementation modeled after npm `expr-eval`/`filtrex`/`jexl`
 // and Rust `evalexpr`/`meval` (MIT License).
 
+import { isSpace, isDigit, isAlpha, isAlnum, strEq } from "cap:ascii";
 const std = @import("std");
 
 pub const MAX_VARS: usize = 64;
@@ -71,7 +72,7 @@ pub struct ExprEnv {
     pub fn set(*_, name: string, value: f64) {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name)) {
+            if (strEq(_.entries[i].name, name)) {
                 _.entries[i].value = value;
                 return;
             }
@@ -88,7 +89,7 @@ pub struct ExprEnv {
     pub fn get(name: string): f64? {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name)) {
+            if (strEq(_.entries[i].name, name)) {
                 return _.entries[i].value;
             }
         }
@@ -99,7 +100,7 @@ pub struct ExprEnv {
     pub fn has(name: string): bool {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name)) {
+            if (strEq(_.entries[i].name, name)) {
                 return true;
             }
         }
@@ -151,20 +152,12 @@ struct Token {
     num: f64 = 0.0,
 }
 
-fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return isAlpha(c) || c == '_';
 }
 
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || isDigit(c);
+    return isAlnum(c) || c == '_';
 }
 
 fn isTruthy(v: f64): bool {
@@ -600,10 +593,10 @@ struct Parser {
                 }
 
                 // Built-in literals & mathematical constants
-                if (std.mem.eql(u8, name, "true")) return 1.0;
-                if (std.mem.eql(u8, name, "false")) return 0.0;
-                if (std.mem.eql(u8, name, "PI")) return MATH_PI;
-                if (std.mem.eql(u8, name, "E")) return MATH_E;
+                if (strEq(name, "true")) return 1.0;
+                if (strEq(name, "false")) return 0.0;
+                if (strEq(name, "PI")) return MATH_PI;
+                if (strEq(name, "E")) return MATH_E;
 
                 // Variable lookup
                 if (!active) return 0.0;
@@ -664,63 +657,63 @@ struct Parser {
     }
 
     fn evalBuiltin(*_, name: string, pos: usize, args: []const f64): f64 {
-        if (std.mem.eql(u8, name, "abs")) {
+        if (strEq(name, "abs")) {
             if (args.len != 1) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return @abs(args[0]);
         }
-        if (std.mem.eql(u8, name, "min")) {
+        if (strEq(name, "min")) {
             if (args.len != 2) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return if (args[0] < args[1]) args[0] else args[1];
         }
-        if (std.mem.eql(u8, name, "max")) {
+        if (strEq(name, "max")) {
             if (args.len != 2) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return if (args[0] > args[1]) args[0] else args[1];
         }
-        if (std.mem.eql(u8, name, "floor")) {
+        if (strEq(name, "floor")) {
             if (args.len != 1) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return @floor(args[0]);
         }
-        if (std.mem.eql(u8, name, "ceil")) {
+        if (strEq(name, "ceil")) {
             if (args.len != 1) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return @ceil(args[0]);
         }
-        if (std.mem.eql(u8, name, "round")) {
+        if (strEq(name, "round")) {
             if (args.len != 1) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return @round(args[0]);
         }
-        if (std.mem.eql(u8, name, "sqrt")) {
+        if (strEq(name, "sqrt")) {
             if (args.len != 1 || args[0] < 0.0) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return @sqrt(args[0]);
         }
-        if (std.mem.eql(u8, name, "pow")) {
+        if (strEq(name, "pow")) {
             if (args.len != 2) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return std.math.pow(f64, args[0], args[1]);
         }
-        if (std.mem.eql(u8, name, "clamp")) {
+        if (strEq(name, "clamp")) {
             if (args.len != 3 || args[1] > args[2]) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
@@ -729,7 +722,7 @@ struct Parser {
             if (args[0] > args[2]) return args[2];
             return args[0];
         }
-        if (std.mem.eql(u8, name, "sign")) {
+        if (strEq(name, "sign")) {
             if (args.len != 1) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
@@ -738,14 +731,14 @@ struct Parser {
             if (args[0] < 0.0) return -1.0;
             return 0.0;
         }
-        if (std.mem.eql(u8, name, "avg")) {
+        if (strEq(name, "avg")) {
             if (args.len != 2) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;
             }
             return (args[0] + args[1]) * 0.5;
         }
-        if (std.mem.eql(u8, name, "if")) {
+        if (strEq(name, "if")) {
             if (args.len != 3) {
                 _.setError(ExprError.InvalidArgs, pos);
                 return 0.0;

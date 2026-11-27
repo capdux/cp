@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isDigit, hexVal, hexCharLower, startsWith } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export class JcsResult {
     ok: bool,
     len: usize,
@@ -34,18 +37,14 @@ export class KeyStep {
 }
 
 export fn isJsonSpace(c: u8): bool;
-export fn isDigit(c: u8): bool;
 export fn skipWs(s: string, start: usize): usize;
-export fn hexVal(c: u8): i8;
 export fn parseHex4(s: string, pos: usize): i32;
-export fn nibbleHexLower(n: u8): u8;
 export fn pushByteChecked(out: []u8, pos: usize, b: u8): usize?;
 export fn pushSliceChecked(out: []u8, pos: usize, s: string): usize?;
 export fn writeUtf8Checked(out: []u8, pos: usize, cp: u32): usize?;
 export fn emitEscapedCodepoint(out: []u8, pos: usize, cp: u32): usize?;
 export fn skipString(input: string, pos: usize): SkipRes;
 export fn skipNumber(input: string, pos: usize): SkipRes;
-export fn matchLiteral(input: string, pos: usize, lit: string): bool;
 export fn skipValue(input: string, start: usize, depth: u8): SkipRes;
 export fn nextKeyUtf16Unit(input: string, pos: usize, end: usize, pending_low: u16): KeyStep;
 export fn compareJsonKeys(input: string, s1: usize, e1: usize, s2: usize, e2: usize): i8;
