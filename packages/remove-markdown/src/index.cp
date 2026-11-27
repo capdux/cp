@@ -9,9 +9,27 @@
 // - Strips fenced code block delimiters (``` / ~~~) with optional `keep_code_block_text`.
 // - Strips blockquotes (> ), unordered/ordered lists (- / * / + / 1. / 2)), task lists (- [x] ), and HTML tags.
 // - Provides `stripMarkdown`, `stripMarkdownWith`, `stripToSingleLine`, and UTF-8 safe `excerpt`.
-// - Zero heap allocation: writes directly into caller-provided `out: []u8`.
+// - Accelerated with 16-lane `@Vector(16, u8)` plain-text & delimiter scanning, comptime 256-entry LUTs,
+//   and bulk `@memcpy`.
 
 import { isSpace, isAlpha, isAlnum, isDigit, trim, findByte } from "cap:ascii";
+
+type MdVec16 = @Vector(16, u8);
+
+fn buildAsciiPunctLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126)) {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const MD_PUNCT_LUT: [256]u8 = buildAsciiPunctLut();
 
 pub struct StripOptions {
     pub keep_img_alt: bool,
@@ -30,7 +48,7 @@ pub struct StripOptions {
 }
 
 fn isAsciiPunct(c: u8) -> bool {
-    return (c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126);
+    return MD_PUNCT_LUT[c as usize] != 0;
 }
 
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
@@ -49,6 +67,16 @@ fn pushTextByte(out: []u8, pos: usize, b: u8, collapse_ws: bool) -> usize {
         return pushByte(out, pos, ' ');
     }
     return pushByte(out, pos, b);
+}
+
+fn pushRawSlice(out: []u8, pos: usize, src: string) -> usize {
+    if (pos >= out.len || src.len == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (src.len < avail) { src.len } else { avail };
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
 }
 
 fn isRuleLine(trimmed: string) -> bool {
@@ -215,7 +243,22 @@ fn stripBlockPrefixes(raw_line: string) -> string {
 fn findMatchingBracket(s: string, open_idx: usize) -> usize {
     let depth: usize = 0;
     let i = open_idx;
+    const v_bs: MdVec16 = @splat('\\' as u8);
+    const v_lb: MdVec16 = @splat('[' as u8);
+    const v_rb: MdVec16 = @splat(']' as u8);
     while (i < s.len) {
+        if (depth > 0) {
+            while (i + 16 <= s.len) {
+                const v: MdVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == v_bs) | (v == v_lb) | (v == v_rb))) {
+                    break;
+                }
+                i += 16;
+            }
+            if (i >= s.len) {
+                break;
+            }
+        }
         if (s[i] == '\\' && i + 1 < s.len) {
             i += 2;
             continue;
@@ -236,7 +279,22 @@ fn findMatchingBracket(s: string, open_idx: usize) -> usize {
 fn findMatchingParen(s: string, open_idx: usize) -> usize {
     let depth: usize = 0;
     let i = open_idx;
+    const v_bs: MdVec16 = @splat('\\' as u8);
+    const v_lp: MdVec16 = @splat('(' as u8);
+    const v_rp: MdVec16 = @splat(')' as u8);
     while (i < s.len) {
+        if (depth > 0) {
+            while (i + 16 <= s.len) {
+                const v: MdVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == v_bs) | (v == v_lp) | (v == v_rp))) {
+                    break;
+                }
+                i += 16;
+            }
+            if (i >= s.len) {
+                break;
+            }
+        }
         if (s[i] == '\\' && i + 1 < s.len) {
             i += 2;
             continue;
@@ -258,7 +316,41 @@ fn stripInline(s: string, opts: StripOptions, out: []u8, start_pos: usize, depth
     let pos = start_pos;
     let i: usize = 0;
 
+    const v_bs: MdVec16 = @splat('\\' as u8);
+    const v_bt: MdVec16 = @splat('`' as u8);
+    const v_bang: MdVec16 = @splat('!' as u8);
+    const v_lb: MdVec16 = @splat('[' as u8);
+    const v_lt: MdVec16 = @splat('<' as u8);
+    const v_star: MdVec16 = @splat('*' as u8);
+    const v_us: MdVec16 = @splat('_' as u8);
+    const v_tilde: MdVec16 = @splat('~' as u8);
+    const v_sp: MdVec16 = @splat(0x20 as u8);
+
     while (i < s.len) {
+        // 16-lane SIMD fast path: bulk-copy runs of plain text containing no Markdown metacharacters
+        const run_start = i;
+        while (i + 16 <= s.len) {
+            const v: MdVec16 = s[i .. i + 16][0..16].*;
+            const has_meta = (v == v_bs) | (v == v_bt) | (v == v_bang) | (v == v_lb)
+                | (v == v_lt) | (v == v_star) | (v == v_us) | (v == v_tilde);
+            if (opts.collapse_whitespace) {
+                if (@reduce(.Or, has_meta | (v <= v_sp))) {
+                    break;
+                }
+            } else {
+                if (@reduce(.Or, has_meta)) {
+                    break;
+                }
+            }
+            i += 16;
+        }
+        if (i > run_start) {
+            pos = pushRawSlice(out, pos, s[run_start..i]);
+            if (i >= s.len) {
+                break;
+            }
+        }
+
         const c = s[i];
 
         // Backslash escape for ASCII punctuation
@@ -290,10 +382,14 @@ fn stripInline(s: string, opts: StripOptions, out: []u8, start_pos: usize, depth
                 j += 1;
             }
             if (found) {
-                let k = i + ticks;
-                while (k < j) {
-                    pos = pushTextByte(out, pos, s[k], opts.collapse_whitespace);
-                    k += 1;
+                if (!opts.collapse_whitespace) {
+                    pos = pushRawSlice(out, pos, s[(i + ticks)..j]);
+                } else {
+                    let k = i + ticks;
+                    while (k < j) {
+                        pos = pushTextByte(out, pos, s[k], true);
+                        k += 1;
+                    }
                 }
                 i = j + ticks;
                 continue;
@@ -454,10 +550,14 @@ pub fn stripMarkdownWith(md: string, opts: StripOptions, out: []u8) -> string {
                 }
                 pending_blank = false;
             }
-            let k: usize = 0;
-            while (k < line.len) {
-                pos = pushTextByte(out, pos, line[k], opts.collapse_whitespace);
-                k += 1;
+            if (!opts.collapse_whitespace) {
+                pos = pushRawSlice(out, pos, line);
+            } else {
+                let k: usize = 0;
+                while (k < line.len) {
+                    pos = pushTextByte(out, pos, line[k], true);
+                    k += 1;
+                }
             }
             has_emitted_line = true;
             continue;

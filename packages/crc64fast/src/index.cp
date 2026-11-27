@@ -6,15 +6,18 @@
 // - CRC-64/XZ (`crc64Xz`, `initXz`):     0x995DC9BBDF1939FA
 // - CRC-64/GO-ISO (`crc64Iso`, `initIso`): 0xB90956C775A41001
 //
-// Uses comptime Slice-by-4 (4x256 LUT) for 4-byte/iter streaming with zero heap allocation.
+// Uses comptime Slice-by-8 (8x256 LUT) + 4-lane `@Vector(4, u64)` SIMD XOR reduction
+// for 8-byte/iter streaming with zero heap allocation.
+
+type CrcVec4u64 = @Vector(4, u64);
 
 fn makeU64(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) << 32) | (lo as u64);
 }
 
-fn buildSlice4Table(poly: u64, reflected: bool) -> [4][256]u64 {
-    @setEvalBranchQuota(40000);
-    let tbl: [4][256]u64 = undefined;
+fn buildSlice8Table(poly: u64, reflected: bool) -> [8][256]u64 {
+    @setEvalBranchQuota(80000);
+    let tbl: [8][256]u64 = undefined;
     const msb: u64 = (1 as u64) << 63;
 
     let i: usize = 0;
@@ -48,7 +51,7 @@ fn buildSlice4Table(poly: u64, reflected: bool) -> [4][256]u64 {
     }
 
     let t: usize = 1;
-    while (t < 4) {
+    while (t < 8) {
         let j: usize = 0;
         while (j < 256) {
             const prev = tbl[t - 1][j];
@@ -64,13 +67,41 @@ fn buildSlice4Table(poly: u64, reflected: bool) -> [4][256]u64 {
     return tbl;
 }
 
-const CRC64_ECMA_LUT: [4][256]u64 = buildSlice4Table(makeU64(0x42F0E1EB as u32, 0xA9EA3693 as u32), false);
-const CRC64_XZ_LUT: [4][256]u64 = buildSlice4Table(makeU64(0xC96C5795 as u32, 0xD7870F42 as u32), true);
-const CRC64_ISO_LUT: [4][256]u64 = buildSlice4Table(makeU64(0xD8000000 as u32, 0x00000000 as u32), true);
+const CRC64_ECMA_LUT: [8][256]u64 = buildSlice8Table(makeU64(0x42F0E1EB as u32, 0xA9EA3693 as u32), false);
+const CRC64_XZ_LUT: [8][256]u64 = buildSlice8Table(makeU64(0xC96C5795 as u32, 0xD7870F42 as u32), true);
+const CRC64_ISO_LUT: [8][256]u64 = buildSlice8Table(makeU64(0xD8000000 as u32, 0x00000000 as u32), true);
 
-fn updateReflectedSlice4(crc_in: u64, data: []const u8, tbl: [4][256]u64) -> u64 {
+fn updateReflectedSlice8(crc_in: u64, data: []const u8, tbl: [8][256]u64) -> u64 {
     let c = crc_in;
     let i: usize = 0;
+    while (i + 8 <= data.len) {
+        const w0: u32 = (data[i] as u32)
+            | ((data[i + 1] as u32) << 8)
+            | ((data[i + 2] as u32) << 16)
+            | ((data[i + 3] as u32) << 24);
+        const w1: u32 = (data[i + 4] as u32)
+            | ((data[i + 5] as u32) << 8)
+            | ((data[i + 6] as u32) << 16)
+            | ((data[i + 7] as u32) << 24);
+        const lo: u32 = ((c & (0xFFFFFFFF as u64)) as u32) ^ w0;
+        const hi: u32 = ((c >> 32) as u32) ^ w1;
+
+        const v0: CrcVec4u64 = [
+            tbl[7][(lo & 0xFF) as usize],
+            tbl[6][((lo >> 8) & 0xFF) as usize],
+            tbl[5][((lo >> 16) & 0xFF) as usize],
+            tbl[4][((lo >> 24) & 0xFF) as usize],
+        ];
+        const v1: CrcVec4u64 = [
+            tbl[3][(hi & 0xFF) as usize],
+            tbl[2][((hi >> 8) & 0xFF) as usize],
+            tbl[1][((hi >> 16) & 0xFF) as usize],
+            tbl[0][((hi >> 24) & 0xFF) as usize],
+        ];
+        const acc: [4]u64 = v0 ^ v1;
+        c = acc[0] ^ acc[1] ^ acc[2] ^ acc[3];
+        i += 8;
+    }
     while (i + 4 <= data.len) {
         const w: u32 = (data[i] as u32)
             | ((data[i + 1] as u32) << 8)
@@ -92,9 +123,37 @@ fn updateReflectedSlice4(crc_in: u64, data: []const u8, tbl: [4][256]u64) -> u64
     return c;
 }
 
-fn updateNormalSlice4(crc_in: u64, data: []const u8, tbl: [4][256]u64) -> u64 {
+fn updateNormalSlice8(crc_in: u64, data: []const u8, tbl: [8][256]u64) -> u64 {
     let c = crc_in;
     let i: usize = 0;
+    while (i + 8 <= data.len) {
+        const w0: u32 = ((data[i] as u32) << 24)
+            | ((data[i + 1] as u32) << 16)
+            | ((data[i + 2] as u32) << 8)
+            | (data[i + 3] as u32);
+        const w1: u32 = ((data[i + 4] as u32) << 24)
+            | ((data[i + 5] as u32) << 16)
+            | ((data[i + 6] as u32) << 8)
+            | (data[i + 7] as u32);
+        const hi: u32 = ((c >> 32) as u32) ^ w0;
+        const lo: u32 = ((c & (0xFFFFFFFF as u64)) as u32) ^ w1;
+
+        const v0: CrcVec4u64 = [
+            tbl[7][((hi >> 24) & 0xFF) as usize],
+            tbl[6][((hi >> 16) & 0xFF) as usize],
+            tbl[5][((hi >> 8) & 0xFF) as usize],
+            tbl[4][(hi & 0xFF) as usize],
+        ];
+        const v1: CrcVec4u64 = [
+            tbl[3][((lo >> 24) & 0xFF) as usize],
+            tbl[2][((lo >> 16) & 0xFF) as usize],
+            tbl[1][((lo >> 8) & 0xFF) as usize],
+            tbl[0][(lo & 0xFF) as usize],
+        ];
+        const acc: [4]u64 = v0 ^ v1;
+        c = acc[0] ^ acc[1] ^ acc[2] ^ acc[3];
+        i += 8;
+    }
     while (i + 4 <= data.len) {
         const w: u32 = ((data[i] as u32) << 24)
             | ((data[i + 1] as u32) << 16)
@@ -116,7 +175,7 @@ fn updateNormalSlice4(crc_in: u64, data: []const u8, tbl: [4][256]u64) -> u64 {
     return c;
 }
 
-/// Streaming 64-bit CRC hasher backed by comptime Slice-by-4 lookup tables (zero heap allocation).
+/// Streaming 64-bit CRC hasher backed by comptime Slice-by-8 lookup tables (zero heap allocation).
 pub struct Crc64Hasher {
     pub table: [256]u64,
     pub crc: u64,
@@ -210,15 +269,15 @@ pub struct Crc64Hasher {
     /// Feeds a chunk of bytes into the running CRC-64 state.
     pub fn update(*_, data: []const u8) {
         if (_.preset == 1) {
-            _.crc = updateNormalSlice4(_.crc, data, CRC64_ECMA_LUT);
+            _.crc = updateNormalSlice8(_.crc, data, CRC64_ECMA_LUT);
             return;
         }
         if (_.preset == 2) {
-            _.crc = updateReflectedSlice4(_.crc, data, CRC64_XZ_LUT);
+            _.crc = updateReflectedSlice8(_.crc, data, CRC64_XZ_LUT);
             return;
         }
         if (_.preset == 3) {
-            _.crc = updateReflectedSlice4(_.crc, data, CRC64_ISO_LUT);
+            _.crc = updateReflectedSlice8(_.crc, data, CRC64_ISO_LUT);
             return;
         }
         let c = _.crc;
@@ -252,17 +311,17 @@ pub struct Crc64Hasher {
 
 /// One-shot CRC-64/ECMA-182 checksum.
 pub fn crc64Ecma(data: []const u8) -> u64 {
-    return updateNormalSlice4(0 as u64, data, CRC64_ECMA_LUT);
+    return updateNormalSlice8(0 as u64, data, CRC64_ECMA_LUT);
 }
 
 /// One-shot CRC-64/XZ checksum.
 pub fn crc64Xz(data: []const u8) -> u64 {
     const all_ones = makeU64(0xFFFFFFFF as u32, 0xFFFFFFFF as u32);
-    return updateReflectedSlice4(all_ones, data, CRC64_XZ_LUT) ^ all_ones;
+    return updateReflectedSlice8(all_ones, data, CRC64_XZ_LUT) ^ all_ones;
 }
 
 /// One-shot CRC-64/GO-ISO checksum.
 pub fn crc64Iso(data: []const u8) -> u64 {
     const all_ones = makeU64(0xFFFFFFFF as u32, 0xFFFFFFFF as u32);
-    return updateReflectedSlice4(all_ones, data, CRC64_ISO_LUT) ^ all_ones;
+    return updateReflectedSlice8(all_ones, data, CRC64_ISO_LUT) ^ all_ones;
 }

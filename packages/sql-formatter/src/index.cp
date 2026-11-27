@@ -7,10 +7,60 @@
 //   and block comments (/* ... */).
 // - Automatic SQL keyword uppercasing & multi-word clause recognition.
 // - Clause-aware line breaks, indentation, parenthesis depth tracking, and multi-statement separation.
-// - Zero heap allocation: writes directly into caller-provided `out: []u8`.
+// - Accelerated with 16-lane `@Vector(16, u8)` lexer scanning & keyword uppercasing,
+//   comptime 256-entry character-class / uppercase LUTs, and bulk `@memcpy` / `@memset`.
 
-import { isSpace, isDigit, isAlpha, toUpperByte, eqIgnoreCase } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { eqIgnoreCase } from "cap:ascii";
+
+type SqlVec16 = @Vector(16, u8);
+type SqlBool16 = @Vector(16, bool);
+
+const SQL_CLS_WS: u8 = 1;
+const SQL_CLS_IDENT_START: u8 = 2;
+const SQL_CLS_WORD_CONT: u8 = 4;
+const SQL_CLS_DIGIT: u8 = 8;
+
+fn buildSqlCharLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 11 || c == 12) {
+            f |= SQL_CLS_WS;
+        }
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+            f |= SQL_CLS_IDENT_START | SQL_CLS_WORD_CONT;
+        }
+        if (c >= '0' && c <= '9') {
+            f |= SQL_CLS_DIGIT | SQL_CLS_WORD_CONT;
+        }
+        if (c == '$') {
+            f |= SQL_CLS_WORD_CONT;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+fn buildSqlUpperLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 'a' && c <= 'z') {
+            lut[c] = (c - 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const SQL_CHAR_LUT: [256]u8 = buildSqlCharLut();
+const SQL_UPPER_LUT: [256]u8 = buildSqlUpperLut();
 
 const TOK_EOF: u8 = 0;
 const TOK_WORD: u8 = 1;
@@ -46,21 +96,25 @@ pub struct SqlFormatOptions {
     }
 }
 
-fn isSqlIdentStart(c: u8) -> bool {
-    return isAlpha(c) || c == '_';
-}
-
-fn isWordCont(c: u8) -> bool {
-    return isSqlIdentStart(c) || isDigit(c) || c == '$';
-}
-
 fn sqlEqIgnoreCase(sql: string, start: usize, end: usize, upper: string) -> bool {
     return eqIgnoreCase(sql[start..end], upper);
 }
 
 fn nextToken(sql: string, start_pos: usize) -> Token {
     let i = start_pos;
-    while (i < sql.len && isSpace(sql[i])) {
+    // 16-lane SIMD whitespace skip
+    const v_sp: SqlVec16 = @splat(' ' as u8);
+    const v_tab: SqlVec16 = @splat('\t' as u8);
+    const v_nl: SqlVec16 = @splat('\n' as u8);
+    const v_cr: SqlVec16 = @splat('\r' as u8);
+    while (i + 16 <= sql.len) {
+        const v: SqlVec16 = sql[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v == v_sp) | (v == v_tab) | (v == v_nl) | (v == v_cr))) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < sql.len && (SQL_CHAR_LUT[sql[i] as usize] & SQL_CLS_WS) != 0) {
         i += 1;
     }
     if (i >= sql.len) {
@@ -73,6 +127,13 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
     if (c == '-' && i + 1 < sql.len && sql[i + 1] == '-') {
         const s = i;
         i += 2;
+        while (i + 16 <= sql.len) {
+            const v: SqlVec16 = sql[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == v_nl) | (v == v_cr))) {
+                break;
+            }
+            i += 16;
+        }
         while (i < sql.len && sql[i] != '\n' && sql[i] != '\r') {
             i += 1;
         }
@@ -82,8 +143,16 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
     // Block comment: /* ... */
     if (c == '/' && i + 1 < sql.len && sql[i + 1] == '*') {
         const s = i;
+        const v_star: SqlVec16 = @splat('*' as u8);
         i += 2;
         while (i + 1 < sql.len) {
+            while (i + 17 <= sql.len) {
+                const v: SqlVec16 = sql[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == v_star)) {
+                    break;
+                }
+                i += 16;
+            }
             if (sql[i] == '*' && sql[i + 1] == '/') {
                 i += 2;
                 return Token{ kind: TOK_BLOCK_COMMENT, start: s, end: i };
@@ -96,8 +165,20 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
     // Single-quoted string literal: '...' (with '' or \' escape)
     if (c == '\'') {
         const s = i;
+        const v_sq: SqlVec16 = @splat('\'' as u8);
+        const v_bs: SqlVec16 = @splat('\\' as u8);
         i += 1;
         while (i < sql.len) {
+            while (i + 16 <= sql.len) {
+                const v: SqlVec16 = sql[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == v_sq) | (v == v_bs))) {
+                    break;
+                }
+                i += 16;
+            }
+            if (i >= sql.len) {
+                break;
+            }
             if (sql[i] == '\'') {
                 if (i + 1 < sql.len && sql[i + 1] == '\'') {
                     i += 2;
@@ -118,9 +199,20 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
     // Double-quoted or backtick identifier: "..." / `...`
     if (c == '"' || c == '`') {
         const quote = c;
+        const v_q: SqlVec16 = @splat(quote);
         const s = i;
         i += 1;
         while (i < sql.len) {
+            while (i + 16 <= sql.len) {
+                const v: SqlVec16 = sql[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == v_q)) {
+                    break;
+                }
+                i += 16;
+            }
+            if (i >= sql.len) {
+                break;
+            }
             if (sql[i] == quote) {
                 if (i + 1 < sql.len && sql[i + 1] == quote) {
                     i += 2;
@@ -134,21 +226,23 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
         return Token{ kind: TOK_QUOTED_IDENT, start: s, end: i };
     }
 
+    const cls = SQL_CHAR_LUT[c as usize];
+
     // Word (keyword or identifier)
-    if (isSqlIdentStart(c)) {
+    if ((cls & SQL_CLS_IDENT_START) != 0) {
         const s = i;
         i += 1;
-        while (i < sql.len && isWordCont(sql[i])) {
+        while (i < sql.len && (SQL_CHAR_LUT[sql[i] as usize] & SQL_CLS_WORD_CONT) != 0) {
             i += 1;
         }
         return Token{ kind: TOK_WORD, start: s, end: i };
     }
 
     // Number literal
-    if (isDigit(c)) {
+    if ((cls & SQL_CLS_DIGIT) != 0) {
         const s = i;
         i += 1;
-        while (i < sql.len && (isDigit(sql[i]) || sql[i] == '.')) {
+        while (i < sql.len && ((SQL_CHAR_LUT[sql[i] as usize] & SQL_CLS_DIGIT) != 0 || sql[i] == '.')) {
             i += 1;
         }
         return Token{ kind: TOK_NUMBER, start: s, end: i };
@@ -193,6 +287,10 @@ fn nextToken(sql: string, start_pos: usize) -> Token {
 }
 
 fn isSqlFunctionKeyword(sql: string, s: usize, e: usize) -> bool {
+    const n = e - s;
+    if (n < 3 || n > 8) {
+        return false;
+    }
     return sqlEqIgnoreCase(sql, s, e, "COUNT") ||
         sqlEqIgnoreCase(sql, s, e, "SUM") ||
         sqlEqIgnoreCase(sql, s, e, "AVG") ||
@@ -208,6 +306,10 @@ fn isSqlFunctionKeyword(sql: string, s: usize, e: usize) -> bool {
 }
 
 fn isSqlKeyword(sql: string, s: usize, e: usize) -> bool {
+    const n = e - s;
+    if (n < 2 || n > 10) {
+        return false;
+    }
     if (isSqlFunctionKeyword(sql, s, e)) {
         return true;
     }
@@ -286,29 +388,46 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
 }
 
 fn pushSlice(out: []u8, pos: usize, src: string, start: usize, end: usize, upper: bool) -> usize {
+    if (pos >= out.len || start >= end) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const raw_len = end - start;
+    const n = if (raw_len < avail) { raw_len } else { avail };
     if (!upper) {
-        return writeStr(src[start..end], out, pos);
+        @memcpy(out[pos .. pos + n], src[start .. start + n]);
+        return pos + n;
     }
-    let p = pos;
-    let i = start;
-    while (i < end && p < out.len) {
-        out[p] = toUpperByte(src[i]);
-        p += 1;
-        i += 1;
+    let k: usize = 0;
+    const v_a: SqlVec16 = @splat('a' as u8);
+    const v_z: SqlVec16 = @splat('z' as u8);
+    const v_mask: SqlVec16 = @splat(0xDF as u8);
+    const v_false: SqlBool16 = @splat(false);
+    while (k + 16 <= n) {
+        const v: SqlVec16 = src[start + k .. start + k + 16][0..16].*;
+        const in_range = @select(bool, v >= v_a, v <= v_z, v_false);
+        const up: [16]u8 = @select(u8, in_range, v & v_mask, v);
+        @memcpy(out[pos + k .. pos + k + 16], up[0..16]);
+        k += 16;
     }
-    return p;
+    while (k < n) {
+        out[pos + k] = SQL_UPPER_LUT[src[start + k] as usize];
+        k += 1;
+    }
+    return pos + n;
 }
 
 fn pushIndent(out: []u8, pos: usize, level: usize, indent_width: u8) -> usize {
-    const spaces = level * (indent_width as usize);
-    let p = pos;
-    let i: usize = 0;
-    while (i < spaces && p < out.len) {
-        out[p] = ' ';
-        p += 1;
-        i += 1;
+    if (pos >= out.len) {
+        return pos;
     }
-    return p;
+    const spaces = level * (indent_width as usize);
+    const avail = out.len - pos;
+    const n = if (spaces < avail) { spaces } else { avail };
+    if (n > 0) {
+        @memset(out[pos .. pos + n], ' ' as u8);
+    }
+    return pos + n;
 }
 
 fn pushNewlineIndent(out: []u8, pos: usize, level: usize, indent_width: u8) -> usize {
@@ -318,6 +437,10 @@ fn pushNewlineIndent(out: []u8, pos: usize, level: usize, indent_width: u8) -> u
 }
 
 fn isJoinLeadWord(sql: string, s: usize, e: usize) -> bool {
+    const n = e - s;
+    if (n < 4 || n > 5) {
+        return false;
+    }
     return sqlEqIgnoreCase(sql, s, e, "INNER") ||
         sqlEqIgnoreCase(sql, s, e, "LEFT") ||
         sqlEqIgnoreCase(sql, s, e, "RIGHT") ||
@@ -326,6 +449,10 @@ fn isJoinLeadWord(sql: string, s: usize, e: usize) -> bool {
 }
 
 fn isTopClauseWord(sql: string, s: usize, e: usize) -> bool {
+    const n = e - s;
+    if (n < 3 || n > 9) {
+        return false;
+    }
     return sqlEqIgnoreCase(sql, s, e, "FROM") ||
         sqlEqIgnoreCase(sql, s, e, "WHERE") ||
         sqlEqIgnoreCase(sql, s, e, "JOIN") ||

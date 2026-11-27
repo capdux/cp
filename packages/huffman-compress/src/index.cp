@@ -8,11 +8,35 @@
 // - `fromCodeLengths(lengths)`: reconstructs the exact same canonical codes purely from bit lengths.
 // - MSB-first bitstream `encode` / `decode` with 4-byte big-endian original length header for exact
 //   end-of-stream truncation and strict malformed/truncated bitstream detection (returns `-1`).
-// - Zero heap allocation.
+// - Accelerated with 16-lane `@Vector(16, u8)` / 8-lane `@Vector(8, u16)` zeroing & sparse-block skip,
+//   64-bit bit-buffer accumulation, and O(1) 8-bit fast-path decode LUT.
+
+type HufVec16u8 = @Vector(16, u8);
+type HufVec8u16 = @Vector(8, u16);
 
 pub const MAX_SYMBOLS: usize = 256;
 pub const MAX_CODE_BITS: u8 = 16;
 const MAX_TREE_NODES: usize = 512;
+
+fn zeroU8x256(buf: []u8) {
+    const zv: HufVec16u8 = @splat(0 as u8);
+    const z: [16]u8 = zv;
+    let i: usize = 0;
+    while (i < 256) {
+        @memcpy(buf[i .. i + 16], z[0..16]);
+        i += 16;
+    }
+}
+
+fn zeroU16x256(buf: []u16) {
+    const zv: HufVec8u16 = @splat(0 as u16);
+    const z: [8]u16 = zv;
+    let i: usize = 0;
+    while (i < 256) {
+        @memcpy(buf[i .. i + 8], z[0..8]);
+        i += 8;
+    }
+}
 
 /// RFC 1951 Canonical Huffman encoder & decoder for 256 byte symbols (zero heap allocation).
 pub struct HuffmanCodec {
@@ -23,12 +47,8 @@ pub struct HuffmanCodec {
     pub static fn empty() -> HuffmanCodec {
         let lens: [MAX_SYMBOLS]u8 = undefined;
         let cds: [MAX_SYMBOLS]u16 = undefined;
-        let i: usize = 0;
-        while (i < MAX_SYMBOLS) {
-            lens[i] = 0;
-            cds[i] = 0;
-            i += 1;
-        }
+        zeroU8x256(lens[0..MAX_SYMBOLS]);
+        zeroU16x256(cds[0..MAX_SYMBOLS]);
         return HuffmanCodec{
             code_len: lens,
             codes: cds,
@@ -55,6 +75,22 @@ pub struct HuffmanCodec {
         }
 
         let s: usize = 0;
+        while (s + 16 <= limit) {
+            const v: HufVec16u8 = lengths[s .. s + 16][0..16].*;
+            if (@reduce(.Or, v) != (0 as u8)) {
+                let k: usize = 0;
+                while (k < 16) {
+                    const l = lengths[s + k];
+                    if (l > 0 && l <= MAX_CODE_BITS) {
+                        codec.code_len[s + k] = l;
+                        bl_count[l as usize] += 1;
+                        codec.symbol_count += 1;
+                    }
+                    k += 1;
+                }
+            }
+            s += 16;
+        }
         while (s < limit) {
             const l = lengths[s];
             if (l > 0 && l <= MAX_CODE_BITS) {
@@ -75,12 +111,19 @@ pub struct HuffmanCodec {
 
         s = 0;
         while (s < MAX_SYMBOLS) {
-            const l = codec.code_len[s];
-            if (l > 0) {
-                codec.codes[s] = (next_code[l as usize] & 0xFFFF) as u16;
-                next_code[l as usize] += 1;
+            const v: HufVec16u8 = codec.code_len[s .. s + 16][0..16].*;
+            if (@reduce(.Or, v) != (0 as u8)) {
+                let k: usize = 0;
+                while (k < 16) {
+                    const l = codec.code_len[s + k];
+                    if (l > 0) {
+                        codec.codes[s + k] = (next_code[l as usize] & 0xFFFF) as u16;
+                        next_code[l as usize] += 1;
+                    }
+                    k += 1;
+                }
             }
-            s += 1;
+            s += 16;
         }
 
         return codec;
@@ -89,11 +132,7 @@ pub struct HuffmanCodec {
     /// Builds a length-limited (<= 16 bits) Canonical Huffman table from symbol frequencies.
     pub static fn fromFrequencies(freqs: []const u32) -> HuffmanCodec {
         let lengths: [MAX_SYMBOLS]u8 = undefined;
-        let i: usize = 0;
-        while (i < MAX_SYMBOLS) {
-            lengths[i] = 0;
-            i += 1;
-        }
+        zeroU8x256(lengths[0..MAX_SYMBOLS]);
 
         let limit = freqs.len;
         if (limit > MAX_SYMBOLS) {
@@ -106,7 +145,7 @@ pub struct HuffmanCodec {
         let active: [MAX_TREE_NODES]bool = undefined;
 
         let n: usize = 0;
-        i = 0;
+        let i: usize = 0;
         while (i < limit) {
             if (freqs[i] > 0) {
                 sym_of[n] = i as u8;
@@ -185,7 +224,6 @@ pub struct HuffmanCodec {
                 k += 1;
             }
             while (kraft > 65536) {
-                // Lengthen the deepest symbol still < 16 to reduce Kraft sum minimally
                 let best_idx: usize = n;
                 let best_len: u8 = 0;
                 k = 0;
@@ -234,7 +272,7 @@ pub struct HuffmanCodec {
             return 4;
         }
 
-        let bit_buf: u32 = 0;
+        let bit_buf: u64 = 0;
         let bit_count: u8 = 0;
         let out_pos: usize = 4;
 
@@ -245,26 +283,48 @@ pub struct HuffmanCodec {
             if (clen == 0) {
                 return -1;
             }
-            const cbits: u32 = _.codes[sym as usize] as u32;
-            bit_buf = (bit_buf << (clen as u5)) | cbits;
+            const cbits: u64 = _.codes[sym as usize] as u64;
+            bit_buf = (bit_buf << (clen as u6)) | cbits;
             bit_count += clen;
 
-            while (bit_count >= 8) {
-                bit_count -= 8;
-                if (out_pos >= dst.len) {
-                    return -1;
+            if (bit_count >= 32) {
+                if (out_pos + 4 > dst.len) {
+                    while (bit_count >= 8) {
+                        bit_count -= 8;
+                        if (out_pos >= dst.len) {
+                            return -1;
+                        }
+                        dst[out_pos] = ((bit_buf >> (bit_count as u6)) & 0xFF) as u8;
+                        out_pos += 1;
+                    }
+                } else {
+                    const shift = (bit_count - 32) as u6;
+                    const w: u32 = ((bit_buf >> shift) & 0xFFFFFFFF) as u32;
+                    dst[out_pos] = ((w >> 24) & 0xFF) as u8;
+                    dst[out_pos + 1] = ((w >> 16) & 0xFF) as u8;
+                    dst[out_pos + 2] = ((w >> 8) & 0xFF) as u8;
+                    dst[out_pos + 3] = (w & 0xFF) as u8;
+                    out_pos += 4;
+                    bit_count -= 32;
                 }
-                dst[out_pos] = ((bit_buf >> (bit_count as u5)) & 0xFF) as u8;
-                out_pos += 1;
             }
             i += 1;
+        }
+
+        while (bit_count >= 8) {
+            bit_count -= 8;
+            if (out_pos >= dst.len) {
+                return -1;
+            }
+            dst[out_pos] = ((bit_buf >> (bit_count as u6)) & 0xFF) as u8;
+            out_pos += 1;
         }
 
         if (bit_count > 0) {
             if (out_pos >= dst.len) {
                 return -1;
             }
-            const pad = (8 - bit_count) as u5;
+            const pad = (8 - bit_count) as u6;
             dst[out_pos] = ((bit_buf << pad) & 0xFF) as u8;
             out_pos += 1;
         }
@@ -293,11 +353,13 @@ pub struct HuffmanCodec {
             return -1;
         }
 
-        // Build compact canonical decode lookup arrays on the stack
+        // Build compact canonical decode lookup arrays + 8-bit fast LUT on the stack
         let bl_count: [17]u16 = undefined;
         let first_code: [17]u32 = undefined;
         let first_idx: [17]u16 = undefined;
         let sorted_syms: [MAX_SYMBOLS]u8 = undefined;
+        let fast_lut: [256]u16 = undefined;
+        zeroU16x256(fast_lut[0..256]);
 
         let b: usize = 0;
         while (b <= 16) {
@@ -309,11 +371,18 @@ pub struct HuffmanCodec {
 
         let s: usize = 0;
         while (s < MAX_SYMBOLS) {
-            const l = _.code_len[s];
-            if (l > 0 && l <= MAX_CODE_BITS) {
-                bl_count[l as usize] += 1;
+            const v: HufVec16u8 = _.code_len[s .. s + 16][0..16].*;
+            if (@reduce(.Or, v) != (0 as u8)) {
+                let k: usize = 0;
+                while (k < 16) {
+                    const l = _.code_len[s + k];
+                    if (l > 0 && l <= MAX_CODE_BITS) {
+                        bl_count[l as usize] += 1;
+                    }
+                    k += 1;
+                }
             }
-            s += 1;
+            s += 16;
         }
 
         let code_acc: u32 = 0;
@@ -328,29 +397,66 @@ pub struct HuffmanCodec {
         }
 
         let cursor_idx: [17]u16 = undefined;
-        b = 0;
-        while (b <= 16) {
-            cursor_idx[b] = first_idx[b];
-            b += 1;
-        }
+        @memcpy(cursor_idx[0..17], first_idx[0..17]);
 
         s = 0;
         while (s < MAX_SYMBOLS) {
-            const l = _.code_len[s];
-            if (l > 0 && l <= MAX_CODE_BITS) {
-                sorted_syms[cursor_idx[l as usize] as usize] = s as u8;
-                cursor_idx[l as usize] += 1;
+            const v: HufVec16u8 = _.code_len[s .. s + 16][0..16].*;
+            if (@reduce(.Or, v) != (0 as u8)) {
+                let k: usize = 0;
+                while (k < 16) {
+                    const sym_idx = s + k;
+                    const l = _.code_len[sym_idx];
+                    if (l > 0 && l <= MAX_CODE_BITS) {
+                        const pos_in_len = cursor_idx[l as usize];
+                        sorted_syms[pos_in_len as usize] = sym_idx as u8;
+                        cursor_idx[l as usize] = pos_in_len + 1;
+                        if (l <= 8) {
+                            const code_val = first_code[l as usize] + ((pos_in_len - first_idx[l as usize]) as u32);
+                            const pad_bits = (8 - l) as u5;
+                            const base_entry = (code_val << pad_bits) as usize;
+                            const span = (1 as usize) << pad_bits;
+                            const entry: u16 = ((l as u16) << 8) | (sym_idx as u16);
+                            let fill: usize = 0;
+                            while (fill < span) {
+                                fast_lut[base_entry + fill] = entry;
+                                fill += 1;
+                            }
+                        }
+                    }
+                    k += 1;
+                }
             }
-            s += 1;
+            s += 16;
         }
 
-        // Decode MSB-first bitstream
+        // Decode MSB-first bitstream using 64-bit accumulator + O(1) 8-bit fast LUT
         let byte_pos: usize = 4;
-        let cur_byte: u8 = 0;
+        let bit_buf: u64 = 0;
         let bits_left: u8 = 0;
         let decoded: usize = 0;
 
         while (decoded < orig_len) {
+            while (bits_left <= 56 && byte_pos < src.len) {
+                bit_buf = (bit_buf << 8) | (src[byte_pos] as u64);
+                byte_pos += 1;
+                bits_left += 8;
+            }
+
+            // O(1) fast path for codes <= 8 bits when >= 8 bits are buffered
+            if (bits_left >= 8) {
+                const top8 = ((bit_buf >> ((bits_left - 8) as u6)) & 0xFF) as usize;
+                const entry = fast_lut[top8];
+                if (entry != 0) {
+                    const flen = (entry >> 8) as u8;
+                    dst[decoded] = (entry & 0xFF) as u8;
+                    decoded += 1;
+                    bits_left -= flen;
+                    continue;
+                }
+            }
+
+            // Slow path for codes > 8 bits or end-of-stream (< 8 bits left)
             let cur_code: u32 = 0;
             let cur_len: usize = 0;
             let matched = false;
@@ -360,12 +466,12 @@ pub struct HuffmanCodec {
                     if (byte_pos >= src.len) {
                         return -1;
                     }
-                    cur_byte = src[byte_pos];
+                    bit_buf = (bit_buf << 8) | (src[byte_pos] as u64);
                     byte_pos += 1;
                     bits_left = 8;
                 }
                 bits_left -= 1;
-                const bit: u32 = ((cur_byte >> (bits_left as u3)) & 1) as u32;
+                const bit: u32 = ((bit_buf >> (bits_left as u6)) & 1) as u32;
                 cur_code = (cur_code << 1) | bit;
                 cur_len += 1;
 

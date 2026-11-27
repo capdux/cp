@@ -7,14 +7,46 @@
 // - RFC 8785 string normalization (minimal escapes, `\uXXXX` / surrogate-pair UTF-8 decoding)
 //   and numeric normalization (`-0` / `-0.0` -> `0`, trailing fractional zero trimming).
 // - `canonicalizeJson(input, out) -> JcsResult` & `areJsonEquivalent(a, b) -> bool`.
-// - Zero heap allocation with bounded recursion depth (max 16) and up to 64 keys per object.
+// - Accelerated with 16-lane `@Vector(16, u8)` whitespace & string scanning, comptime 256-entry LUTs,
+//   and bulk `@memcpy`.
 
-import { isDigit, hexVal, hexCharLower, startsWith } from "cap:ascii";
+import { isDigit, hexCharLower, startsWith } from "cap:ascii";
 import { bytesEq } from "cap:bin";
-import { writeStr } from "cap:fmt";
+
+type JcsVec16 = @Vector(16, u8);
 
 const MAX_DEPTH: u8 = 16;
 const MAX_OBJECT_KEYS: usize = 64;
+
+fn buildJsonWsLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[' ' as usize] = 1;
+    lut['\t' as usize] = 1;
+    lut['\n' as usize] = 1;
+    lut['\r' as usize] = 1;
+    return lut;
+}
+
+fn buildJsonHexLut() -> [256]i8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]i8 = [-1; 256];
+    let c: usize = 0;
+    while (c < 10) {
+        lut[('0' as usize) + c] = c as i8;
+        c += 1;
+    }
+    c = 0;
+    while (c < 6) {
+        lut[('a' as usize) + c] = (10 + c) as i8;
+        lut[('A' as usize) + c] = (10 + c) as i8;
+        c += 1;
+    }
+    return lut;
+}
+
+const JSON_WS_LUT: [256]u8 = buildJsonWsLut();
+const JSON_HEX_LUT: [256]i8 = buildJsonHexLut();
 
 pub struct JcsResult {
     pub ok: bool,
@@ -53,12 +85,24 @@ struct KeyStep {
 }
 
 fn isJsonSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return JSON_WS_LUT[c as usize] != 0;
 }
 
 fn skipWs(s: string, start: usize) -> usize {
     let i = start;
-    while (i < s.len && isJsonSpace(s[i])) {
+    const v_sp: JcsVec16 = @splat(' ' as u8);
+    const v_tab: JcsVec16 = @splat('\t' as u8);
+    const v_nl: JcsVec16 = @splat('\n' as u8);
+    const v_cr: JcsVec16 = @splat('\r' as u8);
+    while (i + 16 <= s.len) {
+        const v: JcsVec16 = s[i .. i + 16][0..16].*;
+        const ws = (v == v_sp) | (v == v_tab) | (v == v_nl) | (v == v_cr);
+        if (!@reduce(.And, ws)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < s.len && JSON_WS_LUT[s[i] as usize] != 0) {
         i += 1;
     }
     return i;
@@ -68,14 +112,14 @@ fn parseHex4(s: string, pos: usize) -> i32 {
     if (pos + 4 > s.len) {
         return -1;
     }
-    const h0 = hexVal(s[pos]);
-    const h1 = hexVal(s[pos + 1]);
-    const h2 = hexVal(s[pos + 2]);
-    const h3 = hexVal(s[pos + 3]);
-    if (h0 == null || h1 == null || h2 == null || h3 == null) {
+    const h0 = JSON_HEX_LUT[s[pos] as usize];
+    const h1 = JSON_HEX_LUT[s[pos + 1] as usize];
+    const h2 = JSON_HEX_LUT[s[pos + 2] as usize];
+    const h3 = JSON_HEX_LUT[s[pos + 3] as usize];
+    if ((h0 | h1 | h2 | h3) < 0) {
         return -1;
     }
-    return ((h0.? as i32) << 12) | ((h1.? as i32) << 8) | ((h2.? as i32) << 4) | (h3.? as i32);
+    return ((h0 as i32) << 12) | ((h1 as i32) << 8) | ((h2 as i32) << 4) | (h3 as i32);
 }
 
 fn pushByteChecked(out: []u8, pos: usize, b: u8) -> usize? {
@@ -90,7 +134,10 @@ fn pushSliceChecked(out: []u8, pos: usize, s: string) -> usize? {
     if (pos + s.len > out.len) {
         return null;
     }
-    return writeStr(s, out, pos);
+    if (s.len > 0) {
+        @memcpy(out[pos .. pos + s.len], s[0..s.len]);
+    }
+    return pos + s.len;
 }
 
 fn writeUtf8Checked(out: []u8, pos: usize, cp: u32) -> usize? {
@@ -161,13 +208,26 @@ fn emitEscapedCodepoint(out: []u8, pos: usize, cp: u32) -> usize? {
     return writeUtf8Checked(out, pos, cp);
 }
 
-/// Validates and skips a JSON string starting at `pos` (`input[pos] == '"'`).
+/// Validates and skips a JSON string starting at `pos` (`input[pos] == '"'`) using 16-lane SIMD.
 fn skipString(input: string, pos: usize) -> SkipRes {
     if (pos >= input.len || input[pos] != '"') {
         return SkipRes{ ok: false, next_in: pos };
     }
+    const v_q: JcsVec16 = @splat('"' as u8);
+    const v_bs: JcsVec16 = @splat('\\' as u8);
+    const v_ctrl: JcsVec16 = @splat(0x20 as u8);
     let i = pos + 1;
     while (i < input.len) {
+        while (i + 16 <= input.len) {
+            const v: JcsVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == v_q) | (v == v_bs) | (v < v_ctrl))) {
+                break;
+            }
+            i += 16;
+        }
+        if (i >= input.len) {
+            break;
+        }
         const c = input[i];
         if (c == '"') {
             return SkipRes{ ok: true, next_in: i + 1 };
@@ -427,7 +487,32 @@ fn emitCanonicalString(input: string, pos: usize, out: []u8, out_pos: usize) -> 
     let op = p0.?;
     let i = pos + 1;
 
+    const v_q: JcsVec16 = @splat('"' as u8);
+    const v_bs: JcsVec16 = @splat('\\' as u8);
+    const v_ctrl: JcsVec16 = @splat(0x20 as u8);
+
     while (i < input.len) {
+        // 16-lane SIMD fast path: scan safe non-escaped characters and bulk-copy via @memcpy
+        const run_start = i;
+        while (i + 16 <= input.len) {
+            const v: JcsVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == v_q) | (v == v_bs) | (v < v_ctrl))) {
+                break;
+            }
+            i += 16;
+        }
+        if (i > run_start) {
+            const run_len = i - run_start;
+            if (op + run_len > out.len) {
+                return StepRes{ ok: false, next_in: run_start, next_out: op };
+            }
+            @memcpy(out[op .. op + run_len], input[run_start..i]);
+            op += run_len;
+            if (i >= input.len) {
+                break;
+            }
+        }
+
         const c = input[i];
         if (c == '"') {
             const pe = pushByteChecked(out, op, '"');
@@ -467,11 +552,10 @@ fn emitCanonicalString(input: string, pos: usize, out: []u8, out_pos: usize) -> 
                 continue;
             }
             if (esc == 'b' || esc == 'f' || esc == 'n' || esc == 'r' || esc == 't') {
-                const np1 = pushByteChecked(out, op, '\\');
-                if (np1 == null) { return StepRes{ ok: false, next_in: i, next_out: op }; }
-                const np2 = pushByteChecked(out, np1.?, esc);
-                if (np2 == null) { return StepRes{ ok: false, next_in: i, next_out: op }; }
-                op = np2.?;
+                if (op + 2 > out.len) { return StepRes{ ok: false, next_in: i, next_out: op }; }
+                out[op] = '\\';
+                out[op + 1] = esc;
+                op += 2;
                 i += 2;
                 continue;
             }
