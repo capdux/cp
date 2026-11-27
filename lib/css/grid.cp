@@ -34,8 +34,35 @@ pub err CssGridError {
     BufferTooSmall,
 }
 
+type CssGridVec16 = @Vector(16, u8);
+
+const GRID_MASK_WS: u8 = 1 << 0;
+const GRID_MASK_IDENT_START: u8 = 1 << 1;
+const GRID_MASK_AREA_CONT: u8 = 1 << 2;
+const GRID_MASK_DIGIT: u8 = 1 << 3;
+
+fn makeGridCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n' || i == 0x0C) m |= GRID_MASK_WS;
+        if (i >= '0' && i <= '9') {
+            m |= GRID_MASK_DIGIT | GRID_MASK_AREA_CONT;
+        }
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i == '-' || i >= 0x80) {
+            m |= GRID_MASK_IDENT_START | GRID_MASK_AREA_CONT;
+        }
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const GRID_CHAR_LUT: [u8; 256] = makeGridCharLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0C;
+    return (GRID_CHAR_LUT[usize(c)] & GRID_MASK_WS) != 0;
 }
 
 fn toLowerAscii(c: u8): u8 {
@@ -50,6 +77,11 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssGridVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssGridVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -64,6 +96,16 @@ fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CssGridVec16 = @splat(65 as u8);
+    const hi_Z: CssGridVec16 = @splat(90 as u8);
+    const case_bit: CssGridVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssGridVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssGridVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -86,14 +128,11 @@ fn trimWs(s: []const u8): []const u8 {
 }
 
 fn isAreaNameCodepoint(c: u8): bool {
-    return (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9') ||
-        c == '_' || c == '-' || c >= 0x80;
+    return (GRID_CHAR_LUT[usize(c)] & GRID_MASK_AREA_CONT) != 0;
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-' || c >= 0x80;
+    return (GRID_CHAR_LUT[usize(c)] & GRID_MASK_IDENT_START) != 0;
 }
 
 fn isValidLineIdent(s: []const u8): bool {
@@ -117,10 +156,8 @@ fn appendBytes(out: []u8, pos: usize, src: []const u8): usize! {
     if (src.len > out.len - pos) {
         return err.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src);
     }
     return pos + src.len;
 }
@@ -159,7 +196,15 @@ fn appendU32(out: []u8, pos: usize, val: u32): usize! {
 fn findMatchingParen(s: []const u8, open_idx: usize): usize? {
     let depth: usize = 0;
     let i = open_idx;
+    const lp_v: CssGridVec16 = @splat('(' as u8);
+    const rp_v: CssGridVec16 = @splat(')' as u8);
     while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: CssGridVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == lp_v) | (v == rp_v))) break;
+            i += 16;
+        }
+        if (i >= s.len) break;
         if (s[i] == '(') {
             depth += 1;
         } else if (s[i] == ')') {
@@ -175,7 +220,19 @@ fn findMatchingParen(s: []const u8, open_idx: usize): usize? {
 fn findTopLevelComma(s: []const u8): usize? {
     let depth: usize = 0;
     let i: usize = 0;
+    const lp_v: CssGridVec16 = @splat('(' as u8);
+    const rp_v: CssGridVec16 = @splat(')' as u8);
+    const lb_v: CssGridVec16 = @splat('[' as u8);
+    const rb_v: CssGridVec16 = @splat(']' as u8);
+    const cm_v: CssGridVec16 = @splat(',' as u8);
     while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: CssGridVec16 = s[i .. i + 16][0..16].*;
+            const hit = (v == lp_v) | (v == rp_v) | (v == lb_v) | (v == rb_v) | (v == cm_v);
+            if (@reduce(.Or, hit)) break;
+            i += 16;
+        }
+        if (i >= s.len) break;
         if (s[i] == '(' || s[i] == '[') {
             depth += 1;
         } else if (s[i] == ')' || s[i] == ']') {

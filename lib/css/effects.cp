@@ -477,8 +477,36 @@ fn writeLen(out: []u8, pos: usize, val: f32, unit: FilterLengthUnit): usize {
 
 // ---------- Low-level helpers ----------
 
+type CssEffVec16 = @Vector(16, u8);
+
+const EFF_MASK_WS: u8 = 1 << 0;
+const EFF_MASK_CSS_WS: u8 = 1 << 1;
+const EFF_MASK_DIGIT: u8 = 1 << 2;
+const EFF_MASK_IDENT_START: u8 = 1 << 3;
+const EFF_MASK_IDENT_CONT: u8 = 1 << 4;
+
+fn makeEffCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r') m |= EFF_MASK_WS | EFF_MASK_CSS_WS;
+        if (i == 0x0C) m |= EFF_MASK_CSS_WS;
+        if (i >= '0' && i <= '9') m |= EFF_MASK_DIGIT | EFF_MASK_IDENT_CONT;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i >= 0x80) {
+            m |= EFF_MASK_IDENT_START | EFF_MASK_IDENT_CONT;
+        }
+        if (i == '-') m |= EFF_MASK_IDENT_CONT;
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const EFF_CHAR_LUT: [u8; 256] = makeEffCharLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (EFF_CHAR_LUT[usize(c)] & EFF_MASK_WS) != 0;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -504,6 +532,16 @@ fn toLower(c: u8): u8 {
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: CssEffVec16 = @splat(65 as u8);
+    const hi_Z: CssEffVec16 = @splat(90 as u8);
+    const case_bit: CssEffVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssEffVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssEffVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        const lb = @select(u8, (vb >= lo_A) & (vb <= hi_Z), vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLower(a[i]) != toLower(b[i])) return false;
     }
@@ -548,13 +586,13 @@ fn parseSignedFloat(s: []const u8): f32? {
 }
 
 fn appendStr(out: []u8, pos: usize, s: []const u8): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
+    if (pos >= out.len) return pos;
+    const avail = out.len - pos;
+    const copy_len = if (s.len < avail) s.len else avail;
+    if (copy_len > 0) {
+        @memcpy(out[pos .. pos + copy_len], s[0..copy_len]);
     }
-    return p;
+    return pos + copy_len;
 }
 
 fn appendU32(out: []u8, pos: usize, v_in: u32): usize {
@@ -601,7 +639,7 @@ fn writeFloat(out: []u8, pos: usize, v_in: f32): usize {
 // ---------- Syntax Validators (Zero-Allocation) ----------
 
 fn isCssWsChar(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\x0c';
+    return (EFF_CHAR_LUT[usize(c)] & EFF_MASK_CSS_WS) != 0;
 }
 
 fn trimCssWs(s: []const u8): []const u8 {
@@ -613,29 +651,43 @@ fn trimCssWs(s: []const u8): []const u8 {
 }
 
 fn isCssDigitChar(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (EFF_CHAR_LUT[usize(c)] & EFF_MASK_DIGIT) != 0;
 }
 
 fn isCssIdentStartChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+    return (EFF_CHAR_LUT[usize(c)] & EFF_MASK_IDENT_START) != 0;
 }
 
 fn isCssIdentContChar(c: u8): bool {
-    return isCssIdentStartChar(c) || isCssDigitChar(c) || c == '-';
+    return (EFF_CHAR_LUT[usize(c)] & EFF_MASK_IDENT_CONT) != 0;
 }
 
 fn hasBalancedParens(s: []const u8, start_idx: usize): bool {
     let depth: usize = 1;
     let i = start_idx;
     let quote: u8 = 0;
-    while (i < s.len) : (i += 1) {
+    const lp_v: CssEffVec16 = @splat('(' as u8);
+    const rp_v: CssEffVec16 = @splat(')' as u8);
+    const dq_v: CssEffVec16 = @splat('"' as u8);
+    const sq_v: CssEffVec16 = @splat('\'' as u8);
+    while (i < s.len) {
+        if (quote == 0) {
+            while (i + 16 <= s.len) {
+                const v: CssEffVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == lp_v) | (v == rp_v) | (v == dq_v) | (v == sq_v))) break;
+                i += 16;
+            }
+            if (i >= s.len) break;
+        }
         const c = s[i];
         if (quote != 0) {
             if (c == '\\' && i + 1 < s.len) {
-                i += 1;
+                i += 2;
+                continue;
             } else if (c == quote) {
                 quote = 0;
             }
+            i += 1;
             continue;
         }
         if (c == '"' || c == '\'') {
@@ -646,6 +698,7 @@ fn hasBalancedParens(s: []const u8, start_idx: usize): bool {
             depth -= 1;
             if (depth == 0) return i + 1 == s.len;
         }
+        i += 1;
     }
     return false;
 }

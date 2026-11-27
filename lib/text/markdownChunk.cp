@@ -136,8 +136,37 @@ struct LineInfo {
     line_no: u32 = 1;
 }
 
+type MdChunkVec16 = @Vector(16, u8);
+
+fn makeMdSepLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize('-')] = 1;
+    lut[usize('|')] = 2;
+    lut[usize(':')] = 3;
+    lut[usize(' ')] = 3;
+    lut[usize('\t')] = 3;
+    return lut;
+}
+
+const MD_SEP_LUT: [u8; 256] = makeMdSepLut();
+
 fn readLine(src: string, pos: usize, line_no: u32): LineInfo {
     let i = pos;
+    const nl_v: MdChunkVec16 = @splat('\n' as u8);
+    while (i + 16 <= src.len) : (i += 16) {
+        const v: MdChunkVec16 = src[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == nl_v)) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (src[i + j] == '\n') {
+                    i += j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
     while (i < src.len && src[i] != '\n') : (i += 1) {}
     let content_end = i;
     if (content_end > pos && src[content_end - 1] == '\r') {
@@ -154,6 +183,14 @@ fn readLine(src: string, pos: usize, line_no: u32): LineInfo {
 
 fn isBlankLine(src: string, start: usize, end: usize): bool {
     let i = start;
+    const sp_v: MdChunkVec16 = @splat(' ' as u8);
+    const tb_v: MdChunkVec16 = @splat('\t' as u8);
+    const cr_v: MdChunkVec16 = @splat('\r' as u8);
+    while (i + 16 <= end) : (i += 16) {
+        const v: MdChunkVec16 = src[i .. i + 16][0..16].*;
+        const ok = (v == sp_v) | (v == tb_v) | (v == cr_v);
+        if (!@reduce(.And, ok)) return false;
+    }
     while (i < end) : (i += 1) {
         const c = src[i];
         if (c != ' ' && c != '\t' && c != '\r') return false;
@@ -230,6 +267,11 @@ fn parseFenceOpen(src: string, start: usize, end: usize): FenceOpen? {
     // Backtick info strings cannot contain additional backticks
     if (ch == '`') {
         let k = i;
+        const bt_v: MdChunkVec16 = @splat('`' as u8);
+        while (k + 16 <= end) : (k += 16) {
+            const v: MdChunkVec16 = src[k .. k + 16][0..16].*;
+            if (@reduce(.Or, v == bt_v)) return null;
+        }
         while (k < end) : (k += 1) {
             if (src[k] == '`') return null;
         }
@@ -256,6 +298,11 @@ fn isFenceClose(src: string, start: usize, end: usize, open: FenceOpen): bool {
 
 fn lineContainsPipe(src: string, start: usize, end: usize): bool {
     let i = start;
+    const pipe_v: MdChunkVec16 = @splat('|' as u8);
+    while (i + 16 <= end) : (i += 16) {
+        const v: MdChunkVec16 = src[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == pipe_v)) return true;
+    }
     while (i < end) : (i += 1) {
         if (src[i] == '|') return true;
     }
@@ -269,16 +316,13 @@ fn isTableSeparatorLine(src: string, start: usize, end: usize): bool {
     let dash_count: usize = 0;
     let i = start;
     while (i < end) : (i += 1) {
-        const c = src[i];
-        if (c == '-') {
+        const cls = MD_SEP_LUT[usize(src[i])];
+        if (cls == 0) return false;
+        if (cls == 1) {
             has_dash = true;
             dash_count += 1;
-        } else if (c == '|') {
+        } else if (cls == 2) {
             has_pipe = true;
-        } else if (c == ':' || c == ' ' || c == '\t') {
-            // valid separator character
-        } else {
-            return false;
         }
     }
     return has_dash && (has_pipe || dash_count >= 3);
@@ -338,6 +382,23 @@ fn utf8SafeCutEnd(src: string, start: usize, limit: usize): usize {
 fn countNewlines(src: string, start: usize, end: usize): u32 {
     let n: u32 = 0;
     let i = start;
+    const nl_v: MdChunkVec16 = @splat('\n' as u8);
+    const ones_v: MdChunkVec16 = @splat(1 as u8);
+    const zeros_v: MdChunkVec16 = @splat(0 as u8);
+    while (i + 16 <= end) {
+        let acc: MdChunkVec16 = zeros_v;
+        let blocks: usize = 0;
+        while (blocks < 255 && i + 16 <= end) : (blocks += 1) {
+            const v: MdChunkVec16 = src[i .. i + 16][0..16].*;
+            acc += @select(u8, v == nl_v, ones_v, zeros_v);
+            i += 16;
+        }
+        const a: [16]u8 = acc;
+        let lane: usize = 0;
+        while (lane < 16) : (lane += 1) {
+            n += a[lane] as u32;
+        }
+    }
     while (i < end) : (i += 1) {
         if (src[i] == '\n') n += 1;
     }

@@ -689,20 +689,46 @@ pub struct Font {
     }
 }
 
+type CssFontVec16 = @Vector(16, u8);
+
+const FONT_MASK_WS: u8 = 1 << 0;
+const FONT_MASK_DIGIT: u8 = 1 << 1;
+const FONT_MASK_IDENT_START: u8 = 1 << 2;
+const FONT_MASK_IDENT_CONT: u8 = 1 << 3;
+
+fn makeFontCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n' || i == 0x0c) m |= FONT_MASK_WS;
+        if (i >= '0' && i <= '9') m |= FONT_MASK_DIGIT | FONT_MASK_IDENT_CONT;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i >= 0x80) {
+            m |= FONT_MASK_IDENT_START | FONT_MASK_IDENT_CONT;
+        }
+        if (i == '-') m |= FONT_MASK_IDENT_CONT;
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const FONT_CHAR_LUT: [u8; 256] = makeFontCharLut();
+
 fn isFontWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\x0c';
+    return (FONT_CHAR_LUT[usize(c)] & FONT_MASK_WS) != 0;
 }
 
 fn isFontDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (FONT_CHAR_LUT[usize(c)] & FONT_MASK_DIGIT) != 0;
 }
 
 fn isFontIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+    return (FONT_CHAR_LUT[usize(c)] & FONT_MASK_IDENT_START) != 0;
 }
 
 fn isFontIdentChar(c: u8): bool {
-    return isFontIdentStart(c) || isFontDigit(c) || c == '-';
+    return (FONT_CHAR_LUT[usize(c)] & FONT_MASK_IDENT_CONT) != 0;
 }
 
 fn consumeFontBalancedRest(s: []const u8, start: usize): bool {
@@ -711,7 +737,25 @@ fn consumeFontBalancedRest(s: []const u8, start: usize): bool {
     let b_depth: usize = 0;
     let c_depth: usize = 0;
     let quote: u8 = 0;
+    const lp_v: CssFontVec16 = @splat('(' as u8);
+    const rp_v: CssFontVec16 = @splat(')' as u8);
+    const lb_v: CssFontVec16 = @splat('[' as u8);
+    const rb_v: CssFontVec16 = @splat(']' as u8);
+    const lc_v: CssFontVec16 = @splat('{' as u8);
+    const rc_v: CssFontVec16 = @splat('}' as u8);
+    const dq_v: CssFontVec16 = @splat('"' as u8);
+    const sq_v: CssFontVec16 = @splat('\'' as u8);
     while (i < s.len) {
+        if (quote == 0) {
+            while (i + 16 <= s.len) {
+                const v: CssFontVec16 = s[i .. i + 16][0..16].*;
+                const hit = (v == lp_v) | (v == rp_v) | (v == lb_v) | (v == rb_v) |
+                    (v == lc_v) | (v == rc_v) | (v == dq_v) | (v == sq_v);
+                if (@reduce(.Or, hit)) break;
+                i += 16;
+            }
+            if (i >= s.len) break;
+        }
         const ch = s[i];
         if (quote != 0) {
             if (ch == '\\' && i + 1 < s.len) {
@@ -788,7 +832,15 @@ fn isFontVarOrEnvCall(s: []const u8): bool {
 fn skipFontParenGroup(s: []const u8, open_paren_pos: usize): usize {
     let i = open_paren_pos + 1;
     let depth: usize = 1;
+    const lp_v: CssFontVec16 = @splat('(' as u8);
+    const rp_v: CssFontVec16 = @splat(')' as u8);
     while (i < s.len && depth > 0) {
+        while (i + 16 <= s.len) {
+            const v: CssFontVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == lp_v) | (v == rp_v))) break;
+            i += 16;
+        }
+        if (i >= s.len) break;
         if (s[i] == '(') depth += 1;
         else if (s[i] == ')') depth -= 1;
         i += 1;

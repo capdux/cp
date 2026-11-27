@@ -73,16 +73,59 @@ struct LabelParseResult {
     next: usize;
 }
 
+type PromVec16 = @Vector(16, u8);
+
+const PROM_MASK_METRIC_START: u8 = 1 << 0;
+const PROM_MASK_METRIC_CONT: u8 = 1 << 1;
+const PROM_MASK_LABEL_START: u8 = 1 << 2;
+const PROM_MASK_LABEL_CONT: u8 = 1 << 3;
+
+fn makePromCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        const is_alpha = (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z');
+        const is_digit = i >= '0' && i <= '9';
+        if (is_alpha || i == '_') {
+            m |= PROM_MASK_LABEL_START | PROM_MASK_LABEL_CONT | PROM_MASK_METRIC_START | PROM_MASK_METRIC_CONT;
+        }
+        if (is_digit) {
+            m |= PROM_MASK_LABEL_CONT | PROM_MASK_METRIC_CONT;
+        }
+        if (i == ':') {
+            m |= PROM_MASK_METRIC_START | PROM_MASK_METRIC_CONT;
+        }
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const PROM_CHAR_LUT: [u8; 256] = makePromCharLut();
+
 fn isValidMetricName(name: []const u8): bool {
     if (name.len == 0) return false;
-    const c0 = name[0];
-    if (!((c0 >= 'a' && c0 <= 'z') || (c0 >= 'A' && c0 <= 'Z') || c0 == '_' || c0 == ':')) {
+    if ((PROM_CHAR_LUT[usize(name[0])] & PROM_MASK_METRIC_START) == 0) {
         return false;
     }
     let i: usize = 1;
+    const lo_a: PromVec16 = @splat('a' as u8);
+    const hi_z: PromVec16 = @splat('z' as u8);
+    const lo_A: PromVec16 = @splat('A' as u8);
+    const hi_Z: PromVec16 = @splat('Z' as u8);
+    const lo_0: PromVec16 = @splat('0' as u8);
+    const hi_9: PromVec16 = @splat('9' as u8);
+    const us_v: PromVec16 = @splat('_' as u8);
+    const col_v: PromVec16 = @splat(':' as u8);
+    while (i + 16 <= name.len) : (i += 16) {
+        const v: PromVec16 = name[i .. i + 16][0..16].*;
+        const ok = ((v >= lo_a) & (v <= hi_z)) | ((v >= lo_A) & (v <= hi_Z)) |
+            ((v >= lo_0) & (v <= hi_9)) | (v == us_v) | (v == col_v);
+        if (!@reduce(.And, ok)) return false;
+    }
     while (i < name.len) : (i += 1) {
-        const c = name[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == ':')) {
+        if ((PROM_CHAR_LUT[usize(name[i])] & PROM_MASK_METRIC_CONT) == 0) {
             return false;
         }
     }
@@ -95,30 +138,30 @@ fn isValidLabelName(name: []const u8): bool {
     if (name.len >= 2 && name[0] == '_' && name[1] == '_') {
         return false;
     }
-    const c0 = name[0];
-    if (!((c0 >= 'a' && c0 <= 'z') || (c0 >= 'A' && c0 <= 'Z') || c0 == '_')) {
-        return false;
-    }
-    let i: usize = 1;
-    while (i < name.len) : (i += 1) {
-        const c = name[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) {
-            return false;
-        }
-    }
-    return true;
+    return isValidLabelNameForParser(name);
 }
 
 fn isValidLabelNameForParser(name: []const u8): bool {
     if (name.len == 0) return false;
-    const c0 = name[0];
-    if (!((c0 >= 'a' && c0 <= 'z') || (c0 >= 'A' && c0 <= 'Z') || c0 == '_')) {
+    if ((PROM_CHAR_LUT[usize(name[0])] & PROM_MASK_LABEL_START) == 0) {
         return false;
     }
     let i: usize = 1;
+    const lo_a: PromVec16 = @splat('a' as u8);
+    const hi_z: PromVec16 = @splat('z' as u8);
+    const lo_A: PromVec16 = @splat('A' as u8);
+    const hi_Z: PromVec16 = @splat('Z' as u8);
+    const lo_0: PromVec16 = @splat('0' as u8);
+    const hi_9: PromVec16 = @splat('9' as u8);
+    const us_v: PromVec16 = @splat('_' as u8);
+    while (i + 16 <= name.len) : (i += 16) {
+        const v: PromVec16 = name[i .. i + 16][0..16].*;
+        const ok = ((v >= lo_a) & (v <= hi_z)) | ((v >= lo_A) & (v <= hi_Z)) |
+            ((v >= lo_0) & (v <= hi_9)) | (v == us_v);
+        if (!@reduce(.And, ok)) return false;
+    }
     while (i < name.len) : (i += 1) {
-        const c = name[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) {
+        if ((PROM_CHAR_LUT[usize(name[i])] & PROM_MASK_LABEL_CONT) == 0) {
             return false;
         }
     }
@@ -186,32 +229,71 @@ fn labelsMatch(a: []const OwnedLabel, b: []const LabelPair): bool {
 }
 
 fn appendEscapedHelp(buf: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): void ! PromError {
+    const bs_v: PromVec16 = @splat('\\' as u8);
+    const nl_v: PromVec16 = @splat('\n' as u8);
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        const c = s[i];
-        if (c == '\\') {
-            buf.appendSlice(allocator, "\\\\") catch return PromError.OutOfMemory;
-        } else if (c == '\n') {
-            buf.appendSlice(allocator, "\\n") catch return PromError.OutOfMemory;
-        } else {
-            buf.append(allocator, c) catch return PromError.OutOfMemory;
+    let run_start: usize = 0;
+    while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: PromVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == bs_v) | (v == nl_v))) break;
+            i += 16;
         }
+        if (i >= s.len) break;
+        const c = s[i];
+        if (c == '\\' || c == '\n') {
+            if (i > run_start) {
+                buf.appendSlice(allocator, s[run_start..i]) catch return PromError.OutOfMemory;
+            }
+            if (c == '\\') {
+                buf.appendSlice(allocator, "\\\\") catch return PromError.OutOfMemory;
+            } else {
+                buf.appendSlice(allocator, "\\n") catch return PromError.OutOfMemory;
+            }
+            i += 1;
+            run_start = i;
+        } else {
+            i += 1;
+        }
+    }
+    if (run_start < s.len) {
+        buf.appendSlice(allocator, s[run_start..s.len]) catch return PromError.OutOfMemory;
     }
 }
 
 fn appendEscapedLabelValue(buf: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, s: []const u8): void ! PromError {
+    const bs_v: PromVec16 = @splat('\\' as u8);
+    const dq_v: PromVec16 = @splat('"' as u8);
+    const nl_v: PromVec16 = @splat('\n' as u8);
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        const c = s[i];
-        if (c == '\\') {
-            buf.appendSlice(allocator, "\\\\") catch return PromError.OutOfMemory;
-        } else if (c == '"') {
-            buf.appendSlice(allocator, "\\\"") catch return PromError.OutOfMemory;
-        } else if (c == '\n') {
-            buf.appendSlice(allocator, "\\n") catch return PromError.OutOfMemory;
-        } else {
-            buf.append(allocator, c) catch return PromError.OutOfMemory;
+    let run_start: usize = 0;
+    while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: PromVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, (v == bs_v) | (v == dq_v) | (v == nl_v))) break;
+            i += 16;
         }
+        if (i >= s.len) break;
+        const c = s[i];
+        if (c == '\\' || c == '"' || c == '\n') {
+            if (i > run_start) {
+                buf.appendSlice(allocator, s[run_start..i]) catch return PromError.OutOfMemory;
+            }
+            if (c == '\\') {
+                buf.appendSlice(allocator, "\\\\") catch return PromError.OutOfMemory;
+            } else if (c == '"') {
+                buf.appendSlice(allocator, "\\\"") catch return PromError.OutOfMemory;
+            } else {
+                buf.appendSlice(allocator, "\\n") catch return PromError.OutOfMemory;
+            }
+            i += 1;
+            run_start = i;
+        } else {
+            i += 1;
+        }
+    }
+    if (run_start < s.len) {
+        buf.appendSlice(allocator, s[run_start..s.len]) catch return PromError.OutOfMemory;
     }
 }
 
@@ -566,6 +648,12 @@ fn trimLine(line: []const u8): []const u8 {
 
 fn skipSpaces(s: []const u8, start: usize): usize {
     let i = start;
+    const sp_v: PromVec16 = @splat(' ' as u8);
+    const tb_v: PromVec16 = @splat('\t' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: PromVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v == sp_v) | (v == tb_v))) break;
+    }
     while (i < s.len && (s[i] == ' ' || s[i] == '\t')) : (i += 1) {}
     return i;
 }
@@ -573,6 +661,12 @@ fn skipSpaces(s: []const u8, start: usize): usize {
 fn readWord(s: []const u8, start: usize): WordRead {
     const begin = skipSpaces(s, start);
     let end = begin;
+    const sp_v: PromVec16 = @splat(' ' as u8);
+    const tb_v: PromVec16 = @splat('\t' as u8);
+    while (end + 16 <= s.len) : (end += 16) {
+        const v: PromVec16 = s[end .. end + 16][0..16].*;
+        if (@reduce(.Or, (v == sp_v) | (v == tb_v))) break;
+    }
     while (end < s.len && s[end] != ' ' && s[end] != '\t') : (end += 1) {}
     return WordRead{ word: s[begin..end], next: end };
 }
@@ -580,21 +674,32 @@ fn readWord(s: []const u8, start: usize): WordRead {
 fn unescapeHelpText(allocator: std.mem.Allocator, raw: []const u8): []u8 ! PromError {
     let buf = std.ArrayListUnmanaged(u8).empty;
     errdefer buf.deinit(allocator);
+    const bs_v: PromVec16 = @splat('\\' as u8);
     let i: usize = 0;
-    while (i < raw.len) : (i += 1) {
+    let run_start: usize = 0;
+    while (i < raw.len) {
+        while (i + 16 <= raw.len) {
+            const v: PromVec16 = raw[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == bs_v)) break;
+            i += 16;
+        }
+        if (i >= raw.len) break;
         if (raw[i] == '\\' && i + 1 < raw.len) {
             const nxt = raw[i + 1];
-            if (nxt == '\\') {
-                buf.append(allocator, '\\') catch return PromError.OutOfMemory;
-                i += 1;
-                continue;
-            } else if (nxt == 'n') {
-                buf.append(allocator, '\n') catch return PromError.OutOfMemory;
-                i += 1;
+            if (nxt == '\\' || nxt == 'n') {
+                if (i > run_start) {
+                    buf.appendSlice(allocator, raw[run_start..i]) catch return PromError.OutOfMemory;
+                }
+                buf.append(allocator, if (nxt == '\\') '\\' else '\n') catch return PromError.OutOfMemory;
+                i += 2;
+                run_start = i;
                 continue;
             }
         }
-        buf.append(allocator, raw[i]) catch return PromError.OutOfMemory;
+        i += 1;
+    }
+    if (run_start < raw.len) {
+        buf.appendSlice(allocator, raw[run_start..raw.len]) catch return PromError.OutOfMemory;
     }
     return buf.toOwnedSlice(allocator) catch return PromError.OutOfMemory;
 }

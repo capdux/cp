@@ -23,16 +23,54 @@ fn approxEq(a: f64, b: f64): bool {
     return diff <= 0.000001;
 }
 
+type CssTransVec16 = @Vector(16, u8);
+
+const TRANS_MASK_WS: u8 = 1 << 0;
+const TRANS_MASK_IDENT_START: u8 = 1 << 1;
+const TRANS_MASK_IDENT_CONT: u8 = 1 << 2;
+
+fn makeTransCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n' || i == 0x0c) m |= TRANS_MASK_WS;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i == '-') {
+            m |= TRANS_MASK_IDENT_START | TRANS_MASK_IDENT_CONT;
+        }
+        if (i >= '0' && i <= '9') {
+            m |= TRANS_MASK_IDENT_CONT;
+        }
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const TRANS_CHAR_LUT: [u8; 256] = makeTransCharLut();
+
 fn isValidIdent(s: string): bool {
     if (s.len == 0) { return false; }
-    const c0 = s[0];
-    if (!((c0 >= 'a' && c0 <= 'z') || (c0 >= 'A' && c0 <= 'Z') || c0 == '_' || c0 == '-')) {
+    if ((TRANS_CHAR_LUT[usize(s[0])] & TRANS_MASK_IDENT_START) == 0) {
         return false;
     }
     let i: usize = 1;
+    const lo_a: CssTransVec16 = @splat('a' as u8);
+    const hi_z: CssTransVec16 = @splat('z' as u8);
+    const lo_A: CssTransVec16 = @splat('A' as u8);
+    const hi_Z: CssTransVec16 = @splat('Z' as u8);
+    const lo_0: CssTransVec16 = @splat('0' as u8);
+    const hi_9: CssTransVec16 = @splat('9' as u8);
+    const us_v: CssTransVec16 = @splat('_' as u8);
+    const hy_v: CssTransVec16 = @splat('-' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: CssTransVec16 = s[i .. i + 16][0..16].*;
+        const ok = ((v >= lo_a) & (v <= hi_z)) | ((v >= lo_A) & (v <= hi_Z)) |
+            ((v >= lo_0) & (v <= hi_9)) | (v == us_v) | (v == hy_v);
+        if (!@reduce(.And, ok)) return false;
+    }
     while (i < s.len) {
-        const c = s[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-')) {
+        if ((TRANS_CHAR_LUT[usize(s[i])] & TRANS_MASK_IDENT_CONT) == 0) {
             return false;
         }
         i += 1;
@@ -507,7 +545,7 @@ pub struct TransitionList {
 }
 
 fn isTimeWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0c;
+    return (TRANS_CHAR_LUT[usize(c)] & TRANS_MASK_WS) != 0;
 }
 
 fn trimTimeWs(s: []const u8): []const u8 {
@@ -519,7 +557,7 @@ fn trimTimeWs(s: []const u8): []const u8 {
 }
 
 fn isTimeIdentChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+    return (TRANS_CHAR_LUT[usize(c)] & TRANS_MASK_IDENT_CONT) != 0;
 }
 
 fn isStrictCssNumber(s: []const u8): bool {

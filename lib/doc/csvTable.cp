@@ -34,6 +34,20 @@ pub err CsvTableError {
     InvalidParameter,
 }
 
+type CsvVec16 = @Vector(16, u8);
+
+fn makeCsvScalarWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\r')] = 1;
+    lut[usize('\n')] = 1;
+    return lut;
+}
+
+const CSV_SCALAR_WS_LUT: [u8; 256] = makeCsvScalarWsLut();
+
 fn asciiLower(c: u8): u8 {
     if (c >= 'A' && c <= 'Z') return c + 32;
     return c;
@@ -42,6 +56,11 @@ fn asciiLower(c: u8): u8 {
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CsvVec16 = a[i .. i + 16][0..16].*;
+        const vb: CsvVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -51,6 +70,15 @@ fn strEq(a: string, b: string): bool {
 fn strEqLower(a: string, lower_b: string): bool {
     if (a.len != lower_b.len) return false;
     let i: usize = 0;
+    const lo_A: CsvVec16 = @splat(65 as u8);
+    const hi_Z: CsvVec16 = @splat(90 as u8);
+    const case_bit: CsvVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CsvVec16 = a[i .. i + 16][0..16].*;
+        const vb: CsvVec16 = lower_b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= lo_A) & (va <= hi_Z), va | case_bit, va);
+        if (@reduce(.Or, la ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (asciiLower(a[i]) != lower_b[i]) return false;
     }
@@ -60,6 +88,17 @@ fn strEqLower(a: string, lower_b: string): bool {
 fn strCmp(a: string, b: string): i32 {
     const min_len: usize = if (a.len < b.len) a.len else b.len;
     let i: usize = 0;
+    while (i + 16 <= min_len) : (i += 16) {
+        const va: CsvVec16 = a[i .. i + 16][0..16].*;
+        const vb: CsvVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (a[i + j] < b[i + j]) return -1;
+                if (a[i + j] > b[i + j]) return 1;
+            }
+        }
+    }
     while (i < min_len) : (i += 1) {
         if (a[i] < b[i]) return -1;
         if (a[i] > b[i]) return 1;
@@ -72,28 +111,27 @@ fn strCmp(a: string, b: string): i32 {
 fn strContains(hay: string, needle: string): bool {
     if (needle.len == 0) return true;
     if (needle.len > hay.len) return false;
+    const limit = hay.len - needle.len + 1;
+    const first_v: CsvVec16 = @splat(needle[0]);
     let i: usize = 0;
-    while (i + needle.len <= hay.len) : (i += 1) {
-        let j: usize = 0;
-        let ok: bool = true;
-        while (j < needle.len) : (j += 1) {
-            if (hay[i + j] != needle[j]) {
-                ok = false;
-                break;
-            }
+    while (i < limit) {
+        while (i + 16 <= limit) {
+            const v: CsvVec16 = hay[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == first_v)) break;
+            i += 16;
         }
-        if (ok) return true;
+        if (i >= limit) break;
+        if (hay[i] == needle[0] && strEq(hay[i .. i + needle.len], needle)) {
+            return true;
+        }
+        i += 1;
     }
     return false;
 }
 
 fn strStartsWith(hay: string, pref: string): bool {
     if (pref.len > hay.len) return false;
-    let i: usize = 0;
-    while (i < pref.len) : (i += 1) {
-        if (hay[i] != pref[i]) return false;
-    }
-    return true;
+    return strEq(hay[0..pref.len], pref);
 }
 
 fn trimFieldWs(s: string, delimiter: u8): string {
@@ -106,9 +144,9 @@ fn trimFieldWs(s: string, delimiter: u8): string {
 
 fn trimScalarWs(s: string): string {
     let start: usize = 0;
-    while (start < s.len && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r' || s[start] == '\n')) : (start += 1) {}
+    while (start < s.len && CSV_SCALAR_WS_LUT[usize(s[start])] != 0) : (start += 1) {}
     let end: usize = s.len;
-    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r' || s[end - 1] == '\n')) : (end -= 1) {}
+    while (end > start && CSV_SCALAR_WS_LUT[usize(s[end - 1])] != 0) : (end -= 1) {}
     if (end - start >= 2 && s[start] == '"' && s[end - 1] == '"') {
         start += 1;
         end -= 1;
@@ -119,9 +157,8 @@ fn trimScalarWs(s: string): string {
 }
 
 fn copyBytes(dst: []u8, dst_off: usize, src: []const u8) {
-    let i: usize = 0;
-    while (i < src.len) : (i += 1) {
-        dst[dst_off + i] = src[i];
+    if (src.len > 0) {
+        @memcpy(dst[dst_off .. dst_off + src.len], src);
     }
 }
 

@@ -83,35 +83,72 @@ pub struct HighlightToken {
 
 const ANSI_RESET: string = "\x1b[0m";
 
+type HlVec16 = @Vector(16, u8);
+
+const HL_MASK_WS: u8 = 1 << 0;
+const HL_MASK_ALPHA: u8 = 1 << 1;
+const HL_MASK_DIGIT: u8 = 1 << 2;
+const HL_MASK_HEX: u8 = 1 << 3;
+const HL_MASK_OP: u8 = 1 << 4;
+const HL_MASK_PUNCT: u8 = 1 << 5;
+
+fn makeHlCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let m: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r') m |= HL_MASK_WS;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_') m |= HL_MASK_ALPHA;
+        if (i >= '0' && i <= '9') {
+            m |= HL_MASK_DIGIT;
+            m |= HL_MASK_HEX;
+        }
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) m |= HL_MASK_HEX;
+        if (i == '+' || i == '-' || i == '*' || i == '/' || i == '%' ||
+            i == '=' || i == '!' || i == '<' || i == '>' || i == '&' ||
+            i == '|' || i == '^' || i == '~' || i == '?' || i == ':' || i == '$')
+        {
+            m |= HL_MASK_OP;
+        }
+        if (i == '(' || i == ')' || i == '[' || i == ']' ||
+            i == '{' || i == '}' || i == ',' || i == ';' || i == '.')
+        {
+            m |= HL_MASK_PUNCT;
+        }
+        lut[i] = m;
+    }
+    return lut;
+}
+
+const HL_CHAR_LUT: [u8; 256] = makeHlCharLut();
+
 fn isWhitespace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_WS) != 0;
 }
 
 fn isAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_ALPHA) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_DIGIT) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_HEX) != 0;
 }
 
 fn isIdentContinue(c: u8): bool {
-    return isAlpha(c) || isDigit(c);
+    return (HL_CHAR_LUT[usize(c)] & (HL_MASK_ALPHA | HL_MASK_DIGIT)) != 0;
 }
 
 fn isOperatorChar(c: u8): bool {
-    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
-        c == '=' || c == '!' || c == '<' || c == '>' || c == '&' ||
-        c == '|' || c == '^' || c == '~' || c == '?' || c == ':' || c == '$';
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_OP) != 0;
 }
 
 fn isPunctChar(c: u8): bool {
-    return c == '(' || c == ')' || c == '[' || c == ']' ||
-        c == '{' || c == '}' || c == ',' || c == ';' || c == '.';
+    return (HL_CHAR_LUT[usize(c)] & HL_MASK_PUNCT) != 0;
 }
 
 fn toLowerAscii(c: u8): u8 {
@@ -122,6 +159,16 @@ fn toLowerAscii(c: u8): u8 {
 fn eqlLower(a: string, lower_lit: string): bool {
     if (a.len != lower_lit.len) return false;
     let i: usize = 0;
+    const lo_A: HlVec16 = @splat(65 as u8);
+    const hi_Z: HlVec16 = @splat(90 as u8);
+    const case_bit: HlVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: HlVec16 = a[i .. i + 16][0..16].*;
+        const vb: HlVec16 = lower_lit[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        if (@reduce(.Or, la ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLowerAscii(a[i]) != lower_lit[i]) return false;
     }
@@ -350,13 +397,30 @@ fn supportsSingleQuoteString(lang: Language): bool {
 
 fn scanLineCommentEnd(code: string, start: usize): usize {
     let i = start;
+    const nl_v: HlVec16 = @splat('\n' as u8);
+    while (i + 16 <= code.len) : (i += 16) {
+        const v: HlVec16 = code[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == nl_v)) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (code[i + j] == '\n') return i + j;
+            }
+        }
+    }
     while (i < code.len && code[i] != '\n') : (i += 1) {}
     return i;
 }
 
 fn scanBlockCommentEnd(code: string, start: usize): usize {
     let i = start + 2;
+    const star_v: HlVec16 = @splat('*' as u8);
     while (i + 1 < code.len) {
+        while (i + 16 <= code.len) {
+            const v: HlVec16 = code[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == star_v)) break;
+            i += 16;
+        }
+        if (i + 1 >= code.len) break;
         if (code[i] == '*' && code[i + 1] == '/') {
             return i + 2;
         }
@@ -367,7 +431,16 @@ fn scanBlockCommentEnd(code: string, start: usize): usize {
 
 fn scanQuotedStringEnd(code: string, start: usize, quote: u8, sql_double_escape: bool): usize {
     let i = start + 1;
+    const q_v: HlVec16 = @splat(quote);
+    const bs_v: HlVec16 = @splat('\\' as u8);
     while (i < code.len) {
+        while (i + 16 <= code.len) {
+            const v: HlVec16 = code[i .. i + 16][0..16].*;
+            const hit = if (sql_double_escape) (v == q_v) else ((v == q_v) | (v == bs_v));
+            if (@reduce(.Or, hit)) break;
+            i += 16;
+        }
+        if (i >= code.len) break;
         const c = code[i];
         if (c == '\\' && !sql_double_escape) {
             if (i + 1 < code.len) {
@@ -471,15 +544,42 @@ fn isFollowedByParen(code: string, pos: usize): bool {
 }
 
 fn appendEscapedHtml(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, text: string) ! HighlightError {
-    for (c of text) {
-        switch (c) {
-            '&' => buf.appendSlice(alloc, "&amp;") catch return HighlightError.OutOfMemory,
-            '<' => buf.appendSlice(alloc, "&lt;") catch return HighlightError.OutOfMemory,
-            '>' => buf.appendSlice(alloc, "&gt;") catch return HighlightError.OutOfMemory,
-            '"' => buf.appendSlice(alloc, "&quot;") catch return HighlightError.OutOfMemory,
-            '\'' => buf.appendSlice(alloc, "&#39;") catch return HighlightError.OutOfMemory,
-            else => buf.append(alloc, c) catch return HighlightError.OutOfMemory,
+    const amp_v: HlVec16 = @splat('&' as u8);
+    const lt_v: HlVec16 = @splat('<' as u8);
+    const gt_v: HlVec16 = @splat('>' as u8);
+    const dq_v: HlVec16 = @splat('"' as u8);
+    const sq_v: HlVec16 = @splat('\'' as u8);
+    let i: usize = 0;
+    let run_start: usize = 0;
+    while (i < text.len) {
+        while (i + 16 <= text.len) {
+            const v: HlVec16 = text[i .. i + 16][0..16].*;
+            const hit = (v == amp_v) | (v == lt_v) | (v == gt_v) | (v == dq_v) | (v == sq_v);
+            if (@reduce(.Or, hit)) break;
+            i += 16;
         }
+        if (i >= text.len) break;
+        const c = text[i];
+        if (c == '&' || c == '<' || c == '>' || c == '"' || c == '\'') {
+            if (i > run_start) {
+                buf.appendSlice(alloc, text[run_start..i]) catch return HighlightError.OutOfMemory;
+            }
+            switch (c) {
+                '&' => buf.appendSlice(alloc, "&amp;") catch return HighlightError.OutOfMemory,
+                '<' => buf.appendSlice(alloc, "&lt;") catch return HighlightError.OutOfMemory,
+                '>' => buf.appendSlice(alloc, "&gt;") catch return HighlightError.OutOfMemory,
+                '"' => buf.appendSlice(alloc, "&quot;") catch return HighlightError.OutOfMemory,
+                '\'' => buf.appendSlice(alloc, "&#39;") catch return HighlightError.OutOfMemory,
+                else => {},
+            }
+            i += 1;
+            run_start = i;
+        } else {
+            i += 1;
+        }
+    }
+    if (run_start < text.len) {
+        buf.appendSlice(alloc, text[run_start..text.len]) catch return HighlightError.OutOfMemory;
     }
 }
 
