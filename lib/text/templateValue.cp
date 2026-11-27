@@ -155,8 +155,16 @@ pub struct TemplateValue {
     /// Resolves a dot-separated path (e.g. `user.profile.name`, `items.0.title`, or `.`)
     /// directly within this value.
     pub fn getPath(path: []const u8): TemplateValue? {
-        if (path.len == 0 || std.mem.eql(u8, path, ".")) return _;
-        let cur = _;
+        let cur = TemplateValue{
+            tag: _.tag,
+            bool_val: _.bool_val,
+            int_val: _.int_val,
+            float_val: _.float_val,
+            str_val: _.str_val,
+            list_val: _.list_val,
+            map_val: _.map_val,
+        };
+        if (path.len == 0 || std.mem.eql(u8, path, ".")) return cur;
         let iter = std.mem.splitScalar(u8, path, '.');
         while (seg := iter.next()) {
             if (seg.len == 0) return null;
@@ -254,7 +262,21 @@ pub struct TemplateContext {
             if (first.len == 0 || rest.len == 0) return null;
         }
 
-        let cur: (*const TemplateContext)? = &_;
+        if (_.data.tag == TemplateValueTag.Map) {
+            if (hit := _.data.get(first)) {
+                if (rest.len == 0) return hit;
+                return hit.getPath(rest);
+            }
+        } else if (_.data.tag == TemplateValueTag.List) {
+            if (idx := TemplateValue.parseIndex(first)) {
+                if (hit := _.data.getIndex(idx)) {
+                    if (rest.len == 0) return hit;
+                    return hit.getPath(rest);
+                }
+            }
+        }
+
+        let cur: (*const TemplateContext)? = _.parent;
         while (frame := cur) {
             if (frame.data.tag == TemplateValueTag.Map) {
                 if (hit := frame.data.get(first)) {

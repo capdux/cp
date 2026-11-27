@@ -59,11 +59,11 @@ pub struct Tensor {
     offset: usize = 0;
     owns_data: bool = false;
 
-    pub fn zeros(alloc: std.mem.Allocator, shape: []const usize): Tensor! {
+    pub static fn zeros(alloc: std.mem.Allocator, shape: []const usize): Tensor! {
         return Tensor.full(alloc, shape, 0.0);
     }
 
-    pub fn ones(alloc: std.mem.Allocator, shape: []const usize): Tensor! {
+    pub static fn ones(alloc: std.mem.Allocator, shape: []const usize): Tensor! {
         return Tensor.full(alloc, shape, 1.0);
     }
 
@@ -85,7 +85,7 @@ pub struct Tensor {
         return t;
     }
 
-    pub fn fromSlice(alloc: std.mem.Allocator, shape: []const usize, src: []const f32): Tensor! {
+    pub static fn fromSlice(alloc: std.mem.Allocator, shape: []const usize, src: []const f32): Tensor! {
         const total = computeElementCount(shape)?;
         if (src.len != total) {
             return TensorError.DimensionMismatch;
