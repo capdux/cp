@@ -851,3 +851,13 @@ git status --porcelain cpc_dev/src
 
 
 
+
+### 6.14 跨生态迁移、依赖分层与源码溯源规范（2026-11-28 固化）
+
+1. **文件头溯源标注规范**：所有从上游项目吸收或重写的标准库（`lib/`）与生态包（`packages/`）`.cp` 源码文件顶部，应统一保留 `// Source: Absorbed from <upstream_repo_or_path> | Synced: YYYY-MM-DD` 溯源注释，便于后续对比上游版本差异与功能完整性审计。
+2. **开发依赖（`devDependencies`）分层处理策略**：
+   - `cap from -npm` 仅递归转换运行时 `dependencies`，默认跳过 `devDependencies`；
+   - **严禁吸收**纯 JS 构建/Lint/类型工具类开发依赖（如 `eslint`、`prettier`、`typescript`、`@types/*`、`wireit`、`hereby`）；
+   - 测试/图像/差异比对等**高价值通用工具依赖**（如 `diff`、`pixelmatch`、`jpeg-js`、`sinon`），优先检查 `cap:*` 内置库与 `packages/registry.json` 覆盖情况，确有缺口时再通过 `cap from -npm <pkg>` 按需吸收为独立裸包。
+3. **测试目录迁移统一参数 `--test`**：`cap from -ts/-rs` 默认仅迁移生产源码；需要一并迁移或评估测试集时，显式传入 `--test`（将扫描 `test/`、`tests/`、`__tests__/` 及 `*.test.*` / `*.spec.*`，自动把 `jest`/`@jest/globals`/`vitest`/`mocha`/`bun:test`/`node:test`/`assert` 映射至 `cap:test`，并自动联动 `cap fix` 修正导入）。
+4. **吸收后强制执行「行数差异与功能边界核查」**：当吸收后的 CP 代码量显著少于上游源码时，必须在结单或 `stats.md` 中明确核对并列出：**① 底层共享底座去重压缩**、**② 按架构决策刻意裁剪的引擎/协议/UI**、**③ 核心 API 覆盖清单及尚简化的边缘长尾能力**，严防功能静默遗漏。
