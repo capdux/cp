@@ -1,6 +1,10 @@
 // @cap/statsd — Zero-heap StatsD & DogStatsD UDP metric codec
 // MIT License (clean-room CP implementation)
 
+import { isDigit } from "cap:ascii";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, writeI64, parseI64 } from "cap:fmt";
+
 pub const STATSD_INVALID: u8 = 0;
 pub const STATSD_COUNTER: u8 = 1;
 pub const STATSD_TIMING: u8 = 2;
@@ -16,20 +20,6 @@ pub struct StatsdMetric {
     pub tags_start: usize,
     pub tags_len: usize,
     pub valid: bool,
-}
-
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn isValidMetricName(name: []const u8) -> bool {
@@ -71,50 +61,13 @@ fn appendSlice(dst: []u8, pos: usize, s: []const u8) -> i64 {
     if (s.len > dst.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        dst[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, dst, pos) as i64;
 }
 
 fn appendI64(dst: []u8, pos: usize, v: i64) -> i64 {
-    let p: i64 = pos as i64;
-    let mag: u64 = 0;
-    if (v < 0) {
-        p = appendByte(dst, p as usize, '-' as u8);
-        if (p < 0) {
-            return -1;
-        }
-        mag = ((-(v + 1)) as u64) + 1;
-    } else {
-        mag = v as u64;
-    }
-
-    let digits: [24]u8 = undefined;
-    let count: usize = 0;
-    if (mag == 0) {
-        digits[0] = '0' as u8;
-        count = 1;
-    } else {
-        let cur: u64 = mag;
-        while (cur > 0) {
-            digits[count] = ('0' as u8) + ((cur % 10) as u8);
-            count += 1;
-            cur = cur / 10;
-        }
-    }
-
-    let k: usize = count;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(dst, p as usize, digits[k]);
-        if (p < 0) {
-            return -1;
-        }
-    }
-    return p;
+    let tmp: [24]u8 = undefined;
+    const n: usize = writeI64(v, tmp[0..24], 0);
+    return appendSlice(dst, pos, tmp[0..n]);
 }
 
 pub fn formatMetric(
@@ -206,58 +159,6 @@ pub fn formatMetric(
     return p;
 }
 
-struct IntParseResult {
-    value: i64,
-    ok: bool,
-}
-
-fn parseI64Slice(s: []const u8) -> IntParseResult {
-    const fail = IntParseResult { value: 0, ok: false };
-    if (s.len == 0) {
-        return fail;
-    }
-    let i: usize = 0;
-    let is_neg: bool = false;
-    if (s[0] == '-' as u8) {
-        is_neg = true;
-        i = 1;
-    } else if (s[0] == '+' as u8) {
-        i = 1;
-    }
-    if (i >= s.len) {
-        return fail;
-    }
-
-    const max_pos: u64 = ((0x7FFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
-    const max_neg: u64 = (0x80000000 as u64) << 32;
-    let max_mag: u64 = max_pos;
-    if (is_neg) {
-        max_mag = max_neg;
-    }
-
-    let acc: u64 = 0;
-    while (i < s.len) {
-        const c: u8 = s[i];
-        if (c < '0' as u8 || c > '9' as u8) {
-            return fail;
-        }
-        const d: u64 = (c - ('0' as u8)) as u64;
-        if (acc > (max_mag - d) / 10) {
-            return fail;
-        }
-        acc = acc * 10 + d;
-        i += 1;
-    }
-
-    if (is_neg) {
-        if (acc == max_neg) {
-            return IntParseResult { value: -(max_pos as i64) - 1, ok: true };
-        }
-        return IntParseResult { value: -(acc as i64), ok: true };
-    }
-    return IntParseResult { value: acc as i64, ok: true };
-}
-
 fn parseSampleRateMilli(s: []const u8) -> i32 {
     if (s.len == 0) {
         return -1;
@@ -265,7 +166,7 @@ fn parseSampleRateMilli(s: []const u8) -> i32 {
     let i: usize = 0;
     let whole: u32 = 0;
     let has_digits: bool = false;
-    while (i < s.len && s[i] >= '0' as u8 && s[i] <= '9' as u8) {
+    while (i < s.len && isDigit(s[i])) {
         has_digits = true;
         whole = whole * 10 + ((s[i] - ('0' as u8)) as u32);
         if (whole > 1) {
@@ -278,7 +179,7 @@ fn parseSampleRateMilli(s: []const u8) -> i32 {
     let scale: u32 = 100;
     if (i < s.len && s[i] == '.' as u8) {
         i += 1;
-        while (i < s.len && s[i] >= '0' as u8 && s[i] <= '9' as u8) {
+        while (i < s.len && isDigit(s[i])) {
             has_digits = true;
             const d: u32 = (s[i] - ('0' as u8)) as u32;
             if (scale > 0) {
@@ -327,24 +228,22 @@ pub fn parseMetric(packet: []const u8) -> StatsdMetric {
     }
 
     // Locate first '|'
-    let pipe1: usize = colon + 1;
-    while (pipe1 < packet.len && packet[pipe1] != '|' as u8) {
-        pipe1 += 1;
-    }
-    if (pipe1 >= packet.len) {
+    let pipe1: usize = 0;
+    if (p1 := findByteInBytes(packet, '|' as u8, colon + 1)) {
+        pipe1 = p1;
+    } else {
         return fail;
     }
 
-    const val_res: IntParseResult = parseI64Slice(packet[(colon + 1)..pipe1]);
-    if (!val_res.ok) {
+    let val: i64 = 0;
+    if (v := parseI64(packet[(colon + 1)..pipe1])) {
+        val = v;
+    } else {
         return fail;
     }
 
     // Read type segment after pipe1
-    let type_end: usize = pipe1 + 1;
-    while (type_end < packet.len && packet[type_end] != '|' as u8) {
-        type_end += 1;
-    }
+    const type_end: usize = findByteInBytes(packet, '|' as u8, pipe1 + 1) ?? packet.len;
     const type_slice: []const u8 = packet[(pipe1 + 1)..type_end];
     let kind: u8 = STATSD_INVALID;
     if (bytesEq(type_slice, "c")) {
@@ -369,10 +268,7 @@ pub fn parseMetric(packet: []const u8) -> StatsdMetric {
             return fail;
         }
         pos += 1;
-        let seg_end: usize = pos;
-        while (seg_end < packet.len && packet[seg_end] != '|' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(packet, '|' as u8, pos) ?? packet.len;
         if (seg_end <= pos) {
             return fail;
         }
@@ -395,7 +291,7 @@ pub fn parseMetric(packet: []const u8) -> StatsdMetric {
     return StatsdMetric {
         name_start: 0,
         name_len: colon,
-        value: val_res.value,
+        value: val,
         kind: kind,
         sample_rate_milli: rate_milli,
         tags_start: tags_start,

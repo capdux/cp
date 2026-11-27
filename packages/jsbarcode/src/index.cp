@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `jsbarcode` and Rust `barcoders`.
 // Supports: EAN-13 (with checksum), UPC-A (with checksum), Code 128 (Set B full printable ASCII), Code 39.
 
+import { isDigit, isPrintable, toUpperByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 const MAX_MODULES: usize = 512;
 
 pub struct Barcode {
@@ -80,15 +83,15 @@ pub struct Barcode {
         }
         const total_w = (_.len + quiet_zone * 2) * bar_width;
         let pos: usize = 0;
-        pos = appendStr(out, pos, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
-        pos = appendUsize(out, pos, total_w);
-        pos = appendStr(out, pos, "\" height=\"");
-        pos = appendUsize(out, pos, height);
-        pos = appendStr(out, pos, "\" viewBox=\"0 0 ");
-        pos = appendUsize(out, pos, total_w);
-        pos = appendStr(out, pos, " ");
-        pos = appendUsize(out, pos, height);
-        pos = appendStr(out, pos, "\"><rect width=\"100%\" height=\"100%\" fill=\"#fff\"/>");
+        pos = writeStr("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"", out, pos);
+        pos = writeU64(total_w as u64, out, pos);
+        pos = writeStr("\" height=\"", out, pos);
+        pos = writeU64(height as u64, out, pos);
+        pos = writeStr("\" viewBox=\"0 0 ", out, pos);
+        pos = writeU64(total_w as u64, out, pos);
+        pos = writeStr(" ", out, pos);
+        pos = writeU64(height as u64, out, pos);
+        pos = writeStr("\"><rect width=\"100%\" height=\"100%\" fill=\"#fff\"/>", out, pos);
 
         let i: usize = 0;
         while (i < _.len) {
@@ -99,59 +102,20 @@ pub struct Barcode {
                 }
                 const run_w = (i - start) * bar_width;
                 const x = (start + quiet_zone) * bar_width;
-                pos = appendStr(out, pos, "<rect x=\"");
-                pos = appendUsize(out, pos, x);
-                pos = appendStr(out, pos, "\" y=\"0\" width=\"");
-                pos = appendUsize(out, pos, run_w);
-                pos = appendStr(out, pos, "\" height=\"");
-                pos = appendUsize(out, pos, height);
-                pos = appendStr(out, pos, "\" fill=\"#000\"/>");
+                pos = writeStr("<rect x=\"", out, pos);
+                pos = writeU64(x as u64, out, pos);
+                pos = writeStr("\" y=\"0\" width=\"", out, pos);
+                pos = writeU64(run_w as u64, out, pos);
+                pos = writeStr("\" height=\"", out, pos);
+                pos = writeU64(height as u64, out, pos);
+                pos = writeStr("\" fill=\"#000\"/>", out, pos);
             } else {
                 i += 1;
             }
         }
-        pos = appendStr(out, pos, "</svg>");
+        pos = writeStr("</svg>", out, pos);
         return out[0..pos];
     }
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendUsize(out: []u8, pos: usize, v: usize) -> usize {
-    let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let x = v;
-    if (x == 0) {
-        tmp[0] = '0';
-        n = 1;
-    } else {
-        while (x > 0 && n < 24) {
-            tmp[n] = ((x % 10) as u8) + '0';
-            x = x / 10;
-            n += 1;
-        }
-    }
-    let p = pos;
-    let k = n;
-    while (k > 0 && p < out.len) {
-        k -= 1;
-        out[p] = tmp[k];
-        p += 1;
-    }
-    return p;
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
 }
 
 // ---------------------------------------------------------------------------
@@ -373,7 +337,7 @@ pub fn encodeCode128B(text: string) -> Barcode {
     let i: usize = 0;
     while (i < text.len) {
         const c = text[i];
-        if (c < 32 || c > 126) {
+        if (!isPrintable(c)) {
             return Barcode.empty();
         }
         const val: usize = (c - 32) as usize;
@@ -395,7 +359,7 @@ pub fn encodeCode128B(text: string) -> Barcode {
 // ---------------------------------------------------------------------------
 
 fn code39Pattern(c: u8) -> string {
-    const ch = if (c >= 'a' && c <= 'z') { c - 32 } else { c };
+    const ch = toUpperByte(c);
     switch (ch) {
         '0' => { return "111221211"; },
         '1' => { return "211211112"; },

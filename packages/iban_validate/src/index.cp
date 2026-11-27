@@ -1,28 +1,15 @@
 // @cap/iban — Zero-heap ISO 13616 IBAN validator, Mod-97-10 engine & formatter
 // MIT License (clean-room CP implementation)
 
+import { toUpperByte, isAlpha, isDigit, isAlnum } from "cap:ascii";
+
 const COUNTRY_COUNT: usize = 88;
 const MAX_IBAN_LEN: usize = 34;
 
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' as u8 && c <= 'z' as u8) {
-        return c - 32;
-    }
-    return c;
-}
-
-fn isUpperAlpha(c: u8) -> bool {
-    return c >= 'A' as u8 && c <= 'Z' as u8;
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' as u8 && c <= '9' as u8;
-}
-
 pub fn countryLength(c0: u8, c1: u8) -> usize {
-    const ch0: u8 = toUpperAscii(c0);
-    const ch1: u8 = toUpperAscii(c1);
-    if (!isUpperAlpha(ch0) || !isUpperAlpha(ch1)) {
+    const ch0: u8 = toUpperByte(c0);
+    const ch1: u8 = toUpperByte(c1);
+    if (!isAlpha(ch0) || !isAlpha(ch1)) {
         return 0;
     }
 
@@ -62,7 +49,7 @@ pub fn electronicFormat(input: string, out: []u8) -> usize {
         if (pos >= out.len) {
             return 0;
         }
-        out[pos] = toUpperAscii(c);
+        out[pos] = toUpperByte(c);
         pos += 1;
         i += 1;
     }
@@ -106,10 +93,10 @@ pub fn mod97(electronic: string) -> u32 {
         if (idx >= electronic.len) {
             idx -= electronic.len;
         }
-        const c: u8 = toUpperAscii(electronic[idx]);
+        const c: u8 = toUpperByte(electronic[idx]);
         if (isDigit(c)) {
             rem = (rem * 10 + ((c - ('0' as u8)) as u32)) % 97;
-        } else if (isUpperAlpha(c)) {
+        } else if (isAlpha(c)) {
             const v: u32 = ((c - ('A' as u8)) as u32) + 10;
             rem = (rem * 100 + v) % 97;
         } else {
@@ -133,8 +120,8 @@ pub fn isValid(input: string) -> bool {
         if (n >= MAX_IBAN_LEN) {
             return false;
         }
-        const up: u8 = toUpperAscii(c);
-        if (!isUpperAlpha(up) && !isDigit(up)) {
+        const up: u8 = toUpperByte(c);
+        if (!isAlnum(up)) {
             return false;
         }
         buf[n] = up;
@@ -145,7 +132,7 @@ pub fn isValid(input: string) -> bool {
     if (n < 15) {
         return false;
     }
-    if (!isUpperAlpha(buf[0]) || !isUpperAlpha(buf[1])) {
+    if (!isAlpha(buf[0]) || !isAlpha(buf[1])) {
         return false;
     }
     if (!isDigit(buf[2]) || !isDigit(buf[3])) {
@@ -167,8 +154,8 @@ pub fn computeCheckDigits(
     out_d0: *u8,
     out_d1: *u8,
 ) -> bool {
-    const c0: u8 = toUpperAscii(country0);
-    const c1: u8 = toUpperAscii(country1);
+    const c0: u8 = toUpperByte(country0);
+    const c1: u8 = toUpperByte(country1);
     const expected: usize = countryLength(c0, c1);
     if (expected < 5 || expected > MAX_IBAN_LEN) {
         return false;
@@ -191,8 +178,8 @@ pub fn computeCheckDigits(
         if (pos >= expected) {
             return false;
         }
-        const up: u8 = toUpperAscii(c);
-        if (!isUpperAlpha(up) && !isDigit(up)) {
+        const up: u8 = toUpperByte(c);
+        if (!isAlnum(up)) {
             return false;
         }
         buf[pos] = up;

@@ -2,6 +2,8 @@
 // Clean-room MIT implementation in pure CP.
 // Supports IMF-fixdate, RFC 850, and ANSI C asctime() formats plus Hinnant civil/epoch math.
 
+import { isDigit, strEq, findByte } from "cap:ascii";
+
 pub struct HttpDateTime {
     pub year: u16,
     pub month: u8,
@@ -26,7 +28,7 @@ fn invalidDateTime() -> HttpDateTime {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn isOws(b: u8) -> bool {
     return b == 32 || b == 9;
 }
 
@@ -99,7 +101,7 @@ fn buildValidated(year: i32, month: i32, day: i32, hour: i32, minute: i32, secon
 fn parse2Digits(s: string, pos: usize) -> i32 {
     const c0 = s[pos];
     const c1 = s[pos + 1];
-    if (c0 < 48 || c0 > 57 || c1 < 48 || c1 > 57) {
+    if (!isDigit(c0) || !isDigit(c1)) {
         return -1;
     }
     return ((c0 - 48) as i32) * 10 + ((c1 - 48) as i32);
@@ -147,28 +149,14 @@ fn isShortWeekday(s: string, pos: usize) -> bool {
     return false;
 }
 
-fn sliceEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn isLongWeekday(s: string) -> bool {
-    return sliceEq(s, "Sunday")
-        || sliceEq(s, "Monday")
-        || sliceEq(s, "Tuesday")
-        || sliceEq(s, "Wednesday")
-        || sliceEq(s, "Thursday")
-        || sliceEq(s, "Friday")
-        || sliceEq(s, "Saturday");
+    return strEq(s, "Sunday")
+        || strEq(s, "Monday")
+        || strEq(s, "Tuesday")
+        || strEq(s, "Wednesday")
+        || strEq(s, "Thursday")
+        || strEq(s, "Friday")
+        || strEq(s, "Saturday");
 }
 
 fn parseImfFixdate(s: string) -> HttpDateTime {
@@ -194,10 +182,12 @@ fn parseImfFixdate(s: string) -> HttpDateTime {
 fn parseRfc850(s: string) -> HttpDateTime {
     // "Sunday, 06-Nov-94 08:49:37 GMT"
     let comma: usize = 0;
-    while (comma < s.len && s[comma] != 44) {
-        comma += 1;
+    if (cpos := findByte(s, 44, 0)) {
+        comma = cpos;
+    } else {
+        return invalidDateTime();
     }
-    if (comma >= s.len || !isLongWeekday(s[0..comma])) {
+    if (!isLongWeekday(s[0..comma])) {
         return invalidDateTime();
     }
     if (s.len - comma != 24 || s[comma + 1] != 32) {
@@ -239,7 +229,7 @@ fn parseAsctime(s: string) -> HttpDateTime {
     const month = parseMonth(s, 4);
     let day: i32 = -1;
     if (s[8] == 32) {
-        if (s[9] >= 48 && s[9] <= 57) {
+        if (isDigit(s[9])) {
             day = (s[9] - 48) as i32;
         }
     } else {
@@ -257,10 +247,10 @@ fn parseAsctime(s: string) -> HttpDateTime {
 pub fn parseHttpDate(input: string) -> HttpDateTime {
     let a: usize = 0;
     let b: usize = input.len;
-    while (a < b && isSpace(input[a])) {
+    while (a < b && isOws(input[a])) {
         a += 1;
     }
-    while (b > a && isSpace(input[b - 1])) {
+    while (b > a && isOws(input[b - 1])) {
         b -= 1;
     }
     const s = input[a..b];

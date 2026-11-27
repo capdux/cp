@@ -2,6 +2,8 @@
 // Clean-room MIT implementation inspired by npm `statuses`, `http-status-codes`,
 // and Rust `http::StatusCode`.
 
+import { toLowerByte } from "cap:ascii";
+
 // ---------------------------------------------------------------------------
 // 1xx Informational
 // ---------------------------------------------------------------------------
@@ -209,13 +211,6 @@ pub fn reasonPhrase(code: u16) -> string {
 // Reverse Lookup (Phrase -> Code)
 // ---------------------------------------------------------------------------
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
 fn isSep(c: u8) -> bool {
     return c == ' ' || c == '_' || c == '-' || c == '\t';
 }
@@ -254,7 +249,7 @@ fn eqNormalizedPhrase(input: string, target: string) -> bool {
         if (i_sep || j_sep) {
             return false;
         }
-        if (toLowerAscii(input[i]) != toLowerAscii(target[j])) {
+        if (toLowerByte(input[i]) != toLowerByte(target[j])) {
             return false;
         }
         i += 1;

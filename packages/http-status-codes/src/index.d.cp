@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { toLowerByte } from "cap:ascii";
 export enum StatusClass {
     Invalid = 0,
     Informational = 1,
@@ -10,7 +11,6 @@ export enum StatusClass {
 }
 
 export fn reasonPhrase(code: u16): string;
-export fn toLowerAscii(c: u8): u8;
 export fn isSep(c: u8): bool;
 export fn eqNormalizedPhrase(input: string, target: string): bool;
 export fn codeFromPhrase(phrase: string): u16?;

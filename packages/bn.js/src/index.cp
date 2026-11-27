@@ -1,6 +1,8 @@
 // @cap/bigint-u256 — Zero-allocation 256-bit unsigned integer arithmetic (4x u64 little-endian limbs)
 // MIT License
 
+import { hexVal, hexCharLower } from "cap:ascii";
+
 const MASK32: u64 = 0xFFFFFFFF;
 const BIT32: u64 = (1 as u64) << 32;
 const MAX_U64: u64 = ((0xFFFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
@@ -107,26 +109,6 @@ fn clz64(x: u64): u32 {
     return n;
 }
 
-fn hexVal(c: u8): i32 {
-    if (c >= 48 && c <= 57) {
-        return (c - 48) as i32;
-    }
-    if (c >= 97 && c <= 102) {
-        return (c - 97 + 10) as i32;
-    }
-    if (c >= 65 && c <= 70) {
-        return (c - 65 + 10) as i32;
-    }
-    return -1;
-}
-
-fn hexDigit(v: u8): u8 {
-    if (v < 10) {
-        return v + 48;
-    }
-    return (v - 10) + 97;
-}
-
 pub struct DivRem256 {
     pub quot: U256,
     pub rem: U256,
@@ -163,8 +145,7 @@ pub struct U256 {
         let acc: U256 = U256.zero();
         let i: usize = start;
         while (i < s.len) {
-            let v: i32 = hexVal(s[i]);
-            if (v >= 0) {
+            if (v := hexVal(s[i])) {
                 acc = acc.shl(4);
                 acc.limbs[0] = acc.limbs[0] | (v as u64);
             }
@@ -389,7 +370,7 @@ pub struct U256 {
             out[0] = 48;
             return 1;
         }
-        let tmp: [64]u8 = [0; 64];
+        let tmp: [64]u8 = undefined;
         let pos: usize = 0;
         let started: bool = false;
         let limb_rev: usize = 4;
@@ -403,7 +384,7 @@ pub struct U256 {
                 let nib: u8 = ((word >> shift) & 15) as u8;
                 if (nib != 0 || started) {
                     started = true;
-                    tmp[pos] = hexDigit(nib);
+                    tmp[pos] = hexCharLower(nib);
                     pos = pos + 1;
                 }
             }

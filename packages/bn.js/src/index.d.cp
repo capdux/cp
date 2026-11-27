@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { hexVal, hexCharLower } from "cap:ascii";
 export class Add64Res {
     sum: u64,
     carry: u64,
@@ -19,8 +20,6 @@ export fn addWithCarry64(a: u64, b: u64, carry_in: u64): Add64Res;
 export fn subWithBorrow64(a: u64, b: u64, borrow_in: u64): Sub64Res;
 export fn mulWide64(a: u64, b: u64): Mul64Res;
 export fn clz64(x: u64): u32;
-export fn hexVal(c: u8): i32;
-export fn hexDigit(v: u8): u8;
 export class DivRem256 {
     quot: U256,
     rem: U256,

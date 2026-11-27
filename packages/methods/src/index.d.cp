@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-export fn hmToLower(c: u8): u8;
+import { toLowerByte } from "cap:ascii";
 export fn hmCmpLower(input: string, lower_target: string): i32;
 export fn findMethodIndex(method: string): i32;
 export fn isHttpMethod(method: string): bool;

@@ -1,8 +1,6 @@
 // Type definitions for CP
 
-export fn toUpperAscii(c: u8): u8;
-export fn isUpperAlpha(c: u8): bool;
-export fn isDigit(c: u8): bool;
+import { toUpperByte, isAlpha, isDigit, isAlnum } from "cap:ascii";
 export fn countryLength(c0: u8, c1: u8): usize;
 export fn electronicFormat(input: string, out: []u8): usize;
 export fn friendlyFormat(input: string, out: []u8): usize;

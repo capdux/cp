@@ -1,6 +1,9 @@
 // @cap/clf-log — Zero-allocation Apache/Nginx CLF & Combined Access Log Parser and Formatter
 // Clean-room MIT implementation in pure CP.
 
+import { isDigit } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct ClfRecord {
     pub host_start: usize,
     pub host_len: usize,
@@ -49,7 +52,7 @@ fn invalidClf() -> ClfRecord {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn isClfSpace(b: u8) -> bool {
     return b == 32 || b == 9;
 }
 
@@ -61,11 +64,11 @@ fn isLineEnd(b: u8) -> bool {
 /// Extracts zero-copy byte offsets into `line`; `bytes == -1` when response size is `-`.
 pub fn parseClf(line: []const u8) -> ClfRecord {
     let n = line.len;
-    while (n > 0 && (isLineEnd(line[n - 1]) || isSpace(line[n - 1]))) {
+    while (n > 0 && (isLineEnd(line[n - 1]) || isClfSpace(line[n - 1]))) {
         n -= 1;
     }
     let pos: usize = 0;
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos >= n) {
@@ -76,7 +79,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
 
     // 1. host
     const host_start = pos;
-    while (pos < n && !isSpace(line[pos])) {
+    while (pos < n && !isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos == host_start) {
@@ -86,11 +89,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.host_len = pos - host_start;
 
     // 2. ident (skip)
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     const ident_start = pos;
-    while (pos < n && !isSpace(line[pos])) {
+    while (pos < n && !isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos == ident_start) {
@@ -98,11 +101,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     }
 
     // 3. user
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     const user_start = pos;
-    while (pos < n && !isSpace(line[pos])) {
+    while (pos < n && !isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos == user_start) {
@@ -112,7 +115,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.user_len = pos - user_start;
 
     // 4. [time]
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos >= n || line[pos] != 91) {
@@ -133,7 +136,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     pos += 1;
 
     // 5. "METHOD PATH PROTO"
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos >= n || line[pos] != 34) {
@@ -157,11 +160,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
 
     // Split request line into METHOD, PATH, PROTO
     let rp = req_start;
-    while (rp < req_end && isSpace(line[rp])) {
+    while (rp < req_end && isClfSpace(line[rp])) {
         rp += 1;
     }
     const m_start = rp;
-    while (rp < req_end && !isSpace(line[rp])) {
+    while (rp < req_end && !isClfSpace(line[rp])) {
         rp += 1;
     }
     if (rp == m_start) {
@@ -170,11 +173,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.method_start = m_start;
     rec.method_len = rp - m_start;
 
-    while (rp < req_end && isSpace(line[rp])) {
+    while (rp < req_end && isClfSpace(line[rp])) {
         rp += 1;
     }
     const p_start = rp;
-    while (rp < req_end && !isSpace(line[rp])) {
+    while (rp < req_end && !isClfSpace(line[rp])) {
         rp += 1;
     }
     if (rp == p_start) {
@@ -183,11 +186,11 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.path_start = p_start;
     rec.path_len = rp - p_start;
 
-    while (rp < req_end && isSpace(line[rp])) {
+    while (rp < req_end && isClfSpace(line[rp])) {
         rp += 1;
     }
     const pr_start = rp;
-    while (rp < req_end && !isSpace(line[rp])) {
+    while (rp < req_end && !isClfSpace(line[rp])) {
         rp += 1;
     }
     if (rp == pr_start) {
@@ -197,14 +200,14 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.proto_len = rp - pr_start;
 
     // 6. status (3-digit HTTP status code 100..599 or valid u16 digits)
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     const st_start = pos;
     let st_val: u32 = 0;
-    while (pos < n && !isSpace(line[pos])) {
+    while (pos < n && !isClfSpace(line[pos])) {
         const ch = line[pos];
-        if (ch < 48 || ch > 57) {
+        if (!isDigit(ch)) {
             return invalidClf();
         }
         st_val = st_val * 10 + ((ch - 48) as u32);
@@ -219,21 +222,21 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     rec.status = st_val as u16;
 
     // 7. bytes ('-' -> -1, or non-negative integer)
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos >= n) {
         return invalidClf();
     }
-    if (line[pos] == 45 && (pos + 1 == n || isSpace(line[pos + 1]))) {
+    if (line[pos] == 45 && (pos + 1 == n || isClfSpace(line[pos + 1]))) {
         rec.bytes = -1;
         pos += 1;
     } else {
         const b_start = pos;
         let b_val: i64 = 0;
-        while (pos < n && !isSpace(line[pos])) {
+        while (pos < n && !isClfSpace(line[pos])) {
             const ch = line[pos];
-            if (ch < 48 || ch > 57) {
+            if (!isDigit(ch)) {
                 return invalidClf();
             }
             b_val = b_val * 10 + ((ch - 48) as i64);
@@ -246,7 +249,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
     }
 
     // 8. Optional Combined fields: "referer" "user-agent"
-    while (pos < n && isSpace(line[pos])) {
+    while (pos < n && isClfSpace(line[pos])) {
         pos += 1;
     }
     if (pos < n) {
@@ -269,7 +272,7 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
         rec.referer_len = pos - ref_start;
         pos += 1;
 
-        while (pos < n && isSpace(line[pos])) {
+        while (pos < n && isClfSpace(line[pos])) {
             pos += 1;
         }
         if (pos >= n || line[pos] != 34) {
@@ -297,40 +300,16 @@ pub fn parseClf(line: []const u8) -> ClfRecord {
 }
 
 fn pushSlice(dst: []u8, pos: usize, src: []const u8) -> i64 {
-    if (pos + src.len > dst.len) {
+    if (src.len > dst.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushU64(dst: []u8, pos: usize, val: u64) -> i64 {
-    let tmp: [20]u8 = undefined;
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            tmp[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n += 1;
-        }
-    }
-    if (pos + n > dst.len) {
-        return -1;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        dst[pos + i] = tmp[n - 1 - i];
-        i += 1;
-    }
-    return (pos + n) as i64;
+    let tmp: [24]u8 = undefined;
+    const n: usize = writeU64(val, tmp[0..24], 0);
+    return pushSlice(dst, pos, tmp[0..n]);
 }
 
 /// Formats a Common Log Format (CLF) line into `dst`.

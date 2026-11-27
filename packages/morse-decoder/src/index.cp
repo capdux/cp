@@ -1,6 +1,9 @@
 // @cap/morse-code — Zero-heap ITU-R M.1677 International Morse Code codec
 // MIT License (clean-room CP implementation)
 
+import { toUpperByte, isSpace, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const TABLE_LEN: usize = 44;
 
 const MORSE_CHARS: [44]u8 = [
@@ -23,33 +26,8 @@ const MORSE_CODES: [44]string = [
     ".-.-.-", "--..--", "..--..", "-..-.", "-....-", "-.--.", "-.--.-", ".--.-.",
 ];
 
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' as u8 && c <= 'z' as u8) {
-        return c - 32;
-    }
-    return c;
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' as u8 || c == '\t' as u8 || c == '\n' as u8 || c == '\r' as u8;
-}
-
-fn bytesEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 pub fn encodeChar(c: u8) -> string {
-    const up: u8 = toUpperAscii(c);
+    const up: u8 = toUpperByte(c);
     let i: usize = 0;
     while (i < TABLE_LEN) {
         if (MORSE_CHARS[i] == up) {
@@ -66,24 +44,12 @@ pub fn decodeSymbol(sym: string) -> u8 {
     }
     let i: usize = 0;
     while (i < TABLE_LEN) {
-        if (bytesEq(MORSE_CODES[i], sym)) {
+        if (strEq(MORSE_CODES[i], sym)) {
             return MORSE_CHARS[i];
         }
         i += 1;
     }
     return 0;
-}
-
-fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
-    if (s.len > out.len - pos) {
-        return -1;
-    }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
 }
 
 pub fn encodeText(input: string, out: []u8) -> usize {
@@ -93,8 +59,8 @@ pub fn encodeText(input: string, out: []u8) -> usize {
     let wrote_any: bool = false;
 
     while (i < input.len) {
-        if (isWs(input[i])) {
-            while (i < input.len && isWs(input[i])) {
+        if (isSpace(input[i])) {
+            while (i < input.len && isSpace(input[i])) {
                 i += 1;
             }
             if (wrote_any) {
@@ -109,11 +75,10 @@ pub fn encodeText(input: string, out: []u8) -> usize {
         }
 
         if (need_word_sep) {
-            const p: i64 = appendSlice(out, pos, " / ");
-            if (p < 0) {
+            if (3 > out.len - pos) {
                 return 0;
             }
-            pos = p as usize;
+            pos = writeStr(" / ", out, pos);
             need_word_sep = false;
         } else if (wrote_any) {
             if (pos >= out.len) {
@@ -123,11 +88,10 @@ pub fn encodeText(input: string, out: []u8) -> usize {
             pos += 1;
         }
 
-        const p2: i64 = appendSlice(out, pos, code);
-        if (p2 < 0) {
+        if (code.len > out.len - pos) {
             return 0;
         }
-        pos = p2 as usize;
+        pos = writeStr(code, out, pos);
         wrote_any = true;
         i += 1;
     }
@@ -140,14 +104,14 @@ pub fn decodeText(morse: string, out: []u8) -> usize {
     let i: usize = 0;
 
     while (i < morse.len) {
-        while (i < morse.len && isWs(morse[i])) {
+        while (i < morse.len && isSpace(morse[i])) {
             i += 1;
         }
         if (i >= morse.len) {
             break;
         }
         const tok_start: usize = i;
-        while (i < morse.len && !isWs(morse[i])) {
+        while (i < morse.len && !isSpace(morse[i])) {
             i += 1;
         }
         const tok: string = morse[tok_start..i];

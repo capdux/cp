@@ -2,6 +2,8 @@
 // Clean-room MIT CP implementation of npm `methods` (120M+/wk, Express / Koa core dependency)
 // Zero-heap, O(log n) case-insensitive lookup over all 34 standard HTTP methods.
 
+import { toLowerByte } from "cap:ascii";
+
 pub const HTTP_METHOD_COUNT: usize = 34;
 
 // Sorted ascending by lowercase ASCII name for O(log n) binary search
@@ -21,16 +23,11 @@ const HM_NAMES_UPPER: [34]string = [
     "TRACE", "UNBIND", "UNLINK", "UNLOCK",
 ];
 
-fn hmToLower(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
-}
-
 fn hmCmpLower(input: string, lower_target: string): i32 {
     let min_len = if (input.len < lower_target.len) { input.len } else { lower_target.len };
     let i: usize = 0;
     while (i < min_len) {
-        let a = hmToLower(input[i]);
+        let a = toLowerByte(input[i]);
         let b = lower_target[i];
         if (a < b) { return -1; }
         if (a > b) { return 1; }

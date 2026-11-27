@@ -2,6 +2,8 @@
 // Inspired by Rust `cexpr`
 // MIT License
 
+import { isSpace, isDigit, hexVal } from "cap:ascii";
+
 pub struct EvalResult {
     pub value: i64,
     pub ok: bool,
@@ -11,10 +13,6 @@ struct Parser {
     pos: usize,
     ok: bool,
     depth: usize,
-}
-
-fn isSpace(ch: u8): bool {
-    return ch == 32 || ch == 9 || ch == 10 || ch == 13;
 }
 
 fn skipWs(p: *Parser, src: string) {
@@ -59,13 +57,6 @@ fn signedRemI64(a: i64, b: i64): i64 {
         return 0 - (r as i64);
     }
     return r as i64;
-}
-
-fn hexDigitVal(ch: u8): i32 {
-    if (ch >= 48 && ch <= 57) { return (ch - 48) as i32; }
-    if (ch >= 97 && ch <= 102) { return (ch - 97 + 10) as i32; }
-    if (ch >= 65 && ch <= 70) { return (ch - 65 + 10) as i32; }
-    return -1;
 }
 
 fn skipIntSuffix(p: *Parser, src: string) {
@@ -132,13 +123,13 @@ fn parseIntLit(p: *Parser, src: string): i64 {
             p.*.pos = p.*.pos + 2;
             let digits: usize = 0;
             while (p.*.pos < src.len) {
-                let dv: i32 = hexDigitVal(src[p.*.pos]);
-                if (dv < 0) {
+                if (dv := hexVal(src[p.*.pos])) {
+                    acc = (acc << 4) | (dv as u64);
+                    p.*.pos = p.*.pos + 1;
+                    digits = digits + 1;
+                } else {
                     break;
                 }
-                acc = (acc << 4) | (dv as u64);
-                p.*.pos = p.*.pos + 1;
-                digits = digits + 1;
             }
             if (digits == 0) {
                 p.*.ok = false;
@@ -167,7 +158,7 @@ fn parseIntLit(p: *Parser, src: string): i64 {
             skipIntSuffix(p, src);
             return acc as i64;
         }
-        if (ch1 >= 48 && ch1 <= 57) {
+        if (isDigit(ch1)) {
             // Octal: 0...
             p.*.pos = p.*.pos + 1;
             while (p.*.pos < src.len) {
@@ -192,7 +183,7 @@ fn parseIntLit(p: *Parser, src: string): i64 {
     let digits: usize = 0;
     while (p.*.pos < src.len) {
         let c: u8 = src[p.*.pos];
-        if (c < 48 || c > 57) {
+        if (!isDigit(c)) {
             break;
         }
         acc = acc * 10 + ((c - 48) as u64);
@@ -234,7 +225,7 @@ fn parsePrimary(p: *Parser, src: string): i64 {
     if (ch == 39) { // '\''
         return parseCharLit(p, src);
     }
-    if (ch >= 48 && ch <= 57) {
+    if (isDigit(ch)) {
         return parseIntLit(p, src);
     }
     p.*.ok = false;

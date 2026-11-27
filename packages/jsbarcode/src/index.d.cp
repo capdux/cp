@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, isPrintable, toUpperByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 export class Barcode {
     modules: [MAX_MODULES]u8,
     len: usize,
@@ -13,9 +15,6 @@ export class Barcode {
     fn renderSvg(bar_width: usize, height: usize, quiet_zone: usize, out: []u8): string;
 }
 
-export fn appendStr(out: []u8, pos: usize, s: string): usize;
-export fn appendUsize(out: []u8, pos: usize, v: usize): usize;
-export fn isDigit(c: u8): bool;
 export fn ean13Checksum(digits12: string): i8;
 export fn isValidEan13(code: string): bool;
 export fn upcAChecksum(digits11: string): i8;
