@@ -155,6 +155,28 @@ pub fn handleBrief(
     }
 
     const raw_pkg = args[0];
+
+    // Built-in stdlib channel support: `cap brief cap:<mod>` -> `doc/lib/<mod>.md`
+    if (std.mem.startsWith(u8, raw_pkg, "cap:")) {
+        const mod_name = raw_pkg[4..];
+        const doc_rel = try std.fmt.allocPrint(allocator, "doc/lib/{s}.md", .{mod_name});
+        defer allocator.free(doc_rel);
+        const doc_abs = try std.fmt.allocPrint(allocator, "{s}/doc/lib/{s}.md", .{ cap_root, mod_name });
+        defer allocator.free(doc_abs);
+        const doc_txt = std.Io.Dir.readFileAlloc(.cwd(), io, doc_rel, allocator, @fromBackingInt(@intCast(2 * 1024 * 1024))) catch
+            std.Io.Dir.readFileAlloc(.cwd(), io, doc_abs, allocator, @fromBackingInt(@intCast(2 * 1024 * 1024))) catch null;
+        if (doc_txt) |txt| {
+            defer allocator.free(txt);
+            const hdr = try std.fmt.allocPrint(allocator, "=== cap brief: {s} (stdlib doc/lib/{s}.md) ===\n\n", .{ raw_pkg, mod_name });
+            defer allocator.free(hdr);
+            out.writeStreamingAll(io, hdr) catch {};
+            writeFirstNLines(io, out, txt, 80);
+            return;
+        }
+        std.debug.print("Error: stdlib doc 'doc/lib/{s}.md' not found for '{s}'.\n", .{ mod_name, raw_pkg });
+        std.process.exit(1);
+    }
+
     const is_scoped = std.mem.startsWith(u8, raw_pkg, "@");
     var variants = try buildNameVariants(allocator, raw_pkg);
     defer variants.deinit(allocator);
