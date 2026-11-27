@@ -1442,3 +1442,7 @@
 - **生态去重 Wave 7 (`a-m` 10 包, -595 LOC) & Wave 8 (`n-z` 10 包, -456 LOC)**：共 20 个裸包接入 16-lane SIMD `cap:ascii`/`cap:bin`/`cap:fmt` 并同步 `src/index.d.cp`，20/20 PASS，`Uses cap:* stdlib` 正式突破 **209**。
 - **内置标准库 `lib/` 清障**：修复全部 6 处 `lib/{shell,binfmt,bundler,crypto,css,media}/index.cp` 导出符号冲突（6 → 0）、清零全仓 13 处 Zig 0.16 不兼容的 `?? unreachable`（改为 `.?`），并修复 `lib/codec/nanoid.cp`、`lib/conf/nix.cp`、`lib/gfx/woff2.cp`、`lib/net/{wgNoise,wgReplay}.cp` 静态方法/借用声明；`test_gf256`、`test_macho`、`test_woff2`、`test_crypto`、`test_ogg` 等 `-m` 深测全部 PASS。
 - **第 10 轮 3h 效率审计固化 (`GEMINI.md` §6.10)**：固化 `cap test -m` 模块隔离测试铁律、`[a-m]*`/`[n-z]*` 零冲突分片、1 秒静态扫描先行与 `pub static fn` 工厂方法规范。
+
+## [2026-11-27] - 全生态 904 包 L0 标准库去重 Waves 9~16 100% 全面清零 + 38 大内置标准库 `-m` 深测全绿
+- **生态去重 Waves 9~16 (+78 包)**：完成 `n-z` 半区与 `a-m` 半区全部剩余单-helper 裸包重构（净删减 **-1,685 LOC**，**100% PASS**），全仓 `Uses cap:* stdlib` 跃升至 **284**，904 包 L0 去重阶段圆满收官。
+- **内置标准库 `lib/` 大规模 `-m` 绿灯**：批量升级 **197 个标准库文件**的 `static fn init`，并补齐 `lib/net`/`lib/agent`/`lib/ds`/`lib/graph`/`lib/sys`/`lib/db`/`lib/web`/`lib/cli`/`lib/http`/`lib/path` 等模块静态工厂方法，38 大核心内置标准库 `-m` 深测全部 PASS。

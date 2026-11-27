@@ -611,3 +611,8 @@
 - **根因定位**：通过对比默认 flatten 模式与 `cap test -m`（modular 模块隔离模式），确认多子文件标准库（如 `lib/mime`、`lib/crypto`）在 `-m` 模式下天然隔离私有 helper，仅需消除 `lib/*/index.cp` 中真正的 6 处重复导出符号冲突；借助 1 秒 Python 正则扫描精准定位并一次性清零（6 → 0）。
 - **连锁收益**：在验证 `-m` 深测过程中顺带发现并全仓清零了 13 处 Zig 0.16 报错的 `?? unreachable`（`lib/binfmt/jks.cp` 及 8 个标准库文件），以及 `nanoid.cp`/`nix.cp`/`woff2.cp`/`wgNoise.cp`/`wgReplay.cp` 的 `static fn` 工厂方法标记。
 - **并行推进**：按 `packages/[a-m]*` 与 `packages/[n-z]*` 零冲突分片完成 Wave 7 & Wave 8（20 包，-1,051 LOC，20/20 PASS，`Uses cap:* stdlib` 突破 **209**），随即轮换派生 Worker W（Wave 9）与 Worker X（Wave 10）继续冲刺。
+
+## 2026-11-27: 全生态 904 包 L0 去重 Waves 9~16 100% 清零 & 转入 Phase 4B 性能深化
+- **成果**：通过零冲突分片双路并行（Waves 9~16），将全生态 904 包剩余所有可复用 `cap:ascii`/`cap:bin`/`cap:fmt` 的裸包彻底清零，`Uses cap:* stdlib` 达 **284**。
+- **内置标准库提质**：通过 `temp/batch_fix_static_init.py` 受控批处理 + `cpc check` 严审，一次升级 197 个 `lib/` 文件的 `static fn init`，结合逐模块 `-m` 抽测修复，实现 38 大核心内置标准库模块 `-m` 深测全绿。
+- **下阶段推导**：自动转入 **Phase 4B（全生态大栈清零 `[0; N>=32] -> undefined` + SIMD 深化）**，由 Worker AE（Batch 5，Top 10）与 Worker AF（Batch 6，12 包）双路零冲突推进。
