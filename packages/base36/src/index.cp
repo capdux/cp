@@ -1,5 +1,52 @@
 // @cap/base36 — Zero-heap Base36 & arbitrary radix 2..36 u64 codec
 // MIT License (clean-room CP implementation)
+// Accelerated with comptime 256-entry decode LUT, 16-lane @Vector(16, u8) SIMD
+// leading-zero scanning, @memcpy, and uninitialized stack workspaces.
+
+type B36Vec16 = @Vector(16, u8);
+
+const B36_DIGITS_LOWER: string = "0123456789abcdefghijklmnopqrstuvwxyz";
+const B36_DIGITS_UPPER: string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+fn b36BuildDecLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 48 && c <= 57) {
+            lut[c] = (c - 48) as u8;
+        } else if (c >= 97 && c <= 122) {
+            lut[c] = (c - 97 + 10) as u8;
+        } else if (c >= 65 && c <= 90) {
+            lut[c] = (c - 65 + 10) as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const B36_DEC_LUT: [256]u8 = b36BuildDecLut();
+
+fn b36CountLeading(data: []const u8, target: u8) -> usize {
+    let i: usize = 0;
+    const len = data.len;
+    const vt: B36Vec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: B36Vec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v != vt)) {
+            let k: usize = 0;
+            while (k < 16 && data[i + k] == target) {
+                k += 1;
+            }
+            return i + k;
+        }
+        i += 16;
+    }
+    while (i < len && data[i] == target) {
+        i += 1;
+    }
+    return i;
+}
 
 pub struct ParseU64Result {
     pub value: u64,
@@ -7,26 +54,10 @@ pub struct ParseU64Result {
 }
 
 fn digitChar(v: u8, uppercase: bool) -> u8 {
-    if (v < 10) {
-        return ('0' as u8) + v;
-    }
     if (uppercase) {
-        return ('A' as u8) + (v - 10);
+        return B36_DIGITS_UPPER[v as usize];
     }
-    return ('a' as u8) + (v - 10);
-}
-
-fn digitVal(c: u8) -> i32 {
-    if (c >= '0' as u8 && c <= '9' as u8) {
-        return (c - ('0' as u8)) as i32;
-    }
-    if (c >= 'a' as u8 && c <= 'z' as u8) {
-        return (c - ('a' as u8) + 10) as i32;
-    }
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return (c - ('A' as u8) + 10) as i32;
-    }
-    return -1;
+    return B36_DIGITS_LOWER[v as usize];
 }
 
 pub fn encodeRadix(val: u64, radix: u8, uppercase: bool, out: []u8) -> usize {
@@ -74,11 +105,11 @@ pub fn decodeRadix(input: string, radix: u8) -> ParseU64Result {
     let acc: u64 = 0;
     let i: usize = 0;
     while (i < input.len) {
-        const d_i: i32 = digitVal(input[i]);
-        if (d_i < 0 || d_i >= (radix as i32)) {
+        const d_u8: u8 = B36_DEC_LUT[input[i] as usize];
+        if (d_u8 >= radix) {
             return fail;
         }
-        const d: u64 = d_i as u64;
+        const d: u64 = d_u8 as u64;
         if (acc > (max_u64 - d) / base) {
             return fail;
         }
@@ -136,8 +167,19 @@ pub fn isValidBase36String(input: string) -> bool {
         return false;
     }
     let i: usize = 0;
-    while (i < input.len) {
-        if (digitVal(input[i]) < 0) {
+    const len = input.len;
+    while (i + 4 <= len) {
+        if (((B36_DEC_LUT[input[i] as usize] |
+            B36_DEC_LUT[input[i + 1] as usize] |
+            B36_DEC_LUT[input[i + 2] as usize] |
+            B36_DEC_LUT[input[i + 3] as usize]) & 0x80) != 0)
+        {
+            return false;
+        }
+        i += 4;
+    }
+    while (i < len) {
+        if ((B36_DEC_LUT[input[i] as usize] & 0x80) != 0) {
             return false;
         }
         i += 1;
@@ -157,10 +199,7 @@ pub fn encodeBytes(data: []const u8, uppercase: bool, out: []u8) -> usize {
         return 0;
     }
 
-    let leading_zeros: usize = 0;
-    while (leading_zeros < data.len && data[leading_zeros] == 0) {
-        leading_zeros += 1;
-    }
+    const leading_zeros: usize = b36CountLeading(data, 0);
 
     if (leading_zeros == data.len) {
         if (leading_zeros > out.len) {
@@ -176,12 +215,8 @@ pub fn encodeBytes(data: []const u8, uppercase: bool, out: []u8) -> usize {
 
     // Copy non-zero tail into working buffer for repeated base-36 division
     let work: [256]u8 = undefined;
-    let work_len: usize = data.len - leading_zeros;
-    let wi: usize = 0;
-    while (wi < work_len) {
-        work[wi] = data[leading_zeros + wi];
-        wi += 1;
-    }
+    const work_len: usize = data.len - leading_zeros;
+    @memcpy(work[0..work_len], data[leading_zeros..data.len]);
 
     // Max base36 digits for 256 bytes: ceil(256 * log(256)/log(36)) = 397
     let rev: [512]u8 = undefined;
@@ -238,10 +273,7 @@ pub fn decodeBytes(input: string, out: []u8) -> DecodeBytesResult {
         return fail;
     }
 
-    let leading_zeros: usize = 0;
-    while (leading_zeros < input.len && input[leading_zeros] == ('0' as u8)) {
-        leading_zeros += 1;
-    }
+    const leading_zeros: usize = b36CountLeading(input, '0' as u8);
 
     if (leading_zeros == input.len) {
         if (leading_zeros > out.len) {
@@ -255,16 +287,16 @@ pub fn decodeBytes(input: string, out: []u8) -> DecodeBytesResult {
         return DecodeBytesResult { len: leading_zeros, valid: true };
     }
 
-    // Little-endian base-256 accumulator
-    let acc: [256]u8 = [0; 256];
+    // Little-endian base-256 accumulator (uninitialized: only 0..acc_len is read/written)
+    let acc: [256]u8 = undefined;
     let acc_len: usize = 0;
     let i: usize = leading_zeros;
     while (i < input.len) {
-        const d_i: i32 = digitVal(input[i]);
-        if (d_i < 0) {
+        const d_u8: u8 = B36_DEC_LUT[input[i] as usize];
+        if ((d_u8 & 0x80) != 0) {
             return fail;
         }
-        let carry: u32 = d_i as u32;
+        let carry: u32 = d_u8 as u32;
         let j: usize = 0;
         while (j < acc_len) {
             const val: u32 = (acc[j] as u32) * 36 + carry;

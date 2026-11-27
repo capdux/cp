@@ -1,10 +1,49 @@
 // @cap/base64-url — Zero-heap RFC 4648 §5 Base64URL encoder, decoder, converter & validator.
-// Clean-room MIT port of npm `base64url` v3; reuses `@cap/data-encoding` and `cap:ascii`.
+// Clean-room MIT port of npm `base64url` v3; reuses `@cap/data-encoding`.
+// Accelerated with comptime 256-entry LUT validation and 16-lane @Vector(16, u8) SIMD conversion.
 
 import {
     base64Encode, base64Decode, base64EncodeLen, DecodeResult
 } from "../../data-encoding/src/index.cp";
-import { isAlnum } from "cap:ascii";
+
+type B64uVec16 = @Vector(16, u8);
+
+fn b64uBuildValidLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 45 || c == 95) {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const B64U_VALID_LUT: [256]u8 = b64uBuildValidLut();
+
+fn b64uCheckChars(s: string): bool {
+    let i: usize = 0;
+    const len = s.len;
+    while (i + 4 <= len) {
+        if ((B64U_VALID_LUT[s[i] as usize] &
+            B64U_VALID_LUT[s[i + 1] as usize] &
+            B64U_VALID_LUT[s[i + 2] as usize] &
+            B64U_VALID_LUT[s[i + 3] as usize]) == 0)
+        {
+            return false;
+        }
+        i += 4;
+    }
+    while (i < len) {
+        if (B64U_VALID_LUT[s[i] as usize] == 0) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
 
 /// Encodes `src` bytes into unpadded Base64URL (`A-Za-z0-9-_`) into `out`.
 pub fn encodeBase64Url(src: []const u8, out: []u8): usize {
@@ -75,6 +114,30 @@ pub fn decodedLen(src: string): usize? {
 pub fn fromStandardBase64(b64: string, out: []u8): usize {
     let p: usize = 0;
     let i: usize = 0;
+    const v_eq: B64uVec16 = @splat(61 as u8);
+    const v_plus: B64uVec16 = @splat(43 as u8);
+    const v_minus: B64uVec16 = @splat(45 as u8);
+    const v_slash: B64uVec16 = @splat(47 as u8);
+    const v_under: B64uVec16 = @splat(95 as u8);
+
+    while (i + 16 <= b64.len && p + 16 <= out.len) {
+        const v: B64uVec16 = b64[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == v_eq)) {
+            if (!@reduce(.Or, v == v_plus) && !@reduce(.Or, v == v_slash)) {
+                @memcpy(out[p .. p + 16], b64[i .. i + 16]);
+            } else {
+                const m1 = @select(u8, v == v_plus, v_minus, v);
+                const m2 = @select(u8, v == v_slash, v_under, m1);
+                const arr: [16]u8 = m2;
+                @memcpy(out[p .. p + 16], arr[0..16]);
+            }
+            i += 16;
+            p += 16;
+            continue;
+        }
+        break;
+    }
+
     while (i < b64.len && p < out.len) {
         let c = b64[i];
         if (c == 61) { // '=' padding stripped
@@ -99,6 +162,25 @@ pub fn fromBase64(b64: string, out: []u8): usize {
 pub fn toStandardBase64(b64url: string, out: []u8): usize {
     let p: usize = 0;
     let i: usize = 0;
+    const v_minus: B64uVec16 = @splat(45 as u8);
+    const v_plus: B64uVec16 = @splat(43 as u8);
+    const v_under: B64uVec16 = @splat(95 as u8);
+    const v_slash: B64uVec16 = @splat(47 as u8);
+
+    while (i + 16 <= b64url.len && p + 16 <= out.len) {
+        const v: B64uVec16 = b64url[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == v_minus) && !@reduce(.Or, v == v_under)) {
+            @memcpy(out[p .. p + 16], b64url[i .. i + 16]);
+        } else {
+            const m1 = @select(u8, v == v_minus, v_plus, v);
+            const m2 = @select(u8, v == v_under, v_slash, m1);
+            const arr: [16]u8 = m2;
+            @memcpy(out[p .. p + 16], arr[0..16]);
+        }
+        i += 16;
+        p += 16;
+    }
+
     while (i < b64url.len && p < out.len) {
         let c = b64url[i];
         if (c == 45) { out[p] = 43; }      // '-' -> '+'
@@ -157,13 +239,7 @@ pub fn unpadString(s: string): string {
 /// with legal length (`len % 4 != 1`).
 pub fn isValidBase64Url(s: string): bool {
     if ((s.len & 3) == 1) { return false; }
-    let i: usize = 0;
-    while (i < s.len) {
-        let c = s[i];
-        if (!isAlnum(c) && c != 45 && c != 95) { return false; }
-        i = i + 1;
-    }
-    return true;
+    return b64uCheckChars(s);
 }
 
 /// Upstream alias: validates unpadded Base64URL string.
@@ -181,12 +257,5 @@ pub fn validatePadded(s: string): bool {
     let pad: usize = 1;
     if (s.len >= 2 && s[s.len - 2] == 61) { pad = 2; }
     if (s.len >= 3 && s[s.len - 3] == 61) { return false; }
-    let body = s[0..s.len - pad];
-    let i: usize = 0;
-    while (i < body.len) {
-        let c = body[i];
-        if (!isAlnum(c) && c != 45 && c != 95) { return false; }
-        i = i + 1;
-    }
-    return true;
+    return b64uCheckChars(s[0..s.len - pad]);
 }

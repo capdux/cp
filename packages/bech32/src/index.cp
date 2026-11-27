@@ -1,12 +1,50 @@
 // @cap/bech32 — Zero-allocation BIP-173 Bech32 & BIP-350 Bech32m codec for CP
 // Clean-room MIT implementation inspired by Rust `bech32` and npm `bech32`.
+// Accelerated with comptime 256-entry case-insensitive charset LUT, 32-entry
+// branchless BCH generator LUT, and 16-lane @Vector(16, u8) SIMD validation.
 
 import { toLowerByte, toLower } from "cap:ascii";
-import { findByteInBytes } from "cap:bin";
+
+type B32Vec16 = @Vector(16, u8);
 
 pub const BECH32_CHARSET: string = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 const BECH32_CONST: u32 = 1;
 const BECH32M_CONST: u32 = 0x2bc830a3;
+
+fn b32BuildCharsetLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let i: usize = 0;
+    while (i < BECH32_CHARSET.len) {
+        const c = BECH32_CHARSET[i];
+        lut[c as usize] = i as u8;
+        if (c >= 97 && c <= 122) {
+            lut[(c - 32) as usize] = i as u8;
+        }
+        i += 1;
+    }
+    return lut;
+}
+
+fn b32BuildGenLut() -> [32]u32 {
+    @setEvalBranchQuota(20000);
+    let lut: [32]u32 = [0; 32];
+    let top: usize = 0;
+    while (top < 32) {
+        let g: u32 = 0;
+        if ((top & 1) != 0) g ^= 0x3b6a57b2;
+        if ((top & 2) != 0) g ^= 0x26508e6d;
+        if ((top & 4) != 0) g ^= 0x1ea119fa;
+        if ((top & 8) != 0) g ^= 0x3d4233dd;
+        if ((top & 16) != 0) g ^= 0x2a1462b3;
+        lut[top] = g;
+        top += 1;
+    }
+    return lut;
+}
+
+const B32_CHARSET_LUT: [256]u8 = b32BuildCharsetLut();
+const B32_GEN_LUT: [32]u32 = b32BuildGenLut();
 
 pub enum Bech32Variant: u8 {
     Bech32 = 0,
@@ -33,23 +71,9 @@ pub struct Bech32Decoded {
 // Internal BCH Polymod & Character Helpers
 // ---------------------------------------------------------------------------
 
-fn charsetIndex(c: u8) -> u8? {
-    const idx = findByteInBytes(BECH32_CHARSET, toLowerByte(c), 0);
-    if (idx == null) {
-        return null;
-    }
-    return idx.? as u8;
-}
-
 fn polymodStep(chk: u32, v: u8) -> u32 {
-    const top = chk >> 25;
-    let c = ((chk & 0x1ffffff) << 5) ^ (v as u32);
-    if ((top & 1) != 0) c ^= 0x3b6a57b2;
-    if ((top & 2) != 0) c ^= 0x26508e6d;
-    if ((top & 4) != 0) c ^= 0x1ea119fa;
-    if ((top & 8) != 0) c ^= 0x3d4233dd;
-    if ((top & 16) != 0) c ^= 0x2a1462b3;
-    return c;
+    const top = (chk >> 25) as usize;
+    return (((chk & 0x1ffffff) << 5) ^ (v as u32)) ^ B32_GEN_LUT[top];
 }
 
 fn polymodHrp(hrp: string) -> u32 {
@@ -82,7 +106,17 @@ fn isValidHrp(hrp: string) -> bool {
         return false;
     }
     let i: usize = 0;
-    while (i < hrp.len) {
+    const len = hrp.len;
+    const v_lo: B32Vec16 = @splat(33 as u8);
+    const v_hi: B32Vec16 = @splat(126 as u8);
+    while (i + 16 <= len) {
+        const v: B32Vec16 = hrp[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v < v_lo) || @reduce(.Or, v > v_hi)) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         const c = hrp[i];
         if (c < 33 || c > 126) {
             return false;
@@ -230,12 +264,47 @@ fn validateStructureAndChecksum(encoded: string) -> ParsedBech32Meta {
         return bad;
     }
 
-    // Reject mixed case & non-printable ASCII; locate last '1' separator
+    // Reject mixed case & non-printable ASCII; locate last '1' separator via 16-lane SIMD
     let has_lower = false;
     let has_upper = false;
     let sep: usize = encoded.len;
     let i: usize = 0;
-    while (i < encoded.len) {
+    const len = encoded.len;
+    const v_lo: B32Vec16 = @splat(33 as u8);
+    const v_hi: B32Vec16 = @splat(126 as u8);
+    const v_la: B32Vec16 = @splat(97 as u8);
+    const v_lz: B32Vec16 = @splat(122 as u8);
+    const v_ua: B32Vec16 = @splat(65 as u8);
+    const v_uz: B32Vec16 = @splat(90 as u8);
+    const v_one: B32Vec16 = @splat(49 as u8);
+
+    while (i + 16 <= len) {
+        const v: B32Vec16 = encoded[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v < v_lo) || @reduce(.Or, v > v_hi)) {
+            return bad;
+        }
+        if (@reduce(.Or, (v >= v_la) & (v <= v_lz))) {
+            has_lower = true;
+        }
+        if (@reduce(.Or, (v >= v_ua) & (v <= v_uz))) {
+            has_upper = true;
+        }
+        if (has_lower && has_upper) {
+            return bad;
+        }
+        if (@reduce(.Or, v == v_one)) {
+            let k: usize = 16;
+            while (k > 0) {
+                k -= 1;
+                if (encoded[i + k] == 49) {
+                    sep = i + k;
+                    break;
+                }
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
         const c = encoded[i];
         if (c < 33 || c > 126) {
             return bad;
@@ -258,11 +327,11 @@ fn validateStructureAndChecksum(encoded: string) -> ParsedBech32Meta {
     let chk = polymodHrp(hrp);
     i = sep + 1;
     while (i < encoded.len) {
-        const idx_opt = charsetIndex(encoded[i]);
-        if (idx_opt == null) {
+        const idx = B32_CHARSET_LUT[encoded[i] as usize];
+        if ((idx & 0x80) != 0) {
             return bad;
         }
-        chk = polymodStep(chk, idx_opt.?);
+        chk = polymodStep(chk, idx);
         i += 1;
     }
 
@@ -301,7 +370,7 @@ pub fn decodeBech32(encoded: string, hrp_out: []u8, data_out: []u8) -> Bech32Dec
     let words: [256]u8 = undefined;
     let i: usize = 0;
     while (i < data_chars) {
-        words[i] = charsetIndex(encoded[sep + 1 + i]).?;
+        words[i] = B32_CHARSET_LUT[encoded[sep + 1 + i] as usize];
         i += 1;
     }
 
