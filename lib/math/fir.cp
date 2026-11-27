@@ -203,7 +203,7 @@ pub struct Biquad {
     z2: f64;
 
     /// Designs a 2nd-order RBJ lowpass biquad filter.
-    pub fn lowpass(fs: f64, fc: f64, q: f64): Biquad? {
+    pub static fn lowpass(fs: f64, fc: f64, q: f64): Biquad? {
         if (!validateBiquadParams(fs, fc, q)) {
             return null;
         }
@@ -227,7 +227,7 @@ pub struct Biquad {
     }
 
     /// Designs a 2nd-order RBJ highpass biquad filter.
-    pub fn highpass(fs: f64, fc: f64, q: f64): Biquad? {
+    pub static fn highpass(fs: f64, fc: f64, q: f64): Biquad? {
         if (!validateBiquadParams(fs, fc, q)) {
             return null;
         }
@@ -251,7 +251,7 @@ pub struct Biquad {
     }
 
     /// Designs a 2nd-order RBJ constant-0dB-peak bandpass biquad filter.
-    pub fn bandpass(fs: f64, fc: f64, q: f64): Biquad? {
+    pub static fn bandpass(fs: f64, fc: f64, q: f64): Biquad? {
         if (!validateBiquadParams(fs, fc, q)) {
             return null;
         }
@@ -273,7 +273,7 @@ pub struct Biquad {
     }
 
     /// Designs a 2nd-order RBJ notch (band-stop) biquad filter.
-    pub fn notch(fs: f64, fc: f64, q: f64): Biquad? {
+    pub static fn notch(fs: f64, fc: f64, q: f64): Biquad? {
         if (!validateBiquadParams(fs, fc, q)) {
             return null;
         }
