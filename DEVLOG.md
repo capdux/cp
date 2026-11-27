@@ -594,3 +594,7 @@
 - **架构演进**：落地 4 大 L0 硬件 16-lane `@Vector(16, u8)` SIMD 标准库基座（`cap:ascii`/`cap:utf8`/`cap:fmt`/`cap:bin`），ReleaseFast `tinybench` 基准证实 7.65x~14.64x 原生硬件加速。完成 832 个生态包裸名迁移与 `cpc/src/resolver.rs` 双向 `_`/`-` 归一化解析，全仓 904 包 0 断链。
 - **去重收官**：通过 5 轮双子智能体 + 主智能体并行流水线（Wave 1~5），将全生态所有含 `>=2` 重复手写 helper 的包彻底清零，净删减 3,500+ 行重复代码，并将 `crc32fast` 升级为 `comptime` 256-entry LUT 无分支查表法。
 - **AI-First 工具链**：在 `cap` CLI 完整交付 `cap brief`、`cap fix`（精准限定 `from "@cap/<pkg>"` 防误伤测试字面量）与 `cap check`，串联 `cpc check` 与 `README_AGENT.md` + `src/index.d.cp`。当前双子智能体 Worker G & Worker H 正并行推进 Phase 4 Top 20 核心高频包的 `[0; N] -> undefined` 栈清零消除与所有权/借用安全加固。
+
+## 2026-11-27: `cpc/src/sema` 6 类假阳性清零（全仓 904/904 100% 绿灯）与下游双端广播
+- 依托 Phase 5 全仓 904 包 `cpc check` 体检精准定位 46 例剩余报错均属 Sema 静态类型推断假阳性（0 语法/借用/导入错误），在 `cpc_dev/src/sema/` 5 个文件中一次性根治 6 类推断缺口并回归 `cargo test --lib` (28/28) 与 `golden_and_fuzz` (6/6) 零回归。
+- 合并至 `cpc/src/sema/` 并发布 Release `cpc`，实测全仓 **904 / 904 PASS (100.0%)**；按 `COMM.md` 规范发出 `syntax-sema-20261127-6-false-positives-fixed` 双端广播通知 `bun_agy` 与 `capsurf_agy`。

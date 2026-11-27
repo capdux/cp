@@ -1426,3 +1426,7 @@
 - **Phase 2 (裸包名零迁移成本改造)**：将 832 个 npm/crates.io 包迁移至原包名 `packages/<orig>/`（保留 39 原生 C/C++ `@cap/*` 与 33 `@web/*`，共 904 零重复包），合并双平台同名包 `bytes`/`semver` 及 6 处跨包导出（`mediatype`/`negotiator`/`cookie-signature`/`cookie-parser`/`@sindresorhus/fnv1a`/`pbkdf2`），全仓 904 包 **0 broken imports**，`registry.json` 按指令不保留旧 `@cap/<old>` 别名。
 - **Phase 3 (L0 去重与性能优化 5 Waves 全清零)**：Wave 1~5 共重构 **75+ 个高频包**，净消除 **3,500+ 行**重复手写辅助代码，`Uses cap:* stdlib` 从 **0 → 117+**，全生态 `>=2` 重复 helper 包彻底清零；`crc32fast` 升级为 `comptime` 256-entry LUT 查表法 + `undefined` 栈缓冲（6/6 PASS）。
 - **Phase 5 (文档与 AI-First CLI 闭环)**：全量 904/904 包配齐 `src/index.d.cp`、`README.md`（含中英文切换栏）、`README.zh-CN.md`、`README_AGENT.md`；`cap` CLI 新增 `cap brief <pkg>`、`cap fix [--dry-run] <path>`（精准匹配 `from "@cap/<pkg>"`）、`cap check <path>`；修复 `cap/build.zig` `zstd.c` 路径与 `lib/time/uuidV7.cp` 旧 `self` 语法。
+
+## [2026-11-27] - 编译器 Sema 6 类假阳性全面修复：全仓 904 / 904 (100.0%) 生态包 `cpc check` 零失败绿灯
+- `cpc/src/sema/{type_infer,coerce,mod,safety,stmt_expr}.rs`: 修复 6 类静态类型推断假阳性（二元运算左侧整数字面量吸收右侧类型、`IfExpr` 分支字面量目标类型传播、`string` 切片推断为 `String`、重赋值不覆盖已声明类型、`@Vector(N,u8)→@Vector(N,u32)` 向量拓宽、`??`/浮点内建/`@as`/函数指针/常量数组长度/重赋值定长失效），通过 `bash scripts/sync_cpc.sh release` 正式发布，并向 `bun_agy` 与 `capsurf_agy` 广播生效。
+- 全仓验证：`cpc/target/release/cpc check` 扫描全部 904 个生态包达到 **904 / 904 PASS (0 failed)**。

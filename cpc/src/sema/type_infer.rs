@@ -170,7 +170,11 @@ impl Analyzer {
                     if let Expr::Ident(ident) = &*bin.left {
                         if let Some(scope) = self.scopes.last_mut() {
                             if let Some(SymbolKind::Var { ty, .. }) = scope.get_mut(&ident.sym) {
-                                *ty = right.clone();
+                                if matches!(*ty, Type::Unknown | Type::Auto | Type::Any)
+                                    && !matches!(right, Type::Unknown | Type::Auto | Type::Any)
+                                {
+                                    *ty = right.clone();
+                                }
                             }
                         }
                     }
@@ -275,7 +279,34 @@ impl Analyzer {
                     {
                         return Err(SemaError::TypeMismatch(left, right, bin.span));
                     }
-                    Ok(left)
+                    fn is_untyped_float_expr(e: &Expr) -> bool {
+                        match e {
+                            Expr::Lit(Lit::Float(_)) => true,
+                            Expr::Neg(inner) => is_untyped_float_expr(inner),
+                            _ => false,
+                        }
+                    }
+                    let left_is_untyped_int = Self::eval_const_int_expr(&bin.left).is_some();
+                    let left_is_untyped_float = is_untyped_float_expr(&bin.left);
+                    let right_is_untyped_int = Self::eval_const_int_expr(&bin.right).is_some();
+                    let right_is_untyped_float = is_untyped_float_expr(&bin.right);
+                    if left_is_untyped_int && Self::is_int_type(&right) && right != Type::I32 {
+                        Ok(right)
+                    } else if (left_is_untyped_float || left_is_untyped_int)
+                        && matches!(right, Type::F32 | Type::F64)
+                    {
+                        Ok(right)
+                    } else if matches!(left, Type::F32) && matches!(right, Type::F64) {
+                        Ok(Type::F64)
+                    } else if matches!(left, Type::Any | Type::Unknown)
+                        && !matches!(right, Type::Any | Type::Unknown)
+                        && !right_is_untyped_int
+                        && !right_is_untyped_float
+                    {
+                        Ok(right)
+                    } else {
+                        Ok(left)
+                    }
                 }
             }
             Expr::Call(call) => {
@@ -565,6 +596,14 @@ impl Analyzer {
                 while let Type::BorrowType { inner, .. } | Type::RawPtr { inner, .. } = o_ty {
                     o_ty = *inner;
                 }
+                if o_ty == Type::String && slice.sentinel.is_none() {
+                    return Ok(Type::String);
+                }
+                if matches!(o_ty, Type::Any | Type::Unknown | Type::Auto)
+                    && slice.sentinel.is_none()
+                {
+                    return Ok(Type::Any);
+                }
                 let elem = match o_ty {
                     Type::ManyRawPtr(elem)
                     | Type::CPtr(elem)
@@ -615,12 +654,23 @@ impl Analyzer {
                     },
                     Type::ErrorUnion(t) | Type::Optional(t) => {
                         if *t == Type::Unknown || *t == Type::Any {
-                            Ok(fb_ty)
+                            if Self::eval_const_int_expr(fallback).is_some() {
+                                Ok(Type::Any)
+                            } else {
+                                Ok(fb_ty)
+                            }
                         } else {
                             Ok(*t)
                         }
                     }
-                    _ => Ok(fb_ty),
+                    other if !matches!(other, Type::Unknown | Type::Any) => Ok(other),
+                    _ => {
+                        if Self::eval_const_int_expr(fallback).is_some() {
+                            Ok(Type::Any)
+                        } else {
+                            Ok(fb_ty)
+                        }
+                    }
                 }
             }
             Expr::Catch { expr, .. } => {
@@ -799,6 +849,22 @@ impl Analyzer {
                     span: Span { start: 0, end: 0 },
                     sym: "SharedTensor".to_string(),
                 })),
+                "@as" => {
+                    if let Some(first) = call.args.first() {
+                        if let Some(ty) = Self::expr_as_type_arg(first) {
+                            return Ok(ty);
+                        }
+                    }
+                    Ok(Type::Unknown)
+                }
+                "@exp" | "@exp2" | "@log" | "@log2" | "@log10" | "@sqrt" | "@sin" | "@cos"
+                | "@tan" | "@floor" | "@ceil" | "@trunc" | "@round" | "@abs" | "@fabs" => {
+                    if let Some(first) = call.args.first() {
+                        self.infer_type(first)
+                    } else {
+                        Ok(Type::Unknown)
+                    }
+                }
                 "@extern" => {
                     if let Some(Expr::TypeVal { ty, .. }) = call.args.first() {
                         Ok(ty.clone())
@@ -1104,9 +1170,40 @@ impl Analyzer {
                     } else {
                         self.infer_type(a)?
                     };
-                    let is_lit = |e: &Expr| matches!(e, Expr::Lit(Lit::Int(_)));
-                    if is_lit(&**cons) && is_lit(&**a) {
+                    fn unwrap_single_expr(e: &Expr) -> &Expr {
+                        match e {
+                            Expr::LabeledBlock { block, .. } if block.body.len() == 1 => {
+                                if let Stmt::Expr(inner) = &block.body[0] {
+                                    return unwrap_single_expr(inner);
+                                }
+                                e
+                            }
+                            _ => e,
+                        }
+                    }
+                    fn is_float_lit_expr(e: &Expr) -> bool {
+                        match e {
+                            Expr::Lit(Lit::Float(_)) => true,
+                            Expr::Neg(inner) => is_float_lit_expr(inner),
+                            _ => false,
+                        }
+                    }
+                    let cons_u = unwrap_single_expr(&**cons);
+                    let alt_u = unwrap_single_expr(&**a);
+                    let cons_is_int_lit = Self::eval_const_int_expr(cons_u).is_some();
+                    let alt_is_int_lit = Self::eval_const_int_expr(alt_u).is_some();
+                    let cons_is_float_lit = is_float_lit_expr(cons_u);
+                    let alt_is_float_lit = is_float_lit_expr(alt_u);
+                    if cons_is_int_lit && alt_is_int_lit {
                         Ok(Type::Any)
+                    } else if cons_is_int_lit && Self::is_int_type(&alt_ty) {
+                        Ok(alt_ty)
+                    } else if alt_is_int_lit && Self::is_int_type(&cons_ty) {
+                        Ok(cons_ty)
+                    } else if cons_is_float_lit && matches!(alt_ty, Type::F32 | Type::F64) {
+                        Ok(alt_ty)
+                    } else if alt_is_float_lit && matches!(cons_ty, Type::F32 | Type::F64) {
+                        Ok(cons_ty)
                     } else if cons_ty == alt_ty {
                         Ok(cons_ty)
                     } else {

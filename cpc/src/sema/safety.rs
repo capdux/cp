@@ -31,6 +31,12 @@ impl Analyzer {
         }
     }
 
+    pub fn clear_known_length(&mut self, name: &str) {
+        for scope in self.known_lengths_stack.iter_mut() {
+            scope.remove(name);
+        }
+    }
+
     pub fn get_const_int(&self, name: &str) -> Option<i64> {
         for scope in self.const_int_vars_stack.iter().rev() {
             if let Some(val) = scope.get(name) {

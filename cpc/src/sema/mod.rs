@@ -41,7 +41,9 @@ pub enum SemaError {
     DanglingValueReceiverReturn(Span),
     #[error("Value-position 'if' expression is missing an 'else' branch at {0:?}")]
     MissingElseInValueIf(Span),
-    #[error("Half-open character range '{0}'..'{1}' in switch excludes upper bound '{1}' at {2:?}")]
+    #[error(
+        "Half-open character range '{0}'..'{1}' in switch excludes upper bound '{1}' at {2:?}"
+    )]
     HalfOpenCharSwitchRange(char, char, Span),
     #[error(
         "Compile Error: Meta '@{0}' can only be applied to {1}, but was applied to {2} at {3:?}"
@@ -1288,6 +1290,13 @@ impl Analyzer {
                             },
                             id.span,
                         );
+                        if v.kind == VarDeclKind::Const {
+                            if let Some(init) = &v.init {
+                                if let Some(val) = self.eval_int_expr(init) {
+                                    self.set_const_int(id.sym.clone(), val);
+                                }
+                            }
+                        }
                     }
                 }
                 _ => {}

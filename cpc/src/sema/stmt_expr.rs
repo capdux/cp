@@ -25,13 +25,12 @@ impl Analyzer {
                 .iter()
                 .any(|f| Self::expr_takes_addr_of_receiver(&f.val)),
             Expr::EnumInit(ei) => {
-                ei.fields
+                ei.fields.as_ref().map_or(false, |fs| {
+                    fs.iter().any(|f| Self::expr_takes_addr_of_receiver(&f.val))
+                }) || ei
+                    .tuple_args
                     .as_ref()
-                    .map_or(false, |fs| fs.iter().any(|f| Self::expr_takes_addr_of_receiver(&f.val)))
-                    || ei
-                        .tuple_args
-                        .as_ref()
-                        .map_or(false, |ts| ts.iter().any(Self::expr_takes_addr_of_receiver))
+                    .map_or(false, |ts| ts.iter().any(Self::expr_takes_addr_of_receiver))
             }
             Expr::New(c) | Expr::Call(c) | Expr::OptCall(c) => {
                 c.args.iter().any(Self::expr_takes_addr_of_receiver)
@@ -575,6 +574,7 @@ impl Analyzer {
                                 id.span,
                             ));
                         }
+                        self.clear_known_length(&id.sym);
                     } else if let Expr::Member(mem) = &*bin.left {
                         if let Expr::Ident(obj_id) = &*mem.obj {
                             if (obj_id.sym == "_" || obj_id.sym == "this")

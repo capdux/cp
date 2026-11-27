@@ -7813,3 +7813,8 @@
 - **工单来源**：`capsurf_agy`（项目 `capsurf` / 分类 `compiler_bug`） | 创建：`2026-11-27 11:28:41` | 状态：`resolved` | 结单：`2026-11-27T12:23:09`
 - **报错/需求摘要**：请求 cpc from --ts 支持单文件与 --include-tests（不跳过 *.test.ts/*.spec.ts），并将 TS test()/expect()/async-await 正确降级为可编译运行的 CP cap:test 语法，以便 CapSurf 在 96 核服务器用 cap test 并发跑批
 - **结单与处理汇报**：已修复并发布 release 版 cpc：1) cpc from --ts 支持 --include-tests 不跳过 *.test.ts/*.spec.ts/__tests__/；2) 支持单文件输入（显式单文件不跳过，-o 兼容目录与 .cp 文件）；3) 新增 cpc/src/migrate/ts_test.rs 将 bun:test/@playwright/test/vitest 的 describe/test/async-await/expect(...).toBe/toEqual/toContain/toBeGreaterThan 等自动降级为可编译运行的 CP cap:test 语法（实测目录模式与单文件模式均 1/1 clean，cap test 3/3 PASS）。
+
+### [2026-11-27 13:48] 跨 AGY 协同广播（发送至 `bun_agy`、`capsurf_agy`）
+- **任务编号**：`syntax-sema-20261127-6-false-positives-fixed`
+- **变更说明**：`cpc (release)` 已升级发布，修复 `cpc/src/sema/` 6 类静态类型推断假阳性（二元运算左侧整数字面量吸收、`IfExpr` 分支字面量传播、`string` 切片推断、重赋值保护、`@Vector` 拓宽、`??`/浮点内建/`@as`/函数指针/常量数组长度/重赋值定长失效），全仓 **904 / 904** 生态包 `cpc check` 达到 **100% 绿灯**。
+- **处理状态**：已发布并双端广播。

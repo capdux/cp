@@ -483,6 +483,23 @@ impl Analyzer {
                         return true;
                     }
                 }
+                Expr::If { cons, alt, .. } => {
+                    let cons_ok = self.can_coerce(target, src, Some(cons));
+                    let alt_ok = match alt {
+                        Some(a) => self.can_coerce(target, src, Some(a)),
+                        None => true,
+                    };
+                    if cons_ok && alt_ok {
+                        return true;
+                    }
+                }
+                Expr::LabeledBlock { block, .. } => {
+                    if let Some(Stmt::Expr(last_e)) = block.body.last() {
+                        if self.can_coerce(target, src, Some(last_e)) {
+                            return true;
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -512,6 +529,12 @@ impl Analyzer {
         } = target
         {
             if matches!(&**t_inner, Type::Array(_)) && self.can_coerce(t_inner, src, init_expr) {
+                return true;
+            }
+            if matches!(&**t_inner, Type::Fn(_, _) | Type::CFn(_, _))
+                && matches!(src, Type::Fn(_, _) | Type::CFn(_, _))
+                && self.can_coerce(t_inner, src, init_expr)
+            {
                 return true;
             }
         }
@@ -644,14 +667,23 @@ impl Analyzer {
             if base.sym == derived.sym || self.is_subclass(&derived.sym, &base.sym) {
                 return true;
             }
+            if let (Some((t_len, t_elem)), Some((s_len, s_elem))) = (
+                Self::parse_vector_type(&base.sym),
+                Self::parse_vector_type(&derived.sym),
+            ) {
+                if t_len == s_len && (t_elem == s_elem || Self::is_safe_widening(&t_elem, &s_elem))
+                {
+                    return true;
+                }
+            }
         }
 
-        // @Vector(N, T) coercion from fixed array / array literal / tuple
+        // @Vector(N, T) coercion from fixed array / array literal / tuple / string
         if let Type::Ref(id) = target {
             if id.sym.starts_with("@Vector(")
                 && matches!(
                     src,
-                    Type::FixedArray(_, _) | Type::Array(_) | Type::Tuple(_)
+                    Type::FixedArray(_, _) | Type::Array(_) | Type::Tuple(_) | Type::String
                 )
             {
                 return true;
@@ -661,7 +693,7 @@ impl Analyzer {
             if id.sym.starts_with("@Vector(")
                 && matches!(
                     target,
-                    Type::FixedArray(_, _) | Type::Array(_) | Type::Tuple(_)
+                    Type::FixedArray(_, _) | Type::Array(_) | Type::Tuple(_) | Type::String
                 )
             {
                 return true;
@@ -888,11 +920,17 @@ impl Analyzer {
                 }
             }
             (Type::FixedArray(t_elem, t_len), Type::FixedArray(s_elem, s_len)) => {
-                let same_len = match (t_len, s_len) {
-                    (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
-                    (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
-                    (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
-                    _ => t_len == s_len,
+                let same_len = match (
+                    self.resolve_array_size(t_len),
+                    self.resolve_array_size(s_len),
+                ) {
+                    (Some(a), Some(b)) => a == b,
+                    _ => match (t_len, s_len) {
+                        (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
+                        (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
+                        (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
+                        _ => t_len == s_len,
+                    },
                 };
                 if !same_len {
                     return false;
@@ -920,7 +958,7 @@ impl Analyzer {
                 }
             }
             (Type::FixedArray(t_elem, t_len), Type::Tuple(s_elems)) => {
-                if t_len.as_usize() != Some(s_elems.len()) {
+                if self.resolve_array_size(t_len) != Some(s_elems.len()) {
                     return false;
                 }
                 if let Some(Expr::Array(elements)) = init_expr {
@@ -964,8 +1002,54 @@ impl Analyzer {
                     .zip(t2)
                     .all(|(a, b)| self.can_coerce(&a.ty, b, None))
             }
+            (Type::Fn(p1, r1), Type::Fn(p2, r2))
+            | (Type::CFn(p1, r1), Type::CFn(p2, r2))
+            | (Type::CFn(p1, r1), Type::Fn(p2, r2))
+            | (Type::Fn(p1, r1), Type::CFn(p2, r2)) => {
+                p1.len() == p2.len()
+                    && p1.iter().zip(p2).all(|(a, b)| self.types_eq(a, b))
+                    && self.types_eq(r1, r2)
+            }
             _ => false,
         }
+    }
+
+    pub(super) fn resolve_array_size(&self, size: &ArraySize) -> Option<usize> {
+        match size {
+            ArraySize::Literal(n) => Some(*n),
+            ArraySize::Ident(id) => self
+                .get_const_int(&id.sym)
+                .and_then(|v| usize::try_from(v).ok()),
+            ArraySize::Expr(s) => s.trim().parse::<usize>().ok().or_else(|| {
+                self.get_const_int(s.trim())
+                    .and_then(|v| usize::try_from(v).ok())
+            }),
+        }
+    }
+
+    pub(super) fn parse_vector_type(sym: &str) -> Option<(usize, Type)> {
+        let inner = sym.strip_prefix("@Vector(")?.strip_suffix(')')?;
+        let (len_str, elem_str) = inner.split_once(',')?;
+        let len = len_str.trim().parse::<usize>().ok()?;
+        let elem = match elem_str.trim() {
+            "u8" => Type::U8,
+            "u16" => Type::U16,
+            "u32" => Type::U32,
+            "u64" => Type::U64,
+            "u128" => Type::U128,
+            "usize" => Type::USize,
+            "i8" => Type::I8,
+            "i16" => Type::I16,
+            "i32" => Type::I32,
+            "i64" => Type::I64,
+            "i128" => Type::I128,
+            "isize" => Type::ISize,
+            "f32" => Type::F32,
+            "f64" => Type::F64,
+            "bool" => Type::Bool,
+            _ => return None,
+        };
+        Some((len, elem))
     }
 
     pub(super) fn types_eq(&self, a: &Type, b: &Type) -> bool {
@@ -1046,11 +1130,14 @@ impl Analyzer {
             }
             (Type::Array(t1), Type::Array(t2)) => self.types_eq(t1, t2),
             (Type::FixedArray(t1, s1), Type::FixedArray(t2, s2)) => {
-                let same_len = match (s1, s2) {
-                    (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
-                    (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
-                    (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
-                    _ => s1 == s2,
+                let same_len = match (self.resolve_array_size(s1), self.resolve_array_size(s2)) {
+                    (Some(a), Some(b)) => a == b,
+                    _ => match (s1, s2) {
+                        (ArraySize::Literal(a), ArraySize::Literal(b)) => a == b,
+                        (ArraySize::Ident(a), ArraySize::Ident(b)) => a.sym == b.sym,
+                        (ArraySize::Expr(a), ArraySize::Expr(b)) => a == b,
+                        _ => s1 == s2,
+                    },
                 };
                 same_len && self.types_eq(t1, t2)
             }
@@ -1061,7 +1148,8 @@ impl Analyzer {
             }
             (Type::FixedArray(elem, len), Type::Tuple(tys))
             | (Type::Tuple(tys), Type::FixedArray(elem, len)) => {
-                len.as_usize() == Some(tys.len()) && tys.iter().all(|t| self.types_eq(elem, t))
+                self.resolve_array_size(len) == Some(tys.len())
+                    && tys.iter().all(|t| self.types_eq(elem, t))
             }
             (Type::Tuple(t1), Type::Tuple(t2)) => {
                 if t1.len() != t2.len() {
