@@ -1,46 +1,109 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/picomatch
+# `picomatch`
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:picomatch` ([https://github.com/micromatch/picomatch](https://github.com/micromatch/picomatch))
+Zero-allocation glob matcher & static base scanner for CP — clean-room parity with **npm `picomatch` v4**, supporting globstar (`**`), character classes (`[a-z]`, `[!0-9]`), brace expansion (`{a,b}`), dotfile protection, and leading negation (`!`).
 
-Zero-allocation glob matching engine & static base scanner for CP — clean-room MIT parity with npm `picomatch` v4. Reuses `@cap/normalize-path` and `@cap/is-extglob`.
+## Provenance & Zero-Cost Migration
 
-纯 CP 零堆分配高频通配符匹配引擎（对标 npm `picomatch` v4），完整支持 `*`/`?`/`**` globstar、字符类 `[a-z]`/`[!0-9]`、嵌套花括号 `{a,b,c}`、前导 `!`/`!!` 取反、点文件保护、`nocase`/`basename`/`noglobstar` 选项、组合规则过滤与 `scanBase` 静态前缀提取。
+| Field | Details |
+| :--- | :--- |
+| **Source Registry** | `npm:picomatch` ([micromatch/picomatch](https://github.com/micromatch/picomatch), v4 parity) |
+| **CP Package** | `picomatch@1.0.0` (`MIT`) |
+| **Dependencies** | `normalize-path@1.0.0`, `is-extglob@1.0.0` |
 
-## Install / 安装
+Keep the exact original package name — no renaming required:
 
-```bash
-cap add @cap/picomatch
+```ts
+// TypeScript (npm picomatch)
+import picomatch from "picomatch";
+const isMatch = picomatch("src/**/codegen/*.ts");
+isMatch("src/a/b/codegen/emit.ts"); // true
 ```
-
-## Dependencies / 跨包复用
-
-- `@cap/normalize-path`: Windows 反斜杠与路径分隔符归一化
-- `@cap/is-extglob`: Bash/Micromatch extglob 语法检测
-
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `PicoOptions` | `struct { dot, nocase, basename, noglobstar: bool }` | Matcher options with `PicoOptions.defaults()` |
-| `isMatch` | `(path: string, pattern: string): bool` | Match `path` against `pattern` with default options |
-| `isMatchWithOptions` | `(path: string, pattern: string, opts: PicoOptions): bool` | Match `path` with custom `PicoOptions` |
-| `isMatchAny` | `(path: string, patterns: []const string, opts: PicoOptions): bool` | Match against combined positive + negative (`!`) glob rules |
-| `scanBase` | `(pattern: string, out: []u8): usize` | Extract static non-glob base prefix (e.g. `"src/lib/**/*.cp"` -> `"src/lib"`) |
-
-## Usage / 使用示例
 
 ```cp
-import { PicoOptions, isMatch, isMatchWithOptions, isMatchAny, scanBase } from "@cap/picomatch";
+// CP — identical package name, zero-allocation matching
+import { isMatch } from "picomatch";
 
-const ok = isMatch("src/lib/router.cp", "src/**/*.{ts,cp,zig}"); // true
-
-let opts = PicoOptions.defaults();
-opts.dot = true;
-const hidden = isMatchWithOptions(".env", "*", opts); // true
-
-let baseBuf: [64]u8 = undefined;
-const n = scanBase("src/lib/**/*.cp", baseBuf[0..64]); // "src/lib"
+const ok = isMatch("src/a/b/codegen/emit.cp", "src/**/codegen/*.cp"); // true
 ```
+
+## ReleaseFast Performance
+
+Measured on Intel Xeon Platinum 8175M (`cpc 1.0.0` + `zig 0.17.0 -OReleaseFast -fllvm`, see [`bench/ECOSYSTEM_PERF_REPORT.md`](../../bench/ECOSYSTEM_PERF_REPORT.md)):
+
+| Operation | Payload | Latency | Throughput | Architecture |
+| :--- | :--- | --: | --: | :--- |
+| `isMatch` | 47 B path vs `src/**/codegen/*.cp` | **343.42 ns/op** | **2,911,885 ops/s** | 16-lane SIMD segment match, zero-alloc |
+
+- **Zero heap allocations**: No regex compilation or AST heap allocation; recursive segment matcher runs completely on the stack with depth bounds.
+- **16-lane SIMD scanning**: Fast delimiter and literal segment scanning via `cap:ascii`.
+
+## Examples
+
+### 1. Basic Glob Matching (Globstar, Braces, Character Classes, Negation)
+
+```cp
+import { isMatch } from "picomatch";
+
+fn demoBasic() {
+    const a = isMatch("src/core/codegen/emit.cp", "src/**/codegen/*.cp"); // true
+    const b = isMatch("app.tsx", "*.{ts,tsx,cp}");                         // true
+    const c = isMatch("file2.log", "file[0-9].log");                       // true
+    const d = isMatch("src/main.cp", "!*.md");                             // true
+    const hidden = isMatch(".env", "*");                                   // false (dotfile protected)
+    _ = a; _ = b; _ = c; _ = d; _ = hidden;
+}
+```
+
+### 2. Custom `PicoOptions` & Multi-Pattern Matching (`isMatchAny`)
+
+```cp
+import { PicoOptions, isMatchWithOptions, isMatchAny } from "picomatch";
+
+fn demoOptions() {
+    let opts = PicoOptions.defaults();
+    opts.dot = true;     // allow matching dotfiles like .env
+    opts.nocase = true;  // case-insensitive ASCII matching
+
+    const matched_dot = isMatchWithOptions(".github/workflows/ci.YML", "**/*.yml", opts); // true
+
+    const patterns = [_]string{ "src/**/*.cp", "lib/**/*.cp", "cap.json" };
+    const any_hit = isMatchAny("lib/net/socket.cp", patterns[0..], PicoOptions.defaults()); // true
+    _ = matched_dot; _ = any_hit;
+}
+```
+
+### 3. Edge Cases: Static Base Extraction (`scanBase`) & Basename Mode
+
+```cp
+import { PicoOptions, isMatchWithOptions, scanBase } from "picomatch";
+
+fn demoEdgeCases() {
+    // Extract static directory prefix before first glob token for fast fs traversal
+    let base_buf: [128]u8 = undefined;
+    const n = scanBase("packages/net/src/**/*.cp", base_buf[0..]);
+    // base_buf[0..n] == "packages/net/src"
+
+    // Match against filename only when pattern has no slashes
+    let opts = PicoOptions.defaults();
+    opts.basename = true;
+    const hit = isMatchWithOptions("a/b/c/README.md", "*.md", opts); // true
+
+    // Disable globstar (** treated as single-segment *)
+    let no_gs = PicoOptions.defaults();
+    no_gs.noglobstar = true;
+    const flat = isMatchWithOptions("a/b/c.cp", "**/*.cp", no_gs); // false
+    _ = n; _ = hit; _ = flat;
+}
+```
+
+## API Overview
+
+- `PicoOptions` (`dot`, `nocase`, `basename`, `noglobstar`, `PicoOptions.defaults()`)
+- `isMatch(path, pattern)`
+- `isMatchWithOptions(path, pattern, opts)`
+- `isMatchAny(path, patterns, opts)`
+- `scanBase(pattern, out)`
+
+See [`src/index.d.cp`](src/index.d.cp) for full signatures.

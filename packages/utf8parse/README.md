@@ -1,44 +1,109 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/utf8-valid
+# `utf8parse`
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:utf8parse` ([https://github.com/alacritty/vte](https://github.com/alacritty/vte)) / `crates.io:utf8_iter` ([https://github.com/hsivonen/utf8_iter](https://github.com/hsivonen/utf8_iter))（原库名 `utf8parse` → CP 包名 `@cap/utf8-valid`）
+Zero-allocation RFC 3629 strict UTF-8 validator, 16-lane SIMD ASCII fast-path scanner, WHATWG lossy repair (`U+FFFD`), and UTF-16 code-unit length calculator for CP — clean-room parity with **crates.io `utf8parse`** & **`utf8_iter`**.
 
-Zero-allocation RFC 3629 strict UTF-8 validator, WHATWG lossy repair (`U+FFFD`), ASCII fast-path, and UTF-16 code-unit length calculator for CP — clean-room MIT parity with Rust `utf-8` and `simdutf8`.
+## Provenance & Zero-Cost Migration
 
-零堆分配的 CP RFC 3629 严格 UTF-8 验证与有损修复引擎，精准拦截过长编码（`0xC0/0xC1`, `0xE0 0x80..0x9F`, `0xF0 0x80..0x8F`）、UTF-16 代理区（`U+D800..U+DFFF`）、超 `U+10FFFF` 与末尾截断，支持 WHATWG 最大非法子段 `U+FFFD` 替换与 LSP/JS 互操作 `utf16Len` 计算（纯 CP 洁净室 MIT 实现）。
+| Field | Details |
+| :--- | :--- |
+| **Source Registries** | `crates.io:utf8parse` ([alacritty/vte](https://github.com/alacritty/vte), v0.2 parity) & `crates.io:utf8_iter` ([hsivonen/utf8_iter](https://github.com/hsivonen/utf8_iter), v1 parity) |
+| **CP Package** | `utf8parse@1.0.0` (`MIT`) |
+| **Dependencies** | None (pure CP, zero external dependencies) |
 
-## Install / 安装
+Keep the exact original package name — no renaming required:
 
-```bash
-cap add @cap/utf8-valid
+```rust
+// Rust (std / utf8parse)
+let ok = std::str::from_utf8(bytes).is_ok();
+let repaired = String::from_utf8_lossy(bytes);
 ```
-
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `Utf8Error` / `Utf8CheckResult` | `pub struct` | 精确报告 `valid`, `valid_up_to`, `error_len`（`0` 为末尾截断）, `codepoint_count` |
-| `validateUtf8` | `(data: string) -> Utf8CheckResult` | RFC 3629 严格 UTF-8 校验 |
-| `isValidUtf8` | `(data: string) -> bool` | 快速布尔校验 |
-| `isAscii` | `(data: string) -> bool` | 纯 7-bit ASCII 快速检测 |
-| `toLossyUtf8` | `(data: string, out: []u8) -> string` | WHATWG 标准有损修复（无效子段替换为 `U+FFFD`） |
-| `utf16Len` | `(data: string) -> usize` | 计算等价 UTF-16 码元长度（BMP=1，辅助平面代理对=2） |
-
-## Usage / 使用示例
 
 ```cp
-import { validateUtf8, isValidUtf8, toLossyUtf8, utf16Len } from "@cap/utf8-valid";
+// CP — identical package name, 16-lane SIMD fast path
+import { validateUtf8, isValidUtf8, toLossyUtf8 } from "utf8parse";
 
-const ok = isValidUtf8("Hello 世界 🚀"); // true
-const u16 = utf16Len("A中🚀");          // 1 + 1 + 2 = 4
-
-let bad: [4]u8 = ['O', 'K', 0xFF, '!'];
-let out: [16]u8 = undefined;
-const repaired = toLossyUtf8(bad[0..4], out[0..16]); // "OK\u{FFFD}!"
+const ok = isValidUtf8("Hello, 世界 🚀"); // true
+const res = validateUtf8("Hello, 世界 🚀"); // res.valid == true, res.codepoint_count == 11
 ```
 
-## License
+## ReleaseFast Performance
 
-MIT
+Measured on Intel Xeon Platinum 8175M (`cpc 1.0.0` + `zig 0.17.0 -OReleaseFast -fllvm`, see [`bench/ECOSYSTEM_PERF_REPORT.md`](../../bench/ECOSYSTEM_PERF_REPORT.md)):
+
+| Operation | Payload | Latency | Throughput | Bandwidth | Architecture |
+| :--- | :--- | --: | --: | --: | :--- |
+| `validateUtf8` | 64 KB ASCII buffer | **3,508.13 ns/op** | 285,052 ops/s | **17,815.77 MB/s (17.82 GB/s)** | 16-lane SIMD ASCII fast path, zero-heap |
+
+- **17.82 GB/s L1/L2 cache saturation**: 16-lane SIMD vectorization checks 16 ASCII bytes per iteration before dropping to strict RFC 3629 multibyte validation.
+- **Strict RFC 3629 compliance**: Rejects overlong encodings, UTF-16 surrogates (`U+D800..U+DFFF`), code points `> U+10FFFF`, and truncated trailing sequences.
+
+## Examples
+
+### 1. Strict Validation, Codepoint Counting & ASCII Fast Check
+
+```cp
+import { validateUtf8, isValidUtf8, isAscii, utf16Len } from "utf8parse";
+
+fn demoValidation() {
+    const ascii_ok = isAscii("GET /api/v1/health HTTP/1.1"); // true
+    const utf8_ok = isValidUtf8("你好 CP 🚀");                // true
+
+    const res = validateUtf8("你好 CP 🚀");
+    if (res.valid) {
+        const cp_count = res.codepoint_count; // 7 Unicode scalar values
+        // UTF-16 code units (🚀 is a surrogate pair = 2 units)
+        const u16_units = utf16Len("你好 CP 🚀"); // 8
+        _ = cp_count; _ = u16_units;
+    }
+    _ = ascii_ok; _ = utf8_ok;
+}
+```
+
+### 2. Inspecting Invalid UTF-8 Offsets (`valid_up_to`, `error_len`) & WHATWG Lossy Repair
+
+```cp
+import { validateUtf8, toLossyUtf8 } from "utf8parse";
+
+fn demoRepair() {
+    // 0xFF is never valid in UTF-8
+    const bad = "ok\xFFtail";
+    const res = validateUtf8(bad);
+    if (!res.valid) {
+        const good_prefix = res.valid_up_to; // 2 ("ok")
+        const err_len = res.error_len;       // 1 (or 0 if truncated at EOF)
+        _ = good_prefix; _ = err_len;
+    }
+
+    // Replace maximal invalid subparts with U+FFFD (EF BF BD) into caller stack buffer
+    let out: [64]u8 = undefined;
+    const repaired = toLossyUtf8(bad, out[0..]); // "ok\u{FFFD}tail"
+    _ = repaired;
+}
+```
+
+### 3. Stepping Sequence-by-Sequence (`checkSeqAt`) & Continuation Byte Check
+
+```cp
+import { checkSeqAt, isCont } from "utf8parse";
+
+fn demoStepping() {
+    const s = "Aé🚀";
+    let pos: usize = 0;
+    while (pos < s.len) {
+        const step = checkSeqAt(s, pos);
+        if (!step.valid) { break; }
+        pos += step.step_len; // 1 ('A'), 2 ('é'), 4 ('🚀')
+    }
+    const cont = isCont(0x80); // true (10xxxxxx)
+    _ = cont;
+}
+```
+
+## API Overview
+
+- **Types**: `Utf8CheckResult` (`valid`, `valid_up_to`, `error_len`, `codepoint_count`), `StepResult` (`valid`, `step_len`, `error_len`), `Utf8Error`
+- **Functions**: `validateUtf8(data)`, `isValidUtf8(data)`, `isAscii(data)`, `toLossyUtf8(data, out)`, `utf16Len(data)`, `checkSeqAt(data, pos)`, `isCont(b)`
+
+See [`src/index.d.cp`](src/index.d.cp) for full signatures.

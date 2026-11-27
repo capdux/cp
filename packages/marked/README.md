@@ -1,60 +1,105 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# `@cap/marked-md`
+# `marked`
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:marked` ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))（原库名 `marked` → CP 包名 `@cap/marked-md`）
+Zero-heap CommonMark / GFM Markdown-to-HTML compiler and plain-text stripper in pure CP — clean-room parity with **npm `marked` v14**, with built-in safe HTML escaping via `escape-html` and link scheme sanitization.
 
-Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP (clean-room MIT counterpart to npm `marked` v14).
+## Provenance & Zero-Cost Migration
 
-## Features
+| Field | Details |
+| :--- | :--- |
+| **Source Registry** | `npm:marked` ([markedjs/marked](https://github.com/markedjs/marked), v14 parity) |
+| **CP Package** | `marked@1.0.0` (`MIT`) |
+| **Dependencies** | `escape-html@1.0.0` |
 
-- **100% Zero Heap Allocation**: Compiles Markdown directly into caller-provided `out: []u8`, returning the exact byte count written.
-- **Cross-Package Reuse**: Reuses `escapeHtml` from `@cap/escape-html` for XSS-safe HTML text and attribute escaping.
-- **Block-Level Syntax**:
-  - ATX Headings (`#` .. `######` -> `<h1>` .. `<h6>`, with optional closing `#` stripping)
-  - Fenced Code Blocks (```` ```lang ```` / `~~~lang` -> `<pre><code class="language-...">`)
-  - Blockquotes (`> ...` -> `<blockquote>`, with recursive inner block parsing)
-  - Unordered Lists (`-`, `*`, `+` -> `<ul><li>`, plus GFM task list checkboxes `- [ ]` / `- [x]`)
-  - Ordered Lists (`1. `, `2) ` -> `<ol><li>`, preserving `start="N"` when `N != 1`)
-  - Horizontal Rules (`---`, `***`, `___` -> `<hr>`)
-  - Paragraphs (`<p>...</p>`)
-- **Inline Syntax**:
-  - Inline code spans (`` `code` `` and multi-backtick `` ``code`` ``)
-  - Bold (`**...**`, `__...__`), Italic (`*...*`, `_..._`), Combined (`***...***`)
-  - GFM Strikethrough (`~~...~~` -> `<del>`)
-  - Links (`[text](url)` -> `<a href="...">`, with XSS protocol filtering for `javascript:`, `vbscript:`, `data:text/html`)
-  - Images (`![alt](src)` -> `<img src="..." alt="...">`)
-  - Backslash escapes (`\*`, `\_`, `` \` ``, etc.) and hard line breaks (trailing two spaces or `\`, plus `opts.breaks`)
-- **Plain-Text Extraction**: `stripMarkdown(md, out)` strips block & inline Markdown syntax to clean plain text.
+Keep the exact original package name — no renaming required:
 
-## Dependencies
-
-- `@cap/escape-html` (`1.0.0`)
-
-## Quick Start
-
-```cp
-import { parseMarkdown, parseInlineMarkdown, stripMarkdown, defaultMarkedOptions } from "@cap/marked-md";
-
-let out: [1024]u8 = undefined;
-const n = parseMarkdown("# Hello **World**\n\n- [x] Zero heap\n- `marked-md`", &out);
-// <h1>Hello <strong>World</strong></h1>
-// <ul>
-// <li><input checked="" disabled="" type="checkbox"> Zero heap</li>
-// <li><code>marked-md</code></li>
-// </ul>
+```ts
+// TypeScript (npm marked)
+import { marked } from "marked";
+const html = marked.parse("# Hello **CP**");
 ```
 
-## API
+```cp
+// CP — identical package name, zero-heap caller buffer
+import { parseMarkdown } from "marked";
 
-- `MarkedOptions { gfm: bool, sanitize_links: bool, breaks: bool }`
-- `defaultMarkedOptions(): MarkedOptions`
+let out: [512]u8 = undefined;
+const n = parseMarkdown("# Hello **CP**\n", out[0..]);
+// out[0..n] == "<h1>Hello <strong>CP</strong></h1>\n"
+```
+
+## Architecture & Zero-Heap Design
+
+- **Zero dynamic allocations**: Single-pass recursive block & inline compiler writing directly into caller-provided `out: []u8`, with bounded recursion depth and compile-time 256-entry ASCII lookup tables (`MKD_PUNCT_ESCAPE_LUT`, `MKD_INLINE_SPECIAL_LUT`).
+- **Safe by default**: Escapes raw HTML entities via `escape-html` and neutralizes unsafe link schemes (`javascript:`, `vbscript:`, `data:`) when `sanitize_links: true` (default).
+- **Rich CommonMark + GFM support**: ATX headings (`#`..`######`), fenced code blocks with language class, blockquotes, ordered/unordered lists, horizontal rules, emphasis (`*`/`_`), strong (`**`/`__`), GFM strikethrough (`~~`), inline code, links/images, and plain-text stripping.
+
+## Examples
+
+### 1. Basic Markdown-to-HTML Compilation (`parseMarkdown` & `parseInlineMarkdown`)
+
+```cp
+import { parseMarkdown, parseInlineMarkdown } from "marked";
+
+fn demoBasic() {
+    const md = "# Title\n\nHello **bold**, *italic*, ~~old~~, and `code`.\n\n- item 1\n- item 2\n";
+    let html_buf: [1024]u8 = undefined;
+    const n = parseMarkdown(md, html_buf[0..]);
+    // html_buf[0..n] contains rendered HTML
+
+    // Inline-only rendering (no wrapping <p>...</p>)
+    let inline_buf: [256]u8 = undefined;
+    const in_len = parseInlineMarkdown("Visit [CP](https://cp-lang.org)", inline_buf[0..]);
+    _ = n; _ = in_len;
+}
+```
+
+### 2. Custom `MarkedOptions` (`gfm`, `sanitize_links`, `breaks`)
+
+```cp
+import { MarkedOptions, defaultMarkedOptions, parseMarkdownWithOptions } from "marked";
+
+fn demoOptions() {
+    let opts = defaultMarkedOptions();
+    opts.breaks = true;         // render single newlines as <br>
+    opts.gfm = true;            // enable GFM strikethrough ~~text~~
+    opts.sanitize_links = true; // block unsafe link schemes
+
+    let out: [512]u8 = undefined;
+    const n = parseMarkdownWithOptions("line1\nline2\n\n[link](javascript:void(0))", opts, out[0..]);
+    _ = n;
+}
+```
+
+### 3. Plain-Text Stripping (`stripMarkdown`) & Buffer Sizing
+
+```cp
+import { stripMarkdown, parseMarkdown } from "marked";
+
+fn demoStripAndSizing() {
+    const doc = "## Release Notes\n\nSee **[docs](https://cp-lang.org)** and `cap build`.\n";
+
+    // Extract clean plain text (ideal for search indexing / LLM context / previews)
+    let text_buf: [512]u8 = undefined;
+    const tn = stripMarkdown(doc, text_buf[0..]);
+    // text_buf[0..tn] == "Release Notes\nSee docs and cap build.\n"
+
+    // Buffer sizing rule: allocate ~2x–4x input length for HTML output;
+    // writes clamp safely to out.len without memory overrun.
+    let small_buf: [32]u8 = undefined;
+    const clamped = parseMarkdown(doc, small_buf[0..]);
+    _ = tn; _ = clamped;
+}
+```
+
+## API Overview
+
+- `MarkedOptions` (`gfm: bool`, `sanitize_links: bool`, `breaks: bool`)
+- `defaultMarkedOptions(): MarkedOptions` (`gfm: true, sanitize_links: true, breaks: false`)
 - `parseMarkdown(md: string, out: []u8): usize`
 - `parseMarkdownWithOptions(md: string, opts: MarkedOptions, out: []u8): usize`
 - `parseInlineMarkdown(src: string, out: []u8): usize`
 - `stripMarkdown(md: string, out: []u8): usize`
 
-## License
-
-MIT
+See [`src/index.d.cp`](src/index.d.cp) for full signatures.
